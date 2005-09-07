@@ -1,0 +1,57 @@
+NEW = NEW 2
+
+A = 1
+A = 1
+A = 1
+A = 1
+Other A = other1
+
+A = 1
+A = 1
+Other A = other1
+Other A = other1
+Other A = other1
+Other A = other1
+Other A = other1
+Other A = other1
+
+D:E = four
+D:E = four
+D:E = four
+
+F->f1:1 = one one
+F->f1:1 = one one
+F->f1:1 = one one
+F->f1:1 = one one
+
+Other F->f1:1 = Other one one
+Other F->f1:1 = Other one one
+
+Yikes = yikes
+Yikes = yikes
+
+Yikes2 = yikes2
+Yikes2 = yikes2
+
+Other Yikes = other yikes
+
+Other Yikes2 = other yikes2
+Other Yikes2 = other yikes2
+
+IHS = i h s
+IHS = i h s
+Other IHS = other i h s
+
+    C GT 1
+        C GT 2
+            C LE 3
+
+    C GT 1
+        C GT 2
+            C LE 3
+
+    1 Matches /Yike/i
+
+    2 Matches /Yike/i
+
+    3 Matches /Yike/i
