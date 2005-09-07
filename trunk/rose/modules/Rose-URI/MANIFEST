@@ -1,0 +1,7 @@
+Changes
+lib/Rose/URI.pm
+Makefile.PL
+MANIFEST
+t/basic.t
+t/query.t
+
