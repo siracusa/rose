@@ -1,0 +1,605 @@
+---
+File: comps/admin/coupon/form/search.mc
+Mode: 33188
+Type: masoncomps
+Lines: 11
+
+<!-- start /admin/coupon/form/search.mc -->
+<%perl>
+$m->comp('/admin/table_editor/form/search.mc', %ARGS, 
+         rows => 
+         [
+           [ 'code', 'start_date' ],
+           [ 'coupon_id', 'end_date' ],
+           [ 'sort',  [ 'per_page', 'list_button' ] ],
+         ]);
+</%perl>
+<!-- end /admin/coupon/form/search.mc -->
+---
+File: comps/admin/coupon/list.mc
+Mode: 33188
+Type: masoncomps
+Lines: 29
+
+<!-- start /admin/coupon/list.mc -->
+<table cellspacing="0" cellpadding="3" width="100%">
+<tr class="header">
+<th>Id</th>
+<th>Code</th>
+<th>Start Date</th>
+<th>End Date</th>
+<th>Migrate</th>
+<th>Clone</th>
+</tr>
+%
+% my $i = 0;
+%
+% foreach my $coupon (@$objects)
+% {
+<tr class="coupon row-<% $i++ % 2 ? 'odd' : 'even' %>">
+<td class="id first"><% $coupon->id |h %></td>
+<td class="code"><a href="<% $app->edit_object_uri($coupon) %>"><% $coupon->code |h %></a></td>
+<td class="start-date"><% $coupon->start_date(format => '%b %d %Y %H:%M') |h %></td>
+<td class="end-date"><% $coupon->end_date(format => '%b %d %Y %H:%M') |h %></td>
+<td class="migrate">Migrate</td>
+<td class="clone last">Clone</td>
+</tr>
+% }
+</table>
+<!-- end /admin/coupon/list.mc -->
+<%args>
+$objects
+</%args>
+---
+File: comps/admin/coupon/navbar.mc
+Mode: 33188
+Type: masoncomps
+Lines: 6
+
+<!-- start /admin/coupon/navbar.mc -->
+<div class="nav">
+<a href="/admin/coupon">Find Coupons</a> |
+<a href="/admin/coupon/new">New Coupon</a>
+</div>
+<!-- end /admin/coupon/navbar.mc -->
+---
+File: comps/admin/messages.mc
+Mode: 33188
+Type: masoncomps
+Lines: 9
+
+<!-- start /admin/messages.mc -->
+% $m->comp('/error_box.mc', message => $error)  if($error);
+% $m->comp('/message_box.mc', message => $message)  if($message);
+% $m->print('<br/>')  if($error || $message);
+<!-- end /admin/messages.mc -->
+<%args>
+$error   => undef
+$message => undef
+</%args>
+---
+File: comps/admin/table_editor/form/edit.mc
+Mode: 33188
+Type: masoncomps
+Lines: 62
+
+<!-- start /admin/table_editor/form/edit.mc -->
+<div class="edit">
+<% $form->start_html %>
+
+% if($form->is_edit_form)
+% {
+%   foreach my $column ($object->meta->primary_key_columns, $form->hidden_field_names)
+%   {
+<% $form->field($column)->hidden_field->xhtml_field %>
+%   }
+% }
+
+<table class="form">
+<tr class="header">
+<td colspan="2" class="title">
+% if($object)
+% {
+Edit <% $object_name |h %> <% $id_string |h %>
+% }
+% else
+% {
+New <% $object_name |h %>
+% }
+</td></tr>
+%
+% my $i = 0;
+%
+% foreach my $field ($form->fields)
+% {
+%   my $name = $field->name;
+%   next  if($pk{$name} || $hide{$name} || $field->isa('Rose::HTML::Form::Field::Submit'));
+<tr class="row-<% $i++ % 2 ? 'odd' : 'even' %>">
+<td class="label"><% $field->xhtml_label %></td>
+<td class="field"><% $field->xhtml %></td>
+</tr>
+% }
+</table>
+
+<div class="buttons">
+% if($object)
+% {
+<% $form->field('update_button')->xhtml_field %>
+% }
+% else
+% {
+<% $form->field('create_button')->xhtml_field %>
+% }
+</div>
+
+<% $form->end_html %>
+</div>
+<!-- end /admin/table_editor/form/edit.mc -->
+<%args>
+$object      => undef
+$object_name => undef
+$id_string   => undef
+</%args>
+<%init>
+my $form = $ARGS{'html_form'};
+my %pk = $object ? (map { $_ => 1 } $object->meta->primary_key_columns) : ();
+my %hide = map { $_ => 1 } $form->hidden_field_names;
+</%init>
+---
+File: comps/admin/table_editor/form/new.mc
+Mode: 33188
+Type: masoncomps
+Lines: 3
+
+<!-- start /admin/table_editor/form/new.mc -->
+<& '/admin/table_editor/form/edit.mc', form_type => 'new', %ARGS &>
+<!-- end /admin/table_editor/form/new.mc -->
+---
+File: comps/admin/table_editor/form/search.mc
+Mode: 33188
+Type: masoncomps
+Lines: 92
+
+<!-- start /admin/table_editor/form/search.mc -->
+<div class="search">
+<% $form->start_html %>
+
+<table class="form">
+<%perl>
+foreach my $row (@$rows)
+{
+  $m->print("<tr>\n");
+
+  foreach my $item (@$row)
+  {
+    my $started = 0;
+    
+    foreach my $field (ref $item ? @$item : $item)
+    {
+      my $label_td = '';
+      my $field_td = '';
+  
+      if(ref $field eq 'HASH')
+      {
+        if(ref $field->{'label_td_attrs'})
+        {
+          $label_td = join(' ', map { "$_=$field->{'label_td_attrs'}{$_}" } 
+                               keys %{$field->{'label_td_attrs'}});
+        }
+  
+        if(ref $field->{'field_td_attrs'})
+        {
+          $field_td = join(' ', map { "$_=$field->{'field_td_attrs'}{$_}" } 
+                               keys %{$field->{'field_td_attrs'}});
+        }
+  
+        $field = $field->{'name'};
+      }
+
+      if($form->field($field)->label)
+      {
+        if($started)
+        {
+          $m->print(' ', $form->field($field)->xhtml_label);
+        }
+        else
+        {
+          $m->print('<td ', $label_td, 'class="label">',
+                    $form->field($field)->xhtml_label,
+                    "</td>\n");
+        }
+      }
+  
+      if($started)
+      {
+        $m->print(' ', $form->field($field)->xhtml);
+      }
+      else
+      {
+        $m->print('<td ', $field_td, 'class="field">',
+                  $form->field($field)->xhtml);
+      }
+      
+      $started++;
+    }
+    
+    $m->print("</td>\n");
+  }
+
+  $m->print("</tr>\n");
+}
+</%perl>
+</table>
+
+<% $form->end_html %>
+</div>
+<!-- end /admin/table_editor/form/search.mc -->
+<%args>
+$rows => undef
+</%args>
+<%init>
+my $form = $ARGS{'html_form'};
+
+unless($rows)
+{
+  my @columns = $form->search_columns;
+
+  while(@columns)
+  {
+    push(@$rows, [ grep { defined } shift(@columns), shift(@columns) ]);
+  }
+  
+  push(@$rows, [ 'sort',  [ 'per_page', 'list_button' ] ]);
+}
+</%init>
+---
+File: comps/end.mc
+Mode: 33188
+Type: masoncomps
+Lines: 4
+
+<!-- start /end.mc -->
+</body>
+
+</html>
+---
+File: comps/error_box.mc
+Mode: 33188
+Type: masoncomps
+Lines: 5
+
+<& '/message_box.mc', %ARGS &>
+<%init>
+$ARGS{'title'} ||= 'error';
+$ARGS{'icon'}  ||= '!';
+</%init>
+---
+File: comps/footer.mc
+Mode: 33188
+Type: masoncomps
+Lines: 15
+
+<!-- /footer.mc -->
+</div>
+% # if(defined $layout && $layout ne 'none')
+% # {
+% #   $m->comp("/layout/$layout/end.mc", %ARGS);
+% # }
+<div id="footer">Copyright &copy; Cambridge Interactive Development 1998-<% $Year %>.</div>
+
+<& '/end.mc', %ARGS &>
+<%args>
+$layout => 'standard'
+</%args>
+<%once>
+my $Year = (localtime(time))[5] + 1900;
+</%once>
+---
+File: comps/head.mc
+Mode: 33188
+Type: masoncomps
+Lines: 15
+
+<!-- start /head.mc -->
+<head>
+<title><% $page_title |h %></title>
+<& $style_comp, %ARGS &>
+<& $script_comp, %ARGS &>
+<% $head_extra |n %>
+</head>
+<!-- end /head.mc -->
+<%args>
+$page_title  => 'Admin Tools'
+$head_extra  => ''
+$style_comp  => '/style.mc'
+$script_comp => '/script.mc'
+$no_title_prefix => 0
+</%args>
+---
+File: comps/header.mc
+Mode: 33188
+Type: masoncomps
+Lines: 26
+
+<& '/start.mc', %ARGS &>
+<div id="header">
+<table cellpadding="0" cellspacing="0">
+<tr valign="middle">
+<td class="logo" rowspan="2"><a href="<% GVX::G3Admin::WebSite->site_url %>"><img 
+src="/images/gv_logo.gif" width="42" height="42" alt="Grand Virtual" border="0"/></a></td>
+<td class="date">Current Date: <b><% $date %></b></td>
+<td class="title" align="center"><a href="/">Admin Toolbox</a></td>
+<td class="user-info" align="right">Current User: <b><a onclick="var w=window.open(&quot;/user-manage?referer=javascript:window.close()&quot;,&quot;pwd_window&quot;,&quot;center=yes,resizable=yes,width=600,height=590,toolbar=yes,scrollbars=yes&quot;);w.focus();" 
+title="Account Management" href="#"><% $ENV{'REMOTE_USER'} |h %></a></b></td>
+</tr>
+<tr><td colspan="3" class="nav"><% GVX::G3Admin::WebSite->navigation_html %></td></tr>
+</table>
+% #if(defined $layout && $layout ne 'none')
+% #{
+% #  $m->comp("/layout/$layout/start.mc", %ARGS);
+% #}
+</div>
+<div id="body">
+<!-- end /header.mc -->
+<%args>
+$layout => 'standard'
+</%args>
+<%init>
+my $date = DateTime->now(time_zone => 'local')->strftime('%A %B %d, %Y');
+</%init>
+---
+File: comps/message_box.mc
+Mode: 33188
+Type: masoncomps
+Lines: 31
+
+<!-- start /message_box.mc -->
+<table align="center" class="message-box" bgcolor="#e0e0e0" border="0" cellpadding="3" cellspacing="0" width="<% $width %>">
+<tr><td bgcolor="#000033" class="title"><% $title |h %></td></tr>
+<tr>
+<td class="body">
+
+<table border="0" cellpadding="6">
+<tr>
+% if(length $icon)
+% {
+<td align="center"><% $icon %></td>
+% }
+<td><% $message %></td></tr>
+</table>
+</td></tr></table>
+<!-- end /message_box.mc -->
+<%args>
+$title => 'message',
+$escape_html => 1
+$message => ''
+$icon    => undef
+$width   => '60%'
+</%args>
+<%init>
+$message = Apache::Util::escape_html($message)  if($escape_html && $message !~ m{</?[^>]+>});
+
+unless(length $icon > 1 || length $icon == 0)
+{
+  $icon = qq(<b class="icon">$icon</b>);
+}
+</%init>
+---
+File: comps/number_line.mc
+Mode: 33188
+Type: masoncomps
+Lines: 127
+
+<%perl>
+my $line;
+
+my $pages = $total / $per_page;
+$pages++  if($pages > 1 && int $pages != $pages);
+$pages = int($pages);
+
+return ''  unless($pages > 1);
+
+$uri = Rose::URI->new($uri)  unless(ref $uri);
+
+$line = '<div class="number-line">'  unless($nodiv);
+
+my($start, $end, $line_set);
+
+my $line_sets = $pages / $max_pages;
+$line_sets++  if($line_sets > 1 && int $line_sets != $line_sets);
+$line_sets = int($line_sets);
+
+if($pages > $max_pages)
+{
+  if($page <= $max_pages)
+  {
+    $line_set = 1;
+  }
+  else
+  {
+    $line_set = $page / $max_pages;
+    $line_set++  if($line_set > 1 && int $line_set != $line_set);
+    $line_set = int($line_set);
+  }
+
+  $start = (($line_set - 1) * $max_pages) + 1;
+  $end = (($line_set - 1) * $max_pages) + $max_pages;
+  $end = $pages  if($end > $pages);
+}
+else
+{
+  $line_set = 1;
+  $start = 1;
+  $end   = $pages;
+}
+
+if($line_set > 1)
+{
+  $uri->query_param(page => (($line_set - 1) * $max_pages) - $max_pages + 1);
+  $line .=  qq(<a href=") . Apache::Util::escape_html($uri) . q(">&laquo;</a> );
+}
+
+if($flat)
+{
+  if($page > 1)
+  {
+    $uri->query_param(page => $page - 1);
+    $line .=  qq(<a href=") . Apache::Util::escape_html($uri) . q(">&laquo; prev</a> );
+  }
+}
+
+$line .= ' ... '  if($line_set > 1);
+
+for(my $i = $start; $i <= $end; $i++)
+{
+  if($i == $page)
+  {
+    $line .= qq(<span class="selected">$i</span> );
+  }
+  else
+  {
+    $uri->query_param(page => $i);
+    $line .= qq(<a href=") . Apache::Util::escape_html($uri) . qq(">$i</a> );
+  }
+}
+
+$line .= ' ... '  if($line_set < $line_sets);
+ 
+unless($flat)
+{
+  if($line_set < $line_sets)
+  {
+    $uri->query_param(page => ($line_set * $max_pages) + 1);
+    $line .=  qq( <a href=") . Apache::Util::escape_html($uri) . q(">&raquo;</a>);
+  }
+
+ if($page > 1)
+  {
+    $uri->query_param(page => $page - 1);
+    $line .=  qq(<br><a href=") . Apache::Util::escape_html($uri) . q(">&laquo; prev</a> );
+  }
+}
+
+if($flat)
+{
+  if($page < $pages)
+  {
+    $uri->query_param(page => $page + 1);
+    $line .=  qq( <a href=") . Apache::Util::escape_html($uri) . q(">next &raquo;</a> );
+  }
+
+  if($line_set < $line_sets)
+  {
+    $uri->query_param(page => ($line_set * $max_pages) + 1);
+    $line .=  qq( <a href=") . Apache::Util::escape_html($uri) . q(">&raquo;</a>);
+  }
+}
+else
+{
+  if($page < $pages)
+  {
+    $uri->query_param(page => $page + 1);
+    $line .=  (($page > 1) ? ' | ' : '<br>') .
+      qq(<a href=") . Apache::Util::escape_html($uri) . q(">next &raquo;</a> );
+  }
+}
+
+$line .= '</div>'  unless($nodiv);
+
+$m->print($line);
+</%perl>
+<%args>
+$uri       => Rose::URI->new($site->requested_uri_with_query)
+$page      => 1
+$max_pages => 30
+$per_page
+$total
+$nodiv => 0
+$flat  => 0
+</%args>
+---
+File: comps/pages_nav.mc
+Mode: 33188
+Type: masoncomps
+Lines: 30
+
+% unless($auto_hide && $pages <= 1)
+% {
+<div class="pages-nav">
+<& '/number_line.mc', page => $page, per_page => $per_page, total => $total, max_pages => $max_pages, flat => $flat &>
+<span class="summary"><% $num1 |nc %> - <% $num2 |nc %> of <% $total |nc %></span>
+</div>
+% }
+<%args>
+$uri       => Rose::URI->new(GVX::G3Admin::WebSite->requested_uri_with_query)
+$page      => 1
+$max_pages => 15
+$flat      => 1
+$auto_hide => 0
+$per_page
+$total
+</%args>
+<%init>
+my $pages = $total / $per_page;
+$pages++  if($pages > 1 && int $pages != $pages);
+$pages = int($pages);
+
+#return ''  unless($pages > 1);
+
+$max_pages = 10  if($page > $max_pages);
+
+my $num1 = ($page * $per_page) - $per_page + 1;
+my $num2 = $page * $per_page;
+
+$num2 = $total  if($num2 > $total);
+</%init>
+---
+File: comps/script.mc
+Mode: 33188
+Type: masoncomps
+Lines: 7
+
+<!-- start /script.mc -->
+<% join("\n", map { qq(<script type="text/javascript" src="$_"></script>) } 
+              '/admin/scripts/navigation.js', @script) %>
+<!-- end /script.mc -->
+<%args>
+@script => ()
+</%args>
+---
+File: comps/start.mc
+Mode: 33188
+Type: masoncomps
+Lines: 18
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<& $head_comp, %ARGS &>
+<body<% $body_html %>>
+<!-- end /start.mc -->
+<%args>
+$head_comp => '/head.mc'
+</%args>
+<%init>
+my $body_html = '';
+
+if(exists $ARGS{'body'})
+{
+  my $body = $ARGS{'body'};
+  $body_html = ' ' . join(' ', map { qq($_=") . Apache::Util::escape_html($body->{$_}) . '"' }
+                               keys(%$body));
+}
+</%init>
+---
+File: comps/style.mc
+Mode: 33188
+Type: masoncomps
+Lines: 6
+
+<!-- start /style.mc -->
+<% join("\n", map { qq(<link rel="stylesheet" type="text/css" href="$_"/>) } '/admin/style/admin.css', @style) %>
+<!-- end /style.mc -->
+<%args>
+@style => ()
+</%args>
+
