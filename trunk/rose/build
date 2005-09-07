@@ -58,7 +58,7 @@ EOF
 }
 
 my $DEFAULT_DIR = 'modules';
-my $DIST_NAME   = 'perl';
+my $DIST_NAME   = 'rose';
 
 my($PERL, $MAKE, $FIND, $RM, $MV, $TAR, $GZIP, $ROOT_DIR, %Tasks);
 
