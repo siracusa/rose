@@ -1,0 +1,55 @@
+NEW = NEW 2
+
+A = john a
+A = john a
+A = john a
+A = john a
+Other A = john other a
+
+A = john a
+A = john a
+Other A = john other a
+Other A = john other a
+Other A = john other a
+Other A = john other a
+Other A = john other a
+Other A = john other a
+
+D:E = four
+D:E = four
+D:E = four
+
+F->f1:1 = nested john
+F->f1:1 = nested john
+F->f1:1 = nested john
+F->f1:1 = nested john
+
+Other F->f1:1 = Other one one
+Other F->f1:1 = Other one one
+
+Yikes = yikes
+Yikes = yikes
+
+Yikes2 = yikes2
+Yikes2 = yikes2
+
+Other Yikes = other yikes
+
+Other Yikes2 = other yikes2
+Other Yikes2 = other yikes2
+
+IHS = i h s
+IHS = i h s
+Other IHS = other i h s
+
+    C GT 1
+        C LE 2
+
+    C GT 1
+        C LE 2
+
+    1 Matches /Yike/i
+
+    2 Matches /Yike/i
+
+    3 Matches /Yike/i

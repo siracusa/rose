@@ -1,0 +1,33 @@
+<& '/header.mc', page_title => $app->title . ': List ' . $app->object_name_plural,
+                 style => $app->style_sheet_uris &>
+
+<div class="admin">
+<div class="object">
+<div class="<% $app->style_name %>">
+
+<& '/admin/messages.mc', %ARGS &>
+
+<& $app->root_uri . '/navbar.mc' &>
+
+% $app->show_form('search_form');
+
+% if($objects && @$objects)
+% {
+<& '/pages_nav.mc', max_pages => 30, %ARGS &>
+<div class="list">
+<& $app->root_uri . '/list.mc', objects => $objects &>
+</div>
+% }
+% elsif($app->param_exists('list'))
+% {
+<p>No matches.</p>
+% }
+
+</div>
+</div>
+
+<& '/footer.mc' &>
+<%args>
+$objects => []
+$total   => undef
+</%args>

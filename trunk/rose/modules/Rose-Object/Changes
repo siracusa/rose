@@ -1,0 +1,28 @@
+0.015 (08.30.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added "clear" method to inheritable and inherited sets.
+    * Added ability to set inherited and inheritable sets using
+      the list_method method type.
+
+0.014 (08.18.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added get_set_init_all interface to hash method maker.
+
+0.013 (02.13.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added hash and inheritable_hash class methods to method maker.
+
+0.012 (12.07.2004) - John Siracusa <siracusa@mindspring.com>
+
+    * Renamed get_set_items array interface to get_set_item.
+    * Added "ignore_existing" flag to method maker.
+    * Renamed "override" and "ignore_existing" method maker flags 
+      to "override_existing" and "preserve_existing".
+
+0.011 (11.14.2004) - John Siracusa <siracusa@mindspring.com>
+
+    * Added copyright info.  Version 0.01 removed.
+
+0.01 (11.13.2004) - John Siracusa <siracusa@mindspring.com>
+
+    * Initial release.
