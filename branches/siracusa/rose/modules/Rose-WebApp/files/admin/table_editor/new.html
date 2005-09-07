@@ -1,0 +1,19 @@
+<& '/header.mc', page_title => $app->title . ": New " . $app->object_name,
+                 style => $app->style_sheet_uris &>
+
+<div class="admin">
+<div class="object">
+
+<& '/admin/messages.mc', %ARGS &>
+
+<& $app->root_uri . '/navbar.mc' &>
+
+<div class="new edit">
+% $app->show_form(name => 'new_form', view_args => \%ARGS);
+</div>
+
+</div>
+</div>
+
+<& '/footer.mc' &>
+

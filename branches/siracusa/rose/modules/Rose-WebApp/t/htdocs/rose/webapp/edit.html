@@ -1,0 +1,20 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Rose::Test::WebApp Edit Page</title>
+<style type="text/css">
+.error { color: #e00 }
+label { font-weight: bold }
+td { vertical-align: baseline }
+</style>
+</head>
+<body>
+
+% $app->show_form(name => 'edit_form', view_args => \%ARGS);
+
+</body>
+</html>
+<%args>
+$edit_form
+</%args>

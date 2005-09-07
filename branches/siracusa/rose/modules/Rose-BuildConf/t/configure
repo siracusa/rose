@@ -1,0 +1,234 @@
+#!/usr/bin/perl
+
+use strict;
+
+use FindBin qw($Bin);
+
+use lib "$Bin/../lib";
+use lib "$Bin/perl/lib";
+
+use File::Path;
+use File::Basename;
+
+use Rose::BuildConf;
+use Rose::BuildConf::Helpers qw(:all);
+
+our $Action ||= 'configure';
+
+our($Questions, $Targets); # Defined in a BEGIN block below
+
+our $CONF_ROOT    = $ENV{'ROSE_CONF_FILE_ROOT'} = "$Bin/perl/conf";
+our $BUILD_ROOT   = "$Bin/build";
+our $INSTALL_ROOT = "$Bin/install";
+
+$ENV{'TERM'} = 'Apple_Terminal'  if($^O eq 'darwin');
+
+MAIN:
+{
+  my $bc = Rose::BuildConf->new(conf_root    => $CONF_ROOT,
+                                build_root   => $BUILD_ROOT,
+                                install_root => $INSTALL_ROOT);
+
+  $bc->add_questions($Questions);
+  $bc->add_install_targets($Targets);
+
+  $bc->post_qa_action(\&Config_Init);
+  $bc->post_install_action(\&Install_Final);
+
+  $bc->action($Action);
+  $bc->parse_command_line;
+  $bc->run;
+}
+
+sub Config_Init
+{
+  my($bc) = shift;
+
+  ##
+  ## Synthesize new conf values
+  ##
+
+  my $a = 
+    $bc->conf_value(class => 'My::Conf',
+                    param => 'B');
+
+  $bc->custom_conf(class => 'My::Conf',
+                   param => 'NEW',
+                   value => "NEW $a");
+}
+
+sub Install_Final
+{
+  my($bc) = shift;
+
+  my $verbose = $bc->option('verbose');
+
+  # ...
+}
+
+BEGIN
+{
+  our $Questions =
+  [
+    {
+      class => 'My::Conf',
+
+      preamble =><<"EOF",
+##
+## Configuring my stuff
+##
+EOF
+
+      questions =>
+      [
+        {
+          conf_param  => 'DEV',
+          question    => 'Will this be a development server?',
+
+          prompt      => 'Development server? [yn]',
+
+          input_filter  => \&_yesno_input_filter,
+          output_filter => \&_yesno_output_filter,
+          validate      => \&_validate_yesno,
+        },
+
+        {
+          conf_param  => 'ROOT',
+          question    => 'Where will the software be installed?',
+          prompt      => 'Directory',
+          validate    => \&helper_check_directory,
+          post_action => sub { shift->install_root($_) },
+        },
+
+        {
+          conf_param  => 'F:f1\:1',
+          question    => 'Nested param test',
+          prompt      => 'Nested',
+        },
+
+        {
+          conf_param  => 'A',
+          question    => 'What is the value for A?',
+          prompt      => 'A',
+        },
+
+        {
+          conf_param  => 'C',
+          question    => 'What is the value for A?',
+          prompt      => 'C',
+        },
+      ],
+    },
+
+    {
+      class => 'My::Other::Conf',
+
+      preamble =><<"EOF",
+##
+## Configuring other stuff
+##
+EOF
+
+      questions =>
+      [
+        {
+          conf_param  => 'DSN',
+          question    => "What is the data source name (DSN) of the session database?",
+          prompt      => 'DSN',
+          validate    => \&_validate_dsn,
+        },
+
+        {
+          conf_param  => 'A',
+          question    => 'What is the value for the other A?',
+          prompt      => 'Other A',
+        },
+      ],
+    },
+  ];
+
+  our $Targets =
+  [
+    {
+      name     => 'The Files',
+      tag      => 'files',
+      preamble =><<"EOF",
+##
+## Installing the files
+##
+EOF
+
+      source      => sub { shift->build_root },
+      destination => sub { shift->install_root },
+    },
+
+    {
+      name     => 'The Other Files',
+      tag      => 'other',
+      preamble =><<"EOF",
+##
+## Installing the other files
+##
+EOF
+
+      source      => sub { shift->build_root_relative('t2') },
+      destination => sub { shift->install_root_relative('other') },
+    },
+  ];
+}
+
+sub _validate_dsn
+{
+  my($bc, %args) = @_;
+
+  my $dsn = $args{'value'};
+
+  unless($dsn =~ /^dbi:([^:]+):/i)
+  {
+    $args{'question'}->error("The DSN should like 'dbi:driver:database=foo;host=bar;port=123'");
+    return;
+  }
+
+  return 1;
+}
+
+sub _validate_yesno
+{
+  my($bc, %args) = @_;
+
+  unless(defined $args{'value'})
+  {
+    $args{'question'}->error("Please answer yes or no.");
+    return;
+  }
+
+  return 1;
+}
+
+sub _yesno_input_filter
+{
+  my($bc, %args) = @_;
+
+  for($args{'value'})
+  {
+    return 1  if(/^(?:y(?:es)?|1)$/i);
+    return 0  if(/^(?:no?|0)$/i);
+  }
+
+  return undef;
+}
+
+sub _yesno_output_filter
+{
+  my($bc, %args) = @_;
+
+  for($args{'value'})
+  {
+    return 'y'  if(/^(?:y(?:es)?|1)$/i);
+    return 'n'  if(/^(?:no?|0)$/i);
+  }
+
+  return undef;
+}
+
+1;
