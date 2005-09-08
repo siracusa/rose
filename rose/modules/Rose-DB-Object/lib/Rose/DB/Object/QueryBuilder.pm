@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.0321';
+our $VERSION = '0.0322';
 
 our $Debug = 0;
 
@@ -809,7 +809,7 @@ This indicates the negation of the specified condition.
 
 =back
 
-If C<query_is_sql> is true, then NAME can also take on these additional forms:
+If C<query_is_sql> is false or omitted, then NAME can also take on these additional forms:
 
 =over 4
 
@@ -888,7 +888,7 @@ which returns an SQL statement something like this:
 
 If you have a column named "and" or "or", you'll have to use the fully-qualified (table.column) or alias-qualified (tN.column) forms in order to address the column.
 
-If C<query_is_sql> is true, all of the parameter values are passed through the C<parse_value()> and C<format_value()> methods of their corresponding L<Rose::DB::Object::Metadata::Column>-dervied column objects.
+If C<query_is_sql> is false or omitted, all of the parameter values are passed through the C<parse_value()> and C<format_value()> methods of their corresponding L<Rose::DB::Object::Metadata::Column>-dervied column objects.
 
 If a column object returns true from its C<manager_uses_method()> method, then its parameter value is passed through the corresponding L<Rose::DB::Object>-derived object method instead.
 
@@ -997,7 +997,7 @@ If omitted, this boolean flag is false.  If true, then the values of the C<query
 
 Here the date value "2003-12-25 20:00:00" must be in the format that the current database expects for columns of that data type.
 
-But if C<query_is_sql> is true, then any query value that can be handled by the L<Rose::DB::Object>-derived object method that services the corresponding database column is valid.  Example:
+But if C<query_is_sql> is false or omitted, then any query value that can be handled by the L<Rose::DB::Object>-derived object method that services the corresponding database column is valid.  Example:
 
     $dt = DateTime->new(year => 2001, month => 1, day => 31);
 
