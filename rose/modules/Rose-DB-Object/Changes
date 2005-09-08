@@ -1,3 +1,8 @@
+0.0721 (09.08.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed incorrect method names in Numeric column type.
+    * Added tests to prevent the above error in the future.
+
 0.072 (08.31.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added "get" and "set" interfaces to all default column method makers.
