@@ -4,7 +4,7 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.021';
+our $VERSION = '0.022';
 
 our $ExportLevel = 0;
 
@@ -189,11 +189,11 @@ or lexicals, possibly with class methods as accessors.   This system works,
 but it also means that looking up configuration information requires loading
 the entire module.
 
-C<Rose::Conf> is a base class that promotes the collect all configuration
+C<Rose::Conf> is a base class that promotes the collection of all configuration
 information for a module into a separate, lighter-weight module. Configuration
 information may be imported as a hash into other packages under any desired
-name, accessed via a C<param()> class method, or through a reference to the
-configuration hash returned by the C<conf_hash()> class method.
+name, accessed via a L<param|/param> class method, or through a reference to the
+configuration hash returned by the L<conf_hash/conf_hash> class method.
 
 This strategy will make even more sense once you read about
 L<Rose::Conf::FileBased> and the (currently unreleased) build and
