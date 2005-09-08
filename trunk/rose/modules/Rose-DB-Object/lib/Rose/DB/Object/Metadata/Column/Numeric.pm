@@ -7,9 +7,9 @@ use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::Metadata::Column::Scalar;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Scalar);
 
-our $VERSION = '0.02';
+our $VERSION = '0.021';
 
-__PACKAGE__->delete_method_maker_argument_names('length');
+__PACKAGE__->delete_common_method_maker_argument_names('length');
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
