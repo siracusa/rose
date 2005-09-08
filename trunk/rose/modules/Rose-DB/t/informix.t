@@ -37,7 +37,7 @@ eval { $dbh = $db->dbh };
 
 SKIP:
 {
-  skip("Could not connect to db - $@", 8)  if($@);
+  skip("Could not connect to db - $@", 6)  if($@);
 
   ok($dbh, 'dbh() 1');
 
