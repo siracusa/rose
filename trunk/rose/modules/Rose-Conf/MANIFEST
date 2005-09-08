@@ -8,4 +8,5 @@ t/conf-filebased.t
 t/conf-root.t
 t/conf.t
 t/local.conf
+t/pod.t
 t/My-Class-Conf.conf

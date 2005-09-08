@@ -1771,7 +1771,7 @@ Rose::DB::Object::MakeMethods::Generic - Create generic object methods for Rose:
 
   # $product->category call is roughly equivalent to:
   #
-  # $cat = Category->new(id => $product->category_id
+  # $cat = Category->new(id => $product->category_id,
   #                      db => $prog->db);
   #
   # $ret = $cat->load;

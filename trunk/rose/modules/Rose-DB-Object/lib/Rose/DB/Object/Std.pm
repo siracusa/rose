@@ -154,7 +154,7 @@ Rose::DB::Object::Std - Standardized object representation of a single row in a 
 
 =head1 DESCRIPTION
 
-C<Rose::DB::Object::Std> is a subclass of L<Rose::DB::Object> that imposes a few more constraints on the tables is fronts.  In addition to the constraints described in the L<Rose::DB::Object> documentation, tables fronted by C<Rose::DB::Object::Std> objects must also fulfill the following requirements:
+L<Rose::DB::Object::Std> is a subclass of L<Rose::DB::Object> that imposes a few more constraints on the tables it fronts.  In addition to the constraints described in the L<Rose::DB::Object> documentation, tables fronted by L<Rose::DB::Object::Std> objects must also fulfill the following requirements:
 
 =over 4
 
@@ -166,7 +166,7 @@ C<Rose::DB::Object::Std> is a subclass of L<Rose::DB::Object> that imposes a few
 
 Different databases provide for auto-generated column values in different ways.  Some provide a native "auto-increment" or "serial" data type, others use sequences behind the scenes.
 
-C<Rose::DB::Object::Std> (in cooperation with L<Rose::DB> and L<Rose::DB::Object::Std::Metadata>) attempts to hide these details from you.  All you have to do is omit the value for the primary key entirely.  After the object is C<save()>ed, you can retrieve the auto-selected primary key by calling the C<id()> method.
+L<Rose::DB::Object::Std> (in cooperation with L<Rose::DB> and L<Rose::DB::Object::Std::Metadata>) attempts to hide these details from you.  All you have to do is omit the value for the primary key entirely.  After the object is C<save()>ed, you can retrieve the auto-selected primary key by calling the C<id()> method.
 
 You do have to correctly define the "id" column in the database, however.  Here are examples of primary key column definitions that provide auto-generated values, one for each of the databases supported by L<Rose::DB>.
 
@@ -198,9 +198,9 @@ You do have to correctly define the "id" column in the database, however.  Here 
 
 =back
 
-Other data definitions are possible, of course, but the three definitions above are used in the C<Rose::DB::Object::Std> test suite and are therefore guaranteed to work.  If you have success with alternative approaches, patches and/or new tests are welcome.
+Other data definitions are possible, of course, but the three definitions above are used in the L<Rose::DB::Object::Std> test suite and are therefore guaranteed to work.  If you have success with alternative approaches, patches and/or new tests are welcome.
 
-To achieve much of this functionality, C<Rose::DB::Object::Std> uses L<Rose::DB::Object::Std::Metadata> objects.  The C<meta()> method will create these form you.  You should not need to do anything special if you use the idimoatic approach to defining metadata as shown in the L<synopsis|/SYNOPSIS>.  
+To achieve much of this functionality, L<Rose::DB::Object::Std> uses L<Rose::DB::Object::Std::Metadata> objects.  The C<meta()> method will create these form you.  You should not need to do anything special if you use the idimoatic approach to defining metadata as shown in the L<synopsis|/SYNOPSIS>.  
 
 =head1 METHODS
 
