@@ -1372,7 +1372,7 @@ sub column_names_string_sql
   my($self) = shift;
 
   return $self->{'column_names_string_sql'} ||= 
-    join(', ', sort { $a cmp $b } map { $_->name_sql } $self->columns);
+    join(', ', map { $_->name_sql } sort { $a->name cmp $b->name } $self->columns);
 }
 
 sub column_names_sql
