@@ -7,18 +7,27 @@ use Carp();
 use Rose::DB::Object::Metadata::MethodMaker;
 our @ISA = qw(Rose::DB::Object::Metadata::MethodMaker);
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 Rose::Object::MakeMethods::Generic->make_methods
 (
   { preserve_existing => 1 },
   scalar => 
   [
+    'deferred_make_method_args',
+    id => { interface => 'get_set_init' },
     __PACKAGE__->common_method_maker_argument_names,
   ],
 );
 
 sub type { Carp::confess "Override in subclass" }
+
+sub is_ready_to_make_methods { 1 }
+sub sanity_check { 1 }
+
+my $Id_Counter = 0;
+
+sub init_id { ++$Id_Counter }
 
 1;
 

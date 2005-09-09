@@ -10,9 +10,9 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.021';
+our $VERSION = '0.022';
 
-__PACKAGE__->default_auto_method_types('get');
+__PACKAGE__->default_auto_method_types('get_set');
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -39,7 +39,7 @@ Rose::Object::MakeMethods::Generic->make_methods
 
 __PACKAGE__->method_maker_info
 (
-  get =>
+  get_set =>
   {
     class => 'Rose::DB::Object::MakeMethods::Generic',
     type  => 'objects_by_map',
@@ -52,12 +52,158 @@ sub build_method_name_for_type
 {
   my($self, $type) = @_;
 
-  if($type eq 'get')
+  if($type eq 'get_set')
   {
     return $self->name;
   }
 
   return undef;
+}
+
+sub sanity_check
+{
+  my($self) = shift;
+
+  defined $self->map_class or 
+    Carp::croak $self->type, " relationship '", $self->name,
+                "' is missing a map_class";
+
+  return 1;
+}
+
+sub is_ready_to_make_methods
+{
+  my($self) = shift;
+
+  eval
+  {
+    my $map_class = $self->map_class or die "Missing map class";
+    my $map_meta  = $map_class->meta or die "Missing map class meta";
+    my $map_from  = $self->map_from;
+    my $map_to    = $self->map_to;
+
+    my $target_class = $self->parent->class;
+    my $meta         = $target_class->meta;
+    my $map_to_method;
+
+    # Build the map of "local" column names to "foreign" object method names. 
+    # The words "local" and "foreign" are relative to the *mapper* class.
+    my %key_template;
+
+    # Also grab the foreign object class that the mapper points to,
+    # the relationship name that points back to us, and the class 
+    # name of the objects we really want to fetch.
+    my($with_objects, $local_rel, $foreign_class, %seen_fk);
+
+    foreach my $item ($map_meta->foreign_keys, $map_meta->relationships)
+    {
+      # Track which foreign keys we've seen
+      if($item->isa('Rose::DB::Object::Metadata::ForeignKey'))
+      {
+        $seen_fk{$item->id}++;
+      }
+      elsif($item->isa('Rose::DB::Object::Metadata::Relationship'))
+      {
+        # Skip a relationship if we've already seen the equivalent foreign key
+        next  if($seen_fk{$item->id});
+      }
+
+      if($item->class eq $target_class)
+      {
+        # Skip if there was an explicit local relationship name and
+        # this is not that name.
+        next  if($map_from && $item->name ne $map_from);
+
+        if(%key_template)
+        {
+          die "Map class $map_class has more than one foreign key ",
+              "and/or 'one to one' relationship that points to the ",
+              "class $target_class.  Please specify one by name ",
+              "with a 'local' parameter in the 'map' hash";
+        }
+
+        $local_rel = $item->name;
+
+        my $map_columns = 
+          $item->can('column_map') ? $item->column_map : $item->key_columns;
+
+        # "local" and "foreign" here are relative to the *mapper* class
+        while(my($local_column, $foreign_column) = each(%$map_columns))
+        {
+          my $foreign_method = $meta->column_accessor_method_name($foreign_column)
+            or Carp::croak "Missing accessor method for column '$foreign_column'", 
+                           " in class ", $meta->class;
+          $key_template{$local_column} = $foreign_method;
+        }
+      }
+      elsif($item->isa('Rose::DB::Object::Metadata::ForeignKey') ||
+            $item->type eq 'one to one')
+      {
+        # Skip if there was an explicit foreign relationship name and
+        # this is not that name.
+        next  if($map_to && $item->name ne $map_to);
+
+        if($with_objects)
+        {
+          Carp::croak "Map class $map_class has more than one foreign key ",
+                      "and/or 'one to one' relationship that points to a ",
+                      "class other than $target_class.  Please specify one ",
+                      "by name with a 'foreign' parameter in the 'map' hash";
+        }
+
+        $with_objects  = [ $item->name ];
+        $foreign_class = $item->class;
+        $map_to_method = $item->method_name('get_set');
+      }
+    }
+
+    unless(%key_template)
+    {
+      die "Could not find a foreign key or 'one to one' relationship ",
+          "in $map_class that points to $target_class";
+    }
+
+    unless($with_objects)
+    {
+      # Make a second attempt to find a a suitable foreign relationship in the
+      # map class, this time looking for links back to $target_class so long as
+      # it's a different relationship than the one used in the local link.
+      foreach my $item ($map_meta->foreign_keys, $map_meta->relationships)
+      {
+        # Skip a relationship if we've already seen the equivalent foreign key
+        if($item->isa('Rose::DB::Object::Metadata::Relationship'))
+        {
+          next  if($seen_fk{$item->id});
+        }
+
+        if(($item->isa('Rose::DB::Object::Metadata::ForeignKey') ||
+           $item->type eq 'one to one') &&
+           $item->class eq $target_class && $item->name ne $local_rel)
+        {  
+          if($with_objects)
+          {
+            die "Map class $map_class has more than two foreign keys ",
+                "and/or 'one to one' relationships that points to a ",
+                "$target_class.  Please specify which ones to use ",
+                "by including 'local' and 'foreign' parameters in the ",
+                "'map' hash";
+          }
+
+          $with_objects = [ $item->name ];
+          $foreign_class = $item->class;
+          $map_to_method = $item->method_name('get_set');
+        }
+      }
+    }
+
+    unless($with_objects)
+    {
+      die "Could not find a foreign key or 'one to one' relationship ",
+          "in $map_class that points to a class other than $target_class"
+    }
+  };
+
+  return $@ ? 0 : 1;
 }
 
 1;
@@ -110,63 +256,110 @@ Given these tables, each widget can have zero or more colors, and each color can
 
 In order to do so, each of the three of the tables that participate in the relationship must be fronted by its own L<Rose::DB::Object>-derived class.  Let's call those classes C<Widget>, C<Color>, and C<WidgetColorMap>.
 
-There's a bit of a "chicken and egg" problem here in that all these classes need to know about each other more or less "simultaneously," but they must be defined in a serial fashion, and may be loaded in any order by the user.
+The class that maps between the other two classes is called the "L<map class|/map_class>."  In this example, it's C<WidgetColorMap>.  The map class B<must> have a foreign key and/or "one to one" relationship pointing to each of the two classes that it maps between.
 
-The simplest way to handle this is to put the setup information for all the classes into a single ".pm" file: C<WidgetSetup.pm>.  Then have the other files (C<Widget.pm>, C<Color.pm> and C<WidgetColorMap.pm>) simply C<require> or C<use> the setup file.
+When it comes to actually creating the three classes that participate in a "many to many" relationship, there's a bit of a "chicken and egg" problem.  All these classes need to know about each other more or less "simultaneously," but they must be defined in a serial fashion, and may be loaded in any order by the user.
 
-In fact, this is the only reasonable way to create this set of classes with I<all> of the relationships defined in such a way that module load order does not matter.  If you are willing to forgo this constraint or leave some of the relationships unspecified, then other solutions are possible.
+In order to account for this, method creation may be deferred for any foreign key or relationship that does not yet have all the information it requires to do its job.  This should be transparent to the developer, provided that following guidelines are obeyed:
 
-Anyway, here's the code.  First, the C<WidgetSetup.pm> file.
+=over 4
 
-  package WidgetSetup;
+=item * The L<map class|/map_class> should C<use> both of the classes that it maps between.
 
-  use strict;
+=item * The other two classes should C<use> the L<map class|/map_class>.
 
-  # Set up the column and table information for all three classes that
-  # participate in the "many to many" widgets/colors relationship.
+=back
+
+Here's a complete example using the C<Widget>, C<Color>, and C<WidgetColorMap> classes.  First, the C<Widget> class which has a "many to many" relationship through which it can retrieve its colors.  The C<Widget> class needs to load the map class, C<WidgetColorMap>.
 
   package Widget;
 
+  use WidgetColorMap; # load map class
+
   use Rose::DB::Object;
   our @ISA = qw(Rose::DB::Object);
 
-  Widget->meta->table('widgets');
-  Widget->meta->columns
+  __PACKAGE__->meta->table('widgets');
+  __PACKAGE__->meta->columns
   (
     id   => { type => 'int', primary_key => 1 },
     name => { type => 'varchar', length => 255 },
   );
+
+  # Define "many to many" relationship to get colors
+  __PACKAGE__->meta->add_relationship
+  (
+    colors =>
+    {
+      type      => 'many to many',
+      map_class => 'WidgetColorMap',
+
+      # These are only necessary if the relationship is ambiguous
+      #map_from  => 'widget',
+      #map_to    => 'color',
+    },
+  );
+
+  __PACKAGE__->meta->initialize;
+
+  1;
+
+Next, the C<Color> class which has a "many to many" relationship through which it can retrieve all the widgets that have this color.  The C<Color> class also needs to load the map class, C<WidgetColorMap>.
 
   package Color;
 
+  use WidgetColorMap; # load map class
+
   use Rose::DB::Object;
   our @ISA = qw(Rose::DB::Object);
 
-  Color->meta->table('colors');
-  Color->meta->columns
+  __PACKAGE__->meta->table('colors');
+  __PACKAGE__->meta->columns
   (
     id   => { type => 'int', primary_key => 1 },
     name => { type => 'varchar', length => 255 },
   );
 
+  # Define "many to many" relationship to get widgets
+  __PACKAGE__->meta->add_relationship
+  (
+    widgets =>
+    {
+      type      => 'many to many',
+      map_class => 'WidgetColorMap',
+
+      # These are only necessary if the relationship is ambiguous
+      #map_from  => 'color',
+      #map_to    => 'widget',
+    },
+  );
+
+  __PACKAGE__->meta->initialize;
+
+  1;
+
+Finally, the C<WidgetColorMap> class which must load both of the classes that it maps between (C<Widget> and C<Color>) and must have a foreign key or "one to one" relationship that points to each of them.
+
   package WidgetColorMap;
+
+  # Load both classes that this class maps between
+  use Widget;
+  use Color;
 
   use Rose::DB::Object;
   our @ISA = qw(Rose::DB::Object);
 
-  WidgetColorMap->meta->table('widget_color_map');
-  WidgetColorMap->meta->columns
+  __PACKAGE__->meta->table('widget_color_map');
+  __PACKAGE__->meta->columns
   (
     id        => { type => 'int', primary_key => 1 },
     widget_id => { type => 'int' },
     color_id  => { type => 'int' },
   );
 
-  #
-  # Set up WidgetColorMap's foreign keys and initialize the class
-  #
-
-  WidgetColorMap->meta->foreign_keys
+  # Define foreign keys that point to each of the two classes 
+  # that this class maps between.
+  __PACKAGE__->meta->foreign_keys
   (
     color => 
     {
@@ -181,78 +374,11 @@ Anyway, here's the code.  First, the C<WidgetSetup.pm> file.
     },  
   );
 
-  WidgetColorMap->meta->initialize;
-
-  #
-  # Set up the relationships in the Widget and Color classes
-  #
-
-  Widget->meta->add_relationship
-  (
-    colors =>
-    {
-      type      => 'many to many',
-      map_class => 'WidgetColorMap',
-
-      # These are only necessary if the relationship is ambiguous
-      #map_from  => 'widget',
-      #map_to    => 'color',
-    },
-  );
-
-  Color->meta->add_relationship
-  (
-    widgets =>
-    {
-      type      => 'many to many',
-      map_class => 'WidgetColorMap',
-
-      # These are only necessary if the relationship is ambiguous
-      #map_from  => 'color',
-      #map_to    => 'widget',
-    },
-  );
-
-  #
-  # Finally, initialize the Widget and Color classes
-  #
-
-  Color->meta->initialize;
-  Widget->meta->initialize;
+  __PACKAGE__->meta->initialize;
 
   1;
 
-Note that the order of the steps in the code above is important.  The key "trick" demonstrated is defining enough of the C<Color> and C<Widget> classes for the C<WidgetColorMap> class to have what it needs to initialize itself, and then delaying the C<Widget> and C<Color> "many to many" relationship definitions and initializations until after C<WidgetColorMap> is completely configured.
-
-The individual class files are now very simple.  WidgetColorMap.pm:
-
-  package WidgetColorMap;
-
-  use WidgetSetup;
-
-  1;
-
-Widget.pm:
-
-  package Widget;
-
-  use WidgetSetup;
-
-  1;
-
-Color.pm:
-
-  package Color;
-
-  use WidgetSetup;
-
-  sub bizarro_name { scalar reverse shift->name }
-
-  1;
-
-Note that only the table, column, and relationship setup has to go in WidgetSetup.pm.  Other methods are free to go in their "normal" locations, as shown with the C<bizarro_name()> method in the C<Color> class.
-
-Finally, here's an initial set of data and some examples of the classes in action.  First, the data:
+Here's an initial set of data and some examples of the above classes in action.  First, the data:
 
   INSERT INTO widgets (id, name) VALUES (1, 'Sprocket');
   INSERT INTO widgets (id, name) VALUES (2, 'Flange');
@@ -280,7 +406,7 @@ Now the code:
 
   @widgets = map { $_->name } $c->widgets; # ('Sprocket')
 
-Phew.  It's actually not as complex as it seems, although there is something to be said for manually creating the C<colors()> and C<widgets()> methods.  If you look to see what's being done on your behalf behind the scenes, it's actually not that complex.  Most of the work involves determining which columns of which tables point to which columns in which other tables.  You, the programmer, already know this information, so manual "many to many" method definitions are usually straightforward.
+Phew!  It's actually not as complex as it seems.  On the other hand, there is something to be said for manually creating the C<colors()> and C<widgets()> methods.  If you look to see what's being done on your behalf behind the scenes, it's actually not that complex.  Most of the work involves determining which columns of which tables point to which columns in which other tables.  You, the programmer, already know this information, so manual "many to many" method definitions are usually straightforward.
 
 For example, here's a custom implementation of the C<Widget> class's C<colors()> method:
 
@@ -316,7 +442,7 @@ In the end, it's up to you.  Which technique makes more sense in terms of initia
 
 =over 4
 
-=item C<get>
+=item C<get_set>
 
 L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_map|Rose::DB::Object::MakeMethods::Generic/objects_by_map>, ...
 
@@ -331,7 +457,7 @@ See the L<Rose::DB::Object::Metadata::Relationship|Rose::DB::Object::Metadata::R
 
 =item B<build_method_name_for_type TYPE>
 
-Return a method name for the relationship method type TYPE.  Returns the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> for the method type "get", undef otherwise.
+Return a method name for the relationship method type TYPE.  Returns the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> for the method type "get_set", undef otherwise.
 
 =item B<manager_class [CLASS]>
 

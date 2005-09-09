@@ -788,6 +788,31 @@ EOF
       }
     );
 
+    MyPgObject->meta->alias_column(fk1 => 'fkone');
+
+    MyPgObject->meta->add_relationship
+    (
+      colors =>
+      {
+        type      => 'many to many',
+        map_class => 'MyPgColorMap',
+        #map_from  => 'object',
+        #map_to    => 'color',
+      },
+    );
+
+    eval { MyPgObject->meta->initialize };
+    Test::More::ok($@, 'meta->initialize() reserved method - pg');
+
+    MyPgObject->meta->alias_column(save => 'save_col');
+    MyPgObject->meta->initialize(preserve_existing => 1);
+
+    my $meta = MyPgObject->meta;
+
+    Test::More::is($meta->relationship('other_obj')->foreign_key,
+                   $meta->foreign_key('other_obj'),
+                   'foreign key sync 1 - pg');
+
     package MyPgOtherObject2;
 
     our @ISA = qw(Rose::DB::Object);
@@ -871,33 +896,6 @@ EOF
     );
 
     MyPgColorMap->meta->initialize;
-
-    # MyPgObject init delayed
-
-    MyPgObject->meta->alias_column(fk1 => 'fkone');
-
-    MyPgObject->meta->add_relationship
-    (
-      colors =>
-      {
-        type      => 'many to many',
-        map_class => 'MyPgColorMap',
-        #map_from  => 'object',
-        #map_to    => 'color',
-      },
-    );
-
-    eval { MyPgObject->meta->initialize };
-    Test::More::ok($@, 'meta->initialize() reserved method - pg');
-
-    MyPgObject->meta->alias_column(save => 'save_col');
-    MyPgObject->meta->initialize(preserve_existing => 1);
-
-    my $meta = MyPgObject->meta;
-
-    Test::More::is($meta->relationship('other_obj')->foreign_key,
-                   $meta->foreign_key('other_obj'),
-                   'foreign key sync 1 - pg');
   }
 
   #
@@ -1066,6 +1064,29 @@ EOF
       },
     );
 
+    MyMySQLObject->meta->add_relationship
+    (
+      colors =>
+      {
+        type      => 'many to many',
+        map_class => 'MyMySQLColorMap',
+        map_from  => 'object',
+        map_to    => 'color',
+      },
+    );
+
+    eval { MyMySQLObject->meta->initialize };
+    Test::More::ok($@, 'meta->initialize() reserved method');
+
+    MyMySQLObject->meta->alias_column(save => 'save_col');
+    MyMySQLObject->meta->initialize(preserve_existing => 1);
+
+    my $meta = MyMySQLObject->meta;
+
+    Test::More::is($meta->relationship('other_obj')->foreign_key,
+                   $meta->foreign_key('other_obj'),
+                   'foreign key sync 1 - mysql');
+
     package MyMySQLOtherObject2;
 
     our @ISA = qw(Rose::DB::Object);
@@ -1149,31 +1170,6 @@ EOF
     );
 
     MyMySQLColorMap->meta->initialize;
-    
-    # MyMySQLObject init delayed
-
-    MyMySQLObject->meta->add_relationship
-    (
-      colors =>
-      {
-        type      => 'many to many',
-        map_class => 'MyMySQLColorMap',
-        map_from  => 'object',
-        map_to    => 'color',
-      },
-    );
-
-    eval { MyMySQLObject->meta->initialize };
-    Test::More::ok($@, 'meta->initialize() reserved method');
-
-    MyMySQLObject->meta->alias_column(save => 'save_col');
-    MyMySQLObject->meta->initialize(preserve_existing => 1);
-
-    my $meta = MyMySQLObject->meta;
-
-    Test::More::is($meta->relationship('other_obj')->foreign_key,
-                   $meta->foreign_key('other_obj'),
-                   'foreign key sync 1 - mysql');
   }
 
   #
@@ -1338,6 +1334,31 @@ EOF
       }
     );
 
+    MyInformixObject->meta->alias_column(fk1 => 'fkone');
+
+    MyInformixObject->meta->add_relationship
+    (
+      colors =>
+      {
+        type      => 'many to many',
+        map_class => 'MyInformixColorMap',
+        #map_from  => 'object',
+        #map_to    => 'color',
+      },
+    );
+
+    eval { MyInformixObject->meta->initialize };
+    Test::More::ok($@, 'meta->initialize() reserved method');
+
+    MyInformixObject->meta->alias_column(save => 'save_col');
+    MyInformixObject->meta->initialize(preserve_existing => 1);
+
+    my $meta = MyInformixObject->meta;
+
+    Test::More::is($meta->relationship('other_obj')->foreign_key,
+                   $meta->foreign_key('other_obj'),
+                   'foreign key sync 1 - Informix');
+
     package MyInformixOtherObject2;
 
     our @ISA = qw(Rose::DB::Object);
@@ -1421,33 +1442,6 @@ EOF
     );
 
     MyInformixColorMap->meta->initialize;
-    
-    # MyInformixObject init delayed
-
-    MyInformixObject->meta->alias_column(fk1 => 'fkone');
-
-    MyInformixObject->meta->add_relationship
-    (
-      colors =>
-      {
-        type      => 'many to many',
-        map_class => 'MyInformixColorMap',
-        #map_from  => 'object',
-        #map_to    => 'color',
-      },
-    );
-
-    eval { MyInformixObject->meta->initialize };
-    Test::More::ok($@, 'meta->initialize() reserved method');
-
-    MyInformixObject->meta->alias_column(save => 'save_col');
-    MyInformixObject->meta->initialize(preserve_existing => 1);
-
-    my $meta = MyInformixObject->meta;
-
-    Test::More::is($meta->relationship('other_obj')->foreign_key,
-                   $meta->foreign_key('other_obj'),
-                   'foreign key sync 1 - pg');
   }
 }
 

@@ -15,7 +15,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 our $Debug = 0;
 
@@ -36,6 +36,7 @@ use Rose::Object::MakeMethods::Generic
   boolean => 
   [
     allow_inline_column_values => { default => 0 },
+    is_initialized => { default => 0 },
   ],
 );
 
@@ -977,6 +978,8 @@ sub initialize
 {
   my($self) = shift;
 
+  $Debug && warn STDERR $self->class, " INITIALIZE\n";
+
   my $class = $self->class
     or Carp::croak "Missing class for metadata object $self";
 
@@ -1000,6 +1003,10 @@ sub initialize
   $self->register_class;
 
   $self->db(undef); # make sure to ditch any db we may have retained
+
+  $self->is_initialized(1);
+
+  $Debug && warn $self->class, " INITIALIZED\n";
 
   return;
 }
@@ -1166,7 +1173,10 @@ sub make_foreign_key_methods
   my($self) = shift;
   my(%args) = @_;
 
+  $self->retry_deferred_foreign_keys;
+  
   my $class = $self->class;
+  my $meta_class = ref $self;
 
   $args{'target_class'} = $class;
 
@@ -1186,7 +1196,26 @@ sub make_foreign_key_methods
       $foreign_key->method_name($type => $method);
     }
 
-    $foreign_key->make_methods(%args);
+    # We may need to defer the creation of some foreign key methods until
+    # all the required pieces are loaded.
+    if($foreign_key->is_ready_to_make_methods)
+    {
+      $Debug && warn $self->class, " MAKE METHODS FOR FOREIGN KEY ", 
+                     $foreign_key->name, "\n";
+
+      $foreign_key->make_methods(%args);
+    }
+    else
+    {
+      # Confirm that no info is missing.  This prevents an improperly
+      # configured foreign_key from being deferred "forever"
+      $foreign_key->sanity_check; 
+
+      $Debug && warn $self->class, " DEFER FOREIGN KEY ", $foreign_key->name, "\n";
+
+      $foreign_key->deferred_make_method_args(\%args);
+      $meta_class->add_deferred_foreign_key($foreign_key);
+    }
 
     # Keep foreign keys and their corresponding "one to one" 
     # relationships in sync.
@@ -1203,7 +1232,61 @@ sub make_foreign_key_methods
     }
   }
 
+  $self->retry_deferred_foreign_keys;
+
   return;
+}
+
+our @Deferred_Foreign_Keys;
+
+sub deferred_foreign_keys
+{
+  return wantarray ? @Deferred_Foreign_Keys : \@Deferred_Foreign_Keys;
+}
+
+sub add_deferred_foreign_keys
+{
+  my($class) = shift;  
+
+  foreach my $arg (@_)
+  {
+    foreach my $fk (@Deferred_Foreign_Keys)
+    {
+      next  if($fk->id eq $arg->id);
+    }
+
+    push(@Deferred_Foreign_Keys, $arg);
+  }
+}
+
+*add_deferred_foreign_key = \&add_deferred_foreign_keys;
+
+sub retry_deferred_foreign_keys
+{
+  my($self) = shift;
+  
+  my $meta_class = ref $self;
+
+  my @foreign_keys;
+  
+  # Check to see if any deferred foreign keys are ready now
+  foreach my $foreign_key ($meta_class->deferred_foreign_keys)
+  {
+    if($foreign_key->is_ready_to_make_methods)
+    {
+      my $args = $foreign_key->deferred_make_method_args || {};
+      $foreign_key->make_methods(%$args);
+    }
+    else
+    {
+      push(@foreign_keys, $foreign_key);
+    }
+  }
+
+  if(@Deferred_Foreign_Keys != @foreign_keys)
+  {
+    @Deferred_Foreign_Keys = @foreign_keys;
+  }
 }
 
 sub make_relationship_methods
@@ -1211,11 +1294,15 @@ sub make_relationship_methods
   my($self) = shift;
   my(%args) = @_;
 
+  $self->retry_deferred_relationships;
+
+  my $meta_class = ref $self;
   my $class = $self->class;
 
   $args{'target_class'} = $class;
 
   my $preserve_existing_arg = $args{'preserve_existing'};
+
   foreach my $relationship ($self->relationships)
   {
     foreach my $type ($relationship->auto_method_types)
@@ -1253,10 +1340,83 @@ sub make_relationship_methods
       }
     }
 
-    $relationship->make_methods(%args);      
+    # We may need to defer the creation of some relationship methods until
+    # all the required pieces are loaded.
+    if($relationship->is_ready_to_make_methods)
+    {
+      $relationship->make_methods(%args);
+    }
+    else
+    {
+      # Confirm that no info is missing.  This prevents an improperly
+      # configured relationship from being deferred "forever"
+      $relationship->sanity_check; 
+
+      $Debug && warn $self->class, " DEFER RELATIONSHIP ", $relationship->name, "\n";
+
+      $relationship->deferred_make_method_args(\%args);
+      $meta_class->add_deferred_relationship($relationship);
+    }
   }
 
+  $self->retry_deferred_relationships;
+
   return;
+}
+
+our @Deferred_Relationships;
+
+sub deferred_relationships
+{
+  return wantarray ? @Deferred_Relationships : \@Deferred_Relationships;
+}
+
+sub add_deferred_relationships
+{
+  my($class) = shift;
+  
+  foreach my $arg (@_)
+  {
+    foreach my $rel (@Deferred_Relationships)
+    {
+      next  if($rel->id eq $arg->id);
+    }
+
+    push(@Deferred_Relationships, $arg);
+  }
+}
+
+*add_deferred_relationship = \&add_deferred_relationships;
+
+sub retry_deferred_relationships
+{
+  my($self) = shift;
+  
+  my $meta_class = ref $self;
+
+  my @relationships;
+  
+  # Check to see if any deferred relationships are ready now
+  foreach my $relationship ($self->deferred_relationships)
+  {
+    if($relationship->is_ready_to_make_methods)
+    {
+      $Debug && warn $self->class, " MAKE METHODS FOR RELATIONSHIP ", 
+                     $relationship->name, "\n";
+
+      my $args = $relationship->deferred_make_method_args || {};
+      $relationship->make_methods(%$args);
+    }
+    else
+    {
+      push(@relationships, $relationship);
+    }
+  }
+
+  if(@Deferred_Relationships != @relationships)
+  {
+    @Deferred_Relationships = @relationships;
+  }
 }
 
 sub make_methods
