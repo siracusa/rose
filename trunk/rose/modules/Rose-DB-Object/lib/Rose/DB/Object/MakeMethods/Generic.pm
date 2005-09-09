@@ -1190,69 +1190,73 @@ sub object_by_key
   my $fk_columns = $args->{'key_columns'} or die "Missing key columns hash";
   my $share_db   = $args->{'share_db'};
 
-  $methods{$name} = sub
+  if($interface eq 'get_set')
   {
-    my($self) = shift;
-
-    if(@_)
+    $methods{$name} = sub
     {
-      return $self->{$key} = undef  unless(defined $_[0]);
-
+      my($self) = shift;
+  
+      if(@_)
+      {
+        return $self->{$key} = undef  unless(defined $_[0]);
+  
+        while(my($local_column, $foreign_column) = each(%$fk_columns))
+        {
+          my $local_method   = $meta->column_mutator_method_name($local_column);
+          my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
+  
+          $self->$local_method($_[0]->$foreign_method);
+        }
+  
+        return $self->{$key} = $_[0];
+      }
+  
+      return $self->{$key}  if(defined $self->{$key});
+  
+      my %key;
+  
       while(my($local_column, $foreign_column) = each(%$fk_columns))
       {
-        my $local_method   = $meta->column_mutator_method_name($local_column);
-        my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
-
-        $self->$local_method($_[0]->$foreign_method);
+        my $local_method   = $meta->column_accessor_method_name($local_column);
+        my $foreign_method = $fk_meta->column_mutator_method_name($foreign_column);
+  
+        $key{$foreign_method} = $self->$local_method();
+  
+        # Comment this out to allow null keys
+        unless(defined $key{$foreign_method})
+        {
+          keys(%$fk_columns); # reset iterator
+          $self->error("Could not load $name object - the " .
+                       "$local_method attribute is undefined");
+          return undef;
+        }
       }
-
-      return $self->{$key} = $_[0];
-    }
-
-    return $self->{$key}  if(defined $self->{$key});
-
-    my %key;
-
-    while(my($local_column, $foreign_column) = each(%$fk_columns))
-    {
-      my $local_method   = $meta->column_accessor_method_name($local_column);
-      my $foreign_method = $fk_meta->column_mutator_method_name($foreign_column);
-
-      $key{$foreign_method} = $self->$local_method();
-
-      # Comment this out to allow null keys
-      unless(defined $key{$foreign_method})
+  
+      my $obj;
+  
+      if($share_db)
       {
-        keys(%$fk_columns); # reset iterator
-        $self->error("Could not load $name object - the " .
-                     "$local_method attribute is undefined");
-        return undef;
+        $obj = $fk_class->new(%key, db => $self->db);
       }
-    }
-
-    my $obj;
-
-    if($share_db)
-    {
-      $obj = $fk_class->new(%key, db => $self->db);
-    }
-    else
-    {
-      $obj = $fk_class->new(%key);
-    }
-
-    my $ret = $obj->load;
-
-    unless($ret)
-    {
-      $self->error("Could not load $fk_class with key ", 
-                   join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                   " - " . $obj->error);
-      return $ret;
-    }
-
-    return $self->{$key} = $obj;
-  };
+      else
+      {
+        $obj = $fk_class->new(%key);
+      }
+  
+      my $ret = $obj->load;
+  
+      unless($ret)
+      {
+        $self->error("Could not load $fk_class with key ", 
+                     join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
+                     " - " . $obj->error);
+        return $ret;
+      }
+  
+      return $self->{$key} = $obj;
+    };
+  }
+  else { Carp::croak "Unknown interface: $interface" }
 
   return \%methods;
 }
@@ -1288,72 +1292,76 @@ sub objects_by_key
     $mgr_args->{'object_class'} = $ft_class;
   }
 
-  $methods{$name} = sub
+  if($interface eq 'get_set' || $interface eq 'get_set_load')
   {
-    my($self) = shift;
-
-    if(@_)
-    {      
-      return $self->{$key} = undef  if(@_ == 1 && !defined $_[0]);
-      return $self->{$key} = (@_ == 1 && ref $_[0] eq 'ARRAY') ? $_[0] : [ @_ ];
-    }
-
-    if(defined $self->{$key})
+    $methods{$name} = sub
     {
-      return wantarray ? @{$self->{$key}} : $self->{$key};  
-    }
-
-    my %key;
-
-    while(my($local_column, $foreign_column) = each(%$ft_columns))
-    {
-      my $local_method = $meta->column_accessor_method_name($local_column);
-
-      $key{$foreign_column} = $self->$local_method();
-
-      # Comment this out to allow null keys
-      unless(defined $key{$foreign_column})
-      {
-        keys(%$ft_columns); # reset iterator
-        $self->error("Could not fetch objects via $name() - the " .
-                     "$local_method attribute is undefined");
-        return wantarray ? () : undef;
+      my($self) = shift;
+  
+      if(@_)
+      {      
+        return $self->{$key} = undef  if(@_ == 1 && !defined $_[0]);
+        return $self->{$key} = (@_ == 1 && ref $_[0] eq 'ARRAY') ? $_[0] : [ @_ ];
       }
-    }
-
-    my $objs;
-
-    if($share_db)
-    {
-      $objs = $ft_manager->$ft_method(query => [ %key, @$query_args ], %$mgr_args, db => $self->db);
-    }
-    else
-    {
-      $objs = $ft_manager->$ft_method(query => [ %key, @$query_args ], %$mgr_args);
-    }
-
-    unless($objs)
-    {
-      $self->error("Could not load $ft_class objects with key ", 
-                   join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                   " - " . $ft_manager->error);
-      return $objs;
-    }
-
-    $self->{$key} = $objs;
-
-    return wantarray ? @{$self->{$key}} : $self->{$key};
-  };
-
-  if($interface eq 'get_set_load')
-  {
-    my $method_name = $args->{'load_method'} || 'load_' . $name;
-
-    $methods{$method_name} = sub
-    {
-      return (defined shift->$name(@_)) ? 1 : 0;
+  
+      if(defined $self->{$key})
+      {
+        return wantarray ? @{$self->{$key}} : $self->{$key};  
+      }
+  
+      my %key;
+  
+      while(my($local_column, $foreign_column) = each(%$ft_columns))
+      {
+        my $local_method = $meta->column_accessor_method_name($local_column);
+  
+        $key{$foreign_column} = $self->$local_method();
+  
+        # Comment this out to allow null keys
+        unless(defined $key{$foreign_column})
+        {
+          keys(%$ft_columns); # reset iterator
+          $self->error("Could not fetch objects via $name() - the " .
+                       "$local_method attribute is undefined");
+          return wantarray ? () : undef;
+        }
+      }
+  
+      my $objs;
+  
+      if($share_db)
+      {
+        $objs = $ft_manager->$ft_method(query => [ %key, @$query_args ], %$mgr_args, db => $self->db);
+      }
+      else
+      {
+        $objs = $ft_manager->$ft_method(query => [ %key, @$query_args ], %$mgr_args);
+      }
+  
+      unless($objs)
+      {
+        $self->error("Could not load $ft_class objects with key ", 
+                     join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
+                     " - " . $ft_manager->error);
+        return $objs;
+      }
+  
+      $self->{$key} = $objs;
+  
+      return wantarray ? @{$self->{$key}} : $self->{$key};
     };
+  
+    if($interface eq 'get_set_load')
+    {
+      my $method_name = $args->{'load_method'} || 'load_' . $name;
+  
+      $methods{$method_name} = sub
+      {
+        return (defined shift->$name(@_)) ? 1 : 0;
+      };
+    }
   }
+  else { Carp::croak "Unknown interface: $interface" }
 
   return \%methods;
 }
@@ -1365,7 +1373,7 @@ sub objects_by_map
   my %methods;
 
   my $key = $args->{'hash_key'} || $name;
-  my $interface = $args->{'interface'} || 'get';
+  my $interface = $args->{'interface'} || 'get_set';
   my $target_class = $options->{'target_class'} or die "Missing target class";
 
   my $map_class       = $args->{'map_class'} or die "Missing map class";
@@ -1459,7 +1467,7 @@ sub objects_by_map
 
       $with_objects  = [ $item->name ];
       $foreign_class = $item->class;
-      $map_to_method = $item->method_name('get');
+      $map_to_method = $item->method_name('get_set');
     }
   }
 
@@ -1497,7 +1505,7 @@ sub objects_by_map
 
         $with_objects = [ $item->name ];
         $foreign_class = $item->class;
-        $map_to_method = $item->method_name('get');
+        $map_to_method = $item->method_name('get_set');
       }
     }
   }
@@ -1512,7 +1520,7 @@ sub objects_by_map
   $map_to   ||= $with_objects->[0];
   $map_from ||= $local_rel;
 
-  if($interface eq 'get')
+  if($interface eq 'get_set')
   {
     $methods{$name} = sub
     {
@@ -1583,6 +1591,7 @@ sub objects_by_map
       return (defined shift->$name(@_)) ? 1 : 0;
     };
   }
+  else { Carp::croak "Unknown interface: $interface" }
 
   return \%methods;
 }
@@ -2180,7 +2189,7 @@ A reference to an array of arguments added to the value of the C<query> paramete
 
 Creates a method that will attempt to fetch L<Rose::DB::Object>-derived objects based on a key formed from attributes of the current object.
 
-If passed a single argument of undef, the list of objects is set to undef.  If passed a reference to an array, the list of objects is set to point to that same array.
+If passed a single argument of undef, the list of objects is set to undef.  If passed a reference to an array, the list of objects is set to point to that same array.  (Note that these objects are not automatically added to the database.)
 
 If called with no arguments and the hash key used to store the list of objects is defined, the list (in list context) or a reference to that array (in scalar context) of objects is returned.  Otherwise, the objects are fetched.
 
@@ -2251,7 +2260,7 @@ The key inside the hash-based object to use for the storage of the fetched objec
 
 =item C<interface>
 
-Choose the interface.  The only current interface is C<get>, which is the default.
+Choose the interface.  The only current interface is C<get_set>, which is the default.
 
 =item C<manager_args>
 
@@ -2291,9 +2300,11 @@ A reference to an array of arguments added to the value of the C<query> paramete
 
 =over 4
 
-=item C<get>
+=item C<get_set>
 
 Creates a method that will attempt to fetch L<Rose::DB::Object>-derived objects that are related to the current object through the C<map_class>.
+
+If passed a single argument of undef, the list of objects is set to undef.  If passed a reference to an array of objects, then the list or related objects is set to point to that same array.  (Note that these objects are not automatically added to the database.)
 
 If the call to C<manager_class>'s C<manager_method> method returns false, that false value (in scalar context) or an empty list (in list context) is returned.
 

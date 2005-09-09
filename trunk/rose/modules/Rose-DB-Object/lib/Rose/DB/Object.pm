@@ -13,7 +13,7 @@ our @ISA = qw(Rose::Object);
 use Rose::DB::Object::Constants qw(:all);
 #use Rose::DB::Constants qw(IN_TRANSACTION);
 
-our $VERSION = '0.0721';
+our $VERSION = '0.073';
 
 our $Debug = 0;
 
@@ -591,6 +591,51 @@ sub clone
   my $class = ref $self;
   local $self->{STATE_CLONING()} = 1;
   return $class->new(map { $_ => $self->$_() } $self->meta->column_accessor_method_names);
+}
+
+our $AUTOLOAD;
+
+sub AUTOLOAD
+{
+  my $self = shift;
+  
+  my $msg = '';
+
+  # Not sure if this will ever be used, but just in case...
+  eval
+  {
+    my @fks  = $self->meta->deferred_foreign_keys;
+    my @rels = $self->meta->deferred_relationships;
+    
+    if(@fks || @rels)
+    {
+      my $tmp_msg =<<"EOF";
+Methods for the following relationships and foreign keys were deferred and
+then never actually created.
+
+TYPE           NAME
+----           ----
+EOF
+
+      my $class = ref $self;
+
+      foreach my $thing (@fks || @rels)
+      {
+        next  unless($thing->parent->class eq $class);
+        my $type = 
+          $thing->isa('Rose::DB::Object::Metadata::Relationship') ? 'Relationship' :
+          $thing->isa('Rose::DB::Object::Metadata::ForeignKey') ? 'Foreign Key' :
+          '???';
+
+        $tmp_msg .= sprintf("%-15s %s\n", $type, $thing->name);
+      }
+      
+      $msg = "\n\n$tmp_msg"  if($tmp_msg);
+    }
+  };
+
+  $AUTOLOAD =~ /^(.+)::(\w+)$/;
+  Carp::confess qq(Can't locate object method "$2" via package "$1"$msg);
 }
 
 sub DESTROY

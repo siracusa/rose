@@ -1,3 +1,14 @@
+0.073 (09.09.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added deferred method creation for relationships and foreign
+      keys in order to make "many to many" relationship setup more
+      developer-friendly.
+    * Renamed default auto-method type for foreign keys relationships
+      from "get" to "get_set", since technically these foreign objects
+      can be set.  They just don't go into the database at that point.
+      I'll probably use a different term for that process (e.g., "add")
+    * Some POD and test fixes.
+
 0.0721 (09.08.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed incorrect method names in Numeric column type.

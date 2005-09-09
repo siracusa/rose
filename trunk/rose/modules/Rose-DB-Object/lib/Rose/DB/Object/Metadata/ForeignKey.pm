@@ -2,12 +2,14 @@ package Rose::DB::Object::Metadata::ForeignKey;
 
 use strict;
 
+use Carp();
+
 use Rose::DB::Object::Metadata::Util qw(:all);
 
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use overload
 (
@@ -17,7 +19,7 @@ use overload
    fallback => 1,
 );
 
-__PACKAGE__->default_auto_method_types('get');
+__PACKAGE__->default_auto_method_types('get_set');
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -30,6 +32,8 @@ use Rose::Object::MakeMethods::Generic
   [
     'share_db' => { default => 1 },
   ],
+
+  scalar => 'deferred_make_method_args',
 
   hash =>
   [
@@ -46,7 +50,7 @@ Rose::Object::MakeMethods::Generic->make_methods
 
 __PACKAGE__->method_maker_info
 (
-  get =>
+  get_set =>
   {
     class => 'Rose::DB::Object::MakeMethods::Generic',
     type  => 'object_by_key',
@@ -59,7 +63,7 @@ sub build_method_name_for_type
 {
   my($self, $type) = @_;
   
-  if($type eq 'get')
+  if($type eq 'get_set')
   {
     return $self->name;
   }
@@ -75,6 +79,47 @@ sub id
 
   return $self->class . ' ' . 
     join("\0", map { join("\1", lc $_, lc $key_columns->{$_}) } sort keys %$key_columns);
+}
+
+sub sanity_check
+{
+  my($self) = shift;
+
+  my $key_columns = $self->key_columns;
+  
+  no warnings;
+  unless(ref $key_columns eq 'HASH' && keys %$key_columns)
+  {
+    Carp::croak "Foreign key '", $self->name, "' is missing a key_columns";
+  }
+
+  return 1;
+}
+
+sub is_ready_to_make_methods
+{
+  my($self) = shift;
+
+  eval
+  {
+    $self->class->isa('Rose::DB::Object') 
+      or die "Missing or invalid foreign class";
+
+    my $fk_meta = $self->class->meta;
+
+    my $key_columns = $self->key_columns || {};
+    
+    foreach my $column_name (values %$key_columns)
+    {
+      unless($fk_meta->column_accessor_method_name($column_name) && 
+             $fk_meta->column_mutator_method_name($column_name))
+      {
+        die "Foreign class not initialized";
+      }
+    }
+  };
+
+  return $@ ? 0 : 1;
 }
 
 sub perl_hash_definition
@@ -153,7 +198,7 @@ A L<Rose::DB::Object::Metadata::ForeignKey>-derived object is responsible for cr
 
 =over 4
 
-=item C<get>
+=item C<get_set>
 
 A method that returns the object referenced by the foreign key.
 
@@ -169,13 +214,13 @@ Using this system, four pieces of information are needed to create a method on b
 
 =over 4
 
-=item * The B<foreign key method type> (e.g., C<get>)
+=item * The B<foreign key method type> (e.g., C<get_set>)
 
 =item * The B<method maker class> (e.g., L<Rose::DB::Object::MakeMethods::Generic>)
 
 =item * The B<method maker method type> (e.g., L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>)
 
-=item * The B<method maker arguments> (e.g., C<interface =E<gt> 'get'>)
+=item * The B<method maker arguments> (e.g., C<interface =E<gt> 'get_set'>)
 
 =back
 
@@ -185,7 +230,7 @@ The default method map for L<Rose::DB::Object::Metadata::ForeignKey> is:
 
 =over 4
 
-=item C<get>
+=item C<get_set>
 
 L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, ...
 
@@ -205,7 +250,7 @@ Remember, the existence and behavior of the method map is really implementation 
 
 =item B<default_auto_method_types [TYPES]>
 
-Get or set the default list of L<auto_method_types|/auto_method_types>.  TYPES should be a list of foreign key method types.  Returns the list of default foreign key method types (in list context) or a reference to an array of the default foreign key method types (in scalar context).  The default list contains only the "get" foreign key method type.
+Get or set the default list of L<auto_method_types|/auto_method_types>.  TYPES should be a list of foreign key method types.  Returns the list of default foreign key method types (in list context) or a reference to an array of the default foreign key method types (in scalar context).  The default list contains only the "get_set" foreign key method type.
 
 =back
 
@@ -223,7 +268,7 @@ Get or set the list of foreign key method types that are automatically created w
 
 =item B<build_method_name_for_type TYPE>
 
-Return a method name for the foreign key method type TYPE.  The default implementation returns the foreign key's L<name|/name> for the foreign key method type "get", and undef otherwise.
+Return a method name for the foreign key method type TYPE.  The default implementation returns the foreign key's L<name|/name> for the foreign key method type "get_set", and undef otherwise.
 
 =item B<class [CLASS]>
 
