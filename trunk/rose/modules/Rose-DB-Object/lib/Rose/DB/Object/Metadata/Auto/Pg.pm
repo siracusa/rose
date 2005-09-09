@@ -18,26 +18,10 @@ our $VERSION = '0.012';
 #   i.relname AS indexname,
 #   t.spcname AS "tablespace",
 #   x.indisunique AS is_unique_index,
-use constant UNIQUE_INDEX_PG8_SQL => <<'EOF';
-SELECT 
-  x.indrelid,
-  x.indkey,
-  i.relname AS key_name
-FROM 
-  pg_catalog.pg_index x
-  JOIN pg_catalog.pg_class c ON c.oid = x.indrelid
-  JOIN pg_catalog.pg_class i ON i.oid = x.indexrelid
-  LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-  LEFT JOIN pg_catalog.pg_tablespace t ON t.oid = i.reltablespace
-WHERE
-  x.indisunique = 't' AND
-  c.relkind     = 'r' AND 
-  i.relkind     = 'i' AND
-  n.nspname     = ?   AND
-  c.relname     = ?
-EOF
-
-use constant UNIQUE_INDEX_PG7_SQL => <<'EOF';
+#
+# Plus this join condition for table "t"
+# LEFT JOIN pg_catalog.pg_tablespace t ON t.oid = i.reltablespace
+use constant UNIQUE_INDEX_SQL => <<'EOF';
 SELECT 
   x.indrelid,
   x.indkey,
@@ -90,8 +74,7 @@ sub auto_generate_unique_keys
 
     my($relation_id, $column_nums, $key_name);
 
-    my $sth = $dbh->prepare($dbh->{'pg_server_version'} >= 80000 ?
-                            UNIQUE_INDEX_PG8_SQL : UNIQUE_INDEX_PG7_SQL);
+    my $sth = $dbh->prepare(UNIQUE_INDEX_SQL);
 
     $sth->execute($schema, $table);
     $sth->bind_columns(\($relation_id, $column_nums, $key_name));
