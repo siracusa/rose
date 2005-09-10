@@ -15,7 +15,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.06';
+our $VERSION = '0.061';
 
 our $Debug = 0;
 
@@ -864,6 +864,7 @@ sub add_foreign_keys
       {
         $self->add_relationship(
           $self->relationship_type_class('one to one')->new(
+            parent      => $self,
             name        => $fk->name, 
             class       => $fk->class,
             foreign_key => $fk));
@@ -892,7 +893,7 @@ sub add_foreign_keys
 
       $Debug && warn $self->class, " - adding $name foreign key\n";
       my $fk = $self->{'foreign_keys'}{$name} = 
-        Rose::DB::Object::Metadata::ForeignKey->new(%$info, name => $name);
+        Rose::DB::Object::Metadata::ForeignKey->new(%$info, name => $name, parent => $self);
 
       # Set or add auto-created method names
       if($methods || $add_methods)
@@ -978,7 +979,7 @@ sub initialize
 {
   my($self) = shift;
 
-  $Debug && warn STDERR $self->class, " INITIALIZE\n";
+  $Debug && warn $self->class, " - initialize\n";
 
   my $class = $self->class
     or Carp::croak "Missing class for metadata object $self";
@@ -1006,7 +1007,7 @@ sub initialize
 
   $self->is_initialized(1);
 
-  $Debug && warn $self->class, " INITIALIZED\n";
+  $Debug && warn $self->class, " - initialized\n";
 
   return;
 }
@@ -1120,6 +1121,8 @@ sub make_column_methods
       $column->method_name($type => $method);
     }
 
+    $Debug && warn $self->class, " - make methods for column $name\n";
+
     $column->make_methods(%args);
 
     if($method ne $name)
@@ -1200,7 +1203,7 @@ sub make_foreign_key_methods
     # all the required pieces are loaded.
     if($foreign_key->is_ready_to_make_methods)
     {
-      $Debug && warn $self->class, " MAKE METHODS FOR FOREIGN KEY ", 
+      $Debug && warn $self->class, " - make methods for foreign key ", 
                      $foreign_key->name, "\n";
 
       $foreign_key->make_methods(%args);
@@ -1211,7 +1214,7 @@ sub make_foreign_key_methods
       # configured foreign_key from being deferred "forever"
       $foreign_key->sanity_check; 
 
-      $Debug && warn $self->class, " DEFER FOREIGN KEY ", $foreign_key->name, "\n";
+      $Debug && warn $self->class, " - defer foreign key ", $foreign_key->name, "\n";
 
       $foreign_key->deferred_make_method_args(\%args);
       $meta_class->add_deferred_foreign_key($foreign_key);
@@ -1274,8 +1277,12 @@ sub retry_deferred_foreign_keys
   {
     if($foreign_key->is_ready_to_make_methods)
     {
+      $Debug && warn $foreign_key->parent->class,
+                     " - (Retry) make methods for foreign key ", 
+                     $foreign_key->name, "\n";
+
       my $args = $foreign_key->deferred_make_method_args || {};
-      $foreign_key->make_methods(%$args);
+      $foreign_key->make_methods(%$args, preserve_existing => 1);
     }
     else
     {
@@ -1303,7 +1310,7 @@ sub make_relationship_methods
 
   my $preserve_existing_arg = $args{'preserve_existing'};
 
-  foreach my $relationship ($self->relationships)
+  REL: foreach my $relationship ($self->relationships)
   {
     foreach my $type ($relationship->auto_method_types)
     {
@@ -1323,7 +1330,7 @@ sub make_relationship_methods
 
       # If a corresponding foreign key exists, the preserve any existing
       # methods with the same names.  This is a crude way to ensure that we
-      # cna have a foreign key and a corresponding "one to one" relationship
+      # can have a foreign key and a corresponding "one to one" relationship
       # without any method name clashes.
       if($relationship->type eq 'one to one')
       {
@@ -1344,6 +1351,9 @@ sub make_relationship_methods
     # all the required pieces are loaded.
     if($relationship->is_ready_to_make_methods)
     {
+      $Debug && warn $self->class, " - make methods for relationship ", 
+                     $relationship->name, "\n";
+
       $relationship->make_methods(%args);
     }
     else
@@ -1352,7 +1362,7 @@ sub make_relationship_methods
       # configured relationship from being deferred "forever"
       $relationship->sanity_check; 
 
-      $Debug && warn $self->class, " DEFER RELATIONSHIP ", $relationship->name, "\n";
+      $Debug && warn $self->class, " - defer relationship ", $relationship->name, "\n";
 
       $relationship->deferred_make_method_args(\%args);
       $meta_class->add_deferred_relationship($relationship);
@@ -1401,7 +1411,8 @@ sub retry_deferred_relationships
   {
     if($relationship->is_ready_to_make_methods)
     {
-      $Debug && warn $self->class, " MAKE METHODS FOR RELATIONSHIP ", 
+      $Debug && warn $relationship->parent->class, 
+                     " - (Retry) make methods for relationship ", 
                      $relationship->name, "\n";
 
       my $args = $relationship->deferred_make_method_args || {};
