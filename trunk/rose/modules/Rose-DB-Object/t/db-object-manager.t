@@ -272,6 +272,207 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   is($o->bb1->name, 'two', "bb foreign object 5 - $db_type");
   is($o->bb2->name, 'four', "bb foreign object 6 - $db_type");
 
+#########
+  $fo = MyPgNick->new(id   => 1,
+                      o_id => 5,
+                      nick => 'none');
+  ok($fo->save, "nick object save() 1 - $db_type");
+
+  $fo = MyPgNick->new(id   => 2,
+                      o_id => 2,
+                      nick => 'ntwo');
+  ok($fo->save, "nick object save() 2 - $db_type");
+
+  $fo = MyPgNick->new(id   => 3,
+                      o_id => 5,
+                      nick => 'nthree');
+  ok($fo->save, "nick object save() 3 - $db_type");
+
+  $fo = MyPgNick->new(id   => 4,
+                      o_id => 2,
+                      nick => 'nfour');
+  ok($fo->save, "nick object save() 4 - $db_type");
+
+  $fo = MyPgNick->new(id   => 5,
+                      o_id => 5,
+                      nick => 'nfive');
+  ok($fo->save, "nick object save() 5 - $db_type");
+
+  $fo = MyPgNick->new(id   => 6,
+                      o_id => 5,
+                      nick => 'nsix');
+  ok($fo->save, "nick object save() 6 - $db_type");
+
+  eval
+  {
+    $objs = 
+      Rose::DB::Object::Manager->get_objects(
+        object_class => 'MyPgObject',
+        share_db     => 1,
+        with_objects => [ 'nicks' ],
+        query        =>
+        [
+          't1.id' => { ge => 1 },
+        ],
+        clauses => [ "LOWER(status) LIKE 'w%'" ],
+        sort_by => 't1.id');
+  };
+
+  ok($@, "many with limit - $db_type");
+local $Rose::DB::Object::Manager::Debug = 1;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      share_db     => 1,
+      with_objects => [ 'nicks' ],
+      query        =>
+      [
+        't1.id'    => { ge => 1 },
+        't1.name'  => 'Betty',  
+        flag       => 'f',
+        flag2      => 1,
+        bits       => '10101',
+        start      => '5/20/2002',
+        '!start'   => { gt => DateTime->new(year  => '2005', 
+                                            month => 12,
+                                            day   => 1) },
+        '!rose_db_object_test.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 2)
+        },
+
+        '!t1.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 3)
+        },
+
+        save_col   => [ 1, 5, 123 ],
+        nums       => [ 4, 5, 6 ],
+        fk1        => 1,
+        last_modified => { le => '6/6/2020' }, # XXX: breaks in 2020!
+        date_created  => '5/10/2002 10:34:56 am'
+      ],
+      clauses => [ "LOWER(status) LIKE 'w%'" ],
+      sort_by => 't1.id');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() with many 2 - $db_type");
+
+  my $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many 3 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many 4 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many 5 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many 6 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many 7 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks', 'bb1' ],
+      query        =>
+      [
+        't1.id'    => { ge => 1 },
+        't1.name'  => 'Betty',  
+        flag       => 'f',
+        flag2      => 1,
+        bits       => '10101',
+        start      => '5/20/2002',
+        '!start'   => { gt => DateTime->new(year  => '2005', 
+                                            month => 12,
+                                            day   => 1) },
+        '!rose_db_object_test.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 2)
+        },
+
+        '!t1.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 3)
+        },
+
+        save_col   => [ 1, 5, 123 ],
+        nums       => [ 4, 5, 6 ],
+        fk1        => 1,
+        last_modified => { le => '6/6/2020' }, # XXX: breaks in 2020!
+        date_created  => '5/10/2002 10:34:56 am'
+      ],
+      clauses => [ "LOWER(status) LIKE 'w%'" ],
+      sort_by => 't1.id');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many 8 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() with many 9 - $db_type");
+
+  $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many 10 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many 11 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many 12 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many 13 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many 14 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many bb1 3 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many bb2 4 - $db_type");
+
+
+
+
+
+  $iterator = 
+    MyPgObjectManager->get_objectz_iterator(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name');
+
+  is(ref $iterator, 'Rose::DB::Object::Iterator', "get_objects_iterator() 1 - $db_type");
+$DB::single = 1;
+  $o = $iterator->next;
+  is($o->name, 'Betty', "iterator many next() 1 - $db_type");
+  is($o->id, 5, "iterator next() 2 - $db_type");
+  
+  $o = $iterator->next;
+  is($o->name, 'Bob', "iterator many next() 2 - $db_type");
+  is($o->id, 4, "iterator next() 2 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "iterator many next() 3 - $db_type");
+  is($o->id, 2, "iterator next() 2 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, 'iterator many sub-object 1');
+  is($o->{'nicks'}[0]{'nick'}, 'ntwo', 'iterator many sub-object 2');
+  is($o->{'nicks'}[1]{'nick'}, 'nfour', 'iterator many sub-object 3');
+  
+  $o = $iterator->next;
+  is($o->name, 'Sue', "iterator many next() 4 - $db_type");
+  is($o->id, 3, "iterator next() 4 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "iterator many next() 5 - $db_type");
+  is($iterator->total, 4, "iterator total() - $db_type");
+
+
+
+
+local $Rose::DB::Object::Manager::Debug = 0;
+###########
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class => 'MyPgObject',
@@ -509,6 +710,7 @@ SKIP: foreach my $db_type ('mysql')
 
   my $count =
     MyMySQLObject->get_objectz_count(
+      with_objects => [ 'nicks', 'bb1', 'bb2' ],
       share_db     => 1,
       query        =>
       [
@@ -525,7 +727,6 @@ SKIP: foreach my $db_type ('mysql')
         status        => { like => 'AC%', field => 'UPPER(status)' },
       ],
       clauses => [ "LOWER(status) LIKE 'ac%'" ],
-      limit   => 5,
       sort_by => 'name DESC');
 
   is($count, 2, "get_objects_count() 1 - $db_type");
@@ -641,6 +842,150 @@ SKIP: foreach my $db_type ('mysql')
 
   is($objs->[0]->bb1->name, 'two', "bb foreign object 3 - $db_type");
   is($objs->[0]->bb2->name, 'four', "bb foreign object 4 - $db_type");
+
+#########
+  $fo = MyMySQLNick->new(id   => 1,
+                         o_id => 5,
+                         nick => 'none');
+  ok($fo->save, "nick object save() 1 - $db_type");
+
+  $fo = MyMySQLNick->new(id   => 2,
+                         o_id => 2,
+                         nick => 'ntwo');
+  ok($fo->save, "nick object save() 2 - $db_type");
+
+  $fo = MyMySQLNick->new(id   => 3,
+                         o_id => 5,
+                         nick => 'nthree');
+  ok($fo->save, "nick object save() 3 - $db_type");
+
+  $fo = MyMySQLNick->new(id   => 4,
+                         o_id => 2,
+                         nick => 'nfour');
+  ok($fo->save, "nick object save() 4 - $db_type");
+
+  $fo = MyMySQLNick->new(id   => 5,
+                         o_id => 5,
+                         nick => 'nfive');
+  ok($fo->save, "nick object save() 5 - $db_type");
+
+  $fo = MyMySQLNick->new(id   => 6,
+                         o_id => 5,
+                         nick => 'nsix');
+  ok($fo->save, "nick object save() 6 - $db_type");
+
+local $Rose::DB::Object::Manager::Debug = 1;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      share_db     => 1,
+      with_objects => [ 'nicks' ],
+      query        =>
+      [
+        't1.id'    => { ge => 1 },
+        't1.name'  => 'Betty',  
+        flag       => 'f',
+        flag2      => 1,
+        bits       => '10101',
+        start      => '5/20/2002',
+        '!start'   => { gt => DateTime->new(year  => '2005', 
+                                            month => 12,
+                                            day   => 1) },
+        '!rose_db_object_test.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 2)
+        },
+
+        '!t1.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 3)
+        },
+
+        save_col   => [ 1, 5, 123 ],
+        nums       => [ 4, 5, 6 ],
+        fk1        => 1,
+        last_modified => { le => '6/6/2020' }, # XXX: breaks in 2020!
+        date_created  => '5/10/2002 10:34:56 am'
+      ],
+      clauses => [ "LOWER(status) LIKE 'w%'" ],
+      sort_by => 't1.id');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() with many 2 - $db_type");
+
+  my $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many 3 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many 4 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many 5 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many 6 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many 7 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks', 'bb1' ],
+      query        =>
+      [
+        't1.id'    => { ge => 1 },
+        't1.name'  => 'Betty',  
+        flag       => 'f',
+        flag2      => 1,
+        bits       => '10101',
+        start      => '5/20/2002',
+        '!start'   => { gt => DateTime->new(year  => '2005', 
+                                            month => 12,
+                                            day   => 1) },
+        '!rose_db_object_test.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 2)
+        },
+
+        '!t1.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 3)
+        },
+
+        save_col   => [ 1, 5, 123 ],
+        nums       => [ 4, 5, 6 ],
+        fk1        => 1,
+        last_modified => { le => '6/6/2020' }, # XXX: breaks in 2020!
+        date_created  => '5/10/2002 10:34:56 am'
+      ],
+      clauses => [ "LOWER(status) LIKE 'w%'" ],
+      sort_by => 't1.id');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many 8 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() with many 9 - $db_type");
+
+  $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many 10 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many 11 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many 12 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many 13 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many 14 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many bb1 3 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many bb2 4 - $db_type");
+  
+local $Rose::DB::Object::Manager::Debug = 0;
+###########
 
   $iterator =
     MyMySQLObjectManager->get_objectz_iterator(
@@ -1277,6 +1622,7 @@ BEGIN
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE rose_db_object_nicks');
       $dbh->do('DROP TABLE rose_db_object_test');
       $dbh->do('DROP TABLE rose_db_object_other');
       $dbh->do('DROP TABLE rose_db_object_bb');
@@ -1346,7 +1692,7 @@ EOF
     );
 
     MyPgBB->meta->initialize;
-
+    
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test
 (
@@ -1372,7 +1718,40 @@ CREATE TABLE rose_db_object_test
 )
 EOF
 
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_nicks
+(
+  id    INT NOT NULL PRIMARY KEY,
+  o_id  INT NOT NULL REFERENCES rose_db_object_test (id),
+  nick  VARCHAR(32)
+)
+EOF
+
     $dbh->disconnect;
+
+    package MyPgNick;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyPgNick->meta->table('rose_db_object_nicks');
+
+    MyPgNick->meta->columns
+    (
+      id   => { type => 'int', primary_key => 1 },
+      o_id => { type => 'int' },
+      nick => { type => 'varchar'},
+    );
+
+    MyPgNick->meta->foreign_keys
+    (
+      obj =>
+      {
+        class => 'MyPgObject',
+        key_columns => { o_id => 'id' },
+      },
+    );
+
+    MyPgNick->meta->initialize;
 
     # Create test subclass
 
@@ -1429,6 +1808,17 @@ EOF
       },
     );
 
+    MyPgObject->meta->relationships
+    (
+      nicks =>
+      {
+        type  => 'one to many',
+        class => 'MyPgNick',
+        column_map => { id => 'o_id' },
+        manager_args => { sort_by => 'nick DESC' },
+      }
+    );
+
     MyPgObject->meta->alias_column(fk1 => 'fkone');
 
     eval { MyPgObject->meta->initialize };
@@ -1473,6 +1863,7 @@ EOF
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE rose_db_object_nicks');
       $dbh->do('DROP TABLE rose_db_object_test');
       $dbh->do('DROP TABLE rose_db_object_bb');
       $dbh->do('DROP TABLE rose_db_object_other');
@@ -1554,7 +1945,40 @@ CREATE TABLE rose_db_object_test
 )
 EOF
 
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_nicks
+(
+  id    INT NOT NULL PRIMARY KEY,
+  o_id  INT NOT NULL REFERENCES rose_db_object_test (id),
+  nick  VARCHAR(32)
+)
+EOF
+
     $dbh->disconnect;
+
+    package MyMySQLNick;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyMySQLNick->meta->table('rose_db_object_nicks');
+
+    MyMySQLNick->meta->columns
+    (
+      id   => { type => 'int', primary_key => 1 },
+      o_id => { type => 'int' },
+      nick => { type => 'varchar'},
+    );
+
+    MyMySQLNick->meta->foreign_keys
+    (
+      obj =>
+      {
+        class => 'MyMySQLObject',
+        key_columns => { o_id => 'id' },
+      },
+    );
+
+    MyMySQLNick->meta->initialize;
 
     # Create test subclass
 
@@ -1608,6 +2032,17 @@ EOF
         class => 'MyMySQLBB',
         key_columns => { b2 => 'id' },
       },
+    );
+
+    MyMySQLObject->meta->relationships
+    (
+      nicks =>
+      {
+        type  => 'one to many',
+        class => 'MyMySQLNick',
+        column_map => { id => 'o_id' },
+        manager_args => { sort_by => 'nick DESC' },
+      }
     );
 
     MyMySQLObject->meta->alias_column(fk1 => 'fkone');
@@ -1830,6 +2265,7 @@ END
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
 
+    $dbh->do('DROP TABLE rose_db_object_nicks');      
     $dbh->do('DROP TABLE rose_db_object_test');
     $dbh->do('DROP TABLE rose_db_object_other');
     $dbh->do('DROP TABLE rose_db_object_bb');

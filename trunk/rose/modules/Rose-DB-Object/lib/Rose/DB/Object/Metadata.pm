@@ -1125,29 +1125,30 @@ sub make_column_methods
 
     $column->make_methods(%args);
 
-    if($method ne $name)
-    {
-      # Primary key columns can be aliased, but we make a column-named 
-      # method anyway.
-      foreach my $column ($self->primary_key_column_names)
-      {
-        if($name eq $column)
-        {
-          if(my $reason = $self->method_name_is_reserved($name, $class))
-          {
-            Carp::croak
-              "Cannot create method for primary key column '$name' ",
-              "- $reason  Although primary keys may be aliased, doing ",
-              "so will not avoid conflicts with reserved method names ", 
-              "because a method named after the primary key column ",
-              "itself must also be created.";
-          }
-
-          no strict 'refs';
-          *{"${class}::$name"} = \&{"${class}::$method"};
-        }
-      }
-    }
+    # Allow primary keys to be aliased
+    #if($method ne $name)
+    #{
+    #  # Primary key columns can be aliased, but we make a column-named 
+    #  # method anyway.
+    #  foreach my $column ($self->primary_key_column_names)
+    #  {
+    #    if($name eq $column)
+    #    {
+    #      if(my $reason = $self->method_name_is_reserved($name, $class))
+    #      {
+    #        Carp::croak
+    #          "Cannot create method for primary key column '$name' ",
+    #          "- $reason  Although primary keys may be aliased, doing ",
+    #          "so will not avoid conflicts with reserved method names ", 
+    #          "because a method named after the primary key column ",
+    #          "itself must also be created.";
+    #      }
+    #
+    #      no strict 'refs';
+    #      *{"${class}::$name"} = \&{"${class}::$method"};
+    #    }
+    #  }
+    #}
   }
 
   # Initialize method name hashes
@@ -2632,8 +2633,6 @@ For example, imagine a column named "save".  The L<Rose::DB::Object> API already
     $meta->alias_column(save => 'save_flag');
 
 See the L<Rose::DB::Object> documentation or call the L<method_name_is_reserved|/method_name_is_reserved> method to determine if a method name is reserved.
-
-B<Note:> if a primary key column is aliased, a method named after the actual column name will I<also> be created.  So aliasing a primary key column in an attempt to keep it from conflicting with a reserved method name will not work.
 
 =item B<allow_inline_column_values [BOOL]>
 

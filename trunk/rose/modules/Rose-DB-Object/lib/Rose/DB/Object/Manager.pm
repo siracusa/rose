@@ -9,6 +9,9 @@ use Rose::DB::Object::QueryBuilder qw(build_select);
 
 use Rose::DB::Object::Constants qw(STATE_LOADING);
 
+# Value that is unlikely to exist in a primary key column
+use constant PK_JOIN => "\0\1\0\2";
+
 our $VERSION = '0.05';
 
 our $Debug = 0;
@@ -262,8 +265,14 @@ sub get_objects
   my %methods = ($tables[0] => scalar $meta->column_mutator_method_names);
   my @classes = ($object_class);
   my %meta    = ($object_class => $meta);
+  my @joins;
 
-  if($with_objects)
+  my $handle_dups = 0;
+  my @has_dups;
+
+   my $num_subtables = $with_objects ? @$with_objects : 0;
+      
+  if($with_objects && !$count_only)
   {
     my $clauses = $args{'clauses'} ||= [];
 
@@ -271,52 +280,110 @@ sub get_objects
 
     $with_objects = [ $with_objects ]  unless(ref $with_objects);
 
+    # Sanity check with_objects arguments, and determine if we're going to
+    # have to handle duplicate data from multiple joins.  If so, note
+    # which with_objects arguments refer to relationships that may return
+    # more than one object.
     foreach my $name (@$with_objects)
     {
-      my $key = $meta->foreign_key($name);
+      my $key = $meta->foreign_key($name) || $meta->relationship($name);
       
       unless($key)
       {
-        $key = $meta->relationship($name);
+        Carp::confess "$class - no foreign key or relationship named '$name'";
+      }
 
-        unless($key && $key->isa('Rose::DB::Object::Metadata::Relationship') &&
-           $key->type eq 'one to one')
+      my $rel_type = $key->type;
+
+      if(index($rel_type, 'many') > 0)
+      {
+        $handle_dups  = 1;
+        $has_dups[$i] = 1;
+        
+        if($args{'limit'})
         {
-          $key = undef;
+          # XXX: document this!
+          Carp::croak qq(The limit parameter is not meaningful when selecting ),
+                      qq(with_objects through one or more "...to many" relationships);
         }
       }
-      
-      unless($key)
-      {
-        Carp::confess "$class - no foreign key or one to one relationship named '$name'";
-      }
 
-      my $fk_class = $key->class or 
-        Carp::confess "$class - Missing foreign object class for '$name'";
-
-      my $fk_columns = $key->key_columns or 
-        Carp::confess "$class - Missing key columns for '$name'";
-
-      my $fk_meta = $fk_class->meta; 
-
-      $meta{$fk_class} = $fk_meta;
-
-      push(@tables, $fk_meta->fq_table_sql);
-      push(@classes, $fk_class);
       $i++;
+    }
 
-      $columns{$tables[-1]} = $fk_meta->columns;#_names;
-      $classes{$tables[-1]} = $fk_class;
-      $methods{$tables[-1]} = $fk_meta->column_mutator_method_names;
+    $i = 1; # reset iterator for second pass through with_objects
 
-      # Add join condition(s)
-      while(my($local_column, $foreign_column) = each(%$fk_columns))
+    foreach my $name (@$with_objects)
+    {
+      my $key = $meta->foreign_key($name) || $meta->relationship($name);
+
+      my $rel_type = $key->type;
+
+      if($rel_type =~ /^(?:foreign key|one to (one|many))$/)
       {
-        # Aliased table names
-        push(@$clauses, "t1.$local_column = t$i.$foreign_column");
+        my $fk_class = $key->class or 
+          Carp::confess "$class - Missing foreign object class for '$name'";
+  
+        my $fk_columns = $key->key_columns or 
+          Carp::confess "$class - Missing key columns for '$name'";
+  
+        my $fk_meta = $fk_class->meta; 
+  
+        $meta{$fk_class} = $fk_meta;
+  
+        push(@tables, $fk_meta->fq_table_sql);
+        push(@classes, $fk_class);
 
-        # Fully-qualified table names
-        #push(@$clauses, "$tables[0].$local_column = $tables[-1].$foreign_column");
+        # Iterator will be the tN value: the first sub-table is t2, and so on
+        $i++;
+  
+        $columns{$tables[-1]} = $fk_meta->columns;#_names;
+        $classes{$tables[-1]} = $fk_class;
+        $methods{$tables[-1]} = $fk_meta->column_mutator_method_names;
+  
+        # Add join condition(s)
+        while(my($local_column, $foreign_column) = each(%$fk_columns))
+        {
+          # Use outer joins to handle duplicate information
+          if($handle_dups && $num_subtables > 1)
+          {
+            # Aliased table names
+            push(@{$joins[$i]{'conditions'}}, "t1.$local_column = t$i.$foreign_column");
+  
+            # Fully-qualified table names
+            #push(@{$joins[$i]{'conditions'}},  "$tables[0].$local_column = $tables[-1].$foreign_column");
+
+            $joins[$i]{'type'} = 'LEFT OUTER JOIN';
+          }
+          else
+          {
+            # Aliased table names
+            push(@$clauses, "t1.$local_column = t$i.$foreign_column");
+  
+            # Fully-qualified table names
+            #push(@$clauses, "$tables[0].$local_column = $tables[-1].$foreign_column");
+          }
+        }
+        
+        # Add sub-object sort conditions
+        if($key->can('manager_args') && (my $mgr_args = $key->manager_args))
+        {
+          if($mgr_args->{'sort_by'})
+          {
+            if($args{'sort_by'})
+            {
+              $args{'sort_by'} .= ", $mgr_args->{'sort_by'}";
+            }
+            else
+            {
+              $args{'sort_by'} = $mgr_args->{'sort_by'};
+            }
+          }
+        }
+      }
+      else
+      {
+        Carp::croak "Don't know how to auto-join relationship '$name' of type '$rel_type'";
       }
     }
   }
@@ -398,6 +465,7 @@ sub get_objects
                  tables  => \@tables,
                  columns => \%columns,
                  classes => \%classes,
+                 joins   => \@joins,
                  meta    => \%meta,
                  db      => $db,
                  pretty  => $Debug,
@@ -441,63 +509,280 @@ sub get_objects
     {
       $iterator = Rose::DB::Object::Iterator->new(active => 1);
 
-      my $num_subtables = $with_objects ? @$with_objects : 0;
-
       my $count = 0;
 
-      $iterator->_next_code(sub
+      # More trading of code duplication for performance: build custom
+      # subroutines depending on how much work needs to be done for
+      # each iteration.
+
+      if($with_objects)
       {
-        my($self) = shift;
-
-        my $object = 0;
-
-        eval
+        # Ug, we have to handle duplicate data due to "...to many" relationships
+        # fetched via outer joins.
+        if($handle_dups)
         {
-          ROW: for(;;)
+          my(@seen, @sub_objects);
+    
+          my @pk_columns = $meta->primary_key_column_names;
+
+          # Get list of primary key columns for each sub-table
+          my @sub_pk_columns;
+  
+          foreach my $i (1 .. $num_subtables)
           {
-            unless($sth->fetch)
-            {
-              $self->total($self->{'_count'});
-              return 0;
-            }
-
-            next ROW  if($skip_first && ++$count <= $skip_first);
-
-            $object = $object_class->new(%object_args);
-
-            local $object->{STATE_LOADING()} = 1;
-            $object->init(%{$row{$object_class,0}});
-
-            if($with_objects)
-            {
-              foreach my $i (1 .. $num_subtables)
-              {
-                my $method = $with_objects->[$i - 1];
-                my $class  = $classes[$i];
-
-                my $subobject = $class->new(%subobject_args);
-                local $subobject->{STATE_LOADING()} = 1;
-                $subobject->init(%{$row{$class,$i}});
-
-                $object->$method($subobject);
-              }
-            }
-
-            $skip_first = 0;
-            $self->{'_count'}++;
-            last ROW;
+            $sub_pk_columns[$i + 1] = [ $classes[$i]->meta->primary_key_column_names ];
           }
-        };
 
-        if($@)
-        {
-          $self->error("next() - $@");
-          $class->handle_error($self);
-          return undef;
+          my $last_object;
+
+          $iterator->_next_code(sub
+          {
+            my($self) = shift;
+
+            my $object = 0;
+            my $done   = 0;
+            my @objects;
+
+            eval
+            {
+              ROW: for(;;)
+              {
+                last ROW  unless($sth);
+
+                if($skip_first)
+                {
+                  # See, even skipping is annoying when handline duplicates
+                  SKIP: while($sth->fetch)
+                  {
+                    # Skip based on the number of unique main (t1) table rows
+                    my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @pk_columns);
+                    next SKIP  if($seen[0]{$pk}++);
+                    next SKIP  if(++$count < $skip_first);
+                    $skip_first = 0;
+                    last SKIP;
+                  }
+                }
+
+                while($sth->fetch)
+                {
+                  my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @pk_columns);
+        
+                  # If this is a new main (t1) table row that we haven't seen before
+                  unless($seen[0]{$pk}++)
+                  {
+                    # First, finish building the last object, if it exists
+                    if($last_object)
+                    {
+        print STDERR "FINISH $object_class $last_object->{'id'}\n";
+                      foreach my $i (1 .. $num_subtables)
+                      {
+                        # We only need to assign to the attributes that can have N objects
+                        # since we assigned the one-to-one object attributes earlier.
+                        if($has_dups[$i])
+                        {
+                          my $method = $with_objects->[$i - 1];      
+                          $last_object->$method($sub_objects[$i]);
+                        }
+                      }
+                      
+                      # Add the object to the final list of objects that we'll return
+                      push(@objects, $last_object);
+
+                      $done = 1;
+                    }
+        print STDERR "MAKE $object_class $pk\n";
+                    # Now, create the object from this new main table row
+                    $object = $object_class->new(%object_args);
+          
+                    local $object->{STATE_LOADING()} = 1;
+                    $object->init(%{$row{$object_class,0}});
+        
+                    $last_object = $object; # This is the "last object" from now on
+                    @sub_objects = ();      # The list of sub-objects is per-object
+                  }
+        
+                  $object ||= $last_object or die "Missing object for primary key '$pk'";
+        
+                  foreach my $i (1 .. $num_subtables)
+                  {
+                    my $class  = $classes[$i];
+                    my $tn = $i + 1;
+
+                    # Null primary key columns are not allowed
+                    my $sub_pk = join(PK_JOIN, grep { defined } map { $row{$class,$i}{$_} } @{$sub_pk_columns[$tn]});
+                    next  unless(defined $sub_pk);
+        
+                    # Skip if we've already seen this sub-object
+                    next  if($seen[$i]{$sub_pk}++);
+        
+                    # Make sub-object
+                    my $subobject = $class->new(%subobject_args);
+                    local $subobject->{STATE_LOADING()} = 1;
+                    $subobject->init(%{$row{$class,$i}});
+          
+                    # If this object belongs to an attribute that can have more
+                    # than one object then just save it for later in the
+                    # per-object sub-objects list.
+                    if($has_dups[$i])
+                    {
+                      push(@{$sub_objects[$i]}, $subobject);
+                    }
+                    else # Otherwise, just assign it
+                    {
+                      my $method = $with_objects->[$i - 1];
+                      $object->$method($subobject);
+                    }
+                  }
+                  
+                  if($done)
+                  {
+                    $self->{'_count'}++;
+                    last ROW;
+                  }
+                }
+                
+                # Handle the left-over "last object" that needs to be finished and
+                # added to the final list of objects to return.
+                if($last_object && !$done)
+                {
+        print STDERR "FINISH STRAGGLER $object_class $last_object->{'id'}\n";
+                  foreach my $i (1 .. $num_subtables)
+                  {
+                    if($has_dups[$i])
+                    {
+                      my $method = $with_objects->[$i - 1];      
+                      $last_object->$method($sub_objects[$i]);
+                    }
+                  }
+                  
+                  push(@objects, $last_object);
+                  
+                  # Set everything up to return this object, then be done
+                  $last_object = undef;
+                  $self->{'_count'}++;
+                  $sth = undef;
+                  last ROW;
+                }
+              }
+            };
+    
+            if($@)
+            {
+              $self->error("next() - $@");
+              $class->handle_error($self);
+              return undef;
+            }
+    
+            if(@objects)
+            {
+        print STDERR "RETURN $object_class $objects[-1]{'id'}\n";
+              return shift(@objects);
+            }
+
+            $self->total($self->{'_count'});
+        print STDERR "RETURN 0\n";
+            return 0;
+          });
+
         }
-
-        return $object;
-      });
+        else
+        {
+          $iterator->_next_code(sub
+          {
+            my($self) = shift;
+    
+            my $object = 0;
+    
+            eval
+            {
+              ROW: for(;;)
+              {
+                unless($sth->fetch)
+                {
+                  $self->total($self->{'_count'});
+                  return 0;
+                }
+    
+                next ROW  if($skip_first && ++$count <= $skip_first);
+    
+                $object = $object_class->new(%object_args);
+    
+                local $object->{STATE_LOADING()} = 1;
+                $object->init(%{$row{$object_class,0}});
+    
+                if($with_objects)
+                {
+                  foreach my $i (1 .. $num_subtables)
+                  {
+                    my $method = $with_objects->[$i - 1];
+                    my $class  = $classes[$i];
+    
+                    my $subobject = $class->new(%subobject_args);
+                    local $subobject->{STATE_LOADING()} = 1;
+                    $subobject->init(%{$row{$class,$i}});
+    
+                    $object->$method($subobject);
+                  }
+                }
+    
+                $skip_first = 0;
+                $self->{'_count'}++;
+                last ROW;
+              }
+            };
+    
+            if($@)
+            {
+              $self->error("next() - $@");
+              $class->handle_error($self);
+              return undef;
+            }
+    
+            return $object;
+          });
+        }
+      }
+      else # no sub-objects
+      {
+        $iterator->_next_code(sub
+        {
+          my($self) = shift;
+  
+          my $object = 0;
+  
+          eval
+          {
+            ROW: for(;;)
+            {
+              unless($sth->fetch)
+              {
+                $self->total($self->{'_count'});
+                return 0;
+              }
+  
+              next ROW  if($skip_first && ++$count <= $skip_first);
+  
+              $object = $object_class->new(%object_args);
+  
+              local $object->{STATE_LOADING()} = 1;
+              $object->init(%{$row{$object_class,0}});
+  
+              $skip_first = 0;
+              $self->{'_count'}++;
+              last ROW;
+            }
+          };
+  
+          if($@)
+          {
+            $self->error("next() - $@");
+            $class->handle_error($self);
+            return undef;
+          }
+  
+          return $object;
+        });
+      }
 
       $iterator->_finish_code(sub
       {
@@ -514,38 +799,159 @@ sub get_objects
     {
       my $num_subtables = @$with_objects;
 
-      if($skip_first)
+      # This is a totally separate code path for handline duplicates.  I'm
+      # doing this for performance reasons.
+      if($handle_dups)
       {
-        while($sth->fetch)
+        my(@seen, @sub_objects);
+
+        my @pk_columns = $meta->primary_key_column_names;
+
+        if($skip_first)
         {
-          next  if(++$count < $skip_first);
-          last;
+          # See, even skipping is annoying when handline duplicates
+          while($sth->fetch)
+          {
+            # Skip based on the number of unique main (t1) table rows
+            my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @pk_columns);
+            next  if($seen[0]{$pk}++);
+            next  if(++$count < $skip_first);
+            last;
+          }
         }
-      }
-
-      while($sth->fetch)
-      {
-        my $object = $object_class->new(%object_args);
-
-        local $object->{STATE_LOADING()} = 1;
-        $object->init(%{$row{$object_class,0}});
+  
+        # Get list of primary key columns for each sub-table
+        my @sub_pk_columns;
 
         foreach my $i (1 .. $num_subtables)
         {
-          my $method = $with_objects->[$i - 1];
-          my $class  = $classes[$i];
-
-          my $subobject = $class->new(%subobject_args);
-          local $subobject->{STATE_LOADING()} = 1;
-          $subobject->init(%{$row{$class,$i}});
-
-          $object->$method($subobject);
+          $sub_pk_columns[$i + 1] = [ $classes[$i]->meta->primary_key_column_names ];
         }
 
-        push(@objects, $object);
+        my $last_object;
+
+        while($sth->fetch)
+        {
+          my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @pk_columns);
+
+          my $object;
+
+          # If this is a new main (t1) table row that we haven't seen before
+          unless($seen[0]{$pk}++)
+          {
+            # First, finish building the last object, if it exists
+            if($last_object)
+            {
+              foreach my $i (1 .. $num_subtables)
+              {
+                # We only need to assign to the attributes that can have N objects
+                # since we assigned the one-to-one object attributes earlier.
+                if($has_dups[$i])
+                {
+                  my $method = $with_objects->[$i - 1];      
+                  $last_object->$method($sub_objects[$i]);
+                }
+              }
+              
+              # Add the object to the final list of objects that we'll return
+              push(@objects, $last_object);
+            }
+
+            # Now, create the object from this new main table row
+            $object = $object_class->new(%object_args);
+  
+            local $object->{STATE_LOADING()} = 1;
+            $object->init(%{$row{$object_class,0}});
+
+            $last_object = $object; # This is the "last object" from now on
+            @sub_objects = ();      # The list of sub-objects is per-object
+          }
+
+          $object ||= $last_object or die "Missing object for primary key '$pk'";
+
+          foreach my $i (1 .. $num_subtables)
+          {
+            my $class  = $classes[$i];
+            my $tn = $i + 1;
+  
+            # Null primary key columns are not allowed
+            my $sub_pk = join(PK_JOIN, grep { defined } map { $row{$class,$i}{$_} } @{$sub_pk_columns[$tn]});
+            next  unless(defined $sub_pk);
+
+            # Skip if we've already seen this sub-object
+            next  if($seen[$i]{$sub_pk}++);
+
+            # Make sub-object
+            my $subobject = $class->new(%subobject_args);
+            local $subobject->{STATE_LOADING()} = 1;
+            $subobject->init(%{$row{$class,$i}});
+  
+            # If this object belongs to an attribute that can have more
+            # than one object then just save it for later in the
+            # per-object sub-objects list.
+            if($has_dups[$i])
+            {
+              push(@{$sub_objects[$i]}, $subobject);
+            }
+            else # Otherwise, just assign it
+            {
+              my $method = $with_objects->[$i - 1];
+              $object->$method($subobject);
+            }
+          }
+        }
+
+        # Handle the left-over "last object" that needs to be finished and
+        # added to the final list of objects to return.
+        if($last_object)
+        {
+          foreach my $i (1 .. $num_subtables)
+          {
+            if($has_dups[$i])
+            {
+              my $method = $with_objects->[$i - 1];      
+              $last_object->$method($sub_objects[$i]);
+            }
+          }
+          
+          push(@objects, $last_object);
+        }
+      }
+      else # simple sub-objects case: nothing worse than one-to-one relationships
+      {
+        if($skip_first)
+        {
+          while($sth->fetch)
+          {
+            next  if(++$count < $skip_first);
+            last;
+          }
+        }
+  
+        while($sth->fetch)
+        {
+          my $object = $object_class->new(%object_args);
+  
+          local $object->{STATE_LOADING()} = 1;
+          $object->init(%{$row{$object_class,0}});
+  
+          foreach my $i (1 .. $num_subtables)
+          {
+            my $method = $with_objects->[$i - 1];
+            my $class  = $classes[$i];
+  
+            my $subobject = $class->new(%subobject_args);
+            local $subobject->{STATE_LOADING()} = 1;
+            $subobject->init(%{$row{$class,$i}});
+  
+            $object->$method($subobject);
+          }
+  
+          push(@objects, $object);
+        }
       }
     }
-    else
+    else # even simpler: no sub-objects at all
     {
       if($skip_first)
       {

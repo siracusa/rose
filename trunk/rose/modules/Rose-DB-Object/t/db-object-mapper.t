@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 254;
+use Test::More tests => 258;
 
 BEGIN 
 {
@@ -18,7 +18,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 128)  unless($HAVE_PG);
+  skip("Postgres tests", 130)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -32,6 +32,8 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
                           K1   => 1,
                           K2   => undef,
                           K3   => 3);
+
+  ok(!$o->can('id'), "primary key alias - $db_type");
 
   ok(ref $o && $o->isa('MyPgObject'), "new() 1 - $db_type");
 
@@ -219,7 +221,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 62)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 63)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -229,6 +231,8 @@ SKIP: foreach my $db_type ('mysql')
                              K3   => 3);
 
   ok(ref $o && $o->isa('MyMySQLObject'), "new() 1 - $db_type");
+
+  ok(!$o->can('id'), "primary key alias - $db_type");
 
   $o->FLAG2('true');
   $o->DATE_CREATED('now');
@@ -388,7 +392,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 63)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 64)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -399,6 +403,8 @@ SKIP: foreach my $db_type ('informix')
                                 K3   => 3);
 
   ok(ref $o && $o->isa('MyInformixObject'), "new() 1 - $db_type");
+
+  ok(!$o->can('id'), "primary key alias - $db_type");
 
   $o->meta->allow_inline_column_values(1);
 
