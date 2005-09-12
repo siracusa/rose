@@ -1,13 +1,18 @@
-0.074 (09.11.2005) - John Siracusa <siracusa@mindspring.com>
+0.074 (09.12.2005) - John Siracusa <siracusa@mindspring.com>
 
+    * Manager can now fetch objects related by "one to many"
+      relationships.
     * Removed restriction on aliasing primary key columns.
+    * Fixed bug in Manager that caused fetched objects to be
+      intereted instead of updated on save().  (Reported by
+      Uwe Voelker.)
 
 0.073 (09.09.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added deferred method creation for relationships and foreign
       keys in order to make "many to many" relationship setup more
       developer-friendly.
-    * Renamed default auto-method type for foreign keys relationships
+    * Renamed default auto-method type for foreign keys and relationships
       from "get" to "get_set", since technically these foreign objects
       can be set.  They just don't go into the database at that point.
       I'll probably use a different term for that process (e.g., "add")
