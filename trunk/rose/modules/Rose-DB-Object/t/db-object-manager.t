@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 201;
+use Test::More tests => 303;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("Postgres tests", 64)  unless($HAVE_PG);
+  skip("Postgres tests", 166)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -272,7 +272,8 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   is($o->bb1->name, 'two', "bb foreign object 5 - $db_type");
   is($o->bb2->name, 'four', "bb foreign object 6 - $db_type");
 
-#########
+################XXXXXXXXXXXXXXXXXX
+
   $fo = MyPgNick->new(id   => 1,
                       o_id => 5,
                       nick => 'none');
@@ -303,23 +304,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
                       nick => 'nsix');
   ok($fo->save, "nick object save() 6 - $db_type");
 
-  eval
-  {
-    $objs = 
-      Rose::DB::Object::Manager->get_objects(
-        object_class => 'MyPgObject',
-        share_db     => 1,
-        with_objects => [ 'nicks' ],
-        query        =>
-        [
-          't1.id' => { ge => 1 },
-        ],
-        clauses => [ "LOWER(status) LIKE 'w%'" ],
-        sort_by => 't1.id');
-  };
-
-  ok($@, "many with limit - $db_type");
-local $Rose::DB::Object::Manager::Debug = 1;
+  #local $Rose::DB::Object::Manager::Debug = 1;
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
@@ -424,14 +409,10 @@ local $Rose::DB::Object::Manager::Debug = 1;
   is($nicks->[3]->nick, 'nfive', "get_objects() with many 14 - $db_type");
 
   $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
-  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many bb1 3 - $db_type");
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many bb1 1 - $db_type");
 
   $fo1 = $objs->[0]->{'bb2'}; # make sure this isn't hitting the db
-  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many bb2 4 - $db_type");
-
-
-
-
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many bb2 2 - $db_type");
 
   $iterator = 
     MyPgObjectManager->get_objectz_iterator(
@@ -443,36 +424,227 @@ local $Rose::DB::Object::Manager::Debug = 1;
       ],
       sort_by => 't1.name');
 
-  is(ref $iterator, 'Rose::DB::Object::Iterator', "get_objects_iterator() 1 - $db_type");
-$DB::single = 1;
+  is(ref $iterator, 'Rose::DB::Object::Iterator', "get_objects_iterator() 2 - $db_type");
+
   $o = $iterator->next;
   is($o->name, 'Betty', "iterator many next() 1 - $db_type");
-  is($o->id, 5, "iterator next() 2 - $db_type");
+  is($o->id, 5, "iterator many next() 2 - $db_type");
   
   $o = $iterator->next;
-  is($o->name, 'Bob', "iterator many next() 2 - $db_type");
-  is($o->id, 4, "iterator next() 2 - $db_type");
+  is($o->name, 'Bob', "iterator many next() 3 - $db_type");
+  is($o->id, 4, "iterator many next() 4 - $db_type");
 
   $o = $iterator->next;
-  is($o->name, 'Fred', "iterator many next() 3 - $db_type");
-  is($o->id, 2, "iterator next() 2 - $db_type");
-  is(scalar @{$o->{'nicks'}}, 2, 'iterator many sub-object 1');
-  is($o->{'nicks'}[0]{'nick'}, 'ntwo', 'iterator many sub-object 2');
-  is($o->{'nicks'}[1]{'nick'}, 'nfour', 'iterator many sub-object 3');
+  is($o->name, 'Fred', "iterator many next() 5 - $db_type");
+  is($o->id, 2, "iterator many next() 6 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, "iterator many sub-object 1 - $db_type");
+  is($o->{'nicks'}[0]{'nick'}, 'ntwo', "iterator many sub-object 2 - $db_type");
+  is($o->{'nicks'}[1]{'nick'}, 'nfour', "iterator many sub-object 3 - $db_type");
   
   $o = $iterator->next;
-  is($o->name, 'Sue', "iterator many next() 4 - $db_type");
-  is($o->id, 3, "iterator next() 4 - $db_type");
+  is($o->name, 'Sue', "iterator many next() 7 - $db_type");
+  is($o->id, 3, "iterator many next() 8 - $db_type");
 
   $o = $iterator->next;
-  is($o, 0, "iterator many next() 5 - $db_type");
-  is($iterator->total, 4, "iterator total() - $db_type");
+  is($o, 0, "iterator many next() 9 - $db_type");
+  is($iterator->total, 4, "iterator many total() - $db_type");
 
+  $iterator = 
+    MyPgObjectManager->get_objectz_iterator(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 2);
 
+  $o = $iterator->next;
+  is($o->name, 'Betty', "iterator limit 2 many next() 1 - $db_type");
+  is($o->id, 5, "iterator limit 2 many next() 2 - $db_type");
+  
+  $o = $iterator->next;
+  is($o->name, 'Bob', "iterator limit 2 many next() 2 - $db_type");
+  is($o->id, 4, "iterator limit 2 many next() 3 - $db_type");
 
+  $o = $iterator->next;
+  is($o, 0, "iterator limit 2 many next() 4 - $db_type");
+  is($iterator->total, 2, "iterator limit 2 many total() - $db_type");
 
-local $Rose::DB::Object::Manager::Debug = 0;
-###########
+  $iterator = 
+    MyPgObjectManager->get_objectz_iterator(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 3);
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "iterator limit 3 many next() 1 - $db_type");
+  is($o->id, 5, "iterator limit 3 many next() 2 - $db_type");
+  
+  $o = $iterator->next;
+  is($o->name, 'Bob', "iterator limit 3 many next() 3 - $db_type");
+  is($o->id, 4, "iterator limit 3 many next() 4 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "iterator limit 3 many next() 5 - $db_type");
+  is($o->id, 2, "iterator limit 3 many next() 6 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, "iterator limit 3 many sub-object 1 - $db_type");
+  is($o->{'nicks'}[0]{'nick'}, 'ntwo', "iterator limit 3 many sub-object 2 - $db_type");
+  is($o->{'nicks'}[1]{'nick'}, 'nfour', "iterator limit 3 many sub-object 3 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "iterator limit 3 many next() 7 - $db_type");
+  is($iterator->total, 3, "iterator limit 3 many total() - $db_type");
+
+  $objs = 
+    MyPgObjectManager->get_objectz(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 2);
+
+  ok(ref $objs && @$objs == 2, "get_objects() limit 2 many 1 - $db_type");
+  is($objs->[0]->name, 'Betty', "get_objects() limit 2 many 2 - $db_type");
+  is($objs->[0]->id, 5, "get_objects() limit 2 many 3 - $db_type");
+
+  is($objs->[1]->name, 'Bob', "get_objects() limit 2 many 4 - $db_type");
+  is($objs->[1]->id, 4, "get_objects() limit 2 many 5 - $db_type");
+
+  $objs = 
+    MyPgObjectManager->get_objectz(
+      share_db     => 1,
+      with_objects => [ 'nicks', 'bb2' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 3);
+
+  ok(ref $objs && @$objs == 3, "get_objects() limit 3 many 1 - $db_type");
+  is($objs->[0]->name, 'Betty', "get_objects() limit 3 many 2 - $db_type");
+  is($objs->[0]->id, 5, "get_objects() limit 3 many 3 - $db_type");
+
+  is($objs->[1]->name, 'Bob', "get_objects() limit 3 many 4 - $db_type");
+  is($objs->[1]->id, 4, "get_objects() limit 3 many 5 - $db_type");
+
+  is($objs->[2]->name, 'Fred', "get_objects() limit 3 many 6 - $db_type");
+  is($objs->[2]->id, 2, "get_objects() limit 3 many 7 - $db_type");
+  is(scalar @{$objs->[2]->{'nicks'}}, 2, 'get_objects() limit 3 many sub-object 1');
+  is($objs->[2]->{'nicks'}[0]{'nick'}, 'ntwo', 'get_objects() limit 3 many sub-object 2');
+  is($objs->[2]->{'nicks'}[1]{'nick'}, 'nfour', 'get_objects() limit 3 many sub-object 3');
+
+  $iterator = 
+    MyPgObjectManager->get_objectz_iterator(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 2,
+      offset  => 1);
+  
+  $o = $iterator->next;
+  is($o->name, 'Bob', "iterator limit 2 offset 1 many next() 1 - $db_type");
+  is($o->id, 4, "iterator limit 2 offset 1 many next() 2 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "iterator limit 2 offset 1 many next() 3 - $db_type");
+  is($o->id, 2, "iterator limit 2 offset 1 many next() 4 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, 'iterator limit 2 offset 1 many sub-object 1');
+  is($o->{'nicks'}[0]{'nick'}, 'ntwo', 'iterator limit 2 offset 1 many sub-object 2');
+  is($o->{'nicks'}[1]{'nick'}, 'nfour', 'iterator limit 2 offset 1 many sub-object 3');
+
+  $o = $iterator->next;
+  is($o, 0, "iterator limit 2 offset 1 many next() 5 - $db_type");
+  is($iterator->total, 2, "iterator limit 2 offset 1 many total() - $db_type");
+
+  $iterator = 
+    MyPgObjectManager->get_objectz_iterator(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 3,
+      offset  => 2);
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "iterator limit 3 offset 2 many next() 1 - $db_type");
+  is($o->id, 2, "iterator limit 3 offset 2 many next() 2 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, 'iterator limit 3 offset 2 many sub-object 1');
+  is($o->{'nicks'}[0]{'nick'}, 'ntwo', 'iterator limit 3 offset 2 many sub-object 2');
+  is($o->{'nicks'}[1]{'nick'}, 'nfour', 'iterator limit 3 offset 2 many sub-object 3');
+
+  $o = $iterator->next;
+  is($o->name, 'Sue', "iterator limit 3 offset 2 many next() 3 - $db_type");
+  is($o->id, 3, "iterator limit 3 offset 2 many next() 4 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "iterator limit 3 offset 2 many next() 5 - $db_type");
+  is($iterator->total, 2, "iterator limit 3 offset 2 many total() - $db_type");
+
+  $objs = 
+    MyPgObjectManager->get_objectz(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 2,
+      offset  => 1);
+
+  ok(ref $objs && @$objs == 2, "get_objects() limit 2 offset 1 many 1 - $db_type");
+  is($objs->[0]->name, 'Bob', "get_objects() limit 2 offset 1 many 2 - $db_type");
+  is($objs->[0]->id, 4, "get_objects() limit 2 offset 1 many 3 - $db_type");
+
+  is($objs->[1]->name, 'Fred', "get_objects() limit 2 offset 1 many 4 - $db_type");
+  is($objs->[1]->id, 2, "get_objects() limit 2 offset 1 many 5 - $db_type");
+  is(scalar @{$objs->[1]->{'nicks'}}, 2, 'get_objects() limit 2 offset 1 many sub-object 1');
+  is($objs->[1]->{'nicks'}[0]{'nick'}, 'ntwo', 'get_objects() limit 2 offset 1 many sub-object 2');
+  is($objs->[1]->{'nicks'}[1]{'nick'}, 'nfour', 'get_objects() limit 2 offset 1 many sub-object 3');
+
+  $objs = 
+    MyPgObjectManager->get_objectz(
+      share_db     => 1,
+      with_objects => [ 'nicks', 'bb2' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 3,
+      offset  => 2);
+
+  ok(ref $objs && @$objs == 2, "get_objects() limit 3 offset 2 many 1 - $db_type");
+
+  is($objs->[0]->name, 'Fred', "get_objects() limit 3 offset 2 many 2 - $db_type");
+  is($objs->[0]->id, 2, "get_objects() limit 3 offset 2 many 3 - $db_type");
+  is(scalar @{$objs->[0]->{'nicks'}}, 2, 'get_objects() limit 3 offset 2 many sub-object 1');
+  is($objs->[0]->{'nicks'}[0]{'nick'}, 'ntwo', 'get_objects() limit 3 offset 2 many sub-object 2');
+  is($objs->[0]->{'nicks'}[1]{'nick'}, 'nfour', 'get_objects() limit 3 offset 2 many sub-object 3');
+
+  is($objs->[1]->name, 'Sue', "get_objects() limit 3 offset 2 many 4 - $db_type");
+  is($objs->[1]->id, 3, "get_objects() limit 3 offset 2 many 5 - $db_type");
+
+###########XXXXXXXXXXX
+
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class => 'MyPgObject',
@@ -752,7 +924,7 @@ SKIP: foreach my $db_type ('mysql')
       limit   => 5,
       sort_by => 'name');
 
-  is(ref $iterator, 'Rose::DB::Object::Iterator', "get_objects_iterator() 1 - $db_type");
+  is(ref $iterator, 'Rose::DB::Object::Iterator', "get_objects_iterator() 3 - $db_type");
 
   $o = $iterator->next;
   is($o->name, 'Fred', "iterator next() 1 - $db_type");
@@ -843,149 +1015,9 @@ SKIP: foreach my $db_type ('mysql')
   is($objs->[0]->bb1->name, 'two', "bb foreign object 3 - $db_type");
   is($objs->[0]->bb2->name, 'four', "bb foreign object 4 - $db_type");
 
-#########
-  $fo = MyMySQLNick->new(id   => 1,
-                         o_id => 5,
-                         nick => 'none');
-  ok($fo->save, "nick object save() 1 - $db_type");
+###########XXXXXXXXXXX
 
-  $fo = MyMySQLNick->new(id   => 2,
-                         o_id => 2,
-                         nick => 'ntwo');
-  ok($fo->save, "nick object save() 2 - $db_type");
-
-  $fo = MyMySQLNick->new(id   => 3,
-                         o_id => 5,
-                         nick => 'nthree');
-  ok($fo->save, "nick object save() 3 - $db_type");
-
-  $fo = MyMySQLNick->new(id   => 4,
-                         o_id => 2,
-                         nick => 'nfour');
-  ok($fo->save, "nick object save() 4 - $db_type");
-
-  $fo = MyMySQLNick->new(id   => 5,
-                         o_id => 5,
-                         nick => 'nfive');
-  ok($fo->save, "nick object save() 5 - $db_type");
-
-  $fo = MyMySQLNick->new(id   => 6,
-                         o_id => 5,
-                         nick => 'nsix');
-  ok($fo->save, "nick object save() 6 - $db_type");
-
-local $Rose::DB::Object::Manager::Debug = 1;
-
-  $objs = 
-    Rose::DB::Object::Manager->get_objects(
-      object_class => 'MyMySQLObject',
-      share_db     => 1,
-      with_objects => [ 'nicks' ],
-      query        =>
-      [
-        't1.id'    => { ge => 1 },
-        't1.name'  => 'Betty',  
-        flag       => 'f',
-        flag2      => 1,
-        bits       => '10101',
-        start      => '5/20/2002',
-        '!start'   => { gt => DateTime->new(year  => '2005', 
-                                            month => 12,
-                                            day   => 1) },
-        '!rose_db_object_test.start' => 
-        {
-          gt => DateTime->new(year  => '2005', 
-                              month => 12,
-                              day   => 2)
-        },
-
-        '!t1.start' => 
-        {
-          gt => DateTime->new(year  => '2005', 
-                              month => 12,
-                              day   => 3)
-        },
-
-        save_col   => [ 1, 5, 123 ],
-        nums       => [ 4, 5, 6 ],
-        fk1        => 1,
-        last_modified => { le => '6/6/2020' }, # XXX: breaks in 2020!
-        date_created  => '5/10/2002 10:34:56 am'
-      ],
-      clauses => [ "LOWER(status) LIKE 'w%'" ],
-      sort_by => 't1.id');
-
-  is(ref $objs, 'ARRAY', "get_objects() with many 1 - $db_type");
-  $objs ||= [];
-  is(scalar @$objs, 1, "get_objects() with many 2 - $db_type");
-
-  my $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
-
-  is(scalar @$nicks, 4, "get_objects() with many 3 - $db_type");
-  is($nicks->[0]->nick, 'nthree', "get_objects() with many 4 - $db_type");
-  is($nicks->[1]->nick, 'nsix', "get_objects() with many 5 - $db_type");
-  is($nicks->[2]->nick, 'none', "get_objects() with many 6 - $db_type");
-  is($nicks->[3]->nick, 'nfive', "get_objects() with many 7 - $db_type");
-
-  $objs = 
-    Rose::DB::Object::Manager->get_objects(
-      object_class => 'MyMySQLObject',
-      share_db     => 1,
-      with_objects => [ 'bb2', 'nicks', 'bb1' ],
-      query        =>
-      [
-        't1.id'    => { ge => 1 },
-        't1.name'  => 'Betty',  
-        flag       => 'f',
-        flag2      => 1,
-        bits       => '10101',
-        start      => '5/20/2002',
-        '!start'   => { gt => DateTime->new(year  => '2005', 
-                                            month => 12,
-                                            day   => 1) },
-        '!rose_db_object_test.start' => 
-        {
-          gt => DateTime->new(year  => '2005', 
-                              month => 12,
-                              day   => 2)
-        },
-
-        '!t1.start' => 
-        {
-          gt => DateTime->new(year  => '2005', 
-                              month => 12,
-                              day   => 3)
-        },
-
-        save_col   => [ 1, 5, 123 ],
-        nums       => [ 4, 5, 6 ],
-        fk1        => 1,
-        last_modified => { le => '6/6/2020' }, # XXX: breaks in 2020!
-        date_created  => '5/10/2002 10:34:56 am'
-      ],
-      clauses => [ "LOWER(status) LIKE 'w%'" ],
-      sort_by => 't1.id');
-
-  is(ref $objs, 'ARRAY', "get_objects() with many 8 - $db_type");
-  $objs ||= [];
-  is(scalar @$objs, 1, "get_objects() with many 9 - $db_type");
-
-  $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
-
-  is(scalar @$nicks, 4, "get_objects() with many 10 - $db_type");
-  is($nicks->[0]->nick, 'nthree', "get_objects() with many 11 - $db_type");
-  is($nicks->[1]->nick, 'nsix', "get_objects() with many 12 - $db_type");
-  is($nicks->[2]->nick, 'none', "get_objects() with many 13 - $db_type");
-  is($nicks->[3]->nick, 'nfive', "get_objects() with many 14 - $db_type");
-
-  $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
-  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many bb1 3 - $db_type");
-
-  $fo1 = $objs->[0]->{'bb2'}; # make sure this isn't hitting the db
-  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many bb2 4 - $db_type");
-  
-local $Rose::DB::Object::Manager::Debug = 0;
-###########
+###########XXXXXXXXXXX
 
   $iterator =
     MyMySQLObjectManager->get_objectz_iterator(
@@ -1291,7 +1323,7 @@ SKIP: foreach my $db_type (qw(informix))
       limit   => 5,
       sort_by => 'name');
 
-  is(ref $iterator, 'Rose::DB::Object::Iterator', "get_objects_iterator() 1 - $db_type");
+  is(ref $iterator, 'Rose::DB::Object::Iterator', "get_objects_iterator() 4 - $db_type");
 
   $o = $iterator->next;
   is($o->name, 'Fred', "iterator next() 1 - $db_type");

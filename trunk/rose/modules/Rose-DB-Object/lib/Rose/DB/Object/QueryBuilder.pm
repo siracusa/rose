@@ -289,7 +289,7 @@ sub build_select
     if($joins && @$joins)
     {
       my $i = 1;
-      
+
       foreach my $table (@$tables)
       {
         # Main table gets treated specially
@@ -310,6 +310,8 @@ sub build_select
                        join(', ', @{$joins->[$i]{'conditions'}}) . ")\n";
         $i++;
       }
+
+      chomp($tables_sql); # Yes, I am that anal
     }
     else
     {
