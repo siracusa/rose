@@ -13,7 +13,7 @@ our @ISA = qw(Rose::Object);
 use Rose::DB::Object::Constants qw(:all);
 #use Rose::DB::Constants qw(IN_TRANSACTION);
 
-our $VERSION = '0.073';
+our $VERSION = '0.074';
 
 our $Debug = 0;
 
@@ -263,7 +263,7 @@ sub update
 
   my @key_columns = $meta->primary_key_column_names;
   my @key_methods = map { $meta->column_accessor_method_name($_) } @key_columns;
-  my @key_values  = grep { defined } map { $self->$_() } @key_columns;
+  my @key_values  = grep { defined } map { $self->$_() } @key_methods;
 
   # See comment below
   #my $null_key  = 0;

@@ -193,7 +193,7 @@ sub forget
   return 1;
 }
 
-sub remeber
+sub remember
 {
   my($self) = shift;
 

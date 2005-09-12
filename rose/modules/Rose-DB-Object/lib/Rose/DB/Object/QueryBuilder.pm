@@ -51,6 +51,7 @@ sub build_select
   my $where_only  = delete $args{'where_only'};
   my $clauses_arg = delete $args{'clauses'};  
   my $pretty      = exists $args{'pretty'} ? $args{'pretty'} : $Debug;
+  my $joins       = $args{'joins'};
 
   $args{'_depth'}++;
 
@@ -276,10 +277,47 @@ sub build_select
 
   if(!$where_only)
   {
-    my $i = 0;
-    my $tables_sql = $multi_table ?
-      join(",\n", map { $i++; "  $_ t$i" } @$tables) :
-      "  $tables->[0]";
+    my $tables_sql;
+
+    # Undocumented "joins" parameter is an array indexed by column alias
+    # number.  Each value is a hashref that contains a key 'type' that
+    # contains the join type SQL, and 'conditions' that contains a ref to
+    # an array of join conditions.
+    #
+    # If this parameter is passed, then every table except t1 has to have
+    # a join type and condition.
+    if($joins && @$joins)
+    {
+      my $i = 1;
+      
+      foreach my $table (@$tables)
+      {
+        # Main table gets treated specially
+        if($i == 1)
+        {
+          $tables_sql = "  $table t$i\n";
+          $i++;
+          next;
+        }
+
+        Carp::croak "Missing join type for table '$table'"
+          unless($joins->[$i]{'type'});
+
+        Carp::croak "Missing join conditions for table '$table'"
+          unless($joins->[$i]{'conditions'});
+
+        $tables_sql .= "  $joins->[$i]{'type'} $table t$i ON(" .
+                       join(', ', @{$joins->[$i]{'conditions'}}) . ")\n";
+        $i++;
+      }
+    }
+    else
+    {
+      my $i = 0;
+      $tables_sql = $multi_table ?
+        join(",\n", map { $i++; "  $_ t$i" } @$tables) :
+        "  $tables->[0]";    
+    }
 
     my $prefix_limit = (defined $limit && $use_prefix_limit) ? $limit : '';
     $select ||= join(",\n", map { "  $_" } @select_columns);
