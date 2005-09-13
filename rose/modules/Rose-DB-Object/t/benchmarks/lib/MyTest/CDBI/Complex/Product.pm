@@ -3,6 +3,7 @@ package MyTest::CDBI::Complex::Product;
 use strict;
 
 use MyTest::CDBI::Complex::Code;
+use MyTest::CDBI::Complex::CodeName;
 use MyTest::CDBI::Complex::Category;
 
 use base 'MyTest::CDBI::Base';
@@ -24,5 +25,7 @@ __PACKAGE__->has_a(published => 'DateTime',
                    deflate => sub { $MyTest::CDBI::Base::DB->format_datetime(shift) });
 
 __PACKAGE__->has_a(category_id => 'MyTest::CDBI::Complex::Category');
+
+__PACKAGE__->has_many(code_names => 'MyTest::CDBI::Complex::CodeName');
 
 1;

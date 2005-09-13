@@ -1,11 +1,13 @@
-0.074 (09.12.2005) - John Siracusa <siracusa@mindspring.com>
+0.074 (09.13.2005) - John Siracusa <siracusa@mindspring.com>
 
-    * Manager can now fetch objects related by "one to many"
-      relationships.
+    * Manager can now fetch objects related by "one to many" relationships.
+      This requires LEFT OUTER JOIN support in the database.  Right now, all
+      of the databases supported by Rose::DB have this feature.
     * Removed restriction on aliasing primary key columns.
-    * Fixed bug in Manager that caused fetched objects to be
-      intereted instead of updated on save().  (Reported by
-      Uwe Voelker.)
+    * Fixed bug in Manager that caused fetched objects to be inserted 
+      instead of updated on save().  (Reported by Uwe Voelker.)
+    * Corrected a misspelled method name in Rose::DB::Object::Cached.
+      (Reported by David Glass)
 
 0.073 (09.09.2005) - John Siracusa <siracusa@mindspring.com>
 

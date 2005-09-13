@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 303;
+use Test::More tests => 507;
 
 BEGIN 
 {
@@ -245,7 +245,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
         't1.id'    => { ge => 2 },
         't1.name'  => { like => '%tt%' },
       ],
-      with_objects => [ 'other_obj', 'bb1', 'bb2' ]);
+      require_objects => [ 'other_obj', 'bb1', 'bb2' ]);
 
   ok(ref $objs->[0]->{'other_obj'} eq 'MyPgOtherObject', "foreign object 2 - $db_type");
   is($objs->[0]->other_obj->k2, 2, "foreign object 3 - $db_type");
@@ -262,7 +262,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
         't1.id'    => { ge => 2 },
         't1.name'  => { like => '%tt%' },
       ],
-      with_objects => [ 'other_obj', 'bb1', 'bb2' ]);
+      require_objects => [ 'other_obj', 'bb1', 'bb2' ]);
 
   $o = $iterator->next;
 
@@ -272,7 +272,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   is($o->bb1->name, 'two', "bb foreign object 5 - $db_type");
   is($o->bb2->name, 'four', "bb foreign object 6 - $db_type");
 
-################XXXXXXXXXXXXXXXXXX
+  # Start "one to many" tests
 
   $fo = MyPgNick->new(id   => 1,
                       o_id => 5,
@@ -318,6 +318,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
         flag       => 'f',
         flag2      => 1,
         bits       => '10101',
+        't2.nick'  => { like => 'n%' },
         start      => '5/20/2002',
         '!start'   => { gt => DateTime->new(year  => '2005', 
                                             month => 12,
@@ -369,6 +370,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
         flag       => 'f',
         flag2      => 1,
         bits       => '10101',
+        't3.nick'  => { like => 'n%' },
         start      => '5/20/2002',
         '!start'   => { gt => DateTime->new(year  => '2005', 
                                             month => 12,
@@ -643,7 +645,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   is($objs->[1]->name, 'Sue', "get_objects() limit 3 offset 2 many 4 - $db_type");
   is($objs->[1]->id, 3, "get_objects() limit 3 offset 2 many 5 - $db_type");
 
-###########XXXXXXXXXXX
+  # End "one to many" tests
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
@@ -707,7 +709,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
         '!rose_db_object_other.name' => 'q',
         '!rose_db_object_other.name' => [ 'x', 'y' ],
       ],
-      with_objects => [ 'other_obj' ]);
+      require_objects => [ 'other_obj' ]);
 
   ok(ref $objs->[0]->{'other_obj'} eq 'MyPgOtherObject', "foreign object 6 - $db_type");
   is($objs->[0]->other_obj->k2, 2, "foreign object 7 - $db_type");
@@ -738,7 +740,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
     MyPgObjectManager->get_objectz(
       object_class => 'MyPgObject',
       sort_by      => 'id DESC',
-      with_objects => [ 'other_obj' ],
+      require_objects => [ 'other_obj' ],
       limit        => 2,
       offset       => 8);
 
@@ -790,7 +792,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 65)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 167)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -1007,7 +1009,7 @@ SKIP: foreach my $db_type ('mysql')
         't1.id'    => { ge => 2 },
         't1.name'  => { like => '%tt%' },
       ],
-      with_objects => [ 'other_obj', 'bb1', 'bb2' ]);
+      require_objects => [ 'other_obj', 'bb1', 'bb2' ]);
 
   ok(ref $objs->[0]->{'other_obj'} eq 'MyMySQLOtherObject', "foreign object 2 - $db_type");
   is($objs->[0]->other_obj->k2, 2, "foreign object 3 - $db_type");
@@ -1015,9 +1017,536 @@ SKIP: foreach my $db_type ('mysql')
   is($objs->[0]->bb1->name, 'two', "bb foreign object 3 - $db_type");
   is($objs->[0]->bb2->name, 'four', "bb foreign object 4 - $db_type");
 
-###########XXXXXXXXXXX
+  # Start "one to many" tests
 
-###########XXXXXXXXXXX
+  $fo = MyMySQLNick->new(id   => 1,
+                         o_id => 5,
+                         nick => 'none');
+  ok($fo->save, "nick object save() 1 - $db_type");
+
+  $fo = MyMySQLNick->new(id   => 2,
+                         o_id => 2,
+                         nick => 'ntwo');
+  ok($fo->save, "nick object save() 2 - $db_type");
+
+  $fo = MyMySQLNick->new(id   => 3,
+                         o_id => 5,
+                         nick => 'nthree');
+  ok($fo->save, "nick object save() 3 - $db_type");
+
+  $fo = MyMySQLNick->new(id   => 4,
+                         o_id => 2,
+                         nick => 'nfour');
+  ok($fo->save, "nick object save() 4 - $db_type");
+
+  $fo = MyMySQLNick->new(id   => 5,
+                         o_id => 5,
+                         nick => 'nfive');
+  ok($fo->save, "nick object save() 5 - $db_type");
+
+  $fo = MyMySQLNick->new(id   => 6,
+                         o_id => 5,
+                         nick => 'nsix');
+  ok($fo->save, "nick object save() 6 - $db_type");
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      share_db     => 1,
+      with_objects => [ 'nicks' ],
+      query        =>
+      [
+        't1.id'    => { ge => 1 },
+        't1.name'  => 'Betty',  
+        flag       => 'f',
+        flag2      => 1,
+        bits       => '10101',
+        't2.nick'  => { like => 'n%' },
+        start      => '5/20/2002',
+        '!start'   => { gt => DateTime->new(year  => '2005', 
+                                            month => 12,
+                                            day   => 1) },
+        '!rose_db_object_test.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 2)
+        },
+
+        '!t1.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 3)
+        },
+
+        save_col   => [ 1, 5, 123 ],
+        nums       => [ 4, 5, 6 ],
+        fk1        => 1,
+        last_modified => { le => '6/6/2020' }, # XXX: breaks in 2020!
+        date_created  => '5/10/2002 10:34:56 am'
+      ],
+      clauses => [ "LOWER(status) LIKE 'w%'" ],
+      sort_by => 't1.id');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() with many 2 - $db_type");
+
+  my $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many 3 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many 4 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many 5 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many 6 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many 7 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks', 'bb1' ],
+      query        =>
+      [
+        't1.id'    => { ge => 1 },
+        't1.name'  => 'Betty',  
+        flag       => 'f',
+        flag2      => 1,
+        bits       => '10101',
+        't3.nick'  => { like => 'n%' },
+        start      => '5/20/2002',
+        '!start'   => { gt => DateTime->new(year  => '2005', 
+                                            month => 12,
+                                            day   => 1) },
+        '!rose_db_object_test.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 2)
+        },
+
+        '!t1.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 3)
+        },
+
+        save_col   => [ 1, 5, 123 ],
+        nums       => [ 4, 5, 6 ],
+        fk1        => 1,
+        last_modified => { le => '6/6/2020' }, # XXX: breaks in 2020!
+        date_created  => '5/10/2002 10:34:56 am'
+      ],
+      clauses => [ "LOWER(status) LIKE 'w%'" ],
+      sort_by => 't1.id');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many 8 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() with many 9 - $db_type");
+
+  $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many 10 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many 11 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many 12 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many 13 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many 14 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many bb1 1 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many bb2 2 - $db_type");
+
+  $iterator = 
+    MyMySQLObjectManager->get_objectz_iterator(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name');
+
+  is(ref $iterator, 'Rose::DB::Object::Iterator', "get_objects_iterator() 2 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "iterator many next() 1 - $db_type");
+  is($o->id, 5, "iterator many next() 2 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'Bob', "iterator many next() 3 - $db_type");
+  is($o->id, 4, "iterator many next() 4 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "iterator many next() 5 - $db_type");
+  is($o->id, 2, "iterator many next() 6 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, "iterator many sub-object 1 - $db_type");
+  is($o->{'nicks'}[0]{'nick'}, 'ntwo', "iterator many sub-object 2 - $db_type");
+  is($o->{'nicks'}[1]{'nick'}, 'nfour', "iterator many sub-object 3 - $db_type");
+  
+  $o = $iterator->next;
+  is($o->name, 'Sue', "iterator many next() 7 - $db_type");
+  is($o->id, 3, "iterator many next() 8 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "iterator many next() 9 - $db_type");
+  is($iterator->total, 4, "iterator many total() - $db_type");
+
+  $iterator = 
+    MyMySQLObjectManager->get_objectz_iterator(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 2);
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "iterator limit 2 many next() 1 - $db_type");
+  is($o->id, 5, "iterator limit 2 many next() 2 - $db_type");
+  
+  $o = $iterator->next;
+  is($o->name, 'Bob', "iterator limit 2 many next() 2 - $db_type");
+  is($o->id, 4, "iterator limit 2 many next() 3 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "iterator limit 2 many next() 4 - $db_type");
+  is($iterator->total, 2, "iterator limit 2 many total() - $db_type");
+
+  $iterator = 
+    MyMySQLObjectManager->get_objectz_iterator(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 3);
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "iterator limit 3 many next() 1 - $db_type");
+  is($o->id, 5, "iterator limit 3 many next() 2 - $db_type");
+  
+  $o = $iterator->next;
+  is($o->name, 'Bob', "iterator limit 3 many next() 3 - $db_type");
+  is($o->id, 4, "iterator limit 3 many next() 4 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "iterator limit 3 many next() 5 - $db_type");
+  is($o->id, 2, "iterator limit 3 many next() 6 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, "iterator limit 3 many sub-object 1 - $db_type");
+  is($o->{'nicks'}[0]{'nick'}, 'ntwo', "iterator limit 3 many sub-object 2 - $db_type");
+  is($o->{'nicks'}[1]{'nick'}, 'nfour', "iterator limit 3 many sub-object 3 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "iterator limit 3 many next() 7 - $db_type");
+  is($iterator->total, 3, "iterator limit 3 many total() - $db_type");
+
+  $objs = 
+    MyMySQLObjectManager->get_objectz(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 2);
+
+  ok(ref $objs && @$objs == 2, "get_objects() limit 2 many 1 - $db_type");
+  is($objs->[0]->name, 'Betty', "get_objects() limit 2 many 2 - $db_type");
+  is($objs->[0]->id, 5, "get_objects() limit 2 many 3 - $db_type");
+
+  is($objs->[1]->name, 'Bob', "get_objects() limit 2 many 4 - $db_type");
+  is($objs->[1]->id, 4, "get_objects() limit 2 many 5 - $db_type");
+
+  $objs = 
+    MyMySQLObjectManager->get_objectz(
+      share_db     => 1,
+      with_objects => [ 'nicks', 'bb2' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 3);
+
+  ok(ref $objs && @$objs == 3, "get_objects() limit 3 many 1 - $db_type");
+  is($objs->[0]->name, 'Betty', "get_objects() limit 3 many 2 - $db_type");
+  is($objs->[0]->id, 5, "get_objects() limit 3 many 3 - $db_type");
+
+  is($objs->[1]->name, 'Bob', "get_objects() limit 3 many 4 - $db_type");
+  is($objs->[1]->id, 4, "get_objects() limit 3 many 5 - $db_type");
+
+  is($objs->[2]->name, 'Fred', "get_objects() limit 3 many 6 - $db_type");
+  is($objs->[2]->id, 2, "get_objects() limit 3 many 7 - $db_type");
+  is(scalar @{$objs->[2]->{'nicks'}}, 2, 'get_objects() limit 3 many sub-object 1');
+  is($objs->[2]->{'nicks'}[0]{'nick'}, 'ntwo', 'get_objects() limit 3 many sub-object 2');
+  is($objs->[2]->{'nicks'}[1]{'nick'}, 'nfour', 'get_objects() limit 3 many sub-object 3');
+
+  $iterator = 
+    MyMySQLObjectManager->get_objectz_iterator(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 2,
+      offset  => 1);
+  
+  $o = $iterator->next;
+  is($o->name, 'Bob', "iterator limit 2 offset 1 many next() 1 - $db_type");
+  is($o->id, 4, "iterator limit 2 offset 1 many next() 2 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "iterator limit 2 offset 1 many next() 3 - $db_type");
+  is($o->id, 2, "iterator limit 2 offset 1 many next() 4 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, 'iterator limit 2 offset 1 many sub-object 1');
+  is($o->{'nicks'}[0]{'nick'}, 'ntwo', 'iterator limit 2 offset 1 many sub-object 2');
+  is($o->{'nicks'}[1]{'nick'}, 'nfour', 'iterator limit 2 offset 1 many sub-object 3');
+
+  $o = $iterator->next;
+  is($o, 0, "iterator limit 2 offset 1 many next() 5 - $db_type");
+  is($iterator->total, 2, "iterator limit 2 offset 1 many total() - $db_type");
+
+  $iterator = 
+    MyMySQLObjectManager->get_objectz_iterator(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 3,
+      offset  => 2);
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "iterator limit 3 offset 2 many next() 1 - $db_type");
+  is($o->id, 2, "iterator limit 3 offset 2 many next() 2 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, 'iterator limit 3 offset 2 many sub-object 1');
+  is($o->{'nicks'}[0]{'nick'}, 'ntwo', 'iterator limit 3 offset 2 many sub-object 2');
+  is($o->{'nicks'}[1]{'nick'}, 'nfour', 'iterator limit 3 offset 2 many sub-object 3');
+
+  $o = $iterator->next;
+  is($o->name, 'Sue', "iterator limit 3 offset 2 many next() 3 - $db_type");
+  is($o->id, 3, "iterator limit 3 offset 2 many next() 4 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "iterator limit 3 offset 2 many next() 5 - $db_type");
+  is($iterator->total, 2, "iterator limit 3 offset 2 many total() - $db_type");
+
+  $objs = 
+    MyMySQLObjectManager->get_objectz(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 2,
+      offset  => 1);
+
+  ok(ref $objs && @$objs == 2, "get_objects() limit 2 offset 1 many 1 - $db_type");
+  is($objs->[0]->name, 'Bob', "get_objects() limit 2 offset 1 many 2 - $db_type");
+  is($objs->[0]->id, 4, "get_objects() limit 2 offset 1 many 3 - $db_type");
+
+  is($objs->[1]->name, 'Fred', "get_objects() limit 2 offset 1 many 4 - $db_type");
+  is($objs->[1]->id, 2, "get_objects() limit 2 offset 1 many 5 - $db_type");
+  is(scalar @{$objs->[1]->{'nicks'}}, 2, 'get_objects() limit 2 offset 1 many sub-object 1');
+  is($objs->[1]->{'nicks'}[0]{'nick'}, 'ntwo', 'get_objects() limit 2 offset 1 many sub-object 2');
+  is($objs->[1]->{'nicks'}[1]{'nick'}, 'nfour', 'get_objects() limit 2 offset 1 many sub-object 3');
+
+  $objs = 
+    MyMySQLObjectManager->get_objectz(
+      share_db     => 1,
+      with_objects => [ 'nicks', 'bb2' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 3,
+      offset  => 2);
+
+  ok(ref $objs && @$objs == 2, "get_objects() limit 3 offset 2 many 1 - $db_type");
+
+  is($objs->[0]->name, 'Fred', "get_objects() limit 3 offset 2 many 2 - $db_type");
+  is($objs->[0]->id, 2, "get_objects() limit 3 offset 2 many 3 - $db_type");
+  is(scalar @{$objs->[0]->{'nicks'}}, 2, 'get_objects() limit 3 offset 2 many sub-object 1');
+  is($objs->[0]->{'nicks'}[0]{'nick'}, 'ntwo', 'get_objects() limit 3 offset 2 many sub-object 2');
+  is($objs->[0]->{'nicks'}[1]{'nick'}, 'nfour', 'get_objects() limit 3 offset 2 many sub-object 3');
+
+  is($objs->[1]->name, 'Sue', "get_objects() limit 3 offset 2 many 4 - $db_type");
+  is($objs->[1]->id, 3, "get_objects() limit 3 offset 2 many 5 - $db_type");
+
+
+##########
+
+  my $o6 = $o2->clone;
+  $o6->id(60);
+  $o6->fkone(10);
+  $o6->fk2(11);
+  $o6->fk3(12);
+  $o6->b1(undef);
+  $o6->b2(2);
+  $o6->name('Ted');
+
+  ok($o6->save, "object save() 8 - $db_type");
+
+  my $o7 = $o2->clone;
+  $o7->id(70);
+  $o7->b1(3);
+  $o7->b2(undef);
+  $o7->name('Joe');
+
+  ok($o7->save, "object save() 9 - $db_type");
+  
+  my $o8 = $o2->clone;
+  $o8->id(80);
+  $o8->b1(undef);
+  $o8->b2(undef);
+  $o8->name('Pete');
+
+  ok($o8->save, "object save() 10 - $db_type");
+
+  $fo = MyMySQLOtherObject->new(name => 'Foo 1',
+                                k1   => 10,
+                                k2   => 11,
+                                k3   => 12);
+
+  ok($fo->save, "object save() 10 - $db_type");
+
+  $fo = MyMySQLNick->new(id   => 7,
+                         o_id => 60,
+                         nick => 'nseven');
+
+  ok($fo->save, "nick object save() 7 - $db_type");
+
+  $fo = MyMySQLNick->new(id   => 8,
+                         o_id => 60,
+                         nick => 'neight');
+
+  ok($fo->save, "nick object save() 8 - $db_type");
+
+  $fo = MyMySQLNick->new(id   => 9,
+                         o_id => 60,
+                         nick => 'neight');
+
+  ok($fo->save, "nick object save() 8 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      share_db     => 1,
+      require_objects => [ 'bb2', 'bb1' ],
+      query        => [ '!t1.id' => 5 ],
+      sort_by => 't1.id');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many 15 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 0, "get_objects() with many 16 - $db_type");
+
+#   +----+--------+--------+--------+
+#   | id | b1name | b2name | nick   |
+#   +----+--------+--------+--------+
+#   |  1 | NULL   | NULL   | NULL   |
+#   |  2 | NULL   | NULL   | ntwo   |
+#   |  2 | NULL   | NULL   | nfour  |
+#   |  3 | NULL   | NULL   | NULL   |
+#   |  4 | NULL   | NULL   | NULL   |
+#   |  5 | two    | four   | none   |
+#   |  5 | two    | four   | nthree |
+#   |  5 | two    | four   | nfive  |
+#   |  5 | two    | four   | nsix   |
+#   | 60 | NULL   | two    | nseven |
+#   | 60 | NULL   | two    | neight |
+#   | 60 | NULL   | two    | neight |
+#   | 70 | three  | NULL   | NULL   |
+#   | 80 | NULL   | NULL   | NULL   |
+#   +----+--------+--------+--------+
+  local $Rose::DB::Object::Manager::Debug = 1;  
+  $DB::single = 1;
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      share_db     => 1,
+      require_objects => [ 'bb2', 'nicks', 'bb1' ],
+      query        => [ ],
+      sort_by => 't1.id');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many 17 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() with many 18 - $db_type");
+
+  is($objs->[0]->id, 5, "get_objects() with many 19 - $db_type");
+
+  $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many 20 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many 21 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many 22 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many 23 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many 24 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks', 'bb1' ],
+      query        => [ ],
+      sort_by => 't1.id');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many 25 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 8, "get_objects() with many 26 - $db_type");
+
+  my $ids = join(',', map { $_->id } @$objs);
+  
+  is($ids, '1,2,3,4,5,60,70,80', "get_objects() with many 27 - $db_type");
+
+  $nicks = $objs->[4]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many 28 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many 29 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many 30 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many 31 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many 32 - $db_type");
+
+  is($objs->[6]->{'bb1'}->{'name'}, 'three', "get_objects() with many 33 - $db_type");
+  ok(!defined $objs->[6]->{'bb2'}, "get_objects() with many 34 - $db_type");
+  ok(!defined $objs->[6]->{'nicks'}, "get_objects() with many 35 - $db_type");
+
+  ok(!defined $objs->[7]->{'bb1'}, "get_objects() with many 36 - $db_type");
+  ok(!defined $objs->[7]->{'bb1'}, "get_objects() with many 37 - $db_type");
+  ok(!defined $objs->[7]->{'nicks'}, "get_objects() with many 38 - $db_type");
+
+  local $Rose::DB::Object::Manager::Debug = 0;
+
+  $fo = MyMySQLNick->new(id => 7);
+  ok($fo->delete, "with many clean-up 1 - $db_type");
+
+  $fo = MyMySQLNick->new(id => 8);
+  ok($fo->delete, "with many clean-up 2 - $db_type");
+  
+  $fo = MyMySQLNick->new(id => 9);
+  ok($fo->delete, "with many clean-up 3 - $db_type");
+
+  ok($o6->delete, "with many clean-up 4 - $db_type");
+  ok($o7->delete, "with many clean-up 5 - $db_type");
+  ok($o8->delete, "with many clean-up 6 - $db_type");
+#######
+  # End "one to many" tests
 
   $iterator =
     MyMySQLObjectManager->get_objectz_iterator(
@@ -1027,7 +1556,7 @@ SKIP: foreach my $db_type ('mysql')
         't1.id'    => { ge => 2 },
         't1.name'  => { like => '%tt%' },
       ],
-      with_objects => [ 'other_obj', 'bb1', 'bb2' ]);
+      require_objects => [ 'other_obj', 'bb1', 'bb2' ]);
 
   $o = $iterator->next;
 
@@ -1098,7 +1627,7 @@ SKIP: foreach my $db_type ('mysql')
         '!rose_db_object_other.name' => 'q',
         '!rose_db_object_other.name' => [ 'x', 'y' ],
       ],
-      with_objects => [ 'other_obj' ]);
+      require_objects => [ 'other_obj' ]);
 
   ok(ref $objs->[0]->{'other_obj'} eq 'MyMySQLOtherObject', "foreign object 6 - $db_type");
   is($objs->[0]->other_obj->k2, 2, "foreign object 7 - $db_type");
@@ -1127,7 +1656,7 @@ SKIP: foreach my $db_type ('mysql')
   $objs = 
     MyMySQLObject->get_objectz(
       sort_by      => 'id DESC',
-      with_objects => [ 'other_obj' ],
+      require_objects => [ 'other_obj' ],
       limit        => 2,
       offset       => 8);
 
@@ -1178,7 +1707,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type (qw(informix))
 {
-  skip("Informix tests", 70)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 172)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -1436,13 +1965,388 @@ SKIP: foreach my $db_type (qw(informix))
         't1.id'    => { ge => 2 },
         't1.name'  => { like => '%tt%' },
       ],
-      with_objects => [ 'other_obj' ]);
+      require_objects => [ 'other_obj' ]);
 
   ok(ref $objs->[0]->{'other_obj'} eq 'MyInformixOtherObject', "foreign object 2 - $db_type");
   is($objs->[0]->other_obj->k2, 2, "foreign object 3 - $db_type");
 
   is($objs->[0]->bb1->name, 'two', "bb foreign object 3 - $db_type");
   is($objs->[0]->bb2->name, 'four', "bb foreign object 4 - $db_type");
+
+  # Start "one to many" tests
+
+  $fo = MyInformixNick->new(id   => 1,
+                            o_id => 5,
+                            nick => 'none');
+  ok($fo->save, "nick object save() 1 - $db_type");
+
+  $fo = MyInformixNick->new(id   => 2,
+                            o_id => 2,
+                            nick => 'ntwo');
+  ok($fo->save, "nick object save() 2 - $db_type");
+
+  $fo = MyInformixNick->new(id   => 3,
+                            o_id => 5,
+                            nick => 'nthree');
+  ok($fo->save, "nick object save() 3 - $db_type");
+
+  $fo = MyInformixNick->new(id   => 4,
+                            o_id => 2,
+                            nick => 'nfour');
+  ok($fo->save, "nick object save() 4 - $db_type");
+
+  $fo = MyInformixNick->new(id   => 5,
+                            o_id => 5,
+                            nick => 'nfive');
+  ok($fo->save, "nick object save() 5 - $db_type");
+
+  $fo = MyInformixNick->new(id   => 6,
+                            o_id => 5,
+                            nick => 'nsix');
+  ok($fo->save, "nick object save() 6 - $db_type");
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      share_db     => 1,
+      with_objects => [ 'nicks' ],
+      query        =>
+      [
+        't1.id'    => { ge => 1 },
+        't1.name'  => 'Betty',  
+        flag       => 'f',
+        flag2      => 1,
+        bits       => '10101',
+        't2.nick'  => { like => 'n%' },
+        start      => '5/20/2002',
+        '!start'   => { gt => DateTime->new(year  => '2005', 
+                                            month => 12,
+                                            day   => 1) },
+        '!rose_db_object_test.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 2)
+        },
+
+        '!t1.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 3)
+        },
+
+        save_col   => [ 1, 5, 123 ],
+        nums       => [ 4, 5, 6 ],
+        fk1        => 1,
+        last_modified => { le => '6/6/2020' }, # XXX: breaks in 2020!
+        date_created  => '5/10/2002 10:34:56 am'
+      ],
+      clauses => [ "LOWER(status) LIKE 'w%'" ],
+      sort_by => 't1.id');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() with many 2 - $db_type");
+
+  my $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many 3 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many 4 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many 5 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many 6 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many 7 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks', 'bb1' ],
+      query        =>
+      [
+        't1.id'    => { ge => 1 },
+        't1.name'  => 'Betty',  
+        flag       => 'f',
+        flag2      => 1,
+        bits       => '10101',
+        't3.nick'  => { like => 'n%' },
+        start      => '5/20/2002',
+        '!start'   => { gt => DateTime->new(year  => '2005', 
+                                            month => 12,
+                                            day   => 1) },
+        '!rose_db_object_test.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 2)
+        },
+
+        '!t1.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 3)
+        },
+
+        save_col   => [ 1, 5, 123 ],
+        nums       => [ 4, 5, 6 ],
+        fk1        => 1,
+        last_modified => { le => '6/6/2020' }, # XXX: breaks in 2020!
+        date_created  => '5/10/2002 10:34:56 am'
+      ],
+      clauses => [ "LOWER(status) LIKE 'w%'" ],
+      sort_by => 't1.id');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many 8 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() with many 9 - $db_type");
+
+  $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many 10 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many 11 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many 12 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many 13 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many 14 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many bb1 1 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many bb2 2 - $db_type");
+
+  $iterator = 
+    MyInformixObjectManager->get_objectz_iterator(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name');
+
+  is(ref $iterator, 'Rose::DB::Object::Iterator', "get_objects_iterator() 2 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "iterator many next() 1 - $db_type");
+  is($o->id, 5, "iterator many next() 2 - $db_type");
+  
+  $o = $iterator->next;
+  is($o->name, 'Bob', "iterator many next() 3 - $db_type");
+  is($o->id, 4, "iterator many next() 4 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "iterator many next() 5 - $db_type");
+  is($o->id, 2, "iterator many next() 6 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, "iterator many sub-object 1 - $db_type");
+  is($o->{'nicks'}[0]{'nick'}, 'ntwo', "iterator many sub-object 2 - $db_type");
+  is($o->{'nicks'}[1]{'nick'}, 'nfour', "iterator many sub-object 3 - $db_type");
+  
+  $o = $iterator->next;
+  is($o->name, 'Sue', "iterator many next() 7 - $db_type");
+  is($o->id, 3, "iterator many next() 8 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "iterator many next() 9 - $db_type");
+  is($iterator->total, 4, "iterator many total() - $db_type");
+
+  $iterator = 
+    MyInformixObjectManager->get_objectz_iterator(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 2);
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "iterator limit 2 many next() 1 - $db_type");
+  is($o->id, 5, "iterator limit 2 many next() 2 - $db_type");
+  
+  $o = $iterator->next;
+  is($o->name, 'Bob', "iterator limit 2 many next() 2 - $db_type");
+  is($o->id, 4, "iterator limit 2 many next() 3 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "iterator limit 2 many next() 4 - $db_type");
+  is($iterator->total, 2, "iterator limit 2 many total() - $db_type");
+
+  $iterator = 
+    MyInformixObjectManager->get_objectz_iterator(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 3);
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "iterator limit 3 many next() 1 - $db_type");
+  is($o->id, 5, "iterator limit 3 many next() 2 - $db_type");
+  
+  $o = $iterator->next;
+  is($o->name, 'Bob', "iterator limit 3 many next() 3 - $db_type");
+  is($o->id, 4, "iterator limit 3 many next() 4 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "iterator limit 3 many next() 5 - $db_type");
+  is($o->id, 2, "iterator limit 3 many next() 6 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, "iterator limit 3 many sub-object 1 - $db_type");
+  is($o->{'nicks'}[0]{'nick'}, 'ntwo', "iterator limit 3 many sub-object 2 - $db_type");
+  is($o->{'nicks'}[1]{'nick'}, 'nfour', "iterator limit 3 many sub-object 3 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "iterator limit 3 many next() 7 - $db_type");
+  is($iterator->total, 3, "iterator limit 3 many total() - $db_type");
+
+  $objs = 
+    MyInformixObjectManager->get_objectz(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 2);
+
+  ok(ref $objs && @$objs == 2, "get_objects() limit 2 many 1 - $db_type");
+  is($objs->[0]->name, 'Betty', "get_objects() limit 2 many 2 - $db_type");
+  is($objs->[0]->id, 5, "get_objects() limit 2 many 3 - $db_type");
+
+  is($objs->[1]->name, 'Bob', "get_objects() limit 2 many 4 - $db_type");
+  is($objs->[1]->id, 4, "get_objects() limit 2 many 5 - $db_type");
+
+  $objs = 
+    MyInformixObjectManager->get_objectz(
+      share_db     => 1,
+      with_objects => [ 'nicks', 'bb2' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 3);
+
+  ok(ref $objs && @$objs == 3, "get_objects() limit 3 many 1 - $db_type");
+  is($objs->[0]->name, 'Betty', "get_objects() limit 3 many 2 - $db_type");
+  is($objs->[0]->id, 5, "get_objects() limit 3 many 3 - $db_type");
+
+  is($objs->[1]->name, 'Bob', "get_objects() limit 3 many 4 - $db_type");
+  is($objs->[1]->id, 4, "get_objects() limit 3 many 5 - $db_type");
+
+  is($objs->[2]->name, 'Fred', "get_objects() limit 3 many 6 - $db_type");
+  is($objs->[2]->id, 2, "get_objects() limit 3 many 7 - $db_type");
+  is(scalar @{$objs->[2]->{'nicks'}}, 2, 'get_objects() limit 3 many sub-object 1');
+  is($objs->[2]->{'nicks'}[0]{'nick'}, 'ntwo', 'get_objects() limit 3 many sub-object 2');
+  is($objs->[2]->{'nicks'}[1]{'nick'}, 'nfour', 'get_objects() limit 3 many sub-object 3');
+
+  $iterator = 
+    MyInformixObjectManager->get_objectz_iterator(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 2,
+      offset  => 1);
+  
+  $o = $iterator->next;
+  is($o->name, 'Bob', "iterator limit 2 offset 1 many next() 1 - $db_type");
+  is($o->id, 4, "iterator limit 2 offset 1 many next() 2 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "iterator limit 2 offset 1 many next() 3 - $db_type");
+  is($o->id, 2, "iterator limit 2 offset 1 many next() 4 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, 'iterator limit 2 offset 1 many sub-object 1');
+  is($o->{'nicks'}[0]{'nick'}, 'ntwo', 'iterator limit 2 offset 1 many sub-object 2');
+  is($o->{'nicks'}[1]{'nick'}, 'nfour', 'iterator limit 2 offset 1 many sub-object 3');
+
+  $o = $iterator->next;
+  is($o, 0, "iterator limit 2 offset 1 many next() 5 - $db_type");
+  is($iterator->total, 2, "iterator limit 2 offset 1 many total() - $db_type");
+
+  $iterator = 
+    MyInformixObjectManager->get_objectz_iterator(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 3,
+      offset  => 2);
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "iterator limit 3 offset 2 many next() 1 - $db_type");
+  is($o->id, 2, "iterator limit 3 offset 2 many next() 2 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, 'iterator limit 3 offset 2 many sub-object 1');
+  is($o->{'nicks'}[0]{'nick'}, 'ntwo', 'iterator limit 3 offset 2 many sub-object 2');
+  is($o->{'nicks'}[1]{'nick'}, 'nfour', 'iterator limit 3 offset 2 many sub-object 3');
+
+  $o = $iterator->next;
+  is($o->name, 'Sue', "iterator limit 3 offset 2 many next() 3 - $db_type");
+  is($o->id, 3, "iterator limit 3 offset 2 many next() 4 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "iterator limit 3 offset 2 many next() 5 - $db_type");
+  is($iterator->total, 2, "iterator limit 3 offset 2 many total() - $db_type");
+
+  $objs = 
+    MyInformixObjectManager->get_objectz(
+      share_db     => 1,
+      with_objects => [ 'bb2', 'nicks' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 2,
+      offset  => 1);
+
+  ok(ref $objs && @$objs == 2, "get_objects() limit 2 offset 1 many 1 - $db_type");
+  is($objs->[0]->name, 'Bob', "get_objects() limit 2 offset 1 many 2 - $db_type");
+  is($objs->[0]->id, 4, "get_objects() limit 2 offset 1 many 3 - $db_type");
+
+  is($objs->[1]->name, 'Fred', "get_objects() limit 2 offset 1 many 4 - $db_type");
+  is($objs->[1]->id, 2, "get_objects() limit 2 offset 1 many 5 - $db_type");
+  is(scalar @{$objs->[1]->{'nicks'}}, 2, 'get_objects() limit 2 offset 1 many sub-object 1');
+  is($objs->[1]->{'nicks'}[0]{'nick'}, 'ntwo', 'get_objects() limit 2 offset 1 many sub-object 2');
+  is($objs->[1]->{'nicks'}[1]{'nick'}, 'nfour', 'get_objects() limit 2 offset 1 many sub-object 3');
+
+  $objs = 
+    MyInformixObjectManager->get_objectz(
+      share_db     => 1,
+      with_objects => [ 'nicks', 'bb2' ],
+      query        =>
+      [
+        't1.id'  => { ge => 2 },
+      ],
+      sort_by => 't1.name',
+      limit   => 3,
+      offset  => 2);
+
+  ok(ref $objs && @$objs == 2, "get_objects() limit 3 offset 2 many 1 - $db_type");
+
+  is($objs->[0]->name, 'Fred', "get_objects() limit 3 offset 2 many 2 - $db_type");
+  is($objs->[0]->id, 2, "get_objects() limit 3 offset 2 many 3 - $db_type");
+  is(scalar @{$objs->[0]->{'nicks'}}, 2, 'get_objects() limit 3 offset 2 many sub-object 1');
+  is($objs->[0]->{'nicks'}[0]{'nick'}, 'ntwo', 'get_objects() limit 3 offset 2 many sub-object 2');
+  is($objs->[0]->{'nicks'}[1]{'nick'}, 'nfour', 'get_objects() limit 3 offset 2 many sub-object 3');
+
+  is($objs->[1]->name, 'Sue', "get_objects() limit 3 offset 2 many 4 - $db_type");
+  is($objs->[1]->id, 3, "get_objects() limit 3 offset 2 many 5 - $db_type");
+
+  # End "one to many" tests
 
   $iterator =
     MyInformixObject->get_objectz_iterator(
@@ -1452,7 +2356,7 @@ SKIP: foreach my $db_type (qw(informix))
         't1.id'    => { ge => 2 },
         't1.name'  => { like => '%tt%' },
       ],
-      with_objects => [ 'other_obj' ]);
+      require_objects => [ 'other_obj' ]);
 
   $o = $iterator->next;
 
@@ -1532,7 +2436,7 @@ SKIP: foreach my $db_type (qw(informix))
         '!rose_db_object_other.name' => 'q',
         '!rose_db_object_other.name' => [ 'x', 'y' ],
       ],
-      with_objects => [ 'other_obj' ]);
+      require_objects => [ 'other_obj' ]);
 
   ok(ref $objs->[0]->{'other_obj'} eq 'MyInformixOtherObject', "foreign object 6 - $db_type");
   is($objs->[0]->other_obj->k2, 2, "foreign object 7 - $db_type");
@@ -1585,7 +2489,7 @@ SKIP: foreach my $db_type (qw(informix))
   $objs = 
     MyInformixObjectManager->get_objectz(
       sort_by      => 'id DESC',
-      with_objects => [ 'other_obj' ],
+      require_objects => [ 'other_obj' ],
       limit        => 2,
       offset       => 8);
 
@@ -1753,7 +2657,7 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_nicks
 (
-  id    INT NOT NULL PRIMARY KEY,
+  id    SERIAL NOT NULL PRIMARY KEY,
   o_id  INT NOT NULL REFERENCES rose_db_object_test (id),
   nick  VARCHAR(32)
 )
@@ -1769,7 +2673,7 @@ EOF
 
     MyPgNick->meta->columns
     (
-      id   => { type => 'int', primary_key => 1 },
+      id   => { type => 'serial', primary_key => 1 },
       o_id => { type => 'int' },
       nick => { type => 'varchar'},
     );
@@ -1980,8 +2884,8 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_nicks
 (
-  id    INT NOT NULL PRIMARY KEY,
-  o_id  INT NOT NULL REFERENCES rose_db_object_test (id),
+  id    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  o_id  INT UNSIGNED NOT NULL REFERENCES rose_db_object_test (id),
   nick  VARCHAR(32)
 )
 EOF
@@ -2209,8 +3113,41 @@ CREATE TABLE rose_db_object_test
 )
 EOF
 
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_nicks
+(
+  id    SERIAL NOT NULL PRIMARY KEY,
+  o_id  INT NOT NULL REFERENCES rose_db_object_test (id),
+  nick  VARCHAR(32)
+)
+EOF
+
     $dbh->commit;
     $dbh->disconnect;
+
+    package MyInformixNick;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyInformixNick->meta->table('rose_db_object_nicks');
+
+    MyInformixNick->meta->columns
+    (
+      id   => { type => 'serial', primary_key => 1 },
+      o_id => { type => 'int' },
+      nick => { type => 'varchar'},
+    );
+
+    MyInformixNick->meta->foreign_keys
+    (
+      obj =>
+      {
+        class => 'MyInformixObject',
+        key_columns => { o_id => 'id' },
+      },
+    );
+
+    MyInformixNick->meta->initialize;
 
     # Create test subclass
 
@@ -2266,6 +3203,17 @@ EOF
       },
     );
 
+    MyInformixObject->meta->relationships
+    (
+      nicks =>
+      {
+        type  => 'one to many',
+        class => 'MyInformixNick',
+        column_map => { id => 'o_id' },
+        manager_args => { sort_by => 'nick DESC' },
+      }
+    );
+
     MyInformixObject->meta->alias_column(fk1 => 'fkone');
 
     eval { MyInformixObject->meta->initialize };
@@ -2311,8 +3259,10 @@ END
     my $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
       or die Rose::DB->error;
 
+    $dbh->do('DROP TABLE rose_db_object_nicks');
     $dbh->do('DROP TABLE rose_db_object_test');
     $dbh->do('DROP TABLE rose_db_object_other');
+    $dbh->do('DROP TABLE rose_db_object_bb');
 
     $dbh->disconnect;
   }
@@ -2323,10 +3273,11 @@ END
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
       or die Rose::DB->error;
 
+    $dbh->do('DROP TABLE rose_db_object_nicks');
     $dbh->do('DROP TABLE rose_db_object_test');
     $dbh->do('DROP TABLE rose_db_object_other');
+    $dbh->do('DROP TABLE rose_db_object_bb');
 
     $dbh->disconnect;
   }
 }
-

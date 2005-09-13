@@ -3,6 +3,7 @@ package MyTest::DBIC::Complex::Product;
 use strict;
 
 use MyTest::DBIC::Complex::Code;
+use MyTest::DBIC::Complex::CodeName;
 use MyTest::DBIC::Complex::Category;
 
 use base 'MyTest::DBIC::Base';
@@ -24,7 +25,10 @@ __PACKAGE__->inflate_column(published => {
                    deflate => sub { $MyTest::CDBI::Base::DB->format_datetime(shift) } });
 
 __PACKAGE__->add_relationship('category_id', 'MyTest::DBIC::Complex::Category',
-                            { 'foreign.id' => 'self.category_id' },
-                            { accessor => 'filter' });
+                              { 'foreign.id' => 'self.category_id' },
+                              { accessor => 'filter' });
 
+__PACKAGE__->add_relationship('code_names', 'MyTest::DBIC::Complex::CodeName',
+                              { 'foreign.product_id' => 'self.id' },
+                              { accessor => 'multi' });
 1;
