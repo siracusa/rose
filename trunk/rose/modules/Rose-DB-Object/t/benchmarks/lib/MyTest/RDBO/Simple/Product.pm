@@ -40,6 +40,16 @@ __PACKAGE__->meta->foreign_keys
   },
 );
 
+__PACKAGE__->meta->relationships
+(
+  code_names =>
+  {
+    type  => 'one to many',
+    class => 'MyTest::RDBO::Simple::CodeName',
+    column_map => { id => 'product_id' },
+  }
+);
+
 __PACKAGE__->meta->initialize;
 
 1;

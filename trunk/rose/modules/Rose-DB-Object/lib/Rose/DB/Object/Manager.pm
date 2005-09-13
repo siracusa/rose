@@ -221,12 +221,21 @@ sub get_objects
 
   $class->error(undef);
 
+  if($args{'require_objects'} && $args{'with_objects'})
+  {
+    Carp::croak "Cannot specify the 'require_objects' and the 'with_objects' ",
+                "parameters in the same call.  Pick one or the other";
+  }
+
   my $return_sql      = delete $args{'return_sql'};
   my $return_iterator = delete $args{'return_iterator'};
   my $object_class    = delete $args{'object_class'} or Carp::croak "Missing object class argument";
-  my $with_objects    = delete $args{'with_objects'};
+  my $require_objects = delete $args{'require_objects'};
+  my $with_objects    = delete $args{'with_objects'} || $require_objects;
   my $skip_first      = delete $args{'skip_first'} || 0;
   my $count_only      = delete $args{'count_only'};
+
+  my $outer_joins_only = ($with_objects && !$require_objects) ? 1 : 0;
 
   my $db  = delete $args{'db'} || $object_class->init_db;
   my $dbh = delete $args{'dbh'};
@@ -274,7 +283,9 @@ sub get_objects
 
   my $num_subtables = $with_objects ? @$with_objects : 0;
 
-  if($with_objects && !$count_only)
+  # Don't bother with with_objects when counting since the count is of the
+  # rows from the "main" table (t1) only.
+  if($with_objects && !$count_only) 
   {
     my $clauses = $args{'clauses'} ||= [];
 
@@ -306,6 +317,13 @@ sub get_objects
         {
           $manual_limit = delete $args{'limit'};
         }
+        
+        #if($require_objects && $num_subtables > 1)
+        #{
+        #  Carp::croak "The 'require_objects' parameter cannot be used with ",
+        #              "'one to many' relationships when joining with more ",
+        #              "than one additional table.  Use 'with_objects' instead";
+        #}
       }
 
       $i++;
@@ -313,6 +331,8 @@ sub get_objects
 
     $i = 1; # reset iterator for second pass through with_objects
 
+    # Build lists of columns, classes, methods, and join conditions for all
+    # of the with_objects arguments.
     foreach my $name (@$with_objects)
     {
       my $key = $meta->foreign_key($name) || $meta->relationship($name);
@@ -344,8 +364,8 @@ sub get_objects
         # Add join condition(s)
         while(my($local_column, $foreign_column) = each(%$fk_columns))
         {
-          # Use outer joins to handle duplicate information
-          if($handle_dups && $num_subtables > 1)
+          # Use outer joins to handle duplicate or optional information
+          if($outer_joins_only || ($handle_dups && $num_subtables > 1 && $has_dups[$i - 1]))
           {
             # Aliased table names
             push(@{$joins[$i]{'conditions'}}, "t1.$local_column = t$i.$foreign_column");
@@ -499,7 +519,7 @@ sub get_objects
 
     foreach my $table (@tables)
     {
-      my $class     = $classes{$table};
+      my $class = $classes{$table};
 
       foreach my $column (@{$methods{$table}})
       {
@@ -631,14 +651,13 @@ sub get_objects
 
                   if($skip_first)
                   {
-
                     next ROW  if($seen[0]{$pk} > 1);
                     ++$count  if($seen[0]{$pk} == 1);
                     next ROW  if($count <= $skip_first);
 
                     $skip_first = 0;
                     @objects = ();        # Discard all skipped objects...
-                    $object_is_ready = 0; # ...so no more are ready
+                    $object_is_ready = 0; # ...so none are ready now
                     next ROW;
                   }
 
@@ -812,7 +831,7 @@ sub get_objects
 
       $iterator->_finish_code(sub
       {
-        $sth->finish  if($sth);
+        $sth->finish      if($sth);
         $db->release_dbh  if($dbh_retained);
         $sth = undef;
       });
@@ -833,19 +852,6 @@ sub get_objects
         my(@seen, @sub_objects);
 
         my @pk_columns = $meta->primary_key_column_names;
-
-#         if($skip_first)
-#         {
-#           # See, even skipping is annoying when handline duplicates
-#           while($sth->fetch)
-#           {
-#             # Skip based on the number of unique main (t1) table rows
-#             my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @pk_columns);
-#             next  if($seen[0]{$pk}++);
-#             next  if(++$count < $skip_first);
-#             last;
-#           }
-#         }
 
         # Get list of primary key columns for each sub-table
         my @sub_pk_columns;
@@ -1068,12 +1074,12 @@ __END__
 
 =head1 NAME
 
-Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from the database.
+Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from the database using complex queries.
 
 =head1 SYNOPSIS
 
   ##
-  ## Given the following example Rose::DB::Object-derived classes...
+  ## Given the following Rose::DB::Object-derived classes...
   ##
 
   package Category;
@@ -1095,7 +1101,40 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
 
   ...
 
+  package CodeName;
+
+  use Product;
+
+  use Rose::DB::Object;
+  our @ISA = qw(Rose::DB::Object);
+
+  __PACKAGE__->meta->table('code_names');
+
+  __PACKAGE__->meta->columns
+  (
+    id          => { type => 'int', primary_key => 1 },
+    product_id  => { type => 'int' },
+    name        => { type => 'varchar', length => 255 },
+    applied     => { type => 'date', not_null => 1 },
+  );
+
+  __PACKAGE__->foreign_keys
+  (
+    product =>
+    {
+      class       => 'Product',
+      key_columns => { product_id => 'id' },
+    },
+  );
+
+  __PACKAGE__->meta->initialize;
+
+  ...
+
   package Product;
+
+  use Category;
+  use CodeName;
 
   use Rose::DB::Object;
   our @ISA = qw(Rose::DB::Object);
@@ -1135,6 +1174,17 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
         category_id => 'id',
       }
     },
+  );
+
+  __PACKAGE__->meta->relationships
+  (
+    code_names =>
+    {
+      type  => 'one to many',
+      class => 'CodeName',
+      column_map   => { id => 'product_id' },
+      manager_args => { sort_by => 'applied DESC' },
+    }
   );
 
   __PACKAGE__->meta->initialize;
@@ -1255,13 +1305,22 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
   $products = 
     Product::Manager->get_products
     (
-      with_objects => [ 'category' ],
+      with_objects => [ 'category', 'code_names' ],
       query =>
       [
         category_id => [ 5, 7, 22 ],
         status      => 'active',
         start_date  => { lt => '15/12/2005 6:30 p.m.' },
-        name        => { like => [ '%foo%', '%bar%' ] },
+
+        # We need to disambiguate the "name" column below since it
+        # appears in more than one table referenced by this query.
+        # The tables have numbered aliases starting from the "main"
+        # table ("products").  The "products" table is t1,
+        # "categories" is t2, and "code_names" is t3.  You can read
+        # more about automatic table aliasing in the documentation
+        # for Rose::DB::Object::QueryBuilder.
+
+        't1.name'   => { like => [ '%foo%', '%bar%' ] },
       ],
       sort_by => 'category_id, start_date DESC',
       limit   => 100,
@@ -1272,6 +1331,13 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
   {
     # The call to $product->category does not hit the database
     print $product->name, ': ', $product->category->name, "\n";
+
+    # The call to $product->code_names does not hit the database
+    foreach my $code_name ($product->code_names)
+    {
+      # This call doesn't hit the database either
+      print $code_name->name, "\n";
+    }
   }
 
 =head1 DESCRIPTION
@@ -1343,7 +1409,7 @@ Valid parameters are:
 
 =item C<db DB>
 
-A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the C<init_db()> object method of the C<object_class>.
+A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> object method of the C<object_class>.
 
 =item C<limit NUM>
 
@@ -1369,11 +1435,13 @@ If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it
 
 =item C<with_object OBJECTS>
 
-Also fetch sub-objects associated with foreign keys in the primary table, where OBJECTS is a reference to an array of foreign key names, as defined by the L<Rose::DB::Object::Metadata> object for C<object_class>.
+Also fetch sub-objects associated with foreign keys in the primary table, where OBJECTS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names, as defined by the L<Rose::DB::Object::Metadata> object for C<object_class>.  The only supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>" and "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>".
 
-Another table will be added to the query for each foreign key listed.  The "join" clauses will be added automatically based on the foreign key definitions.  Note that (obviously) each foreign key table has to have a L<Rose::DB::Object>-derived class fronting it.  See the L<synopsis|/SYNOPSIS> for a simple example.
+Another table will be added to the query for each foreign key or relationship listed.  The "join" clauses will be added automatically based on the foreign key or relationship definitions.  Note that each related table must have a L<Rose::DB::Object>-derived class fronting it.  See the L<synopsis|/SYNOPSIS> for an example.
 
-B<Note:> the C<with_objects> list currently cannot be used to simultaneously fetch two objects that both front the same database table, but are of different classes.  One workaround is to make one class use a synonym or alias for one of the tables.  Another option is to make one table a trivial view of the other.  The objective is to get the table names to be different for each different class (even if it's just a matter of letter case, if your database is not case-sensitive when it comes to table names).
+B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include at least one "one to many" relationship in a list of one or more other relationships or foreign keys.  That's because "one to many" relationships trigger "outer joins" when fetched along with other foreign keys or relationships.  Sometimes these outer joins are more efficient than making additional queries to fetch sub-objects from each object, and sometimes they're not.  When in doubt, do not include "one to many" relationships with any other arguments in the C<with_object> parameter.  (It's okay touse as many "one to one" relationships and foreign keys
+
+B<Note:> the C<with_objects> list currently cannot be used to simultaneously fetch two objects that both front the same database table, I<but are of different classes>.  One workaround is to make one class use a synonym or alias for one of the tables.  Another option is to make one table a trivial view of the other.  The objective is to get the table names to be different for each different class (even if it's just a matter of letter case, if your database is not case-sensitive when it comes to table names).
 
 =item C<query PARAMS>
 
@@ -1385,7 +1453,9 @@ For the complete list of valid parameter names and values, see the L<build_selec
 
 =item B<get_objects_count [PARAMS]>
 
-Accepts the same arguments as C<get_objects()>, but just returns the number of rows that would have been fetched, or undef if there was an error.
+Accepts the same arguments as C<get_objects()>, but just returns the number of objects that would have been fetched, or undef if there was an error.
+
+Note that the L<with_objects|/with_objects> parameter is ignored by this method, since it counts the number of primary objects, irrespective of how many sub-objects exist for each primary object.  If you want to count the number of primary objects that have sub-objects matching certain criteria, you'll simply have to fetch then and count how many you get.
 
 =item B<get_objects_iterator [PARAMS]>
 

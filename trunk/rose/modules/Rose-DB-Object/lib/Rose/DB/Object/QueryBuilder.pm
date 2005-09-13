@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.0322';
+our $VERSION = '0.04';
 
 our $Debug = 0;
 
@@ -279,23 +279,26 @@ sub build_select
   {
     my $tables_sql;
 
-    # Undocumented "joins" parameter is an array indexed by column alias
-    # number.  Each value is a hashref that contains a key 'type' that
-    # contains the join type SQL, and 'conditions' that contains a ref to
-    # an array of join conditions.
+    # XXX: Undocumented "joins" parameter is an array indexed by table
+    # alias number.  Each value is a hashref that contains a key 'type'
+    # that contains the join type SQL, and 'conditions' that contains a
+    # ref to an array of join conditions SQL.
     #
-    # If this parameter is passed, then every table except t1 has to have
-    # a join type and condition.
+    # If this parameter is passed, then every table except t1 that has 
+    # a join type and condition will be joined with an explicit JOIN
+    # statement.  Otherwise, an inplicit inner join willbe used.
     if($joins && @$joins)
     {
       my $i = 1;
+      my(@normal_tables, @joined_tables);
 
       foreach my $table (@$tables)
       {
         # Main table gets treated specially
-        if($i == 1)
+        if($i == 1 || !$joins->[$i])
         {
-          $tables_sql = "  $table t$i\n";
+          push(@normal_tables, "  $table t$i");
+          #$tables_sql = "  $table t$i\n";
           $i++;
           next;
         }
@@ -306,12 +309,19 @@ sub build_select
         Carp::croak "Missing join conditions for table '$table'"
           unless($joins->[$i]{'conditions'});
 
-        $tables_sql .= "  $joins->[$i]{'type'} $table t$i ON(" .
-                       join(', ', @{$joins->[$i]{'conditions'}}) . ")\n";
+        push(@joined_tables, 
+             "  $joins->[$i]{'type'} $table t$i ON(" .
+             join(' AND ', @{$joins->[$i]{'conditions'}}) . ")");
+
+        #$tables_sql .= "  $joins->[$i]{'type'} $table t$i ON(" .
+        #               join(' AND ', @{$joins->[$i]{'conditions'}}) . ")\n";
+ 
         $i++;
       }
 
-      chomp($tables_sql); # Yes, I am that anal
+      # Implicit inner joins first, then explicit JOIN statements
+      $tables_sql = join(",\n", @normal_tables) .
+                    (@joined_tables ? "\n" . join("\n", @joined_tables) : '');
     }
     else
     {
