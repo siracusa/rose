@@ -317,7 +317,7 @@ sub build_select
         push(@joined_tables, 
              "  $joins->[$i]{'type'} $table t$i ON(" .
              join(' AND ', @{$joins->[$i]{'conditions'}}) . ")");
- 
+
         $i++;
       }
 
