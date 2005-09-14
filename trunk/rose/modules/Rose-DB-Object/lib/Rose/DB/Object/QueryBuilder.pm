@@ -290,15 +290,20 @@ sub build_select
     if($joins && @$joins)
     {
       my $i = 1;
-      my(@normal_tables, @joined_tables);
+      my($primary_table, @normal_tables, @joined_tables);
 
       foreach my $table (@$tables)
       {
         # Main table gets treated specially
-        if($i == 1 || !$joins->[$i])
+        if($i == 1)
+        {
+          $primary_table = "  $table t$i";
+          $i++;
+          next;
+        }
+        elsif(!$joins->[$i])
         {
           push(@normal_tables, "  $table t$i");
-          #$tables_sql = "  $table t$i\n";
           $i++;
           next;
         }
@@ -312,16 +317,13 @@ sub build_select
         push(@joined_tables, 
              "  $joins->[$i]{'type'} $table t$i ON(" .
              join(' AND ', @{$joins->[$i]{'conditions'}}) . ")");
-
-        #$tables_sql .= "  $joins->[$i]{'type'} $table t$i ON(" .
-        #               join(' AND ', @{$joins->[$i]{'conditions'}}) . ")\n";
  
         $i++;
       }
 
-      # Implicit inner joins first, then explicit JOIN statements
-      $tables_sql = join(",\n", @normal_tables) .
-                    (@joined_tables ? "\n" . join("\n", @joined_tables) : '');
+      # Primary table first, then explicit joins, then implicit inner joins
+      $tables_sql = join("\n", $primary_table, @joined_tables) .
+                    (@normal_tables ? ",\n" . join(",\n", @normal_tables) : '');
     }
     else
     {

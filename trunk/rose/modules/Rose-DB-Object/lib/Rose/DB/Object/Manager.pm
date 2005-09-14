@@ -221,21 +221,13 @@ sub get_objects
 
   $class->error(undef);
 
-  if($args{'require_objects'} && $args{'with_objects'})
-  {
-    Carp::croak "Cannot specify the 'require_objects' and the 'with_objects' ",
-                "parameters in the same call.  Pick one or the other";
-  }
-
   my $return_sql      = delete $args{'return_sql'};
   my $return_iterator = delete $args{'return_iterator'};
   my $object_class    = delete $args{'object_class'} or Carp::croak "Missing object class argument";
   my $require_objects = delete $args{'require_objects'};
-  my $with_objects    = delete $args{'with_objects'} || $require_objects;
+  my $with_objects    = delete $args{'with_objects'};
   my $skip_first      = delete $args{'skip_first'} || 0;
   my $count_only      = delete $args{'count_only'};
-
-  my $outer_joins_only = ($with_objects && !$require_objects) ? 1 : 0;
 
   my $db  = delete $args{'db'} || $object_class->init_db;
   my $dbh = delete $args{'dbh'};
@@ -251,6 +243,36 @@ sub get_objects
     }
 
     $dbh_retained = 1;
+  }
+
+  my $outer_joins_only = ($with_objects && !$require_objects) ? 1 : 0;
+
+  my($num_required_objects, %required_object, 
+     $num_with_objects, %with_objects);
+
+  if($with_objects)
+  {
+    # Don't honor the with_objects parameter when counting, since the
+    # count is of the rows from the "main" table (t1) only.
+    if($count_only)
+    {
+      $with_objects = undef;
+    }
+    else
+    {
+      $with_objects = [ $with_objects ]  unless(ref $with_objects);
+      $num_with_objects = @$with_objects;
+      %with_objects = map { $_ => 1 } @$with_objects;
+    }
+  }
+
+  if($require_objects)
+  {
+    $require_objects = [ $require_objects ]  unless(ref $require_objects);
+
+    $num_required_objects = @$require_objects;
+    %required_object = map { $_ => 1 } @$require_objects;
+    push(@$with_objects, @$require_objects)
   }
 
   my %object_args = (ref $args{'object_args'} eq 'HASH') ? %{$args{'object_args'}} : ();
@@ -283,16 +305,12 @@ sub get_objects
 
   my $num_subtables = $with_objects ? @$with_objects : 0;
 
-  # Don't bother with with_objects when counting since the count is of the
-  # rows from the "main" table (t1) only.
-  if($with_objects && !$count_only) 
+  if($with_objects)
   {
     my $clauses = $args{'clauses'} ||= [];
 
     my $i = 1;
-
-    $with_objects = [ $with_objects ]  unless(ref $with_objects);
-
+    
     # Sanity check with_objects arguments, and determine if we're going to
     # have to handle duplicate data from multiple joins.  If so, note
     # which with_objects arguments refer to relationships that may return
@@ -318,15 +336,31 @@ sub get_objects
           $manual_limit = delete $args{'limit'};
         }
         
-        #if($require_objects && $num_subtables > 1)
-        #{
-        #  Carp::croak "The 'require_objects' parameter cannot be used with ",
-        #              "'one to many' relationships when joining with more ",
-        #              "than one additional table.  Use 'with_objects' instead";
-        #}
+        if($required_object{$name} && $num_required_objects > 1 && $num_subtables > 1)
+        {
+          Carp::croak 
+            qq(The "require_objects" parameter cannot be used with ),
+            qq(a "one to many" relationship ("$name" in this case) ),
+            qq(unless that relationship is the only one listed and ),
+            qq(the "with_objects" parameter is not used);
+        }
       }
 
       $i++;
+    }
+
+    unless($args{'multi_many_ok'})
+    {
+      if(scalar(grep { $_ } @has_dups) > 1)
+      {
+        Carp::carp
+          qq(WARNING: Fetching sub-objects via more than one ),
+          qq("one to many" relationship in a single query may ),
+          qq(produce many redundant rows, and the query may be ),
+          qq(slow.  If you're sure you want to do this, you can ),
+          qq(silence this warning by using the "multi_many_ok" ),
+          qq(parameter);
+      }
     }
 
     $i = 1; # reset iterator for second pass through with_objects
@@ -365,7 +399,8 @@ sub get_objects
         while(my($local_column, $foreign_column) = each(%$fk_columns))
         {
           # Use outer joins to handle duplicate or optional information
-          if($outer_joins_only || ($handle_dups && $num_subtables > 1 && $has_dups[$i - 1]))
+          if($outer_joins_only || $with_objects{$name})
+          #|| $handle_dups) #($handle_dups && $num_subtables > 1 && $has_dups[$i - 1]))
           {
             # Aliased table names
             push(@{$joins[$i]{'conditions'}}, "t1.$local_column = t$i.$foreign_column");
@@ -1415,6 +1450,10 @@ A L<Rose::DB>-derived object used to access the database.  If omitted, one will 
 
 Return a maximum of NUM objects.
 
+=item C<multi_many_ok BOOL>
+
+If true, do not print a warning when attempting to do multiple LEFT OUTER JOINs against tables related by "one to many" relationships.  See the documentation for the C<with_objects> parameter for more information.
+
 =item C<object_args HASHREF>
 
 A reference to a hash of name/value pairs to be passed to the constructor of each C<object_class> object fetched, in addition to the values from the database.
@@ -1429,17 +1468,27 @@ Skip the first NUM rows.  If the database supports some sort of "limit with offs
 
 This parameter can only be used along with the C<limit> parameter, otherwise a fatal error will occur.
 
+=item C<require_objects OBJECTS>
+
+Only fetch rows from the primary table that have all of the associated sub-objects listed in OBJECTS, where OBJECTS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The only supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>" and "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>".
+
+A "one to many" relationship may be included in OBJECTS I<only> if it is the sole name listed in OBJECTs I<and> the C<with_objects> parameter is omitted entirely.  A fatal error will occur if these conditions are not met.
+
+For each foreign key or relationship listed in OBJECTS, another table will be added to the query via an implicit inner join.  The join conditions will be constructed automatically based on the foreign key or relationship definitions.  Note that each related table must have a L<Rose::DB::Object>-derived class fronting it.
+
+B<Note:> the C<require_objects> list currently cannot be used to simultaneously fetch two objects that both front the same database table, I<but are of different classes>.  One workaround is to make one class use a synonym or alias for one of the tables.  Another option is to make one table a trivial view of the other.  The objective is to get the table names to be different for each different class (even if it's just a matter of letter case, if your database is not case-sensitive when it comes to table names).
+
 =item C<share_db BOOL>
 
 If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it is constructed.  Defaults to true.
 
-=item C<with_object OBJECTS>
+=item C<with_objects OBJECTS>
 
-Also fetch sub-objects associated with foreign keys in the primary table, where OBJECTS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names, as defined by the L<Rose::DB::Object::Metadata> object for C<object_class>.  The only supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>" and "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>".
+Also fetch sub-objects (if any) associated with rows in the primary table, where OBJECTS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The only supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>" and "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>".
 
-Another table will be added to the query for each foreign key or relationship listed.  The "join" clauses will be added automatically based on the foreign key or relationship definitions.  Note that each related table must have a L<Rose::DB::Object>-derived class fronting it.  See the L<synopsis|/SYNOPSIS> for an example.
+For each foreign key or relationship listed in OBJECTS, another table will be added to the query via an explicit LEFT OUTER JOIN.  The join conditions will be constructed automatically based on the foreign key or relationship definitions.  Note that each related table must have a L<Rose::DB::Object>-derived class fronting it.  See the L<synopsis|/SYNOPSIS> for an example.
 
-B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include at least one "one to many" relationship in a list of one or more other relationships or foreign keys.  That's because "one to many" relationships trigger "outer joins" when fetched along with other foreign keys or relationships.  Sometimes these outer joins are more efficient than making additional queries to fetch sub-objects from each object, and sometimes they're not.  When in doubt, do not include "one to many" relationships with any other arguments in the C<with_object> parameter.  (It's okay touse as many "one to one" relationships and foreign keys
+B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include more than one "one to many" relationship in OBJECTS.  Sometimes this may still be more efficient than making additional queries to fetch these sub-objects, but that all depends on the actual data.  A warning will be emitted (via L<Carp::cluck|Carp/cluck>) if you you include more than one "one to many" relationship in OBJECTS.  If you're sure you know what you're doing, you can silence this warning by passing the C<multi_many_ok> parameter with a true value.
 
 B<Note:> the C<with_objects> list currently cannot be used to simultaneously fetch two objects that both front the same database table, I<but are of different classes>.  One workaround is to make one class use a synonym or alias for one of the tables.  Another option is to make one table a trivial view of the other.  The objective is to get the table names to be different for each different class (even if it's just a matter of letter case, if your database is not case-sensitive when it comes to table names).
 
@@ -1455,7 +1504,7 @@ For the complete list of valid parameter names and values, see the L<build_selec
 
 Accepts the same arguments as C<get_objects()>, but just returns the number of objects that would have been fetched, or undef if there was an error.
 
-Note that the L<with_objects|/with_objects> parameter is ignored by this method, since it counts the number of primary objects, irrespective of how many sub-objects exist for each primary object.  If you want to count the number of primary objects that have sub-objects matching certain criteria, you'll simply have to fetch then and count how many you get.
+Note that the C<with_objects> parameter is ignored by this method, since it counts the number of primary objects, irrespective of how many sub-objects exist for each primary object.  If you want to count the number of primary objects that have sub-objects matching certain criteria, use the C<require_objects> parameter instead.
 
 =item B<get_objects_iterator [PARAMS]>
 
