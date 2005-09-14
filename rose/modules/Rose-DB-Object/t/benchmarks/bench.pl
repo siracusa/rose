@@ -617,6 +617,7 @@ sub Insert_Code_Names
       foreach my $n (1 .. (int rand(30) + 5))
       {
         $sth->execute($i + 100_000, "CN 1x$n $i");
+        $sth->execute($i + 1_100_000, "CN 1.1x$n $i");
       }
     }
     
@@ -628,6 +629,7 @@ sub Insert_Code_Names
         foreach my $n (1 .. (int rand(30) + 5))
         {
           $sth->execute($i + 200_000, "CN 2x$n $i");
+          $sth->execute($i + 2_200_000, "CN 2.2x$n $i");
         }
       }    
     }
@@ -640,6 +642,7 @@ sub Insert_Code_Names
         foreach my $n (1 .. (int rand(30) + 5))
         {
           $sth->execute($i + 400_000, "CN 4x$n $i");
+          $sth->execute($i + 4_400_000, "CN 4.4x$n $i");
         }
       }
     }
@@ -652,6 +655,20 @@ sub Insert_Code_Names
         foreach my $n (1 .. (int rand(30) + 5))
         {
           $sth->execute($i + 300_000, "CN 3x$n $i");
+          $sth->execute($i + 3_300_000, "CN 3.3x$n $i");
+        }
+      }
+    }
+
+    # DBI
+    if($cmp{'DBI'})
+    {
+      foreach my $i (1 .. $Iterations)
+      {
+        foreach my $n (1 .. (int rand(30) + 5))
+        {
+          $sth->execute($i + 500_000, "CN 5x$n $i");
+          $sth->execute($i + 5_500_000, "CN 5.5x$n $i");
         }
       }
     }
@@ -1695,7 +1712,7 @@ EOF
           [
             't1.name' => { like => 'Product %2%' },
           ],
-          with_objects => [ 'category' ]);
+          require_objects => [ 'category' ]);
       die unless(@$ps);
 
       if($Debug && !$printed)
@@ -1793,7 +1810,7 @@ EOF
 
     sub search_simple_product_and_category_and_code_name_dbi
     {
-    $DB::single = 1;
+$DB::single = 1;
       my $sth = $DBH->prepare(<<"EOF");
 SELECT
   p.id,
@@ -1812,8 +1829,9 @@ SELECT
   n.product_id,
   n.name
 FROM
-  rose_db_object_test_products p,
-  rose_db_object_test_code_names n
+  rose_db_object_test_products p
+  LEFT OUTER JOIN rose_db_object_test_code_names n ON(n.product_id = p.id),
+  rose_db_object_test_categories c
 WHERE
   c.id = p.category_id AND
   n.product_id = p.id AND
@@ -1846,7 +1864,7 @@ EOF
         my $n = $p->{'cat_name'};
         die  unless($n =~ /\S/);
         my $cn = $p->{'cn_name'};
-        $cn && $cn =~ /\S/;
+        die  unless($cn =~ /^CN /);
       }
     }
   }
@@ -1857,14 +1875,16 @@ EOF
 
     sub search_simple_product_and_category_and_code_name_rdbo
     {
+      #local $Rose::DB::Object::Manager::Debug = 1;
       my $ps =
         MyTest::RDBO::Simple::Product::Manager->get_products(
           db => $DB,
           query =>
           [
-            't1.name' => { like => 'Product %2%' },
+            't1.name' => { like => 'Product 200%' },
           ],
-          with_objects => [ 'category' ]);
+          with_objects    => [ 'code_names' ],
+          require_objects => [ 'category' ]);
       die unless(@$ps);
 
       if($Debug && !$printed)
@@ -1878,6 +1898,8 @@ EOF
         my $cat = $p->category;
         my $n = $cat->name;
         die  unless($n =~ /\S/);
+        my $cn = $p->code_names->[0];
+        die  unless($cn->name =~ /^CN /);
       }
     }
   }
@@ -1888,7 +1910,7 @@ EOF
 
     sub search_simple_product_and_category_and_code_name_cdbi
     {
-      my @p = MyTest::CDBI::Simple::Product->search_like(name => 'Product %2%');
+      my @p = MyTest::CDBI::Simple::Product->search_like(name => 'Product 200%');
       die unless(@p);
 
       if($Debug && !$printed)
@@ -1902,6 +1924,9 @@ EOF
         my $cat = $p->category_id;
         my $n = $cat->name;
         die  unless($n =~ /\S/);
+        my $cn = ($p->code_names)[0];
+$DB::single = 1;
+        die  unless($cn->name =~ /^CN /);
       }
     }
   }
@@ -4171,14 +4196,30 @@ sub Run_Tests
 #       'DBIC' => \&search_complex_product_and_category_dbic,
 #     });
 
-    Bench('Simple: search 4', $CPU_Time,
+    CPU_MISERS:
     {
-      'DBI ' => \&search_simple_product_and_category_and_code_name_dbi,
-      #'RDBO' => \&search_simple_product_and_category_and_code_name_rdbo,
-      #'CDBI' => \&search_simple_product_and_category_and_code_name_cdbi,
-      #'CDBS' => \&search_simple_product_and_category_and_code_name_cdbs,
-      #'DBIC' => \&search_simple_product_and_category_and_code_name_dbic,
-    });
+      local $Benchmark::Min_Count = 0;
+      local $Benchmark::Min_CPU   = 0;
+
+      # These tests take forever (wallclock), even when set to 1 CPU
+      # second.  Force a reasonable number of iterations, scaled
+      # coarsely based on how many iterations other tests are using.
+    
+      my $Tiny_Interations = $Iterations < 1000  ?  10 :
+                             $Iterations < 5000  ?  25 :
+                             $Iterations < 10000 ?  50 :
+                                                   100;
+  
+      Bench('Simple: search 4', $Tiny_Interations,
+      {
+        #'DBI ' => \&search_simple_product_and_category_and_code_name_dbi,
+        'RDBO' => \&search_simple_product_and_category_and_code_name_rdbo,
+        'CDBI' => \&search_simple_product_and_category_and_code_name_cdbi,
+        #'CDBS' => \&search_simple_product_and_category_and_code_name_cdbs,
+        #'DBIC' => \&search_simple_product_and_category_and_code_name_dbic,
+      });
+    }
+
 # 
 #     #
 #     # Iterate
@@ -4376,6 +4417,8 @@ CREATE TABLE rose_db_object_test_products
   last_modified  TIMESTAMP DEFAULT NOW(),
   date_created   TIMESTAMP DEFAULT NOW(),
 
+  INDEX(name),
+
   FOREIGN KEY (fk1, fk2, fk3) REFERENCES rose_db_object_test_codes (k1, k2, k3)
 )
 EOF
@@ -4385,7 +4428,9 @@ CREATE TABLE rose_db_object_test_code_names
 (
   id          SERIAL PRIMARY KEY,
   product_id  INT NOT NULL REFERENCES rose_db_object_test_products (id),
-  name        VARCHAR(32)
+  name        VARCHAR(32),
+  
+  INDEX(product_id)
 )
 EOF
 

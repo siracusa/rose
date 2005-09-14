@@ -1,8 +1,11 @@
-0.074 (09.13.2005) - John Siracusa <siracusa@mindspring.com>
+0.074 (09.14.2005) - John Siracusa <siracusa@mindspring.com>
 
-    * Manager can now fetch objects related by "one to many" relationships.
-      This requires LEFT OUTER JOIN support in the database.  Right now, all
-      of the databases supported by Rose::DB have this feature.
+    * Repurposed the "with_objects" Manager parameter to do explicit
+      LEFT OUTER JOIN instead of implicit inner joins.
+    * Added "require_objects" Manager parameter to fill the role of
+      the old "with_objects" parameter.
+    * Documented new restrictions associated with the more sensible
+      "with_objects" and "require_objects" semantics.
     * Removed restriction on aliasing primary key columns.
     * Fixed bug in Manager that caused fetched objects to be inserted 
       instead of updated on save().  (Reported by Uwe Voelker.)
