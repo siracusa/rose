@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.04';
+our $VERSION = '0.041';
 
 our $Debug = 0;
 
@@ -32,6 +32,8 @@ my %OP_MAP =
   any_in_set => 'ANY IN',
   all_in_set => 'ALL IN',
 );
+
+@OP_MAP{map { $_ . '_sql' } keys %OP_MAP} = values(%OP_MAP);
 
 sub build_where_clause { build_select(@_, where_only => 1) }
 
@@ -361,12 +363,20 @@ sub build_select
 
 sub _build_clause
 {
-  my($dbh, $field, $op, $vals, $not, $field_mod, $bind, $db, $col_meta) = @_;
+  my($dbh, $field, $op, $vals, $not, $field_mod, $bind, $db, $col_meta,
+     $force_inline) = @_;
 
   if(!defined $op && ref $vals eq 'HASH' && keys(%$vals) == 1)
   {
-    $op = $OP_MAP{(keys(%$vals))[0]} or 
-      Carp::croak "Unknown comparison operator: ", (keys(%$vals))[0];
+    my $op_arg = (keys(%$vals))[0];
+
+    if($op_arg =~ s/_sql$//)
+    {
+      $force_inline = 1;
+    }
+
+    $op = $OP_MAP{$op_arg} or 
+      Carp::croak "Unknown comparison operator: $op_arg";
   }
   else { $op ||= '=' }
 
@@ -376,11 +386,12 @@ sub _build_clause
   {
     $field = $field_mod  if($field_mod);
 
-    my $should_inline = ($db && $col_meta && $col_meta->should_inline_value($db, $vals));
+    my $should_inline = 
+      ($db && $col_meta && $col_meta->should_inline_value($db, $vals));
 
     if(defined($vals))
     {
-      if($bind && !$should_inline)
+      if($bind && !$should_inline && !$force_inline)
       {
         push(@$bind, $vals);
 
@@ -402,7 +413,8 @@ sub _build_clause
       else
       {
         return ($not ? "$not(" : '') . "$field $op " .
-               ($should_inline ? $vals : $dbh->quote($vals)) . 
+               (($should_inline || $force_inline) ? $vals : 
+                                                   $dbh->quote($vals)) . 
                ($not ? ')' : '');
       }
     }
@@ -421,9 +433,10 @@ sub _build_clause
 
           foreach my $val (@$vals)
           {
-            my $should_inline = ($db && $col_meta && $col_meta->should_inline_value($db, $val));
+            my $should_inline = 
+              ($db && $col_meta && $col_meta->should_inline_value($db, $val));
 
-            if($should_inline)
+            if($should_inline || $force_inline)
             {
               push(@new_vals, $val);            
             }
@@ -439,7 +452,7 @@ sub _build_clause
 
         return "$field " . ($not ? "$not " : '') . 'IN (' . join(', ', map 
                {
-                 ($db && $col_meta && $col_meta->should_inline_value($db, $_)) ? 
+                 ($force_inline || ($db && $col_meta && $col_meta->should_inline_value($db, $_))) ? 
                  $_ : $dbh->quote($_)
                }
                @$vals) . ')';
@@ -473,11 +486,12 @@ sub _build_clause
 
         foreach my $val (@$vals)
         {
-          my $should_inline = ($db && $col_meta && $col_meta->should_inline_value($db, $val));
+          my $should_inline = 
+            ($db && $col_meta && $col_meta->should_inline_value($db, $val));
 
-          if($should_inline)
+          if($should_inline || $force_inline)
           {
-            push(@new_vals, $val);            
+            push(@new_vals, $val);
           }
           else
           {
@@ -493,8 +507,8 @@ sub _build_clause
       return '(' . join(' OR ', map 
       {
         ($not ? "$not(" : '') . "$field $op " . 
-        ($db && $col_meta && $col_meta->should_inline_value($db, $_) ? $_ : $dbh->quote($_)) .
-        ($not ? ')' : '') 
+        (($force_inline || ($db && $col_meta && $col_meta->should_inline_value($db, $_))) ? $_ : $dbh->quote($_)) .
+        ($not ? ')' : '')
       }
       @$vals) . ')';
     }
@@ -513,13 +527,13 @@ sub _build_clause
 
       if(!ref($vals->{$raw_op}))
       {
-        push(@clauses, _build_clause($dbh, $field, $sub_op, $vals->{$raw_op}, $not, $field_mod, $bind, $db, $col_meta));
+        push(@clauses, _build_clause($dbh, $field, $sub_op, $vals->{$raw_op}, $not, $field_mod, $bind, $db, $col_meta, $force_inline));
       }
       elsif(ref($vals->{$raw_op}) eq 'ARRAY')
       {
         foreach my $val (@{$vals->{$raw_op}})
         {
-          push(@clauses, _build_clause($dbh, $field, $sub_op, $val, $not, $field_mod, $bind, $db, $col_meta));
+          push(@clauses, _build_clause($dbh, $field, $sub_op, $val, $not, $field_mod, $bind, $db, $col_meta, $force_inline));
         }
       }
       else
@@ -840,6 +854,16 @@ Set operations:
     '!NAME' => { all_in_set => [ 'A', 'B'] } 
 
 The string "NAME" can take many forms, each of which eventually resolves to a database column (COLUMN in the examples above).
+
+Any of these operations described above can have "_sql" appended to indicate that the corresponding values are to be "inlined" (i.e., included in the SQL query as-is, with no quoting of any kind).  This is useful for comparing two columns.  For example, this query:
+
+    query => [ legs => { gt_sql => 'eyes' } ]
+
+would produce this SQL:
+
+    SELECT ... FROM animals WHERE legs > eyes
+
+where "legs" and "eyes" are both column names in the "animals" table.
 
 =over 4
 

@@ -1347,13 +1347,13 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
         status      => 'active',
         start_date  => { lt => '15/12/2005 6:30 p.m.' },
 
-        # We need to disambiguate the "name" column below since it
-        # appears in more than one table referenced by this query.
-        # The tables have numbered aliases starting from the "main"
-        # table ("products").  The "products" table is t1,
-        # "categories" is t2, and "code_names" is t3.  You can read
-        # more about automatic table aliasing in the documentation
-        # for Rose::DB::Object::QueryBuilder.
+        # We need to disambiguate the "name" column below since it appears
+        # in more than one table referenced by this query.  When more than
+        # one table is queried, the tables have numbered aliases starting
+        # from the "main" table ("products").  The "products" table is t1,
+        # "categories" is t2, and "code_names" is t3.  You can read more
+        # about automatic table aliasing in the documentation for
+        # Rose::DB::Object::QueryBuilder.
 
         't1.name'   => { like => [ '%foo%', '%bar%' ] },
       ],

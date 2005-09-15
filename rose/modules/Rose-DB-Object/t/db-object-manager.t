@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 686;
+use Test::More tests => 695;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("Postgres tests", 225)  unless($HAVE_PG);
+  skip("Postgres tests", 228)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -999,6 +999,26 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   };
 
   ok($@ =~ /invalid without a limit/, "get_objects_iterator() missing offset - $db_type");
+
+  # Start *_sql comparison tests
+  
+  $o6->fk2(99);
+  $o6->fk3(99);
+  $o6->save;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ 'fk2' => { eq_sql => 'fk3' } ],
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() eq_sql 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() eq_sql 2 - $db_type");
+
+  is($objs->[0]->id, 60, "get_objects() eq_sql 3 - $db_type");
+
+  # End *_sql comparison tests
 }
 
 #
@@ -1007,7 +1027,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 227)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 230)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -1975,6 +1995,26 @@ SKIP: foreach my $db_type ('mysql')
   };
 
   ok($@ =~ /invalid without a limit/, "get_objects_iterator() missing offset - $db_type");
+
+  # Start *_sql comparison tests
+  
+  $o6->fk2(99);
+  $o6->fk3(99);
+  $o6->save;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ 'fk2' => { eq_sql => 'fk3' } ],
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() eq_sql 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() eq_sql 2 - $db_type");
+
+  is($objs->[0]->id, 60, "get_objects() eq_sql 3 - $db_type");
+
+  # End *_sql comparison tests
 }
 
 #
@@ -1983,7 +2023,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type (qw(informix))
 {
-  skip("Informix tests", 232)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 235)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -2001,8 +2041,6 @@ SKIP: foreach my $db_type (qw(informix))
                                 date_created  => '2004-03-30 12:34:56');
 
   ok($o->save, "object save() 1 - $db_type");
-
-  #local $Rose::DB::Object::Manager::Debug = 1;
 
   my $objs = 
     MyInformixObject->get_objectz(
@@ -3025,6 +3063,26 @@ SKIP: foreach my $db_type (qw(informix))
   };
 
   ok($@ =~ /invalid without a limit/, "get_objects_iterator() missing offset - $db_type");
+
+  # Start *_sql comparison tests
+  
+  $o6->fk2(99);
+  $o6->fk3(99);
+  $o6->save;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ 'fk2' => { eq_sql => 'fk3' } ],
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() eq_sql 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() eq_sql 2 - $db_type");
+
+  is($objs->[0]->id, 60, "get_objects() eq_sql 3 - $db_type");
+
+  # End *_sql comparison tests
 }
 
 BEGIN
