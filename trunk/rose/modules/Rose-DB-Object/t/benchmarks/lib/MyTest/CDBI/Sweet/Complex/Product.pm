@@ -2,11 +2,11 @@ package MyTest::CDBI::Sweet::Complex::Product;
 
 use strict;
 
+use base 'MyTest::CDBI::Sweet::Base';
+
 use MyTest::CDBI::Sweet::Complex::Code;
 use MyTest::CDBI::Sweet::Complex::CodeName;
 use MyTest::CDBI::Sweet::Complex::Category;
-
-use base 'MyTest::CDBI::Sweet::Base';
 
 __PACKAGE__->table('rose_db_object_test_products');
 __PACKAGE__->columns(Primary => 'id');
@@ -27,5 +27,9 @@ __PACKAGE__->has_a(published => 'DateTime',
 __PACKAGE__->has_a(category_id => 'MyTest::CDBI::Sweet::Complex::Category');
 
 __PACKAGE__->has_many(code_names => 'MyTest::CDBI::Sweet::Complex::CodeName');
+
+# Dunno why I have to do this, but it doesn't work without it...
+my $meta = __PACKAGE__->meta_info(has_many => 'code_names');
+$meta->args->{'foreign_key'} = 'product_id';
 
 1;

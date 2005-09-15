@@ -1,4 +1,4 @@
-package MyTest::DBIC::Simple::Code;
+package MyTest::DBIC::Simple::CodeName;
 
 use strict;
 
