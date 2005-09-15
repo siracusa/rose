@@ -81,7 +81,7 @@ unless($Opt{'simple'} || $Opt{'complex'})
   delete @Opt{qw(simple complex)};
 }
 
-our $Tests_Match = $Opt{'benchmarks-match'} ? qr($Opt{'benchmarks-match'}|insert) : 0;
+our $Bench_Match = $Opt{'benchmarks-match'} ? qr($Opt{'benchmarks-match'}|insert) : 0;
 
 our $Iterations = $Opt{'iterations'} || $Default_Iterations;
 
@@ -610,6 +610,13 @@ use constant MIN_CODE_NAMES       => 1;
 
 sub Insert_Code_Names
 {
+  if($Bench_Match && 
+     'Simple: search with 1-to-1 and 1-to-n sub-objects' !~ $Bench_Match &&
+     'Complex: search with 1-to-1 and 1-to-n sub-objects' !~ $Bench_Match)
+  {
+    return;
+  }
+
   local $|= 1;
   print "\n# Inserting 1-to-n records";
 
@@ -617,7 +624,7 @@ sub Insert_Code_Names
 
   my $sql = 'INSERT INTO rose_db_object_test_code_names (product_id, name) VALUES (?, ?)';
 
-  my $factor = $Opt{'simple-and-complex'} ? 2 : 1;
+  my $dbi_factor = $Opt{'simple-and-complex'} ? 2 : 1;
 
   foreach my $db_name (@Use_DBs)
   {
@@ -631,7 +638,7 @@ sub Insert_Code_Names
     my $sth = $dbh->prepare($sql);
 
     # RDBO
-    foreach my $i (1 .. ($Iterations * $factor))
+    foreach my $i (1 .. $Iterations)
     {
       foreach my $n (1 .. (int rand(MAX_CODE_NAMES_RANGE) + MIN_CODE_NAMES))
       {
@@ -645,7 +652,7 @@ sub Insert_Code_Names
     # CDBI
     if($cmp{'Class::DBI'})
     {
-      foreach my $i (1 .. ($Iterations * $factor))
+      foreach my $i (1 .. $Iterations)
       {
         foreach my $n (1 .. (int rand(MAX_CODE_NAMES_RANGE) + MIN_CODE_NAMES))
         {
@@ -660,7 +667,7 @@ sub Insert_Code_Names
     # CDBS
     if($cmp{'Class::DBI::Sweet'})
     {
-      foreach my $i (1 .. ($Iterations * $factor))
+      foreach my $i (1 .. $Iterations)
       {
         foreach my $n (1 .. (int rand(MAX_CODE_NAMES_RANGE) + MIN_CODE_NAMES))
         {
@@ -675,7 +682,7 @@ sub Insert_Code_Names
     # DBIC
     if($cmp{'DBIx::Class'})
     {
-      foreach my $i (1 .. ($Iterations * $factor))
+      foreach my $i (1 .. $Iterations)
       {
         foreach my $n (1 .. (int rand(MAX_CODE_NAMES_RANGE) + MIN_CODE_NAMES))
         {
@@ -690,7 +697,7 @@ sub Insert_Code_Names
     # DBI
     if($cmp{'DBI'})
     {
-      foreach my $i (1 .. ($Iterations * $factor))
+      foreach my $i (1 .. ($Iterations * $dbi_factor))
       {
         foreach my $n (1 .. (int rand(MAX_CODE_NAMES_RANGE) + MIN_CODE_NAMES))
         {
@@ -703,6 +710,76 @@ sub Insert_Code_Names
 
     $db->commit;
     print ".\n";
+  }
+}
+
+sub Make_Indexes
+{
+  if($Bench_Match && 
+     'Simple: search with 1-to-1 and 1-to-n sub-objects' !~ $Bench_Match &&
+     'Complex: search with 1-to-1 and 1-to-n sub-objects' !~ $Bench_Match &&
+     'Simple: search with 1-to-1 sub-objects' !~ $Bench_Match &&
+     'Complex: search with 1-to-1 sub-objects' !~ $Bench_Match)
+  {
+    return;
+  }
+
+  print "\n# Making indexes...\n";
+
+  my %cmp = map { $_ => 1 } @Cmp_To;
+
+  foreach my $db_name (@Use_DBs)
+  {
+    my $db = Rose::DB->new($db_name);
+
+    my $dbh = $db->dbh;
+
+    $dbh->do(<<"EOF");
+CREATE INDEX rose_db_object_test_products_name_idx ON rose_db_object_test_products (name)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE INDEX rose_db_object_test_code_names_pid_idx ON rose_db_object_test_code_names (product_id)
+EOF
+  }
+}
+
+sub Drop_Indexes
+{
+  if($Bench_Match && 
+     'Simple: search with 1-to-1 and 1-to-n sub-objects' !~ $Bench_Match &&
+     'Complex: search with 1-to-1 and 1-to-n sub-objects' !~ $Bench_Match &&
+     'Simple: search with 1-to-1 sub-objects' !~ $Bench_Match &&
+     'Complex: search with 1-to-1 sub-objects' !~ $Bench_Match)
+  {
+    return;
+  }
+
+  print "\n# Dropping indexes...\n";
+
+  my %cmp = map { $_ => 1 } @Cmp_To;
+
+  foreach my $db_name (@Use_DBs)
+  {
+    my $db = Rose::DB->new($db_name);
+  
+    my $dbh = $db->dbh;
+  
+    my $on = ($db_name eq 'mysql') ? 'ON rose_db_object_test_products' : '';
+    
+    $dbh->do(<<"EOF");
+DROP INDEX rose_db_object_test_products_name_idx $on
+EOF
+  
+    $on = ($db_name eq 'mysql') ? 'ON rose_db_object_test_code_names' : '';
+
+    $dbh->do(<<"EOF");
+DROP INDEX rose_db_object_test_code_names_pid_idx $on
+EOF
+
+    $dbh->do(<<"EOF");
+DELETE FROM rose_db_object_test_code_names
+EOF
   }
 }
 
@@ -3531,7 +3608,7 @@ EOF
         }
 
         print "search_complex_product_and_category_and_code_name_dbi GOT $num\n";
-        $printed++;
+        #$printed++;
       }
 
       foreach my $p (@ps)
@@ -3550,7 +3627,7 @@ EOF
 
     sub search_complex_product_and_category_and_code_name_rdbo
     {
-      local $Rose::DB::Object::Manager::Debug = 1;
+      #local $Rose::DB::Object::Manager::Debug = 1;
       my $ps =
         MyTest::RDBO::Complex::Product::Manager->get_products(
           db => $DB,
@@ -3565,7 +3642,7 @@ EOF
       if($Debug && !$printed)
       {
         print "search_complex_product_and_category_and_code_name_rdbo GOT ", scalar(@$ps), "\n";
-        $printed++;
+        #$printed++;
       }
 
       foreach my $p (@$ps)
@@ -3573,7 +3650,6 @@ EOF
         my $cat = $p->category;
         my $n = $cat->name;
         die  unless($n =~ /\S/);
-        $DB::single = 1;
         my $cn = $p->code_names->[0];
         die  unless($cn->name =~ /^CN /);
       }
@@ -3592,7 +3668,7 @@ EOF
       if($Debug && !$printed)
       {
         print "search_complex_product_and_category_and_code_name_cdbi GOT ", scalar(@p), "\n";
-        $printed++;
+        #$printed++;
       }
 
       foreach my $p (@p)
@@ -3620,7 +3696,7 @@ EOF
       if($Debug && !$printed)
       {
         print "search_complex_product_and_category_and_code_name_cdbs GOT ", scalar(@p), "\n";
-        $printed++;
+        #$printed++;
       }
 
       foreach my $p (@p)
@@ -3646,7 +3722,7 @@ EOF
       if($Debug && !$printed)
       {
         print "search_complex_product_and_category_and_code_name_dbic GOT ", scalar(@p), "\n";
-        $printed++;
+        #$printed++;
       }
 
       foreach my $p (@p)
@@ -4146,7 +4222,7 @@ sub Bench
     $filtered_tests{$test_name} = $code;
   }
 
-  return  unless(%filtered_tests && (!$Tests_Match || $name =~ /$Tests_Match/));
+  return  unless(%filtered_tests && (!$Bench_Match || $name =~ /$Bench_Match/));
   print "\n"  unless($no_newline);
   print "# $name\n";
 
@@ -4184,8 +4260,6 @@ sub Run_Tests
     'CDBS' => \&insert_complex_category_cdbs,
     'DBIC' => \&insert_complex_category_dbic,
   }, $Opt{'complex'} ? 'no-newline' : 0);
-
-  Insert_Code_Names(); # no reason to bench this
 
   Bench('Simple: insert 2', $Iterations,
   {
@@ -4412,6 +4486,8 @@ sub Run_Tests
       'DBIC' => \&search_limit_offset_complex_product_dbic,
     });
 
+    Make_Indexes();
+
     Bench('Simple: search with 1-to-1 sub-objects', $CPU_Time,
     {
       'DBI ' => \&search_simple_product_and_category_dbi,
@@ -4430,6 +4506,8 @@ sub Run_Tests
       'DBIC' => \&search_complex_product_and_category_dbic,
     });
 
+    Insert_Code_Names(); # no reason to bench this
+
     CPU_MISERS:
     {
       local $Benchmark::Min_Count = 0;
@@ -4439,11 +4517,11 @@ sub Run_Tests
       # second.  Force a reasonable number of iterations, scaled
       # coarsely based on how many iterations other tests are using.
     
-      my $Tiny_Interations = $Iterations <= 1000  ?   5 :
-                             $Iterations <= 5000  ?   3 :
-                             $Iterations <= 10000 ?   2 :
-                                                      1;
-  
+      my $Tiny_Interations = $Iterations <= 1000 ? 5 :
+                             $Iterations <= 3000 ? 2 :
+                             $Iterations <= 5000 ? 1 :
+                                                   1;
+
       Bench('Simple: search with 1-to-1 and 1-to-n sub-objects', $Tiny_Interations,
       {
         'DBI ' => \&search_simple_product_and_category_and_code_name_dbi,
@@ -4525,6 +4603,8 @@ sub Run_Tests
   #
   # Delete
   #
+
+  Drop_Indexes();
 
   Bench('Simple: delete', $Iterations,
   {
@@ -4659,8 +4739,6 @@ CREATE TABLE rose_db_object_test_products
   last_modified  TIMESTAMP DEFAULT NOW(),
   date_created   TIMESTAMP DEFAULT NOW(),
 
-  INDEX(name),
-
   FOREIGN KEY (fk1, fk2, fk3) REFERENCES rose_db_object_test_codes (k1, k2, k3)
 )
 EOF
@@ -4670,9 +4748,7 @@ CREATE TABLE rose_db_object_test_code_names
 (
   id          SERIAL PRIMARY KEY,
   product_id  INT NOT NULL REFERENCES rose_db_object_test_products (id),
-  name        VARCHAR(32),
-  
-  INDEX(product_id)
+  name        VARCHAR(32)
 )
 EOF
 
