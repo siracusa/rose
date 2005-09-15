@@ -250,8 +250,15 @@ sub get_objects
   my($num_required_objects, %required_object, 
      $num_with_objects, %with_objects);
 
+  my $use_redundant_join_conditions = delete $args{'redundant_join_conditions'};
+
   if($with_objects)
   {
+    unless(defined $use_redundant_join_conditions)
+    {
+      $use_redundant_join_conditions = $db->likes_redundant_join_conditions;
+    }
+    
     # Don't honor the with_objects parameter when counting, since the
     # count is of the rows from the "main" table (t1) only.
     if($count_only)
@@ -409,6 +416,19 @@ sub get_objects
             #push(@{$joins[$i]{'conditions'}},  "$tables[0].$local_column = $tables[-1].$foreign_column");
 
             $joins[$i]{'type'} = 'LEFT OUTER JOIN';
+
+            if($use_redundant_join_conditions)
+            {
+              # Aliased table names
+              push(@$clauses, ($has_dups[$i - 1] ?
+                   "(t1.$local_column = t$i.$foreign_column OR t$i.$foreign_column IS NULL)" :
+                   "(t1.$local_column = t$i.$foreign_column OR t1.$local_column IS NULL)"));
+
+              # Fully-qualified table names
+              #push(@$clauses, ($has_dups[$i - 1] ?
+              #     "($tables[0].$local_column = $tables[-1].$foreign_column OR $tables[-1].$foreign_column IS NULL)" :
+              #     "($tables[0].$local_column = $tables[-1].$foreign_column OR $tables[0].$local_column IS NULL)"));
+            }
           }
           else
           {
