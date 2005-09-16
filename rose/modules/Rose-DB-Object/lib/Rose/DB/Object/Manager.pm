@@ -12,7 +12,7 @@ use Rose::DB::Object::Constants qw(STATE_LOADING STATE_IN_DB);
 # XXX: Should be a value that is unlikely to exist in a primary key column
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.06';
+our $VERSION = '0.061';
 
 our $Debug = 0;
 
@@ -382,32 +382,37 @@ sub get_objects
 
       if($rel_type =~ /^(?:foreign key|one to (one|many))$/)
       {
-        my $fk_class = $key->class or 
+        my $ft_class = $key->class or 
           Carp::confess "$class - Missing foreign object class for '$name'";
 
-        my $fk_columns = $key->key_columns or 
+        my $ft_columns = $key->key_columns or 
           Carp::confess "$class - Missing key columns for '$name'";
 
-        my $fk_meta = $fk_class->meta; 
+        my $ft_meta = $ft_class->meta; 
 
-        $meta{$fk_class} = $fk_meta;
+        $meta{$ft_class} = $ft_meta;
 
-        push(@tables, $fk_meta->fq_table_sql);
-        push(@classes, $fk_class);
+        push(@tables, $ft_meta->fq_table_sql);
+        push(@classes, $ft_class);
 
         # Iterator will be the tN value: the first sub-table is t2, and so on
         $i++;
 
-        $columns{$tables[-1]} = $fk_meta->columns;#_names;
-        $classes{$tables[-1]} = $fk_class;
-        $methods{$tables[-1]} = $fk_meta->column_mutator_method_names;
+        $columns{$tables[-1]} = $ft_meta->columns;#_names;
+        $classes{$tables[-1]} = $ft_class;
+        $methods{$tables[-1]} = $ft_meta->column_mutator_method_names;
+
+        # Reset each() iterator
+        keys(%$ft_columns);
 
         # Add join condition(s)
-        while(my($local_column, $foreign_column) = each(%$fk_columns))
+        while(my($local_column, $foreign_column) = each(%$ft_columns))
         {
-          # Use outer joins to handle duplicate or optional information
-          if($outer_joins_only || $with_objects{$name})
-          #|| $handle_dups) #($handle_dups && $num_subtables > 1 && $has_dups[$i - 1]))
+          # Use outer joins to handle duplicate or optional information.
+          # Foreign keys that have all non-null columns are never outer-
+          # joined, however.
+          if(!($rel_type eq 'foreign key' && $key->is_required) &&
+             ($outer_joins_only || $with_objects{$name}))
           {
             # Aliased table names
             push(@{$joins[$i]{'conditions'}}, "t1.$local_column = t$i.$foreign_column");
@@ -1506,7 +1511,7 @@ If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it
 
 Also fetch sub-objects (if any) associated with rows in the primary table, where OBJECTS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The only supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>" and "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>".
 
-For each foreign key or relationship listed in OBJECTS, another table will be added to the query via an explicit LEFT OUTER JOIN.  The join conditions will be constructed automatically based on the foreign key or relationship definitions.  Note that each related table must have a L<Rose::DB::Object>-derived class fronting it.  See the L<synopsis|/SYNOPSIS> for an example.
+For each foreign key or relationship listed in OBJECTS, another table will be added to the query via an explicit LEFT OUTER JOIN.  (Foreign keys whose columns are all NOT NULL are the exception, however.  They are always fetched via inner joins.)   The join conditions will be constructed automatically based on the foreign key or relationship definitions.  Note that each related table must have a L<Rose::DB::Object>-derived class fronting it.  See the L<synopsis|/SYNOPSIS> for an example.
 
 B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include more than one "one to many" relationship in OBJECTS.  Sometimes this may still be more efficient than making additional queries to fetch these sub-objects, but that all depends on the actual data.  A warning will be emitted (via L<Carp::cluck|Carp/cluck>) if you you include more than one "one to many" relationship in OBJECTS.  If you're sure you know what you're doing, you can silence this warning by passing the C<multi_many_ok> parameter with a true value.
 
