@@ -1019,6 +1019,32 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   is($objs->[0]->id, 60, "get_objects() eq_sql 3 - $db_type");
 
   # End *_sql comparison tests
+
+  # Start "many to many" tests
+
+  $fo = MyPgColor->new(id => 1, name => 'Red');
+  $fo->save;
+
+  $fo = MyPgColor->new(id => 2, name => 'Green');
+  $fo->save;
+
+  $fo = MyPgColor->new(id => 3, name => 'Blue');
+  $fo->save;
+
+  $fo = MyPgColorMap->new(id => 1, object_id => $o2->id, color_id => 1);
+  $fo->save;
+
+  $fo = MyPgColorMap->new(id => 2, object_id => $o2->id, color_id => 3);
+  $fo->save;
+
+  local $Rose::DB::Object::Manager::Debug = 1;
+  $DB::single = 1;  
+
+  my @colors = sort { $a->name cmp $b->name } $o2->colors;
+  ok(@colors == 2 && $colors[0]->name eq 'Blue' &&
+     $colors[1]->name eq 'Red', "Fetch many to many 1 - $db_type");
+
+  # End "many to many" tests
 }
 
 #
@@ -3109,6 +3135,8 @@ BEGIN
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE rose_db_object_color_map');
+      $dbh->do('DROP TABLE rose_db_object_colors');
       $dbh->do('DROP TABLE rose_db_object_nicks');
       $dbh->do('DROP TABLE rose_db_object_nicks2');
       $dbh->do('DROP TABLE rose_db_object_test');
@@ -3224,6 +3252,23 @@ CREATE TABLE rose_db_object_nicks2
 )
 EOF
 
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_colors
+(
+  id     SERIAL NOT NULL PRIMARY KEY,
+  name   VARCHAR(32) NOT NULL
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_color_map
+(
+  id         SERIAL NOT NULL PRIMARY KEY,
+  object_id  INT NOT NULL REFERENCES rose_db_object_test (id),
+  color_id   INT NOT NULL REFERENCES rose_db_object_colors (id)
+)
+EOF
+
     $dbh->disconnect;
 
     package MyPgNick;
@@ -3273,6 +3318,59 @@ EOF
     );
 
     MyPgNick2->meta->initialize;
+
+    package MyPgColor;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyPgColor->meta->table('rose_db_object_colors');
+
+    MyPgColor->meta->columns
+    (
+      id   => { type => 'serial', primary_key => 1 },
+      name => { type => 'varchar', not_null => 1 },
+    );
+
+    MyPgColor->meta->relationships
+    (
+      objects =>
+      {
+        type      => 'many to many',
+        map_class => 'MyPgColorMap',
+      },
+    );
+
+    MyPgColor->meta->initialize;
+
+    package MyPgColorMap;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyPgColorMap->meta->table('rose_db_object_color_map');
+
+    MyPgColorMap->meta->columns
+    (
+      id        => { type => 'serial', primary_key => 1 },
+      object_id => { type => 'int', not_null => 1 },
+      color_id  => { type => 'int', not_null => 1 },
+    );
+
+    MyPgColorMap->meta->foreign_keys
+    (
+      color =>
+      {
+        class => 'MyPgColor',
+        key_columns => { color_id => 'id' },
+      },
+
+      object =>
+      {
+        class => 'MyPgObject',
+        key_columns => { object_id => 'id' },
+      },
+    );
+
+    MyPgColorMap->meta->initialize;
 
     # Create test subclass
 
@@ -3345,6 +3443,12 @@ EOF
         class => 'MyPgNick2',
         column_map => { id => 'o_id' },
         manager_args => { sort_by => 'nick2 DESC' },
+      },
+
+      colors =>
+      {
+        type      => 'many to many',
+        map_class => 'MyPgColorMap',
       },
     );
 
@@ -3923,7 +4027,9 @@ END
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE rose_db_object_nicks');      
+    $dbh->do('DROP TABLE rose_db_object_color_map');
+    $dbh->do('DROP TABLE rose_db_object_colors');
+    $dbh->do('DROP TABLE rose_db_object_nicks');
     $dbh->do('DROP TABLE rose_db_object_nicks2');
     $dbh->do('DROP TABLE rose_db_object_test');
     $dbh->do('DROP TABLE rose_db_object_other');
