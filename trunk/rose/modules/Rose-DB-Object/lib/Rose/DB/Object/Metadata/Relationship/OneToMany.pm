@@ -12,7 +12,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 our $VERSION = '0.02';
 
-__PACKAGE__->default_auto_method_types('get');
+__PACKAGE__->default_auto_method_types('get_set');
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -44,7 +44,7 @@ Rose::Object::MakeMethods::Generic->make_methods
 
 __PACKAGE__->method_maker_info
 (
-  get =>
+  get_set =>
   {
     class => 'Rose::DB::Object::MakeMethods::Generic',
     type  => 'objects_by_key',
@@ -60,7 +60,7 @@ sub build_method_name_for_type
 {
   my($self, $type) = @_;
   
-  if($type eq 'get')
+  if($type eq 'get_set')
   {
     return $self->name;
   }
@@ -94,7 +94,7 @@ This class inherits from L<Rose::DB::Object::Metadata::Relationship>. Inherited 
 
 =over 4
 
-=item C<get>
+=item C<get_set>
 
 L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, ...
 
@@ -109,7 +109,7 @@ See the L<Rose::DB::Object::Metadata::Relationship|Rose::DB::Object::Metadata::R
 
 =item B<build_method_name_for_type TYPE>
 
-Return a method name for the relationship method type TYPE.  Returns the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> for the method type "get", undef otherwise.
+Return a method name for the relationship method type TYPE.  Returns the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> for the method type "get_set", undef otherwise.
 
 =item B<map_column LOCAL [, FOREIGN]>
 

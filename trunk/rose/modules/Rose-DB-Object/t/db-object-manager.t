@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 695;
+use Test::More tests => 745;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("Postgres tests", 228)  unless($HAVE_PG);
+  skip("Postgres tests", 278)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -1037,12 +1037,139 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   $fo = MyPgColorMap->new(id => 2, object_id => $o2->id, color_id => 3);
   $fo->save;
 
-  local $Rose::DB::Object::Manager::Debug = 1;
-  $DB::single = 1;  
+  $o2->b1(4);
+  $o2->b1(2);
+  $o2->fkone(2);
+  $o2->fk2(3);
+  $o2->fk3(4);
+  $o2->save;
 
-  my @colors = sort { $a->name cmp $b->name } $o2->colors;
-  ok(@colors == 2 && $colors[0]->name eq 'Blue' &&
-     $colors[1]->name eq 'Red', "Fetch many to many 1 - $db_type");
+  my @colors = $o2->colors;
+  ok(@colors == 2 && $colors[0]->name eq 'Red' &&
+     $colors[1]->name eq 'Blue', "Fetch many to many 1 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class  => 'MyPgObject',
+      share_db      => 1,
+      with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
+      multi_many_ok => 1,
+      query         => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many to many 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 3, "get_objects() with many to many 2 - $db_type");
+
+  is($objs->[0]->id, 5, "get_objects() with many to many 3 - $db_type");
+  is($objs->[1]->id, 2, "get_objects() with many to many 4 - $db_type");
+  is($objs->[2]->id, 1, "get_objects() with many to many 5 - $db_type");
+
+  $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many to many 6 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many  to many 7 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many  to many 8 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many  to many 9 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many  to many 10 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many to many 11 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many to many 12 - $db_type");
+
+  my $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects() with many to many 13 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() with many to many 14 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects() with many to many 15 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class  => 'MyPgObject',
+      share_db      => 1,
+      with_objects  => [ 'bb1', 'nicks', 'other_obj', 'colors', 'bb2' ],
+      multi_many_ok => 1,
+      query         => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many to many (reorder) 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 3, "get_objects() with many to many (reorder) 2 - $db_type");
+
+  is($objs->[0]->id, 5, "get_objects() with many to many (reorder) 3 - $db_type");
+  is($objs->[1]->id, 2, "get_objects() with many to many (reorder) 4 - $db_type");
+  is($objs->[2]->id, 1, "get_objects() with many to many (reorder) 5 - $db_type");
+
+  $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many to many (reorder) 6 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many  to many (reorder) 7 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many  to many (reorder) 8 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many  to many (reorder) 9 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many  to many (reorder) 10 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many to many (reorder) 11 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many to many (reorder) 12 - $db_type");
+
+  $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects() with many to many (reorder) 13 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() with many to many (reorder) 14 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects() with many to many (reorder) 15 - $db_type");
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  #$DB::single = 1;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class    => 'MyPgObject',
+      share_db        => 1,
+      with_objects    => [ 'nicks', 'colors', 'bb2' ],
+      multi_many_ok   => 1,
+      require_objects => [ 'bb1', 'other_obj' ],
+      query           => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by         => 't1.name');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many to many require with 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 2, "get_objects() with many to many require with 2 - $db_type");
+
+  is($objs->[0]->id, 5, "get_objects() with many to many require with 3 - $db_type");
+  is($objs->[1]->id, 2, "get_objects() with many to many require with 4 - $db_type");
+
+  $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many to many require with 6 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many  to many 7 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many  to many 8 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many  to many 9 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many  to many 10 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many to many require with 11 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many to many require with 12 - $db_type");
+
+  $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects() with many to many require with 13 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() with many to many require with 14 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects() with many to many require with 15 - $db_type");
+
+  $fo1 = $objs->[1]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'two', "get_objects() with many to many require with 16 - $db_type");
+
+  $fo1 = $objs->[0]->{'other_obj'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'Foo 1', "get_objects() with many to many require with 17 - $db_type");
+
+  $fo1 = $objs->[1]->{'other_obj'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'Foo 2', "get_objects() with many to many require with 18 - $db_type");
+
+  ok(!defined $objs->[0]->{'colors'}, "get_objects() with many to many require with 19 - $db_type");
+  ok(!defined $objs->[1]->{'bb2'}, "get_objects() with many to many require with 20 - $db_type");
 
   # End "many to many" tests
 }
@@ -3449,6 +3576,7 @@ EOF
       {
         type      => 'many to many',
         map_class => 'MyPgColorMap',
+        manager_args => { sort_by => MyPgColor->meta->table . '.name DESC' },
       },
     );
 

@@ -885,9 +885,9 @@ L<Rose::DB::Object> provides the following functions:
 
 =item * Delete a row from the database.
 
-=item * Fetch an object referred to by a foreign key in the current object. (The "has a" relationship.)
+=item * Fetch an object referred to by a foreign key in the current object. (i.e., "one to one" relationships.)
 
-=item * Fetch multiple objects that refer to the current object.  (The "has many" relationship.)
+=item * Fetch multiple objects that refer to the current object, either directly through foreign keys or indirectly through a mapping table.  (i.e., "one to many" and "many to many" relationships.)
 
 =back
 
@@ -901,7 +901,7 @@ In addition, its sibling class, L<Rose::DB::Object::Manager>, can do the followi
 
 =item * Iterate over a list of objects, fetching from the database in response to each step of the iterator.
 
-=item * Fetch objects along with "foreign objects" (referred to by foreign keys) in a single query by automatically generating the appropriate SQL join(s).
+=item * Fetch objects along with "foreign objects" (connected via "one to one" or "one to many" relationships) in a single query by automatically generating the appropriate SQL join(s).
 
 =item * Count the number of objects that match a given query.
 

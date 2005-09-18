@@ -33,8 +33,21 @@ Rose::Object::MakeMethods::Generic->make_methods
   { preserve_existing => 1 },
   scalar => 
   [
-    __PACKAGE__->common_method_maker_argument_names
+    __PACKAGE__->common_method_maker_argument_names,
   ],
+
+  # These are set by the method maker when make_methods() is called
+
+  scalar => 
+  [
+    'foreign_class', # class to be fetched
+  ],
+  
+  hash =>
+  [
+    # Map from local columns to foreign columns
+    'column_map',
+  ]
 );
 
 __PACKAGE__->method_maker_info
