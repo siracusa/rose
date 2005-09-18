@@ -1376,14 +1376,15 @@ sub objects_by_map
   my $interface = $args->{'interface'} || 'get_set';
   my $target_class = $options->{'target_class'} or die "Missing target class";
 
-  my $map_class       = $args->{'map_class'} or die "Missing map class";
-  my $map_meta        = $map_class->meta or die "Missing meta for $map_class";
-  my $map_from        = $args->{'map_from'};
-  my $map_to          = $args->{'map_to'};
-  my $map_manager     = $args->{'manager_class'};
-  my $map_method      = $args->{'manager_method'} || 'get_objects';
-  my $mgr_args        = $args->{'manager_args'} || {};
-  my $query_args      = $args->{'query_args'} || [];
+  my $relationship = $args->{'relationship'} or die "Missing relationship";
+  my $map_class    = $args->{'map_class'} or die "Missing map class";
+  my $map_meta     = $map_class->meta or die "Missing meta for $map_class";
+  my $map_from     = $args->{'map_from'};
+  my $map_to       = $args->{'map_to'};
+  my $map_manager  = $args->{'manager_class'};
+  my $map_method   = $args->{'manager_method'} || 'get_objects';
+  my $mgr_args     = $args->{'manager_args'} || {};
+  my $query_args   = $args->{'query_args'} || [];
   my $map_to_method;
 
   if(@$query_args % 2 != 0)
@@ -1402,12 +1403,12 @@ sub objects_by_map
 
   # Build the map of "local" column names to "foreign" object method names. 
   # The words "local" and "foreign" are relative to the *mapper* class.
-  my %key_template;
+  my(%key_template, %column_map);
 
   # Also grab the foreign object class that the mapper points to,
   # the relationship name that points back to us, and the class 
   # name of the objects we really want to fetch.
-  my($with_objects, $local_rel, $foreign_class, %seen_fk);
+  my($require_objects, $local_rel, $foreign_class, %seen_fk);
 
   foreach my $item ($map_meta->foreign_keys, $map_meta->relationships)
   {
@@ -1436,7 +1437,7 @@ sub objects_by_map
                     "with a 'local' parameter in the 'map' hash";
       }
 
-      $local_rel = $item->name;
+      $map_from = $local_rel = $item->name;
 
       my $map_columns = 
         $item->can('column_map') ? $item->column_map : $item->key_columns;
@@ -1448,6 +1449,7 @@ sub objects_by_map
           or Carp::croak "Missing accessor method for column '$foreign_column'", 
                          " in class ", $meta->class;
         $key_template{$local_column} = $foreign_method;
+        $column_map{$local_column} = $foreign_column;
       }
     }
     elsif($item->isa('Rose::DB::Object::Metadata::ForeignKey') ||
@@ -1457,7 +1459,9 @@ sub objects_by_map
       # this is not that name.
       next  if($map_to && $item->name ne $map_to);
 
-      if($with_objects)
+      $map_to = $item->name;
+
+      if($require_objects)
       {
         Carp::croak "Map class $map_class has more than one foreign key ",
                     "and/or 'one to one' relationship that points to a ",
@@ -1465,7 +1469,7 @@ sub objects_by_map
                     "by name with a 'foreign' parameter in the 'map' hash";
       }
 
-      $with_objects  = [ $item->name ];
+      $require_objects  = [ $item->name ];
       $foreign_class = $item->class;
       $map_to_method = $item->method_name('get_set');
     }
@@ -1477,7 +1481,7 @@ sub objects_by_map
                 "in $map_class that points to $target_class";
   }
 
-  unless($with_objects)
+  unless($require_objects)
   {
     # Make a second attempt to find a a suitable foreign relationship in the
     # map class, this time looking for links back to $target_class so long as
@@ -1494,7 +1498,7 @@ sub objects_by_map
          $item->type eq 'one to one') &&
          $item->class eq $target_class && $item->name ne $local_rel)
       {  
-        if($with_objects)
+        if($require_objects)
         {
           Carp::croak "Map class $map_class has more than two foreign keys ",
                       "and/or 'one to one' relationships that points to a ",
@@ -1503,21 +1507,27 @@ sub objects_by_map
                       "'map' hash";
         }
 
-        $with_objects = [ $item->name ];
+        $require_objects = [ $item->name ];
         $foreign_class = $item->class;
         $map_to_method = $item->method_name('get_set');
       }
     }
   }
 
-  unless($with_objects)
+  unless($require_objects)
   {
     Carp::croak "Could not find a foreign key or 'one to one' relationship ",
                 "in $map_class that points to a class other than $target_class"
   }
 
+  # Populate relationship with the info we've extracted
+  $relationship->column_map(\%column_map);
+  $relationship->map_from($map_from);
+  $relationship->map_to($map_to);
+  $relationship->foreign_class($foreign_class);
+
   # Relationship names
-  $map_to   ||= $with_objects->[0];
+  $map_to   ||= $require_objects->[0];
   $map_from ||= $local_rel;
 
   if($interface eq 'get_set')
@@ -1559,14 +1569,14 @@ sub objects_by_map
       {
         $objs =
           $map_manager->$map_method(query        => [ %link, @$query_args ],
-                                    with_objects => $with_objects,
+                                    require_objects => $require_objects,
                                     %$mgr_args, db => $self->db);
       }
       else
       {
         $objs = 
           $map_manager->$map_method(query        => [ %link, @$query_args ],
-                                    with_objects => $with_objects,
+                                    require_objects => $require_objects,
                                     %$mgr_args);
       }
 

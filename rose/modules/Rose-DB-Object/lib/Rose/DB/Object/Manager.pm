@@ -303,7 +303,7 @@ sub get_objects
   my %methods = ($tables[0] => scalar $meta->column_mutator_method_names);
   my @classes = ($object_class);
   my %meta    = ($object_class => $meta);
-  my @joins;
+  my(@joins, @subobject_methods);
 
   my $handle_dups = 0;
   my @has_dups;
@@ -333,10 +333,18 @@ sub get_objects
 
       my $rel_type = $key->type;
 
-      if(index($rel_type, 'many') > 0)
+      if(index($rel_type, 'many') >= 0)
       {
         $handle_dups  = 1;
         $has_dups[$i] = 1;
+
+        # "many to many" relationships have an extra table (the mapping table)
+        if($rel_type eq 'many to many')
+        {
+          $i++;
+          $has_dups[$i] = 1;
+          # $num_subtables will be incremented elsewhere (below)
+        }
 
         if($args{'limit'})
         {
@@ -373,20 +381,20 @@ sub get_objects
     $i = 1; # reset iterator for second pass through with_objects
 
     # Build lists of columns, classes, methods, and join conditions for all
-    # of the with_objects arguments.
+    # of the with_objects and/or require_objects arguments.
     foreach my $name (@$with_objects)
     {
-      my $key = $meta->foreign_key($name) || $meta->relationship($name);
+      my $rel = $meta->foreign_key($name) || $meta->relationship($name);
 
-      my $rel_type = $key->type;
+      my $rel_type = $rel->type;
 
-      if($rel_type =~ /^(?:foreign key|one to (one|many))$/)
+      if($rel_type =~ /^(?:foreign key|one to (?:one|many))$/)
       {
-        my $ft_class = $key->class or 
-          Carp::confess "$class - Missing foreign object class for '$name'";
+        my $ft_class = $rel->class 
+          or Carp::confess "$class - Missing foreign object class for '$name'";
 
-        my $ft_columns = $key->key_columns or 
-          Carp::confess "$class - Missing key columns for '$name'";
+        my $ft_columns = $rel->key_columns 
+          or Carp::confess "$class - Missing key columns for '$name'";
 
         my $ft_meta = $ft_class->meta; 
 
@@ -402,6 +410,9 @@ sub get_objects
         $classes{$tables[-1]} = $ft_class;
         $methods{$tables[-1]} = $ft_meta->column_mutator_method_names;
 
+        $subobject_methods[$i - 1] = $rel->method_name('get_set')
+          or Carp::confess "No 'get_set' method found for relationship '$name' in class $class";
+
         # Reset each() iterator
         keys(%$ft_columns);
 
@@ -411,14 +422,14 @@ sub get_objects
           # Use outer joins to handle duplicate or optional information.
           # Foreign keys that have all non-null columns are never outer-
           # joined, however.
-          if(!($rel_type eq 'foreign key' && $key->is_required) &&
+          if(!($rel_type eq 'foreign key' && $rel->is_required) &&
              ($outer_joins_only || $with_objects{$name}))
           {
             # Aliased table names
             push(@{$joins[$i]{'conditions'}}, "t1.$local_column = t$i.$foreign_column");
 
             # Fully-qualified table names
-            #push(@{$joins[$i]{'conditions'}},  "$tables[0].$local_column = $tables[-1].$foreign_column");
+            #push(@{$joins[$i]{'conditions'}}, "$tables[0].$local_column = $tables[-1].$foreign_column");
 
             $joins[$i]{'type'} = 'LEFT OUTER JOIN';
 
@@ -446,7 +457,138 @@ sub get_objects
         }
 
         # Add sub-object sort conditions
-        if($key->can('manager_args') && (my $mgr_args = $key->manager_args))
+        if($rel->can('manager_args') && (my $mgr_args = $rel->manager_args))
+        {
+          if($mgr_args->{'sort_by'})
+          {
+            if($args{'sort_by'})
+            {
+              $args{'sort_by'} .= ", $mgr_args->{'sort_by'}";
+            }
+            else
+            {
+              $args{'sort_by'} = $mgr_args->{'sort_by'};
+            }
+          }
+        }
+      }
+      elsif($rel_type eq 'many to many')
+      {
+        #
+        # First add table, columns, and clauses for the map table itself
+        #
+
+        my $map_class = $rel->map_class 
+          or Carp::confess "$class - Missing map class for '$name'";
+
+        my $map_meta = $map_class->meta; 
+
+        $meta{$map_class} = $map_meta;
+
+        push(@tables, $map_meta->fq_table_sql);
+        push(@classes, $map_class);
+
+        $columns{$tables[-1]} = []; #$map_meta->columns;#_names;
+        $classes{$tables[-1]} = $map_class;
+        $methods{$tables[-1]} = []; #$map_meta->column_mutator_method_names;
+
+        my $column_map = $rel->column_map;
+
+        # Iterator will be the tN value: the first sub-table is t2, and so on.
+        # Increase once for map table.
+        $i++;
+        
+        # Add join condition(s)
+        while(my($local_column, $foreign_column) = each(%$column_map))
+        {
+          # Use outer joins to handle duplicate or optional information.
+          if($outer_joins_only || $with_objects{$name})
+          {
+            # Aliased table names
+            push(@{$joins[$i]{'conditions'}}, "t$i.$local_column = t1.$foreign_column");
+
+            # Fully-qualified table names
+            #push(@{$joins[$i]{'conditions'}}, "$tables[-1].$local_column = $tables[0].$foreign_column");
+
+            $joins[$i]{'type'} = 'LEFT OUTER JOIN';
+          }
+          else
+          {
+            # Aliased table names
+            push(@$clauses, "t$i.$local_column = t1.$foreign_column");
+  
+            # Fully-qualified table names
+            #push(@$clauses, "$tables[-1].$local_column = $tables[0].$foreign_column");
+          }
+        }
+
+        #
+        # Now add table, columns, and clauses for the foreign object
+        #
+
+        $num_subtables++; # Account for the extra table
+
+        my $ft_class = $rel->foreign_class 
+          or Carp::confess "$class - Missing foreign class for '$name'";
+
+        my $ft_meta = $ft_class->meta; 
+        $meta{$ft_class} = $ft_meta;
+
+        my $map_to = $rel->map_to 
+          or Carp::confess "Missing map_to value for relationship '$name' ",
+                           "in clas $class";
+
+        my $foreign_rel = 
+          $map_meta->foreign_key($map_to)  || $map_meta->relationship($map_to) ||
+            Carp::confess "No foreign key or relationship named '$map_to' ",
+                          "found in $map_class";        
+
+        my $ft_columns = $foreign_rel->key_columns 
+          or Carp::confess "$ft_class - Missing key columns for '$map_to'";
+
+        push(@tables, $ft_meta->fq_table_sql);
+        push(@classes, $ft_class);
+
+        $columns{$tables[-1]} = $ft_meta->columns;#_names;
+        $classes{$tables[-1]} = $ft_class;
+        $methods{$tables[-1]} = $ft_meta->column_mutator_method_names;
+
+        # Iterator will be the tN value: the first sub-table is t2, and so on.
+        # Increase again for foreign table.
+        $i++;
+
+        $subobject_methods[$i - 1] = $rel->method_name('get_set')
+          or Carp::confess "No 'get_set' method found for relationship '$name' in class $class";
+
+        # Reset each() iterator
+        keys(%$ft_columns);
+
+        # Add join condition(s)
+        while(my($local_column, $foreign_column) = each(%$ft_columns))
+        {
+          # Use left joins if the map table used an outer join above
+          if($outer_joins_only || $with_objects{$name})
+          {
+            # Aliased table names
+            push(@{$joins[$i]{'conditions'}}, 't' . ($i - 1) . ".$local_column = t$i.$foreign_column");
+
+            # Fully-qualified table names
+            #push(@{$joins[$i]{'conditions'}}, "$tables[-2].$local_column = $tables[-1].$foreign_column");
+
+            $joins[$i]{'type'} = 'LEFT JOIN';
+          }
+          else
+          {
+            # Aliased table names
+            push(@$clauses, 't' . ($i - 1) . ".$local_column = t$i.$foreign_column");
+
+            # Fully-qualified table names
+            #push(@$clauses, "$tables[-2].$local_column = $tables[-1].$foreign_column");
+          }
+        }
+
+        # Add sub-object sort conditions
+        if($rel->can('manager_args') && (my $mgr_args = $rel->manager_args))
         {
           if($mgr_args->{'sort_by'})
           {
@@ -513,6 +655,22 @@ sub get_objects
 
     $class->total($count);
     return $count;
+  }
+
+  # Alter sort_by SQL, replacing table names with aliases.  This is to
+  # prevent databases like Postgres from "adding missing FROM clause"s.
+  # See: http://sql-info.de/postgresql/postgres-gotchas.html#1_5
+  if(my $sort = $args{'sort_by'})
+  {
+    my $i = 0;
+
+    foreach my $table (@tables)
+    {
+      $i++; # Table aliases are 1-based            
+      $sort =~ s/\b$table\./t$i./g;
+    }
+    
+    $args{'sort_by'} = $sort;
   }
 
   if($args{'offset'})
@@ -651,7 +809,8 @@ sub get_objects
                         # since we assigned the one-to-one object attributes earlier.
                         if($has_dups[$i])
                         {
-                          my $method = $with_objects->[$i - 1];      
+                          # Mapping tables will have no subobject methods, so skip them
+                          my $method = $subobject_methods[$i] or next;
                           $last_object->$method($sub_objects[$i]);
                         }
                       }
@@ -673,6 +832,8 @@ sub get_objects
 
                     $last_object = $object; # This is the "last object" from now on
                     @sub_objects = ();      # The list of sub-objects is per-object
+                    splice(@seen, 1);       # Sub-objects seen is also per-object,
+                                            # so trim it, but leave the t1 table info
                   }
 
                   $object ||= $last_object or die "Missing object for primary key '$pk'";
@@ -684,7 +845,7 @@ sub get_objects
 
                     # Null primary key columns are not allowed
                     my $sub_pk = join(PK_JOIN, grep { defined } map { $row{$class,$i}{$_} } @{$sub_pk_columns[$tn]});
-                    next  unless(defined $sub_pk);
+                    next  unless(length $sub_pk);
 
                     # Skip if we've already seen this sub-object
                     next  if($seen[$i]{$sub_pk}++);
@@ -704,7 +865,7 @@ sub get_objects
                     }
                     else # Otherwise, just assign it
                     {
-                      my $method = $with_objects->[$i - 1];
+                      my $method = $subobject_methods[$i];
                       $object->$method($subobject);
                     }
                   }
@@ -745,7 +906,8 @@ sub get_objects
                   {
                     if($has_dups[$i])
                     {
-                      my $method = $with_objects->[$i - 1];      
+                      # Mapping tables will have no subobject methods, so skip them
+                      my $method = $subobject_methods[$i] or next;
                       $last_object->$method($sub_objects[$i]);
                     }
                   }
@@ -817,7 +979,7 @@ sub get_objects
                 {
                   foreach my $i (1 .. $num_subtables)
                   {
-                    my $method = $with_objects->[$i - 1];
+                    my $method = $subobject_methods[$i];
                     my $class  = $classes[$i];
 
                     my $subobject = $class->new(%subobject_args);
@@ -903,8 +1065,6 @@ sub get_objects
 
     if($with_objects)
     {
-      my $num_subtables = @$with_objects;
-
       # This "if" clause is a totally separate code path for handling
       # duplicates rows.  I'm doing this for performance reasons.
       if($handle_dups)
@@ -941,7 +1101,8 @@ sub get_objects
                 # since we assigned the one-to-one object attributes earlier.
                 if($has_dups[$i])
                 {
-                  my $method = $with_objects->[$i - 1];      
+                  # Mapping tables will have no subobject methods, so skip them
+                  my $method = $subobject_methods[$i] or next;
                   $last_object->$method($sub_objects[$i]);
                 }
               }
@@ -964,6 +1125,8 @@ sub get_objects
 
             $last_object = $object; # This is the "last object" from now on
             @sub_objects = ();      # The list of sub-objects is per-object
+            splice(@seen, 1);       # Sub-objects seen is also per-object,
+                                    # so trim it, but leave the t1 table info
           }
 
           $object ||= $last_object or die "Missing object for primary key '$pk'";
@@ -975,7 +1138,7 @@ sub get_objects
 
             # Null primary key columns are not allowed
             my $sub_pk = join(PK_JOIN, grep { defined } map { $row{$class,$i}{$_} } @{$sub_pk_columns[$tn]});
-            next  unless(defined $sub_pk);
+            next  unless(length $sub_pk);
 
             # Skip if we've already seen this sub-object
             next  if($seen[$i]{$sub_pk}++);
@@ -995,7 +1158,7 @@ sub get_objects
             }
             else # Otherwise, just assign it
             {
-              my $method = $with_objects->[$i - 1];
+              my $method = $subobject_methods[$i];
               $object->$method($subobject);
             }
           }
@@ -1019,7 +1182,8 @@ sub get_objects
           {
             if($has_dups[$i])
             {
-              my $method = $with_objects->[$i - 1];      
+              # Mapping tables will have no subobject methods, so skip them
+              my $method = $subobject_methods[$i] or next;
               $last_object->$method($sub_objects[$i]);
             }
           }
@@ -1051,7 +1215,7 @@ sub get_objects
 
           foreach my $i (1 .. $num_subtables)
           {
-            my $method = $with_objects->[$i - 1];
+            my $method = $subobject_methods[$i];
             my $class  = $classes[$i];
 
             my $subobject = $class->new(%subobject_args);

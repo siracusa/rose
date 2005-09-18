@@ -9,6 +9,11 @@ our @ISA = qw(Rose::DB::Object::Metadata::MethodMaker);
 
 our $VERSION = '0.03';
 
+__PACKAGE__->add_common_method_maker_argument_names
+(
+  qw(relationship)
+);
+
 Rose::Object::MakeMethods::Generic->make_methods
 (
   { preserve_existing => 1 },
@@ -21,6 +26,8 @@ Rose::Object::MakeMethods::Generic->make_methods
 );
 
 sub type { Carp::confess "Override in subclass" }
+
+sub relationship { $_[0] }
 
 sub is_ready_to_make_methods { 1 }
 sub sanity_check { 1 }
