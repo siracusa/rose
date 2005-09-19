@@ -36,7 +36,7 @@ Rose::Object::MakeMethods::Generic->make_methods
     'name',
     __PACKAGE__->common_method_maker_argument_names,
   ],
-  
+
   array =>
   [
     'auto_method_types' => { interface => 'get_set_init' },
@@ -66,28 +66,28 @@ sub init_method_maker_info
   my($class) = shift;
 
   my $info = $Method_Maker_Info{$class};
-  
+
   unless($info && %$info)
   {
     $info = $Method_Maker_Info{$class} = {};
 
     my @parents = ($class);
-    
+
     while(my $parent = shift(@parents))
     {
       no strict 'refs';
       foreach my $subclass (@{$parent . '::ISA'})
       {
         push(@parents, $subclass);
-      
+
         next  unless($subclass->can('init_method_maker_info'));
-  
+
         my $subclass_info = $subclass->init_method_maker_info;
-  
+
         foreach my $type ($class->available_method_types)
         {
           next  unless($subclass_info->{$type});
-  
+
           foreach my $attr (qw(class type args))
           {
             next  if(!$subclass_info->{$type}{$attr} ||
@@ -107,14 +107,14 @@ sub init_method_maker_info
 sub method_maker_info
 {
   my($class) = shift;
-  
+
   $class = ref $class  if(ref $class);
 
   while(@_)
   {
     my $type = shift;
     my $info = shift;
-    
+
     Carp::confess "Method maker info must be passed in type/hashref pairs"
       unless(defined $type && ref $info && ref $info eq 'HASH');
 
@@ -125,7 +125,7 @@ sub method_maker_info
       $mm_info->{$key} = $value;
     }
   }
-  
+
   $class->init_method_maker_info;
   return $Method_Maker_Info{$class};
 }
@@ -258,7 +258,7 @@ sub method_name
   my($self, $type) = (shift, shift);
 
   Carp::confess "Missing required type argument"  unless(defined $type);
-  
+
   if(@_)
   {
     return $self->{'method_name'}{$type} = shift;
@@ -274,7 +274,7 @@ sub build_method_name_for_type { Carp::confess "Override in subclass" }
 sub defined_method_types
 {
   my($self) = shift;
-  
+
   my @types = sort keys %{$self->{'method_name'} ||= {}};
   return wantarray ? @types : \@types;
 }
@@ -298,12 +298,12 @@ sub make_methods
   my($self, %args) = @_;
 
   my $options = $args{'options'} || {};
-  
+
   if(exists $args{'preserve_existing'})
   {
     $options->{'preserve_existing'} = $args{'preserve_existing'};
   }
-  
+
   if(exists $args{'replace_existing'})
   {
     if($options->{'preserve_existing'})
@@ -324,7 +324,7 @@ sub make_methods
   {
     my $method_maker_class = $self->method_maker_class($type)
       or Carp::croak "No method maker class defined for method type '$type'";
-      
+
     my $method_maker_type = $self->method_maker_type($type)
       or Carp::croak "No method maker type defined for method type '$type'";
 

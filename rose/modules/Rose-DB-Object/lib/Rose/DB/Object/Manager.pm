@@ -12,7 +12,7 @@ use Rose::DB::Object::Constants qw(STATE_LOADING STATE_IN_DB);
 # XXX: Should be a value that is unlikely to exist in a primary key column
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.061';
+our $VERSION = '0.062';
 
 our $Debug = 0;
 
@@ -258,7 +258,7 @@ sub get_objects
     {
       $use_redundant_join_conditions = $db->likes_redundant_join_conditions;
     }
-    
+
     # Don't honor the with_objects parameter when counting, since the
     # count is of the rows from the "main" table (t1) only.
     if($count_only)
@@ -317,7 +317,7 @@ sub get_objects
     my $clauses = $args{'clauses'} ||= [];
 
     my $i = 1;
-    
+
     # Sanity check with_objects arguments, and determine if we're going to
     # have to handle duplicate data from multiple joins.  If so, note
     # which with_objects arguments refer to relationships that may return
@@ -350,7 +350,7 @@ sub get_objects
         {
           $manual_limit = delete $args{'limit'};
         }
-        
+
         if($required_object{$name} && $num_required_objects > 1 && $num_subtables > 1)
         {
           Carp::croak 
@@ -388,7 +388,8 @@ sub get_objects
 
       my $rel_type = $rel->type;
 
-      if($rel_type =~ /^(?:foreign key|one to (?:one|many))$/)
+      if($rel_type eq 'foreign key' || $rel_type eq 'one to one' ||
+         $rel_type eq 'one to many')
       {
         my $ft_class = $rel->class 
           or Carp::confess "$class - Missing foreign object class for '$name'";
@@ -416,6 +417,8 @@ sub get_objects
         # Reset each() iterator
         keys(%$ft_columns);
 
+        my(@redundant, @redundant_null);
+
         # Add join condition(s)
         while(my($local_column, $foreign_column) = each(%$ft_columns))
         {
@@ -433,17 +436,26 @@ sub get_objects
 
             $joins[$i]{'type'} = 'LEFT OUTER JOIN';
 
+            # MySQL is stupid about using its indexes when "JOIN ... ON (...)"
+            # conditions are the only ones given, so teh code below adds some
+            # redundant WHERE conditions.  They should not change the meaning
+            # of the query, but should nudge MySQL into using its indexes. 
+            # The clauses: "((<ON conditions>) OR (<any columns are null>))"
+            # We build the two clauses separately in the loop below, then
+            # combine it all after the loop is done.
             if($use_redundant_join_conditions)
             {
               # Aliased table names
-              push(@$clauses, ($has_dups[$i - 1] ?
-                   "(t1.$local_column = t$i.$foreign_column OR t$i.$foreign_column IS NULL)" :
-                   "(t1.$local_column = t$i.$foreign_column OR t1.$local_column IS NULL)"));
+              push(@redundant, "t1.$local_column = t$i.$foreign_column");
+              push(@redundant_null, ($has_dups[$i - 1] ?
+                   "t$i.$foreign_column IS NULL" :
+                   "t1.$local_column IS NULL"));
 
               # Fully-qualified table names
-              #push(@$clauses, ($has_dups[$i - 1] ?
-              #     "($tables[0].$local_column = $tables[-1].$foreign_column OR $tables[-1].$foreign_column IS NULL)" :
-              #     "($tables[0].$local_column = $tables[-1].$foreign_column OR $tables[0].$local_column IS NULL)"));
+              #push(@redundant, "$tables[0].$local_column = $tables[-1].$foreign_column");
+              #push(@redundant_null, ($has_dups[$i - 1] ?
+              #     "$tables[-1].$foreign_column IS NULL" :
+              #     "$tables[0].$local_column IS NULL"));
             }
           }
           else
@@ -454,6 +466,12 @@ sub get_objects
             # Fully-qualified table names
             #push(@$clauses, "$tables[0].$local_column = $tables[-1].$foreign_column");
           }
+        }
+
+        if(@redundant)
+        {
+          push(@$clauses, '((' . join(' AND ', @redundant) . ') OR (' .
+                          join(' OR ', @redundant_null) . '))');
         }
 
         # Add sub-object sort conditions
@@ -497,7 +515,7 @@ sub get_objects
         # Iterator will be the tN value: the first sub-table is t2, and so on.
         # Increase once for map table.
         $i++;
-        
+
         # Add join condition(s)
         while(my($local_column, $foreign_column) = each(%$column_map))
         {
@@ -516,7 +534,7 @@ sub get_objects
           {
             # Aliased table names
             push(@$clauses, "t$i.$local_column = t1.$foreign_column");
-  
+
             # Fully-qualified table names
             #push(@$clauses, "$tables[-1].$local_column = $tables[0].$foreign_column");
           }
@@ -669,7 +687,7 @@ sub get_objects
       $i++; # Table aliases are 1-based            
       $sort =~ s/\b$table\./t$i./g;
     }
-    
+
     $args{'sort_by'} = $sort;
   }
 
@@ -1407,7 +1425,10 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
       type  => 'one to many',
       class => 'CodeName',
       column_map   => { id => 'product_id' },
-      manager_args => { sort_by => 'applied DESC' },
+      manager_args => 
+      {
+        sort_by => CodeName->meta->table . '.applied DESC',
+      },
     }
   );
 
@@ -1536,13 +1557,13 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
         status      => 'active',
         start_date  => { lt => '15/12/2005 6:30 p.m.' },
 
-        # We need to disambiguate the "name" column below since it appears
-        # in more than one table referenced by this query.  When more than
-        # one table is queried, the tables have numbered aliases starting
-        # from the "main" table ("products").  The "products" table is t1,
-        # "categories" is t2, and "code_names" is t3.  You can read more
-        # about automatic table aliasing in the documentation for
-        # Rose::DB::Object::QueryBuilder.
+        # We need to disambiguate the "name" column below since it
+        # appears in more than one table referenced by this query. 
+        # When more than one table is queried, the tables have numbered
+        # aliases starting from the "main" table ("products").  The
+        # "products" table is t1, "categories" is t2, and "code_names"
+        # is t3.  You can read more about automatic table aliasing in
+        # the documentation for the get_objects() method below.
 
         't1.name'   => { like => [ '%foo%', '%bar%' ] },
       ],
@@ -1627,7 +1648,50 @@ Note that naively calling this method in list context may result in a list conta
 
 If you want to avoid this, feel free to change the behavior in your wrapper method, or just call it in scalar context (which is more efficient anyway for long lists of objects).
 
-Valid parameters are:
+Each table that participates in the query will be aliased.  Each alias is in the form "tN" where "N" is an ascending number starting with 1.  The tables are numbered as follows.
+
+=over 4
+
+=item * The primary table is always "t1"
+
+=item * The table(s) that correspond to each relationship or foreign key named in the C<with_objects> parameter are numbered in order, starting with "t2"
+
+=item * The table(s) that correspond to each relationship or foreign key named in the C<require_objects> parameter are numbered in order, starting where the C<with_objects> table aliases left off.
+
+=back
+
+"Many to many" relationships have two corresponding tables, and therefore will use two "tN" numbers.  All other supported of relationship types only have just one table and will therefore use a single "tN" number.
+
+For example, imagine that the C<Product> class shown in the L<synopsis|/SYNOPSIS> also has a "many to many" relationship named "colors."  Now consider this call:
+
+    $products = 
+      Product::Manager->get_products(
+        require_objects => [ 'category' ],
+        with_objects    => [ 'code_names', 'colors' ],
+        multi_many_ok   => 1,
+        query           => [ status => 'defunct' ],
+        sort_by         => 't1.name');
+
+The "products" table is "t1" since it's the primary table--the table behind the C<Product> class that C<Product::Manager> manages.  Next, the C<with_objects> tables are aliased.  The "code_names" table is "t2".  Since "colors" is a "many to many" relationship, it gets two numbers: "t3" and "t4".  Finally, the C<require_objects> tables are numbered: the table behind the foreign key "category" is "t5".  Here's an annotated version of the example above:
+
+    # Table aliases in the comments
+    $products = 
+      Product::Manager->get_products(
+                           # t4
+        require_objects => [ 'category' ],
+                           # t1            t2, t3
+        with_objects    => [ 'code_names', 'colors' ],
+        multi_many_ok   => 1,
+        query           => [ status => 'defunct' ],
+        sort_by         => 't1.name'); # "products" is "t1"
+
+Also note that the C<multi_many_ok> parameter was used in order to supress the warning that occurs when more than one "... to many" relationship is included in the combination of C<require_objects> and C<with_objects> ("code_names" (one to many) and "colors" (many to many) in this case).  See the documentation for C<multi_many_ok> below.
+
+The "tN" table aliases are for convenience, and to isolate end-user code from the actual table names.  Ideally, the actual table names should only exist in one place in the entire codebase: in the class definitions for each L<Rose::DB::OBject>-derived class.
+
+That said, when using L<Rose::DB::Object::Manager>, the actual table names can be used as well.  But be aware that some databases don't like a mix of table aliases and real table names in some kinds of queries.
+
+Valid parameters to C<get_objects()> are:
 
 =over 4
 
@@ -1641,7 +1705,7 @@ Return a maximum of NUM objects.
 
 =item C<multi_many_ok BOOL>
 
-If true, do not print a warning when attempting to do multiple LEFT OUTER JOINs against tables related by "one to many" relationships.  See the documentation for the C<with_objects> parameter for more information.
+If true, do not print a warning when attempting to do multiple LEFT OUTER JOINs against tables related by "... to many" relationships.  See the documentation for the C<with_objects> parameter for more information.
 
 =item C<object_args HASHREF>
 
@@ -1659,9 +1723,9 @@ This parameter can only be used along with the C<limit> parameter, otherwise a f
 
 =item C<require_objects OBJECTS>
 
-Only fetch rows from the primary table that have all of the associated sub-objects listed in OBJECTS, where OBJECTS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The only supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>" and "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>".
+Only fetch rows from the primary table that have all of the associated sub-objects listed in OBJECTS, where OBJECTS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>," "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>," and  "L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany>".
 
-A "one to many" relationship may be included in OBJECTS I<only> if it is the sole name listed in OBJECTs I<and> the C<with_objects> parameter is omitted entirely.  A fatal error will occur if these conditions are not met.
+A "one to many" or "many to many" relationship may be included in OBJECTS I<only> if it is the sole name listed in OBJECTs I<and> the C<with_objects> parameter is omitted entirely.  A fatal error will occur if these conditions are not met.
 
 For each foreign key or relationship listed in OBJECTS, another table will be added to the query via an implicit inner join.  The join conditions will be constructed automatically based on the foreign key or relationship definitions.  Note that each related table must have a L<Rose::DB::Object>-derived class fronting it.
 
@@ -1673,11 +1737,13 @@ If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it
 
 =item C<with_objects OBJECTS>
 
-Also fetch sub-objects (if any) associated with rows in the primary table, where OBJECTS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The only supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>" and "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>".
+Also fetch sub-objects (if any) associated with rows in the primary table, where OBJECTS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>," "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>," and  "L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany>".
 
 For each foreign key or relationship listed in OBJECTS, another table will be added to the query via an explicit LEFT OUTER JOIN.  (Foreign keys whose columns are all NOT NULL are the exception, however.  They are always fetched via inner joins.)   The join conditions will be constructed automatically based on the foreign key or relationship definitions.  Note that each related table must have a L<Rose::DB::Object>-derived class fronting it.  See the L<synopsis|/SYNOPSIS> for an example.
 
-B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include more than one "one to many" relationship in OBJECTS.  Sometimes this may still be more efficient than making additional queries to fetch these sub-objects, but that all depends on the actual data.  A warning will be emitted (via L<Carp::cluck|Carp/cluck>) if you you include more than one "one to many" relationship in OBJECTS.  If you're sure you know what you're doing, you can silence this warning by passing the C<multi_many_ok> parameter with a true value.
+"Many to many" relationships are a special case.  They will add two tables to the query (the "map" table plus the table with the actual data), which will offset the 
+
+B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include more than one "... to many" relationship in OBJECTS.  Sometimes this may still be more efficient than making additional queries to fetch these sub-objects, but that all depends on the actual data.  A warning will be emitted (via L<Carp::cluck|Carp/cluck>) if you you include more than one "... to many" relationship in OBJECTS.  If you're sure you know what you're doing, you can silence this warning by passing the C<multi_many_ok> parameter with a true value.
 
 B<Note:> the C<with_objects> list currently cannot be used to simultaneously fetch two objects that both front the same database table, I<but are of different classes>.  One workaround is to make one class use a synonym or alias for one of the tables.  Another option is to make one table a trivial view of the other.  The objective is to get the table names to be different for each different class (even if it's just a matter of letter case, if your database is not case-sensitive when it comes to table names).
 

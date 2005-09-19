@@ -106,19 +106,19 @@ sub auto_alias_columns
     foreach my $type ($column->auto_method_types)
     {
       my $method = $self->method_name_from_column($column, $type);
-  
+
       if($self->method_name_is_reserved($method, $self->class))
       {
         $self->auto_alias_column($column);
         last; # just alias the column once
       }
     }
-  
+
     # Re-check: errors are fatal this time
     foreach my $type ($column->auto_method_types)
     {
       my $method = $self->method_name_from_column($column, $type);
-  
+
       if($self->method_name_is_reserved($method, $self->class))
       {
         Carp::croak "Cannot create '$type' method named '$method' for ",
@@ -126,7 +126,7 @@ sub auto_alias_columns
       }
     }
   }
-  
+
 }
 sub auto_generate_column
 {

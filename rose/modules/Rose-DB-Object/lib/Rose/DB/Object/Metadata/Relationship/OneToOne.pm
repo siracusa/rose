@@ -77,7 +77,7 @@ sub _fk_or_self
 sub method_name
 {
   my($self) = shift;
-  
+
   if(my $fk = $self->foreign_key)
   {
     return $fk->method_name(@_);
@@ -123,7 +123,7 @@ sub id
 sub build_method_name_for_type
 {
   my($self, $type) = @_;
-  
+
   if($type eq 'get_set')
   {
     return $self->name;

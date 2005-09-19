@@ -1,7 +1,18 @@
-0.075 (09.16.2005) - John Siracusa <siracusa@mindspring.com>
+0.075 (09.19.2005) - John Siracusa <siracusa@mindspring.com>
 
+    * Added support for "many to many" relationships to Manager's
+      "with_objects" and "require_objects" parameters.
+    * Corrected a bug that could cause missing sub-objects when
+      using the Manager's "with_objects" and "require_objects" 
+      parameters.
+    * Added warning for doing multiple LEFT OUTER JOINs that could
+      cause a geometric explosion of redundant rows.
+    * Added the "multi_many_ok" parameter to Manager to suppress 
+      the warning described above.
     * Forced inner joins when fetching foreign keys that have
       key columns that are all NOT NULL.
+    * Added a few more sanity checks to class setup which, in turn,
+      helped me to find and fix a few bugs in the test suite.
 
 0.074 (09.15.2005) - John Siracusa <siracusa@mindspring.com>
 

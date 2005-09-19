@@ -326,7 +326,7 @@ sub datetime
   my $default = $args->{'default'};
 
   my %methods;
- 
+
   if($interface eq 'get_set')
   {
     $methods{$name} = sub

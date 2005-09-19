@@ -95,23 +95,23 @@ SKIP:
 
   is($p->boolean('true'), 1, 'boolean get_set 1');
   is($p->boolean, 1, 'boolean get_set 2');
-  
+
   is($p->set_boolean('F'), 0, 'boolean set 1');
   eval { $p->set_boolean() };
   ok($@,  'boolean set 2');
   is($p->get_boolean, 0, 'boolean get');
-  
+
   $p = Person->new(sql_is_happy => 1);
   ok(ref $p && $p->isa('Person'), 'boolean 1');
-  
+
   is($p->sql_is_happy, 1, 'boolean 2');
-  
+
   foreach my $val (qw(t true True TRUE T y Y yes Yes YES 1 1.0 1.00))
   {
     eval { $p->sql_is_happy($val) };
     ok(!$@ && $p->sql_is_happy, "boolean true '$val'");
   }
-  
+
   foreach my $val (qw(f false False FALSE F n N no No NO 0 0.0 0.00))
   {
     eval { $p->sql_is_happy($val) };
@@ -124,7 +124,7 @@ SKIP:
 
   is($p->date('12/24/1980')->ymd, '1980-12-24', 'date get_set 1');
   is($p->date->ymd, '1980-12-24', 'date get_set 2');
-  
+
   is($p->set_date('1980-12-25')->ymd, '1980-12-25', 'date set 1');
   eval { $p->set_date() };
   ok($@,  'date set 2');
@@ -186,7 +186,7 @@ SKIP:
   is($p->datetime('12/24/1980 12:34:56')->strftime('%Y-%m-%d %H:%M:%S'), 
                   '1980-12-24 12:34:56', 'datetime get_set 1');
   is($p->datetime->strftime('%Y-%m-%d %H:%M:%S'), '1980-12-24 12:34:56', 'datetime get_set 2');
-  
+
   is($p->set_datetime('1980-12-25 12:30:50')->strftime('%Y-%m-%d %H:%M:%S'),
                       '1980-12-25 12:30:50', 'datetime set 1');
   eval { $p->set_datetime() };
@@ -220,7 +220,7 @@ SKIP:
   is($p->timestamp('12/24/1980 12:34:56')->strftime('%Y-%m-%d %H:%M:%S'), 
                   '1980-12-24 12:34:56', 'timestamp get_set 1');
   is($p->timestamp->strftime('%Y-%m-%d %H:%M:%S'), '1980-12-24 12:34:56', 'timestamp get_set 2');
-  
+
   is($p->set_timestamp('1980-12-25 12:30:50')->strftime('%Y-%m-%d %H:%M:%S'), 
                        '1980-12-25 12:30:50', 'timestamp set 1');
   eval { $p->set_timestamp() };
@@ -255,7 +255,7 @@ SKIP:
   {
     is($p->bitfield(2)->to_Bin, '00000000000000000000000000000010', 'bitfield get_set 1');
     is($p->bitfield->to_Bin, '00000000000000000000000000000010', 'bitfield get_set 2');
-    
+
     is($p->set_bitfield(1010)->to_Bin, '00000000000000000000000000001010', 'bitfield set 1');
     eval { $p->set_bitfield() };
     ok($@,  'bitfield set 2');
@@ -309,7 +309,7 @@ SKIP:
 
     is($p->array(-1, 2.5, 3), '{-1,2.5,3}', 'array get_set 1');
     is($p->array, '{-1,2.5,3}', 'array get_set 2');
-    
+
     is($p->set_array([ 'a' .. 'c' ]), '{"a","b","c"}', 'array set 1');
     eval { $p->set_array() };
     ok($@,  'array set 2');
@@ -332,7 +332,7 @@ SKIP:
     local $p->{STATE_SAVING()} = 1;
     is($p->set(-1, 2.5, 3), 'SET{-1,2.5,3}', 'set get_set 1');
     is($p->set, 'SET{-1,2.5,3}', 'set get_set 2');
-    
+
     is($p->set_set([ 'a' .. 'c' ]), q(SET{'a','b','c'}), 'set set 1');
     eval { $p->set_set() };
     ok($@,  'set set 2');
@@ -440,7 +440,7 @@ BEGIN
       get_scalar => { interface => 'get', hash_key => 'scalar' },
       set_scalar => { interface => 'set', hash_key => 'scalar' },
     ],
-    
+
     character => 
     [
       'character' => { length => 4 },

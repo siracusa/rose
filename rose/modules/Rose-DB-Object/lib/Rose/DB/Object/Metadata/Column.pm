@@ -67,9 +67,9 @@ __PACKAGE__->method_maker_info
 sub available_method_types
 {
   my($class) = shift;
-  
+
   my @types = $class->SUPER::available_method_types;
-  
+
   @types = qw(get_set get set)  unless(@types);
 
   return @types;
@@ -95,7 +95,7 @@ sub rw_method_name
 sub build_method_name_for_type
 {
   my($self, $type) = @_;
-  
+
   if($type eq 'get_set')
   {
     return $self->alias || $self->name;
@@ -136,9 +136,9 @@ sub made_method_type
 sub method_maker_arguments
 {
   my($self, $type) = @_;
-  
+
   my $args = $self->SUPER::method_maker_arguments($type);
-  
+
   $args->{'interface'} ||= $type;
 
   return wantarray ? %$args : $args;
@@ -240,7 +240,7 @@ sub perl_column_defintion_attributes
     {
       next ATTR;
     }
-    
+
     my $val = $self->can($attr) ? $self->$attr() : next ATTR;
 
     if(!defined $val || ref $val || ($attr eq 'not_null' && !$self->not_null))
@@ -256,14 +256,14 @@ sub perl_column_defintion_attributes
     if($attr =~ /_method_name$/)
     {
       my $method = $self->$attr();
-      
+
       my $ok = 0;
 
       foreach my $type ($self->auto_method_types)
       {
         $ok = 1  if($method eq $self->build_method_name_for_type($type));
       }
-      
+
       next ATTR  if($ok);
     }
 

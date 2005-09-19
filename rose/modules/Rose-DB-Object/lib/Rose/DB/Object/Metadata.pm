@@ -15,7 +15,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.061';
+our $VERSION = '0.062';
 
 our $Debug = 0;
 
@@ -620,13 +620,13 @@ sub add_columns
       {
         my $auto_method_name = 
           $methods ? 'auto_method_types' : 'add_auto_method_types';
-  
+
         my $methods_arg = $methods || $add_methods;
-  
+
         if(ref $methods_arg eq 'HASH')
         {
           $methods = [ keys %$methods_arg ];
-          
+
           while(my($type, $name) = each(%$methods_arg))
           {
             next  unless(defined $name);
@@ -637,7 +637,7 @@ sub add_columns
         {
           $methods = $methods_arg;
         }
-  
+
         $column->$auto_method_name($methods);      
       }
 
@@ -777,13 +777,13 @@ sub add_relationships
       {
         my $auto_method_name = 
           $methods ? 'auto_method_types' : 'add_auto_method_types';
-  
+
         my $methods_arg = $methods || $add_methods;
-  
+
         if(ref $methods_arg eq 'HASH')
         {
           $methods = [ keys %$methods_arg ];
-          
+
           while(my($type, $name) = each(%$methods_arg))
           {
             next  unless(defined $name);
@@ -794,7 +794,7 @@ sub add_relationships
         {
           $methods = $methods_arg;
         }
-  
+
         $relationship->$auto_method_name($methods);      
       }
     }
@@ -858,6 +858,8 @@ sub add_foreign_keys
                     $fk->name, "'";
       }
 
+      $fk->parent($self);
+
       $self->{'foreign_keys'}{$fk->name} = $fk;
 
       unless(defined $self->relationship($fk->name))
@@ -900,13 +902,13 @@ sub add_foreign_keys
       {
         my $auto_method_name = 
           $methods ? 'auto_method_types' : 'add_auto_method_types';
-  
+
         my $methods_arg = $methods || $add_methods;
-  
+
         if(ref $methods_arg eq 'HASH')
         {
           $methods = [ keys %$methods_arg ];
-          
+
           while(my($type, $name) = each(%$methods_arg))
           {
             next  unless(defined $name);
@@ -917,7 +919,7 @@ sub add_foreign_keys
         {
           $methods = $methods_arg;
         }
-  
+
         $fk->$auto_method_name($methods);      
       }
 
@@ -1111,7 +1113,7 @@ sub make_column_methods
     foreach my $type ($column->auto_method_types)
     {
       $method = $self->method_name_from_column_name($name, $type);
-  
+
       if(my $reason = $self->method_name_is_reserved($method, $class))
       {
         Carp::croak "Cannot create method '$method' - $reason  ",
@@ -1168,7 +1170,7 @@ sub make_column_methods
   #              (@$columns == 1 ? '' : 's'), " and ", scalar keys %methods,
   #              " method", (scalar keys %methods == 1 ? '' : 's');
   #}
-  
+
   return;
 }
 
@@ -1178,7 +1180,7 @@ sub make_foreign_key_methods
   my(%args) = @_;
 
   $self->retry_deferred_foreign_keys;
-  
+
   my $class = $self->class;
   my $meta_class = ref $self;
 
@@ -1268,11 +1270,11 @@ sub add_deferred_foreign_keys
 sub retry_deferred_foreign_keys
 {
   my($self) = shift;
-  
+
   my $meta_class = ref $self;
 
   my @foreign_keys;
-  
+
   # Check to see if any deferred foreign keys are ready now
   foreach my $foreign_key ($meta_class->deferred_foreign_keys)
   {
@@ -1385,7 +1387,7 @@ sub deferred_relationships
 sub add_deferred_relationships
 {
   my($class) = shift;
-  
+
   foreach my $arg (@_)
   {
     foreach my $rel (@Deferred_Relationships)
@@ -1402,11 +1404,11 @@ sub add_deferred_relationships
 sub retry_deferred_relationships
 {
   my($self) = shift;
-  
+
   my $meta_class = ref $self;
 
   my @relationships;
-  
+
   # Check to see if any deferred relationships are ready now
   foreach my $relationship ($self->deferred_relationships)
   {

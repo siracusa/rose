@@ -10,7 +10,7 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.022';
+our $VERSION = '0.023';
 
 __PACKAGE__->default_auto_method_types('get_set');
 
@@ -42,7 +42,7 @@ Rose::Object::MakeMethods::Generic->make_methods
   [
     'foreign_class', # class to be fetched
   ],
-  
+
   hash =>
   [
     # Map from local columns to foreign columns
@@ -490,11 +490,15 @@ Get or set a reference to a hash of name/value arguments to pass to the L<manage
     {
       type         => 'many to many',
       map_class    => 'WidgetColorMap',
-      manager_args => { sort_by => 'name' },
+      manager_args => { sort_by => Color->meta->table . '.name' },
     },
   );
 
-This would ensure that a C<Widget>'s C<colors()> are listed in alphabetical order.  See the documentation for L<Rose::DB::Object::Manager>'s L<get_objects|Rose::DB::Object::Manager/get_objects> method for a full list of valid arguments, but remember that you can define your own custom L<manager_class> and thus can also define what kinds of arguments it takes.
+This would ensure that a C<Widget>'s C<colors()> are listed in alphabetical order.  Note that the "name" column is prefixed by the name of the table fronted by the C<Color> class.  This is important because several tables may have a column named "name."  If this relationship is used to form a JOIN in a query along with one of those tables, then the "name" column will be ambiguous.  Adding a table name prefix disambiguates the column name.
+
+Also note that the table name is not hard-coded.  Instead, it is fetched from the L<Rose::DB::Object>-derived class that fronts the table.  This is more verbose, but is a much better choice than including the literal table name when it comes to long-term maintenance of the code.
+
+See the documentation for L<Rose::DB::Object::Manager>'s L<get_objects|Rose::DB::Object::Manager/get_objects> method for a full list of valid arguments for use with the C<manager_args> parameter, but remember that you can define your own custom L<manager_class> and thus can also define what kinds of arguments C<manager_args> will accept.
 
 =item B<map_class [CLASS]>
 
