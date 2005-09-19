@@ -579,6 +579,9 @@ CREATE TABLE rose_db_object_test
   bits           BIT(5) NOT NULL DEFAULT '00101',
   start          DATE,
   save           INT,
+  fk1            INT,
+  fk2            INT,
+  fk3            INT,
   last_modified  TIMESTAMP,
   date_created   DATETIME
 )
@@ -606,6 +609,9 @@ EOF
       start    => { type => 'date', default => '12/24/1980' },
       save     => { type => 'scalar' },
       bits     => { type => 'bitfield', bits => 5, default => 101 },
+      fk1      => { type => 'int' },
+      fk2      => { type => 'int' },
+      fk3      => { type => 'int' },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'datetime' },
     );

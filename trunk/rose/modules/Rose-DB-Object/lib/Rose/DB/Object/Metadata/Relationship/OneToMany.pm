@@ -10,7 +10,7 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.02';
+our $VERSION = '0.021';
 
 __PACKAGE__->default_auto_method_types('get_set');
 
@@ -59,7 +59,7 @@ sub type { 'one to many' }
 sub build_method_name_for_type
 {
   my($self, $type) = @_;
-  
+
   if($type eq 'get_set')
   {
     return $self->name;
@@ -110,6 +110,38 @@ See the L<Rose::DB::Object::Metadata::Relationship|Rose::DB::Object::Metadata::R
 =item B<build_method_name_for_type TYPE>
 
 Return a method name for the relationship method type TYPE.  Returns the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> for the method type "get_set", undef otherwise.
+
+=item B<manager_class [CLASS]>
+
+Get or set the name of the L<Rose::DB::Object::Manager>-derived class used to fetch records.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<Rose::DB::Object::Manager> if this value is left undefined.
+
+=item B<manager_method [METHOD]>
+
+Get or set the name of the L<manager_class|/manager_class> class method to call when fetching records.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<get_objects|Rose::DB::Object::Manager/get_objects> if this value is left undefined.
+
+=item B<manager_args [HASHREF]>
+
+Get or set a reference to a hash of name/value arguments to pass to the L<manager_method|/manager_method> when fetching objects.  For example, this can be used to enforce a particular sort order for objects fetched via this relationship.  For example:
+
+  Product->meta->add_relationship
+  (
+    code_names =>
+    {
+      type         => 'one to many',
+      class        => 'CodeName',
+      column_map   => { id => 'product_id' },
+      manager_args => 
+      {
+        sort_by => CodeName->meta->table . '.name',
+      },
+    },
+  );
+
+This would ensure that a C<Product>'s C<code_names()> are listed in alphabetical order.  Note that the "name" column is prefixed by the name of the table fronted by the C<CodeName> class.  This is important because several tables may have a column named "name."  If this relationship is used to form a JOIN in a query along with one of those tables, then the "name" column will be ambiguous.  Adding a table name prefix disambiguates the column name.
+
+Also note that the table name is not hard-coded.  Instead, it is fetched from the L<Rose::DB::Object>-derived class that fronts the table.  This is more verbose, but is a much better choice than including the literal table name when it comes to long-term maintenance of the code.
+
+See the documentation for L<Rose::DB::Object::Manager>'s L<get_objects|Rose::DB::Object::Manager/get_objects> method for a full list of valid arguments for use with the C<manager_args> parameter, but remember that you can define your own custom L<manager_class> and thus can also define what kinds of arguments C<manager_args> will accept.
 
 =item B<map_column LOCAL [, FOREIGN]>
 

@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
      STATE_SAVING);
 
-our $VERSION = '0.06';
+our $VERSION = '0.061';
 
 sub scalar
 {
@@ -785,25 +785,25 @@ sub bitfield
                $self->{$formatted_key} ? $db->parse_bitfield($self->{$formatted_key}) : undef;
       };
 
-  
+
       if($args->{'with_intersects'})
       {
         my $method = $args->{'intersects'} || $name . '_intersects';
-  
+
         $methods{$method} = sub 
         {
           my($self, $vec) = @_;
-  
+
           my $val = $self->{$key} or return undef;
-  
+
           unless(ref $vec)
           {
             my $db = $self->db or die "Missing Rose::DB object attribute";
             $vec = $db->parse_bitfield($vec, $size);
           }
-  
+
           $vec = Bit::Vector->new_Bin($size, $vec->to_Bin)  if($vec->Size != $size);
-  
+
           my $test = Bit::Vector->new($size);
           $test->Intersection($val, $vec);
           return ($test->to_Bin > 0) ? 1 : 0;
@@ -1195,33 +1195,33 @@ sub object_by_key
     $methods{$name} = sub
     {
       my($self) = shift;
-  
+
       if(@_)
       {
         return $self->{$key} = undef  unless(defined $_[0]);
-  
+
         while(my($local_column, $foreign_column) = each(%$fk_columns))
         {
           my $local_method   = $meta->column_mutator_method_name($local_column);
           my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
-  
+
           $self->$local_method($_[0]->$foreign_method);
         }
-  
+
         return $self->{$key} = $_[0];
       }
-  
+
       return $self->{$key}  if(defined $self->{$key});
-  
+
       my %key;
-  
+
       while(my($local_column, $foreign_column) = each(%$fk_columns))
       {
         my $local_method   = $meta->column_accessor_method_name($local_column);
         my $foreign_method = $fk_meta->column_mutator_method_name($foreign_column);
-  
+
         $key{$foreign_method} = $self->$local_method();
-  
+
         # Comment this out to allow null keys
         unless(defined $key{$foreign_method})
         {
@@ -1231,9 +1231,9 @@ sub object_by_key
           return undef;
         }
       }
-  
+
       my $obj;
-  
+
       if($share_db)
       {
         $obj = $fk_class->new(%key, db => $self->db);
@@ -1242,9 +1242,9 @@ sub object_by_key
       {
         $obj = $fk_class->new(%key);
       }
-  
+
       my $ret = $obj->load;
-  
+
       unless($ret)
       {
         $self->error("Could not load $fk_class with key ", 
@@ -1252,7 +1252,7 @@ sub object_by_key
                      " - " . $obj->error);
         return $ret;
       }
-  
+
       return $self->{$key} = $obj;
     };
   }
@@ -1297,26 +1297,26 @@ sub objects_by_key
     $methods{$name} = sub
     {
       my($self) = shift;
-  
+
       if(@_)
       {      
         return $self->{$key} = undef  if(@_ == 1 && !defined $_[0]);
         return $self->{$key} = (@_ == 1 && ref $_[0] eq 'ARRAY') ? $_[0] : [ @_ ];
       }
-  
+
       if(defined $self->{$key})
       {
         return wantarray ? @{$self->{$key}} : $self->{$key};  
       }
-  
+
       my %key;
-  
+
       while(my($local_column, $foreign_column) = each(%$ft_columns))
       {
         my $local_method = $meta->column_accessor_method_name($local_column);
-  
+
         $key{$foreign_column} = $self->$local_method();
-  
+
         # Comment this out to allow null keys
         unless(defined $key{$foreign_column})
         {
@@ -1326,9 +1326,9 @@ sub objects_by_key
           return wantarray ? () : undef;
         }
       }
-  
+
       my $objs;
-  
+
       if($share_db)
       {
         $objs = $ft_manager->$ft_method(query => [ %key, @$query_args ], %$mgr_args, db => $self->db);
@@ -1337,7 +1337,7 @@ sub objects_by_key
       {
         $objs = $ft_manager->$ft_method(query => [ %key, @$query_args ], %$mgr_args);
       }
-  
+
       unless($objs)
       {
         $self->error("Could not load $ft_class objects with key ", 
@@ -1345,16 +1345,16 @@ sub objects_by_key
                      " - " . $ft_manager->error);
         return $objs;
       }
-  
+
       $self->{$key} = $objs;
-  
+
       return wantarray ? @{$self->{$key}} : $self->{$key};
     };
-  
+
     if($interface eq 'get_set_load')
     {
       my $method_name = $args->{'load_method'} || 'load_' . $name;
-  
+
       $methods{$method_name} = sub
       {
         return (defined shift->$name(@_)) ? 1 : 0;

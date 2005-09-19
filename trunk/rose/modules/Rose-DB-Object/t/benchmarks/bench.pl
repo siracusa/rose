@@ -762,15 +762,15 @@ sub Drop_Indexes
   foreach my $db_name (@Use_DBs)
   {
     my $db = Rose::DB->new($db_name);
-  
+
     my $dbh = $db->dbh;
-  
+
     my $on = ($db_name eq 'mysql') ? 'ON rose_db_object_test_products' : '';
-    
+
     $dbh->do(<<"EOF");
 DROP INDEX rose_db_object_test_products_name_idx $on
 EOF
-  
+
     $on = ($db_name eq 'mysql') ? 'ON rose_db_object_test_code_names' : '';
 
     $dbh->do(<<"EOF");
@@ -888,7 +888,7 @@ EOF
       $i++;
     }
   }
-  
+
 
   INSERT_SIMPLE_PRODUCT_RDBO:
   {
@@ -1081,7 +1081,7 @@ EOF
       }
     }
   }
-  
+
   ACCCESSOR_SIMPLE_PRODUCT_RDBO:
   {
     sub accessor_simple_product_rdbo
@@ -1324,7 +1324,7 @@ EOF
       $i++;
     }
   }
- 
+
   LOAD_SIMPLE_PRODUCT_AND_CATEGORY_RDBO:
   {
     my $i = 1;
@@ -1405,7 +1405,7 @@ EOF
 
       my $usth = $DBH->prepare('UPDATE rose_db_object_test_categories SET name = ? WHERE id = ?');
       $usth->execute($name, $i + 500_000);
-      
+
       $i++;
     }
   }
@@ -1486,7 +1486,7 @@ EOF
       $i++;
     }
   }
-      
+
   UPDATE_SIMPLE_PRODUCT_RDBO:
   {
     my $i = 1;
@@ -1781,9 +1781,9 @@ EOF
       my %row;
       $sth->bind_columns(\@row{qw(id name category_id status fk1 fk2 fk3 published
                                   last_modified date_created cat_id cat_name)});
-                                  
+
       my @ps;
-      
+
       while($sth->fetch)
       {
         push(@ps, { %row });
@@ -1913,7 +1913,7 @@ EOF
   #
   # Search with 1-to-1 and 1-to-n sub-objects
   #
-  
+
   SEARCH_SIMPLE_PRODUCT_AND_CATEGORY_AND_CODE_NAMES_DBI:
   {
     my $printed = 0;
@@ -1952,9 +1952,9 @@ EOF
       $sth->bind_columns(\@row{qw(id name category_id status fk1 fk2 fk3 published
                                   last_modified date_created cat_id cat_name
                                   cn_id cn_product_id cn_name)});
-                                  
+
       my @ps;
-      
+
       while($sth->fetch)
       {
         push(@ps, { %row });
@@ -2145,7 +2145,7 @@ EOF
       }
     }
   }
-    
+
   SEARCH_LIMIT_OFFSET_SIMPLE_PRODUCT_RDBO:
   {
     my $printed = 0;
@@ -2254,7 +2254,7 @@ EOF
       }
     }
   }
-      
+
   ITERATE_SIMPLE_CATEGORY_RDBO:
   {
     my $printed = 0;
@@ -3549,7 +3549,7 @@ EOF
   #
   # Search with 1-to-1 and 1-to-n sub-objects
   #
-  
+
   SEARCH_COMPLEX_PRODUCT_AND_CATEGORY_AND_CODE_NAMES_DBI:
   {
     my $printed = 0;
@@ -3588,9 +3588,9 @@ EOF
       $sth->bind_columns(\@row{qw(id name category_id status fk1 fk2 fk3 published
                                   last_modified date_created cat_id cat_name
                                   cn_id cn_product_id cn_name)});
-                                  
+
       my @ps;
-      
+
       while($sth->fetch)
       {
         push(@ps, { %row });
@@ -4516,7 +4516,7 @@ sub Run_Tests
       # These tests take forever (wallclock), even when set to 1 CPU
       # second.  Force a reasonable number of iterations, scaled
       # coarsely based on how many iterations other tests are using.
-    
+
       my $Tiny_Interations = $Iterations <= 1000 ? 5 :
                              $Iterations <= 3000 ? 2 :
                              $Iterations <= 5000 ? 1 :

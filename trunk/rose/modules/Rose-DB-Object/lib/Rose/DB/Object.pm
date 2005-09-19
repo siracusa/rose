@@ -13,7 +13,7 @@ our @ISA = qw(Rose::Object);
 use Rose::DB::Object::Constants qw(:all);
 #use Rose::DB::Constants qw(IN_TRANSACTION);
 
-our $VERSION = '0.074';
+our $VERSION = '0.075';
 
 our $Debug = 0;
 
@@ -598,7 +598,7 @@ our $AUTOLOAD;
 sub AUTOLOAD
 {
   my $self = shift;
-  
+
   my $msg = '';
 
   # Not sure if this will ever be used, but just in case...
@@ -606,7 +606,7 @@ sub AUTOLOAD
   {
     my @fks  = $self->meta->deferred_foreign_keys;
     my @rels = $self->meta->deferred_relationships;
-    
+
     if(@fks || @rels)
     {
       my $tmp_msg =<<"EOF";
@@ -629,7 +629,7 @@ EOF
 
         $tmp_msg .= sprintf("%-15s %s\n", $type, $thing->name);
       }
-      
+
       $msg = "\n\n$tmp_msg"  if($tmp_msg);
     }
   };

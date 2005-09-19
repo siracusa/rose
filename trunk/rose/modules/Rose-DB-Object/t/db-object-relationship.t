@@ -188,7 +188,7 @@ SKIP: foreach my $db_type ('pg')
 
   my $color = MyPgColor->new(id => 1, name => 'red');
   ok($color->save, "save color 1 - $db_type");
-  
+
   $color = MyPgColor->new(id => 2, name => 'green');
   ok($color->save, "save color 2 - $db_type");
 
@@ -339,7 +339,7 @@ SKIP: foreach my $db_type ('mysql')
 
   my $color = MyMySQLColor->new(id => 1, name => 'red');
   ok($color->save, "save color 1 - $db_type");
-  
+
   $color = MyMySQLColor->new(id => 2, name => 'green');
   ok($color->save, "save color 2 - $db_type");
 
@@ -538,7 +538,7 @@ SKIP: foreach my $db_type ('informix')
 
   my $color = MyInformixColor->new(id => 1, name => 'red');
   ok($color->save, "save color 1 - $db_type");
-  
+
   $color = MyInformixColor->new(id => 2, name => 'green');
   ok($color->save, "save color 2 - $db_type");
 
@@ -947,6 +947,9 @@ CREATE TABLE rose_db_object_test
   bits           BIT(5) NOT NULL DEFAULT '00101',
   start          DATE,
   save           INT,
+  fk1            INT,
+  fk2            INT,
+  fk3            INT,
   last_modified  TIMESTAMP,
   date_created   DATETIME
 )
@@ -1020,6 +1023,9 @@ EOF
       start    => { type => 'date', default => '12/24/1980' },
       save     => { type => 'scalar' },
       bits     => { type => 'bitfield', bits => 5, default => 101 },
+      fk1      => { type => 'int' },
+      fk2      => { type => 'int' },
+      fk3      => { type => 'int' },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'datetime' },
     );
@@ -1460,7 +1466,7 @@ END
     $dbh->do('DROP TABLE rose_db_object_colors');
     $dbh->do('DROP TABLE rose_db_object_other');
     $dbh->do('DROP TABLE rose_db_object_other2');
-    
+
 
     $dbh->disconnect;
   }

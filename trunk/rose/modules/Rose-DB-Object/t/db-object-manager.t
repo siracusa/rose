@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 745;
+use Test::More tests => 1016;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("Postgres tests", 278)  unless($HAVE_PG);
+  skip("Postgres tests", 335)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -442,7 +442,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   is(scalar @{$o->{'nicks'}}, 2, "iterator many sub-object 1 - $db_type");
   is($o->{'nicks'}[0]{'nick'}, 'ntwo', "iterator many sub-object 2 - $db_type");
   is($o->{'nicks'}[1]{'nick'}, 'nfour', "iterator many sub-object 3 - $db_type");
-  
+
   $o = $iterator->next;
   is($o->name, 'Sue', "iterator many next() 7 - $db_type");
   is($o->id, 3, "iterator many next() 8 - $db_type");
@@ -465,7 +465,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   $o = $iterator->next;
   is($o->name, 'Betty', "iterator limit 2 many next() 1 - $db_type");
   is($o->id, 5, "iterator limit 2 many next() 2 - $db_type");
-  
+
   $o = $iterator->next;
   is($o->name, 'Bob', "iterator limit 2 many next() 3 - $db_type");
   is($o->id, 4, "iterator limit 2 many next() 4 - $db_type");
@@ -488,7 +488,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   $o = $iterator->next;
   is($o->name, 'Betty', "iterator limit 3 many next() 1 - $db_type");
   is($o->id, 5, "iterator limit 3 many next() 2 - $db_type");
-  
+
   $o = $iterator->next;
   is($o->name, 'Bob', "iterator limit 3 many next() 3 - $db_type");
   is($o->id, 4, "iterator limit 3 many next() 4 - $db_type");
@@ -557,7 +557,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       sort_by => 't1.name',
       limit   => 2,
       offset  => 1);
-  
+
   $o = $iterator->next;
   is($o->name, 'Bob', "iterator limit 2 offset 1 many next() 1 - $db_type");
   is($o->id, 4, "iterator limit 2 offset 1 many next() 2 - $db_type");
@@ -663,7 +663,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   $o7->name('Joe');
 
   ok($o7->save, "object save() 9 - $db_type");
-  
+
   my $o8 = $o2->clone;
   $o8->id(80);
   $o8->b1(undef);
@@ -707,7 +707,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   is(ref $objs, 'ARRAY', "get_objects() with many 15 - $db_type");
   $objs ||= [];
   is(scalar @$objs, 0, "get_objects() with many 16 - $db_type");
-  
+
   $count = 
     Rose::DB::Object::Manager->get_objects_count(
       object_class => 'MyPgObject',
@@ -823,7 +823,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   is(scalar @$objs, 8, "get_objects() with many 26 - $db_type");
 
   my $ids = join(',', map { $_->id } @$objs);
-  
+
   is($ids, '1,2,3,4,5,60,70,80', "get_objects() with many 27 - $db_type");
 
   $nicks = $objs->[4]->{'nicks'}; # make sure this isn't hitting the db
@@ -849,7 +849,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $fo = MyPgNick->new(id => 8);
   ok($fo->delete, "with many clean-up 2 - $db_type");
-  
+
   $fo = MyPgNick->new(id => 9);
   ok($fo->delete, "with many clean-up 3 - $db_type");
 
@@ -1001,7 +1001,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   ok($@ =~ /invalid without a limit/, "get_objects_iterator() missing offset - $db_type");
 
   # Start *_sql comparison tests
-  
+
   $o6->fk2(99);
   $o6->fk3(99);
   $o6->save;
@@ -1068,10 +1068,10 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
 
   is(scalar @$nicks, 4, "get_objects() with many to many 6 - $db_type");
-  is($nicks->[0]->nick, 'nthree', "get_objects() with many  to many 7 - $db_type");
-  is($nicks->[1]->nick, 'nsix', "get_objects() with many  to many 8 - $db_type");
-  is($nicks->[2]->nick, 'none', "get_objects() with many  to many 9 - $db_type");
-  is($nicks->[3]->nick, 'nfive', "get_objects() with many  to many 10 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many to many 7 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many to many 8 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many to many 9 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many to many 10 - $db_type");
 
   $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
   ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many to many 11 - $db_type");
@@ -1104,10 +1104,10 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
 
   is(scalar @$nicks, 4, "get_objects() with many to many (reorder) 6 - $db_type");
-  is($nicks->[0]->nick, 'nthree', "get_objects() with many  to many (reorder) 7 - $db_type");
-  is($nicks->[1]->nick, 'nsix', "get_objects() with many  to many (reorder) 8 - $db_type");
-  is($nicks->[2]->nick, 'none', "get_objects() with many  to many (reorder) 9 - $db_type");
-  is($nicks->[3]->nick, 'nfive', "get_objects() with many  to many (reorder) 10 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many to many (reorder) 7 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many to many (reorder) 8 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many to many (reorder) 9 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many to many (reorder) 10 - $db_type");
 
   $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
   ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many to many (reorder) 11 - $db_type");
@@ -1143,10 +1143,10 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
 
   is(scalar @$nicks, 4, "get_objects() with many to many require with 6 - $db_type");
-  is($nicks->[0]->nick, 'nthree', "get_objects() with many  to many 7 - $db_type");
-  is($nicks->[1]->nick, 'nsix', "get_objects() with many  to many 8 - $db_type");
-  is($nicks->[2]->nick, 'none', "get_objects() with many  to many 9 - $db_type");
-  is($nicks->[3]->nick, 'nfive', "get_objects() with many  to many 10 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many to many 7 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many to many 8 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many to many 9 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many to many 10 - $db_type");
 
   $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
   ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many to many require with 11 - $db_type");
@@ -1171,6 +1171,151 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   ok(!defined $objs->[0]->{'colors'}, "get_objects() with many to many require with 19 - $db_type");
   ok(!defined $objs->[1]->{'bb2'}, "get_objects() with many to many require with 20 - $db_type");
 
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  #$DB::single = 1;
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      object_class  => 'MyPgObject',
+      share_db      => 1,
+      with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
+      multi_many_ok => 1,
+      query         => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "get_objects_iterator() with many to many 1 - $db_type");
+  is($o->id, 5, "get_objects_iterator() with many to many 2 - $db_type");
+
+  $nicks = $o->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects_iterator() with many to many 3 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects_iterator() with many to many 4 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects_iterator() with many to many 5 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects_iterator() with many to many 6 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects_iterator() with many to many 7 - $db_type");
+
+  $fo1 = $o->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects_iterator() with many to many 8 - $db_type");
+
+  $fo1 = $o->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects_iterator() with many to many 9 - $db_type"); 
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "get_objects_iterator() with many to many 10 - $db_type");
+  is($o->id, 2, "get_objects_iterator() with many to many 11 - $db_type");
+
+  $colors = $o->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects_iterator() with many to many 12 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many 13 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many 14 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'John', "get_objects_iterator() with many to many 15 - $db_type");
+  is($o->id, 1, "get_objects_iterator() with many to many 16 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "get_objects_iterator() with many to many 17 - $db_type");
+  is($iterator->total, 3, "get_objects_iterator() with many to many 18 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      object_class  => 'MyPgObject',
+      share_db      => 1,
+      with_objects  => [ 'bb1', 'nicks', 'other_obj', 'colors', 'bb2' ],
+      multi_many_ok => 1,
+      query         => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "get_objects_iterator() with many to many 19 - $db_type");
+  is($o->id, 5, "get_objects_iterator() with many to many 20 - $db_type");
+
+  $nicks = $o->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects_iterator() with many to many 21 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects_iterator() with many to many 22 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects_iterator() with many to many 23 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects_iterator() with many to many 24 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects_iterator() with many to many 25 - $db_type");
+
+  $fo1 = $o->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects_iterator() with many to many 26 - $db_type");
+
+  $fo1 = $o->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects_iterator() with many to many 27 - $db_type"); 
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "get_objects_iterator() with many to many 28 - $db_type");
+  is($o->id, 2, "get_objects_iterator() with many to many 29 - $db_type");
+
+  $colors = $o->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects_iterator() with many to many 30 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many 31 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many 32 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'John', "get_objects_iterator() with many to many 33 - $db_type");
+  is($o->id, 1, "get_objects_iterator() with many to many 34 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "get_objects_iterator() with many to many 35 - $db_type");
+  is($iterator->total, 3, "get_objects_iterator() with many to many 36 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      object_class    => 'MyPgObject',
+      share_db        => 1,
+      with_objects    => [ 'nicks', 'colors', 'bb2' ],
+      multi_many_ok   => 1,
+      require_objects => [ 'bb1', 'other_obj' ],
+      query           => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by         => 't1.name');
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "get_objects_iterator() with many to many require 1 - $db_type");
+  is($o->id, 5, "get_objects_iterator() with many to many require 2 - $db_type");
+
+  $fo1 = $o->{'other_obj'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'Foo 1', "get_objects_iterator() with many to many require 3 - $db_type");
+
+  ok(!defined $o->{'colors'}, "get_objects_iterator() with many to many require 4 - $db_type");
+
+  $nicks = $o->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects_iterator() with many to many require 5 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects_iterator() with many to many require 6 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects_iterator() with many to many require 7 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects_iterator() with many to many require 8 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects_iterator() with many to many require 9 - $db_type");
+
+  $fo1 = $o->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects_iterator() with many to many require 10 - $db_type");
+
+  $fo1 = $o->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects_iterator() with many to many require 11 - $db_type"); 
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "get_objects_iterator() with many to many require 12 - $db_type");
+  is($o->id, 2, "get_objects_iterator() with many to many require 13 - $db_type");
+
+  $colors = $o->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects_iterator() with many to many require 14 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many require 15 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many require 16 - $db_type");
+
+  $fo1 = $o->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'two', "get_objects_iterator() with many to many require 17 - $db_type");
+
+  $fo1 = $o->{'other_obj'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'Foo 2', "get_objects_iterator() with many to many require 18 - $db_type");
+
+  ok(!defined $o->{'bb2'}, "get_objects_iterator() with many to many require 19 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "get_objects_iterator() with many to many require 20 - $db_type");
+  is($iterator->total, 2, "get_objects_iterator() with many to many require 21 - $db_type");
+
   # End "many to many" tests
 }
 
@@ -1180,7 +1325,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 230)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 337)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -1575,7 +1720,7 @@ SKIP: foreach my $db_type ('mysql')
   is(scalar @{$o->{'nicks'}}, 2, "iterator many sub-object 1 - $db_type");
   is($o->{'nicks'}[0]{'nick'}, 'ntwo', "iterator many sub-object 2 - $db_type");
   is($o->{'nicks'}[1]{'nick'}, 'nfour', "iterator many sub-object 3 - $db_type");
-  
+
   $o = $iterator->next;
   is($o->name, 'Sue', "iterator many next() 7 - $db_type");
   is($o->id, 3, "iterator many next() 8 - $db_type");
@@ -1598,7 +1743,7 @@ SKIP: foreach my $db_type ('mysql')
   $o = $iterator->next;
   is($o->name, 'Betty', "iterator limit 2 many next() 1 - $db_type");
   is($o->id, 5, "iterator limit 2 many next() 2 - $db_type");
-  
+
   $o = $iterator->next;
   is($o->name, 'Bob', "iterator limit 2 many next() 3 - $db_type");
   is($o->id, 4, "iterator limit 2 many next() 4 - $db_type");
@@ -1621,7 +1766,7 @@ SKIP: foreach my $db_type ('mysql')
   $o = $iterator->next;
   is($o->name, 'Betty', "iterator limit 3 many next() 1 - $db_type");
   is($o->id, 5, "iterator limit 3 many next() 2 - $db_type");
-  
+
   $o = $iterator->next;
   is($o->name, 'Bob', "iterator limit 3 many next() 3 - $db_type");
   is($o->id, 4, "iterator limit 3 many next() 4 - $db_type");
@@ -1690,7 +1835,7 @@ SKIP: foreach my $db_type ('mysql')
       sort_by => 't1.name',
       limit   => 2,
       offset  => 1);
-  
+
   $o = $iterator->next;
   is($o->name, 'Bob', "iterator limit 2 offset 1 many next() 1 - $db_type");
   is($o->id, 4, "iterator limit 2 offset 1 many next() 2 - $db_type");
@@ -1796,7 +1941,7 @@ SKIP: foreach my $db_type ('mysql')
   $o7->name('Joe');
 
   ok($o7->save, "object save() 9 - $db_type");
-  
+
   my $o8 = $o2->clone;
   $o8->id(80);
   $o8->b1(undef);
@@ -1842,7 +1987,7 @@ SKIP: foreach my $db_type ('mysql')
   is(ref $objs, 'ARRAY', "get_objects() with many 15 - $db_type");
   $objs ||= [];
   is(scalar @$objs, 0, "get_objects() with many 16 - $db_type");
-  
+
   $count = 
     Rose::DB::Object::Manager->get_objects_count(
       object_class => 'MyMySQLObject',
@@ -1958,7 +2103,7 @@ SKIP: foreach my $db_type ('mysql')
   is(scalar @$objs, 8, "get_objects() with many 26 - $db_type");
 
   my $ids = join(',', map { $_->id } @$objs);
-  
+
   is($ids, '1,2,3,4,5,60,70,80', "get_objects() with many 27 - $db_type");
 
   $nicks = $objs->[4]->{'nicks'}; # make sure this isn't hitting the db
@@ -1984,7 +2129,7 @@ SKIP: foreach my $db_type ('mysql')
 
   $fo = MyMySQLNick->new(id => 8);
   ok($fo->delete, "with many clean-up 2 - $db_type");
-  
+
   $fo = MyMySQLNick->new(id => 9);
   ok($fo->delete, "with many clean-up 3 - $db_type");
 
@@ -2150,7 +2295,7 @@ SKIP: foreach my $db_type ('mysql')
   ok($@ =~ /invalid without a limit/, "get_objects_iterator() missing offset - $db_type");
 
   # Start *_sql comparison tests
-  
+
   $o6->fk2(99);
   $o6->fk3(99);
   $o6->save;
@@ -2168,6 +2313,305 @@ SKIP: foreach my $db_type ('mysql')
   is($objs->[0]->id, 60, "get_objects() eq_sql 3 - $db_type");
 
   # End *_sql comparison tests
+
+  # Start "many to many" tests
+
+  $fo = MyMySQLColor->new(id => 1, name => 'Red');
+  $fo->save;
+
+  $fo = MyMySQLColor->new(id => 2, name => 'Green');
+  $fo->save;
+
+  $fo = MyMySQLColor->new(id => 3, name => 'Blue');
+  $fo->save;
+
+  $fo = MyMySQLColorMap->new(id => 1, object_id => $o2->id, color_id => 1);
+  $fo->save;
+
+  $fo = MyMySQLColorMap->new(id => 2, object_id => $o2->id, color_id => 3);
+  $fo->save;
+
+  $o2->b1(4);
+  $o2->b1(2);
+  $o2->fkone(2);
+  $o2->fk2(3);
+  $o2->fk3(4);
+  $o2->save;
+
+  my @colors = $o2->colors;
+  ok(@colors == 2 && $colors[0]->name eq 'Red' &&
+     $colors[1]->name eq 'Blue', "Fetch many to many 1 - $db_type");
+#local $Rose::DB::Object::Manager::Debug = 1;
+#$DB::single = 1;
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class  => 'MyMySQLObject',
+      share_db      => 1,
+      with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
+      multi_many_ok => 1,
+      query         => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many to many 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 3, "get_objects() with many to many 2 - $db_type");
+
+  is($objs->[0]->id, 5, "get_objects() with many to many 3 - $db_type");
+  is($objs->[1]->id, 2, "get_objects() with many to many 4 - $db_type");
+  is($objs->[2]->id, 1, "get_objects() with many to many 5 - $db_type");
+
+  $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many to many 6 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many to many 7 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many to many 8 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many to many 9 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many to many 10 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many to many 11 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many to many 12 - $db_type");
+
+  my $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects() with many to many 13 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() with many to many 14 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects() with many to many 15 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class  => 'MyMySQLObject',
+      share_db      => 1,
+      with_objects  => [ 'bb1', 'nicks', 'other_obj', 'colors', 'bb2' ],
+      multi_many_ok => 1,
+      query         => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many to many (reorder) 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 3, "get_objects() with many to many (reorder) 2 - $db_type");
+
+  is($objs->[0]->id, 5, "get_objects() with many to many (reorder) 3 - $db_type");
+  is($objs->[1]->id, 2, "get_objects() with many to many (reorder) 4 - $db_type");
+  is($objs->[2]->id, 1, "get_objects() with many to many (reorder) 5 - $db_type");
+
+  $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many to many (reorder) 6 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many to many (reorder) 7 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many to many (reorder) 8 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many to many (reorder) 9 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many to many (reorder) 10 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many to many (reorder) 11 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many to many (reorder) 12 - $db_type");
+
+  $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects() with many to many (reorder) 13 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() with many to many (reorder) 14 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects() with many to many (reorder) 15 - $db_type");
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  #$DB::single = 1;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class    => 'MyMySQLObject',
+      share_db        => 1,
+      with_objects    => [ 'nicks', 'colors', 'bb2' ],
+      multi_many_ok   => 1,
+      require_objects => [ 'bb1', 'other_obj' ],
+      query           => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by         => 't1.name');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many to many require with 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 2, "get_objects() with many to many require with 2 - $db_type");
+
+  is($objs->[0]->id, 5, "get_objects() with many to many require with 3 - $db_type");
+  is($objs->[1]->id, 2, "get_objects() with many to many require with 4 - $db_type");
+
+  $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many to many require with 6 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many to many 7 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many to many 8 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many to many 9 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many to many 10 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many to many require with 11 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many to many require with 12 - $db_type");
+
+  $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects() with many to many require with 13 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() with many to many require with 14 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects() with many to many require with 15 - $db_type");
+
+  $fo1 = $objs->[1]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'two', "get_objects() with many to many require with 16 - $db_type");
+
+  $fo1 = $objs->[0]->{'other_obj'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'Foo 1', "get_objects() with many to many require with 17 - $db_type");
+
+  $fo1 = $objs->[1]->{'other_obj'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'Foo 2', "get_objects() with many to many require with 18 - $db_type");
+
+  ok(!defined $objs->[0]->{'colors'}, "get_objects() with many to many require with 19 - $db_type");
+  ok(!defined $objs->[1]->{'bb2'}, "get_objects() with many to many require with 20 - $db_type");
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  #$DB::single = 1;
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      object_class  => 'MyMySQLObject',
+      share_db      => 1,
+      with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
+      multi_many_ok => 1,
+      query         => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "get_objects_iterator() with many to many 1 - $db_type");
+  is($o->id, 5, "get_objects_iterator() with many to many 2 - $db_type");
+
+  $nicks = $o->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects_iterator() with many to many 3 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects_iterator() with many to many 4 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects_iterator() with many to many 5 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects_iterator() with many to many 6 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects_iterator() with many to many 7 - $db_type");
+
+  $fo1 = $o->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects_iterator() with many to many 8 - $db_type");
+
+  $fo1 = $o->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects_iterator() with many to many 9 - $db_type"); 
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "get_objects_iterator() with many to many 10 - $db_type");
+  is($o->id, 2, "get_objects_iterator() with many to many 11 - $db_type");
+
+  $colors = $o->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects_iterator() with many to many 12 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many 13 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many 14 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'John', "get_objects_iterator() with many to many 15 - $db_type");
+  is($o->id, 1, "get_objects_iterator() with many to many 16 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "get_objects_iterator() with many to many 17 - $db_type");
+  is($iterator->total, 3, "get_objects_iterator() with many to many 18 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      object_class  => 'MyMySQLObject',
+      share_db      => 1,
+      with_objects  => [ 'bb1', 'nicks', 'other_obj', 'colors', 'bb2' ],
+      multi_many_ok => 1,
+      query         => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "get_objects_iterator() with many to many 19 - $db_type");
+  is($o->id, 5, "get_objects_iterator() with many to many 20 - $db_type");
+
+  $nicks = $o->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects_iterator() with many to many 21 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects_iterator() with many to many 22 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects_iterator() with many to many 23 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects_iterator() with many to many 24 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects_iterator() with many to many 25 - $db_type");
+
+  $fo1 = $o->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects_iterator() with many to many 26 - $db_type");
+
+  $fo1 = $o->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects_iterator() with many to many 27 - $db_type"); 
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "get_objects_iterator() with many to many 28 - $db_type");
+  is($o->id, 2, "get_objects_iterator() with many to many 29 - $db_type");
+
+  $colors = $o->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects_iterator() with many to many 30 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many 31 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many 32 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'John', "get_objects_iterator() with many to many 33 - $db_type");
+  is($o->id, 1, "get_objects_iterator() with many to many 34 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "get_objects_iterator() with many to many 35 - $db_type");
+  is($iterator->total, 3, "get_objects_iterator() with many to many 36 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      object_class    => 'MyMySQLObject',
+      share_db        => 1,
+      with_objects    => [ 'nicks', 'colors', 'bb2' ],
+      multi_many_ok   => 1,
+      require_objects => [ 'bb1', 'other_obj' ],
+      query           => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by         => 't1.name');
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "get_objects_iterator() with many to many require 1 - $db_type");
+  is($o->id, 5, "get_objects_iterator() with many to many require 2 - $db_type");
+
+  $fo1 = $o->{'other_obj'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'Foo 1', "get_objects_iterator() with many to many require 3 - $db_type");
+
+  ok(!defined $o->{'colors'}, "get_objects_iterator() with many to many require 4 - $db_type");
+
+  $nicks = $o->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects_iterator() with many to many require 5 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects_iterator() with many to many require 6 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects_iterator() with many to many require 7 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects_iterator() with many to many require 8 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects_iterator() with many to many require 9 - $db_type");
+
+  $fo1 = $o->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects_iterator() with many to many require 10 - $db_type");
+
+  $fo1 = $o->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects_iterator() with many to many require 11 - $db_type"); 
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "get_objects_iterator() with many to many require 12 - $db_type");
+  is($o->id, 2, "get_objects_iterator() with many to many require 13 - $db_type");
+
+  $colors = $o->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects_iterator() with many to many require 14 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many require 15 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many require 16 - $db_type");
+
+  $fo1 = $o->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'two', "get_objects_iterator() with many to many require 17 - $db_type");
+
+  $fo1 = $o->{'other_obj'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'Foo 2', "get_objects_iterator() with many to many require 18 - $db_type");
+
+  ok(!defined $o->{'bb2'}, "get_objects_iterator() with many to many require 19 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "get_objects_iterator() with many to many require 20 - $db_type");
+  is($iterator->total, 2, "get_objects_iterator() with many to many require 21 - $db_type");
+
+  # End "many to many" tests
 }
 
 #
@@ -2176,7 +2620,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type (qw(informix))
 {
-  skip("Informix tests", 235)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 342)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -2610,7 +3054,7 @@ SKIP: foreach my $db_type (qw(informix))
   is(scalar @{$o->{'nicks'}}, 2, "iterator many sub-object 1 - $db_type");
   is($o->{'nicks'}[0]{'nick'}, 'ntwo', "iterator many sub-object 2 - $db_type");
   is($o->{'nicks'}[1]{'nick'}, 'nfour', "iterator many sub-object 3 - $db_type");
-  
+
   $o = $iterator->next;
   is($o->name, 'Sue', "iterator many next() 7 - $db_type");
   is($o->id, 3, "iterator many next() 8 - $db_type");
@@ -2633,7 +3077,7 @@ SKIP: foreach my $db_type (qw(informix))
   $o = $iterator->next;
   is($o->name, 'Betty', "iterator limit 2 many next() 1 - $db_type");
   is($o->id, 5, "iterator limit 2 many next() 2 - $db_type");
-  
+
   $o = $iterator->next;
   is($o->name, 'Bob', "iterator limit 2 many next() 3 - $db_type");
   is($o->id, 4, "iterator limit 2 many next() 4 - $db_type");
@@ -2656,7 +3100,7 @@ SKIP: foreach my $db_type (qw(informix))
   $o = $iterator->next;
   is($o->name, 'Betty', "iterator limit 3 many next() 1 - $db_type");
   is($o->id, 5, "iterator limit 3 many next() 2 - $db_type");
-  
+
   $o = $iterator->next;
   is($o->name, 'Bob', "iterator limit 3 many next() 3 - $db_type");
   is($o->id, 4, "iterator limit 3 many next() 4 - $db_type");
@@ -2725,7 +3169,7 @@ SKIP: foreach my $db_type (qw(informix))
       sort_by => 't1.name',
       limit   => 2,
       offset  => 1);
-  
+
   $o = $iterator->next;
   is($o->name, 'Bob', "iterator limit 2 offset 1 many next() 1 - $db_type");
   is($o->id, 4, "iterator limit 2 offset 1 many next() 2 - $db_type");
@@ -2831,7 +3275,7 @@ SKIP: foreach my $db_type (qw(informix))
   $o7->name('Joe');
 
   ok($o7->save, "object save() 9 - $db_type");
-  
+
   my $o8 = $o2->clone;
   $o8->id(80);
   $o8->b1(undef);
@@ -2877,7 +3321,7 @@ SKIP: foreach my $db_type (qw(informix))
   is(ref $objs, 'ARRAY', "get_objects() with many 15 - $db_type");
   $objs ||= [];
   is(scalar @$objs, 0, "get_objects() with many 16 - $db_type");
-  
+
   $count = 
     Rose::DB::Object::Manager->get_objects_count(
       object_class => 'MyInformixObject',
@@ -2993,7 +3437,7 @@ SKIP: foreach my $db_type (qw(informix))
   is(scalar @$objs, 8, "get_objects() with many 26 - $db_type");
 
   my $ids = join(',', map { $_->id } @$objs);
-  
+
   is($ids, '1,2,3,4,5,60,70,80', "get_objects() with many 27 - $db_type");
 
   $nicks = $objs->[4]->{'nicks'}; # make sure this isn't hitting the db
@@ -3019,7 +3463,7 @@ SKIP: foreach my $db_type (qw(informix))
 
   $fo = MyInformixNick->new(id => 8);
   ok($fo->delete, "with many clean-up 2 - $db_type");
-  
+
   $fo = MyInformixNick->new(id => 9);
   ok($fo->delete, "with many clean-up 3 - $db_type");
 
@@ -3218,7 +3662,7 @@ SKIP: foreach my $db_type (qw(informix))
   ok($@ =~ /invalid without a limit/, "get_objects_iterator() missing offset - $db_type");
 
   # Start *_sql comparison tests
-  
+
   $o6->fk2(99);
   $o6->fk3(99);
   $o6->save;
@@ -3236,6 +3680,304 @@ SKIP: foreach my $db_type (qw(informix))
   is($objs->[0]->id, 60, "get_objects() eq_sql 3 - $db_type");
 
   # End *_sql comparison tests
+
+  # Start "many to many" tests
+
+  $fo = MyInformixColor->new(id => 1, name => 'Red');
+  $fo->save;
+
+  $fo = MyInformixColor->new(id => 2, name => 'Green');
+  $fo->save;
+
+  $fo = MyInformixColor->new(id => 3, name => 'Blue');
+  $fo->save;
+
+  $fo = MyInformixColorMap->new(id => 1, object_id => $o2->id, color_id => 1);
+  $fo->save;
+
+  $fo = MyInformixColorMap->new(id => 2, object_id => $o2->id, color_id => 3);
+  $fo->save;
+
+  $o2->b1(4);
+  $o2->b1(2);
+  $o2->fkone(2);
+  $o2->fk2(3);
+  $o2->fk3(4);
+  $o2->save;
+
+  my @colors = $o2->colors;
+  ok(@colors == 2 && $colors[0]->name eq 'Red' &&
+     $colors[1]->name eq 'Blue', "Fetch many to many 1 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class  => 'MyInformixObject',
+      share_db      => 1,
+      with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
+      multi_many_ok => 1,
+      query         => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many to many 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 3, "get_objects() with many to many 2 - $db_type");
+
+  is($objs->[0]->id, 5, "get_objects() with many to many 3 - $db_type");
+  is($objs->[1]->id, 2, "get_objects() with many to many 4 - $db_type");
+  is($objs->[2]->id, 1, "get_objects() with many to many 5 - $db_type");
+
+  $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many to many 6 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many to many 7 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many to many 8 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many to many 9 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many to many 10 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many to many 11 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many to many 12 - $db_type");
+
+  my $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects() with many to many 13 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() with many to many 14 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects() with many to many 15 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class  => 'MyInformixObject',
+      share_db      => 1,
+      with_objects  => [ 'bb1', 'nicks', 'other_obj', 'colors', 'bb2' ],
+      multi_many_ok => 1,
+      query         => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many to many (reorder) 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 3, "get_objects() with many to many (reorder) 2 - $db_type");
+
+  is($objs->[0]->id, 5, "get_objects() with many to many (reorder) 3 - $db_type");
+  is($objs->[1]->id, 2, "get_objects() with many to many (reorder) 4 - $db_type");
+  is($objs->[2]->id, 1, "get_objects() with many to many (reorder) 5 - $db_type");
+
+  $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many to many (reorder) 6 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many to many (reorder) 7 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many to many (reorder) 8 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many to many (reorder) 9 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many to many (reorder) 10 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many to many (reorder) 11 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many to many (reorder) 12 - $db_type");
+
+  $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects() with many to many (reorder) 13 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() with many to many (reorder) 14 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects() with many to many (reorder) 15 - $db_type");
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  #$DB::single = 1;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class    => 'MyInformixObject',
+      share_db        => 1,
+      with_objects    => [ 'nicks', 'colors', 'bb2' ],
+      multi_many_ok   => 1,
+      require_objects => [ 'bb1', 'other_obj' ],
+      query           => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by         => 't1.name');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many to many require with 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 2, "get_objects() with many to many require with 2 - $db_type");
+
+  is($objs->[0]->id, 5, "get_objects() with many to many require with 3 - $db_type");
+  is($objs->[1]->id, 2, "get_objects() with many to many require with 4 - $db_type");
+
+  $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects() with many to many require with 6 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects() with many to many 7 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects() with many to many 8 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects() with many to many 9 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects() with many to many 10 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects() with many to many require with 11 - $db_type");
+
+  $fo1 = $objs->[0]->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects() with many to many require with 12 - $db_type");
+
+  $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects() with many to many require with 13 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() with many to many require with 14 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects() with many to many require with 15 - $db_type");
+
+  $fo1 = $objs->[1]->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'two', "get_objects() with many to many require with 16 - $db_type");
+
+  $fo1 = $objs->[0]->{'other_obj'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'Foo 1', "get_objects() with many to many require with 17 - $db_type");
+
+  $fo1 = $objs->[1]->{'other_obj'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'Foo 2', "get_objects() with many to many require with 18 - $db_type");
+
+  ok(!defined $objs->[0]->{'colors'}, "get_objects() with many to many require with 19 - $db_type");
+  ok(!defined $objs->[1]->{'bb2'}, "get_objects() with many to many require with 20 - $db_type");
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  #$DB::single = 1;
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      object_class  => 'MyInformixObject',
+      share_db      => 1,
+      with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
+      multi_many_ok => 1,
+      query         => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "get_objects_iterator() with many to many 1 - $db_type");
+  is($o->id, 5, "get_objects_iterator() with many to many 2 - $db_type");
+
+  $nicks = $o->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects_iterator() with many to many 3 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects_iterator() with many to many 4 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects_iterator() with many to many 5 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects_iterator() with many to many 6 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects_iterator() with many to many 7 - $db_type");
+
+  $fo1 = $o->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects_iterator() with many to many 8 - $db_type");
+
+  $fo1 = $o->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects_iterator() with many to many 9 - $db_type"); 
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "get_objects_iterator() with many to many 10 - $db_type");
+  is($o->id, 2, "get_objects_iterator() with many to many 11 - $db_type");
+
+  $colors = $o->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects_iterator() with many to many 12 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many 13 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many 14 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'John', "get_objects_iterator() with many to many 15 - $db_type");
+  is($o->id, 1, "get_objects_iterator() with many to many 16 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "get_objects_iterator() with many to many 17 - $db_type");
+  is($iterator->total, 3, "get_objects_iterator() with many to many 18 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      object_class  => 'MyInformixObject',
+      share_db      => 1,
+      with_objects  => [ 'bb1', 'nicks', 'other_obj', 'colors', 'bb2' ],
+      multi_many_ok => 1,
+      query         => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "get_objects_iterator() with many to many 19 - $db_type");
+  is($o->id, 5, "get_objects_iterator() with many to many 20 - $db_type");
+
+  $nicks = $o->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects_iterator() with many to many 21 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects_iterator() with many to many 22 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects_iterator() with many to many 23 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects_iterator() with many to many 24 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects_iterator() with many to many 25 - $db_type");
+
+  $fo1 = $o->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects_iterator() with many to many 26 - $db_type");
+
+  $fo1 = $o->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects_iterator() with many to many 27 - $db_type"); 
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "get_objects_iterator() with many to many 28 - $db_type");
+  is($o->id, 2, "get_objects_iterator() with many to many 29 - $db_type");
+
+  $colors = $o->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects_iterator() with many to many 30 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many 31 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many 32 - $db_type");
+
+  $o = $iterator->next;
+  is($o->name, 'John', "get_objects_iterator() with many to many 33 - $db_type");
+  is($o->id, 1, "get_objects_iterator() with many to many 34 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "get_objects_iterator() with many to many 35 - $db_type");
+  is($iterator->total, 3, "get_objects_iterator() with many to many 36 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      object_class    => 'MyInformixObject',
+      share_db        => 1,
+      with_objects    => [ 'nicks', 'colors', 'bb2' ],
+      multi_many_ok   => 1,
+      require_objects => [ 'bb1', 'other_obj' ],
+      query           => [ 't1.id' => [ 1, 2, 5 ] ],
+      sort_by         => 't1.name');
+
+  $o = $iterator->next;
+  is($o->name, 'Betty', "get_objects_iterator() with many to many require 1 - $db_type");
+  is($o->id, 5, "get_objects_iterator() with many to many require 2 - $db_type");
+
+  $fo1 = $o->{'other_obj'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'Foo 1', "get_objects_iterator() with many to many require 3 - $db_type");
+
+  ok(!defined $o->{'colors'}, "get_objects_iterator() with many to many require 4 - $db_type");
+
+  $nicks = $o->{'nicks'}; # make sure this isn't hitting the db
+
+  is(scalar @$nicks, 4, "get_objects_iterator() with many to many require 5 - $db_type");
+  is($nicks->[0]->nick, 'nthree', "get_objects_iterator() with many to many require 6 - $db_type");
+  is($nicks->[1]->nick, 'nsix', "get_objects_iterator() with many to many require 7 - $db_type");
+  is($nicks->[2]->nick, 'none', "get_objects_iterator() with many to many require 8 - $db_type");
+  is($nicks->[3]->nick, 'nfive', "get_objects_iterator() with many to many require 9 - $db_type");
+
+  $fo1 = $o->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 2, "get_objects_iterator() with many to many require 10 - $db_type");
+
+  $fo1 = $o->{'bb2'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->id == 4, "get_objects_iterator() with many to many require 11 - $db_type"); 
+
+  $o = $iterator->next;
+  is($o->name, 'Fred', "get_objects_iterator() with many to many require 12 - $db_type");
+  is($o->id, 2, "get_objects_iterator() with many to many require 13 - $db_type");
+
+  $colors = $o->{'colors'}; # make sure this isn't hitting the db
+  ok($colors && ref $colors && @$colors == 2, "get_objects_iterator() with many to many require 14 - $db_type");
+  ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many require 15 - $db_type");
+  ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects_iterator() with many to many require 16 - $db_type");
+
+  $fo1 = $o->{'bb1'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'two', "get_objects_iterator() with many to many require 17 - $db_type");
+
+  $fo1 = $o->{'other_obj'}; # make sure this isn't hitting the db
+  ok($fo1 && ref $fo1 && $fo1->name eq 'Foo 2', "get_objects_iterator() with many to many require 18 - $db_type");
+
+  ok(!defined $o->{'bb2'}, "get_objects_iterator() with many to many require 19 - $db_type");
+
+  $o = $iterator->next;
+  is($o, 0, "get_objects_iterator() with many to many require 20 - $db_type");
+  is($iterator->total, 2, "get_objects_iterator() with many to many require 21 - $db_type");
+
+  # End "many to many" tests
 }
 
 BEGIN
@@ -3335,7 +4077,7 @@ EOF
     );
 
     MyPgBB->meta->initialize;
-    
+
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test
 (
@@ -3624,6 +4366,8 @@ EOF
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE rose_db_object_color_map');
+      $dbh->do('DROP TABLE rose_db_object_colors');
       $dbh->do('DROP TABLE rose_db_object_nicks');
       $dbh->do('DROP TABLE rose_db_object_nicks2');
       $dbh->do('DROP TABLE rose_db_object_test');
@@ -3725,6 +4469,23 @@ CREATE TABLE rose_db_object_nicks2
 )
 EOF
 
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_colors
+(
+  id     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name   VARCHAR(32) NOT NULL
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_color_map
+(
+  id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  object_id  INT UNSIGNED NOT NULL REFERENCES rose_db_object_test (id),
+  color_id   INT UNSIGNED NOT NULL REFERENCES rose_db_object_colors (id)
+)
+EOF
+
     $dbh->disconnect;
 
     package MyMySQLNick;
@@ -3774,6 +4535,59 @@ EOF
     );
 
     MyMySQLNick2->meta->initialize;
+
+    package MyMySQLColor;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyMySQLColor->meta->table('rose_db_object_colors');
+
+    MyMySQLColor->meta->columns
+    (
+      id   => { type => 'serial', primary_key => 1 },
+      name => { type => 'varchar', not_null => 1 },
+    );
+
+    MyMySQLColor->meta->relationships
+    (
+      objects =>
+      {
+        type      => 'many to many',
+        map_class => 'MyMySQLColorMap',
+      },
+    );
+
+    MyMySQLColor->meta->initialize;
+
+    package MyMySQLColorMap;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyMySQLColorMap->meta->table('rose_db_object_color_map');
+
+    MyMySQLColorMap->meta->columns
+    (
+      id        => { type => 'serial', primary_key => 1 },
+      object_id => { type => 'int', not_null => 1 },
+      color_id  => { type => 'int', not_null => 1 },
+    );
+
+    MyMySQLColorMap->meta->foreign_keys
+    (
+      color =>
+      {
+        class => 'MyMySQLColor',
+        key_columns => { color_id => 'id' },
+      },
+
+      object =>
+      {
+        class => 'MyMySQLObject',
+        key_columns => { object_id => 'id' },
+      },
+    );
+
+    MyMySQLColorMap->meta->initialize;
 
     # Create test subclass
 
@@ -3846,6 +4660,13 @@ EOF
         column_map => { id => 'o_id' },
         manager_args => { sort_by => 'nick2 DESC' },
       },
+
+      colors =>
+      {
+        type      => 'many to many',
+        map_class => 'MyMySQLColorMap',
+        manager_args => { sort_by => MyMySQLColor->meta->table . '.name DESC' },
+      },
     );
 
     MyMySQLObject->meta->alias_column(fk1 => 'fkone');
@@ -3897,6 +4718,8 @@ EOF
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE rose_db_object_color_map');
+      $dbh->do('DROP TABLE rose_db_object_colors');
       $dbh->do('DROP TABLE rose_db_object_nicks');
       $dbh->do('DROP TABLE rose_db_object_nicks2');
       $dbh->do('DROP TABLE rose_db_object_test');
@@ -4000,6 +4823,23 @@ CREATE TABLE rose_db_object_nicks2
 )
 EOF
 
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_colors
+(
+  id     SERIAL NOT NULL PRIMARY KEY,
+  name   VARCHAR(32) NOT NULL
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_color_map
+(
+  id         SERIAL NOT NULL PRIMARY KEY,
+  object_id  INT NOT NULL REFERENCES rose_db_object_test (id),
+  color_id   INT NOT NULL REFERENCES rose_db_object_colors (id)
+)
+EOF
+
     $dbh->commit;
     $dbh->disconnect;
 
@@ -4050,6 +4890,59 @@ EOF
     );
 
     MyInformixNick2->meta->initialize;
+
+    package MyInformixColor;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyInformixColor->meta->table('rose_db_object_colors');
+
+    MyInformixColor->meta->columns
+    (
+      id   => { type => 'serial', primary_key => 1 },
+      name => { type => 'varchar', not_null => 1 },
+    );
+
+    MyInformixColor->meta->relationships
+    (
+      objects =>
+      {
+        type      => 'many to many',
+        map_class => 'MyInformixColorMap',
+      },
+    );
+
+    MyInformixColor->meta->initialize;
+
+    package MyInformixColorMap;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyInformixColorMap->meta->table('rose_db_object_color_map');
+
+    MyInformixColorMap->meta->columns
+    (
+      id        => { type => 'serial', primary_key => 1 },
+      object_id => { type => 'int', not_null => 1 },
+      color_id  => { type => 'int', not_null => 1 },
+    );
+
+    MyInformixColorMap->meta->foreign_keys
+    (
+      color =>
+      {
+        class => 'MyInformixColor',
+        key_columns => { color_id => 'id' },
+      },
+
+      object =>
+      {
+        class => 'MyInformixObject',
+        key_columns => { object_id => 'id' },
+      },
+    );
+
+    MyInformixColorMap->meta->initialize;
 
     # Create test subclass
 
@@ -4122,6 +5015,13 @@ EOF
         column_map => { id => 'o_id' },
         manager_args => { sort_by => 'nick2 DESC' },
       },
+
+      colors =>
+      {
+        type      => 'many to many',
+        map_class => 'MyInformixColorMap',
+        manager_args => { sort_by => MyInformixColor->meta->table . '.name DESC' },
+      },
     );
 
     MyInformixObject->meta->alias_column(fk1 => 'fkone');
@@ -4172,6 +5072,8 @@ END
     my $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
       or die Rose::DB->error;
 
+    $dbh->do('DROP TABLE rose_db_object_color_map');
+    $dbh->do('DROP TABLE rose_db_object_colors');
     $dbh->do('DROP TABLE rose_db_object_nicks');
     $dbh->do('DROP TABLE rose_db_object_nicks2');
     $dbh->do('DROP TABLE rose_db_object_test');
@@ -4187,6 +5089,8 @@ END
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
       or die Rose::DB->error;
 
+    $dbh->do('DROP TABLE rose_db_object_color_map');
+    $dbh->do('DROP TABLE rose_db_object_colors');
     $dbh->do('DROP TABLE rose_db_object_nicks');
     $dbh->do('DROP TABLE rose_db_object_nicks2');
     $dbh->do('DROP TABLE rose_db_object_test');
