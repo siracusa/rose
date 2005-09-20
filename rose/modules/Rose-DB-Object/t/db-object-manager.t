@@ -275,33 +275,33 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   # Start "one to many" tests
 
   $fo = MyPgNick->new(id   => 1,
-                         o_id => 5,
-                         nick => 'none');
+                      o_id => 5,
+                      nick => 'none');
   ok($fo->save, "nick object save() 1 - $db_type");
 
   $fo = MyPgNick->new(id   => 2,
-                         o_id => 2,
-                         nick => 'ntwo');
+                      o_id => 2,
+                      nick => 'ntwo');
   ok($fo->save, "nick object save() 2 - $db_type");
 
   $fo = MyPgNick->new(id   => 3,
-                         o_id => 5,
-                         nick => 'nthree');
+                      o_id => 5,
+                      nick => 'nthree');
   ok($fo->save, "nick object save() 3 - $db_type");
 
   $fo = MyPgNick->new(id   => 4,
-                         o_id => 2,
-                         nick => 'nfour');
+                      o_id => 2,
+                      nick => 'nfour');
   ok($fo->save, "nick object save() 4 - $db_type");
 
   $fo = MyPgNick->new(id   => 5,
-                         o_id => 5,
-                         nick => 'nfive');
+                      o_id => 5,
+                      nick => 'nfive');
   ok($fo->save, "nick object save() 5 - $db_type");
 
   $fo = MyPgNick->new(id   => 6,
-                         o_id => 5,
-                         nick => 'nsix');
+                      o_id => 5,
+                      nick => 'nsix');
   ok($fo->save, "nick object save() 6 - $db_type");
 
   #local $Rose::DB::Object::Manager::Debug = 1;

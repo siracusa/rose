@@ -1,3 +1,7 @@
+0.075 (09.20.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added bulk update and delete methods to Manager.
+
 0.075 (09.19.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added support for "many to many" relationships to Manager's
