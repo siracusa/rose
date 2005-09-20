@@ -1869,6 +1869,7 @@ EOF
       my @p = MyTest::CDBI::Sweet::Simple::Product->search(
         { name => { -like => [ 'Product %2%' ] } },
         { prefetch => [ 'category_id' ] });
+
       die unless(@p);
 
       if($Debug && !$printed)
@@ -1892,7 +1893,11 @@ EOF
 
     sub search_simple_product_and_category_dbic
     {
-      my @p = MyTest::DBIC::Simple::Product->search_like({ name => 'Product %2%' });
+      my @p = 
+        MyTest::DBIC::Simple::Product->search_like(
+          { 'me.name' => 'Product %2%' },
+          { prefetch => [ 'category_id' ] });
+
       die unless(@p);
 
       if($Debug && !$printed)
@@ -2055,6 +2060,7 @@ EOF
       my @p = MyTest::CDBI::Sweet::Simple::Product->search(
         { name => { -like => [ 'Product 200%' ] } },
         { prefetch => [ 'category_id' ] });
+
       die unless(@p);
 
       if($Debug && !$printed)
@@ -2636,7 +2642,10 @@ EOF
 
     sub iterate_simple_product_and_category_dbic
     {
-      my $iter = MyTest::DBIC::Simple::Product->search_like({ name => 'Product %2%' });
+      my $iter = 
+        MyTest::DBIC::Simple::Product->search_like(
+          { 'me.name' => 'Product %2%' },
+          { prefetch => [ 'category_id' ] });
 
       my $i = 0;
 
@@ -3505,6 +3514,7 @@ EOF
       my @p = MyTest::CDBI::Sweet::Complex::Product->search(
         { name => { -like => [ 'Product %2%' ] } },
         { prefetch => [ 'category_id' ] });
+
       die unless(@p);
 
       if($Debug && !$printed)
@@ -3528,7 +3538,11 @@ EOF
 
     sub search_complex_product_and_category_dbic
     {
-      my @p = MyTest::DBIC::Complex::Product->search_like({ name => 'Product %2%' });
+      my @p =
+        MyTest::DBIC::Complex::Product->search_like(
+          { 'me.name' => 'Product %2%' },
+          { prefetch => [ 'category_id' ] });
+
       die unless(@p);
 
       if($Debug && !$printed)
@@ -3691,6 +3705,7 @@ EOF
       my @p = MyTest::CDBI::Sweet::Complex::Product->search(
         { name => { -like => [ 'Product 200%' ] } },
         { prefetch => [ 'category_id' ] });
+
       die unless(@p);
 
       if($Debug && !$printed)
@@ -3716,7 +3731,11 @@ EOF
 
     sub search_complex_product_and_category_and_code_name_dbic
     {
-      my @p = MyTest::DBIC::Complex::Product->search_like({ name => 'Product 200%' });
+      my @p = 
+        MyTest::DBIC::Complex::Product->search_like(
+          { 'me.name' => 'Product 200%' },
+          { prefetch => [ 'category_id' ] });
+
       die unless(@p);
 
       if($Debug && !$printed)
@@ -4113,7 +4132,10 @@ EOF
 
     sub iterate_complex_product_and_category_dbic
     {
-      my $iter = MyTest::DBIC::Complex::Product->search_like({ name => 'Product %2%' });
+      my $iter = 
+        MyTest::DBIC::Complex::Product->search_like(
+          { 'me.name' => 'Product %2%' },
+          { prefetch => [ 'category_id' ] });
 
       my $i = 0;
 
@@ -4516,13 +4538,14 @@ sub Run_Tests
       # These tests take forever (wallclock), even when set to 1 CPU
       # second.  Force a reasonable number of iterations, scaled
       # coarsely based on how many iterations other tests are using.
+      #
+      # Update: whaddaya know, now they seem to work...nevermind.
+      #my $Tiny_Interations = $Iterations <= 1000 ? 5 :
+      #                       $Iterations <= 3000 ? 2 :
+      #                       $Iterations <= 5000 ? 1 :
+      #                                             1;
 
-      my $Tiny_Interations = $Iterations <= 1000 ? 5 :
-                             $Iterations <= 3000 ? 2 :
-                             $Iterations <= 5000 ? 1 :
-                                                   1;
-
-      Bench('Simple: search with 1-to-1 and 1-to-n sub-objects', $Tiny_Interations,
+      Bench('Simple: search with 1-to-1 and 1-to-n sub-objects', $CPU_Time, #$Tiny_Interations,
       {
         'DBI ' => \&search_simple_product_and_category_and_code_name_dbi,
         'RDBO' => \&search_simple_product_and_category_and_code_name_rdbo,
@@ -4531,7 +4554,7 @@ sub Run_Tests
         'DBIC' => \&search_simple_product_and_category_and_code_name_dbic,
       });
 
-      Bench('Complex: search with 1-to-1 and 1-to-n sub-objects', $Tiny_Interations,
+      Bench('Complex: search with 1-to-1 and 1-to-n sub-objects', $CPU_Time, #$Tiny_Interations,
       {
         'DBI ' => \&search_complex_product_and_category_and_code_name_dbi,
         'RDBO' => \&search_complex_product_and_category_and_code_name_rdbo,

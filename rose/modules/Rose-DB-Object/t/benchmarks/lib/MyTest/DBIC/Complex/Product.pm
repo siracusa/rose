@@ -13,16 +13,16 @@ __PACKAGE__->add_columns(qw(category_id date_created fk1 fk2 fk3 id last_modifie
 __PACKAGE__->set_primary_key('id');
 
 __PACKAGE__->inflate_column(date_created => {
-                   inflate => sub { $MyTest::CDBI::Base::DB->parse_datetime(shift) },
-                   deflate => sub { $MyTest::CDBI::Base::DB->format_datetime(shift) } });
+                   inflate => sub { $MyTest::DBIC::Base::DB->parse_datetime(shift) },
+                   deflate => sub { $MyTest::DBIC::Base::DB->format_datetime(shift) } });
 
 __PACKAGE__->inflate_column(last_modified => {
-                   inflate => sub { $MyTest::CDBI::Base::DB->parse_datetime(shift) },
-                   deflate => sub { $MyTest::CDBI::Base::DB->format_datetime(shift) } });
+                   inflate => sub { $MyTest::DBIC::Base::DB->parse_datetime(shift) },
+                   deflate => sub { $MyTest::DBIC::Base::DB->format_datetime(shift) } });
 
 __PACKAGE__->inflate_column(published => {
-                   inflate => sub { $MyTest::CDBI::Base::DB->parse_datetime(shift) },
-                   deflate => sub { $MyTest::CDBI::Base::DB->format_datetime(shift) } });
+                   inflate => sub { $MyTest::DBIC::Base::DB->parse_datetime(shift) },
+                   deflate => sub { $MyTest::DBIC::Base::DB->format_datetime(shift) } });
 
 __PACKAGE__->add_relationship('category_id', 'MyTest::DBIC::Complex::Category',
                               { 'foreign.id' => 'self.category_id' },
