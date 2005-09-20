@@ -7,11 +7,13 @@ use Rose::DB;
 use base qw(DBIx::Class);
 __PACKAGE__->load_components(qw(Core DB));
 
+our $DB;
+
 sub refresh
 {
-  my $db = Rose::DB->new;
+  $DB = Rose::DB->new;
   no warnings;
-  __PACKAGE__->connection($db->dsn, $db->username, $db->password, scalar $db->connect_options);   
+  __PACKAGE__->connection($DB->dsn, $DB->username, $DB->password, scalar $DB->connect_options);   
 }
 
 1;
