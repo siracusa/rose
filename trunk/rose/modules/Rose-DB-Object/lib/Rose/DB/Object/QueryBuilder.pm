@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.042';
+our $VERSION = '0.05';
 
 our $Debug = 0;
 
@@ -28,6 +28,8 @@ my %OP_MAP =
   gt         => '>',
   ne         => '<>',
   eq         => '=',
+  ''         => '=',
+  sql        => '=',
   in_set     => 'ANY IN',
   any_in_set => 'ANY IN',
   all_in_set => 'ALL IN',
@@ -54,6 +56,8 @@ sub build_select
   my $clauses_arg = delete $args{'clauses'};  
   my $pretty      = exists $args{'pretty'} ? $args{'pretty'} : $Debug;
   my $joins       = $args{'joins'};
+
+  $logic = " $logic"  unless($logic eq ',');
 
   $args{'_depth'}++;
 
@@ -266,11 +270,11 @@ sub build_select
   if($pretty)
   {
     my $pad = '  ' x $args{'_depth'};
-    $where = join(" $logic\n", map { "$pad$_" } @clauses);
+    $where = join("$logic\n", map { "$pad$_" } @clauses);
   }
   else
   {
-    $where = join(" $logic\n", map { "  $_" } @clauses);
+    $where = join("$logic\n", map { "  $_" } @clauses);
   }
 
   my $qs;
@@ -370,7 +374,7 @@ sub _build_clause
   {
     my $op_arg = (keys(%$vals))[0];
 
-    if($op_arg =~ s/_sql$//)
+    if($op_arg =~ s/_?sql$//)
     {
       $force_inline = 1;
     }
@@ -558,7 +562,9 @@ sub _format_value
 
   if(!ref $value || $asis)
   {
-    unless($col_meta->type eq 'set' && ref $store eq 'HASH' && $param =~ /^(?:a(?:ny|all)_)?in_set$/)
+    unless($col_meta->type eq 'set' && ref $store eq 'HASH' && 
+           ($param eq 'in_set' || $param eq 'all_in_set' || 
+            $param eq 'any_in_set'))
     {
       if($col_meta->manager_uses_method)
       {
@@ -594,6 +600,7 @@ sub _format_value
   {    
     foreach my $key (keys %$value)
     {
+      next  if($key =~ /_?sql$/); # skip inline values
       _format_value($db, $value, $key, $object, $col_meta, $get_method, $set_method, $value->{$key}, 0, $depth + 1);
     }
   }

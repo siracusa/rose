@@ -13,7 +13,7 @@ our @ISA = qw(Rose::Object);
 use Rose::DB::Object::Constants qw(:all);
 #use Rose::DB::Constants qw(IN_TRANSACTION);
 
-our $VERSION = '0.075';
+our $VERSION = '0.076';
 
 our $Debug = 0;
 
@@ -903,7 +903,11 @@ In addition, its sibling class, L<Rose::DB::Object::Manager>, can do the followi
 
 =item * Fetch objects along with "foreign objects" (connected via "one to one" or "one to many" relationships) in a single query by automatically generating the appropriate SQL join(s).
 
-=item * Count the number of objects that match a given query.
+=item * Count the number of objects that match a complex query.
+
+=item * Update objects that match a complex query.
+
+=item * Delete objects that match a complex query.
 
 =back
 

@@ -104,6 +104,7 @@ t/db-object-cached.t
 t/db-object-foreign-key-auto.t
 t/db-object-foreign-key.t
 t/db-object-manager.t
+t/db-object-manager-bulk-ops.t
 t/db-object-mapper.t
 t/db-object-metadata.t
 t/db-object-relationship.t

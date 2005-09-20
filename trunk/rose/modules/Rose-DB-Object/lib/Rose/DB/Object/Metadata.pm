@@ -343,6 +343,20 @@ sub prepare_delete_options
            $_[0]->{'prepare_delete_options'} ||= {}
 }
 
+sub prepare_bulk_delete_options
+{
+  @_ > 1 ? $_[0]->{'prepare_bulk_delete_options'} = $_[1] : 
+           $_[0]->{'prepare_bulk_delete_options'} ||= 
+           $_[0]->prepare_delete_options;
+}
+
+sub prepare_bulk_update_options
+{
+  @_ > 1 ? $_[0]->{'prepare_bulk_update_options'} = $_[1] : 
+           $_[0]->{'prepare_bulk_update_options'} ||= 
+           $_[0]->prepare_update_options;
+}
+
 sub prepare_options
 {
   my($self, $options) = @_;

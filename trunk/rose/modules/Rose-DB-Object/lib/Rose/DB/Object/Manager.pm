@@ -64,13 +64,15 @@ sub handle_error
 
 sub object_class { }
 
+sub default_manager_method_types { qw(objects iterator count delete update) }
+
 sub make_manager_methods
 {
   my($class) = shift;
 
   if(@_ == 1)
   {
-    @_ = (methods => { $_[0] => [ qw(objects iterator count) ] });
+    @_ = (methods => { $_[0] => [ $class->default_manager_method_types ] });
   }
   else
   {
@@ -115,7 +117,10 @@ sub make_manager_methods
                   "You must supply one or the other";
     }
 
-    $args{'methods'} = { $args{'base_name'} => [ qw(objects iterator count) ] };
+    $args{'methods'} = 
+    { 
+      $args{'base_name'} => [ $class->default_manager_method_types ] 
+    };
   }
   elsif($args{'base_name'})
   {
@@ -196,6 +201,42 @@ sub make_manager_methods
           shift;
           $class_invocant->get_objects(
             @_, return_iterator => 1, object_class => $object_class)
+        };
+      }
+      elsif($type eq 'delete')
+      {
+        my $method_name = 
+          $have_full_name ? $name : "${target_class}::delete_$name";
+
+        foreach my $class ($target_class, $class_invocant)
+        {
+          my $method = "${class}::delete_$name";
+          Carp::croak "A $method method already exists"
+            if(defined &{$method});
+        }
+
+        *{$method_name} = sub
+        {
+          shift;
+          $class_invocant->delete_objects(@_, object_class => $object_class);
+        };
+      }
+      elsif($type eq 'update')
+      {
+        my $method_name = 
+          $have_full_name ? $name : "${target_class}::update_$name";
+
+        foreach my $class ($target_class, $class_invocant)
+        {
+          my $method = "${class}::update_$name";
+          Carp::croak "A $method method already exists"
+            if(defined &{$method});
+        }
+
+        *{$method_name} = sub
+        {
+          shift;
+          $class_invocant->update_objects(@_, object_class => $object_class);
         };
       }
       else
@@ -634,16 +675,22 @@ sub get_objects
     delete $args{'offset'};
     delete $args{'sort_by'};
 
-    my($sql, $bind) =
-      build_select(dbh     => $dbh,
-                   select  => 'COUNT(*)',
-                   tables  => \@tables,
-                   columns => \%columns,
-                   classes => \%classes,
-                   meta    => \%meta,
-                   db      => $db,
-                   pretty  => $Debug,
-                   %args);
+    my($sql, $bind);
+    
+    BUILD_SQL:
+    {
+      local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+      ($sql, $bind) =
+        build_select(dbh     => $dbh,
+                     select  => 'COUNT(*)',
+                     tables  => \@tables,
+                     columns => \%columns,
+                     classes => \%classes,
+                     meta    => \%meta,
+                     db      => $db,
+                     pretty  => $Debug,
+                     %args);
+    }
 
     if($return_sql)
     {
@@ -720,16 +767,23 @@ sub get_objects
 
   my($count, @objects, $iterator);
 
-  my($sql, $bind) =
-    build_select(dbh     => $dbh,
-                 tables  => \@tables,
-                 columns => \%columns,
-                 classes => \%classes,
-                 joins   => \@joins,
-                 meta    => \%meta,
-                 db      => $db,
-                 pretty  => $Debug,
-                 %args);
+  my($sql, $bind);
+  
+  BUILD_SQL:
+  {
+    local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+
+    ($sql, $bind) =
+      build_select(dbh     => $dbh,
+                   tables  => \@tables,
+                   columns => \%columns,
+                   classes => \%classes,
+                   joins   => \@joins,
+                   meta    => \%meta,
+                   db      => $db,
+                   pretty  => $Debug,
+                   %args);
+  }
 
   if($return_sql)
   {
@@ -1308,7 +1362,177 @@ sub _map_action
 }
 
 sub save_objects   { shift->_map_action('save', @_)   }
-sub delete_objects { shift->_map_action('delete', @_) }
+
+sub delete_objects
+{
+  my($class, %args) = @_;
+  
+  $class->error(undef);
+
+  $args{'query'} = delete $args{'where'};
+
+  my $object_class = $args{'object_class'} or Carp::croak "Missing object class argument";
+
+  unless(($args{'query'} && @{$args{'query'}}) || delete $args{'all'})
+  {
+    Carp::croak "$class - Refusing to delete all rows from the table '",
+                $object_class->meta->fq_table_sql, "' without an explict ",
+                "'all => 1' parameter";
+  }
+
+  if($args{'query'} && @{$args{'query'}} && $args{'all'})
+  {
+    Carp::croak "Illegal use of the 'where' and 'all' parameters in the same call";
+  }
+
+  my $db  = $args{'db'} || $object_class->init_db;
+  my $dbh = $args{'dbh'};
+  my $dbh_retained = 0;
+
+  unless($dbh)
+  {
+    unless($dbh = $db->retain_dbh)
+    {
+      $class->error($db->error);
+      $class->handle_error($class);
+      return undef;
+    }
+
+    $args{'dbh'} = $dbh;
+    $dbh_retained = 1;
+  }
+
+  my $meta = $object_class->meta;
+
+  # Yes, I'm re-using get_objects() code like crazy, and often
+  # in weird ways.  Shhhh, it's a secret.
+
+  my($where, $bind) = 
+    $class->get_objects(%args, return_sql => 1, where_only => 1);
+  
+  my $sql = 'DELETE FROM ' . $meta->fq_table_sql .
+            ($where ? " WHERE\n$where" : '');
+
+  my $count;
+
+  eval
+  {
+    local $dbh->{'RaiseError'} = 1;  
+    $Debug && warn "$sql\n";
+
+    my $sth = $dbh->prepare($sql, $meta->prepare_bulk_delete_options) 
+      or die $dbh->errstr;
+
+    $sth->execute(@$bind);
+    $count = $sth->rows || 0;
+  };
+
+  if($@)
+  {
+    $class->error("delete_objects() - $@");
+    $class->handle_error($class);
+    return undef;
+  }
+  
+  return $count;
+}
+
+sub update_objects
+{
+  my($class, %args) = @_;
+  
+  $class->error(undef);
+
+  my $object_class = $args{'object_class'} 
+    or Carp::croak "Missing object class argument";
+
+  unless(($args{'where'} && @{$args{'where'}}) || delete $args{'all'})
+  {
+    Carp::croak "$class - Refusing to update all rows in the table '",
+                $object_class->meta->fq_table_sql, "' without an explict ",
+                "'all => 1' parameter";
+  }
+
+  if($args{'where'} && @{$args{'where'}} && $args{'all'})
+  {
+    Carp::croak "Illegal use of the 'where' and 'all' parameters in the same call";
+  }
+
+  my $where = delete $args{'where'};
+  my $set   = delete $args{'set'} 
+    or Carp::croak "Missing requires 'set' parameter";
+
+  $set = [ %$set ]  if(ref $set eq 'HASH');
+
+  my $db  = $args{'db'} || $object_class->init_db;
+  my $dbh = $args{'dbh'};
+  my $dbh_retained = 0;
+
+  unless($dbh)
+  {
+    unless($dbh = $db->retain_dbh)
+    {
+      $class->error($db->error);
+      $class->handle_error($class);
+      return undef;
+    }
+
+    $args{'dbh'} = $dbh;
+    $dbh_retained = 1;
+  }
+
+  my $meta = $object_class->meta;
+
+  # Yes, I'm re-using get_objects() code like crazy, and often
+  # in weird ways.  Shhhh, it's a secret.
+
+  $args{'query'} = $set;
+
+  my($set_sql, $set_bind) = 
+    $class->get_objects(%args, return_sql => 1, where_only => 1, logic => ',');
+
+  my $sql;
+
+  my $where_bind = [];
+
+  if($args{'query'} = $where)
+  {
+    my $where_sql;
+
+    ($where_sql, $where_bind) = 
+      $class->get_objects(%args, return_sql => 1, where_only => 1);
+
+    $sql = 'UPDATE ' . $meta->fq_table_sql . 
+           "\nSET\n$set_sql\nWHERE\n$where_sql";
+  }
+  else
+  {
+    $sql = 'UPDATE ' . $meta->fq_table_sql . "\nSET\n$set_sql";
+  }
+
+  my $count;
+
+  eval
+  {
+    local $dbh->{'RaiseError'} = 1;  
+    $Debug && warn "$sql\n";
+
+    my $sth = $dbh->prepare($sql, $meta->prepare_bulk_update_options) 
+      or die $dbh->errstr;
+
+    $sth->execute(@$set_bind, @$where_bind);
+    $count = $sth->rows || 0;
+  };
+
+  if($@)
+  {
+    $class->error("update_objects() - $@");
+    $class->handle_error($class);
+    return undef;
+  }
+  
+  return $count;
+}
 
 1;
 
@@ -1389,6 +1613,7 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
     name        => { type => 'varchar', length => 255 },
     description => { type => 'text' },
     category_id => { type => 'int' },
+    region_num  => { type => 'int' },
 
     status => 
     {
@@ -1465,6 +1690,16 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
   # sub get_products_count
   # {
   #   shift->get_objects_count(@_, object_class => 'Product');
+  # }
+  #
+  # sub update_products
+  # {
+  #   shift->update_objects(@_, object_class => 'Product');
+  # }
+  #
+  # sub delete_products
+  # {
+  #   shift->delete_objects(@_, object_class => 'Product');
   # }
 
   ...
@@ -1584,16 +1819,81 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
       print $code_name->name, "\n";
     }
   }
+  
+  #
+  # Update objects
+  #
+
+  $num_rows_updated =
+    Product::Manager->update_products(
+      set =>
+      {
+        end_date   => DateTime->now,
+        region_num => { sql => 'region_num * -1' }
+        status     => 'defunct',
+      },
+      where =>
+      [
+        start_date => { lt => '1/1/1980' },
+        status     => [ 'active', 'pending' ],
+      ]);
+
+  #
+  # Delete objects
+  #
+
+  $num_rows_deleted =
+    Product::Manager->delete_products(
+      where =>
+      [
+        status  => [ 'stale', 'old' ],
+        name    => { like => 'Wax%' }
+        or =>
+        [
+          start_date => { gt => '2008-12-30' },
+          end_date   => { gt => 'now' },
+        ],
+      ]);
 
 =head1 DESCRIPTION
 
 C<Rose::DB::Object::Manager> is a base class for classes that select rows from tables fronted by L<Rose::DB::Object>-derived classes.  Each row in the table(s) queried is converted into the equivalent L<Rose::DB::Object>-derived object.
 
-Class methods are provided for fetching objects all at once, one at a time through the use of an iterator, or just getting the object count.  Subclasses are expected to create syntactically pleasing wrappers for C<Rose::DB::Object::Manager> class methods.  A very minimal example is shown in the L<synopsis|/SYNOPSIS> above.
+Class methods are provided for fetching objects all at once, one at a time through the use of an iterator, or just getting the object count.  Subclasses are expected to create syntactically pleasing wrappers for C<Rose::DB::Object::Manager> class methods, either manually or with the L<make_manager_methods|/make_manager_methods> method.  A very minimal example is shown in the L<synopsis|/SYNOPSIS> above.
 
 =head1 CLASS METHODS
 
 =over 4
+
+=item B<delete_objects [PARAMS]>
+
+Delete rows from a table fronted by a L<Rose::DB::Object>-derived class based on PARAMS, where PARAMS are name/value pairs.  Returns the number of rows deleted, or undef if there was an error.
+
+Valid parameters are:
+
+=over 4
+
+=item C<all BOOL>
+
+If set to a true value, this parameter indicates an explicit request to delete all rows from the table.  If both the C<all> and the C<where> parameters are passed, a fatal error will occur.
+
+=item C<db DB>
+
+A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> object method of the C<object_class>.
+
+=item C<object_class CLASS>
+
+The name of the L<Rose::DB::Object>-derived class that fronts the table from which rows are to be deleted.  This parameter is required; a fatal error will occur if it is omitted.
+
+=item C<where PARAMS>
+
+The query parameters, passed as a reference to an array of name/value pairs.  These PARAMS are used to formulate the "where" clause of the SQL query that is used to delete the rows from the table.  Arbitrarily nested boolean logic is supported.
+
+For the complete list of valid parameter names and values, see the documentation for the C<query> parameter of the L<build_select|Rose::DB::Object::QueryBuilder/build_select> function in the L<Rose::DB::Object::QueryBuilder> module.
+
+If this parameter is omitted, this method will refuse to delete all rows from the table and a fatal error will occur.  To delete all rows from a table, you must pass the C<all> parameter with a true value.  If both the C<all> and the C<where> parameters are passed, a fatal error will occur.
+
+=back
 
 =item B<error>
 
@@ -1639,7 +1939,7 @@ In all cases, the class's C<error> attribute will also contain the error message
 
 =item B<get_objects [PARAMS]>
 
-Get L<Rose::DB::Object>-derived objects based on PARAMS, where PARAMS are name/value pairs.  Returns a  reference to a (possibly empty) array in scalar context, a list of objects in list context, or undef if there was an error.  
+Get L<Rose::DB::Object>-derived objects based on PARAMS, where PARAMS are name/value pairs.  Returns a reference to a (possibly empty) array in scalar context, a list of objects in list context, or undef if there was an error.  
 
 Note that naively calling this method in list context may result in a list containing a single undef element if there was an error.  Example:
 
@@ -1713,7 +2013,7 @@ A reference to a hash of name/value pairs to be passed to the constructor of eac
 
 =item C<object_class CLASS>
 
-The class name of the L<Rose::DB::Object>-derived objects to be fetched.  This parameter is required; a fatal error will occur if it is omitted.
+The name of the L<Rose::DB::Object>-derived objects to be fetched.  This parameter is required; a fatal error will occur if it is omitted.
 
 =item C<offset NUM>
 
@@ -1751,7 +2051,7 @@ B<Note:> the C<with_objects> list currently cannot be used to simultaneously fet
 
 The query parameters, passed as a reference to an array of name/value pairs.  These PARAMS are used to formulate the "where" clause of the SQL query that, in turn, is used to fetch the objects from the database.  Arbitrarily nested boolean logic is supported.
 
-For the complete list of valid parameter names and values, see the L<build_select|Rose::DB::Object::QueryBuilder/build_select> function of the L<Rose::DB::Object::QueryBuilder> module.
+For the complete list of valid parameter names and values, see the documentation for the C<query> parameter of the L<build_select|Rose::DB::Object::QueryBuilder/build_select> function in the L<Rose::DB::Object::QueryBuilder> module.
 
 =back
 
@@ -1783,7 +2083,7 @@ The class of the L<Rose::DB::Object>-derived objects to be fetched or counted.
 
 =item * B<base name> or B<method name>
 
-The base name is a string used as the basis of the method names.  For example, the base name "products" would be used to create methods named "get_B<products>", "get_B<products>_count", and "get_B<products>_iterator"
+The base name is a string used as the basis of the method names.  For example, the base name "products" would be used to create methods named "get_B<products>", "get_B<products>_count", "get_B<products>_iterator", "delete_B<products>", and "update_B<products>".
 
 In the absence of a base name, an explicit method name may be provided instead.  The method name will be used as is.
 
@@ -1796,6 +2096,8 @@ The types of methods that should be generated.  Each method type is a wrapper fo
     objects     get_objects()
     iterator    get_objects_iterator()
     count       get_objects_count()
+    delete      delete_objects()
+    update      update_objects()
 
 =item * B<target class>
 
@@ -1968,6 +2270,16 @@ Finally, sometimes you don't want or need to use L<make_manager_methods|/make_ma
     shift->get_objects_count(object_class => 'Product', @_);
   }
 
+  sub delete_products
+  {
+    shift->delete_objects(object_class => 'Product', @_);
+  }
+
+  sub update_products
+  {
+    shift->update_objects(object_class => 'Product', @_);
+  }
+
 Of course, these methods will all look very similar in each L<Rose::DB::Object::Manager>-derived class.  Creating these identically structured methods is exactly what L<make_manager_methods|/make_manager_methods> automates for you.  
 
 But sometimes you want to customize these methods, in which case the "longhand" technique above becomes essential.  For example, imagine that we want to extend the code in the L<synopsis|/SYNOPSIS>, adding support for a C<with_categories> parameter to the C<get_products()> method.  
@@ -1993,6 +2305,75 @@ But sometimes you want to customize these methods, in which case the "longhand" 
 Here we've coerced the caller-friendly C<with_categories> boolean flag parameter into the C<with_objects =E<gt> [ 'category' ]> pair that L<Rose::DB::Object::Manager>'s L<get_objects|/get_objects> method can understand.
 
 This is the typical evolution of an object manager method.  It starts out as being auto-generated by L<make_manager_methods|/make_manager_methods>, then becomes customized as new arguments are added.
+
+=item B<update_objects [PARAMS]>
+
+Update rows in a table fronted by a L<Rose::DB::Object>-derived class based on PARAMS, where PARAMS are name/value pairs.  Returns the number of rows updated, or undef if there was an error.
+
+Valid parameters are:
+
+=over 4
+
+=item C<all BOOL>
+
+If set to a true value, this parameter indicates an explicit request to update all rows in the table.  If both the C<all> and the C<where> parameters are passed, a fatal error will occur.
+
+=item C<db DB>
+
+A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> object method of the C<object_class>.
+
+=item C<object_class CLASS>
+
+The class name of the L<Rose::DB::Object>-derived class that fronts the table whose rows will to be updated.  This parameter is required; a fatal error will occur if it is omitted.
+
+=item C<set PARAMS>
+
+The names and values of the columns to be updated.  PARAMS should be a reference to a hash.  Each key of the hash should be a column name or column get/set method name.  If a value is a simple scalar, then it is passed through the get/set method that services the column before being incorporated into the SQL query.
+
+If a value is a reference to a hash, then it must contain a single key named "sql" and a corresponding value that will be incorporated into the SQL query as-is.  For example, this method call:
+
+  $num_rows_updated =
+    Product::Manager->update_products(
+      set =>
+      {
+        end_date   => DateTime->now,
+        region_num => { sql => 'region_num * -1' }
+        status     => 'defunct',
+      },
+      where =>
+      [
+        status  => [ 'stale', 'old' ],
+        name    => { like => 'Wax%' }
+        or =>
+        [
+          start_date => { gt => '2008-12-30' },
+          end_date   => { gt => 'now' },
+        ],
+      ]);
+
+would produce the an SQL statement something like this (depending on the database vendor, and assuming the current date was September 20th, 2005):
+
+    UPDATE products SET
+      end_date   = '2005-09-20',
+      region_num = region_num * -1,
+      status     = 'defunct'
+    WHERE
+      status IN ('stale', 'old') AND
+      name LIKE 'Wax%' AND
+      (
+        start_date > '2008-12-30' OR
+        end_date   > '2005-09-20'
+      )
+
+=item C<where PARAMS>
+
+The query parameters, passed as a reference to an array of name/value pairs.  These PARAMS are used to formulate the "where" clause of the SQL query that is used to update the rows in the table.  Arbitrarily nested boolean logic is supported.
+
+For the complete list of valid parameter names and values, see the documentation for the C<query> parameter of the L<build_select|Rose::DB::Object::QueryBuilder/build_select> function in the L<Rose::DB::Object::QueryBuilder> module.
+
+If this parameter is omitted, this method will refuse to update all rows in the table and a fatal error will occur.  To update all rows in a table, you must pass the C<all> parameter with a true value.  If both the C<all> and the C<where> parameters are passed, a fatal error will occur.
+
+=back
 
 =back
 
