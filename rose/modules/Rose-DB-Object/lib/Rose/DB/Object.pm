@@ -10,8 +10,9 @@ use Rose::DB::Object::Metadata;
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
+use Rose::DB::Object::Manager;
 use Rose::DB::Object::Constants qw(:all);
-#use Rose::DB::Constants qw(IN_TRANSACTION);
+use Rose::DB::Constants qw(IN_TRANSACTION);
 
 our $VERSION = '0.076';
 
@@ -237,7 +238,7 @@ sub load
   }
 
   $self->{STATE_IN_DB()} = 1;
-  return 1;
+  return $self || 1;
 }
 
 sub save
@@ -537,11 +538,11 @@ sub insert
   return 1;
 }
 
+my %CASCADE_VALUES = (delete => 'delete', null => 'null', 1 => 'delete');
+
 sub delete
 {
   my($self, %args) = @_;
-
-  my $dbh = $self->dbh or return 0;
 
   my $meta = $self->meta;
 
@@ -556,33 +557,238 @@ sub delete
     return 0;
   }
 
-  eval
+  # Totally separate code path for cascaded delete
+  if(my $cascade = $args{'cascade'})
   {
-    local $self->{STATE_SAVING()} = 1;
-    local $dbh->{'RaiseError'} = 1;
-
-    # Was prepare_cached() but that can't be used across transactions
-    my $sth = $dbh->prepare($meta->delete_sql, $meta->prepare_delete_options);
-
-    $Debug && warn $meta->delete_sql, " - bind params: ", join(', ', @pk_values), "\n";
-    $sth->execute(@pk_values);
-
-    unless($sth->rows > 0)
+    unless(exists $CASCADE_VALUES{$cascade})
     {
-      $self->error("Did not delete " . ref($self) . ' where ' . 
-                   join(', ', @pk_methods) . ' = ' . join(', ', @pk_values));
+      Carp::croak "Illegal value for 'cascade' parameter: '$cascade'.  ",
+                  "Valid values are 'delete', 'null', and '1'";
     }
-  };
 
-  if($@)
-  {
-    $self->error("delete() - $@");
-    $self->meta->handle_error($self);
-    return 0;
+    $cascade = $CASCADE_VALUES{$cascade};
+
+    my $mgr_error_mode = Rose::DB::Object::Manager->error_mode;
+    my($db, $started_new_tx);
+
+    eval
+    {
+      $db = $self->db;
+      my $meta  = $self->meta;
+
+      my $ret = $db->begin_work;
+      
+      unless(defined $ret)
+      {
+        die 'Could not begin transaction before deleting with cascade - ',
+            $db->error;
+      }
+
+      $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+
+      unless($self->{STATE_IN_DB()})
+      {
+        $self->load 
+          or die "Could not load in preparation for cascading delete: ", 
+                 $self->error;
+      }
+
+      Rose::DB::Object::Manager->error_mode('fatal');
+
+      # Process all the rows for each "... to many" relationship
+      REL: foreach my $relationship ($meta->relationships)
+      {
+        my $rel_type = $relationship->type;
+        
+        if($rel_type eq 'one to many')
+        {
+          my $column_map = $relationship->column_map;
+          my @query;
+  
+          while(my($local_column, $foreign_column) = each(%$column_map))
+          {
+            my $method = $meta->column_accessor_method_name($local_column);
+            my $value =  $self->$method();
+            
+            # XXX: Comment this out to allow null keys
+            next FK  unless(defined $value);
+  
+            push(@query, $foreign_column => $value);
+          }
+    
+          if($cascade eq 'delete')
+          {
+            Rose::DB::Object::Manager->delete_objects(
+              db           => $db,
+              object_class => $relationship->class,
+              where        => \@query);
+          }
+          elsif($cascade eq 'null')
+          {
+            my %set = map { $_ => undef } values(%$column_map);
+  
+            Rose::DB::Object::Manager->update_objects(
+              db           => $db,
+              object_class => $relationship->class,
+              set          => \%set,
+              where        => \@query);        
+          }
+          else { Carp::confess "Illegal cascade value '$cascade' snuck through" }
+        }
+        elsif($rel_type eq 'many to many')
+        {
+          my $map_class  = $relationship->map_class;
+          my $map_from   = $relationship->map_from;
+  
+          my $map_from_relationship = 
+            $map_class->meta->foreign_key($map_from)  ||
+            $map_class->meta->relationship($map_from) ||
+            Carp::confess "No foreign key or 'many to one' relationship ",
+                          "named '$map_from' in class $map_class";
+  
+          my $key_columns = $map_from_relationship->key_columns;
+          my @query;
+  
+          # "Local" here means "local to the mapping table"
+          while(my($local_column, $foreign_column) = each(%$key_columns))
+          {
+            my $method = $meta->column_accessor_method_name($foreign_column);
+            my $value  = $self->$method();
+  
+            # XXX: Comment this out to allow null keys
+            next REL  unless(defined $value);
+  
+            push(@query, $local_column => $value);
+          }
+
+          if($cascade eq 'delete')
+          {
+            Rose::DB::Object::Manager->delete_objects(
+              db           => $db,
+              object_class => $map_class,
+              where        => \@query);
+          }
+          elsif($cascade eq 'null')
+          {
+            my %set = map { $_ => undef } keys(%$key_columns);
+  
+            Rose::DB::Object::Manager->update_objects(
+              db           => $db,
+              object_class => $map_class,
+              set          => \%set,
+              where        => \@query);        
+          }
+          else { Carp::confess "Illegal cascade value '$cascade' snuck through" }
+        }
+      }
+
+      # Delete the object itself
+      my $dbh = $db->dbh or die "Could not get dbh: ", $self->error;
+      local $self->{STATE_SAVING()} = 1;
+      local $dbh->{'RaiseError'} = 1;
+  
+      # Was prepare_cached() but that can't be used across transactions
+      my $sth = $dbh->prepare($meta->delete_sql, $meta->prepare_delete_options);
+  
+      $Debug && warn $meta->delete_sql, " - bind params: ", join(', ', @pk_values), "\n";
+      $sth->execute(@pk_values);
+  
+      unless($sth->rows > 0)
+      {
+        $self->error("Did not delete " . ref($self) . ' where ' . 
+                     join(', ', @pk_methods) . ' = ' . join(', ', @pk_values));
+      }
+
+      # Process all rows referred to by "one to one" foreign keys
+      FK: foreach my $fk ($meta->foreign_keys)
+      {
+        next  unless($fk->relationship_type eq 'one to one');
+
+        my $key_columns = $fk->key_columns;
+        my @query;
+
+        while(my($local_column, $foreign_column) = each(%$key_columns))
+        {
+          my $method = $meta->column_accessor_method_name($local_column);
+          my $value =  $self->$method();
+          
+          # XXX: Comment this out to allow null keys
+          next FK  unless(defined $value);
+
+          push(@query, $foreign_column => $value);
+        }
+  
+        if($cascade eq 'delete')
+        {
+          Rose::DB::Object::Manager->delete_objects(
+            db           => $db,
+            object_class => $fk->class,
+            where        => \@query);
+        }
+        elsif($cascade eq 'null')
+        {
+          my %set = map { $_ => undef } values(%$key_columns);
+
+          Rose::DB::Object::Manager->update_objects(
+            db           => $db,
+            object_class => $fk->class,
+            set          => \%set,
+            where        => \@query);        
+        }
+        else { Carp::confess "Illegal cascade value '$cascade' snuck through" }
+      }
+
+      if($started_new_tx)
+      {
+        $db->commit or die $db->error;
+      }
+    };
+
+    if($@)
+    {
+      Rose::DB::Object::Manager->error_mode($mgr_error_mode);
+      $self->error("delete() with cascade - $@");
+      $db->rollback  if($db && $started_new_tx);
+      $self->meta->handle_error($self);
+      return 0;
+    }
+
+    Rose::DB::Object::Manager->error_mode($mgr_error_mode);
+    $self->{STATE_IN_DB()} = 0;
+    return 1;
   }
+  else
+  {
+    my $dbh = $self->dbh or return 0;
 
-  $self->{STATE_IN_DB()} = 0;
-  return 1;
+    eval
+    {
+      local $self->{STATE_SAVING()} = 1;
+      local $dbh->{'RaiseError'} = 1;
+  
+      # Was prepare_cached() but that can't be used across transactions
+      my $sth = $dbh->prepare($meta->delete_sql, $meta->prepare_delete_options);
+  
+      $Debug && warn $meta->delete_sql, " - bind params: ", join(', ', @pk_values), "\n";
+      $sth->execute(@pk_values);
+  
+      unless($sth->rows > 0)
+      {
+        $self->error("Did not delete " . ref($self) . ' where ' . 
+                     join(', ', @pk_methods) . ' = ' . join(', ', @pk_values));
+      }
+    };
+  
+    if($@)
+    {
+      $self->error("delete() - $@");
+      $self->meta->handle_error($self);
+      return 0;
+    }
+  
+    $self->{STATE_IN_DB()} = 0;
+    return 1;
+  }
 }
 
 sub clone
@@ -987,7 +1193,7 @@ Returns the text message associated with the last error that occurred.
 
 Load a row from the database table, initializing the object with the values from that row.  An object can be loaded based on either a primary key or a unique key.
 
-Returns true if the row was loaded successfully, undef if the row could not be loaded due to an error, or zero (0) if the row does not exist.
+Returns true if the row was loaded successfully, undef if the row could not be loaded due to an error, or zero (0) if the row does not exist.  The true value returned on success with be the object itself.  If the object L<overload>s its boolean value such that it is not true, then a true value will be returned instead of the object itself.
 
 PARAMS are optional name/value pairs.  If the parameter C<speculative> is passed with a true value, and if the load failed because the row was L<not found|/not_found>, then the L<error_mode|Rose::DB::Object::Metadata/error_mode> setting is ignored and zero (0) is returned.
 

@@ -47,6 +47,7 @@ lib/Rose/DB/Object/Metadata/Object.pm
 lib/Rose/DB/Object/Metadata/PrimaryKey.pm
 lib/Rose/DB/Object/Metadata/Relationship.pm
 lib/Rose/DB/Object/Metadata/Relationship/ManyToMany.pm
+lib/Rose/DB/Object/Metadata/Relationship/ManyToOne.pm
 lib/Rose/DB/Object/Metadata/Relationship/OneToMany.pm
 lib/Rose/DB/Object/Metadata/Relationship/OneToOne.pm
 lib/Rose/DB/Object/Metadata/UniqueKey.pm

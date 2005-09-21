@@ -69,8 +69,6 @@ sub init_method_maker_info
 
   unless($info && %$info)
   {
-    $info = $Method_Maker_Info{$class} = {};
-
     my @parents = ($class);
 
     while(my $parent = shift(@parents))
@@ -84,7 +82,9 @@ sub init_method_maker_info
 
         my $subclass_info = $subclass->init_method_maker_info;
 
-        foreach my $type ($class->available_method_types)
+        $info ||= $Method_Maker_Info{$class} ||= {};
+
+        foreach my $type ($subclass->available_method_types)
         {
           next  unless($subclass_info->{$type});
 
@@ -322,6 +322,10 @@ sub make_methods
 
   foreach my $type (@$types)
   {
+    if(ref $self eq 'Rose::DB::Object::Metadata::Relationship::OneToOne')
+    {
+      $DB::single = 1;
+    }
     my $method_maker_class = $self->method_maker_class($type)
       or Carp::croak "No method maker class defined for method type '$type'";
 

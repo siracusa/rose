@@ -1,6 +1,10 @@
 0.075 (09.20.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added bulk update and delete methods to Manager.
+    * Added "many to one" relationship and made it the new default
+      relationship type for foreign keys.
+    * load() now returns the object itself on success, which allows
+      for the convenient $obj = MyObject->new(id => 123)->load;
 
 0.075 (09.19.2005) - John Siracusa <siracusa@mindspring.com>
 

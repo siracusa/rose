@@ -9,7 +9,7 @@ use Rose::DB::Object::Metadata::Util qw(:all);
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.031';
+our $VERSION = '0.04';
 
 use overload
 (
@@ -45,8 +45,14 @@ use Rose::Object::MakeMethods::Generic
 Rose::Object::MakeMethods::Generic->make_methods
 (
   { preserve_existing => 1 },
-  scalar => [ __PACKAGE__->common_method_maker_argument_names ],
+  scalar => 
+  [
+    __PACKAGE__->common_method_maker_argument_names,
+    relationship_type => { interface => 'get_set_init' },
+  ],
 );
+
+*rel_type = \&relationship_type;
 
 __PACKAGE__->method_maker_info
 (
@@ -56,6 +62,8 @@ __PACKAGE__->method_maker_info
     type  => 'object_by_key',
   },
 );
+
+sub init_relationship_type { 'many to one' }
 
 sub type { 'foreign key' }
 
@@ -225,6 +233,8 @@ This class will create methods for C<the thing referenced by> the foreign key co
 
 Both the local table and the foreign table must have L<Rose::DB::Object>-derived classes fronting them.
 
+Foreign keys can represent both "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>" and "L<many to one|Rose::DB::Object::Metadata::Relationship::ManyToOne>" relationships.  To choose, set the L<relationship_type|/relationship_type> attribute to either "one to one" or "many to one".  The default is "many to one".
+
 =head2 MAKING METHODS
 
 A L<Rose::DB::Object::Metadata::ForeignKey>-derived object is responsible for creating object methods that manipulate objects referenced by a foreign key.  Each foreign key object can make zero or more methods for each available foreign key method type.  A foreign key method type describes the purpose of a method.  The default list of foreign key method types contains only one type:
@@ -344,6 +354,14 @@ If any of the methods could not be created for any reason, a fatal error will oc
 =item B<name [NAME]>
 
 Get or set the name of the foreign key.  This name must be unique among all other foreign keys for a given L<Rose::DB::Object>-derived class.
+
+=item B<rel_type [TYPE]>
+
+This method is an alias for the L<relationship_type|/relationship_type> method described below.
+
+=item B<relationship_type [TYPE]>
+
+Get or set the relationship type represented by this foreign key.  Valid values for TYPE are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>" and "L<many to one|Rose::DB::Object::Metadata::Relationship::ManyToOne>".
 
 =item B<share_db [BOOL]>
 

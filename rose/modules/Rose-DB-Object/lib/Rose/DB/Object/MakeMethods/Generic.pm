@@ -1222,7 +1222,7 @@ sub object_by_key
 
         $key{$foreign_method} = $self->$local_method();
 
-        # Comment this out to allow null keys
+        # XXX: Comment this out to allow null keys
         unless(defined $key{$foreign_method})
         {
           keys(%$fk_columns); # reset iterator
@@ -1432,7 +1432,7 @@ sub objects_by_map
       if(%key_template)
       {
         Carp::croak "Map class $map_class has more than one foreign key ",
-                    "and/or 'one to one' relationship that points to the ",
+                    "and/or 'many to one' relationship that points to the ",
                     "class $target_class.  Please specify one by name ",
                     "with a 'local' parameter in the 'map' hash";
       }
@@ -1453,7 +1453,7 @@ sub objects_by_map
       }
     }
     elsif($item->isa('Rose::DB::Object::Metadata::ForeignKey') ||
-          $item->type eq 'one to one')
+          $item->type eq 'many to one')
     {
       # Skip if there was an explicit foreign relationship name and
       # this is not that name.
@@ -1464,7 +1464,7 @@ sub objects_by_map
       if($require_objects)
       {
         Carp::croak "Map class $map_class has more than one foreign key ",
-                    "and/or 'one to one' relationship that points to a ",
+                    "and/or 'many to one' relationship that points to a ",
                     "class other than $target_class.  Please specify one ",
                     "by name with a 'foreign' parameter in the 'map' hash";
       }
@@ -1477,7 +1477,7 @@ sub objects_by_map
 
   unless(%key_template)
   {
-    Carp::croak "Could not find a foreign key or 'one to one' relationship ",
+    Carp::croak "Could not find a foreign key or 'many to one' relationship ",
                 "in $map_class that points to $target_class";
   }
 
@@ -1495,13 +1495,13 @@ sub objects_by_map
       }
 
       if(($item->isa('Rose::DB::Object::Metadata::ForeignKey') ||
-         $item->type eq 'one to one') &&
+         $item->type eq 'many to one') &&
          $item->class eq $target_class && $item->name ne $local_rel)
       {  
         if($require_objects)
         {
           Carp::croak "Map class $map_class has more than two foreign keys ",
-                      "and/or 'one to one' relationships that points to a ",
+                      "and/or 'many to one' relationships that points to a ",
                       "$target_class.  Please specify which ones to use ",
                       "by including 'local' and 'foreign' parameters in the ",
                       "'map' hash";
@@ -1516,7 +1516,7 @@ sub objects_by_map
 
   unless($require_objects)
   {
-    Carp::croak "Could not find a foreign key or 'one to one' relationship ",
+    Carp::croak "Could not find a foreign key or 'many to one' relationship ",
                 "in $map_class that points to a class other than $target_class"
   }
 
@@ -2286,15 +2286,15 @@ The name of the class method to call on C<manager_class> in order to fetch the o
 
 =item C<map_class>
 
-The name of the L<Rose::DB::Object>-derived class that maps between the other two L<Rose::DB::Object>-derived classes.  This class must have a foreign key and/or "one to one" relationship for each of the two tables that it maps between.
+The name of the L<Rose::DB::Object>-derived class that maps between the other two L<Rose::DB::Object>-derived classes.  This class must have a foreign key and/or "many to one" relationship for each of the two tables that it maps between.
 
 =item C<map_from>
 
-The name of the "one to one" relationship or foreign key in C<map_class> that points to the object of the class that the method exists in.  Setting this value is only necessary if the C<map_class> has more than one foreign key or "one to one" relationship that points to one of the classes that it maps between.
+The name of the "many to one" relationship or foreign key in C<map_class> that points to the object of the class that this relationship exists in.  Setting this value is only necessary if the C<map_class> has more than one foreign key or "many to one" relationship that points to one of the classes that it maps between.
 
 =item C<map_to>
 
-The name of the "one to one" relationship or foreign key in C<map_class> that points to the "foreign" object to be fetched.  Setting this value is only necessary if the C<map_class> has more than one foreign key or "one to one" relationship that points to one of the classes that it maps between.
+The name of the "many to one" relationship or foreign key in C<map_class> that points to the "foreign" object to be fetched.  Setting this value is only necessary if the C<map_class> has more than one foreign key or "many to one" relationship that points to one of the classes that it maps between.
 
 =item C<share_db>
 

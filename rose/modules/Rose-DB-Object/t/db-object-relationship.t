@@ -2,12 +2,13 @@
 
 use strict;
 
-use Test::More tests => 189;
+use Test::More tests => 196;
 
 BEGIN 
 {
   require 't/test-lib.pl';
   use_ok('Rose::DB::Object');
+  use_ok('Rose::DB::Object::Manager');
 }
 
 our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
@@ -18,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 74)  unless($HAVE_PG);
+  skip("Postgres tests", 79)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -227,24 +228,77 @@ SKIP: foreach my $db_type ('pg')
 
   ok(@colors == 1 && $colors[0]->name eq 'pink', "colors 4 - $db_type");
 
-  ok($map1->delete, 'delete color map record 1');
-  ok($map2->delete, 'delete color map record 2');
-  ok($map3->delete, 'delete color map record 3');
+  $o = MyPgObject->new(id => 1)->load;
+  $o->fkone(1);
+  $o->fk2(2);
+  $o->fk3(3);
+  $o->save;
 
-  foreach my $obj ($o->colors)
+  #local $Rose::DB::Object::Manager::Debug = 1;
+
+  eval
   {
-    $obj->delete;
-  }
+    local $o->dbh->{'PrintError'} = 0;
+    $o->delete(cascade => 'null');
+  };
 
-  foreach my $obj ($o->other2_objs)
+  ok($@, "delete cascade null 1 - $db_type");
+
+  my $count = 
+    Rose::DB::Object::Manager->get_objects_count(
+      db => $o->db,
+      object_class => 'MyPgOtherObject');
+      
+  is($count, 2, "delete cascade rollback confirm 1 - $db_type");
+
+  $count = 
+    Rose::DB::Object::Manager->get_objects_count(
+      db => $o->db,
+      object_class => 'MyPgOtherObject2');
+      
+  is($count, 3, "delete cascade rollback confirm 2 - $db_type");
+
+  ok($o->delete(cascade => 'delete'), "delete cascade delete 1 - $db_type");
+
+  $o = MyPgObject->new(id => 99)->load;
+  $o->fkone(11);
+  $o->fk2(12);
+  $o->fk3(13);
+  $o->save;
+
+  eval
   {
-    $obj->delete;
-  }
+    local $o->dbh->{'PrintError'} = 0;
+    $o->delete(cascade => 'null');
+  };
 
-  ok($o->delete, "delete() - $db_type");
+  ok($@, "delete cascade null 2 - $db_type");
+
+  ok($o->delete(cascade => 'delete'), "delete cascade delete 2 - $db_type");
+
+  $count = 
+    Rose::DB::Object::Manager->get_objects_count(
+      db => $o->db,
+      object_class => 'MyPgColorMap');
+      
+  is($count, 0, "delete cascade confirm 1 - $db_type");
+
+  $count = 
+    Rose::DB::Object::Manager->get_objects_count(
+      db => $o->db,
+      object_class => 'MyPgOtherObject2');
+      
+  is($count, 0, "delete cascade confirm 2 - $db_type");
+
+  $count = 
+    Rose::DB::Object::Manager->get_objects_count(
+      db => $o->db,
+      object_class => 'MyPgOtherObject');
+      
+  is($count, 0, "delete cascade confirm 3 - $db_type");
 
   eval { $o->meta->alias_column(nonesuch => 'foo') };
-  ok($@, 'alias_column() nonesuch');
+  ok($@, "alias_column() nonesuch - $db_type");
 }
 
 #
@@ -253,7 +307,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 48)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 50)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -378,24 +432,66 @@ SKIP: foreach my $db_type ('mysql')
 
   ok(@colors == 1 && $colors[0]->name eq 'pink', "colors 4 - $db_type");
 
-  ok($map1->delete, 'delete color map record 1');
-  ok($map2->delete, 'delete color map record 2');
-  ok($map3->delete, 'delete color map record 3');
+  $o = MyMySQLObject->new(id => 1)->load;
+  $o->fk1(1);
+  $o->fk2(2);
+  $o->fk3(3);
+  $o->save;
 
-  foreach my $obj ($o->colors)
+  #local $Rose::DB::Object::Manager::Debug = 1;
+
+  my $ret;
+
+  eval
   {
-    $obj->delete;
-  }
+    local $o->dbh->{'PrintError'} = 0;
+    $ret = $o->delete(cascade => 'null');
+  };
 
-  foreach my $obj (@o2s)
+  # Allow for exceptions in case some fancy new version of MySQL actually
+  # tries preserve referential integrity.  Hey, you never know...
+  ok($ret || $@, "delete cascade null 1 - $db_type");
+
+  my $count = 
+    Rose::DB::Object::Manager->get_objects_count(
+      db => $o->db,
+      object_class => 'MyMySQLOtherObject2');
+      
+  is($count, 3, "delete cascade rollback confirm 2 - $db_type");
+
+  $o = MyMySQLObject->new(id => 99)->load;
+  $o->fk1(11);
+  $o->fk2(12);
+  $o->fk3(13);
+  $o->save;
+
+  eval
   {
-    $obj->delete;
-  }
+    local $o->dbh->{'PrintError'} = 0;
+    $ret = $o->delete(cascade => 'null');
+  };
 
-  ok($o->delete, "delete() - $db_type");
+  ok($ret || $@, "delete cascade null 2 - $db_type");
+
+  $count = 
+    Rose::DB::Object::Manager->get_objects_count(
+      db => $o->db,
+      object_class => 'MyMySQLColorMap');
+      
+  is($count, 3, "delete cascade confirm 1 - $db_type");
+
+  $count = 
+    Rose::DB::Object::Manager->get_objects_count(
+      db => $o->db,
+      object_class => 'MyMySQLOtherObject2');
+      
+  is($count, 3, "delete cascade confirm 2 - $db_type");
 
   eval { $o->meta->alias_column(nonesuch => 'foo') };
-  ok($@, 'alias_column() nonesuch');
+  ok($@, "alias_column() nonesuch - $db_type");
+
+  eval { $o->meta->alias_column(nonesuch => 'foo') };
+  ok($@, "alias_column() nonesuch - $db_type");
 }
 
 #
@@ -404,7 +500,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 66)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 65)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -577,25 +673,77 @@ SKIP: foreach my $db_type ('informix')
 
   ok(@colors == 1 && $colors[0]->name eq 'pink', "colors 4 - $db_type");
 
-  ok($map1->delete, 'delete color map record 1');
-  ok($map2->delete, 'delete color map record 2');
-  ok($map3->delete, 'delete color map record 3');
+  $o = MyInformixObject->new(id => 1)->load;
+  $o->fkone(1);
+  $o->fk2(2);
+  $o->fk3(3);
+  $o->save;
 
-  foreach my $obj ($o->colors)
+  local $Rose::DB::Object::Manager::Debug = 1;
+
+  eval
   {
-    $obj->delete;
-  }
+    local $o->dbh->{'PrintError'} = 0;
+    $o->delete(cascade => 'null');
+  };
 
+  ok($@, "delete cascade null 1 - $db_type");
 
-  foreach my $obj ($o->other2_objs)
+  my $count = 
+    Rose::DB::Object::Manager->get_objects_count(
+      db => $o->db,
+      object_class => 'MyInformixOtherObject');
+      
+  is($count, 2, "delete cascade rollback confirm 1 - $db_type");
+
+  $count = 
+    Rose::DB::Object::Manager->get_objects_count(
+      db => $o->db,
+      object_class => 'MyInformixOtherObject2');
+      
+  is($count, 3, "delete cascade rollback confirm 2 - $db_type");
+
+  ok($o->delete(cascade => 'delete'), "delete cascade delete 1 - $db_type");
+
+  $o = MyInformixObject->new(id => 99)->load;
+  $o->fkone(11);
+  $o->fk2(12);
+  $o->fk3(13);
+  $o->save;
+
+  eval
   {
-    $obj->delete;
-  }
+    local $o->dbh->{'PrintError'} = 0;
+    $o->delete(cascade => 'null');
+  };
 
-  ok($o->delete, "delete() - $db_type");
+  ok($@, "delete cascade null 2 - $db_type");
+$DB::single = 1;
+  ok($o->delete(cascade => 'delete'), "delete cascade delete 2 - $db_type");
+
+  $count = 
+    Rose::DB::Object::Manager->get_objects_count(
+      db => $o->db,
+      object_class => 'MyInformixColorMap');
+      
+  is($count, 0, "delete cascade confirm 1 - $db_type");
+
+  $count = 
+    Rose::DB::Object::Manager->get_objects_count(
+      db => $o->db,
+      object_class => 'MyInformixOtherObject2');
+      
+  is($count, 0, "delete cascade confirm 2 - $db_type");
+
+  $count = 
+    Rose::DB::Object::Manager->get_objects_count(
+      db => $o->db,
+      object_class => 'MyInformixOtherObject');
+
+  is($count, 0, "delete cascade confirm 3 - $db_type");
 
   eval { $o->meta->alias_column(nonesuch => 'foo') };
-  ok($@, 'alias_column() nonesuch');
+  ok($@, "alias_column() nonesuch - $db_type");
 }
 
 
@@ -756,6 +904,7 @@ EOF
       other_obj =>
       {
         class => 'MyPgOtherObject',
+        rel_type => 'one to one',
         key_columns =>
         {
           fk1 => 'k1',
@@ -843,6 +992,7 @@ EOF
       other_obj =>
       {
         class => 'MyPgObject',
+        relationship_type => 'one to one',
         key_columns => { pid => 'id' },
       },
     );
@@ -1034,7 +1184,7 @@ EOF
     (
       other_obj =>
       {
-        type  => 'one to one',
+        type  => 'many to one',
         class => 'MyMySQLOtherObject',
         column_map =>
         {
@@ -1112,7 +1262,7 @@ EOF
     (
       other_obj =>
       {
-        type  => 'one to one',
+        type  => 'many to one',
         class => 'MyMySQLObject',
         column_map => { pid => 'id' },
       },
@@ -1384,7 +1534,7 @@ EOF
     (
       other_obj =>
       {
-        type  => 'one to one',
+        type  => 'many to one',
         class => 'MyInformixObject',
         column_map => { pid => 'id' },
       },
