@@ -843,22 +843,25 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   ok(!defined $objs->[7]->{'nicks'}, "get_objects() with many 38 - $db_type");
 
   local $Rose::DB::Object::Manager::Debug = 0;
-
-  $fo = MyPgNick->new(id => 7);
-  ok($fo->delete, "with many clean-up 1 - $db_type");
-
-  $fo = MyPgNick->new(id => 8);
-  ok($fo->delete, "with many clean-up 2 - $db_type");
-
-  $fo = MyPgNick->new(id => 9);
-  ok($fo->delete, "with many clean-up 3 - $db_type");
-
-  ok($o6->delete, "with many clean-up 4 - $db_type");
-  ok($o7->delete, "with many clean-up 5 - $db_type");
-  ok($o8->delete, "with many clean-up 6 - $db_type");
-
+  $DB::single = 1;
   $fo = MyPgNick2->new(id => 1);
-  ok($fo->delete, "with many clean-up 7 - $db_type");
+  ok($fo->delete(cascade => 1), "with many delete cascade - $db_type");
+
+#   $fo = MyPgNick->new(id => 7);
+#   ok($fo->delete, "with many clean-up 1 - $db_type");
+# 
+#   $fo = MyPgNick->new(id => 8);
+#   ok($fo->delete, "with many clean-up 2 - $db_type");
+# 
+#   $fo = MyPgNick->new(id => 9);
+#   ok($fo->delete, "with many clean-up 3 - $db_type");
+# 
+#   ok($o6->delete, "with many clean-up 4 - $db_type");
+#   ok($o7->delete, "with many clean-up 5 - $db_type");
+#   ok($o8->delete, "with many clean-up 6 - $db_type");
+# 
+#   $fo = MyPgNick2->new(id => 1);
+#   ok($fo->delete, "with many clean-up 7 - $db_type");
 
   # End "one to many" tests
 

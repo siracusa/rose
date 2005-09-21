@@ -1489,7 +1489,7 @@ sub update_objects
   $args{'query'} = $set;
 
   my($set_sql, $set_bind) = 
-    $class->get_objects(%args, return_sql => 1, where_only => 1, logic => ',');
+    $class->get_objects(%args, return_sql => 1, where_only => 1, logic => ',', set => 1);
 
   my $sql;
 

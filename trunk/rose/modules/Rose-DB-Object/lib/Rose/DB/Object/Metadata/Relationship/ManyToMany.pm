@@ -130,7 +130,7 @@ sub is_ready_to_make_methods
         if(%key_template)
         {
           die "Map class $map_class has more than one foreign key ",
-              "and/or 'one to one' relationship that points to the ",
+              "and/or 'many to one' relationship that points to the ",
               "class $target_class.  Please specify one by name ",
               "with a 'local' parameter in the 'map' hash";
         }
@@ -150,7 +150,7 @@ sub is_ready_to_make_methods
         }
       }
       elsif($item->isa('Rose::DB::Object::Metadata::ForeignKey') ||
-            $item->type eq 'one to one')
+            $item->type eq 'many to one')
       {
         # Skip if there was an explicit foreign relationship name and
         # this is not that name.
@@ -159,7 +159,7 @@ sub is_ready_to_make_methods
         if($with_objects)
         {
           Carp::croak "Map class $map_class has more than one foreign key ",
-                      "and/or 'one to one' relationship that points to a ",
+                      "and/or 'many to one' relationship that points to a ",
                       "class other than $target_class.  Please specify one ",
                       "by name with a 'foreign' parameter in the 'map' hash";
         }
@@ -172,7 +172,7 @@ sub is_ready_to_make_methods
 
     unless(%key_template)
     {
-      die "Could not find a foreign key or 'one to one' relationship ",
+      die "Could not find a foreign key or 'many to one' relationship ",
           "in $map_class that points to $target_class";
     }
 
@@ -190,13 +190,13 @@ sub is_ready_to_make_methods
         }
 
         if(($item->isa('Rose::DB::Object::Metadata::ForeignKey') ||
-           $item->type eq 'one to one') &&
+           $item->type eq 'many to one') &&
            $item->class eq $target_class && $item->name ne $local_rel)
         {  
           if($with_objects)
           {
             die "Map class $map_class has more than two foreign keys ",
-                "and/or 'one to one' relationships that points to a ",
+                "and/or 'many to one' relationships that points to a ",
                 "$target_class.  Please specify which ones to use ",
                 "by including 'local' and 'foreign' parameters in the ",
                 "'map' hash";
@@ -211,7 +211,7 @@ sub is_ready_to_make_methods
 
     unless($with_objects)
     {
-      die "Could not find a foreign key or 'one to one' relationship ",
+      die "Could not find a foreign key or 'many to one' relationship ",
           "in $map_class that points to a class other than $target_class"
     }
   };
@@ -269,7 +269,7 @@ Given these tables, each widget can have zero or more colors, and each color can
 
 In order to do so, each of the three of the tables that participate in the relationship must be fronted by its own L<Rose::DB::Object>-derived class.  Let's call those classes C<Widget>, C<Color>, and C<WidgetColorMap>.
 
-The class that maps between the other two classes is called the "L<map class|/map_class>."  In this example, it's C<WidgetColorMap>.  The map class B<must> have a foreign key and/or "one to one" relationship pointing to each of the two classes that it maps between.
+The class that maps between the other two classes is called the "L<map class|/map_class>."  In this example, it's C<WidgetColorMap>.  The map class B<must> have a foreign key and/or "many to one" relationship pointing to each of the two classes that it maps between.
 
 When it comes to actually creating the three classes that participate in a "many to many" relationship, there's a bit of a "chicken and egg" problem.  All these classes need to know about each other more or less "simultaneously," but they must be defined in a serial fashion, and may be loaded in any order by the user.
 
@@ -351,7 +351,7 @@ Next, the C<Color> class which has a "many to many" relationship through which i
 
   1;
 
-Finally, the C<WidgetColorMap> class which must load both of the classes that it maps between (C<Widget> and C<Color>) and must have a foreign key or "one to one" relationship that points to each of them.
+Finally, the C<WidgetColorMap> class which must load both of the classes that it maps between (C<Widget> and C<Color>) and must have a foreign key or "many to one" relationship that points to each of them.
 
   package WidgetColorMap;
 
@@ -502,19 +502,19 @@ See the documentation for L<Rose::DB::Object::Manager>'s L<get_objects|Rose::DB:
 
 =item B<map_class [CLASS]>
 
-Get or set the name of the L<Rose::DB::Object>-derived class that fronts the table that maps between the other two tables.  This class must have a foreign key and/or "one to one" relationship for each of the two tables that it maps between.
+Get or set the name of the L<Rose::DB::Object>-derived class that fronts the table that maps between the other two tables.  This class must have a foreign key and/or "many to one" relationship for each of the two tables that it maps between.
 
 In the L<example|EXAMPLE> above, the map class is C<WidgetColorMap>.
 
 =item B<map_from [NAME]>
 
-Get or set the name of the "one to one" relationship or foreign key in L<map_class|/map_class> that points to the object of the current class.  Setting this value is only necessary if the L<map class|/map_class> has more than one foreign key or "one to one" relationship that points to one of the classes that it maps between.
+Get or set the name of the "many to one" relationship or foreign key in L<map_class|/map_class> that points to the object of the current class.  Setting this value is only necessary if the L<map class|/map_class> has more than one foreign key or "many to one" relationship that points to one of the classes that it maps between.
 
 In the L<example|EXAMPLE> above, the value of L<map_from|/map_from> would be "widget" when defining the "many to many" relationship in the C<Widget> class, or "color" when defining the "many to many" relationship in the C<Color> class.  Neither of these settings is necessary in the example because the C<WidgetColorMap> class has one foreign key that points to each class, so there is no ambiguity.
 
 =item B<map_to [NAME]>
 
-Get or set the name of the "one to one" relationship or foreign key in L<map_class|/map_class> that points to the "foreign" object to be fetched.  Setting this value is only necessary if the L<map class|/map_class> has more than one foreign key or "one to one" relationship that points to one of the classes that it maps between.
+Get or set the name of the "many to one" relationship or foreign key in L<map_class|/map_class> that points to the "foreign" object to be fetched.  Setting this value is only necessary if the L<map class|/map_class> has more than one foreign key or "many to one" relationship that points to one of the classes that it maps between.
 
 In the L<example|EXAMPLE> above, the value of L<map_from> would be "color" when defining the "many to many" relationship in the C<Widget> class, or "widget" when defining the "many to many" relationship in the C<Color> class.  Neither of these settings is necessary in the example because the C<WidgetColorMap> class has one foreign key that points to each class, so there is no ambiguity.
 

@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.05';
+our $VERSION = '0.051';
 
 our $Debug = 0;
 
@@ -56,6 +56,7 @@ sub build_select
   my $clauses_arg = delete $args{'clauses'};  
   my $pretty      = exists $args{'pretty'} ? $args{'pretty'} : $Debug;
   my $joins       = $args{'joins'};
+  my $set         = delete $args{'set'};
 
   $logic = " $logic"  unless($logic eq ',');
 
@@ -91,7 +92,8 @@ sub build_select
             build_select(%args, 
                          where_only => 1,
                          query => $query_arg->[$i + 1],
-                         logic => uc $query_arg->[$i]);
+                         logic => uc $query_arg->[$i],
+                         set => $set);
 
           push(@bind, @$bind);
         }
@@ -101,7 +103,8 @@ sub build_select
             build_select(%args, 
                          where_only => 1,
                          query => $query_arg->[$i + 1],
-                         logic => uc $query_arg->[$i]);
+                         logic => uc $query_arg->[$i],
+                         set => $set);
         }
 
         if($pretty)
@@ -237,11 +240,12 @@ sub build_select
           {
             push(@clauses, _build_clause($dbh, $sql_column, $op, $val, $not, 
                                          undef, $do_bind ? \@bind : undef,
-                                         $db, $col_meta));
+                                         $db, $col_meta, $set));
           }
           elsif(!defined $val)
           {
-            push(@clauses, "$sql_column IS " . ($not ? "$not " : '') . 'NULL');
+            push(@clauses, $set ? "$sql_column = NULL" : 
+                                  ("$sql_column IS " . ($not ? "$not " : '') . 'NULL'));
           }
           else
           {
@@ -368,7 +372,7 @@ sub build_select
 sub _build_clause
 {
   my($dbh, $field, $op, $vals, $not, $field_mod, $bind, $db, $col_meta,
-     $force_inline) = @_;
+     $force_inline, $set) = @_;
 
   if(!defined $op && ref $vals eq 'HASH' && keys(%$vals) == 1)
   {
@@ -422,7 +426,8 @@ sub _build_clause
                ($not ? ')' : '');
       }
     }
-    return "$field IS " . ($not ? "$not " : '') . 'NULL';
+    return $set ? ("$field = NULL") :
+                  ("$field IS " . ($not ? "$not " : '') . 'NULL');
   }
 
   if($ref eq 'ARRAY')
@@ -531,13 +536,13 @@ sub _build_clause
 
       if(!ref($vals->{$raw_op}))
       {
-        push(@clauses, _build_clause($dbh, $field, $sub_op, $vals->{$raw_op}, $not, $field_mod, $bind, $db, $col_meta, $force_inline));
+        push(@clauses, _build_clause($dbh, $field, $sub_op, $vals->{$raw_op}, $not, $field_mod, $bind, $db, $col_meta, $force_inline, $set));
       }
       elsif(ref($vals->{$raw_op}) eq 'ARRAY')
       {
         foreach my $val (@{$vals->{$raw_op}})
         {
-          push(@clauses, _build_clause($dbh, $field, $sub_op, $val, $not, $field_mod, $bind, $db, $col_meta, $force_inline));
+          push(@clauses, _build_clause($dbh, $field, $sub_op, $val, $not, $field_mod, $bind, $db, $col_meta, $force_inline, $set));
         }
       }
       else
