@@ -1127,7 +1127,9 @@ sub make_column_methods
 
     foreach my $type ($column->auto_method_types)
     {
-      $method = $self->method_name_from_column_name($name, $type);
+      $method = $self->method_name_from_column_name($name, $type)
+        or Carp::croak "No method name defined for column '$name' ",
+                       "method type '$type'";
 
       if(my $reason = $self->method_name_is_reserved($method, $class))
       {
@@ -1205,8 +1207,11 @@ sub make_foreign_key_methods
   {
     foreach my $type ($foreign_key->auto_method_types)
     {
-      my $method = $foreign_key->method_name($type) || 
-                   $foreign_key->build_method_name_for_type($type);
+      my $method = 
+        $foreign_key->method_name($type) || 
+        $foreign_key->build_method_name_for_type($type) ||
+        Carp::croak "No method name defined for foreign key '",
+                    $foreign_key->name, "' method type '$type'";
 
       if(my $reason = $self->method_name_is_reserved($method, $class))
       {
@@ -1332,8 +1337,11 @@ sub make_relationship_methods
   {
     foreach my $type ($relationship->auto_method_types)
     {
-      my $method = $relationship->method_name($type) || 
-                   $relationship->build_method_name_for_type($type);
+      my $method = 
+        $relationship->method_name($type) || 
+        $relationship->build_method_name_for_type($type) ||
+        Carp::croak "No method name defined for relationship '",
+                    $relationship->name, "' method type '$type'";
 
       if(my $reason = $self->method_name_is_reserved($method, $class))
       {

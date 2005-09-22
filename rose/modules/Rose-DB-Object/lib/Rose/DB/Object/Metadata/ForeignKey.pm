@@ -60,7 +60,15 @@ __PACKAGE__->method_maker_info
   {
     class => 'Rose::DB::Object::MakeMethods::Generic',
     type  => 'object_by_key',
+    interface => 'get_set',
   },
+  
+  get_set_now =>
+  {
+    class => 'Rose::DB::Object::MakeMethods::Generic',
+    type  => 'object_by_key',  
+    interface => 'get_set_now',
+  }
 );
 
 sub init_relationship_type { 'many to one' }
@@ -104,7 +112,7 @@ sub build_method_name_for_type
 {
   my($self, $type) = @_;
 
-  if($type eq 'get_set')
+  if($type eq 'get_set' || $type eq 'get_set_now')
   {
     return $self->name;
   }

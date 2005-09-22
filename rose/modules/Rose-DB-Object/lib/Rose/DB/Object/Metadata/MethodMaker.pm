@@ -49,6 +49,9 @@ Rose::Object::MakeMethods::Generic->make_methods
   ],
 );
 
+*method_types     = \&auto_method_types;
+*add_method_types = \&add_auto_method_types;
+
 #
 # Class methods
 #
@@ -177,7 +180,7 @@ sub method_maker_argument_names
 
   unless(defined $mm_info->{'args'})
   {
-     $mm_info->{'args'} = $class->common_method_maker_argument_names || [];
+    $mm_info->{'args'} = $class->common_method_maker_argument_names || [];
   }
 
   return wantarray ? @{$mm_info->{'args'}} :
@@ -253,6 +256,22 @@ sub available_method_types
 # Object methods
 #
 
+sub methods
+{
+  my($self) = shift;
+  
+  my %args = (@_ == 1) ? %{$_[0]} : @_;
+  
+  $self->add_auto_method_types(keys %args);
+
+  while(my($type, $name) = each(%args))
+  {
+    $self->method_name($type => $name);
+  }
+
+  return;
+}
+
 sub method_name
 {
   my($self, $type) = (shift, shift);
@@ -289,6 +308,13 @@ sub method_maker_arguments
 
   my %opts = map { $_ => scalar $self->$_() } grep { defined scalar $self->$_() }
      $class->method_maker_argument_names($type);
+
+  # This is done by method_maker_argument_names() above
+  #$class->init_method_maker_info;
+
+  my $mm_info = $Method_Maker_Info{$class}{$type} ||= {};
+  
+  $opts{'interface'} = $mm_info->{'interface'}  if(exists $mm_info->{'interface'});
 
   return wantarray ? %opts : \%opts;
 }

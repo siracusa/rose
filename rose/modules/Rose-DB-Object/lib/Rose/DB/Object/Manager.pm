@@ -452,8 +452,13 @@ sub get_objects
         $classes{$tables[-1]} = $ft_class;
         $methods{$tables[-1]} = $ft_meta->column_mutator_method_names;
 
-        $subobject_methods[$i - 1] = $rel->method_name('get_set')
-          or Carp::confess "No 'get_set' method found for relationship '$name' in class $class";
+        $subobject_methods[$i - 1] = 
+          $rel->method_name('get_set') ||
+          $rel->method_name('get_set_now') ||
+          $rel->method_name('get_set_on_save') ||
+          Carp::confess "No 'get_set', 'get_set_now', or 'get_set_on_save' ",
+                        "method found for relationship '$name' in class ",
+                        "$class";
 
         # Reset each() iterator
         keys(%$ft_columns);
@@ -616,8 +621,13 @@ sub get_objects
         # Increase again for foreign table.
         $i++;
 
-        $subobject_methods[$i - 1] = $rel->method_name('get_set')
-          or Carp::confess "No 'get_set' method found for relationship '$name' in class $class";
+        $subobject_methods[$i - 1] =
+          $rel->method_name('get_set') ||
+          $rel->method_name('get_set_now') ||
+          $rel->method_name('get_set_on_save') ||
+          Carp::confess "No 'get_set', 'get_set_now', or 'get_set_on_save' ",
+                        "method found for relationship '$name' in class ",
+                        "$class";
 
         # Reset each() iterator
         keys(%$ft_columns);
@@ -883,6 +893,7 @@ sub get_objects
                         {
                           # Mapping tables will have no subobject methods, so skip them
                           my $method = $subobject_methods[$i] or next;
+                          local $last_object->{STATE_LOADING()} = 1;
                           $last_object->$method($sub_objects[$i]);
                         }
                       }
@@ -938,6 +949,7 @@ sub get_objects
                     else # Otherwise, just assign it
                     {
                       my $method = $subobject_methods[$i];
+                      local $object->{STATE_LOADING()} = 1;
                       $object->$method($subobject);
                     }
                   }
@@ -980,6 +992,7 @@ sub get_objects
                     {
                       # Mapping tables will have no subobject methods, so skip them
                       my $method = $subobject_methods[$i] or next;
+                      local $last_object->{STATE_LOADING()} = 1;
                       $last_object->$method($sub_objects[$i]);
                     }
                   }
@@ -1175,6 +1188,7 @@ sub get_objects
                 {
                   # Mapping tables will have no subobject methods, so skip them
                   my $method = $subobject_methods[$i] or next;
+                  local $last_object->{STATE_LOADING()} = 1;
                   $last_object->$method($sub_objects[$i]);
                 }
               }
@@ -1231,6 +1245,7 @@ sub get_objects
             else # Otherwise, just assign it
             {
               my $method = $subobject_methods[$i];
+              local $object->{STATE_LOADING()} = 1;
               $object->$method($subobject);
             }
           }
@@ -1256,6 +1271,7 @@ sub get_objects
             {
               # Mapping tables will have no subobject methods, so skip them
               my $method = $subobject_methods[$i] or next;
+              local $last_object->{STATE_LOADING()} = 1;
               $last_object->$method($sub_objects[$i]);
             }
           }

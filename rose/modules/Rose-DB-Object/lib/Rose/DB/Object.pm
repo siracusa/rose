@@ -1181,9 +1181,29 @@ Override this method in your subclass in order to use a different default data s
 
 Returns the L<DBI> database handle contained in L<db|/db>.
 
-=item B<delete>
+=item B<delete [PARAMS]>
 
 Delete the row represented by the current object.  The object must have been previously loaded from the database (or must otherwise have a defined primary key value) in order to be deleted.  Returns true if the row was deleted or did not exist, false otherwise.
+
+PARAMS are optional name/value pairs.  Valid PARAMS are:
+
+=over 4
+
+=item C<cascade TYPE>
+
+Also process related rows.  TYPE must be "delete", "null", or "1".  The value "1" is an alias for "delete".  Passing an illegal TYPE value will cause a fatal error.
+
+For each "one to many" relationship, all of the rows in the foreign ("many") table that reference the current object ("one") will be deleted in "delete" mode, or will have the column(s) that reference the current object set to NULL in "null" mode.
+
+For each "many to many" relationship, all of the rows in the "mapping table" that reference the current object will deleted in "delete" mode, or will have the columns that reference the two tables that the mapping table maps between set to NULL in "null" mode.
+
+For each "one to one" relationship or foreign key with a "one to one" L<relationship type|Rose::DB::Object::Metadata::ForeignKey/relationship_type>, all of the rows in the foreign table that reference the current object will deleted in "delete" mode, or will have the column(s) that reference the current object set to NULL in "null" mode.
+
+In all modes, if the L<db|/db> is not currently in a transaction (i.e., if L<AutoCommit|Rose::DB/autocommit> is turned off), a new transaction is started.  If any part of the cascaded delete fails, the transaction is rolled back.
+
+=back
+
+The cascaded delete feature described above plays it safe by only deleting rows that are not referenced by any other rows (according to the metadata provided by each L<Rose::DB::Object>-derived class).  I B<strongly recommend> that you implement "cascaded delete" in the database itself, rather than using this feature.  It will undoubtedly be faster and more robust than doing it "client-side."  You may also want to cascade only to certain tables, or otherwise deviate from the "safe" plan.  If your database supports automatic cascaded delete and/or triggers, please consider using thse features.
 
 =item B<error>
 
