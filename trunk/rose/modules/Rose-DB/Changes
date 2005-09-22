@@ -1,3 +1,7 @@
+0.0264 (09.15.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Changes to support Rose::DB::Object 0.074.
+
 0.0263 (09.07.2005) - John Siracusa <siracusa@mindspring.com>
 
     * The war against stray "._*" files rages on :-/

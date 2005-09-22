@@ -143,6 +143,8 @@ sub refine_dbi_column_info
   return;
 }
 
+sub likes_redundant_join_conditions { 1 }
+
 1;
 
 __END__

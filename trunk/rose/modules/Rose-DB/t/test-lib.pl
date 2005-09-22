@@ -97,7 +97,7 @@ BEGIN
     connect_options => { AutoCommit => 1 },
     post_connect_sql =>
     [
-      'SET LOCK MODE TO WAIT 30',
+      'SET LOCK MODE TO WAIT 60',
       'SET ISOLATION TO DIRTY READ',
     ],
   );
@@ -111,7 +111,7 @@ BEGIN
     connect_options => { AutoCommit => 1 },
     post_connect_sql =>
     [
-      'SET LOCK MODE TO WAIT 30',
+      'SET LOCK MODE TO WAIT 60',
       'SET ISOLATION TO DIRTY READ',
     ],
   );

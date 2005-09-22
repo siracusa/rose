@@ -10,13 +10,14 @@ use Rose::DateTime::Util();
 
 use Rose::DB::Registry;
 use Rose::DB::Registry::Entry;
+use Rose::DB::Constants qw(IN_TRANSACTION);
 
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.0263';
+our $VERSION = '0.0265';
 
 our $Debug = 0;
 
@@ -641,7 +642,7 @@ sub begin_work
     return 1;
   }
 
-  return -1;
+  return IN_TRANSACTION;
 }
 
 sub commit
@@ -972,6 +973,7 @@ sub next_value_in_sequence
 sub auto_sequence_name { return undef }
 
 sub supports_limit_with_offset { 1 }
+sub likes_redundant_join_conditions { 0 }
 
 sub format_limit_with_offset
 {
