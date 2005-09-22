@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 196;
+use Test::More tests => 202;
 
 BEGIN 
 {
@@ -23,7 +23,25 @@ SKIP: foreach my $db_type ('pg')
 
   Rose::DB->default_type($db_type);
 
-  my $o = MyPgObject->new(name => 'John');
+  my $o = MyPgObject->new(name => 'Alex',
+                          flag => 1);
+  
+#   eval { $o->add_other_obj() };
+#   ok($@, "add foreign key object: no args - $db_type");
+# 
+#   eval { $o->add_other_obj('abc') };
+#   ok($@, "add foreign key object: 1 arg - $db_type");
+# 
+#   eval { $o->add_other_obj(k1 => 1, k2 => 2, k3 => 3) };
+#   ok($@, "add foreign key object: no save - $db_type");
+# 
+#   $o->save;
+# 
+#   $o->add_other_obj(k1 => 1, k2 => 2, k3 => 3);
+#   
+#   ok($o->fkone == 1 && $o->fk2 == 2 && $o->fk3 == 3, "add foreign key object check keys 1 - $db_type");
+
+  $o = MyPgObject->new(name => 'John');
 
   ok(ref $o && $o->isa('MyPgObject'), "new() 1 - $db_type");
 
@@ -500,7 +518,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 65)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 71)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -679,7 +697,7 @@ SKIP: foreach my $db_type ('informix')
   $o->fk3(3);
   $o->save;
 
-  local $Rose::DB::Object::Manager::Debug = 1;
+  #local $Rose::DB::Object::Manager::Debug = 1;
 
   eval
   {
@@ -718,7 +736,7 @@ SKIP: foreach my $db_type ('informix')
   };
 
   ok($@, "delete cascade null 2 - $db_type");
-$DB::single = 1;
+
   ok($o->delete(cascade => 'delete'), "delete cascade delete 2 - $db_type");
 
   $count = 
@@ -910,7 +928,7 @@ EOF
           fk1 => 'k1',
           fk2 => 'k2',
           fk3 => 'k3',
-        }
+        },
       },
     );
 
@@ -1470,6 +1488,7 @@ EOF
       other_obj =>
       {
         class => 'MyInformixOtherObject',
+        rel_type => 'one to one',
         key_columns =>
         {
           fk1 => 'k1',

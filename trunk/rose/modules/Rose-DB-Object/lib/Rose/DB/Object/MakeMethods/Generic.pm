@@ -11,11 +11,13 @@ our @ISA = qw(Rose::Object::MakeMethods);
 
 use Rose::DB::Object::Manager;
 
+use Rose::DB::Constants qw(IN_TRANSACTION);
+
 use Rose::DB::Object::Constants 
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
      STATE_SAVING);
 
-our $VERSION = '0.061';
+our $VERSION = '0.07';
 
 sub scalar
 {
@@ -1256,10 +1258,304 @@ sub object_by_key
       return $self->{$key} = $obj;
     };
   }
+  elsif($interface eq 'get_set_now')
+  {
+    $methods{$name} = sub
+    {
+      my($self) = shift;
+
+      if(@_)
+      {
+        # If loading, just assign
+        if($self->{STATE_LOADING()})
+        {
+          return $self->{$key} = $_[0];
+        }
+      
+        # Can't add until the object is saved
+        unless($self->{STATE_IN_DB()})
+        {
+          Carp::croak "Can't $name() until this object is saved";
+        }
+  
+        my $object;
+  
+        if(@_ == 1)
+        {
+          # Object argument
+          if(my $arg_class = ref $_[0])
+          {
+            unless($arg_class eq $fk_class)
+            {
+              Carp::croak "$arg_class is not a $fk_class object";
+            }
+          
+            $object = $_[0];
+          }
+          elsif(!defined $_[0]) # undef argument
+          {
+            return $self->{$key} = undef;
+          }
+        }
+        else
+        {
+          # Primary key value
+          if(@_ == 1)
+          {
+            my @pk_columns  = $fk_meta->primary_key_columns;
+  
+            if(@pk_columns > 1)
+            {
+              Carp::croak "Single argument is insufficient to add an object ",
+                          "of class $fk_class which has ", scalar(@pk_columns),
+                          " primary key columns";
+            }
+            
+            $object = $fk_class->new($pk_columns[0]->name => $_[0]);
+          }
+          else # Object constructor arguments
+          {
+            $object = $fk_class->new(@_);
+          }
+        }
+  
+        my $error_mode    = $meta->error_mode;    
+        my $fk_error_mode = $fk_meta->error_mode;    
+  
+        my($db, $started_new_tx);
+  
+        eval
+        {
+          $db = $self->db;
+          $object->db($db)  if($share_db);
+    
+          $meta->error_mode('fatal');
+          $fk_meta->error_mode('fatal');
+  
+          my $ret = $db->begin_work;
+   
+          unless(defined $ret)
+          {
+            die 'Could not begin transaction before deleting with cascade - ',
+                $db->error;
+          }
+    
+          $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+          
+          # Load or create the foreign object
+          unless($object->{STATE_IN_DB()})
+          {
+            unless($object->load(speculative => 1))
+            {
+              $object->save;
+            }
+          }
+    
+          while(my($local_column, $foreign_column) = each(%$fk_columns))
+          {
+            my $local_method   = $meta->column_mutator_method_name($local_column);
+            my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
+    
+            $self->$local_method($object->$foreign_method);
+          }
+          
+          $self->save;
+        };
+  
+        if($@)
+        {
+          $meta->error_mode($error_mode);
+          $fk_meta->error_mode($fk_error_mode);
+          $self->error("Could not add object - $@");
+          $db->rollback  if($db && $started_new_tx);
+          $meta->handle_error($self);
+          return undef;
+        }
+  
+        $meta->error_mode($error_mode);
+        $fk_meta->error_mode($fk_error_mode);
+          
+        return $self->{$key};
+      }
+
+      return $self->{$key}  if(defined $self->{$key});
+
+      my %key;
+
+      while(my($local_column, $foreign_column) = each(%$fk_columns))
+      {
+        my $local_method   = $meta->column_accessor_method_name($local_column);
+        my $foreign_method = $fk_meta->column_mutator_method_name($foreign_column);
+
+        $key{$foreign_method} = $self->$local_method();
+
+        # XXX: Comment this out to allow null keys
+        unless(defined $key{$foreign_method})
+        {
+          keys(%$fk_columns); # reset iterator
+          $self->error("Could not load $name object - the " .
+                       "$local_method attribute is undefined");
+          return undef;
+        }
+      }
+
+      my $obj;
+
+      if($share_db)
+      {
+        $obj = $fk_class->new(%key, db => $self->db);
+      }
+      else
+      {
+        $obj = $fk_class->new(%key);
+      }
+
+      my $ret = $obj->load;
+
+      unless($ret)
+      {
+        $self->error("Could not load $fk_class with key ", 
+                     join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
+                     " - " . $obj->error);
+        return $ret;
+      }
+
+      return $self->{$key} = $obj;
+    };
+  }
   else { Carp::croak "Unknown interface: $interface" }
 
   return \%methods;
 }
+
+# sub add_object_by_key
+# {
+#   my($class, $name, $args, $options) = @_;
+# 
+#   my %methods;
+# 
+#   my $key = $args->{'hash_key'} || $name;
+#   my $interface = $args->{'interface'} || 'add';
+#   my $target_class = $options->{'target_class'} or die "Missing target class";
+# 
+#   my $fk_class   = $args->{'class'} or die "Missing foreign object class";
+#   my $fk_meta    = $fk_class->meta;
+#   my $meta       = $target_class->meta;
+# 
+#   my $fk_columns = $args->{'key_columns'} or die "Missing key columns hash";
+#   my $share_db   = $args->{'share_db'};
+# 
+#   if($interface eq 'add')
+#   {
+#     $methods{$name} = sub
+#     {
+#       my($self) = shift;
+# 
+#       Carp::croak "Missing arguments to $name()"  unless(@_); 
+# 
+#       # Can't add until the object is saved
+#       unless($self->{STATE_IN_DB()})
+#       {
+#         Carp::croak "Can't $name() until this object is saved";
+#       }
+# 
+#       my $object;
+# 
+#       # Object argument
+#       if(@_ == 1 && (my $arg_class = ref $_[0]))
+#       {
+#         unless($arg_class eq $fk_class)
+#         {
+#           Carp::croak "$arg_class is not a $fk_class object";
+#         }
+#         
+#         $object = $_[0];
+#       }
+#       else
+#       {
+#         # Primary key value
+#         if(@_ == 1)
+#         {
+#           my @pk_columns  = $fk_meta->primary_key_columns;
+# 
+#           if(@pk_columns > 1)
+#           {
+#             Carp::croak "Single argument is insufficient to add an object ",
+#                         "of class $fk_class which has ", scalar(@pk_columns),
+#                         "primary key columns";
+#           }
+#           
+#           $object = $fk_class->new($pk_columns[0]->name => $_[0]);
+#         }
+#         else # Object constructor arguments
+#         {
+#           $object = $fk_class->new(@_);
+#         }
+#       }
+# 
+#       my $error_mode    = $meta->error_mode;    
+#       my $fk_error_mode = $fk_meta->error_mode;    
+# 
+#       my($db, $started_new_tx);
+# 
+#       eval
+#       {
+#         $db = $self->db;
+#         $object->db($db)  if($share_db);
+#   
+#         $meta->error_mode('fatal');
+#         $fk_meta->error_mode('fatal');
+# 
+#         my $ret = $db->begin_work;
+#  
+#         unless(defined $ret)
+#         {
+#           die 'Could not begin transaction before deleting with cascade - ',
+#               $db->error;
+#         }
+#   
+#         $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+#         
+#         # Load or create the foreign object
+#         unless($object->{STATE_IN_DB()})
+#         {
+#           unless($object->load(speculative => 1))
+#           {
+#             $object->save;
+#           }
+#         }
+#   
+#         while(my($local_column, $foreign_column) = each(%$fk_columns))
+#         {
+#           my $local_method   = $meta->column_mutator_method_name($local_column);
+#           my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
+#   
+#           $self->$local_method($object->$foreign_method);
+#         }
+#         
+#         $self->save;
+#       };
+# 
+#       if($@)
+#       {
+#         $meta->error_mode($error_mode);
+#         $fk_meta->error_mode($fk_error_mode);
+#         $self->error("Could not add object - $@");
+#         $db->rollback  if($db && $started_new_tx);
+#         $meta->handle_error($self);
+#         return undef;
+#       }
+# 
+#       $meta->error_mode($error_mode);
+#       $fk_meta->error_mode($fk_error_mode)
+#         
+#       return $self->{$key};
+#     };
+#   }
+#   else { Carp::croak "Unknown interface: $interface" }
+# 
+#   return \%methods;
+# }
 
 sub objects_by_key
 {
@@ -1471,7 +1767,11 @@ sub objects_by_map
 
       $require_objects  = [ $item->name ];
       $foreign_class = $item->class;
-      $map_to_method = $item->method_name('get_set');
+      $map_to_method = $item->method_name('get_set') || 
+                       $item->method_name('get_set_now') ||
+                       $item->method_name('get_set_on_save') ||
+                       Carp::confess "No 'get_*' method found for ",
+                                     $item->name;
     }
   }
 
@@ -1509,7 +1809,11 @@ sub objects_by_map
 
         $require_objects = [ $item->name ];
         $foreign_class = $item->class;
-        $map_to_method = $item->method_name('get_set');
+        $map_to_method = $item->method_name('get_set') ||
+                         $item->method_name('get_set_now') ||
+                         $item->method_name('get_set_on_save') ||
+                         Carp::confess "No 'get_*' method found for ",
+                                       $item->name;
       }
     }
   }

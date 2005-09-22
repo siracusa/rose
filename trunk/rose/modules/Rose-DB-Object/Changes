@@ -1,6 +1,8 @@
-0.075 (09.20.2005) - John Siracusa <siracusa@mindspring.com>
+0.076 (09.22.2005) - John Siracusa <siracusa@mindspring.com>
 
+    XXX: Document methods => { type => name } foreign key setup param
     * Added bulk update and delete methods to Manager.
+    * Added cascaded delete, plus a plea to do this in the database instead.
     * Added "many to one" relationship and made it the new default
       relationship type for foreign keys.
     * load() now returns the object itself on success, which allows
