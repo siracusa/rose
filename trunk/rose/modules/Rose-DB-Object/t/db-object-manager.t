@@ -274,10 +274,10 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   # Start "one to many" tests
 
-  $fo = MyPgNick->new(id   => 1,
+  ok($fo = MyPgNick->new(id   => 1,
                       o_id => 5,
-                      nick => 'none');
-  ok($fo->save, "nick object save() 1 - $db_type");
+                      nick => 'none')->save,
+      "nick object save() 1 - $db_type");
 
   $fo = MyPgNick->new(id   => 2,
                       o_id => 2,
@@ -1550,10 +1550,10 @@ SKIP: foreach my $db_type ('mysql')
 
   # Start "one to many" tests
 
-  $fo = MyMySQLNick->new(id   => 1,
-                         o_id => 5,
-                         nick => 'none');
-  ok($fo->save, "nick object save() 1 - $db_type");
+  ok($fo = MyMySQLNick->new(id   => 1,
+                            o_id => 5,
+                            nick => 'none')->save,
+     "nick object save() 1 - $db_type");
 
   $fo = MyMySQLNick->new(id   => 2,
                          o_id => 2,
@@ -2884,10 +2884,10 @@ SKIP: foreach my $db_type (qw(informix))
 
   # Start "one to many" tests
 
-  $fo = MyInformixNick->new(id   => 1,
-                         o_id => 5,
-                         nick => 'none');
-  ok($fo->save, "nick object save() 1 - $db_type");
+  ok($fo = MyInformixNick->new(id   => 1,
+                               o_id => 5,
+                               nick => 'none')->save,
+     "nick object save() 1 - $db_type");
 
   $fo = MyInformixNick->new(id   => 2,
                          o_id => 2,

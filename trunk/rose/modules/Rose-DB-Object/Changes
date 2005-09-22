@@ -7,6 +7,8 @@
       relationship type for foreign keys.
     * load() now returns the object itself on success, which allows
       for the convenient $obj = MyObject->new(id => 123)->load;
+    * save() now returns the object itself on success, which allows
+      for the convenient $obj = MyObject->new(id => 123)->save;
 
 0.075 (09.19.2005) - John Siracusa <siracusa@mindspring.com>
 

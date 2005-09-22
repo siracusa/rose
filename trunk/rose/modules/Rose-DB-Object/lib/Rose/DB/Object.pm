@@ -460,7 +460,7 @@ sub update
     return 0;
   }
 
-  return 1;
+  return $self || 1;
 }
 
 sub insert
@@ -598,7 +598,7 @@ sub insert
     return 0;
   }
 
-  return 1;
+  return $self || 1;
 }
 
 my %CASCADE_VALUES = (delete => 'delete', null => 'null', 1 => 'delete');
@@ -1276,7 +1276,7 @@ Returns the text message associated with the last error that occurred.
 
 Load a row from the database table, initializing the object with the values from that row.  An object can be loaded based on either a primary key or a unique key.
 
-Returns true if the row was loaded successfully, undef if the row could not be loaded due to an error, or zero (0) if the row does not exist.  The true value returned on success with be the object itself.  If the object L<overload>s its boolean value such that it is not true, then a true value will be returned instead of the object itself.
+Returns true if the row was loaded successfully, undef if the row could not be loaded due to an error, or zero (0) if the row does not exist.  The true value returned on success will be the object itself.  If the object L<overload>s its boolean value such that it is not true, then a true value will be returned instead of the object itself.
 
 PARAMS are optional name/value pairs.  If the parameter C<speculative> is passed with a true value, and if the load failed because the row was L<not found|/not_found>, then the L<error_mode|Rose::DB::Object::Metadata/error_mode> setting is ignored and zero (0) is returned.
 
@@ -1310,7 +1310,7 @@ If set to a true value, then an update is attempted, regardless of whether or no
 
 It is an error to pass both the C<insert> and C<update> parameters in a single call.
 
-Returns true if the row was inserted or updated successfully, false otherwise.
+Returns true if the row was inserted or updated successfully, false otherwise.  The true value returned on success will be the object itself.  If the object L<overload>s its boolean value such that it is not true, then a true value will be returned instead of the object itself.
 
 If an insert was performed and the primary key is a single column that supports auto-generated values, then the object accessor for the primary key column will contain the auto-generated value.
 
