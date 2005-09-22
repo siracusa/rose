@@ -15,7 +15,7 @@ use Rose::DB::Constants qw(IN_TRANSACTION);
 
 use Rose::DB::Object::Constants 
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
-     STATE_SAVING);
+     STATE_SAVING ON_SAVE_ATTR_NAME);
 
 our $VERSION = '0.07';
 
@@ -1185,6 +1185,7 @@ sub object_by_key
   my $interface = $args->{'interface'} || 'get_set';
   my $target_class = $options->{'target_class'} or die "Missing target class";
 
+  my $fk         = $args->{'foreign_key'};
   my $fk_class   = $args->{'class'} or die "Missing foreign object class";
   my $fk_meta    = $fk_class->meta;
   my $meta       = $target_class->meta;
@@ -1358,15 +1359,22 @@ sub object_by_key
     
             $self->$local_method($object->$foreign_method);
           }
-          
+
           $self->save;
+
+          $self->{$key} = $object;
+          
+          if($started_new_tx)
+          {
+            $db->commit or die $db->error;
+          }
         };
   
         if($@)
         {
           $meta->error_mode($error_mode);
           $fk_meta->error_mode($fk_error_mode);
-          $self->error("Could not add object - $@");
+          $self->error("Could not add $name object - $@");
           $db->rollback  if($db && $started_new_tx);
           $meta->handle_error($self);
           return undef;
@@ -1421,6 +1429,315 @@ sub object_by_key
       }
 
       return $self->{$key} = $obj;
+    };
+  }
+  elsif($interface eq 'get_set_on_save')
+  {
+    unless($fk)
+    {
+      Carp::croak "Cannot make 'get_set_on_save' method $name without foreign key argument";
+    }
+
+    my $fk_name = $fk->name;
+
+    $methods{$name} = sub
+    {
+      my($self) = shift;
+
+      if(@_)
+      {
+        # If loading, just assign
+        if($self->{STATE_LOADING()})
+        {
+          return $self->{$key} = $_[0];
+        }
+
+        my $object;
+  
+        if(@_ == 1)
+        {
+          # Object argument
+          if(my $arg_class = ref $_[0])
+          {
+            unless($arg_class eq $fk_class)
+            {
+              Carp::croak "$arg_class is not a $fk_class object";
+            }
+          
+            $object = $_[0];
+          }
+          elsif(!defined $_[0]) # undef argument
+          {
+            # Clear foreign key columns
+            foreach my $local_column (keys %$fk_columns)
+            {
+              my $local_method = $meta->column_accessor_method_name($local_column);
+              $self->$local_method(undef);
+            }
+
+            delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
+            return $self->{$key} = undef;
+          }
+        }
+        else
+        {
+          # Primary key value
+          if(@_ == 1)
+          {
+            my @pk_columns  = $fk_meta->primary_key_columns;
+  
+            if(@pk_columns > 1)
+            {
+              Carp::croak "Single argument is insufficient to add an object ",
+                          "of class $fk_class which has ", scalar(@pk_columns),
+                          " primary key columns";
+            }
+            
+            $object = $fk_class->new($pk_columns[0]->name => $_[0]);
+          }
+          else # Object constructor arguments
+          {
+            $object = $fk_class->new(@_);
+          }
+        }
+
+        # Try loading the object
+        unless($object->{STATE_IN_DB()})
+        {
+          $object->load(speculative => 1);
+        }
+
+        # Set the foreign key columns
+        while(my($local_column, $foreign_column) = each(%$fk_columns))
+        {
+          my $local_method   = $meta->column_mutator_method_name($local_column);
+          my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
+  
+          $self->$local_method($object->$foreign_method);
+        }
+
+        # Set the attribute
+        $self->{$key} = $object;
+
+        # Make the code that will run on save()
+        my $save_code = sub
+        {
+          # Bail if there's nothing to do
+          my $object = $self->{$key} or return;
+
+          my $error_mode    = $meta->error_mode;    
+          my $fk_error_mode = $fk_meta->error_mode;    
+    
+          my($db, $started_new_tx);
+    
+          eval
+          {
+            $db = $self->db;
+            $object->db($db)  if($share_db);
+      
+            $meta->error_mode('fatal');
+            $fk_meta->error_mode('fatal');
+            
+            # Load or create the foreign object
+            unless($object->{STATE_IN_DB()})
+            {
+              unless($object->load(speculative => 1))
+              {
+                $object->save;
+              }
+            }
+      
+            while(my($local_column, $foreign_column) = each(%$fk_columns))
+            {
+              my $local_method   = $meta->column_mutator_method_name($local_column);
+              my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
+      
+              $self->$local_method($object->$foreign_method);
+            }
+  
+            $self->{$key} = $object;
+          };
+    
+          if($@)
+          {
+            $meta->error_mode($error_mode);
+            $fk_meta->error_mode($fk_error_mode);
+            $self->error("Could not add $name object - $@");
+            $meta->handle_error($self);
+            return undef;
+          }
+    
+          $meta->error_mode($error_mode);
+          $fk_meta->error_mode($fk_error_mode);
+
+          return $self->{$key};
+        };
+        
+        $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'} = $save_code;
+        return $self->{$key};
+      }
+
+      return $self->{$key}  if(defined $self->{$key});
+
+      my %key;
+
+      while(my($local_column, $foreign_column) = each(%$fk_columns))
+      {
+        my $local_method   = $meta->column_accessor_method_name($local_column);
+        my $foreign_method = $fk_meta->column_mutator_method_name($foreign_column);
+
+        $key{$foreign_method} = $self->$local_method();
+
+        # XXX: Comment this out to allow null keys
+        unless(defined $key{$foreign_method})
+        {
+          keys(%$fk_columns); # reset iterator
+          $self->error("Could not load $name object - the " .
+                       "$local_method attribute is undefined");
+          return undef;
+        }
+      }
+
+      my $obj;
+
+      if($share_db)
+      {
+        $obj = $fk_class->new(%key, db => $self->db);
+      }
+      else
+      {
+        $obj = $fk_class->new(%key);
+      }
+
+      my $ret = $obj->load;
+
+      unless($ret)
+      {
+        $self->error("Could not load $fk_class with key ", 
+                     join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
+                     " - " . $obj->error);
+        return $ret;
+      }
+
+      return $self->{$key} = $obj;
+    };
+  }
+  elsif($interface eq 'delete')
+  {
+    unless($fk)
+    {
+      Carp::croak "Cannot make 'delete' method $name without foreign key argument";
+    }
+
+    my $fk_name = $fk->name;
+
+    $methods{$name} = sub
+    {
+      my($self) = shift;
+
+      my $object = $self->{$key} || $fk_class->new;
+
+      my %key;
+
+      while(my($local_column, $foreign_column) = each(%$fk_columns))
+      {
+        my $local_method   = $meta->column_accessor_method_name($local_column);
+        my $foreign_method = $fk_meta->column_mutator_method_name($foreign_column);
+
+        $key{$foreign_method} = $self->$local_method();
+
+        # XXX: Comment this out to allow null keys
+        unless(defined $key{$foreign_method})
+        {
+          keys(%$fk_columns); # reset iterator
+
+          # If this failed because we haven't saved it yet
+          if(delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'})
+          {
+            # Clear foreign key columns
+            foreach my $local_column (keys %$fk_columns)
+            {
+              my $local_method = $meta->column_accessor_method_name($local_column);
+              $self->$local_method(undef);
+            }
+
+            $self->{$key} = undef;
+            return 0;
+          }
+
+          $self->error("Could not delete $name object - the " .
+                       "$local_method attribute is undefined");
+          return undef;
+        }
+      }
+
+      $object->init(%key);
+
+      my $error_mode    = $meta->error_mode;
+      my $fk_error_mode = $fk_meta->error_mode;
+
+      my($db, $started_new_tx, $deleted, %save_fk);
+
+      eval
+      {
+        $db = $self->db;
+        $object->db($db)  if($share_db);
+  
+        $meta->error_mode('fatal');
+        $fk_meta->error_mode('fatal');
+
+        my $ret = $db->begin_work;
+ 
+        unless(defined $ret)
+        {
+          die 'Could not begin transaction before deleting with cascade - ',
+              $db->error;
+        }
+  
+        $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+
+        # Clear columns that reference the foreign key
+        foreach my $local_column (keys %$fk_columns)
+        {
+          my $local_method = $meta->column_accessor_method_name($local_column);
+          $save_fk{$local_method} = $self->$local_method();
+          $self->$local_method(undef);
+        }
+
+        $self->save;
+
+        $deleted = $object->delete(@_); # propogate cascade arg, if any
+  
+        if($started_new_tx)
+        {
+          $db->commit or die $db->error;
+        }
+        
+        $self->{$key} = undef;
+        delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
+      };
+
+      if($@)
+      {
+        $meta->error_mode($error_mode);
+        $fk_meta->error_mode($fk_error_mode);
+        $self->error("Could not delete $name object - $@");
+        $db->rollback  if($db && $started_new_tx);
+
+        # Restore foreign key column values
+        while(my($method, $value) = each(%save_fk))
+        {
+          $self->$method($value);
+        }
+
+        $meta->handle_error($self);
+        return undef;
+      }
+
+      $meta->error_mode($error_mode);
+      $fk_meta->error_mode($fk_error_mode);
+
+      return $deleted;
     };
   }
   else { Carp::croak "Unknown interface: $interface" }

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 202;
+use Test::More tests => 252;
 
 BEGIN 
 {
@@ -19,29 +19,11 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 79)  unless($HAVE_PG);
+  skip("Postgres tests", 108)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
-  my $o = MyPgObject->new(name => 'Alex',
-                          flag => 1);
-  
-#   eval { $o->add_other_obj() };
-#   ok($@, "add foreign key object: no args - $db_type");
-# 
-#   eval { $o->add_other_obj('abc') };
-#   ok($@, "add foreign key object: 1 arg - $db_type");
-# 
-#   eval { $o->add_other_obj(k1 => 1, k2 => 2, k3 => 3) };
-#   ok($@, "add foreign key object: no save - $db_type");
-# 
-#   $o->save;
-# 
-#   $o->add_other_obj(k1 => 1, k2 => 2, k3 => 3);
-#   
-#   ok($o->fkone == 1 && $o->fk2 == 2 && $o->fk3 == 3, "add foreign key object check keys 1 - $db_type");
-
-  $o = MyPgObject->new(name => 'John');
+  my $o = MyPgObject->new(name => 'John');
 
   ok(ref $o && $o->isa('MyPgObject'), "new() 1 - $db_type");
 
@@ -158,12 +140,12 @@ SKIP: foreach my $db_type ('pg')
   is(@a, 3, "load() verify 16 (array value) - $db_type");
 
   my $oo1 = MyPgOtherObject->new(k1 => 1, k2 => 2, k3 => 3, name => 'one');
-  ok($oo1->save, 'other object save() 1');
+  ok($oo1->save, "other object save() 1 - $db_type");
 
   my $oo2 = MyPgOtherObject->new(k1 => 11, k2 => 12, k3 => 13, name => 'two');
-  ok($oo2->save, 'other object save() 2');
+  ok($oo2->save, "other object save() 2 - $db_type");
 
-  is($o->other_obj, undef, 'other_obj() 1');
+  is($o->other_obj, undef, "other_obj() 1 - $db_type");
 
   $o->fkone(1);
   $o->fk2(2);
@@ -171,9 +153,9 @@ SKIP: foreach my $db_type ('pg')
 
   my $obj = $o->other_obj or warn "# ", $o->error, "\n";
 
-  is(ref $obj, 'MyPgOtherObject', 'other_obj() 2');
-  is($obj->name, 'one', 'other_obj() 3');
-  is($obj->db, $o->db, 'share_db (default true)');
+  is(ref $obj, 'MyPgOtherObject', "other_obj() 2 - $db_type");
+  is($obj->name, 'one', "other_obj() 3 - $db_type");
+  is($obj->db, $o->db, "share_db (default true) - $db_type");
 
   $o->other_obj(undef);
   $o->fkone(11);
@@ -182,17 +164,17 @@ SKIP: foreach my $db_type ('pg')
 
   $obj = $o->other_obj or warn "# ", $o->error, "\n";
 
-  is(ref $obj, 'MyPgOtherObject', 'other_obj() 4');
-  is($obj->name, 'two', 'other_obj() 5');
+  is(ref $obj, 'MyPgOtherObject', "other_obj() 4 - $db_type");
+  is($obj->name, 'two', "other_obj() 5 - $db_type");
 
   my $oo21 = MyPgOtherObject2->new(id => 1, name => 'one', pid => $o->id);
-  ok($oo21->save, 'other object 2 save() 1');
+  ok($oo21->save, "other object 2 save() 1 - $db_type");
 
   my $oo22 = MyPgOtherObject2->new(id => 2, name => 'two', pid => $o->id);
-  ok($oo22->save, 'other object 2 save() 2');
+  ok($oo22->save, "other object 2 save() 2 - $db_type");
 
   my $oo23 = MyPgOtherObject2->new(id => 3, name => 'three', pid => $o_x->id);
-  ok($oo23->save, 'other object 2 save() 3');
+  ok($oo23->save, "other object 2 save() 3 - $db_type");
 
   my $o2s = $o->other2_objs;
 
@@ -317,6 +299,118 @@ SKIP: foreach my $db_type ('pg')
 
   eval { $o->meta->alias_column(nonesuch => 'foo') };
   ok($@, "alias_column() nonesuch - $db_type");
+
+  $o = MyPgObject->new(name => 'Alex',
+                       flag => 1);
+
+  eval { $o->other_obj('abc') };
+  ok($@, "set foreign key object: one arg - $db_type");
+
+  eval { $o->other_obj(k1 => 1, k2 => 2, k3 => 3) };
+  ok($@, "set foreign key object: no save - $db_type");
+
+  $o->save;
+
+  eval { $o->other_obj(k1 => 1, k2 => 2) };
+  ok($@, "set foreign key object: too few keys - $db_type");
+
+  ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "set foreign key object 1 - $db_type");
+  ok($o->fkone == 1 && $o->fk2 == 2 && $o->fk3 == 3, "set foreign key object check keys 1 - $db_type");
+
+  ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "set foreign key object 2 - $db_type");
+  ok($o->fkone == 1 && $o->fk2 == 2 && $o->fk3 == 3, "set foreign key object check keys 2 - $db_type");
+
+  ok($o->delete_other_obj, "delete foreign key object 1 - $db_type");
+
+  ok(!defined $o->fkone && !defined $o->fk2 && !defined $o->fk3, "delete foreign key object check keys 1 - $db_type");
+
+  ok(!defined $o->other_obj && defined $o->error, "delete foreign key object confirm 1 - $db_type");
+
+  ok(!defined $o->delete_other_obj, "delete foreign key object 2 - $db_type");
+
+  # Set, save
+  $o = MyPgObject->new(id   => 100,
+                       name => 'Bub',
+                       flag => 1);
+
+  ok($o->other_obj_on_save(k1 => 21, k2 => 22, k3 => 23), "set foreign key object on save 1 - $db_type");
+
+  my $co = MyPgObject->new(id => 100);
+  ok(!$co->load(speculative => 1), "set foreign key object on save 2 - $db_type");
+
+  my $other_obj = $o->other_obj_on_save;
+  
+  ok($other_obj && $other_obj->k1 == 21 && $other_obj->k2 == 22 && $other_obj->k3 == 23,
+     "set foreign key object on save 3 - $db_type");
+
+  ok($o->save, "set foreign key object on save 4 - $db_type");
+
+  $o = MyPgObject->new(id => 100);
+
+  $o->load;
+  
+  $other_obj = $o->other_obj_on_save;
+
+  ok($other_obj && $other_obj && $other_obj->k1 == 21 && $other_obj->k2 == 22 && $other_obj->k3 == 23,
+     "set foreign key object on save 5 - $db_type");
+
+  # Set, set to undef, save
+  $o = MyPgObject->new(id   => 200,
+                       name => 'Rose',
+                       flag => 1);
+
+  ok($o->other_obj_on_save(k1 => 51, k2 => 52, k3 => 53), "set foreign key object on save 6 - $db_type");
+
+  $co = MyPgObject->new(id => 200);
+  ok(!$co->load(speculative => 1), "set foreign key object on save 7 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+
+  ok($other_obj && $other_obj->k1 == 51 && $other_obj->k2 == 52 && $other_obj->k3 == 53,
+     "set foreign key object on save 8 - $db_type");
+
+  $o->other_obj_on_save(undef);
+
+  ok($o->save, "set foreign key object on save 9 - $db_type");
+
+  $o = MyPgObject->new(id => 200);
+
+  $o->load;
+
+  ok(!defined $o->other_obj_on_save, "set foreign key object on save 10 - $db_type");
+
+  $co = MyPgOtherObject->new(k1 => 51, k2 => 52, k3 => 53);
+  ok(!$co->load(speculative => 1), "set foreign key object on save 11 - $db_type");
+
+  $o->delete(cascade => 1);
+
+  # Set, delete, save
+  $o = MyPgObject->new(id   => 200,
+                       name => 'Rose',
+                       flag => 1);
+
+  ok($o->other_obj_on_save(k1 => 51, k2 => 52, k3 => 53), "set foreign key object on save 12 - $db_type");
+
+  $co = MyPgObject->new(id => 200);
+  ok(!$co->load(speculative => 1), "set foreign key object on save 13 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+  
+  ok($other_obj && $other_obj->k1 == 51 && $other_obj->k2 == 52 && $other_obj->k3 == 53,
+     "set foreign key object on save 14 - $db_type");
+
+  ok(!$o->delete_other_obj, "set foreign key object on save 15 - $db_type");
+
+  ok($o->save, "set foreign key object on save 16 - $db_type");
+
+  $o = MyPgObject->new(id => 200);
+
+  $o->load;
+  
+  ok(!defined $o->other_obj_on_save, "set foreign key object on save 17 - $db_type");
+
+  $co = MyPgOtherObject->new(k1 => 51, k2 => 52, k3 => 53);
+  ok(!$co->load(speculative => 1), "set foreign key object on save 18 - $db_type");
 }
 
 #
@@ -325,7 +419,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 50)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 60)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -390,13 +484,13 @@ SKIP: foreach my $db_type ('mysql')
   ok($o4->not_found, "not_found() 2 - $db_type");
 
   my $oo21 = MyMySQLOtherObject2->new(id => 1, name => 'one', pid => $o->id);
-  ok($oo21->save, 'other object 2 save() 1');
+  ok($oo21->save, "other object 2 save() 1 - $db_type");
 
   my $oo22 = MyMySQLOtherObject2->new(id => 2, name => 'two', pid => $o->id);
-  ok($oo22->save, 'other object 2 save() 2');
+  ok($oo22->save, "other object 2 save() 2 - $db_type");
 
   my $oo23 = MyMySQLOtherObject2->new(id => 3, name => 'three', pid => $o_x->id);
-  ok($oo23->save, 'other object 2 save() 3');
+  ok($oo23->save, "other object 2 save() 3 - $db_type");
 
   my $o2s = $o->other2_objs;
 
@@ -508,8 +602,33 @@ SKIP: foreach my $db_type ('mysql')
   eval { $o->meta->alias_column(nonesuch => 'foo') };
   ok($@, "alias_column() nonesuch - $db_type");
 
-  eval { $o->meta->alias_column(nonesuch => 'foo') };
-  ok($@, "alias_column() nonesuch - $db_type");
+  $o = MyMySQLObject->new(name => 'Alex',
+                          flag => 1);
+
+  eval { $o->other_obj('abc') };
+  ok($@, "set foreign key object: one arg - $db_type");
+
+  eval { $o->other_obj(k1 => 1, k2 => 2, k3 => 3) };
+  ok($@, "set foreign key object: no save - $db_type");
+
+  $o->save;
+
+  eval { $o->other_obj(k1 => 1, k2 => 2) };
+  ok($@, "set foreign key object: too few keys - $db_type");
+
+  ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "set foreign key object 1 - $db_type");
+  ok($o->fk1 == 1 && $o->fk2 == 2 && $o->fk3 == 3, "set foreign key object check keys 1 - $db_type");
+
+  ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "set foreign key object 2 - $db_type");
+  ok($o->fk1 == 1 && $o->fk2 == 2 && $o->fk3 == 3, "set foreign key object check keys 2 - $db_type");
+
+  ok($o->del_other_obj, "delete foreign key object 1 - $db_type");
+
+  ok(!defined $o->fk1 && !defined $o->fk2 && !defined $o->fk3, "delete foreign key object check keys 1 - $db_type");
+
+  ok(!defined $o->other_obj && defined $o->error, "delete foreign key object confirm 1 - $db_type");
+
+  ok(!defined $o->del_other_obj, "delete foreign key object 2 - $db_type");
 }
 
 #
@@ -518,7 +637,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 71)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 82)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -604,12 +723,12 @@ SKIP: foreach my $db_type ('informix')
   is(@a, 3, "load() verify 16 (array value) - $db_type");
 
   my $oo1 = MyInformixOtherObject->new(k1 => 1, k2 => 2, k3 => 3, name => 'one');
-  ok($oo1->save, 'other object save() 1');
+  ok($oo1->save, "other object save() 1 - $db_type");
 
   my $oo2 = MyInformixOtherObject->new(k1 => 11, k2 => 12, k3 => 13, name => 'two');
-  ok($oo2->save, 'other object save() 2');
+  ok($oo2->save, "other object save() 2 - $db_type");
 
-  is($o->other_obj, undef, 'other_obj() 1');
+  is($o->other_obj, undef, "other_obj() 1 - $db_type");
 
   $o->fkone(1);
   $o->fk2(2);
@@ -617,8 +736,8 @@ SKIP: foreach my $db_type ('informix')
 
   my $obj = $o->other_obj or warn "# ", $o->error, "\n";
 
-  is(ref $obj, 'MyInformixOtherObject', 'other_obj() 2');
-  is($obj->name, 'one', 'other_obj() 3');
+  is(ref $obj, 'MyInformixOtherObject', "other_obj() 2 - $db_type");
+  is($obj->name, 'one', "other_obj() 3 - $db_type");
 
   $o->other_obj(undef);
   $o->fkone(11);
@@ -627,17 +746,17 @@ SKIP: foreach my $db_type ('informix')
 
   $obj = $o->other_obj or warn "# ", $o->error, "\n";
 
-  is(ref $obj, 'MyInformixOtherObject', 'other_obj() 4');
-  is($obj->name, 'two', 'other_obj() 5');
+  is(ref $obj, 'MyInformixOtherObject', "other_obj() 4 - $db_type");
+  is($obj->name, 'two', "other_obj() 5 - $db_type");
 
   my $oo21 = MyInformixOtherObject2->new(id => 1, name => 'one', pid => $o->id);
-  ok($oo21->save, 'other object 2 save() 1');
+  ok($oo21->save, "other object 2 save() 1 - $db_type");
 
   my $oo22 = MyInformixOtherObject2->new(id => 2, name => 'two', pid => $o->id);
-  ok($oo22->save, 'other object 2 save() 2');
+  ok($oo22->save, "other object 2 save() 2 - $db_type");
 
   my $oo23 = MyInformixOtherObject2->new(id => 3, name => 'three', pid => $o_x->id);
-  ok($oo23->save, 'other object 2 save() 3');
+  ok($oo23->save, "other object 2 save() 3 - $db_type");
 
   my $o2s = $o->other2_objs;
 
@@ -762,8 +881,35 @@ SKIP: foreach my $db_type ('informix')
 
   eval { $o->meta->alias_column(nonesuch => 'foo') };
   ok($@, "alias_column() nonesuch - $db_type");
-}
 
+  $o = MyInformixObject->new(name => 'Alex',
+                             flag => 1);
+
+  eval { $o->other_obj('abc') };
+  ok($@, "set foreign key object: one arg - $db_type");
+
+  eval { $o->other_obj(k1 => 1, k2 => 2, k3 => 3) };
+  ok($@, "set foreign key object: no save - $db_type");
+
+  $o->save;
+
+  eval { $o->other_obj(k1 => 1, k2 => 2) };
+  ok($@, "set foreign key object: too few keys - $db_type");
+
+  ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "set foreign key object 1 - $db_type");
+  ok($o->fkone == 1 && $o->fk2 == 2 && $o->fk3 == 3, "set foreign key object check keys 1 - $db_type");
+
+  ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "set foreign key object 2 - $db_type");
+  ok($o->fkone == 1 && $o->fk2 == 2 && $o->fk3 == 3, "set foreign key object check keys 2 - $db_type");
+
+  ok($o->del_other_obj, "delete foreign key object 1 - $db_type");
+
+  ok(!defined $o->fkone && !defined $o->fk2 && !defined $o->fk3, "delete foreign key object check keys 1 - $db_type");
+
+  ok(!defined $o->other_obj && defined $o->error, "delete foreign key object confirm 1 - $db_type");
+
+  ok(!defined $o->del_other_obj, "delete foreign key object 2 - $db_type");
+}
 
 BEGIN
 {
@@ -928,6 +1074,12 @@ EOF
           fk1 => 'k1',
           fk2 => 'k2',
           fk3 => 'k3',
+        },
+        methods => 
+        {
+          get_set_now     => undef,
+          get_set_on_save => 'other_obj_on_save',
+          delete          => undef,
         },
       },
     );
@@ -1234,7 +1386,12 @@ EOF
           fk1 => 'k1',
           fk2 => 'k2',
           fk3 => 'k3',
-        }
+        },
+        methods => 
+        {
+          get_set_now => 'other_obj',
+          delete      => 'del_other_obj',
+        },
       },
     );
 
@@ -1250,7 +1407,7 @@ EOF
     );
 
     eval { MyMySQLObject->meta->initialize };
-    Test::More::ok($@, 'meta->initialize() reserved method');
+    Test::More::ok($@, 'meta->initialize() reserved method - mysql');
 
     MyMySQLObject->meta->alias_column(save => 'save_col');
     MyMySQLObject->meta->initialize(preserve_existing => 1);
@@ -1494,7 +1651,12 @@ EOF
           fk1 => 'k1',
           fk2 => 'k2',
           fk3 => 'k3',
-        }
+        },
+        methods => 
+        {
+          get_set_now => 'other_obj',
+          delete      => 'del_other_obj',
+        },
       },
     );
 
@@ -1523,7 +1685,7 @@ EOF
     );
 
     eval { MyInformixObject->meta->initialize };
-    Test::More::ok($@, 'meta->initialize() reserved method');
+    Test::More::ok($@, 'meta->initialize() reserved method - informix');
 
     MyInformixObject->meta->alias_column(save => 'save_col');
     MyInformixObject->meta->initialize(preserve_existing => 1);
