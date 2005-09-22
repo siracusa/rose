@@ -19,11 +19,11 @@ use overload
    fallback => 1,
 );
 
-__PACKAGE__->default_auto_method_types('get_set');
+__PACKAGE__->default_auto_method_types(qw(get_set delete));
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
-  qw(share_db class key_columns)
+  qw(share_db class key_columns foreign_key)
 );
 
 use Rose::Object::MakeMethods::Generic
@@ -68,10 +68,26 @@ __PACKAGE__->method_maker_info
     class => 'Rose::DB::Object::MakeMethods::Generic',
     type  => 'object_by_key',  
     interface => 'get_set_now',
-  }
+  },
+
+  get_set_on_save =>
+  {
+    class => 'Rose::DB::Object::MakeMethods::Generic',
+    type  => 'object_by_key',  
+    interface => 'get_set_on_save',
+  },
+
+  delete =>
+  {
+    class => 'Rose::DB::Object::MakeMethods::Generic',
+    type  => 'object_by_key',  
+    interface => 'delete',
+  },
 );
 
 sub init_relationship_type { 'many to one' }
+
+sub foreign_key { $_[0] }
 
 sub type { 'foreign key' }
 
@@ -112,9 +128,13 @@ sub build_method_name_for_type
 {
   my($self, $type) = @_;
 
-  if($type eq 'get_set' || $type eq 'get_set_now')
+  if($type eq 'get_set' || $type eq 'get_set_now' || $type eq 'get_set_on_save')
   {
     return $self->name;
+  }
+  elsif($type eq 'delete')
+  {
+    return 'delete_' . $self->name;
   }
 
   return undef;

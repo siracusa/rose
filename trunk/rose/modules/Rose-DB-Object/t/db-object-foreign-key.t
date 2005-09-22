@@ -386,7 +386,7 @@ BEGIN
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
-      $dbh->do('DROP TABLE rose_db_object_test');
+      $dbh->do('DROP TABLE rose_db_object_test CASCADE');
       $dbh->do('DROP TABLE rose_db_object_other');
       $dbh->do('DROP TABLE rose_db_object_chkpass_test');
     }
@@ -530,7 +530,7 @@ EOF
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
-      $dbh->do('DROP TABLE rose_db_object_test');
+      $dbh->do('DROP TABLE rose_db_object_test CASCADE');
       $dbh->do('DROP TABLE rose_db_object_other');
     }
 
@@ -655,7 +655,7 @@ EOF
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
-      $dbh->do('DROP TABLE rose_db_object_test');
+      $dbh->do('DROP TABLE rose_db_object_test CASCADE');
       $dbh->do('DROP TABLE rose_db_object_other');
     }
 
@@ -780,7 +780,7 @@ END
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE rose_db_object_test');
+    $dbh->do('DROP TABLE rose_db_object_test CASCADE');
     $dbh->do('DROP TABLE rose_db_object_other');
 
     $dbh->disconnect;
@@ -792,7 +792,7 @@ END
     my $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE rose_db_object_test');
+    $dbh->do('DROP TABLE rose_db_object_test CASCADE');
     $dbh->do('DROP TABLE rose_db_object_other');
 
     $dbh->disconnect;
@@ -804,7 +804,7 @@ END
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE rose_db_object_test');
+    $dbh->do('DROP TABLE rose_db_object_test CASCADE');
     $dbh->do('DROP TABLE rose_db_object_other');
 
     $dbh->disconnect;

@@ -245,12 +245,75 @@ sub save
 {
   my($self, %args) = @_;
 
-  if(!$args{'insert'} && ($args{'update'} || $self->{STATE_IN_DB()}))
+  # Keep trigger-encumberd code in separate code path
+  if($self->{ON_SAVE_ATTR_NAME()})
   {
-    return shift->update(@_);
-  }
+    my $db = $self->db or return 0;
+    my $ret = $db->begin_work;
 
-  return shift->insert(@_);
+    unless($ret)
+    {
+      $self->error('Could not begin transaction before saving - ' . $db->error);
+      return undef;
+    }
+    
+    my $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+  
+    eval
+    {
+      my $meta = $self->meta;
+
+      # Do pre-save stuff
+      my $todo = $self->{ON_SAVE_ATTR_NAME()}{'pre'};
+
+      foreach my $fk_name (keys %{$todo->{'fk'}})
+      {
+        my $fk = $meta->foreign_key($fk_name) 
+          or Carp::confess "No foreign key named '$fk_name'";
+
+        my $code = $todo->{'fk'}{$fk_name}{'set'} or next;
+        $code->() or die $self->error;
+      }
+
+      # Do the actual save
+      if(!$args{'insert'} && ($args{'update'} || $self->{STATE_IN_DB()}))
+      {
+        $ret = shift->update(@_);
+      }
+    
+      $ret = shift->insert(@_);
+
+      # Do post-save stuff
+      # $todo = $self->{ON_SAVE_ATTR_NAME()}{'post'};
+      # ...
+
+      if($started_new_tx)
+      {
+        $db->commit or die $db->error;
+      }
+    };
+
+    delete $self->{ON_SAVE_ATTR_NAME()};
+
+    if($@)
+    {
+      $self->error($@);
+      $db->rollback or warn $db->error  if($started_new_tx);
+      $self->meta->handle_error($self);
+      return 0;
+    }
+    
+    return $ret;
+  }
+  else
+  {
+    if(!$args{'insert'} && ($args{'update'} || $self->{STATE_IN_DB()}))
+    {
+      return shift->update(@_);
+    }
+  
+    return shift->insert(@_);
+  }
 }
 
 sub update

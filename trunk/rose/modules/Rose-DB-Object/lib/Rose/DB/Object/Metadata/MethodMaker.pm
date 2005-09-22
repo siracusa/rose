@@ -266,7 +266,7 @@ sub methods
 
   while(my($type, $name) = each(%args))
   {
-    $self->method_name($type => $name);
+    $self->method_name($type => $name)  if(defined $name);
   }
 
   return;
