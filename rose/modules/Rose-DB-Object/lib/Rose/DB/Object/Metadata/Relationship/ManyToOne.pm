@@ -12,7 +12,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 our $VERSION = '0.01';
 
-__PACKAGE__->default_auto_method_types('get_set');
+__PACKAGE__->default_auto_method_types(qw(get_set_on_save delete_on_save));
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -49,6 +49,34 @@ __PACKAGE__->method_maker_info
   {
     class => 'Rose::DB::Object::MakeMethods::Generic',
     type  => 'object_by_key',
+  },
+
+  get_set_now =>
+  {
+    class => 'Rose::DB::Object::MakeMethods::Generic',
+    type  => 'object_by_key',  
+    interface => 'get_set_now',
+  },
+
+  get_set_on_save =>
+  {
+    class => 'Rose::DB::Object::MakeMethods::Generic',
+    type  => 'object_by_key',  
+    interface => 'get_set_on_save',
+  },
+
+  delete_now =>
+  {
+    class => 'Rose::DB::Object::MakeMethods::Generic',
+    type  => 'object_by_key',  
+    interface => 'delete_now',
+  },
+
+  delete_on_save =>
+  {
+    class => 'Rose::DB::Object::MakeMethods::Generic',
+    type  => 'object_by_key',  
+    interface => 'delete_on_save',
   },
 );
 
@@ -162,9 +190,35 @@ This class inherits from L<Rose::DB::Object::Metadata::Relationship>. Inherited 
 
 L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, ...
 
+=item C<get_set_now>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'get_set_now'>
+
+=item C<get_set_on_save>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'get_set_on_save'>
+
+=item C<delete_now>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'delete_now'>
+
+=item C<delete_on_save>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'delete_on_save'>
+
 =back
 
 See the L<Rose::DB::Object::Metadata::Relationship|Rose::DB::Object::Metadata::Relationship/"MAKING METHODS"> documentation for an explanation of this method map.
+
+=head1 CLASS METHODS
+
+=over 4
+
+=item B<default_auto_method_types [TYPES]>
+
+Get or set the default list of L<auto_method_types|Rose::DB::Object::Metadata::Relationship/auto_method_types>.  TYPES should be a list of relationship method types.  Returns the list of default relationship method types (in list context) or a reference to an array of the default relationship method types (in scalar context).  The default list contains the "get_set_on_save" and "delete_on_save" relationship method types.
+
+=back
 
 =head1 OBJECT METHODS
 

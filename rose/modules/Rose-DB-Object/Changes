@@ -1,10 +1,14 @@
-0.076 (09.22.2005) - John Siracusa <siracusa@mindspring.com>
+0.076 (09.23.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added bulk update and delete methods to Manager.
     * Added cascaded delete, plus a plea inthe documentation for users
       to do this in the database instead.
     * Added "many to one" relationship and made it the new default
       relationship type for foreign keys.
+    * Added *_now and *_on_save method types for foreign keys and
+      "... to one" relationships.
+    * Made get_set_on_save and delete_on_save the default auto method 
+      types for foreign keys and "... to one" relationships.
     * load() now returns the object itself on success, which allows
       for the convenient $obj = MyObject->new(id => 123)->load;
     * save() now returns the object itself on success, which allows

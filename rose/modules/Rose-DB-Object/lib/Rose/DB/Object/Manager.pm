@@ -9,7 +9,7 @@ use Rose::DB::Object::QueryBuilder qw(build_select);
 
 use Rose::DB::Object::Constants qw(STATE_LOADING STATE_IN_DB);
 
-# XXX: Should be a value that is unlikely to exist in a primary key column
+# XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
 our $VERSION = '0.062';

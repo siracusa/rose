@@ -10,9 +10,7 @@ use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
 use Rose::DB::Object::Manager;
-
 use Rose::DB::Constants qw(IN_TRANSACTION);
-
 use Rose::DB::Object::Constants 
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
      STATE_SAVING ON_SAVE_ATTR_NAME);
@@ -1246,13 +1244,16 @@ sub object_by_key
         $obj = $fk_class->new(%key);
       }
 
-      my $ret = $obj->load;
+      my $ret;
+      
+      eval { $ret = $obj->load };
 
-      unless($ret)
+      if($@ || !$ret)
       {
         $self->error("Could not load $fk_class with key ", 
                      join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
                      " - " . $obj->error);
+        $self->meta->handle_error($self);
         return $ret;
       }
 
@@ -1342,14 +1343,15 @@ sub object_by_key
           }
     
           $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
-          
-          # Load or create the foreign object
-          unless($object->{STATE_IN_DB()})
+
+          if($object->{STATE_IN_DB()})
           {
-            unless($object->load(speculative => 1))
-            {
-              $object->save;
-            }
+            $object->save;
+          }
+          else
+          {
+            $object->load(speculative => 1);
+            $object->save;
           }
     
           while(my($local_column, $foreign_column) = each(%$fk_columns))
@@ -1418,13 +1420,16 @@ sub object_by_key
         $obj = $fk_class->new(%key);
       }
 
-      my $ret = $obj->load;
+      my $ret;
+      
+      eval { $ret = $obj->load };
 
-      unless($ret)
+      if($@ || !$ret)
       {
         $self->error("Could not load $fk_class with key ", 
                      join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
                      " - " . $obj->error);
+        $self->meta->handle_error($self);
         return $ret;
       }
 
@@ -1525,10 +1530,9 @@ sub object_by_key
           # Bail if there's nothing to do
           my $object = $self->{$key} or return;
 
-          my $error_mode    = $meta->error_mode;    
-          my $fk_error_mode = $fk_meta->error_mode;    
-    
-          my($db, $started_new_tx);
+          my $error_mode    = $meta->error_mode;
+          my $fk_error_mode = $fk_meta->error_mode;
+          my $db;
     
           eval
           {
@@ -1537,16 +1541,19 @@ sub object_by_key
       
             $meta->error_mode('fatal');
             $fk_meta->error_mode('fatal');
-            
-            # Load or create the foreign object
-            unless($object->{STATE_IN_DB()})
+
+            # Save the object, load or create if necessary
+            if($object->{STATE_IN_DB()})
             {
-              unless($object->load(speculative => 1))
-              {
-                $object->save;
-              }
+              $object->save;
             }
-      
+            else
+            {
+              $object->load(speculative => 1);
+              $object->save;
+            }
+
+            # Set the foreign key columns
             while(my($local_column, $foreign_column) = each(%$fk_columns))
             {
               my $local_method   = $meta->column_mutator_method_name($local_column);
@@ -1555,7 +1562,7 @@ sub object_by_key
               $self->$local_method($object->$foreign_method);
             }
   
-            $self->{$key} = $object;
+            return $self->{$key} = $object;
           };
     
           if($@)
@@ -1609,24 +1616,151 @@ sub object_by_key
         $obj = $fk_class->new(%key);
       }
 
-      my $ret = $obj->load;
+      my $ret;
+      
+      eval { $ret = $obj->load };
 
-      unless($ret)
+      if($@ || !$ret)
       {
         $self->error("Could not load $fk_class with key ", 
                      join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
                      " - " . $obj->error);
+        $self->meta->handle_error($self);
         return $ret;
       }
 
       return $self->{$key} = $obj;
     };
   }
-  elsif($interface eq 'delete')
+  elsif($interface eq 'delete_now')
   {
     unless($fk)
     {
       Carp::croak "Cannot make 'delete' method $name without foreign key argument";
+    }
+
+    my $fk_name = $fk->name;
+
+    $methods{$name} = sub
+    {
+      my($self) = shift;
+
+      my $object = $self->{$key} || $fk_class->new;
+
+      my %key;
+
+      while(my($local_column, $foreign_column) = each(%$fk_columns))
+      {
+        my $local_method   = $meta->column_accessor_method_name($local_column);
+        my $foreign_method = $fk_meta->column_mutator_method_name($foreign_column);
+
+        $key{$foreign_method} = $self->$local_method();
+
+        # XXX: Comment this out to allow null keys
+        unless(defined $key{$foreign_method})
+        {
+          keys(%$fk_columns); # reset iterator
+
+          # If this failed because we haven't saved it yet
+          if(delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'})
+          {
+            # Clear foreign key columns
+            foreach my $local_column (keys %$fk_columns)
+            {
+              my $local_method = $meta->column_accessor_method_name($local_column);
+              $self->$local_method(undef);
+            }
+
+            $self->{$key} = undef;
+            return 1;
+          }
+
+          $self->error("Could not delete $name object - the " .
+                       "$local_method attribute is undefined");
+          return undef;
+        }
+      }
+
+      $object->init(%key);
+
+      my $error_mode    = $meta->error_mode;
+      my $fk_error_mode = $fk_meta->error_mode;
+
+      my($db, $started_new_tx, $deleted, %save_fk, $to_save);
+
+      eval
+      {
+        $db = $self->db;
+        $object->db($db)  if($share_db);
+  
+        $meta->error_mode('fatal');
+        $fk_meta->error_mode('fatal');
+
+        my $ret = $db->begin_work;
+
+        unless(defined $ret)
+        {
+          die 'Could not begin transaction before deleting with cascade - ',
+              $db->error;
+        }
+  
+        $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+
+        # Clear columns that reference the foreign key
+        foreach my $local_column (keys %$fk_columns)
+        {
+          my $local_method = $meta->column_accessor_method_name($local_column);
+          $save_fk{$local_method} = $self->$local_method();
+          $self->$local_method(undef);
+        }
+
+        # Forget about any value we were going to set on save
+        $to_save = delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
+      
+        $self->save;
+
+        $deleted = $object->delete(@_); # propogate cascade arg, if any
+  
+        if($started_new_tx)
+        {
+          $db->commit or die $db->error;
+        }
+        
+        $self->{$key} = undef;
+      };
+
+      if($@)
+      {
+        $meta->error_mode($error_mode);
+        $fk_meta->error_mode($fk_error_mode);
+        $self->error("Could not delete $name object - $@");
+        $db->rollback  if($db && $started_new_tx);
+
+        # Restore foreign key column values
+        while(my($method, $value) = each(%save_fk))
+        {
+          $self->$method($value);
+        }
+
+        # Restore any value we were going to set on save
+        $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'} = $to_save
+          if($to_save);
+
+        $meta->handle_error($self);
+        return undef;
+      }
+
+      $meta->error_mode($error_mode);
+      $fk_meta->error_mode($fk_error_mode);
+
+      return $deleted;
+    };
+  }
+  elsif($interface eq 'delete_on_save')
+  {
+    unless($fk)
+    {
+      Carp::croak "Cannot make 'delete_on_save' method $name without foreign key argument";
     }
 
     my $fk_name = $fk->name;
@@ -1673,71 +1807,56 @@ sub object_by_key
 
       $object->init(%key);
 
-      my $error_mode    = $meta->error_mode;
-      my $fk_error_mode = $fk_meta->error_mode;
+      my %save_fk;
 
-      my($db, $started_new_tx, $deleted, %save_fk);
-
-      eval
+      # Clear columns that reference the foreign key, saving old values
+      foreach my $local_column (keys %$fk_columns)
       {
-        $db = $self->db;
-        $object->db($db)  if($share_db);
-  
-        $meta->error_mode('fatal');
-        $fk_meta->error_mode('fatal');
-
-        my $ret = $db->begin_work;
- 
-        unless(defined $ret)
-        {
-          die 'Could not begin transaction before deleting with cascade - ',
-              $db->error;
-        }
-  
-        $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
-
-        # Clear columns that reference the foreign key
-        foreach my $local_column (keys %$fk_columns)
-        {
-          my $local_method = $meta->column_accessor_method_name($local_column);
-          $save_fk{$local_method} = $self->$local_method();
-          $self->$local_method(undef);
-        }
-
-        $self->save;
-
-        $deleted = $object->delete(@_); # propogate cascade arg, if any
-  
-        if($started_new_tx)
-        {
-          $db->commit or die $db->error;
-        }
-        
-        $self->{$key} = undef;
-        delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
-      };
-
-      if($@)
-      {
-        $meta->error_mode($error_mode);
-        $fk_meta->error_mode($fk_error_mode);
-        $self->error("Could not delete $name object - $@");
-        $db->rollback  if($db && $started_new_tx);
-
-        # Restore foreign key column values
-        while(my($method, $value) = each(%save_fk))
-        {
-          $self->$method($value);
-        }
-
-        $meta->handle_error($self);
-        return undef;
+        my $local_method = $meta->column_accessor_method_name($local_column);
+        $save_fk{$local_method} = $self->$local_method();
+        $self->$local_method(undef);
       }
 
-      $meta->error_mode($error_mode);
-      $fk_meta->error_mode($fk_error_mode);
+      # Forget about any value we were going to set on save
+      delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
 
-      return $deleted;
+      # Clear the foreignobject attribute
+      $self->{$key} = undef;
+
+      # Make the code to run on save
+      my $delete_code = sub
+      {  
+        my $db;
+  
+        eval
+        {
+          $db = $self->db;
+          $object->db($db)  if($share_db);
+          $object->delete(@_) or die $object->error;
+        };
+  
+        if($@)
+        {
+          $self->error("Could not delete $name object - $@");
+  
+          # Restore old foreign key column values if prudent
+          while(my($method, $value) = each(%save_fk))
+          {
+            $self->$method($value)  unless(defined $self->$method);
+          }
+  
+          $meta->handle_error($self);
+          return undef;
+        }
+
+        return 1;
+      };
+
+      # Add the on save code to the list
+      push(@{$self->{ON_SAVE_ATTR_NAME()}{'post'}{'fk'}{$fk_name}{'delete'}}, 
+           { code => $delete_code, object => $object });
+
+      return 1;
     };
   }
   else { Carp::croak "Unknown interface: $interface" }
@@ -2963,7 +3082,7 @@ The name of the L<Rose::DB::Object>-derived class of the object to be loaded.  T
 
 =item C<foreign_key>
 
-The L<Rose::DB::Object::Metadata::ForeignKey> object that describes the "key" through which the "object_by_key" is fetched.  This is required when using the "delete" and "get_set_on_save" interfaces.
+The L<Rose::DB::Object::Metadata::ForeignKey> object that describes the "key" through which the "object_by_key" is fetched.  This is required when using the "delete_now", "delete_on_save", and "get_set_on_save" interfaces.
 
 =item C<hash_key>
 
@@ -2987,13 +3106,21 @@ If true, the L<db|Rose::DB::Object/db> attribute of the current object is shared
 
 =over 4
 
-=item C<delete>
+=item C<delete_now>
 
 Deletes a L<Rose::DB::Object>-derived object from the database based on a primary key formed from attributes of the current object.  First, the "parent" object will have all of its attributes that refer to the "foreign" set to null, and it will be saved into the database.  This needs to be done first because a database that enforces referential integrity will not allow a row to be deleted if it is still referenced by a foreign key in another table.
 
 The entire process takes place within a transaction if the database supports it.  If not currently in a transaction, a new one is started and then committed on success and rolled back on failure.
 
-Returns true of the foreign object existed and was deleted successfully, false otherwise.
+Returns true if the foreign object was deleted successfully or did not exist in the database, false if any of the keys that refer to the foreign object were undef, and triggers the normal L<Rose::DB::Object> L<error handling|Rose::DB::Object::Metadata/error_mode> in the case of any other kind of failure.
+
+=item C<delete_on_save>
+
+Deletes a L<Rose::DB::Object>-derived object from the database when the "parent" object is L<save|Rose::DB::Object/save>ed, based on a primary key formed from attributes of the current object.  The "parent" object will have all of its attributes that refer to the "foreign" set to null immediately, but the actual delete will not be done until the parent is saved.
+
+The entire process takes place within a transaction if the database supports it.  If not currently in a transaction, a new one is started and then committed on success and rolled back on failure.
+
+Returns true if the foreign object was deleted successfully or did not exist in the database, false if any of the keys that refer to the foreign object were undef, and triggers the normal L<Rose::DB::Object> L<error handling|Rose::DB::Object::Metadata/error_mode> in the case of any other kind of failure.
 
 =item C<get_set>
 
@@ -3003,7 +3130,9 @@ If passed a single argument of undef, the C<hash_key> used to store the object i
 
 If called with no arguments and the C<hash_key> used to store the object is defined, the object is returned.  Otherwise, the object is created and loaded.
 
-The load may fail for several reasons.  The load will not even be attempted if any of the key attributes in the current object are undefined.  Instead, undef will be returned.  If the call to the newly created object's C<load> method returns false, that false value is returned.
+The load may fail for several reasons.  The load will not even be attempted if any of the key attributes in the current object are undefined.  Instead, undef will be returned.
+
+If the call to the newly created object's L<load|Rose::DB::Object/load> method returns false, then the normal L<Rose::DB::Object> L<error handling|Rose::DB::Object::Metadata/error_mode> is triggered.  The false value returned by the call to the L<load|Rose::DB::Object/load> method is returned (assuming no exception was raised).
 
 If the load succeeds, the object is returned.
 
@@ -3015,7 +3144,9 @@ If passed a single argument of undef, the C<hash_key> used to store the object i
 
 If called with no arguments and the C<hash_key> used to store the object is defined, the object is returned.  Otherwise, the object is created and loaded.
 
-The load may fail for several reasons.  The load will not even be attempted if any of the key attributes in the current object are undefined.  Instead, undef will be returned.  If the call to the newly created object's C<load> method returns false, that false value is returned.
+The load may fail for several reasons.  The load will not even be attempted if any of the key attributes in the current object are undefined.  Instead, undef will be returned.
+
+If the call to the newly created object's L<load|Rose::DB::Object/load> method returns false, then the normal L<Rose::DB::Object> L<error handling|Rose::DB::Object::Metadata/error_mode> is triggered.  The false value returned by the call to the L<load|Rose::DB::Object/load> method is returned (assuming no exception was raised).
 
 If the load succeeds, the object is returned.
 
@@ -3023,11 +3154,21 @@ If the load succeeds, the object is returned.
 
 Creates a method that will attempt to create and load a L<Rose::DB::Object>-derived object based on a primary key formed from attributes of the current object, and save the object when the "parent" object is L<save|Rose::DB::Object/save>ed.
 
-If passed a single argument of undef, the C<hash_key> used to store the object is set to undef.  Otherwise, the argument is assumed to be an object of type C<class> and is assigned to C<hash_key> after having its C<key_columns> set to their corresponding values in the current object.  The object will be saved into the database when the "parent" object is L<save|Rose::DB::Object/save>ed.
+If passed a single argument of undef, the C<hash_key> used to store the object is set to undef.
 
-If called with no arguments and the C<hash_key> used to store the object is defined, the object is returned.  Otherwise, the object is created and loaded.
+If passed a set of name/value pairs, an object of type C<class> is constructed, with those parameters being passed to the constructor.
 
-The load may fail for several reasons.  The load will not even be attempted if any of the key attributes in the current object are undefined.  Instead, undef will be returned.  If the call to the newly created object's C<load> method returns false, that false value is returned.
+If passed a single value, and if C<class> has a single primary key column, then an object of type C<class> is constructed, with the primary key value passed to the constructor as the value of the primary key column's mutator method.
+
+If passed an object of type C<class>, it is used as-is.
+
+The object is then assigned to C<hash_key> after having its C<key_columns> set to their corresponding values in the current object.  The object will be saved into the database when the "parent" object is L<save|Rose::DB::Object/save>ed.
+
+If called with no arguments and the C<hash_key> used to store the object is defined, the object is returned.  Otherwise, the object is created and loaded from the database.
+
+The load may fail for several reasons.  The load will not even be attempted if any of the key attributes in the current object are undefined.  Instead, undef will be returned.
+
+If the call to the newly created object's L<load|Rose::DB::Object/load> method returns false, then the normal L<Rose::DB::Object> L<error handling|Rose::DB::Object::Metadata/error_mode> is triggered.  The false value returned by the call to the L<load|Rose::DB::Object/load> method is returned (assuming no exception was raised).
 
 If the load succeeds, the object is returned.
 
@@ -3035,19 +3176,29 @@ If the load succeeds, the object is returned.
 
 =back
 
-Example:
+Example setup:
+
+    # CLASS     DB TABLE
+    # -------   --------
+    # Product   products
+    # Category  categories
 
     package Product;
 
     our @ISA = qw(Rose::DB::Object);
     ...
+    
+    # You will almost never call the method-maker directly
+    # like this.  See the Rose::DB::Object::Metadata docs
+    # for examples of more common usage.
     use Rose::DB::Object::MakeMethods::Generic
     (
       object_by_key =>
       [
         category => 
         {
-          class => 'Category',
+          interface   => 'get_set',
+          class       => 'Category',
           key_columns =>
           {
             # Map Product column names to Category column names
@@ -3058,9 +3209,13 @@ Example:
     );
     ...
 
+Example - get_set interface:
+
+
     $product = Product->new(id => 5, category_id => 99);
 
-    $category = $product->category;
+    # Read from the categories table
+    $category = $product->category; 
 
     # $product->category call is roughly equivalent to:
     #
@@ -3070,6 +3225,58 @@ Example:
     # $ret = $cat->load;
     # return $ret  unless($ret);
     # return $cat;
+
+    # Does not write to the db
+    $product->category(Category->new(...));
+
+    $product->save; # writes to products table only
+
+Example - get_set_now interface:
+
+    # Read from the products table
+    $product = Product->new(id => 5)->load;
+
+    # Read from the categories table
+    $category = $product->category;
+
+    # Write to the categories table
+    $product->category(Category->new(...));
+
+    # Write to the products table
+    $product->save; 
+
+Example - get_set_on_save interface:
+
+    # Read from the products table
+    $product = Product->new(id => 5)->load;
+
+    # Read from the categories table
+    $category = $product->category;
+
+    # Does not write to the db
+    $product->category(Category->new(...)); 
+
+    # Write to both the products and categories tables
+    $product->save; 
+
+Example - delete_now interface:
+
+    # Read from the products table
+    $product = Product->new(id => 5)->load;
+
+    # Write to both the categories and products tables
+    $product->delete_category();
+
+Example - delete_on_save interface:
+
+    # Read from the products table
+    $product = Product->new(id => 5)->load;
+
+    # Does not write to the db
+    $product->delete_category(); 
+
+    # Write to both the products and categories tables
+    $product->save;
 
 =item B<scalar>
 

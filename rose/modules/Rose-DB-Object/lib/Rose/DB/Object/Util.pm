@@ -10,12 +10,18 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = 
   qw(is_in_db is_loading is_saving
-    set_state_in_db set_state_loading set_state_saving
-    unset_state_in_db unset_state_loading unset_state_saving);
+     set_state_in_db set_state_loading set_state_saving
+     unset_state_in_db unset_state_loading unset_state_saving
+     row_id);
 
 our %EXPORT_TAGS = 
 (
-  all => \@EXPORT_OK,
+  all => 
+  [
+    qw(is_in_db is_loading is_saving
+       set_state_in_db set_state_loading set_state_saving
+      unset_state_in_db unset_state_loading unset_state_saving) 
+  ],
   get_state   => [ qw(is_in_db is_loading is_saving) ],
   set_state   => [ qw(set_state_in_db set_state_loading set_state_saving) ],
   unset_state => [ qw(unset_state_in_db unset_state_loading unset_state_saving) ],
@@ -34,6 +40,22 @@ sub set_state_saving  { shift->{STATE_SAVING()} = 1  }
 sub unset_state_in_db   { shift->{STATE_IN_DB()} = 0   }
 sub unset_state_loading { shift->{STATE_LOADING()} = 0 }
 sub unset_state_saving  { shift->{STATE_SAVING()} = 0  }
+
+# XXX: A value that is unlikely to exist in a primary key column value
+use constant PK_JOIN => "\0\2,\3\0";
+
+sub row_id
+{
+  my($object) = shift;
+  
+  my $meta = $object->meta or die "$object has no meta attribute";
+
+  return 
+    join(PK_JOIN, 
+         map { $object->$_() } 
+         map { $meta->column_accessor_method_name($_) }
+         $meta->primary_key_column_names);
+}
 
 1;
 

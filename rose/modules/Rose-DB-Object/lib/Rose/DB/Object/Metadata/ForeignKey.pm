@@ -19,7 +19,7 @@ use overload
    fallback => 1,
 );
 
-__PACKAGE__->default_auto_method_types(qw(get_set_on_save delete));
+__PACKAGE__->default_auto_method_types(qw(get_set_on_save delete_on_save));
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -77,11 +77,18 @@ __PACKAGE__->method_maker_info
     interface => 'get_set_on_save',
   },
 
-  delete =>
+  delete_now =>
   {
     class => 'Rose::DB::Object::MakeMethods::Generic',
     type  => 'object_by_key',  
-    interface => 'delete',
+    interface => 'delete_now',
+  },
+
+  delete_on_save =>
+  {
+    class => 'Rose::DB::Object::MakeMethods::Generic',
+    type  => 'object_by_key',  
+    interface => 'delete_on_save',
   },
 );
 
@@ -132,7 +139,7 @@ sub build_method_name_for_type
   {
     return $self->name;
   }
-  elsif($type eq 'delete')
+  elsif($type eq 'delete_now' || $type eq 'delete_on_save')
   {
     return 'delete_' . $self->name;
   }
@@ -313,6 +320,14 @@ L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::Mak
 
 L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'get_set_on_save'>
 
+=item C<delete_now>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'delete_now'>
+
+=item C<delete_on_save>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'delete_on_save'>
+
 =back
 
 Each item in the map is a foreign key method type.  For each foreign key method type, the method maker class, the method maker method type, and the "interesting" method maker arguments are listed, in that order.
@@ -329,7 +344,7 @@ Remember, the existence and behavior of the method map is really implementation 
 
 =item B<default_auto_method_types [TYPES]>
 
-Get or set the default list of L<auto_method_types|/auto_method_types>.  TYPES should be a list of foreign key method types.  Returns the list of default foreign key method types (in list context) or a reference to an array of the default foreign key method types (in scalar context).  The default list contains  the "get_set_on_save" and "delete" foreign key method type.
+Get or set the default list of L<auto_method_types|/auto_method_types>.  TYPES should be a list of foreign key method types.  Returns the list of default foreign key method types (in list context) or a reference to an array of the default foreign key method types (in scalar context).  The default list contains  the "get_set_on_save" and "delete_on_save" foreign key method types.
 
 =back
 
@@ -347,7 +362,13 @@ Get or set the list of foreign key method types that are automatically created w
 
 =item B<build_method_name_for_type TYPE>
 
-Return a method name for the foreign key method type TYPE.  The default implementation returns the foreign key's L<name|/name> for the foreign key method type "get_set", and undef otherwise.
+Return a method name for the foreign key method type TYPE.  The default implementation returns the following.
+
+For the method types "get_set", "get_set_now", and "get_set_on_save", the foreign key's L<name|/name> is returned.
+
+For the method types "delete_now" and "delete_on_save", the foreign key's L<name|/name> prefixed with "delete_" is returned.
+
+Otherwise, undef is returned.
 
 =item B<class [CLASS]>
 
