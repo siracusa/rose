@@ -2961,6 +2961,10 @@ Create a get/set methods for a single L<Rose::DB::Object>-derived object loaded 
 
 The name of the L<Rose::DB::Object>-derived class of the object to be loaded.  This option is required.
 
+=item C<foreign_key>
+
+The L<Rose::DB::Object::Metadata::ForeignKey> object that describes the "key" through which the "object_by_key" is fetched.  This is required when using the "delete" and "get_set_on_save" interfaces.
+
 =item C<hash_key>
 
 The key inside the hash-based object to use for the storage of the object.  Defaults to the name of the method.
@@ -2971,7 +2975,7 @@ A reference to a hash that maps column names in the current object to those of t
 
 =item C<interface>
 
-Choose the interface.  The only current interface is C<get_set>, which is the default.
+Choose the interface.  The default is C<get_set>.
 
 =item C<share_db>
 
@@ -2983,11 +2987,43 @@ If true, the L<db|Rose::DB::Object/db> attribute of the current object is shared
 
 =over 4
 
+=item C<delete>
+
+Deletes a L<Rose::DB::Object>-derived object from the database based on a primary key formed from attributes of the current object.  First, the "parent" object will have all of its attributes that refer to the "foreign" set to null, and it will be saved into the database.  This needs to be done first because a database that enforces referential integrity will not allow a row to be deleted if it is still referenced by a foreign key in another table.
+
+The entire process takes place within a transaction if the database supports it.  If not currently in a transaction, a new one is started and then committed on success and rolled back on failure.
+
+Returns true of the foreign object existed and was deleted successfully, false otherwise.
+
 =item C<get_set>
 
 Creates a method that will attempt to create and load a L<Rose::DB::Object>-derived object based on a primary key formed from attributes of the current object.
 
 If passed a single argument of undef, the C<hash_key> used to store the object is set to undef.  Otherwise, the argument is assumed to be an object of type C<class> and is assigned to C<hash_key> after having its C<key_columns> set to their corresponding values in the current object.
+
+If called with no arguments and the C<hash_key> used to store the object is defined, the object is returned.  Otherwise, the object is created and loaded.
+
+The load may fail for several reasons.  The load will not even be attempted if any of the key attributes in the current object are undefined.  Instead, undef will be returned.  If the call to the newly created object's C<load> method returns false, that false value is returned.
+
+If the load succeeds, the object is returned.
+
+=item C<get_set_now>
+
+Creates a method that will attempt to create and load a L<Rose::DB::Object>-derived object based on a primary key formed from attributes of the current object, and will also save the object to the database when called with an appropriate object as an argument.
+
+If passed a single argument of undef, the C<hash_key> used to store the object is set to undef.  Otherwise, the argument is assumed to be an object of type C<class> and is assigned to C<hash_key> after having its C<key_columns> set to their corresponding values in the current object.  The object is then immediately L<save|Rose::DB::Object/save>ed to the database.
+
+If called with no arguments and the C<hash_key> used to store the object is defined, the object is returned.  Otherwise, the object is created and loaded.
+
+The load may fail for several reasons.  The load will not even be attempted if any of the key attributes in the current object are undefined.  Instead, undef will be returned.  If the call to the newly created object's C<load> method returns false, that false value is returned.
+
+If the load succeeds, the object is returned.
+
+=item C<get_set_on_save>
+
+Creates a method that will attempt to create and load a L<Rose::DB::Object>-derived object based on a primary key formed from attributes of the current object, and save the object when the "parent" object is L<save|Rose::DB::Object/save>ed.
+
+If passed a single argument of undef, the C<hash_key> used to store the object is set to undef.  Otherwise, the argument is assumed to be an object of type C<class> and is assigned to C<hash_key> after having its C<key_columns> set to their corresponding values in the current object.  The object will be saved into the database when the "parent" object is L<save|Rose::DB::Object/save>ed.
 
 If called with no arguments and the C<hash_key> used to store the object is defined, the object is returned.  Otherwise, the object is created and loaded.
 
