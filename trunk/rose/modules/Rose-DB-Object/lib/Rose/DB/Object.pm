@@ -13,6 +13,7 @@ our @ISA = qw(Rose::Object);
 use Rose::DB::Object::Manager;
 use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
+use Rose::DB::Object::Util qw(row_id);
 
 our $VERSION = '0.076';
 
@@ -262,6 +263,7 @@ sub save
     eval
     {
       my $meta = $self->meta;
+      my %did_set;
 
       # Do pre-save stuff
       my $todo = $self->{ON_SAVE_ATTR_NAME()}{'pre'};
@@ -271,8 +273,18 @@ sub save
         my $fk = $meta->foreign_key($fk_name) 
           or Carp::confess "No foreign key named '$fk_name'";
 
-        my $code = $todo->{'fk'}{$fk_name}{'set'} or next;
-        $code->() or die $self->error;
+        my $code   = $todo->{'fk'}{$fk_name}{'set'} or next;
+        my $object = $code->();
+        
+        # Account for objects that evaluate to false to due overloading
+        unless($object || ref $object)
+        {
+          die $self->error;
+        }
+
+        # Track which rows were set so we can avoid deleting
+        # them later in the "delete on save" code
+        $did_set{'fk'}{$fk_name}{row_id($object)} = 1;
       }
 
       # Do the actual save
@@ -280,12 +292,30 @@ sub save
       {
         $ret = shift->update(@_);
       }
-    
-      $ret = shift->insert(@_);
+      else
+      {
+        $ret = shift->insert(@_);
+      }
 
       # Do post-save stuff
-      # $todo = $self->{ON_SAVE_ATTR_NAME()}{'post'};
-      # ...
+      $todo = $self->{ON_SAVE_ATTR_NAME()}{'post'};
+
+      foreach my $fk_name (keys %{$todo->{'fk'}})
+      {
+        my $fk = $meta->foreign_key($fk_name) 
+          or Carp::confess "No foreign key named '$fk_name'";
+
+        foreach my $item (@{$todo->{'fk'}{$fk_name}{'delete'} || []})
+        {
+          my $code   = $item->{'code'};
+          my $object = $item->{'object'};
+          
+          # Don't run the code to delete this object if we just set it above
+          next  if($did_set{'fk'}{$fk_name}{row_id($object)});
+
+          $code->() or die $self->error;
+        }
+      }
 
       if($started_new_tx)
       {

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 252;
+use Test::More tests => 360;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 108)  unless($HAVE_PG);
+  skip("Postgres tests", 132)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -300,7 +300,14 @@ SKIP: foreach my $db_type ('pg')
   eval { $o->meta->alias_column(nonesuch => 'foo') };
   ok($@, "alias_column() nonesuch - $db_type");
 
-  $o = MyPgObject->new(name => 'Alex',
+  # Start foreign key method tests
+
+  #
+  # Foreign key get_set_now
+  #
+
+  $o = MyPgObject->new(id   => 50,
+                       name => 'Alex',
                        flag => 1);
 
   eval { $o->other_obj('abc') };
@@ -320,6 +327,10 @@ SKIP: foreach my $db_type ('pg')
   ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "set foreign key object 2 - $db_type");
   ok($o->fkone == 1 && $o->fk2 == 2 && $o->fk3 == 3, "set foreign key object check keys 2 - $db_type");
 
+  #
+  # Foreign key delete_now
+  #
+
   ok($o->delete_other_obj, "delete foreign key object 1 - $db_type");
 
   ok(!defined $o->fkone && !defined $o->fk2 && !defined $o->fk3, "delete foreign key object check keys 1 - $db_type");
@@ -328,7 +339,11 @@ SKIP: foreach my $db_type ('pg')
 
   ok(!defined $o->delete_other_obj, "delete foreign key object 2 - $db_type");
 
-  # Set, save
+  #
+  # Foreign key get_set_on_save
+  #
+
+  # TEST: Set, save
   $o = MyPgObject->new(id   => 100,
                        name => 'Bub',
                        flag => 1);
@@ -354,7 +369,7 @@ SKIP: foreach my $db_type ('pg')
   ok($other_obj && $other_obj && $other_obj->k1 == 21 && $other_obj->k2 == 22 && $other_obj->k3 == 23,
      "set foreign key object on save 5 - $db_type");
 
-  # Set, set to undef, save
+  # TEST: Set, set to undef, save
   $o = MyPgObject->new(id   => 200,
                        name => 'Rose',
                        flag => 1);
@@ -384,7 +399,7 @@ SKIP: foreach my $db_type ('pg')
 
   $o->delete(cascade => 1);
 
-  # Set, delete, save
+  # TEST: Set, delete, save
   $o = MyPgObject->new(id   => 200,
                        name => 'Rose',
                        flag => 1);
@@ -399,18 +414,201 @@ SKIP: foreach my $db_type ('pg')
   ok($other_obj && $other_obj->k1 == 51 && $other_obj->k2 == 52 && $other_obj->k3 == 53,
      "set foreign key object on save 14 - $db_type");
 
-  ok(!$o->delete_other_obj, "set foreign key object on save 15 - $db_type");
+  ok($o->delete_other_obj, "set foreign key object on save 15 - $db_type");
 
-  ok($o->save, "set foreign key object on save 16 - $db_type");
+  $other_obj = $o->other_obj_on_save;
+  
+  ok(!defined $other_obj && !defined $o->fkone && !defined $o->fk2 && !defined $o->fk3,
+     "set foreign key object on save 16 - $db_type");
+
+  ok($o->save, "set foreign key object on save 17 - $db_type");
 
   $o = MyPgObject->new(id => 200);
 
   $o->load;
   
-  ok(!defined $o->other_obj_on_save, "set foreign key object on save 17 - $db_type");
+  ok(!defined $o->other_obj_on_save, "set foreign key object on save 18 - $db_type");
 
   $co = MyPgOtherObject->new(k1 => 51, k2 => 52, k3 => 53);
-  ok(!$co->load(speculative => 1), "set foreign key object on save 18 - $db_type");
+  ok(!$co->load(speculative => 1), "set foreign key object on save 19 - $db_type");
+  
+  $o->delete(cascade => 1);
+
+  #
+  # Foreign key delete_on_save
+  #
+
+  $o = MyPgObject->new(id   => 500,
+                       name => 'Kip',
+                       flag => 1);
+
+  $o->other_obj_on_save(k1 => 7, k2 => 8, k3 => 9);
+  $o->save;
+
+  $o = MyPgObject->new(id => 500);
+  $o->load;
+
+  # TEST: Delete, save
+  $o->del_other_obj_on_save;
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are undef...
+  ok(!defined $other_obj && !defined $o->fkone && !defined $o->fk2 && !defined $o->fk3,
+     "delete foreign key object on save 1 - $db_type");
+
+  # ...but that the foreign object has not yet been deleted
+  $co = MyPgOtherObject->new(k1 => 7, k2 => 8, k3 => 9);
+  ok($co->load(speculative => 1), "delete foreign key object on save 2 - $db_type");
+
+  # Do the save
+  ok($o->save, "delete foreign key object on save 3 - $db_type");
+
+  # Now it's deleted
+  $co = MyPgOtherObject->new(k1 => 7, k2 => 8, k3 => 9);
+  ok(!$co->load(speculative => 1), "delete foreign key object on save 4 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are undef
+  ok(!defined $other_obj && !defined $o->fkone && !defined $o->fk2 && !defined $o->fk3,
+     "delete foreign key object on save 5 - $db_type");
+
+  # RESET
+  $o->delete;
+
+  $o = MyPgObject->new(id   => 700,
+                       name => 'Ham',
+                       flag => 0);
+
+  $o->other_obj_on_save(k1 => 12, k2 => 34, k3 => 56);
+  $o->save;
+
+  $o = MyPgObject->new(id => 700);
+  $o->load;
+  
+  # TEST: Delete, set on save, delete, save
+  ok($o->del_other_obj_on_save, "delete 2 foreign key object on save 1 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are undef...
+  ok(!defined $other_obj && !defined $o->fkone && !defined $o->fk2 && !defined $o->fk3,
+     "delete 2 foreign key object on save 2 - $db_type");
+
+  # ...but that the foreign object has not yet been deleted
+  $co = MyPgOtherObject->new(k1 => 12, k2 => 34, k3 => 56);
+  ok($co->load(speculative => 1), "delete 3 foreign key object on save 3 - $db_type");
+
+  # Set on save
+  $o->other_obj_on_save(k1 => 44, k2 => 55, k3 => 66);
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are set...
+  ok($other_obj &&  $other_obj->k1 == 44 && $other_obj->k2 == 55 && $other_obj->k3 == 66,
+     "delete 2 foreign key object on save 4 - $db_type");
+
+  # ...and that the foreign object has not yet been saved
+  $co = MyPgOtherObject->new(k1 => 44, k2 => 55, k3 => 66);
+  ok(!$co->load(speculative => 1), "delete 2 foreign key object on save 5 - $db_type");
+
+  # Delete again
+  ok($o->del_other_obj_on_save, "delete 2 foreign key object on save 6 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are undef...
+  ok(!defined $other_obj && !defined $o->fkone && !defined $o->fk2 && !defined $o->fk3,
+     "delete 2 foreign key object on save 7 - $db_type");
+
+  # Confirm that the foreign objects have not been saved
+  $co = MyPgOtherObject->new(k1 => 7, k2 => 8, k3 => 9);
+  ok(!$co->load(speculative => 1), "delete 2 foreign key object on save 8 - $db_type");
+  $co = MyPgOtherObject->new(k1 => 44, k2 => 55, k3 => 66);
+  ok(!$co->load(speculative => 1), "delete 2 foreign key object on save 9 - $db_type");
+
+  # RESET
+  $o->delete;
+
+  $o = MyPgObject->new(id   => 800,
+                       name => 'Lee',
+                       flag => 1);
+
+  $o->other_obj_on_save(k1 => 12, k2 => 34, k3 => 56);
+  $o->save;
+
+  $o = MyPgObject->new(id => 800);
+  $o->load;
+  
+  # TEST: Set & save, delete on save, set on save, delete on save, save
+  ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "delete 3 foreign key object on save 1 - $db_type");
+
+  # Confirm that both foreign objects are in the db
+  $co = MyPgOtherObject->new(k1 => 12, k2 => 34, k3 => 56);
+  ok($co->load(speculative => 1), "delete 3 foreign key object on save 2 - $db_type");
+  $co = MyPgOtherObject->new(k1 => 1, k2 => 2, k3 => 3);
+  ok($co->load(speculative => 1), "delete 3 foreign key object on save 3 - $db_type");
+
+  # Delete on save
+  $o->del_other_obj_on_save;
+  
+  # Set-on-save to old value
+  $o->other_obj_on_save(k1 => 12, k2 => 34, k3 => 56);
+  
+  # Delete on save
+  $o->del_other_obj_on_save;  
+
+  # Save
+  $o->save;
+
+  # Confirm that both foreign objects have been deleted
+  $co = MyPgOtherObject->new(k1 => 12, k2 => 34, k3 => 56);
+  ok(!$co->load(speculative => 1), "delete 3 foreign key object on save 4 - $db_type");
+  $co = MyPgOtherObject->new(k1 => 1, k2 => 2, k3 => 3);
+  ok(!$co->load(speculative => 1), "delete 3 foreign key object on save 5 - $db_type");
+
+  # RESET
+  $o->delete;
+
+  $o = MyPgObject->new(id   => 900,
+                       name => 'Kai',
+                       flag => 1);
+
+  $o->other_obj_on_save(k1 => 12, k2 => 34, k3 => 56);
+  $o->save;
+
+  $o = MyPgObject->new(id => 900);
+  $o->load;
+  
+  # TEST: Delete on save, set on save, delete on save, set to same one, save
+  $o->del_other_obj_on_save;
+
+  # Set on save
+  ok($o->other_obj_on_save(k1 => 1, k2 => 2, k3 => 3), "delete 4 foreign key object on save 1 - $db_type");
+
+  # Delete on save
+  $o->del_other_obj_on_save;
+  
+  # Set-on-save to previous value
+  $o->other_obj_on_save(k1 => 1, k2 => 2, k3 => 3);
+
+  # Save
+  $o->save;
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are set...
+  ok($other_obj &&  $other_obj->k1 == 1 && $other_obj->k2 == 2 && $other_obj->k3 == 3,
+     "delete 4 foreign key object on save 2 - $db_type");
+
+  # Confirm that the new foreign object is there and the old one is not
+  $co = MyPgOtherObject->new(k1 => 1, k2 => 2, k3 => 3);
+  ok($co->load(speculative => 1), "delete 4 foreign key object on save 3 - $db_type");
+  $co = MyPgOtherObject->new(k1 => 12, k2 => 34, k3 => 56);
+  ok(!$co->load(speculative => 1), "delete 4 foreign key object on save 4 - $db_type");
+
+  # End foreign key method tests
 }
 
 #
@@ -419,7 +617,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 60)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 102)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -602,7 +800,14 @@ SKIP: foreach my $db_type ('mysql')
   eval { $o->meta->alias_column(nonesuch => 'foo') };
   ok($@, "alias_column() nonesuch - $db_type");
 
-  $o = MyMySQLObject->new(name => 'Alex',
+  # Start foreign key method tests
+
+  #
+  # Foreign key get_set_now
+  #
+
+  $o = MyMySQLObject->new(id   => 50,
+                          name => 'Alex',
                           flag => 1);
 
   eval { $o->other_obj('abc') };
@@ -622,13 +827,288 @@ SKIP: foreach my $db_type ('mysql')
   ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "set foreign key object 2 - $db_type");
   ok($o->fk1 == 1 && $o->fk2 == 2 && $o->fk3 == 3, "set foreign key object check keys 2 - $db_type");
 
-  ok($o->del_other_obj, "delete foreign key object 1 - $db_type");
+  #
+  # Foreign key delete_now
+  #
+
+  ok($o->delete_other_obj, "delete foreign key object 1 - $db_type");
 
   ok(!defined $o->fk1 && !defined $o->fk2 && !defined $o->fk3, "delete foreign key object check keys 1 - $db_type");
 
   ok(!defined $o->other_obj && defined $o->error, "delete foreign key object confirm 1 - $db_type");
 
-  ok(!defined $o->del_other_obj, "delete foreign key object 2 - $db_type");
+  ok(!defined $o->delete_other_obj, "delete foreign key object 2 - $db_type");
+
+  #
+  # Foreign key get_set_on_save
+  #
+
+  # TEST: Set, save
+  $o = MyMySQLObject->new(id   => 100,
+                          name => 'Bub',
+                          flag => 1);
+
+  ok($o->other_obj_on_save(k1 => 21, k2 => 22, k3 => 23), "set foreign key object on save 1 - $db_type");
+
+  my $co = MyMySQLObject->new(id => 100);
+  ok(!$co->load(speculative => 1), "set foreign key object on save 2 - $db_type");
+
+  my $other_obj = $o->other_obj_on_save;
+  
+  ok($other_obj && $other_obj->k1 == 21 && $other_obj->k2 == 22 && $other_obj->k3 == 23,
+     "set foreign key object on save 3 - $db_type");
+
+  ok($o->save, "set foreign key object on save 4 - $db_type");
+
+  $o = MyMySQLObject->new(id => 100);
+
+  $o->load;
+  
+  $other_obj = $o->other_obj_on_save;
+
+  ok($other_obj && $other_obj && $other_obj->k1 == 21 && $other_obj->k2 == 22 && $other_obj->k3 == 23,
+     "set foreign key object on save 5 - $db_type");
+
+  # TEST: Set, set to undef, save
+  $o = MyMySQLObject->new(id   => 200,
+                          name => 'Rose',
+                          flag => 1);
+
+  ok($o->other_obj_on_save(k1 => 51, k2 => 52, k3 => 53), "set foreign key object on save 6 - $db_type");
+
+  $co = MyMySQLObject->new(id => 200);
+  ok(!$co->load(speculative => 1), "set foreign key object on save 7 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+
+  ok($other_obj && $other_obj->k1 == 51 && $other_obj->k2 == 52 && $other_obj->k3 == 53,
+     "set foreign key object on save 8 - $db_type");
+
+  $o->other_obj_on_save(undef);
+
+  ok($o->save, "set foreign key object on save 9 - $db_type");
+
+  $o = MyMySQLObject->new(id => 200);
+
+  $o->load;
+
+  ok(!defined $o->other_obj_on_save, "set foreign key object on save 10 - $db_type");
+
+  $co = MyMySQLOtherObject->new(k1 => 51, k2 => 52, k3 => 53);
+  ok(!$co->load(speculative => 1), "set foreign key object on save 11 - $db_type");
+
+  $o->delete(cascade => 1);
+
+  # TEST: Set, delete, save
+  $o = MyMySQLObject->new(id   => 200,
+                          name => 'Rose',
+                          flag => 1);
+
+  ok($o->other_obj_on_save(k1 => 51, k2 => 52, k3 => 53), "set foreign key object on save 12 - $db_type");
+
+  $co = MyMySQLObject->new(id => 200);
+  ok(!$co->load(speculative => 1), "set foreign key object on save 13 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+  
+  ok($other_obj && $other_obj->k1 == 51 && $other_obj->k2 == 52 && $other_obj->k3 == 53,
+     "set foreign key object on save 14 - $db_type");
+
+  ok($o->delete_other_obj, "set foreign key object on save 15 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+  
+  ok(!defined $other_obj && !defined $o->fk1 && !defined $o->fk2 && !defined $o->fk3,
+     "set foreign key object on save 16 - $db_type");
+
+  ok($o->save, "set foreign key object on save 17 - $db_type");
+
+  $o = MyMySQLObject->new(id => 200);
+
+  $o->load;
+  
+  ok(!defined $o->other_obj_on_save, "set foreign key object on save 18 - $db_type");
+
+  $co = MyMySQLOtherObject->new(k1 => 51, k2 => 52, k3 => 53);
+  ok(!$co->load(speculative => 1), "set foreign key object on save 19 - $db_type");
+  
+  $o->delete(cascade => 1);
+
+  #
+  # Foreign key delete_on_save
+  #
+
+  $o = MyMySQLObject->new(id   => 500,
+                          name => 'Kip',
+                          flag => 1);
+
+  $o->other_obj_on_save(k1 => 7, k2 => 8, k3 => 9);
+  $o->save;
+
+  $o = MyMySQLObject->new(id => 500);
+  $o->load;
+
+  # TEST: Delete, save
+  $o->del_other_obj_on_save;
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are undef...
+  ok(!defined $other_obj && !defined $o->fk1 && !defined $o->fk2 && !defined $o->fk3,
+     "delete foreign key object on save 1 - $db_type");
+
+  # ...but that the foreign object has not yet been deleted
+  $co = MyMySQLOtherObject->new(k1 => 7, k2 => 8, k3 => 9);
+  ok($co->load(speculative => 1), "delete foreign key object on save 2 - $db_type");
+
+  # Do the save
+  ok($o->save, "delete foreign key object on save 3 - $db_type");
+
+  # Now it's deleted
+  $co = MyMySQLOtherObject->new(k1 => 7, k2 => 8, k3 => 9);
+  ok(!$co->load(speculative => 1), "delete foreign key object on save 4 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are undef
+  ok(!defined $other_obj && !defined $o->fk1 && !defined $o->fk2 && !defined $o->fk3,
+     "delete foreign key object on save 5 - $db_type");
+
+  # RESET
+  $o->delete;
+
+  $o = MyMySQLObject->new(id   => 700,
+                          name => 'Ham',
+                          flag => 0);
+
+  $o->other_obj_on_save(k1 => 12, k2 => 34, k3 => 56);
+  $o->save;
+
+  $o = MyMySQLObject->new(id => 700);
+  $o->load;
+  
+  # TEST: Delete, set on save, delete, save
+  ok($o->del_other_obj_on_save, "delete 2 foreign key object on save 1 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are undef...
+  ok(!defined $other_obj && !defined $o->fk1 && !defined $o->fk2 && !defined $o->fk3,
+     "delete 2 foreign key object on save 2 - $db_type");
+
+  # ...but that the foreign object has not yet been deleted
+  $co = MyMySQLOtherObject->new(k1 => 12, k2 => 34, k3 => 56);
+  ok($co->load(speculative => 1), "delete 3 foreign key object on save 3 - $db_type");
+
+  # Set on save
+  $o->other_obj_on_save(k1 => 44, k2 => 55, k3 => 66);
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are set...
+  ok($other_obj &&  $other_obj->k1 == 44 && $other_obj->k2 == 55 && $other_obj->k3 == 66,
+     "delete 2 foreign key object on save 4 - $db_type");
+
+  # ...and that the foreign object has not yet been saved
+  $co = MyMySQLOtherObject->new(k1 => 44, k2 => 55, k3 => 66);
+  ok(!$co->load(speculative => 1), "delete 2 foreign key object on save 5 - $db_type");
+
+  # Delete again
+  ok($o->del_other_obj_on_save, "delete 2 foreign key object on save 6 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are undef...
+  ok(!defined $other_obj && !defined $o->fk1 && !defined $o->fk2 && !defined $o->fk3,
+     "delete 2 foreign key object on save 7 - $db_type");
+
+  # Confirm that the foreign objects have not been saved
+  $co = MyMySQLOtherObject->new(k1 => 7, k2 => 8, k3 => 9);
+  ok(!$co->load(speculative => 1), "delete 2 foreign key object on save 8 - $db_type");
+  $co = MyMySQLOtherObject->new(k1 => 44, k2 => 55, k3 => 66);
+  ok(!$co->load(speculative => 1), "delete 2 foreign key object on save 9 - $db_type");
+
+  # RESET
+  $o->delete;
+
+  $o = MyMySQLObject->new(id   => 800,
+                          name => 'Lee',
+                          flag => 1);
+
+  $o->other_obj_on_save(k1 => 12, k2 => 34, k3 => 56);
+  $o->save;
+
+  $o = MyMySQLObject->new(id => 800);
+  $o->load;
+  
+  # TEST: Set & save, delete on save, set on save, delete on save, save
+  ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "delete 3 foreign key object on save 1 - $db_type");
+
+  # Confirm that both foreign objects are in the db
+  $co = MyMySQLOtherObject->new(k1 => 12, k2 => 34, k3 => 56);
+  ok($co->load(speculative => 1), "delete 3 foreign key object on save 2 - $db_type");
+  $co = MyMySQLOtherObject->new(k1 => 1, k2 => 2, k3 => 3);
+  ok($co->load(speculative => 1), "delete 3 foreign key object on save 3 - $db_type");
+
+  # Delete on save
+  $o->del_other_obj_on_save;
+  
+  # Set-on-save to old value
+  $o->other_obj_on_save(k1 => 12, k2 => 34, k3 => 56);
+  
+  # Delete on save
+  $o->del_other_obj_on_save;  
+
+  # Save
+  $o->save;
+
+  # Confirm that both foreign objects have been deleted
+  $co = MyMySQLOtherObject->new(k1 => 12, k2 => 34, k3 => 56);
+  ok(!$co->load(speculative => 1), "delete 3 foreign key object on save 4 - $db_type");
+  $co = MyMySQLOtherObject->new(k1 => 1, k2 => 2, k3 => 3);
+  ok(!$co->load(speculative => 1), "delete 3 foreign key object on save 5 - $db_type");
+
+  # RESET
+  $o->delete;
+
+  $o = MyMySQLObject->new(id   => 900,
+                          name => 'Kai',
+                          flag => 1);
+
+  $o->other_obj_on_save(k1 => 12, k2 => 34, k3 => 56);
+  $o->save;
+
+  $o = MyMySQLObject->new(id => 900);
+  $o->load;
+  
+  # TEST: Delete on save, set on save, delete on save, set to same one, save
+  $o->del_other_obj_on_save;
+
+  # Set on save
+  ok($o->other_obj_on_save(k1 => 1, k2 => 2, k3 => 3), "delete 4 foreign key object on save 1 - $db_type");
+
+  # Delete on save
+  $o->del_other_obj_on_save;
+  
+  # Set-on-save to previous value
+  $o->other_obj_on_save(k1 => 1, k2 => 2, k3 => 3);
+
+  # Save
+  $o->save;
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are set...
+  ok($other_obj &&  $other_obj->k1 == 1 && $other_obj->k2 == 2 && $other_obj->k3 == 3,
+     "delete 4 foreign key object on save 2 - $db_type");
+
+  # Confirm that the new foreign object is there and the old one is not
+  $co = MyMySQLOtherObject->new(k1 => 1, k2 => 2, k3 => 3);
+  ok($co->load(speculative => 1), "delete 4 foreign key object on save 3 - $db_type");
+  $co = MyMySQLOtherObject->new(k1 => 12, k2 => 34, k3 => 56);
+  ok(!$co->load(speculative => 1), "delete 4 foreign key object on save 4 - $db_type");
+
+  # End foreign key method tests
 }
 
 #
@@ -637,7 +1117,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 82)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 124)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -882,8 +1362,15 @@ SKIP: foreach my $db_type ('informix')
   eval { $o->meta->alias_column(nonesuch => 'foo') };
   ok($@, "alias_column() nonesuch - $db_type");
 
-  $o = MyInformixObject->new(name => 'Alex',
-                             flag => 1);
+  # Start foreign key method tests
+
+  #
+  # Foreign key get_set_now
+  #
+
+  $o = MyInformixObject->new(id   => 50,
+                       name => 'Alex',
+                       flag => 1);
 
   eval { $o->other_obj('abc') };
   ok($@, "set foreign key object: one arg - $db_type");
@@ -902,13 +1389,288 @@ SKIP: foreach my $db_type ('informix')
   ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "set foreign key object 2 - $db_type");
   ok($o->fkone == 1 && $o->fk2 == 2 && $o->fk3 == 3, "set foreign key object check keys 2 - $db_type");
 
-  ok($o->del_other_obj, "delete foreign key object 1 - $db_type");
+  #
+  # Foreign key delete_now
+  #
+
+  ok($o->delete_other_obj, "delete foreign key object 1 - $db_type");
 
   ok(!defined $o->fkone && !defined $o->fk2 && !defined $o->fk3, "delete foreign key object check keys 1 - $db_type");
 
   ok(!defined $o->other_obj && defined $o->error, "delete foreign key object confirm 1 - $db_type");
 
-  ok(!defined $o->del_other_obj, "delete foreign key object 2 - $db_type");
+  ok(!defined $o->delete_other_obj, "delete foreign key object 2 - $db_type");
+
+  #
+  # Foreign key get_set_on_save
+  #
+
+  # TEST: Set, save
+  $o = MyInformixObject->new(id   => 100,
+                       name => 'Bub',
+                       flag => 1);
+
+  ok($o->other_obj_on_save(k1 => 21, k2 => 22, k3 => 23), "set foreign key object on save 1 - $db_type");
+
+  my $co = MyInformixObject->new(id => 100);
+  ok(!$co->load(speculative => 1), "set foreign key object on save 2 - $db_type");
+
+  my $other_obj = $o->other_obj_on_save;
+  
+  ok($other_obj && $other_obj->k1 == 21 && $other_obj->k2 == 22 && $other_obj->k3 == 23,
+     "set foreign key object on save 3 - $db_type");
+
+  ok($o->save, "set foreign key object on save 4 - $db_type");
+
+  $o = MyInformixObject->new(id => 100);
+
+  $o->load;
+  
+  $other_obj = $o->other_obj_on_save;
+
+  ok($other_obj && $other_obj && $other_obj->k1 == 21 && $other_obj->k2 == 22 && $other_obj->k3 == 23,
+     "set foreign key object on save 5 - $db_type");
+
+  # TEST: Set, set to undef, save
+  $o = MyInformixObject->new(id   => 200,
+                       name => 'Rose',
+                       flag => 1);
+
+  ok($o->other_obj_on_save(k1 => 51, k2 => 52, k3 => 53), "set foreign key object on save 6 - $db_type");
+
+  $co = MyInformixObject->new(id => 200);
+  ok(!$co->load(speculative => 1), "set foreign key object on save 7 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+
+  ok($other_obj && $other_obj->k1 == 51 && $other_obj->k2 == 52 && $other_obj->k3 == 53,
+     "set foreign key object on save 8 - $db_type");
+
+  $o->other_obj_on_save(undef);
+
+  ok($o->save, "set foreign key object on save 9 - $db_type");
+
+  $o = MyInformixObject->new(id => 200);
+
+  $o->load;
+
+  ok(!defined $o->other_obj_on_save, "set foreign key object on save 10 - $db_type");
+
+  $co = MyInformixOtherObject->new(k1 => 51, k2 => 52, k3 => 53);
+  ok(!$co->load(speculative => 1), "set foreign key object on save 11 - $db_type");
+
+  $o->delete(cascade => 1);
+
+  # TEST: Set, delete, save
+  $o = MyInformixObject->new(id   => 200,
+                       name => 'Rose',
+                       flag => 1);
+
+  ok($o->other_obj_on_save(k1 => 51, k2 => 52, k3 => 53), "set foreign key object on save 12 - $db_type");
+
+  $co = MyInformixObject->new(id => 200);
+  ok(!$co->load(speculative => 1), "set foreign key object on save 13 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+  
+  ok($other_obj && $other_obj->k1 == 51 && $other_obj->k2 == 52 && $other_obj->k3 == 53,
+     "set foreign key object on save 14 - $db_type");
+
+  ok($o->delete_other_obj, "set foreign key object on save 15 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+  
+  ok(!defined $other_obj && !defined $o->fkone && !defined $o->fk2 && !defined $o->fk3,
+     "set foreign key object on save 16 - $db_type");
+
+  ok($o->save, "set foreign key object on save 17 - $db_type");
+
+  $o = MyInformixObject->new(id => 200);
+
+  $o->load;
+  
+  ok(!defined $o->other_obj_on_save, "set foreign key object on save 18 - $db_type");
+
+  $co = MyInformixOtherObject->new(k1 => 51, k2 => 52, k3 => 53);
+  ok(!$co->load(speculative => 1), "set foreign key object on save 19 - $db_type");
+  
+  $o->delete(cascade => 1);
+
+  #
+  # Foreign key delete_on_save
+  #
+
+  $o = MyInformixObject->new(id   => 500,
+                       name => 'Kip',
+                       flag => 1);
+
+  $o->other_obj_on_save(k1 => 7, k2 => 8, k3 => 9);
+  $o->save;
+
+  $o = MyInformixObject->new(id => 500);
+  $o->load;
+
+  # TEST: Delete, save
+  $o->del_other_obj_on_save;
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are undef...
+  ok(!defined $other_obj && !defined $o->fkone && !defined $o->fk2 && !defined $o->fk3,
+     "delete foreign key object on save 1 - $db_type");
+
+  # ...but that the foreign object has not yet been deleted
+  $co = MyInformixOtherObject->new(k1 => 7, k2 => 8, k3 => 9);
+  ok($co->load(speculative => 1), "delete foreign key object on save 2 - $db_type");
+
+  # Do the save
+  ok($o->save, "delete foreign key object on save 3 - $db_type");
+
+  # Now it's deleted
+  $co = MyInformixOtherObject->new(k1 => 7, k2 => 8, k3 => 9);
+  ok(!$co->load(speculative => 1), "delete foreign key object on save 4 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are undef
+  ok(!defined $other_obj && !defined $o->fkone && !defined $o->fk2 && !defined $o->fk3,
+     "delete foreign key object on save 5 - $db_type");
+
+  # RESET
+  $o->delete;
+
+  $o = MyInformixObject->new(id   => 700,
+                       name => 'Ham',
+                       flag => 0);
+
+  $o->other_obj_on_save(k1 => 12, k2 => 34, k3 => 56);
+  $o->save;
+
+  $o = MyInformixObject->new(id => 700);
+  $o->load;
+  
+  # TEST: Delete, set on save, delete, save
+  ok($o->del_other_obj_on_save, "delete 2 foreign key object on save 1 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are undef...
+  ok(!defined $other_obj && !defined $o->fkone && !defined $o->fk2 && !defined $o->fk3,
+     "delete 2 foreign key object on save 2 - $db_type");
+
+  # ...but that the foreign object has not yet been deleted
+  $co = MyInformixOtherObject->new(k1 => 12, k2 => 34, k3 => 56);
+  ok($co->load(speculative => 1), "delete 3 foreign key object on save 3 - $db_type");
+
+  # Set on save
+  $o->other_obj_on_save(k1 => 44, k2 => 55, k3 => 66);
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are set...
+  ok($other_obj &&  $other_obj->k1 == 44 && $other_obj->k2 == 55 && $other_obj->k3 == 66,
+     "delete 2 foreign key object on save 4 - $db_type");
+
+  # ...and that the foreign object has not yet been saved
+  $co = MyInformixOtherObject->new(k1 => 44, k2 => 55, k3 => 66);
+  ok(!$co->load(speculative => 1), "delete 2 foreign key object on save 5 - $db_type");
+
+  # Delete again
+  ok($o->del_other_obj_on_save, "delete 2 foreign key object on save 6 - $db_type");
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are undef...
+  ok(!defined $other_obj && !defined $o->fkone && !defined $o->fk2 && !defined $o->fk3,
+     "delete 2 foreign key object on save 7 - $db_type");
+
+  # Confirm that the foreign objects have not been saved
+  $co = MyInformixOtherObject->new(k1 => 7, k2 => 8, k3 => 9);
+  ok(!$co->load(speculative => 1), "delete 2 foreign key object on save 8 - $db_type");
+  $co = MyInformixOtherObject->new(k1 => 44, k2 => 55, k3 => 66);
+  ok(!$co->load(speculative => 1), "delete 2 foreign key object on save 9 - $db_type");
+
+  # RESET
+  $o->delete;
+
+  $o = MyInformixObject->new(id   => 800,
+                       name => 'Lee',
+                       flag => 1);
+
+  $o->other_obj_on_save(k1 => 12, k2 => 34, k3 => 56);
+  $o->save;
+
+  $o = MyInformixObject->new(id => 800);
+  $o->load;
+  
+  # TEST: Set & save, delete on save, set on save, delete on save, save
+  ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "delete 3 foreign key object on save 1 - $db_type");
+
+  # Confirm that both foreign objects are in the db
+  $co = MyInformixOtherObject->new(k1 => 12, k2 => 34, k3 => 56);
+  ok($co->load(speculative => 1), "delete 3 foreign key object on save 2 - $db_type");
+  $co = MyInformixOtherObject->new(k1 => 1, k2 => 2, k3 => 3);
+  ok($co->load(speculative => 1), "delete 3 foreign key object on save 3 - $db_type");
+
+  # Delete on save
+  $o->del_other_obj_on_save;
+  
+  # Set-on-save to old value
+  $o->other_obj_on_save(k1 => 12, k2 => 34, k3 => 56);
+  
+  # Delete on save
+  $o->del_other_obj_on_save;  
+
+  # Save
+  $o->save;
+
+  # Confirm that both foreign objects have been deleted
+  $co = MyInformixOtherObject->new(k1 => 12, k2 => 34, k3 => 56);
+  ok(!$co->load(speculative => 1), "delete 3 foreign key object on save 4 - $db_type");
+  $co = MyInformixOtherObject->new(k1 => 1, k2 => 2, k3 => 3);
+  ok(!$co->load(speculative => 1), "delete 3 foreign key object on save 5 - $db_type");
+
+  # RESET
+  $o->delete;
+
+  $o = MyInformixObject->new(id   => 900,
+                       name => 'Kai',
+                       flag => 1);
+
+  $o->other_obj_on_save(k1 => 12, k2 => 34, k3 => 56);
+  $o->save;
+
+  $o = MyInformixObject->new(id => 900);
+  $o->load;
+  
+  # TEST: Delete on save, set on save, delete on save, set to same one, save
+  $o->del_other_obj_on_save;
+
+  # Set on save
+  ok($o->other_obj_on_save(k1 => 1, k2 => 2, k3 => 3), "delete 4 foreign key object on save 1 - $db_type");
+
+  # Delete on save
+  $o->del_other_obj_on_save;
+  
+  # Set-on-save to previous value
+  $o->other_obj_on_save(k1 => 1, k2 => 2, k3 => 3);
+
+  # Save
+  $o->save;
+
+  $other_obj = $o->other_obj_on_save;
+
+  # Confirm that fk attrs are set...
+  ok($other_obj &&  $other_obj->k1 == 1 && $other_obj->k2 == 2 && $other_obj->k3 == 3,
+     "delete 4 foreign key object on save 2 - $db_type");
+
+  # Confirm that the new foreign object is there and the old one is not
+  $co = MyInformixOtherObject->new(k1 => 1, k2 => 2, k3 => 3);
+  ok($co->load(speculative => 1), "delete 4 foreign key object on save 3 - $db_type");
+  $co = MyInformixOtherObject->new(k1 => 12, k2 => 34, k3 => 56);
+  ok(!$co->load(speculative => 1), "delete 4 foreign key object on save 4 - $db_type");
+
+  # End foreign key method tests
 }
 
 BEGIN
@@ -1079,7 +1841,8 @@ EOF
         {
           get_set_now     => undef,
           get_set_on_save => 'other_obj_on_save',
-          delete          => undef,
+          delete_now      => undef,
+          delete_on_save  => 'del_other_obj_on_save',
         },
       },
     );
@@ -1095,7 +1858,7 @@ EOF
           fk1 => 'k1',
           fk2 => 'k2',
           fk3 => 'k3',
-        }
+        },
       },
 
       other2_objs =>
@@ -1361,7 +2124,7 @@ EOF
           fk1 => 'k1',
           fk2 => 'k2',
           fk3 => 'k3',
-        }
+        },
       }
     );
 
@@ -1389,8 +2152,10 @@ EOF
         },
         methods => 
         {
-          get_set_now => 'other_obj',
-          delete      => 'del_other_obj',
+          get_set_now     => undef,
+          get_set_on_save => 'other_obj_on_save',
+          delete_now      => undef,
+          delete_on_save  => 'del_other_obj_on_save',
         },
       },
     );
@@ -1654,8 +2419,10 @@ EOF
         },
         methods => 
         {
-          get_set_now => 'other_obj',
-          delete      => 'del_other_obj',
+          get_set_now     => undef,
+          get_set_on_save => 'other_obj_on_save',
+          delete_now      => undef,
+          delete_on_save  => 'del_other_obj_on_save',
         },
       },
     );
