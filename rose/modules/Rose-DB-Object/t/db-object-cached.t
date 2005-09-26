@@ -372,6 +372,7 @@ SKIP: foreach my $db_type ('mysql')
   ok($@, 'alias_column() nonesuch');
 
   $o = MyMySQLObject->new(name => 'John');
+$DB::single = 1;
   ok($o->load, "load() forget 1 - $db_type");
 
   $o->forget;

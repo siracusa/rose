@@ -115,9 +115,9 @@ sub dbh
 
 sub load
 {
-  my($self) = shift;
+  my($self) = $_[0]; # XXX: Must maintain alias to actual "self" object arg
 
-  my %args = @_;
+  my %args = (self => @_); # faster than @_[1 .. $#_];
 
   my $db  = $self->db  or return 0;
   my $dbh = $self->dbh or return 0;
@@ -202,16 +202,20 @@ sub load
 
     if(@$objects > 0)
     {
-      my $methods = $meta->column_mutator_method_names;
-      my $object  = $objects->[0];
+      # Sneaky init by object replacement
+      $self = $_[0] = $objects->[0];
 
-      local $self->{STATE_LOADING()}  = 1;
-      local $object->{STATE_SAVING()} = 1;
-
-      foreach my $method (@$methods)
-      {
-        $self->$method($object->$method());
-      }
+      # Init by copying attributes
+      #my $methods = $meta->column_mutator_method_names;
+      #my $object  = $objects->[0];
+      #
+      #local $self->{STATE_LOADING()}  = 1;
+      #local $object->{STATE_SAVING()} = 1;
+      #
+      #foreach my $method (@$methods)
+      #{
+      #  $self->$method($object->$method());
+      #}
     }
     else
     {
@@ -275,13 +279,24 @@ sub load
 
     if($rows > 0)
     {
+      my $object = (ref $self)->new(db => $self->db);
       my $methods = $meta->column_mutator_method_names_hash;
 
+      # Sneaky init by object replacement
       foreach my $name (@$column_names)
       {
         my $method = $methods->{$name};
-        $self->$method($row{$name});
+        $object->$method($row{$name});
       }
+
+      $self = $_[0] = $object;
+
+      # Init by copying
+      #foreach my $name (@$column_names)
+      #{
+      #  my $method = $methods->{$name};
+      #  $self->$method($row{$name});
+      #}
     }
     else
     {
@@ -1425,6 +1440,34 @@ If this parameter is passed with a true value, and if the load failed because th
 Load the object and the specified "foreign objects" simultaneously.  OBJECTS should be a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names.
 
 =back
+
+B<SUBCLASS NOTE:> If you are going to override the L<load|/load> method in your subclass, you I<must> pass an I<alias to the actual object> as the first argument to the method, rather than passing a copy of the object reference.  Example:
+
+    # This is the CORRECT way to override load() while still
+    # calling the base class version of the method.
+    sub load
+    {
+      my $self = $_[0]; # Copy, no shift
+      
+      ... # Do your stuff
+
+      shift->SUPER::load(@_); # Call superclass
+    }
+
+Now here's the wrong way:
+
+    # This is the WRONG way to override load() while still
+    # calling the base class version of the method.
+    sub load
+    {
+      my $self = shift; # WRONG!  The alias to original object is now lost!
+
+      ... # Do your stuff
+
+      $self->SUPER::load(@_); # This won't work right!
+    }
+
+This requirement exists in order to preserve some sneaky object-replacement optimizations in the base class implementation of L<load|/load>.  At some point, those optimizations may change or go away.  But if you follow these guidelines, your code will continue to work no matter what.
 
 =item B<not_found>
 

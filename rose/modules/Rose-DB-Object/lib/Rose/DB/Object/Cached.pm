@@ -113,7 +113,9 @@ sub __xrdbopriv_get_object
 
 sub load
 {
-  my %args = @_[1 .. $#_];
+  # XXX: Must maintain alias to actual "self" object arg
+
+  my %args = (self => @_); # faster than @_[1 .. $#_];
 
   unless(delete $args{'refresh'})
   {
@@ -146,10 +148,8 @@ sub load
     }
   }
 
-  my $self = shift;
-
-  my $ret = $self->SUPER::load(@_);
-  __xrdbopriv_save_object($self)  if($ret);
+  my $ret = $_[0]->SUPER::load(%args);
+  __xrdbopriv_save_object($_[0])  if($ret);
 
   return $ret;
 }
