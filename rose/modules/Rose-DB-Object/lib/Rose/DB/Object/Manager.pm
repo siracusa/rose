@@ -735,7 +735,7 @@ sub get_objects
   # Alter sort_by SQL, replacing table names with aliases.  This is to
   # prevent databases like Postgres from "adding missing FROM clause"s.
   # See: http://sql-info.de/postgresql/postgres-gotchas.html#1_5
-  if(my $sort = $args{'sort_by'})
+  if((my $sort = $args{'sort_by'}) && $num_subtables > 1)
   {
     my $i = 0;
 

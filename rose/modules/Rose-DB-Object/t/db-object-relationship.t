@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 648;
+use Test::More tests => 657;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 228)  unless($HAVE_PG);
+  skip("Postgres tests", 231)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -975,6 +975,22 @@ SKIP: foreach my $db_type ('pg')
   ok(MyPgOtherObject2->new(id => 11)->load(speculative => 1), "add one to many on save 28 - $db_type");
 
   # End "one to many" method tests
+
+  # Start "load with ..." tests
+
+  ok($o = MyPgObject->new(id => 444)->load(with => [ qw(other_obj other2_objs colors) ]),
+     "load with 1 - $db_type");
+
+  $o = MyPgObject->new(id => 999);
+  
+  ok(!$o->load(with => [ qw(other_obj other2_objs colors) ], speculative => 1),
+     "load with 2 - $db_type");
+
+  $o = MyPgObject->new(id => 222);
+  
+  ok($o->load(with => 'colors'), "load with 3 - $db_type");
+  
+  # End "load with ..." tests
 }
 
 #
@@ -983,7 +999,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 198)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 201)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -1841,6 +1857,22 @@ SKIP: foreach my $db_type ('mysql')
   ok(MyMySQLOtherObject2->new(id => 11)->load(speculative => 1), "add one to many on save 28 - $db_type");
 
   # End "one to many" method tests
+
+  # Start "load with ..." tests
+
+  ok($o = MyMySQLObject->new(id => 444)->load(with => [ qw(other_obj other2_objs colors) ]),
+     "load with 1 - $db_type");
+
+  $o = MyMySQLObject->new(id => 999);
+  
+  ok(!$o->load(with => [ qw(other_obj other2_objs colors) ], speculative => 1),
+     "load with 2 - $db_type");
+
+  $o = MyMySQLObject->new(id => 222);
+  
+  ok($o->load(with => 'colors'), "load with 3 - $db_type");
+  
+  # End "load with ..." tests
 }
 
 #
@@ -1849,7 +1881,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 220)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 223)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -2772,6 +2804,22 @@ SKIP: foreach my $db_type ('informix')
   ok(MyInformixOtherObject2->new(id => 11)->load(speculative => 1), "add one to many on save 28 - $db_type");
 
   # End "one to many" method tests
+
+  # Start "load with ..." tests
+
+  ok($o = MyInformixObject->new(id => 444)->load(with => [ qw(other_obj other2_objs colors) ]),
+     "load with 1 - $db_type");
+
+  $o = MyInformixObject->new(id => 999);
+  
+  ok(!$o->load(with => [ qw(other_obj other2_objs colors) ], speculative => 1),
+     "load with 2 - $db_type");
+
+  $o = MyInformixObject->new(id => 222);
+  
+  ok($o->load(with => 'colors'), "load with 3 - $db_type");
+  
+  # End "load with ..." tests
 }
 
 BEGIN
@@ -2967,7 +3015,7 @@ EOF
         type  => 'one to many',
         class => 'MyPgOtherObject2',
         column_map => { id => 'pid' },
-        manager_args => { sort_by => 'name DESC' },
+        manager_args => { sort_by => 'rose_db_object_other2.name DESC' },
         methods =>
         {
           get_set         => undef,
@@ -3244,7 +3292,7 @@ EOF
         type  => 'one to many',
         class => 'MyMySQLOtherObject2',
         column_map => { id => 'pid' },
-        manager_args => { sort_by => 'name DESC' },
+        manager_args => { sort_by => 'rose_db_object_other2.name DESC' },
         methods =>
         {
           get_set         => undef,
@@ -3551,7 +3599,7 @@ EOF
         type  => 'one to many',
         class => 'MyInformixOtherObject2',
         column_map => { id => 'pid' },
-        manager_args => { sort_by => 'name DESC' },
+        manager_args => { sort_by => 'rose_db_object_other2.name DESC' },
         methods =>
         {
           get_set         => undef,
