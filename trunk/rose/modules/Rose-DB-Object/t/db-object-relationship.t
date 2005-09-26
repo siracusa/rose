@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 657;
+use Test::More tests => 660;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 231)  unless($HAVE_PG);
+  skip("Postgres tests", 232)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -981,14 +981,17 @@ SKIP: foreach my $db_type ('pg')
   ok($o = MyPgObject->new(id => 444)->load(with => [ qw(other_obj other2_objs colors) ]),
      "load with 1 - $db_type");
 
+  ok($o->{'other2_objs'} && $o->{'other2_objs'}[1]->name eq 'nine',
+     "load with 2 - $db_type");
+
   $o = MyPgObject->new(id => 999);
   
   ok(!$o->load(with => [ qw(other_obj other2_objs colors) ], speculative => 1),
-     "load with 2 - $db_type");
+     "load with 3 - $db_type");
 
   $o = MyPgObject->new(id => 222);
   
-  ok($o->load(with => 'colors'), "load with 3 - $db_type");
+  ok($o->load(with => 'colors'), "load with 4 - $db_type");
   
   # End "load with ..." tests
 }
@@ -999,7 +1002,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 201)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 202)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -1863,14 +1866,17 @@ SKIP: foreach my $db_type ('mysql')
   ok($o = MyMySQLObject->new(id => 444)->load(with => [ qw(other_obj other2_objs colors) ]),
      "load with 1 - $db_type");
 
+  ok($o->{'other2_objs'} && $o->{'other2_objs'}[1]->name eq 'nine',
+     "load with 2 - $db_type");
+
   $o = MyMySQLObject->new(id => 999);
   
   ok(!$o->load(with => [ qw(other_obj other2_objs colors) ], speculative => 1),
-     "load with 2 - $db_type");
+     "load with 3 - $db_type");
 
   $o = MyMySQLObject->new(id => 222);
   
-  ok($o->load(with => 'colors'), "load with 3 - $db_type");
+  ok($o->load(with => 'colors'), "load with 4 - $db_type");
   
   # End "load with ..." tests
 }
@@ -1881,7 +1887,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 223)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 224)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -2810,14 +2816,17 @@ SKIP: foreach my $db_type ('informix')
   ok($o = MyInformixObject->new(id => 444)->load(with => [ qw(other_obj other2_objs colors) ]),
      "load with 1 - $db_type");
 
+  ok($o->{'other2_objs'} && $o->{'other2_objs'}[1]->name eq 'nine',
+     "load with 2 - $db_type");
+
   $o = MyInformixObject->new(id => 999);
   
   ok(!$o->load(with => [ qw(other_obj other2_objs colors) ], speculative => 1),
-     "load with 2 - $db_type");
+     "load with 3 - $db_type");
 
   $o = MyInformixObject->new(id => 222);
   
-  ok($o->load(with => 'colors'), "load with 3 - $db_type");
+  ok($o->load(with => 'colors'), "load with 4 - $db_type");
   
   # End "load with ..." tests
 }
