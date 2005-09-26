@@ -265,7 +265,10 @@ sub save
       my $meta = $self->meta;
       my %did_set;
 
+      #
       # Do pre-save stuff
+      #
+
       my $todo = $self->{ON_SAVE_ATTR_NAME()}{'pre'};
 
       foreach my $fk_name (keys %{$todo->{'fk'}})
@@ -287,7 +290,10 @@ sub save
         $did_set{'fk'}{$fk_name}{row_id($object)} = 1;
       }
 
+      #
       # Do the actual save
+      #
+
       if(!$args{'insert'} && ($args{'update'} || $self->{STATE_IN_DB()}))
       {
         $ret = shift->update(@_);
@@ -297,9 +303,13 @@ sub save
         $ret = shift->insert(@_);
       }
 
+      #
       # Do post-save stuff
+      #
+
       $todo = $self->{ON_SAVE_ATTR_NAME()}{'post'};
 
+      # Foreign keys
       foreach my $fk_name (keys %{$todo->{'fk'}})
       {
         my $fk = $meta->foreign_key($fk_name) 
@@ -315,6 +325,21 @@ sub save
 
           $code->() or die $self->error;
         }
+      }
+
+      # Relationships
+      foreach my $rel_name (keys %{$todo->{'rel'}})
+      {
+        my $rel = $meta->relationship($rel_name) 
+          or Carp::confess "No relationship named '$rel_name'";
+
+        # Set value(s)
+        my $code  = $todo->{'rel'}{$rel_name}{'set'} or next;
+        $code->() or die $self->error;
+
+        # Add value(s)
+        $code  = $todo->{'rel'}{$rel_name}{'add'} or next;
+        $code->() or die $self->error;
       }
 
       if($started_new_tx)

@@ -23,7 +23,7 @@ __PACKAGE__->default_auto_method_types(qw(get_set_on_save delete_on_save));
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
-  qw(share_db class key_columns foreign_key)
+  qw(hash_key share_db class key_columns foreign_key)
 );
 
 use Rose::Object::MakeMethods::Generic
@@ -310,29 +310,30 @@ The default method map for L<Rose::DB::Object::Metadata::ForeignKey> is:
 
 =item C<get_set>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, ...
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, 
+C<interface =E<gt> 'get_set'> ...
 
 =item C<get_set_now>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'get_set_now'>
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'get_set_now'> ...
 
 =item C<get_set_on_save>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'get_set_on_save'>
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'get_set_on_save'> ...
 
 =item C<delete_now>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'delete_now'>
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'delete_now'> ...
 
 =item C<delete_on_save>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'delete_on_save'>
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'delete_on_save'> ...
 
 =back
 
 Each item in the map is a foreign key method type.  For each foreign key method type, the method maker class, the method maker method type, and the "interesting" method maker arguments are listed, in that order.
 
-The "..." in the method maker arguments is meant to indicate that arguments have been omitted.  Arguments that are common to all foreign key method types are routinely omitted from the method map for the sake of brevity.  If there are no "interesting" method maker arguments, then "..." may appear by itself, as shown above.
+The "..." in the method maker arguments is meant to indicate that arguments have been omitted.  Arguments that are common to all foreign key method types are routinely omitted from the method map for the sake of brevity.
 
 The purpose of documenting the method map is to answer the question, "What kind of method(s) will be created by this foreign key object for a given method type?"  Given the method map, it's possible to read the documentation for each method maker class to determine how methods of the specified type behave when passed the listed arguments.
 
@@ -344,7 +345,7 @@ Remember, the existence and behavior of the method map is really implementation 
 
 =item B<default_auto_method_types [TYPES]>
 
-Get or set the default list of L<auto_method_types|/auto_method_types>.  TYPES should be a list of foreign key method types.  Returns the list of default foreign key method types (in list context) or a reference to an array of the default foreign key method types (in scalar context).  The default list contains  the "get_set_on_save" and "delete_on_save" foreign key method types.
+Get or set the default list of L<auto_method_types|/auto_method_types>.  TYPES should be a list of foreign key method types.  Returns the list of default foreign key method types (in list context) or a reference to an array of the default foreign key method types (in scalar context).  The default list contains the "get_set_on_save" and "delete_on_save" foreign key method types.
 
 =back
 

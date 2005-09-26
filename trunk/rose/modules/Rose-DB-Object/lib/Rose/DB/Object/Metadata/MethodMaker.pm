@@ -256,6 +256,8 @@ sub available_method_types
 # Object methods
 #
 
+sub hash_key { shift->name }
+
 sub methods
 {
   my($self) = shift;
