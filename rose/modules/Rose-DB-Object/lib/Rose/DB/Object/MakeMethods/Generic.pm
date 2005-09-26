@@ -1277,7 +1277,7 @@ sub object_by_key
         # Can't add until the object is saved
         unless($self->{STATE_IN_DB()})
         {
-          Carp::croak "Can't $name() until this object is saved";
+          Carp::croak "Can't $name() until this object is loaded or saved";
         }
   
         my $object;
@@ -1338,7 +1338,7 @@ sub object_by_key
    
           unless(defined $ret)
           {
-            die 'Could not begin transaction before deleting with cascade - ',
+            die 'Could not begin transaction during call to $name() - ',
                 $db->error;
           }
     
@@ -1440,7 +1440,7 @@ sub object_by_key
   {
     unless($fk)
     {
-      Carp::croak "Cannot make 'get_set_on_save' method $name without foreign key argument";
+      Carp::confess "Cannot make 'get_set_on_save' method $name without foreign key argument";
     }
 
     my $fk_name = $fk->name;
@@ -1700,7 +1700,7 @@ sub object_by_key
 
         unless(defined $ret)
         {
-          die 'Could not begin transaction before deleting with cascade - ',
+          die 'Could not begin transaction during call to $name() - ',
               $db->error;
         }
   
@@ -1946,7 +1946,7 @@ sub object_by_key
 #  
 #         unless(defined $ret)
 #         {
-#           die 'Could not begin transaction before deleting with cascade - ',
+#           die 'Could not begin transaction during call to $name() - ',
 #               $db->error;
 #         }
 #   
@@ -2002,6 +2002,8 @@ sub objects_by_key
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
   my $target_class = $options->{'target_class'} or die "Missing target class";
+
+  my $relationship = $args->{'relationship'};
 
   my $ft_class   = $args->{'class'} or die "Missing foreign object class";
   my $meta       = $target_class->meta;
@@ -2061,20 +2063,29 @@ sub objects_by_key
 
       my $objs;
 
-      if($share_db)
+      eval
       {
-        $objs = $ft_manager->$ft_method(query => [ %key, @$query_args ], %$mgr_args, db => $self->db);
-      }
-      else
-      {
-        $objs = $ft_manager->$ft_method(query => [ %key, @$query_args ], %$mgr_args);
-      }
+        if($share_db)
+        {
+          $objs = 
+            $ft_manager->$ft_method(query => [ %key, @$query_args ], 
+                                   %$mgr_args, db => $self->db)
+              or die $ft_manager->error;
+        }
+        else
+        {
+          $objs = 
+            $ft_manager->$ft_method(query => [ %key, @$query_args ], %$mgr_args)
+              or die $ft_manager->error;
+        }
+      };
 
-      unless($objs)
+      if($@ || !$objs)
       {
         $self->error("Could not load $ft_class objects with key ", 
                      join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
                      " - " . $ft_manager->error);
+        $self->meta->handle_error($self);
         return $objs;
       }
 
@@ -2092,6 +2103,540 @@ sub objects_by_key
         return (defined shift->$name(@_)) ? 1 : 0;
       };
     }
+  }
+  elsif($interface eq 'add_now')
+  {
+    unless($relationship)
+    {
+      Carp::confess "Cannot make 'add_now' method $name without relationship argument";
+    }
+
+    my $rel_name = $relationship->name;
+
+    $methods{$name} = sub
+    {
+      my($self) = shift;
+
+      unless(@_)
+      {
+        $self->error("No $name to add");
+        return undef;
+      }
+
+      # Can't add until the object is saved
+      unless($self->{STATE_IN_DB()})
+      {
+        Carp::croak "Can't add $name() until this object is loaded or saved";
+      }
+
+      if($self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'set'})
+      {
+        Carp::croak "Cannot add objects via the 'add_now' method $name() ",
+                    "because the list of objects is already going to be ".
+                    "set to something else on save.  Use the 'add_on_save' ",
+                    "method type instead.";
+      }
+
+      # Set up column map
+      my %map;
+
+      my $ft_meta = $ft_class->meta 
+        or Carp::croak "Missing metadata for foreign object class $ft_class";
+
+      while(my($local_column, $foreign_column) = each(%$ft_columns))
+      {
+        my $local_method   = $meta->column_accessor_method_name($local_column);
+        my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
+
+        $map{$foreign_method} = $self->$local_method();
+
+        # Comment this out to allow null keys
+        unless(defined $map{$foreign_method})
+        {
+          keys(%$ft_columns); # reset iterator
+          $self->error("Could add set objects via $name() - the " .
+                       "$local_method attribute is undefined");
+          return wantarray ? () : undef;
+        }
+      }
+
+      my($db, $started_new_tx);
+
+      eval
+      {
+        $db = $self->db;
+
+        my $ret = $db->begin_work;
+ 
+        unless(defined $ret)
+        {
+          die 'Could not begin transaction during call to $name() - ',
+              $db->error;
+        }
+  
+        $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+
+        # Add all the new objects
+        my $objects;
+        
+        if(@_ == 1)
+        {
+          if(ref $_[0] eq 'ARRAY') { $objects = $_[0]  }
+          elsif(defined $_[0])     { $objects = [ @_ ] }
+        }
+        else { $objects = [ @_ ] }
+
+        foreach my $object (@$objects)
+        {
+          # Map object to parent
+          $object->init(%map, db => $db);
+
+          # Save the object
+          $object->save or die $object->error;
+        }
+
+        # Clear the existing list, forcing it to be reloaded next time
+        # it's asked for
+        $self->{$key} = undef;
+
+        if($started_new_tx)
+        {
+          $db->commit or die $db->error;
+        }
+      };
+
+      if($@)
+      {
+        $self->error("Could not add $name - $@");
+        $db->rollback  if($db && $started_new_tx);
+        $meta->handle_error($self);
+        return undef;
+      }
+
+      return 1;
+    };
+  }
+  elsif($interface eq 'add_on_save')
+  {
+    unless($relationship)
+    {
+      Carp::confess "Cannot make 'add_on_save' method $name without relationship argument";
+    }
+
+    my $rel_name = $relationship->name;
+
+    $methods{$name} = sub
+    {
+      my($self) = shift;
+
+      unless(@_)
+      {
+        $self->error("No $name to add");
+        return undef;
+      }
+
+      # Add all the new objects
+      my $objects;
+      
+      if(@_ == 1)
+      {
+        if(ref $_[0] eq 'ARRAY') { $objects = $_[0]  }
+        elsif(defined $_[0])     { $objects = [ @_ ] }
+      }
+      else { $objects = [ @_ ] }
+
+      my $add_code = sub
+      {
+        # Set up column map
+        my %map;
+
+        my $ft_meta = $ft_class->meta 
+          or Carp::croak "Missing metadata for foreign object class $ft_class";
+
+        while(my($local_column, $foreign_column) = each(%$ft_columns))
+        {
+          my $local_method   = $meta->column_accessor_method_name($local_column);
+          my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
+
+          $map{$foreign_method} = $self->$local_method();
+
+          # Comment this out to allow null keys
+          unless(defined $map{$foreign_method})
+          {
+            keys(%$ft_columns); # reset iterator
+            $self->error("Could not add objects via $name() - the " .
+                         "$local_method attribute is undefined");
+            return wantarray ? () : undef;
+          }
+        }
+
+        my $db = $self->db;
+
+        # Add all the objects.
+        foreach my $object (@$objects)
+        {
+          # Map object to parent
+          $object->init(%map, db => $db);
+
+          # Save the object
+          $object->save or die $object->error;
+        }
+
+        # Clear the existing list, forcing it to be reloaded next time
+        # it's asked for
+        $self->{$key} = undef;
+
+        return 1;
+      };
+
+      $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'} = $add_code;
+      return 1;
+    };
+  }
+  elsif($interface eq 'get_set_now')
+  {
+    my $ft_delete_method  = $args->{'manager_delete_method'} || 'delete_objects';
+
+    unless($relationship)
+    {
+      Carp::confess "Cannot make 'get_set_now' method $name without relationship argument";
+    }
+
+    my $rel_name = $relationship->name;
+
+    $methods{$name} = sub
+    {
+      my($self) = shift;
+
+      if(@_)
+      {
+        # If loading, just assign
+        if($self->{STATE_LOADING()})
+        {
+          return $self->{$key} = undef  if(@_ == 1 && !defined $_[0]);
+          return $self->{$key} = (@_ == 1 && ref $_[0] eq 'ARRAY') ? $_[0] : [ @_ ];
+        }
+      
+        # Can't add until the object is saved
+        unless($self->{STATE_IN_DB()})
+        {
+          Carp::croak "Can't set $name() until this object is loaded or saved";
+        }
+  
+        # Set up join conditions and column map
+        my(%key, %map);
+
+        my $ft_meta = $ft_class->meta 
+          or Carp::croak "Missing metadata for foreign object class $ft_class";
+
+        while(my($local_column, $foreign_column) = each(%$ft_columns))
+        {
+          my $local_method   = $meta->column_accessor_method_name($local_column);
+          my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
+
+          $key{$foreign_column} = $map{$foreign_method} = $self->$local_method();
+
+          # Comment this out to allow null keys
+          unless(defined $key{$foreign_column})
+          {
+            keys(%$ft_columns); # reset iterator
+            $self->error("Could not set objects via $name() - the " .
+                         "$local_method attribute is undefined");
+            return wantarray ? () : undef;
+          }
+        }
+  
+        my($db, $started_new_tx);
+  
+        eval
+        {
+          $db = $self->db;
+  
+          my $ret = $db->begin_work;
+   
+          unless(defined $ret)
+          {
+            die 'Could not begin transaction during call to $name() - ',
+                $db->error;
+          }
+    
+          $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+
+          # Delete any existing objects
+          my $deleted = 
+            $ft_manager->$ft_delete_method(object_class => $ft_class,
+                                           where => [ %key ], 
+                                           db => $db);
+          die $ft_manager->error  unless(defined $deleted);
+
+          # Save all the new objects
+          my $objects;
+          
+          if(@_ == 1)
+          {
+            if(ref $_[0] eq 'ARRAY') { $objects = $_[0]  }
+            elsif(defined $_[0])     { $objects = [ @_ ] }
+          }
+          else { $objects = [ @_ ] }
+
+          foreach my $object (@$objects)
+          {
+            # Map object to parent
+            $object->init(%map, db => $db);
+
+            # Try to load teh object if doesn't appear to exist already
+            unless($object->{STATE_IN_DB()})
+            {
+              # It's okay if this fails (e.g., if the primary key is undefined)
+              eval { $object->load(speculative => 1) };
+            }
+
+            # Save the object
+            $object->save or die $object->error;
+
+            # Not sharing?  Aw.
+            $object->db(undef)  unless($share_db);
+          }
+
+          # Assign to attribute
+          $self->{$key} = $objects;
+
+          if($started_new_tx)
+          {
+            $db->commit or die $db->error;
+          }
+
+          # Delete any pending set or add actions
+          delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'set'};
+          delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'};
+        };
+
+        if($@)
+        {
+          $self->error("Could not add $name objects - $@");
+          $db->rollback  if($db && $started_new_tx);
+          $meta->handle_error($self);
+          return undef;
+        }
+
+        return wantarray ? @{$self->{$key}} : $self->{$key};
+      }
+
+      # Return existing list of objects, if it exists
+      if(defined $self->{$key})
+      {
+        return wantarray ? @{$self->{$key}} : $self->{$key};  
+      }
+
+      my $objs;
+
+      # Get query key
+      my %key;
+
+      while(my($local_column, $foreign_column) = each(%$ft_columns))
+      {
+        my $local_method = $meta->column_accessor_method_name($local_column);
+
+        $key{$foreign_column} = $self->$local_method();
+
+        # Comment this out to allow null keys
+        unless(defined $key{$foreign_column})
+        {
+          keys(%$ft_columns); # reset iterator
+          $self->error("Could not fetch objects via $name() - the " .
+                       "$local_method attribute is undefined");
+          return wantarray ? () : undef;
+        }
+      }
+      
+      # Make query for object list
+      eval
+      {
+        if($share_db)
+        {
+          $objs = 
+            $ft_manager->$ft_method(query => [ %key, @$query_args ], 
+                                   %$mgr_args, db => $self->db)
+              or die $ft_manager->error;
+        }
+        else
+        {
+          $objs = 
+            $ft_manager->$ft_method(query => [ %key, @$query_args ], %$mgr_args)
+              or die $ft_manager->error;
+        }
+      };
+
+      if($@ || !$objs)
+      {
+        $self->error("Could not load $ft_class objects with key ", 
+                     join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
+                     " - " . $ft_manager->error);
+        $self->meta->handle_error($self);
+        return $objs;
+      }
+
+      $self->{$key} = $objs;
+
+      return wantarray ? @{$self->{$key}} : $self->{$key};
+    };
+  }
+  elsif($interface eq 'get_set_on_save')
+  {
+    my $ft_delete_method  = $args->{'manager_delete_method'} || 'delete_objects';
+
+    unless($relationship)
+    {
+      Carp::confess "Cannot make 'get_set_on_save' method $name without relationship argument";
+    }
+
+    my $rel_name = $relationship->name;
+
+    $methods{$name} = sub
+    {
+      my($self) = shift;
+
+      if(@_)
+      {
+        # If loading, just assign
+        if($self->{STATE_LOADING()})
+        {
+          return $self->{$key} = undef  if(@_ == 1 && !defined $_[0]);
+          return $self->{$key} = (@_ == 1 && ref $_[0] eq 'ARRAY') ? $_[0] : [ @_ ];
+        }
+  
+        my $objects;
+        
+        if(@_ == 1)
+        {
+          if(ref $_[0] eq 'ARRAY') { $objects = $_[0]  }
+          elsif(defined $_[0])     { $objects = [ @_ ] }
+        }
+        else { $objects = [ @_ ] }
+
+        # Set the attribute
+        $self->{$key} = $objects;
+
+        my $save_code = sub
+        {
+          # Set up join conditions and column map
+          my(%key, %map);
+  
+          my $ft_meta = $ft_class->meta 
+            or Carp::croak "Missing metadata for foreign object class $ft_class";
+  
+          while(my($local_column, $foreign_column) = each(%$ft_columns))
+          {
+            my $local_method   = $meta->column_accessor_method_name($local_column);
+            my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
+  
+            $key{$foreign_column} = $map{$foreign_method} = $self->$local_method();
+  
+            # Comment this out to allow null keys
+            unless(defined $key{$foreign_column})
+            {
+              keys(%$ft_columns); # reset iterator
+              $self->error("Could not set objects via $name() - the " .
+                           "$local_method attribute is undefined");
+              return wantarray ? () : undef;
+            }
+          }
+
+          my $db = $self->db;
+
+          # Delete any existing objects
+          my $deleted = 
+            $ft_manager->$ft_delete_method(object_class => $ft_class,
+                                           where => [ %key ], 
+                                           db => $db);
+          die $ft_manager->error  unless(defined $deleted);
+
+          # Save all the objects.  Use the current list, even if it's
+          # different than it was when the "set on save" was called.
+          foreach my $object (@{$self->{$key} || []})
+          {
+            # Map object to parent
+            $object->init(%map, db => $db);
+
+            # Try to load teh object if doesn't appear to exist already
+            unless($object->{STATE_IN_DB()})
+            {
+              # It's okay if this fails (e.g., if the primary key is undefined)
+              eval { $object->load(speculative => 1) };
+            }
+
+            # Save the object
+            $object->save or die $object->error;
+
+            # Not sharing?  Aw.
+            $object->db(undef)  unless($share_db);
+          }
+          
+          return 1;
+        };
+
+        $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'set'} = $save_code;
+        return wantarray ? @{$self->{$key}} : $self->{$key};
+      }
+
+      # Return existing list of objects, if it exists
+      if(defined $self->{$key})
+      {
+        return wantarray ? @{$self->{$key}} : $self->{$key};  
+      }
+
+      my $objs;
+
+      # Get query key
+      my %key;
+
+      while(my($local_column, $foreign_column) = each(%$ft_columns))
+      {
+        my $local_method = $meta->column_accessor_method_name($local_column);
+
+        $key{$foreign_column} = $self->$local_method();
+
+        # Comment this out to allow null keys
+        unless(defined $key{$foreign_column})
+        {
+          keys(%$ft_columns); # reset iterator
+          $self->error("Could not fetch objects via $name() - the " .
+                       "$local_method attribute is undefined");
+          return wantarray ? () : undef;
+        }
+      }
+      
+      # Make query for object list
+      eval
+      {
+        if($share_db)
+        {
+          $objs = 
+            $ft_manager->$ft_method(query => [ %key, @$query_args ], 
+                                   %$mgr_args, db => $self->db)
+              or die $ft_manager->error;
+        }
+        else
+        {
+          $objs = 
+            $ft_manager->$ft_method(query => [ %key, @$query_args ], %$mgr_args)
+              or die $ft_manager->error;
+        }
+      };
+
+      if($@ || !$objs)
+      {
+        $self->error("Could not load $ft_class objects with key ", 
+                     join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
+                     " - " . $ft_manager->error);
+        $self->meta->handle_error($self);
+        return $objs;
+      }
+
+      $self->{$key} = $objs;
+
+      return wantarray ? @{$self->{$key}} : $self->{$key};
+    };
   }
   else { Carp::croak "Unknown interface: $interface" }
 
@@ -2921,6 +3466,10 @@ The name of the class method to call on C<manager_class> in order to fetch the o
 
 Choose the interface.  The only current interface is C<get_set>, which is the default.
 
+=item C<relationship>
+
+The L<Rose::DB::Object::Metadata::Relationship> object that describes the "key" through which the "objects_by_key" are fetched.  This is required when using the "add_now", "add_on_save", and "get_set_on_save" interfaces.
+
 =item C<share_db>
 
 If true, the L<db|Rose::DB::Object/db> attribute of the current object is shared with all of the objects fetched.  Defaults to true.
@@ -2940,6 +3489,32 @@ A reference to an array of arguments added to the value of the C<query> paramete
 Creates a method that will attempt to fetch L<Rose::DB::Object>-derived objects based on a key formed from attributes of the current object.
 
 If passed a single argument of undef, the list of objects is set to undef.  If passed a reference to an array, the list of objects is set to point to that same array.  (Note that these objects are not automatically added to the database.)
+
+If called with no arguments and the hash key used to store the list of objects is defined, the list (in list context) or a reference to that array (in scalar context) of objects is returned.  Otherwise, the objects are fetched.
+
+The fetch may fail for several reasons.  The fetch will not even be attempted if any of the key attributes in the current object are undefined.  Instead, undef (in scalar context) or an empty list (in list context) will be returned.  If the call to C<manager_class>'s C<manager_method> method returns false, that false value (in scalar context) or an empty list (in list context) is returned.
+
+If the fetch succeeds, a list (in list context) or a reference to the array of objects (in scalar context) is returned.  (If the fetch finds zero objects, the list or array reference will simply be empty.  This is still considered success.)
+
+=item C<get_set_now>
+
+Creates a method that will attempt to fetch L<Rose::DB::Object>-derived objects based on a key formed from attributes of the current object, and will also save the objects to the database when called with arguments.
+
+If passed a single argument of undef, the list of objects is set to undef and all of the existing objects are deleted from the database.  If passed a reference to an array, the list of objects is set to point to that same array, the old objects are deleted from the database, and the new ones are added.
+
+The object must have been L<load|Rose::DB::Object/load>ed or L<save|Rose::DB::Object/save>ed prior to setting the list of objects.  If this method is called with arguments before the object has been  L<load|Rose::DB::Object/load>ed or L<save|Rose::DB::Object/save>ed, a fatal error will occur.
+
+If called with no arguments and the hash key used to store the list of objects is defined, the list (in list context) or a reference to that array (in scalar context) of objects is returned.  Otherwise, the objects are fetched.
+
+The fetch may fail for several reasons.  The fetch will not even be attempted if any of the key attributes in the current object are undefined.  Instead, undef (in scalar context) or an empty list (in list context) will be returned.  If the call to C<manager_class>'s C<manager_method> method returns false, that false value (in scalar context) or an empty list (in list context) is returned.
+
+If the fetch succeeds, a list (in list context) or a reference to the array of objects (in scalar context) is returned.  (If the fetch finds zero objects, the list or array reference will simply be empty.  This is still considered success.)
+
+=item C<get_set_on_save>
+
+Creates a method that will attempt to fetch L<Rose::DB::Object>-derived objects based on a key formed from attributes of the current object, and will also save the objects to the database when the "parent" object is L<save|Rose::DB::Object/save>ed.
+
+If passed a single argument of undef, the list of objects is set to undef and all of the existing objects are scheduled to be deleted from the database when the parent is L<save|Rose::DB::Object/save>ed.  If passed a reference to an array, the list of objects is set to point to that same array, the old objects are scheduled to be deleted from the database and the new ones are scheduled to be added when the parent is L<save|Rose::DB::Object/save>ed.
 
 If called with no arguments and the hash key used to store the list of objects is defined, the list (in list context) or a reference to that array (in scalar context) of objects is returned.  Otherwise, the objects are fetched.
 
@@ -3141,6 +3716,8 @@ If the load succeeds, the object is returned.
 Creates a method that will attempt to create and load a L<Rose::DB::Object>-derived object based on a primary key formed from attributes of the current object, and will also save the object to the database when called with an appropriate object as an argument.
 
 If passed a single argument of undef, the C<hash_key> used to store the object is set to undef.  Otherwise, the argument is assumed to be an object of type C<class> and is assigned to C<hash_key> after having its C<key_columns> set to their corresponding values in the current object.  The object is then immediately L<save|Rose::DB::Object/save>ed to the database.
+
+The object must have been L<load|Rose::DB::Object/load>ed or L<save|Rose::DB::Object/save>ed prior to setting the list of objects.  If this method is called with arguments before the object has been  L<load|Rose::DB::Object/load>ed or L<save|Rose::DB::Object/save>ed, a fatal error will occur.
 
 If called with no arguments and the C<hash_key> used to store the object is defined, the object is returned.  Otherwise, the object is created and loaded.
 

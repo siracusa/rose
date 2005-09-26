@@ -10,9 +10,9 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.021';
+our $VERSION = '0.03';
 
-__PACKAGE__->default_auto_method_types('get_set');
+__PACKAGE__->default_auto_method_types(qw(get_set_on_save add_on_save));
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -46,8 +46,37 @@ __PACKAGE__->method_maker_info
 (
   get_set =>
   {
-    class => 'Rose::DB::Object::MakeMethods::Generic',
-    type  => 'objects_by_key',
+    class     => 'Rose::DB::Object::MakeMethods::Generic',
+    type      => 'objects_by_key',
+    interface => 'get_set',
+  },
+  
+  get_set_now =>
+  {
+    class     => 'Rose::DB::Object::MakeMethods::Generic',
+    type      => 'objects_by_key',
+    interface => 'get_set_now',
+  },
+
+  get_set_on_save =>
+  {
+    class     => 'Rose::DB::Object::MakeMethods::Generic',
+    type      => 'objects_by_key',
+    interface => 'get_set_on_save',
+  },
+  
+  add_now => 
+  {
+    class     => 'Rose::DB::Object::MakeMethods::Generic',
+    type      => 'objects_by_key',
+    interface => 'add_now',
+  },
+
+  add_on_save => 
+  {
+    class     => 'Rose::DB::Object::MakeMethods::Generic',
+    type      => 'objects_by_key',
+    interface => 'add_on_save',
   },
 );
 
@@ -60,9 +89,13 @@ sub build_method_name_for_type
 {
   my($self, $type) = @_;
 
-  if($type eq 'get_set')
+  if($type eq 'get_set' || $type eq 'get_set_now' || $type eq 'get_set_on_save')
   {
     return $self->name;
+  }
+  elsif($type eq 'add_now' || $type eq 'add_on_save')
+  {
+    return 'add_' . $self->name;
   }
 
   return undef;
@@ -96,12 +129,38 @@ This class inherits from L<Rose::DB::Object::Metadata::Relationship>. Inherited 
 
 =item C<get_set>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, ...
+L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, 
+C<interface =E<gt> 'get_set'> ...
+
+=item C<get_set_now>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'get_set_now'> ...
+
+=item C<get_set_on_save>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'get_set_on_save'> ...
+
+=item C<add_now>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'add_now'> ...
+
+=item C<add_on_save>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'add_on_save'> ...
 
 =back
 
 See the L<Rose::DB::Object::Metadata::Relationship|Rose::DB::Object::Metadata::Relationship/"MAKING METHODS"> documentation for an explanation of this method map.
 
+=head1 CLASS METHODS
+
+=over 4
+
+=item B<default_auto_method_types [TYPES]>
+
+Get or set the default list of L<auto_method_types|/auto_method_types>.  TYPES should be a list of relationship method types.  Returns the list of default relationship method types (in list context) or a reference to an array of the default relationship method types (in scalar context).  The default list contains the "get_set_on_save" and "add_on_save" relationship method types.
+
+=back
 
 =head1 OBJECT METHODS
 
@@ -109,7 +168,13 @@ See the L<Rose::DB::Object::Metadata::Relationship|Rose::DB::Object::Metadata::R
 
 =item B<build_method_name_for_type TYPE>
 
-Return a method name for the relationship method type TYPE.  Returns the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> for the method type "get_set", undef otherwise.
+Return a method name for the relationship method type TYPE.  
+
+For the method types "get_set", "get_set_now", and "get_set_on_save", the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> is returned.
+
+For the method types "add_now" and "add_on_save", the relationship's  L<name|Rose::DB::Object::Metadata::Relationship/name> prefixed with "add_" is returned.
+
+Otherwise, undef is returned.
 
 =item B<manager_class [CLASS]>
 

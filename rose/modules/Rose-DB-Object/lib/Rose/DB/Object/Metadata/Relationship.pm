@@ -11,7 +11,7 @@ our $VERSION = '0.03';
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
-  qw(relationship)
+  qw(relationship hash_key)
 );
 
 Rose::Object::MakeMethods::Generic->make_methods
