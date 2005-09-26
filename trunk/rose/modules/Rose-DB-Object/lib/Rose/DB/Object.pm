@@ -333,13 +333,19 @@ sub save
         my $rel = $meta->relationship($rel_name) 
           or Carp::confess "No relationship named '$rel_name'";
 
+        my $code;
+
         # Set value(s)
-        my $code  = $todo->{'rel'}{$rel_name}{'set'} or next;
-        $code->() or die $self->error;
+        if($code  = $todo->{'rel'}{$rel_name}{'set'})
+        {
+          $code->() or die $self->error;
+        }
 
         # Add value(s)
-        $code  = $todo->{'rel'}{$rel_name}{'add'} or next;
-        $code->() or die $self->error;
+        if($code  = $todo->{'rel'}{$rel_name}{'add'})
+        {
+          $code->() or die $self->error;
+        }
       }
 
       if($started_new_tx)
