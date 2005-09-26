@@ -163,9 +163,80 @@ sub load
     }
   }
 
-  my $rows = 0;
-
   my $column_names = $meta->column_names;
+
+  #
+  # Handle sub-object load in separate code path
+  #
+
+  if(my $with = $args{'with'})
+  {
+    my $mgr_class = $args{'manager_class'} || 'Rose::DB::Object::Manager';
+    my %query;
+    
+    @query{map { "t1.$_" } @key_columns} = @key_values;
+
+    my $objects;
+
+    eval
+    {
+      $objects = 
+        $mgr_class->get_objects(object_class  => ref $self,
+                                query         => [ %query ],
+                                with_objects  => $with,
+                                multi_many_ok => 1)
+          or Carp::confess $mgr_class->error;
+
+      if(@$objects > 1)
+      {
+        die "Found ", @$objects, " objects instead of one";
+      }
+    };
+
+    if($@)
+    {
+      $self->error("load(with => ...) - $@");
+      $self->meta->handle_error($self);
+      return undef;
+    }
+
+    if(@$objects > 0)
+    {
+      my $methods = $meta->column_mutator_method_names;
+      my $object  = $objects->[0];
+
+      local $self->{STATE_LOADING()}  = 1;
+      local $object->{STATE_SAVING()} = 1;
+
+      foreach my $method (@$methods)
+      {
+        $self->$method($object->$method());
+      }
+    }
+    else
+    {
+      no warnings;
+      $self->error("No such " . ref($self) . ' where ' . 
+                   join(', ', @key_columns) . ' = ' . join(', ', @key_values));
+      $self->{'not_found'} = 1;
+
+      unless($args{'speculative'})
+      {
+        $self->meta->handle_error($self);
+      }
+  
+      return 0;
+    }
+
+    $self->{STATE_IN_DB()} = 1;
+    return $self || 1;
+  }
+
+  #
+  # Handle normal load
+  #
+
+  my $rows = 0;
 
   $self->{'not_found'} = 0;
 
@@ -1215,9 +1286,11 @@ L<Rose::DB::Object> provides the following functions:
 
 =item * Delete a row from the database.
 
-=item * Fetch an object referred to by a foreign key in the current object. (i.e., "one to one" relationships.)
+=item * Fetch an object referred to by a foreign key in the current object. (i.e., "one to one" and "many to one" relationships.)
 
 =item * Fetch multiple objects that refer to the current object, either directly through foreign keys or indirectly through a mapping table.  (i.e., "one to many" and "many to many" relationships.)
+
+=item * Load an object along with "foreign objects" that are related through any of the supported relationship types.
 
 =back
 
@@ -1231,7 +1304,7 @@ In addition, its sibling class, L<Rose::DB::Object::Manager>, can do the followi
 
 =item * Iterate over a list of objects, fetching from the database in response to each step of the iterator.
 
-=item * Fetch objects along with "foreign objects" (connected via "one to one" or "one to many" relationships) in a single query by automatically generating the appropriate SQL join(s).
+=item * Fetch objects along with "foreign objects" (related through any of the supported relationship types) in a single query by automatically generating the appropriate SQL join(s).
 
 =item * Count the number of objects that match a complex query.
 
@@ -1339,7 +1412,19 @@ Load a row from the database table, initializing the object with the values from
 
 Returns true if the row was loaded successfully, undef if the row could not be loaded due to an error, or zero (0) if the row does not exist.  The true value returned on success will be the object itself.  If the object L<overload>s its boolean value such that it is not true, then a true value will be returned instead of the object itself.
 
-PARAMS are optional name/value pairs.  If the parameter C<speculative> is passed with a true value, and if the load failed because the row was L<not found|/not_found>, then the L<error_mode|Rose::DB::Object::Metadata/error_mode> setting is ignored and zero (0) is returned.
+PARAMS are optional name/value pairs.  Valid PARAMS are:
+
+=over 4
+
+=item C<speculative BOOL>
+
+If this parameter is passed with a true value, and if the load failed because the row was L<not found|/not_found>, then the L<error_mode|Rose::DB::Object::Metadata/error_mode> setting is ignored and zero (0) is returned.
+
+=item C<with OBJECTS>
+
+Load the object and the specified "foreign objects" simultaneously.  OBJECTS should be a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names.
+
+=back
 
 =item B<not_found>
 
