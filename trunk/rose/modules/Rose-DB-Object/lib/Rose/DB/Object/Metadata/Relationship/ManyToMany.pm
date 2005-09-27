@@ -12,7 +12,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 our $VERSION = '0.023';
 
-__PACKAGE__->default_auto_method_types('get_set');
+__PACKAGE__->default_auto_method_types(qw(get_set_on_save add_on_save));
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -45,7 +45,7 @@ Rose::Object::MakeMethods::Generic->make_methods
 
   hash =>
   [
-    # Map from local columns to foreign columns
+    # Map from map-table columns to self-table columns
     'column_map',
   ]
 );
@@ -56,6 +56,35 @@ __PACKAGE__->method_maker_info
   {
     class => 'Rose::DB::Object::MakeMethods::Generic',
     type  => 'objects_by_map',
+    interface => 'get_set',
+  },
+
+  get_set_now =>
+  {
+    class     => 'Rose::DB::Object::MakeMethods::Generic',
+    type      => 'objects_by_map',
+    interface => 'get_set_now',
+  },
+
+  get_set_on_save =>
+  {
+    class     => 'Rose::DB::Object::MakeMethods::Generic',
+    type      => 'objects_by_map',
+    interface => 'get_set_on_save',
+  },
+
+  add_now => 
+  {
+    class     => 'Rose::DB::Object::MakeMethods::Generic',
+    type      => 'objects_by_map',
+    interface => 'add_now',
+  },
+
+  add_on_save => 
+  {
+    class     => 'Rose::DB::Object::MakeMethods::Generic',
+    type      => 'objects_by_map',
+    interface => 'add_on_save',
   },
 );
 
@@ -65,9 +94,13 @@ sub build_method_name_for_type
 {
   my($self, $type) = @_;
 
-  if($type eq 'get_set')
+  if($type eq 'get_set' || $type eq 'get_set_now' || $type eq 'get_set_on_save')
   {
     return $self->name;
+  }
+  elsif($type eq 'add_now' || $type eq 'add_on_save')
+  {
+    return 'add_' . $self->name;
   }
 
   return undef;
@@ -88,25 +121,32 @@ sub is_ready_to_make_methods
 {
   my($self) = shift;
 
+  # This code is (ug) duplicated from the method-maker itself, and
+  # slightly modified to run here.  If the method-maker can't get all
+  # the info it needs, then we're not yet ready to make these methods.
   eval
   {
     my $map_class = $self->map_class or die "Missing map class";
     my $map_meta  = $map_class->meta or die "Missing map class meta";
     my $map_from  = $self->map_from;
     my $map_to    = $self->map_to;
+    my $relationship = $self;
 
     my $target_class = $self->parent->class;
     my $meta         = $target_class->meta;
-    my $map_to_method;
 
-    # Build the map of "local" column names to "foreign" object method names. 
-    # The words "local" and "foreign" are relative to the *mapper* class.
-    my %key_template;
+    my($map_to_class, $map_to_meta, $map_to_method);
+
+    # "map" is the map table, "self" is the $target_class, and "remote"
+    # is the foreign object class
+    my(%map_column_to_self_method,
+       %map_column_to_self_column,
+       %map_method_to_remote_method);
 
     # Also grab the foreign object class that the mapper points to,
     # the relationship name that points back to us, and the class 
     # name of the objects we really want to fetch.
-    my($with_objects, $local_rel, $foreign_class, %seen_fk);
+    my($require_objects, $local_rel, $foreign_class, %seen_fk);
 
     foreach my $item ($map_meta->foreign_keys, $map_meta->relationships)
     {
@@ -127,15 +167,15 @@ sub is_ready_to_make_methods
         # this is not that name.
         next  if($map_from && $item->name ne $map_from);
 
-        if(%key_template)
+        if(%map_column_to_self_method)
         {
-          die "Map class $map_class has more than one foreign key ",
-              "and/or 'many to one' relationship that points to the ",
-              "class $target_class.  Please specify one by name ",
-              "with a 'local' parameter in the 'map' hash";
+          Carp::croak "Map class $map_class has more than one foreign key ",
+                      "and/or 'many to one' relationship that points to the ",
+                      "class $target_class.  Please specify one by name ",
+                      "with a 'local' parameter in the 'map' hash";
         }
 
-        $local_rel = $item->name;
+        $map_from = $local_rel = $item->name;
 
         my $map_columns = 
           $item->can('column_map') ? $item->column_map : $item->key_columns;
@@ -146,7 +186,8 @@ sub is_ready_to_make_methods
           my $foreign_method = $meta->column_accessor_method_name($foreign_column)
             or Carp::croak "Missing accessor method for column '$foreign_column'", 
                            " in class ", $meta->class;
-          $key_template{$local_column} = $foreign_method;
+          $map_column_to_self_method{$local_column} = $foreign_method;
+          $map_column_to_self_column{$local_column} = $foreign_column;
         }
       }
       elsif($item->isa('Rose::DB::Object::Metadata::ForeignKey') ||
@@ -156,7 +197,9 @@ sub is_ready_to_make_methods
         # this is not that name.
         next  if($map_to && $item->name ne $map_to);
 
-        if($with_objects)
+        $map_to = $item->name;
+
+        if($require_objects)
         {
           Carp::croak "Map class $map_class has more than one foreign key ",
                       "and/or 'many to one' relationship that points to a ",
@@ -164,19 +207,51 @@ sub is_ready_to_make_methods
                       "by name with a 'foreign' parameter in the 'map' hash";
         }
 
-        $with_objects  = [ $item->name ];
+        $map_to_class = $item->class;
+        $map_to_meta  = $map_to_class->meta;
+
+        my $map_columns = 
+          $item->can('column_map') ? $item->column_map : $item->key_columns;
+
+        # "local" and "foreign" here are relative to the *mapper* class
+        while(my($local_column, $foreign_column) = each(%$map_columns))
+        {
+          my $local_method = $map_meta->column_accessor_method_name($local_column)
+            or Carp::croak "Missing accessor method for column '$local_column'", 
+                           " in class ", $map_meta->class;
+
+          my $foreign_method = $map_to_meta->column_accessor_method_name($foreign_column)
+            or Carp::croak "Missing accessor method for column '$foreign_column'", 
+                           " in class ", $map_to_class->class;
+
+          # local           foreign
+          # Map:color_id => Color:id
+          $map_method_to_remote_method{$local_method} = $foreign_method;
+        }
+
+        $require_objects = [ $item->name ];
         $foreign_class = $item->class;
-        $map_to_method = $item->method_name('get_set');
+        $map_to_method = $item->method_name('get_set') || 
+                         $item->method_name('get_set_now') ||
+                         $item->method_name('get_set_on_save') ||
+                         Carp::confess "No 'get_*' method found for ",
+                                       $item->name;
       }
     }
 
-    unless(%key_template)
+    unless(%map_column_to_self_method)
     {
-      die "Could not find a foreign key or 'many to one' relationship ",
-          "in $map_class that points to $target_class";
+      Carp::croak "Could not find a foreign key or 'many to one' relationship ",
+                  "in $map_class that points to $target_class";
     }
 
-    unless($with_objects)
+    unless(%map_column_to_self_column)
+    {
+      Carp::croak "Could not find a foreign key or 'many to one' relationship ",
+                  "in $map_class that points to ", ($map_to_class || $map_to);
+    }
+
+    unless($require_objects)
     {
       # Make a second attempt to find a a suitable foreign relationship in the
       # map class, this time looking for links back to $target_class so long as
@@ -193,26 +268,30 @@ sub is_ready_to_make_methods
            $item->type eq 'many to one') &&
            $item->class eq $target_class && $item->name ne $local_rel)
         {  
-          if($with_objects)
+          if($require_objects)
           {
-            die "Map class $map_class has more than two foreign keys ",
-                "and/or 'many to one' relationships that points to a ",
-                "$target_class.  Please specify which ones to use ",
-                "by including 'local' and 'foreign' parameters in the ",
-                "'map' hash";
+            Carp::croak "Map class $map_class has more than two foreign keys ",
+                        "and/or 'many to one' relationships that points to a ",
+                        "$target_class.  Please specify which ones to use ",
+                        "by including 'local' and 'foreign' parameters in the ",
+                        "'map' hash";
           }
 
-          $with_objects = [ $item->name ];
+          $require_objects = [ $item->name ];
           $foreign_class = $item->class;
-          $map_to_method = $item->method_name('get_set');
+          $map_to_method = $item->method_name('get_set') ||
+                           $item->method_name('get_set_now') ||
+                           $item->method_name('get_set_on_save') ||
+                           Carp::confess "No 'get_*' method found for ",
+                                         $item->name;
         }
       }
     }
 
-    unless($with_objects)
+    unless($require_objects)
     {
-      die "Could not find a foreign key or 'many to one' relationship ",
-          "in $map_class that points to a class other than $target_class"
+      Carp::croak "Could not find a foreign key or 'many to one' relationship ",
+                  "in $map_class that points to a class other than $target_class"
     }
   };
 
@@ -457,12 +536,38 @@ In the end, it's up to you.  Which technique makes more sense in terms of initia
 
 =item C<get_set>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_map|Rose::DB::Object::MakeMethods::Generic/objects_by_map>, ...
+L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_map|Rose::DB::Object::MakeMethods::Generic/objects_by_map>, 
+C<interface =E<gt> 'get_set'> ...
+
+=item C<get_set_now>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_map>, C<interface =E<gt> 'get_set_now'> ...
+
+=item C<get_set_on_save>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_map|Rose::DB::Object::MakeMethods::Generic/objects_by_map>, C<interface =E<gt> 'get_set_on_save'> ...
+
+=item C<add_now>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_map|Rose::DB::Object::MakeMethods::Generic/objects_by_map>, C<interface =E<gt> 'add_now'> ...
+
+=item C<add_on_save>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_map|Rose::DB::Object::MakeMethods::Generic/objects_by_map>, C<interface =E<gt> 'add_on_save'> ...
 
 =back
 
 See the L<Rose::DB::Object::Metadata::Relationship|Rose::DB::Object::Metadata::Relationship/"MAKING METHODS"> documentation for an explanation of this method map.
 
+=head1 CLASS METHODS
+
+=over 4
+
+=item B<default_auto_method_types [TYPES]>
+
+Get or set the default list of L<auto_method_types|Rose::DB::Object::Metadata::Relationship/auto_method_types>.   TYPES should be a list of relationship method types.  Returns the list of default relationship method types (in list context) or a reference to an array of the default relationship method types (in scalar context).  The default list contains  "get_set_on_save" and "add_on_save".
+
+=back
 
 =head1 OBJECT METHODS
 
@@ -470,7 +575,13 @@ See the L<Rose::DB::Object::Metadata::Relationship|Rose::DB::Object::Metadata::R
 
 =item B<build_method_name_for_type TYPE>
 
-Return a method name for the relationship method type TYPE.  Returns the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> for the method type "get_set", undef otherwise.
+Return a method name for the relationship method type TYPE.  
+
+For the method types "get_set", "get_set_now", and "get_set_on_save", the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> is returned.
+
+For the method types "add_now" and "add_on_save", the relationship's  L<name|Rose::DB::Object::Metadata::Relationship/name> prefixed with "add_" is returned.
+
+Otherwise, undef is returned.
 
 =item B<manager_class [CLASS]>
 

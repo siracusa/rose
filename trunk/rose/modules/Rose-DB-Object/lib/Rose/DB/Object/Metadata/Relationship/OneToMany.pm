@@ -50,7 +50,7 @@ __PACKAGE__->method_maker_info
     type      => 'objects_by_key',
     interface => 'get_set',
   },
-  
+
   get_set_now =>
   {
     class     => 'Rose::DB::Object::MakeMethods::Generic',
@@ -64,7 +64,7 @@ __PACKAGE__->method_maker_info
     type      => 'objects_by_key',
     interface => 'get_set_on_save',
   },
-  
+
   add_now => 
   {
     class     => 'Rose::DB::Object::MakeMethods::Generic',
@@ -134,19 +134,19 @@ C<interface =E<gt> 'get_set'> ...
 
 =item C<get_set_now>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'get_set_now'> ...
+L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'get_set_now'> ...
 
 =item C<get_set_on_save>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'get_set_on_save'> ...
+L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'get_set_on_save'> ...
 
 =item C<add_now>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'add_now'> ...
+L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'add_now'> ...
 
 =item C<add_on_save>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'add_on_save'> ...
+L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'add_on_save'> ...
 
 =back
 
@@ -158,7 +158,7 @@ See the L<Rose::DB::Object::Metadata::Relationship|Rose::DB::Object::Metadata::R
 
 =item B<default_auto_method_types [TYPES]>
 
-Get or set the default list of L<auto_method_types|/auto_method_types>.  TYPES should be a list of relationship method types.  Returns the list of default relationship method types (in list context) or a reference to an array of the default relationship method types (in scalar context).  The default list contains the "get_set_on_save" and "add_on_save" relationship method types.
+Get or set the default list of L<auto_method_types|Rose::DB::Object::Metadata::Relationship/auto_method_types>.  TYPES should be a list of relationship method types.  Returns the list of default relationship method types (in list context) or a reference to an array of the default relationship method types (in scalar context).  The default list contains "get_set_on_save" and "add_on_save".
 
 =back
 

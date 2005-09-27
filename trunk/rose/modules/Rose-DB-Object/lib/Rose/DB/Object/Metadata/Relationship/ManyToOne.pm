@@ -152,9 +152,13 @@ sub build_method_name_for_type
 {
   my($self, $type) = @_;
 
-  if($type eq 'get_set')
+  if($type eq 'get_set' || $type eq 'get_set_now' || $type eq 'get_set_on_save')
   {
     return $self->name;
+  }
+  elsif($type eq 'delete_now' || $type eq 'delete_on_save')
+  {
+    return 'delete_' . $self->name;
   }
 
   return undef;
@@ -216,7 +220,7 @@ See the L<Rose::DB::Object::Metadata::Relationship|Rose::DB::Object::Metadata::R
 
 =item B<default_auto_method_types [TYPES]>
 
-Get or set the default list of L<auto_method_types|Rose::DB::Object::Metadata::Relationship/auto_method_types>.  TYPES should be a list of relationship method types.  Returns the list of default relationship method types (in list context) or a reference to an array of the default relationship method types (in scalar context).  The default list contains the "get_set_on_save" and "delete_on_save" relationship method types.
+Get or set the default list of L<auto_method_types|Rose::DB::Object::Metadata::Relationship/auto_method_types>.  TYPES should be a list of relationship method types.  Returns the list of default relationship method types (in list context) or a reference to an array of the default relationship method types (in scalar context).  The default list contains "get_set_on_save" and "delete_on_save".
 
 =back
 
@@ -226,7 +230,13 @@ Get or set the default list of L<auto_method_types|Rose::DB::Object::Metadata::R
 
 =item B<build_method_name_for_type TYPE>
 
-Return a method name for the relationship method type TYPE.  Returns the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> for the method type "get_set", undef otherwise.
+Return a method name for the relationship method type TYPE.  
+
+For the method types "get_set", "get_set_now", and "get_set_on_save", the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> is returned.
+
+For the method types "delete_now" and "delete_on_save", the relationship's  L<name|Rose::DB::Object::Metadata::Relationship/name> prefixed with "delete_" is returned.
+
+Otherwise, undef is returned.
 
 =item B<foreign_key [FK]>
 
