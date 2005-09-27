@@ -686,7 +686,7 @@ sub get_objects
     delete $args{'sort_by'};
 
     my($sql, $bind);
-    
+
     BUILD_SQL:
     {
       local $Carp::CarpLevel = $Carp::CarpLevel + 1;
@@ -778,7 +778,7 @@ sub get_objects
   my($count, @objects, $iterator);
 
   my($sql, $bind);
-  
+
   BUILD_SQL:
   {
     local $Carp::CarpLevel = $Carp::CarpLevel + 1;
@@ -1382,7 +1382,7 @@ sub save_objects   { shift->_map_action('save', @_)   }
 sub delete_objects
 {
   my($class, %args) = @_;
-  
+
   $class->error(undef);
 
   $args{'query'} = delete $args{'where'};
@@ -1425,7 +1425,7 @@ sub delete_objects
 
   my($where, $bind) = 
     $class->get_objects(%args, return_sql => 1, where_only => 1);
-  
+
   my $sql = 'DELETE FROM ' . $meta->fq_table_sql .
             ($where ? " WHERE\n$where" : '');
 
@@ -1434,7 +1434,7 @@ sub delete_objects
   eval
   {
     local $dbh->{'RaiseError'} = 1;  
-    $Debug && warn "$sql\n";
+    $Debug && warn "$sql - bind params: ", join(', ', @$bind), "\n";
 
     my $sth = $dbh->prepare($sql, $meta->prepare_bulk_delete_options) 
       or die $dbh->errstr;
@@ -1449,14 +1449,14 @@ sub delete_objects
     $class->handle_error($class);
     return undef;
   }
-  
+
   return $count;
 }
 
 sub update_objects
 {
   my($class, %args) = @_;
-  
+
   $class->error(undef);
 
   my $object_class = $args{'object_class'} 
@@ -1546,7 +1546,7 @@ sub update_objects
     $class->handle_error($class);
     return undef;
   }
-  
+
   return $count;
 }
 
@@ -1835,7 +1835,7 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
       print $code_name->name, "\n";
     }
   }
-  
+
   #
   # Update objects
   #

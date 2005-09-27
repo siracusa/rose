@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 660;
+use Test::More tests => 1056;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 232)  unless($HAVE_PG);
+  skip("Postgres tests", 364)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -211,12 +211,12 @@ SKIP: foreach my $db_type ('pg')
   my $colors = $o->colors;
 
   ok(ref $colors eq 'ARRAY' && @$colors == 2 && 
-     $colors->[0]->name eq 'red' && $colors->[1]->name eq 'blue',
+     $colors->[0]->name eq 'blue' && $colors->[1]->name eq 'red',
      "colors 1 - $db_type");
 
   my @colors = $o->colors;
 
-  ok(@colors == 2 && $colors[0]->name eq 'red' && $colors[1]->name eq 'blue',
+  ok(@colors == 2 && $colors[0]->name eq 'blue' && $colors[1]->name eq 'red',
      "colors 2 - $db_type");
 
   $colors = $o_x->colors;
@@ -248,14 +248,14 @@ SKIP: foreach my $db_type ('pg')
     Rose::DB::Object::Manager->get_objects_count(
       db => $o->db,
       object_class => 'MyPgOtherObject');
-      
+
   is($count, 2, "delete cascade rollback confirm 1 - $db_type");
 
   $count = 
     Rose::DB::Object::Manager->get_objects_count(
       db => $o->db,
       object_class => 'MyPgOtherObject2');
-      
+
   is($count, 3, "delete cascade rollback confirm 2 - $db_type");
 
   ok($o->delete(cascade => 'delete'), "delete cascade delete 1 - $db_type");
@@ -280,21 +280,21 @@ SKIP: foreach my $db_type ('pg')
     Rose::DB::Object::Manager->get_objects_count(
       db => $o->db,
       object_class => 'MyPgColorMap');
-      
+
   is($count, 0, "delete cascade confirm 1 - $db_type");
 
   $count = 
     Rose::DB::Object::Manager->get_objects_count(
       db => $o->db,
       object_class => 'MyPgOtherObject2');
-      
+
   is($count, 0, "delete cascade confirm 2 - $db_type");
 
   $count = 
     Rose::DB::Object::Manager->get_objects_count(
       db => $o->db,
       object_class => 'MyPgOtherObject');
-      
+
   is($count, 0, "delete cascade confirm 3 - $db_type");
 
   eval { $o->meta->alias_column(nonesuch => 'foo') };
@@ -354,7 +354,7 @@ SKIP: foreach my $db_type ('pg')
   ok(!$co->load(speculative => 1), "set foreign key object on save 2 - $db_type");
 
   my $other_obj = $o->other_obj_on_save;
-  
+
   ok($other_obj && $other_obj->k1 == 21 && $other_obj->k2 == 22 && $other_obj->k3 == 23,
      "set foreign key object on save 3 - $db_type");
 
@@ -363,7 +363,7 @@ SKIP: foreach my $db_type ('pg')
   $o = MyPgObject->new(id => 100);
 
   $o->load;
-  
+
   $other_obj = $o->other_obj_on_save;
 
   ok($other_obj && $other_obj && $other_obj->k1 == 21 && $other_obj->k2 == 22 && $other_obj->k3 == 23,
@@ -410,14 +410,14 @@ SKIP: foreach my $db_type ('pg')
   ok(!$co->load(speculative => 1), "set foreign key object on save 13 - $db_type");
 
   $other_obj = $o->other_obj_on_save;
-  
+
   ok($other_obj && $other_obj->k1 == 51 && $other_obj->k2 == 52 && $other_obj->k3 == 53,
      "set foreign key object on save 14 - $db_type");
 
   ok($o->delete_other_obj, "set foreign key object on save 15 - $db_type");
 
   $other_obj = $o->other_obj_on_save;
-  
+
   ok(!defined $other_obj && !defined $o->fkone && !defined $o->fk2 && !defined $o->fk3,
      "set foreign key object on save 16 - $db_type");
 
@@ -426,12 +426,12 @@ SKIP: foreach my $db_type ('pg')
   $o = MyPgObject->new(id => 200);
 
   $o->load;
-  
+
   ok(!defined $o->other_obj_on_save, "set foreign key object on save 18 - $db_type");
 
   $co = MyPgOtherObject->new(k1 => 51, k2 => 52, k3 => 53);
   ok(!$co->load(speculative => 1), "set foreign key object on save 19 - $db_type");
-  
+
   $o->delete(cascade => 1);
 
   #
@@ -486,7 +486,7 @@ SKIP: foreach my $db_type ('pg')
 
   $o = MyPgObject->new(id => 700);
   $o->load;
-  
+
   # TEST: Delete, set on save, delete, save
   ok($o->del_other_obj_on_save, "delete 2 foreign key object on save 1 - $db_type");
 
@@ -540,7 +540,7 @@ SKIP: foreach my $db_type ('pg')
 
   $o = MyPgObject->new(id => 800);
   $o->load;
-  
+
   # TEST: Set & save, delete on save, set on save, delete on save, save
   ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "delete 3 foreign key object on save 1 - $db_type");
 
@@ -552,10 +552,10 @@ SKIP: foreach my $db_type ('pg')
 
   # Delete on save
   $o->del_other_obj_on_save;
-  
+
   # Set-on-save to old value
   $o->other_obj_on_save(k1 => 12, k2 => 34, k3 => 56);
-  
+
   # Delete on save
   $o->del_other_obj_on_save;  
 
@@ -580,7 +580,7 @@ SKIP: foreach my $db_type ('pg')
 
   $o = MyPgObject->new(id => 900);
   $o->load;
-  
+
   # TEST: Delete on save, set on save, delete on save, set to same one, save
   $o->del_other_obj_on_save;
 
@@ -589,7 +589,7 @@ SKIP: foreach my $db_type ('pg')
 
   # Delete on save
   $o->del_other_obj_on_save;
-  
+
   # Set-on-save to previous value
   $o->other_obj_on_save(k1 => 1, k2 => 2, k3 => 3);
 
@@ -611,7 +611,7 @@ SKIP: foreach my $db_type ('pg')
   # End foreign key method tests
 
   # Start "one to many" method tests
-  
+
   #
   # "one to many" get_set_now
   #
@@ -639,9 +639,9 @@ SKIP: foreach my $db_type ('pg')
   @o2s = $o->other2_objs_now;
   ok(@o2s == 3, "set one to many now 3 - $db_type");
 
-  ok($o2s[0]->id == 1 && $o2s[0]->pid == 111, "set one to many now 4 - $db_type");
-  ok($o2s[1]->id == 2 && $o2s[1]->pid == 111, "set one to many now 5 - $db_type");
-  ok($o2s[2]->id == 3 && $o2s[2]->pid == 111, "set one to many now 6 - $db_type");
+  ok($o2s[0]->id == 2 && $o2s[0]->pid == 111, "set one to many now 4 - $db_type");
+  ok($o2s[1]->id == 3 && $o2s[1]->pid == 111, "set one to many now 5 - $db_type");
+  ok($o2s[2]->id == 1 && $o2s[2]->pid == 111, "set one to many now 6 - $db_type");
 
   $o2 = MyPgOtherObject2->new(id => 1)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set one to many now 7 - $db_type");
@@ -688,18 +688,18 @@ SKIP: foreach my $db_type ('pg')
 
   ok($o->other2_objs_now(\@o2s), "set 2 one to many now 1 - $db_type");
 
-  $o2 = MyPgOtherObject2->new(id => 1)->load(speculative => 1);
+  $o2 = MyPgOtherObject2->new(id => 7)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set 2 one to many now 2 - $db_type");
 
-  $o2 = MyPgOtherObject2->new(id => 7)->load(speculative => 1);
+  $o2 = MyPgOtherObject2->new(id => 1)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set 2 one to many now 3 - $db_type");
 
   @o2s = $o->other2_objs_now;
   ok(@o2s == 2, "set 2 one to many now 4 - $db_type");
 
-  ok($o2s[0]->id == 1 && $o2s[0]->pid == 111, "set 2 one to many now 5 - $db_type");
-  ok($o2s[1]->id == 7 && $o2s[1]->pid == 111, "set 2 one to many now 6 - $db_type");
-  
+  ok($o2s[0]->id == 7 && $o2s[0]->pid == 111, "set 2 one to many now 5 - $db_type");
+  ok($o2s[1]->id == 1 && $o2s[1]->pid == 111, "set 2 one to many now 6 - $db_type");
+
   $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_other2 WHERE pid = 111');
   $sth->execute;
   $count = $sth->fetchrow_array;
@@ -741,9 +741,9 @@ SKIP: foreach my $db_type ('pg')
   @o2s = $o->other2_objs_on_save;
   ok(@o2s == 3, "set one to many on save 8 - $db_type");
 
-  ok($o2s[0]->id == 5 && $o2s[0]->pid == 222, "set one to many on save 9 - $db_type");
-  ok($o2s[1]->id == 6 && $o2s[1]->pid == 222, "set one to many on save 10 - $db_type");
-  ok($o2s[2]->id == 7 && $o2s[2]->pid == 222, "set one to many on save 11 - $db_type");
+  ok($o2s[0]->id == 6 && $o2s[0]->pid == 222, "set one to many on save 9 - $db_type");
+  ok($o2s[1]->id == 7 && $o2s[1]->pid == 222, "set one to many on save 10 - $db_type");
+  ok($o2s[2]->id == 5 && $o2s[2]->pid == 222, "set one to many on save 11 - $db_type");
 
   $o2 = MyPgOtherObject2->new(id => 5)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set one to many on save 12 - $db_type");
@@ -770,7 +770,7 @@ SKIP: foreach my $db_type ('pg')
   );
 
   ok($o->other2_objs_on_save(\@o2s), "set 2 one to many on save 1 - $db_type");
-  
+
   $o2 = MyPgOtherObject2->new(id => 7)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set 2 one to many on save 2 - $db_type");
 
@@ -859,14 +859,14 @@ SKIP: foreach my $db_type ('pg')
   );
 
   eval { $o->add_other2_objs_now(@o2s) };
-  
+
   ok($@, "add one to many now 2 - $db_type");
 
   # Add
   $o->load;
 
   $o->add_other2_objs_now(@o2s);
-  
+
   @o2s = $o->other2_objs;
   ok(@o2s == 4, "add one to many now 3 - $db_type");
 
@@ -969,7 +969,7 @@ SKIP: foreach my $db_type ('pg')
   ok($o2s[0]->id == 10 && $o2s[0]->pid == 444, "add one to many on save 23 - $db_type");
   ok($o2s[1]->id == 9 && $o2s[1]->pid == 444, "add one to many on save 24 - $db_type");
   ok($o2s[2]->id == 11 && $o2s[2]->pid == 444, "add one to many on save 25 - $db_type");
-  
+
   ok(MyPgOtherObject2->new(id => 10)->load(speculative => 1), "add one to many on save 26 - $db_type");
   ok(MyPgOtherObject2->new(id => 9)->load(speculative => 1), "add one to many on save 27 - $db_type");
   ok(MyPgOtherObject2->new(id => 11)->load(speculative => 1), "add one to many on save 28 - $db_type");
@@ -985,15 +985,424 @@ SKIP: foreach my $db_type ('pg')
      "load with 2 - $db_type");
 
   $o = MyPgObject->new(id => 999);
-  
+
   ok(!$o->load(with => [ qw(other_obj other2_objs colors) ], speculative => 1),
      "load with 3 - $db_type");
 
   $o = MyPgObject->new(id => 222);
-  
+
   ok($o->load(with => 'colors'), "load with 4 - $db_type");
-  
+
   # End "load with ..." tests
+
+  # Start "many to many" tests
+
+  #
+  # "many to many" get_set_now
+  #
+
+  # SETUP
+
+  $o = MyPgObject->new(id   => 30,
+                       name => 'Color',
+                       flag => 1);
+
+  # Set
+  @colors =
+  (
+    MyPgColor->new(id => 1), # red
+    MyPgColor->new(id => 3), # blue
+    MyPgColor->new(id => 5, name => 'orange'),
+  );
+
+  #MyPgColor->new(id => 2), # green
+  #MyPgColor->new(id => 4), # pink
+
+  # Set before save, save, set
+  eval { $o->colors_now(@colors) };
+  ok($@, "set many to many now 1 - $db_type");
+
+  $o->save;
+
+  ok($o->colors_now(@colors), "set many to many now 2 - $db_type");
+
+  @colors = $o->colors_now;
+  ok(@colors == 3, "set many to many now 3 - $db_type");
+
+  ok($colors[0]->id == 3, "set many to many now 4 - $db_type");
+  ok($colors[1]->id == 5, "set many to many now 5 - $db_type");
+  ok($colors[2]->id == 1, "set many to many now 6 - $db_type");
+
+  $color = MyPgColor->new(id => 5);
+  ok($color->load(speculative => 1), "set many to many now 7 - $db_type");
+
+  ok(MyPgColorMap->new(obj_id => 30, color_id => 3)->load(speculative => 1),
+     "set many to many now 8 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 30, color_id => 5)->load(speculative => 1),
+     "set many to many now 9 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 30, color_id => 1)->load(speculative => 1),
+     "set many to many now 10 - $db_type");
+
+  $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 30');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 3, "set many to many now 11 - $db_type");
+
+  # Set to undef
+  $o->colors_now(undef);
+
+  @colors = $o->colors_now;
+  ok(@colors == 3, "set 2 many to many now 1 - $db_type");
+
+  ok($colors[0]->id == 3, "set 2 many to many now 2 - $db_type");
+  ok($colors[1]->id == 5, "set 2 many to many now 3 - $db_type");
+  ok($colors[2]->id == 1, "set 2 many to many now 4 - $db_type");
+
+  $color = MyPgColor->new(id => 5);
+  ok($color->load(speculative => 1), "set 2 many to many now 5 - $db_type");
+
+  $color = MyPgColor->new(id => 3);
+  ok($color->load(speculative => 1), "set 2 many to many now 6 - $db_type");
+
+  $color = MyPgColor->new(id => 1);
+  ok($color->load(speculative => 1), "set 2 many to many now 7 - $db_type");
+
+  ok(MyPgColorMap->new(obj_id => 30, color_id => 3)->load(speculative => 1),
+     "set 2 many to many now 8 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 30, color_id => 5)->load(speculative => 1),
+     "set 2 many to many now 9 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 30, color_id => 1)->load(speculative => 1),
+     "set 2 many to many now 10 - $db_type");
+
+  $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 30');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 3, "set 2 many to many now 11 - $db_type");
+
+  #
+  # "many to many" get_set_on_save
+  #
+
+  # SETUP
+  $o = MyPgObject->new(id   => 40,
+                       name => 'Cool',
+                       flag => 1);
+
+  # Set
+  @colors =
+  (
+    MyPgColor->new(id => 1), # red
+    MyPgColor->new(id => 3), # blue
+    MyPgColor->new(id => 6, name => 'ochre'),
+  );
+
+  #MyPgColor->new(id => 2), # green
+  #MyPgColor->new(id => 4), # pink
+
+  $o->colors_on_save(@colors);
+
+  @colors = $o->colors_on_save;
+  ok(@colors == 3, "set many to many on save 1 - $db_type");
+
+  ok($colors[0]->id == 1, "set many to many on save 2 - $db_type");
+  ok($colors[1]->id == 3, "set many to many on save 3 - $db_type");
+  ok($colors[2]->id == 6, "set many to many on save 4 - $db_type");
+
+  ok(MyPgColor->new(id => 1)->load(speculative => 1), "set many to many on save 5 - $db_type");
+  ok(MyPgColor->new(id => 3)->load(speculative => 1), "set many to many on save 6 - $db_type");
+  ok(!MyPgColor->new(id => 6)->load(speculative => 1), "set many to many on save 7 - $db_type");
+
+  ok(!MyPgColorMap->new(obj_id => 40, color_id => 1)->load(speculative => 1),
+     "set many to many on save 8 - $db_type");
+  ok(!MyPgColorMap->new(obj_id => 40, color_id => 3)->load(speculative => 1),
+     "set many to many on save 9 - $db_type");
+  ok(!MyPgColorMap->new(obj_id => 40, color_id => 6)->load(speculative => 1),
+     "set many to many on save 10 - $db_type");
+
+  $o->save;
+
+  @colors = $o->colors_on_save;
+  ok(@colors == 3, "set many to many on save 11 - $db_type");
+
+  ok($colors[0]->id == 3, "set many to many on save 12 - $db_type");
+  ok($colors[1]->id == 6, "set many to many on save 13 - $db_type");
+  ok($colors[2]->id == 1, "set many to many on save 14 - $db_type");
+
+  ok(MyPgColor->new(id => 1)->load(speculative => 1), "set many to many on save 15 - $db_type");
+  ok(MyPgColor->new(id => 3)->load(speculative => 1), "set many to many on save 16 - $db_type");
+  ok(MyPgColor->new(id => 6)->load(speculative => 1), "set many to many on save 17 - $db_type");
+
+  ok(MyPgColorMap->new(obj_id => 40, color_id => 1)->load(speculative => 1),
+     "set 2 many to many on save 18 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 40, color_id => 3)->load(speculative => 1),
+     "set 2 many to many on save 19 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 40, color_id => 6)->load(speculative => 1),
+     "set 2 many to many on save 20 - $db_type");
+
+  $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 40');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 3, "set many to many on save 21 - $db_type");
+
+  # RESET
+  $o = MyPgObject->new(id => 40)->load;
+
+  # Set to undef
+  $o->colors_on_save(undef);
+
+  @colors = $o->colors_on_save;
+  ok(@colors == 3, "set 2 many to many on save 1 - $db_type");
+
+  ok($colors[0]->id == 3, "set 2 many to many on save 2 - $db_type");
+  ok($colors[1]->id == 6, "set 2 many to many on save 3 - $db_type");
+  ok($colors[2]->id == 1, "set 2 many to many on save 4 - $db_type");
+
+  ok(MyPgColor->new(id => 1)->load(speculative => 1), "set 2 many to many on save 5 - $db_type");
+  ok(MyPgColor->new(id => 3)->load(speculative => 1), "set 2 many to many on save 6 - $db_type");
+  ok(MyPgColor->new(id => 6)->load(speculative => 1), "set 2 many to many on save 7 - $db_type");
+
+  ok(MyPgColorMap->new(obj_id => 40, color_id => 1)->load(speculative => 1),
+     "set 2 many to many on save 8 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 40, color_id => 3)->load(speculative => 1),
+     "set 2 many to many on save 9 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 40, color_id => 6)->load(speculative => 1),
+     "set 2 many to many on save 10 - $db_type");
+
+  $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 40');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 3, "set 2 many to many on save 11 - $db_type");
+
+  #
+  # "many to many" add_now
+  #
+
+  # SETUP
+  $o = MyPgObject->new(id   => 50,
+                       name => 'Blat',
+                       flag => 1);
+
+  $o->delete;
+
+  @colors =
+  (
+    MyPgColor->new(id => 1), # red
+    MyPgColor->new(id => 3), # blue  
+  );
+
+  #MyPgColor->new(id => 4), # pink
+
+  $o->colors_on_save(\@colors);
+  $o->save;
+
+  $o = MyPgObject->new(id   => 50,
+                       name => 'Blat',
+                       flag => 1);
+  # Add, no args
+  @colors = ();
+  ok(!defined $o->add_colors(@colors), "add many to many now 1 - $db_type");
+
+  # Add before load/save
+  @colors = 
+  (
+    MyPgColor->new(id => 7, name => 'puce'),
+    MyPgColor->new(id => 2), # green
+  );
+
+  eval { $o->add_colors(@colors) };
+
+  ok($@, "add many to many now 2 - $db_type");
+
+  # Add
+  $o->load;
+
+  $o->add_colors(@colors);
+
+  @colors = $o->colors;
+  ok(@colors == 4, "add many to many now 3 - $db_type");
+
+  ok($colors[0]->id == 3, "add many to many now 4 - $db_type");
+  ok($colors[1]->id == 2, "add many to many now 5 - $db_type");
+  ok($colors[2]->id == 7, "add many to many now 6 - $db_type");
+  ok($colors[3]->id == 1, "add many to many now 7 - $db_type");
+
+  ok(MyPgColor->new(id => 3)->load(speculative => 1), "add many to many now 8 - $db_type");
+  ok(MyPgColor->new(id => 2)->load(speculative => 1), "add many to many now 9 - $db_type");
+  ok(MyPgColor->new(id => 7)->load(speculative => 1), "add many to many now 10 - $db_type");
+  ok(MyPgColor->new(id => 1)->load(speculative => 1), "add many to many now 11 - $db_type");
+
+  ok(MyPgColorMap->new(obj_id => 50, color_id => 3)->load(speculative => 1),
+     "set 2 many to many on save 12 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 50, color_id => 2)->load(speculative => 1),
+     "set 2 many to many on save 13 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 50, color_id => 7)->load(speculative => 1),
+     "set 2 many to many on save 14 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 50, color_id => 1)->load(speculative => 1),
+     "set 2 many to many on save 15 - $db_type");
+
+  #
+  # "many to many" add_on_save
+  #
+
+  # SETUP
+  $o = MyPgObject->new(id   => 60,
+                       name => 'Cretch',
+                       flag => 1);
+
+  $o->delete;
+
+  # Set on save, add on save, save
+  @colors = 
+  (
+    MyPgColor->new(id => 1), # red
+    MyPgColor->new(id => 2), # green
+  );
+
+  # Set on save
+  $o->colors_on_save(@colors);
+
+  @colors = 
+  (
+    MyPgColor->new(id => 7), # puce
+    MyPgColor->new(id => 8, name => 'tan'),
+  );
+
+  # Add on save
+  ok($o->add_colors_on_save(@colors), "add many to many on save 1 - $db_type");
+
+  @colors = $o->colors;
+  ok(@colors == 4, "add many to many on save 2 - $db_type");
+
+  ok($colors[0]->id == 1, "add many to many on save 3 - $db_type");
+  ok($colors[1]->id == 2, "add many to many on save 4 - $db_type");
+  ok($colors[2]->id == 7, "add many to many on save 5 - $db_type");
+  ok($colors[3]->id == 8, "add many to many on save 6 - $db_type");
+
+  ok(MyPgColor->new(id => 1)->load(speculative => 1), "add many to many on save 7 - $db_type");
+  ok(MyPgColor->new(id => 2)->load(speculative => 1), "add many to many on save 8 - $db_type");
+  ok(MyPgColor->new(id => 7)->load(speculative => 1), "add many to many on save 9 - $db_type");
+  ok(!MyPgColor->new(id => 8)->load(speculative => 1), "add many to many on save 10 - $db_type");
+
+  ok(!MyPgColorMap->new(obj_id => 60, color_id => 1)->load(speculative => 1),
+     "set many to many on save 11 - $db_type");
+  ok(!MyPgColorMap->new(obj_id => 60, color_id => 2)->load(speculative => 1),
+     "set many to many on save 12 - $db_type");
+  ok(!MyPgColorMap->new(obj_id => 60, color_id => 7)->load(speculative => 1),
+     "set many to many on save 13 - $db_type");
+  ok(!MyPgColorMap->new(obj_id => 60, color_id => 8)->load(speculative => 1),
+     "set many to many on save 14 - $db_type");
+
+  $o->save;
+
+  @colors = $o->colors;
+  ok(@colors == 4, "add many to many on save 15 - $db_type");
+
+  ok($colors[0]->id == 2, "add many to many on save 16 - $db_type");
+  ok($colors[1]->id == 7, "add many to many on save 17 - $db_type");
+  ok($colors[2]->id == 1, "add many to many on save 18 - $db_type");
+  ok($colors[3]->id == 8, "add many to many on save 19 - $db_type");
+
+  ok(MyPgColor->new(id => 2)->load(speculative => 1), "add many to many on save 20 - $db_type");
+  ok(MyPgColor->new(id => 7)->load(speculative => 1), "add many to many on save 21 - $db_type");
+  ok(MyPgColor->new(id => 1)->load(speculative => 1), "add many to many on save 22 - $db_type");
+  ok(MyPgColor->new(id => 8)->load(speculative => 1), "add many to many on save 21 - $db_type");
+
+  ok(MyPgColorMap->new(obj_id => 60, color_id => 2)->load(speculative => 1),
+     "add many to many on save 22 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 60, color_id => 7)->load(speculative => 1),
+     "add many to many on save 23 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 60, color_id => 1)->load(speculative => 1),
+     "add many to many on save 24 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 60, color_id => 8)->load(speculative => 1),
+     "add many to many on save 25 - $db_type");
+
+  $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 60');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 4, "add many to many on save 26 - $db_type");
+
+  # RESET
+  $o = MyPgObject->new(id   => 60,
+                       name => 'Cretch',
+                       flag => 1);
+
+  $o->load(with => 'colors');
+
+  # Add on save, save
+  @colors = 
+  (
+    MyPgColor->new(id => 9, name => 'aqua'),
+  );
+
+  # Add on save
+  ok($o->add_colors_on_save(@colors), "add 2 many to many on save 1 - $db_type");
+
+  @colors = $o->colors;
+  ok(@colors == 5, "add 2 many to many on save 16 - $db_type");
+
+  ok($colors[0]->id == 2, "add 2 many to many on save 2 - $db_type");
+  ok($colors[1]->id == 7, "add 2 many to many on save 3 - $db_type");
+  ok($colors[2]->id == 1, "add 2 many to many on save 4 - $db_type");
+  ok($colors[3]->id == 8, "add 2 many to many on save 5 - $db_type");
+  ok($colors[4]->id == 9, "add 2 many to many on save 6 - $db_type");
+
+  ok(MyPgColor->new(id => 2)->load(speculative => 1), "add many to many on save 7 - $db_type");
+  ok(MyPgColor->new(id => 7)->load(speculative => 1), "add many to many on save 8 - $db_type");
+  ok(MyPgColor->new(id => 1)->load(speculative => 1), "add many to many on save 9 - $db_type");
+  ok(MyPgColor->new(id => 8)->load(speculative => 1), "add many to many on save 10 - $db_type");
+  ok(!MyPgColor->new(id => 9)->load(speculative => 1), "add many to many on save 11 - $db_type");
+
+  ok(MyPgColorMap->new(obj_id => 60, color_id => 2)->load(speculative => 1),
+     "add 2 many to many on save 12 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 60, color_id => 7)->load(speculative => 1),
+     "add 2 many to many on save 13 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 60, color_id => 1)->load(speculative => 1),
+     "add 2 many to many on save 14 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 60, color_id => 8)->load(speculative => 1),
+     "add 2 many to many on save 15 - $db_type");
+  ok(!MyPgColorMap->new(obj_id => 60, color_id => 9)->load(speculative => 1),
+     "add 2 many to many on save 16 - $db_type");
+
+  $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 60');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 4, "add 2 many to many on save 17 - $db_type");
+
+  # Save
+  $o->save;
+
+  @colors = $o->colors;
+  ok(@colors == 5, "add 2 many to many on save 18 - $db_type");
+
+  ok($colors[0]->id == 9, "add 2 many to many on save 19 - $db_type");
+  ok($colors[1]->id == 2, "add 2 many to many on save 20 - $db_type");
+  ok($colors[2]->id == 7, "add 2 many to many on save 21 - $db_type");
+  ok($colors[3]->id == 1, "add 2 many to many on save 22 - $db_type");
+  ok($colors[4]->id == 8, "add 2 many to many on save 23 - $db_type");
+
+  ok(MyPgColor->new(id => 9)->load(speculative => 1), "add many to many on save 24 - $db_type");
+  ok(MyPgColor->new(id => 2)->load(speculative => 1), "add many to many on save 25 - $db_type");
+  ok(MyPgColor->new(id => 7)->load(speculative => 1), "add many to many on save 26 - $db_type");
+  ok(MyPgColor->new(id => 1)->load(speculative => 1), "add many to many on save 27 - $db_type");
+  ok(MyPgColor->new(id => 8)->load(speculative => 1), "add many to many on save 28 - $db_type");
+
+  ok(MyPgColorMap->new(obj_id => 60, color_id => 9)->load(speculative => 1),
+     "add 2 many to many on save 29 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 60, color_id => 2)->load(speculative => 1),
+     "add 2 many to many on save 20 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 60, color_id => 7)->load(speculative => 1),
+     "add 2 many to many on save 31 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 60, color_id => 1)->load(speculative => 1),
+     "add 2 many to many on save 32 - $db_type");
+  ok(MyPgColorMap->new(obj_id => 60, color_id => 8)->load(speculative => 1),
+     "add 2 many to many on save 33 - $db_type");
+
+  $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 60');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 5, "add 2 many to many on save 34 - $db_type");
+
+  # End "many to many" tests
 }
 
 #
@@ -1002,7 +1411,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 202)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 334)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -1110,12 +1519,12 @@ SKIP: foreach my $db_type ('mysql')
   my $colors = $o->colors;
 
   ok(ref $colors eq 'ARRAY' && @$colors == 2 && 
-     $colors->[0]->name eq 'red' && $colors->[1]->name eq 'blue',
+     $colors->[0]->name eq 'blue' && $colors->[1]->name eq 'red',
      "colors 1 - $db_type");
 
   my @colors = $o->colors;
 
-  ok(@colors == 2 && $colors[0]->name eq 'red' && $colors[1]->name eq 'blue',
+  ok(@colors == 2 && $colors[0]->name eq 'blue' && $colors[1]->name eq 'red',
      "colors 2 - $db_type");
 
   $colors = $o_x->colors;
@@ -1151,7 +1560,7 @@ SKIP: foreach my $db_type ('mysql')
     Rose::DB::Object::Manager->get_objects_count(
       db => $o->db,
       object_class => 'MyMySQLOtherObject2');
-      
+
   is($count, 3, "delete cascade rollback confirm 2 - $db_type");
 
   $o = MyMySQLObject->new(id => 99)->load;
@@ -1172,14 +1581,14 @@ SKIP: foreach my $db_type ('mysql')
     Rose::DB::Object::Manager->get_objects_count(
       db => $o->db,
       object_class => 'MyMySQLColorMap');
-      
+
   is($count, 3, "delete cascade confirm 1 - $db_type");
 
   $count = 
     Rose::DB::Object::Manager->get_objects_count(
       db => $o->db,
       object_class => 'MyMySQLOtherObject2');
-      
+
   is($count, 3, "delete cascade confirm 2 - $db_type");
 
   eval { $o->meta->alias_column(nonesuch => 'foo') };
@@ -1239,7 +1648,7 @@ SKIP: foreach my $db_type ('mysql')
   ok(!$co->load(speculative => 1), "set foreign key object on save 2 - $db_type");
 
   my $other_obj = $o->other_obj_on_save;
-  
+
   ok($other_obj && $other_obj->k1 == 21 && $other_obj->k2 == 22 && $other_obj->k3 == 23,
      "set foreign key object on save 3 - $db_type");
 
@@ -1248,7 +1657,7 @@ SKIP: foreach my $db_type ('mysql')
   $o = MyMySQLObject->new(id => 100);
 
   $o->load;
-  
+
   $other_obj = $o->other_obj_on_save;
 
   ok($other_obj && $other_obj && $other_obj->k1 == 21 && $other_obj->k2 == 22 && $other_obj->k3 == 23,
@@ -1295,14 +1704,14 @@ SKIP: foreach my $db_type ('mysql')
   ok(!$co->load(speculative => 1), "set foreign key object on save 13 - $db_type");
 
   $other_obj = $o->other_obj_on_save;
-  
+
   ok($other_obj && $other_obj->k1 == 51 && $other_obj->k2 == 52 && $other_obj->k3 == 53,
      "set foreign key object on save 14 - $db_type");
 
   ok($o->delete_other_obj, "set foreign key object on save 15 - $db_type");
 
   $other_obj = $o->other_obj_on_save;
-  
+
   ok(!defined $other_obj && !defined $o->fk1 && !defined $o->fk2 && !defined $o->fk3,
      "set foreign key object on save 16 - $db_type");
 
@@ -1311,12 +1720,12 @@ SKIP: foreach my $db_type ('mysql')
   $o = MyMySQLObject->new(id => 200);
 
   $o->load;
-  
+
   ok(!defined $o->other_obj_on_save, "set foreign key object on save 18 - $db_type");
 
   $co = MyMySQLOtherObject->new(k1 => 51, k2 => 52, k3 => 53);
   ok(!$co->load(speculative => 1), "set foreign key object on save 19 - $db_type");
-  
+
   $o->delete(cascade => 1);
 
   #
@@ -1371,7 +1780,7 @@ SKIP: foreach my $db_type ('mysql')
 
   $o = MyMySQLObject->new(id => 700);
   $o->load;
-  
+
   # TEST: Delete, set on save, delete, save
   ok($o->del_other_obj_on_save, "delete 2 foreign key object on save 1 - $db_type");
 
@@ -1425,7 +1834,7 @@ SKIP: foreach my $db_type ('mysql')
 
   $o = MyMySQLObject->new(id => 800);
   $o->load;
-  
+
   # TEST: Set & save, delete on save, set on save, delete on save, save
   ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "delete 3 foreign key object on save 1 - $db_type");
 
@@ -1437,10 +1846,10 @@ SKIP: foreach my $db_type ('mysql')
 
   # Delete on save
   $o->del_other_obj_on_save;
-  
+
   # Set-on-save to old value
   $o->other_obj_on_save(k1 => 12, k2 => 34, k3 => 56);
-  
+
   # Delete on save
   $o->del_other_obj_on_save;  
 
@@ -1465,7 +1874,7 @@ SKIP: foreach my $db_type ('mysql')
 
   $o = MyMySQLObject->new(id => 900);
   $o->load;
-  
+
   # TEST: Delete on save, set on save, delete on save, set to same one, save
   $o->del_other_obj_on_save;
 
@@ -1474,7 +1883,7 @@ SKIP: foreach my $db_type ('mysql')
 
   # Delete on save
   $o->del_other_obj_on_save;
-  
+
   # Set-on-save to previous value
   $o->other_obj_on_save(k1 => 1, k2 => 2, k3 => 3);
 
@@ -1496,7 +1905,7 @@ SKIP: foreach my $db_type ('mysql')
   # End foreign key method tests
 
   # Start "one to many" method tests
-  
+
   #
   # "one to many" get_set_now
   #
@@ -1524,9 +1933,9 @@ SKIP: foreach my $db_type ('mysql')
   @o2s = $o->other2_objs_now;
   ok(@o2s == 3, "set one to many now 3 - $db_type");
 
-  ok($o2s[0]->id == 1 && $o2s[0]->pid == 111, "set one to many now 4 - $db_type");
-  ok($o2s[1]->id == 2 && $o2s[1]->pid == 111, "set one to many now 5 - $db_type");
-  ok($o2s[2]->id == 3 && $o2s[2]->pid == 111, "set one to many now 6 - $db_type");
+  ok($o2s[0]->id == 2 && $o2s[0]->pid == 111, "set one to many now 4 - $db_type");
+  ok($o2s[1]->id == 3 && $o2s[1]->pid == 111, "set one to many now 5 - $db_type");
+  ok($o2s[2]->id == 1 && $o2s[2]->pid == 111, "set one to many now 6 - $db_type");
 
   $o2 = MyMySQLOtherObject2->new(id => 1)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set one to many now 7 - $db_type");
@@ -1572,7 +1981,7 @@ SKIP: foreach my $db_type ('mysql')
   );
 
   ok($o->other2_objs_now(\@o2s), "set 2 one to many now 1 - $db_type");
-  
+
   $o2 = MyMySQLOtherObject2->new(id => 1)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set 2 one to many now 2 - $db_type");
 
@@ -1582,9 +1991,9 @@ SKIP: foreach my $db_type ('mysql')
   @o2s = $o->other2_objs_now;
   ok(@o2s == 2, "set 2 one to many now 4 - $db_type");
 
-  ok($o2s[0]->id == 1 && $o2s[0]->pid == 111, "set 2 one to many now 5 - $db_type");
-  ok($o2s[1]->id == 7 && $o2s[1]->pid == 111, "set 2 one to many now 6 - $db_type");
-  
+  ok($o2s[0]->id == 7 && $o2s[0]->pid == 111, "set 2 one to many now 5 - $db_type");
+  ok($o2s[1]->id == 1 && $o2s[1]->pid == 111, "set 2 one to many now 6 - $db_type");
+
   $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_other2 WHERE pid = 111');
   $sth->execute;
   $count = $sth->fetchrow_array;
@@ -1598,8 +2007,8 @@ SKIP: foreach my $db_type ('mysql')
   $o2->db->dbh->do('DELETE FROM rose_db_object_other2');
 
   $o = MyMySQLObject->new(id   => 222,
-                       name => 'Hap',
-                       flag => 1);
+                          name => 'Hap',
+                          flag => 1);
 
   @o2s = 
   (
@@ -1626,9 +2035,9 @@ SKIP: foreach my $db_type ('mysql')
   @o2s = $o->other2_objs_on_save;
   ok(@o2s == 3, "set one to many on save 8 - $db_type");
 
-  ok($o2s[0]->id == 5 && $o2s[0]->pid == 222, "set one to many on save 9 - $db_type");
-  ok($o2s[1]->id == 6 && $o2s[1]->pid == 222, "set one to many on save 10 - $db_type");
-  ok($o2s[2]->id == 7 && $o2s[2]->pid == 222, "set one to many on save 11 - $db_type");
+  ok($o2s[0]->id == 6 && $o2s[0]->pid == 222, "set one to many on save 9 - $db_type");
+  ok($o2s[1]->id == 7 && $o2s[1]->pid == 222, "set one to many on save 10 - $db_type");
+  ok($o2s[2]->id == 5 && $o2s[2]->pid == 222, "set one to many on save 11 - $db_type");
 
   $o2 = MyMySQLOtherObject2->new(id => 5)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set one to many on save 12 - $db_type");
@@ -1655,7 +2064,7 @@ SKIP: foreach my $db_type ('mysql')
   );
 
   ok($o->other2_objs_on_save(\@o2s), "set 2 one to many on save 1 - $db_type");
-  
+
   $o2 = MyMySQLOtherObject2->new(id => 7)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set 2 one to many on save 2 - $db_type");
 
@@ -1714,8 +2123,8 @@ SKIP: foreach my $db_type ('mysql')
   $o2->db->dbh->do('DELETE FROM rose_db_object_other2');
 
   $o = MyMySQLObject->new(id   => 333,
-                       name => 'Zoom',
-                       flag => 1);
+                          name => 'Zoom',
+                          flag => 1);
 
   $o->save;
 
@@ -1730,8 +2139,8 @@ SKIP: foreach my $db_type ('mysql')
 
   # RESET
   $o = MyMySQLObject->new(id   => 333,
-                       name => 'Zoom',
-                       flag => 1);
+                          name => 'Zoom',
+                          flag => 1);
 
   # Add, no args
   @o2s = ();
@@ -1744,14 +2153,14 @@ SKIP: foreach my $db_type ('mysql')
   );
 
   eval { $o->add_other2_objs_now(@o2s) };
-  
+
   ok($@, "add one to many now 2 - $db_type");
 
   # Add
   $o->load;
 
   $o->add_other2_objs_now(@o2s);
-  
+
   @o2s = $o->other2_objs;
   ok(@o2s == 4, "add one to many now 3 - $db_type");
 
@@ -1773,8 +2182,8 @@ SKIP: foreach my $db_type ('mysql')
   $o2->db->dbh->do('DELETE FROM rose_db_object_other2');
 
   $o = MyMySQLObject->new(id   => 444,
-                       name => 'Blargh',
-                       flag => 1);
+                          name => 'Blargh',
+                          flag => 1);
 
   # Set on save, add on save, save
   @o2s = 
@@ -1821,8 +2230,8 @@ SKIP: foreach my $db_type ('mysql')
 
   # RESET
   $o = MyMySQLObject->new(id   => 444,
-                       name => 'Blargh',
-                       flag => 1);
+                          name => 'Blargh',
+                          flag => 1);
 
   $o->load;
 
@@ -1854,7 +2263,7 @@ SKIP: foreach my $db_type ('mysql')
   ok($o2s[0]->id == 10 && $o2s[0]->pid == 444, "add one to many on save 23 - $db_type");
   ok($o2s[1]->id == 9 && $o2s[1]->pid == 444, "add one to many on save 24 - $db_type");
   ok($o2s[2]->id == 11 && $o2s[2]->pid == 444, "add one to many on save 25 - $db_type");
-  
+
   ok(MyMySQLOtherObject2->new(id => 10)->load(speculative => 1), "add one to many on save 26 - $db_type");
   ok(MyMySQLOtherObject2->new(id => 9)->load(speculative => 1), "add one to many on save 27 - $db_type");
   ok(MyMySQLOtherObject2->new(id => 11)->load(speculative => 1), "add one to many on save 28 - $db_type");
@@ -1870,15 +2279,424 @@ SKIP: foreach my $db_type ('mysql')
      "load with 2 - $db_type");
 
   $o = MyMySQLObject->new(id => 999);
-  
+
   ok(!$o->load(with => [ qw(other_obj other2_objs colors) ], speculative => 1),
      "load with 3 - $db_type");
 
   $o = MyMySQLObject->new(id => 222);
-  
+
   ok($o->load(with => 'colors'), "load with 4 - $db_type");
-  
+
   # End "load with ..." tests
+
+  # Start "many to many" tests
+
+  #
+  # "many to many" get_set_now
+  #
+
+  # SETUP
+
+  $o = MyMySQLObject->new(id   => 30,
+                          name => 'Color',
+                          flag => 1);
+
+  # Set
+  @colors =
+  (
+    MyMySQLColor->new(id => 1), # red
+    MyMySQLColor->new(id => 3), # blue
+    MyMySQLColor->new(id => 5, name => 'orange'),
+  );
+
+  #MyMySQLColor->new(id => 2), # green
+  #MyMySQLColor->new(id => 4), # pink
+
+  # Set before save, save, set
+  eval { $o->colors_now(@colors) };
+  ok($@, "set many to many now 1 - $db_type");
+
+  $o->save;
+
+  ok($o->colors_now(@colors), "set many to many now 2 - $db_type");
+
+  @colors = $o->colors_now;
+  ok(@colors == 3, "set many to many now 3 - $db_type");
+
+  ok($colors[0]->id == 3, "set many to many now 4 - $db_type");
+  ok($colors[1]->id == 5, "set many to many now 5 - $db_type");
+  ok($colors[2]->id == 1, "set many to many now 6 - $db_type");
+
+  $color = MyMySQLColor->new(id => 5);
+  ok($color->load(speculative => 1), "set many to many now 7 - $db_type");
+
+  ok(MyMySQLColorMap->new(obj_id => 30, color_id => 3)->load(speculative => 1),
+     "set many to many now 8 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 30, color_id => 5)->load(speculative => 1),
+     "set many to many now 9 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 30, color_id => 1)->load(speculative => 1),
+     "set many to many now 10 - $db_type");
+
+  $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 30');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 3, "set many to many now 11 - $db_type");
+
+  # Set to undef
+  $o->colors_now(undef);
+
+  @colors = $o->colors_now;
+  ok(@colors == 3, "set 2 many to many now 1 - $db_type");
+
+  ok($colors[0]->id == 3, "set 2 many to many now 2 - $db_type");
+  ok($colors[1]->id == 5, "set 2 many to many now 3 - $db_type");
+  ok($colors[2]->id == 1, "set 2 many to many now 4 - $db_type");
+
+  $color = MyMySQLColor->new(id => 5);
+  ok($color->load(speculative => 1), "set 2 many to many now 5 - $db_type");
+
+  $color = MyMySQLColor->new(id => 3);
+  ok($color->load(speculative => 1), "set 2 many to many now 6 - $db_type");
+
+  $color = MyMySQLColor->new(id => 1);
+  ok($color->load(speculative => 1), "set 2 many to many now 7 - $db_type");
+
+  ok(MyMySQLColorMap->new(obj_id => 30, color_id => 3)->load(speculative => 1),
+     "set 2 many to many now 8 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 30, color_id => 5)->load(speculative => 1),
+     "set 2 many to many now 9 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 30, color_id => 1)->load(speculative => 1),
+     "set 2 many to many now 10 - $db_type");
+
+  $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 30');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 3, "set 2 many to many now 11 - $db_type");
+
+  #
+  # "many to many" get_set_on_save
+  #
+
+  # SETUP
+  $o = MyMySQLObject->new(id   => 40,
+                          name => 'Cool',
+                          flag => 1);
+
+  # Set
+  @colors =
+  (
+    MyMySQLColor->new(id => 1), # red
+    MyMySQLColor->new(id => 3), # blue
+    MyMySQLColor->new(id => 6, name => 'ochre'),
+  );
+
+  #MyMySQLColor->new(id => 2), # green
+  #MyMySQLColor->new(id => 4), # pink
+
+  $o->colors_on_save(@colors);
+
+  @colors = $o->colors_on_save;
+  ok(@colors == 3, "set many to many on save 1 - $db_type");
+
+  ok($colors[0]->id == 1, "set many to many on save 2 - $db_type");
+  ok($colors[1]->id == 3, "set many to many on save 3 - $db_type");
+  ok($colors[2]->id == 6, "set many to many on save 4 - $db_type");
+
+  ok(MyMySQLColor->new(id => 1)->load(speculative => 1), "set many to many on save 5 - $db_type");
+  ok(MyMySQLColor->new(id => 3)->load(speculative => 1), "set many to many on save 6 - $db_type");
+  ok(!MyMySQLColor->new(id => 6)->load(speculative => 1), "set many to many on save 7 - $db_type");
+
+  ok(!MyMySQLColorMap->new(obj_id => 40, color_id => 1)->load(speculative => 1),
+     "set many to many on save 8 - $db_type");
+  ok(!MyMySQLColorMap->new(obj_id => 40, color_id => 3)->load(speculative => 1),
+     "set many to many on save 9 - $db_type");
+  ok(!MyMySQLColorMap->new(obj_id => 40, color_id => 6)->load(speculative => 1),
+     "set many to many on save 10 - $db_type");
+
+  $o->save;
+
+  @colors = $o->colors_on_save;
+  ok(@colors == 3, "set many to many on save 11 - $db_type");
+
+  ok($colors[0]->id == 3, "set many to many on save 12 - $db_type");
+  ok($colors[1]->id == 6, "set many to many on save 13 - $db_type");
+  ok($colors[2]->id == 1, "set many to many on save 14 - $db_type");
+
+  ok(MyMySQLColor->new(id => 1)->load(speculative => 1), "set many to many on save 15 - $db_type");
+  ok(MyMySQLColor->new(id => 3)->load(speculative => 1), "set many to many on save 16 - $db_type");
+  ok(MyMySQLColor->new(id => 6)->load(speculative => 1), "set many to many on save 17 - $db_type");
+
+  ok(MyMySQLColorMap->new(obj_id => 40, color_id => 1)->load(speculative => 1),
+     "set 2 many to many on save 18 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 40, color_id => 3)->load(speculative => 1),
+     "set 2 many to many on save 19 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 40, color_id => 6)->load(speculative => 1),
+     "set 2 many to many on save 20 - $db_type");
+
+  $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 40');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 3, "set many to many on save 21 - $db_type");
+
+  # RESET
+  $o = MyMySQLObject->new(id => 40)->load;
+
+  # Set to undef
+  $o->colors_on_save(undef);
+
+  @colors = $o->colors_on_save;
+  ok(@colors == 3, "set 2 many to many on save 1 - $db_type");
+
+  ok($colors[0]->id == 3, "set 2 many to many on save 2 - $db_type");
+  ok($colors[1]->id == 6, "set 2 many to many on save 3 - $db_type");
+  ok($colors[2]->id == 1, "set 2 many to many on save 4 - $db_type");
+
+  ok(MyMySQLColor->new(id => 1)->load(speculative => 1), "set 2 many to many on save 5 - $db_type");
+  ok(MyMySQLColor->new(id => 3)->load(speculative => 1), "set 2 many to many on save 6 - $db_type");
+  ok(MyMySQLColor->new(id => 6)->load(speculative => 1), "set 2 many to many on save 7 - $db_type");
+
+  ok(MyMySQLColorMap->new(obj_id => 40, color_id => 1)->load(speculative => 1),
+     "set 2 many to many on save 8 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 40, color_id => 3)->load(speculative => 1),
+     "set 2 many to many on save 9 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 40, color_id => 6)->load(speculative => 1),
+     "set 2 many to many on save 10 - $db_type");
+
+  $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 40');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 3, "set 2 many to many on save 11 - $db_type");
+
+  #
+  # "many to many" add_now
+  #
+
+  # SETUP
+  $o = MyMySQLObject->new(id   => 50,
+                          name => 'Blat',
+                          flag => 1);
+
+  $o->delete;
+
+  @colors =
+  (
+    MyMySQLColor->new(id => 1), # red
+    MyMySQLColor->new(id => 3), # blue  
+  );
+
+  #MyMySQLColor->new(id => 4), # pink
+
+  $o->colors_on_save(\@colors);
+  $o->save;
+
+  $o = MyMySQLObject->new(id   => 50,
+                          name => 'Blat',
+                          flag => 1);
+  # Add, no args
+  @colors = ();
+  ok(!defined $o->add_colors(@colors), "add many to many now 1 - $db_type");
+
+  # Add before load/save
+  @colors = 
+  (
+    MyMySQLColor->new(id => 7, name => 'puce'),
+    MyMySQLColor->new(id => 2), # green
+  );
+
+  eval { $o->add_colors(@colors) };
+
+  ok($@, "add many to many now 2 - $db_type");
+
+  # Add
+  $o->load;
+
+  $o->add_colors(@colors);
+
+  @colors = $o->colors;
+  ok(@colors == 4, "add many to many now 3 - $db_type");
+
+  ok($colors[0]->id == 3, "add many to many now 4 - $db_type");
+  ok($colors[1]->id == 2, "add many to many now 5 - $db_type");
+  ok($colors[2]->id == 7, "add many to many now 6 - $db_type");
+  ok($colors[3]->id == 1, "add many to many now 7 - $db_type");
+
+  ok(MyMySQLColor->new(id => 3)->load(speculative => 1), "add many to many now 8 - $db_type");
+  ok(MyMySQLColor->new(id => 2)->load(speculative => 1), "add many to many now 9 - $db_type");
+  ok(MyMySQLColor->new(id => 7)->load(speculative => 1), "add many to many now 10 - $db_type");
+  ok(MyMySQLColor->new(id => 1)->load(speculative => 1), "add many to many now 11 - $db_type");
+
+  ok(MyMySQLColorMap->new(obj_id => 50, color_id => 3)->load(speculative => 1),
+     "set 2 many to many on save 12 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 50, color_id => 2)->load(speculative => 1),
+     "set 2 many to many on save 13 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 50, color_id => 7)->load(speculative => 1),
+     "set 2 many to many on save 14 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 50, color_id => 1)->load(speculative => 1),
+     "set 2 many to many on save 15 - $db_type");
+
+  #
+  # "many to many" add_on_save
+  #
+
+  # SETUP
+  $o = MyMySQLObject->new(id   => 60,
+                          name => 'Cretch',
+                          flag => 1);
+
+  $o->delete;
+
+  # Set on save, add on save, save
+  @colors = 
+  (
+    MyMySQLColor->new(id => 1), # red
+    MyMySQLColor->new(id => 2), # green
+  );
+
+  # Set on save
+  $o->colors_on_save(@colors);
+
+  @colors = 
+  (
+    MyMySQLColor->new(id => 7), # puce
+    MyMySQLColor->new(id => 8, name => 'tan'),
+  );
+
+  # Add on save
+  ok($o->add_colors_on_save(@colors), "add many to many on save 1 - $db_type");
+
+  @colors = $o->colors;
+  ok(@colors == 4, "add many to many on save 2 - $db_type");
+
+  ok($colors[0]->id == 1, "add many to many on save 3 - $db_type");
+  ok($colors[1]->id == 2, "add many to many on save 4 - $db_type");
+  ok($colors[2]->id == 7, "add many to many on save 5 - $db_type");
+  ok($colors[3]->id == 8, "add many to many on save 6 - $db_type");
+
+  ok(MyMySQLColor->new(id => 1)->load(speculative => 1), "add many to many on save 7 - $db_type");
+  ok(MyMySQLColor->new(id => 2)->load(speculative => 1), "add many to many on save 8 - $db_type");
+  ok(MyMySQLColor->new(id => 7)->load(speculative => 1), "add many to many on save 9 - $db_type");
+  ok(!MyMySQLColor->new(id => 8)->load(speculative => 1), "add many to many on save 10 - $db_type");
+
+  ok(!MyMySQLColorMap->new(obj_id => 60, color_id => 1)->load(speculative => 1),
+     "set many to many on save 11 - $db_type");
+  ok(!MyMySQLColorMap->new(obj_id => 60, color_id => 2)->load(speculative => 1),
+     "set many to many on save 12 - $db_type");
+  ok(!MyMySQLColorMap->new(obj_id => 60, color_id => 7)->load(speculative => 1),
+     "set many to many on save 13 - $db_type");
+  ok(!MyMySQLColorMap->new(obj_id => 60, color_id => 8)->load(speculative => 1),
+     "set many to many on save 14 - $db_type");
+
+  $o->save;
+
+  @colors = $o->colors;
+  ok(@colors == 4, "add many to many on save 15 - $db_type");
+
+  ok($colors[0]->id == 2, "add many to many on save 16 - $db_type");
+  ok($colors[1]->id == 7, "add many to many on save 17 - $db_type");
+  ok($colors[2]->id == 1, "add many to many on save 18 - $db_type");
+  ok($colors[3]->id == 8, "add many to many on save 19 - $db_type");
+
+  ok(MyMySQLColor->new(id => 2)->load(speculative => 1), "add many to many on save 20 - $db_type");
+  ok(MyMySQLColor->new(id => 7)->load(speculative => 1), "add many to many on save 21 - $db_type");
+  ok(MyMySQLColor->new(id => 1)->load(speculative => 1), "add many to many on save 22 - $db_type");
+  ok(MyMySQLColor->new(id => 8)->load(speculative => 1), "add many to many on save 21 - $db_type");
+
+  ok(MyMySQLColorMap->new(obj_id => 60, color_id => 2)->load(speculative => 1),
+     "add many to many on save 22 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 60, color_id => 7)->load(speculative => 1),
+     "add many to many on save 23 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 60, color_id => 1)->load(speculative => 1),
+     "add many to many on save 24 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 60, color_id => 8)->load(speculative => 1),
+     "add many to many on save 25 - $db_type");
+
+  $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 60');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 4, "add many to many on save 26 - $db_type");
+
+  # RESET
+  $o = MyMySQLObject->new(id   => 60,
+                          name => 'Cretch',
+                          flag => 1);
+
+  $o->load(with => 'colors');
+
+  # Add on save, save
+  @colors = 
+  (
+    MyMySQLColor->new(id => 9, name => 'aqua'),
+  );
+
+  # Add on save
+  ok($o->add_colors_on_save(@colors), "add 2 many to many on save 1 - $db_type");
+
+  @colors = $o->colors;
+  ok(@colors == 5, "add 2 many to many on save 16 - $db_type");
+
+  ok($colors[0]->id == 2, "add 2 many to many on save 2 - $db_type");
+  ok($colors[1]->id == 7, "add 2 many to many on save 3 - $db_type");
+  ok($colors[2]->id == 1, "add 2 many to many on save 4 - $db_type");
+  ok($colors[3]->id == 8, "add 2 many to many on save 5 - $db_type");
+  ok($colors[4]->id == 9, "add 2 many to many on save 6 - $db_type");
+
+  ok(MyMySQLColor->new(id => 2)->load(speculative => 1), "add many to many on save 7 - $db_type");
+  ok(MyMySQLColor->new(id => 7)->load(speculative => 1), "add many to many on save 8 - $db_type");
+  ok(MyMySQLColor->new(id => 1)->load(speculative => 1), "add many to many on save 9 - $db_type");
+  ok(MyMySQLColor->new(id => 8)->load(speculative => 1), "add many to many on save 10 - $db_type");
+  ok(!MyMySQLColor->new(id => 9)->load(speculative => 1), "add many to many on save 11 - $db_type");
+
+  ok(MyMySQLColorMap->new(obj_id => 60, color_id => 2)->load(speculative => 1),
+     "add 2 many to many on save 12 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 60, color_id => 7)->load(speculative => 1),
+     "add 2 many to many on save 13 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 60, color_id => 1)->load(speculative => 1),
+     "add 2 many to many on save 14 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 60, color_id => 8)->load(speculative => 1),
+     "add 2 many to many on save 15 - $db_type");
+  ok(!MyMySQLColorMap->new(obj_id => 60, color_id => 9)->load(speculative => 1),
+     "add 2 many to many on save 16 - $db_type");
+
+  $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 60');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 4, "add 2 many to many on save 17 - $db_type");
+
+  # Save
+  $o->save;
+
+  @colors = $o->colors;
+  ok(@colors == 5, "add 2 many to many on save 18 - $db_type");
+
+  ok($colors[0]->id == 9, "add 2 many to many on save 19 - $db_type");
+  ok($colors[1]->id == 2, "add 2 many to many on save 20 - $db_type");
+  ok($colors[2]->id == 7, "add 2 many to many on save 21 - $db_type");
+  ok($colors[3]->id == 1, "add 2 many to many on save 22 - $db_type");
+  ok($colors[4]->id == 8, "add 2 many to many on save 23 - $db_type");
+
+  ok(MyMySQLColor->new(id => 9)->load(speculative => 1), "add many to many on save 24 - $db_type");
+  ok(MyMySQLColor->new(id => 2)->load(speculative => 1), "add many to many on save 25 - $db_type");
+  ok(MyMySQLColor->new(id => 7)->load(speculative => 1), "add many to many on save 26 - $db_type");
+  ok(MyMySQLColor->new(id => 1)->load(speculative => 1), "add many to many on save 27 - $db_type");
+  ok(MyMySQLColor->new(id => 8)->load(speculative => 1), "add many to many on save 28 - $db_type");
+
+  ok(MyMySQLColorMap->new(obj_id => 60, color_id => 9)->load(speculative => 1),
+     "add 2 many to many on save 29 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 60, color_id => 2)->load(speculative => 1),
+     "add 2 many to many on save 20 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 60, color_id => 7)->load(speculative => 1),
+     "add 2 many to many on save 31 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 60, color_id => 1)->load(speculative => 1),
+     "add 2 many to many on save 32 - $db_type");
+  ok(MyMySQLColorMap->new(obj_id => 60, color_id => 8)->load(speculative => 1),
+     "add 2 many to many on save 33 - $db_type");
+
+  $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 60');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 5, "add 2 many to many on save 34 - $db_type");
+
+  # End "many to many" tests
 }
 
 #
@@ -1887,7 +2705,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 224)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 356)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -2043,12 +2861,12 @@ SKIP: foreach my $db_type ('informix')
   my $colors = $o->colors;
 
   ok(ref $colors eq 'ARRAY' && @$colors == 2 && 
-     $colors->[0]->name eq 'red' && $colors->[1]->name eq 'blue',
+     $colors->[0]->name eq 'blue' && $colors->[1]->name eq 'red',
      "colors 1 - $db_type");
 
   my @colors = $o->colors;
 
-  ok(@colors == 2 && $colors[0]->name eq 'red' && $colors[1]->name eq 'blue',
+  ok(@colors == 2 && $colors[0]->name eq 'blue' && $colors[1]->name eq 'red',
      "colors 2 - $db_type");
 
   $colors = $o_x->colors;
@@ -2080,14 +2898,14 @@ SKIP: foreach my $db_type ('informix')
     Rose::DB::Object::Manager->get_objects_count(
       db => $o->db,
       object_class => 'MyInformixOtherObject');
-      
+
   is($count, 2, "delete cascade rollback confirm 1 - $db_type");
 
   $count = 
     Rose::DB::Object::Manager->get_objects_count(
       db => $o->db,
       object_class => 'MyInformixOtherObject2');
-      
+
   is($count, 3, "delete cascade rollback confirm 2 - $db_type");
 
   ok($o->delete(cascade => 'delete'), "delete cascade delete 1 - $db_type");
@@ -2112,14 +2930,14 @@ SKIP: foreach my $db_type ('informix')
     Rose::DB::Object::Manager->get_objects_count(
       db => $o->db,
       object_class => 'MyInformixColorMap');
-      
+
   is($count, 0, "delete cascade confirm 1 - $db_type");
 
   $count = 
     Rose::DB::Object::Manager->get_objects_count(
       db => $o->db,
       object_class => 'MyInformixOtherObject2');
-      
+
   is($count, 0, "delete cascade confirm 2 - $db_type");
 
   $count = 
@@ -2186,7 +3004,7 @@ SKIP: foreach my $db_type ('informix')
   ok(!$co->load(speculative => 1), "set foreign key object on save 2 - $db_type");
 
   my $other_obj = $o->other_obj_on_save;
-  
+
   ok($other_obj && $other_obj->k1 == 21 && $other_obj->k2 == 22 && $other_obj->k3 == 23,
      "set foreign key object on save 3 - $db_type");
 
@@ -2195,7 +3013,7 @@ SKIP: foreach my $db_type ('informix')
   $o = MyInformixObject->new(id => 100);
 
   $o->load;
-  
+
   $other_obj = $o->other_obj_on_save;
 
   ok($other_obj && $other_obj && $other_obj->k1 == 21 && $other_obj->k2 == 22 && $other_obj->k3 == 23,
@@ -2242,14 +3060,14 @@ SKIP: foreach my $db_type ('informix')
   ok(!$co->load(speculative => 1), "set foreign key object on save 13 - $db_type");
 
   $other_obj = $o->other_obj_on_save;
-  
+
   ok($other_obj && $other_obj->k1 == 51 && $other_obj->k2 == 52 && $other_obj->k3 == 53,
      "set foreign key object on save 14 - $db_type");
 
   ok($o->delete_other_obj, "set foreign key object on save 15 - $db_type");
 
   $other_obj = $o->other_obj_on_save;
-  
+
   ok(!defined $other_obj && !defined $o->fkone && !defined $o->fk2 && !defined $o->fk3,
      "set foreign key object on save 16 - $db_type");
 
@@ -2258,12 +3076,12 @@ SKIP: foreach my $db_type ('informix')
   $o = MyInformixObject->new(id => 200);
 
   $o->load;
-  
+
   ok(!defined $o->other_obj_on_save, "set foreign key object on save 18 - $db_type");
 
   $co = MyInformixOtherObject->new(k1 => 51, k2 => 52, k3 => 53);
   ok(!$co->load(speculative => 1), "set foreign key object on save 19 - $db_type");
-  
+
   $o->delete(cascade => 1);
 
   #
@@ -2318,7 +3136,7 @@ SKIP: foreach my $db_type ('informix')
 
   $o = MyInformixObject->new(id => 700);
   $o->load;
-  
+
   # TEST: Delete, set on save, delete, save
   ok($o->del_other_obj_on_save, "delete 2 foreign key object on save 1 - $db_type");
 
@@ -2372,7 +3190,7 @@ SKIP: foreach my $db_type ('informix')
 
   $o = MyInformixObject->new(id => 800);
   $o->load;
-  
+
   # TEST: Set & save, delete on save, set on save, delete on save, save
   ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "delete 3 foreign key object on save 1 - $db_type");
 
@@ -2384,10 +3202,10 @@ SKIP: foreach my $db_type ('informix')
 
   # Delete on save
   $o->del_other_obj_on_save;
-  
+
   # Set-on-save to old value
   $o->other_obj_on_save(k1 => 12, k2 => 34, k3 => 56);
-  
+
   # Delete on save
   $o->del_other_obj_on_save;  
 
@@ -2412,7 +3230,7 @@ SKIP: foreach my $db_type ('informix')
 
   $o = MyInformixObject->new(id => 900);
   $o->load;
-  
+
   # TEST: Delete on save, set on save, delete on save, set to same one, save
   $o->del_other_obj_on_save;
 
@@ -2421,7 +3239,7 @@ SKIP: foreach my $db_type ('informix')
 
   # Delete on save
   $o->del_other_obj_on_save;
-  
+
   # Set-on-save to previous value
   $o->other_obj_on_save(k1 => 1, k2 => 2, k3 => 3);
 
@@ -2443,7 +3261,7 @@ SKIP: foreach my $db_type ('informix')
   # End foreign key method tests
 
   # Start "one to many" method tests
-  
+
   #
   # "one to many" get_set_now
   #
@@ -2474,9 +3292,9 @@ SKIP: foreach my $db_type ('informix')
   @o2s = $o->other2_objs_now;
   ok(@o2s == 3, "set one to many now 3 - $db_type");
 
-  ok($o2s[0]->id == 1 && $o2s[0]->pid == 111, "set one to many now 4 - $db_type");
-  ok($o2s[1]->id == 2 && $o2s[1]->pid == 111, "set one to many now 5 - $db_type");
-  ok($o2s[2]->id == 3 && $o2s[2]->pid == 111, "set one to many now 6 - $db_type");
+  ok($o2s[0]->id == 2 && $o2s[0]->pid == 111, "set one to many now 4 - $db_type");
+  ok($o2s[1]->id == 3 && $o2s[1]->pid == 111, "set one to many now 5 - $db_type");
+  ok($o2s[2]->id == 1 && $o2s[2]->pid == 111, "set one to many now 6 - $db_type");
 
   $o2 = MyInformixOtherObject2->new(id => 1)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set one to many now 7 - $db_type");
@@ -2522,7 +3340,7 @@ SKIP: foreach my $db_type ('informix')
   );
 
   ok($o->other2_objs_now(\@o2s), "set 2 one to many now 1 - $db_type");
-  
+
   $o2 = MyInformixOtherObject2->new(id => 1)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set 2 one to many now 2 - $db_type");
 
@@ -2532,9 +3350,9 @@ SKIP: foreach my $db_type ('informix')
   @o2s = $o->other2_objs_now;
   ok(@o2s == 2, "set 2 one to many now 4 - $db_type");
 
-  ok($o2s[0]->id == 1 && $o2s[0]->pid == 111, "set 2 one to many now 5 - $db_type");
-  ok($o2s[1]->id == 7 && $o2s[1]->pid == 111, "set 2 one to many now 6 - $db_type");
-  
+  ok($o2s[0]->id == 7 && $o2s[0]->pid == 111, "set 2 one to many now 5 - $db_type");
+  ok($o2s[1]->id == 1 && $o2s[1]->pid == 111, "set 2 one to many now 6 - $db_type");
+
   $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_other2 WHERE pid = 111');
   $sth->execute;
   $count = $sth->fetchrow_array;
@@ -2576,9 +3394,9 @@ SKIP: foreach my $db_type ('informix')
   @o2s = $o->other2_objs_on_save;
   ok(@o2s == 3, "set one to many on save 8 - $db_type");
 
-  ok($o2s[0]->id == 5 && $o2s[0]->pid == 222, "set one to many on save 9 - $db_type");
-  ok($o2s[1]->id == 6 && $o2s[1]->pid == 222, "set one to many on save 10 - $db_type");
-  ok($o2s[2]->id == 7 && $o2s[2]->pid == 222, "set one to many on save 11 - $db_type");
+  ok($o2s[0]->id == 6 && $o2s[0]->pid == 222, "set one to many on save 9 - $db_type");
+  ok($o2s[1]->id == 7 && $o2s[1]->pid == 222, "set one to many on save 10 - $db_type");
+  ok($o2s[2]->id == 5 && $o2s[2]->pid == 222, "set one to many on save 11 - $db_type");
 
   $o2 = MyInformixOtherObject2->new(id => 5)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set one to many on save 12 - $db_type");
@@ -2605,7 +3423,7 @@ SKIP: foreach my $db_type ('informix')
   );
 
   ok($o->other2_objs_on_save(\@o2s), "set 2 one to many on save 1 - $db_type");
-  
+
   $o2 = MyInformixOtherObject2->new(id => 7)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set 2 one to many on save 2 - $db_type");
 
@@ -2694,14 +3512,14 @@ SKIP: foreach my $db_type ('informix')
   );
 
   eval { $o->add_other2_objs_now(@o2s) };
-  
+
   ok($@, "add one to many now 2 - $db_type");
 
   # Add
   $o->load;
 
   $o->add_other2_objs_now(@o2s);
-  
+
   @o2s = $o->other2_objs;
   ok(@o2s == 4, "add one to many now 3 - $db_type");
 
@@ -2804,7 +3622,7 @@ SKIP: foreach my $db_type ('informix')
   ok($o2s[0]->id == 10 && $o2s[0]->pid == 444, "add one to many on save 23 - $db_type");
   ok($o2s[1]->id == 9 && $o2s[1]->pid == 444, "add one to many on save 24 - $db_type");
   ok($o2s[2]->id == 11 && $o2s[2]->pid == 444, "add one to many on save 25 - $db_type");
-  
+
   ok(MyInformixOtherObject2->new(id => 10)->load(speculative => 1), "add one to many on save 26 - $db_type");
   ok(MyInformixOtherObject2->new(id => 9)->load(speculative => 1), "add one to many on save 27 - $db_type");
   ok(MyInformixOtherObject2->new(id => 11)->load(speculative => 1), "add one to many on save 28 - $db_type");
@@ -2820,15 +3638,424 @@ SKIP: foreach my $db_type ('informix')
      "load with 2 - $db_type");
 
   $o = MyInformixObject->new(id => 999);
-  
+
   ok(!$o->load(with => [ qw(other_obj other2_objs colors) ], speculative => 1),
      "load with 3 - $db_type");
 
   $o = MyInformixObject->new(id => 222);
-  
+
   ok($o->load(with => 'colors'), "load with 4 - $db_type");
-  
+
   # End "load with ..." tests
+
+  # Start "many to many" tests
+
+  #
+  # "many to many" get_set_now
+  #
+
+  # SETUP
+
+  $o = MyInformixObject->new(id   => 30,
+                             name => 'Color',
+                             flag => 1);
+
+  # Set
+  @colors =
+  (
+    MyInformixColor->new(id => 1), # red
+    MyInformixColor->new(id => 3), # blue
+    MyInformixColor->new(id => 5, name => 'orange'),
+  );
+
+  #MyInformixColor->new(id => 2), # green
+  #MyInformixColor->new(id => 4), # pink
+
+  # Set before save, save, set
+  eval { $o->colors_now(@colors) };
+  ok($@, "set many to many now 1 - $db_type");
+
+  $o->save;
+
+  ok($o->colors_now(@colors), "set many to many now 2 - $db_type");
+
+  @colors = $o->colors_now;
+  ok(@colors == 3, "set many to many now 3 - $db_type");
+
+  ok($colors[0]->id == 3, "set many to many now 4 - $db_type");
+  ok($colors[1]->id == 5, "set many to many now 5 - $db_type");
+  ok($colors[2]->id == 1, "set many to many now 6 - $db_type");
+
+  $color = MyInformixColor->new(id => 5);
+  ok($color->load(speculative => 1), "set many to many now 7 - $db_type");
+
+  ok(MyInformixColorMap->new(obj_id => 30, color_id => 3)->load(speculative => 1),
+     "set many to many now 8 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 30, color_id => 5)->load(speculative => 1),
+     "set many to many now 9 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 30, color_id => 1)->load(speculative => 1),
+     "set many to many now 10 - $db_type");
+
+  $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 30');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 3, "set many to many now 11 - $db_type");
+
+  # Set to undef
+  $o->colors_now(undef);
+
+  @colors = $o->colors_now;
+  ok(@colors == 3, "set 2 many to many now 1 - $db_type");
+
+  ok($colors[0]->id == 3, "set 2 many to many now 2 - $db_type");
+  ok($colors[1]->id == 5, "set 2 many to many now 3 - $db_type");
+  ok($colors[2]->id == 1, "set 2 many to many now 4 - $db_type");
+
+  $color = MyInformixColor->new(id => 5);
+  ok($color->load(speculative => 1), "set 2 many to many now 5 - $db_type");
+
+  $color = MyInformixColor->new(id => 3);
+  ok($color->load(speculative => 1), "set 2 many to many now 6 - $db_type");
+
+  $color = MyInformixColor->new(id => 1);
+  ok($color->load(speculative => 1), "set 2 many to many now 7 - $db_type");
+
+  ok(MyInformixColorMap->new(obj_id => 30, color_id => 3)->load(speculative => 1),
+     "set 2 many to many now 8 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 30, color_id => 5)->load(speculative => 1),
+     "set 2 many to many now 9 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 30, color_id => 1)->load(speculative => 1),
+     "set 2 many to many now 10 - $db_type");
+
+  $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 30');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 3, "set 2 many to many now 11 - $db_type");
+
+  #
+  # "many to many" get_set_on_save
+  #
+
+  # SETUP
+  $o = MyInformixObject->new(id   => 40,
+                             name => 'Cool',
+                             flag => 1);
+
+  # Set
+  @colors =
+  (
+    MyInformixColor->new(id => 1), # red
+    MyInformixColor->new(id => 3), # blue
+    MyInformixColor->new(id => 6, name => 'ochre'),
+  );
+
+  #MyInformixColor->new(id => 2), # green
+  #MyInformixColor->new(id => 4), # pink
+
+  $o->colors_on_save(@colors);
+
+  @colors = $o->colors_on_save;
+  ok(@colors == 3, "set many to many on save 1 - $db_type");
+
+  ok($colors[0]->id == 1, "set many to many on save 2 - $db_type");
+  ok($colors[1]->id == 3, "set many to many on save 3 - $db_type");
+  ok($colors[2]->id == 6, "set many to many on save 4 - $db_type");
+
+  ok(MyInformixColor->new(id => 1)->load(speculative => 1), "set many to many on save 5 - $db_type");
+  ok(MyInformixColor->new(id => 3)->load(speculative => 1), "set many to many on save 6 - $db_type");
+  ok(!MyInformixColor->new(id => 6)->load(speculative => 1), "set many to many on save 7 - $db_type");
+
+  ok(!MyInformixColorMap->new(obj_id => 40, color_id => 1)->load(speculative => 1),
+     "set many to many on save 8 - $db_type");
+  ok(!MyInformixColorMap->new(obj_id => 40, color_id => 3)->load(speculative => 1),
+     "set many to many on save 9 - $db_type");
+  ok(!MyInformixColorMap->new(obj_id => 40, color_id => 6)->load(speculative => 1),
+     "set many to many on save 10 - $db_type");
+
+  $o->save;
+
+  @colors = $o->colors_on_save;
+  ok(@colors == 3, "set many to many on save 11 - $db_type");
+
+  ok($colors[0]->id == 3, "set many to many on save 12 - $db_type");
+  ok($colors[1]->id == 6, "set many to many on save 13 - $db_type");
+  ok($colors[2]->id == 1, "set many to many on save 14 - $db_type");
+
+  ok(MyInformixColor->new(id => 1)->load(speculative => 1), "set many to many on save 15 - $db_type");
+  ok(MyInformixColor->new(id => 3)->load(speculative => 1), "set many to many on save 16 - $db_type");
+  ok(MyInformixColor->new(id => 6)->load(speculative => 1), "set many to many on save 17 - $db_type");
+
+  ok(MyInformixColorMap->new(obj_id => 40, color_id => 1)->load(speculative => 1),
+     "set 2 many to many on save 18 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 40, color_id => 3)->load(speculative => 1),
+     "set 2 many to many on save 19 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 40, color_id => 6)->load(speculative => 1),
+     "set 2 many to many on save 20 - $db_type");
+
+  $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 40');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 3, "set many to many on save 21 - $db_type");
+
+  # RESET
+  $o = MyInformixObject->new(id => 40)->load;
+
+  # Set to undef
+  $o->colors_on_save(undef);
+
+  @colors = $o->colors_on_save;
+  ok(@colors == 3, "set 2 many to many on save 1 - $db_type");
+
+  ok($colors[0]->id == 3, "set 2 many to many on save 2 - $db_type");
+  ok($colors[1]->id == 6, "set 2 many to many on save 3 - $db_type");
+  ok($colors[2]->id == 1, "set 2 many to many on save 4 - $db_type");
+
+  ok(MyInformixColor->new(id => 1)->load(speculative => 1), "set 2 many to many on save 5 - $db_type");
+  ok(MyInformixColor->new(id => 3)->load(speculative => 1), "set 2 many to many on save 6 - $db_type");
+  ok(MyInformixColor->new(id => 6)->load(speculative => 1), "set 2 many to many on save 7 - $db_type");
+
+  ok(MyInformixColorMap->new(obj_id => 40, color_id => 1)->load(speculative => 1),
+     "set 2 many to many on save 8 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 40, color_id => 3)->load(speculative => 1),
+     "set 2 many to many on save 9 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 40, color_id => 6)->load(speculative => 1),
+     "set 2 many to many on save 10 - $db_type");
+
+  $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 40');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 3, "set 2 many to many on save 11 - $db_type");
+
+  #
+  # "many to many" add_now
+  #
+
+  # SETUP
+  $o = MyInformixObject->new(id   => 50,
+                             name => 'Blat',
+                             flag => 1);
+
+  $o->delete;
+
+  @colors =
+  (
+    MyInformixColor->new(id => 1), # red
+    MyInformixColor->new(id => 3), # blue  
+  );
+
+  #MyInformixColor->new(id => 4), # pink
+
+  $o->colors_on_save(\@colors);
+  $o->save;
+
+  $o = MyInformixObject->new(id   => 50,
+                             name => 'Blat',
+                             flag => 1);
+  # Add, no args
+  @colors = ();
+  ok(!defined $o->add_colors(@colors), "add many to many now 1 - $db_type");
+
+  # Add before load/save
+  @colors = 
+  (
+    MyInformixColor->new(id => 7, name => 'puce'),
+    MyInformixColor->new(id => 2), # green
+  );
+
+  eval { $o->add_colors(@colors) };
+
+  ok($@, "add many to many now 2 - $db_type");
+
+  # Add
+  $o->load;
+
+  $o->add_colors(@colors);
+
+  @colors = $o->colors;
+  ok(@colors == 4, "add many to many now 3 - $db_type");
+
+  ok($colors[0]->id == 3, "add many to many now 4 - $db_type");
+  ok($colors[1]->id == 2, "add many to many now 5 - $db_type");
+  ok($colors[2]->id == 7, "add many to many now 6 - $db_type");
+  ok($colors[3]->id == 1, "add many to many now 7 - $db_type");
+
+  ok(MyInformixColor->new(id => 3)->load(speculative => 1), "add many to many now 8 - $db_type");
+  ok(MyInformixColor->new(id => 2)->load(speculative => 1), "add many to many now 9 - $db_type");
+  ok(MyInformixColor->new(id => 7)->load(speculative => 1), "add many to many now 10 - $db_type");
+  ok(MyInformixColor->new(id => 1)->load(speculative => 1), "add many to many now 11 - $db_type");
+
+  ok(MyInformixColorMap->new(obj_id => 50, color_id => 3)->load(speculative => 1),
+     "set 2 many to many on save 12 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 50, color_id => 2)->load(speculative => 1),
+     "set 2 many to many on save 13 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 50, color_id => 7)->load(speculative => 1),
+     "set 2 many to many on save 14 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 50, color_id => 1)->load(speculative => 1),
+     "set 2 many to many on save 15 - $db_type");
+
+  #
+  # "many to many" add_on_save
+  #
+
+  # SETUP
+  $o = MyInformixObject->new(id   => 60,
+                             name => 'Cretch',
+                             flag => 1);
+
+  $o->delete;
+
+  # Set on save, add on save, save
+  @colors = 
+  (
+    MyInformixColor->new(id => 1), # red
+    MyInformixColor->new(id => 2), # green
+  );
+
+  # Set on save
+  $o->colors_on_save(@colors);
+
+  @colors = 
+  (
+    MyInformixColor->new(id => 7), # puce
+    MyInformixColor->new(id => 8, name => 'tan'),
+  );
+
+  # Add on save
+  ok($o->add_colors_on_save(@colors), "add many to many on save 1 - $db_type");
+
+  @colors = $o->colors;
+  ok(@colors == 4, "add many to many on save 2 - $db_type");
+
+  ok($colors[0]->id == 1, "add many to many on save 3 - $db_type");
+  ok($colors[1]->id == 2, "add many to many on save 4 - $db_type");
+  ok($colors[2]->id == 7, "add many to many on save 5 - $db_type");
+  ok($colors[3]->id == 8, "add many to many on save 6 - $db_type");
+
+  ok(MyInformixColor->new(id => 1)->load(speculative => 1), "add many to many on save 7 - $db_type");
+  ok(MyInformixColor->new(id => 2)->load(speculative => 1), "add many to many on save 8 - $db_type");
+  ok(MyInformixColor->new(id => 7)->load(speculative => 1), "add many to many on save 9 - $db_type");
+  ok(!MyInformixColor->new(id => 8)->load(speculative => 1), "add many to many on save 10 - $db_type");
+
+  ok(!MyInformixColorMap->new(obj_id => 60, color_id => 1)->load(speculative => 1),
+     "set many to many on save 11 - $db_type");
+  ok(!MyInformixColorMap->new(obj_id => 60, color_id => 2)->load(speculative => 1),
+     "set many to many on save 12 - $db_type");
+  ok(!MyInformixColorMap->new(obj_id => 60, color_id => 7)->load(speculative => 1),
+     "set many to many on save 13 - $db_type");
+  ok(!MyInformixColorMap->new(obj_id => 60, color_id => 8)->load(speculative => 1),
+     "set many to many on save 14 - $db_type");
+
+  $o->save;
+
+  @colors = $o->colors;
+  ok(@colors == 4, "add many to many on save 15 - $db_type");
+
+  ok($colors[0]->id == 2, "add many to many on save 16 - $db_type");
+  ok($colors[1]->id == 7, "add many to many on save 17 - $db_type");
+  ok($colors[2]->id == 1, "add many to many on save 18 - $db_type");
+  ok($colors[3]->id == 8, "add many to many on save 19 - $db_type");
+
+  ok(MyInformixColor->new(id => 2)->load(speculative => 1), "add many to many on save 20 - $db_type");
+  ok(MyInformixColor->new(id => 7)->load(speculative => 1), "add many to many on save 21 - $db_type");
+  ok(MyInformixColor->new(id => 1)->load(speculative => 1), "add many to many on save 22 - $db_type");
+  ok(MyInformixColor->new(id => 8)->load(speculative => 1), "add many to many on save 21 - $db_type");
+
+  ok(MyInformixColorMap->new(obj_id => 60, color_id => 2)->load(speculative => 1),
+     "add many to many on save 22 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 60, color_id => 7)->load(speculative => 1),
+     "add many to many on save 23 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 60, color_id => 1)->load(speculative => 1),
+     "add many to many on save 24 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 60, color_id => 8)->load(speculative => 1),
+     "add many to many on save 25 - $db_type");
+
+  $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 60');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 4, "add many to many on save 26 - $db_type");
+
+  # RESET
+  $o = MyInformixObject->new(id   => 60,
+                             name => 'Cretch',
+                             flag => 1);
+
+  $o->load(with => 'colors');
+
+  # Add on save, save
+  @colors = 
+  (
+    MyInformixColor->new(id => 9, name => 'aqua'),
+  );
+
+  # Add on save
+  ok($o->add_colors_on_save(@colors), "add 2 many to many on save 1 - $db_type");
+
+  @colors = $o->colors;
+  ok(@colors == 5, "add 2 many to many on save 16 - $db_type");
+
+  ok($colors[0]->id == 2, "add 2 many to many on save 2 - $db_type");
+  ok($colors[1]->id == 7, "add 2 many to many on save 3 - $db_type");
+  ok($colors[2]->id == 1, "add 2 many to many on save 4 - $db_type");
+  ok($colors[3]->id == 8, "add 2 many to many on save 5 - $db_type");
+  ok($colors[4]->id == 9, "add 2 many to many on save 6 - $db_type");
+
+  ok(MyInformixColor->new(id => 2)->load(speculative => 1), "add many to many on save 7 - $db_type");
+  ok(MyInformixColor->new(id => 7)->load(speculative => 1), "add many to many on save 8 - $db_type");
+  ok(MyInformixColor->new(id => 1)->load(speculative => 1), "add many to many on save 9 - $db_type");
+  ok(MyInformixColor->new(id => 8)->load(speculative => 1), "add many to many on save 10 - $db_type");
+  ok(!MyInformixColor->new(id => 9)->load(speculative => 1), "add many to many on save 11 - $db_type");
+
+  ok(MyInformixColorMap->new(obj_id => 60, color_id => 2)->load(speculative => 1),
+     "add 2 many to many on save 12 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 60, color_id => 7)->load(speculative => 1),
+     "add 2 many to many on save 13 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 60, color_id => 1)->load(speculative => 1),
+     "add 2 many to many on save 14 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 60, color_id => 8)->load(speculative => 1),
+     "add 2 many to many on save 15 - $db_type");
+  ok(!MyInformixColorMap->new(obj_id => 60, color_id => 9)->load(speculative => 1),
+     "add 2 many to many on save 16 - $db_type");
+
+  $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 60');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 4, "add 2 many to many on save 17 - $db_type");
+
+  # Save
+  $o->save;
+
+  @colors = $o->colors;
+  ok(@colors == 5, "add 2 many to many on save 18 - $db_type");
+
+  ok($colors[0]->id == 9, "add 2 many to many on save 19 - $db_type");
+  ok($colors[1]->id == 2, "add 2 many to many on save 20 - $db_type");
+  ok($colors[2]->id == 7, "add 2 many to many on save 21 - $db_type");
+  ok($colors[3]->id == 1, "add 2 many to many on save 22 - $db_type");
+  ok($colors[4]->id == 8, "add 2 many to many on save 23 - $db_type");
+
+  ok(MyInformixColor->new(id => 9)->load(speculative => 1), "add many to many on save 24 - $db_type");
+  ok(MyInformixColor->new(id => 2)->load(speculative => 1), "add many to many on save 25 - $db_type");
+  ok(MyInformixColor->new(id => 7)->load(speculative => 1), "add many to many on save 26 - $db_type");
+  ok(MyInformixColor->new(id => 1)->load(speculative => 1), "add many to many on save 27 - $db_type");
+  ok(MyInformixColor->new(id => 8)->load(speculative => 1), "add many to many on save 28 - $db_type");
+
+  ok(MyInformixColorMap->new(obj_id => 60, color_id => 9)->load(speculative => 1),
+     "add 2 many to many on save 29 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 60, color_id => 2)->load(speculative => 1),
+     "add 2 many to many on save 20 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 60, color_id => 7)->load(speculative => 1),
+     "add 2 many to many on save 31 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 60, color_id => 1)->load(speculative => 1),
+     "add 2 many to many on save 32 - $db_type");
+  ok(MyInformixColorMap->new(obj_id => 60, color_id => 8)->load(speculative => 1),
+     "add 2 many to many on save 33 - $db_type");
+
+  $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 60');
+  $sth->execute;
+  $count = $sth->fetchrow_array;
+  is($count, 5, "add 2 many to many on save 34 - $db_type");
+
+  # End "many to many" tests
 }
 
 BEGIN
@@ -2928,7 +4155,9 @@ CREATE TABLE rose_db_object_colors_map
 (
   id        SERIAL PRIMARY KEY,
   obj_id    INT NOT NULL REFERENCES rose_db_object_test (id),
-  color_id  INT NOT NULL REFERENCES rose_db_object_colors (id)
+  color_id  INT NOT NULL REFERENCES rose_db_object_colors (id),
+
+  UNIQUE(obj_id, color_id)
 )
 EOF
 
@@ -3046,6 +4275,15 @@ EOF
         map_class => 'MyPgColorMap',
         #map_from  => 'object',
         #map_to    => 'color',
+        manager_args => { sort_by => 'rose_db_object_colors.name' },
+        methods =>
+        {
+          get_set         => undef,
+          get_set_now     => 'colors_now',
+          get_set_on_save => 'colors_on_save',
+          add_now         => undef,
+          add_on_save     => 'add_colors_on_save',
+        },
       },
     );
 
@@ -3128,6 +4366,8 @@ EOF
       obj_id   => { type => 'int', not_null => 1 },
       color_id => { type => 'int', not_null => 1 },
     );
+
+    MyPgColorMap->meta->unique_keys([ 'obj_id', 'color_id' ]);
 
     MyPgColorMap->meta->foreign_keys
     (
@@ -3226,7 +4466,9 @@ CREATE TABLE rose_db_object_colors_map
 (
   id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   obj_id    INT NOT NULL REFERENCES rose_db_object_test (id),
-  color_id  INT NOT NULL REFERENCES rose_db_object_colors (id)
+  color_id  INT NOT NULL REFERENCES rose_db_object_colors (id),
+
+  UNIQUE(obj_id, color_id)
 )
 EOF
 
@@ -3342,6 +4584,15 @@ EOF
         map_class => 'MyMySQLColorMap',
         map_from  => 'object',
         map_to    => 'color',
+        manager_args => { sort_by => 'rose_db_object_colors.name' },
+        methods =>
+        {
+          get_set         => undef,
+          get_set_now     => 'colors_now',
+          get_set_on_save => 'colors_on_save',
+          add_now         => undef,
+          add_on_save     => 'add_colors_on_save',
+        },
       },
     );
 
@@ -3423,6 +4674,8 @@ EOF
       obj_id   => { type => 'int', not_null => 1 },
       color_id => { type => 'int', not_null => 1 },
     );
+
+    MyMySQLColorMap->meta->unique_keys([ 'obj_id', 'color_id' ]);
 
     MyMySQLColorMap->meta->foreign_keys
     (
@@ -3524,7 +4777,9 @@ CREATE TABLE rose_db_object_colors_map
 (
   id        SERIAL PRIMARY KEY,
   obj_id    INT NOT NULL REFERENCES rose_db_object_test (id),
-  color_id  INT NOT NULL REFERENCES rose_db_object_colors (id)
+  color_id  INT NOT NULL REFERENCES rose_db_object_colors (id),
+
+  UNIQUE(obj_id, color_id)
 )
 EOF
 
@@ -3630,6 +4885,15 @@ EOF
         map_class => 'MyInformixColorMap',
         #map_from  => 'object',
         #map_to    => 'color',
+        manager_args => { sort_by => 'rose_db_object_colors.name' },
+        methods =>
+        {
+          get_set         => undef,
+          get_set_now     => 'colors_now',
+          get_set_on_save => 'colors_on_save',
+          add_now         => undef,
+          add_on_save     => 'add_colors_on_save',
+        },
       },
     );
 
@@ -3711,6 +4975,8 @@ EOF
       obj_id   => { type => 'int', not_null => 1 },
       color_id => { type => 'int', not_null => 1 },
     );
+
+    MyInformixColorMap->meta->unique_keys([ 'obj_id', 'color_id' ]);
 
     MyInformixColorMap->meta->foreign_keys
     (

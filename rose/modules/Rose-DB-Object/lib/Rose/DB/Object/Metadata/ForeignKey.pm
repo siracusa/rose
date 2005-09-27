@@ -62,7 +62,7 @@ __PACKAGE__->method_maker_info
     type  => 'object_by_key',
     interface => 'get_set',
   },
-  
+
   get_set_now =>
   {
     class => 'Rose::DB::Object::MakeMethods::Generic',

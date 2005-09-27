@@ -173,7 +173,7 @@ sub load
   {
     my $mgr_class = $args{'manager_class'} || 'Rose::DB::Object::Manager';
     my %query;
-    
+
     @query{map { "t1.$_" } @key_columns} = @key_values;
 
     my $objects;
@@ -205,7 +205,7 @@ sub load
       # Sneaky init by object replacement
       $self = $_[0] = $objects->[0];
 
-      # Init by copying attributes
+      # Init by copying attributes (broken; need to do fks and relationships too)
       #my $methods = $meta->column_mutator_method_names;
       #my $object  = $objects->[0];
       #
@@ -228,7 +228,7 @@ sub load
       {
         $self->meta->handle_error($self);
       }
-  
+
       return 0;
     }
 
@@ -343,9 +343,9 @@ sub save
       $self->error('Could not begin transaction before saving - ' . $db->error);
       return undef;
     }
-    
+
     my $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
-  
+
     eval
     {
       my $meta = $self->meta;
@@ -364,7 +364,7 @@ sub save
 
         my $code   = $todo->{'fk'}{$fk_name}{'set'} or next;
         my $object = $code->();
-        
+
         # Account for objects that evaluate to false to due overloading
         unless($object || ref $object)
         {
@@ -405,7 +405,7 @@ sub save
         {
           my $code   = $item->{'code'};
           my $object = $item->{'object'};
-          
+
           # Don't run the code to delete this object if we just set it above
           next  if($did_set{'fk'}{$fk_name}{row_id($object)});
 
@@ -449,7 +449,7 @@ sub save
       $self->meta->handle_error($self);
       return 0;
     }
-    
+
     return $ret;
   }
   else
@@ -458,7 +458,7 @@ sub save
     {
       return shift->update(@_);
     }
-  
+
     return shift->insert(@_);
   }
 }
@@ -787,7 +787,7 @@ sub delete
       my $meta  = $self->meta;
 
       my $ret = $db->begin_work;
-      
+
       unless(defined $ret)
       {
         die 'Could not begin transaction before deleting with cascade - ',
@@ -809,23 +809,23 @@ sub delete
       REL: foreach my $relationship ($meta->relationships)
       {
         my $rel_type = $relationship->type;
-        
+
         if($rel_type eq 'one to many')
         {
           my $column_map = $relationship->column_map;
           my @query;
-  
+
           while(my($local_column, $foreign_column) = each(%$column_map))
           {
             my $method = $meta->column_accessor_method_name($local_column);
             my $value =  $self->$method();
-            
+
             # XXX: Comment this out to allow null keys
             next FK  unless(defined $value);
-  
+
             push(@query, $foreign_column => $value);
           }
-    
+
           if($cascade eq 'delete')
           {
             Rose::DB::Object::Manager->delete_objects(
@@ -836,7 +836,7 @@ sub delete
           elsif($cascade eq 'null')
           {
             my %set = map { $_ => undef } values(%$column_map);
-  
+
             Rose::DB::Object::Manager->update_objects(
               db           => $db,
               object_class => $relationship->class,
@@ -849,25 +849,25 @@ sub delete
         {
           my $map_class  = $relationship->map_class;
           my $map_from   = $relationship->map_from;
-  
+
           my $map_from_relationship = 
             $map_class->meta->foreign_key($map_from)  ||
             $map_class->meta->relationship($map_from) ||
             Carp::confess "No foreign key or 'many to one' relationship ",
                           "named '$map_from' in class $map_class";
-  
+
           my $key_columns = $map_from_relationship->key_columns;
           my @query;
-  
+
           # "Local" here means "local to the mapping table"
           while(my($local_column, $foreign_column) = each(%$key_columns))
           {
             my $method = $meta->column_accessor_method_name($foreign_column);
             my $value  = $self->$method();
-  
+
             # XXX: Comment this out to allow null keys
             next REL  unless(defined $value);
-  
+
             push(@query, $local_column => $value);
           }
 
@@ -881,7 +881,7 @@ sub delete
           elsif($cascade eq 'null')
           {
             my %set = map { $_ => undef } keys(%$key_columns);
-  
+
             Rose::DB::Object::Manager->update_objects(
               db           => $db,
               object_class => $map_class,
@@ -896,13 +896,13 @@ sub delete
       my $dbh = $db->dbh or die "Could not get dbh: ", $self->error;
       local $self->{STATE_SAVING()} = 1;
       local $dbh->{'RaiseError'} = 1;
-  
+
       # Was prepare_cached() but that can't be used across transactions
       my $sth = $dbh->prepare($meta->delete_sql, $meta->prepare_delete_options);
-  
+
       $Debug && warn $meta->delete_sql, " - bind params: ", join(', ', @pk_values), "\n";
       $sth->execute(@pk_values);
-  
+
       unless($sth->rows > 0)
       {
         $self->error("Did not delete " . ref($self) . ' where ' . 
@@ -921,13 +921,13 @@ sub delete
         {
           my $method = $meta->column_accessor_method_name($local_column);
           my $value =  $self->$method();
-          
+
           # XXX: Comment this out to allow null keys
           next FK  unless(defined $value);
 
           push(@query, $foreign_column => $value);
         }
-  
+
         if($cascade eq 'delete')
         {
           Rose::DB::Object::Manager->delete_objects(
@@ -975,27 +975,27 @@ sub delete
     {
       local $self->{STATE_SAVING()} = 1;
       local $dbh->{'RaiseError'} = 1;
-  
+
       # Was prepare_cached() but that can't be used across transactions
       my $sth = $dbh->prepare($meta->delete_sql, $meta->prepare_delete_options);
-  
+
       $Debug && warn $meta->delete_sql, " - bind params: ", join(', ', @pk_values), "\n";
       $sth->execute(@pk_values);
-  
+
       unless($sth->rows > 0)
       {
         $self->error("Did not delete " . ref($self) . ' where ' . 
                      join(', ', @pk_methods) . ' = ' . join(', ', @pk_values));
       }
     };
-  
+
     if($@)
     {
       $self->error("delete() - $@");
       $self->meta->handle_error($self);
       return 0;
     }
-  
+
     $self->{STATE_IN_DB()} = 0;
     return 1;
   }
@@ -1448,7 +1448,7 @@ B<SUBCLASS NOTE:> If you are going to override the L<load|/load> method in your 
     sub load
     {
       my $self = $_[0]; # Copy, no shift
-      
+
       ... # Do your stuff
 
       shift->SUPER::load(@_); # Call superclass

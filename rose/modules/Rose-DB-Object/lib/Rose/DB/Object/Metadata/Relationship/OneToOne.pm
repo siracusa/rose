@@ -5,7 +5,7 @@ use strict;
 use Rose::DB::Object::Metadata::Relationship::ManyToOne;
 our @ISA = qw(Rose::DB::Object::Metadata::Relationship::ManyToOne);
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 sub type { 'one to one' }
 
@@ -39,9 +39,35 @@ This class inherits from L<Rose::DB::Object::Metadata::Relationship>. Inherited 
 
 L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, ...
 
+=item C<get_set_now>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'get_set_now'>
+
+=item C<get_set_on_save>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'get_set_on_save'>
+
+=item C<delete_now>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'delete_now'>
+
+=item C<delete_on_save>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<object_by_key|Rose::DB::Object::MakeMethods::Generic/object_by_key>, C<interface =E<gt> 'delete_on_save'>
+
 =back
 
 See the L<Rose::DB::Object::Metadata::Relationship|Rose::DB::Object::Metadata::Relationship/"MAKING METHODS"> documentation for an explanation of this method map.
+
+=head1 CLASS METHODS
+
+=over 4
+
+=item B<default_auto_method_types [TYPES]>
+
+Get or set the default list of L<auto_method_types|Rose::DB::Object::Metadata::Relationship/auto_method_types>.  TYPES should be a list of relationship method types.  Returns the list of default relationship method types (in list context) or a reference to an array of the default relationship method types (in scalar context).  The default list contains "get_set_on_save" and "delete_on_save".
+
+=back
 
 =head1 OBJECT METHODS
 
@@ -49,7 +75,13 @@ See the L<Rose::DB::Object::Metadata::Relationship|Rose::DB::Object::Metadata::R
 
 =item B<build_method_name_for_type TYPE>
 
-Return a method name for the relationship method type TYPE.  Returns the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> for the method type "get_set", undef otherwise.
+Return a method name for the relationship method type TYPE.  
+
+For the method types "get_set", "get_set_now", and "get_set_on_save", the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> is returned.
+
+For the method types "delete_now" and "delete_on_save", the relationship's  L<name|Rose::DB::Object::Metadata::Relationship/name> prefixed with "delete_" is returned.
+
+Otherwise, undef is returned.
 
 =item B<foreign_key [FK]>
 
