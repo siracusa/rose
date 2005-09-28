@@ -1,0 +1,264 @@
+=head1 Introduction
+
+This tutorial describes "best practices" for using L<Rose::DB> in the most robust, maintainable manner.  It does not replace the actual documentation, however.  The actual L<Rose::DB> documentation is still essential, and contains some good examples of its own.
+
+In particular, you should read the L<description|Rose::DB/DESCRIPTION> section of the L<Rose::DB> documentation if you have not done so already.  It describes the features and philosophy of L<Rose::DB>.  That information that will not be repeated here.
+
+=head1 Conventions
+
+The examples in this tutorial will use the fictional C<My::> namespace prefix.  Your code should use whaterver namespace you deem appropriate.  Usually, it will be more akin to C<MyCorp::MyProject::> (i.e., your corporation, organization, and/or project).  I've chosen to use C<My::> simply because it's shorter, and will help this tutorial stay within an 80-column width.
+
+For the sake of brevity, the C<use strict> directive and associated "my" declarations have been omitted from the example code.  Needless to say, you should always C<use strict> and follow the required rules in your actual code.
+
+Similarly, the traditional "1;" true value used at the end of each ".pm" file has been omitted from all but a few examples.  Don't forget to add this to the end of your actual Perl module files.
+
+=head1 Tutorial
+
+=head2 Creating a subclass
+
+The first step when using L<Rose::DB> in anythingbut a throw-away script is to create a trivial subclass.  This is important because L<Rose::DB> has a significant amount of class data.  Using L<Rose::DB> directly means that you will be reading and writing the same data as any other code that also uses L<Rose::DB> directly.
+
+In particular, the L<registry|Rose::DB/registry> that contains all the information for each data source is class data, and is inherited from (that is, shared with) the base class by default.  Creating a subclass allows you to have your own, private data source registry.
+
+So, here's our initial L<Rose::DB> subclass.
+
+  # File: My/DB.pm
+  package My::DB;
+  
+  use Rose::DB;
+  our @ISA = qw(Rose::DB);
+  
+  use Rose::DB::Registry;
+  
+  # Create a private registry for this class
+  __PACKAGE__->registry(Rose::DB::Registry->new);
+
+=head2 Designing your namespace
+
+As L<described|Rose::DB/"Data Source Abstraction"> in the L<Rose::DB> documentation, L<Rose::DB> provides a two-level namespace for data sources made of a "domain" and a "type."  These are both arbtrary strings, so there's a lot of freedom to break up the namespace in any way you see fit.  For example, sub-domains and sub-types can be created within each string using delimiter characters (e.g., "::" as in Perl's package namespace).
+
+But let's back up.  The simplest case is that you have just one data source, and therefore no need for a namespace at all.  If this is the case, you can skip to the L<next step|Registering data sources>.
+
+In the common case, it's usually sufficient to use simple words for both tpe and domain.  As the name "domain" implies, this value usually represents the environment or surroundings.  For example, a typical server application might use domains named "development", "qa", "staging", and "production".
+
+The "type" portion of the namespace tends to be used to differentiate the applicability or contents of the data sources.  Some example type names are "main" for the primary database, "archive" for a data warehouse database, and "session" for a database used to store transient session data.
+
+The goal of namespace design is to allow data sources to be referred to symbolically, with names that make sense to you in your environment.
+
+=head2 Registering data sources
+
+Now that you've decided on your namespace design (or lack thereof, if you have only one data source), it's time to register some data sources.  Call the L<register_db|Rose::DB/register_db> class method to register a data source.  This can be done nearly anywhere, but it's most convenient to "early" and to link it somehow to your C<My::DB> subclass.  That is, when someone C<use>s C<My::DB>, they shouldnot have to worry about whether or not all the data sources are registered.
+
+In a server environment, there's usually some sort of start-up file that gets loaded before any "end-user" code (e.g., "startup.pl" by convention in a mod_perl Apache web server).  That may be a good place to include your data source registration calls, but only if you're absolutely sure that C<My::DB> will never be sued outside the server environment.
+
+A better, safer alternative is to put the data source registration calls directly in your L<Rose::DB> subclass.  This is the recommended approach.  Here are some examples.
+
+=head3 Just one data source
+
+First, consider the case where a namespace is not necessary.  You have a single data source and that's all.  You don't care what it's named.  Luckily, there are default values for both L<type|Rose::DB/default_type> and L<domain|Rose::DB/default_domain>.  Simply register your data source using these values and you're all set.
+
+    package My::DB;
+    
+    use Rose::DB;
+    our @ISA = qw(Rose::DB);
+    
+    use Rose::DB::Registry;
+    
+    # Create a private registry for this class
+    __PACKAGE__->registry(Rose::DB::Registry->new);
+
+    # Register your lone data source
+    My::DB->register_db(
+      domain   => My::DB->default_domain,
+      type     => My::DB->default_type,
+      driver   => 'Pg',
+      database => 'my_db',
+      host     => 'localhost',
+      username => 'joeuser',
+      password => 'mysecret',
+    );
+
+To use C<My::DB> in this kind of setup, simply omit the L<domain|Rose::DB/domain> and L<type|Rose::DB/type> attributes from your C<My::DB> objects.  They will automatically get the default values.
+
+    use My::DB;
+    
+    $db = My::DB->new(); # use default type and default domain
+
+    print $db->username; # "joeuser"
+
+=head3 Multiple data sources within a namespace
+
+Most commonly, you will have more than one data source.  (And if you don't know, you probably will in the future.  Better safe than sorry.)  After you've L<designed your namespace|/"Designing your namespace">, data source registration is straightforward.  The only wrinkle is how to deal with the default domain and type.
+
+I recommend setting the default domain and type to the "safest" values in your environment.  For example, a domain of "development" and a type of "main" are reasonable choices.  This allows you to use "bare" calls to C<My::DB-E<gt>new()> as shown in the simple, single data source example L<above|/"Just one data source">.
+
+Here's an example that includes two domains "development" and "production", and two types, "main" and "session."  The default data source is the domain "development" and the type "main".
+
+    package My::DB;
+    
+    use Rose::DB;
+    our @ISA = qw(Rose::DB);
+    
+    use Rose::DB::Registry;
+    
+    # Create a private registry for this class
+    __PACKAGE__->registry(Rose::DB::Registry->new);
+
+    # Set the default domain and type
+    __PACKAGE__->default_domain('development');
+    __PACKAGE__->default_type('main');
+
+    # Register the data sources
+    
+    # Develpment:
+
+    My::DB->register_db(
+      domain   => 'development',
+      type     => 'main',
+      driver   => 'Pg',
+      database => 'dev_db',
+      host     => 'localhost',
+      username => 'devuser',
+      password => 'mysecret',
+    );
+
+    My::DB->register_db(
+      domain   => 'development',
+      type     => 'session',
+      driver   => 'mysql',
+      database => 'session_db',
+      host     => 'localhost',
+      username => 'devmysql',
+      password => 'mysqlpw',
+    );
+    
+    # Production:
+
+    My::DB->register_db(
+      domain   => 'production',
+      type     => 'main',
+      driver   => 'Pg',
+      database => 'big_db',
+      host     => 'dbserver.mycorp.com',
+      username => 'dbadmin',
+      password => 'prodsecret',
+    );
+
+    My::DB->register_db(
+      domain   => 'production',
+      type     => 'session',
+      driver   => 'mysql',
+      database => 'session_db',
+      host     => 'sessions.mycorp.com',
+      username => 'session_user',
+      password => 'prodsesspw',
+    );
+    
+Ideally, and as shown in the example above, all data source types are available in each domain.  Combined with the consistent practice of never specifying an explicit domain when constructing your C<My::DB> objects, this allows the domain to be switched as needed, without modifying any code in the actual application.  
+
+For example, imagine a mod_perl Apache web server environment running application code that constructs its C<My::DB> objects like this:
+
+    $main_db    = My::DB->new('main');    
+    $session_db = My::DB->new('session');
+
+Now imagine a "startup.pl" file that contains the following:
+
+    # File: startup.pl
+    use My::DB;
+
+    if($ENV{'MYCORP_PRODUCTION_SERVER'})
+    {
+      My::DB->default_domain('production');
+    }
+    else
+    {
+      My::DB->default_domain('development');
+    }
+    
+The determination of the current environment can be done in many different ways, of course.  Checking an environment variable as shown above is probably not the best way to do it, but it makes for a simple example.
+
+Another alternative is to use some sort of configuration/build management system to generate the Apache configuration files from templates.  In that case, the templates could contain something like this:
+
+    [% IF in_production %]
+        My::DB->default_domain('production');
+    [% ELSE %]
+        My::DB->default_domain('development');
+    [% END %]
+
+This would leave only the single, appropriate call in the completed "startup.pl" file.
+
+Anyway, the upshot is that the deliberate use of defaults and a healthy dose of convention in your constructor calls can make it simple to move your code from one environment to another without any changes beyond the usual configuration management that must be done (e.g., for apache configuration files).
+
+
+=head2 Using your database objects
+
+
+  use Rose::DB;
+
+  Rose::DB->register_db(
+    domain   => 'development',
+    type     => 'main',
+    driver   => 'Pg',
+    database => 'dev_db',
+    host     => 'localhost',
+    username => 'devuser',
+    password => 'mysecret',
+    server_time_zone => 'UTC',
+  );
+
+  Rose::DB->register_db(
+    domain   => 'production',
+    type     => 'main',
+    driver   => 'Pg',
+    database => 'big_db',
+    host     => 'dbserver.acme.com',
+    username => 'dbadmin',
+    password => 'prodsecret',
+    server_time_zone => 'UTC',
+  );
+
+  Rose::DB->default_domain('development');
+  Rose::DB->default_type('main');
+  ...
+
+  $db = Rose::DB->new;
+
+  my $dbh = $db->dbh or die $db->error;
+
+  $db->begin_work or die $db->error;
+  $dbh->do(...)   or die $db->error;
+  $db->commit     or die $db->error;
+
+  $db->do_transaction(sub
+  {
+    $dbh->do(...);
+    $sth = $dbh->prepare(...);
+    $sth->execute(...);
+    while($sth->fetch) { ... }
+    $dbh->do(...);
+  }) 
+  or die $db->error;
+
+  $dt  = $db->parse_timestamp('2001-03-05 12:34:56.123');
+  $val = $db->format_timestamp($dt);
+
+  $dt  = $db->parse_datetime('2001-03-05 12:34:56');
+  $val = $db->format_datetime($dt);
+
+  $dt  = $db->parse_date('2001-03-05');
+  $val = $db->format_date($dt);
+
+  $bit = $db->parse_bitfield('0x0AF', 32);
+  $val = $db->format_bitfield($bit);
+
+  ...
+
+=head1 Author
+
+John C. Siracusa (siracusa@mindspring.com)
+
+=head1 Copyright
+
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same terms
+as Perl itself.
