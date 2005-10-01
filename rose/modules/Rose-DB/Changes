@@ -1,3 +1,8 @@
+0.03 (10.01.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added support for MySQL's weird "all-zeros" date/time keywords.
+    * Added tutorial.
+
 0.0264 (09.15.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Changes to support Rose::DB::Object 0.074.
