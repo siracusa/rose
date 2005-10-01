@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 44);
+    Test::More->import(tests => 49);
   }
 }
 
@@ -77,6 +77,14 @@ ok(!$db->validate_datetime_keyword($rand), "validate_datetime_keyword ($rand)");
 is($db->format_datetime('Foo(Bar)'), 'Foo(Bar)', 'format_datetime (Foo(Bar))');
 
 ok(!$db->validate_date_keyword($rand), "validate_date_keyword ($rand)");
+
+ok($db->validate_date_keyword('0000-00-00'), "validate_date_keyword (0000-00-00)");
+
+ok($db->validate_datetime_keyword('0000-00-00 00:00:00'), "validate_datetime_keyword (0000-00-00 00:00:00)");
+ok($db->validate_datetime_keyword('0000-00-00 00:00:00'), "validate_datetime_keyword (0000-00-00 00:00:00)");
+
+ok($db->validate_timestamp_keyword('0000-00-00 00:00:00'), "validate_timestamp_keyword (0000-00-00 00:00:00)");
+ok($db->validate_timestamp_keyword('00000000000000'), "validate_timestamp_keyword (00000000000000)");
 
 is($db->format_date('Foo(Bar)'), 'Foo(Bar)', 'format_date (Foo(Bar))');
 

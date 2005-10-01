@@ -16,7 +16,7 @@ Similarly, the traditional "1;" true value used at the end of each ".pm" file ha
 
 =head2 Creating a subclass
 
-The first step when using L<Rose::DB> in anythingbut a throw-away script is to create a trivial subclass.  This is important because L<Rose::DB> has a significant amount of class data.  Using L<Rose::DB> directly means that you will be reading and writing the same data as any other code that also uses L<Rose::DB> directly.
+The first step when using L<Rose::DB> in anything but a throw-away script is to create a trivial subclass.  This is important because L<Rose::DB> has a significant amount of class data.  Using L<Rose::DB> directly means that you will be reading and writing the same data as any other code that also uses L<Rose::DB> directly.
 
 In particular, the L<registry|Rose::DB/registry> that contains all the information for each data source is class data, and is inherited from (that is, shared with) the base class by default.  Creating a subclass allows you to have your own, private data source registry.
 
@@ -49,7 +49,7 @@ The goal of namespace design is to allow data sources to be referred to symbolic
 
 Now that you've decided on your namespace design (or lack thereof, if you have only one data source), it's time to register some data sources.  Call the L<register_db|Rose::DB/register_db> class method to register a data source.  This can be done nearly anywhere, but it's most convenient to "early" and to link it somehow to your C<My::DB> subclass.  That is, when someone C<use>s C<My::DB>, they shouldnot have to worry about whether or not all the data sources are registered.
 
-In a server environment, there's usually some sort of start-up file that gets loaded before any "end-user" code (e.g., "startup.pl" by convention in a mod_perl Apache web server).  That may be a good place to include your data source registration calls, but only if you're absolutely sure that C<My::DB> will never be sued outside the server environment.
+In a server environment, there's usually some sort of start-up file that gets loaded before any "end-user" code (e.g., "startup.pl" by convention in a mod_perl Apache web server).  That may be a good place to include your data source registration calls, but only if you're absolutely sure that C<My::DB> will never be used outside the server environment.
 
 A better, safer alternative is to put the data source registration calls directly in your L<Rose::DB> subclass.  This is the recommended approach.  Here are some examples.
 

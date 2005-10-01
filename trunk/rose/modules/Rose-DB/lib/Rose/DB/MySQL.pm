@@ -9,7 +9,7 @@ use DateTime::Format::MySQL;
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.022';
+our $VERSION = '0.03';
 
 our $Debug = 0;
 
@@ -52,6 +52,24 @@ sub min_timestamp  { '00000000000000' }
 sub max_timestamp  { '00000000000000' }
 
 sub last_insertid_from_sth { $_[1]->{'mysql_insertid'} }
+
+sub validate_date_keyword
+{
+  no warnings;
+  !ref $_[1] && $_[1] =~ /^(?:0000-00-00|\w+\(.*\))$/;
+}
+
+sub validate_datetime_keyword
+{
+  no warnings;
+  !ref $_[1] && $_[1] =~ /^(?:0000-00-00 00:00:00|\w+\(.*\))$/;
+}
+
+sub validate_timestamp_keyword
+{
+  no warnings;
+  !ref $_[1] && $_[1] =~ /^(?:0000-00-00 00:00:00|00000000000000|\w+\(.*\))$/;
+}
 
 *format_timestamp = \&Rose::DB::format_datetime;
 
@@ -217,6 +235,31 @@ Parse STRING and return a reference to an array.  STRING should be formatted acc
 If a LIST of more than one item is passed, a reference to an array containing the values in LIST is returned.
 
 If a an ARRAYREF is passed, it is returned as-is.
+
+=item B<validate_date_keyword STRING>
+
+Returns true if STRING is a valid keyword for the MySQL "date" data type.  Valid date keywords are:
+
+    00000-00-00
+
+Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid date keyword.
+
+=item B<validate_datetime_keyword STRING>
+
+Returns true if STRING is a valid keyword for the MySQL "datetime" data type, false otherwise.  Valid datetime keywords are:
+
+    0000-00-00 00:00:00
+
+Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid datetime keyword.
+
+=item B<validate_timestamp_keyword STRING>
+
+Returns true if STRING is a valid keyword for the MySQL "timestamp" data type, false otherwise.  Valid timestamp keywords are:
+
+    0000-00-00 00:00:00
+    00000000000000
+
+Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid timestamp keyword.
 
 =back
 

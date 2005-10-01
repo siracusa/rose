@@ -765,6 +765,7 @@ CREATE TABLE rose_db_object_test
   nums           VARCHAR(255),
   start          DATE,
   save           INT,
+  ndate          DATE NOT NULL DEFAULT '0000-00-00',
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -807,6 +808,7 @@ EOF
       flag2    => { type => 'boolean' },
       status   => { default => 'active', methods => [ qw(get_set get set) ] },
       start    => { type => 'date', default => '12/24/1980' },
+      ndate    => { type => 'date', not_null => 1, default => '0000-00-00' },
       save     => { type => 'scalar' },
       nums     => { type => 'array' },
       bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },
