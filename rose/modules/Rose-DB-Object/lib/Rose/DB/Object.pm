@@ -1216,7 +1216,7 @@ Rose::DB::Object - Extensible, high performance RDBMS-OO mapper.
     {
       type       => 'one to many',
       class      => 'Price',
-      column_map => { id => 'id_product' },
+      column_map => { id => 'product_id' },
     },
   );
 
