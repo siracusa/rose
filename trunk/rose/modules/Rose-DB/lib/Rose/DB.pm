@@ -287,7 +287,35 @@ sub new
   my $driver_class = $class->driver_class($driver) or Carp::croak
     "No driver class found for driver '$driver'";
 
-  my $self = bless {}, $driver_class;
+  my $self;
+
+  REBLESS: # Do slightly evil re-blessing magic
+  {
+    # Special, simple case for Rose::DB
+    if($class eq __PACKAGE__)
+    {
+      $self = bless {}, $driver_class;
+    }
+    else # Handle Rose::DB subclasses
+    {
+      # If this is a default Rose::DB driver class
+      if(index($driver_class, 'Rose::DB::') == 0)
+      {
+        # Make a new driver class based on the current class
+        my $new_class = $class . '::__RoseDBPrivate__::' . $driver_class;
+
+        no strict 'refs';        
+        @{"${new_class}::ISA"} = ($driver_class, $class);
+
+        $self = bless {}, $new_class;
+      }
+      else
+      {
+        # Otherwise use the (apparently custom) driver class
+        $self = bless {}, $driver_class;
+      }
+    }
+  }
 
   $self->{'_origin_class'} = $class;
 
@@ -303,8 +331,12 @@ sub init
   $self->init_db_info;
 }
 
-sub init_domain { shift->_origin_class->default_domain }
-sub init_type   { shift->_origin_class->default_type }
+# These have to "cheat" to get the right values by going through
+# the real origin class because they may be called after the 
+# re-blessing magic takes place.
+sub init_domain { shift->{'_origin_class'}->default_domain }
+sub init_type   { shift->{'_origin_class'}->default_type }
+
 sub init_date_handler { Rose::DateTime::Format::Stub->new }
 sub init_server_time_zone { 'floating' }
 

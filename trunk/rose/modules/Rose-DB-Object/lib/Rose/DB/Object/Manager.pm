@@ -265,10 +265,11 @@ sub get_objects
   my $return_sql      = delete $args{'return_sql'};
   my $return_iterator = delete $args{'return_iterator'};
   my $object_class    = delete $args{'object_class'} or Carp::croak "Missing object class argument";
-  my $require_objects = delete $args{'require_objects'};
-  my $with_objects    = delete $args{'with_objects'};
-  my $skip_first      = delete $args{'skip_first'} || 0;
   my $count_only      = delete $args{'count_only'};
+  my $require_objects = delete $args{'require_objects'};
+  my $with_objects    = !$count_only ? delete $args{'with_objects'} : undef;
+  my $skip_first      = delete $args{'skip_first'} || 0;
+
 
   my $db  = delete $args{'db'} || $object_class->init_db;
   my $dbh = delete $args{'dbh'};
@@ -344,7 +345,7 @@ sub get_objects
   my %methods = ($tables[0] => scalar $meta->column_mutator_method_names);
   my @classes = ($object_class);
   my %meta    = ($object_class => $meta);
-  my(@joins, @subobject_methods);
+  my(@joins, @subobject_methods, $clauses);
 
   my $handle_dups = 0;
   my @has_dups;
@@ -355,7 +356,8 @@ sub get_objects
 
   if($with_objects)
   {
-    my $clauses = $args{'clauses'} ||= [];
+    # Copy clauses arg
+    $clauses = $args{'clauses'} ? [ @{$args{'clauses'}} ] : [];
 
     my $i = 1;
 
@@ -677,6 +679,8 @@ sub get_objects
         Carp::croak "Don't know how to auto-join relationship '$name' of type '$rel_type'";
       }
     }
+
+    $args{'clauses'} = $clauses; # restore clauses arg
   }
 
   if($count_only)
@@ -684,15 +688,40 @@ sub get_objects
     delete $args{'limit'};
     delete $args{'offset'};
     delete $args{'sort_by'};
-
+          
     my($sql, $bind);
+
+    my $use_distinct = 0; # Do we have to use DISTINCT to count?
+
+    if($require_objects)
+    {
+      foreach my $name (@$require_objects)
+      {
+        # Ignore error here since it'll be caught and handled later anyway
+        my $key = 
+          $meta->foreign_key($name) || $meta->relationship($name) || next;
+
+        my $rel_type = $key->type;
+
+        if(index($key->type, 'many') >= 0)
+        {
+          $use_distinct = 1;
+          last;
+        }
+      }
+    }
 
     BUILD_SQL:
     {
+      my $select = $use_distinct ? 'COUNT(DISTINCT ' .
+        join(', ', map { "t1.$_" } $meta->primary_key_column_names) . ')' :
+        'COUNT(*)';
+
       local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+
       ($sql, $bind) =
         build_select(dbh     => $dbh,
-                     select  => 'COUNT(*)',
+                     select  => $select,
                      tables  => \@tables,
                      columns => \%columns,
                      classes => \%classes,
