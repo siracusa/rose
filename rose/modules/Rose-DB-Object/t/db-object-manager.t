@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1016;
+use Test::More tests => 1019;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("Postgres tests", 335)  unless($HAVE_PG);
+  skip("Postgres tests", 336)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -138,6 +138,45 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       sort_by => 'name DESC');
 
   is($count, 2, "get_objects_count() 1 - $db_type");
+
+  # Set up sub-object for this one test
+  my $b1 = MyPgBB->new(id   => 1, name => 'one');
+  $b1->save;
+  
+  $objs->[0]->b1(1);
+  $objs->[0]->save;
+
+  $count =
+    MyPgObjectManager->object_count(
+      share_db     => 1,
+      query_is_sql => 1,
+      require_objects => [ 'bb1' ],
+      query        =>
+      [
+        't2.name'  => { like => 'o%' },
+        't1.id'    => { ge => 2 },
+        't1.name'  => { like => '%e%' },
+        flag       => 't',
+        flag2      => 'f',
+        status     => 'active',
+        bits       => '00001',
+        start      => '2001-01-02',
+        save_col   => [ 1, 5 ],
+        nums       => '{1,2,3}',
+        last_modified => { le => 'now' },
+        date_created  => '2004-03-30 12:34:56',
+        status        => { like => 'AC%', field => 'UPPER(status)' },
+      ],
+      clauses => [ "LOWER(status) LIKE 'ac%'" ],
+      limit   => 5,
+      sort_by => 'name DESC');
+
+  is($count, 1, "get_objects_count() require 1 - $db_type");
+
+  # Clear sub-object
+  $objs->[0]->b1(undef);
+  $objs->[0]->save;
+  $b1->delete;
 
   my $iterator = 
     MyPgObjectManager->get_objectz_iterator(
@@ -1323,7 +1362,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 337)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 338)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -1435,6 +1474,35 @@ SKIP: foreach my $db_type ('mysql')
       sort_by => 'name DESC');
 
   is($count, 2, "get_objects_count() 1 - $db_type");
+
+  # Set up sub-object for this one test
+  my $b1 = MyMySQLBB->new(id => 1, name => 'one');
+  $b1->save;
+  
+  $objs->[0]->b1(1);
+  $objs->[0]->save;
+
+  $count =
+    MyMySQLObjectManager->get_objectz_count(
+      share_db     => 1,
+      query_is_sql => 1,
+      require_objects => [ 'bb1' ],
+      query        =>
+      [
+        't2.name'  => { like => 'o%' },
+        't1.id'    => { ge => 2 },
+        't1.name'  => { like => '%e%' },
+      ],
+      clauses => [ "LOWER(status) LIKE 'ac%'" ],
+      limit   => 5,
+      sort_by => 'name DESC');
+
+  is($count, 1, "get_objects_count() require 1 - $db_type");
+
+  # Clear sub-object
+  $objs->[0]->b1(undef);
+  $objs->[0]->save;
+  $b1->delete;
 
   my $iterator = 
     MyMySQLObjectManager->get_objectz_iterator(
@@ -2339,8 +2407,10 @@ SKIP: foreach my $db_type ('mysql')
   my @colors = $o2->colors;
   ok(@colors == 2 && $colors[0]->name eq 'Red' &&
      $colors[1]->name eq 'Blue', "Fetch many to many 1 - $db_type");
-#local $Rose::DB::Object::Manager::Debug = 1;
-#$DB::single = 1;
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  #$DB::single = 1;
+
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class  => 'MyMySQLObject',
@@ -2618,7 +2688,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type (qw(informix))
 {
-  skip("Informix tests", 342)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 343)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -2736,6 +2806,35 @@ SKIP: foreach my $db_type (qw(informix))
       sort_by => 'name DESC');
 
   is($count, 2, "get_objects_count() 1 - $db_type");
+
+  # Set up sub-object for this one test
+  my $b1 = MyInformixBB->new(id   => 1, name => 'one');
+  $b1->save;
+
+  $objs->[0]->b1(1);
+  $objs->[0]->save;
+
+  $count =
+    MyInformixObjectManager->get_objectz_count(
+      share_db     => 1,
+      query_is_sql => 1,
+      require_objects => [ 'bb1' ],
+      query        =>
+      [
+        't2.name'  => { like => 'o%' },
+        't1.id'    => { ge => 2 },
+        't1.name'  => { like => '%e%' },
+      ],
+      clauses => [ "LOWER(status) LIKE 'ac%'" ],
+      limit   => 5,
+      sort_by => 'name DESC');
+
+  is($count, 1, "get_objects_count() require 1 - $db_type");
+
+  # Clear sub-object
+  $objs->[0]->b1(undef);
+  $objs->[0]->save;
+  $b1->delete;
 
   my $save_o = $o;
 
