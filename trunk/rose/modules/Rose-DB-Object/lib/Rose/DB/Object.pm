@@ -1079,8 +1079,9 @@ Rose::DB::Object - Extensible, high performance RDBMS-OO mapper.
 =head1 SYNOPSIS
 
   ## First, set up your Rose::DB data sources, otherwise you
-  ## won't be able to connect to the database at all!  See 
-  ## the Rose::DB documentation for more information.
+  ## won't be able to connect to the database at all.  See 
+  ## the Rose::DB documentation for more information.  For
+  ## a quick start, run: perldoc Rose::DB::Tutorial
 
   ##
   ## Create classes - two possible approaches:
