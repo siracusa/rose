@@ -915,7 +915,7 @@ sub get_objects
             {
               ROW: for(;;)
               {
-                last ROW  unless($sth && $sth->{'Active'});
+                last ROW  unless($sth);
 
                 while($sth->fetch)
                 {
@@ -997,7 +997,7 @@ sub get_objects
                       $object->$method($subobject);
                     }
                   }
-$DB::single = 1;
+
                   if($skip_first)
                   {
                     next ROW  if($seen[0]{$pk} > 1);
@@ -1049,6 +1049,8 @@ $DB::single = 1;
                   $sth = undef;
                   last ROW;
                 }
+                
+                last ROW;
               }
             };
 
@@ -1093,7 +1095,7 @@ $DB::single = 1;
             {
               ROW: for(;;)
               {
-                unless($sth->{'Active'} && $sth->fetch)
+                unless($sth->fetch)
                 {
                   $self->total($self->{'_count'});
                   return 0;
@@ -1152,7 +1154,7 @@ $DB::single = 1;
           {
             ROW: for(;;)
             {
-              unless($sth->{'Active'} && $sth->fetch)
+              unless($sth->fetch)
               {
                 $self->total($self->{'_count'});
                 return 0;
