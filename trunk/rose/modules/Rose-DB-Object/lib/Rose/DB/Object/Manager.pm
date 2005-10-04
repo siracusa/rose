@@ -12,7 +12,7 @@ use Rose::DB::Object::Constants qw(STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.062';
+our $VERSION = '0.07';
 
 our $Debug = 0;
 
@@ -309,7 +309,15 @@ sub get_objects
     }
     else
     {
-      $with_objects = [ $with_objects ]  unless(ref $with_objects);
+      if(ref $with_objects) # copy argument (shallow copy)
+      {
+        $with_objects = [ @$with_objects ];
+      }
+      else
+      {
+        $with_objects = [ $with_objects ];
+      }
+
       $num_with_objects = @$with_objects;
       %with_objects = map { $_ => 1 } @$with_objects;
     }
@@ -317,7 +325,14 @@ sub get_objects
 
   if($require_objects)
   {
-    $require_objects = [ $require_objects ]  unless(ref $require_objects);
+    if(ref $require_objects) # copy argument (shallow copy)
+    {
+      $require_objects = [ @$require_objects ];
+    }
+    else
+    {
+      $require_objects = [ $require_objects ];
+    }
 
     $num_required_objects = @$require_objects;
     %required_object = map { $_ => 1 } @$require_objects;
@@ -409,7 +424,7 @@ sub get_objects
 
     unless($args{'multi_many_ok'})
     {
-      if(scalar(grep { $_ } @has_dups) > 1)
+      if(scalar(grep { defined $_ } @has_dups) > 1)
       {
         Carp::carp
           qq(WARNING: Fetching sub-objects via more than one ),
@@ -777,7 +792,7 @@ sub get_objects
     $args{'sort_by'} = $sort;
   }
 
-  if($args{'offset'})
+  if(defined $args{'offset'})
   {
     Carp::croak "Offset argument is invalid without a limit argument"
       unless($args{'limit'} || $manual_limit);
@@ -900,7 +915,7 @@ sub get_objects
             {
               ROW: for(;;)
               {
-                last ROW  unless($sth);
+                last ROW  unless($sth && $sth->{'Active'});
 
                 while($sth->fetch)
                 {
@@ -982,7 +997,7 @@ sub get_objects
                       $object->$method($subobject);
                     }
                   }
-
+$DB::single = 1;
                   if($skip_first)
                   {
                     next ROW  if($seen[0]{$pk} > 1);
@@ -1044,8 +1059,11 @@ sub get_objects
               return undef;
             }
 
+            @objects = ()  if($skip_first);
+
             if(@objects)
             {
+              no warnings; # undef count okay
               if($manual_limit && $self->{'_count'} == $manual_limit)
               {
                 $self->total($self->{'_count'});
@@ -1075,7 +1093,7 @@ sub get_objects
             {
               ROW: for(;;)
               {
-                unless($sth->fetch)
+                unless($sth->{'Active'} && $sth->fetch)
                 {
                   $self->total($self->{'_count'});
                   return 0;
@@ -1118,7 +1136,7 @@ sub get_objects
               return undef;
             }
 
-            return $object;
+            return $skip_first ? undef : $object;
           });
         }
       }
@@ -1134,7 +1152,7 @@ sub get_objects
           {
             ROW: for(;;)
             {
-              unless($sth->fetch)
+              unless($sth->{'Active'} && $sth->fetch)
               {
                 $self->total($self->{'_count'});
                 return 0;
@@ -1225,7 +1243,7 @@ sub get_objects
               # Add the object to the final list of objects that we'll return
               push(@objects, $last_object);
 
-              if($manual_limit && @objects == $manual_limit)
+              if(!$skip_first && $manual_limit && @objects == $manual_limit)
               {
                 last ROW;
               }
@@ -1292,7 +1310,7 @@ sub get_objects
 
         # Handle the left-over "last object" that needs to be finished and
         # added to the final list of objects to return.
-        if($last_object)
+        if($last_object && !$skip_first)
         {
           foreach my $i (1 .. $num_subtables)
           {
@@ -1310,6 +1328,8 @@ sub get_objects
             push(@objects, $last_object);
           }
         }
+        
+        @objects = ()  if($skip_first);
       }
       else # simple sub-objects case: nothing worse than one-to-one relationships
       {
