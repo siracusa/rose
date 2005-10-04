@@ -2022,9 +2022,9 @@ The "products" table is "t1" since it's the primary table--the table behind the 
     # Table aliases in the comments
     $products = 
       Product::Manager->get_products(
-                           # t4
+                           # t5
         require_objects => [ 'category' ],
-                           # t1            t2, t3
+                           # t2            t3, t4
         with_objects    => [ 'code_names', 'colors' ],
         multi_many_ok   => 1,
         query           => [ status => 'defunct' ],
