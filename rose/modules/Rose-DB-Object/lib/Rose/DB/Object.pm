@@ -1594,6 +1594,20 @@ Here is a list of method names reserved by the L<Rose::DB::Object> API.  If you 
 
 Note that not all of these methods are public.  These methods do not suddenly become public just because you now know their names!  Remember the stated policy of the L<Rose> web application framework: if a method is not documented, it does not exist.  (And no, the list of method names above does not constitute "documentation")
 
+=head1 DEVELOPMENT POLICY
+
+The L<Rose development policy|Rose/"DEVELOPMENT POLICY"> applies to this, and all C<Rose::*> modules.  Please install L<Rose> from CPAN and then run "C<perldoc Rose>" for more information.
+
+=head1 SUPPORT
+
+Any L<Rose::DB::Objects> questions or problems can be posted to the L<Rose::DB::Object> mailing list.  To subscribe to the list or view the archives, go here:
+
+L<http://lists.sourceforge.net/lists/listinfo/rose-db-object>
+
+Although the mailing list is the preferred support mechanism, you can also email the author (see below) or file bugs using the CPAN bug tracking system:
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB-Object>
+
 =head1 AUTHOR
 
 John C. Siracusa (siracusa@mindspring.com)

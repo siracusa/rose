@@ -1872,6 +1872,20 @@ Returns true if STRING is a valid keyword for the "timestamp" (month, day, year,
 
 =back
 
+=head1 DEVELOPMENT POLICY
+
+The L<Rose development policy|Rose/"DEVELOPMENT POLICY"> applies to this, and all C<Rose::*> modules.  Please install L<Rose> from CPAN and then run "C<perldoc Rose>" for more information.
+
+=head1 SUPPORT
+
+Any L<Rose::DB> questions or problems can be posted to the L<Rose::DB::Object> mailing list.  (If the volume ever gets high enough, I'll create a separate list for L<Rose::DB>, but it isn't an issue right now.)  To subscribe to the list or view the archives, go here:
+
+L<http://lists.sourceforge.net/lists/listinfo/rose-db-object>
+
+Although the mailing list is the preferred support mechanism, you can also email the author (see below) or file bugs using the CPAN bug tracking system:
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB>
+
 =head1 AUTHOR
 
 John C. Siracusa (siracusa@mindspring.com)
