@@ -6,6 +6,7 @@ lib/Rose/DB/MySQL.pm
 lib/Rose/DB/Pg.pm
 lib/Rose/DB/Registry.pm
 lib/Rose/DB/Registry/Entry.pm
+lib/Rose/DB/Tutorial.pod
 Makefile.PL
 MANIFEST
 t/00-warning.t

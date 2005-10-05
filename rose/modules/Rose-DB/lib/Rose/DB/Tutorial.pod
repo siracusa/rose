@@ -24,12 +24,12 @@ So, here's our initial L<Rose::DB> subclass.
 
   # File: My/DB.pm
   package My::DB;
-  
+
   use Rose::DB;
   our @ISA = qw(Rose::DB);
-  
+
   use Rose::DB::Registry;
-  
+
   # Create a private registry for this class
   __PACKAGE__->registry(Rose::DB::Registry->new);
 
@@ -37,7 +37,7 @@ So, here's our initial L<Rose::DB> subclass.
 
 As L<described|Rose::DB/"Data Source Abstraction"> in the L<Rose::DB> documentation, L<Rose::DB> provides a two-level namespace for data sources, made up of a "domain" and a "type."  These are both arbitrary strings, so there's a lot of freedom to break up the namespace in any way you see fit.  For example, sub-domains and sub-types can be created within each string using delimiter characters (e.g., "::" as in Perl's package namespace).
 
-But let's back up.  The simplest case is that you have just one data source, and therefore no need for a namespace at all.  If this is the case, you can skip to the L<next section|Registering data sources>.
+But let's back up.  The simplest case is that you have just one data source, and therefore no need for a namespace at all.  If this is the case, you can skip to the L<next section|"Registering data sources">.
 
 In the common case, it's usually sufficient to use simple words for both type and domain.  As the name "domain" implies, this value usually represents the environment or surroundings.  For example, a typical server application might use domains named "development", "qa", "staging", and "production".
 
@@ -60,12 +60,12 @@ A better, safer alternative is to put the data source registration calls directl
 First, consider the case where a namespace is not necessary.  You have a single data source and that's all.  You don't care what it's named.  Luckily, there are default values for both L<type|Rose::DB/default_type> and L<domain|Rose::DB/default_domain>.  Simply register your data source using these values and you're all set.
 
     package My::DB;
-    
+
     use Rose::DB;
     our @ISA = qw(Rose::DB);
-    
+
     use Rose::DB::Registry;
-    
+
     # Create a private registry for this class
     __PACKAGE__->registry(Rose::DB::Registry->new);
 
@@ -83,7 +83,7 @@ First, consider the case where a namespace is not necessary.  You have a single 
 To use C<My::DB> in this kind of setup, simply omit the L<domain|Rose::DB/domain> and L<type|Rose::DB/type> attributes from your C<My::DB> objects.  They will automatically get the default values.
 
     use My::DB;
-    
+
     $db = My::DB->new(); # use default type and default domain
     print $db->username; # "joeuser"
     $dbh = $db->dbh;     # connect and get DBI database handle
@@ -97,12 +97,12 @@ I recommend setting the default domain and type to the "safest" values in your e
 Here's an example that includes two domains "development" and "production", and two types, "main" and "session."  The default data source is the domain "development" and the type "main".
 
     package My::DB;
-    
+
     use Rose::DB;
     our @ISA = qw(Rose::DB);
-    
+
     use Rose::DB::Registry;
-    
+
     # Create a private registry for this class
     __PACKAGE__->registry(Rose::DB::Registry->new);
 
@@ -133,7 +133,7 @@ Here's an example that includes two domains "development" and "production", and 
       username => 'devmysql',
       password => 'mysqlpw',
     );
-    
+
     # Production:
 
     My::DB->register_db(
@@ -155,7 +155,7 @@ Here's an example that includes two domains "development" and "production", and 
       username => 'session_user',
       password => 'prodsesspw',
     );
-    
+
 Ideally, and as shown in the example above, all data source types are available in each domain.  Combined with the consistent practice of never specifying an explicit domain when constructing your C<My::DB> objects, this allows the domain to be switched as needed, without modifying any code in the actual application.  
 
 For example, imagine a mod_perl Apache web server environment running application code that constructs its C<My::DB> objects like this:

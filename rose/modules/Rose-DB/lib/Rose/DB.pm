@@ -1353,12 +1353,12 @@ In most deployment scenarios, L<register_db|/register_db> is called early in the
 Database registration can be included directly in your L<Rose::DB> subclass.  This is the recommended approach.  Example:
 
     package My::DB;
-    
+
     use Rose::DB;
     our @ISA = qw(Rose::DB);
-    
+
     use Rose::DB::Registry;
-    
+
     # Create a private registry for this class
     __PACKAGE__->registry(Rose::DB::Registry->new);
 
@@ -1429,12 +1429,12 @@ Note that L<Rose::DB> subclasses will inherit the base class's L<Rose::DB::Regis
 In most cases, it's wise to give your subclass its own private registry if it inherits directly from L<Rose::DB>.  To do that, just set a new registry object in your subclass.  Example:
 
     package My::DB;
-    
+
     use Rose::DB;
     our @ISA = qw(Rose::DB);
-    
+
     use Rose::DB::Registry;
-    
+
     # Create a private registry for this class
     __PACKAGE__->registry(Rose::DB::Registry->new);
     ...
