@@ -1,8 +1,8 @@
 =head1 INTRODUCTION
 
-This document provides a step-by-step introduction to the L<Rose::DB:Object> module distribution.  It demonstrates all of the important features using a realistic example database.  This does not replace the actual documentation for each module, however.  The "reference" documentation found in each ".pm" file is still essential, and contains some good examples of its own.
+This document provides a step-by-step introduction to the L<Rose::DB::Object> module distribution.  It demonstrates all of the important features using a realistic example database.  This does not replace the actual documentation for each module, however.  The "reference" documentation found in each ".pm" file is still essential, and contains some good examples of its own.
 
-This tutorial provides a gradual introduction to L<Rose::DB:Object>.  It also describes "best practices" for using L<Rose::DB:Object> in the most robust, maintainable manner.  If you're just trying to get a feel for what's possible, you can skip to the end and take a look at the completed example database and associated Perl code.  But I recommend reading the tutorial from start to finish at least once.
+This tutorial provides a gradual introduction to L<Rose::DB::Object>.  It also describes "best practices" for using L<Rose::DB::Object> in the most robust, maintainable manner.  If you're just trying to get a feel for what's possible, you can skip to the end and take a look at the completed example database and associated Perl code.  But I recommend reading the tutorial from start to finish at least once.
 
 The examples will start simple (less abstracted) and then get progressively more complex (more abstracted).  You, the developer, have to decide how much abstraction is appropriate for your particular task.
 
@@ -34,7 +34,6 @@ We will start with a single table in a PostgreSQL database as part of a fictiona
     );
 
 ...
-
 
 
 

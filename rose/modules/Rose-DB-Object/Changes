@@ -1,4 +1,4 @@
-0.076 (10.03.2005) - John Siracusa <siracusa@mindspring.com>
+0.076 (10.05.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed a bug that caused incorrect counts in get_objects_count()
       when using the require_object parameter with "... to many" 
