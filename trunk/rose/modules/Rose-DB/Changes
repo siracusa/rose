@@ -1,4 +1,4 @@
-0.03 (10.03.2005) - John Siracusa <siracusa@mindspring.com>
+0.03 (10.05.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Rejiggered magic re-blessing to make private registries to work.
     * Added support for MySQL's weird "all-zeros" date/time keywords.
