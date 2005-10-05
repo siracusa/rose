@@ -4,7 +4,7 @@
       when using the require_object parameter with "... to many" 
       relationships.
     * Added bulk update and delete methods to Manager.
-    * Added cascaded delete, plus a plea inthe documentation for users
+    * Added cascaded delete, plus a plea in the documentation for users
       to do this in the database instead.
     * Added "many to one" relationship and made it the new default
       relationship type for foreign keys.

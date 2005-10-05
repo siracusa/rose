@@ -197,9 +197,7 @@ Before trying to use L<Rose::DB> objects, it's important to understand the prima
 
 Of course, it could fill the same role for any L<Rose::DB::Object>-like module, and for any code that does the same kinds of things.  If you need to parse or format L<vendor-specific column values|Rose::DB/"Vendor-Specific Column Value Parsing and Formatting"> or want to use a simple form of L<reference counting|Rose::DB/"Database Handle Life-Cycle Management"> to keep track of shared database handles, you may find L<Rose::DB> useful.
 
-The most common non-L<Rose::DB::Object>-related use for L<Rose::DB> is as a way to get a L<DBI> database handle without sweating the details of how it's created or where it's connected.
-
-The previous sections of this tutorial cover everything you need to know to set up L<Rose::DB> to be used in this capacity.  Please be sure to read the L<Rose::DB documentation|Rose::DB> as well, particularly the L<database handle life-cycle management|Rose::DB/"Database Handle Life-Cycle Management"> section.
+The most common non-L<Rose::DB::Object>-related use for L<Rose::DB> is as a way to get a L<DBI> database handle without sweating the details of how it's created or where it's connected.  The previous sections of this tutorial cover everything you need to know to set up L<Rose::DB> to be used in this capacity.  Please be sure to read the L<Rose::DB documentation|Rose::DB> as well, particularly the L<database handle life-cycle management|Rose::DB/"Database Handle Life-Cycle Management"> section.
 
 =head1 DEVELOPMENT POLICY
 
