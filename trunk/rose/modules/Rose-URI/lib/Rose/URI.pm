@@ -94,8 +94,7 @@ sub init_with_uri
 sub clone
 {
   my($self) = shift;
-
-  return ref($self)->new($self);
+  return bless _deep_copy($self), ref($self);
 }
 
 sub parse_query
@@ -492,6 +491,10 @@ sub _deep_copy
   {
     $copy = \(my $var = '');
     $$copy = _deep_copy($$data);
+  }
+  elsif($ref_type->isa(__PACKAGE__)) # cloning
+  {
+    $copy = _deep_copy({ %{$data} });
   }
   else
   {

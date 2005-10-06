@@ -1,7 +1,8 @@
 0.021 (10.06.2005) - John Siracusa <siracusa@mindspring.com>
 
+    * Simplified cloning.
     * Corrected POD errors.
-    
+
 0.02 (10.05.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Fix cloning bugs.
