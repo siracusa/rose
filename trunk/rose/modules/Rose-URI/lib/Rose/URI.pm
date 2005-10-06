@@ -21,7 +21,7 @@ our $Make_URI;
 
 our $SCHEME_RE = '[a-zA-Z][a-zA-Z0-9.+\-]*';
 
-our $VERSION = '0.012';
+our $VERSION = '0.013';
 
 #our $Debug = 0;
 
@@ -92,7 +92,7 @@ sub clone
 {
   my($self) = shift;
 
-  return ref($self)->new($self);
+  return ref($self)->new("$self");
 }
 
 sub parse_query
@@ -416,18 +416,18 @@ sub __uri_from_uri
     {
       if(my($user, $pass) = split(':', $userinfo))
       {
-        $self->{'username'} = $user;
-        $self->{'password'} = $pass;
+        $self->{'username'} = __unescape_uri($user);
+        $self->{'password'} = __unescape_uri($pass);
       }
     }
   }
 
-  $self->{'scheme'}       = $uri->scheme   || '';
-  $self->{'host'}         = $uri->host     || ''  if($uri->can('host'));
-  $self->{'port'}         = $uri->_port    || ''  if($uri->can('_port'));
-  $self->{'default_port'} = $uri->port     || ''  if($uri->can('port'));
-  $self->{'path'}         = $uri->path     || ''  if($uri->can('path'));
-  $self->{'fragment'}     = $uri->fragment || '';
+  $self->{'scheme'}       = __unescape_uri($uri->scheme   || '');
+  $self->{'host'}         = __unescape_uri($uri->host     || '')  if($uri->can('host'));
+  $self->{'port'}         = __unescape_uri($uri->_port    || '')  if($uri->can('_port'));
+  $self->{'default_port'} = __unescape_uri($uri->port     || '')  if($uri->can('port'));
+  $self->{'path'}         = __unescape_uri($uri->path     || '')  if($uri->can('path'));
+  $self->{'fragment'}     = __unescape_uri($uri->fragment || '');
 
   $self->parse_query($uri->query);
 
@@ -472,7 +472,8 @@ __END__
 
 =head1 NAME
 
-Rose::URI - A URI object built for easy and efficient manipulation.
+Rose::URI - A standalone URI object built for easy and efficient manipulation of query
+parameters and other URI components.
 
 =head1 SYNOPSIS
 
