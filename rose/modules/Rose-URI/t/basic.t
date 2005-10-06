@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 24;
+use Test::More tests => 26;
 
 BEGIN
 {
@@ -65,3 +65,18 @@ $uri->username('u/n&');
 $uri->query_param(c => '?5/1 + 1-3 = 2_()');
 
 is($uri, 'http://u%2Fn%26:pw@ob.com:81/Foo%20Bar/Baz?a=1&a=2&b=3&c=%3F5%2F1%20%2B%201-3%20%3D%202_()#blah', 'escape 2');
+
+my @values = (1, 2);
+my %query = (a => \@values, b => 3);
+
+$uri->query(\%query);
+
+my $uri2 = $uri->clone;
+
+my $original_uri = $uri->as_string;
+
+is($uri2->as_string, $original_uri, 'clone 1');
+
+$values[0] = 7;
+
+is($uri2->as_string, $original_uri, 'clone 2');
