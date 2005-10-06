@@ -2119,13 +2119,13 @@ If set to any kind of true value, then the "DISTINCT" SQL keyword will be added 
 
 If set to a simple scalar value that is true, then only the columns in the primary table ("t1") are fetched from the database.
 
-If set to a reference to an array of table names or "tN" table aliases, then only the columns from those tables, plus the primary table ("t1"), will be fetched.
+If set to a reference to an array of table names or "tN" table aliases, then only the columns from those tables will be fetched.  Columns from the primary table ("t1") are always selected, regardless of whether or not it appears in the list.
 
 This parameter conflicts with the C<fetch_only> parameter in the case where both provide a list of table names or aliases.  In this case, if the value of the C<distinct> parameter is also reference to an array table names or aliases, then a fatal error will occur.
 
 =item C<fetch_only [ARRAYREF]>
 
-ARRAYREF should be a reference to an array of table names or "tN" table aliases. Only the columns from those tables, plus the primary table ("t1"), will be fetched.
+ARRAYREF should be a reference to an array of table names or "tN" table aliases. Only the columns from those tables will be fetched.  Columns from the primary table ("t1") are always selected, regardless of whether or not it appears in the list.
 
 This parameter conflicts with the C<distinct> parameter in the case where both provide a list of table names or aliases.  In this case, then a fatal error will occur.
 
