@@ -88,7 +88,7 @@ To use C<My::DB> in this kind of setup, simply omit the L<domain|Rose::DB/domain
     print $db->username; # "joeuser"
     $dbh = $db->dbh;     # connect and get DBI database handle
 
-=head3 Multiple data sources using namespaces
+=head3 Multiple data sources
 
 Most commonly, you will have more than one data source.  (And if you don't now, you probably will in the future.  Better safe than sorry.)  After you've L<designed your namespace|/"Designing your namespace">, data source registration is straightforward.  The only wrinkle is how to deal with the default domain and type.
 
