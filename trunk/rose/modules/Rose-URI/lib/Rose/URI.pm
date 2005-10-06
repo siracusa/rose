@@ -510,7 +510,7 @@ __END__
 
 =head1 NAME
 
-Rose::URI - A standalone URI class allowing easy and efficient manipulation of query parameters and other URI components.
+Rose::URI - A URI class that allows easy and efficient manipulation of URI components.
 
 =head1 SYNOPSIS
 
