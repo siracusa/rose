@@ -12,7 +12,7 @@ use Rose::DB::Object::Constants qw(STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.07';
+our $VERSION = '0.071';
 
 our $Debug = 0;
 
@@ -269,7 +269,9 @@ sub get_objects
   my $require_objects = delete $args{'require_objects'};
   my $with_objects    = !$count_only ? delete $args{'with_objects'} : undef;
   my $skip_first      = delete $args{'skip_first'} || 0;
-
+  my $distinct        = delete $args{'distinct'};
+  my $fetch           = delete $args{'fetch_only'};
+  my %fetch;
 
   my $db  = delete $args{'db'} || $object_class->init_db;
   my $dbh = delete $args{'dbh'};
@@ -360,6 +362,9 @@ sub get_objects
   my %methods = ($tables[0] => scalar $meta->column_mutator_method_names);
   my @classes = ($object_class);
   my %meta    = ($object_class => $meta);
+
+  my @table_names = ($meta->table);
+
   my(@joins, @subobject_methods, $clauses);
 
   my $handle_dups = 0;
@@ -368,6 +373,27 @@ sub get_objects
   my $manual_limit = 0;
 
   my $num_subtables = $with_objects ? @$with_objects : 0;
+
+  if($distinct || $fetch)
+  {
+    if($fetch && ref $distinct)
+    {
+      Carp::croak "The 'distinct' and 'fetch' parameters cannot be used ",
+                  "together if they both contain lists of tables";
+    }
+
+    $args{'distinct'} = 1  if($distinct);
+
+    %fetch = (t1 => 1, $tables[0] => 1, $meta->table => 1);
+
+    if(ref $fetch || ref $distinct)
+    {
+      foreach my $arg (ref $distinct ? @$distinct : @$fetch)
+      {
+        $fetch{$arg} = 1;
+      }
+    }
+  }
 
   if($with_objects)
   {
@@ -409,14 +435,15 @@ sub get_objects
           $manual_limit = delete $args{'limit'};
         }
 
-        if($required_object{$name} && $num_required_objects > 1 && $num_subtables > 1)
-        {
-          Carp::croak 
-            qq(The "require_objects" parameter cannot be used with ),
-            qq(a "one to many" relationship ("$name" in this case) ),
-            qq(unless that relationship is the only one listed and ),
-            qq(the "with_objects" parameter is not used);
-        }
+        # This restriction seems unnecessary now
+        #if($required_object{$name} && $num_required_objects > 1 && $num_subtables > 1)
+        #{
+        #  Carp::croak 
+        #    qq(The "require_objects" parameter cannot be used with ),
+        #    qq(a "... to many" relationship ("$name" in this case) ),
+        #    qq(unless that relationship is the only one listed and ),
+        #    qq(the "with_objects" parameter is not used);
+        #}
       }
 
       $i++;
@@ -460,6 +487,7 @@ sub get_objects
         $meta{$ft_class} = $ft_meta;
 
         push(@tables, $ft_meta->fq_table_sql);
+        push(@table_names, $ft_meta->table);
         push(@classes, $ft_class);
 
         # Iterator will be the tN value: the first sub-table is t2, and so on
@@ -500,7 +528,7 @@ sub get_objects
             $joins[$i]{'type'} = 'LEFT OUTER JOIN';
 
             # MySQL is stupid about using its indexes when "JOIN ... ON (...)"
-            # conditions are the only ones given, so teh code below adds some
+            # conditions are the only ones given, so the code below adds some
             # redundant WHERE conditions.  They should not change the meaning
             # of the query, but should nudge MySQL into using its indexes. 
             # The clauses: "((<ON conditions>) OR (<any columns are null>))"
@@ -540,7 +568,9 @@ sub get_objects
         # Add sub-object sort conditions
         if($rel->can('manager_args') && (my $mgr_args = $rel->manager_args))
         {
-          if($mgr_args->{'sort_by'})
+          # Don't bother sorting by columns if we're not even selecting them
+          if($mgr_args->{'sort_by'} && (!%fetch || 
+             ($fetch{$tables[-1]} && !$fetch{$table_names[-1]})))
           {
             if($args{'sort_by'})
             {
@@ -567,6 +597,7 @@ sub get_objects
         $meta{$map_class} = $map_meta;
 
         push(@tables, $map_meta->fq_table_sql);
+        push(@table_names, $map_meta->table);
         push(@classes, $map_class);
 
         $columns{$tables[-1]} = []; #$map_meta->columns;#_names;
@@ -628,6 +659,7 @@ sub get_objects
           or Carp::confess "$ft_class - Missing key columns for '$map_to'";
 
         push(@tables, $ft_meta->fq_table_sql);
+        push(@table_names, $ft_meta->table);
         push(@classes, $ft_class);
 
         $columns{$tables[-1]} = $ft_meta->columns;#_names;
@@ -676,7 +708,9 @@ sub get_objects
         # Add sub-object sort conditions
         if($rel->can('manager_args') && (my $mgr_args = $rel->manager_args))
         {
-          if($mgr_args->{'sort_by'})
+          # Don't bother sorting by columns if we're not even selecting them
+          if($mgr_args->{'sort_by'} && (!%fetch || 
+             ($fetch{$tables[-1]} && !$fetch{$table_names[-1]})))
           {
             if($args{'sort_by'})
             {
@@ -696,6 +730,19 @@ sub get_objects
     }
 
     $args{'clauses'} = $clauses; # restore clauses arg
+  }
+
+  # Flesh out list of fetch tables and cull columns for those tables
+  if(%fetch)
+  {
+    foreach my $i (1 .. $#tables) # skip first table, which is always selected
+    {
+      unless($fetch{'t' . ($i + 1)} || $fetch{$tables[$i]} || $fetch{$table_names[$i]})
+      {
+        $columns{$tables[$i]} = [];
+        $methods{$tables[$i]} = [];
+      }
+    }
   }
 
   if($count_only)
@@ -2066,6 +2113,22 @@ Valid parameters to C<get_objects()> are:
 
 A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> object method of the C<object_class>.
 
+=item C<distinct [BOOL|ARRAYREF]>
+
+If set to any kind of true value, then the "DISTINCT" SQL keyword will be added to the "SELECT" statement.  Specific values trigger the behaviors described below.
+
+If set to a simple scalar value that is true, then only the columns in the primary table ("t1") are fetched from the database.
+
+If set to a reference to an array of table names or "tN" table aliases, then only the columns from those tables, plus the primary table ("t1"), will be fetched.
+
+This parameter conflicts with the C<fetch_only> parameter in the case where both provide a list of table names or aliases.  In this case, if the value of the C<distinct> parameter is also reference to an array table names or aliases, then a fatal error will occur.
+
+=item C<fetch_only [ARRAYREF]>
+
+ARRAYREF should be a reference to an array of table names or "tN" table aliases. Only the columns from those tables, plus the primary table ("t1"), will be fetched.
+
+This parameter conflicts with the C<distinct> parameter in the case where both provide a list of table names or aliases.  In this case, then a fatal error will occur.
+
 =item C<limit NUM>
 
 Return a maximum of NUM objects.
@@ -2091,8 +2154,6 @@ This parameter can only be used along with the C<limit> parameter, otherwise a f
 =item C<require_objects OBJECTS>
 
 Only fetch rows from the primary table that have all of the associated sub-objects listed in OBJECTS, where OBJECTS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>," "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>," and  "L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany>".
-
-A "one to many" or "many to many" relationship may be included in OBJECTS I<only> if it is the sole name listed in OBJECTs I<and> the C<with_objects> parameter is omitted entirely.  A fatal error will occur if these conditions are not met.
 
 For each foreign key or relationship listed in OBJECTS, another table will be added to the query via an implicit inner join.  The join conditions will be constructed automatically based on the foreign key or relationship definitions.  Note that each related table must have a L<Rose::DB::Object>-derived class fronting it.
 

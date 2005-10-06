@@ -51,6 +51,7 @@ sub build_select
   my $sort_by     = delete $args{'sort_by'};
   my $group_by    = delete $args{'group_by'};
   my $limit       = delete $args{'limit'};
+  my $distinct    = delete $args{'distinct'} ? 'DISTINCT ' : '';
   my $select      = $args{'select'};
   my $where_only  = delete $args{'where_only'};
   my $clauses_arg = delete $args{'clauses'};  
@@ -343,9 +344,9 @@ sub build_select
         "  $tables->[0]";    
     }
 
-    my $prefix_limit = (defined $limit && $use_prefix_limit) ? $limit : '';
+    my $prefix_limit = (defined $limit && $use_prefix_limit) ? "$limit " : '';
     $select ||= join(",\n", map { "  $_" } @select_columns);
-    $qs = "SELECT $prefix_limit\n$select\nFROM\n$tables_sql\n";
+    $qs = "SELECT $prefix_limit$distinct\n$select\nFROM\n$tables_sql\n";
   }
 
   if($where)
