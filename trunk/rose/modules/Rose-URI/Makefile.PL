@@ -7,7 +7,7 @@ WriteMakefile(NAME         => 'Rose::URI',
               VERSION_FROM => 'lib/Rose/URI.pm',
               PREREQ_PM =>
               {
-                Rose::Object => 0,
+                Rose::Object => '0.015',
                 overload     => 0,
                 URI          => 0,
                 URI::Escape  => 0,

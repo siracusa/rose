@@ -2,9 +2,7 @@ package Rose::URI;
 
 use strict;
 
-use Carp;
-
-use URI;
+use Carp();
 use URI::Escape();
 
 use Rose::Object;
@@ -21,10 +19,15 @@ our $Make_URI;
 
 our $SCHEME_RE = '[a-zA-Z][a-zA-Z0-9.+\-]*';
 
-our $VERSION = '0.013';
+our $VERSION = '0.02';
 
-#our $Debug = 0;
+# Class data
+use Rose::Class::MakeMethods::Generic
+(
+  inheritable_scalar => 'default_query_param_separator',
+);
 
+# Object data
 use Rose::Object::MakeMethods::Generic
 (
   scalar =>
@@ -34,12 +37,15 @@ use Rose::Object::MakeMethods::Generic
     'scheme',
     'host',
     'port',
-    'default_port',
     'path',
     'fragment',
-    'query_param_separator',    
+    'query_param_separator' => { interface => 'get_set_init' },
   ]
 );
+
+__PACKAGE__->default_query_param_separator('&');
+
+sub init_query_param_separator { ref(shift)->default_query_param_separator }
 
 sub new
 {
@@ -47,17 +53,14 @@ sub new
 
   my $self =
   {
-    username     => '',
-    password     => '',
-    scheme       => '',
-    host         => '',
-    port         => '',
-    default_port => undef,
-    path         => '',
-    query        => {},
-    fragment     => '',
-
-    query_param_separator => '&',
+    username => '',
+    password => '',
+    scheme   => '',
+    host     => '',
+    port     => '',
+    path     => '',
+    query    => {},
+    fragment => '',
   };
 
   bless $self, $class;
@@ -92,7 +95,7 @@ sub clone
 {
   my($self) = shift;
 
-  return ref($self)->new("$self");
+  return ref($self)->new($self);
 }
 
 sub parse_query
@@ -180,7 +183,7 @@ sub query_param
     return $self->{'query'}{$_[0]} = $_[1];
   }
 
-  croak "query_param() takes either one or two arguments";
+  Carp::croak "query_param() takes either one or two arguments";
 }
 
 sub query_params
@@ -201,7 +204,7 @@ sub query_param_add
 {
   my($self, $name, $value) = @_;
 
-  croak "query_add_param() takes two arguments"  unless(@_ == 3);
+  Carp::croak "query_add_param() takes two arguments"  unless(@_ == 3);
 
   my $params = $self->query_params($name);
 
@@ -216,7 +219,7 @@ sub query_param_exists
 {
   my($self, $param) = @_;
 
-  croak "Missing query param argument"  unless(defined $param);
+  Carp::croak "Missing query param argument"  unless(defined $param);
 
   return exists $self->{'query'}{$param};
 }
@@ -225,7 +228,7 @@ sub query_param_delete
 {
   my($self) = shift;
 
-  croak "query_param_delete() takes one or more arguments"  unless(@_);
+  Carp::croak "query_param_delete() takes one or more arguments"  unless(@_);
 
   foreach my $param (@_)
   {
@@ -260,7 +263,7 @@ sub query
   {
     if(ref $_[0])
     {
-      $self->{'query'} = { %{$_[0]} };
+      $self->{'query'} = _deep_copy($_[0])
     }
     else
     {
@@ -269,7 +272,7 @@ sub query
   }
   elsif(@_)
   {
-    $self->{'query'} = { @_ };
+    $self->{'query'} = _deep_copy({ @_ });
   }
 
   return  unless(defined(wantarray));
@@ -284,7 +287,7 @@ sub query
     }
   }
 
-  return join($self->{'query_param_separator'}, @query);
+  return join($self->query_param_separator, @query);
 }
 
 sub query_form
@@ -422,12 +425,11 @@ sub __uri_from_uri
     }
   }
 
-  $self->{'scheme'}       = __unescape_uri($uri->scheme   || '');
-  $self->{'host'}         = __unescape_uri($uri->host     || '')  if($uri->can('host'));
-  $self->{'port'}         = __unescape_uri($uri->_port    || '')  if($uri->can('_port'));
-  $self->{'default_port'} = __unescape_uri($uri->port     || '')  if($uri->can('port'));
-  $self->{'path'}         = __unescape_uri($uri->path     || '')  if($uri->can('path'));
-  $self->{'fragment'}     = __unescape_uri($uri->fragment || '');
+  $self->{'scheme'}   = __unescape_uri($uri->scheme   || '');
+  $self->{'host'}     = __unescape_uri($uri->host     || '')  if($uri->can('host'));
+  $self->{'port'}     = __unescape_uri($uri->_port    || '')  if($uri->can('_port'));
+  $self->{'path'}     = __unescape_uri($uri->path     || '')  if($uri->can('path'));
+  $self->{'fragment'} = __unescape_uri($uri->fragment || '');
 
   $self->parse_query($uri->query);
 
@@ -457,6 +459,7 @@ else
     return $e;
   };
 
+  require URI;
   $Make_URI = \&__uri_from_uri;
 }
 
@@ -466,14 +469,45 @@ sub __escape_uri_whole
     (@_ > 1) ? (defined $_[1] ? $_[1] : ()) : q(^A-Za-z0-9\-_.,'!~*#?&()/?@\:\[\]=));
 }
 
+# Based on code from Clone::PP
+sub _deep_copy
+{
+  my($data) = shift;
+
+  my $ref_type = ref $data or return $data;
+
+  my $copy;
+
+  if($ref_type eq 'HASH')
+  {
+    $copy = {};
+    %$copy = map { !ref($_) ? $_ : _deep_copy($_) } %$data;
+  }
+  elsif($ref_type eq 'ARRAY')
+  {
+    $copy = [];
+    @$copy = map { !ref($_) ? $_ : _deep_copy($_) } @$data;
+  }
+  elsif($ref_type eq 'REF' or $ref_type eq 'SCALAR') 
+  {
+    $copy = \(my $var = '');
+    $$copy = _deep_copy($$data);
+  }
+  else
+  {
+    $copy = $data;
+  }
+
+  return $copy;
+}
+
 1;
 
 __END__
 
 =head1 NAME
 
-Rose::URI - A standalone URI object built for easy and efficient manipulation of query
-parameters and other URI components.
+Rose::URI - A standalone URI class allowing easy and efficient manipulation of query parameters and other URI components.
 
 =head1 SYNOPSIS
 
@@ -499,39 +533,21 @@ parameters and other URI components.
 
 =head1 DESCRIPTION
 
-C<Rose::URI> is a limited alternative to C<URI>.  The important differences
-are as follows.
+L<Rose::URI> is an alternative to L<URI>.  The important differences are as follows.
 
-C<Rose::URI> provides a rich set of query string manipulation methods. Query
-parameters can be added, removed, and checked for their existence. C<URI>
-allows the entire query to be set or returned as a whole via C<query_form()>
-or C<query()>, and the C<URI::QueryParam> module provides a few more methods
-for query string manipulation.
+L<Rose::URI> provides a rich set of query string manipulation methods. Query parameters can be added, removed, and checked for their existence. L<URI> allows the entire query to be set or returned as a whole via the L<query_form|URI/query_form> or L<query|URI/query> methods, and the L<URI::QueryParam> module provides a few more methods for query string manipulation.
 
-C<Rose::URI> supports query parameters with multiple values (e.g. "a=1&a=2"). 
-C<URI> has  limited support for this (hrough C<query_form()>'s list return
-value.  Better methods are available in C<URI::QueryParam>.
+L<Rose::URI> supports query parameters with multiple values (e.g. "a=1&a=2"). L<URI> has  limited support for this (through C<query_form|URI/query_form>'s list return value.  Better methods are available in L<URI::QueryParam>.
 
-C<Rose::URI> uses Apache's C-based URI parsing and HTML escaping functions
-when running in a mod_perl 1.x web server environment.
+L<Rose::URI> uses Apache's C-based URI parsing and HTML escaping functions when running in a mod_perl 1.x web server environment.
 
-C<Rose::URI> stores each URI "in pieces" (scheme, host, path, etc.) and then
-assembles those pieces when the entire URI is needed as a string. This
-technique is based on the assumption that the URI will be manipulated many
-more times than it is stringified.  If this is not the case in your usage
-scenario, then C<URI> may be a better alternative.
+L<Rose::URI> stores each URI "in pieces" (scheme, host, path, etc.) and then assembles those pieces when the entire URI is needed as a string. This technique is based on the assumption that the URI will be manipulated many more times than it is stringified.  If this is not the case in your usage scenario, then L<URI> may be a better alternative.
 
-Now some similarities: both classes use the C<overload> module to allow
-"magic" stringification.  Both C<URI> and C<Rose::URI> objects can be printed
-and compared as if they were strings.
+Now some similarities: both classes use the L<overload> module to allow "magic" stringification.  Both L<URI> and L<Rose::URI> objects can be printed and compared as if they were strings.
 
-C<Rose::URI> actually uses the C<URI> class to do the heavy lifting of parsing
-URIs when not running in a mod_perl 1.x environment.
+L<Rose::URI> actually uses the L<URI> class to do the heavy lifting of parsing URIs when not running in a mod_perl 1.x environment.
 
-Finally, a caveat: C<Rose::URI>  supports only "http"-like URIs.  This
-includes ftp, http, https, and other similar looking URIs. C<URI> supports
-many more esoteric URI types (gopher, mailto, etc.) If you need to support
-these formats, use C<URI> instead.
+Finally, a caveat: L<Rose::URI>  supports only "http"-like URIs.  This includes ftp, http, https, and other similar looking URIs. L<URI> supports many more esoteric URI types (gopher, mailto, etc.) If you need to support these formats, use L<URI> instead.
 
 =head1 CONSTRUCTOR
 
@@ -539,20 +555,16 @@ these formats, use C<URI> instead.
 
 =item B<new [ URI | PARAMS ]>
 
-Constructs a URI object based on URI or PARAMS, where URI is a string
-and PARAMS are described below. Returns a new C<Rose::URI> object.
+Constructs a URI object based on URI or PARAMS, where URI is a string and PARAMS are described below. Returns a new L<Rose::URI> object.
 
-The query string portion of the URI argument may use either "&" or ";"
-as the parameter separator. Examples:
+The query string portion of the URI argument may use either "&" or ";" as the parameter separator. Examples:
 
     $uri = Rose::URI->new('/foo?a=1&b=2');
     $uri = Rose::URI->new('/foo?a=1;b=2'); # same thing
 
-The C<query_param_separator> parameter determines what is used when the
-query string (or the whole URI) is output as a string later.
+The L<query_param_separator|/query_param_separator> parameter determines what is used when the query string (or the whole URI) is output as a string later.
 
-C<Rose::URI> uses C<URI> or C<Apache::URI> (when running under mod_perl
-1.x) to do its URI string parsing.
+L<Rose::URI> uses L<URI> or L<Apache::URI> (when running under mod_perl 1.x) to do its URI string parsing.
 
 Valid PARAMS are:
 
@@ -571,51 +583,64 @@ Which correspond to the following URI pieces:
 
     <scheme>://<username:password>@<path>?<query>#<fragment>
 
-All the above parameters accept strings.  See below for more information
-about the C<query> parameter.  The C<query_param_separator> parameter
-determines the separator used when constructing the query string.  It is
-"&" by default (e.g. "a=1&b=2")
+All the above parameters accept strings.  See below for more information about the L<query|/query> parameter.  The L<query_param_separator|/query_param_separator> parameter determines the separator used when constructing the query string.  It is "&" by default (e.g. "a=1&b=2")
 
 =back
 
-=head1 METHODS
+
+=head1 CLASS METHODS
+
+=over 4
+
+=item B<default_query_param_separator [CHARACTER]>
+
+Get or set the character used to separate query parameters in the stringified version of L<Rose::URI> objects.  Defaults to "&".
+
+=back
+
+=head1 OBJECT METHODS
 
 =over 4
 
 =item B<abs [BASE]>
 
-This method exists solely for compatibility with C<URI>.
+This method exists solely for compatibility with L<URI>.
 
-Returns an absolute C<Rose::URI> object.  If the current URI is already
-absolute, then a reference to it is simply returned.  If the current URI is
-relative, then a new absolute URI is constructed by combining the URI and the
-BASE, and returned.
+Returns an absolute L<Rose::URI> object.  If the current URI is already absolute, then a reference to it is simply returned.  If the current URI is relative, then a new absolute URI is constructed by combining the URI and the BASE, and returned.
 
 =item B<as_string>
 
-Returns the URI as a string.  The string is "URI escaped" (reserved URI
-characters are replaced with %xx sequences), but not "HTML escaped"
-(ampersands are not escaped, for example).
+Returns the URI as a string.  The string is "URI escaped" (reserved URI characters are replaced with %xx sequences), but not "HTML escaped" (ampersands are not escaped, for example).
 
 =item B<clone>
 
-Returns a copy of the C<Rose::URI> object.
+Returns a copy of the L<Rose::URI> object.
 
-=item B<query QUERY>
+=item B<fragment [FRAGMENT]>
 
-Sets the URI's query based on QUERY.  QUERY may be a query string (e.g.
-"a=1&b=2"), a reference to a hash, or a list of name/value pairs.
+Get or set the fragment portion of the URI.
 
-Query strings may use either "&" or ";" as their query separator. If a "&"
-character exists anywhere in teh query string, it is assumed to be the
-separator.
+=item B<password [PASSWORD]>
 
-If none of the characters "&", ";", or "=" appears in the query string, then
-the entire query string is taken as a single parameter name with an undefined
-value.
+Get or set the password portion of the URI.
 
-Hashes and lists should specify multiple parameter values using array
-references. 
+=item B<path [PATH]>
+
+Get or set the path portion of the URI.
+
+=item B<port [PORT]>
+
+Get or set the port number portion of the URI.
+
+=item B<query [QUERY]>
+
+Get or sets the URI's query.  QUERY may be a query string (e.g. "a=1&b=2"), a reference to a hash, or a list of name/value pairs.
+
+Query strings may use either "&" or ";" as their query separator. If a "&" character exists anywhere in the query string, it is assumed to be the separator.
+
+If none of the characters "&", ";", or "=" appears in the query string, then the entire query string is taken as a single parameter name with an undefined value.
+
+Hashes and lists should specify multiple parameter values using array references.
 
 Here are some examples representing the query string "a=1&a=2&b=3"
 
@@ -624,23 +649,17 @@ Here are some examples representing the query string "a=1&a=2&b=3"
     $uri->query({ a => [ 1, 2 ], b => 3 }); # hash ref
     $uri->query(a => [ 1, 2 ], b => 3);     # list
 
-Returns the current (or new) query as a URI-escaped (but not HTML-escaped)
-query string.
+Returns the current (or new) query as a URI-escaped (but not HTML-escaped) query string.
 
 =item B<query_form QUERY>
 
-Implementation of C<URI>'s method of the same name.  This exists for backwards
-compatibility purposes only and should not be used (or necessary).  See the
-C<URI> documentation for more details.
+Implementation of L<URI>'s method of the same name.  This exists for backwards compatibility purposes only and should not be used (or necessary).  See the L<URI> documentation for more details.
 
 =item B<query_hash>
 
-Returns the current query as a hash (in list context) or reference to a hash
-(in scalar context), with multiple parameter values represented by array
-references (see C<query()> for details).
+Returns the current query as a hash (in list context) or reference to a hash (in scalar context), with multiple parameter values represented by array references (see the L<query|/query> method for details).
 
-The return value is a shallow copy of the actual query hash.  It should be
-treated as read-only unless you really know what you are doing.
+The return value is a shallow copy of the actual query hash.  It should be treated as read-only unless you really know what you are doing.
 
 Example:
 
@@ -650,11 +669,7 @@ Example:
 
 =item B<query_param NAME [, VALUE]>
 
-Get or set a query parameter.  If only NAME is passed, it returns the value of
-the query parameter named NAME.  Parameters with multiple values are returned
-as array references.  If both NAME and VALUE are passed, it sets the parameter
-named NAME to VALUE, where VALUE can be a simple scalar value or a reference
-to an array of simple scalar values.
+Get or set a query parameter.  If only NAME is passed, it returns the value of the query parameter named NAME.  Parameters with multiple values are returned as array references.  If both NAME and VALUE are passed, it sets the parameter named NAME to VALUE, where VALUE can be a simple scalar value or a reference to an array of simple scalar values.
 
 Examples:
 
@@ -670,9 +685,7 @@ Examples:
 
 =item B<query_params NAME [, VALUE]>
 
-Same as C<query_param()>, except the return value is always either an array
-(in list context) or reference to an array (in scalar context), even if there
-is only one value.
+Same as the L<query_param|/query_param> method, except the return value is always either an array (in list context) or reference to an array (in scalar context), even if there is only one value.
 
 Examples:
 
@@ -692,8 +705,7 @@ Adds a new value to a query parameter.   Example:
 
     $a = $uri->query_param_add('b' => 2); # now "a=2&b=1&b=2"
 
-Returns an array (in list context) or reference to an array (in scalar
-context) of the new parameter value(s).
+Returns an array (in list context) or reference to an array (in scalar context) of the new parameter value(s).
 
 =item B<query_param_delete NAME>
 
@@ -701,30 +713,33 @@ Deletes all instances of the parameter named NAME from the query.
 
 =item B<query_param_exists NAME>
 
-Returns a boolean value indicating whether or not a parameter named NAME
-exists in the query string.
+Returns a boolean value indicating whether or not a parameter named NAME exists in the query string.
+
+=item B<query_param_separator [CHARACTER]>
+
+Get or set the character used to separate query parameters in the stringified version of the URI.  Defaults to the return value of the L<default_query_param_separator|/default_query_param_separator> class method ("&" by default).
 
 =item B<rel BASE>
 
-This method exists solely for compatibility with C<URI>.
+This method exists solely for compatibility with L<URI>.
 
-Returns a relative URI reference if it is possible to make one that denotes
-the same resource relative to BASE.  If not, then the current URI is simply
-returned.
+Returns a relative URI reference if it is possible to make one that denotes the same resource relative to BASE.  If not, then the current URI is simply returned.
+
+=item B<scheme [SCHEME]>
+
+Get or set the scheme portion of the URI.
 
 =item B<userinfo>
 
-Returns the C<username> and C<password> attributes joined by a ":" (colon). 
-The username and password are not escaped in any way. If there is no password,
-only the username is returned (without the colon).  If neither exist, an empty
-string is returned.
+Returns the L<username|/username> and L<password|/password> attributes joined by a ":" (colon). The username and password are not escaped in any way. If there is no password, only the username is returned (without the colon).  If neither exist, an empty string is returned.
 
 =item B<userinfo_escaped>
 
-Returns the C<username> and C<password> attributes joined by a ":" (colon). 
-The username and password are URI-escaped, but not HTML-escaped. If there is
-no password, only the username is returned (without the colon).  If neither
-exist, an empty string is returned.
+Returns the L<username|/username> and L<password|/password> attributes joined by a ":" (colon). The username and password are URI-escaped, but not HTML-escaped. If there is no password, only the username is returned (without the colon).  If neither exist, an empty string is returned.
+
+=item B<username [USERNAME]>
+
+Get or set the username portion of the URI.
 
 =back
 
@@ -734,6 +749,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2004 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
