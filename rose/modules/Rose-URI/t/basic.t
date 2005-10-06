@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 26;
+use Test::More tests => 28;
 
 BEGIN
 {
@@ -10,10 +10,10 @@ BEGIN
 }
 
 my $uri = Rose::URI->new('http://un:pw@ob.com:81/bar/baz?a=1&a=2&b=3#blah');
-ok(ref $uri eq 'Rose::URI' && $uri eq 'http://un:pw@ob.com:81/bar/baz?a=1&a=2&b=3#blah', 'Parse full URI (&)');
+ok(ref $uri eq 'Rose::URI' && $uri eq 'http://un:pw@ob.com:81/bar/baz?a=1&a=2&b=3#blah', 'parse full URI (&)');
 
 $uri = Rose::URI->new('http://un:pw@ob.com:81/bar/baz?a=1;a=2;b=3#blah');
-ok(ref $uri eq 'Rose::URI' && $uri eq 'http://un:pw@ob.com:81/bar/baz?a=1&a=2&b=3#blah', 'Parse full URI (;)');
+ok(ref $uri eq 'Rose::URI' && $uri eq 'http://un:pw@ob.com:81/bar/baz?a=1&a=2&b=3#blah', 'parse full URI (;)');
 
 is($uri->scheme,   'http', 'scheme()');
 is($uri->username, 'un', 'username()');
@@ -71,12 +71,22 @@ my %query = (a => \@values, b => 3);
 
 $uri->query(\%query);
 
-my $uri2 = $uri->clone;
-
 my $original_uri = $uri->as_string;
+
+$values[0]  = 8;
+$query{'b'} = 9;
+
+is($uri->as_string, $original_uri, 'deep copy 1');
+
+my $uri2 = $uri->clone;
 
 is($uri2->as_string, $original_uri, 'clone 1');
 
 $values[0] = 7;
 
 is($uri2->as_string, $original_uri, 'clone 2');
+
+Rose::URI->default_query_param_separator(';');
+
+$uri = Rose::URI->new('http://un:pw@ob.com:81/bar/baz?a=1&a=2&b=3#blah');
+is($uri, 'http://un:pw@ob.com:81/bar/baz?a=1;a=2;b=3#blah', 'default query param separator (;)');
