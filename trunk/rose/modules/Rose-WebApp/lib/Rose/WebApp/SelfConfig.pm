@@ -144,7 +144,7 @@ sub _archive_files_recursive
 
     while(my $file = readdir($dir))
     {
-      next  if($file =~ /^\.\.?$/);
+      next  if($file =~ /^\.\.?|\._.+|\.DS_Store$/);
       my $file_path = Path::Class::File->new($path, $file);
       $file_path->cleanup;
       _archive_files_recursive($file_path->stringify, @_);
