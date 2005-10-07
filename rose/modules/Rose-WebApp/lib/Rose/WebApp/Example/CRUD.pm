@@ -66,7 +66,7 @@ sub init
     [
       class         => $self->search_form_class,
       action_uri    => 'list',
-      view_path     => '/rose/webapp/example/table_editor/form/search.mc',
+      view_path     => '/rose/webapp/example/crud/form/search.mc',
       build_on_init => 0,
       app           => $self,
     ],
@@ -75,7 +75,7 @@ sub init
     [
       class         => $self->edit_form_class,
       action_uri    => $self->relative_action_uri('update'),
-      view_path     => '/rose/webapp/example/table_editor/form/edit.mc',
+      view_path     => '/rose/webapp/example/crud/form/edit.mc',
       build_on_init => 0,
       clear_on_init => 1,
       app           => $self,
@@ -87,7 +87,7 @@ sub init
     [
       class         => $self->new_form_class,
       action_uri    => $self->relative_action_uri('create'),
-      view_path     => '/rose/webapp/example/table_editor/form/new.mc',
+      view_path     => '/rose/webapp/example/crud/form/new.mc',
       build_on_init => 0,
       reset_on_init => 1,
       app           => $self,
@@ -110,21 +110,21 @@ sub init
   {
     list_page =>
     {
-      path  => '/rose/webapp/example/table_editor/list.html',
+      path  => '/rose/webapp/example/crud/list.html',
       uri   => 'list',
       form_names => [ 'search_form' ],
     },
 
     new_page => 
     {
-      path  => '/rose/webapp/example/table_editor/new.html',
+      path  => '/rose/webapp/example/crud/new.html',
       uri   => 'new',
       form_names => [ 'new_form' ],
     },
 
     edit_page => 
     {
-      path  => '/rose/webapp/example/table_editor/edit.html',
+      path  => '/rose/webapp/example/crud/edit.html',
       uri   => 'edit',
       form_names => [ 'edit_form' ],
     },
@@ -475,262 +475,270 @@ sub list_page
 
 __DATA__
 ---
-File: comps/admin/coupon/form/search.mc
-Mode: 33188
-Type: masoncomps
-Lines: 11
+File: htdocs/rose/webapp/example/crud/edit.html
+Mode: 33264
+Type: htdocs
+Lines: 22
 
-<!-- start /admin/coupon/form/search.mc -->
-<%perl>
-$m->comp('/admin/table_editor/form/search.mc', %ARGS, 
-         rows => 
-         [
-           [ 'code', 'start_date' ],
-           [ 'coupon_id', 'end_date' ],
-           [ 'sort',  [ 'per_page', 'list_button' ] ],
-         ]);
-</%perl>
-<!-- end /admin/coupon/form/search.mc -->
----
-File: comps/admin/coupon/list.mc
-Mode: 33188
-Type: masoncomps
-Lines: 29
+<& '/header.mc', page_title => $app->title . ": Edit $object_name ($id_string)",
+                 style => $app->style_sheet_uris &>
 
-<!-- start /admin/coupon/list.mc -->
-<table cellspacing="0" cellpadding="3" width="100%">
-<tr class="header">
-<th>Id</th>
-<th>Code</th>
-<th>Start Date</th>
-<th>End Date</th>
-<th>Migrate</th>
-<th>Clone</th>
-</tr>
-%
-% my $i = 0;
-%
-% foreach my $coupon (@$objects)
-% {
-<tr class="coupon row-<% $i++ % 2 ? 'odd' : 'even' %>">
-<td class="id first"><% $coupon->id |h %></td>
-<td class="code"><a href="<% $app->edit_object_uri($coupon) %>"><% $coupon->code |h %></a></td>
-<td class="start-date"><% $coupon->start_date(format => '%b %d %Y %H:%M') |h %></td>
-<td class="end-date"><% $coupon->end_date(format => '%b %d %Y %H:%M') |h %></td>
-<td class="migrate">Migrate</td>
-<td class="clone last">Clone</td>
-</tr>
-% }
-</table>
-<!-- end /admin/coupon/list.mc -->
-<%args>
-$objects
-</%args>
----
-File: comps/admin/coupon/navbar.mc
-Mode: 33188
-Type: masoncomps
-Lines: 6
+<div class="admin">
+<div class="object">
 
-<!-- start /admin/coupon/navbar.mc -->
-<div class="nav">
-<a href="/admin/coupon">Find Coupons</a> |
-<a href="/admin/coupon/new">New Coupon</a>
-</div>
-<!-- end /admin/coupon/navbar.mc -->
----
-File: comps/admin/messages.mc
-Mode: 33188
-Type: masoncomps
-Lines: 9
+<& '/messages.mc', %ARGS &>
 
-<!-- start /admin/messages.mc -->
-% $m->comp('/error_box.mc', message => $error)  if($error);
-% $m->comp('/message_box.mc', message => $message)  if($message);
-% $m->print('<br/>')  if($error || $message);
-<!-- end /admin/messages.mc -->
-<%args>
-$error   => undef
-$message => undef
-</%args>
----
-File: comps/admin/table_editor/form/edit.mc
-Mode: 33188
-Type: masoncomps
-Lines: 62
+<& $app->root_uri . '/navbar.mc' &>
 
-<!-- start /admin/table_editor/form/edit.mc -->
 <div class="edit">
-<% $form->start_html %>
-
-% if($form->is_edit_form)
-% {
-%   foreach my $column ($object->meta->primary_key_columns, $form->hidden_field_names)
-%   {
-<% $form->field($column)->hidden_field->xhtml_field %>
-%   }
-% }
-
-<table class="form">
-<tr class="header">
-<td colspan="2" class="title">
-% if($object)
-% {
-Edit <% $object_name |h %> <% $id_string |h %>
-% }
-% else
-% {
-New <% $object_name |h %>
-% }
-</td></tr>
-%
-% my $i = 0;
-%
-% foreach my $field ($form->fields)
-% {
-%   my $name = $field->name;
-%   next  if($pk{$name} || $hide{$name} || $field->isa('Rose::HTML::Form::Field::Submit'));
-<tr class="row-<% $i++ % 2 ? 'odd' : 'even' %>">
-<td class="label"><% $field->xhtml_label %></td>
-<td class="field"><% $field->xhtml %></td>
-</tr>
-% }
-</table>
-
-<div class="buttons">
-% if($object)
-% {
-<% $form->field('update_button')->xhtml_field %>
-% }
-% else
-% {
-<% $form->field('create_button')->xhtml_field %>
-% }
+% $app->show_form(name => 'edit_form', view_args => \%ARGS);
 </div>
 
-<% $form->end_html %>
 </div>
-<!-- end /admin/table_editor/form/edit.mc -->
+</div>
+
+<& '/footer.mc' &>
 <%args>
-$object      => undef
-$object_name => undef
-$id_string   => undef
+$object_name
+$id_string
 </%args>
-<%init>
-my $form = $ARGS{'html_form'};
-my %pk = $object ? (map { $_ => 1 } $object->meta->primary_key_columns) : ();
-my %hide = map { $_ => 1 } $form->hidden_field_names;
-</%init>
 ---
-File: comps/admin/table_editor/form/new.mc
-Mode: 33188
-Type: masoncomps
-Lines: 3
+File: htdocs/rose/webapp/example/crud/list.html
+Mode: 33264
+Type: htdocs
+Lines: 33
 
-<!-- start /admin/table_editor/form/new.mc -->
-<& '/admin/table_editor/form/edit.mc', form_type => 'new', %ARGS &>
-<!-- end /admin/table_editor/form/new.mc -->
----
-File: comps/admin/table_editor/form/search.mc
-Mode: 33188
-Type: masoncomps
-Lines: 92
+<& '/header.mc', page_title => $app->title . ': List ' . $app->object_name_plural,
+                 style => $app->style_sheet_uris &>
 
-<!-- start /admin/table_editor/form/search.mc -->
-<div class="search">
-<% $form->start_html %>
+<div class="admin">
+<div class="object">
+<div class="<% $app->style_name %>">
 
-<table class="form">
-<%perl>
-foreach my $row (@$rows)
-{
-  $m->print("<tr>\n");
+<& '/messages.mc', %ARGS &>
 
-  foreach my $item (@$row)
-  {
-    my $started = 0;
+<& $app->root_uri . '/navbar.mc' &>
 
-    foreach my $field (ref $item ? @$item : $item)
-    {
-      my $label_td = '';
-      my $field_td = '';
+% $app->show_form('search_form');
 
-      if(ref $field eq 'HASH')
-      {
-        if(ref $field->{'label_td_attrs'})
-        {
-          $label_td = join(' ', map { "$_=$field->{'label_td_attrs'}{$_}" } 
-                               keys %{$field->{'label_td_attrs'}});
-        }
-
-        if(ref $field->{'field_td_attrs'})
-        {
-          $field_td = join(' ', map { "$_=$field->{'field_td_attrs'}{$_}" } 
-                               keys %{$field->{'field_td_attrs'}});
-        }
-
-        $field = $field->{'name'};
-      }
-
-      if($form->field($field)->label)
-      {
-        if($started)
-        {
-          $m->print(' ', $form->field($field)->xhtml_label);
-        }
-        else
-        {
-          $m->print('<td ', $label_td, 'class="label">',
-                    $form->field($field)->xhtml_label,
-                    "</td>\n");
-        }
-      }
-
-      if($started)
-      {
-        $m->print(' ', $form->field($field)->xhtml);
-      }
-      else
-      {
-        $m->print('<td ', $field_td, 'class="field">',
-                  $form->field($field)->xhtml);
-      }
-
-      $started++;
-    }
-
-    $m->print("</td>\n");
-  }
-
-  $m->print("</tr>\n");
-}
-</%perl>
-</table>
-
-<% $form->end_html %>
+% if($objects && @$objects)
+% {
+<& '/pages_nav.mc', max_pages => 30, %ARGS &>
+<div class="list">
+<& $app->root_uri . '/list.mc', objects => $objects &>
 </div>
-<!-- end /admin/table_editor/form/search.mc -->
+% }
+% elsif($app->param_exists('list'))
+% {
+<p>No matches.</p>
+% }
+
+</div>
+</div>
+
+<& '/footer.mc' &>
 <%args>
-$rows => undef
+$objects => []
+$total   => undef
 </%args>
-<%init>
-my $form = $ARGS{'html_form'};
-
-unless($rows)
-{
-  my @columns = $form->search_columns;
-
-  while(@columns)
-  {
-    push(@$rows, [ grep { defined } shift(@columns), shift(@columns) ]);
-  }
-
-  push(@$rows, [ 'sort',  [ 'per_page', 'list_button' ] ]);
-}
-</%init>
 ---
-File: comps/end.mc
-Mode: 33188
+File: htdocs/rose/webapp/example/crud/new.html
+Mode: 33264
+Type: htdocs
+Lines: 19
+
+<& '/header.mc', page_title => $app->title . ": New " . $app->object_name,
+                 style => $app->style_sheet_uris &>
+
+<div class="admin">
+<div class="object">
+
+<& '/messages.mc', %ARGS &>
+
+<& $app->root_uri . '/navbar.mc' &>
+
+<div class="new edit">
+% $app->show_form(name => 'new_form', view_args => \%ARGS);
+</div>
+
+</div>
+</div>
+
+<& '/footer.mc' &>
+
+---
+File: htdocs/style/admin.css
+Mode: 33264
+Type: htdocs
+Lines: 164
+
+/* Page */
+
+body
+{
+  font: 10pt Verdana, sans-serif;  
+}
+
+/* Message boxes */
+
+.message-box .title
+{
+  font-size: small;
+  font-weight: bold;
+  color: #cccccc;
+  background-color: #000033;
+}
+
+.message-box .icon
+{
+  font-family: Times, "Times New Roman", serif;
+  font-weight: bold;
+  font-size: 40px;
+  color: #990000;
+}
+
+.message-box .body
+{
+  background-color: #e0e0e0;
+}
+
+/* Admin tools */
+
+.admin .nav
+{
+  margin-bottom: 1em;
+}
+
+.admin .pages-nav
+{
+  margin-left: 3px;
+  margin-bottom: 1em;
+}
+
+.admin .pages-nav .summary
+{
+  font-size: 90%;
+}
+
+.admin form table tr
+{
+  vertical-align: baseline;
+}
+
+.admin form td.field
+{
+  padding-right: 1em;
+}
+
+.admin form label,
+.admin form .label
+{
+  text-align: right;
+  font-weight: bold;  
+}
+
+.admin .form label .required,
+.admin .form .label .required
+{
+  color: #e00000;
+}
+
+.admin form .error
+{
+  color: #e00000;
+  font-size: 90%;
+}
+
+.admin .search table.form
+{
+  background-color: #e0e0e0;
+  border: 2px solid #aaaaaa;
+  padding: 6px; 
+}
+
+.admin .object .list .header,
+.admin .object .edit .header
+{
+  color: white;
+  background-color: #333399;
+  font-weight: bold;
+}
+
+.admin .object .list .object td
+{
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.admin .object .list .row-odd td
+{
+  background-color: #ffffee;
+}
+
+.admin .object .list .row-even td,
+.admin .object .edit .row-even td
+{
+  background-color: #eeeeee;
+}
+
+.admin .object .list .object .first
+{
+  border-left: 1px solid silver;  
+}
+
+.admin .object .list .object td.last
+{
+  border-right: 1px solid silver;  
+}
+
+.admin .object .list table
+{
+  border-bottom: 1px solid silver;
+}
+
+.admin .object .edit table
+{
+  border-spacing: 0;
+  background-color: #e0e0e0;
+  border: 1px solid silver;
+}
+
+.admin .object .edit .header .title
+{
+  text-transform: uppercase;
+  padding: 3px;
+}
+
+.admin .object .edit td.label
+{
+  vertical-align: top;
+  padding-top: 4px;
+  padding-left: 8px;
+  padding-right: 5px;
+}
+
+.admin .object .edit .buttons
+{
+  margin-top: 8px;
+}
+
+.admin .object .edit .field
+{
+  padding-left: 3px;  
+}
+
+.admin .object .edit .row-odd td
+{
+  background-color: #e0e0e0;
+}
+
+.admin .object .edit .row-even td
+{
+  background-color: #e0e0e0;
+}
+---
+File: mason/comps/end.mc
+Mode: 33200
 Type: masoncomps
 Lines: 4
 
@@ -739,8 +747,8 @@ Lines: 4
 
 </html>
 ---
-File: comps/error_box.mc
-Mode: 33188
+File: mason/comps/error_box.mc
+Mode: 33200
 Type: masoncomps
 Lines: 5
 
@@ -750,29 +758,16 @@ $ARGS{'title'} ||= 'error';
 $ARGS{'icon'}  ||= '!';
 </%init>
 ---
-File: comps/footer.mc
-Mode: 33188
+File: mason/comps/footer.mc
+Mode: 33264
 Type: masoncomps
-Lines: 15
+Lines: 2
 
 <!-- /footer.mc -->
-</div>
-% # if(defined $layout && $layout ne 'none')
-% # {
-% #   $m->comp("/layout/$layout/end.mc", %ARGS);
-% # }
-<div id="footer">Copyright &copy; Cambridge Interactive Development 1998-<% $Year %>.</div>
-
 <& '/end.mc', %ARGS &>
-<%args>
-$layout => 'standard'
-</%args>
-<%once>
-my $Year = (localtime(time))[5] + 1900;
-</%once>
 ---
-File: comps/head.mc
-Mode: 33188
+File: mason/comps/head.mc
+Mode: 33200
 Type: masoncomps
 Lines: 15
 
@@ -792,40 +787,16 @@ $script_comp => '/script.mc'
 $no_title_prefix => 0
 </%args>
 ---
-File: comps/header.mc
-Mode: 33188
+File: mason/comps/header.mc
+Mode: 33264
 Type: masoncomps
-Lines: 26
+Lines: 2
 
 <& '/start.mc', %ARGS &>
-<div id="header">
-<table cellpadding="0" cellspacing="0">
-<tr valign="middle">
-<td class="logo" rowspan="2"><a href="<% GVX::G3Admin::WebSite->site_url %>"><img 
-src="/images/gv_logo.gif" width="42" height="42" alt="Grand Virtual" border="0"/></a></td>
-<td class="date">Current Date: <b><% $date %></b></td>
-<td class="title" align="center"><a href="/">Admin Toolbox</a></td>
-<td class="user-info" align="right">Current User: <b><a onclick="var w=window.open(&quot;/user-manage?referer=javascript:window.close()&quot;,&quot;pwd_window&quot;,&quot;center=yes,resizable=yes,width=600,height=590,toolbar=yes,scrollbars=yes&quot;);w.focus();" 
-title="Account Management" href="#"><% $ENV{'REMOTE_USER'} |h %></a></b></td>
-</tr>
-<tr><td colspan="3" class="nav"><% GVX::G3Admin::WebSite->navigation_html %></td></tr>
-</table>
-% #if(defined $layout && $layout ne 'none')
-% #{
-% #  $m->comp("/layout/$layout/start.mc", %ARGS);
-% #}
-</div>
-<div id="body">
 <!-- end /header.mc -->
-<%args>
-$layout => 'standard'
-</%args>
-<%init>
-my $date = DateTime->now(time_zone => 'local')->strftime('%A %B %d, %Y');
-</%init>
 ---
-File: comps/message_box.mc
-Mode: 33188
+File: mason/comps/message_box.mc
+Mode: 33200
 Type: masoncomps
 Lines: 31
 
@@ -861,8 +832,23 @@ unless(length $icon > 1 || length $icon == 0)
 }
 </%init>
 ---
-File: comps/number_line.mc
-Mode: 33188
+File: mason/comps/messages.mc
+Mode: 33264
+Type: masoncomps
+Lines: 9
+
+<!-- start /admin/messages.mc -->
+% $m->comp('/error_box.mc', message => $error)  if($error);
+% $m->comp('/message_box.mc', message => $message)  if($message);
+% $m->print('<br/>')  if($error || $message);
+<!-- end /admin/messages.mc -->
+<%args>
+$error   => undef
+$message => undef
+</%args>
+---
+File: mason/comps/number_line.mc
+Mode: 33264
 Type: masoncomps
 Lines: 127
 
@@ -940,7 +926,7 @@ for(my $i = $start; $i <= $end; $i++)
 }
 
 $line .= ' ... '  if($line_set < $line_sets);
-
+ 
 unless($flat)
 {
   if($line_set < $line_sets)
@@ -994,8 +980,8 @@ $nodiv => 0
 $flat  => 0
 </%args>
 ---
-File: comps/pages_nav.mc
-Mode: 33188
+File: mason/comps/pages_nav.mc
+Mode: 33264
 Type: masoncomps
 Lines: 30
 
@@ -1007,7 +993,7 @@ Lines: 30
 </div>
 % }
 <%args>
-$uri       => Rose::URI->new(GVX::G3Admin::WebSite->requested_uri_with_query)
+$uri       => Rose::URI->new(Rose::WebSite->requested_uri_with_query)
 $page      => 1
 $max_pages => 15
 $flat      => 1
@@ -1030,52 +1016,215 @@ my $num2 = $page * $per_page;
 $num2 = $total  if($num2 > $total);
 </%init>
 ---
-File: comps/script.mc
-Mode: 33188
+File: mason/comps/rose/webapp/example/crud/form/edit.mc
+Mode: 33264
 Type: masoncomps
-Lines: 7
+Lines: 62
+
+<!-- start /rose/webapp/example/crud/form/edit.mc -->
+<div class="edit">
+<% $form->start_html %>
+
+% if($form->is_edit_form)
+% {
+%   foreach my $column ($object->meta->primary_key_columns, $form->hidden_field_names)
+%   {
+<% $form->field($column)->hidden_field->xhtml_field %>
+%   }
+% }
+
+<table class="form">
+<tr class="header">
+<td colspan="2" class="title">
+% if($object)
+% {
+Edit <% $object_name |h %> <% $id_string |h %>
+% }
+% else
+% {
+New <% $object_name |h %>
+% }
+</td></tr>
+%
+% my $i = 0;
+%
+% foreach my $field ($form->fields)
+% {
+%   my $name = $field->name;
+%   next  if($pk{$name} || $hide{$name} || $field->isa('Rose::HTML::Form::Field::Submit'));
+<tr class="row-<% $i++ % 2 ? 'odd' : 'even' %>">
+<td class="label"><% $field->xhtml_label %></td>
+<td class="field"><% $field->xhtml %></td>
+</tr>
+% }
+</table>
+
+<div class="buttons">
+% if($object)
+% {
+<% $form->field('update_button')->xhtml_field %>
+% }
+% else
+% {
+<% $form->field('create_button')->xhtml_field %>
+% }
+</div>
+
+<% $form->end_html %>
+</div>
+<!-- end /rose/webapp/example/crud/form/edit.mc -->
+<%args>
+$object      => undef
+$object_name => undef
+$id_string   => undef
+</%args>
+<%init>
+my $form = $ARGS{'html_form'};
+my %pk = $object ? (map { $_ => 1 } $object->meta->primary_key_columns) : ();
+my %hide = map { $_ => 1 } $form->hidden_field_names;
+</%init>
+---
+File: mason/comps/rose/webapp/example/crud/form/new.mc
+Mode: 33264
+Type: masoncomps
+Lines: 3
+
+<!-- start /rose/webapp/example/crud/form/new.mc -->
+<& '/rose/webapp/example/crud/form/edit.mc', form_type => 'new', %ARGS &>
+<!-- end /rose/webapp/example/crud/form/new.mc -->
+---
+File: mason/comps/rose/webapp/example/crud/form/search.mc
+Mode: 33264
+Type: masoncomps
+Lines: 92
+
+<!-- start /rose/webapp/example/crud/form/search.mc -->
+<div class="search">
+<% $form->start_html %>
+
+<table class="form">
+<%perl>
+foreach my $row (@$rows)
+{
+  $m->print("<tr>\n");
+
+  foreach my $item (@$row)
+  {
+    my $started = 0;
+    
+    foreach my $field (ref $item ? @$item : $item)
+    {
+      my $label_td = '';
+      my $field_td = '';
+  
+      if(ref $field eq 'HASH')
+      {
+        if(ref $field->{'label_td_attrs'})
+        {
+          $label_td = join(' ', map { "$_=$field->{'label_td_attrs'}{$_}" } 
+                               keys %{$field->{'label_td_attrs'}});
+        }
+  
+        if(ref $field->{'field_td_attrs'})
+        {
+          $field_td = join(' ', map { "$_=$field->{'field_td_attrs'}{$_}" } 
+                               keys %{$field->{'field_td_attrs'}});
+        }
+  
+        $field = $field->{'name'};
+      }
+
+      if($form->field($field)->label)
+      {
+        if($started)
+        {
+          $m->print(' ', $form->field($field)->xhtml_label);
+        }
+        else
+        {
+          $m->print('<td ', $label_td, 'class="label">',
+                    $form->field($field)->xhtml_label,
+                    "</td>\n");
+        }
+      }
+  
+      if($started)
+      {
+        $m->print(' ', $form->field($field)->xhtml);
+      }
+      else
+      {
+        $m->print('<td ', $field_td, 'class="field">',
+                  $form->field($field)->xhtml);
+      }
+      
+      $started++;
+    }
+    
+    $m->print("</td>\n");
+  }
+
+  $m->print("</tr>\n");
+}
+</%perl>
+</table>
+
+<% $form->end_html %>
+</div>
+<!-- end /rose/webapp/example/crud/form/search.mc -->
+<%args>
+$rows => undef
+</%args>
+<%init>
+my $form = $ARGS{'html_form'};
+
+unless($rows)
+{
+  my @columns = $form->search_columns;
+
+  while(@columns)
+  {
+    push(@$rows, [ grep { defined } shift(@columns), shift(@columns) ]);
+  }
+  
+  push(@$rows, [ 'sort',  [ 'per_page', 'list_button' ] ]);
+}
+</%init>
+---
+File: mason/comps/script.mc
+Mode: 33264
+Type: masoncomps
+Lines: 6
 
 <!-- start /script.mc -->
-<% join("\n", map { qq(<script type="text/javascript" src="$_"></script>) } 
-              '/admin/scripts/navigation.js', @script) %>
+<% join("\n", map { qq(<script type="text/javascript" src="$_"></script>) } @script) %>
 <!-- end /script.mc -->
 <%args>
 @script => ()
 </%args>
 ---
-File: comps/start.mc
-Mode: 33188
+File: mason/comps/start.mc
+Mode: 33264
 Type: masoncomps
-Lines: 18
+Lines: 8
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <& $head_comp, %ARGS &>
-<body<% $body_html %>>
+<body>
 <!-- end /start.mc -->
 <%args>
 $head_comp => '/head.mc'
 </%args>
-<%init>
-my $body_html = '';
-
-if(exists $ARGS{'body'})
-{
-  my $body = $ARGS{'body'};
-  $body_html = ' ' . join(' ', map { qq($_=") . Apache::Util::escape_html($body->{$_}) . '"' }
-                               keys(%$body));
-}
-</%init>
 ---
-File: comps/style.mc
-Mode: 33188
+File: mason/comps/style.mc
+Mode: 33264
 Type: masoncomps
 Lines: 6
 
 <!-- start /style.mc -->
-<% join("\n", map { qq(<link rel="stylesheet" type="text/css" href="$_"/>) } '/admin/style/admin.css', @style) %>
+<% join("\n", map { qq(<link rel="stylesheet" type="text/css" href="$_"/>) } '/style/admin.css', @style) %>
 <!-- end /style.mc -->
 <%args>
 @style => ()
 </%args>
-
