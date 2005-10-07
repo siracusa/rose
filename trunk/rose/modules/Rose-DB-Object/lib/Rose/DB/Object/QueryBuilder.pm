@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.051';
+our $VERSION = '0.052';
 
 our $Debug = 0;
 
@@ -58,6 +58,7 @@ sub build_select
   my $pretty      = exists $args{'pretty'} ? $args{'pretty'} : $Debug;
   my $joins       = $args{'joins'};
   my $set         = delete $args{'set'};
+  my $table_map   = delete $args{'table_map'} || {};
 
   $logic = " $logic"  unless($logic eq ',');
 
@@ -184,19 +185,21 @@ sub build_select
 
     foreach my $column (@{$columns->{$table}})
     {
-      my $fq_column    = "$table.$column";
-      my $short_column = "$table_alias.$column";
+      my $fq_column     = "$table.$column";
+      my $short_column  = "$table_alias.$column";
+      my $unique_column = "${table_alias}_$column";
+      my $rel_column    = $table_map->{$table_alias} ?
+        "$table_map->{$table_alias}.$column" : '';
 
       my $method = $obj_meta ? $obj_meta->column_rw_method_name($column) : undef;
 
       push(@select_columns, $multi_table ? 
            "$short_column AS ${table_alias}_$column" : $column);
 
-      foreach my $column_arg (map { ($_, "!$_") } ($column, $fq_column, $short_column, 
+      foreach my $column_arg (grep { $query{$_} } map { ($_, "!$_") } 
+                              ($column, $fq_column, $short_column, $rel_column, $unique_column, 
                               (defined $method && $method ne $column ? $method : ())))
       {
-        next  unless(exists $query{$column_arg});
-
         $not = (index($column_arg, '!') == 0) ? 'NOT' : '';
 
         # Deflate/format values using prototype objects
@@ -230,9 +233,16 @@ sub build_select
 
           if($column_arg eq $column && $column_count{$column} > 1)
           {
-            Carp::croak "Column '$column' is ambiguous; it appears in ",
-                        "$column_count{$column} tables.  Use a fully-qualified ",
-                        "column name instead (e.g., $fq_column or $short_column)";
+            if($args{'no_ambiguous_columns'})
+            {
+              Carp::croak "Column '$column' is ambiguous; it appears in ",
+                          "$column_count{$column} tables.  Use a fully-qualified ",
+                          "column name instead (e.g., $fq_column or $short_column)";
+            }
+            else # unprefixed columns are considered part of t1
+            {
+              next  unless($table_alias eq 't1');
+            }
           }
 
           my $sql_column = $multi_table ? $short_column : $column;
@@ -911,6 +921,10 @@ A L<Rose::DB::Object> method name for an object fronting one of the tables being
 This indicates the negation of the specified condition.
 
 =back
+
+Un-prefixed column or method names that are ambiguous (i.e., exist in more than one of the tables being queried) are considered to be part of the primary table ("t1").
+
+Finally, in the case of apparently intractable ambiguity, like when a table name is the same as another table's alias, remember that you can always use the "tn_"-prefixed column name aliases, which are unique within a given query.
 
 All of these clauses are joined by C<logic> (default: "AND") in the final query.  Example:
 
