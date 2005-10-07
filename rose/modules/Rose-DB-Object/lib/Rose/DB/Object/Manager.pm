@@ -271,7 +271,7 @@ sub get_objects
   my $skip_first      = delete $args{'skip_first'} || 0;
   my $distinct        = delete $args{'distinct'};
   my $fetch           = delete $args{'fetch_only'};
-  my %fetch;
+  my(%fetch, %rel_name);
 
   my $db  = delete $args{'db'} || $object_class->init_db;
   my $dbh = delete $args{'dbh'};
@@ -487,7 +487,7 @@ sub get_objects
         $meta{$ft_class} = $ft_meta;
 
         push(@tables, $ft_meta->fq_table_sql);
-        push(@table_names, $ft_meta->table);
+        push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
         push(@classes, $ft_class);
 
         # Iterator will be the tN value: the first sub-table is t2, and so on
@@ -597,7 +597,7 @@ sub get_objects
         $meta{$map_class} = $map_meta;
 
         push(@tables, $map_meta->fq_table_sql);
-        push(@table_names, $map_meta->table);
+        push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
         push(@classes, $map_class);
 
         $columns{$tables[-1]} = []; #$map_meta->columns;#_names;
@@ -659,7 +659,7 @@ sub get_objects
           or Carp::confess "$ft_class - Missing key columns for '$map_to'";
 
         push(@tables, $ft_meta->fq_table_sql);
-        push(@table_names, $ft_meta->table);
+        push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
         push(@classes, $ft_class);
 
         $columns{$tables[-1]} = $ft_meta->columns;#_names;
@@ -737,13 +737,18 @@ sub get_objects
   {
     foreach my $i (1 .. $#tables) # skip first table, which is always selected
     {
-      unless($fetch{'t' . ($i + 1)} || $fetch{$tables[$i]} || $fetch{$table_names[$i]})
+      my $tn = 't' . ($i + 1);
+      my $rel_name = $rel_name{$tn} || '';
+
+      unless($fetch{$tn} || $fetch{$tables[$i]} || $fetch{$table_names[$i]} || $fetch{$rel_name})
       {
         $columns{$tables[$i]} = [];
         $methods{$tables[$i]} = [];
       }
     }
   }
+
+  $args{'table_map'} = \%rel_name;
 
   if($count_only)
   {
@@ -823,20 +828,40 @@ sub get_objects
     return $count;
   }
 
-  # Alter sort_by SQL, replacing table names with aliases.  This is to
-  # prevent databases like Postgres from "adding missing FROM clause"s.
-  # See: http://sql-info.de/postgresql/postgres-gotchas.html#1_5
-  if((my $sort = $args{'sort_by'}) && $num_subtables > 0)
+  if(my $sort_by = $args{'sort_by'})
   {
-    my $i = 0;
-
-    foreach my $table (@tables)
+    # Alter sort_by SQL, replacing table and relationship names with aliases.
+    # This is to prevent databases like Postgres from "adding missing FROM
+    # clause"s.  See: http://sql-info.de/postgresql/postgres-gotchas.html#1_5
+    if($num_subtables > 0)
     {
-      $i++; # Table aliases are 1-based            
-      $sort =~ s/\b$table\./t$i./g;
+      my $i = 0;
+      $sort_by = [ $sort_by ]  unless(ref $sort_by);
+  
+      foreach my $table (@tables)
+      {
+        $i++; # Table aliases are 1-based
+        
+        foreach my $sort (@$sort_by)
+        {
+          $sort =~ s/\b$table\./t$i./g;
+
+          if(my $rel_name = $rel_name{"t$i"})
+          {
+            $sort =~ s/\b$rel_name\./t$i./g;
+          }
+        }
+      }
+    }
+    else # otherwise, trim t1. prefixes
+    {
+      foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
+      {
+        $sort =~ s/\bt1\.//g;
+      }
     }
 
-    $args{'sort_by'} = $sort;
+    $args{'sort_by'} = $sort_by;
   }
 
   if(defined $args{'offset'})
@@ -1913,8 +1938,11 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
         # "products" table is t1, "categories" is t2, and "code_names"
         # is t3.  You can read more about automatic table aliasing in
         # the documentation for the get_objects() method below.
+        #
+        # "category.name" and "categories.name" would work too, since
+        # table and relationship names are also valid prefixes.
 
-        't1.name'   => { like => [ '%foo%', '%bar%' ] },
+        't2.name'   => { like => [ '%foo%', '%bar%' ] },
       ],
       sort_by => 'category_id, start_date DESC',
       limit   => 100,
@@ -2119,13 +2147,13 @@ If set to any kind of true value, then the "DISTINCT" SQL keyword will be added 
 
 If set to a simple scalar value that is true, then only the columns in the primary table ("t1") are fetched from the database.
 
-If set to a reference to an array of table names or "tN" table aliases, then only the columns from those tables will be fetched.  Columns from the primary table ("t1") are always selected, regardless of whether or not it appears in the list.
+If set to a reference to an array of table names, "tN" table aliases, or relationship or foreign key names, then only the columns from the corresponding tables will be fetched.  In the case of relationships that involve more than one table, only the "most distant" table is considered.  (e.g., The map table is ignored in a "many to many" relationship.)  Columns from the primary table ("t1") are always selected, regardless of whether or not it appears in the list.
 
 This parameter conflicts with the C<fetch_only> parameter in the case where both provide a list of table names or aliases.  In this case, if the value of the C<distinct> parameter is also reference to an array table names or aliases, then a fatal error will occur.
 
 =item C<fetch_only [ARRAYREF]>
 
-ARRAYREF should be a reference to an array of table names or "tN" table aliases. Only the columns from those tables will be fetched.  Columns from the primary table ("t1") are always selected, regardless of whether or not it appears in the list.
+ARRAYREF should be a reference to an array of table names or "tN" table aliases. Only the columns from the corresponding tables will be fetched.  In the case of relationships that involve more than one table, only the "most distant" table is considered.  (e.g., The map table is ignored in a "many to many" relationship.)  Columns from the primary table ("t1") are always selected, regardless of whether or not it appears in the list.
 
 This parameter conflicts with the C<distinct> parameter in the case where both provide a list of table names or aliases.  In this case, then a fatal error will occur.
 
@@ -2163,6 +2191,12 @@ B<Note:> the C<require_objects> list currently cannot be used to simultaneously 
 
 If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it is constructed.  Defaults to true.
 
+=item B<sort_by CLAUSE | ARRAYREF>
+
+A fully formed SQL "ORDER BY ..." clause, sans the words "ORDER BY", or a reference to an array of strings to be joined with a comma and appended to the "ORDER BY" clause.
+
+Within each string, any instance of "NAME." will be replaced with the appropriate "tN." table alias, where NAME is a table, foreign key, or relationship name.
+
 =item C<with_objects OBJECTS>
 
 Also fetch sub-objects (if any) associated with rows in the primary table, where OBJECTS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>," "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>," and  "L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany>".
@@ -2180,6 +2214,8 @@ B<Note:> the C<with_objects> list currently cannot be used to simultaneously fet
 The query parameters, passed as a reference to an array of name/value pairs.  These PARAMS are used to formulate the "where" clause of the SQL query that, in turn, is used to fetch the objects from the database.  Arbitrarily nested boolean logic is supported.
 
 For the complete list of valid parameter names and values, see the documentation for the C<query> parameter of the L<build_select|Rose::DB::Object::QueryBuilder/build_select> function in the L<Rose::DB::Object::QueryBuilder> module.
+
+This class also supports a useful extension to the query syntax supported by L<Rose::DB::Object::QueryBuilder>.  In addition to table names and aliases, column names may be prefixed with foreign key or relationship names as well.
 
 =back
 

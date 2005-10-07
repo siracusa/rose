@@ -1,3 +1,12 @@
+0.077 (10.07.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added "distinct" and "fetch_only" manager parameters.
+    * Added support for foreign key and relationship names as
+      column prefixes in manager query parameters and sort_by
+      arguments.
+    * Changed manager and query builder to default unprefixed
+      ambiguous columns to belong to the primary table ("t1").
+
 0.076 (10.05.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed a bug that caused incorrect counts in get_objects_count()
