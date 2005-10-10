@@ -47,8 +47,7 @@ __END__
 
 =head1 NAME
 
-Rose::HTML::Form::Field::RadioButton - Object representation of a single radio button
-field in an HTML form.
+Rose::HTML::Form::Field::RadioButton - Object representation of a single radio button field in an HTML form.
 
 =head1 SYNOPSIS
 
@@ -68,13 +67,9 @@ field in an HTML form.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Form::Field::RadioButton> is an object representation of a single
-radio button field in an HTML form.
+L<Rose::HTML::Form::Field::RadioButton> is an object representation of a single radio button field in an HTML form.
 
-This class inherits from, and follows the conventions of,
-L<Rose::HTML::Form::Field>. Inherited methods that are not overridden will not
-be documented a second time here.  See the L<Rose::HTML::Form::Field>
-documentation for more information.
+This class inherits from, and follows the conventions of, L<Rose::HTML::Form::Field>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::HTML::Form::Field> documentation for more information.
 
 =head1 HTML ATTRIBUTES
 
@@ -130,9 +125,7 @@ Boolean attributes:
 
 =item B<new PARAMS>
 
-Constructs a new L<Rose::HTML::Form::Field::RadioButton> object based on PARAMS,
-where PARAMS are name/value pairs.  Any object method is a valid parameter
-name.
+Constructs a new L<Rose::HTML::Form::Field::RadioButton> object based on PARAMS, where PARAMS are name/value pairs.  Any object method is a valid parameter name.
 
 =back
 
@@ -142,14 +135,11 @@ name.
 
 =item B<checked [BOOL]>
 
-Check or uncheck the radio button by passing a boolean value.  If BOOL is true,
-the radio button will be checked. If it is false, it will be unchecked. Returns
-true if the radio button is checked, false otherwise.
+Check or uncheck the radio button by passing a boolean value.  If BOOL is true, the radio button will be checked. If it is false, it will be unchecked. Returns true if the radio button is checked, false otherwise.
 
 =item B<html_radio_button>
 
-Returns the HTML serialization of the radio button field only (i.e., without any
-label or error message)
+Returns the HTML serialization of the radio button field only (i.e., without any label or error message)
 
 =item B<is_checked>
 
@@ -157,8 +147,7 @@ Returns true if the radio button is checked, false otherwise.
 
 =item B<is_on>
 
-Simply calls L<is_checked()|/is_checked>.  This method exists for API uniformity between
-radio buttons and checkboxes.
+Simply calls L<is_checked()|/is_checked>.  This method exists for API uniformity between radio buttons and checkboxes.
 
 =item B<value [VALUE]>
 
@@ -166,8 +155,7 @@ Gets or sets the value of the "value" HTML attribute.
 
 =item B<xhtml_radio_button>
 
-Returns the XHTML serialization of the radio button field only (i.e., without any
-label or error message)
+Returns the XHTML serialization of the radio button field only (i.e., without any label or error message)
 
 =back
 
@@ -177,6 +165,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

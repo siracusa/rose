@@ -135,16 +135,9 @@ Rose::HTML::Image - Object representation of the "img" HTML tag.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Image> is an object representation of the E<lt>imgE<gt> HTML
-tag. It includes the ability to automatically fill in the "width" and "height"
-HTML attributes with the correct values, provided it is given enough
-information to find the actual image file on disk.  The L<Image::Size> module
-is used to read the file and determine the correct dimensions.
+L<Rose::HTML::Image> is an object representation of the E<lt>imgE<gt> HTML tag. It includes the ability to automatically fill in the "width" and "height" HTML attributes with the correct values, provided it is given enough information to find the actual image file on disk.  The L<Image::Size> module is used to read the file and determine the correct dimensions.
 
-This class inherits from, and follows the conventions of,
-L<Rose::HTML::Object>. Inherited methods that are not overridden will not be
-documented a second time here.  See the L<Rose::HTML::Object> documentation
-for more information.
+This class inherits from, and follows the conventions of, L<Rose::HTML::Object>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::HTML::Object> documentation for more information.
 
 =head1 HTML ATTRIBUTES
 
@@ -191,8 +184,7 @@ Boolean attributes:
 
 =item B<new PARAMS>
 
-Constructs a new L<Rose::HTML::Image> object based on PARAMS, where PARAMS are
-name/value pairs.  Any object method is a valid parameter name.
+Constructs a new L<Rose::HTML::Image> object based on PARAMS, where PARAMS are name/value pairs.  Any object method is a valid parameter name.
 
 =back
 
@@ -202,33 +194,21 @@ name/value pairs.  Any object method is a valid parameter name.
 
 =item B<document_root [PATH]>
 
-Get or set the web site document root.  This is combined with the value of the
-"src" HTML attribute to build the path to the actual image file on disk. If
-running in a mod_perl environment, the document root defaults to the value
-returned by:
+Get or set the web site document root.  This is combined with the value of the "src" HTML attribute to build the path to the actual image file on disk. If running in a mod_perl environment, the document root defaults to the value returned by:
 
     Apache->request->document_root
 
-This call is made once for each L<Rose::HTML::Image> object that needs to use
-the document root.
+This call is made once for each L<Rose::HTML::Image> object that needs to use the document root.
 
 =item B<init_size [PATH]>
 
-Try to set the "width" and "height" HTML attributes but using L<Image::Size>
-to read the image file on disk.  If a PATH argument is passed, the image file
-is read at that location.  Otherwise, if the L<path()|/path> attribute is set, that
-path is used.  Failing that, the width and height HTML attributes are simply
-not modified.
+Try to set the "width" and "height" HTML attributes but using L<Image::Size> to read the image file on disk.  If a PATH argument is passed, the image file is read at that location.  Otherwise, if the L<path()|/path> attribute is set, that path is used.  Failing that, the width and height HTML attributes are simply not modified.
 
 =item B<path [PATH]>
 
 Get or set the path to the image file on disk.
 
-If a PATH argument is passed and L<document_root()|/document_root> is defined, then PATH has
-L<document_root()|/document_root> removed from the front of it (substitution anchored at the
-start of PATH) and the resulting string is set as the value of the "src" HTML
-attribute.  Regardless of the value of L<document_root()|/document_root>, L<init_size()|/init_size> is
-called in an attempt to set the "height" and "width" HTML attributes.
+If a PATH argument is passed and L<document_root()|/document_root> is defined, then PATH has L<document_root()|/document_root> removed from the front of it (substitution anchored at the start of PATH) and the resulting string is set as the value of the "src" HTML attribute.  Regardless of the value of L<document_root()|/document_root>, L<init_size()|/init_size> is called in an attempt to set the "height" and "width" HTML attributes.
 
 The current value of the C<path> object attribute is returned.
 
@@ -236,10 +216,7 @@ The current value of the C<path> object attribute is returned.
 
 Get or set the value of the "src" HTML attribute.
 
-If a SRC argument is passed and a file is found at the path specified by SRC,
-then L<path()|/path> is set to SRC.  Otherwise, L<path()|/path> is set to the
-concatenation of L<document_root()|/document_root> and SRC.  In either case, L<init_size()|/init_size>
-is called in an attempt to set the "height" and "width" HTML attributes.
+If a SRC argument is passed and a file is found at the path specified by SRC, then L<path()|/path> is set to SRC.  Otherwise, L<path()|/path> is set to the concatenation of L<document_root()|/document_root> and SRC.  In either case, L<init_size()|/init_size> is called in an attempt to set the "height" and "width" HTML attributes.
 
 The current value of the "src" HTML attribute is returned.
 
@@ -251,6 +228,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

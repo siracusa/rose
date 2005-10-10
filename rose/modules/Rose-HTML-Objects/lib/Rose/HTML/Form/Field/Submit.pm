@@ -72,8 +72,7 @@ __END__
 
 =head1 NAME
 
-Rose::HTML::Form::Field::Submit - Object representation of a submit button
-in an HTML form.
+Rose::HTML::Form::Field::Submit - Object representation of a submit button in an HTML form.
 
 =head1 SYNOPSIS
 
@@ -91,13 +90,9 @@ in an HTML form.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Form::Field::Submit> is an object representation of a submit
-button in an HTML form.
+L<Rose::HTML::Form::Field::Submit> is an object representation of a submit button in an HTML form.
 
-This class inherits from, and follows the conventions of,
-L<Rose::HTML::Form::Field>. Inherited methods that are not overridden will not
-be documented a second time here.  See the L<Rose::HTML::Form::Field>
-documentation for more information.
+This class inherits from, and follows the conventions of, L<Rose::HTML::Form::Field>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::HTML::Form::Field> documentation for more information.
 
 =head1 HTML ATTRIBUTES
 
@@ -158,9 +153,7 @@ Boolean attributes:
 
 =item B<new PARAMS>
 
-Constructs a new L<Rose::HTML::Form::Field::Submit> object based on PARAMS,
-where PARAMS are name/value pairs.  Any object method is a valid parameter
-name.
+Constructs a new L<Rose::HTML::Form::Field::Submit> object based on PARAMS, where PARAMS are name/value pairs.  Any object method is a valid parameter name.
 
 =back
 
@@ -170,13 +163,9 @@ name.
 
 =item B<image_html [ARGS]>
 
-Returns the HTML serialization of the submit button using an image instead of
-a standard button widget (in other words, type="image").   ARGS is a list of
-HTML attribute name/value pairs which are temporarily set, then backed out
-before the method returns.  (The type="image" change is also backed out.)
+Returns the HTML serialization of the submit button using an image instead of a standard button widget (in other words, type="image").   ARGS is a list of HTML attribute name/value pairs which are temporarily set, then backed out before the method returns.  (The type="image" change is also backed out.)
 
-The "src" HTML attribute must be set (either in ARGS or from an existing value
-for that attribute) or a fatal error will occur.
+The "src" HTML attribute must be set (either in ARGS or from an existing value for that attribute) or a fatal error will occur.
 
 =item B<image_xhtml [ARGS]>
 
@@ -194,6 +183,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

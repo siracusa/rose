@@ -78,8 +78,7 @@ Rose::HTML::Form::Field::Time::Hours - Text field that only accepts valid hours.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Form::Field::Time::Hours> is a subclass of
-L<Rose::HTML::Form::Field::Text> that only accepts valid hours.  It supports normal (0-12) and military (0-23) time.  The behavior is toggled via the L<military|/military> object method.  Leading zeros are optional.
+L<Rose::HTML::Form::Field::Time::Hours> is a subclass of L<Rose::HTML::Form::Field::Text> that only accepts valid hours.  It supports normal (0-12) and military (0-23) time.  The behavior is toggled via the L<military|/military> object method.  Leading zeros are optional.
 
 =head1 OBJECT METHODS
 
@@ -97,6 +96,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

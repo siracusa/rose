@@ -49,14 +49,11 @@ sub inflate_value
 
 1;
 
-
 __END__
 
 =head1 NAME
 
-Rose::HTML::Form::Field::PhoneNumber::US - Text field that accepts only input
-that contains exactly 10 digits, and coerces valid input into US phone numbers
-in the form: 123-456-7890
+Rose::HTML::Form::Field::PhoneNumber::US - Text field that accepts only input that contains exactly 10 digits, and coerces valid input into US phone numbers in the form: 123-456-7890
 
 =head1 SYNOPSIS
 
@@ -80,16 +77,9 @@ in the form: 123-456-7890
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Form::Field::PhoneNumber::US> is a subclass of
-L<Rose::HTML::Form::Field::Text> that only allows values that contain exactly
-10 digits, which it coerces into the form "123-456-7890".  It overrides the
-L<validate()|Rose::HTML::Form::Field/validate> and L<inflate_value()|Rose::HTML::Form::Field/inflate_value>, and L<deflate_value()|Rose::HTML::Form::Field/deflate_value> methods of its
-parent class.
+L<Rose::HTML::Form::Field::PhoneNumber::US> is a subclass of L<Rose::HTML::Form::Field::Text> that only allows values that contain exactly 10 digits, which it coerces into the form "123-456-7890".  It overrides the L<validate()|Rose::HTML::Form::Field/validate> and L<inflate_value()|Rose::HTML::Form::Field/inflate_value>, and L<deflate_value()|Rose::HTML::Form::Field/deflate_value> methods of its parent class.
 
-This is a good example of a custom field class that constrains the kinds of
-inputs that it accepts and coerces all valid input and output to a particular
-format.  See L<Rose::HTML::Form::Field::Time> for another example, and a list
-of more complex examples.
+This is a good example of a custom field class that constrains the kinds of inputs that it accepts and coerces all valid input and output to a particular format.  See L<Rose::HTML::Form::Field::Time> for another example, and a list of more complex examples.
 
 =head1 AUTHOR
 
@@ -97,6 +87,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

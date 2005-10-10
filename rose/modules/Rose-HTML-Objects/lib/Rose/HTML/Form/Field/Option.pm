@@ -58,8 +58,7 @@ __END__
 
 =head1 NAME
 
-Rose::HTML::Form::Field::Option - Object representation of the
-"option" HTML tag.
+Rose::HTML::Form::Field::Option - Object representation of the "option" HTML tag.
 
 =head1 SYNOPSIS
 
@@ -76,13 +75,9 @@ Rose::HTML::Form::Field::Option - Object representation of the
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Form::Field::Option> is an object representation of a single
-option in a pop-up menu or select box in an HTML form.
+L<Rose::HTML::Form::Field::Option> is an object representation of a single option in a pop-up menu or select box in an HTML form.
 
-This class inherits from, and follows the conventions of,
-L<Rose::HTML::Form::Field>. Inherited methods that are not overridden will not
-be documented a second time here.  See the L<Rose::HTML::Form::Field>
-documentation for more information.
+This class inherits from, and follows the conventions of, L<Rose::HTML::Form::Field>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::HTML::Form::Field> documentation for more information.
 
 =head1 HTML ATTRIBUTES
 
@@ -145,9 +140,7 @@ Boolean attributes:
 
 =item B<new PARAMS>
 
-Constructs a new L<Rose::HTML::Form::Field::Option> object based on PARAMS,
-where PARAMS are name/value pairs.  Any object method is a valid parameter
-name.
+Constructs a new L<Rose::HTML::Form::Field::Option> object based on PARAMS, where PARAMS are name/value pairs.  Any object method is a valid parameter name.
 
 =back
 
@@ -157,9 +150,7 @@ name.
 
 =item B<short_label [TEXT]>
 
-Get or set the value of the "label" HTML attribute.  When present, user agents
-are supposed to use this value instead of the contents of the option tag as the
-label for the option.  Example:
+Get or set the value of the "label" HTML attribute.  When present, user agents are supposed to use this value instead of the contents of the option tag as the label for the option.  Example:
 
     $field =
       Rose::HTML::Form::Field::Option->new(
@@ -193,6 +184,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

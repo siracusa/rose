@@ -115,8 +115,7 @@ __END__
 
 =head1 NAME
 
-Rose::HTML::Form::Field::DateTime::Split::MonthDayYear - Compound field for
-dates with separate text fields for month, day, and year.
+Rose::HTML::Form::Field::DateTime::Split::MonthDayYear - Compound field for dates with separate text fields for month, day, and year.
 
 =head1 SYNOPSIS
 
@@ -148,28 +147,15 @@ dates with separate text fields for month, day, and year.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Form::Field::DateTime::Split::MonthDayYear> a compound field for
-dates with separate text fields for month, day, and year.
+L<Rose::HTML::Form::Field::DateTime::Split::MonthDayYear> a compound field for dates with separate text fields for month, day, and year.
 
-This class inherits (indirectly) from both L<Rose::HTML::Form::Field::DateTime>
-and L<Rose::HTML::Form::Field::Compound>.  This doesn't quite work out as
-expected without a bit of tweaking.  We'd like L<inflate_value()|Rose::HTML::Form::Field/inflate_value> and
-L<validate()|Rose::HTML::Form::Field/validate> methods to be inherited from L<Rose::HTML::Form::Field::DateTime>,
-but everything else to be inherited from
-L<Rose::HTML::Form::Field::Compound>.
+This class inherits (indirectly) from both L<Rose::HTML::Form::Field::DateTime> and L<Rose::HTML::Form::Field::Compound>.  This doesn't quite work out as expected without a bit of tweaking.  We'd like L<inflate_value()|Rose::HTML::Form::Field/inflate_value> and L<validate()|Rose::HTML::Form::Field/validate> methods to be inherited from L<Rose::HTML::Form::Field::DateTime>, but everything else to be inherited from L<Rose::HTML::Form::Field::Compound>.
 
-To solve this problem, there's an intermediate class that imports the correct
-set of methods.  This class then inherits from the intermediate class.  This
-works, and isolates the tricky bits to a single intermediate class, but it
-also demonstrates the problems that can crop up when multiple inheritance is
-combined with a strong aversion to code duplication.
+To solve this problem, there's an intermediate class that imports the correct set of methods.  This class then inherits from the intermediate class.  This works, and isolates the tricky bits to a single intermediate class, but it also demonstrates the problems that can crop up when multiple inheritance is combined with a strong aversion to code duplication.
 
-Inheritence shenanigans aside, this class is a good example of a compound field
-that also provides an "inflated" internal value (a L<DateTime> object).
+Inheritence shenanigans aside, this class is a good example of a compound field that also provides an "inflated" internal value (a L<DateTime> object).
 
-It is important that this class (indirectly) inherits from
-L<Rose::HTML::Form::Field::Compound>. See the
-L<Rose::HTML::Form::Field::Compound> documentation for more information.
+It is important that this class (indirectly) inherits from L<Rose::HTML::Form::Field::Compound>. See the L<Rose::HTML::Form::Field::Compound> documentation for more information.
 
 =head1 OBJECT METHODS
 
@@ -177,19 +163,15 @@ L<Rose::HTML::Form::Field::Compound> documentation for more information.
 
 =item B<date_parser [PARSER]>
 
-Get or set the date parser object.  This object must include a C<parse_datetime()>
-method that takes a single string as an argument and returns a L<DateTime>
-object, or undef if parsing fails.
+Get or set the date parser object.  This object must include a C<parse_datetime()> method that takes a single string as an argument and returns a L<DateTime> object, or undef if parsing fails.
 
-If the parser object has an C<error()> method, it will be called to set the
-error message after a failed parsing attempt.
+If the parser object has an C<error()> method, it will be called to set the error message after a failed parsing attempt.
 
 The parser object defaults to L<Rose::DateTime::Parser-E<gt>new()|Rose::DateTime::Parser/new>.
 
 =item B<time_zone [TZ]>
 
-If the parser object has a L<time_zone()|/time_zone> method, this method simply calls it,
-passing all arguments.  Otherwise, undef is returned.
+If the parser object has a L<time_zone()|/time_zone> method, this method simply calls it, passing all arguments.  Otherwise, undef is returned.
 
 =back
 
@@ -221,8 +203,7 @@ A simple compound field that coalesces multiple subfields into a single value.
 
 =item L<Rose::HTML::Form::Field::DateTime::Split::MDYHMS>
 
-A compound field that includes other compound fields and uses inflate/deflate 
-convert input from multiple subfields into a L<DateTime> object.
+A compound field that includes other compound fields and uses inflate/deflate convert input from multiple subfields into a L<DateTime> object.
 
 =back
 
@@ -232,6 +213,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

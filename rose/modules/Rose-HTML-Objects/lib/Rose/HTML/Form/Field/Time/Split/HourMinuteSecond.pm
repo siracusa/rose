@@ -118,9 +118,7 @@ __END__
 
 =head1 NAME
 
-Rose::HTML::Form::Field::Time::Split::HourMinuteSecond - Compound field for
-times with separate text fields for hour, minute, and second, and a pop-up
-menu for selecting AM or PM.
+Rose::HTML::Form::Field::Time::Split::HourMinuteSecond - Compound field for times with separate text fields for hour, minute, and second, and a pop-up menu for selecting AM or PM.
 
 =head1 SYNOPSIS
 
@@ -151,35 +149,17 @@ menu for selecting AM or PM.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Form::Field::Time::Split::HourMinuteSecond> is a compound field
-for times with separate text fields for hour, minute, and second, and a pop-up
-menu for selecting AM or PM.
+L<Rose::HTML::Form::Field::Time::Split::HourMinuteSecond> is a compound field for times with separate text fields for hour, minute, and second, and a pop-up menu for selecting AM or PM.
 
-This class inherits (indirectly) from both L<Rose::HTML::Form::Field::Time>
-and L<Rose::HTML::Form::Field::Compound>.  This doesn't quite work out as
-expected without a bit of tweaking.  We'd like L<inflate_value()|Rose::HTML::Form::Field/inflate_value> and
-L<validate()|Rose::HTML::Form::Field/validate> methods to be inherited from L<Rose::HTML::Form::Field::Time>,
-but everything else to be inherited from
-L<Rose::HTML::Form::Field::Compound>.
+This class inherits (indirectly) from both L<Rose::HTML::Form::Field::Time> and L<Rose::HTML::Form::Field::Compound>.  This doesn't quite work out as expected without a bit of tweaking.  We'd like L<inflate_value()|Rose::HTML::Form::Field/inflate_value> and L<validate()|Rose::HTML::Form::Field/validate> methods to be inherited from L<Rose::HTML::Form::Field::Time>, but everything else to be inherited from L<Rose::HTML::Form::Field::Compound>.
 
-To solve this problem, there's an intermediate class that imports the correct
-set of methods.  This class then inherits from the intermediate class.  To
-solve this problem, there's an intermediate class that imports the correct set
-of methods.  This class then inherits from the intermediate class.  This
-works, and isolates the tricky bits to a single intermediate class, but it
-also demonstrates the problems that can crop up when multiple inheritance is
-combined with a strong aversion to code duplication.
+To solve this problem, there's an intermediate class that imports the correct set of methods.  This class then inherits from the intermediate class.  To solve this problem, there's an intermediate class that imports the correct set of methods.  This class then inherits from the intermediate class.  This works, and isolates the tricky bits to a single intermediate class, but it also demonstrates the problems that can crop up when multiple inheritance is combined with a strong aversion to code duplication.
 
-A simpler example of a compound field can be found in
-L<Rose::HTML::Form::Field::PhoneNumber::US::Split>.  It too uses multiple
-inheritance, but its family tree is more conveniently built, saving it from
-selective method importing shenanigans.
+A simpler example of a compound field can be found in L<Rose::HTML::Form::Field::PhoneNumber::US::Split>.  It too uses multiple inheritance, but its family tree is more conveniently built, saving it from selective method importing shenanigans.
 
 This field also overrides the C<is_full()|Rose::HTML::Form::Field::Compound/is_full> method.  A valid time can be extracted from the field as long as both the hour and AM/PM subfields are not empty.  All other empty fields will be treated as if they contained zeros (00).
 
-It is important that this class (indirectly) inherits from
-L<Rose::HTML::Form::Field::Compound>. See the
-L<Rose::HTML::Form::Field::Compound> documentation for more information.
+It is important that this class (indirectly) inherits from L<Rose::HTML::Form::Field::Compound>. See the L<Rose::HTML::Form::Field::Compound> documentation for more information.
 
 =head1 AUTHOR
 
@@ -187,6 +167,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

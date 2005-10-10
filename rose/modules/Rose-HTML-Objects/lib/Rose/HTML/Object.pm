@@ -620,124 +620,69 @@ Rose::HTML::Object - HTML object base class.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Object> is the base class for HTML objects.  It defines
-the HTML element name, provides methods for specifying, manipulating,
-and validating HTML attributes, and can serialize itself as either HTML
-or XHTML.
+L<Rose::HTML::Object> is the base class for HTML objects.  It defines the HTML element name, provides methods for specifying, manipulating, and validating HTML attributes, and can serialize itself as either HTML or XHTML.
 
-This class inherits from, and follows the conventions of, L<Rose::Object>.
-See the L<Rose::Object> documentation for more information.
+This class inherits from, and follows the conventions of, L<Rose::Object>. See the L<Rose::Object> documentation for more information.
 
 =head1 VALIDATION
 
-Although several methods, data structures, and policies exist to aid the
-creation of valid HTML, they are in no way a replacement for real markup
-validation.
+Although several methods, data structures, and policies exist to aid the creation of valid HTML, they are in no way a replacement for real markup validation.
 
-This class and those that inherit from it try to support a superset of the
-elements and attributes specified in the HTML 4.01 and XHTML 1.x
-specifications.  As a result, these classes will tend to be more permissive
-than actual validation.  The support of these standards is not exhaustive, and
-will inevitably expand.  Also remember that there are several variant DTDs
-that make up XHTML 1.x.  By trying to support a superset of these standards,
-this class simply can't correctly enforce the rules of any individual
-standard. 
+This class and those that inherit from it try to support a superset of the elements and attributes specified in the HTML 4.01 and XHTML 1.x specifications.  As a result, these classes will tend to be more permissive than actual validation.  The support of these standards is not exhaustive, and will inevitably expand.  Also remember that there are several variant DTDs that make up XHTML 1.x.  By trying to support a superset of these standards, this class simply can't correctly enforce the rules of any individual standard.
 
-So I say again: these classes are not a replacement for real markup
-validation! Use an external validator!
+So I say again: these classes are not a replacement for real markup validation! Use an external validator!
 
-Going forward, the compatibility policy of these classes is that attribute
-specifications may be added in the future, but existing attribute
-specifications will never be removed (unless they originally existed in error,
-i.e., were never part of any HTML 4.01 or XHTML 1.x standard).  
+Going forward, the compatibility policy of these classes is that attribute specifications may be added in the future, but existing attribute specifications will never be removed (unless they originally existed in error, i.e., were never part of any HTML 4.01 or XHTML 1.x standard).
 
-This support policy is pragmatic rather than ideological.  There is enough
-default validation to catch most typos or other unintentional errors, but not
-so much that the entire class hierarchy is weighed down by language lawyering
-and bookkeeping.
+This support policy is pragmatic rather than ideological.  There is enough default validation to catch most typos or other unintentional errors, but not so much that the entire class hierarchy is weighed down by language lawyering and bookkeeping.
 
-If the runtime overhead of validating every HTML attribute is deemed too
-onerous, it can be turned off on a per-object basis with the
-L<validate_html_attrs()|/validate_html_attrs> method.   Subclasses can set this attribute during
-object construction to make the effect class-wide.  (You will also want to
-look at the L<autoload_html_attr_methods()|/autoload_html_attr_methods> class attribute.)
+If the runtime overhead of validating every HTML attribute is deemed too onerous, it can be turned off on a per-object basis with the L<validate_html_attrs()|/validate_html_attrs> method.   Subclasses can set this attribute during object construction to make the effect class-wide.  (You will also want to look at the L<autoload_html_attr_methods()|/autoload_html_attr_methods> class attribute.)
 
-There are also methods for adding and removing valid, required, and boolean
-HTML attributes for a class.
+There are also methods for adding and removing valid, required, and boolean HTML attributes for a class.
 
-Finally, all element and attribute names are case-sensitive and lowercase in
-order to comply with XHTML (and to be easy to type).
+Finally, all element and attribute names are case-sensitive and lowercase in order to comply with XHTML (and to be easy to type).
 
 =head1 CLASS METHODS
 
-These class methods can be called with a class name or an object as the
-invocant.  Either way, remember that the data structures and attributes
-affected are part of the class as a whole, not any individual object.  For
-example, adding a valid HTML attribute makes it valid for all objects of the
-class, including any objects that already exist.
+These class methods can be called with a class name or an object as the invocant.  Either way, remember that the data structures and attributes affected are part of the class as a whole, not any individual object.  For example, adding a valid HTML attribute makes it valid for all objects of the class, including any objects that already exist.
 
-Many of the class methods manipulate "inheritable sets" or "inherited
-sets." See the L<Rose::Class::MakeMethods::Set> documentation for an
-explanation off these method types.
+Many of the class methods manipulate "inheritable sets" or "inherited sets." See the L<Rose::Class::MakeMethods::Set> documentation for an explanation off these method types.
 
-The sets of valid and boolean HTML attributes are "inherited sets."  The
-set of required HTML attributes is an "inheritable set."
+The sets of valid and boolean HTML attributes are "inherited sets."  The set of required HTML attributes is an "inheritable set."
 
-The inheritance behavior of these sets is noted here in order to facilitate
-subclassing.  But it is an implementation detail, not a part of the public
-API.  The requirements of the APIs themselves do not include any particular
-inheritance behavior.
+The inheritance behavior of these sets is noted here in order to facilitate subclassing.  But it is an implementation detail, not a part of the public API.  The requirements of the APIs themselves do not include any particular inheritance behavior.
 
 =over 4
 
 =item B<add_boolean_html_attr NAME>
 
-Adds a value to the list of boolean HTML attributes for this class. Boolean
-HTML attributes appear without values in HTML tags, (e.g., <dl compact>) or
-with fixed values in XHTML tags (e.g., <dl compact="compact">)
+Adds a value to the list of boolean HTML attributes for this class. Boolean HTML attributes appear without values in HTML tags, (e.g., <dl compact>) or with fixed values in XHTML tags (e.g., <dl compact="compact">)
 
 =item B<add_boolean_html_attrs NAME1, NAME2, ...>
 
-Adds one or more values to the list of boolean HTML attributes for this class.
-Boolean HTML attributes appear without values in HTML tags, (e.g., <dl
-compact>) or with fixed values in XHTML tags (e.g., <dl compact="compact">)
+Adds one or more values to the list of boolean HTML attributes for this class. Boolean HTML attributes appear without values in HTML tags, (e.g., <dl compact>) or with fixed values in XHTML tags (e.g., <dl compact="compact">)
 
 =item B<add_required_html_attr NAME [, DEFAULT]>
 
-Adds a value to the list of required HTML attributes for this class. Required
-HTML attributes will always appear in the HTML tag, with or without a
-non-empty value. You can set the default value for a required HTML attribute
-using the L<required_html_attr_value()|/required_html_attr_value> method or by passing the DEFAULT
-parameter to this method.
+Adds a value to the list of required HTML attributes for this class. Required HTML attributes will always appear in the HTML tag, with or without a non-empty value. You can set the default value for a required HTML attribute using the L<required_html_attr_value()|/required_html_attr_value> method or by passing the DEFAULT parameter to this method.
 
 =item B<add_required_html_attrs NAME1, NAME2, ... | HASHREF>
 
-Adds one or more values to the list of required HTML attributes for this
-class. Required HTML attributes will always appear in the HTML tag, with or
-without a non-empty value.  You can set the default value for a required HTML
-attribute using the L<required_html_attr_value()|/required_html_attr_value> method or by passing a
-reference to a hash containing name/default pairs.
+Adds one or more values to the list of required HTML attributes for this class. Required HTML attributes will always appear in the HTML tag, with or without a non-empty value.  You can set the default value for a required HTML attribute using the L<required_html_attr_value()|/required_html_attr_value> method or by passing a reference to a hash containing name/default pairs.
 
 =item B<add_valid_html_attr NAME>
 
-Adds a value to the list of valid HTML attributes for this class.  If the
-object property C<validate_html_attrs> is true, then only valid attributes can
-be added to an object of this class.
+Adds a value to the list of valid HTML attributes for this class.  If the object property C<validate_html_attrs> is true, then only valid attributes can be added to an object of this class.
 
 =item B<add_valid_html_attrs NAME1, NAME2, ...>
 
-Adds one or more values to the list of valid HTML attributes for this class. 
-If the object property C<validate_html_attrs> is true, then only valid
-attributes can be added to an object of this class.
+Adds one or more values to the list of valid HTML attributes for this class. If the object property C<validate_html_attrs> is true, then only valid attributes can be added to an object of this class.
 
 =item B<autoload_html_attr_methods [BOOL]>
 
-Get or set the boolean flag that determines whether or not any valid HTML
-attribute can be used as a method call of the same name.  The default is
-true, and the value is inherited by subclasses unless overridden.
+Get or set the boolean flag that determines whether or not any valid HTML attribute can be used as a method call of the same name.  The default is true, and the value is inherited by subclasses unless overridden.
 
-In the case of a name conflict, the existing method is called and a new
-method is not auto-created for the HTML attribute of the same name.
+In the case of a name conflict, the existing method is called and a new method is not auto-created for the HTML attribute of the same name.
 
 Examples:
 
@@ -763,35 +708,21 @@ Examples:
     # the HTML attribute named "error"
     $o->error(99);
 
-Yes, the existence of this capability means that adding a method to a future
-version of a L<Rose::HTML::Object>-derived class that has the same name as a
-valid HTML attribute may cause older code that calls the auto-created method
-of the same name to break.
+Yes, the existence of this capability means that adding a method to a future version of a L<Rose::HTML::Object>-derived class that has the same name as a valid HTML attribute may cause older code that calls the auto-created method of the same name to break.
 
-You have a few options.  You can simply choose not to use any auto-created
-methods, opting instead to use L<html_attr()|/html_attr> everywhere (and you can set
-C<autoload_html_attr_methods> to false to make sure that you don't
-accidentally use such a method).  Or you can simply trust that I will not add
-new methods with the same names as existing valid HTML attributes.  Since I
-use auto-created methods extensively, you can have some faith that I will 
-do everything I can to avoid breaking my own code.
+You have a few options.  You can simply choose not to use any auto-created methods, opting instead to use L<html_attr()|/html_attr> everywhere (and you can set C<autoload_html_attr_methods> to false to make sure that you don't accidentally use such a method).  Or you can simply trust that I will not add new methods with the same names as existing valid HTML attributes.  Since I use auto-created methods extensively, you can have some faith that I will do everything I can to avoid breaking my own code.
 
 =item B<boolean_html_attrs>
 
-Returns a reference to a sorted list of boolean HTML attributes in scalar
-context, or a sorted list of boolean HTML attributes in list context. The
-default set of boolean HTML attributes is empty.
+Returns a reference to a sorted list of boolean HTML attributes in scalar context, or a sorted list of boolean HTML attributes in list context. The default set of boolean HTML attributes is empty.
 
-See the introduction to the L<"CLASS METHODS"> section for more information
-about the "inherited set" implementation used by the set of boolean HTML
-attributes.
+See the introduction to the L<"CLASS METHODS"> section for more information about the "inherited set" implementation used by the set of boolean HTML attributes.
 
 =item B<default_html_attr_value NAME [, VALUE]>
 
 Returns the default value for the HTML attribute NAME.
 
-If passed both an attribute NAME and a VALUE, it adds NAME to the set of
-required HTML attributes and sets its default value to VALUE.
+If passed both an attribute NAME and a VALUE, it adds NAME to the set of required HTML attributes and sets its default value to VALUE.
 
 =item B<delete_boolean_html_attr NAME>
 
@@ -803,48 +734,33 @@ Removes the HTML attribute NAME from the set of required HTML attributes.
 
 =item B<delete_valid_html_attr NAME>
 
-Removes the HTML attribute NAME from the set of valid HTML attributes. The
-attribute is also removed from the set of required and boolean HTML
-attributes, if it existed in either set.
+Removes the HTML attribute NAME from the set of valid HTML attributes. The attribute is also removed from the set of required and boolean HTML attributes, if it existed in either set.
 
 =item B<html_attr_is_boolean NAME>
 
-Returns a boolean value indicating whether or not the attribute NAME is a
-boolean HTML attribute.  A boolean attribute must also be a valid attribute.
+Returns a boolean value indicating whether or not the attribute NAME is a boolean HTML attribute.  A boolean attribute must also be a valid attribute.
 
 =item B<html_attr_is_required NAME>
 
-Returns a boolean value indicating whether or not the attribute NAME is a
-required HTML attribute.  A required attribute must also be a valid attribute.
+Returns a boolean value indicating whether or not the attribute NAME is a required HTML attribute.  A required attribute must also be a valid attribute.
 
 =item B<html_attr_is_valid NAME>
 
-Returns a boolean value indicating whether or not the attribute NAME is a
-valid HTML attribute.
+Returns a boolean value indicating whether or not the attribute NAME is a valid HTML attribute.
 
 =item B<html_element [NAME]>
 
-Get or set the name of the HTML element.  The HTML element is the
-name of the tag, e.g. "img", "p", "a", "select", "textarea", etc.
+Get or set the name of the HTML element.  The HTML element is the name of the tag, e.g. "img", "p", "a", "select", "textarea", etc.
 
-This attribute may be read-only in subclasses, but is read/write here for
-increased flexibility.  The value is inherited by subclasses.
+This attribute may be read-only in subclasses, but is read/write here for increased flexibility.  The value is inherited by subclasses.
 
 =item B<required_html_attrs>
 
-Returns a reference to a sorted list of required HTML attributes in scalar
-context, or a sorted list of required HTML attributes in list context. The
-default set of required HTML attributes is empty.
+Returns a reference to a sorted list of required HTML attributes in scalar context, or a sorted list of required HTML attributes in list context. The default set of required HTML attributes is empty.
 
-Required HTML attributes are included in the strings generated by
-L<html_attrs_string()|/html_attrs_string> and L<xhtml_attrs_string()|/xhtml_attrs_string> even if they have been
-deleted by L<delete_html_attr()|/delete_html_attr> or one of its variants.  If a required HTML
-attribute does not have a default value, its value defaults to an empty string
-or, if the attribute is also boolean, the name of the attribute.
+Required HTML attributes are included in the strings generated by L<html_attrs_string()|/html_attrs_string> and L<xhtml_attrs_string()|/xhtml_attrs_string> even if they have been deleted by L<delete_html_attr()|/delete_html_attr> or one of its variants.  If a required HTML attribute does not have a default value, its value defaults to an empty string or, if the attribute is also boolean, the name of the attribute.
 
-See the introduction to the L<"CLASS METHODS"> section for more information
-about the "inheritable set" implementation used by the set of boolean HTML
-attributes.
+See the introduction to the L<"CLASS METHODS"> section for more information about the "inheritable set" implementation used by the set of boolean HTML attributes.
 
 =item B<required_html_attr_value ATTR [, VALUE]>
 
@@ -852,9 +768,7 @@ Get or set the default value of the required HTML attrbute ATTR.  If both ATTR a
 
 =item B<valid_html_attrs>
 
-Returns a reference to a sorted list of valid HTML attributes in scalar
-context, or a sorted list of valid HTML attributes in list context.  The
-default set is:
+Returns a reference to a sorted list of valid HTML attributes in scalar context, or a sorted list of valid HTML attributes in list context.  The default set is:
 
     id
     class
@@ -874,18 +788,13 @@ default set is:
     onkeydown
     onkeyup
 
-See the L<"VALIDATION"> section for more on the philosophy and policy of
-validation.  See the introduction to the L<"CLASS METHODS"> section for more
-information about the "inherited set" implementation used by the set of valid
-HTML attributes.
+See the L<"VALIDATION"> section for more on the philosophy and policy of validation.  See the introduction to the L<"CLASS METHODS"> section for more information about the "inherited set" implementation used by the set of valid HTML attributes.
 
 =item B<xhtml_element [NAME]>
 
-Get or set the name of the XHTML element.  The XHTML element is the
-name of the tag, e.g. "img", "p", "a", "select", "textarea", etc.
+Get or set the name of the XHTML element.  The XHTML element is the name of the tag, e.g. "img", "p", "a", "select", "textarea", etc.
 
-This attribute may be read-only in subclasses, but is read/write here for
-increased flexibility.  The value is inherited by subclasses.
+This attribute may be read-only in subclasses, but is read/write here for increased flexibility.  The value is inherited by subclasses.
 
 =back
 
@@ -895,8 +804,7 @@ increased flexibility.  The value is inherited by subclasses.
 
 =item B<new PARAMS>
 
-Constructs a new L<Rose::HTML::Object> object based on PARAMS, where 
-PARAMS are name/value pairs.  Any object method is a valid parameter name.
+Constructs a new L<Rose::HTML::Object> object based on PARAMS, where PARAMS are name/value pairs.  Any object method is a valid parameter name.
 
 =back
 
@@ -914,8 +822,7 @@ Clears the HTML attribute NAME by settings its value to undef.
 
 =item B<clear_html_attrs NAME1, NAME2, ...>
 
-Clears the HTML attributes specified by NAME1, NAME2, etc. by settings their
-values to undef.
+Clears the HTML attributes specified by NAME1, NAME2, etc. by settings their values to undef.
 
 =item B<delete_all_html_attrs>
 
@@ -935,12 +842,7 @@ Get or set an error string.
 
 =item B<escape_html [BOOL]>
 
-This flag may be used by other methods to decide whether or not to escape
-HTML.  It is set to true by default.  The only method in L<Rose::HTML::Object>
-that references it is C<html_error>.  All other HTML is escaped as appropriate
-regardless of the C<escape_html> setting (e.g. the text returned by
-C<html_attrs_string> always has its attribute values escaped).  Subclasses may
-consult this flag for similar purposes (which they must document, of course).
+This flag may be used by other methods to decide whether or not to escape HTML.  It is set to true by default.  The only method in L<Rose::HTML::Object> that references it is C<html_error>.  All other HTML is escaped as appropriate regardless of the C<escape_html> setting (e.g. the text returned by C<html_attrs_string> always has its attribute values escaped).  Subclasses may consult this flag for similar purposes (which they must document, of course).
 
 =item B<html>
 
@@ -948,9 +850,7 @@ A synonym for L<html_tag()|/html_tag>.
 
 =item B<html_attr NAME [, VALUE]>
 
-Get or set the HTML attribute NAME.  If just NAME is passed, it returns the
-value of the HTML attribute specified by NAME, or undef if there is no such
-attribute.
+Get or set the HTML attribute NAME.  If just NAME is passed, it returns the value of the HTML attribute specified by NAME, or undef if there is no such attribute.
 
 If both NAME and VALUE are passed, it sets the HTML attribute NAME to VALUE.
 
@@ -963,18 +863,11 @@ Examples:
 
 =item B<html_attrs [ATTRS]>
 
-If called with an argument, this method sets and/or adds the HTML attributes
-specified by ATTRS, where ATTRS is a series of name/value pairs or a reference
-to a hash of name/value pairs.
+If called with an argument, this method sets and/or adds the HTML attributes specified by ATTRS, where ATTRS is a series of name/value pairs or a reference to a hash of name/value pairs.
 
-Returns all of the existing HTML attributes as a hash (in list context) or a
-reference to a hash (in scalar context).
+Returns all of the existing HTML attributes as a hash (in list context) or a reference to a hash (in scalar context).
 
-Note that the reference returned in scalar context is a reference to the
-object's actual hash of attributes; modifying it will change the state of the
-object!  I recommend that you treat the contents of the referenced hash as
-read-only, and I cannot promise that I will not find a way to force it to be
-read-only in the future.
+Note that the reference returned in scalar context is a reference to the object's actual hash of attributes; modifying it will change the state of the object!  I recommend that you treat the contents of the referenced hash as read-only, and I cannot promise that I will not find a way to force it to be read-only in the future.
 
 The order of the attributes in the return value is indeterminate.
 
@@ -989,9 +882,7 @@ Examples:
 
 =item B<html_attrs_string>
 
-If there are any HTML attributes, it returns a sorted list of HTML attributes
-and their values in a string suitable for use in an HTML tag.  The string
-includes a leading space.
+If there are any HTML attributes, it returns a sorted list of HTML attributes and their values in a string suitable for use in an HTML tag.  The string includes a leading space.
 
 If there are no HTML attributes, an empty string is returned.
 
@@ -1008,22 +899,15 @@ Examples:
 
 =item B<html_attr_hook NAME [, CODE]>
 
-If called with two arguments, it sets the hook method for the attribute NAME
-to the code reference CODE.
+If called with two arguments, it sets the hook method for the attribute NAME to the code reference CODE.
 
-If called with one or two arguments, it returns the hook method for the HTML
-attribute NAME as a code reference, or undef if there is no hook method.
+If called with one or two arguments, it returns the hook method for the HTML attribute NAME as a code reference, or undef if there is no hook method.
 
-Hook methods are called whenever their corresponding HTML attribute is set or
-retrieved.  When the attribute is set, the hook method gets the proposed value
-of the attribute as an argument.  The return value of the hook method is then
-used as the actual value of the attribute.
+Hook methods are called whenever their corresponding HTML attribute is set or retrieved.  When the attribute is set, the hook method gets the proposed value of the attribute as an argument.  The return value of the hook method is then used as the actual value of the attribute.
 
-When an attribute is retrieved, the hook method is called with no arguments,
-and its return value is what is actually returned to the caller.
+When an attribute is retrieved, the hook method is called with no arguments, and its return value is what is actually returned to the caller.
 
-In both cases, the default variable C<$_> is localized and then set to the new
-or existing value of the attribute before the hook method is called.
+In both cases, the default variable C<$_> is localized and then set to the new or existing value of the attribute before the hook method is called.
 
 Examples:
 
@@ -1050,21 +934,15 @@ Returns the error text, if any, as a snippet of HTML that looks like this:
 
     <span class="error">Error text goes here</span>
 
-If the C<escape_html> flag is set to true (the default), then the error text
-has any HTML in it escaped.
+If the C<escape_html> flag is set to true (the default), then the error text has any HTML in it escaped.
 
 =item B<html_tag>
 
-Serializes the object as an HTML tag.  In other words, it is the concatenation
-of the strings returned by L<html_element()|/html_element> and L<html_attrs_string()|/html_attrs_string>,
-wrapped with the appropriate angled brackets.
+Serializes the object as an HTML tag.  In other words, it is the concatenation of the strings returned by L<html_element()|/html_element> and L<html_attrs_string()|/html_attrs_string>, wrapped with the appropriate angled brackets.
 
 =item B<validate_html_attrs BOOL>
 
-If set to true, HTML attribute arguments to C<html_attr> and
-C<html_attr_hook> will be validated by calling C<html_attr_is_valid(ATTR)>,
-where ATTR is the name of the attribute being set or read.  The default
-value is true.
+If set to true, HTML attribute arguments to C<html_attr> and C<html_attr_hook> will be validated by calling C<html_attr_is_valid(ATTR)>, where ATTR is the name of the attribute being set or read.  The default value is true.
 
 =item B<xhtml>
 
@@ -1072,16 +950,11 @@ A synonym for L<xhtml_tag()|/xhtml_tag>.
 
 =item B<xhtml_tag>
 
-Serializes the object as an XHTML tag.  In other words, it is the
-concatenation of the strings returned by L<xhtml_element()|/xhtml_element> and
-L<xhtml_attrs_string()|/xhtml_attrs_string>, wrapped with the appropriate angled brackets and
-forward slash character.
+Serializes the object as an XHTML tag.  In other words, it is the concatenation of the strings returned by L<xhtml_element()|/xhtml_element> and L<xhtml_attrs_string()|/xhtml_attrs_string>, wrapped with the appropriate angled brackets and forward slash character.
 
 =item B<xhtml_attrs_string>
 
-If there are any HTML attributes, it returns a sorted list of HTML attributes
-and their values in a string suitable for use in an XHTML tag.  The string
-includes a leading space.
+If there are any HTML attributes, it returns a sorted list of HTML attributes and their values in a string suitable for use in an XHTML tag.  The string includes a leading space.
 
 If there are no HTML attributes, an empty string is returned.
 
@@ -1099,12 +972,20 @@ Examples:
 
 =back
 
+=head1 SUPPORT
+
+Any L<Rose::HTML::Objects> questions or problems can be posted to the L<Rose::HTML::Objects> mailing list.  To subscribe to the list or view the archives, go here:
+
+L<http://lists.sourceforge.net/lists/listinfo/rose-html-objects>
+
+Although the mailing list is the preferred support mechanism, you can also email the author (see below) or file bugs using the CPAN bug tracking system:
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-HTML-Objects>
+
 =head1 AUTHOR
 
 John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

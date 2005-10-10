@@ -95,8 +95,7 @@ __END__
 
 =head1 NAME
 
-Rose::HTML::Form::Field::DateTime - Text field that inflates valid dates into
-L<DateTime> objects.
+Rose::HTML::Form::Field::DateTime - Text field that inflates valid dates into L<DateTime> objects.
 
 =head1 SYNOPSIS
 
@@ -126,10 +125,7 @@ L<DateTime> objects.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Form::Field::DateTime> is a subclass of
-L<Rose::HTML::Form::Field::Text> that allows only valid dates as input, which
-it then coerces to L<DateTime> objects. It overrides the L<validate()|Rose::HTML::Form::Field/validate>,
-L<inflate_value()|Rose::HTML::Form::Field/inflate_value>, and L<deflate_value()|Rose::HTML::Form::Field/deflate_value> methods of its parent class.
+L<Rose::HTML::Form::Field::DateTime> is a subclass of L<Rose::HTML::Form::Field::Text> that allows only valid dates as input, which it then coerces to L<DateTime> objects. It overrides the L<validate()|Rose::HTML::Form::Field/validate>, L<inflate_value()|Rose::HTML::Form::Field/inflate_value>, and L<deflate_value()|Rose::HTML::Form::Field/deflate_value> methods of its parent class.
 
 Valid input is converted to the format "YYYY-MM-DD HH:MM:SS AM/PM" on output.
 
@@ -139,12 +135,9 @@ Valid input is converted to the format "YYYY-MM-DD HH:MM:SS AM/PM" on output.
 
 =item B<date_parser [PARSER]>
 
-Get or set the date parser object.  This object must include a C<parse_datetime()>
-method that takes a single string as an argument and returns a L<DateTime>
-object, or undef if parsing fails.
+Get or set the date parser object.  This object must include a C<parse_datetime()> method that takes a single string as an argument and returns a L<DateTime> object, or undef if parsing fails.
 
-If the parser object has an C<error()> method, it will be called to set the
-error message after a failed parsing attempt.
+If the parser object has an C<error()> method, it will be called to set the error message after a failed parsing attempt.
 
 The parser object defaults to L<Rose::DateTime::Parser-E<gt>new()|Rose::DateTime::Parser/new>.
 
@@ -154,8 +147,7 @@ Get or set the format string passed to L<Rose::DateTime::Util>'s L<format_date|R
 
 =item B<time_zone [TZ]>
 
-If the parser object has a L<time_zone()|/time_zone> method, this method simply calls it,
-passing all arguments.  Otherwise, undef is returned.
+If the parser object has a L<time_zone()|/time_zone> method, this method simply calls it, passing all arguments.  Otherwise, undef is returned.
 
 =back
 
@@ -183,13 +175,11 @@ A simple compound field that coalesces multiple subfields into a single value.
 
 =item L<Rose::HTML::Form::Field::DateTime::Split::MonthDayYear>
 
-A compound field that uses inflate/deflate convert input from multiple
-subfields into a L<DateTime> object.
+A compound field that uses inflate/deflate convert input from multiple subfields into a L<DateTime> object.
 
 =item L<Rose::HTML::Form::Field::DateTime::Split::MDYHMS>
 
-A compound field that includes other compound fields and uses inflate/deflate 
-convert input from multiple subfields into a L<DateTime> object.
+A compound field that includes other compound fields and uses inflate/deflate convert input from multiple subfields into a L<DateTime> object.
 
 =back
 
@@ -199,6 +189,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
