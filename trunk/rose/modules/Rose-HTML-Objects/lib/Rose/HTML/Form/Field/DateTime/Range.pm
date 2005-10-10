@@ -274,9 +274,7 @@ The input value can be a reference to an array of L<DateTime> objects, or string
 
 This class is a good example of a compound field whose internal value consists of more than one object.  See L<below|/"SEE ALSO"> for more compound field examples.
 
-It is important that this class inherits from
-L<Rose::HTML::Form::Field::Compound>. See the
-L<Rose::HTML::Form::Field::Compound> documentation for more information.
+It is important that this class inherits from L<Rose::HTML::Form::Field::Compound>. See the L<Rose::HTML::Form::Field::Compound> documentation for more information.
 
 =head1 OBJECT METHODS
 
@@ -342,13 +340,11 @@ A simple compound field that coalesces multiple subfields into a single value.
 
 =item L<Rose::HTML::Form::Field::DateTime::Split::MonthDayYear>
 
-A compound field that uses inflate/deflate convert input from multiple
-subfields into a L<DateTime> object.
+A compound field that uses inflate/deflate convert input from multiple subfields into a L<DateTime> object.
 
 =item L<Rose::HTML::Form::Field::DateTime::Split::MDYHMS>
 
-A compound field that includes other compound fields and uses inflate/deflate 
-convert input from multiple subfields into a L<DateTime> object.
+A compound field that includes other compound fields and uses inflate/deflate convert input from multiple subfields into a L<DateTime> object.
 
 =back
 
@@ -358,6 +354,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

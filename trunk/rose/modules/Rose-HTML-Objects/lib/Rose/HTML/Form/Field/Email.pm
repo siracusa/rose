@@ -36,8 +36,7 @@ __END__
 
 =head1 NAME
 
-Rose::HTML::Form::Field::Email - Text field that only accepts valid email
-addresses.
+Rose::HTML::Form::Field::Email - Text field that only accepts valid email addresses.
 
 =head1 SYNOPSIS
 
@@ -63,15 +62,9 @@ addresses.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Form::Field::Email> is a subclass of
-L<Rose::HTML::Form::Field::Text> that uses L<Email::Valid> to allow only valid
-email addresses as input.  It overrides the L<validate()|Rose::HTML::Form::Field/validate> method of its
-parent class, returning true if the L<internal_value()|Rose::HTML::Form::Field/internal_value> is a valid email
-address, or setting an error message and returning false otherwise.
+L<Rose::HTML::Form::Field::Email> is a subclass of L<Rose::HTML::Form::Field::Text> that uses L<Email::Valid> to allow only valid email addresses as input.  It overrides the L<validate()|Rose::HTML::Form::Field/validate> method of its parent class, returning true if the L<internal_value()|Rose::HTML::Form::Field/internal_value> is a valid email address, or setting an error message and returning false otherwise.
 
-This is a good example of a custom field class that simply constrains the
-kinds of inputs that it accepts, but does not inflate/deflate values or
-aggregate other fields.
+This is a good example of a custom field class that simply constrains the kinds of inputs that it accepts, but does not inflate/deflate values or aggregate other fields.
 
 =head1 SEE ALSO
 
@@ -97,13 +90,11 @@ A simple compound field that coalesces multiple subfields into a single value.
 
 =item L<Rose::HTML::Form::Field::DateTime::Split::MonthDayYear>
 
-A compound field that uses inflate/deflate convert input from multiple
-subfields into a L<DateTime> object.
+A compound field that uses inflate/deflate convert input from multiple subfields into a L<DateTime> object.
 
 =item L<Rose::HTML::Form::Field::DateTime::Split::MDYHMS>
 
-A compound field that includes other compound fields and uses inflate/deflate 
-convert input from multiple subfields into a L<DateTime> object.
+A compound field that includes other compound fields and uses inflate/deflate convert input from multiple subfields into a L<DateTime> object.
 
 =back
 
@@ -113,6 +104,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

@@ -106,8 +106,7 @@ Rose::HTML::Form::Field::Set - Text area that accepts whitespace- or comma-separ
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Form::Field::Set> is a subclass of
-L<Rose::HTML::Form::Field::TextArea> that accepts  whitespace- or comma-separated strings.  Its internal value is a reference to an array of strings, or undef if the input value could not be parsed.
+L<Rose::HTML::Form::Field::Set> is a subclass of L<Rose::HTML::Form::Field::TextArea> that accepts  whitespace- or comma-separated strings.  Its internal value is a reference to an array of strings, or undef if the input value could not be parsed.
 
 Strings with spaces, double quotes, backslashes, or commas must be double-quoted.  Use a backslash character "\" to escape double-quotes within double-quoted strings.  Backslashed escapes in double-quoted strings are interpolated according to Perl's rules.
 
@@ -117,6 +116,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

@@ -57,8 +57,7 @@ Rose::HTML::Form::Field::DateTime::EndDate - Text field for an "end date" in a d
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Form::Field::DateTime::EndDate> is a subclass of
-L<Rose::HTML::Form::Field::DateTime> that pins the time to the very last nanosecond of the specified date (i.e., 23:59:59.999999999) if the time is left unspecified.
+L<Rose::HTML::Form::Field::DateTime::EndDate> is a subclass of L<Rose::HTML::Form::Field::DateTime> that pins the time to the very last nanosecond of the specified date (i.e., 23:59:59.999999999) if the time is left unspecified.
 
 =head1 AUTHOR
 
@@ -66,6 +65,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

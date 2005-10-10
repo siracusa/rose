@@ -41,8 +41,7 @@ Rose::HTML::Form::Field::DateTime::EndDate - Text field for a "start date" in a 
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Form::Field::DateTime::EndDate> is a subclass of
-L<Rose::HTML::Form::Field::DateTime> that pins the time to the very first moment of the specified date (i.e., 00:00:00.00000000) if the time is left unspecified.
+L<Rose::HTML::Form::Field::DateTime::EndDate> is a subclass of L<Rose::HTML::Form::Field::DateTime> that pins the time to the very first moment of the specified date (i.e., 00:00:00.00000000) if the time is left unspecified.
 
 =head1 AUTHOR
 
@@ -50,6 +49,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

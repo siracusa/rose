@@ -100,12 +100,9 @@ Rose::HTML::Util - Utility functions for manipulating HTML.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Util> provides aliases and wrappers for common HTML manipulation
-functions.  When running in a mod_perl 1.x web server environment, Apache's
-C-based functions are used in some cases.
+L<Rose::HTML::Util> provides aliases and wrappers for common HTML manipulation functions.  When running in a mod_perl 1.x web server environment, Apache's C-based functions are used in some cases.
 
-This all may seem silly, but I like to be able to pull these functions from a
-single location and get the fastest possible versions.
+This all may seem silly, but I like to be able to pull these functions from a single location and get the fastest possible versions.
 
 =head1 EXPORTS
 
@@ -133,40 +130,30 @@ Alias for C<HTML::Entities::encode()>
 
 =item B<unescape_html STRING>
 
-When running under mod_perl 1.x, this is an alias for
-C<Apache::Util::unescape_html()>. Otherwise, it's an alias for
-C<HTML::Entities::decode()>.
+When running under mod_perl 1.x, this is an alias for C<Apache::Util::unescape_html()>. Otherwise, it's an alias for C<HTML::Entities::decode()>.
 
 =item B<escape_uri STRING>
 
-This is a wrapper for C<URI::Escape::uri_escape()> that is intended to escape
-entire URIs.  Example:
+This is a wrapper for C<URI::Escape::uri_escape()> that is intended to escape entire URIs.  Example:
 
     $str = 'http://foo.com/bar?baz=1%&blay=foo bar'
     $esc = escape_uri($str);
 
     print $esc; # http://foo.com/bar?baz=1%25&blay=foo%20bar
 
-In other words, it tries to escape all characters that need to be escaped
-in a URI I<except> those characters that are legitimately part of the URI:
-forward slashes, a question mark before the query, etc.  
+In other words, it tries to escape all characters that need to be escaped in a URI I<except> those characters that are legitimately part of the URI: forward slashes, a question mark before the query, etc.
 
-This is the goal of the wrapper, but the implementation may change in order to
-better achieve this goal.  The current implementation escapes all characters
-except those in this set:
+This is the goal of the wrapper, but the implementation may change in order to better achieve this goal.  The current implementation escapes all characters except those in this set:
 
     A-Za-z0-9\-_.,'!~*#?&()/?@:[]=
 
-Note that the URI-escaped string is not HTML-escaped.  In order make a URI
-safe to include in an HTML page, call L<escape_html()|/escape_html> as well:
+Note that the URI-escaped string is not HTML-escaped.  In order make a URI safe to include in an HTML page, call L<escape_html()|/escape_html> as well:
 
     $h = '<a href="' . escape_html(escape_uri($str)) . '">foo</a>';
 
 =item B<escape_uri_component STRING>
 
-When running under mod_perl 1.x, this is an alias for
-C<Apache::Util::escape_uri()>. Otherwise, it's an alias for
-C<URI::Escape::uri_escape()>.
+When running under mod_perl 1.x, this is an alias for C<Apache::Util::escape_uri()>. Otherwise, it's an alias for C<URI::Escape::uri_escape()>.
 
 =item B<encode_entities STRING>
 
@@ -180,6 +167,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

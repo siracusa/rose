@@ -331,8 +331,7 @@ __END__
 
 =head1 NAME
 
-Rose::HTML::Form::Field::Compound - Base class for field objects that contain
-other field objects.
+Rose::HTML::Form::Field::Compound - Base class for field objects that contain other field objects.
 
 =head1 SYNOPSIS
 
@@ -704,6 +703,16 @@ This method is therefore essential for implementing compound fields that need to
 See the source code for  L<Rose::HTML::Form::Field::DateTime::Range>'s L<inflate_value|Rose::HTML::Form::Field::DateTime::Range/inflate_value> method for a real-world usage example of the L<subfield_input_value|/subfield_input_value> method.
 
 =back
+
+=head1 SUPPORT
+
+Any L<Rose::HTML::Objects> questions or problems can be posted to the L<Rose::HTML::Objects> mailing list.  To subscribe to the list or view the archives, go here:
+
+L<http://lists.sourceforge.net/lists/listinfo/rose-html-objects>
+
+Although the mailing list is the preferred support mechanism, you can also email the author (see below) or file bugs using the CPAN bug tracking system:
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-HTML-Objects>
 
 =head1 AUTHOR
 

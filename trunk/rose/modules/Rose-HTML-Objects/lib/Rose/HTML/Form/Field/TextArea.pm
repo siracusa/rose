@@ -49,8 +49,7 @@ __END__
 
 =head1 NAME
 
-Rose::HTML::Form::Field::TextArea - Object representation of a multi-line
-text field in an HTML form.
+Rose::HTML::Form::Field::TextArea - Object representation of a multi-line text field in an HTML form.
 
 =head1 SYNOPSIS
 
@@ -69,13 +68,9 @@ text field in an HTML form.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Form::Field::TextArea> is an object representation of a multi-line
-text field in an HTML form.
+L<Rose::HTML::Form::Field::TextArea> is an object representation of a multi-line text field in an HTML form.
 
-This class inherits from, and follows the conventions of,
-L<Rose::HTML::Form::Field>. Inherited methods that are not overridden will not
-be documented a second time here.  See the L<Rose::HTML::Form::Field>
-documentation for more information.
+This class inherits from, and follows the conventions of, L<Rose::HTML::Form::Field>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::HTML::Form::Field> documentation for more information.
 
 =head1 HTML ATTRIBUTES
 
@@ -128,9 +123,7 @@ Boolean attributes:
 
 =item B<new PARAMS>
 
-Constructs a new L<Rose::HTML::Form::Field::TextArea> object based on PARAMS,
-where PARAMS are name/value pairs.  Any object method is a valid parameter
-name.
+Constructs a new L<Rose::HTML::Form::Field::TextArea> object based on PARAMS, where PARAMS are name/value pairs.  Any object method is a valid parameter name.
 
 =back
 
@@ -140,9 +133,7 @@ name.
 
 =item B<contents [TEXT]>
 
-Get or set the contents of the text area.  If a TEXT argument is present, it
-is passed to L<input_value()|Rose::HTML::Form::Field/input_value> and the return value of that method call is then
-returned. Otherwise, L<output_value()|Rose::HTML::Form::Field/output_value> is called with no arguments.
+Get or set the contents of the text area.  If a TEXT argument is present, it is passed to L<input_value()|Rose::HTML::Form::Field/input_value> and the return value of that method call is then returned. Otherwise, L<output_value()|Rose::HTML::Form::Field/output_value> is called with no arguments.
 
 =item B<value [TEXT]>
 
@@ -156,6 +147,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

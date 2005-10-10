@@ -21,8 +21,7 @@ __END__
 
 =head1 NAME
 
-Rose::HTML::Form::Field::Password - Object representation of a password field
-in an HTML form.
+Rose::HTML::Form::Field::Password - Object representation of a password field in an HTML form.
 
 =head1 SYNOPSIS
 
@@ -41,13 +40,9 @@ in an HTML form.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Form::Field::Password> is an object representation of a password field
-in an HTML form.
+L<Rose::HTML::Form::Field::Password> is an object representation of a password field in an HTML form.
 
-This class inherits from, and follows the conventions of,
-L<Rose::HTML::Form::Field>. Inherited methods that are not overridden will not
-be documented a second time here.  See the L<Rose::HTML::Form::Field>
-documentation for more information.
+This class inherits from, and follows the conventions of, L<Rose::HTML::Form::Field>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::HTML::Form::Field> documentation for more information.
 
 =head1 HTML ATTRIBUTES
 
@@ -105,9 +100,7 @@ Boolean attributes:
 
 =item B<new PARAMS>
 
-Constructs a new L<Rose::HTML::Form::Field::Password> object based on PARAMS,
-where PARAMS are name/value pairs.  Any object method is a valid parameter
-name.
+Constructs a new L<Rose::HTML::Form::Field::Password> object based on PARAMS, where PARAMS are name/value pairs.  Any object method is a valid parameter name.
 
 =back
 
@@ -117,6 +110,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

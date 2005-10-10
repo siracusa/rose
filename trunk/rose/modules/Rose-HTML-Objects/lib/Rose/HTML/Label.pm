@@ -42,14 +42,9 @@ Rose::HTML::Label - Object representation of the "label" HTML tag.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Label> is an object representation of the E<lt>labelE<gt> HTML
-tag.  Yes, there really is a E<lt>labelE<gt> tag in both HTML 4.01 and XHTML
-1.0.  Look it up.
+L<Rose::HTML::Label> is an object representation of the E<lt>labelE<gt> HTML tag.  Yes, there really is a E<lt>labelE<gt> tag in both HTML 4.01 and XHTML 1.0.  Look it up.
 
-This class inherits from, and follows the conventions of,
-L<Rose::HTML::Object>. Inherited methods that are not overridden will not be
-documented a second time here.  See the L<Rose::HTML::Object> documentation
-for more information.
+This class inherits from, and follows the conventions of, L<Rose::HTML::Object>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::HTML::Object> documentation for more information.
 
 =head1 HTML ATTRIBUTES
 
@@ -83,6 +78,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
