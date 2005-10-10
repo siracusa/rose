@@ -135,10 +135,10 @@ Rose::HTML::Image - Object representation of the "img" HTML tag.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Image> is an object representation of the E<lt>imgE<gt> HTML
+L<Rose::HTML::Image> is an object representation of the E<lt>imgE<gt> HTML
 tag. It includes the ability to automatically fill in the "width" and "height"
 HTML attributes with the correct values, provided it is given enough
-information to find the actual image file on disk.  The C<Image::Size> module
+information to find the actual image file on disk.  The L<Image::Size> module
 is used to read the file and determine the correct dimensions.
 
 This class inherits from, and follows the conventions of,
@@ -191,7 +191,7 @@ Boolean attributes:
 
 =item B<new PARAMS>
 
-Constructs a new C<Rose::HTML::Image> object based on PARAMS, where PARAMS are
+Constructs a new L<Rose::HTML::Image> object based on PARAMS, where PARAMS are
 name/value pairs.  Any object method is a valid parameter name.
 
 =back
@@ -209,12 +209,12 @@ returned by:
 
     Apache->request->document_root
 
-This call is made once for each C<Rose::HTML::Image> object that needs to use
+This call is made once for each L<Rose::HTML::Image> object that needs to use
 the document root.
 
 =item B<init_size [PATH]>
 
-Try to set the "width" and "height" HTML attributes but using C<Image::Size>
+Try to set the "width" and "height" HTML attributes but using L<Image::Size>
 to read the image file on disk.  If a PATH argument is passed, the image file
 is read at that location.  Otherwise, if the C<path()> attribute is set, that
 path is used.  Failing that, the width and height HTML attributes are simply

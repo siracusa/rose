@@ -683,7 +683,7 @@ Rose::HTML::Form - HTML form base class.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form> is more than just an object representation of the
+L<Rose::HTML::Form> is more than just an object representation of the
 E<lt>formE<gt> HTML tag.  It is meant to be a base class for custom form
 classes that can be initialized with and return "rich" values such as objects,
 or collections of objects.
@@ -699,7 +699,7 @@ for more information.
 
 =head1 OVERVIEW
 
-C<Rose::HTML::Form> objects are meant to encapsulate an entire HTML form,
+L<Rose::HTML::Form> objects are meant to encapsulate an entire HTML form,
 including all fields within the form. While individual fields may be queried
 and manipulated, the intended purpose of this class is to treat the form as a
 "black box" as much as possible.
@@ -787,7 +787,7 @@ Required attributes (default values in parentheses):
 
 =item B<new PARAMS>
 
-Constructs a new C<Rose::HTML::Form> object based on PARAMS, where PARAMS are
+Constructs a new L<Rose::HTML::Form> object based on PARAMS, where PARAMS are
 name/value pairs.  Any object method is a valid parameter name.
 
 =back
@@ -1153,7 +1153,7 @@ shorter and more clear than my description.  Basically, it does this:
 Use this method as a "helper" when writing your own methods such as
 C<init_with_person()>, as described in the example in the L<OVERVIEW>.
 C<init_with_object()> should be called in the code for subclasses of
-C<Rose::HTML::Form>, but never by an end-user of such classes.
+L<Rose::HTML::Form>, but never by an end-user of such classes.
 
 The convention for naming such methods is "init_with_foo", where "foo" is a
 (lowercase, underscore-separated, please) description of the object (or
@@ -1204,7 +1204,7 @@ alternately be passed as a name/value pair in PARAMS.
 Use this method as a "helper" when writing your own methods such as
 C<person_from_form()>, as described in the example in the L<OVERVIEW>.
 C<object_from_form()> should be called in the code for subclasses of
-C<Rose::HTML::Form>, but never by an end-user of such classes.
+L<Rose::HTML::Form>, but never by an end-user of such classes.
 
 The convention for naming such methods is "foo_from_form", where "foo" is a
 (lowercase, underscore-separated, please) description of the object

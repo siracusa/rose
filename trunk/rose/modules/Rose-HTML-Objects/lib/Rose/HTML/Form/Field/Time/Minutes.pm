@@ -58,7 +58,7 @@ Rose::HTML::Form::Field::Time::Minutes - Text field that only accepts valid minu
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::Time::Minutes> is a subclass of
+L<Rose::HTML::Form::Field::Time::Minutes> is a subclass of
 L<Rose::HTML::Form::Field::Text> that only accepts valid minutes: numbers between 0 and 59, inclusive, with or without leading zeros.
 
 =head1 AUTHOR

@@ -151,7 +151,7 @@ menu for selecting AM or PM.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::Time::Split::HourMinuteSecond> is a compound field
+L<Rose::HTML::Form::Field::Time::Split::HourMinuteSecond> is a compound field
 for times with separate text fields for hour, minute, and second, and a pop-up
 menu for selecting AM or PM.
 

@@ -148,7 +148,7 @@ dates with separate text fields for month, day, and year.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::DateTime::Split::MonthDayYear> a compound field for
+L<Rose::HTML::Form::Field::DateTime::Split::MonthDayYear> a compound field for
 dates with separate text fields for month, day, and year.
 
 This class inherits (indirectly) from both L<Rose::HTML::Form::Field::DateTime>

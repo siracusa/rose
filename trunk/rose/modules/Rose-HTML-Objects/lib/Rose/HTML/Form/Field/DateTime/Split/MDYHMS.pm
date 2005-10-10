@@ -139,7 +139,7 @@ and second, and a pop-up menu for AM/PM.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::DateTime::Split::MDYHMS> is a compound field for 
+L<Rose::HTML::Form::Field::DateTime::Split::MDYHMS> is a compound field for 
 dates with separate text fields for month, day, year, hour, minute, and
 second, and a pop-up menu for AM/PM.
 

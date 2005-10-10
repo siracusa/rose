@@ -467,7 +467,7 @@ sub create_html_attr_methods
 # 
 # This method is an implementation detail and is not part of the public "user"
 # API. It is described here for the benefit of those who are subclassing
-# C<Rose::HTML::Object> and who also may find themselves in a bit of a multiple
+# L<Rose::HTML::Object> and who also may find themselves in a bit of a multiple
 # inheritence bind.
 # 
 # Example:
@@ -620,7 +620,7 @@ Rose::HTML::Object - HTML object base class.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Object> is the base class for HTML objects.  It defines
+L<Rose::HTML::Object> is the base class for HTML objects.  It defines
 the HTML element name, provides methods for specifying, manipulating,
 and validating HTML attributes, and can serialize itself as either HTML
 or XHTML.
@@ -764,7 +764,7 @@ Examples:
     $o->error(99);
 
 Yes, the existence of this capability means that adding a method to a future
-version of a C<Rose::HTML::Object>-derived class that has the same name as a
+version of a L<Rose::HTML::Object>-derived class that has the same name as a
 valid HTML attribute may cause older code that calls the auto-created method
 of the same name to break.
 
@@ -891,7 +891,7 @@ increased flexibility.  The value is inherited by subclasses.
 
 =item B<new PARAMS>
 
-Constructs a new C<Rose::HTML::Object> object based on PARAMS, where 
+Constructs a new L<Rose::HTML::Object> object based on PARAMS, where 
 PARAMS are name/value pairs.  Any object method is a valid parameter name.
 
 =back
@@ -932,7 +932,7 @@ Get or set an error string.
 =item B<escape_html [BOOL]>
 
 This flag may be used by other methods to decide whether or not to escape
-HTML.  It is set to true by default.  The only method in C<Rose::HTML::Object>
+HTML.  It is set to true by default.  The only method in L<Rose::HTML::Object>
 that references it is C<html_error>.  All other HTML is escaped as appropriate
 regardless of the C<escape_html> setting (e.g. the text returned by
 C<html_attrs_string> always has its attribute values escaped).  Subclasses may
