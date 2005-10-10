@@ -15,4 +15,9 @@ Rose::HTML::Form::Field::Time->import_methods
   'validate',
 );
 
+Rose::HTML::Form::Field::Compound->import_methods
+(
+  'name',
+);
+
 1;

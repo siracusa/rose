@@ -19,7 +19,12 @@ Rose::HTML::Form::Field::PhoneNumber::US->import_methods
   'deflate_value',
 );
 
-our $VERSION = '0.011';
+Rose::HTML::Form::Field::Compound->import_methods
+(
+  'name',
+);
+
+our $VERSION = '0.02';
 
 sub build_field
 {

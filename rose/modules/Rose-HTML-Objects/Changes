@@ -1,3 +1,7 @@
+0.023 (10.09.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed incorrect handling of compound field renaming.
+
 0.022 (08.20.2005) - John Siracusa <siracusa@mindspring.com>
 
     * POD fixes.

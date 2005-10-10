@@ -9,7 +9,7 @@ use Rose::HTML::Form::Field::Text;
 use Rose::HTML::Form::Field::DateTime::Split;
 our @ISA = qw(Rose::HTML::Form::Field::DateTime::Split);
 
-our $VERSION = '0.012';
+our $VERSION = '0.02';
 
 sub build_field
 {
