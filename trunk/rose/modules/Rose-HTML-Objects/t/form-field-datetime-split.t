@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 48;
+use Test::More tests => 50;
 
 BEGIN 
 {
@@ -154,6 +154,44 @@ is($field->xhtml_field,
   qq(<option selected="selected" value="PM">PM</option>\n) .
   '</select></span></span>',
   'mdyhms xhtml_field() 1');
+
+$field->name('when');
+
+is($field->html_field, 
+  '<span class="datetime">' .
+  '<span class="date">' .
+  '<input class="month" maxlength="2" name="when.date.month" size="2" type="text" value="12">/' .
+  '<input class="day" maxlength="2" name="when.date.day" size="2" type="text" value="25">/' .
+  '<input class="year" maxlength="4" name="when.date.year" size="4" type="text" value="1984"></span> ' .
+  '<span class="time">' .
+  '<input class="hour" maxlength="2" name="when.time.hour" size="2" type="text" value="12">:' .
+  '<input class="minute" maxlength="2" name="when.time.minute" size="2" type="text" value="34">:' .
+  '<input class="second" maxlength="2" name="when.time.second" size="2" type="text" value="56">' .
+  qq(<select class="ampm" name="when.time.ampm" size="1">\n) .
+  qq(<option value=""></option>\n) .
+  qq(<option value="AM">AM</option>\n) .
+  qq(<option selected value="PM">PM</option>\n) .
+  '</select></span></span>',
+  'mdyhms html_field() rename 1');
+
+is($field->xhtml_field, 
+  '<span class="datetime">' .
+  '<span class="date">' .
+  '<input class="month" maxlength="2" name="when.date.month" size="2" type="text" value="12" />/' .
+  '<input class="day" maxlength="2" name="when.date.day" size="2" type="text" value="25" />/' .
+  '<input class="year" maxlength="4" name="when.date.year" size="4" type="text" value="1984" /></span> ' .
+  '<span class="time">' .
+  '<input class="hour" maxlength="2" name="when.time.hour" size="2" type="text" value="12" />:' .
+  '<input class="minute" maxlength="2" name="when.time.minute" size="2" type="text" value="34" />:' .
+  '<input class="second" maxlength="2" name="when.time.second" size="2" type="text" value="56" />' .
+  qq(<select class="ampm" name="when.time.ampm" size="1">\n) .
+  qq(<option value=""></option>\n) .
+  qq(<option value="AM">AM</option>\n) .
+  qq(<option selected="selected" value="PM">PM</option>\n) .
+  '</select></span></span>',
+  'mdyhms xhtml_field() rename 1');
+
+$field->name('datetime');
 
 $field->field('datetime.date.month')->class('mm');
 $field->field('datetime.date.day')->class('dd');

@@ -14,7 +14,7 @@ unless($@)
 ## *** WARNING: Ancient version of DateTime detected ***
 ##
 ## You appear to have DateTime version $DateTime::VERSION installed.  This is very old.
-## You should have DateTime version 0.20 at least.  Some way fail unless
+## You should have DateTime version 0.20 at least.  Some tests may fail unless
 ## you upgrade DateTime.  The latest stable version is recommended.
 ##
 ##
@@ -32,7 +32,7 @@ WriteMakefile('NAME'         => 'Rose::HTML::Objects',
                 'Image::Size'    => 0,
                 'Email::Valid'   => 0,
                 'Scalar::Util'   => 0,
-                'Rose::Object'   => 0,
-                'Rose::DateTime' => 0,
-                'Rose::URI'      => 0,
+                'Rose::Object'   => '0.015',
+                'Rose::DateTime' => '0.0133',
+                'Rose::URI'      => '0.021',
               });
