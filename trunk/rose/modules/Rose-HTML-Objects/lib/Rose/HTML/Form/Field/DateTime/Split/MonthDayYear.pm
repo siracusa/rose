@@ -153,8 +153,8 @@ dates with separate text fields for month, day, and year.
 
 This class inherits (indirectly) from both L<Rose::HTML::Form::Field::DateTime>
 and L<Rose::HTML::Form::Field::Compound>.  This doesn't quite work out as
-expected without a bit of tweaking.  We'd like C<inflate_value()> and
-C<validate()> methods to be inherited from L<Rose::HTML::Form::Field::DateTime>,
+expected without a bit of tweaking.  We'd like L<inflate_value()|Rose::HTML::Form::Field/inflate_value> and
+L<validate()|Rose::HTML::Form::Field/validate> methods to be inherited from L<Rose::HTML::Form::Field::DateTime>,
 but everything else to be inherited from
 L<Rose::HTML::Form::Field::Compound>.
 
@@ -165,7 +165,7 @@ also demonstrates the problems that can crop up when multiple inheritance is
 combined with a strong aversion to code duplication.
 
 Inheritence shenanigans aside, this class is a good example of a compound field
-that also provides an "inflated" internal value (a C<DateTime> object).
+that also provides an "inflated" internal value (a L<DateTime> object).
 
 It is important that this class (indirectly) inherits from
 L<Rose::HTML::Form::Field::Compound>. See the
@@ -178,7 +178,7 @@ L<Rose::HTML::Form::Field::Compound> documentation for more information.
 =item B<date_parser [PARSER]>
 
 Get or set the date parser object.  This object must include a C<parse_datetime()>
-method that takes a single string as an argument and returns a C<DateTime>
+method that takes a single string as an argument and returns a L<DateTime>
 object, or undef if parsing fails.
 
 If the parser object has an C<error()> method, it will be called to set the
@@ -188,7 +188,7 @@ The parser object defaults to L<Rose::DateTime::Parser-E<gt>new()|Rose::DateTime
 
 =item B<time_zone [TZ]>
 
-If the parser object has a C<time_zone()> method, this method simply calls it,
+If the parser object has a L<time_zone()|/time_zone> method, this method simply calls it,
 passing all arguments.  Otherwise, undef is returned.
 
 =back
@@ -209,7 +209,7 @@ Uses inflate/deflate to coerce input into a fixed format.
 
 =item L<Rose::HTML::Form::Field::DateTime>
 
-Uses inflate/deflate to convert input to a C<DateTime> object.
+Uses inflate/deflate to convert input to a L<DateTime> object.
 
 =item L<Rose::HTML::Form::Field::DateTime::Range>
 
@@ -222,7 +222,7 @@ A simple compound field that coalesces multiple subfields into a single value.
 =item L<Rose::HTML::Form::Field::DateTime::Split::MDYHMS>
 
 A compound field that includes other compound fields and uses inflate/deflate 
-convert input from multiple subfields into a C<DateTime> object.
+convert input from multiple subfields into a L<DateTime> object.
 
 =back
 

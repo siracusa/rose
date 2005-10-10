@@ -105,7 +105,7 @@ Constructs a new L<Rose::HTML::Form::Field::CheckBoxGroup> object based on PARAM
 
 =item B<add_checkbox OPTION>
 
-Convenience alias for C<add_checkboxes()>.
+Convenience alias for L<add_checkboxes()|/add_checkboxes>.
 
 =item B<add_checkboxes CHECKBOXES>
 

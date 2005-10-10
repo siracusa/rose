@@ -127,7 +127,7 @@ name.
 
 =item B<add_option OPTION>
 
-Convenience alias for C<add_options()>.
+Convenience alias for L<add_options()|/add_options>.
 
 =item B<add_options OPTIONS>
 
@@ -136,7 +136,7 @@ value/label pairs, a reference to an array of values, or a list of
 L<Rose::HTML::Form::Field::Option> objects. Passing an odd number of items in
 the value/label argument list causes a fatal error. Options passed as a hash
 reference are sorted by value according to the default behavior of Perl's
-built-in C<sort()> function.  Options are added to the end of the existing
+built-in L<sort()|perlfunc/sort> function.  Options are added to the end of the existing
 list of options.
 
 =item B<has_value VALUE>
@@ -159,7 +159,7 @@ in scalar context.
 =item B<option VALUE>
 
 Returns the first option (according to the order that they are returned from
-C<options()>) whose "value" HTML attribute is VALUE, or undef if no such
+L<options()|/options>) whose "value" HTML attribute is VALUE, or undef if no such
 option exists.
 
 =item B<options OPTIONS>
@@ -169,10 +169,10 @@ reference to a hash of value/label pairs, a reference to an array of values,
 or a list of L<Rose::HTML::Form::Field::Option> objects. Passing an odd number
 of items in the value/label argument list causes a fatal error. Options passed
 as a hash reference are sorted by value according to the default behavior of
-Perl's built-in C<sort()> function.
+Perl's built-in L<sort()|perlfunc/sort> function.
 
 To set an ordered list of option values along with labels in the constructor,
-use both the C<options()> and C<labels()> methods in the correct order. 
+use both the L<options()|/options> and L<labels()|/labels> methods in the correct order. 
 Example:
 
     $field = 
@@ -182,8 +182,8 @@ Example:
         labels  => { apple => 'Apple', pear => 'Pear' });
 
 Remember that methods are called in the order that they appear in the
-constructor arguments (see the L<Rose::Object> documentation), so C<options()>
-will be called before C<labels()> in the example above.  This is important; it
+constructor arguments (see the L<Rose::Object> documentation), so L<options()|/options>
+will be called before L<labels()|/labels> in the example above.  This is important; it
 will not work in the opposite order.
 
 Returns a list of the pop-up menu's L<Rose::HTML::Form::Field::Option> objects
@@ -194,7 +194,7 @@ field itself.
 =item B<value_label>
 
 Returns the label of the first selected value (according to the order that
-they are returned by C<internal_value()>), or the value itself if it has no
+they are returned by L<internal_value()|Rose::HTML::Form::Field/internal_value>), or the value itself if it has no
 label. If no value is selected, undef is returned.
 
 =back

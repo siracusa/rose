@@ -150,8 +150,8 @@ contains three separate text fields for US phone numbers: one each for area
 code, exchange, and number.  It inherits from both
 L<Rose::HTML::Form::Field::PhoneNumber::US> and
 L<Rose::HTML::Form::Field::Compound>.  It overrides the following methods:
-C<build_field()>, C<coalesce_value()>, C<decompose_value()>, C<html_field()>,
-and C<xhtml_field()>.
+L<build_field()|Rose::HTML::Form::Field::Compound/build_field>, L<coalesce_value()|Rose::HTML::Form::Field::Compound/coalesce_value>, L<decompose_value()|Rose::HTML::Form::Field::Compound/decompose_value>, L<html_field()|Rose::HTML::Form::Field/html_field>,
+and L<xhtml_field()|Rose::HTML::Form::Field/xhtml_field>.
 
 This is a good example of a compound field that combines separate fields into
 a single value through simple concatenation (plus a separator character). By
@@ -180,7 +180,7 @@ Uses inflate/deflate to coerce input into a fixed format.
 
 =item L<Rose::HTML::Form::Field::DateTime>
 
-Uses inflate/deflate to convert input to a C<DateTime> object.
+Uses inflate/deflate to convert input to a L<DateTime> object.
 
 =item L<Rose::HTML::Form::Field::DateTime::Range>
 
@@ -189,12 +189,12 @@ A compound field whose internal value consists of more than one object.
 =item L<Rose::HTML::Form::Field::DateTime::Split::MonthDayYear>
 
 A compound field that uses inflate/deflate convert input from multiple
-subfields into a C<DateTime> object.
+subfields into a L<DateTime> object.
 
 =item L<Rose::HTML::Form::Field::DateTime::Split::MDYHMS>
 
 A compound field that includes other compound fields and uses inflate/deflate 
-convert input from multiple subfields into a C<DateTime> object.
+convert input from multiple subfields into a L<DateTime> object.
 
 =back
 

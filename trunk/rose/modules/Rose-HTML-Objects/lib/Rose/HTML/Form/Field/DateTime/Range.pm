@@ -334,7 +334,7 @@ Uses inflate/deflate to coerce input into a fixed format.
 
 =item L<Rose::HTML::Form::Field::DateTime>
 
-Uses inflate/deflate to convert input to a C<DateTime> object.
+Uses inflate/deflate to convert input to a L<DateTime> object.
 
 =item L<Rose::HTML::Form::Field::PhoneNumber::US::Split>
 
@@ -343,12 +343,12 @@ A simple compound field that coalesces multiple subfields into a single value.
 =item L<Rose::HTML::Form::Field::DateTime::Split::MonthDayYear>
 
 A compound field that uses inflate/deflate convert input from multiple
-subfields into a C<DateTime> object.
+subfields into a L<DateTime> object.
 
 =item L<Rose::HTML::Form::Field::DateTime::Split::MDYHMS>
 
 A compound field that includes other compound fields and uses inflate/deflate 
-convert input from multiple subfields into a C<DateTime> object.
+convert input from multiple subfields into a L<DateTime> object.
 
 =back
 

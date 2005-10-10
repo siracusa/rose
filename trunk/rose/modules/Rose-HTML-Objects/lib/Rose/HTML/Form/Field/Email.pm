@@ -65,8 +65,8 @@ addresses.
 
 L<Rose::HTML::Form::Field::Email> is a subclass of
 L<Rose::HTML::Form::Field::Text> that uses L<Email::Valid> to allow only valid
-email addresses as input.  It overrides the C<validate()> method of its
-parent class, returning true if the C<internal_value()> is a valid email
+email addresses as input.  It overrides the L<validate()|Rose::HTML::Form::Field/validate> method of its
+parent class, returning true if the L<internal_value()|Rose::HTML::Form::Field/internal_value> is a valid email
 address, or setting an error message and returning false otherwise.
 
 This is a good example of a custom field class that simply constrains the
@@ -85,7 +85,7 @@ Uses inflate/deflate to coerce input into a fixed format.
 
 =item L<Rose::HTML::Form::Field::DateTime>
 
-Uses inflate/deflate to convert input to a C<DateTime> object.
+Uses inflate/deflate to convert input to a L<DateTime> object.
 
 =item L<Rose::HTML::Form::Field::DateTime::Range>
 
@@ -98,12 +98,12 @@ A simple compound field that coalesces multiple subfields into a single value.
 =item L<Rose::HTML::Form::Field::DateTime::Split::MonthDayYear>
 
 A compound field that uses inflate/deflate convert input from multiple
-subfields into a C<DateTime> object.
+subfields into a L<DateTime> object.
 
 =item L<Rose::HTML::Form::Field::DateTime::Split::MDYHMS>
 
 A compound field that includes other compound fields and uses inflate/deflate 
-convert input from multiple subfields into a C<DateTime> object.
+convert input from multiple subfields into a L<DateTime> object.
 
 =back
 

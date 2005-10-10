@@ -158,7 +158,7 @@ except those in this set:
     A-Za-z0-9\-_.,'!~*#?&()/?@:[]=
 
 Note that the URI-escaped string is not HTML-escaped.  In order make a URI
-safe to include in an HTML page, call C<escape_html()> as well:
+safe to include in an HTML page, call L<escape_html()|/escape_html> as well:
 
     $h = '<a href="' . escape_html(escape_uri($str)) . '">foo</a>';
 

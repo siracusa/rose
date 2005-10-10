@@ -128,7 +128,7 @@ name.
 
 =item B<add_option OPTION>
 
-Convenience alias for C<add_options()>.
+Convenience alias for L<add_options()|/add_options>.
 
 =item B<add_options OPTIONS>
 
@@ -138,7 +138,7 @@ that are of, or inherit from, the classes L<Rose::HTML::Form::Field::Option>
 or L<Rose::HTML::Form::Field::OptionGroup>. Passing an odd number of items in
 the value/label argument list causes a fatal error. Options passed as a hash
 reference are sorted by value according to the default behavior of Perl's
-built-in C<sort()> function.  Options are added to the end of the existing
+built-in L<sort()|perlfunc/sort> function.  Options are added to the end of the existing
 list of options.
 
 =item B<add_value VALUE>
@@ -171,7 +171,7 @@ values in a non-multiple-valued select box will cause a fatal error.
 =item B<option VALUE>
 
 Returns the first option (according to the order that they are returned from
-C<options()>) whose "value" HTML attribute is VALUE, or undef if no such
+L<options()|/options>) whose "value" HTML attribute is VALUE, or undef if no such
 option exists.
 
 =item B<options OPTIONS>
@@ -182,10 +182,10 @@ or a list of objects that are of, or inherit from, the classes
 L<Rose::HTML::Form::Field::Option> or L<Rose::HTML::Form::Field::OptionGroup>.
 Passing an odd number of items in the value/label argument list causes a fatal
 error. Options passed as a hash reference are sorted by value according to the
-default behavior of Perl's built-in C<sort()> function.
+default behavior of Perl's built-in L<sort()|perlfunc/sort> function.
 
 To set an ordered list of option values along with labels in the constructor,
-use both the C<options()> and C<labels()> methods in the correct order. 
+use both the L<options()|/options> and L<labels()|/labels> methods in the correct order. 
 Example:
 
     $field = 
@@ -195,8 +195,8 @@ Example:
         labels  => { apple => 'Apple', pear => 'Pear' });
 
 Remember that methods are called in the order that they appear in the
-constructor arguments (see the L<Rose::Object> documentation), so C<options()>
-will be called before C<labels()> in the example above.  This is important; it
+constructor arguments (see the L<Rose::Object> documentation), so L<options()|/options>
+will be called before L<labels()|/labels> in the example above.  This is important; it
 will not work in the opposite order.
 
 Returns a list of the select box's L<Rose::HTML::Form::Field::Option> and/or
@@ -206,16 +206,16 @@ objects used in the field. Modifying them will modify the field itself.
 
 =item B<value [VALUE]>
 
-Simply calls C<input_value()>, passing all arguments.
+Simply calls L<input_value()|Rose::HTML::Form::Field/input_value>, passing all arguments.
 
 =item B<values [VALUE]>
 
-Simply calls C<input_value()>, passing all arguments.
+Simply calls L<input_value()|Rose::HTML::Form::Field/input_value>, passing all arguments.
 
 =item B<value_label>
 
 Returns the label of the first selected value (according to the order that
-they are returned by C<internal_value()>), or the value itself if it has no
+they are returned by L<internal_value()|Rose::HTML::Form::Field/internal_value>), or the value itself if it has no
 label. If no value is selected, undef is returned.
 
 =item B<value_labels>

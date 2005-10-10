@@ -121,7 +121,7 @@ for that attribute) or a fatal error will occur.
 
 =item B<image_xhtml [ARGS]>
 
-Like C<image_html()>, but serialized to XHTML instead.
+Like L<image_html()|/image_html>, but serialized to XHTML instead.
 
 =item B<value [VALUE]>
 

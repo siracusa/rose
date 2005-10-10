@@ -157,7 +157,7 @@ Returns true if the radio button is checked, false otherwise.
 
 =item B<is_on>
 
-Simply calls C<is_checked()>.  This method exists for API uniformity between
+Simply calls L<is_checked()|/is_checked>.  This method exists for API uniformity between
 radio buttons and checkboxes.
 
 =item B<value [VALUE]>

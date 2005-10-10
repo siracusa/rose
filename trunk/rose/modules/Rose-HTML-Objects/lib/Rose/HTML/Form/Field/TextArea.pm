@@ -141,12 +141,12 @@ name.
 =item B<contents [TEXT]>
 
 Get or set the contents of the text area.  If a TEXT argument is present, it
-is passed to C<input_value()> and the return value of that method call is then
-returned. Otherwise, C<output_value()> is called with no arguments.
+is passed to L<input_value()|Rose::HTML::Form::Field/input_value> and the return value of that method call is then
+returned. Otherwise, L<output_value()|Rose::HTML::Form::Field/output_value> is called with no arguments.
 
 =item B<value [TEXT]>
 
-Simply calls C<contents()>, passing all arguments.
+Simply calls L<contents()|/contents>, passing all arguments.
 
 =back
 
