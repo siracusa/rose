@@ -100,7 +100,7 @@ Rose::HTML::Util - Utility functions for manipulating HTML.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Util> provides aliases and wrappers for common HTML manipulation
+L<Rose::HTML::Util> provides aliases and wrappers for common HTML manipulation
 functions.  When running in a mod_perl 1.x web server environment, Apache's
 C-based functions are used in some cases.
 
@@ -109,7 +109,7 @@ single location and get the fastest possible versions.
 
 =head1 EXPORTS
 
-C<Rose::HTML::Util> does not export any function names by default.
+L<Rose::HTML::Util> does not export any function names by default.
 
 The 'all' tag:
 

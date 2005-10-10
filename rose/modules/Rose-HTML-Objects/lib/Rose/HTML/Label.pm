@@ -42,7 +42,7 @@ Rose::HTML::Label - Object representation of the "label" HTML tag.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Label> is an object representation of the E<lt>labelE<gt> HTML
+L<Rose::HTML::Label> is an object representation of the E<lt>labelE<gt> HTML
 tag.  Yes, there really is a E<lt>labelE<gt> tag in both HTML 4.01 and XHTML
 1.0.  Look it up.
 

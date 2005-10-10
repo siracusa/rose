@@ -58,7 +58,7 @@ Rose::HTML::Form::Field::Time::Seconds - Text field that only accepts valid seco
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::Time::Seconds> is a subclass of
+L<Rose::HTML::Form::Field::Time::Seconds> is a subclass of
 L<Rose::HTML::Form::Field::Text> that only accepts valid seconds: numbers between 0 and 59, inclusive, with or without leading zeros.
 
 =head1 AUTHOR

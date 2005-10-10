@@ -32,7 +32,7 @@ in an HTML form.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::Reset> is an object representation of a reset
+L<Rose::HTML::Form::Field::Reset> is an object representation of a reset
 button in an HTML form.
 
 This class inherits from, and follows the conventions of,
@@ -99,7 +99,7 @@ Boolean attributes:
 
 =item B<new PARAMS>
 
-Constructs a new C<Rose::HTML::Form::Field::Reset> object based on PARAMS,
+Constructs a new L<Rose::HTML::Form::Field::Reset> object based on PARAMS,
 where PARAMS are name/value pairs.  Any object method is a valid parameter
 name.
 

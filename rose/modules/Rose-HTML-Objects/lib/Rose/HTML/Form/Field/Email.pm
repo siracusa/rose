@@ -63,8 +63,8 @@ addresses.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::Email> is a subclass of
-L<Rose::HTML::Form::Field::Text> that uses C<Email::Valid> to allow only valid
+L<Rose::HTML::Form::Field::Email> is a subclass of
+L<Rose::HTML::Form::Field::Text> that uses L<Email::Valid> to allow only valid
 email addresses as input.  It overrides the C<validate()> method of its
 parent class, returning true if the C<internal_value()> is a valid email
 address, or setting an error message and returning false otherwise.

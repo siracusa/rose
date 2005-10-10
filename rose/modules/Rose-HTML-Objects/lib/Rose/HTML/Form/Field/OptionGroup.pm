@@ -62,7 +62,7 @@ of options in a pop-up menu or select box in an HTML form.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::OptionGroup> is an object representation of a group
+L<Rose::HTML::Form::Field::OptionGroup> is an object representation of a group
 of options in a pop-up menu or select box in an HTML form.  Yes, this is the
 often-overlooked (and sometimes ill-supported) "optgroup" HTML tag.
 
@@ -115,7 +115,7 @@ Boolean attributes:
 
 =item B<new PARAMS>
 
-Constructs a new C<Rose::HTML::Form::Field::OptionGroup> object based on PARAMS,
+Constructs a new L<Rose::HTML::Form::Field::OptionGroup> object based on PARAMS,
 where PARAMS are name/value pairs.  Any object method is a valid parameter
 name.
 

@@ -118,7 +118,7 @@ coerces valid input into HH:MM:SS AM/PM format.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::Time> is a subclass of
+L<Rose::HTML::Form::Field::Time> is a subclass of
 L<Rose::HTML::Form::Field::Text> that only allows values that are valid times,
 which it coerces into the form HH:MM:SS AM/PM.  It overrides the C<validate()>
 and C<inflate_value()> methods of its parent class.

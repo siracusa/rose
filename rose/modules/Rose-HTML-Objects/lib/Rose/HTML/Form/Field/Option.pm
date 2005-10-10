@@ -76,7 +76,7 @@ Rose::HTML::Form::Field::Option - Object representation of the
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::Option> is an object representation of a single
+L<Rose::HTML::Form::Field::Option> is an object representation of a single
 option in a pop-up menu or select box in an HTML form.
 
 This class inherits from, and follows the conventions of,
@@ -145,7 +145,7 @@ Boolean attributes:
 
 =item B<new PARAMS>
 
-Constructs a new C<Rose::HTML::Form::Field::Option> object based on PARAMS,
+Constructs a new L<Rose::HTML::Form::Field::Option> object based on PARAMS,
 where PARAMS are name/value pairs.  Any object method is a valid parameter
 name.
 

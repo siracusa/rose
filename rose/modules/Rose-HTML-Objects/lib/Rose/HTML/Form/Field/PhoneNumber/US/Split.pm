@@ -145,7 +145,7 @@ numbers with separate fields for area code, exchange, and number.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::PhoneNumber::US::Split> is a compound field that
+L<Rose::HTML::Form::Field::PhoneNumber::US::Split> is a compound field that
 contains three separate text fields for US phone numbers: one each for area
 code, exchange, and number.  It inherits from both
 L<Rose::HTML::Form::Field::PhoneNumber::US> and

@@ -68,7 +68,7 @@ field in an HTML form.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::RadioButton> is an object representation of a single
+L<Rose::HTML::Form::Field::RadioButton> is an object representation of a single
 radio button field in an HTML form.
 
 This class inherits from, and follows the conventions of,
@@ -130,7 +130,7 @@ Boolean attributes:
 
 =item B<new PARAMS>
 
-Constructs a new C<Rose::HTML::Form::Field::RadioButton> object based on PARAMS,
+Constructs a new L<Rose::HTML::Form::Field::RadioButton> object based on PARAMS,
 where PARAMS are name/value pairs.  Any object method is a valid parameter
 name.
 

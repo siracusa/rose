@@ -126,7 +126,7 @@ C<DateTime> objects.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::DateTime> is a subclass of
+L<Rose::HTML::Form::Field::DateTime> is a subclass of
 L<Rose::HTML::Form::Field::Text> that allows only valid dates as input, which
 it then coerces to C<DateTime> objects. It overrides the C<validate()>,
 C<inflate_value()>, and C<deflate_value()> methods of its parent class.

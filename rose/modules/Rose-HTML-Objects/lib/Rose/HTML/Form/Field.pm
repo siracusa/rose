@@ -631,7 +631,7 @@ Rose::HTML::Form::Field - HTML form field base class.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field> is the base class for field objects used in an HTML
+L<Rose::HTML::Form::Field> is the base class for field objects used in an HTML
 form.  It defines a generic interface for field input, output, validation, and
 filtering.
 
@@ -646,14 +646,14 @@ A field object provides an interface for a logical field in an HTML form.
 Although it may serialize to multiple HTML tags, the field object itself is a
 single, logical entity.
 
-C<Rose::HTML::Form::Field> is the base class for field objects.   Since the
+L<Rose::HTML::Form::Field> is the base class for field objects.   Since the
 field object will eventually be asked to serialize itself as HTML,
-C<Rose::HTML::Form::Field> inherits from L<Rose::HTML::Object>.  That defines
+L<Rose::HTML::Form::Field> inherits from L<Rose::HTML::Object>.  That defines
 a lot of a field object's interface, leaving only the field-specific functions
-to C<Rose::HTML::Form::Field> itself.
+to L<Rose::HTML::Form::Field> itself.
 
 The most important function of a field object is to accept and return user
-input.  C<Rose::HTML::Form::Field> defines a data flow for field values with
+input.  L<Rose::HTML::Form::Field> defines a data flow for field values with
 several different hooks and callbacks along the way:
 
                         +------------+
@@ -735,7 +735,7 @@ before being inflated.
 =item B<internal value>
 
 The most useful representation of the value as far as the user of the
-C<Rose::HTML::Form::Field>-derived class is concerned.  It has been filtered
+L<Rose::HTML::Form::Field>-derived class is concerned.  It has been filtered
 and optionally "inflated" into a richer representation (i.e., an object).
 The internal value must also be a valid input value.
 
@@ -757,7 +757,7 @@ the appropriate object methods.
 
 The prefilter exists to handle common filtering tasks without hogging
 the lone input filter spot (or requiring users to constantly set
-input filters for every field).  The C<Rose::HTML::Form::Field> prefilter
+input filters for every field).  The L<Rose::HTML::Form::Field> prefilter
 optionally trims leading and trailing whitespace based on the value of
 the C<trim_spaces()> boolean attribute.  This is part of the public
 API for field objects, so subclasses that override C<input_prefilter()>
@@ -798,7 +798,7 @@ run.  Reuse, reuse, reuse!
 
 =head1 HTML ATTRIBUTES
 
-C<Rose::HTML::Form::Field> has the following set of valid HTML attributes.
+L<Rose::HTML::Form::Field> has the following set of valid HTML attributes.
 
     accesskey
     class
@@ -830,7 +830,7 @@ C<Rose::HTML::Form::Field> has the following set of valid HTML attributes.
 
 =item B<new PARAMS>
 
-Constructs a new C<Rose::HTML::Form::Field> object based on PARAMS, where 
+Constructs a new L<Rose::HTML::Form::Field> object based on PARAMS, where 
 PARAMS are name/value pairs.  Any object method is a valid parameter name.
 
 =back
@@ -864,7 +864,7 @@ the default value is used as the input value.
 This method is meant to be overridden by a subclass.  It should take VALUE and
 "deflate" it to a form that is a suitable for the output value: a string or
 reference to an array of strings.  The implementation in
-C<Rose::HTML::Form::Field> simply returns VALUE unmodified.
+L<Rose::HTML::Form::Field> simply returns VALUE unmodified.
 
 =item B<description [TEXT]>
 
@@ -945,13 +945,13 @@ with one of your own.
 =item B<html_prefix [STRING]>
 
 Get or set an HTML prefix that may be displayed before the HTML field.
-C<Rose::HTML::Form::Field> does not use this prefix, but subclasses might.
+L<Rose::HTML::Form::Field> does not use this prefix, but subclasses might.
 The default value is an empty string.
 
 =item B<html_suffix [STRING]>
 
 Get or set an HTML suffix that may be appended to the HTML field.
-C<Rose::HTML::Form::Field> does not use this suffix, but subclasses might.
+L<Rose::HTML::Form::Field> does not use this suffix, but subclasses might.
 The default value is an empty string.
 
 =item B<html_tag>

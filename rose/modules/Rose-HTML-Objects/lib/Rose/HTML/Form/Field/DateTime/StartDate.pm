@@ -41,7 +41,7 @@ Rose::HTML::Form::Field::DateTime::EndDate - Text field for a "start date" in a 
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::DateTime::EndDate> is a subclass of
+L<Rose::HTML::Form::Field::DateTime::EndDate> is a subclass of
 L<Rose::HTML::Form::Field::DateTime> that pins the time to the very first moment of the specified date (i.e., 00:00:00.00000000) if the time is left unspecified.
 
 =head1 AUTHOR

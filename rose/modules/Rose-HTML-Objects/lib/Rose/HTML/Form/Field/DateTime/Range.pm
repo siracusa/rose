@@ -266,7 +266,7 @@ Rose::HTML::Form::Field::DateTime::Range - Compound field for date ranges with s
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::DateTime::Range> is a compound field that represents a date range.  It is made up of two subfields: a L<Rose::HTML::Form::Field::DateTime::StartDate> field and a L<Rose::HTML::Form::Field::DateTime::EndDate> field.
+L<Rose::HTML::Form::Field::DateTime::Range> is a compound field that represents a date range.  It is made up of two subfields: a L<Rose::HTML::Form::Field::DateTime::StartDate> field and a L<Rose::HTML::Form::Field::DateTime::EndDate> field.
 
 The internal value of this field is a list (in list context) or reference to an array (in scalar context) of two L<DateTime> objects.  The first object is the start date and the second is the end date.  If either of fields are not filled in or are otherwise invalid, then the internal value is undef.
 

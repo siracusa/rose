@@ -80,7 +80,7 @@ in the form: 123-456-7890
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::PhoneNumber::US> is a subclass of
+L<Rose::HTML::Form::Field::PhoneNumber::US> is a subclass of
 L<Rose::HTML::Form::Field::Text> that only allows values that contain exactly
 10 digits, which it coerces into the form "123-456-7890".  It overrides the
 C<validate()> and C<inflate_value()>, and C<deflate_value()> methods of its

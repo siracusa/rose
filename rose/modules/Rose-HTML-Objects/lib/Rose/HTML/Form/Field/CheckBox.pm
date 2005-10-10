@@ -68,7 +68,7 @@ field in an HTML form.
 
 =head1 DESCRIPTION
 
-C<Rose::HTML::Form::Field::CheckBox> is an object representation of a single
+L<Rose::HTML::Form::Field::CheckBox> is an object representation of a single
 checkbox field in an HTML form.
 
 This class inherits from, and follows the conventions of,
@@ -130,7 +130,7 @@ Boolean attributes:
 
 =item B<new PARAMS>
 
-Constructs a new C<Rose::HTML::Form::Field::CheckBox> object based on PARAMS,
+Constructs a new L<Rose::HTML::Form::Field::CheckBox> object based on PARAMS,
 where PARAMS are name/value pairs.  Any object method is a valid parameter
 name.
 
@@ -157,7 +157,7 @@ Returns true if the checkbox is checked, false otherwise.
 
 =item B<is_on>
 
-Simply calls C<is_checked()>.  This method exists for API uniformity between
+Simply calls L<is_checked|/is_checked>.  This method exists for API uniformity between
 radio buttons and checkboxes.
 
 =item B<value [VALUE]>
