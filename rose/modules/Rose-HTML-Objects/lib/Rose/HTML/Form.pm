@@ -712,13 +712,13 @@ Form objects should also accept initialization through the same kinds of
 objects that they return.  Subclasses are encouraged to create methods such as
 (to use the example described above) C<init_with_person()> and
 C<person_from_form()> in order to do this.  The generic methods
-C<init_with_object()> and C<object_from_form()> are meant to ease the
+L<init_with_object()|/init_with_object> and L<object_from_form()|/object_from_form> are meant to ease the
 implementation of such custom methods.
 
 Form objects can also take input through a hash.  Each hash key correspond to
 a field (or subfield) name, and each value is either a scalar or a reference
 to an array of scalars (for multiple-value fields).  This hash of parameters
-can be queried and manipulated before finally calling C<init_fields()> in order
+can be queried and manipulated before finally calling L<init_fields()|/init_fields> in order
 to initialize the fields based on the current state of the parameters.
 
 Compound fields (fields consisting of more than one HTML field, such as a
@@ -736,7 +736,7 @@ name, which may or may not be the same as the field name, which may or may not
 be the same as the "name" HTML attribute for any of the HTML tags that make up
 that field.
 
-Forms are validated by calling C<validate()> on each field object.  If any
+Forms are validated by calling L<validate()|Rose::HTML::Form::Field/validate> on each field object.  If any
 individual field does not validate, then the form is invalid. Inter-field
 validation is the responsibility of the form object.
 
@@ -798,22 +798,22 @@ name/value pairs.  Any object method is a valid parameter name.
 
 =item B<add_field ARGS>
 
-Convenience alias for C<add_fields()>.
+Convenience alias for L<add_fields()|/add_fields>.
 
 =item B<add_fields ARGS>
 
 Add the fields specified by ARGS to the list of fields contained in this form.
 
 If an argument is "isa" L<Rose::HTML::Form::Field>, then it is added to the
-list of fields, stored under the name returned by the field's C<name()> method.
+list of fields, stored under the name returned by the field's L<name()|Rose::HTML::Form::Field/name> method.
 
 If an argument is anything else, it is used as the field name, and the next
 argument is used as the field object to store under that name.  If the next
 argument is not an object derived from L<Rose::HTML::Form::Field>, then a
 fatal error occurs.
 
-The field object's C<name()> is set to the name that it is stored under, and
-its C<parent_field()> is set to the form object.
+The field object's L<name()|Rose::HTML::Form::Field/name> is set to the name that it is stored under, and
+its L<parent_field()|Rose::HTML::Form::Field/parent_field> is set to the form object.
 
 Returns the full list of field objects, sorted by field name, in list context,
 or a reference to a list of the same in scalar context.
@@ -852,24 +852,24 @@ Add VALUE to the parameter named NAME.  Example:
 
 =item B<build_on_init [BOOL]>
 
-Get or set a boolean flag that indicates whether or not C<build_form()> should
-be called from within the C<init()> method.  See C<build_form()> for more
+Get or set a boolean flag that indicates whether or not L<build_form()|/build_form> should
+be called from within the L<init()|Rose::Object/init> method.  See L<build_form()|/build_form> for more
 information.
 
 =item B<build_form>
 
 This method is a no-op in this class.  It is meant to be overridden by
-subclasses.  It is called at the end of the C<init()> method if
-C<build_on_init()> is true. (Remember that this class inherits from
+subclasses.  It is called at the end of the L<init()|Rose::Object/init> method if
+L<build_on_init()|/build_on_init> is true. (Remember that this class inherits from
 L<Rose::HTML::Object>, which inherits from L<Rose::Object>, which defines the
-C<init()> method, which is called from the constructor.  See the
+L<init()|Rose::Object/init> method, which is called from the constructor.  See the
 L<Rose::Object> documentation for more information.)
 
-If C<build_on_init()> is false, then you must remember to call C<build_form()>
+If L<build_on_init()|/build_on_init> is false, then you must remember to call L<build_form()|/build_form>
 manually.
 
 Subclasses should populate the field list in their overridden versions of
-C<build_form()>.  Example:
+L<build_form()|/build_form>.  Example:
 
   sub build_form 
   {
@@ -892,9 +892,13 @@ C<build_form()>.  Example:
     $self->add_fields(%fields);
   }
 
+=item B<clear>
+
+Call L<clear()|Rose::HTML::Form::Field/clear> on each field object and set L<error()|Rose::HTML::Object/error> to undef.
+
 =item B<clear_fields>
 
-Call C<clear()> on each field object.
+Call L<clear()|Rose::HTML::Form::Field/clear> on each field object.
 
 =item B<coalesce_hidden_fields [BOOL]>
 
@@ -913,7 +917,7 @@ of each compound field appear as separate query parameters.
 =item B<delete_field NAME>
 
 Delete the field stored under the name NAME.  If NAME "isa"
-L<Rose::HTML::Form::Field>, then the C<name()> method is called on it and the
+L<Rose::HTML::Form::Field>, then the L<name()|Rose::HTML::Form::Field/name> method is called on it and the
 return value is used as NAME.
 
 =item B<delete_fields>
@@ -987,47 +991,47 @@ of the same in scalar context.
 Returns one or more L<Rose::HTML::Form::Field::Hidden> objects that represent
 the hidden fields needed to encode all of the field values in this form.
 
-If C<coalesce_hidden_fields()> is true, then each compound field is encoded as
+If L<coalesce_hidden_fields()|/coalesce_hidden_fields> is true, then each compound field is encoded as
 a single hidden field.  Otherwise, each subfield of a compound field will be
 have its own hidden field.
 
 =item B<html_hidden_fields>
 
-Returns the HTML serialization of the fields returned by C<hidden_fields()>,
+Returns the HTML serialization of the fields returned by L<hidden_fields()|/hidden_fields>,
 joined by newlines.
 
 =item B<init_fields [ARGS]>
 
-Initialize the fields based on C<params()>.  In general, this works as you'd
+Initialize the fields based on L<params()|/params>.  In general, this works as you'd
 expect, but the details are a bit complicated.
 
-The intention of C<init_fields()> is to set field values based solely and
-entirely on C<params()>.  That means that default values for fields should not
-be considered unless they are explicitly part of C<params()>.
+The intention of L<init_fields()|/init_fields> is to set field values based solely and
+entirely on L<params()|/params>.  That means that default values for fields should not
+be considered unless they are explicitly part of L<params()|/params>.
 
 In  general, default values for fields exist for the purpose of displaying the
 HTML form with certain items pre-selected or filled in.  In a typical usage
 scenario, those default values will end up in the web browser form submission
-and, eventually, as as an explicit part of part C<params()>, so they are not
+and, eventually, as as an explicit part of part L<params()|/params>, so they are not
 really ignored.
 
-But to preserve the intended functionality of C<init_fields()>, the first thing
-this method does is C<clear()> the form. If a C<no_clear> parameter with a
+But to preserve the intended functionality of L<init_fields()|/init_fields>, the first thing
+this method does is L<clear()|/clear> the form. If a C<no_clear> parameter with a
 true value is passed as part of ARGS, then this step is skipped.
 
 If a parameter name exactly matches a field's name (note: the field's
-C<name()>, I<not> the name that the field is stored under in the form, which
+L<name()|Rose::HTML::Form::Field/name>, I<not> the name that the field is stored under in the form, which
 may be different), then the (list context) value of that parameter is passed
-as the C<input_value()> for that field.
+as the L<input_value()|Rose::HTML::Form::Field/input_value> for that field.
 
 If a field "isa" L<Rose::HTML::Form::Field::Compound>, and if no parameter
-exactly matches the C<name()> of the compound field, then each subfields may
-be initialized by a parameter name that matches the subfield's C<name()>.
+exactly matches the L<name()|Rose::HTML::Form::Field/name> of the compound field, then each subfields may
+be initialized by a parameter name that matches the subfield's L<name()|Rose::HTML::Form::Field/name>.
 
 If a field is an "on/off" type of field (e.g., a radio button or checkbox),
 then the field is turned "on" only if the value of the parameter that matches
-the field's C<name()> exactly matches (string comparison) the "value" HTML
-attribute of the field.  If not, and if C<params_exist()>, then the field is
+the field's L<name()|Rose::HTML::Form::Field/name> exactly matches (string comparison) the "value" HTML
+attribute of the field.  If not, and if L<params_exist()|/params_exist>, then the field is
 set to "off".  Otherwise, the field is not modified at all.
 
 Examples:
@@ -1125,12 +1129,12 @@ Examples:
 
 =item B<init_with_object OBJECT>
 
-Initialize the form based on OBJECT.  First, the form is C<clear()>ed.  Next,
-for each field C<name()>, if the object has a method with the same name, then
+Initialize the form based on OBJECT.  First, the form is L<clear()|/clear>ed.  Next,
+for each field L<name()|Rose::HTML::Form::Field/name>, if the object has a method with the same name, then
 the return value of that method (called in scalar context) is passed as the
-C<input_value()> for the form field of the same name.
+L<input_value()|Rose::HTML::Form::Field/input_value> for the form field of the same name.
 
-Heck, at this point, the actual code for the C<init_with_object()> method is
+Heck, at this point, the actual code for the L<init_with_object()|/init_with_object> method is
 shorter and more clear than my description.  Basically, it does this:
 
     sub init_with_object
@@ -1152,7 +1156,7 @@ shorter and more clear than my description.  Basically, it does this:
 
 Use this method as a "helper" when writing your own methods such as
 C<init_with_person()>, as described in the example in the L<OVERVIEW>.
-C<init_with_object()> should be called in the code for subclasses of
+L<init_with_object()|/init_with_object> should be called in the code for subclasses of
 L<Rose::HTML::Form>, but never by an end-user of such classes.
 
 The convention for naming such methods is "init_with_foo", where "foo" is a
@@ -1162,7 +1166,7 @@ any kind or number of arguments in your "init_with_foo()"-style methods
 (all which you'll carefully document, of course).
 
 The field names may not match up exactly with the object method names. In such
-cases, you can use C<init_with_object()> to handle all the fields that do
+cases, you can use L<init_with_object()|/init_with_object> to handle all the fields that do
 match up with method names, and then handle the others manually.  Example:
 
     sub init_with_person 
@@ -1182,8 +1186,8 @@ match up with method names, and then handle the others manually.  Example:
 
 Returns an object built based on the contents of the form.  
 
-For each field C<name()>, if the object has a method with the same name, then
-the C<internal_value()> of the field is passed to the object method of that
+For each field L<name()|Rose::HTML::Form::Field/name>, if the object has a method with the same name, then
+the L<internal_value()|Rose::HTML::Form::Field/internal_value> of the field is passed to the object method of that
 name.  The actual code is just about as concise as my description:
 
   foreach my $field ($self->fields)
@@ -1198,12 +1202,12 @@ name.  The actual code is just about as concise as my description:
 
 To do this, the method needs an object.  If passed an OBJECT argument, then
 that's the object that's used.  If passed a CLASS name, then a new object is
-constructed by calling C<new()> on that class.  OBJECT or CLASS may
+constructed by calling L<new()|/new> on that class.  OBJECT or CLASS may
 alternately be passed as a name/value pair in PARAMS.
 
 Use this method as a "helper" when writing your own methods such as
 C<person_from_form()>, as described in the example in the L<OVERVIEW>.
-C<object_from_form()> should be called in the code for subclasses of
+L<object_from_form()|/object_from_form> should be called in the code for subclasses of
 L<Rose::HTML::Form>, but never by an end-user of such classes.
 
 The convention for naming such methods is "foo_from_form", where "foo" is a
@@ -1211,7 +1215,7 @@ The convention for naming such methods is "foo_from_form", where "foo" is a
 constructed based on the values in the form's fields.
 
 The field names may not match up exactly with the object method names. In such
-cases, you can use C<object_from_form()> to handle all the fields that do
+cases, you can use L<object_from_form()|/object_from_form> to handle all the fields that do
 match up with method names, and then handle the others manually.  Example:
 
   sub person_from_form
@@ -1284,23 +1288,23 @@ A fatal error occurs unless both NAME and VALUE arguments are passed.
 =item B<query_string>
 
 Returns a URI-escaped (but I<not> HTML-escaped) query string that corresponds
-to the current state of the form.  If C<coalesce_query_string_params()> is
+to the current state of the form.  If L<coalesce_query_string_params()|/coalesce_query_string_params> is
 true (which is the default), then compound fields are represented by a single
 query parameter.  Otherwise, the subfields of each compound field appear as
 separate query parameters.
 
 =item B<reset>
 
-Call C<reset()> on each field object and set C<error()> to undef.
+Call L<reset()|Rose::HTML::Form::Field/reset> on each field object and set L<error()|Rose::HTML::Object/error> to undef.
 
 =item B<reset_fields>
 
-Call C<reset()> on each field object.
+Call L<reset()|/reset> on each field object.
 
 =item B<self_uri>
 
 Returns a L<Rose::URI> object corresponding to the current state of the form.
-If C<uri_base()> is set, then it is included in front of what would otherwise
+If L<uri_base()|/uri_base> is set, then it is included in front of what would otherwise
 be the start of the URI (i.e., the value of the form's "action" HTML attribute).
 
 =item B<start_html>
@@ -1325,8 +1329,8 @@ XHTML that will begin the form tag.
 
 Get or set the URI of the form, minus the value of the "action" HTML
 attribute.  Although the form action can be a relative URI, I suggest that it
-be an absolute path at the very least, leaving the C<uri_base()> to be the
-initial part of the full URI returned by C<self_uri()>.  Example:
+be an absolute path at the very least, leaving the L<uri_base()|/uri_base> to be the
+initial part of the full URI returned by L<self_uri()|/self_uri>.  Example:
 
     $form->action('/foo/bar');
     $form->uri_base('http://www.foo.com');
@@ -1337,25 +1341,25 @@ initial part of the full URI returned by C<self_uri()>.  Example:
 =item B<uri_separator [CHAR]>
 
 Get or set the character used to separate parameter name/value pairs in the
-return value of C<query_string()> (which is in turn used to construct
-the return value of C<self_uri()>).  The default is "&".
+return value of L<query_string()|/query_string> (which is in turn used to construct
+the return value of L<self_uri()|/self_uri>).  The default is "&".
 
 =item B<validate>
 
-Validate the form by calling C<validate()> on each field.  If any field
-returns false from its C<validate()> call, then this method returns false. 
+Validate the form by calling L<validate()|Rose::HTML::Form::Field/validate> on each field.  If any field
+returns false from its L<validate()|Rose::HTML::Form::Field/validate> call, then this method returns false. 
 Otherwise, it returns true.
 
 =item B<validate_field_html_attrs [BOOL]>
 
 Get or set a boolean flag that indicates whether or not the fields of this
 form will validate their HTML attributes.  If a BOOL argument is passed, then
-it is passed as the argument to a call to C<validate_html_attrs()> on each
+it is passed as the argument to a call to L<validate_html_attrs()|Rose::HTML::Object/validate_html_attrs> on each
 field.  In either case, the current value of this flag is returned.
 
 =item B<xhtml_hidden_fields>
 
-Returns the XHTML serialization of the fields returned by C<hidden_fields()>,
+Returns the XHTML serialization of the fields returned by L<hidden_fields()|/hidden_fields>,
 joined by newlines.
 
 =back

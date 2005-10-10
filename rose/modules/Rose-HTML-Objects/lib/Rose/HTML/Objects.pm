@@ -43,32 +43,27 @@ Rose::HTML::Objects - Object-oriented interfaces for HTML.
 
 =head1 DESCRIPTION
 
-The C<Rose::HTML::Object::*> family of classes represent HTML tags, or groups
-of tags.  These objects  allow HTML to be arbitrarily manipulated, then
-serialized to actual HTML (or XHTML). Currently, the process only works in one
-direction.  Objects cannot be constructed from their serialized
-representations.  In practice, given the purpose of these modules, this is not
-an important limitation.
+The C<Rose::HTML::Object::*> family of classes represent HTML tags, or groups of tags.  These objects  allow HTML to be arbitrarily manipulated, then serialized to actual HTML (or XHTML). Currently, the process only works in one direction.  Objects cannot be constructed from their serialized representations.  In practice, given the purpose of these modules, this is not an important limitation.
 
-Any HTML tag can theoretically be represented by a
-L<Rose::HTML::Object>-derived class, but this family of modules was originally
-motivated by a desire to simplify the use of HTML forms.
+Any HTML tag can theoretically be represented by a L<Rose::HTML::Object>-derived class, but this family of modules was originally motivated by a desire to simplify the use of HTML forms.
 
-The form/field object interfaces have been heavily abstracted to allow for
-input and output filtering, inflation/deflation of values, and compound fields
-(fields that contain other fields).  The classes are also designed to be
-subclassed. The creation of custom form and field subclasses is really the
-"big win" for these modules.
+The form/field object interfaces have been heavily abstracted to allow for input and output filtering, inflation/deflation of values, and compound fields (fields that contain other fields).  The classes are also designed to be subclassed. The creation of custom form and field subclasses is really the "big win" for these modules.
 
-There is also a simple image tag class which is useful for auto-populating the
-C<width> and C<height> attributes of C<img> tags. Future releases may include
-object representations of other HTML tags. Contributions are welcome.
+There is also a simple image tag class which is useful for auto-populating the C<width> and C<height> attributes of C<img> tags. Future releases may include object representations of other HTML tags. Contributions are welcome.
 
-=head1 BUGS
+=head1 DEVELOPMENT POLICY
 
-Just in case this doesn't go without saying, I do not promise that the
-C<Rose::HTML::Object::*> API will be stable until version 1.0.  I will make
-every effort to avoid changing the API needlessly, however.
+The L<Rose development policy|Rose/"DEVELOPMENT POLICY"> applies to this, and all C<Rose::*> modules.  Please install L<Rose> from CPAN and then run "C<perldoc Rose>" for more information.
+
+=head1 SUPPORT
+
+Any L<Rose::HTML::Objects> questions or problems can be posted to the L<Rose::HTML::Objects> mailing list.  To subscribe to the list or view the archives, go here:
+
+L<http://lists.sourceforge.net/lists/listinfo/rose-html-objects>
+
+Although the mailing list is the preferred support mechanism, you can also email the author (see below) or file bugs using the CPAN bug tracking system:
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-HTML-Objects>
 
 =head1 AUTHOR
 

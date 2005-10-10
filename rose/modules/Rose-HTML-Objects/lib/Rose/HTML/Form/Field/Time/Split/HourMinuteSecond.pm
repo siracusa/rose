@@ -157,8 +157,8 @@ menu for selecting AM or PM.
 
 This class inherits (indirectly) from both L<Rose::HTML::Form::Field::Time>
 and L<Rose::HTML::Form::Field::Compound>.  This doesn't quite work out as
-expected without a bit of tweaking.  We'd like C<inflate_value()> and
-C<validate()> methods to be inherited from L<Rose::HTML::Form::Field::Time>,
+expected without a bit of tweaking.  We'd like L<inflate_value()|Rose::HTML::Form::Field/inflate_value> and
+L<validate()|Rose::HTML::Form::Field/validate> methods to be inherited from L<Rose::HTML::Form::Field::Time>,
 but everything else to be inherited from
 L<Rose::HTML::Form::Field::Compound>.
 

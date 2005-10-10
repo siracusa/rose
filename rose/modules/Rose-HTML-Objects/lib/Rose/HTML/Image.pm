@@ -216,7 +216,7 @@ the document root.
 
 Try to set the "width" and "height" HTML attributes but using L<Image::Size>
 to read the image file on disk.  If a PATH argument is passed, the image file
-is read at that location.  Otherwise, if the C<path()> attribute is set, that
+is read at that location.  Otherwise, if the L<path()|/path> attribute is set, that
 path is used.  Failing that, the width and height HTML attributes are simply
 not modified.
 
@@ -224,10 +224,10 @@ not modified.
 
 Get or set the path to the image file on disk.
 
-If a PATH argument is passed and C<document_root()> is defined, then PATH has
-C<document_root()> removed from the front of it (substitution anchored at the
+If a PATH argument is passed and L<document_root()|/document_root> is defined, then PATH has
+L<document_root()|/document_root> removed from the front of it (substitution anchored at the
 start of PATH) and the resulting string is set as the value of the "src" HTML
-attribute.  Regardless of the value of C<document_root()>, C<init_size()> is
+attribute.  Regardless of the value of L<document_root()|/document_root>, L<init_size()|/init_size> is
 called in an attempt to set the "height" and "width" HTML attributes.
 
 The current value of the C<path> object attribute is returned.
@@ -237,8 +237,8 @@ The current value of the C<path> object attribute is returned.
 Get or set the value of the "src" HTML attribute.
 
 If a SRC argument is passed and a file is found at the path specified by SRC,
-then C<path()> is set to SRC.  Otherwise, C<path()> is set to the
-concatenation of C<document_root()> and SRC.  In either case, C<init_size()>
+then L<path()|/path> is set to SRC.  Otherwise, L<path()|/path> is set to the
+concatenation of L<document_root()|/document_root> and SRC.  In either case, L<init_size()|/init_size>
 is called in an attempt to set the "height" and "width" HTML attributes.
 
 The current value of the "src" HTML attribute is returned.

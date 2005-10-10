@@ -106,7 +106,7 @@ name.
 
 =item B<add_radio_button OPTION>
 
-Convenience alias for C<add_radio_buttons()>.
+Convenience alias for L<add_radio_buttons()|/add_radio_buttons>.
 
 =item B<add_radio_buttons RADIO_BUTTONS>
 
@@ -115,13 +115,13 @@ reference to a hash of value/label pairs, a reference to an array of values,
 or a list of L<Rose::HTML::Form::Field::RadioButton> objects. Passing an odd
 number of items in the value/label argument list causes a fatal error.
 Radio button values and labels passed as a hash reference are sorted by value
-according to the default behavior of Perl's built-in C<sort()> function. 
+according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function. 
 Radio buttons are added to the end of the existing list of radio buttons.
 
 =item B<columns [COLS]>
 
 Get or set the default number of columns to use in the output of the
-C<html_table()> and C<xhtml_table()> methods.
+L<html_table()|/html_table> and L<xhtml_table()|/xhtml_table> methods.
 
 =item B<has_value VALUE>
 
@@ -130,8 +130,8 @@ otherwise.
 
 =item B<html>
 
-Returns the HTML for radio button group, which consists of the C<html()> for each
-radio button object joined by C<html_linebreak()> if C<linebreak()> is true, or
+Returns the HTML for radio button group, which consists of the L<html()|/html> for each
+radio button object joined by L<html_linebreak()|/html_linebreak> if L<linebreak()|/linebreak> is true, or
 single spaces if it is false.
 
 =item B<html_linebreak [HTML]>
@@ -157,8 +157,8 @@ Defaults to 0.
 
 =item columns
 
-The number of columns in the table.  Defaults to C<columns()>,
-or 1 if C<columns()> is false.
+The number of columns in the table.  Defaults to L<columns()|/columns>,
+or 1 if L<columns()|/columns> is false.
 
 =item format_item
 
@@ -167,8 +167,8 @@ fill each table cell.  Defaults to "html"
 
 =item rows
 
-The number of rows in the table.  Defaults to C<rows()>,
-or 1 if C<rows()> is false.
+The number of rows in the table.  Defaults to L<rows()|/rows>,
+or 1 if L<rows()|/rows> is false.
 
 =item table
 
@@ -194,8 +194,8 @@ the last entry is used for all of the remaining rows.  Defaults to C<{ valign
 
 =back
 
-Specifying "rows" and "columns" values (either as ARGS or via C<rows()> and
-C<columns()>) that are both greater than 1 leads to undefined behavior if
+Specifying "rows" and "columns" values (either as ARGS or via L<rows()|/rows> and
+L<columns()|/columns>) that are both greater than 1 leads to undefined behavior if
 there are not exactly "rows x columns" radio buttons.  For predictable behavior,
 set either rows or columns to a value greater than 1, but not both.
 
@@ -227,13 +227,13 @@ in scalar context.
 =item B<linebreak [BOOL]>
 
 Get or set the flag that determines whether or not the string stored in
-C<html_linebreak()> or C<xhtml_linebreak()> is used to separate radio buttons
-in the output of C<html()> or C<xhtml()>, respectively.  Defaults to true.
+L<html_linebreak()|/html_linebreak> or L<xhtml_linebreak()|/xhtml_linebreak> is used to separate radio buttons
+in the output of L<html()|/html> or L<xhtml()|/xhtml>, respectively.  Defaults to true.
 
 =item B<radio_button VALUE>
 
 Returns the first radio button (according to the order that they are returned
-from C<radio_buttons()>) whose "value" HTML attribute is VALUE, or undef if no
+from L<radio_buttons()|/radio_buttons>) whose "value" HTML attribute is VALUE, or undef if no
 such radio button exists.
 
 =item B<radio_buttons RADIO_BUTTONS>
@@ -243,10 +243,10 @@ reference to a hash of value/label pairs, a reference to an array of values,
 or a list of L<Rose::HTML::Form::Field::RadioButton> objects. Passing an odd
 number of items in the value/label argument list causes a fatal error.
 Radio button values and labels passed as a hash reference are sorted by value
-according to the default behavior of Perl's built-in C<sort()> function.
+according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.
 
 To set an ordered list of radio buttons along with labels in the constructor,
-use both the C<radio_buttons()> and C<labels()> methods in the correct order. 
+use both the L<radio_buttons()|/radio_buttons> and L<labels()|/labels> methods in the correct order. 
 Example:
 
     $field = 
@@ -257,7 +257,7 @@ Example:
 
 Remember that methods are called in the order that they appear in the
 constructor arguments (see the L<Rose::Object> documentation), so
-C<radio_buttons()> will be called before C<labels()> in the example above. 
+L<radio_buttons()|/radio_buttons> will be called before L<labels()|/labels> in the example above. 
 This is important; it will not work in the opposite order.
 
 Returns a list of the radio button group's L<Rose::HTML::Form::Field::RadioButton>
@@ -268,11 +268,11 @@ modify the field itself.
 =item B<rows [ROWS]>
 
 Get or set the default number of rows to use in the output of the
-C<html_table()> and C<xhtml_table()> methods.
+L<html_table()|/html_table> and L<xhtml_table()|/xhtml_table> methods.
 
 =item B<value [VALUE]>
 
-Simply calls C<input_value()>, passing all arguments.
+Simply calls L<input_value()|Rose::HTML::Form::Field/input_value>, passing all arguments.
 
 =item B<value_label [VALUE [, LABEL]>
 
@@ -287,8 +287,8 @@ radio button does not exist, then undef is returned.
 
 =item B<xhtml>
 
-Returns the XHTML for radio button group, which consists of the C<xhtml()> for
-each radio button object joined by C<xhtml_linebreak()> if C<linebreak()> is
+Returns the XHTML for radio button group, which consists of the L<xhtml()|/xhtml> for
+each radio button object joined by L<xhtml_linebreak()|/xhtml_linebreak> if L<linebreak()|/linebreak> is
 true, or single spaces if it is false.
 
 =item B<xhtml_linebreak [XHTML]>
@@ -297,7 +297,7 @@ Get or set the XHTML linebreak string.  The default is "E<lt>br /E<gt>\n"
 
 =item B<xhtml_table>
 
-Equivalent to C<html_table()>.
+Equivalent to L<html_table()|/html_table>.
 
 =back
 

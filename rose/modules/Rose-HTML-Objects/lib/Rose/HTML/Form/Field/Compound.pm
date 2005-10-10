@@ -429,50 +429,23 @@ other field objects.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Form::Field::Compound> is a base class for compound fields. A
-compound field is one that contains other fields.  The example in the
-L<SYNOPSIS> is a full name field made up of three separate text fields, one
-each for first, middle, and last name.  Compound fields can also contain other
-compound fields.
+L<Rose::HTML::Form::Field::Compound> is a base class for compound fields. A compound field is one that contains other fields.  The example in the L<SYNOPSIS> is a full name field made up of three separate text fields, one each for first, middle, and last name.  Compound fields can also contain other compound fields.
 
-Externally, a compound field must field look and behave as if it is a single,
-simple field.  Although this can be done in many ways, it is important for all
-compound fields to actually inherit from L<Rose::HTML::Form::Field::Compound>.
-L<Rose::HTML::Form> uses this relationship in order to identify compound
-fields and handle them correctly.  Any compound field that does not inherit
-from L<Rose::HTML::Form::Field::Compound> will not work correctly with
-L<Rose::HTML::Form>.
+Externally, a compound field must field look and behave as if it is a single, simple field.  Although this can be done in many ways, it is important for all compound fields to actually inherit from L<Rose::HTML::Form::Field::Compound>. L<Rose::HTML::Form> uses this relationship in order to identify compound fields and handle them correctly.  Any compound field that does not inherit from L<Rose::HTML::Form::Field::Compound> will not work correctly with L<Rose::HTML::Form>.
 
-This class inherits from, and follows the conventions of,
-L<Rose::HTML::Form::Field>. Inherited methods that are not overridden will not
-be documented a second time here.  See the L<Rose::HTML::Form::Field>
-documentation for more information.
+This class inherits from, and follows the conventions of, L<Rose::HTML::Form::Field>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::HTML::Form::Field> documentation for more information.
 
 =head1 SUBCLASSING
 
-Actual compound fields must override the following methods: C<build_field()>,
-C<decompose_value()>, and C<coalesce_value()>.  The required semantics of
-those methods are described in the L<OBJECT METHODS> section below.
+Actual compound fields must override the following methods: L<build_field()|/build_field>, L<decompose_value()|/decompose_value>, and L<coalesce_value()|/coalesce_value>.  The required semantics of those methods are described in the L<OBJECT METHODS> section below.
 
 =head1 SUBFIELD ADDRESSING
 
-Subfields are fields that are contained within another field.  A field that
-has subfields is called a compound field.  It is important to HTML form
-initialization that subfields be addressable from the top level.  Since fields
-can be arbitrarily nested, some form of nesting must also exist in the field
-names.
+Subfields are fields that are contained within another field.  A field that has subfields is called a compound field.  It is important to HTML form initialization that subfields be addressable from the top level.  Since fields can be arbitrarily nested, some form of nesting must also exist in the field names.
 
-To that end, compound fields use the "." character to partition the namespace.
-For example, the "month" subfield of a compound field named "date" could be
-addressed by the name "date.month".  As a consequence of this convention,
-I<field names may not contain periods>.
+To that end, compound fields use the "." character to partition the namespace. For example, the "month" subfield of a compound field named "date" could be addressed by the name "date.month".  As a consequence of this convention, I<field names may not contain periods>.
 
-Subfields may be addressed by their fully-qualified name, or by their
-"relative" name from the perspective of the caller.  For example, the
-L<Rose::HTML::Form::Field::DateTime::Split::MDYHMS> custom field class
-contains a two compound fields: one for the time (split into hours, minutes,
-seconds, and AM/PM) and one for the date (split into month, day, and year).
-Here are a few ways to address the fields.
+Subfields may be addressed by their fully-qualified name, or by their "relative" name from the perspective of the caller.  For example, the L<Rose::HTML::Form::Field::DateTime::Split::MDYHMS> custom field class contains a two compound fields: one for the time (split into hours, minutes, seconds, and AM/PM) and one for the date (split into month, day, and year). Here are a few ways to address the fields.
 
     $datetime_field = 
       Rose::HTML::Form::Field::DateTime::Split::MDYHMS->new(
@@ -501,47 +474,21 @@ Here are a few ways to address the fields.
     # Direct subfield access plus another direct subfield access
     $year_field = $datetime_field->field('date')->field('year');
 
-See the L<Rose::HTML::Form> documentation for more information on how forms
-address and initialize fields based on query parameter names.
+See the L<Rose::HTML::Form> documentation for more information on how forms address and initialize fields based on query parameter names.
 
 =head1 VALIDATION
 
-It is not the job of the C<coalesce_value()> or C<decompose_value()> methods
-to validate input.  That's the job of the C<validate()> method in
-L<Rose::HTML::Form::Field>.
+It is not the job of the L<coalesce_value()|/coalesce_value> or L<decompose_value()|/decompose_value> methods to validate input.  That's the job of the L<validate()|Rose::HTML::Form::Field/validate> method in L<Rose::HTML::Form::Field>.
 
-But as you'll see when you start to write your own C<decompose_value()>
-methods, it's often nice to know whether the input is valid before you try to
-decompose it into subfield values.  Valid input can usually be divided up very
-easily, whereas invalid input requires some hard decisions to be made.
-Consequently, most C<decompose_value()> methods have one section for handling
-valid input, and another that makes a best-effort to handle invalid input.
+But as you'll see when you start to write your own L<decompose_value()|/decompose_value> methods, it's often nice to know whether the input is valid before you try to decompose it into subfield values.  Valid input can usually be divided up very easily, whereas invalid input requires some hard decisions to be made. Consequently, most L<decompose_value()|/decompose_value> methods have one section for handling valid input, and another that makes a best-effort to handle invalid input.
 
-There are several ways to determine whether or not a value passed to
-C<decompose_value()> is valid.  You could actually call C<validate()>, but
-that is technically a violation of the API since C<decompose_value()> only
-knows that it's supposed to divvy up the value that it is passed.  It is
-merely assuming that this value is also the current value of the field. In
-short, don't do that.
+There are several ways to determine whether or not a value passed to L<decompose_value()|/decompose_value> is valid.  You could actually call L<validate()|Rose::HTML::Form::Field/validate>, but that is technically a violation of the API since L<decompose_value()|/decompose_value> only knows that it's supposed to divvy up the value that it is passed.  It is merely assuming that this value is also the current value of the field. In short, don't do that.
 
-The C<decompose_value()> method could try to validate the input directly, of
-course.  But that seems like a duplication of code.  It might work, but it is
-more effort.
+The L<decompose_value()|/decompose_value> method could try to validate the input directly, of course.  But that seems like a duplication of code.  It might work, but it is more effort.
 
-The recommended solution is to rely on the fact that most overridden
-C<inflate_value()> methods serve as an alternate form of validation.  Really,
-the C<decompose_value()> method doesn't I<want> to "validate" in the same way
-that C<validate()> does. Imagine a month/day/year compound field that only
-accepts dates in the the 1990s.  As far as C<validate()> is concerned,
-12/31/2002 is an invalid value.  But as far as C<decompose_value()> is
-concerned, it's perfectly fine and can be parsed and divided up into subfield
-values easily.
+The recommended solution is to rely on the fact that most overridden L<inflate_value()|Rose::HTML::Form::Field/inflate_value> methods serve as an alternate form of validation.  Really, the L<decompose_value()|/decompose_value> method doesn't I<want> to "validate" in the same way that L<validate()|Rose::HTML::Form::Field/validate> does. Imagine a month/day/year compound field that only accepts dates in the the 1990s.  As far as L<validate()|Rose::HTML::Form::Field/validate> is concerned, 12/31/2002 is an invalid value.  But as far as L<decompose_value()|/decompose_value> is concerned, it's perfectly fine and can be parsed and divided up into subfield values easily.
 
-This is exactly the determination that many overridden C<inflate_value()>
-methods must also make.  For example, that month/day/year compound field may
-use a C<DateTime> object as its internal value.  The C<inflate_value()> method
-must parse a date string and produce a C<DateTime> value.  The
-C<decompose_value()> method can use that to its advantage.  Example:
+This is exactly the determination that many overridden L<inflate_value()|Rose::HTML::Form::Field/inflate_value> methods must also make.  For example, that month/day/year compound field may use a L<DateTime> object as its internal value.  The L<inflate_value()|Rose::HTML::Form::Field/inflate_value> method must parse a date string and produce a L<DateTime> value.  The L<decompose_value()|/decompose_value> method can use that to its advantage.  Example:
 
     sub decompose_value
     {
@@ -574,13 +521,9 @@ C<decompose_value()> method can use that to its advantage.  Example:
       };
     }
 
-This technique is sound because both C<decompose_value()> and
-C<inflate_value()> work only with the input they are given, and have no
-reliance on the state of the field object itself (unlike C<validate()>).
+This technique is sound because both L<decompose_value()|/decompose_value> and L<inflate_value()|Rose::HTML::Form::Field/inflate_value> work only with the input they are given, and have no reliance on the state of the field object itself (unlike L<validate()|Rose::HTML::Form::Field/validate>).
 
-If the C<inflate_value()> method is not being used, then C<decompose_value()>
-must sanity check its own input.  But this code is not necessarily the same as
-the code in C<validate()>, so there is no real duplication.
+If the L<inflate_value()|Rose::HTML::Form::Field/inflate_value> method is not being used, then L<decompose_value()|/decompose_value> must sanity check its own input.  But this code is not necessarily the same as the code in L<validate()|Rose::HTML::Form::Field/validate>, so there is no real duplication.
 
 =head1 OBJECT METHODS
 
@@ -588,26 +531,19 @@ the code in C<validate()>, so there is no real duplication.
 
 =item B<add_field ARGS>
 
-Convenience alias for C<add_fields()>.
+Convenience alias for L<add_fields()|/add_fields>.
 
 =item B<add_fields ARGS>
 
-Add the fields specified by ARGS to the list of subfields in
-this compound field.
+Add the fields specified by ARGS to the list of subfields in this compound field.
 
-If an argument is "isa" L<Rose::HTML::Form::Field>, then it is added to the
-list of fields, stored under the name returned by the field's C<name()> method.
+If an argument is "isa" L<Rose::HTML::Form::Field>, then it is added to the list of fields, stored under the name returned by the field's L<name()|Rose::HTML::Form::Field/name> method.
 
-If an argument is anything else, it is used as the field name, and the next
-argument is used as the field object to store under that name.  If the next
-argument is not an object derived from L<Rose::HTML::Form::Field>, then a
-fatal error occurs.
+If an argument is anything else, it is used as the field name, and the next argument is used as the field object to store under that name.  If the next argument is not an object derived from L<Rose::HTML::Form::Field>, then a fatal error occurs.
 
-The field object's C<name()> is set to the name that it is stored under, and
-its C<parent_field()> is set to the form object.
+The field object's L<name()|Rose::HTML::Form::Field/name> is set to the name that it is stored under, and its L<parent_field()|Rose::HTML::Form::Field/parent_field> is set to the form object.
 
-Returns the full list of field objects, sorted by field name, in list context,
-or a reference to a list of the same in scalar context.
+Returns the full list of field objects, sorted by field name, in list context, or a reference to a list of the same in scalar context.
 
 Examples:
 
@@ -636,8 +572,7 @@ Get or set a boolean value that indicates whether or not the internal value of a
 
 =item B<build_field>
 
-This method must be overridden by subclasses.  Its job is to build the compound
-field by creating and then adding the subfields.  Example:
+This method must be overridden by subclasses.  Its job is to build the compound field by creating and then adding the subfields.  Example:
 
     sub build_field
     {
@@ -660,15 +595,11 @@ field by creating and then adding the subfields.  Example:
       $self->add_fields(%fields);
     }
 
-The example uses a hash to store the fields temporarily, then passes the hash
-to C<add_fields()>.  It could just as easily have added each field as it was
-created by calling C<add_field()>.  See the documentation for C<add_fields()>
-and C<add_field()> for more details about they arguments they accept.
+The example uses a hash to store the fields temporarily, then passes the hash to L<add_fields()|/add_fields>.  It could just as easily have added each field as it was created by calling L<add_field()|/add_field>.  See the documentation for L<add_fields()|/add_fields> and L<add_field()|/add_field> for more details about they arguments they accept.
 
 =item B<coalesce_value>
 
-This method must be overridden by subclasses.  It is responsible for combining
-the values of the subfields into a single value.  Example:
+This method must be overridden by subclasses.  It is responsible for combining the values of the subfields into a single value.  Example:
 
     sub coalesce_value
     {
@@ -678,24 +609,15 @@ the values of the subfields into a single value.  Example:
                        qw(first middle last));
     }
 
-The value returned must be suitable as an input value.  See the
-L<Rose::HTML::Form::Field> documentation for more information on input values.
+The value returned must be suitable as an input value.  See the L<Rose::HTML::Form::Field> documentation for more information on input values.
 
 =item B<decompose_value VALUE>
 
-This method must be overridden by subclasses.  It is responsible for
-distributing the input value VALUE amongst the various subfields.  This is
-harder than you might expect, given the possibility of invalid input.
-Nevertheless, subclasses must try to divvy up even garbage values such that
-they eventually produce output values that are equivalent to the original
-input value when fed back through the system.
+This method must be overridden by subclasses.  It is responsible for distributing the input value VALUE amongst the various subfields.  This is harder than you might expect, given the possibility of invalid input. Nevertheless, subclasses must try to divvy up even garbage values such that they eventually produce output values that are equivalent to the original input value when fed back through the system.
 
 The method should return a reference to a hash of subfield-name/value pairs.
 
-In the example below, the method's job is to decompose a full name into
-first, middle, and last names.  It is not very heroic in its efforts to
-parse the name, but it at least tries to ensure that every significant piece 
-of the value ends up back in one of the subfields.
+In the example below, the method's job is to decompose a full name into first, middle, and last names.  It is not very heroic in its efforts to parse the name, but it at least tries to ensure that every significant piece of the value ends up back in one of the subfields.
 
     sub decompose_value
     {
@@ -739,23 +661,17 @@ of the value ends up back in one of the subfields.
 
 =item B<field NAME [, VALUE]>
 
-Get or set the field specified by NAME.  If only a NAME argument is passed,
-then the field stored under the name NAME is returned.  If no field exists
-under that name exists, then undef is returned.
+Get or set the field specified by NAME.  If only a NAME argument is passed, then the field stored under the name NAME is returned.  If no field exists under that name exists, then undef is returned.
 
-If both NAME and VALUE arguments are passed, then the field VALUE is stored
-under the name NAME.  If VALUE is not an object derived from
-L<Rose::HTML::Form::Field>, a fatal error occurs.
+If both NAME and VALUE arguments are passed, then the field VALUE is stored under the name NAME.  If VALUE is not an object derived from L<Rose::HTML::Form::Field>, a fatal error occurs.
 
 =item B<fields>
 
-Returns the full list of field objects, sorted by field name, in list context,
-or a reference to a list of the same in scalar context.
+Returns the full list of field objects, sorted by field name, in list context, or a reference to a list of the same in scalar context.
 
 =item B<field_names>
 
-Returns a sorted list of field names in list context, or a reference to a list
-of the same in scalar context.
+Returns a sorted list of field names in list context, or a reference to a list of the same in scalar context.
 
 =item B<invalidate_value>
 
@@ -795,6 +711,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

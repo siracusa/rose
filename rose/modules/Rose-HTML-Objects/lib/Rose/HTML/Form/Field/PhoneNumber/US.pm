@@ -83,7 +83,7 @@ in the form: 123-456-7890
 L<Rose::HTML::Form::Field::PhoneNumber::US> is a subclass of
 L<Rose::HTML::Form::Field::Text> that only allows values that contain exactly
 10 digits, which it coerces into the form "123-456-7890".  It overrides the
-C<validate()> and C<inflate_value()>, and C<deflate_value()> methods of its
+L<validate()|Rose::HTML::Form::Field/validate> and L<inflate_value()|Rose::HTML::Form::Field/inflate_value>, and L<deflate_value()|Rose::HTML::Form::Field/deflate_value> methods of its
 parent class.
 
 This is a good example of a custom field class that constrains the kinds of

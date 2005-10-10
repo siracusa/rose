@@ -714,7 +714,7 @@ several different hooks and callbacks along the way:
                     +------------------+
 
 
-Input must be done "at the top", by calling C<input_value()>. The value as
+Input must be done "at the top", by calling L<input_value()|/input_value>. The value as
 it exists at various stages of the flow can be retrieved, but it can only be
 set at the top.  Input and output filters can be defined, but none exist by
 default.
@@ -759,8 +759,8 @@ The prefilter exists to handle common filtering tasks without hogging
 the lone input filter spot (or requiring users to constantly set
 input filters for every field).  The L<Rose::HTML::Form::Field> prefilter
 optionally trims leading and trailing whitespace based on the value of
-the C<trim_spaces()> boolean attribute.  This is part of the public
-API for field objects, so subclasses that override C<input_prefilter()>
+the L<trim_spaces()|/trim_spaces> boolean attribute.  This is part of the public
+API for field objects, so subclasses that override L<input_prefilter()|/input_prefilter>
 must preserve this functionality.
 
 In addition to the various kinds of field values, each field also has a name,
@@ -776,7 +776,7 @@ This module distribution contains classes for most simple HTML fields, as well
 as examples of several more complex field types.  These "custom" fields do
 things like accept only valid email addresses or dates, coerce input and
 output into fixed formats, and provide rich internal representations (e.g.,
-C<DateTime> objects).  Compound fields are made up of more than one field, and
+L<DateTime> objects).  Compound fields are made up of more than one field, and
 this construction can be nested: compound fields can contain other compound
 fields.  So long as each custom field class complies with the API outlined
 here, it doesn't matter how complex it is internally (or externally, in its
@@ -848,11 +848,11 @@ See L</"parent_field"> and L</"invalidate_value"> for more information.
 =item B<clear>
 
 Clears the field by setting both the "value" HTML attribute and the input
-value to undef.  Also sets the C<is_cleared()> flag.
+value to undef.  Also sets the L<is_cleared()|/is_cleared> flag.
 
 =item B<default VALUE>
 
-Convenience wrapper for C<default_value()>
+Convenience wrapper for L<default_value()|/default_value>
 
 =item B<default_value VALUE>
 
@@ -900,7 +900,7 @@ Sets both the input filter and output filter to CODE.
 
 =item B<hidden_field>
 
-Convenience wrapper for C<hidden_fields()>
+Convenience wrapper for L<hidden_fields()|/hidden_fields>
 
 =item B<hidden_fields>
 
@@ -911,12 +911,12 @@ the hidden fields needed to encode this field's value.
 
 Returns the HTML serialization of the field, along with the HTML error
 message, if any. The field and error HTML are joined by
-C<html_error_separator()>, which is "E<lt>brE<gt>\n" by default.
+L<html_error_separator()|/html_error_separator>, which is "E<lt>brE<gt>\n" by default.
 
 =item B<html_error_separator [STRING]>
 
 Get or set the string used to join the HTML field and HTML error message
-in the output of the C<html()> method.  The default value is "E<lt>brE<gt>\n"
+in the output of the L<html()|/html> method.  The default value is "E<lt>brE<gt>\n"
 
 =item B<html_field>
 
@@ -924,21 +924,21 @@ Returns the HTML serialization of the field.
 
 =item B<html_hidden_field>
 
-Convenience wrapper for C<html_hidden_fields()>
+Convenience wrapper for L<html_hidden_fields()|/html_hidden_fields>
 
 =item B<html_hidden_fields>
 
-Returns the HTML serialization of the fields returned by C<hidden_fields()>,
+Returns the HTML serialization of the fields returned by L<hidden_fields()|/hidden_fields>,
 joined by newlines.
 
 =item B<html_label [ARGS]>
 
 Returns the HTML serialization of the label object, or the empty
 string if the field's C<label> is undefined or zero in length.
-Any ARGS are passed to the call to C<label_object()>.
+Any ARGS are passed to the call to L<label_object()|/label_object>.
 
-If C<required()>is true for this field, then the name/value pair "class =>
-'required'" is passed to the call to C<label_object()> I<before> any
+If L<required()|/required>is true for this field, then the name/value pair "class =>
+'required'" is passed to the call to L<label_object()|/label_object> I<before> any
 arguments that you pass.  This allows you to override the "class" value
 with one of your own.
 
@@ -957,7 +957,7 @@ The default value is an empty string.
 =item B<html_tag>
 
 This method is part of the L<Rose::HTML::Object> API.  In this case, it simply
-calls C<html_field()>.
+calls L<html_field()|/html_field>.
 
 =item B<inflate_value VALUE>
 
@@ -977,8 +977,8 @@ when needed and is not meant to be called by users of this module.  Subclasses
 may want to override it, however. 
 
 The default implementation optionally trims leading and trailing spaces based
-on the value of the C<trim_spaces()> boolean attribute.  This is part of the
-public API for field objects, so subclasses that override C<input_prefilter()>
+on the value of the L<trim_spaces()|/trim_spaces> boolean attribute.  This is part of the
+public API for field objects, so subclasses that override L<input_prefilter()|/input_prefilter>
 must preserve this functionality.
 
 =item B<input_value [VALUE]>
@@ -1006,8 +1006,8 @@ This method is most useful in conjunction with the L</"parent_field"> attribute.
 
 =item B<is_cleared>
 
-Returns true if the field is cleared (i.e., if C<clear()> has been called on
-it and it has not subsequently been C<reset()> or given a new input value),
+Returns true if the field is cleared (i.e., if L<clear()|/clear> has been called on
+it and it has not subsequently been L<reset()|/reset> or given a new input value),
 false otherwise.
 
 =item B<is_empty>
@@ -1030,12 +1030,12 @@ for use in the latter.
 Returns a L<Rose::HTML::Label> object with its C<for> HTML attribute set to
 the calling field's C<id> attribute and any other HTML attributes specified by
 the name/value pairs in ARGS.  The HTML contents of the label object are set
-to the field's C<label()>, which has its HTML escaped if C<escape_html()> is
+to the field's L<label()|/label>, which has its HTML escaped if L<escape_html()|Rose::HTML::Object/escape_html> is
 true (which is the default).
 
 =item B<name [NAME]>
 
-Get or set the "name" HTML attribute, but return the C<field_name()>
+Get or set the "name" HTML attribute, but return the L<field_name()|/field_name>
 if the "name" HTML attribute is undefined.
 
 =item B<output_filter [CODE]>
@@ -1056,12 +1056,12 @@ order to avoid memory leaks caused by circular references.
 =item B<required [BOOL]>
 
 Get to set a boolean flag that indicates whether or not a field is "required."
-See C<validate()> for more on what "required" means.
+See L<validate()|/validate> for more on what "required" means.
 
 =item B<reset>
 
-Reset the field to its default state: the input value and C<error()> are set
-to undef and the C<is_cleared()> flag is set to false.
+Reset the field to its default state: the input value and L<error()|Rose::HTML::Object/error> are set
+to undef and the L<is_cleared()|/is_cleared> flag is set to false.
 
 =item B<trim_spaces [BOOL]>
 
@@ -1080,27 +1080,27 @@ following rules.
 * If the internal value is a reference to an array, and the array is empty,
 then return false.
 
-* If C<trim_spaces()> is true (the default) and if the internal value does not
+* If L<trim_spaces()|/trim_spaces> is true (the default) and if the internal value does not
 contain any non-whitespace characters, return false.
 
-If false is returned due to one of the conditions above, then C<error()> is
+If false is returned due to one of the conditions above, then L<error()|Rose::HTML::Object/error> is
 set to the string:
 
     $label is a required field
 
-where C<$label> is either the field's C<label()> or, if C<label()> is not
+where C<$label> is either the field's L<label()|/label> or, if L<label()|/label> is not
 defined, the string "This".
 
-If a custom C<validator()> is set, then C<$_> is localized and set to the
+If a custom L<validator()|/validator> is set, then C<$_> is localized and set to the
 internal value and the validator subroutine is called with the field object
 as the first and only argument.
 
-If the validator subroutine returns false and did not set C<error()> to a
-defined value, then C<error()> is set to the string:
+If the validator subroutine returns false and did not set L<error()|Rose::HTML::Object/error> to a
+defined value, then L<error()|Rose::HTML::Object/error> is set to the string:
 
     $label is invalid
 
-where C<$label> is is either the field's C<label()> or, if C<label()> is not
+where C<$label> is is either the field's L<label()|/label> or, if L<label()|/label> is not
 defined, the string "Value".
 
 The return value of the validator subroutine is then returned.
@@ -1111,7 +1111,7 @@ returned.
 =item B<validator [CODE]>
 
 Get or set a validator subroutine.  If defined, this subroutine is called by
-C<validate()>.
+L<validate()|/validate>.
 
 =item B<value [VALUE]>
 
@@ -1122,12 +1122,12 @@ HTML attribute to VALUE.  Returns the value of the "value" HTML attribute.
 
 Returns the XHTML serialization of the field, along with the HTML error
 message, if any. The field and error HTML are joined by
-C<xhtml_error_separator()>, which is "E<lt>br /E<gt>\n" by default.
+L<xhtml_error_separator()|/xhtml_error_separator>, which is "E<lt>br /E<gt>\n" by default.
 
 =item B<xhtml_error_separator [STRING]>
 
 Get or set the string used to join the XHTML field and HTML error message
-in the output of the C<xhtml()> method.  The default value is "E<lt>br /E<gt>\n"
+in the output of the L<xhtml()|/xhtml> method.  The default value is "E<lt>br /E<gt>\n"
 
 =item B<xhtml_field>
 
@@ -1135,28 +1135,28 @@ Returns the XHTML serialization of the field.
 
 =item B<xhtml_hidden_field>
 
-Convenience wrapper for C<xhtml_hidden_fields()>
+Convenience wrapper for L<xhtml_hidden_fields()|/xhtml_hidden_fields>
 
 =item B<xhtml_hidden_fields>
 
-Returns the XHTML serialization of the fields returned by C<hidden_fields()>,
+Returns the XHTML serialization of the fields returned by L<hidden_fields()|/hidden_fields>,
 joined by newlines.
 
 =item B<xhtml_label [ARGS]>
 
 Returns the XHTML serialization of the label object, or the empty
 string if the field's C<label> is undefined or zero in length.
-Any ARGS are passed to the call to C<label_object()>.
+Any ARGS are passed to the call to L<label_object()|/label_object>.
 
-If C<required()>is true for this field, then the name/value pair "class =>
-'required'" is passed to the call to C<label_object()> I<before> any
+If L<required()|/required>is true for this field, then the name/value pair "class =>
+'required'" is passed to the call to L<label_object()|/label_object> I<before> any
 arguments that you pass.  This allows you to override the "class" value
 with one of your own.
 
 =item B<xhtml_tag>
 
 This method is part of the L<Rose::HTML::Object> API.  In this case, it simply
-calls C<xhtml_field()>.
+calls L<xhtml_field()|/xhtml_field>.
 
 =back
 
