@@ -12,7 +12,7 @@ use Rose::DB::Object::Constants qw(STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.071';
+our $VERSION = '0.072';
 
 our $Debug = 0;
 
@@ -395,6 +395,45 @@ sub get_objects
     }
   }
 
+  # Pre-process sort_by args
+  if(my $sort_by = $args{'sort_by'})
+  {
+    # Alter sort_by SQL, replacing table and relationship names with aliases.
+    # This is to prevent databases like Postgres from "adding missing FROM
+    # clause"s.  See: http://sql-info.de/postgresql/postgres-gotchas.html#1_5
+    if($num_subtables > 0)
+    {
+      my $i = 0;
+      $sort_by = [ $sort_by ]  unless(ref $sort_by);
+  
+      foreach my $table (@tables)
+      {
+        $i++; # Table aliases are 1-based
+        
+        foreach my $sort (@$sort_by)
+        {
+          unless($sort =~ s/^(['"`]?)\w+\1(?:\s+(?:ASC|DESC))?$/t1.$sort/ ||
+                 $sort =~ s/\b$table\./t$i./g)
+          {
+            if(my $rel_name = $rel_name{"t$i"})
+            {
+              $sort =~ s/\b$rel_name\./t$i./g;
+            }
+          }
+        }
+      }
+    }
+    else # otherwise, trim t1. prefixes
+    {
+      foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
+      {
+        $sort =~ s/\bt1\.//g;
+      }
+    }
+
+    $args{'sort_by'} = $sort_by;
+  }
+
   if($with_objects)
   {
     # Copy clauses arg
@@ -572,13 +611,20 @@ sub get_objects
           if($mgr_args->{'sort_by'} && (!%fetch || 
              ($fetch{$tables[-1]} && !$fetch{$table_names[-1]})))
           {
+            my $sort_by = $mgr_args->{'sort_by'};
+
+            foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
+            {
+              $sort =~ s/^(['"`]?)\w+\1(?:\s+(?:ASC|DESC))?$/t$i.$sort/;
+            }
+
             if($args{'sort_by'})
             {
-              $args{'sort_by'} .= ", $mgr_args->{'sort_by'}";
+              push(@{$args{'sort_by'}}, $sort_by);
             }
             else
             {
-              $args{'sort_by'} = $mgr_args->{'sort_by'};
+              $args{'sort_by'} = [ $sort_by ];
             }
           }
         }
@@ -712,13 +758,21 @@ sub get_objects
           if($mgr_args->{'sort_by'} && (!%fetch || 
              ($fetch{$tables[-1]} && !$fetch{$table_names[-1]})))
           {
+            my $sort_by = $mgr_args->{'sort_by'};
+
+            # translate un-prefixed simple columns
+            foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
+            {
+              $sort =~ s/^(['"`]?)\w+\1(?:\s+(?:ASC|DESC))?$/t$i.$sort/;
+            }
+
             if($args{'sort_by'})
             {
-              $args{'sort_by'} .= ", $mgr_args->{'sort_by'}";
+              push(@{$args{'sort_by'}}, $sort_by);
             }
             else
             {
-              $args{'sort_by'} = $mgr_args->{'sort_by'};
+              $args{'sort_by'} = [ $sort_by ];
             }
           }
         }
@@ -828,6 +882,7 @@ sub get_objects
     return $count;
   }
 
+  # Post-process sort_by args
   if(my $sort_by = $args{'sort_by'})
   {
     # Alter sort_by SQL, replacing table and relationship names with aliases.
@@ -836,7 +891,6 @@ sub get_objects
     if($num_subtables > 0)
     {
       my $i = 0;
-      $sort_by = [ $sort_by ]  unless(ref $sort_by);
   
       foreach my $table (@tables)
       {
@@ -844,11 +898,13 @@ sub get_objects
         
         foreach my $sort (@$sort_by)
         {
-          $sort =~ s/\b$table\./t$i./g;
-
-          if(my $rel_name = $rel_name{"t$i"})
+          unless($sort =~ s/^(['"`]?)\w+\1(?:\s+(?:ASC|DESC))?$/t1.$sort/ ||
+                 $sort =~ s/\b$table\./t$i./g)
           {
-            $sort =~ s/\b$rel_name\./t$i./g;
+            if(my $rel_name = $rel_name{"t$i"})
+            {
+              $sort =~ s/\b$rel_name\./t$i./g;
+            }
           }
         }
       }
@@ -2195,7 +2251,7 @@ If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it
 
 A fully formed SQL "ORDER BY ..." clause, sans the words "ORDER BY", or a reference to an array of strings to be joined with a comma and appended to the "ORDER BY" clause.
 
-Within each string, any instance of "NAME." will be replaced with the appropriate "tN." table alias, where NAME is a table, foreign key, or relationship name.
+Within each string, any instance of "NAME." will be replaced with the appropriate "tN." table alias, where NAME is a table, foreign key, or relationship name.  All unprefixed simple column names are assumed to belong to the primary table ("t1").
 
 =item C<with_objects OBJECTS>
 

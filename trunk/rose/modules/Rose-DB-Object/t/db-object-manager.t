@@ -385,7 +385,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
         date_created  => '5/10/2002 10:34:56 am'
       ],
       clauses => [ "LOWER(status) LIKE 'w%'" ],
-      sort_by => 't1.id');
+      sort_by => 'id');
 
   is(ref $objs, 'ARRAY', "get_objects() with many 1 - $db_type");
   $objs ||= [];
@@ -437,7 +437,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
         date_created  => '5/10/2002 10:34:56 am'
       ],
       clauses => [ "LOWER(status) LIKE 'w%'" ],
-      sort_by => 't1.id');
+      sort_by => 'id');
 
   is(ref $objs, 'ARRAY', "get_objects() with many 8 - $db_type");
   $objs ||= [];
@@ -1886,7 +1886,7 @@ SKIP: foreach my $db_type ('mysql')
         date_created  => '5/10/2002 10:34:56 am'
       ],
       clauses => [ "LOWER(status) LIKE 'w%'" ],
-      sort_by => 't1.id');
+      sort_by => 'id');
 
   is(ref $objs, 'ARRAY', "get_objects() with many 1 - $db_type");
   $objs ||= [];
@@ -1938,7 +1938,7 @@ SKIP: foreach my $db_type ('mysql')
         date_created  => '5/10/2002 10:34:56 am'
       ],
       clauses => [ "LOWER(status) LIKE 'w%'" ],
-      sort_by => 't1.id');
+      sort_by => 'id');
 
   is(ref $objs, 'ARRAY', "get_objects() with many 8 - $db_type");
   $objs ||= [];
@@ -3444,7 +3444,7 @@ SKIP: foreach my $db_type (qw(informix))
         date_created  => '5/10/2002 10:34:56 am'
       ],
       clauses => [ "LOWER(status) LIKE 'w%'" ],
-      sort_by => 't1.id');
+      sort_by => 'id');
 
   is(ref $objs, 'ARRAY', "get_objects() with many 1 - $db_type");
   $objs ||= [];
@@ -3496,7 +3496,7 @@ SKIP: foreach my $db_type (qw(informix))
         date_created  => '5/10/2002 10:34:56 am'
       ],
       clauses => [ "LOWER(status) LIKE 'w%'" ],
-      sort_by => 't1.id');
+      sort_by => 'id');
 
   is(ref $objs, 'ARRAY', "get_objects() with many 8 - $db_type");
   $objs ||= [];
