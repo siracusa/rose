@@ -1601,7 +1601,7 @@ The L<Rose development policy|Rose/"DEVELOPMENT POLICY"> applies to this, and al
 
 =head1 SUPPORT
 
-Any L<Rose::DB::Objects> questions or problems can be posted to the L<Rose::DB::Object> mailing list.  To subscribe to the list or view the archives, go here:
+Any L<Rose::DB::Object> questions or problems can be posted to the L<Rose::DB::Object> mailing list.  To subscribe to the list or view the archives, go here:
 
 L<http://lists.sourceforge.net/lists/listinfo/rose-db-object>
 
