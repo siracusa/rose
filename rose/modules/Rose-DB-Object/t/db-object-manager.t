@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1271;
+use Test::More tests => 1229;
 
 BEGIN 
 {
@@ -3077,7 +3077,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type (qw(informix))
 {
-  skip("Informix tests", 427)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 385)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -4603,58 +4603,62 @@ SKIP: foreach my $db_type (qw(informix))
 
   my $i = 0;
 
-  foreach my $distinct (1, [ 't1' ], [ 'rose_db_object_test' ])
-  {
-    $i++;
-
-    $objs = 
-      Rose::DB::Object::Manager->get_objects(
-        object_class    => 'MyInformixObject',
-        distinct        => $distinct,
-        share_db        => 1,
-        require_objects => [ 'nicks', 'colors', 'other_obj' ],
-        multi_many_ok   => 1,
-        sort_by         => 't1.name');
-  
-    is(scalar @$objs, 2, "get_objects() distinct multi many require $i.1 - $db_type");
-  
-    is($objs->[0]->id, 5, "get_objects() distinct multi many require $i.2 - $db_type");
-    is($objs->[1]->id, 2, "get_objects() distinct multi many require $i.3 - $db_type");
-  
-    ok(!defined $objs->[0]->{'nicks'}, "get_objects() distinct multi many require $i.4 - $db_type");
-    ok(!defined $objs->[0]->{'colors'}, "get_objects() distinct multi many require $i.5 - $db_type");
-  
-    ok(!defined $objs->[1]->{'nicks'}, "get_objects() distinct multi many require $i.6 - $db_type");
-    ok(!defined $objs->[1]->{'colors'}, "get_objects() distinct multi many require $i.7 - $db_type");
-  }
+  # Can't do this in Informix thanks to the "nums" SET column: 
+  # Error -9607 Collections are not allowed in the DISTINCT clause.
+  #foreach my $distinct (1, [ 't1' ], [ 'rose_db_object_test' ])
+  #{
+  #  $i++;
+  #
+  #  $objs = 
+  #    Rose::DB::Object::Manager->get_objects(
+  #      object_class    => 'MyInformixObject',
+  #      distinct        => $distinct,
+  #      share_db        => 1,
+  #      require_objects => [ 'nicks', 'colors', 'other_obj' ],
+  #      multi_many_ok   => 1,
+  #      sort_by         => 't1.name');
+  #
+  #  is(scalar @$objs, 2, "get_objects() distinct multi many require $i.1 - $db_type");
+  #
+  #  is($objs->[0]->id, 5, "get_objects() distinct multi many require $i.2 - $db_type");
+  #  is($objs->[1]->id, 2, "get_objects() distinct multi many require $i.3 - $db_type");
+  #
+  #  ok(!defined $objs->[0]->{'nicks'}, "get_objects() distinct multi many require $i.4 - $db_type");
+  #  ok(!defined $objs->[0]->{'colors'}, "get_objects() distinct multi many require $i.5 - $db_type");
+  #
+  #  ok(!defined $objs->[1]->{'nicks'}, "get_objects() distinct multi many require $i.6 - $db_type");
+  #  ok(!defined $objs->[1]->{'colors'}, "get_objects() distinct multi many require $i.7 - $db_type");
+  #}
 
   #local $Rose::DB::Object::Manager::Debug = 1;
   #$DB::single = 1;
 
-  foreach my $distinct ([ 't2' ], [ 'rose_db_object_nicks' ], [ 'nicks' ])
-  {
-    $i++;
-
-    $objs = 
-      Rose::DB::Object::Manager->get_objects(
-        object_class    => 'MyInformixObject',
-        distinct        => $distinct,
-        share_db        => 1,
-        require_objects => [ 'nicks', 'colors', 'other_obj' ],
-        multi_many_ok   => 1,
-        sort_by         => 't1.name');
-  
-    is(scalar @$objs, 2, "get_objects() distinct multi many require $i.1 - $db_type");
-  
-    is($objs->[0]->id, 5, "get_objects() distinct multi many require $i.2 - $db_type");
-    is($objs->[1]->id, 2, "get_objects() distinct multi many require $i.3 - $db_type");
-  
-    ok(defined $objs->[0]->{'nicks'}, "get_objects() distinct multi many require $i.4 - $db_type");
-    ok(!defined $objs->[0]->{'colors'}, "get_objects() distinct multi many require $i.5 - $db_type");
-  
-    ok(defined $objs->[1]->{'nicks'}, "get_objects() distinct multi many require $i.6 - $db_type");
-    ok(!defined $objs->[1]->{'colors'}, "get_objects() distinct multi many require $i.7 - $db_type");
-  }
+  # Can't do this in Informix thanks to the "nums" SET column: 
+  # Error -9607 Collections are not allowed in the DISTINCT clause.
+  #foreach my $distinct ([ 't2' ], [ 'rose_db_object_nicks' ], [ 'nicks' ])
+  #{
+  #  $i++;
+  #
+  #  $objs = 
+  #    Rose::DB::Object::Manager->get_objects(
+  #      object_class    => 'MyInformixObject',
+  #      distinct        => $distinct,
+  #      share_db        => 1,
+  #      require_objects => [ 'nicks', 'colors', 'other_obj' ],
+  #      multi_many_ok   => 1,
+  #      sort_by         => 't1.name');
+  #
+  #  is(scalar @$objs, 2, "get_objects() distinct multi many require $i.1 - $db_type");
+  #
+  #  is($objs->[0]->id, 5, "get_objects() distinct multi many require $i.2 - $db_type");
+  #  is($objs->[1]->id, 2, "get_objects() distinct multi many require $i.3 - $db_type");
+  #
+  #  ok(defined $objs->[0]->{'nicks'}, "get_objects() distinct multi many require $i.4 - $db_type");
+  #  ok(!defined $objs->[0]->{'colors'}, "get_objects() distinct multi many require $i.5 - $db_type");
+  #
+  #  ok(defined $objs->[1]->{'nicks'}, "get_objects() distinct multi many require $i.6 - $db_type");
+  #  ok(!defined $objs->[1]->{'colors'}, "get_objects() distinct multi many require $i.7 - $db_type");
+  #}
 
   # End distinct tests
 }
