@@ -183,7 +183,34 @@ sub build_select
         or Carp::confess "No metadata found for class '$obj_class'";
     }
 
-    foreach my $column (@{$columns->{$table}})
+    my $query_only_columns = 0;
+    my $columns = $columns->{$table};
+
+    # No columns to select, but allow them to be queried if we can
+    if(@$columns == 0)
+    {
+      # Don't select these columns, but allow them to participate in the query
+      $query_only_columns = 1; 
+
+      if($obj_meta)
+      {
+        $columns = $obj_meta->column_names;
+      }
+      else # Try to dig out meta object even if query_is_sql
+      {
+        $meta      = $args{'meta'} || {};
+        $obj_class = $classes->{$table};
+        $obj_meta = $meta->{$obj_class} || 
+                      ($obj_class ? $obj_class->meta : undef);
+
+        if($obj_meta)
+        {
+          $columns = $obj_meta->column_names;
+        }
+      }
+    }
+
+    foreach my $column (@$columns)
     {
       my $fq_column     = "$table.$column";
       my $short_column  = "$table_alias.$column";
@@ -193,10 +220,13 @@ sub build_select
 
       my $method = $obj_meta ? $obj_meta->column_rw_method_name($column) : undef;
 
-      push(@select_columns, $multi_table ? 
-           "$short_column AS ${table_alias}_$column" : $column);
+      unless($query_only_columns)
+      {
+        push(@select_columns, $multi_table ? 
+             "$short_column AS ${table_alias}_$column" : $column);
+      }
 
-      foreach my $column_arg (grep { $query{$_} } map { ($_, "!$_") } 
+      foreach my $column_arg (grep { exists $query{$_} } map { ($_, "!$_") } 
                               ($column, $fq_column, $short_column, $rel_column, $unique_column, 
                               (defined $method && $method ne $column ? $method : ())))
       {

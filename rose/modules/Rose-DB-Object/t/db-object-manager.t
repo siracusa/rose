@@ -13,6 +13,8 @@ BEGIN
 
 our($HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
+# XXX: TODO - outer join where fo is null
+
 #
 # Postgres
 #
