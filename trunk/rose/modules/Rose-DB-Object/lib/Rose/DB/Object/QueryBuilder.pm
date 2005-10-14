@@ -261,7 +261,7 @@ sub build_select
             $val = $tmp{$column_arg};
           }
 
-          if($column_arg eq $column && $column_count{$column} > 1)
+          if($column_arg eq $column && ($column_count{$column} || 0) > 1)
           {
             if($args{'no_ambiguous_columns'})
             {

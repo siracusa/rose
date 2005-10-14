@@ -1004,7 +1004,7 @@ END
 
   if($HAVE_INFORMIX)
   {
-    # MySQL
+    # Informix
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
       or die Rose::DB->error;
 

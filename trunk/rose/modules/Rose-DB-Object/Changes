@@ -1,4 +1,4 @@
-0.077 (10.07.2005) - John Siracusa <siracusa@mindspring.com>
+0.077 (10.14.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added "distinct" and "fetch_only" manager parameters.
     * Added support for foreign key and relationship names as
@@ -6,6 +6,11 @@
       arguments.
     * Changed manager and query builder to default unprefixed
       ambiguous columns to belong to the primary table ("t1").
+    * Fixed a bug that caused make_methods() to fail for "... to one"
+      relationships that have no corresponding foreign key.
+    * Fixed a bug in QueryBuilder that prevented the ability to check
+      for null columns.
+    * Added the ability to query for columns that are not SELECTed.
 
 0.076 (10.05.2005) - John Siracusa <siracusa@mindspring.com>
 
