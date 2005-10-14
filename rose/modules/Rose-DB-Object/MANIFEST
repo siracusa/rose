@@ -115,4 +115,5 @@ t/db-object.t
 t/makemethods-db.t
 t/makemethods.t
 t/pod.t
+t/spot-check-01.t
 t/test-lib.pl
