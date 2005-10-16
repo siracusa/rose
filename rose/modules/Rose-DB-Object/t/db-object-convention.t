@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 21;
+use Test::More tests => 29;
 
 BEGIN 
 {
@@ -131,6 +131,66 @@ is($fk->class, 'My::FK1::OtherObject', 'auto_foreign_key 2');
 my $kc = $fk->key_columns;
 is(scalar keys %$kc, 1, 'auto_foreign_key 3');
 is($kc->{'other_object_id'}, 'id', 'auto_foreign_key 4');
+
+FK2:
+{
+  package My::FK2::OtherObj;
+  our @ISA = qw(Rose::DB::Object);
+  sub init_db { Rose::DB->new('pg') }
+  __PACKAGE__->meta->columns(qw(id name));
+  __PACKAGE__->meta->initialize;
+
+  package My::FK2::Object;
+  our @ISA = qw(Rose::DB::Object);
+  sub init_db { Rose::DB->new('pg') }
+  __PACKAGE__->meta->columns(qw(id other_object_id));  
+  __PACKAGE__->meta->foreign_keys
+  (
+    other_object =>
+    {
+      class => 'My::FK2::OtherObj',
+    }
+  );
+
+  __PACKAGE__->meta->initialize;
+}
+
+$fk = My::FK2::Object->meta->foreign_key('other_object');
+ok($fk, 'auto_foreign_key 5');
+is($fk->class, 'My::FK2::OtherObj', 'auto_foreign_key 6');
+my $kc = $fk->key_columns;
+is(scalar keys %$kc, 1, 'auto_foreign_key 7');
+is($kc->{'other_object_id'}, 'id', 'auto_foreign_key 8');
+
+FK3:
+{
+  package My::FK3::OtherObj;
+  our @ISA = qw(Rose::DB::Object);
+  sub init_db { Rose::DB->new('pg') }
+  __PACKAGE__->meta->columns(eyedee => { type => 'serial' },  'name');
+  __PACKAGE__->meta->initialize;
+
+  package My::FK3::Object;
+  our @ISA = qw(Rose::DB::Object);
+  sub init_db { Rose::DB->new('pg') }
+  __PACKAGE__->meta->columns(qw(id other_obj_id));  
+  __PACKAGE__->meta->foreign_keys
+  (
+    other_obj =>
+    {
+      key_columns => { other_obj_id => 'eyedee' },
+    }
+  );
+
+  __PACKAGE__->meta->initialize;
+}
+
+$fk = My::FK3::Object->meta->foreign_key('other_obj');
+ok($fk, 'auto_foreign_key 9');
+is($fk->class, 'My::FK3::OtherObj', 'auto_foreign_key 10');
+my $kc = $fk->key_columns;
+is(scalar keys %$kc, 1, 'auto_foreign_key 11');
+is($kc->{'other_obj_id'}, 'eyedee', 'auto_foreign_key 12');
 
 __END__
   
