@@ -2,6 +2,8 @@ Changes
 lib/Rose/DB/Object.pm
 lib/Rose/DB/Object/Cached.pm
 lib/Rose/DB/Object/Constants.pm
+lib/Rose/DB/Object/ConventionManager.pm
+lib/Rose/DB/Object/ConventionManager/Null.pm
 lib/Rose/DB/Object/Iterator.pm
 lib/Rose/DB/Object/MakeMethods/Date.pm
 lib/Rose/DB/Object/MakeMethods/Generic.pm
@@ -102,6 +104,7 @@ t/benchmarks/lib/MyTest/RDBO/Simple/Product.pm
 t/benchmarks/lib/MyTest/RDBO/Simple/Product/Manager.pm
 t/db-object-auto.t
 t/db-object-cached.t
+t/db-object-convention.t
 t/db-object-foreign-key-auto.t
 t/db-object-foreign-key.t
 t/db-object-manager.t

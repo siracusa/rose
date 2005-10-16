@@ -40,14 +40,22 @@ sub columns
     return wantarray ? @{$self->{'columns'} ||= []} :  ($self->{'columns'} ||= []);
   }
 
+  unless(@{$self->{'columns'} ||= []})
+  {
+    $self->{'columns'} = $self->auto_init_columns;
+  }
+
   # Expand into columns on return
   return wantarray ?  map { $meta->column($_) || $_ } @{$self->{'columns'} ||= []} : 
                     [ map { $meta->column($_) || $_ } @{$self->{'columns'} ||= []} ];
 }
 
+sub auto_init_columns { [] }
+
 sub column_names
 {
-  return wantarray ? @{shift->{'columns'} ||= []} : shift->{'columns'};
+  my($self) = shift;
+  return wantarray ? @{$self->{'columns'} ||= $self->auto_init_columns} : $self->{'columns'};
 }
 
 sub add_columns

@@ -9,6 +9,8 @@ our @ISA = qw(Rose::Object);
 
 use Rose::DB::Object::Constants qw(PRIVATE_PREFIX);
 
+use Rose::DB::Object::ConventionManager;
+use Rose::DB::Object::ConventionManager::Null;
 use Rose::DB::Object::Metadata::PrimaryKey;
 use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::ForeignKey;
@@ -257,6 +259,42 @@ sub init_with_db
   return;
 }
 
+sub init_convention_manager { Rose::DB::Object::ConventionManager->new }
+
+sub convention_manager
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    my $mgr = shift;
+
+    # Setting to undef means use the null convention manager    
+    if(!defined $mgr)
+    {
+      return $self->{'convention_manager'} = 
+        Rose::DB::Object::ConventionManager::Null->new(parent => $self);
+    }
+
+    unless(UNIVERSAL::isa($mgr, 'Rose::DB::Object::ConventionManager'))
+    {
+      Carp::croak "$mgr is not a Rose::DB::Object::ConventionManager-derived object";
+    }
+    
+    $mgr->parent($self);
+    return $self->{'convention_manager'} = $mgr;
+  }
+  
+  if(defined $self->{'convention_manager'})
+  {
+    return $self->{'convention_manager'};
+  }
+
+  my $mgr = $self->init_convention_manager;
+  $mgr->parent($self);
+  return $self->{'convention_manager'} = $mgr;
+}
+
 # Code borrowed from Cache::Cache
 my %Expiration_Units =
 (
@@ -373,7 +411,11 @@ sub prepare_options
 
 sub table
 {
-  return $_[0]->{'table'}  unless(@_ > 1);
+  unless(@_ > 1)
+  {
+    return $_[0]->{'table'} ||= $_[0]->convention_manager->auto_table_name;
+  }
+
   $_[0]->_clear_table_generated_values;
   return $_[0]->{'table'} = $_[1];
 }
@@ -888,6 +930,21 @@ sub add_foreign_keys
       }
 
       next ARG;
+    }
+
+    # Name only: try to get all the other info by convention
+    if(!ref $_[0])
+    {
+      if(my $fk = $self->convention_manager->auto_foreign_key($name))
+      {
+        $self->add_foreign_keys($fk);
+        next ARG;
+      }
+      else
+      {
+        Carp::croak "Incomplete foreign key specification could not be ",
+                    "completed by convention manager: $name";
+      }
     }
 
     if(ref $_[0] eq 'HASH')
