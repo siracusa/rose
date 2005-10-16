@@ -902,6 +902,7 @@ sub add_foreign_keys
   {
     my $name = shift;
 
+    # Foreign key object
     if(UNIVERSAL::isa($name, 'Rose::DB::Object::Metadata::ForeignKey'))
     {
       my $fk = $name;
@@ -947,6 +948,7 @@ sub add_foreign_keys
       }
     }
 
+    # Name and hashref spec
     if(ref $_[0] eq 'HASH')
     {
       my $info = shift;
@@ -967,7 +969,10 @@ sub add_foreign_keys
 
       $Debug && warn $self->class, " - adding $name foreign key\n";
       my $fk = $self->{'foreign_keys'}{$name} = 
-        Rose::DB::Object::Metadata::ForeignKey->new(%$info, name => $name, parent => $self);
+        $self->convention_manager->auto_foreign_key($name, $info) ||
+        Rose::DB::Object::Metadata::ForeignKey->new(%$info, name => $name);
+
+      $fk->parent($self);
 
       # Set or add auto-created method names
       if($methods || $add_methods)
