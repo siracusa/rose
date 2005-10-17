@@ -350,10 +350,6 @@ sub make_methods
 
   foreach my $type (@$types)
   {
-    if(ref $self eq 'Rose::DB::Object::Metadata::Relationship::OneToOne')
-    {
-      $DB::single = 1;
-    }
     my $method_maker_class = $self->method_maker_class($type)
       or Carp::croak "No method maker class defined for method type '$type'";
 

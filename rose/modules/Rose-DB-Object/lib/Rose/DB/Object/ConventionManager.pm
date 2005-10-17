@@ -158,4 +158,131 @@ sub auto_foreign_key
   return Rose::DB::Object::Metadata::ForeignKey->new(name => $name, %$spec);
 }
 
+sub auto_relationship
+{
+  my($self, $name, $rel_class, $spec) = @_;
+
+  $spec ||= {};
+
+  my $meta = $self->meta;
+
+  unless($spec->{'class'})
+  {
+    my $class = $meta->class;
+
+    # Get class prefix, if any
+    $class =~ /^((?:\w+::)*)/;
+    my $prefix = $1 || '';
+
+    # Get class suffix from relationship name
+    my $table = $name;
+    $table =~ s/_id$//;
+    my $suffix = $self->table_to_class($table);
+    my $f_class = "$prefix$suffix";
+
+    LOAD:
+    {
+      # Try to load class
+      no strict 'refs';
+      unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'))
+      {
+        eval "require $f_class";
+        return  if($@);
+      }
+    }
+
+    return  unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'));
+    
+    $spec->{'class'} = $f_class;
+  }
+
+  my $rel_type = $rel_class->type;
+
+  if($rel_type eq 'one to one')
+  {
+    return $self->auto_relationship_one_to_one($name, $rel_class, $spec);
+  }
+  elsif($rel_type eq 'many to one')
+  {
+    return $self->auto_relationship_many_to_one($name, $rel_class, $spec);
+  }
+  elsif($rel_type eq 'one to many')
+  {
+    return $self->auto_relationship_one_to_many($name, $rel_class, $spec);
+  }
+
+  return;
+}
+
+sub auto_relationship_one_to_one
+{
+  my($self, $name, $rel_class, $spec) = @_;
+
+  $spec ||= {};
+
+  my $meta = $self->meta;
+
+  unless(defined $spec->{'column_map'})
+  {
+    my @fpk_columns = $spec->{'class'}->meta->primary_key_column_names;
+    return  unless(@fpk_columns == 1);
+
+    my $aliases = $meta->column_aliases;    
+  
+    if($meta->column($name) && $aliases->{$name} && $aliases->{$name} ne $name)
+    {
+      $spec->{'column_map'} = { $name => $fpk_columns[0] };
+    }
+    elsif($meta->column("${name}_$fpk_columns[0]"))
+    {
+      $spec->{'column_map'} = { "${name}_$fpk_columns[0]" => $fpk_columns[0] };
+    }
+    elsif($meta->column("${name}_id"))
+    {
+      $spec->{'column_map'} = { "${name}_id" => $fpk_columns[0] };
+    }
+    else { return }
+  }
+  
+  return $rel_class->new(name => $name, %$spec);
+}
+
+*auto_relationship_many_to_one = \&auto_relationship_one_to_one;
+
+sub auto_relationship_one_to_many
+{
+  my($self, $name, $rel_class, $spec) = @_;
+$DB::single = 1;
+  $spec ||= {};
+
+  my $meta = $self->meta;
+  my $f_col_name = $self->class_to_table_singular;
+    
+  unless(defined $spec->{'column_map'})
+  {
+    my @pk_columns = $meta->primary_key_column_names;
+    return  unless(@pk_columns == 1);
+
+    my $f_meta = $spec->{'class'}->meta;
+
+    my $aliases = $f_meta->column_aliases;
+  
+    if($f_meta->column($f_col_name) && $aliases->{$f_col_name} && $aliases->{$f_col_name} ne $f_col_name)
+    {
+      $spec->{'column_map'} = { $pk_columns[0] => $f_col_name };
+    }
+    elsif($f_meta->column("${f_col_name}_$pk_columns[0]"))
+    {
+      $spec->{'column_map'} = { $pk_columns[0] => "${f_col_name}_$pk_columns[0]" };
+    }
+    elsif($f_meta->column("${f_col_name}_id"))
+    {
+      $spec->{'column_map'} = { $pk_columns[0] => "${f_col_name}_id" };
+    }
+    else { return }
+  }
+
+  return $rel_class->new(name => $name, %$spec);
+}
+
 1;

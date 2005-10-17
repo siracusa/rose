@@ -766,6 +766,7 @@ sub add_relationships
   {
     my $name = shift;
 
+    # Relationship object
     if(UNIVERSAL::isa($name, 'Rose::DB::Object::Metadata::Relationship'))
     {
       my $relationship = $name;
@@ -784,9 +785,13 @@ sub add_relationships
       next;
     }
 
-    unless(ref $_[0])
+    # Name and type only: recurse with hashref arg
+    if(!ref $_[0])
     {
-      Carp::croak "No relationship specificaton found for relationship name '$name'";
+      my $type = shift;
+
+      $self->add_relationships($name => { type => $type });
+      next ARG;
     }
 
     if(UNIVERSAL::isa($_[0], 'Rose::DB::Object::Metadata::Relationship'))
@@ -827,7 +832,16 @@ sub add_relationships
 
       $Debug && warn $self->class, " - adding $name $relationship_class\n";
       my $relationship = $self->{'relationships'}{$name} = 
-        $relationship_class->new(%$info, name => $name, parent => $self);
+        $self->convention_manager->auto_relationship($name, $relationship_class, $info) ||
+        $relationship_class->new(%$info, name => $name);
+
+      unless($relationship)
+      {
+        Carp::croak "Incomplete relationship specification could not be ",
+                    "completed by convention manager: $name";
+      }
+
+      $relationship->parent($self);
 
       # Set or add auto-created method names
       if($methods || $add_methods)
