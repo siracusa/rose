@@ -19,6 +19,7 @@ use Rose::Object::MakeMethods::Generic
   'scalar --get_set_init' =>
   [
     'singular_to_plural_function',
+    'plural_to_singular_function',
   ],
 );
 
@@ -86,6 +87,7 @@ sub default_singular_to_plural
 }
 
 sub init_singular_to_plural_function { \&default_singular_to_plural }
+sub init_plural_to_singular_function { }
 
 sub singular_to_plural
 {
@@ -97,6 +99,19 @@ sub singular_to_plural
   }
   
   return $word . 's';
+}
+
+sub plural_to_singular
+{
+  my($self, $word) = @_;
+  
+  if(my $code = $self->plural_to_singular_function)
+  {
+    return $code->($word);
+  }
+  
+  $word =~ s/s$//;
+  return $word;
 }
 
 sub auto_foreign_key
@@ -164,39 +179,69 @@ sub auto_relationship
 
   $spec ||= {};
 
-  my $meta = $self->meta;
+  my $meta     = $self->meta;
+  my $rel_type = $rel_class->type;
 
   unless($spec->{'class'})
   {
-    my $class = $meta->class;
-
-    # Get class prefix, if any
-    $class =~ /^((?:\w+::)*)/;
-    my $prefix = $1 || '';
-
-    # Get class suffix from relationship name
-    my $table = $name;
-    $table =~ s/_id$//;
-    my $suffix = $self->table_to_class($table);
-    my $f_class = "$prefix$suffix";
-
-    LOAD:
+    if($rel_type eq 'one to many')
     {
-      # Try to load class
-      no strict 'refs';
-      unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'))
+      my $class = $meta->class;
+
+      # Get class prefix, if any
+      $class =~ /^((?:\w+::)*)/;
+      my $prefix = $1 || '';
+  
+      # Get class suffix from relationship name
+      my $table   = $self->plural_to_singular($name);
+      my $suffix  = $self->table_to_class($table);
+      my $f_class = "$prefix$suffix";
+  
+      LOAD:
       {
-        eval "require $f_class";
-        return  if($@);
+        # Try to load class
+        no strict 'refs';
+        unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'))
+        {
+          eval "require $f_class";
+          return  if($@);
+        }
       }
+  
+      return  unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'));
+      
+      $spec->{'class'} = $f_class;
     }
-
-    return  unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'));
-    
-    $spec->{'class'} = $f_class;
+    elsif($rel_type =~ /^(?:one|many) to one$/)
+    {
+      my $class = $meta->class;
+  
+      # Get class prefix, if any
+      $class =~ /^((?:\w+::)*)/;
+      my $prefix = $1 || '';
+  
+      # Get class suffix from relationship name
+      my $table = $name;
+      $table =~ s/_id$//;
+      my $suffix = $self->table_to_class($table);
+      my $f_class = "$prefix$suffix";
+  
+      LOAD:
+      {
+        # Try to load class
+        no strict 'refs';
+        unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'))
+        {
+          eval "require $f_class";
+          return  if($@);
+        }
+      }
+  
+      return  unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'));
+      
+      $spec->{'class'} = $f_class;
+    }
   }
-
-  my $rel_type = $rel_class->type;
 
   if($rel_type eq 'one to one')
   {
@@ -209,6 +254,10 @@ sub auto_relationship
   elsif($rel_type eq 'one to many')
   {
     return $self->auto_relationship_one_to_many($name, $rel_class, $spec);
+  }
+  elsif($rel_type eq 'many to many')
+  {
+    return $self->auto_relationship_many_to_many($name, $rel_class, $spec);
   }
 
   return;
@@ -252,7 +301,7 @@ sub auto_relationship_one_to_one
 sub auto_relationship_one_to_many
 {
   my($self, $name, $rel_class, $spec) = @_;
-$DB::single = 1;
+
   $spec ||= {};
 
   my $meta = $self->meta;
@@ -266,7 +315,7 @@ $DB::single = 1;
     my $f_meta = $spec->{'class'}->meta;
 
     my $aliases = $f_meta->column_aliases;
-  
+
     if($f_meta->column($f_col_name) && $aliases->{$f_col_name} && $aliases->{$f_col_name} ne $f_col_name)
     {
       $spec->{'column_map'} = { $pk_columns[0] => $f_col_name };
@@ -280,6 +329,105 @@ $DB::single = 1;
       $spec->{'column_map'} = { $pk_columns[0] => "${f_col_name}_id" };
     }
     else { return }
+  }
+
+  return $rel_class->new(name => $name, %$spec);
+}
+
+sub auto_relationship_many_to_many
+{
+  my($self, $name, $rel_class, $spec) = @_;
+
+  $spec ||= {};
+
+  my $meta = $self->meta;
+
+  unless($spec->{'map_class'})
+  {
+    my $class = $meta->class;
+
+    # Given:
+    #   Class: My::Object
+    #   Rel name: other_objects
+    #   Foreign class: My::OtherObject
+    #
+    # Consider map class names:
+    #   My::ObjectsToOtherObjectsMap
+    #   My::ObjectToOtherObjectMap
+    #   My::OtherObjectsToObjectsMap
+    #   My::OtherObjectToObjectMap
+    #   My::ObjectsOtherObjects
+    #   My::ObjectOtherObjects
+    #   My::OtherObjectsObjects
+    #   My::OtherObjectObjects
+    #   My::OtherObjectMap
+    #   My::OtherObjectsMap
+    #   My::ObjectMap
+    #   My::ObjectsMap
+
+    # Get class prefix, if any
+    $class =~ /^((?:\w+::)*)/;
+    my $prefix = $1 || '';
+
+    my @consider;
+    
+    my $f_table           = $self->plural_to_singular($name);
+    my $f_class_suffix    = $self->table_to_class($f_table);
+    my $f_class_suffix_pl = $self->table_to_class($name);
+
+    $class =~ /(\w+)$/;
+    my $class_suffix = $1;
+    my $class_suffix_pl = $self->singular_to_plural($class_suffix);
+
+    push(@consider, map { "${prefix}$_" }
+         $class_suffix_pl . 'To' . $f_class_suffix_pl . 'Map',
+         $class_suffix . 'To' . $f_class_suffix . 'Map',
+
+         $f_class_suffix_pl . 'To' . $class_suffix_pl . 'Map',
+         $f_class_suffix . 'To' . $class_suffix . 'Map',
+
+         $class_suffix_pl . $f_class_suffix_pl,
+         $class_suffix . $f_class_suffix_pl,
+         
+         $f_class_suffix_pl . $class_suffix_pl,
+         $f_class_suffix . $class_suffix_pl,
+         
+         $f_class_suffix . 'Map',
+         $f_class_suffix_pl . 'Map',
+
+         $class_suffix . 'Map',
+         $class_suffix_pl . 'Map');
+
+$DB::single = 1;
+    my $map_class;
+
+    CLASS: foreach my $class (@consider)
+    {
+      LOAD:
+      {
+        # Try to load class
+        no strict 'refs';
+        if(UNIVERSAL::isa($class, 'Rose::DB::Object'))
+        {
+          $map_class = $class;
+          last CLASS;
+        }
+        else
+        {
+          eval "require $class";
+
+          unless($@)
+          {
+            $map_class = $class;
+            last CLASS  if(UNIVERSAL::isa($class, 'Rose::DB::Object'));
+          }
+        }
+      }
+    }
+
+    return  unless($map_class && UNIVERSAL::isa($map_class, 'Rose::DB::Object'));
+    
+    $spec->{'map_class'} = $map_class;
   }
 
   return $rel_class->new(name => $name, %$spec);
