@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 77;
+use Test::More tests => 125;
 
 BEGIN 
 {
@@ -424,7 +424,6 @@ $cm = $rel->column_map;
 is(scalar keys %$cm, 1, 'auto_relationship many to one 15');
 is($cm->{'other_obj_eyedee'}, 'eyedee', 'auto_relationship many to one 16');
 
-
 # one to many
 
 OTM1:
@@ -439,11 +438,11 @@ OTM1:
   our @ISA = qw(Rose::DB::Object);
   sub init_db { Rose::DB->new('pg') }
   __PACKAGE__->meta->columns(qw(id name));  
-  __PACKAGE__->meta->relationships(other_object => 'one to many');
+  __PACKAGE__->meta->relationships(other_objects => 'one to many');
   __PACKAGE__->meta->initialize;
 }
 
-$rel = My::OTM1::Object->meta->relationship('other_object');
+$rel = My::OTM1::Object->meta->relationship('other_objects');
 ok($rel, 'auto_relationship one to many 1');
 is($rel->class, 'My::OTM1::OtherObject', 'auto_relationship one to many 2');
 $cm = $rel->column_map;
@@ -464,7 +463,7 @@ OTM2:
   __PACKAGE__->meta->columns(qw(id name));  
   __PACKAGE__->meta->relationships
   (
-    other_object =>
+    other_objects =>
     {
       type  => 'one to many',
       class => 'My::OTM2::OtherObj',
@@ -474,7 +473,7 @@ OTM2:
   __PACKAGE__->meta->initialize;
 }
 
-$rel = My::OTM2::Object->meta->relationship('other_object');
+$rel = My::OTM2::Object->meta->relationship('other_objects');
 ok($rel, 'auto_relationship one to many 5');
 is($rel->class, 'My::OTM2::OtherObj', 'auto_relationship one to many 6');
 $cm = $rel->column_map;
@@ -526,18 +525,75 @@ OTM4:
   __PACKAGE__->meta->columns(eyedee => { type => 'serial' }, 'name');
   __PACKAGE__->meta->relationships
   (
-    other_obj => { type => 'one to many' }
+    other_objs => { type => 'one to many' }
   );
 
   __PACKAGE__->meta->initialize;
 }
 
-$rel = My::OTM4::Object->meta->relationship('other_obj');
+$rel = My::OTM4::Object->meta->relationship('other_objs');
 ok($rel, 'auto_relationship many to one 13');
 is($rel->class, 'My::OTM4::OtherObj', 'auto_relationship many to one 14');
 $cm = $rel->column_map;
 is(scalar keys %$cm, 1, 'auto_relationship many to one 15');
 is($cm->{'eyedee'}, 'object_eyedee', 'auto_relationship many to one 16');
+
+# many to many
+
+my $i = 0;
+
+my @map_classes =
+qw(ObjectsToOtherObjectsMap
+   ObjectToOtherObjectMap
+   OtherObjectsToObjectsMap
+   OtherObjectToObjectMap
+   ObjectsOtherObjects
+   ObjectOtherObjects
+   OtherObjectsObjects
+   OtherObjectObjects
+   OtherObjectMap
+   OtherObjectsMap
+   ObjectMap
+   ObjectsMap);
+
+foreach my $class (@map_classes)
+{
+  $i++;
+
+  my $defs=<<"EOF";
+  package My::MTM${i}::$class;
+  our \@ISA = qw(Rose::DB::Object);
+  sub init_db { Rose::DB->new('pg') }
+  __PACKAGE__->meta->columns(qw(id object_id other_object_id));
+  
+  package My::MTM${i}::OtherObject;
+  our \@ISA = qw(Rose::DB::Object);
+  sub init_db { Rose::DB->new('pg') }
+  __PACKAGE__->meta->columns(qw(id name));
+  __PACKAGE__->meta->initialize;
+  
+  package My::MTM${i}::Object;
+  our \@ISA = qw(Rose::DB::Object);
+  sub init_db { Rose::DB->new('pg') }
+  __PACKAGE__->meta->columns(qw(id name));  
+  
+  My::MTM${i}::$class->meta->foreign_keys(qw(object other_object));
+  My::MTM${i}::$class->meta->initialize;
+  
+  My::MTM${i}::Object->meta->relationships(other_objects => 'many to many');
+  My::MTM${i}::Object->meta->initialize
+EOF
+
+  eval $defs;
+  die $@  if($@);
+
+  my $obj_class = "My::MTM${i}::Object";
+  $rel = $obj_class->meta->relationship('other_objects');
+  ok($rel, "auto_relationship many to many $i.1");
+  is($rel->map_class, "My::MTM${i}::$class", "auto_relationship many to many $i.2");
+  is($rel->map_from, 'object', "auto_relationship many to many $i.3");
+  is($rel->map_to, 'other_object', "auto_relationship many to many $i.4");
+}
 
 __END__
   
