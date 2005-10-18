@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 125;
+use Test::More tests => 129;
 
 BEGIN 
 {
@@ -173,12 +173,12 @@ FK3:
   package My::FK3::Object;
   our @ISA = qw(Rose::DB::Object);
   sub init_db { Rose::DB->new('pg') }
-  __PACKAGE__->meta->columns(qw(id other_obj_id));  
+  __PACKAGE__->meta->columns(qw(id other_obj_eyedee));  
   __PACKAGE__->meta->foreign_keys
   (
     other_obj =>
     {
-      key_columns => { other_obj_id => 'eyedee' },
+      key_columns => { other_obj_eyedee => 'eyedee' },
     }
   );
 
@@ -190,7 +190,30 @@ ok($fk, 'auto_foreign_key 9');
 is($fk->class, 'My::FK3::OtherObj', 'auto_foreign_key 10');
 $kc = $fk->key_columns;
 is(scalar keys %$kc, 1, 'auto_foreign_key 11');
-is($kc->{'other_obj_id'}, 'eyedee', 'auto_foreign_key 12');
+is($kc->{'other_obj_eyedee'}, 'eyedee', 'auto_foreign_key 12');
+
+FK4:
+{
+  package My::FK4::OtherObj;
+  our @ISA = qw(Rose::DB::Object);
+  sub init_db { Rose::DB->new('pg') }
+  __PACKAGE__->meta->columns(eyedee => { type => 'serial' },  'name');
+  __PACKAGE__->meta->initialize;
+
+  package My::FK4::Object;
+  our @ISA = qw(Rose::DB::Object);
+  sub init_db { Rose::DB->new('pg') }
+  __PACKAGE__->meta->columns(qw(id other_obj_eyedee));  
+  __PACKAGE__->meta->foreign_keys(qw(other_obj));
+  __PACKAGE__->meta->initialize;
+}
+
+$fk = My::FK4::Object->meta->foreign_key('other_obj');
+ok($fk, 'auto_foreign_key 13');
+is($fk->class, 'My::FK4::OtherObj', 'auto_foreign_key 14');
+$kc = $fk->key_columns;
+is(scalar keys %$kc, 1, 'auto_foreign_key 15');
+is($kc->{'other_obj_eyedee'}, 'eyedee', 'auto_foreign_key 16');
 
 #
 # auto_relationship
@@ -543,10 +566,10 @@ is($cm->{'eyedee'}, 'object_eyedee', 'auto_relationship many to one 16');
 my $i = 0;
 
 my @map_classes =
-qw(ObjectsToOtherObjectsMap
-   ObjectToOtherObjectMap
-   OtherObjectsToObjectsMap
-   OtherObjectToObjectMap
+qw(ObjectsOtherObjectsMap
+   ObjectOtherObjectMap
+   OtherObjectsObjectsMap
+   OtherObjectObjectMap
    ObjectsOtherObjects
    ObjectOtherObjects
    OtherObjectsObjects

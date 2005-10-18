@@ -1029,8 +1029,8 @@ sub AUTOLOAD
 Methods for the following relationships and foreign keys were deferred and
 then never actually created.
 
-TYPE           NAME
-----           ----
+TYPE            NAME
+----            ----
 EOF
 
       my $class = ref $self;
@@ -1046,7 +1046,7 @@ EOF
         $tmp_msg .= sprintf("%-15s %s\n", $type, $thing->name);
       }
 
-      $msg = "\n\n$tmp_msg"  if($tmp_msg);
+      $msg = "\n\n$tmp_msg\n"  if($tmp_msg);
     }
   };
 

@@ -837,7 +837,7 @@ sub add_relationships
 
       unless($relationship)
       {
-        Carp::croak "Incomplete relationship specification could not be ",
+        Carp::croak "$class - Incomplete relationship specification could not be ",
                     "completed by convention manager: $name";
       }
 
@@ -957,7 +957,8 @@ sub add_foreign_keys
       }
       else
       {
-        Carp::croak "Incomplete foreign key specification could not be ",
+        Carp::croak $self->class, 
+                    " - Incomplete foreign key specification could not be ",
                     "completed by convention manager: $name";
       }
     }
