@@ -78,12 +78,12 @@ sub default_singular_to_plural
 {
   my($word) = shift;
   
-  if($word =~ /[sx]/)
+  if($word =~ /(?:x|[se]s)$/)
   {
     return $word . 'es';
   }
-  
-  return $word . 's';
+
+  return $word =~ /s$/ ? $word : ($word . 's');
 }
 
 sub init_singular_to_plural_function { \&default_singular_to_plural }
@@ -132,7 +132,6 @@ sub auto_foreign_key
 
     # Get class suffix from foreign key name
     my $table = $name;
-    $table =~ s/_id$//;
     my $suffix = $self->table_to_class($table);
     my $fk_class = "$prefix$suffix";
 
@@ -147,7 +146,7 @@ sub auto_foreign_key
       }
     }
 
-    return  unless(UNIVERSAL::isa($fk_class, 'Rose::DB::Object'));
+    #return  unless(UNIVERSAL::isa($fk_class, 'Rose::DB::Object'));
     
     $spec->{'class'} = $fk_class;
   }
@@ -163,9 +162,9 @@ sub auto_foreign_key
     {
       $spec->{'key_columns'} = { $name => $fpk_columns[0] };
     }
-    elsif($meta->column("${name}_id"))
+    elsif($meta->column("${name}_$fpk_columns[0]"))
     {
-      $spec->{'key_columns'} = { "${name}_id" => $fpk_columns[0] };
+      $spec->{'key_columns'} = { "${name}_$fpk_columns[0]" => $fpk_columns[0] };
     }
     else { return }
   }
@@ -208,7 +207,7 @@ sub auto_relationship
         }
       }
   
-      return  unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'));
+      #return  unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'));
       
       $spec->{'class'} = $f_class;
     }
@@ -237,7 +236,7 @@ sub auto_relationship
         }
       }
   
-      return  unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'));
+      #return  unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'));
       
       $spec->{'class'} = $f_class;
     }
@@ -312,6 +311,9 @@ sub auto_relationship_one_to_many
     my @pk_columns = $meta->primary_key_column_names;
     return  unless(@pk_columns == 1);
 
+    my @fpk_columns = $meta->primary_key_column_names;
+    return  unless(@fpk_columns == 1);
+    
     my $f_meta = $spec->{'class'}->meta;
 
     my $aliases = $f_meta->column_aliases;
@@ -324,9 +326,9 @@ sub auto_relationship_one_to_many
     {
       $spec->{'column_map'} = { $pk_columns[0] => "${f_col_name}_$pk_columns[0]" };
     }
-    elsif($f_meta->column("${f_col_name}_id"))
+    elsif($f_meta->column("${f_col_name}_$fpk_columns[0]"))
     {
-      $spec->{'column_map'} = { $pk_columns[0] => "${f_col_name}_id" };
+      $spec->{'column_map'} = { $pk_columns[0] => "${f_col_name}_$fpk_columns[0]" };
     }
     else { return }
   }
@@ -352,10 +354,10 @@ sub auto_relationship_many_to_many
     #   Foreign class: My::OtherObject
     #
     # Consider map class names:
-    #   My::ObjectsToOtherObjectsMap
-    #   My::ObjectToOtherObjectMap
-    #   My::OtherObjectsToObjectsMap
-    #   My::OtherObjectToObjectMap
+    #   My::ObjectsOtherObjectsMap
+    #   My::ObjectOtherObjectMap
+    #   My::OtherObjectsObjectsMap
+    #   My::OtherObjectObjectMap
     #   My::ObjectsOtherObjects
     #   My::ObjectOtherObjects
     #   My::OtherObjectsObjects
@@ -370,7 +372,7 @@ sub auto_relationship_many_to_many
     my $prefix = $1 || '';
 
     my @consider;
-    
+
     my $f_table           = $self->plural_to_singular($name);
     my $f_class_suffix    = $self->table_to_class($f_table);
     my $f_class_suffix_pl = $self->table_to_class($name);
@@ -380,25 +382,24 @@ sub auto_relationship_many_to_many
     my $class_suffix_pl = $self->singular_to_plural($class_suffix);
 
     push(@consider, map { "${prefix}$_" }
-         $class_suffix_pl . 'To' . $f_class_suffix_pl . 'Map',
-         $class_suffix . 'To' . $f_class_suffix . 'Map',
+         $class_suffix_pl . $f_class_suffix_pl . 'Map',
+         $class_suffix . $f_class_suffix . 'Map',
 
-         $f_class_suffix_pl . 'To' . $class_suffix_pl . 'Map',
-         $f_class_suffix . 'To' . $class_suffix . 'Map',
+         $f_class_suffix_pl . $class_suffix_pl . 'Map',
+         $f_class_suffix . $class_suffix . 'Map',
 
          $class_suffix_pl . $f_class_suffix_pl,
          $class_suffix . $f_class_suffix_pl,
          
          $f_class_suffix_pl . $class_suffix_pl,
          $f_class_suffix . $class_suffix_pl,
-         
+
          $f_class_suffix . 'Map',
          $f_class_suffix_pl . 'Map',
 
          $class_suffix . 'Map',
          $class_suffix_pl . 'Map');
 
-$DB::single = 1;
     my $map_class;
 
     CLASS: foreach my $class (@consider)
