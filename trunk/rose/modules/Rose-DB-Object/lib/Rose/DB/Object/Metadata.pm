@@ -1135,7 +1135,7 @@ sub register_class
   # against someone changing it to "-" (or whatever) elsewhere in the code.
   local $; = "\034";
 
-   # Register with all available information
+  # Register with all available information
   $reg->{'catalog-schema-table',$catalog,$schema,$table} =
     $reg->{'schema-table',$schema,$table}  =
     $reg->{'catalog-table',$catalog,$table} =
