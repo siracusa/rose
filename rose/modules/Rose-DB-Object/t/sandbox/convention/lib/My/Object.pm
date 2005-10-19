@@ -1,3 +1,4 @@
+# Common Rose::DB::Object-derived base class
 package My::Object;
 use strict;
 use My::DB;
