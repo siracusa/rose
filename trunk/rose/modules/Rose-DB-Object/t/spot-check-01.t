@@ -137,7 +137,7 @@ BEGIN
     $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
   };
-$DB::single = 1;
+
   if(!$@ && $dbh)
   {
     $HAVE{'pg'} = 1;
