@@ -385,8 +385,6 @@ sub auto_generate_foreign_keys
                 $fk_info->{'UK_TABLE_CAT'}, "' schema '", 
                 $fk_info->{'UK_TABLE_SCHEM'}, "' table '", 
                 $fk_info->{'UK_TABLE_NAME'}, "'";
-
-          ;
         }
 
         next FK_INFO;
@@ -722,7 +720,7 @@ sub auto_init_foreign_keys
 {
   my($self, %args) = @_;
 
-  my $auto_foreign_keys     = $self->auto_generate_foreign_keys;
+  my $auto_foreign_keys     = $self->auto_generate_foreign_keys(%args);
   my $existing_foreign_keys = $self->foreign_keys;
 
   if(!$args{'replace_existing'} && @$auto_foreign_keys != @$existing_foreign_keys)
