@@ -5,7 +5,7 @@ use strict;
 use Rose::DB::Object::Metadata::UniqueKey;
 our @ISA = qw(Rose::DB::Object::Metadata::UniqueKey);
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Rose::Object::MakeMethods::Generic
 (

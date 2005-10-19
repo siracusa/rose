@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata;
 our @ISA = qw(Rose::DB::Object::Metadata);
 
-our $VERSION = '0.02';
+our $VERSION = '0.021';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -373,6 +373,19 @@ sub auto_generate_foreign_keys
                          schema  => $fk_info->{'UK_TABLE_SCHEM'},
                          table   => $fk_info->{'UK_TABLE_NAME'});
 
+      unless($foreign_class) # Give convention manager a chance
+      {
+        $foreign_class = 
+          $self->convention_manager->related_table_to_class(
+            $fk_info->{'UK_TABLE_NAME'}, $self->class);
+
+        unless(UNIVERSAL::isa($foreign_class, 'Rose::DB::Object'))
+        {
+          eval "require $foreign_class";
+          $foreign_class = undef  if($@);
+        }
+      }
+
       unless($foreign_class)
       {
         my $key = join($;, map { defined($_) ? $_ : '' } 
@@ -390,7 +403,11 @@ sub auto_generate_foreign_keys
         next FK_INFO;
       }
 
-      my $key_name       = $fk_info->{'UK_NAME'}; 
+      my $cm = $self->convention_manager;
+
+      my $key_name = $fk_info->{'UK_NAME'} =
+        $cm->auto_foreign_key_name($foreign_class, $fk_info->{'UK_NAME'});
+
       my $local_column   = $fk_info->{'FK_COLUMN_NAME'};
       my $foreign_column = $fk_info->{'UK_COLUMN_NAME'};
 

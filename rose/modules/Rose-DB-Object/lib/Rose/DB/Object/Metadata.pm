@@ -17,7 +17,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.062';
+our $VERSION = '0.07';
 
 our $Debug = 0;
 
@@ -40,6 +40,11 @@ use Rose::Object::MakeMethods::Generic
     allow_inline_column_values => { default => 0 },
     is_initialized => { default => 0 },
   ],
+  
+  array =>
+  [
+    'columns_ordered',
+  ]
 );
 
 use Rose::Class::MakeMethods::Generic
@@ -522,6 +527,19 @@ sub delete_column
 {
   my($self, $name) = @_;
   delete $self->{'columns'}{$name};
+
+  # Remove from ordered list too  
+  my $columns = $self->columns_ordered;
+
+  for(my $i = 0; $i < @$columns; $i++)
+  {
+    if($columns->[$i]->name eq $name)
+    {
+      splice(@$columns, $i, 1);
+      last;
+    }
+  }
+
   return;
 }
 
@@ -529,8 +547,11 @@ sub delete_columns
 {
   my($self, $name) = @_;
   $self->{'columns'} = {};
+  $self->{'columns_ordered'} = [];
   return;
 }
+
+sub first_column { my $c = shift->columns_ordered || [];  return $c->[0] }
 
 sub sync_keys_to_columns
 {
@@ -604,6 +625,8 @@ sub add_columns
 
   $self->_clear_column_generated_values;
 
+  my @columns;
+
   ARG: while(@_)
   {
     my $name = shift;
@@ -617,6 +640,7 @@ sub add_columns
 
       $column->parent($self);
       $self->{'columns'}{$column->name} = $column;
+      push(@columns, $column);
       next;
     }
 
@@ -627,6 +651,7 @@ sub add_columns
 
       $Debug && warn $self->class, " - adding scalar column $name\n";
       $self->{'columns'}{$name} = $column_class->new(name => $name, parent => $self);
+      push(@columns, $self->{'columns'}{$name});
       next;
     }
 
@@ -636,6 +661,7 @@ sub add_columns
       $column->name($name);
       $column->parent($self);
       $self->{'columns'}{$name} = $column;
+      push(@columns, $column);
     }
     elsif(ref $_[0] eq 'HASH')
     {
@@ -671,6 +697,8 @@ sub add_columns
       $Debug && warn $self->class, " - adding $name $column_class\n";
       my $column = $self->{'columns'}{$name} = 
         $column_class->new(%$info, name => $name, parent => $self);
+
+      push(@columns, $column);
 
       # Set or add auto-created method names
       if($methods || $add_methods)
@@ -709,6 +737,8 @@ sub add_columns
       Carp::croak "Invalid column name or specification: $_[0]";
     }
   }
+
+  push(@{$self->{'columns_ordered'}}, @columns);
 }
 
 *add_column = \&add_columns;
@@ -720,7 +750,7 @@ sub relationship
   if(@_)
   {
     $self->delete_relationship($name);
-    $self->add_relationship($name => @_);
+    $self->add_relationship($name => $_[0]);
   }
 
   return $self->{'relationships'}{$name}  if($self->{'relationships'}{$name});
@@ -796,7 +826,8 @@ sub add_relationships
 
     if(UNIVERSAL::isa($_[0], 'Rose::DB::Object::Metadata::Relationship'))
     {
-      my $relationship = $_[0];
+      my $relationship = shift;
+
       $relationship->name($name);
       $relationship->parent($self);
       $self->{'relationships'}{$name} = $relationship;
@@ -1375,6 +1406,14 @@ sub retry_deferred_foreign_keys
   # Check to see if any deferred foreign keys are ready now
   foreach my $foreign_key ($meta_class->deferred_foreign_keys)
   {
+    # XXX: this is not necessary, so it's commented out for now.
+    # Try to rebuild the relationship using the convention manager, since
+    # new info may be available now.  Otherwise, leave it as-is.
+    # $foreign_key = 
+    #   $self->convention_manager->auto_foreign_key(
+    #     $def_fk->name, scalar $def_fk->spec_hash) ||
+    #     $def_fk;
+
     if($foreign_key->is_ready_to_make_methods)
     {
       $Debug && warn $foreign_key->parent->class,
@@ -1512,6 +1551,20 @@ sub retry_deferred_relationships
   # Check to see if any deferred relationships are ready now
   foreach my $relationship ($self->deferred_relationships)
   {
+    # Try to rebuild the relationship using the convention manager, since
+    # new info may be available now.  Otherwise, leave it as-is.
+    my $rebuild_rel = 
+         $self->convention_manager->auto_relationship(
+           $relationship->name, ref $relationship, 
+           scalar $relationship->spec_hash);
+
+    if($rebuild_rel)
+    {
+      # XXX: This is pretty evil.  I need some sort of copy operator, but
+      # XXX: a straight hash copy will do for now...
+      %$relationship = %$rebuild_rel;
+    }
+
     if($relationship->is_ready_to_make_methods)
     {
       $Debug && warn $relationship->parent->class, 
@@ -1519,7 +1572,11 @@ sub retry_deferred_relationships
                      $relationship->name, "\n";
 
       my $args = $relationship->deferred_make_method_args || {};
+      $args->{'preserve_existing'} = 1;
       $relationship->make_methods(%$args);
+
+      # Reassign to list in case we rebuild above
+      $self->relationship($relationship->name => $relationship);
     }
     else
     {

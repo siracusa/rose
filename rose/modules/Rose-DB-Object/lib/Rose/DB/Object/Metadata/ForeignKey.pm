@@ -9,7 +9,7 @@ use Rose::DB::Object::Metadata::Util qw(:all);
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.04';
+our $VERSION = '0.041';
 
 use overload
 (
@@ -242,6 +242,42 @@ sub perl_hash_definition
   $def .= $hash . ",\n}";
 
   return $def;
+}
+
+# Some object keys have different names when they appear
+# in hashref-style foreign key specs.  This hash maps
+# between the two in the case where they differ.
+sub spec_hash_map 
+{
+  {
+    # object key    spec key
+    method_name => 'methods',
+  }
+}
+
+# Return a hashref-style foreign key spec
+sub spec_hash
+{
+  my($self) = shift;
+  
+  my $map = $self->spec_hash_map || {};
+
+  my %spec;
+
+  foreach my $key (keys(%$self))
+  {
+    if(exists $map->{$key})
+    {
+      my $spec_key = $map->{$key} or next;
+      $spec{$spec_key} = $self->{$key};
+    }
+    else
+    {
+      $spec{$key} = $self->{$key};
+    }
+  }
+
+  return wantarray ? %spec : \%spec;
 }
 
 1;
