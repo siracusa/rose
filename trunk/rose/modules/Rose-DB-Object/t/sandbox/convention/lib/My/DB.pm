@@ -1,3 +1,4 @@
+# Rose::DB subclass to handle the db connection
 package My::DB;
 use strict;
 use base 'Rose::DB';
