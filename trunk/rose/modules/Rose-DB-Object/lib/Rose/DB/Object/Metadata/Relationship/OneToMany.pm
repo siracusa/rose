@@ -10,7 +10,7 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.03';
+our $VERSION = '0.031';
 
 __PACKAGE__->default_auto_method_types(qw(get_set_on_save add_on_save));
 
@@ -99,6 +99,12 @@ sub build_method_name_for_type
   }
 
   return undef;
+}
+
+sub is_ready_to_make_methods 
+{
+  my($self) = shift;
+  return $self->class && $self->key_columns ? 1 : 0;
 }
 
 1;

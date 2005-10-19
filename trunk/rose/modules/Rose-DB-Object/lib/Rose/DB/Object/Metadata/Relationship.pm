@@ -7,7 +7,7 @@ use Carp();
 use Rose::DB::Object::Metadata::MethodMaker;
 our @ISA = qw(Rose::DB::Object::Metadata::MethodMaker);
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -35,6 +35,42 @@ sub sanity_check { 1 }
 my $Id_Counter = 0;
 
 sub init_id { ++$Id_Counter }
+
+# Some object keys have different names when they appear
+# in hashref-style relationship specs.  This hash maps
+# between the two in the case where they differ.
+sub spec_hash_map 
+{
+  {
+    # object key    spec key
+    method_name => 'methods',
+  }
+}
+
+# Return a hashref-style relationship spec
+sub spec_hash
+{
+  my($self) = shift;
+  
+  my $map = $self->spec_hash_map || {};
+
+  my %spec;
+
+  foreach my $key (keys(%$self))
+  {
+    if(exists $map->{$key})
+    {
+      my $spec_key = $map->{$key} or next;
+      $spec{$spec_key} = $self->{$key};
+    }
+    else
+    {
+      $spec{$key} = $self->{$key};
+    }
+  }
+
+  return wantarray ? %spec : \%spec;
+}
 
 1;
 

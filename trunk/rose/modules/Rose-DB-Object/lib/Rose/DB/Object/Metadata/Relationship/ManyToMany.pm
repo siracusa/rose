@@ -293,6 +293,8 @@ sub is_ready_to_make_methods
       Carp::croak "Could not find a foreign key or 'many to one' relationship ",
                   "in $map_class that points to a class other than $target_class"
     }
+    
+    die "Missing foreign class"  unless($foreign_class);
   };
 
   return $@ ? 0 : 1;

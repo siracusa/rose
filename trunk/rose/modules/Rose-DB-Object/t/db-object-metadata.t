@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 19;
+use Test::More tests => 20;
 
 BEGIN 
 {
@@ -41,6 +41,8 @@ $meta->columns
   bits     => { type => 'bitfield', bits => 5, default => 101 },
   date_created  => { type => 'timestamp' },
 );
+
+is($meta->first_column->name, 'name', 'first_column 1');
 
 $meta->add_columns(
   Rose::DB::Object::Metadata::Column::Timestamp->new(

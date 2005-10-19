@@ -43,11 +43,37 @@ sub class_to_table_plural
   $self->singular_to_plural($self->class_to_table_singular(@_));
 }
 
+sub table_to_class_plural 
+{
+  my($self, $table, $prefix) = @_;
+  return $self->table_to_class($table, $prefix, 1);
+}
+
 sub table_to_class
 {
-  my($self, $table) = @_;
+  my($self, $table, $prefix, $plural) = @_;
+  $table = $self->plural_to_singular($table)  unless($plural);
   $table =~ s/_(.)/\U$1/g;
-  return ucfirst $table;
+  return ($prefix || '') . ucfirst $table;
+}
+
+sub class_prefix
+{
+  my($self, $class) = @_;
+  $class =~ /^((?:\w+::)*)/;
+  return $1 || '';
+}
+
+sub related_table_to_class_plural
+{
+  my($self, $table, $local_class) = @_;
+  return $self->related_table_to_class($table, $local_class);
+}
+
+sub related_table_to_class
+{
+  my($self, $table, $local_class, $plural) = @_;
+  return $self->table_to_class($table, $self->class_prefix($local_class), $plural);
 }
 
 sub auto_table_name { shift->class_to_table_plural }
@@ -69,6 +95,12 @@ sub auto_primary_key_column_names
   foreach my $column (sort { lc $a->name cmp lc $b->name } $meta->columns)
   {
     return [ $column->name ]  if($column->type eq 'serial');
+  }
+
+  # 4. The first column
+  if(my $column = $meta->first_column)
+  {
+    return [ $column->name ];
   }
 
   return;
@@ -107,6 +139,13 @@ sub plural_to_singular
   return $word;
 }
 
+sub auto_foreign_key_name
+{
+  my($self, $f_class, $current_name) = @_;
+  my $f_meta = $f_class->meta or return $current_name;
+  return $self->plural_to_singular($f_meta->table) || $current_name;
+}
+
 sub auto_foreign_key
 {
   my($self, $name, $spec) = @_;
@@ -119,14 +158,9 @@ sub auto_foreign_key
   {
     my $class = $meta->class;
 
-    # Get class prefix, if any
-    $class =~ /^((?:\w+::)*)/;
-    my $prefix = $1 || '';
-
     # Get class suffix from foreign key name
     my $table = $name;
-    my $suffix = $self->table_to_class($table);
-    my $fk_class = "$prefix$suffix";
+    my $fk_class = $self->related_table_to_class($table, $class);
 
     LOAD:
     {
@@ -179,15 +213,10 @@ sub auto_relationship
     if($rel_type eq 'one to many')
     {
       my $class = $meta->class;
-
-      # Get class prefix, if any
-      $class =~ /^((?:\w+::)*)/;
-      my $prefix = $1 || '';
   
       # Get class suffix from relationship name
       my $table   = $self->plural_to_singular($name);
-      my $suffix  = $self->table_to_class($table);
-      my $f_class = "$prefix$suffix";
+      my $f_class = $self->related_table_to_class($table, $class);
   
       LOAD:
       {
@@ -208,15 +237,10 @@ sub auto_relationship
     {
       my $class = $meta->class;
   
-      # Get class prefix, if any
-      $class =~ /^((?:\w+::)*)/;
-      my $prefix = $1 || '';
-  
       # Get class suffix from relationship name
       my $table = $name;
       $table =~ s/_id$//;
-      my $suffix = $self->table_to_class($table);
-      my $f_class = "$prefix$suffix";
+      my $f_class = $self->related_table_to_class($table, $class);
   
       LOAD:
       {
@@ -233,6 +257,14 @@ sub auto_relationship
       
       $spec->{'class'} = $f_class;
     }
+  }
+
+  # Make sure this class has its @ISA set up...
+  unless(UNIVERSAL::isa($spec->{'class'}, 'Rose::DB::Object'))
+  {
+    # ...but allow many-to-many relationships to pass because they tend to
+    # need more time before every piece of info is available.
+    return unless($rel_type eq 'many to many');
   }
 
   if($rel_type eq 'one to one')
@@ -360,15 +392,12 @@ sub auto_relationship_many_to_many
     #   My::ObjectMap
     #   My::ObjectsMap
 
-    # Get class prefix, if any
-    $class =~ /^((?:\w+::)*)/;
-    my $prefix = $1 || '';
+    my $prefix = $self->class_prefix($class);
 
     my @consider;
 
-    my $f_table           = $self->plural_to_singular($name);
-    my $f_class_suffix    = $self->table_to_class($f_table);
-    my $f_class_suffix_pl = $self->table_to_class($name);
+    my $f_class_suffix    = $self->table_to_class($name);
+    my $f_class_suffix_pl = $self->table_to_class_plural($name);
 
     $class =~ /(\w+)$/;
     my $class_suffix = $1;
