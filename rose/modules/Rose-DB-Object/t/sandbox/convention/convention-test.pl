@@ -5,6 +5,19 @@ use lib 'lib';
 
 use My::Product;
 
+# use My::Price;
+# use My::Color;
+# use My::Vendor;
+# $p = My::Product->new(id => 1, name => 'A');
+# $p->prices(My::Price->new(product_id => 1, region => 'IS', price => 1.23),
+#            My::Price->new(product_id => 1, region => 'DE', price => 4.56));
+# 
+# $p->colors(My::Color->new(code => 'CC1', name => 'red'),
+#            My::Color->new(code => 'CC2', name => 'green'));
+# 
+# $p->vendor(My::Vendor->new(id => 1, name => 'V1'));
+# $p->save;
+
 $p = My::Product->new(id => 1)->load;
 print $p->vendor->name, "\n";
 

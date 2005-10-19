@@ -74,19 +74,7 @@ sub auto_primary_key_column_names
   return;
 }
 
-sub default_singular_to_plural
-{
-  my($word) = shift;
-  
-  if($word =~ /(?:x|[se]s)$/)
-  {
-    return $word . 'es';
-  }
-
-  return $word =~ /s$/ ? $word : ($word . 's');
-}
-
-sub init_singular_to_plural_function { \&default_singular_to_plural }
+sub init_singular_to_plural_function { }
 sub init_plural_to_singular_function { }
 
 sub singular_to_plural
@@ -98,7 +86,12 @@ sub singular_to_plural
     return $code->($word);
   }
   
-  return $word . 's';
+  if($word =~ /(?:x|[se]s)$/)
+  {
+    return $word . 'es';
+  }
+
+  return $word =~ /s$/ ? $word : ($word . 's');
 }
 
 sub plural_to_singular
