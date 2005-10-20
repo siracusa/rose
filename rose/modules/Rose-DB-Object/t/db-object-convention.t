@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 152;
+use Test::More tests => 159;
 
 BEGIN 
 {
@@ -12,6 +12,25 @@ BEGIN
   use_ok('Rose::DB::Object::ConventionManager');
   use_ok('Rose::DB::Object::ConventionManager::Null');
 }
+
+#
+# related_table_to_class
+#
+
+my $cm = Rose::DB::Object::ConventionManager->new;
+
+is($cm->related_table_to_class('prices', 'My::Product'), 'My::Price', 'related_table_to_class 1');
+is($cm->related_table_to_class('big_hats', 'A::B::FooBar'), 'A::B::BigHat', 'related_table_to_class 2');
+is($cm->related_table_to_class('a1_steaks', 'Meat'), 'A1Steak', 'related_table_to_class 3');
+
+#
+# related_table_to_class
+#
+
+is($cm->table_to_class('products', 'My::'), 'My::Product', 'table_to_class 1');
+is($cm->table_to_class('products'), 'Product', 'table_to_class 2');
+is($cm->table_to_class('big_hats', 'My::'), 'My::BigHat', 'table_to_class 3');
+is($cm->table_to_class('my5_hat_pig'), 'My5HatPig', 'table_to_class 4');
 
 #
 # is_singleton
@@ -55,7 +74,8 @@ SKIP:
 {
   eval "require Lingua::EN::Inflect";
 
-  skip('missing Lingua::EN::Inflect', 19)  if($@);
+  skip('missing Lingua::EN::Inflect 1.89', 19)
+    if($@ || $Lingua::EN::Inflect::VERSION != 1.89);
 
   %Expect_Table =
   (
@@ -291,7 +311,7 @@ OTO1:
 my $rel = My::OTO1::Object->meta->relationship('other_object');
 ok($rel, 'auto_relationship one to one 1');
 is($rel->class, 'My::OTO1::OtherObject', 'auto_relationship one to one 2');
-my $cm = $rel->column_map;
+$cm = $rel->column_map;
 is(scalar keys %$cm, 1, 'auto_relationship one to one 3');
 is($cm->{'other_object_id'}, 'id', 'auto_relationship one to one 4');
 

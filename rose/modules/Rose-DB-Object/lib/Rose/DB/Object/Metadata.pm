@@ -529,7 +529,7 @@ sub delete_column
   delete $self->{'columns'}{$name};
 
   # Remove from ordered list too  
-  my $columns = $self->columns_ordered;
+  my $columns = $self->columns_ordered || [];
 
   for(my $i = 0; $i < @$columns; $i++)
   {
@@ -2847,7 +2847,7 @@ Get or set the database catalog name.  This attribute is not applicable to any o
 
 =item B<class [CLASS]>
 
-Get or set the L<Rose::DB::object>-derived class associated with this metadata object.  This is the class where the accessor methods for each column will be created (by L<make_methods|/make_methods>).
+Get or set the L<Rose::DB::Object>-derived class associated with this metadata object.  This is the class where the accessor methods for each column will be created (by L<make_methods|/make_methods>).
 
 =item B<class_for PARAMS>
 
@@ -2910,6 +2910,14 @@ Returns the name of the "get_set" method for the column named NAME.  This is jus
 =item B<column_rw_method_names>
 
 Returns a list (in list context) or a reference to the array (in scalar context) of the names of the "get_set" methods for all the columns, in the order that the columns are returned by L<column_names|/column_names>.
+
+=item B<convention_manager [CM]>
+
+Get or set the convention manager for this L<class|/class>.  Defaults to the return value of the L<init_convention_manager|/init_convention_manager> method.
+
+If undef is passed, then a L<Rose::DB::Object::ConventionManager::Null> object is stored instead.
+
+See the L<Rose::DB::Object::ConventionManager> documentation for more information on convention managers.
 
 =item B<db>
 
@@ -2981,6 +2989,10 @@ Return a value that indicates that an error has occurred, as described in the L<
 
 In all cases, the object's L<error|Rose::DB::Object/error> attribute will also contain the error message.
 
+=item B<first_column>
+
+Returns the first column, determined by the orider that columns were L<added|/add_columns>, or undef if there are no columns.
+
 =item B<foreign_key NAME [, FOREIGNKEY | HASHREF ]>
 
 Get or set the foreign key named NAME.  NAME should be the name of the thing being referenced by the foreign key, I<not> the name of any of the columns that make up the foreign key.  If called with just a NAME argument, the foreign key stored under that name is returned.  Undef is returned if there is no such foreign key.
@@ -3009,9 +3021,15 @@ Given the L<Rose::DB>-derived object DB, generate a new primary key column value
 
 If no L<primary_key_generator|/primary_key_generator> is defined, a new primary key value will be generated, if possible, using the native facilities of the current database.  Note that this may not be possible for databases that auto-generate such values only after an insertion.  In that case, undef will be returned.
 
+=item B<init_convention_manager>
+
+Returns the default L<Rose::DB::Object::ConventionManager>-derived object used as the L<convention manager|/convention_manager> for this L<class|/class>.  
+
+Override this method in your L<Rose::DB::Object::Metadata> subclass in order to use a custom convention manager class.  See the L<tips and tricks|Rose::DB::Object::ConventionManager/"TIPS AND TRICKS"> section of the L<Rose::DB::Object::ConventionManager> documentation for an example.
+
 =item B<initialize [ARGS]>
 
-Initialize the L<Rose::DB::object>-derived class associated with this metadata object by creating accessor methods for each column and foreign key.  The L<table|/table> name and the L<primary_key_columns|/primary_key_columns> must be defined or a fatal error will occur.
+Initialize the L<Rose::DB::Object>-derived class associated with this metadata object by creating accessor methods for each column and foreign key.  The L<table|/table> name and the L<primary_key_columns|/primary_key_columns> must be defined or a fatal error will occur.
 
 If any column name in the primary key or any of the unique keys does not exist in the list of L<columns|/columns>, then that primary or unique key is deleted.  (As per the above, this will trigger a fatal error if any column in the primary key is not in the column list.)
 
