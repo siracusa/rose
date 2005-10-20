@@ -34,8 +34,8 @@ DROP TABLE vendors CASCADE;
 
 CREATE TABLE vendors
 (
-  id        SERIAL NOT NULL PRIMARY KEY,
-  name      VARCHAR(255)
+  id    SERIAL NOT NULL PRIMARY KEY,
+  name  VARCHAR(255)
 );
 
 CREATE TABLE colors
