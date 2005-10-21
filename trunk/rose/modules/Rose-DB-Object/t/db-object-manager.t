@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1229;
+use Test::More tests => 1325;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("Postgres tests", 420)  unless($HAVE_PG);
+  skip("Postgres tests", 452)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -1549,6 +1549,180 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   }
 
   # End distinct tests
+
+  # Start pager tests
+
+  is(Rose::DB::Object::Manager->default_objects_per_page, 20, 'default_objects_per_page 1');
+
+  Rose::DB::Object::Manager->default_objects_per_page(3);
+
+  my $per_page = Rose::DB::Object::Manager->default_objects_per_page;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 1,
+      per_page     => 3);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 1.$_");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 1);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 2.$_");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      per_page     => 3);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 3.$_");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      per_page     => -1);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 4.$_");
+  }
+  
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => -1);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 5.$_");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => undef);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 6.$_");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      per_page     => undef);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 7.$_");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id');
+
+  ok(scalar @$objs > 3, 'pager 8');
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 2,
+      per_page     => 3);
+
+  $i = 0;
+
+  for(4 .. 6)
+  {
+    is($objs->[$i++]->id, $_, "pager 9.$_");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 3,
+      per_page     => 3);
+
+  $i = 0;
+
+  for(7 .. 9)
+  {
+    is($objs->[$i++]->id, $_, "pager 10.$_");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 4,
+      per_page     => 3);
+
+  $i = 0;
+
+  for(10 .. 11)
+  {
+    is($objs->[$i++]->id, $_, "pager 11.$_");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 5,
+      per_page     => 3);
+
+  ok(scalar @$objs == 0, 'pager 12');
+
+  Rose::DB::Object::Manager->default_objects_per_page(20);
+
+  # End pager tests
 }
 
 #
@@ -1557,7 +1731,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 422)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 454)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -3071,6 +3245,180 @@ SKIP: foreach my $db_type ('mysql')
   }
 
   # End distinct tests
+
+  # Start pager tests
+
+  is(Rose::DB::Object::Manager->default_objects_per_page, 20, 'default_objects_per_page 1');
+
+  Rose::DB::Object::Manager->default_objects_per_page(3);
+
+  my $per_page = Rose::DB::Object::Manager->default_objects_per_page;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 1,
+      per_page     => 3);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 1.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 1);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 2.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      per_page     => 3);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 3.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      per_page     => -1);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 4.$_ - $db_type");
+  }
+  
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => -1);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 5.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => undef);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 6.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      per_page     => undef);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 7.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id');
+
+  ok(scalar @$objs > 3, "pager 8 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 2,
+      per_page     => 3);
+
+  $i = 0;
+
+  for(4 .. 6)
+  {
+    is($objs->[$i++]->id, $_, "pager 9.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 3,
+      per_page     => 3);
+
+  $i = 0;
+
+  for(7 .. 9)
+  {
+    is($objs->[$i++]->id, $_, "pager 10.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 4,
+      per_page     => 3);
+
+  $i = 0;
+
+  for(10 .. 11)
+  {
+    is($objs->[$i++]->id, $_, "pager 11.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 5,
+      per_page     => 3);
+
+  ok(scalar @$objs == 0, "pager 12 - $db_type");
+
+  Rose::DB::Object::Manager->default_objects_per_page(20);
+
+  # End pager tests
 }
 
 #
@@ -3079,7 +3427,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type (qw(informix))
 {
-  skip("Informix tests", 385)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 417)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -4663,6 +5011,180 @@ SKIP: foreach my $db_type (qw(informix))
   #}
 
   # End distinct tests
+
+  # Start pager tests
+
+  is(Rose::DB::Object::Manager->default_objects_per_page, 20, 'default_objects_per_page 1');
+
+  Rose::DB::Object::Manager->default_objects_per_page(3);
+
+  my $per_page = Rose::DB::Object::Manager->default_objects_per_page;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 1,
+      per_page     => 3);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 1.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 1);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 2.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      per_page     => 3);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 3.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      per_page     => -1);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 4.$_ - $db_type");
+  }
+  
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => -1);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 5.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => undef);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 6.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      per_page     => undef);
+
+  $i = 0;
+
+  for(1 .. 3)
+  {
+    is($objs->[$i++]->id, $_, "pager 7.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id');
+
+  ok(scalar @$objs > 3, "pager 8 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 2,
+      per_page     => 3);
+
+  $i = 0;
+
+  for(4 .. 6)
+  {
+    is($objs->[$i++]->id, $_, "pager 9.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 3,
+      per_page     => 3);
+
+  $i = 0;
+
+  for(7 .. 9)
+  {
+    is($objs->[$i++]->id, $_, "pager 10.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 4,
+      per_page     => 3);
+
+  $i = 0;
+
+  for(10 .. 11)
+  {
+    is($objs->[$i++]->id, $_, "pager 11.$_ - $db_type");
+  }
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ id => { le => 11 } ],
+      sort_by      => 't1.id',
+      page         => 5,
+      per_page     => 3);
+
+  ok(scalar @$objs == 0, "pager 12 - $db_type");
+
+  Rose::DB::Object::Manager->default_objects_per_page(20);
+
+  # End pager tests
 }
 
 BEGIN
