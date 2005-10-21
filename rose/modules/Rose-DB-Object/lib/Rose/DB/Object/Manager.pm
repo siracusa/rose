@@ -22,10 +22,17 @@ our $Debug = 0;
 
 use Rose::Class::MakeMethods::Generic
 (
-  inheritable_scalar => [ 'error', 'total', 'error_mode' ],
+  inheritable_scalar =>
+  [
+    'error',
+    'total', 
+    'error_mode', 
+    'default_objects_per_page',
+  ],
 );
 
 __PACKAGE__->error_mode('fatal');
+__PACKAGE__->default_objects_per_page(20);
 
 sub handle_error
 {
@@ -392,6 +399,30 @@ sub get_objects
       {
         $fetch{$arg} = 1;
       }
+    }
+  }
+
+  # Handle "page" arguments
+  if(exists $args{'page'} || exists $args{'per_page'})
+  {
+    if(exists $args{'limit'} || exists $args{'offset'})
+    {
+      Carp::croak 'Cannot include the "page" or "per_page" ',
+                  'options when the "limit" or "offset" option ',
+                  'is used';
+    }
+
+    my $page     = delete $args{'page'} || 1;
+    my $per_page = delete $args{'per_page'} || $class->default_objects_per_page;
+
+    $page     = 1  if($page < 1);
+    $per_page = $class->default_objects_per_page  if($per_page < 1);
+
+    $args{'limit'} = $per_page;
+
+    if($page > 1)
+    {
+      $args{'offset'} = ($page - 1) * $per_page;
     }
   }
 

@@ -624,7 +624,7 @@ Consider map class names in this order:
     My::ProductsColors      <PREFIX><LCLASS_P><FCLASS_P>
     My::ProductColors       <PREFIX><LCLASS_S><FCLASS_P>
     My::ColorsProducts      <PREFIX><FCLASS_P><LCLASS_P>
-    My::ColorProducts       <PREFIX><FCLASS_S><LCLASS_P>Map 
+    My::ColorProducts       <PREFIX><FCLASS_S><LCLASS_P>
     My::ColorMap            <PREFIX><FCLASS_S>Map 
     My::ColorsMap           <PREFIX><FCLASS_P>Map 
     My::ProductMap          <PREFIX><LCLASS_S>Map 
