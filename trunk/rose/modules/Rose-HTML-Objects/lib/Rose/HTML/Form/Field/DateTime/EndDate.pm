@@ -11,7 +11,7 @@ sub inflate_value
 
   my $date = $self->SUPER::inflate_value(@_);
 
-  return $date  unless(ref $date && $date->isa('DateTime'));
+  return $date  unless(UNIVERSAL::isa($date, 'DateTime'));
 
   no warnings;
   # Pin to the last second of the day if no time is set

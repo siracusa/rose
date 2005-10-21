@@ -22,7 +22,7 @@ sub field
 
   if(@_ == 3)
   {
-    unless(ref $field && $field->isa('Rose::HTML::Form::Field'))
+    unless(UNIVERSAL::isa($field, 'Rose::HTML::Form::Field'))
     {
       Carp::croak "Not a Rose::HTML::Form::Field object: $field";
     }
@@ -49,13 +49,13 @@ sub add_fields
   {
     my $arg = shift;
 
-    if(ref($arg) && $arg->isa('Rose::HTML::Form::Field'))
+    if(UNIVERSAL::isa($arg, 'Rose::HTML::Form::Field'))
     {
       $self->field($arg->name => $arg)
     }
     else
     {
-      unless(ref $_[0] && $_[0]->isa('Rose::HTML::Form::Field'))
+      unless(UNIVERSAL::isa($_[0], 'Rose::HTML::Form::Field'))
       {
         Carp::croak "Not a Rose::HTML::Form::Field object: $_[0]";
       }
@@ -90,7 +90,7 @@ sub delete_field
 {
   my($self, $name) = @_;
 
-  $name = $name->name  if(ref $name && $name->isa('Rose::HTML::Form::Field'));
+  $name = $name->name  if(UNIVERSAL::isa($name, 'Rose::HTML::Form::Field'));
 
   delete $self->{'fields'}{$name};
 }

@@ -81,7 +81,7 @@ sub _args_to_items
   }
   elsif(@_ == 1 && ref $_[0] eq 'ARRAY')
   {
-    if(ref $_[0][0] && ($_[0][0]->isa($class) || $_[0][0]->isa($group_class)))
+    if(UNIVERSAL::isa($_[0][0], $class) || UNIVERSAL::isa($_[0][0], $group_class))
     {
       $items = $_[0];
     }
@@ -91,7 +91,7 @@ sub _args_to_items
       %labels = map { $_ => $_  } @choices;
     }
   }
-  elsif($_[0]->isa($class) || $_[0]->isa($group_class))
+  elsif(UNIVERSAL::isa($_[0], $class) || UNIVERSAL::isa($_[0], $group_class))
   {
     $items = [ @_ ];
   }
