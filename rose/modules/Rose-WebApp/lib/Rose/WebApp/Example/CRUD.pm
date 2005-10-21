@@ -412,7 +412,7 @@ sub get_objects
 
   $self->prepare_object_list_args(\%args);
 
-  my($total, @objects);
+  my($total, $objects);
 
   eval
   {
@@ -422,20 +422,11 @@ sub get_objects
 
     die $manager_class->error  unless(defined $total);
 
-    $args{'limit'} = $per_page;
+    $args{'per_page'} = $per_page;
+    $args{'page'}    =  $page;
 
-    if($page > 1)
-    {
-      $args{'offset'} = ($page - 1) * $per_page;
-    }
-
-    my $iterator = $manager_class->get_objects_iterator(%args)
+    $objects = $manager_class->get_objects(%args)
       or die $manager_class->error;
-
-    while(my $object = $iterator->next)
-    {
-      push(@objects, $object);
-    }
   };
 
   if($@)
@@ -446,7 +437,7 @@ sub get_objects
 
   return
   {
-    objects  => \@objects,
+    objects  => $objects,
     total    => $total,
     per_page => $per_page,
     page     => $page,
