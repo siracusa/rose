@@ -1,0 +1,81 @@
+0.026 (10.22.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Documented value/label pair argument format for select boxes,
+      pop-up menus, and checkbox and radio button groups.
+
+0.025 (10.21.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a bug that caused a fatal error when passing name/value
+      pairs to the options() method of option containers.
+
+0.024 (10.10.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed POD links and altered POD formatting.
+    * Added support information and links to selected modules.
+
+0.023 (10.09.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed compound field renaming bug.
+
+0.022 (08.20.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * POD fixes.
+
+0.021 (06.28.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added set field.
+
+0.02 (06.27.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added support for multi-valued internal values.
+    * Added support for fields with partial values (e.g., a compound time 
+      field with just an hour and an AM/PM specifier filled out.)
+    * Shored up support for deeply-nested compound fields.
+    * Added hour, minute, second, start date, end date, and date range fields.
+
+0.0143 (05.02.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added scalar context to the input_value() call in init_with_object(),
+      and to the deflate_value() call in output_value().
+    * Fixed mistakes in TextArea documentation.
+
+0.0142 (04.27.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added build_on_init() method to form objects.
+
+0.0141 (04.22.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added class="required" to the label tag of required fields.
+
+0.014 (04.22.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added functionality to the value_label() method of on/off field 
+      groups and restored the original meaning of the label() method 
+      for those fields.
+
+0.0132 (04.21.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a bug that caused a misleading error message when trying to
+      select multiple items in a pop-up menu.
+
+0.0131 (12.30.2004) - John Siracusa <siracusa@mindspring.com>
+
+    * Added code to tests to drop back to UTC time zone if the local time
+      zone cannot be determined (e.g., on Win32)
+    * Added warnings for ancient versions of DateTime.
+
+0.013 (12.07.2004) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed some tests that relied on keys()/values() order.
+
+0.012 (11.14.2004) - John Siracusa <siracusa@mindspring.com>
+
+    * Added copyright info.  Versions 0.01 and 0.011 removed.
+
+0.011 (11.14.2004) - John Siracusa <siracusa@mindspring.com>
+
+    * Added missing prerequisite (Rose::URI)
+
+0.01 (11.13.2004) - John Siracusa <siracusa@mindspring.com>
+
+    * Initial release.
