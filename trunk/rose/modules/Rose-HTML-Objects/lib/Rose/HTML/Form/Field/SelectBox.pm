@@ -23,7 +23,7 @@ __PACKAGE__->add_valid_html_attrs
   'onchange',    # %Script;       #IMPLIED  -- the element value was changed --
 );
 
-our $VERSION = '0.012';
+our $VERSION = '0.013';
 
 sub multiple { shift->html_attr('multiple', @_) }
 
@@ -125,7 +125,7 @@ Convenience alias for L<add_options()|/add_options>.
 
 =item B<add_options OPTIONS>
 
-Adds options to the select box.  OPTIONS may be a reference to a hash of value/label pairs, a reference to an array of values, or a list of objects that are of, or inherit from, the classes L<Rose::HTML::Form::Field::Option> or L<Rose::HTML::Form::Field::OptionGroup>. Passing an odd number of items in the value/label argument list causes a fatal error. Options passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.  Options are added to the end of the existing list of options.
+Adds options to the select box.  OPTIONS may be a reference to a hash of value/label pairs, an ordered list of value/label pairs, a reference to an array of values, or a list of objects that are of, or inherit from, the classes L<Rose::HTML::Form::Field::Option> or L<Rose::HTML::Form::Field::OptionGroup>. Passing an odd number of items in the value/label argument list causes a fatal error. Options passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.  Options are added to the end of the existing list of options.
 
 =item B<add_value VALUE>
 
@@ -153,9 +153,9 @@ This is just an accessor method for the "multiple" boolean HTML attribute, but I
 
 Returns the first option (according to the order that they are returned from L<options()|/options>) whose "value" HTML attribute is VALUE, or undef if no such option exists.
 
-=item B<options OPTIONS>
+=item B<options [OPTIONS]>
 
-Get or set the full list of options in the select box.  OPTIONS may be a reference to a hash of value/label pairs, a reference to an array of values, or a list of objects that are of, or inherit from, the classes L<Rose::HTML::Form::Field::Option> or L<Rose::HTML::Form::Field::OptionGroup>. Passing an odd number of items in the value/label argument list causes a fatal error. Options passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.
+Get or set the full list of options in the select box.  OPTIONS may be a reference to a hash of value/label pairs, an ordered list of value/label pairs, a reference to an array of values, or a list of objects that are of, or inherit from, the classes L<Rose::HTML::Form::Field::Option> or L<Rose::HTML::Form::Field::OptionGroup>. Passing an odd number of items in the value/label argument list causes a fatal error.  Options passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.
 
 To set an ordered list of option values along with labels in the constructor, use both the L<options()|/options> and L<labels()|/labels> methods in the correct order. Example:
 
