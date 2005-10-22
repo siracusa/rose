@@ -10,7 +10,7 @@ use Rose::HTML::Form::Field::Group;
 use Rose::HTML::Form::Field::Group::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
 
-our $VERSION = '0.012';
+our $VERSION = '0.013';
 
 sub _item_class       { 'Rose::HTML::Form::Field::CheckBox' }
 sub _item_name        { 'checkbox' }
@@ -109,7 +109,7 @@ Convenience alias for L<add_checkboxes()|/add_checkboxes>.
 
 =item B<add_checkboxes CHECKBOXES>
 
-Adds checkboxes to the checkbox group.  CHECKBOXES may be a reference to a hash of value/label pairs, a reference to an array of values, or a list of L<Rose::HTML::Form::Field::CheckBox> objects. Passing an odd number of items in the value/label argument list causes a fatal error. Checkbox values and labels passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.  Checkboxes are added to the end of the existing list of checkboxes.
+Adds checkboxes to the checkbox group.  CHECKBOXES may be a reference to a hash of value/label pairs, an ordered list of value/label pairs, a reference to an array of values, or a list of L<Rose::HTML::Form::Field::CheckBox> objects. Passing an odd number of items in the value/label argument list causes a fatal error. Checkbox values and labels passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.  Checkboxes are added to the end of the existing list of checkboxes.
 
 =item B<add_value VALUE>
 
@@ -123,9 +123,9 @@ Put a check in the checkboxes whose values are equal to VALUE1, VALUE2, etc.
 
 Returns the first checkbox (according to the order that they are returned from L<checkboxes()|/checkboxes>) whose "value" HTML attribute is VALUE, or undef if no such checkbox exists.
 
-=item B<checkboxes CHECKBOXES>
+=item B<checkboxes [CHECKBOXES]>
 
-Get or set the full list of checkboxes in the group.  CHECKBOXES may be a reference to a hash of value/label pairs, a reference to an array of values, or a list of L<Rose::HTML::Form::Field::CheckBox> objects. Passing an odd number of items in the value/label argument list causes a fatal error. Checkbox values and labels passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.
+Get or set the full list of checkboxes in the group.  CHECKBOXES may be a reference to a hash of value/label pairs, an ordered list of value/label pairs, a reference to an array of values, or a list of L<Rose::HTML::Form::Field::CheckBox> objects. Passing an odd number of items in the value/label argument list causes a fatal error. Checkbox values and labels passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.
 
 To set an ordered list of checkboxes along with labels in the constructor, use both the L<checkboxes()|/checkboxes> and L<labels()|/labels> methods in the correct order. Example:
 

@@ -10,7 +10,7 @@ use Rose::HTML::Form::Field::Group;
 use Rose::HTML::Form::Field::Group::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
 
-our $VERSION = '0.011';
+our $VERSION = '0.013';
 
 sub _item_class       { 'Rose::HTML::Form::Field::RadioButton' }
 sub _item_name        { 'radio button' }
@@ -103,7 +103,7 @@ Convenience alias for L<add_radio_buttons()|/add_radio_buttons>.
 
 =item B<add_radio_buttons RADIO_BUTTONS>
 
-Adds radio buttons to the radio button group.  RADIO_BUTTONS may be a reference to a hash of value/label pairs, a reference to an array of values, or a list of L<Rose::HTML::Form::Field::RadioButton> objects. Passing an odd number of items in the value/label argument list causes a fatal error. Radio button values and labels passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function. Radio buttons are added to the end of the existing list of radio buttons.
+Adds radio buttons to the radio button group.  RADIO_BUTTONS may be a reference to a hash of value/label pairs, an ordered list of value/label pairs, a reference to an array of values, or a list of L<Rose::HTML::Form::Field::RadioButton> objects. Passing an odd number of items in the value/label argument list causes a fatal error. Radio button values and labels passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function. Radio buttons are added to the end of the existing list of radio buttons.
 
 =item B<columns [COLS]>
 
@@ -191,9 +191,9 @@ Get or set the flag that determines whether or not the string stored in L<html_l
 
 Returns the first radio button (according to the order that they are returned from L<radio_buttons()|/radio_buttons>) whose "value" HTML attribute is VALUE, or undef if no such radio button exists.
 
-=item B<radio_buttons RADIO_BUTTONS>
+=item B<radio_buttons [RADIO_BUTTONS]>
 
-Get or set the full list of radio buttons in the group.  RADIO_BUTTONS may be a reference to a hash of value/label pairs, a reference to an array of values, or a list of L<Rose::HTML::Form::Field::RadioButton> objects. Passing an odd number of items in the value/label argument list causes a fatal error. Radio button values and labels passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.
+Get or set the full list of radio buttons in the group.  RADIO_BUTTONS may be a reference to a hash of value/label pairs, an ordered list of value/label pairs, a reference to an array of values, or a list of L<Rose::HTML::Form::Field::RadioButton> objects. Passing an odd number of items in the value/label argument list causes a fatal error. Radio button values and labels passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.
 
 To set an ordered list of radio buttons along with labels in the constructor, use both the L<radio_buttons()|/radio_buttons> and L<labels()|/labels> methods in the correct order. Example:
 
