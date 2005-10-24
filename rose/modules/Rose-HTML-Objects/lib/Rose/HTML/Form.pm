@@ -12,7 +12,7 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.02';
+our $VERSION = '0.021';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -304,6 +304,9 @@ sub self_uri
 
   return Rose::URI->new($self_uri);
 }
+
+# XXX: To document or not to document, that is the question...
+sub query_hash { Rose::URI->new(query => shift->query_string)->query_hash }
 
 sub query_string
 {
