@@ -1,3 +1,8 @@
+0.027 (10.23.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a bug that caused the incorrect initialization of compound
+      fields nested 3 or more levels deep.
+
 0.026 (10.22.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Documented value/label pair argument format for select boxes,

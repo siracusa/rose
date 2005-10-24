@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 79;
+use Test::More tests => 81;
 
 BEGIN 
 {
@@ -12,6 +12,7 @@ BEGIN
   use_ok('Rose::HTML::Form::Field::RadioButtonGroup');
   use_ok('Rose::HTML::Form::Field::CheckBoxGroup');
   use_ok('Rose::HTML::Form::Field::DateTime::Split::MonthDayYear');
+  use_ok('Rose::HTML::Form::Field::DateTime::Split::MDYHMS');
 }
 
 my $form = Rose::HTML::Form->new;
@@ -448,6 +449,40 @@ $form->build_form;
 @fields = $form->fields;
 
 is(scalar @fields, 4,'build_on_init() 2');
+
+
+$form = Rose::HTML::Form->new;
+$form->add_field(Rose::HTML::Form::Field::DateTime::Split::MDYHMS->new(name => 'event'));
+$form->params(
+{
+  'event.date.month'  => 10,
+  'event.date.day'    => 23,
+  'event.date.year'   => 2005,
+  'event.time.hour'   => 15,
+  'event.time.minute' => 21,
+});
+
+$form->init_fields;
+
+my $cgi_params = {
+    who                 => 'Some name',
+    'event.date.month'  => 10,
+    'event.date.day'    => 23,
+    'event.date.year'   => 2005,
+    'event.time.hour'   => 15,
+    'event.time.minute' => 21,
+};
+
+$form->params( $cgi_params );
+$form->init_fields;
+
+is($form->field('event')->html, 
+'<span class="datetime"><span class="date"><input class="month" maxlength="2" name="event.date.month" size="2" type="text" value="10">/<input class="day" maxlength="2" name="event.date.day" size="2" type="text" value="23">/<input class="year" maxlength="4" name="event.date.year" size="4" type="text" value="2005"></span> <span class="time"><input class="hour" maxlength="2" name="event.time.hour" size="2" type="text" value="15">:<input class="minute" maxlength="2" name="event.time.minute" size="2" type="text" value="21">:<input class="second" maxlength="2" name="event.time.second" size="2" type="text" value=""><select class="ampm" name="event.time.ampm" size="1">
+<option value=""></option>
+<option value="AM">AM</option>
+<option value="PM">PM</option>
+</select></span></span>', 
+'init_fields 3-level compound');
 
 BEGIN
 {
