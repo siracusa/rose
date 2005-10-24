@@ -5,7 +5,7 @@ use strict;
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.011';
+our $VERSION = '0.012';
 
 __PACKAGE__->add_required_html_attr(
 {
@@ -16,6 +16,7 @@ sub inflate_value
 {
   my($self, $time) = @_;
 
+  no warnings; # undef time okay
   if($time =~ /^\s*(\d\d?)(?::(\d\d)(?::(\d\d))?)?\s*([ap]\.?m\.?)?\s*$/i)
   {
     my $hour = $1;

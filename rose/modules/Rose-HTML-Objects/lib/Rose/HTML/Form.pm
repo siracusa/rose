@@ -12,7 +12,7 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.0121';
+our $VERSION = '0.02';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -371,24 +371,7 @@ sub init_fields
 
   foreach my $field ($self->fields)
   {
-    if($field->isa('Rose::HTML::Form::Field::Compound'))
-    {
-      if($self->param_exists($field->name))
-      {
-        $self->_init_field($field);
-      }
-      else
-      {
-        foreach my $field_name ($field->field_names)
-        {
-          $self->_init_field($field->field($field_name));
-        }
-      }
-    }
-    else
-    {
-      $self->_init_field($field);
-    }
+    $self->_init_field($field);
   }
 }
 
@@ -406,46 +389,19 @@ sub _init_field
   my $field_name_exists = $self->param_exists($field_name);
   my $name_attr_exists  = $self->param_exists($name_attr);
 
-  return  unless((($field_name_exists || $name_attr_exists) &&
-		          !$field->isa('Rose::HTML::Form::Field::Submit')) || $on_off);
-
-  if($field->isa('Rose::HTML::Form::Field::Group'))
+  if(!$field_name_exists && $field->isa('Rose::HTML::Form::Field::Compound'))
   {
-    if($field_name_exists)
+    foreach my $field_name ($field->field_names)
     {
-      $Debug && warn "$field->input_value(", $self->param($field_name), ")\n";
-      $field->input_value($self->param($field_name));
-    }
-    else
-    {
-      $Debug && warn "$field->input_value(", $self->param($name_attr), ")\n";
-      $field->input_value($self->param($name_attr));
+      $self->_init_field($field->field($field_name));
     }
   }
   else
   {
-    # Must handle lone checkboxes and radio buttons here
-    if($on_off)
-    {
-      if($self->param($field->name) eq $field->html_attr('value'))
-      {
-        $Debug && warn "$self->param($field->{'name'}) = checked\n";
-        $field->checked(1);
-      }
-      else
-      {
-        if($self->params_exist)
-        {
-          $field->checked(0);
-        }
-        else
-        {
-          # Didn't set anything, so avoid doing pareant un-clearing below
-          return;
-        } 
-      }
-    }
-    else
+    return  unless((($field_name_exists || $name_attr_exists) &&
+		          !$field->isa('Rose::HTML::Form::Field::Submit')) || $on_off);
+
+    if($field->isa('Rose::HTML::Form::Field::Group'))
     {
       if($field_name_exists)
       {
@@ -456,6 +412,43 @@ sub _init_field
       {
         $Debug && warn "$field->input_value(", $self->param($name_attr), ")\n";
         $field->input_value($self->param($name_attr));
+      }
+    }
+    else
+    {
+      # Must handle lone checkboxes and radio buttons here
+      if($on_off)
+      {
+        if($self->param($field->name) eq $field->html_attr('value'))
+        {
+          $Debug && warn "$self->param($field->{'name'}) = checked\n";
+          $field->checked(1);
+        }
+        else
+        {
+          if($self->params_exist)
+          {
+            $field->checked(0);
+          }
+          else
+          {
+            # Didn't set anything, so avoid doing pareant un-clearing below
+            return;
+          } 
+        }
+      }
+      else
+      {
+        if($field_name_exists)
+        {
+          $Debug && warn "$field->input_value(", $self->param($field_name), ")\n";
+          $field->input_value($self->param($field_name));
+        }
+        else
+        {
+          $Debug && warn "$field->input_value(", $self->param($name_attr), ")\n";
+          $field->input_value($self->param($name_attr));
+        }
       }
     }
   }
