@@ -331,14 +331,17 @@ sub input_prefilter
 
   return undef  unless(defined $value);
 
-  for($value)
+  unless(ref $value)
   {
-    no warnings;
-
-    if($self->trim_spaces)
+    for($value)
     {
-      s/^\s+//;
-      s/\s+$//;
+      no warnings;
+  
+      if($self->trim_spaces)
+      {
+        s/^\s+//;
+        s/\s+$//;
+      }
     }
   }
 
