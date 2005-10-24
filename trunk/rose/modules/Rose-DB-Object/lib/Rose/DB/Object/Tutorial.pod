@@ -24,7 +24,11 @@ To get up to speed quickly with L<Rose::DB>, read the L<Rose::DB::Tutorial> docu
 
 The PostgreSQL database will be used in the examples in this tutorial, but the features demonstrated will not be specific to that database.  If you are following along with a different database, you may have to adjust the specific syntax used in the SQL table creation statements, but all of the same features should be present in some form.
 
-We will start with a single table in a PostgreSQL database as part of a fictional store-like application.  The table and the corresponding example code will evolve over the course of this tutorial to become more complex.  But things will start simply.  Here is the initial database table, "products"
+This tutorial is based on a fictional database schema belonging to a store-like application.  Both the database schema the corresponding Perl classes will evolve over the course of this tutorial.
+
+=head2 Getting Started
+
+Let's start with a single table in our fictional store database.
 
     CREATE TABLE products
     (
