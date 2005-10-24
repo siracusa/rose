@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.02';
+our $VERSION = '0.021';
 
 # syscolumns.coltype constants taken from:
 #
@@ -821,6 +821,8 @@ EOF
 
     my %fk;
 
+    my $cm = $self->convention_manager;
+  
     FK: while(my $index_info = $sth->fetchrow_hashref)
     {
       # Sanity check - should never happen
@@ -873,8 +875,19 @@ EOF
       my %key_columns;
       @key_columns{@local_cols} = @foreign_cols;
 
+   
+      if(my $alt_key_name = $cm->auto_foreign_key_name($foreign_class, $key_name))
+      {
+        $key_name = $alt_key_name;
+      }
+      elsif($key_name !~ /^[a-zA-Z]\w*$/)
+      {
+        $key_name = undef;
+      }
+
       my $fk = 
         Rose::DB::Object::Metadata::ForeignKey->new(
+          name        => $key_name,
           class       => $foreign_class,
           key_columns => \%key_columns);
 
@@ -886,6 +899,9 @@ EOF
     # foreign keys to work in a predictible manner.  This exact sort order
     # (lowercase table name comparisons) is part of the API for foreign
     # key auto generation.
+    #
+    # XXX: This is somewhat superseded by the convention manager, but it
+    # XXX: doesn't hurt to leave it here.
     @foreign_keys = 
       sort { lc $a->class->meta->table cmp lc $b->class->meta->table } 
       @foreign_keys;

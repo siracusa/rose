@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.021';
+our $VERSION = '0.022';
 
 sub auto_retrieve_primary_key_column_names
 {
@@ -121,6 +121,8 @@ sub auto_generate_foreign_keys
     # This happens when the table has no foreign keys
     return  unless(defined $sth);
 
+    my $cm = $self->convention_manager;
+
     FK: while(my $row = $sth->fetchrow_hashref)
     {
       # The Comment column contains a text description of foreign keys that
@@ -174,9 +176,12 @@ sub auto_generate_foreign_keys
 
           my %key_columns;
           @key_columns{@local_columns} = @foreign_columns;
+    
+          my $key_name = $cm->auto_foreign_key_name($foreign_class);
 
           my $fk = 
             Rose::DB::Object::Metadata::ForeignKey->new(
+              name        => $key_name,
               class       => $foreign_class,
               key_columns => \%key_columns);
 
