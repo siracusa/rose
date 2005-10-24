@@ -2094,6 +2094,10 @@ Class methods are provided for fetching objects all at once, one at a time throu
 
 =over 4
 
+=item B<default_objects_per_page [NUM]>
+
+Get or set the default number of items per page, as returned by the L<get_objects|/get_objects> method when used with the C<page> and/or C<per_page> parameters.  The default value is 20.
+
 =item B<delete_objects [PARAMS]>
 
 Delete rows from a table fronted by a L<Rose::DB::Object>-derived class based on PARAMS, where PARAMS are name/value pairs.  Returns the number of rows deleted, or undef if there was an error.
@@ -2265,6 +2269,20 @@ The name of the L<Rose::DB::Object>-derived objects to be fetched.  This paramet
 Skip the first NUM rows.  If the database supports some sort of "limit with offset" syntax (e.g., "LIMIT 10 OFFSET 20") then it will be used.  Otherwise, the first NUM rows will be fetched and then discarded.
 
 This parameter can only be used along with the C<limit> parameter, otherwise a fatal error will occur.
+
+=item C<page NUM>
+
+Show page number NUM of objects.  Pages are numbered starting from 1.  A page number less than or equal to zero causes the page number to default to 1.
+
+The number of objects per page can be set by the C<per_page> parameter.  If the C<per_page> parameter is supplied and this parameter is omitted, it defaults to 1 (the first page).
+
+If this parameter is included along with either of the C<limit> or <offset> parameters, a fatal error will occur.
+
+=item C<per_page NUM>
+
+The number of objects per C<page>.   Defaults to the value returned by the L<default_objects_per_page|/default_objects_per_page> class method (20, by default).
+
+If this parameter is included along with either of the C<limit> or <offset> parameters, a fatal error will occur.
 
 =item C<require_objects OBJECTS>
 

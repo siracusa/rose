@@ -1,6 +1,8 @@
-0.078 (10.21.2005) - John Siracusa <siracusa@mindspring.com>
+0.078 (10.24.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added page and per_page manager parameters for the truly lazy.
+    * Fixed a big caused by a conflict between the convention manager
+      and the legacy foreign key name generator.
 
 0.077 (10.20.2005) - John Siracusa <siracusa@mindspring.com>
 

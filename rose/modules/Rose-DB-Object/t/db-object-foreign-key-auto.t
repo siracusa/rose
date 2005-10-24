@@ -1314,6 +1314,7 @@ EOF
     sub init_db { Rose::DB->new('pg') }
 
     MyPgObject->meta->table('rose_db_object_test');
+    MyPgObject->meta->convention_manager(undef);
 
     MyPgObject->meta->column_name_to_method_name_mapper(sub
     {
@@ -1511,6 +1512,7 @@ EOF
     sub init_db { Rose::DB->new('mysql') }
 
     MyMySQLObject->meta->table('rose_db_object_test');
+    MyMySQLObject->meta->convention_manager(undef);
 
     MyMySQLObject->meta->column_name_to_method_name_mapper(sub
     {
@@ -1674,7 +1676,7 @@ EOF
     sub init_db { Rose::DB->new('informix') }
 
     MyInformixObject->meta->table('rose_db_object_test');
-
+    MyInformixObject->meta->convention_manager(undef);
 
     MyInformixObject->meta->column_name_to_method_name_mapper(sub
     {
