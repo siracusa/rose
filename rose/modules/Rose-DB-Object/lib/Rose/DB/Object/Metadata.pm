@@ -17,7 +17,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.07';
+our $VERSION = '0.071';
 
 our $Debug = 0;
 
@@ -1371,6 +1371,58 @@ sub make_foreign_key_methods
   return;
 }
 
+our @Deferred_Tasks;
+
+sub deferred_tasks
+{
+  return wantarray ? @Deferred_Tasks : \@Deferred_Tasks;
+}
+
+sub add_deferred_tasks
+{
+  my($class) = shift;  
+
+  ARG: foreach my $arg (@_)
+  {
+    foreach my $task (@Deferred_Tasks)
+    {
+      next  ARG if($arg->{'class'}  eq $task->{'class'} &&
+                   $arg->{'method'} eq $task->{'method'});
+    }
+
+    push(@Deferred_Tasks, $arg);
+  }
+}
+
+*add_deferred_task = \&add_deferred_tasks;
+
+sub retry_deferred_tasks
+{
+  my($self) = shift;
+
+  my @tasks;
+
+  foreach my $task (@Deferred_Tasks)
+  {
+    my $class  = $task->{'class'};
+    my $method = $task->{'method'};
+    my $args   = $task->{'args'};
+    my $check  = $task->{'check'};
+
+    $class->meta->$method(%$args);
+
+    unless($check->())
+    {
+      push(@tasks, $task);
+    }
+  }
+
+  if(@Deferred_Tasks != @tasks)
+  {
+    @Deferred_Tasks = @tasks;
+  }
+}
+
 our @Deferred_Foreign_Keys;
 
 sub deferred_foreign_keys
@@ -1382,11 +1434,11 @@ sub add_deferred_foreign_keys
 {
   my($class) = shift;  
 
-  foreach my $arg (@_)
+  ARG: foreach my $arg (@_)
   {
     foreach my $fk (@Deferred_Foreign_Keys)
     {
-      next  if($fk->id eq $arg->id);
+      next ARG  if($fk->id eq $arg->id);
     }
 
     push(@Deferred_Foreign_Keys, $arg);
@@ -1421,7 +1473,7 @@ sub retry_deferred_foreign_keys
                      $foreign_key->name, "\n";
 
       my $args = $foreign_key->deferred_make_method_args || {};
-      $foreign_key->make_methods(%$args, preserve_existing => 1);
+      $foreign_key->make_methods(%$args); #, preserve_existing => 1);
     }
     else
     {
@@ -1527,11 +1579,11 @@ sub add_deferred_relationships
 {
   my($class) = shift;
 
-  foreach my $arg (@_)
+  ARG: foreach my $arg (@_)
   {
     foreach my $rel (@Deferred_Relationships)
     {
-      next  if($rel->id eq $arg->id);
+      next ARG  if($rel->id eq $arg->id);
     }
 
     push(@Deferred_Relationships, $arg);
