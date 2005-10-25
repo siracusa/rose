@@ -231,6 +231,7 @@ sub is_ready_to_make_methods
 
         $require_objects = [ $item->name ];
         $foreign_class = $item->class;
+
         $map_to_method = $item->method_name('get_set') || 
                          $item->method_name('get_set_now') ||
                          $item->method_name('get_set_on_save') ||
