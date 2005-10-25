@@ -7,7 +7,7 @@ use DateTime::Format::Pg;
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.022';
+our $VERSION = '0.023';
 
 our $Debug = 0;
 
@@ -44,6 +44,7 @@ sub init_date_handler
 }
 
 sub default_implicit_schema { 'public' }
+sub likes_lowercase_table_names { 1 }
 
 sub insertid_param { 'unsupported' }
 sub null_date      { '0000-00-00'  }

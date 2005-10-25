@@ -115,6 +115,10 @@ t/db-object-relationship.t
 t/db-object-std-cached.t
 t/db-object-std.t
 t/db-object.t
+t/lib/My/DB/Gene/Main.pm
+t/lib/My/DB/Gene2Unigene.pm
+t/lib/My/DB/Object.pm
+t/lib/My/DB/Unigene/Main.pm
 t/makemethods-db.t
 t/makemethods.t
 t/pod.t
@@ -133,4 +137,5 @@ t/sandbox/convention/lib/My/Product.pm
 t/sandbox/convention/lib/My/ProductColors.pm
 t/sandbox/convention/lib/My/Vendor.pm
 t/spot-check-01.t
+t/spot-check-02.t
 t/test-lib.pl
