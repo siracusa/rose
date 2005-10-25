@@ -315,6 +315,8 @@ sub auto_retrieve_primary_key_column_names
   return wantarray ? @columns : \@columns;
 }
 
+my %Warned;
+    
 sub auto_generate_foreign_keys
 {
   my($self, %args) = @_;
@@ -367,8 +369,6 @@ sub auto_generate_foreign_keys
     @fk_info = 
       sort { lc $a->{'UK_TABLE_NAME'} cmp lc $b->{'UK_TABLE_NAME'} } @fk_info;
 
-    my %warned;
-
     my $cm = $self->convention_manager;
 
     FK_INFO: foreach my $fk_info (@fk_info)
@@ -393,14 +393,22 @@ sub auto_generate_foreign_keys
 
       unless($foreign_class)
       {
-        my $key = join($;, map { defined($_) ? $_ : '' } 
-                       @$fk_info{qw(UK_TABLE_CAT UK_TABLE_NAME UK_TABLE_SCHEM)});
+        my $key = join($;, map { defined($_) ? $_ : "\034" } $self->class,
+                       @$fk_info{qw(UK_TABLE_CAT UK_TABLE_SCHEM UK_TABLE_NAME)});
 
+        # Add deferred task
         $self->add_deferred_task(
         {
           class  => $self->class, 
           method => 'auto_init_foreign_keys',
           args   => \%args,
+
+          code   => sub
+          {
+            $self->auto_init_foreign_keys(%args);
+            $self->make_foreign_key_methods(%args, preserve_existing => 1);
+          },
+
           check  => sub
           {
             my $num = scalar @foreign_keys;
@@ -409,13 +417,14 @@ sub auto_generate_foreign_keys
           }
         });
 
-        unless($no_warnings || $warned{$key}++)
+        unless($no_warnings || $Warned{$key}++)
         {
           no warnings; # Allow undef coercion to empty string
-          warn "No Rose::DB::Object-derived class found for catalog '",
-                $fk_info->{'UK_TABLE_CAT'}, "' schema '", 
-                $fk_info->{'UK_TABLE_SCHEM'}, "' table '", 
-                $fk_info->{'UK_TABLE_NAME'}, "'";
+          Carp::carp
+            "No Rose::DB::Object-derived class found for catalog '",
+            $fk_info->{'UK_TABLE_CAT'}, "' schema '", 
+            $fk_info->{'UK_TABLE_SCHEM'}, "' table '", 
+            $fk_info->{'UK_TABLE_NAME'}, "'";
         }
 
         next FK_INFO;
@@ -818,7 +827,15 @@ sub auto_initialize
   $self->auto_init_unique_keys(@_);
   $self->auto_init_foreign_keys(@_);
   $self->initialize;
-  $self->retry_deferred_tasks;
+
+  for(1 .. 2) # two passes are required to catch everything
+  {
+    $self->retry_deferred_foreign_keys;
+    $self->retry_deferred_relationships;
+    $self->retry_deferred_tasks;
+  }
+
+  return;
 }
 
 1;

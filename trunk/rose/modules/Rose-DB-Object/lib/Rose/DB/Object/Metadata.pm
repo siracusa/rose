@@ -1404,12 +1404,10 @@ sub retry_deferred_tasks
 
   foreach my $task (@Deferred_Tasks)
   {
-    my $class  = $task->{'class'};
-    my $method = $task->{'method'};
-    my $args   = $task->{'args'};
-    my $check  = $task->{'check'};
+    my $code  = $task->{'code'};
+    my $check = $task->{'check'};
 
-    $class->meta->$method(%$args);
+    $code->();
 
     unless($check->())
     {
@@ -1624,7 +1622,7 @@ sub retry_deferred_relationships
                      $relationship->name, "\n";
 
       my $args = $relationship->deferred_make_method_args || {};
-      $args->{'preserve_existing'} = 1;
+      #$args->{'preserve_existing'} = 1;
       $relationship->make_methods(%$args);
 
       # Reassign to list in case we rebuild above
