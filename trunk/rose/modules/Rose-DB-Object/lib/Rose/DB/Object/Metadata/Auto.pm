@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata;
 our @ISA = qw(Rose::DB::Object::Metadata);
 
-our $VERSION = '0.031';
+our $VERSION = '0.032';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -396,6 +396,19 @@ sub auto_generate_foreign_keys
         my $key = join($;, map { defined($_) ? $_ : '' } 
                        @$fk_info{qw(UK_TABLE_CAT UK_TABLE_NAME UK_TABLE_SCHEM)});
 
+        $self->add_deferred_task(
+        {
+          class  => $self->class, 
+          method => 'auto_init_foreign_keys',
+          args   => \%args,
+          check  => sub
+          {
+            my $num = scalar @foreign_keys;
+            my $fks = $self->foreign_keys;
+            return @$fks > $num ? 1 : 0;
+          }
+        });
+
         unless($no_warnings || $warned{$key}++)
         {
           no warnings; # Allow undef coercion to empty string
@@ -413,18 +426,14 @@ sub auto_generate_foreign_keys
 
       if(defined $key_name && length $key_name)
       {
-        $fk{$key_name}{'name'} = $key_name;
-      }
-      else
-      {
-        $key_name = $fk_info->{'UK_NAME'};
+        $fk{$fk_info->{'UK_NAME'}}{'name'} = $key_name;
       }
 
       my $local_column   = $fk_info->{'FK_COLUMN_NAME'};
       my $foreign_column = $fk_info->{'UK_COLUMN_NAME'};
 
-      $fk{$key_name}{'class'} = $foreign_class;
-      $fk{$key_name}{'key_columns'}{$local_column} = $foreign_column;
+      $fk{$fk_info->{'UK_NAME'}}{'class'} = $foreign_class;
+      $fk{$fk_info->{'UK_NAME'}}{'key_columns'}{$local_column} = $foreign_column;
     }
 
     my(%seen, %seen_name);
@@ -760,7 +769,7 @@ sub auto_init_foreign_keys
 
       foreach my $existing_key (@$existing_foreign_keys)
       {
-        next KEY  if($id eq $existing_key->id);#__fk_key_to_id($existing_key));
+        next KEY  if($id eq $existing_key->id);
       }
 
       $self->add_foreign_key($key);
@@ -809,6 +818,7 @@ sub auto_initialize
   $self->auto_init_unique_keys(@_);
   $self->auto_init_foreign_keys(@_);
   $self->initialize;
+  $self->retry_deferred_tasks;
 }
 
 1;
