@@ -1,3 +1,8 @@
+0.079 (10.25.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed bugs that caused auto-inited many-to-many relationships
+      to be inadequately fleshed-out under some circumstances.
+
 0.078 (10.24.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added page and per_page manager parameters for the truly lazy.
