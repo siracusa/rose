@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.021';
+our $VERSION = '0.022';
 
 # syscolumns.coltype constants taken from:
 #
@@ -862,6 +862,27 @@ EOF
 
       unless($foreign_class)
       {
+        # Add deferred task
+        $self->add_deferred_task(
+        {
+          class  => $self->class, 
+          method => 'auto_init_foreign_keys',
+          args   => \%args,
+
+          code   => sub
+          {
+            $self->auto_init_foreign_keys(%args);
+            $self->make_foreign_key_methods(%args, preserve_existing => 1);
+          },
+
+          check  => sub
+          {
+            my $num = scalar @foreign_keys;
+            my $fks = $self->foreign_keys;
+            return @$fks > $num ? 1 : 0;
+          }
+        });
+
         unless($no_warnings)
         {
           no warnings; # Allow undef coercion to empty string

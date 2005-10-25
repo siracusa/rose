@@ -1622,7 +1622,7 @@ sub retry_deferred_relationships
                      $relationship->name, "\n";
 
       my $args = $relationship->deferred_make_method_args || {};
-      #$args->{'preserve_existing'} = 1;
+      $args->{'preserve_existing'} = 1;
       $relationship->make_methods(%$args);
 
       # Reassign to list in case we rebuild above
