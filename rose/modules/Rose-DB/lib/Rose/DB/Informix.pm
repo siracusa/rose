@@ -37,6 +37,8 @@ sub max_timestamp  { '9999-12-31 23:59:59.99999' }
 
 sub last_insertid_from_sth { $_[1]->{'ix_sqlerrd'}[1] }
 
+sub likes_lowercase_table_names { 1 }
+
 sub generate_primary_key_values { return; }
 
 sub generate_primary_key_placeholders

@@ -1377,7 +1377,11 @@ EOF
     my $sth = $dbh->prepare("SHOW TABLE STATUS FROM `$db_name` LIKE ?");
     $sth->execute('rose_db_object_other');
     my $info = $sth->fetchrow_hashref;
-    die "Missing InnoDB support"  unless(lc $info->{'Type'} eq 'innodb');
+
+    unless(lc $info->{'Type'} eq 'innodb' || lc $info->{'Engine'} eq 'innodb')
+    {
+      die "Missing InnoDB support";
+    }
   };
 
   if(!$@ && $dbh)

@@ -17,7 +17,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.071';
+our $VERSION = '0.072';
 
 our $Debug = 0;
 
@@ -222,6 +222,7 @@ sub init_with_db
 
   my $catalog = $db->{'catalog'};
   my $schema  = $db->{'schema'};
+  my $driver  = $db->{'driver'};
   my $changed = 0;
 
   UNDEF_IS_OK: # Avoid undef string comparison warnings
@@ -238,11 +239,27 @@ sub init_with_db
       $self->{'schema'} = $schema;
       $changed++;
     }
+
+    if($driver ne $self->{'driver'})
+    {
+      $self->{'driver'} = $driver;
+      $changed++;
+    }
   }
 
   if($changed)
   {
     $self->_clear_table_generated_values;
+
+    if($db->likes_lowercase_table_names)
+    {
+      $self->table(lc($self->{'table_case_sensitive'} = $self->table));
+    }
+    else
+    {
+      $self->table($self->{'table_case_sensitive'})
+        if($self->{'table_case_sensitive'});
+    }
   }
 
   UNDEF_IS_OK: # Avoid undef string comparison warnings
@@ -1158,6 +1175,8 @@ sub register_class
   my $table = $self->table 
     or Carp::croak "Missing table for metadata object $self";
 
+  $table = lc $table  if($db->likes_lowercase_table_names);
+
   my $reg = $self->class_registry;
 
   # Combine keys using $;, which is "\034" (0x1C) by default. But just to
@@ -1187,8 +1206,13 @@ sub class_for
   $catalog = NULL_CATALOG  unless(defined $catalog);
   $schema  = NULL_SCHEMA   unless(defined $schema);
 
+  my $default_schema = $db->default_implicit_schema;
+  $default_schema = NULL_SCHEMA   unless(defined $default_schema);
+
   my $table = $args{'table'} 
     or Carp::croak "Missing required table parameter";
+
+  $table = lc $table  if($db->likes_lowercase_table_names);
 
   my $reg = $self->class_registry;
 
@@ -1200,7 +1224,7 @@ sub class_for
 
   return 
     $reg->{'catalog-schema-table',$catalog,$schema,$table} ||
-    $reg->{'catalog-schema-table',$catalog,$db->default_implicit_schema,$table} ||
+    $reg->{'catalog-schema-table',$catalog,,$table} ||
     $reg->{'schema-table',$schema,$table}  ||
     $reg->{'catalog-table',$catalog,$table} ||
     $reg->{'table',$table};

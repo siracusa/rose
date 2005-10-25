@@ -13,5 +13,5 @@ WriteMakefile(NAME         => 'Rose::DB::Object',
                 Scalar::Util          => 0,
                 Rose::DateTime::Util  => 0,
                 Rose::Object          => '0.015',
-                Rose::DB              => '0.03',
+                Rose::DB              => '0.031',
               });

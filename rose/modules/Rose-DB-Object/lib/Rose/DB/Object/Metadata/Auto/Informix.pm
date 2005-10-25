@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.022';
+our $VERSION = '0.023';
 
 # syscolumns.coltype constants taken from:
 #
@@ -143,7 +143,9 @@ sub auto_generate_columns
     #   4     data type (encoded)
     #   5     data length (encoded)
     #
-    my @col_list = DBD::Informix::Metadata::ix_columns($dbh, $self->table);
+    # Lowercase table because Rose::DB::Informix->likes_lowercase_table_names
+
+    my @col_list = DBD::Informix::Metadata::ix_columns($dbh, lc $self->table);
 
     # We'll also need to query the syscolumns table directly to get the
     # table id, which we need to query the sysdefaults table.  But to get
@@ -467,7 +469,7 @@ sub auto_retrieve_primary_key_column_names
     #   4     data type (encoded)
     #   5     data length (encoded)
     #
-    my @col_list = DBD::Informix::Metadata::ix_columns($dbh, $self->table);
+    my @col_list = DBD::Informix::Metadata::ix_columns($dbh, lc $self->table);
 
     my $owner = $col_list[0][0];
     my $table = $col_list[0][1]; # just in case...
@@ -574,7 +576,7 @@ sub auto_generate_unique_keys
     #   4     data type (encoded)
     #   5     data length (encoded)
     #
-    my @col_list = DBD::Informix::Metadata::ix_columns($dbh, $self->table);
+    my @col_list = DBD::Informix::Metadata::ix_columns($dbh, lc $self->table);
 
     # Here's the query for the table id
     my $st_sth = $dbh->prepare(<<"EOF");
@@ -793,7 +795,7 @@ sub auto_generate_foreign_keys
     my $dbh = $db->dbh or die $db->error;
 
     # I'm doing this to get the table id and owner.  Gotta be a better way...
-    my @col_list = DBD::Informix::Metadata::ix_columns($dbh, $self->table);
+    my @col_list = DBD::Informix::Metadata::ix_columns($dbh, lc $self->table);
 
     my $st_sth = $dbh->prepare(<<"EOF");
 SELECT tabid FROM informix.systables WHERE tabname = ? AND owner = ?
