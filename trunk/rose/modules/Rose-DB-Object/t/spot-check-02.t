@@ -223,7 +223,7 @@ CREATE TABLE Rose_db_object_ug_main
   symbol        VARCHAR(255),
   description   VARCHAR(255),
   cytoband      VARCHAR(255),
-  scount        INTEGER,
+  scount        INT,
   homol         VARCHAR(255),
   rest_expr     VARCHAR(255),
   mgi           VARCHAR(255)
@@ -252,8 +252,8 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE Rose_db_object_g_main
 (
-  tax_id           INT,
   gene_id          INT NOT NULL PRIMARY KEY,
+  tax_id           INT,
   symbol           VARCHAR(255),
   locustag         VARCHAR(255),
   chromosome       VARCHAR(255),
@@ -275,6 +275,9 @@ CREATE TABLE Rose_db_object_g_ug
   g_ug_id  INT PRIMARY KEY,
   gene_id  INT NOT NULL,
   ug_id    VARCHAR(255) NOT NULL,
+
+  INDEX(gene_id),
+  INDEX(ug_id),
 
   FOREIGN KEY (gene_id) REFERENCES Rose_db_object_g_main (gene_id),
   FOREIGN KEY (ug_id) REFERENCES Rose_db_object_ug_main (ug_id)
@@ -385,7 +388,7 @@ END
     $dbh->do('DROP TABLE Rose_db_object_g_ug CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_ug_main CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_g_main CASCADE');
-  
+
     $dbh->disconnect;
   }
 

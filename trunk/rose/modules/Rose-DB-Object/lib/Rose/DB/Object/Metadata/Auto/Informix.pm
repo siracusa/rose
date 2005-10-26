@@ -144,7 +144,6 @@ sub auto_generate_columns
     #   5     data length (encoded)
     #
     # Lowercase table because Rose::DB::Informix->likes_lowercase_table_names
-
     my @col_list = DBD::Informix::Metadata::ix_columns($dbh, lc $self->table);
 
     # We'll also need to query the syscolumns table directly to get the

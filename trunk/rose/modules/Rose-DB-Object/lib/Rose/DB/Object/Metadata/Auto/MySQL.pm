@@ -156,7 +156,7 @@ sub auto_generate_foreign_keys
           {
             die "Failed to parse MySQL foreign key Comment ",
                 "'$row->{'Comment'}' returned by the query '",
-                "SHOW TABLE STATUS FROM `$db_name` LIKE ", 
+                "SHOW TABLE STATUS FROM `$db_name` LIKE '", 
                 $self->table, "'";
           }
 
