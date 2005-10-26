@@ -1,7 +1,6 @@
 0.031 (10.25.2005) - John Siracusa <siracusa@mindspring.com>
 
-    * Force table names to lowercase in databases that DBI cannot
-      extract foreign key information from unless this is done.    
+    * Support for Rose::DB::Object 0.079.
 
 0.03 (10.05.2005) - John Siracusa <siracusa@mindspring.com>
 
