@@ -684,17 +684,17 @@ BEGIN
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
       $dbh->do('DROP TABLE Rose_db_object_test CASCADE');
-      $dbh->do('DROP TABLE rose_db_object_private.Rose_db_object_test CASCADE');
-      $dbh->do('DROP TABLE rose_db_object_chkpass_test');
-      $dbh->do('CREATE SCHEMA rose_db_object_private');
+      $dbh->do('DROP TABLE Rose_db_object_private.Rose_db_object_test CASCADE');
+      $dbh->do('DROP TABLE Rose_db_object_chkpass_test');
+      $dbh->do('CREATE SCHEMA Rose_db_object_private');
     }
 
     eval
     {
       local $dbh->{'RaiseError'} = 1;
       local $dbh->{'PrintError'} = 0;
-      $dbh->do('CREATE TABLE rose_db_object_chkpass_test (pass CHKPASS)');
-      $dbh->do('DROP TABLE rose_db_object_chkpass_test');
+      $dbh->do('CREATE TABLE Rose_db_object_chkpass_test (pass CHKPASS)');
+      $dbh->do('DROP TABLE Rose_db_object_chkpass_test');
     };
 
     our $PG_HAS_CHKPASS = 1  unless($@);
@@ -725,7 +725,7 @@ CREATE TABLE Rose_db_object_test
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_private.Rose_db_object_test
+CREATE TABLE Rose_db_object_private.Rose_db_object_test
 (
   id             SERIAL NOT NULL PRIMARY KEY,
   k1             INT,
@@ -930,12 +930,12 @@ EOF
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
-      $dbh->do('DROP TABLE rose_db_object_test CASCADE');
-      $dbh->do('DROP TABLE rose_db_object_test2 CASCADE');
+      $dbh->do('DROP TABLE Rose_db_object_test CASCADE');
+      $dbh->do('DROP TABLE Rose_db_object_test2 CASCADE');
     }
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_test
+CREATE TABLE Rose_db_object_test
 (
   id             SERIAL NOT NULL PRIMARY KEY,
   k1             INT,
@@ -965,15 +965,15 @@ CREATE TABLE rose_db_object_test
 EOF
 
     $dbh->do(<<"EOF");
-CREATE UNIQUE INDEX rose_db_object_test_k1_idx ON rose_db_object_test (k1, k2, k3);
+CREATE UNIQUE INDEX Rose_db_object_test_k1_idx ON Rose_db_object_test (k1, k2, k3);
 EOF
 
     $dbh->do(<<"EOF");
-CREATE UNIQUE INDEX rose_db_object_test_save_idx ON rose_db_object_test (save);
+CREATE UNIQUE INDEX Rose_db_object_test_save_idx ON Rose_db_object_test (save);
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_test2
+CREATE TABLE Rose_db_object_test2
 (
   k1    INT NOT NULL,
   k2    INT NOT NULL,
@@ -982,7 +982,7 @@ CREATE TABLE rose_db_object_test2
 EOF
 
     $dbh->do(<<"EOF");
-ALTER TABLE rose_db_object_test2 ADD CONSTRAINT PRIMARY KEY (k1, k2)
+ALTER TABLE Rose_db_object_test2 ADD CONSTRAINT PRIMARY KEY (k1, k2)
 EOF
 
     $dbh->commit;
@@ -996,7 +996,7 @@ EOF
 
     sub init_db { Rose::DB->new('informix') }
 
-    MyMPKInformixObject->meta->table('rose_db_object_test2');
+    MyMPKInformixObject->meta->table('Rose_db_object_test2');
 
     MyMPKInformixObject->meta->auto_init_primary_key_columns;
 
@@ -1009,7 +1009,7 @@ EOF
 
     sub init_db { Rose::DB->new('informix') }
 
-    MyInformixObject->meta->table('rose_db_object_test');
+    MyInformixObject->meta->table('Rose_db_object_test');
 
     MyInformixObject->meta->columns(MyInformixObject->meta->auto_generate_columns);
 
@@ -1039,8 +1039,8 @@ END
       or die Rose::DB->error;
 
     $dbh->do('DROP TABLE Rose_db_object_test CASCADE');
-    $dbh->do('DROP TABLE rose_db_object_private.Rose_db_object_test CASCADE');
-    $dbh->do('DROP SCHEMA rose_db_object_private CASCADE');
+    $dbh->do('DROP TABLE Rose_db_object_private.Rose_db_object_test CASCADE');
+    $dbh->do('DROP SCHEMA Rose_db_object_private CASCADE');
 
     $dbh->disconnect;
   }
@@ -1063,8 +1063,8 @@ END
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE rose_db_object_test CASCADE');
-    $dbh->do('DROP TABLE rose_db_object_test2 CASCADE');
+    $dbh->do('DROP TABLE Rose_db_object_test CASCADE');
+    $dbh->do('DROP TABLE Rose_db_object_test2 CASCADE');
 
     $dbh->disconnect;
   }

@@ -239,27 +239,11 @@ sub init_with_db
       $self->{'schema'} = $schema;
       $changed++;
     }
-
-    if($driver ne $self->{'driver'})
-    {
-      $self->{'driver'} = $driver;
-      $changed++;
-    }
   }
 
   if($changed)
   {
     $self->_clear_table_generated_values;
-
-    if($db->likes_lowercase_table_names)
-    {
-      $self->table(lc($self->{'table_case_sensitive'} = $self->table));
-    }
-    else
-    {
-      $self->table($self->{'table_case_sensitive'})
-        if($self->{'table_case_sensitive'});
-    }
   }
 
   UNDEF_IS_OK: # Avoid undef string comparison warnings
@@ -1185,11 +1169,17 @@ sub register_class
   # against someone changing it to "-" (or whatever) elsewhere in the code.
   local $; = "\034";
 
-  # Register with all available information
+  # Register with all available information.
+  # Ug, have to store lowercase versions too because MySQL sometimes returns
+  # lowercase names for tables that are actually mixed case.  Grrr...
   $reg->{'catalog-schema-table',$catalog,$schema,$table} =
     $reg->{'schema-table',$schema,$table}  =
     $reg->{'catalog-table',$catalog,$table} =
-    $reg->{'table',$table} = $class;
+    $reg->{'table',$table} =
+    $reg->{'lc-catalog-schema-table',$catalog,$schema,lc $table} =
+    $reg->{'lc-schema-table',$schema,lc $table}  =
+    $reg->{'lc-catalog-table',$catalog,lc $table} =
+    $reg->{'lc-table',lc $table} = $class;
 
   return;
 }
@@ -1222,12 +1212,28 @@ sub class_for
   # against someone changing it to "-" elsewhere in the code or whatever.
   local $; = "\034";
 
-  return 
+  my $f_table =
     $reg->{'catalog-schema-table',$catalog,$schema,$table} ||
-    $reg->{'catalog-schema-table',$catalog,,$table} ||
+    $reg->{'catalog-schema-table',$catalog,$default_schema,$table} ||
     $reg->{'schema-table',$schema,$table}  ||
     $reg->{'catalog-table',$catalog,$table} ||
     $reg->{'table',$table};
+
+  # Ug, have to check lowercase versions too because MySQL sometimes returns
+  # lowercase names for tables that are actually mixed case.  Grrr...
+  unless($f_table)
+  {
+    $table = lc $table;
+
+    return
+      $reg->{'lc-catalog-schema-table',$catalog,$schema,$table} ||
+      $reg->{'lc-catalog-schema-table',$catalog,$default_schema,$table} ||
+      $reg->{'lc-schema-table',$schema,$table}  ||
+      $reg->{'lc-catalog-table',$catalog,$table} ||
+      $reg->{'lc-table',$table};  
+  }
+  
+  return $f_table;
 }
 
 #sub made_method_for_column 

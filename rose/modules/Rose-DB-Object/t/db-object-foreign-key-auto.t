@@ -285,7 +285,7 @@ use strict;
 use Rose::DB::Object
 our @ISA = qw(Rose::DB::Object);
 
-__PACKAGE__->meta->table('rose_db_object_test');
+__PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns(
     bits          => { type => 'bitfield', bits => 5, default => '00101', not_null => 1 },
@@ -356,7 +356,7 @@ use strict;
 use Rose::DB::Object
 our @ISA = qw(Rose::DB::Object);
 
-__PACKAGE__->meta->table('rose_db_object_test');
+__PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns
 (
@@ -650,7 +650,7 @@ use strict;
 use Rose::DB::Object
 our \@ISA = qw(Rose::DB::Object);
 
-__PACKAGE__->meta->table('rose_db_object_test');
+__PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns(
     bits          => { type => 'bitfield', bits => 5, default => 101 },
@@ -719,7 +719,7 @@ use strict;
 use Rose::DB::Object
 our \@ISA = qw(Rose::DB::Object);
 
-__PACKAGE__->meta->table('rose_db_object_test');
+__PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns
 (
@@ -1028,7 +1028,7 @@ use strict;
 use Rose::DB::Object
 our @ISA = qw(Rose::DB::Object);
 
-__PACKAGE__->meta->table('rose_db_object_test');
+__PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns(
     bits          => { type => 'bitfield', bits => 5, default => 101 },
@@ -1098,7 +1098,7 @@ use strict;
 use Rose::DB::Object
 our @ISA = qw(Rose::DB::Object);
 
-__PACKAGE__->meta->table('rose_db_object_test');
+__PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns
 (
@@ -1192,26 +1192,26 @@ BEGIN
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
-      $dbh->do('DROP TABLE rose_db_object_test CASCADE');
-      $dbh->do('DROP TABLE rose_db_object_other');
-      $dbh->do('DROP TABLE rose_db_object_other2');
-      $dbh->do('DROP TABLE rose_db_object_other3');
-      $dbh->do('DROP TABLE rose_db_object_other4');
-      $dbh->do('DROP TABLE rose_db_object_chkpass_test');
+      $dbh->do('DROP TABLE Rose_db_object_test CASCADE');
+      $dbh->do('DROP TABLE Rose_db_object_other');
+      $dbh->do('DROP TABLE Rose_db_object_other2');
+      $dbh->do('DROP TABLE Rose_db_object_other3');
+      $dbh->do('DROP TABLE Rose_db_object_other4');
+      $dbh->do('DROP TABLE Rose_db_object_chkpass_test');
     }
 
     eval
     {
       local $dbh->{'RaiseError'} = 1;
       local $dbh->{'PrintError'} = 0;
-      $dbh->do('CREATE TABLE rose_db_object_chkpass_test (pass CHKPASS)');
-      $dbh->do('DROP TABLE rose_db_object_chkpass_test');
+      $dbh->do('CREATE TABLE Rose_db_object_chkpass_test (pass CHKPASS)');
+      $dbh->do('DROP TABLE Rose_db_object_chkpass_test');
     };
 
     our $PG_HAS_CHKPASS = 1  unless($@);
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_other
+CREATE TABLE Rose_db_object_other
 (
   k1    INT NOT NULL,
   k2    INT NOT NULL,
@@ -1223,7 +1223,7 @@ CREATE TABLE rose_db_object_other
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_other2
+CREATE TABLE Rose_db_object_other2
 (
   id2   SERIAL PRIMARY KEY,
   name  VARCHAR(32)
@@ -1231,7 +1231,7 @@ CREATE TABLE rose_db_object_other2
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_other3
+CREATE TABLE Rose_db_object_other3
 (
   id3   SERIAL PRIMARY KEY,
   name  VARCHAR(32)
@@ -1239,7 +1239,7 @@ CREATE TABLE rose_db_object_other3
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_other4
+CREATE TABLE Rose_db_object_other4
 (
   id4   SERIAL PRIMARY KEY,
   name  VARCHAR(32)
@@ -1253,7 +1253,7 @@ EOF
 
     sub init_db { Rose::DB->new('pg') }
 
-    MyPgOtherObject->meta->table('rose_db_object_other');
+    MyPgOtherObject->meta->table('Rose_db_object_other');
 
     MyPgOtherObject->meta->auto_initialize;
 
@@ -1262,23 +1262,23 @@ EOF
     package MyPgOtherObject2;
     our @ISA = qw(Rose::DB::Object);
     sub init_db { Rose::DB->new('pg') }
-    MyPgOtherObject2->meta->table('rose_db_object_other2');
+    MyPgOtherObject2->meta->table('Rose_db_object_other2');
     MyPgOtherObject2->meta->auto_initialize;
 
     package MyPgOtherObject3;
     our @ISA = qw(Rose::DB::Object);
     sub init_db { Rose::DB->new('pg') }
-    MyPgOtherObject3->meta->table('rose_db_object_other3');
+    MyPgOtherObject3->meta->table('Rose_db_object_other3');
     MyPgOtherObject3->meta->auto_initialize;
 
     package MyPgOtherObject4;
     our @ISA = qw(Rose::DB::Object);
     sub init_db { Rose::DB->new('pg') }
-    MyPgOtherObject4->meta->table('rose_db_object_other4');
+    MyPgOtherObject4->meta->table('Rose_db_object_other4');
     MyPgOtherObject4->meta->auto_initialize;    
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_test
+CREATE TABLE Rose_db_object_test
 (
   id             SERIAL PRIMARY KEY,
   @{[ $PG_HAS_CHKPASS ? 'password CHKPASS,' : '' ]}
@@ -1293,13 +1293,13 @@ CREATE TABLE rose_db_object_test
   fk1            INT,
   fk2            INT,
   fk3            INT,
-  fother_id2     INT REFERENCES rose_db_object_other2 (id2),
-  fother_id3     INT REFERENCES rose_db_object_other3 (id3),
-  fother_id4     INT REFERENCES rose_db_object_other4 (id4),
+  fother_id2     INT REFERENCES Rose_db_object_other2 (id2),
+  fother_id3     INT REFERENCES Rose_db_object_other3 (id3),
+  fother_id4     INT REFERENCES Rose_db_object_other4 (id4),
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
-  FOREIGN KEY (fk1, fk2, fk3) REFERENCES rose_db_object_other (k1, k2, k3)
+  FOREIGN KEY (fk1, fk2, fk3) REFERENCES Rose_db_object_other (k1, k2, k3)
 )
 EOF
 
@@ -1313,7 +1313,7 @@ EOF
 
     sub init_db { Rose::DB->new('pg') }
 
-    MyPgObject->meta->table('rose_db_object_test');
+    MyPgObject->meta->table('Rose_db_object_test');
     MyPgObject->meta->convention_manager(undef);
 
     MyPgObject->meta->column_name_to_method_name_mapper(sub
@@ -1352,13 +1352,13 @@ EOF
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
-      $dbh->do('DROP TABLE rose_db_object_test CASCADE');
-      $dbh->do('DROP TABLE rose_db_object_other');
+      $dbh->do('DROP TABLE Rose_db_object_test CASCADE');
+      $dbh->do('DROP TABLE Rose_db_object_other');
     }
 
     # Foreign key stuff requires InnoDB support
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_other
+CREATE TABLE Rose_db_object_other
 (
   k1    INT NOT NULL,
   k2    INT NOT NULL,
@@ -1375,7 +1375,7 @@ EOF
     # check to make sure an InnoDB table was really created.
     my $db_name = $db->database;
     my $sth = $dbh->prepare("SHOW TABLE STATUS FROM `$db_name` LIKE ?");
-    $sth->execute('rose_db_object_other');
+    $sth->execute('Rose_db_object_other');
     my $info = $sth->fetchrow_hashref;
 
     unless(lc $info->{'Type'} eq 'innodb' || lc $info->{'Engine'} eq 'innodb')
@@ -1392,15 +1392,15 @@ EOF
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
-      $dbh->do('DROP TABLE rose_db_object_test CASCADE');
-      $dbh->do('DROP TABLE rose_db_object_other');
-      $dbh->do('DROP TABLE rose_db_object_other2');
-      $dbh->do('DROP TABLE rose_db_object_other3');
-      $dbh->do('DROP TABLE rose_db_object_other4');
+      $dbh->do('DROP TABLE Rose_db_object_test CASCADE');
+      $dbh->do('DROP TABLE Rose_db_object_other');
+      $dbh->do('DROP TABLE Rose_db_object_other2');
+      $dbh->do('DROP TABLE Rose_db_object_other3');
+      $dbh->do('DROP TABLE Rose_db_object_other4');
     }
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_other
+CREATE TABLE Rose_db_object_other
 (
   k1    INT UNSIGNED NOT NULL,
   k2    INT UNSIGNED NOT NULL,
@@ -1413,7 +1413,7 @@ TYPE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_other2
+CREATE TABLE Rose_db_object_other2
 (
   id2   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name  VARCHAR(32)
@@ -1422,7 +1422,7 @@ TYPE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_other3
+CREATE TABLE Rose_db_object_other3
 (
   id3   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name  VARCHAR(32)
@@ -1431,7 +1431,7 @@ TYPE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_other4
+CREATE TABLE Rose_db_object_other4
 (
   id4   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name  VARCHAR(32)
@@ -1447,7 +1447,7 @@ EOF
 
     sub init_db { Rose::DB->new('mysql') }
 
-    MyMySQLOtherObject->meta->table('rose_db_object_other');
+    MyMySQLOtherObject->meta->table('Rose_db_object_other');
 
     MyMySQLOtherObject->meta->auto_initialize;
 
@@ -1456,23 +1456,23 @@ EOF
     package MyMySQLOtherObject2;
     our @ISA = qw(Rose::DB::Object);
     sub init_db { Rose::DB->new('mysql') }
-    MyMySQLOtherObject2->meta->table('rose_db_object_other2');
+    MyMySQLOtherObject2->meta->table('Rose_db_object_other2');
     MyMySQLOtherObject2->meta->auto_initialize;
 
     package MyMySQLOtherObject3;
     our @ISA = qw(Rose::DB::Object);
     sub init_db { Rose::DB->new('mysql') }
-    MyMySQLOtherObject3->meta->table('rose_db_object_other3');
+    MyMySQLOtherObject3->meta->table('Rose_db_object_other3');
     MyMySQLOtherObject3->meta->auto_initialize;
 
     package MyMySQLOtherObject4;
     our @ISA = qw(Rose::DB::Object);
     sub init_db { Rose::DB->new('mysql') }
-    MyMySQLOtherObject4->meta->table('rose_db_object_other4');
+    MyMySQLOtherObject4->meta->table('Rose_db_object_other4');
     MyMySQLOtherObject4->meta->auto_initialize;    
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_test
+CREATE TABLE Rose_db_object_test
 (
   id             INT AUTO_INCREMENT PRIMARY KEY,
   name           VARCHAR(32) NOT NULL,
@@ -1496,11 +1496,11 @@ CREATE TABLE rose_db_object_test
   INDEX(fother_id4),
   INDEX(fk1, fk2, fk3),
 
-  FOREIGN KEY (fother_id2) REFERENCES rose_db_object_other2 (id2),
-  FOREIGN KEY (fother_id3) REFERENCES rose_db_object_other3 (id3),
-  FOREIGN KEY (fother_id4) REFERENCES rose_db_object_other4 (id4),
+  FOREIGN KEY (fother_id2) REFERENCES Rose_db_object_other2 (id2),
+  FOREIGN KEY (fother_id3) REFERENCES Rose_db_object_other3 (id3),
+  FOREIGN KEY (fother_id4) REFERENCES Rose_db_object_other4 (id4),
 
-  FOREIGN KEY (fk1, fk2, fk3) REFERENCES rose_db_object_other (k1, k2, k3)
+  FOREIGN KEY (fk1, fk2, fk3) REFERENCES Rose_db_object_other (k1, k2, k3)
 )
 TYPE=InnoDB
 EOF
@@ -1515,7 +1515,7 @@ EOF
 
     sub init_db { Rose::DB->new('mysql') }
 
-    MyMySQLObject->meta->table('rose_db_object_test');
+    MyMySQLObject->meta->table('Rose_db_object_test');
     MyMySQLObject->meta->convention_manager(undef);
 
     MyMySQLObject->meta->column_name_to_method_name_mapper(sub
@@ -1568,15 +1568,15 @@ EOF
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
-      $dbh->do('DROP TABLE rose_db_object_test');
-      $dbh->do('DROP TABLE rose_db_object_other');
-      $dbh->do('DROP TABLE rose_db_object_other2');
-      $dbh->do('DROP TABLE rose_db_object_other3');
-      $dbh->do('DROP TABLE rose_db_object_other4');
+      $dbh->do('DROP TABLE Rose_db_object_test');
+      $dbh->do('DROP TABLE Rose_db_object_other');
+      $dbh->do('DROP TABLE Rose_db_object_other2');
+      $dbh->do('DROP TABLE Rose_db_object_other3');
+      $dbh->do('DROP TABLE Rose_db_object_other4');
     }
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_other
+CREATE TABLE Rose_db_object_other
 (
   k1    INT NOT NULL,
   k2    INT NOT NULL,
@@ -1588,7 +1588,7 @@ CREATE TABLE rose_db_object_other
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_other2
+CREATE TABLE Rose_db_object_other2
 (
   id2   SERIAL PRIMARY KEY,
   name  VARCHAR(32)
@@ -1596,7 +1596,7 @@ CREATE TABLE rose_db_object_other2
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_other3
+CREATE TABLE Rose_db_object_other3
 (
   id3   SERIAL PRIMARY KEY,
   name  VARCHAR(32)
@@ -1604,7 +1604,7 @@ CREATE TABLE rose_db_object_other3
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_other4
+CREATE TABLE Rose_db_object_other4
 (
   id4   SERIAL PRIMARY KEY,
   name  VARCHAR(32)
@@ -1619,7 +1619,7 @@ EOF
 
     sub init_db { Rose::DB->new('informix') }
 
-    MyInformixOtherObject->meta->table('rose_db_object_other');
+    MyInformixOtherObject->meta->table('Rose_db_object_other');
 
     MyInformixOtherObject->meta->auto_initialize;
 
@@ -1628,23 +1628,23 @@ EOF
     package MyInformixOtherObject2;
     our @ISA = qw(Rose::DB::Object);
     sub init_db { Rose::DB->new('informix') }
-    MyInformixOtherObject2->meta->table('rose_db_object_other2');
+    MyInformixOtherObject2->meta->table('Rose_db_object_other2');
     MyInformixOtherObject2->meta->auto_initialize;
 
     package MyInformixOtherObject3;
     our @ISA = qw(Rose::DB::Object);
     sub init_db { Rose::DB->new('informix') }
-    MyInformixOtherObject3->meta->table('rose_db_object_other3');
+    MyInformixOtherObject3->meta->table('Rose_db_object_other3');
     MyInformixOtherObject3->meta->auto_initialize;
 
     package MyInformixOtherObject4;
     our @ISA = qw(Rose::DB::Object);
     sub init_db { Rose::DB->new('informix') }
-    MyInformixOtherObject4->meta->table('rose_db_object_other4');
+    MyInformixOtherObject4->meta->table('Rose_db_object_other4');
     MyInformixOtherObject4->meta->auto_initialize;   
 
     $dbh->do(<<"EOF");
-CREATE TABLE rose_db_object_test
+CREATE TABLE Rose_db_object_test
 (
   id             INT NOT NULL PRIMARY KEY,
   name           VARCHAR(32) NOT NULL,
@@ -1658,13 +1658,13 @@ CREATE TABLE rose_db_object_test
   fk1            INT,
   fk2            INT,
   fk3            INT,
-  fother_id2     INT REFERENCES rose_db_object_other2 (id2),
-  fother_id3     INT REFERENCES rose_db_object_other3 (id3),
-  fother_id4     INT REFERENCES rose_db_object_other4 (id4),
+  fother_id2     INT REFERENCES Rose_db_object_other2 (id2),
+  fother_id3     INT REFERENCES Rose_db_object_other3 (id3),
+  fother_id4     INT REFERENCES Rose_db_object_other4 (id4),
   last_modified  DATETIME YEAR TO FRACTION(5),
   date_created   DATETIME YEAR TO FRACTION(5),
 
-  FOREIGN KEY (fk1, fk2, fk3) REFERENCES rose_db_object_other (k1, k2, k3)
+  FOREIGN KEY (fk1, fk2, fk3) REFERENCES Rose_db_object_other (k1, k2, k3)
 )
 EOF
 
@@ -1679,7 +1679,7 @@ EOF
 
     sub init_db { Rose::DB->new('informix') }
 
-    MyInformixObject->meta->table('rose_db_object_test');
+    MyInformixObject->meta->table('Rose_db_object_test');
     MyInformixObject->meta->convention_manager(undef);
 
     MyInformixObject->meta->column_name_to_method_name_mapper(sub
@@ -1718,11 +1718,11 @@ END
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE rose_db_object_test CASCADE');
-    $dbh->do('DROP TABLE rose_db_object_other');
-    $dbh->do('DROP TABLE rose_db_object_other2');
-    $dbh->do('DROP TABLE rose_db_object_other3');
-    $dbh->do('DROP TABLE rose_db_object_other4');
+    $dbh->do('DROP TABLE Rose_db_object_test CASCADE');
+    $dbh->do('DROP TABLE Rose_db_object_other');
+    $dbh->do('DROP TABLE Rose_db_object_other2');
+    $dbh->do('DROP TABLE Rose_db_object_other3');
+    $dbh->do('DROP TABLE Rose_db_object_other4');
 
     $dbh->disconnect;
   }
@@ -1733,11 +1733,11 @@ END
     my $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE rose_db_object_test CASCADE');
-    $dbh->do('DROP TABLE rose_db_object_other');
-    $dbh->do('DROP TABLE rose_db_object_other2');
-    $dbh->do('DROP TABLE rose_db_object_other3');
-    $dbh->do('DROP TABLE rose_db_object_other4');
+    $dbh->do('DROP TABLE Rose_db_object_test CASCADE');
+    $dbh->do('DROP TABLE Rose_db_object_other');
+    $dbh->do('DROP TABLE Rose_db_object_other2');
+    $dbh->do('DROP TABLE Rose_db_object_other3');
+    $dbh->do('DROP TABLE Rose_db_object_other4');
 
     $dbh->disconnect;
   }
@@ -1748,9 +1748,9 @@ END
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE rose_db_object_test CASCADE');
-    $dbh->do('DROP TABLE rose_db_object_other');
-    $dbh->do('DROP TABLE rose_db_object_other2');
+    $dbh->do('DROP TABLE Rose_db_object_test CASCADE');
+    $dbh->do('DROP TABLE Rose_db_object_other');
+    $dbh->do('DROP TABLE Rose_db_object_other2');
 
     $dbh->disconnect;
   }

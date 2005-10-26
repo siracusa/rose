@@ -50,6 +50,8 @@ sub auto_generate_columns
 
     $table = ($db->driver eq 'mysql') ? $self->table : lc $self->table;
 
+    $table = lc $table  if($db->likes_lowercase_table_names);
+
     $schema = $self->schema;
     $schema = $db->default_implicit_schema  unless(defined $schema);
 
@@ -337,8 +339,10 @@ sub auto_generate_foreign_keys
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
 
+    my $table = $db->likes_lowercase_table_names ? lc $self->table : $self->table;
+
     my $sth = $dbh->foreign_key_info(undef, undef, undef,
-                                     $self->catalog, $self->schema, $self->table);
+                                     $self->catalog, $self->schema, $table);
 
     # This happens when the table has no foreign keys
     return  unless(defined $sth);
@@ -347,7 +351,10 @@ sub auto_generate_foreign_keys
 
     my $schema = $self->schema;
     $schema = $db->default_implicit_schema  unless(defined $schema);
-
+if($table eq 'rose_db_object_test')
+{
+  $DB::single = 1;
+}
     FK: while(my $fk_info = $sth->fetchrow_hashref)
     {
       CHECK_TABLE: # Make sure this column is from the right table
@@ -355,7 +362,7 @@ sub auto_generate_foreign_keys
         no warnings; # Allow undef coercion to empty string
         next FK  unless($fk_info->{'FK_TABLE_CAT'}   eq $self->catalog &&
                         $fk_info->{'FK_TABLE_SCHEM'} eq $schema &&
-                        $fk_info->{'FK_TABLE_NAME'}  eq $self->table);
+                        $fk_info->{'FK_TABLE_NAME'}  eq $table);
       }
 
       push(@fk_info, $fk_info);
