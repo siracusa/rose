@@ -4,7 +4,7 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.012';
+our $VERSION = '0.02';
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
@@ -180,7 +180,7 @@ sub hash
     $methods{($interface eq 'manip' ? 'delete_' : '') . $name} = sub
     {
       Carp::croak "Missing key(s) to delete"  unless(@_ > 1);
-      delete @{$Hash{$_[0]}{$key}}{@_};
+      delete @{$Hash{$_[0]}{$key}}{@_[1 .. $#_]};
     }
   }
   elsif($interface eq 'exists')
@@ -348,7 +348,7 @@ sub inheritable_hash
     {
       Carp::croak "Missing key(s) to delete"  unless(@_ > 1);
       defined $Inheritable_Hash{$_[0]}{$key} || $init_method->($_[0]);
-      delete @{$Inheritable_Hash{$_[0]}{$key}}{@_};
+      delete @{$Inheritable_Hash{$_[0]}{$key}}{@_[1 .. $#_]};
     }
   }
   elsif($interface eq 'exists')
