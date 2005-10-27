@@ -168,16 +168,16 @@ sub name_sql
 {
   my($self) = shift;
 
-  return $self->{'name_sql'} = shift  if(@_);
+  return $self->{'name_sql'} = shift  if(@_ && !ref $_[0]);
 
   if(defined $self->{'name_sql'})
   {
     return $self->{'name_sql'};
   }
 
-  if(my $parent = $self->parent)
+  if(my $db = shift)
   {
-    return $self->{'name_sql'} = $parent->db->quote_column_name($self->{'name'});
+    return $self->{'name_sql'} = $db->quote_column_name($self->{'name'});
   }
   else
   {
