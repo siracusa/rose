@@ -3028,11 +3028,15 @@ Returns the name of the "get_set" method for the column named NAME.  This is jus
 
 Returns a list (in list context) or a reference to the array (in scalar context) of the names of the "get_set" methods for all the columns, in the order that the columns are returned by L<column_names|/column_names>.
 
-=item B<convention_manager [CM]>
+=item B<convention_manager [ OBJECT | NAME ]>
 
 Get or set the convention manager for this L<class|/class>.  Defaults to the return value of the L<init_convention_manager|/init_convention_manager> method.
 
 If undef is passed, then a L<Rose::DB::Object::ConventionManager::Null> object is stored instead.
+
+If a L<Rose::DB::Object::ConventionManager>-derived object is passed, its L<meta|Rose::DB::Object::ConventionManager/meta> attribute set to this metadata object and then it is used as the convention manager for this L<class|/class>.
+
+If a convention manager name is passed, then the corresponding class is looked up in the L<convention manager class map|convention_manager_classes>, a new object of that class is constructed, its L<meta|Rose::DB::Object::ConventionManager/meta> attribute set to this metadata object, and it is used as the convention manager for this L<class|/class>.  If there is no class mapped to NAME, a fatal error will occur.
 
 See the L<Rose::DB::Object::ConventionManager> documentation for more information on convention managers.
 
