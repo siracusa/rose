@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 20;
+use Test::More tests => 26;
 
 BEGIN 
 {
@@ -76,6 +76,32 @@ is($aliases->{'save'}, 'save_col', 'column_aliases() 4');
 my $methods = $meta->column_rw_method_names;
 
 is(join(',', @$methods), 'bar,baz,bits,date_created,flag,flag2,foo,id,last_modified,name,nums,password,save_col,start,status', 'column_rw_method_names()');
+
+eval { $meta->convention_manager('nonesuch') };
+ok($@, 'convention_manager nonesuch');
+
+$meta->convention_manager('null');
+
+is(ref $meta->convention_manager, 'Rose::DB::Object::ConventionManager::Null', 
+  'convention_manager null');
+
+my $class = ref $meta;
+
+is($class->convention_manager_class('default'), 'Rose::DB::Object::ConventionManager', 
+   'convention_manager default');
+
+$class->convention_manager_class(foo => 'bar');
+$class->convention_manager_class(default => 'Rose::DB::Object::ConventionManager::Null');
+
+is($class->convention_manager_class('foo'), 'bar', 'convention_manager bar');
+
+$DB::single = 1;
+$class->delete_convention_manager_class('foo');
+
+ok(!defined $class->convention_manager_class('foo'), 'delete_convention_manager_class');
+
+is(ref $class->init_convention_manager, 'Rose::DB::Object::ConventionManager::Null', 
+   'init_convention_manager');
 
 BEGIN
 {

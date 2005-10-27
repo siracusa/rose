@@ -1,3 +1,7 @@
+0.080 (10.26.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added a named, configurable map for convention manager classes.
+
 0.079 (10.25.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed bugs that caused auto-inited many-to-many relationships

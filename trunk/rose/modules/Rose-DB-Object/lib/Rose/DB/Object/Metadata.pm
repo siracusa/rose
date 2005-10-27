@@ -63,6 +63,10 @@ use Rose::Class::MakeMethods::Generic
     delete_relationship_type_class => { interface => 'delete', hash_key => 'relationship_type_classes' },
 
     class_registry => => { interface => 'get_set_all' },
+
+    convention_manager_classes => { interface => 'get_set_all' },
+    convention_manager_class   => { interface => 'get_set', hash_key => 'convention_manager_classes' },
+    delete_convention_manager_class => { interface => 'delete', hash_key => 'convention_manager_classes' },
   ],
 );
 
@@ -73,6 +77,12 @@ __PACKAGE__->auto_helper_classes
   'Informix' => 'Rose::DB::Object::Metadata::Auto::Informix',
   'Pg'       => 'Rose::DB::Object::Metadata::Auto::Pg',
   'mysql'    => 'Rose::DB::Object::Metadata::Auto::MySQL',
+);
+
+__PACKAGE__->convention_manager_classes
+(
+  'default' => 'Rose::DB::Object::ConventionManager',
+  'null'    => 'Rose::DB::Object::ConventionManager::Null',
 );
 
 __PACKAGE__->column_type_classes
@@ -265,7 +275,7 @@ sub init_with_db
   return;
 }
 
-sub init_convention_manager { Rose::DB::Object::ConventionManager->new }
+sub init_convention_manager { shift->convention_manager_class('default')->new }
 
 sub convention_manager
 {
@@ -281,8 +291,14 @@ sub convention_manager
       return $self->{'convention_manager'} = 
         Rose::DB::Object::ConventionManager::Null->new(parent => $self);
     }
+    elsif(!ref $mgr)
+    {
+      my $class = $self->convention_manager_class($mgr) or
+        Carp::croak "No convention manager class registered under the name '$mgr'";
 
-    unless(UNIVERSAL::isa($mgr, 'Rose::DB::Object::ConventionManager'))
+      $mgr = $class->new;
+    }
+    elsif(!UNIVERSAL::isa($mgr, 'Rose::DB::Object::ConventionManager'))
     {
       Carp::croak "$mgr is not a Rose::DB::Object::ConventionManager-derived object";
     }
@@ -2513,9 +2529,11 @@ This hybrid approach to metadata population strikes a good balance between upfro
 
 =over 4
 
-=item B<column_type_class TYPE>
+=item B<column_type_class TYPE [, CLASS]>
 
 Given the column type string TYPE, return the name of the L<Rose::DB::Object::Metadata::Column>-derived class used to store metadata and create the accessor method(s) for columns of that type.
+
+If a CLASS is passed, the column type TYPE is mapped to CLASS.
 
 =item B<column_type_classes [MAP]>
 
@@ -2591,6 +2609,25 @@ The default mapping of type names to class names is:
   set       => Rose::DB::Object::Metadata::Column::Set
 
   chkpass   => Rose::DB::Object::Metadata::Column::Pg::Chkpass
+
+=item B<convention_manager_class NAME [, CLASS]>
+
+Given the string NAME, return the name of the L<Rose::DB::Object::ConventionManager>-derived class L<mapped|/convention_manager_classes> to that name.
+
+If a CLASS is passed, then NAME is mapped to CLASS.
+
+=item B<convention_manager_classes [MAP]>
+
+Get or set the hash that maps names to L<Rose::DB::Object::ConventionManager>-derived class names.
+
+This hash is class data.  If you want to modify it, I suggest making your own subclass of L<Rose::DB::Object::Metadata> and then setting that as the L<meta_class|Rose::DB::Object/meta_class> of your L<Rose::DB::Object> subclass.
+
+If passed MAP (a list of name/class pairs or a reference to a hash of the same) then MAP replaces the current mapping.  Returns a list of name/class pairs (in list context) or a reference to the hash of name/class mappings (in scalar context).
+
+The default mapping of names to classes is:
+
+  default => Rose::DB::Object::ConventionManager
+  null    => Rose::DB::Object::ConventionManager::Null
 
 =item B<for_class CLASS>
 
@@ -3013,7 +3050,11 @@ Delete all of the columns.
 
 =item B<delete_column_type_class TYPE>
 
-Delete the type/class mapping entry for the column type TYPE.
+Delete the type/class L<mapping|/column_type_classes> entry for the column type TYPE.
+
+=item B<delete_convention_manager_class NAME>
+
+Delete the name/class L<mapping|/convention_manager_classes> entry for the convention manager class mapped to NAME.
 
 =item B<delete_relationship NAME>
 
@@ -3103,9 +3144,9 @@ If no L<primary_key_generator|/primary_key_generator> is defined, a new primary 
 
 =item B<init_convention_manager>
 
-Returns the default L<Rose::DB::Object::ConventionManager>-derived object used as the L<convention manager|/convention_manager> for this L<class|/class>.  
+Returns the default L<Rose::DB::Object::ConventionManager>-derived object used as the L<convention manager|/convention_manager> for this L<class|/class>.  This object will be of the class returned by L<convention_manager_class('default')|/convention_manager_class>.
 
-Override this method in your L<Rose::DB::Object::Metadata> subclass in order to use a custom convention manager class.  See the L<tips and tricks|Rose::DB::Object::ConventionManager/"TIPS AND TRICKS"> section of the L<Rose::DB::Object::ConventionManager> documentation for an example.
+Override this method in your L<Rose::DB::Object::Metadata> subclass, or L<re-map|/convention_manager_class> the "default" convention manager class, in order to use a different convention manager class.  See the L<tips and tricks|Rose::DB::Object::ConventionManager/"TIPS AND TRICKS"> section of the L<Rose::DB::Object::ConventionManager> documentation for an example of the subclassing approach.
 
 =item B<initialize [ARGS]>
 
