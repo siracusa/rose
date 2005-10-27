@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
      STATE_SAVING ON_SAVE_ATTR_NAME);
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 sub scalar
 {
@@ -1284,25 +1284,34 @@ sub object_by_key
 
         if(@_ == 1)
         {
-          # Object argument
           if(my $arg_class = ref $_[0])
           {
-            unless($arg_class eq $fk_class)
+            if(ref $_[0] eq 'HASH') # Hashref constructor args
             {
-              Carp::croak "$arg_class is not a $fk_class object";
+              $object = $fk_class->new(%{$_[0]});
             }
-
-            $object = $_[0];
+            else # Object
+            {
+              unless($arg_class eq $fk_class)
+              {
+                Carp::croak "$arg_class is not a $fk_class object";
+              }
+  
+              $object = $_[0];
+            }
           }
           elsif(!defined $_[0]) # undef argument
           {
+            # Set the foreign key columns
+            while(my($local_column, $foreign_column) = each(%$fk_columns))
+            {
+              my $local_method = $meta->column_mutator_method_name($local_column);
+              $self->$local_method(undef);
+            }
+
             return $self->{$key} = undef;
           }
-        }
-        else
-        {
-          # Primary key value
-          if(@_ == 1)
+          else # primary key value
           {
             my @pk_columns  = $fk_meta->primary_key_columns;
 
@@ -1315,11 +1324,11 @@ sub object_by_key
 
             $object = $fk_class->new($pk_columns[0]->name => $_[0]);
           }
-          else # Object constructor arguments
-          {
-            $object = $fk_class->new(@_);
-          }
-        }  
+        }
+        else # Object constructor arguments
+        {
+          $object = $fk_class->new(@_);
+        }
 
         my($db, $started_new_tx);
 
@@ -1344,7 +1353,10 @@ sub object_by_key
           }
           else
           {
-            $object->load(speculative => 1);
+            my $dbh = $object->dbh;
+            # Ignore any errors due to missing primary keys
+            local $dbh->{'PrintError'} = 0;
+            eval { $object->load(speculative => 1) };
             $object->save or die $object->error;
           }
 
@@ -1450,33 +1462,35 @@ sub object_by_key
 
         if(@_ == 1)
         {
-          # Object argument
           if(my $arg_class = ref $_[0])
           {
-            unless($arg_class eq $fk_class)
+            if(ref $_[0] eq 'HASH') # Hashref constructor args
             {
-              Carp::croak "$arg_class is not a $fk_class object";
+              $object = $fk_class->new(%{$_[0]});
             }
-
-            $object = $_[0];
+            else # Object
+            {
+              unless($arg_class eq $fk_class)
+              {
+                Carp::croak "$arg_class is not a $fk_class object";
+              }
+  
+              $object = $_[0];
+            }
           }
           elsif(!defined $_[0]) # undef argument
           {
-            # Clear foreign key columns
-            foreach my $local_column (keys %$fk_columns)
+            # Set the foreign key columns
+            while(my($local_column, $foreign_column) = each(%$fk_columns))
             {
-              my $local_method = $meta->column_accessor_method_name($local_column);
+              my $local_method = $meta->column_mutator_method_name($local_column);
               $self->$local_method(undef);
             }
 
             delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
             return $self->{$key} = undef;
           }
-        }
-        else
-        {
-          # Primary key value
-          if(@_ == 1)
+          else # primary key value
           {
             my @pk_columns  = $fk_meta->primary_key_columns;
 
@@ -1489,16 +1503,10 @@ sub object_by_key
 
             $object = $fk_class->new($pk_columns[0]->name => $_[0]);
           }
-          else # Object constructor arguments
-          {
-            $object = $fk_class->new(@_);
-          }
         }
-
-        # Try loading the object
-        unless($object->{STATE_IN_DB()})
+        else # Object constructor arguments
         {
-          $object->load(speculative => 1);
+          $object = $fk_class->new(@_);
         }
 
         # Set the foreign key columns
@@ -1533,7 +1541,10 @@ sub object_by_key
             }
             else
             {
-              $object->load(speculative => 1);
+              my $dbh = $object->dbh;
+              # Ignore any errors due to missing primary keys
+              local $dbh->{'PrintError'} = 0;
+              eval { $object->load(speculative => 1) };
               $object->save or die $object->error;
             }
 

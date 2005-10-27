@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 129;
+use Test::More tests => 138;
 
 BEGIN 
 {
@@ -18,7 +18,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 54)  unless($HAVE_PG);
+  skip("Postgres tests", 57)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -30,9 +30,12 @@ SKIP: foreach my $db_type ('pg')
   $o->date_created('now');
   $o->last_modified($o->date_created);
   $o->save_col(7);
+  $o->other2_obj(7);
 
   ok($o->save, "save() 1 - $db_type");
   ok($o->load, "load() 1 - $db_type");
+
+  is($o->other2_obj->name, 'def', "single column foreign key 1 - $db_type");
 
   my $o2 = MyPgObject->new(id => $o->id);
 
@@ -57,12 +60,15 @@ SKIP: foreach my $db_type ('pg')
   $o2->name('John 2');
   $o2->start('5/24/2001');
 
+  $o2->other2_obj({ id => 3, name => 'foo' });
+
   sleep(1); # keep the last modified dates from being the same
 
   $o2->last_modified('now');
   ok($o2->save, "save() 2 - $db_type");
   ok($o2->load, "load() 3 - $db_type");
 
+  is($o2->other2_obj->name, 'foo', "single column foreign key 2 - $db_type");
   is($o2->date_created, $o->date_created, "save() verify 1 - $db_type");
   ok($o2->last_modified ne $o->last_modified, "save() verify 2 - $db_type");
   is($o2->start->ymd, '2001-05-24', "save() verify 3 (date value) - $db_type");
@@ -78,6 +84,12 @@ SKIP: foreach my $db_type ('pg')
   my $o4 = MyPgObject->new(id => 999);
   ok(!$o4->load(speculative => 1), "load() nonexistent - $db_type");
   ok($o4->not_found, "not_found() 2 - $db_type");
+
+  $o->other2_obj(MyPgOtherObject2->new(name => 'bar'));
+  $o->save;
+
+  $o = MyPgObject->new(id => $o->id)->load;
+  is($o->other2_obj->name, 'bar', "single column foreign key 3 - $db_type");
 
   ok($o->load, "load() 4 - $db_type");
 
@@ -175,7 +187,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 28)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 31)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -187,9 +199,12 @@ SKIP: foreach my $db_type ('mysql')
   $o->date_created('now');
   $o->last_modified($o->date_created);
   $o->save_col(22);
+  $o->other2_obj(7);
 
   ok($o->save, "save() 1 - $db_type");
   ok($o->load, "load() 1 - $db_type");
+
+  is($o->other2_obj->name, 'def', "single column foreign key 1 - $db_type");
 
   my $o2 = MyMySQLObject->new(id => $o->id);
 
@@ -214,12 +229,15 @@ SKIP: foreach my $db_type ('mysql')
   $o2->name('John 2');
   $o2->start('5/24/2001');
 
+  $o2->other2_obj({ id => 3, name => 'foo' });
+  
   sleep(1); # keep the last modified dates from being the same
 
   $o2->last_modified('now');
   ok($o2->save, "save() 2 - $db_type");
   ok($o2->load, "load() 3 - $db_type");
 
+  is($o2->other2_obj->name, 'foo', "single column foreign key 2 - $db_type");
   is($o2->date_created, $o->date_created, "save() verify 1 - $db_type");
   ok($o2->last_modified ne $o->last_modified, "save() verify 2 - $db_type");
   is($o2->start->ymd, '2001-05-24', "save() verify 3 (date value) - $db_type");
@@ -236,6 +254,12 @@ SKIP: foreach my $db_type ('mysql')
   ok(!$o4->load(speculative => 1), "load() nonexistent - $db_type");
   ok($o4->not_found, "not_found() 2 - $db_type");
 
+  $o->other2_obj(MyMySQLOtherObject2->new(name => 'bar'));
+  $o->save;
+  
+  $o = MyMySQLObject->new(id => $o->id)->load;
+  is($o->other2_obj->name, 'bar', "single column foreign key 3 - $db_type");
+
   ok($o->delete, "delete() - $db_type");
 
   eval { $o->meta->alias_column(nonesuch => 'foo') };
@@ -248,7 +272,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 46)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 49)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -260,9 +284,12 @@ SKIP: foreach my $db_type ('informix')
   $o->date_created('now');
   $o->last_modified($o->date_created);
   $o->save_col(7);
+  $o->other2_obj(7);
 
   ok($o->save, "save() 1 - $db_type");
   ok($o->load, "load() 1 - $db_type");
+
+  is($o->other2_obj->name, 'def', "single column foreign key 1 - $db_type");
 
   my $o2 = MyInformixObject->new(id => $o->id);
 
@@ -287,12 +314,15 @@ SKIP: foreach my $db_type ('informix')
   $o2->name('John 2');
   $o2->start('5/24/2001');
 
+  $o2->other2_obj({ id => 3, name => 'foo' });
+
   sleep(1); # keep the last modified dates from being the same
 
   $o2->last_modified('now');
   ok($o2->save, "save() 2 - $db_type");
   ok($o2->load, "load() 3 - $db_type");
 
+  is($o2->other2_obj->name, 'foo', "single column foreign key 2 - $db_type");
   is($o2->date_created, $o->date_created, "save() verify 1 - $db_type");
   ok($o2->last_modified ne $o->last_modified, "save() verify 2 - $db_type");
   is($o2->start->ymd, '2001-05-24', "save() verify 3 (date value) - $db_type");
@@ -308,6 +338,12 @@ SKIP: foreach my $db_type ('informix')
   my $o4 = MyInformixObject->new(id => 999);
   ok(!$o4->load(speculative => 1), "load() nonexistent - $db_type");
   ok($o4->not_found, "not_found() 2 - $db_type");
+
+  $o->other2_obj(MyInformixOtherObject2->new(name => 'bar'));
+  $o->save;
+
+  $o = MyInformixObject->new(id => $o->id)->load;
+  is($o->other2_obj->name, 'bar', "single column foreign key 3 - $db_type");
 
   ok($o->load, "load() 4 - $db_type");
 
@@ -388,6 +424,7 @@ BEGIN
       local $dbh->{'PrintError'} = 0;
       $dbh->do('DROP TABLE rose_db_object_test CASCADE');
       $dbh->do('DROP TABLE rose_db_object_other');
+      $dbh->do('DROP TABLE rose_db_object_other2');
       $dbh->do('DROP TABLE rose_db_object_chkpass_test');
     }
 
@@ -413,7 +450,15 @@ CREATE TABLE rose_db_object_other
 )
 EOF
 
-    # Create test foreign subclass
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_other2
+(
+  id    SERIAL PRIMARY KEY,
+  name  VARCHAR(32) DEFAULT 'def'
+)
+EOF
+
+    # Create test foreign subclasses
 
     package MyPgOtherObject;
 
@@ -435,6 +480,22 @@ EOF
 
     MyPgOtherObject->meta->initialize;
 
+    package MyPgOtherObject2;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    sub init_db { Rose::DB->new('mysql') }
+
+    MyPgOtherObject2->meta->table('rose_db_object_other2');
+
+    MyPgOtherObject2->meta->columns
+    (
+      id   => { type => 'serial', primary_key => 1 },
+      name => { type => 'varchar', default => 'def' },
+    );
+
+    MyPgOtherObject2->meta->initialize;
+
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test
 (
@@ -451,6 +512,7 @@ CREATE TABLE rose_db_object_test
   fk1            INT,
   fk2            INT,
   fk3            INT,
+  fks            INT REFERENCES rose_db_object_other2 (id),
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -485,6 +547,7 @@ EOF
       fk1      => { type => 'int' },
       fk2      => { type => 'int' },
       fk3      => { type => 'int' },
+      fks      => { type => 'int' },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );
@@ -500,6 +563,15 @@ EOF
           fk2 => 'k2',
           fk3 => 'k3',
         }
+      },
+
+      other2_obj =>
+      {
+        class => 'MyPgOtherObject2',
+        key_columns =>
+        {
+          fks => 'id',
+        },
       },
     );
 
@@ -532,6 +604,7 @@ EOF
       local $dbh->{'PrintError'} = 0;
       $dbh->do('DROP TABLE rose_db_object_test CASCADE');
       $dbh->do('DROP TABLE rose_db_object_other');
+      $dbh->do('DROP TABLE rose_db_object_other2');
     }
 
     $dbh->do(<<"EOF");
@@ -546,7 +619,15 @@ CREATE TABLE rose_db_object_other
 )
 EOF
 
-    # Create test foreign subclass
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_other2
+(
+  id    SERIAL PRIMARY KEY,
+  name  VARCHAR(32) DEFAULT 'def'
+)
+EOF
+
+    # Create test foreign subclasses
 
     package MyMySQLOtherObject;
 
@@ -568,6 +649,22 @@ EOF
 
     MyMySQLOtherObject->meta->initialize;
 
+    package MyMySQLOtherObject2;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    sub init_db { Rose::DB->new('mysql') }
+
+    MyMySQLOtherObject2->meta->table('rose_db_object_other2');
+
+    MyMySQLOtherObject2->meta->columns
+    (
+      id   => { type => 'serial', primary_key => 1 },
+      name => { type => 'varchar', default => 'def' },
+    );
+
+    MyMySQLOtherObject2->meta->initialize;
+
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test
 (
@@ -582,6 +679,7 @@ CREATE TABLE rose_db_object_test
   fk1            INT,
   fk2            INT,
   fk3            INT,
+  fks            INT REFERENCES rose_db_object_other2 (id),
   last_modified  TIMESTAMP,
   date_created   DATETIME
 )
@@ -612,6 +710,7 @@ EOF
       fk1      => { type => 'int' },
       fk2      => { type => 'int' },
       fk3      => { type => 'int' },
+      fks      => { type => 'int' },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'datetime' },
     );
@@ -627,6 +726,15 @@ EOF
           fk2 => 'k2',
           fk3 => 'k3',
         }
+      },
+
+      other2_obj =>
+      {
+        class => 'MyMySQLOtherObject2',
+        key_columns =>
+        {
+          fks => 'id',
+        },
       },
     );
 
@@ -657,6 +765,7 @@ EOF
       local $dbh->{'PrintError'} = 0;
       $dbh->do('DROP TABLE rose_db_object_test CASCADE');
       $dbh->do('DROP TABLE rose_db_object_other');
+      $dbh->do('DROP TABLE rose_db_object_other2');
     }
 
     $dbh->do(<<"EOF");
@@ -671,7 +780,15 @@ CREATE TABLE rose_db_object_other
 )
 EOF
 
-    # Create test foreign subclass
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_other2
+(
+  id    SERIAL PRIMARY KEY,
+  name  VARCHAR(32) DEFAULT 'def'
+)
+EOF
+
+    # Create test foreign subclasses
 
     package MyInformixOtherObject;
 
@@ -693,6 +810,22 @@ EOF
 
     MyInformixOtherObject->meta->initialize;
 
+    package MyInformixOtherObject2;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    sub init_db { Rose::DB->new('mysql') }
+
+    MyInformixOtherObject2->meta->table('rose_db_object_other2');
+
+    MyInformixOtherObject2->meta->columns
+    (
+      id   => { type => 'serial', primary_key => 1 },
+      name => { type => 'varchar', default => 'def' },
+    );
+
+    MyInformixOtherObject2->meta->initialize;
+
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test
 (
@@ -708,6 +841,7 @@ CREATE TABLE rose_db_object_test
   fk1            INT,
   fk2            INT,
   fk3            INT,
+  fks            INT REFERENCES rose_db_object_other2 (id),
   last_modified  DATETIME YEAR TO FRACTION(5),
   date_created   DATETIME YEAR TO FRACTION(5),
 
@@ -742,6 +876,7 @@ EOF
       fk1      => { type => 'int' },
       fk2      => { type => 'int' },
       fk3      => { type => 'int' },
+      fks      => { type => 'int' },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );
@@ -757,6 +892,15 @@ EOF
           fk2 => 'k2',
           fk3 => 'k3',
         }
+      },
+
+      other2_obj =>
+      {
+        class => 'MyInformixOtherObject2',
+        key_columns =>
+        {
+          fks => 'id',
+        },
       },
     );
 
@@ -782,6 +926,7 @@ END
 
     $dbh->do('DROP TABLE rose_db_object_test CASCADE');
     $dbh->do('DROP TABLE rose_db_object_other');
+    $dbh->do('DROP TABLE rose_db_object_other2');
 
     $dbh->disconnect;
   }
@@ -794,6 +939,7 @@ END
 
     $dbh->do('DROP TABLE rose_db_object_test CASCADE');
     $dbh->do('DROP TABLE rose_db_object_other');
+    $dbh->do('DROP TABLE rose_db_object_other2');
 
     $dbh->disconnect;
   }
@@ -806,6 +952,7 @@ END
 
     $dbh->do('DROP TABLE rose_db_object_test CASCADE');
     $dbh->do('DROP TABLE rose_db_object_other');
+    $dbh->do('DROP TABLE rose_db_object_other2');
 
     $dbh->disconnect;
   }

@@ -17,7 +17,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.072';
+our $VERSION = '0.08';
 
 our $Debug = 0;
 
@@ -232,7 +232,6 @@ sub init_with_db
 
   my $catalog = $db->{'catalog'};
   my $schema  = $db->{'schema'};
-  my $driver  = $db->{'driver'};
   my $changed = 0;
 
   UNDEF_IS_OK: # Avoid undef string comparison warnings
@@ -254,23 +253,8 @@ sub init_with_db
   if($changed)
   {
     $self->_clear_table_generated_values;
+    $self->{'db'} = $db;
   }
-
-  UNDEF_IS_OK: # Avoid undef string comparison warnings
-  {
-    no warnings 'uninitialized';
-    # If necessary, also clear the select few column-generated values that
-    # depend on the database driver.
-    if($db->{'driver'} ne $self->{'db_driver'})
-    {
-      # This is a call to _clear_db_generated_values() that
-      # has been inlined for speed.
-      $self->{'column_names_string_sql'} = undef;
-      $self->{'column_names_sql'} = undef;
-    }
-  }
-
-  $self->{'db_driver'} = $db->{'driver'};
 
   return;
 }
@@ -1796,20 +1780,20 @@ sub column_names
 
 sub column_names_string_sql
 {
-  my($self) = shift;
+  my($self, $db) = @_;
 
-  return $self->{'column_names_string_sql'} ||= 
-    join(', ', map { $_->name_sql } sort { $a->name cmp $b->name } $self->columns);
+  return $self->{'column_names_string_sql'}{$db->{'driver'}} ||= 
+    join(', ', map { $_->name_sql($db) } sort { $a->name cmp $b->name } $self->columns);
 }
 
 sub column_names_sql
 {
-  my($self) = shift;
+  my($self, $db) = @_;
 
-  $self->{'column_names_sql'} ||= 
-    [ map { $_->name_sql } sort { $a->name cmp $b->name } $self->columns ];
+  my $list = $self->{'column_names_sql'}{$db->{'driver'}} ||= 
+    [ map { $_->name_sql($db) } sort { $a->name cmp $b->name } $self->columns ];
 
-  return wantarray ? @{$self->{'column_names_sql'}} : $self->{'column_names_sql'};
+  return wantarray ? @$list : $list;
 }
 
 sub method_column
@@ -1938,26 +1922,26 @@ sub fq_table_sql
 
 sub load_sql
 {
-  my($self, $key_columns) = @_;
+  my($self, $key_columns, $db) = @_;
 
   $key_columns ||= $self->primary_key_column_names;
 
   no warnings;
   return $self->{'load_sql'}{join("\0", @$key_columns)} ||= 
-    'SELECT ' . $self->column_names_string_sql . ' FROM ' .
+    'SELECT ' . $self->column_names_string_sql($db) . ' FROM ' .
     $self->fq_table_sql . ' WHERE ' .
     join(' AND ',  map { "$_ = ?" } @$key_columns);
 }
 
 sub load_sql_with_null_key
 {
-  my($self, $key_columns, $key_values) = @_;
+  my($self, $key_columns, $key_values, $db) = @_;
 
   my $i = 0;
 
   no warnings;
   return 
-    'SELECT ' . $self->column_names_string_sql . ' FROM ' .
+    'SELECT ' . $self->column_names_string_sql($db) . ' FROM ' .
     $self->fq_table_sql . ' WHERE ' .
     join(' AND ',  map { defined $key_values->[$i++] ? "$_ = ?" : "$_ IS NULL" }
     @$key_columns);
@@ -1965,11 +1949,11 @@ sub load_sql_with_null_key
 
 sub update_sql
 {
-  my($self, $key_columns) = @_;
+  my($self, $key_columns, $db) = @_;
 
   $key_columns ||= $self->primary_key_column_names;
 
-  my $cache_key = join("\0", @$key_columns);
+  my $cache_key = "$db->{'driver'}:" . join("\0", @$key_columns);
 
   return $self->{'update_sql'}{$cache_key}
     if($self->{'update_sql'}{$cache_key});
@@ -1979,10 +1963,10 @@ sub update_sql
   no warnings;
   return $self->{'update_sql'}{$cache_key} = 
     'UPDATE ' . $self->fq_table_sql . " SET \n" .
-    join(",\n", map { '    ' . $self->column($_)->name_sql . ' = ?' } 
+    join(",\n", map { '    ' . $self->column($_)->name_sql($db) . ' = ?' } 
                 grep { !$key{$_} } $self->column_names) .
     "\nWHERE " . 
-    join(' AND ', map { $self->column($_)->name_sql . ' = ?' } @$key_columns);
+    join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns);
 }
 
 # This is nonsensical right now because the primary key always has to be
@@ -1991,7 +1975,7 @@ sub update_sql
 #
 # sub update_sql_with_null_key
 # {
-#   my($self, $key_columns, $key_values) = @_;
+#   my($self, $key_columns, $key_values, $db) = @_;
 # 
 #   my %key = map { ($_ => 1) } @$key_columns;
 #   my $i = 0;
@@ -1999,10 +1983,10 @@ sub update_sql
 #   no warnings;
 #   return
 #     'UPDATE ' . $self->fq_table_sql . " SET \n" .
-#     join(",\n", map { '    ' . $self->column($_)->name_sql . ' = ?' } 
+#     join(",\n", map { '    ' . $self->column($_)->name_sql($db) . ' = ?' } 
 #                 grep { !$key{$_} } $self->column_names) .
 #     "\nWHERE " . join(' AND ', map { defined $key_values->[$i++] ? "$_ = ?" : "$_ IS NULL" }
-#     map { $self->column($_)->name_sql } @$key_columns);
+#     map { $self->column($_)->name_sql($db) } @$key_columns);
 # }
 #
 # Ditto for this version of update_sql_with_inlining which handles null keys
@@ -2027,11 +2011,11 @@ sub update_sql
 #     
 #     if($column->should_inline_value($db, $value))
 #     {
-#       push(@updates, '  ' . $column->name_sql . " = $value");
+#       push(@updates, '  ' . $column->name_sql($db) . " = $value");
 #     }
 #     else
 #     {
-#       push(@updates, '  ' . $column->name_sql . ' = ?');
+#       push(@updates, '  ' . $column->name_sql($db) . ' = ?');
 #       push(@bind, $value);
 #     }
 #   }
@@ -2045,7 +2029,7 @@ sub update_sql
 #      'UPDATE ' . $self->fq_table_sql . " SET \n") .
 #     join(",\n", @updates) . "\nWHERE " . 
 #     join(' AND ', map { defined $key_values->[$i++] ? "$_ = ?" : "$_ IS NULL" }
-#                   map { $self->column($_)->name_sql } @$key_columns),
+#                   map { $self->column($_)->name_sql($db) } @$key_columns),
 #     \@bind
 #   );
 # }
@@ -2070,11 +2054,11 @@ sub update_sql_with_inlining
 
     if($column->should_inline_value($db, $value))
     {
-      push(@updates, '  ' . $column->name_sql . " = $value");
+      push(@updates, '  ' . $column->name_sql($db) . " = $value");
     }
     else
     {
-      push(@updates, '  ' . $column->name_sql . ' = ?');
+      push(@updates, '  ' . $column->name_sql($db) . ' = ?');
       push(@bind, $value);
     }
   }
@@ -2087,19 +2071,19 @@ sub update_sql_with_inlining
     ($self->{'update_sql_with_inlining_start'} ||= 
      'UPDATE ' . $self->fq_table_sql . " SET \n") .
     join(",\n", @updates) . "\nWHERE " . 
-    join(' AND ', map { $self->column($_)->name_sql . ' = ?' } @$key_columns),
+    join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns),
     \@bind
   );
 }
 
 sub insert_sql
 {
-  my($self) = shift;
+  my($self, $db) = @_;
 
   no warnings;
-  return $self->{'insert_sql'} ||= 
-    'INSERT INTO ' . $self->fq_table_sql . "\n(\n" .
-    join(",\n", map { "  $_" } $self->column_names_sql) .
+  return $self->{'insert_sql'}{$db->{'driver'}} ||= 
+    'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
+    join(",\n", map { "  $_" } $self->column_names_sql($db)) .
     "\n)\nVALUES\n(\n" . join(",\n", map { "  ?" } $self->column_names) .
     "\n)";
 }
@@ -2147,10 +2131,10 @@ sub insert_sql_with_inlining
 
 sub delete_sql
 {
-  my($self) = shift;
-  return $self->{'delete_sql'} ||= 
-    'DELETE FROM ' . $self->fq_table_sql . ' WHERE ' .
-    join(' AND ', map {  $self->column($_)->name_sql . ' = ?' } 
+  my($self, $db) = @_;
+  return $self->{'delete_sql'}{$db->{'driver'}} ||= 
+    'DELETE FROM ' . $self->fq_table_sql($db) . ' WHERE ' .
+    join(' AND ', map {  $self->column($_)->name_sql($db) . ' = ?' } 
                   $self->primary_key_column_names);
 }
 
@@ -2188,14 +2172,6 @@ sub _clear_column_generated_values
   $self->{'insert_sql'} = undef;
   $self->{'insert_sql_with_inlining_start'} = undef;
   $self->{'delete_sql'} = undef;
-}
-
-sub _clear_db_generated_values
-{
-  my($self) = shift;
-
-  $self->{'column_names_string_sql'} = undef;
-  $self->{'column_names_sql'} = undef;
 }
 
 sub method_name_is_reserved
@@ -2297,7 +2273,7 @@ sub auto_helper_class
   else
   {
     my $db = $self->db or die "Missing db";
-    return $self->auto_helper_classes->{$db->driver};
+    return $self->auto_helper_classes->{$db->{'driver'}};
   }
 }
 

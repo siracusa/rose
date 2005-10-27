@@ -95,7 +95,6 @@ $class->convention_manager_class(default => 'Rose::DB::Object::ConventionManager
 
 is($class->convention_manager_class('foo'), 'bar', 'convention_manager bar');
 
-$DB::single = 1;
 $class->delete_convention_manager_class('foo');
 
 ok(!defined $class->convention_manager_class('foo'), 'delete_convention_manager_class');
