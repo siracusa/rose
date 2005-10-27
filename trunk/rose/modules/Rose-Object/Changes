@@ -1,3 +1,9 @@
+0.016 (10.26.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a bug in the inheritable class hash method maker's "delete"
+      method type that could cause an extra key to be deleted under some
+      rare circumstances.
+
 0.015 (08.30.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added "clear" method to inheritable and inherited sets.
