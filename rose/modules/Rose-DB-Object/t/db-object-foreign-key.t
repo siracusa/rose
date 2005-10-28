@@ -622,7 +622,7 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_other2
 (
-  id    SERIAL PRIMARY KEY,
+  id    INT AUTO_INCREMENT PRIMARY KEY,
   name  VARCHAR(32) DEFAULT 'def'
 )
 EOF

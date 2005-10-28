@@ -222,6 +222,10 @@ If passed a local column name LOCAL, return the corresponding column name in the
 
 Get or set a reference to a hash that maps local column names to foreign column names.
 
+=item C<query_args>
+
+A reference to an array of arguments added to the value of the C<query> parameter passed to the call to C<manager_class>'s C<manager_method> class method.
+
 =item B<type>
 
 Returns "one to many".
