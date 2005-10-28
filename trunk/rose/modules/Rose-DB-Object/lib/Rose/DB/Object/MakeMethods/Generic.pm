@@ -1866,6 +1866,12 @@ sub objects_by_key
   my $mgr_args   = $args->{'manager_args'} || {};
   my $query_args = $args->{'query_args'} || [];
 
+  if($mgr_args->{'query'})
+  {
+    Carp::croak "Cannot use the key 'query' in the manager_args parameter ",
+                "hash.  Use the separate query_args parameter instead";
+  }
+
   if(@$query_args % 2 != 0)
   {
     Carp::croak "Odd number of arguments passed in query_args parameter";
@@ -2615,6 +2621,12 @@ sub objects_by_map
   my $map_method   = $args->{'manager_method'} || 'get_objects';
   my $mgr_args     = $args->{'manager_args'} || {};
   my $query_args   = $args->{'query_args'} || [];
+
+  if($mgr_args->{'query'})
+  {
+    Carp::croak "Cannot use the key 'query' in the manager_args parameter ",
+                "hash.  Use the separate query_args parameter instead";
+  }
 
   my($map_to_class, $map_to_meta, $map_to_method);
 

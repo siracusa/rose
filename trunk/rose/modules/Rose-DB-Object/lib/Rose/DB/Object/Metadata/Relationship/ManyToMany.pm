@@ -654,6 +654,10 @@ This would ensure that a C<Widget>'s C<colors()> would be limited to those that 
 
 Get or set a boolean flag that indicates whether or not all of the classes involved in fetching objects via this relationship (including the objects themselves) will share the same L<Rose::DB>-derived L<db|Rose::DB::Object/db> object.  Defaults to true.
 
+=item C<query_args>
+
+A reference to an array of arguments added to the value of the C<query> parameter passed to the call to C<manager_class>'s C<manager_method> class method.
+
 =item B<type>
 
 Returns "many to many".
