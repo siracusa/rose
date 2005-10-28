@@ -1354,10 +1354,17 @@ sub object_by_key
           else
           {
             my $dbh = $object->dbh;
+
+            my $ret;
+
             # Ignore any errors due to missing primary keys
             local $dbh->{'PrintError'} = 0;
-            eval { $object->load(speculative => 1) };
-            $object->save or die $object->error;
+            eval { $ret = $object->load(speculative => 1) };
+            
+            unless($ret)
+            {
+              $object->save or die $object->error;
+            }
           }
 
           while(my($local_column, $foreign_column) = each(%$fk_columns))
@@ -1542,10 +1549,17 @@ sub object_by_key
             else
             {
               my $dbh = $object->dbh;
+  
+              my $ret;
+  
               # Ignore any errors due to missing primary keys
               local $dbh->{'PrintError'} = 0;
-              eval { $object->load(speculative => 1) };
-              $object->save or die $object->error;
+              eval { $ret = $object->load(speculative => 1) };
+              
+              unless($ret)
+              {
+                $object->save or die $object->error;
+              }
             }
 
             # Set the foreign key columns
@@ -2069,7 +2083,10 @@ sub objects_by_key
             # Try to load the object if doesn't appear to exist already
             unless($object->{STATE_IN_DB()})
             {
+              my $dbh = $object->dbh;
+
               # It's okay if this fails (e.g., if the primary key is undefined)
+              local $dbh->{'PrintError'} = 0;
               eval { $object->load(speculative => 1) };
             }
 
@@ -2284,7 +2301,10 @@ sub objects_by_key
             # Try to load the object if doesn't appear to exist already
             unless($object->{STATE_IN_DB()})
             {
+              my $dbh = $object->dbh;
+
               # It's okay if this fails (e.g., if the primary key is undefined)
+              local $dbh->{'PrintError'} = 0;
               eval { $object->load(speculative => 1) };
             }
 
@@ -2981,7 +3001,10 @@ sub objects_by_map
             # Try to load the object if doesn't appear to exist already
             unless($object->{STATE_IN_DB()})
             {
+              my $dbh = $object->dbh;
+
               # It's okay if this fails (e.g., if the primary key is undefined)
+              local $dbh->{'PrintError'} = 0;
               eval { $object->load(speculative => 1) };
             }
 
@@ -3164,7 +3187,10 @@ sub objects_by_map
             # Try to load the object if doesn't appear to exist already
             unless($object->{STATE_IN_DB()})
             {
+              my $dbh = $object->dbh;
+
               # It's okay if this fails (e.g., if the primary key is undefined)
+              local $dbh->{'PrintError'} = 0;
               eval { $object->load(speculative => 1) };
             }
 
@@ -3341,7 +3367,10 @@ sub objects_by_map
           # Try to load the object if doesn't appear to exist already
           unless($object->{STATE_IN_DB()})
           {
+            my $dbh = $object->dbh;
+
             # It's okay if this fails (e.g., if the primary key is undefined)
+            local $dbh->{'PrintError'} = 0;
             eval { $object->load(speculative => 1) };
           }
 
@@ -3452,7 +3481,10 @@ sub objects_by_map
           # Try to load the object if doesn't appear to exist already
           unless($object->{STATE_IN_DB()})
           {
+            my $dbh = $object->dbh;
+
             # It's okay if this fails (e.g., if the primary key is undefined)
+            local $dbh->{'PrintError'} = 0;
             eval { $object->load(speculative => 1) };
           }
 
