@@ -621,11 +621,13 @@ SKIP: foreach my $db_type ('pg')
                        name => 'Boo',
                        flag => 1);
 
+  MyPgOtherObject2->new(id => 1, name => 'one', pid => 900)->save;
+
   @o2s = 
   (
-    MyPgOtherObject2->new(id => 1, name => 'one'),
+    1,
     MyPgOtherObject2->new(id => 2, name => 'two'),
-    MyPgOtherObject2->new(id => 3, name => 'three'),
+    { id => 3, name => 'three', pid => 111 },
   );
 
   # Set before save, save, set
@@ -1010,9 +1012,9 @@ SKIP: foreach my $db_type ('pg')
   # Set
   @colors =
   (
-    MyPgColor->new(id => 1), # red
+    1, # red
     MyPgColor->new(id => 3), # blue
-    MyPgColor->new(id => 5, name => 'orange'),
+    { id => 5, name => 'orange' },
   );
 
   #MyPgColor->new(id => 2), # green
@@ -1092,8 +1094,8 @@ SKIP: foreach my $db_type ('pg')
   @colors =
   (
     MyPgColor->new(id => 1), # red
-    MyPgColor->new(id => 3), # blue
-    MyPgColor->new(id => 6, name => 'ochre'),
+    3, # blue
+    { id => 6, name => 'ochre' },
   );
 
   #MyPgColor->new(id => 2), # green
@@ -1917,9 +1919,9 @@ SKIP: foreach my $db_type ('mysql')
 
   @o2s = 
   (
-    MyMySQLOtherObject2->new(id => 1, name => 'one'),
+    1,
     MyMySQLOtherObject2->new(id => 2, name => 'two'),
-    MyMySQLOtherObject2->new(id => 3, name => 'three'),
+    { id => 3, name => 'three' },
   );
 
   # Set before save, save, set
@@ -2304,9 +2306,9 @@ SKIP: foreach my $db_type ('mysql')
   # Set
   @colors =
   (
-    MyMySQLColor->new(id => 1), # red
+    1, # red
     MyMySQLColor->new(id => 3), # blue
-    MyMySQLColor->new(id => 5, name => 'orange'),
+    { id => 5, name => 'orange' },
   );
 
   #MyMySQLColor->new(id => 2), # green
@@ -2386,8 +2388,8 @@ SKIP: foreach my $db_type ('mysql')
   @colors =
   (
     MyMySQLColor->new(id => 1), # red
-    MyMySQLColor->new(id => 3), # blue
-    MyMySQLColor->new(id => 6, name => 'ochre'),
+    3, # blue
+    { id => 6, name => 'ochre' },
   );
 
   #MyMySQLColor->new(id => 2), # green
@@ -3276,9 +3278,9 @@ SKIP: foreach my $db_type ('informix')
 
   @o2s = 
   (
-    MyInformixOtherObject2->new(id => 1, name => 'one'),
+    1,
     MyInformixOtherObject2->new(id => 2, name => 'two'),
-    MyInformixOtherObject2->new(id => 3, name => 'three'),
+    { id => 3, name => 'three' },
   );
 
   # Set before save, save, set
@@ -3663,9 +3665,9 @@ SKIP: foreach my $db_type ('informix')
   # Set
   @colors =
   (
-    MyInformixColor->new(id => 1), # red
+    1, # red
     MyInformixColor->new(id => 3), # blue
-    MyInformixColor->new(id => 5, name => 'orange'),
+    { id => 5, name => 'orange' },
   );
 
   #MyInformixColor->new(id => 2), # green
@@ -3745,8 +3747,8 @@ SKIP: foreach my $db_type ('informix')
   @colors =
   (
     MyInformixColor->new(id => 1), # red
-    MyInformixColor->new(id => 3), # blue
-    MyInformixColor->new(id => 6, name => 'ochre'),
+    3, # blue
+    { id => 6, name => 'ochre' },
   );
 
   #MyInformixColor->new(id => 2), # green
