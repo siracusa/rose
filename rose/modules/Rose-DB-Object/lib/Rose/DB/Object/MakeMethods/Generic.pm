@@ -1187,6 +1187,7 @@ sub object_by_key
   my $fk_class   = $args->{'class'} or die "Missing foreign object class";
   my $fk_meta    = $fk_class->meta;
   my $meta       = $target_class->meta;
+  my $fk_pk;
 
   my $fk_columns = $args->{'key_columns'} or die "Missing key columns hash";
   my $share_db   = $args->{'share_db'};
@@ -1199,17 +1200,35 @@ sub object_by_key
 
       if(@_)
       {
-        return $self->{$key} = undef  unless(defined $_[0]);
+        # If loading, just assign
+        if($self->{STATE_LOADING()})
+        {
+          return $self->{$key} = $_[0];
+        }
+
+        unless(defined $_[0]) # undef argument
+        {
+          # Set the foreign key columns
+          while(my($local_column, $foreign_column) = each(%$fk_columns))
+          {
+            my $local_method = $meta->column_mutator_method_name($local_column);
+            $self->$local_method(undef);
+          }
+
+          return $self->{$key} = undef;
+        }
+
+        my $object = __args_to_object($self, $key, $fk_class, \$fk_pk, \@_);
 
         while(my($local_column, $foreign_column) = each(%$fk_columns))
         {
           my $local_method   = $meta->column_mutator_method_name($local_column);
           my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
 
-          $self->$local_method($_[0]->$foreign_method);
+          $self->$local_method($object->$foreign_method);
         }
 
-        return $self->{$key} = $_[0];
+        return $self->{$key} = $object;
       }
 
       return $self->{$key}  if(defined $self->{$key});
@@ -1280,55 +1299,19 @@ sub object_by_key
           Carp::croak "Can't $name() until this object is loaded or saved";
         }
 
-        my $object;
-
-        if(@_ == 1)
+        unless(defined $_[0]) # undef argument
         {
-          if(my $arg_class = ref $_[0])
+          # Set the foreign key columns
+          while(my($local_column, $foreign_column) = each(%$fk_columns))
           {
-            if(ref $_[0] eq 'HASH') # Hashref constructor args
-            {
-              $object = $fk_class->new(%{$_[0]});
-            }
-            else # Object
-            {
-              unless($arg_class eq $fk_class)
-              {
-                Carp::croak "$arg_class is not a $fk_class object";
-              }
-  
-              $object = $_[0];
-            }
+            my $local_method = $meta->column_mutator_method_name($local_column);
+            $self->$local_method(undef);
           }
-          elsif(!defined $_[0]) # undef argument
-          {
-            # Set the foreign key columns
-            while(my($local_column, $foreign_column) = each(%$fk_columns))
-            {
-              my $local_method = $meta->column_mutator_method_name($local_column);
-              $self->$local_method(undef);
-            }
 
-            return $self->{$key} = undef;
-          }
-          else # primary key value
-          {
-            my @pk_columns  = $fk_meta->primary_key_columns;
-
-            if(@pk_columns > 1)
-            {
-              Carp::croak "Single argument is insufficient to add an object ",
-                          "of class $fk_class which has ", scalar(@pk_columns),
-                          " primary key columns";
-            }
-
-            $object = $fk_class->new($pk_columns[0]->name => $_[0]);
-          }
+          return $self->{$key} = undef;
         }
-        else # Object constructor arguments
-        {
-          $object = $fk_class->new(@_);
-        }
+
+        my $object = __args_to_object($self, $key, $fk_class, \$fk_pk, \@_);
 
         my($db, $started_new_tx);
 
@@ -1465,56 +1448,20 @@ sub object_by_key
           return $self->{$key} = $_[0];
         }
 
-        my $object;
-
-        if(@_ == 1)
+        unless(defined $_[0]) # undef argument
         {
-          if(my $arg_class = ref $_[0])
+          # Set the foreign key columns
+          while(my($local_column, $foreign_column) = each(%$fk_columns))
           {
-            if(ref $_[0] eq 'HASH') # Hashref constructor args
-            {
-              $object = $fk_class->new(%{$_[0]});
-            }
-            else # Object
-            {
-              unless($arg_class eq $fk_class)
-              {
-                Carp::croak "$arg_class is not a $fk_class object";
-              }
-  
-              $object = $_[0];
-            }
+            my $local_method = $meta->column_mutator_method_name($local_column);
+            $self->$local_method(undef);
           }
-          elsif(!defined $_[0]) # undef argument
-          {
-            # Set the foreign key columns
-            while(my($local_column, $foreign_column) = each(%$fk_columns))
-            {
-              my $local_method = $meta->column_mutator_method_name($local_column);
-              $self->$local_method(undef);
-            }
 
-            delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
-            return $self->{$key} = undef;
-          }
-          else # primary key value
-          {
-            my @pk_columns  = $fk_meta->primary_key_columns;
-
-            if(@pk_columns > 1)
-            {
-              Carp::croak "Single argument is insufficient to add an object ",
-                          "of class $fk_class which has ", scalar(@pk_columns),
-                          " primary key columns";
-            }
-
-            $object = $fk_class->new($pk_columns[0]->name => $_[0]);
-          }
+          delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
+          return $self->{$key} = undef;
         }
-        else # Object constructor arguments
-        {
-          $object = $fk_class->new(@_);
-        }
+
+        my $object = __args_to_object($self, $key, $fk_class, \$fk_pk, \@_);
 
         # Set the foreign key columns
         while(my($local_column, $foreign_column) = each(%$fk_columns))
@@ -1872,6 +1819,7 @@ sub objects_by_key
 
   my $ft_class   = $args->{'class'} or die "Missing foreign object class";
   my $meta       = $target_class->meta;
+  my $ft_pk;
 
   my $ft_columns = $args->{'key_columns'} or die "Missing key columns hash";
   my $ft_manager = $args->{'manager_class'};
@@ -1896,7 +1844,7 @@ sub objects_by_key
     $ft_manager = 'Rose::DB::Object::Manager';
     $mgr_args->{'object_class'} = $ft_class;
   }
-
+  
   if($interface eq 'get_set' || $interface eq 'get_set_load')
   {
     $methods{$name} = sub
@@ -2063,15 +2011,7 @@ sub objects_by_key
           die $ft_manager->error  unless(defined $deleted);
 
           # Save all the new objects
-          my $objects;
-
-          if(@_ == 1)
-          {    
-            if(ref $_[0] eq 'ARRAY') { $objects = $_[0]  }
-            else                     { $objects = [ @_ ] }
-
-          }
-          else { $objects = [ @_ ] }
+          my $objects = __args_to_objects($self, $key, $ft_class, \$ft_pk, \@_);
 
           foreach my $object (@$objects)
           {
@@ -2080,8 +2020,10 @@ sub objects_by_key
             # the current transaction
             $object->db($db); 
 
-            # Try to load the object if doesn't appear to exist already
-            unless($object->{STATE_IN_DB()})
+            # Try to load the object if doesn't appear to exist already.
+            # If anything was delete above, we have to try loading no
+            # matter what.
+            unless(!$deleted && $object->{STATE_IN_DB()})
             {
               my $dbh = $object->dbh;
 
@@ -2210,26 +2152,19 @@ sub objects_by_key
           return $self->{$key} = (@_ == 1 && ref $_[0] eq 'ARRAY') ? $_[0] : [ @_ ];
         }
 
-        my $objects;
-
-        if(@_ == 1)
+        # Set to undef resets the attr  
+        if(@_ == 1 && !defined $_[0])
         {
-          # Set to undef resets the attr  
-          unless(defined $_[0])
-          {
-            # Delete any pending set or add actions
-            delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'set'};
-            delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'};
+          # Delete any pending set or add actions
+          delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'set'};
+          delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'};
 
-            $self->{$key} = undef;
-            return;
-          }
-
-          if(ref $_[0] eq 'ARRAY') { $objects = $_[0]  }
-          else                     { $objects = [ @_ ] }
+          $self->{$key} = undef;
+          return;
         }
-        else { $objects = [ @_ ] }
 
+        my $objects = __args_to_objects($self, $key, $ft_class, \$ft_pk, \@_);
+          
         my $db = $self->db;
 
         # Set up column map
@@ -2298,8 +2233,10 @@ sub objects_by_key
             # the current transaction
             $object->db($db); 
 
-            # Try to load the object if doesn't appear to exist already
-            unless($object->{STATE_IN_DB()})
+            # Try to load the object if doesn't appear to exist already.
+            # If anything was delete above, we have to try loading no
+            # matter what.
+            unless(!$deleted && $object->{STATE_IN_DB()})
             {
               my $dbh = $object->dbh;
 
@@ -2457,13 +2394,7 @@ sub objects_by_key
         }
       }
 
-      my $objects;
-
-      if(@_ == 1 && ref $_[0] eq 'ARRAY') 
-      {
-        $objects = $_[0];
-      }
-      else { $objects = [ @_ ] }
+      my $objects = __args_to_objects($self, $key, $ft_class, \$ft_pk, \@_);
 
       my($db, $started_new_tx);
 
@@ -2532,13 +2463,7 @@ sub objects_by_key
       }
 
       # Add all the new objects
-      my $objects;
-
-      if(@_ == 1 && ref $_[0] eq 'ARRAY') 
-      {
-        $objects = [ @{$_[0]} ];
-      }
-      else { $objects = [ @_ ] }
+      my $objects = __args_to_objects($self, $key, $ft_class, \$ft_pk, \@_);
 
       # Add the objects to the list, if it's defined
       if(defined $self->{$key})
@@ -2833,6 +2758,10 @@ sub objects_by_map
   $map_to   ||= $require_objects->[0];
   $map_from ||= $local_rel;
 
+  # This var will old the name of the primary key column in the foreign 
+  # class, provided that there is only one column in that key.
+  my $ft_pk;
+
   if($interface eq 'get_set' || $interface eq 'get_set_load')
   {
     $methods{$name} = sub
@@ -2982,14 +2911,7 @@ sub objects_by_map
           die $map_manager->error  unless(defined $deleted);
 
           # Save all the new objects
-          my $objects;
-
-          if(@_ == 1)
-          {    
-            if(ref $_[0] eq 'ARRAY') { $objects = $_[0]  }
-            else                     { $objects = [ @_ ] }
-          }
-          else { $objects = [ @_ ] }
+          my $objects = __args_to_objects($self, $key, $foreign_class, \$ft_pk, \@_);
 
           foreach my $object (@$objects)
           {
@@ -2998,18 +2920,23 @@ sub objects_by_map
             # the current transaction
             $object->db($db); 
 
+            my $in_db = $object->{STATE_IN_DB()};
+
             # Try to load the object if doesn't appear to exist already
-            unless($object->{STATE_IN_DB()})
+            unless($in_db)
             {
               my $dbh = $object->dbh;
 
               # It's okay if this fails (e.g., if the primary key is undefined)
               local $dbh->{'PrintError'} = 0;
-              eval { $object->load(speculative => 1) };
+              eval { $in_db = $object->load(speculative => 1) };
             }
 
-            # Save the object
-            $object->save or die $object->error;
+            # Save the object, if necessary
+            unless($in_db)
+            {
+              $object->save or die $object->error;
+            }
 
             # Not sharing?  Aw.
             $object->db(undef)  unless($share_db);
@@ -3120,26 +3047,21 @@ sub objects_by_map
           return $self->{$key} = (@_ == 1 && ref $_[0] eq 'ARRAY') ? $_[0] : [@_];
         }
 
-        my $objects;
 
-        if(@_ == 1)
+        # Set to undef resets the attr  
+        if(@_ == 1 && !defined $_[0])
         {
-          # Set to undef resets the attr  
-          unless(defined $_[0])
-          {
-            # Delete any pending set or add actions
-            delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'set'};
-            delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'};
+          # Delete any pending set or add actions
+          delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'set'};
+          delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'};
 
-            $self->{$key} = undef;
-            return;
-          }
-
-          if(ref $_[0] eq 'ARRAY') { $objects = $_[0]  }
-          else                     { $objects = [ @_ ] }
+          $self->{$key} = undef;
+          return;
         }
-        else { $objects = [ @_ ] }
 
+        # Get all the new objects
+        my $objects = __args_to_objects($self, $key, $foreign_class, \$ft_pk, \@_);
+          
         # Set the attribute
         $self->{$key} = $objects;
 
@@ -3184,18 +3106,23 @@ sub objects_by_map
             # the current transaction
             $object->db($db); 
 
+            my $in_db = $object->{STATE_IN_DB()};
+
             # Try to load the object if doesn't appear to exist already
-            unless($object->{STATE_IN_DB()})
+            unless($in_db)
             {
               my $dbh = $object->dbh;
 
               # It's okay if this fails (e.g., if the primary key is undefined)
               local $dbh->{'PrintError'} = 0;
-              eval { $object->load(speculative => 1) };
+              eval { $in_db = $object->load(speculative => 1) };
             }
 
-            # Save the object
-            $object->save or die $object->error;
+            # Save the object, if necessary
+            unless($in_db)
+            {
+              $object->save or die $object->error;
+            }
 
             # Not sharing?  Aw.
             $object->db(undef)  unless($share_db);
@@ -3332,13 +3259,7 @@ sub objects_by_map
         }
       }
 
-      my $objects;
-
-      if(@_ == 1 && ref $_[0] eq 'ARRAY') 
-      {
-        $objects = $_[0];
-      }
-      else { $objects = [ @_ ] }
+      my $objects = __args_to_objects($self, $key, $foreign_class, \$ft_pk, \@_);
 
       my($db, $started_new_tx);
 
@@ -3364,18 +3285,23 @@ sub objects_by_map
           # the current transaction
           $object->db($db); 
 
+          my $in_db = $object->{STATE_IN_DB()};
+
           # Try to load the object if doesn't appear to exist already
-          unless($object->{STATE_IN_DB()})
+          unless($in_db)
           {
             my $dbh = $object->dbh;
 
             # It's okay if this fails (e.g., if the primary key is undefined)
             local $dbh->{'PrintError'} = 0;
-            eval { $object->load(speculative => 1) };
+            eval { $in_db = $object->load(speculative => 1) };
           }
 
-          # Save the object
-          $object->save or die $object->error;
+          # Save the object, if necessary
+          unless($in_db)
+          {
+            $object->save or die $object->error;
+          }
 
           # Not sharing?  Aw.
           $object->db(undef)  unless($share_db);
@@ -3430,14 +3356,8 @@ sub objects_by_map
         return undef;
       }
 
-      my $objects;
-
-      # Add all the new objects
-      if(@_ == 1 && ref $_[0] eq 'ARRAY') 
-      {
-        $objects = [ @{$_[0]} ];
-      }
-      else { $objects = [ @_ ] }
+      # Get all the new objects
+      my $objects = __args_to_objects($self, $key, $foreign_class, \$ft_pk, \@_);
 
       # Add the objects to the list, if it's defined
       if(defined $self->{$key})
@@ -3478,18 +3398,23 @@ sub objects_by_map
           # the current transaction
           $object->db($db); 
 
+          my $in_db = $object->{STATE_IN_DB()};
+
           # Try to load the object if doesn't appear to exist already
-          unless($object->{STATE_IN_DB()})
+          unless($in_db)
           {
             my $dbh = $object->dbh;
 
             # It's okay if this fails (e.g., if the primary key is undefined)
             local $dbh->{'PrintError'} = 0;
-            eval { $object->load(speculative => 1) };
+            eval { $in_db = $object->load(speculative => 1) };
           }
 
-          # Save the object
-          $object->save or die $object->error;
+          # Save the object, if necessary
+          unless($in_db)
+          {
+            $object->save or die $object->error;
+          }
 
           # Not sharing?  Aw.
           $object->db(undef)  unless($share_db);
@@ -3521,6 +3446,108 @@ sub objects_by_map
   else { Carp::croak "Unknown interface: $interface" }
 
   return \%methods;
+}
+
+sub __args_to_objects
+{
+  my($self, $name, $object_class, $pk_name, $args) = @_;
+
+  if(@$args == 1 && ref $args->[0] eq 'ARRAY')
+  {
+    $args = $args->[0];
+  }
+
+  unless(defined $$pk_name)
+  {
+    my @cols = $object_class->meta->primary_key_column_names;
+  
+    if(@cols == 1)
+    {
+      $$pk_name = $cols[0];
+    }
+    else
+    {
+      $$pk_name = 0;
+    }
+  }
+
+  my @objects;
+
+  foreach my $arg (@$args)
+  {
+    # Already an object
+    if(UNIVERSAL::isa($arg, $object_class))
+    {
+      push(@objects, $arg);
+    }
+    else
+    {  
+      my $ref = ref $arg;
+      
+      if($ref eq 'HASH')
+      {
+        push(@objects, $object_class->new(%$arg));
+      }
+      elsif(!$ref && $pk_name)
+      {
+        push(@objects, $object_class->new($$pk_name => $arg));
+      }
+      else
+      {
+        Carp::croak "Invalid $name argument: $arg";
+      }
+    }
+  }
+
+  return \@objects;
+}
+
+sub __args_to_object
+{
+  my($self, $name, $object_class, $pk_name, $args) = @_;
+
+  unless(defined $$pk_name)
+  {
+    my @cols = $object_class->meta->primary_key_column_names;
+  
+    if(@cols == 1)
+    {
+      $$pk_name = $cols[0];
+    }
+    else
+    {
+      $$pk_name = 0;
+    }
+  }
+
+  if(@$args == 1)
+  {
+    my $arg = $args->[0];
+
+    # Already an object
+    if(UNIVERSAL::isa($arg, $object_class))
+    {
+      return $arg;
+    }
+    elsif(ref $arg eq 'HASH')
+    {
+      return $object_class->new(%$arg);
+    }
+    elsif($pk_name)
+    {
+      return $object_class->new($$pk_name => $arg);
+    }
+    else
+    {
+      Carp::croak "Invalid $name argument: $arg";
+    }
+  }
+  elsif(@$args % 2 == 0)
+  {
+    return $object_class->new(@$args);
+  }
+
+  Carp::croak "Invalid $name argument: @$args";
 }
 
 1;

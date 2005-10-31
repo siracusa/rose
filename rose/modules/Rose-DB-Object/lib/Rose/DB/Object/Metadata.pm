@@ -2123,7 +2123,7 @@ sub insert_sql_with_inlining
   (
     ($self->{'insert_sql_with_inlining_start'} ||=
     'INSERT INTO ' . $self->fq_table_sql . "\n(\n" .
-    join(",\n", map { "  $_" } $self->column_names_sql) .
+    join(",\n", map { "  $_" } $self->column_names_sql($db)) .
     "\n)\nVALUES\n(\n") . join(",\n", @places) . "\n)",
     \@bind
   );
