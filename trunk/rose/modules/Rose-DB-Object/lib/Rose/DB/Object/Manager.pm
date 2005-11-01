@@ -116,6 +116,13 @@ sub make_manager_methods
                  " or override the object_class() method in $target_class" : '');
   }
 
+  eval "require $object_class";
+   
+  if($@)
+  {
+    Carp::croak "Could not load object class $object_class - $@";
+  }
+
   if(!$args{'methods'})
   {
     unless($args{'base_name'})
