@@ -72,7 +72,7 @@ The steps are simple:
 
 Operations 2 through 6 are done through the L<metadata object|Rose::DB::Object::Metadata> associated with this class.  The table must have a primary key, and may have zero or more unique keys.  The primary key and each unique may contain multiple columns.
 
-Of course, L<earlier|/Preface> it was established that L<Rose::DB> needs to be set up for any L<Rose::DB::Object> class to work properly.  To that end, this tutorial assmumes the existence of a L<Rose::DB> subclass named L<My::DB> that is set up according to the L<best practices|Rose::DB::Tutorial> of L<Rose::DB>.  We need to make out C<Product> class use L<My::DB>.  Here's one way to do it:
+Of course, L<earlier|/Preface> it was established that L<Rose::DB> needs to be set up for any L<Rose::DB::Object> class to work properly.  To that end, this tutorial assumes the existence of a L<Rose::DB> subclass named L<My::DB> that is set up according to the L<best practices|Rose::DB::Tutorial> of L<Rose::DB>.  We need to make out C<Product> class use L<My::DB>.  Here's one way to do it:
 
     package Product;
     
@@ -127,6 +127,18 @@ The lesson is simple: when in doubt, subclass.  A few minutes spent now can save
 
 Now that we have our C<Product> class all set up, let's see what we can do with it.
 
+=head4 Get and set column values
+
+By default, each column has a combined accessor/mutator method.  When passed a value, the column value is set and returned.  When called with no arguments, the value is simply returned.
+
+    $p->name('Bike'); # set name
+    print $p->name;   # get name
+
+Since L<Rose::DB::Object> inherits from L<Rose::Object>, each object method is also a valid constructor argument.
+
+    $p = Product->new(name => 'Cane', price => 1.99);
+    print $p->price; # 1.99
+
 =head4 Load
 
 An object can be loaded based on a primary key.
@@ -139,7 +151,7 @@ An object can also be loaded based on a unique key:
     $p = Product->new(name => 'Sled'); # unique key
     $p->load; # Load the object from the database
 
-If there is no row in the database table with the specified primary or unqiue key value, the call to L<load()|Rose::DB::Object/load> will fail.  Under the default L<error mode|Rose::DB::Object::Metadata/error_mode>, an exception will be thrown.  To  check whether or not such a row exists, use the C<speculative> parameter.
+If there is no row in the database table with the specified primary or unique key value, the call to L<load()|Rose::DB::Object/load> will fail.  Under the default L<error mode|Rose::DB::Object::Metadata/error_mode>, an exception will be thrown.  To  check whether or not such a row exists, use the C<speculative> parameter.
 
     $p = Product->new(id => 1);
 
@@ -208,7 +220,163 @@ It works just as well with objects that have been loaded or saved.
     $p2->load;   # Load an existing object
     $p2->delete; # Now delete the object
 
-=head2 Getting Started
+=head3 Multiple objects
+
+The examples above show select, insert, update, and delete operations on one object at time based on primary or unique keys.  What about manipulating objects based on other criteria?  What about manipulating multiple objects simultaneously?  Enter L<Rose::DB::Object::Manager>, or just "the manager" for short.
+
+But why a separate class for dealing with multiple objects?  Why not simply add more methods to the object itself?  Say, a C<search()> method to go alongside L<load|Rose::DB::Object/load>, L<save|Rose::DB::Object/save>, L<delete|Rose::DB::Object/delete> and friends?  There are several reasons.
+
+It's somewhat "semantically impure" for the class that represents a single object to also be the class that's used to fetch multiple objects.  It's also important to keep the object method namespace sparsely populated as possible.  Each new object method prevents a column with the same name from using that method name.  L<Rose::DB::Object> tries to keep the list of L<reserved method names|Rose::DB::Object/"RESERVED METHODS"> as small as possible.
+
+Inevitably, classes grow.  It's important for the object manager class to be separate from the object class itself so each class can grow happily in isolation, with no potential clashes.
+
+All of that being said, L<Rose::DB::Object::Manager> does include support for adding manager methods to the object class.  Obviously, this practice is not recommended, but it exists if you really want it.
+
+Anyway, let's see some example.  Making a manager class is simply a matter of inheriting from L<Rose::DB::Object::Manager>, specifying the object class, and then creating a series of appropriately named methods.
+
+    package Product::Manager;
+
+    use Rose::DB::Object::Manager;
+    our @ISA = qw(Rose::DB::Object::Manager);
+
+    sub object_class { 'Product' }
+
+    __PACKAGE__->make_manager_methods('products');
+
+The call to L<make_manager_methods()|Rose::DB::Object::Manager/make_manager_methods> creates the following methods:
+
+    get_products
+    get_products_iterator
+    get_products_count
+    delete_products
+    update_products
+
+The names are pretty much self-explanatory.  You can read the L<Rose::DB::Object::Manager> documentation for all the gory details.  The important thing to note is that the methods were all named based on the "products" argument to L<make_manager_methods()|Rose::DB::Object::Manager/make_manager_methods>.  You can see how "products" has been incorporated into each of the method names.  Each of these methods is a thin wrapper around the generically-named methods in L<Rose::DB::Object::Manager>.  The wrappers pass the specified object class to the generic methods.
+
+If you decide not to heed my advice and create these methods inside your L<Rose::DB::Object>-derived class directly, then just call L<make_manager_methods()|Rose::DB::Object::Manager/make_manager_methods> from within your object class.
+
+    package Product;
+
+    use Rose::DB::Object::Manager;
+
+    use My::DB::Object;
+    our @ISA = qw(My::DB::Object);
+    ...    
+    Rose::DB::Object::Manager->make_manager_methods('products');
+
+This will be the last you see of this technique in this tutorial.  All of the examples will assume that the recommended approach is used instead.
+
+=head4 Fetching objects
+
+The most common task for the manager is fetching multiple objects.  We'll use the C<get_products()> method to do that.  It's based on the L<get_objects()|Rose::DB::Object::Manager/get_objects> method, which takes many parameters.  Most are optional.  In fact, passing no arguments at all will simply fetch every C<Product> object in the database.
+
+    $products = Product::Manager->get_products();
+
+    foreach my $product (@$products)
+    {
+      print $product->name, "\n";
+    }
+
+The return value is a reference to an array in the example above.  A regular array also works.
+
+    @products = Product::Manager->get_products();
+
+Now let's go to the other extreme.
+
+    $products = 
+      Product::Manager->get_products(
+        query =>
+        [
+          name => { like => '%Hat' },
+          id   => { ge => 7 },
+          or   => 
+          [
+            price => 5.00,
+            price => { lt => 10.00 },
+          ],
+        ],
+        sort_by => 'name',
+        limit   => 10,
+        offset  => 50);
+
+Queries support nested boolean logic and several different kinds of comparison operators.  For a full explanation of all the options, see the L<Rose::DB::Object::Manager> documentation.
+
+The iterator method takes the same kinds of arguments, but returns an iterator that will fetch the objects from the database one at a time.
+
+    $iterator = Product::Manager->get_products_iterator(...);
+
+    while($product = $iterator->next)
+    {
+      print $product->id, ' ', $product->name, "\n";
+
+      $iterator->finish  if(...);  # exit early?
+    }
+  
+    print $iterator->total; # total iterated over
+
+=head4 Counting objects
+
+Counting objects is straightforward.  The C<get_products_count()> method takes the same same kinds of arguments as C<get_products()> and C<get_products_iterator()>.  (Noticing a pattern here?)  I returns the count.
+
+    $num_cheap_products = 
+      Product::Manager->get_products_count(
+        query => [ price => { lt => 1.00 } ]);
+
+=head4 Deleting objects
+
+The C<delete_products()> method accepts the same kinds of C<query> arguments as the manager methods described above, only it uses the parameter name C<where> instead.
+
+    $num_rows_deleted =
+      Product::Manager->delete_products(
+        where =>
+        [
+          id    => { ne => 123 },
+          name  => { like => 'Wax%' },
+        ]);
+
+=head4 Updating objects
+
+The C<update_products()> method accepts the same kinds of arguments as the C<delete_products()> method, plus a C<set> parameter to specify the actual update information.
+
+    $num_rows_updated =
+      Product::Manager->update_products(
+        set =>
+        {
+          price => 5.00,
+        },
+        where =>
+        [
+          price => 4.99,
+          id    => { gt => 100 },
+        ]);
+
+
+
+=head3 The end of the beginning
+
+This section covers the I<bare minimum> usage and functionality of the L<Rose::DB::Object> module distribution.  Using these features alone, you can automate the basic CRUD operations (Create, Retrieve, Update, and Delete) for single or multiple objects.  But it's almost a shame to stop at this point.  There's a lot more that L<Rose::DB::Object> can do for you.  The "sweet spot" of effort vs. results is much farther along the curve.
+
+In the next section, we will expand upon our C<Product> class and tap more of L<Rose::DB::Object>'s features.
+
+=head2 Your first "real" class
+
+Let's imagine that the C<products> table has expanded.  It now looks like this.
+
+    CREATE TABLE products
+    (
+      id      SERIAL NOT NULL PRIMARY KEY,
+      name    VARCHAR(255) NOT NULL,
+      price   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+
+      status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
+                CHECK(status IN ('inactive', 'active', 'defunct')),
+
+      date_created  TIMESTAMP NOT NULL DEFAULT NOW(),
+      release_date  TIMESTAMP,
+      
+      UNIQUE(name)
+    );
+
 
 =head1 DEVELOPMENT POLICY
 
