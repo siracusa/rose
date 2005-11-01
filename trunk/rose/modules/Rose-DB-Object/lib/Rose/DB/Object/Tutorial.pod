@@ -16,7 +16,7 @@ Similarly, the traditional "1;" true value used at the end of each ".pm" file ha
 
 =head1 TUTORIAL
 
-=head2 Getting Started
+=head2 Preface
 
 Before doing anything useful with L<Rose::DB::Object>, it's necessary to create and configure a L<Rose::DB> subclass through which L<Rose::DB::Object>-derived objects will access the database.
 
@@ -26,7 +26,7 @@ The PostgreSQL database will be used in the examples in this tutorial, but the f
 
 This tutorial is based on a fictional database schema belonging to a store-like application.  Both the database schema the corresponding Perl classes will evolve over the course of this tutorial.
 
-=head2 Getting Started
+=head2 Getting started
 
 Let's start with a single table in our fictional store database.
 
@@ -34,14 +34,181 @@ Let's start with a single table in our fictional store database.
     (
       id      SERIAL NOT NULL PRIMARY KEY,
       name    VARCHAR(255) NOT NULL,
-      price   DECIMAL(10,2) NOT NULL DEFAULT 0.00
+      price   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+      
+      UNIQUE(name)
     );
 
-...
+Here's a basic L<Rose::DB::Object> class to front that table:
 
+    package Product;
+    
+    use Rose::DB::Object;
+    our @ISA = qw(Rose::DB::Object);
+    
+    __PACKAGE__->meta->table('products);
+    __PACKAGE__->meta->columns(qw(id name price));
+    __PACKAGE__->meta->primary_key_columns('id');
+    __PACKAGE__->meta->add_unique_key('name');
+    __PACKAGE__->meta->initialize;
 
+The steps are simple:
 
+=over 4
 
+=item 1. Inherit from L<Rose::DB::Object>.
+
+=item 2. Name the table.
+
+=item 3. Name the columns.
+
+=item 4. Name the primary key column(s).
+
+=item 5. Add unique keys (if any).
+
+=item 6. Initialize.
+
+=back
+
+Operations 2 through 6 are done through the L<metadata object|Rose::DB::Object::Metadata> associated with this class.  The table must have a primary key, and may have zero or more unique keys.  The primary key and each unique may contain multiple columns.
+
+Of course, L<earlier|/Preface> it was established that L<Rose::DB> needs to be set up for any L<Rose::DB::Object> class to work properly.  To that end, this tutorial assmumes the existence of a L<Rose::DB> subclass named L<My::DB> that is set up according to the L<best practices|Rose::DB::Tutorial> of L<Rose::DB>.  We need to make out C<Product> class use L<My::DB>.  Here's one way to do it:
+
+    package Product;
+    
+    use My::DB;
+
+    use Rose::DB::Object;
+    our @ISA = qw(Rose::DB::Object);
+    
+    __PACKAGE__->meta->table('products);
+    __PACKAGE__->meta->columns(qw(id name price));
+    __PACKAGE__->meta->primary_key_columns('id');
+    __PACKAGE__->meta->add_unique_key('name');
+    __PACKAGE__->meta->initialize;
+    
+    sub init_db { My::DB->new }
+
+Now C<Product> will create a L<My::DB> object when it needs to connect to the database.
+
+=head3 Setting up your own base class
+
+Looking forward, it's likely that all of our L<Rose::DB::Object>-derived classes will want to use L<My::DB> objects when connecting to the database.  It's tedious to repeat this code in all of those classes.  A subclass can provide a single, shared location for that code.
+
+    package My::DB::Object;
+    
+    use My::DB;
+
+    use Rose::DB::Object;
+    our @ISA = qw(Rose::DB::Object);
+    
+    sub init_db { My::DB->new }
+
+Now the C<Product> class can inherit from C<My::DB::Object> instead of inheriting from L<Rose::DB::Object> directly.
+
+    package Product;
+
+    use My::DB::Object;
+    our @ISA = qw(My::DB::Object);
+    
+    __PACKAGE__->meta->table('products);
+    __PACKAGE__->meta->columns(qw(id name price));
+    __PACKAGE__->meta->primary_key_columns('id');
+    __PACKAGE__->meta->add_unique_key('name');
+    __PACKAGE__->meta->initialize;
+
+This use of a subclass is strongly recommended.  You will see this pattern repeated several times in this tutorial.  The creation of seemingly "trivial" subclasses is a cheap and easy way to ensure ease of extensibility later on.  
+
+For example, imagine we want to add a C<clone()> method to all of our database objects.  If they all inherit directly from C<Rose::DB::Object>, that's not easy to do.  But if they all inherit from our C<My::DB::Object>, we can just add the C<clone()> method to that class.
+
+The lesson is simple: when in doubt, subclass.  A few minutes spent now can save you a lot more time down the road.
+
+=head3 Database objects in action
+
+Now that we have our C<Product> class all set up, let's see what we can do with it.
+
+=head4 Load
+
+An object can be loaded based on a primary key.
+
+    $p = Product->new(id => 1); # primary key
+    $p->load; # Load the object from the database
+
+An object can also be loaded based on a unique key:
+
+    $p = Product->new(name => 'Sled'); # unique key
+    $p->load; # Load the object from the database
+
+If there is no row in the database table with the specified primary or unqiue key value, the call to L<load()|Rose::DB::Object/load> will fail.  Under the default L<error mode|Rose::DB::Object::Metadata/error_mode>, an exception will be thrown.  To  check whether or not such a row exists, use the C<speculative> parameter.
+
+    $p = Product->new(id => 1);
+
+    unless($p->load(speculative => 1))
+    {
+      print "No such product with id = 1";
+    }
+
+Regardless of the L<error mode|Rose::DB::Object::Metadata/error_mode>, L<load()|Rose::DB::Object/load> will simply return true or false when the  C<speculative> parameter is used.
+
+=head4 Insert
+
+First, let's insert some rows.  To do that, we create objects and then L<save|Rose::DB::Object/save> them.
+
+    $p = Product->new(id => 123, name => 'Widget', price => 4.56);
+    $p->save; # Insert the object into the database
+
+The default L<error mode|Rose::DB::Object::Metadata/error_mode> will throw an exception if anything goes wrong during the save, so we don't have to check the return value.
+
+Here's another variation:
+
+    $p = Product->new(name => 'Widget', price => 1.23);
+    $p->save;
+
+    print $p->id; # print the auto-generated primary key value
+
+Since the primary key of the C<products> table, C<id>, is a SERIAL column, a new primary key value will be auto-generated if one is not specified.  After the object is saved, we can retrieve the auto-generated value.
+
+=head4 Update
+
+To update a row, simply L<save|Rose::DB::Object/save> an object that has been previously L<load|Rose::DB::Object/load>ed or L<save|Rose::DB::Object/save>d.
+
+    $p1 = Product->new(name => 'Sprocket', price => 9.99);
+    $p1->save; # Insert a new object into the database
+
+    $p1->price(12.00);
+    $p1->save; # Update the object in the database
+
+    $p2 = Product->new(id => 1);
+    $p2->load; # Load an existing object
+
+    $p2->name($p2->name . ' Mark II');
+    $p2->save; # Update the object in the database
+
+=head4 Delete
+
+An object can be deleted based on a primary key or a unique key.
+
+    $p = Product->new(id => 1); # primary key
+    $p->delete; # Delete the object from the database
+
+An object can also be deleted based on a unique key:
+
+    $p = Product->new(name => 'Sled'); # unique key
+    $p->delete; # Delete the object from the database
+    
+The L<delete|Rose::DB::Object/delete> method will return true if the row was deleted or did not exist, false otherwise.
+
+It works just as well with objects that have been loaded or saved.
+
+    $p1 = Product->new(name => 'Sprocket', price => 9.99);
+    $p1->save;   # Insert a new object into the database
+    $p1->delete; # Now delete the object
+
+    $p2 = Product->new(id => 1);
+    $p2->load;   # Load an existing object
+    $p2->delete; # Now delete the object
+
+=head2 Getting Started
 
 =head1 DEVELOPMENT POLICY
 
