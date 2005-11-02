@@ -231,6 +231,21 @@ sub refine_dbi_column_info
     $col_info->{'COLUMN_SIZE'} = $1;
   }
 
+  # Extract precision and scale from numeric types
+  if($col_info->{'pg_type'} =~ /^numeric/i)
+  {
+    if($col_info->{'COLUMN_SIZE'} =~ /^(\d+),(\d+)$/)
+    {
+      $col_info->{'COLUMN_SIZE'}    = $1;
+      $col_info->{'DECIMAL_DIGITS'} = $2;
+    }
+    elsif($col_info->{'pg_type'} =~ /^numeric\((\d+),(\d+)\)$/i)
+    {
+      $col_info->{'COLUMN_SIZE'}    = $2;
+      $col_info->{'DECIMAL_DIGITS'} = $1;
+    }
+  }
+
   # We currently treat all arrays the same, regardless of what they are 
   # arrays of: integer, character, float, etc.  So we covert TYPE_NAMEs
   # like 'integer[]' into 'array'
@@ -263,6 +278,11 @@ sub parse_dbi_column_info_default
     elsif(/^B'([01]+)'::(?:bit|"bit")$/)
     {
       return $1;
+    }
+    # Ignore defaults that look like function calls
+    elsif(/^\w+\(.*\)$/)
+    {
+      return undef;
     }
     # Handle sequence-based defaults elsewhere (if at all)
     elsif(/^nextval\(/)

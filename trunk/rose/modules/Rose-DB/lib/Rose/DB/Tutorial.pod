@@ -28,10 +28,8 @@ So, here's our initial L<Rose::DB> subclass.
   use Rose::DB;
   our @ISA = qw(Rose::DB);
 
-  use Rose::DB::Registry;
-
-  # Create a private registry for this class
-  __PACKAGE__->registry(Rose::DB::Registry->new);
+  # Use a private registry for this class
+  __PACKAGE__->use_private_registry;
 
 =head2 Designing your namespace
 

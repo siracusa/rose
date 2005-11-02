@@ -12,7 +12,7 @@ our @ISA = qw(Rose::DB::Object::Metadata::MethodMaker);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use overload
 (
@@ -30,6 +30,7 @@ Rose::Object::MakeMethods::Generic->make_methods
   scalar => 
   [
     'alias',
+    'ordinal_position',
     __PACKAGE__->common_method_maker_argument_names,
   ],
 
@@ -225,6 +226,8 @@ sub init_with_dbi_column_info
     $self->not_null(0);
   }
 
+  $self->ordinal_position($col_info->{'ORDINAL_POSITION'} || 0);
+
   return;
 }
 
@@ -236,7 +239,8 @@ sub perl_column_defintion_attributes
 
   ATTR: foreach my $attr ('type', sort keys %$self)
   {
-    if($attr =~ /^(?:name(?:_sql)?|is_primary_key_member|primary_key_position|method_name)$/)
+    if($attr =~ /^(?:name(?:_sql)? | is_primary_key_member | 
+                  primary_key_position | method_name | ordinal_position)$/x)
     {
       next ATTR;
     }
