@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
      STATE_SAVING ON_SAVE_ATTR_NAME);
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 sub scalar
 {
@@ -4047,6 +4047,10 @@ Create get/set methods for fixed-length character string attributes.
 =item Options
 
 =over 4
+
+=item C<check_in>
+
+A reference to an array of valid values.  When setting the attribute, if the new value is not equal (string comparison) to one of the valid values, a fatal error will occur.
 
 =item C<default>
 

@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.031';
+our $VERSION = '0.032';
 
 our $Debug = 0;
 
@@ -124,63 +124,12 @@ use Rose::Object::MakeMethods::Generic
 # Class methods
 #
 
-# Can't do this because drivers are subclasses too...
-# {
-#   my($class) = shift;
-# 
-#   unless($Registry{$class})
-#   {
-#     no strict 'refs';
-#     foreach my $subclass (@{$class . '::ISA'})
-#     {
-#       if(ref $Registry{$subclass} eq 'HASH')
-#       {
-#         foreach my $domain (keys %{$Registry{$subclass}})
-#         {
-#           $Registry{$class}{$domain} = {};
-# 
-#           foreach my $type (keys %{$Registry{$subclass}{$domain} ||= {}})
-#           {
-#             my %info;
-# 
-#             # Manually do a two-level copy (avoiding using Clone::Any
-#             # and friend for now)
-#             while(my($k, $v) = each(%{$Registry{$subclass}}))
-#             {
-#               if(!ref $v)
-#               {
-#                 $info{$k} = $v;
-#               }
-#               elsif(ref $v eq 'ARRAY')
-#               {
-#                 $info{$k} = [ @$v ];
-#               }
-#               elsif(ref $v eq 'HASH')
-#               {
-#                 $info{$k} = { %$v };
-#               }
-#               else
-#               {
-#                 Carp::croak "Encountered unexpected reference value in subclass ",
-#                             "data source registry: $subclass - $v";
-#               }
-#             }
-#             
-#             $Registry{$class}{$domain}{$type} = \%info;
-#           }
-#         }
-#         last;
-#       }
-#     }
-#   }
-# 
-#   return $Registry{$class} ||= {};
-# }
-
 sub register_db   { shift->registry->add_entry(@_)  }
 sub unregister_db { shift->registry->delete_entry(@_) }
 
 sub default_implicit_schema { undef }
+
+sub use_private_registry { shift->registry(Rose::DB::Registry->new) }
 
 sub modify_db
 {
@@ -1358,10 +1307,8 @@ Database registration can be included directly in your L<Rose::DB> subclass.  Th
     use Rose::DB;
     our @ISA = qw(Rose::DB);
 
-    use Rose::DB::Registry;
-
-    # Create a private registry for this class
-    __PACKAGE__->registry(Rose::DB::Registry->new);
+    # Use a private registry for this class
+    __PACKAGE__->use_private_registry;
 
     # Register data sources
     My::DB->register_db(
@@ -1434,10 +1381,14 @@ In most cases, it's wise to give your subclass its own private registry if it in
     use Rose::DB;
     our @ISA = qw(Rose::DB);
 
-    use Rose::DB::Registry;
-
-    # Create a private registry for this class
-    __PACKAGE__->registry(Rose::DB::Registry->new);
+    # Create a private registry for this class:
+    #
+    # either explicitly:
+    # use Rose::DB::Registry;
+    # __PACKAGE__->registry(Rose::DB::Registry->new);
+    #
+    # or use the convenience method:
+    __PACKAGE__->use_private_registry;
     ...
 
 Further subclasses of C<My::DB> may then inherit its registry object, if desired, or may create their own private registries in the manner shown above.
@@ -1459,6 +1410,17 @@ Unregisters an entire domain.  Returns true if the domain was unregistered succe
     Rose::DB->unregister_domain('test');
 
 Unregistering a domain removes all knowledge of all of the data sources that existed under it.  This may be harmful to any existing L<Rose::DB> objects that are associated with any of those data sources.
+
+=item use_private_registry
+
+This is a convenience method used to give a class its own private L<registry|/registry>.  In other words, this:
+
+    __PACKAGE__->use_private_registry;
+
+is equivalent to this:
+
+    use Rose::DB::Registry;
+    __PACKAGE__->registry(Rose::DB::Registry->new);
 
 =back
 

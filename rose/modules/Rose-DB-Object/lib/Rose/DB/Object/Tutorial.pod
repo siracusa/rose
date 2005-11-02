@@ -22,7 +22,7 @@ Before doing anything useful with L<Rose::DB::Object>, it's necessary to create 
 
 To get up to speed quickly with L<Rose::DB>, read the L<Rose::DB::Tutorial> documentation.  The rest of this tutorial will assume the existence of a C<My::DB> class as L<described|Rose::DB::Tutorial/"Multiple data sources using namespaces"> in the L<Rose::DB tutorial|Rose::DB::Tutorial>.
 
-The PostgreSQL database will be used in the examples in this tutorial, but the features demonstrated will not be specific to that database.  If you are following along with a different database, you may have to adjust the specific syntax used in the SQL table creation statements, but all of the same features should be present in some form.
+The PostgreSQL ("Postgres") database will be used in the examples in this tutorial, but the features demonstrated will not be specific to that database.  If you are following along with a different database, you may have to adjust the specific syntax used in the SQL table creation statements, but all of the same features should be present in some form.
 
 This tutorial is based on a fictional database schema belonging to a store-like application.  Both the database schema the corresponding Perl classes will evolve over the course of this tutorial.
 
@@ -35,18 +35,18 @@ Let's start with a single table in our fictional store database.
       id      SERIAL NOT NULL PRIMARY KEY,
       name    VARCHAR(255) NOT NULL,
       price   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-      
+
       UNIQUE(name)
     );
 
 Here's a basic L<Rose::DB::Object> class to front that table:
 
     package Product;
-    
+
     use Rose::DB::Object;
     our @ISA = qw(Rose::DB::Object);
-    
-    __PACKAGE__->meta->table('products);
+
+    __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->columns(qw(id name price));
     __PACKAGE__->meta->primary_key_columns('id');
     __PACKAGE__->meta->add_unique_key('name');
@@ -75,18 +75,18 @@ Operations 2 through 6 are done through the L<metadata object|Rose::DB::Object::
 Of course, L<earlier|/Preface> it was established that L<Rose::DB> needs to be set up for any L<Rose::DB::Object> class to work properly.  To that end, this tutorial assumes the existence of a L<Rose::DB> subclass named L<My::DB> that is set up according to the L<best practices|Rose::DB::Tutorial> of L<Rose::DB>.  We need to make out C<Product> class use L<My::DB>.  Here's one way to do it:
 
     package Product;
-    
+
     use My::DB;
 
     use Rose::DB::Object;
     our @ISA = qw(Rose::DB::Object);
-    
-    __PACKAGE__->meta->table('products);
+
+    __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->columns(qw(id name price));
     __PACKAGE__->meta->primary_key_columns('id');
     __PACKAGE__->meta->add_unique_key('name');
     __PACKAGE__->meta->initialize;
-    
+
     sub init_db { My::DB->new }
 
 Now C<Product> will create a L<My::DB> object when it needs to connect to the database.
@@ -96,12 +96,12 @@ Now C<Product> will create a L<My::DB> object when it needs to connect to the da
 Looking forward, it's likely that all of our L<Rose::DB::Object>-derived classes will want to use L<My::DB> objects when connecting to the database.  It's tedious to repeat this code in all of those classes.  A subclass can provide a single, shared location for that code.
 
     package My::DB::Object;
-    
+
     use My::DB;
 
     use Rose::DB::Object;
     our @ISA = qw(Rose::DB::Object);
-    
+
     sub init_db { My::DB->new }
 
 Now the C<Product> class can inherit from C<My::DB::Object> instead of inheriting from L<Rose::DB::Object> directly.
@@ -110,8 +110,8 @@ Now the C<Product> class can inherit from C<My::DB::Object> instead of inheritin
 
     use My::DB::Object;
     our @ISA = qw(My::DB::Object);
-    
-    __PACKAGE__->meta->table('products);
+
+    __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->columns(qw(id name price));
     __PACKAGE__->meta->primary_key_columns('id');
     __PACKAGE__->meta->add_unique_key('name');
@@ -207,7 +207,7 @@ An object can also be deleted based on a unique key:
 
     $p = Product->new(name => 'Sled'); # unique key
     $p->delete; # Delete the object from the database
-    
+
 The L<delete|Rose::DB::Object/delete> method will return true if the row was deleted or did not exist, false otherwise.
 
 It works just as well with objects that have been loaded or saved.
@@ -311,7 +311,7 @@ The iterator method takes the same kinds of arguments, but returns an iterator t
 
       $iterator->finish  if(...);  # exit early?
     }
-  
+
     print $iterator->total; # total iterated over
 
 =head4 Counting objects
@@ -350,8 +350,6 @@ The C<update_products()> method accepts the same kinds of arguments as the C<del
           id    => { gt => 100 },
         ]);
 
-
-
 =head3 The end of the beginning
 
 This section covers the I<bare minimum> usage and functionality of the L<Rose::DB::Object> module distribution.  Using these features alone, you can automate the basic CRUD operations (Create, Retrieve, Update, and Delete) for single or multiple objects.  But it's almost a shame to stop at this point.  There's a lot more that L<Rose::DB::Object> can do for you.  The "sweet spot" of effort vs. results is much farther along the curve.
@@ -373,9 +371,206 @@ Let's imagine that the C<products> table has expanded.  It now looks like this.
 
       date_created  TIMESTAMP NOT NULL DEFAULT NOW(),
       release_date  TIMESTAMP,
-      
+
       UNIQUE(name)
     );
+
+We could do a straightforward expansion of the C<Product> class as designed in the L<previous section|/"Getting started">.
+
+    package Product;
+
+    use My::DB::Object;
+    our @ISA = qw(My::DB::Object);
+
+    __PACKAGE__->meta->table('products');
+    __PACKAGE__->meta->columns(
+      qw(id name price status date_created release_date));
+    __PACKAGE__->meta->primary_key_columns('id');
+    __PACKAGE__->meta->add_unique_key('name');
+    __PACKAGE__->meta->initialize;
+
+But now we're faced with a few problems.  First, while the C<status> column only accepts a few pre-defined values, our C<Product> objects will gladly accept any value.  But maybe that's okay because a exception will be thrown when the object is saved anyway.
+
+The date/time fields are more troubling.  What is the format of a valid value for a TIMESTAMP column in Postgres?  Consulting the documentation will yield the answer, I suppose.  But now all the code that uses C<Product> objects has to be sure to format the C<date_created> and C<release_date> values accordingly.  That's even more difficult if some of those values come from external sources, such as a web form.
+
+Worse, what if we decide to change databases in the future?  We'd have to hunt down every single place where a C<date_created> or C<release_date> value is set and then modify the formatting to match whatever format the new database wants.  Oh, and we'll have to look that up too.  Blah.
+
+Finally, what about all those default values?  The C<price> column already had a default value, but now two more columns also have defaults.  True, the database will take care of this when a row is inserted, but now the Perl object is diverging more and more from the database representation.
+
+Let's solve all of these problems.  If we more accurately describe the columns, L<Rose::DB::Object> will do the rest.
+
+    package Product;
+
+    use My::DB::Object;
+    our @ISA = qw(My::DB::Object);
+
+    __PACKAGE__->meta->table('products');
+
+    __PACKAGE__->meta->columns
+    (
+      id   => { type => 'serial', primary_key => 1, not_null => 1 },
+      name => { type => 'varchar', length => 255, not_null => 1 },
+
+      price => 
+      {
+        type      => 'decimal',
+        precision => 10,
+        scale     => 2,
+        not_null  => 1,
+        default   => 0.00 
+      },
+
+      status => 
+      {
+        type     => 'varchar', 
+        length   => 128,
+        not_null => 1, 
+        default  => 'inactive', 
+        check_in => [ 'inactive', 'active', 'defunct' ]
+      },
+
+      date_created => { type => 'timestamp', not_null => 1 },
+      release_date => { type => 'timestamp' },
+    );
+
+    __PACKAGE__->meta->add_unique_key('name');
+    __PACKAGE__->meta->initialize;
+
+Before examining what new functionality this new class gives us, there are a few things to note about the definition.  First, the primary key is no longer specified with the L<primary_key_columns()|Rose::DB::Object::Metadata/primary_key_columns> method.  Instead, the C<id> column has its C<primary_key> attribute set to a true value in its description.
+
+Second, the C<date_created> doesn't have a default value listed in the column description, despite the fact that the database table definition does have a default value of C<NOW()>.  This is intentional.  In the case of "creation date" columns like this, it's usually better to let the database fill in the value as close as possible to the very moment the row is created.  On the other hand, this will mean that the Perl object will have an undefined value for that column until/unless it is loaded from the database.  It's a trade-off, but I've made my choice this time.
+
+Let's see the new C<Product> class in action. The defaults work as expected.
+
+    $p = Product->new;
+
+    print $p->status; # 'inactive'
+    print $p->price;  # 0.00
+
+The C<status> method now restricts its input, throwing an exception if the input is invalid.
+
+    $p->status('nonesuch'); # Boom!  Invalid status: 'nonesuch'
+
+The timestamp columns now accept any value that L<Rose::DateTime::Util>'s L<parse_date()|Rose::DateTime::Util/parse_date> method can understand.
+
+    $p->release_date('2005-01-22 18:00:57');
+    $p->release_date('12/24/1980 10am');
+
+See the L<Rose::DateTime::Util|Rose::DateTime::Util/parse_date> documentation for a full list of acceptable formats.
+
+Internally, date/time information is stored in L<DateTime> objects.
+
+    $dt = $p->release_date; # DateTime object
+
+Since  L<DateTime> objects can be modified in-place, doing a formerly thorny task like date math is now trivial.
+
+    $p->release_date->add(days => 1);
+
+The C<release_date()> method also accepts a L<DateTime> object as an input, of course:
+
+    $p->release_date(DateTime->new(...));
+
+There are even a few convenience functions triggered by passing a name/value pair.
+
+    # Thursday, December 25th 1980 at 10:00:00 AM
+    print $p->release_date(format => '%A, %B %E %Y at %t');
+
+    # Clone the DateTime object, truncate the clone, and return it
+    $month_start = $p->release_date(truncate => 'month');
+
+    print $month_start->strftime('%Y-%m-%d'); # 1980-12-01
+
+The upshot is that you no longer have to be concerned about the details of the date/time format(s) understood by the underlying database.  You're also free to use L<DateTime> objects as a convenient interchange format in your code.
+
+=head2 Auto-initialization and the convention manager
+
+The C<Product> class set up in the previous section is useful, but it also takes significantly more typing to set up.  Over the long term, it's still a clear win.  On the other hand, a lot of the details in the column descriptions are already known by the database: column types, default values, maximum lengths, etc.  It would be handy if we could ask the database for this information instead of looking it up and typing it in manually.
+
+This process of interrogating the database in order to extract metadata is called "auto-initialization."  There's an L<entire section|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> of the L<Rose::DB::Object::Metadata> documentation dedicated to the topic.  The executive summary is that auto-initialization saves work in the short-run, but at the cost of some long-term costs.  Read the L<friendly manual|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> for the details.  For the purposes of this tutorial, I will simply demonstrate the features, culminating in the suggested best practice.
+
+Let's start by applying auto-initialization to the C<Product> class.
+
+    package Product;
+
+    use My::DB::Object;
+    our @ISA = qw(My::DB::Object);
+
+    __PACKAGE__->meta->table('products');
+    __PACKAGE__->meta->auto_initialize;
+
+Believe it or not, that class is equivalent to the previous incarnation, right down to the details of the columns and the unique key.  As long as the table is specified, L<Rose::DB::Object> will dig all the rest of the information out of the database.  Handy!
+
+In fact, that class can be shortened even further with the help of the L<convention manager|Rose::DB::Object::ConventionManager>.
+
+    package Product;
+
+    use My::DB::Object;
+    our @ISA = qw(My::DB::Object);
+
+    __PACKAGE__->meta->auto_initialize;
+
+Now even the table is left unspecified.  How does L<Rose::DB::Object> know what to do in this case?  Why, by convention, of course.  The default convention manager dictates that class names are singular and title-cased and their corresponding table names are lowercase and plural.  Thus, the omitted table name in the C<Product> class is, by convention, assumed to be named "products".
+
+Like auto-initialization, convention managers are handy, but may also present some maintenance issues.  I tend to favor a more explicitly approach, but I can also imagine scenarios where the convention manager is a good fit.  Keep in mind that customized convention managers are possible, allowing individual organizations or projects to define their own conventions.  You can read all about it in the L<Rose::DB::Object::ConventionManager> documentation.
+
+Anyway, back to auto-initialization.  Yes, L<auto_initialize()|Rose::DB::Object::Metadata/auto_initialize> will dig out all sorts of interesting and important information for you.  Unfortunately, it will dig that information out I<every single time the class is loaded>.  Worse, this class will fail to load at all if a database connection is not immediately available.
+
+Auto-initialization seems like something that is best done only once, with the results being saved in a more conventional form.  That's just what L<Rose::DB::Object::Metadata>'s L<code generation|Rose::DB::Object::Metadata/"Code Generation"> functions are designed to do.  The C<perl_*> family of methods can generate snippets of Perl code, or even entire classes, based on the results of the auto-initialization process.  They'll even honor some basic code formatting directives.
+
+    package Product;
+
+    use My::DB::Object;
+    our @ISA = qw(My::DB::Object);
+
+    __PACKAGE__->meta->table('products');
+    __PACKAGE__->meta->auto_initialize;
+
+    print __PACKAGE__->meta->perl_class_definition(indent => 2,
+                                                   braces => 'bsd');
+
+Here's the output of that print statement.  A few long lines were manually wrapped, but it's otherwise unmodified.
+
+  package Product;
+
+  use strict;
+
+  use My::DB::Object
+  our @ISA = qw(My::DB::Object);
+
+  __PACKAGE__->meta->table('products');
+
+  __PACKAGE__->meta->columns
+  (
+    id           => { type => 'integer', not_null => 1 },
+    name         => { type => 'varchar', length => 255, not_null => 1 },
+    price        => { type => 'numeric', default => '0.00', 
+                      not_null => 1, precision => 2, scale => 10 },
+    status       => { type => 'varchar', default => 'inactive', 
+                      length => 128, not_null => 1 },
+    date_created => { type => 'timestamp', not_null => 1 },
+    release_date => { type => 'timestamp' },
+  );
+
+  __PACKAGE__->meta->primary_key_columns([ 'id' ]);
+
+  __PACKAGE__->meta->add_unique_keys([ 'name' ]);
+
+  __PACKAGE__->meta->initialize;
+
+  1;
+
+Copy and paste that output back into the "Product.pm" file and you're in business.
+
+The door is open to further automation through scripts that call the methods demonstrated above.  Although it's my inclination to work towards a static, explicit type of class definition, the tools are there for those who prefer a more dynamic approach.
+
+=head2 Foreign keys
+
+
+
+
+
+
+
 
 
 =head1 DEVELOPMENT POLICY

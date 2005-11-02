@@ -1,3 +1,7 @@
+0.032 (11.01.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added the use_private_registry() convenience method.
+
 0.031 (10.25.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Support for Rose::DB::Object 0.079.

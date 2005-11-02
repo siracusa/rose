@@ -191,7 +191,7 @@ sub subclass_special_informix { 'INFORMIX' }
 package My::DB3;
 @My::DB3::ISA = qw(My::DB2);
 
-My::DB3->registry(Rose::DB::Registry->new);
+My::DB3->use_private_registry;
 
 package My::DBReg;
 @My::DBReg::ISA = qw(Rose::DB);
