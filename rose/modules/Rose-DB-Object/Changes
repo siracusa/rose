@@ -1,6 +1,9 @@
-0.080 (10.26.2005) - John Siracusa <siracusa@mindspring.com>
+0.080 (11.01.2005) - John Siracusa <siracusa@mindspring.com>
 
+    * Added tutorial.
+    * Added support for new argument types to relationship methods.
     * Added a named, configurable map for convention manager classes.
+    * Added unique_key() convenience method to metadata objects.
 
 0.079 (10.25.2005) - John Siracusa <siracusa@mindspring.com>
 

@@ -49,7 +49,7 @@ Here's a basic L<Rose::DB::Object> class to front that table:
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->columns(qw(id name price));
     __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->add_unique_key('name');
+    __PACKAGE__->meta->unique_key('name');
     __PACKAGE__->meta->initialize;
 
 The steps are simple:
@@ -84,7 +84,7 @@ Of course, L<earlier|/Preface> it was established that L<Rose::DB> needs to be s
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->columns(qw(id name price));
     __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->add_unique_key('name');
+    __PACKAGE__->meta->unique_key('name');
     __PACKAGE__->meta->initialize;
 
     sub init_db { My::DB->new }
@@ -114,7 +114,7 @@ Now the C<Product> class can inherit from C<My::DB::Object> instead of inheritin
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->columns(qw(id name price));
     __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->add_unique_key('name');
+    __PACKAGE__->meta->unique_key('name');
     __PACKAGE__->meta->initialize;
 
 This use of a subclass is strongly recommended.  You will see this pattern repeated several times in this tutorial.  The creation of seemingly "trivial" subclasses is a cheap and easy way to ensure ease of extensibility later on.  
@@ -386,7 +386,7 @@ We could do a straightforward expansion of the C<Product> class as designed in t
     __PACKAGE__->meta->columns(
       qw(id name price status date_created release_date));
     __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->add_unique_key('name');
+    __PACKAGE__->meta->unique_key('name');
     __PACKAGE__->meta->initialize;
 
 But now we're faced with a few problems.  First, while the C<status> column only accepts a few pre-defined values, our C<Product> objects will gladly accept any value.  But maybe that's okay because a exception will be thrown when the object is saved anyway.
@@ -433,7 +433,7 @@ Let's solve all of these problems.  If we more accurately describe the columns, 
       release_date => { type => 'timestamp' },
     );
 
-    __PACKAGE__->meta->add_unique_key('name');
+    __PACKAGE__->meta->unique_key('name');
     __PACKAGE__->meta->initialize;
 
 Before examining what new functionality this new class gives us, there are a few things to note about the definition.  First, the primary key is no longer specified with the L<primary_key_columns()|Rose::DB::Object::Metadata/primary_key_columns> method.  Instead, the C<id> column has its C<primary_key> attribute set to a true value in its description.
@@ -481,6 +481,18 @@ There are even a few convenience functions triggered by passing a name/value pai
     print $month_start->strftime('%Y-%m-%d'); # 1980-12-01
 
 The upshot is that you no longer have to be concerned about the details of the date/time format(s) understood by the underlying database.  You're also free to use L<DateTime> objects as a convenient interchange format in your code.
+
+This ability isn't just limited to date/time columns.  Any data type that requires special formatting in the database, and/or is more conveniently dealt with as a more "rich" value on the Perl side of the fence (i.e., an object) is fair game for this treatment.
+
+Some other examples include the L<bitfield|Rose::DB::Object::Metadata::Column::Bitfield> column type, which is represented by a L<Bit::Vector> object on the Perl side, and the L<boolean|Rose::DB::Object::Metadata::Column::Boolean> column type which evaluates the "truth" of its arguments and coerces the value accordingly.  As always, values are formatted as required by the particular database.
+
+In some circumstances, L<Rose::DB::Object> can even "fake" a data type for use with a database that does not natively support it.  For example, the L<array|Rose::DB::Object::Metadata::Column::Array> column type is natively supported by Postgres, but it will also work with MySQL using a VARCHAR column type as a stand-in.
+
+Finally, if you're concerned about the performance implications of "inflating" column values from strings and numbers into (relatively) large objects, rest assured that such inflation is only done as needed.  For example, an object with ten date/time columns can be loaded, modified, and saved without ever creating a single L<DateTime> object, provided that none of the date/time columns were among those whose values were modified.
+
+Put another way, the methods that service the columns have an awareness of the producer and consumer of their data.  When data is coming from the database, the column methods accept it as-is.  When data is being sent to the database, it is formatted appropriately, if necessary.  If a column value was not modified since it was loaded from the database, then the value that was loaded is simply returned as-is.  In this way, data can make a round-trip without ever being inflated, deflated, or formatted.
+
+This behavior is not a requirement of all column methods, but it is a recommended practice--one followed by all the column classes that are part of the L<Rose::DB::Object> distribution.
 
 =head2 Auto-initialization and the convention manager
 
@@ -553,7 +565,7 @@ Here's the output of that print statement.  A few long lines were manually wrapp
 
   __PACKAGE__->meta->primary_key_columns([ 'id' ]);
 
-  __PACKAGE__->meta->add_unique_keys([ 'name' ]);
+  __PACKAGE__->meta->unique_keys([ 'name' ]);
 
   __PACKAGE__->meta->initialize;
 
@@ -565,11 +577,79 @@ The door is open to further automation through scripts that call the methods dem
 
 =head2 Foreign keys
 
+When a column in one table references a row in another table, the referring table is said to have a "foreign key."  As with primary and unique keys, L<Rose::DB::Object> supports foreign keys made up of more than one column.
 
+In the context of L<Rose::DB::Object>, a foreign key is a database-supported construct that ensures that any non-null value in a foreign key column actually refers to an existing row in the foreign table.  Databases that enforce this constraint are said to support "referential integrity."  Foreign keys are only applicable to L<Rose::DB::Object>-derived classes when the underlying database supports "native" foreign keys and enforces referential integrity.
 
+While it's possible to define foreign keys in an L<Rose::DB::Object>-derived class even if there is no support for them in the database, this is considered bad practice.  If you're just trying to express some sort of relationship between two tables, there's a more appropriate way to do so. (More on that in the L<next section|/Relationships>.)
 
+Let's add a foreign key to the C<products> table.  First, we'll need to create the table that the foreign key will reference.
 
+    CREATE TABLE vendors
+    (
+      id    SERIAL NOT NULL PRIMARY KEY,
+      name  VARCHAR(255) NOT NULL
+    );
 
+When dealing with any kind of inter-table relationship, L<Rose::DB::Object> requires a L<Rose::DB::Object>-derived class fronting each participating table.  So we need a class for the C<vendors> table.
+
+    package Vendor;  
+
+    use My::DB::Object
+    our @ISA = qw(My::DB::Object);
+  
+    __PACKAGE__->meta->table('vendors');
+    __PACKAGE__->meta->columns
+    (
+      id   => { type => 'serial', primary_key => 1, not_null => 1 },
+      name => { type => 'varchar', length => 255, not_null => 1 },
+    );
+    __PACKAGE__->meta->primary_key_columns('id');
+    __PACKAGE__->meta->initialize;
+
+Now we'll add the foreign key to our ever-growing C<products> table.
+
+    CREATE TABLE products
+    (
+      id      SERIAL NOT NULL PRIMARY KEY,
+      name    VARCHAR(255) NOT NULL,
+      price   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+
+      vendor_id  INT REFERENCES vendors (id),
+
+      status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
+                CHECK(status IN ('inactive', 'active', 'defunct')),
+
+      date_created  TIMESTAMP NOT NULL DEFAULT NOW(),
+      release_date  TIMESTAMP,
+
+      UNIQUE(name)
+    );
+
+Finally, here's how the foreign key definition looks in the Perl class.  (The C<Product> class is getting larger now, so previously established portions may be omitted from now on.)
+
+    package Product;  
+
+    use Vendor;
+
+    use My::DB::Object
+    our @ISA = qw(My::DB::Object);
+  
+    __PACKAGE__->meta->table('products');
+    __PACKAGE__->meta->columns(...);
+    __PACKAGE__->meta->primary_key_columns('id');
+    __PACKAGE__->meta->unique_key('name');
+    
+    __PACKAGE__->meta->foreign_keys
+    (
+      vendor =>
+      {
+        class       => 'Vendor',
+        key_columns => { vendor_id => 'id' }
+      },
+    );
+  
+    __PACKAGE__->meta->initialize;
 
 
 

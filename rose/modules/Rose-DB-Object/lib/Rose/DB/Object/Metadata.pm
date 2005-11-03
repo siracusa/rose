@@ -502,6 +502,7 @@ sub add_unique_keys
 }
 
 *add_unique_key = \&add_unique_keys;
+*unique_key     = \&add_unique_keys;
 
 sub delete_unique_keys { $_[0]->{'unique_keys'} = [] }
 
@@ -2868,7 +2869,7 @@ Example:
 
 =item B<add_unique_key KEY>
 
-This method is an alias for L<add_unique_key|/add_unique_key>.
+This method is an alias for L<add_unique_keys|/add_unique_keys>.
 
 =item B<add_unique_keys KEYS>
 
@@ -3293,6 +3294,10 @@ Get or set the database schema name.  This attribute is only applicable to Postg
 =item B<table [TABLE]>
 
 Get or set the name of the database table.  The table name should not include any sort of prefix to indicate the L<schema|/schema> or L<catalog|/catalog>; there are separate attributes for those values.
+
+=item B<unique_key KEY>
+
+This method is an alias for L<add_unique_keys|/add_unique_keys>.
 
 =item B<unique_keys KEYS>
 
