@@ -91,6 +91,56 @@ Of course, L<earlier|/Preface> it was established that L<Rose::DB> needs to be s
 
 Now C<Product> will create a L<My::DB> object when it needs to connect to the database.
 
+=head3 A brief digression: database objects
+
+The L<Rose::DB>-derived database object used by each L<Rose::DB::Object>-derived object is available via the L<db|Rose::DB::Object/db> object attribute.
+
+    $p = Product->new(...);
+    $db = $p->db; # My::DB object
+
+See the L<Rose::DB> documentation to explore the capabilities of these db objects.  Most of the time, you won't have to be concerned about them.  But it is sometime important to ensure that all objects share the same C<db>.  For example, imagine creating several C<Product> objects in a single transaction.
+
+    $db = My::DB->new(...);
+    
+    $db->begin_work; # Start transaction
+
+    # Use this db object with each product object
+
+    $p1 = Product->new(name => 'Bike', db => $db);
+    $p1->save;
+    
+    $p2 = Product->new(name => 'Sled', db => $db);
+    $p2->save;
+
+    $p3 = Product->new(name => 'Kite', db => $db);
+    $p3->save;
+    
+    if(...) # Now either commit them all or roll them all back
+    {
+      $db->commit;
+    }
+    else
+    {
+      $db->rollback;    
+    }
+
+Cross-database migration is another important use for C<db> objects.  Here's how to move a product from a production database to an archive database.
+
+    $production_db = My::DB->new('production');
+    $archive_db    = My::DB->new('archive');
+    
+    # Load bike from production database
+    $p = Product->new(name => 'Bike', db => $production_db);
+    $p->load;
+
+    # Save the bike into the archive database
+    $p->db($archive_db);
+    $p->save;
+
+    # Delete the bike from the production database
+    $p->db($production_db);
+    $p->delete;
+
 =head3 Setting up your own base class
 
 Looking forward, it's likely that all of our L<Rose::DB::Object>-derived classes will want to use L<My::DB> objects when connecting to the database.  It's tedious to repeat this code in all of those classes.  A subclass can provide a single, shared location for that code.
@@ -356,7 +406,7 @@ This section covers the I<bare minimum> usage and functionality of the L<Rose::D
 
 In the next section, we will expand upon our C<Product> class and tap more of L<Rose::DB::Object>'s features.
 
-=head2 Your first "real" class
+=head2 Mainstream usage
 
 Let's imagine that the C<products> table has expanded.  It now looks like this.
 
@@ -558,12 +608,13 @@ Here's the output of that print statement.  A few long lines were manually wrapp
   (
     id           => { type => 'integer', not_null => 1 },
     name         => { type => 'varchar', length => 255, not_null => 1 },
-    price        => { type => 'numeric', default => '0.00', 
-                      not_null => 1, precision => 2, scale => 10 },
+    price        => { type => 'numeric', default => '0.00', not_null => 1,
+                      precision => 2, scale => 10 },
+    vendor_id    => { type => 'integer' },
     status       => { type => 'varchar', default => 'inactive', 
                       length => 128, not_null => 1 },
-    date_created => { type => 'timestamp', not_null => 1, 
-                      default => 'now()' },
+    date_created => { type => 'timestamp', default => 'now()', 
+                      not_null => 1 },
     release_date => { type => 'timestamp' },
   );
 
@@ -643,6 +694,8 @@ Finally, here's how the foreign key definition looks in the Perl class.
     our @ISA = qw(My::DB::Object);
   
     __PACKAGE__->meta->table('products');
+
+    __PACKAGE__->meta->columns
     (
       id           => { type => 'integer', not_null => 1 },
       name         => { type => 'varchar', length => 255, not_null =>1 },
@@ -774,7 +827,348 @@ Setting the C<vendor_id> column directly has the same effect, of course.
     $p->vendor_id(undef); # set vendor_id = NULL
     $p->save;
 
+Before moving on to the next section, here's a brief note about auto-initialization and foreign keys.  Since foreign keys are a construct of the database itself, the auto-initialization process can actually discover them and create the appropriate foreign key metadata.
+
+Since all of the column and table names are still in sync with the expected conventions, the C<Product> class can still be defined like this:
+
+    package Product;
+
+    use My::DB::Object;
+    our @ISA = qw(My::DB::Object);
+
+    __PACKAGE__->meta->auto_initialize;
+
+while retaining all of the abilities demonstrated above.
+
+The L<perl_class_definition()|Rose::DB::Object::Metadata/perl_class_definition> method will produce the appropriate foreign key definitions, as expected.
+
+    package Product;
+
+    use My::DB::Object;
+    our @ISA = qw(My::DB::Object);
+
+    __PACKAGE__->meta->auto_initialize;
+
+    print __PACKAGE__->meta->perl_class_definition(indent => 2,
+                                                   braces => 'bsd');
+
+Here's the output.
+
+  package Product;
+  
+  use strict;
+  
+  use My::DB::Object
+  our @ISA = qw(My::DB::Object);
+  
+  __PACKAGE__->meta->table('products');
+  
+  __PACKAGE__->meta->columns
+  (
+    id           => { type => 'integer', not_null => 1 },
+    name         => { type => 'varchar', length => 255, not_null => 1 },
+    price        => { type => 'numeric', default => '0.00', not_null => 1,
+                      precision => 2, scale => 10 },
+    vendor_id    => { type => 'integer' },
+    status       => { type => 'varchar', default => 'inactive', 
+                      length => 128, not_null => 1 },
+    date_created => { type => 'timestamp', default => 'now()', 
+                      not_null => 1 },
+    release_date => { type => 'timestamp' },
+  );
+  
+  __PACKAGE__->meta->primary_key_columns([ 'id' ]);
+  
+  __PACKAGE__->meta->add_unique_keys([ 'name' ]);
+  
+  __PACKAGE__->meta->foreign_keys
+  (
+    vendor => 
+    {
+      class => 'Vendor',
+      key_columns => 
+      {
+        vendor_id => 'id',
+      },
+    },
+  );
+  
+  __PACKAGE__->meta->initialize;
+
 =head2 Relationships
+
+Foreign keys are a database-native representation of a specific kind of inter-table relationship.  This concept can be further generalized to encompass other kinds of relationships as well.  But before we delve into that, let's consider the kind of relationship that a foreign key represents.
+
+In the product and vendor example in the L<previous section|/"Foreign keys">, each product has one vendor.  (Actually it can have zero or one vendor, since the C<vendor_id> column allows NULL values.  But for now, we'll leave that aside.)
+
+When viewed in terms of the participating tables, things look slightly different.  Earlier, we established that several products can have the same vendor.  So the inter-table relationship is actually this: many rows from the C<products> table may refer to one row from the C<vendors> table.  
+
+L<Rose::DB::Object> describes inter-table relationships from the perspective of a given table by using the cardinality of the "local" table (C<products>) followed by the cardinality of the "remote" table (C<vendors>).  The foreign key in the C<products> table (and C<Product> class) therefore represents a "B<many to one>" relationship.
+
+If the relationship were different and each vendor was only allowed to have a single product, then the relationship would be "one to one."  Given only the foreign key definition as it exists in the database, it's not possible to determine whether the relationship is "many to one" or "one to one."  The default is "many to one" because that's the less restrictive choice.
+
+To override the default, a relationship type string can be included in the foreign description.
+
+    __PACKAGE__->meta->foreign_keys
+    (
+      vendor =>
+      {
+        class       => 'Vendor',
+        key_columns => { vendor_id => 'id' },
+        relationship_type => 'one to one',
+      },
+    );
+
+(The C<relationship_type> parameter may be shortened to C<rel_type>, if desired.)
+
+L<Rose::DB::Object> generalizes all inter-table relationships using a family of aptly named relationship objects.  Each inherits from the L<Rose::DB::Object::Metadata::Relationship> base class.
+
+Even foreign keys are included under the umbrella of this concept.  When foreign key metadata is added to a L<Rose::DB::Object>-derived class, a corresponding "many to one" or "one to one" relationship is actually added as well.  This relationship is simply a proxy for the foreign key.  It exists so that the set of relationship objects encompasses all relationships, even those that correspond to foreign keys in the database.  This makes iterating over all relationships in a class a simple affair.
+
+    foreach my $rel (Product->meta->relationships)
+    {
+      print $rel->name, ': ', $rel->type, "\n";
+    }
+
+For the C<Product> class, the output is:
+
+    vendor: many to one
+
+Given the two possible cardinalities, "many" and "one", it's easy to come up with a list of all possible inter-table relationships.  Here they are, listed with their corresponding relationship object classes.
+
+    one to one   - Rose::DB::Object::Metadata::Relationship::OneToOne
+    one to many  - Rose::DB::Object::Metadata::Relationship::OneToMany
+    many to one  - Rose::DB::Object::Metadata::Relationship::ManyToOne
+    many to many - Rose::DB::Object::Metadata::Relationship::ManyToMany
+
+We've already seen that "one to one" and "many to one" relationships can be represented by foreign keys in the database, but that's not a requirement.  It's perfectly possible to have either of those two kinds of relationships in, for example, a database that has no native support for foreign keys.  MySQL using the MyISAM data storage format is a common example.
+
+If you find yourself using such a database, there's no reason to lie to your Perl classes by adding foreign key metadata.  Instead, simple add a relationship.
+
+Here's an example of our C<Product> class as it might exist on a database that does not support foreign keys.  (The C<Product> class is getting larger now, so previously established portions may be omitted from now on.)
+
+    package Product;  
+
+    use Vendor;
+
+    use My::DB::Object
+    our @ISA = qw(My::DB::Object);
+  
+    __PACKAGE__->meta->table('products');
+    __PACKAGE__->meta->columns(...);
+    __PACKAGE__->meta->primary_key_columns('id');
+    __PACKAGE__->meta->add_unique_key('name');
+    
+    __PACKAGE__->meta->relationships
+    (
+      vendor =>
+      {
+        type       => 'many to one',
+        class      => 'Vendor',
+        column_map => { vendor_id => 'id' },
+      },
+    );
+  
+    __PACKAGE__->meta->initialize;
+
+They syntax and semantics are similar to those L<described|/"Foreign keys"> for foreign keys.  The only slight differences are the names and types of parameters accepted by relationship objects.
+
+In the example above, a "many to one" relationship named "vendor" is set up.  As demonstrated before, this definition can be reduced much further, allowing the convention manager to fill in the details.  But unlike the case with the foreign key definition, where only the name was supplied, we must provide the relationship type as well. 
+
+    __PACKAGE__->meta->relationships(vendor => { type => 'many to one' });
+
+There's an even more convenient shorthand for that:
+
+    __PACKAGE__->meta->relationships(vendor => 'many to one');
+
+(Again, this all depends on naming the tables, classes, and columns in accordance with the expectations of the L<convention manager|Rose::DB::Object::Metadata/convention_manager>.)  The resulting C<vendor()> and C<delete_vendor()> methods behave exactly the same as the methods created on behalf of the foreign key definition.
+
+Now let's explore the other two method types.  We'll start with "one to many" by adding region-specific pricing to our products.  First, we'll need a C<prices> table.
+
+    CREATE TABLE prices
+    (
+      id          SERIAL NOT NULL PRIMARY KEY,
+      product_id  INT NOT NULL REFERENCES products (id),
+      region      CHAR(2) NOT NULL DEFAULT 'US',
+      price       DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+      
+      UNIQUE(product_id, region)
+    );
+
+This table needs a corresponding L<Rose::DB::Object>-derived class, of course.
+
+    package Price;
+
+    use Product;
+
+    use My::DB::Object;
+    our @ISA = qw(My::DB::Object);
+
+    __PACKAGE__->meta->table('prices');
+
+    __PACKAGE__->meta->columns
+    (
+      id         => { type => 'serial', primary_key => 1, not_null => 1 },
+      product_id => { type => 'int', not_null => 1 },
+      region     => { type => 'char', length => 2, not_null => 1 },
+      price => 
+      {
+        type      => 'decimal',
+        precision => 10,
+        scale     => 2,
+        not_null  => 1,
+        default   => 0.00 
+      },
+    );
+
+    __PACKAGE__->meta->primary_key_columns('id');
+    __PACKAGE__->meta->add_unique_key([ 'product_id', 'region' ]);
+
+    __PACKAGE__->meta->foreign_keys
+    (
+      product =>
+      {
+        class       => 'Product',
+        key_columns => { product_id => 'id' },
+      },
+    );
+
+    __PACKAGE__->meta->initialize;
+
+The C<price> column will be removed from the C<products> table now.
+
+    ALTER TABLE products DROP COLUMN price;
+
+Finally, the C<Product> class needs to be modified.
+
+    package Product;  
+
+    use Price;
+    use Vendor;
+
+    use My::DB::Object
+    our @ISA = qw(My::DB::Object);
+  
+    __PACKAGE__->meta->table('products');
+    __PACKAGE__->meta->columns(...);
+    __PACKAGE__->meta->primary_key_columns('id');
+    __PACKAGE__->meta->add_unique_key('name');
+    
+    __PACKAGE__->meta->foreign_keys
+    (
+      vendor =>
+      {
+        class       => 'Vendor',
+        key_columns => { vendor_id => 'id' },
+      },
+    );
+  
+    __PACKAGE__->meta->relationships
+    (
+      prices =>
+      {
+        type       => 'one to many',
+        class      => 'Price',
+        column_map => { id => 'product_id' },
+      },
+    );
+
+    __PACKAGE__->meta->initialize;
+
+Note that both the L<column map|Rose::DB::Object::Metadata::Relationship::OneToMany/column_map> for the "one to many" relationship and the L<key columns|Rose::DB::Object::Metadata::ForeignKey/key_columns> for the foreign key map from "local" columns to "foreign" columns.
+
+The C<vendor_id> column in the local table (C<products>) is connected to the C<id> column in the foreign table (C<vendors>).
+
+    key_columns => { vendor_id => 'id' },
+
+The C<id> column in the local table (C<products>) is connected to the C<product_id> column in the foreign table (C<prices>).
+
+    column_map => { id => 'product_id' },
+
+This is all from the perspective of the class in which the definitions appear.  Note that things are reversed in the C<Price> class.
+
+    package Price;
+    ...
+    __PACKAGE__->meta->foreign_keys
+    (
+      product =>
+      {
+        class       => 'Product',
+        key_columns => { product_id => 'id' },
+      },
+    );
+    
+Here, the C<product_id> column in the local table (C<prices>) is connected to the C<id> column in the foreign table (C<products>).
+
+The methods created by "... to many" relationships behave much like their "... to one" and foreign key counterparts.  The main difference is that lists or references to arrays of the L<previously described|/"Foreign keys"> argument formats are also acceptable, while name/value pairs outside of a hashref are not.
+
+Here's a list of argument types accepted by "many to one" methods like C<prices>.
+
+=over 4
+
+=item * A list or reference to an array of objects of the appropriate class.
+
+=item * A list or reference to an array of hash references containing name/value pairs used to construct such an object.
+
+=item * A list or reference to an array of primary key value (but only if the foreign table has a single-column primary key).
+
+=back
+
+Setting a new list of prices will delete all the old prices.  As with foreign keys, any actual database modification happens when the parent object is saved.  here are some examples.
+
+    $p = Product->new(name => 'Kite');
+    $p->prices({ price => 1.23, region => 'US' },
+               { price => 4.56, region => 'UK' });
+    $p->save;
+    
+    # US: 1.23
+    # UK: 4.56
+    print join("\n", map { $_->region . ': ' . $_->price } $p->prices);
+
+Deleting a product now becomes slightly more interesting.  The naive approach fails.
+
+    $p->delete; # Fatal error!
+
+    # DBD::Pg::st execute failed: ERROR:  update or delete on "products"
+    # violates foreign key constraint "prices_product_id_fkey" on
+    # "prices"
+    # DETAIL:  Key (id)=(89) is still referenced from table "prices".
+
+Since rows in the C<prices> table now link to rows in the C<products> table, a product cannot be deleted until all of the prices that refer to it are also deleted.  There are a few ways to deal with this.
+
+The best solution is to add a trigger to the C<products> table itself in the database that makes sure to delete any associated prices before deleting a product.  This change will allow the naive approach shown above to work correctly.
+
+A less robust solution is necessary if your database does not support triggers.  One such solution is to manually delete the prices before deleting the product.  This can be done in several ways.  The prices can be deleted directly, like this.
+
+    foreach my $price ($p->prices)
+    {
+      $price->delete; # Delete all associated prices
+    }
+
+    $p->delete; # Now it's safe to delete the product
+
+The list or prices for the product can also be set to an empty list, which will have the effect of deleting all associated prices when the product is saved.
+
+    $p->prices([]);
+    $p->save;   # All associated prices deleted here
+    $p->delete; # Now it's safe to delete the product
+
+Finally, the L<delete()|Rose::DB::Object/delete> method can actually automate this process, and do it all inside a transaction to boot.
+
+    $p->delete(cascade => 1); # Delete all associated rows too
+
+Again, the recommended approach is to use triggers inside the database itself.  But if necessary, these other approaches will work too.
+
+
+
+
+
+
+
+
+
+
+
 
 
 
