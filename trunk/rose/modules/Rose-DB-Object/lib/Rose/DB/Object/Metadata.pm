@@ -502,7 +502,6 @@ sub add_unique_keys
 }
 
 *add_unique_key = \&add_unique_keys;
-*unique_key     = \&add_unique_keys;
 
 sub delete_unique_keys { $_[0]->{'unique_keys'} = [] }
 
