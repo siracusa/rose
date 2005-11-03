@@ -49,7 +49,7 @@ Here's a basic L<Rose::DB::Object> class to front that table:
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->columns(qw(id name price));
     __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->unique_key('name');
+    __PACKAGE__->meta->add_unique_key('name');
     __PACKAGE__->meta->initialize;
 
 The steps are simple:
@@ -84,7 +84,7 @@ Of course, L<earlier|/Preface> it was established that L<Rose::DB> needs to be s
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->columns(qw(id name price));
     __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->unique_key('name');
+    __PACKAGE__->meta->add_unique_key('name');
     __PACKAGE__->meta->initialize;
 
     sub init_db { My::DB->new }
@@ -114,7 +114,7 @@ Now the C<Product> class can inherit from C<My::DB::Object> instead of inheritin
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->columns(qw(id name price));
     __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->unique_key('name');
+    __PACKAGE__->meta->add_unique_key('name');
     __PACKAGE__->meta->initialize;
 
 This use of a subclass is strongly recommended.  You will see this pattern repeated several times in this tutorial.  The creation of seemingly "trivial" subclasses is a cheap and easy way to ensure ease of extensibility later on.  
@@ -386,7 +386,7 @@ We could do a straightforward expansion of the C<Product> class as designed in t
     __PACKAGE__->meta->columns(
       qw(id name price status date_created release_date));
     __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->unique_key('name');
+    __PACKAGE__->meta->add_unique_key('name');
     __PACKAGE__->meta->initialize;
 
 But now we're faced with a few problems.  First, while the C<status> column only accepts a few pre-defined values, our C<Product> objects will gladly accept any value.  But maybe that's okay because a exception will be thrown when the object is saved anyway.
@@ -429,16 +429,19 @@ Let's solve all of these problems.  If we more accurately describe the columns, 
         check_in => [ 'inactive', 'active', 'defunct' ]
       },
 
-      date_created => { type => 'timestamp', not_null => 1 },
+      date_created => { type => 'timestamp', not_null => 1, 
+                        default => 'now()' },
       release_date => { type => 'timestamp' },
     );
 
-    __PACKAGE__->meta->unique_key('name');
+    __PACKAGE__->meta->add_unique_key('name');
     __PACKAGE__->meta->initialize;
 
 Before examining what new functionality this new class gives us, there are a few things to note about the definition.  First, the primary key is no longer specified with the L<primary_key_columns()|Rose::DB::Object::Metadata/primary_key_columns> method.  Instead, the C<id> column has its C<primary_key> attribute set to a true value in its description.
 
-Second, the C<date_created> doesn't have a default value listed in the column description, despite the fact that the database table definition does have a default value of C<NOW()>.  This is intentional.  In the case of "creation date" columns like this, it's usually better to let the database fill in the value as close as possible to the very moment the row is created.  On the other hand, this will mean that the Perl object will have an undefined value for that column until/unless it is loaded from the database.  It's a trade-off, but I've made my choice this time.
+Second, note the default value for the C<date_created> column.  It's the function call C<now()>, which can actualyl only be run within the database.  That's okay, because L<Rose::DB::Object> will pass that value through to the database rather than trying to execute it itself.
+
+In the case of "creation date" columns like this, it's usually better to let the database provide the value as close as possible to the very moment the row is created.  On the other hand, this will mean that any newly created C<Product> object will have a "strange" value for that column (the string "now()") until/unless it is loaded from the database.  It's a trade-off.
 
 Let's see the new C<Product> class in action. The defaults work as expected.
 
@@ -559,13 +562,14 @@ Here's the output of that print statement.  A few long lines were manually wrapp
                       not_null => 1, precision => 2, scale => 10 },
     status       => { type => 'varchar', default => 'inactive', 
                       length => 128, not_null => 1 },
-    date_created => { type => 'timestamp', not_null => 1 },
+    date_created => { type => 'timestamp', not_null => 1, 
+                      default => 'now()' },
     release_date => { type => 'timestamp' },
   );
 
   __PACKAGE__->meta->primary_key_columns([ 'id' ]);
 
-  __PACKAGE__->meta->unique_keys([ 'name' ]);
+  __PACKAGE__->meta->add_unique_keys([ 'name' ]);
 
   __PACKAGE__->meta->initialize;
 
@@ -588,7 +592,9 @@ Let's add a foreign key to the C<products> table.  First, we'll need to create t
     CREATE TABLE vendors
     (
       id    SERIAL NOT NULL PRIMARY KEY,
-      name  VARCHAR(255) NOT NULL
+      name  VARCHAR(255) NOT NULL,
+      
+      UNIQUE(name)
     );
 
 When dealing with any kind of inter-table relationship, L<Rose::DB::Object> requires a L<Rose::DB::Object>-derived class fronting each participating table.  So we need a class for the C<vendors> table.
@@ -605,6 +611,7 @@ When dealing with any kind of inter-table relationship, L<Rose::DB::Object> requ
       name => { type => 'varchar', length => 255, not_null => 1 },
     );
     __PACKAGE__->meta->primary_key_columns('id');
+    __PACKAGE__->meta->add_unique_key('name');
     __PACKAGE__->meta->initialize;
 
 Now we'll add the foreign key to our ever-growing C<products> table.
@@ -626,7 +633,7 @@ Now we'll add the foreign key to our ever-growing C<products> table.
       UNIQUE(name)
     );
 
-Finally, here's how the foreign key definition looks in the Perl class.  (The C<Product> class is getting larger now, so previously established portions may be omitted from now on.)
+Finally, here's how the foreign key definition looks in the Perl class.
 
     package Product;  
 
@@ -636,20 +643,138 @@ Finally, here's how the foreign key definition looks in the Perl class.  (The C<
     our @ISA = qw(My::DB::Object);
   
     __PACKAGE__->meta->table('products');
-    __PACKAGE__->meta->columns(...);
+    (
+      id           => { type => 'integer', not_null => 1 },
+      name         => { type => 'varchar', length => 255, not_null =>1 },
+      price        => { type => 'numeric', default => '0.00', 
+                        not_null => 1, precision => 2, scale => 10 },
+      vendor_id    => { type => 'int' },
+      status       => { type => 'varchar', default => 'inactive', 
+                        length => 128, not_null => 1 },
+      date_created => { type => 'timestamp', not_null => 1, 
+                        default => 'now()' },
+      release_date => { type => 'timestamp' },
+    );
+
     __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->unique_key('name');
+    __PACKAGE__->meta->add_unique_key('name');
     
     __PACKAGE__->meta->foreign_keys
     (
       vendor =>
       {
         class       => 'Vendor',
-        key_columns => { vendor_id => 'id' }
+        key_columns => { vendor_id => 'id' },
       },
     );
   
     __PACKAGE__->meta->initialize;
+
+First, notice that the C<Vendor> class is loaded.  This is important.  A foreign key cannot be defined unless the L<Rose::DB::Object>-derived class that fronts the foreign table is also loaded.  The auto-initialization process will try to load such classes for you, but the "manual" approach shown above will not.  As usual, I prefer the more explicit approach.
+
+Next, note that a C<vendor_id> column is added to the column list.  This needs to be done independently of any foreign key definition.  It's a new column, so it needs to be in the column list.  There's nothing more to it than that.
+
+Finally, there's the foreign key definition itself.  The name/hashref-value pair passed to the L<foreign_keys()|Rose::DB::Object::Metadata/foreign_keys> method is (roughly) shorthand for this.
+
+    Rose::DB::Object::Metadata::ForeignKey->new(
+      name        => 'vendor',
+      class       => 'Vendor',
+      key_columns => { vendor_id => 'id' });
+
+In other words, C<vendor> is the name of the foreign key, and the rest of the information is used to set attributes on the L<foreign key object|Rose::DB::Object::Metadata::ForeignKey>.  You could, in fact, construct your own foreign key objects and pass them to  L<foreign_keys()|Rose::DB::Object::Metadata/foreign_keys> (or  L<add_foreign_keys()|Rose::DB::Object::Metadata/add_foreign_keys>, etc.) but that would require even more typing.
+
+Going in the other direction, since our class and column names match up with what the convention manager expects, we could actually shorten the code to this.
+
+    __PACKAGE__->meta->foreign_keys('vendor');
+
+Given only a foreign key name, the convention manager will derive the C<Vendor> class name and will find the C<vendor_id> column in the C<Product> class and match it up to the primary key of the C<vendors> table.  As with most things in L<Rose::DB::Object> class setup, you can be as explicit or as terse as you feel comfortable with, depending on how closely you conform to the expected conventions.
+
+So, what does this new C<vendor> foreign key do for us?  Let's add some data and see.  Imagine the following two 
+
+    $v = Vendor->new(name => 'Acme')->save;
+    $p = Product->new(name => 'Kite')->save;
+
+Note the idiomatic way to create and then save an object in "one step."  This is possible because both the L<new|Rose::DB::Object/new> and L<save|Rose::DB::Object/save> methods return the object itself.  Anyway, let's link the two objects.  One way to do it is to set the column values directly.
+
+    $p->vendor_id($v->id);
+    $p->save;
+
+To use this technique, we must know which columns link to each other, of course.  But it works.  We can see this by calling the method named after the foreign key itself: C<vendor()>.
+
+    $v = $p->vendor; # Vendor object
+    print $v->name;  # "Acme"
+
+The C<vendor()> method can be used to link the two objects as well.  Let's start over and try it that way:
+
+    $v = Vendor->new(name => 'Smith')->save;
+    $p = Product->new(name => 'Knife')->save;
+
+    $p->vendor($v);
+    $p->save;    
+
+    print $p->vendor->name; # "Smith"
+
+The C<vendor()> method actually takes several different kinds of arguments.  A C<Vendor> object was passed above, but other formats are possible.  Imagine a new product also made by Smith.
+
+    $p = Product->new(name => 'Rope')->save;
+    $p->vendor(name => 'Smith');
+    $p->save;
+
+Here the arguments passed to the C<vendor()> method are name/value pairs which will be used to construct the appropriate C<Vendor> object.  Since C<name> is a unique key in the C<vendors> table, the C<Vendor> class can look up the existing vendor named "Smith" and assign it to the "Rope" product.
+
+If no vendor named "Smith" existed, one would have been created when the product was saved.  In this case, the save process would take place within a transaction (assuming the database supports transactions) to ensure that both the product and vendor are created successfully, or neither is.
+
+The name/value pairs can also be provided in a reference to a hash.
+
+    $p = Product->new(name => 'Rope')->save;
+    $p->vendor({ name => 'Smith' });
+    $p->save;
+
+Here's yet another argument format.  Imagine that the "Acme" vendor id is 1.
+
+    $p = Product->new(name => 'Crate')->save;
+    $p->vendor(1);
+    $p->save;
+
+    print $p->vendor->name; # "Acme"
+
+Like the name/value pair argument format, a primary key value will be used to construct the appropriate object.  (This only works if the foreign table has a single-column primary key, of course.)  And like before, if such an object doesn't exist, it will be created.  But in this case, if no existing vendor object had an C<id> of 1, the attempt to create one would have failed because the C<name> column would have been null.
+
+To summarize, the foreign key method can take arguments in these forms.
+
+=over 4
+
+=item * An object of the appropriate class.
+
+=item * Name/value pairs used to construct such an object.
+
+=item * A reference to a hash containing name/value pairs used to construct such an object.
+
+=item * A primary key value (but only if the foreign table has a single-column primary key).
+
+=back
+    
+In each case, the foreign object will be added to the database it if does not already exist there.  This all happens when the "parent" (C<Product>) object is saved.  Until then, nothing is stored in the database.
+
+There's also another method created in response to the foreign key definition.  This one allows the foreign object to be deleted from the database.
+
+    print $p->vendor->name; # "Acme"
+    $p->delete_vendor();
+    $p->save; # The "Acme" vendor is deleted from the vendors table
+
+Again, the actual database modification takes place when the parent object is saved.  Note that this operation will fail if any other rows in the C<products> table still reference the Acme vendor.  And again, since this all takes place within a transaction (where supported), the entire operation will fail or succeed as a single unit.
+
+Finally, if we want to simply disassociate a product from its vendor, we can simply set the vendor to undef.
+
+    $p->vendor(undef); # This product has no vendor
+    $p->save;
+
+Setting the C<vendor_id> column directly has the same effect, of course.
+
+    $p->vendor_id(undef); # set vendor_id = NULL
+    $p->save;
+
+=head2 Relationships
 
 
 

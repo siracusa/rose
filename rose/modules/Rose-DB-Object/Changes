@@ -3,7 +3,6 @@
     * Added tutorial.
     * Added support for new argument types to relationship methods.
     * Added a named, configurable map for convention manager classes.
-    * Added unique_key() convenience method to metadata objects.
 
 0.079 (10.25.2005) - John Siracusa <siracusa@mindspring.com>
 

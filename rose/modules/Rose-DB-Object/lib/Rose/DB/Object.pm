@@ -1036,7 +1036,7 @@ EOF
 
       my $class = ref $self;
 
-      foreach my $thing (@fks || @rels)
+      foreach my $thing (@fks, @rels)
       {
         next  unless($thing->parent->class eq $class);
         my $type = 
