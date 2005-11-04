@@ -550,13 +550,27 @@ sub perl_columns_definition
 
   my @col_defs;
 
-  foreach my $column (sort { $a->ordinal_position <=> $b->ordinal_position } $self->columns)
+  no warnings 'uninitialized'; # ordinal_position may be undef
+  foreach my $column (sort __by_rank $self->columns)
   {
     push(@col_defs, $column->perl_hash_definition(inline       => 1, 
                                                   name_padding => $max_len));
   }
 
   return $def_start . join(",\n", map { "$indent$_" } @col_defs) . ",\n);\n";
+}
+
+sub __by_rank
+{  
+  my $pos1 = $a->ordinal_position;
+  my $pos2 = $b->ordinal_position;
+  
+  if(defined $pos1 && defined $pos2)
+  {
+    return $pos1 <=> $pos2 || lc $a->name cmp lc $b->name;
+  }
+  
+  return lc $a->name cmp lc $b->name;
 }
 
 sub perl_foreign_keys_definition
