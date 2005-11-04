@@ -3,8 +3,7 @@ package My::DB;
 use strict;
 use base 'Rose::DB';
 
-use Rose::DB::Registry;
-__PACKAGE__->registry(Rose::DB::Registry->new);
+__PACKAGE__->use_private_registry;
          
 My::DB->register_db
 (

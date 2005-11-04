@@ -1027,8 +1027,8 @@ Using L<Rose::DB::Object>'s L<auto-initialization|Rose::DB::Object::Metadata/"AU
   use base 'My::Object';
   __PACKAGE__->meta->relationships
   (
-    prices => { type => 'one to many'  },
-    colors => { type => 'many to many' },
+    prices => 'one to many',
+    colors => 'many to many',
   );
   __PACKAGE__->meta->auto_initialize;
 

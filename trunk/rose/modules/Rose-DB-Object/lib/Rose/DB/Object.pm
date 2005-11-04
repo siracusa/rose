@@ -359,13 +359,15 @@ sub save
 
       foreach my $fk_name (keys %{$todo->{'fk'}})
       {
-        my $fk = $meta->foreign_key($fk_name) || $meta->relationship($fk_name);
-        
-        unless(UNIVERSAL::isa($fk, 'Rose::DB::Object::ForeignKey') ||
-               $fk->type =~ /^(?:one|many) to one$/)
-        {
-          Carp::confess "No foreign key or '... to one' relationship named '$fk_name'";
-        }
+        # No real need to check for this, I suppose.  Still, the 'fk' name
+        # for the hash key above could be a bit better...
+        #my $fk = $meta->foreign_key($fk_name) || $meta->relationship($fk_name);
+        #
+        #unless(UNIVERSAL::isa($fk, 'Rose::DB::Object::Metadata::ForeignKey') ||
+        #       $fk->type =~ /^(?:one|many) to one$/)
+        #{
+        #  Carp::confess "No foreign key or '... to one' relationship named '$fk_name'";
+        #}
 
         my $code   = $todo->{'fk'}{$fk_name}{'set'} or next;
         my $object = $code->();

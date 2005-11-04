@@ -288,24 +288,24 @@ our @ISA = qw(Rose::DB::Object);
 __PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns(
+    id            => { type => 'integer', not_null => 1 },
+    password      => { type => 'chkpass' },
+    name          => { type => 'varchar', length => 32, not_null => 1 },
+    flag          => { type => 'boolean', default => 'true', not_null => 1 },
+    flag2         => { type => 'boolean' },
+    status        => { type => 'varchar', default => 'active', length => 32 },
     bits          => { type => 'bitfield', bits => 5, default => '00101', not_null => 1 },
-    date_created  => { type => 'timestamp' },
+    start         => { type => 'date', default => '1980-12-24' },
+    save          => { type => 'integer', alias => 'save_col' },
+    nums          => { type => 'array' },
     fk1           => { type => 'integer', alias => 'fkone' },
     fk2           => { type => 'integer' },
     fk3           => { type => 'integer' },
-    flag          => { type => 'boolean', default => 'true', not_null => 1 },
-    flag2         => { type => 'boolean' },
     fother_id2    => { type => 'integer' },
     fother_id3    => { type => 'integer' },
     fother_id4    => { type => 'integer' },
-    id            => { type => 'integer', not_null => 1 },
     last_modified => { type => 'timestamp' },
-    name          => { type => 'varchar', length => 32, not_null => 1 },
-    nums          => { type => 'array' },
-    password      => { type => 'chkpass' },
-    save          => { type => 'integer', alias => 'save_col' },
-    start         => { type => 'date', default => '1980-12-24' },
-    status        => { type => 'varchar', default => 'active', length => 32 },
+    date_created  => { type => 'timestamp' },
 );
 
 __PACKAGE__->meta->primary_key_columns([ 'id' ]);
@@ -360,24 +360,24 @@ __PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns
 (
+  id            => { type => 'integer', not_null => 1 },
+  password      => { type => 'chkpass' },
+  name          => { type => 'varchar', length => 32, not_null => 1 },
+  flag          => { type => 'boolean', default => 'true', not_null => 1 },
+  flag2         => { type => 'boolean' },
+  status        => { type => 'varchar', default => 'active', length => 32 },
   bits          => { type => 'bitfield', bits => 5, default => '00101', not_null => 1 },
-  date_created  => { type => 'timestamp' },
+  start         => { type => 'date', default => '1980-12-24' },
+  save          => { type => 'integer', alias => 'save_col' },
+  nums          => { type => 'array' },
   fk1           => { type => 'integer', alias => 'fkone' },
   fk2           => { type => 'integer' },
   fk3           => { type => 'integer' },
-  flag          => { type => 'boolean', default => 'true', not_null => 1 },
-  flag2         => { type => 'boolean' },
   fother_id2    => { type => 'integer' },
   fother_id3    => { type => 'integer' },
   fother_id4    => { type => 'integer' },
-  id            => { type => 'integer', not_null => 1 },
   last_modified => { type => 'timestamp' },
-  name          => { type => 'varchar', length => 32, not_null => 1 },
-  nums          => { type => 'array' },
-  password      => { type => 'chkpass' },
-  save          => { type => 'integer', alias => 'save_col' },
-  start         => { type => 'date', default => '1980-12-24' },
-  status        => { type => 'varchar', default => 'active', length => 32 },
+  date_created  => { type => 'timestamp' },
 );
 
 __PACKAGE__->meta->primary_key_columns([ 'id' ]);
@@ -654,21 +654,21 @@ __PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns(
     bits          => { type => 'bitfield', bits => 5, default => 101 },
-    date_created  => { type => 'datetime' },
+    id            => { type => 'integer', not_null => 1 },
+    name          => { type => 'varchar', default => '', length => 32, not_null => 1 },
+    status        => { type => 'varchar', default => 'active', length => 32 },
+    start         => { type => 'date', default => '1980-12-24' },
+    save          => { type => 'integer', alias => 'save_col' },
     fk1           => { type => 'integer', alias => 'fkone' },
     fk2           => { type => 'integer' },
     fk3           => { type => 'integer' },
+    fother_id3    => { type => 'integer' },
+    fother_id4    => { type => 'integer' },
+    last_modified => { type => 'timestamp', default => 'now' },
+    date_created  => { type => 'datetime' },
     flag          => { type => 'boolean', default => 1 },
     flag2         => { type => 'boolean' },
     fother_id2    => { type => 'integer' },
-    fother_id3    => { type => 'integer' },
-    fother_id4    => { type => 'integer' },
-    id            => { type => 'integer', not_null => 1 },
-    last_modified => { type => 'timestamp'@{[ $mysql_41 ? ", default => 'now'" : '' ]} },
-    name          => { type => 'varchar', default => '', length => 32, not_null => 1 },
-    save          => { type => 'integer', alias => 'save_col' },
-    start         => { type => 'date', default => '1980-12-24' },
-    status        => { type => 'varchar', default => 'active', length => 32 },
 );
 
 __PACKAGE__->meta->primary_key_columns([ 'id' ]);
@@ -724,21 +724,21 @@ __PACKAGE__->meta->table('Rose_db_object_test');
 __PACKAGE__->meta->columns
 (
   bits          => { type => 'bitfield', bits => 5, default => 101 },
-  date_created  => { type => 'datetime' },
+  id            => { type => 'integer', not_null => 1 },
+  name          => { type => 'varchar', default => '', length => 32, not_null => 1 },
+  status        => { type => 'varchar', default => 'active', length => 32 },
+  start         => { type => 'date', default => '1980-12-24' },
+  save          => { type => 'integer', alias => 'save_col' },
   fk1           => { type => 'integer', alias => 'fkone' },
   fk2           => { type => 'integer' },
   fk3           => { type => 'integer' },
+  fother_id3    => { type => 'integer' },
+  fother_id4    => { type => 'integer' },
+  last_modified => { type => 'timestamp', default => 'now' },
+  date_created  => { type => 'datetime' },
   flag          => { type => 'boolean', default => 1 },
   flag2         => { type => 'boolean' },
   fother_id2    => { type => 'integer' },
-  fother_id3    => { type => 'integer' },
-  fother_id4    => { type => 'integer' },
-  id            => { type => 'integer', not_null => 1 },
-  last_modified => { type => 'timestamp'@{[ $mysql_41 ? ", default => 'now'" : '' ]} },
-  name          => { type => 'varchar', default => '', length => 32, not_null => 1 },
-  save          => { type => 'integer', alias => 'save_col' },
-  start         => { type => 'date', default => '1980-12-24' },
-  status        => { type => 'varchar', default => 'active', length => 32 },
 );
 
 __PACKAGE__->meta->primary_key_columns([ 'id' ]);
