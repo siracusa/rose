@@ -42,6 +42,8 @@ use Rose::Object::MakeMethods::Generic
   ],
 );
 
+*column_map = \&key_columns;
+
 Rose::Object::MakeMethods::Generic->make_methods
 (
   { preserve_existing => 1 },
@@ -166,7 +168,8 @@ sub sanity_check
   no warnings;
   unless(ref $key_columns eq 'HASH' && keys %$key_columns)
   {
-    Carp::croak "Foreign key '", $self->name, "' is missing a key_columns";
+    #Carp::croak "Foreign key '", $self->name, "' is missing a key_columns";
+    return;
   }
 
   return 1;
@@ -175,6 +178,8 @@ sub sanity_check
 sub is_ready_to_make_methods
 {
   my($self) = shift;
+
+  return 0  unless($self->sanity_check);
 
   eval
   {
@@ -410,6 +415,10 @@ Otherwise, undef is returned.
 =item B<class [CLASS]>
 
 Get or set the class name of the L<Rose::DB::Object>-derived object that encapsulates rows from the table referenced by the foreign key column(s).
+
+=item B<column_map [HASH | HASHREF]>
+
+This is an alias for the L<key_columns|/key_columns> method.
 
 =item B<key_column LOCAL [, FOREIGN]>
 

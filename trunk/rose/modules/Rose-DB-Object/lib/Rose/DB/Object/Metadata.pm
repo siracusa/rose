@@ -1129,6 +1129,11 @@ sub initialize
 
   $self->register_class;
 
+  # Retry deferred stuff
+  $self->retry_deferred_tasks;
+  $self->retry_deferred_foreign_keys;
+  $self->retry_deferred_relationships;
+
   $self->db(undef); # make sure to ditch any db we may have retained
 
   $self->is_initialized(1);

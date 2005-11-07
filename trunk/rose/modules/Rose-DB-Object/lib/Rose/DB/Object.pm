@@ -1033,15 +1033,15 @@ sub AUTOLOAD
 
     if(@fks || @rels)
     {
+      my $class = ref $self;
+
       my $tmp_msg =<<"EOF";
 Methods for the following relationships and foreign keys were deferred and
-then never actually created.
+then never actually created in the class $class.
 
 TYPE            NAME
 ----            ----
 EOF
-
-      my $class = ref $self;
 
       foreach my $thing (@fks, @rels)
       {
