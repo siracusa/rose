@@ -179,8 +179,62 @@ sub auto_foreign_key
 
   unless(defined $spec->{'key_columns'})
   {
-    my @fpk_columns = $spec->{'class'}->meta->primary_key_column_names;
-    return  unless(@fpk_columns == 1);
+    my @fpk_columns = UNIVERSAL::isa($spec->{'class'}, 'Rose::DB::Object') ?
+      $spec->{'class'}->meta->primary_key_column_names : ();
+
+    # Defer population of key columns until the foreign class is initialized
+    unless(@fpk_columns == 1)
+    {
+      # If the foreign class has more than one primary key column, give up
+      return  if(@fpk_columns);
+
+      # If the foreign class is initialized and the foreign key spec still
+      # has no key columns, then give up.
+      if(UNIVERSAL::isa($spec->{'class'}, 'Rose::DB::Object') && 
+         $spec->{'class'}->meta->is_initialized)
+      {
+        return;
+      }
+
+      my %spec = %$spec;
+
+      $meta->add_deferred_task(
+      {
+        class  => $meta->class, 
+        method => "foreign_key:$name",
+
+        code   => sub
+        {
+          # Generate new foreign key, then grab the key columns from it
+          my $new_fk   = $self->auto_foreign_key($name, \%spec) or return;
+          my $fk       = $meta->foreign_key($name);
+          my $key_cols = $new_fk->key_columns or return;
+
+          $fk->key_columns($key_cols);
+        },
+
+        check  => sub
+        {
+          my $fk = $meta->foreign_key($name) or return 0;
+
+          # If the foreign class is initialized and the foreign key still
+          # has no key columns, then we should give up.
+          if(UNIVERSAL::isa($fk->class, 'Rose::DB::Object') && 
+             $fk->class->meta->is_initialized)
+          {
+            Carp::croak "Missing key columns for foreign key named ",
+                        $fk->name, " in class ", $meta->class;
+          }
+
+          my $cols = $fk->key_columns or return 0;
+          
+          # Everything is okay if we have key columns
+          return (ref($cols) && keys(%$cols) > 0) ? 1 : 0;
+        }
+      });
+
+      return Rose::DB::Object::Metadata::ForeignKey->new(name => $name, %$spec);
+    }
 
     my $aliases = $meta->column_aliases;
 
