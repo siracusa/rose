@@ -278,7 +278,7 @@ sub parse_dbi_column_info_default
     if(/^'.+'::[\w ]+$/)
     {
       my $default;
-$DB::single = 1;
+
       # Single quotes are backslash-escaped, but Postgres 8.1 and
       # later uses doubled quotes '' instead.
       if($pg_vers >= 80100 && /^'((?:[^']+|'')*)'::[\w ]+$/)
