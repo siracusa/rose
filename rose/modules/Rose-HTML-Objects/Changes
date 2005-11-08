@@ -1,3 +1,9 @@
+0.30 (11.08.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Adjusted tests to pass despite a backward-incompatible change
+      in HTML::Entities as part of the HTML::Parser 3.46 release.
+    * Big version number bump.
+
 0.027 (10.23.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed a bug that caused the incorrect initialization of compound

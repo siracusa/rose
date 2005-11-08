@@ -95,13 +95,13 @@ $field->value('orange');
 
 my $values = join(',', $field->values);
 
-$field->error("Don't pick orange!");
+$field->error("Do not pick orange!");
 
 is($field->html, 
   qq(<input name="fruits" type="checkbox" value="apple"> <label>Apple</label><br>\n) .
   qq(<input checked name="fruits" type="checkbox" value="orange"> <label>Orange</label><br>\n) .
   qq(<input name="fruits" type="checkbox" value="grape"> <label>Grape</label><br>\n) .
-  qq(<span class="error">Don't pick orange!</span>),
+  qq(<span class="error">Do not pick orange!</span>),
   'html()');
 
 $field->error(undef);
