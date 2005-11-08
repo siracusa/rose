@@ -86,7 +86,7 @@ is($field->xhtml_field,
   qq(</select>),
   'value() 1');
 
-$field->error("Don't pick orange!");
+$field->error("Do not pick orange!");
 
 is($field->html, 
   qq(<select name="fruits" size="6">\n) .
@@ -94,7 +94,7 @@ is($field->html,
   qq(<option selected value="orange">Orange</option>\n) .
   qq(<option value="grape">Grape</option>\n) .
   qq(</select><br>\n) .
-  qq(<span class="error">Don't pick orange!</span>),
+  qq(<span class="error">Do not pick orange!</span>),
   'html()');
 
 is($field->xhtml, 
@@ -103,7 +103,7 @@ is($field->xhtml,
   qq(<option selected="selected" value="orange">Orange</option>\n) .
   qq(<option value="grape">Grape</option>\n) .
   qq(</select><br />\n) .
-  qq(<span class="error">Don't pick orange!</span>),
+  qq(<span class="error">Do not pick orange!</span>),
   'xhtml()');
 
 $field->error(undef);

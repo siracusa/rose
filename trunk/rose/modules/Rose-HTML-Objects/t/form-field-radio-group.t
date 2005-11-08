@@ -95,13 +95,13 @@ is($field->html_field,
 
 $field->value('orange');
 
-$field->error("Don't pick orange!");
+$field->error("Do not pick orange!");
 
 is($field->html, 
   qq(<input name="fruits" type="radio" value="apple"> <label>Apple</label><br>\n) .
   qq(<input checked name="fruits" type="radio" value="orange"> <label>Orange</label><br>\n) .
   qq(<input name="fruits" type="radio" value="grape"> <label>Grape</label><br>\n) .
-  qq(<span class="error">Don't pick orange!</span>),
+  qq(<span class="error">Do not pick orange!</span>),
   'html()');
 
 $field->error(undef);
