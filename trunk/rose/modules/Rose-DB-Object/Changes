@@ -3,6 +3,7 @@
     * Added tutorial.
     * Added support for new argument types to relationship methods.
     * Added a named, configurable map for convention manager classes.
+    * Added perl_manager_class() and make_manager_class() meta methods.
 
 0.079 (10.25.2005) - John Siracusa <siracusa@mindspring.com>
 

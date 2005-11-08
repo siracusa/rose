@@ -101,20 +101,20 @@ The L<Rose::DB>-derived database object used by each L<Rose::DB::Object>-derived
 See the L<Rose::DB> documentation to explore the capabilities of these db objects.  Most of the time, you won't have to be concerned about them.  But it is sometime important to ensure that all objects share the same C<db>.  For example, imagine creating several C<Product> objects in a single transaction.
 
     $db = My::DB->new(...);
-    
+
     $db->begin_work; # Start transaction
 
     # Use this db object with each product object
 
     $p1 = Product->new(name => 'Bike', db => $db);
     $p1->save;
-    
+
     $p2 = Product->new(name => 'Sled', db => $db);
     $p2->save;
 
     $p3 = Product->new(name => 'Kite', db => $db);
     $p3->save;
-    
+
     if(...) # Now either commit them all or roll them all back
     {
       $db->commit;
@@ -128,7 +128,7 @@ Cross-database migration is another important use for C<db> objects.  Here's how
 
     $production_db = My::DB->new('production');
     $archive_db    = My::DB->new('archive');
-    
+
     # Load bike from production database
     $p = Product->new(name => 'Bike', db => $production_db);
     $p->load;
@@ -302,6 +302,20 @@ The call to L<make_manager_methods()|Rose::DB::Object::Manager/make_manager_meth
     update_products
 
 The names are pretty much self-explanatory.  You can read the L<Rose::DB::Object::Manager> documentation for all the gory details.  The important thing to note is that the methods were all named based on the "products" argument to L<make_manager_methods()|Rose::DB::Object::Manager/make_manager_methods>.  You can see how "products" has been incorporated into each of the method names.  Each of these methods is a thin wrapper around the generically-named methods in L<Rose::DB::Object::Manager>.  The wrappers pass the specified object class to the generic methods.
+
+The Perl code for the C<Product::Manager> class shown above can be generated automatically with the L<perl_manager_class|Rose::DB::Object::Metadata/perl_manager_class> method.  The L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> will both generate the code and L<eval|perlfunc/eval>uate it for you, automating the entire process of creating a manager class from within your L<Rose::DB::Object>-derived class.
+
+    package Product;
+
+    use Rose::DB::Object;
+    our @ISA = qw(Rose::DB::Object);
+    ...
+
+    # This actually creates the Product::Manager class 
+    # as shown in the code sample above.
+    __PACKAGE__->meta->make_manager_class('products');
+
+As the comment says, the call to L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> will create a standalone C<Product::Manager> class in memory.  See the documentation for the L<perl_manager_class|Rose::DB::Object::Metadata/perl_manager_class> and L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> methods for more information.
 
 If you decide not to heed my advice and create these methods inside your L<Rose::DB::Object>-derived class directly, then just call L<make_manager_methods()|Rose::DB::Object::Manager/make_manager_methods> from within your object class.
 
@@ -644,7 +658,7 @@ Let's add a foreign key to the C<products> table.  First, we'll need to create t
     (
       id    SERIAL NOT NULL PRIMARY KEY,
       name  VARCHAR(255) NOT NULL,
-      
+
       UNIQUE(name)
     );
 
@@ -654,7 +668,7 @@ When dealing with any kind of inter-table relationship, L<Rose::DB::Object> requ
 
     use My::DB::Object
     our @ISA = qw(My::DB::Object);
-  
+
     __PACKAGE__->meta->table('vendors');
     __PACKAGE__->meta->columns
     (
@@ -692,7 +706,7 @@ Finally, here's how the foreign key definition looks in the Perl class.
     our @ISA = qw(My::DB::Object);
 
     use Vendor;
-  
+
     __PACKAGE__->meta->table('products');
 
     __PACKAGE__->meta->columns
@@ -711,7 +725,7 @@ Finally, here's how the foreign key definition looks in the Perl class.
 
     __PACKAGE__->meta->primary_key_columns('id');
     __PACKAGE__->meta->add_unique_key('name');
-    
+
     __PACKAGE__->meta->foreign_keys
     (
       vendor =>
@@ -720,7 +734,7 @@ Finally, here's how the foreign key definition looks in the Perl class.
         key_columns => { vendor_id => 'id' },
       },
     );
-  
+
     __PACKAGE__->meta->initialize;
 
 First, notice that the C<Vendor> class is loaded.  This is important.  A foreign key cannot be defined unless the L<Rose::DB::Object>-derived class that fronts the foreign table is also loaded.  The auto-initialization process will try to load such classes for you, but the "manual" approach shown above will not.  As usual, I prefer the more explicit approach.
@@ -808,7 +822,7 @@ To summarize, the foreign key method can take arguments in these forms.
 =item * A primary key value (but only if the foreign table has a single-column primary key).
 
 =back
-    
+
 In each case, the foreign object will be added to the database it if does not already exist there.  This all happens when the "parent" (C<Product>) object is saved.  Until then, nothing is stored in the database.
 
 There's also another method created in response to the foreign key definition.  This one allows the foreign object to be deleted from the database.
@@ -857,14 +871,14 @@ The L<perl_class_definition()|Rose::DB::Object::Metadata/perl_class_definition> 
 Here's the output.
 
   package Product;
-  
+
   use strict;
-  
+
   use My::DB::Object
   our @ISA = qw(My::DB::Object);
-  
+
   __PACKAGE__->meta->table('products');
-  
+
   __PACKAGE__->meta->columns
   (
     id           => { type => 'integer', not_null => 1 },
@@ -878,11 +892,11 @@ Here's the output.
                       not_null => 1 },
     release_date => { type => 'timestamp' },
   );
-  
+
   __PACKAGE__->meta->primary_key_columns([ 'id' ]);
-  
+
   __PACKAGE__->meta->add_unique_keys([ 'name' ]);
-  
+
   __PACKAGE__->meta->foreign_keys
   (
     vendor => 
@@ -894,7 +908,7 @@ Here's the output.
       },
     },
   );
-  
+
   __PACKAGE__->meta->initialize;
 
 =head2 Relationships
@@ -957,12 +971,12 @@ Here's an example of our C<Product> class as it might exist on a database that d
     our @ISA = qw(My::DB::Object);
 
     use Vendor;
-  
+
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->columns(...);
     __PACKAGE__->meta->primary_key_columns('id');
     __PACKAGE__->meta->add_unique_key('name');
-    
+
     __PACKAGE__->meta->relationships
     (
       vendor =>
@@ -972,7 +986,7 @@ Here's an example of our C<Product> class as it might exist on a database that d
         column_map => { vendor_id => 'id' },
       },
     );
-  
+
     __PACKAGE__->meta->initialize;
 
 They syntax and semantics are similar to those L<described|/"Foreign keys"> for foreign keys.  The only slight differences are the names and types of parameters accepted by relationship objects.
@@ -997,7 +1011,7 @@ Now let's explore the other two method types.  We'll start with "one to many" by
       product_id  INT NOT NULL REFERENCES products (id),
       region      CHAR(2) NOT NULL DEFAULT 'US',
       price       DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-      
+
       UNIQUE(product_id, region)
     );
 
@@ -1054,12 +1068,12 @@ Finally, the C<Product> class needs to be modified.
 
     use Price;
     use Vendor;
-  
+
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->columns(...);
     __PACKAGE__->meta->primary_key_columns('id');
     __PACKAGE__->meta->add_unique_key('name');
-    
+
     __PACKAGE__->meta->foreign_keys
     (
       vendor =>
@@ -1068,7 +1082,7 @@ Finally, the C<Product> class needs to be modified.
         key_columns => { vendor_id => 'id' },
       },
     );
-  
+
     __PACKAGE__->meta->relationships
     (
       prices =>
@@ -1103,7 +1117,7 @@ This is all from the perspective of the class in which the definitions appear.  
         key_columns => { product_id => 'id' },
       },
     );
-    
+
 Here, the C<product_id> column in the local table (C<prices>) is connected to the C<id> column in the foreign table (C<products>).
 
 The methods created by "... to many" relationships behave much like their "... to one" and foreign key counterparts.  The main difference is that lists or references to arrays of the L<previously described|/"Foreign keys"> argument formats are also acceptable, while name/value pairs outside of a hashref are not.
@@ -1127,7 +1141,7 @@ Setting a new list of prices will delete all the old prices.  As with foreign ke
                { price => 4.56, region => 'UK' });
 
     $p->save; # database is modified here
-    
+
     # US: 1.23
     # UK: 4.56
     print join("\n", map { $_->region . ': ' . $_->price } $p->prices);
@@ -1191,7 +1205,7 @@ Here's a simple C<Color> class to front it.
     our @ISA = qw(My::DB::Object);
 
     use Product;
-  
+
     __PACKAGE__->meta->table('colors');
     __PACKAGE__->meta->columns
     (
@@ -1286,7 +1300,7 @@ Here's the new C<Color> class.
 
     use My::DB::Object
     our @ISA = qw(My::DB::Object);
-  
+
     __PACKAGE__->meta->table('colors');
     __PACKAGE__->meta->columns
     (
@@ -1303,7 +1317,7 @@ Since the C<colors> table no longer has a foreign key that points to the C<produ
     (
       product_id  INT NOT NULL REFERENCES products (id),
       color_id    INT NOT NULL REFERENCES colors (id),
-      
+
       PRIMARY KEY(product_id, color_id)
     );
 
@@ -1318,7 +1332,7 @@ Here's the map class.
 
     use Product;
     use Color;
-    
+
     __PACKAGE__->meta->table('product_color_map');
     __PACKAGE__->meta->columns
     (
@@ -1344,7 +1358,7 @@ Here's the map class.
     );
 
     __PACKAGE__->meta->initialize;
-    
+
 It's important that the map class have either a foreign key or a "many to one" relationship pointing to each of the tables that it maps between.  In this case, there are two foreign keys.  Also note that both foreign classes, C<Product> and C<Color>, must be loaded by the map class.
 
 Finally, here's the "many to many" relationship definition in the C<Product> class.
@@ -1430,16 +1444,16 @@ Now let's revisit the example code.
 The database now looks much nicer.
 
     mydb=# select * from colors;
-  
+
      id | name  
     ----+-------
       1 | red
       2 | green
       3 | blue
 
-  
+
     mydb=# select * from product_color_map; 
-  
+
      product_id | color_id 
     ------------+----------
              10 |        1
@@ -1507,7 +1521,7 @@ First, the database schema.
     (
       id    SERIAL NOT NULL PRIMARY KEY,
       name  VARCHAR(255) NOT NULL,
-      
+
       UNIQUE(name)
     );
 
@@ -1534,7 +1548,7 @@ First, the database schema.
       product_id  INT NOT NULL REFERENCES products (id),
       region      CHAR(2) NOT NULL DEFAULT 'US',
       price       DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-      
+
       UNIQUE(product_id, region)
     );
 
@@ -1550,23 +1564,23 @@ First, the database schema.
     (
       product_id  INT NOT NULL REFERENCES products (id),
       color_id    INT NOT NULL REFERENCES colors (id),
-      
+
       PRIMARY KEY(product_id, color_id)
     );
 
 Now the Perl classes.  Remember that these must each be in their own ".pm" files, despite appearing in one contiguous code snippet below.
 
   package Vendor;
-  
+
   use base 'My::DB::Object';
-  
+
   __PACKAGE__->meta->table('vendors');
   __PACKAGE__->meta->columns
   (
     id   => { type => 'serial', primary_key => 1, not_null => 1 },
     name => { type => 'varchar', length => 255, not_null => 1 },
   );
-  
+
   __PACKAGE__->meta->add_unique_key('name');
   __PACKAGE__->meta->initialize;
 
@@ -1580,14 +1594,14 @@ Now the Perl classes.  Remember that these must each be in their own ".pm" files
   use ProductColorMap;
 
   use base 'My::DB::Object';
-  
+
   __PACKAGE__->meta->table('products');
-  
+
   __PACKAGE__->meta->columns
   (
     id           => { type => 'integer', not_null => 1 },
     name         => { type => 'varchar', length => 255, not_null => 1 },
-  
+
     vendor_id    => { type => 'int' },
     status       => { type => 'varchar', default => 'inactive', 
                       length => 128, not_null => 1 },
@@ -1595,10 +1609,10 @@ Now the Perl classes.  Remember that these must each be in their own ".pm" files
                       default => 'now()' },
     release_date => { type => 'timestamp' },
   );
-  
+
   __PACKAGE__->meta->primary_key_columns('id');
   __PACKAGE__->meta->add_unique_key('name');
-  
+
   __PACKAGE__->meta->relationships
   (
     prices => 'one to many',
@@ -1611,13 +1625,13 @@ Now the Perl classes.  Remember that these must each be in their own ".pm" files
 
 
   package Price;
-  
+
   use Product;
-  
+
   use base 'My::DB::Object';
-  
+
   __PACKAGE__->meta->table('prices');
-  
+
   __PACKAGE__->meta->columns
   (
     id         => { type => 'serial', primary_key => 1, not_null => 1 },
@@ -1632,45 +1646,45 @@ Now the Perl classes.  Remember that these must each be in their own ".pm" files
       default   => 0.00 
     },
   );
-  
+
   __PACKAGE__->meta->add_unique_key([ 'product_id', 'region' ]);
   __PACKAGE__->meta->add_foreign_key('product');
   __PACKAGE__->meta->initialize;
-  
+
   1;
 
 
   package Color;  
-  
+
   use base 'My::DB::Object';
-  
+
   __PACKAGE__->meta->table('colors');
   __PACKAGE__->meta->columns
   (
     id   => { type => 'serial', primary_key => 1, not_null => 1 },
     name => { type => 'varchar', length => 255, not_null => 1 },
   );
-  
+
   __PACKAGE__->meta->add_unique_key('name');
   __PACKAGE__->meta->initialize;
-  
+
   1;
 
 
   package ProductColorMap;  
-  
+
   use Product;
   use Color;
-  
+
   use base 'My::DB::Object';
-  
+
   __PACKAGE__->meta->table('product_color_map');
   __PACKAGE__->meta->columns
   (
     product_id => { type => 'int', not_null => 1 },
     color_id   => { type => 'int', not_null => 1 },
   );
-  
+
   __PACKAGE__->meta->primary_key_columns('product_id', 'color_id');
   __PACKAGE__->meta->add_foreign_keys('product', 'color');
   __PACKAGE__->meta->initialize;
