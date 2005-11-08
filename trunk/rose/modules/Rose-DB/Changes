@@ -1,6 +1,7 @@
-0.032 (11.01.2005) - John Siracusa <siracusa@mindspring.com>
+0.032 (11.08.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added the use_private_registry() convenience method.
+    * Added some tweaks to support Postgres 8.1.
 
 0.031 (10.25.2005) - John Siracusa <siracusa@mindspring.com>
 

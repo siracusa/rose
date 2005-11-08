@@ -80,6 +80,8 @@ sub auto_generate_columns
         Carp::croak "Could not extract column name from DBI column_info()";
       }
 
+      $db->refine_dbi_column_info($col_info);
+
       $columns{$col_info->{'COLUMN_NAME'}} = 
         $self->auto_generate_column($col_info->{'COLUMN_NAME'}, $col_info);
     }
@@ -128,15 +130,11 @@ sub auto_alias_columns
       }
     }
   }
-
 }
+
 sub auto_generate_column
 {
   my($self, $name, $col_info) = @_;
-
-  my $db = $self->db or Carp::confess "Could not get db";
-
-  $db->refine_dbi_column_info($col_info);
 
   my $type = $col_info->{'TYPE_NAME'};
 

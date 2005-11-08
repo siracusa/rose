@@ -276,21 +276,22 @@ __PACKAGE__->meta->foreign_keys
 );
 EOF
 
+  my $chkpass = $PG_HAS_CHKPASS ? "    password      => { type => 'chkpass' },\n" : '';
+
   is(MyPgObject->meta->perl_class_definition,
-     <<'EOF', "perl_class_definition 1 - $db_type");
+     <<"EOF", "perl_class_definition 1 - $db_type");
 package MyPgObject;
 
 use strict;
 
 use Rose::DB::Object
-our @ISA = qw(Rose::DB::Object);
+our \@ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns(
     id            => { type => 'integer', not_null => 1 },
-    password      => { type => 'chkpass' },
-    name          => { type => 'varchar', length => 32, not_null => 1 },
+$chkpass    name          => { type => 'varchar', length => 32, not_null => 1 },
     flag          => { type => 'boolean', default => 'true', not_null => 1 },
     flag2         => { type => 'boolean' },
     status        => { type => 'varchar', default => 'active', length => 32 },
@@ -347,22 +348,23 @@ __PACKAGE__->meta->initialize;
 1;
 EOF
 
+  $chkpass = $PG_HAS_CHKPASS ? "  password      => { type => 'chkpass' },\n" : '';
+  
   is(MyPgObject->meta->perl_class_definition(braces => 'bsd', indent => 2),
-     <<'EOF', "perl_class_definition 2 - $db_type");
+     <<"EOF", "perl_class_definition 2 - $db_type");
 package MyPgObject;
 
 use strict;
 
 use Rose::DB::Object
-our @ISA = qw(Rose::DB::Object);
+our \@ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns
 (
   id            => { type => 'integer', not_null => 1 },
-  password      => { type => 'chkpass' },
-  name          => { type => 'varchar', length => 32, not_null => 1 },
+$chkpass  name          => { type => 'varchar', length => 32, not_null => 1 },
   flag          => { type => 'boolean', default => 'true', not_null => 1 },
   flag2         => { type => 'boolean' },
   status        => { type => 'varchar', default => 'active', length => 32 },

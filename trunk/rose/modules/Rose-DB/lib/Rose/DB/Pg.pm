@@ -224,6 +224,12 @@ sub refine_dbi_column_info
     $col_info->{'TYPE_NAME'} = 'bits';
   }
 
+  # Postgres 8.1 sometimes adds double quotes around the column name
+  if($col_info->{'COLUMN_NAME'} =~ /^"(.+)"$/)
+  {
+    $col_info->{'COLUMN_NAME'} = $1;
+  }
+
   # Pg does not populate COLUMN_SIZE correctly for bit fields, so
   # we have to extract the number of bits from pg_type.
   if($col_info->{'pg_type'} =~ /^bit\((\d+)\)$/)
@@ -266,12 +272,26 @@ sub parse_dbi_column_info_default
     no warnings;
     local $_ = $string;
 
+    my $pg_vers = $self->dbh->{'pg_server_version'};
+
     # Example: q('value'::character varying)
-    # Single quotes are backslash-escaped.
-    if(/^'((?:[^\\']+|\\.)*)'::[\w ]+$/)
+    if(/^'.+'::[\w ]+$/)
     {
-      my $default = $1;
-      $default =~ s/\\'/'/g;
+      my $default;
+$DB::single = 1;
+      # Single quotes are backslash-escaped, but Postgres 8.1 and
+      # later uses doubled quotes '' instead.
+      if($pg_vers >= 80100 && /^'((?:[^']+|'')*)'::[\w ]+$/)
+      {
+        $default = $1;
+        $default =~ s/''/'/g;
+      }
+      elsif($pg_vers < 80100 && /^'((?:[^\\']+|\\.)*)'::[\w ]+$/)
+      {
+        $default = $1;
+        $default =~ s/\\'/'/g;
+      }
+
       return $default;
     }
     # Example: q(B'00101'::"bit")
