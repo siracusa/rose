@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1325;
+use Test::More tests => 1327;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("Postgres tests", 452)  unless($HAVE_PG);
+  skip("Postgres tests", 454)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -5528,6 +5528,23 @@ EOF
 
     eval { Rose::DB::Object::Manager->make_manager_methods('objectz') };
     Test::More::ok($@, 'make_manager_methods clash - pg');
+
+    Test::More::is(MyPgObject->meta->perl_manager_class('MyPgObjectMgr'), 
+                  <<"EOF", 'perl_manager_class - pg');
+package MyPgObjectMgr;
+
+use Rose::DB::Object::Manager;
+our \@ISA = qw(Rose::DB::Object::Manager);
+
+sub object_class { 'MyPgObject' }
+
+__PACKAGE__->meta->make_manager_methods('my_pg_object');
+
+1;
+EOF
+
+    eval { MyPgObject->meta->perl_manager_class('MyPgObjectMgr') };
+    Test::More::ok(!$@, 'make_manager_class - pg');
 
     package MyPgObjectManager;
     our @ISA = qw(Rose::DB::Object::Manager);

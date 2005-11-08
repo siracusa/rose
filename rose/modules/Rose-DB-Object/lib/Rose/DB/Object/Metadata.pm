@@ -17,7 +17,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 our $Debug = 0;
 
@@ -40,7 +40,7 @@ use Rose::Object::MakeMethods::Generic
     allow_inline_column_values => { default => 0 },
     is_initialized => { default => 0 },
   ],
-  
+
   array =>
   [
     'columns_ordered',
@@ -264,7 +264,7 @@ sub init_convention_manager { shift->convention_manager_class('default')->new }
 sub convention_manager
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     my $mgr = shift;
@@ -286,11 +286,11 @@ sub convention_manager
     {
       Carp::croak "$mgr is not a Rose::DB::Object::ConventionManager-derived object";
     }
-    
+
     $mgr->parent($self);
     return $self->{'convention_manager'} = $mgr;
   }
-  
+
   if(defined $self->{'convention_manager'})
   {
     return $self->{'convention_manager'};
@@ -1237,7 +1237,7 @@ sub class_for
       $reg->{'lc-catalog-table',$catalog,$table} ||
       $reg->{'lc-table',$table};  
   }
-  
+
   return $f_table;
 }
 
@@ -1389,7 +1389,7 @@ sub make_foreign_key_methods
     # Keep foreign keys and their corresponding relationships in sync.
     my $fk_id       = $foreign_key->id;
     my $fk_rel_type = $foreign_key->relationship_type;
-    
+
     foreach my $relationship ($self->relationships)
     {
       next  unless($relationship->type eq $fk_rel_type);
@@ -1562,7 +1562,7 @@ sub make_relationship_methods
       if($relationship->can('id'))
       {
         my $rel_id = $relationship->id;
-  
+
         FK: foreach my $fk ($self->foreign_keys)
         {
           if($rel_id eq $fk->id)
@@ -2236,6 +2236,86 @@ sub method_name_from_column
   }
 
   return $method_name;
+}
+
+sub make_manager_class
+{
+  eval shift->perl_manager_class(@_);
+}
+
+sub perl_manager_class
+{
+  my($self) = shift;
+
+  my %args;
+
+  if(@_ == 1)
+  {
+    $args{'class'} = shift;
+  }
+  else
+  {
+    %args = @_;
+  }
+
+  $args{'base_name'} ||= $self->convention_manager->class_to_table_singular;
+
+  $args{'class'} ||= $self->class . '::Manager';
+
+  unless($args{'class'} =~ /^\w+(?:::\w+)*$/)
+  {
+    no warnings;
+    Carp::croak "Missing or invalid class", 
+                (length $args{'class'} ? ": '$args{'class'}'" : '');
+  }
+
+  $args{'isa'} ||= [ 'Rose::DB::Object::Manager' ];
+  $args{'isa'} = [ $args{'isa'} ]  unless(ref $args{'isa'});
+
+  my($isa, $ok);
+
+  foreach my $class (@{$args{'isa'}})
+  {
+    unless($class =~ /^\w+(?:::\w+)*$/)
+    {
+      no warnings;
+      Carp::croak "Invalid isa class: '$class'";
+    }
+
+    $isa .= "use $class;\n";
+
+    $ok = 1  if(UNIVERSAL::isa($class, 'Rose::DB::Object::Manager'));
+  }
+
+  unless($ok)
+  {
+    Carp::croak 
+      "None of these classes inherit from Rose::DB::Object::Manager: ",
+      join(', ', @{$args{'isa'}});
+  }
+
+  $isa .= "our \@ISA = qw(@{$args{'isa'}});";
+
+  no strict 'refs';
+  if(@{"$args{'class'}::ISA"})
+  {
+    Carp::croak "Can't override class $args{'class'} which already ",
+                "appears to be defined.";
+  }
+
+  my $object_class = $self->class;
+
+  return<<"EOF";
+package $args{'class'};
+
+$isa
+
+sub object_class { '$object_class' }
+
+__PACKAGE__->meta->make_manager_methods('$args{'base_name'}');
+
+1;
+EOF
 }
 
 #
@@ -3141,6 +3221,10 @@ If any column name in the primary key or any of the unique keys does not exist i
 
 ARGS, if any, are passed to the call to L<make_methods|/make_methods> that actually creates the methods.
 
+=item B<make_manager_class [PARAMS | CLASS]>
+
+This method creates a L<Rose::DB::Object::Manager>-derived class to manage objects of this L<class|/class>.  To do so, it simply calls L<perl_manager_class|/perl_manager_class>, passing all arguments, and then L<eval|perlfunc/eval>uates the result.  See the L<perl_manager_class|/perl_manager_class> documentation for more information.
+
 =item B<make_methods [ARGS]>
 
 Create object methods in L<class|/class> for each L<column|/columns>, L<foreign key|/foreign_keys>, and L<relationship|/relationship>.  This is done by calling L<make_column_methods|/make_column_methods>, L<make_foreign_key_methods|/make_foreign_key_methods>, and L<make_relationship_methods|/make_relationship_methods>, in that order.
@@ -3643,6 +3727,50 @@ The integer number of spaces to use for each level of indenting in the generated
 =back
 
 See the larger example in the documentation for the L<perl_class_definition|/perl_class_definition> method to see what the generated Perl code looks like.
+
+=item B<perl_manager_class [PARAMS | CLASS]>
+
+Returns a Perl class definition for a L<Rose::DB::Object::Manager>-derived class to manage objects of this L<class|/class>.  If a single string is passed, it is taken as the value of the C<class> parameter.  PARAMS are optional name/value pairs that may include the following:
+
+=over 4
+
+=item * base_name NAME
+
+The value of the L<base_name|Rose::DB::Object::Manager/base_name> parameter that will be passed to the call to L<Rose::DB::Object::Manager>'s L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.  Defaults to the return value of the L<convention manager|/convention_manager>'s L<class_to_table_singular|Rose::DB::Object::ConventionManager/class_to_table_singular> method.
+
+=item * class CLASS
+
+The name of the manager class.  Defaults to the L<object class|/class> with "::Manager" appended.
+
+=item * isa CLASSES
+
+The name of a single class or a reference to an array of class names to be included in the C<@ISA> array for the manager class.  One of these classes must inherit from L<Rose::DB::Object::Manager>.  Defaults to C<Rose::DB::Object::Manager>.
+
+=back
+
+For example, given this class:
+
+    package Product;
+
+    use Rose::DB::Object;
+    our @ISA = qw(Rose::DB::Object);
+    ...
+
+    print __PACKAGE__->meta->perl_manager_class(class     => 'Prod::Mgr',
+                                                base_name => 'prod');
+
+The following would be printed:
+
+    package Prod::Mgr;
+
+    use Rose::DB::Object::Manager;
+    our @ISA = qw(Rose::DB::Object::Manager);
+
+    sub object_class { 'Product' }
+
+    __PACKAGE__->meta->make_manager_methods('prod');
+
+    1;
 
 =item B<perl_primary_key_columns_definition>
 
