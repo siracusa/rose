@@ -214,20 +214,21 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   # Test code generation
   #
 
+  my $chkpass = $PG_HAS_CHKPASS ? "  password      => { type => 'chkpass' },\n" : '';
+  
   is(MyPgObject->meta->perl_columns_definition(braces => 'bsd', indent => 2),
-     <<'EOF', "perl_columns_definition 1 - $db_type");
+     <<"EOF", "perl_columns_definition 1 - $db_type");
 __PACKAGE__->meta->columns
 (
   id            => { type => 'integer', not_null => 1 },
   k1            => { type => 'integer' },
   k2            => { type => 'integer' },
   k3            => { type => 'integer' },
-  password      => { type => 'chkpass' },
-  name          => { type => 'varchar', length => 32, not_null => 1 },
+$chkpass  name          => { type => 'varchar', length => 32, not_null => 1 },
   code          => { type => 'character', length => 6 },
   flag          => { type => 'boolean', default => 'true', not_null => 1 },
   flag2         => { type => 'boolean' },
-  status        => { type => 'varchar', default => 'act\'ive', length => 32 },
+  status        => { type => 'varchar', default => 'act\\'ive', length => 32 },
   bits          => { type => 'bitfield', bits => 5, default => '00101', not_null => 1 },
   start         => { type => 'date', default => '1980-12-24' },
   save          => { type => 'integer', alias => 'save_col' },
@@ -237,19 +238,20 @@ __PACKAGE__->meta->columns
 );
 EOF
 
+  $chkpass = $PG_HAS_CHKPASS ? "    password      => { type => 'chkpass' },\n" : '';
+
   is(MyPgObject->meta->perl_columns_definition(braces => 'k&r', indent => 4),
-     <<'EOF', "perl_columns_definition 2 - $db_type");
+     <<"EOF", "perl_columns_definition 2 - $db_type");
 __PACKAGE__->meta->columns(
     id            => { type => 'integer', not_null => 1 },
     k1            => { type => 'integer' },
     k2            => { type => 'integer' },
     k3            => { type => 'integer' },
-    password      => { type => 'chkpass' },
-    name          => { type => 'varchar', length => 32, not_null => 1 },
+$chkpass    name          => { type => 'varchar', length => 32, not_null => 1 },
     code          => { type => 'character', length => 6 },
     flag          => { type => 'boolean', default => 'true', not_null => 1 },
     flag2         => { type => 'boolean' },
-    status        => { type => 'varchar', default => 'act\'ive', length => 32 },
+    status        => { type => 'varchar', default => 'act\\'ive', length => 32 },
     bits          => { type => 'bitfield', bits => 5, default => '00101', not_null => 1 },
     start         => { type => 'date', default => '1980-12-24' },
     save          => { type => 'integer', alias => 'save_col' },
@@ -259,19 +261,20 @@ __PACKAGE__->meta->columns(
 );
 EOF
 
+  $chkpass = $PG_HAS_CHKPASS ? "    password      => { type => 'chkpass' },\n" : '';
+
   is(MyPgObject->meta->perl_columns_definition,
-     <<'EOF', "perl_columns_definition 3 - $db_type");
+     <<"EOF", "perl_columns_definition 3 - $db_type");
 __PACKAGE__->meta->columns(
     id            => { type => 'integer', not_null => 1 },
     k1            => { type => 'integer' },
     k2            => { type => 'integer' },
     k3            => { type => 'integer' },
-    password      => { type => 'chkpass' },
-    name          => { type => 'varchar', length => 32, not_null => 1 },
+$chkpass    name          => { type => 'varchar', length => 32, not_null => 1 },
     code          => { type => 'character', length => 6 },
     flag          => { type => 'boolean', default => 'true', not_null => 1 },
     flag2         => { type => 'boolean' },
-    status        => { type => 'varchar', default => 'act\'ive', length => 32 },
+    status        => { type => 'varchar', default => 'act\\'ive', length => 32 },
     bits          => { type => 'bitfield', bits => 5, default => '00101', not_null => 1 },
     start         => { type => 'date', default => '1980-12-24' },
     save          => { type => 'integer', alias => 'save_col' },
