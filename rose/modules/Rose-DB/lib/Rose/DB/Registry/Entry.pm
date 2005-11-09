@@ -17,7 +17,7 @@ use Rose::Object::MakeMethods::Generic
 (
   'scalar' =>
   [
-    qw(database domain driver dsn host password port
+    qw(database domain dsn dbi_driver host password port
        server_time_zone schema catalog type username)
   ],
 
@@ -39,6 +39,14 @@ sub init_connect_options { {} }
 sub autocommit  { shift->connect_option('AutoCommit', @_) }
 sub print_error { shift->connect_option('PrintError', @_) }
 sub raise_error { shift->connect_option('RaiseError', @_) }
+
+sub driver
+{
+  my($self) = shift;
+  return $self->{'driver'}  unless(@_);
+  $self->{'dbi_driver'} = shift;
+  return $self->{'driver'} = lc $self->{'dbi_driver'};
+}
 
 1;
 
@@ -120,7 +128,7 @@ Get or set the data source domain.  Note that changing the C<domain> after a reg
 
 =item B<driver [DRIVER]>
 
-Get or set the driver name.
+Get or set the driver name.  The DRIVER argument is converted to lowercase before being set.
 
 =item B<dsn [DSN]>
 

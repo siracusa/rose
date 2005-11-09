@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 84;
+use Test::More tests => 86;
 
 BEGIN
 {
@@ -46,6 +46,17 @@ BEGIN
     database => 'test',
     host     => 'localhost',
     username => 'postgres',
+    password => '',
+  );
+
+  # Generic
+  My::DB2->register_db(
+    domain   => 'test',
+    type     => 'generic',
+    driver   => 'NoneSuch',
+    database => 'test',
+    host     => 'localhost',
+    username => 'someuser',
     password => '',
   );
 
@@ -198,6 +209,12 @@ $adb->init_db_info;
 
 is($db->username, $adb->username, "alias username() mod");
 is($db->connect_options, $adb->connect_options, "alias connect_options() mod");
+
+$db = My::DB2->new('generic');
+
+is(ref($db), 'My::DB2::__RoseDBPrivate__::Rose::DB::Generic', 'generic class');
+
+is($db->dsn, 'dbi:NoneSuch:dbname=test;host=localhost', 'generic dsn');
 
 #
 # Registry tests
