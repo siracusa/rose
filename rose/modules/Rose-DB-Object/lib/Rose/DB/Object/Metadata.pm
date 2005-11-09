@@ -74,9 +74,10 @@ __PACKAGE__->class_registry({});
 
 __PACKAGE__->auto_helper_classes
 (
-  'Informix' => 'Rose::DB::Object::Metadata::Auto::Informix',
-  'Pg'       => 'Rose::DB::Object::Metadata::Auto::Pg',
+  'informix' => 'Rose::DB::Object::Metadata::Auto::Informix',
+  'pg'       => 'Rose::DB::Object::Metadata::Auto::Pg',
   'mysql'    => 'Rose::DB::Object::Metadata::Auto::MySQL',
+  'generic'  => 'Rose::DB::Object::Metadata::Auto::Generic',
 );
 
 __PACKAGE__->convention_manager_classes
@@ -2351,14 +2352,17 @@ sub auto_helper_class
 
   if(@_)
   {
-    my $driver = shift;
+    my $driver = lc shift;
     return $self->auto_helper_classes->{$driver} = shift  if(@_);
     return $self->auto_helper_classes->{$driver};
   }
   else
   {
     my $db = $self->db or die "Missing db";
-    return $self->auto_helper_classes->{$db->{'driver'}};
+    return $self->auto_helper_classes->{$db->driver} || 
+      $self->auto_helper_classes->{'generic'} ||
+      Carp::croak "Don't know how to auto-initialize using driver '", 
+                  $db->driver, "'";
   }
 }
 

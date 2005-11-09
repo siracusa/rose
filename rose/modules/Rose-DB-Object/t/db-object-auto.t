@@ -2,12 +2,13 @@
 
 use strict;
 
-use Test::More tests => 261;
+use Test::More tests => 262;
 
 BEGIN 
 {
   require 't/test-lib.pl';
   use_ok('Rose::DB::Object');
+  use_ok('Rose::DB::Object::Metadata::Auto::Generic');
 }
 
 our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);

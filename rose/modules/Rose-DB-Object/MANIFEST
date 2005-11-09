@@ -12,6 +12,7 @@ lib/Rose/DB/Object/MakeMethods/Std.pm
 lib/Rose/DB/Object/Manager.pm
 lib/Rose/DB/Object/Metadata.pm
 lib/Rose/DB/Object/Metadata/Auto.pm
+lib/Rose/DB/Object/Metadata/Auto/Generic.pm
 lib/Rose/DB/Object/Metadata/Auto/Informix.pm
 lib/Rose/DB/Object/Metadata/Auto/MySQL.pm
 lib/Rose/DB/Object/Metadata/Auto/Pg.pm
