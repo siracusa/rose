@@ -40,7 +40,7 @@ use Rose::Class::MakeMethods::Generic
   inheritable_hash =>
   [
     driver_classes      => { interface => 'get_set_all' },
-    driver_class        => { interface => 'get_set', hash_key => 'driver_classes' },
+    _driver_class       => { interface => 'get_set', hash_key => 'driver_classes' },
     delete_driver_class => { interface => 'delete', hash_key => 'driver_classes' },
 
     default_connect_options => { interface => 'get_set_all',  },
@@ -55,8 +55,9 @@ __PACKAGE__->default_type('default');
 __PACKAGE__->driver_classes
 (
   mysql    => 'Rose::DB::MySQL',
-  Pg       => 'Rose::DB::Pg',
-  Informix => 'Rose::DB::Informix',
+  pg       => 'Rose::DB::Pg',
+  informix => 'Rose::DB::Informix',
+  generic  => 'Rose::DB::Generic',
 );
 
 __PACKAGE__->default_connect_options
@@ -91,8 +92,8 @@ use Rose::Object::MakeMethods::Generic
 (
   'scalar' =>
   [
-    qw(database schema catalog host port username password european_dates
-       _dbh_refcount _origin_class)
+    qw(database dbi_driver schema catalog host port username 
+       password european_dates _dbh_refcount _origin_class)
   ],
 
   'boolean' =>
@@ -193,6 +194,8 @@ sub alias_db
 
 sub unregister_domain { shift->registry->delete_domain(@_) }
 
+sub driver_class { shift->_driver_class(lc shift, @_) }
+
 #
 # Object methods
 #
@@ -233,8 +236,9 @@ sub new
   Carp::croak "No driver found for domain '$domain' and type '$type'"
     unless(defined $driver);
 
-  my $driver_class = $class->driver_class($driver) or Carp::croak
-    "No driver class found for driver '$driver'";
+  my $driver_class = $class->driver_class($driver) ||
+     $class->driver_class('generic') || Carp::croak
+    "No driver class found for drivers '$driver' or 'generic'";
 
   my $self;
 
@@ -408,6 +412,8 @@ sub driver
 {
   if(@_ > 1)
   {
+    $_[1] = lc $_[1];
+
     if(defined $_[1] && defined $_[0]->{'driver'} && $_[0]->{'driver'} ne $_[1])
     {
       Carp::croak "Attempt to change driver from '$_[0]->{'driver'}' to ",
@@ -1121,7 +1127,7 @@ L<Rose::DB> currently supports the following L<DBI> database drivers:
     DBD::mysql    (MySQL)
     DBD::Informix (Informix)
 
-Support for more drivers may be added in the future.  Patches are welcome (provided they also patch the test suite, of course).
+L<Rose::DB> will attempt to service an unsupported database using a L<generic|Rose::DB::Generic> implementation that may or may not work.  Support for more drivers may be added in the future.  Patches are welcome.
 
 All database-specific behavior is contained and documented in the subclasses of L<Rose::DB>.  L<Rose::DB>'s constructor method (L<new()|/new>) returns  a database-specific subclass of L<Rose::DB>, chosen based on the L<driver|/driver> value of the selected L<data source|"Data Source Abstraction">.  The default mapping of databases to L<Rose::DB> subclasses is:
 
@@ -1267,10 +1273,19 @@ Get or set the default data source type.  See the L<"Data Source Abstraction"> s
 
 =item B<driver_class DRIVER [, CLASS]>
 
-Get or set the subclass used for DRIVER.
+Get or set the subclass used for DRIVER.  The DRIVER argument is automatically converted to lowercase.  (Driver names are effectively case-insensitive.)
 
     $class = Rose::DB->driver_class('Pg');      # get
-    Rose::DB->driver_class('Pg' => 'MyDB::Pg'); # set
+    Rose::DB->driver_class('pg' => 'MyDB::Pg'); # set
+
+The default mapping of driver names to class names is as follows:
+
+    mysql    -> Rose::DB::MySQL
+    pg       -> Rose::DB::Pg
+    informix -> Rose::DB::Informix
+    generic  -> Rose::DB::Generic
+
+The class mapped to the special driver name "generic" will be used for any driver name that does not have an entry in the map.
 
 See the documentation for the L<new|/new> method for more information on how the driver influences the class of objects returned by the constructor.
 
@@ -1284,7 +1299,6 @@ PARAMS are name/value pairs.  Any L<Rose::DB> object method that sets a L<data s
                         type     => 'main',
                         username => 'tester');
 
-
 PARAMS should include values for both the C<type> and C<domain> parameters since these two attributes are used to identify the data source.  If they are omitted, they default to L<default_domain|/default_domain> and L<default_type|/default_type>, respectively.  If default values do not exist, a fatal error will occur.  If there is no data source defined for the specified C<type> and C<domain>, a fatal error will occur.
 
 =item B<register_db PARAMS>
@@ -1296,7 +1310,7 @@ PARAMS B<must> include values for the C<type>, C<domain>, and C<driver> paramete
 
 The C<type> and C<domain> are used to identify the data source.  If either one is missing, a fatal error will occur.  See the L<"Data Source Abstraction"> section for more information on data source types and domains.
 
-The C<driver> is used to determine which class objects will be blessed into by the L<Rose::DB> constructor, L<new|/new>.  If it is missing, a fatal error will occur.
+The C<driver> is used to determine which class objects will be blessed into by the L<Rose::DB> constructor, L<new|/new>.  The driver name is automatically converted to lowercase.  If it is missing, a fatal error will occur.  
 
 In most deployment scenarios, L<register_db|/register_db> is called early in the compilation process to ensure that the registered data sources are available when the "real" code runs.
 

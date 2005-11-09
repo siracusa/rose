@@ -26,7 +26,7 @@ sub build_dsn
   $info{'port'}   = $args{'port'};
 
   return
-    "dbi:$args{'driver'}:" . 
+    "dbi:$args{'dbi_driver'}:" . 
     join(';', map { "$_=$info{$_}" } grep { defined $info{$_} }
               qw(dbname host port));
 }
