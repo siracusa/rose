@@ -3,7 +3,7 @@ package Rose::DB::Object::Util;
 use strict;
 
 use Rose::DB::Object::Constants
-  qw(STATE_IN_DB STATE_LOADING STATE_SAVING);
+  qw(PRIVATE_PREFIX STATE_IN_DB STATE_LOADING STATE_SAVING);
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -12,7 +12,7 @@ our @EXPORT_OK =
   qw(is_in_db is_loading is_saving
      set_state_in_db set_state_loading set_state_saving
      unset_state_in_db unset_state_loading unset_state_saving
-     row_id);
+     row_id column_value_formatted_key);
 
 our %EXPORT_TAGS = 
 (
@@ -20,7 +20,8 @@ our %EXPORT_TAGS =
   [
     qw(is_in_db is_loading is_saving
        set_state_in_db set_state_loading set_state_saving
-      unset_state_in_db unset_state_loading unset_state_saving) 
+       unset_state_in_db unset_state_loading unset_state_saving
+       row_id column_value_formatted_key) 
   ],
   get_state   => [ qw(is_in_db is_loading is_saving) ],
   set_state   => [ qw(set_state_in_db set_state_loading set_state_saving) ],
@@ -55,6 +56,12 @@ sub row_id
          map { $object->$_() } 
          map { $meta->column_accessor_method_name($_) }
          $meta->primary_key_column_names);
+}
+
+sub column_value_formatted_key
+{
+  my($key) = shift;
+  return PRIVATE_PREFIX . "_${key}_formatted";
 }
 
 1;
