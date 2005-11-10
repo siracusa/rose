@@ -368,8 +368,11 @@ sub make_methods
 
     $self->made_method_type($type => $method_name);
   }
+  
+  return;
 }
 
 sub made_method_type { }
+sub made_method_types { }
 
 1;

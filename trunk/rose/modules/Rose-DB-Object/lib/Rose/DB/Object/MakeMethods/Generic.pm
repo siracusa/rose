@@ -15,6 +15,8 @@ use Rose::DB::Object::Constants
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
      STATE_SAVING ON_SAVE_ATTR_NAME);
 
+use Rose::DB::Object::Util qw(column_value_formatted_key);
+
 our $VERSION = '0.09';
 
 sub scalar
@@ -697,7 +699,7 @@ sub bitfield
     my $size = $args->{'bits'} ||= 32;
 
     my $default = $args->{'default'};
-    my $formatted_key = PRIVATE_PREFIX . "_${key}_formatted";
+    my $formatted_key = column_value_formatted_key($key);
 
     if(defined $default)
     {
@@ -706,13 +708,14 @@ sub bitfield
         my $self = shift;
 
         my $db = $self->db or die "Missing Rose::DB object attribute";
+        my $driver = $db->driver || 'unknown';
 
         if(@_)
         {
           if($self->{STATE_LOADING()})
           {
             $self->{$key} = undef;
-            $self->{$formatted_key} = $_[0];
+            $self->{$formatted_key,$driver} = $_[0];
           }
           else
           {
@@ -724,7 +727,7 @@ sub bitfield
             }
           }
         }
-        elsif(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key}))
+        elsif(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key,$driver}))
         {
           $self->{$key} = $db->parse_bitfield($default, $size);
 
@@ -736,16 +739,16 @@ sub bitfield
 
         if($self->{STATE_SAVING()})
         {
-          $self->{$formatted_key} = $db->format_bitfield($self->{$key})
-            unless(defined $self->{$formatted_key} || !defined $self->{$key});
+          $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key})
+            unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
 
-          return $self->{$formatted_key};
+          return $self->{$formatted_key,$driver};
         }
 
         return unless(defined wantarray);
 
         return $self->{$key} ? $self->{$key} : 
-               $self->{$formatted_key} ? $db->parse_bitfield($self->{$formatted_key}) : undef;
+               $self->{$formatted_key,$driver} ? $db->parse_bitfield($self->{$formatted_key,$driver}) : undef;
       };
     }
     else
@@ -755,13 +758,14 @@ sub bitfield
         my $self = shift;
 
         my $db = $self->db or die "Missing Rose::DB object attribute";
+        my $driver = $db->driver || 'unknown';
 
         if(@_)
         {
           if($self->{STATE_LOADING()})
           {
             $self->{$key} = undef;
-            $self->{$formatted_key} = $_[0];
+            $self->{$formatted_key,$driver} = $_[0];
           }
           else
           {
@@ -771,18 +775,18 @@ sub bitfield
 
         if($self->{STATE_SAVING()})
         {
-          return undef  unless(defined($self->{$formatted_key}) || $self->{$key});
+          return undef  unless(defined($self->{$formatted_key,$driver}) || $self->{$key});
 
-          $self->{$formatted_key} = $db->format_bitfield($self->{$key})
-            unless(defined $self->{$formatted_key} || !defined $self->{$key});
+          $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key})
+            unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
 
-          return $self->{$formatted_key};
+          return $self->{$formatted_key,$driver};
         }
 
         return unless(defined wantarray);
 
         return $self->{$key} ? $self->{$key} : 
-               $self->{$formatted_key} ? $db->parse_bitfield($self->{$formatted_key}) : undef;
+               $self->{$formatted_key,$driver} ? $db->parse_bitfield($self->{$formatted_key,$driver}) : undef;
       };
 
 
@@ -816,7 +820,7 @@ sub bitfield
     my $size = $args->{'bits'} ||= 32;
 
     my $default = $args->{'default'};
-    my $formatted_key = PRIVATE_PREFIX . "_${key}_formatted";
+    my $formatted_key = column_value_formatted_key($key);
 
     if(defined $default)
     {
@@ -825,8 +829,9 @@ sub bitfield
         my $self = shift;
 
         my $db = $self->db or die "Missing Rose::DB object attribute";
+        my $driver = $db->driver || 'unknown';
 
-        if(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key}))
+        if(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key,$driver}))
         {
           $self->{$key} = $db->parse_bitfield($default, $size);
 
@@ -838,16 +843,16 @@ sub bitfield
 
         if($self->{STATE_SAVING()})
         {
-          $self->{$formatted_key} = $db->format_bitfield($self->{$key})
-            unless(defined $self->{$formatted_key} || !defined $self->{$key});
+          $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key})
+            unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
 
-          return $self->{$formatted_key};
+          return $self->{$formatted_key,$driver};
         }
 
         return unless(defined wantarray);
 
         return $self->{$key} ? $self->{$key} : 
-               $self->{$formatted_key} ? $db->parse_bitfield($self->{$formatted_key}) : undef;
+               $self->{$formatted_key,$driver} ? $db->parse_bitfield($self->{$formatted_key,$driver}) : undef;
       };
     }
     else
@@ -857,21 +862,22 @@ sub bitfield
         my $self = shift;
 
         my $db = $self->db or die "Missing Rose::DB object attribute";
+        my $driver = $db->driver || 'unknown';
 
         if($self->{STATE_SAVING()})
         {
-          return undef  unless(defined($self->{$formatted_key}) || $self->{$key});
+          return undef  unless(defined($self->{$formatted_key,$driver}) || $self->{$key});
 
-          $self->{$formatted_key} = $db->format_bitfield($self->{$key})
-            unless(defined $self->{$formatted_key} || !defined $self->{$key});
+          $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key})
+            unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
 
-          return $self->{$formatted_key};
+          return $self->{$formatted_key,$driver};
         }
 
         return unless(defined wantarray);
 
         return $self->{$key} ? $self->{$key} : 
-               $self->{$formatted_key} ? $db->parse_bitfield($self->{$formatted_key}) : undef;
+               $self->{$formatted_key,$driver} ? $db->parse_bitfield($self->{$formatted_key,$driver}) : undef;
       };
     }
   }
@@ -880,20 +886,21 @@ sub bitfield
     my $size = $args->{'bits'} ||= 32;
 
     my $default = $args->{'default'};
-    my $formatted_key = PRIVATE_PREFIX . "_${key}_formatted";
+    my $formatted_key = column_value_formatted_key($key);
 
     $methods{$name} = sub
     {
       my $self = shift;
 
       my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
 
       Carp::croak "Missing argument in call to $name"  unless(@_);
 
       if($self->{STATE_LOADING()})
       {
         $self->{$key} = undef;
-        $self->{$formatted_key} = $_[0];
+        $self->{$formatted_key,$driver} = $_[0];
       }
       else
       {
@@ -902,18 +909,18 @@ sub bitfield
 
       if($self->{STATE_SAVING()})
       {
-        return undef  unless(defined($self->{$formatted_key}) || $self->{$key});
+        return undef  unless(defined($self->{$formatted_key,$driver}) || $self->{$key});
 
-        $self->{$formatted_key} = $db->format_bitfield($self->{$key})
-          unless(defined $self->{$formatted_key} || !defined $self->{$key});
+        $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key})
+          unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
 
-        return $self->{$formatted_key};
+        return $self->{$formatted_key,$driver};
       }
 
       return unless(defined wantarray);
 
       return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key} ? $db->parse_bitfield($self->{$formatted_key}) : undef;
+             $self->{$formatted_key,$driver} ? $db->parse_bitfield($self->{$formatted_key,$driver}) : undef;
     };
   }
   else { Carp::croak "Unknown interface: $interface" }

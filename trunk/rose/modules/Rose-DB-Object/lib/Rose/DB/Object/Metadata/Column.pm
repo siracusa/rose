@@ -9,6 +9,11 @@ use Rose::DB::Object::Metadata::Util qw(:all);
 use Rose::DB::Object::Metadata::MethodMaker;
 our @ISA = qw(Rose::DB::Object::Metadata::MethodMaker);
 
+use Rose::DB::Object::Util qw(column_value_formatted_key);
+
+use Rose::DB::Object::Constants 
+  qw(STATE_IN_DB STATE_LOADING STATE_SAVING);
+
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
@@ -23,6 +28,26 @@ use overload
 __PACKAGE__->add_default_auto_method_types('get_set');
 
 __PACKAGE__->add_common_method_maker_argument_names(qw(column default type hash_key));
+
+use Rose::Class::MakeMethods::Generic
+(
+  inheritable_hash =>
+  [
+    event_method_type  => { hash_key => 'event_method_types' },
+    event_method_types => { interface=> 'get_set_all' },
+    delete_event_method_type => { interface=>'delete', hash_key=> 'event_method_types' },
+  ],
+);
+
+__PACKAGE__->event_method_types
+(
+  inflate => [ qw(get_set get) ],
+  deflate => [ qw(get_set get) ],
+  on_load => [ qw(get_set set) ],
+  on_save => [ qw(get_set get) ],
+  on_set  => [ qw(get_set set) ],
+  on_get  => [ qw(get_set get) ],
+);
 
 Rose::Object::MakeMethods::Generic->make_methods
 (
@@ -39,6 +64,7 @@ Rose::Object::MakeMethods::Generic->make_methods
     'manager_uses_method',
     'is_primary_key_member',
     'not_null',
+    'triggers_disabled',
   ],
 );
 
@@ -132,6 +158,15 @@ sub made_method_type
   {
     $self->{'mutator_method_name'} = $name;
   }
+  
+  $self->{'made_method_types'}{$type} = 1;
+}
+
+sub defined_method_types
+{
+  my($self) = shift;
+  my @types = sort keys %{$self->{'made_method_types'} ||= {}};
+  return wantarray ? @types : \@types;
 }
 
 sub method_maker_arguments
@@ -327,6 +362,245 @@ sub _sort_keys
   }
 
   return lc $_[0] cmp lc $_[1];
+}
+
+our %Trigger_Events =
+(
+  inflate => 1,
+  deflate => 1,
+  on_load => 1,
+  on_save => 1,
+  on_set  => 1,
+  on_get  => 1,
+);
+
+sub triggers
+{
+  my($self, $event) = (shift, shift);
+
+  Carp::croak "Invalid event: $event"  unless(exists $Trigger_Events{$event});
+
+  if(@_)
+  {
+    my $code = shift;
+
+    unless((ref($code) || '') eq 'CODE')
+    {
+      Carp::croak "Not a code reference: $code";
+    }
+
+    $self->{'triggers'}{$event} = [ $code ];
+    $self->reapply_triggers($event);
+    return;
+  }
+
+  return $self->{'triggers'}{$event};
+}
+
+sub add_trigger
+{
+  my($self, $event) = (shift, shift);
+
+  Carp::croak "Invalid event: '$event'"  unless(exists $Trigger_Events{$event});
+  
+  my($code, $where);
+
+  if(@_ == 2)
+  {
+    $where = shift;
+    $code  = shift;
+  }
+  elsif(@_)
+  {
+    $code  = shift;
+    $where = 'end';
+  }
+
+  unless((ref($code) || '') eq 'CODE')
+  {
+    Carp::croak "Not a code reference: $code";
+  }
+  
+  if($where =~ /^(?:end|last|push)$/)
+  {
+    push(@{$self->{'triggers'}{$event}}, $code);
+  }
+  elsif($where =~ /^(?:start|first|unshift)$/)
+  {
+    unshift(@{$self->{'triggers'}{$event}}, $code);
+  }
+  else { Carp::croak "Invalid trigger position: '$where'" }
+
+  $self->reapply_triggers($event);
+  return;
+}
+
+sub apply_triggers
+{
+  my($self, $event) = @_;
+
+  my $method_types;
+
+  if(defined $event)
+  {
+    $method_types = $self->event_method_type($event) 
+      or Carp::croak "Invalid event: '$event'";
+
+    my %defined = map { $_ => 1 } $self->defined_method_types;
+
+    $method_types = [ grep { $defined{$_} } @$method_types ];
+  }
+  else
+  {
+    $method_types =  $self->defined_method_types;
+  }
+
+  foreach my $method_type (@$method_types)
+  {
+    $self->apply_method_triggers($method_type);
+  }
+  
+  return;
+}
+
+*reapply_triggers = \&apply_triggers;
+
+sub apply_method_triggers
+{
+  my($self, $type) = @_;
+
+  my $class = $self->parent->class;
+
+  my $method_name = $self->method_name($type) or
+    Carp::confess "No method name for method type '$type'";
+
+  my $method_code = $self->method_code($type);
+  
+  # Save the original method code
+  unless($method_code)
+  {
+    $method_code = \&{"${class}::$method_name"};
+    $self->method_code($type, $method_code);
+  }
+
+  # Copying out into scalars to avoid method calls in the sub itself
+  my $inflate_code = $self->triggers('inflate') || 0;
+  my $deflate_code = $self->triggers('deflate') || 0;
+  my $on_load_code = $self->triggers('on_load') || 0;
+  my $on_save_code = $self->triggers('on_save') || 0;
+  my $on_set_code  = $self->triggers('on_set')  || 0;
+  my $on_get_code  = $self->triggers('on_get')  || 0;
+
+  my $key           = $self->hash_key;
+  my $formatted_key = column_value_formatted_key($key);
+
+  if($type eq 'get')
+  {
+    if($inflate_code || $deflate_code || $on_save_code || $on_get_code)
+    {
+      my $method = sub
+      {
+        my($obj) = $_[0];
+    
+        if($obj->{STATE_SAVING()})
+        {
+          unless($obj->{'triggers_disabled'})
+          {
+            local $obj->{'triggers_disabled'} = 1;
+
+            if($deflate_code)
+            {            
+              my $db = $obj->db or die "Missing Rose::DB object attribute";
+              my $driver = $db->driver || 'unknown';
+  
+              my $value = defined $obj->{$formatted_key,$driver} ?
+                          $obj->{$formatted_key,$driver} : $obj->{$key};
+  
+              foreach my $code (@$deflate_code)
+              {
+                $value = $code->($obj, $value);
+              }
+              
+              $obj->{$formatted_key,$driver} = $value;
+            }
+              
+            if($on_save_code)
+            {
+              foreach my $code (@$on_save_code)
+              {
+                $code->($obj);
+              }
+            }
+          }
+
+          &$method_code; # magic call using current @_
+        }
+        else
+        {
+          unless($obj->{'triggers_disabled'})
+          {
+            local $obj->{'triggers_disabled'} = 1;
+
+            if($inflate_code)
+            {
+              my $db = $obj->db or die "Missing Rose::DB object attribute";
+              my $driver = $db->driver || 'unknown';
+  
+              my $value = defined $obj->{$key} ? $obj->{$key} :
+                          $obj->{$formatted_key,$driver};
+  
+              foreach my $code (@$inflate_code)
+              {
+                $value = $code->($obj, $value);
+              }
+              
+              $obj->{$key} = $value;
+            }
+              
+            if($on_get_code)
+            {
+              foreach my $code (@$on_get_code)
+              {
+                $code->($obj);
+              }
+            }
+          }
+
+          &$method_code; # magic call using current @_
+        }
+      };
+
+      no warnings;
+      no strict 'refs';
+      *{"${class}::$method_name"} = $method;
+    }
+    else # no triggers
+    {
+      no warnings;
+      no strict 'refs';
+      *{"${class}::$method_name"} = $method_code;
+    }
+  }
+}
+
+sub method_code
+{
+  my($self, $type) = (shift, shift);
+  
+  if(@_)
+  {
+    return $self->{'method_code'}{$type} = shift;
+  }
+
+  return $self->{'method_code'}{$type};
+}
+
+sub make_methods
+{
+  my($self) = shift;
+  
+  $self->SUPER::make_methods(@_);
+  $self->apply_triggers;
 }
 
 1;
