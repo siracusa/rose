@@ -275,7 +275,8 @@ sub perl_column_defintion_attributes
   ATTR: foreach my $attr ('type', sort keys %$self)
   {
     if($attr =~ /^(?:name(?:_sql)? | is_primary_key_member | 
-                  primary_key_position | method_name | ordinal_position)$/x)
+                  primary_key_position | method_name | method_code |
+                  made_method_types| ordinal_position | triggers)$/x)
     {
       next ATTR;
     }
@@ -586,7 +587,9 @@ sub apply_method_triggers
 sub method_code
 {
   my($self, $type) = (shift, shift);
-  
+
+  Carp::confess "Missing or undefined type argument"  unless(defined $type);
+
   if(@_)
   {
     return $self->{'method_code'}{$type} = shift;
