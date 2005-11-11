@@ -1933,7 +1933,7 @@ sub load_sql
   $key_columns ||= $self->primary_key_column_names;
 
   no warnings;
-  return $self->{'load_sql'}{join("\0", @$key_columns)} ||= 
+  return $self->{'load_sql'}{$db->{'driver'}}{join("\0", @$key_columns)} ||= 
     'SELECT ' . $self->column_names_string_sql($db) . ' FROM ' .
     $self->fq_table_sql . ' WHERE ' .
     join(' AND ',  map { "$_ = ?" } @$key_columns);
