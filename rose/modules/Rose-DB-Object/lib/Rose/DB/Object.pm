@@ -279,24 +279,27 @@ sub load
 
     if($rows > 0)
     {
-      my $object = (ref $self)->new(db => $self->db);
       my $methods = $meta->column_mutator_method_names_hash;
 
-      # Sneaky init by object replacement
+      # Empty existing object?
+      #%$self = (db => $self->db, meta => $meta, STATE_LOADING() => 1);
+
       foreach my $name (@$column_names)
       {
         my $method = $methods->{$name};
-        $object->$method($row{$name});
+        $self->$method($row{$name});
       }
 
-      $self = $_[0] = $object;
-
-      # Init by copying
+      # Sneaky init by object replacement
+      #my $object = (ref $self)->new(db => $self->db);
+      #
       #foreach my $name (@$column_names)
       #{
       #  my $method = $methods->{$name};
-      #  $self->$method($row{$name});
+      #  $object->$method($row{$name});
       #}
+      #
+      #$self = $_[0] = $object;
     }
     else
     {
@@ -709,15 +712,16 @@ sub insert
 
     if(@pk_methods == 1)
     {
-      my $pk = $pk_methods[0];
+      my $get_pk = $pk_methods[0];
 
-      if($using_pk_placeholders || !defined $self->$pk())
+      if($using_pk_placeholders || !defined $self->$get_pk())
       {
-        #$self->$pk($db->last_insertid_from_sth($sth, $self));
-        $self->$pk($db->last_insertid_from_sth($sth));
+        my $set_pk = $meta->column_mutator_method_name($meta->primary_key_column_names);
+        #$self->$set_pk($db->last_insertid_from_sth($sth, $self));
+        $self->$set_pk($db->last_insertid_from_sth($sth));
         $self->{STATE_IN_DB()} = 1;
       }
-      elsif(!$using_pk_placeholders && defined $self->$pk())
+      elsif(!$using_pk_placeholders && defined $self->$get_pk())
       {
         $self->{STATE_IN_DB()} = 1;
       }

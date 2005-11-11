@@ -290,6 +290,23 @@ sub method_name
   return $self->{'method_name'}{$type};
 }
 
+sub method_uses_formatted_key 
+{
+  my($self, $type) = @_;
+  return 0;
+}
+
+sub method_should_set
+{
+  my($self, $type, $args) = @_;
+
+  return 1  if($type eq 'set');
+  return 0  if($type eq 'get');
+
+  # $args is a reference to the method args *including* the invocant
+  return @$args > 1 ? 1 : 0;
+}
+
 sub build_method_name_for_type { Carp::confess "Override in subclass" }
 
 sub defined_method_types

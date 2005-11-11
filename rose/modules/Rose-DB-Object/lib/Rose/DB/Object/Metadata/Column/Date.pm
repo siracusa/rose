@@ -35,6 +35,23 @@ sub should_inline_value
           ($_[1]->driver eq 'Informix' || $_[2] =~ /^\w+\(.*\)$/)) ? 1 : 0;
 }
 
+sub method_should_set
+{
+  my($self, $type, $args) = @_;
+
+  return 1  if($type eq 'set');
+  return 0  if($type eq 'get');
+
+  if($type eq 'get_set')
+  {
+    # Set with 1 arg, but two args is a form of get.
+    # Three or more args is undefined...
+    return @$args == 2 ? 1 : 0;
+  }
+
+  return $self->SUPER::method_should_set($type, $args);
+}
+
 sub parse_value
 {
   shift; 
@@ -50,6 +67,13 @@ sub parse_value
 }
 
 sub format_value { shift; shift->format_date(@_) }
+
+sub method_uses_formatted_key
+{
+  my($self, $type) = @_;
+  return 1  if($type eq 'get' || $type eq 'set' || $type eq 'get_set');
+  return 0;
+}
 
 1;
 
