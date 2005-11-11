@@ -59,6 +59,13 @@ sub init_with_dbi_column_info
   return;
 }
 
+sub method_uses_formatted_key
+{
+  my($self, $type) = @_;
+  return 1  if($type eq 'get' || $type eq 'set' || $type eq 'get_set');
+  return 0;
+}
+
 1;
 
 __END__

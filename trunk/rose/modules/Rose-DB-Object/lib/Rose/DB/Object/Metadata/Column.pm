@@ -9,7 +9,8 @@ use Rose::DB::Object::Metadata::Util qw(:all);
 use Rose::DB::Object::Metadata::MethodMaker;
 our @ISA = qw(Rose::DB::Object::Metadata::MethodMaker);
 
-use Rose::DB::Object::Util qw(column_value_formatted_key);
+use Rose::DB::Object::Util 
+  qw(column_value_formatted_key column_value_is_inflated_key);
 
 use Rose::DB::Object::Constants 
   qw(STATE_IN_DB STATE_LOADING STATE_SAVING);
@@ -34,8 +35,8 @@ use Rose::Class::MakeMethods::Generic
   inheritable_hash =>
   [
     event_method_type  => { hash_key => 'event_method_types' },
-    event_method_types => { interface=> 'get_set_all' },
-    delete_event_method_type => { interface=>'delete', hash_key=> 'event_method_types' },
+    event_method_types => { interface => 'get_set_all' },
+    delete_event_method_type => { interface => 'delete', hash_key => 'event_method_types' },
   ],
 );
 
@@ -276,7 +277,8 @@ sub perl_column_defintion_attributes
   {
     if($attr =~ /^(?:name(?:_sql)? | is_primary_key_member | 
                   primary_key_position | method_name | method_code |
-                  made_method_types| ordinal_position | triggers)$/x)
+                  made_method_types| ordinal_position | triggers | 
+                  trigger_index )$/x)
     {
       next ATTR;
     }
@@ -400,40 +402,110 @@ sub triggers
 
 sub add_trigger
 {
-  my($self, $event) = (shift, shift);
+  my($self, %args) = @_;
 
-  Carp::croak "Invalid event: '$event'"  unless(exists $Trigger_Events{$event});
+  my($event, $position, $code, $name);
   
-  my($code, $where);
+  if(@_ == 3 && $Trigger_Events{$_[1]})
+  {
+    $event = $_[1];
+    $code  = $_[2];
+  }
+  else
+  {
+    $event    = $args{'event'};
+    $code     = $args{'code'};
+  }
 
-  if(@_ == 2)
-  {
-    $where = shift;
-    $code  = shift;
-  }
-  elsif(@_)
-  {
-    $code  = shift;
-    $where = 'end';
-  }
+  $name     = $args{'name'} || $self->generate_trigger_name;
+  $position = $args{'position'} || 'end';
+
+  Carp::croak "Invalid event: '$event'"  
+    unless(exists $Trigger_Events{$event});
 
   unless((ref($code) || '') eq 'CODE')
   {
     Carp::croak "Not a code reference: $code";
   }
   
-  if($where =~ /^(?:end|last|push)$/)
+  if($position =~ /^(?:end|last|push)$/)
   {
     push(@{$self->{'triggers'}{$event}}, $code);
+    $self->trigger_index($event, $name, $#{$self->{'triggers'}{$event}});
   }
-  elsif($where =~ /^(?:start|first|unshift)$/)
+  elsif($position =~ /^(?:start|first|unshift)$/)
   {
     unshift(@{$self->{'triggers'}{$event}}, $code);
+    
+    # Shift all the other trigger positions
+    my $indexes = $self->trigger_indexes($event);
+    
+    foreach my $name (keys(%$indexes))
+    {
+      $indexes->{$name}++;
+    }
+
+    # Set new position
+    $self->trigger_index($event, $name, 0);
   }
-  else { Carp::croak "Invalid trigger position: '$where'" }
+  else { Carp::croak "Invalid trigger position: '$position'" }
 
   $self->reapply_triggers($event);
   return;
+}
+
+my $Trigger_Num = 0;
+
+sub generate_trigger_name { "dyntrig_${$}_" . ++$Trigger_Num }
+
+sub trigger_indexes { $_[0]->{'trigger_index'}{$_[1]} || {} }
+
+sub trigger_index
+{
+  my($self, $event, $name) = (shift, shift, shift);
+  
+  if(@_)
+  {
+    return $self->{'trigger_index'}{$event}{$name} = shift;
+  }
+
+  return $self->{'trigger_index'}{$event}{$name};
+}
+
+sub delete_trigger
+{
+  my($self, %args) = @_;
+
+  my $name  = $args{'name'} or Carp::croak "Missing name parameter";
+  my $event = $args{'event'};
+
+  Carp::croak "Invalid event: '$event'"  
+    unless(exists $Trigger_Events{$event});
+
+  my $index = $self->trigger_index($event, $name);
+  
+  unless(defined $index)
+  {
+    Carp::croak "No trigger named '$name' for event '$event'";
+  }
+
+  my $triggers = $self->{'triggers'}{$event};
+  
+  # Remove the trigger
+  splice(@$triggers, $index, 1);
+
+  my $indexes = $self->trigger_indexes($event);
+
+  # Remove its index
+  delete $indexes->{$name};
+
+  # Shift all trigger indexes greater than $index
+  foreach my $name (keys(%$indexes))
+  {
+    $indexes->{$name}--  if($indexes->{$name} > $index);
+  }
+
+  $self->reapply_triggers($event);
 }
 
 sub apply_triggers
@@ -470,6 +542,8 @@ sub apply_method_triggers
 {
   my($self, $type) = @_;
 
+  my $column = $self; # $self masked in a deeper context below
+
   my $class = $self->parent->class;
 
   my $method_name = $self->method_name($type) or
@@ -492,44 +566,219 @@ sub apply_method_triggers
   my $on_set_code  = $self->triggers('on_set')  || 0;
   my $on_get_code  = $self->triggers('on_get')  || 0;
 
-  my $key           = $self->hash_key;
-  my $formatted_key = column_value_formatted_key($key);
+  my $key             = $self->hash_key;
+  my $formatted_key   = column_value_formatted_key($key);
+  my $is_inflated_key = column_value_is_inflated_key($key);
 
-  if($type eq 'get')
+  my $uses_formatted_key = $self->method_uses_formatted_key($type);
+
+  if($type eq 'get_set')
+  {
+    if($inflate_code || $deflate_code || 
+       $on_load_code || $on_save_code ||
+       $on_set_code  || $on_get_code)
+    {
+      my $method = sub
+      {
+        my($self) = $_[0];
+    
+        if($column->method_should_set('get_set', \@_))
+        {
+          # This is a duplication of the 'set' code below.  Yes, it's
+          # duplicated to save one measly function call.  So sue me.
+          if($self->{STATE_LOADING()})
+          {
+            $self->{$is_inflated_key} = 0  unless($uses_formatted_key);
+
+            &$method_code; # magic call using current @_
+  
+            unless($self->{'triggers_disabled'})
+            {
+              local $self->{'triggers_disabled'} = 1;
+  
+              if($on_load_code)
+              {
+                foreach my $code (@$on_load_code)
+                {
+                  $code->($self);
+                }
+              }
+            }
+          }
+          else
+          {
+            $self->{$is_inflated_key} = 0  unless($uses_formatted_key);
+
+            &$method_code; # magic call using current @_
+  
+            unless($self->{'triggers_disabled'})
+            {
+              local $self->{'triggers_disabled'} = 1;
+  
+              if($on_set_code)
+              {
+                foreach my $code (@$on_set_code)
+                {
+                  $code->($self);
+                }
+              }
+            }
+          }
+        }
+        else # getting
+        {
+          # This is a duplication of the 'get' code below.  Yes, it's
+          # duplicated to save one measly function call.  So sue me.
+          if($self->{STATE_SAVING()})
+          {
+            unless($self->{'triggers_disabled'})
+            {
+              local $self->{'triggers_disabled'} = 1;
+  
+              if($deflate_code)
+              {
+                my $db = $self->db or die "Missing Rose::DB object attribute";
+                my $driver = $db->driver || 'unknown';
+    
+                my $value = defined $self->{$formatted_key,$driver} ?
+                            $self->{$formatted_key,$driver} : $self->{$key};
+    
+                foreach my $code (@$deflate_code)
+                {
+                  $value = $code->($self, $value);
+                }
+  
+                if($uses_formatted_key)
+                {
+                  $self->{$formatted_key,$driver} = $value;
+                  $self->{$key} = undef;
+                }
+                else
+                {
+                  $self->{$key} = $value;
+                  $self->{$is_inflated_key} = 0;
+                }
+              }
+                
+              if($on_save_code)
+              {
+                foreach my $code (@$on_save_code)
+                {
+                  $code->($self);
+                }
+              }
+            }
+  
+            &$method_code; # magic call using current @_
+          }
+          else
+          {
+            unless($self->{'triggers_disabled'})
+            {
+              local $self->{'triggers_disabled'} = 1;
+  
+              if($inflate_code)
+              {
+                if($uses_formatted_key)
+                {
+                  unless(defined $self->{$key})
+                  {
+                    my $db = $self->db or die "Missing Rose::DB object attribute";
+                    my $driver = $db->driver || 'unknown';
+      
+                    my $value = $self->{$formatted_key,$driver};
+      
+                    foreach my $code (@$inflate_code)
+                    {
+                      $value = $code->($self, $value);
+                    }
+      
+                    $self->{$key} = $value;
+                  }
+                }
+                elsif(!$self->{$is_inflated_key})
+                {
+                  my $value = $self->{$key};
+    
+                  foreach my $code (@$inflate_code)
+                  {
+                    $value = $code->($self, $value);
+                  }
+    
+                  $self->{$is_inflated_key} = 1;
+                  $self->{$key} = $value;
+                }
+              }
+                
+              if($on_get_code)
+              {
+                foreach my $code (@$on_get_code)
+                {
+                  $code->($self);
+                }
+              }
+            }
+  
+            &$method_code; # magic call using current @_
+          }
+        }
+      };
+
+      no warnings;
+      no strict 'refs';
+      *{"${class}::$method_name"} = $method;
+    }
+    else # no applicable triggers for 'get'
+    {
+      no warnings;
+      no strict 'refs';
+      *{"${class}::$method_name"} = $method_code;
+    }
+  }
+  elsif($type eq 'get')
   {
     if($inflate_code || $deflate_code || $on_save_code || $on_get_code)
     {
       my $method = sub
       {
-        my($obj) = $_[0];
+        my($self) = $_[0];
     
-        if($obj->{STATE_SAVING()})
+        if($self->{STATE_SAVING()})
         {
-          unless($obj->{'triggers_disabled'})
+          unless($self->{'triggers_disabled'})
           {
-            local $obj->{'triggers_disabled'} = 1;
+            local $self->{'triggers_disabled'} = 1;
 
             if($deflate_code)
-            {            
-              my $db = $obj->db or die "Missing Rose::DB object attribute";
+            {
+              my $db = $self->db or die "Missing Rose::DB object attribute";
               my $driver = $db->driver || 'unknown';
   
-              my $value = defined $obj->{$formatted_key,$driver} ?
-                          $obj->{$formatted_key,$driver} : $obj->{$key};
+              my $value = defined $self->{$formatted_key,$driver} ?
+                          $self->{$formatted_key,$driver} : $self->{$key};
   
               foreach my $code (@$deflate_code)
               {
-                $value = $code->($obj, $value);
+                $value = $code->($self, $value);
               }
-              
-              $obj->{$formatted_key,$driver} = $value;
+
+              if($uses_formatted_key)
+              {
+                $self->{$formatted_key,$driver} = $value;
+                $self->{$key} = undef;
+              }
+              else
+              {
+                $self->{$key} = $value;
+                $self->{$is_inflated_key} = 0;
+              }
             }
               
             if($on_save_code)
             {
               foreach my $code (@$on_save_code)
               {
-                $code->($obj);
+                $code->($self);
               }
             }
           }
@@ -538,31 +787,48 @@ sub apply_method_triggers
         }
         else
         {
-          unless($obj->{'triggers_disabled'})
+          unless($self->{'triggers_disabled'})
           {
-            local $obj->{'triggers_disabled'} = 1;
+            local $self->{'triggers_disabled'} = 1;
 
             if($inflate_code)
             {
-              my $db = $obj->db or die "Missing Rose::DB object attribute";
-              my $driver = $db->driver || 'unknown';
-  
-              my $value = defined $obj->{$key} ? $obj->{$key} :
-                          $obj->{$formatted_key,$driver};
-  
-              foreach my $code (@$inflate_code)
+              if($uses_formatted_key)
               {
-                $value = $code->($obj, $value);
+                unless(defined $self->{$key})
+                {
+                  my $db = $self->db or die "Missing Rose::DB object attribute";
+                  my $driver = $db->driver || 'unknown';
+    
+                  my $value = $self->{$formatted_key,$driver};
+    
+                  foreach my $code (@$inflate_code)
+                  {
+                    $value = $code->($self, $value);
+                  }
+    
+                  $self->{$key} = $value;
+                }
               }
-              
-              $obj->{$key} = $value;
+              elsif(!$self->{$is_inflated_key})
+              {
+                my $value = $self->{$key};
+  
+                foreach my $code (@$inflate_code)
+                {
+                  $value = $code->($self, $value);
+                }
+  
+                $self->{$is_inflated_key} = 1;
+                $self->{$key} = $value;
+              }
             }
-              
+
             if($on_get_code)
             {
               foreach my $code (@$on_get_code)
               {
-                $code->($obj);
+                $code->($self);
               }
             }
           }
@@ -575,7 +841,66 @@ sub apply_method_triggers
       no strict 'refs';
       *{"${class}::$method_name"} = $method;
     }
-    else # no triggers
+    else # no applicable triggers for 'get'
+    {
+      no warnings;
+      no strict 'refs';
+      *{"${class}::$method_name"} = $method_code;
+    }
+  }
+  elsif($type eq 'set')
+  {
+    if($on_load_code || $on_set_code)
+    {
+      my $method = sub
+      {
+        my($self) = $_[0];
+
+        if($self->{STATE_LOADING()})
+        {
+          $self->{$is_inflated_key} = 0  unless($uses_formatted_key);
+
+          &$method_code; # magic call using current @_
+
+          unless($self->{'triggers_disabled'})
+          {
+            local $self->{'triggers_disabled'} = 1;
+
+            if($on_load_code)
+            {
+              foreach my $code (@$on_load_code)
+              {
+                $code->($self);
+              }
+            }
+          }
+        }
+        else
+        {
+          $self->{$is_inflated_key} = 0  unless($uses_formatted_key);
+
+          &$method_code; # magic call using current @_
+
+          unless($self->{'triggers_disabled'})
+          {
+            local $self->{'triggers_disabled'} = 1;
+
+            if($on_set_code)
+            {
+              foreach my $code (@$on_set_code)
+              {
+                $code->($self);
+              }
+            }
+          }
+        }
+      };
+
+      no warnings;
+      no strict 'refs';
+      *{"${class}::$method_name"} = $method;
+    }
+    else # no applicable triggers for 'set'
     {
       no warnings;
       no strict 'refs';
