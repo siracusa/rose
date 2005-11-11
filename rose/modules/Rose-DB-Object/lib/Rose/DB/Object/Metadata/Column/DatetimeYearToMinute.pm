@@ -13,7 +13,7 @@ sub should_inline_value
 {
   #my($self, $db, $value) = @_;
   return ($_[1]->validate_datetime_year_to_minute_keyword($_[2]) && 
-          ($_[1]->driver eq 'Informix' || $_[2] =~ /^\w+\(.*\)$/)) ? 1 : 0;
+          ($_[1]->driver eq 'informix' || $_[2] =~ /^\w+\(.*\)$/)) ? 1 : 0;
 }
 
 sub parse_value  { shift; shift->parse_datetime_year_to_minute(@_)  }
