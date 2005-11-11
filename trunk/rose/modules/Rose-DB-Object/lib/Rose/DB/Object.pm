@@ -664,7 +664,10 @@ sub insert
       return undef;
     }
 
-    foreach my $name (@pk_methods)
+    my @pk_set_methods = map { $meta->column_mutator_method_name($_) } 
+                         $meta->primary_key_column_names;
+
+    foreach my $name (@pk_set_methods)
     {
       $self->$name(shift @pk_values);
     }

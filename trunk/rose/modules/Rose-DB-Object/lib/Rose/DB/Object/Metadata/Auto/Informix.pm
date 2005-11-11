@@ -450,7 +450,7 @@ sub auto_retrieve_primary_key_column_names
 
     $class = $self->class or die "Missing class!";
 
-    my $db  = $self->db;  
+    my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
 
     # We need the table owner.  Asking for column information is the only

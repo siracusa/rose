@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 34;
+use Test::More tests => 134;
 
 BEGIN 
 {
@@ -29,7 +29,7 @@ SETUP:
   (
     id       => { primary_key => 1, not_null => 1 },
     name     => { type => 'varchar', length => 32 },
-    code     => { type => 'char', length => 6 },
+    code     => { type => 'varchar', length => 32 },
     start    => { type => 'date', default => '12/24/1980' },
     date_created => { type => 'timestamp' },
   );
@@ -105,8 +105,8 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
 {
   SKIP:
   {
-    #21
-    skip("$db_type tests", 1)  unless($Have{$db_type});
+    #31
+    skip("$db_type tests", 31)  unless($Have{$db_type});
   }
   
   next  unless($Have{$db_type});
@@ -118,8 +118,16 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
     MyObject->meta->initialize;
   }
 
-  # Run tests
+  ##
+  ## Run tests
+  ##
 
+  %Temp = ();
+
+  #
+  # name
+  #
+  
   my $o = MyObject->new;
   
   $o->name('Fred');
@@ -143,6 +151,11 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   is(keys %Temp, 1, "on_get 5 - $db_type");
   %Temp = ();
 
+  $name = $o->xget_name;
+  is($Temp{'get'}{'name'}, 'Fred', "on_get 6 - $db_type");
+  is(keys %Temp, 1, "on_get 7 - $db_type");
+  %Temp = ();
+
   #$Rose::DB::Object::Debug = 1;
 
   $o->save;
@@ -157,9 +170,9 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   %Temp = ();
 
   is($o->name, 'FRED', "deflate 1 - $db_type");
-  is($Temp{'get'}{'name'}, 'FRED', "on_get 6 - $db_type");
-  is($Temp{'inflate'}{'name'}, 'FRED', "on_get 7 - $db_type");
-  is(keys %Temp, 2, "on_get 8 - $db_type");
+  is($Temp{'get'}{'name'}, 'FRED', "on_get 8 - $db_type");
+  is($Temp{'inflate'}{'name'}, 'FRED', "on_get 9 - $db_type");
+  is(keys %Temp, 2, "on_get 10 - $db_type");
   %Temp = ();
   
   $o->name('Fred');
@@ -168,9 +181,44 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   %Temp = ();
 
   MyObject->meta->column('name')->add_trigger(
-    inflate => sub { $Temp{'inflate'}{'lc_name'} = lc shift->name });
+    event => 'inflate',
+    name  => 'lc_inflate',
+    code  => sub { $Temp{'lc_inflate'}{'name'} = lc shift->name });
 
   is($o->name, 'fred', "inflate 1 - $db_type");
+  is($Temp{'get'}{'name'}, 'fred', "inflate 2 - $db_type");
+  is($Temp{'inflate'}{'name'}, 'Fred', "inflate 3 - $db_type");
+  is($Temp{'lc_inflate'}{'name'}, 'fred', "inflate 4 - $db_type");
+  is(keys %Temp, 3, "inflate 5 - $db_type");
+  %Temp = ();
+
+  #
+  # code
+  #
+
+  $o = MyObject->new(name => 'foo', code => 'Abc');
+
+  is($o->code, 'abc', "inflate/deflate 1 - $db_type");
+
+  $o->save;
+
+  my $sth = $o->db->dbh->prepare(
+    'SELECT code FROM ' . $o->meta->fq_table_sql . ' WHERE id = ?');
+
+  $sth->execute($o->id);
+  my $code = $sth->fetchrow_array;
+
+  is($code, 'ABC', "inflate/deflate 2 - $db_type");
+  
+  is($o->code, 'abc', "inflate/deflate 3 - $db_type");
+  is($o->xget_code, 'abc', "inflate/deflate 4 - $db_type");
+
+  #
+  # Clean-up
+  #
+
+  MyObject->meta->column('name')->delete_trigger(event => 'inflate',
+                                                 name  => 'lc_inflate');
 }
 
 BEGIN
@@ -208,7 +256,7 @@ CREATE TABLE Rose_db_object_test
 (
   id             SERIAL NOT NULL PRIMARY KEY,
   name           VARCHAR(32) NOT NULL,
-  code           CHAR(6),
+  code           VARCHAR(32),
   start          DATE NOT NULL DEFAULT '1980-12-24',
   date_created   TIMESTAMP
 )
@@ -219,7 +267,7 @@ CREATE TABLE Rose_db_object_private.Rose_db_object_test
 (
   id             SERIAL NOT NULL PRIMARY KEY,
   name           VARCHAR(32) NOT NULL,
-  code           CHAR(6),
+  code           VARCHAR(32),
   start          DATE NOT NULL DEFAULT '1980-12-24',
   date_created   TIMESTAMP
 )
@@ -254,7 +302,7 @@ CREATE TABLE Rose_db_object_test
 (
   id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name           VARCHAR(32) NOT NULL,
-  code           CHAR(6),
+  code           VARCHAR(32),
   start          DATE NOT NULL DEFAULT '1980-12-24',
   date_created   TIMESTAMP
 )
@@ -289,7 +337,7 @@ CREATE TABLE Rose_db_object_test
 (
   id             SERIAL NOT NULL PRIMARY KEY,
   name           VARCHAR(32) NOT NULL,
-  code           CHAR(6),
+  code           VARCHAR(32),
   start          DATE DEFAULT '12/24/1980' NOT NULL,
   date_created   DATETIME YEAR TO SECOND
 )
