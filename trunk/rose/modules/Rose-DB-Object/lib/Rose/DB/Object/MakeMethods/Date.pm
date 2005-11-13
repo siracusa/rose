@@ -11,7 +11,9 @@ use Rose::DB::Object::Constants
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
      STATE_SAVING);
 
-our $VERSION = '0.04';
+use Rose::DB::Object::Util qw(column_value_formatted_key);
+
+our $VERSION = '0.05';
 
 sub date
 {
@@ -21,7 +23,7 @@ sub date
   my $interface = $args->{'interface'} || 'get_set';
   my $tz = $args->{'time_zone'} || 0;
 
-  my $formatted_key = PRIVATE_PREFIX . "_${key}_formatted";
+  my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
 
   my %methods;
@@ -33,12 +35,13 @@ sub date
       my $self = shift;
 
       my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
 
       if(@_)
       {
         if(@_ == 2)
         {
-          my $dt = $self->{$key} || $self->{$formatted_key};
+          my $dt = $self->{$key} || $self->{$formatted_key,$driver};
 
           if(defined $dt && !ref $dt)
           {
@@ -75,7 +78,7 @@ sub date
           if($self->{STATE_LOADING()})
           {
             $self->{$key} = undef;
-            $self->{$formatted_key} = $_[0];
+            $self->{$formatted_key,$driver} = $_[0];
           }
           else
           {
@@ -91,25 +94,25 @@ sub date
             {
               $dt->set_time_zone($tz || $db->server_time_zone);
               $self->{$key} = $dt;
-              $self->{$formatted_key} = undef;
+              $self->{$formatted_key,$driver} = undef;
             }
             else
             {
               $self->{$key} = undef;
-              $self->{$formatted_key} = $dt;
+              $self->{$formatted_key,$driver} = $dt;
             }
           }
         }
         else
         {
           $self->{$key} = undef;
-          $self->{$formatted_key} = undef;
+          $self->{$formatted_key,$driver} = undef;
         }
       }
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key})
+      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
       {
         my $dt = $db->parse_date($default);
 
@@ -123,23 +126,24 @@ sub date
         {
           $dt->set_time_zone($tz || $db->server_time_zone);
           $self->{$key} = $dt;
-          $self->{$formatted_key} = undef;
+          $self->{$formatted_key,$driver} = undef;
         }
         else
         {
           $self->{$key} = undef;
-          $self->{$formatted_key} = $dt;
+          $self->{$formatted_key,$driver} = $dt;
         }
       }
 
       if($self->{STATE_SAVING()})
       {
-        return ($self->{$key} || $self->{$formatted_key}) ? 
-          ($self->{$formatted_key} ||= $db->format_date($self->{$key})) : undef;
+        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
+          ($self->{$formatted_key,$driver} ||= $db->format_date($self->{$key})) : undef;
       }
 
       return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key} ? $db->parse_date($self->{$formatted_key}) : undef;
+             $self->{$formatted_key,$driver} ? 
+             ($self->{$key} = $db->parse_date($self->{$formatted_key,$driver})) : undef;
     };
   }
   elsif($interface eq 'get')
@@ -149,10 +153,11 @@ sub date
       my $self = shift;
 
       my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
 
       if(@_ == 2)
       {
-        my $dt = $self->{$key} || $self->{$formatted_key};
+        my $dt = $self->{$key} || $self->{$formatted_key,$driver};
 
         if(defined $dt && !ref $dt)
         {
@@ -184,7 +189,7 @@ sub date
         }
       }
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key})
+      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
       {
         my $dt = $db->parse_date($default);
 
@@ -198,23 +203,24 @@ sub date
         {
           $dt->set_time_zone($tz || $db->server_time_zone);
           $self->{$key} = $dt;
-          $self->{$formatted_key} = undef;
+          $self->{$formatted_key,$driver} = undef;
         }
         else
         {
           $self->{$key} = undef;
-          $self->{$formatted_key} = $dt;
+          $self->{$formatted_key,$driver} = $dt;
         }
       }
 
       if($self->{STATE_SAVING()})
       {
-        return ($self->{$key} || $self->{$formatted_key}) ? 
-          ($self->{$formatted_key} ||= $db->format_date($self->{$key})) : undef;
+        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
+          ($self->{$formatted_key,$driver} ||= $db->format_date($self->{$key})) : undef;
       }
 
       return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key} ? $db->parse_date($self->{$formatted_key}) : undef;
+             $self->{$formatted_key,$driver} ? 
+             ($self->{$key} = $db->parse_date($self->{$formatted_key,$driver})) : undef;
     };
   }
   elsif($interface eq 'set')
@@ -224,6 +230,7 @@ sub date
       my $self = shift;
 
       my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
 
       Carp::croak "Missing argument in call to $name"  unless(@_);
 
@@ -232,7 +239,7 @@ sub date
         if($self->{STATE_LOADING()})
         {
           $self->{$key} = undef;
-          $self->{$formatted_key} = $_[0];
+          $self->{$formatted_key,$driver} = $_[0];
         }
         else
         {
@@ -248,24 +255,24 @@ sub date
           {
             $dt->set_time_zone($tz || $db->server_time_zone);
             $self->{$key} = $dt;
-            $self->{$formatted_key} = undef;
+            $self->{$formatted_key,$driver} = undef;
           }
           else
           {
             $self->{$key} = undef;
-            $self->{$formatted_key} = $dt;
+            $self->{$formatted_key,$driver} = $dt;
           }
         }
       }
       else
       {
         $self->{$key} = undef;
-        $self->{$formatted_key} = undef;
+        $self->{$formatted_key,$driver} = undef;
       }
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key})
+      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
       {
         my $dt = $db->parse_date($default);
 
@@ -279,23 +286,24 @@ sub date
         {
           $dt->set_time_zone($tz || $db->server_time_zone);
           $self->{$key} = $dt;
-          $self->{$formatted_key} = undef;
+          $self->{$formatted_key,$driver} = undef;
         }
         else
         {
           $self->{$key} = undef;
-          $self->{$formatted_key} = $dt;
+          $self->{$formatted_key,$driver} = $dt;
         }
       }
 
       if($self->{STATE_SAVING()})
       {
-        return ($self->{$key} || $self->{$formatted_key}) ? 
-          ($self->{$formatted_key} ||= $db->format_date($self->{$key})) : undef;
+        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
+          ($self->{$formatted_key,$driver} ||= $db->format_date($self->{$key})) : undef;
       }
 
       return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key} ? $db->parse_date($self->{$formatted_key}) : undef;
+             $self->{$formatted_key,$driver} ? 
+             ($self->{$key} = $db->parse_date($self->{$formatted_key,$driver})) : undef;
     };
   }
   else { Carp::croak "Unknown interface: $interface" }
@@ -322,7 +330,7 @@ sub datetime
   my $format_method = "format_$type";
   my $parse_method  = "parse_$type";
 
-  my $formatted_key = PRIVATE_PREFIX . "_${name}_formatted";
+  my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
 
   my %methods;
@@ -334,12 +342,13 @@ sub datetime
       my $self = shift;
 
       my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
 
       if(@_)
       {
         if(@_ == 2)
         {
-          my $dt = $self->{$key} || $self->{$formatted_key};
+          my $dt = $self->{$key} || $self->{$formatted_key,$driver};
 
           if(defined $dt && !ref $dt)
           {
@@ -372,7 +381,7 @@ sub datetime
           if($self->{STATE_LOADING()})
           {
             $self->{$key} = undef;
-            $self->{$formatted_key} = $_[0];
+            $self->{$formatted_key,$driver} = $_[0];
           }
           else
           {
@@ -386,19 +395,19 @@ sub datetime
 
             $dt->set_time_zone($tz || $db->server_time_zone)  if(ref $dt);
             $self->{$key} = $dt;
-            $self->{$formatted_key} = undef;
+            $self->{$formatted_key,$driver} = undef;
           }
         }
         else
         {
           $self->{$key} = undef;
-          $self->{$formatted_key} = undef;
+          $self->{$formatted_key,$driver} = undef;
         }
       }
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key})
+      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
       {
         my $dt = $db->$parse_method($default);
 
@@ -412,23 +421,24 @@ sub datetime
         {
           $dt->set_time_zone($tz || $db->server_time_zone);
           $self->{$key} = $dt;
-          $self->{$formatted_key} = undef;
+          $self->{$formatted_key,$driver} = undef;
         }
         else
         {
           $self->{$key} = undef;
-          $self->{$formatted_key} = $dt;
+          $self->{$formatted_key,$driver} = $dt;
         }
       }
 
       if($self->{STATE_SAVING()})
       {
-        return ($self->{$key} || $self->{$formatted_key}) ? 
-          ($self->{$formatted_key} ||= $db->$format_method($self->{$key})) : undef;
+        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
+          ($self->{$formatted_key,$driver} ||= $db->$format_method($self->{$key})) : undef;
       }
 
       return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key} ? $db->$parse_method($self->{$formatted_key}) : undef;
+             $self->{$formatted_key,$driver} ? 
+             ($self->{$key} = $db->$parse_method($self->{$formatted_key,$driver})) : undef;
     };
   }
   elsif($interface eq 'get')
@@ -438,8 +448,9 @@ sub datetime
       my $self = shift;
 
       my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key})
+      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
       {
         my $dt = $db->$parse_method($default);
 
@@ -453,23 +464,24 @@ sub datetime
         {
           $dt->set_time_zone($tz || $db->server_time_zone);
           $self->{$key} = $dt;
-          $self->{$formatted_key} = undef;
+          $self->{$formatted_key,$driver} = undef;
         }
         else
         {
           $self->{$key} = undef;
-          $self->{$formatted_key} = $dt;
+          $self->{$formatted_key,$driver} = $dt;
         }
       }
 
       if($self->{STATE_SAVING()})
       {
-        return ($self->{$key} || $self->{$formatted_key}) ? 
-          ($self->{$formatted_key} ||= $db->$format_method($self->{$key})) : undef;
+        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
+          ($self->{$formatted_key,$driver} ||= $db->$format_method($self->{$key})) : undef;
       }
 
       return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key} ? $db->$parse_method($self->{$formatted_key}) : undef;
+             $self->{$formatted_key,$driver} ? 
+             ($self->{$key} = $db->$parse_method($self->{$formatted_key,$driver})) : undef;
     };
   }
   elsif($interface eq 'set')
@@ -479,6 +491,7 @@ sub datetime
       my $self = shift;
 
       my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
 
       Carp::croak "Missing argument in call to $name"  unless(@_);
 
@@ -487,7 +500,7 @@ sub datetime
         if($self->{STATE_LOADING()})
         {
           $self->{$key} = undef;
-          $self->{$formatted_key} = $_[0];
+          $self->{$formatted_key,$driver} = $_[0];
         }
         else
         {
@@ -501,18 +514,18 @@ sub datetime
 
           $dt->set_time_zone($tz || $db->server_time_zone)  if(ref $dt);
           $self->{$key} = $dt;
-          $self->{$formatted_key} = undef;
+          $self->{$formatted_key,$driver} = undef;
         }
       }
       else
       {
         $self->{$key} = undef;
-        $self->{$formatted_key} = undef;
+        $self->{$formatted_key,$driver} = undef;
       }
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key})
+      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
       {
         my $dt = $db->$parse_method($default);
 
@@ -526,23 +539,24 @@ sub datetime
         {
           $dt->set_time_zone($tz || $db->server_time_zone);
           $self->{$key} = $dt;
-          $self->{$formatted_key} = undef;
+          $self->{$formatted_key,$driver} = undef;
         }
         else
         {
           $self->{$key} = undef;
-          $self->{$formatted_key} = $dt;
+          $self->{$formatted_key,$driver} = $dt;
         }
       }
 
       if($self->{STATE_SAVING()})
       {
-        return ($self->{$key} || $self->{$formatted_key}) ? 
-          ($self->{$formatted_key} ||= $db->$format_method($self->{$key})) : undef;
+        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
+          ($self->{$formatted_key,$driver} ||= $db->$format_method($self->{$key})) : undef;
       }
 
       return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key} ? $db->$parse_method($self->{$formatted_key}) : undef;
+             $self->{$formatted_key,$driver} ? 
+             ($self->{$key} = $db->$parse_method($self->{$formatted_key,$driver})) : undef;
     };
   }
   else { Carp::croak "Unknown interface: $interface" }
@@ -572,7 +586,7 @@ sub timestamp
   my $interface = $args->{'interface'} || 'get_set';
   my $tz = $args->{'time_zone'} || 0;
 
-  my $formatted_key = PRIVATE_PREFIX . "_${name}_formatted";
+  my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
 
   my %methods;
@@ -584,12 +598,13 @@ sub timestamp
       my $self = shift;
 
       my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
 
       if(@_)
       {
         if(@_ == 2)
         {
-          my $dt = $self->{$key} || $self->{$formatted_key};
+          my $dt = $self->{$key} || $self->{$formatted_key,$driver};
 
           if(defined $dt && !ref $dt)
           {
@@ -626,7 +641,7 @@ sub timestamp
           if($self->{STATE_LOADING()})
           {
             $self->{$key} = undef;
-            $self->{$formatted_key} = $_[0];
+            $self->{$formatted_key,$driver} = $_[0];
           }
           else
           {
@@ -640,19 +655,19 @@ sub timestamp
 
             $dt->set_time_zone($tz || $db->server_time_zone)  if(ref $dt);
             $self->{$key} = $dt;
-            $self->{$formatted_key} = undef;
+            $self->{$formatted_key,$driver} = undef;
           }
         }
         else
         {
           $self->{$key} = undef;
-          $self->{$formatted_key} = undef;
+          $self->{$formatted_key,$driver} = undef;
         }
       }
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key})
+      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
       {
         my $dt = $db->parse_timestamp($default);
 
@@ -666,23 +681,24 @@ sub timestamp
         {
           $dt->set_time_zone($tz || $db->server_time_zone);
           $self->{$key} = $dt;
-          $self->{$formatted_key} = undef;
+          $self->{$formatted_key,$driver} = undef;
         }
         else
         {
           $self->{$key} = undef;
-          $self->{$formatted_key} = $dt;
+          $self->{$formatted_key,$driver} = $dt;
         }
       }
 
       if($self->{STATE_SAVING()})
       {
-        return ($self->{$key} || $self->{$formatted_key}) ? 
-          ($self->{$formatted_key} ||= $db->format_timestamp($self->{$key})) : undef;
+        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
+          ($self->{$formatted_key,$driver} ||= $db->format_timestamp($self->{$key})) : undef;
       }
 
       return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key} ? $db->parse_timestamp($self->{$formatted_key}) : undef;
+             $self->{$formatted_key,$driver} ? 
+             ($self->{$key} = $db->parse_timestamp($self->{$formatted_key,$driver})) : undef;
     };
   }
   elsif($interface eq 'get')
@@ -692,10 +708,11 @@ sub timestamp
       my $self = shift;
 
       my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
 
       if(@_ == 2)
       {
-        my $dt = $self->{$key} || $self->{$formatted_key};
+        my $dt = $self->{$key} || $self->{$formatted_key,$driver};
 
         if(defined $dt && !ref $dt)
         {
@@ -727,7 +744,7 @@ sub timestamp
         }
       }
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key})
+      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
       {
         my $dt = $db->parse_timestamp($default);
 
@@ -741,23 +758,24 @@ sub timestamp
         {
           $dt->set_time_zone($tz || $db->server_time_zone);
           $self->{$key} = $dt;
-          $self->{$formatted_key} = undef;
+          $self->{$formatted_key,$driver} = undef;
         }
         else
         {
           $self->{$key} = undef;
-          $self->{$formatted_key} = $dt;
+          $self->{$formatted_key,$driver} = $dt;
         }
       }
 
       if($self->{STATE_SAVING()})
       {
-        return ($self->{$key} || $self->{$formatted_key}) ? 
-          ($self->{$formatted_key} ||= $db->format_timestamp($self->{$key})) : undef;
+        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
+          ($self->{$formatted_key,$driver} ||= $db->format_timestamp($self->{$key})) : undef;
       }
 
       return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key} ? $db->parse_timestamp($self->{$formatted_key}) : undef;
+             $self->{$formatted_key,$driver} ? 
+             ($self->{$key} = $db->parse_timestamp($self->{$formatted_key,$driver})) : undef;
     };
   }
   elsif($interface eq 'set')
@@ -767,6 +785,7 @@ sub timestamp
       my $self = shift;
 
       my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
 
       Carp::croak "Missing argument in call to $name"  unless(@_);
 
@@ -775,7 +794,7 @@ sub timestamp
         if($self->{STATE_LOADING()})
         {
           $self->{$key} = undef;
-          $self->{$formatted_key} = $_[0];
+          $self->{$formatted_key,$driver} = $_[0];
         }
         else
         {
@@ -789,18 +808,18 @@ sub timestamp
 
           $dt->set_time_zone($tz || $db->server_time_zone)  if(ref $dt);
           $self->{$key} = $dt;
-          $self->{$formatted_key} = undef;
+          $self->{$formatted_key,$driver} = undef;
         }
       }
       else
       {
         $self->{$key} = undef;
-        $self->{$formatted_key} = undef;
+        $self->{$formatted_key,$driver} = undef;
       }
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key})
+      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
       {
         my $dt = $db->parse_timestamp($default);
 
@@ -814,23 +833,24 @@ sub timestamp
         {
           $dt->set_time_zone($tz || $db->server_time_zone);
           $self->{$key} = $dt;
-          $self->{$formatted_key} = undef;
+          $self->{$formatted_key,$driver} = undef;
         }
         else
         {
           $self->{$key} = undef;
-          $self->{$formatted_key} = $dt;
+          $self->{$formatted_key,$driver} = $dt;
         }
       }
 
       if($self->{STATE_SAVING()})
       {
-        return ($self->{$key} || $self->{$formatted_key}) ? 
-          ($self->{$formatted_key} ||= $db->format_timestamp($self->{$key})) : undef;
+        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
+          ($self->{$formatted_key,$driver} ||= $db->format_timestamp($self->{$key})) : undef;
       }
 
       return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key} ? $db->parse_timestamp($self->{$formatted_key}) : undef;
+             $self->{$formatted_key,$driver} ? 
+             ($self->{$key} = $db->parse_timestamp($self->{$formatted_key,$driver})) : undef;
     };
   }
   else { Carp::croak "Unknown interface: $interface" }

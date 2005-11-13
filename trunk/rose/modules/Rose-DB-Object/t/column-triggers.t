@@ -2,14 +2,17 @@
 
 use strict;
 
-use Test::More tests => 134;
+use Test::More tests => 163;
 
 BEGIN 
 {
   require 't/test-lib.pl';
   use_ok('Rose::DB::Object');
   use_ok('Rose::DB::Object::Manager');
+  use_ok('Rose::DateTime::Util');
 }
+
+use Rose::DateTime::Util qw(parse_date);
 
 our(%Have, $Did_Setup, %Temp);
 
@@ -31,6 +34,7 @@ SETUP:
     name     => { type => 'varchar', length => 32 },
     code     => { type => 'varchar', length => 32 },
     start    => { type => 'date', default => '12/24/1980' },
+    ended    => { type => 'scalar', default => '11/22/2003' },
     date_created => { type => 'timestamp' },
   );
 
@@ -93,20 +97,48 @@ SETUP:
 
   $column->add_trigger(inflate => sub { lc $_[1] });
   $column->add_trigger(deflate => sub { uc $_[1] });
+
+  $column = MyObject->meta->column('start');
+
+  $column->add_trigger(inflate => sub { ref $_[1] ? $_[1]->add(days => 1) : $_[1] });
+  $column->add_trigger(deflate => sub 
+  { 
+    if(ref $_[1])
+    {
+      $_[1]->subtract(days => 1);
+      return $_[0]->db->format_date($_[1]);
+    }
+
+    return $_[1];
+  });
+
+  $column->add_trigger(on_set => sub { shift->name('start set') });
+  $column->add_trigger(on_get => sub { shift->name('start get') });
+
+  $column = MyObject->meta->column('ended');
+
+  $column->add_trigger(inflate => sub
+  {
+    defined $_[1] ? (Rose::DateTime::Util::parse_date($_[1]) || $_[0]->db->parse_date($_[1])) : undef 
+  });
+
+  $column->add_trigger(deflate => sub 
+  {
+    defined $_[1] ? $_[0]->db->format_date(Rose::DateTime::Util::parse_date($_[1]) || 
+                                           $_[0]->db->parse_date($_[1])) : undef 
+  });
 }
 
 #
 # Tests
 #
 
-#$Rose::DB::Object::Manager::Debug = 1;
-
 foreach my $db_type (qw(mysql pg pg_with_schema informix))
 {
   SKIP:
   {
-    #31
-    skip("$db_type tests", 31)  unless($Have{$db_type});
+    #38
+    skip("$db_type tests", 38)  unless($Have{$db_type});
   }
   
   next  unless($Have{$db_type});
@@ -214,6 +246,41 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   is($o->xget_code, 'abc', "inflate/deflate 4 - $db_type");
 
   #
+  # start
+  #
+
+  $o->start('2002-10-20');
+  is($o->name, 'start set',  "start 1 - $db_type");
+
+  $o->save;
+
+  is($o->name, 'start set',  "start 2 - $db_type");
+
+  $sth = $o->db->dbh->prepare(
+    'SELECT start FROM ' . $o->meta->fq_table_sql . ' WHERE id = ?');
+
+  $sth->execute($o->id);
+  my $start = $sth->fetchrow_array;
+
+  $start = parse_date($start);
+  
+  is($start->ymd, '2002-10-19', "start 3 - $db_type");
+
+  is($o->start->ymd, '2002-10-20', "start 4 - $db_type");
+  is($o->name, 'start get',  "start 5 - $db_type");
+
+  $o->load;
+  is($o->start->ymd, '2002-10-20', "start 6 - $db_type");
+
+  #
+  # ended
+  #
+
+  $o = MyObject->new;
+
+  is($o->ended->ymd, '2003-11-22', "ended 1 - $db_type");
+
+  #
   # Clean-up
   #
 
@@ -248,6 +315,7 @@ BEGIN
       local $dbh->{'PrintError'} = 0;
       $dbh->do('DROP TABLE Rose_db_object_test');
       $dbh->do('DROP TABLE Rose_db_object_private.Rose_db_object_test');
+      $dbh->do('DROP SCHEMA Rose_db_object_private');
       $dbh->do('CREATE SCHEMA Rose_db_object_private');
     }
 
@@ -258,6 +326,7 @@ CREATE TABLE Rose_db_object_test
   name           VARCHAR(32) NOT NULL,
   code           VARCHAR(32),
   start          DATE NOT NULL DEFAULT '1980-12-24',
+  ended          TIMESTAMP,
   date_created   TIMESTAMP
 )
 EOF
@@ -269,6 +338,7 @@ CREATE TABLE Rose_db_object_private.Rose_db_object_test
   name           VARCHAR(32) NOT NULL,
   code           VARCHAR(32),
   start          DATE NOT NULL DEFAULT '1980-12-24',
+  ended          TIMESTAMP,
   date_created   TIMESTAMP
 )
 EOF
@@ -304,6 +374,7 @@ CREATE TABLE Rose_db_object_test
   name           VARCHAR(32) NOT NULL,
   code           VARCHAR(32),
   start          DATE NOT NULL DEFAULT '1980-12-24',
+  ended          TIMESTAMP,
   date_created   TIMESTAMP
 )
 EOF
@@ -339,6 +410,7 @@ CREATE TABLE Rose_db_object_test
   name           VARCHAR(32) NOT NULL,
   code           VARCHAR(32),
   start          DATE DEFAULT '12/24/1980' NOT NULL,
+  ended          DATETIME,
   date_created   DATETIME YEAR TO SECOND
 )
 EOF
@@ -360,7 +432,8 @@ END
 
     $dbh->do('DROP TABLE Rose_db_object_test');
     $dbh->do('DROP TABLE Rose_db_object_private.Rose_db_object_test');
-
+    $dbh->do('DROP SCHEMA Rose_db_object_private');
+      
     $dbh->disconnect;
   }
 
