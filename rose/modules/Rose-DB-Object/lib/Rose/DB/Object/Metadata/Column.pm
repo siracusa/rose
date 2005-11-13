@@ -633,24 +633,32 @@ sub apply_method_triggers
   
               if($deflate_code)
               {
-                my $db = $self->db or die "Missing Rose::DB object attribute";
-                my $driver = $db->driver || 'unknown';
-    
-                my $value = defined $self->{$formatted_key,$driver} ?
-                            $self->{$formatted_key,$driver} : $self->{$key};
-    
-                foreach my $code (@$deflate_code)
-                {
-                  $value = $code->($self, $value);
-                }
-  
                 if($uses_formatted_key)
                 {
-                  $self->{$formatted_key,$driver} = $value;
-                  $self->{$key} = undef;
+                  my $db = $self->db or die "Missing Rose::DB object attribute";
+                  my $driver = $db->driver || 'unknown';
+
+                  unless(defined $self->{$formatted_key,$driver})
+                  {      
+                    my $value = $self->{$key};
+      
+                    foreach my $code (@$deflate_code)
+                    {
+                      $value = $code->($self, $value);
+                    }
+    
+                    $self->{$formatted_key,$driver} = $value;
+                  }
                 }
                 else
                 {
+                  my $value = $self->{$key};
+  
+                  foreach my $code (@$deflate_code)
+                  {
+                    $value = $code->($self, $value);
+                  }
+  
                   $self->{$key} = $value;
                   $self->{$is_inflated_key} = 0;
                 }
@@ -675,27 +683,37 @@ sub apply_method_triggers
   
               if($inflate_code)
               {
+                my $value;
+                
+                if(defined $self->{$key})
+                {
+                  $value = $self->{$key};
+                }
+                else
+                {
+                  # Invoke built-in default and inflation code
+                  # (The call must not be in void context)
+                  $value = $method_code->($self, @_[1 .. $#$_]);
+                }
+
                 if($uses_formatted_key)
                 {
-                  unless(defined $self->{$key})
+                  foreach my $code (@$inflate_code)
                   {
-                    my $db = $self->db or die "Missing Rose::DB object attribute";
-                    my $driver = $db->driver || 'unknown';
-      
-                    my $value = $self->{$formatted_key,$driver};
-      
-                    foreach my $code (@$inflate_code)
-                    {
-                      $value = $code->($self, $value);
-                    }
-      
-                    $self->{$key} = $value;
+                    $value = $code->($self, $value);
                   }
+
+                  my $db = $self->db or die "Missing Rose::DB object attribute";
+                  my $driver = $db->driver || 'unknown';
+    
+                  # Invalidate deflated value
+                  $self->{$formatted_key,$driver} = undef;
+
+                  # Set new inflated value
+                  $self->{$key} = $value;
                 }
                 elsif(!$self->{$is_inflated_key})
-                {
-                  my $value = $self->{$key};
-    
+                {    
                   foreach my $code (@$inflate_code)
                   {
                     $value = $code->($self, $value);
@@ -747,24 +765,32 @@ sub apply_method_triggers
 
             if($deflate_code)
             {
-              my $db = $self->db or die "Missing Rose::DB object attribute";
-              my $driver = $db->driver || 'unknown';
-  
-              my $value = defined $self->{$formatted_key,$driver} ?
-                          $self->{$formatted_key,$driver} : $self->{$key};
-  
-              foreach my $code (@$deflate_code)
-              {
-                $value = $code->($self, $value);
-              }
-
               if($uses_formatted_key)
               {
-                $self->{$formatted_key,$driver} = $value;
-                $self->{$key} = undef;
+                my $db = $self->db or die "Missing Rose::DB object attribute";
+                my $driver = $db->driver || 'unknown';
+
+                unless(defined $self->{$formatted_key,$driver})
+                {    
+                  my $value = $self->{$key};
+    
+                  foreach my $code (@$deflate_code)
+                  {
+                    $value = $code->($self, $value);
+                  }
+  
+                  $self->{$formatted_key,$driver} = $value;
+                }
               }
               else
               {
+                my $value = $self->{$key};
+
+                foreach my $code (@$deflate_code)
+                {
+                  $value = $code->($self, $value);
+                }
+
                 $self->{$key} = $value;
                 $self->{$is_inflated_key} = 0;
               }
@@ -787,38 +813,48 @@ sub apply_method_triggers
           {
             local $self->{'triggers_disabled'} = 1;
 
-            if($inflate_code)
-            {
-              if($uses_formatted_key)
+              if($inflate_code)
               {
-                unless(defined $self->{$key})
+                my $value;
+                
+                if(defined $self->{$key})
                 {
+                  $value = $self->{$key};
+                }
+                else
+                {
+                  # Invoke built-in default and inflation code
+                  # (The call must not be in void context)
+                  $value = $method_code->($self, @_[1 .. $#$_]);
+                }
+
+                if($uses_formatted_key)
+                {
+                  foreach my $code (@$inflate_code)
+                  {
+                    $value = $code->($self, $value);
+                  }
+
                   my $db = $self->db or die "Missing Rose::DB object attribute";
                   my $driver = $db->driver || 'unknown';
     
-                  my $value = $self->{$formatted_key,$driver};
-    
+                  # Invalidate deflated value
+                  $self->{$formatted_key,$driver} = undef;
+
+                  # Set new inflated value
+                  $self->{$key} = $value;
+                }
+                elsif(!$self->{$is_inflated_key})
+                {    
                   foreach my $code (@$inflate_code)
                   {
                     $value = $code->($self, $value);
                   }
     
+                  $self->{$is_inflated_key} = 1;
                   $self->{$key} = $value;
                 }
               }
-              elsif(!$self->{$is_inflated_key})
-              {
-                my $value = $self->{$key};
-  
-                foreach my $code (@$inflate_code)
-                {
-                  $value = $code->($self, $value);
-                }
-  
-                $self->{$is_inflated_key} = 1;
-                $self->{$key} = $value;
-              }
-            }
 
             if($on_get_code)
             {

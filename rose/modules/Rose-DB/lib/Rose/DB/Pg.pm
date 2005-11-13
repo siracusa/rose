@@ -299,11 +299,6 @@ sub parse_dbi_column_info_default
     {
       return $1;
     }
-    # Ignore defaults that look like function calls
-    elsif(/^\w+\(.*\)$/)
-    {
-      return undef;
-    }
     # Handle sequence-based defaults elsewhere (if at all)
     elsif(/^nextval\(/)
     {
