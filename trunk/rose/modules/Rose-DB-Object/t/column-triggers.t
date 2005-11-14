@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 163;
+use Test::More tests => 171;
 
 BEGIN 
 {
@@ -137,8 +137,8 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
 {
   SKIP:
   {
-    #38
-    skip("$db_type tests", 38)  unless($Have{$db_type});
+    # 40
+    skip("$db_type tests", 40)  unless($Have{$db_type});
   }
   
   next  unless($Have{$db_type});
@@ -270,7 +270,14 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   is($o->name, 'start get',  "start 5 - $db_type");
 
   $o->load;
+
   is($o->start->ymd, '2002-10-20', "start 6 - $db_type");
+
+  $start = $o->start(truncate => 'month');
+  is($start->ymd, '2002-10-01', "start 7 - $db_type");
+
+  $start = $o->start(format => '%B %E %Y');
+  is($start, 'October 20th 2002', "start 8 - $db_type");
 
   #
   # ended

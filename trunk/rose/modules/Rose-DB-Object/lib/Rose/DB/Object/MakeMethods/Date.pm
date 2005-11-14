@@ -65,7 +65,7 @@ sub date
           {
             return undef  unless($self->{$key});
             return $dt  unless(ref $dt);
-            return $db->format_date($dt->clone->truncate(to => $_[1]));
+            return $dt->clone->truncate(to => $_[1]);
           }
           else
           {
@@ -181,7 +181,7 @@ sub date
         {
           return undef  unless($self->{$key});
           return $dt  unless(ref $dt);
-          return $db->format_date($dt->clone->truncate(to => $_[1]));
+          return $dt->clone->truncate(to => $_[1]);
         }
         else
         {
