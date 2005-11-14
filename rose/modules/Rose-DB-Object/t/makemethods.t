@@ -135,21 +135,7 @@ SKIP:
 
   is($p->sql_date_birthday->ymd, '1980-12-24', 'date 2');
 
-  if($p->db->driver =~ /^(?:pg|mysql)$/)
-  {
-    is($p->sql_date_birthday(truncate => 'month'), '1980-12-01', 'date truncate');
-  }
-  elsif($p->db->driver eq 'informix')
-  {
-    is($p->sql_date_birthday(truncate => 'month'), '12/01/1980', 'date truncate');
-  }
-  else
-  {
-    SKIP:
-    {
-      skip('date truncate skipped', 1);
-    }
-  }
+  is($p->sql_date_birthday(truncate => 'month')->ymd, '1980-12-01', 'date truncate');
 
   is($p->sql_date_birthday(format => '%B'), 'December', 'date format');
 

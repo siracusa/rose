@@ -684,43 +684,51 @@ sub apply_method_triggers
               if($inflate_code)
               {
                 my $value;
+                my $key_was_defined;
                 
                 if(defined $self->{$key})
                 {
                   $value = $self->{$key};
+                  $key_was_defined = 1;
                 }
                 else
                 {
+                  $key_was_defined = 0;
                   # Invoke built-in default and inflation code
                   # (The call must not be in void context)
                   $value = $method_code->($self, @_[1 .. $#$_]);
                 }
 
-                if($uses_formatted_key)
+                unless($self->{$is_inflated_key} && $key_was_defined)
                 {
-                  foreach my $code (@$inflate_code)
+                  if($uses_formatted_key)
                   {
-                    $value = $code->($self, $value);
+                    foreach my $code (@$inflate_code)
+                    {
+                      $value = $code->($self, $value);
+                    }
+  
+                    my $db = $self->db or die "Missing Rose::DB object attribute";
+                    my $driver = $db->driver || 'unknown';
+      
+                    # Invalidate deflated value
+                    $self->{$formatted_key,$driver} = undef;
+  
+                    # Set new inflated value
+                    $self->{$key} = $value;
+                  }
+                  else
+                  {    
+                    foreach my $code (@$inflate_code)
+                    {
+                      $value = $code->($self, $value);
+                    }
+      
+                    $self->{$is_inflated_key} = 1;
+                    $self->{$key} = $value;
                   }
 
-                  my $db = $self->db or die "Missing Rose::DB object attribute";
-                  my $driver = $db->driver || 'unknown';
-    
-                  # Invalidate deflated value
-                  $self->{$formatted_key,$driver} = undef;
-
-                  # Set new inflated value
-                  $self->{$key} = $value;
-                }
-                elsif(!$self->{$is_inflated_key})
-                {    
-                  foreach my $code (@$inflate_code)
-                  {
-                    $value = $code->($self, $value);
-                  }
-    
                   $self->{$is_inflated_key} = 1;
-                  $self->{$key} = $value;
                 }
               }
                 
@@ -813,21 +821,26 @@ sub apply_method_triggers
           {
             local $self->{'triggers_disabled'} = 1;
 
-              if($inflate_code)
+            if($inflate_code)
+            {
+              my $value;
+              my $key_was_defined;
+              
+              if(defined $self->{$key})
               {
-                my $value;
-                
-                if(defined $self->{$key})
-                {
-                  $value = $self->{$key};
-                }
-                else
-                {
-                  # Invoke built-in default and inflation code
-                  # (The call must not be in void context)
-                  $value = $method_code->($self, @_[1 .. $#$_]);
-                }
+                $value = $self->{$key};
+                $key_was_defined = 1;
+              }
+              else
+              {
+                $key_was_defined = 0;
+                # Invoke built-in default and inflation code
+                # (The call must not be in void context)
+                $value = $method_code->($self, @_[1 .. $#$_]);
+              }
 
+              unless($self->{$is_inflated_key} && $key_was_defined)
+              {
                 if($uses_formatted_key)
                 {
                   foreach my $code (@$inflate_code)
@@ -844,7 +857,7 @@ sub apply_method_triggers
                   # Set new inflated value
                   $self->{$key} = $value;
                 }
-                elsif(!$self->{$is_inflated_key})
+                else
                 {    
                   foreach my $code (@$inflate_code)
                   {
@@ -854,7 +867,10 @@ sub apply_method_triggers
                   $self->{$is_inflated_key} = 1;
                   $self->{$key} = $value;
                 }
+
+                $self->{$is_inflated_key} = 1;
               }
+            }
 
             if($on_get_code)
             {
