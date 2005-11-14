@@ -1,7 +1,6 @@
-0.080 (11.13.2005) - John Siracusa <siracusa@mindspring.com>
+0.080 (11.14.2005) - John Siracusa <siracusa@mindspring.com>
 
-    * Added tutorial.
-    * Added column triggers for set, get, load, save, inflate, and deflate.
+    * Added column triggers for get, set, load, save, inflate, and deflate.
     * Added support for new argument types to relationship methods.
     * Added a named, configurable map for convention manager classes.
     * Added perl_manager_class() and make_manager_class() meta methods.

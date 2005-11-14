@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 171;
+use Test::More tests => 195;
 
 BEGIN 
 {
@@ -47,6 +47,28 @@ SETUP:
 
   my $column = MyObject->meta->column('name');
   
+  foreach my $event (qw(on_set on_get on_load on_save inflate deflate))
+  {
+    $column->add_trigger($event => sub { die "foo" });
+    $column->add_trigger($event => sub { die "bar" });
+    $column->add_trigger($event => sub { die "baz" });
+  }
+
+  $column->delete_triggers('on_set');
+
+  Test::More::ok(!defined $column->triggers('on_set'), 'delete_triggers 1');
+  Test::More::ok(defined $column->triggers('on_get'), 'delete_triggers 2');
+
+  $column->delete_triggers;
+
+  my $i = 2;
+
+  foreach my $event (qw(on_set on_get on_load on_save inflate deflate))
+  {
+    $i++;
+    Test::More::ok(!defined $column->triggers($event), "delete_triggers $i");
+  }
+  
   # 0: die
   $column->add_trigger(event => 'on_get', 
                        name  => 'die',
@@ -56,7 +78,8 @@ SETUP:
   $column->add_trigger(event => 'on_get', 
                        code => sub { $Temp{'get'}{'name'} = shift->name });
 
-  my $dyn_name = "dyntrig_${$}_1";
+  # This relies on knowledge of how generate_trigger_name() works
+  my $dyn_name = "dyntrig_${$}_19"; 
 
   # 0: warn, die, dyn
   $column->add_trigger(event => 'on_get', 
@@ -137,8 +160,8 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
 {
   SKIP:
   {
-    # 40
-    skip("$db_type tests", 40)  unless($Have{$db_type});
+    # 44
+    skip("$db_type tests", 44)  unless($Have{$db_type});
   }
   
   next  unless($Have{$db_type});
@@ -286,6 +309,22 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   $o = MyObject->new;
 
   is($o->ended->ymd, '2003-11-22', "ended 1 - $db_type");
+  $o->ended('1999-09-10');
+
+  is($o->ended->ymd, '1999-09-10', "ended 2 - $db_type");
+
+  $o->save;
+  
+  $o = MyObject->new(id => $o->id);
+  $o->load;
+  
+  is($o->ended->ymd, '1999-09-10', "ended 3 - $db_type");
+
+  $o->ended('2/3/2004');
+  is($o->ended->ymd, '2004-02-03', "ended 4 - $db_type");
+
+  $o->ended(DateTime->new(year => 1980, month => 5, day => 20));
+  is($o->ended->ymd, '1980-05-20', "ended 5 - $db_type");
 
   #
   # Clean-up
@@ -417,7 +456,7 @@ CREATE TABLE Rose_db_object_test
   name           VARCHAR(32) NOT NULL,
   code           VARCHAR(32),
   start          DATE DEFAULT '12/24/1980' NOT NULL,
-  ended          DATETIME,
+  ended          DATE,
   date_created   DATETIME YEAR TO SECOND
 )
 EOF
