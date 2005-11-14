@@ -3760,8 +3760,9 @@ For example, given this class:
     our @ISA = qw(Rose::DB::Object);
     ...
 
-    print __PACKAGE__->meta->perl_manager_class(class     => 'Prod::Mgr',
-                                                base_name => 'prod');
+    print Product->meta->perl_manager_class(
+                           class     => 'Prod::Mgr',
+                           base_name => 'prod');
 
 The following would be printed:
 
