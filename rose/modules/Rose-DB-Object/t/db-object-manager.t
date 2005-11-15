@@ -5538,7 +5538,7 @@ our \@ISA = qw(Rose::DB::Object::Manager);
 
 sub object_class { 'MyPgObject' }
 
-__PACKAGE__->meta->make_manager_methods('my_pg_object');
+__PACKAGE__->make_manager_methods('my_pg_object');
 
 1;
 EOF
