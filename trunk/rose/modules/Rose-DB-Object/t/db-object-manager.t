@@ -5529,7 +5529,7 @@ EOF
     eval { Rose::DB::Object::Manager->make_manager_methods('objectz') };
     Test::More::ok($@, 'make_manager_methods clash - pg');
 
-    Test::More::is(MyPgObject->meta->perl_manager_class('MyPgObjectMgr'), 
+    Test::More::is(MyPgObject->meta->perl_manager_class(class => 'MyPgObjectMgr'), 
                   <<"EOF", 'perl_manager_class - pg');
 package MyPgObjectMgr;
 
@@ -5538,12 +5538,12 @@ our \@ISA = qw(Rose::DB::Object::Manager);
 
 sub object_class { 'MyPgObject' }
 
-__PACKAGE__->make_manager_methods('my_pg_object');
+__PACKAGE__->make_manager_methods('my_pg_objects');
 
 1;
 EOF
 
-    eval { MyPgObject->meta->perl_manager_class('MyPgObjectMgr') };
+    eval { MyPgObject->meta->perl_manager_class(class => 'MyPgObjectMgr') };
     Test::More::ok(!$@, 'make_manager_class - pg');
 
     package MyPgObjectManager;

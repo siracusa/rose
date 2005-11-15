@@ -2252,7 +2252,7 @@ sub perl_manager_class
 
   if(@_ == 1)
   {
-    $args{'class'} = shift;
+    $args{'base_name'} = shift;
   }
   else
   {
@@ -3732,9 +3732,9 @@ The integer number of spaces to use for each level of indenting in the generated
 
 See the larger example in the documentation for the L<perl_class_definition|/perl_class_definition> method to see what the generated Perl code looks like.
 
-=item B<perl_manager_class [PARAMS | CLASS]>
+=item B<perl_manager_class [ PARAMS | BASE_NAME ]>
 
-Returns a Perl class definition for a L<Rose::DB::Object::Manager>-derived class to manage objects of this L<class|/class>.  If a single string is passed, it is taken as the value of the C<class> parameter.  PARAMS are optional name/value pairs that may include the following:
+Returns a Perl class definition for a L<Rose::DB::Object::Manager>-derived class to manage objects of this L<class|/class>.  If a single string is passed, it is taken as the value of the C<base_name> parameter.  PARAMS are optional name/value pairs that may include the following:
 
 =over 4
 
