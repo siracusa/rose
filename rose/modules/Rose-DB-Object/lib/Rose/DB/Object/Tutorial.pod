@@ -1,16 +1,16 @@
 =head1 INTRODUCTION
 
-This document provides a step-by-step introduction to the L<Rose::DB::Object> module distribution.  It demonstrates all of the important features using a realistic example database.  This does not replace the actual documentation for each module, however.  The "reference" documentation found in each ".pm" file is still essential, and contains some good examples of its own.
+This document provides a step-by-step introduction to the L<Rose::DB::Object> module distribution.  It demonstrates all of the important features using a semi-realistic example database.  This tutorial does not replace the actual documentation for each module, however.  The "reference" documentation found in each ".pm" file is still essential, and contains some good examples of its own.
 
-This tutorial provides a gradual introduction to L<Rose::DB::Object>.  It also describes "best practices" for using L<Rose::DB::Object> in the most robust, maintainable manner.  If you're just trying to get a feel for what's possible, you can skip to the end and take a look at the completed example database and associated Perl code.  But I recommend reading the tutorial from start to finish at least once.
+This tutorial provides a gradual introduction to L<Rose::DB::Object>.  It also describes "best practices" for using L<Rose::DB::Object> in the most robust, maintainable manner.  If you're just trying to get a feel for what's possible, you can L<skip to the end|/"Relationship code summary"> and take a look at the completed example database and associated Perl code.  But I recommend reading the tutorial from start to finish at least once.
 
-The examples will start simple (less abstracted) and then get progressively more complex (more abstracted).  You, the developer, have to decide how much abstraction is appropriate for your particular task.
+The examples will start simple and get progressively more complex.  You, the developer, have to decide which level of complexity or abstraction is appropriate for your particular task.
 
 =head1 CONVENTIONS
 
-The examples in this tutorial will use the fictional C<My::> namespace prefix.  Your code should use whatever namespace you deem appropriate.  Usually, it will be more akin to C<MyCorp::MyProject::> (i.e., your corporation, organization, and/or project).  I've chosen to use C<My::> simply because it's shorter, and will help this tutorial stay within an 80-column width.
+Some of the examples in this tutorial will use the fictional C<My::> namespace prefix.  Some will use no prefix at all.  Your code should use whatever namespace you deem appropriate.  Usually, it will be something like C<MyCorp::MyProject::> (i.e., your corporation, organization, and/or project).  I've chosen to use C<My::> or to omit the prefix entirely simply because this produces shorter class names, which will help this tutorial stay within an 80-column width.
 
-For the sake of brevity, the C<use strict> directive and associated "my" declarations have been omitted from the example code.  Needless to say, you should always C<use strict> in your actual code.
+For the sake of brevity, the C<use strict> directive and associated "my" declarations have also been omitted from the example code.  Needless to say, you should always C<use strict> in your actual code.
 
 Similarly, the traditional "1;" true value used at the end of each ".pm" file has been omitted from the examples.  Don't forget to add this to the end of your actual Perl module files.
 
@@ -20,7 +20,7 @@ Similarly, the traditional "1;" true value used at the end of each ".pm" file ha
 
 Before doing anything useful with L<Rose::DB::Object>, it's necessary to create and configure a L<Rose::DB> subclass through which L<Rose::DB::Object>-derived objects will access the database.
 
-To get up to speed quickly with L<Rose::DB>, read the L<Rose::DB::Tutorial> documentation.  The rest of this tutorial will assume the existence of a C<My::DB> class as L<described|Rose::DB::Tutorial/"Multiple data sources using namespaces"> in the L<Rose::DB tutorial|Rose::DB::Tutorial>.
+To get up to speed quickly with L<Rose::DB>, read the L<Rose::DB::Tutorial> documentation.  The rest of this tutorial will assume the existence of a C<My::DB> class created as L<described|Rose::DB::Tutorial/"Multiple data sources using namespaces"> in the L<Rose::DB tutorial|Rose::DB::Tutorial>.
 
 The PostgreSQL ("Postgres") database will be used in the examples in this tutorial, but the features demonstrated will not be specific to that database.  If you are following along with a different database, you may have to adjust the specific syntax used in the SQL table creation statements, but all of the same features should be present in some form.
 
@@ -70,9 +70,9 @@ The steps are simple:
 
 =back
 
-Operations 2 through 6 are done through the L<metadata object|Rose::DB::Object::Metadata> associated with this class.  The table must have a primary key, and may have zero or more unique keys.  The primary key and each unique may contain multiple columns.
+Operations 2 through 6 are done through the L<metadata object|Rose::DB::Object::Metadata> associated with this class.  The table must have a primary key, and may have zero or more unique keys.  The primary key and each unique key may contain multiple columns.
 
-Of course, L<earlier|/Preface> it was established that L<Rose::DB> needs to be set up for any L<Rose::DB::Object> class to work properly.  To that end, this tutorial assumes the existence of a L<Rose::DB> subclass named L<My::DB> that is set up according to the L<best practices|Rose::DB::Tutorial> of L<Rose::DB>.  We need to make out C<Product> class use L<My::DB>.  Here's one way to do it:
+Of course, L<earlier|/Preface> it was established that L<Rose::DB> needs to be set up for any L<Rose::DB::Object> class to work properly.  To that end, this tutorial assumes the existence of a L<Rose::DB> subclass named L<My::DB> that is set up according to the L<best practices|Rose::DB::Tutorial> of L<Rose::DB>.  We need to make the C<Product> class use L<My::DB>.  Here's one way to do it:
 
     package Product;
 
@@ -104,7 +104,7 @@ See the L<Rose::DB> documentation to explore the capabilities of these db object
 
     $db->begin_work; # Start transaction
 
-    # Use this db object with each product object
+    # Use this $db with each product object
 
     $p1 = Product->new(name => 'Bike', db => $db);
     $p1->save;
@@ -169,11 +169,11 @@ Now the C<Product> class can inherit from C<My::DB::Object> instead of inheritin
 
 This use of a subclass is strongly recommended.  You will see this pattern repeated several times in this tutorial.  The creation of seemingly "trivial" subclasses is a cheap and easy way to ensure ease of extensibility later on.  
 
-For example, imagine we want to add a C<clone()> method to all of our database objects.  If they all inherit directly from C<Rose::DB::Object>, that's not easy to do.  But if they all inherit from our C<My::DB::Object>, we can just add the C<clone()> method to that class.
+For example, imagine we want to add a C<clone()> method to all of our database objects.  If they all inherit directly from C<Rose::DB::Object>, that's not easy to do.  But if they all inherit from C<My::DB::Object>, we can just add the C<clone()> method to that class.
 
 The lesson is simple: when in doubt, subclass.  A few minutes spent now can save you a lot more time down the road.
 
-=head3 Database objects in action
+=head3 Rose::DB::Object in action
 
 Now that we have our C<Product> class all set up, let's see what we can do with it.
 
@@ -201,7 +201,7 @@ An object can also be loaded based on a unique key:
     $p = Product->new(name => 'Sled'); # unique key
     $p->load; # Load the object from the database
 
-If there is no row in the database table with the specified primary or unique key value, the call to L<load()|Rose::DB::Object/load> will fail.  Under the default L<error mode|Rose::DB::Object::Metadata/error_mode>, an exception will be thrown.  To  check whether or not such a row exists, use the C<speculative> parameter.
+If there is no row in the database table with the specified primary or unique key value, the call to L<load()|Rose::DB::Object/load> will fail.  Under the default L<error mode|Rose::DB::Object::Metadata/error_mode>, an exception will be thrown.  To safely check whether or not such a row exists, use the C<speculative> parameter.
 
     $p = Product->new(id => 1);
 
@@ -210,11 +210,11 @@ If there is no row in the database table with the specified primary or unique ke
       print "No such product with id = 1";
     }
 
-Regardless of the L<error mode|Rose::DB::Object::Metadata/error_mode>, L<load()|Rose::DB::Object/load> will simply return true or false when the  C<speculative> parameter is used.
+Regardless of the L<error mode|Rose::DB::Object::Metadata/error_mode>, L<load()|Rose::DB::Object/load> will simply return true or false when the C<speculative> parameter is used.
 
 =head4 Insert
 
-First, let's insert some rows.  To do that, we create objects and then L<save|Rose::DB::Object/save> them.
+To insert a row, create an object and then L<save|Rose::DB::Object/save> it.
 
     $p = Product->new(id => 123, name => 'Widget', price => 4.56);
     $p->save; # Insert the object into the database
@@ -228,7 +228,7 @@ Here's another variation:
 
     print $p->id; # print the auto-generated primary key value
 
-Since the primary key of the C<products> table, C<id>, is a SERIAL column, a new primary key value will be auto-generated if one is not specified.  After the object is saved, we can retrieve the auto-generated value.
+Since the primary key of the C<products> table, C<id>, is a SERIAL column, a new primary key value will be automatically generated if one is not specified.  After the object is saved, we can retrieve the auto-generated value.
 
 =head4 Update
 
@@ -253,8 +253,6 @@ An object can be deleted based on a primary key or a unique key.
     $p = Product->new(id => 1); # primary key
     $p->delete; # Delete the object from the database
 
-An object can also be deleted based on a unique key:
-
     $p = Product->new(name => 'Sled'); # unique key
     $p->delete; # Delete the object from the database
 
@@ -272,17 +270,17 @@ It works just as well with objects that have been loaded or saved.
 
 =head3 Multiple objects
 
-The examples above show select, insert, update, and delete operations on one object at time based on primary or unique keys.  What about manipulating objects based on other criteria?  What about manipulating multiple objects simultaneously?  Enter L<Rose::DB::Object::Manager>, or just "the manager" for short.
+The examples above show SELECT, INSERT, UPDATE, and DELETE operations on one row at time based on primary or unique keys.  What about manipulating rows based on other criteria?  What about manipulating multiple rows simultaneously?  Enter L<Rose::DB::Object::Manager>, or just "the manager" for short.
 
-But why a separate class for dealing with multiple objects?  Why not simply add more methods to the object itself?  Say, a C<search()> method to go alongside L<load|Rose::DB::Object/load>, L<save|Rose::DB::Object/save>, L<delete|Rose::DB::Object/delete> and friends?  There are several reasons.
+But why is there a separate class for dealing with multiple objects?  Why not simply add more methods to the object itself?  Say, a C<search()> method to go alongside L<load()|Rose::DB::Object/load>, L<save()|Rose::DB::Object/save>, L<delete()|Rose::DB::Object/delete> and friends?  There are several reasons.
 
-It's somewhat "semantically impure" for the class that represents a single object to also be the class that's used to fetch multiple objects.  It's also important to keep the object method namespace sparsely populated as possible.  Each new object method prevents a column with the same name from using that method name.  L<Rose::DB::Object> tries to keep the list of L<reserved method names|Rose::DB::Object/"RESERVED METHODS"> as small as possible.
+First, it's somewhat "semantically impure" for the class that represents a single row to also be the class that's used to fetch multiple row.  It's also important to keep the object method namespace as sparsely populated as possible.  Each new object method prevents a column with the same name from using that method name.  L<Rose::DB::Object> tries to keep the list of L<reserved method names|Rose::DB::Object/"RESERVED METHODS"> as small as possible.
 
-Inevitably, classes grow.  It's important for the object manager class to be separate from the object class itself so each class can grow happily in isolation, with no potential clashes.
+Second, inevitably, classes grow.  It's important for the object manager class to be separate from the object class itself so each class can grow happily in isolation, with no potential for namespace or functionality clashes.
 
 All of that being said, L<Rose::DB::Object::Manager> does include support for adding manager methods to the object class.  Obviously, this practice is not recommended, but it exists if you really want it.
 
-Anyway, let's see some example.  Making a manager class is simply a matter of inheriting from L<Rose::DB::Object::Manager>, specifying the object class, and then creating a series of appropriately named methods.
+Anyway, let's see some examples.  Making a manager class is simply a matter of inheriting from L<Rose::DB::Object::Manager>, specifying the object class, and then creating a series of appropriately named wrapper methods.
 
     package Product::Manager;
 
@@ -303,7 +301,7 @@ The call to L<make_manager_methods()|Rose::DB::Object::Manager/make_manager_meth
 
 The names are pretty much self-explanatory.  You can read the L<Rose::DB::Object::Manager> documentation for all the gory details.  The important thing to note is that the methods were all named based on the "products" argument to L<make_manager_methods()|Rose::DB::Object::Manager/make_manager_methods>.  You can see how "products" has been incorporated into each of the method names.  Each of these methods is a thin wrapper around the generically-named methods in L<Rose::DB::Object::Manager>.  The wrappers pass the specified object class to the generic methods.
 
-The Perl code for the C<Product::Manager> class shown above can be generated automatically with the L<perl_manager_class|Rose::DB::Object::Metadata/perl_manager_class> method.  The L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> will both generate the code and L<eval|perlfunc/eval>uate it for you, automating the entire process of creating a manager class from within your L<Rose::DB::Object>-derived class.
+The Perl code for the C<Product::Manager> class shown above can be generated automatically with the L<perl_manager_class|Rose::DB::Object::Metadata/perl_manager_class> method.  The L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> method will both generate the code and L<eval|perlfunc/eval>uate it for you, automating the entire process of creating a manager class from within your L<Rose::DB::Object>-derived class.
 
     package Product;
 
@@ -341,7 +339,7 @@ The most common task for the manager is fetching multiple objects.  We'll use th
       print $product->name, "\n";
     }
 
-The return value is a reference to an array in the example above.  A regular array also works.
+The return value is a reference to an array of C<Product> objects in the example above.  A regular array also works.
 
     @products = Product::Manager->get_products();
 
@@ -363,7 +361,16 @@ Now let's go to the other extreme.
         limit   => 10,
         offset  => 50);
 
-Queries support nested boolean logic and several different kinds of comparison operators.  For a full explanation of all the options, see the L<Rose::DB::Object::Manager> documentation.
+That call produces SQL that looks something like this:
+
+    SELECT id, name, price FROM products WHERE
+      name LIKE '%Hat' AND
+      id >= 7 AND
+      (price = 5.00 OR price < 10.00)
+    ORDER BY name
+    LIMIT 10 OFFSET 50
+
+Manager queries support nested boolean logic and several different kinds of comparison operators.  For a full explanation of all the options, see the L<Rose::DB::Object::Manager> documentation.
 
 The iterator method takes the same kinds of arguments, but returns an iterator that will fetch the objects from the database one at a time.
 
@@ -378,9 +385,11 @@ The iterator method takes the same kinds of arguments, but returns an iterator t
 
     print $iterator->total; # total iterated over
 
+Note that this is a "real" iterator.  Objects not iterated over are not fetched from the database at all.
+
 =head4 Counting objects
 
-Counting objects is straightforward.  The C<get_products_count()> method takes the same same kinds of arguments as C<get_products()> and C<get_products_iterator()>.  (Noticing a pattern here?)  I returns the count.
+Counting objects is straightforward.  The C<get_products_count()> method takes the same same kinds of arguments as C<get_products()> and C<get_products_iterator()>.  (Noticing a pattern here?)  It returns the count.
 
     $num_cheap_products = 
       Product::Manager->get_products_count(
@@ -416,7 +425,7 @@ The C<update_products()> method accepts the same kinds of arguments as the C<del
 
 =head3 The end of the beginning
 
-This section covers the I<bare minimum> usage and functionality of the L<Rose::DB::Object> module distribution.  Using these features alone, you can automate the basic CRUD operations (Create, Retrieve, Update, and Delete) for single or multiple objects.  But it's almost a shame to stop at this point.  There's a lot more that L<Rose::DB::Object> can do for you.  The "sweet spot" of effort vs. results is much farther along the curve.
+This section has covered the I<bare minimum> usage and functionality of the L<Rose::DB::Object> module distribution.  Using these features alone, you can automate the basic CRUD operations (Create, Retrieve, Update, and Delete) for single or multiple objects.  But it's almost a shame to stop at this point.  There's a lot more that L<Rose::DB::Object> can do for you.  The "sweet spot" of effort vs. results is much farther along the curve.
 
 In the next section, we will expand upon our C<Product> class and tap more of L<Rose::DB::Object>'s features.
 
@@ -453,9 +462,9 @@ We could do a straightforward expansion of the C<Product> class as designed in t
     __PACKAGE__->meta->add_unique_key('name');
     __PACKAGE__->meta->initialize;
 
-But now we're faced with a few problems.  First, while the C<status> column only accepts a few pre-defined values, our C<Product> objects will gladly accept any value.  But maybe that's okay because a exception will be thrown when the object is saved anyway.
+But now we're faced with a few problems.  First, while the C<status> column only accepts a few pre-defined values, our C<Product> object will gladly accept any status value.  But maybe that's okay because the database will reject invalid values, causing an exception will be thrown when the object is saved.
 
-The date/time fields are more troubling.  What is the format of a valid value for a TIMESTAMP column in Postgres?  Consulting the documentation will yield the answer, I suppose.  But now all the code that uses C<Product> objects has to be sure to format the C<date_created> and C<release_date> values accordingly.  That's even more difficult if some of those values come from external sources, such as a web form.
+The date/time fields are more troubling.  What is the format of a valid value for a TIMESTAMP column in Postgres?  Consulting the Postgres documentation will yield the answer, I suppose.  But now all the code that uses C<Product> objects has to be sure to format the C<date_created> and C<release_date> values accordingly.  That's even more difficult if some of those values come from external sources, such as a web form.
 
 Worse, what if we decide to change databases in the future?  We'd have to hunt down every single place where a C<date_created> or C<release_date> value is set and then modify the formatting to match whatever format the new database wants.  Oh, and we'll have to look that up too.  Blah.
 
@@ -503,7 +512,7 @@ Let's solve all of these problems.  If we more accurately describe the columns, 
 
 Before examining what new functionality this new class gives us, there are a few things to note about the definition.  First, the primary key is no longer specified with the L<primary_key_columns()|Rose::DB::Object::Metadata/primary_key_columns> method.  Instead, the C<id> column has its C<primary_key> attribute set to a true value in its description.
 
-Second, note the default value for the C<date_created> column.  It's the function call C<now()>, which can actually only be run within the database.  That's okay, because L<Rose::DB::Object> will pass that value through to the database rather than trying to execute it itself.
+Second, note the default value for the C<date_created> column.  It's a string containing a call to the PL/SQL function C<now()>, which can actually only be run within the database.  That's okay, because L<Rose::DB::Object> will pass that value through to the database rather than trying to execute it itself.
 
 In the case of "creation date" columns like this, it's usually better to let the database provide the value as close as possible to the very moment the row is created.  On the other hand, this will mean that any newly created C<Product> object will have a "strange" value for that column (the string "now()") until/unless it is loaded from the database.  It's a trade-off.
 
@@ -525,11 +534,11 @@ The timestamp columns now accept any value that L<Rose::DateTime::Util>'s L<pars
 
 See the L<Rose::DateTime::Util|Rose::DateTime::Util/parse_date> documentation for a full list of acceptable formats.
 
-Internally, date/time information is stored in L<DateTime> objects.
+Inside a C<Product> object, date/time information is stored in L<DateTime> objects.
 
     $dt = $p->release_date; # DateTime object
 
-Since  L<DateTime> objects can be modified in-place, doing a formerly thorny task like date math is now trivial.
+Since L<DateTime> objects can be modified in-place, doing a formerly thorny task like date math is now trivial.
 
     $p->release_date->add(days => 1);
 
@@ -549,11 +558,11 @@ There are even a few convenience functions triggered by passing a name/value pai
 
 The upshot is that you no longer have to be concerned about the details of the date/time format(s) understood by the underlying database.  You're also free to use L<DateTime> objects as a convenient interchange format in your code.
 
-This ability isn't just limited to date/time columns.  Any data type that requires special formatting in the database, and/or is more conveniently dealt with as a more "rich" value on the Perl side of the fence (i.e., an object) is fair game for this treatment.
+This ability isn't just limited to date/time columns.  Any data type that requires special formatting in the database, and/or is more conveniently dealt with as a more "rich" value on the Perl side of the fence is fair game for this treatment.
 
-Some other examples include the L<bitfield|Rose::DB::Object::Metadata::Column::Bitfield> column type, which is represented by a L<Bit::Vector> object on the Perl side, and the L<boolean|Rose::DB::Object::Metadata::Column::Boolean> column type which evaluates the "truth" of its arguments and coerces the value accordingly.  As always, values are formatted as required by the particular database.
+Some other examples include the L<bitfield|Rose::DB::Object::Metadata::Column::Bitfield> column type, which is represented by a L<Bit::Vector> object on the Perl side, and the L<boolean|Rose::DB::Object::Metadata::Column::Boolean> column type which evaluates the "truth" of its arguments and coerces the value accordingly.  In all cases, column values are automatically formatted as required by the native column data types in the database.
 
-In some circumstances, L<Rose::DB::Object> can even "fake" a data type for use with a database that does not natively support it.  For example, the L<array|Rose::DB::Object::Metadata::Column::Array> column type is natively supported by Postgres, but it will also work with MySQL using a VARCHAR column type as a stand-in.
+In some circumstances, L<Rose::DB::Object> can even "fake" a data type for use with a database that does not natively support it.  For example, the L<array|Rose::DB::Object::Metadata::Column::Array> column type is natively supported by Postgres, but it will also work with MySQL using a VARCHAR column as a stand-in.
 
 Finally, if you're concerned about the performance implications of "inflating" column values from strings and numbers into (relatively) large objects, rest assured that such inflation is only done as needed.  For example, an object with ten date/time columns can be loaded, modified, and saved without ever creating a single L<DateTime> object, provided that none of the date/time columns were among those whose values were modified.
 
@@ -565,7 +574,7 @@ This behavior is not a requirement of all column methods, but it is a recommende
 
 The C<Product> class set up in the previous section is useful, but it also takes significantly more typing to set up.  Over the long term, it's still a clear win.  On the other hand, a lot of the details in the column descriptions are already known by the database: column types, default values, maximum lengths, etc.  It would be handy if we could ask the database for this information instead of looking it up and typing it in manually.
 
-This process of interrogating the database in order to extract metadata is called "auto-initialization."  There's an L<entire section|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> of the L<Rose::DB::Object::Metadata> documentation dedicated to the topic.  The executive summary is that auto-initialization saves work in the short-run, but at the cost of some long-term costs.  Read the L<friendly manual|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> for the details.  For the purposes of this tutorial, I will simply demonstrate the features, culminating in the suggested best practice.
+This process of interrogating the database in order to extract metadata is called "auto-initialization."  There's an L<entire section|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> of the L<Rose::DB::Object::Metadata> documentation dedicated to the topic.  The executive summary is that auto-initialization saves work in the short-run, but with some long-term costs.  Read the L<friendly manual|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> for the details.  For the purposes of this tutorial, I will simply demonstrate the features, culminating in the suggested best practice.
 
 Let's start by applying auto-initialization to the C<Product> class.
 
@@ -588,9 +597,11 @@ In fact, that class can be shortened even further with the help of the L<convent
 
     __PACKAGE__->meta->auto_initialize;
 
-Now even the table is left unspecified.  How does L<Rose::DB::Object> know what to do in this case?  Why, by convention, of course.  The default convention manager dictates that class names are singular and title-cased and their corresponding table names are lowercase and plural.  Thus, the omitted table name in the C<Product> class is, by convention, assumed to be named "products".
+Now even the table is left unspecified.  How does L<Rose::DB::Object> know what to do in this case?  Why, by convention, of course.  The default convention manager dictates that class names are singular and TitleCased, and their corresponding table names are lowercase and plural.  Thus, the omitted table name in the C<Product> class is, by convention, assumed to be named "products".
 
-Like auto-initialization, convention managers are handy, but may also present some maintenance issues.  I tend to favor a more explicitly approach, but I can also imagine scenarios where the convention manager is a good fit.  Keep in mind that customized convention managers are possible, allowing individual organizations or projects to define their own conventions.  You can read all about it in the L<Rose::DB::Object::ConventionManager> documentation.
+Like auto-initialization, the convention manager is handy, but may also present some maintenance issues.  I tend to favor a more explicitly approach, but I can also imagine scenarios where the convention manager is a good fit.
+
+Keep in mind that customized convention managers are possible, allowing individual organizations or projects to define their own conventions.  You can read all about it in the L<Rose::DB::Object::ConventionManager> documentation.
 
 Anyway, back to auto-initialization.  Yes, L<auto_initialize()|Rose::DB::Object::Metadata/auto_initialize> will dig out all sorts of interesting and important information for you.  Unfortunately, it will dig that information out I<every single time the class is loaded>.  Worse, this class will fail to load at all if a database connection is not immediately available.
 
@@ -650,7 +661,7 @@ When a column in one table references a row in another table, the referring tabl
 
 In the context of L<Rose::DB::Object>, a foreign key is a database-supported construct that ensures that any non-null value in a foreign key column actually refers to an existing row in the foreign table.  Databases that enforce this constraint are said to support "referential integrity."  Foreign keys are only applicable to L<Rose::DB::Object>-derived classes when the underlying database supports "native" foreign keys and enforces referential integrity.
 
-While it's possible to define foreign keys in an L<Rose::DB::Object>-derived class even if there is no support for them in the database, this is considered bad practice.  If you're just trying to express some sort of relationship between two tables, there's a more appropriate way to do so. (More on that in the L<next section|/Relationships>.)
+While it's possible to define foreign keys in a L<Rose::DB::Object>-derived class even if there is no support for them in the database, this is considered bad practice.  If you're just trying to express some sort of relationship between two tables, there's a more appropriate way to do so. (More on that in the L<next section|/Relationships>.)
 
 Let's add a foreign key to the C<products> table.  First, we'll need to create the table that the foreign key will reference.
 
@@ -737,9 +748,7 @@ Finally, here's how the foreign key definition looks in the Perl class.
 
     __PACKAGE__->meta->initialize;
 
-First, notice that the C<Vendor> class is loaded.  This is important.  A foreign key cannot be defined unless the L<Rose::DB::Object>-derived class that fronts the foreign table is also loaded.  The auto-initialization process will try to load such classes for you, but the "manual" approach shown above will not.  As usual, I prefer the more explicit approach.
-
-(It's also a good idea to load foreign classes only after establishing the current base class.  In the code above, note that C<@ISA> is set before the C<Vendor> class is loaded.)
+First, notice that the C<Vendor> class is loaded with a C<use> statement near the top of the class definition.  This is important.  A foreign key cannot be defined unless the L<Rose::DB::Object>-derived class that fronts the foreign table is also loaded.  The auto-initialization process will try to load such classes for you, but the "manual" approach shown above will not.  As usual, I prefer the more explicit approach.
 
 Next, note that a C<vendor_id> column is added to the column list.  This needs to be done independently of any foreign key definition.  It's a new column, so it needs to be in the column list.  There's nothing more to it than that.
 
@@ -758,17 +767,17 @@ Going in the other direction, since our class and column names match up with wha
 
 Given only a foreign key name, the convention manager will derive the C<Vendor> class name and will find the C<vendor_id> column in the C<Product> class and match it up to the primary key of the C<vendors> table.  As with most things in L<Rose::DB::Object> class setup, you can be as explicit or as terse as you feel comfortable with, depending on how closely you conform to the expected conventions.
 
-So, what does this new C<vendor> foreign key do for us?  Let's add some data and see.  Imagine the following two 
+So, what does this new C<vendor> foreign key do for us?  Let's add some data and see.  Imagine the following two objects.
 
     $v = Vendor->new(name => 'Acme')->save;
     $p = Product->new(name => 'Kite')->save;
 
-Note the idiomatic way to create and then save an object in "one step."  This is possible because both the L<new|Rose::DB::Object/new> and L<save|Rose::DB::Object/save> methods return the object itself.  Anyway, let's link the two objects.  One way to do it is to set the column values directly.
+Note the use of the idiomatic way to create and then save an object in "one step."  This is possible because both the L<new|Rose::DB::Object/new> and L<save|Rose::DB::Object/save> methods return the object itself.  Anyway, let's link the two objects.  One way to do it is to set the column values directly.
 
     $p->vendor_id($v->id);
     $p->save;
 
-To use this technique, we must know which columns link to each other, of course.  But it works.  We can see this by calling the method named after the foreign key itself: C<vendor()>.
+To use this technique, we must know which columns link to which other columns, of course.  But it works.  We can see this by calling the method named after the foreign key itself: C<vendor()>.
 
     $v = $p->vendor; # Vendor object
     print $v->name;  # "Acme"
@@ -807,7 +816,7 @@ Here's yet another argument format.  Imagine that the "Acme" vendor id is 1.
 
     print $p->vendor->name; # "Acme"
 
-Like the name/value pair argument format, a primary key value will be used to construct the appropriate object.  (This only works if the foreign table has a single-column primary key, of course.)  And like before, if such an object doesn't exist, it will be created.  But in this case, if no existing vendor object had an C<id> of 1, the attempt to create one would have failed because the C<name> column would have been null.
+Like the name/value pair argument format, a primary key value will be used to construct the appropriate object.  (This only works if the foreign table has a single-column primary key, of course.)  And like before, if such an object doesn't exist, it will be created.  But in this case, if no existing vendor object had an C<id> of 1, the attempt to create one would have failed because the C<name> column of the inserted row would have been null.
 
 To summarize, the foreign key method can take arguments in these forms.
 
@@ -883,7 +892,7 @@ Here's the output.
   (
     id           => { type => 'integer', not_null => 1 },
     name         => { type => 'varchar', length => 255, not_null => 1 },
-    price        => { type => 'numeric', default => '0.00', not_null => 1,
+    price        => { type => 'numeric', default => '0.00', not_null =>1,
                       precision => 2, scale => 10 },
     vendor_id    => { type => 'integer' },
     status       => { type => 'varchar', default => 'inactive', 
@@ -910,6 +919,8 @@ Here's the output.
   );
 
   __PACKAGE__->meta->initialize;
+
+  1;
 
 =head2 Relationships
 
@@ -959,9 +970,9 @@ Given the two possible cardinalities, "many" and "one", it's easy to come up wit
     many to one  - Rose::DB::Object::Metadata::Relationship::ManyToOne
     many to many - Rose::DB::Object::Metadata::Relationship::ManyToMany
 
-We've already seen that "one to one" and "many to one" relationships can be represented by foreign keys in the database, but that's not a requirement.  It's perfectly possible to have either of those two kinds of relationships in a database that has no native support for foreign keys.  MySQL using the MyISAM  storage engine is a common example.
+We've already seen that "one to one" and "many to one" relationships can be represented by foreign keys in the database, but that's not a requirement.  It's perfectly possible to have either of those two kinds of relationships in a database that has no native support for foreign keys.  (MySQL using the MyISAM  storage engine is a common example.)
 
-If you find yourself using such a database, there's no reason to lie to your Perl classes by adding foreign key metadata.  Instead, simple add a relationship.
+If you find yourself using such a database, there's no reason to lie to your Perl classes by adding foreign key metadata.  Instead, simply add a relationship.
 
 Here's an example of our C<Product> class as it might exist on a database that does not support foreign keys.  (The C<Product> class is getting larger now, so previously established portions may be omitted from now on.)
 
@@ -1003,7 +1014,7 @@ There's an even more convenient shorthand for that:
 
 =head3 "one to many" relationships
 
-Now let's explore the other two method types.  We'll start with "one to many" by adding region-specific pricing to our products.  First, we'll need a C<prices> table.
+Now let's explore the other two relationship types.  We'll start with "one to many" by adding region-specific pricing to our products.  First, we'll need a C<prices> table.
 
     CREATE TABLE prices
     (
@@ -1059,7 +1070,7 @@ The C<price> column can be removed from the C<products> table.
 
     ALTER TABLE products DROP COLUMN price;
 
-Finally, the C<Product> class needs to be modified.
+Finally, the C<Product> class needs to be modified to reference the C<prices> table.
 
     package Product;  
 
@@ -1095,15 +1106,23 @@ Finally, the C<Product> class needs to be modified.
 
     __PACKAGE__->meta->initialize;
 
-Note that both the L<column map|Rose::DB::Object::Metadata::Relationship::OneToMany/column_map> for the "one to many" relationship and the L<key columns|Rose::DB::Object::Metadata::ForeignKey/key_columns> for the foreign key map from "local" columns to "foreign" columns.
+Note that both the L<column map|Rose::DB::Object::Metadata::Relationship::OneToMany/column_map> for the "one to many" relationship and the L<key columns|Rose::DB::Object::Metadata::ForeignKey/key_columns> for the foreign key connect "local" columns to "foreign" columns.
 
-The C<vendor_id> column in the local table (C<products>) is connected to the C<id> column in the foreign table (C<vendors>).
+The C<vendor_id> column in the local table (C<products>) is connected to the C<id> column in the foreign table (C<vendors>):
 
-    key_columns => { vendor_id => 'id' },
+    vendor =>
+    {
+      key_columns => { vendor_id => 'id' },
+      ...
+    }
 
-The C<id> column in the local table (C<products>) is connected to the C<product_id> column in the foreign table (C<prices>).
+The C<id> column in the local table (C<products>) is connected to the C<product_id> column in the foreign table (C<prices>):
 
-    column_map => { id => 'product_id' },
+    prices =>
+    {
+      column_map => { id => 'product_id' },
+      ...
+    }
 
 This is all from the perspective of the class in which the definitions appear.  Note that things are reversed in the C<Price> class.
 
@@ -1128,13 +1147,13 @@ Here's a list of argument types accepted by "many to one" methods like C<prices>
 
 =item * A list or reference to an array of objects of the appropriate class.
 
-=item * A list or reference to an array of hash references containing name/value pairs used to construct such an object.
+=item * A list or reference to an array of hash references containing name/value pairs used to construct such objects.
 
 =item * A list or reference to an array of primary key values (but only if the foreign table has a single-column primary key).
 
 =back
 
-Setting a new list of prices will delete all the old prices.  As with foreign keys, any actual database modification happens when the parent object is saved.  here are some examples.
+Setting a new list of prices will delete all the old prices.  As with foreign keys, any actual database modification happens when the parent object is saved.  Here are some examples.
 
     $p = Product->new(name => 'Kite');
     $p->prices({ price => 1.23, region => 'US' },
@@ -1170,13 +1189,13 @@ A less robust solution is necessary if your database does not support triggers. 
 
     $p->delete; # Now it's safe to delete the product
 
-The list or prices for the product can also be set to an empty list, which will have the effect of deleting all associated prices when the product is saved.
+The list of prices for the product can also be set to an empty list, which will have the effect of deleting all associated prices when the product is saved.
 
     $p->prices([]);
     $p->save;   # All associated prices deleted here
     $p->delete; # Now it's safe to delete the product
 
-Finally, the L<delete()|Rose::DB::Object/delete> method can actually automate this process, and do it all inside a transaction to boot.
+Finally, the L<delete()|Rose::DB::Object/delete> method can actually automate this process, and do it all inside a transaction as well.
 
     $p->delete(cascade => 1); # Delete all associated rows too
 
@@ -1188,7 +1207,9 @@ The final relationship type is the most complex.  In a "many to many" relationsh
 
 This kind of relationship involves three tables instead of just two.  The "local" and "foreign" tables, familiar from the other relationship types described above, still exist, but now there's a third table that connects rows from those two tables.  This third table is called the "mapping table," and the L<Rose::DB::Object>-derived class that fronts it is called the "map class."
 
-Let's add such a relationship to our growing family of classes.  Imagine that each product may come in several colors.    Right away, both the "one to one" and "many to one" relationship types are eliminated since they can only provide a single color for any given product.  A "one to many" relationship may seem suitable, since one product may have many colors.  But such a relationship is wasteful.  Let's see why.  Imagine a C<colors> table like this.
+Let's add such a relationship to our growing family of classes.  Imagine that each product may come in several colors.    Right away, both the "one to one" and "many to one" relationship types are eliminated since they can only provide a single color for any given product.
+
+But wait, isn't a "one to many" relationship suitable?  After all, one product may have many colors.  Unfortunately, such a relationship is wasteful in this case.  Let's see why.  Imagine a C<colors> table like this.
 
     CREATE TABLE colors
     (
@@ -1252,7 +1273,7 @@ It works as expected.
                        colors => 
                        [ 
                          { name => 'red'   }, 
-                         { name => 'green' } 
+                         { name => 'green' },
                        ]);
     $p1->save;
 
@@ -1266,7 +1287,7 @@ It works as expected.
                        ]);
     $p2->save;
 
-But now look at the contents of the <colors> table in the database.
+But now look at the contents of the C<colors> table in the database.
 
     mydb=# select * from colors;
 
@@ -1282,7 +1303,7 @@ Notice that the colors "green" and "red" appear twice.  Now imagine that there a
 
 This is a poor database design.  To fix it, we must recognize that colors will be shared among products, since the set of possible colors is relatively small compared to the set of possible products.  One product may have many colors, but one color may also belong to many products.  And there you have it: a textbook "many to many" relationship.
 
-Let's redesign this relationship, starting with a new version of the C<colors> table.
+Let's redesign this relationship in "many to many" form, starting with a new version of the C<colors> table.
 
     CREATE TABLE colors
     (
@@ -1340,7 +1361,7 @@ Here's the map class.
       color_id   => { type => 'int', not_null => 1 },
     );
 
-    __PACKAGE__->meta->primary_key_columns(qw(product_id color_id));
+    __PACKAGE__->meta->primary_key_columns('product_id', 'color_id');
 
     __PACKAGE__->meta->foreign_keys
     (
@@ -1381,7 +1402,9 @@ Finally, here's the "many to many" relationship definition in the C<Product> cla
 
     __PACKAGE__->meta->initialize;
 
-Note that only the map class needs to be C<use>d in the C<Product> class.  The relationship definition specifies the name of the map class, and (optionally) the names of the foreign keys or "one to one" relationships in the map class that connect the two tables.  In most cases, these two parameters (C<map_from> and C<map_to>) are unnecessary.  L<Rose::DB::Object> will figure out what to do given only the map class, so long as there's no ambiguity in the mapping table.
+Note that only the map class needs to be C<use>d in the C<Product> class.  The relationship definition specifies the name of the map class, and (optionally) the names of the foreign keys or "many to one" relationships in the map class that connect the two tables.
+
+In most cases, these two parameters (C<map_from> and C<map_to>) are unnecessary.  L<Rose::DB::Object> will figure out what to do given only the map class, so long as there's no ambiguity in the mapping table.
 
 In this case, there is no ambiguity, so the relationship definition can be shortened to this.
 
@@ -1441,7 +1464,7 @@ Now let's revisit the example code.
                        ]);
     $p2->save;
 
-The database now looks much nicer.
+The code works as expected, but the database now looks much nicer.
 
     mydb=# select * from colors;
 
@@ -1462,15 +1485,15 @@ The database now looks much nicer.
              20 |        2
              20 |        1
 
-Each color appears only once, and the mapping table handles all the connections between the C<colors> and <products> tables.
+Each color appears only once, and the mapping table handles all the connections between the C<colors> and C<products> tables.
 
-The "many to many" C<colors> method works much like the "one to many "C<prices> method described earlier.  The valid argument formats are the same.
+The "many to many" C<colors> method works much like the "one to many" C<prices> method described earlier.  The valid argument formats are the same.
 
 =over 4
 
 =item * A list or reference to an array of objects of the appropriate class.
 
-=item * A list or reference to an array of hash references containing name/value pairs used to construct such an object.
+=item * A list or reference to an array of hash references containing name/value pairs used to construct such objects.
 
 =item * A list or reference to an array of primary key values (but only if the foreign table has a single-column primary key).
 
@@ -1498,7 +1521,7 @@ Setting the list of colors replaces the old list, but in the case of a "many to 
 Passing a reference to an empty array will remove all colors associated with a particular product by deleting all its mapping table entries.
 
     $p->colors([]);
-    $p->save; # all mapping table entries deleted
+    $p->save; # all mapping table entries for this product deleted here
 
 Finally, the same caveats L<described earlier|/"Cascading delete"> about deleting products that have associated prices apply to colors as well.  Again, I recommend using a trigger in the database to handle this, but L<Rose::DB::Object>'s cascading delete feature will work in a pinch.
 
@@ -1693,11 +1716,15 @@ Now the Perl classes.  Remember that these must each be in their own ".pm" files
 
 =head2 Auto-joins and other Manager features
 
-The C<Product::Manager> class we created L<earlier|/"Multiple objects"> is deceptively simply.  Setting it up can actually be reduced to a one-liner, but it provides a rich set of features.  The basics demonstrated earlier cover most kinds of single-table "SELECT" statements.  But as the C<Product> class has become more complex, linking to other objects via L<foreign keys|/"Foreign keys"> and other L<relationships|/"Relationships">, selecting rows from just the C<products> table has become a lot less appealing.  What good is it to retrieve hundreds of products in a single "SELECT" query when you then have to execute hundreds of individual queries to get the prices of those products?
+The C<Product::Manager> class we created L<earlier|/"Multiple objects"> is deceptively simple.  Setting it up can actually be reduced to a one-liner, but it provides a rich set of features.
 
-This is what SQL JOINs were made for: selecting related rows from multiple tables simultaneously.  L<Rose::DB::Object::Manager> supports a few kinds of joins.  The interface to this functionality is presented in terms of objects.  To avoid running separate queries in order to load related objects, use the C<require_objects> and C<with_objects> parameters to your custom L<get_objects()|Rose::DB::Object::Manager/get_objects> wrapper method.
+The basics demonstrated earlier cover most kinds of single-table SELECT statements.  But as the C<Product> class has become more complex, linking to other objects via L<foreign keys|/"Foreign keys"> and other L<relationships|/"Relationships">, selecting rows from just the C<products> table has become a lot less appealing.  What good is it to retrieve hundreds of products in a single query when you then have to execute hundreds of individual queries to get the prices of those products?
 
-Both parameters expect a list of foreign key or relationship names.  The C<require_objects> parameters will use an "inner join" to fetch related objects, while the C<with_objects> parameter will perform an "outer join."  If you're unfamiliar with these terms, it's probably a good idea to learn about them form a good SQL book or web tutorial.  But even if you've never written an SQL JOIN by hand, there's not much you need to understand in order to use your manager class successfully.
+This is what SQL JOINs were made for: selecting related rows from multiple tables simultaneously.  L<Rose::DB::Object::Manager> supports a two kinds of joins.  The interface to this functionality is presented in terms of objects via the C<require_objects> and C<with_objects> parameters to the L<get_objects()|Rose::DB::Object::Manager/get_objects> method.
+
+Both parameters expect a list of foreign key or relationship names.  The C<require_objects> parameters will use an "inner join" to fetch related objects, while the C<with_objects> parameter will perform an "outer join."
+
+If you're unfamiliar with these terms, it's probably a good idea to learn about them from a good SQL book or web tutorial.  But even if you've never written an SQL JOIN by hand, there's not much you need to understand in order to use your manager class effectively.
 
 The rule of thumb is simple.  When you want each and every object returned by your query to have a particular related object, then use the C<require_objects> parameter.  But if you do not want to exclude objects even if they do not have a particular related object attached to them yet, then use the C<with_objects> parameter.
 
@@ -1709,7 +1736,7 @@ to this:
 
     vendor_id  INT NOT NULL REFERENCES vendors (id)
 
-Now it's impossible for a product to have a NULL vendor id.  And since our database enforces referential integrity, it's also impossible for the C<vendor_id> column to have a value that does not refer to the C<id> of an existing row in the C<vendors> table.
+Now it's impossible for a product to have a NULL C<vendor_id>.  And since our database enforces referential integrity, it's also impossible for the C<vendor_id> column to have a value that does not refer to the C<id> of an existing row in the C<vendors> table.
 
 While the C<with_objects> parameter could technically be used to fetch C<Product>s with their associated C<Vendor> objects, it would be wasteful.  (Outer joins are often less efficient than inner joins.)  The table structure basically dictates that the C<require_objects> parameter be used when fetching C<Product>s with their C<Vendor>s.
 
@@ -1757,9 +1784,9 @@ For the SQL-inclined, the actual query run looks something like this.
 
 As you can see, the query includes "tN" aliases for each table.  This is important because columns in separate tables often have identical names.  For example, both the C<products> and the C<vendors> tables have columns named C<id> and C<name>.
 
-In the query, you'll notice that the C<name => { like => 'Kite%' }> argument ended up filtering on the product name rather than the vendor name.  This is intentional.  Any unqualified column name that is ambiguous is considered to belong to the "primary" table (C<products>, in this case).
+In the query, you'll notice that the C<name =E<gt> { like =E<gt> 'Kite%' }> argument ended up filtering on the product name rather than the vendor name.  This is intentional.  Any unqualified column name that is ambiguous is considered to belong to the "primary" table (C<products>, in this case).
 
-The "tN" numbering is deterministic.  The primary table is I<always> "t1", and secondary tables are assigned ascending numbers starting from there.  You can find a L<full explanation|Rose::DB::Object::Manager/get_objects> of the numbering rules in the L<Rose::DB::Object::Manager> documentation.
+The "tN" numbering is deterministic.  The primary table is always "t1", and secondary tables are assigned ascending numbers starting from there.  You can find a L<full explanation|Rose::DB::Object::Manager/get_objects> of the numbering rules in the L<Rose::DB::Object::Manager> documentation.
 
 In the example above, if we wanted to filter and sort on the vendor name instead, we could do this.
 
@@ -1767,7 +1794,7 @@ In the example above, if we wanted to filter and sort on the vendor name instead
       Product::Manager->get_products(
         query =>
         [
-          't2.name' => { like => 'Kite%' },
+          't2.name' => { like => 'Acm%' },
           id        => { gt => 15 },
         ]
         require_objects => [ 'vendor' ],
@@ -1779,7 +1806,7 @@ But that's not the only option.  There are several ways to disambiguate a query 
       Product::Manager->get_products(
         query =>
         [
-          'vendor.name' => { like => 'Kite%' },
+          'vendor.name' => { like => 'Acm%' },
           id            => { gt => 15 },
         ]
         require_objects => [ 'vendor' ],
@@ -1791,7 +1818,7 @@ The actual table name itself can also be used (although I do not recommend this 
       Product::Manager->get_products(
         query =>
         [
-          'vendors.name' => { like => 'Kite%' },
+          'vendors.name' => { like => 'Acm%' },
           id             => { gt => 15 },
         ]
         require_objects => [ 'vendor' ],
@@ -1809,7 +1836,7 @@ Now let's see an example of the C<with_objects> parameter in action.  Each C<Pro
         with_objects => [ 'prices' ],
         sort_by => 'name');
 
-Again, the name of the "one to many" relationship that connects a product to its prices is "prices", this the value of the C<with_objects> parameter.  The SQL looks something like this:
+Again, since the name of the "one to many" relationship that connects a product to its prices is "prices", this is the value use in the C<with_objects> parameter.  The SQL looks something like this:
 
     SELECT 
       t1.date_created,
@@ -1877,7 +1904,7 @@ Each C<Product> also has zero or more C<Color>s which are related to it through 
           name => { like => 'Kite%' },
           id   => { gt => 15 },
         ],
-        with_objects    => [ 'colors' ],
+        with_objects => [ 'colors' ],
         sort_by => 'name');
 
 The resulting SQL is a bit more complex.
@@ -1941,9 +1968,9 @@ Anyone who knows SQL well will recognize that there is a danger lurking when com
     <number of prices for each product> x 
     <number of colors for each product>
 
-That number can get very large, very fast if products have many prices, colors, or both.  (The last two terms in the multiplication maybe switched, depending on the order of the actual JOIN clauses, but the results are similar.)  And the problem only gets worse as the number of object related by "... to many" relationships increases.
+That number can get very large, very fast if products have many prices, colors, or both.  (The last two terms in the multiplication maybe switched, depending on the order of the actual JOIN clauses, but the results are similar.)  And the problem only gets worse as the number of objects related by "... to many" relationships increases.
 
-That said, L<Rose::DB::Object::Manager> does allow multiple objects related by  "... to many" relationships to be fetched simultaneously.  But it requires the developer to supply the C<multi_many_ok> parameter with a true value as a form of confirmation.  "Yes, I know the risks, but I want to do it anyway."
+That said, L<Rose::DB::Object::Manager> does allow multiple objects related by "... to many" relationships to be fetched simultaneously.  But it requires the developer to supply the C<multi_many_ok> parameter with a true value as a form of confirmation.  "Yes, I know the risks, but I want to do it anyway."
 
 As an example, let's try fetching products with their associated prices, colors, and vendors.  To do so, we'll have to include the C<multi_many_ok> parameter.
 
@@ -1997,13 +2024,13 @@ Finally, it's also possible to load a single product with all of its associated 
 
 The same "multi many" caveats apply, but the C<multi_many_ok> parameter is not required in this case.  The assumption is that a single object won't have too many related objects.  But again, only you know your data, so be careful.
 
-=head1 CONCLUSION
+=head2 Wrap-up
 
-I hope you've learned something from this tutorial.  Although it is by no means a complete tour of all of the features of L<Rose::DB::Object>, it does hit most of the highlights.  This tutorial will likely expand in the future, and a separate document describing the various ways that  L<Rose::DB::Object> can be extended is also planned.  For now, there is a brief overview in the wiki that was pulled from the L<Rose::DB::Object> mailing list.
+I hope you've learned something from this tutorial.  Although it is by no means a complete tour of all of the features of L<Rose::DB::Object>, it does hit most of the highlights.  This tutorial will likely expand in the future, and a separate document describing the various ways that  L<Rose::DB::Object> can be extended is also planned.  For now, there is a brief overview that was pulled from the L<Rose::DB::Object> mailing list in the wiki.
 
 http://rose.sourceforge.net/wiki/index.php/RDBO/MailingList/Extending
 
-See the L<support|/SUPPORT> section below for more information.
+See the L<support|/SUPPORT> section below for more information on the mailing list.
 
 =head1 DEVELOPMENT POLICY
 

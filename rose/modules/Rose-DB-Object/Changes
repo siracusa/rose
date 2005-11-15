@@ -1,3 +1,7 @@
+0.081 (11.15.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Tutorial added.
+
 0.080 (11.14.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added column triggers for get, set, load, save, inflate, and deflate.

@@ -59,6 +59,7 @@ lib/Rose/DB/Object/QueryBuilder.pm
 lib/Rose/DB/Object/Std.pm
 lib/Rose/DB/Object/Std/Cached.pm
 lib/Rose/DB/Object/Std/Metadata.pm
+lib/Rose/DB/Object/Tutorial.pod
 lib/Rose/DB/Object/Util.pm
 Makefile.PL
 MANIFEST
