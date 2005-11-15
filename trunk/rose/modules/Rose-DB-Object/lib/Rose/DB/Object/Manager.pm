@@ -2228,9 +2228,9 @@ The "products" table is "t1" since it's the primary table--the table behind the 
         query           => [ status => 'defunct' ],
         sort_by         => 't1.name'); # "products" is "t1"
 
-Also note that the C<multi_many_ok> parameter was used in order to supress the warning that occurs when more than one "... to many" relationship is included in the combination of C<require_objects> and C<with_objects> ("code_names" (one to many) and "colors" (many to many) in this case).  See the documentation for C<multi_many_ok> below.
+Also note that the C<multi_many_ok> parameter was used in order to suppress the warning that occurs when more than one "... to many" relationship is included in the combination of C<require_objects> and C<with_objects> ("code_names" (one to many) and "colors" (many to many) in this case).  See the documentation for C<multi_many_ok> below.
 
-The "tN" table aliases are for convenience, and to isolate end-user code from the actual table names.  Ideally, the actual table names should only exist in one place in the entire codebase: in the class definitions for each L<Rose::DB::OBject>-derived class.
+The "tN" table aliases are for convenience, and to isolate end-user code from the actual table names.  Ideally, the actual table names should only exist in one place in the entire code base: in the class definitions for each L<Rose::DB::OBject>-derived class.
 
 That said, when using L<Rose::DB::Object::Manager>, the actual table names can be used as well.  But be aware that some databases don't like a mix of table aliases and real table names in some kinds of queries.
 

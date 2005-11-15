@@ -2259,7 +2259,7 @@ sub perl_manager_class
     %args = @_;
   }
 
-  $args{'base_name'} ||= $self->convention_manager->class_to_table_singular;
+  $args{'base_name'} ||= $self->convention_manager->class_to_table_plural;
 
   $args{'class'} ||= $self->class . '::Manager';
 
@@ -2313,7 +2313,7 @@ $isa
 
 sub object_class { '$object_class' }
 
-__PACKAGE__->meta->make_manager_methods('$args{'base_name'}');
+__PACKAGE__->make_manager_methods('$args{'base_name'}');
 
 1;
 EOF
@@ -3740,7 +3740,7 @@ Returns a Perl class definition for a L<Rose::DB::Object::Manager>-derived class
 
 =item * base_name NAME
 
-The value of the L<base_name|Rose::DB::Object::Manager/base_name> parameter that will be passed to the call to L<Rose::DB::Object::Manager>'s L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.  Defaults to the return value of the L<convention manager|/convention_manager>'s L<class_to_table_singular|Rose::DB::Object::ConventionManager/class_to_table_singular> method.
+The value of the L<base_name|Rose::DB::Object::Manager/base_name> parameter that will be passed to the call to L<Rose::DB::Object::Manager>'s L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.  Defaults to the return value of the L<convention manager|/convention_manager>'s L<class_to_table_plural|Rose::DB::Object::ConventionManager/class_to_table_plural> method.
 
 =item * class CLASS
 
@@ -3773,7 +3773,7 @@ The following would be printed:
 
     sub object_class { 'Product' }
 
-    __PACKAGE__->meta->make_manager_methods('prod');
+    __PACKAGE__->make_manager_methods('prod');
 
     1;
 
