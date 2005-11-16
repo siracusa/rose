@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1327;
+use Test::More tests => 1333;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("Postgres tests", 454)  unless($HAVE_PG);
+  skip("Postgres tests", 456)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -393,6 +393,9 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   $objs ||= [];
   is(scalar @$objs, 1, "get_objects() with many 2 - $db_type");
 
+  ok(!defined $objs->[0]->{'status'}, "lazy main 1 - $db_type");
+  is($objs->[0]->status, 'with', "lazy main 2 - $db_type");
+
   my $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
 
   is(scalar @$nicks, 4, "get_objects() with many 3 - $db_type");
@@ -467,6 +470,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => [ 'nicks' ],
       sort_by => 't1.name');
 
   is(ref $iterator, 'Rose::DB::Object::Iterator', "get_objects_iterator() 1 - $db_type");
@@ -525,6 +529,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 3);
 
@@ -573,6 +578,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 3);
 
@@ -597,6 +603,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 2,
       offset  => 1);
@@ -624,6 +631,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 3,
       offset  => 2);
@@ -651,6 +659,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 2,
       offset  => 1);
@@ -673,6 +682,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 3,
       offset  => 2);
@@ -1534,6 +1544,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
         share_db        => 1,
         require_objects => [ 'nicks', 'colors', 'other_obj' ],
         multi_many_ok   => 1,
+        nonlazy         => 1,
         sort_by         => 't1.name');
   
     is(scalar @$objs, 2, "get_objects() distinct multi many require $i.1 - $db_type");
@@ -1570,7 +1581,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   for(1 .. 3)
   {
-    is($objs->[$i++]->id, $_, "pager 1.$_");
+    is($objs->[$i++]->id, $_, "pager 1.$_ - $db_type");
   }
 
   $objs = 
@@ -1584,7 +1595,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   for(1 .. 3)
   {
-    is($objs->[$i++]->id, $_, "pager 2.$_");
+    is($objs->[$i++]->id, $_, "pager 2.$_ - $db_type");
   }
 
   $objs = 
@@ -1598,7 +1609,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   for(1 .. 3)
   {
-    is($objs->[$i++]->id, $_, "pager 3.$_");
+    is($objs->[$i++]->id, $_, "pager 3.$_ - $db_type");
   }
 
   $objs = 
@@ -1612,7 +1623,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   for(1 .. 3)
   {
-    is($objs->[$i++]->id, $_, "pager 4.$_");
+    is($objs->[$i++]->id, $_, "pager 4.$_ - $db_type");
   }
   
   $objs = 
@@ -1626,7 +1637,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   for(1 .. 3)
   {
-    is($objs->[$i++]->id, $_, "pager 5.$_");
+    is($objs->[$i++]->id, $_, "pager 5.$_ - $db_type");
   }
 
   $objs = 
@@ -1640,7 +1651,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   for(1 .. 3)
   {
-    is($objs->[$i++]->id, $_, "pager 6.$_");
+    is($objs->[$i++]->id, $_, "pager 6.$_ - $db_type");
   }
 
   $objs = 
@@ -1654,7 +1665,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   for(1 .. 3)
   {
-    is($objs->[$i++]->id, $_, "pager 7.$_");
+    is($objs->[$i++]->id, $_, "pager 7.$_ - $db_type");
   }
 
   $objs = 
@@ -1663,7 +1674,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       query        => [ id => { le => 11 } ],
       sort_by      => 't1.id');
 
-  ok(scalar @$objs > 3, 'pager 8');
+  ok(scalar @$objs > 3, "pager 8 - $db_type");
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
@@ -1677,7 +1688,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   for(4 .. 6)
   {
-    is($objs->[$i++]->id, $_, "pager 9.$_");
+    is($objs->[$i++]->id, $_, "pager 9.$_ - $db_type");
   }
 
   $objs = 
@@ -1692,7 +1703,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   for(7 .. 9)
   {
-    is($objs->[$i++]->id, $_, "pager 10.$_");
+    is($objs->[$i++]->id, $_, "pager 10.$_ - $db_type");
   }
 
   $objs = 
@@ -1707,7 +1718,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   for(10 .. 11)
   {
-    is($objs->[$i++]->id, $_, "pager 11.$_");
+    is($objs->[$i++]->id, $_, "pager 11.$_ - $db_type");
   }
 
   $objs = 
@@ -1718,7 +1729,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       page         => 5,
       per_page     => 3);
 
-  ok(scalar @$objs == 0, 'pager 12');
+  ok(scalar @$objs == 0, "pager 12 - $db_type");
 
   Rose::DB::Object::Manager->default_objects_per_page(20);
 
@@ -1731,7 +1742,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 454)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 456)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -2068,6 +2079,9 @@ SKIP: foreach my $db_type ('mysql')
   $objs ||= [];
   is(scalar @$objs, 1, "get_objects() with many 2 - $db_type");
 
+  ok(!defined $objs->[0]->{'status'}, "lazy main 1 - $db_type");
+  is($objs->[0]->status, 'with', "lazy main 2 - $db_type");
+
   my $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
 
   is(scalar @$nicks, 4, "get_objects() with many 3 - $db_type");
@@ -2142,6 +2156,7 @@ SKIP: foreach my $db_type ('mysql')
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => [ 'nicks' ],
       sort_by => 't1.name');
 
   is(ref $iterator, 'Rose::DB::Object::Iterator', "get_objects_iterator() 1 - $db_type");
@@ -2200,6 +2215,7 @@ SKIP: foreach my $db_type ('mysql')
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 3);
 
@@ -2248,6 +2264,7 @@ SKIP: foreach my $db_type ('mysql')
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 3);
 
@@ -2272,6 +2289,7 @@ SKIP: foreach my $db_type ('mysql')
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 2,
       offset  => 1);
@@ -2299,6 +2317,7 @@ SKIP: foreach my $db_type ('mysql')
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 3,
       offset  => 2);
@@ -2326,6 +2345,7 @@ SKIP: foreach my $db_type ('mysql')
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 2,
       offset  => 1);
@@ -2348,6 +2368,7 @@ SKIP: foreach my $db_type ('mysql')
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 3,
       offset  => 2);
@@ -3427,7 +3448,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type (qw(informix))
 {
-  skip("Informix tests", 417)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 419)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -3800,6 +3821,9 @@ SKIP: foreach my $db_type (qw(informix))
   $objs ||= [];
   is(scalar @$objs, 1, "get_objects() with many 2 - $db_type");
 
+  ok(!defined $objs->[0]->{'status'}, "lazy main 1 - $db_type");
+  is($objs->[0]->status, 'with', "lazy main 2 - $db_type");
+
   my $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
 
   is(scalar @$nicks, 4, "get_objects() with many 3 - $db_type");
@@ -3874,6 +3898,7 @@ SKIP: foreach my $db_type (qw(informix))
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name');
 
   is(ref $iterator, 'Rose::DB::Object::Iterator', "get_objects_iterator() 1 - $db_type");
@@ -3932,6 +3957,7 @@ SKIP: foreach my $db_type (qw(informix))
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => [ 'nicks' ],
       sort_by => 't1.name',
       limit   => 3);
 
@@ -3980,6 +4006,7 @@ SKIP: foreach my $db_type (qw(informix))
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 3);
 
@@ -4004,6 +4031,7 @@ SKIP: foreach my $db_type (qw(informix))
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 2,
       offset  => 1);
@@ -4031,6 +4059,7 @@ SKIP: foreach my $db_type (qw(informix))
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 3,
       offset  => 2);
@@ -4058,6 +4087,7 @@ SKIP: foreach my $db_type (qw(informix))
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 2,
       offset  => 1);
@@ -4080,6 +4110,7 @@ SKIP: foreach my $db_type (qw(informix))
       [
         't1.id'  => { ge => 2 },
       ],
+      nonlazy => 1,
       sort_by => 't1.name',
       limit   => 3,
       offset  => 2);
@@ -5345,7 +5376,7 @@ EOF
     (
       id   => { type => 'serial', primary_key => 1 },
       o_id => { type => 'int' },
-      nick => { type => 'varchar'},
+      nick => { type => 'varchar', lazy => 1 },
     );
 
     MyPgNick->meta->foreign_keys
@@ -5450,8 +5481,8 @@ EOF
       id       => { primary_key => 1 },
       flag     => { type => 'boolean', default => 1 },
       flag2    => { type => 'boolean' },
-      status   => { default => 'active' },
-      start    => { type => 'date', default => '12/24/1980' },
+      status   => { default => 'active', lazy => 1 },
+      start    => { type => 'date', default => '12/24/1980', lazy => 1 },
       save     => { type => 'scalar' },
       nums     => { type => 'array' },
       bits     => { type => 'bitfield', bits => 5, default => 101 },
@@ -5709,7 +5740,7 @@ EOF
     (
       id   => { type => 'int', primary_key => 1 },
       o_id => { type => 'int' },
-      nick => { type => 'varchar'},
+      nick => { type => 'varchar', lazy => 1 },
     );
 
     MyMySQLNick->meta->foreign_keys
@@ -5814,8 +5845,8 @@ EOF
       id       => { primary_key => 1 },
       flag     => { type => 'boolean', default => 1 },
       flag2    => { type => 'boolean' },
-      status   => { default => 'active' },
-      start    => { type => 'date', default => '12/24/1980' },
+      status   => { default => 'active', lazy => 1 },
+      start    => { type => 'date', default => '12/24/1980', lazy => 1 },
       save     => { type => 'scalar' },
       bits     => { type => 'bitfield', bits => 5, default => 101 },
       nums     => { type => 'array' },
@@ -6067,7 +6098,7 @@ EOF
     (
       id   => { type => 'serial', primary_key => 1 },
       o_id => { type => 'int' },
-      nick => { type => 'varchar'},
+      nick => { type => 'varchar', lazy => 1 },
     );
 
     MyInformixNick->meta->foreign_keys
@@ -6172,8 +6203,8 @@ EOF
       id       => { primary_key => 1 },
       flag     => { type => 'boolean', default => 1 },
       flag2    => { type => 'boolean' },
-      status   => { default => 'active' },
-      start    => { type => 'date', default => '12/24/1980' },
+      status   => { default => 'active', lazy => 1 },
+      start    => { type => 'date', default => '12/24/1980', lazy => 1 },
       save     => { type => 'scalar' },
       nums     => { type => 'set' },
       bits     => { type => 'bitfield', bits => 5, default => 101 },

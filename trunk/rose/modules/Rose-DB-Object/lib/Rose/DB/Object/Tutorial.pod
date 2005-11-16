@@ -1441,7 +1441,7 @@ And further still:
       colors => 'many to many',
     );
 
-(Classes can be L<shortened even more absurdly|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> when auto-initialization is combined with the convention manager.  See the L<convention manager documentation|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> for an example.)
+(Classes can be shortened even more absurdly when auto-initialization is combined with the convention manager.  See the L<convention manager documentation|Rose::DB::Object::ConventionManager/"AUTO-INIT EXAMPLE"> for an example.)
 
 Now let's revisit the example code.
 

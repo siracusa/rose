@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 195;
+use Test::More tests => 215;
 
 BEGIN 
 {
@@ -156,6 +156,71 @@ SETUP:
     defined $_[1] ? $_[0]->db->format_date(Rose::DateTime::Util::parse_date($_[1]) || 
                                            $_[0]->db->parse_date($_[1])) : undef 
   });
+
+  # Test built-in triggers
+
+  # 0: die
+  $column->add_builtin_trigger(event => 'on_get', 
+                               name  => 'die',
+                               code  => sub { die "blah" });
+
+  # 1: die, dyn
+  $column->add_builtin_trigger(event => 'on_get', 
+                               code => sub { $Temp{'bi'}{'get'}{'name'} = shift->name });
+
+  # This relies on knowledge of how generate_trigger_name() works
+  $dyn_name = "dyntrig_${$}_33"; 
+
+  # 0: warn, die, dyn
+  $column->add_builtin_trigger(event => 'on_get', 
+                               name  => 'warn',
+                               code  => sub { warn "boo" },
+                               position => 'first');
+
+  Test::More::is($column->builtin_trigger_index('on_get', 'warn'), 0, 'builtin_trigger_index 1');
+  Test::More::is($column->builtin_trigger_index('on_get', 'die'), 1, 'builtin_trigger_index 2');
+  Test::More::is($column->builtin_trigger_index('on_get', $dyn_name), 2, 'builtin_trigger_index 3');
+
+  $column->delete_builtin_trigger(event => 'on_get',
+                                  name  => 'die');
+
+  Test::More::is($column->builtin_trigger_index('on_get', 'warn'), 0, 'builtin_trigger_index 4');
+  Test::More::is($column->builtin_trigger_index('on_get', $dyn_name), 1, 'builtin_trigger_index 5');
+
+  $column->delete_builtin_trigger(event => 'on_get',
+                                  name  => 'warn');
+
+  Test::More::is($column->builtin_trigger_index('on_get', $dyn_name), 0, 'builtin_trigger_index 6');
+
+  $indexes = $column->builtin_trigger_indexes('on_get');
+  Test::More::is(keys %$indexes, 1, 'builtin_trigger_indexes 1');
+
+  $triggers = $column->builtin_triggers('on_get');
+  Test::More::is(scalar @$triggers, 1, 'builtin_triggers 1');
+
+  $column->add_builtin_trigger(event => 'on_set', 
+                       code => sub { $Temp{'bi'}{'set'}{'name'} = shift->name });
+
+  $column->add_builtin_trigger(on_load => sub { $Temp{'bi'}{'on_load'}{'name'} = shift->name });
+  $column->add_builtin_trigger(on_save => sub { $Temp{'bi'}{'on_save'}{'name'} = shift->name });
+
+  $column->add_builtin_trigger(inflate => sub { $Temp{'bi'}{'inflate'}{'name'} = shift->name });
+  $column->add_builtin_trigger(deflate => sub { $Temp{'bi'}{'deflate'}{'name'} = uc $_[1] });
+
+  $column->delete_builtin_triggers;
+
+  $i = 0;
+
+  foreach my $event (qw(on_set on_get on_load on_save inflate deflate))
+  {
+    $i++;
+    $indexes = $column->builtin_trigger_indexes($event);
+    Test::More::is(keys %$indexes, 0, "delete_builtin_triggers $i");
+
+    $i++;
+    $triggers = $column->builtin_triggers($event);
+    Test::More::ok(!defined $triggers, "delete_builtin_triggers $i");
+  }
 }
 
 #

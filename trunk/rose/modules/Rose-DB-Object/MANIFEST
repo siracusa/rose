@@ -117,6 +117,7 @@ t/db-object-relationship.t
 t/db-object-std-cached.t
 t/db-object-std.t
 t/db-object.t
+t/lazy-columns.t
 t/lib/My/DB/Gene/Main.pm
 t/lib/My/DB/Gene2Unigene.pm
 t/lib/My/DB/Object.pm

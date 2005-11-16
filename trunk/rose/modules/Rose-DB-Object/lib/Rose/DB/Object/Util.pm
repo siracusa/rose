@@ -12,7 +12,8 @@ our @EXPORT_OK =
   qw(is_in_db is_loading is_saving
      set_state_in_db set_state_loading set_state_saving
      unset_state_in_db unset_state_loading unset_state_saving
-     row_id column_value_formatted_key column_value_is_inflated_key);
+     row_id column_value_formatted_key column_value_is_inflated_key
+     lazy_column_values_loaded_key);
 
 our %EXPORT_TAGS = 
 (
@@ -21,7 +22,8 @@ our %EXPORT_TAGS =
     qw(is_in_db is_loading is_saving
        set_state_in_db set_state_loading set_state_saving
        unset_state_in_db unset_state_loading unset_state_saving
-       row_id column_value_formatted_key column_value_is_inflated_key) 
+       row_id column_value_formatted_key column_value_is_inflated_key
+       lazy_column_values_loaded_key) 
   ],
   get_state   => [ qw(is_in_db is_loading is_saving) ],
   set_state   => [ qw(set_state_in_db set_state_loading set_state_saving) ],
@@ -68,6 +70,12 @@ sub column_value_is_inflated_key
 {
   my($key) = shift;
   return PRIVATE_PREFIX . "_${key}_is_inflated";
+}
+
+sub lazy_column_values_loaded_key
+{
+  my($key) = shift;
+  return PRIVATE_PREFIX . "_lazy_loaded";
 }
 
 1;

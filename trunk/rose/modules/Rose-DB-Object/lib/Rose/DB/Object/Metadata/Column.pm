@@ -10,13 +10,17 @@ use Rose::DB::Object::Metadata::MethodMaker;
 our @ISA = qw(Rose::DB::Object::Metadata::MethodMaker);
 
 use Rose::DB::Object::Util 
-  qw(column_value_formatted_key column_value_is_inflated_key);
+  qw(column_value_formatted_key column_value_is_inflated_key
+    lazy_column_values_loaded_key);
 
 use Rose::DB::Object::Constants 
   qw(STATE_IN_DB STATE_LOADING STATE_SAVING);
 
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
+
+our $Triggers_Key      = 'triggers';
+our $Trigger_Index_Key = 'trigger_index';
 
 our $VERSION = '0.10';
 
@@ -69,7 +73,7 @@ Rose::Object::MakeMethods::Generic->make_methods
   ],
 );
 
-*primary_key = \&is_primary_key_member;
+*primary_key    = \&is_primary_key_member;
 
 __PACKAGE__->method_maker_info
 (
@@ -270,8 +274,9 @@ sub perl_column_defintion_attributes
   {
     if($attr =~ /^(?:name(?:_sql)? | is_primary_key_member | 
                   primary_key_position | method_name | method_code |
-                  made_method_types| ordinal_position | triggers | 
-                  trigger_index )$/x)
+                  made_method_types| ordinal_position | 
+                  (?:builtin_)?triggers | 
+                  (?:builtin_)?trigger_index )$/x)
     {
       next ATTR;
     }
@@ -360,6 +365,93 @@ sub _sort_keys
   return lc $_[0] cmp lc $_[1];
 }
 
+sub lazy
+{
+  my($self) = shift;
+  
+  return $self->{'lazy'}  unless(@_);
+
+  if($_[0])
+  {
+    if($self->is_primary_key_member)
+    {
+      Carp::croak "The column '", $self->name, "' cannot be loaded on demand ",
+                  "because it's part of the primary key";
+    }
+
+    $self->{'lazy'} = 1;
+    $self->add_builtin_trigger(event => 'on_get',
+                               name  => 'load_on_demand',
+                               code  => $self->load_on_demand_on_get_code);
+
+    $self->add_builtin_trigger(event => 'on_load',
+                               name  => 'load_on_demand',
+                               code  => $self->load_on_demand_on_set_code);
+
+    $self->add_builtin_trigger(event => 'on_set',
+                               name  => 'load_on_demand',
+                               code  => $self->load_on_demand_on_set_code);
+  }
+  else
+  {
+    $self->{'lazy'} = 0;
+    $self->delete_builtin_trigger(event => 'on_get',
+                                  name  => 'load_on_demand');
+
+    $self->delete_builtin_trigger(event => 'on_load',
+                                  name  => 'load_on_demand');
+
+    $self->delete_builtin_trigger(event => 'on_set',
+                                  name  => 'load_on_demand');
+  }
+ 
+  if(my $meta = $self->parent)
+  {
+    $meta->refresh_lazy_column_tracking;
+  }
+
+  return $self->{'lazy'};
+}
+
+*is_lazy        = \&lazy;
+*load_on_demand = \&lazy;
+
+use constant LAZY_LOADED_KEY => lazy_column_values_loaded_key();
+
+sub load_on_demand_on_get_code
+{
+  my($column) = shift;
+
+  my($name, $mutator);
+
+  return sub
+  {
+    my($self) = shift;
+
+    $name ||= $column->name;
+    return  if(!$self->{STATE_IN_DB()} || $self->{LAZY_LOADED_KEY()}{$name});
+
+    $mutator ||= $column->mutator_method_name;
+    $self->$mutator($self->meta->get_column_value($self, $column));
+
+    $self->{LAZY_LOADED_KEY()}{$name} = 1;
+  };
+}
+
+sub load_on_demand_on_set_code
+{
+  my($column) = shift;
+
+  my $name;
+
+  return sub
+  {
+    my($self) = shift;
+    $name ||= $column->name;
+    $self->{LAZY_LOADED_KEY()}{$name} = 1;
+  };
+}
+
 our %Trigger_Events =
 (
   inflate => 1,
@@ -369,6 +461,13 @@ our %Trigger_Events =
   on_set  => 1,
   on_get  => 1,
 );
+
+sub builtin_triggers
+{
+  # So evil...
+  local $Triggers_Key = 'builtin_triggers';
+  shift->triggers(@_);
+}
 
 sub triggers
 {
@@ -394,12 +493,20 @@ sub triggers
       }
     }
 
-    $self->{'triggers'}{$event} = @$codes ? $codes : undef;
+    $self->{$Triggers_Key}{$event} = @$codes ? $codes : undef;
     $self->reapply_triggers($event);
     return;
   }
 
-  return $self->{'triggers'}{$event};
+  return $self->{$Triggers_Key}{$event};
+}
+
+sub delete_builtin_triggers
+{
+  # So evil...
+  local $Triggers_Key      = 'builtin_triggers';
+  local $Trigger_Index_Key = 'builtin_trigger_index';
+  shift->delete_triggers(@_);
 }
 
 sub delete_triggers
@@ -411,8 +518,8 @@ sub delete_triggers
   foreach my $event (@events)
   {
     Carp::croak "Invalid event: $event"  unless(exists $Trigger_Events{$event});
-    $self->{'triggers'}{$event} = undef;
-    $self->{'trigger_index'}{$event} = undef;
+    $self->{$Triggers_Key}{$event} = undef;
+    $self->{$Trigger_Index_Key}{$event} = undef;
   }
 
   return;
@@ -420,6 +527,23 @@ sub delete_triggers
 
 sub disable_triggers { shift->triggers_disabled(1) }
 sub enable_triggers  { shift->triggers_disabled(0) }
+
+sub add_builtin_trigger
+{
+  my($self, %args) = @_;
+  
+  if(@_ == 3 && $Trigger_Events{$_[1]})
+  {
+    my $event = $_[1];
+    my $code  = $_[2];
+
+    return $self->add_trigger(event => $event, 
+                              code  => $code, 
+                              builtin => 1);
+  }
+
+  return $self->add_trigger(%args, builtin => 1);
+}
 
 sub add_trigger
 {
@@ -441,6 +565,9 @@ sub add_trigger
   $name     = $args{'name'} || $self->generate_trigger_name;
   $position = $args{'position'} || 'end';
 
+  my $builtin = $args{'builtin'} || 0;
+  my $builtin_prefix = $builtin ? 'builtin_' : '';
+
   Carp::croak "Invalid event: '$event'"  
     unless(exists $Trigger_Events{$event});
 
@@ -451,15 +578,24 @@ sub add_trigger
   
   if($position =~ /^(?:end|last|push)$/)
   {
-    push(@{$self->{'triggers'}{$event}}, $code);
-    $self->trigger_index($event, $name, $#{$self->{'triggers'}{$event}});
+    push(@{$self->{$builtin_prefix . 'triggers'}{$event}}, $code);
+    
+    if($builtin)
+    {
+      $self->builtin_trigger_index($event, $name, $#{$self->{'builtin_triggers'}{$event}});
+    }
+    else
+    {
+      $self->trigger_index($event, $name, $#{$self->{'triggers'}{$event}});
+    }
   }
   elsif($position =~ /^(?:start|first|unshift)$/)
   {
-    unshift(@{$self->{'triggers'}{$event}}, $code);
+    unshift(@{$self->{$builtin_prefix . 'triggers'}{$event}}, $code);
     
     # Shift all the other trigger positions
-    my $indexes = $self->trigger_indexes($event);
+    my $indexes = $builtin? $self->builtin_trigger_indexes($event) :
+                            $self->trigger_indexes($event);
     
     foreach my $name (keys(%$indexes))
     {
@@ -467,7 +603,14 @@ sub add_trigger
     }
 
     # Set new position
-    $self->trigger_index($event, $name, 0);
+    if($builtin)
+    {
+      $self->builtin_trigger_index($event, $name, 0);
+    }
+    else
+    {
+      $self->trigger_index($event, $name, 0);
+    }
   }
   else { Carp::croak "Invalid trigger position: '$position'" }
 
@@ -480,6 +623,7 @@ my $Trigger_Num = 0;
 sub generate_trigger_name { "dyntrig_${$}_" . ++$Trigger_Num }
 
 sub trigger_indexes { $_[0]->{'trigger_index'}{$_[1]} || {} }
+sub builtin_trigger_indexes { $_[0]->{'builtin_trigger_index'}{$_[1]} || {} }
 
 sub trigger_index
 {
@@ -493,29 +637,49 @@ sub trigger_index
   return $self->{'trigger_index'}{$event}{$name};
 }
 
+sub builtin_trigger_index
+{
+  my($self, $event, $name) = (shift, shift, shift);
+  
+  if(@_)
+  {
+    return $self->{'builtin_trigger_index'}{$event}{$name} = shift;
+  }
+
+  return $self->{'builtin_trigger_index'}{$event}{$name};
+}
+
+sub delete_builtin_trigger { shift->delete_trigger(@_, builtin => 1) }
+
 sub delete_trigger
 {
   my($self, %args) = @_;
 
   my $name  = $args{'name'} or Carp::croak "Missing name parameter";
   my $event = $args{'event'};
+  my $builtin = $args{'builtin'} || 0;
 
+  my $builtin_text   = $builtin ? ' builtin' : '';
+  my $builtin_prefix = $builtin ? 'builtin_' : '';
+  
   Carp::croak "Invalid event: '$event'"  
     unless(exists $Trigger_Events{$event});
 
-  my $index = $self->trigger_index($event, $name);
-  
+  my $index = $builtin ? $self->builtin_trigger_index($event, $name) :
+                         $self->trigger_index($event, $name);
+
   unless(defined $index)
   {
-    Carp::croak "No trigger named '$name' for event '$event'";
+    Carp::croak "No$builtin_text trigger named '$name' for event '$event'";
   }
 
-  my $triggers = $self->{'triggers'}{$event};
+  my $triggers = $self->{$builtin_prefix . 'triggers'}{$event};
   
   # Remove the trigger
   splice(@$triggers, $index, 1);
 
-  my $indexes = $self->trigger_indexes($event);
+  my $indexes = $builtin? $self->builtin_trigger_indexes($event) :
+                          $self->trigger_indexes($event);
 
   # Remove its index
   delete $indexes->{$name};
@@ -586,6 +750,27 @@ sub apply_method_triggers
   my $on_save_code = $self->triggers('on_save') || 0;
   my $on_set_code  = $self->triggers('on_set')  || 0;
   my $on_get_code  = $self->triggers('on_get')  || 0;
+
+  my $builtins;
+
+  # Add built-ins, if any
+  unshift(@{$inflate_code ||= []}, @$builtins)
+    if($builtins = $self->builtin_triggers('inflate'));
+
+  unshift(@{$deflate_code ||= []}, @$builtins)
+    if($builtins = $self->builtin_triggers('deflate'));  
+
+  unshift(@{$on_load_code ||= []}, @$builtins)
+    if($builtins = $self->builtin_triggers('on_load'));  
+
+  unshift(@{$on_save_code ||= []}, @$builtins)
+    if($builtins = $self->builtin_triggers('on_save'));  
+
+  unshift(@{$on_set_code ||= []}, @$builtins)
+    if($builtins = $self->builtin_triggers('on_set'));  
+
+  unshift(@{$on_get_code ||= []}, @$builtins)
+    if($builtins = $self->builtin_triggers('on_get'));  
 
   my $key             = $self->hash_key;
   my $formatted_key   = column_value_formatted_key($key);
@@ -1316,6 +1501,14 @@ Convert VALUE into a string suitable for the database column of this type.  VALU
 =item B<is_primary_key_member [BOOL]>
 
 Get or set the boolean flag that indicates whether or not this column is part of the primary key for its table.
+
+=item B<load_on_demand [BOOL]>
+
+Get or set a boolean valuee that indicates whether or not a column's value should be loaded only when needed.  If true, then the column's value will not be fetched form the database when an object is L<loaded|Rose::DB::Object/load>.  The default is false.
+
+=item B<lazy [BOOL]>
+
+This is an alias for the L<load_on_demand|/load_on_demand> method.
 
 =item B<make_methods PARAMS>
 
