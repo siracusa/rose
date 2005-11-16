@@ -371,6 +371,7 @@ SKIP: foreach my $db_type ('mysql')
   ok($@ && $o->not_found, "load() not found fatal - $db_type");
 
   my $old_table = $o->meta->table;
+
   $o->meta->table('nonesuch');
 
   eval { $o->load };
@@ -686,13 +687,13 @@ EOF
       code     => { type => 'char', length => 6 },
       id       => { primary_key => 1, not_null => 1 },
       k1       => { type => 'int' },
-      k2       => { type => 'int' },
+      k2       => { type => 'int', lazy => 1 },
       k3       => { type => 'int' },
       ($PG_HAS_CHKPASS ? (passwd => { type => 'chkpass', alias => 'password' }) : ()),
       flag     => { type => 'boolean', default => 1 },
       flag2    => { type => 'boolean' },
       status   => { default => 'active', add_methods => [ qw(get set) ] },
-      start    => { type => 'date', default => '12/24/1980' },
+      start    => { type => 'date', default => '12/24/1980', lazy => 1 },
       save     => { type => 'scalar' },
       nums     => { type => 'array' },
       bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },
@@ -802,12 +803,12 @@ EOF
       code     => { type => 'char', length => 6 },
       id       => { primary_key => 1, not_null => 1 },
       k1       => { type => 'int' },
-      k2       => { type => 'int' },
+      k2       => { type => 'int', lazy => 1 },
       k3       => { type => 'int' },
       flag     => { type => 'boolean', default => 1 },
       flag2    => { type => 'boolean' },
       status   => { default => 'active', methods => [ qw(get_set get set) ] },
-      start    => { type => 'date', default => '12/24/1980' },
+      start    => { type => 'date', default => '12/24/1980', lazy => 1 },
       ndate    => { type => 'date', not_null => 1, default => '0000-00-00' },
       save     => { type => 'scalar' },
       nums     => { type => 'array' },
@@ -935,12 +936,12 @@ EOF
       code     => { type => 'char', length => 6 },
       id       => { type => 'serial', primary_key => 1, not_null => 1 },
       k1       => { type => 'int' },
-      k2       => { type => 'int' },
+      k2       => { type => 'int', lazy => 1 },
       k3       => { type => 'int' },
       flag     => { type => 'boolean', default => 1 },
       flag2    => { type => 'boolean' },
       status   => { default => 'active', add_methods => [ qw(get set) ] },
-      start    => { type => 'date', default => '12/24/1980' },
+      start    => { type => 'date', default => '12/24/1980', lazy => 1 },
       save     => { type => 'scalar' },
       nums     => { type => 'array' },
       bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },

@@ -6,7 +6,6 @@ use Carp();
 
 use Rose::DB::Object::Iterator;
 use Rose::DB::Object::QueryBuilder qw(build_select);
-
 use Rose::DB::Object::Constants qw(STATE_LOADING STATE_IN_DB);
 
 # XXX: A value that is unlikely to exist in a primary key column value
@@ -288,6 +287,7 @@ sub get_objects
   my $skip_first      = delete $args{'skip_first'} || 0;
   my $distinct        = delete $args{'distinct'};
   my $fetch           = delete $args{'fetch_only'};
+  
   my(%fetch, %rel_name);
 
   my $db  = delete $args{'db'} || $object_class->init_db;
@@ -373,10 +373,28 @@ sub get_objects
 
   my($fields, $fields_string, $table);
 
+  $args{'nonlazy'} = []  unless(exists $args{'nonlazy'});
+  my $nonlazy = $args{'nonlazy'};
+  my %nonlazy = (ref $nonlazy ? map { $_ => 1 } @$nonlazy : ());
+
   my @tables  = ($meta->fq_table_sql);
-  my %columns = ($tables[0] => scalar $meta->columns);#_names);
+
+  my $use_lazy_columns = (!ref $nonlazy || $nonlazy{'self'}) ? 0 : $meta->has_lazy_columns;
+
+  my(%columns, %methods);
+
+  if($use_lazy_columns)
+  {
+    %columns = ($tables[0] => scalar $meta->nonlazy_columns);
+    %methods = ($tables[0] => scalar $meta->nonlazy_column_mutator_method_names);
+  }
+  else
+  {
+    %columns = ($tables[0] => scalar $meta->columns);
+    %methods = ($tables[0] => scalar $meta->column_mutator_method_names);  
+  }
+
   my %classes = ($tables[0] => $object_class);
-  my %methods = ($tables[0] => scalar $meta->column_mutator_method_names);
   my @classes = ($object_class);
   my %meta    = ($object_class => $meta);
 
@@ -573,9 +591,20 @@ sub get_objects
         # Iterator will be the tN value: the first sub-table is t2, and so on
         $i++;
 
-        $columns{$tables[-1]} = $ft_meta->columns;#_names;
+        my $use_lazy_columns = (!ref $nonlazy || $nonlazy{$name}) ? 0 : $ft_meta->has_lazy_columns;
+  
+        if($use_lazy_columns)
+        {
+          $columns{$tables[-1]} = $ft_meta->nonlazy_columns;
+          $methods{$tables[-1]} = $ft_meta->nonlazy_column_mutator_method_names;
+        }
+        else
+        {
+          $columns{$tables[-1]} = $ft_meta->columns;   
+          $methods{$tables[-1]} = $ft_meta->column_mutator_method_names;        
+        }
+
         $classes{$tables[-1]} = $ft_class;
-        $methods{$tables[-1]} = $ft_meta->column_mutator_method_names;
 
         $subobject_methods[$i - 1] = 
           $rel->method_name('get_set') ||
@@ -687,9 +716,9 @@ sub get_objects
         push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
         push(@classes, $map_class);
 
-        $columns{$tables[-1]} = []; #$map_meta->columns;#_names;
+        $columns{$tables[-1]} = []; # Don't fetch map class columns
         $classes{$tables[-1]} = $map_class;
-        $methods{$tables[-1]} = []; #$map_meta->column_mutator_method_names;
+        $methods{$tables[-1]} = [];
 
         my $column_map = $rel->column_map;
 
@@ -749,9 +778,20 @@ sub get_objects
         push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
         push(@classes, $ft_class);
 
-        $columns{$tables[-1]} = $ft_meta->columns;#_names;
+        my $use_lazy_columns = (!ref $nonlazy || $nonlazy{$name}) ? 0 : $ft_meta->has_lazy_columns;
+
+        if($use_lazy_columns)
+        {
+          $columns{$tables[-1]} = $ft_meta->nonlazy_columns;
+          $methods{$tables[-1]} = $ft_meta->nonlazy_column_mutator_method_names;
+        }
+        else
+        {
+          $columns{$tables[-1]} = $ft_meta->columns;   
+          $methods{$tables[-1]} = $ft_meta->column_mutator_method_names;        
+        }
+        
         $classes{$tables[-1]} = $ft_class;
-        $methods{$tables[-1]} = $ft_meta->column_mutator_method_names;
 
         # Iterator will be the tN value: the first sub-table is t2, and so on.
         # Increase again for foreign table.

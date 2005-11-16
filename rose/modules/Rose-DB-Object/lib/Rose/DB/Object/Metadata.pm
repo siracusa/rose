@@ -7,6 +7,7 @@ use Carp();
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
+use Rose::DB::Object::Util qw(lazy_column_values_loaded_key);
 use Rose::DB::Object::Constants qw(PRIVATE_PREFIX);
 
 use Rose::DB::Object::ConventionManager;
@@ -257,7 +258,7 @@ sub init_with_db
     $self->{'db'} = $db;
   }
 
-  return;
+  return $db;
 }
 
 sub init_convention_manager { shift->convention_manager_class('default')->new }
@@ -617,6 +618,24 @@ sub columns
   return wantarray ?
     (sort { $a->name cmp $b->name } values %{$self->{'columns'} ||= {}}) :
     [ sort { $a->name cmp $b->name } values %{$self->{'columns'} ||= {}} ];
+}
+
+sub nonlazy_columns
+{
+  my($self) = shift;
+
+  return wantarray ?
+    (sort { $a->name cmp $b->name } grep { !$_->lazy } values %{$self->{'columns'} ||= {}}) :
+    [ sort { $a->name cmp $b->name } grep { !$_->lazy } values %{$self->{'columns'} ||= {}} ];
+}
+
+sub lazy_columns
+{
+  my($self) = shift;
+
+  return wantarray ?
+    (sort { $a->name cmp $b->name } grep { $_->lazy } values %{$self->{'columns'} ||= {}}) :
+    [ sort { $a->name cmp $b->name } grep { $_->lazy } values %{$self->{'columns'} ||= {}} ];
 }
 
 sub add_columns
@@ -1126,6 +1145,18 @@ sub initialize
   Carp::croak "$class - No columns defined for for table '$table'"
     unless(@column_names);
 
+  foreach my $name ($self->primary_key_column_names)
+  {
+    my $column = $self->column($name) or
+      Carp::croak "Could not find column for primary key column name '$name'";
+
+    if($column->is_lazy)
+    {
+      Carp::croak "Column '$name' cannot be lazy: cannot load primary key ",             
+                  "columns on demand";
+    }
+  }
+
   $self->make_methods(@_);
 
   $self->register_class;
@@ -1134,6 +1165,8 @@ sub initialize
   $self->retry_deferred_tasks;
   $self->retry_deferred_foreign_keys;
   $self->retry_deferred_relationships;
+
+  $self->refresh_lazy_column_tracking;
 
   $self->db(undef); # make sure to ditch any db we may have retained
 
@@ -1774,7 +1807,7 @@ sub primary_key_sequence_name
     Carp::croak "Cannot generate primary key sequence name without table name";
 
   return $self->{'primary_key_sequence_name'} = 
-    $db->auto_sequence_name(table => $table, column => $pk_columns[0]);    
+    $db->auto_sequence_name(table => $table, schema => $db->schema, column => $pk_columns[0]);    
 }
 
 sub column_names
@@ -1782,6 +1815,28 @@ sub column_names
   my($self) = shift;
   $self->{'column_names'} ||= [ sort { $a cmp $b } keys %{$self->{'columns'} ||= {}} ];
   return wantarray ? @{$self->{'column_names'}} : $self->{'column_names'};
+}
+
+sub nonlazy_column_names
+{
+  my($self) = shift;
+  $self->{'nonlazy_column_names'} ||= [ map { $_->name } $self->nonlazy_columns ];
+  return wantarray ? @{$self->{'nonlazy_column_names'}} : $self->{'nonlazy_column_names'};
+}
+
+sub lazy_column_names
+{
+  my($self) = shift;
+  $self->{'lazy_column_names'} ||= [ map { $_->name } $self->lazy_columns ];
+  return wantarray ? @{$self->{'lazy_column_names'}} : $self->{'lazy_column_names'};
+}
+
+sub nonlazy_column_names_string_sql
+{
+  my($self, $db) = @_;
+
+  return $self->{'nonlazy_column_names_string_sql'}{$db->{'driver'}} ||= 
+    join(', ', map { $_->name_sql($db) } $self->nonlazy_columns);
 }
 
 sub column_names_string_sql
@@ -1845,6 +1900,17 @@ sub column_accessor_method_names
                      $self->{'column_accessor_method_names'};
 }
 
+sub nonlazy_column_accessor_method_names
+{
+  my($self) = shift;
+
+  $self->{'nonlazy_column_accessor_method_names'} ||= 
+    [ map { $self->column_accessor_method_name($_) } $self->nonlazy_column_names ];
+
+  return wantarray ? @{$self->{'nonlazy_column_accessor_method_names'}} :
+                     $self->{'nonlazy_column_accessor_method_names'};
+}
+
 sub column_mutator_method_names
 {
   my($self) = shift;
@@ -1854,6 +1920,17 @@ sub column_mutator_method_names
 
   return wantarray ? @{$self->{'column_mutator_method_names'}} :
                      $self->{'column_mutator_method_names'};
+}
+
+sub nonlazy_column_mutator_method_names
+{
+  my($self) = shift;
+
+  $self->{'nonlazy_column_mutator_method_names'} ||= 
+    [ map { $self->column_mutator_method_name($_) } $self->nonlazy_column_names ];
+
+  return wantarray ? @{$self->{'nonlazy_column_mutator_method_names'}} :
+                     $self->{'nonlazy_column_mutator_method_names'};
 }
 
 sub alias_column
@@ -1926,6 +2003,19 @@ sub fq_table_sql
     join('.', grep { defined } ($self->catalog, $self->schema, $self->table));
 }
 
+sub load_all_sql
+{
+  my($self, $key_columns, $db) = @_;
+
+  $key_columns ||= $self->primary_key_column_names;
+
+  no warnings;
+  return $self->{'load_all_sql'}{$db->{'driver'}}{join("\0", @$key_columns)} ||= 
+    'SELECT ' . $self->column_names_string_sql($db) . ' FROM ' .
+    $self->fq_table_sql . ' WHERE ' .
+    join(' AND ',  map { "$_ = ?" } @$key_columns);
+}
+
 sub load_sql
 {
   my($self, $key_columns, $db) = @_;
@@ -1934,12 +2024,12 @@ sub load_sql
 
   no warnings;
   return $self->{'load_sql'}{$db->{'driver'}}{join("\0", @$key_columns)} ||= 
-    'SELECT ' . $self->column_names_string_sql($db) . ' FROM ' .
+    'SELECT ' . $self->nonlazy_column_names_string_sql($db) . ' FROM ' .
     $self->fq_table_sql . ' WHERE ' .
     join(' AND ',  map { "$_ = ?" } @$key_columns);
 }
 
-sub load_sql_with_null_key
+sub load_all_sql_with_null_key
 {
   my($self, $key_columns, $key_values, $db) = @_;
 
@@ -1953,7 +2043,21 @@ sub load_sql_with_null_key
     @$key_columns);
 }
 
-sub update_sql
+sub load_sql_with_null_key
+{
+  my($self, $key_columns, $key_values, $db) = @_;
+
+  my $i = 0;
+
+  no warnings;
+  return 
+    'SELECT ' . $self->nonlazy_column_names_string_sql($db) . ' FROM ' .
+    $self->fq_table_sql . ' WHERE ' .
+    join(' AND ',  map { defined $key_values->[$i++] ? "$_ = ?" : "$_ IS NULL" }
+    @$key_columns);
+}
+
+sub update_all_sql
 {
   my($self, $key_columns, $db) = @_;
 
@@ -1961,16 +2065,37 @@ sub update_sql
 
   my $cache_key = "$db->{'driver'}:" . join("\0", @$key_columns);
 
-  return $self->{'update_sql'}{$cache_key}
-    if($self->{'update_sql'}{$cache_key});
+  return $self->{'update_all_sql'}{$cache_key}
+    if($self->{'update_all_sql'}{$cache_key});
 
   my %key = map { ($_ => 1) } @$key_columns;
 
   no warnings;
-  return $self->{'update_sql'}{$cache_key} = 
+  return $self->{'update_all_sql'}{$cache_key} = 
     'UPDATE ' . $self->fq_table_sql . " SET \n" .
     join(",\n", map { '    ' . $self->column($_)->name_sql($db) . ' = ?' } 
                 grep { !$key{$_} } $self->column_names) .
+    "\nWHERE " . 
+    join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns);
+}
+
+use constant LAZY_LOADED_KEY => lazy_column_values_loaded_key();
+
+sub update_sql
+{
+  my($self, $obj, $key_columns, $db) = @_;
+
+  $key_columns ||= $self->primary_key_column_names;
+
+  my %key = map { ($_ => 1) } @$key_columns;
+
+  no warnings;
+  return ($self->{'update_sql_prefix'} ||=
+    'UPDATE ' . $self->fq_table_sql . " SET \n") .
+    join(",\n", map { '    ' . $self->column($_)->name_sql($db) . ' = ?' } 
+                grep { !$key{$_->{'name'}} && (!$_->{'lazy'} || 
+                       $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
+                $self->columns) .
     "\nWHERE " . 
     join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns);
 }
@@ -1979,7 +2104,7 @@ sub update_sql
 # non-null, and any update will use the primary key instead of a unique
 # key. But I'll leave the code here (commented out) just in case.
 #
-# sub update_sql_with_null_key
+# sub update_all_sql_with_null_key
 # {
 #   my($self, $key_columns, $key_values, $db) = @_;
 # 
@@ -2053,7 +2178,9 @@ sub update_sql_with_inlining
   my @bind;
   my @updates;
 
-  foreach my $column (grep { !$key{$_} } $self->columns)
+  foreach my $column (grep { !$key{$_} && (!$_->{'lazy'} || 
+                             $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
+                      $self->columns)
   {
     my $method = $self->column_accessor_method_name($column->name);
     my $value  = $obj->$method();
@@ -2144,15 +2271,87 @@ sub delete_sql
                   $self->primary_key_column_names);
 }
 
+sub get_column_value
+{
+  my($self, $object, $column) = @_;
+
+  my $db  = $object->db or Carp::confess $object->error;
+  my $dbh = $db->dbh or Carp::confess $db->error;
+
+  my $sql = $self->{'get_column_sql_tmpl'};
+
+  unless($sql)
+  {
+    my $key_columns = $self->primary_key_column_names;
+    my %key = map { ($_ => 1) } @$key_columns;  
+
+    $sql = $column->{'get_column_sql_tmpl'}{$db->{'driver'}} = 
+      'SELECT __COLUMN__ FROM ' . $self->fq_table_sql . ' WHERE ' .
+      join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns);
+  }
+  
+  $sql =~ s/__COLUMN__/$column->name_sql/e;
+
+  my @key_values = 
+    map { $object->$_() }
+    map { $self->column_accessor_method_name($_) } 
+    $self->primary_key_column_names;
+
+  my $value;
+
+  eval
+  {
+    ($Debug || $Rose::DB::Object::Debug) && warn "$sql (@key_values)\n";
+    my $sth = $dbh->prepare($sql);
+    $sth->execute(@key_values);
+    $sth->bind_columns(\$value);
+    $sth->fetch;
+  };
+
+  if($@)
+  {
+    Carp::croak "Could not lazily-load column value for column '",
+                $column->name, "' - $@";
+  }
+
+  return $value;
+}
+
+sub refresh_lazy_column_tracking
+{
+  my($self) = shift;
+
+  $self->_clear_column_generated_values;
+
+  # Initialize method name hashes
+  $self->column_accessor_method_names;
+  $self->column_mutator_method_names;
+  $self->column_rw_method_names;
+
+  return $self->{'has_lazy_columns'} = grep { $_->lazy } $self->columns;
+}
+
+sub has_lazy_columns
+{
+  my($self) = shift;
+  return $self->{'has_lazy_columns'}  if(defined $self->{'has_lazy_columns'});
+  return $self->{'has_lazy_columns'} = grep { $_->lazy } $self->columns;
+}
+
 sub _clear_table_generated_values
 {
   my($self) = shift;
 
-  $self->{'fq_table_sql'} = undef;
-  $self->{'load_sql'}     = undef;
-  $self->{'update_sql'}   = undef;
-  $self->{'insert_sql'}   = undef;
-  $self->{'delete_sql'}   = undef;
+  $self->{'fq_table_sql'}      = undef;
+  $self->{'get_column_sql_tmpl'} = undef;
+  $self->{'load_sql'}          = undef;
+  $self->{'load_all_sql'}      = undef;
+  $self->{'update_all_sql'}    = undef;
+  $self->{'update_sql_prefix'} = undef;
+  $self->{'insert_sql'}        = undef;
+  $self->{'insert_sql_with_inlining_start'} = undef;
+  $self->{'update_sql_with_inlining_start'} = undef;
+  $self->{'delete_sql'}        = undef;
   $self->{'fq_primary_key_sequence_name'} = undef;
   $self->{'primary_key_sequence_name'} = undef;
 }
@@ -2163,20 +2362,28 @@ sub _clear_column_generated_values
 
   $self->{'fq_table_sql'}        = undef;
   $self->{'column_names'}        = undef;
+  $self->{'nonlazy_column_names'} = undef;
+  $self->{'lazy_column_names'} = undef;
+  $self->{'get_column_sql_tmpl'} = undef;
   $self->{'columns_names_sql'}   = undef;
   $self->{'column_names_string_sql'} = undef;
+  $self->{'nonlazy_column_names_string_sql'} = undef;
   $self->{'column_rw_method_names'} = undef;
   $self->{'column_accessor_method_names'} = undef;
+  $self->{'nonlazy_column_accessor_method_names'} = undef;
   $self->{'column_mutator_method_names'} = undef;
+  $self->{'nonlazy_column_mutator_method_names'} = undef;
   $self->{'method_columns'}      = undef;
   $self->{'column_accessor_method'} = undef;
   $self->{'column_mutator_method'} = undef;
   $self->{'column_rw_method'} = undef;
   $self->{'load_sql'}   = undef;
-  $self->{'update_sql'} = undef;
-  $self->{'update_sql_with_inlining_start'} = undef;
+  $self->{'load_all_sql'}   = undef;
+  $self->{'update_all_sql'} = undef;
+  $self->{'update_sql_prefix'} = undef;
   $self->{'insert_sql'} = undef;
   $self->{'insert_sql_with_inlining_start'} = undef;
+  $self->{'update_sql_with_inlining_start'} = undef;
   $self->{'delete_sql'} = undef;
 }
 

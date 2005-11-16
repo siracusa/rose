@@ -1,3 +1,8 @@
+0.50 (11.16.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added lazy-loading of column values.
+    * Long-overdue version number bump.
+
 0.081 (11.15.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Tutorial added.

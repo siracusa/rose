@@ -13,9 +13,9 @@ our @ISA = qw(Rose::Object);
 use Rose::DB::Object::Manager;
 use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
-use Rose::DB::Object::Util qw(row_id);
+use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
 
-our $VERSION = '0.081';
+our $VERSION = '0.50';
 
 our $Debug = 0;
 
@@ -69,7 +69,7 @@ sub db
     return $self->{'db'};
   }
 
-  return $self->{'db'} ||= $self->_init_db;
+  return $self->{'db'} ||= $self->meta->init_with_db($self->_init_db);
 }
 
 sub init_db { Rose::DB->new() }
@@ -112,6 +112,8 @@ sub dbh
     return undef;
   }
 }
+
+use constant LAZY_LOADED_KEY => lazy_column_values_loaded_key();
 
 sub load
 {
@@ -163,7 +165,18 @@ sub load
     }
   }
 
-  my $column_names = $meta->column_names;
+  my $has_lazy_columns = $args{'nonlazy'} ? 0 : $meta->has_lazy_columns;
+  my $column_names;
+  
+  if($has_lazy_columns)
+  {
+    $column_names = $meta->nonlazy_column_names;
+    $self->{LAZY_LOADED_KEY()} = {};
+  }
+  else
+  {
+    $column_names = $meta->column_names;
+  }
 
   #
   # Handle sub-object load in separate code path
@@ -184,7 +197,8 @@ sub load
         $mgr_class->get_objects(object_class  => ref $self,
                                 query         => [ %query ],
                                 with_objects  => $with,
-                                multi_many_ok => 1)
+                                multi_many_ok => 1,
+                                nonlazy       => $args{'nonlazy'})
           or Carp::confess $mgr_class->error;
 
       if(@$objects > 1)
@@ -253,17 +267,30 @@ sub load
 
     if($null_key)
     {
-      $sql = $meta->load_sql_with_null_key(\@key_columns, \@key_values, $db);
-      $sth = $dbh->prepare($sql, $meta->prepare_select_options);
+      if($has_lazy_columns)
+      {
+        $sql = $meta->load_sql_with_null_key(\@key_columns, \@key_values, $db);
+      }
+      else
+      {
+        $sql = $meta->load_all_sql_with_null_key(\@key_columns, \@key_values, $db);
+      }
     }
     else
     {
-      $sql = $meta->load_sql(\@key_columns, $db);
-
-      # Was prepare_cached() but that can't be used across transactions
-      $sth = $dbh->prepare($sql, $meta->prepare_select_options);
+      if($has_lazy_columns)
+      {
+        $sql = $meta->load_sql(\@key_columns, $db);
+      }
+      else
+      {
+        $sql = $meta->load_all_sql(\@key_columns, $db);
+      }
     }
 
+    # Was prepare_cached() but that can't be used across transactions
+    $sth = $dbh->prepare($sql, $meta->prepare_select_options);
+      
     $Debug && warn "$sql - bind params: ", join(', ', grep { defined } @key_values), "\n";
     $sth->execute(grep { defined } @key_values);
 
@@ -578,30 +605,64 @@ sub update
       #}
       #else
       #{
-      #  $sql = $meta->update_sql(\@key_columns, $db);
+      #  $sql = $meta->update_sql($self, \@key_columns, $db);
       #  # Was prepare_cached() but that can't be used across transactions
       #  $sth = $dbh->prepare($sql, $meta->prepare_update_options);
       #}
-
-      my $sql = $meta->update_sql(\@key_columns, $db);
-      # Was prepare_cached() but that can't be used across transactions
-      my $sth = $dbh->prepare($sql, $meta->prepare_update_options);
-
-      my %key = map { ($_ => 1) } @key_methods;
-
-      my $method_names = $meta->column_accessor_method_names;
-
-      if($Debug)
+      
+      if($meta->has_lazy_columns)
       {
-        no warnings;
-        warn "$sql - bind params: ", 
-          join(', ', (map { $self->$_() } grep { !$key{$_} } @$method_names), 
-                      grep { defined } @key_values), "\n";
-      }
+        my $sql = $meta->update_sql($self, \@key_columns, $db);
 
-      $sth->execute(
-        (map { $self->$_() } grep { !$key{$_} } @$method_names), 
-        grep { defined } @key_values);
+        # Was prepare_cached() but that can't be used across transactions
+        my $sth = $dbh->prepare($sql, $meta->prepare_update_options);
+  
+        my %key = map { ($_ => 1) } @key_methods;
+
+        my $method_name = $meta->column_accessor_method_names_hash;
+
+        my @exec;
+        
+        foreach my $column (grep { !$key{$_->{'name'}} } $meta->columns)
+        {
+          no warnings;
+          next if($column->{'lazy'} && !$self->{LAZY_LOADED_KEY()}{$column->{'name'}});
+          my $method = $method_name->{$column->{'name'}};
+          push(@exec, $self->$method());
+        }
+
+        if($Debug)
+        {
+          no warnings;
+          warn "$sql - bind params: ", 
+            join(', ', @exec, grep { defined } @key_values), "\n";
+        }
+
+        $sth->execute(@exec, @key_values)
+      }
+      else
+      {
+        my $sql = $meta->update_all_sql(\@key_columns, $db);
+
+        # Was prepare_cached() but that can't be used across transactions
+        my $sth = $dbh->prepare($sql, $meta->prepare_update_options);
+  
+        my %key = map { ($_ => 1) } @key_methods;
+
+        my $method_names = $meta->column_accessor_method_names;
+
+        if($Debug)
+        {
+          no warnings;
+          warn "$sql - bind params: ", 
+            join(', ', (map { $self->$_() } grep { !$key{$_} } @$method_names), 
+                        grep { defined } @key_values), "\n";
+        }
+      
+        $sth->execute(
+          (map { $self->$_() } grep { !$key{$_} } @$method_names), 
+          @key_values);
+      }
     }
     #if($started_new_tx)
     #{
@@ -1452,6 +1513,10 @@ Returns true if the row was loaded successfully, undef if the row could not be l
 PARAMS are optional name/value pairs.  Valid PARAMS are:
 
 =over 4
+
+=item C<nonlazy BOOL>
+
+If true, then all columns will be fetched from the database, even L<lazy|Rose::DB::Object::Metadata::Column/load_on_demand> columns.  If omitted, the default is false.
 
 =item C<speculative BOOL>
 
