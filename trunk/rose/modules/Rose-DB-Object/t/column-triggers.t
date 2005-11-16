@@ -142,6 +142,12 @@ SETUP:
 
   $column->add_trigger(inflate => sub
   {
+    # Handle older MySQL version of timestamp values
+    if(defined $_[1])
+    {
+      $_[1] =~ s/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/$1-$2-$3 $2:$5:$6/;
+    }
+
     defined $_[1] ? (Rose::DateTime::Util::parse_date($_[1]) || $_[0]->db->parse_date($_[1])) : undef 
   });
 
@@ -317,7 +323,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   
   $o = MyObject->new(id => $o->id);
   $o->load;
-  
+
   is($o->ended->ymd, '1999-09-10', "ended 3 - $db_type");
 
   $o->ended('2/3/2004');

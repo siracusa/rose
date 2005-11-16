@@ -1093,10 +1093,14 @@ Rose::DB::Object - Extensible, high performance RDBMS-OO mapper.
 
 =head1 SYNOPSIS
 
+  ## For an informal overview of Rose::DB::Object, please
+  ## see the Rose::DB::Object::Tutorial documentation.  The
+  ## reference documentation follows.
+
   ## First, set up your Rose::DB data sources, otherwise you
   ## won't be able to connect to the database at all.  See 
   ## the Rose::DB documentation for more information.  For
-  ## a quick start, run: perldoc Rose::DB::Tutorial
+  ## a quick start, see the Rose::DB::Tutorial documentation.
 
   ##
   ## Create classes - two possible approaches:
@@ -1280,6 +1284,8 @@ Rose::DB::Object - Extensible, high performance RDBMS-OO mapper.
 L<Rose::DB::Object> is a base class for objects that encapsulate a single row in a database table.  L<Rose::DB::Object>-derived objects are sometimes simply called "L<Rose::DB::Object> objects" in this documentation for the sake of brevity, but be assured that derivation is the only reasonable way to use this class.
 
 L<Rose::DB::Object> inherits from, and follows the conventions of, L<Rose::Object>.  See the L<Rose::Object> documentation for more information.
+
+For an informal overview of this module distribution, consult the L<Rose::DB::Object::Tutorial>.
 
 =head2 Restrictions
 
@@ -1615,6 +1621,10 @@ Note that not all of these methods are public.  These methods do not suddenly be
 The L<Rose development policy|Rose/"DEVELOPMENT POLICY"> applies to this, and all C<Rose::*> modules.  Please install L<Rose> from CPAN and then run "C<perldoc Rose>" for more information.
 
 =head1 SUPPORT
+
+For an informal overview of L<Rose::DB::Object>, consult the L<Rose::DB::Object::Tutorial>.
+
+    perldoc Rose::DB::Object::Tutorial
 
 Any L<Rose::DB::Object> questions or problems can be posted to the L<Rose::DB::Object> mailing list.  To subscribe to the list or view the archives, go here:
 
