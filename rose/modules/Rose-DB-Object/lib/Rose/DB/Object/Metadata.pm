@@ -17,7 +17,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 our $Debug = 0;
 

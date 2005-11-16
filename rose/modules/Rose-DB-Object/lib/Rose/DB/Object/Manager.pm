@@ -12,7 +12,7 @@ use Rose::DB::Object::Constants qw(STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.072';
+our $VERSION = '0.10';
 
 our $Debug = 0;
 
@@ -2655,6 +2655,20 @@ If this parameter is omitted, this method will refuse to update all rows in the 
 =back
 
 =back
+
+=head1 SUPPORT
+
+For an informal overview of L<Rose::DB::Object>, including L<Rose::DB::Object::Manager>, consult the L<Rose::DB::Object::Tutorial>.
+
+    perldoc Rose::DB::Object::Tutorial
+
+Any L<Rose::DB::Object::Manager> questions or problems can be posted to the L<Rose::DB::Object> mailing list.  To subscribe to the list or view the archives, go here:
+
+L<http://lists.sourceforge.net/lists/listinfo/rose-db-object>
+
+Although the mailing list is the preferred support mechanism, you can also email the author (see below) or file bugs using the CPAN bug tracking system:
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB-Object>
 
 =head1 AUTHOR
 
