@@ -2,7 +2,7 @@ package Rose;
 
 use strict;
 
-our $VERSION = '0.031';
+our $VERSION = '0.05';
 
 sub version { $VERSION }
 
@@ -119,9 +119,13 @@ use the method, email me and I'll consider making it part of the public API.
 
 =head1 BUGS
 
-I'm sure this suite is rife with bugs.  It's only version 0.0N, after all. In
-particular, I'd appreciate it if people would email me with documentation
-corrections.  I'm an awful typist...
+To report a bug, email the L<author|/AUTHOR> or use CPAN's bug tracker.
+
+=head1 SUPPORT
+
+There are several mailing lists and a wiki available at the Rose SourceForge web site.
+
+L<http://rose.sourceforge.net/wiki/>
 
 =head1 AUTHOR
 
