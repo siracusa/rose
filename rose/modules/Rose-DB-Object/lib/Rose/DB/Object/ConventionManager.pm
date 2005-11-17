@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Object;
 our @ISA = qw(Rose::DB::Object::Metadata::Object);
 
-our $VERSION = '0.01';
+our $VERSION = '0.20';
 
 our $Debug = 0;
 
@@ -831,7 +831,7 @@ One easy way to improve this is by setting a custom L<singular_to_plural_functio
 
     print $cm->singular_to_plural('person'); # "people"
 
-But that's a bit of a pain to do in every single class.  An easier way to do it for all of your classes is to make a new L<Rose::DB::Object::Metadata> subclass that overrides the L<init_singular_to_plural_function|/init_singular_to_plural_function> method, and then make a L<Rose::DB::Object>-derived base class that uses your new metadata class.  Example:
+But that's a bit of a pain to do in every single class.  An easier way to do it for all of your classes is to make a new L<Rose::DB::Object::Metadata> subclass that overrides the L<init_convention_manager|Rose::DB::Object::Metadata/init_convention_manager> method, then make a L<Rose::DB::Object>-derived base class that uses your new metadata class.  Example:
 
     package My::DB::Metadata;
 
@@ -839,7 +839,20 @@ But that's a bit of a pain to do in every single class.  An easier way to do it 
     our @ISA = qw(Rose::DB::Object::Metadata);
 
     use Lingua::EN::Inflect;
-    sub init_singular_to_plural_function { \&Lingua::EN::Inflect::PL }
+
+    sub init_convention_manager
+    {
+      my $self = shift;
+      
+      # Let the base class make ths convention manager object
+      my $cm = $self->SUPER::init_convention_manager(@_);
+      
+      # Set the new singular-to-plural function
+      $cm->singular_to_plural_function(\&Lingua::EN::Inflect::PL);
+
+      # Return the modified convention manager
+      return $cm;
+    }
 
     ...
 
@@ -862,7 +875,7 @@ But that's a bit of a pain to do in every single class.  An easier way to do it 
     # The big pay-off: smart plurals!
     print __PACKAGE__->meta->table; # "people"
 
-You might wonder why I don't use L<Lingua::EN::Inflect> in L<Rose::DB::Object::ConventionManager> to save you this effort.  The answer is that the L<Rose::DB::Object::ConventionManager> module adds almost a megabyte of memory overhead on my system.  I'd rather not incur that overhead just for the sake of being more clever about naming conventions.  Furthermore, as primitive as the default plural-forming is, at least it's deterministic.  Guessing what L<Lingua::EN::Inflect> will return is not always easy.
+You might wonder why I don't use L<Lingua::EN::Inflect> in L<Rose::DB::Object::ConventionManager> to save you this effort.  The answer is that the L<Rose::DB::Object::ConventionManager> module adds almost a megabyte of memory overhead on my system.  I'd rather not incur that overhead just for the sake of being more clever about naming conventions.  Furthermore, as primitive as the default plural-forming is, at least it's deterministic.  Guessing what L<Lingua::EN::Inflect> will return is not always easy, and the results can change depending on which version L<Lingua::EN::Inflect> you have installed.
 
 =head1 EXAMPLE
 
