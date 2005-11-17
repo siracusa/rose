@@ -49,7 +49,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   SKIP:
   {
     # 15
-    skip("$db_type tests", $Did_Setup ? 15 : 15 + 2)  unless($Have{$db_type});
+    skip("$db_type tests", 15)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -142,6 +142,8 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   #$DB::single = 1;
   #$Rose::DB::Object::Debug = 1;
 }
+
+skip("all db tests", 2)  unless($Did_Setup);
 
 BEGIN
 {

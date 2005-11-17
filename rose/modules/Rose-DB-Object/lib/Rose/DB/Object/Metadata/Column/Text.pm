@@ -2,10 +2,10 @@ package Rose::DB::Object::Metadata::Column::Text;
 
 use strict;
 
-use Rose::DB::Object::Metadata::Column::Character;
-our @ISA = qw(Rose::DB::Object::Metadata::Column::Character);
+use Rose::DB::Object::Metadata::Column::Varchar;
+our @ISA = qw(Rose::DB::Object::Metadata::Column::Varchar);
 
-our $VERSION = '0.02';
+our $VERSION = '0.50';
 
 sub type { 'text' }
 
@@ -37,15 +37,15 @@ This class inherits from L<Rose::DB::Object::Metadata::Column::Character>. Inher
 
 =item C<get_set>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<character|Rose::DB::Object::MakeMethods::Generic/character>, ...
+L<Rose::DB::Object::MakeMethods::Generic>, L<varchar|Rose::DB::Object::MakeMethods::Generic/varchar>, ...
 
 =item C<get>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<character|Rose::DB::Object::MakeMethods::Generic/character>, ...
+L<Rose::DB::Object::MakeMethods::Generic>, L<varchar|Rose::DB::Object::MakeMethods::Generic/varchar>, ...
 
 =item C<get_set>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<character|Rose::DB::Object::MakeMethods::Generic/character>, ...
+L<Rose::DB::Object::MakeMethods::Generic>, L<varchar|Rose::DB::Object::MakeMethods::Generic/varchar>, ...
 
 =back
 

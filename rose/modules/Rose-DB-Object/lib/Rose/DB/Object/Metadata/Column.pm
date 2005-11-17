@@ -1504,11 +1504,21 @@ Get or set the boolean flag that indicates whether or not this column is part of
 
 =item B<load_on_demand [BOOL]>
 
-Get or set a boolean valuee that indicates whether or not a column's value should be loaded only when needed.  If true, then the column's value will not be fetched form the database when an object is L<loaded|Rose::DB::Object/load>.  The default is false.
+Get or set a boolean value that indicates whether or not a column's value should be loaded only when needed.  If true, then the column's value will not automatically be fetched from the database when an object is L<loaded|Rose::DB::Object/load>.  It will be fetched only if the column value is subsequently requested through its L<accessor method|/accessor_method_name>.  (This is often referred to as "lazy loading.")  The default value is false.
+
+Note: a column that is part of a primary key cannot be loaded on demand.
 
 =item B<lazy [BOOL]>
 
-This is an alias for the L<load_on_demand|/load_on_demand> method.
+This is an alias for the L<load_on_demand|/load_on_demand> method.  It exists to allow this common usage scenario:
+
+    __PACKAGE__->meta->columns
+    (
+      ...
+      notes => { type => 'text', length => 1024, lazy => 1 },
+    );
+
+without requiring the longer C<load_on_demand> parameter name to be used.
 
 =item B<make_methods PARAMS>
 
