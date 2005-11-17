@@ -2306,6 +2306,14 @@ Return a maximum of NUM objects.
 
 If true, do not print a warning when attempting to do multiple LEFT OUTER JOINs against tables related by "... to many" relationships.  See the documentation for the C<with_objects> parameter for more information.
 
+=item C<nonlazy [ BOOL | ARRAYREF ]>
+
+By default, L<get_objects|/get_objects> will honor all L<load-on-demand columns|Rose::DB::Object::Metadata::Column/load_on_demand> when fetching objects.  Use this parameter to override that behavior and select all columns instead.
+
+If the value is a true boolean value (typically "1"), then all columns will be fetched for all participating classes (i.e., the main object class as well as any sub-object classes).
+
+The value can also be a reference to an array of relationship names.  The sub-objects corresponding to each relationship name will have all their columns selected.  To refer to the main class (the "t1" table), use the special name "self".
+
 =item C<object_args HASHREF>
 
 A reference to a hash of name/value pairs to be passed to the constructor of each C<object_class> object fetched, in addition to the values from the database.
