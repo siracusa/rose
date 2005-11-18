@@ -147,6 +147,49 @@ sub auto_foreign_key_name
   return $self->plural_to_singular($f_meta->table) || $current_name;
 }
 
+sub auto_table_to_relationship_name_plural
+{
+  my($self, $table) = @_;
+  return $table;
+}
+
+sub auto_foreign_key_to_relationship_name_plural
+{
+  my($self, $fk) = @_;
+  return $self->singular_to_plural($fk->name);
+}
+
+sub looks_like_map_class
+{
+  my($self, $class) = @_;
+
+  unless(UNIVERSAL::isa($class, 'Rose::DB::Object'))
+  {
+    return undef;
+  }
+
+  my @fks = $class->meta->foreign_keys;
+
+  return 1  if(@fks == 2);
+  return 0  if($class->meta->is_initialized);
+  return undef;
+}
+
+sub looks_like_map_table_name
+{
+  my($self, $table) = @_;
+  
+  if($table =~ m{^(?:
+                    (?:\w+_){2,}map             # foo_bar_map
+                  | (?:\w+_)*\w+s_(?:\w+_)*\w+s # foos_bars
+               )$}x)
+  {
+    return 1;
+  }
+
+  return 0;
+}
+
 sub auto_foreign_key
 {
   my($self, $name, $spec) = @_;
