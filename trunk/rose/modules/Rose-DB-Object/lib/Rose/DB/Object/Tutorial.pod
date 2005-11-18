@@ -1,3 +1,7 @@
+=head1 NAME
+
+Rose::DB::Object::Tutorial - A guided tour of the basics of Rose::DB::Object
+
 =head1 INTRODUCTION
 
 This document provides a step-by-step introduction to the L<Rose::DB::Object> module distribution.  It demonstrates all of the important features using a semi-realistic example database.  This tutorial does not replace the actual documentation for each module, however.  The "reference" documentation found in each ".pm" file is still essential, and contains some good examples of its own.
