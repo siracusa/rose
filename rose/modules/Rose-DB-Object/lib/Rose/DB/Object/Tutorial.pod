@@ -560,6 +560,18 @@ There are even a few convenience functions triggered by passing a name/value pai
 
     print $month_start->strftime('%Y-%m-%d'); # 1980-12-01
 
+Conveniently, L<Rose::DB::Object::Manager> queries can also use any values that the corresponding column methods will accept.  For example, here's a query that filters on the C<release_date> column using a L<DateTime> object.
+
+    $last_week = DateTime->now->subtract(weeks => 1);
+
+    $products = 
+      Product::Manager->get_products(
+        query =>
+        [
+          release_date => { lt => $last_week },
+        ],
+        sort_by => 'release_date');
+
 The upshot is that you no longer have to be concerned about the details of the date/time format(s) understood by the underlying database.  You're also free to use L<DateTime> objects as a convenient interchange format in your code.
 
 This ability isn't just limited to date/time columns.  Any data type that requires special formatting in the database, and/or is more conveniently dealt with as a more "rich" value on the Perl side of the fence is fair game for this treatment.

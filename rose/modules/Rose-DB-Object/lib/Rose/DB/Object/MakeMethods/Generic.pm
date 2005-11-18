@@ -17,7 +17,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.09';
+our $VERSION = '0.51';
 
 sub scalar
 {
@@ -2643,7 +2643,7 @@ sub objects_by_map
       next  if($seen_fk{$item->id});
     }
 
-    if($item->class eq $target_class)
+    if($item->can('class') && $item->class eq $target_class)
     {
       # Skip if there was an explicit local relationship name and
       # this is not that name.

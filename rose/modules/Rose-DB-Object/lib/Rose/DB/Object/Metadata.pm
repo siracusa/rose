@@ -40,6 +40,7 @@ use Rose::Object::MakeMethods::Generic
   [
     allow_inline_column_values => { default => 0 },
     is_initialized => { default => 0 },
+    allow_auto_initialization => { default => 0 },
   ],
 
   array =>
@@ -670,7 +671,7 @@ sub add_columns
       my $column_class = $class->column_type_class('scalar')
         or Carp::croak "No column class set for column type 'scalar'";
 
-      $Debug && warn $self->class, " - adding scalar column $name\n";
+      #$Debug && warn $self->class, " - adding scalar column $name\n";
       $self->{'columns'}{$name} = $column_class->new(name => $name, parent => $self);
       push(@columns, $self->{'columns'}{$name});
       next;
@@ -692,7 +693,7 @@ sub add_columns
 
       if($info->{'primary_key'})
       {
-        $Debug && warn $self->class, " - adding primary key column $name\n";
+        #$Debug && warn $self->class, " - adding primary key column $name\n";
         $self->add_primary_key_column($name);
       }
 
@@ -715,7 +716,7 @@ sub add_columns
         $self->load_column_class($column_class);
       }
 
-      $Debug && warn $self->class, " - adding $name $column_class\n";
+      #$Debug && warn $self->class, " - adding $name $column_class\n";
       my $column = $self->{'columns'}{$name} = 
         $column_class->new(%$info, name => $name, parent => $self);
 
@@ -1220,7 +1221,17 @@ sub register_class
     $reg->{'lc-catalog-table',$catalog,lc $table} =
     $reg->{'lc-table',lc $table} = $class;
 
+  push(@{$reg->{'classes'}}, $class);
+
   return;
+}
+
+sub registered_classes
+{
+  my($self) = shift;
+  my $reg = $self->class_registry;
+  
+  return wantarray ? @{$reg->{'classes'} ||= []} : $reg->{'classes'};
 }
 
 sub class_for
@@ -1317,7 +1328,7 @@ sub make_column_methods
       $column->method_name($type => $method);
     }
 
-    $Debug && warn $self->class, " - make methods for column $name\n";
+    #$Debug && warn $self->class, " - make methods for column $name\n";
 
     $column->make_methods(%args);
 
@@ -1403,8 +1414,11 @@ sub make_foreign_key_methods
     # all the required pieces are loaded.
     if($foreign_key->is_ready_to_make_methods)
     {
-      $Debug && warn $self->class, " - make methods for foreign key ", 
-                     $foreign_key->name, "\n";
+      if($Debug && !$args{'preserve_existing'})
+      {
+        warn $self->class, " - make methods for foreign key ", 
+             $foreign_key->name, "\n";
+      }
 
       $foreign_key->make_methods(%args);
     }
@@ -1552,6 +1566,13 @@ sub retry_deferred_foreign_keys
   {
     @Deferred_Foreign_Keys = @foreign_keys;
   }
+
+  # Retry relationship auto-init for all other classes
+  foreach my $class ($self->registered_classes)
+  {
+    next  unless($class->meta->allow_auto_initialization);
+    $self->auto_init_relationships(restore_types => 1);
+  }
 }
 
 sub make_relationship_methods
@@ -1570,6 +1591,8 @@ sub make_relationship_methods
 
   REL: foreach my $relationship ($self->relationships)
   {
+    next  if($args{'name'} && $relationship->name ne $args{'name'});
+
     foreach my $type ($relationship->auto_method_types)
     {
       my $method = 
@@ -1612,8 +1635,11 @@ sub make_relationship_methods
     # all the required pieces are loaded.
     if($relationship->is_ready_to_make_methods)
     {
-      $Debug && warn $self->class, " - make methods for relationship ", 
-                     $relationship->name, "\n";
+      if($Debug && !$args{'preserve_existing'})
+      {
+        warn $self->class, " - make methods for relationship ", 
+             $relationship->name, "\n";
+      }
 
       $relationship->make_methods(%args);
     }
@@ -1706,6 +1732,13 @@ sub retry_deferred_relationships
   if(@Deferred_Relationships != @relationships)
   {
     @Deferred_Relationships = @relationships;
+  }
+
+  # Retry relationship auto-init for all other classes
+  foreach my $class ($self->registered_classes)
+  {
+    next  unless($class->meta->allow_auto_initialization);
+    $self->auto_init_relationships(restore_types => 1);
   }
 }
 
