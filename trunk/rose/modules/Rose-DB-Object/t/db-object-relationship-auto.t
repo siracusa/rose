@@ -29,7 +29,8 @@ unless($@) # make sure init order doesn't matter
 {
   @Classes = List::Util::shuffle(@Classes);
 }
-@Classes = qw(Color Price ProductsColors Vendor Product);
+#@Classes = qw(Color Price ProductsColors Vendor Product);
+#@Classes = qw(Price ProductsColors Product Color Vendor);
 print "# Init order: @Classes\n";
 
 SETUP:
@@ -57,7 +58,7 @@ foreach my $db_type (qw(mysql)) # qw(mysql pg pg_with_schema informix))
 
   Rose::DB->default_type($db_type);
 
-  $Rose::DB::Object::Metadata::Debug = 1;
+  #$Rose::DB::Object::Metadata::Debug = 1;
 
   foreach my $class (@Classes)#qw(Vendor Product Price Color ProductsColors))
   {
@@ -68,7 +69,7 @@ foreach my $db_type (qw(mysql)) # qw(mysql pg pg_with_schema informix))
   ##
   ## Run tests
   ##
-$DB::single = 1;
+#$DB::single = 1;
   my $p = Product->new(name => 'Sled');
 
   $p->vendor(name => 'Acme');
@@ -335,7 +336,7 @@ CREATE TABLE products
   status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
             CHECK(status IN ('inactive', 'active', 'defunct')),
 
-  date_created  TIMESTAMP NOT NULL DEFAULT NOW(),
+  date_created  TIMESTAMP,
   release_date  TIMESTAMP,
 
   UNIQUE(name),

@@ -1511,6 +1511,29 @@ sub deferred_foreign_keys
   return wantarray ? @Deferred_Foreign_Keys : \@Deferred_Foreign_Keys;
 }
 
+sub has_deferred_foreign_keys
+{
+  my($self) = shift;
+  
+  my $class = $self->class;
+  
+  foreach my $fk ($self->deferred_foreign_keys)
+  {
+    return 1  if($fk->class eq $class);
+  }
+  
+  # Search among the defereed tasks too (icky)
+  foreach my $task ($self->deferred_tasks)
+  {
+    if($task->{'class'} eq $class && $task->{'method'} eq 'auto_init_foreign_keys')
+    {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
 sub add_deferred_foreign_keys
 {
   my($class) = shift;  
@@ -1610,7 +1633,7 @@ sub make_relationship_methods
       $relationship->method_name($type => $method);
 
       # Initialize/reset preserve_existing flag
-      $args{'preserve_existing'} = $preserve_existing_arg;
+      $args{'preserve_existing'} = $preserve_existing_arg || $self->allow_auto_initialization;
 
       # If a corresponding foreign key exists, the preserve any existing
       # methods with the same names.  This is a crude way to ensure that we
@@ -1735,11 +1758,11 @@ sub retry_deferred_relationships
   }
 
   # Retry relationship auto-init for all other classes
-  foreach my $class ($self->registered_classes)
-  {
-    next  unless($class->meta->allow_auto_initialization);
-    $self->auto_init_relationships(restore_types => 1);
-  }
+  #foreach my $class ($self->registered_classes)
+  #{
+  #  next  unless($class->meta->allow_auto_initialization);
+  #  $self->auto_init_relationships(restore_types => 1);
+  #}
 }
 
 sub make_methods
