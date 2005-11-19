@@ -163,6 +163,16 @@ sub for_class
   return $Objects{$_[1]} ||= $_[0]->new(class => $_[1]);
 }
 
+sub clear_all_dbs
+{
+  my($class) = shift;
+
+  foreach my $obj_class ($class->registered_classes)
+  {
+    $obj_class->meta->db(undef);
+  }
+}
+
 sub error_mode
 {
   return $_[0]->{'error_mode'} ||= $_[0]->init_error_mode
@@ -1125,6 +1135,7 @@ sub foreign_keys
 sub initialize
 {
   my($self) = shift;
+  my(%args) = @_;
 
   $Debug && warn $self->class, " - initialize\n";
 
@@ -1169,7 +1180,10 @@ sub initialize
 
   $self->refresh_lazy_column_tracking;
 
-  $self->db(undef); # make sure to ditch any db we may have retained
+  unless($args{'stay_connected'})
+  {
+    $self->db(undef); # make sure to ditch any db we may have retained
+  }
 
   $self->is_initialized(1);
 
@@ -1392,7 +1406,7 @@ sub make_foreign_key_methods
   my($self) = shift;
   my(%args) = @_;
 
-  $self->retry_deferred_foreign_keys;
+  #$self->retry_deferred_foreign_keys;
 
   my $class = $self->class;
   my $meta_class = ref $self;
@@ -1487,6 +1501,25 @@ sub add_deferred_tasks
 
 *add_deferred_task = \&add_deferred_tasks;
 
+sub has_deferred_tasks
+{
+  my($self) = shift;
+
+  my $class = $self->class;
+  my $meta_class = ref $self;
+
+  # Search among the deferred tasks too (icky)
+  foreach my $task ($meta_class->deferred_tasks)
+  {
+    if($task->{'class'} eq $class)
+    {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
 sub retry_deferred_tasks
 {
   my($self) = shift;
@@ -1524,14 +1557,15 @@ sub has_deferred_foreign_keys
   my($self) = shift;
   
   my $class = $self->class;
+  my $meta_class = ref $self;
   
-  foreach my $fk ($self->deferred_foreign_keys)
+  foreach my $fk ($meta_class->deferred_foreign_keys)
   {
     return 1  if($fk->class eq $class);
   }
   
-  # Search among the defereed tasks too (icky)
-  foreach my $task ($self->deferred_tasks)
+  # Search among the deferred tasks too (icky)
+  foreach my $task ($meta_class->deferred_tasks)
   {
     if($task->{'class'} eq $class && $task->{'method'} eq 'auto_init_foreign_keys')
     {
@@ -1540,6 +1574,27 @@ sub has_deferred_foreign_keys
   }
 
   return 0;
+}
+
+sub has_outstanding_metadata_tasks
+{
+  my($self) = shift;
+  
+  return $self->{'has_outstanding_metadata_tasks'} = shift  if(@_);
+
+  if(defined $self->{'has_outstanding_metadata_tasks'})
+  {
+    return $self->{'has_outstanding_metadata_tasks'};
+  }
+
+  if($self->has_deferred_foreign_keys  || 
+     $self->has_deferred_relationships ||
+     $self->has_deferred_tasks)
+  {
+    return $self->{'has_outstanding_metadata_tasks'} = 1;
+  }
+  
+  return $self->{'has_outstanding_metadata_tasks'} = 0;
 }
 
 sub add_deferred_foreign_keys
@@ -1553,6 +1608,7 @@ sub add_deferred_foreign_keys
       next ARG  if($fk->id eq $arg->id);
     }
 
+    $arg->parent->has_outstanding_metadata_tasks(1);
     push(@Deferred_Foreign_Keys, $arg);
   }
 }
@@ -1601,7 +1657,8 @@ sub retry_deferred_foreign_keys
   # Retry relationship auto-init for all other classes
   foreach my $class ($self->registered_classes)
   {
-    next  unless($class->meta->allow_auto_initialization);
+    my $meta = $class->meta;
+    next  unless($meta->allow_auto_initialization && $meta->has_outstanding_metadata_tasks);
     $self->auto_init_relationships(restore_types => 1);
   }
 }
@@ -1611,7 +1668,7 @@ sub make_relationship_methods
   my($self) = shift;
   my(%args) = @_;
 
-  $self->retry_deferred_relationships;
+  #$self->retry_deferred_relationships;
 
   my $meta_class = ref $self;
   my $class = $self->class;
@@ -1687,7 +1744,7 @@ sub make_relationship_methods
     }
   }
 
-  $self->retry_deferred_relationships;
+  #$self->retry_deferred_relationships;
 
   return;
 }
@@ -1697,6 +1754,34 @@ our @Deferred_Relationships;
 sub deferred_relationships
 {
   return wantarray ? @Deferred_Relationships : \@Deferred_Relationships;
+}
+
+sub has_deferred_relationships
+{
+  my($self) = shift;
+  
+  my $class = $self->class;
+  my $meta_class = ref $self;
+
+  foreach my $rel ($meta_class->deferred_relationships)
+  {
+    if(($rel->can('class') && $rel->class eq $class) ||
+       ($rel->can('map_class') && $rel->map_class eq $class))
+    {
+      return 1;
+    }
+  }
+
+  # Search among the deferred tasks too (icky)
+  foreach my $task ($meta_class->deferred_tasks)
+  {
+    if($task->{'class'} eq $class && $task->{'method'} eq 'auto_init_relationships')
+    {
+      return 1;
+    }
+  }
+
+  return 0;
 }
 
 sub add_deferred_relationships
@@ -1768,7 +1853,7 @@ sub retry_deferred_relationships
   # Retry relationship auto-init for all other classes
   #foreach my $class ($self->registered_classes)
   #{
-  #  next  unless($class->meta->allow_auto_initialization);
+  #  next  unless($class->meta->allow_auto_initialization && $meta->has_outstanding_metadata_tasks);
   #  $self->auto_init_relationships(restore_types => 1);
   #}
 }
@@ -2865,6 +2950,10 @@ This hybrid approach to metadata population strikes a good balance between upfro
 
 =over 4
 
+=item B<clear_all_dbs>
+
+Clears the L<db|/db> attribute of the metadata object for each L<registered class|registered_classes>.
+
 =item B<column_type_class TYPE [, CLASS]>
 
 Given the column type string TYPE, return the name of the L<Rose::DB::Object::Metadata::Column>-derived class used to store metadata and create the accessor method(s) for columns of that type.
@@ -2993,6 +3082,14 @@ The default mapping of type names to class names is:
   'one to many'  => Rose::DB::Object::Metadata::Relationship::OneToMany
   'many to one'  => Rose::DB::Object::Metadata::Relationship::ManyToOne
   'many to many' => Rose::DB::Object::Metadata::Relationship::ManyToMany
+
+=item B<registered_classes>
+
+Return a list (in list context) or reference to an array (in scalar context) of the names of all L<Rose::DB::Object>-derived classes registered under this metadata class's L<registry_key|/registry_key>.
+
+=item B<registry_key>
+
+Returns the string used to group L<Rose::DB::Object>-derived class names in the class registry.  The default is "Rose::DB::Object::Metadata".
 
 =back
 
@@ -3766,9 +3863,12 @@ Auto-initialize the entire metadata object.  This is a wrapper for the individua
   $meta->auto_init_primary_key_columns;
   $meta->auto_init_unique_keys(...);
   $meta->auto_init_foreign_keys(...);
+  $meta->auto_init_relationships(...);
   $meta->initialize;
 
-PARAMS are optional name/value pairs.  If a C<replace_existing> parameter is passed with a true value, then the auto-generated columns, unique keys, and foreign keys entirely replace any existing columns, unique keys, and foreign keys, respectively.
+PARAMS are optional name/value pairs.  If a C<replace_existing> parameter is passed with a true value, then the auto-generated columns, unique keys, foreign keys, and relationships entirely replace any existing columns, unique keys, foreign keys, and relationships, respectively.
+
+If a C<stay_connected> parameter is passed with a true value, then any database connections retained by the metadata objects belonging to the various L<Rose::DB::Object>-derived classes participating in the auto-initialization process will remain connected until an explicit call to the L<clear_all_dbs|/clear_all_dbs> class method.
 
 During initialization, if one of the columns has a method name that clashes with a L<reserved method name|Rose::DB::Object/"RESERVED METHODS">, then the L<column_alias_generator|/column_alias_generator> will be called to remedy the situation by aliasing the column.  If the name still conflicts, then a fatal error will occur.
 
@@ -3782,13 +3882,35 @@ Auto-generate L<Rose::DB::Object::Metadata::Column> objects for this table, then
 
 Auto-generate L<Rose::DB::Object::Metadata::ForeignKey> objects for this table, then populate the list of L<foreign_keys|/foreign_keys>.  PARAMS are optional name/value pairs.  If a C<replace_existing> parameter is passed with a true value, then the auto-generated foreign keys replace any existing foreign keys.  Otherwise, any existing foreign keys are left as-is.
 
-B<PLEASE NOTE:> In order for this method to work correctly, the L<Rose::DB::Object>-derived classes for all referenced tables must be loaded I<before> this method is called on behalf of the referring class.
-
 B<Note:> This method works with MySQL only when using the InnoDB storage type.
 
 =item B<auto_init_primary_key_columns>
 
 Auto-retrieve the names of the columns that make up the primary key for this table, then populate the list of L<primary_key_column_names|/primary_key_column_names>.  A fatal error will occur unless at least one primary key column name could be retrieved.
+
+=item B<auto_init_relationships [PARAMS]>
+
+Auto-populate the list of L<relationships|/relationships> for this L<class|/class>.  PARAMS are optional name/value pairs.
+
+=over 4
+
+=item C<replace_existing BOOL> 
+
+If true, then the auto-generated relationships replace any existing relationships.  Otherwise, any existing relationships are left as-is.
+
+=item C<relationship_types ARRAYREF>
+
+A reference to an array of relationship L<type|Rose::DB::Object::Metadata::Relationship/type> names.  Only relationships of these types will be created.  If omitted, relationships of L<all types|/relationship_type_classes> will be created.  If passed a reference to an emoty array, no relationships will be created.
+
+=item C<types ARRAYREF>
+
+This is an alias for the C<relationship_types> parameter.
+
+=item C<with_relationships [ BOOL | ARRAYREF ]>
+
+This is the same as the C<relationship_types> parameter except that it also accepts a boolean value.  If true, then relationships of L<all types|/relationship_type_classes> will be created.  If false, then none will be created.
+
+=back
 
 =item B<auto_init_unique_keys [PARAMS]>
 
