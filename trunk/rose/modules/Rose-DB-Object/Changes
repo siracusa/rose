@@ -1,3 +1,7 @@
+0.51 (11.19.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added auto-initialization of relationships.
+
 0.50 (11.17.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added optional lazy-loading of column values.

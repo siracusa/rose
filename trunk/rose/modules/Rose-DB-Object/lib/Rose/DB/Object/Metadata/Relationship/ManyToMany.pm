@@ -116,11 +116,19 @@ sub sanity_check
 
   return 1;
 }
+my $i;
+my %C;
 
 sub is_ready_to_make_methods
 {
   my($self) = shift;
-
+# print "M2M $i\n";
+# my $caller = (caller(1))[3];
+# $C{$caller}++;
+# print "$caller\n"; 
+# use Data::Dumper;
+# print Dumper(\%C);
+# $i++;
   # This code is (ug) duplicated from the method-maker itself, and
   # slightly modified to run here.  If the method-maker can't get all
   # the info it needs, then we're not yet ready to make these methods.

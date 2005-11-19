@@ -55,7 +55,6 @@ foreach my $i (1 .. $Iterations)
   {
     SKIP:
     {
-      # 7
       skip("$db_type tests", 7)  unless($Have{$db_type});
     }
   
@@ -88,7 +87,7 @@ foreach my $i (1 .. $Iterations)
         $class->meta->auto_initialize;
       }
     }
-    
+
     my $product_class = $class_prefix . 'Product';
   
     ##
@@ -125,6 +124,8 @@ foreach my $i (1 .. $Iterations)
   
     #$DB::single = 1;
     #$Rose::DB::Object::Debug = 1;
+    
+    $product_class->meta_class->clear_all_dbs;
   }
 }
 
@@ -166,7 +167,7 @@ BEGIN
       $dbh->do('DROP TABLE Rose_db_object_private.products CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.vendors CASCADE');
     
-      $dbh->do('DROP SCHEMA Rose_db_object_private');
+      $dbh->do('DROP SCHEMA Rose_db_object_private CASCADE');
       $dbh->do('CREATE SCHEMA Rose_db_object_private');
     }
 
@@ -480,8 +481,7 @@ END
     $dbh->do('DROP TABLE Rose_db_object_private.products CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_private.vendors CASCADE');
 
-    $dbh->do('DROP SCHEMA Rose_db_object_private');
-    $dbh->do('CREATE SCHEMA Rose_db_object_private');
+    $dbh->do('DROP SCHEMA Rose_db_object_private CASCADE');
       
     $dbh->disconnect;
   }

@@ -882,10 +882,30 @@ sub auto_init_relationships
     }
   }
 
-  if(my $types = delete $args{'relationship_types'} || delete $args{'types'})
+  if(exists $args{'relationship_types'} || 
+     exists $args{'types'} || 
+     exists $args{'with_relationships'})
   {
-    %types = map { $_ => 1 } @$types;
-    $Auto_Rel_Types{$self->class} = $types;
+    my $types = exists $args{'relationship_types'} ? 
+                delete $args{'relationship_types'} :
+                exists $args{'types'} ?
+                delete $args{'types'} :
+                exists $args{'with_relationships'} ?
+                delete $args{'with_relationships'} : 1;
+
+    if(ref $types)
+    {
+      %types = map { $_ => 1 } @$types;
+      $Auto_Rel_Types{$self->class} = $types;
+    }
+    elsif($types)
+    {
+      %types = map { $_ => 1 } @all_types;
+    }
+    else
+    {
+      $Auto_Rel_Types{$self->class} = [];
+    }
   }
   else
   {
@@ -1009,11 +1029,7 @@ sub auto_init_many_to_many_relationships
   my($self, %args) = @_;
 
   my $class = $self->class;
-# if($class eq 'ProductsColors')
-# {
-#   my @fks = $self->foreign_keys;
-#   $DB::single = @fks;
-# }
+
   my $cm = $self->convention_manager;
 
   # Nevermind if this isn't a map class
@@ -1070,6 +1086,7 @@ sub auto_init_many_to_many_relationships
 sub auto_initialize
 {
   my($self) = shift;
+  my(%args) = @_;
 
   $self->allow_auto_initialization(1);
 
@@ -1085,6 +1102,12 @@ sub auto_initialize
     $self->retry_deferred_foreign_keys;
     $self->retry_deferred_relationships;
     $self->retry_deferred_tasks;
+  }
+
+  unless($args{'stay_connected'})
+  {
+    my $meta_class = ref $self;
+    $meta_class->clear_all_dbs;
   }
 
   return;
