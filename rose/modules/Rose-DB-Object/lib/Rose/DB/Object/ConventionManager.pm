@@ -159,7 +159,20 @@ sub auto_foreign_key_to_relationship_name_plural
   return $self->singular_to_plural($fk->name);
 }
 
-sub looks_like_map_class
+sub is_map_class
+{
+  my($self, $class) = @_;
+
+  return 0  unless(UNIVERSAL::isa($class, 'Rose::DB::Object'));
+
+  my $is_map_table = $self->looks_like_map_table_name($class->meta->table);
+  my $is_map_class = $self->looks_like_map_class_name($class);
+
+  return 1  if($is_map_table && (!defined $is_map_class || $is_map_class));
+  return 0;
+}
+
+sub looks_like_map_class_name
 {
   my($self, $class) = @_;
 
@@ -168,10 +181,11 @@ sub looks_like_map_class
     return undef;
   }
 
-  my @fks = $class->meta->foreign_keys;
+  my $meta = $class->meta;
+  my @fks  = $meta->foreign_keys;
 
   return 1  if(@fks == 2);
-  return 0  if($class->meta->is_initialized);
+  return 0  if($meta->is_initialized && !$meta->has_deferred_foreign_keys);
   return undef;
 }
 
@@ -785,6 +799,33 @@ Examples:
     Product       product
     My::Product   product
     My::Box       box
+
+=item B<is_map_class CLASS>
+
+Returns true if CLASS is a L<map class|Rose::DB::Object::Metadata::Relationship::ManyToMany/map_class> used as part of a L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany> relationship, false if it does not.
+
+The default implementations returns true if CLASS is derived from L<Rose::DB::Object> and its L<table|Rose::DB::Object::Metadata/table> name looks like a map table name according to the L<looks_like_map_table_name|/looks_like_map_table_name> method and the L<looks_like_map_class_name|/looks_like_map_class_name> method returns either true or undef.
+
+Override this method to control which classes are considered map classes.  Note that it may be called several times on the same class at various stages of that class's construction.
+
+=item B<looks_like_map_class_name CLASS>
+
+Given the class name CLASS, returns true if it looks like the name of a L<map class|Rose::DB::Object::Metadata::Relationship::ManyToMany/map_class> used as part of a L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany> relationship, false (but defined) if it does not, and undef if it's unsure.
+
+The default implementation returns true if CLASS is derived from L<Rose::DB::Object> and has exactly two foreign keys.  It returns false (but defined) if CLASS is derived from L<Rose::DB::Object> and has been L<initialized|Rose::DB::Object/initialize>, but does not have exactly two foreign keys.  It returns undef otherwise.
+
+=item B<looks_like_map_table_name TABLE>
+
+Returns true if TABLE looks like the name of a mapping table used as part of a L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany> relationship, false (but defined) if it does not, and undef if it's unsure.
+
+The default implementation returns true if TABLE is in one of these forms:
+
+    Regex                     Examples
+    -----------------------   -----------------------------
+    (\w+_){2,}map             pig_toe_map, pig_skin_toe_map
+    (\w+_)*\w+s_(\w+_)*\w+s   pigs_toes, pig_skins_toe_jams
+
+It returns false otherwise.
 
 =item B<meta [META]>
 

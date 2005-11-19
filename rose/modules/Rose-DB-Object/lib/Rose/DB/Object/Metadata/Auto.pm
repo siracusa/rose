@@ -439,7 +439,7 @@ sub auto_generate_foreign_keys
           }
         });
 
-        unless($no_warnings || $Warned{$key}++)
+        unless($no_warnings || $Warned{$key}++ || $self->allow_auto_initialization)
         {
           no warnings; # Allow undef coercion to empty string
           Carp::carp
@@ -915,23 +915,6 @@ sub auto_init_relationships
     }
   }
 
-  return  if($args{'no_recurse'});
-
-  # Retry all other classes too
-#   foreach my $class ($self->registered_classes)
-#   {
-#     next  unless($class->meta->allow_auto_initialization);
-# 
-#     my %args = (no_recurse => 1);
-#     
-#     if(my $types = $Auto_Rel_Types{$class})
-#     {
-#       $args{'types'} = $types;
-#     }
-# 
-#     $self->auto_init_relationships(%args);
-#   }
-
   return;
 }
 
@@ -949,10 +932,7 @@ sub auto_init_one_to_many_relationships
   my($self, %args) = @_;
 
   my $class = $self->class;
-if($class eq 'Price')
-{
-  $DB::single = $JCS::FOO;
-}
+
   # For each foreign key in this class, try to make a "one to many"
   # relationship in the table that the foreign key points to.  But
   # don't do so if there's already a one to one relationship in that 
@@ -989,10 +969,7 @@ if($class eq 'Price')
 
     # Also don't add add one to many relationships between a class
     # and one of its map classes
-    my $is_map_table = $cm->looks_like_map_table_name($class->meta->table);
-    my $is_map_class = $cm->looks_like_map_class($class);
-
-    if($is_map_table && (!defined $is_map_class || $is_map_class))
+    if($cm->is_map_class($class))
     {
       $Debug && warn "$f_class - Refusing to make one to many relationship ",
                      "to map class to $class\n";
@@ -1014,11 +991,8 @@ if($class eq 'Price')
                                 });
     }
 
-    # Manually create the methods if the class is already initialized
-    if($f_meta->is_initialized)
-    {
-      $f_meta->make_relationship_methods(name => $name, preserve_existing => 1);
-    }
+    # Create the methods, preserving existing methods
+    $f_meta->make_relationship_methods(name => $name, preserve_existing => 1);
   }
 
   return;
@@ -1029,14 +1003,15 @@ sub auto_init_many_to_many_relationships
   my($self, %args) = @_;
 
   my $class = $self->class;
-
+# if($class eq 'ProductsColors')
+# {
+#   my @fks = $self->foreign_keys;
+#   $DB::single = @fks;
+# }
   my $cm = $self->convention_manager;
 
-  my $is_map_table = $cm->looks_like_map_table_name($class->meta->table);
-  my $is_map_class = $cm->looks_like_map_class($class);
-
   # Nevermind if this isn't a map class
-  return  unless($is_map_table && (!defined $is_map_class || $is_map_class));
+  return  unless($cm->is_map_class($class));
 
   my @fks = $self->foreign_keys;
   
@@ -1077,11 +1052,8 @@ sub auto_init_many_to_many_relationships
                               });
     }
 
-    # Manually create the methods if the class is already initialized
-    if($meta->is_initialized)
-    {
-      $meta->make_relationship_methods(name => $name, preserve_existing => 1);
-    }
+    # Create the methods, preserving existing methods
+    $meta->make_relationship_methods(name => $name, preserve_existing => 1);
   }
 
   return;

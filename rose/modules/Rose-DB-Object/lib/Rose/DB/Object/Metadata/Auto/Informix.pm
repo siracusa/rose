@@ -884,7 +884,7 @@ EOF
           }
         });
 
-        unless($no_warnings)
+        unless($no_warnings || $self->allow_auto_initialization)
         {
           no warnings; # Allow undef coercion to empty string
           warn "No Rose::DB::Object-derived class found for table ",

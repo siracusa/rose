@@ -105,7 +105,7 @@ sub auto_generate_foreign_keys
 
   my $no_warnings = $args{'no_warnings'};
 
-  my($class, @foreign_keys);
+  my($class, @foreign_keys, $total_fks);
 
   eval
   {
@@ -114,6 +114,8 @@ sub auto_generate_foreign_keys
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
     my $db_name = $db->database;
+
+    my $q = $dbh->get_info(29); # quote character
 
     my $sth = $dbh->prepare("SHOW TABLE STATUS FROM `$db_name` LIKE ?");
     $sth->execute($self->table);
@@ -138,7 +140,7 @@ sub auto_generate_foreign_keys
 
       for(my $comment = $row->{'Comment'})
       {
-        s/^InnoDB free:.+?; *//;
+        s/^InnoDB free:.+?; *//i;
 
         FK: while(s{\(((?:`[^`]+` *)+)\) REFER `([^`]+)/([^`]+)`\(((?:`[^`]+` *)+)\)(?:; *| *$)}{})
         {
@@ -171,27 +173,27 @@ sub auto_generate_foreign_keys
               method => 'auto_init_foreign_keys',
               args   => \%args,
     
-              code   => sub
+              code => sub
               {
                 $self->auto_init_foreign_keys(%args);
                 $self->make_foreign_key_methods(%args, preserve_existing => 1);
               },
     
-              check  => sub
+              check => sub
               {
-                my $num = scalar @foreign_keys;
                 my $fks = $self->foreign_keys;
-                return @$fks > $num ? 1 : 0;
+                return @$fks == $total_fks ? 1 : 0;
               }
             });
 
-            #unless($no_warnings)
-            #{
-            #  no warnings; # Allow undef coercion to empty string
-            #  warn "No Rose::DB::Object-derived class found for table ",
-            #       "'$foreign_table'";
-            #}
+            unless($no_warnings || $self->allow_auto_initialization)
+            {
+              no warnings; # Allow undef coercion to empty string
+              warn "No Rose::DB::Object-derived class found for table ",
+                   "'$foreign_table'";
+            }
 
+            $total_fks++;
             next FK;
           }
 
@@ -207,6 +209,7 @@ sub auto_generate_foreign_keys
               key_columns => \%key_columns);
 
           push(@foreign_keys, $fk);
+          $total_fks++;
         }
       }
     }
