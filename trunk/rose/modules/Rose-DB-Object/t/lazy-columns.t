@@ -143,7 +143,10 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   #$Rose::DB::Object::Debug = 1;
 }
 
-skip("all db tests", 2)  unless($Did_Setup);
+SKIP:
+{
+  skip("all db tests", 2)  unless($Did_Setup);
+}
 
 BEGIN
 {
