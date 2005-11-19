@@ -56,7 +56,7 @@ sub spec_hash
   
   my $map = $self->spec_hash_map || {};
 
-  my %spec;
+  my %spec = (type => $self->type);
 
   foreach my $key (keys(%$self))
   {
@@ -148,6 +148,8 @@ sub perl_relationship_defintion_attributes
     {
       next ATTR;
     }
+
+    next ATTR  if($attr eq 'share_db' && $self->share_db);
 
     if($attr eq 'method_name')
     {
