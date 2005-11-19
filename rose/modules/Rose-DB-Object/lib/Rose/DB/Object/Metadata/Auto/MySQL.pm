@@ -185,12 +185,12 @@ sub auto_generate_foreign_keys
               }
             });
 
-            unless($no_warnings)
-            {
-              no warnings; # Allow undef coercion to empty string
-              warn "No Rose::DB::Object-derived class found for table ",
-                   "'$foreign_table'";
-            }
+            #unless($no_warnings)
+            #{
+            #  no warnings; # Allow undef coercion to empty string
+            #  warn "No Rose::DB::Object-derived class found for table ",
+            #       "'$foreign_table'";
+            #}
 
             next FK;
           }

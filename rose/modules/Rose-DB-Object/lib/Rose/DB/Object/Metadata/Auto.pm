@@ -10,7 +10,11 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata;
 our @ISA = qw(Rose::DB::Object::Metadata);
 
-our $VERSION = '0.04';
+our $Debug;
+
+*Debug = \$Rose::DB::Object::Metadata::Debug;
+
+our $VERSION = '0.50';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -19,6 +23,13 @@ use Rose::Class::MakeMethods::Generic
     'default_perl_indent',
     'default_perl_braces',
     'default_perl_unique_key_style',
+  ],
+
+  inheritable_hash =>
+  [
+    relationship_type_ranks => { interface => 'get_set_all' },
+    relationship_type_rank   => { interface => 'get_set', hash_key => 'relationship_type_ranks' },
+    delete_relationship_type_rank => { interface => 'delete', hash_key => 'relationship_type_ranks' },
   ],
 );
 
@@ -31,9 +42,18 @@ use Rose::Object::MakeMethods::Generic
   ],
 );
 
+__PACKAGE__->relationship_type_ranks
+(
+  'one to one'   => 1,
+  'many to one'  => 2,
+  'one to many'  => 3,
+  'many to many' => 4,
+);
+
 __PACKAGE__->default_perl_indent(4);
 __PACKAGE__->default_perl_braces('k&r');
 __PACKAGE__->default_perl_unique_key_style('array');
+
 
 sub auto_generate_columns
 {
@@ -837,14 +857,247 @@ sub auto_init_primary_key_columns
   return;
 }
 
+my %Auto_Rel_Types;
+
+sub auto_init_relationships
+{
+  my($self) = shift;
+  my(%args) = @_;
+
+
+  my $type_map  = $self->relationship_type_classes;
+  my @all_types = keys %$type_map;
+
+  my %types;
+
+  if(delete $args{'restore_types'})
+  {
+    if(my $types = $Auto_Rel_Types{$self->class})
+    {
+      $args{'types'} = $types;
+    }
+  }
+
+  if(my $types = delete $args{'relationship_types'} || delete $args{'types'})
+  {
+    %types = map { $_ => 1 } @$types;
+    $Auto_Rel_Types{$self->class} = $types;
+  }
+  else
+  {
+    %types = map { $_ => 1 } @all_types;
+  }
+
+  if(delete $args{'replace_existing'})
+  {
+    foreach my $rel ($self->relationships)
+    {
+      next  unless($types{$rel->type});
+      $self->delete_relationship($rel->name);
+    }
+  }
+
+  foreach my $type (sort { $self->sort_relationship_types($a, $b) } keys %types)
+  {
+    my $type_name = $type;
+
+    for($type_name)
+    {
+      s/ /_/g;
+      s/\W+//g;
+    }
+
+    my $method = 'auto_init_' . $type_name . '_relationships';
+
+    if($self->can($method))
+    {
+      $self->$method(@_);
+    }
+  }
+
+  return  if($args{'no_recurse'});
+
+  # Retry all other classes too
+#   foreach my $class ($self->registered_classes)
+#   {
+#     next  unless($class->meta->allow_auto_initialization);
+# 
+#     my %args = (no_recurse => 1);
+#     
+#     if(my $types = $Auto_Rel_Types{$class})
+#     {
+#       $args{'types'} = $types;
+#     }
+# 
+#     $self->auto_init_relationships(%args);
+#   }
+
+  return;
+}
+
+sub sort_relationship_types
+{
+  my($self, $a, $b) = @_;
+  return $self->relationship_type_rank($a) <=> $self->relationship_type_rank($b);
+}
+
+sub auto_init_one_to_one_relationships { }
+sub auto_init_many_to_one_relationships { }
+
+sub auto_init_one_to_many_relationships 
+{
+  my($self, %args) = @_;
+
+  my $class = $self->class;
+if($class eq 'Price')
+{
+  $DB::single = $JCS::FOO;
+}
+  # For each foreign key in this class, try to make a "one to many"
+  # relationship in the table that the foreign key points to.  But
+  # don't do so if there's already a one to one relationship in that 
+  # class that references all of the foreign key's columns.
+  FK: foreach my $fk ($self->foreign_keys)
+  {
+    my $f_class = $fk->class;
+    
+    next  unless($f_class && UNIVERSAL::isa($f_class, 'Rose::DB::Object'));
+
+    my $f_meta  = $f_class->meta;
+    my $key_cols = $fk->key_columns;
+
+    # Check for any one to one relationships that reference the foreign
+    # key's columns.  If found, don't try to make the one to many rel.
+    REL: foreach my $rel ($f_meta->relationships)
+    {
+      if($rel->type eq 'one to one' && !$rel->foreign_key)
+      {
+        my $skip = 1;
+        
+        my $col_map = $rel->column_map or next REL;
+        
+        foreach my $remote_col (values %$col_map)
+        {
+          $skip = 0  unless($key_cols->{$remote_col});
+        }
+
+        next FK  if($skip);
+      }
+    }
+
+    my $cm = $self->convention_manager;
+
+    # Also don't add add one to many relationships between a class
+    # and one of its map classes
+    my $is_map_table = $cm->looks_like_map_table_name($class->meta->table);
+    my $is_map_class = $cm->looks_like_map_class($class);
+
+    if($is_map_table && (!defined $is_map_class || $is_map_class))
+    {
+      $Debug && warn "$f_class - Refusing to make one to many relationship ",
+                     "to map class to $class\n";
+      next FK;
+    }
+
+    # Add the one to many relationship to the foreign class
+    my $name = $cm->auto_table_to_relationship_name_plural($self->table);
+
+    unless($f_meta->relationship($name))
+    {
+      $Debug && warn "$f_class - Adding one to many relationship ",
+                     "'$name' to $class\n";
+      $f_meta->add_relationship($name =>
+                                {
+                                  type       => 'one to many',
+                                  class      => $class,
+                                  column_map => { reverse %$key_cols },
+                                });
+    }
+
+    # Manually create the methods if the class is already initialized
+    if($f_meta->is_initialized)
+    {
+      $f_meta->make_relationship_methods(name => $name, preserve_existing => 1);
+    }
+  }
+
+  return;
+}
+
+sub auto_init_many_to_many_relationships
+{
+  my($self, %args) = @_;
+
+  my $class = $self->class;
+
+  my $cm = $self->convention_manager;
+
+  my $is_map_table = $cm->looks_like_map_table_name($class->meta->table);
+  my $is_map_class = $cm->looks_like_map_class($class);
+
+  # Nevermind if this isn't a map class
+  return  unless($is_map_table && (!defined $is_map_class || $is_map_class));
+
+  my @fks = $self->foreign_keys;
+  
+  # It's got to have just two foreign keys
+  return  unless(@fks == 2);
+  
+  my $key_cols1 = $fks[0]->key_columns;
+  my $key_cols2 = $fks[1]->key_columns;
+  
+  # Each foreign key must have key columns
+  return  unless($key_cols1 && keys %$key_cols1 &&
+                 $key_cols2 && keys %$key_cols2);
+
+  my $map_class = $class;
+
+  # Make many to many relationships in both foreign classes that go
+  # through this map table
+  PAIR: foreach my $pair ([ @fks ], [ reverse @fks ])
+  {
+    my($fk1, $fk2) = @$pair;
+    
+    my $class1 = $fk1->class;
+    my $class2 = $fk2->class;
+
+    my $meta = $class1->meta;
+    my $name = $cm->auto_foreign_key_to_relationship_name_plural($fk2);
+
+    unless($meta->relationship($name))
+    {
+      $Debug && warn "$class1 - Adding many to many relationship '$name' ",
+                     "through $map_class to $class2\n";
+      $meta->add_relationship($name =>
+                              {
+                                type      => 'many to many',
+                                map_class => $map_class,
+                                map_from  => $fk1->name,
+                                map_to    => $fk2->name,
+                              });
+    }
+
+    # Manually create the methods if the class is already initialized
+    if($meta->is_initialized)
+    {
+      $meta->make_relationship_methods(name => $name, preserve_existing => 1);
+    }
+  }
+
+  return;
+}
+
 sub auto_initialize
 {
   my($self) = shift;
+
+  $self->allow_auto_initialization(1);
 
   $self->auto_init_columns(@_);
   $self->auto_init_primary_key_columns;
   $self->auto_init_unique_keys(@_);
   $self->auto_init_foreign_keys(@_);
+  $self->auto_init_relationships(@_);
   $self->initialize;
 
   for(1 .. 2) # two passes are required to catch everything
