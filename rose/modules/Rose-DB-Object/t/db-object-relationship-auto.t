@@ -2,7 +2,10 @@
 
 use strict;
 
-use Test::More tests => 10;
+my $Iterations;
+
+BEGIN { $Iterations = 2 }
+use Test::More tests => 3 + (4 * 7 * $Iterations);
 
 BEGIN 
 {
@@ -21,85 +24,108 @@ our(%Have, $Did_Setup);
 # Setup
 #
 
+# Some good test cases:
+#@Classes = qw(Color Price ProductsColors Vendor Product);
+#@Classes = qw(Price ProductsColors Product Color Vendor);
+#@Classes = qw(ProductsColors Price Vendor Product Color);
+#@Classes = qw(Price Color Vendor ProductsColors Product)
 my @Classes = qw(Vendor Product Price Color ProductsColors);
 
 eval { require List::Util };
+my $Can_Shuffle = $@ ? 0 : 1;
 
-unless($@) # make sure init order doesn't matter
-{
-  @Classes = List::Util::shuffle(@Classes);
-}
-#@Classes = qw(Color Price ProductsColors Vendor Product);
-#@Classes = qw(Price ProductsColors Product Color Vendor);
-print "# Init order: @Classes\n";
+my %Tables =
+(
+  Vendor  => 'vendors',
+  Product => 'products',
+  Price   => 'prices',
+  Color   => 'colors',
+  ProductsColors => 'products_colors',
+);
 
-SETUP:
-{
-  foreach my $class (qw(Vendor Product Price Color ProductsColors))
-  {
-    no strict 'refs';
-    @{"${class}::ISA"} = qw(Rose::DB::Object);
-  }
-}
+my %Setup_Class;
 
 #
 # Tests
 #
 
-foreach my $db_type (qw(mysql)) # qw(mysql pg pg_with_schema informix))
+foreach my $i (1 .. $Iterations)
 {
-  SKIP:
+  foreach my $db_type (qw(mysql pg pg_with_schema informix))
   {
-    # 1
-    skip("$db_type tests", 1)  unless($Have{$db_type});
+    SKIP:
+    {
+      # 7
+      skip("$db_type tests", 7)  unless($Have{$db_type});
+    }
+  
+    next  unless($Have{$db_type});
+  
+    Rose::DB->default_type($db_type);
+    Rose::DB::Object::Metadata->unregister_all_classes;
+
+    my $class_prefix = ucfirst($db_type eq 'pg_with_schema' ? 'pg' : $db_type) . $i;
+
+    @Classes = List::Util::shuffle(@Classes)  if($Can_Shuffle);
+    print "# Class order: @Classes\n";
+
+    #$Rose::DB::Object::Metadata::Debug = 1;
+
+    foreach my $class_root (@Classes)
+    {
+      my $class = $class_prefix . $class_root;
+  
+      if($Setup_Class{$class}++)
+      {
+        $class->meta->init_with_db(Rose::DB->new);
+      }
+      else
+      {   
+        no strict 'refs';
+        @{"${class}::ISA"} = qw(Rose::DB::Object);
+        $class->meta->table($Tables{$class_root});
+        $class->meta->init_with_db(Rose::DB->new);
+        $class->meta->auto_initialize;
+      }
+    }
+    
+    my $product_class = $class_prefix . 'Product';
+  
+    ##
+    ## Run tests
+    ##
+  
+    my $p = $product_class->new(name => "Sled $i");
+  
+    $p->vendor(name => "Acme $i");
+  
+    $p->prices({ price => 1.23, region => 'US' },
+               { price => 4.56, region => 'UK' });
+  
+    $p->colors({ name => 'red'   }, 
+               { name => 'green' });
+  
+    $p->save;
+    
+    $p = $product_class->new(id => $p->id)->load;
+    is($p->vendor->name, "Acme $i", "vendor $i.1 - $db_type");
+  
+    
+    my @prices = sort { $a->price <=> $b->price } $p->prices;
+    
+    is(scalar @prices, 2, "prices $i.1 - $db_type");
+    is($prices[0]->price, 1.23, "prices $i.2 - $db_type");
+    is($prices[1]->price, 4.56, "prices $i.3 - $db_type");
+  
+    my @colors = sort { $a->name cmp $b->name } $p->colors;
+    
+    is(scalar @colors, 2, "colors $i.1 - $db_type");
+    is($colors[0]->name, 'green', "colors $i.2 - $db_type");
+    is($colors[1]->name, 'red', "colors $i.3 - $db_type");
+  
+    #$DB::single = 1;
+    #$Rose::DB::Object::Debug = 1;
   }
-
-  next  unless($Have{$db_type});
-
-  Rose::DB->default_type($db_type);
-
-  #$Rose::DB::Object::Metadata::Debug = 1;
-
-  foreach my $class (@Classes)#qw(Vendor Product Price Color ProductsColors))
-  {
-    $class->meta->init_with_db(Rose::DB->new);
-    $class->meta->auto_initialize;
-  }
-
-  ##
-  ## Run tests
-  ##
-#$DB::single = 1;
-  my $p = Product->new(name => 'Sled');
-
-  $p->vendor(name => 'Acme');
-
-  $p->prices({ price => 1.23, region => 'US' },
-             { price => 4.56, region => 'UK' });
-
-  $p->colors({ name => 'red'   }, 
-             { name => 'green' });
-
-  $p->save;
-  
-  $p = Product->new(id => $p->id)->load;
-  is($p->vendor->name, 'Acme', "vendor 1 - $db_type");
-
-  
-  my @prices = sort { $a->price <=> $b->price } $p->prices;
-  
-  is(scalar @prices, 2, "prices 1 - $db_type");
-  is($prices[0]->price, 1.23, "prices 2 - $db_type");
-  is($prices[1]->price, 4.56, "prices 3 - $db_type");
-
-  my @colors = sort { $a->name cmp $b->name } $p->colors;
-  
-  is(scalar @colors, 2, "colors 1 - $db_type");
-  is($colors[0]->name, 'green', "colors 2 - $db_type");
-  is($colors[1]->name, 'red', "colors 3 - $db_type");
-
-  #$DB::single = 1;
-  #$Rose::DB::Object::Debug = 1;
 }
 
 BEGIN
