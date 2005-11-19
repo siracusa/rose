@@ -272,9 +272,9 @@ sub perl_column_defintion_attributes
 
   ATTR: foreach my $attr ('type', sort keys %$self)
   {
-    if($attr =~ /^(?:name(?:_sql)? | is_primary_key_member | 
+    if($attr =~ /^(?: name(?:_sql)? | is_primary_key_member | 
                   primary_key_position | method_name | method_code |
-                  made_method_types| ordinal_position | 
+                  made_method_types | ordinal_position | 
                   (?:builtin_)?triggers | 
                   (?:builtin_)?trigger_index )$/x)
     {

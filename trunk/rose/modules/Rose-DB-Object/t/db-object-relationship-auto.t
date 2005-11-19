@@ -5,7 +5,7 @@ use strict;
 my $Iterations;
 
 BEGIN { $Iterations = 2 }
-use Test::More tests => 3 + (4 * 7 * $Iterations);
+use Test::More tests => 3 + (4 * 9 * $Iterations);
 
 BEGIN 
 {
@@ -55,7 +55,7 @@ foreach my $i (1 .. $Iterations)
   {
     SKIP:
     {
-      skip("$db_type tests", 7)  unless($Have{$db_type});
+      skip("$db_type tests", 9)  unless($Have{$db_type});
     }
   
     next  unless($Have{$db_type});
@@ -89,7 +89,7 @@ foreach my $i (1 .. $Iterations)
     }
 
     my $product_class = $class_prefix . 'Product';
-  
+
     ##
     ## Run tests
     ##
@@ -124,7 +124,54 @@ foreach my $i (1 .. $Iterations)
   
     #$DB::single = 1;
     #$Rose::DB::Object::Debug = 1;
-    
+ 
+     #
+    # Test code generation
+    #
+  
+    is($product_class->meta->perl_relationships_definition,
+       <<"EOF", "perl_relationships_definition $i.1 - $db_type");
+__PACKAGE__->meta->relationships(
+    colors => {
+        column_map    => { product_id => 'id' },
+        foreign_class => '${class_prefix}Color',
+        map_class     => '${class_prefix}ProductsColors',
+        map_from      => 'product',
+        map_to        => 'color',
+        share_db      => 1,
+    },
+
+    prices => {
+        class       => '${class_prefix}Price',
+        key_columns => { id => 'product_id' },
+        share_db    => 1,
+    },
+);
+EOF
+
+    is($product_class->meta->perl_relationships_definition(braces => 'bsd', indent => 2),
+       <<"EOF", "perl_relationships_definition $i.2 - $db_type");
+__PACKAGE__->meta->relationships
+(
+  colors => 
+  {
+    column_map    => { product_id => 'id' },
+    foreign_class => '${class_prefix}Color',
+    map_class     => '${class_prefix}ProductsColors',
+    map_from      => 'product',
+    map_to        => 'color',
+    share_db      => 1,
+  },
+
+  prices => 
+  {
+    class       => '${class_prefix}Price',
+    key_columns => { id => 'product_id' },
+    share_db    => 1,
+  },
+);
+EOF
+
     $product_class->meta_class->clear_all_dbs;
   }
 }

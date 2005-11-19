@@ -646,6 +646,59 @@ sub perl_foreign_keys_definition
   return $def . ");\n";
 }
 
+sub perl_relationships_definition
+{
+  my($self, %args) = @_;
+
+  $self->auto_init_relationships;
+
+  my $indent = defined $args{'indent'} ? $args{'indent'} : $self->default_perl_indent;
+  my $braces = defined $args{'braces'} ? $args{'braces'} : $self->default_perl_braces;
+
+  unless($indent =~ /^\d+$/)
+  {
+    Carp::croak 'Invalid ', (defined $args{'indent'} ? '' : 'default '),
+                "indent size: '$braces'";
+  }
+
+  my $indent_txt = ' ' x $indent;
+
+  my $def = "__PACKAGE__->meta->relationships";
+
+  if($braces eq 'bsd')
+  {
+    $def .= "\n(\n";
+  }
+  elsif($braces eq 'k&r')
+  {
+    $def .= "(\n";
+  }
+  else
+  {
+    Carp::croak 'Invalid ', (defined $args{'braces'} ? '' : 'default '),
+                "brace style: '$braces'";
+  }
+
+  my @rel_defs;
+
+  foreach my $rel ($self->relationships)
+  {
+    next  if($rel->can('foreign_key') && $rel->foreign_key);
+$DB::single = 1;
+    push(@rel_defs, $rel->perl_hash_definition(indent => $indent, braces => $braces));
+  }
+
+  return ''  unless(@rel_defs);
+
+  foreach my $rel_def (@rel_defs)
+  {
+    $rel_def =~ s/^/$indent_txt/mg;
+    $def .= "$rel_def,\n" . ($rel_def eq $rel_defs[-1] ? '' : "\n");
+  }
+
+  return $def . ");\n";
+}
+
 sub perl_unique_keys_definition
 {
   my($self, %args) = @_;

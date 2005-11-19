@@ -4,6 +4,8 @@ use strict;
 
 use Carp();
 
+use Rose::DB::Object::Metadata::Util qw(:all);
+
 use Rose::DB::Object::Metadata::MethodMaker;
 our @ISA = qw(Rose::DB::Object::Metadata::MethodMaker);
 
@@ -70,6 +72,125 @@ sub spec_hash
   }
 
   return wantarray ? %spec : \%spec;
+}
+
+our $DEFAULT_INLINE_LIMIT = 80;
+
+sub perl_hash_definition
+{
+  my($self, %args) = @_;
+
+  my $meta = $self->parent;
+
+  my $name_padding = $args{'name_padding'};
+
+  my $braces = $args{'braces'};
+  my $indent = defined $args{'indent'} ? $args{'indent'} : 
+                 ($meta ? $meta->default_perl_indent : undef);
+
+  my $inline = defined $args{'inline'} ? $args{'inline'} : 0;
+  my $inline_limit = defined $args{'inline'} ? $args{'inline_limit'} : $DEFAULT_INLINE_LIMIT;
+
+  my %attrs = map { $_ => 1 } $self->perl_relationship_defintion_attributes;
+  my %hash = $self->spec_hash;
+
+  my @delete_keys = grep { !$attrs{$_} } keys %hash;
+  delete @hash{@delete_keys};
+
+  my $max_len = 0;
+  my $min_len = -1;
+  
+  foreach my $name (keys %hash)
+  {
+    $max_len = length($name)  if(length $name > $max_len);
+    $min_len = length($name)  if(length $name < $min_len || $min_len < 0);
+  }
+
+  if(defined $name_padding && $name_padding > 0)
+  {
+    return sprintf('%-*s => ', $name_padding, perl_quote_key($self->name)) .
+           perl_hashref(hash         => \%hash, 
+                        braces       => $braces,
+                        inline       => $inline, 
+                        inline_limit => $inline_limit,
+                        indent       => $indent,
+                        key_padding  => hash_key_padding(\%hash));
+  }
+  else
+  {
+    return perl_quote_key($self->name) . ' => ' .
+           perl_hashref(hash         => \%hash, 
+                        braces       => $braces,
+                        inline       => $inline,
+                        inline_limit => $inline_limit,
+                        indent       => $indent,
+                        key_padding  => hash_key_padding(\%hash));
+  }
+}
+
+sub perl_relationship_defintion_attributes
+{
+  my($self) = shift;
+
+  my @attrs;
+
+  ATTR: foreach my $attr ('type', sort keys %$self)
+  {
+    if($attr =~ /^(?: id | name | method_name | method_code | auto_method_types |
+                  deferred_make_method_args | parent )$/x)
+    {
+      next ATTR;
+    }
+
+    my $val = $self->can($attr) ? $self->$attr() : next ATTR;
+
+    if(!defined $val)
+    {
+      next ATTR;
+    }
+
+    if($attr eq 'method_name')
+    {
+      my $names = $self->{$attr} or next ATTR;
+      my $custom = 0;
+
+      while(my($type, $name) = each(%$names))
+      {
+        if($name ne $self->build_method_name_for_type($type))
+        {
+          $custom = 1;
+          last;
+        }
+      }
+
+      unless($custom)
+      {
+        my $def_types = $self->init_auto_method_types;
+  
+        CHECK: foreach my $def_type (@$def_types)
+        {
+          my $found = 0;
+  
+          foreach my $type ($self->auto_method_types)
+          {
+            if($type eq $def_type)
+            {
+              $found++;
+              next CHECK;
+            }
+          }
+          
+          $custom = 1  if($found != @$def_types);
+        }
+      }
+      
+      next ATTR  unless($custom);
+    }
+
+    push(@attrs, $attr);
+  }
+
+  return @attrs;
 }
 
 1;
