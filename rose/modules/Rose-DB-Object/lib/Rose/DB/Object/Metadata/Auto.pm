@@ -408,6 +408,8 @@ sub auto_generate_foreign_keys
 
         unless(UNIVERSAL::isa($foreign_class, 'Rose::DB::Object'))
         {
+          # Null convention manager may return undef
+          no warnings 'uninitialized'; 
           eval "require $foreign_class";
           $foreign_class = undef  if($@);
         }
@@ -978,6 +980,8 @@ sub auto_init_one_to_many_relationships
       next FK;
     }
 
+    # XXX: skip of there's already a relationship with the same id
+
     # Add the one to many relationship to the foreign class
     my $name = $cm->auto_table_to_relationship_name_plural($self->table);
 
@@ -1037,6 +1041,8 @@ sub auto_init_many_to_many_relationships
     
     my $class1 = $fk1->class;
     my $class2 = $fk2->class;
+
+    # XXX: skip of there's already a relationship with the same id
 
     my $meta = $class1->meta;
     my $name = $cm->auto_foreign_key_to_relationship_name_plural($fk2);

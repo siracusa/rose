@@ -1190,6 +1190,8 @@ BEGIN
   {
     our $HAVE_PG = 1;
 
+    Rose::DB::Object::Metadata->unregister_all_classes;
+  
     # Drop existing table and create schema, ignoring errors
     {
       local $dbh->{'RaiseError'} = 0;
@@ -1390,6 +1392,8 @@ EOF
   {
     our $HAVE_MYSQL_WITH_INNODB = 1;
 
+    Rose::DB::Object::Metadata->unregister_all_classes;
+
     # Drop existing table and create schema, ignoring errors
     {
       local $dbh->{'RaiseError'} = 0;
@@ -1565,6 +1569,8 @@ EOF
   if(!$@ && $dbh)
   {
     our $HAVE_INFORMIX = 1;
+
+    Rose::DB::Object::Metadata->unregister_all_classes;
 
     # Drop existing table and create schema, ignoring errors
     {

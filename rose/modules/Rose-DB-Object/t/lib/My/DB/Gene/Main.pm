@@ -15,7 +15,7 @@ __PACKAGE__->meta->relationships
   },
 );
 
-__PACKAGE__->meta->auto_initialize();
+__PACKAGE__->meta->auto_initialize(relationship_types => []);
 
 package My::DB::Gene::Main::Manager;
 
