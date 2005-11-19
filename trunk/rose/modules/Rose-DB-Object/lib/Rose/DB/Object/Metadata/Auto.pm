@@ -348,7 +348,7 @@ sub auto_generate_foreign_keys
 
   my $no_warnings = $args{'no_warnings'};
 
-  my($class, @foreign_keys);
+  my($class, @foreign_keys, $total_fks);
 
   eval
   {
@@ -431,12 +431,11 @@ sub auto_generate_foreign_keys
             $self->make_foreign_key_methods(%args, preserve_existing => 1);
           },
 
-          check  => sub
+          check => sub
           {
-            my $num = scalar @foreign_keys;
             my $fks = $self->foreign_keys;
-            return @$fks > $num ? 1 : 0;
-          }
+            return @$fks == $total_fks ? 1 : 0;
+          },
         });
 
         unless($no_warnings || $Warned{$key}++ || $self->allow_auto_initialization)
@@ -449,6 +448,7 @@ sub auto_generate_foreign_keys
             $fk_info->{'UK_TABLE_NAME'}, "'";
         }
 
+        $total_fks++;
         next FK_INFO;
       }
 
@@ -465,6 +465,8 @@ sub auto_generate_foreign_keys
 
       $fk{$fk_info->{'UK_NAME'}}{'class'} = $foreign_class;
       $fk{$fk_info->{'UK_NAME'}}{'key_columns'}{$local_column} = $foreign_column;
+
+      $total_fks++;
     }
 
     my(%seen, %seen_name);

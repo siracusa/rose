@@ -1200,8 +1200,8 @@ sub register_class
     or Carp::croak "Missing table for metadata object $self";
 
   $table = lc $table  if($db->likes_lowercase_table_names);
-
-  my $reg = $self->class_registry;
+  
+  my $reg = $self->registry_key->class_registry;
 
   # Combine keys using $;, which is "\034" (0x1C) by default. But just to
   # make sure, I'll localize it.  What I'm looking for is a value that
@@ -1226,12 +1226,20 @@ sub register_class
   return;
 }
 
+sub registry_key { __PACKAGE__ }
+
 sub registered_classes
 {
   my($self) = shift;
-  my $reg = $self->class_registry;
-  
+  my $reg = $self->registry_key->class_registry;
   return wantarray ? @{$reg->{'classes'} ||= []} : $reg->{'classes'};
+}
+
+sub unregister_all_classes
+{
+  my($self) = shift;
+  $self->registry_key->class_registry({});
+  return;
 }
 
 sub class_for
@@ -1254,7 +1262,7 @@ sub class_for
 
   $table = lc $table  if($db->likes_lowercase_table_names);
 
-  my $reg = $self->class_registry;
+  my $reg = $self->registry_key->class_registry;
 
   # Combine keys using $;, which is "\034" (0x1C) by default. But just to
   # make sure, we'll localize it.  What we're looking for is a value that
