@@ -25,11 +25,11 @@ our(%Have, $Did_Setup);
 #
 
 # Some good test cases:
-#@Classes = qw(Color Price ProductsColors Vendor Product);
-#@Classes = qw(Price ProductsColors Product Color Vendor);
-#@Classes = qw(ProductsColors Price Vendor Product Color);
-#@Classes = qw(Price Color Vendor ProductsColors Product)
-my @Classes = qw(Vendor Product Price Color ProductsColors);
+#@Classes = qw(Color Price ProductColorMap Vendor Product);
+#@Classes = qw(Price ProductColorMap Product Color Vendor);
+#@Classes = qw(ProductColorMap Price Vendor Product Color);
+#@Classes = qw(Price Color Vendor ProductColorMap Product)
+my @Classes = qw(Vendor Product Price Color ProductColorMap);
 
 eval { require List::Util };
 my $Can_Shuffle = $@ ? 0 : 1;
@@ -40,7 +40,7 @@ my %Tables =
   Product => 'products',
   Price   => 'prices',
   Color   => 'colors',
-  ProductsColors => 'products_colors',
+  ProductColorMap => 'product_color_map',
 );
 
 my %Setup_Class;
@@ -89,7 +89,7 @@ foreach my $i (1 .. $Iterations)
     }
 
     my $product_class = $class_prefix . 'Product';
-
+  
     ##
     ## Run tests
     ##
@@ -124,7 +124,7 @@ foreach my $i (1 .. $Iterations)
   
     #$DB::single = 1;
     #$Rose::DB::Object::Debug = 1;
- 
+
     #
     # Test code generation
     #
@@ -135,7 +135,7 @@ __PACKAGE__->meta->relationships(
     colors => {
         column_map    => { product_id => 'id' },
         foreign_class => '${class_prefix}Color',
-        map_class     => '${class_prefix}ProductsColors',
+        map_class     => '${class_prefix}ProductColorMap',
         map_from      => 'product',
         map_to        => 'color',
         type          => 'many to many',
@@ -157,7 +157,7 @@ __PACKAGE__->meta->relationships
   {
     column_map    => { product_id => 'id' },
     foreign_class => '${class_prefix}Color',
-    map_class     => '${class_prefix}ProductsColors',
+    map_class     => '${class_prefix}ProductColorMap',
     map_from      => 'product',
     map_to        => 'color',
     type          => 'many to many',
@@ -171,7 +171,7 @@ __PACKAGE__->meta->relationships
   },
 );
 EOF
-
+    
     $product_class->meta_class->clear_all_dbs;
   }
 }
@@ -202,13 +202,13 @@ BEGIN
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
 
-      $dbh->do('DROP TABLE products_colors CASCADE');
+      $dbh->do('DROP TABLE product_color_map CASCADE');
       $dbh->do('DROP TABLE colors CASCADE');
       $dbh->do('DROP TABLE prices CASCADE');
       $dbh->do('DROP TABLE products CASCADE');
       $dbh->do('DROP TABLE vendors CASCADE');
     
-      $dbh->do('DROP TABLE Rose_db_object_private.products_colors CASCADE');
+      $dbh->do('DROP TABLE Rose_db_object_private.product_color_map CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.colors CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.prices CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.products CASCADE');
@@ -270,7 +270,7 @@ CREATE TABLE colors
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE products_colors
+CREATE TABLE product_color_map
 (
   product_id  INT NOT NULL REFERENCES products (id),
   color_id    INT NOT NULL REFERENCES colors (id),
@@ -331,7 +331,7 @@ CREATE TABLE Rose_db_object_private.colors
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE Rose_db_object_private.products_colors
+CREATE TABLE Rose_db_object_private.product_color_map
 (
   product_id  INT NOT NULL REFERENCES products (id),
   color_id    INT NOT NULL REFERENCES colors (id),
@@ -361,7 +361,7 @@ EOF
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
 
-      $dbh->do('DROP TABLE products_colors CASCADE');
+      $dbh->do('DROP TABLE product_color_map CASCADE');
       $dbh->do('DROP TABLE colors CASCADE');
       $dbh->do('DROP TABLE prices CASCADE');
       $dbh->do('DROP TABLE products CASCADE');
@@ -449,7 +449,7 @@ TYPE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE products_colors
+CREATE TABLE product_color_map
 (
   product_id  INT NOT NULL,
   color_id    INT NOT NULL,
@@ -516,13 +516,13 @@ END
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE products_colors CASCADE');
+    $dbh->do('DROP TABLE product_color_map CASCADE');
     $dbh->do('DROP TABLE colors CASCADE');
     $dbh->do('DROP TABLE prices CASCADE');
     $dbh->do('DROP TABLE products CASCADE');
     $dbh->do('DROP TABLE vendors CASCADE');
 
-    $dbh->do('DROP TABLE Rose_db_object_private.products_colors CASCADE');
+    $dbh->do('DROP TABLE Rose_db_object_private.product_color_map CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_private.colors CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_private.prices CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_private.products CASCADE');
@@ -539,7 +539,7 @@ END
     my $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE products_colors CASCADE');
+    $dbh->do('DROP TABLE product_color_map CASCADE');
     $dbh->do('DROP TABLE colors CASCADE');
     $dbh->do('DROP TABLE prices CASCADE');
     $dbh->do('DROP TABLE products CASCADE');

@@ -41,6 +41,7 @@ use Rose::Object::MakeMethods::Generic
     allow_inline_column_values => { default => 0 },
     is_initialized => { default => 0 },
     allow_auto_initialization => { default => 0 },
+    was_auto_initialized => { default => 0 },
   ],
 
   array =>
@@ -3976,11 +3977,11 @@ The list of base classes to use in the generated class definition.  CLASSES shou
 
 =back
 
-This method is simply a wrapper (with some glue) for the following methods: L<perl_columns_definition|/perl_columns_definition>, L<perl_primary_key_columns_definition|/perl_primary_key_columns_definition>, L<perl_unique_keys_definition|/perl_unique_keys_definition>, and L<perl_foreign_keys_definition|/perl_foreign_keys_definition>.  The "braces" and "indent" parameters are passed on to these other methods.
+This method is simply a wrapper (with some glue) for the following methods: L<perl_columns_definition|/perl_columns_definition>, L<perl_primary_key_columns_definition|/perl_primary_key_columns_definition>, L<perl_unique_keys_definition|/perl_unique_keys_definition>,  L<perl_foreign_keys_definition|/perl_foreign_keys_definition>, and L<perl_relationships_definition|/perl_relationships_definition>.  The "braces" and "indent" parameters are passed on to these other methods.
 
 Here's a complete example, which also serves as an example of the individual "perl_*" methods that this method wraps.  First, the table definitions.
 
-    CREATE TABLE categories
+    CREATE TABLE topics
     (
       id    SERIAL PRIMARY KEY,
       name  VARCHAR(32)
@@ -3995,14 +3996,14 @@ Here's a complete example, which also serves as an example of the individual "pe
 
       PRIMARY KEY(k1, k2, k3)
     );
-
+    
     CREATE TABLE products
     (
       id             SERIAL PRIMARY KEY,
       name           VARCHAR(32) NOT NULL,
       flag           BOOLEAN NOT NULL DEFAULT 't',
       status         VARCHAR(32) DEFAULT 'active',
-      category_id    INT REFERENCES categories (id),
+      topic_id       INT REFERENCES topics (id),
       fk1            INT,
       fk2            INT,
       fk3            INT,
@@ -4012,11 +4013,19 @@ Here's a complete example, which also serves as an example of the individual "pe
       FOREIGN KEY (fk1, fk2, fk3) REFERENCES codes (k1, k2, k3)
     );
 
-We'll auto-initialize the first two classes so that we can skip right to generating the Perl code for the third class, which references them.
+    CREATE TABLE prices
+    (
+      id          SERIAL PRIMARY KEY,
+      product_id  INT REFERENCES products (id),
+      price       DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+      region      CHAR(2) NOT NULL DEFAULT 'US' 
+    );
+
+First we'll auto-initialize the classes.
 
     package Category;
     our @ISA = qw(Rose::DB::Object);
-    Category->meta->table('categories');
+    Category->meta->table('topics');
     Category->meta->auto_initialize;
 
     package Code;
@@ -4024,53 +4033,51 @@ We'll auto-initialize the first two classes so that we can skip right to generat
     Code->meta->table('codes');
     Code->meta->auto_initialize;
 
-Finally, setup the last class and generate the Perl code.
-
     package Product;
     our @ISA = qw(Rose::DB::Object);
     my $meta = Product->meta;
     $meta->table('products');
+    Product->meta->auto_initialize;
 
-    print $meta->perl_class_definition(braces => 'bsd', indent => 2);
+    package Price;
+    our @ISA = qw(Rose::DB::Object);
+    Price->meta->table('prices');
+    Price->meta->auto_initialize;
+
+Then we'll print the C<Product> class definition;
+
+    print Product->meta->perl_class_definition(braces => 'bsd', 
+                                               indent => 2);
 
 The output looks like this:
 
  package Product;
-
+ 
  use strict;
-
+ 
  use Rose::DB::Object
  our @ISA = qw(Rose::DB::Object);
-
+ 
  __PACKAGE__->meta->table('products');
-
+ 
  __PACKAGE__->meta->columns
  (
-   category_id   => { type => 'integer' },
-   date_created  => { type => 'timestamp' },
+   id            => { type => 'integer', not_null => 1 },
+   name          => { type => 'varchar', length => 32, not_null => 1 },
+   flag          => { type => 'boolean', default => 'true', not_null => 1 },
+   status        => { type => 'varchar', default => 'active', length => 32 },
+   topic_id      => { type => 'integer' },
    fk1           => { type => 'integer' },
    fk2           => { type => 'integer' },
    fk3           => { type => 'integer' },
-   flag          => { type => 'boolean', default => 'true', not_null => 1 },
-   id            => { type => 'integer', not_null => 1 },
    last_modified => { type => 'timestamp' },
-   name          => { type => 'varchar', length => 32, not_null => 1 },
-   status        => { type => 'varchar', default => 'active', length => 32 },
+   date_created  => { type => 'timestamp' },
  );
-
+ 
  __PACKAGE__->meta->primary_key_columns([ 'id' ]);
-
+ 
  __PACKAGE__->meta->foreign_keys
  (
-   category => 
-   {
-     class => 'Category',
-     key_columns => 
-     {
-       category_id => 'id',
-     },
-   },
-
    code => 
    {
      class => 'Code',
@@ -4081,17 +4088,36 @@ The output looks like this:
        fk3 => 'k3',
      },
    },
+ 
+   topic => 
+   {
+     class => 'Category',
+     key_columns => 
+     {
+       topic_id => 'id',
+     },
+   },
  );
-
+ 
+ __PACKAGE__->meta->relationships
+ (
+   prices => 
+   {
+     class       => 'Price',
+     key_columns => { id => 'product_id' },
+     type        => 'one to many',
+   },
+ );
+ 
  __PACKAGE__->meta->initialize;
-
+ 
  1;
 
 See the L<auto-initialization|AUTO-INITIALIZATION> section for more discussion of Perl code generation.
 
 =item B<perl_columns_definition [PARAMS]>
 
-Auto-initialize the columns, then return the Perl source code that is equivalent to the auto-initialization.  PARAMS are optional name/value pairs that may include the following:
+Auto-initialize the columns (if necessary), then return the Perl source code that is equivalent to the auto-initialization.  PARAMS are optional name/value pairs that may include the following:
 
 =over 4
 
@@ -4109,7 +4135,7 @@ See the larger example in the documentation for the L<perl_class_definition|/per
 
 =item B<perl_foreign_keys_definition [PARAMS]>
 
-Auto-initialize the foreign keys, then return the Perl source code that is equivalent to the auto-initialization.  PARAMS are optional name/value pairs that may include the following:
+Auto-initialize the foreign keys (if necessary), then return the Perl source code that is equivalent to the auto-initialization.  PARAMS are optional name/value pairs that may include the following:
 
 =over 4
 
@@ -4172,7 +4198,25 @@ The following would be printed:
 
 =item B<perl_primary_key_columns_definition>
 
-Auto-initialize the primary key column names, then return the Perl source code that is equivalent to the auto-initialization.
+Auto-initialize the primary key column names (if necessary), then return the Perl source code that is equivalent to the auto-initialization.
+
+See the larger example in the documentation for the L<perl_class_definition|/perl_class_definition> method to see what the generated Perl code looks like.
+
+=item B<perl_relationships_definition [PARAMS]>
+
+Auto-initialize the relationships (if necessary), then return the Perl source code that is equivalent to the auto-initialization.  PARAMS are optional name/value pairs that may include the following:
+
+=over 4
+
+=item * braces STYLE
+
+The brace style to use in the generated Perl code.  STYLE must be either "k&r" or "bsd".  The default value is determined by the return value of the L<default_perl_braces|/default_perl_braces> class method.
+
+=item * indent INT
+
+The integer number of spaces to use for each level of indenting in the generated Perl code.  The default value is determined by the return value of the L<default_perl_indent|/default_perl_indent> class method.
+
+=back
 
 See the larger example in the documentation for the L<perl_class_definition|/perl_class_definition> method to see what the generated Perl code looks like.
 

@@ -532,7 +532,7 @@ sub perl_columns_definition
 {
   my($self, %args) = @_;
 
-  $self->auto_init_columns;
+  $self->auto_init_columns  unless($self->was_auto_initialized);
 
   my $indent = defined $args{'indent'} ? $args{'indent'} : $self->default_perl_indent;
   my $braces = defined $args{'braces'} ? $args{'braces'} : $self->default_perl_braces;
@@ -599,7 +599,7 @@ sub perl_foreign_keys_definition
 {
   my($self, %args) = @_;
 
-  $self->auto_init_foreign_keys;
+  $self->auto_init_foreign_keys  unless($self->was_auto_initialized);
 
   my $indent = defined $args{'indent'} ? $args{'indent'} : $self->default_perl_indent;
   my $braces = defined $args{'braces'} ? $args{'braces'} : $self->default_perl_braces;
@@ -650,7 +650,7 @@ sub perl_relationships_definition
 {
   my($self, %args) = @_;
 
-  $self->auto_init_relationships;
+  $self->auto_init_relationships  unless($self->was_auto_initialized);
 
   my $indent = defined $args{'indent'} ? $args{'indent'} : $self->default_perl_indent;
   my $braces = defined $args{'braces'} ? $args{'braces'} : $self->default_perl_braces;
@@ -684,7 +684,6 @@ sub perl_relationships_definition
   foreach my $rel ($self->relationships)
   {
     next  if($rel->can('foreign_key') && $rel->foreign_key);
-$DB::single = 1;
     push(@rel_defs, $rel->perl_hash_definition(indent => $indent, braces => $braces));
   }
 
@@ -703,7 +702,7 @@ sub perl_unique_keys_definition
 {
   my($self, %args) = @_;
 
-  $self->auto_init_unique_keys;
+  $self->auto_init_unique_keys  unless($self->was_auto_initialized);
 
   my $style  = defined $args{'style'}  ? $args{'style'}  : $self->default_perl_unique_key_style;
   my $indent = defined $args{'indent'} ? $args{'indent'} : $self->default_perl_indent;
@@ -776,7 +775,7 @@ sub perl_primary_key_columns_definition
 {
   my($self, %args) = @_;
 
-  $self->auto_init_primary_key_columns;
+  $self->auto_init_primary_key_columns  unless($self->was_auto_initialized);
 
   my @pk_cols = $self->primary_key->column_names;
 
@@ -811,7 +810,8 @@ __PACKAGE__->meta->table('@{[ $self->table ]}');
 @{[join("\n", grep { /\S/ } $self->perl_columns_definition(%args),
                             $self->perl_primary_key_columns_definition(%args),
                             $self->perl_unique_keys_definition(%args),
-                            $self->perl_foreign_keys_definition(%args))]}
+                            $self->perl_foreign_keys_definition(%args),
+                            $self->perl_relationships_definition(%args))]}
 __PACKAGE__->meta->initialize;
 
 1;
@@ -1162,6 +1162,8 @@ sub auto_initialize
     my $meta_class = ref $self;
     $meta_class->clear_all_dbs;
   }
+
+  $self->was_auto_initialized(1);
 
   return;
 }
