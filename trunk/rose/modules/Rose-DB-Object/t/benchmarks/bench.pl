@@ -10,7 +10,7 @@ use lib "$Bin/../../lib";
 use lib "$Bin/lib";
 
 use Rose::DB;
-
+use Rose::DB::Object;
 use Rose::DB::Object::Util qw(:all);
 
 use Benchmark qw(timethese cmpthese); # :hireswallclock
@@ -55,6 +55,7 @@ GetOptions(\%Opt, 'help',
                   'compare-to|cmp-to=s',
                   'time',
                   'compare',
+                  'no-versions',
                   'time-and-compare',
                   'simple',
                   'complex',
@@ -100,6 +101,28 @@ MAIN:
 ##
 
 EOF
+
+    unless($Opt{'no-versions'})
+    {
+      my $len = 0;
+
+      foreach my $class ('Rose::DB::Object', @Cmp_To)
+      {
+        $len = length($class)  if(length($class) > $len);
+      }
+
+      printf("%-*s  Version\n", $len, 'Class');
+      printf("%-*s  -------\n", $len, '-' x $len);
+
+      foreach my $class (sort(('Rose::DB::Object', @Cmp_To)))
+      {
+        no strict 'refs';
+        printf("%-*s  " . ${"${class}::VERSION"} . "\n", $len, $class);
+      }
+
+      print "\n";
+    }
+
     Rose::DB->default_type($db_type);
 
     require MyTest::RDBO::Simple::Code;

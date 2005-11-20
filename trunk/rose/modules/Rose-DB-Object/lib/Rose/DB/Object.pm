@@ -43,12 +43,16 @@ sub meta_class { 'Rose::DB::Object::Metadata' }
 
 sub meta
 {  
-  if(ref $_[0])
+  my($self) = shift;
+
+  if(ref $self)
   {
-    return $_[0]->{META_ATTR_NAME()} ||= $_[0]->meta_class->for_class(ref $_[0]);
+    return $self->{META_ATTR_NAME()} ||= $self->meta_class->for_class(ref $self);
   }
 
-  return $_[0]->meta_class->for_class($_[0]);
+  return $Rose::DB::Object::Metadata::Objects{$self} || 
+         $self->meta_class->for_class($self);
+  return $self->meta_class->for_class($self);
 }
 
 #
@@ -69,7 +73,8 @@ sub db
     return $self->{'db'};
   }
 
-  return $self->{'db'} ||= $self->meta->init_with_db($self->_init_db);
+  # return $self->{'db'} ||= $self->meta->init_with_db($self->_init_db);
+  return $self->{'db'} ||= $self->_init_db;
 }
 
 sub init_db { Rose::DB->new() }
