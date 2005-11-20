@@ -112,6 +112,8 @@ t/db-object-foreign-key-auto.t
 t/db-object-foreign-key.t
 t/db-object-loader.t
 t/db-object-loader-2.t
+t/db-object-loader-3.t
+t/db-object-loader-4.t
 t/db-object-manager-bulk-ops.t
 t/db-object-manager.t
 t/db-object-mapper.t

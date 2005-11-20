@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (4 * 10);
+use Test::More tests => 1 + (4 * 12);
 
 BEGIN 
 {
@@ -25,7 +25,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
 {
   SKIP:
   {
-    skip("$db_type tests", 10)  unless($Have{$db_type});
+    skip("$db_type tests", 12)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -53,6 +53,14 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   ##
 
   my $p = $product_class->new(name => "Sled $i");
+
+  is($p->db->class, 'Rose::DB', "db 1 - $db_type");
+  
+  OBJECT_CLASS:
+  {
+    no strict 'refs';
+    ok(${"${product_class}::ISA"}[0] =~ /^${class_prefix}::DB::Object::Base\d+$/, "base class 1 - $db_type");
+  }
 
   $p->vendor(name => "Acme $i");
 

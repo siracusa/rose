@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (4 * 16);
+use Test::More tests => 1 + (4 * 12);
 
 BEGIN 
 {
@@ -12,22 +12,8 @@ BEGIN
 
 our %Have;
 
-our @Tables = qw(vendors products prices colors product_color_map);
+our @Tables = qw(vendors products prices colors products_colors);
 our $Include_Tables = join('|', @Tables);
-
-SETUP:
-{
-  package My::DB;
-  our @ISA = qw(Rose::DB);
-  
-  package My::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
-  sub foo_bar { 123 }
-  
-  package MyWeirdClass;
-  our @ISA = qw(Rose::Object);
-  sub baz { 456 }
-}
 
 #
 # Tests
@@ -39,24 +25,28 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
 {
   SKIP:
   {
-    skip("$db_type tests", 16)  unless($Have{$db_type});
+    skip("$db_type tests", 12)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
 
   $i++;
 
-  My::DB->default_type($db_type);
+  Rose::DB->default_type($db_type);
   Rose::DB::Object::Metadata->unregister_all_classes;
 
   my $class_prefix = ucfirst($db_type eq 'pg_with_schema' ? 'pgws' : $db_type);
 
   #$Rose::DB::Object::Metadata::Debug = 1;
 
+  my $db = Rose::DB->new;
+
   my $loader = 
     Rose::DB::Object::Loader->new(
-      db           => My::DB->new,
-      base_classes => [ qw(My::DB::Object MyWeirdClass) ],
+      db_dsn       => $db->dsn,
+      db_username  => $db->username,
+      db_password  => $db->password,
+      db_options   => scalar $db->connect_options,
       class_prefix => $class_prefix);
   
   my @classes = $loader->make_classes(include_tables => $Include_Tables);
@@ -69,22 +59,6 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
 
   my $p = $product_class->new(name => "Sled $i");
 
-  is($p->db->class, 'My::DB', "db 1 - $db_type");
-
-  ok($p->isa('My::DB::Object'), "base class 1 - $db_type");
-  ok($p->isa('MyWeirdClass'), "base class 2 - $db_type");
-  is($p->foo_bar, 123, "foo_bar 1 - $db_type");
-  is($p->baz, 456, "baz 1 - $db_type");
-
-  if($db_type eq 'pg_with_schema')
-  {
-    is($p->db->schema, lc 'Rose_db_object_private', "schema - $db_type");
-  }
-  else
-  {
-    ok(1, "schema - $db_type");
-  }
-
   $p->vendor(name => "Acme $i");
 
   $p->prices({ price => 1.23, region => 'US' },
@@ -96,9 +70,17 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   $p->save;
   
   $p = $product_class->new(id => $p->id)->load;
+
+  ok($p->db->class =~ /^${class_prefix}::DB::Base\d+$/, "db 1 - $db_type");
+  
+  OBJECT_CLASS:
+  {
+    no strict 'refs';
+    ok(${"${product_class}::ISA"}[0] =~ /^${class_prefix}::DB::Object::Base\d+$/, "base class 1 - $db_type");
+  }
+
   is($p->vendor->name, "Acme $i", "vendor 1 - $db_type");
 
-  
   my @prices = sort { $a->price <=> $b->price } $p->prices;
   
   is(scalar @prices, 2, "prices 1 - $db_type");
@@ -117,7 +99,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   is(ref $prods, 'ARRAY', "get_products 1 - $db_type");
   is(@$prods, 1, "get_products 2 - $db_type");
   is($prods->[0]->id, $p->id, "get_products 3 - $db_type");
-  
+
   #$DB::single = 1;
   #$Rose::DB::Object::Debug = 1;
 }
@@ -149,13 +131,13 @@ BEGIN
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
 
-      $dbh->do('DROP TABLE product_color_map CASCADE');
+      $dbh->do('DROP TABLE products_colors CASCADE');
       $dbh->do('DROP TABLE colors CASCADE');
       $dbh->do('DROP TABLE prices CASCADE');
       $dbh->do('DROP TABLE products CASCADE');
       $dbh->do('DROP TABLE vendors CASCADE');
     
-      $dbh->do('DROP TABLE Rose_db_object_private.product_color_map CASCADE');
+      $dbh->do('DROP TABLE Rose_db_object_private.products_colors CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.colors CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.prices CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.products CASCADE');
@@ -217,7 +199,7 @@ CREATE TABLE colors
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE product_color_map
+CREATE TABLE products_colors
 (
   product_id  INT NOT NULL REFERENCES products (id),
   color_id    INT NOT NULL REFERENCES colors (id),
@@ -278,7 +260,7 @@ CREATE TABLE Rose_db_object_private.colors
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE Rose_db_object_private.product_color_map
+CREATE TABLE Rose_db_object_private.products_colors
 (
   product_id  INT NOT NULL REFERENCES products (id),
   color_id    INT NOT NULL REFERENCES colors (id),
@@ -308,7 +290,7 @@ EOF
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
 
-      $dbh->do('DROP TABLE product_color_map CASCADE');
+      $dbh->do('DROP TABLE products_colors CASCADE');
       $dbh->do('DROP TABLE colors CASCADE');
       $dbh->do('DROP TABLE prices CASCADE');
       $dbh->do('DROP TABLE products CASCADE');
@@ -396,7 +378,7 @@ TYPE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE product_color_map
+CREATE TABLE products_colors
 (
   product_id  INT NOT NULL,
   color_id    INT NOT NULL,
@@ -463,13 +445,13 @@ END
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE product_color_map CASCADE');
+    $dbh->do('DROP TABLE products_colors CASCADE');
     $dbh->do('DROP TABLE colors CASCADE');
     $dbh->do('DROP TABLE prices CASCADE');
     $dbh->do('DROP TABLE products CASCADE');
     $dbh->do('DROP TABLE vendors CASCADE');
 
-    $dbh->do('DROP TABLE Rose_db_object_private.product_color_map CASCADE');
+    $dbh->do('DROP TABLE Rose_db_object_private.products_colors CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_private.colors CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_private.prices CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_private.products CASCADE');
@@ -486,7 +468,7 @@ END
     my $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE product_color_map CASCADE');
+    $dbh->do('DROP TABLE products_colors CASCADE');
     $dbh->do('DROP TABLE colors CASCADE');
     $dbh->do('DROP TABLE prices CASCADE');
     $dbh->do('DROP TABLE products CASCADE');

@@ -46,16 +46,19 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
 
   $i++;
 
-  My::DB->default_type($db_type);
+  Rose::DB->default_type($db_type);
   Rose::DB::Object::Metadata->unregister_all_classes;
 
   my $class_prefix = ucfirst($db_type eq 'pg_with_schema' ? 'pgws' : $db_type);
 
   #$Rose::DB::Object::Metadata::Debug = 1;
 
+  my $db = My::DB->new;
+
   my $loader = 
     Rose::DB::Object::Loader->new(
-      db           => My::DB->new,
+      db_dsn       => $db->dsn,
+      db_schema    => $db->schema,
       base_classes => [ qw(My::DB::Object MyWeirdClass) ],
       class_prefix => $class_prefix);
   
@@ -69,7 +72,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
 
   my $p = $product_class->new(name => "Sled $i");
 
-  is($p->db->class, 'My::DB', "db 1 - $db_type");
+  ok($p->db->class =~ /^${class_prefix}::DB::Base\d+$/, "db 1 - $db_type");
 
   ok($p->isa('My::DB::Object'), "base class 1 - $db_type");
   ok($p->isa('MyWeirdClass'), "base class 2 - $db_type");
@@ -117,7 +120,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   is(ref $prods, 'ARRAY', "get_products 1 - $db_type");
   is(@$prods, 1, "get_products 2 - $db_type");
   is($prods->[0]->id, $p->id, "get_products 3 - $db_type");
-  
+
   #$DB::single = 1;
   #$Rose::DB::Object::Debug = 1;
 }
