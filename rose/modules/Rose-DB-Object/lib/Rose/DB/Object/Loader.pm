@@ -369,6 +369,8 @@ sub make_classes
     }
   }
 
+  $classes[0]->meta_class->clear_all_dbs  if(@classes);
+
   return wantarray ? @classes : \@classes;
 }
 
@@ -378,7 +380,7 @@ __END__
 
 =head1 NAME
 
-Rose::DB::Object::Loader - Automatically create Rose::DB::Object subclasses for each table in a database.
+Rose::DB::Object::Loader - Automatically create Rose::DB::Object subclasses for all the tables in a database.
 
 =head1 SYNOPSIS
 
@@ -439,7 +441,7 @@ To start, make a L<Rose::DB::Object::Loader> object, specifying the database con
 
   $loader = 
     Rose::DB::Object::Loader->new(
-      db_dsn       => 'dbi:Pg:dbname=test;host=localhost',
+      db_dsn       => 'dbi:Pg:dbname=mydb;host=localhost',
       db_username  => 'someuser',
       db_password  => 'mysecret',
       db_options   => { AutoCommit => 1, ChopBlanks => 1 },
@@ -449,7 +451,7 @@ It's even easier to specify the database information if you've set up L<Rose::DB
 
   $loader = 
     Rose::DB::Object::Loader->new(
-      dbn          => My::Corp::DB->new('main'),
+      db           => My::Corp::DB->new('main'),
       class_prefix => 'My::Corp');
 
 Finally, automatically create L<Rose::DB::Object> subclasses for all the tables in the database.  All it takes is one method call.
@@ -483,6 +485,8 @@ Here's what you get for your effort.
 
   # US: 1.23, UK: 4.56
   print join(', ', map { $_->region . ': ' . $_->price } $p->prices);
+
+See the L<Rose::DB::Object> and L<Rose::DB::Object::Manager> documentation for learn more about the features these classes provide.
 
 The contents of the database now look like this.
 
@@ -521,13 +525,13 @@ The contents of the database now look like this.
 
 =head1 DESCRIPTION
 
-L<Rose::DB::Object::Loader> will automatically create L<Rose::DB::Object> subclasses for each table in a database.  It will configure column data types, primary keys, unique keys, and foreign keys, and can discover and set up inter-table relationships of L<all types|Rose::DB::Object::Metadata/relationship_type_classes>.  It uses L<Rose::DB::Object>'s L<auto-initialization|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> capabilities to do all of this.
+L<Rose::DB::Object::Loader> will automatically create L<Rose::DB::Object> subclasses for all the tables in a database.  It will configure column data types, default values, primary keys, unique keys, and foreign keys.  It can also discover and set up inter-table L<relationships|Rose::DB::Object::Metadata/relationship_type_classes>.  It uses L<Rose::DB::Object>'s L<auto-initialization|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> capabilities to do all of this.
 
 To do its work, the loader needs to know how to connect to the database.  This information can be provided in several ways.  The recommended practice is to set up L<Rose::DB> according to the instructions in the L<Rose::DB::Tutorial>, and then pass a L<Rose::DB>-derived object or class name to the loader.  The loader will also accept traditional L<DBI>-style connection information: DSN, username, password, etc.
 
-Once the loader object is configures, the L<make_classes|/make_classes> method does all the work.  It takes a few options specifying which tables to make classes for, whether or not to make L<manager|Rose::DB::Object::Manager> classes for each table, and so on.  The L<convention manager|/convention_manager> is used to convert table names to class names, generate foreign key and relationship method names, and so on.  The result of this process is a suite of L<Rose::DB::Object> subclasses ready for use.
+Once the loader object is configured, the L<make_classes|/make_classes> method does all the work.  It takes a few options specifying which tables to make classes for, whether or not to make L<manager|Rose::DB::Object::Manager> classes for each table, and a few other L<options|/make_classes>.  The L<convention manager|/convention_manager> is used to convert table names to class names, generate foreign key and relationship method names, and so on.  The result of this process is a suite of L<Rose::DB::Object> (and L<Rose::DB::Object::Manager>) subclasses ready for use.
 
-L<Rose::DB::Object> inherits from, and follows the conventions of, L<Rose::Object>.  See the L<Rose::Object> documentation for more information.
+L<Rose::DB::Object::Loader> inherits from, and follows the conventions of, L<Rose::Object>.  See the L<Rose::Object> documentation for more information.
 
 =head1 CONSTRUCTOR
 
@@ -551,11 +555,11 @@ This is an alias for the L<base_classes|/base_classes> method.
 
 Get or set the list of base classes to use for the L<Rose::DB::Object> subclasses created by the L<make_classes|/make_classes> method.  The argument may be a class name or a reference to an array of class names.  At least one of the classes must inherit from L<Rose::DB::Object>.
 
-Returns a list (in list context) or reference to an array (in scalar context) of  class names.  Defaults to a dynamically-generated L<Rose::DB::Object> subclass name.
+Returns a list (in list context) or reference to an array (in scalar context) of base class names.  Defaults to a dynamically-generated L<Rose::DB::Object> subclass name.
 
 =item B<class_prefix [PREFIX]>
 
-Get or set the prefix for all class names created by the L<make_classes|/make_classes> method.  If PREFIX doesn't end in "::", it will be added automatically.
+Get or set the prefix affixed to all class names created by the L<make_classes|/make_classes> method.  If PREFIX doesn't end in "::", it will be added automatically.
 
 =item B<convention_manager [MANAGER]>
 
@@ -563,9 +567,9 @@ Get or set the L<Rose::DB::Object::ConventionManager>-derived object used during
 
 =item B<db [DB]>
 
-Get or set the L<Rose::DB>-derived object used to connect to the database.  This object will be used by the L<make_classes|/make_classes> method when extracting information from the database.  It will I<also> be used by each L<Rose::DB::Object> subclass to connect to the database.
+Get or set the L<Rose::DB>-derived object used to connect to the database.  This object will be used by the L<make_classes|/make_classes> method when extracting information from the database.  It will also be used as the prototype for the L<db|Rose::DB::Object/db> object used by each L<Rose::DB::Object> subclass to connect to the database.
 
-Setting this attribute also sets the L<db_class|/db_class> and L<db_dsn|/db_dsn> attributes, overwriting any previous values.
+Setting this attribute also sets the L<db_class|/db_class> and L<db_dsn|/db_dsn> attributes, overwriting any previously existing values.
 
 =item B<db_catalog [CATALOG]>
 
@@ -573,13 +577,13 @@ Get or set the L<catalog|Rose::DB/catalog> for the database connection.
 
 =item B<db_class [CLASS]>
 
-Get or set the name of the L<Rose::DB>-derived class used by the L<make_classes|/make_classes> method to construct a L<db|/db> object if one has not set been via the method of the same name.
+Get or set the name of the L<Rose::DB>-derived class used by the L<make_classes|/make_classes> method to construct a L<db|/db> object if one has not been set via the method of the same name.
 
 Setting this attribute sets the L<db|/db> attribute to undef unless its class is the same as CLASS.
 
 =item B<db_dsn [DSN]>
 
-Get or set the L<DBI>-style Data Source Name (DSN) used to connect to the database.  This object will be used by the L<make_classes|/make_classes> method when extracting information from the database.  The L<Rose::DB>-derived objects used by each L<Rose::DB::Object> subclass to connect to the database will be initialized with this DSN.
+Get or set the L<DBI>-style Data Source Name (DSN) used to connect to the database.  This will be used by the L<make_classes|/make_classes> method when extracting information from the database.  The L<Rose::DB>-derived objects used by each L<Rose::DB::Object> subclass to connect to the database will be initialized with this DSN.
 
 Setting this attribute immediately sets the L<dsn|Rose::DB/dsn> of the L<db|/db> attribute, if it is defined.
 
@@ -601,7 +605,7 @@ Get or set the L<username|Rose::DB/username> used to connect to the database.
 
 =item B<make_classes [PARAMS]>
 
-Automatically create Rose::DB::Object subclasses for each table in the database.  The process is controlled by the object attributes described above, combined with optional name/value pairs.  Valid PARAMS are:
+Automatically create L<Rose::DB::Object> and (optionally) L<Rose::DB::Object::Manager> subclasses for some or all of the tables in a database.  The process is controlled by the object attributes described above, combined with optional name/value pairs passed to this method.  Valid PARAMS are:
 
 =over 4
 
@@ -619,17 +623,17 @@ A reference to a subroutine that takes a single table name argument and returns 
 
 =item B<include_views BOOL>
 
-If true, database views will also be considered.
+If true, database views will also be processed.
 
 =item B<with_managers BOOL>
 
-If true, create L<Rose::DB::Object::Manager|Rose::DB::Object::Manager>-derived manager classes for each L<Rose::DB::Object> subclass.  This is the default.  Set it to false if you don't want manager classes to be created.
+If true, create L<Rose::DB::Object::Manager|Rose::DB::Object::Manager>-derived manager classes for each L<Rose::DB::Object> subclass.  This is the default.  Set it to false if you don't want manager classes to be created.  The L<Rose::DB::Object> subclass's L<metadata object|Rose::DB::Object::Metadata>'s L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> method will be used to create the manager class.  It will be passed the table name as an argument.
 
 =back
 
-Each L<Rose::DB::Object> will be created according to the "best practices" described in the L<Rose::DB::Object::Tutorial>.  If a L<base class|/base_classes> is not provided, one (with a dynamically generated name) will be created automatically.  The same goes for the  L<db|/db> object.  If one is not set, then a new (again, dynamically named) subclass of L<Rose::DB>, with its own L<private data source registry|Rose::DB/use_private_registry>, will be created automatically.
+Each L<Rose::DB::Object> subclass will be created according to the "best practices" described in the L<Rose::DB::Object::Tutorial>.  If a L<base class|/base_classes> is not provided, one (with a dynamically generated name) will be created automatically.  The same goes for the L<db|/db> object.  If one is not set, then a new (again, dynamically named) subclass of L<Rose::DB>, with its own L<private data source registry|Rose::DB/use_private_registry>, will be created automatically.
 
-This method will return a list (in list context) or a reference to an array (in scalar context) of the names of all the classes that were created.  (This list will include L<manager|Rose::DB::Object::Manager> class names as well, if any were created.)
+This method returns a list (in list context) or a reference to an array (in scalar context) of the names of all the classes that were created.  (This list will include L<manager|Rose::DB::Object::Manager> class names as well, if any were created.)
 
 =back
 
