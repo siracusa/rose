@@ -1609,6 +1609,10 @@ Returns the name of the L<DBI> statement handle attribute that contains the auto
 
 Given a L<DBI> statement handle, returns the value of the auto-generated unique key created during the last insert operation.  This value may be undefined if this feature is not supported by the current data source.
 
+=item B<list_tables>
+
+Returns a list (in list context) or reference to an array (in scalar context) of table in the database.  The current L<catalog|/catalog> and L<schema|/schema> are honored.
+
 =item B<quote_column_name NAME>
 
 Returns the column name NAME appropriately quoted for use in an SQL statement.  (Note that "appropriate" quoting may mean no quoting at all.)
