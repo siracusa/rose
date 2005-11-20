@@ -5,20 +5,16 @@ use strict;
 my $Iterations;
 
 BEGIN { $Iterations = 2 }
-use Test::More tests => 3 + (4 * 9 * $Iterations);
+use Test::More tests => 2 + (4 * 9 * $Iterations);
 
 BEGIN 
 {
   require 't/test-lib.pl';
   use_ok('Rose::DB::Object');
   use_ok('Rose::DB::Object::Manager');
-  use_ok('Rose::DateTime::Util');
 }
 
-use Rose::DB::Object::Util qw(column_value_formatted_key);
-use Rose::DateTime::Util qw(parse_date);
-
-our(%Have, $Did_Setup);
+our %Have;
 
 #
 # Setup

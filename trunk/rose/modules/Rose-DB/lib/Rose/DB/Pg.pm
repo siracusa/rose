@@ -309,6 +309,63 @@ sub parse_dbi_column_info_default
   return $string;
 }
 
+sub list_tables
+{
+  my($self) = shift;
+  
+  my @tables;
+
+  my $schema = $self->schema;
+  $schema = $self->default_implicit_schema  unless(defined $schema);
+
+  eval
+  {
+    my $dbh = $self->dbh or die $self->error;
+
+    local $dbh->{'RaiseError'} = 1;
+
+    my $sth = $dbh->table_info($self->catalog, $schema, '', 'TABLE',
+                               { noprefix => 1, pg_noprefix => 1 });
+
+    $sth->execute;
+    
+    while(my $table_info = $sth->fetchrow_hashref)
+    {
+      push(@tables, $table_info->{'TABLE_NAME'})
+    }
+  };
+
+  if($@)
+  {
+    Carp::croak "Could not last tables from ", $self->dsn, " - $@";
+  }
+
+  return wantarray ? @tables : \@tables;
+}
+
+# sub list_tables
+# {
+#   my($self) = shift;
+# 
+#   my @tables;
+# 
+#   my $schema = $self->schema;
+#   $schema = $db->default_implicit_schema  unless(defined $schema);
+#     
+#   if($DBD::Pg::VERSION >= 1.31) 
+#   {
+#     @tables = $self->dbh->tables($self->catalog, $schema, '', 'TABLE',
+#                               { noprefix => 1, pg_noprefix => 1 });
+#     }
+#     else 
+#     {
+#       @tables = $dbh->tables;
+#     }
+#   }
+# 
+#   return wantarray ? @tables : \@tables;
+# }
+
 1;
 
 __END__
