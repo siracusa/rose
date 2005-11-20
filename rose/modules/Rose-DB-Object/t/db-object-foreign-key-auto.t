@@ -284,7 +284,7 @@ package MyPgObject;
 
 use strict;
 
-use Rose::DB::Object
+use Rose::DB::Object;
 our \@ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
@@ -356,7 +356,7 @@ package MyPgObject;
 
 use strict;
 
-use Rose::DB::Object
+use Rose::DB::Object;
 our \@ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
@@ -649,7 +649,7 @@ package MyMySQLObject;
 
 use strict;
 
-use Rose::DB::Object
+use Rose::DB::Object;
 our \@ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
@@ -718,7 +718,7 @@ package MyMySQLObject;
 
 use strict;
 
-use Rose::DB::Object
+use Rose::DB::Object;
 our \@ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
@@ -1027,7 +1027,7 @@ package MyInformixObject;
 
 use strict;
 
-use Rose::DB::Object
+use Rose::DB::Object;
 our @ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
@@ -1097,7 +1097,7 @@ package MyInformixObject;
 
 use strict;
 
-use Rose::DB::Object
+use Rose::DB::Object;
 our @ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
