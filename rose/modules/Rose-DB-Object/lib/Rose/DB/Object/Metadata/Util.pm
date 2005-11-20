@@ -98,7 +98,7 @@ sub perl_arrayref
 
   if($braces eq 'bsd')
   {
-    $perl = "\n${sub_indent}[\n";
+    $perl = "\n${sub_indent}\[\n";
   }
   elsif($braces eq 'k&r')
   {
