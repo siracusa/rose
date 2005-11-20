@@ -272,7 +272,8 @@ sub make_classes
   
   foreach my $class (@base_classes)
   {
-    unless(UNIVERSAL::isa($class, 'Rose::DB::Object'))
+    no strict 'refs';
+    unless(UNIVERSAL::isa($class, 'Rose::DB::Object') || @{"${class}::ISA"})
     {
       eval "require $class";
       croak $@  if($@);
@@ -297,7 +298,7 @@ sub make_classes
   my $cm = $self->convention_manager or die "Missing convention manager";
 
   my @classes;
-$DB::single = 1;
+
   # Iterate over tables, creating RDBO classes for each
   foreach my $table ($db->list_tables)
   {
