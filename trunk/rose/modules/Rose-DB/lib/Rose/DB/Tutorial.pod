@@ -1,3 +1,7 @@
+=head1 NAME
+
+Rose::DB::Tutorial - Best practices for using Rose::DB
+
 =head1 INTRODUCTION
 
 This tutorial describes "best practices" for using L<Rose::DB> in the most robust, maintainable manner.  It does not replace the actual documentation, however.  The actual L<Rose::DB> documentation is still essential, and contains some good examples of its own.

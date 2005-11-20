@@ -1177,9 +1177,8 @@ Setting a new list of prices will delete all the old prices.  As with foreign ke
 
     $p->save; # database is modified here
 
-    # US: 1.23
-    # UK: 4.56
-    print join("\n", map { $_->region . ': ' . $_->price } $p->prices);
+    # US: 1.23, UK: 4.56
+    print join(', ', map { $_->region . ': ' . $_->price } $p->prices);
 
 =head3 Cascading delete
 

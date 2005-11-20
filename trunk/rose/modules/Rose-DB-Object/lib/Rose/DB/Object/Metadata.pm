@@ -3,6 +3,7 @@ package Rose::DB::Object::Metadata;
 use strict;
 
 use Carp();
+use Clone::PP qw(clone);
 
 use Rose::Object;
 our @ISA = qw(Rose::Object);
@@ -161,7 +162,35 @@ sub new
 
 sub for_class
 {
-  return $Objects{$_[1]} ||= $_[0]->new(class => $_[1]);
+  my($meta_class, $class) = (shift, shift);
+  return $Objects{$class}  if($Objects{$class});
+  
+  # Clone an ancestor meta object
+  foreach my $parent_class (__get_parents($class))
+  {
+    if($Objects{$parent_class})
+    {
+      my $meta = clone($Objects{$parent_class});
+      $meta->class($class);
+      return $Objects{$class} = $meta;
+    }
+  }
+
+  return $Objects{$class} = $meta_class->new(class => $class);
+}
+
+sub __get_parents
+{
+  my($class) = shift;
+  my @parents;
+
+  no strict 'refs';
+  foreach my $sub_class (@{"${class}::ISA"})
+  {
+    push(@parents, __get_parents($sub_class))
+  }
+
+  return @parents;
 }
 
 sub clear_all_dbs

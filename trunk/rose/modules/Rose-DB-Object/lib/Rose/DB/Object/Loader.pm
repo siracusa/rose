@@ -3,6 +3,7 @@ package Rose::DB::Object::Loader;
 use strict;
 
 use Carp;
+use Clone::PP qw(clone);
 
 use Rose::DB;
 use Rose::DB::Object;
@@ -19,6 +20,9 @@ use Rose::Object::MakeMethods::Generic
   [
     'db_catalog',
     'db_schema',
+    'db_username',
+    'db_password',
+    'db_options',
   ],
 
   boolean => 
@@ -29,11 +33,19 @@ use Rose::Object::MakeMethods::Generic
 
 my $Base_Class_Counter = 1;
 
-sub generate_base_class 
+sub generate_object_base_class_name
 {
   my($self) = shift;
 
-  return (($self->class_prefix . 'Base') || "Rose::DB::Object::Auto::Base") . 
+  return (($self->class_prefix . 'DB::Object::Base') || "Rose::DB::Object::LoaderAuto::Base") . 
+          $Base_Class_Counter++;
+}
+
+sub generate_db_base_class_name
+{
+  my($self) = shift;
+
+  return (($self->class_prefix . 'DB::Base') || "Rose::DB::LoaderAuto::Base") . 
           $Base_Class_Counter++;
 }
 
@@ -49,7 +61,7 @@ sub base_classes
     }
     
     # Make new base class
-    my $bc = $self->{'base_classes'} = [ $self->generate_base_class ];
+    my $bc = $self->{'base_classes'} = [ $self->generate_object_base_class_name ];
     
     $self->using_default_base_class(1);
 
@@ -143,21 +155,24 @@ sub db
   return $self->{'db'} = $db;
 }
 
-sub dn_dsn
+sub dbi_dsn
 {
   my($self) = shift;
   
-  return $self->{'dn_dsn'}  unless(@_);
+  return $self->{'dbi_dsn'}  unless(@_);
 
-  my $dn_dsn = shift;
+  my $dbi_dsn = shift;
   
   if(my $db = $self->db)
   {
-    $db->dn_dsn($dn_dsn);
+    $db->dbi_dsn($dbi_dsn);
   }
   
-  return $self->{'dn_dsn'} = $dn_dsn;
+  return $self->{'dbi_dsn'} = $dbi_dsn;
 }
+
+*dsn    = \&dbi_dsn;
+*db_dsn = \&dbi_dsn;
 
 sub db_class
 {
@@ -217,7 +232,7 @@ sub make_classes
 
   my $db = $self->db;
   
-  my $db_class = $db->class;
+  my $db_class = $db ? $db->class : undef;
 
   unless($db)
   {
@@ -238,12 +253,17 @@ sub make_classes
         # Make the class
         no strict 'refs';
         @{"${db_class}::ISA"} = qw(Rose::DB);
-        $db_class->use_private_registry;
+        $db_class->registry(clone(Rose::DB->registry));
       }
     }
     else
     {
-      $db_class = 'Rose::DB';
+      $db_class = $self->generate_db_base_class_name;
+
+      # Make a class
+      no strict 'refs';
+      @{"${db_class}::ISA"} = qw(Rose::DB);
+      $db_class->registry(clone(Rose::DB->registry));
     }
     
     $db = $db_class->new;
@@ -259,8 +279,14 @@ sub make_classes
   delete $db_args{'type'}    if($db_args{'type'} eq $db->default_type);
   delete $db_args{'domain'}  if($db_args{'domain'} eq $db->default_domain);
 
-  $db_args{'catalog'} = $self->db_catalog  if($self->db_catalog);
-  $db_args{'schema'}  = $self->db_schema   if($self->db_schema);
+  foreach my $attr (qw(db_catalog db_schema db_username db_password))
+  {
+    (my $db_attr = $attr) =~ s/^db_//;
+    no strict 'refs';
+    $db_args{$db_attr} = $self->$attr()  if(defined $self->$attr());
+  }
+
+  $db_args{'connect_options'} = $self->db_options  if(defined $self->db_options);
 
   my $init_db = sub { $db_class->new(%db_args) };
 
@@ -340,55 +366,158 @@ __END__
 
 =head1 NAME
 
-Rose::DB::Object::Iterator - Iterate over a series of Rose::DB::Objects.
+Rose::DB::Object::Loader - Automatically create Rose::DB::Object subclasses for each table in a database.
 
 =head1 SYNOPSIS
 
-    $iterator = Rose::DB::Object::Manager->get_objects_iterator(...);
+Sample database schema:
 
-    while($object = $iterator->next)
-    {
-      # do stuff with $object...
+  CREATE TABLE vendors
+  (
+    id    SERIAL NOT NULL PRIMARY KEY,
+    name  VARCHAR(255) NOT NULL,
+  
+    UNIQUE(name)
+  );
+  
+  CREATE TABLE products
+  (
+    id      SERIAL NOT NULL PRIMARY KEY,
+    name    VARCHAR(255) NOT NULL,
+    price   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  
+    vendor_id  INT REFERENCES vendors (id),
+  
+    status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
+              CHECK(status IN ('inactive', 'active', 'defunct')),
+  
+    date_created  TIMESTAMP NOT NULL DEFAULT NOW(),
+    release_date  TIMESTAMP,
+  
+    UNIQUE(name)
+  );
+  
+  CREATE TABLE prices
+  (
+    id          SERIAL NOT NULL PRIMARY KEY,
+    product_id  INT NOT NULL REFERENCES products (id),
+    region      CHAR(2) NOT NULL DEFAULT 'US',
+    price       DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  
+    UNIQUE(product_id, region)
+  );
+  
+  CREATE TABLE colors
+  (
+    id    SERIAL NOT NULL PRIMARY KEY,
+    name  VARCHAR(255) NOT NULL,
+  
+    UNIQUE(name)
+  );
+  
+  CREATE TABLE product_color_map
+  (
+    product_id  INT NOT NULL REFERENCES products (id),
+    color_id    INT NOT NULL REFERENCES colors (id),
+  
+    PRIMARY KEY(product_id, color_id)
+  );
 
-      if(...) # bail out early
-      {
-        $iterator->finish;
-        last;
-      }
-    }
+To start, make a L<Rose::DB::Object::Loader> object, specifying the database connection information and an optional class name prefix.
 
-    if($iterator->error)
-    {
-      print "There was an error: ", $iterator->error;
-    }
-    else
-    {
-      print "Total: ", $iterator->total;
-    }
+  $loader = 
+    Rose::DB::Object::Loader->new(
+      db_dsn       => 'dbi:Pg:dbname=test;host=localhost',
+      db_username  => 'someuser',
+      db_password  => 'mysecret',
+      db_options   => { AutoCommit => 1, ChopBlanks => 1 },
+      class_prefix => 'My::Corp');
+
+It's even easier to specify the database information if you've set up L<Rose::DB> (say, by following the instructions in L<Rose::DB::Tutorial>).  Just pass a L<Rose::DB>-derived object pointing to the database you're interested in.
+
+  $loader = 
+    Rose::DB::Object::Loader->new(
+      dbn          => My::Corp::DB->new('main'),
+      class_prefix => 'My::Corp');
+
+Finally, automatically create L<Rose::DB::Object> subclasses for all the tables in the database.  All it takes is one method call.
+
+  $loader->make_classes;
+
+Here's what you get for your effort.
+
+  My::Corp::Product->new(name => 'Sled');
+
+  $p->vendor(name => 'Acme');
+
+  $p->prices({ price => 1.23, region => 'US' },
+             { price => 4.56, region => 'UK' });
+
+  $p->colors({ name => 'red'   }, 
+             { name => 'green' });
+
+  $p->save;
+  
+  $products = 
+    My::Corp::Product::Manager->get_products_iterator(
+      query           => [ name => { like => '%le%' } ],
+      with_objects    => [ 'prices' ],
+      require_objects => [ 'vendor' ],
+      sort_by         => 'vendor.name');
+  
+  $p = $products->next;
+  
+  print $p->vendor->name; # Acme
+
+  # US: 1.23, UK: 4.56
+  print join(', ', map { $_->region . ': ' . $_->price } $p->prices);
+
+The contents of the database now look like this.
+
+  mydb=# select * from products;
+   id |  name  | price | vendor_id |  status  |       date_created
+  ----+--------+-------+-----------+----------+-------------------------
+    1 | Sled 3 |  0.00 |         1 | inactive | 2005-11-19 22:09:20.7988 
+  
+  
+  mydb=# select * from vendors;
+   id |  name  
+  ----+--------
+    1 | Acme 3
+  
+  
+  mydb=# select * from prices;
+   id | product_id | region | price 
+  ----+------------+--------+-------
+    1 |          1 | US     |  1.23
+    2 |          1 | UK     |  4.56
+  
+  
+  mydb=# select * from colors;
+   id | name  
+  ----+-------
+    1 | red
+    2 | green
+  
+  
+  mydb=# select * from product_color_map;
+   product_id | color_id 
+  ------------+----------
+            1 |        1
+            1 |        2
+
 
 =head1 DESCRIPTION
 
-C<Rose::DB::Object::Iterator> is an iterator object that traverses a database query, returning L<Rose::DB::Object>-derived objects for each row.  C<Rose::DB::Object::Iterator> objects are created by calls to the C<get_objects_iterator|Rose::DB::Object::Manager/get_objects_iterator> method of L<Rose::DB::Object::Manager> or one of its subclasses.
+
 
 =head1 OBJECT METHODS
 
 =over 4
 
-=item B<error>
+=item B<...>
 
-Returns the text message associated with the last error, or false if there was no error.
-
-=item B<finish>
-
-Prematurely stop the iteration (i.e., before iterating over all of the available objects).
-
-=item B<next>
-
-Return the next L<Rose::DB::Object>-derived object.  Returns false (but defined) if there are no more objects to iterate over, or undef if there was an error.
-
-=item B<total>
-
-Returns the total number of objects iterated over so far.
+...
 
 =back
 
