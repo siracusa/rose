@@ -294,7 +294,7 @@ sub load
     }
 
     # Was prepare_cached() but that can't be used across transactions
-    $sth = $dbh->prepare($sql, $meta->prepare_select_options);
+    $sth = $dbh->prepare($sql); #, $meta->prepare_select_options);
       
     $Debug && warn "$sql - bind params: ", join(', ', grep { defined } @key_values), "\n";
     $sth->execute(grep { defined } @key_values);
@@ -595,7 +595,7 @@ sub update
         warn "$sql - bind params: ", join(', ', @$bind, @key_values), "\n";
       }
 
-      $sth = $dbh->prepare($sql, $meta->prepare_update_options);
+      $sth = $dbh->prepare($sql); #, $meta->prepare_update_options);
       $sth->execute(@$bind, @key_values);
     }
     else
@@ -606,13 +606,13 @@ sub update
       #if($null_key)
       #{
       #  $sql = $meta->update_sql_with_null_key(\@key_columns, \@key_values, $db);
-      #  $sth = $dbh->prepare($sql, $meta->prepare_update_options);
+      #  $sth = $dbh->prepare($sql); #, $meta->prepare_update_options);
       #}
       #else
       #{
       #  $sql = $meta->update_sql($self, \@key_columns, $db);
       #  # Was prepare_cached() but that can't be used across transactions
-      #  $sth = $dbh->prepare($sql, $meta->prepare_update_options);
+      #  $sth = $dbh->prepare($sql); #, $meta->prepare_update_options);
       #}
       
       if($meta->has_lazy_columns)
@@ -620,7 +620,7 @@ sub update
         my $sql = $meta->update_sql($self, \@key_columns, $db);
 
         # Was prepare_cached() but that can't be used across transactions
-        my $sth = $dbh->prepare($sql, $meta->prepare_update_options);
+        my $sth = $dbh->prepare($sql); #, $meta->prepare_update_options);
   
         my %key = map { ($_ => 1) } @key_methods;
 
@@ -650,7 +650,7 @@ sub update
         my $sql = $meta->update_all_sql(\@key_columns, $db);
 
         # Was prepare_cached() but that can't be used across transactions
-        my $sth = $dbh->prepare($sql, $meta->prepare_update_options);
+        my $sth = $dbh->prepare($sql); #, $meta->prepare_update_options);
   
         my %key = map { ($_ => 1) } @key_methods;
 
@@ -744,7 +744,7 @@ sub insert
     local $self->{STATE_SAVING()} = 1;
     local $dbh->{'RaiseError'} = 1;
 
-    my $options = $meta->prepare_insert_options;
+    #my $options = $meta->prepare_insert_options;
 
     my $sth;
 
@@ -758,7 +758,7 @@ sub insert
         warn "$sql - bind params: ", join(', ', @$bind), "\n";
       }
 
-      $sth = $dbh->prepare($sql, $options);
+      $sth = $dbh->prepare($sql); #, $options);
       $sth->execute(@$bind);
     }
     else
@@ -766,7 +766,7 @@ sub insert
       my $column_names = $meta->column_names;
 
       # Was prepare_cached() but that can't be used across transactions
-      $sth = $dbh->prepare($meta->insert_sql($db), $options);
+      $sth = $dbh->prepare($meta->insert_sql($db)); #, $options);
 
       if($Debug)
       {
@@ -978,7 +978,7 @@ sub delete
       local $dbh->{'RaiseError'} = 1;
 
       # Was prepare_cached() but that can't be used across transactions
-      my $sth = $dbh->prepare($meta->delete_sql($db), $meta->prepare_delete_options);
+      my $sth = $dbh->prepare($meta->delete_sql($db)); #, $meta->prepare_delete_options);
 
       $Debug && warn $meta->delete_sql($db), " - bind params: ", join(', ', @pk_values), "\n";
       $sth->execute(@pk_values);
@@ -1058,7 +1058,7 @@ sub delete
       local $dbh->{'RaiseError'} = 1;
 
       # Was prepare_cached() but that can't be used across transactions
-      my $sth = $dbh->prepare($meta->delete_sql($db), $meta->prepare_delete_options);
+      my $sth = $dbh->prepare($meta->delete_sql($db)); #, $meta->prepare_delete_options);
 
       $Debug && warn $meta->delete_sql($db), " - bind params: ", join(', ', @pk_values), "\n";
       $sth->execute(@pk_values);
