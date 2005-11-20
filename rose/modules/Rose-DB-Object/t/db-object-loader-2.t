@@ -61,6 +61,12 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   
   my @classes = $loader->make_classes(include_tables => $Include_Tables);
 
+  #foreach my $class (@classes)
+  #{
+  #  next  unless($class->isa('Rose::DB::Object'));
+  #  print $class->meta->perl_class_definition, "\n";
+  #}
+
   my $product_class = $class_prefix . '::Product';
 
   ##

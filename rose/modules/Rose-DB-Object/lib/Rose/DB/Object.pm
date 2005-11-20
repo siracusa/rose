@@ -1426,6 +1426,8 @@ L<Rose::DB::Object::Manager> can be subclassed and used separately (the recommen
 
 L<Rose::DB::Object> can parse, coerce, inflate, and deflate column values on your behalf, providing the most convenient possible data representations on the Perl side of the fence, while allowing the programmer to completely forget about the ugly details of the data formats required by the database.  Default implementations are included for most common column types, and the framework is completely extensible.
 
+Finally, the L<Rose::DB::Object::Loader> can be used to automatically create a suite of L<Rose::DB::Object> and L<Rose::DB::Object::Manager> subclasses based on the contents of the database.
+
 =head2 Configuration
 
 Before L<Rose::DB::Object> can do any useful work, you must register at least one L<Rose::DB> data source.  By default, L<Rose::DB::Object> instantiates a L<Rose::DB> object by passing no arguments to its constructor.  (See the L<db|/db> method.)  If you register a L<Rose::DB> data source using the default type and domain, this will work fine.  Otherwise, you must override the L<meta|/meta> method in your L<Rose::DB::Object> subclass and have it return the appropriate L<Rose::DB>-derived object.

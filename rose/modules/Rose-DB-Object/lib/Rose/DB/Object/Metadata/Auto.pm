@@ -802,7 +802,7 @@ package $class;
 
 use strict;
 
-@{[join(";\n", map { "use $_" } @$isa)]}
+@{[join(";\n", map { "use $_" } @$isa)]};
 our \@ISA = qw(@$isa);
 
 __PACKAGE__->meta->table('@{[ $self->table ]}');
