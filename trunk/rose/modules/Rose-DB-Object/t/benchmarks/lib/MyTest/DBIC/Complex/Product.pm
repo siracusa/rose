@@ -13,16 +13,49 @@ __PACKAGE__->add_columns(qw(category_id date_created fk1 fk2 fk3 id last_modifie
 __PACKAGE__->set_primary_key('id');
 
 __PACKAGE__->inflate_column(date_created => {
-                   inflate => sub { $MyTest::DBIC::Base::DB->parse_datetime(shift) },
-                   deflate => sub { $MyTest::DBIC::Base::DB->format_datetime(shift) } });
+                   inflate => sub 
+                   {
+                     $MyTest::DBIC::Base::DB->parse_datetime($_[0]) 
+                   },
+                   deflate => sub 
+                   { 
+                     my $arg = shift;
+                     if(ref $arg eq 'SCALAR')
+                     {
+                       $arg = $MyTest::DBIC::Base::DB->parse_datetime($$arg);
+                     }
+                     $MyTest::DBIC::Base::DB->format_datetime($arg) 
+                   } });
 
 __PACKAGE__->inflate_column(last_modified => {
-                   inflate => sub { $MyTest::DBIC::Base::DB->parse_datetime(shift) },
-                   deflate => sub { $MyTest::DBIC::Base::DB->format_datetime(shift) } });
+                   inflate => sub 
+                   {
+                     $MyTest::DBIC::Base::DB->parse_datetime($_[0]) 
+                   },
+                   deflate => sub 
+                   { 
+                     my $arg = shift;
+                     if(ref $arg eq 'SCALAR')
+                     {
+                       $arg = $MyTest::DBIC::Base::DB->parse_datetime($$arg);
+                     }
+                     $MyTest::DBIC::Base::DB->format_datetime($arg) 
+                   } });
 
 __PACKAGE__->inflate_column(published => {
-                   inflate => sub { $MyTest::DBIC::Base::DB->parse_datetime(shift) },
-                   deflate => sub { $MyTest::DBIC::Base::DB->format_datetime(shift) } });
+                   inflate => sub 
+                   {
+                     $MyTest::DBIC::Base::DB->parse_datetime($_[0]) 
+                   },
+                   deflate => sub 
+                   { 
+                     my $arg = shift;
+                     if(ref $arg eq 'SCALAR')
+                     {
+                       $arg = $MyTest::DBIC::Base::DB->parse_datetime($$arg);
+                     }
+                     $MyTest::DBIC::Base::DB->format_datetime($arg) 
+                   } });
 
 __PACKAGE__->add_relationship('category_id', 'MyTest::DBIC::Complex::Category',
                               { 'foreign.id' => 'self.category_id' },
