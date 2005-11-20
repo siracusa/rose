@@ -1111,9 +1111,14 @@ TYPE            NAME
 ----            ----
 EOF
 
+      my $found = 0;
+
       foreach my $thing (@fks, @rels)
       {
         next  unless($thing->parent->class eq $class);
+
+        $found++;
+
         my $type = 
           $thing->isa('Rose::DB::Object::Metadata::Relationship') ? 'Relationship' :
           $thing->isa('Rose::DB::Object::Metadata::ForeignKey') ? 'Foreign Key' :
@@ -1122,7 +1127,7 @@ EOF
         $tmp_msg .= sprintf("%-15s %s\n", $type, $thing->name);
       }
 
-      $msg = "\n\n$tmp_msg\n"  if($tmp_msg);
+      $msg = "\n\n$tmp_msg\n"  if($tmp_msg && $found);
     }
   };
 

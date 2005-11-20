@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.032';
+our $VERSION = '0.50';
 
 our $Debug = 0;
 
@@ -106,7 +106,8 @@ use Rose::Object::MakeMethods::Generic
     'domain',
     'type',
     'date_handler',
-    'server_time_zone'
+    'server_time_zone',
+    'class',
   ],
 
   'array' => 
@@ -268,6 +269,8 @@ sub new
         $self = bless {}, $driver_class;
       }
     }
+    
+    $self->class($class);
   }
 
   $self->{'_origin_class'} = $class;
@@ -282,6 +285,24 @@ sub init
   my($self) = shift;
   $self->SUPER::init(@_);
   $self->init_db_info;
+}
+
+sub init_class 
+{
+  my($self) = shift;
+  
+  my $class = ref $self;
+
+  if($class =~ /^Rose::DB::/)
+  {
+    return 'Rose::DB';
+  }
+  elsif($class =~ /^((?:\w+::)*\w+)::__RoseDBPrivate__::/)
+  {
+    return $1;
+  }
+  
+  return $class;
 }
 
 # These have to "cheat" to get the right values by going through
@@ -993,6 +1014,36 @@ sub refine_dbi_column_info
 
 
 sub parse_dbi_column_info_default { $_[1] }
+
+sub list_tables
+{
+  my($self) = shift;
+  
+  my @tables;
+  
+  eval
+  {
+    my $dbh = $self->dbh or die $self->error;
+
+    local $dbh->{'RaiseError'} = 1;
+
+    my $sth = $dbh->table_info($self->catalog, $self->schema, '', 'TABLE');
+
+    $sth->execute;
+    
+    while(my $table_info = $sth->fetchrow_hashref)
+    {
+      push(@tables, $table_info->{'TABLE_NAME'})
+    }
+  };
+
+  if($@)
+  {
+    Carp::croak "Could not last tables from ", $self->dsn, " - $@";
+  }
+
+  return wantarray ? @tables : \@tables;
+}
 
 #
 # This is both a class and an object method

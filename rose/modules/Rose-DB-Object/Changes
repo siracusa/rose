@@ -1,6 +1,7 @@
 0.51 (11.19.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added auto-initialization of relationships.
+    * Added loader.
 
 0.50 (11.17.2005) - John Siracusa <siracusa@mindspring.com>
 

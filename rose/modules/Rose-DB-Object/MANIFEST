@@ -5,6 +5,7 @@ lib/Rose/DB/Object/Constants.pm
 lib/Rose/DB/Object/ConventionManager.pm
 lib/Rose/DB/Object/ConventionManager/Null.pm
 lib/Rose/DB/Object/Iterator.pm
+lib/Rose/DB/Object/Loader.pm
 lib/Rose/DB/Object/MakeMethods/Date.pm
 lib/Rose/DB/Object/MakeMethods/Generic.pm
 lib/Rose/DB/Object/MakeMethods/Pg.pm
@@ -109,11 +110,14 @@ t/db-object-cached.t
 t/db-object-convention.t
 t/db-object-foreign-key-auto.t
 t/db-object-foreign-key.t
+t/db-object-loader.t
 t/db-object-manager-bulk-ops.t
 t/db-object-manager.t
 t/db-object-mapper.t
 t/db-object-metadata.t
 t/db-object-relationship.t
+t/db-object-relationship-auto.t
+t/db-object-relationship-auto-2.t
 t/db-object-std-cached.t
 t/db-object-std.t
 t/db-object.t

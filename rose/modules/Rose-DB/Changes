@@ -1,3 +1,7 @@
+0.50 (11.19.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added list_tables() method.
+
 0.032 (11.09.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Driver names are now case-insensitive.
