@@ -72,14 +72,14 @@ foreach my $i (1 .. $Iterations)
   
       if($Setup_Class{$class}++)
       {
-        $class->meta->init_with_db(Rose::DB->new);
+        #$class->meta->init_with_db(Rose::DB->new);
       }
       else
       {   
         no strict 'refs';
         @{"${class}::ISA"} = qw(Rose::DB::Object);
         $class->meta->table($Tables{$class_root});
-        $class->meta->init_with_db(Rose::DB->new);
+        #$class->meta->init_with_db(Rose::DB->new);
         $class->meta->auto_initialize;
       }
     }
