@@ -128,7 +128,7 @@ sub class_prefix
 
   my $class_prefix = shift;
 
-  unless($class_prefix =~ /^(?:\w+::)*\w+$/)
+  unless($class_prefix =~ /^(?:\w+::)*\w+(?:::)?$/)
   {
     croak "Illegal class prefix: $class_prefix";
   }
