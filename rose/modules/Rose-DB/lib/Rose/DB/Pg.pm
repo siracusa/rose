@@ -311,8 +311,9 @@ sub parse_dbi_column_info_default
 
 sub list_tables
 {
-  my($self) = shift;
+  my($self, %args) = @_;
   
+  my $types = $args{'include_views'} ? "'TABLE','VIEW'" : 'TABLE';
   my @tables;
 
   my $schema = $self->schema;
@@ -324,7 +325,7 @@ sub list_tables
 
     local $dbh->{'RaiseError'} = 1;
 
-    my $sth = $dbh->table_info($self->catalog, $schema, '', 'TABLE',
+    my $sth = $dbh->table_info($self->catalog, $schema, '', $types,
                                { noprefix => 1, pg_noprefix => 1 });
 
     $sth->execute;
