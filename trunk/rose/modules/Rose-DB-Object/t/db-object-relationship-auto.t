@@ -482,18 +482,72 @@ EOF
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
-      $dbh->do('DROP TABLE Rose_db_object_test');
+
+      $dbh->do('DROP TABLE products_colors CASCADE');
+      $dbh->do('DROP TABLE colors CASCADE');
+      $dbh->do('DROP TABLE prices CASCADE');
+      $dbh->do('DROP TABLE products CASCADE');
+      $dbh->do('DROP TABLE vendors CASCADE');
     }
 
     $dbh->do(<<"EOF");
-CREATE TABLE Rose_db_object_test
+CREATE TABLE vendors
 (
-  id             INT AUTO_INCREMENT PRIMARY KEY,
-  name           VARCHAR(32) NOT NULL,
-  code           VARCHAR(32),
-  start          DATE DEFAULT '12/24/1980' NOT NULL,
-  ended          DATE,
-  date_created   DATETIME YEAR TO SECOND
+  id    SERIAL NOT NULL PRIMARY KEY,
+  name  VARCHAR(255) NOT NULL,
+
+  UNIQUE(name)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE products
+(
+  id      SERIAL NOT NULL PRIMARY KEY,
+  name    VARCHAR(255) NOT NULL,
+  price   DECIMAL(10,2) DEFAULT 0.00 NOT NULL,
+
+  vendor_id  INT REFERENCES vendors (id),
+
+  status  VARCHAR(128) DEFAULT 'inactive' NOT NULL
+            CHECK(status IN ('inactive', 'active', 'defunct')),
+
+  date_created  DATETIME YEAR TO SECOND,
+  release_date  DATETIME YEAR TO SECOND,
+  
+  UNIQUE(name)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE prices
+(
+  id          SERIAL NOT NULL PRIMARY KEY,
+  product_id  INT NOT NULL REFERENCES products (id),
+  region      CHAR(2) DEFAULT 'US' NOT NULL,
+  price       DECIMAL(10,2) DEFAULT 0.00 NOT NULL,
+
+  UNIQUE(product_id, region)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE colors
+(
+  id    SERIAL NOT NULL PRIMARY KEY,
+  name  VARCHAR(255) NOT NULL,
+
+  UNIQUE(name)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE products_colors
+(
+  product_id  INT NOT NULL REFERENCES products (id),
+  color_id    INT NOT NULL REFERENCES colors (id),
+
+  PRIMARY KEY(product_id, color_id)
 )
 EOF
 
@@ -550,7 +604,12 @@ END
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE Rose_db_object_test');
+    $dbh->do('DROP TABLE products_colors CASCADE');
+    $dbh->do('DROP TABLE colors CASCADE');
+    $dbh->do('DROP TABLE prices CASCADE');
+    $dbh->do('DROP TABLE products CASCADE');
+    $dbh->do('DROP TABLE vendors CASCADE');
+
 
     $dbh->disconnect;
   }
