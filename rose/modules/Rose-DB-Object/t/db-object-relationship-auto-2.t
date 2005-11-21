@@ -483,7 +483,7 @@ EOF
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
 
-      $dbh->do('DROP TABLE products_colors CASCADE');
+      $dbh->do('DROP TABLE product_color_map CASCADE');
       $dbh->do('DROP TABLE colors CASCADE');
       $dbh->do('DROP TABLE prices CASCADE');
       $dbh->do('DROP TABLE products CASCADE');
@@ -542,7 +542,7 @@ CREATE TABLE colors
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE products_colors
+CREATE TABLE product_color_map
 (
   product_id  INT NOT NULL REFERENCES products (id),
   color_id    INT NOT NULL REFERENCES colors (id),
@@ -604,7 +604,7 @@ END
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE products_colors CASCADE');
+    $dbh->do('DROP TABLE product_color_map CASCADE');
     $dbh->do('DROP TABLE colors CASCADE');
     $dbh->do('DROP TABLE prices CASCADE');
     $dbh->do('DROP TABLE products CASCADE');
