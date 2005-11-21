@@ -19,6 +19,10 @@ our $Include_Tables = join('|', @Tables);
 # Tests
 #
 
+# We'll need to clear the registry since we're using DSN instead
+our $real_registry  = Rose::DB->registry;
+our $empty_registry = Rose::DB::Registry->new;
+
 my $i = 1;
 
 foreach my $db_type (qw(mysql pg pg_with_schema informix))
@@ -32,14 +36,14 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
 
   $i++;
 
-  Rose::DB->default_type($db_type);
+  Rose::DB->registry($real_registry);
   Rose::DB::Object::Metadata->unregister_all_classes;
 
   my $class_prefix = ucfirst($db_type eq 'pg_with_schema' ? 'pgws' : $db_type);
 
   #$Rose::DB::Object::Metadata::Debug = 1;
 
-  my $db = Rose::DB->new;
+  my $db = Rose::DB->new($db_type);
 
   my $loader = 
     Rose::DB::Object::Loader->new(
@@ -48,7 +52,9 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
       db_password  => $db->password,
       db_options   => scalar $db->connect_options,
       class_prefix => $class_prefix);
-  
+
+  Rose::DB->registry($empty_registry);
+
   my @classes = $loader->make_classes(include_tables => $Include_Tables);
 
   my $product_class = $class_prefix . '::Product';
@@ -484,7 +490,6 @@ CREATE TABLE products_colors
 )
 EOF
 
-    $dbh->commit;
     $dbh->disconnect;
   }
 }
@@ -492,6 +497,8 @@ EOF
 END
 {
   # Delete test table
+
+  Rose::DB->registry($real_registry);
 
   if($Have{'pg'})
   {
