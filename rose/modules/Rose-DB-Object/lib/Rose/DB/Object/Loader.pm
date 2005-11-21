@@ -247,7 +247,7 @@ sub make_classes
   my $db_class = $db ? $db->class : undef;
 
   my $made_new_db_class = 0;
-
+$DB::single = 1;
   unless($db)
   {
     $db_class = $self->db_class;
