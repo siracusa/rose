@@ -428,6 +428,59 @@ sub format_limit_with_offset
   return @_ > 2 ? "SKIP $_[2] LIMIT $_[1]" : "FIRST $_[1]";
 }
 
+sub list_tables
+{
+  my($self, %args) = @_;
+
+  my @tables;
+  
+  eval
+  {
+    my $dbh = $self->dbh or die $self->error;
+
+    local $dbh->{'RaiseError'} = 1;
+    
+    my @table_info = $dbh->func('user', '_tables');
+    
+    if($args{'include_views'})
+    {
+      my @view_info = $dbh->func('view', '_tables');
+      push(@table_info, @view_info);
+    }
+
+    foreach my $item (@table_info)
+    {
+      # From DBD::Informix::Metadata:
+      #
+      # The owner name will be enclosed in double quotes; if it contains
+      # double quotes, those will be doubled up as required by SQL.  The
+      # table name will only be enclosed in double quotes if it is not a
+      # valid C identifier (meaning, it starts with an alphabetic
+      # character or underscore, and continues with alphanumeric
+      # characters or underscores).  If it is enclosed in double quotes,
+      # any embedded double quotes are doubled up.
+      #
+      # "jsiracusa                       ".test
+
+      if($item =~ /^(?: "(?:""|[^"]+)+" | [^".]+ ) \. (?: "((?:""|[^"]+)+)" | (\w+) )/x)
+      {
+        push(@tables, defined $1 ? $1 : $2);
+      }
+      else
+      {
+        Carp::carp "Could not parse table information: $item";
+      }
+    }
+  };
+
+  if($@)
+  {
+    Carp::croak "Could not last tables from ", $self->dsn, " - $@";
+  }
+
+  return wantarray ? @tables : \@tables;
+}
+
 1;
 
 __END__
