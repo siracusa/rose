@@ -1,3 +1,8 @@
+0.51 (11.21.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a limit-with-offset bug when connected to Informix 10+.
+    * Changes to support Rose::DB::Object 0.52
+
 0.50 (11.20.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added list_tables() method.

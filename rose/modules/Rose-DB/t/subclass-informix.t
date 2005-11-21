@@ -60,7 +60,7 @@ ok(ref $db && $db->isa('Rose::DB'), "new()");
 
 $db->init_db_info;
 
-if($db->dbh->{'ix_ProductVersion'} >= 950)
+if($db->dbh->{'ix_ProductVersion'} >= 1000)
 {
   ok($db->supports_limit_with_offset, 'supports_limit_with_offset');
 }
