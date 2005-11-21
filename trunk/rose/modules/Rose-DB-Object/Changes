@@ -1,3 +1,7 @@
+0.52 (11.21.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed bugs in loader when using a DSN instead of a db.
+
 0.51 (11.20.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added auto-initialization of relationships.

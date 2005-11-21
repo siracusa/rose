@@ -417,15 +417,15 @@ sub supports_limit_with_offset
 
   my $dbh = $self->dbh or return 0;
 
-  # "950" is what Informix version 10 returns
-  return $dbh->{'ix_ProductVersion'} >= 950 ? 1 : 0;
+  # "1000" is what Informix version 10 seems to return
+  return $dbh->{'ix_ProductVersion'} >= 1000 ? 1 : 0;
   return 0;
 }
 
 sub format_limit_with_offset
 {
   #my($self, $limit, $offset) = @_;
-  return @_ > 2 ? "SKIP $_[2] LIMIT $_[1]" : "FIRST $_[1]";
+  return @_ > 2 ? "SKIP $_[2] FIRST $_[1]" : "FIRST $_[1]";
 }
 
 sub list_tables

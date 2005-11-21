@@ -2,6 +2,7 @@ package Rose::DB::Object::Loader;
 
 use strict;
 
+use DBI;
 use Carp;
 use Clone::PP qw(clone);
 
@@ -12,13 +13,14 @@ use Rose::DB::Object::ConventionManager;
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.50';
+our $VERSION = '0.51';
 
 use Rose::Object::MakeMethods::Generic
 (
   scalar =>
   [
     'db_catalog',
+    'db_database',
     'db_schema',
     'db_username',
     'db_password',
@@ -244,6 +246,8 @@ sub make_classes
 
   my $db_class = $db ? $db->class : undef;
 
+  my $made_new_db_class = 0;
+
   unless($db)
   {
     $db_class = $self->db_class;
@@ -274,22 +278,27 @@ sub make_classes
       no strict 'refs';
       @{"${db_class}::ISA"} = qw(Rose::DB);
       $db_class->registry(clone(Rose::DB->registry));
-    }
 
-    $db = $db_class->new;
+      $made_new_db_class = 1;
+    }
   }
 
   # Create the init_db subroutine that will be used with the objects
-  my %db_args =
-  (
-    type   => $db->type,
-    domain => $db->domain,
-  );
+  my %db_args;
 
-  delete $db_args{'type'}    if($db_args{'type'} eq $db->default_type);
-  delete $db_args{'domain'}  if($db_args{'domain'} eq $db->default_domain);
+  if($db)
+  {
+    %db_args =
+    (
+      type   => $db->type,
+      domain => $db->domain,
+    );
 
-  foreach my $attr (qw(db_dsn db_catalog db_schema db_username db_password))
+    delete $db_args{'type'}    if($db_args{'type'} eq $db->default_type);
+    delete $db_args{'domain'}  if($db_args{'domain'} eq $db->default_domain);
+  }
+
+  foreach my $attr (qw(db_dsn db_catalog db_schema db_username db_password db_database))
   {
     (my $db_attr = $attr) =~ s/^db_//;
     no strict 'refs';
@@ -298,8 +307,52 @@ sub make_classes
 
   $db_args{'connect_options'} = $self->db_options  if(defined $self->db_options);
 
-  my $init_db = sub { $db_class->new(%db_args) };
+  my $init_db;
 
+  if($made_new_db_class)
+  {
+    if($db_args{'dsn'} && !$db_args{'driver'})
+    {
+      if(DBI->can('parse_dsn'))
+      {
+        $db_args{'driver'} = lc((DBI->parse_dsn($db_args{'dsn'}))[1]);
+      }
+      
+      unless($db_args{'driver'})
+      {
+        $db_args{'dsn'} =~ /^dbi:(\w+)/i or 
+          Carp::croak "Could not extract driver name from DSN: $db_args{'dsn'}";
+
+        $db_args{'driver'} = lc $1;
+      }
+    }
+
+    $db_class->register_db(domain => $db_class->default_domain,
+                           type   => $db_class->default_type,
+                           %db_args);
+
+    my $entry = 
+      $db_class->registry->entry(domain => $db_class->default_domain,
+                                 type   => $db_class->default_type);
+
+    unless($entry->database)
+    {
+      # Need appropriate db just for parsing
+      my $tmp_db = $db_class->new;
+$DB::single = 1;
+      my $database = $tmp_db->database_from_dsn($entry->dsn) or
+        Carp::croak "Could not extract database name from DSN: ", $entry->dsn;
+
+      $entry->database($database);
+    }
+
+    $init_db = sub { $db_class->new };
+  }
+  else
+  {
+    $init_db = sub { $db_class->new(%db_args) };
+  }
+$DB::single = 1;
   # Refresh the db
   $db = $init_db->();
 

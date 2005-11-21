@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.50';
+our $VERSION = '0.51';
 
 our $Debug = 0;
 
@@ -409,6 +409,43 @@ sub dsn
   }
 
   return $self->{'dsn'};
+}
+
+sub database_from_dsn
+{
+  my($self_or_class, $dsn) = @_;
+  
+  my($scheme, $driver, $attr_string, $attr_hash, $driver_dsn);
+
+  # x DBI->parse_dsn('dbi:mysql:database=test;host=localhost')
+  # 0  'dbi'
+  # 1  'mysql'
+  # 2  undef
+  # 3  undef
+  # 4  'database=test;host=localhost'
+
+  if(DBI->can('parse_dsn'))
+  {
+    ($scheme, $driver, $attr_string, $attr_hash, $driver_dsn) = 
+      DBI->parse_dsn($dsn);
+  }
+  
+  my $db = $attr_hash->{'dbname'} || $attr_hash->{'database'};
+
+  unless($db)
+  {
+    # Wing it...
+    unless($attr_string ||= $driver_dsn)
+    {
+      ($attr_string = $dsn) =~ s/^dbi:\w+://i;
+    }
+
+    $attr_string =~ /(?:dbname|database)=([^; ]+)|^([^; ]+)/i;
+
+    $db = $1 || $2;
+  }
+
+  return $db;
 }
 
 sub _parsed_dsn { }
