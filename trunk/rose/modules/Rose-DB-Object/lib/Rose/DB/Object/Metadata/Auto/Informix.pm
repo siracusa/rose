@@ -418,6 +418,8 @@ EOF
 
     foreach my $col_info (values %col_info)
     {
+      $db->refine_dbi_column_info($col_info);
+
       $columns{$col_info->{'COLUMN_NAME'}} = 
         $self->auto_generate_column($col_info->{'COLUMN_NAME'}, $col_info);
     }

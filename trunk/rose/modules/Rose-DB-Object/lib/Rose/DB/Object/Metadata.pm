@@ -3896,7 +3896,9 @@ Auto-initialize the entire metadata object.  This is a wrapper for the individua
   $meta->auto_init_relationships(...);
   $meta->initialize;
 
-PARAMS are optional name/value pairs.  If a C<replace_existing> parameter is passed with a true value, then the auto-generated columns, unique keys, foreign keys, and relationships entirely replace any existing columns, unique keys, foreign keys, and relationships, respectively.
+PARAMS are optional name/value pairs.  When applicable, these parameters are passed on to each of the "auto_init_*" methods.
+
+If a C<replace_existing> parameter is passed with a true value, then the auto-generated columns, unique keys, foreign keys, and relationships entirely replace any existing columns, unique keys, foreign keys, and relationships, respectively.
 
 If a C<stay_connected> parameter is passed with a true value, then any database connections retained by the metadata objects belonging to the various L<Rose::DB::Object>-derived classes participating in the auto-initialization process will remain connected until an explicit call to the L<clear_all_dbs|/clear_all_dbs> class method.
 

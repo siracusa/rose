@@ -229,6 +229,7 @@ sub make_classes
 
     $filter = sub 
     {
+      no warnings 'uninitialized';
       return 0  if((defined $include && !/$include/) ||
                    (defined $exclude && /$exclude/));
       return 1;
@@ -630,6 +631,12 @@ If true, database views will also be processed.
 If true, create L<Rose::DB::Object::Manager|Rose::DB::Object::Manager>-derived manager classes for each L<Rose::DB::Object> subclass.  This is the default.  Set it to false if you don't want manager classes to be created.  The L<Rose::DB::Object> subclass's L<metadata object|Rose::DB::Object::Metadata>'s L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> method will be used to create the manager class.  It will be passed the table name as an argument.
 
 =back
+
+Any remaining name/value parameters will be passed on to the call to L<auto_initialize|Rose::DB::Object::Metadata/auto_initialize> used to set up each class.  For example, to ask the loader not to create any L<relationships|Rose::DB::Object::Metadata/relationships>, pass the C<with_relationships> parameter with a false value.
+
+    $loader->make_classes(with_relationships => 0);
+
+This parameter will be passed on to the L<auto_initialize|Rose::DB::Object::Metadata/auto_initialize> method, which, in turn, will pass the parameter on to its own call to the L<auto_init_relationships|Rose::DB::Object::Metadata/auto_init_relationships> method.  See the L<Rose::DB::Object::Metadata> documentation for more information on these methods.
 
 Each L<Rose::DB::Object> subclass will be created according to the "best practices" described in the L<Rose::DB::Object::Tutorial>.  If a L<base class|/base_classes> is not provided, one (with a dynamically generated name) will be created automatically.  The same goes for the L<db|/db> object.  If one is not set, then a new (again, dynamically named) subclass of L<Rose::DB>, with its own L<private data source registry|Rose::DB/use_private_registry>, will be created automatically.
 
