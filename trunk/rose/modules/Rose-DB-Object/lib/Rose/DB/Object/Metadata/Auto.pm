@@ -54,7 +54,6 @@ __PACKAGE__->default_perl_indent(4);
 __PACKAGE__->default_perl_braces('k&r');
 __PACKAGE__->default_perl_unique_key_style('array');
 
-
 sub auto_generate_columns
 {
   my($self) = shift;
