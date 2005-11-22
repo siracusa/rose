@@ -247,7 +247,7 @@ sub make_classes
   my $db_class = $db ? $db->class : undef;
 
   my $made_new_db_class = 0;
-$DB::single = 1;
+
   unless($db)
   {
     $db_class = $self->db_class;
@@ -339,7 +339,7 @@ $DB::single = 1;
     {
       # Need appropriate db just for parsing
       my $tmp_db = $db_class->new;
-$DB::single = 1;
+
       my $database = $tmp_db->database_from_dsn($entry->dsn) or
         Carp::croak "Could not extract database name from DSN: ", $entry->dsn;
 
@@ -352,7 +352,7 @@ $DB::single = 1;
   {
     $init_db = sub { $db_class->new(%db_args) };
   }
-$DB::single = 1;
+
   # Refresh the db
   $db = $init_db->();
 
