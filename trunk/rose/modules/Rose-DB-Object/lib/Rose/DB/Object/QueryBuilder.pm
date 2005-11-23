@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.052';
+our $VERSION = '0.54';
 
 our $Debug = 0;
 
@@ -45,6 +45,7 @@ sub build_select
 
   my $dbh         = $args{'dbh'};
   my $tables      = $args{'tables'} || Carp::croak "Missing 'tables' argument";
+  my $tables_sql  = $args{'tables_sql'} || $tables;
   my $logic       = delete $args{'logic'} || 'AND';
   my $columns     = $args{'columns'};  
   my $query_arg   = delete $args{'query'};
@@ -156,7 +157,7 @@ sub build_select
   my $multi_table = @$tables > 1 ? 1 : 0;
   my $table_num = 1;
 
-  my %proto; # prototype objects used for formatting values
+  my($db, %proto); # db object and prototype objects used for formatting values
 
   foreach my $table (@$tables)
   {
@@ -164,7 +165,7 @@ sub build_select
 
     next  unless($columns->{$table});
 
-    my($classes, $meta, $db, $obj_class, $obj_meta);
+    my($classes, $meta, $obj_class, $obj_meta);
 
     unless($query_is_sql)
     {
@@ -223,7 +224,8 @@ sub build_select
       unless($query_only_columns)
       {
         push(@select_columns, $multi_table ? 
-             "$short_column AS ${table_alias}_$column" : $column);
+             "$short_column AS ${table_alias}_$column" : 
+             $db ? $db->quote_column_name($column) : $column);
       }
 
       foreach my $column_arg (grep { exists $query{$_} } map { ($_, "!$_") } 
@@ -275,7 +277,8 @@ sub build_select
             }
           }
 
-          my $sql_column = $multi_table ? $short_column : $column;
+          my $sql_column = $multi_table ? $short_column :
+            $db ? $db->quote_column_name($column) : $column;
 
           if(ref($val))
           {
@@ -328,7 +331,7 @@ sub build_select
 
   if(!$where_only)
   {
-    my $tables_sql;
+    my $from_tables_sql;
 
     # XXX: Undocumented "joins" parameter is an array indexed by table
     # alias number.  Each value is a hashref that contains a key 'type'
@@ -348,13 +351,13 @@ sub build_select
         # Main table gets treated specially
         if($i == 1)
         {
-          $primary_table = "  $table t$i";
+          $primary_table = "  $tables_sql->[$i - 1] t$i";
           $i++;
           next;
         }
         elsif(!$joins->[$i])
         {
-          push(@normal_tables, "  $table t$i");
+          push(@normal_tables, "  $tables_sql->[$i - 1] t$i");
           $i++;
           next;
         }
@@ -366,27 +369,29 @@ sub build_select
           unless($joins->[$i]{'conditions'});
 
         push(@joined_tables, 
-             "  $joins->[$i]{'type'} $table t$i ON(" .
+             "  $joins->[$i]{'type'} $tables_sql->[$i - 1] t$i ON(" .
              join(' AND ', @{$joins->[$i]{'conditions'}}) . ")");
 
         $i++;
       }
 
       # Primary table first, then explicit joins, then implicit inner joins
-      $tables_sql = join("\n", $primary_table, @joined_tables) .
-                    (@normal_tables ? ",\n" . join(",\n", @normal_tables) : '');
+      $from_tables_sql =
+        join("\n", $primary_table, @joined_tables) .
+             (@normal_tables ? ",\n" . join(",\n", @normal_tables) : '');
     }
     else
     {
       my $i = 0;
-      $tables_sql = $multi_table ?
-        join(",\n", map { $i++; "  $_ t$i" } @$tables) :
-        "  $tables->[0]";    
+
+      $from_tables_sql = $multi_table ?
+        join(",\n", map { $i++; "  $_ t$i" } @$tables_sql) :
+        "  $tables_sql->[0]";
     }
 
     my $prefix_limit = (defined $limit && $use_prefix_limit) ? "$limit " : '';
     $select ||= join(",\n", map { "  $_" } @select_columns);
-    $qs = "SELECT $prefix_limit$distinct\n$select\nFROM\n$tables_sql\n";
+    $qs = "SELECT $prefix_limit$distinct\n$select\nFROM\n$from_tables_sql\n";
   }
 
   if($where)

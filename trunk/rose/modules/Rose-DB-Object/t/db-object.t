@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 271;
+use Test::More tests => 273;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 136)  unless($HAVE_PG);
+  skip("Postgres tests", 138)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -44,6 +44,9 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $o->save_col(7);
 
   ok($o->save, "save() 1 - $db_type");
+
+  is($o->meta->primary_key->sequence_name, 'rose_db_object_test_id_seq', 
+     "pk sequence name - $db_type");
 
   ok(is_in_db($o), "is_in_db - $db_type");
 

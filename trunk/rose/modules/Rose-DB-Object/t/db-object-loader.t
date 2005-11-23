@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (4 * 12);
+use Test::More tests => 1 + (4 * 14) + 3;
 
 BEGIN 
 {
@@ -15,6 +15,8 @@ our %Have;
 our @Tables = qw(vendors products prices colors products_colors);
 our $Include_Tables = join('|', @Tables);
 
+our %Reserved_Words;
+
 #
 # Tests
 #
@@ -25,7 +27,10 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
 {
   SKIP:
   {
-    skip("$db_type tests", 12)  unless($Have{$db_type});
+    unless($Have{$db_type})
+    {
+      skip("$db_type tests", 14 + scalar @{$Reserved_Words{$db_type} ||= []});
+    }
   }
 
   next  unless($Have{$db_type});
@@ -43,8 +48,9 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
     Rose::DB::Object::Loader->new(
       db           => Rose::DB->new,
       class_prefix => $class_prefix);
-  
-  my @classes = $loader->make_classes(include_tables => $Include_Tables);
+
+  my @classes = $loader->make_classes(include_tables => $Include_Tables . 
+                                      ($db_type eq 'mysql' ? '|read' : ''));
 
   if($db_type eq 'informix')
   {
@@ -62,6 +68,12 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   ##
 
   my $p = $product_class->new(name => "Sled $i");
+
+  # Check reserved methods
+  foreach my $word (@{$Reserved_Words{$db_type} ||= []})
+  {
+    ok($p->$word(int(rand(10)) + 1), "reserved word: $word - $db_type");
+  }
 
   is($p->db->class, 'Rose::DB', "db 1 - $db_type");
   
@@ -98,6 +110,10 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   is($colors[1]->name, 'red', "colors 3 - $db_type");
 
   my $mgr_class = $class_prefix . '::Product::Manager';
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  #$DB::single = 1;
+
   my $prods = $mgr_class->get_products(query => [ id => $p->id ]);
   
   is(ref $prods, 'ARRAY', "get_products 1 - $db_type");
@@ -105,13 +121,37 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   is($prods->[0]->id, $p->id, "get_products 3 - $db_type");
 
   #$DB::single = 1;
-  #$Rose::DB::Object::Debug = 1;
+  #local $Rose::DB::Object::Debug = 1;
+  
+  # Reserved tablee name tests
+  if($db_type eq 'mysql')
+  {
+    my $o = Mysql::Read->new(read => 'Foo')->save;
+    $o = Mysql::Read->new(id => $o->id)->load;
+    is($o->read, 'Foo', "reserved table name 1 - $db_type");
+    my $os = Mysql::Read::Manager->get_read;
+    ok(@$os == 1 && $os->[0]->read eq 'Foo', "reserved table name 2 - $db_type");
+  }
+  else
+  {
+    SKIP:
+    {
+      skip("reserved table name tests", 2);
+    }
+  }
 }
 
 
 BEGIN
 {
   our %Have;
+
+  our %Reserved_Words =
+  (
+    'pg' => [ 'role' ],
+    'pg_with_schema' => [ 'role' ],
+    'mysql' => [ 'read' ],
+  );
 
   #
   # Postgres
@@ -167,6 +207,8 @@ CREATE TABLE products
   id      SERIAL NOT NULL PRIMARY KEY,
   name    VARCHAR(255) NOT NULL,
   price   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+
+  @{[ join(', ', map { "$_ INT" } @{$Reserved_Words{'pg'}}) . ',' ]}
 
   vendor_id  INT REFERENCES vendors (id),
 
@@ -228,6 +270,8 @@ CREATE TABLE Rose_db_object_private.products
   id      SERIAL NOT NULL PRIMARY KEY,
   name    VARCHAR(255) NOT NULL,
   price   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+
+  @{[ join(', ', map { "$_ INT" } @{$Reserved_Words{'pg'}}) . ',' ]}
 
   vendor_id  INT REFERENCES vendors (id),
 
@@ -299,6 +343,7 @@ EOF
       $dbh->do('DROP TABLE prices CASCADE');
       $dbh->do('DROP TABLE products CASCADE');
       $dbh->do('DROP TABLE vendors CASCADE');
+      $dbh->do('DROP TABLE `read` CASCADE');
     }
 
     # Foreign key stuff requires InnoDB support
@@ -337,6 +382,8 @@ CREATE TABLE products
   id      INT AUTO_INCREMENT PRIMARY KEY,
   name    VARCHAR(255) NOT NULL,
   price   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+
+  @{[ join(', ', map { "`$_` INT" } @{$Reserved_Words{'mysql'}}) . ',' ]}
 
   vendor_id  INT,
 
@@ -397,7 +444,16 @@ CREATE TABLE products_colors
 )
 TYPE=InnoDB
 EOF
-    
+
+    $dbh->do(<<"EOF");
+CREATE TABLE `read`
+(
+  id      INT AUTO_INCREMENT PRIMARY KEY,
+  `read`  VARCHAR(255) NOT NULL
+)
+TYPE=InnoDB
+EOF
+
     $dbh->disconnect;
   }
 
@@ -531,6 +587,7 @@ END
     $dbh->do('DROP TABLE prices CASCADE');
     $dbh->do('DROP TABLE products CASCADE');
     $dbh->do('DROP TABLE vendors CASCADE');
+    $dbh->do('DROP TABLE `read` CASCADE');
 
     $dbh->disconnect;
   }

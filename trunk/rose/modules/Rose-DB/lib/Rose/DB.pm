@@ -810,15 +810,17 @@ sub unquote_column_name
 {
   my($self_or_class, $name) = @_;
 
-  # The table name may be double-quoted with double-quotes doubled      
-  if($name =~ /^(?: "((?:""|[^"]+)+)" | ([^"]+) )$/x)
+  if($name =~ /^(['"`])(.+)\1$/)
   {
-    $name = defined $1 ? $1 : $2;
-    $name =~ s/""/"/g;
+    my $q = $1;
+    $name = $2;
+    $name =~ s/$q$q/$q/g;
   }
-  
+
   return $name;
 }
+
+sub quote_table_name { $_[1] }
 
 *unquote_table_name = \&unquote_column_name;
 

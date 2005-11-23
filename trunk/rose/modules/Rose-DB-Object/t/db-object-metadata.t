@@ -25,7 +25,7 @@ $meta->table('mytable');
 is($meta->schema, 'priv', 'schema()');
 is($meta->table, 'mytable', 'table()');
 
-is($meta->fq_table_sql, 'priv.mytable', 'fq_table_sql()');
+is($meta->fq_table_sql(MyDBObject->init_db), 'priv.mytable', 'fq_table_sql()');
 
 $meta->columns
 (
