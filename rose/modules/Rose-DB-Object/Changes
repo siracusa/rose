@@ -1,3 +1,8 @@
+0.53 (11.22.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Improved handling of table and column names that use 
+      reserved words.
+
 0.52 (11.21.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed bugs in loader when using a DSN instead of a db.

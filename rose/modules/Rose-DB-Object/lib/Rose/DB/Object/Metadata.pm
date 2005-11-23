@@ -1946,6 +1946,8 @@ sub fq_primary_key_sequence_name
 
   if(my $seq = $self->primary_key_sequence_name(@_))
   {
+    $self->primary_key->sequence_name($seq);
+
     my %args = @_;
 
     my $db = $args{'db'} or
@@ -1971,6 +1973,11 @@ sub primary_key_sequence_name
   if($self->{'primary_key_sequence_name'})
   {
     return $self->{'primary_key_sequence_name'};
+  }
+
+  if(my $seq = $self->primary_key->sequence_name)
+  {
+    return $self->{'primary_key_sequence_name'} = $seq;
   }
 
   my @pk_columns = $self->primary_key_column_names;
@@ -2177,9 +2184,15 @@ sub column_rw_method_names_hash { shift->{'column_rw_method'} }
 
 sub fq_table_sql
 {
-  my($self) = shift;
-  return $self->{'fq_table_sql'} ||= 
-    join('.', grep { defined } ($self->catalog, $self->schema, $self->table));
+  my($self, $db) = @_;
+  return $self->{'fq_table_sql'}{$db->{'driver'}} ||= 
+    join('.', grep { defined } ($self->catalog, $self->schema, $db->quote_table_name($self->table)));    
+}
+
+sub fq_table
+{
+  my $self = shift;
+  join('.', grep { defined } ($self->catalog, $self->schema, $self->table));
 }
 
 sub load_all_sql
@@ -2191,7 +2204,7 @@ sub load_all_sql
   no warnings;
   return $self->{'load_all_sql'}{$db->{'driver'}}{join("\0", @$key_columns)} ||= 
     'SELECT ' . $self->column_names_string_sql($db) . ' FROM ' .
-    $self->fq_table_sql . ' WHERE ' .
+    $self->fq_table_sql($db) . ' WHERE ' .
     join(' AND ',  map { "$_ = ?" } @$key_columns);
 }
 
@@ -2204,7 +2217,7 @@ sub load_sql
   no warnings;
   return $self->{'load_sql'}{$db->{'driver'}}{join("\0", @$key_columns)} ||= 
     'SELECT ' . $self->nonlazy_column_names_string_sql($db) . ' FROM ' .
-    $self->fq_table_sql . ' WHERE ' .
+    $self->fq_table_sql($db) . ' WHERE ' .
     join(' AND ',  map { "$_ = ?" } @$key_columns);
 }
 
@@ -2217,7 +2230,7 @@ sub load_all_sql_with_null_key
   no warnings;
   return 
     'SELECT ' . $self->column_names_string_sql($db) . ' FROM ' .
-    $self->fq_table_sql . ' WHERE ' .
+    $self->fq_table_sql($db) . ' WHERE ' .
     join(' AND ',  map { defined $key_values->[$i++] ? "$_ = ?" : "$_ IS NULL" }
     @$key_columns);
 }
@@ -2231,7 +2244,7 @@ sub load_sql_with_null_key
   no warnings;
   return 
     'SELECT ' . $self->nonlazy_column_names_string_sql($db) . ' FROM ' .
-    $self->fq_table_sql . ' WHERE ' .
+    $self->fq_table_sql($db) . ' WHERE ' .
     join(' AND ',  map { defined $key_values->[$i++] ? "$_ = ?" : "$_ IS NULL" }
     @$key_columns);
 }
@@ -2251,7 +2264,7 @@ sub update_all_sql
 
   no warnings;
   return $self->{'update_all_sql'}{$cache_key} = 
-    'UPDATE ' . $self->fq_table_sql . " SET \n" .
+    'UPDATE ' . $self->fq_table_sql($db) . " SET \n" .
     join(",\n", map { '    ' . $self->column($_)->name_sql($db) . ' = ?' } 
                 grep { !$key{$_} } $self->column_names) .
     "\nWHERE " . 
@@ -2270,7 +2283,7 @@ sub update_sql
 
   no warnings;
   return ($self->{'update_sql_prefix'} ||=
-    'UPDATE ' . $self->fq_table_sql . " SET \n") .
+    'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
     join(",\n", map { '    ' . $self->column($_)->name_sql($db) . ' = ?' } 
                 grep { !$key{$_->{'name'}} && (!$_->{'lazy'} || 
                        $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
@@ -2292,7 +2305,7 @@ sub update_sql
 # 
 #   no warnings;
 #   return
-#     'UPDATE ' . $self->fq_table_sql . " SET \n" .
+#     'UPDATE ' . $self->fq_table_sql($db) . " SET \n" .
 #     join(",\n", map { '    ' . $self->column($_)->name_sql($db) . ' = ?' } 
 #                 grep { !$key{$_} } $self->column_names) .
 #     "\nWHERE " . join(' AND ', map { defined $key_values->[$i++] ? "$_ = ?" : "$_ IS NULL" }
@@ -2336,7 +2349,7 @@ sub update_sql
 #   return 
 #   (
 #     ($self->{'update_sql_with_inlining_start'} ||= 
-#      'UPDATE ' . $self->fq_table_sql . " SET \n") .
+#      'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
 #     join(",\n", @updates) . "\nWHERE " . 
 #     join(' AND ', map { defined $key_values->[$i++] ? "$_ = ?" : "$_ IS NULL" }
 #                   map { $self->column($_)->name_sql($db) } @$key_columns),
@@ -2381,7 +2394,7 @@ sub update_sql_with_inlining
   return 
   (
     ($self->{'update_sql_with_inlining_start'} ||= 
-     'UPDATE ' . $self->fq_table_sql . " SET \n") .
+     'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
     join(",\n", @updates) . "\nWHERE " . 
     join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns),
     \@bind
@@ -2434,7 +2447,7 @@ sub insert_sql_with_inlining
   return 
   (
     ($self->{'insert_sql_with_inlining_start'} ||=
-    'INSERT INTO ' . $self->fq_table_sql . "\n(\n" .
+    'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
     join(",\n", map { "  $_" } $self->column_names_sql($db)) .
     "\n)\nVALUES\n(\n") . join(",\n", @places) . "\n)",
     \@bind
@@ -2465,7 +2478,7 @@ sub get_column_value
     my %key = map { ($_ => 1) } @$key_columns;  
 
     $sql = $column->{'get_column_sql_tmpl'}{$db->{'driver'}} = 
-      'SELECT __COLUMN__ FROM ' . $self->fq_table_sql . ' WHERE ' .
+      'SELECT __COLUMN__ FROM ' . $self->fq_table_sql($db) . ' WHERE ' .
       join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns);
   }
   
@@ -2521,6 +2534,7 @@ sub _clear_table_generated_values
 {
   my($self) = shift;
 
+  $self->{'fq_table'}          = undef;
   $self->{'fq_table_sql'}      = undef;
   $self->{'get_column_sql_tmpl'} = undef;
   $self->{'load_sql'}          = undef;
@@ -2539,6 +2553,7 @@ sub _clear_column_generated_values
 {
   my($self) = shift;
 
+  $self->{'fq_table'}            = undef;
   $self->{'fq_table_sql'}        = undef;
   $self->{'column_names'}        = undef;
   $self->{'nonlazy_column_names'} = undef;
@@ -3594,10 +3609,6 @@ If both NAME and HASHREF are passed, then the combination of NAME and HASHREF mu
 Get or set the full list of foreign keys.  If ARGS are passed, the foreign key list is cleared and then ARGS are passed to the L<add_foreign_keys|/add_foreign_keys> method.
 
 Returns a list of foreign key objects in list context, or a reference to an array of foreign key objects in scalar context.
-
-=item B<fq_table_sql>
-
-Returns the fully-qualified table name in a form suitable for use in an SQL statement.
 
 =item B<generate_primary_key_value DB>
 

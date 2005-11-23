@@ -282,7 +282,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   is(keys %Temp, 1, "on_get 7 - $db_type");
   %Temp = ();
 
-  #$Rose::DB::Object::Debug = 1;
+  #local $Rose::DB::Object::Debug = 1;
 
   $o->save;
   is($Temp{'on_save'}{'name'}, 'FRED', "on_save 1 - $db_type");
@@ -329,7 +329,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   $o->save;
 
   my $sth = $o->db->dbh->prepare(
-    'SELECT code FROM ' . $o->meta->fq_table_sql . ' WHERE id = ?');
+    'SELECT code FROM ' . $o->meta->fq_table_sql($o->db) . ' WHERE id = ?');
 
   $sth->execute($o->id);
   my $code = $sth->fetchrow_array;
@@ -351,7 +351,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   is($o->name, 'start set',  "start 2 - $db_type");
 
   $sth = $o->db->dbh->prepare(
-    'SELECT start FROM ' . $o->meta->fq_table_sql . ' WHERE id = ?');
+    'SELECT start FROM ' . $o->meta->fq_table_sql($o->db) . ' WHERE id = ?');
 
   $sth->execute($o->id);
   my $start = $sth->fetchrow_array;

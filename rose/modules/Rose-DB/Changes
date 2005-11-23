@@ -1,6 +1,6 @@
 0.52 (11.22.2005) - John Siracusa <siracusa@mindspring.com>
 
-    * Fixed a few Pg identifier quoting issues.
+    * Fixed a few identifier quoting issues.
     * Changes to support Rose::DB::Object 0.53
 
 0.51 (11.21.2005) - John Siracusa <siracusa@mindspring.com>

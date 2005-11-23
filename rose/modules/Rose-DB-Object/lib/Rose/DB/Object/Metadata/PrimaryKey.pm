@@ -5,13 +5,14 @@ use strict;
 use Rose::DB::Object::Metadata::UniqueKey;
 our @ISA = qw(Rose::DB::Object::Metadata::UniqueKey);
 
-our $VERSION = '0.02';
+our $VERSION = '0.53';
 
 use Rose::Object::MakeMethods::Generic
 (
   scalar =>
   [
-    'generator'
+    'generator',
+    'sequence_name',
   ],
 );
 
@@ -78,6 +79,10 @@ Get or set the name of the primary key.  Traditionally, this is the name of the 
 =item B<parent [META]>
 
 Get or set the L<Rose::DB::Object::Metadata>-derived object that this primary key belongs to.
+
+=item B<sequence_name [NAME]>
+
+Get or set the name of the database sequence (if any) used to generate values for the primary key column.
 
 =back
 

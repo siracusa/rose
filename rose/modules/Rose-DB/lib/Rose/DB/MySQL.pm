@@ -40,7 +40,10 @@ sub build_dsn
               qw(database host port));
 }
 
+# These assume no ` characters in column or table names.
+# Because, come on, who would do such a thing... :)
 sub quote_column_name { qq(`$_[1]`) }
+sub quote_table_name  { qq(`$_[1]`) }
 
 sub init_date_handler { DateTime::Format::MySQL->new }
 

@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.023';
+our $VERSION = '0.53';
 
 sub auto_retrieve_primary_key_column_names
 {
@@ -30,7 +30,7 @@ sub auto_retrieve_primary_key_column_names
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
 
-    my $sth = $dbh->prepare('SHOW INDEX FROM ' . $self->fq_table_sql);
+    my $sth = $dbh->prepare('SHOW INDEX FROM ' . $self->fq_table_sql($db));
     $sth->execute;
 
     while(my $row = $sth->fetchrow_hashref)
@@ -67,7 +67,7 @@ sub auto_generate_unique_keys
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
 
-    my $sth = $dbh->prepare('SHOW INDEX FROM ' . $self->fq_table_sql);
+    my $sth = $dbh->prepare('SHOW INDEX FROM ' . $self->fq_table_sql($db));
     $sth->execute;
 
     while(my $row = $sth->fetchrow_hashref)

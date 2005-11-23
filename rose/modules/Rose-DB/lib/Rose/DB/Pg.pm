@@ -201,7 +201,7 @@ sub auto_sequence_name
   my $column = $args{'column'};
   Carp::croak "Missing column argument"  unless(defined $column);
 
-  return "\L${table}_${column}_seq";
+  return lc "${table}_${column}_seq";
 }
 
 #

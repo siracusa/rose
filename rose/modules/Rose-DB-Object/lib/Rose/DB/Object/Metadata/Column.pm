@@ -128,17 +128,20 @@ sub build_method_name_for_type
 {
   my($self, $type) = @_;
 
+  my $name = $self->alias || $self->name;
+  $name =~ s/\W/_/g;
+
   if($type eq 'get_set')
   {
-    return $self->alias || $self->name;
+    return $name
   }
   elsif($type eq 'set')
   {
-    return 'set_' . ($self->alias || $self->name);
+    return "set_$name";
   }
   elsif($type eq 'get')
   {
-    return 'get_' . ($self->alias || $self->name);
+    return "get_$name";
   }
 
   return undef;
