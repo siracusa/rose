@@ -343,11 +343,7 @@ The most common task for the manager is fetching multiple objects.  We'll use th
       print $product->name, "\n";
     }
 
-The return value is a reference to an array of C<Product> objects in the example above.  A regular array also works.
-
-    @products = Product::Manager->get_products();
-
-Now let's go to the other extreme.
+The return value is a reference to an array of C<Product> objects in the example above.  Now let's go to the other extreme.
 
     $products = 
       Product::Manager->get_products(

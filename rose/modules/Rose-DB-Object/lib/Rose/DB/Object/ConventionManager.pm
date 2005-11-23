@@ -61,6 +61,7 @@ sub table_to_class
   my($self, $table, $prefix, $plural) = @_;
   $table = $self->plural_to_singular($table)  unless($plural);
   $table =~ s/_(.)/\U$1/g;
+  $table =~ s/[^\w:]/_/g;
   return ($prefix || '') . ucfirst $table;
 }
 

@@ -332,7 +332,7 @@ sub list_tables
     
     while(my $table_info = $sth->fetchrow_hashref)
     {
-      push(@tables, $table_info->{'TABLE_NAME'})
+      push(@tables, $self->unquote_table_name($table_info->{'TABLE_NAME'}));
     }
   };
 
