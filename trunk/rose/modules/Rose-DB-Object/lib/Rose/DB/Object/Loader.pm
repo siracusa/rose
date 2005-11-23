@@ -13,7 +13,7 @@ use Rose::DB::Object::ConventionManager;
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.51';
+our $VERSION = '0.53';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -156,7 +156,7 @@ sub db
   if(defined $db)
   {
     $self->{'db_class'} = $db->class;
-    $self->{'db_dsn'}   = $db->dsn;
+    $self->{'db_dsn'}   = undef;
   }
 
   return $self->{'db'} = $db;
@@ -623,7 +623,7 @@ Get or set the L<Rose::DB::Object::ConventionManager>-derived object used during
 
 Get or set the L<Rose::DB>-derived object used to connect to the database.  This object will be used by the L<make_classes|/make_classes> method when extracting information from the database.  It will also be used as the prototype for the L<db|Rose::DB::Object/db> object used by each L<Rose::DB::Object> subclass to connect to the database.
 
-Setting this attribute also sets the L<db_class|/db_class> and L<db_dsn|/db_dsn> attributes, overwriting any previously existing values.
+Setting this attribute also sets the L<db_class|/db_class> attributes, overwriting any previously existing value, and sets the  L<db_dsn|/db_dsn> value to undef.
 
 =item B<db_catalog [CATALOG]>
 

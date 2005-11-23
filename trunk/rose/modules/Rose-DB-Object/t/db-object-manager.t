@@ -3440,6 +3440,19 @@ SKIP: foreach my $db_type ('mysql')
   Rose::DB::Object::Manager->default_objects_per_page(20);
 
   # End pager tests
+
+  # Start get_objects_from_sql tests
+
+#   $objs = MyMySQLObjectManager->get_objects_from_sql(<<"EOF");
+# SELECT * FROM rose_db_object_test WHERE id != fk1 ORDER BY id DESC
+# EOF
+# 
+#   ok(scalar @$objs == 19, "get_objects_from_sql 1 - $db_type");
+#   is($objs->[18]->id, 20, "get_objects_from_sql 2 - $db_type");
+#   is($objs->[18]->save_col, 5, "get_objects_from_sql 3 - $db_type");
+#   is($objs->[18]->name, 'John', "get_objects_from_sql 4 - $db_type");
+
+  # End get_objects_from_sql tests
 }
 
 #

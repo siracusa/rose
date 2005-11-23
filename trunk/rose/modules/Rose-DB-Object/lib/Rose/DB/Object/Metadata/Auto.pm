@@ -71,16 +71,18 @@ sub auto_generate_columns
 
     $table = lc $table  if($db->likes_lowercase_table_names);
 
+    my $table_unquoted = $db->unquote_table_name($table);
+
     $schema = $self->schema;
     $schema = $db->default_implicit_schema  unless(defined $schema);
 
-    my $sth = $dbh->column_info($self->catalog, $schema, $table, '%');
+    my $sth = $dbh->column_info($self->catalog, $schema, $table_unquoted, '%');
 
     unless(defined $sth)
     {
       no warnings; # undef strings okay
       die "No column information found for catalog '", $self->catalog,
-          "' schema '", $schema, "' table '", $table, "'";
+          "' schema '", $schema, "' table '", $table_unquoted, "'";
     }
 
     COLUMN: while(my $col_info = $sth->fetchrow_hashref)
@@ -89,9 +91,11 @@ sub auto_generate_columns
       {
         no warnings; # Allow undef coercion to empty string
 
+        $col_info->{'TABLE_NAME'} = $db->unquote_table_name($col_info->{'TABLE_NAME'});
+
         next COLUMN unless($col_info->{'TABLE_CAT'}   eq $self->catalog &&
                            $col_info->{'TABLE_SCHEM'} eq $schema &&
-                           $col_info->{'TABLE_NAME'}  eq $table);
+                           $col_info->{'TABLE_NAME'}  eq $table_unquoted);
       }
 
       unless(defined $col_info->{'COLUMN_NAME'})
@@ -291,10 +295,12 @@ sub auto_retrieve_primary_key_column_names
 
     my $table = lc $self->table;
 
+    my $table_unquoted = $db->unquote_table_name($table);
+
     $schema = $self->schema;
     $schema = $db->default_implicit_schema  unless(defined $schema);
 
-    my $sth = $dbh->primary_key_info($self->catalog, $schema, $table);
+    my $sth = $dbh->primary_key_info($self->catalog, $schema, $table_unquoted);
 
     unless(defined $sth)
     {
@@ -309,9 +315,11 @@ sub auto_retrieve_primary_key_column_names
       {
         no warnings; # Allow undef coercion to empty string
 
+        $pk_info->{'TABLE_NAME'} = $db->unquote_table_name($pk_info->{'TABLE_NAME'});
+
         next PK  unless($pk_info->{'TABLE_CAT'}   eq $self->catalog &&
                         $pk_info->{'TABLE_SCHEM'} eq $schema &&
-                        $pk_info->{'TABLE_NAME'}  eq $table);
+                        $pk_info->{'TABLE_NAME'}  eq $table_unquoted);
       }
 
       unless(defined $pk_info->{'COLUMN_NAME'})

@@ -952,7 +952,8 @@ sub get_objects
     {
       local $dbh->{'RaiseError'} = 1;
       $Debug && warn "$sql\n";
-      my $sth = $dbh->prepare($sql, $meta->prepare_select_options) or die $dbh->errstr;
+      #my $sth = $dbh->prepare($sql, $meta->prepare_select_options) or die $dbh->errstr;
+      my $sth = $dbh->prepare($sql) or die $dbh->errstr;
       $sth->execute(@$bind);
       $count = $sth->fetchrow_array;
       $sth->finish;
@@ -1066,7 +1067,8 @@ sub get_objects
     local $dbh->{'RaiseError'} = 1;
 
     $Debug && warn "$sql (", join(', ', @$bind), ")\n";
-    my $sth = $dbh->prepare($sql, $meta->prepare_select_options) or die $dbh->errstr;
+    #my $sth = $dbh->prepare($sql, $meta->prepare_select_options) or die
+    my $sth = $dbh->prepare($sql) or die $dbh->errstr;
 
     $sth->{'RaiseError'} = 1;
 
@@ -1703,8 +1705,8 @@ sub delete_objects
     local $dbh->{'RaiseError'} = 1;  
     $Debug && warn "$sql - bind params: ", join(', ', @$bind), "\n";
 
-    my $sth = $dbh->prepare($sql, $meta->prepare_bulk_delete_options) 
-      or die $dbh->errstr;
+    #my $sth = $dbh->prepare($sql, $meta->prepare_bulk_delete_options)
+    my $sth = $dbh->prepare($sql) or die $dbh->errstr;
 
     $sth->execute(@$bind);
     $count = $sth->rows || 0;
@@ -1800,8 +1802,8 @@ sub update_objects
     local $dbh->{'RaiseError'} = 1;  
     $Debug && warn "$sql\n";
 
-    my $sth = $dbh->prepare($sql, $meta->prepare_bulk_update_options) 
-      or die $dbh->errstr;
+    #my $sth = $dbh->prepare($sql, $meta->prepare_bulk_update_options)
+    my $sth = $dbh->prepare($sql) or die $dbh->errstr;
 
     $sth->execute(@$set_bind, @$where_bind);
     $count = $sth->rows || 0;
@@ -1816,6 +1818,111 @@ sub update_objects
 
   return $count;
 }
+
+# sub get_objects_from_sql
+# {
+#   my($class) = shift;
+# 
+#   my(%args, $sql);
+#   
+#   if(@_ == 1) { $sql = shift }
+#   else
+#   {
+#     %args = @_;
+#     $sql = $args{'sql'};
+#   }
+#   
+#   Carp::croak "Missing SQL"  unless($sql);
+# 
+#   my $object_class = $args{'object_class'} || $class->object_class ||
+#     Carp::croak "Missing object class";
+# 
+#   my $meta = $object_class->meta 
+#     or Carp::croak "Could not get meta for $object_class";
+# 
+#   my $methods  = $args{'_methods'};
+#   my $args     = $args{'args'} || [];
+# 
+#   my $have_methods = $args{'_methods'} ? 1 : 0;
+# 
+#   my $db  = delete $args{'db'} || $object_class->init_db;
+#   my $dbh = delete $args{'dbh'};
+#   my $dbh_retained = 0;
+# 
+#   unless($dbh)
+#   {
+#     unless($dbh = $db->retain_dbh)
+#     {
+#       $class->error($db->error);
+#       $class->handle_error($class);
+#       return undef;
+#     }
+# 
+#     $dbh_retained = 1;
+#   }
+# 
+#   my %object_args =
+#   (
+#     (exists $args{'share_db'} ? $args{'share_db'} : 1) ? (db => $db) : ()
+#   );
+# 
+#   my @objects;
+# 
+#   eval
+#   {
+#     local $dbh->{'RaiseError'} = 1;
+# 
+#     $Debug && warn "$sql\n";
+#     my $sth = $dbh->prepare($sql) or die $dbh->errstr;
+# 
+#     $sth->execute(@$args);
+# 
+#     while(my $row = $sth->fetchrow_hashref)
+#     {
+#       unless($have_methods)
+#       {
+#         foreach my $col (keys %$row)
+#         {
+#           if(my $method = $meta->column_mutator_method_name($col))
+#           {
+#             $methods->{$col} = $method;
+#           }
+#           elsif($object_class->can($col))
+#           {
+#             $methods->{$col} = $col;
+#           }
+#         }
+# 
+#         $have_methods = 1;
+#       }
+#       
+#       my $object = $object_class->new(%object_args);
+# 
+#       local $object->{STATE_LOADING()} = 1;
+#       $object->{STATE_IN_DB()} = 1;
+# 
+#       while(my($col, $val) = each(%$row))
+#       {
+#         my $method = $methods->{$col};
+#         $object->$method($val);
+#       }
+# 
+#       push(@objects, $object);
+#     }
+#   };
+# 
+#   $db->release_dbh  if($dbh_retained);
+# 
+#   if($@)
+#   {
+#     $class->total(undef);
+#     $class->error("get_objects_from_sql() - $@");
+#     $class->handle_error($class);
+#     return undef;
+#   }
+# 
+#   return \@objects;
+# }
 
 sub perl_class_definition
 {
