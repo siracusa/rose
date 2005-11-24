@@ -212,7 +212,16 @@ sub refine_dbi_column_info
 {
   my($self, $col_info) = @_;
 
+  # Save default value
+  my $default = $col_info->{'COLUMN_DEF'};
+
   $self->SUPER::refine_dbi_column_info($col_info);
+
+  # Set sequence name key, if present
+  if(defined $default && $default =~ /^nextval\(\(?'((?:''|[^']+))'::\w+/)
+  {
+    $col_info->{'rdbo_default_value_sequence_name'} = $1;
+  }
 
   # Pg has some odd names for types.  Convert them to standard forms.
   if($col_info->{'TYPE_NAME'} eq 'character varying')

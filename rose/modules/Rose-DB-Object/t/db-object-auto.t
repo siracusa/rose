@@ -221,7 +221,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
      <<"EOF", "perl_columns_definition 1 - $db_type");
 __PACKAGE__->meta->columns
 (
-  id            => { type => 'integer', not_null => 1 },
+  id            => { type => 'integer', not_null => 1, sequence => 'rose_db_object_test_seq' },
   k1            => { type => 'integer' },
   k2            => { type => 'integer' },
   k3            => { type => 'integer' },
@@ -244,7 +244,7 @@ EOF
   is(MyPgObject->meta->perl_columns_definition(braces => 'k&r', indent => 4),
      <<"EOF", "perl_columns_definition 2 - $db_type");
 __PACKAGE__->meta->columns(
-    id            => { type => 'integer', not_null => 1 },
+    id            => { type => 'integer', not_null => 1, sequence => 'rose_db_object_test_seq' },
     k1            => { type => 'integer' },
     k2            => { type => 'integer' },
     k3            => { type => 'integer' },
@@ -267,7 +267,7 @@ EOF
   is(MyPgObject->meta->perl_columns_definition,
      <<"EOF", "perl_columns_definition 3 - $db_type");
 __PACKAGE__->meta->columns(
-    id            => { type => 'integer', not_null => 1 },
+    id            => { type => 'integer', not_null => 1, sequence => 'rose_db_object_test_seq' },
     k1            => { type => 'integer' },
     k2            => { type => 'integer' },
     k3            => { type => 'integer' },
@@ -690,6 +690,8 @@ BEGIN
       $dbh->do('DROP TABLE Rose_db_object_test CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.Rose_db_object_test CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_chkpass_test');
+      $dbh->do('DROP SEQUENCE Rose_db_object_test_seq');
+      $dbh->do('DROP SEQUENCE Rose_db_object_private.Rose_db_object_test_seq');
       $dbh->do('CREATE SCHEMA Rose_db_object_private');
     }
 
@@ -703,10 +705,12 @@ BEGIN
 
     our $PG_HAS_CHKPASS = 1  unless($@);
 
+    $dbh->do('CREATE SEQUENCE Rose_db_object_test_seq');
+
     $dbh->do(<<"EOF");
 CREATE TABLE Rose_db_object_test
 (
-  id             SERIAL NOT NULL PRIMARY KEY,
+  id             INT DEFAULT nextval('Rose_db_object_test_seq') NOT NULL PRIMARY KEY,
   k1             INT,
   k2             INT,
   k3             INT,
@@ -728,10 +732,12 @@ CREATE TABLE Rose_db_object_test
 )
 EOF
 
+    $dbh->do('CREATE SEQUENCE Rose_db_object_private.Rose_db_object_test_seq');
+
     $dbh->do(<<"EOF");
 CREATE TABLE Rose_db_object_private.Rose_db_object_test
 (
-  id             SERIAL NOT NULL PRIMARY KEY,
+  id             INT DEFAULT nextval('Rose_db_object_test_seq') NOT NULL PRIMARY KEY,
   k1             INT,
   k2             INT,
   k3             INT,
@@ -1044,6 +1050,8 @@ END
 
     $dbh->do('DROP TABLE Rose_db_object_test CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_private.Rose_db_object_test CASCADE');
+    $dbh->do('DROP SEQUENCE Rose_db_object_test_seq');
+    $dbh->do('DROP SEQUENCE Rose_db_object_private.Rose_db_object_test_seq');
     $dbh->do('DROP SCHEMA Rose_db_object_private CASCADE');
 
     $dbh->disconnect;
