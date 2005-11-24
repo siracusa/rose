@@ -24,6 +24,64 @@ sub auto_init_columns
   my $meta = $self->parent || return [];
   return $meta->convention_manager->auto_primary_key_column_names || [];
 }
+
+sub add_columns
+{
+  my($self) = shift;
+  
+  $self->SUPER::add_columns(@_);
+  $self->sync_sequence_name;
+  return;
+}
+
+*add_column = \&add_columns;
+
+sub columns
+{
+  my($self) = shift;
+  
+  my(@ret, $ret);
+
+  my $wantarray = wantarray;
+  if(defined $wantarray)
+  {
+    if($wantarray)
+    {
+      @ret = $self->SUPER::columns(@_);
+    }
+    else
+    {
+      $ret = $self->SUPER::columns(@_);
+    }
+  }
+  else
+  {
+    $self->SUPER::columns(@_);
+  }
+  
+  $self->sync_sequence_name;
+
+  return $wantarray ? @ret : $ret;
+}
+
+sub sync_sequence_name
+{
+  my($self) = shift;
+
+  foreach my $column ($self->SUPER::columns)
+  {
+    next  unless(ref $column); # may just be a column name
+
+    if(my $seq = $column->default_value_sequence_name)
+    {
+      $self->sequence_name($seq);
+      return;
+    }
+  }
+  
+  return;
+}
+
 1;
 
 __END__

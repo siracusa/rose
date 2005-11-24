@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (4 * 16);
+use Test::More tests => 1 + (4 * 17);
 
 BEGIN 
 {
@@ -39,7 +39,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
 {
   SKIP:
   {
-    skip("$db_type tests", 16)  unless($Have{$db_type});
+    skip("$db_type tests", 17)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -83,12 +83,23 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
   is($p->baz, 456, "baz 1 - $db_type");
 
   if($db_type eq 'pg_with_schema')
-  {
+  {    
     is($p->db->schema, lc 'Rose_db_object_private', "schema - $db_type");
   }
   else
   {
     ok(1, "schema - $db_type");
+  }
+
+  if($db_type =~ /^pg/)
+  {
+    is($p->meta->column('id')->perl_hash_definition, 
+       q(id => { type => 'integer', not_null => 1 }),
+        "perl_hash_definition - $db_type");
+  }
+  else
+  {
+    ok(1, "perl_hash_definition - $db_type");  
   }
 
   $p->vendor(name => "Acme $i");

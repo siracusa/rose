@@ -61,6 +61,7 @@ Rose::Object::MakeMethods::Generic->make_methods
   [
     'alias',
     'ordinal_position',
+    'default_value_sequence_name',
     __PACKAGE__->common_method_maker_argument_names,
   ],
 
@@ -73,7 +74,8 @@ Rose::Object::MakeMethods::Generic->make_methods
   ],
 );
 
-*primary_key    = \&is_primary_key_member;
+*sequence    = \&default_value_sequence_name;
+*primary_key = \&is_primary_key_member;
 
 __PACKAGE__->method_maker_info
 (
@@ -264,6 +266,8 @@ sub init_with_dbi_column_info
 
   $self->ordinal_position($col_info->{'ORDINAL_POSITION'} || 0);
 
+  $self->default_value_sequence_name($col_info->{'rdbo_default_value_sequence_name'});
+
   return;
 }
 
@@ -294,6 +298,24 @@ sub perl_column_defintion_attributes
     if($attr eq 'alias' && $val eq $self->name)
     {
       next ATTR;
+    }
+
+    if($attr eq 'default_value_sequence_name')
+    {
+      my $seq = $self->default_value_sequence_name;
+      
+      my $meta = $self->parent;
+      my $auto_seq = $meta->db->auto_sequence_name(table  => $meta->table,
+                                                   schema => $meta->schema, 
+                                                   column => $self);
+
+      no warnings 'uninitialized';
+      if($seq ne $auto_seq)
+      {
+        push(@attrs, 'sequence');
+      }
+
+      next;
     }
 
     if($attr =~ /_method_name$/)
@@ -336,7 +358,7 @@ sub perl_hash_definition
     $hash{$attr} = $self->$attr();
   }
 
-  if($name_padding > 0)
+  if(defined $name_padding && $name_padding > 0)
   {
     return sprintf('%-*s => ', $name_padding, perl_quote_key($self->name)) .
            perl_hashref(hash      => \%hash, 

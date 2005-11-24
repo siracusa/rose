@@ -906,7 +906,7 @@ END
 
     $dbh->do('DROP TABLE rose_db_object_test');
     $dbh->do('DROP TABLE rose_db_object_private.rose_db_object_test');
-    $dbh->do('DROP SCHEMA rose_db_object_private');
+    $dbh->do('DROP SCHEMA rose_db_object_private CASCADE');
 
     $dbh->disconnect;
   }

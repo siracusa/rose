@@ -19,7 +19,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.10';
+our $VERSION = '0.54';
 
 our $Debug = 0;
 
@@ -2192,7 +2192,8 @@ sub fq_table_sql
 sub fq_table
 {
   my $self = shift;
-  join('.', grep { defined } ($self->catalog, $self->schema, $self->table));
+  return $self->{'fq_table'} ||=
+    join('.', grep { defined } ($self->catalog, $self->schema, $self->table));
 }
 
 sub load_all_sql
