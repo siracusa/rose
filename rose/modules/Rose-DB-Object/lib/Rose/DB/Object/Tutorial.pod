@@ -139,7 +139,7 @@ Cross-database migration is another important use for C<db> objects.  Here's how
 
     # Save the bike into the archive database
     $p->db($archive_db);
-    $p->save;
+    $p->save(insert => 1); # force an insert instead of an update
 
     # Delete the bike from the production database
     $p->db($production_db);
