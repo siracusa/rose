@@ -2,6 +2,8 @@
 
 use strict;
 
+use FindBin qw($Bin);
+
 use Rose::DB;
 
 BEGIN 
@@ -129,7 +131,30 @@ BEGIN
     password => '',
   );
 
-  my @types = qw(pg pg_with_schema pg_admin mysql mysql_admin informix informix_admin);
+  #
+  # SQLite
+  #
+
+  # Main
+  Rose::DB->register_db(
+    domain   => 'test',
+    type     => 'sqlite',
+    driver   => 'sqlite',
+    database => "$Bin/sqlite.db",
+    connect_options => { AutoCommit => 1 },
+  );
+
+  # Admin
+  Rose::DB->register_db(
+    domain   => 'test',
+    type     => 'sqlite_admin',
+    driver   => 'sqlite',
+    database => "$Bin/sqlite.db",
+    connect_options => { AutoCommit => 1 },
+  );
+
+  my @types = qw(pg pg_with_schema pg_admin mysql mysql_admin 
+                 informix informix_admin sqlite sqlite_admin);
 
   unless($Rose::DB::Object::Test::NoDefaults)
   {

@@ -81,6 +81,7 @@ __PACKAGE__->auto_helper_classes
   'informix' => 'Rose::DB::Object::Metadata::Auto::Informix',
   'pg'       => 'Rose::DB::Object::Metadata::Auto::Pg',
   'mysql'    => 'Rose::DB::Object::Metadata::Auto::MySQL',
+  'sqlite'   => 'Rose::DB::Object::Metadata::Auto::SQLite',
   'generic'  => 'Rose::DB::Object::Metadata::Auto::Generic',
 );
 

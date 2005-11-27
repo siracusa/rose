@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 26;
+use Test::More tests => 32;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our(%HAVE, $DID_SETUP);
 
 #$Rose::DB::Object::Manager::Debug = 1;
 
-foreach my $db_type (qw(mysql pg pg_with_schema informix))
+foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 {
   SKIP:
   {
@@ -357,6 +357,75 @@ EOF
     $dbh->commit;
     $dbh->disconnect;
   }
+
+  #
+  # SQLite
+  #
+
+  eval
+  {
+    $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
+      or die Rose::DB->error;
+  };
+
+  if(!$@ && $dbh)
+  {
+    $HAVE{'sqlite'} = 1;
+
+    # Drop existing tables, ignoring errors
+    {
+      local $dbh->{'RaiseError'} = 0;
+      local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE Rose_db_object_g_ug');
+      $dbh->do('DROP TABLE Rose_db_object_ug_main');
+      $dbh->do('DROP TABLE Rose_db_object_g_main');
+    }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE Rose_db_object_ug_main
+(
+  ug_id         VARCHAR(255) NOT NULL PRIMARY KEY,
+  species       VARCHAR(255),
+  symbol        VARCHAR(255),
+  description   VARCHAR(255),
+  cytoband      VARCHAR(255),
+  scount        INT,
+  homol         VARCHAR(255),
+  rest_expr     VARCHAR(255),
+  mgi           VARCHAR(255)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE Rose_db_object_g_main
+(
+  tax_id           INT,
+  gene_id          INT PRIMARY KEY,
+  symbol           VARCHAR(255),
+  locustag         VARCHAR(255),
+  chromosome       VARCHAR(255),
+  map_location     VARCHAR(255),
+  description      VARCHAR(255),
+  gene_type        VARCHAR(255),
+  symbol_from_nomenclature_auth    VARCHAR(255),
+  full_name_from_nomenclature_auth VARCHAR(255),
+  nomenclature_status              VARCHAR(255),
+  discontinued     INT DEFAULT 0,
+  new_gene_id      INT DEFAULT NULL
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE Rose_db_object_g_ug
+(
+  g_ug_id  INTEGER PRIMARY KEY AUTOINCREMENT,
+  gene_id  INTEGER REFERENCES Rose_db_object_g_main (gene_id),
+  ug_id    VARCHAR(255) REFERENCES Rose_db_object_ug_main (ug_id) 
+)
+EOF
+
+    $dbh->disconnect;
+  }
 }
 
 END
@@ -401,6 +470,19 @@ END
     $dbh->do('DROP TABLE Rose_db_object_g_ug CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_ug_main CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_g_main CASCADE');
+
+    $dbh->disconnect;
+  }
+
+  if($HAVE{'sqlite'})
+  {
+    # Informix
+    my $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
+      or die Rose::DB->error;
+
+    $dbh->do('DROP TABLE Rose_db_object_g_ug');
+    $dbh->do('DROP TABLE Rose_db_object_ug_main');
+    $dbh->do('DROP TABLE Rose_db_object_g_main');
 
     $dbh->disconnect;
   }

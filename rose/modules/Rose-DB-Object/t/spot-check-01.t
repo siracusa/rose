@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 66;
+use Test::More tests => 82;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our(%HAVE, $DID_SETUP);
 
 #$Rose::DB::Object::Manager::Debug = 1;
 
-foreach my $db_type (qw(mysql pg pg_with_schema informix))
+foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 {
   SKIP:
   {
@@ -273,6 +273,49 @@ EOF
     $dbh->commit;
     $dbh->disconnect;
   }
+
+
+  #
+  # SQLite
+  #
+
+  eval 
+  {
+    $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
+      or die Rose::DB->error;
+  };
+
+  if(!$@ && $dbh)
+  {
+    $HAVE{'sqlite'} = 1;
+
+    # Drop existing tables, ignoring errors
+    {
+      local $dbh->{'RaiseError'} = 0;
+      local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE Rose_db_object_MD');
+      $dbh->do('DROP TABLE Rose_db_object_MDV');
+    }
+
+    our $PG_HAS_CHKPASS = 1  unless($@);
+
+    $dbh->do(<<"EOF");
+CREATE TABLE Rose_db_object_MD
+(
+  ID INTEGER PRIMARY KEY AUTOINCREMENT
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE Rose_db_object_MDV
+(
+  ID INTEGER PRIMARY KEY AUTOINCREMENT,
+  MD INT NOT NULL
+)
+EOF
+
+    $dbh->disconnect;
+  }
 }
 
 END
@@ -310,6 +353,18 @@ END
   {
     # Informix
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
+      or die Rose::DB->error;
+
+    $dbh->do('DROP TABLE Rose_db_object_MD');
+    $dbh->do('DROP TABLE Rose_db_object_MDV');
+
+    $dbh->disconnect;
+  }
+
+  if($HAVE{'sqlite'})
+  {
+    # SQLite
+    my $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
       or die Rose::DB->error;
 
     $dbh->do('DROP TABLE Rose_db_object_MD');

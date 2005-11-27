@@ -15,4 +15,5 @@ WriteMakefile(NAME         => 'Rose::DB::Object',
                 Rose::DateTime::Util  => 0,
                 Rose::Object          => '0.016',
                 Rose::DB              => '0.52',
-              });
+              },
+              clean => { FILES => "t/*.db" });

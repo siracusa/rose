@@ -9,16 +9,9 @@ use DateTime::Format::MySQL;
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.03';
+our $VERSION = '0.54';
 
 our $Debug = 0;
-
-use Rose::Class::MakeMethods::Generic
-(
-  inheritable_scalar => 'max_array_characters',
-);
-
-__PACKAGE__->max_array_characters(255);
 
 #
 # Object methods
@@ -35,10 +28,12 @@ sub build_dsn
   $info{'port'}     = $args{'port'};
 
   return
-    "dbi:$args{'dbi_driver'}:" . 
+    "dbi:mysql:" . 
     join(';', map { "$_=$info{$_}" } grep { defined $info{$_} }
               qw(database host port));
 }
+
+sub dbi_driver { 'mysql' }
 
 # These assume no ` characters in column or table names.
 # Because, come on, who would do such a thing... :)
@@ -75,61 +70,6 @@ sub validate_timestamp_keyword
 }
 
 *format_timestamp = \&Rose::DB::format_datetime;
-
-sub parse_array
-{
-  my($self) = shift;
-
-  return $_[0]  if(ref $_[0]);
-  return [ @_ ] if(@_ > 1);
-
-  my $val = $_[0];
-
-  return undef  unless(defined $val);
-
-  $val =~ s/^\{(.*)\}$/$1/;
-
-  my @array;
-
-  while($val =~ s/(?:"((?:[^"\\]+|\\.)*)"|([^",]+))(?:,|$)//)
-  {
-    push(@array, (defined $1) ? $1 : $2);
-  }
-
-  return \@array;
-}
-
-sub format_array
-{
-  my($self) = shift;
-
-  my @array = (ref $_[0]) ? @{$_[0]} : @_;
-
-  return undef  unless(@array && defined $array[0]);
-
-  my $str = '{' . join(',', map 
-  {
-    if(/^[-+]?\d+(?:\.\d*)?$/)
-    {
-      $_
-    }
-    else
-    {
-      s/\\/\\\\/g; 
-      s/"/\\"/g;
-      qq("$_") 
-    }
-  } @array) . '}';
-
-  if(length($str) > $self->max_array_characters)
-  {
-    Carp::croak "Array string is longer than ", ref($self), 
-                "->max_array_characters (", $self->max_array_characters,
-                ") characters long: $str";
-  }
-
-  return $str;
-}
 
 # sub format_limit_with_offset
 # {

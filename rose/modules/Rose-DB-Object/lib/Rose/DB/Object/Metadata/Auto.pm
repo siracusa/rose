@@ -67,7 +67,7 @@ sub auto_generate_columns
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
 
-    $table = ($db->driver eq 'mysql') ? $self->table : lc $self->table;
+    $table = $self->table;
 
     $table = lc $table  if($db->likes_lowercase_table_names);
 
