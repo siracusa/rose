@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 273;
+use Test::More tests => 339;
 
 BEGIN 
 {
@@ -13,7 +13,7 @@ BEGIN
 
 Rose::DB::Object::Util->import(':all');
 
-our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
+our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 #
 # Postgres
@@ -584,6 +584,180 @@ SKIP: foreach my $db_type ('informix')
   $o->meta->error_mode('return');
 }
 
+#
+# SQLite
+#
+
+SKIP: foreach my $db_type ('sqlite')
+{
+  skip("SQLite tests", 66)  unless($HAVE_SQLITE);
+
+  Rose::DB->default_type($db_type);
+
+  my $o = MySQLiteObject->new(name => 'John',
+                              k1   => 1,
+                              k2   => undef,
+                              k3   => 3);
+
+  ok(ref $o && $o->isa('MySQLiteObject'), "new() 1 - $db_type");
+
+  $o->flag2('true');
+  $o->date_created('now');
+  $o->last_modified($o->date_created);
+  $o->save_col(22);
+
+  ok($o->save, "save() 1 - $db_type");
+  ok($o->load, "load() 1 - $db_type");
+
+  $o->name('C' x 50);
+  is($o->name, 'C' x 32, "varchar truncation - $db_type");
+
+  $o->name('John');
+
+  $o->code('A');
+  is($o->code, 'A     ', "character padding - $db_type");
+
+  $o->code('C' x 50);
+  is($o->code, 'C' x 6, "character truncation - $db_type");
+
+  my $ouk;
+  ok($ouk = MySQLiteObject->new(k1 => 1,
+                                k2 => undef,
+                                k3 => 3)->load, "load() uk 1 - $db_type");
+
+  ok(!$ouk->not_found, "not_found() uk 1 - $db_type");
+
+  is($ouk->id, 1, "load() uk 2 - $db_type");
+  is($ouk->name, 'John', "load() uk 3 - $db_type");
+
+  ok($ouk->save, "save() uk 1 - $db_type");
+
+  my $o2 = MySQLiteObject->new(id => $o->id);
+
+  ok(ref $o2 && $o2->isa('MySQLiteObject'), "new() 2 - $db_type");
+
+  is($o2->bits->to_Bin, '00101', "bits() (bitfield default value) - $db_type");
+
+  ok($o2->load, "load() 2 - $db_type");
+  ok(!$o2->not_found, "not_found() 1 - $db_type");
+
+  is($o2->name, $o->name, "load() verify 1 - $db_type");
+  is($o2->date_created, $o->date_created, "load() verify 2 - $db_type");
+  is($o2->last_modified, $o->last_modified, "load() verify 3 - $db_type");
+  is($o2->status, 'active', "load() verify 4 (default value) - $db_type");
+  is($o2->flag, 1, "load() verify 5 (default boolean value) - $db_type");
+  is($o2->flag2, 1, "load() verify 6 (boolean value) - $db_type");
+  is($o2->save_col, 22, "load() verify 7 (aliased column) - $db_type");
+  is($o2->start->ymd, '1980-12-24', "load() verify 8 (date value) - $db_type");
+
+  $o2->set_status('foo');
+  is($o2->get_status, 'foo', 'get_status()');
+  $o2->set_status('active');
+  eval { $o2->set_status };
+  ok($@, 'set_status()');
+
+  is($o2->bits->to_Bin, '00101', "load() verify 9 (bitfield value) - $db_type");
+
+  my $clone = $o2->clone;
+  ok($o2->start eq $clone->start, "clone() 1 - $db_type");
+  $clone->start->set(year => '1960');
+  ok($o2->start ne $clone->start, "clone() 2 - $db_type");
+
+  $o2->name('John 2');
+  $o2->start('5/24/2001');
+
+  sleep(1); # keep the last modified dates from being the same
+
+  $o2->last_modified('now');
+  ok($o2->save, "save() 2 - $db_type");
+  ok($o2->load, "load() 3 - $db_type");
+
+  is($o2->date_created, $o->date_created, "save() verify 1 - $db_type");
+  ok($o2->last_modified ne $o->last_modified, "save() verify 2 - $db_type");
+  is($o2->start->ymd, '2001-05-24', "save() verify 3 (date value) - $db_type");
+
+  my $o3 = MySQLiteObject->new();
+
+  my $db = $o3->db or die $o3->error;
+
+  ok(ref $db && $db->isa('Rose::DB'), "db() - $db_type");
+
+  is($db->dbh, $o3->dbh, "dbh() - $db_type");
+
+  my $o4 = MySQLiteObject->new(id => 999);
+  ok(!$o4->load(speculative => 1), "load() nonexistent - $db_type");
+  ok($o4->not_found, "not_found() 2 - $db_type");
+
+  $o->nums([ 4, 5, 6 ]);
+  ok($o->save, "save() 3 - $db_type");
+  ok($o->load, "load() 4 - $db_type");
+
+  is($o->nums->[0], 4, "load() verify 10 (array value) - $db_type");
+  is($o->nums->[1], 5, "load() verify 11 (array value) - $db_type");
+  is($o->nums->[2], 6, "load() verify 12 (array value) - $db_type");
+
+  my @a = $o->nums;
+
+  is($a[0], 4, "load() verify 13 (array value) - $db_type");
+  is($a[1], 5, "load() verify 14 (array value) - $db_type");
+  is($a[2], 6, "load() verify 15 (array value) - $db_type");
+  is(@a, 3, "load() verify 16 (array value) - $db_type");
+
+  ok($o->delete, "delete() - $db_type");
+
+  $o = MySQLiteObject->new(name => 'John', id => 9);
+  $o->save_col(22);
+  ok($o->save, "save() 4 - $db_type");
+  $o->save_col(50);
+  ok($o->save, "save() 5 - $db_type");
+
+  $ouk = MySQLiteObject->new(save_col => 50);
+  ok($ouk->load, "load() aliased unique key - $db_type");
+
+  eval { $o->meta->alias_column(nonesuch => 'foo') };
+  ok($@, "alias_column() nonesuch - $db_type");
+
+  # This is okay now
+  #eval { $o->meta->alias_column(id => 'foo') };
+  #ok($@, "alias_column() primary key - $db_type");
+
+  $o = MySQLiteObject->new(id => 777);
+
+  $o->meta->error_mode('fatal');
+
+  $o->dbh->{'PrintError'} = 0;
+
+  eval { $o->load };
+  ok($@ && $o->not_found, "load() not found fatal - $db_type");
+
+  my $old_table = $o->meta->table;
+
+  $o->meta->table('nonesuch');
+
+  eval { $o->load };
+  ok($@ && !$o->not_found, "load() fatal - $db_type");
+
+  eval { $o->save };
+  ok($@, "save() fatal - $db_type");
+
+  $o->meta->table($old_table);  
+  $o->meta->error_mode('return');
+
+  $o = MyMPKSQLiteObject->new(name => 'John');
+
+  ok($o->save, "save() 1 multi-value primary key with generated values - $db_type");
+
+  is($o->k1, 1, "save() verify 1 multi-value primary key with generated values - $db_type");
+  is($o->k2, 2, "save() verify 2 multi-value primary key with generated values - $db_type");
+
+  $o = MyMPKSQLiteObject->new(name => 'Alex');
+
+  ok($o->save, "save() 2 multi-value primary key with generated values - $db_type");
+
+  is($o->k1, 3, "save() verify 3 multi-value primary key with generated values - $db_type");
+  is($o->k2, 4, "save() verify 4 multi-value primary key with generated values - $db_type");
+}
+
 BEGIN
 {
   #
@@ -975,6 +1149,153 @@ EOF
     MyInformixObject->meta->column('k1')->primary_key_position(7);
     Test::More::ok(!defined MyInformixObject->meta->column('k1')->primary_key_position, 'primary_key_position 3 - informix');
   }
+
+  #
+  # SQLite
+  #
+
+  eval 
+  {
+    $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
+      or die Rose::DB->error;
+  };
+
+  if(!$@ && $dbh)
+  {
+    our $HAVE_SQLITE = 1;
+
+    # Drop existing table and create schema, ignoring errors
+    {
+      local $dbh->{'RaiseError'} = 0;
+      local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE rose_db_object_test');
+      $dbh->do('DROP TABLE rose_db_object_test2');
+    }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test
+(
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  k1             INT,
+  k2             INT,
+  k3             INT,
+  name           VARCHAR(32) NOT NULL,
+  code           CHAR(6),
+  flag           BOOLEAN NOT NULL,
+  flag2          BOOLEAN,
+  status         VARCHAR(32) DEFAULT 'active',
+  bitz           VARCHAR(5) DEFAULT '00101' NOT NULL,
+  decs           DECIMAL(10,2),
+  start          DATE,
+  save           INT,
+  nums           VARCHAR(255),
+  last_modified  TIMESTAMP,
+  date_created   TIMESTAMP,
+
+  UNIQUE(k1, k2, k3)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test2
+(
+  k1             INT NOT NULL,
+  k2             INT NOT NULL,
+  name           VARCHAR(32),
+
+  UNIQUE(k1, k2)
+)
+EOF
+
+    $dbh->disconnect;
+
+    # Create test subclass
+
+    package MySQLiteObject;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    sub init_db { Rose::DB->new('sqlite') }
+
+    MySQLiteObject->meta->table('rose_db_object_test');
+
+    MySQLiteObject->meta->columns
+    (
+      name     => { type => 'varchar', length => 32 },
+      code     => { type => 'char', length => 6 },
+      id       => { primary_key => 1, not_null => 1 },
+      k1       => { type => 'int' },
+      k2       => { type => 'int', lazy => 1 },
+      k3       => { type => 'int' },
+      flag     => { type => 'boolean', default => 1 },
+      flag2    => { type => 'boolean' },
+      status   => { default => 'active', add_methods => [ qw(get set) ] },
+      start    => { type => 'date', default => '12/24/1980', lazy => 1 },
+      save     => { type => 'scalar' },
+      nums     => { type => 'array' },
+      bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },
+      decs     => { type => 'decimal', precision => 10, scale => 2 },
+      #last_modified => { type => 'timestamp' },
+      date_created  => { type => 'timestamp' },
+    );
+
+    MySQLiteObject->meta->add_unique_key('save');
+
+    MySQLiteObject->meta->add_unique_key([ qw(k1 k2 k3) ]);
+
+    MySQLiteObject->meta->add_columns(
+      Rose::DB::Object::Metadata::Column::Timestamp->new(
+        name => 'last_modified'));
+
+    eval { MySQLiteObject->meta->initialize };
+    Test::More::ok($@, 'meta->initialize() reserved method');
+
+    MySQLiteObject->meta->alias_column(save => 'save_col');
+
+    eval { MySQLiteObject->meta->initialize };
+    Test::More::ok($@, 'meta->initialize() no override');
+
+    MySQLiteObject->meta->initialize(preserve_existing => 1);
+
+    Test::More::is(MySQLiteObject->meta->column('id')->is_primary_key_member, 1, 'is_primary_key_member - sqlite');
+    Test::More::is(MySQLiteObject->meta->column('id')->primary_key_position, 1, 'primary_key_position 1 - sqlite');
+    Test::More::ok(!defined MySQLiteObject->meta->column('k1')->primary_key_position, 'primary_key_position 2 - sqlite');
+    MySQLiteObject->meta->column('k1')->primary_key_position(7);
+    Test::More::ok(!defined MySQLiteObject->meta->column('k1')->primary_key_position, 'primary_key_position 3 - sqlite');
+
+    package MyMPKSQLiteObject;
+
+    use Rose::DB::Object;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    sub init_db { Rose::DB->new('sqlite') }
+
+    MyMPKSQLiteObject->meta->table('rose_db_object_test2');
+
+    MyMPKSQLiteObject->meta->columns
+    (
+      k1          => { type => 'int', not_null => 1 },
+      k2          => { type => 'int', not_null => 1 },
+      name        => { type => 'varchar', length => 32 },
+    );
+
+    MyMPKSQLiteObject->meta->primary_key_columns('k1', 'k2');
+
+    MyMPKSQLiteObject->meta->initialize;
+
+    my $i = 1;
+
+    MyMPKSQLiteObject->meta->primary_key_generator(sub
+    {
+      my($meta, $db) = @_;
+
+      my $k1 = $i++;
+      my $k2 = $i++;
+
+      return $k1, $k2;
+    });
+  }
 }
 
 END
@@ -1013,6 +1334,18 @@ END
       or die Rose::DB->error;
 
     $dbh->do('DROP TABLE rose_db_object_test');
+
+    $dbh->disconnect;
+  }
+
+  if($HAVE_SQLITE)
+  {
+    # SQLite
+    my $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
+      or die Rose::DB->error;
+
+    $dbh->do('DROP TABLE rose_db_object_test');
+    $dbh->do('DROP TABLE rose_db_object_test2');
 
     $dbh->disconnect;
   }

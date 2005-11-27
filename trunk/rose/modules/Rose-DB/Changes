@@ -1,3 +1,7 @@
+0.53 (11.22.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added SQLite support.
+
 0.52 (11.22.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed a few identifier quoting issues.

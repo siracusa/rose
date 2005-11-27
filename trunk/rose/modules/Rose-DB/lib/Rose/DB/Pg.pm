@@ -26,10 +26,12 @@ sub build_dsn
   $info{'port'}   = $args{'port'};
 
   return
-    "dbi:$args{'dbi_driver'}:" . 
+    "dbi:Pg:" . 
     join(';', map { "$_=$info{$_}" } grep { defined $info{$_} }
               qw(dbname host port));
 }
+
+sub dbi_driver { 'Pg' }
 
 sub init_date_handler
 {

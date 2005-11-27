@@ -7,15 +7,15 @@ use Rose::DateTime::Util qw(parse_date);
 BEGIN
 {
   require Test::More;
-  eval { require DBD::mysql };
+  eval { require DBD::SQLite };
 
   if($@)
   {
-    Test::More->import(skip_all => 'Missing DBD::mysql');
+    Test::More->import(skip_all => 'Missing DBD::SQLite');
   }
   else
   {
-    Test::More->import(tests => 49);
+    Test::More->import(tests => 42);
   }
 }
 
@@ -26,7 +26,7 @@ BEGIN
 }
 
 My::DB2->default_domain('test');
-My::DB2->default_type('mysql');
+My::DB2->default_type('sqlite');
 
 my $db = My::DB2->new();
 
@@ -47,7 +47,7 @@ SKIP:
 
   foreach my $field (qw(dsn driver database host port username password))
   { 
-    is($db2->$field(), $db->$field(), "$field()");
+    is($db2->$field() || '', $db->$field() || '', "$field()");
   }
 
   $db->disconnect;
@@ -78,14 +78,6 @@ is($db->format_datetime('Foo(Bar)'), 'Foo(Bar)', 'format_datetime (Foo(Bar))');
 
 ok(!$db->validate_date_keyword($rand), "validate_date_keyword ($rand)");
 
-ok($db->validate_date_keyword('0000-00-00'), "validate_date_keyword (0000-00-00)");
-
-ok($db->validate_datetime_keyword('0000-00-00 00:00:00'), "validate_datetime_keyword (0000-00-00 00:00:00)");
-ok($db->validate_datetime_keyword('0000-00-00 00:00:00'), "validate_datetime_keyword (0000-00-00 00:00:00)");
-
-ok($db->validate_timestamp_keyword('0000-00-00 00:00:00'), "validate_timestamp_keyword (0000-00-00 00:00:00)");
-ok($db->validate_timestamp_keyword('00000000000000'), "validate_timestamp_keyword (00000000000000)");
-
 is($db->format_date('Foo(Bar)'), 'Foo(Bar)', 'format_date (Foo(Bar))');
 
 ok(!$db->validate_time_keyword($rand), "validate_time_keyword ($rand)");
@@ -104,17 +96,12 @@ ok(@$a == 2 && $a->[0] eq 'a' && $a->[1] eq 'b', 'parse_array() 1');
 
 SKIP:
 {
-  unless(lookup_ip($db->host))
-  {
-    skip("Host '@{[$db->host]}' not found", 19);
-  }
-
   eval { $db->connect };
-  skip("Could not connect to db 'test', 'mysql' - $@", 19)  if($@);
+  skip("Could not connect to db 'test', 'sqlite' - $@", 17)  if($@);
   $dbh = $db->dbh;
 
   is($db->domain, 'test', "domain()");
-  is($db->type, 'mysql', "type()");
+  is($db->type, 'sqlite', "type()");
 
   is($db->print_error, $dbh->{'PrintError'}, 'print_error() 2');
   is($db->print_error, $db->connect_option('PrintError'), 'print_error() 3');
@@ -126,7 +113,7 @@ SKIP:
   is($db->format_datetime(parse_date('12/31/2002 12:34:56', 'floating')), '2002-12-31 12:34:56', "format_datetime() floating");
 
   is($db->format_timestamp(parse_date('12/31/2002 12:34:56', 'floating')), '2002-12-31 12:34:56', "format_timestamp() floating");
-  is($db->format_time(parse_date('12/31/2002 12:34:56', 'floating')), '12:34:56', "format_time() floating");
+  #is($db->format_time(parse_date('12/31/2002 12:34:56', 'floating')), '12:34:56', "format_time() floating");
 
   is($db->format_bitfield($db->parse_bitfield('1010')),
      q(1010), "format_bitfield() 1");
@@ -152,31 +139,17 @@ SKIP:
   is($db->autocommit + 0, 0, 'autocommit() 4');
   is($dbh->{'AutoCommit'} + 0, 0, 'autocommit() 5');
 
-  ok(!defined $db->auto_sequence_name(table => 'foo.goo', column => 'bar'), 'auto_sequence_name()');
-
   my $dbh_copy = $db->retain_dbh;
 
   $db->disconnect;
 }
 
-$db->dsn('dbi:mysql:dbname=dbfoo;host=hfoo;port=pfoo');
+$db->dsn('dbi:SQLite:dbname=dbfoo');
 
 #ok(!defined($db->database) || $db->database eq 'dbfoo', 'dsn() 1');
 #ok(!defined($db->host) || $db->host eq 'hfoo', 'dsn() 2');
 #ok(!defined($db->port) || $db->port eq 'port', 'dsn() 3');
 
-eval { $db->dsn('dbi:Pg:dbname=dbfoo;host=hfoo;port=pfoo') };
+eval { $db->dsn('dbi:Pg:dbname=dbfoo') };
 
 ok($@ || $DBI::VERSION <  1.43, 'dsn() driver change');
-
-sub lookup_ip
-{
-  my($name) = shift;
-
-  my $address = (gethostbyname($name))[4] or return 0;
-
-  my @octets = unpack("CCCC", $address);
-
-  return 0  unless($name && @octets);
-  return join('.', @octets), "\n";
-}

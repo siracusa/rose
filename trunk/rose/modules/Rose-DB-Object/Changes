@@ -1,3 +1,9 @@
+0.53 (11.25.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added SQLite support.
+    * Improved aut-detection of primary key sequence names.
+    * Made the primary key sequence name configurable.
+
 0.53 (11.22.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Improved handling of table and column names that use 

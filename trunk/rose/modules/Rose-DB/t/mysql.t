@@ -126,7 +126,7 @@ SKIP:
   is($db->format_datetime(parse_date('12/31/2002 12:34:56', 'floating')), '2002-12-31 12:34:56', "format_datetime() floating");
 
   is($db->format_timestamp(parse_date('12/31/2002 12:34:56', 'floating')), '2002-12-31 12:34:56', "format_timestamp() floating");
-  is($db->format_time(parse_date('12/31/2002 12:34:56', 'floating')), '12:34:56', "format_datetime() floating");
+  is($db->format_time(parse_date('12/31/2002 12:34:56', 'floating')), '12:34:56', "format_time() floating");
 
   is($db->format_bitfield($db->parse_bitfield('1010')),
      q(1010), "format_bitfield() 1");

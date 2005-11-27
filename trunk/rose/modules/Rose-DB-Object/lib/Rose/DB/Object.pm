@@ -1621,6 +1621,14 @@ Here are examples of primary key column definitions that provide auto-generated 
       ...
     );
 
+=item * SQLite
+
+    CREATE TABLE mytable
+    (
+      id   INTEGER PRIMARY KEY AUTOINCREMENT,
+      ...
+    );
+
 =item * Informix
 
     CREATE TABLE mytable
