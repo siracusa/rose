@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 192;
+use Test::More tests => 257;
 
 BEGIN 
 {
@@ -10,7 +10,8 @@ BEGIN
   use_ok('Rose::DB::Object');
 }
 
-our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL_WITH_INNODB, $HAVE_INFORMIX);
+our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL_WITH_INNODB, $HAVE_INFORMIX, 
+    $HAVE_SQLITE);
 
 #
 # Postgres
@@ -1172,6 +1173,386 @@ __PACKAGE__->meta->initialize;
 EOF
 }
 
+#
+# SQLite
+#
+
+SKIP: foreach my $db_type ('sqlite')
+{
+  skip("SQLite tests", 65)  unless($HAVE_SQLITE);
+
+  Rose::DB->default_type($db_type);
+
+  my $o = MySQLiteObject->new(name => 'John', id => 1);
+
+  ok(ref $o && $o->isa('MySQLiteObject'), "new() 1 - $db_type");
+
+  $o->flag2('true');
+  $o->date_created('now');
+  $o->last_modified($o->date_created);
+  $o->save_col(7);
+
+  ok($o->save, "save() 1 - $db_type");
+  ok($o->load, "load() 1 - $db_type");
+
+  my $o2 = MySQLiteObject->new(id => $o->id);
+
+  ok(ref $o2 && $o2->isa('MySQLiteObject'), "new() 2 - $db_type");
+
+  is($o2->bits->to_Bin, '00101', "bits() (bitfield default value) - $db_type");
+
+  ok($o2->load, "load() 2 - $db_type");
+  ok(!$o2->not_found, "not_found() 1 - $db_type");
+
+  is($o2->name, $o->name, "load() verify 1 - $db_type");
+  is($o2->date_created, $o->date_created, "load() verify 2 - $db_type");
+  is($o2->last_modified, $o->last_modified, "load() verify 3 - $db_type");
+  is($o2->status, 'active', "load() verify 4 (default value) - $db_type");
+  is($o2->flag, 1, "load() verify 5 (default boolean value) - $db_type");
+  is($o2->flag2, 1, "load() verify 6 (boolean value) - $db_type");
+  is($o2->save_col, 7, "load() verify 7 (aliased column) - $db_type");
+  is($o2->start->ymd, '1980-12-24', "load() verify 8 (date value) - $db_type");
+
+  is($o2->bits->to_Bin, '00101', "load() verify 9 (bitfield value) - $db_type");
+
+  $o2->name('John 2');
+  $o2->start('5/24/2001');
+
+  sleep(1); # keep the last modified dates from being the same
+
+  $o2->last_modified('now');
+  ok($o2->save, "save() 2 - $db_type");
+  ok($o2->load, "load() 3 - $db_type");
+
+  is($o2->date_created, $o->date_created, "save() verify 1 - $db_type");
+  ok($o2->last_modified ne $o->last_modified, "save() verify 2 - $db_type");
+  is($o2->start->ymd, '2001-05-24', "save() verify 3 (date value) - $db_type");
+
+  my $o3 = MySQLiteObject->new();
+
+  my $db = $o3->db or die $o3->error;
+
+  ok(ref $db && $db->isa('Rose::DB'), "db() - $db_type");
+
+  is($db->dbh, $o3->dbh, "dbh() - $db_type");
+
+  my $o4 = MySQLiteObject->new(id => 999);
+  ok(!$o4->load(speculative => 1), "load() nonexistent - $db_type");
+  ok($o4->not_found, "not_found() 2 - $db_type");
+
+  ok($o->load, "load() 4 - $db_type");
+
+  my $o5 = MySQLiteObject->new(id => $o->id);
+
+  ok($o5->load, "load() 5 - $db_type");
+
+  $o5->nums([ 4, 5, 6 ]);
+  ok($o5->save, "save() 4 - $db_type");
+  ok($o->load, "load() 6 - $db_type");
+
+  is($o5->nums->[0], 4, "load() verify 10 (array value) - $db_type");
+  is($o5->nums->[1], 5, "load() verify 11 (array value) - $db_type");
+  is($o5->nums->[2], 6, "load() verify 12 (array value) - $db_type");
+
+  my @a = $o5->nums;
+
+  is($a[0], 4, "load() verify 13 (array value) - $db_type");
+  is($a[1], 5, "load() verify 14 (array value) - $db_type");
+  is($a[2], 6, "load() verify 15 (array value) - $db_type");
+  is(@a, 3, "load() verify 16 (array value) - $db_type");
+
+  my $oo1 = MySQLiteOtherObject->new(k1 => 1, k2 => 2, k3 => 3, name => 'one');
+  ok($oo1->save, 'other object save() 1');
+
+  my $oo2 = MySQLiteOtherObject->new(k1 => 11, k2 => 12, k3 => 13, name => 'two');
+  ok($oo2->save, 'other object save() 2');
+
+  my $other2 = MySQLiteOtherObject2->new(id2 => 12, name => 'twelve');
+  ok($other2->save, 'other 2 object save() 1');
+
+  my $other3 = MySQLiteOtherObject3->new(id3 => 13, name => 'thirteen');
+  ok($other3->save, 'other 3 object save() 1');
+
+  my $other4 = MySQLiteOtherObject4->new(id4 => 14, name => 'fourteen');
+  ok($other4->save, 'other 4 object save() 1');
+
+  is($o->fother, undef, 'fother() 1');
+  is($o->fother2, undef, 'fother2() 1');
+  is($o->fother3, undef, 'fother3() 1');
+  is($o->my_sqlite_other_object, undef, 'my_sqlite_other_object() 1');
+
+  $o->fother_id2(12);
+  $o->fother_id3(13);
+  $o->fother_id4(14);
+  $o->fkone(1);
+  $o->fk2(2);
+  $o->fk3(3);
+
+  my $obj = $o->my_sqlite_other_object or warn "# ", $o->error, "\n";
+  is(ref $obj, 'MySQLiteOtherObject', 'my_sqlite_other_object() 2');
+  is($obj->name, 'one', 'my_sqlite_other_object() 3');
+
+  $obj = $o->fother or warn "# ", $o->error, "\n";
+  is(ref $obj, 'MySQLiteOtherObject2', 'fother() 2');
+  is($obj->name, 'twelve', 'fother() 3');
+
+  $obj = $o->fother2 or warn "# ", $o->error, "\n";
+  is(ref $obj, 'MySQLiteOtherObject3', 'fother2() 2');
+  is($obj->name, 'thirteen', 'fother2() 3');
+
+  $obj = $o->fother3 or warn "# ", $o->error, "\n";
+  is(ref $obj, 'MySQLiteOtherObject4', 'fother3() 2');
+  is($obj->name, 'fourteen', 'fother3() 3');
+
+  $o->my_sqlite_other_object(undef);
+  $o->fkone(11);
+  $o->fk2(12);
+  $o->fk3(13);
+
+  $obj = $o->my_sqlite_other_object or warn "# ", $o->error, "\n";
+
+  is(ref $obj, 'MySQLiteOtherObject', 'my_sqlite_other_object() 4');
+  is($obj->name, 'two', 'my_sqlite_other_object() 5');
+
+  ok($o->delete, "delete() - $db_type");
+
+  eval { $o->meta->alias_column(nonesuch => 'foo') };
+  ok($@, 'alias_column() nonesuch');
+
+  #
+  # Test code generation
+  #
+
+  is(MySQLiteObject->meta->perl_foreign_keys_definition,
+     <<'EOF', "perl_foreign_keys_definition 1 - $db_type");
+__PACKAGE__->meta->foreign_keys(
+    fother => {
+        class => 'MySQLiteOtherObject2',
+        key_columns => {
+            fother_id2 => 'id2',
+        },
+    },
+
+    fother2 => {
+        class => 'MySQLiteOtherObject3',
+        key_columns => {
+            fother_id3 => 'id3',
+        },
+    },
+
+    fother3 => {
+        class => 'MySQLiteOtherObject4',
+        key_columns => {
+            fother_id4 => 'id4',
+        },
+    },
+
+    my_sqlite_other_object => {
+        class => 'MySQLiteOtherObject',
+        key_columns => {
+            fk1 => 'k1',
+            fk2 => 'k2',
+            fk3 => 'k3',
+        },
+    },
+);
+EOF
+
+  is(MySQLiteObject->meta->perl_foreign_keys_definition(braces => 'bsd', indent => 2),
+     <<'EOF', "perl_foreign_keys_definition 2 - $db_type");
+__PACKAGE__->meta->foreign_keys
+(
+  fother => 
+  {
+    class => 'MySQLiteOtherObject2',
+    key_columns => 
+    {
+      fother_id2 => 'id2',
+    },
+  },
+
+  fother2 => 
+  {
+    class => 'MySQLiteOtherObject3',
+    key_columns => 
+    {
+      fother_id3 => 'id3',
+    },
+  },
+
+  fother3 => 
+  {
+    class => 'MySQLiteOtherObject4',
+    key_columns => 
+    {
+      fother_id4 => 'id4',
+    },
+  },
+
+  my_sqlite_other_object => 
+  {
+    class => 'MySQLiteOtherObject',
+    key_columns => 
+    {
+      fk1 => 'k1',
+      fk2 => 'k2',
+      fk3 => 'k3',
+    },
+  },
+);
+EOF
+
+  is(MySQLiteObject->meta->perl_class_definition,
+     <<'EOF', "perl_class_definition 1 - $db_type");
+package MySQLiteObject;
+
+use strict;
+
+use Rose::DB::Object;
+our @ISA = qw(Rose::DB::Object);
+
+__PACKAGE__->meta->table('Rose_db_object_test');
+
+__PACKAGE__->meta->columns(
+    id            => { type => 'integer', not_null => 1 },
+    name          => { type => 'varchar', length => 32, not_null => 1 },
+    flag          => { type => 'boolean', default => 't', not_null => 1 },
+    flag2         => { type => 'boolean' },
+    status        => { type => 'varchar', default => 'active', length => 32 },
+    bits          => { type => 'bitfield', bits => 5, default => '00101', not_null => 1 },
+    start         => { type => 'date', default => '1980-12-24' },
+    save          => { type => 'integer', alias => 'save_col' },
+    fk1           => { type => 'integer', alias => 'fkone' },
+    fk2           => { type => 'integer' },
+    fk3           => { type => 'integer' },
+    fother_id2    => { type => 'integer' },
+    fother_id3    => { type => 'integer' },
+    fother_id4    => { type => 'integer' },
+    last_modified => { type => 'datetime' },
+    date_created  => { type => 'datetime' },
+    nums          => { type => 'array' },
+);
+
+__PACKAGE__->meta->primary_key_columns([ 'id' ]);
+
+__PACKAGE__->meta->foreign_keys(
+    fother => {
+        class => 'MySQLiteOtherObject2',
+        key_columns => {
+            fother_id2 => 'id2',
+        },
+    },
+
+    fother2 => {
+        class => 'MySQLiteOtherObject3',
+        key_columns => {
+            fother_id3 => 'id3',
+        },
+    },
+
+    fother3 => {
+        class => 'MySQLiteOtherObject4',
+        key_columns => {
+            fother_id4 => 'id4',
+        },
+    },
+
+    my_sqlite_other_object => {
+        class => 'MySQLiteOtherObject',
+        key_columns => {
+            fk1 => 'k1',
+            fk2 => 'k2',
+            fk3 => 'k3',
+        },
+    },
+);
+
+__PACKAGE__->meta->initialize;
+
+1;
+EOF
+
+  is(MySQLiteObject->meta->perl_class_definition(braces => 'bsd', indent => 2),
+     <<'EOF', "perl_class_definition 2 - $db_type");
+package MySQLiteObject;
+
+use strict;
+
+use Rose::DB::Object;
+our @ISA = qw(Rose::DB::Object);
+
+__PACKAGE__->meta->table('Rose_db_object_test');
+
+__PACKAGE__->meta->columns
+(
+  id            => { type => 'integer', not_null => 1 },
+  name          => { type => 'varchar', length => 32, not_null => 1 },
+  flag          => { type => 'boolean', default => 't', not_null => 1 },
+  flag2         => { type => 'boolean' },
+  status        => { type => 'varchar', default => 'active', length => 32 },
+  bits          => { type => 'bitfield', bits => 5, default => '00101', not_null => 1 },
+  start         => { type => 'date', default => '1980-12-24' },
+  save          => { type => 'integer', alias => 'save_col' },
+  fk1           => { type => 'integer', alias => 'fkone' },
+  fk2           => { type => 'integer' },
+  fk3           => { type => 'integer' },
+  fother_id2    => { type => 'integer' },
+  fother_id3    => { type => 'integer' },
+  fother_id4    => { type => 'integer' },
+  last_modified => { type => 'datetime' },
+  date_created  => { type => 'datetime' },
+  nums          => { type => 'array' },
+);
+
+__PACKAGE__->meta->primary_key_columns([ 'id' ]);
+
+__PACKAGE__->meta->foreign_keys
+(
+  fother => 
+  {
+    class => 'MySQLiteOtherObject2',
+    key_columns => 
+    {
+      fother_id2 => 'id2',
+    },
+  },
+
+  fother2 => 
+  {
+    class => 'MySQLiteOtherObject3',
+    key_columns => 
+    {
+      fother_id3 => 'id3',
+    },
+  },
+
+  fother3 => 
+  {
+    class => 'MySQLiteOtherObject4',
+    key_columns => 
+    {
+      fother_id4 => 'id4',
+    },
+  },
+
+  my_sqlite_other_object => 
+  {
+    class => 'MySQLiteOtherObject',
+    key_columns => 
+    {
+      fk1 => 'k1',
+      fk2 => 'k2',
+      fk3 => 'k3',
+    },
+  },
+);
+
+__PACKAGE__->meta->initialize;
+
+1;
+EOF
+}
+
 BEGIN
 {
   #
@@ -1192,7 +1573,7 @@ BEGIN
 
     Rose::DB::Object::Metadata->unregister_all_classes;
   
-    # Drop existing table and create schema, ignoring errors
+    # Drop existing tables, ignoring errors
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
@@ -1394,7 +1775,7 @@ EOF
 
     Rose::DB::Object::Metadata->unregister_all_classes;
 
-    # Drop existing table and create schema, ignoring errors
+    # Drop existing tables, ignoring errors
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
@@ -1572,7 +1953,7 @@ EOF
 
     Rose::DB::Object::Metadata->unregister_all_classes;
 
-    # Drop existing table and create schema, ignoring errors
+    # Drop existing tables, ignoring errors
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
@@ -1714,6 +2095,161 @@ EOF
     eval 'package MyInformixObjectEvalTest; ' . MyInformixObject->meta->perl_foreign_keys_definition;
     Test::More::ok(!$@, 'perl_foreign_keys_definition eval - informix');
   }
+
+  #
+  # SQLite
+  #
+
+  eval
+  {
+    $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
+      or die Rose::DB->error;
+  };
+
+  if(!$@ && $dbh)
+  {
+    our $HAVE_SQLITE = 1;
+
+    Rose::DB::Object::Metadata->unregister_all_classes;
+
+    # Drop existing tables, ignoring errors
+    {
+      local $dbh->{'RaiseError'} = 0;
+      local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE Rose_db_object_test');
+      $dbh->do('DROP TABLE Rose_db_object_other');
+      $dbh->do('DROP TABLE Rose_db_object_other2');
+      $dbh->do('DROP TABLE Rose_db_object_other3');
+      $dbh->do('DROP TABLE Rose_db_object_other4');
+    }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE Rose_db_object_other
+(
+  k1    INT NOT NULL,
+  k2    INT NOT NULL,
+  k3    INT NOT NULL,
+  name  VARCHAR(32),
+
+  PRIMARY KEY(k1, k2, k3)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE Rose_db_object_other2
+(
+  id2   INTEGER PRIMARY KEY AUTOINCREMENT,
+  name  VARCHAR(32)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE Rose_db_object_other3
+(
+  id3   INTEGER PRIMARY KEY AUTOINCREMENT,
+  name  VARCHAR(32)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE Rose_db_object_other4
+(
+  id4   INTEGER PRIMARY KEY AUTOINCREMENT,
+  name  VARCHAR(32)
+)
+EOF
+
+    # Create test foreign subclass 1
+
+    package MySQLiteOtherObject;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    sub init_db { Rose::DB->new('sqlite') }
+
+    MySQLiteOtherObject->meta->table('Rose_db_object_other');
+
+    MySQLiteOtherObject->meta->auto_initialize;
+
+    # Create test foreign subclasses 2-4
+
+    package MySQLiteOtherObject2;
+    our @ISA = qw(Rose::DB::Object);
+    sub init_db { Rose::DB->new('sqlite') }
+    MySQLiteOtherObject2->meta->table('Rose_db_object_other2');
+    MySQLiteOtherObject2->meta->auto_initialize;
+
+    package MySQLiteOtherObject3;
+    our @ISA = qw(Rose::DB::Object);
+    sub init_db { Rose::DB->new('sqlite') }
+    MySQLiteOtherObject3->meta->table('Rose_db_object_other3');
+    MySQLiteOtherObject3->meta->auto_initialize;
+
+    package MySQLiteOtherObject4;
+    our @ISA = qw(Rose::DB::Object);
+    sub init_db { Rose::DB->new('sqlite') }
+    MySQLiteOtherObject4->meta->table('Rose_db_object_other4');
+    MySQLiteOtherObject4->meta->auto_initialize;   
+
+    $dbh->do(<<"EOF");
+CREATE TABLE Rose_db_object_test
+(
+  id             INT NOT NULL PRIMARY KEY,
+  name           VARCHAR(32) NOT NULL,
+  flag           BOOLEAN DEFAULT 't' NOT NULL,
+  flag2          BOOLEAN,
+  status         VARCHAR(32) DEFAULT 'active',
+  bits           BIT(5) DEFAULT '00101' NOT NULL,
+  start          DATE DEFAULT '1980-12-24',
+  save           INT,
+  nums           VARCHAR(255),
+  fk1            INT,
+  fk2            INT,
+  fk3            INT,
+  fother_id2     INT REFERENCES Rose_db_object_other2 (id2),
+  fother_id3     INT REFERENCES Rose_db_object_other3 (id3),
+  fother_id4     INT REFERENCES Rose_db_object_other4 (id4),
+  last_modified  DATETIME,
+  date_created   DATETIME,
+
+  FOREIGN KEY (fk1, fk2, fk3) REFERENCES Rose_db_object_other (k1, k2, k3)
+)
+EOF
+
+    $dbh->disconnect;
+
+    # Create test subclass
+
+    package MySQLiteObject;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    sub init_db { Rose::DB->new('sqlite') }
+
+    MySQLiteObject->meta->table('Rose_db_object_test');
+    MySQLiteObject->meta->convention_manager(undef);
+
+    MySQLiteObject->meta->column_name_to_method_name_mapper(sub
+    {
+      return ($_ eq 'fk1') ? 'fkone' : $_
+    });
+
+    # No native support for array types in SQLite
+    MySQLiteObject->meta->column(nums => { type => 'array' });
+
+    MySQLiteObject->meta->auto_initialize;
+
+    Test::More::ok(MySQLiteObject->can('fother'),  'fother() check - sqlite');
+    Test::More::ok(MySQLiteObject->can('fother2'), 'fother2() check - sqlite');
+    Test::More::ok(MySQLiteObject->can('fother3'), 'fother3() check - sqlite');
+
+    package MySQLiteObjectEvalTest;
+    our @ISA = qw(Rose::DB::Object);
+    sub init_db { Rose::DB->new('sqlite') }
+
+    eval 'package MySQLiteObjectEvalTest; ' . MySQLiteObject->meta->perl_foreign_keys_definition;
+    Test::More::ok(!$@, 'perl_foreign_keys_definition eval - sqlite');
+  }
 }
 
 END
@@ -1757,6 +2293,19 @@ END
       or die Rose::DB->error;
 
     $dbh->do('DROP TABLE Rose_db_object_test CASCADE');
+    $dbh->do('DROP TABLE Rose_db_object_other');
+    $dbh->do('DROP TABLE Rose_db_object_other2');
+
+    $dbh->disconnect;
+  }
+
+  if($HAVE_SQLITE)
+  {
+    # SQLite
+    my $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
+      or die Rose::DB->error;
+
+    $dbh->do('DROP TABLE Rose_db_object_test');
     $dbh->do('DROP TABLE Rose_db_object_other');
     $dbh->do('DROP TABLE Rose_db_object_other2');
 
