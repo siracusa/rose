@@ -627,7 +627,7 @@ SKIP: foreach my $db_type ('sqlite')
 
   ok(!$ouk->not_found, "not_found() uk 1 - $db_type");
 
-  is($ouk->id, 1, "load() uk 2 - $db_type");
+  is($ouk->id->[0], 1, "load() uk 2 - $db_type");
   is($ouk->name, 'John', "load() uk 3 - $db_type");
 
   ok($ouk->save, "save() uk 1 - $db_type");
@@ -1246,6 +1246,9 @@ EOF
     MySQLiteObject->meta->add_columns(
       Rose::DB::Object::Metadata::Column::Timestamp->new(
         name => 'last_modified'));
+
+    MySQLiteObject->meta->column('id')->add_trigger(inflate => sub { defined $_[1] ? [ $_[1] ] : undef });
+    MySQLiteObject->meta->column('id')->add_trigger(deflate => sub { ref $_[1] ? @{$_[1]}  : $_[1] });
 
     eval { MySQLiteObject->meta->initialize };
     Test::More::ok($@, 'meta->initialize() reserved method');
