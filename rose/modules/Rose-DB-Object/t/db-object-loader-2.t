@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (4 * 17);
+use Test::More tests => 1 + (5 * 17);
 
 BEGIN 
 {
@@ -35,7 +35,7 @@ SETUP:
 
 my $i = 1;
 
-foreach my $db_type (qw(mysql pg pg_with_schema informix))
+foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 {
   SKIP:
   {
@@ -380,7 +380,7 @@ CREATE TABLE products
   UNIQUE(name),
   INDEX(vendor_id),
 
-  FOREIGN KEY (vendor_id) REFERENCES vendors (id)
+  FOREIGN KEY (vendor_id) REFERENCES vendors (id) ON DELETE NO ACTION ON UPDATE SET NULL
 )
 TYPE=InnoDB
 EOF
@@ -396,7 +396,7 @@ CREATE TABLE prices
   UNIQUE(product_id, region),
   INDEX(product_id),
 
-  FOREIGN KEY (product_id) REFERENCES products (id)
+  FOREIGN KEY (product_id) REFERENCES products (id) ON UPDATE NO ACTION
 )
 TYPE=InnoDB
 EOF
@@ -423,8 +423,8 @@ CREATE TABLE product_color_map
   INDEX(color_id),
   INDEX(product_id),
 
-  FOREIGN KEY (product_id) REFERENCES products (id),
-  FOREIGN KEY (color_id) REFERENCES colors (id)
+  FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE RESTRICT,
+  FOREIGN KEY (color_id) REFERENCES colors (id) ON UPDATE NO ACTION
 )
 TYPE=InnoDB
 EOF
@@ -451,7 +451,7 @@ EOF
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
 
-      $dbh->do('DROP TABLE products_colors CASCADE');
+      $dbh->do('DROP TABLE product_color_map CASCADE');
       $dbh->do('DROP TABLE colors CASCADE');
       $dbh->do('DROP TABLE prices CASCADE');
       $dbh->do('DROP TABLE products CASCADE');
@@ -510,7 +510,7 @@ CREATE TABLE colors
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE products_colors
+CREATE TABLE product_color_map
 (
   product_id  INT NOT NULL REFERENCES products (id),
   color_id    INT NOT NULL REFERENCES colors (id),
@@ -519,7 +519,96 @@ CREATE TABLE products_colors
 )
 EOF
 
-    $dbh->commit;
+    $dbh->disconnect;
+  }
+
+  #
+  # SQLite
+  #
+
+  eval
+  {
+    $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
+      or die Rose::DB->error;
+  };
+
+  if(!$@ && $dbh)
+  {
+    $Have{'sqlite'} = 1;
+
+    # Drop existing tables, ignoring errors
+    {
+      local $dbh->{'RaiseError'} = 0;
+      local $dbh->{'PrintError'} = 0;
+
+      $dbh->do('DROP TABLE product_color_map');
+      $dbh->do('DROP TABLE colors');
+      $dbh->do('DROP TABLE prices');
+      $dbh->do('DROP TABLE products');
+      $dbh->do('DROP TABLE vendors');
+    }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE vendors
+(
+  id    INTEGER PRIMARY KEY AUTOINCREMENT,
+  name  VARCHAR(255) NOT NULL,
+
+  UNIQUE(name)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE products
+(
+  id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  name    VARCHAR(255) NOT NULL,
+  price   DECIMAL(10,2) DEFAULT 0.00 NOT NULL,
+
+  vendor_id  INT REFERENCES vendors (id),
+
+  status  VARCHAR(128) DEFAULT 'inactive' NOT NULL
+            CHECK(status IN ('inactive', 'active', 'defunct')),
+
+  date_created  DATETIME,
+  release_date  DATETIME,
+  
+  UNIQUE(name)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE prices
+(
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  product_id  INT NOT NULL REFERENCES products (id),
+  region      CHAR(2) DEFAULT 'US' NOT NULL,
+  price       DECIMAL(10,2) DEFAULT 0.00 NOT NULL,
+
+  UNIQUE(product_id, region)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE colors
+(
+  id    INTEGER PRIMARY KEY AUTOINCREMENT,
+  name  VARCHAR(255) NOT NULL,
+
+  UNIQUE(name)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE product_color_map
+(
+  product_id  INT NOT NULL REFERENCES products (id),
+  color_id    INT NOT NULL REFERENCES colors (id),
+
+  PRIMARY KEY(product_id, color_id)
+)
+EOF
+
     $dbh->disconnect;
   }
 }
@@ -572,11 +661,26 @@ END
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE products_colors CASCADE');
+    $dbh->do('DROP TABLE product_color_map CASCADE');
     $dbh->do('DROP TABLE colors CASCADE');
     $dbh->do('DROP TABLE prices CASCADE');
     $dbh->do('DROP TABLE products CASCADE');
     $dbh->do('DROP TABLE vendors CASCADE');
+
+    $dbh->disconnect;
+  }
+
+  if($Have{'sqlite'})
+  {
+    # Informix
+    my $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
+      or die Rose::DB->error;
+
+    $dbh->do('DROP TABLE product_color_map');
+    $dbh->do('DROP TABLE colors');
+    $dbh->do('DROP TABLE prices');
+    $dbh->do('DROP TABLE products');
+    $dbh->do('DROP TABLE vendors');
 
     $dbh->disconnect;
   }
