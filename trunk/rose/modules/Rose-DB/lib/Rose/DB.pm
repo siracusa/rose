@@ -21,7 +21,6 @@ our $VERSION = '0.53';
 
 our $Debug = 0;
 
-
 #
 # Class data
 #
@@ -76,18 +75,21 @@ __PACKAGE__->default_connect_options
 
 BEGIN { __PACKAGE__->registry(Rose::DB::Registry->new) }
 
-LOAD_SUBCLASSES:
-{
-  my %seen;
+my %Class_Loaded;
 
-  my $map = __PACKAGE__->driver_classes;
-
-  foreach my $class (values %$map)
-  {
-    eval qq(require $class)  unless($seen{$class}++);
-    die "Could not load $class - $@"  if($@);
-  }
-}
+# Load on demand instead
+# LOAD_SUBCLASSES:
+# {
+#   my %seen;
+# 
+#   my $map = __PACKAGE__->driver_classes;
+# 
+#   foreach my $class (values %$map)
+#   {
+#     eval qq(require $class)  unless($seen{$class}++);
+#     die "Could not load $class - $@"  if($@);
+#   }
+# }
 
 #
 # Object data
@@ -104,6 +106,7 @@ use Rose::Object::MakeMethods::Generic
   'boolean' =>
   [
     '_dbh_is_private',
+    'auto_create' => { default => 1 },
   ],
 
   'scalar --get_set_init' =>
@@ -246,6 +249,11 @@ sub new
      $class->driver_class('generic') || Carp::croak
     "No driver class found for drivers '$driver' or 'generic'";
 
+  unless($Class_Loaded{$driver_class})
+  {
+    $class->load_driver_class($driver_class);
+  }
+
   my $self;
 
   REBLESS: # Do slightly evil re-blessing magic
@@ -290,6 +298,36 @@ sub init
   my($self) = shift;
   $self->SUPER::init(@_);
   $self->init_db_info;
+}
+
+sub load_driver_class
+{
+  my($class, $arg) = @_;
+
+  my $driver_class = $class->driver_class($arg) || $arg;
+
+  eval "require $driver_class";
+
+  Carp::croak "Could not load driver class '$driver_class' - $@"
+    if($@ && !UNIVERSAL::isa($driver_class, 'Rose::DB'));
+
+  $Class_Loaded{$driver_class}++;
+}
+
+sub driver_class_is_loaded { $Class_Loaded{$_[1]} }
+
+sub load_driver_classes
+{
+  my($class) = shift;
+
+  my $map = $class->driver_classes;
+
+  foreach my $arg (@_ ? @_ : keys %$map)
+  {
+    $class->load_driver_class($arg);
+  }
+
+  return;
 }
 
 sub init_class 

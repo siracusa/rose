@@ -13,6 +13,8 @@ BEGIN
 
   require 't/test-lib.pl';
 
+  My::DB2->load_driver_classes(qw(pg MySQL Sqlite));
+
   is(Rose::DB::Constants::IN_TRANSACTION(), -1, 'Rose::DB::Constants::IN_TRANSACTION');
   Rose::DB::Constants->import('IN_TRANSACTION');
 

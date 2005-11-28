@@ -21,6 +21,11 @@ use Rose::Object::MakeMethods::Generic
        server_time_zone schema catalog type username)
   ],
 
+  'boolean' =>
+  [
+    'auto_create' => { default => 1 },
+  ],
+
   'hash' =>
   [
     'connect_options' => { interface => 'get_set_init' },

@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 42);
+    Test::More->import(tests => 43);
   }
 }
 
@@ -153,3 +153,17 @@ $db->dsn('dbi:SQLite:dbname=dbfoo');
 eval { $db->dsn('dbi:Pg:dbname=dbfoo') };
 
 ok($@ || $DBI::VERSION <  1.43, 'dsn() driver change');
+
+My::DB2->register_db(
+  domain      => My::DB2->default_domain,
+  type        => 'nonesuch',
+  driver      => 'SQLITE',
+  database    => '/tmp/does_not_exist.db',
+  auto_create => 0,
+);
+
+$db = My::DB2->new('nonesuch');
+
+eval { $db->connect };
+
+ok($@ =~ /^Refus/, 'nonesuch database');

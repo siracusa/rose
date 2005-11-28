@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 42);
+    Test::More->import(tests => 43);
   }
 }
 
@@ -153,3 +153,17 @@ $db->dsn('dbi:SQLite:dbname=dbfoo');
 eval { $db->dsn('dbi:Pg:dbname=dbfoo') };
 
 ok($@ || $DBI::VERSION <  1.43, 'dsn() driver change');
+
+Rose::DB->register_db(
+  domain      => Rose::DB->default_domain,
+  type        => 'nonesuch',
+  driver      => 'SQLITE',
+  database    => '/tmp/does_not_exist.db',
+  auto_create => 0,
+);
+
+$db = Rose::DB->new('nonesuch');
+
+eval { $db->connect };
+
+ok($@ =~ /^Refus/, 'nonesuch database');

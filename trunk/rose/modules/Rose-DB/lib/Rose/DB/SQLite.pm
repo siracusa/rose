@@ -2,6 +2,8 @@ package Rose::DB::SQLite;
 
 use strict;
 
+use Carp();
+
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
@@ -27,6 +29,21 @@ sub build_dsn
 }
 
 sub dbi_driver { 'SQLite' }
+
+sub init_dbh
+{
+  my($self) = shift;
+  
+  my $database = $self->database;
+
+  unless(-e $database)
+  {
+    Carp::croak "Refusing to create non-existent SQLite database ",
+                "file: '$database'";
+  }
+
+  $self->SUPER::init_dbh(@_);
+}
 
 sub last_insertid_from_sth { shift->dbh->func('last_insert_rowid') }
 
@@ -123,6 +140,16 @@ SQLite does not have a native "ARRAY" data type, but it can be emulated using a 
 =back
 
 =head1 OBJECT METHODS
+
+=over 4
+
+=item B<auto_create [BOOL]>
+
+Get or set a boolean value indicating whether or not a new SQLite L<database|Rose::DB/database> should be created if it does not already exist.  Defaults to true.
+
+If false, and if the specified L<database|Rose::DB/database> does not exist, then a fatal error will occur when an attempt is made to L<connect|Rose::DB/connect> to the database.
+
+=back
 
 =head2 Value Parsing and Formatting
 
