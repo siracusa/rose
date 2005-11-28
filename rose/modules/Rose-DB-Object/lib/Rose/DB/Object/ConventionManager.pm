@@ -65,9 +65,9 @@ sub table_to_class
   return ($prefix || '') . ucfirst $table;
 }
 
-sub table_to_manager_base_name
+sub auto_manager_base_name
 {
-  my($self, $table) = @_;
+  my($self, $table, $object_class) = @_;
   return $table;
 }
 
@@ -651,6 +651,10 @@ Given the name of a foreign class and an optional pre-existing foreign key name,
 
 Calls L<plural_to_singular|/plural_to_singular>, passing the L<table|Rose::DB::Object::Metadata/table> name of the foreign class.  Returns the current name if the call to L<plural_to_singular|/plural_to_singular> does not return a true value.
 
+=item B<auto_manager_base_name TABLE, CLASS>
+
+Given a table name and the name of the L<Rose::DB::Object>-derived class that fronts it, return a base name suitable for use as the value of the C<base_name> parameter to L<Rose::DB::Object::Manager>'s L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.  The default implementation simply returns the table name.
+
 =item B<auto_primary_key_column_names>
 
 Returns a reference to an array of primary key column names.
@@ -888,10 +892,6 @@ Examples:
     products      <none>   Product
     big_hats      My::     My::BigHat
     my5_hat_pig   <none>   My5HatPig
-
-=item B<table_to_manager_base_name TABLE>
-
-Given a table name, return a base name suitable for use as the value of the C<base_name> parameter to L<Rose::DB::Object::Manager>'s L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.  The default implementation returns the table name as-is.
 
 =back
 
