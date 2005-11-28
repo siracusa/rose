@@ -396,7 +396,7 @@ CREATE TABLE products
   UNIQUE(name),
   INDEX(vendor_id),
 
-  FOREIGN KEY (vendor_id) REFERENCES vendors (id)
+  FOREIGN KEY (vendor_id) REFERENCES vendors (id) ON DELETE NO ACTION ON UPDATE SET NULL
 )
 TYPE=InnoDB
 EOF
@@ -412,7 +412,7 @@ CREATE TABLE prices
   UNIQUE(product_id, region),
   INDEX(product_id),
 
-  FOREIGN KEY (product_id) REFERENCES products (id)
+  FOREIGN KEY (product_id) REFERENCES products (id) ON UPDATE NO ACTION
 )
 TYPE=InnoDB
 EOF
@@ -439,8 +439,8 @@ CREATE TABLE products_colors
   INDEX(color_id),
   INDEX(product_id),
 
-  FOREIGN KEY (product_id) REFERENCES products (id),
-  FOREIGN KEY (color_id) REFERENCES colors (id)
+  FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE RESTRICT,
+  FOREIGN KEY (color_id) REFERENCES colors (id) ON UPDATE NO ACTION
 )
 TYPE=InnoDB
 EOF

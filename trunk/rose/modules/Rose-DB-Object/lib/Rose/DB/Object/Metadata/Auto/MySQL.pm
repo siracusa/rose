@@ -143,9 +143,10 @@ sub auto_generate_foreign_keys
       {
         s/^InnoDB free:.+?; *//i;
 
-        FK: while(s{\( ((?:`[^`]+` \s*)+) \) \s+ REFER \s* 
-                    `([^`]+) / ([^`]+) ` \( ((?:`[^`]+` \s*)+) \)
-                    (?: \s+ ON \s+ (?: DELETE | UPDATE) \s+ 
+        FK: while(s{\( ((?:`(?:[^`]|``)+` \s*)+) \) \s+ REFER \s* 
+                    `((?:[^`]|``)+) / ((?:[^`]|``)+) ` 
+                    \( ((?:`(?:[^`]|``)+` \s*)+) \) 
+                    (?: \s+ ON \s+ (?: DELETE | UPDATE) \s+
                       (?: RESTRICT | CASCADE | SET \s+ NULL | NO \s+ ACTION)
                     )* (?:; \s* | \s* $)}{}six)
         {
