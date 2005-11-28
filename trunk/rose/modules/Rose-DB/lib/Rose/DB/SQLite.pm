@@ -36,7 +36,7 @@ sub init_dbh
   
   my $database = $self->database;
 
-  unless(-e $database)
+  unless($self->auto_create || -e $database)
   {
     Carp::croak "Refusing to create non-existent SQLite database ",
                 "file: '$database'";
@@ -65,8 +65,6 @@ sub validate_timestamp_keyword
   !ref $_[1] && $_[1] =~ /^\w+\(.*\)$/;
 }
 
-*format_timestamp = \&Rose::DB::format_datetime;
-
 sub quote_table_name
 {
   my($self, $table) = @_;
@@ -87,6 +85,40 @@ sub refine_dbi_column_info
   }
 
   return;
+}
+
+sub list_tables
+{
+  my($self, %args) = @_;
+  
+  my $types = $args{'include_views'} ? q('table', 'view') : q('table');
+
+  my @tables;
+
+  eval
+  {
+    my $dbh = $self->dbh or die $self->error;
+
+    local $dbh->{'RaiseError'} = 1;
+
+    my $sth = $dbh->prepare("SELECT name FROM sqlite_master WHERE type IN($types)");
+    $sth->execute;
+
+    my $name;
+    $sth->bind_columns(\$name);
+
+    while($sth->fetch)
+    {
+      push(@tables, $name);
+    }
+  };
+
+  if($@)
+  {
+    Carp::croak "Could not last tables from ", $self->dsn, " - $@";
+  }
+
+  return wantarray ? @tables : \@tables;
 }
 
 1;
@@ -136,10 +168,10 @@ This class inherits from L<Rose::DB>.  B<Only the methods that are new or have  
 SQLite doesn't care what value you pass for a given column, regardless of that column's nominal data type.  L<Rose::DB> does care, however.  The following data type formats are enforced by L<Rose::DB::SQLite>'s L<parse_*|Rose::DB/"Value Parsing and Formatting"> and L<format_*|Rose::DB/"Value Parsing and Formatting"> functions.
 
     Type        Format
-    ---------   --------------------
+    ---------   ------------------------------
     DATE        YYYY-MM-DD
     DATETIME    YYYY-MM-DD HH:MM::SS
-    TIMESTAMP   YYYY-MM-DD HH:MM::SS
+    TIMESTAMP   YYYY-MM-DD HH:MM::SS.NNNNNNNNN
 
 =head1 CLASS METHODS
 

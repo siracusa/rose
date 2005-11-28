@@ -1245,7 +1245,7 @@ BEGIN
 
   sub format_date      { shift; Rose::DateTime::Util::format_date($_[0], '%Y-%m-%d') }
   sub format_datetime  { shift; Rose::DateTime::Util::format_date($_[0], '%Y-%m-%d %T') }
-  sub format_timestamp { shift; Rose::DateTime::Util::format_date($_[0], '%Y-%m-%d %H:%M:%S') }
+  sub format_timestamp { shift; Rose::DateTime::Util::format_date($_[0], '%Y-%m-%d %H:%M:%S.%N') }
 
   sub parse_date       { shift; Rose::DateTime::Util::parse_date($_[0]) }
   sub parse_datetime   { shift; Rose::DateTime::Util::parse_date($_[0]) }

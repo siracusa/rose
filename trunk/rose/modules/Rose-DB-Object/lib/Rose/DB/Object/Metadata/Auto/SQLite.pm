@@ -309,7 +309,7 @@ our $Column_Constraint =
      | UNIQUE (?: \s+ $Conflict_Clause)? 
      | CHECK \s* $Nested_Parens (?: \s+ $Conflict_Clause)?
      | REFERENCES \s+ $Name \s* \( \s* $Name \s* \)
-     | DEFAULT \s+ $Name
+     | DEFAULT \s+ (?: $Name | \w+ \s* $Nested_Parens | [^,)]+ )
      | COLLATE \s+ \S+)}six;
 
 our $Table_Constraint =
@@ -402,7 +402,7 @@ sub _info_from_sql
     {
       local $_ = $1;
 
-      if(/^DEFAULT \s+ ($Name)/six)
+      if(/^DEFAULT \s+ ( $Name | \w+ \s* $Nested_Parens | [^,)]+ )/six)
       {
         $col_info{'COLUMN_DEF'} = _unquote_name($1);
       }
@@ -454,7 +454,7 @@ sub _info_from_sql
       push(@uk_info, \@uk_columns);
     }
   }
-
+$DB::single = 1;
   return(\@col_info, \@pk_columns, \@uk_info);
 }
 
