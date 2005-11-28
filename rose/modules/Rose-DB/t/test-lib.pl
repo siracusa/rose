@@ -187,6 +187,8 @@ BEGIN
   }
 }
 
+Rose::DB->load_driver_classes(qw(pg MySQL informix SQLItE));
+  
 # Subclass testing
 package My::DB;
 @My::DB::ISA = qw(Rose::DB);
