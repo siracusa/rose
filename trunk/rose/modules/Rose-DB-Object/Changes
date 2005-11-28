@@ -1,4 +1,4 @@
-0.53 (11.28.2005) - John Siracusa <siracusa@mindspring.com>
+0.54 (11.28.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added SQLite support.
     * Improved aut-detection of primary key sequence names.
