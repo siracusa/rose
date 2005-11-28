@@ -418,7 +418,7 @@ sub make_classes
     # Make the manager class
     if($with_managers)
     {
-      $meta->make_manager_class($table);
+      $meta->make_manager_class($cm->table_to_manager_base_name($table));
       push(@classes, "${obj_class}::Manager");
     }
   }

@@ -65,6 +65,12 @@ sub table_to_class
   return ($prefix || '') . ucfirst $table;
 }
 
+sub table_to_manager_base_name
+{
+  my($self, $table) = @_;
+  return $table;
+}
+
 sub class_prefix
 {
   my($self, $class) = @_;
@@ -882,6 +888,10 @@ Examples:
     products      <none>   Product
     big_hats      My::     My::BigHat
     my5_hat_pig   <none>   My5HatPig
+
+=item B<table_to_manager_base_name TABLE>
+
+Given a table name, return a base name suitable for use as the value of the C<base_name> parameter to L<Rose::DB::Object::Manager>'s L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.  The default implementation returns the table name as-is.
 
 =back
 
