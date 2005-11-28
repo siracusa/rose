@@ -578,7 +578,7 @@ sub perl_columns_definition
   }
 
   my @col_defs;
-
+$DB::single = 1;
   no warnings 'uninitialized'; # ordinal_position may be undef
   foreach my $column (sort __by_rank $self->columns)
   {

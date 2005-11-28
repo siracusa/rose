@@ -337,11 +337,13 @@ sub _info_from_sql
   
   my(@col_info, @pk_columns, @uk_info);
 
-  my $new_sql;
+  my($new_sql, $pos);
 
   # Remove comments
   while($sql =~ /\G((.*?)$Comment)/sgix)
   {
+    $pos = pos($sql);
+
     if(defined $4) # caught comment
     {
       no warnings 'uninitialized';
@@ -353,7 +355,7 @@ sub _info_from_sql
     }
   }
 
-  $sql = $new_sql  if(defined $new_sql);
+  $sql = $new_sql . substr($sql, $pos) if(defined $new_sql);
 
   # Remove the start and end
   $sql =~ s/^\s* CREATE \s+ (?:TEMP(?:ORARY)? \s+)? TABLE \s+ $Name \s*\(\s*//sgix;
@@ -367,7 +369,6 @@ sub _info_from_sql
   # Column defintiions
   while($sql =~ s/^$Column_Def (?:\s*,\s*|\s*$)//six)
   {
-
     my $col_name    = $1;
     my $col_type    = $2 || 'scalar';
     my $constraints = $3;
@@ -387,7 +388,7 @@ sub _info_from_sql
     if($col_type =~ /^(\w+) \s* \( \s* (\d+) \s* \)$/x)
     {
       $col_info{'TYPE_NAME'}         = $1;
-      $col_info{'SIZE'}              = $2;
+      $col_info{'COLUMN_SIZE'}       = $2;
       $col_info{'CHAR_OCTET_LENGTH'} = $2;
     }
     elsif($col_type =~ /^\s* (\w+) \s* \( \s* (\d+) \s* , \s* (\d+) \s* \) \s*$/x)

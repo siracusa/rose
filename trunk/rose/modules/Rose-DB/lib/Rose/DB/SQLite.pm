@@ -75,6 +75,20 @@ sub quote_table_name
   return qq('$table');
 }
 
+sub refine_dbi_column_info
+{
+  my($self, $col_info) = @_;
+
+  $self->SUPER::refine_dbi_column_info($col_info);
+
+  if($col_info->{'TYPE_NAME'} eq 'bit')
+  {
+    $col_info->{'TYPE_NAME'} = 'bits';
+  }
+
+  return;
+}
+
 1;
 
 __END__

@@ -9,7 +9,7 @@ use Rose::DB::Object::Metadata::Util qw(:all);
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.041';
+our $VERSION = '0.53';
 
 use overload
 (
@@ -114,8 +114,9 @@ sub is_required
   foreach my $column_name (keys %$key_columns)
   {
     my $column = $meta->column($column_name) 
-      or Carp::confess "No such column '$column_name' for foreign key '",
-                        $self->name, "'";
+      or Carp::confess "No such column '$column_name' in table '",
+           $self->parent->table, "' referenced from foreign key '",
+           $self->name, "'";
 
     unless($column->not_null)
     {
