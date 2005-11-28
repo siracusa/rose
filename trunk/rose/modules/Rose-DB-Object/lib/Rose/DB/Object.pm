@@ -130,6 +130,8 @@ sub load
 
   my $meta = $self->meta;
 
+  local $self->{STATE_SAVING()} = 1;
+
   my @key_columns = $meta->primary_key_column_names;
   my @key_methods = map { $meta->column_accessor_method_name($_) } @key_columns;
   my @key_values  = grep { defined } map { $self->$_() } @key_methods;
@@ -513,6 +515,8 @@ sub update
 
   my $meta = $self->meta;
 
+  local $self->{STATE_SAVING()} = 1;
+
   my @key_columns = $meta->primary_key_column_names;
   my @key_methods = map { $meta->column_accessor_method_name($_) } @key_columns;
   my @key_values  = grep { defined } map { $self->$_() } @key_methods;
@@ -573,7 +577,7 @@ sub update
 
   eval
   {
-    local $self->{STATE_SAVING()} = 1;
+    #local $self->{STATE_SAVING()} = 1;
     local $dbh->{'RaiseError'} = 1;
 
     my $sth;
@@ -694,6 +698,8 @@ sub insert
 
   my $meta = $self->meta;
 
+  local $self->{STATE_SAVING()} = 1;
+
   my @pk_methods = map { $meta->column_accessor_method_name($_) } 
                    $meta->primary_key_column_names;
   my @pk_values  = grep { defined } map { $self->$_() } @pk_methods;
@@ -740,7 +746,7 @@ sub insert
 
   eval
   {
-    local $self->{STATE_SAVING()} = 1;
+    #local $self->{STATE_SAVING()} = 1;
     local $dbh->{'RaiseError'} = 1;
 
     #my $options = $meta->prepare_insert_options;
@@ -784,6 +790,7 @@ sub insert
 
       if($using_pk_placeholders || !defined $self->$get_pk())
       {
+        local $self->{STATE_LOADING()} = 1;
         my $set_pk = $meta->column_mutator_method_name($meta->primary_key_column_names);
         #$self->$set_pk($db->last_insertid_from_sth($sth, $self));
         $self->$set_pk($db->last_insertid_from_sth($sth));
@@ -834,6 +841,8 @@ sub delete
   my($self, %args) = @_;
 
   my $meta = $self->meta;
+
+  local $self->{STATE_SAVING()} = 1;
 
   my @pk_methods = map { $meta->column_accessor_method_name($_) } $meta->primary_key_column_names;
   my @pk_values  = grep { defined } map { $self->$_() } @pk_methods;
@@ -973,7 +982,7 @@ sub delete
 
       # Delete the object itself
       my $dbh = $db->dbh or die "Could not get dbh: ", $self->error;
-      local $self->{STATE_SAVING()} = 1;
+      #local $self->{STATE_SAVING()} = 1;
       local $dbh->{'RaiseError'} = 1;
 
       # Was prepare_cached() but that can't be used across transactions
@@ -1053,7 +1062,7 @@ sub delete
 
     eval
     {
-      local $self->{STATE_SAVING()} = 1;
+      #local $self->{STATE_SAVING()} = 1;
       local $dbh->{'RaiseError'} = 1;
 
       # Was prepare_cached() but that can't be used across transactions
