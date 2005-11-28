@@ -131,6 +131,7 @@ BEGIN
     type     => 'sqlite',
     driver   => 'sqlite',
     database => "$Bin/sqlite.db",
+    auto_create     => 0,
     connect_options => { AutoCommit => 1 },
   );
 

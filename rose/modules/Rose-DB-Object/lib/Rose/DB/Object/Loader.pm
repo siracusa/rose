@@ -13,7 +13,7 @@ use Rose::DB::Object::ConventionManager;
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.53';
+our $VERSION = '0.54';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -25,11 +25,16 @@ use Rose::Object::MakeMethods::Generic
     'db_username',
     'db_password',
     'db_options',
+    'include_tables',
+    'exclude_tables',
+    'filter_tables',
   ],
 
   boolean => 
   [
     'using_default_base_class',
+    'include_views' => { default => 0 },
+    'with_managers' => { default => 1 },
   ],
 );
 
@@ -214,16 +219,28 @@ sub make_classes
 {
   my($self, %args) = @_;
 
-  my $include = delete $args{'include_tables'};
-  my $exclude = delete $args{'exclude_tables'};
-  my $filter  = delete $args{'filter_tables'};
+  my $include_views = exists $args{'include_views'} ? 
+    $args{'include_views'} : $self->include_views;
+
+  my $with_managers = exists $args{'with_managers'} ? 
+    $args{'with_managers'} : $self->with_managers;
+
+  my $include = exists $args{'include_tables'} ? 
+    $args{'include_tables'} : $self->include_tables;
+
+  my $exclude = exists $args{'exclude_tables'} ? 
+    $args{'exclude_tables'} : $self->exclude_tables;
+
+  my $filter = exists $args{'filter_tables'} ? $args{'filter_tables'} : 
+    (!defined $include && !defined $exclude) ? $self->filter_tables : undef;
 
   if($include || $exclude)
   {
     if($filter)
     {
-      croak "The filter_tables parameter cannot be used with ",
-            "the include_tables or exclude_tables parameters";
+      croak "The filter_tables parameter and/or object attribute cannot ",
+            "be used with the include_tables or exclude_tables parameters ",
+            "or object attributes";
     }
 
     $include = qr($include)  if(defined $include);
@@ -380,8 +397,6 @@ sub make_classes
     $installed_init_db_in_base_class = 1;
   }
 
-  my $with_managers = exists $args{'with_managers'} ? delete $args{'with_managers'} : 1;
-
   my $class_prefix = $self->class_prefix || '';
 
   my $cm = $self->convention_manager or die "Missing convention manager";
@@ -389,7 +404,7 @@ sub make_classes
   my @classes;
 
   my %list_args;
-  $list_args{'include_views'} = 1  if(delete $args{'include_views'});
+  $list_args{'include_views'} = 1  if($include_views);
 
   # Iterate over tables, creating RDBO classes for each
   foreach my $table ($db->list_tables(%list_args))
@@ -657,31 +672,53 @@ Get or set the L<schema|Rose::DB/schema> for the database connection.
 
 Get or set the L<username|Rose::DB/username> used to connect to the database.
 
+=item B<include_tables REGEX>
+
+Table names that do not match REGEX will be skipped by default during calls to the L<make_classes|/make_classes> method.
+
+=item B<exclude_tables REGEX>
+
+Table names that match REGEX will be skipped during calls to the L<make_classes|/make_classes> method.
+
+=item B<filter_tables CODEREF>
+
+A reference to a subroutine that takes a single table name argument and returns true if the table should be processed by default during calls to the L<make_classes|/make_classes> method, false if the table should be skipped.  The C<$_> variable will also be set to the table name before the call to CODEREF.  
+
+This attribute should not be combined with the L<exclude_tables|/exclude_tables> or L<include_tables|/include_tables> attributes.
+
+=item B<include_views BOOL>
+
+If true, database views will also be processed by default during calls to the L<make_classes|/make_classes> method.  Defaults to false.
+
 =item B<make_classes [PARAMS]>
 
-Automatically create L<Rose::DB::Object> and (optionally) L<Rose::DB::Object::Manager> subclasses for some or all of the tables in a database.  The process is controlled by the object attributes described above, combined with optional name/value pairs passed to this method.  Valid PARAMS are:
+Automatically create L<Rose::DB::Object> and (optionally) L<Rose::DB::Object::Manager> subclasses for some or all of the tables in a database.  The process is controlled by the object attributes described above.  Optional name/value pairs passed to this method may override some of those values.  Valid PARAMS are:
 
 =over 4
 
 =item B<include_tables REGEX>
 
-Table names that do not match REGEX will be skipped.
+Table names that do not match REGEX will be skipped.  Defaults to the value of the loader object's L<include_tables|/include_tables> attribute.
 
 =item B<exclude_tables REGEX>
 
-Table names that match REGEX will be skipped.
+Table names that match REGEX will be skipped.  Defaults to the value of the loader object's L<exclude_tables|/exclude_tables> attribute.
 
 =item B<filter_tables CODEREF>
 
 A reference to a subroutine that takes a single table name argument and returns true if the table should be processed, false if it should be skipped.  The C<$_> variable will also be set to the table name before the call.  This parameter cannot be combined with the C<exclude_tables> or C<include_tables> options.
 
+Defaults to the value of the loader object's L<filter_tables|/filter_tables> attribute, provided that both the C<exclude_tables> and C<include_tables> values are undefined.
+
 =item B<include_views BOOL>
 
-If true, database views will also be processed.
+If true, database views will also be processed.  Defaults to the value of the loader object's L<include_views|/include_views> attribute.
 
 =item B<with_managers BOOL>
 
-If true, create L<Rose::DB::Object::Manager|Rose::DB::Object::Manager>-derived manager classes for each L<Rose::DB::Object> subclass.  This is the default.  Set it to false if you don't want manager classes to be created.  The L<Rose::DB::Object> subclass's L<metadata object|Rose::DB::Object::Metadata>'s L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> method will be used to create the manager class.  It will be passed the table name as an argument.
+If true, create L<Rose::DB::Object::Manager|Rose::DB::Object::Manager>-derived manager classes for each L<Rose::DB::Object> subclass.  Defaults to the value of the loader object's L<with_managers|/with_managers> attribute.
+
+The L<Rose::DB::Object> subclass's L<metadata object|Rose::DB::Object::Metadata>'s L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> method will be used to create the manager class.  It will be passed the return value of the convention manager's L<auto_manager_base_name|Rose::DB::Object::ConventionManager/auto_manager_base_name> method as an argument.
 
 =back
 
@@ -694,6 +731,12 @@ This parameter will be passed on to the L<auto_initialize|Rose::DB::Object::Meta
 Each L<Rose::DB::Object> subclass will be created according to the "best practices" described in the L<Rose::DB::Object::Tutorial>.  If a L<base class|/base_classes> is not provided, one (with a dynamically generated name) will be created automatically.  The same goes for the L<db|/db> object.  If one is not set, then a new (again, dynamically named) subclass of L<Rose::DB>, with its own L<private data source registry|Rose::DB/use_private_registry>, will be created automatically.
 
 This method returns a list (in list context) or a reference to an array (in scalar context) of the names of all the classes that were created.  (This list will include L<manager|Rose::DB::Object::Manager> class names as well, if any were created.)
+
+=item B<with_managers BOOL>
+
+If true, the L<make_classes|/make_classes> method will create L<Rose::DB::Object::Manager|Rose::DB::Object::Manager>-derived manager classes for each L<Rose::DB::Object> subclass by default.  Defaults true.
+
+The L<Rose::DB::Object> subclass's L<metadata object|Rose::DB::Object::Metadata>'s L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> method will be used to create the manager class.  It will be passed the return value of the convention manager's L<auto_manager_base_name|Rose::DB::Object::ConventionManager/auto_manager_base_name> method as an argument.
 
 =back
 
