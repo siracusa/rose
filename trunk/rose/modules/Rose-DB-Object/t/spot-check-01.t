@@ -88,6 +88,11 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     
     MDV->meta->initialize;
   }
+  #else
+  #{
+  #  MD->meta->init_with_db(Rose::DB->new);
+  #  MDV->meta->init_with_db(Rose::DB->new);
+  #}
 
   # Add data
   my $dbh = MD->init_db->retain_dbh;

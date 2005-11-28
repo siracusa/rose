@@ -300,7 +300,7 @@ sub init_with_db
     $self->{'db'} = $db;
   }
 
-  return $db;
+  return $changed;
 }
 
 sub init_convention_manager { shift->convention_manager_class('default')->new }

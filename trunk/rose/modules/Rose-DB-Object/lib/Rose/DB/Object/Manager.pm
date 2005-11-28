@@ -173,7 +173,7 @@ sub make_manager_methods
       if($type eq 'objects')
       {
         my $method_name = 
-          $have_full_name ? $name : "${target_class}::get_$name";
+          $have_full_name ? "${target_class}::$name" : "${target_class}::get_$name";
 
         foreach my $class ($target_class, $class_invocant)
         {
@@ -191,7 +191,7 @@ sub make_manager_methods
       elsif($type eq 'count')
       {
         my $method_name =
-          $have_full_name ? $name : "${target_class}::get_${name}_count";
+          $have_full_name ? "${target_class}::$name" : "${target_class}::get_${name}_count";
 
         foreach my $class ($target_class, $class_invocant)
         {
@@ -210,7 +210,7 @@ sub make_manager_methods
       elsif($type eq 'iterator')
       {
         my $method_name =
-          $have_full_name ? $name : "${target_class}::get_${name}_iterator";
+          $have_full_name ? "${target_class}::$name" : "${target_class}::get_${name}_iterator";
 
         foreach my $class ($target_class, $class_invocant)
         {
@@ -229,7 +229,7 @@ sub make_manager_methods
       elsif($type eq 'delete')
       {
         my $method_name = 
-          $have_full_name ? $name : "${target_class}::delete_$name";
+          $have_full_name ? "${target_class}::$name" : "${target_class}::delete_$name";
 
         foreach my $class ($target_class, $class_invocant)
         {
@@ -247,7 +247,7 @@ sub make_manager_methods
       elsif($type eq 'update')
       {
         my $method_name = 
-          $have_full_name ? $name : "${target_class}::update_$name";
+          $have_full_name ? "${target_class}::$name" : "${target_class}::update_$name";
 
         foreach my $class ($target_class, $class_invocant)
         {
@@ -297,7 +297,10 @@ sub get_objects
   
   my(%fetch, %rel_name);
 
-  my $db  = delete $args{'db'} || $object_class->init_db;
+  my $meta    = $object_class->meta;
+  my $db      = delete $args{'db'} || $object_class->init_db;
+  my $init_db = $meta->init_with_db($db);
+
   my $dbh = delete $args{'dbh'};
   my $dbh_retained = 0;
 
@@ -375,8 +378,6 @@ sub get_objects
     $object_args{'db'}    = $db;
     $subobject_args{'db'} = $db;
   }
-
-  my $meta = $object_class->meta;
 
   my($fields, $fields_string, $table);
 
@@ -594,6 +595,8 @@ sub get_objects
 
         $meta{$ft_class} = $ft_meta;
 
+        $ft_meta->init_with_db($db)  if($init_db);
+
         push(@tables, $ft_meta->fq_table);
         push(@tables_sql, $ft_meta->fq_table_sql($db));
         push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
@@ -723,6 +726,8 @@ sub get_objects
 
         $meta{$map_class} = $map_meta;
 
+        $map_meta->init_with_db($db)  if($init_db);
+
         push(@tables, $map_meta->fq_table);
         push(@tables_sql, $map_meta->fq_table_sql($db));
         push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
@@ -785,6 +790,8 @@ sub get_objects
 
         my $ft_columns = $foreign_rel->key_columns 
           or Carp::confess "$ft_class - Missing key columns for '$map_to'";
+
+        $ft_meta->init_with_db($db)  if($init_db);
 
         push(@tables, $ft_meta->fq_table);
         push(@tables_sql, $ft_meta->fq_table_sql($db));
@@ -1666,7 +1673,16 @@ sub delete_objects
 
   my $object_class = $args{'object_class'} or Carp::croak "Missing object class argument";
 
-  my $db  = $args{'db'} || $object_class->init_db;
+  my $meta = $object_class->meta;
+
+  my $db  = delete $args{'db'};
+  
+  unless($db)
+  {
+    $db = $object_class->init_db;
+    $meta->init_with_db($db);
+  }
+
   my $dbh = $args{'dbh'};
   my $dbh_retained = 0;
 
@@ -1688,7 +1704,7 @@ sub delete_objects
   unless(($args{'query'} && @{$args{'query'}}) || delete $args{'all'})
   {
     Carp::croak "$class - Refusing to delete all rows from the table '",
-                $object_class->meta->fq_table, "' without an explict ",
+                $meta->fq_table, "' without an explict ",
                 "'all => 1' parameter";
   }
 
@@ -1696,8 +1712,6 @@ sub delete_objects
   {
     Carp::croak "Illegal use of the 'where' and 'all' parameters in the same call";
   }
-
-  my $meta = $object_class->meta;
 
   # Yes, I'm re-using get_objects() code like crazy, and often
   # in weird ways.  Shhhh, it's a secret.
@@ -1741,7 +1755,15 @@ sub update_objects
   my $object_class = $args{'object_class'} 
     or Carp::croak "Missing object class argument";
 
-  my $db  = $args{'db'} || $object_class->init_db;
+  my $meta = $object_class->meta;
+  my $db   = $args{'db'};
+  
+  unless($db)
+  {
+    $db = $object_class->init_db;
+    $meta->init_with_db($db);
+  }
+
   my $dbh = $args{'dbh'};
   my $dbh_retained = 0;
 
@@ -1761,7 +1783,7 @@ sub update_objects
   unless(($args{'where'} && @{$args{'where'}}) || delete $args{'all'})
   {
     Carp::croak "$class - Refusing to update all rows in the table '",
-                $object_class->meta->fq_table_sql($db), "' without an explict ",
+                $meta->fq_table_sql($db), "' without an explict ",
                 "'all => 1' parameter";
   }
 
@@ -1775,8 +1797,6 @@ sub update_objects
     or Carp::croak "Missing requires 'set' parameter";
 
   $set = [ %$set ]  if(ref $set eq 'HASH');
-
-  my $meta = $object_class->meta;
 
   # Yes, I'm re-using get_objects() code like crazy, and often
   # in weird ways.  Shhhh, it's a secret.

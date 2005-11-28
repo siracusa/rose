@@ -53,6 +53,10 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   is(scalar @Rose::DB::Object::Metadata::Deferred_Relationships || 0, 0,
      "deferred relationships - $db_type");
 
+  # XXX: switch entirely to per-db SQL?
+  #My::DB::Gene::Main->meta->init_with_db(Rose::DB->new);
+  #My::DB::Unigene::Main->meta->init_with_db(Rose::DB->new);
+
   my $g = My::DB::Gene::Main->new;
   eval { $g->unigenes };
   ok(!$@, "unigenes - $db_type");
