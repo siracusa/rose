@@ -1,6 +1,7 @@
-0.53 (11.22.2005) - John Siracusa <siracusa@mindspring.com>
+0.53 (11.27.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added SQLite support.
+    * Driver classes now loaded on demand.
 
 0.52 (11.22.2005) - John Siracusa <siracusa@mindspring.com>
 
