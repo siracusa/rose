@@ -1,8 +1,10 @@
-0.53 (11.25.2005) - John Siracusa <siracusa@mindspring.com>
+0.53 (11.28.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added SQLite support.
     * Improved aut-detection of primary key sequence names.
     * Made the primary key sequence name configurable.
+    * Fixed a bug in the MySQL foreign key auto-init system
+      (reported by Bernhard Graf).
 
 0.53 (11.22.2005) - John Siracusa <siracusa@mindspring.com>
 
