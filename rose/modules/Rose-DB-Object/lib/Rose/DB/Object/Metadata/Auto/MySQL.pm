@@ -141,8 +141,12 @@ sub auto_generate_foreign_keys
       for(my $comment = $row->{'Comment'})
       {
         s/^InnoDB free:.+?; *//i;
-
-        FK: while(s{\(((?:`[^`]+` *)+)\) REFER `([^`]+)/([^`]+)`\(((?:`[^`]+` *)+)\)(?:; *| *$)}{})
+$DB::single = 1;
+        FK: while(s{\( ((?:`[^`]+` \s*)+) \) \s+ REFER \s* 
+                    `([^`]+) / ([^`]+) ` \( ((?:`[^`]+` \s*)+) \)
+                    (?: \s+ ON \s+ (?: DELETE | UPDATE) \s+ 
+                      (?: RESTRICT | CASCADE | SET \s+ NULL | NO \s+ ACTION)
+                    )* (?:; \s* | \s* $)}{}six)
         {
           my $local_columns   = $1;
           my $foreign_db      = $2;
