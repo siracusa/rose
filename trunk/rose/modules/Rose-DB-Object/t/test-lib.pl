@@ -125,27 +125,30 @@ BEGIN
   # SQLite
   #
 
-  # Main
-  Rose::DB->register_db(
-    domain   => 'test',
-    type     => 'sqlite',
-    driver   => 'sqlite',
-    database => $ENV{'RDBO_NO_SQLITE'} ? '' : "$Bin/sqlite.db",
-    auto_create     => 0,
-    connect_options => { AutoCommit => 1 },
-  );
-
-  # Admin
-  Rose::DB->register_db(
-    domain   => 'test',
-    type     => 'sqlite_admin',
-    driver   => 'sqlite',
-    database => $ENV{'RDBO_NO_SQLITE'} ? '' : "$Bin/sqlite.db",
-    connect_options => { AutoCommit => 1 },
-  );
+  unless($ENV{'RDBO_NO_SQLITE'})
+  {
+    # Main
+    Rose::DB->register_db(
+      domain   => 'test',
+      type     => 'sqlite',
+      driver   => 'sqlite',
+      database => "$Bin/sqlite.db",
+      auto_create     => 0,
+      connect_options => { AutoCommit => 1 },
+    );
+  
+    # Admin
+    Rose::DB->register_db(
+      domain   => 'test',
+      type     => 'sqlite_admin',
+      driver   => 'sqlite',
+      database => "$Bin/sqlite.db",
+      connect_options => { AutoCommit => 1 },
+    );
+  }
 
   my @types = qw(pg pg_with_schema pg_admin mysql mysql_admin 
-                 informix informix_admin sqlite sqlite_admin);
+                 informix informix_admin);
 
   unless($Rose::DB::Object::Test::NoDefaults)
   {

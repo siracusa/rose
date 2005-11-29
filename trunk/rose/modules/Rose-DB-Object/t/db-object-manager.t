@@ -5237,7 +5237,7 @@ SKIP: foreach my $db_type (qw(informix))
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 456)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 454)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
