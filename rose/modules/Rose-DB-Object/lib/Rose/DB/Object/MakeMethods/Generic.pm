@@ -377,7 +377,7 @@ sub varchar
           if(@_ > 1 && defined $_[1])
           {
             Carp::croak "Invalid $name: '$_[1]'"  unless(exists $check{$_[1]});
-            return $_[0]->{$key} = $length ? substr($_[1], 0, $length) : $_[1];
+            return $_[0]->{$key} = ($length && defined $_[1]) ? substr($_[1], 0, $length) : $_[1];
           }
           return (defined $_[0]->{$key}) ? $_[0]->{$key} : 
                    ($_[0]->{$key} = $default);
@@ -392,7 +392,7 @@ sub varchar
           if(@_ > 1 && defined $_[1])
           {
             Carp::croak "Invalid $name: '$_[1]'"  unless(exists $check{$_[1]});
-            return $_[0]->{$key} = $length ? substr($_[1], 0, $length) : $_[1];
+            return $_[0]->{$key} = ($length && defined $_[1]) ? substr($_[1], 0, $length) : $_[1];
           }
           return (defined $_[0]->{$key}) ? $_[0]->{$key} : 
                    ($_[0]->{$key} = $_[0]->$init_method());
@@ -405,7 +405,7 @@ sub varchar
           if(@_ > 1 && defined $_[1])
           {
             Carp::croak "Invalid $name: '$_[1]'"  unless(exists $check{$_[1]});
-            return $_[0]->{$key} = $length ? substr($_[1], 0, $length) : $_[1];
+            return $_[0]->{$key} = ($length && defined $_[1]) ? substr($_[1], 0, $length) : $_[1];
           }
           return $_[0]->{$key};
         };
@@ -422,7 +422,7 @@ sub varchar
           if(@_ > 1)
           {
             no warnings; # substr on undef is ok here
-            return $_[0]->{$key} = $length ? substr($_[1], 0, $length) : $_[1];
+            return $_[0]->{$key} = ($length && defined $_[1]) ? substr($_[1], 0, $length) : $_[1];
           }
           return (defined $_[0]->{$key}) ? $_[0]->{$key} : 
                    ($_[0]->{$key} = $default);
@@ -437,7 +437,7 @@ sub varchar
           if(@_ > 1)
           {
             no warnings; # substr on undef is ok here
-            return $_[0]->{$key} = $length ? substr($_[1], 0, $length) : $_[1];
+            return $_[0]->{$key} = ($length && defined $_[1]) ? substr($_[1], 0, $length) : $_[1];
           }
           return (defined $_[0]->{$key}) ? $_[0]->{$key} : 
                    ($_[0]->{$key} = $_[0]->$init_method());
@@ -450,7 +450,7 @@ sub varchar
           if(@_ > 1)
           {
             no warnings; # substr on undef is ok here
-            return $_[0]->{$key} = $length ? substr($_[1], 0, $length) : $_[1];
+            return $_[0]->{$key} = ($length && defined $_[1]) ? substr($_[1], 0, $length) : $_[1];
           }
           return $_[0]->{$key};
         };
@@ -495,7 +495,7 @@ sub varchar
       {
         Carp::croak "Missing argument in call to $name"  unless(@_ > 1);
         Carp::croak "Invalid $name: '$_[1]'"  unless(exists $check{$_[1]});
-        return $_[0]->{$key} = $length ? substr($_[1], 0, $length) : $_[1];
+        return $_[0]->{$key} = ($length && defined $_[1]) ? substr($_[1], 0, $length) : $_[1];
       };
     }
     else
@@ -504,7 +504,7 @@ sub varchar
       {
         Carp::croak "Missing argument in call to $name"  unless(@_ > 1);
         no warnings; # substr on undef is ok here
-        return $_[0]->{$key} = $length ? substr($_[1], 0, $length) : $_[1];
+        return $_[0]->{$key} = ($length && defined $_[1]) ? substr($_[1], 0, $length) : $_[1];
       };
     }
   }

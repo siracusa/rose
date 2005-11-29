@@ -130,7 +130,7 @@ BEGIN
     domain   => 'test',
     type     => 'sqlite',
     driver   => 'sqlite',
-    database => "$Bin/sqlite.db",
+    database => $ENV{'RDBO_NO_SQLITE'} ? '' : "$Bin/sqlite.db",
     auto_create     => 0,
     connect_options => { AutoCommit => 1 },
   );
@@ -140,7 +140,7 @@ BEGIN
     domain   => 'test',
     type     => 'sqlite_admin',
     driver   => 'sqlite',
-    database => "$Bin/sqlite.db",
+    database => $ENV{'RDBO_NO_SQLITE'} ? '' : "$Bin/sqlite.db",
     connect_options => { AutoCommit => 1 },
   );
 

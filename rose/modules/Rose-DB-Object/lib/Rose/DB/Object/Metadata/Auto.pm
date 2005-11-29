@@ -161,7 +161,7 @@ sub auto_generate_column
 
   my $type = $col_info->{'TYPE_NAME'};
   my $meta_class = $self->original_class;
-$DB::single = 1;
+
   my $column_class = 
     $meta_class->column_type_class($type) || $meta_class->column_type_class('scalar')
       or Carp::croak "No column class set for column types '$type' or 'scalar'";
