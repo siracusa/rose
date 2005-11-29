@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1787;
+use Test::More tests => 1851;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("Postgres tests", 456)  unless($HAVE_PG);
+  skip("Postgres tests", 472)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -1105,6 +1105,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       share_db      => 1,
       with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
       multi_many_ok => 1,
+      with_map_records => 'map_record',
       query         => [ 't1.id' => [ 1, 2, 5 ] ],
       sort_by       => 't1.name');
 
@@ -1134,6 +1135,57 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   ok($colors && ref $colors && @$colors == 2, "get_objects() with many to many 13 - $db_type");
   ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() with many to many 14 - $db_type");
   ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects() with many to many 15 - $db_type");
+
+  is($colors->[0]->map_record->color_id, $colors->[0]->id, "map_record 1 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 2 - $db_type");
+  is($colors->[1]->map_record->color_id, $colors->[1]->id, "map_record 3 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 4 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      object_class  => 'MyPgObject',
+      share_db      => 1,
+      with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
+      multi_many_ok => 1,
+      with_map_records => 'map_record',
+      query         => [ id => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  $objs = [];
+
+  while(my $obj = $iterator->next)
+  {
+    push(@$objs, $obj);
+  }
+
+  is(ref $objs, 'ARRAY', "get_objects_iterator() with many to many map record 1 - $db_type");
+  is(scalar @$objs, 3, "get_objects_iterator() with many to many map record  2 - $db_type");
+
+  $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  is($colors->[0]->map_record->color_id, $colors->[0]->id, "map_record 5 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 6 - $db_type");
+  is($colors->[1]->map_record->color_id, $colors->[1]->id, "map_record 7 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 8 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class  => 'MyPgObject',
+      share_db      => 1,
+      with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
+      multi_many_ok => 1,
+      with_map_records => 'map_rec',
+      query         => [ id => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many to many 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 3, "get_objects() with many to many 2 - $db_type");
+
+  $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  is($colors->[0]->map_rec->color_id, $colors->[0]->id, "map_rec 1 - $db_type");
+  is($colors->[0]->map_rec->object_id, $objs->[1]->id, "map_rec 2 - $db_type");
+  is($colors->[1]->map_rec->color_id, $colors->[1]->id, "map_rec 3 - $db_type");
+  is($colors->[0]->map_rec->object_id, $objs->[1]->id, "map_rec 4 - $db_type");
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
@@ -1742,7 +1794,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 456)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 472)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -2812,6 +2864,7 @@ SKIP: foreach my $db_type ('mysql')
       share_db      => 1,
       with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
       multi_many_ok => 1,
+      with_map_records => 1,
       query         => [ id => [ 1, 2, 5 ] ],
       sort_by       => 't1.name');
 
@@ -2841,6 +2894,57 @@ SKIP: foreach my $db_type ('mysql')
   ok($colors && ref $colors && @$colors == 2, "get_objects() with many to many 13 - $db_type");
   ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() with many to many 14 - $db_type");
   ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects() with many to many 15 - $db_type");
+
+  is($colors->[0]->map_record->color_id, $colors->[0]->id, "map_record 1 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 2 - $db_type");
+  is($colors->[1]->map_record->color_id, $colors->[1]->id, "map_record 3 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 4 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      object_class  => 'MyMySQLObject',
+      share_db      => 1,
+      with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
+      multi_many_ok => 1,
+      with_map_records => 'map_record',
+      query         => [ id => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  $objs = [];
+
+  while(my $obj = $iterator->next)
+  {
+    push(@$objs, $obj);
+  }
+  
+  is(ref $objs, 'ARRAY', "get_objects_iterator() with many to many map record 1 - $db_type");
+  is(scalar @$objs, 3, "get_objects_iterator() with many to many map record  2 - $db_type");
+
+  $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  is($colors->[0]->map_record->color_id, $colors->[0]->id, "map_record 5 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 6 - $db_type");
+  is($colors->[1]->map_record->color_id, $colors->[1]->id, "map_record 7 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 8 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class  => 'MyMySQLObject',
+      share_db      => 1,
+      with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
+      multi_many_ok => 1,
+      with_map_records => 'map_rec',
+      query         => [ id => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many to many 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 3, "get_objects() with many to many 2 - $db_type");
+
+  $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  is($colors->[0]->map_rec->color_id, $colors->[0]->id, "map_rec 1 - $db_type");
+  is($colors->[0]->map_rec->object_id, $objs->[1]->id, "map_rec 2 - $db_type");
+  is($colors->[1]->map_rec->color_id, $colors->[1]->id, "map_rec 3 - $db_type");
+  is($colors->[0]->map_rec->object_id, $objs->[1]->id, "map_rec 4 - $db_type");
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
@@ -3461,7 +3565,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type (qw(informix))
 {
-  skip("Informix tests", 419)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 435)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -4596,7 +4700,7 @@ SKIP: foreach my $db_type (qw(informix))
       object_class  => 'MyInformixObject',
       share_db      => 1,
       with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
-      multi_many_ok => 1,
+      with_map_records => 'map_record',
       query         => [ 't1.id' => [ 1, 2, 5 ] ],
       sort_by       => 't1.name');
 
@@ -4626,6 +4730,57 @@ SKIP: foreach my $db_type (qw(informix))
   ok($colors && ref $colors && @$colors == 2, "get_objects() with many to many 13 - $db_type");
   ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() with many to many 14 - $db_type");
   ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects() with many to many 15 - $db_type");
+
+  is($colors->[0]->map_record->color_id, $colors->[0]->id, "map_record 1 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 2 - $db_type");
+  is($colors->[1]->map_record->color_id, $colors->[1]->id, "map_record 3 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 4 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      object_class  => 'MyInformixObject',
+      share_db      => 1,
+      with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
+      multi_many_ok => 1,
+      with_map_records => 'map_record',
+      query         => [ id => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  $objs = [];
+
+  while(my $obj = $iterator->next)
+  {
+    push(@$objs, $obj);
+  }
+  
+  is(ref $objs, 'ARRAY', "get_objects_iterator() with many to many map record 1 - $db_type");
+  is(scalar @$objs, 3, "get_objects_iterator() with many to many map record  2 - $db_type");
+
+  $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  is($colors->[0]->map_record->color_id, $colors->[0]->id, "map_record 5 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 6 - $db_type");
+  is($colors->[1]->map_record->color_id, $colors->[1]->id, "map_record 7 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 8 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class  => 'MyInformixObject',
+      share_db      => 1,
+      with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
+      multi_many_ok => 1,
+      with_map_records => 'map_rec',
+      query         => [ id => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many to many 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 3, "get_objects() with many to many 2 - $db_type");
+
+  $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  is($colors->[0]->map_rec->color_id, $colors->[0]->id, "map_rec 1 - $db_type");
+  is($colors->[0]->map_rec->object_id, $objs->[1]->id, "map_rec 2 - $db_type");
+  is($colors->[1]->map_rec->color_id, $colors->[1]->id, "map_rec 3 - $db_type");
+  is($colors->[0]->map_rec->object_id, $objs->[1]->id, "map_rec 4 - $db_type");
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
@@ -5237,7 +5392,7 @@ SKIP: foreach my $db_type (qw(informix))
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 454)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 470)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -6339,6 +6494,7 @@ SKIP: foreach my $db_type (qw(sqlite))
       share_db      => 1,
       with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
       multi_many_ok => 1,
+      with_map_records => 'map_record',
       query         => [ 't1.id' => [ 1, 2, 5 ] ],
       sort_by       => 't1.name');
 
@@ -6368,6 +6524,57 @@ SKIP: foreach my $db_type (qw(sqlite))
   ok($colors && ref $colors && @$colors == 2, "get_objects() with many to many 13 - $db_type");
   ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() with many to many 14 - $db_type");
   ok($colors->[1]->id == 3 && $colors->[0]->name eq 'Red', "get_objects() with many to many 15 - $db_type");
+
+  is($colors->[0]->map_record->color_id, $colors->[0]->id, "map_record 1 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 2 - $db_type");
+  is($colors->[1]->map_record->color_id, $colors->[1]->id, "map_record 3 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 4 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      object_class  => 'MySQLiteObject',
+      share_db      => 1,
+      with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
+      multi_many_ok => 1,
+      with_map_records => 'map_record',
+      query         => [ id => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  $objs = [];
+
+  while(my $obj = $iterator->next)
+  {
+    push(@$objs, $obj);
+  }
+  
+  is(ref $objs, 'ARRAY', "get_objects_iterator() with many to many map record 1 - $db_type");
+  is(scalar @$objs, 3, "get_objects_iterator() with many to many map record  2 - $db_type");
+
+  $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  is($colors->[0]->map_record->color_id, $colors->[0]->id, "map_record 5 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 6 - $db_type");
+  is($colors->[1]->map_record->color_id, $colors->[1]->id, "map_record 7 - $db_type");
+  is($colors->[0]->map_record->object_id, $objs->[1]->id, "map_record 8 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class  => 'MySQLiteObject',
+      share_db      => 1,
+      with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
+      multi_many_ok => 1,
+      with_map_records => 'map_rec',
+      query         => [ id => [ 1, 2, 5 ] ],
+      sort_by       => 't1.name');
+
+  is(ref $objs, 'ARRAY', "get_objects() with many to many 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 3, "get_objects() with many to many 2 - $db_type");
+
+  $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
+  is($colors->[0]->map_rec->color_id, $colors->[0]->id, "map_rec 1 - $db_type");
+  is($colors->[0]->map_rec->object_id, $objs->[1]->id, "map_rec 2 - $db_type");
+  is($colors->[1]->map_rec->color_id, $colors->[1]->id, "map_rec 3 - $db_type");
+  is($colors->[0]->map_rec->object_id, $objs->[1]->id, "map_rec 4 - $db_type");
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(

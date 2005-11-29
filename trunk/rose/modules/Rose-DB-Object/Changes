@@ -1,8 +1,10 @@
-0.54 (11.28.2005) - John Siracusa <siracusa@mindspring.com>
+0.54 (11.29.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added SQLite support.
-    * Improved aut-detection of primary key sequence names.
+    * Improved auto-detection of primary key sequence names.
     * Made the primary key sequence name configurable.
+    * Added the with_map_records Manager parameter used to fetch map
+      records when auto-joining through a "many to many" relationship.
     * Fixed a bug in the MySQL foreign key auto-init system.
       (Reported by Bernhard Graf)
     * Fixed a bug in the column type class customization system that
