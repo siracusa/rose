@@ -35,6 +35,7 @@ use Rose::Object::MakeMethods::Generic
     'db',
     'primary_key',
     'column_name_to_method_name_mapper',
+    'original_class',
   ],
 
   boolean => 
@@ -56,7 +57,7 @@ use Rose::Class::MakeMethods::Generic
   inheritable_hash =>
   [
     column_type_classes => { interface => 'get_set_all' },
-    column_type_class   => { interface => 'get_set', hash_key => 'column_type_classes' },
+    _column_type_class   => { interface => 'get_set', hash_key => 'column_type_classes' },
     delete_column_type_class => { interface => 'delete', hash_key => 'column_type_classes' },
 
     auto_helper_classes      => { interface => 'get_set_all' },
@@ -160,6 +161,8 @@ sub new
   my $class = $args{'class'} or Carp::croak "Missing required 'class' parameter";
   return $Objects{$class} ||= shift->SUPER::new(@_);
 }
+
+sub init_original_class { ref shift }
 
 sub for_class
 {
@@ -709,7 +712,7 @@ sub add_columns
 
     unless(ref $_[0])
     {
-      my $column_class = $class->column_type_class('scalar')
+      my $column_class = $self->original_class->column_type_class('scalar')
         or Carp::croak "No column class set for column type 'scalar'";
 
       #$Debug && warn $self->class, " - adding scalar column $name\n";
@@ -749,7 +752,7 @@ sub add_columns
 
       my $type = $info->{'type'} ||= 'scalar';
 
-      my $column_class = $class->column_type_class($type)
+      my $column_class = $self->original_class->column_type_class($type)
         or Carp::croak "No column class set for column type '$type'";
 
       unless($self->column_class_is_loaded($column_class))
@@ -987,6 +990,12 @@ sub load_column_class
 }
 
 sub column_class_is_loaded { $Class_Loaded{$_[1]} }
+
+sub column_type_class 
+{
+  my($class, $type) = (shift, shift);
+  return $class->_column_type_class(lc $type, @_) 
+}
 
 sub load_relationship_class
 {
@@ -2781,6 +2790,8 @@ sub init_auto_helper
 
     Carp::croak "Could not load ", $self->auto_helper_class, " - $@"  if($@);
 
+    $self->original_class($class);
+
     bless $self, $self->auto_helper_class;
   }
 
@@ -3003,9 +3014,7 @@ Clears the L<db|/db> attribute of the metadata object for each L<registered clas
 
 =item B<column_type_class TYPE [, CLASS]>
 
-Given the column type string TYPE, return the name of the L<Rose::DB::Object::Metadata::Column>-derived class used to store metadata and create the accessor method(s) for columns of that type.
-
-If a CLASS is passed, the column type TYPE is mapped to CLASS.
+Given the column type string TYPE, return the name of the L<Rose::DB::Object::Metadata::Column>-derived class used to store metadata and create the accessor method(s) for columns of that type.  If a CLASS is passed, the column type TYPE is mapped to CLASS.  In both cases, the TYPE argument is automatically converted to lowercase.
 
 =item B<column_type_classes [MAP]>
 
