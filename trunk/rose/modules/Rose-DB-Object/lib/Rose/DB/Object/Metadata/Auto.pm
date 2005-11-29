@@ -160,9 +160,10 @@ sub auto_generate_column
   my($self, $name, $col_info) = @_;
 
   my $type = $col_info->{'TYPE_NAME'};
-
+  my $meta_class = $self->original_class;
+$DB::single = 1;
   my $column_class = 
-    $self->column_type_class($type) || $self->column_type_class('scalar')
+    $meta_class->column_type_class($type) || $meta_class->column_type_class('scalar')
       or Carp::croak "No column class set for column types '$type' or 'scalar'";
 
   unless($self->column_class_is_loaded($column_class))
@@ -578,7 +579,7 @@ sub perl_columns_definition
   }
 
   my @col_defs;
-$DB::single = 1;
+
   no warnings 'uninitialized'; # ordinal_position may be undef
   foreach my $column (sort __by_rank $self->columns)
   {
