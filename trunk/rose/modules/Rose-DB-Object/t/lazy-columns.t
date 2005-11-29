@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 65;
+use Test::More tests => 80;
 
 BEGIN 
 {
@@ -44,7 +44,11 @@ SETUP:
 # Tests
 #
 
-foreach my $db_type (qw(mysql pg pg_with_schema informix))
+my @dbs = qw(mysql pg pg_with_schema informix sqlite);
+eval { require List::Util };
+@dbs = List::Util::shuffle(@dbs)  unless($@);
+
+foreach my $db_type (@dbs)
 {
   SKIP:
   {
@@ -278,6 +282,42 @@ EOF
     $dbh->commit;
     $dbh->disconnect;
   }
+
+  #
+  # SQLite
+  #
+
+  eval
+  {
+    $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
+      or die Rose::DB->error;
+  };
+
+  if(!$@ && $dbh)
+  {
+    $Have{'sqlite'} = 1;
+
+    # Drop existing tables, ignoring errors
+    {
+      local $dbh->{'RaiseError'} = 0;
+      local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE Rose_db_object_test');
+    }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE Rose_db_object_test
+(
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  name           VARCHAR(32) NOT NULL,
+  code           VARCHAR(32),
+  start          DATE DEFAULT '1980-12-24' NOT NULL,
+  ended          DATE,
+  date_created   DATETIME
+)
+EOF
+
+    $dbh->disconnect;
+  }
 }
 
 END
@@ -312,6 +352,17 @@ END
   {
     # Informix
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
+      or die Rose::DB->error;
+
+    $dbh->do('DROP TABLE Rose_db_object_test');
+
+    $dbh->disconnect;
+  }
+
+  if($Have{'sqlite'})
+  {
+    # SQLite
+    my $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
       or die Rose::DB->error;
 
     $dbh->do('DROP TABLE Rose_db_object_test');
