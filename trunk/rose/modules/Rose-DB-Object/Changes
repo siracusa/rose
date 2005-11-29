@@ -8,6 +8,7 @@
     * Fixed a bug in the column type class customization system that
       caused it to fail when combined with auto-initialization.
       (Reported by Bernhard Graf)
+    * DBI 1.40 or later is now required.
 
 0.53 (11.22.2005) - John Siracusa <siracusa@mindspring.com>
 

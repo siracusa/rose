@@ -299,7 +299,7 @@ sub get_objects
 
   my $meta    = $object_class->meta;
   my $db      = delete $args{'db'} || $object_class->init_db;
-  my $init_db = $meta->init_with_db($db);
+  #my $init_db = $meta->init_with_db($db);
 
   my $dbh = delete $args{'dbh'};
   my $dbh_retained = 0;
@@ -385,7 +385,7 @@ sub get_objects
   my $nonlazy = $args{'nonlazy'};
   my %nonlazy = (ref $nonlazy ? map { $_ => 1 } @$nonlazy : ());
 
-  my @tables     = ($meta->fq_table);
+  my @tables     = ($meta->fq_table($db));
   my @tables_sql = ($meta->fq_table_sql($db));
 
   my $use_lazy_columns = (!ref $nonlazy || $nonlazy{'self'}) ? 0 : $meta->has_lazy_columns;
@@ -595,9 +595,9 @@ sub get_objects
 
         $meta{$ft_class} = $ft_meta;
 
-        $ft_meta->init_with_db($db)  if($init_db);
+        #$ft_meta->init_with_db($db)  if($init_db);
 
-        push(@tables, $ft_meta->fq_table);
+        push(@tables, $ft_meta->fq_table($db));
         push(@tables_sql, $ft_meta->fq_table_sql($db));
         push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
         push(@classes, $ft_class);
@@ -726,9 +726,9 @@ sub get_objects
 
         $meta{$map_class} = $map_meta;
 
-        $map_meta->init_with_db($db)  if($init_db);
+        #$map_meta->init_with_db($db)  if($init_db);
 
-        push(@tables, $map_meta->fq_table);
+        push(@tables, $map_meta->fq_table($db));
         push(@tables_sql, $map_meta->fq_table_sql($db));
         push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
         push(@classes, $map_class);
@@ -791,9 +791,9 @@ sub get_objects
         my $ft_columns = $foreign_rel->key_columns 
           or Carp::confess "$ft_class - Missing key columns for '$map_to'";
 
-        $ft_meta->init_with_db($db)  if($init_db);
+        #$ft_meta->init_with_db($db)  if($init_db);
 
-        push(@tables, $ft_meta->fq_table);
+        push(@tables, $ft_meta->fq_table($db));
         push(@tables_sql, $ft_meta->fq_table_sql($db));
         push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
         push(@classes, $ft_class);
@@ -1055,7 +1055,7 @@ sub get_objects
   my($count, @objects, $iterator);
 
   my($sql, $bind);
-
+$DB::single = 1;
   BUILD_SQL:
   {
     local $Carp::CarpLevel = $Carp::CarpLevel + 1;
@@ -1680,7 +1680,7 @@ sub delete_objects
   unless($db)
   {
     $db = $object_class->init_db;
-    $meta->init_with_db($db);
+    #$meta->init_with_db($db);
   }
 
   my $dbh = $args{'dbh'};
@@ -1704,7 +1704,7 @@ sub delete_objects
   unless(($args{'query'} && @{$args{'query'}}) || delete $args{'all'})
   {
     Carp::croak "$class - Refusing to delete all rows from the table '",
-                $meta->fq_table, "' without an explict ",
+                $meta->fq_table($db), "' without an explict ",
                 "'all => 1' parameter";
   }
 
@@ -1761,7 +1761,7 @@ sub update_objects
   unless($db)
   {
     $db = $object_class->init_db;
-    $meta->init_with_db($db);
+    #$meta->init_with_db($db);
   }
 
   my $dbh = $args{'dbh'};

@@ -7,13 +7,14 @@ WriteMakefile(NAME         => 'Rose::DB::Object',
               dist => { 'COMPRESS' => 'gzip' },
               PREREQ_PM =>
               {
+                DBI                   => 1.40,
                 DateTime              => 0,
                 Test::More            => 0,
                 Bit::Vector::Overload => 0,
                 Scalar::Util          => 0,
                 Clone::PP             => 1.02,
                 Rose::DateTime::Util  => 0,
-                Rose::Object          => '0.016',
-                Rose::DB              => '0.52',
+                Rose::Object          => 0.016,
+                Rose::DB              => 0.52,
               },
               clean => { FILES => "t/*.db" });

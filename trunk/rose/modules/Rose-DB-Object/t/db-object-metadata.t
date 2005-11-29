@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 26;
+use Test::More tests => 25;
 
 BEGIN 
 {
@@ -19,13 +19,13 @@ is(ref $meta2, 'Rose::DB::Object::Metadata', 'for_class');
 
 is($meta, $meta2, 'new() & for_class()');
 
-$meta->schema('priv');
+#$meta->schema('priv');
 $meta->table('mytable');
 
-is($meta->schema, 'priv', 'schema()');
+#is($meta->schema, 'priv', 'schema()');
 is($meta->table, 'mytable', 'table()');
 
-is($meta->fq_table_sql(MyDBObject->init_db), 'priv.mytable', 'fq_table_sql()');
+is($meta->fq_table_sql(MyDBObject->init_db), 'rose_db_object_private.mytable', 'fq_table_sql()');
 
 $meta->columns
 (
@@ -106,5 +106,5 @@ BEGIN
 {
   package MyDBObject;
   our @ISA = qw(Rose::DB::Object);
-  sub init_db { Rose::DB->new('pg') }
+  sub init_db { Rose::DB->new('pg_with_schema') }
 }
