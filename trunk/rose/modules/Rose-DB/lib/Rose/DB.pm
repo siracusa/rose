@@ -100,7 +100,7 @@ use Rose::Object::MakeMethods::Generic
   'scalar' =>
   [
     qw(database dbi_driver schema catalog host port username 
-       password european_dates _dbh_refcount _origin_class)
+       password european_dates _dbh_refcount _origin_class id)
   ],
 
   'boolean' =>
@@ -287,6 +287,7 @@ sub new
   }
 
   $self->{'_origin_class'} = $class;
+  $self->{'id'} = "$domain\0$type";
 
   $self->init(@_);
 
