@@ -4669,6 +4669,7 @@ SKIP: foreach my $db_type ('sqlite')
   my $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_other2 WHERE pid = 111');
   $sth->execute;
   $count = $sth->fetchrow_array;
+  $sth->finish;
   is($count, 3, "set one to many now 10 - $db_type");
 
   # Set to undef
@@ -4717,6 +4718,7 @@ SKIP: foreach my $db_type ('sqlite')
   $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_other2 WHERE pid = 111');
   $sth->execute;
   $count = $sth->fetchrow_array;
+  $sth->finish;
   is($count, 2, "set 2 one to many now 7 - $db_type");
 
   #
@@ -4771,6 +4773,7 @@ SKIP: foreach my $db_type ('sqlite')
   $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_other2 WHERE pid = 222');
   $sth->execute;
   $count = $sth->fetchrow_array;
+  $sth->finish;
   is($count, 3, "set one to many on save 15 - $db_type");
 
   # RESET
@@ -4793,6 +4796,7 @@ SKIP: foreach my $db_type ('sqlite')
   $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_other2 WHERE pid = 222');
   $sth->execute;
   $count = $sth->fetchrow_array;
+  $sth->finish;
   is($count, 3, "set 2 one to many on save 4 - $db_type");
 
   @o2s = $o->other2_objs_on_save;
@@ -4818,6 +4822,7 @@ SKIP: foreach my $db_type ('sqlite')
   $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_other2 WHERE pid = 222');
   $sth->execute;
   $count = $sth->fetchrow_array;
+  $sth->finish;
   is($count, 2, "set one to many on save 15 - $db_type");
 
   # Set to undef
@@ -5060,6 +5065,7 @@ SKIP: foreach my $db_type ('sqlite')
   $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 30');
   $sth->execute;
   $count = $sth->fetchrow_array;
+  $sth->finish;
   is($count, 3, "set many to many now 11 - $db_type");
 
   # Set to undef
@@ -5091,6 +5097,7 @@ SKIP: foreach my $db_type ('sqlite')
   $sth = $o2->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 30');
   $sth->execute;
   $count = $sth->fetchrow_array;
+  $sth->finish;
   is($count, 3, "set 2 many to many now 11 - $db_type");
 
   #
@@ -5156,6 +5163,7 @@ SKIP: foreach my $db_type ('sqlite')
   $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 40');
   $sth->execute;
   $count = $sth->fetchrow_array;
+  $sth->finish;
   is($count, 3, "set many to many on save 21 - $db_type");
 
   # RESET
@@ -5185,6 +5193,7 @@ SKIP: foreach my $db_type ('sqlite')
   $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 40');
   $sth->execute;
   $count = $sth->fetchrow_array;
+  $sth->finish;
   is($count, 3, "set 2 many to many on save 11 - $db_type");
 
   #
@@ -5333,6 +5342,7 @@ SKIP: foreach my $db_type ('sqlite')
   $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 60');
   $sth->execute;
   $count = $sth->fetchrow_array;
+  $sth->finish;
   is($count, 4, "add many to many on save 26 - $db_type");
 
   # RESET
@@ -5380,6 +5390,7 @@ SKIP: foreach my $db_type ('sqlite')
   $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 60');
   $sth->execute;
   $count = $sth->fetchrow_array;
+  $sth->finish;
   is($count, 4, "add 2 many to many on save 17 - $db_type");
 
   # Save
@@ -5414,6 +5425,7 @@ SKIP: foreach my $db_type ('sqlite')
   $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 60');
   $sth->execute;
   $count = $sth->fetchrow_array;
+  $sth->finish;
   is($count, 5, "add 2 many to many on save 34 - $db_type");
 
   # End "many to many" tests

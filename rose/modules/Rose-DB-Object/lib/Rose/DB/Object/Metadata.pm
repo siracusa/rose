@@ -28,6 +28,7 @@ use Rose::Object::MakeMethods::Generic
   scalar => 
   [
     'class',
+    'error',
   ],
 
   'scalar --get_set_init' =>
@@ -485,21 +486,21 @@ sub table
     return $_[0]->{'table'} ||= $_[0]->convention_manager->auto_table_name;
   }
 
-  $_[0]->_clear_table_generated_values;
+  $_[0]->_clear_table_generated_values(1);
   return $_[0]->{'table'} = $_[1];
 }
 
 sub catalog
 {
   return $_[0]->{'catalog'}  unless(@_ > 1);
-  $_[0]->_clear_table_generated_values;
+  $_[0]->_clear_table_generated_values(1);
   return $_[0]->{'catalog'} = $_[1];
 }
 
 sub schema
 {
   return $_[0]->{'schema'}  unless(@_ > 1);
-  $_[0]->_clear_table_generated_values;
+  $_[0]->_clear_table_generated_values(1);
   return $_[0]->{'schema'} = $_[1];
 }
 
@@ -1980,7 +1981,7 @@ sub fq_primary_key_sequence_name
       die "Cannot generate fully-qualified primary key sequence name without db argument";
 
     return $self->{'fq_primary_key_sequence_name'}{$db->{'id'}} = 
-      $db->quote_identifier($self->catalog, $self->schema, $seq);
+      $db->quote_identifier($db->catalog, $db->schema, $seq);
   }
 
   return undef;
@@ -2561,36 +2562,40 @@ sub has_lazy_columns
 
 sub _clear_table_generated_values
 {
-  my($self) = shift;
+  my($self, $all) = (shift, shift);
 
-  $self->{'fq_table'}          = undef;
-  $self->{'fq_table_sql'}      = undef;
-  $self->{'get_column_sql_tmpl'} = undef;
-  $self->{'load_sql'}          = undef;
-  $self->{'load_all_sql'}      = undef;
+  if($all)
+  {
+    $self->{'fq_table'}          = undef;
+    $self->{'fq_table_sql'}      = undef;
+    $self->{'get_column_sql_tmpl'} = undef;
+    $self->{'load_sql'}          = undef;
+    $self->{'load_all_sql'}      = undef;
+    $self->{'delete_sql'}        = undef;
+    $self->{'fq_primary_key_sequence_name'} = undef;
+    $self->{'primary_key_sequence_name'} = undef;
+    $self->{'insert_sql'}        = undef;
+  }
+
   $self->{'update_all_sql'}    = undef;
   $self->{'update_sql_prefix'} = undef;
-  $self->{'insert_sql'}        = undef;
   $self->{'insert_sql_with_inlining_start'} = undef;
   $self->{'update_sql_with_inlining_start'} = undef;
-  $self->{'delete_sql'}        = undef;
-  $self->{'fq_primary_key_sequence_name'} = undef;
-  $self->{'primary_key_sequence_name'} = undef;
 }
 
 sub _clear_column_generated_values
 {
   my($self) = shift;
 
-  $self->{'fq_table'}            = undef;
-  $self->{'fq_table_sql'}        = undef;
+  #$self->{'fq_table'}            = undef;
+  #$self->{'fq_table_sql'}        = undef;
   $self->{'column_names'}        = undef;
   $self->{'nonlazy_column_names'} = undef;
   $self->{'lazy_column_names'} = undef;
-  $self->{'get_column_sql_tmpl'} = undef;
-  $self->{'columns_names_sql'}   = undef;
-  $self->{'column_names_string_sql'} = undef;
-  $self->{'nonlazy_column_names_string_sql'} = undef;
+  #$self->{'get_column_sql_tmpl'} = undef;
+  #$self->{'columns_names_sql'}   = undef;
+  #$self->{'column_names_string_sql'} = undef;
+  #$self->{'nonlazy_column_names_string_sql'} = undef;
   $self->{'column_rw_method_names'} = undef;
   $self->{'column_accessor_method_names'} = undef;
   $self->{'nonlazy_column_accessor_method_names'} = undef;
@@ -2600,11 +2605,11 @@ sub _clear_column_generated_values
   $self->{'column_accessor_method'} = undef;
   $self->{'column_mutator_method'} = undef;
   $self->{'column_rw_method'} = undef;
-  $self->{'load_sql'}   = undef;
-  $self->{'load_all_sql'}   = undef;
+  #$self->{'load_sql'}   = undef;
+  #$self->{'load_all_sql'}   = undef;
   $self->{'update_all_sql'} = undef;
   $self->{'update_sql_prefix'} = undef;
-  $self->{'insert_sql'} = undef;
+  #$self->{'insert_sql'} = undef;
   $self->{'insert_sql_with_inlining_start'} = undef;
   $self->{'update_sql_with_inlining_start'} = undef;
   $self->{'delete_sql'} = undef;
@@ -2796,6 +2801,8 @@ sub auto_helper_class
   }
 }
 
+my %Rebless;
+
 sub init_auto_helper
 {
   my($self) = shift;
@@ -2810,7 +2817,46 @@ sub init_auto_helper
 
     $self->original_class($class);
 
-    bless $self, $self->auto_helper_class;
+    my $auto_helper_class = $self->auto_helper_class;
+
+    REBLESS: # Do slightly evil re-blessing magic
+    {
+      # Check cache
+      if(my $new_class = $Rebless{$class,$auto_helper_class})
+      {
+        bless $self, $new_class;
+      }
+      else
+      {
+        # Special, simple case for Rose::DB::Object::Metadata
+        if($class eq __PACKAGE__)
+        {
+          bless $self, $auto_helper_class;
+        }
+        else # Handle Rose::DB::Object::Metadata subclasses
+        {
+          # If this is a default Rose::DB driver class
+          if(index($auto_helper_class, 'Rose::DB::') == 0)
+          {
+            # Make a new metadata class based on the current class
+            my $new_class = $class . '::__RoseDBObjectMetadataPrivate__::' . $auto_helper_class;
+
+            no strict 'refs';        
+            @{"${new_class}::ISA"} = ($auto_helper_class, $class);
+    
+            bless $self, $new_class;
+          }
+          else
+          {
+            # Otherwise use the (apparently custom) metadata class
+            bless $self, $auto_helper_class;
+          }
+        }
+        
+        # Cache value
+        $Rebless{$class,$auto_helper_class} = ref $self;
+      }
+    }
   }
 
   return 1;
