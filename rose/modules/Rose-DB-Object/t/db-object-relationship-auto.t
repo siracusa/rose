@@ -54,6 +54,8 @@ foreach my $i (1 .. $Iterations)
   # Good test orders:
   #@dbs = qw(sqlite pg_with_schema pg mysql informix);
 
+  print "# db type order: @dbs\n";
+
   foreach my $db_type (@dbs)
   {
     SKIP:

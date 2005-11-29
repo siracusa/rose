@@ -68,7 +68,6 @@ sub db
     $self->{FLAG_DB_IS_PRIVATE()} = 0;
     $self->{'db'}  = shift;
     $self->{'dbh'} = undef;
-    $self->meta->init_with_db($self->{'db'});
 
     return $self->{'db'};
   }
@@ -87,7 +86,6 @@ sub _init_db
   if($db->init_db_info)
   {
     $self->{FLAG_DB_IS_PRIVATE()} = 1;
-    $self->meta->init_with_db($db);
     return $db;
   }
 

@@ -308,11 +308,10 @@ sub get_objects
   
   my(%fetch, %rel_name);
 
-  my $meta    = $object_class->meta;
-  my $db      = delete $args{'db'} || $object_class->init_db;
-  #my $init_db = $meta->init_with_db($db);
+  my $meta = $object_class->meta;
 
-  my $dbh = delete $args{'dbh'};
+  my $db   = delete $args{'db'} || $object_class->init_db;
+  my $dbh  = delete $args{'dbh'};
   my $dbh_retained = 0;
 
   unless($dbh)
@@ -627,8 +626,6 @@ sub get_objects
 
         $meta{$ft_class} = $ft_meta;
 
-        #$ft_meta->init_with_db($db)  if($init_db);
-
         push(@tables, $ft_meta->fq_table($db));
         push(@tables_sql, $ft_meta->fq_table_sql($db));
         push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
@@ -758,8 +755,6 @@ sub get_objects
 
         $meta{$map_class} = $map_meta;
 
-        #$map_meta->init_with_db($db)  if($init_db);
-
         push(@tables, $map_meta->fq_table($db));
         push(@tables_sql, $map_meta->fq_table_sql($db));
         push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
@@ -857,8 +852,6 @@ sub get_objects
 
         my $ft_columns = $foreign_rel->key_columns 
           or Carp::confess "$ft_class - Missing key columns for '$map_to'";
-
-        #$ft_meta->init_with_db($db)  if($init_db);
 
         push(@tables, $ft_meta->fq_table($db));
         push(@tables_sql, $ft_meta->fq_table_sql($db));
@@ -1774,14 +1767,7 @@ sub delete_objects
 
   my $meta = $object_class->meta;
 
-  my $db  = delete $args{'db'};
-  
-  unless($db)
-  {
-    $db = $object_class->init_db;
-    #$meta->init_with_db($db);
-  }
-
+  my $db  = delete $args{'db'} || $object_class->init_db;
   my $dbh = $args{'dbh'};
   my $dbh_retained = 0;
 
@@ -1855,14 +1841,8 @@ sub update_objects
     or Carp::croak "Missing object class argument";
 
   my $meta = $object_class->meta;
-  my $db   = $args{'db'};
-  
-  unless($db)
-  {
-    $db = $object_class->init_db;
-    #$meta->init_with_db($db);
-  }
 
+  my $db  = delete $args{'db'} || $object_class->init_db;
   my $dbh = $args{'dbh'};
   my $dbh_retained = 0;
 
