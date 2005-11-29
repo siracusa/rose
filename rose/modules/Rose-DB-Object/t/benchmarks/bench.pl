@@ -32,6 +32,7 @@ our %DB_Name =
   pg       => 'PostgreSQL',
   mysql    => 'MySQL',
   informix => 'Informix',
+  sqlite   => 'SQLite',
 );
 
 our %DB_Tag;
@@ -372,6 +373,12 @@ sub Init
 ##     RDBO_INFORMIX_USER  (@{[ NVL('RDBO_INFORMIX_USER', '<none>') ]})
 ##     RDBO_INFORMIX_PASS  (@{[ NVL('RDBO_INFORMIX_PASS', '<none>') ]})
 ## 
+## SQLite:
+##
+##     To disable the SQLite tests, set this varible to a true value:
+##
+##     RDBO_NO_SQLITE (@{[ NVL('RDBO_NO_SQLITE', '<undef>') ]})
+##
 ## Press return to continue (or wait 60 seconds)
 EOF
 

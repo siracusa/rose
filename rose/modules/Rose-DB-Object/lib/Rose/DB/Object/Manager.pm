@@ -6,7 +6,7 @@ use Carp();
 
 use Rose::DB::Object::Iterator;
 use Rose::DB::Object::QueryBuilder qw(build_select);
-use Rose::DB::Object::Constants qw(STATE_LOADING STATE_IN_DB);
+use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
@@ -69,6 +69,16 @@ sub handle_error
 
   return 1;
 }
+
+use constant MAP_RECORD_ATTR   => PRIVATE_PREFIX . '_map_record';
+use constant MAP_RECORD_METHOD => 'map_record';
+use constant DEFAULT_REL_KEY   => PRIVATE_PREFIX . '_default_rel_key';
+
+my $Map_Record_Method = sub 
+{
+  return $_[0]->{MAP_RECORD_ATTR()} = $_[1]  if(@_ > 1);
+  return shift->{MAP_RECORD_ATTR()};
+};
 
 sub object_class { }
 
@@ -285,15 +295,16 @@ sub get_objects
 
   $class->error(undef);
 
-  my $return_sql      = delete $args{'return_sql'};
-  my $return_iterator = delete $args{'return_iterator'};
-  my $object_class    = delete $args{'object_class'} or Carp::croak "Missing object class argument";
-  my $count_only      = delete $args{'count_only'};
-  my $require_objects = delete $args{'require_objects'};
-  my $with_objects    = !$count_only ? delete $args{'with_objects'} : undef;
-  my $skip_first      = delete $args{'skip_first'} || 0;
-  my $distinct        = delete $args{'distinct'};
-  my $fetch           = delete $args{'fetch_only'};
+  my $return_sql       = delete $args{'return_sql'};
+  my $return_iterator  = delete $args{'return_iterator'};
+  my $object_class     = delete $args{'object_class'} or Carp::croak "Missing object class argument";
+  my $count_only       = delete $args{'count_only'};
+  my $require_objects  = delete $args{'require_objects'};
+  my $with_objects     = !$count_only ? delete $args{'with_objects'} : undef;
+
+  my $skip_first       = delete $args{'skip_first'} || 0;
+  my $distinct         = delete $args{'distinct'};
+  my $fetch            = delete $args{'fetch_only'};
   
   my(%fetch, %rel_name);
 
@@ -314,6 +325,27 @@ sub get_objects
     }
 
     $dbh_retained = 1;
+  }
+
+  my $with_map_records;
+
+  if($with_map_records = delete $args{'with_map_records'})
+  {
+    unless(ref $with_map_records)
+    {
+      if($with_map_records =~ /^[A-Za-z]\w*$/)
+      {
+        $with_map_records = { DEFAULT_REL_KEY() => $with_map_records };
+      }
+      elsif($with_map_records)
+      {
+        $with_map_records = { DEFAULT_REL_KEY() => MAP_RECORD_METHOD };
+      }
+      else
+      {
+        $with_map_records = 0;
+      }
+    }
   }
 
   my $outer_joins_only = ($with_objects && !$require_objects) ? 1 : 0;
@@ -409,7 +441,7 @@ sub get_objects
 
   my @table_names = ($meta->table);
 
-  my(@joins, @subobject_methods, $clauses);
+  my(@joins, @subobject_methods, @mapped_object_methods, $clauses);
 
   my $handle_dups = 0;
   my @has_dups;
@@ -733,15 +765,50 @@ sub get_objects
         push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
         push(@classes, $map_class);
 
-        $columns{$tables[-1]} = []; # Don't fetch map class columns
+        if($with_map_records)
+        {
+          my $use_lazy_columns = (!ref $nonlazy || $nonlazy{$name}) ? 0 : $map_meta->has_lazy_columns;
+
+          if($use_lazy_columns)
+          {
+            $columns{$tables[-1]} = $map_meta->nonlazy_columns;
+            $methods{$tables[-1]} = $map_meta->nonlazy_column_mutator_method_names;
+          }
+          else
+          {
+            $columns{$tables[-1]} = $map_meta->columns;   
+            $methods{$tables[-1]} = $map_meta->column_mutator_method_names;        
+          }
+        }
+        else
+        {
+          $columns{$tables[-1]} = []; # Don't fetch map class columns
+          $methods{$tables[-1]} = [];
+        }
+
         $classes{$tables[-1]} = $map_class;
-        $methods{$tables[-1]} = [];
 
         my $column_map = $rel->column_map;
 
         # Iterator will be the tN value: the first sub-table is t2, and so on.
         # Increase once for map table.
         $i++;
+
+        my $method = $mapped_object_methods[$i - 1] = 
+          exists $with_map_records->{$name} ? $with_map_records->{$name} : 
+          $with_map_records->{DEFAULT_REL_KEY()};
+
+        if($method)
+        {
+          my $ft_class = $rel->foreign_class 
+            or Carp::confess "$class - Missing foreign class for '$name'";
+          
+          unless($ft_class->can($method))
+          {
+            no strict 'refs';
+            *{"${ft_class}::$method"} = $Map_Record_Method;
+          }
+        }
 
         # Add join condition(s)
         while(my($local_column, $foreign_column) = each(%$column_map))
@@ -1055,7 +1122,7 @@ sub get_objects
   my($count, @objects, $iterator);
 
   my($sql, $bind);
-$DB::single = 1;
+
   BUILD_SQL:
   {
     local $Carp::CarpLevel = $Carp::CarpLevel + 1;
@@ -1200,6 +1267,8 @@ $DB::single = 1;
 
                   $object ||= $last_object or die "Missing object for primary key '$pk'";
 
+                  my $map_record;
+
                   foreach my $i (1 .. $num_subtables)
                   {
                     my $class  = $classes[$i];
@@ -1223,7 +1292,21 @@ $DB::single = 1;
                     # per-object sub-objects list.
                     if($has_dups[$i])
                     {
-                      push(@{$sub_objects[$i]}, $subobject);
+                      if($mapped_object_methods[$i])
+                      {
+                        $map_record = $subobject;
+                      }
+                      else
+                      {
+                        if($map_record)
+                        {
+                          my $method = $mapped_object_methods[$i - 1] or next;
+                          $subobject->$method($map_record);
+                          $map_record = 0;
+                        }
+
+                        push(@{$sub_objects[$i]}, $subobject);
+                      }
                     }
                     else # Otherwise, just assign it
                     {
@@ -1501,6 +1584,8 @@ $DB::single = 1;
 
           $object ||= $last_object or die "Missing object for primary key '$pk'";
 
+          my $map_record;
+
           foreach my $i (1 .. $num_subtables)
           {
             my $class  = $classes[$i];
@@ -1524,7 +1609,21 @@ $DB::single = 1;
             # per-object sub-objects list.
             if($has_dups[$i])
             {
-              push(@{$sub_objects[$i]}, $subobject);
+              if($mapped_object_methods[$i])
+              {
+                $map_record = $subobject;
+              }
+              else
+              {
+                if($map_record)
+                {
+                  my $method = $mapped_object_methods[$i - 1] or next;
+                  $subobject->$method($map_record);
+                  $map_record = 0;
+                }
+
+                push(@{$sub_objects[$i]}, $subobject);
+              }
             }
             else # Otherwise, just assign it
             {
@@ -2530,6 +2629,16 @@ If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it
 A fully formed SQL "ORDER BY ..." clause, sans the words "ORDER BY", or a reference to an array of strings to be joined with a comma and appended to the "ORDER BY" clause.
 
 Within each string, any instance of "NAME." will be replaced with the appropriate "tN." table alias, where NAME is a table, foreign key, or relationship name.  All unprefixed simple column names are assumed to belong to the primary table ("t1").
+
+=item C<with_map_records [ BOOL | METHOD | HASHREF ]>
+
+When fetching related objects through a "L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany>" relationship, objects of the L<map class|Rose::DB::Object::Metadata::Relationship::ManyToMany/map_class> are not retrieved by default.  Use this parameter to override the default behavior.
+
+If the value is "1", then each object fetched through a mapping table will have its associated map record available through a C<map_record()> attribute.
+
+If a method name is provided instead, then each object fetched through a mapping table will have its associated map record available through a method of that name.
+
+If the value is a reference to a hash, then the keys of the hash should be "many to many" relationship names, and the values should be the method names through which the maps records will be available for each relationship.
 
 =item C<with_objects OBJECTS>
 

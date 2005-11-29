@@ -374,7 +374,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 
   $start = $o->start(format => '%B %E %Y');
   is($start, 'October 20th 2002', "start 8 - $db_type");
-$DB::single = 1;
+
   #
   # ended
   #

@@ -39,6 +39,10 @@ print STDERR<<"EOF";
 ##     RDBO_INFORMIX_USER  (@{[ nvl('RDBO_INFORMIX_USER', '<none>') ]})
 ##     RDBO_INFORMIX_PASS  (@{[ nvl('RDBO_INFORMIX_PASS', '<none>') ]})
 ## 
+## SQLite: To disable the SQLite tests, set this environment varible
+##
+##     RDBO_NO_SQLITE  (@{[ nvl('RDBO_NO_SQLITE', '<undef>') ]})
+##
 ## Press return to continue (or wait 60 seconds)
 EOF
 
