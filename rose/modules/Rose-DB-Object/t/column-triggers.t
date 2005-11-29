@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 215;
+use Test::More tests => 259;
 
 BEGIN 
 {
@@ -227,7 +227,7 @@ SETUP:
 # Tests
 #
 
-foreach my $db_type (qw(mysql pg pg_with_schema informix))
+foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 {
   SKIP:
   {
@@ -333,6 +333,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
 
   $sth->execute($o->id);
   my $code = $sth->fetchrow_array;
+  $sth->finish;
 
   is($code, 'ABC', "inflate/deflate 2 - $db_type");
   
@@ -355,6 +356,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
 
   $sth->execute($o->id);
   my $start = $sth->fetchrow_array;
+  $sth->finish;
 
   $start = parse_date($start);
   
@@ -372,7 +374,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix))
 
   $start = $o->start(format => '%B %E %Y');
   is($start, 'October 20th 2002', "start 8 - $db_type");
-
+$DB::single = 1;
   #
   # ended
   #
@@ -535,6 +537,42 @@ EOF
     $dbh->commit;
     $dbh->disconnect;
   }
+
+  #
+  # SQLite
+  #
+
+  eval
+  {
+    $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
+      or die Rose::DB->error;
+  };
+
+  if(!$@ && $dbh)
+  {
+    $Have{'sqlite'} = 1;
+
+    # Drop existing tables, ignoring errors
+    {
+      local $dbh->{'RaiseError'} = 0;
+      local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE Rose_db_object_test');
+    }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE Rose_db_object_test
+(
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  name           VARCHAR(32) NOT NULL,
+  code           VARCHAR(32),
+  start          DATE DEFAULT '1980-12-24' NOT NULL,
+  ended          DATE,
+  date_created   DATETIME
+)
+EOF
+
+    $dbh->disconnect;
+  }
 }
 
 END
@@ -572,6 +610,17 @@ END
       or die Rose::DB->error;
 
     $dbh->do('DROP TABLE Rose_db_object_test CASCADE');
+
+    $dbh->disconnect;
+  }
+
+  if($Have{'sqlite'})
+  {
+    # Informix
+    my $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
+      or die Rose::DB->error;
+
+    $dbh->do('DROP TABLE Rose_db_object_test');
 
     $dbh->disconnect;
   }

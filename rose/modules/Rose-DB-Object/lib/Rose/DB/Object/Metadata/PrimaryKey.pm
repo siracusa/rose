@@ -12,11 +12,27 @@ use Rose::Object::MakeMethods::Generic
   scalar =>
   [
     'generator',
-    'sequence_name',
   ],
 );
 
 sub init_name { 'primary_key' }
+
+sub sequence_name
+{
+  my($self) = shift;
+  
+  my $db    = $self->parent->db;
+  my $db_id = $db->{'id'};
+
+  if(@_)
+  {
+    return $self->{'sequence_name'}{$db->driver} = 
+           $self->{'sequence_name'}{$db_id} = shift;
+  }
+
+  return $self->{'sequence_name'}{$db_id} || 
+         $self->{'sequence_name'}{$db->driver};
+}
 
 sub auto_init_columns
 {

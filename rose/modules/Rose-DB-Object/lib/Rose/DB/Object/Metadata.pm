@@ -33,6 +33,7 @@ use Rose::Object::MakeMethods::Generic
   'scalar --get_set_init' =>
   [
     'db',
+    'db_id',
     'primary_key',
     'column_name_to_method_name_mapper',
     'original_class',
@@ -268,9 +269,20 @@ sub init_db
 
   my $class = $self->class or die "Missing class!";
 
-  return $self->class->init_db or 
+  my $db = $self->class->init_db or 
     Carp::croak "Could not init_db() for class $class - are you sure that ",         
                 "Rose::DB's data sources are set up?";
+
+  $self->{'db_id'} = $db->{'id'};
+
+  return $db;
+}
+
+sub init_db_id 
+{
+  my($self) = shift;
+  $self->init_db;
+  return $self->{'db_id'};
 }
 
 sub init_with_db
@@ -304,6 +316,7 @@ sub init_with_db
   {
     $self->_clear_table_generated_values;
     $self->{'db'} = $db;
+    $self->{'db_id'} = $db->{'id'};
   }
 
   return $changed;
@@ -1950,23 +1963,23 @@ sub generate_primary_key_placeholders
 
 sub fq_primary_key_sequence_name
 {
-  my($self) = shift;
+  my($self, %args) = @_;
 
-  if(defined $self->{'fq_primary_key_sequence_name'})
+  my $db_id = $args{'db'}{'id'} || ($self->{'db_id'} ||= $self->init_db_id);
+
+  if(defined $self->{'fq_primary_key_sequence_name'}{$db_id})
   {
-    return $self->{'fq_primary_key_sequence_name'};
+    return $self->{'fq_primary_key_sequence_name'}{$db_id};
   }
 
-  if(my $seq = $self->primary_key_sequence_name(@_))
+  if(my $seq = $self->primary_key_sequence_name(%args))
   {
     $self->primary_key->sequence_name($seq);
-
-    my %args = @_;
 
     my $db = $args{'db'} or
       die "Cannot generate fully-qualified primary key sequence name without db argument";
 
-    return $self->{'fq_primary_key_sequence_name'} = 
+    return $self->{'fq_primary_key_sequence_name'}{$db->{'id'}} = 
       $db->quote_identifier($self->catalog, $self->schema, $seq);
   }
 
@@ -1977,20 +1990,22 @@ sub primary_key_sequence_name
 {
   my($self) = shift;
 
+  my $db_id = $self->{'db_id'} ||= $self->init_db_id;
+
   if(@_ == 1)
   {
-    $self->{'fq_primary_key_sequence_name'} = undef;
-    return $self->{'primary_key_sequence_name'} = shift;
+    $self->{'fq_primary_key_sequence_name'}{$db_id} = undef;
+    return $self->{'primary_key_sequence_name'}{$db_id} = shift;
   }
 
-  if($self->{'primary_key_sequence_name'})
+  if($self->{'primary_key_sequence_name'}{$db_id})
   {
-    return $self->{'primary_key_sequence_name'};
+    return $self->{'primary_key_sequence_name'}{$db_id};
   }
 
   if(my $seq = $self->primary_key->sequence_name)
   {
-    return $self->{'primary_key_sequence_name'} = $seq;
+    return $self->{'primary_key_sequence_name'}{$db_id} = $seq;
   }
 
   my @pk_columns = $self->primary_key_column_names;
@@ -2005,7 +2020,7 @@ sub primary_key_sequence_name
   my $table = $self->table or 
     Carp::croak "Cannot generate primary key sequence name without table name";
 
-  return $self->{'primary_key_sequence_name'} = 
+  return $self->{'primary_key_sequence_name'}{$db->{'id'}} = 
     $db->auto_sequence_name(table => $table, schema => $db->schema, column => $pk_columns[0]);    
 }
 
@@ -2034,7 +2049,7 @@ sub nonlazy_column_names_string_sql
 {
   my($self, $db) = @_;
 
-  return $self->{'nonlazy_column_names_string_sql'}{$db->{'driver'}} ||= 
+  return $self->{'nonlazy_column_names_string_sql'}{$db->{'id'}} ||= 
     join(', ', map { $_->name_sql($db) } $self->nonlazy_columns);
 }
 
@@ -2042,7 +2057,7 @@ sub column_names_string_sql
 {
   my($self, $db) = @_;
 
-  return $self->{'column_names_string_sql'}{$db->{'driver'}} ||= 
+  return $self->{'column_names_string_sql'}{$db->{'id'}} ||= 
     join(', ', map { $_->name_sql($db) } sort { $a->name cmp $b->name } $self->columns);
 }
 
@@ -2050,7 +2065,7 @@ sub column_names_sql
 {
   my($self, $db) = @_;
 
-  my $list = $self->{'column_names_sql'}{$db->{'driver'}} ||= 
+  my $list = $self->{'column_names_sql'}{$db->{'id'}} ||= 
     [ map { $_->name_sql($db) } sort { $a->name cmp $b->name } $self->columns ];
 
   return wantarray ? @$list : $list;
@@ -2198,15 +2213,15 @@ sub column_rw_method_names_hash { shift->{'column_rw_method'} }
 sub fq_table_sql
 {
   my($self, $db) = @_;
-  return $self->{'fq_table_sql'}{$db->{'driver'}} ||= 
-    join('.', grep { defined } ($self->catalog, $self->schema, $db->quote_table_name($self->table)));    
+  return $self->{'fq_table_sql'}{$db->{'id'}} ||= 
+    join('.', grep { defined } ($db->catalog, $db->schema, $db->quote_table_name($self->table)));
 }
 
 sub fq_table
 {
-  my $self = shift;
-  return $self->{'fq_table'} ||=
-    join('.', grep { defined } ($self->catalog, $self->schema, $self->table));
+  my($self, $db) = @_;
+  return $self->{'fq_table'}{$db->{'id'}} ||=
+    join('.', grep { defined } ($db->catalog, $db->schema, $self->table));
 }
 
 sub load_all_sql
@@ -2216,7 +2231,7 @@ sub load_all_sql
   $key_columns ||= $self->primary_key_column_names;
 
   no warnings;
-  return $self->{'load_all_sql'}{$db->{'driver'}}{join("\0", @$key_columns)} ||= 
+  return $self->{'load_all_sql'}{$db->{'id'}}{join("\0", @$key_columns)} ||= 
     'SELECT ' . $self->column_names_string_sql($db) . ' FROM ' .
     $self->fq_table_sql($db) . ' WHERE ' .
     join(' AND ',  map { "$_ = ?" } @$key_columns);
@@ -2229,7 +2244,7 @@ sub load_sql
   $key_columns ||= $self->primary_key_column_names;
 
   no warnings;
-  return $self->{'load_sql'}{$db->{'driver'}}{join("\0", @$key_columns)} ||= 
+  return $self->{'load_sql'}{$db->{'id'}}{join("\0", @$key_columns)} ||= 
     'SELECT ' . $self->nonlazy_column_names_string_sql($db) . ' FROM ' .
     $self->fq_table_sql($db) . ' WHERE ' .
     join(' AND ',  map { "$_ = ?" } @$key_columns);
@@ -2420,7 +2435,7 @@ sub insert_sql
   my($self, $db) = @_;
 
   no warnings;
-  return $self->{'insert_sql'}{$db->{'driver'}} ||= 
+  return $self->{'insert_sql'}{$db->{'id'}} ||= 
     'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
     join(",\n", map { "  $_" } $self->column_names_sql($db)) .
     "\n)\nVALUES\n(\n" . join(",\n", map { "  ?" } $self->column_names) .
@@ -2471,7 +2486,7 @@ sub insert_sql_with_inlining
 sub delete_sql
 {
   my($self, $db) = @_;
-  return $self->{'delete_sql'}{$db->{'driver'}} ||= 
+  return $self->{'delete_sql'}{$db->{'id'}} ||= 
     'DELETE FROM ' . $self->fq_table_sql($db) . ' WHERE ' .
     join(' AND ', map {  $self->column($_)->name_sql($db) . ' = ?' } 
                   $self->primary_key_column_names);
@@ -2491,7 +2506,7 @@ sub get_column_value
     my $key_columns = $self->primary_key_column_names;
     my %key = map { ($_ => 1) } @$key_columns;  
 
-    $sql = $column->{'get_column_sql_tmpl'}{$db->{'driver'}} = 
+    $sql = $column->{'get_column_sql_tmpl'}{$db->{'id'}} = 
       'SELECT __COLUMN__ FROM ' . $self->fq_table_sql($db) . ' WHERE ' .
       join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns);
   }
