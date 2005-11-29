@@ -209,6 +209,8 @@ sub driver_class { shift->_driver_class(lc shift, @_) }
 # Object methods
 #
 
+my %Rebless;
+
 sub new
 {
   my($class) = shift;
@@ -258,31 +260,42 @@ sub new
 
   REBLESS: # Do slightly evil re-blessing magic
   {
-    # Special, simple case for Rose::DB
-    if($class eq __PACKAGE__)
+    # Check cache
+    if(my $new_class = $Rebless{$class,$driver_class})
     {
-      $self = bless {}, $driver_class;
+      $self = bless {}, $new_class;
     }
-    else # Handle Rose::DB subclasses
+    else
     {
-      # If this is a default Rose::DB driver class
-      if(index($driver_class, 'Rose::DB::') == 0)
+      # Special, simple case for Rose::DB
+      if($class eq __PACKAGE__)
       {
-        # Make a new driver class based on the current class
-        my $new_class = $class . '::__RoseDBPrivate__::' . $driver_class;
-
-        no strict 'refs';        
-        @{"${new_class}::ISA"} = ($driver_class, $class);
-
-        $self = bless {}, $new_class;
-      }
-      else
-      {
-        # Otherwise use the (apparently custom) driver class
         $self = bless {}, $driver_class;
       }
-    }
-    
+      else # Handle Rose::DB subclasses
+      {
+        # If this is a default Rose::DB driver class
+        if(index($driver_class, 'Rose::DB::') == 0)
+        {
+          # Make a new driver class based on the current class
+          my $new_class = $class . '::__RoseDBPrivate__::' . $driver_class;
+  
+          no strict 'refs';        
+          @{"${new_class}::ISA"} = ($driver_class, $class);
+  
+          $self = bless {}, $new_class;
+        }
+        else
+        {
+          # Otherwise use the (apparently custom) driver class
+          $self = bless {}, $driver_class;
+        }
+      }
+
+      # Cache value
+      $Rebless{$class,$driver_class} = ref $self;
+    }    
+
     $self->class($class);
   }
 

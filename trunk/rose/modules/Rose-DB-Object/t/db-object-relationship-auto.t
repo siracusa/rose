@@ -51,6 +51,9 @@ foreach my $i (1 .. $Iterations)
   eval { require List::Util };
   @dbs = List::Util::shuffle(@dbs)  unless($@);
 
+  # Good test orders:
+  #@dbs = qw(sqlite pg_with_schema pg mysql informix);
+
   foreach my $db_type (@dbs)
   {
     SKIP:
@@ -95,7 +98,7 @@ foreach my $i (1 .. $Iterations)
     ##
   
     my $p = $product_class->new(name => "Sled $i");
-  
+
     $p->vendor(name => "Acme $i");
   
     $p->prices({ price => 1.23, region => 'US' },
@@ -103,9 +106,10 @@ foreach my $i (1 .. $Iterations)
   
     $p->colors({ name => 'red'   }, 
                { name => 'green' });
+
   
     $p->save;
-    
+
     $p = $product_class->new(id => $p->id)->load;
     is($p->vendor->name, "Acme $i", "vendor $i.1 - $db_type");
   
@@ -296,7 +300,7 @@ CREATE TABLE Rose_db_object_private.products
   name    VARCHAR(255) NOT NULL,
   price   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
 
-  vendor_id  INT REFERENCES vendors (id),
+  vendor_id  INT REFERENCES Rose_db_object_private.vendors (id),
 
   status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
             CHECK(status IN ('inactive', 'active', 'defunct')),
@@ -312,7 +316,7 @@ EOF
 CREATE TABLE Rose_db_object_private.prices
 (
   id          SERIAL NOT NULL PRIMARY KEY,
-  product_id  INT NOT NULL REFERENCES products (id),
+  product_id  INT NOT NULL REFERENCES Rose_db_object_private.products (id),
   region      CHAR(2) NOT NULL DEFAULT 'US',
   price       DECIMAL(10,2) NOT NULL DEFAULT 0.00,
 
@@ -333,8 +337,8 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE Rose_db_object_private.products_colors
 (
-  product_id  INT NOT NULL REFERENCES products (id),
-  color_id    INT NOT NULL REFERENCES colors (id),
+  product_id  INT NOT NULL REFERENCES Rose_db_object_private.products (id),
+  color_id    INT NOT NULL REFERENCES Rose_db_object_private.colors (id),
 
   PRIMARY KEY(product_id, color_id)
 )
