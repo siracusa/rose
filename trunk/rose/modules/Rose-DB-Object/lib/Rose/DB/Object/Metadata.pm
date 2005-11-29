@@ -286,43 +286,6 @@ sub init_db_id
   return $self->{'db_id'};
 }
 
-sub init_with_db
-{
-  my($self, $db) = @_;
-
-  # XXX: I'm cheating like crazy in this method for performance reasons,
-  # XXX: directly accessing hash keys.  I'll "fix" it if/when I have to...
-
-  my $catalog = $db->{'catalog'};
-  my $schema  = $db->{'schema'};
-  my $changed = 0;
-
-  UNDEF_IS_OK: # Avoid undef string comparison warnings
-  {
-    no warnings 'uninitialized';
-    if($catalog ne $self->{'catalog'})
-    {
-      $self->{'catalog'} = $catalog;
-      $changed++;
-    }
-
-    if($schema ne $self->{'schema'})
-    {
-      $self->{'schema'} = $schema;
-      $changed++;
-    }
-  }
-
-  if($changed)
-  {
-    $self->_clear_table_generated_values;
-    $self->{'db'} = $db;
-    $self->{'db_id'} = $db->{'id'};
-  }
-
-  return $changed;
-}
-
 sub init_convention_manager { shift->convention_manager_class('default')->new }
 
 sub convention_manager
@@ -486,21 +449,21 @@ sub table
     return $_[0]->{'table'} ||= $_[0]->convention_manager->auto_table_name;
   }
 
-  $_[0]->_clear_table_generated_values(1);
+  $_[0]->_clear_table_generated_values;
   return $_[0]->{'table'} = $_[1];
 }
 
 sub catalog
 {
   return $_[0]->{'catalog'}  unless(@_ > 1);
-  $_[0]->_clear_table_generated_values(1);
+  $_[0]->_clear_table_generated_values;
   return $_[0]->{'catalog'} = $_[1];
 }
 
 sub schema
 {
   return $_[0]->{'schema'}  unless(@_ > 1);
-  $_[0]->_clear_table_generated_values(1);
+  $_[0]->_clear_table_generated_values;
   return $_[0]->{'schema'} = $_[1];
 }
 
@@ -2285,7 +2248,7 @@ sub update_all_sql
 
   $key_columns ||= $self->primary_key_column_names;
 
-  my $cache_key = "$db->{'driver'}:" . join("\0", @$key_columns);
+  my $cache_key = "$db->{'id'}:" . join("\0", @$key_columns);
 
   return $self->{'update_all_sql'}{$cache_key}
     if($self->{'update_all_sql'}{$cache_key});
@@ -2312,7 +2275,7 @@ sub update_sql
   my %key = map { ($_ => 1) } @$key_columns;
 
   no warnings;
-  return ($self->{'update_sql_prefix'} ||=
+  return ($self->{'update_sql_prefix'}{$db->{'id'}} ||=
     'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
     join(",\n", map { '    ' . $self->column($_)->name_sql($db) . ' = ?' } 
                 grep { !$key{$_->{'name'}} && (!$_->{'lazy'} || 
@@ -2423,7 +2386,7 @@ sub update_sql_with_inlining
   no warnings;
   return 
   (
-    ($self->{'update_sql_with_inlining_start'} ||= 
+    ($self->{'update_sql_with_inlining_start'}{$db->{'id'}} ||= 
      'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
     join(",\n", @updates) . "\nWHERE " . 
     join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns),
@@ -2476,7 +2439,7 @@ sub insert_sql_with_inlining
 
   return 
   (
-    ($self->{'insert_sql_with_inlining_start'} ||=
+    ($self->{'insert_sql_with_inlining_start'}{$db->{'id'}} ||=
     'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
     join(",\n", map { "  $_" } $self->column_names_sql($db)) .
     "\n)\nVALUES\n(\n") . join(",\n", @places) . "\n)",
@@ -2562,25 +2525,21 @@ sub has_lazy_columns
 
 sub _clear_table_generated_values
 {
-  my($self, $all) = (shift, shift);
+  my($self) = shift;
 
-  if($all)
-  {
-    $self->{'fq_table'}          = undef;
-    $self->{'fq_table_sql'}      = undef;
-    $self->{'get_column_sql_tmpl'} = undef;
-    $self->{'load_sql'}          = undef;
-    $self->{'load_all_sql'}      = undef;
-    $self->{'delete_sql'}        = undef;
-    $self->{'fq_primary_key_sequence_name'} = undef;
-    $self->{'primary_key_sequence_name'} = undef;
-    $self->{'insert_sql'}        = undef;
-  }
-
-  $self->{'update_all_sql'}    = undef;
-  $self->{'update_sql_prefix'} = undef;
+  $self->{'fq_table'}          = undef;
+  $self->{'fq_table_sql'}      = undef;
+  $self->{'get_column_sql_tmpl'} = undef;
+  $self->{'load_sql'}          = undef;
+  $self->{'load_all_sql'}      = undef;
+  $self->{'delete_sql'}        = undef;
+  $self->{'fq_primary_key_sequence_name'} = undef;
+  $self->{'primary_key_sequence_name'} = undef;
+  $self->{'insert_sql'}        = undef;
   $self->{'insert_sql_with_inlining_start'} = undef;
+  $self->{'update_sql_prefix'} = undef;
   $self->{'update_sql_with_inlining_start'} = undef;
+  $self->{'update_all_sql'}    = undef;
 }
 
 sub _clear_column_generated_values
@@ -2608,10 +2567,10 @@ sub _clear_column_generated_values
   #$self->{'load_sql'}   = undef;
   #$self->{'load_all_sql'}   = undef;
   $self->{'update_all_sql'} = undef;
-  $self->{'update_sql_prefix'} = undef;
+  #$self->{'update_sql_prefix'} = undef;
   #$self->{'insert_sql'} = undef;
-  $self->{'insert_sql_with_inlining_start'} = undef;
-  $self->{'update_sql_with_inlining_start'} = undef;
+  #$self->{'insert_sql_with_inlining_start'} = undef;
+  #$self->{'update_sql_with_inlining_start'} = undef;
   $self->{'delete_sql'} = undef;
 }
 

@@ -48,6 +48,11 @@ my @dbs = qw(mysql pg pg_with_schema informix sqlite);
 eval { require List::Util };
 @dbs = List::Util::shuffle(@dbs)  unless($@);
 
+# Good test orders:
+#@dbs = qw(pg mysql sqlite pg_with_schema informix);
+
+print "# db type order: @dbs\n";
+
 foreach my $db_type (@dbs)
 {
   SKIP:
