@@ -113,6 +113,9 @@ __PACKAGE__->column_type_classes
   'int'       => 'Rose::DB::Object::Metadata::Column::Integer',
   'integer'   => 'Rose::DB::Object::Metadata::Column::Integer',
 
+  'tinyint'   => 'Rose::DB::Object::Metadata::Column::Integer',
+  'smallint'  => 'Rose::DB::Object::Metadata::Column::Integer',
+
   'serial'    => 'Rose::DB::Object::Metadata::Column::Serial',
 
   'num'       => 'Rose::DB::Object::Metadata::Column::Numeric',
@@ -3045,6 +3048,9 @@ The default mapping of type names to class names is:
   int       => Rose::DB::Object::Metadata::Column::Integer
   integer   => Rose::DB::Object::Metadata::Column::Integer
 
+  tinyint   => Rose::DB::Object::Metadata::Column::Integer
+  smallint  => Rose::DB::Object::Metadata::Column::Integer
+  
   serial    => Rose::DB::Object::Metadata::Column::Serial
 
   num       => Rose::DB::Object::Metadata::Column::Numeric

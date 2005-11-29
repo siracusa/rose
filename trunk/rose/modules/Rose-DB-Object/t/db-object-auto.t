@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 262;
+use Test::More tests => 263;
 
 BEGIN 
 {
@@ -313,7 +313,7 @@ EOF
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 58)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 59)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -849,12 +849,17 @@ EOF
 
     $dbh->disconnect;
 
+    package MyMySQLMeta;
+    our @ISA = qw(Rose::DB::Object::Metadata);
+    MyMySQLMeta->column_type_class(int => 'Rose::DB::Object::Metadata::Column::Varchar');
+
     # Create test subclass
 
     package MyMySQLObject;
 
     our @ISA = qw(Rose::DB::Object);
 
+    sub meta_class { 'MyMySQLMeta' }
     sub init_db { Rose::DB->new('mysql') }
 
     MyMySQLObject->meta->table('Rose_db_object_test');
@@ -882,6 +887,8 @@ EOF
     MyMySQLObject->meta->delete_column('k3');
     MyMySQLObject->meta->auto_init_columns;
 
+    Test::More::is(MyMySQLObject->meta->column('k3')->type, 'varchar', 'custom column clas - mysql');
+    
     MyMySQLObject->meta->primary_key_columns(MyMySQLObject->meta->auto_retrieve_primary_key_column_names);
 
     MyMySQLObject->meta->add_unique_key('save');
