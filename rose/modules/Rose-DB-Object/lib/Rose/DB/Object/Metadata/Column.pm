@@ -22,7 +22,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 our $Triggers_Key      = 'triggers';
 our $Trigger_Index_Key = 'trigger_index';
 
-our $VERSION = '0.10';
+our $VERSION = '0.54';
 
 use overload
 (
@@ -305,9 +305,13 @@ sub perl_column_defintion_attributes
       my $seq = $self->default_value_sequence_name;
       
       my $meta = $self->parent;
-      my $auto_seq = $meta->db->auto_sequence_name(table  => $meta->table,
-                                                   schema => $meta->schema, 
-                                                   column => $self);
+      my $db   = $meta->db;
+
+      my $auto_seq = $db->auto_sequence_name(table  => $meta->table,
+                                             schema => $db->schema, 
+                                             column => $self);
+
+      $seq =~ s/^[^.]+\.//;
 
       no warnings 'uninitialized';
       if($seq ne $auto_seq)

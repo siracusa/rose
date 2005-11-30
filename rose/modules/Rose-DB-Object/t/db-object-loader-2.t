@@ -111,7 +111,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
              { name => 'green' });
 
   $p->save;
-  
+
   $p = $product_class->new(id => $p->id)->load;
   is($p->vendor->name, "Acme $i", "vendor 1 - $db_type");
 
@@ -380,7 +380,7 @@ CREATE TABLE products
   UNIQUE(name),
   INDEX(vendor_id),
 
-  FOREIGN KEY (vendor_id) REFERENCES vendors (id) ON DELETE NO ACTION ON UPDATE SET NULL
+  FOREIGN KEY (vendor_id) REFERENCES vendors (id) ON DELETE NO ACTION
 )
 TYPE=InnoDB
 EOF
@@ -423,7 +423,7 @@ CREATE TABLE product_color_map
   INDEX(color_id),
   INDEX(product_id),
 
-  FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE RESTRICT,
+  FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE NO ACTION,
   FOREIGN KEY (color_id) REFERENCES colors (id) ON UPDATE NO ACTION
 )
 TYPE=InnoDB

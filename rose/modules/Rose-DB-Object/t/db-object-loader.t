@@ -439,7 +439,7 @@ CREATE TABLE products_colors
   INDEX(color_id),
   INDEX(product_id),
 
-  FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE RESTRICT,
+  FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE NO ACTION,
   FOREIGN KEY (color_id) REFERENCES colors (id) ON UPDATE NO ACTION
 )
 TYPE=InnoDB

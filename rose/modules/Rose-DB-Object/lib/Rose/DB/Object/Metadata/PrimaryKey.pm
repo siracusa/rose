@@ -20,7 +20,7 @@ sub init_name { 'primary_key' }
 sub sequence_name
 {
   my($self) = shift;
-  
+
   my $db    = $self->parent->db;
   my $db_id = $db->{'id'};
 

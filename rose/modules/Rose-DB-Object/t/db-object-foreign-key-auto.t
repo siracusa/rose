@@ -1884,7 +1884,7 @@ CREATE TABLE Rose_db_object_test
   INDEX(fk1, fk2, fk3),
 
   FOREIGN KEY (fother_id2) REFERENCES Rose_db_object_other2 (id2) ON DELETE NO ACTION ON UPDATE SET NULL,
-  FOREIGN KEY (fother_id3) REFERENCES Rose_db_object_other3 (id3) ON UPDATE RESTRICT ON DELETE CASCADE,
+  FOREIGN KEY (fother_id3) REFERENCES Rose_db_object_other3 (id3) ON UPDATE NO ACTION ON DELETE CASCADE,
   FOREIGN KEY (fother_id4) REFERENCES Rose_db_object_other4 (id4) ON DELETE CASCADE ON UPDATE SET NULL,
 
   FOREIGN KEY (fk1, fk2, fk3) REFERENCES Rose_db_object_other (k1, k2, k3)
