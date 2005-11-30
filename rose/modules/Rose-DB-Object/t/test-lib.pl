@@ -125,7 +125,11 @@ BEGIN
   # SQLite
   #
 
-  unless($ENV{'RDBO_NO_SQLITE'})
+  eval { require DBD::SQLite };
+  
+  my $version = $DBD::SQLite::VERSION || 0;
+
+  unless($ENV{'RDBO_NO_SQLITE'} || $version < 1.08)
   {
     # Main
     Rose::DB->register_db(
