@@ -442,11 +442,11 @@ sub list_tables
     
     my @table_info = $dbh->func('user', '_tables');
     
-    if($args{'include_views'})
-    {
-      my @view_info = $dbh->func('view', '_tables');
-      push(@table_info, @view_info);
-    }
+    #if($args{'include_views'})
+    #{
+    #  my @view_info = $dbh->func('view', '_tables');
+    #  push(@table_info, @view_info);
+    #}
 
     foreach my $item (@table_info)
     {

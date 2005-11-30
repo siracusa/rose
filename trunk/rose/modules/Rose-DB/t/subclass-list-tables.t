@@ -42,6 +42,11 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     is_deeply(\@tables, [ sort(@Tables, 'read') ], "$db_type tables 1");
   }
+  elsif($db_type eq 'informix')
+  {
+    # Informix shows views every time
+    is_deeply(\@tables, [ sort(@Tables, 'rdbo_test_view') ], "$db_type tables");
+  }
   else
   {
     is_deeply(\@tables, \@Tables, "$db_type tables 1");
