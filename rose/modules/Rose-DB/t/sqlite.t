@@ -9,7 +9,7 @@ BEGIN
   require Test::More;
   eval { require DBD::SQLite };
 
-  if($@)
+  if($@ || $DBD::SQLite::VERSION < 1.08)
   {
     Test::More->import(skip_all => 'Missing DBD::SQLite');
   }
