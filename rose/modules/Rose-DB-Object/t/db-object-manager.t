@@ -4700,6 +4700,7 @@ SKIP: foreach my $db_type (qw(informix))
       object_class  => 'MyInformixObject',
       share_db      => 1,
       with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
+      multi_many_ok => 1,
       with_map_records => 'map_record',
       query         => [ 't1.id' => [ 1, 2, 5 ] ],
       sort_by       => 't1.name');

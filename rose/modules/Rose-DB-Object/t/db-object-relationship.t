@@ -4055,6 +4055,7 @@ SKIP: foreach my $db_type ('informix')
   $sth = $color->db->dbh->prepare('SELECT COUNT(*) FROM rose_db_object_colors_map WHERE obj_id = 60');
   $sth->execute;
   $count = $sth->fetchrow_array;
+  $sth->finish;
   is($count, 5, "add 2 many to many on save 34 - $db_type");
 
   # End "many to many" tests
