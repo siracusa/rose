@@ -32,9 +32,9 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 
   next  unless($Have{$db_type});
 
-  Rose::DB->default_type($db_type);
+  My::DB2->default_type($db_type);
 
-  my $db = Rose::DB->new;
+  my $db = My::DB2->new;
 
   my @tables = sort grep { /$Regex/ } $db->list_tables;
   
@@ -78,8 +78,8 @@ BEGIN
 
   eval 
   {
-    $dbh = Rose::DB->new('pg_admin')->retain_dbh()
-      or die Rose::DB->error;
+    $dbh = My::DB2->new('pg_admin')->retain_dbh()
+      or die My::DB2->error;
   };
 
   if(!$@ && $dbh)
@@ -250,8 +250,8 @@ EOF
 
   eval 
   {
-    my $db = Rose::DB->new('mysql_admin');
-    $dbh = $db->retain_dbh or die Rose::DB->error;
+    my $db = My::DB2->new('mysql_admin');
+    $dbh = $db->retain_dbh or die My::DB2->error;
 
     my $version = $dbh->get_info(18); # SQL_DBMS_VER  
 
@@ -385,8 +385,8 @@ EOF
 
   eval
   {
-    $dbh = Rose::DB->new('informix_admin')->retain_dbh()
-      or die Rose::DB->error;
+    $dbh = My::DB2->new('informix_admin')->retain_dbh()
+      or die My::DB2->error;
   };
 
   if(!$@ && $dbh)
@@ -481,8 +481,8 @@ EOF
 
   eval
   {
-    $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
-      or die Rose::DB->error;
+    $dbh = My::DB2->new('sqlite_admin')->retain_dbh()
+      or die My::DB2->error;
   };
 
   if(!$@ && $dbh)
@@ -578,8 +578,8 @@ END
   if($Have{'pg'})
   {
     # Postgres
-    my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
-      or die Rose::DB->error;
+    my $dbh = My::DB2->new('pg_admin')->retain_dbh()
+      or die My::DB2->error;
 
     $dbh->do('DROP VIEW rdbo_test_view');
     $dbh->do('DROP TABLE rdbo_test_products_colors CASCADE');
@@ -603,8 +603,8 @@ END
   if($Have{'mysql'})
   {
     # MySQL
-    my $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
-      or die Rose::DB->error;
+    my $dbh = My::DB2->new('mysql_admin')->retain_dbh()
+      or die My::DB2->error;
 
     $dbh->do('DROP TABLE rdbo_test_products_colors CASCADE');
     $dbh->do('DROP TABLE rdbo_test_colors CASCADE');
@@ -619,8 +619,8 @@ END
   if($Have{'informix'})
   {
     # Informix
-    my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
-      or die Rose::DB->error;
+    my $dbh = My::DB2->new('informix_admin')->retain_dbh()
+      or die My::DB2->error;
 
     $dbh->do('DROP VIEW rdbo_test_view');
     $dbh->do('DROP TABLE rdbo_test_products_colors CASCADE');
@@ -635,8 +635,8 @@ END
   if($Have{'sqlite'})
   {
     # Informix
-    my $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
-      or die Rose::DB->error;
+    my $dbh = My::DB2->new('sqlite_admin')->retain_dbh()
+      or die My::DB2->error;
 
     $dbh->do('DROP VIEW rdbo_test_view');
     $dbh->do('DROP TABLE rdbo_test_products_colors');
