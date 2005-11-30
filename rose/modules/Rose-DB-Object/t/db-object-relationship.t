@@ -6697,9 +6697,9 @@ END
     my $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE rose_db_object_test CASCADE');
     $dbh->do('DROP TABLE rose_db_object_colors_map CASCADE');
     $dbh->do('DROP TABLE rose_db_object_colors');
+    $dbh->do('DROP TABLE rose_db_object_test CASCADE');
     $dbh->do('DROP TABLE rose_db_object_other');
     $dbh->do('DROP TABLE rose_db_object_other2');
 
@@ -6712,9 +6712,9 @@ END
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE rose_db_object_test CASCADE');
     $dbh->do('DROP TABLE rose_db_object_colors_map CASCADE');
     $dbh->do('DROP TABLE rose_db_object_colors');
+    $dbh->do('DROP TABLE rose_db_object_test CASCADE');
     $dbh->do('DROP TABLE rose_db_object_other');
     $dbh->do('DROP TABLE rose_db_object_other2');
 
@@ -6723,7 +6723,7 @@ END
 
   if($HAVE_SQLITE)
   {
-    # Informix
+    # SQLite
     my $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
       or die Rose::DB->error;
 

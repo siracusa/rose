@@ -292,7 +292,7 @@ sub load
       }
     }
 
-    $sth = $dbh->prepare_cached($sql, undef, 3); #, $meta->prepare_select_options);
+    $sth = $dbh->prepare($sql); #, $meta->prepare_select_options);
 
     $Debug && warn "$sql - bind params: ", join(', ', grep { defined } @key_values), "\n";
     $sth->execute(grep { defined } @key_values);
