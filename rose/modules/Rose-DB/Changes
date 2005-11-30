@@ -1,7 +1,7 @@
 0.53 (11.27.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added SQLite support.
-    * Driver classes now loaded on demand.
+    * Driver classes are now loaded on demand.
     * Changes to support Rose::DB::Object 0.54
 
 0.52 (11.22.2005) - John Siracusa <siracusa@mindspring.com>
