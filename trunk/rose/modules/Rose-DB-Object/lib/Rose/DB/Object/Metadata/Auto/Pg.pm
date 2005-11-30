@@ -67,7 +67,7 @@ sub auto_generate_unique_keys
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
 
-    my $schema = $self->schema;
+    my $schema = $db->schema;
     $schema = $db->default_implicit_schema  unless(defined $schema);
 
     my $table = lc $self->table;

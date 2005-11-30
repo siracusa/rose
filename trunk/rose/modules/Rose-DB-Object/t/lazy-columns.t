@@ -83,7 +83,7 @@ foreach my $db_type (@dbs)
     MyObject->meta->initialize;
   }
 
-  MyObject->meta->init_with_db(Rose::DB->new);
+  #MyObject->meta->init_with_db(Rose::DB->new);
 
   ##
   ## Run tests

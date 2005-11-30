@@ -453,19 +453,19 @@ sub table
   return $_[0]->{'table'} = $_[1];
 }
 
-sub catalog
-{
-  return $_[0]->{'catalog'}  unless(@_ > 1);
-  $_[0]->_clear_table_generated_values;
-  return $_[0]->{'catalog'} = $_[1];
-}
-
-sub schema
-{
-  return $_[0]->{'schema'}  unless(@_ > 1);
-  $_[0]->_clear_table_generated_values;
-  return $_[0]->{'schema'} = $_[1];
-}
+# sub catalog
+# {
+#   return $_[0]->{'catalog'}  unless(@_ > 1);
+#   $_[0]->_clear_table_generated_values;
+#   return $_[0]->{'catalog'} = $_[1];
+# }
+# 
+# sub schema
+# {
+#   return $_[0]->{'schema'}  unless(@_ > 1);
+#   $_[0]->_clear_table_generated_values;
+#   return $_[0]->{'schema'} = $_[1];
+# }
 
 sub init_primary_key
 {
@@ -1224,8 +1224,8 @@ sub register_class
 
   my $db = $self->db;
 
-  my $catalog = $self->catalog;
-  my $schema  = $self->schema;
+  my $catalog = $db->catalog;
+  my $schema  = $db->schema;
 
   $catalog  = NULL_CATALOG  unless(defined $catalog);
   $schema   = NULL_SCHEMA   unless(defined $schema);
@@ -1943,8 +1943,11 @@ sub fq_primary_key_sequence_name
     my $db = $args{'db'} or
       die "Cannot generate fully-qualified primary key sequence name without db argument";
 
+    # Add schema and catalog information only if it isn't present
+    # XXX: crappy check - just looking for a '.'
     return $self->{'fq_primary_key_sequence_name'}{$db->{'id'}} = 
-      $db->quote_identifier($db->catalog, $db->schema, $seq);
+       (index($seq, '.') > 0) ? $seq : 
+       $db->quote_identifier($db->catalog, $db->schema, $seq);
   }
 
   return undef;
@@ -1985,7 +1988,7 @@ sub primary_key_sequence_name
     Carp::croak "Cannot generate primary key sequence name without table name";
 
   return $self->{'primary_key_sequence_name'}{$db->{'id'}} = 
-    $db->auto_sequence_name(table => $table, schema => $db->schema, column => $pk_columns[0]);    
+    $db->auto_sequence_name(table => $table, column => $pk_columns[0]);    
 }
 
 sub column_names
@@ -2546,32 +2549,32 @@ sub _clear_column_generated_values
 {
   my($self) = shift;
 
-  #$self->{'fq_table'}            = undef;
-  #$self->{'fq_table_sql'}        = undef;
-  $self->{'column_names'}        = undef;
-  $self->{'nonlazy_column_names'} = undef;
-  $self->{'lazy_column_names'} = undef;
-  #$self->{'get_column_sql_tmpl'} = undef;
-  #$self->{'columns_names_sql'}   = undef;
-  #$self->{'column_names_string_sql'} = undef;
-  #$self->{'nonlazy_column_names_string_sql'} = undef;
+  $self->{'fq_table'}               = undef;
+  $self->{'fq_table_sql'}           = undef;
+  $self->{'column_names'}           = undef;
+  $self->{'nonlazy_column_names'}   = undef;
+  $self->{'lazy_column_names'}      = undef;
+  $self->{'get_column_sql_tmpl'}    = undef;
+  $self->{'columns_names_sql'}      = undef;
+  $self->{'column_names_string_sql'} = undef;
+  $self->{'nonlazy_column_names_string_sql'} = undef;
   $self->{'column_rw_method_names'} = undef;
   $self->{'column_accessor_method_names'} = undef;
   $self->{'nonlazy_column_accessor_method_names'} = undef;
   $self->{'column_mutator_method_names'} = undef;
   $self->{'nonlazy_column_mutator_method_names'} = undef;
-  $self->{'method_columns'}      = undef;
+  $self->{'method_columns'}         = undef;
   $self->{'column_accessor_method'} = undef;
-  $self->{'column_mutator_method'} = undef;
-  $self->{'column_rw_method'} = undef;
-  #$self->{'load_sql'}   = undef;
-  #$self->{'load_all_sql'}   = undef;
-  $self->{'update_all_sql'} = undef;
-  #$self->{'update_sql_prefix'} = undef;
-  #$self->{'insert_sql'} = undef;
-  #$self->{'insert_sql_with_inlining_start'} = undef;
-  #$self->{'update_sql_with_inlining_start'} = undef;
-  $self->{'delete_sql'} = undef;
+  $self->{'column_mutator_method'}  = undef;
+  $self->{'column_rw_method'}       = undef;
+  $self->{'load_sql'}               = undef;
+  $self->{'load_all_sql'}           = undef;
+  $self->{'update_all_sql'}         = undef;
+  $self->{'update_sql_prefix'}      = undef;
+  $self->{'insert_sql'}             = undef;
+  $self->{'insert_sql_with_inlining_start'} = undef;
+  $self->{'update_sql_with_inlining_start'} = undef;
+  $self->{'delete_sql'}             = undef;
 }
 
 sub method_name_is_reserved
@@ -3473,10 +3476,6 @@ If an object was read from the database the specified number of seconds ago or e
 
 A L<cached_objects_expire_in|/cached_objects_expire_in> value of undef or zero means that nothing will ever expire from the object cache for the L<Rose::DB::Object::Cached>-derived class associated with this metadata object.  This is the default.
 
-=item B<catalog [CATALOG]>
-
-Get or set the database catalog name.  This attribute is not applicable to any of the supported databases, as far as I know.
-
 =item B<class [CLASS]>
 
 Get or set the L<Rose::DB::Object>-derived class associated with this metadata object.  This is the class where the accessor methods for each column will be created (by L<make_methods|/make_methods>).
@@ -3825,13 +3824,9 @@ Get or set the full list of relationships.  If ARGS are passed, the relationship
 
 Returns a list of relationship objects in list context, or a reference to an array of relationship objects in scalar context.
 
-=item B<schema [SCHEMA]>
-
-Get or set the database schema name.  This attribute is only applicable to PostgreSQL databases.
-
 =item B<table [TABLE]>
 
-Get or set the name of the database table.  The table name should not include any sort of prefix to indicate the L<schema|/schema> or L<catalog|/catalog>; there are separate attributes for those values.
+Get or set the name of the database table.  The table name should not include any sort of prefix to indicate the L<schema|Rose::DB/schema> or L<catalog|Rose::DB/catalog>.
 
 =item B<unique_key KEY>
 

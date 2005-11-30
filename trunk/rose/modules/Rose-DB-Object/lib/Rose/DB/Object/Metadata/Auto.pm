@@ -58,13 +58,13 @@ sub auto_generate_columns
 {
   my($self) = shift;
 
-  my($class, %columns, $schema, $table);
+  my($db, $class, %columns, $schema, $table);
 
   eval
   {
     $class = $self->class or die "Missing class!";
 
-    my $db  = $self->db;
+    $db = $self->db;
     my $dbh = $db->dbh or die $db->error;
 
     $table = $self->table;
@@ -73,15 +73,15 @@ sub auto_generate_columns
 
     my $table_unquoted = $db->unquote_table_name($table);
 
-    $schema = $self->schema;
+    $schema = $db->schema;
     $schema = $db->default_implicit_schema  unless(defined $schema);
 
-    my $sth = $dbh->column_info($self->catalog, $schema, $table_unquoted, '%');
+    my $sth = $dbh->column_info($db->catalog, $schema, $table_unquoted, '%');
 
     unless(defined $sth)
     {
       no warnings; # undef strings okay
-      die "No column information found for catalog '", $self->catalog,
+      die "No column information found for catalog '", $db->catalog,
           "' schema '", $schema, "' table '", $table_unquoted, "'";
     }
 
@@ -93,7 +93,7 @@ sub auto_generate_columns
 
         $col_info->{'TABLE_NAME'} = $db->unquote_table_name($col_info->{'TABLE_NAME'});
 
-        next COLUMN unless($col_info->{'TABLE_CAT'}   eq $self->catalog &&
+        next COLUMN unless($col_info->{'TABLE_CAT'}   eq $db->catalog &&
                            $col_info->{'TABLE_SCHEM'} eq $schema &&
                            $col_info->{'TABLE_NAME'}  eq $table_unquoted);
       }
@@ -114,7 +114,7 @@ sub auto_generate_columns
   {
     no warnings; # undef strings okay
     Carp::croak "Could not auto-generate columns for class $class - ",
-                ($@ || "no column info found for catalog '" . $self->catalog .
+                ($@ || "no column info found for catalog '" . $db->catalog .
                 "' schema '" . $schema . "' table '$table'");
   }
 
@@ -285,28 +285,28 @@ sub auto_retrieve_primary_key_column_names
     Carp::croak "Useless call to auto_retrieve_primary_key_column_names() in void context";
   }
 
-  my($class, @columns, $schema);
+  my($db, $class, @columns, $schema);
 
   eval
   {
     $class = $self->class or die "Missing class!";
 
-    my $db  = $self->db;
+    $db = $self->db;
     my $dbh = $db->dbh or die $db->error;
 
     my $table = lc $self->table;
 
     my $table_unquoted = $db->unquote_table_name($table);
 
-    $schema = $self->schema;
+    $schema = $db->schema;
     $schema = $db->default_implicit_schema  unless(defined $schema);
 
-    my $sth = $dbh->primary_key_info($self->catalog, $schema, $table_unquoted);
+    my $sth = $dbh->primary_key_info($db->catalog, $schema, $table_unquoted);
 
     unless(defined $sth)
     {
       no warnings; # undef strings okay
-      die "No primary key information found for catalog '", $self->catalog,
+      die "No primary key information found for catalog '", $db->catalog,
           "' schema '", $schema, "' table '", $table, "'";
     }
 
@@ -318,7 +318,7 @@ sub auto_retrieve_primary_key_column_names
 
         $pk_info->{'TABLE_NAME'} = $db->unquote_table_name($pk_info->{'TABLE_NAME'});
 
-        next PK  unless($pk_info->{'TABLE_CAT'}   eq $self->catalog &&
+        next PK  unless($pk_info->{'TABLE_CAT'}   eq $db->catalog &&
                         $pk_info->{'TABLE_SCHEM'} eq $schema &&
                         $pk_info->{'TABLE_NAME'}  eq $table_unquoted);
       }
@@ -336,7 +336,7 @@ sub auto_retrieve_primary_key_column_names
   {
     $@ = 'no primary key coumns found'  unless(defined $@);
     Carp::croak "Could not auto-retrieve primary key columns for class $class - ",
-                ($@ || "no primary key info found for catalog '" . $self->catalog .
+                ($@ || "no primary key info found for catalog '" . $db->catalog .
                 "' schema '" . $schema . "' table '" . lc $self->table, "'");
   }
 
@@ -368,14 +368,14 @@ sub auto_generate_foreign_keys
     my $table = $db->likes_lowercase_table_names ? lc $self->table : $self->table;
 
     my $sth = $dbh->foreign_key_info(undef, undef, undef,
-                                     $self->catalog, $self->schema, $table);
+                                     $db->catalog, $db->schema, $table);
 
     # This happens when the table has no foreign keys
     return  unless(defined $sth);
 
     my(%fk, @fk_info);
 
-    my $schema = $self->schema;
+    my $schema = $db->schema;
     $schema = $db->default_implicit_schema  unless(defined $schema);
 
     FK: while(my $fk_info = $sth->fetchrow_hashref)
@@ -383,7 +383,7 @@ sub auto_generate_foreign_keys
       CHECK_TABLE: # Make sure this column is from the right table
       {
         no warnings; # Allow undef coercion to empty string
-        next FK  unless($fk_info->{'FK_TABLE_CAT'}   eq $self->catalog &&
+        next FK  unless($fk_info->{'FK_TABLE_CAT'}   eq $db->catalog &&
                         $fk_info->{'FK_TABLE_SCHEM'} eq $schema &&
                         $fk_info->{'FK_TABLE_NAME'}  eq $table);
       }

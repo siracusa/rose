@@ -1150,7 +1150,7 @@ sub next_value_in_sequence
   return undef;
 }
 
-sub auto_sequence_name { return undef }
+sub auto_sequence_name { undef }
 
 sub supports_limit_with_offset { 1 }
 sub likes_redundant_join_conditions { 0 }
