@@ -606,6 +606,8 @@ SKIP: foreach my $db_type (qw(informix))
   sleep(5);
   $o->load or die $o->error;
   ok($MyInformixObject::Objects_By_Key_Loaded{'name'}{'John'} != $loaded, "cache_expires_in uk 3 - $db_type");
+
+  $o->meta->clear_object_cache;
 }
 
 #
