@@ -17,7 +17,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.51';
+our $VERSION = '0.55';
 
 sub scalar
 {
@@ -134,6 +134,124 @@ sub scalar
         return $_[0]->{$key} = $_[1];
       };
     }
+  }
+  elsif($interface eq 'get')
+  {
+    my $default = $args->{'default'};
+
+    if(defined $default)
+    {
+      $methods{$name} = sub
+      {
+        return (defined $_[0]->{$key}) ? $_[0]->{$key} : 
+                 ($_[0]->{$key} = $default);
+      };
+    }
+    elsif(exists $args->{'with_init'} || exists $args->{'init_method'})
+    {
+      my $init_method = $args->{'init_method'} || "init_$name";
+
+      $methods{$name} = sub
+      {
+        return (defined $_[0]->{$key}) ? $_[0]->{$key} : 
+                 ($_[0]->{$key} = $_[0]->$init_method());
+      };
+    }
+    else
+    {
+      $methods{$name} = sub
+      {
+        return $_[0]->{$key};
+      };
+    }
+  }
+  else { Carp::croak "Unknown interface: $interface" }
+
+  return \%methods;
+}
+
+sub enum
+{
+  my($class, $name, $args) = @_;
+
+  my $key = $args->{'hash_key'} || $name;
+  my $interface = $args->{'interface'} || 'get_set';
+
+  my $values = $args->{'values'} || $args->{'check_in'};
+
+  unless(ref $values && @$values)
+  {
+    Carp::croak "Missing list of valid values for enum column '$name'";
+  }
+
+  my @values = @$values;
+
+  my $max_num = 0;
+
+  if($args->{'allow_numbers'})
+  {
+    $max_num = @$values;
+  }
+
+  my %methods;
+
+  if($interface eq 'get_set')
+  {
+    my %check = map { $_ => 1 } @values;
+
+    my $default = $args->{'default'};
+
+    if(defined $default)
+    {
+      $methods{$name} = sub
+      {
+        if(@_ > 1 && defined $_[1])
+        {
+          Carp::croak "Invalid $name: '$_[1]'"  unless(exists $check{$_[1]});
+          return $_[0]->{$key} = $_[1];
+        }
+        return (defined $_[0]->{$key}) ? $_[0]->{$key} : 
+                 ($_[0]->{$key} = $default);
+      };
+    }
+    elsif(exists $args->{'with_init'} || exists $args->{'init_method'})
+    {
+      my $init_method = $args->{'init_method'} || "init_$name";
+
+      $methods{$name} = sub
+      {
+        if(@_ > 1 && defined $_[1])
+        {
+          Carp::croak "Invalid $name: '$_[1]'"  unless(exists $check{$_[1]});
+          return $_[0]->{$key} = $_[1];
+        }
+        return (defined $_[0]->{$key}) ? $_[0]->{$key} : 
+                 ($_[0]->{$key} = $_[0]->$init_method());
+      };
+    }
+    else
+    {
+      $methods{$name} = sub
+      {
+        if(@_ > 1 && defined $_[1])
+        {
+          Carp::croak "Invalid $name: '$_[1]'"  unless(exists $check{$_[1]});
+          return $_[0]->{$key} = $_[1];
+        }
+        return $_[0]->{$key};
+      };
+    }
+  }
+  elsif($interface eq 'set')
+  {
+    my %check = map { $_ => 1 } @values;
+
+    $methods{$name} = sub
+    {
+      Carp::croak "Missing argument in call to $name"  unless(@_ > 1);
+      Carp::croak "Invalid $name: '$_[1]'"  unless(exists $check{$_[1]});
+      return $_[0]->{$key} = $_[1];
+    };
   }
   elsif($interface eq 'get')
   {
