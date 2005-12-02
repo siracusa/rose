@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.53';
+our $VERSION = '0.54';
 
 our $Debug = 0;
 
@@ -279,10 +279,10 @@ sub new
         {
           # Make a new driver class based on the current class
           my $new_class = $class . '::__RoseDBPrivate__::' . $driver_class;
-  
+
           no strict 'refs';        
           @{"${new_class}::ISA"} = ($driver_class, $class);
-  
+
           $self = bless {}, $new_class;
         }
         else
@@ -347,7 +347,7 @@ sub load_driver_classes
 sub init_class 
 {
   my($self) = shift;
-  
+
   my $class = ref $self;
 
   if($class =~ /^Rose::DB::/)
@@ -358,7 +358,7 @@ sub init_class
   {
     return $1;
   }
-  
+
   return $class;
 }
 
@@ -471,7 +471,7 @@ sub dsn
 sub database_from_dsn
 {
   my($self_or_class, $dsn) = @_;
-  
+
   my($scheme, $driver, $attr_string, $attr_hash, $driver_dsn);
 
   # x DBI->parse_dsn('dbi:mysql:database=test;host=localhost')
@@ -486,7 +486,7 @@ sub database_from_dsn
     ($scheme, $driver, $attr_string, $attr_hash, $driver_dsn) = 
       DBI->parse_dsn($dsn);
   }
-  
+
   my $db = $attr_hash->{'dbname'} || $attr_hash->{'database'};
 
   unless($db)
@@ -1192,7 +1192,7 @@ sub list_tables
 
   my $types = $args{'include_views'} ? "'TABLE','VIEW'" : 'TABLE';
   my @tables;
-  
+
   eval
   {
     my $dbh = $self->dbh or die $self->error;
@@ -1202,7 +1202,7 @@ sub list_tables
     my $sth = $dbh->table_info($self->catalog, $self->schema, '', $types);
 
     $sth->execute;
-    
+
     while(my $table_info = $sth->fetchrow_hashref)
     {
       push(@tables, $table_info->{'TABLE_NAME'})

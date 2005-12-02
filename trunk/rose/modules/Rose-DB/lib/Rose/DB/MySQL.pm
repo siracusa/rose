@@ -9,7 +9,7 @@ use DateTime::Format::MySQL;
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.54';
+our $VERSION = '0.55';
 
 our $Debug = 0;
 
@@ -43,11 +43,6 @@ sub quote_table_name  { qq(`$_[1]`) }
 sub init_date_handler { DateTime::Format::MySQL->new }
 
 sub insertid_param { 'mysql_insertid' }
-sub null_date      { '0000-00-00'  }
-sub null_datetime  { '0000-00-00 00:00:00' }
-sub null_timestamp { '00000000000000' }
-sub min_timestamp  { '00000000000000' }
-sub max_timestamp  { '00000000000000' }
 
 sub last_insertid_from_sth { $_[1]->{'mysql_insertid'} }
 
@@ -98,10 +93,16 @@ sub refine_dbi_column_info
       # Translate "current time" value into something that our date parser
       # will understand.
       #$col_info->{'COLUMN_DEF'} = 'now';
-      
+
       # Actually, let the database handle this.
       $col_info->{'COLUMN_DEF'} = undef;
     }
+  }
+
+  # Put valid enum values in standard key
+  if($col_info->{'TYPE_NAME'} eq 'enum')
+  {
+    $col_info->{'RDBO_ENUM_VALUES'} = $col_info->{'mysql_values'};
   }
 
   return;

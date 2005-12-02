@@ -108,7 +108,7 @@ foreach my $db_type (@dbs)
 
   $o = MyObject->new(id => $o->id);
   $o->load;
-  
+
   is($o->start->ymd, '2002-10-20', "lazy load 3 - $db_type");
 
   $o->name('Foo');
@@ -119,7 +119,7 @@ foreach my $db_type (@dbs)
 
   ok(!defined $o->{'code'}, "lazy check 3 - $db_type");
   ok(!defined $o->{'start'}, "lazy check 4 - $db_type");
-  
+
   is($o->name, 'Foo', "load 2 - $db_type");
 
   is($o->code, 'abc', "lazy load 4 - $db_type");
@@ -247,7 +247,7 @@ CREATE TABLE Rose_db_object_test
   date_created   TIMESTAMP
 )
 EOF
-    
+
     $dbh->disconnect;
   }
 
@@ -338,7 +338,7 @@ END
     $dbh->do('DROP TABLE Rose_db_object_test');
     $dbh->do('DROP TABLE Rose_db_object_private.Rose_db_object_test');
     $dbh->do('DROP SCHEMA Rose_db_object_private');
-      
+
     $dbh->disconnect;
   }
 

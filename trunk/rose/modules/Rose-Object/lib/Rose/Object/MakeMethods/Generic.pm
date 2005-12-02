@@ -472,9 +472,9 @@ sub array
       $methods{$name} = sub
       {
         my($self) = shift;
-  
+
         Carp::croak "Missing value(s) to add"  unless(@_);
-  
+
         $self->{$key} = $self->$init_method()  unless(defined $self->{$key});
         push(@{$self->{$key}}, (@_ == 1 && ref $_[0] && ref $_[0] eq 'ARRAY') ? @{$_[0]} : @_);
       }    
@@ -484,9 +484,9 @@ sub array
       $methods{$name} = sub
       {
         my($self) = shift;
-  
+
         Carp::croak "Missing value(s) to add"  unless(@_);
-  
+
         push(@{$self->{$key}}, (@_ == 1 && ref $_[0] && ref $_[0] eq 'ARRAY') ? @{$_[0]} : @_);
       }
     }

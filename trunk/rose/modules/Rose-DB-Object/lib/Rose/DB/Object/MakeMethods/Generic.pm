@@ -1616,13 +1616,13 @@ sub object_by_key
             else
             {
               my $dbh = $object->dbh;
-  
+
               my $ret;
-  
+
               # Ignore any errors due to missing primary keys
               local $dbh->{'PrintError'} = 0;
               eval { $ret = $object->load(speculative => 1) };
-              
+
               unless($ret)
               {
                 $object->save or die $object->error;
@@ -1964,7 +1964,7 @@ sub objects_by_key
     $ft_manager = 'Rose::DB::Object::Manager';
     $mgr_args->{'object_class'} = $ft_class;
   }
-  
+
   if($interface eq 'get_set' || $interface eq 'get_set_load')
   {
     $methods{$name} = sub
@@ -2285,7 +2285,7 @@ sub objects_by_key
         }
 
         my $objects = __args_to_objects($self, $key, $ft_class, \$ft_pk, \@_);
-          
+
         my $db = $self->db;
 
         # Set up column map
@@ -3202,7 +3202,7 @@ sub objects_by_map
 
         # Get all the new objects
         my $objects = __args_to_objects($self, $key, $foreign_class, \$ft_pk, \@_);
-          
+
         # Set the attribute
         $self->{$key} = $objects;
 
@@ -3601,7 +3601,7 @@ sub __args_to_objects
   unless(defined $$pk_name)
   {
     my @cols = $object_class->meta->primary_key_column_names;
-  
+
     if(@cols == 1)
     {
       $$pk_name = $cols[0];
@@ -3624,7 +3624,7 @@ sub __args_to_objects
     else
     {  
       my $ref = ref $arg;
-      
+
       if($ref eq 'HASH')
       {
         push(@objects, $object_class->new(%$arg));
@@ -3650,7 +3650,7 @@ sub __args_to_object
   unless(defined $$pk_name)
   {
     my @cols = $object_class->meta->primary_key_column_names;
-  
+
     if(@cols == 1)
     {
       $$pk_name = $cols[0];

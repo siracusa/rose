@@ -53,7 +53,7 @@ sub spec_hash_map
 sub spec_hash
 {
   my($self) = shift;
-  
+
   my $map = $self->spec_hash_map || {};
 
   my %spec = (type => $self->type);
@@ -99,7 +99,7 @@ sub perl_hash_definition
 
   my $max_len = 0;
   my $min_len = -1;
-  
+
   foreach my $name (keys %hash)
   {
     $max_len = length($name)  if(length $name > $max_len);
@@ -168,11 +168,11 @@ sub perl_relationship_defintion_attributes
       unless($custom)
       {
         my $def_types = $self->init_auto_method_types;
-  
+
         CHECK: foreach my $def_type (@$def_types)
         {
           my $found = 0;
-  
+
           foreach my $type ($self->auto_method_types)
           {
             if($type eq $def_type)
@@ -181,11 +181,11 @@ sub perl_relationship_defintion_attributes
               next CHECK;
             }
           }
-          
+
           $custom = 1  if($found != @$def_types);
         }
       }
-      
+
       next ATTR  unless($custom);
     }
 

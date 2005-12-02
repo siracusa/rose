@@ -168,7 +168,7 @@ sub made_method_type
   {
     $self->{'mutator_method_name'} = $name;
   }
-  
+
   $self->{'made_method_types'}{$type} = 1;
 }
 
@@ -303,7 +303,7 @@ sub perl_column_defintion_attributes
     if($attr eq 'default_value_sequence_name')
     {
       my $seq = $self->default_value_sequence_name;
-      
+
       my $meta = $self->parent;
       my $db   = $meta->db;
 
@@ -397,7 +397,7 @@ sub _sort_keys
 sub lazy
 {
   my($self) = shift;
-  
+
   return $self->{'lazy'}  unless(@_);
 
   if($_[0])
@@ -433,7 +433,7 @@ sub lazy
     $self->delete_builtin_trigger(event => 'on_set',
                                   name  => 'load_on_demand');
   }
- 
+
   if(my $meta = $self->parent)
   {
     $meta->refresh_lazy_column_tracking;
@@ -507,7 +507,7 @@ sub triggers
   if(@_)
   {
     my $codes = (@_ > 1) ? [ @_ ] : $_[0];
-    
+
     unless(ref $codes eq 'ARRAY')
     {
       Carp::croak "Expected code reference or a reference to an array ",
@@ -560,7 +560,7 @@ sub enable_triggers  { shift->triggers_disabled(0) }
 sub add_builtin_trigger
 {
   my($self, %args) = @_;
-  
+
   if(@_ == 3 && $Trigger_Events{$_[1]})
   {
     my $event = $_[1];
@@ -579,7 +579,7 @@ sub add_trigger
   my($self, %args) = @_;
 
   my($event, $position, $code, $name);
-  
+
   if(@_ == 3 && $Trigger_Events{$_[1]})
   {
     $event = $_[1];
@@ -604,11 +604,11 @@ sub add_trigger
   {
     Carp::croak "Not a code reference: $code";
   }
-  
+
   if($position =~ /^(?:end|last|push)$/)
   {
     push(@{$self->{$builtin_prefix . 'triggers'}{$event}}, $code);
-    
+
     if($builtin)
     {
       $self->builtin_trigger_index($event, $name, $#{$self->{'builtin_triggers'}{$event}});
@@ -621,11 +621,11 @@ sub add_trigger
   elsif($position =~ /^(?:start|first|unshift)$/)
   {
     unshift(@{$self->{$builtin_prefix . 'triggers'}{$event}}, $code);
-    
+
     # Shift all the other trigger positions
     my $indexes = $builtin? $self->builtin_trigger_indexes($event) :
                             $self->trigger_indexes($event);
-    
+
     foreach my $name (keys(%$indexes))
     {
       $indexes->{$name}++;
@@ -657,7 +657,7 @@ sub builtin_trigger_indexes { $_[0]->{'builtin_trigger_index'}{$_[1]} || {} }
 sub trigger_index
 {
   my($self, $event, $name) = (shift, shift, shift);
-  
+
   if(@_)
   {
     return $self->{'trigger_index'}{$event}{$name} = shift;
@@ -669,7 +669,7 @@ sub trigger_index
 sub builtin_trigger_index
 {
   my($self, $event, $name) = (shift, shift, shift);
-  
+
   if(@_)
   {
     return $self->{'builtin_trigger_index'}{$event}{$name} = shift;
@@ -690,7 +690,7 @@ sub delete_trigger
 
   my $builtin_text   = $builtin ? ' builtin' : '';
   my $builtin_prefix = $builtin ? 'builtin_' : '';
-  
+
   Carp::croak "Invalid event: '$event'"  
     unless(exists $Trigger_Events{$event});
 
@@ -703,7 +703,7 @@ sub delete_trigger
   }
 
   my $triggers = $self->{$builtin_prefix . 'triggers'}{$event};
-  
+
   # Remove the trigger
   splice(@$triggers, $index, 1);
 
@@ -746,7 +746,7 @@ sub apply_triggers
   {
     $self->apply_method_triggers($method_type);
   }
-  
+
   return;
 }
 
@@ -764,7 +764,7 @@ sub apply_method_triggers
     Carp::confess "No method name for method type '$type'";
 
   my $method_code = $self->method_code($type);
-  
+
   # Save the original method code
   unless($method_code)
   {
@@ -816,7 +816,7 @@ sub apply_method_triggers
       my $method = sub
       {
         my($self) = $_[0];
-    
+
         if($column->method_should_set('get_set', \@_))
         {
           # This is a duplication of the 'set' code below.  Yes, it's
@@ -826,11 +826,11 @@ sub apply_method_triggers
             $self->{$is_inflated_key} = 0  unless($uses_formatted_key);
 
             &$method_code; # magic call using current @_
-  
+
             unless($self->{'triggers_disabled'})
             {
               local $self->{'triggers_disabled'} = 1;
-  
+
               if($on_load_code)
               {
                 foreach my $code (@$on_load_code)
@@ -845,11 +845,11 @@ sub apply_method_triggers
             $self->{$is_inflated_key} = 0  unless($uses_formatted_key);
 
             &$method_code; # magic call using current @_
-  
+
             unless($self->{'triggers_disabled'})
             {
               local $self->{'triggers_disabled'} = 1;
-  
+
               if($on_set_code)
               {
                 foreach my $code (@$on_set_code)
@@ -869,7 +869,7 @@ sub apply_method_triggers
             unless($self->{'triggers_disabled'})
             {
               local $self->{'triggers_disabled'} = 1;
-  
+
               if($deflate_code)
               {
                 if($uses_formatted_key)
@@ -880,29 +880,29 @@ sub apply_method_triggers
                   unless(defined $self->{$formatted_key,$driver})
                   {      
                     my $value = $self->{$key};
-      
+
                     foreach my $code (@$deflate_code)
                     {
                       $value = $code->($self, $value);
                     }
-    
+
                     $self->{$formatted_key,$driver} = $value;
                   }
                 }
                 else
                 {
                   my $value = $self->{$key};
-  
+
                   foreach my $code (@$deflate_code)
                   {
                     $value = $code->($self, $value);
                   }
-  
+
                   $self->{$key} = $value;
                   $self->{$is_inflated_key} = 0;
                 }
               }
-                
+
               if($on_save_code)
               {
                 foreach my $code (@$on_save_code)
@@ -911,7 +911,7 @@ sub apply_method_triggers
                 }
               }
             }
-  
+
             &$method_code; # magic call using current @_
           }
           else
@@ -919,12 +919,12 @@ sub apply_method_triggers
             unless($self->{'triggers_disabled'})
             {
               local $self->{'triggers_disabled'} = 1;
-  
+
               if($inflate_code)
               {
                 my $value;
                 my $key_was_defined;
-                
+
                 if(defined $self->{$key})
                 {
                   $value = $self->{$key};
@@ -946,13 +946,13 @@ sub apply_method_triggers
                     {
                       $value = $code->($self, $value);
                     }
-  
+
                     my $db = $self->db or die "Missing Rose::DB object attribute";
                     my $driver = $db->driver || 'unknown';
-      
+
                     # Invalidate deflated value
                     $self->{$formatted_key,$driver} = undef;
-  
+
                     # Set new inflated value
                     $self->{$key} = $value;
                   }
@@ -962,7 +962,7 @@ sub apply_method_triggers
                     {
                       $value = $code->($self, $value);
                     }
-      
+
                     $self->{$is_inflated_key} = 1;
                     $self->{$key} = $value;
                   }
@@ -970,7 +970,7 @@ sub apply_method_triggers
                   $self->{$is_inflated_key} = 1;
                 }
               }
-                
+
               if($on_get_code)
               {
                 foreach my $code (@$on_get_code)
@@ -979,7 +979,7 @@ sub apply_method_triggers
                 }
               }
             }
-  
+
             &$method_code; # magic call using current @_
           }
         }
@@ -1003,7 +1003,7 @@ sub apply_method_triggers
       my $method = sub
       {
         my($self) = $_[0];
-    
+
         if($self->{STATE_SAVING()})
         {
           unless($self->{'triggers_disabled'})
@@ -1020,12 +1020,12 @@ sub apply_method_triggers
                 unless(defined $self->{$formatted_key,$driver})
                 {    
                   my $value = $self->{$key};
-    
+
                   foreach my $code (@$deflate_code)
                   {
                     $value = $code->($self, $value);
                   }
-  
+
                   $self->{$formatted_key,$driver} = $value;
                 }
               }
@@ -1042,7 +1042,7 @@ sub apply_method_triggers
                 $self->{$is_inflated_key} = 0;
               }
             }
-              
+
             if($on_save_code)
             {
               foreach my $code (@$on_save_code)
@@ -1064,7 +1064,7 @@ sub apply_method_triggers
             {
               my $value;
               my $key_was_defined;
-              
+
               if(defined $self->{$key})
               {
                 $value = $self->{$key};
@@ -1089,7 +1089,7 @@ sub apply_method_triggers
 
                   my $db = $self->db or die "Missing Rose::DB object attribute";
                   my $driver = $db->driver || 'unknown';
-    
+
                   # Invalidate deflated value
                   $self->{$formatted_key,$driver} = undef;
 
@@ -1102,7 +1102,7 @@ sub apply_method_triggers
                   {
                     $value = $code->($self, $value);
                   }
-    
+
                   $self->{$is_inflated_key} = 1;
                   $self->{$key} = $value;
                 }
@@ -1213,7 +1213,7 @@ sub method_code
 sub make_methods
 {
   my($self) = shift;
-  
+
   $self->SUPER::make_methods(@_);
   $self->apply_triggers;
 }

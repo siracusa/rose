@@ -26,7 +26,7 @@ sub auto_generate_columns
 
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
-  
+
     foreach my $info (@$col_info)
     {
       $db->refine_dbi_column_info($info);
@@ -151,13 +151,13 @@ sub auto_generate_foreign_keys
     }
 
     my $cm = $self->convention_manager;
-    
+
     FK: foreach my $id (sort { $a <=> $b } keys(%fk_info))
     {
       my $col_info = $fk_info{$id};
-      
+
       my $foreign_table = $col_info->[0]{'table'};
-      
+
       my $foreign_class = $self->class_for(table => $foreign_table);
 
       unless($foreign_class)
@@ -334,7 +334,7 @@ use constant SQL_NULLABLE => 1;
 sub _info_from_sql
 {
   my $sql = shift;
-  
+
   my(@col_info, @pk_columns, @uk_info);
 
   my($new_sql, $pos);
@@ -432,7 +432,7 @@ sub _info_from_sql
       my $columns = $1;
       $columns =~ s/^\(\s*//;
       $columns =~ s/\s*\)\s*$//;
-      
+
       while($columns =~ s/^\s* ($Name) (?:\s*,\s*|\s*$)//six)
       {
         push(@pk_columns, _unquote_name($1));
@@ -443,14 +443,14 @@ sub _info_from_sql
       my $columns = $1;
       $columns =~ s/^\(\s*//;
       $columns =~ s/\s*\)\s*$//;
-      
+
       my @uk_columns;
 
       while($columns =~ s/^\s* ($Name) (?:\s*,\s*|\s*$)//six)
       {
         push(@uk_columns, _unquote_name($1));
       }
-      
+
       push(@uk_info, \@uk_columns);
     }
   }

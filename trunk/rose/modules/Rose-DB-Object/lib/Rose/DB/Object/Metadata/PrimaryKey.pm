@@ -44,7 +44,7 @@ sub auto_init_columns
 sub add_columns
 {
   my($self) = shift;
-  
+
   $self->SUPER::add_columns(@_);
   $self->sync_sequence_name;
   return;
@@ -55,7 +55,7 @@ sub add_columns
 sub columns
 {
   my($self) = shift;
-  
+
   my(@ret, $ret);
 
   my $wantarray = wantarray;
@@ -74,7 +74,7 @@ sub columns
   {
     $self->SUPER::columns(@_);
   }
-  
+
   $self->sync_sequence_name;
 
   return $wantarray ? @ret : $ret;
@@ -94,7 +94,7 @@ sub sync_sequence_name
       return;
     }
   }
-  
+
   return;
 }
 

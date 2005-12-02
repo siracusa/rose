@@ -323,7 +323,7 @@ sub parse_dbi_column_info_default
 sub list_tables
 {
   my($self, %args) = @_;
-  
+
   my $types = $args{'include_views'} ? "'TABLE','VIEW'" : 'TABLE';
   my @tables;
 
@@ -340,7 +340,7 @@ sub list_tables
                                { noprefix => 1, pg_noprefix => 1 });
 
     $sth->execute;
-    
+
     while(my $table_info = $sth->fetchrow_hashref)
     {
       push(@tables, $self->unquote_table_name($table_info->{'TABLE_NAME'}));

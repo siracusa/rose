@@ -29,11 +29,13 @@ use Rose::Class::MakeMethods::Generic
     '_object_class',
     '_base_name',
     'default_objects_per_page',
+    'dbi_prepare_cached',
   ],
 );
 
 __PACKAGE__->error_mode('fatal');
 __PACKAGE__->default_objects_per_page(20);
+__PACKAGE__->dbi_prepare_cached(0);
 
 sub handle_error
 {
@@ -130,7 +132,7 @@ sub make_manager_methods
   unless(UNIVERSAL::isa($object_class, 'Rose::DB::Object'))
   {
     eval "require $object_class";
-     
+
     if($@)
     {
       Carp::croak "Could not load object class $object_class - $@";
@@ -305,10 +307,14 @@ sub get_objects
   my $skip_first       = delete $args{'skip_first'} || 0;
   my $distinct         = delete $args{'distinct'};
   my $fetch            = delete $args{'fetch_only'};
-  
+
   my(%fetch, %rel_name);
 
   my $meta = $object_class->meta;
+
+  my $prepare_cached = 
+    exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
+    $class->dbi_prepare_cached;
 
   my $db   = delete $args{'db'} || $object_class->init_db;
   my $dbh  = delete $args{'dbh'};
@@ -504,11 +510,11 @@ sub get_objects
     {
       my $i = 0;
       $sort_by = [ $sort_by ]  unless(ref $sort_by);
-  
+
       foreach my $table (@tables)
       {
         $i++; # Table aliases are 1-based
-        
+
         my $table_unquoted = $db->unquote_table_name($table);
 
         foreach my $sort (@$sort_by)
@@ -635,7 +641,7 @@ sub get_objects
         $i++;
 
         my $use_lazy_columns = (!ref $nonlazy || $nonlazy{$name}) ? 0 : $ft_meta->has_lazy_columns;
-  
+
         if($use_lazy_columns)
         {
           $columns{$tables[-1]} = $ft_meta->nonlazy_columns;
@@ -797,7 +803,7 @@ sub get_objects
         {
           my $ft_class = $rel->foreign_class 
             or Carp::confess "$class - Missing foreign class for '$name'";
-          
+
           unless($ft_class->can($method))
           {
             no strict 'refs';
@@ -870,7 +876,7 @@ sub get_objects
           $columns{$tables[-1]} = $ft_meta->columns;   
           $methods{$tables[-1]} = $ft_meta->column_mutator_method_names;        
         }
-        
+
         $classes{$tables[-1]} = $ft_class;
 
         # Iterator will be the tN value: the first sub-table is t2, and so on.
@@ -970,7 +976,7 @@ sub get_objects
     delete $args{'limit'};
     delete $args{'offset'};
     delete $args{'sort_by'};
-          
+
     my($sql, $bind);
 
     my $use_distinct = 0; # Do we have to use DISTINCT to count?
@@ -1026,8 +1032,8 @@ sub get_objects
     {
       local $dbh->{'RaiseError'} = 1;
       $Debug && warn "$sql\n";
-      #my $sth = $dbh->prepare($sql, $meta->prepare_select_options) or die $dbh->errstr;
-      my $sth = $dbh->prepare($sql) or die $dbh->errstr;
+      my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                  $dbh->prepare($sql);
       $sth->execute(@$bind);
       $count = $sth->fetchrow_array;
       $sth->finish;
@@ -1054,7 +1060,7 @@ sub get_objects
     if($num_subtables > 0)
     {
       my $i = 0;
-  
+
       foreach my $table (@tables)
       {
         $i++; # Table aliases are 1-based
@@ -1144,8 +1150,9 @@ sub get_objects
     local $dbh->{'RaiseError'} = 1;
 
     $Debug && warn "$sql (", join(', ', @$bind), ")\n";
-    #my $sth = $dbh->prepare($sql, $meta->prepare_select_options) or die
-    my $sth = $dbh->prepare($sql) or die $dbh->errstr;
+    # $meta->prepare_select_options (defunct)
+    my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                $dbh->prepare($sql) or die $dbh->errstr;
 
     $sth->{'RaiseError'} = 1;
 
@@ -1360,7 +1367,7 @@ sub get_objects
                   $sth = undef;
                   last ROW;
                 }
-                
+
                 last ROW;
               }
             };
@@ -1657,7 +1664,7 @@ sub get_objects
             push(@objects, $last_object);
           }
         }
-        
+
         @objects = ()  if($skip_first);
       }
       else # simple sub-objects case: nothing worse than one-to-one relationships
@@ -1767,6 +1774,10 @@ sub delete_objects
 
   my $meta = $object_class->meta;
 
+  my $prepare_cached = 
+    exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
+    $class->dbi_prepare_cached;
+
   my $db  = delete $args{'db'} || $object_class->init_db;
   my $dbh = $args{'dbh'};
   my $dbh_retained = 0;
@@ -1814,8 +1825,9 @@ sub delete_objects
     local $dbh->{'RaiseError'} = 1;  
     $Debug && warn "$sql - bind params: ", join(', ', @$bind), "\n";
 
-    #my $sth = $dbh->prepare($sql, $meta->prepare_bulk_delete_options)
-    my $sth = $dbh->prepare($sql) or die $dbh->errstr;
+    # $meta->prepare_bulk_delete_options (defunct)
+    my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                $dbh->prepare($sql) or die $dbh->errstr;
 
     $sth->execute(@$bind);
     $count = $sth->rows || 0;
@@ -1841,6 +1853,10 @@ sub update_objects
     or Carp::croak "Missing object class argument";
 
   my $meta = $object_class->meta;
+
+  my $prepare_cached = 
+    exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
+    $class->dbi_prepare_cached;
 
   my $db  = delete $args{'db'} || $object_class->init_db;
   my $dbh = $args{'dbh'};
@@ -1911,8 +1927,9 @@ sub update_objects
     local $dbh->{'RaiseError'} = 1;  
     $Debug && warn "$sql\n";
 
-    #my $sth = $dbh->prepare($sql, $meta->prepare_bulk_update_options)
-    my $sth = $dbh->prepare($sql) or die $dbh->errstr;
+    # $meta->prepare_bulk_update_options (defunct)
+    my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                $dbh->prepare($sql) or die $dbh->errstr;
 
     $sth->execute(@$set_bind, @$where_bind);
     $count = $sth->rows || 0;
@@ -1928,110 +1945,140 @@ sub update_objects
   return $count;
 }
 
-# sub get_objects_from_sql
-# {
-#   my($class) = shift;
-# 
-#   my(%args, $sql);
-#   
-#   if(@_ == 1) { $sql = shift }
-#   else
-#   {
-#     %args = @_;
-#     $sql = $args{'sql'};
-#   }
-#   
-#   Carp::croak "Missing SQL"  unless($sql);
-# 
-#   my $object_class = $args{'object_class'} || $class->object_class ||
-#     Carp::croak "Missing object class";
-# 
-#   my $meta = $object_class->meta 
-#     or Carp::croak "Could not get meta for $object_class";
-# 
-#   my $methods  = $args{'_methods'};
-#   my $args     = $args{'args'} || [];
-# 
-#   my $have_methods = $args{'_methods'} ? 1 : 0;
-# 
-#   my $db  = delete $args{'db'} || $object_class->init_db;
-#   my $dbh = delete $args{'dbh'};
-#   my $dbh_retained = 0;
-# 
-#   unless($dbh)
-#   {
-#     unless($dbh = $db->retain_dbh)
-#     {
-#       $class->error($db->error);
-#       $class->handle_error($class);
-#       return undef;
-#     }
-# 
-#     $dbh_retained = 1;
-#   }
-# 
-#   my %object_args =
-#   (
-#     (exists $args{'share_db'} ? $args{'share_db'} : 1) ? (db => $db) : ()
-#   );
-# 
-#   my @objects;
-# 
-#   eval
-#   {
-#     local $dbh->{'RaiseError'} = 1;
-# 
-#     $Debug && warn "$sql\n";
-#     my $sth = $dbh->prepare($sql) or die $dbh->errstr;
-# 
-#     $sth->execute(@$args);
-# 
-#     while(my $row = $sth->fetchrow_hashref)
-#     {
-#       unless($have_methods)
-#       {
-#         foreach my $col (keys %$row)
-#         {
-#           if(my $method = $meta->column_mutator_method_name($col))
-#           {
-#             $methods->{$col} = $method;
-#           }
-#           elsif($object_class->can($col))
-#           {
-#             $methods->{$col} = $col;
-#           }
-#         }
-# 
-#         $have_methods = 1;
-#       }
-#       
-#       my $object = $object_class->new(%object_args);
-# 
-#       local $object->{STATE_LOADING()} = 1;
-#       $object->{STATE_IN_DB()} = 1;
-# 
-#       while(my($col, $val) = each(%$row))
-#       {
-#         my $method = $methods->{$col};
-#         $object->$method($val);
-#       }
-# 
-#       push(@objects, $object);
-#     }
-#   };
-# 
-#   $db->release_dbh  if($dbh_retained);
-# 
-#   if($@)
-#   {
-#     $class->total(undef);
-#     $class->error("get_objects_from_sql() - $@");
-#     $class->handle_error($class);
-#     return undef;
-#   }
-# 
-#   return \@objects;
-# }
+sub make_manager_method_from_sql
+{
+  my($class) = shift;
+  
+  my %args;
+
+  if(@_ == 2)
+  {
+    %args = (method => $_[0], sql => $_[1]);
+  }
+  else { %args = @_ }
+
+  my $object_class = $args{'object_class'} || $class->object_class ||
+    Carp::croak "Missing object class";
+
+  my $method = delete $args{'method'} or  Carp::croak "Missing method name";
+
+  my $code = sub { shift->get_objects_from_sql(%args, args => \@_) };
+
+  no strict 'refs';
+  *{"${object_class}::$method"} = $code;
+  
+  return $code;
+}
+
+sub get_objects_from_sql
+{
+  my($class) = shift;
+
+  my(%args, $sql);
+  
+  if(@_ == 1) { $sql = shift }
+  else
+  {
+    %args = @_;
+    $sql = $args{'sql'};
+  }
+  
+  Carp::croak "Missing SQL"  unless($sql);
+
+  my $object_class = $args{'object_class'} || $class->object_class ||
+    Carp::croak "Missing object class";
+
+  my $meta = $object_class->meta 
+    or Carp::croak "Could not get meta for $object_class";
+
+  my $prepare_cached = 
+    exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
+    $class->dbi_prepare_cached;
+
+  my $methods   = $args{'_methods'};
+  my $exec_args = $args{'args'} || [];
+
+  my $have_methods = $args{'_methods'} ? 1 : 0;
+
+  my $db  = delete $args{'db'} || $object_class->init_db;
+  my $dbh = delete $args{'dbh'};
+  my $dbh_retained = 0;
+
+  unless($dbh)
+  {
+    unless($dbh = $db->retain_dbh)
+    {
+      $class->error($db->error);
+      $class->handle_error($class);
+      return undef;
+    }
+
+    $dbh_retained = 1;
+  }
+
+  my %object_args =
+  (
+    (exists $args{'share_db'} ? $args{'share_db'} : 1) ? (db => $db) : ()
+  );
+
+  my @objects;
+
+  eval
+  {
+    local $dbh->{'RaiseError'} = 1;
+
+    $Debug && warn "$sql\n";
+    my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                $dbh->prepare($sql) or die $dbh->errstr;
+
+    $sth->execute(@$exec_args);
+
+    while(my $row = $sth->fetchrow_hashref)
+    {
+      unless($have_methods)
+      {
+        foreach my $col (keys %$row)
+        {
+          if(my $method = $meta->column_mutator_method_name($col))
+          {
+            $methods->{$col} = $method;
+          }
+          elsif($object_class->can($col))
+          {
+            $methods->{$col} = $col;
+          }
+        }
+
+        $have_methods = 1;
+      }
+      
+      my $object = $object_class->new(%object_args);
+
+      local $object->{STATE_LOADING()} = 1;
+      $object->{STATE_IN_DB()} = 1;
+
+      while(my($col, $val) = each(%$row))
+      {
+        my $method = $methods->{$col};
+        $object->$method($val);
+      }
+
+      push(@objects, $object);
+    }
+  };
+
+  $db->release_dbh  if($dbh_retained);
+
+  if($@)
+  {
+    $class->total(undef);
+    $class->error("get_objects_from_sql() - $@");
+    $class->handle_error($class);
+    return undef;
+  }
+
+  return \@objects;
+}
 
 sub perl_class_definition
 {
@@ -2394,6 +2441,10 @@ Class methods are provided for fetching objects all at once, one at a time throu
 
 =over 4
 
+=item B<dbi_prepare_cached [BOOL]>
+
+Get or set a boolean value that indicates whether or not this class will use L<DBI>'s L<prepare_cached|DBI/prepare_cached> method by default (instead of the L<prepare|DBI/prepare> method) when preparing SQL queries.  The default value is false.
+
 =item B<default_objects_per_page [NUM]>
 
 Get or set the default number of items per page, as returned by the L<get_objects|/get_objects> method when used with the C<page> and/or C<per_page> parameters.  The default value is 20.
@@ -2413,6 +2464,10 @@ If set to a true value, this parameter indicates an explicit request to delete a
 =item C<db DB>
 
 A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> object method of the C<object_class>.
+
+=item C<prepare_cached BOOL>
+
+If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will delete the objects.  If omitted, the default value is determined by the L<dbi_prepare_cached|/dbi_prepare_cached> class method.
 
 =item C<object_class CLASS>
 
@@ -2524,7 +2579,7 @@ The "tN" table aliases are for convenience, and to isolate end-user code from th
 
 That said, when using L<Rose::DB::Object::Manager>, the actual table names can be used as well.  But be aware that some databases don't like a mix of table aliases and real table names in some kinds of queries.
 
-Valid parameters to C<get_objects()> are:
+Valid parameters to L<get_objects|/get_objects> are:
 
 =over 4
 
@@ -2592,6 +2647,10 @@ The number of objects per C<page>.   Defaults to the value returned by the L<def
 
 If this parameter is included along with either of the C<limit> or <offset> parameters, a fatal error will occur.
 
+=item C<prepare_cached BOOL>
+
+If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will fetch the objects.  If omitted, the default value is determined by the L<dbi_prepare_cached|/dbi_prepare_cached> class method.
+
 =item C<require_objects OBJECTS>
 
 Only fetch rows from the primary table that have all of the associated sub-objects listed in OBJECTS, where OBJECTS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>," "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>," and  "L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany>".
@@ -2604,7 +2663,7 @@ B<Note:> the C<require_objects> list currently cannot be used to simultaneously 
 
 If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it is constructed.  Defaults to true.
 
-=item B<sort_by CLAUSE | ARRAYREF>
+=item C<sort_by CLAUSE | ARRAYREF>
 
 A fully formed SQL "ORDER BY ..." clause, sans the words "ORDER BY", or a reference to an array of strings to be joined with a comma and appended to the "ORDER BY" clause.
 
@@ -2644,17 +2703,66 @@ This class also supports a useful extension to the query syntax supported by L<R
 
 =item B<get_objects_count [PARAMS]>
 
-Accepts the same arguments as C<get_objects()>, but just returns the number of objects that would have been fetched, or undef if there was an error.
+Accepts the same arguments as L<get_objects|/get_objects>, but just returns the number of objects that would have been fetched, or undef if there was an error.
 
 Note that the C<with_objects> parameter is ignored by this method, since it counts the number of primary objects, irrespective of how many sub-objects exist for each primary object.  If you want to count the number of primary objects that have sub-objects matching certain criteria, use the C<require_objects> parameter instead.
 
+=item B<get_objects_from_sql [ SQL | PARAMS ]>
+
+Fetch objects using a custom SQL query.  Pass either a single SQL query string or name/value parameters as arguments.  Valid parameters are:
+
+=over 4
+
+=item C<args ARRAYREF>
+
+A reference to an array of arguments to be passed to L<DBI>'s L<execute|/execute> method when the query is run.  The number of items in this array must exactly match the number of placeholders in the SQL query.
+
+=item C<db DB>
+
+A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> object method of the C<object_class>.
+
+=item C<object_class CLASS>
+
+The class name of the L<Rose::DB::Object>-derived objects to be fetched.  Defaults to L<object_class|/object_class>.
+
+=item C<prepare_cached BOOL>
+
+If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will fetch the objects.  If omitted, the default value is determined by the L<dbi_prepare_cached|/dbi_prepare_cached> class method.
+
+=item C<sql SQL>
+
+The SQL query string.  This parameter is required.
+
+=back
+
+Each column returned by the SQL query must be either a column or method name in C<object_class>.  Column names take precedence in the case of a conflict.
+
+Returns a reference to an array of C<object_class> objects.
+
+Examples:
+
+    package Product::Manager;    
+    use Product;
+    use base 'Rose::DB::Object::Manager';
+    sub object_class { 'Product' }
+    ...
+
+    $products = Product::Manager->get_objects_from_sql(<<"EOF");
+    SELECT * FROM products WHERE sku % 2 != 0 ORDER BY status, type
+    EOF
+
+    $products = 
+      Product::Manager->get_objects_from_sql(
+        args => [ '2005-01-01' ],
+        sql  => 'SELECT * FROM products WHERE release_date > ?');
+
 =item B<get_objects_iterator [PARAMS]>
 
-Accepts any valid C<get_objects()> argument, but return a L<Rose::DB::Object::Iterator> object which can be used to fetch the objects one at a time, or undef if there was an error.
+Accepts any valid L<get_objects|/get_objects> argument, but return a L<Rose::DB::Object::Iterator> object which can be used to fetch the objects one at a time, or undef if there was an error.
 
 =item B<get_objects_sql [PARAMS]>
 
-Accepts the same arguments as C<get_objects()>, but return the SQL query string that would have been used to fetch the objects (in scalar context), or the SQL query string and a reference to an array of bind values (in list context).
+Accepts the same arguments as L<get_objects|/get_objects>, but return the SQL query string that would have been used to fetch the objects (in scalar context), or the SQL query string and a reference to an array of bind values (in list context).
 
 =item B<make_manager_methods PARAMS>
 
@@ -2893,6 +3001,63 @@ Here we've coerced the caller-friendly C<with_categories> boolean flag parameter
 
 This is the typical evolution of an object manager method.  It starts out as being auto-generated by L<make_manager_methods|/make_manager_methods>, then becomes customized as new arguments are added.
 
+=item B<make_manager_method_from_sql [ NAME =E<gt> SQL | PARAMS ]>
+
+Create a class method that will fetch objects using a custom SQL query.  Pass either a method name and an SQL query string or name/value parameters as arguments.  Valid parameters are:
+
+=over 4
+
+=item C<db DB>
+
+A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> object method of the C<object_class>.
+
+=item C<object_class CLASS>
+
+The class name of the L<Rose::DB::Object>-derived objects to be fetched.  Defaults to L<object_class|/object_class>.
+
+=item C<method NAME>
+
+The name of the method to be created.  This parameter is required.
+
+=item C<prepare_cached BOOL>
+
+If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will fetch the objects.  If omitted, the default value is determined by the L<dbi_prepare_cached|/dbi_prepare_cached> class method.
+
+=item C<sql SQL>
+
+The SQL query string.  This parameter is required.
+
+=back
+
+Each column returned by the SQL query must be either a column or method name in C<object_class>.  Column names take precedence in the case of a conflict.
+
+Arguments to the created method be passed to L<DBI>'s L<execute|/execute> method when the query is run.  The number of items in this array must exactly match the number of placeholders in the SQL query.
+
+Returns a code reference to the method created.
+
+Example:
+
+    package Product::Manager;
+    
+    use base 'Rose::DB::Object::Manager';
+    ...
+    __PACKAGE__->make_manager_method_from_sql(get_odd_products =><<"EOF");
+    SELECT * FROM products WHERE sku % 2 != 0 
+    EOF
+
+    __PACKAGE__->make_manager_method_from_sql(get_new_products =><<"EOF");
+    SELECT * FROM products WHERE release_date > ?
+    EOF
+    ...
+
+    $products = Product::Manager->get_odd_products();
+
+    $products = Product::Manager->get_new_products('2005-01-01');
+
+=item B<object_class>
+
+Returns the class name of the L<Rose::DB::Object>-derived objects to be managed by this class.  Override this method in your subclass.  The default implementation returns undef.
+
 =item B<perl_class_definition>
 
 Attempts to create the Perl source code that is equivalent to the current class.  This works best for classes created via L<Rose::DB::Object::Metadata>'s L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> method, but it will also work most of the time for classes whose methods were created using L<make_manager_methods|/make_manager_methods>.
@@ -2900,16 +3065,16 @@ Attempts to create the Perl source code that is equivalent to the current class.
 The Perl code is returned as a string.  Here's an example:
 
   package My::Product::Manager;
-  
+
   use My::Product;
-  
+
   use Rose::DB::Object::Manager;
   our @ISA = qw(Rose::DB::Object::Manager);
-  
+
   sub object_class { 'My::Product' }
-  
+
   __PACKAGE__->make_manager_methods('products');
-  
+
   1;
 
 =item B<update_objects [PARAMS]>

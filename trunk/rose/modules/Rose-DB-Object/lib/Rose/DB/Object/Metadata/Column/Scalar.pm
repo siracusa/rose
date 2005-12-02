@@ -7,7 +7,7 @@ use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.02';
+our $VERSION = '0.55';
 
 __PACKAGE__->add_common_method_maker_argument_names
 (

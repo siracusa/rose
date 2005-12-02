@@ -37,7 +37,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   my $db = Rose::DB->new;
 
   my @tables = sort grep { /$Regex/ } $db->list_tables;
-  
+
   if($db_type eq 'mysql')
   {
     is_deeply(\@tables, [ sort(@Tables, 'read') ], "$db_type tables 1");
@@ -53,7 +53,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   }
 
   @tables = sort grep { /$Regex/ } $db->list_tables(include_views => 1);
-  
+
   if($db_type =~ /^(?:pg(?:_with_schema)?|sqlite|informix)$/)
   {
     is_deeply(\@tables, [ sort(@Tables, 'rdbo_test_view') ], "$db_type tables and views");
@@ -435,7 +435,7 @@ CREATE TABLE rdbo_test_products
 
   date_created  DATETIME YEAR TO SECOND,
   release_date  DATETIME YEAR TO SECOND,
-  
+
   UNIQUE(name)
 )
 EOF
@@ -531,7 +531,7 @@ CREATE TABLE rdbo_test_products
 
   date_created  DATETIME,
   release_date  DATETIME,
-  
+
   UNIQUE(name)
 )
 EOF
@@ -601,7 +601,7 @@ END
     $dbh->do('DROP TABLE Rose_db_object_private.rdbo_test_vendors CASCADE');
 
     $dbh->do('DROP SCHEMA Rose_db_object_private CASCADE');
-      
+
     $dbh->disconnect;
   }
 

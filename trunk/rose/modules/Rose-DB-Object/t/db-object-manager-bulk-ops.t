@@ -153,9 +153,9 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
           ended => DateTime->new(year => 1999, month => 2, day => 3),
         });
   };
-  
+
   ok($@, "update refused - $db_type");
-      
+
   $num = 
     MyPgObject::Manager->update_objs(
       all => 1,
@@ -169,7 +169,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   is($num, 5, "update 9 - $db_type");
 
   my $objs = MyPgObject::Manager->get_objs;
-  
+
   my $test_num = 6;
 
   foreach my $obj (@$objs)
@@ -368,9 +368,9 @@ SKIP: foreach my $db_type ('mysql')
           ended => DateTime->new(year => 1999, month => 2, day => 3),
         });
   };
-  
+
   ok($@, "update refused - $db_type");
-      
+
   $num = 
     MyMySQLObject::Manager->update_objs(
       all => 1,
@@ -384,7 +384,7 @@ SKIP: foreach my $db_type ('mysql')
   is($num, 5, "update 9 - $db_type");
 
   my $objs = MyMySQLObject::Manager->get_objs;
-  
+
   my $test_num = 6;
 
   foreach my $obj (@$objs)
@@ -583,9 +583,9 @@ SKIP: foreach my $db_type ('informix')
           ended => DateTime->new(year => 1999, month => 2, day => 3),
         });
   };
-  
+
   ok($@, "update refused - $db_type");
-      
+
   $num = 
     MyInformixObject::Manager->update_objs(
       all => 1,
@@ -599,7 +599,7 @@ SKIP: foreach my $db_type ('informix')
   is($num, 5, "update 9 - $db_type");
 
   my $objs = MyInformixObject::Manager->get_objs;
-  
+
   my $test_num = 6;
 
   foreach my $obj (@$objs)
@@ -799,9 +799,9 @@ SKIP: foreach my $db_type ('sqlite')
           ended => DateTime->new(year => 1999, month => 2, day => 3),
         });
   };
-  
+
   ok($@, "update refused - $db_type");
-      
+
   $num = 
     MySQLiteObject::Manager->update_objs(
       all => 1,
@@ -815,7 +815,7 @@ SKIP: foreach my $db_type ('sqlite')
   is($num, 5, "update 9 - $db_type");
 
   my $objs = MySQLiteObject::Manager->get_objs;
-  
+
   my $test_num = 6;
 
   foreach my $obj (@$objs)
@@ -924,7 +924,7 @@ CREATE TABLE rose_db_object_test
   started  DATE,
   ended    DATE,
   num      INT,
-  
+
   UNIQUE(name)
 )
 EOF
@@ -1004,7 +1004,7 @@ CREATE TABLE rose_db_object_test
   started  DATE,
   ended    DATE,
   num      INT,
-  
+
   UNIQUE(name)
 )
 EOF

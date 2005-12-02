@@ -350,7 +350,7 @@ __PACKAGE__->meta->initialize;
 EOF
 
   $chkpass = $PG_HAS_CHKPASS ? "  password      => { type => 'chkpass' },\n" : '';
-  
+
   is(MyPgObject->meta->perl_class_definition(braces => 'bsd', indent => 2),
      <<"EOF", "perl_class_definition 2 - $db_type");
 package MyPgObject;
@@ -1572,7 +1572,7 @@ BEGIN
     our $HAVE_PG = 1;
 
     Rose::DB::Object::Metadata->unregister_all_classes;
-  
+
     # Drop existing tables, ignoring errors
     {
       local $dbh->{'RaiseError'} = 0;

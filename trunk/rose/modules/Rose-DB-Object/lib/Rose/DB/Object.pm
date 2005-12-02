@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
 
-our $VERSION = '0.54';
+our $VERSION = '0.55';
 
 our $Debug = 0;
 
@@ -128,6 +128,10 @@ sub load
 
   my $meta = $self->meta;
 
+  my $prepare_cached = 
+    exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
+    $meta->dbi_prepare_cached;
+
   local $self->{STATE_SAVING()} = 1;
 
   my @key_columns = $meta->primary_key_column_names;
@@ -171,7 +175,7 @@ sub load
 
   my $has_lazy_columns = $args{'nonlazy'} ? 0 : $meta->has_lazy_columns;
   my $column_names;
-  
+
   if($has_lazy_columns)
   {
     $column_names = $meta->nonlazy_column_names;
@@ -202,7 +206,10 @@ sub load
                                 query         => [ %query ],
                                 with_objects  => $with,
                                 multi_many_ok => 1,
-                                nonlazy       => $args{'nonlazy'})
+                                nonlazy       => $args{'nonlazy'},
+                                (exists $args{'prepare_cached'} ?
+                                (prepare_cached =>  $args{'prepare_cached'}) : 
+                                ()))
           or Carp::confess $mgr_class->error;
 
       if(@$objects > 1)
@@ -292,7 +299,9 @@ sub load
       }
     }
 
-    $sth = $dbh->prepare($sql); #, $meta->prepare_select_options);
+    # $meta->prepare_select_options (defunct)
+    $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                             $dbh->prepare($sql);
 
     $Debug && warn "$sql - bind params: ", join(', ', grep { defined } @key_values), "\n";
     $sth->execute(grep { defined } @key_values);
@@ -512,6 +521,10 @@ sub update
 
   my $meta = $self->meta;
 
+  my $prepare_cached = 
+    exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
+    $meta->dbi_prepare_cached;
+
   local $self->{STATE_SAVING()} = 1;
 
   my @key_columns = $meta->primary_key_column_names;
@@ -611,21 +624,25 @@ sub update
       #else
       #{
       #  $sql = $meta->update_sql($self, \@key_columns, $db);
-      #  $sth = $dbh->prepare_cached($sql, undef, 3); #, $meta->prepare_update_options);
+      #  # $meta->prepare_update_options (defunct)
+      #  $sth = = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+      #                             $dbh->prepare($sql);
       #}
-      
+
       if($meta->has_lazy_columns)
       {
         my $sql = $meta->update_sql($self, \@key_columns, $db);
 
-        my $sth = $dbh->prepare_cached($sql, undef, 3); #, $meta->prepare_update_options);
-  
+        # $meta->prepare_update_options (defunct)
+        my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                    $dbh->prepare($sql);
+
         my %key = map { ($_ => 1) } @key_methods;
 
         my $method_name = $meta->column_accessor_method_names_hash;
 
         my @exec;
-        
+
         foreach my $column (grep { !$key{$_->{'name'}} } $meta->columns)
         {
           no warnings;
@@ -647,8 +664,10 @@ sub update
       {
         my $sql = $meta->update_all_sql(\@key_columns, $db);
 
-        my $sth = $dbh->prepare_cached($sql, undef, 3); #, $meta->prepare_update_options);
-  
+        # $meta->prepare_update_options (defunct)
+        my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                    $dbh->prepare($sql);
+
         my %key = map { ($_ => 1) } @key_methods;
 
         my $method_names = $meta->column_accessor_method_names;
@@ -660,7 +679,7 @@ sub update
             join(', ', (map { $self->$_() } grep { !$key{$_} } @$method_names), 
                         grep { defined } @key_values), "\n";
         }
-      
+
         $sth->execute(
           (map { $self->$_() } grep { !$key{$_} } @$method_names), 
           @key_values);
@@ -691,6 +710,10 @@ sub insert
   my $dbh = $self->dbh or return 0;
 
   my $meta = $self->meta;
+
+  my $prepare_cached = 
+    exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
+    $meta->dbi_prepare_cached;
 
   local $self->{STATE_SAVING()} = 1;
 
@@ -764,7 +787,8 @@ sub insert
     {
       my $column_names = $meta->column_names;
 
-      $sth = $dbh->prepare_cached($meta->insert_sql($db), undef, 3); #, $options);
+      $sth = $prepare_cached ? $dbh->prepare_cached($meta->insert_sql($db), undef, 3) : 
+                               $dbh->prepare($meta->insert_sql($db));
 
       if($Debug)
       {
@@ -834,6 +858,10 @@ sub delete
   my($self, %args) = @_;
 
   my $meta = $self->meta;
+
+  my $prepare_cached = 
+    exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
+    $meta->dbi_prepare_cached;
 
   local $self->{STATE_SAVING()} = 1;
 
@@ -978,7 +1006,9 @@ sub delete
       #local $self->{STATE_SAVING()} = 1;
       local $dbh->{'RaiseError'} = 1;
 
-      my $sth = $dbh->prepare_cached($meta->delete_sql($db), undef, 3); #, $meta->prepare_delete_options);
+      # $meta->prepare_delete_options (defunct)
+      my $sth = $prepare_cached ? $dbh->prepare_cached($meta->delete_sql($db), undef, 3) : 
+                                  $dbh->prepare($meta->delete_sql($db));
 
       $Debug && warn $meta->delete_sql($db), " - bind params: ", join(', ', @pk_values), "\n";
       $sth->execute(@pk_values);
@@ -1057,7 +1087,9 @@ sub delete
       #local $self->{STATE_SAVING()} = 1;
       local $dbh->{'RaiseError'} = 1;
 
-      my $sth = $dbh->prepare_cached($meta->delete_sql($db), undef, 3); #, $meta->prepare_delete_options);
+      # $meta->prepare_delete_options (defunct)
+      my $sth = $prepare_cached ? $dbh->prepare_cached($meta->delete_sql($db), undef, 3) : 
+                                  $dbh->prepare($meta->delete_sql($db));
 
       $Debug && warn $meta->delete_sql($db), " - bind params: ", join(', ', @pk_values), "\n";
       $sth->execute(@pk_values);
@@ -1507,6 +1539,10 @@ For each "one to one" relationship or foreign key with a "one to one" L<relation
 
 In all modes, if the L<db|/db> is not currently in a transaction (i.e., if L<AutoCommit|Rose::DB/autocommit> is turned off), a new transaction is started.  If any part of the cascaded delete fails, the transaction is rolled back.
 
+=item C<prepare_cached BOOL>
+
+If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will delete the object.  If omitted, the default value is determined by the L<metadata object|/meta>'s L<dbi_prepare_cached|Rose::DB::Object::Metadata/dbi_prepare_cached> class method.
+
 =back
 
 The cascaded delete feature described above plays it safe by only deleting rows that are not referenced by any other rows (according to the metadata provided by each L<Rose::DB::Object>-derived class).  I B<strongly recommend> that you implement "cascaded delete" in the database itself, rather than using this feature.  It will undoubtedly be faster and more robust than doing it "client-side."  You may also want to cascade only to certain tables, or otherwise deviate from the "safe" plan.  If your database supports automatic cascaded delete and/or triggers, please consider using thse features.
@@ -1528,6 +1564,12 @@ PARAMS are optional name/value pairs.  Valid PARAMS are:
 =item C<nonlazy BOOL>
 
 If true, then all columns will be fetched from the database, even L<lazy|Rose::DB::Object::Metadata::Column/load_on_demand> columns.  If omitted, the default is false.
+
+=item C<prepare_cached BOOL>
+
+If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL query that will load the object.  If omitted, the default value is determined by the L<metadata object|/meta>'s L<dbi_prepare_cached|Rose::DB::Object::Metadata/dbi_prepare_cached> class method.
+
+all columns will be fetched from the database, even L<lazy|Rose::DB::Object::Metadata::Column/load_on_demand> columns.  If omitted, the default is false.
 
 =item C<speculative BOOL>
 
@@ -1585,11 +1627,15 @@ PARAMS are name/value pairs.  Valid parameters are:
 
 =over 4
 
-=item * C<insert>
+=item C<insert>
 
 If set to a true value, then an insert is attempted, regardless of whether or not the object was previously L<load|/load>ed from the database.
 
-=item * C<update>
+=item C<prepare_cached BOOL>
+
+If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will save the object.  If omitted, the default value is determined by the L<metadata object|/meta>'s L<dbi_prepare_cached|Rose::DB::Object::Metadata/dbi_prepare_cached> class method.
+
+=item C<update>
 
 If set to a true value, then an update is attempted, regardless of whether or not the object was previously L<load|/load>ed from the database.
 

@@ -40,7 +40,7 @@ sub perl_hashref
   }
 
   my($inline_perl, $perl);
-  
+
   $inline_perl = '{ ' . join(', ', @pairs) . ' }';
 
   if($braces eq 'bsd')
@@ -56,14 +56,14 @@ sub perl_hashref
     Carp::croak 'Invalid ', (defined $args{'braces'} ? '' : 'default '),
                 "brace style: '$braces'";
   }
-  
+
   $perl .= join(",\n", map { "$indent_txt$_" } @pairs) . ",\n$sub_indent}";
 
   if(defined $inline_limit && length($inline_perl) > $inline_limit)
   {
     return $perl;
   }
-  
+
   return $inline ? $inline_perl : $perl;
 }
 
@@ -86,14 +86,14 @@ sub perl_arrayref
   my $sub_indent = ' ' x ($indent * $level);
 
   my @items;
-  
+
   foreach my $item (@$array)
   {
     push(@items, perl_value(value => $item, %args));
   }
 
   my($inline_perl, $perl);
-  
+
   $inline_perl = '[ ' . join(', ', @items) . ' ]';
 
   if($braces eq 'bsd')
@@ -109,21 +109,21 @@ sub perl_arrayref
     Carp::croak 'Invalid ', (defined $args{'braces'} ? '' : 'default '),
                 "brace style: '$braces'";
   }
-  
+
   $perl .= join(",\n", map { "$indent_txt$_" } @items) . ",\n$sub_indent]";
 
   if(defined $inline_limit && length($inline_perl) > $inline_limit)
   {
     return $perl;
   }
-  
+
   return $inline ? $inline_perl : $perl;
 }
 
 sub perl_value
 {
   my(%args) = (@_ == 1 ? (value => $_[0]) : @_);
-  
+
   my $value = delete $args{'value'};
 
   $args{'level'}++;
@@ -155,13 +155,13 @@ sub hash_key_padding
 
   my $max_len = 0;
   my $min_len = -1;
-  
+
   foreach my $name (keys %$hash)
   {
     $max_len = length($name)  if(length $name > $max_len);
     $min_len = length($name)  if(length $name < $min_len || $min_len < 0);
   }
-  
+
   return $max_len;
 }
 

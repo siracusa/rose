@@ -433,15 +433,15 @@ sub list_tables
   my($self, %args) = @_;
 
   my @tables;
-  
+
   eval
   {
     my $dbh = $self->dbh or die $self->error;
 
     local $dbh->{'RaiseError'} = 1;
-    
+
     my @table_info = $dbh->func('user', '_tables');
-    
+
     #if($args{'include_views'})
     #{
     #  my @view_info = $dbh->func('view', '_tables');

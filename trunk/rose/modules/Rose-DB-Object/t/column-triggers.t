@@ -46,7 +46,7 @@ SETUP:
   }
 
   my $column = MyObject->meta->column('name');
-  
+
   foreach my $event (qw(on_set on_get on_load on_save inflate deflate))
   {
     $column->add_trigger($event => sub { die "foo" });
@@ -68,7 +68,7 @@ SETUP:
     $i++;
     Test::More::ok(!defined $column->triggers($event), "delete_triggers $i");
   }
-  
+
   # 0: die
   $column->add_trigger(event => 'on_get', 
                        name  => 'die',
@@ -238,7 +238,7 @@ foreach my $db_type (@dbs)
     # 44
     skip("$db_type tests", 44)  unless($Have{$db_type});
   }
-  
+
   next  unless($Have{$db_type});
 
   Rose::DB->default_type($db_type);
@@ -257,9 +257,9 @@ foreach my $db_type (@dbs)
   #
   # name
   #
-  
+
   my $o = MyObject->new;
-  
+
   $o->name('Fred');
   is($Temp{'set'}{'name'}, 'Fred', "on_set 1 - $db_type");
   is(keys %Temp, 1, "on_set 2 - $db_type");
@@ -304,7 +304,7 @@ foreach my $db_type (@dbs)
   is($Temp{'inflate'}{'name'}, 'FRED', "on_get 9 - $db_type");
   is(keys %Temp, 2, "on_get 10 - $db_type");
   %Temp = ();
-  
+
   $o->name('Fred');
   is($Temp{'set'}{'name'}, 'Fred', "on_set 5 - $db_type");
   is(keys %Temp, 1, "on_set 6 - $db_type");
@@ -340,7 +340,7 @@ foreach my $db_type (@dbs)
   $sth->finish;
 
   is($code, 'ABC', "inflate/deflate 2 - $db_type");
-  
+
   is($o->code, 'abc', "inflate/deflate 3 - $db_type");
   is($o->xget_code, 'abc', "inflate/deflate 4 - $db_type");
 
@@ -363,7 +363,7 @@ foreach my $db_type (@dbs)
   $sth->finish;
 
   $start = parse_date($start);
-  
+
   is($start->ymd, '2002-10-19', "start 3 - $db_type");
 
   is($o->start->ymd, '2002-10-20', "start 4 - $db_type");
@@ -391,7 +391,7 @@ foreach my $db_type (@dbs)
   is($o->ended->ymd, '1999-09-10', "ended 2 - $db_type");
 
   $o->save;
-  
+
   $o = MyObject->new(id => $o->id);
   $o->load;
 
@@ -501,7 +501,7 @@ CREATE TABLE Rose_db_object_test
   date_created   TIMESTAMP
 )
 EOF
-    
+
     $dbh->disconnect;
   }
 
@@ -592,7 +592,7 @@ END
     $dbh->do('DROP TABLE Rose_db_object_test CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_private.Rose_db_object_test CASCADE');
     $dbh->do('DROP SCHEMA Rose_db_object_private CASCADE');
-      
+
     $dbh->disconnect;
   }
 

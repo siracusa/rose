@@ -336,7 +336,7 @@ sub input_prefilter
     for($value)
     {
       no warnings;
-  
+
       if($self->trim_spaces)
       {
         s/^\s+//;

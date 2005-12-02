@@ -825,7 +825,7 @@ EOF
     my %fk;
 
     my $cm = $self->convention_manager;
-  
+
     FK: while(my $index_info = $sth->fetchrow_hashref)
     {
       # Sanity check - should never happen
@@ -899,7 +899,7 @@ EOF
       my %key_columns;
       @key_columns{@local_cols} = @foreign_cols;
 
-   
+
       if(my $alt_key_name = $cm->auto_foreign_key_name($foreign_class, $key_name))
       {
         $key_name = $alt_key_name;

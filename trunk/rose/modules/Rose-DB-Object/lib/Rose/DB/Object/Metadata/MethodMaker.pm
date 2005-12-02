@@ -261,9 +261,9 @@ sub hash_key { shift->name }
 sub methods
 {
   my($self) = shift;
-  
+
   my %args = (@_ == 1) ? %{$_[0]} : @_;
-  
+
   $self->add_auto_method_types(keys %args);
 
   while(my($type, $name) = each(%args))
@@ -332,7 +332,7 @@ sub method_maker_arguments
   #$class->init_method_maker_info;
 
   my $mm_info = $Method_Maker_Info{$class}{$type} ||= {};
-  
+
   $opts{'interface'} = $mm_info->{'interface'}  if(exists $mm_info->{'interface'});
 
   return wantarray ? %opts : \%opts;
@@ -385,7 +385,7 @@ sub make_methods
 
     $self->made_method_type($type => $method_name);
   }
-  
+
   return;
 }
 
