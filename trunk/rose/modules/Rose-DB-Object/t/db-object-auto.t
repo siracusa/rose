@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 264;
+use Test::More tests => 266;
 
 BEGIN 
 {
@@ -313,7 +313,7 @@ EOF
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 60)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 62)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -342,6 +342,12 @@ SKIP: foreach my $db_type ('mysql')
 
   $o->code('C' x 50);
   is($o->code, 'C' x 6, "character truncation - $db_type");
+
+  is($o->enums, 'foo', "enum 1 - $db_type");
+  eval { $o->enums('blee') };
+  ok($@, "enum 2 - $db_type");
+
+  $o->enums('bar');
 
   my $ouk = MyMySQLObject->new(k1 => 1,
                                k2 => undef,
@@ -828,6 +834,7 @@ CREATE TABLE Rose_db_object_test
   nums           VARCHAR(255),
   start          DATE DEFAULT '1980-12-24',
   save           INT,
+  enums          ENUM ('foo', 'bar', 'baz') DEFAULT 'foo',
   last_modified  TIMESTAMP,
   date_created   DATETIME,
 
