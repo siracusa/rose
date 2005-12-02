@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 339;
+use Test::More tests => 341;
 
 BEGIN 
 {
@@ -233,7 +233,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 66)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 68)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -262,6 +262,12 @@ SKIP: foreach my $db_type ('mysql')
 
   $o->code('C' x 50);
   is($o->code, 'C' x 6, "character truncation - $db_type");
+
+  is($o->enums, 'foo', "enum 1 - $db_type");
+  eval { $o->enums('blee') };
+  ok($@, "enum 2 - $db_type");
+
+  $o->enums('bar');
 
   my $ouk;
   ok($ouk = MyMySQLObject->new(k1 => 1,
@@ -943,6 +949,7 @@ CREATE TABLE rose_db_object_test
   nums           VARCHAR(255),
   start          DATE,
   save           INT,
+  enums          ENUM('foo', 'bar', 'baz') DEFAULT 'foo',
   ndate          DATE NOT NULL DEFAULT '0000-00-00',
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
@@ -989,6 +996,7 @@ EOF
       ndate    => { type => 'date', not_null => 1, default => '0000-00-00' },
       save     => { type => 'scalar' },
       nums     => { type => 'array' },
+      enums    => { type => 'enum', values => [ qw(foo bar baz) ], default => 'foo' },
       bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },
       decs     => { type => 'decimal', precision => 10, scale => 2 },
       last_modified => { type => 'timestamp' },

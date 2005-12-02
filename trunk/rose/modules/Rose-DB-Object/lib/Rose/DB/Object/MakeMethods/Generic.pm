@@ -184,30 +184,29 @@ sub enum
     Carp::croak "Missing list of valid values for enum column '$name'";
   }
 
-  my @values = @$values;
+  my %values = map { $_ => 1 } @$values;
 
-  my $max_num = 0;
+  my $default = $args->{'default'};
 
-  if($args->{'allow_numbers'})
+  if(exists $args->{'default'})
   {
-    $max_num = @$values;
+    unless(exists $values{$default})
+    {
+      Carp::croak "Illegal default value for enum column '$name' - '$default'";
+    }
   }
 
   my %methods;
 
   if($interface eq 'get_set')
   {
-    my %check = map { $_ => 1 } @values;
-
-    my $default = $args->{'default'};
-
-    if(defined $default)
+    if(exists $args->{'default'})
     {
       $methods{$name} = sub
       {
         if(@_ > 1 && defined $_[1])
         {
-          Carp::croak "Invalid $name: '$_[1]'"  unless(exists $check{$_[1]});
+          Carp::croak "Invalid $name: '$_[1]'"  unless(exists $values{$_[1]});
           return $_[0]->{$key} = $_[1];
         }
         return (defined $_[0]->{$key}) ? $_[0]->{$key} : 
@@ -222,7 +221,7 @@ sub enum
       {
         if(@_ > 1 && defined $_[1])
         {
-          Carp::croak "Invalid $name: '$_[1]'"  unless(exists $check{$_[1]});
+          Carp::croak "Invalid $name: '$_[1]'"  unless(exists $values{$_[1]});
           return $_[0]->{$key} = $_[1];
         }
         return (defined $_[0]->{$key}) ? $_[0]->{$key} : 
@@ -235,7 +234,7 @@ sub enum
       {
         if(@_ > 1 && defined $_[1])
         {
-          Carp::croak "Invalid $name: '$_[1]'"  unless(exists $check{$_[1]});
+          Carp::croak "Invalid $name: '$_[1]'"  unless(exists $values{$_[1]});
           return $_[0]->{$key} = $_[1];
         }
         return $_[0]->{$key};
@@ -244,20 +243,16 @@ sub enum
   }
   elsif($interface eq 'set')
   {
-    my %check = map { $_ => 1 } @values;
-
     $methods{$name} = sub
     {
       Carp::croak "Missing argument in call to $name"  unless(@_ > 1);
-      Carp::croak "Invalid $name: '$_[1]'"  unless(exists $check{$_[1]});
+      Carp::croak "Invalid $name: '$_[1]'"  unless(exists $values{$_[1]});
       return $_[0]->{$key} = $_[1];
     };
   }
   elsif($interface eq 'get')
   {
-    my $default = $args->{'default'};
-
-    if(defined $default)
+    if(exists $args->{'default'})
     {
       $methods{$name} = sub
       {
@@ -4238,6 +4233,97 @@ Example:
     $o->name('A'); # pads on set
     print $o->name;   # 'A  '
 
+=item B<enum>
+
+Create get/set methods for enum attributes.
+
+=over 4
+
+=item Options
+
+=over 4
+
+=item C<default>
+
+Determines the default value of the attribute.
+
+=item C<values>
+
+A reference to an array of the enum values.  This attribute is required.  When setting the attribute, if the new value is not equal (string comparison) to one of the enum values, a fatal error will occur.
+
+=item C<hash_key>
+
+The key inside the hash-based object to use for the storage of this
+attribute.  Defaults to the name of the method.
+
+=item C<init_method>
+
+The name of the method to call when initializing the value of an
+undefined attribute.  Defaults to the method name with the prefix
+C<init_> added.  This option implies C<with_init>.
+
+=item C<interface>
+
+Choose the interface.  The only current interface is C<get_set>, which is the default.
+
+=item C<with_init>
+
+Modifies the behavior of the C<get_set> and C<get> interfaces.  If the attribute is undefined, the method specified by the C<init_method> option is called and the attribute is set to the return value of that
+method.
+
+=back
+
+=item Interfaces
+
+=over 4
+
+=item C<get_set>
+
+Creates a get/set method for an enum attribute.  When called with an argument, the value of the attribute is set.  If the value is invalid, a fatal error will occur.  The current value of the attribute is returned.
+
+=item C<get>
+
+Creates an accessor method for an object attribute that returns the current
+value of the attribute.
+
+=item C<set>
+
+Creates a mutator method for an object attribute.  When called with an argument, the value of the attribute is set.  If the value is invalid, a fatal error will occur.  If called with no arguments, a fatal error will occur.
+
+=back
+
+=back
+
+Example:
+
+    package MyDBObject;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    use Rose::DB::Object::MakeMethods::Generic
+    (
+      enum => 
+      [
+        type  => { values => [ qw(main aux extra) ], default => 'aux' },
+        stage => { values => [ qw(new std old) ], with_init => 1 },
+      ],
+    );
+
+    sub init_stage { 'new' }
+    ...
+
+    $o = MyDBObject->new(...);
+
+    print $o->type;   # aux
+    print $o->stage;  # new
+
+    $o->type('aux');  # set
+    $o->stage('old'); # set
+
+    eval { $o->type('foo') }; # fatal error: invalid value
+
+    print $o->type, ' is at stage ', $o->stage; # get
+
 =item B<objects_by_key>
 
 Create get/set methods for an array of L<Rose::DB::Object>-derived objects fetched based on a key formed from attributes of the current object.
@@ -5125,8 +5211,7 @@ Create get/set methods for scalar attributes.
 
 =item C<default>
 
-Determines the default value of the attribute.  This option is only
-applicable when using the C<get_set> interface.
+Determines the default value of the attribute.
 
 =item C<check_in>
 
@@ -5149,8 +5234,7 @@ Choose the interface.  The only current interface is C<get_set>, which is the de
 
 =item C<with_init>
 
-Modifies the behavior of the C<get_set> interface.  If the attribute is undefined, the method specified by the C<init_method>
-option is called and the attribute is set to the return value of that
+Modifies the behavior of the C<get_set> and C<get> interfaces.  If the attribute is undefined, the method specified by the C<init_method> option is called and the attribute is set to the return value of that
 method.
 
 =back
@@ -5159,13 +5243,13 @@ method.
 
 =over 4
 
-=item C<get>
-
 =item C<get_set>
 
 Creates a get/set method for an object attribute.  When
 called with an argument, the value of the attribute is set.  The current
 value of the attribute is returned.
+
+=item C<get>
 
 Creates an accessor method for an object attribute that returns the current
 value of the attribute.
