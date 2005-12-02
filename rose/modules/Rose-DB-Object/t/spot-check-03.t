@@ -16,7 +16,7 @@ my $sql =<<"EOF";
    name varchar(255),
    id   int primary key,
 
-   
+
    unique(name)
  )
 EOF

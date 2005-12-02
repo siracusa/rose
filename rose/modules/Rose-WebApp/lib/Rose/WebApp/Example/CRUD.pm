@@ -917,7 +917,7 @@ for(my $i = $start; $i <= $end; $i++)
 }
 
 $line .= ' ... '  if($line_set < $line_sets);
- 
+
 unless($flat)
 {
   if($line_set < $line_sets)
@@ -1102,12 +1102,12 @@ foreach my $row (@$rows)
   foreach my $item (@$row)
   {
     my $started = 0;
-    
+
     foreach my $field (ref $item ? @$item : $item)
     {
       my $label_td = '';
       my $field_td = '';
-  
+
       if(ref $field eq 'HASH')
       {
         if(ref $field->{'label_td_attrs'})
@@ -1115,13 +1115,13 @@ foreach my $row (@$rows)
           $label_td = join(' ', map { "$_=$field->{'label_td_attrs'}{$_}" } 
                                keys %{$field->{'label_td_attrs'}});
         }
-  
+
         if(ref $field->{'field_td_attrs'})
         {
           $field_td = join(' ', map { "$_=$field->{'field_td_attrs'}{$_}" } 
                                keys %{$field->{'field_td_attrs'}});
         }
-  
+
         $field = $field->{'name'};
       }
 
@@ -1138,7 +1138,7 @@ foreach my $row (@$rows)
                     "</td>\n");
         }
       }
-  
+
       if($started)
       {
         $m->print(' ', $form->field($field)->xhtml);
@@ -1148,10 +1148,10 @@ foreach my $row (@$rows)
         $m->print('<td ', $field_td, 'class="field">',
                   $form->field($field)->xhtml);
       }
-      
+
       $started++;
     }
-    
+
     $m->print("</td>\n");
   }
 
@@ -1177,7 +1177,7 @@ unless($rows)
   {
     push(@$rows, [ grep { defined } shift(@columns), shift(@columns) ]);
   }
-  
+
   push(@$rows, [ 'sort',  [ 'per_page', 'list_button' ] ]);
 }
 </%init>

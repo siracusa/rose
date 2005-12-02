@@ -136,7 +136,7 @@ BEGIN
   #
 
   eval { require DBD::SQLite };
-  
+
   my $version = $DBD::SQLite::VERSION || 0;
 
   unless($ENV{'RDBO_NO_SQLITE'} || $version < 1.08)
@@ -150,7 +150,7 @@ BEGIN
       auto_create     => 0,
       connect_options => { AutoCommit => 1 },
     );
-  
+
     # Admin
     Rose::DB->register_db(
       domain   => 'test',
@@ -196,7 +196,7 @@ BEGIN
 }
 
 Rose::DB->load_driver_classes(qw(pg MySQL informix SQLItE));
-  
+
 # Subclass testing
 package My::DB;
 @My::DB::ISA = qw(Rose::DB);

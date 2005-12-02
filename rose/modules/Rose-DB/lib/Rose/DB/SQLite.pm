@@ -33,7 +33,7 @@ sub dbi_driver { 'SQLite' }
 sub init_dbh
 {
   my($self) = shift;
-  
+
   my $database = $self->database;
 
   unless($self->auto_create || -e $database)
@@ -68,7 +68,7 @@ sub validate_timestamp_keyword
 sub quote_table_name
 {
   my($self, $table) = @_;
-  
+
   $table =~ s/'/''/g;
   return qq('$table');
 }
@@ -90,7 +90,7 @@ sub refine_dbi_column_info
 sub list_tables
 {
   my($self, %args) = @_;
-  
+
   my $types = $args{'include_views'} ? q('table', 'view') : q('table');
 
   my @tables;

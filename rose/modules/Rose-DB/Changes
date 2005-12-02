@@ -1,3 +1,7 @@
+0.54 (12.01.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Changes to support Rose::DB::Object 0.55
+
 0.53 (11.30.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added SQLite support.

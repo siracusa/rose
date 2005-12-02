@@ -208,7 +208,7 @@ DEFAULT_FK_NAME_GEN:
       else
       {
         my($local_column, $foreign_column) = each(%$key_columns);
-  
+
         # Try to lop off foreign column name.  Example:
         # my_foreign_object_id -> my_foreign_object
         if($local_column =~ s/_?$foreign_column$//)
@@ -344,7 +344,7 @@ sub auto_retrieve_primary_key_column_names
 }
 
 my %Warned;
-    
+
 sub auto_generate_foreign_keys
 {
   my($self, %args) = @_;
@@ -480,7 +480,7 @@ sub auto_generate_foreign_keys
     }
 
     my(%seen, %seen_name);
-    
+
     foreach my $fk_info (@fk_info)
     {
       next  if($seen{$fk_info->{'UK_NAME'}}++);
@@ -490,13 +490,13 @@ sub auto_generate_foreign_keys
       next  unless(defined $fk->class);
 
       my $name = $self->foreign_key_name_generator->($self, $fk);
-      
+
       unless(defined $name && $name =~ /^\w+$/)
       {
         die "Missing or invalid key name '$name' for foreign key ",
             "generated in $class for ", $fk->class;
       }
-      
+
       $fk->name($name);
 
       push(@foreign_keys, $fk);
@@ -594,12 +594,12 @@ sub __by_rank
 {  
   my $pos1 = $a->ordinal_position;
   my $pos2 = $b->ordinal_position;
-  
+
   if(defined $pos1 && defined $pos2)
   {
     return $pos1 <=> $pos2 || lc $a->name cmp lc $b->name;
   }
-  
+
   return lc $a->name cmp lc $b->name;
 }
 
@@ -1025,7 +1025,7 @@ sub auto_init_one_to_many_relationships
   FK: foreach my $fk ($self->foreign_keys)
   {
     my $f_class = $fk->class;
-    
+
     next  unless($f_class && UNIVERSAL::isa($f_class, 'Rose::DB::Object'));
 
     my $f_meta  = $f_class->meta;
@@ -1038,9 +1038,9 @@ sub auto_init_one_to_many_relationships
       if($rel->type eq 'one to one' && !$rel->foreign_key)
       {
         my $skip = 1;
-        
+
         my $col_map = $rel->column_map or next REL;
-        
+
         foreach my $remote_col (values %$col_map)
         {
           $skip = 0  unless($key_cols->{$remote_col});
@@ -1097,13 +1097,13 @@ sub auto_init_many_to_many_relationships
   return  unless($cm->is_map_class($class));
 
   my @fks = $self->foreign_keys;
-  
+
   # It's got to have just two foreign keys
   return  unless(@fks == 2);
-  
+
   my $key_cols1 = $fks[0]->key_columns;
   my $key_cols2 = $fks[1]->key_columns;
-  
+
   # Each foreign key must have key columns
   return  unless($key_cols1 && keys %$key_cols1 &&
                  $key_cols2 && keys %$key_cols2);
@@ -1115,7 +1115,7 @@ sub auto_init_many_to_many_relationships
   PAIR: foreach my $pair ([ @fks ], [ reverse @fks ])
   {
     my($fk1, $fk2) = @$pair;
-    
+
     my $class1 = $fk1->class;
     my $class2 = $fk2->class;
 

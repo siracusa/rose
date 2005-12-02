@@ -1755,23 +1755,23 @@ If you want to see what the loader did for you, catch the return value of the L<
 The output is shown below.  Compare it to the manually created Perl code L<shown above|/"Relationship code summary"> and you'll see that it's nearly identical.  Again, careful table name choices really help here.  Do what the L<convention manager|Rose::DB::Object::ConventionManager> expects (or write your own convention manager subclass that does what I<you> expect) and automation like this can work very well.
 
   package My::Color;
-  
+
   use strict;
-  
+
   use My::DB::Object::Base1;
   our @ISA = qw(My::DB::Object::Base1);
-  
+
   __PACKAGE__->meta->table('colors');
-  
+
   __PACKAGE__->meta->columns
   (
     id   => { type => 'integer', not_null => 1 },
     name => { type => 'varchar', length => 255, not_null => 1 },
   );
-  
+
   __PACKAGE__->meta->primary_key_columns([ 'id' ]);
   __PACKAGE__->meta->add_unique_keys([ 'name' ]);
-  
+
   __PACKAGE__->meta->relationships
   (
     products => 
@@ -1784,33 +1784,33 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
       type          => 'many to many',
     },
   );
-  
+
   __PACKAGE__->meta->initialize;
-  
+
   1;
-  
+
   package My::Color::Manager;
-  
+
   use My::Color;
-  
+
   use Rose::DB::Object::Manager;
   our @ISA = qw(Rose::DB::Object::Manager);
-  
+
   sub object_class { 'My::Color' }
-  
+
   __PACKAGE__->make_manager_methods('colors');
-  
+
   1;
-  
+
   package My::Price;
-  
+
   use strict;
-  
+
   use My::DB::Object::Base1;
   our @ISA = qw(My::DB::Object::Base1);
-  
+
   __PACKAGE__->meta->table('prices');
-  
+
   __PACKAGE__->meta->columns
   (
     id         => { type => 'integer', not_null => 1 },
@@ -1820,10 +1820,10 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
     price      => { type => 'numeric', default => '0.00', not_null => 1,
                     precision => 2, scale => 10 },
   );
-  
+
   __PACKAGE__->meta->primary_key_columns([ 'id' ]);
   __PACKAGE__->meta->add_unique_keys([ 'product_id', 'region' ]);
-  
+
   __PACKAGE__->meta->foreign_keys
   (
     product => 
@@ -1835,41 +1835,41 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
       },
     },
   );
-  
+
   __PACKAGE__->meta->initialize;
-  
+
   1;
-  
+
   package My::Price::Manager;
-  
+
   use My::Price;
-  
+
   use Rose::DB::Object::Manager;
   our @ISA = qw(Rose::DB::Object::Manager);
-  
+
   sub object_class { 'My::Price' }
-  
+
   __PACKAGE__->make_manager_methods('prices');
-  
+
   1;
-  
+
   package My::ProductColorMap;
-  
+
   use strict;
-  
+
   use My::DB::Object::Base1;
   our @ISA = qw(My::DB::Object::Base1);
-  
+
   __PACKAGE__->meta->table('product_color_map');
-  
+
   __PACKAGE__->meta->columns
   (
     product_id => { type => 'integer', not_null => 1 },
     color_id   => { type => 'integer', not_null => 1 },
   );
-  
+
   __PACKAGE__->meta->primary_key_columns([ 'product_id', 'color_id' ]);
-  
+
   __PACKAGE__->meta->foreign_keys
   (
     color => 
@@ -1880,7 +1880,7 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
         color_id => 'id',
       },
     },
-  
+
     product => 
     {
       class => 'My::Product',
@@ -1890,68 +1890,68 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
       },
     },
   );
-  
+
   __PACKAGE__->meta->initialize;
-  
+
   1;
-  
+
   package My::ProductColorMap::Manager;
-  
+
   use My::ProductColorMap;
-  
+
   use Rose::DB::Object::Manager;
   our @ISA = qw(Rose::DB::Object::Manager);
-  
+
   sub object_class { 'My::ProductColorMap' }
-  
+
   __PACKAGE__->make_manager_methods('product_color_map');
-  
+
   1;
-  
+
   package My::ProductColor;
-  
+
   use strict;
-  
+
   use My::DB::Object::Base1;
   our @ISA = qw(My::DB::Object::Base1);
-  
+
   __PACKAGE__->meta->table('product_colors');
-  
+
   __PACKAGE__->meta->columns
   (
     id         => { type => 'integer', not_null => 1 },
     product_id => { type => 'integer', not_null => 1 },
     color_code => { type => 'character', length => 3, not_null => 1 },
   );
-  
+
   __PACKAGE__->meta->primary_key_columns([ 'id' ]);
-  
+
   __PACKAGE__->meta->initialize;
-  
+
   1;
-  
+
   package My::ProductColor::Manager;
-  
+
   use My::ProductColor;
-  
+
   use Rose::DB::Object::Manager;
   our @ISA = qw(Rose::DB::Object::Manager);
-  
+
   sub object_class { 'My::ProductColor' }
-  
+
   __PACKAGE__->make_manager_methods('product_colors');
-  
+
   1;
-  
+
   package My::Product;
-  
+
   use strict;
-  
+
   use My::DB::Object::Base1;
   our @ISA = qw(My::DB::Object::Base1);
-  
+
   __PACKAGE__->meta->table('products');
-  
+
   __PACKAGE__->meta->columns
   (
     id           => { type => 'integer', not_null => 1 },
@@ -1965,10 +1965,10 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
                       not_null => 1 },
     release_date => { type => 'timestamp' },
   );
-  
+
   __PACKAGE__->meta->primary_key_columns([ 'id' ]);
   __PACKAGE__->meta->add_unique_keys([ 'name' ]);
-  
+
   __PACKAGE__->meta->foreign_keys
   (
     vendor => 
@@ -1980,7 +1980,7 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
       },
     },
   );
-  
+
   __PACKAGE__->meta->relationships
   (
     colors => 
@@ -1992,7 +1992,7 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
       map_to        => 'color',
       type          => 'many to many',
     },
-  
+
     prices => 
     {
       class       => 'My::Price',
@@ -2000,42 +2000,42 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
       type        => 'one to many',
     },
   );
-  
+
   __PACKAGE__->meta->initialize;
-  
+
   1;
-  
+
   package My::Product::Manager;
-  
+
   use My::Product;
-  
+
   use Rose::DB::Object::Manager;
   our @ISA = qw(Rose::DB::Object::Manager);
-  
+
   sub object_class { 'My::Product' }
-  
+
   __PACKAGE__->make_manager_methods('products');
-  
+
   1;
-  
+
   package My::Vendor;
-  
+
   use strict;
-  
+
   use My::DB::Object::Base1;
   our @ISA = qw(My::DB::Object::Base1);
-  
+
   __PACKAGE__->meta->table('vendors');
-  
+
   __PACKAGE__->meta->columns
   (
     id   => { type => 'integer', not_null => 1 },
     name => { type => 'varchar', length => 255, not_null => 1 },
   );
-  
+
   __PACKAGE__->meta->primary_key_columns([ 'id' ]);
   __PACKAGE__->meta->add_unique_keys([ 'name' ]);
-  
+
   __PACKAGE__->meta->relationships
   (
     products => 
@@ -2045,22 +2045,22 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
       type        => 'one to many',
     },
   );
-  
+
   __PACKAGE__->meta->initialize;
-  
+
   1;
-  
+
   package My::Vendor::Manager;
-  
+
   use My::Vendor;
-  
+
   use Rose::DB::Object::Manager;
   our @ISA = qw(Rose::DB::Object::Manager);
-  
+
   sub object_class { 'My::Vendor' }
-  
+
   __PACKAGE__->make_manager_methods('vendors');
-  
+
   1;
 
 =head2 Auto-joins and other Manager features

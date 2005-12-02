@@ -99,7 +99,7 @@ SKIP:
     'My::pBox'             => 'p_boxes',
     'My::Other::pBox'      => 'p_boxes',
   );
-  
+
   foreach my $pkg (sort keys %Expect_Table)
   {
     no strict 'refs';
@@ -659,21 +659,21 @@ foreach my $class (@map_classes)
   our \@ISA = qw(Rose::DB::Object);
   sub init_db { Rose::DB->new('pg') }
   __PACKAGE__->meta->columns(qw(id object_id other_object_id));
-  
+
   package My::MTM${i}::OtherObject;
   our \@ISA = qw(Rose::DB::Object);
   sub init_db { Rose::DB->new('pg') }
   __PACKAGE__->meta->columns(qw(id name));
   __PACKAGE__->meta->initialize;
-  
+
   package My::MTM${i}::Object;
   our \@ISA = qw(Rose::DB::Object);
   sub init_db { Rose::DB->new('pg') }
   __PACKAGE__->meta->columns(qw(id name));  
-  
+
   My::MTM${i}::$class->meta->foreign_keys(qw(object other_object));
   My::MTM${i}::$class->meta->initialize;
-  
+
   My::MTM${i}::Object->meta->relationships(other_objects => 'many to many');
   My::MTM${i}::Object->meta->initialize
 EOF

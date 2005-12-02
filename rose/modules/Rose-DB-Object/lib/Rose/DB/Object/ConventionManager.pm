@@ -199,7 +199,7 @@ sub looks_like_map_class_name
 sub looks_like_map_table_name
 {
   my($self, $table) = @_;
-  
+
   if($table =~ m{^(?:
                     (?:\w+_){2,}map             # foo_bar_map
                   | (?:\w+_)*\w+s_(?:\w+_)*\w+s # foos_bars
@@ -291,7 +291,7 @@ sub auto_foreign_key
           }
 
           my $cols = $fk->key_columns or return 0;
-          
+
           # Everything is okay if we have key columns
           return (ref($cols) && keys(%$cols) > 0) ? 1 : 0;
         }
@@ -938,10 +938,10 @@ But that's a bit of a pain to do in every single class.  An easier way to do it 
     sub init_convention_manager
     {
       my $self = shift;
-      
+
       # Let the base class make ths convention manager object
       my $cm = $self->SUPER::init_convention_manager(@_);
-      
+
       # Set the new singular-to-plural function
       $cm->singular_to_plural_function(\&Lingua::EN::Inflect::PL);
 

@@ -216,7 +216,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   #
 
   my $chkpass = $PG_HAS_CHKPASS ? "  password      => { type => 'chkpass' },\n" : '';
-  
+
   is(MyPgObject->meta->perl_columns_definition(braces => 'bsd', indent => 2),
      <<"EOF", "perl_columns_definition 1 - $db_type");
 __PACKAGE__->meta->columns

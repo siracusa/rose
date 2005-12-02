@@ -178,13 +178,13 @@ sub auto_generate_foreign_keys
               class  => $self->class, 
               method => 'auto_init_foreign_keys',
               args   => \%args,
-    
+
               code => sub
               {
                 $self->auto_init_foreign_keys(%args);
                 $self->make_foreign_key_methods(%args, preserve_existing => 1);
               },
-    
+
               check => sub
               {
                 my $fks = $self->foreign_keys;
@@ -205,7 +205,7 @@ sub auto_generate_foreign_keys
 
           my %key_columns;
           @key_columns{@local_columns} = @foreign_columns;
-    
+
           my $key_name = $cm->auto_foreign_key_name($foreign_class);
 
           my $fk = 

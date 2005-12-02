@@ -23,6 +23,10 @@ our $VERSION = '0.55';
 
 our $Debug = 0;
 
+#
+# Object data
+#
+
 use Rose::Object::MakeMethods::Generic
 (
   scalar => 
@@ -54,8 +58,14 @@ use Rose::Object::MakeMethods::Generic
   ]
 );
 
+#
+# Class data
+#
+
 use Rose::Class::MakeMethods::Generic
 (
+  inheritable_scalar => 'dbi_prepare_cached',
+
   inheritable_hash =>
   [
     column_type_classes => { interface => 'get_set_all' },
@@ -76,6 +86,8 @@ use Rose::Class::MakeMethods::Generic
     delete_convention_manager_class => { interface => 'delete', hash_key => 'convention_manager_classes' },
   ],
 );
+
+__PACKAGE__->dbi_prepare_cached(1);
 
 __PACKAGE__->class_registry({});
 
@@ -158,6 +170,10 @@ __PACKAGE__->relationship_type_classes
   'many to many' => 'Rose::DB::Object::Metadata::Relationship::ManyToMany',
 );
 
+#
+# Methods
+#
+
 sub init_column_name_to_method_name_mapper() { 0 }
 
 our %Objects;
@@ -175,7 +191,7 @@ sub for_class
 {
   my($meta_class, $class) = (shift, shift);
   return $Objects{$class}  if($Objects{$class});
-  
+
   # Clone an ancestor meta object
   foreach my $parent_class (__get_parents($class))
   {
@@ -1236,7 +1252,7 @@ sub register_class
     or Carp::croak "Missing table for metadata object $self";
 
   $table = lc $table  if($db->likes_lowercase_table_names);
-  
+
   my $reg = $self->registry_key->class_registry;
 
   # Combine keys using $;, which is "\034" (0x1C) by default. But just to
@@ -1577,15 +1593,15 @@ sub deferred_foreign_keys
 sub has_deferred_foreign_keys
 {
   my($self) = shift;
-  
+
   my $class = $self->class;
   my $meta_class = ref $self;
-  
+
   foreach my $fk ($meta_class->deferred_foreign_keys)
   {
     return 1  if($fk->class eq $class);
   }
-  
+
   # Search among the deferred tasks too (icky)
   foreach my $task ($meta_class->deferred_tasks)
   {
@@ -1601,7 +1617,7 @@ sub has_deferred_foreign_keys
 sub has_outstanding_metadata_tasks
 {
   my($self) = shift;
-  
+
   return $self->{'has_outstanding_metadata_tasks'} = shift  if(@_);
 
   if(defined $self->{'has_outstanding_metadata_tasks'})
@@ -1615,7 +1631,7 @@ sub has_outstanding_metadata_tasks
   {
     return $self->{'has_outstanding_metadata_tasks'} = 1;
   }
-  
+
   return $self->{'has_outstanding_metadata_tasks'} = 0;
 }
 
@@ -1781,7 +1797,7 @@ sub deferred_relationships
 sub has_deferred_relationships
 {
   my($self) = shift;
-  
+
   my $class = $self->class;
   my $meta_class = ref $self;
 
@@ -2479,7 +2495,7 @@ sub get_column_value
       'SELECT __COLUMN__ FROM ' . $self->fq_table_sql($db) . ' WHERE ' .
       join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns);
   }
-  
+
   $sql =~ s/__COLUMN__/$column->name_sql/e;
 
   my @key_values = 
@@ -2807,7 +2823,7 @@ sub init_auto_helper
 
             no strict 'refs';        
             @{"${new_class}::ISA"} = ($auto_helper_class, $class);
-    
+
             bless $self, $new_class;
           }
           else
@@ -2816,7 +2832,7 @@ sub init_auto_helper
             bless $self, $auto_helper_class;
           }
         }
-        
+
         # Cache value
         $Rebless{$class,$auto_helper_class} = ref $self;
       }
@@ -3079,7 +3095,7 @@ The default mapping of type names to class names is:
   serial    => Rose::DB::Object::Metadata::Column::Serial
 
   enum      => Rose::DB::Object::Metadata::Column::Enum
-  
+
   num       => Rose::DB::Object::Metadata::Column::Numeric
   numeric   => Rose::DB::Object::Metadata::Column::Numeric
   decimal   => Rose::DB::Object::Metadata::Column::Numeric
@@ -3142,6 +3158,10 @@ The default mapping of names to classes is:
 
   default => Rose::DB::Object::ConventionManager
   null    => Rose::DB::Object::ConventionManager::Null
+
+=item B<dbi_prepare_cached [BOOL]>
+
+Get or set a boolean value that indicates whether or not the L<Rose::DB::Object>-derived L<class|/class> will use L<DBI>'s L<prepare_cached|DBI/prepare_cached> method by default (instead of the L<prepare|DBI/prepare> method) when L<loading|Rose::DB::Object/load>, L<saving|Rose::DB::Object/save>, and L<deleting|Rose::DB::Object/delete> objects.  The default value is true.
 
 =item B<for_class CLASS>
 
@@ -4074,7 +4094,7 @@ Here's a complete example, which also serves as an example of the individual "pe
 
       PRIMARY KEY(k1, k2, k3)
     );
-    
+
     CREATE TABLE products
     (
       id             SERIAL PRIMARY KEY,
@@ -4130,14 +4150,14 @@ Then we'll print the C<Product> class definition;
 The output looks like this:
 
  package Product;
- 
+
  use strict;
- 
+
  use Rose::DB::Object
  our @ISA = qw(Rose::DB::Object);
- 
+
  __PACKAGE__->meta->table('products');
- 
+
  __PACKAGE__->meta->columns
  (
    id            => { type => 'integer', not_null => 1 },
@@ -4151,9 +4171,9 @@ The output looks like this:
    last_modified => { type => 'timestamp' },
    date_created  => { type => 'timestamp' },
  );
- 
+
  __PACKAGE__->meta->primary_key_columns([ 'id' ]);
- 
+
  __PACKAGE__->meta->foreign_keys
  (
    code => 
@@ -4166,7 +4186,7 @@ The output looks like this:
        fk3 => 'k3',
      },
    },
- 
+
    topic => 
    {
      class => 'Category',
@@ -4176,7 +4196,7 @@ The output looks like this:
      },
    },
  );
- 
+
  __PACKAGE__->meta->relationships
  (
    prices => 
@@ -4186,9 +4206,9 @@ The output looks like this:
      type        => 'one to many',
    },
  );
- 
+
  __PACKAGE__->meta->initialize;
- 
+
  1;
 
 See the L<auto-initialization|AUTO-INITIALIZATION> section for more discussion of Perl code generation.

@@ -19,11 +19,11 @@ SETUP:
 {
   package My::DB;
   our @ISA = qw(Rose::DB);
-  
+
   package My::DB::Object;
   our @ISA = qw(Rose::DB::Object);
   sub foo_bar { 123 }
-  
+
   package MyWeirdClass;
   our @ISA = qw(Rose::Object);
   sub baz { 456 }
@@ -58,7 +58,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
       db           => My::DB->new,
       base_classes => [ qw(My::DB::Object MyWeirdClass) ],
       class_prefix => $class_prefix);
-  
+
   my @classes = $loader->make_classes(include_tables => $Include_Tables);
 
   #foreach my $class (@classes)
@@ -115,26 +115,26 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   $p = $product_class->new(id => $p->id)->load;
   is($p->vendor->name, "Acme $i", "vendor 1 - $db_type");
 
-  
+
   my @prices = sort { $a->price <=> $b->price } $p->prices;
-  
+
   is(scalar @prices, 2, "prices 1 - $db_type");
   is($prices[0]->price, 1.23, "prices 2 - $db_type");
   is($prices[1]->price, 4.56, "prices 3 - $db_type");
 
   my @colors = sort { $a->name cmp $b->name } $p->colors;
-  
+
   is(scalar @colors, 2, "colors 1 - $db_type");
   is($colors[0]->name, 'green', "colors 2 - $db_type");
   is($colors[1]->name, 'red', "colors 3 - $db_type");
 
   my $mgr_class = $class_prefix . '::Product::Manager';
   my $prods = $mgr_class->get_products(query => [ id => $p->id ]);
-  
+
   is(ref $prods, 'ARRAY', "get_products 1 - $db_type");
   is(@$prods, 1, "get_products 2 - $db_type");
   is($prods->[0]->id, $p->id, "get_products 3 - $db_type");
-  
+
   #$DB::single = 1;
   #$Rose::DB::Object::Debug = 1;
 }
@@ -171,13 +171,13 @@ BEGIN
       $dbh->do('DROP TABLE prices CASCADE');
       $dbh->do('DROP TABLE products CASCADE');
       $dbh->do('DROP TABLE vendors CASCADE');
-    
+
       $dbh->do('DROP TABLE Rose_db_object_private.product_color_map CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.colors CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.prices CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.products CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.vendors CASCADE');
-    
+
       $dbh->do('DROP SCHEMA Rose_db_object_private CASCADE');
       $dbh->do('CREATE SCHEMA Rose_db_object_private');
     }
@@ -428,7 +428,7 @@ CREATE TABLE product_color_map
 )
 TYPE=InnoDB
 EOF
-    
+
     $dbh->disconnect;
   }
 
@@ -482,7 +482,7 @@ CREATE TABLE products
 
   date_created  DATETIME YEAR TO SECOND,
   release_date  DATETIME YEAR TO SECOND,
-  
+
   UNIQUE(name)
 )
 EOF
@@ -572,7 +572,7 @@ CREATE TABLE products
 
   date_created  DATETIME,
   release_date  DATETIME,
-  
+
   UNIQUE(name)
 )
 EOF
@@ -636,7 +636,7 @@ END
     $dbh->do('DROP TABLE Rose_db_object_private.vendors CASCADE');
 
     $dbh->do('DROP SCHEMA Rose_db_object_private CASCADE');
-      
+
     $dbh->disconnect;
   }
 

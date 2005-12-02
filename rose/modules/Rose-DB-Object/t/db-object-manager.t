@@ -144,7 +144,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   # Set up sub-object for this one test
   my $b1 = MyPgBB->new(id   => 1, name => 'one');
   $b1->save;
-  
+
   $objs->[0]->b1(1);
   $objs->[0]->save;
 
@@ -1446,7 +1446,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       offset          => 5);
 
   ok(@$objs == 0, "get_objects_iterator() with many to many require 23 - $db_type");
-  
+
   # End "many to many" tests
 
   # Start multi-require tests
@@ -1484,7 +1484,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   is(scalar @$nicks, 2, "get_objects() multi many require 11 - $db_type");
   is($nicks->[0]->nick, 'ntwo', "get_objects() multi many require 12 - $db_type");
   is($nicks->[1]->nick, 'nfour', "get_objects() multi many require 13 - $db_type");
-  
+
   $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
   ok($colors && ref $colors && @$colors == 2, "get_objects() multi many require 14 - $db_type");
   ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() multi many require 15 - $db_type");
@@ -1521,7 +1521,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   is(scalar @$nicks, 2, "get_objects() multi many with require 11 - $db_type");
   is($nicks->[0]->nick, 'ntwo', "get_objects() multi many with require 12 - $db_type");
   is($nicks->[1]->nick, 'nfour', "get_objects() multi many with require 13 - $db_type");
-  
+
   $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
   ok($colors && ref $colors && @$colors == 2, "get_objects() multi many with require 14 - $db_type");
   ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() multi many with require 15 - $db_type");
@@ -1569,15 +1569,15 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
         require_objects => [ 'nicks', 'colors', 'other_obj' ],
         multi_many_ok   => 1,
         sort_by         => 't1.name');
-  
+
     is(scalar @$objs, 2, "get_objects() distinct multi many require $i.1 - $db_type");
-  
+
     is($objs->[0]->id, 5, "get_objects() distinct multi many require $i.2 - $db_type");
     is($objs->[1]->id, 2, "get_objects() distinct multi many require $i.3 - $db_type");
-  
+
     ok(!defined $objs->[0]->{'nicks'}, "get_objects() distinct multi many require $i.4 - $db_type");
     ok(!defined $objs->[0]->{'colors'}, "get_objects() distinct multi many require $i.5 - $db_type");
-  
+
     ok(!defined $objs->[1]->{'nicks'}, "get_objects() distinct multi many require $i.6 - $db_type");
     ok(!defined $objs->[1]->{'colors'}, "get_objects() distinct multi many require $i.7 - $db_type");
   }
@@ -1598,15 +1598,15 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
         multi_many_ok   => 1,
         nonlazy         => 1,
         sort_by         => 't1.name');
-  
+
     is(scalar @$objs, 2, "get_objects() distinct multi many require $i.1 - $db_type");
-  
+
     is($objs->[0]->id, 5, "get_objects() distinct multi many require $i.2 - $db_type");
     is($objs->[1]->id, 2, "get_objects() distinct multi many require $i.3 - $db_type");
-  
+
     ok(defined $objs->[0]->{'nicks'}, "get_objects() distinct multi many require $i.4 - $db_type");
     ok(!defined $objs->[0]->{'colors'}, "get_objects() distinct multi many require $i.5 - $db_type");
-  
+
     ok(defined $objs->[1]->{'nicks'}, "get_objects() distinct multi many require $i.6 - $db_type");
     ok(!defined $objs->[1]->{'colors'}, "get_objects() distinct multi many require $i.7 - $db_type");
   }
@@ -1677,7 +1677,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   {
     is($objs->[$i++]->id, $_, "pager 4.$_ - $db_type");
   }
-  
+
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class => 'MyPgObject',
@@ -1910,7 +1910,7 @@ SKIP: foreach my $db_type ('mysql')
   # Set up sub-object for this one test
   my $b1 = MyMySQLBB->new(id => 1, name => 'one');
   $b1->save;
-  
+
   $objs->[0]->b1(1);
   $objs->[0]->save;
 
@@ -2916,7 +2916,7 @@ SKIP: foreach my $db_type ('mysql')
   {
     push(@$objs, $obj);
   }
-  
+
   is(ref $objs, 'ARRAY', "get_objects_iterator() with many to many map record 1 - $db_type");
   is(scalar @$objs, 3, "get_objects_iterator() with many to many map record  2 - $db_type");
 
@@ -3243,7 +3243,7 @@ SKIP: foreach my $db_type ('mysql')
   is(scalar @$nicks, 2, "get_objects() multi many require 11 - $db_type");
   is($nicks->[0]->nick, 'ntwo', "get_objects() multi many require 12 - $db_type");
   is($nicks->[1]->nick, 'nfour', "get_objects() multi many require 13 - $db_type");
-  
+
   $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
   ok($colors && ref $colors && @$colors == 2, "get_objects() multi many require 14 - $db_type");
   ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() multi many require 15 - $db_type");
@@ -3280,7 +3280,7 @@ SKIP: foreach my $db_type ('mysql')
   is(scalar @$nicks, 2, "get_objects() multi many with require 11 - $db_type");
   is($nicks->[0]->nick, 'ntwo', "get_objects() multi many with require 12 - $db_type");
   is($nicks->[1]->nick, 'nfour', "get_objects() multi many with require 13 - $db_type");
-  
+
   $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
   ok($colors && ref $colors && @$colors == 2, "get_objects() multi many with require 14 - $db_type");
   ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() multi many with require 15 - $db_type");
@@ -3328,15 +3328,15 @@ SKIP: foreach my $db_type ('mysql')
         require_objects => [ 'nicks', 'colors', 'other_obj' ],
         multi_many_ok   => 1,
         sort_by         => 't1.name');
-  
+
     is(scalar @$objs, 2, "get_objects() distinct multi many require $i.1 - $db_type");
-  
+
     is($objs->[0]->id, 5, "get_objects() distinct multi many require $i.2 - $db_type");
     is($objs->[1]->id, 2, "get_objects() distinct multi many require $i.3 - $db_type");
-  
+
     ok(!defined $objs->[0]->{'nicks'}, "get_objects() distinct multi many require $i.4 - $db_type");
     ok(!defined $objs->[0]->{'colors'}, "get_objects() distinct multi many require $i.5 - $db_type");
-  
+
     ok(!defined $objs->[1]->{'nicks'}, "get_objects() distinct multi many require $i.6 - $db_type");
     ok(!defined $objs->[1]->{'colors'}, "get_objects() distinct multi many require $i.7 - $db_type");
   }
@@ -3356,15 +3356,15 @@ SKIP: foreach my $db_type ('mysql')
         require_objects => [ 'nicks', 'colors', 'other_obj' ],
         multi_many_ok   => 1,
         sort_by         => 't1.name');
-  
+
     is(scalar @$objs, 2, "get_objects() distinct multi many require $i.1 - $db_type");
-  
+
     is($objs->[0]->id, 5, "get_objects() distinct multi many require $i.2 - $db_type");
     is($objs->[1]->id, 2, "get_objects() distinct multi many require $i.3 - $db_type");
-  
+
     ok(defined $objs->[0]->{'nicks'}, "get_objects() distinct multi many require $i.4 - $db_type");
     ok(!defined $objs->[0]->{'colors'}, "get_objects() distinct multi many require $i.5 - $db_type");
-  
+
     ok(defined $objs->[1]->{'nicks'}, "get_objects() distinct multi many require $i.6 - $db_type");
     ok(!defined $objs->[1]->{'colors'}, "get_objects() distinct multi many require $i.7 - $db_type");
   }
@@ -3435,7 +3435,7 @@ SKIP: foreach my $db_type ('mysql')
   {
     is($objs->[$i++]->id, $_, "pager 4.$_ - $db_type");
   }
-  
+
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class => 'MyMySQLObject',
@@ -4753,7 +4753,7 @@ SKIP: foreach my $db_type (qw(informix))
   {
     push(@$objs, $obj);
   }
-  
+
   is(ref $objs, 'ARRAY', "get_objects_iterator() with many to many map record 1 - $db_type");
   is(scalar @$objs, 3, "get_objects_iterator() with many to many map record  2 - $db_type");
 
@@ -5080,7 +5080,7 @@ SKIP: foreach my $db_type (qw(informix))
   is(scalar @$nicks, 2, "get_objects() multi many require 11 - $db_type");
   is($nicks->[0]->nick, 'ntwo', "get_objects() multi many require 12 - $db_type");
   is($nicks->[1]->nick, 'nfour', "get_objects() multi many require 13 - $db_type");
-  
+
   $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
   ok($colors && ref $colors && @$colors == 2, "get_objects() multi many require 14 - $db_type");
   ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() multi many require 15 - $db_type");
@@ -5117,7 +5117,7 @@ SKIP: foreach my $db_type (qw(informix))
   is(scalar @$nicks, 2, "get_objects() multi many with require 11 - $db_type");
   is($nicks->[0]->nick, 'ntwo', "get_objects() multi many with require 12 - $db_type");
   is($nicks->[1]->nick, 'nfour', "get_objects() multi many with require 13 - $db_type");
-  
+
   $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
   ok($colors && ref $colors && @$colors == 2, "get_objects() multi many with require 14 - $db_type");
   ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() multi many with require 15 - $db_type");
@@ -5276,7 +5276,7 @@ SKIP: foreach my $db_type (qw(informix))
   {
     is($objs->[$i++]->id, $_, "pager 4.$_ - $db_type");
   }
-  
+
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class => 'MyInformixObject',
@@ -5516,7 +5516,7 @@ SKIP: foreach my $db_type (qw(sqlite))
   # Set up sub-object for this one test
   my $b1 = MySQLiteBB->new(id   => 1, name => 'one');
   $b1->save;
-  
+
   $objs->[0]->b1(1);
   $objs->[0]->save;
 
@@ -6547,7 +6547,7 @@ SKIP: foreach my $db_type (qw(sqlite))
   {
     push(@$objs, $obj);
   }
-  
+
   is(ref $objs, 'ARRAY', "get_objects_iterator() with many to many map record 1 - $db_type");
   is(scalar @$objs, 3, "get_objects_iterator() with many to many map record  2 - $db_type");
 
@@ -6836,7 +6836,7 @@ SKIP: foreach my $db_type (qw(sqlite))
       offset          => 5);
 
   ok(@$objs == 0, "get_objects_iterator() with many to many require 23 - $db_type");
-  
+
   # End "many to many" tests
 
   # Start multi-require tests
@@ -6874,7 +6874,7 @@ SKIP: foreach my $db_type (qw(sqlite))
   is(scalar @$nicks, 2, "get_objects() multi many require 11 - $db_type");
   is($nicks->[0]->nick, 'ntwo', "get_objects() multi many require 12 - $db_type");
   is($nicks->[1]->nick, 'nfour', "get_objects() multi many require 13 - $db_type");
-  
+
   $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
   ok($colors && ref $colors && @$colors == 2, "get_objects() multi many require 14 - $db_type");
   ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() multi many require 15 - $db_type");
@@ -6911,7 +6911,7 @@ SKIP: foreach my $db_type (qw(sqlite))
   is(scalar @$nicks, 2, "get_objects() multi many with require 11 - $db_type");
   is($nicks->[0]->nick, 'ntwo', "get_objects() multi many with require 12 - $db_type");
   is($nicks->[1]->nick, 'nfour', "get_objects() multi many with require 13 - $db_type");
-  
+
   $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
   ok($colors && ref $colors && @$colors == 2, "get_objects() multi many with require 14 - $db_type");
   ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() multi many with require 15 - $db_type");
@@ -6959,15 +6959,15 @@ SKIP: foreach my $db_type (qw(sqlite))
         require_objects => [ 'nicks', 'colors', 'other_obj' ],
         multi_many_ok   => 1,
         sort_by         => 't1.name');
-  
+
     is(scalar @$objs, 2, "get_objects() distinct multi many require $i.1 - $db_type");
-  
+
     is($objs->[0]->id, 5, "get_objects() distinct multi many require $i.2 - $db_type");
     is($objs->[1]->id, 2, "get_objects() distinct multi many require $i.3 - $db_type");
-  
+
     ok(!defined $objs->[0]->{'nicks'}, "get_objects() distinct multi many require $i.4 - $db_type");
     ok(!defined $objs->[0]->{'colors'}, "get_objects() distinct multi many require $i.5 - $db_type");
-  
+
     ok(!defined $objs->[1]->{'nicks'}, "get_objects() distinct multi many require $i.6 - $db_type");
     ok(!defined $objs->[1]->{'colors'}, "get_objects() distinct multi many require $i.7 - $db_type");
   }
@@ -6988,15 +6988,15 @@ SKIP: foreach my $db_type (qw(sqlite))
         multi_many_ok   => 1,
         nonlazy         => 1,
         sort_by         => 't1.name');
-  
+
     is(scalar @$objs, 2, "get_objects() distinct multi many require $i.1 - $db_type");
-  
+
     is($objs->[0]->id, 5, "get_objects() distinct multi many require $i.2 - $db_type");
     is($objs->[1]->id, 2, "get_objects() distinct multi many require $i.3 - $db_type");
-  
+
     ok(defined $objs->[0]->{'nicks'}, "get_objects() distinct multi many require $i.4 - $db_type");
     ok(!defined $objs->[0]->{'colors'}, "get_objects() distinct multi many require $i.5 - $db_type");
-  
+
     ok(defined $objs->[1]->{'nicks'}, "get_objects() distinct multi many require $i.6 - $db_type");
     ok(!defined $objs->[1]->{'colors'}, "get_objects() distinct multi many require $i.7 - $db_type");
   }
@@ -7067,7 +7067,7 @@ SKIP: foreach my $db_type (qw(sqlite))
   {
     is($objs->[$i++]->id, $_, "pager 4.$_ - $db_type");
   }
-  
+
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class => 'MySQLiteObject',

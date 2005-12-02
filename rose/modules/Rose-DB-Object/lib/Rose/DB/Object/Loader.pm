@@ -334,7 +334,7 @@ sub make_classes
       {
         $db_args{'driver'} = lc((DBI->parse_dsn($db_args{'dsn'}))[1]);
       }
-      
+
       unless($db_args{'driver'})
       {
         $db_args{'dsn'} =~ /^dbi:(\w+)/i or 

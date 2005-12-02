@@ -230,7 +230,7 @@ SKIP: foreach my $db_type ('mysql')
   $o2->start('5/24/2001');
 
   $o2->other2_obj({ id => 3, name => 'foo' });
-  
+
   sleep(1); # keep the last modified dates from being the same
 
   $o2->last_modified('now');
@@ -256,7 +256,7 @@ SKIP: foreach my $db_type ('mysql')
 
   $o->other2_obj(MyMySQLOtherObject2->new(name => 'bar'));
   $o->save;
-  
+
   $o = MyMySQLObject->new(id => $o->id)->load;
   is($o->other2_obj->name, 'bar', "single column foreign key 3 - $db_type");
 

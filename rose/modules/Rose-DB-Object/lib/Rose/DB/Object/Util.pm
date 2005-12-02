@@ -50,7 +50,7 @@ use constant PK_JOIN => "\0\2,\3\0";
 sub row_id
 {
   my($object) = shift;
-  
+
   my $meta = $object->meta or die "$object has no meta attribute";
 
   return 

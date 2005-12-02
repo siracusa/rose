@@ -55,7 +55,7 @@ sub auto_init_columns { [] }
 sub column_names
 {
   my($self) = shift;
-  
+
   if(@{$self->{'columns'} ||= []})
   {
     return wantarray ? @{$self->{'columns'}} : $self->{'columns'};

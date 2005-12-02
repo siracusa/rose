@@ -265,7 +265,7 @@ sub spec_hash_map
 sub spec_hash
 {
   my($self) = shift;
-  
+
   my $map = $self->spec_hash_map || {};
 
   my %spec;

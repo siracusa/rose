@@ -656,6 +656,9 @@ sub Insert_Code_Names
 
   my $dbi_factor = $Opt{'simple-and-complex'} ? 2 : 1;
 
+  my $simple  = $Opt{'simple'}  || $Opt{'simple-and-complex'};
+  my $complex = $Opt{'complex'} || $Opt{'simple-and-complex'};
+
   foreach my $db_name (@Use_DBs)
   {
     my $db = Rose::DB->new($db_name);
@@ -672,8 +675,8 @@ sub Insert_Code_Names
     {
       foreach my $n (1 .. (int rand(MAX_CODE_NAMES_RANGE) + MIN_CODE_NAMES))
       {
-        $sth->execute($i + 100_000, "CN 1x$n $i");
-        $sth->execute($i + 1_100_000, "CN 1.1x$n $i");
+        $sth->execute($i + 100_000, "CN 1x$n $i")  if($simple);
+        $sth->execute($i + 1_100_000, "CN 1.1x$n $i")  if($complex);
       }
     }
 
@@ -686,8 +689,8 @@ sub Insert_Code_Names
       {
         foreach my $n (1 .. (int rand(MAX_CODE_NAMES_RANGE) + MIN_CODE_NAMES))
         {
-          $sth->execute($i + 200_000, "CN 2x$n $i");
-          $sth->execute($i + 2_200_000, "CN 2.2x$n $i");
+          $sth->execute($i + 200_000, "CN 2x$n $i")  if($simple);
+          $sth->execute($i + 2_200_000, "CN 2.2x$n $i")  if($complex);
         }
       }    
     }
@@ -701,8 +704,8 @@ sub Insert_Code_Names
       {
         foreach my $n (1 .. (int rand(MAX_CODE_NAMES_RANGE) + MIN_CODE_NAMES))
         {
-          $sth->execute($i + 400_000, "CN 4x$n $i");
-          $sth->execute($i + 4_400_000, "CN 4.4x$n $i");
+          $sth->execute($i + 400_000, "CN 4x$n $i")  if($simple);
+          $sth->execute($i + 4_400_000, "CN 4.4x$n $i")  if($complex);
         }
       }
     }
@@ -716,8 +719,8 @@ sub Insert_Code_Names
       {
         foreach my $n (1 .. (int rand(MAX_CODE_NAMES_RANGE) + MIN_CODE_NAMES))
         {
-          $sth->execute($i + 300_000, "CN 3x$n $i");
-          $sth->execute($i + 3_300_000, "CN 3.3x$n $i");
+          $sth->execute($i + 300_000, "CN 3x$n $i")  if($simple);
+          $sth->execute($i + 3_300_000, "CN 3.3x$n $i")  if($complex);
         }
       }
     }
@@ -731,7 +734,7 @@ sub Insert_Code_Names
       {
         foreach my $n (1 .. (int rand(MAX_CODE_NAMES_RANGE) + MIN_CODE_NAMES))
         {
-          $sth->execute($i + 500_000, "CN 5x$n $i");
+          $sth->execute($i + 500_000, "CN 5x$n $i")  if($simple);
           # No "complex" DBI tests
           #$sth->execute($i + 5_500_000, "CN 5.5x$n $i");
         }
@@ -1606,6 +1609,7 @@ EOF
         MyTest::RDBO::Simple::Category::Manager->get_categories(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             name => { like => 'xCat %2%' },
@@ -1716,6 +1720,7 @@ EOF
         MyTest::RDBO::Simple::Product::Manager->get_products(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             name => { like => 'Product %2%' },
@@ -1847,6 +1852,7 @@ EOF
         MyTest::RDBO::Simple::Product::Manager->get_products(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             't1.name' => { like => 'Product %2%' },
@@ -2034,6 +2040,7 @@ EOF
         MyTest::RDBO::Simple::Product::Manager->get_products(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             't1.name' => { like => 'Product 200%' },
@@ -2196,6 +2203,7 @@ EOF
         MyTest::RDBO::Simple::Product::Manager->get_products(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             name => { like => 'Product %2%' },
@@ -2306,6 +2314,7 @@ EOF
         MyTest::RDBO::Simple::Category::Manager->get_categories_iterator(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             name => { like => 'xCat %2%' },
@@ -2447,6 +2456,7 @@ EOF
         MyTest::RDBO::Simple::Product::Manager->get_products_iterator(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             'name' => { like => 'Product %2%' },
@@ -2596,6 +2606,7 @@ EOF
         MyTest::RDBO::Simple::Product::Manager->get_products_iterator(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             't1.name' => { like => 'Product %2%' },
@@ -2729,7 +2740,7 @@ EOF
         MyTest::RDBO::Simple::Category->new(
           db => $DB, 
           id => $i + 100_000);
-      $c->delete;
+      $c->delete(prepare_cached => !(1..1));
       $i++;
     }
   }
@@ -2895,7 +2906,7 @@ EOF
         name        => "Product $i",
         category_id => 2,
         status      => 'temp',
-        published   => \'2005-01-02 12:34:56' });
+        published   => \'2005-01-02 12:34:56' }); #\'
       $i++;
     }
   }
@@ -2911,7 +2922,7 @@ EOF
       my $c = 
         MyTest::RDBO::Complex::Category->new(
           db  => $DB,
-          id  => 1 + 100_000);
+          id  => 1 + 1_100_000);
 
       $c->load;
 
@@ -2980,7 +2991,7 @@ EOF
       my $p =
         MyTest::RDBO::Complex::Product->new(
           db => $DB, 
-          id => 1 + 100_000);
+          id => 1 + 1_100_000);
 
       $p->load;
 
@@ -3330,7 +3341,7 @@ EOF
     {
       my $p = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
       $p->name($p->name . ' updated');
-      $p->published(\'2004-01-02 12:34:55');
+      $p->published(\'2004-01-02 12:34:55'); #\'
       $p->update;
       $i++;
     }
@@ -3350,6 +3361,7 @@ EOF
         MyTest::RDBO::Complex::Category::Manager->get_categories(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             name => { like => 'xCat %2%' },
@@ -3425,6 +3437,7 @@ EOF
         MyTest::RDBO::Complex::Product::Manager->get_products(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             name => { like => 'Product %2%' },
@@ -3500,6 +3513,7 @@ EOF
         MyTest::RDBO::Complex::Product::Manager->get_products(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             't1.name' => { like => 'Product %2%' },
@@ -3687,6 +3701,7 @@ EOF
         MyTest::RDBO::Complex::Product::Manager->get_products(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             't1.name' => { like => 'Product 200%' },
@@ -3812,6 +3827,7 @@ EOF
         MyTest::RDBO::Complex::Product::Manager->get_products(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             name => { like => 'Product %2%' },
@@ -3896,6 +3912,7 @@ EOF
         MyTest::RDBO::Complex::Category::Manager->get_categories_iterator(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             name => { like => 'xCat %2%' },
@@ -3995,6 +4012,7 @@ EOF
         MyTest::RDBO::Complex::Product::Manager->get_products_iterator(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             'name' => { like => 'Product %2%' },
@@ -4094,6 +4112,7 @@ EOF
         MyTest::RDBO::Complex::Product::Manager->get_products_iterator(
           db => $DB,
           query_is_sql => 1,
+          prepare_cached => 1,
           query =>
           [
             't1.name' => { like => 'Product %2%' },
@@ -4227,7 +4246,7 @@ EOF
         MyTest::RDBO::Complex::Product->new(
           db => $DB, 
           id => $i + 1_100_000);
-      $p->delete;
+      $p->delete(prepare_cached => !(1..1));
       $i++;
     }
   }
