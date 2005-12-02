@@ -7,17 +7,14 @@ our @ISA = qw(Rose::DB::Object::Metadata::Column::Integer);
 
 our $VERSION = '0.55';
 
-__PACKAGE__->add_common_method_maker_argument_names
-(
-  qw(allow_numbers)
-);
-
 foreach my $type (__PACKAGE__->available_method_types)
 {
   __PACKAGE__->method_maker_type($type => 'enum');
 }
 
 sub type { 'enum' }
+
+*values = \&Rose::DB::Object::Metadata::Column::Scalar::check_in;
 
 sub init_with_dbi_column_info
 {
