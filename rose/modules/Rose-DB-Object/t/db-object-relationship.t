@@ -6190,6 +6190,8 @@ EOF
 
     MyInformixObject->meta->table('rose_db_object_test');
 
+    MyInformixObject->meta->dbi_prepare_cached(0);
+
     MyInformixObject->meta->columns
     (
       'name',
