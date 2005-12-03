@@ -1957,16 +1957,31 @@ sub make_manager_method_from_sql
   }
   else { %args = @_ }
 
-  my $object_class = $args{'object_class'} || $class->object_class ||
-    Carp::croak "Missing object class";
+  my $named_args = delete $args{'params'};
 
   my $method = delete $args{'method'} or  Carp::croak "Missing method name";
+  my $code;
 
-  my $code = sub { shift->get_objects_from_sql(%args, args => \@_) };
+  $args{'_methods'} = {}; # Will fill in on first run
+
+  if($named_args)
+  {    
+    my @params = @$named_args; # every little bit counts
+
+    $code = sub 
+    {
+      my($self, %np) = @_;
+      $self->get_objects_from_sql(%args, args => [ map { $np{$_} } @params ]);
+    };
+  }
+  else
+  {
+    $code = sub { shift->get_objects_from_sql(%args, args => \@_) };
+  }
 
   no strict 'refs';
-  *{"${object_class}::$method"} = $code;
-  
+  *{"${class}::$method"} = $code;
+
   return $code;
 }
 
@@ -1998,7 +2013,7 @@ sub get_objects_from_sql
   my $methods   = $args{'_methods'};
   my $exec_args = $args{'args'} || [];
 
-  my $have_methods = $args{'_methods'} ? 1 : 0;
+  my $have_methods = ($args{'_methods'} && %{$args{'_methods'}}) ? 1 : 0;
 
   my $db  = delete $args{'db'} || $object_class->init_db;
   my $dbh = delete $args{'dbh'};
@@ -2039,9 +2054,9 @@ sub get_objects_from_sql
       {
         foreach my $col (keys %$row)
         {
-          if(my $method = $meta->column_mutator_method_name($col))
+          if($meta->column($col))
           {
-            $methods->{$col} = $method;
+            $methods->{$col} = $meta->column_mutator_method_name($col);
           }
           elsif($object_class->can($col))
           {
@@ -2729,6 +2744,10 @@ The class name of the L<Rose::DB::Object>-derived objects to be fetched.  Defaul
 
 If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will fetch the objects.  If omitted, the default value is determined by the L<dbi_prepare_cached|/dbi_prepare_cached> class method.
 
+=item C<share_db BOOL>
+
+If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it is constructed.  Defaults to true.
+
 =item C<sql SQL>
 
 The SQL query string.  This parameter is required.
@@ -3003,7 +3022,7 @@ This is the typical evolution of an object manager method.  It starts out as bei
 
 =item B<make_manager_method_from_sql [ NAME =E<gt> SQL | PARAMS ]>
 
-Create a class method that will fetch objects using a custom SQL query.  Pass either a method name and an SQL query string or name/value parameters as arguments.  Valid parameters are:
+Create a class method in the calling class that will fetch objects using a custom SQL query.  Pass either a method name and an SQL query string or name/value parameters as arguments.  Valid parameters are:
 
 =over 4
 
@@ -3015,6 +3034,10 @@ A L<Rose::DB>-derived object used to access the database.  If omitted, one will 
 
 The class name of the L<Rose::DB::Object>-derived objects to be fetched.  Defaults to L<object_class|/object_class>.
 
+=item C<params ARRAYREF>
+
+If you want the method that will be created to accept named parameters (name/value pairs) instead of positional parameters, provide the desired names of the parameters in the order that they should be passed to the call to  L<DBI>'s L<execute|DBI/execute> method.
+
 =item C<method NAME>
 
 The name of the method to be created.  This parameter is required.
@@ -3022,6 +3045,10 @@ The name of the method to be created.  This parameter is required.
 =item C<prepare_cached BOOL>
 
 If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will fetch the objects.  If omitted, the default value is determined by the L<dbi_prepare_cached|/dbi_prepare_cached> class method.
+
+=item C<share_db BOOL>
+
+If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it is constructed.  Defaults to true.
 
 =item C<sql SQL>
 
@@ -3031,7 +3058,7 @@ The SQL query string.  This parameter is required.
 
 Each column returned by the SQL query must be either a column or method name in C<object_class>.  Column names take precedence in the case of a conflict.
 
-Arguments to the created method be passed to L<DBI>'s L<execute|/execute> method when the query is run.  The number of items in this array must exactly match the number of placeholders in the SQL query.
+Arguments passed to the created method be passed to L<DBI>'s L<execute|/execute> method when the query is run.  The number of arguments must exactly match the number of placeholders in the SQL query.  Positional parameters are required unless the C<params> parameter is used.  (See description above.)
 
 Returns a code reference to the method created.
 
@@ -3041,18 +3068,35 @@ Example:
     
     use base 'Rose::DB::Object::Manager';
     ...
+    
+    # Make method that takes no arguments
     __PACKAGE__->make_manager_method_from_sql(get_odd_products =><<"EOF");
     SELECT * FROM products WHERE sku % 2 != 0 
     EOF
 
+    # Make method that takes one positional parameter
     __PACKAGE__->make_manager_method_from_sql(get_new_products =><<"EOF");
     SELECT * FROM products WHERE release_date > ?
     EOF
+
+    # Make method that takes named parameters
+    __PACKAGE__->make_manager_method_from_sql(
+      method => 'get_named_products',
+      params => [ qw(type name) ],
+      sql    => <<"EOF");
+    SELECT * FROM products WHERE type = ? AND name LIKE ?
+    EOF
+    
     ...
 
     $products = Product::Manager->get_odd_products();
 
     $products = Product::Manager->get_new_products('2005-01-01');
+
+    $products = 
+      Product::Manager->get_named_products(
+        name => 'Kite%', 
+        type => 'toy');
 
 =item B<object_class>
 
