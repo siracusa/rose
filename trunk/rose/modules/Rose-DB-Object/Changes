@@ -1,5 +1,10 @@
-0.55 (12.01.2005) - John Siracusa <siracusa@mindspring.com>
+0.55 (12.02.2005) - John Siracusa <siracusa@mindspring.com>
 
+    * Added get_objects_from_sql() and make_manager_method_from_sql()
+      Manager methods.
+    * Made the use of prepare_cached() optional everywhere.  It's on
+      my default in Rose::DB::Object, but off by default in Manager.
+      Class data determins the defaults.
     * Added enum column type.
 
 0.54 (11.30.2005) - John Siracusa <siracusa@mindspring.com>
