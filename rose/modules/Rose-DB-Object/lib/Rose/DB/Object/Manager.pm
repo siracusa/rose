@@ -3036,7 +3036,7 @@ The class name of the L<Rose::DB::Object>-derived objects to be fetched.  Defaul
 
 =item C<params ARRAYREF>
 
-If you want the method that will be created to accept named parameters (name/value pairs) instead of positional parameters, provide the desired names of the parameters in the order that they should be passed to the call to  L<DBI>'s L<execute|DBI/execute> method.
+To allow the method that will be created to accept named parameters (name/value pairs) instead of positional parameters, provide a reference to an array of parameter names in the order that they should be passed to the call to L<DBI>'s L<execute|DBI/execute> method.
 
 =item C<method NAME>
 
@@ -3058,7 +3058,7 @@ The SQL query string.  This parameter is required.
 
 Each column returned by the SQL query must be either a column or method name in C<object_class>.  Column names take precedence in the case of a conflict.
 
-Arguments passed to the created method be passed to L<DBI>'s L<execute|/execute> method when the query is run.  The number of arguments must exactly match the number of placeholders in the SQL query.  Positional parameters are required unless the C<params> parameter is used.  (See description above.)
+Arguments passed to the created method will be passed to L<DBI>'s L<execute|/execute> method when the query is run.  The number of arguments must exactly match the number of placeholders in the SQL query.  Positional parameters are required unless the C<params> parameter is used.  (See description above.)
 
 Returns a code reference to the method created.
 

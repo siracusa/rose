@@ -11,7 +11,7 @@ BEGIN
 
   if($@ || $DBD::SQLite::VERSION < 1.08)
   {
-    Test::More->import(skip_all => 'Missing DBD::SQLite');
+    Test::More->import(skip_all => 'Missing DBD::SQLite 1.08+');
   }
   else
   {

@@ -48,7 +48,7 @@ Rose::DB::Object::Metadata::Column::Enum - Enumerated column metadata.
 
 =head1 DESCRIPTION
 
-Objects of this class store and manipulate metadata for enum columns in a database.  Column metadata objects store information about columns (data type, size, etc.) and are responsible for creating object methods that manipulate column values.  An enum column accepts a restricted set of string values which are usually stored as sequential integers in the database.
+Objects of this class store and manipulate metadata for enum columns.  Column metadata objects store information about columns (data type, size, etc.) and are responsible for creating object methods that manipulate column values.  An enum column accepts a restricted set of string values which are usually stored as sequential integers in the database.
 
 This class inherits from L<Rose::DB::Object::Metadata::Column::Scalar>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::Scalar> documentation for more information.
 
@@ -82,7 +82,7 @@ Returns "enum".
 
 =item B<values [VALUES]>
 
-Get or set a reference to an array of valid column values.  This is attribute is required.
+Get or set a reference to an array of valid column values.  This attribute is required.
 
 =back
 
