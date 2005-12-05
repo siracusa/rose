@@ -1,3 +1,7 @@
+0.57 (12.04.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed broken custom convention manager support in the loader.
+
 0.56 (12.03.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Updated required Rose::DB version.  The 0.55 release was incorrect.
