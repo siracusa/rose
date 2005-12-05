@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 14) + 3;
+use Test::More tests => 1 + (5 * 15) + 3;
 
 BEGIN 
 {
@@ -21,6 +21,19 @@ our %Reserved_Words;
 # Tests
 #
 
+FOO:
+{
+  package MyCM;
+
+  @MyCM::ISA = qw(Rose::DB::Object::ConventionManager);
+
+  sub auto_foreign_key_name 
+  {
+    $JCS::Called_Custom_CM{$_[0]->parent->class}++;
+    shift->SUPER::auto_foreign_key_name(@_);
+  }
+}
+
 my $i = 1;
 
 foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
@@ -29,7 +42,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     unless($Have{$db_type})
     {
-      skip("$db_type tests", 14 + scalar @{$Reserved_Words{$db_type} ||= []});
+      skip("$db_type tests", 15 + scalar @{$Reserved_Words{$db_type} ||= []});
     }
   }
 
@@ -44,13 +57,19 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 
   #$Rose::DB::Object::Metadata::Debug = 1;
 
+  %JCS::Called_Custom_CM = ();
+
   my $loader = 
     Rose::DB::Object::Loader->new(
       db           => Rose::DB->new,
       class_prefix => $class_prefix);
 
+  $loader->convention_manager($i % 2 ? 'MyCM' : MyCM->new);
+
   my @classes = $loader->make_classes(include_tables => $Include_Tables . 
                                       ($db_type eq 'mysql' ? '|read' : ''));
+
+  is(scalar keys %JCS::Called_Custom_CM, 3, "custom convention manager - $db_type");
 
   if($db_type eq 'informix')
   {

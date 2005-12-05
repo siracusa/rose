@@ -13,7 +13,7 @@ use Rose::DB::Object::ConventionManager;
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.54';
+our $VERSION = '0.57';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -118,9 +118,23 @@ sub convention_manager
   {
     my $cm = shift;
 
-    unless(UNIVERSAL::isa($cm, 'Rose::DB::Object::ConventionManager'))
+    if(ref $cm)
     {
-      croak "Not a Rose::DB::Object::ConventionManager-derived object: $cm";
+      unless(UNIVERSAL::isa($cm, 'Rose::DB::Object::ConventionManager'))
+      {
+        croak "Not a Rose::DB::Object::ConventionManager-derived object: $cm";
+      }
+
+      $self->{'convention_manager'} = $cm;
+    }
+    else
+    {
+      unless(UNIVERSAL::isa($cm, 'Rose::DB::Object::ConventionManager'))
+      {
+        croak "Not a Rose::DB::Object::ConventionManager-derived class: $cm";
+      }
+
+      $self->{'convention_manager'} = $cm->new;
     }
   }
 
@@ -406,6 +420,8 @@ sub make_classes
   my %list_args;
   $list_args{'include_views'} = 1  if($include_views);
 
+  my $cm_class = ref $cm;
+
   # Iterate over tables, creating RDBO classes for each
   foreach my $table ($db->list_tables(%list_args))
   {
@@ -426,6 +442,7 @@ sub make_classes
     my $meta = $obj_class->meta;
 
     $meta->table($table);
+    $meta->convention_manager($cm_class->new);
     $meta->auto_initialize(%args);
 
     push(@classes, $obj_class);
@@ -630,9 +647,9 @@ Returns a list (in list context) or reference to an array (in scalar context) of
 
 Get or set the prefix affixed to all class names created by the L<make_classes|/make_classes> method.  If PREFIX doesn't end in "::", it will be added automatically.
 
-=item B<convention_manager [MANAGER]>
+=item B<convention_manager [ CLASS | MANAGER ]>
 
-Get or set the L<Rose::DB::Object::ConventionManager>-derived object used during the L<auto-initialization|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> process for each class created by the L<make_classes|/make_classes> method.  Defaults to a new L<Rose::DB::Object::ConventionManager> object.
+Get or set the L<Rose::DB::Object::ConventionManager>-derived class name or object to be used during the L<auto-initialization|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> process for each class created by the L<make_classes|/make_classes> method.  Returns a L<Rose::DB::Object::ConventionManager>-derived object, which defaults to a new L<Rose::DB::Object::ConventionManager> object.
 
 =item B<db [DB]>
 
