@@ -30,7 +30,7 @@ our %EXPORT_TAGS =
   unset_state => [ qw(unset_state_in_db unset_state_loading unset_state_saving) ],
 );
 
-our $VERSION = '0.02';
+our $VERSION = '0.58';
 
 sub is_in_db   { shift->{STATE_IN_DB()}   }
 sub is_loading { shift->{STATE_LOADING()} }
@@ -141,7 +141,7 @@ will cause the following function names to be imported:
 
 The 'unset_state' tag:
 
-    use Rose::DB::Object::Util qw(:set_state);
+    use Rose::DB::Object::Util qw(:unset_state);
 
 will cause the following function names to be imported:
 
