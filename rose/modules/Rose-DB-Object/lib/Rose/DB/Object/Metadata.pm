@@ -1254,8 +1254,8 @@ sub register_class
 
   my $db = $self->db;
 
-  my $catalog = $db->catalog;
-  my $schema  = $db->schema;
+  my $catalog = $self->select_catalog($db);
+  my $schema  = $self->select_schema($db);
 
   $catalog  = NULL_CATALOG  unless(defined $catalog);
   $schema   = NULL_SCHEMA   unless(defined $schema);
@@ -2005,7 +2005,8 @@ sub fq_primary_key_sequence_names
     {
       if(defined $seq && index($seq, '.') < 0)
       {
-        $seq = $db->quote_identifier($db->catalog, $db->schema, $seq);
+        $seq = $db->quote_identifier($self->select_catalog($db),
+                                     $self->select_schema($db), $seq);
       }
     }
 
@@ -2097,8 +2098,11 @@ sub primary_key_sequence_names
     # with type information.
     if($column->type eq 'scalar')
     {
-      $seq = _sequence_name($db, $self->select_catalog, 
-                            $self->select_schema, $table, $column);
+      $seq = _sequence_name($db, 
+                            $self->select_catalog($db), 
+                            $self->select_schema($db), 
+                            $table, 
+                            $column);
     }
     # Set auto-created serial column sequence names for Pg only
     elsif($column->type eq 'serial' && $db->driver eq 'pg')
@@ -2345,14 +2349,18 @@ sub fq_table_sql
 {
   my($self, $db) = @_;
   return $self->{'fq_table_sql'}{$db->{'id'}} ||= 
-    join('.', grep { defined } ($db->catalog, $db->schema, $db->quote_table_name($self->table)));
+    join('.', grep { defined } ($self->select_catalog($db), 
+                                $self->select_schema($db), 
+                                $db->quote_table_name($self->table)));
 }
 
 sub fq_table
 {
   my($self, $db) = @_;
   return $self->{'fq_table'}{$db->{'id'}} ||=
-    join('.', grep { defined } ($db->catalog, $db->schema, $self->table));
+    join('.', grep { defined } ($self->select_catalog($db), 
+                                $self->select_schema($db), 
+                                $self->table));
 }
 
 sub load_all_sql
@@ -3646,6 +3654,10 @@ If an object was read from the database the specified number of seconds ago or e
 
 A L<cached_objects_expire_in|/cached_objects_expire_in> value of undef or zero means that nothing will ever expire from the object cache for the L<Rose::DB::Object::Cached>-derived class associated with this metadata object.  This is the default.
 
+=item B<catalog [CATALOG]>
+
+Get or set the database catalog for this L<class|/class>.  This setting will B<override> any L<setting|Rose::DB/catalog> in the L<db|Rose::DB::Object/db> object.  Use this method only if you know that the L<class|/class> will always point to a specific catalog, regardless of what the L<Rose::DB>-derived database handle object specifies.
+
 =item B<class [CLASS]>
 
 Get or set the L<Rose::DB::Object>-derived class associated with this metadata object.  This is the class where the accessor methods for each column will be created (by L<make_methods|/make_methods>).
@@ -3995,6 +4007,10 @@ If both NAME and HASHREF are passed, then the combination of NAME and HASHREF mu
 Get or set the full list of relationships.  If ARGS are passed, the relationship list is cleared and then ARGS are passed to the L<add_relationships|/add_relationships> method.
 
 Returns a list of relationship objects in list context, or a reference to an array of relationship objects in scalar context.
+
+=item B<schema [SCHEMA]>
+
+Get or set the database schema for this L<class|/class>.  This setting will B<override> any L<setting|Rose::DB/schema> in the L<db|Rose::DB::Object/db> object.  Use this method only if you know that the L<class|/class> will always point to a specific schema, regardless of what the L<Rose::DB>-derived database handle object specifies.
 
 =item B<table [TABLE]>
 
