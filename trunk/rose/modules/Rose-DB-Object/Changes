@@ -4,6 +4,7 @@
       key columns and primary keys with one or more non-sequence-
       based columns.
     * TODD: schema override, test db migration with pk sequences.
+    * TODO: summarize default conventions.
 
 0.57 (12.04.2005) - John Siracusa <siracusa@mindspring.com>
 
