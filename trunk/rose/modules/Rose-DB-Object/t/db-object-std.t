@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 183;
+use Test::More tests => 185;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 97)  unless($HAVE_PG);
+  skip("Postgres tests", 99)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -147,9 +147,16 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   eval { $o->meta->alias_column(nonesuch => 'foo') };
   ok($@, 'alias_column() nonesuch');
 
-  my $new_id;
+  my($new_id, $old_id);
 
-  eval { $new_id = $o->meta->generate_primary_key_values($o->db) };
+  $old_id = $o->id;
+
+  eval { $new_id = $o->meta->generate_primary_key_value($o->db) };
+  ok(defined $new_id && $new_id > $o->id, 'generate_primary_key_value()');
+
+  $old_id = $new_id;
+
+  eval { ($new_id) = $o->meta->generate_primary_key_values($o->db) };
   ok(defined $new_id && $new_id > $o->id, 'generate_primary_key_values()');
 }
 

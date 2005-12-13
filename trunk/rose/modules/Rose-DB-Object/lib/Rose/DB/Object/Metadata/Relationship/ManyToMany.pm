@@ -10,7 +10,7 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.51';
+our $VERSION = '0.57';
 
 __PACKAGE__->default_auto_method_types(qw(get_set_on_save add_on_save));
 
@@ -634,9 +634,9 @@ Get or set the name of the "many to one" relationship or foreign key in L<map_cl
 
 In the L<example|EXAMPLE> above, the value of L<map_from> would be "color" when defining the "many to many" relationship in the C<Widget> class, or "widget" when defining the "many to many" relationship in the C<Color> class.  Neither of these settings is necessary in the example because the C<WidgetColorMap> class has one foreign key that points to each class, so there is no ambiguity.
 
-=item B<query_args [HASHREF]>
+=item B<query_args [ARRAYREF]>
 
-Get or set a reference to a hash of name/value arguments to add to the L<query|Rose::DB::Object::Manager/query> argument to the L<manager_method|/manager_method> when fetching objects.
+Get or set a reference to an array of query arguments to add to the L<query|Rose::DB::Object::Manager/query> passed to the L<manager_method|/manager_method> when fetching objects.
 
 This can be used to limit the objects fetched via this relationship.  For example, modifying the L<example|/EXAMPLE> above:
 
@@ -646,7 +646,7 @@ This can be used to limit the objects fetched via this relationship.  For exampl
     {
       type       => 'many to many',
       map_class  => 'WidgetColorMap',
-      query_args => { name => { like => '%e%' } },
+      query_args => [ name => { like => '%e%' } ],
     },
   );
 
@@ -655,10 +655,6 @@ This would ensure that a C<Widget>'s C<colors()> would be limited to those that 
 =item B<share_db [BOOL]>
 
 Get or set a boolean flag that indicates whether or not all of the classes involved in fetching objects via this relationship (including the objects themselves) will share the same L<Rose::DB>-derived L<db|Rose::DB::Object/db> object.  Defaults to true.
-
-=item C<query_args>
-
-A reference to an array of arguments added to the value of the C<query> parameter passed to the call to C<manager_class>'s C<manager_method> class method.
 
 =item B<type>
 
