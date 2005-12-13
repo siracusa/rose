@@ -1217,6 +1217,7 @@ sub initialize
   $self->retry_deferred_relationships;
 
   $self->refresh_lazy_column_tracking;
+  $self->refresh_primary_key_sequence_names(db => $self->class->init_db);
 
   unless($args{'stay_connected'})
   {
@@ -1914,20 +1915,39 @@ sub generate_primary_key_values
     return $code->($self, $db);
   }
 
-  my $id;
+  my @ids;
 
-  if(my $seq = $self->fq_primary_key_sequence_name(db => $db))
+  my $seqs = $self->fq_primary_key_sequence_names(db => $db);
+
+  if($seqs && @$seqs)
   {
-    $id = $db->next_value_in_sequence($seq);
+    my $i = 0;
 
-    unless($id)
+    foreach my $seq (@$seqs)
     {
-      $self->error("Could not generate primary key for ", $self->class, 
-                   " by selecting the next value in the sequence '$seq' - $@");
-      return undef;
+      $i++;
+
+      unless(defined $seq)
+      {
+        push(@ids, undef);
+        next;
+      }
+
+      my $id = $db->next_value_in_sequence($seq);
+
+      unless($id)
+      {
+        $self->error("Could not generate primary key for ", $self->class, 
+                     " column '", ($self->primary_key_column_names)[$i],
+                     "' by selecting the next value in the sequence ",
+                     "'$seq' - $@");
+        return undef;
+      }
+
+      push(@ids, $id);
     }
 
-    return $id;
+    return @ids;
   }
   else
   {
@@ -1935,7 +1955,11 @@ sub generate_primary_key_values
   }
 }
 
-*generate_primary_key_value = \&generate_primary_key_values;
+sub generate_primary_key_value 
+{
+  my @ids = shift->generate_primary_key_values(@_);
+  return $ids[0];
+}
 
 sub generate_primary_key_placeholders
 {
@@ -1943,70 +1967,109 @@ sub generate_primary_key_placeholders
   return $db->generate_primary_key_placeholders(scalar @{$self->primary_key_column_names});
 }
 
-sub fq_primary_key_sequence_name
+sub fq_primary_key_sequence_names
 {
   my($self, %args) = @_;
 
   my $db_id = $args{'db'}{'id'} || ($self->{'db_id'} ||= $self->init_db_id);
 
-  if(defined $self->{'fq_primary_key_sequence_name'}{$db_id})
+  if(defined $self->{'fq_primary_key_sequence_names'}{$db_id})
   {
-    return $self->{'fq_primary_key_sequence_name'}{$db_id};
+    my $seqs = $self->{'fq_primary_key_sequence_names'}{$db_id} or return;
+    return wantarray ? @$seqs : $seqs;
   }
 
-  if(my $seq = $self->primary_key_sequence_name(%args))
-  {
-    $self->primary_key->sequence_name($seq);
+  my $db = $args{'db'} or
+    die "Cannot generate fully-qualified primary key sequence name without db argument";
 
-    my $db = $args{'db'} or
-      die "Cannot generate fully-qualified primary key sequence name without db argument";
+  my @seqs = $self->primary_key_sequence_names($db);
+
+  if(@seqs)
+  {
+    $self->primary_key->sequence_names(@seqs);
 
     # Add schema and catalog information only if it isn't present
     # XXX: crappy check - just looking for a '.'
-    return $self->{'fq_primary_key_sequence_name'}{$db->{'id'}} = 
-       (index($seq, '.') > 0) ? $seq : 
-       $db->quote_identifier($db->catalog, $db->schema, $seq);
+    foreach my $seq (@seqs)
+    {
+      if(defined $seq && index($seq, '.') < 0)
+      {
+        $seq = $db->quote_identifier($db->catalog, $db->schema, $seq);
+      }
+    }
+
+    $self->{'fq_primary_key_sequence_names'}{$db->{'id'}} = \@seqs;
+    return wantarray ? @seqs : \@seqs;
   }
 
   return undef;
 }
 
-sub primary_key_sequence_name
+*refresh_primary_key_sequence_names = \&fq_primary_key_sequence_names;
+
+sub primary_key_sequence_names
 {
   my($self) = shift;
 
-  my $db_id = $self->{'db_id'} ||= $self->init_db_id;
+  my $db;
 
-  if(@_ == 1)
+  $db = shift  if(UNIVERSAL::isa($_[0], 'Rose::DB'));
+
+  my $db_id = $self->{'db_id'} ||= ($db ? $db->{'id'} : $self->init_db_id);
+
+  if(@_)
   {
-    $self->{'fq_primary_key_sequence_name'}{$db_id} = undef;
-    return $self->{'primary_key_sequence_name'}{$db_id} = shift;
+    $self->{'fq_primary_key_sequence_names'}{$db_id} = undef;
+    my $ret = $self->{'primary_key_sequence_names'}{$db_id} = 
+      (@_ == 1 && ref $_[0]) ? $_[0] : [ @_ ];
+    return wantarray ? @$ret : $ret;
   }
 
-  if($self->{'primary_key_sequence_name'}{$db_id})
+  if($self->{'primary_key_sequence_names'}{$db_id})
   {
-    return $self->{'primary_key_sequence_name'}{$db_id};
+    my $ret = $self->{'primary_key_sequence_names'}{$db_id};
+    return wantarray ? @$ret : $ret;
   }
 
-  if(my $seq = $self->primary_key->sequence_name)
+  my @pks  = $self->primary_key_column_names;
+  my $seqs = $self->primary_key->sequence_names;
+  my @seqs;
+
+  if($seqs)
   {
-    return $self->{'primary_key_sequence_name'}{$db_id} = $seq;
+    if(@pks == grep { defined } @$seqs)
+    {
+      $self->{'primary_key_sequence_names'}{$db_id} = $seqs;
+      return wantarray ? @$seqs : $seqs;
+    }
+    else
+    {
+      @seqs = @$seqs;
+    }
   }
 
-  my @pk_columns = $self->primary_key_column_names;
-
-  return undef  if(@pk_columns > 1);
-
-  my %args = @_;
-
-  my $db = $args{'db'} or
+  unless($db)
+  {
     die "Cannot generate primary key sequence name without db argument";
+  }
 
   my $table = $self->table or 
     Carp::croak "Cannot generate primary key sequence name without table name";
 
-  return $self->{'primary_key_sequence_name'}{$db->{'id'}} = 
-    $db->auto_sequence_name(table => $table, column => $pk_columns[0]);    
+  my $i = 0;
+
+  foreach my $column ($self->primary_key_columns)
+  {
+    next  unless($column->type eq 'serial' ||  (@pks == 1 &&
+                 $db->driver eq 'pg' && $column->type eq 'scalar'));
+    $seqs[$i++] ||= $db->auto_sequence_name(table => $table, column => $column);
+  }
+
+  if($self->is_initialized)
+  {
+    $self->{'primary_key_sequence_names'}{$db->{'id'}} = \@seqs;
+  }
+  return wantarray ? @seqs : \@seqs;
 }
 
 sub column_names
@@ -2554,8 +2617,8 @@ sub _clear_table_generated_values
   $self->{'load_sql'}          = undef;
   $self->{'load_all_sql'}      = undef;
   $self->{'delete_sql'}        = undef;
-  $self->{'fq_primary_key_sequence_name'} = undef;
-  $self->{'primary_key_sequence_name'} = undef;
+  $self->{'fq_primary_key_sequence_names'} = undef;
+  $self->{'primary_key_sequence_names'} = undef;
   $self->{'insert_sql'}        = undef;
   $self->{'insert_sql_with_inlining_start'} = undef;
   $self->{'update_sql_prefix'} = undef;
@@ -3672,13 +3735,15 @@ Returns a list of foreign key objects in list context, or a reference to an arra
 
 =item B<generate_primary_key_value DB>
 
-This method is an alias for L<generate_primary_key_values|/generate_primary_key_values>.
+This method is the same as L<generate_primary_key_values|/generate_primary_key_values>.
 
 =item B<generate_primary_key_values DB>
 
-Given the L<Rose::DB>-derived object DB, generate a new primary key column value for the table described by this metadata object.  If a L<primary_key_generator|/primary_key_generator> is defined, it will be called (passed this metadata object and the DB) and its value returned.
+Given the L<Rose::DB>-derived object DB, generate and return a list of new primary key column values for the table described by this metadata object.
 
-If no L<primary_key_generator|/primary_key_generator> is defined, a new primary key value will be generated, if possible, using the native facilities of the current database.  Note that this may not be possible for databases that auto-generate such values only after an insertion.  In that case, undef will be returned.
+If a L<primary_key_generator|/primary_key_generator> is defined, it will be called (passed this metadata object and the DB) and its value returned.
+
+If no L<primary_key_generator|/primary_key_generator> is defined, new primary key values will be generated, if possible, using the native facilities of the current database.  Note that this may not be possible for databases that auto-generate such values only after an insertion.  In that case, undef will be returned.
 
 =item B<init_convention_manager>
 
@@ -3828,11 +3893,11 @@ Get or set the subroutine used to generate new primary key values for the primar
 
 The subroutine is expected to return a list of values, one for each primary key column.  The values must be in the same order as the corresponding columns returned by L<primary_key_columns|/primary_key_columns>. (i.e., the first value belongs to the first column returned by L<primary_key_columns|/primary_key_columns>, the second value belongs to the second column, and so on.)
 
-=item B<primary_key_sequence_name [NAME]>
+=item B<primary_key_sequence_names [NAMES]>
 
-Get or set the name of the sequence used to populate the primary key column.  This method is only applicable to single-column primary keys.  Multi-column keys must set a custom L<primary_key_generator|/primary_key_generator>.
+Get or set the list of database sequence names used to populate the primary key columns.  The sequence names must be in the same order as the L<primary_key_columns|/primary_key_columns>.  NAMES may be a list or reference to an array of sequence names.  Returns a list (in list context) or reference to the array (in scalar context) of sequence names.
 
-If you do not set this value, it will be derived for you based on the name of the first primary key column.  In the common case, you do not need to be concerned about this method.  If you are using the built-in SERIAL or AUTO_INCREMENT type in your database for your single-column primary key, everything should just work.
+If you do not set this value, it will be derived for you based on the name of the primary key columns.  In the common case, you do not need to be concerned about this method.  If you are using the built-in SERIAL or AUTO_INCREMENT types in your database for your primary key columns, everything should just work.
 
 =item B<relationship NAME [, RELATIONSHIP | HASHREF]>
 

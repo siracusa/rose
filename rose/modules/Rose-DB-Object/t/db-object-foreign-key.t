@@ -667,7 +667,7 @@ EOF
     MyPgObject->meta->columns
     (
       'name',
-      id       => { primary_key => 1 },
+      id       => { primary_key => 1, type => 'serial' },
       ($PG_HAS_CHKPASS ? (password => { type => 'chkpass' }) : ()),
       flag     => { type => 'boolean', default => 1 },
       flag2    => { type => 'boolean' },
