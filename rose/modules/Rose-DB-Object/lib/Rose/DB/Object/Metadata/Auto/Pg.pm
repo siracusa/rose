@@ -9,7 +9,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.012';
+our $VERSION = '0.58';
 
 # Other useful columns, not selected for now
 #   pg_get_indexdef(i.oid) AS indexdef
