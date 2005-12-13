@@ -45,7 +45,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
   ok($o->save, "save() 1 - $db_type");
 
-  is($o->meta->primary_key->sequence_name, 'rose_db_object_test_id_seq', 
+  is($o->meta->primary_key->sequence_names->[0], 'rose_db_object_test_id_seq', 
      "pk sequence name - $db_type");
 
   ok(is_in_db($o), "is_in_db - $db_type");

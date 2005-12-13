@@ -735,15 +735,15 @@ sub insert
 
   unless(@pk_values == @pk_methods)
   {
-    @pk_values = $meta->generate_primary_key_values($db);
+    my @generated_pk_values = $meta->generate_primary_key_values($db);
 
-    unless(@pk_values)
+    unless(@generated_pk_values)
     {
-      @pk_values = $meta->generate_primary_key_placeholders($db);
+      @generated_pk_values = $meta->generate_primary_key_placeholders($db);
       $using_pk_placeholders = 1;
     }
 
-    unless(@pk_values == @pk_methods)
+    unless(@generated_pk_values == @pk_methods)
     {
       my $s = (@pk_values == 1 ? '' : 's');
       $self->error("Could not generate primary key$s for column$s " .
@@ -755,9 +755,13 @@ sub insert
     my @pk_set_methods = map { $meta->column_mutator_method_name($_) } 
                          $meta->primary_key_column_names;
 
+    my $i = 0;
+
     foreach my $name (@pk_set_methods)
     {
-      $self->$name(shift @pk_values);
+      my $pk_value = shift @generated_pk_values;
+      next  unless(defined $pk_value);
+      $self->$name($pk_value);
     }
   }
 
