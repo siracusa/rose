@@ -5,7 +5,7 @@ use strict;
 use Rose::DB::Object::Metadata::UniqueKey;
 our @ISA = qw(Rose::DB::Object::Metadata::UniqueKey);
 
-our $VERSION = '0.53';
+our $VERSION = '0.58';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -26,7 +26,9 @@ sub sequence_names
 
   if(@_)
   {
-    my $seqs = $self->{'sequence_names'}{$db->driver} = $self->{'sequence_names'}{$db_id} =
+
+    my $seqs = $self->{'sequence_names'}{$db->driver} = 
+      $self->{'sequence_names'}{$db_id} =
       (@_ == 1 && ref $_[0]) ? $_[0] : [ @_ ];
 
     my $i = 0;
@@ -40,6 +42,15 @@ sub sequence_names
 
   my $ret = $self->{'sequence_names'}{$db_id} || 
             $self->{'sequence_names'}{$db->driver};
+
+  unless(ref $ret)
+  {
+    $self->sync_sequence_names;
+    $ret = $self->{'sequence_names'}{$db_id} || 
+           $self->{'sequence_names'}{$db->driver};
+  }
+
+  return  unless(ref $ret);
 
   return wantarray ? @$ret : $ret;
 }
@@ -101,6 +112,8 @@ sub sync_sequence_names
     next  unless(ref $column); # may just be a column name
     push(@sequences, $column->default_value_sequence_name);
   }
+
+  return  unless(grep { defined } @sequences);
 
   $self->sequence_names(\@sequences)  if(@sequences);
 

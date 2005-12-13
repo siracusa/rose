@@ -13,6 +13,8 @@ BEGIN
 
 our(%HAVE, $DID_SETUP);
 
+$DID_SETUP = 0; # dumb
+
 #
 # Tests
 #
@@ -127,6 +129,18 @@ foreach my $db_type (qw(pg pg_with_schema))
 
   if($db_type eq 'pg')
   {
+    $o = MyPgObject->new(name => "Barn $i");
+    $o->save;
+  
+    is($o->id1, 3, "pk 9 - $db_type");
+    is($o->id2, 3, "pk 10 - $db_type");
+
+    $o = MyPgObject2->new(id1 => 30, name => "Barn $i");
+    $o->save;
+  
+    is($o->id1, 30, "pk 9 - $db_type");
+    is($o->id2, 3, "pk 10 - $db_type");
+
     is_deeply(scalar MyPgObject->meta->primary_key->sequence_names, 
       [ 'rose_db_object_test_id1_seq', 'rdbo_seq2' ], 
       "pk sequence names 3 - $db_type");
@@ -140,21 +154,21 @@ foreach my $db_type (qw(pg pg_with_schema))
 
     is_deeply(scalar MyPgObject2->meta->primary_key_sequence_names(MyPgObject2->init_db), 
       [ undef, 'rdbo_seq2_2' ], "pk sequence names 6 - $db_type");
-
-    $o = MyPgObject->new(name => "Barn $i");
-    $o->save;
-  
-    is($o->id1, 3, "pk 9 - $db_type");
-    is($o->id2, 3, "pk 10 - $db_type");
-
-    $o = MyPgObject2->new(id1 => 30, name => "Barn $i");
-    $o->save;
-  
-    is($o->id1, 30, "pk 9 - $db_type");
-    is($o->id2, 3, "pk 10 - $db_type");
   }
   elsif($db_type eq 'pg_with_schema')
   {
+    $o = MyPgWSObject->new(name => "Barn $i");
+    $o->save;
+  
+    is($o->id1, 3, "pk 9 - $db_type");
+    is($o->id2, 3, "pk 10 - $db_type");  
+
+    $o = MyPgWSObject2->new(id1 => 30, name => "Barn $i");
+    $o->save;
+  
+    is($o->id1, 30, "pk 9 - $db_type");
+    is($o->id2, 3, "pk 10 - $db_type");  
+
     is_deeply(scalar MyPgWSObject->meta->primary_key->sequence_names, 
       [ 'Rose_db_object_private.rose_db_object_test_id1_seq', 
         'Rose_db_object_private.rdbo_seq2' ], 
@@ -172,18 +186,6 @@ foreach my $db_type (qw(pg pg_with_schema))
     is_deeply(scalar MyPgWSObject2->meta->primary_key_sequence_names(MyPgWSObject2->init_db), 
       [ undef, 'Rose_db_object_private.rdbo_seq2_2' ], 
       "pk sequence names 6 - $db_type");
-
-    $o = MyPgWSObject->new(name => "Barn $i");
-    $o->save;
-  
-    is($o->id1, 3, "pk 9 - $db_type");
-    is($o->id2, 3, "pk 10 - $db_type");  
-
-    $o = MyPgWSObject2->new(id1 => 30, name => "Barn $i");
-    $o->save;
-  
-    is($o->id1, 30, "pk 9 - $db_type");
-    is($o->id2, 3, "pk 10 - $db_type");  
   }
   else
   {

@@ -230,6 +230,7 @@ SETUP:
 my @dbs = qw(mysql pg pg_with_schema informix sqlite);
 eval { require List::Util };
 @dbs = List::Util::shuffle(@dbs)  unless($@);
+#@dbs = qw(informix sqlite mysql pg_with_schema  pg);
 
 foreach my $db_type (@dbs)
 {

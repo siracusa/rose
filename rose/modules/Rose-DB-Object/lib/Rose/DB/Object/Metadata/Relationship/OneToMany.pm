@@ -10,7 +10,7 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.031';
+our $VERSION = '0.57';
 
 __PACKAGE__->default_auto_method_types(qw(get_set_on_save add_on_save));
 
@@ -222,9 +222,9 @@ If passed a local column name LOCAL, return the corresponding column name in the
 
 Get or set a reference to a hash that maps local column names to foreign column names.
 
-=item C<query_args>
+=item B<query_args [ARRAYREF]>
 
-A reference to an array of arguments added to the value of the C<query> parameter passed to the call to C<manager_class>'s C<manager_method> class method.
+Get or set a reference to an array of query arguments to add to the L<query|Rose::DB::Object::Manager/query> passed to the L<manager_method|/manager_method> when fetching objects.
 
 =item B<type>
 

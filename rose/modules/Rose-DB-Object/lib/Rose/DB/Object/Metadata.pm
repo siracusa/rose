@@ -1217,7 +1217,6 @@ sub initialize
   $self->retry_deferred_relationships;
 
   $self->refresh_lazy_column_tracking;
-  $self->refresh_primary_key_sequence_names(db => $self->class->init_db);
 
   unless($args{'stay_connected'})
   {
@@ -2002,10 +2001,8 @@ sub fq_primary_key_sequence_names
     return wantarray ? @seqs : \@seqs;
   }
 
-  return undef;
+  return;
 }
-
-*refresh_primary_key_sequence_names = \&fq_primary_key_sequence_names;
 
 sub primary_key_sequence_names
 {
@@ -2015,7 +2012,7 @@ sub primary_key_sequence_names
 
   $db = shift  if(UNIVERSAL::isa($_[0], 'Rose::DB'));
 
-  my $db_id = $self->{'db_id'} ||= ($db ? $db->{'id'} : $self->init_db_id);
+  my $db_id = $db ? $db->{'id'} : ($self->{'db_id'} ||= $self->init_db_id);
 
   if(@_)
   {
@@ -2062,7 +2059,14 @@ sub primary_key_sequence_names
   {
     next  unless($column->type eq 'serial' ||  (@pks == 1 &&
                  $db->driver eq 'pg' && $column->type eq 'scalar'));
-    $seqs[$i++] ||= $db->auto_sequence_name(table => $table, column => $column);
+
+    unless(exists $seqs[$i] && defined $seqs[$i])
+    {
+      my $val = $db->auto_sequence_name(table => $table, column => $column);
+      $seqs[$i] = $val  if(defined $val);
+    }
+    
+    $i++;
   }
 
   if($self->is_initialized)
@@ -3735,7 +3739,7 @@ Returns a list of foreign key objects in list context, or a reference to an arra
 
 =item B<generate_primary_key_value DB>
 
-This method is the same as L<generate_primary_key_values|/generate_primary_key_values>.
+This method is the same as L<generate_primary_key_values|/generate_primary_key_values> except that it only returns the generated value for the first primary key column, rather than the entire list of values.  Use this method only when there is a single primary key column (or not at all).
 
 =item B<generate_primary_key_values DB>
 
