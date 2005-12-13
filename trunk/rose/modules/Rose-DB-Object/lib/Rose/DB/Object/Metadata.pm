@@ -471,19 +471,31 @@ sub table
   return $_[0]->{'table'} = $_[1];
 }
 
-# sub catalog
-# {
-#   return $_[0]->{'catalog'}  unless(@_ > 1);
-#   $_[0]->_clear_table_generated_values;
-#   return $_[0]->{'catalog'} = $_[1];
-# }
-# 
-# sub schema
-# {
-#   return $_[0]->{'schema'}  unless(@_ > 1);
-#   $_[0]->_clear_table_generated_values;
-#   return $_[0]->{'schema'} = $_[1];
-# }
+sub catalog
+{
+  return $_[0]->{'catalog'}  unless(@_ > 1);
+  $_[0]->_clear_table_generated_values;
+  return $_[0]->{'catalog'} = $_[1];
+}
+
+sub select_catalog
+{
+  my($self, $db) = @_;  
+  return $self->{'catalog'} || ($db ? $db->catalog : undef);
+}
+
+sub schema
+{
+  return $_[0]->{'schema'}  unless(@_ > 1);
+  $_[0]->_clear_table_generated_values;
+  return $_[0]->{'schema'} = $_[1];
+}
+
+sub select_schema
+{
+  my($self, $db) = @_;  
+  return $self->{'schema'} || ($db ? $db->schema : undef);
+}
 
 sub init_primary_key
 {
@@ -2004,21 +2016,36 @@ sub fq_primary_key_sequence_names
   return;
 }
 
+sub refresh_primary_key_sequence_names
+{
+  my($self, $db) = @_;
+  my $db_id = UNIVERSAL::isa($db, 'Rose::DB') ? $db->id : $db;
+  $self->{'fq_primary_key_sequence_names'}{$db_id} = undef;
+  $self->{'primary_key_sequence_names'}{$db_id} = undef;
+  return;
+}
+
 sub primary_key_sequence_names
 {
   my($self) = shift;
 
-  my $db;
+  my($db, $db_id);
 
   $db = shift  if(UNIVERSAL::isa($_[0], 'Rose::DB'));
+  $db_id = $db ? $db->{'id'} : (@_ == 2) ? shift : $self->init_db_id;
 
-  my $db_id = $db ? $db->{'id'} : ($self->{'db_id'} ||= $self->init_db_id);
-
-  if(@_)
+  # Set pk sequence names
+  if(@_) 
   {
+    # Clear fully-qualified pk values
     $self->{'fq_primary_key_sequence_names'}{$db_id} = undef;
+
     my $ret = $self->{'primary_key_sequence_names'}{$db_id} = 
       (@_ == 1 && ref $_[0]) ? $_[0] : [ @_ ];
+
+    # Push down into pk metadata object too
+    $self->primary_key->sequence_names($db, @$ret);
+
     return wantarray ? @$ret : $ret;
   }
 
@@ -2028,18 +2055,23 @@ sub primary_key_sequence_names
     return wantarray ? @$ret : $ret;
   }
 
+  # Init pk sequence names
+
+  # Start by considering the list of sequence names stored in the 
+  # primary key metadata object
   my @pks  = $self->primary_key_column_names;
-  my $seqs = $self->primary_key->sequence_names;
+  my $seqs = $self->primary_key->sequence_names($db);
   my @seqs;
 
   if($seqs)
   {
+    # If each pk column has a defined sequence name, accept them as-is
     if(@pks == grep { defined } @$seqs)
     {
       $self->{'primary_key_sequence_names'}{$db_id} = $seqs;
       return wantarray ? @$seqs : $seqs;
     }
-    else
+    else # otherwise, use them as a starting point
     {
       @seqs = @$seqs;
     }
@@ -2057,23 +2089,70 @@ sub primary_key_sequence_names
 
   foreach my $column ($self->primary_key_columns)
   {
-    next  unless($column->type eq 'serial' ||  (@pks == 1 &&
-                 $db->driver eq 'pg' && $column->type eq 'scalar'));
+    my $seq;
+
+    # Go the extra mile and look up the sequence name (if any) for scalar
+    # pk columns.  These pk columns were probably set using the columns()
+    # shortcut $meta->columns(qw(foo bar baz)) rather than the "long way"
+    # with type information.
+    if($column->type eq 'scalar')
+    {
+      $seq = _sequence_name($db, $self->select_catalog, 
+                            $self->select_schema, $table, $column);
+    }
+    # Set auto-created serial column sequence names for Pg only
+    elsif($column->type eq 'serial' && $db->driver eq 'pg')
+    {
+      $seq = $db->auto_sequence_name(table => $table, column => $column);
+    }
 
     unless(exists $seqs[$i] && defined $seqs[$i])
     {
-      my $val = $db->auto_sequence_name(table => $table, column => $column);
-      $seqs[$i] = $val  if(defined $val);
+      $seqs[$i] = $seq  if(defined $seq);
     }
     
     $i++;
   }
 
+  # Only save if it looks like the class setup is finished
   if($self->is_initialized)
   {
     $self->{'primary_key_sequence_names'}{$db->{'id'}} = \@seqs;
   }
+
   return wantarray ? @seqs : \@seqs;
+}
+
+sub _sequence_name
+{
+  my($db, $catalog, $schema, $table, $column) = @_;
+
+  # XXX: This is only beneficial in Postgres right now
+  return  unless($db->driver eq 'pg');
+
+  $table = lc $table  if($db->likes_lowercase_table_names);
+
+  my $col_info;
+
+  eval # Ignore failure
+  {
+    my $dbh = $db->dbh;
+
+    local $dbh->{'RaiseError'} = 0;
+    local $dbh->{'PrintError'} = 0;
+
+    my $sth = $dbh->column_info($catalog, $schema, $table, $column) or return;
+
+    $sth->execute;
+    $col_info = $sth->fetchrow_hashref;
+    $sth->finish;
+  };
+
+  return  if($@ || !$col_info);
+
+  $db->refine_dbi_column_info($col_info);
+
+  return $col_info->{'rdbo_default_value_sequence_name'};
 }
 
 sub column_names

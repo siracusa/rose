@@ -30,7 +30,7 @@ SETUP:
 
   MyObject->meta->columns
   (
-    id       => { primary_key => 1, not_null => 1, type => 'serial' },
+    id       => { primary_key => 1, not_null => 1 },
     name     => { type => 'varchar', length => 32 },
     code     => { type => 'varchar', length => 32 },
     start    => { type => 'date', default => '12/24/1980' },

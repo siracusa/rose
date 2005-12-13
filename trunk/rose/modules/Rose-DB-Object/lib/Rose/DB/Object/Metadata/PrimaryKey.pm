@@ -21,12 +21,13 @@ sub sequence_names
 {
   my($self) = shift;
 
-  my $db    = $self->parent->db;
-  my $db_id = $db->{'id'};
+  my $db;
+  $db = shift  if(UNIVERSAL::isa($_[0], 'Rose::DB'));
+  $db ||= $self->parent->init_db;
+  my $db_id = $db->id;
 
   if(@_)
   {
-
     my $seqs = $self->{'sequence_names'}{$db->driver} = 
       $self->{'sequence_names'}{$db_id} =
       (@_ == 1 && ref $_[0]) ? $_[0] : [ @_ ];
@@ -36,7 +37,8 @@ sub sequence_names
     foreach my $column ($self->SUPER::columns)
     {
       next  unless(ref $column); # may just be a column name
-      $column->default_value_sequence_name($seqs->[$i++]);
+      # Push down into column metadata object too
+      $column->default_value_sequence_name($db, $seqs->[$i++]);
     }
   }
 

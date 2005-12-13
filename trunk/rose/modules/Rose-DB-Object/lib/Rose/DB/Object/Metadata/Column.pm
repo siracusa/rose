@@ -22,7 +22,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 our $Triggers_Key      = 'triggers';
 our $Trigger_Index_Key = 'trigger_index';
 
-our $VERSION = '0.54';
+our $VERSION = '0.58';
 
 use overload
 (
@@ -61,7 +61,6 @@ Rose::Object::MakeMethods::Generic->make_methods
   [
     'alias',
     'ordinal_position',
-    'default_value_sequence_name',
     __PACKAGE__->common_method_maker_argument_names,
   ],
 
@@ -97,6 +96,29 @@ __PACKAGE__->method_maker_info
     type  => 'scalar',
   },
 );
+
+use constant ANY_DB => "\0ANY_DB\0";
+
+sub default_value_sequence_name
+{
+  my($self) = shift;
+
+  my $db;
+  $db = shift  if(UNIVERSAL::isa($_[0], 'Rose::DB'));
+  my $parent = $self->parent;
+  my $db_id = $db ? $db->id : $parent ? $parent->init_db_id : ANY_DB;
+  
+  return $self->{'default_value_sequence_name'}{$db_id}  unless(@_);
+  
+  $self->{'default_value_sequence_name'}{$db_id} = shift;
+
+  if($parent && $self->is_primary_key_member)
+  {
+    $parent->refresh_primary_key_sequence_names($db || $db_id);
+  }
+
+  return $self->{'default_value_sequence_name'}{$db_id};
+}
 
 sub available_method_types
 {

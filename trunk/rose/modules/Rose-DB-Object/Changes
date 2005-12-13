@@ -1,3 +1,10 @@
+0.58 (12.14.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added auto-detection of multiple sequence-based primary 
+      key columns and primary keys with one or more non-sequence-
+      based columns.
+    * TODD: schema override, test db migration with pk sequences.
+
 0.57 (12.04.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed broken custom convention manager support in the loader.

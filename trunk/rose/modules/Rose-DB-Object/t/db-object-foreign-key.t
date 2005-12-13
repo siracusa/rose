@@ -622,7 +622,7 @@ EOF
 
     MyPgOtherObject2->meta->columns
     (
-      id   => { type => 'serial', primary_key => 1 },
+      id   => { primary_key => 1 },
       name => { type => 'varchar', default => 'def' },
     );
 
