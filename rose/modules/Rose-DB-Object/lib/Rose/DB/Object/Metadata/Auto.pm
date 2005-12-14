@@ -920,6 +920,16 @@ sub auto_init_primary_key_columns
     Carp::croak "Could not retrieve primary key columns for class ", ref($self);
   }
 
+  # Wipe pk defaults because stupid MySQL adds them implicitly
+  if($self->db->driver eq 'mysql')
+  {
+    foreach my $name (@$primary_key_columns)
+    {
+      my $column = $self->column($name) or next;
+      $column->default(undef);
+    }
+  }
+
   $self->primary_key_columns(@$primary_key_columns);
 
   return;
