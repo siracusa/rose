@@ -358,7 +358,6 @@ CREATE TABLE Rose_db_object_g_ug
 )
 EOF
 
-    $dbh->commit;
     $dbh->disconnect;
   }
 
