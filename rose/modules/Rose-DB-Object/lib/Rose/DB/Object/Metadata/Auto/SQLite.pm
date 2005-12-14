@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.54';
+our $VERSION = '0.58';
 
 sub auto_generate_columns
 {
@@ -406,9 +406,13 @@ sub _info_from_sql
       {
         $col_info{'COLUMN_DEF'} = _unquote_name($1);
       }
-      elsif(/^PRIMARY \s+ KEY \b/six)
+      elsif(/^PRIMARY (?: \s+ KEY )? \b/six)
       {
         push(@pk_columns, $col_name)
+      }
+      elsif(/^\s* UNIQUE (?: \s+ KEY)? \b/six)
+      {
+        push(@uk_info, [ _unquote_name($col_name) ]);
       }
       elsif(/^NOT \s+ NULL \b/six)
       {
