@@ -70,6 +70,7 @@ sub add_columns
 
   $self->SUPER::add_columns(@_);
   $self->sync_sequence_names;
+  $self->parent->init_primary_key_column_info;
   return;
 }
 
@@ -98,6 +99,7 @@ sub columns
     $self->SUPER::columns(@_);
   }
 
+  $self->parent->init_primary_key_column_info  if(@_);
   $self->sync_sequence_names;
 
   return $wantarray ? @ret : $ret;

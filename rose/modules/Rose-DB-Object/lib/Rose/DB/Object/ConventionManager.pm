@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Object;
 our @ISA = qw(Rose::DB::Object::Metadata::Object);
 
-our $VERSION = '0.20';
+our $VERSION = '0.58';
 
 our $Debug = 0;
 
@@ -160,10 +160,23 @@ sub auto_table_to_relationship_name_plural
   return $table;
 }
 
+sub auto_class_to_relationship_name_plural
+{
+  my($self, $class) = @_;
+  return $self->class_to_table_plural($class);
+}
+
 sub auto_foreign_key_to_relationship_name_plural
 {
   my($self, $fk) = @_;
   return $self->singular_to_plural($fk->name);
+}
+
+sub auto_one_to_many_relationship_name
+{
+  my($self, $table, $class) = @_;
+  #return $self->auto_class_to_relationship_name_plural($class);
+  return $self->auto_table_to_relationship_name_plural($class);
 }
 
 sub is_map_class
@@ -607,6 +620,48 @@ If insufficient information is available, or if the convention manager simply de
 
 In the documentation, the adjectives "local" and "foreign" are used to distinguish between the things that belong to the the convention manager's L<class|/class> and the class on "the other side" of the inter-table relationship, respectively.
 
+=head1 SUMMARY OF DEFAULT CONVENTIONS
+
+Although the object method documentation below includes all the information required to understand the default conventions, it's also quite spread out.  What follows is a summary of the default conventions.  Some details have necessarily been omitted or glossed over for the sake of brevity, of course.  But this summary should give you a good starting point for further exploration.
+
+Here's a brief summary of the default conventions as implemented in L<Rose::DB::Object::ConventionManager>.
+
+=over 4
+
+=item B<Table, column, foreign key, and relationship names are lowercase, with underscores separating words.>
+
+Examples:  C<products>, C<street_address>, C<date_created>, C<vendor_id>.
+
+=item B<Table names are plural.>
+
+Examples: C<products>, C<vendors>, C<codes>, C<customer_details>, C<employee_addresses>.
+
+=item B<Class names are singular, title-cased, with nothing separating words.>
+
+Examples: C<Product>, C<Vendor>, C<Code>, C<CustomerDetails>, C<EmployeeAddress>.
+
+=item B<Primary key column names do not contain the table name.>
+
+For example, the primary key column name in the C<products> table might be C<id> or C<sku>, but should B<not> be C<product_id> or C<product_sku>.
+
+=item B<Foreign key column names are made from the singular version of the foreign table's name joined (with an underscore) to the foreign table's key column name.>
+
+Examples: C<product_sku>, C<vendor_id>, C<employee_address_id>.
+
+=item B<"one to one" and "many to one" relationship names are singular.>
+
+Examples: C<product>, C<vendor>, C<code>.  These relationships may point to zero or one foreign object.  The default method names generated from such relationships are based on the relationship name, so singular names make the most sense.
+
+=item B<"one to many" and "many to many" relationship names are plural.>
+
+Examples: C<colors>, C<prices>, C<customer_details>.  These relationships may point to more than one foreign object.  The default method names generated from such relationships are based on the relationship name, so plural names make the most sense.
+
+=item B<Mapping tables and their associated classes that participate in "many to many" relationships are named according a formula that combines the names of the two classes/tables that are being linked.>
+
+See the L<auto_relationship|/auto_relationship>, L<looks_like_map_class_name|/looks_like_map_class_name>, and L<looks_like_map_table_name|/looks_like_map_table_name> documentation for all the details. 
+
+=back
+
 =head1 CONSTRUCTOR
 
 =over 4
@@ -654,6 +709,10 @@ Calls L<plural_to_singular|/plural_to_singular>, passing the L<table|Rose::DB::O
 =item B<auto_manager_base_name TABLE, CLASS>
 
 Given a table name and the name of the L<Rose::DB::Object>-derived class that fronts it, return a base name suitable for use as the value of the C<base_name> parameter to L<Rose::DB::Object::Manager>'s L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.  The default implementation simply returns the table name.
+
+=item B<auto_one_to_many_relationship_name TABLE, CLASS>
+
+Return the name of a "one to many" relationship that fetches objects from the specified TABLE and CLASS.  The default implementation simply returns the table name.
 
 =item B<auto_primary_key_column_names>
 

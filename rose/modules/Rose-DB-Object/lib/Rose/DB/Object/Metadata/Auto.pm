@@ -76,6 +76,9 @@ sub auto_generate_columns
     $catalog = $self->select_catalog($db);
     $schema  = $self->select_schema($db); 
     $schema  = $db->default_implicit_schema  unless(defined $schema);
+    
+    $schema  = lc $schema   if(defined $schema && $db->likes_lowercase_schema_names);
+    $catalog = lc $catalog  if(defined $catalog && $db->likes_lowercase_catalog_names);
 
     my $sth = $dbh->column_info($catalog, $schema, $table_unquoted, '%');
 
@@ -303,6 +306,9 @@ sub auto_retrieve_primary_key_column_names
     $schema = $self->select_schema($db);
     $schema = $db->default_implicit_schema  unless(defined $schema);
 
+    $schema  = lc $schema   if(defined $schema && $db->likes_lowercase_schema_names);
+    $catalog = lc $catalog  if(defined $catalog && $db->likes_lowercase_catalog_names);
+
     my $sth = $dbh->primary_key_info($catalog, $schema, $table_unquoted);
 
     unless(defined $sth)
@@ -370,6 +376,9 @@ sub auto_generate_foreign_keys
     my $catalog = $self->select_catalog($db);
     my $schema  = $self->select_schema($db); 
     $schema = $db->default_implicit_schema  unless(defined $schema);
+
+    $schema  = lc $schema   if(defined $schema && $db->likes_lowercase_schema_names);
+    $catalog = lc $catalog  if(defined $catalog && $db->likes_lowercase_catalog_names);
 
     my $table = $db->likes_lowercase_table_names ? lc $self->table : $self->table;
 
@@ -1077,7 +1086,7 @@ sub auto_init_one_to_many_relationships
     # XXX: skip of there's already a relationship with the same id
 
     # Add the one to many relationship to the foreign class
-    my $name = $cm->auto_table_to_relationship_name_plural($self->table);
+    my $name = $cm->auto_one_to_many_relationship_name($self->table, $class);
 
     unless($f_meta->relationship($name))
     {
