@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.54';
+our $VERSION = '0.55';
 
 our $Debug = 0;
 
@@ -1154,7 +1154,12 @@ sub auto_sequence_name { undef }
 
 sub supports_limit_with_offset { 1 }
 sub likes_redundant_join_conditions { 0 }
-sub likes_lowercase_table_names { 0 }
+sub likes_lowercase_table_names   { 0 }
+sub likes_lowercase_schema_names  { 0 }
+sub likes_lowercase_catalog_names { 0 }
+
+sub supports_schema  { 0 }
+sub supports_catalog { 0 }
 
 sub format_limit_with_offset
 {
