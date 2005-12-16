@@ -2002,13 +2002,18 @@ sub primary_key_column_accessor_names
     return @{$self->{'primary_key_column_accessor_names'}};
   }
 
-  my @names = grep { defined } map { $self->column_accessor_method_name($_) } 
-              $self->primary_key_column_names;
+  my @column_names = $self->primary_key_column_names;
+  my @columns      = grep { defined } map { $self->column($_) } @column_names;
 
-  return  unless(@names);
+  return  unless(@column_names == @columns); # not ready yet
 
-  $self->{'primary_key_column_accessor_names'} = \@names;
-  return @names;
+  my @methods = grep { defined } map { $self->column_accessor_method_name($_) } 
+                @column_names;
+
+  return  unless(@methods);
+
+  $self->{'primary_key_column_accessor_names'} = \@methods;
+  return @methods;
 }
 
 sub primary_key_column_mutator_names
@@ -2020,13 +2025,18 @@ sub primary_key_column_mutator_names
     return @{$self->{'primary_key_column_mutator_names'}};
   }
 
-  my @names = grep { defined } map { $self->column_mutator_method_name($_) } 
-              $self->primary_key_column_names;
+  my @column_names = $self->primary_key_column_names;
+  my @columns      = grep { defined } map { $self->column($_) } @column_names;
 
-  return  unless(@names);
+  return  unless(@column_names == @columns); # not ready yet
 
-  $self->{'primary_key_column_mutator_names'} = \@names;
-  return @names;
+  my @methods = grep { defined } map { $self->column_mutator_method_name($_) } 
+                @column_names;
+
+  return  unless(@methods);
+
+  $self->{'primary_key_column_mutator_names'} = \@methods;
+  return @methods;
 }
 
 sub fq_primary_key_sequence_names
