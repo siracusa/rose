@@ -475,7 +475,7 @@ sub list_tables
 
   if($@)
   {
-    Carp::croak "Could not last tables from ", $self->dsn, " - $@";
+    Carp::croak "Could not list tables from ", $self->dsn, " - $@";
   }
 
   return wantarray ? @tables : \@tables;
