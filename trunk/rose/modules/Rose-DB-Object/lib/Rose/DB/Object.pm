@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
 
-our $VERSION = '0.57';
+our $VERSION = '0.58';
 
 our $Debug = 0;
 
@@ -66,7 +66,24 @@ sub db
   if(@_)
   {
     $self->{FLAG_DB_IS_PRIVATE()} = 0;
-    $self->{'db'}  = shift;
+
+    my $new_db = shift;
+
+    # If potentially migrating across db types, "suck through" the
+    # driver-formatted  values using the old db before swapping it 
+    # with the new one.
+    if($self->{LOADED_FROM_DRIVER()} && 
+       $self->{LOADED_FROM_DRIVER()} ne $new_db->{'driver'})
+    {
+      foreach my $method ($self->meta->column_accessor_method_names)
+      {
+        # Need to catch return to avoid clever methods that
+        # skip work when called in void context.
+        my $val = $self->$method();
+      }
+    }
+
+    $self->{'db'}  = $new_db;
     $self->{'dbh'} = undef;
 
     return $self->{'db'};
@@ -135,7 +152,7 @@ sub load
   local $self->{STATE_SAVING()} = 1;
 
   my @key_columns = $meta->primary_key_column_names;
-  my @key_methods = map { $meta->column_accessor_method_name($_) } @key_columns;
+  my @key_methods = $meta->primary_key_column_accessor_names;
   my @key_values  = grep { defined } map { $self->$_() } @key_methods;
   my $null_key  = 0;
   my $found_key = 0;
@@ -258,6 +275,7 @@ sub load
     }
 
     $self->{STATE_IN_DB()} = 1;
+    $self->{LOADED_FROM_DRIVER()} = $db->{'driver'};
     return $self || 1;
   }
 
@@ -367,6 +385,7 @@ sub load
   }
 
   $self->{STATE_IN_DB()} = 1;
+  $self->{LOADED_FROM_DRIVER()} = $db->{'driver'};
   return $self || 1;
 }
 
@@ -374,10 +393,10 @@ sub save
 {
   my($self, %args) = @_;
 
-  # Keep trigger-encumberd code in separate code path
+  # Keep trigger-encumbered code in separate code path
   if($self->{ON_SAVE_ATTR_NAME()})
   {
-    my $db = $self->db or return 0;
+    my $db  = $self->db or return 0;
     my $ret = $db->begin_work;
 
     unless($ret)
@@ -528,7 +547,7 @@ sub update
   local $self->{STATE_SAVING()} = 1;
 
   my @key_columns = $meta->primary_key_column_names;
-  my @key_methods = map { $meta->column_accessor_method_name($_) } @key_columns;
+  my @key_methods = $meta->primary_key_column_accessor_names;
   my @key_values  = grep { defined } map { $self->$_() } @key_methods;
 
   # See comment below
@@ -717,8 +736,7 @@ sub insert
 
   local $self->{STATE_SAVING()} = 1;
 
-  my @pk_methods = map { $meta->column_accessor_method_name($_) } 
-                   $meta->primary_key_column_names;
+  my @pk_methods = $meta->primary_key_column_accessor_names;
   my @pk_values  = grep { defined } map { $self->$_() } @pk_methods;
 
   #my $ret = $db->begin_work;
@@ -830,9 +848,37 @@ sub insert
     {
       my $have_pk = 1;
 
+      my @pk_set_methods = $meta->primary_key_column_mutator_names;
+
+      my $i = 0;
+      my $got_last_insert_id = 0;
+
       foreach my $pk (@pk_methods)
       {
-        $have_pk = 0  unless(defined $self->$pk());
+        unless(defined $self->$pk())
+        {
+          # XXX: This clause assumes that any db that uses last_insert_id
+          # XXX: can only have one such id per table.  This is currently
+          # XXX: true for the supported dbs: MySQL, Pg, SQLite, Informix.
+          if($got_last_insert_id)
+          {
+            $have_pk = 0;
+            last;
+          }
+          elsif(my $pk_val = $db->last_insertid_from_sth($sth))
+          {
+            my $set_pk = $pk_set_methods[$i];
+            $self->$set_pk($pk_val);
+            $got_last_insert_id = 1;
+          }
+          else 
+          {
+            $have_pk = 0;
+            last;
+          }
+        }
+
+        $i++;
       }
 
       $self->{STATE_IN_DB()} = $have_pk;
@@ -869,7 +915,7 @@ sub delete
 
   local $self->{STATE_SAVING()} = 1;
 
-  my @pk_methods = map { $meta->column_accessor_method_name($_) } $meta->primary_key_column_names;
+  my @pk_methods = $meta->primary_key_column_accessor_names;
   my @pk_values  = grep { defined } map { $self->$_() } @pk_methods;
 
   unless(@pk_values == @pk_methods)

@@ -19,7 +19,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.55';
+our $VERSION = '0.58';
 
 our $Debug = 0;
 
@@ -322,10 +322,17 @@ sub convention_manager
     }
     elsif(!ref $mgr)
     {
-      my $class = $self->convention_manager_class($mgr) or
-        Carp::croak "No convention manager class registered under the name '$mgr'";
+      if(UNIVERSAL::isa($mgr, 'Rose::DB::Object::ConventionManager'))
+      {
+        $mgr = $mgr->new;
+      }
+      else
+      {
+        my $class = $self->convention_manager_class($mgr) or
+          Carp::croak "No convention manager class registered under the name '$mgr'";
 
-      $mgr = $class->new;
+        $mgr = $class->new;
+      }
     }
     elsif(!UNIVERSAL::isa($mgr, 'Rose::DB::Object::ConventionManager'))
     {
@@ -480,7 +487,8 @@ sub catalog
 
 sub select_catalog
 {
-  my($self, $db) = @_;  
+  my($self, $db) = @_;
+  return undef  if($db && !$db->supports_catalog);
   return $self->{'catalog'} || ($db ? $db->catalog : undef);
 }
 
@@ -494,6 +502,7 @@ sub schema
 sub select_schema
 {
   my($self, $db) = @_;  
+  return undef  if($db && !$db->supports_schema);
   return $self->{'schema'} || ($db ? $db->schema : undef);
 }
 
@@ -519,6 +528,12 @@ sub init_primary_key_column_info
     $column->is_primary_key_member(1);
     $column->primary_key_position($pk_position);
   }
+
+  $self->_clear_primary_key_column_generated_values;
+
+  # Init these by asking for them
+  $self->primary_key_column_accessor_names;
+  $self->primary_key_column_mutator_names;
 
   return;
 }
@@ -1978,6 +1993,42 @@ sub generate_primary_key_placeholders
   return $db->generate_primary_key_placeholders(scalar @{$self->primary_key_column_names});
 }
 
+sub primary_key_column_accessor_names
+{
+  my($self) = shift;
+
+  if($self->{'primary_key_column_accessor_names'})
+  {
+    return @{$self->{'primary_key_column_accessor_names'}};
+  }
+
+  my @names = grep { defined } map { $self->column_accessor_method_name($_) } 
+              $self->primary_key_column_names;
+
+  return  unless(@names);
+
+  $self->{'primary_key_column_accessor_names'} = \@names;
+  return @names;
+}
+
+sub primary_key_column_mutator_names
+{
+  my($self) = shift;
+
+  if($self->{'primary_key_column_mutator_names'})
+  {
+    return @{$self->{'primary_key_column_mutator_names'}};
+  }
+
+  my @names = grep { defined } map { $self->column_mutator_method_name($_) } 
+              $self->primary_key_column_names;
+
+  return  unless(@names);
+
+  $self->{'primary_key_column_mutator_names'} = \@names;
+  return @names;
+}
+
 sub fq_primary_key_sequence_names
 {
   my($self, %args) = @_;
@@ -2747,6 +2798,13 @@ sub _clear_column_generated_values
   $self->{'insert_sql_with_inlining_start'} = undef;
   $self->{'update_sql_with_inlining_start'} = undef;
   $self->{'delete_sql'}             = undef;
+}
+
+sub _clear_primary_key_column_generated_values
+{
+  my($self) = shift;
+  $self->{'primary_key_column_accessor_names'} = undef;
+  $self->{'primary_key_column_mutator_names'} = undef;
 }
 
 sub method_name_is_reserved
@@ -3724,13 +3782,15 @@ Returns the name of the "get_set" method for the column named NAME.  This is jus
 
 Returns a list (in list context) or a reference to the array (in scalar context) of the names of the "get_set" methods for all the columns, in the order that the columns are returned by L<column_names|/column_names>.
 
-=item B<convention_manager [ OBJECT | NAME ]>
+=item B<convention_manager [ OBJECT | CLASS | NAME ]>
 
 Get or set the convention manager for this L<class|/class>.  Defaults to the return value of the L<init_convention_manager|/init_convention_manager> method.
 
 If undef is passed, then a L<Rose::DB::Object::ConventionManager::Null> object is stored instead.
 
 If a L<Rose::DB::Object::ConventionManager>-derived object is passed, its L<meta|Rose::DB::Object::ConventionManager/meta> attribute set to this metadata object and then it is used as the convention manager for this L<class|/class>.
+
+If a L<Rose::DB::Object::ConventionManager>-derived class name us passed, a new object of that class is created with its L<meta|Rose::DB::Object::ConventionManager/meta> attribute set to this metadata object.  Then it is used as the convention manager for this L<class|/class>.
 
 If a convention manager name is passed, then the corresponding class is looked up in the L<convention manager class map|convention_manager_classes>, a new object of that class is constructed, its L<meta|Rose::DB::Object::ConventionManager/meta> attribute set to this metadata object, and it is used as the convention manager for this L<class|/class>.  If there is no class mapped to NAME, a fatal error will occur.
 

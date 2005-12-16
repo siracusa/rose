@@ -69,6 +69,7 @@ sub auto_generate_unique_keys
 
     my $schema = $self->select_schema($db);
     $schema = $db->default_implicit_schema  unless(defined $schema);
+    $schema = lc $schema  if(defined $schema);
 
     my $table = lc $self->table;
 
