@@ -9,9 +9,10 @@ BEGIN
   require Test::More;
   eval { require DBD::SQLite };
 
-  if($@ || $DBD::SQLite::VERSION < 1.08)
+  if($@ || $DBD::SQLite::VERSION < 1.08 || $ENV{'RDBO_NO_SQLITE'})
   {
-    Test::More->import(skip_all => 'Missing DBD::SQLite 1.08+');
+    Test::More->import(skip_all =>  $ENV{'RDBO_NO_SQLITE'} ? 
+      'SQLite tests disabled' : 'Missing DBD::SQLite 1.08+');
   }
   else
   {
