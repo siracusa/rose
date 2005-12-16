@@ -7,7 +7,7 @@ use DateTime::Format::Pg;
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.023';
+our $VERSION = '0.55';
 
 our $Debug = 0;
 
@@ -46,7 +46,11 @@ sub init_date_handler
 }
 
 sub default_implicit_schema { 'public' }
-sub likes_lowercase_table_names { 1 }
+sub likes_lowercase_table_names   { 1 }
+sub likes_lowercase_schema_names  { 1 }
+sub likes_lowercase_catalog_names { 1 }
+
+sub supports_schema { 1 }
 
 sub insertid_param { 'unsupported' }
 sub null_date      { '0000-00-00'  }
@@ -66,7 +70,7 @@ sub last_insertid_from_sth
   #if($DBD::Pg::VERSION >= 1.40)
   #{
   #  my $meta = $obj->meta;
-  #  return $self->dbh->last_insert_id(undef, $meta->schema, $meta->table, undef);
+  #  return $self->dbh->last_insert_id(undef, $meta->select_schema, $meta->table, undef);
   #}
 
   return undef;

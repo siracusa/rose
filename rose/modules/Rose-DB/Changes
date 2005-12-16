@@ -1,3 +1,7 @@
+0.55 (12.15.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Changes to support Rose::DB::Object 0.58
+
 0.54 (12.03.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Changes to support Rose::DB::Object 0.55
