@@ -1086,7 +1086,7 @@ sub auto_init_one_to_many_relationships
     # XXX: skip of there's already a relationship with the same id
 
     # Add the one to many relationship to the foreign class
-    my $name = $cm->auto_one_to_many_relationship_name($self->table, $class);
+    my $name = $cm->auto_relationship_name_one_to_many($self->table, $class);
 
     unless($f_meta->relationship($name))
     {

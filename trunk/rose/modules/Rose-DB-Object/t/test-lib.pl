@@ -139,7 +139,11 @@ BEGIN
       database => "$Bin/sqlite.db",
       auto_create     => 0,
       connect_options => { AutoCommit => 1 },
-      post_connect_sql => [ 'PRAGMA synchronous = OFF' ],
+      post_connect_sql => 
+      [
+        'PRAGMA synchronous = OFF',
+        'PRAGMA temp_store = MEMORY',
+      ],
     );
 
     # Admin
@@ -149,7 +153,11 @@ BEGIN
       driver   => 'sqlite',
       database => "$Bin/sqlite.db",
       connect_options => { AutoCommit => 1 },
-      post_connect_sql => [ 'PRAGMA synchronous = OFF' ],
+      post_connect_sql =>
+      [
+        'PRAGMA synchronous = OFF',
+        'PRAGMA temp_store = MEMORY',
+      ],
     );
   }
 

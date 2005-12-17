@@ -119,7 +119,7 @@ EOF
 
     package MyCM;
     our @ISA = qw(Rose::DB::Object::ConventionManager);
-    sub auto_one_to_many_relationship_name
+    sub auto_relationship_name_one_to_many
     { 
       my($self, $table, $class) = @_;
       return $self->auto_class_to_relationship_name_plural($class);

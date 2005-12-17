@@ -172,11 +172,12 @@ sub auto_foreign_key_to_relationship_name_plural
   return $self->singular_to_plural($fk->name);
 }
 
-sub auto_one_to_many_relationship_name
+sub auto_relationship_name_one_to_many
 {
   my($self, $table, $class) = @_;
   #return $self->auto_class_to_relationship_name_plural($class);
-  return $self->auto_table_to_relationship_name_plural($class);
+  #return $self->auto_table_to_relationship_name_plural($class);
+  return $table;
 }
 
 sub is_map_class
@@ -710,7 +711,7 @@ Calls L<plural_to_singular|/plural_to_singular>, passing the L<table|Rose::DB::O
 
 Given a table name and the name of the L<Rose::DB::Object>-derived class that fronts it, return a base name suitable for use as the value of the C<base_name> parameter to L<Rose::DB::Object::Manager>'s L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.  The default implementation simply returns the table name.
 
-=item B<auto_one_to_many_relationship_name TABLE, CLASS>
+=item B<auto_relationship_name_one_to_many TABLE, CLASS>
 
 Return the name of a "one to many" relationship that fetches objects from the specified TABLE and CLASS.  The default implementation simply returns the table name.
 
