@@ -26,7 +26,7 @@ __PACKAGE__->has_a(published => 'DateTime',
 
 __PACKAGE__->has_a(category_id => 'MyTest::CDBI::Sweet::Complex::Category');
 
-__PACKAGE__->has_many(code_names => 'MyTest::CDBI::Sweet::Complex::CodeName');
+__PACKAGE__->has_many(code_names => 'MyTest::CDBI::Sweet::Complex::CodeName', { cascade => 'None' });
 
 # Dunno why I have to do this, but it doesn't work without it...
 my $meta = __PACKAGE__->meta_info(has_many => 'code_names');

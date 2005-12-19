@@ -19,7 +19,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.58';
+our $VERSION = '0.59';
 
 our $Debug = 0;
 
@@ -3020,7 +3020,7 @@ sub init_auto_helper
     $self->original_class($class);
 
     my $auto_helper_class = $self->auto_helper_class;
-
+$DB::single = 1;
     REBLESS: # Do slightly evil re-blessing magic
     {
       # Check cache
@@ -3043,8 +3043,30 @@ sub init_auto_helper
             # Make a new metadata class based on the current class
             my $new_class = $class . '::__RoseDBObjectMetadataPrivate__::' . $auto_helper_class;
 
+            # Pull all the auto-helper's methods up into the new class, 
+            # unless they're already defined by the original class.  This
+            # is ugly, I know, but remember that it's all an implementation
+            # detail that could change at any time :)
+            IMPORT:
+            {
+              no strict 'refs';
+              local(*auto_symbol, *existing_symbol);
+
+              while(my($name, $value) = each(%{"${auto_helper_class}::"}))
+              {
+                *auto_symbol     = $value;
+                *existing_symbol = *{"${class}::$name"};
+
+                if(defined &auto_symbol && !defined &existing_symbol)
+                {
+                  $Debug && warn "IMPORT $name INTO $new_class FROM $auto_helper_class\n";
+                  *{"${new_class}::$name"} = \&auto_symbol;
+                }
+              }
+            }
+
             no strict 'refs';        
-            @{"${new_class}::ISA"} = ($auto_helper_class, $class);
+            @{"${new_class}::ISA"} = ($class, $auto_helper_class);
 
             bless $self, $new_class;
           }

@@ -2740,7 +2740,7 @@ EOF
         MyTest::RDBO::Simple::Category->new(
           db => $DB, 
           id => $i + 100_000);
-      $c->delete(prepare_cached => !(1..1));
+      $c->delete(prepare_cached => $i > 1);
       $i++;
     }
   }
@@ -4246,7 +4246,7 @@ EOF
         MyTest::RDBO::Complex::Product->new(
           db => $DB, 
           id => $i + 1_100_000);
-      $p->delete(prepare_cached => !(1..1));
+      $p->delete(prepare_cached => $i > 1);
       $i++;
     }
   }

@@ -26,6 +26,6 @@ __PACKAGE__->has_a(published => 'DateTime',
 
 __PACKAGE__->has_a(category_id => 'MyTest::CDBI::Complex::Category');
 
-__PACKAGE__->has_many(code_names => 'MyTest::CDBI::Complex::CodeName');
+__PACKAGE__->has_many(code_names => 'MyTest::CDBI::Complex::CodeName', { cascade => 'None' });
 
 1;
