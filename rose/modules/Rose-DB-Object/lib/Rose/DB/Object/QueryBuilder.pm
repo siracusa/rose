@@ -30,9 +30,12 @@ my %OP_MAP =
   eq         => '=',
   ''         => '=',
   sql        => '=',
-  in_set     => 'ANY IN',
-  any_in_set => 'ANY IN',
-  all_in_set => 'ALL IN',
+  in_set     => 'ANY IN SET',
+  any_in_set => 'ANY IN SET',
+  all_in_set => 'ALL IN SET',
+  in_array      => 'ANY IN ARRAY',
+  any_in_array  => 'ANY IN ARRAY',
+  all_in_array  => 'ALL IN ARRAY',
 );
 
 @OP_MAP{map { $_ . '_sql' } keys %OP_MAP} = values(%OP_MAP);
@@ -449,9 +452,13 @@ sub _build_clause
       {
         push(@$bind, $vals);
 
-        if($op =~ /^A(?:NY|LL) IN$/)
+        if($op eq 'ANY IN SET' || $op eq 'ALL IN SET')
         {
           return ($not ? "$not " : '') . "? IN $field ";
+        }
+        elsif($op eq 'ANY IN ARRAY' || $op eq 'ALL IN ARRAY')
+        {
+          return $not ? "NOT (? = ANY($field))" : "? = ANY($field)";
         }
         else
         {
@@ -459,10 +466,15 @@ sub _build_clause
         }
       }
 
-      if($op =~ /^A(?:NY|LL) IN$/)
+      if($op eq 'ANY IN SET' || $op eq 'ALL IN SET')
       {
         return ($not ? "$not(" : '') . $dbh->quote($vals) . " $op $field " .
                $dbh->quote($vals)  . ($not ? ')' : '');
+      }
+      elsif($op eq 'ANY IN ARRAY' || $op eq 'ALL IN ARRAY')
+      {
+        my $qval = $dbh->quote($vals);
+        return $not ? "NOT ($qval = ANY($field)) " : "$qval = ANY($field) ";
       }
       else
       {
@@ -512,9 +524,10 @@ sub _build_clause
                }
                @$vals) . ')';
       }
-      elsif($op =~ /^A(NY|LL) IN$/)
+      elsif($op =~ /^(A(?:NY|LL)) IN (SET|ARRAY)$/)
       {
-        my $sep = ($1 eq 'NY') ? 'OR ' : 'AND ';
+        my $sep = ($1 eq 'ANY') ? 'OR ' : 'AND ';
+        my $field_sql = ($2 eq 'SET') ? "IN $field" : "= ANY($field)";
 
         if($bind)
         {
@@ -522,7 +535,7 @@ sub _build_clause
           join($sep, map
           {
             push(@$bind, $_);
-            "? IN $field "
+            "? $field_sql "
           }
           (ref $vals ? @$vals : ($vals))) . ')';
         }
@@ -530,7 +543,7 @@ sub _build_clause
         return  ($not ? "$not " : '') . '(' . 
         join($sep, map
         {
-          $dbh->quote($_) . " IN $field "
+          $dbh->quote($_) . " $field_sql "
         }
         (ref $vals ? @$vals : ($vals))) . ')';
       }
@@ -576,6 +589,8 @@ sub _build_clause
 
     $field_mod = delete $vals->{'field'}  if(exists $vals->{'field'});
 
+    my $all_in = ($op eq 'ALL IN SET' || $op eq 'ALL IN ARRAY') ? 1 : 0;
+
     foreach my $raw_op (keys(%$vals))
     {
       $sub_op = $OP_MAP{$raw_op} || Carp::croak "Unknown comparison operator: $raw_op";
@@ -586,9 +601,11 @@ sub _build_clause
       }
       elsif(ref($vals->{$raw_op}) eq 'ARRAY')
       {
+        my $tmp_not = $all_in ? 0 : $not;
+
         foreach my $val (@{$vals->{$raw_op}})
         {
-          push(@clauses, _build_clause($dbh, $field, $sub_op, $val, $not, $field_mod, $bind, $db, $col_meta, $force_inline, $set));
+          push(@clauses, _build_clause($dbh, $field, $sub_op, $val, $tmp_not, $field_mod, $bind, $db, $col_meta, $force_inline, $set));
         }
       }
       else
@@ -597,9 +614,14 @@ sub _build_clause
       }
     }
 
-    my $sep = ($op eq 'ALL IN') ? ' AND ' : ' OR ';
-
-    return @clauses == 1 ? $clauses[0] : ('(' . join($sep, @clauses) . ')');
+    if($not && $all_in)
+    {
+      return 'NOT(' . join(' AND ', @clauses) . ')';
+    }
+    else
+    {
+      return @clauses == 1 ? $clauses[0] : ('(' . join(' OR ', @clauses) . ')');
+    }
   }
 
   Carp::croak "Don't know how to handle comparison values $vals";
@@ -614,8 +636,10 @@ sub _format_value
   if(!ref $value || $asis)
   {
     unless($col_meta->type eq 'set' && ref $store eq 'HASH' && 
-           ($param eq 'in_set' || $param eq 'all_in_set' || 
-            $param eq 'any_in_set'))
+           (($param eq 'in_set' || $param eq 'all_in_set' || 
+             $param eq 'any_in_set') ||
+            ($param eq 'in_array' || $param eq 'all_in_array' || 
+             $param eq 'any_in_array')))
     {
       if($col_meta->manager_uses_method)
       {
@@ -910,6 +934,28 @@ Set operations:
 
     # NOT(A IN COLUMN AND B IN COLUMN)
     '!NAME' => { all_in_set => [ 'A', 'B'] } 
+
+Array operations:
+
+    # A = ANY(COLUMN)
+    'NAME' => { in_array => 'A' } 
+
+    # NOT(A = ANY(COLUMN))
+    '!NAME' => { in_array => 'A' } 
+
+    # (A = ANY(COLUMN) OR B = ANY(COLUMN))
+    'NAME' => { in_array => [ 'A', 'B'] } 
+    'NAME' => { any_in_array => [ 'A', 'B'] } 
+
+    # NOT(A = ANY(COLUMN) OR B = ANY(COLUMN))
+    '!NAME' => { in_array => [ 'A', 'B'] } 
+    '!NAME' => { any_in_array => [ 'A', 'B'] } 
+
+    # (A = ANY(COLUMN) AND B = ANY(COLUMN))
+    'NAME' => { all_in_array => [ 'A', 'B'] } 
+
+    # NOT(A = ANY(COLUMN) AND B = ANY(COLUMN))
+    '!NAME' => { all_in_array => [ 'A', 'B'] } 
 
 The string "NAME" can take many forms, each of which eventually resolves to a database column (COLUMN in the examples above).
 

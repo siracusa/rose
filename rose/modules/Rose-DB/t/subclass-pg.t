@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 122);
+    Test::More->import(tests => 123);
   }
 }
 
@@ -211,7 +211,11 @@ SKIP:
   eval { $db->format_array([ 'a', undef ]) };
   ok($@ =~ /undefined/i, 'format_array() 3');
 
-  my $ar = $db->parse_array($str);
+  my $ar = $db->parse_array('[-3:3]={1,2,3}');
+  ok(ref $ar eq 'ARRAY' && @$ar == 3 && $ar->[0] eq '1' && $ar->[1] eq '2' && $ar->[2] eq '3',
+     'parse_array() 2');
+
+  $ar = $db->parse_array($str);
   ok(ref $ar eq 'ARRAY' && $ar->[0] eq 'a' && $ar->[1] eq 'b' && $ar->[2] eq 'c',
      'parse_array() 1');
 

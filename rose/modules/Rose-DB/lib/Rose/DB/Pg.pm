@@ -133,7 +133,7 @@ sub parse_array
 
   return undef  unless(defined $val);
 
-  $val =~ s/^\{(.*)\}$/$1/;
+  $val =~ s/^ (?:\[.+\]=)? \{ (.*) \} $/$1/sx;
 
   my @array;
 

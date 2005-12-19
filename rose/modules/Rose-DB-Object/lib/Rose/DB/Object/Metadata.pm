@@ -3020,7 +3020,7 @@ sub init_auto_helper
     $self->original_class($class);
 
     my $auto_helper_class = $self->auto_helper_class;
-$DB::single = 1;
+
     REBLESS: # Do slightly evil re-blessing magic
     {
       # Check cache

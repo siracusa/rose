@@ -1,5 +1,7 @@
 0.59 (12.19.2005) - John Siracusa <siracusa@mindspring.com>
 
+    * Added in_array, any_in_array, and all_in_array query operators
+      for filtering on Postgres array columns.
     * Fixed a bug that caused certain method overrides to fail when
       using a custom metadata class with the auto-initialize feature.
       (Reported by Svilen Ivanov)
