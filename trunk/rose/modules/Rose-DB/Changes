@@ -1,3 +1,7 @@
+0.56 (12.19.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added support for prepended Pg arrays (e.g., [0:3]={3,4,5,6})
+
 0.55 (12.15.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Changes to support Rose::DB::Object 0.58
