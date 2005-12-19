@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 16);
+use Test::More tests => 1 + (5 * 17);
 
 BEGIN 
 {
@@ -19,9 +19,19 @@ SETUP:
 {
   package My::DB;
   our @ISA = qw(Rose::DB);
-  
+
+  package My::DB::Object::Metadata;
+  our @ISA = qw(Rose::DB::Object::Metadata);    
+  sub make_column_methods
+  {
+    my($self) = shift;
+    $JCS::Called_For{$self->class}++;
+    $self->SUPER::make_column_methods(@_);
+  }
+
   package My::DB::Object;
   our @ISA = qw(Rose::DB::Object);
+  sub meta_class { 'My::DB::Object::Metadata' }
   sub foo_bar { 123 }
   
   package MyWeirdClass;
@@ -43,7 +53,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 16)  unless($Have{$db_type});
+    skip("$db_type tests", 17)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -73,6 +83,8 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   my @classes = $loader->make_classes(include_tables => $Include_Tables);
 
   my $product_class = $class_prefix . '::Product';
+
+  ok($JCS::Called_For{$product_class}, "custom metadata - $db_type");
 
   ##
   ## Run tests

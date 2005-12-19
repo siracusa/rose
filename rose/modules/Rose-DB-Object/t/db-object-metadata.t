@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 25;
+use Test::More tests => 26;
 
 BEGIN 
 {
@@ -102,9 +102,29 @@ ok(!defined $class->convention_manager_class('foo'), 'delete_convention_manager_
 is(ref $class->init_convention_manager, 'Rose::DB::Object::ConventionManager::Null', 
    'init_convention_manager');
 
+$meta = MyDBOBjectCustom->meta;
+$meta->init_auto_helper;
+eval { $meta->make_column_methods() };
+ok($@ =~ /^Yay!/, 'custom meta override');
+
 BEGIN
 {
   package MyDBObject;
   our @ISA = qw(Rose::DB::Object);
   sub init_db { Rose::DB->new('pg_with_schema') }
+
+  package MyDBObject::Metadata;
+  our @ISA = qw(Rose::DB::Object::Metadata);
+  sub make_column_methods { die "Yay!" }
+  
+  package MyDBObject::Base;
+  our @ISA = qw(Rose::DB::Object);
+  sub init_db { Rose::DB->new('pg_with_schema') }
+  sub meta_class { 'MyDBObject::Metadata' }
+  
+  package MyDBOBjectCustom;
+  our @ISA = qw(MyDBObject::Base);
 }
+
+
+1;

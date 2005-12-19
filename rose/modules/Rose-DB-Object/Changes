@@ -1,3 +1,9 @@
+0.59 (12.19.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a bug that caused certain method overrides to fail when
+      using a custom metadata class with the auto-initialize feature.
+      (Reported by Svilen Ivanov)
+
 0.58 (12.16.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added auto-detection of multiple sequence-based primary 
