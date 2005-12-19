@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.55';
+our $VERSION = '0.56';
 
 our $Debug = 0;
 
@@ -1085,7 +1085,7 @@ sub parse_array
 
   return undef  unless(defined $val);
 
-  $val =~ s/^\{(.*)\}$/$1/;
+  $val =~ s/^ (?:\[.+\]=)? \{ (.*) \} $/$1/sx;
 
   my @array;
 
