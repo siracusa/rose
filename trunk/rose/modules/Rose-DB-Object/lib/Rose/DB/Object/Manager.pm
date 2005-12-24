@@ -4,6 +4,9 @@ use strict;
 
 use Carp();
 
+use List::Util qw(first);
+use Scalar::Util qw(refaddr);
+
 use Rose::DB::Object::Iterator;
 use Rose::DB::Object::QueryBuilder qw(build_select);
 use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
@@ -14,7 +17,7 @@ use constant PK_JOIN => "\0\2,\3\0";
 our $VERSION = '0.54';
 
 our $Debug = 0;
-
+$JCS::FOO = 0;
 #
 # Class data
 #
@@ -356,10 +359,11 @@ sub get_objects
   my $outer_joins_only = ($with_objects && !$require_objects) ? 1 : 0;
 
   my($num_required_objects, %required_object, 
-     $num_with_objects, %with_objects);
+     $num_with_objects, %with_objects,
+     @belongs_to, %seen_rel, %rel_tn);
 
   my $use_redundant_join_conditions = delete $args{'redundant_join_conditions'};
-
+#$DB::single = $JCS::FOO8 || 0;
   if($with_objects)
   {
     unless(defined $use_redundant_join_conditions)
@@ -384,11 +388,44 @@ sub get_objects
         $with_objects = [ $with_objects ];
       }
 
+      # Expand multi-level arguments
+      if(first { index($_, '.') >= 0 } @$with_objects)
+      {
+        my @with_objects;
+    
+        foreach my $arg (@$with_objects)
+        {
+          next  if($seen_rel{$arg});
+
+          if(index($arg, '.') < 0)
+          {
+            $seen_rel{$arg} = 'with';
+            push(@with_objects, $arg);
+          }
+          else
+          {
+            my @expanded = ($arg);
+            $seen_rel{$arg} = 'with';
+
+            while($arg =~ s/\.([^.]+)$//)
+            {
+              next  if($seen_rel{$arg}++);
+              unshift(@expanded, $arg);
+            }
+  
+            push(@with_objects, @expanded);          
+          }
+        }
+  
+        $with_objects = \@with_objects;
+  #      $JCS::FOO = 1;
+      }
+
       $num_with_objects = @$with_objects;
       %with_objects = map { $_ => 1 } @$with_objects;
     }
   }
-
+#$DB::single = $JCS::FOO8 || 0;
   if($require_objects)
   {
     if(ref $require_objects) # copy argument (shallow copy)
@@ -398,6 +435,70 @@ sub get_objects
     else
     {
       $require_objects = [ $require_objects ];
+    }
+
+    # Expand multi-level arguments
+    if(first { index($_, '.') >= 0 } @$require_objects)
+    {
+      my @require_objects;
+  
+      foreach my $arg (@$require_objects)
+      {
+        if(index($arg, '.') < 0)
+        {
+          if(my $seen = $seen_rel{$arg})
+          {
+            if($seen eq 'with')
+            {
+              Carp::croak "require_objects argument '$arg' conflicts with ",
+                          "with_objects argument of the same name";
+            }
+            next;
+          }
+
+          $seen_rel{$arg}++;
+          push(@require_objects, $arg);
+        }
+        else
+        {
+          my @expanded = ($arg);
+
+          if(my $seen = $seen_rel{$arg})
+          {
+            if($seen eq 'with')
+            {
+              Carp::croak "require_objects argument '$arg' conflicts with ",
+                          "with_objects argument of the same name";
+            }
+            next;
+          }
+
+          $seen_rel{$arg}++;
+
+          while($arg =~ s/\.[^.]+$//)
+          {
+            next  if($seen_rel{$arg});
+            unshift(@expanded, $arg);
+            $seen_rel{$arg}++;
+          }
+
+          push(@require_objects, @expanded);          
+        }
+      }
+
+      $require_objects = \@require_objects;
+#      $JCS::FOO = 1;
+    }
+    else
+    {
+      foreach my $arg (@$require_objects)
+      {
+        if($seen_rel{$arg})
+        {
+          Carp::croak "require_objects argument '$arg' conflicts with ",
+                      "with_objects argument of the same name";
+        }
+      }
     }
 
     $num_required_objects = @$require_objects;
@@ -449,6 +550,7 @@ sub get_objects
   my(@joins, @subobject_methods, @mapped_object_methods, $clauses);
 
   my $handle_dups = 0;
+  #my $deep_joins  = 0;
   my @has_dups;
 
   my $manual_limit = 0;
@@ -499,7 +601,10 @@ sub get_objects
       $args{'offset'} = ($page - 1) * $per_page;
     }
   }
-
+#################
+# TODO: Force sort by t1.pk unless sorting by some other t1 columm
+# or a "... to one" related column
+##############
   # Pre-process sort_by args
   if(my $sort_by = $args{'sort_by'})
   {
@@ -524,7 +629,7 @@ sub get_objects
           {
             if(my $rel_name = $rel_name{"t$i"})
             {
-              $sort =~ s/\b$rel_name\./t$i./g;
+              $sort =~ s/\b$rel_name\./t$i./g  unless($rel_name =~ /^t\d+$/);
             }
           }
         }
@@ -541,6 +646,8 @@ sub get_objects
     $args{'sort_by'} = $sort_by;
   }
 
+  my $num_to_many_rels = 0;
+
   if($with_objects)
   {
     # Copy clauses arg
@@ -554,11 +661,33 @@ sub get_objects
     # more than one object.
     foreach my $name (@$with_objects)
     {
-      my $key = $meta->foreign_key($name) || $meta->relationship($name);
+      my $key;
 
-      unless($key)
+      # Chase down multi-level keys: e.g., colors.name.types
+      if(index($name, '.') >= 0)
       {
-        Carp::confess "$class - no foreign key or relationship named '$name'";
+        #$deep_joins = 1;
+
+        my $chase_meta  = $meta;
+        my $chase_class = $meta->class;
+
+        while($name =~ /\G([^.]+)(?:\.|$)/g)
+        {
+          my $sub_name = $1;
+
+          $key = $chase_meta->foreign_key($sub_name) ||
+                 $chase_meta->relationship($sub_name) ||
+                 Carp::confess "$chase_class - no foreign key or ",
+                               "relationship named '$sub_name'";
+          
+          $chase_meta = $key->can('foreign_class') ? 
+            $key->foreign_class->meta : $key->class->meta;
+        }
+      }
+      else
+      {
+        $key = $meta->foreign_key($name) || $meta->relationship($name) ||
+          Carp::confess "$class - no foreign key or relationship named '$name'";
       }
 
       my $rel_type = $key->type;
@@ -595,9 +724,11 @@ sub get_objects
       $i++;
     }
 
+    $num_to_many_rels = grep { defined $_ } @has_dups;
+
     unless($args{'multi_many_ok'})
     {
-      if(scalar(grep { defined $_ } @has_dups) > 1)
+      if($num_to_many_rels > 1)
       {
         Carp::carp
           qq(WARNING: Fetching sub-objects via more than one ),
@@ -613,9 +744,39 @@ sub get_objects
 
     # Build lists of columns, classes, methods, and join conditions for all
     # of the with_objects and/or require_objects arguments.
-    foreach my $name (@$with_objects)
+    foreach my $arg (@$with_objects)
     {
-      my $rel = $meta->foreign_key($name) || $meta->relationship($name);
+#$DB::single = $JCS::FOO8 || 0;
+      my($parent_meta, $parent_tn, $name);
+$DB::single = $FOO::BAR || 0;
+print STDERR "\nARG: $arg\n";      
+      if(index($arg, '.') > 0) # dot at start is invalid, so "> 0" is correct
+      {
+        $arg =~ /^(.+)\.([^.]+)$/;
+        my $parent = $1;
+        $name = $2;
+print STDERR "PARENT: $parent\n";      
+        $parent_tn = defined $rel_tn{$parent} ? $rel_tn{$parent}: $i; # value of $i as of last iteration
+print STDERR "PARENT TN: $parent_tn\n";      
+        $belongs_to[$i] = $parent_tn - 1;
+        $parent_meta = $classes[$parent_tn - 1]->meta;
+      }
+      else
+      {
+        $parent_meta = $meta;
+        $name = $arg;
+        $parent_tn = 1;
+        $belongs_to[$i] = 0;
+      }
+
+      $rel_tn{$arg} = $i + 1; # note the tN table number of this relationship
+
+print STDERR "TN $arg: $rel_tn{$arg}\n";      
+
+      my $rel = $parent_meta->foreign_key($name) || 
+                $parent_meta->relationship($name) ||
+                Carp::croak "No relationship named '$name' in class ",
+                            $parent_meta->class;
 
       my $rel_type = $rel->type;
 
@@ -675,10 +836,10 @@ sub get_objects
           # Foreign keys that have all non-null columns are never outer-
           # joined, however.
           if(!($rel_type eq 'foreign key' && $rel->is_required) &&
-             ($outer_joins_only || $with_objects{$name}))
+             ($outer_joins_only || $with_objects{$arg}))
           {
             # Aliased table names
-            push(@{$joins[$i]{'conditions'}}, "t1.$local_column = t$i.$foreign_column");
+            push(@{$joins[$i]{'conditions'}}, "t${parent_tn}.$local_column = t$i.$foreign_column");
 
             # Fully-qualified table names
             #push(@{$joins[$i]{'conditions'}}, "$tables[0].$local_column = $tables[-1].$foreign_column");
@@ -695,25 +856,25 @@ sub get_objects
             if($use_redundant_join_conditions)
             {
               # Aliased table names
-              push(@redundant, "t1.$local_column = t$i.$foreign_column");
+              push(@redundant, "t${parent_tn}.$local_column = t$i.$foreign_column");
               push(@redundant_null, ($has_dups[$i - 1] ?
                    "t$i.$foreign_column IS NULL" :
-                   "t1.$local_column IS NULL"));
+                   "t${parent_tn}.$local_column IS NULL"));
 
               # Fully-qualified table names
-              #push(@redundant, "$tables[0].$local_column = $tables[-1].$foreign_column");
+              #push(@redundant, "$tables[$parent_tn - 1].$local_column = $tables[-1].$foreign_column");
               #push(@redundant_null, ($has_dups[$i - 1] ?
               #     "$tables[-1].$foreign_column IS NULL" :
-              #     "$tables[0].$local_column IS NULL"));
+              #     "$tables[$parent_tn - 1].$local_column IS NULL"));
             }
           }
           else
           {
             # Aliased table names
-            push(@$clauses, "t1.$local_column = t$i.$foreign_column");
+            push(@$clauses, "t${parent_tn}.$local_column = t$i.$foreign_column");
 
             # Fully-qualified table names
-            #push(@$clauses, "$tables[0].$local_column = $tables[-1].$foreign_column");
+            #push(@$clauses, "$tables[$parent_tn - 1].$local_column = $tables[-1].$foreign_column");
           }
         }
 
@@ -731,7 +892,7 @@ sub get_objects
              ($fetch{$tables[-1]} && !$fetch{$table_names[-1]})))
           {
             my $sort_by = $mgr_args->{'sort_by'};
-
+#$DB::single = $JCS::FOO3 || 0;
             foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
             {
               $sort =~ s/^(['"`]?)\w+\1(?:\s+(?:ASC|DESC))?$/t$i.$sort/;
@@ -743,7 +904,7 @@ sub get_objects
             }
             else
             {
-              $args{'sort_by'} = [ $sort_by ];
+              $args{'sort_by'} = ref $sort_by ? [ @$sort_by ] : [ $sort_by ]
             }
           }
         }
@@ -763,7 +924,7 @@ sub get_objects
 
         push(@tables, $map_meta->fq_table($db));
         push(@tables_sql, $map_meta->fq_table_sql($db));
-        push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
+        push(@table_names, $rel_name{'t' . (scalar(@tables) + 1)} = $rel->name);
         push(@classes, $map_class);
 
         if($with_map_records)
@@ -795,9 +956,14 @@ sub get_objects
         # Increase once for map table.
         $i++;
 
+        # Increase the tN table number of this relationship as well
+        $rel_tn{$arg} = $i + 1; 
+#$DB::single = 1;
+        $belongs_to[$i] = $belongs_to[$i - 1];
+        
         my $method = $mapped_object_methods[$i - 1] = 
           exists $with_map_records->{$name} ? $with_map_records->{$name} : 
-          $with_map_records->{DEFAULT_REL_KEY()};
+          $with_map_records->{DEFAULT_REL_KEY()} || 0;
 
         if($method)
         {
@@ -815,23 +981,23 @@ sub get_objects
         while(my($local_column, $foreign_column) = each(%$column_map))
         {
           # Use outer joins to handle duplicate or optional information.
-          if($outer_joins_only || $with_objects{$name})
+          if($outer_joins_only || $with_objects{$arg})
           {
             # Aliased table names
-            push(@{$joins[$i]{'conditions'}}, "t$i.$local_column = t1.$foreign_column");
+            push(@{$joins[$i]{'conditions'}}, "t$i.$local_column = t${parent_tn}.$foreign_column");
 
             # Fully-qualified table names
-            #push(@{$joins[$i]{'conditions'}}, "$tables[-1].$local_column = $tables[0].$foreign_column");
+            #push(@{$joins[$i]{'conditions'}}, "$tables[-1].$local_column = $tables[$parent_tn - 1].$foreign_column");
 
             $joins[$i]{'type'} = 'LEFT OUTER JOIN';
           }
           else
           {
             # Aliased table names
-            push(@$clauses, "t$i.$local_column = t1.$foreign_column");
+            push(@$clauses, "t$i.$local_column = t${parent_tn}.$foreign_column");
 
             # Fully-qualified table names
-            #push(@$clauses, "$tables[-1].$local_column = $tables[0].$foreign_column");
+            #push(@$clauses, "$tables[-1].$local_column = $tables[$parent_tn - 1].$foreign_column");
           }
         }
 
@@ -898,7 +1064,7 @@ sub get_objects
         while(my($local_column, $foreign_column) = each(%$ft_columns))
         {
           # Use left joins if the map table used an outer join above
-          if($outer_joins_only || $with_objects{$name})
+          if($outer_joins_only || $with_objects{$arg})
           {
             # Aliased table names
             push(@{$joins[$i]{'conditions'}}, 't' . ($i - 1) . ".$local_column = t$i.$foreign_column");
@@ -939,7 +1105,7 @@ sub get_objects
             }
             else
             {
-              $args{'sort_by'} = [ $sort_by ];
+              $args{'sort_by'} = ref $sort_by ? [ @$sort_by ] : [ $sort_by ]
             }
           }
         }
@@ -1050,7 +1216,10 @@ sub get_objects
     $class->total($count);
     return $count;
   }
-
+#################
+# TODO: Force sort by t1.pk unless sorting by some other t1 columm
+# or a "... to one" related column
+##############
   # Post-process sort_by args
   if(my $sort_by = $args{'sort_by'})
   {
@@ -1074,9 +1243,32 @@ sub get_objects
           {
             if(my $rel_name = $rel_name{"t$i"})
             {
-              $sort =~ s/\b$rel_name\./t$i./g;
+              $sort =~ s/\b$rel_name\./t$i./g  unless($rel_name =~ /^t\d+$/);
             }
           }
+        }
+      }
+      
+      # When selecting sub-objects via a "... to many" relationship, force
+      # a sort by t1's primarky key unless sorting by some other column in
+      # t1.  This is required to ensure that all result rows from each row
+      # in t1 are grouped together.
+      if($num_to_many_rels > 0)
+      {
+        my $do_prefix = 1;
+
+        foreach my $sort (@$sort_by)
+        {
+          if($sort =~ /^t1\./)
+          {
+            $do_prefix = 0;
+            last;
+          }
+        }
+        
+        if($do_prefix)
+        {
+          unshift(@$sort_by, join(', ', map { "t1.$_" } $meta->primary_key_column_names));
         }
       }
     }
@@ -1088,7 +1280,16 @@ sub get_objects
       }
     }
 
+    # TODO: remove duplicate/redundant sort conditions
+
     $args{'sort_by'} = $sort_by;
+  }
+  elsif($num_to_many_rels > 0)
+  {
+    # When selecting sub-objects via a "... to many" relationship, force a
+    # sort by t1's primarky key to ensure that all result rows from each
+    # row in t1 are grouped together.
+    $args{'sort_by'} = [ join(', ', map { "t1.$_" } $meta->primary_key_column_names) ];
   }
 
   if(defined $args{'offset'})
@@ -1189,9 +1390,9 @@ sub get_objects
       {
         # Ug, we have to handle duplicate data due to "...to many" relationships
         # fetched via outer joins.
-        if($handle_dups)
+        if($handle_dups)# || $deep_joins)
         {
-          my(@seen, @sub_objects);
+          my(@seen, %seen, @sub_objects);
 
           my @pk_columns = $meta->primary_key_column_names;
 
@@ -1203,7 +1404,7 @@ sub get_objects
             $sub_pk_columns[$i + 1] = [ $classes[$i]->meta->primary_key_column_names ];
           }
 
-          my $last_object;
+          my($last_object, %subobjects, %parent_objects);
 
           $iterator->_next_code(sub
           {
@@ -1231,18 +1432,19 @@ sub get_objects
                     {
                       #$Debug && warn "Finish $object_class $last_object->{'id'}\n";
 
-                      foreach my $i (1 .. $num_subtables)
+                      while(my($ident, $parent) = each(%parent_objects))
                       {
-                        # We only need to assign to the attributes that can have N objects
-                        # since we assigned the one-to-one object attributes earlier.
-                        if($has_dups[$i])
+                        while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                         {
-                          # Mapping tables will have no subobject methods, so skip them
-                          my $method = $subobject_methods[$i] or next;
-                          local $last_object->{STATE_LOADING()} = 1;
-                          $last_object->$method($sub_objects[$i]);
+                       # print STDERR "     IDENT: $ident METH: $method SUBOBJ: @$subobjects\n";
+        print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
+        join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
+                          $parent->$method($subobjects);
                         }
                       }
+
+                      %subobjects = ();
+                      %parent_objects = ();
 
                       # Add the object to the final list of objects that we'll return
                       push(@objects, $last_object);
@@ -1263,6 +1465,7 @@ sub get_objects
                     @sub_objects = ();      # The list of sub-objects is per-object
                     splice(@seen, 1);       # Sub-objects seen is also per-object,
                                             # so trim it, but leave the t1 table info
+                    %seen = ();             # Wipe sub-object parent tracking.
                   }
 
                   $object ||= $last_object or die "Missing object for primary key '$pk'";
@@ -1271,6 +1474,9 @@ sub get_objects
 
                   foreach my $i (1 .. $num_subtables)
                   {
+                    my $mapped_object_method = $mapped_object_methods[$i];
+                    next  if(defined $mapped_object_method && !$mapped_object_method);
+
                     my $class  = $classes[$i];
                     my $tn = $i + 1;
 
@@ -1278,14 +1484,17 @@ sub get_objects
                     my $sub_pk = join(PK_JOIN, grep { defined } map { $row{$class,$i}{$_} } @{$sub_pk_columns[$tn]});
                     next  unless(length $sub_pk);
 
-                    # Skip if we've already seen this sub-object
-                    next  if($seen[$i]{$sub_pk}++);
+                    my $subobject = $seen[$i]{$sub_pk};
 
-                    # Make sub-object
-                    my $subobject = $class->new(%subobject_args);
-                    local $subobject->{STATE_LOADING()} = 1;
-                    $subobject->init(%{$row{$class,$i}});
-                    $subobject->{STATE_IN_DB()} = 1;
+                    unless($subobject)
+                    {
+                      # Make sub-object
+                      $subobject = $class->new(%subobject_args);
+                      local $subobject->{STATE_LOADING()} = 1;
+                      $subobject->init(%{$row{$class,$i}});
+                      $subobject->{STATE_IN_DB()} = 1;
+                      $seen[$i]{$sub_pk} = $subobject;
+                    }
 
                     # If this object belongs to an attribute that can have more
                     # than one object then just save it for later in the
@@ -1305,14 +1514,66 @@ sub get_objects
                           $map_record = 0;
                         }
 
+                        next  if(defined $mapped_object_methods[$i]);
+
+                        if($has_dups[$i] && (my $bt = $belongs_to[$i]))
+                        {
+                          #$subobjects_belong_to[$i] = $#{$sub_objects[$bt]};
+        
+                          my $parent_object = $sub_objects[$bt];
+                          # XXX: This relies on parent objects coming before child
+                          # objects in the list of tables in the FROM clause.
+                          $parent_object = $parent_object->[-1] #$parent_object->[$subobjects_belong_to[$i]]
+                            if(ref $parent_object eq 'ARRAY');
+        
+                          my $method = $subobject_methods[$i];
+        #print STDERR "WOULD $parent_object ($parent_object->{id} @{[ $parent_object->{name} || $parent_object->{nick} || $parent_object->{text} || '' ]}) -> ",
+        #"$method ADD $subobject ($subobject->{id} @{[ $subobject->{name} || $subobject->{nick} || $subobject->{text} || '' ]})\n";
+        
+                          my $ident = refaddr $parent_object;
+                          next  if($seen{$ident,$method}{$sub_pk}++);
+                          $parent_objects{$ident} = $parent_object;
+                          push(@{$subobjects{$ident}{$method}}, $subobject);
+                        }
+                        else
+                        {
+                          my $ident = refaddr $object;
+                          my $method = $subobject_methods[$i];
+                          next  if($seen{$ident,$method}{$sub_pk}++);
+                          $parent_objects{$ident} = $object;
+                          push(@{$subobjects{$ident}{$method}}, $subobject);
+                        }
+
                         push(@{$sub_objects[$i]}, $subobject);
                       }
                     }
                     else # Otherwise, just assign it
                     {
+                      $sub_objects[$i] = $subobject;
+                      my $parent_object;
+                      
+                      if(my $bt = $belongs_to[$i])
+                      {
+                        $parent_object = $sub_objects[$bt];
+                        # XXX: This relies on parent objects coming before
+                        # child objects in the list of tables in the FROM
+                        # clause.
+                        $parent_object = $parent_object->[-1]  if(ref $parent_object eq 'ARRAY');
+                      }
+                      else
+                      {
+                        $parent_object = $object;
+                      }
+        
                       my $method = $subobject_methods[$i];
-                      local $object->{STATE_LOADING()} = 1;
-                      $object->$method($subobject);
+        
+                      # Only assign "... to one" values once
+                      next  if($seen{refaddr $parent_object,$method}++);
+        
+                      local $parent_object->{STATE_LOADING()} = 1;
+        print STDERR "DO $parent_object ($parent_object->{id} @{[ $parent_object->{name} || $parent_object->{nick} || $parent_object->{text} || '' ]}) -> ",
+        "$method = $subobject ($subobject->{id} @{[ $subobject->{name} || $subobject->{nick} || $subobject->{text} || '' ]})\n";
+                      $parent_object->$method($subobject);
                     }
                   }
 
@@ -1348,14 +1609,13 @@ sub get_objects
                 {
                   #$Debug && warn "Finish straggler $object_class $last_object->{'id'}\n";
 
-                  foreach my $i (1 .. $num_subtables)
+                  while(my($ident, $parent) = each(%parent_objects))
                   {
-                    if($has_dups[$i])
+                    while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                     {
-                      # Mapping tables will have no subobject methods, so skip them
-                      my $method = $subobject_methods[$i] or next;
-                      local $last_object->{STATE_LOADING()} = 1;
-                      $last_object->$method($sub_objects[$i]);
+        print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
+        join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
+                      $parent->$method($subobjects);
                     }
                   }
 
@@ -1394,7 +1654,7 @@ sub get_objects
               return shift(@objects);
             }
 
-            $self->total($self->{'_count'});
+            #$self->total($self->{'_count'});
 
             #$Debug && warn "Return 0\n";
             return 0;
@@ -1415,7 +1675,7 @@ sub get_objects
               {
                 unless($sth->fetch)
                 {
-                  $self->total($self->{'_count'});
+                  #$self->total($self->{'_count'});
                   return 0;
                 }
 
@@ -1426,6 +1686,8 @@ sub get_objects
                 local $object->{STATE_LOADING()} = 1;
                 $object->init(%{$row{$object_class,0}});
                 $object->{STATE_IN_DB()} = 1;
+
+                my @sub_objects;
 
                 if($with_objects)
                 {
@@ -1439,7 +1701,16 @@ sub get_objects
                     $subobject->init(%{$row{$class,$i}});
                     $subobject->{STATE_IN_DB()} = 1;
 
-                    $object->$method($subobject);
+                    $sub_objects[$i] = $subobject;
+                    
+                    if(my $bt = $belongs_to[$i])
+                    {
+                      $sub_objects[$bt]->$method($subobject);
+                    }
+                    else
+                    {
+                      $object->$method($subobject);
+                    }
                   }
                 }
 
@@ -1474,7 +1745,7 @@ sub get_objects
             {
               unless($sth->fetch)
               {
-                $self->total($self->{'_count'});
+                #$self->total($self->{'_count'});
                 return 0;
               }
 
@@ -1506,7 +1777,7 @@ sub get_objects
       $iterator->_finish_code(sub
       {
         $sth->finish      if($sth);
-        $db->release_dbh  if($dbh_retained);
+        $db->release_dbh  if($db && $dbh_retained);
         $sth = undef;
       });
 
@@ -1519,9 +1790,9 @@ sub get_objects
     {
       # This "if" clause is a totally separate code path for handling
       # duplicates rows.  I'm doing this for performance reasons.
-      if($handle_dups)
+      if($handle_dups)# || $deep_joins)
       {
-        my(@seen, @sub_objects);
+        my(@seen, %seen, @sub_objects);
 
         my @pk_columns = $meta->primary_key_column_names;
 
@@ -1533,10 +1804,12 @@ sub get_objects
           $sub_pk_columns[$i + 1] = [ $classes[$i]->meta->primary_key_column_names ];
         }
 
-        my $last_object;
+        my($last_object, %subobjects, %parent_objects);
 
-        ROW: while($sth->fetch)
+        ROW: while(my $r = $sth->fetch)
         {
+no warnings;
+print STDERR "ROW: @$r\n";
           my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @pk_columns);
 
           my $object;
@@ -1547,18 +1820,18 @@ sub get_objects
             # First, finish building the last object, if it exists
             if($last_object)
             {
-              foreach my $i (1 .. $num_subtables)
+              while(my($ident, $parent) = each(%parent_objects))
               {
-                # We only need to assign to the attributes that can have N objects
-                # since we assigned the one-to-one object attributes earlier.
-                if($has_dups[$i])
+                while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                 {
-                  # Mapping tables will have no subobject methods, so skip them
-                  my $method = $subobject_methods[$i] or next;
-                  local $last_object->{STATE_LOADING()} = 1;
-                  $last_object->$method($sub_objects[$i]);
+print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
+join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
+                  $parent->$method($subobjects);
                 }
               }
+
+              %subobjects = ();
+              %parent_objects = ();
 
               # Add the object to the final list of objects that we'll return
               push(@objects, $last_object);
@@ -1576,10 +1849,11 @@ sub get_objects
             $object->init(%{$row{$object_class,0}});
             $object->{STATE_IN_DB()} = 1;
 
-            $last_object = $object; # This is the "last object" from now on
-            @sub_objects = ();      # The list of sub-objects is per-object
+            $last_object = $object; # This is the "last object" from now on.
+            @sub_objects = ();      # The list of sub-objects is per-object.
             splice(@seen, 1);       # Sub-objects seen is also per-object,
-                                    # so trim it, but leave the t1 table info
+                                    # so trim it, but leave the t1 table info.
+            %seen = ();             # Wipe sub-object parent tracking.
           }
 
           $object ||= $last_object or die "Missing object for primary key '$pk'";
@@ -1588,6 +1862,9 @@ sub get_objects
 
           foreach my $i (1 .. $num_subtables)
           {
+            my $mapped_object_method = $mapped_object_methods[$i];
+            next  if(defined $mapped_object_method && !$mapped_object_method);
+
             my $class  = $classes[$i];
             my $tn = $i + 1;
 
@@ -1595,21 +1872,24 @@ sub get_objects
             my $sub_pk = join(PK_JOIN, grep { defined } map { $row{$class,$i}{$_} } @{$sub_pk_columns[$tn]});
             next  unless(length $sub_pk);
 
-            # Skip if we've already seen this sub-object
-            next  if($seen[$i]{$sub_pk}++);
-
-            # Make sub-object
-            my $subobject = $class->new(%subobject_args);
-            local $subobject->{STATE_LOADING()} = 1;
-            $subobject->init(%{$row{$class,$i}});
-            $subobject->{STATE_IN_DB()} = 1;
+            my $subobject = $seen[$i]{$sub_pk};
+            
+            unless($subobject)
+            {
+              # Make sub-object
+              $subobject = $class->new(%subobject_args);
+              local $subobject->{STATE_LOADING()} = 1;
+              $subobject->init(%{$row{$class,$i}});
+              $subobject->{STATE_IN_DB()} = 1;
+              $seen[$i]{$sub_pk} = $subobject;
+            }
 
             # If this object belongs to an attribute that can have more
             # than one object then just save it for later in the
             # per-object sub-objects list.
             if($has_dups[$i])
             {
-              if($mapped_object_methods[$i])
+              if($mapped_object_method)
               {
                 $map_record = $subobject;
               }
@@ -1622,14 +1902,69 @@ sub get_objects
                   $map_record = 0;
                 }
 
+                next  if(defined $mapped_object_methods[$i]);
+
+                if($has_dups[$i] && (my $bt = $belongs_to[$i]))
+                {
+                  #$subobjects_belong_to[$i] = $#{$sub_objects[$bt]};
+
+                  my $parent_object = $sub_objects[$bt];
+                  # XXX: This relies on parent objects coming before child
+                  # objects in the list of tables in the FROM clause.
+                  $parent_object = $parent_object->[-1] #$parent_object->[$subobjects_belong_to[$i]]
+                    if(ref $parent_object eq 'ARRAY');
+
+                  my $method = $subobject_methods[$i];
+#print STDERR "WOULD $parent_object ($parent_object->{id} @{[ $parent_object->{name} || $parent_object->{nick} || $parent_object->{text} || '' ]}) -> ",
+#"$method ADD $subobject ($subobject->{id} @{[ $subobject->{name} || $subobject->{nick} || $subobject->{text} || '' ]})\n";
+
+                  my $ident = refaddr $parent_object;
+                  next  if($seen{$ident,$method}{$sub_pk}++);
+                  $parent_objects{$ident} = $parent_object;
+                  push(@{$subobjects{$ident}{$method}}, $subobject);
+                }
+                else
+                {
+                  my $ident = refaddr $object;
+                  my $method = $subobject_methods[$i];
+                  next  if($seen{$ident,$method}{$sub_pk}++);
+                  $parent_objects{$ident} = $object;
+                  push(@{$subobjects{$ident}{$method}}, $subobject);
+                }
+
                 push(@{$sub_objects[$i]}, $subobject);
               }
             }
             else # Otherwise, just assign it
             {
+              push(@{$sub_objects[$i]}, $subobject);
+# if("@$r" eq "1 Kite 1 1 1 red 1 desc 1 1 1 1 john 1 2 sir 1 V1 DE  2 4.56 1 DE DE Germany")
+# {
+# $DB::single = $JCS::FOO10 || 0;
+# }
+              my $parent_object;
+              
+              if(my $bt = $belongs_to[$i])
+              {
+                $parent_object = $sub_objects[$bt];
+                # XXX: This relies on parent objects coming before child
+                # objects in the list of tables in the FROM clause.
+                $parent_object = $parent_object->[-1]  if(ref $parent_object eq 'ARRAY');
+              }
+              else
+              {
+                $parent_object = $object;
+              }
+
               my $method = $subobject_methods[$i];
-              local $object->{STATE_LOADING()} = 1;
-              $object->$method($subobject);
+
+              # Only assign "... to one" values once
+              next  if($seen{refaddr $parent_object,$method}++);
+
+              local $parent_object->{STATE_LOADING()} = 1;
+print STDERR "DO $parent_object ($parent_object->{id} @{[ $parent_object->{name} || $parent_object->{nick} || $parent_object->{text} || '' ]}) -> ",
+"$method = $subobject ($subobject->{id} @{[ $subobject->{name} || $subobject->{nick} || $subobject->{text} || '' ]})\n";
+              $parent_object->$method($subobject);
             }
           }
 
@@ -1648,14 +1983,13 @@ sub get_objects
         # added to the final list of objects to return.
         if($last_object && !$skip_first)
         {
-          foreach my $i (1 .. $num_subtables)
+          while(my($ident, $parent) = each(%parent_objects))
           {
-            if($has_dups[$i])
+            while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
             {
-              # Mapping tables will have no subobject methods, so skip them
-              my $method = $subobject_methods[$i] or next;
-              local $last_object->{STATE_LOADING()} = 1;
-              $last_object->$method($sub_objects[$i]);
+print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
+join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
+              $parent->$method($subobjects);
             }
           }
 
@@ -1686,6 +2020,8 @@ sub get_objects
           $object->init(%{$row{$object_class,0}});
           $object->{STATE_IN_DB()} = 1;
 
+          my @sub_objects;
+        
           foreach my $i (1 .. $num_subtables)
           {
             my $method = $subobject_methods[$i];
@@ -1696,7 +2032,16 @@ sub get_objects
             $subobject->init(%{$row{$class,$i}});
             $subobject->{STATE_IN_DB()} = 1;
 
-            $object->$method($subobject);
+            $sub_objects[$i] = $subobject;
+            
+            if(my $bt = $belongs_to[$i])
+            {
+              $sub_objects[$bt]->$method($subobject);
+            }
+            else
+            {
+              $object->$method($subobject);
+            }
           }
 
           push(@objects, $object);
@@ -2542,7 +2887,7 @@ In all cases, the class's C<error> attribute will also contain the error message
 
 =item B<get_objects [PARAMS]>
 
-Get L<Rose::DB::Object>-derived objects based on PARAMS, where PARAMS are name/value pairs.  Returns a reference to a (possibly empty) array in scalar context, a list of objects in list context, or undef if there was an error.  
+Get L<Rose::DB::Object>-derived objects based on PARAMS, where PARAMS are name/value pairs.  Returns a reference to a (possibly empty) array, or undef if there was an error.  
 
 Note that naively calling this method in list context may result in a list containing a single undef element if there was an error.  Example:
 
@@ -2683,6 +3028,8 @@ If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it
 A fully formed SQL "ORDER BY ..." clause, sans the words "ORDER BY", or a reference to an array of strings to be joined with a comma and appended to the "ORDER BY" clause.
 
 Within each string, any instance of "NAME." will be replaced with the appropriate "tN." table alias, where NAME is a table, foreign key, or relationship name.  All unprefixed simple column names are assumed to belong to the primary table ("t1").
+
+If selecting sub-objects (via C<require_objects> or C<with_objects>) that are related through "one to many" or "many to many" relationships, the first condition in the sort order clause must be a column in the primary table (t1).  If this condition is not met, the list of primary key columns will be added to the beginning of the sort order clause automatically.
 
 =item C<with_map_records [ BOOL | METHOD | HASHREF ]>
 

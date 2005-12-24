@@ -312,7 +312,12 @@ sub perl_column_defintion_attributes
 
     my $val = $self->can($attr) ? $self->$attr() : next ATTR;
 
-    if(!defined $val || ref $val || ($attr eq 'not_null' && !$self->not_null))
+    if($attr eq 'check_in' && ref $val && ref $val eq 'ARRAY')
+    {
+      $val = perl_arrayref(array => $val, inline => 1);
+      $attr = 'values';
+    }
+    elsif(!defined $val || ref $val || ($attr eq 'not_null' && !$self->not_null))
     {
       next ATTR;
     }

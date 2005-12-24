@@ -1,3 +1,12 @@
+0.60 (12.22.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * 
+
+    * Enum columns now have their list of valid values printed correctly
+      by the perl_hash_definition() method.  (Reported by Juan Camacho)      
+    * Fixed a bug that caused the loader to trip over mixed-case unique 
+      keysin MySQL databases. (Reported by Juan Camacho)
+
 0.59 (12.19.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added in_array, any_in_array, and all_in_array query operators
