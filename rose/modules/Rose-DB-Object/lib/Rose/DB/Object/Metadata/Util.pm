@@ -5,7 +5,9 @@ use strict;
 require Exporter;
 our @ISA = qw(Exporter);
 
-our @EXPORT_OK   = qw(perl_hashref perl_quote_key perl_quote_value hash_key_padding);
+our @EXPORT_OK = 
+  qw(perl_hashref perl_arrayref perl_quote_key perl_quote_value
+     hash_key_padding);
 our %EXPORT_TAGS = (all => \@EXPORT_OK);
 
 our $DEFAULT_PERL_INDENT = 4;

@@ -5,14 +5,13 @@ use strict;
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.02';
+our $VERSION = '0.60';
 
 use Rose::Object::MakeMethods::Generic
 (
   scalar => 
   [
     'error',
-    'total',
     '_count',
     '_next_code',
     '_finish_code',
@@ -41,6 +40,8 @@ sub DESTROY
   my($self) = shift;
   $self->finish  if($self->active);
 }
+
+sub total { shift->{'_count'} }
 
 1;
 
