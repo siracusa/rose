@@ -17,7 +17,7 @@ use constant PK_JOIN => "\0\2,\3\0";
 our $VERSION = '0.54';
 
 our $Debug = 0;
-$JCS::FOO = 0;
+
 #
 # Class data
 #
@@ -363,7 +363,7 @@ sub get_objects
      @belongs_to, %seen_rel, %rel_tn);
 
   my $use_redundant_join_conditions = delete $args{'redundant_join_conditions'};
-#$DB::single = $JCS::FOO8 || 0;
+
   if($with_objects)
   {
     unless(defined $use_redundant_join_conditions)
@@ -418,14 +418,13 @@ sub get_objects
         }
   
         $with_objects = \@with_objects;
-  #      $JCS::FOO = 1;
       }
 
       $num_with_objects = @$with_objects;
       %with_objects = map { $_ => 1 } @$with_objects;
     }
   }
-#$DB::single = $JCS::FOO8 || 0;
+
   if($require_objects)
   {
     if(ref $require_objects) # copy argument (shallow copy)
@@ -487,7 +486,6 @@ sub get_objects
       }
 
       $require_objects = \@require_objects;
-#      $JCS::FOO = 1;
     }
     else
     {
@@ -746,18 +744,16 @@ sub get_objects
     # of the with_objects and/or require_objects arguments.
     foreach my $arg (@$with_objects)
     {
-#$DB::single = $JCS::FOO8 || 0;
       my($parent_meta, $parent_tn, $name);
-$DB::single = $FOO::BAR || 0;
-print STDERR "\nARG: $arg\n";      
+#print STDERR "\nARG: $arg\n";
       if(index($arg, '.') > 0) # dot at start is invalid, so "> 0" is correct
       {
         $arg =~ /^(.+)\.([^.]+)$/;
         my $parent = $1;
         $name = $2;
-print STDERR "PARENT: $parent\n";      
+#print STDERR "PARENT: $parent\n";      
         $parent_tn = defined $rel_tn{$parent} ? $rel_tn{$parent}: $i; # value of $i as of last iteration
-print STDERR "PARENT TN: $parent_tn\n";      
+#print STDERR "PARENT TN: $parent_tn\n";      
         $belongs_to[$i] = $parent_tn - 1;
         $parent_meta = $classes[$parent_tn - 1]->meta;
       }
@@ -771,7 +767,7 @@ print STDERR "PARENT TN: $parent_tn\n";
 
       $rel_tn{$arg} = $i + 1; # note the tN table number of this relationship
 
-print STDERR "TN $arg: $rel_tn{$arg}\n";      
+#print STDERR "TN $arg: $rel_tn{$arg}\n";      
 
       my $rel = $parent_meta->foreign_key($name) || 
                 $parent_meta->relationship($name) ||
@@ -892,7 +888,7 @@ print STDERR "TN $arg: $rel_tn{$arg}\n";
              ($fetch{$tables[-1]} && !$fetch{$table_names[-1]})))
           {
             my $sort_by = $mgr_args->{'sort_by'};
-#$DB::single = $JCS::FOO3 || 0;
+
             foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
             {
               $sort =~ s/^(['"`]?)\w+\1(?:\s+(?:ASC|DESC))?$/t$i.$sort/;
@@ -958,7 +954,7 @@ print STDERR "TN $arg: $rel_tn{$arg}\n";
 
         # Increase the tN table number of this relationship as well
         $rel_tn{$arg} = $i + 1; 
-#$DB::single = 1;
+
         $belongs_to[$i] = $belongs_to[$i - 1];
         
         my $method = $mapped_object_methods[$i - 1] = 
@@ -1437,8 +1433,8 @@ print STDERR "TN $arg: $rel_tn{$arg}\n";
                         while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                         {
                        # print STDERR "     IDENT: $ident METH: $method SUBOBJ: @$subobjects\n";
-        print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
-        join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
+#print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
+#        join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
                           $parent->$method($subobjects);
                         }
                       }
@@ -1571,8 +1567,8 @@ print STDERR "TN $arg: $rel_tn{$arg}\n";
                       next  if($seen{refaddr $parent_object,$method}++);
         
                       local $parent_object->{STATE_LOADING()} = 1;
-        print STDERR "DO $parent_object ($parent_object->{id} @{[ $parent_object->{name} || $parent_object->{nick} || $parent_object->{text} || '' ]}) -> ",
-        "$method = $subobject ($subobject->{id} @{[ $subobject->{name} || $subobject->{nick} || $subobject->{text} || '' ]})\n";
+        #print STDERR "DO $parent_object ($parent_object->{id} @{[ $parent_object->{name} || $parent_object->{nick} || $parent_object->{text} || '' ]}) -> ",
+        #"$method = $subobject ($subobject->{id} @{[ $subobject->{name} || $subobject->{nick} || $subobject->{text} || '' ]})\n";
                       $parent_object->$method($subobject);
                     }
                   }
@@ -1613,8 +1609,8 @@ print STDERR "TN $arg: $rel_tn{$arg}\n";
                   {
                     while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                     {
-        print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
-        join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
+        #print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
+        #join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
                       $parent->$method($subobjects);
                     }
                   }
@@ -1808,8 +1804,8 @@ print STDERR "TN $arg: $rel_tn{$arg}\n";
 
         ROW: while(my $r = $sth->fetch)
         {
-no warnings;
-print STDERR "ROW: @$r\n";
+#no warnings;
+#print STDERR "ROW: @$r\n";
           my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @pk_columns);
 
           my $object;
@@ -1824,8 +1820,8 @@ print STDERR "ROW: @$r\n";
               {
                 while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                 {
-print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
-join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
+#print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
+#join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
                   $parent->$method($subobjects);
                 }
               }
@@ -1938,10 +1934,7 @@ join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' 
             else # Otherwise, just assign it
             {
               push(@{$sub_objects[$i]}, $subobject);
-# if("@$r" eq "1 Kite 1 1 1 red 1 desc 1 1 1 1 john 1 2 sir 1 V1 DE  2 4.56 1 DE DE Germany")
-# {
-# $DB::single = $JCS::FOO10 || 0;
-# }
+
               my $parent_object;
               
               if(my $bt = $belongs_to[$i])
@@ -1962,8 +1955,8 @@ join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' 
               next  if($seen{refaddr $parent_object,$method}++);
 
               local $parent_object->{STATE_LOADING()} = 1;
-print STDERR "DO $parent_object ($parent_object->{id} @{[ $parent_object->{name} || $parent_object->{nick} || $parent_object->{text} || '' ]}) -> ",
-"$method = $subobject ($subobject->{id} @{[ $subobject->{name} || $subobject->{nick} || $subobject->{text} || '' ]})\n";
+#print STDERR "DO $parent_object ($parent_object->{id} @{[ $parent_object->{name} || $parent_object->{nick} || $parent_object->{text} || '' ]}) -> ",
+#"$method = $subobject ($subobject->{id} @{[ $subobject->{name} || $subobject->{nick} || $subobject->{text} || '' ]})\n";
               $parent_object->$method($subobject);
             }
           }
@@ -1987,8 +1980,8 @@ print STDERR "DO $parent_object ($parent_object->{id} @{[ $parent_object->{name}
           {
             while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
             {
-print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
-join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
+#print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
+#join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
               $parent->$method($subobjects);
             }
           }
