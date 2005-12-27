@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 81;
+use Test::More tests => 85;
 
 BEGIN 
 {
@@ -484,6 +484,16 @@ is($form->field('event')->html,
 </select></span></span>', 
 'init_fields 3-level compound');
 
+$form = MyForm2->new;
+
+is(join(',', $form->field_names), 'name,hobbies,Gender,bday', 'compare_fields() 1');
+is(join(',', map { $_->name } $form->fields), 'your_name,hobbies,Gender,bday', 'compare_fields() 2');
+
+$form = MyForm3->new;
+
+is(join(',', $form->field_names), 'name,hobbies,bday,Gender', 'field_names() 1');
+is(join(',', map { $_->name } $form->fields), 'your_name,hobbies,bday,Gender', 'field_names() 2');
+
 BEGIN
 {
   package MyObject;
@@ -550,6 +560,82 @@ BEGIN
 
     $self->add_fields(%fields);
 
-      $self->field('name')->html_attr(name => 'your_name');
+    $self->field('name')->html_attr(name => 'your_name');
   }
+
+  package MyForm2;
+
+  our @ISA = qw(Rose::HTML::Form);
+
+  sub build_form 
+  {
+    my($self) = shift;
+
+    my %fields;
+
+    $fields{'name'} = 
+      Rose::HTML::Form::Field::Text->new(
+        name => 'name',
+        size => 25);
+
+    $fields{'Gender'} = 
+      Rose::HTML::Form::Field::RadioButtonGroup->new(
+        name          => 'gender',
+        radio_buttons => { 'm' => 'Male', 'f' => 'Female' },
+        default       => 'm');
+
+    $fields{'hobbies'} = 
+      Rose::HTML::Form::Field::CheckBoxGroup->new(
+        name       => 'hobbies',
+        checkboxes => [ 'Chess', 'Checkers', 'Knitting' ],
+        default    => 'Chess');
+
+    $fields{'bday'} = 
+      Rose::HTML::Form::Field::DateTime::Split::MonthDayYear->new(
+        name => 'bday');
+
+    $self->add_fields(%fields);
+
+    $self->field('name')->html_attr(name => 'your_name');
+  }
+  
+  sub compare_fields { lc $_[2]->name cmp lc $_[1]->name }
+
+  package MyForm3;
+
+  our @ISA = qw(Rose::HTML::Form);
+
+  sub build_form 
+  {
+    my($self) = shift;
+
+    my %fields;
+
+    $fields{'name'} = 
+      Rose::HTML::Form::Field::Text->new(
+        name => 'name',
+        size => 25);
+
+    $fields{'Gender'} = 
+      Rose::HTML::Form::Field::RadioButtonGroup->new(
+        name          => 'gender',
+        radio_buttons => { 'm' => 'Male', 'f' => 'Female' },
+        default       => 'm');
+
+    $fields{'hobbies'} = 
+      Rose::HTML::Form::Field::CheckBoxGroup->new(
+        name       => 'hobbies',
+        checkboxes => [ 'Chess', 'Checkers', 'Knitting' ],
+        default    => 'Chess');
+
+    $fields{'bday'} = 
+      Rose::HTML::Form::Field::DateTime::Split::MonthDayYear->new(
+        name => 'bday');
+
+    $self->add_fields(%fields);
+
+    $self->field('name')->html_attr(name => 'your_name');
+  }
+  
+  sub field_names { wantarray ? qw(name hobbies bday Gender) : [ qw(name hobbies bday Gender) ] }
 }

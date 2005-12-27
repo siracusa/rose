@@ -855,6 +855,10 @@ Get or set the boolean flag that controls how compound field values are encoded 
 
 Get or set the boolean flag that controls how compound field values are encoded in the query string. If this flag is true (the default), then compound fields are represented by a single query parameter. Otherwise, the subfields of each compound field appear as separate query parameters.
 
+=item B<compare_fields [FIELD1, FIELD2]>
+
+Compare two fields, returning 1 if FIELD1 should come before FIELD2, -1 if FIELD2 should come before FIELD1, or 0 if neither field should come before the other.  This method is called from within the L<field_names|/field_names> method to determine the order of the fields in this form.
+
 =item B<delete_field NAME>
 
 Delete the field stored under the name NAME.  If NAME "isa" L<Rose::HTML::Form::Field>, then the L<name()|Rose::HTML::Form::Field/name> method is called on it and the return value is used as NAME.
@@ -909,11 +913,13 @@ If both NAME and VALUE arguments are passed, then the field VALUE is stored unde
 
 =item B<fields>
 
-Returns the full list of field objects, sorted by field name, in list context, or a reference to a list of the same in scalar context.
+Returns an ordered list of this form's field objects in list context, or a reference to this list in scalar context.  The order of the fields matches the order of the field names returned by the L<field_names|/field_names> method.
 
 =item B<field_names>
 
-Returns a sorted list of field names in list context, or a reference to a list of the same in scalar context.
+Returns an ordered list of field names in list context, or a reference to this list in scalar context.  The order is determined by the L<compare_fields|/compare_fields> method by default.
+
+You can override the L<compare_fields|/compare_fields> method in your subclass to provide a custom sort order, or you can override the L<field_names|/field_names> method itself to provide an arbitrary  order, ignoring the L<compare_fields|/compare_fields> method entirely.
 
 =item B<hidden_fields>
 
