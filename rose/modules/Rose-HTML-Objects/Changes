@@ -1,3 +1,9 @@
+0.31 (12.27.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Field order can now be customized in Rose::HTML::Form subclasses
+      by overriding the new compare_fields() method or the revised 
+      field_names() method.
+
 0.30 (11.08.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Adjusted tests to pass despite a backward-incompatible change

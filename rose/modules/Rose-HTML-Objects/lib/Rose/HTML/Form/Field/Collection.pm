@@ -9,7 +9,7 @@ use Rose::HTML::Form::Field::Hidden;
 use Rose::HTML::Form::Field;
 our @ISA = qw(Rose::HTML::Form::Field);
 
-our $VERSION = '0.011';
+our $VERSION = '0.31';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -29,6 +29,8 @@ sub field
 
     $field->name($name);
     $field->parent_field($self);
+
+    $self->_clear_field_generated_values;
 
     return $self->{'fields'}{$name} = $field;
   }
@@ -64,33 +66,67 @@ sub add_fields
     }
   }
 
+  $self->_clear_field_generated_values;
+
   return  unless(defined wantarray);
   return $self->fields;
 }
 
 *add_field = \&add_fields;
 
+sub compare_fields { $_[1]->name cmp $_[2]->name }
+
 sub fields
 {
-  my $fields = $_[0]->{'fields'};
+  my($self) = shift;
+  
+  if(my $fields = $self->{'field_list'})
+  {
+    return wantarray ? @$fields : $fields;
+  }
 
-  return (wantarray) ? map { $fields->{$_} }  sort keys %$fields :
-                       [ map { $fields->{$_} }  sort keys %$fields ];
+  my $fields = $self->{'fields'};
+
+  $self->{'field_list'} = [ grep { defined } map { $fields->{$_} } $self->field_names ];
+
+  return wantarray ? @{$self->{'field_list'}} : $self->{'field_list'};
 }
 
 sub field_names
 {
-  return (wantarray) ? sort keys %{$_[0]->{'fields'}} : 
-                       [ sort keys %{$_[0]->{'fields'}} ];
+  my($self) = shift;
+  
+  if(my $names = $self->{'field_names'})
+  {
+    return wantarray ? @$names : $names;
+  }
+
+  my @info;
+
+  while(my($name, $field) = each %{$self->{'fields'}})
+  {
+    push(@info, [ $name, $field ]);
+  }
+
+  $self->{'field_names'} = 
+    [ map { $_->[0] } sort { $self->compare_fields($a->[1], $b->[1]) } @info ];
+
+  return wantarray ? @{$self->{'field_names'}} : $self->{'field_names'};
 }
 
-sub delete_fields { $_[0]->{'fields'} = {} }
+sub delete_fields 
+{
+  $_[0]->_clear_field_generated_values;
+  $_[0]->{'fields'} = {} 
+}
 
 sub delete_field
 {
   my($self, $name) = @_;
 
   $name = $name->name  if(UNIVERSAL::isa($name, 'Rose::HTML::Form::Field'));
+
+  $self->_clear_field_generated_values;
 
   delete $self->{'fields'}{$name};
 }
@@ -113,6 +149,13 @@ sub reset_fields
   {
     $field->reset();
   }
+}
+
+sub _clear_field_generated_values
+{
+  my($self) = shift;  
+  $self->{'field_list'}  = undef;
+  $self->{'field_names'} = undef;
 }
 
 sub hidden_field
