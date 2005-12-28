@@ -164,6 +164,7 @@ sub build_select
 
   foreach my $table (@$tables)
   {
+    my $table_tn    = $table_num;
     my $table_alias = 't' . $table_num++;
 
     next  unless($columns->{$table});
@@ -219,8 +220,8 @@ sub build_select
       my $fq_column     = "$table.$column";
       my $short_column  = "$table_alias.$column";
       my $unique_column = "${table_alias}_$column";
-      my $rel_column    = $table_map->{$table_alias} ?
-        "$table_map->{$table_alias}.$column" : '';
+      my $rel_column    =  $table_map->{$table_tn} ?
+        "$table_map->{$table_tn}.$column" : '';
 
       my $method = $obj_meta ? $obj_meta->column_rw_method_name($column) : undef;
 
