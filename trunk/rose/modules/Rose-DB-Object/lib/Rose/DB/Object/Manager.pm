@@ -1131,7 +1131,10 @@ sub get_objects
     }
   }
 
-  $args{'table_map'} = \%rel_name;
+  #use Data::Dumper;
+  #print STDERR Dumper(\%rel_tn);
+  $args{'table_map'} = { reverse %rel_tn };
+  #$args{'table_map'} = \%rel_name;
 
   if($count_only)
   {

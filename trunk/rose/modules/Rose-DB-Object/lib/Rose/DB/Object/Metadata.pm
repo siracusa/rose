@@ -1942,7 +1942,7 @@ sub generate_primary_key_values
   }
 
   my @ids;
-$DB::single = 1;
+
   my $seqs = $self->fq_primary_key_sequence_names(db => $db);
 
   if($seqs && @$seqs)

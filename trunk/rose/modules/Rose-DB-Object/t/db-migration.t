@@ -144,7 +144,6 @@ SKIP:
   #
 
   $a1 = Code->new(name => 'One', db => $db_pg, id2 => 2)->save;
-  $DB::single = 1;
   $a2 = Code->new(name => 'Two', db => $db_ws, id2 => 3)->save;
 
   $a3 = Code->new(name => 'Thr', db => $db_my, id2 => 5, id3 => 6)->save;
