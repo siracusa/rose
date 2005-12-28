@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.56';
+our $VERSION = '0.57';
 
 our $Debug = 0;
 
@@ -100,13 +100,14 @@ use Rose::Object::MakeMethods::Generic
   'scalar' =>
   [
     qw(database dbi_driver schema catalog host port username 
-       password european_dates _dbh_refcount _origin_class id)
+       password _dbh_refcount _origin_class id)
   ],
 
   'boolean' =>
   [
     '_dbh_is_private',
-    'auto_create' => { default => 1 },
+    'auto_create'    => { default => 1 },
+    'european_dates' => { default => 0 },
   ],
 
   'scalar --get_set_init' =>
@@ -1153,10 +1154,12 @@ sub next_value_in_sequence
 sub auto_sequence_name { undef }
 
 sub supports_limit_with_offset { 1 }
+
 sub likes_redundant_join_conditions { 0 }
-sub likes_lowercase_table_names   { 0 }
-sub likes_lowercase_schema_names  { 0 }
-sub likes_lowercase_catalog_names { 0 }
+sub likes_lowercase_table_names     { 0 }
+sub likes_lowercase_schema_names    { 0 }
+sub likes_lowercase_catalog_names   { 0 }
+sub likes_lowercase_sequence_names  { 0 }
 
 sub supports_schema  { 0 }
 sub supports_catalog { 0 }

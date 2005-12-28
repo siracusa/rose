@@ -12,12 +12,18 @@ our $VERSION = '0.04';
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
-  qw(default length)
+  qw(default length overflow)
 );
 
 Rose::Object::MakeMethods::Generic->make_methods
 (
   { preserve_existing => 1 },
+
+  'scalar --get_set_init' =>
+  [
+    overflow => { check_in => [ qw(truncate warn fatal) ] },
+  ],
+
   scalar => [ __PACKAGE__->common_method_maker_argument_names ]
 );
 
@@ -27,6 +33,8 @@ foreach my $type (__PACKAGE__->available_method_types)
 {
   __PACKAGE__->method_maker_type($type => 'character')
 }
+
+sub init_overflow { 'fatal' }
 
 sub parse_value
 {

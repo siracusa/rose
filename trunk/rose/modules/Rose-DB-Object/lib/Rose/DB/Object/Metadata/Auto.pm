@@ -107,7 +107,7 @@ sub auto_generate_columns
         Carp::croak "Could not extract column name from DBI column_info()";
       }
 
-      $db->refine_dbi_column_info($col_info);
+      $db->refine_dbi_column_info($col_info, $self);
 
       $columns{$col_info->{'COLUMN_NAME'}} = 
         $self->auto_generate_column($col_info->{'COLUMN_NAME'}, $col_info);

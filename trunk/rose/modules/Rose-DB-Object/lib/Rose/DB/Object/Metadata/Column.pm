@@ -109,7 +109,7 @@ sub default_value_sequence_name
   my $db_id = $db ? $db->id : $parent ? $parent->init_db_id : ANY_DB;
   
   return $self->{'default_value_sequence_name'}{$db_id}  unless(@_);
-  
+$DB::single = 1;
   $self->{'default_value_sequence_name'}{$db_id} = shift;
 
   if($parent && $self->is_primary_key_member)
@@ -327,6 +327,11 @@ sub perl_column_defintion_attributes
       next ATTR;
     }
 
+    if($attr eq 'overflow' && $val eq $self->init_overflow)
+    {
+      next ATTR;
+    }
+    
     if($attr eq 'default_value_sequence_name')
     {
       my $seq = $self->default_value_sequence_name;
