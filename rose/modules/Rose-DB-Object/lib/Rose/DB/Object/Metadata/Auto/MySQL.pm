@@ -66,7 +66,7 @@ sub auto_generate_unique_keys
 
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
-$DB::single = 1;
+
     my $sth = $dbh->prepare('SHOW INDEX FROM ' . $self->fq_table_sql($db));
     $sth->execute;
 
@@ -89,6 +89,7 @@ $DB::single = 1;
 
   # This sort order is part of the API, and is essential to make the
   # test suite work.
+  no warnings 'uninitialized';
   my @uk = map { $unique_keys{$_} } sort { lc $a <=> lc $b } keys(%unique_keys);
 
   return wantarray ? @uk : \@uk;

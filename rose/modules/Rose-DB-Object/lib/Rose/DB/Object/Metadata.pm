@@ -1942,7 +1942,7 @@ sub generate_primary_key_values
   }
 
   my @ids;
-
+$DB::single = 1;
   my $seqs = $self->fq_primary_key_sequence_names(db => $db);
 
   if($seqs && @$seqs)
@@ -2217,7 +2217,17 @@ sub _sequence_name
 
   $db->refine_dbi_column_info($col_info);
 
-  return $col_info->{'rdbo_default_value_sequence_name'};
+  my $seq = $col_info->{'rdbo_default_value_sequence_name'};
+
+  my $implicit_schema = $db->default_implicit_schema;
+
+  # Strip off default implicit schema unless a schema is explicitly specified  
+  if(defined $seq && defined $implicit_schema && !defined $schema)
+  {
+    $seq =~ s/^$implicit_schema\.//;
+  }
+
+  return $seq;
 }
 
 sub column_names
@@ -3054,6 +3064,10 @@ sub init_auto_helper
 
               while(my($name, $value) = each(%{"${auto_helper_class}::"}))
               {
+                no warnings;
+
+                next  if($name =~ /^[A-Z]+$/); # skip BEGIN, DESTROY, etc.
+
                 *auto_symbol     = $value;
                 *existing_symbol = *{"${class}::$name"};
 

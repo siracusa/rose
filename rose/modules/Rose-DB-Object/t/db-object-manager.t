@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1939;
+use Test::More tests => 2128;
 
 BEGIN 
 {
@@ -5626,7 +5626,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 492)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 681)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -7533,7 +7533,6 @@ EOF
 
   is($objs->[4]{'nicks'}[0]{'nick'}, 'nnine', "tough order 15 - $db_type");
 
-
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class    => 'MySQLiteObject',
@@ -7603,7 +7602,6 @@ EOF
 
   # End tough order tests
 
-#$JCS::FOO = 1;
   # Start deep join tests
 
   eval 
@@ -7615,9 +7613,7 @@ EOF
   };
   
   ok($@, "deep join conflict 1 - $db_type");
-#local $Rose::DB::Object::Manager::Debug = 1;
-#$JCS::FOO8 = 1;
-#$JCS::FOO9 = 1;
+
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class => 'MySQLiteObject',
@@ -7626,7 +7622,7 @@ EOF
       multi_many_ok   => 1,
       query        => [ 'id' => [ 2, 5 ] ],
       sort_by      => 'type.name');
-$DB::single = 1;
+
   ok(@$objs == 2, "deep join 1 - $db_type");
   is($objs->[0]->id, 2, "deep join 2 - $db_type");
   is($objs->[1]->id, 5, "deep join 3 - $db_type");
@@ -7688,7 +7684,7 @@ $DB::single = 1;
   is($o->{'nicks'}[0]{'type'}{'name'}, 'nt four', "deep join iterator 1 - $db_type");
   is($o->{'nicks'}[1]{'type'}{'name'}, 'nt two', "deep join iterator 2 - $db_type");
   is(scalar @{$o->{'nicks'}}, 2, "deep join iterator 3 - $db_type");
-#$DB::single = 1;
+
   is($o->{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt two 1', "deep join 3.1 - $db_type");
   
   is($o->{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 four', "deep join iterator 3.1 - $db_type");
@@ -7700,7 +7696,7 @@ $DB::single = 1;
   is($o->{'nicks'}[2]{'type'}{'name'}, 'nt six', "deep join iterator 6 - $db_type");
   is($o->{'nicks'}[3]{'type'}{'name'}, 'nt three', "deep join iterator 7 - $db_type");
   is(scalar @{$o->{'nicks'}}, 4, "deep join iterator 8 - $db_type");
-#$DB::single = 1;
+
   is($o->{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt one 1', "deep join 15 - $db_type");
   is($o->{'nicks'}[1]{'alts'}[1]{'alt'}, 'alt one 2', "deep join 16 - $db_type");
   is($o->{'nicks'}[1]{'alts'}[2]{'alt'}, 'alt one 3', "deep join 17 - $db_type");
@@ -7822,10 +7818,7 @@ $DB::single = 1;
 
   while($iterator->next) { }
   is($iterator->total, 21, "deep join iterator with 9 - $db_type");
-  
-#local $Rose::DB::Object::Manager::Debug = 1;
-#$JCS::FOO5 = 1;
-#$DB::single = 1;
+
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class => 'MySQLiteObject',
@@ -7833,11 +7826,11 @@ $DB::single = 1;
       multi_many_ok => 1,
       query        => [ 'id' => [ 2, 5 ] ],
       sort_by      => 'alts.alt');
-#$DB::single = 1;
+
   ok(@$objs == 2, "deep join multi 1 - $db_type");
   is($objs->[0]->id, 2, "deep join multi 2 - $db_type");
   is($objs->[1]->id, 5, "deep join multi 3 - $db_type");
-#$DB::single = 1;
+
   is($objs->[0]{'nicks'}[0]{'alts'}[0]{'alt'}, 'alt two 1', "deep join multi 4 - $db_type");
   is(scalar @{$objs->[0]{'nicks'}[0]{'alts'}}, 1, "deep join multi 5 - $db_type");
 
@@ -7846,11 +7839,6 @@ $DB::single = 1;
   is($objs->[1]{'nicks'}[0]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi 8 - $db_type");
   is(scalar @{$objs->[1]{'nicks'}[0]{'alts'}}, 3, "deep join multi 11 - $db_type");
 
-
-#$JCS::FOO6 = 1;
-#$JCS::FOO8 = 1;
-#local $Rose::DB::Object::Manager::Debug = 1;
-#$DB::single = 1;
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class  => 'MySQLiteObject',
@@ -7872,11 +7860,6 @@ $DB::single = 1;
 
   is(scalar @{$objs->[0]{'nicks'} || []}, 0, "deep join multi with 12 - $db_type");
 
-
-
-
-#$JCS::FOO5 = 1;
-#$DB::single = 1;
   $iterator = 
     Rose::DB::Object::Manager->get_objects_iterator(
       object_class => 'MySQLiteObject',
@@ -7899,9 +7882,6 @@ $DB::single = 1;
   ok(!$iterator->next, "deep join multi iter 8 - $db_type");
   is($iterator->total, 2, "deep join multi iter 9 - $db_type");
 
-
-#local $Rose::DB::Object::Manager::Debug = 1;
-#$DB::single = $JCS::FOO7 = 1;
   $iterator = 
     Rose::DB::Object::Manager->get_objects_iterator(
       object_class  => 'MySQLiteObject',
@@ -7929,10 +7909,7 @@ $DB::single = 1;
   
   while($iterator->next) { }
   is($iterator->total, 21, "deep join multi iter with 9 - $db_type");
-#  $DB::single = 1;
-##########
-# TODO: a.b.c, a.b.d, a.b.d.e.f -> handle overlap?
-##########
+
   # End deep join tests
 }
 
@@ -7963,7 +7940,11 @@ BEGIN
       $dbh->do('DROP TABLE rose_db_object_color_map CASCADE');
       $dbh->do('DROP TABLE rose_db_object_colors CASCADE');
       $dbh->do('DROP TABLE rose_db_object_nicks CASCADE');
+      $dbh->do('DROP TABLE rose_db_object_nick_types2 CASCADE');
+      $dbh->do('DROP TABLE rose_db_object_nick_types CASCADE');
       $dbh->do('DROP TABLE rose_db_object_nicks2 CASCADE');
+      $dbh->do('DROP TABLE rose_db_object_nick_alts CASCADE');
+      $dbh->do('DROP TABLE rose_db_object_nick_opts CASCADE');
       $dbh->do('DROP TABLE rose_db_object_test CASCADE');
       $dbh->do('DROP TABLE rose_db_object_other CASCADE');
       $dbh->do('DROP TABLE rose_db_object_bb CASCADE');
@@ -8048,11 +8029,47 @@ CREATE TABLE rose_db_object_test
 EOF
 
     $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_nick_types2
+(
+  id    SERIAL NOT NULL PRIMARY KEY,
+  name  VARCHAR(32) NOT NULL UNIQUE
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_nick_types
+(
+  id     SERIAL NOT NULL PRIMARY KEY,
+  name   VARCHAR(32) NOT NULL UNIQUE,
+  t2_id  INT REFERENCES rose_db_object_nick_types2 (id)
+)
+EOF
+
+    $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_nicks
 (
   id    SERIAL NOT NULL PRIMARY KEY,
   o_id  INT NOT NULL REFERENCES rose_db_object_test (id),
-  nick  VARCHAR(32)
+  nick  VARCHAR(32),
+  type_id INT REFERENCES rose_db_object_nick_types (id)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_nick_alts
+(
+  id       SERIAL NOT NULL PRIMARY KEY,
+  nick_id  INT NOT NULL REFERENCES rose_db_object_nicks (id),
+  alt      VARCHAR(32)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_nick_opts
+(
+  id       SERIAL NOT NULL PRIMARY KEY,
+  nick_id  INT NOT NULL REFERENCES rose_db_object_nicks (id),
+  opt      VARCHAR(32)
 )
 EOF
 
@@ -8084,6 +8101,47 @@ EOF
 
     $dbh->disconnect;
 
+    package MyPgNickType2;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyPgNickType2->meta->table('rose_db_object_nick_types2');
+
+    MyPgNickType2->meta->columns
+    (
+      id      => { type => 'serial', primary_key => 1 },
+      name    => { type => 'varchar', length => 32 },
+    );
+
+    MyPgNickType2->meta->add_unique_key('name');
+    MyPgNickType2->meta->initialize;
+
+    package MyPgNickType;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyPgNickType->meta->table('rose_db_object_nick_types');
+
+    MyPgNickType->meta->columns
+    (
+      id    => { type => 'serial', primary_key => 1 },
+      name  => { type => 'varchar', length => 32 },
+      t2_id => { type => 'int' },
+    );
+
+    MyPgNickType->meta->add_unique_key('name');
+
+    MyPgNickType->meta->foreign_keys
+    (
+      t2 =>
+      {
+        class => 'MyPgNickType2',
+        key_columns => { t2_id => 'id' },
+      }
+    );
+
+    MyPgNickType->meta->initialize;
+    
     package MyPgNick;
 
     our @ISA = qw(Rose::DB::Object);
@@ -8095,6 +8153,7 @@ EOF
       id   => { type => 'serial', primary_key => 1 },
       o_id => { type => 'int' },
       nick => { type => 'varchar', lazy => 1 },
+      type_id => { type => 'int' },
     );
 
     MyPgNick->meta->foreign_keys
@@ -8103,6 +8162,29 @@ EOF
       {
         class => 'MyPgObject',
         key_columns => { o_id => 'id' },
+      },
+
+      type =>
+      {
+        class => 'MyPgNickType',
+        key_columns => { type_id => 'id' },
+      },
+    );
+
+    MyPgNick->meta->relationships
+    (
+      alts =>
+      {
+        type  => 'one to many',
+        class => 'MyPgNickAlt',
+        key_columns => { id => 'nick_id' },
+      },
+
+      opts =>
+      {
+        type  => 'one to many',
+        class => 'MyPgNickOpt',
+        key_columns => { id => 'nick_id' },
       },
     );
 
@@ -8131,6 +8213,54 @@ EOF
     );
 
     MyPgNick2->meta->initialize;
+
+    package MyPgNickAlt;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyPgNickAlt->meta->table('rose_db_object_nick_alts');
+
+    MyPgNickAlt->meta->columns
+    (
+      id      => { type => 'serial', primary_key => 1 },
+      nick_id => { type => 'int' },
+      alt     => { type => 'varchar' },
+    );
+
+    MyPgNickAlt->meta->foreign_keys
+    (
+      type =>
+      {
+        class => 'MyPgNick',
+        key_columns => { nick_id => 'id' },
+      },
+    );
+
+    MyPgNickAlt->meta->initialize;
+
+    package MyPgNickOpt;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyPgNickOpt->meta->table('rose_db_object_nick_opts');
+
+    MyPgNickOpt->meta->columns
+    (
+      id      => { type => 'serial', primary_key => 1 },
+      nick_id => { type => 'int' },
+      opt     => { type => 'varchar' },
+    );
+
+    MyPgNickOpt->meta->foreign_keys
+    (
+      type =>
+      {
+        class => 'MyPgNick',
+        key_columns => { nick_id => 'id' },
+      },
+    );
+
+    MyPgNickOpt->meta->initialize;
 
     package MyPgColor;
 
@@ -8333,7 +8463,11 @@ EOF
       $dbh->do('DROP TABLE rose_db_object_color_map CASCADE');
       $dbh->do('DROP TABLE rose_db_object_colors CASCADE');
       $dbh->do('DROP TABLE rose_db_object_nicks CASCADE');
+      $dbh->do('DROP TABLE rose_db_object_nick_types2 CASCADE');
+      $dbh->do('DROP TABLE rose_db_object_nick_types CASCADE');
       $dbh->do('DROP TABLE rose_db_object_nicks2 CASCADE');
+      $dbh->do('DROP TABLE rose_db_object_nick_alts CASCADE');
+      $dbh->do('DROP TABLE rose_db_object_nick_opts CASCADE');
       $dbh->do('DROP TABLE rose_db_object_test CASCADE');
       $dbh->do('DROP TABLE rose_db_object_other CASCADE');
       $dbh->do('DROP TABLE rose_db_object_bb CASCADE');
@@ -8690,10 +8824,15 @@ EOF
       $dbh->do('DROP TABLE rose_db_object_color_map CASCADE');
       $dbh->do('DROP TABLE rose_db_object_colors CASCADE');
       $dbh->do('DROP TABLE rose_db_object_nicks CASCADE');
+      $dbh->do('DROP TABLE rose_db_object_nick_types2 CASCADE');
+      $dbh->do('DROP TABLE rose_db_object_nick_types CASCADE');
       $dbh->do('DROP TABLE rose_db_object_nicks2 CASCADE');
+      $dbh->do('DROP TABLE rose_db_object_nick_alts CASCADE');
+      $dbh->do('DROP TABLE rose_db_object_nick_opts CASCADE');
       $dbh->do('DROP TABLE rose_db_object_test CASCADE');
       $dbh->do('DROP TABLE rose_db_object_other CASCADE');
       $dbh->do('DROP TABLE rose_db_object_bb CASCADE');
+
     }
 
     $dbh->do(<<"EOF");
@@ -9144,7 +9283,7 @@ CREATE TABLE rose_db_object_nick_types
   t2_id  INT REFERENCES rose_db_object_nick_types2 (id)
 )
 EOF
- $JCS::FOO2 = 1;
+
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_nicks
 (
@@ -9537,7 +9676,11 @@ END
     $dbh->do('DROP TABLE rose_db_object_color_map CASCADE');
     $dbh->do('DROP TABLE rose_db_object_colors CASCADE');
     $dbh->do('DROP TABLE rose_db_object_nicks CASCADE');
+    $dbh->do('DROP TABLE rose_db_object_nick_types2 CASCADE');
+    $dbh->do('DROP TABLE rose_db_object_nick_types CASCADE');
     $dbh->do('DROP TABLE rose_db_object_nicks2 CASCADE');
+    $dbh->do('DROP TABLE rose_db_object_nick_alts CASCADE');
+    $dbh->do('DROP TABLE rose_db_object_nick_opts CASCADE');
     $dbh->do('DROP TABLE rose_db_object_test CASCADE');
     $dbh->do('DROP TABLE rose_db_object_other CASCADE');
     $dbh->do('DROP TABLE rose_db_object_bb CASCADE');
@@ -9554,7 +9697,11 @@ END
     $dbh->do('DROP TABLE rose_db_object_color_map CASCADE');
     $dbh->do('DROP TABLE rose_db_object_colors CASCADE');
     $dbh->do('DROP TABLE rose_db_object_nicks CASCADE');
+    $dbh->do('DROP TABLE rose_db_object_nick_types2 CASCADE');
+    $dbh->do('DROP TABLE rose_db_object_nick_types CASCADE');
     $dbh->do('DROP TABLE rose_db_object_nicks2 CASCADE');
+    $dbh->do('DROP TABLE rose_db_object_nick_alts CASCADE');
+    $dbh->do('DROP TABLE rose_db_object_nick_opts CASCADE');
     $dbh->do('DROP TABLE rose_db_object_test CASCADE');
     $dbh->do('DROP TABLE rose_db_object_other CASCADE');
     $dbh->do('DROP TABLE rose_db_object_bb CASCADE');
@@ -9571,7 +9718,11 @@ END
     $dbh->do('DROP TABLE rose_db_object_color_map CASCADE');
     $dbh->do('DROP TABLE rose_db_object_colors CASCADE');
     $dbh->do('DROP TABLE rose_db_object_nicks CASCADE');
+    $dbh->do('DROP TABLE rose_db_object_nick_types2 CASCADE');
+    $dbh->do('DROP TABLE rose_db_object_nick_types CASCADE');
     $dbh->do('DROP TABLE rose_db_object_nicks2 CASCADE');
+    $dbh->do('DROP TABLE rose_db_object_nick_alts CASCADE');
+    $dbh->do('DROP TABLE rose_db_object_nick_opts CASCADE');
     $dbh->do('DROP TABLE rose_db_object_test CASCADE');
     $dbh->do('DROP TABLE rose_db_object_other CASCADE');
     $dbh->do('DROP TABLE rose_db_object_bb CASCADE');

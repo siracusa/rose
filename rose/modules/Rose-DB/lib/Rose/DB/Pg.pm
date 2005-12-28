@@ -7,7 +7,7 @@ use DateTime::Format::Pg;
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.55';
+our $VERSION = '0.57';
 
 our $Debug = 0;
 
@@ -46,9 +46,10 @@ sub init_date_handler
 }
 
 sub default_implicit_schema { 'public' }
-sub likes_lowercase_table_names   { 1 }
-sub likes_lowercase_schema_names  { 1 }
-sub likes_lowercase_catalog_names { 1 }
+sub likes_lowercase_table_names    { 1 }
+sub likes_lowercase_schema_names   { 1 }
+sub likes_lowercase_catalog_names  { 1 }
+sub likes_lowercase_sequence_names { 1 }
 
 sub supports_schema { 1 }
 
@@ -216,7 +217,7 @@ sub auto_sequence_name
 
 sub refine_dbi_column_info
 {
-  my($self, $col_info) = @_;
+  my($self, $col_info, $meta) = @_;
 
   # Save default value
   my $default = $col_info->{'COLUMN_DEF'};
@@ -226,7 +227,24 @@ sub refine_dbi_column_info
   # Set sequence name key, if present
   if(defined $default && $default =~ /^nextval\(\(?'((?:''|[^']+))'::\w+/)
   {
-    $col_info->{'rdbo_default_value_sequence_name'} = $1;
+    $col_info->{'rdbo_default_value_sequence_name'} = 
+      $self->likes_lowercase_sequence_names ? lc $1 : $1;
+
+    if($meta)
+    {
+      my $seq = $col_info->{'rdbo_default_value_sequence_name'};
+
+      my $implicit_schema = $self->default_implicit_schema;
+
+      # Strip off default implicit schema unless a schema is explicitly 
+      # specified in the RDBO metadata object.
+      if(defined $seq && defined $implicit_schema && !defined $meta->schema)
+      {
+        $seq =~ s/^$implicit_schema\.//;
+      }
+
+      $col_info->{'rdbo_default_value_sequence_name'} = $seq;
+    }
   }
 
   # Pg has some odd names for types.  Convert them to standard forms.

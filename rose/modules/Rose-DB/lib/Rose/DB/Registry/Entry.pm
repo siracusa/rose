@@ -5,7 +5,7 @@ use strict;
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.011';
+our $VERSION = '0.57';
 
 our $Debug = 0;
 
@@ -23,7 +23,8 @@ use Rose::Object::MakeMethods::Generic
 
   'boolean' =>
   [
-    'auto_create' => { default => 1 },
+    'auto_create'    => { default => 1 },
+    'european_dates' => { default => 0 },
   ],
 
   'hash' =>

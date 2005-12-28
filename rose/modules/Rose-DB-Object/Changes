@@ -1,11 +1,15 @@
 0.60 (12.22.2005) - John Siracusa <siracusa@mindspring.com>
 
-    * 
+    * varchar die/truncate settings
+    * arb depth join
 
     * Enum columns now have their list of valid values printed correctly
       by the perl_hash_definition() method.  (Reported by Juan Camacho)      
     * Fixed a bug that caused the loader to trip over mixed-case unique 
       keysin MySQL databases. (Reported by Juan Camacho)
+    * Force MDY dates in Postgres in the test suite, just in case the user
+      has European dates configured.  (Reported by Cees Hek)
+    * Fixed numerous Postgres 7.x bugs.  (Reported by Cees Hek)
 
 0.59 (12.19.2005) - John Siracusa <siracusa@mindspring.com>
 

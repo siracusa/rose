@@ -14,6 +14,8 @@ BEGIN
   # Postgres
   #
 
+  $ENV{'PGDATESTYLE'} = 'MDY';
+
   # Main
   Rose::DB->register_db(
     domain   => 'test',
