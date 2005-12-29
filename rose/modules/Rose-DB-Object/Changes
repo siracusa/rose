@@ -3,6 +3,8 @@
     * Added arbitrary-depth auto-joins to the Manager using a "dot-chained"
       syntax (e.g., vendor.regions.code)
 
+    * TODO: meta->class_fixup right before initialize()
+    * TODO: make_perl_modules() loader method
     * TODO: varchar die/truncate settings
 
     * Enum columns now have their list of valid values printed correctly
