@@ -1,12 +1,14 @@
-0.60 (12.22.2005) - John Siracusa <siracusa@mindspring.com>
+0.60 (12.28.2005) - John Siracusa <siracusa@mindspring.com>
 
-    * varchar die/truncate settings
-    * arb depth join
+    * Added arbitrary-depth auto-joins to the Manager via a "dot-chained"
+      syntax (e.g., vendor.regions.code)
+
+    * TODO: varchar die/truncate settings
 
     * Enum columns now have their list of valid values printed correctly
       by the perl_hash_definition() method.  (Reported by Juan Camacho)      
     * Fixed a bug that caused the loader to trip over mixed-case unique 
-      keysin MySQL databases. (Reported by Juan Camacho)
+      keys in MySQL databases. (Reported by Juan Camacho)
     * Force MDY dates in Postgres in the test suite, just in case the user
       has European dates configured.  (Reported by Cees Hek)
     * Fixed numerous Postgres 7.x bugs.  (Reported by Cees Hek)
