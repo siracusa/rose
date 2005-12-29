@@ -3045,6 +3045,13 @@ For each foreign key or relationship listed in OBJECTS, another table will be ad
 
 "Many to many" relationships are a special case.  They will add two tables to the query (the "map" table plus the table with the actual data), which will offset the 
 
+Foreign key or relationship names may be chained, with dots (".") separating each name.  For example imagine three tables: C<products>, C<vendors>, and C<regions>.  Each product has a vendor, and each vendor has a region.  To fetch products along with their vendors, and their vendors' regions, provide a C<with_objects> argument like this:
+
+    with_objects => [ 'vendor.region', ... ],
+
+This assumed that the C<Product> class has a relationship or foreign key named "vendor" that points to the product's vendor, and that the C<Vendor> class has a foreign key or relationship named "region" that points to the vendor's region.
+
+
 B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include more than one "... to many" relationship in OBJECTS.  Sometimes this may still be more efficient than making additional queries to fetch these sub-objects, but that all depends on the actual data.  A warning will be emitted (via L<Carp::cluck|Carp/cluck>) if you you include more than one "... to many" relationship in OBJECTS.  If you're sure you know what you're doing, you can silence this warning by passing the C<multi_many_ok> parameter with a true value.
 
 B<Note:> the C<with_objects> list currently cannot be used to simultaneously fetch two objects that both front the same database table, I<but are of different classes>.  One workaround is to make one class use a synonym or alias for one of the tables.  Another option is to make one table a trivial view of the other.  The objective is to get the table names to be different for each different class (even if it's just a matter of letter case, if your database is not case-sensitive when it comes to table names).
@@ -3055,7 +3062,7 @@ The query parameters, passed as a reference to an array of name/value pairs.  Th
 
 For the complete list of valid parameter names and values, see the documentation for the C<query> parameter of the L<build_select|Rose::DB::Object::QueryBuilder/build_select> function in the L<Rose::DB::Object::QueryBuilder> module.
 
-This class also supports a useful extension to the query syntax supported by L<Rose::DB::Object::QueryBuilder>.  In addition to table names and aliases, column names may be prefixed with foreign key or relationship names as well.
+This class also supports a useful extension to the query syntax supported by L<Rose::DB::Object::QueryBuilder>.  In addition to table names and aliases, column names may be prefixed with foreign key or relationship names.  These names may be chained, with dots (".") separating the components.  
 
 =back
 
