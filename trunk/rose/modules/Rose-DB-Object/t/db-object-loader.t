@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 15) + 3;
+use Test::More tests => 1 + (5 * 16) + 3;
 
 BEGIN 
 {
@@ -42,7 +42,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     unless($Have{$db_type})
     {
-      skip("$db_type tests", 15 + scalar @{$Reserved_Words{$db_type} ||= []});
+      skip("$db_type tests", 16 + scalar @{$Reserved_Words{$db_type} ||= []});
     }
   }
 
@@ -59,10 +59,13 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 
   %JCS::Called_Custom_CM = ();
 
+  my $pre_init_hook = 0;
+
   my $loader = 
     Rose::DB::Object::Loader->new(
-      db           => Rose::DB->new,
-      class_prefix => $class_prefix);
+      db            => Rose::DB->new,
+      class_prefix  => $class_prefix,
+      pre_init_hook => sub { $pre_init_hook++ });
 
   $loader->convention_manager($i % 2 ? 'MyCM' : MyCM->new);
 
@@ -70,6 +73,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
                                       ($db_type eq 'mysql' ? '|read' : ''));
 
   is(scalar keys %JCS::Called_Custom_CM, 3, "custom convention manager - $db_type");
+  is($pre_init_hook, $db_type eq 'mysql' ? 6 : 5, "pre_init_hook - $db_type");
 
   if($db_type eq 'informix')
   {

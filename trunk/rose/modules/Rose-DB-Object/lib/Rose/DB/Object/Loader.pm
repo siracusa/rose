@@ -13,7 +13,7 @@ use Rose::DB::Object::ConventionManager;
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.57';
+our $VERSION = '0.60';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -28,6 +28,7 @@ use Rose::Object::MakeMethods::Generic
     'include_tables',
     'exclude_tables',
     'filter_tables',
+    'pre_init_hook'
   ],
 
   boolean => 
@@ -239,6 +240,9 @@ sub make_classes
   my $with_managers = exists $args{'with_managers'} ? 
     $args{'with_managers'} : $self->with_managers;
 
+  my $pre_init_hook = exists $args{'pre_init_hook'} ? 
+    $args{'pre_init_hook'} : $self->pre_init_hook;
+
   my $include = exists $args{'include_tables'} ? 
     $args{'include_tables'} : $self->include_tables;
 
@@ -440,6 +444,8 @@ sub make_classes
     }
 
     my $meta = $obj_class->meta;
+
+    $meta->pre_init_hook($pre_init_hook)  if($pre_init_hook);
 
     $meta->table($table);
     $meta->convention_manager($cm_class->new);
@@ -731,6 +737,10 @@ Defaults to the value of the loader object's L<filter_tables|/filter_tables> att
 
 If true, database views will also be processed.  Defaults to the value of the loader object's L<include_views|/include_views> attribute.
 
+=item B<pre_init_hook CODE>
+
+A reference to a subroutine that will be called just before each L<Rose::DB::Object>-derived class is L<initialize|Rose::DB::Object::Metadata/initialize>ed.  The subroutine will be passed the class's L<metdata|Rose::DB::Object::Metadata> object as an argument.  Defaults to the value of the loader object's L<pre_init_hook|/pre_init_hook> attribute.
+
 =item B<with_managers BOOL>
 
 If true, create L<Rose::DB::Object::Manager|Rose::DB::Object::Manager>-derived manager classes for each L<Rose::DB::Object> subclass.  Defaults to the value of the loader object's L<with_managers|/with_managers> attribute.
@@ -748,6 +758,10 @@ This parameter will be passed on to the L<auto_initialize|Rose::DB::Object::Meta
 Each L<Rose::DB::Object> subclass will be created according to the "best practices" described in the L<Rose::DB::Object::Tutorial>.  If a L<base class|/base_classes> is not provided, one (with a dynamically generated name) will be created automatically.  The same goes for the L<db|/db> object.  If one is not set, then a new (again, dynamically named) subclass of L<Rose::DB>, with its own L<private data source registry|Rose::DB/use_private_registry>, will be created automatically.
 
 This method returns a list (in list context) or a reference to an array (in scalar context) of the names of all the classes that were created.  (This list will include L<manager|Rose::DB::Object::Manager> class names as well, if any were created.)
+
+=item B<pre_init_hook [CODE]>
+
+Get or set a reference to a subroutine to be called just before each L<Rose::DB::Object>-derived class is L<initialize|Rose::DB::Object::Metadata/initialize>ed within the L<make_classes|/make_classes> method.  The subroutine will be passed the class's L<metdata|Rose::DB::Object::Metadata> object as an argument.
 
 =item B<with_managers BOOL>
 
