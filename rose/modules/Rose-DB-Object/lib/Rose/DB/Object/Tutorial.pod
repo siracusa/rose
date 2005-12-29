@@ -2365,6 +2365,55 @@ Here's the SQL.
 
 It's questionable whether this five-way join will be faster than doing a four- or three-way join and then fetching the other information after the fact, with separate queries.  It all depends on the number of rows expected to match.  Only you know your data.  You must choose the most efficient query that suits your needs.
 
+Moving beyond even the example above, it's possible to chain foreign key or relationship names to an arbitrary depth.  For example, imagine that each C<Vendor> has a C<Region> related to it by a foreign key named "region".  The following call will get region information for each product's vendor, filtering on the region name.
+
+    $products = 
+      Product::Manager->get_products(
+        query =>
+        [
+          'vendor.region.name' => 'UK',
+          'name' => { like => 'Kite%' },
+          'id'   => { gt => 15 },
+        ],
+        require_objects => [ 'vendor.region' ],
+        with_objects    => [ 'colors', 'prices' ],
+        multi_many_ok   => 1,
+        sort_by => 'name');
+
+The SQL would now look something like this.
+
+    SELECT 
+      t1.date_created,
+      t1.id,
+      t1.name,
+      t1.release_date,
+      t1.status,
+      t1.vendor_id,
+      t3.id,
+      t3.name,
+      t4.id,
+      t4.price,
+      t4.product_id,
+      t4.region,
+      t5.id,
+      t5.name
+    FROM
+      products t1
+      LEFT OUTER JOIN product_color_map t2 ON(t2.product_id = t1.id)
+      LEFT JOIN colors t3 ON(t2.color_id = t3.id)
+      LEFT OUTER JOIN prices t4 ON(t1.id = t4.product_id),
+      vendors t5,
+      regions t6
+    WHERE
+      t1.id > 15 AND
+      t1.name LIKE 'Kite%' AND
+      t1.vendor_id = t5.id AND
+      t5.region_id = t6.id AND
+      t6.name = 'UK'
+    ORDER BY t1.name
+
+The same caveat about performance and the potential explosion of redundant data when JOINing across multiple "... to many" relationships also applies to the "chained" selectors demonstrated above--even more so, in fact, as the depth of the chain increases.  That said, it's usually safe to go a few levels deep into "... to one" relationships when using the C<require_objects> parameter.
+
 Finally, it's also possible to load a single product with all of its associated foreign objects.  The L<load()|Rose::DB::Object/load> method accepts a C<with> parameter that takes a list of foreign key and relationship names.
 
     $product = Product->new(id => 1234);

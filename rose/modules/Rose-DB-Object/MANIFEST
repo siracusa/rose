@@ -128,6 +128,7 @@ t/db-object-relationship-auto-2.t
 t/db-object-std-cached.t
 t/db-object-std.t
 t/db-object.t
+t/deep-joins.t
 t/lazy-columns.t
 t/lib/My/DB/Gene/Main.pm
 t/lib/My/DB/Gene2Unigene.pm
@@ -156,4 +157,5 @@ t/spot-check-01.t
 t/spot-check-02.t
 t/spot-check-03.t
 t/spot-check-04.t
+t/spot-check-05.t
 t/test-lib.pl

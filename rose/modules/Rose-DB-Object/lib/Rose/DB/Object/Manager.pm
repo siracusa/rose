@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.54';
+our $VERSION = '0.60';
 
 our $Debug = 0;
 
@@ -613,25 +613,6 @@ sub get_objects
     {
       my $i = 0;
       $sort_by = [ $sort_by ]  unless(ref $sort_by);
-
-      foreach my $table (@tables)
-      {
-        $i++; # Table aliases are 1-based
-
-        my $table_unquoted = $db->unquote_table_name($table);
-
-        foreach my $sort (@$sort_by)
-        {
-          unless($sort =~ s/^(['"`]?)\w+\1(?:\s+(?:ASC|DESC))?$/t1.$sort/ ||
-                 $sort =~ s/\b$table_unquoted\./t$i./g)
-          {
-            if(my $rel_name = $rel_name{"t$i"})
-            {
-              $sort =~ s/\b$rel_name\./t$i./g  unless($rel_name =~ /^t\d+$/);
-            }
-          }
-        }
-      }
     }
     else # otherwise, trim t1. prefixes
     {
@@ -3007,11 +2988,23 @@ If this parameter is included along with either of the C<limit> or <offset> para
 
 If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will fetch the objects.  If omitted, the default value is determined by the L<dbi_prepare_cached|/dbi_prepare_cached> class method.
 
-=item C<require_objects OBJECTS>
+=item C<require_objects ARGS>
 
-Only fetch rows from the primary table that have all of the associated sub-objects listed in OBJECTS, where OBJECTS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>," "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>," and  "L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany>".
+Only fetch rows from the primary table that have all of the associated sub-objects listed in ARGS, where ARGS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>," "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>," and  "L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany>".
 
-For each foreign key or relationship listed in OBJECTS, another table will be added to the query via an implicit inner join.  The join conditions will be constructed automatically based on the foreign key or relationship definitions.  Note that each related table must have a L<Rose::DB::Object>-derived class fronting it.
+For each foreign key or relationship listed in ARGS, another table will be added to the query via an implicit inner join.  The join conditions will be constructed automatically based on the foreign key or relationship definitions.  Note that each related table must have a L<Rose::DB::Object>-derived class fronting it.
+
+Foreign key and relationship names may be chained, with dots (".") separating each name.  For example, imagine three tables, C<products>, C<vendors>, and C<regions>, fronted by three L<Rose::DB::Object>-derived classes, C<Product>, C<Vendor>, and C<Region>, respectively.  Each C<Product> has a C<Vendor>, and each C<Vendor> has a C<Region>.
+
+To fetch C<Product>s along with their C<Vendor>s, and their vendors' C<Region>s, provide a C<with_objects> argument like this:
+
+    with_objects => [ 'vendor.region' ],
+
+This assumes that the C<Product> class has a relationship or foreign key named "vendor" that points to the product's C<Vendor>, and that the C<Vendor> class has a foreign key or relationship named "region" that points to the vendor's C<Region>.
+
+This chaining syntax can be used to traverse relationships of any kind, including "one to many" and "many to many" relationships, to an arbitrary depth.
+
+B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include more than one "... to many" relationship in ARGS.  Sometimes this may still be more efficient than making additional queries to fetch these sub-objects, but that all depends on the actual data.  A warning will be emitted (via L<Carp::cluck|Carp/cluck>) if you you include more than one "... to many" relationship in ARGS.  If you're sure you know what you're doing, you can silence this warning by passing the C<multi_many_ok> parameter with a true value.
 
 B<Note:> the C<require_objects> list currently cannot be used to simultaneously fetch two objects that both front the same database table, I<but are of different classes>.  One workaround is to make one class use a synonym or alias for one of the tables.  Another option is to make one table a trivial view of the other.  The objective is to get the table names to be different for each different class (even if it's just a matter of letter case, if your database is not case-sensitive when it comes to table names).
 
@@ -3037,22 +3030,25 @@ If a method name is provided instead, then each object fetched through a mapping
 
 If the value is a reference to a hash, then the keys of the hash should be "many to many" relationship names, and the values should be the method names through which the maps records will be available for each relationship.
 
-=item C<with_objects OBJECTS>
+=item C<with_objects ARGS>
 
-Also fetch sub-objects (if any) associated with rows in the primary table, where OBJECTS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>," "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>," and  "L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany>".
+Also fetch sub-objects (if any) associated with rows in the primary table, where ARGS is a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>," "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>," and  "L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany>".
 
-For each foreign key or relationship listed in OBJECTS, another table will be added to the query via an explicit LEFT OUTER JOIN.  (Foreign keys whose columns are all NOT NULL are the exception, however.  They are always fetched via inner joins.)   The join conditions will be constructed automatically based on the foreign key or relationship definitions.  Note that each related table must have a L<Rose::DB::Object>-derived class fronting it.  See the L<synopsis|/SYNOPSIS> for an example.
+For each foreign key or relationship listed in ARGS, another table will be added to the query via an explicit LEFT OUTER JOIN.  (Foreign keys whose columns are all NOT NULL are the exception, however.  They are always fetched via inner joins.)   The join conditions will be constructed automatically based on the foreign key or relationship definitions.  Note that each related table must have a L<Rose::DB::Object>-derived class fronting it.  See the L<synopsis|/SYNOPSIS> for an example.
 
-"Many to many" relationships are a special case.  They will add two tables to the query (the "map" table plus the table with the actual data), which will offset the 
+"Many to many" relationships are a special case.  They will add two tables to the query (the "map" table plus the table with the actual data), which will offset the "tN" table numbering by one extra table.
 
-Foreign key or relationship names may be chained, with dots (".") separating each name.  For example imagine three tables: C<products>, C<vendors>, and C<regions>.  Each product has a vendor, and each vendor has a region.  To fetch products along with their vendors, and their vendors' regions, provide a C<with_objects> argument like this:
+Foreign key and relationship names may be chained, with dots (".") separating each name.  For example, imagine three tables, C<products>, C<vendors>, and C<regions>, fronted by three L<Rose::DB::Object>-derived classes, C<Product>, C<Vendor>, and C<Region>, respectively.  Each C<Product> has a C<Vendor>, and each C<Vendor> has a C<Region>.
 
-    with_objects => [ 'vendor.region', ... ],
+To fetch C<Product>s along with their C<Vendor>s, and their vendors' C<Region>s, provide a C<with_objects> argument like this:
 
-This assumed that the C<Product> class has a relationship or foreign key named "vendor" that points to the product's vendor, and that the C<Vendor> class has a foreign key or relationship named "region" that points to the vendor's region.
+    with_objects => [ 'vendor.region' ],
 
+This assumes that the C<Product> class has a relationship or foreign key named "vendor" that points to the product's C<Vendor>, and that the C<Vendor> class has a foreign key or relationship named "region" that points to the vendor's C<Region>.
 
-B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include more than one "... to many" relationship in OBJECTS.  Sometimes this may still be more efficient than making additional queries to fetch these sub-objects, but that all depends on the actual data.  A warning will be emitted (via L<Carp::cluck|Carp/cluck>) if you you include more than one "... to many" relationship in OBJECTS.  If you're sure you know what you're doing, you can silence this warning by passing the C<multi_many_ok> parameter with a true value.
+This chaining syntax can be used to traverse relationships of any kind, including "one to many" and "many to many" relationships, to an arbitrary depth.
+
+B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include more than one "... to many" relationship in ARGS.  Sometimes this may still be more efficient than making additional queries to fetch these sub-objects, but that all depends on the actual data.  A warning will be emitted (via L<Carp::cluck|Carp/cluck>) if you you include more than one "... to many" relationship in ARGS.  If you're sure you know what you're doing, you can silence this warning by passing the C<multi_many_ok> parameter with a true value.
 
 B<Note:> the C<with_objects> list currently cannot be used to simultaneously fetch two objects that both front the same database table, I<but are of different classes>.  One workaround is to make one class use a synonym or alias for one of the tables.  Another option is to make one table a trivial view of the other.  The objective is to get the table names to be different for each different class (even if it's just a matter of letter case, if your database is not case-sensitive when it comes to table names).
 
@@ -3062,7 +3058,16 @@ The query parameters, passed as a reference to an array of name/value pairs.  Th
 
 For the complete list of valid parameter names and values, see the documentation for the C<query> parameter of the L<build_select|Rose::DB::Object::QueryBuilder/build_select> function in the L<Rose::DB::Object::QueryBuilder> module.
 
-This class also supports a useful extension to the query syntax supported by L<Rose::DB::Object::QueryBuilder>.  In addition to table names and aliases, column names may be prefixed with foreign key or relationship names.  These names may be chained, with dots (".") separating the components.  
+This class also supports a useful extension to the query syntax supported by L<Rose::DB::Object::QueryBuilder>.  In addition to table names and aliases, column names may be prefixed with foreign key or relationship names.  These names may be chained, with dots (".") separating the components.
+
+For example, imagine three tables, C<products>, C<vendors>, and C<regions>, fronted by three L<Rose::DB::Object>-derived classes, C<Product>, C<Vendor>, and C<Region>, respectively.  Each C<Product> has a C<Vendor>, and each C<Vendor> has a C<Region>.
+
+To select only products whose vendors are in the United States, use a query argument like this:
+
+    query => [ 'vendor.region.name' => 'US' ],
+
+This assumes that the C<Product> class has a relationship or foreign key named "vendor" that points to the product's C<Vendor>, and that the C<Vendor> class has a foreign key or relationship named "region" that points to the vendor's C<Region>, and that 'vendor.region' (or any foreign key or relationship name chain that begins with 'vendor.region.') is an argument to the C<with_objects> or C<require_objects> parameters.
+
 
 =back
 
