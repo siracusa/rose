@@ -2866,13 +2866,6 @@ In all cases, the class's C<error> attribute will also contain the error message
 
 Get L<Rose::DB::Object>-derived objects based on PARAMS, where PARAMS are name/value pairs.  Returns a reference to a (possibly empty) array, or undef if there was an error.  
 
-Note that naively calling this method in list context may result in a list containing a single undef element if there was an error.  Example:
-
-    # If there is an error, you'll get: @objects = (undef)
-    @objects = Rose::DB::Object::Manager->get_objects(...);
-
-If you want to avoid this, feel free to change the behavior in your wrapper method, or just call it in scalar context (which is more efficient anyway for long lists of objects).
-
 Each table that participates in the query will be aliased.  Each alias is in the form "tN" where "N" is an ascending number starting with 1.  The tables are numbered as follows.
 
 =over 4
