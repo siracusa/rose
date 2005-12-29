@@ -1,6 +1,6 @@
 0.60 (12.28.2005) - John Siracusa <siracusa@mindspring.com>
 
-    * Added arbitrary-depth auto-joins to the Manager via a "dot-chained"
+    * Added arbitrary-depth auto-joins to the Manager using a "dot-chained"
       syntax (e.g., vendor.regions.code)
 
     * TODO: varchar die/truncate settings
