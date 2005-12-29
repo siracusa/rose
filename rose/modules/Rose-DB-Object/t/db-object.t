@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 341;
+use Test::More tests => 342;
 
 BEGIN 
 {
@@ -596,7 +596,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 66)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 67)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -1258,9 +1258,13 @@ EOF
     MySQLiteObject->meta->column('id')->add_trigger(inflate => sub { defined $_[1] ? [ $_[1] ] : undef });
     MySQLiteObject->meta->column('id')->add_trigger(deflate => sub { ref $_[1] ? @{$_[1]}  : $_[1] });
 
+    my $pre_inited = 0;
+    MySQLiteObject->meta->pre_init_hook(sub { $pre_inited++ });
+
     eval { MySQLiteObject->meta->initialize };
     Test::More::ok($@, 'meta->initialize() reserved method');
-
+    Test::More::is($pre_inited, 1, 'meta->pre_init_hook()');
+    
     MySQLiteObject->meta->alias_column(save => 'save_col');
 
     eval { MySQLiteObject->meta->initialize };

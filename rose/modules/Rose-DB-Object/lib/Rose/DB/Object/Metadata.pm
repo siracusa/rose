@@ -33,6 +33,7 @@ use Rose::Object::MakeMethods::Generic
   [
     'class',
     'error',
+    'pre_init_hook',
   ],
 
   'scalar --get_set_init' =>
@@ -1203,6 +1204,11 @@ sub initialize
   my(%args) = @_;
 
   $Debug && warn $self->class, " - initialize\n";
+
+  if(my $code = $self->pre_init_hook)
+  {
+    $code->($self, @_);
+  }
 
   my $class = $self->class
     or Carp::croak "Missing class for metadata object $self";
@@ -4060,6 +4066,9 @@ Given the column object COLUMN and the method type TYPE, returns the correspondi
 
 Given the method name NAME and the class name CLASS, returns true if the method name is reserved (i.e., is used by the CLASS API), false otherwise.
 
+=item B<pre_init_hook [CODE]>
+
+Get or set a reference to a subroutine that will be called just before the L<initialize|/initialize> method runs.  The subroutine arguments will be the metdata object itself and any arguments passed to the call to L<initialize|/initialize>.
 =item B<primary_key [PK]>
 
 Get or set the L<Rose::DB::Object::Metadata::PrimaryKey> object that stores the list of column names that make up the primary key for this table.

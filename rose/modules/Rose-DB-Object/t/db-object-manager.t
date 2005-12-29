@@ -8700,19 +8700,19 @@ EOF
   is($objs->[2]->id, 3, "deep join with 4 - $db_type");
   is($objs->[16]->id, 17, "deep join with 5 - $db_type");
 
-  #SORT:
-  #{
-  #  $objs->[1]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[1]{'nicks'}} ];
-  #}
+  SORT:
+  {
+    $objs->[1]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[1]{'nicks'}} ];
+  }
 
   is($objs->[1]{'nicks'}[0]{'type'}{'name'}, 'nt four', "deep join with 6 - $db_type");
   is($objs->[1]{'nicks'}[1]{'type'}{'name'}, 'nt two', "deep join with 7 - $db_type");
   is(scalar @{$objs->[1]{'nicks'}}, 2, "deep join with 8 - $db_type");
 
-  #SORT:
-  #{
-  #  $objs->[4]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[4]{'nicks'}} ];
-  #}
+  SORT:
+  {
+    $objs->[4]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[4]{'nicks'}} ];
+  }
 
   is($objs->[4]{'nicks'}[0]{'type'}{'name'}, 'nt five', "deep join with 9 - $db_type");
   is($objs->[4]{'nicks'}[1]{'type'}{'name'}, 'nt one', "deep join with 10 - $db_type");
@@ -8770,10 +8770,10 @@ EOF
 
   $o = $iterator->next;
 
-  #SORT:
-  #{
-  #  $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
-  #}
+  SORT:
+  {
+    $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
+  }
 
   is($o->{'nicks'}[0]{'type'}{'name'}, 'nt four', "deep join with with iterator 1 - $db_type");
   is($o->{'nicks'}[1]{'type'}{'name'}, 'nt two', "deep join with iterator 2 - $db_type");
@@ -8784,10 +8784,10 @@ EOF
     
   $o = $iterator->next;
 
-  #SORT:
-  #{
-  #  $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
-  #}
+  SORT:
+  {
+    $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
+  }
 
   is($o->{'nicks'}[0]{'type'}{'name'}, 'nt five', "deep join with iterator 4 - $db_type");
   is($o->{'nicks'}[1]{'type'}{'name'}, 'nt one', "deep join with iterator 5 - $db_type");
@@ -8810,19 +8810,19 @@ EOF
   is($objs->[0]->id, 2, "deep join three-level 2 - $db_type");
   is($objs->[1]->id, 5, "deep join three-level 3 - $db_type");
 
-  #SORT:
-  #{
-  #  $objs->[0]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[0]{'nicks'}} ];
-  #}
+  SORT:
+  {
+    $objs->[0]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[0]{'nicks'}} ];
+  }
 
   is($objs->[0]{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 four', "deep join three-level 4 - $db_type");
   is($objs->[0]{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 two', "deep join three-level 5 - $db_type");
   is(scalar @{$objs->[0]{'nicks'}}, 2, "deep join three-level 6 - $db_type");
 
-  #SORT:
-  #{
-  #  $objs->[1]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[1]{'nicks'}} ];
-  #}
+  SORT:
+  {
+    $objs->[1]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[1]{'nicks'}} ];
+  }
 
   is($objs->[1]{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 five', "deep join three-level 7 - $db_type");
   is($objs->[1]{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 one', "deep join three-level 8 - $db_type");
@@ -8843,19 +8843,19 @@ EOF
   is($objs->[4]->id, 5, "deep join three-level 4 - $db_type");
   is($objs->[20]->id, 60, "deep join three-level 5 - $db_type");
   
-  #SORT:
-  #{
-  #  $objs->[1]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[1]{'nicks'}} ];
-  #}
+  SORT:
+  {
+    $objs->[1]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[1]{'nicks'}} ];
+  }
 
   is($objs->[1]{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 four', "deep join three-level 6 - $db_type");
   is($objs->[1]{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 two', "deep join three-level 7 - $db_type");
   is(scalar @{$objs->[1]{'nicks'}}, 2, "deep join three-level 8 - $db_type");
 
-  #SORT:
-  #{
-  #  $objs->[4]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[4]{'nicks'}} ];
-  #}
+  SORT:
+  {
+    $objs->[4]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[4]{'nicks'}} ];
+  }
 
   is($objs->[4]{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 five', "deep join three-level 9 - $db_type");
   is($objs->[4]{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 one', "deep join three-level 10 - $db_type");
@@ -8892,10 +8892,10 @@ EOF
   $o = $iterator->next;
   $o = $iterator->next;
 
-  #SORT:
-  #{
-  #  $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
-  #}
+  SORT:
+  {
+    $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
+  }
 
   is($o->{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 four', "deep join iterator with 1 - $db_type");
   is($o->{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 two', "deep join iterator with 2 - $db_type");
@@ -8906,10 +8906,10 @@ EOF
 
   $o = $iterator->next;
 
-  #SORT:
-  #{
-  #  $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
-  #}
+  SORT:
+  {
+    $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
+  }
 
   is($o->{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 five', "deep join iterator with 4 - $db_type");
   is($o->{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 one', "deep join iterator with 5 - $db_type");
@@ -8952,25 +8952,25 @@ EOF
   is($objs->[1]->id, 2, "deep join multi with 2 - $db_type");
   is($objs->[4]->id, 5, "deep join multi with 3 - $db_type");
 
-  #SORT:
-  #{
-  #  $objs->[1]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[1]{'nicks'}} ];
-  #  $objs->[1]{'nicks'}[1]{'alts'} = [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$objs->[1]{'nicks'}[1]{'alts'}} ];
-  #}
+  SORT:
+  {
+    $objs->[1]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[1]{'nicks'}} ];
+    $objs->[1]{'nicks'}[1]{'alts'} = [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$objs->[1]{'nicks'}[1]{'alts'}} ];
+  }
 
   is($objs->[1]{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt two 1', "deep join multi with with 4 - $db_type");
   is(scalar @{$objs->[1]{'nicks'}[1]{'alts'}}, 1, "deep join multi with 5 - $db_type");
 
-  #SORT:
-  #{
-  #  $objs->[4]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[4]{'nicks'}} ];
-  #  $objs->[4]{'nicks'}[1]{'alts'} = [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$objs->[4]{'nicks'}[3]{'alts'}} ];
-  #}
+  SORT:
+  {
+    $objs->[4]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[4]{'nicks'}} ];
+    $objs->[4]{'nicks'}[1]{'alts'} = [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$objs->[4]{'nicks'}[1]{'alts'}} ];
+  }
 
-  is($objs->[4]{'nicks'}[3]{'alts'}[0]{'alt'}, 'alt one 1', "deep join multi with 6 - $db_type");
-  is($objs->[4]{'nicks'}[3]{'alts'}[1]{'alt'}, 'alt one 2', "deep join multi with 7 - $db_type");
-  is($objs->[4]{'nicks'}[3]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi with 8 - $db_type");
-  is(scalar @{$objs->[4]{'nicks'}[3]{'alts'}}, 3, "deep join multi with 11 - $db_type");
+  is($objs->[4]{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt one 1', "deep join multi with 6 - $db_type");
+  is($objs->[4]{'nicks'}[1]{'alts'}[1]{'alt'}, 'alt one 2', "deep join multi with 7 - $db_type");
+  is($objs->[4]{'nicks'}[1]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi with 8 - $db_type");
+  is(scalar @{$objs->[4]{'nicks'}[1]{'alts'}}, 3, "deep join multi with 11 - $db_type");
 
   is(scalar @{$objs->[0]{'nicks'} || []}, 0, "deep join multi with 12 - $db_type");
 
@@ -9010,11 +9010,11 @@ EOF
 
   $o = $iterator->next;
 
-  #SORT:
-  #{
-  #  $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
-  #  $o->{'nicks'}[1]{'alts'} = [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$o->{'nicks'}[1]{'alts'}} ];
-  #}
+  SORT:
+  {
+    $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
+    $o->{'nicks'}[1]{'alts'} = [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$o->{'nicks'}[1]{'alts'}} ];
+  }
 
   is($o->id, 2, "deep join multi iter with 2 - $db_type");
   is($o->{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt two 1', "deep join multi iter with 3 - $db_type");
@@ -9025,17 +9025,17 @@ EOF
 
   $o = $iterator->next;
 
-  #SORT:
-  #{
-  #  $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
-  #  $o->{'nicks'}[3]{'alts'} = [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$o->{'nicks'}[3]{'alts'}} ];
-  #}
-  
-  is($o->{'nicks'}[3]{'alts'}[0]{'alt'}, 'alt one 1', "deep join multi iter with 5 - $db_type");
-  is($o->{'nicks'}[3]{'alts'}[1]{'alt'}, 'alt one 2', "deep join multi iter with 6 - $db_type");
-  is($o->{'nicks'}[3]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi iter with 7 - $db_type");
-  is(scalar @{$o->{'nicks'}[3]{'alts'}}, 3, "deep join multi iter with 8 - $db_type");
-  
+  SORT:
+  {
+    $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
+    $o->{'nicks'}[1]{'alts'} = [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$o->{'nicks'}[1]{'alts'}} ];
+  }
+
+  is($o->{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt one 1', "deep join multi iter with 5 - $db_type");
+  is($o->{'nicks'}[1]{'alts'}[1]{'alt'}, 'alt one 2', "deep join multi iter with 6 - $db_type");
+  is($o->{'nicks'}[1]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi iter with 7 - $db_type");
+  is(scalar @{$o->{'nicks'}[1]{'alts'}}, 3, "deep join multi iter with 8 - $db_type");
+
   while($iterator->next) { }
   is($iterator->total, 21, "deep join multi iter with 9 - $db_type");
 
