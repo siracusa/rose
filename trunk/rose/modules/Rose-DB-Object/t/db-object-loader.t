@@ -73,7 +73,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
                                       ($db_type eq 'mysql' ? '|read' : ''));
 
   is(scalar keys %JCS::Called_Custom_CM, 3, "custom convention manager - $db_type");
-  is($pre_init_hook, $db_type eq 'mysql' ? 6 : 5, "pre_init_hook - $db_type");
+  ok($pre_init_hook > 0, "pre_init_hook - $db_type");
 
   if($db_type eq 'informix')
   {
