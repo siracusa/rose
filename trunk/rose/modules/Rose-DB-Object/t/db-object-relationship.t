@@ -5001,6 +5001,8 @@ SKIP: foreach my $db_type ('sqlite')
   ok($o = MySQLiteObject->new(id => 444)->load(with => [ qw(other_obj other2_objs colors) ]),
      "load with 1 - $db_type");
 
+  $o->{'other2_objs'} = [ sort { $a->{'name'} cmp $b->{'name'} } @{$o->{'other2_objs'}} ];
+
   ok($o->{'other2_objs'} && $o->{'other2_objs'}[1]->name eq 'nine',
      "load with 2 - $db_type");
 
@@ -5365,17 +5367,19 @@ SKIP: foreach my $db_type ('sqlite')
   @colors = $o->colors;
   ok(@colors == 5, "add 2 many to many on save 16 - $db_type");
 
-  ok($colors[0]->id == 2, "add 2 many to many on save 2 - $db_type");
-  ok($colors[1]->id == 7, "add 2 many to many on save 3 - $db_type");
-  ok($colors[2]->id == 1, "add 2 many to many on save 4 - $db_type");
-  ok($colors[3]->id == 8, "add 2 many to many on save 5 - $db_type");
-  ok($colors[4]->id == 9, "add 2 many to many on save 6 - $db_type");
+  @colors = sort { $a->{'name'} cmp $b->{'name'} } @colors;
 
-  ok(MySQLiteColor->new(id => 2)->load(speculative => 1), "add many to many on save 7 - $db_type");
-  ok(MySQLiteColor->new(id => 7)->load(speculative => 1), "add many to many on save 8 - $db_type");
-  ok(MySQLiteColor->new(id => 1)->load(speculative => 1), "add many to many on save 9 - $db_type");
-  ok(MySQLiteColor->new(id => 8)->load(speculative => 1), "add many to many on save 10 - $db_type");
-  ok(!MySQLiteColor->new(id => 9)->load(speculative => 1), "add many to many on save 11 - $db_type");
+  ok($colors[0]->id == 9, "add 2 many to many on save 2 - $db_type");
+  ok($colors[1]->id == 2, "add 2 many to many on save 3 - $db_type");
+  ok($colors[2]->id == 7, "add 2 many to many on save 4 - $db_type");
+  ok($colors[3]->id == 1, "add 2 many to many on save 5 - $db_type");
+  ok($colors[4]->id == 8, "add 2 many to many on save 6 - $db_type");
+
+  ok(!MySQLiteColor->new(id => 9)->load(speculative => 1), "add many to many on save 7 - $db_type");
+  ok(MySQLiteColor->new(id => 2)->load(speculative => 1), "add many to many on save 8 - $db_type");
+  ok(MySQLiteColor->new(id => 7)->load(speculative => 1), "add many to many on save 9 - $db_type");
+  ok(MySQLiteColor->new(id => 1)->load(speculative => 1), "add many to many on save 10 - $db_type");
+  ok(MySQLiteColor->new(id => 8)->load(speculative => 1), "add many to many on save 11 - $db_type");
 
   ok(MySQLiteColorMap->new(obj_id => 60, color_id => 2)->load(speculative => 1),
      "add 2 many to many on save 12 - $db_type");
