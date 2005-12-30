@@ -244,6 +244,32 @@ sub refine_dbi_column_info
       }
 
       $col_info->{'rdbo_default_value_sequence_name'} = $seq;
+
+      # Pg returns serial columns as integer or bigint
+      if($col_info->{'TYPE_NAME'} eq 'integer' ||
+         $col_info->{'TYPE_NAME'} eq 'bigint')
+      {
+        my $db = $meta->db;
+#$DB::single = 1;
+        my $auto_seq =
+          $db->auto_sequence_name(table  => $meta->table,
+                                  column => $col_info->{'COLUMN_NAME'});
+
+        # Use schema prefix on auto-generated name if necessary
+        if($seq =~ /^[^.]+\./)
+        {
+          my $schema = $meta->select_schema($db);
+          $auto_seq = "$schema.$auto_seq"  if($schema);
+        }
+
+        # If the sequence name
+        no warnings 'uninitialized';
+        if(lc $seq eq lc $auto_seq)
+        {
+          $col_info->{'TYPE_NAME'} =
+            $col_info->{'TYPE_NAME'} eq 'integer' ? 'serial' : 'bigserial';
+        }
+      }
     }
   }
 
@@ -257,11 +283,6 @@ sub refine_dbi_column_info
     $col_info->{'TYPE_NAME'} = 'bits';
   }
 
-  # Postgres 8.1 sometimes adds double quotes around the column name
-  if($col_info->{'COLUMN_NAME'} =~ /^"(.+)"$/)
-  {
-    $col_info->{'COLUMN_NAME'} = $1;
-  }
 
   # Pg does not populate COLUMN_SIZE correctly for bit fields, so
   # we have to extract the number of bits from pg_type.

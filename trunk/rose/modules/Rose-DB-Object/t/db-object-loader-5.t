@@ -158,7 +158,7 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 
   SKIP:
   {
-    skip('informix reserved name tests', 2)  unless($db_type eq 'informix');
+    skip('reserved name tests', 12 - scalar(@classes))  unless(@classes == 12);
   }
 
   my $product_class = $class_prefix . '::Product';
