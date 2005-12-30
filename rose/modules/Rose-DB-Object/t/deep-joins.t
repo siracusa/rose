@@ -216,15 +216,21 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($products->[0]{'colors'}[0]{'description'}{'text'}, 'desc 1', "p1 - with colors description 1 - $db_type");
   is($products->[0]{'colors'}[1]{'description'}{'text'}, 'desc 2', "p1 - with colors description 2 - $db_type");
 
-  #$products->[0]{'colors'}[0]{'description'}{'authors'} = 
-  #  [ sort { $a->{'name'} cmp $b->{'name'} } @{$products->[0]{'colors'}[0]{'description'}{'authors'}} ];
+  if(has_broken_order_by($db_type))
+  {
+    $products->[0]{'colors'}[0]{'description'}{'authors'} = 
+      [ sort { $a->{'name'} cmp $b->{'name'} } @{$products->[0]{'colors'}[0]{'description'}{'authors'}} ];
+  }
 
   is($products->[0]{'colors'}[0]{'description'}{'authors'}[0]{'name'}, 'john', "p1 - with colors description authors 1 - $db_type");
   is($products->[0]{'colors'}[0]{'description'}{'authors'}[1]{'name'}, 'sue', "p1 - with colors description authors 2 - $db_type");
   is(scalar @{$products->[0]{'colors'}[0]{'description'}{'authors'}}, 2, "p1 - with colors description authors 3  - $db_type");
 
-  #$products->[0]{'colors'}[1]{'description'}{'authors'} = 
-  #  [ sort { $a->{'name'} cmp $b->{'name'} } @{$products->[0]{'colors'}[1]{'description'}{'authors'}} ];
+  if(has_broken_order_by($db_type))
+  {
+    $products->[0]{'colors'}[1]{'description'}{'authors'} = 
+      [ sort { $a->{'name'} cmp $b->{'name'} } @{$products->[0]{'colors'}[1]{'description'}{'authors'}} ];
+  }
 
   is($products->[0]{'colors'}[1]{'description'}{'authors'}[0]{'name'}, 'jane', "p1 - with colors description authors 4 - $db_type");
   is($products->[0]{'colors'}[1]{'description'}{'authors'}[1]{'name'}, 'john', "p1 - with colors description authors 5 - $db_type");
@@ -319,8 +325,11 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($p->{'colors'}[0]{'description'}{'authors'}[1]{'name'}, 'sue', "p1 - iterator with colors description authors 2 - $db_type");
   is(scalar @{$p->{'colors'}[0]{'description'}{'authors'}}, 2, "p1 - iterator with colors description authors 3  - $db_type");
 
-  #$p->{'colors'}[1]{'description'}{'authors'} = 
-  #  [ sort { $a->{'name'} cmp $b->{'name'} } @{$p->{'colors'}[1]{'description'}{'authors'}} ];
+  if(has_broken_order_by($db_type))
+  {
+    $p->{'colors'}[1]{'description'}{'authors'} = 
+      [ sort { $a->{'name'} cmp $b->{'name'} } @{$p->{'colors'}[1]{'description'}{'authors'}} ];
+  }
 
   is($p->{'colors'}[1]{'description'}{'authors'}[0]{'name'}, 'jane', "p1 - iterator with colors description authors 4 - $db_type");
   is($p->{'colors'}[1]{'description'}{'authors'}[1]{'name'}, 'john', "p1 - iterator with colors description authors 5 - $db_type");
@@ -432,8 +441,17 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($products->[1]{'prices'}[0]{'price'}, 9.99, "p2 - prices 2 - $db_type");
   is($products->[1]{'prices'}[0]{'region'}{'name'}, 'America', "p2 - prices 3 - $db_type");
 
-  #$products->[0]{'colors'} = 
-  #  [ sort { $b->{'name'} cmp $a->{'name'} } @{$products->[0]{'colors'}} ];
+  if(has_broken_order_by($db_type))
+  {
+    $products->[0]{'colors'} = 
+      [ sort { $b->{'name'} cmp $a->{'name'} } @{$products->[0]{'colors'}} ];
+
+    $products->[0]{'colors'}[0]{'description'}{'authors'} =
+      [ sort { $a->{'name'} cmp $b->{'name'} } @{$products->[0]{'colors'}[0]{'description'}{'authors'}} ];
+
+    $products->[0]{'colors'}[1]{'description'}{'authors'} =
+      [ sort { $a->{'name'} cmp $b->{'name'} } @{$products->[0]{'colors'}[1]{'description'}{'authors'}} ];
+  }
 
   is($products->[0]{'colors'}[0]{'name'}, 'red', "p1 - with colors vendors 1 - $db_type");
   is($products->[0]{'colors'}[1]{'name'}, 'blue', "p1 - with colors vendors 2 - $db_type");
@@ -565,9 +583,15 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($p->{'colors'}[0]{'description'}{'text'}, 'desc 1', "p1 - iterator with colors vendors description 1 - $db_type");
   is($p->{'colors'}[1]{'description'}{'text'}, 'desc 2', "p1 - iterator with colors vendors description 2 - $db_type");
 
-  #$p->{'colors'}[0]{'description'}{'authors'} = 
-  #  [ sort { $a->{'name'} cmp $b->{'name'} } @{$p->{'colors'}[0]{'description'}{'authors'}} ];
-    
+  if(has_broken_order_by($db_type))
+  {
+    $p->{'colors'}[0]{'description'}{'authors'} = 
+      [ sort { $a->{'name'} cmp $b->{'name'} } @{$p->{'colors'}[0]{'description'}{'authors'}} ];
+
+    $p->{'colors'}[1]{'description'}{'authors'} =
+      [ sort { $a->{'name'} cmp $b->{'name'} } @{$p->{'colors'}[1]{'description'}{'authors'}} ];
+  }
+
   is($p->{'colors'}[0]{'description'}{'authors'}[0]{'name'}, 'john', "p1 - iterator with colors vendors description authors 1 - $db_type");
   is($p->{'colors'}[0]{'description'}{'authors'}[1]{'name'}, 'sue', "p1 - iterator with colors vendors description authors 2 - $db_type");
   is(scalar @{$p->{'colors'}[0]{'description'}{'authors'}}, 2, "p1 - iterator with colors vendors description authors 3  - $db_type");
@@ -1577,4 +1601,16 @@ END
 
     $dbh->disconnect;
   }
+}
+
+sub has_broken_order_by
+{
+  my($db_type) = shift;
+  
+  if($db_type eq 'sqlite' && $DBD::SQLite::VERSION < 1.11)
+  {
+    return 1;
+  }
+
+  return 0;
 }
