@@ -332,21 +332,35 @@ sub perl_column_defintion_attributes
       next ATTR;
     }
     
+    # Use shorter "sequence" hash key name for this attr
     if($attr eq 'default_value_sequence_name')
     {
-      my $seq = $self->default_value_sequence_name;
-
-      my $meta = $self->parent;
-      my $db   = $meta->db;
-
-      my $auto_seq = $db->auto_sequence_name(table  => $meta->table,
-                                             schema => $db->schema, 
-                                             column => $self);
-
-      $seq =~ s/^[^.]+\.//;
-
-      no warnings 'uninitialized';
-      if($seq ne $auto_seq)
+      # Only list an explicit sequence for serial columns if the sequence
+      # name differs from the default auto-generated sequence name.
+      if($self->type =~ /^(?:big)?serial$/)
+      {
+        my $seq = $self->default_value_sequence_name;
+  
+        my $meta = $self->parent;
+        my $db   = $meta->db;
+  
+        my $auto_seq = $db->auto_sequence_name(table  => $meta->table,
+                                               column => $self);
+  
+        # Use schema prefix on auto-generated name if necessary
+        if($seq =~ /^[^.]+\./)
+        {
+          my $schema = $meta->select_schema($db);
+          $auto_seq = "$schema.$auto_seq"  if($schema);
+        }
+  
+        no warnings 'uninitialized';
+        if(lc $seq ne lc $auto_seq)
+        {
+          push(@attrs, 'sequence');
+        }
+      }
+      else
       {
         push(@attrs, 'sequence');
       }

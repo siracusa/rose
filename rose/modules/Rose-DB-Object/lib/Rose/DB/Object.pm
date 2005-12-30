@@ -892,7 +892,7 @@ sub insert
 
   if($@)
   {
-    $self->error("update() - $@");
+    $self->error("insert() - $@");
     #$db->rollback or warn $db->error  if($started_new_tx);
     $self->meta->handle_error($self);
     return 0;

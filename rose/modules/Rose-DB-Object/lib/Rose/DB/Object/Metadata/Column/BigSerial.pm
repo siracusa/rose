@@ -1,13 +1,13 @@
-package Rose::DB::Object::Metadata::Column::Serial;
+package Rose::DB::Object::Metadata::Column::BigSerial;
 
 use strict;
 
-use Rose::DB::Object::Metadata::Column::Integer;
-our @ISA = qw(Rose::DB::Object::Metadata::Column::Integer);
+use Rose::DB::Object::Metadata::Column::Serial;
+our @ISA = qw(Rose::DB::Object::Metadata::Column::Serial);
 
 our $VERSION = '0.60';
 
-sub type { 'serial' }
+sub type { 'bigserial' }
 
 1;
 
@@ -15,21 +15,21 @@ __END__
 
 =head1 NAME
 
-Rose::DB::Object::Metadata::Column::Serial - Serial column metadata.
+Rose::DB::Object::Metadata::Column::BigSerial - Big serial column metadata.
 
 =head1 SYNOPSIS
 
-  use Rose::DB::Object::Metadata::Column::Serial;
+  use Rose::DB::Object::Metadata::Column::BigSerial;
 
-  $col = Rose::DB::Object::Metadata::Column::Serial->new(...);
+  $col = Rose::DB::Object::Metadata::Column::BigSerial->new(...);
   $col->make_methods(...);
   ...
 
 =head1 DESCRIPTION
 
-Objects of this class store and manipulate metadata for serial columns in a database.  Column metadata objects store information about columns (data type, size, etc.) and are responsible for creating object methods that manipulate column values.
+Objects of this class store and manipulate metadata for big serial (sometimes called "serial8") columns in a database.  Column metadata objects store information about columns (data type, size, etc.) and are responsible for creating object methods that manipulate column values.
 
-This class inherits from L<Rose::DB::Object::Metadata::Column::Scalar>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::Scalar> documentation for more information.
+This class inherits from L<Rose::DB::Object::Metadata::Column::Serial>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::Serial> documentation for more information.
 
 =head1 METHOD MAP
 
@@ -57,7 +57,7 @@ See the L<Rose::DB::Object::Metadata::Column|Rose::DB::Object::Metadata::Column/
 
 =item B<type>
 
-Returns "serial".
+Returns "bigserial".
 
 =back
 

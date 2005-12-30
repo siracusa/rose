@@ -246,7 +246,7 @@ sub auto_foreign_key
       unless(UNIVERSAL::isa($fk_class, 'Rose::DB::Object'))
       {
         eval "require $fk_class";
-        return  if($@);
+        return  if($@ || !UNIVERSAL::isa($fk_class, 'Rose::DB::Object'));
       }
     }
 
@@ -356,7 +356,7 @@ sub auto_relationship
         unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'))
         {
           eval "require $f_class";
-          return  if($@);
+          return  if($@ || !UNIVERSAL::isa($f_class, 'Rose::DB::Object'));
         }
       }
 
@@ -378,7 +378,7 @@ sub auto_relationship
         unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'))
         {
           eval "require $f_class";
-          return  if($@);
+          return  if($@ || !UNIVERSAL::isa($f_class, 'Rose::DB::Object'));
         }
       }
 

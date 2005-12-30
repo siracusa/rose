@@ -2,6 +2,9 @@ package Rose::DB::Object::Loader;
 
 use strict;
 
+use Cwd;
+use File::Path;
+use File::Spec;
 use DBI;
 use Carp;
 use Clone::PP qw(clone);
@@ -28,7 +31,8 @@ use Rose::Object::MakeMethods::Generic
     'include_tables',
     'exclude_tables',
     'filter_tables',
-    'pre_init_hook'
+    'pre_init_hook',
+    'module_dir',
   ],
 
   boolean => 
@@ -230,26 +234,82 @@ sub db_class
   return $self->{'db_class'} = $db_class;
 }
 
+sub make_modules
+{
+  my($self, %args) = @_;
+  
+  my $module_dir = exists $args{'module_dir'} ? 
+    delete $args{'module_dir'} : $self->module_dir;
+
+  $module_dir = cwd()  unless(defined $module_dir);
+
+  unless(-d $module_dir)
+  {
+    croak "Module directory '$module_dir' does not exist";
+  }
+
+  my @classes = $self->make_classes(%args);
+
+  foreach my $class (@classes)
+  {
+    my @path = split('::', $class);
+    $path[-1] .= '.pm';
+    unshift(@path, $module_dir);
+
+    my $dir = File::Spec->catfile(@path[0 .. ($#path - 1)]);
+    
+    mkpath($dir)  unless(-e $dir);
+    
+    unless(-d $dir)
+    {
+      if(-f $dir)
+      {
+        croak "Could not create module directory '$module_dir' - a file ",
+              "with the same name already exists";
+      }
+      croak "Could not create module directory '$module_dir' - $!";
+    }
+
+    my $file = File::Spec->catfile(@path);
+
+    open(my $pm, '>', $file) or croak "Could not create $file - $!";
+    
+    if($class->isa('Rose::DB::Object'))
+    {
+      print $pm $class->meta->perl_class_definition, "\n";
+    }
+    elsif($class->isa('Rose::DB::Object::Manager'))
+    {
+      print $pm $class->perl_class_definition, "\n";
+    }
+    else { croak "Unknown class: $class" }
+    
+    close($pm) or croak  "Could not write $file - $!";
+  }
+
+  return wantarray ? @classes : \@classes;
+}
+
 sub make_classes
 {
   my($self, %args) = @_;
 
   my $include_views = exists $args{'include_views'} ? 
-    $args{'include_views'} : $self->include_views;
+    delete $args{'include_views'} : $self->include_views;
 
   my $with_managers = exists $args{'with_managers'} ? 
-    $args{'with_managers'} : $self->with_managers;
+    delete $args{'with_managers'} : $self->with_managers;
 
   my $pre_init_hook = exists $args{'pre_init_hook'} ? 
-    $args{'pre_init_hook'} : $self->pre_init_hook;
+    delete $args{'pre_init_hook'} : $self->pre_init_hook;
 
   my $include = exists $args{'include_tables'} ? 
-    $args{'include_tables'} : $self->include_tables;
+    delete $args{'include_tables'} : $self->include_tables;
 
   my $exclude = exists $args{'exclude_tables'} ? 
-    $args{'exclude_tables'} : $self->exclude_tables;
+    delete $args{'exclude_tables'} : $self->exclude_tables;
 
-  my $filter = exists $args{'filter_tables'} ? $args{'filter_tables'} : 
+  my $filter = exists $args{'filter_tables'} ? delete $args{'filter_tables'} : 
     (!defined $include && !defined $exclude) ? $self->filter_tables : undef;
 
   if($include || $exclude)

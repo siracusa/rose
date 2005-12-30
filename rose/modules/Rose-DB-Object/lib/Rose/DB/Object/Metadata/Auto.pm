@@ -431,7 +431,7 @@ sub auto_generate_foreign_keys
           # Null convention manager may return undef
           no warnings 'uninitialized'; 
           eval "require $foreign_class";
-          $foreign_class = undef  if($@);
+          $foreign_class = undef  if($@ || !UNIVERSAL::isa($foreign_class, 'Rose::DB::Object'));
         }
       }
 

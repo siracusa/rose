@@ -132,6 +132,7 @@ __PACKAGE__->column_type_classes
   'smallint'  => 'Rose::DB::Object::Metadata::Column::Integer',
 
   'serial'    => 'Rose::DB::Object::Metadata::Column::Serial',
+  'bigserial' => 'Rose::DB::Object::Metadata::Column::BigSerial',
 
   'enum'      => 'Rose::DB::Object::Metadata::Column::Enum',
 
@@ -2165,11 +2166,11 @@ sub primary_key_sequence_names
     # with type information.
     if($column->type eq 'scalar')
     {
-      $seq = _sequence_name($db, 
-                            $self->select_catalog($db), 
-                            $self->select_schema($db), 
-                            $table, 
-                            $column);
+      $seq = $self->_sequence_name($db, 
+                                   $self->select_catalog($db), 
+                                   $self->select_schema($db), 
+                                   $table, 
+                                   $column);
     }
     # Set auto-created serial column sequence names for Pg only
     elsif($column->type eq 'serial' && $db->driver eq 'pg')
@@ -2196,7 +2197,7 @@ sub primary_key_sequence_names
 
 sub _sequence_name
 {
-  my($db, $catalog, $schema, $table, $column) = @_;
+  my($self, $db, $catalog, $schema, $table, $column) = @_;
 
   # XXX: This is only beneficial in Postgres right now
   return  unless($db->driver eq 'pg');
@@ -2221,7 +2222,7 @@ sub _sequence_name
 
   return  if($@ || !$col_info);
 
-  $db->refine_dbi_column_info($col_info);
+  $db->refine_dbi_column_info($col_info, $self);
 
   my $seq = $col_info->{'rdbo_default_value_sequence_name'};
 
@@ -3357,6 +3358,7 @@ The default mapping of type names to class names is:
   smallint  => Rose::DB::Object::Metadata::Column::Integer
 
   serial    => Rose::DB::Object::Metadata::Column::Serial
+  bigserial => Rose::DB::Object::Metadata::Column::BigSerial
 
   enum      => Rose::DB::Object::Metadata::Column::Enum
 

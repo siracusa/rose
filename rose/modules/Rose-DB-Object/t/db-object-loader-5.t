@@ -2,7 +2,11 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 17);
+use File::Spec;
+use File::Path;
+use FindBin qw($Bin);
+
+use Test::More tests => 1 + (5 * 29);
 
 BEGIN 
 {
@@ -14,6 +18,7 @@ our %Have;
 
 our @Tables = qw(vendors products prices colors product_color_map);
 our $Include_Tables = join('|', @Tables);
+our $Module_Dir = File::Spec->catfile($Bin, 'loader_lib');
 
 SETUP:
 {
@@ -37,6 +42,38 @@ SETUP:
   package MyWeirdClass;
   our @ISA = qw(Rose::Object);
   sub baz { 456 }
+
+  File::Path::rmtree($Module_Dir)  if(-d $Module_Dir);
+
+  unless(-d $Module_Dir)
+  {
+    mkdir($Module_Dir);
+
+    unless(-d $Module_Dir)
+    {
+      die "Could not mkdir($Module_Dir) - $!";
+    }
+  }
+
+  unshift(@INC, $Module_Dir);
+
+  my $base_pm_dir = File::Spec->catfile($Module_Dir, 'My', 'DB', 'Object');
+  File::Path::mkpath($base_pm_dir);
+  
+  my $base_pm = File::Spec->catfile($Module_Dir, 'My', 'DB', 'Object.pm');
+  open(my $fh, '>', $base_pm) or die "Could not create $base_pm - $!";
+  print $fh "1;\n";
+  close($fh) or die "Could not write $base_pm - $!";
+
+  my $base_meta_pm = File::Spec->catfile($Module_Dir, 'My', 'DB', 'Object', 'Metadata.pm');
+  open($fh, '>', $base_meta_pm) or die "Could not create $base_meta_pm - $!";
+  print $fh "1;\n";
+  close($fh) or die "Could not write $base_meta_pm - $!";
+
+  my $weird_pm = File::Spec->catfile($Module_Dir, 'MyWeirdClass.pm');
+  open($fh, '>', $weird_pm) or die "Could not create $weird_pm - $!";
+  print $fh "1;\n";
+  close($fh) or die "Could not write $weird_pm - $!";
 }
 
 #
@@ -53,7 +90,7 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 17)  unless($Have{$db_type});
+    skip("$db_type tests", 29)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -80,7 +117,44 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
   
   Rose::DB->registry($empty_registry);
 
-  my @classes = $loader->make_classes(include_tables => $Include_Tables);
+  my @classes = $loader->make_modules(include_tables => $Include_Tables,
+                                      module_dir     => $Module_Dir);
+
+  if($db_type eq 'pg')
+  {
+    is(Pg::Color->meta->column('id')->perl_hash_definition,
+       q(id => { type => 'bigserial', not_null => 1 }),
+       "bigserial perl_hash_definition 1 - $db_type"); 
+
+    is(Pg::Price->meta->column('id')->perl_hash_definition,
+       q(id => { type => 'serial', not_null => 1 }),
+       "bigserial perl_hash_definition 2 - $db_type");
+  }
+  elsif($db_type eq 'pg_with_schema')
+  {
+    is(Pgws::Color->meta->column('id')->perl_hash_definition,
+       q(id => { type => 'bigserial', not_null => 1 }),
+       "bigserial perl_hash_definition 1 - $db_type"); 
+
+    is(Pgws::Price->meta->column('id')->perl_hash_definition,
+       q(id => { type => 'serial', not_null => 1 }),
+       "bigserial perl_hash_definition 2 - $db_type");
+  }
+  else
+  {
+    SKIP:
+    {
+      skip('Pg serial tests', 2);
+    }
+  }
+
+  foreach my $class (@classes)
+  {
+    my @path = split('::', $class);
+    $path[-1] .= '.pm';
+    my $file = File::Spec->catfile($Module_Dir, @path);
+    ok(-e $file, "make_modules() $class");
+  }
 
   my $product_class = $class_prefix . '::Product';
 
@@ -232,7 +306,7 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE colors
 (
-  id    SERIAL NOT NULL PRIMARY KEY,
+  id    SERIAL8 NOT NULL PRIMARY KEY,
   name  VARCHAR(255) NOT NULL,
 
   UNIQUE(name)
@@ -293,7 +367,7 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE Rose_db_object_private.colors
 (
-  id    SERIAL NOT NULL PRIMARY KEY,
+  id    BIGSERIAL NOT NULL PRIMARY KEY,
   name  VARCHAR(255) NOT NULL,
 
   UNIQUE(name)
@@ -621,7 +695,9 @@ EOF
 
 END
 {
-  # Delete test table
+  File::Path::rmtree($Module_Dir)  if(-d $Module_Dir);
+
+  # Delete test tables
 
   Rose::DB->registry($real_registry);
 
