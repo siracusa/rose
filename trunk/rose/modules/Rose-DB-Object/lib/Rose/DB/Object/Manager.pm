@@ -599,10 +599,7 @@ sub get_objects
       $args{'offset'} = ($page - 1) * $per_page;
     }
   }
-#################
-# TODO: Force sort by t1.pk unless sorting by some other t1 columm
-# or a "... to one" related column
-##############
+
   # Pre-process sort_by args
   if(my $sort_by = $args{'sort_by'})
   {
@@ -726,15 +723,16 @@ sub get_objects
     foreach my $arg (@$with_objects)
     {
       my($parent_meta, $parent_tn, $name);
-#print STDERR "\nARG: $arg\n";
+
       if(index($arg, '.') > 0) # dot at start is invalid, so "> 0" is correct
       {
         $arg =~ /^(.+)\.([^.]+)$/;
         my $parent = $1;
         $name = $2;
-#print STDERR "PARENT: $parent\n";      
-        $parent_tn = defined $rel_tn{$parent} ? $rel_tn{$parent}: $i; # value of $i as of last iteration
-#print STDERR "PARENT TN: $parent_tn\n";      
+
+        # value of $i as of last iteration
+        $parent_tn = defined $rel_tn{$parent} ? $rel_tn{$parent}: $i; 
+
         $belongs_to[$i] = $parent_tn - 1;
         $parent_meta = $classes[$parent_tn - 1]->meta;
       }
@@ -747,8 +745,6 @@ sub get_objects
       }
 
       $rel_tn{$arg} = $i + 1; # note the tN table number of this relationship
-
-#print STDERR "TN $arg: $rel_tn{$arg}\n";      
 
       my $rel = $parent_meta->foreign_key($name) || 
                 $parent_meta->relationship($name) ||
@@ -1112,10 +1108,7 @@ sub get_objects
     }
   }
 
-  #use Data::Dumper;
-  #print STDERR Dumper(\%rel_tn);
   $args{'table_map'} = { reverse %rel_tn };
-  #$args{'table_map'} = \%rel_name;
 
   if($count_only)
   {
@@ -1196,10 +1189,7 @@ sub get_objects
     $class->total($count);
     return $count;
   }
-#################
-# TODO: Force sort by t1.pk unless sorting by some other t1 columm
-# or a "... to one" related column
-##############
+
   # Post-process sort_by args
   if(my $sort_by = $args{'sort_by'})
   {
@@ -1416,9 +1406,6 @@ sub get_objects
                       {
                         while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                         {
-                       # print STDERR "     IDENT: $ident METH: $method SUBOBJ: @$subobjects\n";
-#print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
-#        join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
                           $parent->$method($subobjects);
                         }
                       }
@@ -1507,8 +1494,6 @@ sub get_objects
                             if(ref $parent_object eq 'ARRAY');
         
                           my $method = $subobject_methods[$i];
-        #print STDERR "WOULD $parent_object ($parent_object->{id} @{[ $parent_object->{name} || $parent_object->{nick} || $parent_object->{text} || '' ]}) -> ",
-        #"$method ADD $subobject ($subobject->{id} @{[ $subobject->{name} || $subobject->{nick} || $subobject->{text} || '' ]})\n";
         
                           my $ident = refaddr $parent_object;
                           next  if($seen{$ident,$method}{$sub_pk}++);
@@ -1551,8 +1536,6 @@ sub get_objects
                       next  if($seen{refaddr $parent_object,$method}++);
         
                       local $parent_object->{STATE_LOADING()} = 1;
-        #print STDERR "DO $parent_object ($parent_object->{id} @{[ $parent_object->{name} || $parent_object->{nick} || $parent_object->{text} || '' ]}) -> ",
-        #"$method = $subobject ($subobject->{id} @{[ $subobject->{name} || $subobject->{nick} || $subobject->{text} || '' ]})\n";
                       $parent_object->$method($subobject);
                     }
                   }
@@ -1593,8 +1576,6 @@ sub get_objects
                   {
                     while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                     {
-        #print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
-        #join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
                       $parent->$method($subobjects);
                     }
                   }
@@ -1634,8 +1615,6 @@ sub get_objects
               return shift(@objects);
             }
 
-            #$self->total($self->{'_count'});
-
             #$Debug && warn "Return 0\n";
             return 0;
           });
@@ -1655,7 +1634,6 @@ sub get_objects
               {
                 unless($sth->fetch)
                 {
-                  #$self->total($self->{'_count'});
                   return 0;
                 }
 
@@ -1786,10 +1764,8 @@ sub get_objects
 
         my($last_object, %subobjects, %parent_objects);
 
-        ROW: while(my $r = $sth->fetch)
+        ROW: while($sth->fetch)
         {
-#no warnings;
-#print STDERR "ROW: @$r\n";
           my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @pk_columns);
 
           my $object;
@@ -1804,8 +1780,6 @@ sub get_objects
               {
                 while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                 {
-#print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
-#join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
                   $parent->$method($subobjects);
                 }
               }
@@ -1895,8 +1869,6 @@ sub get_objects
                     if(ref $parent_object eq 'ARRAY');
 
                   my $method = $subobject_methods[$i];
-#print STDERR "WOULD $parent_object ($parent_object->{id} @{[ $parent_object->{name} || $parent_object->{nick} || $parent_object->{text} || '' ]}) -> ",
-#"$method ADD $subobject ($subobject->{id} @{[ $subobject->{name} || $subobject->{nick} || $subobject->{text} || '' ]})\n";
 
                   my $ident = refaddr $parent_object;
                   next  if($seen{$ident,$method}{$sub_pk}++);
@@ -1939,8 +1911,6 @@ sub get_objects
               next  if($seen{refaddr $parent_object,$method}++);
 
               local $parent_object->{STATE_LOADING()} = 1;
-#print STDERR "DO $parent_object ($parent_object->{id} @{[ $parent_object->{name} || $parent_object->{nick} || $parent_object->{text} || '' ]}) -> ",
-#"$method = $subobject ($subobject->{id} @{[ $subobject->{name} || $subobject->{nick} || $subobject->{text} || '' ]})\n";
               $parent_object->$method($subobject);
             }
           }
@@ -1964,8 +1934,6 @@ sub get_objects
           {
             while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
             {
-#print STDERR "DOC $parent ($parent->{id}  @{[ $parent->{name} || $parent->{nick} || $parent->{text} || '' ]}) -> $method = ",
-#join(', ', map { "$_ ($_->{id} @{[ $_->{name} || $_->{nick} || $_->{text} || '' ]})" } @$subobjects), "\n";
               $parent->$method($subobjects);
             }
           }
