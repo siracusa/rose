@@ -819,6 +819,26 @@ Each L<Rose::DB::Object> subclass will be created according to the "best practic
 
 This method returns a list (in list context) or a reference to an array (in scalar context) of the names of all the classes that were created.  (This list will include L<manager|Rose::DB::Object::Manager> class names as well, if any were created.)
 
+=item B<make_modules [PARAMS]>
+
+Automatically create L<Rose::DB::Object> and (optionally) L<Rose::DB::Object::Manager> subclasses for some or all of the tables in a database, then create Perl module (*.pm) files for each class.
+
+This method calls L<make_classes|/make_classes> to make the actual classes, and therefore takes all of the same parameters, with one addition.
+
+=over 4
+
+=item B<module_dir DIR>
+
+The path to the directory where the Perl module files will be created.  For example, given a DIR of "/home/john/lib", the Perl module file for the class C<My::DB::Object> would be located at "/home/john/lib/My/DB/Object.pm".  
+
+Defaults to the value of the loader object's L<module_dir|/module_dir> attribute.  If the L<module_dir|/module_dir> attribute is also undefined, then the current working directory (as determined by a call to L<cwd()|Cwd/cwd>) is used instead.
+
+=back
+
+=item B<module_dir [DIR]>
+
+Get or set the path to the directory where L<make_modules|/make_modules> will create its Perl modules files.  For example, given a DIR of "/home/john/lib", L<make_modules|/make_modules> would create the file  "/home/john/lib/My/DB/Object.pm" for the class C<My::DB::Object>.
+
 =item B<pre_init_hook [CODE]>
 
 Get or set a reference to a subroutine to be called just before each L<Rose::DB::Object>-derived class is L<initialize|Rose::DB::Object::Metadata/initialize>ed within the L<make_classes|/make_classes> method.  The subroutine will be passed the class's L<metdata|Rose::DB::Object::Metadata> object as an argument.
