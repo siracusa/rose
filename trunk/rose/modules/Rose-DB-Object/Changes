@@ -1,12 +1,12 @@
-0.60 (12.28.2005) - John Siracusa <siracusa@mindspring.com>
+0.60 (12.29.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added arbitrary-depth auto-joins to the Manager using a "dot-chained"
       syntax (e.g., vendor.regions.code)
 
-    * TODO: meta->class_fixup right before initialize()
     * TODO: make_perl_modules() loader method
     * TODO: varchar die/truncate settings
 
+    * Added pre_init_hook() method to metadata objects and the loader.
     * Enum columns now have their list of valid values printed correctly
       by the perl_hash_definition() method.  (Reported by Juan Camacho)      
     * Fixed a bug that caused the loader to trip over mixed-case unique 

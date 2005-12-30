@@ -20,6 +20,7 @@ lib/Rose/DB/Object/Metadata/Auto/Pg.pm
 lib/Rose/DB/Object/Metadata/Auto/SQLite.pm
 lib/Rose/DB/Object/Metadata/Column.pm
 lib/Rose/DB/Object/Metadata/Column/Array.pm
+lib/Rose/DB/Object/Metadata/Column/BigSerial.pm
 lib/Rose/DB/Object/Metadata/Column/Bitfield.pm
 lib/Rose/DB/Object/Metadata/Column/Blob.pm
 lib/Rose/DB/Object/Metadata/Column/Boolean.pm
@@ -118,6 +119,7 @@ t/db-object-loader.t
 t/db-object-loader-2.t
 t/db-object-loader-3.t
 t/db-object-loader-4.t
+t/db-object-loader-5.t
 t/db-object-manager-bulk-ops.t
 t/db-object-manager.t
 t/db-object-mapper.t
