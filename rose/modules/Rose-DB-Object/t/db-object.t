@@ -252,8 +252,8 @@ SKIP: foreach my $db_type ('mysql')
   ok($o->save, "save() 1 - $db_type");
   ok($o->load, "load() 1 - $db_type");
 
-  $o->name('C' x 50);
-  is($o->name, 'C' x 32, "varchar truncation - $db_type");
+  eval { $o->name('C' x 50) };
+  ok($@, "varchar overflow fatal - $db_type");
 
   $o->name('John');
 
@@ -866,7 +866,7 @@ EOF
 
     MyPgObject->meta->columns
     (
-      name     => { type => 'varchar', length => 32 },
+      name     => { type => 'varchar', length => 32, overflow => 'truncate' },
       code     => { type => 'char', length => 6 },
       id       => { primary_key => 1, not_null => 1 },
       k1       => { type => 'int' },
@@ -1117,7 +1117,7 @@ EOF
 
     MyInformixObject->meta->columns
     (
-      name     => { type => 'varchar', length => 32 },
+      name     => { type => 'varchar', length => 32, overflow => 'truncate' },
       code     => { type => 'char', length => 6 },
       id       => { type => 'serial', primary_key => 1, not_null => 1 },
       k1       => { type => 'int' },
@@ -1229,7 +1229,7 @@ EOF
 
     MySQLiteObject->meta->columns
     (
-      name     => { type => 'varchar', length => 32 },
+      name     => { type => 'varchar', length => 32, overflow => 'truncate' },
       code     => { type => 'char', length => 6 },
       id       => { primary_key => 1, not_null => 1 },
       k1       => { type => 'int' },

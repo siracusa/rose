@@ -17,9 +17,9 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.55';
+our $VERSION = '0.60';
 
-our $Debug = 1;
+our $Debug = 0;
 
 sub scalar
 {
@@ -3706,16 +3706,16 @@ Create get/set methods for "array" attributes.   A "array" column in a database 
 
 =over 4
 
-=item C<default VALUE>
+=item B<default VALUE>
 
 Determines the default value of the attribute.  The value should be a reference to an array.
 
-=item C<hash_key NAME>
+=item B<hash_key NAME>
 
 The key inside the hash-based object to use for the storage of this
 attribute.  Defaults to the name of the method.
 
-=item C<interface NAME>
+=item B<interface NAME>
 
 Choose the interface.  The default is C<get_set>.
 
@@ -3725,7 +3725,7 @@ Choose the interface.  The default is C<get_set>.
 
 =over 4
 
-=item C<get_set>
+=item B<get_set>
 
 Creates a get/set method for a "array" object attribute.  A "array" column in a database table contains an ordered list of values.
 
@@ -3735,7 +3735,7 @@ When saving to the database, if the attribute value is defined, the method will 
 
 When not saving to the database, the method returns the array as a list in list context, or as a reference to the array in scalar context.
 
-=item C<get>
+=item B<get>
 
 Creates an accessor method for a "array" object attribute.  A "array" column in a database table contains an ordered list of values.
 
@@ -3743,7 +3743,7 @@ When saving to the database, if the attribute value is defined, the method will 
 
 When not saving to the database, the method returns the array as a list in list context, or as a reference to the array in scalar context.
 
-=item C<set>
+=item B<set>
 
 Creates a mutator method for a "array" object attribute.  A "array" column in a database table contains an ordered list of values.
 
@@ -3795,28 +3795,28 @@ Create get/set methods for bitfield attributes.
 
 =over 4
 
-=item C<default VALUE>
+=item B<default VALUE>
 
 Determines the default value of the attribute.
 
-=item C<hash_key NAME>
+=item B<hash_key NAME>
 
 The key inside the hash-based object to use for the storage of this
 attribute.  Defaults to the name of the method.
 
-=item C<interface NAME>
+=item B<interface NAME>
 
 Choose the interface.  The default is C<get_set>.
 
-=item C<intersects NAME>
+=item B<intersects NAME>
 
 Set the name of the "intersects" method.  (See C<with_intersects> below.)  Defaults to the bitfield attribute method name with "_intersects" appended.
 
-=item C<bits INT>
+=item B<bits INT>
 
 The number of bits in the bitfield.  Defaults to 32.
 
-=item C<with_intersects BOOL>
+=item B<with_intersects BOOL>
 
 This option is only applicable with the C<get_set> interface.
 
@@ -3830,17 +3830,17 @@ The "intersects" method will return true if there is any intersection between it
 
 =over 4
 
-=item C<get_set>
+=item B<get_set>
 
 Creates a get/set method for a bitfield attribute.  When setting the attribute, the value is passed through the L<parse_bitfield|Rose::DB/parse_bitfield> method of the object's L<db|Rose::DB::Object/db> attribute before being assigned.
 
 When saving to the database, the method will pass the attribute value through the L<format_bitfield|Rose::DB/format_bitfield> method of the object's L<db|Rose::DB::Object/db> attribute before returning it.  Otherwise, the value is returned as-is.
 
-=item C<get>
+=item B<get>
 
 Creates an accessor method for a bitfield attribute.  When saving to the database, the method will pass the attribute value through the L<format_bitfield|Rose::DB/format_bitfield> method of the object's L<db|Rose::DB::Object/db> attribute before returning it.  Otherwise, the value is returned as-is.
 
-=item C<set>
+=item B<set>
 
 Creates a mutator method for a bitfield attribute.  When setting the attribute, the value is passed through the L<parse_bitfield|Rose::DB/parse_bitfield> method of the object's L<db|Rose::DB::Object/db> attribute before being assigned.
 
@@ -3886,16 +3886,16 @@ Create get/set methods for boolean attributes.
 
 =over 4
 
-=item C<default VALUE>
+=item B<default VALUE>
 
 Determines the default value of the attribute.
 
-=item C<hash_key NAME>
+=item B<hash_key NAME>
 
 The key inside the hash-based object to use for the storage of this
 attribute.  Defaults to the name of the method.
 
-=item C<interface NAME>
+=item B<interface NAME>
 
 Choose the interface.  The default is C<get_set>.
 
@@ -3905,7 +3905,7 @@ Choose the interface.  The default is C<get_set>.
 
 =over 4
 
-=item C<get_set>
+=item B<get_set>
 
 Creates a get/set method for a boolean attribute.  When setting the attribute, if the value is "true" according to Perl's rules, it is compared to a list of "common" true and false values: 1, 0, 1.0 (with any number of zeros), 0.0 (with any number of zeros), t, true, f, false, yes, no.  (All are case-insensitive.)  If the value matches, then it is set to true (1) or false (0) accordingly.
 
@@ -3913,11 +3913,11 @@ If the value does not match any of those, then it is passed through the L<parse_
 
 When saving to the database, the method will pass the attribute value through the L<format_boolean|Rose::DB/format_boolean> method of the object's L<db|Rose::DB::Object/db> attribute before returning it.  Otherwise, the value is returned as-is.
 
-=item C<get>
+=item B<get>
 
 Creates an accessor method for a boolean attribute.  When saving to the database, the method will pass the attribute value through the L<format_boolean|Rose::DB/format_boolean> method of the object's L<db|Rose::DB::Object/db> attribute before returning it.  Otherwise, the value is returned as-is.
 
-=item C<set>
+=item B<set>
 
 Creates a mutator method for a boolean attribute.  When setting the attribute, if the value is "true" according to Perl's rules, it is compared to a list of "common" true and false values: 1, 0, 1.0 (with any number of zeros), 0.0 (with any number of zeros), t, true, f, false, yes, no.  (All are case-insensitive.)  If the value matches, then it is set to true (1) or false (0) accordingly.
 
@@ -3966,54 +3966,54 @@ Create get/set methods for fixed-length character string attributes.
 
 =over 4
 
-=item C<check_in ARRAYREF>
+=item B<check_in ARRAYREF>
 
 A reference to an array of valid values.  When setting the attribute, if the new value is not equal (string comparison) to one of the valid values, a fatal error will occur.
 
-=item C<default VALUE>
+=item B<default VALUE>
 
 Determines the default value of the attribute.
 
-=item C<hash_key NAME>
+=item B<hash_key NAME>
 
 The key inside the hash-based object to use for the storage of this
 attribute.  Defaults to the name of the method.
 
-=item C<init_method NAME>
+=item B<init_method NAME>
 
 The name of the method to call when initializing the value of an
 undefined attribute.  Defaults to the method name with the prefix
 C<init_> added.  This option implies C<with_init>.
 
-=item C<interface NAME>
+=item B<interface NAME>
 
 Choose the interface.  The default is C<get_set>.
 
-=item C<length INT>
+=item B<length INT>
 
 The number of characters in the string.  Any strings shorter than this will be padded with spaces to meet the length requirement.  If length is omitted, the string will be left unmodified.
 
-=item C<overflow BEHAVIOR>
+=item B<overflow BEHAVIOR>
 
 Determines the behavior when the value is greater than the number of characters specified by the C<length> option.  Valid values for BEHAVIOR are:
 
 =over 4
 
-=item C<fatal>
+=item B<fatal>
 
 Throw an exception.
 
-=item C<truncate>
+=item B<truncate>
 
 Truncate the value to the correct length.
 
-=item C<warn>
+=item B<warn>
 
 Print a warning message.
 
 =back
 
-=item C<with_init BOOL>
+=item B<with_init BOOL>
 
 Modifies the behavior of the C<get_set> and C<get> interfaces.  If the attribute is undefined, the method specified by the C<init_method> option is called and the attribute is set to the return value of that
 method.
@@ -4024,15 +4024,15 @@ method.
 
 =over 4
 
-=item C<get_set>
+=item B<get_set>
 
 Creates a get/set method for a fixed-length character string attribute.  When setting, any strings longer than C<length> will be truncated, and any strings shorter will be padded with spaces to meet the length requirement.  If C<length> is omitted, the string will be left unmodified.
 
-=item C<get>
+=item B<get>
 
 Creates an accessor method for a fixed-length character string attribute.
 
-=item C<set>
+=item B<set>
 
 Creates a mutator method for a fixed-length character string attribute.  Any strings longer than C<length> will be truncated, and any strings shorter will be padded with spaces to meet the length requirement.  If C<length> is omitted, the string will be left unmodified.
 
@@ -4072,30 +4072,30 @@ Create get/set methods for enum attributes.
 
 =over 4
 
-=item C<default VALUE>
+=item B<default VALUE>
 
 Determines the default value of the attribute.
 
-=item C<values ARRAYREF>
+=item B<values ARRAYREF>
 
 A reference to an array of the enum values.  This attribute is required.  When setting the attribute, if the new value is not equal (string comparison) to one of the enum values, a fatal error will occur.
 
-=item C<hash_key NAME>
+=item B<hash_key NAME>
 
 The key inside the hash-based object to use for the storage of this
 attribute.  Defaults to the name of the method.
 
-=item C<init_method NAME>
+=item B<init_method NAME>
 
 The name of the method to call when initializing the value of an
 undefined attribute.  Defaults to the method name with the prefix
 C<init_> added.  This option implies C<with_init>.
 
-=item C<interface NAME>
+=item B<interface NAME>
 
 Choose the interface.  The only current interface is C<get_set>, which is the default.
 
-=item C<with_init BOOL>
+=item B<with_init BOOL>
 
 Modifies the behavior of the C<get_set> and C<get> interfaces.  If the attribute is undefined, the method specified by the C<init_method> option is called and the attribute is set to the return value of that
 method.
@@ -4106,16 +4106,16 @@ method.
 
 =over 4
 
-=item C<get_set>
+=item B<get_set>
 
 Creates a get/set method for an enum attribute.  When called with an argument, the value of the attribute is set.  If the value is invalid, a fatal error will occur.  The current value of the attribute is returned.
 
-=item C<get>
+=item B<get>
 
 Creates an accessor method for an object attribute that returns the current
 value of the attribute.
 
-=item C<set>
+=item B<set>
 
 Creates a mutator method for an object attribute.  When called with an argument, the value of the attribute is set.  If the value is invalid, a fatal error will occur.  If called with no arguments, a fatal error will occur.
 
@@ -4163,43 +4163,43 @@ Create get/set methods for an array of L<Rose::DB::Object>-derived objects fetch
 
 =over 4
 
-=item C<class CLASS>
+=item B<class CLASS>
 
 The name of the L<Rose::DB::Object>-derived class of the objects to be fetched.  This option is required.
 
-=item C<hash_key NAME>
+=item B<hash_key NAME>
 
 The key inside the hash-based object to use for the storage of the fetched objects.  Defaults to the name of the method.
 
-=item C<key_columns HASHREF>
+=item B<key_columns HASHREF>
 
 A reference to a hash that maps column names in the current object to those in the objects to be fetched.  This option is required.
 
-=item C<manager_args HASHREF>
+=item B<manager_args HASHREF>
 
 A reference to a hash of arguments passed to the C<manager_class> when fetching objects.  If C<manager_class> defaults to L<Rose::DB::Object::Manager>, the following argument is added to the C<manager_args> hash: C<object_class =E<gt> CLASS>, where CLASS is the value of the C<class> option (see above).  If C<manager_args> includes a "sort_by" argument, be sure to prefix each column name with the appropriate table name.  (See the L<synopsis|/SYNOPSIS> for examples.)
 
-=item C<manager_class CLASS>
+=item B<manager_class CLASS>
 
 The name of the L<Rose::DB::Object::Manager>-derived class used to fetch the objects.  The C<manager_method> class method is called on this class.  Defaults to L<Rose::DB::Object::Manager>.
 
-=item C<manager_method NAME>
+=item B<manager_method NAME>
 
 The name of the class method to call on C<manager_class> in order to fetch the objects.  Defaults to C<get_objects>.
 
-=item C<interface NAME>
+=item B<interface NAME>
 
 Choose the interface.  The only current interface is C<get_set>, which is the default.
 
-=item C<relationship OBJECT>
+=item B<relationship OBJECT>
 
 The L<Rose::DB::Object::Metadata::Relationship> object that describes the "key" through which the "objects_by_key" are fetched.  This is required when using the "add_now", "add_on_save", and "get_set_on_save" interfaces.
 
-=item C<share_db BOOL>
+=item B<share_db BOOL>
 
 If true, the L<db|Rose::DB::Object/db> attribute of the current object is shared with all of the objects fetched.  Defaults to true.
 
-=item C<query_args ARRAYREF>
+=item B<query_args ARRAYREF>
 
 A reference to an array of arguments added to the value of the C<query> parameter passed to the call to C<manager_class>'s C<manager_method> class method.
 
@@ -4209,7 +4209,7 @@ A reference to an array of arguments added to the value of the C<query> paramete
 
 =over 4
 
-=item C<get_set>
+=item B<get_set>
 
 Creates a method that will attempt to fetch L<Rose::DB::Object>-derived objects based on a key formed from attributes of the current object.
 
@@ -4235,7 +4235,7 @@ The fetch may fail for several reasons.  The fetch will not even be attempted if
 
 If the fetch succeeds, a list (in list context) or a reference to the array of objects (in scalar context) is returned.  (If the fetch finds zero objects, the list or array reference will simply be empty.  This is still considered success.)
 
-=item C<get_set_now>
+=item B<get_set_now>
 
 Creates a method that will attempt to fetch L<Rose::DB::Object>-derived objects based on a key formed from attributes of the current object, and will also save the objects to the database when called with arguments.  The objects do not have to already exist in the database; they will be inserted if needed.
 
@@ -4267,7 +4267,7 @@ The fetch may fail for several reasons.  The fetch will not even be attempted if
 
 If the fetch succeeds, a list (in list context) or a reference to the array of objects (in scalar context) is returned.  (If the fetch finds zero objects, the list or array reference will simply be empty.  This is still considered success.)
 
-=item C<get_set_on_save>
+=item B<get_set_on_save>
 
 Creates a method that will attempt to fetch L<Rose::DB::Object>-derived objects based on a key formed from attributes of the current object, and will also save the objects to the database when the "parent" object is L<save|Rose::DB::Object/save>d.  The objects do not have to already exist in the database; they will be inserted if needed.
 
@@ -4297,7 +4297,7 @@ The fetch may fail for several reasons.  The fetch will not even be attempted if
 
 If the fetch succeeds, a list (in list context) or a reference to the array of objects (in scalar context) is returned.  (If the fetch finds zero objects, the list or array reference will simply be empty.  This is still considered success.)
 
-=item C<add_now>
+=item B<add_now>
 
 Creates a method that will add to a list of L<Rose::DB::Object>-derived objects that are related to the current object by a key formed from attributes of the current object.  The objects do not have to already exist in the database; they will be inserted if needed.
 
@@ -4325,7 +4325,7 @@ When adding each object, if the object does not already exists in the database, 
 
 The parent object's list of related objects is then set to undef, causing the related objects to be reloaded from the database the next time they're needed.
 
-=item C<add_on_save>
+=item B<add_on_save>
 
 Creates a method that will add to a list of L<Rose::DB::Object>-derived objects that are related to the current object by a key formed from attributes of the current object.  The objects will be added to the database when the parent object is L<save|Rose::DB::Object/save>d.  The objects do not have to already exist in the database; they will be inserted if needed.
 
@@ -4556,47 +4556,47 @@ Create methods that fetch L<Rose::DB::Object>-derived objects via an intermediat
 
 =over 4
 
-=item C<hash_key NAME>
+=item B<hash_key NAME>
 
 The key inside the hash-based object to use for the storage of the fetched objects.  Defaults to the name of the method.
 
-=item C<interface NAME>
+=item B<interface NAME>
 
 Choose the interface.  The only current interface is C<get_set>, which is the default.
 
-=item C<manager_args HASHREF>
+=item B<manager_args HASHREF>
 
 A reference to a hash of arguments passed to the C<manager_class> when fetching objects.  If C<manager_args> includes a "sort_by" argument, be sure to prefix each column name with the appropriate table name.  (See the L<synopsis|/SYNOPSIS> for examples.)
 
-=item C<manager_class CLASS>
+=item B<manager_class CLASS>
 
 The name of the L<Rose::DB::Object::Manager>-derived class that the C<map_class> will use to fetch records.  Defaults to L<Rose::DB::Object::Manager>.
 
-=item C<manager_method NAME>
+=item B<manager_method NAME>
 
 The name of the class method to call on C<manager_class> in order to fetch the objects.  Defaults to C<get_objects>.
 
-=item C<map_class CLASS>
+=item B<map_class CLASS>
 
 The name of the L<Rose::DB::Object>-derived class that maps between the other two L<Rose::DB::Object>-derived classes.  This class must have a foreign key and/or "many to one" relationship for each of the two tables that it maps between.
 
-=item C<map_from NAME>
+=item B<map_from NAME>
 
 The name of the "many to one" relationship or foreign key in C<map_class> that points to the object of the class that this relationship exists in.  Setting this value is only necessary if the C<map_class> has more than one foreign key or "many to one" relationship that points to one of the classes that it maps between.
 
-=item C<map_to NAME>
+=item B<map_to NAME>
 
 The name of the "many to one" relationship or foreign key in C<map_class> that points to the "foreign" object to be fetched.  Setting this value is only necessary if the C<map_class> has more than one foreign key or "many to one" relationship that points to one of the classes that it maps between.
 
-=item C<relationship OBJECT>
+=item B<relationship OBJECT>
 
 The L<Rose::DB::Object::Metadata::Relationship> object that describes the "key" through which the "objects_by_key" are fetched.  This option is required.
 
-=item C<share_db BOOL>
+=item B<share_db BOOL>
 
 If true, the L<db|Rose::DB::Object/db> attribute of the current object is shared with all of the objects fetched.  Defaults to true.
 
-=item C<query_args ARRAYREF>
+=item B<query_args ARRAYREF>
 
 A reference to an array of arguments added to the value of the C<query> parameter passed to the call to C<manager_class>'s C<manager_method> class method.
 
@@ -4606,7 +4606,7 @@ A reference to an array of arguments added to the value of the C<query> paramete
 
 =over 4
 
-=item C<get_set>
+=item B<get_set>
 
 Creates a method that will attempt to fetch L<Rose::DB::Object>-derived objects that are related to the current object through the C<map_class>.
 
@@ -4630,7 +4630,7 @@ When fetching objects from the database, if the call to C<manager_class>'s C<man
 
 If the fetch succeeds, a list (in list context) or a reference to the array of objects (in scalar context) is returned.  (If the fetch finds zero objects, the list or array reference will simply be empty.  This is still considered success.)
 
-=item C<get_set_now>
+=item B<get_set_now>
 
 Creates a method that will attempt to fetch L<Rose::DB::Object>-derived objects that are related to the current object through the C<map_class>, and will also save objects to the database and map them to the parent object when called with arguments.  The objects do not have to already exist in the database; they will be inserted if needed.
 
@@ -4662,7 +4662,7 @@ When fetching, if the call to C<manager_class>'s C<manager_method> method return
 
 If the fetch succeeds, a list (in list context) or a reference to the array of objects (in scalar context) is returned.  (If the fetch finds zero objects, the list or array reference will simply be empty.  This is still considered success.)
 
-=item C<get_set_on_save>
+=item B<get_set_on_save>
 
 Creates a method that will attempt to fetch L<Rose::DB::Object>-derived objects that are related to the current object through the C<map_class>, and will also save objects to the database and map them to the parent object when the "parent" object is L<save|Rose::DB::Object/save>d.  The objects do not have to already exist in the database; they will be inserted if needed.
 
@@ -4692,7 +4692,7 @@ When fetching, if the call to C<manager_class>'s C<manager_method> method return
 
 If the fetch succeeds, a list (in list context) or a reference to the array of objects (in scalar context) is returned.  (If the fetch finds zero objects, the list or array reference will simply be empty.  This is still considered success.)
 
-=item C<add_now>
+=item B<add_now>
 
 Creates a method that will add to a list of L<Rose::DB::Object>-derived objects that are related to the current object through the C<map_class>, and will also save objects to the database and map them to the parent object.  The objects do not have to already exist in the database; they will be inserted if needed.
 
@@ -4716,7 +4716,7 @@ The latter two formats will be used to construct an object of type C<class>.  A 
 
 The parent object's list of related objects is then set to undef, causing the related objects to be reloaded from the database the next time they're needed.
 
-=item C<add_on_save>
+=item B<add_on_save>
 
 Creates a method that will add to a list of L<Rose::DB::Object>-derived objects that are related to the current object through the C<map_class>, and will also save objects to the database and map them to the parent object when the "parent" object is L<save|Rose::DB::Object/save>d.  The objects and map records will be added to the database when the parent object is L<save|Rose::DB::Object/save>d.  The objects do not have to already exist in the database; they will be inserted if needed.
 
@@ -4754,27 +4754,27 @@ Create a get/set methods for a single L<Rose::DB::Object>-derived object loaded 
 
 =over 4
 
-=item C<class CLASS>
+=item B<class CLASS>
 
 The name of the L<Rose::DB::Object>-derived class of the object to be loaded.  This option is required.
 
-=item C<foreign_key OBJECT>
+=item B<foreign_key OBJECT>
 
 The L<Rose::DB::Object::Metadata::ForeignKey> object that describes the "key" through which the "object_by_key" is fetched.  This is required when using the "delete_now", "delete_on_save", and "get_set_on_save" interfaces.
 
-=item C<hash_key NAME>
+=item B<hash_key NAME>
 
 The key inside the hash-based object to use for the storage of the object.  Defaults to the name of the method.
 
-=item C<key_columns HASHREF>
+=item B<key_columns HASHREF>
 
 A reference to a hash that maps column names in the current object to those of the primary key in the object to be loaded.  This option is required.
 
-=item C<interface NAME>
+=item B<interface NAME>
 
 Choose the interface.  The default is C<get_set>.
 
-=item C<share_db BOOL>
+=item B<share_db BOOL>
 
 If true, the L<db|Rose::DB::Object/db> attribute of the current object is shared with the object loaded.  Defaults to true.
 
@@ -4784,7 +4784,7 @@ If true, the L<db|Rose::DB::Object/db> attribute of the current object is shared
 
 =over 4
 
-=item C<delete_now>
+=item B<delete_now>
 
 Deletes a L<Rose::DB::Object>-derived object from the database based on a primary key formed from attributes of the current object.  First, the "parent" object will have all of its attributes that refer to the "foreign" set to null, and it will be saved into the database.  This needs to be done first because a database that enforces referential integrity will not allow a row to be deleted if it is still referenced by a foreign key in another table.
 
@@ -4794,7 +4794,7 @@ The entire process takes place within a transaction if the database supports it.
 
 Returns true if the foreign object was deleted successfully or did not exist in the database, false if any of the keys that refer to the foreign object were undef, and triggers the normal L<Rose::DB::Object> L<error handling|Rose::DB::Object::Metadata/error_mode> in the case of any other kind of failure.
 
-=item C<delete_on_save>
+=item B<delete_on_save>
 
 Deletes a L<Rose::DB::Object>-derived object from the database when the "parent" object is L<save|Rose::DB::Object/save>d, based on a primary key formed from attributes of the current object.  The "parent" object will have all of its attributes that refer to the "foreign" set to null immediately, but the actual delete will not be done until the parent is saved.
 
@@ -4804,7 +4804,7 @@ The entire process takes place within a transaction if the database supports it.
 
 Returns true if the foreign object was deleted successfully or did not exist in the database, false if any of the keys that refer to the foreign object were undef, and triggers the normal L<Rose::DB::Object> L<error handling|Rose::DB::Object::Metadata/error_mode> in the case of any other kind of failure.
 
-=item C<get_set>
+=item B<get_set>
 
 Creates a method that will attempt to create and load a L<Rose::DB::Object>-derived object based on a primary key formed from attributes of the current object.
 
@@ -4834,7 +4834,7 @@ If the call to the newly created object's L<load|Rose::DB::Object/load> method r
 
 If the load succeeds, the object is returned.
 
-=item C<get_set_now>
+=item B<get_set_now>
 
 Creates a method that will attempt to create and load a L<Rose::DB::Object>-derived object based on a primary key formed from attributes of the current object, and will also save the object to the database when called with an appropriate object as an argument.
 
@@ -4868,7 +4868,7 @@ If the call to the newly created object's L<load|Rose::DB::Object/load> method r
 
 If the load succeeds, the object is returned.
 
-=item C<get_set_on_save>
+=item B<get_set_on_save>
 
 Creates a method that will attempt to create and load a L<Rose::DB::Object>-derived object based on a primary key formed from attributes of the current object, and save the object when the "parent" object is L<save|Rose::DB::Object/save>d.
 
@@ -5038,54 +5038,54 @@ Create get/set methods for scalar attributes.
 
 =over 4
 
-=item C<default VALUE>
+=item B<default VALUE>
 
 Determines the default value of the attribute.
 
-=item C<check_in ARRAYREF>
+=item B<check_in ARRAYREF>
 
 A reference to an array of valid values.  When setting the attribute, if the new value is not equal (string comparison) to one of the valid values, a fatal error will occur.
 
-=item C<hash_key NAME>
+=item B<hash_key NAME>
 
 The key inside the hash-based object to use for the storage of this
 attribute.  Defaults to the name of the method.
 
-=item C<init_method NAME>
+=item B<init_method NAME>
 
 The name of the method to call when initializing the value of an
 undefined attribute.  Defaults to the method name with the prefix
 C<init_> added.  This option implies C<with_init>.
 
-=item C<interface NAME>
+=item B<interface NAME>
 
 Choose the interface.  The only current interface is C<get_set>, which is the default.
 
-=item C<length INT>
+=item B<length INT>
 
 The maximum number of characters in the string.
 
-=item C<overflow BEHAVIOR>
+=item B<overflow BEHAVIOR>
 
 Determines the behavior when the value is greater than the number of characters specified by the C<length> option.  Valid values for BEHAVIOR are:
 
 =over 4
 
-=item C<fatal>
+=item B<fatal>
 
 Throw an exception.
 
-=item C<truncate>
+=item B<truncate>
 
 Truncate the value to the correct length.
 
-=item C<warn>
+=item B<warn>
 
 Print a warning message.
 
 =back
 
-=item C<with_init BOOL>
+=item B<with_init BOOL>
 
 Modifies the behavior of the C<get_set> and C<get> interfaces.  If the attribute is undefined, the method specified by the C<init_method> option is called and the attribute is set to the return value of that
 method.
@@ -5096,18 +5096,18 @@ method.
 
 =over 4
 
-=item C<get_set>
+=item B<get_set>
 
 Creates a get/set method for an object attribute.  When
 called with an argument, the value of the attribute is set.  The current
 value of the attribute is returned.
 
-=item C<get>
+=item B<get>
 
 Creates an accessor method for an object attribute that returns the current
 value of the attribute.
 
-=item C<set>
+=item B<set>
 
 Creates a mutator method for an object attribute.  When called with an argument, the value of the attribute is set.  If called with no arguments, a fatal error will occur.
 
@@ -5163,16 +5163,16 @@ Create get/set methods for "set" attributes.   A "set" column in a database tabl
 
 =over 4
 
-=item C<default VALUE>
+=item B<default VALUE>
 
 Determines the default value of the attribute.  The value should be a reference to an array.
 
-=item C<hash_key NAME>
+=item B<hash_key NAME>
 
 The key inside the hash-based object to use for the storage of this
 attribute.  Defaults to the name of the method.
 
-=item C<interface NAME>
+=item B<interface NAME>
 
 Choose the interface.  The default is C<get_set>.
 
@@ -5182,7 +5182,7 @@ Choose the interface.  The default is C<get_set>.
 
 =over 4
 
-=item C<get_set>
+=item B<get_set>
 
 Creates a get/set method for a "set" object attribute.  A "set" column in a database table contains an unordered group of values.  On the Perl side of the fence, an ordered list (an array) is used to store the values, but keep in mind that the order is not significant, nor is it guaranteed to be preserved.
 
@@ -5192,7 +5192,7 @@ When saving to the database, if the attribute value is defined, the method will 
 
 When not saving to the database, the method returns the set as a list in list context, or as a reference to the array in scalar context.
 
-=item C<get>
+=item B<get>
 
 Creates an accessor method for a "set" object attribute.  A "set" column in a database table contains an unordered group of values.  On the Perl side of the fence, an ordered list (an array) is used to store the values, but keep in mind that the order is not significant, nor is it guaranteed to be preserved.
 
@@ -5200,7 +5200,7 @@ When saving to the database, if the attribute value is defined, the method will 
 
 When not saving to the database, the method returns the set as a list in list context, or as a reference to the array in scalar context.
 
-=item C<set>
+=item B<set>
 
 Creates a mutator method for a "set" object attribute.  A "set" column in a database table contains an unordered group of values.  On the Perl side of the fence, an ordered list (an array) is used to store the values, but keep in mind that the order is not significant, nor is it guaranteed to be preserved.
 
@@ -5251,50 +5251,50 @@ Create get/set methods for variable-length character string attributes.
 
 =over 4
 
-=item C<default VALUE>
+=item B<default VALUE>
 
 Determines the default value of the attribute.
 
-=item C<hash_key NAME>
+=item B<hash_key NAME>
 
 The key inside the hash-based object to use for the storage of this
 attribute.  Defaults to the name of the method.
 
-=item C<init_method NAME>
+=item B<init_method NAME>
 
 The name of the method to call when initializing the value of an
 undefined attribute.  Defaults to the method name with the prefix
 C<init_> added.  This option implies C<with_init>.
 
-=item C<interface NAME>
+=item B<interface NAME>
 
 Choose the interface.  The only current interface is C<get_set>, which is the default.
 
-=item C<length INT>
+=item B<length INT>
 
 The maximum number of characters in the string.
 
-=item C<overflow BEHAVIOR>
+=item B<overflow BEHAVIOR>
 
 Determines the behavior when the value is greater than the number of characters specified by the C<length> option.  Valid values for BEHAVIOR are:
 
 =over 4
 
-=item C<fatal>
+=item B<fatal>
 
 Throw an exception.
 
-=item C<truncate>
+=item B<truncate>
 
 Truncate the value to the correct length.
 
-=item C<warn>
+=item B<warn>
 
 Print a warning message.
 
 =back
 
-=item C<with_init BOOL>
+=item B<with_init BOOL>
 
 Modifies the behavior of the C<get_set> and C<get> interfaces.  If the attribute is undefined, the method specified by the C<init_method> option is called and the attribute is set to the return value of that
 method.
@@ -5305,7 +5305,7 @@ method.
 
 =over 4
 
-=item C<get_set>
+=item B<get_set>
 
 Creates a get/set accessor method for a fixed-length character string attribute.  When setting, any strings longer than C<length> will be truncated.  If C<length> is omitted, the string will be left unmodified.
 

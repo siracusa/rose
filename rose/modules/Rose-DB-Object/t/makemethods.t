@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 123;
+use Test::More tests => 125;
 
 BEGIN
 {
@@ -35,6 +35,8 @@ is($p->get_scalar, 'bar', 'scalar get');
 
 is($p->character('booga'), 'boog', 'character get_set 1');
 is($p->character, 'boog', 'character get_set 2');
+eval { $p->character_die('booga') };
+ok($@, 'character_die get_set 1');
 
 is($p->set_character('woo'), 'woo ', 'character set 1');
 eval { $p->set_character() };
@@ -47,6 +49,8 @@ is($p->get_character, 'woo ', 'character get');
 
 is($p->varchar('booga'), 'boog', 'varchar get_set 1');
 is($p->varchar, 'boog', 'varchar get_set 2');
+eval { $p->varchar_die('booga') };
+ok($@, 'varchar_die get_set 1');
 
 is($p->set_varchar('woo'), 'woo', 'varchar set 1');
 eval { $p->set_varchar() };
@@ -429,14 +433,16 @@ BEGIN
 
     character => 
     [
-      'character' => { length => 4 },
+      character     => { length => 4, overflow => 'truncate' },
+      character_die => { length => 4, overflow => 'fatal' },
       get_character => { interface => 'get', hash_key => 'character', length => 4 },
       set_character => { interface => 'set', hash_key => 'character', length => 4 },
     ],
 
     varchar => 
     [
-      'varchar' => { length => 4 },
+      varchar     => { length => 4, overflow => 'truncate' },
+      varchar_die => { length => 4, overflow => 'fatal' },
       get_varchar => { interface => 'get', hash_key => 'varchar', length => 4 },
       set_varchar => { interface => 'set', hash_key => 'varchar', length => 4 },
     ],

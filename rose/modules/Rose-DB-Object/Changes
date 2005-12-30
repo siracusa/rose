@@ -1,12 +1,15 @@
-0.60 (12.29.2005) - John Siracusa <siracusa@mindspring.com>
+0.60 (12.30.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added arbitrary-depth auto-joins to the Manager using a "dot-chained"
       syntax (e.g., vendor.regions.code)
-
-    * TODO: varchar die/truncate settings
-
     * Added make_modules() method to the loader.
     * Added pre_init_hook() method to metadata objects and the loader.
+    * Added overflow attribute to control the behavior when a scalar, 
+      character, or varchar column value is too long.  Possible values
+      are "fatal" (the default), "truncate", and "warn".
+    * Serial columns are now detected correctly even when DBI returns a 
+      column type of integer or bigint.  (Reported by Cees Hek)
+    * Added support for bigserial columns.
     * Enum columns now have their list of valid values printed correctly
       by the perl_hash_definition() method.  (Reported by Juan Camacho)      
     * Fixed a bug that caused the loader to trip over mixed-case unique 
@@ -14,6 +17,8 @@
     * Force MDY dates in Postgres in the test suite, just in case the user
       has European dates configured.  (Reported by Cees Hek)
     * Fixed numerous Postgres 7.x bugs.  (Reported by Cees Hek)
+    * Worked around numerous SQLite bugs in order to make the test suite
+      function correctly.
 
 0.59 (12.19.2005) - John Siracusa <siracusa@mindspring.com>
 
