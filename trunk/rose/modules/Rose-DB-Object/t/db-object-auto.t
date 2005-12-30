@@ -45,16 +45,17 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
   ok($o->load, "load() 1 - $db_type");
 
-  $o->name('C' x 50);
-  is($o->name, 'C' x 32, "varchar truncation - $db_type");
+  eval { $o->name('C' x 50) };
+  ok($@, "varchar overflow fatal - $db_type");
 
   $o->name('John');
 
   $o->code('A');
   is($o->code, 'A     ', "character padding - $db_type");
 
-  $o->code('C' x 50);
-  is($o->code, 'C' x 6, "character truncation - $db_type");
+  eval { $o->code('C' x 50) };
+  ok($@, "character overflow fatal - $db_type");
+  $o->code('C' x 6);
 
   my $ouk = MyPgObject->new(k1 => 1,
                             k2 => undef,
@@ -332,16 +333,17 @@ SKIP: foreach my $db_type ('mysql')
   ok($o->save, "save() 1 - $db_type");
   ok($o->load, "load() 1 - $db_type");
 
-  $o->name('C' x 50);
-  is($o->name, 'C' x 32, "varchar truncation - $db_type");
+  eval { $o->name('C' x 50) };
+  ok($@, "varchar overflow fatal - $db_type");
 
   $o->name('John');
 
   $o->code('A');
   is($o->code, 'A     ', "character padding - $db_type");
 
-  $o->code('C' x 50);
-  is($o->code, 'C' x 6, "character truncation - $db_type");
+  eval { $o->code('C' x 50) };
+  ok($@, "character overflow fatal - $db_type");
+  $o->code('C' x 6);
 
   is($o->enums, 'foo', "enum 1 - $db_type");
   eval { $o->enums('blee') };
@@ -522,16 +524,17 @@ SKIP: foreach my $db_type ('informix')
   is(ref $o->other_date, 'DateTime', 'other_date 1');
   is(ref $o->other_datetime, 'DateTime', 'other_datetime 1');
 
-  $o->name('C' x 50);
-  is($o->name, 'C' x 32, "varchar truncation - $db_type");
+  eval { $o->name('C' x 50) };
+  ok($@, "varchar overflow fatal - $db_type");
 
   $o->name('John');
 
   $o->code('A');
   is($o->code, 'A     ', "character padding - $db_type");
 
-  $o->code('C' x 50);
-  is($o->code, 'C' x 6, "character truncation - $db_type");
+  eval { $o->code('C' x 50) };
+  ok($@, "character overflow fatal - $db_type");
+  $o->code('C' x 6);
 
   my $ouk = MyInformixObject->new(k1 => 1,
                                   k2 => undef,

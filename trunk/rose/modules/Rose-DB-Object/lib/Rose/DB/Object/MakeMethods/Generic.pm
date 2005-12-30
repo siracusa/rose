@@ -87,6 +87,7 @@ EOF
     if($overflow eq 'fatal')
     {
       $length_check_code =<<"EOF";
+no warnings 'uninitialized';
 if(length(\$value) > $length)
     {
       Carp::croak ref(\$self), ": Value for $qname() is too long.  Maximum ",
@@ -99,6 +100,7 @@ EOF
     elsif($overflow eq 'warn')
     {
       $length_check_code =<<"EOF";
+no warnings 'uninitialized';
 if(length(\$value) > $length)
     {
       Carp::croak ref(\$self), ": WARNING: Value for $qname() is too long.  ",
@@ -110,6 +112,7 @@ EOF
     elsif($overflow eq 'truncate')
     {
       $length_check_code =<<"EOF";
+no warnings 'uninitialized';
 if(length(\$value) > $length)
     {
       \$value = substr(\$value, 0, $length);

@@ -8,24 +8,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 use Rose::DB::Object::Metadata::Column::Scalar;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Scalar);
 
-our $VERSION = '0.04';
-
-__PACKAGE__->add_common_method_maker_argument_names
-(
-  qw(default length overflow)
-);
-
-Rose::Object::MakeMethods::Generic->make_methods
-(
-  { preserve_existing => 1 },
-
-  'scalar --get_set_init' =>
-  [
-    overflow => { check_in => [ qw(truncate warn fatal) ] },
-  ],
-
-  scalar => [ __PACKAGE__->common_method_maker_argument_names ]
-);
+our $VERSION = '0.60';
 
 sub type { 'character' }
 
@@ -33,8 +16,6 @@ foreach my $type (__PACKAGE__->available_method_types)
 {
   __PACKAGE__->method_maker_type($type => 'character')
 }
-
-sub init_overflow { 'fatal' }
 
 sub parse_value
 {
