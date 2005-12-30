@@ -6,7 +6,7 @@ use File::Spec;
 use File::Path;
 use FindBin qw($Bin);
 
-use Test::More tests => 1 + (5 * 29);
+use Test::More tests => 1 + (5 * 31);
 
 BEGIN 
 {
@@ -90,7 +90,7 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 29)  unless($Have{$db_type});
+    skip("$db_type tests", 31)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -142,8 +142,10 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
   }
   else
   {
-    ok(1, 'serial tests n/a');
-    ok(1, 'serial tests n/a');
+    SKIP:
+    {
+      skip('Pg serial tests', 2);
+    }
   }
 
   foreach my $class (@classes)
@@ -152,6 +154,11 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
     $path[-1] .= '.pm';
     my $file = File::Spec->catfile($Module_Dir, @path);
     ok(-e $file, "make_modules() $class");
+  }
+
+  SKIP:
+  {
+    skip('informix reserved name tests', 2)  unless($db_type eq 'informix');
   }
 
   my $product_class = $class_prefix . '::Product';
