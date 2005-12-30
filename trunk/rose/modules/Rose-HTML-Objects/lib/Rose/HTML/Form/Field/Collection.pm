@@ -9,12 +9,27 @@ use Rose::HTML::Form::Field::Hidden;
 use Rose::HTML::Form::Field;
 our @ISA = qw(Rose::HTML::Form::Field);
 
-our $VERSION = '0.31';
+our $VERSION = '0.32';
 
 use Rose::Object::MakeMethods::Generic
 (
   boolean => 'coalesce_hidden_fields',
+
+  'scalar --get_set_init'  => 
+  [
+    'rank_counter',
+  ],
 );
+
+sub init_rank_counter { 1 }
+
+sub increment_rank_counter
+{
+  my($self) = shift;
+  my $rank = $self->rank_counter;
+  $self->rank_counter($rank + 1);
+  return $rank;
+}
 
 sub field
 {
@@ -31,6 +46,11 @@ sub field
     $field->parent_field($self);
 
     $self->_clear_field_generated_values;
+
+    unless(defined $field->rank)
+    {
+      $field->rank($self->increment_rank_counter);
+    }
 
     return $self->{'fields'}{$name} = $field;
   }
@@ -53,16 +73,28 @@ sub add_fields
 
     if(UNIVERSAL::isa($arg, 'Rose::HTML::Form::Field'))
     {
-      $self->field($arg->name => $arg)
+      unless(defined $arg->rank)
+      {
+        $arg->rank($self->increment_rank_counter);
+      }
+
+      $self->field($arg->name => $arg);
     }
     else
     {
-      unless(UNIVERSAL::isa($_[0], 'Rose::HTML::Form::Field'))
+      my $field = shift;
+
+      unless(UNIVERSAL::isa($field, 'Rose::HTML::Form::Field'))
       {
-        Carp::croak "Not a Rose::HTML::Form::Field object: $_[0]";
+        Carp::croak "Not a Rose::HTML::Form::Field object: $field";
       }
 
-      $self->field($arg => shift);
+      unless(defined $field->rank)
+      {
+        $field->rank($self->increment_rank_counter);
+      }
+
+      $self->field($arg => $field);
     }
   }
 
@@ -117,7 +149,9 @@ sub field_names
 sub delete_fields 
 {
   $_[0]->_clear_field_generated_values;
-  $_[0]->{'fields'} = {} 
+  $_[0]->{'fields'} = {};
+  $_[0]->rank_counter(undef);
+  return;
 }
 
 sub delete_field

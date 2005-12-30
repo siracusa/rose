@@ -1,3 +1,10 @@
+0.32 (12.30.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Added a rank() attribute to field objects, and a rank_counter()
+      to forms.  Fields are ranked in the order that they are added to
+      the form.  Subclasses can override compare_fields() to sort based
+      on this rank.
+
 0.31 (12.27.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Field order can now be customized in Rose::HTML::Form subclasses
