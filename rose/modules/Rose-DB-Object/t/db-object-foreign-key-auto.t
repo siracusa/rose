@@ -291,7 +291,7 @@ our \@ISA = qw(Rose::DB::Object);
 __PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns(
-    id            => { type => 'integer', not_null => 1 },
+    id            => { type => 'serial', not_null => 1 },
 $chkpass    name          => { type => 'varchar', length => 32, not_null => 1 },
     flag          => { type => 'boolean', default => 'true', not_null => 1 },
     flag2         => { type => 'boolean' },
@@ -364,7 +364,7 @@ __PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns
 (
-  id            => { type => 'integer', not_null => 1 },
+  id            => { type => 'serial', not_null => 1 },
 $chkpass  name          => { type => 'varchar', length => 32, not_null => 1 },
   flag          => { type => 'boolean', default => 'true', not_null => 1 },
   flag2         => { type => 'boolean' },

@@ -94,7 +94,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   if($db_type =~ /^pg/)
   {
     is($p->meta->column('id')->perl_hash_definition, 
-       q(id => { type => 'integer', not_null => 1 }),
+       q(id => { type => 'serial', not_null => 1 }),
         "perl_hash_definition - $db_type");
   }
   else
