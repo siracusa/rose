@@ -23,7 +23,7 @@ use Rose::Object::MakeMethods::Generic
 (
   scalar => 
   [
-    qw(label description)
+    qw(label description rank)
   ],
 
   boolean => [ qw(required is_cleared has_partial_value) ],
@@ -948,6 +948,10 @@ Returns the output value.
 =item B<parent_field [FIELD]>
 
 Get or set the parent field.  This method is provided for the benefit of subclasses that might want to have a hierarchy of field objects.  The reference to the parent field is "weakened" using C<Scalar::Util::weaken()> in order to avoid memory leaks caused by circular references.
+
+=item B<rank [INT]>
+
+Get or set the field's rank.  This value can be used for any purpose that suits you, but it is most often used to number and sort fields within a L<form|Rose::HTML::Form> using a custom L<compare_fields()|Rose::HTML::Form/compare_fields> method.
 
 =item B<required [BOOL]>
 

@@ -12,7 +12,7 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.021';
+our $VERSION = '0.32';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -770,7 +770,7 @@ If an argument is "isa" L<Rose::HTML::Form::Field>, then it is added to the list
 
 If an argument is anything else, it is used as the field name, and the next argument is used as the field object to store under that name.  If the next argument is not an object derived from L<Rose::HTML::Form::Field>, then a fatal error occurs.
 
-The field object's L<name()|Rose::HTML::Form::Field/name> is set to the name that it is stored under, and its L<parent_field()|Rose::HTML::Form::Field/parent_field> is set to the form object.
+The field object's L<name()|Rose::HTML::Form::Field/name> is set to the name that it is stored under, and its L<parent_field()|Rose::HTML::Form::Field/parent_field> is set to the form object.  If the field's L<rank|Rose::HTML::Form::Field/rank> is undefined, it's set to the value of the form's L<rank_counter|/rank_counter> attribute and the rank counter is incremented.
 
 Returns the full list of field objects, sorted by field name, in list context, or a reference to a list of the same in scalar context.
 
@@ -865,7 +865,7 @@ Delete the field stored under the name NAME.  If NAME "isa" L<Rose::HTML::Form::
 
 =item B<delete_fields>
 
-Delete all fields, leaving the list of fields empty.
+Delete all fields, leaving the list of fields empty.  The L<rank_counter|/rank_counter> is also reset to 1.
 
 =item B<delete_param NAME [, VALUES]>
 
@@ -1158,6 +1158,10 @@ A fatal error occurs unless both NAME and VALUE arguments are passed.
 =item B<query_string>
 
 Returns a URI-escaped (but I<not> HTML-escaped) query string that corresponds to the current state of the form.  If L<coalesce_query_string_params()|/coalesce_query_string_params> is true (which is the default), then compound fields are represented by a single query parameter.  Otherwise, the subfields of each compound field appear as separate query parameters.
+
+=item B<rank_counter [INT]>
+
+Get or set the value of the counter used to set the L<rank|Rose::HTML::Form::Field/rank> of fields as they're L<added|/add_fields> to the form.  The counter starts at 1 by default.
 
 =item B<reset>
 
