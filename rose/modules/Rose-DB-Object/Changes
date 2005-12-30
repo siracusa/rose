@@ -3,9 +3,9 @@
     * Added arbitrary-depth auto-joins to the Manager using a "dot-chained"
       syntax (e.g., vendor.regions.code)
 
-    * TODO: make_perl_modules() loader method
     * TODO: varchar die/truncate settings
 
+    * Added make_modules() method to the loader.
     * Added pre_init_hook() method to metadata objects and the loader.
     * Enum columns now have their list of valid values printed correctly
       by the perl_hash_definition() method.  (Reported by Juan Camacho)      
