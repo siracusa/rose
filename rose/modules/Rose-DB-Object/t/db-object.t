@@ -260,8 +260,9 @@ SKIP: foreach my $db_type ('mysql')
   $o->code('A');
   is($o->code, 'A     ', "character padding - $db_type");
 
-  $o->code('C' x 50);
-  is($o->code, 'C' x 6, "character truncation - $db_type");
+  eval { $o->code('C' x 50) };
+  ok($@, "code overflow fatal - $db_type");
+  $o->code('C' x 6);
 
   is($o->enums, 'foo', "enum 1 - $db_type");
   eval { $o->enums('blee') };
@@ -867,7 +868,7 @@ EOF
     MyPgObject->meta->columns
     (
       name     => { type => 'varchar', length => 32, overflow => 'truncate' },
-      code     => { type => 'char', length => 6 },
+      code     => { type => 'char', length => 6, overflow => 'truncate' },
       id       => { primary_key => 1, not_null => 1 },
       k1       => { type => 'int' },
       k2       => { type => 'int', lazy => 1 },
@@ -1118,7 +1119,7 @@ EOF
     MyInformixObject->meta->columns
     (
       name     => { type => 'varchar', length => 32, overflow => 'truncate' },
-      code     => { type => 'char', length => 6 },
+      code     => { type => 'char', length => 6, overflow => 'truncate' },
       id       => { type => 'serial', primary_key => 1, not_null => 1 },
       k1       => { type => 'int' },
       k2       => { type => 'int', lazy => 1 },
@@ -1230,7 +1231,7 @@ EOF
     MySQLiteObject->meta->columns
     (
       name     => { type => 'varchar', length => 32, overflow => 'truncate' },
-      code     => { type => 'char', length => 6 },
+      code     => { type => 'char', length => 6, overflow => 'truncate' },
       id       => { primary_key => 1, not_null => 1 },
       k1       => { type => 'int' },
       k2       => { type => 'int', lazy => 1 },

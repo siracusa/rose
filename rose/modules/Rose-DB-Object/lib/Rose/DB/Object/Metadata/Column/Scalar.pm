@@ -9,14 +9,27 @@ our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
 our $VERSION = '0.60';
 
+use Rose::Class::MakeMethods::Generic
+(
+  inheritable_scalar => 'default_overflow',
+);
+
+__PACKAGE__->default_overflow('fatal');
+
 __PACKAGE__->add_common_method_maker_argument_names
 (
-  qw(length check_in with_init init_method)
+  qw(default length check_in with_init init_method overflow)
 );
 
 Rose::Object::MakeMethods::Generic->make_methods
 (
   { preserve_existing => 1 },
+
+  'scalar --get_set_init' =>
+  [
+    overflow => { check_in => [ qw(truncate warn fatal) ] },
+  ],
+
   scalar => [ __PACKAGE__->common_method_maker_argument_names ]
 );
 
@@ -30,6 +43,8 @@ sub init_with_dbi_column_info
 
   return;
 }
+
+sub init_overflow { __PACKAGE__->default_overflow }
 
 1;
 
@@ -80,6 +95,10 @@ See the L<Rose::DB::Object::Metadata::Column|Rose::DB::Object::Metadata::Column/
 =item B<check_in [ARRAYREF]>
 
 Get or set a reference to an array of valid column values.
+
+=item B<default VALUE>
+
+Get or set the default value for the column.
 
 =item B<init_method [NAME]>
 

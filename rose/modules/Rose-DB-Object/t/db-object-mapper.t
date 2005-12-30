@@ -838,8 +838,8 @@ EOF
 
     MyPgObject->meta->columns
     (
-      name     => { type => 'varchar', length => 32 },
-      code     => { type => 'char', length => 6 },
+      name     => { type => 'varchar', length => 32, overflow => 'truncate' },
+      code     => { type => 'char', length => 6, overflow => 'truncate' },
       id       => { primary_key => 1, not_null => 1 },
       k1       => { type => 'int' },
       k2       => { type => 'int' },
@@ -952,8 +952,8 @@ EOF
 
     MyMySQLObject->meta->columns
     (
-      name     => { type => 'varchar', length => 32 },
-      code     => { type => 'char', length => 6 },
+      name     => { type => 'varchar', length => 32, overflow => 'truncate' },
+      code     => { type => 'char', length => 6, overflow => 'truncate' },
       id       => { primary_key => 1, not_null => 1 },
       k1       => { type => 'int' },
       k2       => { type => 'int' },
@@ -1087,8 +1087,8 @@ EOF
 
     MyInformixObject->meta->columns
     (
-      name     => { type => 'varchar', length => 32 },
-      code     => { type => 'char', length => 6 },
+      name     => { type => 'varchar', length => 32, overflow => 'truncate' },
+      code     => { type => 'char', length => 6, overflow => 'truncate' },
       id       => { type => 'serial', primary_key => 1, not_null => 1 },
       k1       => { type => 'int' },
       k2       => { type => 'int' },
@@ -1183,8 +1183,8 @@ EOF
 
     MySQLiteObject->meta->columns
     (
-      name     => { type => 'varchar', length => 32 },
-      code     => { type => 'char', length => 6 },
+      name     => { type => 'varchar', length => 32, overflow => 'truncate' },
+      code     => { type => 'char', length => 6, overflow => 'truncate' },
       id       => { type => 'serial', primary_key => 1, not_null => 1 },
       k1       => { type => 'int' },
       k2       => { type => 'int' },
