@@ -83,6 +83,7 @@ EOF
       Carp::croak "Invalid length for $type column $qname: '$length'";
     }
 
+    no warnings 'uninitialized';
     if($overflow eq 'fatal')
     {
       $length_check_code =<<"EOF";
