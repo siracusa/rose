@@ -7,7 +7,7 @@ use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.55';
+our $VERSION = '0.60';
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -88,6 +88,28 @@ Get or set the name of the "init" method.  See the documentation for the C<scala
 =item B<length [INT]>
 
 Get or set the length of the column in characters.
+
+=item B<overflow [BEHAVIOR]>
+
+Get or set the setting that determines the behavior when the column value is greater than L<length|/length> characters.  Valid values for BEHAVIOR are:
+
+=over 4
+
+=item B<fatal>
+
+Throw an exception.
+
+=item B<truncate>
+
+Truncate the column value to the correct L<length|/length>.
+
+=item B<warn>
+
+Print a warning message.
+
+=back
+
+The default value is "fatal".
 
 =item B<type>
 
