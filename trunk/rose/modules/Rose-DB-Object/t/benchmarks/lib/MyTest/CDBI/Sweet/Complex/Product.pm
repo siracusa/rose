@@ -2,6 +2,8 @@ package MyTest::CDBI::Sweet::Complex::Product;
 
 use strict;
 
+use Class::DBI::AbstractSearch;
+
 use base 'MyTest::CDBI::Sweet::Base';
 
 use MyTest::CDBI::Sweet::Complex::Code;

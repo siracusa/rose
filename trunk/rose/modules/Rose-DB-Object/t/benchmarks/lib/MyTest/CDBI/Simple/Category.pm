@@ -2,6 +2,8 @@ package MyTest::CDBI::Simple::Category;
 
 use strict;
 
+use Class::DBI::AbstractSearch;
+
 use base 'MyTest::CDBI::Base';
 
 __PACKAGE__->table('rose_db_object_test_categories');

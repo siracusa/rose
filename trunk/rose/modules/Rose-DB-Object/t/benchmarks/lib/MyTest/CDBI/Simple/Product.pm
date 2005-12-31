@@ -2,6 +2,8 @@ package MyTest::CDBI::Simple::Product;
 
 use strict;
 
+use Class::DBI::AbstractSearch;
+
 use MyTest::CDBI::Simple::Code;
 use MyTest::CDBI::Simple::CodeName;
 use MyTest::CDBI::Simple::Category;
