@@ -10,7 +10,20 @@ our @ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('rose_db_object_test_products');
 
-# Set up manually so we can force the accessor name
+__PACKAGE__->meta->columns
+(
+  id            => { type => 'serial', primary_key => 1 },
+  name          => { type => 'varchar' },
+  category_id   => { type => 'integer' },
+  status        => { type => 'varchar' },
+  fk1           => { type => 'integer' },
+  fk2           => { type => 'integer' },
+  fk3           => { type => 'integer' },
+  published     => { type => 'datetime' },
+  last_modified => { type => 'datetime' },
+  date_created  => { type => 'datetime' },
+);
+
 __PACKAGE__->meta->foreign_keys
 (
   category =>
@@ -44,6 +57,7 @@ __PACKAGE__->meta->relationships
   }
 );
 
-__PACKAGE__->meta->auto_initialize;
+
+__PACKAGE__->meta->initialize;
 
 1;

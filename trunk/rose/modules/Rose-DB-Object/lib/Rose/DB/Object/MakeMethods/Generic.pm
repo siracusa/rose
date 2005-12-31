@@ -33,6 +33,8 @@ sub scalar
   my $check_in  = $args->{'check_in'};
   my $type      = $args->{'_method_type'} || 'scalar';
 
+  $length = undef  if($type eq 'integer'); # don't limit integers by length
+
   my $init_method;
 
   if(exists $args->{'with_init'} || exists $args->{'init_method'})
@@ -425,6 +427,13 @@ sub varchar
 {
   my($class, $name, $args) = @_;
   $args->{'_method_type'} = 'varchar';
+  $class->scalar($name, $args);
+}
+
+sub integer 
+{
+  my($class, $name, $args) = @_;
+  $args->{'_method_type'} = 'integer';
   $class->scalar($name, $args);
 }
 
@@ -3689,10 +3698,7 @@ Rose::DB::Object::MakeMethods::Generic - Create generic object methods for Rose:
 
 =head1 DESCRIPTION
 
-L<Rose::DB::Object::MakeMethods::Generic> is a method maker that inherits
-from L<Rose::Object::MakeMethods>.  See the L<Rose::Object::MakeMethods>
-documentation to learn about the interface.  The method types provided
-by this module are described below.
+L<Rose::DB::Object::MakeMethods::Generic> is a method maker that inherits from L<Rose::Object::MakeMethods>.  See the L<Rose::Object::MakeMethods> documentation to learn about the interface.  The method types provided by this module are described below.
 
 All method types defined by this module are designed to work with objects that are subclasses of (or otherwise conform to the interface of) L<Rose::DB::Object>.  In particular, the object is expected to have a L<db|Rose::DB::Object/db> method that returns a L<Rose::DB>-derived object.  See the L<Rose::DB::Object> documentation for more details.
 
@@ -3980,14 +3986,11 @@ Determines the default value of the attribute.
 
 =item B<hash_key NAME>
 
-The key inside the hash-based object to use for the storage of this
-attribute.  Defaults to the name of the method.
+The key inside the hash-based object to use for the storage of this attribute.  Defaults to the name of the method.
 
 =item B<init_method NAME>
 
-The name of the method to call when initializing the value of an
-undefined attribute.  Defaults to the method name with the prefix
-C<init_> added.  This option implies C<with_init>.
+The name of the method to call when initializing the value of an undefined attribute.  Defaults to the method name with the prefix C<init_> added.  This option implies C<with_init>.
 
 =item B<interface NAME>
 
@@ -4086,18 +4089,15 @@ A reference to an array of the enum values.  This attribute is required.  When s
 
 =item B<hash_key NAME>
 
-The key inside the hash-based object to use for the storage of this
-attribute.  Defaults to the name of the method.
+The key inside the hash-based object to use for the storage of this attribute.  Defaults to the name of the method.
 
 =item B<init_method NAME>
 
-The name of the method to call when initializing the value of an
-undefined attribute.  Defaults to the method name with the prefix
-C<init_> added.  This option implies C<with_init>.
+The name of the method to call when initializing the value of an undefined attribute.  Defaults to the method name with the prefix C<init_> added.  This option implies C<with_init>.
 
 =item B<interface NAME>
 
-Choose the interface.  The only current interface is C<get_set>, which is the default.
+Choose the interface.  The C<get_set> interface is the default.
 
 =item B<with_init BOOL>
 
@@ -4116,8 +4116,7 @@ Creates a get/set method for an enum attribute.  When called with an argument, t
 
 =item B<get>
 
-Creates an accessor method for an object attribute that returns the current
-value of the attribute.
+Creates an accessor method for an object attribute that returns the current value of the attribute.
 
 =item B<set>
 
@@ -4157,6 +4156,85 @@ Example:
 
     print $o->type, ' is at stage ', $o->stage; # get
 
+=item B<integer>
+
+Create get/set methods for integer attributes.
+
+=over 4
+
+=item Options
+
+=over 4
+
+=item B<default VALUE>
+
+Determines the default value of the attribute.
+
+=item B<hash_key NAME>
+
+The key inside the hash-based object to use for the storage of this attribute.  Defaults to the name of the method.
+
+=item B<init_method NAME>
+
+The name of the method to call when initializing the value of an undefined attribute.  Defaults to the method name with the prefix C<init_> added.  This option implies C<with_init>.
+
+=item B<interface NAME>
+
+Choose the interface.  The C<get_set> interface is the default.
+
+=item B<with_init BOOL>
+
+Modifies the behavior of the C<get_set> and C<get> interfaces.  If the attribute is undefined, the method specified by the C<init_method> option is called and the attribute is set to the return value of that method.
+
+=back
+
+=item Interfaces
+
+=over 4
+
+=item B<get_set>
+
+Creates a get/set method for an integer object attribute.  When called with an argument, the value of the attribute is set.  The current value of the attribute is returned.
+
+=item B<get>
+
+Creates an accessor method for an integer object attribute that returns the current value of the attribute.
+
+=item B<set>
+
+Creates a mutator method for an integer object attribute.  When called with an argument, the value of the attribute is set.  If called with no arguments, a fatal error will occur.
+
+=back
+
+=back
+
+Example:
+
+    package MyDBObject;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    use Rose::DB::Object::MakeMethods::Generic
+    (
+      integer => 
+      [
+        code => { default => 99  },
+        type => { with_init => 1 }
+      ],
+    );
+
+    sub init_type { 123 }
+    ...
+
+    $o = MyDBObject->new(...);
+
+    print $o->code; # 99
+    print $o->type; # 123
+
+    $o->code(8675309); # set
+    $o->type(42);      # set
+    
+
 =item B<objects_by_key>
 
 Create get/set methods for an array of L<Rose::DB::Object>-derived objects fetched based on a key formed from attributes of the current object.
@@ -4193,7 +4271,7 @@ The name of the class method to call on C<manager_class> in order to fetch the o
 
 =item B<interface NAME>
 
-Choose the interface.  The only current interface is C<get_set>, which is the default.
+Choose the interface.  The C<get_set> interface is the default.
 
 =item B<relationship OBJECT>
 
@@ -4566,7 +4644,7 @@ The key inside the hash-based object to use for the storage of the fetched objec
 
 =item B<interface NAME>
 
-Choose the interface.  The only current interface is C<get_set>, which is the default.
+Choose the interface.  The C<get_set> interface is the default.
 
 =item B<manager_args HASHREF>
 
@@ -5057,13 +5135,11 @@ attribute.  Defaults to the name of the method.
 
 =item B<init_method NAME>
 
-The name of the method to call when initializing the value of an
-undefined attribute.  Defaults to the method name with the prefix
-C<init_> added.  This option implies C<with_init>.
+The name of the method to call when initializing the value of an undefined attribute.  Defaults to the method name with the prefix C<init_> added.  This option implies C<with_init>.
 
 =item B<interface NAME>
 
-Choose the interface.  The only current interface is C<get_set>, which is the default.
+Choose the interface.  The C<get_set> interface is the default.
 
 =item B<length INT>
 
@@ -5102,14 +5178,11 @@ method.
 
 =item B<get_set>
 
-Creates a get/set method for an object attribute.  When
-called with an argument, the value of the attribute is set.  The current
-value of the attribute is returned.
+Creates a get/set method for an object attribute.  When called with an argument, the value of the attribute is set.  The current value of the attribute is returned.
 
 =item B<get>
 
-Creates an accessor method for an object attribute that returns the current
-value of the attribute.
+Creates an accessor method for an object attribute that returns the current value of the attribute.
 
 =item B<set>
 
@@ -5261,18 +5334,15 @@ Determines the default value of the attribute.
 
 =item B<hash_key NAME>
 
-The key inside the hash-based object to use for the storage of this
-attribute.  Defaults to the name of the method.
+The key inside the hash-based object to use for the storage of this attribute.  Defaults to the name of the method.
 
 =item B<init_method NAME>
 
-The name of the method to call when initializing the value of an
-undefined attribute.  Defaults to the method name with the prefix
-C<init_> added.  This option implies C<with_init>.
+The name of the method to call when initializing the value of an undefined attribute.  Defaults to the method name with the prefix C<init_> added.  This option implies C<with_init>.
 
 =item B<interface NAME>
 
-Choose the interface.  The only current interface is C<get_set>, which is the default.
+Choose the interface.  The C<get_set> interface is the default.
 
 =item B<length INT>
 
