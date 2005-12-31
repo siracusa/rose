@@ -86,6 +86,17 @@ unless($Opt{'simple'} || $Opt{'complex'})
 our $Bench_Match = $Opt{'benchmarks-match'} ? qr($Opt{'benchmarks-match'}|insert) : 0;
 
 our $Iterations = $Opt{'iterations'} || $Default_Iterations;
+our $Limit_Dialect;
+our %Limit_Dialect =
+(
+  pg       => 'LimitOffset',
+  mysql    => 'LimitXY',
+  sqlite   => 'LimitYX',
+  informix => 'First',
+);
+
+use constant LIMIT  => 50;
+use constant OFFSET => 25;
 
 Benchmark->import(':hireswallclock')  if($Opt{'hi-res-time'});
 
@@ -95,6 +106,8 @@ MAIN:
 
   foreach my $db_type (@Use_DBs)
   {
+    $Limit_Dialect = $Limit_Dialect{$db_type};
+
     print<<"EOF";
 
 ##
@@ -1586,7 +1599,13 @@ EOF
 
     sub search_simple_category_dbi
     {
-      my $sth = $DBH->prepare("SELECT id, name FROM rose_db_object_test_categories WHERE name LIKE 'xCat %2%'");
+      my $sth = $DBH->prepare(<<"EOF");
+SELECT id, name FROM rose_db_object_test_categories WHERE 
+name LIKE 'xCat %2%' AND 
+id <= @{[ 500_000 + $Iterations ]} AND
+id >= 500000
+LIMIT @{[ LIMIT ]}
+EOF
       $sth->execute;
       my $c = $sth->fetchall_arrayref;
       die unless(@$c);
@@ -1612,8 +1631,12 @@ EOF
           prepare_cached => 1,
           query =>
           [
+            id => { le => 100_000 + $Iterations },
+            id => { ge => 100_000 },
             name => { like => 'xCat %2%' },
-          ]);
+          ],
+          limit => LIMIT);
+
       die unless(@$c);
 
       if($Debug && !$printed)
@@ -1630,7 +1653,14 @@ EOF
 
     sub search_simple_category_cdbi
     {
-      my @c = MyTest::CDBI::Simple::Category->search_like(name => 'xCat %2%');
+      my @c = 
+        MyTest::CDBI::Simple::Category->search_where(
+        {
+          name => { -like => 'xCat %2%' },
+          id   => { '<=' => 200_000 + $Iterations,
+                    '>=' => 200_000 },
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+
       die unless(@c);
 
       if($Debug && !$printed)
@@ -1647,7 +1677,14 @@ EOF
 
     sub search_simple_category_cdbs
     {
-      my @c = MyTest::CDBI::Sweet::Simple::Category->search_like(name => 'xCat %2%');
+      my @c = 
+        MyTest::CDBI::Sweet::Simple::Category->search_where(
+        {
+          name => { -like => 'xCat %2%' },
+          id   => { '<=' => 400_000 + $Iterations,
+                    '>=' => 400_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+
       die unless(@c);
 
       if($Debug && !$printed)
@@ -1664,7 +1701,14 @@ EOF
 
     sub search_simple_category_dbic
     {
-      my @c = MyTest::DBIC::Simple::Category->search_like({ name => 'xCat %2%' });
+      my @c = 
+        MyTest::DBIC::Simple::Category->search(
+        {
+          name => { -like => 'xCat %2%' },
+          id   => { '<=' => 300_000 + $Iterations,
+                    '>=' => 300_000 } 
+        }, { rows => LIMIT});
+
       die unless(@c);
 
       if($Debug && !$printed)
@@ -1696,7 +1740,10 @@ SELECT
 FROM
   rose_db_object_test_products
 WHERE
-  name LIKE 'Product %2%'
+  name LIKE 'Product %2%' AND
+  id <= @{[ 500_000 + $Iterations ]} AND
+  id >= 500000
+LIMIT @{[ LIMIT ]}
 EOF
       $sth->execute;
       my $p = $sth->fetchall_arrayref;
@@ -1724,7 +1771,11 @@ EOF
           query =>
           [
             name => { like => 'Product %2%' },
-          ]);
+            id => { le => 100_000 + $Iterations },
+            id => { ge => 100_000 },
+          ],
+          limit => LIMIT);
+
       die unless(@$p);
 
       if($Debug && !$printed)
@@ -1741,7 +1792,14 @@ EOF
 
     sub search_simple_product_cdbi
     {
-      my @p = MyTest::CDBI::Simple::Product->search_like(name => 'Product %2%');
+      my @p = 
+        MyTest::CDBI::Simple::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 200_000 + $Iterations,
+                    '>=' => 200_000 },
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+
       die unless(@p);
 
       if($Debug && !$printed)
@@ -1758,7 +1816,14 @@ EOF
 
     sub search_simple_product_cdbs
     {
-      my @p = MyTest::CDBI::Sweet::Simple::Product->search_like(name => 'Product %2%');
+      my @p = 
+        MyTest::CDBI::Sweet::Simple::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 400_000 + $Iterations,
+                    '>=' => 400_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+
       die unless(@p);
 
       if($Debug && !$printed)
@@ -1775,7 +1840,14 @@ EOF
 
     sub search_simple_product_dbic
     {
-      my @p = MyTest::DBIC::Simple::Product->search_like({ name => 'Product %2%' });
+      my @p = 
+        MyTest::DBIC::Simple::Product->search(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 300_000 + $Iterations,
+                    '>=' => 300_000 } 
+        }, { rows => LIMIT});
+
       die unless(@p);
 
       if($Debug && !$printed)
@@ -1811,7 +1883,10 @@ FROM
   rose_db_object_test_categories c
 WHERE
   c.id = p.category_id AND
-  p.name LIKE 'Product %2%'
+  p.name LIKE 'Product %2%' AND
+  id <= @{[ 500_000 + $Iterations ]} AND
+  id >= 500000
+LIMIT @{[ LIMIT ]}
 EOF
 
       $sth->execute;
@@ -1855,9 +1930,13 @@ EOF
           prepare_cached => 1,
           query =>
           [
-            't1.name' => { like => 'Product %2%' },
+            id => { le => 100_000 + $Iterations },
+            id => { ge => 100_000 },
+            name => { like => 'Product %2%' },
           ],
-          require_objects => [ 'category' ]);
+          require_objects => [ 'category' ],
+          limit => LIMIT);
+
       die unless(@$ps);
 
       if($Debug && !$printed)
@@ -1881,7 +1960,14 @@ EOF
 
     sub search_simple_product_and_category_cdbi
     {
-      my @p = MyTest::CDBI::Simple::Product->search_like(name => 'Product %2%');
+      my @p = 
+        MyTest::CDBI::Simple::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 200_000 + $Iterations,
+                    '>=' => 200_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+
       die unless(@p);
 
       if($Debug && !$printed)
@@ -1905,9 +1991,14 @@ EOF
 
     sub search_simple_product_and_category_cdbs
     {
-      my @p = MyTest::CDBI::Sweet::Simple::Product->search(
-        { name => { -like => [ 'Product %2%' ] } },
-        { prefetch => [ 'category_id' ] });
+      my @p = 
+        MyTest::CDBI::Sweet::Simple::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 400_000 + $Iterations,
+                    '>=' => 400_000 } 
+        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT });
+
 
       die unless(@p);
 
@@ -1933,9 +2024,13 @@ EOF
     sub search_simple_product_and_category_dbic
     {
       my @p = 
-        MyTest::DBIC::Simple::Product->search_like(
-          { 'me.name' => 'Product %2%' },
-          { prefetch => [ 'category_id' ] });
+        MyTest::DBIC::Simple::Product->search(
+        {
+          'me.name' => { -like => 'Product %2%' },
+          'me.id'   => { '<=' => 300_000 + $Iterations,
+                         '>=' => 300_000 } 
+        },
+        { prefetch => [ 'category_id' ], rows => LIMIT});
 
       die unless(@p);
 
@@ -1988,7 +2083,10 @@ FROM
 WHERE
   c.id = p.category_id AND
   n.product_id = p.id AND
-  p.name LIKE 'Product 200%'
+  p.name LIKE 'Product %2%' AND
+  id <= @{[ 500_000 + $Iterations ]} AND
+  id >= 500000
+LIMIT @{[ LIMIT ]}
 EOF
 
       $sth->execute;
@@ -2043,16 +2141,19 @@ EOF
           prepare_cached => 1,
           query =>
           [
-            't1.name' => { like => 'Product 200%' },
+            id => { le => 100_000 + $Iterations },
+            id => { ge => 100_000 },
+            name => { like => 'Product %2%' },
           ],
           with_objects    => [ 'code_names' ],
-          require_objects => [ 'category' ]);
+          require_objects => [ 'category' ],
+          limit => LIMIT);
       die unless(@$ps);
 
       if($Debug && !$printed)
       {
         print "search_simple_product_and_category_and_code_name_rdbo GOT ", scalar(@$ps), "\n";
-        #$printed++;
+        $printed++;
       }
 
       foreach my $p (@$ps)
@@ -2072,13 +2173,20 @@ EOF
 
     sub search_simple_product_and_category_and_code_name_cdbi
     {
-      my @p = MyTest::CDBI::Simple::Product->search_like(name => 'Product 200%');
+      my @p = 
+        MyTest::CDBI::Simple::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 200_000 + $Iterations,
+                    '>=' => 200_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+
       die unless(@p);
 
       if($Debug && !$printed)
       {
         print "search_simple_product_and_category_and_code_name_cdbi GOT ", scalar(@p), "\n";
-        #$printed++;
+        $printed++;
       }
 
       foreach my $p (@p)
@@ -2098,16 +2206,20 @@ EOF
 
     sub search_simple_product_and_category_and_code_name_cdbs
     {
-      my @p = MyTest::CDBI::Sweet::Simple::Product->search(
-        { name => { -like => [ 'Product 200%' ] } },
-        { prefetch => [ 'category_id' ] });
+      my @p = 
+        MyTest::CDBI::Sweet::Simple::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 400_000 + $Iterations,
+                    '>=' => 400_000 } 
+        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT });
 
       die unless(@p);
 
       if($Debug && !$printed)
       {
         print "search_simple_product_and_category_and_code_name_cdbs GOT ", scalar(@p), "\n";
-        #$printed++;
+        $printed++;
       }
 
       foreach my $p (@p)
@@ -2127,13 +2239,19 @@ EOF
 
     sub search_simple_product_and_category_and_code_name_dbic
     {
-      my @p = MyTest::DBIC::Simple::Product->search_like({ name => 'Product 200%' });
+      my @p = 
+        MyTest::DBIC::Simple::Product->search(
+        {
+          'me.name' => { -like => 'Product %2%' },
+          'me.id'   => { '<=' => 300_000 + $Iterations,
+                         '>=' => 300_000 } 
+        }, { prefetch => [ 'category_id' ], rows => LIMIT});
       die unless(@p);
 
       if($Debug && !$printed)
       {
         print "search_simple_product_and_category_and_code_name_dbic GOT ", scalar(@p), "\n";
-        #$printed++;
+        $printed++;
       }
 
       foreach my $p (@p)
@@ -2151,9 +2269,6 @@ EOF
   #
   # Search with limit and offset
   #
-
-  use constant LIMIT  => 20;
-  use constant OFFSET => 100;
 
   SEARCH_LIMIT_OFFSET_SIMPLE_PRODUCT_DBI:
   {
@@ -2178,7 +2293,9 @@ SELECT
 FROM
   rose_db_object_test_products
 WHERE
-  name LIKE 'Product %2%'
+  name LIKE 'Product %2%' AND
+  id <= @{[ 500_000 + $Iterations ]} AND
+  id >= 500000
 LIMIT @{[LIMIT]} OFFSET @{[OFFSET]}
 EOF
 
@@ -2206,6 +2323,8 @@ EOF
           prepare_cached => 1,
           query =>
           [
+            id   => { le => 100_000 + $Iterations },
+            id   => { ge => 100_000 },
             name => { like => 'Product %2%' },
           ],
           limit  => LIMIT,
@@ -2227,8 +2346,15 @@ EOF
     sub search_limit_offset_simple_product_cdbi
     {
       die "Unsupported";
-      my @p = MyTest::CDBI::Simple::Product->search_like(name => 'Product %2%');
-      #die unless(@p);
+      my @p = 
+        MyTest::CDBI::Complex::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 200_000 + $Iterations,
+                    '>=' => 200_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT, offset => OFFSET });
+
+      die unless(@p);
 
       if($Debug && !$printed)
       {
@@ -2244,9 +2370,21 @@ EOF
 
     sub search_limit_offset_simple_product_cdbs
     {
-      my @p = MyTest::CDBI::Sweet::Simple::Product->search_like(
-        { name => 'Product %2%' }, { rows => LIMIT, offset => OFFSET });
-      #die unless(@p);
+      my @p = 
+        MyTest::CDBI::Sweet::Simple::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 400_000 + $Iterations,
+                    '>=' => 400_000 } 
+        }, 
+        {
+          prefetch => [ 'category_id' ],
+          limit_dialect => $Limit_Dialect,
+          limit  => LIMIT,
+          offset => OFFSET 
+        });
+
+      die unless(@p);
 
       if($Debug && !$printed)
       {
@@ -2262,9 +2400,15 @@ EOF
 
     sub search_limit_offset_simple_product_dbic
     {
-      my @p = MyTest::DBIC::Simple::Product->search_like(
-        { name => 'Product %2%' }, { rows => LIMIT, offset => OFFSET });
-      #die unless(@p);
+      my @p =
+        MyTest::DBIC::Simple::Product->search(
+        {
+          'me.name' => { -like => 'Product %2%' },
+          'me.id'   => { '<=' => 300_000 + $Iterations,
+                         '>=' => 300_000 } 
+        }, { prefetch => [ 'category_id' ], rows => LIMIT, offset => OFFSET });
+
+      die unless(@p);
 
       if($Debug && !$printed)
       {
@@ -2284,7 +2428,13 @@ EOF
 
     sub iterate_simple_category_dbi
     {
-      my $sth = $DBH->prepare("SELECT id, name FROM rose_db_object_test_categories WHERE name LIKE 'xCat %2%'");
+      my $sth = $DBH->prepare(<<"EOF");
+SELECT id, name FROM rose_db_object_test_categories WHERE
+name LIKE 'xCat %2%' AND
+id <= @{[ 500_000 + $Iterations ]} AND
+id >= 500000
+LIMIT @{[ LIMIT ]}
+EOF
       $sth->execute;
       my($id, $name);
       $sth->bind_columns(\$id, \$name);
@@ -2317,8 +2467,11 @@ EOF
           prepare_cached => 1,
           query =>
           [
+            id => { le => 100_000 + $Iterations },
+            id => { ge => 100_000 },
             name => { like => 'xCat %2%' },
-          ]);
+          ],
+          limit => LIMIT);
 
       my $i = 0;
 
@@ -2341,7 +2494,13 @@ EOF
 
     sub iterate_simple_category_cdbi
     {
-      my $iter = MyTest::CDBI::Simple::Category->search_like(name => 'xCat %2%');
+      my $iter = 
+        MyTest::CDBI::Simple::Category->search_where(
+        {
+          name => { -like => 'xCat %2%' },
+          id   => { '<=' => 200_000 + $Iterations,
+                    '>=' => 200_000 },
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
 
       my $i = 0;
 
@@ -2364,7 +2523,13 @@ EOF
 
     sub iterate_simple_category_cdbs
     {
-      my $iter = MyTest::CDBI::Sweet::Simple::Category->search_like(name => 'xCat %2%');
+      my $iter = 
+        MyTest::CDBI::Sweet::Simple::Category->search_where(
+        {
+          name => { -like => 'xCat %2%' },
+          id   => { '<=' => 400_000 + $Iterations,
+                    '>=' => 400_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
 
       my $i = 0;
 
@@ -2387,7 +2552,13 @@ EOF
 
     sub iterate_simple_category_dbic
     {
-      my $iter = MyTest::DBIC::Simple::Category->search_like({ name => 'xCat %2%' });
+      my $iter = 
+        MyTest::DBIC::Simple::Category->search(
+        {
+          name => { -like => 'xCat %2%' },
+          id   => { '<=' => 300_000 + $Iterations,
+                    '>=' => 300_000 } 
+        }, { rows => LIMIT});
 
       my $i = 0;
 
@@ -2425,7 +2596,10 @@ SELECT
 FROM
   rose_db_object_test_products
 WHERE
-  name LIKE 'Product %2%'
+  name LIKE 'Product %2%' AND
+  id <= @{[ 500_000 + $Iterations ]} AND
+  id >= 500000
+LIMIT @{[ LIMIT ]}
 EOF
       $sth->execute;
       my %row;
@@ -2459,8 +2633,11 @@ EOF
           prepare_cached => 1,
           query =>
           [
-            'name' => { like => 'Product %2%' },
-          ]);
+            id => { le => 100_000 + $Iterations },
+            id => { ge => 100_000 },
+            name => { like => 'Product %2%' },
+          ],
+          limit => LIMIT);
 
       my $i = 0;
 
@@ -2483,7 +2660,13 @@ EOF
 
     sub iterate_simple_product_cdbi
     {
-      my $iter = MyTest::CDBI::Simple::Product->search_like(name => 'Product %2%');
+      my $iter = 
+        MyTest::CDBI::Simple::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 200_000 + $Iterations,
+                    '>=' => 200_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
 
       my $i = 0;
 
@@ -2506,7 +2689,12 @@ EOF
 
     sub iterate_simple_product_cdbs
     {
-      my $iter = MyTest::CDBI::Sweet::Simple::Product->search_like(name => 'Product %2%');
+      my $iter = MyTest::CDBI::Sweet::Simple::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 400_000 + $Iterations,
+                    '>=' => 400_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
 
       my $i = 0;
 
@@ -2529,7 +2717,13 @@ EOF
 
     sub iterate_simple_product_dbic
     {
-      my $iter = MyTest::DBIC::Simple::Product->search_like({ name => 'Product %2%' });
+      my $iter = 
+        MyTest::DBIC::Simple::Product->search(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 300_000 + $Iterations,
+                    '>=' => 300_000 } 
+        }, { rows => LIMIT});
 
       my $i = 0;
 
@@ -2572,6 +2766,9 @@ FROM
 WHERE
   c.id = p.category_id AND
   p.name LIKE 'Product %2%'
+  id <= @{[ 500_000 + $Iterations ]} AND
+  id >= 500000
+LIMIT @{[ LIMIT ]}
 EOF
 
       $sth->execute;
@@ -2609,9 +2806,12 @@ EOF
           prepare_cached => 1,
           query =>
           [
-            't1.name' => { like => 'Product %2%' },
+            id => { le => 100_000 + $Iterations },
+            id => { ge => 100_000 },
+            name => { like => 'Product %2%' },
           ],
-          with_objects => [ 'category' ]);
+          with_objects => [ 'category' ],
+          limit => LIMIT);
 
       my $i = 0;
 
@@ -2637,7 +2837,13 @@ EOF
 
     sub iterate_simple_product_and_category_cdbi
     {
-      my $iter = MyTest::CDBI::Simple::Product->search_like(name => 'Product %2%');
+      my $iter = 
+        MyTest::CDBI::Simple::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 200_000 + $Iterations,
+                    '>=' => 200_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
 
       my $i = 0;
 
@@ -2663,10 +2869,13 @@ EOF
 
     sub iterate_simple_product_and_category_cdbs
     {
-      my $iter = MyTest::CDBI::Sweet::Simple::Product->search(
-        { name => { -like => [ 'Product %2%' ] } },
-        { prefetch => [ 'category_id' ] });
-
+      my $iter = 
+        MyTest::CDBI::Sweet::Simple::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 400_000 + $Iterations,
+                    '>=' => 400_000 } 
+        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT });
       my $i = 0;
 
       while(my $p = $iter->next)
@@ -2692,9 +2901,13 @@ EOF
     sub iterate_simple_product_and_category_dbic
     {
       my $iter = 
-        MyTest::DBIC::Simple::Product->search_like(
-          { 'me.name' => 'Product %2%' },
-          { prefetch => [ 'category_id' ] });
+        MyTest::DBIC::Simple::Product->search(
+        {
+          'me.name' => { -like => 'Product %2%' },
+          'me.id'   => { '<=' => 300_000 + $Iterations,
+                         '>=' => 300_000 } 
+        },
+        { prefetch => [ 'category_id' ], rows => LIMIT });
 
       my $i = 0;
 
@@ -3365,7 +3578,10 @@ EOF
           query =>
           [
             name => { like => 'xCat %2%' },
-          ]);
+            id => { le => 1_100_000 + $Iterations },
+            id => { ge => 1_100_000 },
+          ],
+          limit => LIMIT);
       die unless(@$c);
 
       if($Debug && !$printed)
@@ -3382,7 +3598,13 @@ EOF
 
     sub search_complex_category_cdbi
     {
-      my @c = MyTest::CDBI::Complex::Category->search_like(name => 'xCat %2%');
+      my @c = 
+        MyTest::CDBI::Complex::Category->search_where(
+        {
+          name => { -like => 'xCat %2%' },
+          id   => { '<=' => 2_200_000 + $Iterations,
+                    '>=' => 2_200_000 },
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
       die unless(@c);
 
       if($Debug && !$printed)
@@ -3399,7 +3621,13 @@ EOF
 
     sub search_complex_category_cdbs
     {
-      my @c = MyTest::CDBI::Sweet::Complex::Category->search_like(name => 'xCat %2%');
+      my @c = 
+        MyTest::CDBI::Sweet::Complex::Category->search_where(
+        {
+          name => { -like => 'xCat %2%' },
+          id   => { '<=' => 4_400_000 + $Iterations,
+                    '>=' => 4_400_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
       die unless(@c);
 
       if($Debug && !$printed)
@@ -3416,7 +3644,13 @@ EOF
 
     sub search_complex_category_dbic
     {
-      my @c = MyTest::DBIC::Complex::Category->search_like({ name => 'xCat %2%' });
+      my @c = 
+        MyTest::DBIC::Complex::Category->search(
+        {
+          name => { -like => 'xCat %2%' },
+          id   => { '<=' => 3_300_000 + $Iterations,
+                    '>=' => 3_300_000 } 
+        }, { rows => LIMIT});
       die unless(@c);
 
       if($Debug && !$printed)
@@ -3427,6 +3661,44 @@ EOF
     }
   }
 
+  SEARCH_COMPLEX_PRODUCT_DBI:
+  {
+    my $printed = 0;
+
+    sub search_complex_product_dbi
+    {
+      my $sth = $DBH->prepare(<<"EOF");
+SELECT
+  id,
+  name,
+  category_id,
+  status,
+  fk1,
+  fk2,
+  fk3,
+  published,
+  last_modified,
+  date_created
+FROM
+  rose_db_object_test_products
+WHERE
+  name LIKE 'Product %2%' AND
+  id <= @{[ 500_000 + $Iterations ]} AND
+  id >= 500000
+LIMIT @{[ LIMIT ]}
+EOF
+      $sth->execute;
+      my $p = $sth->fetchall_arrayref;
+      die unless(@$p);
+
+      if($Debug && !$printed)
+      {
+        print "search_complex_product_dbi GOT ", scalar(@$p), "\n";
+        $printed++;
+      }
+    }
+  }
+  
   SEARCH_COMPLEX_PRODUCT_RDBO:
   {
     my $printed = 0;
@@ -3440,8 +3712,11 @@ EOF
           prepare_cached => 1,
           query =>
           [
-            name => { like => 'Product 20%' },
-          ]);
+            id => { le => 100_000 + $Iterations },
+            id => { ge => 100_000 },
+            name => { like => 'Product %2%' },
+          ],
+          limit => LIMIT);
       die unless(@$p);
 
       if($Debug && !$printed)
@@ -3458,7 +3733,13 @@ EOF
 
     sub search_complex_product_cdbi
     {
-      my @p = MyTest::CDBI::Complex::Product->search_like(name => 'Product 20%');
+      my @p =
+        MyTest::CDBI::Complex::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 200_000 + $Iterations,
+                    '>=' => 200_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
       die unless(@p);
 
       if($Debug && !$printed)
@@ -3475,7 +3756,14 @@ EOF
 
     sub search_complex_product_cdbs
     {
-      my @p = MyTest::CDBI::Sweet::Complex::Product->search_like(name => 'Product 20%');
+      my @p = 
+        MyTest::CDBI::Sweet::Complex::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 400_000 + $Iterations,
+                    '>=' => 400_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+
       die unless(@p);
 
       if($Debug && !$printed)
@@ -3492,7 +3780,14 @@ EOF
 
     sub search_complex_product_dbic
     {
-      my @p = MyTest::DBIC::Complex::Product->search_like({ name => 'Product 20%' });
+      my @p = 
+        MyTest::DBIC::Complex::Product->search(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 300_000 + $Iterations,
+                    '>=' => 300_000 } 
+        }, { rows => LIMIT});
+
       die unless(@p);
 
       if($Debug && !$printed)
@@ -3516,9 +3811,12 @@ EOF
           prepare_cached => 1,
           query =>
           [
-            't1.name' => { like => 'Product 20%' },
+            id => { le => 100_000 + $Iterations },
+            id => { ge => 100_000 },
+            name => { like => 'Product %2%' },
           ],
-          with_objects => [ 'category' ]);
+          with_objects => [ 'category' ],
+          limit => LIMIT);
       die unless(@$ps);
 
       if($Debug && !$printed)
@@ -3542,7 +3840,14 @@ EOF
 
     sub search_complex_product_and_category_cdbi
     {
-      my @p = MyTest::CDBI::Complex::Product->search_like(name => 'Product 20%');
+      my @p =
+        MyTest::CDBI::Complex::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 200_000 + $Iterations,
+                    '>=' => 200_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+
       die unless(@p);
 
       if($Debug && !$printed)
@@ -3566,9 +3871,13 @@ EOF
 
     sub search_complex_product_and_category_cdbs
     {
-      my @p = MyTest::CDBI::Sweet::Complex::Product->search(
-        { name => { -like => [ 'Product 20%' ] } },
-        { prefetch => [ 'category_id' ] });
+      my @p = 
+        MyTest::CDBI::Sweet::Complex::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 400_000 + $Iterations,
+                    '>=' => 400_000 } 
+        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT });
 
       die unless(@p);
 
@@ -3594,9 +3903,13 @@ EOF
     sub search_complex_product_and_category_dbic
     {
       my @p =
-        MyTest::DBIC::Complex::Product->search_like(
-          { 'me.name' => 'Product 20%' },
-          { prefetch => [ 'category_id' ] });
+        MyTest::DBIC::Complex::Product->search(
+        {
+          'me.name' => { -like => 'Product %2%' },
+          'me.id'   => { '<=' => 300_000 + $Iterations,
+                         '>=' => 300_000 } 
+        },
+        { prefetch => [ 'category_id' ], rows => LIMIT});
 
       die unless(@p);
 
@@ -3649,7 +3962,10 @@ FROM
 WHERE
   c.id = p.category_id AND
   n.product_id = p.id AND
-  p.name LIKE 'Product 200%'
+  p.name LIKE 'Product %2%' AND
+  id <= @{[ 500_000 + $Iterations ]} AND
+  id >= 500000
+LIMIT @{[ LIMIT ]}
 EOF
 
       $sth->execute;
@@ -3677,7 +3993,7 @@ EOF
         }
 
         print "search_complex_product_and_category_and_code_name_dbi GOT $num\n";
-        #$printed++;
+        $printed++;
       }
 
       foreach my $p (@ps)
@@ -3704,16 +4020,19 @@ EOF
           prepare_cached => 1,
           query =>
           [
-            't1.name' => { like => 'Product 200%' },
+            id   => { le => 100_000 + $Iterations },
+            id   => { ge => 100_000 },
+            name => { like => 'Product %2%' },
           ],
           with_objects    => [ 'code_names' ],
-          require_objects => [ 'category' ]);
+          require_objects => [ 'category' ],
+          limit => LIMIT);
       die unless(@$ps);
 
       if($Debug && !$printed)
       {
         print "search_complex_product_and_category_and_code_name_rdbo GOT ", scalar(@$ps), "\n";
-        #$printed++;
+        $printed++;
       }
 
       foreach my $p (@$ps)
@@ -3733,13 +4052,19 @@ EOF
 
     sub search_complex_product_and_category_and_code_name_cdbi
     {
-      my @p = MyTest::CDBI::Complex::Product->search_like(name => 'Product 200%');
+      my @p = 
+        MyTest::CDBI::Complex::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 200_000 + $Iterations,
+                    '>=' => 200_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
       die unless(@p);
 
       if($Debug && !$printed)
       {
         print "search_complex_product_and_category_and_code_name_cdbi GOT ", scalar(@p), "\n";
-        #$printed++;
+        $printed++;
       }
 
       foreach my $p (@p)
@@ -3759,16 +4084,20 @@ EOF
 
     sub search_complex_product_and_category_and_code_name_cdbs
     {
-      my @p = MyTest::CDBI::Sweet::Complex::Product->search(
-        { name => { -like => [ 'Product 200%' ] } },
-        { prefetch => [ 'category_id' ] });
+      my @p = 
+        MyTest::CDBI::Sweet::Complex::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 400_000 + $Iterations,
+                    '>=' => 400_000 } 
+        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT });
 
       die unless(@p);
 
       if($Debug && !$printed)
       {
         print "search_complex_product_and_category_and_code_name_cdbs GOT ", scalar(@p), "\n";
-        #$printed++;
+        $printed++;
       }
 
       foreach my $p (@p)
@@ -3789,16 +4118,19 @@ EOF
     sub search_complex_product_and_category_and_code_name_dbic
     {
       my @p = 
-        MyTest::DBIC::Complex::Product->search_like(
-          { 'me.name' => 'Product 200%' },
-          { prefetch => [ 'category_id' ] });
+        MyTest::DBIC::Complex::Product->search(
+        {
+          'me.name' => { -like => 'Product %2%' },
+          'me.id'   => { '<=' => 300_000 + $Iterations,
+                         '>=' => 300_000 } 
+        }, { prefetch => [ 'category_id' ], rows => LIMIT});
 
       die unless(@p);
 
       if($Debug && !$printed)
       {
         print "search_complex_product_and_category_and_code_name_dbic GOT ", scalar(@p), "\n";
-        #$printed++;
+        $printed++;
       }
 
       foreach my $p (@p)
@@ -3830,11 +4162,14 @@ EOF
           prepare_cached => 1,
           query =>
           [
+            id => { le => 100_000 + $Iterations },
+            id => { ge => 100_000 },
             name => { like => 'Product %2%' },
           ],
           limit  => LIMIT,
           offset => OFFSET);
-      #die unless(@$p);
+
+      die unless(@$p);
 
       if($Debug && !$printed)
       {
@@ -3851,8 +4186,14 @@ EOF
     sub search_limit_offset_complex_product_cdbi
     {
       die "Unsupported";
-      my @p = MyTest::CDBI::Complex::Product->search_like(name => 'Product %2%');
-      #die unless(@p);
+      my @p = MyTest::CDBI::Complex::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 200_000 + $Iterations,
+                    '>=' => 200_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT, offset => OFFSET });
+
+      die unless(@p);
 
       if($Debug && !$printed)
       {
@@ -3868,9 +4209,21 @@ EOF
 
     sub search_limit_offset_complex_product_cdbs
     {
-      my @p = MyTest::CDBI::Sweet::Complex::Product->search_like(
-        { name => 'Product %2%' }, { rows => LIMIT, offset => OFFSET });
-      #die unless(@p);
+      my @p = 
+        MyTest::CDBI::Sweet::Complex::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 400_000 + $Iterations,
+                    '>=' => 400_000 } 
+        }, 
+        {
+          prefetch => [ 'category_id' ],
+          limit_dialect => $Limit_Dialect,
+          limit  => LIMIT,
+          offset => OFFSET 
+        });  
+
+      die unless(@p);
 
       if($Debug && !$printed)
       {
@@ -3886,9 +4239,15 @@ EOF
 
     sub search_limit_offset_complex_product_dbic
     {
-      my @p = MyTest::DBIC::Complex::Product->search_like(
-        { name => 'Product %2%' }, { rows => LIMIT, offset => OFFSET });
-      #die unless(@p);
+      my @p = 
+        MyTest::DBIC::Complex::Product->search(
+        {
+          'me.name' => { -like => 'Product %2%' },
+          'me.id'   => { '<=' => 300_000 + $Iterations,
+                         '>=' => 300_000 } 
+        }, { prefetch => [ 'category_id' ], rows => LIMIT, offset => OFFSET });
+
+      die unless(@p);
 
       if($Debug && !$printed)
       {
@@ -3915,8 +4274,11 @@ EOF
           prepare_cached => 1,
           query =>
           [
+            id => { le => 100_000 + $Iterations },
+            id => { ge => 100_000 },
             name => { like => 'xCat %2%' },
-          ]);
+          ],
+          limit => LIMIT);
 
       my $i = 0;
 
@@ -3939,7 +4301,13 @@ EOF
 
     sub iterate_complex_category_cdbi
     {
-      my $iter = MyTest::CDBI::Complex::Category->search_like(name => 'xCat %2%');
+      my $iter = 
+        MyTest::CDBI::Complex::Category->search_where(
+        {
+          name => { -like => 'xCat %2%' },
+          id   => { '<=' => 200_000 + $Iterations,
+                    '>=' => 200_000 },
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
 
       my $i = 0;
 
@@ -3962,7 +4330,13 @@ EOF
 
     sub iterate_complex_category_cdbs
     {
-      my $iter = MyTest::CDBI::Sweet::Complex::Category->search_like(name => 'xCat %2%');
+      my $iter = 
+        MyTest::CDBI::Sweet::Complex::Category->search_where(
+        {
+          name => { -like => 'xCat %2%' },
+          id   => { '<=' => 400_000 + $Iterations,
+                    '>=' => 400_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
 
       my $i = 0;
 
@@ -3985,7 +4359,13 @@ EOF
 
     sub iterate_complex_category_dbic
     {
-      my $iter = MyTest::DBIC::Complex::Category->search_like({ name => 'xCat %2%' });
+      my $iter = 
+        MyTest::DBIC::Complex::Category->search(
+        {
+          name => { -like => 'xCat %2%' },
+          id   => { '<=' => 300_000 + $Iterations,
+                    '>=' => 300_000 } 
+        }, { rows => LIMIT});
 
       my $i = 0;
 
@@ -4015,8 +4395,11 @@ EOF
           prepare_cached => 1,
           query =>
           [
-            'name' => { like => 'Product %2%' },
-          ]);
+            id => { le => 100_000 + $Iterations },
+            id => { ge => 100_000 },
+            name => { like => 'Product %2%' },
+          ],
+          limit => LIMIT);
 
       my $i = 0;
 
@@ -4039,7 +4422,13 @@ EOF
 
     sub iterate_complex_product_cdbi
     {
-      my $iter = MyTest::CDBI::Complex::Product->search_like(name => 'Product %2%');
+      my $iter = 
+        MyTest::CDBI::Complex::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 200_000 + $Iterations,
+                    '>=' => 200_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
 
       my $i = 0;
 
@@ -4062,7 +4451,13 @@ EOF
 
     sub iterate_complex_product_cdbs
     {
-      my $iter = MyTest::CDBI::Sweet::Complex::Product->search_like(name => 'Product %2%');
+      my $iter =
+        MyTest::CDBI::Sweet::Complex::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 400_000 + $Iterations,
+                    '>=' => 400_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
 
       my $i = 0;
 
@@ -4085,7 +4480,13 @@ EOF
 
     sub iterate_complex_product_dbic
     {
-      my $iter = MyTest::DBIC::Complex::Product->search_like({ name => 'Product %2%' });
+      my $iter = 
+        MyTest::DBIC::Complex::Product->search(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 300_000 + $Iterations,
+                    '>=' => 300_000 } 
+        }, { rows => LIMIT});
 
       my $i = 0;
 
@@ -4115,9 +4516,12 @@ EOF
           prepare_cached => 1,
           query =>
           [
-            't1.name' => { like => 'Product %2%' },
+            id => { le => 100_000 + $Iterations },
+            id => { ge => 100_000 },
+            name => { like => 'Product %2%' },
           ],
-          with_objects => [ 'category' ]);
+          with_objects => [ 'category' ],
+          limit => LIMIT);
 
       my $i = 0;
 
@@ -4143,7 +4547,13 @@ EOF
 
     sub iterate_complex_product_and_category_cdbi
     {
-      my $iter = MyTest::CDBI::Complex::Product->search_like(name => 'Product %2%');
+      my $iter = 
+        MyTest::CDBI::Complex::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 200_000 + $Iterations,
+                    '>=' => 200_000 } 
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
 
       my $i = 0;
 
@@ -4169,9 +4579,13 @@ EOF
 
     sub iterate_complex_product_and_category_cdbs
     {
-      my $iter = MyTest::CDBI::Sweet::Complex::Product->search(
-        { name => { -like => [ 'Product %2%' ] } },
-        { prefetch => [ 'category_id' ] });
+      my $iter = 
+        MyTest::CDBI::Sweet::Complex::Product->search_where(
+        {
+          name => { -like => 'Product %2%' },
+          id   => { '<=' => 400_000 + $Iterations,
+                    '>=' => 400_000 } 
+        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT });
 
       my $i = 0;
 
@@ -4198,9 +4612,13 @@ EOF
     sub iterate_complex_product_and_category_dbic
     {
       my $iter = 
-        MyTest::DBIC::Complex::Product->search_like(
-          { 'me.name' => 'Product %2%' },
-          { prefetch => [ 'category_id' ] });
+        MyTest::DBIC::Complex::Product->search(
+        {
+          'me.name' => { -like => 'Product %2%' },
+          'me.id'   => { '<=' => 300_000 + $Iterations,
+                         '>=' => 300_000 } 
+        },
+        { prefetch => [ 'category_id' ], rows => LIMIT });
 
       my $i = 0;
 
@@ -4368,65 +4786,65 @@ sub Run_Tests
     'DBIC' => \&insert_complex_product_dbic,
   });
 
-  INTERNAL_LOOPERS1:
-  {
-    #
-    # Accessor
-    #
-
-    # It's okay for these tests to only have a few iterations because they
-    # loop internally.
-    local $Benchmark::Min_Count = 1;
-
-    Bench('Simple: accessor 1', $CPU_Time,
-    {
-      'DBI ' => \&accessor_simple_category_dbi,
-      'RDBO' => \&accessor_simple_category_rdbo,
-      'CDBI' => \&accessor_simple_category_cdbi,
-      'CDBS' => \&accessor_simple_category_cdbs,
-      'DBIC' => \&accessor_simple_category_dbic,
-    });
-
-    Bench('Complex: accessor 1', $CPU_Time,
-    {
-      'DBI ' => \&accessor_simple_category_dbi,
-      'RDBO' => \&accessor_complex_category_rdbo,
-      'CDBI' => \&accessor_complex_category_cdbi,
-      'CDBS' => \&accessor_complex_category_cdbs,
-      'DBIC' => \&accessor_complex_category_dbic,
-    });
-
-    Bench('Simple: accessor 2', $CPU_Time,
-    {
-      'DBI ' => \&accessor_simple_product_dbi,
-      'RDBO' => \&accessor_simple_product_rdbo,
-      'CDBI' => \&accessor_simple_product_cdbi,
-      'CDBS' => \&accessor_simple_product_cdbs,
-      'DBIC' => \&accessor_simple_product_dbic,
-    });
-
-    Bench('Complex: accessor 2', $CPU_Time,
-    {
-      'DBI ' => \&accessor_simple_product_dbi,
-      'RDBO' => \&accessor_complex_product_rdbo,
-      'CDBI' => \&accessor_complex_product_cdbi,
-      'CDBS' => \&accessor_complex_product_cdbs,
-      'DBIC' => \&accessor_complex_product_dbic,
-    });
-  }
-
-  #
-  # Load
-  #
-
-  Bench('Simple: load 1', $Iterations,
-  {
-    'DBI ' => \&load_simple_category_dbi,
-    'RDBO' => \&load_simple_category_rdbo,
-    'CDBI' => \&load_simple_category_cdbi,
-    'CDBS' => \&load_simple_category_cdbs,
-    'DBIC' => \&load_simple_category_dbic,
-  });
+#   INTERNAL_LOOPERS1:
+#   {
+#     #
+#     # Accessor
+#     #
+# 
+#     # It's okay for these tests to only have a few iterations because they
+#     # loop internally.
+#     local $Benchmark::Min_Count = 1;
+# 
+#     Bench('Simple: accessor 1', $CPU_Time,
+#     {
+#       'DBI ' => \&accessor_simple_category_dbi,
+#       'RDBO' => \&accessor_simple_category_rdbo,
+#       'CDBI' => \&accessor_simple_category_cdbi,
+#       'CDBS' => \&accessor_simple_category_cdbs,
+#       'DBIC' => \&accessor_simple_category_dbic,
+#     });
+# 
+#     Bench('Complex: accessor 1', $CPU_Time,
+#     {
+#       'DBI ' => \&accessor_simple_category_dbi,
+#       'RDBO' => \&accessor_complex_category_rdbo,
+#       'CDBI' => \&accessor_complex_category_cdbi,
+#       'CDBS' => \&accessor_complex_category_cdbs,
+#       'DBIC' => \&accessor_complex_category_dbic,
+#     });
+# 
+#     Bench('Simple: accessor 2', $CPU_Time,
+#     {
+#       'DBI ' => \&accessor_simple_product_dbi,
+#       'RDBO' => \&accessor_simple_product_rdbo,
+#       'CDBI' => \&accessor_simple_product_cdbi,
+#       'CDBS' => \&accessor_simple_product_cdbs,
+#       'DBIC' => \&accessor_simple_product_dbic,
+#     });
+# 
+#     Bench('Complex: accessor 2', $CPU_Time,
+#     {
+#       'DBI ' => \&accessor_simple_product_dbi,
+#       'RDBO' => \&accessor_complex_product_rdbo,
+#       'CDBI' => \&accessor_complex_product_cdbi,
+#       'CDBS' => \&accessor_complex_product_cdbs,
+#       'DBIC' => \&accessor_complex_product_dbic,
+#     });
+#   }
+# 
+#   #
+#   # Load
+#   #
+# 
+#   Bench('Simple: load 1', $Iterations,
+#   {
+#     'DBI ' => \&load_simple_category_dbi,
+#     'RDBO' => \&load_simple_category_rdbo,
+#     'CDBI' => \&load_simple_category_cdbi,
+#     'CDBS' => \&load_simple_category_cdbs,
+#     'DBIC' => \&load_simple_category_dbic,
+#   });
 
   #Bench('Complex: load 1', $Iterations,
   #{
@@ -4436,41 +4854,41 @@ sub Run_Tests
   #  'DBIC' => \&load_complex_category_dbic,
   #});
 
-  Bench('Simple: load 2', $Iterations,
-  {
-    'DBI ' => \&load_simple_product_dbi,
-    'RDBO' => \&load_simple_product_rdbo,
-    'CDBI' => \&load_simple_product_cdbi,
-    'CDBS' => \&load_simple_product_cdbs,
-    'DBIC' => \&load_simple_product_dbic,
-  });
-
-  Bench('Complex: load 2', $Iterations,
-  {
-    'DBI ' => \&load_simple_product_dbi,
-    'RDBO' => \&load_complex_product_rdbo,
-    'CDBI' => \&load_complex_product_cdbi,
-    'CDBS' => \&load_complex_product_cdbs,
-    'DBIC' => \&load_complex_product_dbic,
-  });
-
-  Bench('Simple: load 3', $Iterations,
-  {
-    'DBI ' => \&load_simple_product_and_category_dbi,
-    'RDBO' => \&load_simple_product_and_category_rdbo,
-    'CDBI' => \&load_simple_product_and_category_cdbi,
-    'CDBS' => \&load_simple_product_and_category_cdbs,
-    'DBIC' => \&load_simple_product_and_category_dbic,
-  });
-
-  Bench('Complex: load 3', $Iterations,
-  {
-    'DBI ' => \&load_simple_product_and_category_dbi,
-    'RDBO' => \&load_complex_product_and_category_rdbo,
-    'CDBI' => \&load_complex_product_and_category_cdbi,
-    'CDBS' => \&load_complex_product_and_category_cdbs,
-    'DBIC' => \&load_complex_product_and_category_dbic,
-  });
+#   Bench('Simple: load 2', $Iterations,
+#   {
+#     'DBI ' => \&load_simple_product_dbi,
+#     'RDBO' => \&load_simple_product_rdbo,
+#     'CDBI' => \&load_simple_product_cdbi,
+#     'CDBS' => \&load_simple_product_cdbs,
+#     'DBIC' => \&load_simple_product_dbic,
+#   });
+# 
+#   Bench('Complex: load 2', $Iterations,
+#   {
+#     'DBI ' => \&load_simple_product_dbi,
+#     'RDBO' => \&load_complex_product_rdbo,
+#     'CDBI' => \&load_complex_product_cdbi,
+#     'CDBS' => \&load_complex_product_cdbs,
+#     'DBIC' => \&load_complex_product_dbic,
+#   });
+# 
+#   Bench('Simple: load 3', $Iterations,
+#   {
+#     'DBI ' => \&load_simple_product_and_category_dbi,
+#     'RDBO' => \&load_simple_product_and_category_rdbo,
+#     'CDBI' => \&load_simple_product_and_category_cdbi,
+#     'CDBS' => \&load_simple_product_and_category_cdbs,
+#     'DBIC' => \&load_simple_product_and_category_dbic,
+#   });
+# 
+#   Bench('Complex: load 3', $Iterations,
+#   {
+#     'DBI ' => \&load_simple_product_and_category_dbi,
+#     'RDBO' => \&load_complex_product_and_category_rdbo,
+#     'CDBI' => \&load_complex_product_and_category_cdbi,
+#     'CDBS' => \&load_complex_product_and_category_cdbs,
+#     'DBIC' => \&load_complex_product_and_category_dbic,
+#   });
 
   #
   # Update
