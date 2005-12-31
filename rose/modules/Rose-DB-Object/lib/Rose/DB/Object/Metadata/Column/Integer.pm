@@ -5,7 +5,12 @@ use strict;
 use Rose::DB::Object::Metadata::Column::Scalar;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Scalar);
 
-our $VERSION = '0.03';
+our $VERSION = '0.60';
+
+foreach my $type (__PACKAGE__->available_method_types)
+{
+  __PACKAGE__->method_maker_type($type => 'integer');
+}
 
 sub type { 'integer' }
 
@@ -42,15 +47,15 @@ This class inherits from L<Rose::DB::Object::Metadata::Column::Scalar>. Inherite
 
 =item C<get_set>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::Generic/scalar>, C<interface =E<gt> 'get_set', ...>
+L<Rose::DB::Object::MakeMethods::Generic>, L<integer|Rose::DB::Object::MakeMethods::Generic/integer>, C<interface =E<gt> 'get_set', ...>
 
 =item C<get>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::Generic/scalar>, C<interface =E<gt> 'get', ...>
+L<Rose::DB::Object::MakeMethods::Generic>, L<integer|Rose::DB::Object::MakeMethods::Generic/integer>, C<interface =E<gt> 'get', ...>
 
 =item C<get_set>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::Generic/scalar>, C<interface =E<gt> 'set', ...>
+L<Rose::DB::Object::MakeMethods::Generic>, L<integer|Rose::DB::Object::MakeMethods::Generic/integer>, C<interface =E<gt> 'set', ...>
 
 =back
 

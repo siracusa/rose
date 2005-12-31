@@ -112,7 +112,7 @@ EOF
         $len = length($class)  if(length($class) > $len);
       }
 
-      printf("%-*s  Version\n", $len, 'Class');
+      printf("%-*s  Version\n", $len, 'Module');
       printf("%-*s  -------\n", $len, '-' x $len);
 
       foreach my $class (sort(('Rose::DB::Object', @Cmp_To)))
@@ -3440,7 +3440,7 @@ EOF
           prepare_cached => 1,
           query =>
           [
-            name => { like => 'Product %2%' },
+            name => { like => 'Product 20%' },
           ]);
       die unless(@$p);
 
@@ -3458,7 +3458,7 @@ EOF
 
     sub search_complex_product_cdbi
     {
-      my @p = MyTest::CDBI::Complex::Product->search_like(name => 'Product %2%');
+      my @p = MyTest::CDBI::Complex::Product->search_like(name => 'Product 20%');
       die unless(@p);
 
       if($Debug && !$printed)
@@ -3475,7 +3475,7 @@ EOF
 
     sub search_complex_product_cdbs
     {
-      my @p = MyTest::CDBI::Sweet::Complex::Product->search_like(name => 'Product %2%');
+      my @p = MyTest::CDBI::Sweet::Complex::Product->search_like(name => 'Product 20%');
       die unless(@p);
 
       if($Debug && !$printed)
@@ -3492,7 +3492,7 @@ EOF
 
     sub search_complex_product_dbic
     {
-      my @p = MyTest::DBIC::Complex::Product->search_like({ name => 'Product %2%' });
+      my @p = MyTest::DBIC::Complex::Product->search_like({ name => 'Product 20%' });
       die unless(@p);
 
       if($Debug && !$printed)
@@ -3516,7 +3516,7 @@ EOF
           prepare_cached => 1,
           query =>
           [
-            't1.name' => { like => 'Product %2%' },
+            't1.name' => { like => 'Product 20%' },
           ],
           with_objects => [ 'category' ]);
       die unless(@$ps);
@@ -3542,7 +3542,7 @@ EOF
 
     sub search_complex_product_and_category_cdbi
     {
-      my @p = MyTest::CDBI::Complex::Product->search_like(name => 'Product %2%');
+      my @p = MyTest::CDBI::Complex::Product->search_like(name => 'Product 20%');
       die unless(@p);
 
       if($Debug && !$printed)
@@ -3567,7 +3567,7 @@ EOF
     sub search_complex_product_and_category_cdbs
     {
       my @p = MyTest::CDBI::Sweet::Complex::Product->search(
-        { name => { -like => [ 'Product %2%' ] } },
+        { name => { -like => [ 'Product 20%' ] } },
         { prefetch => [ 'category_id' ] });
 
       die unless(@p);
@@ -3595,7 +3595,7 @@ EOF
     {
       my @p =
         MyTest::DBIC::Complex::Product->search_like(
-          { 'me.name' => 'Product %2%' },
+          { 'me.name' => 'Product 20%' },
           { prefetch => [ 'category_id' ] });
 
       die unless(@p);
