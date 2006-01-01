@@ -237,7 +237,7 @@ sub db_class
 sub make_modules
 {
   my($self, %args) = @_;
-  
+
   my $module_dir = exists $args{'module_dir'} ? 
     delete $args{'module_dir'} : $self->module_dir;
 
@@ -257,9 +257,9 @@ sub make_modules
     unshift(@path, $module_dir);
 
     my $dir = File::Spec->catfile(@path[0 .. ($#path - 1)]);
-    
+
     mkpath($dir)  unless(-e $dir);
-    
+
     unless(-d $dir)
     {
       if(-f $dir)
@@ -273,7 +273,7 @@ sub make_modules
     my $file = File::Spec->catfile(@path);
 
     open(my $pm, '>', $file) or croak "Could not create $file - $!";
-    
+
     if($class->isa('Rose::DB::Object'))
     {
       print $pm $class->meta->perl_class_definition, "\n";
@@ -283,7 +283,7 @@ sub make_modules
       print $pm $class->perl_class_definition, "\n";
     }
     else { croak "Unknown class: $class" }
-    
+
     close($pm) or croak  "Could not write $file - $!";
   }
 

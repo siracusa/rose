@@ -23,14 +23,14 @@ my $Include =
                         description_author_map product_color_map
                         prices products vendors regions)) . ')$';
 $Include = qr($Include);
-  
+
 foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 {
   SKIP:
   {
     skip("$db_type tests", 299)  unless($Have{$db_type});
   }
-  
+
   next  unless($Have{$db_type});
 
   Rose::DB->default_type($db_type);
@@ -152,7 +152,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($products->[0]{'vendor'}{'id'}, 2, "p2 - require vendors 1 - $db_type");
   is($products->[0]{'vendor'}{'vendor'}{'id'}, 1, "p2 - require vendors 2 - $db_type");
   is($products->[0]{'vendor'}{'region'}{'name'}, 'America', "p2 - require vendors 3 - $db_type");
-  
+
   is($products->[1]{'vendor'}{'id'}, 3, "p3 - require vendors 1 - $db_type");
   is($products->[1]{'vendor'}{'vendor'}{'id'}, 2, "p3 - require vendors 2 - $db_type");
   is($products->[1]{'vendor'}{'region'}{'name'}, 'England', "p3 - require vendors 3 - $db_type");
@@ -164,7 +164,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
       offset => 1);
 
   is(scalar @$products, 1, "offset require vendors 1 - $db_type");
-  
+
   is($products->[0]{'vendor'}{'id'}, 3, "p3 - offset require vendors 1 - $db_type");
   is($products->[0]{'vendor'}{'vendor'}{'id'}, 2, "p3 - offset require vendors 2 - $db_type");
   is($products->[0]{'vendor'}{'region'}{'name'}, 'England', "p3 - offset require vendors 3 - $db_type");
@@ -177,7 +177,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($p->{'vendor'}{'id'}, 2, "p2 - require vendors iterator 1 - $db_type");
   is($p->{'vendor'}{'vendor'}{'id'}, 1, "p2 - require vendors iterator 2 - $db_type");
   is($p->{'vendor'}{'region'}{'name'}, 'America', "p2 - require vendors iterator 3 - $db_type");
-  
+
   $p = $iterator->next;
   is($p->{'vendor'}{'id'}, 3, "p3 - require vendors iterator 1 - $db_type");
   is($p->{'vendor'}{'vendor'}{'id'}, 2, "p3 - require vendors iterator 2 - $db_type");
@@ -212,7 +212,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($products->[0]{'colors'}[0]{'name'}, 'red', "p1 - with colors 1 - $db_type");
   is($products->[0]{'colors'}[1]{'name'}, 'blue', "p1 - with colors 2 - $db_type");
   is(scalar @{$products->[0]{'colors'}}, 2, "p1 - with colors 3  - $db_type");
-  
+
   is($products->[0]{'colors'}[0]{'description'}{'text'}, 'desc 1', "p1 - with colors description 1 - $db_type");
   is($products->[0]{'colors'}[1]{'description'}{'text'}, 'desc 2', "p1 - with colors description 2 - $db_type");
 
@@ -257,7 +257,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($products->[1]{'colors'}[0]{'name'}, 'red', "p2 - with colors 1 - $db_type");
   is($products->[1]{'colors'}[1]{'name'}, 'green', "p2 - with colors 2 - $db_type");
   is(scalar @{$products->[1]{'colors'}}, 2, "p2 - with colors 3  - $db_type");
-  
+
   is($products->[1]{'colors'}[0]{'description'}{'text'}, 'desc 1', "p2 - with colors description 1 - $db_type");
   is($products->[1]{'colors'}[1]{'description'}{'text'}, 'desc 3', "p2 - with colors description 2 - $db_type");
 
@@ -287,7 +287,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($products->[0]{'colors'}[0]{'name'}, 'red', "p2 - offset with colors 1 - $db_type");
   is($products->[0]{'colors'}[1]{'name'}, 'green', "p2 - offset with colors 2 - $db_type");
   is(scalar @{$products->[0]{'colors'}}, 2, "p2 - offset with colors 3  - $db_type");
-  
+
   is($products->[0]{'colors'}[0]{'description'}{'text'}, 'desc 1', "p2 - offset with colors description 1 - $db_type");
   is($products->[0]{'colors'}[1]{'description'}{'text'}, 'desc 3', "p2 - offset with colors description 2 - $db_type");
 
@@ -317,7 +317,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($p->{'colors'}[0]{'name'}, 'red', "p1 - iterator with colors 1 - $db_type");
   is($p->{'colors'}[1]{'name'}, 'blue', "p1 - iterator with colors 2 - $db_type");
   is(scalar @{$p->{'colors'}}, 2, "p1 - iterator with colors 3  - $db_type");
-  
+
   is($p->{'colors'}[0]{'description'}{'text'}, 'desc 1', "p1 - iterator with colors description 1 - $db_type");
   is($p->{'colors'}[1]{'description'}{'text'}, 'desc 2', "p1 - iterator with colors description 2 - $db_type");
 
@@ -357,7 +357,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($p->{'colors'}[0]{'name'}, 'red', "p2 - iterator with colors 1 - $db_type");
   is($p->{'colors'}[1]{'name'}, 'green', "p2 - iterator with colors 2 - $db_type");
   is(scalar @{$p->{'colors'}}, 2, "p2 - iterator with colors 3  - $db_type");
-  
+
   is($p->{'colors'}[0]{'description'}{'text'}, 'desc 1', "p2 - iterator with colors description 1 - $db_type");
   is($p->{'colors'}[1]{'description'}{'text'}, 'desc 3', "p2 - iterator with colors description 2 - $db_type");
 
@@ -391,7 +391,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($p->{'colors'}[0]{'name'}, 'red', "p2 - offset iterator with colors 1 - $db_type");
   is($p->{'colors'}[1]{'name'}, 'green', "p2 - offset iterator with colors 2 - $db_type");
   is(scalar @{$p->{'colors'}}, 2, "p2 - offset iterator with colors 3  - $db_type");
-  
+
   is($p->{'colors'}[0]{'description'}{'text'}, 'desc 1', "p2 - offset iterator with colors description 1 - $db_type");
   is($p->{'colors'}[1]{'description'}{'text'}, 'desc 3', "p2 - offset iterator with colors description 2 - $db_type");
 
@@ -456,7 +456,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($products->[0]{'colors'}[0]{'name'}, 'red', "p1 - with colors vendors 1 - $db_type");
   is($products->[0]{'colors'}[1]{'name'}, 'blue', "p1 - with colors vendors 2 - $db_type");
   is(scalar @{$products->[0]{'colors'}}, 2, "p1 - with colors vendors 3  - $db_type");
-  
+
   is($products->[0]{'colors'}[0]{'description'}{'text'}, 'desc 1', "p1 - with colors vendors description 1 - $db_type");
   is($products->[0]{'colors'}[1]{'description'}{'text'}, 'desc 2', "p1 - with colors vendors description 2 - $db_type");
 
@@ -489,7 +489,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($products->[1]{'colors'}[0]{'name'}, 'red', "p2 - with colors vendors 1 - $db_type");
   is($products->[1]{'colors'}[1]{'name'}, 'green', "p2 - with colors vendors 2 - $db_type");
   is(scalar @{$products->[1]{'colors'}}, 2, "p2 - with colors vendors 3  - $db_type");
-  
+
   is($products->[1]{'colors'}[0]{'description'}{'text'}, 'desc 1', "p2 - with colors vendors description 1 - $db_type");
   is($products->[1]{'colors'}[1]{'description'}{'text'}, 'desc 3', "p2 - with colors vendors description 2 - $db_type");
 
@@ -533,7 +533,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($products->[0]{'colors'}[0]{'name'}, 'red', "p2 - offset with colors vendors 1 - $db_type");
   is($products->[0]{'colors'}[1]{'name'}, 'green', "p2 - offset with colors vendors 2 - $db_type");
   is(scalar @{$products->[0]{'colors'}}, 2, "p2 - offset with colors vendors 3  - $db_type");
-  
+
   is($products->[0]{'colors'}[0]{'description'}{'text'}, 'desc 1', "p2 - offset with colors vendors description 1 - $db_type");
   is($products->[0]{'colors'}[1]{'description'}{'text'}, 'desc 3', "p2 - offset with colors vendors description 2 - $db_type");
 
@@ -579,7 +579,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($p->{'colors'}[0]{'name'}, 'red', "p1 - iterator with colors vendors 1 - $db_type");
   is($p->{'colors'}[1]{'name'}, 'blue', "p1 - iterator with colors vendors 2 - $db_type");
   is(scalar @{$p->{'colors'}}, 2, "p1 - iterator with colors vendors 3  - $db_type");
-  
+
   is($p->{'colors'}[0]{'description'}{'text'}, 'desc 1', "p1 - iterator with colors vendors description 1 - $db_type");
   is($p->{'colors'}[1]{'description'}{'text'}, 'desc 2', "p1 - iterator with colors vendors description 2 - $db_type");
 
@@ -623,7 +623,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($p->{'vendor'}{'region'}{'name'}, 'America', "p2 - iterator vendor 2 - $db_type");
 
   $p->{'prices'} = [ sort { $a->{'price'} <=> $b->{'price'} } @{$p->{'prices'}} ];
-  
+
   is(scalar @{$p->{'prices'}}, 1, "p2 - iterator prices 2 - $db_type");
   is($p->{'prices'}[0]{'price'}, 9.99, "p2 - iterator prices 2 - $db_type");
   is($p->{'prices'}[0]{'region'}{'name'}, 'America', "p2 - iterator prices 3 - $db_type");
@@ -631,7 +631,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($p->{'colors'}[0]{'name'}, 'red', "p2 - iterator with colors vendors 1 - $db_type");
   is($p->{'colors'}[1]{'name'}, 'green', "p2 - iterator with colors vendors 2 - $db_type");
   is(scalar @{$p->{'colors'}}, 2, "p2 - iterator with colors vendors 3  - $db_type");
-  
+
   is($p->{'colors'}[0]{'description'}{'text'}, 'desc 1', "p2 - iterator with colors vendors description 1 - $db_type");
   is($p->{'colors'}[1]{'description'}{'text'}, 'desc 3', "p2 - iterator with colors vendors description 2 - $db_type");
 
@@ -667,7 +667,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($p->{'vendor'}{'region'}{'name'}, 'America', "p2 - offset iterator vendor 2 - $db_type");
 
   $p->{'prices'} = [ sort { $a->{'price'} <=> $b->{'price'} } @{$p->{'prices'}} ];
-  
+
   is(scalar @{$p->{'prices'}}, 1, "p2 - offset iterator prices 2 - $db_type");
   is($p->{'prices'}[0]{'price'}, 9.99, "p2 - offset iterator prices 2 - $db_type");
   is($p->{'prices'}[0]{'region'}{'name'}, 'America', "p2 - offset iterator prices 3 - $db_type");
@@ -675,7 +675,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($p->{'colors'}[0]{'name'}, 'red', "p2 - offset iterator with colors vendors 1 - $db_type");
   is($p->{'colors'}[1]{'name'}, 'green', "p2 - offset iterator with colors vendors 2 - $db_type");
   is(scalar @{$p->{'colors'}}, 2, "p2 - offset iterator with colors vendors 3  - $db_type");
-  
+
   is($p->{'colors'}[0]{'description'}{'text'}, 'desc 1', "p2 - offset iterator with colors vendors description 1 - $db_type");
   is($p->{'colors'}[1]{'description'}{'text'}, 'desc 3', "p2 - offset iterator with colors vendors description 2 - $db_type");
 
@@ -715,7 +715,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($p->{'vendor'}{'region'}{'name'}, 'America', "p2 - query iterator vendor 2 - $db_type");
 
   $p->{'prices'} = [ sort { $a->{'price'} <=> $b->{'price'} } @{$p->{'prices'}} ];
-  
+
   is(scalar @{$p->{'prices'}}, 1, "p2 - query iterator prices 2 - $db_type");
   is($p->{'prices'}[0]{'price'}, 9.99, "p2 - query iterator prices 2 - $db_type");
   is($p->{'prices'}[0]{'region'}{'name'}, 'America', "p2 - query iterator prices 3 - $db_type");
@@ -723,7 +723,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($p->{'colors'}[0]{'name'}, 'red', "p2 - query iterator with colors vendors 1 - $db_type");
   is($p->{'colors'}[1]{'name'}, 'green', "p2 - query iterator with colors vendors 2 - $db_type");
   is(scalar @{$p->{'colors'}}, 2, "p2 - query iterator with colors vendors 3  - $db_type");
-  
+
   is($p->{'colors'}[0]{'description'}{'text'}, 'desc 1', "p2 - query iterator with colors vendors description 1 - $db_type");
   is($p->{'colors'}[1]{'description'}{'text'}, 'desc 3', "p2 - query iterator with colors vendors description 2 - $db_type");
 
@@ -784,7 +784,7 @@ BEGIN
       $dbh->do('DROP TABLE products CASCADE');
       $dbh->do('DROP TABLE vendors CASCADE');
       $dbh->do('DROP TABLE regions CASCADE');
-  
+
       $dbh->do('DROP TABLE Rose_db_object_private.product_color_map CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.colors CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.description_author_map CASCADE');
@@ -1092,7 +1092,7 @@ CREATE TABLE vendors
 
   FOREIGN KEY (vendor_id) REFERENCES vendors (id),
   FOREIGN KEY (region_id) REFERENCES regions (id),
-  
+
   UNIQUE(name)
 )
 TYPE=InnoDB
@@ -1109,7 +1109,7 @@ CREATE TABLE products
   INDEX(vendor_id),
 
   FOREIGN KEY (vendor_id) REFERENCES vendors (id),
-  
+
   UNIQUE(name)
 )
 TYPE=InnoDB
@@ -1216,7 +1216,7 @@ CREATE TABLE product_color_map
 
   FOREIGN KEY (product_id) REFERENCES products (id),
   FOREIGN KEY (color_id) REFERENCES colors (id),
-  
+
   PRIMARY KEY(product_id, color_id)
 )
 TYPE=InnoDB
@@ -1606,7 +1606,7 @@ END
 sub has_broken_order_by
 {
   my($db_type) = shift;
-  
+
   if($db_type eq 'sqlite' && $DBD::SQLite::VERSION < 1.11)
   {
     return 1;

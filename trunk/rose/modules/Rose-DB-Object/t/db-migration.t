@@ -45,7 +45,7 @@ SKIP:
   # pg with schema -> pg
   $a3->db($db_pg);
   $a3->save;
-  
+
   $a3 = Album->new(id => 1, db => $db_pg)->load;
   is($a3->name, 'OneWS', 'pg with schema -> pg');
 
@@ -66,7 +66,7 @@ SKIP:
   $a3->db($db_my);
   $a3->delete;
   $a3->save;
-  
+
   $a3 = Album->new(id => 1, db => $db_my)->load;
   is($a3->name, 'OneWS', 'pg with schema -> mysql 1');
   is($a3->dt->month, 3, 'pg with schema -> mysql 2');
@@ -159,7 +159,7 @@ SKIP:
   is($a3->id1, 1, 'multi-pk check pk 7');
   is($a3->id2, 5, 'multi-pk check pk 8');
   is($a3->id3, 6, 'multi-pk check pk 9');
-  
+
   # pg -> mysql
   $a1->db($db_my);
   $a1->delete;
@@ -178,7 +178,7 @@ SKIP:
   $a3->save(insert => 1);
   $a3 = Code->new(id1 => 1, id2 => 5, id3 => 6, db => $db_pg)->load;
   is($a3->name, 'Thr', 'multi-pk mysql -> pg');
-  
+
   # mysql -> pg with schema
   $a3->db($db_ws);
   $a3->save(insert => 1);

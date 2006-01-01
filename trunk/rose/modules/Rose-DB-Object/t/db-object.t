@@ -1265,7 +1265,7 @@ EOF
     eval { MySQLiteObject->meta->initialize };
     Test::More::ok($@, 'meta->initialize() reserved method');
     Test::More::is($pre_inited, 1, 'meta->pre_init_hook()');
-    
+
     MySQLiteObject->meta->alias_column(save => 'save_col');
 
     eval { MySQLiteObject->meta->initialize };

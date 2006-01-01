@@ -116,12 +116,12 @@ BEGIN
   package MyDBObject::Metadata;
   our @ISA = qw(Rose::DB::Object::Metadata);
   sub make_column_methods { die "Yay!" }
-  
+
   package MyDBObject::Base;
   our @ISA = qw(Rose::DB::Object);
   sub init_db { Rose::DB->new('pg_with_schema') }
   sub meta_class { 'MyDBObject::Metadata' }
-  
+
   package MyDBOBjectCustom;
   our @ISA = qw(MyDBObject::Base);
 }

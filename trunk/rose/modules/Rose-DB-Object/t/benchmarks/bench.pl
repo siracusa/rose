@@ -3698,7 +3698,7 @@ EOF
       }
     }
   }
-  
+
   SEARCH_COMPLEX_PRODUCT_RDBO:
   {
     my $printed = 0;

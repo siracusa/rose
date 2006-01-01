@@ -107,7 +107,7 @@ sub default_value_sequence_name
   $db = shift  if(UNIVERSAL::isa($_[0], 'Rose::DB'));
   my $parent = $self->parent;
   my $db_id = $db ? $db->id : $parent ? $parent->init_db_id : ANY_DB;
-  
+
   return $self->{'default_value_sequence_name'}{$db_id}  unless(@_);
 
   $self->{'default_value_sequence_name'}{$db_id} = shift;
@@ -331,7 +331,7 @@ sub perl_column_defintion_attributes
     {
       next ATTR;
     }
-    
+
     # Use shorter "sequence" hash key name for this attr
     if($attr eq 'default_value_sequence_name')
     {
@@ -340,20 +340,20 @@ sub perl_column_defintion_attributes
       if($self->type =~ /^(?:big)?serial$/)
       {
         my $seq = $self->default_value_sequence_name;
-  
+
         my $meta = $self->parent;
         my $db   = $meta->db;
-  
+
         my $auto_seq = $db->auto_sequence_name(table  => $meta->table,
                                                column => $self);
-  
+
         # Use schema prefix on auto-generated name if necessary
         if($seq =~ /^[^.]+\./)
         {
           my $schema = $meta->select_schema($db);
           $auto_seq = "$schema.$auto_seq"  if($schema);
         }
-  
+
         no warnings 'uninitialized';
         if(lc $seq ne lc $auto_seq)
         {

@@ -25,7 +25,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     skip("$db_type tests", 6)  unless($HAVE{$db_type});
   }
-  
+
   next  unless($HAVE{$db_type});
 
   Rose::DB->default_type($db_type);
@@ -43,7 +43,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 
   is(join(', ', map { $_->name } My::DB::Gene2Unigene->meta->foreign_keys),
      'Rose_db_object_g_main, Rose_db_object_ug_main', "foreign_keys 1 - $db_type");  
-  
+
   is(join(', ', map { $_->name . ' ' . $_->type} My::DB::Gene::Main->meta->relationships),
      'genes many to many, unigenes many to many', "relationships 1 - $db_type");
 
@@ -288,7 +288,7 @@ CREATE TABLE Rose_db_object_g_ug
 )
 TYPE=InnoDB
 EOF
-    
+
     $dbh->disconnect;
   }
 

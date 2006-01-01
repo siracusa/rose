@@ -2182,7 +2182,7 @@ sub primary_key_sequence_names
     {
       $seqs[$i] = $seq  if(defined $seq);
     }
-    
+
     $i++;
   }
 

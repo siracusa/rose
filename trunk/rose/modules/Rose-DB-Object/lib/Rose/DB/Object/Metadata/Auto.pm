@@ -76,7 +76,7 @@ sub auto_generate_columns
     $catalog = $self->select_catalog($db);
     $schema  = $self->select_schema($db); 
     $schema  = $db->default_implicit_schema  unless(defined $schema);
-    
+
     $schema  = lc $schema   if(defined $schema && $db->likes_lowercase_schema_names);
     $catalog = lc $catalog  if(defined $catalog && $db->likes_lowercase_catalog_names);
 

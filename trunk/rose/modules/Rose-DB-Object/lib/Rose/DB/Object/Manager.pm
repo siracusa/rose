@@ -392,7 +392,7 @@ sub get_objects
       if(first { index($_, '.') >= 0 } @$with_objects)
       {
         my @with_objects;
-    
+
         foreach my $arg (@$with_objects)
         {
           next  if($seen_rel{$arg});
@@ -412,11 +412,11 @@ sub get_objects
               next  if($seen_rel{$arg}++);
               unshift(@expanded, $arg);
             }
-  
+
             push(@with_objects, @expanded);          
           }
         }
-  
+
         $with_objects = \@with_objects;
       }
 
@@ -440,7 +440,7 @@ sub get_objects
     if(first { index($_, '.') >= 0 } @$require_objects)
     {
       my @require_objects;
-  
+
       foreach my $arg (@$require_objects)
       {
         if(index($arg, '.') < 0)
@@ -655,7 +655,7 @@ sub get_objects
                  $chase_meta->relationship($sub_name) ||
                  Carp::confess "$chase_class - no foreign key or ",
                                "relationship named '$sub_name'";
-          
+
           $chase_meta = $key->can('foreign_class') ? 
             $key->foreign_class->meta : $key->class->meta;
         }
@@ -933,7 +933,7 @@ sub get_objects
         $rel_tn{$arg} = $i + 1; 
 
         $belongs_to[$i] = $belongs_to[$i - 1];
-        
+
         my $method = $mapped_object_methods[$i - 1] = 
           exists $with_map_records->{$name} ? $with_map_records->{$name} : 
           $with_map_records->{DEFAULT_REL_KEY()} || 0;
@@ -1218,7 +1218,7 @@ sub get_objects
           }
         }
       }
-      
+
       # When selecting sub-objects via a "... to many" relationship, force
       # a sort by t1's primarky key unless sorting by some other column in
       # t1.  This is required to ensure that all result rows from each row
@@ -1235,7 +1235,7 @@ sub get_objects
             last;
           }
         }
-        
+
         if($do_prefix)
         {
           unshift(@$sort_by, join(', ', map { "t1.$_" } $meta->primary_key_column_names));
@@ -1486,15 +1486,15 @@ sub get_objects
                         if($has_dups[$i] && (my $bt = $belongs_to[$i]))
                         {
                           #$subobjects_belong_to[$i] = $#{$sub_objects[$bt]};
-        
+
                           my $parent_object = $sub_objects[$bt];
                           # XXX: This relies on parent objects coming before child
                           # objects in the list of tables in the FROM clause.
                           $parent_object = $parent_object->[-1] #$parent_object->[$subobjects_belong_to[$i]]
                             if(ref $parent_object eq 'ARRAY');
-        
+
                           my $method = $subobject_methods[$i];
-        
+
                           my $ident = refaddr $parent_object;
                           next  if($seen{$ident,$method}{$sub_pk}++);
                           $parent_objects{$ident} = $parent_object;
@@ -1516,7 +1516,7 @@ sub get_objects
                     {
                       $sub_objects[$i] = $subobject;
                       my $parent_object;
-                      
+
                       if(my $bt = $belongs_to[$i])
                       {
                         $parent_object = $sub_objects[$bt];
@@ -1529,12 +1529,12 @@ sub get_objects
                       {
                         $parent_object = $object;
                       }
-        
+
                       my $method = $subobject_methods[$i];
-        
+
                       # Only assign "... to one" values once
                       next  if($seen{refaddr $parent_object,$method}++);
-        
+
                       local $parent_object->{STATE_LOADING()} = 1;
                       $parent_object->$method($subobject);
                     }
@@ -1660,7 +1660,7 @@ sub get_objects
                     $subobject->{STATE_IN_DB()} = 1;
 
                     $sub_objects[$i] = $subobject;
-                    
+
                     if(my $bt = $belongs_to[$i])
                     {
                       $sub_objects[$bt]->$method($subobject);
@@ -1827,7 +1827,7 @@ sub get_objects
             next  unless(length $sub_pk);
 
             my $subobject = $seen[$i]{$sub_pk};
-            
+
             unless($subobject)
             {
               # Make sub-object
@@ -1892,7 +1892,7 @@ sub get_objects
               push(@{$sub_objects[$i]}, $subobject);
 
               my $parent_object;
-              
+
               if(my $bt = $belongs_to[$i])
               {
                 $parent_object = $sub_objects[$bt];
@@ -1966,7 +1966,7 @@ sub get_objects
           $object->{STATE_IN_DB()} = 1;
 
           my @sub_objects;
-        
+
           foreach my $i (1 .. $num_subtables)
           {
             my $method = $subobject_methods[$i];
@@ -1978,7 +1978,7 @@ sub get_objects
             $subobject->{STATE_IN_DB()} = 1;
 
             $sub_objects[$i] = $subobject;
-            
+
             if(my $bt = $belongs_to[$i])
             {
               $sub_objects[$bt]->$method($subobject);
@@ -2238,7 +2238,7 @@ sub update_objects
 sub make_manager_method_from_sql
 {
   my($class) = shift;
-  
+
   my %args;
 
   if(@_ == 2)
@@ -2280,14 +2280,14 @@ sub get_objects_from_sql
   my($class) = shift;
 
   my(%args, $sql);
-  
+
   if(@_ == 1) { $sql = shift }
   else
   {
     %args = @_;
     $sql = $args{'sql'};
   }
-  
+
   Carp::croak "Missing SQL"  unless($sql);
 
   my $object_class = $args{'object_class'} || $class->object_class ||
@@ -2356,7 +2356,7 @@ sub get_objects_from_sql
 
         $have_methods = 1;
       }
-      
+
       my $object = $object_class->new(%object_args);
 
       local $object->{STATE_LOADING()} = 1;
@@ -3381,10 +3381,10 @@ Returns a code reference to the method created.
 Example:
 
     package Product::Manager;
-    
+
     use base 'Rose::DB::Object::Manager';
     ...
-    
+
     # Make method that takes no arguments
     __PACKAGE__->make_manager_method_from_sql(get_odd_products =><<"EOF");
     SELECT * FROM products WHERE sku % 2 != 0 
@@ -3402,7 +3402,7 @@ Example:
       sql    => <<"EOF");
     SELECT * FROM products WHERE type = ? AND name LIKE ?
     EOF
-    
+
     ...
 
     $products = Product::Manager->get_odd_products();

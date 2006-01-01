@@ -24,7 +24,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     skip("$db_type tests", 1)  unless($Have{$db_type});
   }
-  
+
   next  unless($Have{$db_type});
 
   Rose::DB->default_type($db_type);
@@ -36,11 +36,11 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     Rose::DB::Object::Loader->new(
       db           => Rose::DB->new,
       class_prefix => $class_prefix);
-  
+
   my @classes = $loader->make_classes(include_tables => 'rdbo_album.*');
 
   my $manager_class = $class_prefix . '::RdboAlbumArtwork::Manager';
-  
+
   my $results = 
     $manager_class->get_rdbo_album_artwork(
       query   => [ art_filename => 'album1.jpg' ],
@@ -138,7 +138,7 @@ EOF
 
     $dbh->do(qq(INSERT INTO Rose_db_object_private.rdbo_album_artwork VALUES ('album1.jpg', 'id1')));
     $dbh->do(qq(INSERT INTO Rose_db_object_private.rdbo_album_artwork VALUES ('album2.jpg', 'id2')));
-    
+
     $dbh->disconnect;
   }
 
@@ -198,7 +198,7 @@ CREATE TABLE rdbo_album_artwork
 (
   art_filename   VARCHAR(32) PRIMARY KEY,
   album_other_id VARCHAR(32),
-  
+
   INDEX(album_other_id),
 
   FOREIGN KEY (album_other_id) REFERENCES rdbo_albums (other_id)
@@ -213,7 +213,7 @@ EOF
 
     $dbh->do(qq(INSERT INTO rdbo_album_artwork VALUES ('album1.jpg', 'id1')));
     $dbh->do(qq(INSERT INTO rdbo_album_artwork VALUES ('album2.jpg', 'id2')));
-    
+
     $dbh->disconnect;
   }
 
