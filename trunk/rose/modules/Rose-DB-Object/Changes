@@ -1,5 +1,8 @@
 0.601 (01.01.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Fixed some incorrect deep join tests.
+    * Reduced the number of Postgres database connections used in the test
+      suite in order to avoid hitting Postgres's default connection limit.
     * Fixed the DBI benchmark tests broken by the last release.
     * Uncommented some sections of the benchmark script that were
       accidentally left commented-out in the last release.

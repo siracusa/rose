@@ -25,7 +25,10 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   Rose::DB->default_type($db_type);
 
-  my $o = MyPgObject->new(id         => 1,
+  my $db = MyPgObject->init_db;
+
+  my $o = MyPgObject->new(db         => $db,
+                          id         => 1,
                           name       => 'John',  
                           flag       => 't',
                           flag2      => 'f',
@@ -42,6 +45,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   my $objs = 
     MyPgObject->get_objectz(
+      db           => $db,
       share_db     => 1,
       query_is_sql => 1,
       query        =>
@@ -70,18 +74,21 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   is(scalar @$objs, 1, "get_objects() 2 - $db_type");
 
   my $o2 = $o->clone;
+  $o2->db($db);
   $o2->id(2);
   $o2->name('Fred');
 
   ok($o2->save, "object save() 2 - $db_type");
 
   my $o3 = $o2->clone;
+  $o3->db($db);
   $o3->id(3);
   $o3->name('Sue');
 
   ok($o3->save, "object save() 3 - $db_type");
 
   my $o4 = $o3->clone;
+  $o4->db($db);
   $o4->id(4);
   $o4->name('Bob');
 
@@ -89,6 +96,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     MyPgObjectManager->get_objectz(
+      db           => $db,
       share_db     => 1,
       query_is_sql => 1,
       query        =>
@@ -147,7 +155,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   is($count, 2, "get_objects_count() 1 - $db_type");
 
   # Set up sub-object for this one test
-  my $b1 = MyPgBB->new(id   => 1, name => 'one');
+  my $b1 = MyPgBB->new(id   => 1, name => 'one', db => $db);
   $b1->save;
 
   $objs->[0]->b1(1);
@@ -189,6 +197,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   my $iterator = 
     MyPgObjectManager->get_objectz_iterator(
+      db           => $db,
       share_db     => 1,
       query_is_sql => 1,
       query        =>
@@ -227,34 +236,41 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   my $fo = MyPgOtherObject->new(name => 'Foo 1',
                                 k1   => 1,
                                 k2   => 2,
-                                k3   => 3);
+                                k3   => 3,
+                                db   => $db);
 
   ok($fo->save, "object save() 5 - $db_type");
 
   $fo = MyPgOtherObject->new(name => 'Foo 2',
                              k1   => 2,
                              k2   => 3,
-                             k3   => 4);
+                             k3   => 4,
+                             db   => $db);
 
   ok($fo->save, "object save() 6 - $db_type");
 
   $fo = MyPgBB->new(id   => 1,
-                    name => 'one');
+                    name => 'one',
+                    db   => $db);
   ok($fo->save, "bb object save() 1 - $db_type");
 
   $fo = MyPgBB->new(id   => 2,
-                    name => 'two');
+                    name => 'two',
+                    db   => $db);
   ok($fo->save, "bb object save() 2 - $db_type");
 
   $fo = MyPgBB->new(id   => 3,
-                    name => 'three');
+                    name => 'three',
+                    db   => $db);
   ok($fo->save, "bb object save() 3 - $db_type");
 
   $fo = MyPgBB->new(id   => 4,
-                    name => 'four');
+                    name => 'four',
+                    db   => $db);
   ok($fo->save, "bb object save() 4 - $db_type");
 
-  my $o5 = MyPgObject->new(id         => 5,
+  my $o5 = MyPgObject->new(db         => $db,
+                           id         => 5,
                            name       => 'Betty',  
                            flag       => 'f',
                            flag2      => 't',
@@ -286,6 +302,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     MyPgObjectManager->get_objectz(
+      db           => $db,
       share_db     => 1,
       query_is_sql => 1,
       query        =>
@@ -303,6 +320,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $iterator =
     MyPgObjectManager->get_objectz_iterator(
+      db           => $db,
       share_db     => 1,
       query_is_sql => 1,
       query        =>
@@ -323,32 +341,38 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   # Start "one to many" tests
 
   ok($fo = MyPgNick->new(id   => 1,
-                      o_id => 5,
-                      nick => 'none')->save,
+                         o_id => 5,
+                         db   => $db,
+                         nick => 'none')->save,
       "nick object save() 1 - $db_type");
 
   $fo = MyPgNick->new(id   => 2,
                       o_id => 2,
+                      db   => $db,
                       nick => 'ntwo');
   ok($fo->save, "nick object save() 2 - $db_type");
 
   $fo = MyPgNick->new(id   => 3,
                       o_id => 5,
+                      db   => $db,
                       nick => 'nthree');
   ok($fo->save, "nick object save() 3 - $db_type");
 
   $fo = MyPgNick->new(id   => 4,
                       o_id => 2,
+                      db   => $db,
                       nick => 'nfour');
   ok($fo->save, "nick object save() 4 - $db_type");
 
   $fo = MyPgNick->new(id   => 5,
                       o_id => 5,
+                      db   => $db,
                       nick => 'nfive');
   ok($fo->save, "nick object save() 5 - $db_type");
 
   $fo = MyPgNick->new(id   => 6,
                       o_id => 5,
+                      db   => $db,
                       nick => 'nsix');
   ok($fo->save, "nick object save() 6 - $db_type");
 
@@ -356,6 +380,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       share_db     => 1,
       with_objects => [ 'nicks.type' ],
@@ -411,6 +436,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       share_db     => 1,
       with_objects => [ 'bb2', 'nicks', 'bb1' ],
@@ -469,6 +495,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $iterator = 
     MyPgObjectManager->get_objectz_iterator(
+      db           => $db,
       share_db     => 1,
       with_objects => [ 'bb2', 'nicks' ],
       query        =>
@@ -505,6 +532,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $iterator = 
     MyPgObjectManager->get_objectz_iterator(
+      db           => $db,
       share_db     => 1,
       with_objects => [ 'bb2', 'nicks' ],
       query        =>
@@ -528,6 +556,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $iterator = 
     MyPgObjectManager->get_objectz_iterator(
+      db           => $db,
       share_db     => 1,
       with_objects => [ 'bb2', 'nicks' ],
       query        =>
@@ -559,6 +588,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     MyPgObjectManager->get_objectz(
+      db           => $db,
       share_db     => 1,
       with_objects => [ 'bb2', 'nicks' ],
       query        =>
@@ -577,6 +607,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     MyPgObjectManager->get_objectz(
+      db           => $db,
       share_db     => 1,
       with_objects => [ 'nicks', 'bb2' ],
       query        =>
@@ -602,6 +633,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $iterator = 
     MyPgObjectManager->get_objectz_iterator(
+      db           => $db,
       share_db     => 1,
       with_objects => [ 'bb2', 'nicks' ],
       query        =>
@@ -630,6 +662,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $iterator = 
     MyPgObjectManager->get_objectz_iterator(
+      db           => $db,
       share_db     => 1,
       with_objects => [ 'bb2', 'nicks' ],
       query        =>
@@ -658,6 +691,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     MyPgObjectManager->get_objectz(
+      db           => $db,
       share_db     => 1,
       with_objects => [ 'bb2', 'nicks' ],
       query        =>
@@ -681,6 +715,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     MyPgObjectManager->get_objectz(
+      db           => $db,
       share_db     => 1,
       with_objects => [ 'nicks', 'bb2' ],
       query        =>
@@ -704,6 +739,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   is($objs->[1]->id, 3, "get_objects() limit 3 offset 2 many 5 - $db_type");
 
   my $o6 = $o2->clone;
+  $o6->db($db);
   $o6->id(60);
   $o6->fkone(undef);
   $o6->fk2(undef);
@@ -715,6 +751,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   ok($o6->save, "object save() 8 - $db_type");
 
   my $o7 = $o2->clone;
+  $o7->db($db);
   $o7->id(70);
   $o7->b1(3);
   $o7->b2(undef);
@@ -723,6 +760,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   ok($o7->save, "object save() 9 - $db_type");
 
   my $o8 = $o2->clone;
+  $o8->db($db);
   $o8->id(80);
   $o8->b1(undef);
   $o8->b2(undef);
@@ -732,30 +770,35 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $fo = MyPgNick->new(id   => 7,
                       o_id => 60,
+                      db   => $db,
                       nick => 'nseven');
 
   ok($fo->save, "nick object save() 7 - $db_type");
 
   $fo = MyPgNick->new(id   => 8,
                       o_id => 60,
+                      db   => $db,
                       nick => 'neight');
 
   ok($fo->save, "nick object save() 8 - $db_type");
 
   $fo = MyPgNick->new(id   => 9,
                       o_id => 60,
+                      db   => $db,
                       nick => 'neight');
 
   ok($fo->save, "nick object save() 8 - $db_type");
 
   $fo = MyPgNick2->new(id    => 1,
                        o_id  => 5,
+                       db    => $db,
                        nick2 => 'n2one');
 
   ok($fo->save, "nick2 object save() 1 - $db_type");
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       share_db     => 1,
       require_objects => [ 'bb2', 'bb1' ],
@@ -768,6 +811,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $count = 
     Rose::DB::Object::Manager->get_objects_count(
+      db           => $db,
       object_class => 'MyPgObject',
       share_db     => 1,
       require_objects => [ 'bb2', 'bb1' ],
@@ -782,6 +826,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $count = 
     Rose::DB::Object::Manager->get_objects_count(
+      db           => $db,
       object_class => 'MyPgObject',
       share_db     => 1,
       require_objects => [ 'bb2' ],
@@ -793,6 +838,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       share_db     => 1,
       require_objects => [ 'bb2', 'bb1' ],
@@ -816,6 +862,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       share_db     => 1,
       require_objects => [ 'bb1', 'bb2' ],
@@ -842,6 +889,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $iterator = 
     Rose::DB::Object::Manager->get_objects_iterator(
+      db           => $db,
       object_class => 'MyPgObject',
       share_db     => 1,
       require_objects => [ 'bb1', 'bb2' ],
@@ -870,6 +918,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       share_db     => 1,
       with_objects => [ 'bb2', 'nicks', 'bb1' ],
@@ -920,6 +969,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       share_db     => 1,
       query        =>
@@ -964,6 +1014,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     MyPgObjectManager->get_objectz(
+      db           => $db,
       share_db     => 1,
       query        =>
       [
@@ -990,6 +1041,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   foreach my $id (6 .. 20)
   {
     my $o = $o5->clone;
+    $o->db($db);
     $o->id($id);
     $o->name("Clone $id");
 
@@ -998,6 +1050,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     MyPgObjectManager->get_objectz(
+      db           => $db,
       object_class => 'MyPgObject',
       sort_by      => 'id DESC',
       limit        => 2,
@@ -1009,6 +1062,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     MyPgObjectManager->get_objectz(
+      db           => $db,
       object_class => 'MyPgObject',
       sort_by      => 'id DESC',
       require_objects => [ 'other_obj' ],
@@ -1021,6 +1075,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $iterator = 
     MyPgObjectManager->get_objectz_iterator(
+      db           => $db,
       object_class => 'MyPgObject',
       sort_by      => 'id DESC',
       limit        => 2,
@@ -1038,6 +1093,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   {
     $objs = 
       MyPgObjectManager->get_objectz(
+
         object_class => 'MyPgObject',
         sort_by      => 'id DESC',
         offset       => 8)
@@ -1049,6 +1105,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   {
     $iterator = 
       MyPgObjectManager->get_objectz_iterator(
+        db           => $db,
         object_class => 'MyPgObject',
         sort_by      => 'id DESC',
         offset       => 8);
@@ -1064,6 +1121,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       query        => [ 'fk2' => { eq_sql => 'fk3' } ],
       sort_by => 'id');
@@ -1078,19 +1136,19 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   # Start "many to many" tests
 
-  $fo = MyPgColor->new(id => 1, name => 'Red');
+  $fo = MyPgColor->new(id => 1, name => 'Red', db => $db);
   $fo->save;
 
-  $fo = MyPgColor->new(id => 2, name => 'Green');
+  $fo = MyPgColor->new(id => 2, name => 'Green', db => $db);
   $fo->save;
 
-  $fo = MyPgColor->new(id => 3, name => 'Blue');
+  $fo = MyPgColor->new(id => 3, name => 'Blue', db => $db);
   $fo->save;
 
-  $fo = MyPgColorMap->new(id => 1, object_id => $o2->id, color_id => 1);
+  $fo = MyPgColorMap->new(id => 1, object_id => $o2->id, color_id => 1, db => $db);
   $fo->save;
 
-  $fo = MyPgColorMap->new(id => 2, object_id => $o2->id, color_id => 3);
+  $fo = MyPgColorMap->new(id => 2, object_id => $o2->id, color_id => 3, db => $db);
   $fo->save;
 
   $o2->b1(4);
@@ -1106,6 +1164,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db            => $db,
       object_class  => 'MyPgObject',
       share_db      => 1,
       with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
@@ -1148,6 +1207,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $iterator = 
     Rose::DB::Object::Manager->get_objects_iterator(
+      db            => $db,
       object_class  => 'MyPgObject',
       share_db      => 1,
       with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
@@ -1174,6 +1234,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db            => $db,
       object_class  => 'MyPgObject',
       share_db      => 1,
       with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
@@ -1194,6 +1255,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db            => $db,
       object_class  => 'MyPgObject',
       share_db      => 1,
       with_objects  => [ 'bb1', 'nicks', 'other_obj', 'colors', 'bb2' ],
@@ -1233,6 +1295,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db              => $db,
       object_class    => 'MyPgObject',
       share_db        => 1,
       with_objects    => [ 'nicks', 'colors', 'bb2' ],
@@ -1284,6 +1347,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $iterator = 
     Rose::DB::Object::Manager->get_objects_iterator(
+      db            => $db,
       object_class  => 'MyPgObject',
       share_db      => 1,
       with_objects  => [ 'other_obj', 'bb2', 'nicks', 'bb1', 'colors' ],
@@ -1328,6 +1392,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $iterator = 
     Rose::DB::Object::Manager->get_objects_iterator(
+      db            => $db,
       object_class  => 'MyPgObject',
       share_db      => 1,
       with_objects  => [ 'bb1', 'nicks', 'other_obj', 'colors', 'bb2' ],
@@ -1372,6 +1437,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $iterator = 
     Rose::DB::Object::Manager->get_objects_iterator(
+      db              => $db,
       object_class    => 'MyPgObject',
       share_db        => 1,
       with_objects    => [ 'nicks', 'colors', 'bb2' ],
@@ -1426,6 +1492,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $iterator = 
     Rose::DB::Object::Manager->get_objects_iterator(
+      db              => $db,
       object_class    => 'MyPgObject',
       share_db        => 1,
       with_objects    => [ 'nicks', 'colors', 'bb2' ],
@@ -1440,6 +1507,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db              => $db,
       object_class    => 'MyPgObject',
       share_db        => 1,
       with_objects    => [ 'nicks', 'colors', 'bb2' ],
@@ -1456,11 +1524,12 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   # Start multi-require tests
 
-  $fo = MyPgColorMap->new(id => 3, object_id => 5, color_id => 2);
+  $fo = MyPgColorMap->new(id => 3, object_id => 5, color_id => 2, db => $db);
   $fo->save;
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db              => $db,
       object_class    => 'MyPgObject',
       share_db        => 1,
       require_objects => [ 'nicks', 'colors', 'other_obj' ],
@@ -1497,6 +1566,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db              => $db,
       object_class    => 'MyPgObject',
       share_db        => 1,
       require_objects => [ 'nicks', 'colors', 'other_obj' ],
@@ -1535,12 +1605,13 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   is($objs->[0]->{'bb2'}{'name'}, 'four', "get_objects() multi many with require 17 - $db_type");
   ok(!defined $objs->[1]->{'bb2'}{'name'}, "get_objects() multi many with require 18 - $db_type");
 
-  MyPgNick->new(id => 7, o_id => 10,  nick => 'nseven')->save;
-  MyPgNick->new(id => 8, o_id => 11,  nick => 'neight')->save;
-  MyPgNick->new(id => 9, o_id => 12,  nick => 'nnine')->save;
+  MyPgNick->new(id => 7, o_id => 10,  nick => 'nseven', db => $db)->save;
+  MyPgNick->new(id => 8, o_id => 11,  nick => 'neight', db => $db)->save;
+  MyPgNick->new(id => 9, o_id => 12,  nick => 'nnine', db => $db)->save;
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db              => $db,
       object_class    => 'MyPgObject',
       share_db        => 1,
       require_objects => [ 'nicks', 'bb1' ],
@@ -1568,6 +1639,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
     $objs = 
       Rose::DB::Object::Manager->get_objects(
+        db              => $db,
         object_class    => 'MyPgObject',
         distinct        => $distinct,
         share_db        => 1,
@@ -1596,6 +1668,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
     $objs = 
       Rose::DB::Object::Manager->get_objects(
+        db              => $db,
         object_class    => 'MyPgObject',
         distinct        => $distinct,
         share_db        => 1,
@@ -1628,6 +1701,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       query        => [ id => { le => 11 } ],
       sort_by      => 't1.id',
@@ -1643,6 +1717,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       query        => [ id => { le => 11 } ],
       sort_by      => 't1.id',
@@ -1657,6 +1732,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       query        => [ id => { le => 11 } ],
       sort_by      => 't1.id',
@@ -1671,6 +1747,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       query        => [ id => { le => 11 } ],
       sort_by      => 't1.id',
@@ -1685,6 +1762,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       query        => [ id => { le => 11 } ],
       sort_by      => 't1.id',
@@ -1699,6 +1777,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       query        => [ id => { le => 11 } ],
       sort_by      => 't1.id',
@@ -1713,6 +1792,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       query        => [ id => { le => 11 } ],
       sort_by      => 't1.id',
@@ -1727,6 +1807,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       query        => [ id => { le => 11 } ],
       sort_by      => 't1.id');
@@ -1735,6 +1816,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       query        => [ id => { le => 11 } ],
       sort_by      => 't1.id',
@@ -1750,6 +1832,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       query        => [ id => { le => 11 } ],
       sort_by      => 't1.id',
@@ -1765,6 +1848,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       query        => [ id => { le => 11 } ],
       sort_by      => 't1.id',
@@ -1780,6 +1864,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
+      db           => $db,
       object_class => 'MyPgObject',
       query        => [ id => { le => 11 } ],
       sort_by      => 't1.id',
@@ -1796,7 +1881,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   $objs = 
     MyPgObjectManager->get_objects_from_sql(
-      db  => MyPgObject->init_db,
+      db  => $db,
       object_class => 'MyPgObject',
       prepare_cached => 1,
       sql => <<"EOF");
@@ -1819,6 +1904,7 @@ EOF
 
   $objs = 
     MyPgObjectManager->get_objects_from_sql(
+      db   => $db,
       args => [ 19 ],
       sql => <<"EOF");
 SELECT * FROM rose_db_object_test WHERE id > ? ORDER BY id DESC
