@@ -29,7 +29,7 @@ foreach my $db_type (qw(pg pg_with_schema))
   {
     skip("$db_type tests", 24)  unless($HAVE{$db_type});
   }
-  
+
   next  unless($HAVE{$db_type});
 
   $i++;
@@ -131,13 +131,13 @@ foreach my $db_type (qw(pg pg_with_schema))
   {
     $o = MyPgObject->new(name => "Barn $i");
     $o->save;
-  
+
     is($o->id1, 3, "pk 9 - $db_type");
     is($o->id2, 3, "pk 10 - $db_type");
 
     $o = MyPgObject2->new(id1 => 30, name => "Barn $i");
     $o->save;
-  
+
     is($o->id1, 30, "pk 9 - $db_type");
     is($o->id2, 3, "pk 10 - $db_type");
 
@@ -159,13 +159,13 @@ foreach my $db_type (qw(pg pg_with_schema))
   {
     $o = MyPgWSObject->new(name => "Barn $i");
     $o->save;
-  
+
     is($o->id1, 3, "pk 9 - $db_type");
     is($o->id2, 3, "pk 10 - $db_type");  
 
     $o = MyPgWSObject2->new(id1 => 30, name => "Barn $i");
     $o->save;
-  
+
     is($o->id1, 30, "pk 9 - $db_type");
     is($o->id2, 3, "pk 10 - $db_type");  
 
@@ -178,7 +178,7 @@ foreach my $db_type (qw(pg pg_with_schema))
       [ 'Rose_db_object_private.rose_db_object_test_id1_seq', 
         'Rose_db_object_private.rdbo_seq2' ], 
       "pk sequence names 4 - $db_type");
-      
+
     is_deeply(scalar MyPgWSObject2->meta->primary_key->sequence_names, 
       [ undef, 'Rose_db_object_private.rdbo_seq2_2' ], 
       "pk sequence names 5 - $db_type");

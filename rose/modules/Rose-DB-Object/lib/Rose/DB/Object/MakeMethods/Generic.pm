@@ -75,7 +75,7 @@ EOF
   #
   # length check code
   #
-  
+
   my $length_check_code = '';
 
   if($length)
@@ -187,7 +187,7 @@ EOF
     $return_code       = qq(return \$self->{'$qkey'};);
     $return_code_shift = qq(return shift->{'$qkey'};);
   }
-  
+
   $return_code_shift ||= $return_code;
 
   my %methods;
@@ -207,7 +207,7 @@ sub
   if(\@_)
   {
     my \$value = shift;
-    
+
     $check_in_code
     $length_check_code
     $set_code
@@ -237,7 +237,7 @@ sub
 };
 EOF
     }
-    
+
     $Debug && warn "sub $name = ", $code;
     $methods{$name} = eval $code;
 
@@ -260,10 +260,10 @@ EOF
     {
       $code = qq(sub { shift->{'$qkey'} });
     }
-    
+
     $Debug && warn "sub $name = ", $code;
     $methods{$name} = eval $code;
-    
+
     if($@)
     {
       Carp::croak "Error in generated code for method $name - $@\n",
@@ -281,14 +281,14 @@ sub
   $arg_check_code
   my \$self = shift;
   my \$value = shift;
-    
+
   $check_in_code
   $length_check_code
   $set_code
   $return_code
 };
 EOF
-    
+
     $Debug && warn "sub $name = ", $code;
     $methods{$name} = eval $code;
 
@@ -4233,7 +4233,7 @@ Example:
 
     $o->code(8675309); # set
     $o->type(42);      # set
-    
+
 
 =item B<objects_by_key>
 

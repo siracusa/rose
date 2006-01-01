@@ -3747,7 +3747,7 @@ EOF
   is($objs->[1]{'nicks'}[3]{'nick'}, 'nfive', "tough order 12 - $db_type");
 
   is($objs->[2]{'nicks'}[0]{'nick'}, 'nseven', "tough order 13 - $db_type");
-  
+
   is($objs->[3]{'nicks'}[0]{'nick'}, 'neight', "tough order 14 - $db_type");
 
   is($objs->[4]{'nicks'}[0]{'nick'}, 'nnine', "tough order 15 - $db_type");
@@ -3765,7 +3765,7 @@ EOF
   is($objs->[2]->id, 11, "tough order 19 - $db_type");
   is($objs->[3]->id, 12, "tough order 20 - $db_type");
   is($objs->[4]->id, 2, "tough order 21 - $db_type");
-  
+
   is($objs->[0]{'nicks'}[0]{'nick'}, 'nthree', "tough order 22 - $db_type");
   is($objs->[0]{'nicks'}[1]{'nick'}, 'nsix', "tough order 23 - $db_type");
   is($objs->[0]{'nicks'}[2]{'nick'}, 'none', "tough order 24 - $db_type");
@@ -3830,7 +3830,7 @@ EOF
       require_objects => [ 'nicks.type' ],
       with_objects    => [ 'nicks.type' ]);
   };
-  
+
   ok($@, "deep join conflict 1 - $db_type");
 
   $objs = 
@@ -3911,7 +3911,7 @@ EOF
   is($objs->[4]{'nicks'}[2]{'type'}{'name'}, 'nt six', "deep join with 11 - $db_type");
   is($objs->[4]{'nicks'}[3]{'type'}{'name'}, 'nt three', "deep join with 12 - $db_type");
   is(scalar @{$objs->[4]{'nicks'}}, 4, "deep join with 13 - $db_type");
-  
+
   is(scalar @{$objs->[0]{'nicks'} ||= []}, 0, "deep join with 14 - $db_type");
 
   $iterator = 
@@ -3929,7 +3929,7 @@ EOF
   is(scalar @{$o->{'nicks'}}, 2, "deep join iterator 3 - $db_type");
 
   is($o->{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt two 1', "deep join 3.1 - $db_type");
-  
+
   is($o->{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 four', "deep join iterator 3.1 - $db_type");
   is($o->{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 two', "deep join iterator 3.2 - $db_type");
 
@@ -3973,7 +3973,7 @@ EOF
 
   $o = $iterator->next;
   $o = $iterator->next;
-    
+
   $o = $iterator->next;
 
   #SORT:
@@ -3986,7 +3986,7 @@ EOF
   is($o->{'nicks'}[2]{'type'}{'name'}, 'nt six', "deep join with iterator 6 - $db_type");
   is($o->{'nicks'}[3]{'type'}{'name'}, 'nt three', "deep join with iterator 7 - $db_type");
   is(scalar @{$o->{'nicks'}}, 4, "deep join with iterator 8 - $db_type");
-  
+
   while($iterator->next) { }
   is($iterator->total, 21, "deep join iterator 9 - $db_type");
 
@@ -4184,7 +4184,7 @@ EOF
   is($o->{'nicks'}[0]{'alts'}[1]{'alt'}, 'alt one 2', "deep join multi iter 5 - $db_type");
   is($o->{'nicks'}[0]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi iter 6 - $db_type");
   is(scalar @{$o->{'nicks'}[0]{'alts'}}, 3, "deep join multi iter 7 - $db_type");
-  
+
   ok(!$iterator->next, "deep join multi iter 8 - $db_type");
   is($iterator->total, 2, "deep join multi iter 9 - $db_type");
 
@@ -4227,7 +4227,7 @@ EOF
   is($o->{'nicks'}[3]{'alts'}[1]{'alt'}, 'alt one 2', "deep join multi iter with 6 - $db_type");
   is($o->{'nicks'}[3]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi iter with 7 - $db_type");
   is(scalar @{$o->{'nicks'}[3]{'alts'}}, 3, "deep join multi iter with 8 - $db_type");
-  
+
   while($iterator->next) { }
   is($iterator->total, 21, "deep join multi iter with 9 - $db_type");
 
@@ -6179,7 +6179,7 @@ EOF
   is($objs->[1]{'nicks'}[3]{'nick'}, 'nfive', "tough order 12 - $db_type");
 
   is($objs->[2]{'nicks'}[0]{'nick'}, 'nseven', "tough order 13 - $db_type");
-  
+
   is($objs->[3]{'nicks'}[0]{'nick'}, 'neight', "tough order 14 - $db_type");
 
   is($objs->[4]{'nicks'}[0]{'nick'}, 'nnine', "tough order 15 - $db_type");
@@ -6197,7 +6197,7 @@ EOF
   is($objs->[2]->id, 11, "tough order 19 - $db_type");
   is($objs->[3]->id, 12, "tough order 20 - $db_type");
   is($objs->[4]->id, 2, "tough order 21 - $db_type");
-  
+
   is($objs->[0]{'nicks'}[0]{'nick'}, 'nthree', "tough order 22 - $db_type");
   is($objs->[0]{'nicks'}[1]{'nick'}, 'nsix', "tough order 23 - $db_type");
   is($objs->[0]{'nicks'}[2]{'nick'}, 'none', "tough order 24 - $db_type");
@@ -6262,7 +6262,7 @@ EOF
       require_objects => [ 'nicks.type' ],
       with_objects    => [ 'nicks.type' ]);
   };
-  
+
   ok($@, "deep join conflict 1 - $db_type");
 
   $objs = 
@@ -6332,7 +6332,7 @@ EOF
   is($objs->[4]{'nicks'}[2]{'type'}{'name'}, 'nt six', "deep join with 11 - $db_type");
   is($objs->[4]{'nicks'}[3]{'type'}{'name'}, 'nt three', "deep join with 12 - $db_type");
   is(scalar @{$objs->[4]{'nicks'}}, 4, "deep join with 13 - $db_type");
-  
+
   is(scalar @{$objs->[0]{'nicks'} ||= []}, 0, "deep join with 14 - $db_type");
 
   $iterator = 
@@ -6350,7 +6350,7 @@ EOF
   is(scalar @{$o->{'nicks'}}, 2, "deep join iterator 3 - $db_type");
 
   is($o->{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt two 1', "deep join 3.1 - $db_type");
-  
+
   is($o->{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 four', "deep join iterator 3.1 - $db_type");
   is($o->{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 two', "deep join iterator 3.2 - $db_type");
 
@@ -6394,7 +6394,7 @@ EOF
 
   $o = $iterator->next;
   $o = $iterator->next;
-    
+
   $o = $iterator->next;
 
   #SORT:
@@ -6407,7 +6407,7 @@ EOF
   is($o->{'nicks'}[2]{'type'}{'name'}, 'nt six', "deep join with iterator 6 - $db_type");
   is($o->{'nicks'}[3]{'type'}{'name'}, 'nt three', "deep join with iterator 7 - $db_type");
   is(scalar @{$o->{'nicks'}}, 4, "deep join with iterator 8 - $db_type");
-  
+
   while($iterator->next) { }
   is($iterator->total, 21, "deep join iterator 9 - $db_type");
 
@@ -6605,7 +6605,7 @@ EOF
   is($o->{'nicks'}[0]{'alts'}[1]{'alt'}, 'alt one 2', "deep join multi iter 5 - $db_type");
   is($o->{'nicks'}[0]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi iter 6 - $db_type");
   is(scalar @{$o->{'nicks'}[0]{'alts'}}, 3, "deep join multi iter 7 - $db_type");
-  
+
   ok(!$iterator->next, "deep join multi iter 8 - $db_type");
   is($iterator->total, 2, "deep join multi iter 9 - $db_type");
 
@@ -6648,7 +6648,7 @@ EOF
   is($o->{'nicks'}[3]{'alts'}[1]{'alt'}, 'alt one 2', "deep join multi iter with 6 - $db_type");
   is($o->{'nicks'}[3]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi iter with 7 - $db_type");
   is(scalar @{$o->{'nicks'}[3]{'alts'}}, 3, "deep join multi iter with 8 - $db_type");
-  
+
   while($iterator->next) { }
   is($iterator->total, 21, "deep join multi iter with 9 - $db_type");
 
@@ -8566,7 +8566,7 @@ EOF
   is($objs->[1]{'nicks'}[3]{'nick'}, 'nfive', "tough order 12 - $db_type");
 
   is($objs->[2]{'nicks'}[0]{'nick'}, 'nseven', "tough order 13 - $db_type");
-  
+
   is($objs->[3]{'nicks'}[0]{'nick'}, 'neight', "tough order 14 - $db_type");
 
   is($objs->[4]{'nicks'}[0]{'nick'}, 'nnine', "tough order 15 - $db_type");
@@ -8584,7 +8584,7 @@ EOF
   is($objs->[2]->id, 11, "tough order 19 - $db_type");
   is($objs->[3]->id, 12, "tough order 20 - $db_type");
   is($objs->[4]->id, 2, "tough order 21 - $db_type");
-  
+
   is($objs->[0]{'nicks'}[0]{'nick'}, 'nthree', "tough order 22 - $db_type");
   is($objs->[0]{'nicks'}[1]{'nick'}, 'nsix', "tough order 23 - $db_type");
   is($objs->[0]{'nicks'}[2]{'nick'}, 'none', "tough order 24 - $db_type");
@@ -8649,7 +8649,7 @@ EOF
       require_objects => [ 'nicks.type' ],
       with_objects    => [ 'nicks.type' ]);
   };
-  
+
   ok($@, "deep join conflict 1 - $db_type");
 
   $objs = 
@@ -8719,7 +8719,7 @@ EOF
   is($objs->[4]{'nicks'}[2]{'type'}{'name'}, 'nt six', "deep join with 11 - $db_type");
   is($objs->[4]{'nicks'}[3]{'type'}{'name'}, 'nt three', "deep join with 12 - $db_type");
   is(scalar @{$objs->[4]{'nicks'}}, 4, "deep join with 13 - $db_type");
-  
+
   is(scalar @{$objs->[0]{'nicks'} ||= []}, 0, "deep join with 14 - $db_type");
 
   $iterator = 
@@ -8737,7 +8737,7 @@ EOF
   is(scalar @{$o->{'nicks'}}, 2, "deep join iterator 3 - $db_type");
 
   is($o->{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt two 1', "deep join 3.1 - $db_type");
-  
+
   is($o->{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 four', "deep join iterator 3.1 - $db_type");
   is($o->{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 two', "deep join iterator 3.2 - $db_type");
 
@@ -8781,7 +8781,7 @@ EOF
 
   $o = $iterator->next;
   $o = $iterator->next;
-    
+
   $o = $iterator->next;
 
   SORT:
@@ -8794,7 +8794,7 @@ EOF
   is($o->{'nicks'}[2]{'type'}{'name'}, 'nt six', "deep join with iterator 6 - $db_type");
   is($o->{'nicks'}[3]{'type'}{'name'}, 'nt three', "deep join with iterator 7 - $db_type");
   is(scalar @{$o->{'nicks'}}, 4, "deep join with iterator 8 - $db_type");
-  
+
   while($iterator->next) { }
   is($iterator->total, 21, "deep join iterator 9 - $db_type");
 
@@ -8842,7 +8842,7 @@ EOF
   is($objs->[1]->id, 2, "deep join three-level 3 - $db_type");
   is($objs->[4]->id, 5, "deep join three-level 4 - $db_type");
   is($objs->[20]->id, 60, "deep join three-level 5 - $db_type");
-  
+
   SORT:
   {
     $objs->[1]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[1]{'nicks'}} ];
@@ -8992,7 +8992,7 @@ EOF
   is($o->{'nicks'}[0]{'alts'}[1]{'alt'}, 'alt one 2', "deep join multi iter 5 - $db_type");
   is($o->{'nicks'}[0]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi iter 6 - $db_type");
   is(scalar @{$o->{'nicks'}[0]{'alts'}}, 3, "deep join multi iter 7 - $db_type");
-  
+
   ok(!$iterator->next, "deep join multi iter 8 - $db_type");
   is($iterator->total, 2, "deep join multi iter 9 - $db_type");
 
@@ -9270,7 +9270,7 @@ EOF
     );
 
     MyPgNickType->meta->initialize;
-    
+
     package MyPgNick;
 
     our @ISA = qw(Rose::DB::Object);
@@ -10304,7 +10304,7 @@ EOF
     );
 
     MyInformixNickType->meta->initialize;
-    
+
     package MyInformixNick;
 
     our @ISA = qw(Rose::DB::Object);

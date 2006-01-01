@@ -24,7 +24,7 @@ foreach my $db_type (qw(mysql))
   {
     skip("$db_type tests", 2)  unless($Have{$db_type});
   }
-  
+
   next  unless($Have{$db_type});
 
   Rose::DB->default_type($db_type);
@@ -35,13 +35,13 @@ foreach my $db_type (qw(mysql))
     Rose::DB::Object::Loader->new(
       db           => Rose::DB->new,
       class_prefix => $class_prefix);
-  
+
   my @classes = $loader->make_classes(include_tables => 'rdbo_company_vote');
-  
+
   is(scalar @classes, 2, "uppercase keys - $db_type");
-  
+
   my $o = Mysql::RdboCompanyVote->new;
-  
+
   if($db_type eq 'mysql')
   {
     is($o->meta->column('canmeet')->perl_hash_definition,
@@ -91,7 +91,7 @@ CREATE TABLE rdbo_company_vote
   KEY IDX_company_vote3 (question_id) 
 )
 EOF
-    
+
     $dbh->disconnect;
   }
 

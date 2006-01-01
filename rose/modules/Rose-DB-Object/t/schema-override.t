@@ -28,17 +28,17 @@ SKIP:
   # Albums should take on the schema of the db handle
   my $a1 = Album->new(db => $db_pg, name => 'One', year => 2001)->save;
   my $a2 = Album->new(db => $db_ws, name => 'One', year => 2002)->save;
-  
+
   is($a1->id, 1, 'flex schema 1');
   is($a2->id, 1, 'flex schema 2');
-  
+
   # Album photos should NOT take on the schema of the db handle
   my $p1 = AlbumPhoto->new(db => $db_pg, album_id => 1, name => '1.1')->save;
   my $p2 = AlbumPhoto->new(db => $db_ws, album_id => 1, name => '1.2')->save;
 
   is($p1->id, 1, 'flex schema 1');
   is($p2->id, 2, 'flex schema 2');
-  
+
   # Make sure both albums read the same album photos table
   is_deeply([ map { $_->name } sort { $a->id <=> $b->id } $a1->album_photos ], 
             [ '1.1', '1.2' ], 'single photos table 1');
