@@ -95,8 +95,9 @@ our %Limit_Dialect =
   informix => 'First',
 );
 
-use constant LIMIT  => 50;
+use constant LIMIT1 => 50;
 use constant OFFSET => 25;
+use constant LIMIT2 => 1000;
 
 Benchmark->import(':hireswallclock')  if($Opt{'hi-res-time'});
 
@@ -1604,7 +1605,7 @@ SELECT id, name FROM rose_db_object_test_categories WHERE
 name LIKE 'xCat %2%' AND 
 id <= @{[ 500_000 + $Iterations ]} AND
 id >= 500000
-LIMIT @{[ LIMIT ]}
+LIMIT @{[ LIMIT1 ]}
 EOF
       $sth->execute;
       my $c = $sth->fetchall_arrayref;
@@ -1635,7 +1636,7 @@ EOF
             id => { ge => 100_000 },
             name => { like => 'xCat %2%' },
           ],
-          limit => LIMIT);
+          limit => LIMIT1);
 
       die unless(@$c);
 
@@ -1659,7 +1660,7 @@ EOF
           name => { -like => 'xCat %2%' },
           id   => { '<=' => 200_000 + $Iterations,
                     '>=' => 200_000 },
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       die unless(@c);
 
@@ -1683,7 +1684,7 @@ EOF
           name => { -like => 'xCat %2%' },
           id   => { '<=' => 400_000 + $Iterations,
                     '>=' => 400_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       die unless(@c);
 
@@ -1707,7 +1708,7 @@ EOF
           name => { -like => 'xCat %2%' },
           id   => { '<=' => 300_000 + $Iterations,
                     '>=' => 300_000 } 
-        }, { rows => LIMIT});
+        }, { rows => LIMIT1});
 
       die unless(@c);
 
@@ -1743,7 +1744,7 @@ WHERE
   name LIKE 'Product %2%' AND
   id <= @{[ 500_000 + $Iterations ]} AND
   id >= 500000
-LIMIT @{[ LIMIT ]}
+LIMIT @{[ LIMIT1 ]}
 EOF
       $sth->execute;
       my $p = $sth->fetchall_arrayref;
@@ -1774,7 +1775,7 @@ EOF
             id => { le => 100_000 + $Iterations },
             id => { ge => 100_000 },
           ],
-          limit => LIMIT);
+          limit => LIMIT1);
 
       die unless(@$p);
 
@@ -1798,7 +1799,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 200_000 + $Iterations,
                     '>=' => 200_000 },
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       die unless(@p);
 
@@ -1822,7 +1823,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 400_000 + $Iterations,
                     '>=' => 400_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       die unless(@p);
 
@@ -1846,7 +1847,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 300_000 + $Iterations,
                     '>=' => 300_000 } 
-        }, { rows => LIMIT});
+        }, { rows => LIMIT1});
 
       die unless(@p);
 
@@ -1886,7 +1887,7 @@ WHERE
   p.name LIKE 'Product %2%' AND
   id <= @{[ 500_000 + $Iterations ]} AND
   id >= 500000
-LIMIT @{[ LIMIT ]}
+LIMIT @{[ LIMIT1 ]}
 EOF
 
       $sth->execute;
@@ -1935,7 +1936,7 @@ EOF
             name => { like => 'Product %2%' },
           ],
           require_objects => [ 'category' ],
-          limit => LIMIT);
+          limit => LIMIT1);
 
       die unless(@$ps);
 
@@ -1966,7 +1967,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 200_000 + $Iterations,
                     '>=' => 200_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       die unless(@p);
 
@@ -1997,7 +1998,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 400_000 + $Iterations,
                     '>=' => 400_000 } 
-        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
 
       die unless(@p);
@@ -2030,7 +2031,7 @@ EOF
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
         },
-        { prefetch => [ 'category_id' ], rows => LIMIT});
+        { prefetch => [ 'category_id' ], rows => LIMIT1});
 
       die unless(@p);
 
@@ -2086,7 +2087,7 @@ WHERE
   p.name LIKE 'Product %2%' AND
   id <= @{[ 500_000 + $Iterations ]} AND
   id >= 500000
-LIMIT @{[ LIMIT ]}
+LIMIT @{[ LIMIT2 ]}
 EOF
 
       $sth->execute;
@@ -2147,7 +2148,7 @@ EOF
           ],
           with_objects    => [ 'code_names' ],
           require_objects => [ 'category' ],
-          limit => LIMIT);
+          limit => LIMIT2);
       die unless(@$ps);
 
       if($Debug && !$printed)
@@ -2179,7 +2180,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 200_000 + $Iterations,
                     '>=' => 200_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT2 });
 
       die unless(@p);
 
@@ -2212,7 +2213,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 400_000 + $Iterations,
                     '>=' => 400_000 } 
-        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT2 });
 
       die unless(@p);
 
@@ -2245,7 +2246,7 @@ EOF
           'me.name' => { -like => 'Product %2%' },
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
-        }, { prefetch => [ 'category_id' ], rows => LIMIT});
+        }, { prefetch => [ 'category_id' ], rows => LIMIT2});
       die unless(@p);
 
       if($Debug && !$printed)
@@ -2296,7 +2297,7 @@ WHERE
   name LIKE 'Product %2%' AND
   id <= @{[ 500_000 + $Iterations ]} AND
   id >= 500000
-LIMIT @{[LIMIT]} OFFSET @{[OFFSET]}
+LIMIT @{[LIMIT1]} OFFSET @{[OFFSET]}
 EOF
 
       $sth->execute;
@@ -2327,7 +2328,7 @@ EOF
             id   => { ge => 100_000 },
             name => { like => 'Product %2%' },
           ],
-          limit  => LIMIT,
+          limit  => LIMIT1,
           offset => OFFSET);
       #die unless(@$p);
 
@@ -2352,7 +2353,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 200_000 + $Iterations,
                     '>=' => 200_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT, offset => OFFSET });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1, offset => OFFSET });
 
       die unless(@p);
 
@@ -2380,7 +2381,7 @@ EOF
         {
           prefetch => [ 'category_id' ],
           limit_dialect => $Limit_Dialect,
-          limit  => LIMIT,
+          limit  => LIMIT1,
           offset => OFFSET 
         });
 
@@ -2406,7 +2407,7 @@ EOF
           'me.name' => { -like => 'Product %2%' },
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
-        }, { prefetch => [ 'category_id' ], rows => LIMIT, offset => OFFSET });
+        }, { prefetch => [ 'category_id' ], rows => LIMIT1, offset => OFFSET });
 
       die unless(@p);
 
@@ -2433,7 +2434,7 @@ SELECT id, name FROM rose_db_object_test_categories WHERE
 name LIKE 'xCat %2%' AND
 id <= @{[ 500_000 + $Iterations ]} AND
 id >= 500000
-LIMIT @{[ LIMIT ]}
+LIMIT @{[ LIMIT1 ]}
 EOF
       $sth->execute;
       my($id, $name);
@@ -2471,7 +2472,7 @@ EOF
             id => { ge => 100_000 },
             name => { like => 'xCat %2%' },
           ],
-          limit => LIMIT);
+          limit => LIMIT1);
 
       my $i = 0;
 
@@ -2500,7 +2501,7 @@ EOF
           name => { -like => 'xCat %2%' },
           id   => { '<=' => 200_000 + $Iterations,
                     '>=' => 200_000 },
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       my $i = 0;
 
@@ -2529,7 +2530,7 @@ EOF
           name => { -like => 'xCat %2%' },
           id   => { '<=' => 400_000 + $Iterations,
                     '>=' => 400_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       my $i = 0;
 
@@ -2558,7 +2559,7 @@ EOF
           name => { -like => 'xCat %2%' },
           id   => { '<=' => 300_000 + $Iterations,
                     '>=' => 300_000 } 
-        }, { rows => LIMIT});
+        }, { rows => LIMIT1});
 
       my $i = 0;
 
@@ -2599,7 +2600,7 @@ WHERE
   name LIKE 'Product %2%' AND
   id <= @{[ 500_000 + $Iterations ]} AND
   id >= 500000
-LIMIT @{[ LIMIT ]}
+LIMIT @{[ LIMIT1 ]}
 EOF
       $sth->execute;
       my %row;
@@ -2637,7 +2638,7 @@ EOF
             id => { ge => 100_000 },
             name => { like => 'Product %2%' },
           ],
-          limit => LIMIT);
+          limit => LIMIT1);
 
       my $i = 0;
 
@@ -2666,7 +2667,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 200_000 + $Iterations,
                     '>=' => 200_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       my $i = 0;
 
@@ -2694,7 +2695,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 400_000 + $Iterations,
                     '>=' => 400_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       my $i = 0;
 
@@ -2723,7 +2724,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 300_000 + $Iterations,
                     '>=' => 300_000 } 
-        }, { rows => LIMIT});
+        }, { rows => LIMIT1});
 
       my $i = 0;
 
@@ -2768,7 +2769,7 @@ WHERE
   p.name LIKE 'Product %2%'
   id <= @{[ 500_000 + $Iterations ]} AND
   id >= 500000
-LIMIT @{[ LIMIT ]}
+LIMIT @{[ LIMIT1 ]}
 EOF
 
       $sth->execute;
@@ -2811,7 +2812,7 @@ EOF
             name => { like => 'Product %2%' },
           ],
           with_objects => [ 'category' ],
-          limit => LIMIT);
+          limit => LIMIT1);
 
       my $i = 0;
 
@@ -2843,7 +2844,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 200_000 + $Iterations,
                     '>=' => 200_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       my $i = 0;
 
@@ -2875,7 +2876,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 400_000 + $Iterations,
                     '>=' => 400_000 } 
-        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT1 });
       my $i = 0;
 
       while(my $p = $iter->next)
@@ -2907,7 +2908,7 @@ EOF
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
         },
-        { prefetch => [ 'category_id' ], rows => LIMIT });
+        { prefetch => [ 'category_id' ], rows => LIMIT1 });
 
       my $i = 0;
 
@@ -3581,7 +3582,7 @@ EOF
             id => { le => 1_100_000 + $Iterations },
             id => { ge => 1_100_000 },
           ],
-          limit => LIMIT);
+          limit => LIMIT1);
       die unless(@$c);
 
       if($Debug && !$printed)
@@ -3604,7 +3605,7 @@ EOF
           name => { -like => 'xCat %2%' },
           id   => { '<=' => 2_200_000 + $Iterations,
                     '>=' => 2_200_000 },
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
       die unless(@c);
 
       if($Debug && !$printed)
@@ -3627,7 +3628,7 @@ EOF
           name => { -like => 'xCat %2%' },
           id   => { '<=' => 4_400_000 + $Iterations,
                     '>=' => 4_400_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
       die unless(@c);
 
       if($Debug && !$printed)
@@ -3650,7 +3651,7 @@ EOF
           name => { -like => 'xCat %2%' },
           id   => { '<=' => 3_300_000 + $Iterations,
                     '>=' => 3_300_000 } 
-        }, { rows => LIMIT});
+        }, { rows => LIMIT1});
       die unless(@c);
 
       if($Debug && !$printed)
@@ -3685,7 +3686,7 @@ WHERE
   name LIKE 'Product %2%' AND
   id <= @{[ 500_000 + $Iterations ]} AND
   id >= 500000
-LIMIT @{[ LIMIT ]}
+LIMIT @{[ LIMIT1 ]}
 EOF
       $sth->execute;
       my $p = $sth->fetchall_arrayref;
@@ -3716,7 +3717,7 @@ EOF
             id => { ge => 100_000 },
             name => { like => 'Product %2%' },
           ],
-          limit => LIMIT);
+          limit => LIMIT1);
       die unless(@$p);
 
       if($Debug && !$printed)
@@ -3739,7 +3740,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 200_000 + $Iterations,
                     '>=' => 200_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
       die unless(@p);
 
       if($Debug && !$printed)
@@ -3762,7 +3763,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 400_000 + $Iterations,
                     '>=' => 400_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       die unless(@p);
 
@@ -3786,7 +3787,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 300_000 + $Iterations,
                     '>=' => 300_000 } 
-        }, { rows => LIMIT});
+        }, { rows => LIMIT1});
 
       die unless(@p);
 
@@ -3816,7 +3817,7 @@ EOF
             name => { like => 'Product %2%' },
           ],
           with_objects => [ 'category' ],
-          limit => LIMIT);
+          limit => LIMIT1);
       die unless(@$ps);
 
       if($Debug && !$printed)
@@ -3846,7 +3847,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 200_000 + $Iterations,
                     '>=' => 200_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       die unless(@p);
 
@@ -3877,7 +3878,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 400_000 + $Iterations,
                     '>=' => 400_000 } 
-        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       die unless(@p);
 
@@ -3909,7 +3910,7 @@ EOF
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
         },
-        { prefetch => [ 'category_id' ], rows => LIMIT});
+        { prefetch => [ 'category_id' ], rows => LIMIT1});
 
       die unless(@p);
 
@@ -3965,7 +3966,7 @@ WHERE
   p.name LIKE 'Product %2%' AND
   id <= @{[ 500_000 + $Iterations ]} AND
   id >= 500000
-LIMIT @{[ LIMIT ]}
+LIMIT @{[ LIMIT2 ]}
 EOF
 
       $sth->execute;
@@ -4026,7 +4027,7 @@ EOF
           ],
           with_objects    => [ 'code_names' ],
           require_objects => [ 'category' ],
-          limit => LIMIT);
+          limit => LIMIT2);
       die unless(@$ps);
 
       if($Debug && !$printed)
@@ -4058,7 +4059,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 200_000 + $Iterations,
                     '>=' => 200_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT2 });
       die unless(@p);
 
       if($Debug && !$printed)
@@ -4090,7 +4091,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 400_000 + $Iterations,
                     '>=' => 400_000 } 
-        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT2 });
 
       die unless(@p);
 
@@ -4123,7 +4124,7 @@ EOF
           'me.name' => { -like => 'Product %2%' },
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
-        }, { prefetch => [ 'category_id' ], rows => LIMIT});
+        }, { prefetch => [ 'category_id' ], rows => LIMIT2});
 
       die unless(@p);
 
@@ -4166,7 +4167,7 @@ EOF
             id => { ge => 100_000 },
             name => { like => 'Product %2%' },
           ],
-          limit  => LIMIT,
+          limit  => LIMIT1,
           offset => OFFSET);
 
       die unless(@$p);
@@ -4191,7 +4192,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 200_000 + $Iterations,
                     '>=' => 200_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT, offset => OFFSET });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1, offset => OFFSET });
 
       die unless(@p);
 
@@ -4219,7 +4220,7 @@ EOF
         {
           prefetch => [ 'category_id' ],
           limit_dialect => $Limit_Dialect,
-          limit  => LIMIT,
+          limit  => LIMIT1,
           offset => OFFSET 
         });  
 
@@ -4245,7 +4246,7 @@ EOF
           'me.name' => { -like => 'Product %2%' },
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
-        }, { prefetch => [ 'category_id' ], rows => LIMIT, offset => OFFSET });
+        }, { prefetch => [ 'category_id' ], rows => LIMIT1, offset => OFFSET });
 
       die unless(@p);
 
@@ -4278,7 +4279,7 @@ EOF
             id => { ge => 100_000 },
             name => { like => 'xCat %2%' },
           ],
-          limit => LIMIT);
+          limit => LIMIT1);
 
       my $i = 0;
 
@@ -4307,7 +4308,7 @@ EOF
           name => { -like => 'xCat %2%' },
           id   => { '<=' => 200_000 + $Iterations,
                     '>=' => 200_000 },
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       my $i = 0;
 
@@ -4336,7 +4337,7 @@ EOF
           name => { -like => 'xCat %2%' },
           id   => { '<=' => 400_000 + $Iterations,
                     '>=' => 400_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       my $i = 0;
 
@@ -4365,7 +4366,7 @@ EOF
           name => { -like => 'xCat %2%' },
           id   => { '<=' => 300_000 + $Iterations,
                     '>=' => 300_000 } 
-        }, { rows => LIMIT});
+        }, { rows => LIMIT1});
 
       my $i = 0;
 
@@ -4399,7 +4400,7 @@ EOF
             id => { ge => 100_000 },
             name => { like => 'Product %2%' },
           ],
-          limit => LIMIT);
+          limit => LIMIT1);
 
       my $i = 0;
 
@@ -4428,7 +4429,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 200_000 + $Iterations,
                     '>=' => 200_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       my $i = 0;
 
@@ -4457,7 +4458,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 400_000 + $Iterations,
                     '>=' => 400_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       my $i = 0;
 
@@ -4486,7 +4487,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 300_000 + $Iterations,
                     '>=' => 300_000 } 
-        }, { rows => LIMIT});
+        }, { rows => LIMIT1});
 
       my $i = 0;
 
@@ -4521,7 +4522,7 @@ EOF
             name => { like => 'Product %2%' },
           ],
           with_objects => [ 'category' ],
-          limit => LIMIT);
+          limit => LIMIT1);
 
       my $i = 0;
 
@@ -4553,7 +4554,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 200_000 + $Iterations,
                     '>=' => 200_000 } 
-        }, { limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       my $i = 0;
 
@@ -4585,7 +4586,7 @@ EOF
           name => { -like => 'Product %2%' },
           id   => { '<=' => 400_000 + $Iterations,
                     '>=' => 400_000 } 
-        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT });
+        }, { prefetch => [ 'category_id' ], limit_dialect => $Limit_Dialect, limit => LIMIT1 });
 
       my $i = 0;
 
@@ -4618,7 +4619,7 @@ EOF
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
         },
-        { prefetch => [ 'category_id' ], rows => LIMIT });
+        { prefetch => [ 'category_id' ], rows => LIMIT1 });
 
       my $i = 0;
 
