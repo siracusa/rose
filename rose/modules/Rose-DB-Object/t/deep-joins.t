@@ -268,6 +268,9 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($products->[1]{'colors'}[1]{'description'}{'authors'}[0]{'name'}, 'tim', "p2 - with colors description authors 4 - $db_type");
   is(scalar @{$products->[1]{'colors'}[1]{'description'}{'authors'}}, 1, "p2 - with colors description authors 6  - $db_type");
 
+  $products->[1]{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'} = 
+    [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$products->[1]{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'}} ];
+
   is($products->[1]{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'}[0]{'nick'}, 'jack', "p2 - with colors description authors nicknames 1 - $db_type");
   is($products->[1]{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'}[1]{'nick'}, 'sir', "p2 - with colors description authors nicknames 2 - $db_type");
   is(scalar @{$products->[1]{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'}}, 2, "p2 - with colors description authors nicknames 3 - $db_type");
@@ -297,6 +300,9 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 
   is($products->[0]{'colors'}[1]{'description'}{'authors'}[0]{'name'}, 'tim', "p2 - offset with colors description authors 4 - $db_type");
   is(scalar @{$products->[0]{'colors'}[1]{'description'}{'authors'}}, 1, "p2 - offset with colors description authors 6  - $db_type");
+
+  $products->[0]{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'} = 
+    [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$products->[0]{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'}} ];
 
   is($products->[0]{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'}[0]{'nick'}, 'jack', "p2 - offset with colors description authors nicknames 1 - $db_type");
   is($products->[0]{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'}[1]{'nick'}, 'sir', "p2 - offset with colors description authors nicknames 2 - $db_type");
@@ -368,6 +374,9 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is($p->{'colors'}[1]{'description'}{'authors'}[0]{'name'}, 'tim', "p2 - iterator with colors description authors 4 - $db_type");
   is(scalar @{$p->{'colors'}[1]{'description'}{'authors'}}, 1, "p2 - iterator with colors description authors 6  - $db_type");
 
+  $p->{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'} = 
+    [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$p->{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'}} ];
+
   is($p->{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'}[0]{'nick'}, 'jack', "p2 - iterator with colors description authors nicknames 1 - $db_type");
   is($p->{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'}[1]{'nick'}, 'sir', "p2 - iterator with colors description authors nicknames 2 - $db_type");
   is(scalar @{$p->{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'}}, 2, "p2 - iterator with colors description authors nicknames 3 - $db_type");
@@ -401,6 +410,9 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 
   is($p->{'colors'}[1]{'description'}{'authors'}[0]{'name'}, 'tim', "p2 - offset iterator with colors description authors 4 - $db_type");
   is(scalar @{$p->{'colors'}[1]{'description'}{'authors'}}, 1, "p2 - offset iterator with colors description authors 6  - $db_type");
+
+  $p->{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'} = 
+    [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$p->{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'}} ];
 
   is($p->{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'}[0]{'nick'}, 'jack', "p2 - offset iterator with colors description authors nicknames 1 - $db_type");
   is($p->{'colors'}[0]{'description'}{'authors'}[0]{'nicknames'}[1]{'nick'}, 'sir', "p2 - offset iterator with colors description authors nicknames 2 - $db_type");
