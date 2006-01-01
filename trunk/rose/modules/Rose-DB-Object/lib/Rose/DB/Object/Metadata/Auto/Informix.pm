@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.023';
+our $VERSION = '0.60';
 
 # syscolumns.coltype constants taken from:
 #
@@ -67,7 +67,7 @@ my %Column_Types =
   NCHAR()      => 'char',
   NVARCHAR()   => 'varchar',
   INT8()       => 'int',
-  SERIAL8()    => 'serial',
+  SERIAL8()    => 'bigserial',
   SET()        => 'set',
   MULTISET()   => 'multiset',
   LIST()       => 'list',

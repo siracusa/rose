@@ -19,7 +19,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.59';
+our $VERSION = '0.60';
 
 our $Debug = 0;
 
@@ -2173,7 +2173,7 @@ sub primary_key_sequence_names
                                    $column);
     }
     # Set auto-created serial column sequence names for Pg only
-    elsif($column->type eq 'serial' && $db->driver eq 'pg')
+    elsif($column->type =~ /^(?:big)?serial$/ && $db->driver eq 'pg')
     {
       $seq = $db->auto_sequence_name(table => $table, column => $column);
     }

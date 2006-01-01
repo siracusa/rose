@@ -1,4 +1,4 @@
-0.60 (12.30.2005) - John Siracusa <siracusa@mindspring.com>
+0.60 (12.31.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added arbitrary-depth auto-joins to the Manager using a "dot-chained"
       syntax (e.g., vendor.regions.code)
@@ -17,6 +17,9 @@
     * Force MDY dates in Postgres in the test suite, just in case the user
       has European dates configured.  (Reported by Cees Hek)
     * Fixed numerous Postgres 7.x bugs.  (Reported by Cees Hek)
+    * Modified the benchmark suite to further isolate each module to its
+      own private set of database rows in order to eliminate the influence
+      of run order during the tests.
     * Worked around numerous SQLite bugs in order to make the test suite
       function correctly.
 
