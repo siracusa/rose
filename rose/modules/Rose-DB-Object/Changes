@@ -1,7 +1,8 @@
 0.601 (01.01.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * Some sections of the benchmark script were accidentally left 
-      commented-out in the last release.  Fixed in this release.
+    * Fixed the DBI benchmark tests broken by the last release.
+    * Uncommented some sections of the benchmark script that were
+      accidentally left commented-out in the last release.
 
 0.60 (12.31.2005) - John Siracusa <siracusa@mindspring.com>
 
