@@ -4786,65 +4786,65 @@ sub Run_Tests
     'DBIC' => \&insert_complex_product_dbic,
   });
 
-#   INTERNAL_LOOPERS1:
-#   {
-#     #
-#     # Accessor
-#     #
-# 
-#     # It's okay for these tests to only have a few iterations because they
-#     # loop internally.
-#     local $Benchmark::Min_Count = 1;
-# 
-#     Bench('Simple: accessor 1', $CPU_Time,
-#     {
-#       'DBI ' => \&accessor_simple_category_dbi,
-#       'RDBO' => \&accessor_simple_category_rdbo,
-#       'CDBI' => \&accessor_simple_category_cdbi,
-#       'CDBS' => \&accessor_simple_category_cdbs,
-#       'DBIC' => \&accessor_simple_category_dbic,
-#     });
-# 
-#     Bench('Complex: accessor 1', $CPU_Time,
-#     {
-#       'DBI ' => \&accessor_simple_category_dbi,
-#       'RDBO' => \&accessor_complex_category_rdbo,
-#       'CDBI' => \&accessor_complex_category_cdbi,
-#       'CDBS' => \&accessor_complex_category_cdbs,
-#       'DBIC' => \&accessor_complex_category_dbic,
-#     });
-# 
-#     Bench('Simple: accessor 2', $CPU_Time,
-#     {
-#       'DBI ' => \&accessor_simple_product_dbi,
-#       'RDBO' => \&accessor_simple_product_rdbo,
-#       'CDBI' => \&accessor_simple_product_cdbi,
-#       'CDBS' => \&accessor_simple_product_cdbs,
-#       'DBIC' => \&accessor_simple_product_dbic,
-#     });
-# 
-#     Bench('Complex: accessor 2', $CPU_Time,
-#     {
-#       'DBI ' => \&accessor_simple_product_dbi,
-#       'RDBO' => \&accessor_complex_product_rdbo,
-#       'CDBI' => \&accessor_complex_product_cdbi,
-#       'CDBS' => \&accessor_complex_product_cdbs,
-#       'DBIC' => \&accessor_complex_product_dbic,
-#     });
-#   }
-# 
-#   #
-#   # Load
-#   #
-# 
-#   Bench('Simple: load 1', $Iterations,
-#   {
-#     'DBI ' => \&load_simple_category_dbi,
-#     'RDBO' => \&load_simple_category_rdbo,
-#     'CDBI' => \&load_simple_category_cdbi,
-#     'CDBS' => \&load_simple_category_cdbs,
-#     'DBIC' => \&load_simple_category_dbic,
-#   });
+  INTERNAL_LOOPERS1:
+  {
+    #
+    # Accessor
+    #
+
+    # It's okay for these tests to only have a few iterations because they
+    # loop internally.
+    local $Benchmark::Min_Count = 1;
+
+    Bench('Simple: accessor 1', $CPU_Time,
+    {
+      'DBI ' => \&accessor_simple_category_dbi,
+      'RDBO' => \&accessor_simple_category_rdbo,
+      'CDBI' => \&accessor_simple_category_cdbi,
+      'CDBS' => \&accessor_simple_category_cdbs,
+      'DBIC' => \&accessor_simple_category_dbic,
+    });
+
+    Bench('Complex: accessor 1', $CPU_Time,
+    {
+      'DBI ' => \&accessor_simple_category_dbi,
+      'RDBO' => \&accessor_complex_category_rdbo,
+      'CDBI' => \&accessor_complex_category_cdbi,
+      'CDBS' => \&accessor_complex_category_cdbs,
+      'DBIC' => \&accessor_complex_category_dbic,
+    });
+
+    Bench('Simple: accessor 2', $CPU_Time,
+    {
+      'DBI ' => \&accessor_simple_product_dbi,
+      'RDBO' => \&accessor_simple_product_rdbo,
+      'CDBI' => \&accessor_simple_product_cdbi,
+      'CDBS' => \&accessor_simple_product_cdbs,
+      'DBIC' => \&accessor_simple_product_dbic,
+    });
+
+    Bench('Complex: accessor 2', $CPU_Time,
+    {
+      'DBI ' => \&accessor_simple_product_dbi,
+      'RDBO' => \&accessor_complex_product_rdbo,
+      'CDBI' => \&accessor_complex_product_cdbi,
+      'CDBS' => \&accessor_complex_product_cdbs,
+      'DBIC' => \&accessor_complex_product_dbic,
+    });
+  }
+
+  #
+  # Load
+  #
+
+  Bench('Simple: load 1', $Iterations,
+  {
+    'DBI ' => \&load_simple_category_dbi,
+    'RDBO' => \&load_simple_category_rdbo,
+    'CDBI' => \&load_simple_category_cdbi,
+    'CDBS' => \&load_simple_category_cdbs,
+    'DBIC' => \&load_simple_category_dbic,
+  });
 
   #Bench('Complex: load 1', $Iterations,
   #{
@@ -4854,41 +4854,41 @@ sub Run_Tests
   #  'DBIC' => \&load_complex_category_dbic,
   #});
 
-#   Bench('Simple: load 2', $Iterations,
-#   {
-#     'DBI ' => \&load_simple_product_dbi,
-#     'RDBO' => \&load_simple_product_rdbo,
-#     'CDBI' => \&load_simple_product_cdbi,
-#     'CDBS' => \&load_simple_product_cdbs,
-#     'DBIC' => \&load_simple_product_dbic,
-#   });
-# 
-#   Bench('Complex: load 2', $Iterations,
-#   {
-#     'DBI ' => \&load_simple_product_dbi,
-#     'RDBO' => \&load_complex_product_rdbo,
-#     'CDBI' => \&load_complex_product_cdbi,
-#     'CDBS' => \&load_complex_product_cdbs,
-#     'DBIC' => \&load_complex_product_dbic,
-#   });
-# 
-#   Bench('Simple: load 3', $Iterations,
-#   {
-#     'DBI ' => \&load_simple_product_and_category_dbi,
-#     'RDBO' => \&load_simple_product_and_category_rdbo,
-#     'CDBI' => \&load_simple_product_and_category_cdbi,
-#     'CDBS' => \&load_simple_product_and_category_cdbs,
-#     'DBIC' => \&load_simple_product_and_category_dbic,
-#   });
-# 
-#   Bench('Complex: load 3', $Iterations,
-#   {
-#     'DBI ' => \&load_simple_product_and_category_dbi,
-#     'RDBO' => \&load_complex_product_and_category_rdbo,
-#     'CDBI' => \&load_complex_product_and_category_cdbi,
-#     'CDBS' => \&load_complex_product_and_category_cdbs,
-#     'DBIC' => \&load_complex_product_and_category_dbic,
-#   });
+  Bench('Simple: load 2', $Iterations,
+  {
+    'DBI ' => \&load_simple_product_dbi,
+    'RDBO' => \&load_simple_product_rdbo,
+    'CDBI' => \&load_simple_product_cdbi,
+    'CDBS' => \&load_simple_product_cdbs,
+    'DBIC' => \&load_simple_product_dbic,
+  });
+
+  Bench('Complex: load 2', $Iterations,
+  {
+    'DBI ' => \&load_simple_product_dbi,
+    'RDBO' => \&load_complex_product_rdbo,
+    'CDBI' => \&load_complex_product_cdbi,
+    'CDBS' => \&load_complex_product_cdbs,
+    'DBIC' => \&load_complex_product_dbic,
+  });
+
+  Bench('Simple: load 3', $Iterations,
+  {
+    'DBI ' => \&load_simple_product_and_category_dbi,
+    'RDBO' => \&load_simple_product_and_category_rdbo,
+    'CDBI' => \&load_simple_product_and_category_cdbi,
+    'CDBS' => \&load_simple_product_and_category_cdbs,
+    'DBIC' => \&load_simple_product_and_category_dbic,
+  });
+
+  Bench('Complex: load 3', $Iterations,
+  {
+    'DBI ' => \&load_simple_product_and_category_dbi,
+    'RDBO' => \&load_complex_product_and_category_rdbo,
+    'CDBI' => \&load_complex_product_and_category_cdbi,
+    'CDBS' => \&load_complex_product_and_category_cdbs,
+    'DBIC' => \&load_complex_product_and_category_dbic,
+  });
 
   #
   # Update
