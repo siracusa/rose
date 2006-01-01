@@ -2115,7 +2115,7 @@ EOF
         }
 
         print "search_simple_product_and_category_and_code_name_dbi GOT $num\n";
-        #$printed++;
+        $printed++;
       }
 
       foreach my $p (@ps)
