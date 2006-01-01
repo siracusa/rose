@@ -95,8 +95,8 @@ our %Limit_Dialect =
   informix => 'First',
 );
 
-use constant LIMIT1 => 50;
-use constant OFFSET => 25;
+use constant LIMIT1 => 100;
+use constant OFFSET => 50;
 use constant LIMIT2 => 1000;
 
 Benchmark->import(':hireswallclock')  if($Opt{'hi-res-time'});
