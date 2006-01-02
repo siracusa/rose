@@ -17,7 +17,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.60';
+our $VERSION = '0.61';
 
 our $Debug = 0;
 
@@ -651,7 +651,11 @@ sub bitfield
             }
           }
         }
-        elsif(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key,$driver}))
+
+        return unless(defined wantarray);
+
+        # Pull default through if necessary
+        unless(defined $self->{$key} || defined $self->{$formatted_key,$driver})
         {
           $self->{$key} = $db->parse_bitfield($default, $size);
 
@@ -669,10 +673,10 @@ sub bitfield
           return $self->{$formatted_key,$driver};
         }
 
-        return unless(defined wantarray);
-
         return $self->{$key} ? $self->{$key} : 
-               $self->{$formatted_key,$driver} ? $db->parse_bitfield($self->{$formatted_key,$driver}) : undef;
+               defined $self->{$formatted_key,$driver} ? 
+               ($self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size)) : 
+               undef;
       };
     }
     else
@@ -710,7 +714,9 @@ sub bitfield
         return unless(defined wantarray);
 
         return $self->{$key} ? $self->{$key} : 
-               $self->{$formatted_key,$driver} ? $db->parse_bitfield($self->{$formatted_key,$driver}) : undef;
+               defined $self->{$formatted_key,$driver} ? 
+               ($self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size)) : 
+               undef;
       };
 
 

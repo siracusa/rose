@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 342;
+use Test::More tests => 344;
 
 BEGIN 
 {
@@ -233,7 +233,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 68)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 70)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -248,10 +248,15 @@ SKIP: foreach my $db_type ('mysql')
   $o->date_created('now');
   $o->last_modified($o->date_created);
   $o->save_col(22);
+  $o->bitz3('11');
 
   ok($o->save, "save() 1 - $db_type");
   ok($o->load, "load() 1 - $db_type");
 
+  my $ox = MyMySQLObject->new(id => $o->id)->load;
+  is($ox->bitz2->to_Bin(), '00', "spot check bitfield 1 - $db_type");
+  is($ox->bitz3->to_Bin(), '0011', "spot check bitfield 2 - $db_type");
+  
   eval { $o->name('C' x 50) };
   ok($@, "varchar overflow fatal - $db_type");
 
@@ -946,6 +951,8 @@ CREATE TABLE rose_db_object_test
   flag2          TINYINT(1),
   status         VARCHAR(32) DEFAULT 'active',
   bitz           BIT(5) NOT NULL DEFAULT '00101',
+  bitz2          BIT(2) DEFAULT '0',
+  bitz3          BIT(4),
   decs           FLOAT(10,2),
   nums           VARCHAR(255),
   start          DATE,
@@ -999,6 +1006,8 @@ EOF
       nums     => { type => 'array' },
       enums    => { type => 'enum', values => [ qw(foo bar baz) ], default => 'foo' },
       bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },
+      bitz2    => { type => 'bits', bits => 2, default => '0' },
+      bitz3    => { type => 'bits', bits => 4 },
       decs     => { type => 'decimal', precision => 10, scale => 2 },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },

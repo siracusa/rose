@@ -1,3 +1,8 @@
+0.61 (01.02.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed several bitfield column accessor method bugs.
+      (Reported by Svilen Ivanov)
+
 0.601 (01.01.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed some incorrect deep join tests.
