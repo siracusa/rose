@@ -7,7 +7,7 @@ use DateTime::Format::Pg;
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.57';
+our $VERSION = '0.58';
 
 our $Debug = 0;
 
@@ -328,19 +328,20 @@ sub parse_dbi_column_info_default
 
     my $pg_vers = $self->dbh->{'pg_server_version'};
 
-    # Example: q('value'::character varying)
-    if(/^'.+'::[\w ]+$/)
+    # Example: 'value'::character varying
+    # Example: ('now'::text)::timestamp(0)
+    if(/^\(*'(.+)'::.+$/)
     {
-      my $default;
+      my $default = $1;
 
       # Single quotes are backslash-escaped, but Postgres 8.1 and
       # later uses doubled quotes '' instead.
-      if($pg_vers >= 80100 && /^'((?:[^']+|'')*)'::[\w ]+$/)
+      if($pg_vers >= 80100 && $default =~ /^'((?:[^']+|'')*)'/)
       {
         $default = $1;
         $default =~ s/''/'/g;
       }
-      elsif($pg_vers < 80100 && /^'((?:[^\\']+|\\.)*)'::[\w ]+$/)
+      elsif($pg_vers < 80100 && $default =~ /^'((?:[^\\']+|\\.)*)'$/)
       {
         $default = $1;
         $default =~ s/\\'/'/g;

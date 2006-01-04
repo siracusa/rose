@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.60';
+our $VERSION = '0.61';
 
 our $Debug = 0;
 
@@ -526,12 +526,13 @@ sub get_objects
 
   my $use_lazy_columns = (!ref $nonlazy || $nonlazy{'self'}) ? 0 : $meta->has_lazy_columns;
 
-  my(%columns, %methods);
+  my(%columns, %methods, %all_columns);
 
   if($use_lazy_columns)
   {
-    %columns = ($tables[0] => scalar $meta->nonlazy_columns);
-    %methods = ($tables[0] => scalar $meta->nonlazy_column_mutator_method_names);
+    %columns     = ($tables[0] => scalar $meta->nonlazy_columns);
+    %all_columns = ($tables[0] => scalar $meta->columns);
+    %methods     = ($tables[0] => scalar $meta->nonlazy_column_mutator_method_names);
   }
   else
   {
@@ -1147,15 +1148,16 @@ sub get_objects
       local $Carp::CarpLevel = $Carp::CarpLevel + 1;
 
       ($sql, $bind) =
-        build_select(dbh        => $dbh,
-                     select     => $select,
-                     tables     => \@tables,
-                     tables_sql => \@tables_sql,
-                     columns    => \%columns,
-                     classes    => \%classes,
-                     meta       => \%meta,
-                     db         => $db,
-                     pretty     => $Debug,
+        build_select(dbh         => $dbh,
+                     select      => $select,
+                     tables      => \@tables,
+                     tables_sql  => \@tables_sql,
+                     columns     => \%columns,
+                     all_columns => \%all_columns,
+                     classes     => \%classes,
+                     meta        => \%meta,
+                     db          => $db,
+                     pretty      => $Debug,
                      %args);
     }
 
@@ -1298,15 +1300,16 @@ sub get_objects
     local $Carp::CarpLevel = $Carp::CarpLevel + 1;
 
     ($sql, $bind) =
-      build_select(dbh        => $dbh,
-                   tables     => \@tables,
-                   tables_sql => \@tables_sql,
-                   columns    => \%columns,
-                   classes    => \%classes,
-                   joins      => \@joins,
-                   meta       => \%meta,
-                   db         => $db,
-                   pretty     => $Debug,
+      build_select(dbh         => $dbh,
+                   tables      => \@tables,
+                   tables_sql  => \@tables_sql,
+                   columns     => \%columns,
+                   all_columns => \%all_columns,
+                   classes     => \%classes,
+                   joins       => \@joins,
+                   meta        => \%meta,
+                   db          => $db,
+                   pretty      => $Debug,
                    %args);
   }
 
@@ -2260,8 +2263,11 @@ sub make_manager_method_from_sql
 
     $code = sub 
     {
-      my($self, %np) = @_;
-      $self->get_objects_from_sql(%args, args => [ map { $np{$_} } @params ]);
+      my($self, %margs) = @_;
+      $self->get_objects_from_sql(
+        %args, 
+        args => [ delete @margs{@params} ], 
+        %margs);
     };
   }
   else

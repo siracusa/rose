@@ -9,7 +9,7 @@ use Rose::DB::Object::Metadata::Util qw(:all);
 use Rose::DB::Object::Metadata::MethodMaker;
 our @ISA = qw(Rose::DB::Object::Metadata::MethodMaker);
 
-our $VERSION = '0.04';
+our $VERSION = '0.61';
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -41,11 +41,20 @@ sub init_id { ++$Id_Counter }
 # Some object keys have different names when they appear
 # in hashref-style relationship specs.  This hash maps
 # between the two in the case where they differ.
-sub spec_hash_map 
+sub spec_hash_key_map 
 {
   {
     # object key    spec key
-    method_name => 'methods',
+    method_name  => 'methods',
+  }
+}
+
+sub spec_hash_method_map 
+{
+  {
+    # object key    object method
+    _share_db    => 'share_db',
+    _key_columns => 'key_columns',
   }
 }
 
@@ -54,16 +63,22 @@ sub spec_hash
 {
   my($self) = shift;
 
-  my $map = $self->spec_hash_map || {};
+  my $key_map    = $self->spec_hash_key_map || {};
+  my $method_map = $self->spec_hash_method_map || {};
 
   my %spec = (type => $self->type);
 
   foreach my $key (keys(%$self))
   {
-    if(exists $map->{$key})
+    if(exists $key_map->{$key})
     {
-      my $spec_key = $map->{$key} or next;
+      my $spec_key = $key_map->{$key} or next;
       $spec{$spec_key} = $self->{$key};
+    }
+    elsif(exists $method_map->{$key})
+    {
+      my $method = $method_map->{$key} or next;
+      $spec{$method} = $self->$method();
     }
     else
     {
@@ -149,9 +164,13 @@ sub perl_relationship_defintion_attributes
       next ATTR;
     }
 
-    next ATTR  if($attr eq 'share_db' && $self->share_db);
+    next ATTR  if($attr =~ /^_?share_db$/ && $self->share_db);
 
-    if($attr eq 'method_name')
+    if($attr =~ /^_(share_db|key_columns)$/)
+    {
+      $attr = $1;
+    }
+    elsif($attr eq 'method_name')
     {
       my $names = $self->{$attr} or next ATTR;
       my $custom = 0;
