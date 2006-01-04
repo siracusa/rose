@@ -2265,7 +2265,7 @@ sub make_manager_method_from_sql
     {
       my($self, %margs) = @_;
       $self->get_objects_from_sql(
-        %args, 
+        %args,
         args => [ delete @margs{@params} ], 
         %margs);
     };
@@ -3347,10 +3347,6 @@ This is the typical evolution of an object manager method.  It starts out as bei
 Create a class method in the calling class that will fetch objects using a custom SQL query.  Pass either a method name and an SQL query string or name/value parameters as arguments.  Valid parameters are:
 
 =over 4
-
-=item C<db DB>
-
-A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> object method of the C<object_class>.
 
 =item C<object_class CLASS>
 

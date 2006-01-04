@@ -1,3 +1,7 @@
+0.58 (01.04.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Improved parsing of default column values in Postgres.
+
 0.57 (12.31.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Changes to support Rose::DB::Object 0.60

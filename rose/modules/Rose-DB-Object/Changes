@@ -1,5 +1,10 @@
-0.61 (01.02.2006) - John Siracusa <siracusa@mindspring.com>
+0.61 (01.04.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * TODO: fetch_only => [ foo => [ qw(col1 col2) ] ]
+    * It's now possible to filter based on lazy columns that
+      are not selected as part of a Manager query.
+    * Extra parameters can now be passed to the method created by
+      make_manager_method_from_sql()
     * Fixed several bitfield column accessor method bugs.
       (Reported by Svilen Ivanov)
 
