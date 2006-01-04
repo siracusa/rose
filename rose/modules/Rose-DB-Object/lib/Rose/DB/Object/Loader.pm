@@ -16,7 +16,7 @@ use Rose::DB::Object::ConventionManager;
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.60';
+our $VERSION = '0.61';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -248,6 +248,8 @@ sub make_modules
     croak "Module directory '$module_dir' does not exist";
   }
 
+  $args{'make_modules'} = 1;
+
   my @classes = $self->make_classes(%args);
 
   foreach my $class (@classes)
@@ -293,6 +295,8 @@ sub make_modules
 sub make_classes
 {
   my($self, %args) = @_;
+
+  my $make_modules = delete $args{'make_modules'};
 
   my $include_views = exists $args{'include_views'} ? 
     delete $args{'include_views'} : $self->include_views;
@@ -460,7 +464,15 @@ sub make_classes
     unless(UNIVERSAL::isa($class, 'Rose::DB::Object') || @{"${class}::ISA"})
     {
       eval "require $class";
-      croak $@  if($@);
+      
+      if($@)
+      {
+        if($make_modules)
+        {
+          # XXX: make base class module
+        }
+        else { croak $@ }
+      }
     }
   }
 
