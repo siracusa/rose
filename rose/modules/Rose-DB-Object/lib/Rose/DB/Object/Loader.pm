@@ -284,20 +284,20 @@ sub make_modules
     {
       if($extra_info{'base_classes'}{$class})
       {
-        print $pm _perl_base_class($class, \%extra_info, \%args);
+        print {$pm} _perl_base_class($class, \%extra_info, \%args);
       }
       else
       {
-        print $pm _perl_class($class, \%extra_info, \%args);
+        print {$pm} _perl_class($class, \%extra_info, \%args);
       }
     }
     elsif($class->isa('Rose::DB::Object::Manager'))
     {
-      print $pm $class->perl_class_definition(%args), "\n";
+      print {$pm} $class->perl_class_definition(%args), "\n";
     }
     elsif($class->isa('Rose::DB'))
     {
-      print $pm _perl_db_class($class, \%extra_info, \%args);
+      print {$pm} _perl_db_class($class, \%extra_info, \%args);
     }
     else { croak "Unknown class: $class" }
 
