@@ -6,11 +6,10 @@
       as part of a Manager query.
     * Extra parameters can now be passed to the method created by
       make_manager_method_from_sql()
-    * Fixed several bitfield column accessor method bugs.
-      (Reported by Svilen Ivanov)
+    * Fixed several bitfield column accessor method bugs.  (Reported by 
+      Svilen Ivanov)
     * The loader's make_modules() method now correctly creates *.pm files
       for auto-generated base classes.  (Reported by Sean Davis)
-      (Reported by Svilen Ivanov)
 
 0.601 (01.01.2006) - John Siracusa <siracusa@mindspring.com>
 
