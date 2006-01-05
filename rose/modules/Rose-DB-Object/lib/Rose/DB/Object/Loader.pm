@@ -12,6 +12,7 @@ use Clone::PP qw(clone);
 use Rose::DB;
 use Rose::DB::Object;
 use Rose::DB::Object::ConventionManager;
+use Rose::DB::Object::Metadata::Util qw(perl_hashref);
 
 use Rose::Object;
 our @ISA = qw(Rose::Object);
@@ -49,7 +50,7 @@ sub generate_object_base_class_name
 {
   my($self) = shift;
 
-  return (($self->class_prefix . 'DB::Object::Base') || "Rose::DB::Object::LoaderAuto::Base") . 
+  return (($self->class_prefix . 'DB::Object::AutoBase') || "Rose::DB::Object::LoaderGenerated::AutoBase") . 
           $Base_Class_Counter++;
 }
 
@@ -57,7 +58,7 @@ sub generate_db_base_class_name
 {
   my($self) = shift;
 
-  return (($self->class_prefix . 'DB::Base') || "Rose::DB::LoaderAuto::Base") . 
+  return (($self->class_prefix . 'DB::AutoBase') || "Rose::DB::LoaderGenerated::AutoBase") . 
           $Base_Class_Counter++;
 }
 
@@ -248,11 +249,14 @@ sub make_modules
     croak "Module directory '$module_dir' does not exist";
   }
 
-  $args{'make_modules'} = 1;
+  my(@extra_classes, %extra_info);
+
+  $args{'extra_classes'} = \@extra_classes;
+  $args{'extra_info'}    = \%extra_info;
 
   my @classes = $self->make_classes(%args);
 
-  foreach my $class (@classes)
+  foreach my $class (@classes, @extra_classes)
   {
     my @path = split('::', $class);
     $path[-1] .= '.pm';
@@ -278,11 +282,22 @@ sub make_modules
 
     if($class->isa('Rose::DB::Object'))
     {
-      print $pm $class->meta->perl_class_definition, "\n";
+      if($extra_info{'base_classes'}{$class})
+      {
+        print $pm _perl_base_class($class, \%extra_info, \%args);
+      }
+      else
+      {
+        print $pm _perl_class($class, \%extra_info, \%args);
+      }
     }
     elsif($class->isa('Rose::DB::Object::Manager'))
     {
-      print $pm $class->perl_class_definition, "\n";
+      print $pm $class->perl_class_definition(%args), "\n";
+    }
+    elsif($class->isa('Rose::DB'))
+    {
+      print $pm _perl_db_class($class, \%extra_info, \%args);
     }
     else { croak "Unknown class: $class" }
 
@@ -292,11 +307,88 @@ sub make_modules
   return wantarray ? @classes : \@classes;
 }
 
+sub _perl_class
+{
+  my($class, $info, $args) = @_;
+
+  my $code = $class->meta->perl_class_definition(%$args);
+
+  if(!$info->{'init_db_in_base_class'} && $info->{'perl_init_db'})
+  {
+    my $init_db = $info->{'perl_init_db'};
+    
+    $code =~ s/1;/$init_db\n\n1;/;
+  }
+  
+  return $code . "\n";
+}
+
+sub _perl_base_class
+{
+  my($class, $info, $args) = @_;
+
+  my $init_db = '';
+
+  if($info->{'init_db_in_base_class'} && $info->{'perl_init_db'})
+  {
+    $init_db = "\n" . $info->{'perl_init_db'} . "\n";
+  }
+
+  return<<"EOF";
+package $class;
+
+use Rose::DB::Object;
+our \@ISA = qw(Rose::DB::Object);
+$init_db
+1;
+EOF
+}
+
+sub _perl_db_class
+{
+  my($class, $info, $args) = @_;
+
+  my $max = 0;
+  
+  foreach my $key (keys %{$info->{'db_entry'}})
+  {
+    $max = length($key)  if(length($key) > $max);
+  }
+
+  my $hash = perl_hashref(hash        => $info->{'db_entry'}, 
+                          inline      => 0, 
+                          key_padding => $max,
+                          indent      => $args->{'indent'} || 2);
+
+  $hash =~ s/^{\n//;
+  $hash =~ s/\n}$//;
+
+  return<<"EOF";
+package $class;
+
+use strict;
+
+use Rose::DB;
+our \@ISA = qw(Rose::DB);
+
+__PACKAGE__->use_private_registry;
+
+__PACKAGE__->register_db
+(
+  domain => __PACKAGE__->default_domain,
+  type   => __PACKAGE__->default_type,
+$hash
+);
+1;
+EOF
+}
+
 sub make_classes
 {
   my($self, %args) = @_;
 
-  my $make_modules = delete $args{'make_modules'};
+  my $extra_classes = delete $args{'extra_classes'};
+  my $extra_info    = delete $args{'extra_info'};
 
   my $include_views = exists $args{'include_views'} ? 
     delete $args{'include_views'} : $self->include_views;
@@ -378,6 +470,7 @@ sub make_classes
       @{"${db_class}::ISA"} = qw(Rose::DB);
       $db_class->registry(clone(Rose::DB->registry));
 
+      push(@$extra_classes, $db_class)  if($extra_classes);
       $made_new_db_class = 1;
     }
   }
@@ -434,6 +527,8 @@ sub make_classes
       $db_class->registry->entry(domain => $db_class->default_domain,
                                  type   => $db_class->default_type);
 
+    $extra_info->{'db_entry'} = { %db_args };
+    
     unless($entry->database)
     {
       # Need appropriate db just for parsing
@@ -443,13 +538,29 @@ sub make_classes
         Carp::croak "Could not extract database name from DSN: ", $entry->dsn;
 
       $entry->database($database);
+
+      $extra_info->{'database'} = $database;
     }
 
     $init_db = sub { $db_class->new };
+
+    $extra_info->{'perl_init_db'} =
+      "use $db_class;\n" .
+      "sub init_db { $db_class->new }";
   }
   else
   {
     $init_db = sub { $db_class->new(%db_args) };
+
+    my $hash = perl_hashref(hash   => \%db_args,
+                            inline => 1,
+                            indent => 0);
+    $hash =~ s/^{\n//;
+    $hash =~ s/\n}$//;
+
+    $extra_info->{'perl_init_db'} = 
+      "use $db_class;\n" .
+      "sub init_db { $db_class->new($hash) }";
   }
 
   # Refresh the db
@@ -463,16 +574,8 @@ sub make_classes
     no strict 'refs';
     unless(UNIVERSAL::isa($class, 'Rose::DB::Object') || @{"${class}::ISA"})
     {
-      eval "require $class";
-      
-      if($@)
-      {
-        if($make_modules)
-        {
-          # XXX: make base class module
-        }
-        else { croak $@ }
-      }
+      eval "require $class";      
+      croak $@  if($@);
     }
   }
 
@@ -484,7 +587,10 @@ sub make_classes
   {
     no strict 'refs';
     *{"$base_classes[0]::init_db"} = $init_db;
-    $installed_init_db_in_base_class = 1;
+    $installed_init_db_in_base_class = 
+      $extra_info->{'init_db_in_base_class'} = 1;
+    $extra_info->{'base_classes'}{$base_classes[0]}++;
+    push(@$extra_classes, $base_classes[0]);
   }
 
   my $class_prefix = $self->class_prefix || '';

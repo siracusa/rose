@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 2506;
+use Test::More tests => 2887;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("Postgres tests", 494)  unless($HAVE_PG);
+  skip("Postgres tests", 731)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -342,39 +342,87 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   ok($fo = MyPgNick->new(id   => 1,
                          o_id => 5,
-                         db   => $db,
-                         nick => 'none')->save,
-      "nick object save() 1 - $db_type");
+                         nick => 'none',
+                         type => { name => 'nt one', t2 => { name => 'nt2 one' } },
+                         alts => [ { alt => 'alt one 1' },
+                                   { alt => 'alt one 2' },
+                                   { alt => 'alt one 3' }, ],
+                         opts => [ { opt => 'opt one 1' },
+                                   { opt => 'opt one 2' } ])->save,
+     "nick object save() 1 - $db_type");
 
   $fo = MyPgNick->new(id   => 2,
-                      o_id => 2,
                       db   => $db,
-                      nick => 'ntwo');
+                      o_id => 2,
+                      nick => 'ntwo',
+                      type => { name => 'nt two', t2 => { name => 'nt2 two' } },
+                      alts => [ { alt => 'alt two 1' } ]);
   ok($fo->save, "nick object save() 2 - $db_type");
 
   $fo = MyPgNick->new(id   => 3,
-                      o_id => 5,
                       db   => $db,
-                      nick => 'nthree');
+                      o_id => 5,
+                      nick => 'nthree',
+                      type => { name => 'nt three', t2 => { name => 'nt2 three' } },
+                      opts => [ { opt => 'opt three 1' },  { opt => 'opt three 2' } ]);
   ok($fo->save, "nick object save() 3 - $db_type");
 
   $fo = MyPgNick->new(id   => 4,
-                      o_id => 2,
                       db   => $db,
-                      nick => 'nfour');
+                      o_id => 2,
+                      nick => 'nfour',
+                      type => { name => 'nt four', t2 => { name => 'nt2 four' } });
   ok($fo->save, "nick object save() 4 - $db_type");
 
   $fo = MyPgNick->new(id   => 5,
-                      o_id => 5,
                       db   => $db,
-                      nick => 'nfive');
+                      o_id => 5,
+                      nick => 'nfive',
+                      type => { name => 'nt five', t2 => { name => 'nt2 five' } });
   ok($fo->save, "nick object save() 5 - $db_type");
 
   $fo = MyPgNick->new(id   => 6,
-                      o_id => 5,
                       db   => $db,
-                      nick => 'nsix');
+                      o_id => 5,
+                      nick => 'nsix',
+                      type => { name => 'nt six', t2 => { name => 'nt2 six' } });
   ok($fo->save, "nick object save() 6 - $db_type");
+  # 
+#   ok($fo = MyPgNick->new(id   => 1,
+#                          o_id => 5,
+#                          db   => $db,
+#                          nick => 'none')->save,
+#       "nick object save() 1 - $db_type");
+# 
+#   $fo = MyPgNick->new(id   => 2,
+#                       o_id => 2,
+#                       db   => $db,
+#                       nick => 'ntwo');
+#   ok($fo->save, "nick object save() 2 - $db_type");
+# 
+#   $fo = MyPgNick->new(id   => 3,
+#                       o_id => 5,
+#                       db   => $db,
+#                       nick => 'nthree');
+#   ok($fo->save, "nick object save() 3 - $db_type");
+# 
+#   $fo = MyPgNick->new(id   => 4,
+#                       o_id => 2,
+#                       db   => $db,
+#                       nick => 'nfour');
+#   ok($fo->save, "nick object save() 4 - $db_type");
+# 
+#   $fo = MyPgNick->new(id   => 5,
+#                       o_id => 5,
+#                       db   => $db,
+#                       nick => 'nfive');
+#   ok($fo->save, "nick object save() 5 - $db_type");
+# 
+#   $fo = MyPgNick->new(id   => 6,
+#                       o_id => 5,
+#                       db   => $db,
+#                       nick => 'nsix');
+#   ok($fo->save, "nick object save() 6 - $db_type");
 
   #local $Rose::DB::Object::Manager::Debug = 1;
 
@@ -1957,6 +2005,609 @@ EOF
   is($objs->[2]->id, 19, "make_manager_method_from_sql 12 - $db_type");
 
   # End get_objects_from_sql tests
+
+  # Start tough order tests
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class    => 'MyPgObject',
+      require_objects => [ 'nicks' ],
+      nonlazy         => 1);
+
+  ok(@$objs == 5, "tough order 1 - $db_type");
+  is($objs->[0]->id, 2, "tough order 2 - $db_type");
+  is($objs->[1]->id, 5, "tough order 3 - $db_type");
+  is($objs->[2]->id, 10, "tough order 4 - $db_type");
+  is($objs->[3]->id, 11, "tough order 5 - $db_type");
+  is($objs->[4]->id, 12, "tough order 6 - $db_type");
+
+  is($objs->[0]{'nicks'}[0]{'nick'}, 'ntwo', "tough order 7 - $db_type");
+  is($objs->[0]{'nicks'}[1]{'nick'}, 'nfour', "tough order 8 - $db_type");
+
+  is($objs->[1]{'nicks'}[0]{'nick'}, 'nthree', "tough order 9 - $db_type");
+  is($objs->[1]{'nicks'}[1]{'nick'}, 'nsix', "tough order 10 - $db_type");
+  is($objs->[1]{'nicks'}[2]{'nick'}, 'none', "tough order 11 - $db_type");
+  is($objs->[1]{'nicks'}[3]{'nick'}, 'nfive', "tough order 12 - $db_type");
+
+  is($objs->[2]{'nicks'}[0]{'nick'}, 'nseven', "tough order 13 - $db_type");
+
+  is($objs->[3]{'nicks'}[0]{'nick'}, 'neight', "tough order 14 - $db_type");
+
+  is($objs->[4]{'nicks'}[0]{'nick'}, 'nnine', "tough order 15 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class    => 'MyPgObject',
+      require_objects => [ 'nicks' ],
+      nonlazy         => 1,
+      sort_by         => 'name');
+
+  ok(@$objs == 5, "tough order 16 - $db_type");
+  is($objs->[0]->id, 5, "tough order 17 - $db_type");
+  is($objs->[1]->id, 10, "tough order 18 - $db_type");
+  is($objs->[2]->id, 11, "tough order 19 - $db_type");
+  is($objs->[3]->id, 12, "tough order 20 - $db_type");
+  is($objs->[4]->id, 2, "tough order 21 - $db_type");
+
+  is($objs->[0]{'nicks'}[0]{'nick'}, 'nthree', "tough order 22 - $db_type");
+  is($objs->[0]{'nicks'}[1]{'nick'}, 'nsix', "tough order 23 - $db_type");
+  is($objs->[0]{'nicks'}[2]{'nick'}, 'none', "tough order 24 - $db_type");
+  is($objs->[0]{'nicks'}[3]{'nick'}, 'nfive', "tough order 25 - $db_type");
+  is(scalar @{$objs->[0]{'nicks'}}, 4, "tough order 26 - $db_type");
+
+  is($objs->[1]{'nicks'}[0]{'nick'}, 'nseven', "tough order 27 - $db_type");
+  is(scalar @{$objs->[1]{'nicks'}}, 1, "tough order 28 - $db_type");
+
+  is($objs->[2]{'nicks'}[0]{'nick'}, 'neight', "tough order 29 - $db_type");
+  is(scalar @{$objs->[2]{'nicks'}}, 1, "tough order 30 - $db_type");
+
+  is($objs->[3]{'nicks'}[0]{'nick'}, 'nnine', "tough order 31 - $db_type");
+  is(scalar @{$objs->[3]{'nicks'}}, 1, "tough order 32 - $db_type");
+
+  is($objs->[4]{'nicks'}[0]{'nick'}, 'ntwo', "tough order 33 - $db_type");
+  is($objs->[4]{'nicks'}[1]{'nick'}, 'nfour', "tough order 34 - $db_type");
+  is(scalar @{$objs->[4]{'nicks'}}, 2, "tough order 35 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      object_class    => 'MyPgObject',
+      require_objects => [ 'nicks' ],
+      nonlazy         => 1,
+      sort_by         => 'name');
+
+  $o = $iterator->next;
+  is($o->{'nicks'}[0]{'nick'}, 'nthree', "tough order 36 - $db_type");
+  is($o->{'nicks'}[1]{'nick'}, 'nsix', "tough order 37 - $db_type");
+  is($o->{'nicks'}[2]{'nick'}, 'none', "tough order 38 - $db_type");
+  is($o->{'nicks'}[3]{'nick'}, 'nfive', "tough order 39 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 4, "tough order 40 - $db_type");
+
+  $o = $iterator->next;
+  is($o->{'nicks'}[0]{'nick'}, 'nseven', "tough order 41 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 1, "tough order 42 - $db_type");
+
+  $o = $iterator->next;
+  is($o->{'nicks'}[0]{'nick'}, 'neight', "tough order 43 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 1, "tough order 44 - $db_type");
+
+  $o = $iterator->next;
+  is($o->{'nicks'}[0]{'nick'}, 'nnine', "tough order 45 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 1, "tough order 46 - $db_type");
+
+  $o = $iterator->next;
+  is($o->{'nicks'}[0]{'nick'}, 'ntwo', "tough order 47 - $db_type");
+  is($o->{'nicks'}[1]{'nick'}, 'nfour', "tough order 48 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, "tough order 49 - $db_type");
+
+  ok(!$iterator->next, "tough order 50 - $db_type");
+  is($iterator->total, 5, "tough order 51 - $db_type");
+
+  # End tough order tests
+
+  # Start deep join tests
+
+  eval 
+  { 
+    Rose::DB::Object::Manager->get_objects(
+      db           => $db,
+      object_class => 'MyPgObject',
+      require_objects => [ 'nicks.type' ],
+      with_objects    => [ 'nicks.type' ]);
+  };
+
+  ok($@, "deep join conflict 1 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      db           => $db,
+      object_class => 'MyPgObject',
+      require_objects => [ 'nicks.type', 'nicks.type', 'nicks' ],
+      with_objects    => [ 'nicks.type.t2', 'nicks.alts' ],
+      multi_many_ok   => 1,
+      nonlazy         => 1,
+      query        => [ 'id' => [ 2, 5 ] ],
+      sort_by      => 'type.name');
+
+  ok(@$objs == 2, "deep join 1 - $db_type");
+  is($objs->[0]->id, 2, "deep join 2 - $db_type");
+  is($objs->[1]->id, 5, "deep join 3 - $db_type");
+
+  #SORT:
+  #{
+  #  $objs->[0]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[0]{'nicks'}} ];
+  #}
+
+  is($objs->[0]{'nicks'}[0]{'type'}{'name'}, 'nt four', "deep join 4 - $db_type");
+  is($objs->[0]{'nicks'}[1]{'type'}{'name'}, 'nt two', "deep join 5 - $db_type");
+  is(scalar @{$objs->[0]{'nicks'}}, 2, "deep join 6 - $db_type");
+
+  #SORT:
+  #{
+  #  $objs->[1]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[1]{'nicks'}} ];
+  #}
+
+  is($objs->[1]{'nicks'}[0]{'type'}{'name'}, 'nt five', "deep join 7 - $db_type");
+  is($objs->[1]{'nicks'}[1]{'type'}{'name'}, 'nt one', "deep join 8 - $db_type");
+  is($objs->[1]{'nicks'}[2]{'type'}{'name'}, 'nt six', "deep join 9 - $db_type");
+  is($objs->[1]{'nicks'}[3]{'type'}{'name'}, 'nt three', "deep join 10 - $db_type");
+  is(scalar @{$objs->[1]{'nicks'}}, 4, "deep join 11 - $db_type");
+
+  is($objs->[0]{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 four', "deep join 12 - $db_type");
+  is($objs->[0]{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 two', "deep join 13 - $db_type");
+
+  is($objs->[0]{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt two 1', "deep join 14 - $db_type");
+
+  $objs->[1]{'nicks'}[1]{'alts'} = 
+    [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$objs->[1]{'nicks'}[1]{'alts'}} ];
+  is($objs->[1]{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt one 1', "deep join 15 - $db_type");
+  is($objs->[1]{'nicks'}[1]{'alts'}[1]{'alt'}, 'alt one 2', "deep join 16 - $db_type");
+  is($objs->[1]{'nicks'}[1]{'alts'}[2]{'alt'}, 'alt one 3', "deep join 17 - $db_type");
+  is(scalar @{$objs->[1]{'nicks'}[1]{'alts'}}, 3, "deep join 18 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      db           => $db,
+      object_class => 'MyPgObject',
+      with_objects => [ 'nicks.type' ],
+      nonlazy      => 1,
+      sort_by      => 'type.name');
+
+  ok(@$objs == 21, "deep join with 1 - $db_type");
+  is($objs->[0]->id, 1, "deep join with 2 - $db_type");
+  is($objs->[1]->id, 2, "deep join with 3 - $db_type");
+  is($objs->[2]->id, 3, "deep join with 4 - $db_type");
+  is($objs->[16]->id, 17, "deep join with 5 - $db_type");
+
+  #SORT:
+  #{
+  #  $objs->[1]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[1]{'nicks'}} ];
+  #}
+
+  is($objs->[1]{'nicks'}[0]{'type'}{'name'}, 'nt four', "deep join with 6 - $db_type");
+  is($objs->[1]{'nicks'}[1]{'type'}{'name'}, 'nt two', "deep join with 7 - $db_type");
+  is(scalar @{$objs->[1]{'nicks'}}, 2, "deep join with 8 - $db_type");
+
+  #SORT:
+  #{
+  #  $objs->[4]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[4]{'nicks'}} ];
+  #}
+
+  is($objs->[4]{'nicks'}[0]{'type'}{'name'}, 'nt five', "deep join with 9 - $db_type");
+  is($objs->[4]{'nicks'}[1]{'type'}{'name'}, 'nt one', "deep join with 10 - $db_type");
+  is($objs->[4]{'nicks'}[2]{'type'}{'name'}, 'nt six', "deep join with 11 - $db_type");
+  is($objs->[4]{'nicks'}[3]{'type'}{'name'}, 'nt three', "deep join with 12 - $db_type");
+  is(scalar @{$objs->[4]{'nicks'}}, 4, "deep join with 13 - $db_type");
+
+  is(scalar @{$objs->[0]{'nicks'} ||= []}, 0, "deep join with 14 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      db              => $db,
+      object_class    => 'MyPgObject',
+      require_objects => [ 'nicks.type', 'nicks.type', 'nicks' ],
+      with_objects    => [ 'nicks.type.t2', 'nicks.alts' ],
+      multi_many_ok   => 1,
+      query           => [ 'id' => [ 2, 5 ] ],
+      sort_by         => 'type.name');
+
+  $o = $iterator->next;
+  is($o->{'nicks'}[0]{'type'}{'name'}, 'nt four', "deep join iterator 1 - $db_type");
+  is($o->{'nicks'}[1]{'type'}{'name'}, 'nt two', "deep join iterator 2 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, "deep join iterator 3 - $db_type");
+
+  is($o->{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt two 1', "deep join 3.1 - $db_type");
+
+  is($o->{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 four', "deep join iterator 3.1 - $db_type");
+  is($o->{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 two', "deep join iterator 3.2 - $db_type");
+
+  $o = $iterator->next;
+  is($o->{'nicks'}[0]{'type'}{'name'}, 'nt five', "deep join iterator 4 - $db_type");
+  is($o->{'nicks'}[1]{'type'}{'name'}, 'nt one', "deep join iterator 5 - $db_type");
+  is($o->{'nicks'}[2]{'type'}{'name'}, 'nt six', "deep join iterator 6 - $db_type");
+  is($o->{'nicks'}[3]{'type'}{'name'}, 'nt three', "deep join iterator 7 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 4, "deep join iterator 8 - $db_type");
+
+  $o->{'nicks'}[1]{'alts'} = 
+    [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$o->{'nicks'}[1]{'alts'}} ];
+  is($o->{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt one 1', "deep join iterator 9 - $db_type");
+  is($o->{'nicks'}[1]{'alts'}[1]{'alt'}, 'alt one 2', "deep join iterator 10 - $db_type");
+  is($o->{'nicks'}[1]{'alts'}[2]{'alt'}, 'alt one 3', "deep join iterator 11 - $db_type");
+  is(scalar @{$o->{'nicks'}[1]{'alts'}}, 3, "deep join iterator 12 - $db_type");
+
+  ok(!$iterator->next, "deep join iterator 13 - $db_type");
+  is($iterator->total, 2, "deep join iterator 14 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      db           => $db,
+      object_class => 'MyPgObject',
+      with_objects => [ 'nicks.type' ],
+      nonlazy      => 1,
+      sort_by      => 'type.name');
+
+  $o = $iterator->next;
+  is($o->id, 1, "deep join with with iterator 1 - $db_type");
+
+  $o = $iterator->next;
+
+  #SORT:
+  #{
+  #  $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
+  #}
+
+  is($o->{'nicks'}[0]{'type'}{'name'}, 'nt four', "deep join with with iterator 1 - $db_type");
+  is($o->{'nicks'}[1]{'type'}{'name'}, 'nt two', "deep join with iterator 2 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, "deep join with iterator 3 - $db_type");
+
+  $o = $iterator->next;
+  $o = $iterator->next;
+
+  $o = $iterator->next;
+
+  #SORT:
+  #{
+  #  $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
+  #}
+
+  is($o->{'nicks'}[0]{'type'}{'name'}, 'nt five', "deep join with iterator 4 - $db_type");
+  is($o->{'nicks'}[1]{'type'}{'name'}, 'nt one', "deep join with iterator 5 - $db_type");
+  is($o->{'nicks'}[2]{'type'}{'name'}, 'nt six', "deep join with iterator 6 - $db_type");
+  is($o->{'nicks'}[3]{'type'}{'name'}, 'nt three', "deep join with iterator 7 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 4, "deep join with iterator 8 - $db_type");
+
+  while($iterator->next) { }
+  is($iterator->total, 21, "deep join iterator 9 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      db           => $db,
+      object_class => 'MyPgObject',
+      require_objects => [ 'nicks.type.t2' ],
+      query        => [ 'id' => [ 2, 5 ] ],
+      nonlazy      => 1,
+      sort_by      => 'type.name');
+
+  ok(@$objs == 2, "deep join three-level 1 - $db_type");
+  is($objs->[0]->id, 2, "deep join three-level 2 - $db_type");
+  is($objs->[1]->id, 5, "deep join three-level 3 - $db_type");
+
+  #SORT:
+  #{
+  #  $objs->[0]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[0]{'nicks'}} ];
+  #}
+
+  is($objs->[0]{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 four', "deep join three-level 4 - $db_type");
+  is($objs->[0]{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 two', "deep join three-level 5 - $db_type");
+  is(scalar @{$objs->[0]{'nicks'}}, 2, "deep join three-level 6 - $db_type");
+
+  #SORT:
+  #{
+  #  $objs->[1]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[1]{'nicks'}} ];
+  #}
+
+  is($objs->[1]{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 five', "deep join three-level 7 - $db_type");
+  is($objs->[1]{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 one', "deep join three-level 8 - $db_type");
+  is($objs->[1]{'nicks'}[2]{'type'}{'t2'}{'name'}, 'nt2 six', "deep join three-level 9 - $db_type");
+  is($objs->[1]{'nicks'}[3]{'type'}{'t2'}{'name'}, 'nt2 three', "deep join three-level 10 - $db_type");
+  is(scalar @{$objs->[1]{'nicks'}}, 4, "deep join three-level 11 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      db           => $db,
+      object_class => 'MyPgObject',
+      with_objects => [ 'nicks.type.t2' ],
+      nonlazy      => 1,
+      sort_by      => 'type.name');
+
+  ok(@$objs == 21, "deep join three-level 1 - $db_type");
+  is($objs->[0]->id, 1, "deep join three-level 2 - $db_type");
+  is($objs->[1]->id, 2, "deep join three-level 3 - $db_type");
+  is($objs->[4]->id, 5, "deep join three-level 4 - $db_type");
+  is($objs->[20]->id, 60, "deep join three-level 5 - $db_type");
+
+  #SORT:
+  #{
+  #  $objs->[1]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[1]{'nicks'}} ];
+  #}
+
+  is($objs->[1]{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 four', "deep join three-level 6 - $db_type");
+  is($objs->[1]{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 two', "deep join three-level 7 - $db_type");
+  is(scalar @{$objs->[1]{'nicks'}}, 2, "deep join three-level 8 - $db_type");
+
+  #SORT:
+  #{
+  #  $objs->[1]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[1]{'nicks'}} ];
+  #}
+
+  is($objs->[4]{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 five', "deep join three-level 9 - $db_type");
+  is($objs->[4]{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 one', "deep join three-level 10 - $db_type");
+  is($objs->[4]{'nicks'}[2]{'type'}{'t2'}{'name'}, 'nt2 six', "deep join three-level 11 - $db_type");
+  is($objs->[4]{'nicks'}[3]{'type'}{'t2'}{'name'}, 'nt2 three', "deep join three-level 12 - $db_type");
+  is(scalar @{$objs->[4]{'nicks'}}, 4, "deep join three-level 13 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      db           => $db,
+      object_class => 'MyPgObject',
+      require_objects => [ 'nicks.type.t2' ],
+      query        => [ 'id' => [ 2, 5 ] ],
+      sort_by      => 'type.name');
+
+  $o = $iterator->next;
+  is($o->{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 four', "deep join iterator 1 - $db_type");
+  is($o->{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 two', "deep join iterator 2 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, "deep join iterator 3 - $db_type");
+
+  $o = $iterator->next;
+  is($o->{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 five', "deep join iterator 4 - $db_type");
+  is($o->{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 one', "deep join iterator 5 - $db_type");
+  is($o->{'nicks'}[2]{'type'}{'t2'}{'name'}, 'nt2 six', "deep join iterator 6 - $db_type");
+  is($o->{'nicks'}[3]{'type'}{'t2'}{'name'}, 'nt2 three', "deep join iterator 7 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 4, "deep join iterator 8 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      db           => $db,
+      object_class => 'MyPgObject',
+      with_objects => [ 'nicks.type.t2' ],
+      nonlazy      => 1,
+      sort_by      => 'type.name');
+
+  $o = $iterator->next;
+  $o = $iterator->next;
+
+  #SORT:
+  #{
+  #  $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
+  #}
+
+  is($o->{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 four', "deep join iterator with 1 - $db_type");
+  is($o->{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 two', "deep join iterator with 2 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 2, "deep join iterator with 3 - $db_type");
+
+  $o = $iterator->next;
+  $o = $iterator->next;
+
+  $o = $iterator->next;
+
+  #SORT:
+  #{
+  #  $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
+  #}
+
+  is($o->{'nicks'}[0]{'type'}{'t2'}{'name'}, 'nt2 five', "deep join iterator with 4 - $db_type");
+  is($o->{'nicks'}[1]{'type'}{'t2'}{'name'}, 'nt2 one', "deep join iterator with 5 - $db_type");
+  is($o->{'nicks'}[2]{'type'}{'t2'}{'name'}, 'nt2 six', "deep join iterator with 6 - $db_type");
+  is($o->{'nicks'}[3]{'type'}{'t2'}{'name'}, 'nt2 three', "deep join iterator with 7 - $db_type");
+  is(scalar @{$o->{'nicks'}}, 4, "deep join iterator with 8 - $db_type");
+
+  while($iterator->next) { }
+  is($iterator->total, 21, "deep join iterator with 9 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      db           => $db,
+      object_class => 'MyPgObject',
+      require_objects => [ 'nicks.alts' ],
+      multi_many_ok => 1,
+      query        => [ 'id' => [ 2, 5 ] ],
+      sort_by      => 'alts.alt');
+
+  ok(@$objs == 2, "deep join multi 1 - $db_type");
+  is($objs->[0]->id, 2, "deep join multi 2 - $db_type");
+  is($objs->[1]->id, 5, "deep join multi 3 - $db_type");
+
+  is($objs->[0]{'nicks'}[0]{'alts'}[0]{'alt'}, 'alt two 1', "deep join multi 4 - $db_type");
+  is(scalar @{$objs->[0]{'nicks'}[0]{'alts'}}, 1, "deep join multi 5 - $db_type");
+
+  is($objs->[1]{'nicks'}[0]{'alts'}[0]{'alt'}, 'alt one 1', "deep join multi 6 - $db_type");
+  is($objs->[1]{'nicks'}[0]{'alts'}[1]{'alt'}, 'alt one 2', "deep join multi 7 - $db_type");
+  is($objs->[1]{'nicks'}[0]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi 8 - $db_type");
+  is(scalar @{$objs->[1]{'nicks'}[0]{'alts'}}, 3, "deep join multi 11 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      db           => $db,
+      object_class  => 'MyPgObject',
+      with_objects  => [ 'nicks.alts' ],
+      multi_many_ok => 1,
+      nonlazy       => 1,
+      sort_by       => 'alts.alt');
+
+  ok(@$objs == 21, "deep join multi with 1 - $db_type");
+  is($objs->[1]->id, 2, "deep join multi with 2 - $db_type");
+  is($objs->[4]->id, 5, "deep join multi with 3 - $db_type");
+
+  SORT:
+  {
+    $objs->[1]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[1]{'nicks'}} ];
+    $objs->[1]{'nicks'}[1]{'alts'} = [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$objs->[1]{'nicks'}[1]{'alts'}} ];
+  }
+
+  is($objs->[1]{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt two 1', "deep join multi with with 4 - $db_type");
+  is(scalar @{$objs->[1]{'nicks'}[1]{'alts'}}, 1, "deep join multi with 5 - $db_type");
+
+  SORT:
+  {
+    $objs->[4]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[4]{'nicks'}} ];
+    $objs->[4]{'nicks'}[1]{'alts'} = [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$objs->[4]{'nicks'}[1]{'alts'}} ];
+  }
+
+  is($objs->[4]{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt one 1', "deep join multi with 6 - $db_type");
+  is($objs->[4]{'nicks'}[1]{'alts'}[1]{'alt'}, 'alt one 2', "deep join multi with 7 - $db_type");
+  is($objs->[4]{'nicks'}[1]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi with 8 - $db_type");
+  is(scalar @{$objs->[4]{'nicks'}[1]{'alts'}}, 3, "deep join multi with 11 - $db_type");
+
+  is(scalar @{$objs->[0]{'nicks'} || []}, 0, "deep join multi with 12 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      db           => $db,
+      object_class => 'MyPgObject',
+      require_objects => [ 'nicks.alts' ],
+      multi_many_ok => 1,
+      query        => [ 'id' => [ 2, 5 ] ],
+      sort_by      => 'alts.alt');
+
+  $o = $iterator->next;
+  is($o->id, 2, "deep join multi iter 1 - $db_type");
+  is($o->{'nicks'}[0]{'alts'}[0]{'alt'}, 'alt two 1', "deep join multi iter 2 - $db_type");
+  is(scalar @{$o->{'nicks'}[0]{'alts'}}, 1, "deep join multi iter 3 - $db_type");
+
+  $o = $iterator->next;
+  is($o->{'nicks'}[0]{'alts'}[0]{'alt'}, 'alt one 1', "deep join multi iter 4 - $db_type");
+  is($o->{'nicks'}[0]{'alts'}[1]{'alt'}, 'alt one 2', "deep join multi iter 5 - $db_type");
+  is($o->{'nicks'}[0]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi iter 6 - $db_type");
+  is(scalar @{$o->{'nicks'}[0]{'alts'}}, 3, "deep join multi iter 7 - $db_type");
+
+  ok(!$iterator->next, "deep join multi iter 8 - $db_type");
+  is($iterator->total, 2, "deep join multi iter 9 - $db_type");
+
+  $iterator = 
+    Rose::DB::Object::Manager->get_objects_iterator(
+      db            => $db,
+      object_class  => 'MyPgObject',
+      with_objects  => [ 'nicks.alts' ],
+      multi_many_ok => 1,
+      nonlazy       => 1,
+      #query => [ id => 2 ],
+      sort_by       => 'alts.alt');
+
+  $o = $iterator->next;
+  is(scalar @{$o->{'nicks'} ||= []}, 0, "deep join multi iter with 1 - $db_type");
+
+  $o = $iterator->next;
+
+  SORT:
+  {
+    $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
+    $o->{'nicks'}[1]{'alts'} = [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$o->{'nicks'}[1]{'alts'}} ];
+  }
+
+  is($o->id, 2, "deep join multi iter with 2 - $db_type");
+  is($o->{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt two 1', "deep join multi iter with 3 - $db_type");
+  is(scalar @{$o->{'nicks'}[1]{'alts'}}, 1, "deep join multi iter with 4 - $db_type");
+
+  $o = $iterator->next;
+  $o = $iterator->next;
+
+  $o = $iterator->next;
+
+  SORT:
+  {
+    $o->{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$o->{'nicks'}} ];
+    $o->{'nicks'}[1]{'alts'} = [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$o->{'nicks'}[1]{'alts'}} ];
+  }
+
+  is($o->{'nicks'}[1]{'alts'}[0]{'alt'}, 'alt one 1', "deep join multi iter with 5 - $db_type");
+  is($o->{'nicks'}[1]{'alts'}[1]{'alt'}, 'alt one 2', "deep join multi iter with 6 - $db_type");
+  is($o->{'nicks'}[1]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi iter with 7 - $db_type");
+  is(scalar @{$o->{'nicks'}[1]{'alts'}}, 3, "deep join multi iter with 8 - $db_type");
+
+  while($iterator->next) { }
+  is($iterator->total, 21, "deep join multi iter with 9 - $db_type");
+
+  # End deep join tests
+
+  # Start custom select tests
+
+  my @selects =
+  (
+    't2.nick, id, t2.id, name, UPPER(name) AS derived',
+    't1.id, t2.nick, t2.id, t1.name, UPPER(name) AS derived',
+    'rose_db_object_nicks.id, rose_db_object_test.id, rose_db_object_nicks.nick, rose_db_object_test.name, UPPER(name) AS derived',
+    [ qw(id name t2.nick nicks.id), 'UPPER(name) AS derived' ],
+    [ qw(t2.nick t2.id t1.id t1.name), 'UPPER(name) AS derived' ],
+    [ 'UPPER(name) AS derived', qw(t2.id rose_db_object_nicks.nick rose_db_object_test.id rose_db_object_test.name) ],
+    [ qw(rose_db_object_test.id rose_db_object_nicks.nick rose_db_object_test.name rose_db_object_nicks.id), 'UPPER(name) AS derived' ],
+    [ qw(rose_db_object_test.id rose_db_object_test.name rose_db_object_nicks.nick t2.id), 'UPPER(name) AS derived' ],
+  );
+
+  $i = 0;
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+
+  foreach my $select (@selects)
+  {
+    $iterator = 
+      Rose::DB::Object::Manager->get_objects_iterator(
+        db              => $db,
+        object_class    => 'MyPgObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    $o = $iterator->next;
+
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && !defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+     $i++;
+
+    $o = $iterator->next;
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && !defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    ok(!$iterator->next, "custom select $i - $db_type");
+
+    $objs = 
+      Rose::DB::Object::Manager->get_objects(
+        db              => $db,
+        object_class    => 'MyPgObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    ok($objs->[0]->id > 2 && defined $objs->[0]->name && defined $objs->[0]->nicks->[0]->nick &&
+       !defined $objs->[0]->nicks->[0]->type_id && !defined $objs->[0]->flag2 &&
+       $objs->[0]->derived eq 'DERIVED: ' . uc($objs->[0]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+
+    ok($objs->[1]->id > 2 && defined $objs->[1]->name && defined $objs->[1]->nicks->[0]->nick &&
+       !defined $objs->[1]->nicks->[0]->type_id && !defined $objs->[1]->flag2 &&
+       $objs->[1]->derived eq 'DERIVED: ' . uc($objs->[1]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    is(scalar @$objs, 2, "custom select $i - $db_type");
+  }
+
+  # End custom select tests
 }
 
 #
@@ -1965,7 +2616,7 @@ EOF
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 683)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 731)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -4318,6 +4969,84 @@ EOF
   is($iterator->total, 21, "deep join multi iter with 9 - $db_type");
 
   # End deep join tests
+
+  # Start custom select tests
+
+  my @selects =
+  (
+    't2.nick, id, t2.id, name, UPPER(name) AS derived',
+    't1.id, t2.nick, t2.id, t1.name, UPPER(name) AS derived',
+    'rose_db_object_nicks.id, rose_db_object_test.id, rose_db_object_nicks.nick, rose_db_object_test.name, UPPER(name) AS derived',
+    [ qw(id name t2.nick nicks.id), 'UPPER(name) AS derived' ],
+    [ qw(t2.nick t2.id t1.id t1.name), 'UPPER(name) AS derived' ],
+    [ 'UPPER(name) AS derived', qw(t2.id rose_db_object_nicks.nick rose_db_object_test.id rose_db_object_test.name) ],
+    [ qw(rose_db_object_test.id rose_db_object_nicks.nick rose_db_object_test.name rose_db_object_nicks.id), 'UPPER(name) AS derived' ],
+    [ qw(rose_db_object_test.id rose_db_object_test.name rose_db_object_nicks.nick t2.id), 'UPPER(name) AS derived' ],
+  );
+
+  $i = 0;
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+
+  foreach my $select (@selects)
+  {
+    $iterator = 
+      Rose::DB::Object::Manager->get_objects_iterator(
+        object_class    => 'MyMySQLObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    $o = $iterator->next;
+
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && !defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+     $i++;
+
+    $o = $iterator->next;
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && !defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    ok(!$iterator->next, "custom select $i - $db_type");
+
+    $objs = 
+      Rose::DB::Object::Manager->get_objects(
+        object_class    => 'MyMySQLObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    ok($objs->[0]->id > 2 && defined $objs->[0]->name && defined $objs->[0]->nicks->[0]->nick &&
+       !defined $objs->[0]->nicks->[0]->type_id && !defined $objs->[0]->flag2 &&
+       $objs->[0]->derived eq 'DERIVED: ' . uc($objs->[0]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+
+    ok($objs->[1]->id > 2 && defined $objs->[1]->name && defined $objs->[1]->nicks->[0]->nick &&
+       !defined $objs->[1]->nicks->[0]->type_id && !defined $objs->[1]->flag2 &&
+       $objs->[1]->derived eq 'DERIVED: ' . uc($objs->[1]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    is(scalar @$objs, 2, "custom select $i - $db_type");
+  }
+
+  # End custom select tests
 }
 
 #
@@ -4326,7 +5055,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(informix))
 {
-  skip("Informix tests", 646)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 694)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -6739,6 +7468,84 @@ EOF
   is($iterator->total, 21, "deep join multi iter with 9 - $db_type");
 
   # End deep join tests
+
+  # Start custom select tests
+
+  my @selects =
+  (
+    't2.nick, id, t2.id, name, UPPER(name) AS derived',
+    't1.id, t2.nick, t2.id, t1.name, UPPER(name) AS derived',
+    'rose_db_object_nicks.id, rose_db_object_test.id, rose_db_object_nicks.nick, rose_db_object_test.name, UPPER(name) AS derived',
+    [ qw(id name t2.nick nicks.id), 'UPPER(name) AS derived' ],
+    [ qw(t2.nick t2.id t1.id t1.name), 'UPPER(name) AS derived' ],
+    [ 'UPPER(name) AS derived', qw(t2.id rose_db_object_nicks.nick rose_db_object_test.id rose_db_object_test.name) ],
+    [ qw(rose_db_object_test.id rose_db_object_nicks.nick rose_db_object_test.name rose_db_object_nicks.id), 'UPPER(name) AS derived' ],
+    [ qw(rose_db_object_test.id rose_db_object_test.name rose_db_object_nicks.nick t2.id), 'UPPER(name) AS derived' ],
+  );
+
+  $i = 0;
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+
+  foreach my $select (@selects)
+  {
+    $iterator = 
+      Rose::DB::Object::Manager->get_objects_iterator(
+        object_class    => 'MyInformixObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    $o = $iterator->next;
+
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && !defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+     $i++;
+
+    $o = $iterator->next;
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && !defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    ok(!$iterator->next, "custom select $i - $db_type");
+
+    $objs = 
+      Rose::DB::Object::Manager->get_objects(
+        object_class    => 'MyInformixObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    ok($objs->[0]->id > 2 && defined $objs->[0]->name && defined $objs->[0]->nicks->[0]->nick &&
+       !defined $objs->[0]->nicks->[0]->type_id && !defined $objs->[0]->flag2 &&
+       $objs->[0]->derived eq 'DERIVED: ' . uc($objs->[0]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+
+    ok($objs->[1]->id > 2 && defined $objs->[1]->name && defined $objs->[1]->nicks->[0]->nick &&
+       !defined $objs->[1]->nicks->[0]->type_id && !defined $objs->[1]->flag2 &&
+       $objs->[1]->derived eq 'DERIVED: ' . uc($objs->[1]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    is(scalar @$objs, 2, "custom select $i - $db_type");
+  }
+
+  # End custom select tests
 }
 
 #
@@ -6747,7 +7554,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 681)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 729)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -9126,6 +9933,84 @@ EOF
   is($iterator->total, 21, "deep join multi iter with 9 - $db_type");
 
   # End deep join tests
+  
+  # Start custom select tests
+
+  my @selects =
+  (
+    't2.nick, id, t2.id, name, UPPER(name) AS derived',
+    't1.id, t2.nick, t2.id, t1.name, UPPER(name) AS derived',
+    'rose_db_object_nicks.id, rose_db_object_test.id, rose_db_object_nicks.nick, rose_db_object_test.name, UPPER(name) AS derived',
+    [ qw(id name t2.nick nicks.id), 'UPPER(name) AS derived' ],
+    [ qw(t2.nick t2.id t1.id t1.name), 'UPPER(name) AS derived' ],
+    [ 'UPPER(name) AS derived', qw(t2.id rose_db_object_nicks.nick rose_db_object_test.id rose_db_object_test.name) ],
+    [ qw(rose_db_object_test.id rose_db_object_nicks.nick rose_db_object_test.name rose_db_object_nicks.id), 'UPPER(name) AS derived' ],
+    [ qw(rose_db_object_test.id rose_db_object_test.name rose_db_object_nicks.nick t2.id), 'UPPER(name) AS derived' ],
+  );
+
+  $i = 0;
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+
+  foreach my $select (@selects)
+  {
+    $iterator = 
+      Rose::DB::Object::Manager->get_objects_iterator(
+        object_class    => 'MySQLiteObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    $o = $iterator->next;
+
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && !defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+     $i++;
+
+    $o = $iterator->next;
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && !defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    ok(!$iterator->next, "custom select $i - $db_type");
+
+    $objs = 
+      Rose::DB::Object::Manager->get_objects(
+        object_class    => 'MySQLiteObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    ok($objs->[0]->id > 2 && defined $objs->[0]->name && defined $objs->[0]->nicks->[0]->nick &&
+       !defined $objs->[0]->nicks->[0]->type_id && !defined $objs->[0]->flag2 &&
+       $objs->[0]->derived eq 'DERIVED: ' . uc($objs->[0]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+
+    ok($objs->[1]->id > 2 && defined $objs->[1]->name && defined $objs->[1]->nicks->[0]->nick &&
+       !defined $objs->[1]->nicks->[0]->type_id && !defined $objs->[1]->flag2 &&
+       $objs->[1]->derived eq 'DERIVED: ' . uc($objs->[1]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    is(scalar @$objs, 2, "custom select $i - $db_type");
+  }
+
+  # End custom select tests
 }
 
 BEGIN
@@ -9559,6 +10444,12 @@ EOF
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );
+
+    sub derived 
+    {
+      return 'DERIVED: ' . $_[0]->{'derived'}  if(@_ == 1);
+      return $_[0]->{'derived'} = $_[1] 
+    }
 
     MyPgObject->meta->foreign_keys
     (
@@ -10081,6 +10972,12 @@ EOF
       date_created  => { type => 'datetime' },
     );
 
+    sub derived 
+    {
+      return 'DERIVED: ' . $_[0]->{'derived'}  if(@_ == 1);
+      return $_[0]->{'derived'} = $_[1] 
+    }
+
     MyMySQLObject->meta->foreign_keys
     (
       other_obj =>
@@ -10594,6 +11491,12 @@ EOF
       date_created  => { type => 'timestamp' },
     );
 
+    sub derived 
+    {
+      return 'DERIVED: ' . $_[0]->{'derived'}  if(@_ == 1);
+      return $_[0]->{'derived'} = $_[1] 
+    }
+
     MyInformixObject->meta->foreign_keys
     (
       other_obj =>
@@ -11095,6 +11998,12 @@ EOF
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );
+
+    sub derived 
+    {
+      return 'DERIVED: ' . $_[0]->{'derived'}  if(@_ == 1);
+      return $_[0]->{'derived'} = $_[1] 
+    }
 
     MySQLiteObject->meta->foreign_keys
     (

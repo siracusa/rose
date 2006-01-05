@@ -310,6 +310,7 @@ sub get_objects
   my $skip_first       = delete $args{'skip_first'} || 0;
   my $distinct         = delete $args{'distinct'};
   my $fetch            = delete $args{'fetch_only'};
+  my $select           = $args{'select'};
 
   my(%fetch, %rel_name);
 
@@ -779,8 +780,9 @@ sub get_objects
 
         if($use_lazy_columns)
         {
-          $columns{$tables[-1]} = $ft_meta->nonlazy_columns;
-          $methods{$tables[-1]} = $ft_meta->nonlazy_column_mutator_method_names;
+          $columns{$tables[-1]}     = $ft_meta->nonlazy_columns;
+          $all_columns{$tables[-1]} = $ft_meta->columns;
+          $methods{$tables[-1]}     = $ft_meta->nonlazy_column_mutator_method_names;
         }
         else
         {
@@ -907,8 +909,9 @@ sub get_objects
 
           if($use_lazy_columns)
           {
-            $columns{$tables[-1]} = $map_meta->nonlazy_columns;
-            $methods{$tables[-1]} = $map_meta->nonlazy_column_mutator_method_names;
+            $columns{$tables[-1]}     = $map_meta->nonlazy_columns;
+            $all_columns{$tables[-1]} = $map_meta->columns;
+            $methods{$tables[-1]}     = $map_meta->nonlazy_column_mutator_method_names;
           }
           else
           {
@@ -1008,8 +1011,9 @@ sub get_objects
 
         if($use_lazy_columns)
         {
-          $columns{$tables[-1]} = $ft_meta->nonlazy_columns;
-          $methods{$tables[-1]} = $ft_meta->nonlazy_column_mutator_method_names;
+          $columns{$tables[-1]}     = $ft_meta->nonlazy_columns;
+          $all_columns{$tables[-1]} = $ft_meta->columns;
+          $methods{$tables[-1]}     = $ft_meta->nonlazy_column_mutator_method_names;
         }
         else
         {
@@ -1110,6 +1114,40 @@ sub get_objects
   }
 
   $args{'table_map'} = { reverse %rel_tn };
+
+  my %tn;
+
+  if($select)
+  {
+    if($fetch)
+    {
+      Carp::croak "The 'select' and 'fetch' parameters cannot be used together";
+    }
+
+    $select = [ split(/\s*,\s*/, $select) ]  unless(ref $select);
+
+    my $i = 1;
+    %tn = map { $_ => $i++ } @tables;
+
+    foreach my $item (@$select)
+    {
+      if(index($item, '.') < 0 && $item !~ / AS /i)
+      {
+        $item = "t1.$item"  if($num_subtables > 0);
+      }
+      elsif($item =~ /^t(\d+)\.(.+)$/)
+      {
+        $item = $2 if($num_subtables == 0);
+      }
+      elsif($item =~ /^(['"]?)([^.]+)\1\.(['"]?)(.+\3)$/)
+      {
+        my $num = $tn{$2} || $rel_tn{$2};
+        $item = "t$num.$3$4";
+      }
+    }
+
+    $args{'select'} = $select;
+  }
 
   if($count_only)
   {
@@ -1337,16 +1375,55 @@ sub get_objects
     my $col_num   = 1;
     my $table_num = 0;
 
-    foreach my $table (@tables)
-    {
-      my $class = $classes{$table};
-
-      foreach my $column (@{$methods{$table}})
+    if($select)
+    {      
+      foreach my $orig_item (@$select)
       {
+        my($class, $table_num, $column);
+
+        my $item = $orig_item;
+
+        if($item =~ s/\s+AS\s+(\w.+)$//i)
+        {
+          $column = $1;
+        }
+
+        if(index($item, '.') < 0)
+        {
+          $table_num = 0;
+          $class = $classes[$table_num];
+          $column ||= $item;
+        }
+        elsif($item =~ /^t(\d+)\.(.+)$/)
+        {
+          $table_num = $1 - 1;
+          $class = $classes[$table_num];
+          $column ||= $2;
+        }
+        elsif($item =~ /^(['"]?)([^.]+)\1\.(['"]?)(.+)\3$/)
+        {
+          my $table = $2;
+          $class = $classes{$table};
+          $column ||= $4;
+          my $table_num = $tn{$table} || $rel_tn{$table};
+        }
+
         $sth->bind_col($col_num++, \$row{$class,$table_num}{$column});
       }
+    }
+    else
+    {
+      foreach my $table (@tables)
+      {
+        my $class = $classes{$table};
 
-      $table_num++;
+        foreach my $column (@{$methods{$table}})
+        {
+          $sth->bind_col($col_num++, \$row{$class,$table_num}{$column});
+        }
+
+        $table_num++;
+      }
     }
 
     if($return_iterator)
@@ -2974,6 +3051,16 @@ This chaining syntax can be used to traverse relationships of any kind, includin
 B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include more than one "... to many" relationship in ARGS.  Sometimes this may still be more efficient than making additional queries to fetch these sub-objects, but that all depends on the actual data.  A warning will be emitted (via L<Carp::cluck|Carp/cluck>) if you you include more than one "... to many" relationship in ARGS.  If you're sure you know what you're doing, you can silence this warning by passing the C<multi_many_ok> parameter with a true value.
 
 B<Note:> the C<require_objects> list currently cannot be used to simultaneously fetch two objects that both front the same database table, I<but are of different classes>.  One workaround is to make one class use a synonym or alias for one of the tables.  Another option is to make one table a trivial view of the other.  The objective is to get the table names to be different for each different class (even if it's just a matter of letter case, if your database is not case-sensitive when it comes to table names).
+
+=item C<select LIST>
+
+Select only the columns specified in LIST, which must be a comma-separated string of column names or a reference to an array of column names.  Strings are naively split between each comma.  If you need more complex parsing, please use the array-reference argument format instead.
+
+Column names should be prefixed by the appropriate "tN" table alias, the table name, or the foreign key or relationship name.  Unprefixed columns are assumed to belong to the primary table ("t1").  The prefix should be joined to the column name with a dot (".").  Examples: C<t2.name>, C<vendors.age>.
+
+If selecting sub-objects via the C<with_objects> or C<require_objects> parameters, you must select the primary key columns from each sub-object table.  Failure to do so will cause those sub-objects I<not> to be created.
+
+This parameter conflicts with the C<fetch_only> parameter.  A fatal error will occur if both are used.
 
 =item C<share_db BOOL>
 

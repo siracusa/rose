@@ -120,6 +120,7 @@ t/db-object-loader-2.t
 t/db-object-loader-3.t
 t/db-object-loader-4.t
 t/db-object-loader-5.t
+t/db-object-loader-6.t
 t/db-object-manager-bulk-ops.t
 t/db-object-manager.t
 t/db-object-mapper.t
