@@ -22,27 +22,6 @@ our $Module_Dir = File::Spec->catfile($Bin, 'loader_lib');
 
 SETUP:
 {
-  package My::DB;
-  our @ISA = qw(Rose::DB);
-
-  package My::DB::Object::Metadata;
-  our @ISA = qw(Rose::DB::Object::Metadata);    
-  sub make_column_methods
-  {
-    my($self) = shift;
-    $JCS::Called_For{$self->class}++;
-    $self->SUPER::make_column_methods(@_);
-  }
-
-  package My::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
-  sub meta_class { 'My::DB::Object::Metadata' }
-  sub foo_bar { 123 }
-
-  package MyWeirdClass;
-  our @ISA = qw(Rose::Object);
-  sub baz { 456 }
-
   File::Path::rmtree($Module_Dir)  if(-d $Module_Dir);
 
   unless(-d $Module_Dir)
@@ -56,51 +35,6 @@ SETUP:
   }
 
   unshift(@INC, $Module_Dir);
-
-  my $base_pm_dir = File::Spec->catfile($Module_Dir, 'My', 'DB', 'Object');
-  File::Path::mkpath($base_pm_dir);
-
-  my $base_db_pm = File::Spec->catfile($Module_Dir, 'My', 'DB.pm');
-  open(my $fh, '>', $base_db_pm) or die "Could not create $base_db_pm - $!";
-  print $fh '', <<"EOF";
-package My::DB;
-use base 'Rose::DB';
-1;
-EOF
-  close($fh) or die "Could not write $base_db_pm - $!";
-
-  my $base_pm = File::Spec->catfile($Module_Dir, 'My', 'DB', 'Object.pm');
-  open($fh, '>', $base_pm) or die "Could not create $base_pm - $!";
-  print $fh '', <<"EOF";
-package My::DB::Object;
-use base 'Rose::DB::Object';
-use My::DB::Object::Metadata;
-sub meta_class { 'My::DB::Object::Metadata' }
-sub foo_bar { 123 }
-1;
-EOF
-  close($fh) or die "Could not write $base_pm - $!";
-
-  my $base_meta_pm = File::Spec->catfile($Module_Dir, 'My', 'DB', 'Object', 'Metadata.pm');
-  open($fh, '>', $base_meta_pm) or die "Could not create $base_meta_pm - $!";
-  print $fh '', <<"EOF";
-package My::DB::Object::Metadata;
-use base 'Rose::DB::Object::Metadata';
-
-sub make_column_methods
-{
-  my(\$self) = shift;
-  \$JCS::Called_For{\$self->class}++;
-  \$self->SUPER::make_column_methods(\@_);
-}
-1;
-EOF
-  close($fh) or die "Could not write $base_meta_pm - $!";
-
-  my $weird_pm = File::Spec->catfile($Module_Dir, 'MyWeirdClass.pm');
-  open($fh, '>', $weird_pm) or die "Could not create $weird_pm - $!";
-  print $fh "1;\n";
-  close($fh) or die "Could not write $weird_pm - $!";
 }
 
 #
@@ -112,6 +46,7 @@ our $real_registry  = Rose::DB->registry;
 our $empty_registry = Rose::DB::Registry->new;
 
 my $i = 1;
+my $BC_Counter = 1;
 
 foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 {
@@ -131,7 +66,7 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 
   #$Rose::DB::Object::Metadata::Debug = 1;
 
-  my $db = My::DB->new($db_type);
+  my $db = Rose::DB->new($db_type);
 
   my $loader = 
     Rose::DB::Object::Loader->new(
@@ -139,14 +74,13 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
       db_schema    => $db->schema,
       db_username  => $db->username,
       db_password  => $db->password,
-      base_classes => [ qw(My::DB::Object MyWeirdClass) ],
       class_prefix => $class_prefix);
 
   Rose::DB->registry($empty_registry);
 
   my @classes = $loader->make_modules(include_tables => $Include_Tables,
                                       module_dir     => $Module_Dir);
-
+$DB::single = 1;
   if($db_type eq 'pg')
   {
     is(Pg::Color->meta->column('id')->perl_hash_definition,
@@ -156,6 +90,10 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
     is(Pg::Price->meta->column('id')->perl_hash_definition,
        q(id => { type => 'serial', not_null => 1 }),
        "bigserial perl_hash_definition 2 - $db_type");
+
+    is(Pg::Product->meta->column('date_created')->type, 'timestamp', 
+       "tough default 1 - $db_type");
+    is(Pg::Product->meta->column('date_created')->default, 'now');
   }
   elsif($db_type eq 'pg_with_schema')
   {
@@ -166,22 +104,29 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
     is(Pgws::Price->meta->column('id')->perl_hash_definition,
        q(id => { type => 'serial', not_null => 1 }),
        "bigserial perl_hash_definition 2 - $db_type");
+
+    is(Pgws::Product->meta->column('date_created')->type, 'timestamp');
+    is(Pgws::Product->meta->column('date_created')->default, 'now');
   }
   else
   {
     SKIP:
     {
-      skip('Pg serial tests', 2);
+      skip('Pg serial tests', 4);
     }
   }
 
-  foreach my $class (@classes)
+  foreach my $class (@classes, map { $class_prefix . "::$_" } 
+                     ('DB::AutoBase' . $BC_Counter, 
+                      'DB::Object::AutoBase' . ($BC_Counter + 1)))
   {
     my @path = split('::', $class);
     $path[-1] .= '.pm';
     my $file = File::Spec->catfile($Module_Dir, @path);
     ok(-e $file, "make_modules() $class");
   }
+
+  $BC_Counter += 2;
 
   SKIP:
   {
@@ -190,20 +135,15 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 
   my $product_class = $class_prefix . '::Product';
 
-  ok($JCS::Called_For{$product_class}, "custom metadata - $db_type");
-
   ##
   ## Run tests
   ##
 
   my $p = $product_class->new(name => "Sled $i");
 
-  ok($p->db->class =~ /^${class_prefix}::DB::Base\d+$/, "db 1 - $db_type");
+  ok($p->db->class =~ /^${class_prefix}::DB::AutoBase\d+$/, "db 1 - $db_type");
 
-  ok($p->isa('My::DB::Object'), "base class 1 - $db_type");
-  ok($p->isa('MyWeirdClass'), "base class 2 - $db_type");
-  is($p->foo_bar, 123, "foo_bar 1 - $db_type");
-  is($p->baz, 456, "baz 1 - $db_type");
+  ok($p->isa('Rose::DB::Object'), "base class 1 - $db_type");
 
   if($db_type eq 'pg_with_schema')
   {
@@ -321,7 +261,9 @@ CREATE TABLE products
   status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
             CHECK(status IN ('inactive', 'active', 'defunct')),
 
-  date_created  TIMESTAMP NOT NULL DEFAULT NOW(),
+  date_created  TIMESTAMP WITHOUT TIME ZONE NOT NULL 
+    DEFAULT ('now'::text)::timestamp(0) WITHOUT TIME ZONE,
+
   release_date  TIMESTAMP,
 
   UNIQUE(name)
@@ -382,7 +324,9 @@ CREATE TABLE Rose_db_object_private.products
   status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
             CHECK(status IN ('inactive', 'active', 'defunct')),
 
-  date_created  TIMESTAMP NOT NULL DEFAULT NOW(),
+  date_created  TIMESTAMP WITHOUT TIME ZONE NOT NULL 
+    DEFAULT ('now'::text)::timestamp(0) WITHOUT TIME ZONE,
+
   release_date  TIMESTAMP,
 
   UNIQUE(name)

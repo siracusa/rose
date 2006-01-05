@@ -170,7 +170,7 @@ sub build_select
     my $table_tn    = $table_num;
     my $table_alias = 't' . $table_num++;
 
-    next  unless($all_columns->{$table});
+    next  unless($all_columns->{$table} ||= $columns->{$table});
 
     my($classes, $meta, $obj_class, $obj_meta);
 
