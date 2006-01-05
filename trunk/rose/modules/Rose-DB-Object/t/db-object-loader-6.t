@@ -80,7 +80,7 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 
   my @classes = $loader->make_modules(include_tables => $Include_Tables,
                                       module_dir     => $Module_Dir);
-$DB::single = 1;
+
   if($db_type eq 'pg')
   {
     is(Pg::Color->meta->column('id')->perl_hash_definition,
@@ -93,7 +93,8 @@ $DB::single = 1;
 
     is(Pg::Product->meta->column('date_created')->type, 'timestamp', 
        "tough default 1 - $db_type");
-    is(Pg::Product->meta->column('date_created')->default, 'now');
+    is(Pg::Product->meta->column('date_created')->default, 'now',
+       "tough default 2 - $db_type");
   }
   elsif($db_type eq 'pg_with_schema')
   {
@@ -105,8 +106,10 @@ $DB::single = 1;
        q(id => { type => 'serial', not_null => 1 }),
        "bigserial perl_hash_definition 2 - $db_type");
 
-    is(Pgws::Product->meta->column('date_created')->type, 'timestamp');
-    is(Pgws::Product->meta->column('date_created')->default, 'now');
+    is(Pgws::Product->meta->column('date_created')->type, 'timestamp', 
+       "tough default 1 - $db_type");
+    is(Pgws::Product->meta->column('date_created')->default, 'now',
+       "tough default 2 - $db_type");
   }
   else
   {

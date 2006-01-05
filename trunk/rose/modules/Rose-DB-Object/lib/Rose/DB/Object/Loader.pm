@@ -316,10 +316,10 @@ sub _perl_class
   if(!$info->{'init_db_in_base_class'} && $info->{'perl_init_db'})
   {
     my $init_db = $info->{'perl_init_db'};
-    
+
     $code =~ s/1;/$init_db\n\n1;/;
   }
-  
+
   return $code . "\n";
 }
 
@@ -349,7 +349,7 @@ sub _perl_db_class
   my($class, $info, $args) = @_;
 
   my $max = 0;
-  
+
   foreach my $key (keys %{$info->{'db_entry'}})
   {
     $max = length($key)  if(length($key) > $max);
@@ -528,7 +528,7 @@ sub make_classes
                                  type   => $db_class->default_type);
 
     $extra_info->{'db_entry'} = { %db_args };
-    
+
     unless($entry->database)
     {
       # Need appropriate db just for parsing

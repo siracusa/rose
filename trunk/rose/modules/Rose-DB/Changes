@@ -1,4 +1,4 @@
-0.58 (01.04.2006) - John Siracusa <siracusa@mindspring.com>
+0.58 (01.05.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Improved parsing of default column values in Postgres.
 

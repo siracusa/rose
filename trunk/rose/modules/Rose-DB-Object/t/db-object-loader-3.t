@@ -77,12 +77,12 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   
   $p = $product_class->new(id => $p->id)->load;
 
-  ok($p->db->class =~ /^${class_prefix}::DB::Base\d+$/, "db 1 - $db_type");
+  ok($p->db->class =~ /^${class_prefix}::DB::AutoBase\d+$/, "db 1 - $db_type");
   
   OBJECT_CLASS:
   {
     no strict 'refs';
-    ok(${"${product_class}::ISA"}[0] =~ /^${class_prefix}::DB::Object::Base\d+$/, "base class 1 - $db_type");
+    ok(${"${product_class}::ISA"}[0] =~ /^${class_prefix}::DB::Object::AutoBase\d+$/, "base class 1 - $db_type");
   }
 
   is($p->vendor->name, "Acme $i", "vendor 1 - $db_type");

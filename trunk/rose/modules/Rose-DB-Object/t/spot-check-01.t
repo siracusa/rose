@@ -25,7 +25,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     skip("$db_type tests", 16)  unless($HAVE{$db_type});
   }
-  
+
   next  unless($HAVE{$db_type});
 
   Rose::DB->default_type($db_type);
@@ -37,13 +37,13 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     #
 
     package MD;
-    
+
     our @ISA = qw(Rose::DB::Object);
-    
+
     MD->meta->table('Rose_db_object_MD');
-    
+
     MD->meta->columns(ID => { primary_key => 1 });
-    
+
     MD->meta->relationships
     (
       'mdvs' =>
@@ -53,29 +53,29 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
         column_map => { ID => 'MD' },
       }
     );
-    
+
     MD->meta->initialize;
-    
+
     package MD::Mgr;
-    
+
     our @ISA = qw(Rose::DB::Object::Manager);
-    
+
     sub object_class { 'MD' }
-    
+
     Rose::DB::Object::Manager->make_manager_methods('mds');
-    
+
     package MDV;
-    
+
     our @ISA = qw(Rose::DB::Object);
-    
+
     MDV->meta->table('Rose_db_object_MDV');
-    
+
     MDV->meta->columns
     (
       ID => { primary_key => 1 },
       MD => { type => 'int' },
     );
-    
+
     MDV->meta->relationships
     (
       'md' =>
@@ -85,7 +85,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
         column_map => { MD => 'ID' },
       }
     );
-    
+
     MDV->meta->initialize;
   }
   #else
@@ -109,7 +109,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   }
 
   # Run tests
-  
+
   my $i = 0;
 
   foreach my $arg (qw(MD mdvs.MD t2.MD Rose_db_object_MDV.MD))
@@ -119,7 +119,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
                                with_objects => [ 'mdvs' ],
                                query        => [ 'MD' => undef ],
                                sort_by      => 'ID');
-  
+
     ok($mds, "get_mds() $i.1 - $db_type");
     ok(@$mds == 2, "get_mds() $i.2 - $db_type");
     is($mds->[0]->ID, 2, "get_mds() $i.3 - $db_type");
