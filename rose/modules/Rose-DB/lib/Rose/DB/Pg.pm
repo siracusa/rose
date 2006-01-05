@@ -250,7 +250,7 @@ sub refine_dbi_column_info
          $col_info->{'TYPE_NAME'} eq 'bigint')
       {
         my $db = $meta->db;
-#$DB::single = 1;
+
         my $auto_seq =
           $db->auto_sequence_name(table  => $meta->table,
                                   column => $col_info->{'COLUMN_NAME'});
@@ -336,12 +336,11 @@ sub parse_dbi_column_info_default
 
       # Single quotes are backslash-escaped, but Postgres 8.1 and
       # later uses doubled quotes '' instead.
-      if($pg_vers >= 80100 && $default =~ /^'((?:[^']+|'')*)'/)
+      if($pg_vers >= 80100 && index($default, q('')) > 0)
       {
-        $default = $1;
         $default =~ s/''/'/g;
       }
-      elsif($pg_vers < 80100 && $default =~ /^'((?:[^\\']+|\\.)*)'$/)
+      elsif($pg_vers < 80100 && index($default, q(\')) > 0)
       {
         $default = $1;
         $default =~ s/\\'/'/g;

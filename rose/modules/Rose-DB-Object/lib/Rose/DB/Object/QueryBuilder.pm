@@ -170,7 +170,7 @@ sub build_select
     my $table_tn    = $table_num;
     my $table_alias = 't' . $table_num++;
 
-    next  unless($all_columns->{$table} ||= $columns->{$table});
+    #next  unless($all_columns->{$table} ||= $columns->{$table});
 
     my($classes, $meta, $obj_class, $obj_meta);
 
@@ -192,18 +192,18 @@ sub build_select
     }
 
     my $query_only_columns = 0;
-    my $columns = $columns->{$table};
-    my $all_columns = $all_columns->{$table};
-    
+    my $my_columns     = $columns->{$table};
+    my $all_my_columns = $all_columns->{$table} ||= $my_columns;
+
     # No columns to select, but allow them to be queried if we can
-    if(@$columns == 0)
+    if(@$my_columns == 0)
     {
       # Don't select these columns, but allow them to participate in the query
       $query_only_columns = 1; 
 
       if($obj_meta)
       {
-        $columns = $all_columns || $obj_meta->column_names;
+        $my_columns = $all_my_columns = $obj_meta->column_names;
       }
       else # Try to dig out meta object even if query_is_sql
       {
@@ -214,14 +214,14 @@ sub build_select
 
         if($obj_meta)
         {
-          $columns = $obj_meta->column_names;
+          $my_columns = $obj_meta->column_names;
         }
       }
     }
 
-    my %select_columns = map { $_ => 1 } @$columns;
+    my %select_columns = map { $_ => 1 } @$my_columns;
 
-    foreach my $column (@$all_columns)
+    foreach my $column (@$all_my_columns)
     {
       my $fq_column     = "$table.$column";
       my $short_column  = "$table_alias.$column";

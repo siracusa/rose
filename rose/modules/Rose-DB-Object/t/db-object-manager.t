@@ -9933,7 +9933,7 @@ EOF
   is($iterator->total, 21, "deep join multi iter with 9 - $db_type");
 
   # End deep join tests
-  
+
   # Start custom select tests
 
   my @selects =
