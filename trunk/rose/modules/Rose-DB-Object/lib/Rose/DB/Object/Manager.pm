@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.61';
+our $VERSION = '0.611';
 
 our $Debug = 0;
 
@@ -3060,7 +3060,9 @@ Column names should be prefixed by the appropriate "tN" table alias, the table n
 
 If selecting sub-objects via the C<with_objects> or C<require_objects> parameters, you must select the primary key columns from each sub-object table.  Failure to do so will cause those sub-objects I<not> to be created.
 
-This parameter conflicts with the C<fetch_only> parameter.  A fatal error will occur if both are used.
+This parameter conflicts with the C<fetch_only> parameter.  A fatal error will occur if both are used in the same call.
+
+If this parameter is omitted, then all columns from all participating tables are selected (optionally modified by the C<nonlazy> parameter).
 
 =item C<share_db BOOL>
 
