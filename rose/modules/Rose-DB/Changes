@@ -1,4 +1,4 @@
-0.59 (01.05.2006) - John Siracusa <siracusa@mindspring.com>
+0.59 (01.06.2006) - John Siracusa <siracusa@mindspring.com>
 
     * The type and domain parameters to register_db() now default to
       the default_type() and default_domain().
