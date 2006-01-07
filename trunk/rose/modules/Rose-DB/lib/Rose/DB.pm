@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.58';
+our $VERSION = '0.59';
 
 our $Debug = 0;
 
@@ -73,7 +73,7 @@ __PACKAGE__->default_connect_options
   Warn       => 0,
 );
 
-BEGIN { __PACKAGE__->registry(Rose::DB::Registry->new) }
+BEGIN { __PACKAGE__->registry(Rose::DB::Registry->new(parent => __PACKAGE__)) }
 
 my %Class_Loaded;
 
@@ -135,12 +135,18 @@ use Rose::Object::MakeMethods::Generic
 # Class methods
 #
 
-sub register_db   { shift->registry->add_entry(@_)  }
+sub register_db
+{
+  my $class = shift;
+  # Smuggle parent/caller in with an otherwise nonsensical arrayref arg
+  $class->registry->add_entry([ $class ], @_);
+}
+
 sub unregister_db { shift->registry->delete_entry(@_) }
 
 sub default_implicit_schema { undef }
 
-sub use_private_registry { shift->registry(Rose::DB::Registry->new) }
+sub use_private_registry { $_[0]->registry(Rose::DB::Registry->new(parent => $_[0])) }
 
 sub modify_db
 {
@@ -1542,7 +1548,7 @@ PARAMS should include values for both the C<type> and C<domain> parameters since
 Registers a new data source with the attributes specified in PARAMS, where
 PARAMS are name/value pairs.  Any L<Rose::DB> object method that sets a L<data source configuration value|"Data Source Configuration"> is a valid parameter name.
 
-PARAMS B<must> include values for the C<type>, C<domain>, and C<driver> parameters.
+PARAMS B<must> include a value for the C<driver> parameter.  If the C<type> or C<domain> parameters are omitted or undefined, they default to the return values of the L<default_type|/default_type> and L<default_domain|/default_domain> class methods, respectively.
 
 The C<type> and C<domain> are used to identify the data source.  If either one is missing, a fatal error will occur.  See the L<"Data Source Abstraction"> section for more information on data source types and domains.
 

@@ -9,7 +9,7 @@ use Rose::DB::Registry::Entry;
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.01';
+our $VERSION = '0.59';
 
 our $Debug = 0;
 
@@ -27,6 +27,7 @@ use Rose::Object::MakeMethods::Generic
   'scalar --get_set_init' =>
   [
     'hash',
+    'parent',
   ],
 );
 
@@ -34,11 +35,16 @@ use Rose::Object::MakeMethods::Generic
 # Object methods
 #
 
-sub init_hash { {} }
+sub init_hash   { {} }
+sub init_parent { 'Rose::DB' }
 
 sub add_entries
 {
   my($self) = shift;
+
+  # Smuggle parent in with an otherwise nonsensical arrayref arg
+  my $parent = shift->[0]  if(ref $_[0] eq 'ARRAY');
+  $parent ||= $self->parent;
 
   my $entries = $self->hash;
   my $i = 0;
@@ -50,9 +56,9 @@ sub add_entries
     if(ref $item eq 'HASH')
     {
       if($entry = delete $item->{'entry'})
-      {        
+      {
         $domain = delete $item->{'domain'};
-        $type = delete $item->{'type'};
+        $type   = delete $item->{'type'};
 
         if(keys(%$item))
         {
@@ -73,7 +79,19 @@ sub add_entries
     else { Carp::croak "Don't know how to add registry entry '$item'" }
 
     $domain = $entry->domain  unless(defined $domain);
-    $type   = $entry->type    unless(defined $type   );
+    $type   = $entry->type    unless(defined $type);
+
+    unless(defined $domain)
+    {
+      $domain = $parent->default_domain;
+      $entry->domain($domain);
+    }
+
+    unless(defined $type)
+    {
+      $type = $parent->default_type;
+      $entry->type($type);
+    }
 
     Carp::croak "Missing domain for registry entry '$item'"
       unless(defined $domain);
@@ -95,12 +113,15 @@ sub add_entry
 {
   my($self) = shift;
 
+  # Smuggle parent in with an otherwise nonsensical arrayref arg
+  my $parent = shift  if(ref $_[0] eq 'ARRAY');
+
   if(@_ == 1 || (ref $_[0] && $_[0]->isa('Rose::DB::Registry::Entry')))
   {
-    return $self->add_entries(@_);
+    return $self->add_entries(($parent ? $parent : ()), @_);
   }
 
-  return $self->add_entries({ @_ });
+  return $self->add_entries(($parent ? $parent : ()), { @_ });
 }
 
 sub entry_exists
