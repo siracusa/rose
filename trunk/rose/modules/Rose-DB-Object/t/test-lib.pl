@@ -6,7 +6,7 @@ use FindBin qw($Bin);
 
 use Rose::DB;
 
-BEGIN 
+BEGIN
 {  
   Rose::DB->default_domain('test');
 
@@ -133,6 +133,8 @@ BEGIN
 
   unless($ENV{'RDBO_NO_SQLITE'} || $version < 1.08)
   {
+    #unlink("$Bin/sqlite.db");
+
     # Main
     Rose::DB->register_db(
       domain   => 'test',
