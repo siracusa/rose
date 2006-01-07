@@ -357,11 +357,9 @@ sub _perl_db_class
 
   my $hash = perl_hashref(hash        => $info->{'db_entry'}, 
                           inline      => 0, 
+                          no_curlies  => 1,
                           key_padding => $max,
                           indent      => $args->{'indent'} || 2);
-
-  $hash =~ s/^{\n//;
-  $hash =~ s/\n}$//;
 
   return<<"EOF";
 package $class;
@@ -552,11 +550,10 @@ sub make_classes
   {
     $init_db = sub { $db_class->new(%db_args) };
 
-    my $hash = perl_hashref(hash   => \%db_args,
-                            inline => 1,
-                            indent => 0);
-    $hash =~ s/^{\s*//;
-    $hash =~ s/\s*}$//;
+    my $hash = perl_hashref(hash       => \%db_args,
+                            inline     => 1,
+                            no_curlies => 1,
+                            indent     => 0);
 
     $extra_info->{'perl_init_db'} = 
       "use $db_class;\n" .
@@ -593,12 +590,23 @@ sub make_classes
   }
   else
   {
-    foreach my $base_class (@base_classes)
+    if($made_new_db_class || $db_class ne 'Rose::DB')
     {
-      if($base_class->can('init_db'))
+      no strict 'refs';
+      no warnings;
+      *{"$base_classes[0]::init_db"} = $init_db;
+      $extra_info->{'init_db_in_base_class'} = 1;
+      $extra_info->{'base_classes'}{$base_classes[0]}++;
+    }
+    else
+    {
+      foreach my $base_class (@base_classes)
       {
-        $extra_info->{'init_db_in_base_class'} = 1;
-        last;
+        if($base_class->can('init_db'))
+        {
+          $extra_info->{'init_db_in_base_class'} = 1;
+          last;
+        }
       }
     }
   }
@@ -637,6 +645,7 @@ sub make_classes
 
     $meta->table($table);
     $meta->convention_manager($cm_class->new);
+
     $meta->auto_initialize(%args);
 
     push(@classes, $obj_class);

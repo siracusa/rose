@@ -1,3 +1,8 @@
+0.62 (01.06.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a make_modules() bug that caused incorrect init_db() methods
+      to be created in some cases.  (Reported by Sean Davis)
+
 0.61 (01.05.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added "select" parameter to the Manager which accetps an explicit

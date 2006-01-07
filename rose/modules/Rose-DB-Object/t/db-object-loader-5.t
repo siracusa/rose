@@ -65,6 +65,11 @@ SETUP:
   print $fh '', <<"EOF";
 package My::DB;
 use base 'Rose::DB';
+My::DB->use_private_registry;
+My::DB->register_db
+(
+  driver => 'sqlite',
+);
 1;
 EOF
   close($fh) or die "Could not write $base_db_pm - $!";
@@ -76,6 +81,8 @@ package My::DB::Object;
 use base 'Rose::DB::Object';
 use My::DB::Object::Metadata;
 sub meta_class { 'My::DB::Object::Metadata' }
+use My::DB;
+sub init_db { My::DB->new }
 sub foo_bar { 123 }
 1;
 EOF
@@ -224,8 +231,12 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 
   $p->save;
 
-  system($^X, '-I', $Module_Dir, "-M$product_class", '-e',
-         "\$p = $product_class->new(id => " . $p->id . ')->load;');
+  
+  $ENV{'PERL5LIB'} = $ENV{'PERL5LIB'} ? 
+    "$Bin/../../Rose-DB/lib:$ENV{'PERL5LIB'}" : "$Bin/../../Rose-DB/lib";
+
+  my @cmd = ($^X, '-I', $Module_Dir, "-M$product_class", '-e', '0');
+  system(@cmd);
 
   is($? >> 8, 0, "external load - $db_type");
 

@@ -13,7 +13,7 @@ our %EXPORT_TAGS = (all => \@EXPORT_OK);
 our $DEFAULT_PERL_INDENT = 4;
 our $DEFAULT_PERL_BRACES = 'k&r';
 
-our $VERSION = '0.01';
+our $VERSION = '0.62';
 
 sub perl_hashref
 {
@@ -23,7 +23,8 @@ sub perl_hashref
   my $indent = defined $args{'indent'} ? $args{'indent'} : ($args{'indent'} = $DEFAULT_PERL_INDENT);
   my $braces = defined $args{'braces'} ? $args{'braces'} : ($args{'braces'} = $DEFAULT_PERL_BRACES);
   my $level  = defined $args{'level'}  ? $args{'level'}  : ($args{'level'}  = 0);
-  my $key_padding = $args{'key_padding'} || 0;
+  my $no_curlies   = delete $args{'no_curlies'};
+  my $key_padding  = $args{'key_padding'} || 0;
   my $inline_limit = $args{'inline_limit'};
 
   my $sort_keys = $args{'sort_keys'} || sub { lc $_[0] cmp lc $_[1] };
@@ -43,15 +44,15 @@ sub perl_hashref
 
   my($inline_perl, $perl);
 
-  $inline_perl = '{ ' . join(', ', @pairs) . ' }';
+  $inline_perl = ($no_curlies ? '' : '{ ') . join(', ', @pairs) . ($no_curlies ? '' : ' }');
 
   if($braces eq 'bsd')
   {
-    $perl = "\n${sub_indent}\{\n";
+    $perl = "\n${sub_indent}" . ($no_curlies ? '' : "{\n");
   }
   elsif($braces eq 'k&r')
   {
-    $perl = "{\n";
+    $perl = "{\n"  unless($no_curlies);
   }
   else
   {
@@ -59,7 +60,8 @@ sub perl_hashref
                 "brace style: '$braces'";
   }
 
-  $perl .= join(",\n", map { "$indent_txt$_" } @pairs) . ",\n$sub_indent}";
+  $perl .= join(",\n", map { "$indent_txt$_" } @pairs) . ',' . 
+           ($no_curlies ? '' : "\n$sub_indent}");
 
   if(defined $inline_limit && length($inline_perl) > $inline_limit)
   {

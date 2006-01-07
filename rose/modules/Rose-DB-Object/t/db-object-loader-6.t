@@ -168,7 +168,8 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
   $p->save;
 
   system($^X, '-I', $Module_Dir, "-M$product_class", '-e',
-         "\$p = $product_class->new(id => " . $p->id . ')->load;');
+         "\$p = $product_class->new(id => " . $p->id . ')->load;' .
+         'die "Wrong id" unless($p->name eq "' . $p->name . '");');
 
   is($? >> 8, 0, "external load - $db_type");
 
