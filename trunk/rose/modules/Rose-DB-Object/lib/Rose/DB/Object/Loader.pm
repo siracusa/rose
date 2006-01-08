@@ -17,7 +17,7 @@ use Rose::DB::Object::Metadata::Util qw(perl_hashref);
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.62';
+our $VERSION = '0.63';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -60,6 +60,12 @@ sub generate_db_base_class_name
 
   return (($self->class_prefix . 'DB::AutoBase') || "Rose::DB::LoaderGenerated::AutoBase") . 
           $Base_Class_Counter++;
+}
+
+sub generate_manager_class_name
+{
+  my($self, $object_class) = @_;
+  return "${object_class}::Manager";
 }
 
 sub base_classes
@@ -654,7 +660,7 @@ sub make_classes
     if($with_managers)
     {
       $meta->make_manager_class($cm->auto_manager_base_name($table, $obj_class));
-      push(@classes, "${obj_class}::Manager");
+      push(@classes, $self->generate_manager_class_name($obj_class));
     }
   }
 
@@ -906,6 +912,10 @@ A reference to a subroutine that takes a single table name argument and returns 
 
 This attribute should not be combined with the L<exclude_tables|/exclude_tables> or L<include_tables|/include_tables> attributes.
 
+=item B<generate_manager_class_name CLASS>
+
+Given the name of a L<Rose::DB::Object>-derived class, returns a class name for a L<Rose::DB::Object::Manager>-derived class to manage such objects.  The default implementation simply appends "::Manager" to the L<Rose::DB::Object>-derived class name.
+
 =item B<include_views BOOL>
 
 If true, database views will also be processed by default during calls to the L<make_classes|/make_classes> method.  Defaults to false.
@@ -941,6 +951,8 @@ A reference to a subroutine that will be called just before each L<Rose::DB::Obj
 =item B<with_managers BOOL>
 
 If true, create L<Rose::DB::Object::Manager|Rose::DB::Object::Manager>-derived manager classes for each L<Rose::DB::Object> subclass.  Defaults to the value of the loader object's L<with_managers|/with_managers> attribute.
+
+The manager class name is determined by passing the L<Rose::DB::Object>-derived class name to the L<generate_manager_class_name|/generate_manager_class_name> method.
 
 The L<Rose::DB::Object> subclass's L<metadata object|Rose::DB::Object::Metadata>'s L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> method will be used to create the manager class.  It will be passed the return value of the convention manager's L<auto_manager_base_name|Rose::DB::Object::ConventionManager/auto_manager_base_name> method as an argument.
 
@@ -982,7 +994,9 @@ Get or set a reference to a subroutine to be called just before each L<Rose::DB:
 
 =item B<with_managers BOOL>
 
-If true, the L<make_classes|/make_classes> method will create L<Rose::DB::Object::Manager|Rose::DB::Object::Manager>-derived manager classes for each L<Rose::DB::Object> subclass by default.  Defaults true.
+If true, the L<make_classes|/make_classes> method will create L<Rose::DB::Object::Manager|Rose::DB::Object::Manager>-derived manager classes for each L<Rose::DB::Object> subclass by default.  Defaults to true.
+
+The manager class name is determined by passing the L<Rose::DB::Object>-derived class name to the L<generate_manager_class_name|/generate_manager_class_name> method.
 
 The L<Rose::DB::Object> subclass's L<metadata object|Rose::DB::Object::Metadata>'s L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> method will be used to create the manager class.  It will be passed the return value of the convention manager's L<auto_manager_base_name|Rose::DB::Object::ConventionManager/auto_manager_base_name> method as an argument.
 

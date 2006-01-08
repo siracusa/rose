@@ -1,3 +1,7 @@
+0.63 (01.06.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added the generate_manager_class_name() method to the loader.
+
 0.62 (01.06.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed a make_modules() bug that caused incorrect init_db() methods
