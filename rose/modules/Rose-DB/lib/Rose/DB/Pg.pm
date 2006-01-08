@@ -7,7 +7,7 @@ use DateTime::Format::Pg;
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.58';
+our $VERSION = '0.60';
 
 our $Debug = 0;
 
@@ -79,15 +79,23 @@ sub last_insertid_from_sth
 
 sub parse_datetime
 {
-  return DateTime::Infinite::Past->new   if($_[1] eq '-infinity');
-  return DateTime::Infinite::Future->new if($_[1] eq 'infinity');
+  unless(ref $_[1])
+  {
+    return DateTime::Infinite::Past->new   if($_[1] eq '-infinity');
+    return DateTime::Infinite::Future->new if($_[1] eq 'infinity');
+  }
+
   shift->SUPER::parse_datetime(@_);
 }
 
 sub parse_timestamp
 {
-  return DateTime::Infinite::Past->new   if($_[1] eq '-infinity');
-  return DateTime::Infinite::Future->new if($_[1] eq 'infinity');
+  unless(ref $_[1])
+  {
+    return DateTime::Infinite::Past->new   if($_[1] eq '-infinity');
+    return DateTime::Infinite::Future->new if($_[1] eq 'infinity');
+  }
+
   shift->SUPER::parse_timestamp(@_);
 }
 
