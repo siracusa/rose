@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 50;
+use Test::More tests => 52;
 
 BEGIN 
 {
@@ -107,6 +107,16 @@ ok($field->error =~ /\S/, 'mdy error() 2');
 is($field->internal_value, undef, 'mdy internal_value() 3');
 is($field->input_value, 'foo', 'mdy input_value() 1');
 is($field->output_value, 'foo', 'mdy output_value() 1');
+
+use Rose::HTML::Form;
+my $form = Rose::HTML::Form->new;
+$form->add_fields(start => Rose::HTML::Form::Field::DateTime::Split::MonthDayYear->new(name => 'start'));
+$form->params('start.month' => 1);
+$form->init_fields;
+
+ok(!$form->field('start')->validate, 'mdy validate partial 1');
+ok($form->field('start')->error, 'mdy validate partial 2');
+
 
 #
 # Rose::HTML::Form::Field::DateTime::Split::MDYHMS
