@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.611';
+our $VERSION = '0.63';
 
 our $Debug = 0;
 
@@ -903,7 +903,23 @@ sub get_objects
         push(@table_names, $rel_name{'t' . (scalar(@tables) + 1)} = $rel->name);
         push(@classes, $map_class);
 
+        my $rel_mgr_args = $rel->manager_args || {};
+
+        my $rel_with_map_records;
+
         if($with_map_records)
+        {
+          $rel_with_map_records =
+            exists $with_map_records->{$name} ? $with_map_records->{$name} : 
+            $with_map_records->{DEFAULT_REL_KEY()} || 0;
+        }
+        elsif($rel_with_map_records = $rel_mgr_args->{'with_map_records'})
+        {
+          $with_map_records->{$name} = 
+            ($rel_with_map_records eq '1') ? MAP_RECORD_METHOD : $rel_with_map_records;
+        }
+
+        if($rel_with_map_records)
         {
           my $use_lazy_columns = (!ref $nonlazy || $nonlazy{$name}) ? 0 : $map_meta->has_lazy_columns;
 
