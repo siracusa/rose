@@ -79,11 +79,23 @@ use constant MAP_RECORD_ATTR   => PRIVATE_PREFIX . '_map_record';
 use constant MAP_RECORD_METHOD => 'map_record';
 use constant DEFAULT_REL_KEY   => PRIVATE_PREFIX . '_default_rel_key';
 
-my $Map_Record_Method = sub 
+MAKE_MAP_RECORD_METHOD:
 {
-  return $_[0]->{MAP_RECORD_ATTR()} = $_[1]  if(@_ > 1);
-  return shift->{MAP_RECORD_ATTR()};
-};
+  my $counter = 1;
+
+  sub make_map_record_method
+  {
+    my($key) = shift || $counter++;
+
+    $key = MAP_RECORD_ATTR . '_' . $key;
+  
+    return sub 
+    {
+      return $_[0]->{$key} = $_[1]  if(@_ > 1);
+      return shift->{$key};
+    }
+  }
+}
 
 sub object_class { }
 
@@ -625,6 +637,9 @@ sub get_objects
   }
 
   my $num_to_many_rels = 0;
+  # Adjust for explicitly included map_record tables, which should
+  # not count towards the multi_many_ok warning.
+  my $num_to_many_rels_adjustment = 0;
 
   if($with_objects)
   {
@@ -681,6 +696,10 @@ sub get_objects
           $i++;
           $has_dups[$i] = 1;
           # $num_subtables will be incremented elsewhere (below)
+
+          # Adjust for explicitly included map_record tables, which should
+          # not count towards the multi_many_ok warning.
+          $num_to_many_rels_adjustment++;
         }
 
         if($args{'limit'})
@@ -706,7 +725,9 @@ sub get_objects
 
     unless($args{'multi_many_ok'})
     {
-      if($num_to_many_rels > 1)
+      # Adjust for explicitly included map_record tables, which should
+      # not count towards the multi_many_ok warning.
+      if(($num_to_many_rels - $num_to_many_rels_adjustment)  > 1)
       {
         Carp::carp
           qq(WARNING: Fetching sub-objects via more than one ),
@@ -905,21 +926,22 @@ sub get_objects
 
         my $rel_mgr_args = $rel->manager_args || {};
 
-        my $rel_with_map_records;
+        my $map_record_method;
 
-        if($with_map_records)
+        if(my $rel_with_map_records = $rel_mgr_args->{'with_map_records'})
         {
-          $rel_with_map_records =
+          $map_record_method =
+            ($with_map_records && exists $with_map_records->{$name}) ? $with_map_records->{$name} :
+            ($rel_with_map_records eq '1') ? MAP_RECORD_METHOD : $rel_with_map_records;
+        }
+        elsif($with_map_records)
+        {
+          $map_record_method =
             exists $with_map_records->{$name} ? $with_map_records->{$name} : 
             $with_map_records->{DEFAULT_REL_KEY()} || 0;
         }
-        elsif($rel_with_map_records = $rel_mgr_args->{'with_map_records'})
-        {
-          $with_map_records->{$name} = 
-            ($rel_with_map_records eq '1') ? MAP_RECORD_METHOD : $rel_with_map_records;
-        }
 
-        if($rel_with_map_records)
+        if($map_record_method)
         {
           my $use_lazy_columns = (!ref $nonlazy || $nonlazy{$name}) ? 0 : $map_meta->has_lazy_columns;
 
@@ -954,19 +976,17 @@ sub get_objects
 
         $belongs_to[$i] = $belongs_to[$i - 1];
 
-        my $method = $mapped_object_methods[$i - 1] = 
-          exists $with_map_records->{$name} ? $with_map_records->{$name} : 
-          $with_map_records->{DEFAULT_REL_KEY()} || 0;
+        $mapped_object_methods[$i - 1] = $map_record_method || 0;
 
-        if($method)
+        if($map_record_method)
         {
           my $ft_class = $rel->foreign_class 
             or Carp::confess "$class - Missing foreign class for '$name'";
 
-          unless($ft_class->can($method))
+          unless($ft_class->can($map_record_method))
           {
             no strict 'refs';
-            *{"${ft_class}::$method"} = $Map_Record_Method;
+            *{"${ft_class}::$map_record_method"} = make_map_record_method();
           }
         }
 
