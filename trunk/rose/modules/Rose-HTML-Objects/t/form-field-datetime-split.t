@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 52;
+use Test::More tests => 55;
 
 BEGIN 
 {
@@ -117,6 +117,11 @@ $form->init_fields;
 ok(!$form->field('start')->validate, 'mdy validate partial 1');
 ok($form->field('start')->error, 'mdy validate partial 2');
 
+$field = Rose::HTML::Form::Field::DateTime::Split::MonthDayYear->new(name => 'start');
+
+ok($field->validate, 'mdy empty validate');
+ok($field->is_empty, 'mdy empty is_empty');
+ok(!$field->has_partial_value, 'mdy empty has_partial_value');
 
 #
 # Rose::HTML::Form::Field::DateTime::Split::MDYHMS

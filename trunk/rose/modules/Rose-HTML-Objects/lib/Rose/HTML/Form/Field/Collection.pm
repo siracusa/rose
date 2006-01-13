@@ -111,7 +111,7 @@ sub compare_fields { $_[1]->name cmp $_[2]->name }
 sub fields
 {
   my($self) = shift;
-  
+
   if(my $fields = $self->{'field_list'})
   {
     return wantarray ? @$fields : $fields;
@@ -127,7 +127,7 @@ sub fields
 sub field_names
 {
   my($self) = shift;
-  
+
   if(my $names = $self->{'field_names'})
   {
     return wantarray ? @$names : $names;
