@@ -17,7 +17,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.61';
+our $VERSION = '0.63';
 
 our $Debug = 0;
 
@@ -2504,6 +2504,15 @@ sub objects_by_key
   return \%methods;
 }
 
+use constant MAP_RECORD_METHOD => 'map_record';
+use constant MAP_RECORD_ATTR   => PRIVATE_PREFIX . '_map_record';
+
+my $Map_Record_Method = sub 
+{
+  return $_[0]->{MAP_RECORD_ATTR()} = $_[1]  if(@_ > 1);
+  return shift->{MAP_RECORD_ATTR()};
+};
+
 sub objects_by_map
 {
   my($class, $name, $args, $options) = @_;
@@ -2720,6 +2729,36 @@ sub objects_by_map
   # class, provided that there is only one column in that key.
   my $ft_pk;
 
+  # Pre-process sort_by args to map unqualified column names to the
+  # leaf-node table rather than the map table.
+  if(my $sort_by = $mgr_args->{'sort_by'})
+  {
+    my $table = $foreign_class->meta->table;
+
+    foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
+    {
+      $sort =~ s/^(['"`]?)\w+\1(?:\s+(?:ASC|DESC))?$/$table.$sort/;
+    }
+
+    $mgr_args->{'sort_by'} = $sort_by;
+  }
+
+  my $map_record_method = $mgr_args->{'with_map_records'};
+
+  if($map_record_method)
+  {
+    if($map_record_method && $map_record_method eq '1')
+    {
+      $map_record_method = MAP_RECORD_METHOD;
+    }
+  
+    unless($map_to_class->can($map_record_method))
+    {
+      no strict 'refs';
+      *{"${map_to_class}::$map_record_method"} = $Map_Record_Method;
+    }
+  }
+
   if($interface eq 'get_set' || $interface eq 'get_set_load')
   {
     $methods{$name} = sub
@@ -2778,7 +2817,23 @@ sub objects_by_map
         return wantarray ? () : $objs;
       }
 
-      $self->{$key} = [ map { $_->$map_to_method() } @$objs ];
+      if($map_record_method)
+      {
+        $self->{$key} = 
+        [
+          map 
+          {
+            my $o = $_->$map_to_method();
+            $o->$map_record_method($_); 
+            $o;
+          }
+          @$objs
+        ];
+      }
+      else
+      {
+        $self->{$key} = [ map { $_->$map_to_method() } @$objs ];
+      }
 
       return wantarray ? @{$self->{$key}} : $self->{$key};
     };
@@ -2986,7 +3041,23 @@ sub objects_by_map
         return wantarray ? () : $objs;
       }
 
-      $self->{$key} = [ map { $_->$map_to_method() } @$objs ];
+      if($map_record_method)
+      {
+        $self->{$key} = 
+        [
+          map 
+          {
+            my $o = $_->$map_to_method();
+            $o->$map_record_method($_); 
+            $o;
+          }
+          @$objs
+        ];
+      }
+      else
+      {
+        $self->{$key} = [ map { $_->$map_to_method() } @$objs ];
+      }
 
       return wantarray ? @{$self->{$key}} : $self->{$key};
     };
@@ -3165,7 +3236,23 @@ sub objects_by_map
         return wantarray ? () : $objs;
       }
 
-      $self->{$key} = [ map { $_->$map_to_method() } @$objs ];
+      if($map_record_method)
+      {
+        $self->{$key} = 
+        [
+          map 
+          {
+            my $o = $_->$map_to_method();
+            $o->$map_record_method($_); 
+            $o;
+          }
+          @$objs
+        ];
+      }
+      else
+      {
+        $self->{$key} = [ map { $_->$map_to_method() } @$objs ];
+      }
 
       return wantarray ? @{$self->{$key}} : $self->{$key};
     };
