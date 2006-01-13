@@ -69,6 +69,7 @@ sub validate
   }
 
   my $input = $self->input_value_filtered;
+  no warnings 'uninitialized';
   return 1  unless(length $input);
 
   $date = $self->date_parser->parse_datetime($input);

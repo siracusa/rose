@@ -23,6 +23,20 @@ sub clear    {   }
 sub error    {   }
 sub validate { 1 }
 
+sub html_field
+{
+  my($self) = shift;
+  $self->html_attr(value => $self->output_value);
+  return $self->SUPER::html_field(@_);
+}
+
+sub xhtml_field
+{
+  my($self) = shift;
+  $self->html_attr(value => $self->output_value);
+  return $self->SUPER::xhtml_field(@_);
+}
+
 1;
 
 __END__

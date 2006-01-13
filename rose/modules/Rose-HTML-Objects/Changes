@@ -1,3 +1,10 @@
+0.33 (01.13.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a bug in input_value() on hidden fields that caused incorrect
+      html() and xhtml() results.  (Reported by Sean Davis)
+    * Compound datetime fields now correctly indicate invalid data when
+      partially filled out.  (Reported by Sean Davis)
+
 0.32 (12.30.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added a rank() attribute to field objects, and a rank_counter()

@@ -605,7 +605,7 @@ BEGIN
 
     $self->field('name')->html_attr(name => 'your_name');
   }
-  
+
   sub compare_fields { lc $_[2]->name cmp lc $_[1]->name }
 
   package MyForm3;
@@ -643,7 +643,7 @@ BEGIN
 
     $self->field('name')->html_attr(name => 'your_name');
   }
-  
+
   sub field_names { wantarray ? qw(name hobbies bday Gender) : [ qw(name hobbies bday Gender) ] }
 
   package MyForm4;
@@ -662,7 +662,7 @@ BEGIN
         size => 25);
 
     $self->add_field(%fields); %fields = ();
- 
+
     $fields{'Gender'} = 
       Rose::HTML::Form::Field::RadioButtonGroup->new(
         name          => 'gender',
