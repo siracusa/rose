@@ -1889,7 +1889,7 @@ CREATE TABLE Rose_db_object_test
 
   FOREIGN KEY (fk1, fk2, fk3) REFERENCES Rose_db_object_other (k1, k2, k3)
 )
-TYPE=InnoDB
+TYPE=InnoDB COMMENT='This is a very long comment.  This is a very long comment.'
 EOF
 
     $dbh->disconnect;
