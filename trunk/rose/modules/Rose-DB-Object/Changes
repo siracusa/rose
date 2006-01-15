@@ -3,6 +3,8 @@
     * Added the generate_manager_class_name() method to the loader.
     * Enabled the with_map_records Manager argument to work in the
       manager_args list for relationships.
+    * Added auto_manager_class_name() method to convention manager, and
+      made the loader delegate to it.
 
 0.62 (01.06.2006) - John Siracusa <siracusa@mindspring.com>
 
