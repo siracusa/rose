@@ -3177,7 +3177,7 @@ Fetch objects using a custom SQL query.  Pass either a single SQL query string o
 
 =item C<args ARRAYREF>
 
-A reference to an array of arguments to be passed to L<DBI>'s L<execute|/execute> method when the query is run.  The number of items in this array must exactly match the number of placeholders in the SQL query.
+A reference to an array of arguments to be passed to L<DBI>'s L<execute|DBI/execute> method when the query is run.  The number of items in this array must exactly match the number of placeholders in the SQL query.
 
 =item C<db DB>
 
@@ -3501,7 +3501,7 @@ The SQL query string.  This parameter is required.
 
 Each column returned by the SQL query must be either a column or method name in C<object_class>.  Column names take precedence in the case of a conflict.
 
-Arguments passed to the created method will be passed to L<DBI>'s L<execute|/execute> method when the query is run.  The number of arguments must exactly match the number of placeholders in the SQL query.  Positional parameters are required unless the C<params> parameter is used.  (See description above.)
+Arguments passed to the created method will be passed to L<DBI>'s L<execute|DBI/execute> method when the query is run.  The number of arguments must exactly match the number of placeholders in the SQL query.  Positional parameters are required unless the C<params> parameter is used.  (See description above.)
 
 Returns a code reference to the method created.
 
