@@ -65,7 +65,7 @@ sub generate_db_base_class_name
 sub generate_manager_class_name
 {
   my($self, $object_class) = @_;
-  return "${object_class}::Manager";
+  return $self->convention_manager->auto_manager_class_name($object_class);
 }
 
 sub base_classes
@@ -914,7 +914,7 @@ This attribute should not be combined with the L<exclude_tables|/exclude_tables>
 
 =item B<generate_manager_class_name CLASS>
 
-Given the name of a L<Rose::DB::Object>-derived class, returns a class name for a L<Rose::DB::Object::Manager>-derived class to manage such objects.  The default implementation simply appends "::Manager" to the L<Rose::DB::Object>-derived class name.
+Given the name of a L<Rose::DB::Object>-derived class, returns a class name for a L<Rose::DB::Object::Manager>-derived class to manage such objects.  The default implementation calls the L<auto_manager_class_name|Rose::DB::Object::ConventionManager/auto_manager_class_name> method on the L<convention_manager|/convention_manager> object.
 
 =item B<include_views BOOL>
 

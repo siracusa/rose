@@ -71,6 +71,12 @@ sub auto_manager_base_name
   return $table;
 }
 
+sub auto_manager_class_name
+{
+  my($self, $object_class) = @_;
+  return "${object_class}::Manager";
+}
+
 sub class_prefix
 {
   my($self, $class) = @_;
@@ -710,6 +716,10 @@ Calls L<plural_to_singular|/plural_to_singular>, passing the L<table|Rose::DB::O
 =item B<auto_manager_base_name TABLE, CLASS>
 
 Given a table name and the name of the L<Rose::DB::Object>-derived class that fronts it, return a base name suitable for use as the value of the C<base_name> parameter to L<Rose::DB::Object::Manager>'s L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.  The default implementation simply returns the table name.
+
+=item B<auto_manager_class_name CLASS>
+
+Given the name of a L<Rose::DB::Object>-derived class, returns a class name for a L<Rose::DB::Object::Manager>-derived class to manage such objects.  The default implementation simply appends "::Manager" to the L<Rose::DB::Object>-derived class name.
 
 =item B<auto_relationship_name_one_to_many TABLE, CLASS>
 
