@@ -2,10 +2,12 @@ package Rose::HTML::Form::Field::TextArea;
 
 use strict;
 
+use Carp();
+
 use Rose::HTML::Form::Field::WithContents;
 our @ISA = qw(Rose::HTML::Form::Field::WithContents);
 
-our $VERSION = '0.012';
+our $VERSION = '0.34';
 
 __PACKAGE__->add_valid_html_attrs
 (
@@ -41,6 +43,29 @@ sub contents
   my($self) = shift;
   return $self->input_value(@_)  if(@_);
   return $self->output_value;
+}
+
+sub size
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    local $_ = shift;
+    
+    if(my($cols, $rows) = /^(\d+)x(\d+)$/)
+    {
+      $self->cols($cols);
+      $self->rows($rows);
+      return $cols . 'x' . $rows;
+    }
+    else
+    {
+      Carp::croak "Invalid size argument '$_' is not in the form COLSxROWS";
+    }
+  }
+
+  return $self->cols . 'x' . $self->rows;
 }
 
 1;
@@ -134,6 +159,10 @@ Constructs a new L<Rose::HTML::Form::Field::TextArea> object based on PARAMS, wh
 =item B<contents [TEXT]>
 
 Get or set the contents of the text area.  If a TEXT argument is present, it is passed to L<input_value()|Rose::HTML::Form::Field/input_value> and the return value of that method call is then returned. Otherwise, L<output_value()|Rose::HTML::Form::Field/output_value> is called with no arguments.
+
+=item B<size [COLSxROWS]>
+
+Get or set the the number of columns and rows (C<cols> and C<rows>) in the text area in the form of a string "COLSxROWS".  For example, "40x3" means 40 columns and 3 rows.  If the size argument is not in the correct format, a fatal error will occur.
 
 =item B<value [TEXT]>
 

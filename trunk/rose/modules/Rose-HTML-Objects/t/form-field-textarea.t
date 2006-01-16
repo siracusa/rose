@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 12;
+use Test::More tests => 18;
 
 BEGIN 
 {
@@ -64,6 +64,8 @@ $field->rows(10);
 $field->cols(80);
 $field->disabled('abc');
 
+is($field->size, '80x10', 'size() 1');
+
 is($field->html_field, 
    '<textarea class="foo" cols="80" disabled id="bar" name="name" rows="10" style="baz">John</textarea>',
    'html_field() 5');
@@ -71,3 +73,18 @@ is($field->html_field,
 is($field->xhtml_field,
    '<textarea class="foo" cols="80" disabled="disabled" id="bar" name="name" rows="10" style="baz">John</textarea>',
    'xhtml_field() 5');
+
+is($field->size, '80x10', 'size() 1');
+
+eval { $field->size(90) };
+ok($@, 'invalid size');
+
+is($field->size('50x3'), '50x3', 'size() 1');
+
+is($field->html_field, 
+   '<textarea class="foo" cols="50" disabled id="bar" name="name" rows="3" style="baz">John</textarea>',
+   'html_field() 6');
+
+is($field->xhtml_field,
+   '<textarea class="foo" cols="50" disabled="disabled" id="bar" name="name" rows="3" style="baz">John</textarea>',
+   'xhtml_field() 6');
