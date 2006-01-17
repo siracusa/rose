@@ -1,6 +1,7 @@
-0.34 (01.15.2006) - John Siracusa <siracusa@mindspring.com>
+0.34 (01.17.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added a size() attribute to the text area field.
+    * Corrected the POD for the start/end date fields.
 
 0.33 (01.13.2006) - John Siracusa <siracusa@mindspring.com>
 
