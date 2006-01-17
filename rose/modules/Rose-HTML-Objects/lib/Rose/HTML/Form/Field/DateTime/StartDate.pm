@@ -5,6 +5,8 @@ use strict;
 use Rose::HTML::Form::Field::DateTime;
 our @ISA = qw(Rose::HTML::Form::Field::DateTime);
 
+our $VERSION = '0.34';
+
 1;
 
 __END__
