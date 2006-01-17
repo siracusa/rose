@@ -7584,9 +7584,9 @@ SKIP: foreach my $db_type (qw(sqlite))
         flag       => 1,
         flag2      => 0,
         status     => 'active',
-        bits       => '00001',
-        or         => [ and => [ '!bits' => '00001', bits => { ne => '11111' } ],
-                        and => [ bits => { lt => '10101' }, '!bits' => '10000' ] ],
+        #bits       => '00001',
+        #or         => [ and => [ '!bits' => '00001', bits => { ne => '11111' } ],
+        #                and => [ bits => { lt => '10101' }, '!bits' => '10000' ] ],
         start      => '2001-01-02',
         save_col   => [ 1, 5 ],
         nums       => '{1,2,3}',
@@ -7631,7 +7631,7 @@ SKIP: foreach my $db_type (qw(sqlite))
         flag       => 1,
         flag2      => 0,
         status     => 'active',
-        bits       => '00001',
+        #bits       => '00001',
         start      => '2001-01-02',
         save_col   => [ 1, 5 ],
         nums       => '{1,2,3}',
@@ -7660,7 +7660,7 @@ SKIP: foreach my $db_type (qw(sqlite))
         flag       => 1,
         flag2      => 0,
         status     => 'active',
-        bits       => '00001',
+        #bits       => '00001',
         start      => '2001-01-02',
         save_col   => [ 1, 5 ],
         nums       => '{1,2,3}',
@@ -7696,7 +7696,7 @@ SKIP: foreach my $db_type (qw(sqlite))
         flag       => 1,
         flag2      => 0,
         status     => 'active',
-        bits       => '00001',
+        #bits       => '00001',
         start      => '2001-01-02',
         save_col   => [ 1, 5 ],
         nums       => '{1,2,3}',
@@ -7726,7 +7726,7 @@ SKIP: foreach my $db_type (qw(sqlite))
         flag       => 1,
         flag2      => 0,
         status     => 'active',
-        bits       => '00001',
+        #bits       => '00001',
         start      => '2001-01-02',
         save_col   => [ 1, 5 ],
         nums       => '{1,2,3}',
@@ -7787,7 +7787,7 @@ SKIP: foreach my $db_type (qw(sqlite))
                            flag       => 'f',
                            flag2      => 't',
                            status     => 'with',
-                           bits       => '10101',
+                           #bits       => '10101',
                            start      => '2002-05-20',
                            save_col   => 123,
                            nums       => [ 4, 5, 6 ],
@@ -7906,7 +7906,7 @@ SKIP: foreach my $db_type (qw(sqlite))
         't1.name'  => 'Betty',  
         flag       => 0,
         flag2      => 1,
-        bits       => '10101',
+        #bits       => '10101',
         't2.nick'  => { like => 'n%' },
         start      => '5/20/2002',
         '!start'   => { gt => DateTime->new(year  => '2005', 
@@ -7964,7 +7964,7 @@ SKIP: foreach my $db_type (qw(sqlite))
         't1.name'  => 'Betty',  
         flag       => 0,
         flag2      => 1,
-        bits       => '10101',
+        #bits       => '10101',
         't3.nick'  => { like => 'n%' },
         start      => '5/20/2002',
         '!start'   => { gt => DateTime->new(year  => '2005', 
@@ -8488,7 +8488,7 @@ SKIP: foreach my $db_type (qw(sqlite))
         flag       => 1,
         flag2      => 0,
         status     => 'active',
-        bits       => '1',
+        #bits       => '1',
         start      => '1/2/2001',
         '!start'   => { gt => DateTime->new(year  => '2005', 
                                             month => 1,
@@ -10633,6 +10633,12 @@ EOF
 
     MyMySQLBB->meta->initialize;
 
+    # MySQL 5.0.3 or later has a completely stupid "native" BIT type
+    my $bit_col = 
+      ($dbh->get_info(18) =~ /^[5-9]\d*\.(?:[1-9]\d*|0\.(?:[3-9]|\d\d))/) ?
+        q(bits  BIT(5) NOT NULL DEFAULT B'00101') :
+        q(bits  BIT(5) NOT NULL DEFAULT '00101');
+
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test
 (
@@ -10641,7 +10647,7 @@ CREATE TABLE rose_db_object_test
   flag           TINYINT(1) NOT NULL,
   flag2          TINYINT(1),
   status         VARCHAR(32) DEFAULT 'active',
-  bits           VARCHAR(5) NOT NULL DEFAULT '00101',
+  $bit_col,
   nums           VARCHAR(255),
   start          DATE,
   save           INT,
@@ -10949,6 +10955,8 @@ EOF
     our @ISA = qw(Rose::DB::Object);
 
     sub extra { $_[0]->{'extra'} = $_[1]  if(@_ > 1); $_[0]->{'extra'} }
+
+    MyMySQLObject->meta->allow_inline_column_values(1);
 
     MyMySQLObject->meta->table('rose_db_object_test');
 

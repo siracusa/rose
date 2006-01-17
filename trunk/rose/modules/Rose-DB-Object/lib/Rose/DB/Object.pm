@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
 
-our $VERSION = '0.63';
+our $VERSION = '0.63_02';
 
 our $Debug = 0;
 
@@ -821,6 +821,24 @@ sub insert
       }
 
       $sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
+
+      # Not ready to cross this bridge yet...
+      #if($meta->needs_data_type_hand_holding($db))
+      #{
+      #  my $i = 1;
+      #
+      #  foreach my $column ($meta->columns)
+      #  {
+      #    my $method = $column->accessor_method_name;
+      #    $sth->bind_param($i++,  $self->$method(), $column->dbi_data_type);
+      #  }
+      # 
+      #  $sth->execute;
+      #}
+      #else
+      #{
+      #  $sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
+      #}
     }
 
     if(@pk_methods == 1)

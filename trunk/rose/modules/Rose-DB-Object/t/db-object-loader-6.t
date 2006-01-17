@@ -6,7 +6,7 @@ use File::Spec;
 use File::Path;
 use FindBin qw($Bin);
 
-use Test::More tests => 1 + (5 * 32);
+use Test::More tests => 1 + (5 * 18);
 
 BEGIN 
 {
@@ -52,7 +52,7 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 32)  unless($Have{$db_type});
+    skip("$db_type tests", 18)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -126,15 +126,10 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
     my @path = split('::', $class);
     $path[-1] .= '.pm';
     my $file = File::Spec->catfile($Module_Dir, @path);
-    ok(-e $file, "make_modules() $class");
+    die "Missing $file"  unless(-e $file, "make_modules() $class");
   }
 
   $BC_Counter += 2;
-
-  SKIP:
-  {
-    skip('reserved name tests', 12 - scalar(@classes))  unless(@classes == 12);
-  }
 
   my $product_class = $class_prefix . '::Product';
 
@@ -383,7 +378,7 @@ EOF
 
     my $version = $dbh->get_info(18); # SQL_DBMS_VER  
 
-    die "MySQL version too old"  unless($version =~ /^4\./);
+    die "MySQL version too old"  unless($version =~ /^[4-9]\./);
 
     # Drop existing tables, ignoring errors
     {

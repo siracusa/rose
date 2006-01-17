@@ -667,7 +667,7 @@ sub bitfield
 
         if($self->{STATE_SAVING()})
         {
-          $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key})
+          $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key}, $size)
             unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
 
           return $self->{$formatted_key,$driver};
@@ -705,7 +705,7 @@ sub bitfield
         {
           return undef  unless(defined($self->{$formatted_key,$driver}) || $self->{$key});
 
-          $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key})
+          $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key}, $size)
             unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
 
           return $self->{$formatted_key,$driver};
@@ -773,7 +773,7 @@ sub bitfield
 
         if($self->{STATE_SAVING()})
         {
-          $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key})
+          $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key}, $size)
             unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
 
           return $self->{$formatted_key,$driver};
@@ -798,7 +798,7 @@ sub bitfield
         {
           return undef  unless(defined($self->{$formatted_key,$driver}) || $self->{$key});
 
-          $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key})
+          $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key}, $size)
             unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
 
           return $self->{$formatted_key,$driver};
@@ -841,7 +841,7 @@ sub bitfield
       {
         return undef  unless(defined($self->{$formatted_key,$driver}) || $self->{$key});
 
-        $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key})
+        $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key}, $size)
           unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
 
         return $self->{$formatted_key,$driver};

@@ -9,7 +9,7 @@ use DateTime::Format::MySQL;
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.55';
+our $VERSION = '0.61';
 
 our $Debug = 0;
 
@@ -72,6 +72,42 @@ sub validate_timestamp_keyword
 #   return join(', ', @_[2,1]);
 # }
 
+sub format_bitfield 
+{
+  my($self, $vec, $size) = @_;
+
+  $vec = Bit::Vector->new_Bin($size, $vec->to_Bin)  if($size);
+
+  # MySQL 5.0.3 or later requires this crap...
+  if($self->database_version =~ /^[5-9]\d*\.(?:[1-9]\d*|0\.(?:[3-9]|\d\d))/)
+  {
+    return q(b') . $vec->to_Bin . q('); # 'CAST(' . $vec->to_Dec . ' AS UNSIGNED)';
+  }
+
+  return sprintf('%d', hex($vec->to_Hex));
+}
+
+sub should_inline_bitfield_values 
+{
+  # MySQL 5.0.3 or later requires this crap...
+  return $_[0]->{'should_inline_bitfield_values'} ||= 
+    (shift->database_version =~ /^[5-9]\d*\.(?:[1-9]\d*|0\.(?:[3-9]|\d\d))/) ? 1 : 0;
+}
+
+sub select_bitfield_column_sql
+{
+  my($self, $name, $table_alias) = @_;
+
+  # MySQL 5.0.3 or later requires this crap...
+  if($self->database_version =~ /^[5-9]\d*\.(?:[1-9]\d*|0\.(?:[3-9]|\d\d))/)
+  {
+    return q{CONCAT("b'", BIN(} . ($table_alias ? "$table_alias." : '') . 
+            $self->quote_column_name($name) . q{ + 0), "'")};
+  }
+
+  return $self->quote_column_name($name);
+}
+    
 sub refine_dbi_column_info
 {
   my($self, $col_info) = @_;

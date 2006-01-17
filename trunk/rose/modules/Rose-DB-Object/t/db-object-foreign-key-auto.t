@@ -1858,6 +1858,14 @@ EOF
     MyMySQLOtherObject4->meta->table('Rose_db_object_other4');
     MyMySQLOtherObject4->meta->auto_initialize;    
 
+    # MySQL 5.0.3 or later has a completely stupid "native" BIT type
+    # which we want to avoid because DBI's column_info() method prints
+    # a warning when it encounters such a column.
+    my $bit_col = 
+      ($dbh->get_info(18) =~ /^[5-9]\d*\.(?:[1-9]\d*|0\.(?:[3-9]|\d\d))/) ?
+        q(bits  TINYINT(1) NOT NULL DEFAULT '00101') :
+        q(bits  BIT(5) NOT NULL DEFAULT '00101');
+
     $dbh->do(<<"EOF");
 CREATE TABLE Rose_db_object_test
 (
@@ -1901,6 +1909,8 @@ EOF
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('mysql') }
+
+    MyMySQLObject->meta->allow_inline_column_values(1);
 
     MyMySQLObject->meta->table('Rose_db_object_test');
     MyMySQLObject->meta->convention_manager(undef);

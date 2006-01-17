@@ -1,3 +1,13 @@
+0.64 (01.17.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Worked around yet more SQLite ORDER BY bugs.
+    * Improved the column trigger implementation.
+    * Added support for MySQL 5's brain-dead new BIT column type.  Classes
+      must allow_inline_column_values(2) to use it due to the inablility of
+      DBD::mysql to bind BIT values correctly.
+    * Use alternate strategy for extracting foreign key information from
+      MySQL 5 because the old way no longer works.
+
 0.63 (01.15.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Made the with_map_records Manager argument work in the

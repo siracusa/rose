@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.54';
+our $VERSION = '0.64';
 
 our $Debug = 0;
 
@@ -233,9 +233,25 @@ sub build_select
 
       unless($query_only_columns || !$select_columns{$column})
       {
-        push(@select_columns, $multi_table ? 
-             "$short_column AS ${table_alias}_$column" : 
-             $db ? $db->quote_column_name($column) : $column);
+        if($multi_table)
+        {
+          push(@select_columns, 
+            $obj_meta ? ($obj_meta->column($column)->select_sql($db, $table_alias) . 
+                         ' AS ' . $db->quote_column_name("${table_alias}_$column")) :
+            $db ? ($db->quote_column_name($short_column) . 
+                   ' AS ' . $db->quote_column_name("${table_alias}_$column")) :
+            "$short_column AS ${table_alias}_$column");
+        }
+        else
+        {
+          push(@select_columns, 
+            $obj_meta ? $obj_meta->column($column)->select_sql($db) :
+            $db ? $db->quote_column_name($column) : $column);
+        }
+
+#        push(@select_columns, $multi_table ? 
+#             "$short_column AS ${table_alias}_$column" : 
+#             $db ? $db->quote_column_name($column) : $column);
       }
 
       foreach my $column_arg (grep { exists $query{$_} } map { ($_, "!$_") } 
@@ -303,14 +319,21 @@ sub build_select
           }
           else
           {
-            if($do_bind)
+            if($col_meta && $db && $col_meta->should_inline_value($db, $val))
             {
-              push(@clauses, ($not ? "$not(" : '') . "$sql_column = ?" . ($not ? ')' : ''));
+              push(@clauses, ($not ? "$not($sql_column = $val)" : "$sql_column = $val"));
+            }
+            elsif($do_bind)
+            {
+              push(@clauses, ($not ? "$not($sql_column = ?)" : "$sql_column = ?"));
               push(@bind, $val);
             }
             else
             {
-              push(@clauses, ($not ? "$not(" : '') . "$sql_column = " . $dbh->quote($val) . ($not ? ')' : ''));
+              push(@clauses, ($not ? "$not($sql_column = " . $dbh->quote($val) . ')' :
+                              "$sql_column = " . $dbh->quote($val)));
+
+              #($not ? "$not(" : '') . "$sql_column = " . $dbh->quote($val) . ($not ? ')' : ''));
             }
           }
         }

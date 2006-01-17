@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.60';
+our $VERSION = '0.60_02';
 
 our $Debug = 0;
 
@@ -351,6 +351,13 @@ sub load_driver_classes
   return;
 }
 
+sub database_version
+{
+  my($self) = shift;
+  return $self->{'database_version'}  if(defined $self->{'database_version'});
+  return $self->{'database_version'} = $self->dbh->get_info(18); # SQL_DBMS_VER
+}
+
 sub init_class 
 {
   my($self) = shift;
@@ -608,7 +615,8 @@ sub init_dbh
 
   $Debug && warn "DBI->connect('", $self->dsn, "', '", $self->username, "', ...)\n";
 
-  $self->error(undef);
+  $self->{'error'} = undef;
+  $self->{'database_version'} = undef;
 
   my $dbh = DBI->connect($self->dsn, $self->username, $self->password, $options);
 
@@ -1077,9 +1085,18 @@ sub format_bitfield
 {
   my($self, $vec, $size) = @_;
 
-  $vec = Bit::Vector->new_Bin($size, $vec->to_Bin)  if($size);
-  return $vec->to_Bin;
+  if($size)
+  {
+    $vec = Bit::Vector->new_Bin($size, $vec->to_Bin);
+    return sprintf('%0*b', $size, hex($vec->to_Hex));
+  }
+
+  return sprintf('%b', hex($vec->to_Hex));
 }
+
+sub select_bitfield_column_sql { shift->quote_column_name(shift) }
+
+sub should_inline_bitfield_values { 0 }
 
 sub parse_array
 {
