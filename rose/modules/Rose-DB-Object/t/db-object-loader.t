@@ -72,7 +72,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   my @classes = $loader->make_classes(include_tables => $Include_Tables . 
                                       ($db_type eq 'mysql' ? '|read' : ''));
 
-  is(scalar keys %JCS::Called_Custom_CM, 3, "custom convention manager - $db_type");
+  ok(scalar keys %JCS::Called_Custom_CM >= 3, "custom convention manager - $db_type");
   ok($pre_init_hook > 0, "pre_init_hook - $db_type");
 
   if($db_type eq 'informix')
@@ -354,7 +354,7 @@ EOF
 
     my $version = $dbh->get_info(18); # SQL_DBMS_VER  
 
-    die "MySQL version too old"  unless($version =~ /^4\./);
+    die "MySQL version too old"  unless($version =~ /^[4-9]\./);
 
     # Drop existing tables, ignoring errors
     {

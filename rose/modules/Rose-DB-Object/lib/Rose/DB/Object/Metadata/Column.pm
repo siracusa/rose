@@ -22,7 +22,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 our $Triggers_Key      = 'triggers';
 our $Trigger_Index_Key = 'trigger_index';
 
-our $VERSION = '0.58';
+our $VERSION = '0.64';
 
 use overload
 (
@@ -224,6 +224,7 @@ sub name
   if(@_)
   {
     $self->name_sql(undef);
+    $self->select_sql(undef);
     return $self->{'name'} = shift;
   }
 
@@ -245,6 +246,31 @@ sub name_sql
     return $self->{'name'};
   }
 }
+
+sub select_sql
+{
+  my($self) = shift;
+
+  # Optional args: db, table alias
+
+  if(my $db = shift)
+  {
+    if(@_) # table alias arg too
+    {
+      return "$_[0]." . $db->quote_column_name($self->{'name'});
+    }
+    else
+    {
+      return $self->{'select_sql'}{$db->{'driver'}} ||= $db->quote_column_name($self->{'name'});
+    }
+  }
+  else
+  {
+    return $self->{'name'};
+  }
+}
+
+# sub dbi_data_type { () }
 
 sub parse_value  { $_[2] }
 sub format_value { $_[2] }
@@ -303,7 +329,7 @@ sub perl_column_defintion_attributes
   {
     if($attr =~ /^(?: name(?:_sql)? | is_primary_key_member | 
                   primary_key_position | method_name | method_code |
-                  made_method_types | ordinal_position | 
+                  made_method_types | ordinal_position | select_sql |
                   (?:builtin_)?triggers | 
                   (?:builtin_)?trigger_index )$/x)
     {

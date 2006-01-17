@@ -2284,6 +2284,35 @@ sub column_names_sql
   return wantarray ? @$list : $list;
 }
 
+sub select_nonlazy_columns_string_sql
+{
+  my($self, $db) = @_;
+
+  return $self->{'select_nonlazy_columns_string_sql'}{$db->{'id'}} ||= 
+    join(', ', map { $_->select_sql($db) } $self->nonlazy_columns);
+}
+
+sub select_columns_string_sql
+{
+  my($self, $db) = @_;
+
+  return $self->{'select_columns_string_sql'}{$db->{'id'}} ||= 
+    join(', ', map { $_->select_sql($db) } sort { $a->name cmp $b->name } $self->columns);
+}
+
+sub select_columns_sql
+{
+  my($self, $db) = @_;
+
+  my $list = $self->{'select_columns_sql'}{$db->{'id'}} ||= 
+    [ map { $_->select_sql($db) } sort { $a->name cmp $b->name } $self->columns ];
+
+  return wantarray ? @$list : $list;
+}
+
+
+
+
 sub method_column
 {
   my($self, $method) = @_;
@@ -2449,7 +2478,7 @@ sub load_all_sql
 
   no warnings;
   return $self->{'load_all_sql'}{$db->{'id'}}{join("\0", @$key_columns)} ||= 
-    'SELECT ' . $self->column_names_string_sql($db) . ' FROM ' .
+    'SELECT ' . $self->select_columns_string_sql($db) . ' FROM ' .
     $self->fq_table_sql($db) . ' WHERE ' .
     join(' AND ',  map { "$_ = ?" } @$key_columns);
 }
@@ -2462,7 +2491,7 @@ sub load_sql
 
   no warnings;
   return $self->{'load_sql'}{$db->{'id'}}{join("\0", @$key_columns)} ||= 
-    'SELECT ' . $self->nonlazy_column_names_string_sql($db) . ' FROM ' .
+    'SELECT ' . $self->select_nonlazy_columns_string_sql($db) . ' FROM ' .
     $self->fq_table_sql($db) . ' WHERE ' .
     join(' AND ',  map { "$_ = ?" } @$key_columns);
 }
@@ -2475,7 +2504,7 @@ sub load_all_sql_with_null_key
 
   no warnings;
   return 
-    'SELECT ' . $self->column_names_string_sql($db) . ' FROM ' .
+    'SELECT ' . $self->select_columns_string_sql($db) . ' FROM ' .
     $self->fq_table_sql($db) . ' WHERE ' .
     join(' AND ',  map { defined $key_values->[$i++] ? "$_ = ?" : "$_ IS NULL" }
     @$key_columns);
@@ -2489,7 +2518,7 @@ sub load_sql_with_null_key
 
   no warnings;
   return 
-    'SELECT ' . $self->nonlazy_column_names_string_sql($db) . ' FROM ' .
+    'SELECT ' . $self->select_nonlazy_columns_string_sql($db) . ' FROM ' .
     $self->fq_table_sql($db) . ' WHERE ' .
     join(' AND ',  map { defined $key_values->[$i++] ? "$_ = ?" : "$_ IS NULL" }
     @$key_columns);
@@ -2807,12 +2836,15 @@ sub _clear_column_generated_values
   $self->{'get_column_sql_tmpl'}    = undef;
   $self->{'columns_names_sql'}      = undef;
   $self->{'column_names_string_sql'} = undef;
-  $self->{'nonlazy_column_names_string_sql'} = undef;
-  $self->{'column_rw_method_names'} = undef;
-  $self->{'column_accessor_method_names'} = undef;
+  $self->{'nonlazy_column_names_string_sql'}      = undef;
+  $self->{'column_rw_method_names'}               = undef;
+  $self->{'column_accessor_method_names'}         = undef;
   $self->{'nonlazy_column_accessor_method_names'} = undef;
-  $self->{'column_mutator_method_names'} = undef;
-  $self->{'nonlazy_column_mutator_method_names'} = undef;
+  $self->{'column_mutator_method_names'}          = undef;
+  $self->{'nonlazy_column_mutator_method_names'}  = undef;
+  $self->{'select_nonlazy_columns_string_sql'}    = undef;
+  $self->{'select_columns_string_sql'}            = undef;
+  $self->{'select_columns_sql'}                   = undef;
   $self->{'method_columns'}         = undef;
   $self->{'column_accessor_method'} = undef;
   $self->{'column_mutator_method'}  = undef;

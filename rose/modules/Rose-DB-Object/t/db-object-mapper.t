@@ -903,6 +903,12 @@ EOF
       $dbh->do('DROP TABLE rose_db_object_test2');
     }
 
+    # MySQL 5.0.3 or later has a completely stupid "native" BIT type
+    my $bit_col = 
+      ($dbh->get_info(18) =~ /^[5-9]\d*\.(?:[1-9]\d*|0\.(?:[3-9]|\d\d))/) ?
+        q(bitz  BIT(5) NOT NULL DEFAULT B'00101') :
+        q(bitz  BIT(5) NOT NULL DEFAULT '00101');
+        
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test
 (
@@ -915,7 +921,7 @@ CREATE TABLE rose_db_object_test
   flag           TINYINT(1) NOT NULL,
   flag2          TINYINT(1),
   status         VARCHAR(32) DEFAULT 'active',
-  bitz           BIT(5) NOT NULL DEFAULT '00101',
+  $bit_col,
   nums           VARCHAR(255),
   start          DATE,
   save           INT,
@@ -947,6 +953,8 @@ EOF
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('mysql') }
+
+    MyMySQLObject->meta->allow_inline_column_values(1);
 
     MyMySQLObject->meta->table('rose_db_object_test');
 

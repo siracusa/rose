@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 187;
+use Test::More tests => 188;
 
 BEGIN 
 {
@@ -187,7 +187,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 31)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 32)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -202,6 +202,7 @@ SKIP: foreach my $db_type ('mysql')
   $o->other2_obj(7);
 
   ok($o->save, "save() 1 - $db_type");
+
   ok($o->load, "load() 1 - $db_type");
 
   is($o->other2_obj->name, 'def', "single column foreign key 1 - $db_type");
@@ -212,7 +213,7 @@ SKIP: foreach my $db_type ('mysql')
 
   is($o2->bits->to_Bin, '00101', "bits() (bitfield default value) - $db_type");
 
-  ok($o2->load, "load() 2 - $db_type");
+  ok($o2->load(with => [ 'other_obj' ]), "load() 2 - $db_type");
   ok(!$o2->not_found, "not_found() 1 - $db_type");
 
   is($o2->name, $o->name, "load() verify 1 - $db_type");
@@ -234,6 +235,7 @@ SKIP: foreach my $db_type ('mysql')
   sleep(1); # keep the last modified dates from being the same
 
   $o2->last_modified('now');
+
   ok($o2->save, "save() 2 - $db_type");
   ok($o2->load, "load() 3 - $db_type");
 
@@ -241,7 +243,8 @@ SKIP: foreach my $db_type ('mysql')
   is($o2->date_created, $o->date_created, "save() verify 1 - $db_type");
   ok($o2->last_modified ne $o->last_modified, "save() verify 2 - $db_type");
   is($o2->start->ymd, '2001-05-24', "save() verify 3 (date value) - $db_type");
-
+  is($o2->bits->to_Bin, '00101', "load() verify 10 (bitfield value) - $db_type");
+  
   my $o3 = MyMySQLObject->new();
 
   my $db = $o3->db or die $o3->error;
@@ -797,6 +800,12 @@ EOF
 
     MyMySQLOtherObject2->meta->initialize;
 
+    # MySQL 5.0.3 or later has a completely stupid "native" BIT type
+    my $bit_col = 
+      ($dbh->get_info(18) =~ /^[5-9]\d*\.(?:[1-9]\d*|0\.(?:[3-9]|\d\d))/) ?
+        q(bits  BIT(5) NOT NULL DEFAULT B'00101') :
+        q(bits  BIT(5) NOT NULL DEFAULT '00101');
+
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test
 (
@@ -805,7 +814,7 @@ CREATE TABLE rose_db_object_test
   flag           TINYINT(1) NOT NULL,
   flag2          TINYINT(1),
   status         VARCHAR(32) DEFAULT 'active',
-  bits           BIT(5) NOT NULL DEFAULT '00101',
+  $bit_col,
   start          DATE,
   save           INT,
   fk1            INT,
@@ -826,6 +835,8 @@ EOF
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('mysql') }
+
+    MyMySQLObject->meta->allow_inline_column_values(1);
 
     MyMySQLObject->meta->table('rose_db_object_test');
 

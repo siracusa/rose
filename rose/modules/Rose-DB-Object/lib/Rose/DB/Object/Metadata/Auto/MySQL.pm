@@ -118,8 +118,8 @@ sub auto_generate_foreign_keys
 
     my $q = $dbh->get_info(29); # quote character
 
-    my $sth = $dbh->prepare("SHOW TABLE STATUS FROM `$db_name` LIKE ?");
-    $sth->execute($self->table);
+    my $sth = $dbh->prepare("SHOW CREATE TABLE `$db_name`.`" . $self->table . '`');
+    $sth->execute;
 
     # This happens when the table has no foreign keys
     return  unless(defined $sth);
@@ -128,38 +128,47 @@ sub auto_generate_foreign_keys
 
     FK: while(my $row = $sth->fetchrow_hashref)
     {
-      # The Comment column contains a text description of foreign keys that
-      # we have to parse.  See, this is why people hate MySQL.
+      # The Create Table column contains a text description of foreign keys 
+      # that we have to parse.  See, this is why people hate MySQL.
       #
-      # The comment looks like this (s/\n/ /g):
+      # The value looks like this (s/\n/ /g):
       #
-      # InnoDB free: 4096 kB;
-      # (`fother_id2`) REFER `test/rose_db_object_other2`(`id2`) 
-      # ON DELETE NO ACTION ON UPDATE SET NULL;
-      # (`fother_id3`) REFER `test/rose_db_object_other3`(`id3`);
-      # (`fother_id4`) REFER `test/rose_db_object_other4`(`id4`);
-      # (`fk1` `fk2` `fk3`) REFER `test/rose_db_object_other`(`k1` `k2` `k3`)
+      # CONSTRAINT `products_ibfk_1` FOREIGN KEY (`vendor_id`) 
+      # REFERENCES `vendors` (`id`) ON DELETE NO ACTION ON UPDATE SET NULL,
+      # CONSTRAINT `products_ibfk_1` FOREIGN KEY (`vendor_id`) 
+      # REFERENCES `dbname`.`vendors` (`id`) ON DELETE NO ACTION ON UPDATE SET NULL,
+      # CONSTRAINT `rose_db_object_test_ibfk_4` FOREIGN KEY (`fk1`, `fk2`, `fk3`)
+      # REFERENCES `rose_db_object_other` (`k1`, `k2`, `k3`)
 
-      for(my $comment = $row->{'Comment'})
+      for(my $sql = $row->{'Create Table'})
       {
-        s/^InnoDB free:.+?; *//i;
+        s/^.+?,\n\s*(?=CONSTRAINT)//si;
 
-        FK: while(s{\( ((?:`(?:[^`]|``)+` \s*)+) \) \s+ REFER \s* 
-                    `((?:[^`]|``)+) / ((?:[^`]|``)+) ` 
-                    \( ((?:`(?:[^`]|``)+` \s*)+) \) 
+        # XXX: This is not bullet-proof
+        FK: while(s{^CONSTRAINT \s+ 
+                    `((?:[^`]|``)+)` \s+                # constraint name
+                    FOREIGN \s+ KEY \s+
+                    \( ((?:`(?:[^`]|``)+`,? \s*)+) \) \s+ # local columns
+                    REFERENCES \s* 
+                    (?: `((?:[^`]|``)+)` \. )?          # foreign db
+                    `((?:[^`]|``)+)` \s+                # foreign table
+                    \( ((?:`(?:[^`]|``)+`,? \s*)+) \)   # foreign columns
                     (?: \s+ ON \s+ (?: DELETE | UPDATE) \s+
                       (?: RESTRICT | CASCADE | SET \s+ NULL | NO \s+ ACTION)
-                    )* (?:; \s* | \s* $)}{}six)
+                    )* (?:, \s* | \s* \))}{}six)
         {
-          my $local_columns   = $1;
-          my $foreign_db      = $2;
-          my $foreign_table   = $3;
-          my $foreign_columns = $4;
+          my $constraint_name = $1;
+          my $local_columns   = $2;
+          my $foreign_db      = $3;
+          my $foreign_table   = $4;
+          my $foreign_columns = $5;
 
-          next  unless(lc $foreign_db eq $db_name);
+          # No cross-database foreign keys in MySQL for now...
+          next  unless(!defined $foreign_db || lc $foreign_db eq $db_name);
 
-          my @local_columns   = map { s/^`//; s/`$//; $_ } split(' ', $local_columns);
-          my @foreign_columns = map { s/^`//; s/`$//; $_ } split(' ', $foreign_columns);
+          # XXX: This is not bullet-proof
+          my @local_columns   = map { s/^`//; s/`$//; s/``/`/g; $_ } split(/,? /, $local_columns);
+          my @foreign_columns = map { s/^`//; s/`$//; s/``/`/g; $_ } split(/,? /, $foreign_columns);
 
           unless(@local_columns > 0 && @local_columns == @foreign_columns)
           {

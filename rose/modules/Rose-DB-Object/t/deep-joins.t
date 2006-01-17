@@ -1043,7 +1043,7 @@ EOF
 
     my $version = $dbh->get_info(18); # SQL_DBMS_VER  
 
-    die "MySQL version too old"  unless($version =~ /^4\./);
+    die "MySQL version too old"  unless($version =~ /^[4-9]\./);
 
     # Drop existing tables, ignoring errors
     {
