@@ -5,6 +5,8 @@ use strict;
 use Rose::HTML::Form::Field::DateTime;
 our @ISA = qw(Rose::HTML::Form::Field::DateTime);
 
+our $VERSION = '0.35';
+
 sub inflate_value
 {
   my($self) = shift;
