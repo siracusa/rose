@@ -5455,6 +5455,8 @@ SKIP: foreach my $db_type ('sqlite')
       require_objects => [ 'colors3' ],
       with_map_records => { colors3 => 'mrec' });
 
+  $objs->[0]->{'colors3'} = [ sort { $b->mrec->color_id <=> $a->mrec->color_id } @{$objs->[0]->{'colors3'}} ];
+
   is($objs->[0]->colors3->[0]->mrec->color_id, $objs->[0]->colors3->[0]->id, "with_map_records mrec 1 - $db_type");
   is($objs->[0]->colors3->[0]->mrec->obj_id, $o->id, "with_map_records mrec 2 - $db_type");
   is($objs->[0]->colors3->[0]->mrec->color_id, 9, "with_map_records mrec 3 - $db_type");
@@ -5502,6 +5504,9 @@ SKIP: foreach my $db_type ('sqlite')
       with_map_records => { colors3 => 'mrec' });
 
   $obj = $iter->next;
+
+  $obj->{'colors3'} = [ sort { $b->mrec->color_id <=> $a->mrec->color_id } @{$obj->{'colors3'}} ];
+
   is($obj->colors3->[0]->mrec->color_id, $obj->colors3->[0]->id, "with_map_records mrec 1 - $db_type");
   is($obj->colors3->[0]->mrec->obj_id, $o->id, "with_map_records mrec 2 - $db_type");
   is($obj->colors3->[0]->mrec->color_id, 9, "with_map_records mrec 3 - $db_type");

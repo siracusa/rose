@@ -927,6 +927,9 @@ sub apply_method_triggers
                   {      
                     my $value = $self->{$key};
 
+                    # Call method to get default value
+                    $value = $method_code->($self)  unless(defined $value);
+
                     foreach my $code (@$deflate_code)
                     {
                       $value = $code->($self, $value);
@@ -938,6 +941,9 @@ sub apply_method_triggers
                 else
                 {
                   my $value = $self->{$key};
+
+                  # Call method to get default value
+                  $value = $method_code->($self)  unless(defined $value);
 
                   foreach my $code (@$deflate_code)
                   {
@@ -1067,6 +1073,9 @@ sub apply_method_triggers
                 {    
                   my $value = $self->{$key};
 
+                  # Call method to get default value
+                  $value = $method_code->($self)  unless(defined $value);
+
                   foreach my $code (@$deflate_code)
                   {
                     $value = $code->($self, $value);
@@ -1078,6 +1087,9 @@ sub apply_method_triggers
               else
               {
                 my $value = $self->{$key};
+                
+                # Call method to get default value
+                $value = $method_code->($self)  unless(defined $value);
 
                 foreach my $code (@$deflate_code)
                 {
