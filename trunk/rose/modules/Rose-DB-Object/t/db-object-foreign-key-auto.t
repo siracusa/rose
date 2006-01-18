@@ -1731,7 +1731,7 @@ EOF
 
     my $version = $dbh->get_info(18); # SQL_DBMS_VER  
 
-    die "MySQL version too old"  unless($version =~ /^4\./);
+    die "MySQL version too old"  unless($version =~ /^[4-9]\./);
 
     CLEAR:
     {
@@ -1874,7 +1874,7 @@ CREATE TABLE Rose_db_object_test
   flag           TINYINT(1) NOT NULL,
   flag2          TINYINT(1),
   status         VARCHAR(32) DEFAULT 'active',
-  bits           BIT(5) NOT NULL DEFAULT '00101',
+  $bit_col,
   start          DATE DEFAULT '1980-12-24',
   save           INT,
   fk1            INT UNSIGNED,
