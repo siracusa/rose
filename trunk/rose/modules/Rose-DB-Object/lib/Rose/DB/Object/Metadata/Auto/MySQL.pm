@@ -121,7 +121,7 @@ sub auto_generate_foreign_keys
     my $information_schema_ok = 0;
 
     # Try information_schema if using MySQL >= 5.0.6
-    if($db->database_version =~ /^5\.(?:1|0\.(?:[6-9]|\d\d))/)
+    if($db->database_version >= 5_000_006)
     {
       eval
       {
