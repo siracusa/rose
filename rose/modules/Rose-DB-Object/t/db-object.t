@@ -921,10 +921,13 @@ EOF
   # MySQL
   #
 
-  eval 
+  my $db_version;
+
+  eval
   {
-    $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
-      or die Rose::DB->error;
+    my $db = Rose::DB->new('mysql_admin');
+    $dbh = $db->retain_dbh() or die Rose::DB->error;
+    $db_version = $db->database_version;
   };
 
   if(!$@ && $dbh)
@@ -941,12 +944,12 @@ EOF
 
     # MySQL 5.0.3 or later has a completely stupid "native" BIT type
     my $bit_col1 = 
-      ($dbh->get_info(18) =~ /^[5-9]\d*\.(?:[1-9]\d*|0\.(?:[3-9]|\d\d))/) ?
+      ($db_version >= 5_000_003) ?
         q(bitz  BIT(5) NOT NULL DEFAULT B'00101') :
         q(bitz  BIT(5) NOT NULL DEFAULT '00101');
 
     my $bit_col2 = 
-      ($dbh->get_info(18) =~ /^[5-9]\d*\.(?:[1-9]\d*|0\.(?:[3-9]|\d\d))/) ?
+      ($db_version >= 5_000_003) ?
         q(bitz2  BIT(2) NOT NULL DEFAULT B'00') :
         q(bitz2  BIT(2) NOT NULL DEFAULT '0');
         
