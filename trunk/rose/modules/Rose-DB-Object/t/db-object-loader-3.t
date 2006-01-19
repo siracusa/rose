@@ -74,11 +74,11 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
              { name => 'green' });
 
   $p->save;
-  
+
   $p = $product_class->new(id => $p->id)->load;
 
   ok($p->db->class =~ /^${class_prefix}::DB::AutoBase\d+$/, "db 1 - $db_type");
-  
+
   OBJECT_CLASS:
   {
     no strict 'refs';
@@ -88,20 +88,20 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   is($p->vendor->name, "Acme $i", "vendor 1 - $db_type");
 
   my @prices = sort { $a->price <=> $b->price } $p->prices;
-  
+
   is(scalar @prices, 2, "prices 1 - $db_type");
   is($prices[0]->price, 1.23, "prices 2 - $db_type");
   is($prices[1]->price, 4.56, "prices 3 - $db_type");
 
   my @colors = sort { $a->name cmp $b->name } $p->colors;
-  
+
   is(scalar @colors, 2, "colors 1 - $db_type");
   is($colors[0]->name, 'green', "colors 2 - $db_type");
   is($colors[1]->name, 'red', "colors 3 - $db_type");
 
   my $mgr_class = $class_prefix . '::Product::Manager';
   my $prods = $mgr_class->get_products(query => [ id => $p->id ]);
-  
+
   is(ref $prods, 'ARRAY', "get_products 1 - $db_type");
   is(@$prods, 1, "get_products 2 - $db_type");
   is($prods->[0]->id, $p->id, "get_products 3 - $db_type");
@@ -142,13 +142,13 @@ BEGIN
       $dbh->do('DROP TABLE prices CASCADE');
       $dbh->do('DROP TABLE products CASCADE');
       $dbh->do('DROP TABLE vendors CASCADE');
-    
+
       $dbh->do('DROP TABLE Rose_db_object_private.products_colors CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.colors CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.prices CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.products CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.vendors CASCADE');
-    
+
       $dbh->do('DROP SCHEMA Rose_db_object_private CASCADE');
       $dbh->do('CREATE SCHEMA Rose_db_object_private');
     }
@@ -399,7 +399,7 @@ CREATE TABLE products_colors
 )
 TYPE=InnoDB
 EOF
-    
+
     $dbh->disconnect;
   }
 
@@ -453,7 +453,7 @@ CREATE TABLE products
 
   date_created  DATETIME YEAR TO SECOND,
   release_date  DATETIME YEAR TO SECOND,
-  
+
   UNIQUE(name)
 )
 EOF
@@ -543,7 +543,7 @@ CREATE TABLE products
 
   date_created  DATETIME,
   release_date  DATETIME,
-  
+
   UNIQUE(name)
 )
 EOF
@@ -609,7 +609,7 @@ END
     $dbh->do('DROP TABLE Rose_db_object_private.vendors CASCADE');
 
     $dbh->do('DROP SCHEMA Rose_db_object_private CASCADE');
-      
+
     $dbh->disconnect;
   }
 

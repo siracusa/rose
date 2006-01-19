@@ -226,7 +226,7 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 
   $p->save;
 
-  
+
   $ENV{'PERL5LIB'} = $ENV{'PERL5LIB'} ? 
     "$Bin/../../Rose-DB/lib:$ENV{'PERL5LIB'}" : "$Bin/../../Rose-DB/lib";
 

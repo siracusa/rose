@@ -128,17 +128,34 @@ SKIP:
   is($db->format_timestamp(parse_date('12/31/2002 12:34:56', 'floating')), '2002-12-31 12:34:56', "format_timestamp() floating");
   is($db->format_time(parse_date('12/31/2002 12:34:56', 'floating')), '12:34:56', "format_time() floating");
 
-  is($db->format_bitfield($db->parse_bitfield('1010')),
-     q(1010), "format_bitfield() 1");
+  if($db->database_version >= 5_000_003)
+  {
+	is($db->format_bitfield($db->parse_bitfield('1010')),
+	   q(b'1010'), "format_bitfield() 1");
 
-  is($db->format_bitfield($db->parse_bitfield(q(B'1010'))),
-     q(1010), "format_bitfield() 2");
+	is($db->format_bitfield($db->parse_bitfield(q(B'1010'))),
+	   q(b'1010'), "format_bitfield() 2");
 
-  is($db->format_bitfield($db->parse_bitfield(2), 4),
-     q(0010), "format_bitfield() 3");
+	is($db->format_bitfield($db->parse_bitfield(2), 4),
+	   q(b'0010'), "format_bitfield() 3");
 
-  is($db->format_bitfield($db->parse_bitfield('0xA'), 4),
-     q(1010), "format_bitfield() 4");
+	is($db->format_bitfield($db->parse_bitfield('0xA'), 4),
+	   q(b'1010'), "format_bitfield() 4");  
+  }
+  else
+  {
+	is($db->format_bitfield($db->parse_bitfield('1010')),
+	   q(10), "format_bitfield() 1");
+
+	is($db->format_bitfield($db->parse_bitfield(q(B'1010'))),
+	   q(10), "format_bitfield() 2");
+
+	is($db->format_bitfield($db->parse_bitfield(2), 4),
+	   q(2), "format_bitfield() 3");
+
+	is($db->format_bitfield($db->parse_bitfield('0xA'), 4),
+	   q(10), "format_bitfield() 4");
+  }
 
   #is($db->autocommit + 0, $dbh->{'AutoCommit'} + 0, 'autocommit() 1');
 

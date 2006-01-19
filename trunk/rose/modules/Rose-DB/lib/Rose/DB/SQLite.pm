@@ -73,6 +73,13 @@ sub quote_table_name
   return qq('$table');
 }
 
+sub format_bitfield 
+{
+  my($self, $vec, $size) = @_;
+  $vec = Bit::Vector->new_Bin($size, $vec->to_Bin)  if($size);
+  return q(b') . $vec->to_Bin . q(');
+}
+
 sub refine_dbi_column_info
 {
   my($self, $col_info) = @_;

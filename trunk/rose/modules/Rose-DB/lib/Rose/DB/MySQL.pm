@@ -40,7 +40,7 @@ sub database_version
   my($self) = shift;
   return $self->{'database_version'}  if(defined $self->{'database_version'});
 
-  $vers = $self->dbh->get_info(18); # SQL_DBMS_VER
+  my $vers = $self->dbh->get_info(18); # SQL_DBMS_VER
 
   # Convert to an integer, e.g., 5.1.13 -> 5001013
   if($vers =~ /^(\d+)\.(\d+)(?:\.(\d+))?/)
@@ -107,7 +107,7 @@ sub should_inline_bitfield_values
 {
   # MySQL 5.0.3 or later requires this crap...
   return $_[0]->{'should_inline_bitfield_values'} ||= 
-    (shift->database_version =~ /^[5-9]\d*\.(?:[1-9]\d*|0\.(?:[3-9]|\d\d))/) ? 1 : 0;
+    (shift->database_version >= 5_000_003) ? 1 : 0;
 }
 
 sub select_bitfield_column_sql
@@ -123,7 +123,7 @@ sub select_bitfield_column_sql
 
   return $self->quote_column_name($name);
 }
-    
+
 sub refine_dbi_column_info
 {
   my($self, $col_info) = @_;
