@@ -1113,7 +1113,7 @@ sub apply_method_triggers
               else
               {
                 my $value = $self->{$key};
-                
+
                 # Call method to get default value
                 $value = $method_code->($self)  unless(defined $value);
 

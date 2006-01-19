@@ -88,7 +88,7 @@ MAKE_MAP_RECORD_METHOD:
     my($key) = shift || $counter++;
 
     $key = MAP_RECORD_ATTR . '_' . $key;
-  
+
     return sub 
     {
       return $_[0]->{$key} = $_[1]  if(@_ > 1);

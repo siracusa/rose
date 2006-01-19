@@ -2751,7 +2751,7 @@ sub objects_by_map
     {
       $map_record_method = MAP_RECORD_METHOD;
     }
-  
+
     unless($map_to_class->can($map_record_method))
     {
       no strict 'refs';

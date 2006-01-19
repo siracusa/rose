@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 86;
+use Test::More tests => 90;
 
 BEGIN
 {
@@ -266,3 +266,31 @@ is($entry->connect_option('PrintError'), 1, 'entry print_error() 1');
 
 $entry->autocommit(1);
 is($entry->connect_option('AutoCommit'), 1, 'entry autocommit() 1');
+
+{
+  package MyTest::DB;
+  our @ISA = qw(My::DB2);
+  MyTest::DB->use_private_registry;
+  MyTest::DB->default_type('dt');
+  MyTest::DB->default_domain('dd');
+  MyTest::DB->register_db(driver => 'sqlite');
+}
+
+$db = MyTest::DB->new;
+
+is($db->type, 'dt', 'default type 1');
+is($db->domain, 'dd', 'default domain 1');
+
+{
+  package MyTest::DB2;
+  our @ISA = qw(My::DB2);
+  MyTest::DB2->default_type('xdt');
+  MyTest::DB2->default_domain('xdd');
+
+  MyTest::DB2->register_db(driver => 'sqlite');
+}
+
+$db = MyTest::DB2->new;
+
+is($db->type, 'xdt', 'default type 2');
+is($db->domain, 'xdd', 'default domain 2');

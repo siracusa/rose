@@ -162,9 +162,9 @@ EOF
         {
           # No cross-database foreign keys in MySQL for now...
           next  unless(!defined $foreign_schema || lc $foreign_schema eq lc $db_name);
-          
+
           my $info = $fk_info{$foreign_table} ||= {};
-          
+
           push(@{$info->{'local_columns'}}, $local_column);
           push(@{$info->{'foreign_columns'}}, $foreign_column);
         }
@@ -180,9 +180,9 @@ EOF
                 "information_schema for table '", $self->table, "' ",
                 " in database '$db_name'";
           }
-  
+
           my $foreign_class = $self->class_for(table => $foreign_table);
-  
+
           unless($foreign_class)
           {
             # Add deferred task
@@ -191,34 +191,34 @@ EOF
               class  => $self->class, 
               method => 'auto_init_foreign_keys',
               args   => \%args,
-  
+
               code => sub
               {
                 $self->auto_init_foreign_keys(%args);
                 $self->make_foreign_key_methods(%args, preserve_existing => 1);
               },
-  
+
               check => sub
               {
                 my $fks = $self->foreign_keys;
                 return @$fks == $total_fks ? 1 : 0;
               }
             });
-  
+
             unless($no_warnings || $self->allow_auto_initialization)
             {
               no warnings; # Allow undef coercion to empty string
               warn "No Rose::DB::Object-derived class found for table ",
                    "'$foreign_table'";
             }
-  
+
             $total_fks++;
             next FK;
           }
-  
+
           my %key_columns;
           @key_columns{@local_columns} = @foreign_columns;
-  
+
           my $fk = 
             Rose::DB::Object::Metadata::ForeignKey->new(
               class       => $foreign_class,
@@ -227,7 +227,7 @@ EOF
           push(@foreign_keys, $fk);
           $total_fks++;
         }
-        
+
         $information_schema_ok = 1;
       };
     }
@@ -236,13 +236,13 @@ EOF
     unless($information_schema_ok)
     {
       #my $q = $dbh->get_info(29); # quote character
-  
+
       my $sth = $dbh->prepare("SHOW CREATE TABLE `$db_name`.`" . $self->table . '`');
       $sth->execute;
-  
+
       # This happens when the table has no foreign keys
       return  unless(defined $sth);
-  
+
       FK: while(my $row = $sth->fetchrow_hashref)
       {
         # The Create Table column contains a text description of foreign keys 
@@ -256,11 +256,11 @@ EOF
         # REFERENCES `dbname`.`vendors` (`id`) ON DELETE NO ACTION ON UPDATE SET NULL,
         # CONSTRAINT `rose_db_object_test_ibfk_4` FOREIGN KEY (`fk1`, `fk2`, `fk3`)
         # REFERENCES `rose_db_object_other` (`k1`, `k2`, `k3`)
-  
+
         for(my $sql = $row->{'Create Table'})
         {
           s/^.+?,\n\s*(?=CONSTRAINT)//si;
-  
+
           # XXX: This is not bullet-proof
           FK: while(s{^CONSTRAINT \s+ 
                       `((?:[^`]|``)+)` \s+                  # constraint name
@@ -279,23 +279,23 @@ EOF
             my $foreign_db      = $3;
             my $foreign_table   = $4;
             my $foreign_columns = $5;
-  
+
             # No cross-database foreign keys in MySQL for now...
             next  unless(!defined $foreign_db || lc $foreign_db eq $db_name);
-  
+
             # XXX: This is not bullet-proof
             my @local_columns   = map { s/^`//; s/`$//; s/``/`/g; $_ } split(/,? /, $local_columns);
             my @foreign_columns = map { s/^`//; s/`$//; s/``/`/g; $_ } split(/,? /, $foreign_columns);
-  
+
             unless(@local_columns > 0 && @local_columns == @foreign_columns)
             {
               die "Failed to parse MySQL table definition ",
                   "'$row->{'Create Table'}' returned by the query '",
                   "SHOW CREATE TABLE `$db_name`.`" . $self->table . '`';
             }
-  
+
             my $foreign_class = $self->class_for(table => $foreign_table);
-  
+
             unless($foreign_class)
             {
               # Add deferred task
@@ -304,39 +304,39 @@ EOF
                 class  => $self->class, 
                 method => 'auto_init_foreign_keys',
                 args   => \%args,
-  
+
                 code => sub
                 {
                   $self->auto_init_foreign_keys(%args);
                   $self->make_foreign_key_methods(%args, preserve_existing => 1);
                 },
-  
+
                 check => sub
                 {
                   my $fks = $self->foreign_keys;
                   return @$fks == $total_fks ? 1 : 0;
                 }
               });
-  
+
               unless($no_warnings || $self->allow_auto_initialization)
               {
                 no warnings; # Allow undef coercion to empty string
                 warn "No Rose::DB::Object-derived class found for table ",
                      "'$foreign_table'";
               }
-  
+
               $total_fks++;
               next FK;
             }
-  
+
             my %key_columns;
             @key_columns{@local_columns} = @foreign_columns;
-  
+
             my $fk = 
               Rose::DB::Object::Metadata::ForeignKey->new(
                 class       => $foreign_class,
                 key_columns => \%key_columns);
-  
+
             push(@foreign_keys, $fk);
             $total_fks++;
           }
@@ -364,7 +364,7 @@ EOF
         die "Missing or invalid key name '$key_name' for foreign key ",
             "generated in $class for ", $fk->class;
       }
-  
+
       $fk->name($key_name);
     }
   };

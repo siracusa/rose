@@ -27,7 +27,7 @@ BEGIN
 }
 
 My::DB2->default_domain('test');
-My::DB2->default_type('sqlite');
+My::DB2->default_type('sqlite_admin');
 
 my $db = My::DB2->new();
 
@@ -102,7 +102,7 @@ SKIP:
   $dbh = $db->dbh;
 
   is($db->domain, 'test', "domain()");
-  is($db->type, 'sqlite', "type()");
+  is($db->type, 'sqlite_admin', "type()");
 
   is($db->print_error, $dbh->{'PrintError'}, 'print_error() 2');
   is($db->print_error, $db->connect_option('PrintError'), 'print_error() 3');
@@ -117,16 +117,16 @@ SKIP:
   #is($db->format_time(parse_date('12/31/2002 12:34:56', 'floating')), '12:34:56', "format_time() floating");
 
   is($db->format_bitfield($db->parse_bitfield('1010')),
-     q(1010), "format_bitfield() 1");
+     q(b'1010'), "format_bitfield() 1");
 
   is($db->format_bitfield($db->parse_bitfield(q(B'1010'))),
-     q(1010), "format_bitfield() 2");
+     q(b'1010'), "format_bitfield() 2");
 
   is($db->format_bitfield($db->parse_bitfield(2), 4),
-     q(0010), "format_bitfield() 3");
+     q(b'0010'), "format_bitfield() 3");
 
   is($db->format_bitfield($db->parse_bitfield('0xA'), 4),
-     q(1010), "format_bitfield() 4");
+     q(b'1010'), "format_bitfield() 4");
 
   #is($db->autocommit + 0, $dbh->{'AutoCommit'} + 0, 'autocommit() 1');
 
