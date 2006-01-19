@@ -1,4 +1,4 @@
-0.64 (01.18.2006) - John Siracusa <siracusa@mindspring.com>
+0.64 (01.19.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Worked around yet more SQLite ORDER BY bugs.
     * Improved the column trigger implementation.
