@@ -1,4 +1,4 @@
-0.61 (01.18.2006) - John Siracusa <siracusa@mindspring.com>
+0.61 (01.19.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Changes to support MySQL 5's brain-dead new BIT column type.
     * Changed SQLite's bitfield representation to use strings instead
