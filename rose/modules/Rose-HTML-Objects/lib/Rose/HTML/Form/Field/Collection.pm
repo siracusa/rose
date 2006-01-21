@@ -17,17 +17,17 @@ use Rose::Object::MakeMethods::Generic
 
   'scalar --get_set_init'  => 
   [
-    'rank_counter',
+    'field_rank_counter',
   ],
 );
 
-sub init_rank_counter { 1 }
+sub init_field_rank_counter { 1 }
 
-sub increment_rank_counter
+sub increment_field_rank_counter
 {
   my($self) = shift;
-  my $rank = $self->rank_counter;
-  $self->rank_counter($rank + 1);
+  my $rank = $self->field_rank_counter;
+  $self->field_rank_counter($rank + 1);
   return $rank;
 }
 
@@ -43,13 +43,14 @@ sub field
     }
 
     $field->name($name);
+    $field->field_name($name);
     $field->parent_field($self);
 
     $self->_clear_field_generated_values;
 
     unless(defined $field->rank)
     {
-      $field->rank($self->increment_rank_counter);
+      $field->rank($self->increment_field_rank_counter);
     }
 
     return $self->{'fields'}{$name} = $field;
@@ -75,7 +76,7 @@ sub add_fields
     {
       unless(defined $arg->rank)
       {
-        $arg->rank($self->increment_rank_counter);
+        $arg->rank($self->increment_field_rank_counter);
       }
 
       $self->field($arg->name => $arg);
@@ -91,7 +92,7 @@ sub add_fields
 
       unless(defined $field->rank)
       {
-        $field->rank($self->increment_rank_counter);
+        $field->rank($self->increment_field_rank_counter);
       }
 
       $self->field($arg => $field);
@@ -150,7 +151,7 @@ sub delete_fields
 {
   $_[0]->_clear_field_generated_values;
   $_[0]->{'fields'} = {};
-  $_[0]->rank_counter(undef);
+  $_[0]->field_rank_counter(undef);
   return;
 }
 

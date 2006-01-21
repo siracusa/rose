@@ -9,10 +9,15 @@ use Rose::URI;
 use URI::Escape qw(uri_escape);
 
 use Rose::HTML::Form::Field;
+use Rose::HTML::Form::Collection;
 use Rose::HTML::Form::Field::Collection;
-our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.32';
+our @ISA = 
+  qw(Rose::HTML::Form::Field 
+     Rose::HTML::Form::Field::Collection 
+     Rose::HTML::Form::Collection);
+
+our $VERSION = '0.35';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -50,7 +55,13 @@ our $Debug = 0;
 
 use Rose::Object::MakeMethods::Generic
 (
-  scalar => 'uri_base',
+  scalar =>
+  [
+    'uri_base',
+    'rank',
+    'form_name',
+  ],
+
   'scalar --get_set_init' => 'uri_separator',
 
   boolean => 
@@ -96,6 +107,58 @@ sub action { shift->html_attr('action', @_) }
 sub method { shift->html_attr('method', @_) }
 
 sub build_form { }
+
+sub parent_form
+{
+  my($self) = shift; 
+  return Scalar::Util::weaken($self->{'parent_form'} = shift)  if(@_);
+  return $self->{'parent_form'};
+}
+
+sub name
+{
+  my($self) = shift;
+
+  if(@_)
+  {
+    return $self->html_attr('name', shift);
+  }
+  else
+  {
+    unless(defined $self->html_attr('name'))
+    {
+      return $self->form_name;
+    }
+
+    return $self->html_attr('name');
+  }
+}
+
+# sub form_name
+# {
+#   my($self) = shift;
+# 
+#   if(@_)
+#   {
+#     $self->{'form_name'} = shift;
+# 
+#     unless(defined $self->name)
+#     {
+#       $self->html_attr(name => $self->{'form_name'})
+#     }
+# 
+#     return $self->{'form_name'};
+#   }
+#   else
+#   {
+#     unless(defined $self->{'form_name'})
+#     {
+#       return $self->{'form_name'} = $self->html_attr('name');
+#     }
+# 
+#     return $self->{'form_name'};
+#   }
+# }
 
 sub validate_field_html_attrs
 {
