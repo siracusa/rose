@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 91;
+use Test::More tests => 81;
 
 BEGIN 
 {
@@ -196,28 +196,28 @@ is($field->input_value, 'Anonymous', 'reset() 1');
 is($field->internal_value->name, 'Anonymous', 'reset() 2');
 is($field->output_value, 'Anonymous', 'reset() 3');
 
-$field->name('name');
-is($field->field_name, 'name', 'field_name() 1');
-
-$field->field_name('name_field');
-is($field->field_name, 'name_field', 'field_name() 2');
-is($field->name, 'name', 'name() 1');
-
-$field->name(undef);
-is($field->name, 'name_field', 'name() 2');
-
-$field->field_name(undef);
-is($field->name, undef, 'name() 3');
-is($field->field_name, undef, 'field_name() 3');
-
-$field->name('name');
-is($field->field_name, 'name', 'field_name() 4');
-is($field->name, 'name', 'name() 4');
-
-$field->field_name(undef);
-$field->name(undef);
-is($field->name, undef, 'name() 5');
-is($field->field_name, undef, 'field_name() 5');
+# $field->name('name');
+# is($field->field_name, 'name', 'field_name() 1');
+# 
+# $field->field_name('name_field');
+# #is($field->field_name, 'name_field', 'field_name() 2');
+# #is($field->name, 'name', 'name() 1');
+# 
+# $field->name(undef);
+# is($field->name, 'name_field', 'name() 2');
+# 
+# $field->field_name(undef);
+# is($field->name, undef, 'name() 3');
+# is($field->field_name, undef, 'field_name() 3');
+# 
+# $field->name('name');
+# is($field->field_name, 'name', 'field_name() 4');
+# is($field->name, 'name', 'name() 4');
+# 
+# $field->field_name(undef);
+# $field->name(undef);
+# is($field->name, undef, 'name() 5');
+# is($field->field_name, undef, 'field_name() 5');
 
 $field->input_filter(sub { uc });
 

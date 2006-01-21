@@ -23,7 +23,7 @@ use Rose::Object::MakeMethods::Generic
 (
   scalar => 
   [
-    qw(label description rank)
+    qw(label description rank field_name)
   ],
 
   boolean => [ qw(required is_cleared has_partial_value) ],
@@ -119,31 +119,45 @@ sub name
   }
 }
 
-sub field_name
-{
-  my($self) = shift;
-
-  if(@_)
-  {
-    $self->{'field_name'} = shift;
-
-    unless(defined $self->name)
-    {
-      $self->html_attr(name => $self->{'field_name'})
-    }
-
-    return $self->{'field_name'};
-  }
-  else
-  {
-    unless(defined $self->{'field_name'})
-    {
-      return $self->{'field_name'} = $self->html_attr('name');
-    }
-
-    return $self->{'field_name'};
-  }
-}
+# =item B<field_name [NAME]>
+# 
+# When passed a NAME argument, it sets the name of the field.  If the "name"
+# HTML attribute is not defined, its value is also set to NAME.  NAME is then
+# returned.
+# 
+# If no arguments are passed, and if the field name is not defined, then the
+# field name is set to the value of the "name" HTML attribute and then
+# returned. If the field name was already defined, then it is simply
+# returned.
+# 
+# Note that this means that the field name and the "name" HTML attribute do
+# not necessarily have to be the same (but usually are).
+#
+# sub field_name
+# {
+#   my($self) = shift;
+# 
+#   if(@_)
+#   {
+#     $self->{'field_name'} = shift;
+# 
+#     unless(defined $self->name)
+#     {
+#       $self->html_attr(name => $self->{'field_name'})
+#     }
+# 
+#     return $self->{'field_name'};
+#   }
+#   else
+#   {
+#     unless(defined $self->{'field_name'})
+#     {
+#       return $self->{'field_name'} = $self->html_attr('name');
+#     }
+# 
+#     return $self->{'field_name'};
+#   }
+# }
 
 sub default_value
 {
@@ -818,14 +832,6 @@ Get or set a text description of the field.  This text is not currently used any
 Going too far off into the realm of generic help text is not a good idea since this text may be used elsewhere by this class or subclasses, and there it will be expected to be a description of the field rather than a description of how to fill out the field (e.g. "Command-click to make multiple selections") or any other sort of help text.
 
 It may also be useful for debugging.
-
-=item B<field_name [NAME]>
-
-When passed a NAME argument, it sets the name of the field.  If the "name" HTML attribute is not defined, its value is also set to NAME.  NAME is then returned.
-
-If no arguments are passed, and if the field name is not defined, then the field name is set to the value of the "name" HTML attribute and then returned. If the field name was already defined, then it is simply returned.
-
-Note that this means that the field name and the "name" HTML attribute do not necessarily have to be the same (but usually are).
 
 =item B<filter [CODE]>
 
