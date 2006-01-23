@@ -21,7 +21,7 @@ use Rose::HTML::Form::Constants qw(FIELD_SEPARATOR FORM_SEPARATOR);
 our $FIELD_SEPARATOR = FIELD_SEPARATOR;
 our $FORM_SEPARATOR  = FORM_SEPARATOR;
 
-our $VERSION = '0.02';
+our $VERSION = '0.35';
 
 #our $Debug = 0;
 
@@ -29,7 +29,7 @@ use Rose::Object::MakeMethods::Generic
 (
   scalar => 
   [
-    qw(label description rank field_name)
+    qw(label description rank field_name type)
   ],
 
   boolean => [ qw(required is_cleared has_partial_value) ],
