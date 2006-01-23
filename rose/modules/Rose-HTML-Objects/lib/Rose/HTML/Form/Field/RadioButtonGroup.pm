@@ -22,6 +22,8 @@ sub _item_name_plural { 'radio buttons' }
 *add_radio_buttons = \&Rose::HTML::Form::Field::Group::add_items;
 *add_radio_button  = \&add_radio_buttons;
 
+*choices = \&radio_buttons;
+
 sub html_table
 {
   my($self, %args) = @_;

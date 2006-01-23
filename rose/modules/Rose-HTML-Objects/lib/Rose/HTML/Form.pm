@@ -9,13 +9,9 @@ use Rose::URI;
 use URI::Escape qw(uri_escape);
 
 use Rose::HTML::Form::Field;
-use Rose::HTML::Form::Collection;
 use Rose::HTML::Form::Field::Collection;
 
-our @ISA = 
-  qw(Rose::HTML::Form::Field 
-     Rose::HTML::Form::Field::Collection 
-     Rose::HTML::Form::Collection);
+our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
 our $VERSION = '0.35';
 
@@ -51,6 +47,12 @@ __PACKAGE__->add_required_html_attrs(
 
 use constant UNSAFE_URI_CHARS => '^\w\d?\057=.:-';
 
+use Rose::HTML::Form::Constants qw(FIELD_SEPARATOR FORM_SEPARATOR);
+
+# Variables for use in regexes
+our $FIELD_SEPARATOR_RE = quotemeta FIELD_SEPARATOR;
+our $FORM_SEPARATOR_RE  = quotemeta FORM_SEPARATOR;
+
 our $Debug = 0;
 
 use Rose::Object::MakeMethods::Generic
@@ -59,10 +61,13 @@ use Rose::Object::MakeMethods::Generic
   [
     'uri_base',
     'rank',
-    'form_name',
   ],
 
-  'scalar --get_set_init' => 'uri_separator',
+  'scalar --get_set_init' => 
+  [
+    'uri_separator',
+    'form_rank_counter',
+  ],
 
   boolean => 
   [
@@ -108,12 +113,6 @@ sub method { shift->html_attr('method', @_) }
 
 sub build_form { }
 
-sub parent_form
-{
-  my($self) = shift; 
-  return Scalar::Util::weaken($self->{'parent_form'} = shift)  if(@_);
-  return $self->{'parent_form'};
-}
 
 sub name
 {
@@ -447,15 +446,17 @@ sub _init_field
 
   my $on_off = $field->isa('Rose::HTML::Form::Field::OnOff');
 
-  my $field_name = $field->name;
+  my $name       = $field->name;
+  my $field_name = $field->field_name;
   my $name_attr  = $field->html_attr('name');
 
   $Debug && warn "INIT FIELD $field_name ($name_attr)\n";
 
+  my $name_exists       = $self->param_exists($name);
   my $field_name_exists = $self->param_exists($field_name);
   my $name_attr_exists  = $self->param_exists($name_attr);
 
-  if(!$field_name_exists && $field->isa('Rose::HTML::Form::Field::Compound'))
+  if(!$name_exists && $field->isa('Rose::HTML::Form::Field::Compound'))
   {
     foreach my $field_name ($field->field_names)
     {
@@ -464,12 +465,17 @@ sub _init_field
   }
   else
   {
-    return  unless((($field_name_exists || $name_attr_exists) &&
+    return  unless((($name_exists || $name_attr_exists || $field_name_exists) &&
 		          !$field->isa('Rose::HTML::Form::Field::Submit')) || $on_off);
 
     if($field->isa('Rose::HTML::Form::Field::Group'))
     {
-      if($field_name_exists)
+      if($name_exists)
+      {
+        $Debug && warn "$field->input_value(", $self->param($name), ")\n";
+        $field->input_value($self->param($name));
+      }
+      elsif($field_name_exists)
       {
         $Debug && warn "$field->input_value(", $self->param($field_name), ")\n";
         $field->input_value($self->param($field_name));
@@ -485,9 +491,9 @@ sub _init_field
       # Must handle lone checkboxes and radio buttons here
       if($on_off)
       {
-        if($self->param($field->name) eq $field->html_attr('value'))
+        if($self->param($name) eq $field->html_attr('value'))
         {
-          $Debug && warn "$self->param($field->{'name'}) = checked\n";
+          $Debug && warn "$self->param($name) = checked\n";
           $field->checked(1);
         }
         else
@@ -505,7 +511,12 @@ sub _init_field
       }
       else
       {
-        if($field_name_exists)
+        if($name_exists)
+        {
+          $Debug && warn "$field->input_value(", $self->param($name), ")\n";
+          $field->input_value($self->param($name));
+        }
+        elsif($field_name_exists)
         {
           $Debug && warn "$field->input_value(", $self->param($field_name), ")\n";
           $field->input_value($self->param($field_name));
@@ -621,15 +632,434 @@ sub init_with_object
 
 sub clear
 {
-  $_[0]->clear_fields;
-  $_[0]->error(undef);
+  my($self) = shift;
+  $self->clear_fields;
+  $self->clear_forms;
+  $self->error(undef);
 }
 
 sub reset
 {
-  $_[0]->reset_fields;
-  $_[0]->error(undef);
+  my($self) = shift;
+  $self->reset_fields;
+  $self->reset_forms;
+  $self->error(undef);
 }
+
+sub init_form_rank_counter { 1 }
+
+sub increment_form_rank_counter
+{
+  my($self) = shift;
+  my $rank = $self->form_rank_counter;
+  $self->form_rank_counter($rank + 1);
+  return $rank;
+}
+
+sub add_forms
+{
+  my($self) = shift;
+
+  my @added_forms;
+
+  while(@_)
+  {
+    my $arg = shift;
+
+    my($name, $form);
+
+    if(UNIVERSAL::isa($arg, 'Rose::HTML::Form'))
+    {
+      $form = $arg;
+      $name = $form->form_name;
+
+      unless(defined $form->rank)
+      {
+        $form->rank($self->increment_form_rank_counter);
+      }
+    }
+    else
+    {
+      $name = $arg;
+      $form = shift;
+
+      unless(UNIVERSAL::isa($form, 'Rose::HTML::Form'))
+      {
+        Carp::croak "Not a Rose::HTML::Form object: $form";
+      }
+
+      $form->form_name($name);
+
+      unless(defined $form->rank)
+      {
+        $form->rank($self->increment_form_rank_counter);
+      }
+    }
+
+    if(index($name, FORM_SEPARATOR) >= 0)
+    {
+      my $parent_form = $self->find_parent_form($name);
+      $form->parent_form($parent_form);
+      $parent_form->add_form($name => $form);
+    }
+    else
+    {
+      $form->parent_form($self);
+      $self->{'forms'}{$name} = $form;
+    }
+
+    $self->_prefix_fields($form);
+    push(@added_forms, $form);
+  }
+
+  $self->_clear_form_generated_values;
+
+  return  unless(defined wantarray);
+  return @added_forms;
+}
+
+*add_form = \&add_forms;
+
+sub _prefix_fields
+{
+  my($self, $form) = @_;
+#$DB::single = 1;
+  foreach my $field ($form->fields)
+  {
+    $field->name($field->fq_name);
+  }
+}
+
+sub compare_forms { no warnings 'uninitialized'; $_[1]->rank cmp $_[2]->rank }
+
+sub forms
+{
+  my($self) = shift;
+
+  if(my $forms = $self->{'form_list'})
+  {
+    return wantarray ? @$forms : $forms;
+  }
+
+  my $forms = $self->{'forms'};
+
+  $self->{'form_list'} = [ grep { defined } map { $forms->{$_} } $self->form_names ];
+
+  return wantarray ? @{$self->{'form_list'}} : $self->{'form_list'};
+}
+
+sub form_names
+{
+  my($self) = shift;
+
+  if(my $names = $self->{'form_names'})
+  {
+    return wantarray ? @$names : $names;
+  }
+
+  my @info;
+
+  while(my($name, $form) = each %{$self->{'forms'}})
+  {
+    push(@info, [ $name, $form ]);
+  }
+
+  $self->{'form_names'} = 
+    [ map { $_->[0] } sort { $self->compare_forms($a->[1], $b->[1]) } @info ];
+
+  return wantarray ? @{$self->{'form_names'}} : $self->{'form_names'};
+}
+
+sub delete_forms 
+{
+  my($self) = shift;
+  $self->{'forms'} = {};
+  $self->form_rank_counter(undef);
+  $self->_clear_form_generated_values;
+  return;
+}
+
+sub delete_form
+{
+  my($self, $name) = @_;
+
+  $name = $name->form_name  if(UNIVERSAL::isa($name, 'Rose::HTML::Form'));
+
+  if(exists $self->{'forms'}{$name})
+  {
+    $self->_clear_form_generated_values;
+    return delete $self->{'forms'}{$name};
+  }
+
+  return undef;
+}
+
+sub clear_forms
+{
+  my($self) = shift;
+
+  foreach my $form ($self->forms)
+  {
+    $form->clear();
+  }
+}
+
+sub reset_forms
+{
+  my($self) = shift;
+
+  foreach my $form ($self->forms)
+  {
+    $form->reset();
+  }
+}
+
+sub _clear_form_generated_values
+{
+  my($self) = shift;  
+  $self->{'field_list'}  = undef;
+  $self->{'field_names'} = undef;
+  $self->{'form_list'}   = undef;
+  $self->{'form_names'}  = undef;
+}
+
+sub subfield_name
+{
+  my($self, $name) = @_;
+  return $name  if(index($name,  $self->name . FIELD_SEPARATOR) == 0);
+  return $self->name . FIELD_SEPARATOR . $name
+}
+
+sub form_name
+{
+  my($self) = shift;
+
+  return $self->{'form_name'}  unless(@_);
+  my $old_name = $self->{'form_name'};
+  my $name     = $self->{'form_name'} = shift;
+  my %forms;
+
+  if(defined $old_name && defined $name && $name ne $old_name)
+  {
+die "FOO";
+#     my $replace = qr(^$old_name$FORM_SEPARATOR_RE);
+# 
+#     foreach my $form ($self->forms)
+#     {
+#       my $subform_name = $form->form_name;
+#       $subform_name =~ s/$replace/$name$FORM_SEPARATOR_RE/;
+#       #$Debug && warn $form->form_name, " -> $subform_name\n";
+#       $form->form_name($subform_name);
+#       $forms{$subform_name} = $form;
+#     }
+# 
+#     $self->delete_forms;
+#     $self->add_forms(%forms);
+  }
+
+  return $name;
+}
+
+sub local_field
+{
+  my($self, $name) = (shift, shift);
+  
+  if(my $field = shift)
+  {
+    $field->parent_form($self);
+    no warnings 'uninitialized';
+    $field->name($name)  unless(length $field->name);
+    $field->field_name($name);
+    $self->{'fields_by_name'}{$field->name} = $field;
+    return $self->{'fields'}{$name} = $field;
+  }
+
+  return $self->{'fields'}{$name} || $self->{'fields_by_name'}{$name};
+}
+
+sub delete_fields 
+{
+  my($self) = shift;
+  $self->_clear_field_generated_values;
+  $self->{'fields'} = {};
+  $self->{'fields_by_name'} = {};
+  $self->field_rank_counter(undef);
+  return;
+}
+
+sub delete_field
+{
+  my($self, $name) = @_;
+
+  $name = $name->name  if(UNIVERSAL::isa($name, 'Rose::HTML::Form::Field'));
+
+  $self->_clear_field_generated_values;
+
+  my $field1 = delete $self->{'fields'}{$name};
+  my $field2 = delete $self->{'fields_by_name'}{$name};
+  return $field1 || $field2;
+}
+
+sub field
+{
+  my($self, $name) = (shift, shift);
+
+  my $sep_pos;
+
+  # Non-hierarchical name
+  if(($sep_pos = index($name, FORM_SEPARATOR)) < 0)
+  {
+    return $self->local_field($name, @_);
+  }
+
+  # First check if it's a local compound field  
+  my $prefix = substr($name, 0, $sep_pos);
+  my $rest   = substr($name, $sep_pos + 1);
+  my $field = $self->field($prefix);
+  
+  if(UNIVERSAL::isa($field, 'Rose::HTML::Form::Field::Compound'))
+  {
+    $field = $field->field($rest);
+    return $field  if($field);
+  }
+
+  my($parent_form, $local_name) = $self->find_parent_form($name);
+
+  return $parent_form->field($local_name, @_);
+}
+
+sub fields
+{
+  my($self) = shift;
+
+  if(my $fields = $self->{'field_list'})
+  {
+    return wantarray ? @$fields : $fields;
+  }
+
+  my $fields = $self->{'fields'};
+  my $fields_by_name = $self->{'fields_by_name'};
+
+  $self->{'field_list'} = 
+  [
+    grep { defined } 
+    map 
+    { 
+      /$FIELD_SEPARATOR_RE([^$FIELD_SEPARATOR_RE]+)/ || /(.*)/;
+      $fields->{$1} || $fields_by_name->{$1} || $self->field($_)
+    } 
+    $self->field_names 
+  ];
+
+  return wantarray ? @{$self->{'field_list'}} : $self->{'field_list'};
+}
+
+# XXX: revive field_name? as field storage name
+sub field_names
+{
+  my($self) = shift;
+
+  if(my $names = $self->{'field_names'})
+  {
+    return wantarray ? @$names : $names;
+  }
+
+  my @info; 
+
+  $self->_find_field_info($self, \@info);
+
+  $self->{'field_names'} = 
+    [ map { $_->[2] } sort { $self->compare_forms($a->[0], $b->[0]) || $self->compare_fields($a->[1], $b->[1]) } @info ];
+
+  return wantarray ? @{$self->{'field_names'}} : $self->{'field_names'};
+}
+
+sub _find_field_info
+{
+  my($self, $form, $list) = @_;
+
+  while(my($name, $field) = each %{$form->{'fields'}})
+  {
+    push(@$list, [ $form, $field, $field->fq_field_name ]);
+  }
+
+  foreach my $sub_form ($form->forms)
+  {
+    $form->_find_field_info($sub_form, $list);
+  }
+}
+
+sub find_parent_form
+{
+  my($self, $name) = @_;
+
+  # Non-hierarchical name
+  if(index($name, FORM_SEPARATOR) < 0)
+  {
+    return $self->local_form($name) ? ($self, $name) : undef;
+  }
+
+  my $parent_form;
+
+  while($name =~ s/^([^$FORM_SEPARATOR_RE]+)$FORM_SEPARATOR_RE//o)
+  {
+    my $parent_name = $1;
+    last  if($parent_form = $self->local_form($parent_name));
+  }
+
+  return unless(defined $parent_form);
+  return wantarray ? ($parent_form, $name) : $parent_form;
+}
+
+sub fq_form_name
+{
+  my($self) = shift;
+
+  return $self->form_name  unless($self->parent_form);
+
+  my @parts;
+  my $form = $self;
+
+  while(my $parent_form = $form->parent_form)
+  {
+    unshift(@parts, $form->form_name);
+    $form = $parent_form;
+  }
+
+  return @parts ? join(FORM_SEPARATOR, @parts) : '';
+}
+
+sub local_form
+{
+  my($self, $name) = @_;
+  return $self->{'forms'}{$name}  if(exists $self->{'forms'}{$name});
+  return undef;
+}
+
+sub form
+{
+  my($self, $name) = (shift, shift);
+
+  # Set form
+  if(@_)
+  {
+    my $form = shift;
+    $self->delete_form($name);
+    return $self->add_form($name => $form);
+  }
+
+  # Local form?
+  if(my $form = $self->local_form($name))
+  {
+    return $form;
+  }
+  
+  # Look up nested form
+  my($parent_form, $local_name) = $self->find_parent_form($name);
+  return undef  unless(defined $parent_form);
+  return $parent_form->form($local_name);
+}
+
 
 1;
 

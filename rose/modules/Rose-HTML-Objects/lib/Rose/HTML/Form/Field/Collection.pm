@@ -43,8 +43,15 @@ sub field
     }
 
     $field->name($name);
-    $field->field_name($name);
-    $field->parent_field($self);
+    
+    if($self->isa('Rose::HTML::Form'))
+    {
+      $field->parent_form($self);
+    }
+    else
+    {
+      $field->parent_field($self);
+    }
 
     $self->_clear_field_generated_values;
 
@@ -68,6 +75,8 @@ sub add_fields
 {
   my($self) = shift;
 
+  my @added_fields;
+
   while(@_)
   {
     my $arg = shift;
@@ -80,6 +89,7 @@ sub add_fields
       }
 
       $self->field($arg->name => $arg);
+      push(@added_fields, $arg);
     }
     else
     {
@@ -96,13 +106,14 @@ sub add_fields
       }
 
       $self->field($arg => $field);
+      push(@added_fields, $field);
     }
   }
 
   $self->_clear_field_generated_values;
 
   return  unless(defined wantarray);
-  return $self->fields;
+  return wantarray ? @added_fields : $added_fields[0];
 }
 
 *add_field = \&add_fields;
