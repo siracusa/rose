@@ -68,8 +68,8 @@ is(@fields, 0, 'delete_fields()');
 
 $form->add_fields(foo2 => $field, bar2 => $field2);
 
-ok($form->field('foo2') eq $field && $field->name eq 'foo2' &&
-  $form->field('bar2')  eq $field2 && $field2->name eq 'bar2',
+ok($form->field('foo2') eq $field && $field->name eq 'foo' &&
+  $form->field('bar2')  eq $field2 && $field2->name eq 'bar',
   'add_fields() hash');
 
 @fields = $form->fields;
@@ -90,9 +90,11 @@ ok(!$form->param_exists('b'), 'delete_param()');
 $form->add_param_value('c' => 10);
 ok($form->param_value_exists('c' => 10), 'add_param_value()');
 
-$form->params(foo2 => 2, bar2 => 5);
+$form->params(foo => 2, bar => 5);
+
 $form->init_fields();
-is($form->query_string, 'bar2=5&foo2=2', 'query_string() 1');
+
+is($form->query_string, 'bar=5&foo=2', 'query_string() 1');
 
 $form->clear_fields;
 is($form->query_string, '', 'clear_fields()');
@@ -371,11 +373,11 @@ my $vals = join(':', map { defined $_ ? $_ : '' }
              join(', ', $form->field('hobbies')->internal_value),
              $form->field('bday')->internal_value);
 
-is($vals, ':m::1984-01-24T00:00:00', 'init_fields() 4');
+is($vals, 'John:m::1984-01-24T00:00:00', 'init_fields() 4');
 
 $form->reset;
 
-$form->params(name  => 'John', 
+$form->params(your_name  => 'John', 
               bday  => '1/24/1984');
 
 $form->init_fields(no_clear => 1);
@@ -386,7 +388,7 @@ $vals = join(':', map { defined $_ ? $_ : '' }
              join(', ', $form->field('hobbies')->internal_value),
              $form->field('bday')->internal_value);
 
-is($vals, ':m:Chess:1984-01-24T00:00:00', 'init_fields() 5');
+is($vals, 'John:m:Chess:1984-01-24T00:00:00', 'init_fields() 5');
 
 
 $form->reset;
@@ -487,17 +489,17 @@ is($form->field('event')->html,
 $form = MyForm2->new;
 
 is(join(',', $form->field_names), 'name,hobbies,Gender,bday', 'compare_fields() 1');
-is(join(',', map { $_->name } $form->fields), 'your_name,hobbies,Gender,bday', 'compare_fields() 2');
+is(join(',', map { $_->name } $form->fields), 'name,hobbies,gender,bday', 'compare_fields() 2');
 
 $form = MyForm3->new;
 
 is(join(',', $form->field_names), 'name,hobbies,bday,Gender', 'field_names() 1');
-is(join(',', map { $_->name } $form->fields), 'your_name,hobbies,bday,Gender', 'field_names() 2');
+is(join(',', map { $_->name } $form->fields), 'your_name,hobbies,bday,gender', 'field_names() 2');
 
 $form = MyForm4->new;
 
 is(join(',', $form->field_names), 'name,Gender,hobbies,bday', 'field rank() 1');
-is(join(',', map { $_->name } $form->fields), 'your_name,Gender,hobbies,bday', 'field rank() 2');
+is(join(',', map { $_->name } $form->fields), 'your_name,gender,hobbies,bday', 'field rank() 2');
 is($form->field('name')->rank, 1, 'field rank() 3');
 is($form->field('bday')->rank, 4, 'field rank() 4');
 
@@ -603,7 +605,7 @@ BEGIN
 
     $self->add_fields(%fields);
 
-    $self->field('name')->html_attr(name => 'your_name');
+    #$self->field('name')->html_attr(name => 'your_name');
   }
 
   sub compare_fields { lc $_[2]->name cmp lc $_[1]->name }

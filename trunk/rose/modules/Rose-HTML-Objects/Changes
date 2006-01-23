@@ -1,3 +1,10 @@
+0.35 (01.23.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added the ability to nest forms.
+    * TODO: radio_buttons | checkboxes | options -> choices
+    * TODO: hashref args to add_fields() and field(), map of names to classes
+    * TODO: cache field() lookups
+
 0.34 (01.17.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added a size() attribute to the text area field.

@@ -15,6 +15,12 @@ our @ISA = qw(Rose::HTML::Object);
 use constant HTML_ERROR_SEP  => "<br>\n";
 use constant XHTML_ERROR_SEP => "<br />\n";
 
+use Rose::HTML::Form::Constants qw(FIELD_SEPARATOR FORM_SEPARATOR);
+
+# Variables for use in regexes
+our $FIELD_SEPARATOR = FIELD_SEPARATOR;
+our $FORM_SEPARATOR  = FORM_SEPARATOR;
+
 our $VERSION = '0.02';
 
 #our $Debug = 0;
@@ -78,6 +84,31 @@ sub parent_field
   my($self) = shift; 
   return Scalar::Util::weaken($self->{'parent_field'} = shift)  if(@_);
   return $self->{'parent_field'};
+}
+
+sub parent_form
+{
+  my($self) = shift; 
+  return Scalar::Util::weaken($self->{'parent_form'} = shift)  if(@_);
+  return $self->{'parent_form'};
+}
+
+sub fq_name
+{
+  my($self) = shift;
+  my $name = $self->name;
+  my $parent_form = $self->parent_form or return $name;
+  my $fq_form_name = $parent_form->fq_form_name or return $name;
+  return join(FORM_SEPARATOR, $fq_form_name, $name);
+}
+
+sub fq_field_name
+{
+  my($self) = shift;
+  my $name = $self->field_name;
+  my $parent_form = $self->parent_form or return $name;
+  my $fq_form_name = $parent_form->fq_form_name or return $name;
+  return join(FORM_SEPARATOR, $fq_form_name, $name);
 }
 
 sub init_html_prefix { '' }

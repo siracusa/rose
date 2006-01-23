@@ -9,6 +9,8 @@ use Carp();
 
 our $VERSION = '0.35';
 
+our $Debug = 0;
+
 use Rose::Object::MakeMethods::Generic
 (
   'scalar --get_set_init' => 
@@ -27,7 +29,7 @@ sub increment_form_rank_counter
   return $rank;
 }
 
-sub form
+sub _form
 {
   my($self, $name, $form) = @_;
 
@@ -102,7 +104,13 @@ sub add_forms
 
 *add_form = \&add_forms;
 
-sub compare_forms { $_[1]->name cmp $_[2]->name }
+# XXX: add forms only in add_form, only by simple name
+# XXX: add fields only in add_field, only by simple name
+# XXX: form() only do lookup, pass add onto add_form after looking up deepest form
+# XXX: field() only do lookup, pass add onto add_field after looking up deepest form
+
+
+sub compare_forms { no warnings; $_[1]->rank cmp $_[2]->rank }
 
 sub forms
 {
@@ -184,8 +192,185 @@ sub reset_forms
 sub _clear_form_generated_values
 {
   my($self) = shift;  
-  $self->{'form_list'}  = undef;
-  $self->{'form_names'} = undef;
+  $self->{'field_list'}  = undef;
+  $self->{'field_names'} = undef;
+  $self->{'form_list'}   = undef;
+  $self->{'form_names'}  = undef;
 }
+
+use constant FORM_SEPARATOR => '.';
+our $FORM_SEPARATOR = FORM_SEPARATOR;
+
+sub subform_name
+{
+  my($self, $name) = @_;
+  my $form_name = $self->form_name;
+  return $name  unless(defined $form_name);
+  return $name  if(index($name,  $form_name . FORM_SEPARATOR) == 0);
+  return $self->form_name . FORM_SEPARATOR . $name
+}
+
+use constant FIELD_SEPARATOR => '.';
+our $FIELD_SEPARATOR = FIELD_SEPARATOR;
+
+sub subfield_name
+{
+  my($self, $name) = @_;
+  return $name  if(index($name,  $self->name . FIELD_SEPARATOR) == 0);
+  return $self->name . FIELD_SEPARATOR . $name
+}
+
+sub form_name
+{
+  my($self) = shift;
+
+  return $self->{'form_name'}  unless(@_);
+  my $old_name = $self->{'form_name'};
+  my $name     = $self->{'form_name'} = shift;
+  my %forms;
+
+  if(defined $old_name && defined $name && $name ne $old_name)
+  {
+    my $replace = qr(^$old_name$FORM_SEPARATOR);
+
+    foreach my $form ($self->forms)
+    {
+      my $subform_name = $form->form_name;
+      $subform_name =~ s/$replace/$name$FORM_SEPARATOR/;
+      #$Debug && warn $form->form_name, " -> $subform_name\n";
+      $form->form_name($subform_name);
+      $forms{$subform_name} = $form;
+    }
+
+    $self->delete_forms;
+    $self->add_forms(%forms);
+  }
+
+  return $name;
+}
+
+sub form
+{
+  my($self, $name) = (shift, shift);
+
+  $Debug && warn "name($name) = ", $self->subform_name($name), "\n";
+  $name = $self->subform_name($name);
+
+  #return $self->form($name, @_)  if(@_);
+
+  # Dig out sub-subforms
+  if(index($name, FORM_SEPARATOR) != rindex($name, FORM_SEPARATOR))
+  {
+    my $form_name    = $name;
+    my $subform_name = $name;
+
+    while(!defined $self->_form($form_name))
+    {
+      unless($form_name =~ s/$FORM_SEPARATOR[^$FORM_SEPARATOR]+$//o)
+      {
+        # No such form: create or fail
+	    if(@_)
+	    {
+	      my $form = $self->_form($name, @_);
+	      $self->_form_prefix_fields($form, $name);
+	      return $form;
+	    }
+        return undef;
+      }
+    }
+
+    my $parent_form = $self->_form($form_name);
+    
+    if(@_)
+    {
+      my $form = $parent_form->_form($subform_name, @_);
+      $self->_form_prefix_fields($form, $subform_name);
+    }
+
+    return $parent_form->_form($subform_name);
+  }
+  else
+  {
+    if(@_)
+    {
+      my $form = $self->_form($name, @_);
+      $self->_form_prefix_fields($form, $name);
+      return $form;
+    }
+    
+    return $self->_form($name);
+  }
+}
+
+sub _form_prefix_fields
+{
+  my($self, $form, $prefix) = @_;
+
+  # Name-prefix all the fields in this form
+  foreach my $field ($form->fields)
+  {
+    $form->delete_field($field->field_name);
+	$form->field($prefix . FIELD_SEPARATOR . $field->name => $field);
+  }
+}
+
+
+sub field
+{
+  my($self, $name, $field) = @_;
+
+  my $form;
+  my $name_prefix = '';
+
+  # Dig out the appropriate sub-subform, if necessary
+  if(index($name, FORM_SEPARATOR) >= 0)
+  {
+    $name =~ s/([^$FORM_SEPARATOR]+)$FORM_SEPARATOR//o;
+    my $form_name = $1;
+
+    while(index($name, FORM_SEPARATOR) >= 0 && !defined $self->form($form_name))
+    {
+      $name =~ s/([^$FORM_SEPARATOR]+)$FORM_SEPARATOR//o;
+      $form_name .= FORM_SEPARATOR . $1;
+    }
+
+    $name_prefix = $form_name . FIELD_SEPARATOR;
+    $form = $self->form($form_name) || $self;
+  }
+  else { $form = $self }
+
+  if(@_ == 3)
+  {
+    unless(UNIVERSAL::isa($field, 'Rose::HTML::Form::Field'))
+    {
+      Carp::croak "Not a Rose::HTML::Form::Field object: $field";
+    }
+
+    $field->name($name_prefix . $name);
+    $field->field_name($name);
+    $field->parent_field($form);
+
+    $self->_clear_field_generated_values;
+
+    unless(defined $field->rank)
+    {
+      $field->rank($form->increment_field_rank_counter);
+    }
+    
+    $form->{'fields'}{$name} = $field;
+  }
+  
+  if(exists $form->{'fields'}{$name})
+  {
+    return $form->{'fields'}{$name};
+  }
+  elsif($name_prefix)
+  {
+    return $form->field($name);
+  }
+
+  return undef;
+}
+
 
 1;
