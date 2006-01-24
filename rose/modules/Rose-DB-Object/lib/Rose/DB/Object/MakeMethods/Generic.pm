@@ -17,7 +17,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.63';
+our $VERSION = '0.65';
 
 our $Debug = 0;
 
@@ -644,6 +644,7 @@ sub bitfield
           else
           {
             $self->{$key} = $db->parse_bitfield($_[0], $size);
+            $self->{$formatted_key,$driver} = undef;
 
             unless(defined $self->{$key})
             {
@@ -673,10 +674,16 @@ sub bitfield
           return $self->{$formatted_key,$driver};
         }
 
-        return $self->{$key} ? $self->{$key} : 
-               defined $self->{$formatted_key,$driver} ? 
-               ($self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size)) : 
-               undef;
+        return $self->{$key}  if(defined $self->{$key});
+    
+        if(defined $self->{$formatted_key,$driver})
+        {
+          $self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size);
+          $self->{$formatted_key,$driver} = undef;
+          return $self->{$key};
+        }
+        
+        return undef;
       };
     }
     else
@@ -698,6 +705,7 @@ sub bitfield
           else
           {
             $self->{$key} = $db->parse_bitfield($_[0], $size);
+            $self->{$formatted_key,$driver} = undef;
           }
         }
 
@@ -713,10 +721,16 @@ sub bitfield
 
         return unless(defined wantarray);
 
-        return $self->{$key} ? $self->{$key} : 
-               defined $self->{$formatted_key,$driver} ? 
-               ($self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size)) : 
-               undef;
+        return $self->{$key}  if(defined $self->{$key});
+    
+        if(defined $self->{$formatted_key,$driver})
+        {
+          $self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size);
+          $self->{$formatted_key,$driver} = undef;
+          return $self->{$key};
+        }
+        
+        return undef;
       };
 
 
@@ -781,8 +795,16 @@ sub bitfield
 
         return unless(defined wantarray);
 
-        return $self->{$key} ? $self->{$key} : 
-               $self->{$formatted_key,$driver} ? $db->parse_bitfield($self->{$formatted_key,$driver}) : undef;
+        return $self->{$key}  if(defined $self->{$key});
+    
+        if(defined $self->{$formatted_key,$driver})
+        {
+          $self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size);
+          $self->{$formatted_key,$driver} = undef;
+          return $self->{$key};
+        }
+        
+        return undef;
       };
     }
     else
@@ -806,8 +828,16 @@ sub bitfield
 
         return unless(defined wantarray);
 
-        return $self->{$key} ? $self->{$key} : 
-               $self->{$formatted_key,$driver} ? $db->parse_bitfield($self->{$formatted_key,$driver}) : undef;
+        return $self->{$key}  if(defined $self->{$key});
+    
+        if(defined $self->{$formatted_key,$driver})
+        {
+          $self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size);
+          $self->{$formatted_key,$driver} = undef;
+          return $self->{$key};
+        }
+        
+        return undef;
       };
     }
   }
@@ -835,6 +865,7 @@ sub bitfield
       else
       {
         $self->{$key} = $db->parse_bitfield($_[0], $size);
+        $self->{$formatted_key,$driver} = undef;
       }
 
       if($self->{STATE_SAVING()})
@@ -847,10 +878,16 @@ sub bitfield
         return $self->{$formatted_key,$driver};
       }
 
-      return unless(defined wantarray);
-
-      return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key,$driver} ? $db->parse_bitfield($self->{$formatted_key,$driver}) : undef;
+      return $self->{$key}  if(defined $self->{$key});
+  
+      if(defined $self->{$formatted_key,$driver})
+      {
+        $self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size);
+        $self->{$formatted_key,$driver} = undef;
+        return $self->{$key};
+      }
+      
+      return undef;
     };
   }
   else { Carp::croak "Unknown interface: $interface" }
