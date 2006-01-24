@@ -12,6 +12,8 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 our $VERSION = '0.57';
 
+our $Debug = 0;
+
 __PACKAGE__->default_auto_method_types(qw(get_set_on_save add_on_save));
 
 __PACKAGE__->add_common_method_maker_argument_names
@@ -299,6 +301,13 @@ sub is_ready_to_make_methods
 
     die "Missing foreign class"  unless($foreign_class);
   };
+
+  if($@ && ($Debug || $Rose::DB::Object::Metadata::Debug))
+  {
+    my $err = $@;
+    $err =~ s/ at .*//;
+    warn $self->parent->class, ': many-to-many relationship ', $self->name, " NOT READY - $err";
+  }
 
   return $@ ? 0 : 1;
 }

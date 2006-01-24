@@ -285,6 +285,11 @@ package MyPgObject;
 
 use strict;
 
+use MyPgOtherObject;
+use MyPgOtherObject2;
+use MyPgOtherObject3;
+use MyPgOtherObject4;
+
 use Rose::DB::Object;
 our \@ISA = qw(Rose::DB::Object);
 
@@ -356,6 +361,11 @@ EOF
 package MyPgObject;
 
 use strict;
+
+use MyPgOtherObject;
+use MyPgOtherObject2;
+use MyPgOtherObject3;
+use MyPgOtherObject4;
 
 use Rose::DB::Object;
 our \@ISA = qw(Rose::DB::Object);
@@ -650,6 +660,11 @@ package MyMySQLObject;
 
 use strict;
 
+use MyMySQLOtherObject;
+use MyMySQLOtherObject2;
+use MyMySQLOtherObject3;
+use MyMySQLOtherObject4;
+
 use Rose::DB::Object;
 our \@ISA = qw(Rose::DB::Object);
 
@@ -718,6 +733,11 @@ EOF
 package MyMySQLObject;
 
 use strict;
+
+use MyMySQLOtherObject;
+use MyMySQLOtherObject2;
+use MyMySQLOtherObject3;
+use MyMySQLOtherObject4;
 
 use Rose::DB::Object;
 our \@ISA = qw(Rose::DB::Object);
@@ -1028,6 +1048,11 @@ package MyInformixObject;
 
 use strict;
 
+use MyInformixOtherObject;
+use MyInformixOtherObject2;
+use MyInformixOtherObject3;
+use MyInformixOtherObject4;
+
 use Rose::DB::Object;
 our @ISA = qw(Rose::DB::Object);
 
@@ -1097,6 +1122,11 @@ EOF
 package MyInformixObject;
 
 use strict;
+
+use MyInformixOtherObject;
+use MyInformixOtherObject2;
+use MyInformixOtherObject3;
+use MyInformixOtherObject4;
 
 use Rose::DB::Object;
 our @ISA = qw(Rose::DB::Object);
@@ -1408,6 +1438,11 @@ package MySQLiteObject;
 
 use strict;
 
+use MySQLiteOtherObject;
+use MySQLiteOtherObject2;
+use MySQLiteOtherObject3;
+use MySQLiteOtherObject4;
+
 use Rose::DB::Object;
 our @ISA = qw(Rose::DB::Object);
 
@@ -1477,6 +1512,11 @@ EOF
 package MySQLiteObject;
 
 use strict;
+
+use MySQLiteOtherObject;
+use MySQLiteOtherObject2;
+use MySQLiteOtherObject3;
+use MySQLiteOtherObject4;
 
 use Rose::DB::Object;
 our @ISA = qw(Rose::DB::Object);
