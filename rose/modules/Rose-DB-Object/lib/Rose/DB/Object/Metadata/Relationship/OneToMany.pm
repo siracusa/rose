@@ -10,6 +10,8 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
+our $Debug = 0;
+
 our $VERSION = '0.57';
 
 __PACKAGE__->default_auto_method_types(qw(get_set_on_save add_on_save));
@@ -104,6 +106,16 @@ sub build_method_name_for_type
 sub is_ready_to_make_methods 
 {
   my($self) = shift;
+
+  if($Debug || $Rose::DB::Object::Metadata::Debug)
+  {
+    my $err;
+    if(!$self->class) { $err = "does not belong to a class" }
+    elsif(!$self->key_columns) { $err = "has no key columns" }
+
+    warn $self->parent->class, ': one-to-many relationship ', $self->name, " NOT READY - $err";
+  }
+
   return $self->class && $self->key_columns ? 1 : 0;
 }
 

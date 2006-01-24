@@ -9,7 +9,9 @@ use Rose::DB::Object::Metadata::Util qw(:all);
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.53';
+our $VERSION = '0.65';
+
+our $Debug = 0;
 
 use overload
 (
@@ -156,7 +158,7 @@ sub id
 
   my $key_columns = $self->key_columns;
 
-  return $self->class . ' ' . 
+  return $self->parent->class . ' ' . $self->class . ' ' . 
     join("\0", map { join("\1", lc $_, lc $key_columns->{$_}) } sort keys %$key_columns);
 }
 
@@ -193,6 +195,11 @@ sub is_ready_to_make_methods
 
     foreach my $column_name (values %$key_columns)
     {
+      unless($fk_meta->column($column_name))
+      {
+        die "No column '$column_name' in class ", $fk_meta->class;
+      }
+
       unless($fk_meta->column_accessor_method_name($column_name) && 
              $fk_meta->column_mutator_method_name($column_name))
       {
@@ -200,6 +207,13 @@ sub is_ready_to_make_methods
       }
     }
   };
+
+  if($@ && ($Debug || $Rose::DB::Object::Metadata::Debug))
+  {
+    my $err = $@;
+    $err =~ s/ at .*//;
+    warn $self->parent->class, ': Foreign key ', $self->name, " NOT READY - $err";
+  }
 
   return $@ ? 0 : 1;
 }

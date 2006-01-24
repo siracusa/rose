@@ -14,7 +14,7 @@ our $Debug;
 
 *Debug = \$Rose::DB::Object::Metadata::Debug;
 
-our $VERSION = '0.58';
+our $VERSION = '0.65';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -817,11 +817,37 @@ sub perl_class_definition
 
   $isa = [ $isa ]  unless(ref $isa);
 
+  my %use;
+  
+  foreach my $fk ($self->foreign_keys)
+  {
+    $use{$fk->class}++;
+  }
+
+  foreach my $rel ($self->relationships)
+  {
+    if($rel->can('map_class'))
+    {
+      $use{$rel->map_class}++;
+    }
+    else
+    {
+      $use{$rel->class}++;
+    }
+  }
+
+  my $foreign_modules = '';
+
+  if(%use)
+  {
+    $foreign_modules = "\n" . join("\n", map { "use $_;"} sort keys %use) . "\n";
+  }
+
   return<<"EOF";
 package $class;
 
 use strict;
-
+$foreign_modules
 @{[join(";\n", map { "use $_" } @$isa)]};
 our \@ISA = qw(@$isa);
 
@@ -890,11 +916,11 @@ sub auto_init_foreign_keys
   {
     KEY: foreach my $key (@$auto_foreign_keys)
     {
-      my $id = $key->id; #__fk_key_to_id($key);
+      my $id = __fk_key_to_id($key); # $key->id; # might not have parent yet
 
       foreach my $existing_key (@$existing_foreign_keys)
       {
-        next KEY  if($id eq $existing_key->id);
+        next KEY  if($id eq __fk_key_to_id($existing_key)); # $existing_key->id
       }
 
       $self->add_foreign_key($key);

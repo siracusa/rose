@@ -10,7 +10,7 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.01';
+our $VERSION = '0.65';
 
 __PACKAGE__->default_auto_method_types(qw(get_set_on_save delete_on_save));
 
@@ -144,7 +144,7 @@ sub id
 
   my $column_map = $self->column_map;
 
-  return $self->class . ' ' . 
+  return $self->parent->class . ' ' .   $self->class . ' ' . 
     join("\0", map { join("\1", lc $_, lc $column_map->{$_}) } sort keys %$column_map);
 }
 
