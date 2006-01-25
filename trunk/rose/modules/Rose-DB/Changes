@@ -1,3 +1,7 @@
+0.62 (01.25.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * More MySQL 5 BIT column tweaks.
+
 0.61 (01.19.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Changes to support MySQL 5's brain-dead new BIT column type.

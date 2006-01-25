@@ -3278,7 +3278,7 @@ More troublingly, databases do not always provide all the metadata that a human 
       name  VARCHAR(64)
     );
 
-Now look at the metadata that MySQL stores internally for this table:
+Now look at the metadata that MySQL 4 stores internally for this table:
 
     mysql> describe mytable;
     +-------+------------------+------+-----+---------+----------------+

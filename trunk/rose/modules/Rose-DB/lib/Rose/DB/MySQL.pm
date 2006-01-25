@@ -94,13 +94,14 @@ sub format_bitfield
 
   $vec = Bit::Vector->new_Bin($size, $vec->to_Bin)  if($size);
 
+  # XXX: Now using $dbh->{'mysql_unsafe_bind_type_guessing'} = 1 instead
   # MySQL 5.0.3 or later requires this crap...
-  if($self->database_version >= 5_000_003)
-  {
-    return q(b') . $vec->to_Bin . q('); # 'CAST(' . $vec->to_Dec . ' AS UNSIGNED)';
-  }
+  #if($self->database_version >= 5_000_003)
+  #{
+  #  return q(b') . $vec->to_Bin . q('); # 'CAST(' . $vec->to_Dec . ' AS UNSIGNED)';
+  #}
 
-  return sprintf('%d', hex($vec->to_Hex));
+  return hex($vec->to_Hex);
 }
 
 sub should_inline_bitfield_values 

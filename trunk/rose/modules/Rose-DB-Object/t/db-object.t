@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 344;
+use Test::More tests => 348;
 
 BEGIN 
 {
@@ -233,7 +233,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 70)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 74)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -412,6 +412,20 @@ SKIP: foreach my $db_type ('mysql')
 
   is($o->k1, 3, "save() verify 3 multi-value primary key with generated values - $db_type");
   is($o->k2, 4, "save() verify 4 multi-value primary key with generated values - $db_type");
+
+  is($ox->bitz3->to_Bin(), '0011', "spot check bitfield 3 - $db_type");
+  $ox->bitz3->Bit_On(3);
+  is($ox->bitz3->to_Bin(), '1011', "spot check bitfield 4 - $db_type");
+
+  $ox->save(insert => 1);
+
+  $ox = MyMySQLObject->new(id => $ox->id)->load;
+  is($ox->bitz3->to_Bin(), '1011', "spot check bitfield 5 - $db_type");
+
+  $ox->bitz3->Bit_On(2);
+  $ox->save;
+  $ox = MyMySQLObject->new(id => $ox->id)->load;
+  is($ox->bitz3->to_Bin(), '1111', "spot check bitfield 6 - $db_type");
 }
 
 #

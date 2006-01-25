@@ -674,7 +674,11 @@ sub bitfield
           return $self->{$formatted_key,$driver};
         }
 
-        return $self->{$key}  if(defined $self->{$key});
+        if(defined $self->{$key})
+        {
+          $self->{$formatted_key,$driver} = undef;
+          return $self->{$key};
+        }
     
         if(defined $self->{$formatted_key,$driver})
         {
@@ -721,7 +725,11 @@ sub bitfield
 
         return unless(defined wantarray);
 
-        return $self->{$key}  if(defined $self->{$key});
+        if(defined $self->{$key})
+        {
+          $self->{$formatted_key,$driver} = undef;
+          return $self->{$key};
+        }
     
         if(defined $self->{$formatted_key,$driver})
         {
@@ -795,7 +803,11 @@ sub bitfield
 
         return unless(defined wantarray);
 
-        return $self->{$key}  if(defined $self->{$key});
+        if(defined $self->{$key})
+        {
+          $self->{$formatted_key,$driver} = undef;
+          return $self->{$key};
+        }
     
         if(defined $self->{$formatted_key,$driver})
         {
@@ -828,7 +840,11 @@ sub bitfield
 
         return unless(defined wantarray);
 
-        return $self->{$key}  if(defined $self->{$key});
+        if(defined $self->{$key})
+        {
+          $self->{$formatted_key,$driver} = undef;
+          return $self->{$key};
+        }
     
         if(defined $self->{$formatted_key,$driver})
         {
@@ -878,7 +894,11 @@ sub bitfield
         return $self->{$formatted_key,$driver};
       }
 
-      return $self->{$key}  if(defined $self->{$key});
+      if(defined $self->{$key})
+      {
+        $self->{$formatted_key,$driver} = undef;
+        return $self->{$key};
+      }
   
       if(defined $self->{$formatted_key,$driver})
       {
