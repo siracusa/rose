@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.61';
+our $VERSION = '0.62';
 
 our $Debug = 0;
 
@@ -650,7 +650,17 @@ sub init_dbh
     }
   }
 
-  return $self->{'dbh'} = $dbh;
+  # Important: assign here before callingd database_version() below
+  $self->{'dbh'} = $dbh;
+
+  # MySQL 5.0.3 or later requires this in order to correctly bind BIT column
+  # values during $sth->execute(@values).  Many thanks to Rob Kinyon! :)
+  if($self->{'driver'} eq 'mysql' && $self->database_version >= 5_000_003)
+  {
+    $dbh->{'mysql_unsafe_bind_type_guessing'} = 1;
+  }
+
+  return $dbh;
 }
 
 use constant MAX_SANE_TIMESTAMP => 30000000000000; # YYYYY MM DD HH MM SS
