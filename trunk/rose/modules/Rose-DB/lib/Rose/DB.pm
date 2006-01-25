@@ -655,7 +655,8 @@ sub init_dbh
 
   # MySQL 5.0.3 or later requires this in order to correctly bind BIT column
   # values during $sth->execute(@values).  Many thanks to Rob Kinyon! :)
-  if($self->{'driver'} eq 'mysql' && $self->database_version >= 5_000_003)
+  if($self->{'consider_using_mysql_unsafe_bind_type_guessing'} && 
+     $self->database_version >= 5_000_003)
   {
     $dbh->{'mysql_unsafe_bind_type_guessing'} = 1;
   }

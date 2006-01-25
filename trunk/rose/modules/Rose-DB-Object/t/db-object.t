@@ -292,8 +292,10 @@ SKIP: foreach my $db_type ('mysql')
   ok(ref $o2 && $o2->isa('MyMySQLObject'), "new() 2 - $db_type");
 
   is($o2->bits->to_Bin, '00101', "bits() (bitfield default value) - $db_type");
-
+$Rose::DB::Object::Debug = 1;
+$DB::single = 1;
   ok($o2->load, "load() 2 - $db_type");
+
   ok(!$o2->not_found, "not_found() 1 - $db_type");
 
   is($o2->name, $o->name, "load() verify 1 - $db_type");
@@ -414,6 +416,7 @@ SKIP: foreach my $db_type ('mysql')
   is($o->k2, 4, "save() verify 4 multi-value primary key with generated values - $db_type");
 
   is($ox->bitz3->to_Bin(), '0011', "spot check bitfield 3 - $db_type");
+
   $ox->bitz3->Bit_On(3);
   is($ox->bitz3->to_Bin(), '1011', "spot check bitfield 4 - $db_type");
 

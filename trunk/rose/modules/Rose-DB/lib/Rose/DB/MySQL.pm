@@ -104,12 +104,12 @@ sub format_bitfield
   return hex($vec->to_Hex);
 }
 
-sub should_inline_bitfield_values 
-{
-  # MySQL 5.0.3 or later requires this crap...
-  return $_[0]->{'should_inline_bitfield_values'} ||= 
-    (shift->database_version >= 5_000_003) ? 1 : 0;
-}
+# sub should_inline_bitfield_values
+# {
+#   # MySQL 5.0.3 or later requires this crap...
+#   return $_[0]->{'should_inline_bitfield_values'} ||= 
+#     (shift->database_version >= 5_000_003) ? 1 : 0;
+# }
 
 sub select_bitfield_column_sql
 {
@@ -120,9 +120,16 @@ sub select_bitfield_column_sql
   {
     return q{CONCAT("b'", BIN(} . ($table_alias ? "$table_alias." : '') . 
             $self->quote_column_name($name) . q{ + 0), "'")};
+    #return q{DEC(} . ($table_alias ? "$table_alias." : '') . 
+    #        $self->quote_column_name($name) . q{ + 0)};
+  }
+  else
+  {
+    return q{BIN(} . ($table_alias ? "$table_alias." : '') . 
+            $self->quote_column_name($name) . q{ + 0)};
   }
 
-  return $self->quote_column_name($name);
+  #return $self->quote_column_name($name);
 }
 
 sub refine_dbi_column_info
