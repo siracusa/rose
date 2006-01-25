@@ -8,7 +8,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.64';
+our $VERSION = '0.65';
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -61,11 +61,11 @@ sub init_with_dbi_column_info
   return;
 }
 
-sub should_inline_value
-{
-  #my($self, $db, $value) = @_;
-  return (defined $_[2] && ($_[1]->should_inline_bitfield_values || $_[2] =~ /^\w+\(.*\)$/)) ? 1 : 0;
-}
+# sub should_inline_value
+# {
+#   #my($self, $db, $value) = @_;
+#   return (defined $_[2] && ($_[1]->should_inline_bitfield_values || $_[2] =~ /^\w+\(.*\)$/)) ? 1 : 0;
+# }
 
 sub method_uses_formatted_key
 {

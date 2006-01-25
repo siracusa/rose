@@ -715,7 +715,7 @@ sub bitfield
 
         if($self->{STATE_SAVING()})
         {
-          return undef  unless(defined($self->{$formatted_key,$driver}) || $self->{$key});
+          return undef  unless(defined($self->{$formatted_key,$driver}) || defined($self->{$key}));
 
           $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key}, $size)
             unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
@@ -830,7 +830,7 @@ sub bitfield
 
         if($self->{STATE_SAVING()})
         {
-          return undef  unless(defined($self->{$formatted_key,$driver}) || $self->{$key});
+          return undef  unless(defined($self->{$formatted_key,$driver}) || defined($self->{$key}));
 
           $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key}, $size)
             unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
@@ -886,7 +886,7 @@ sub bitfield
 
       if($self->{STATE_SAVING()})
       {
-        return undef  unless(defined($self->{$formatted_key,$driver}) || $self->{$key});
+        return undef  unless(defined($self->{$formatted_key,$driver}) || defined($self->{$key}));
 
         $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key}, $size)
           unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
