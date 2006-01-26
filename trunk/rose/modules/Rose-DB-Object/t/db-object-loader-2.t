@@ -109,9 +109,10 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 
   $p->colors({ name => 'red'   }, 
              { name => 'green' });
-
+local $Rose::DB::Object::Debug = 1;
+local $Rose::DB::Object::Manager::Debug = 1;
   $p->save;
-
+$DB::single = 1;
   $p = $product_class->new(id => $p->id)->load;
   is($p->vendor->name, "Acme $i", "vendor 1 - $db_type");
 
