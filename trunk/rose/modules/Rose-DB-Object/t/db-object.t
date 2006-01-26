@@ -248,6 +248,7 @@ SKIP: foreach my $db_type ('mysql')
   $o->date_created('now');
   $o->last_modified($o->date_created);
   $o->save_col(22);
+
   $o->bitz3('11');
 
   ok($o->save, "save() 1 - $db_type");
@@ -284,7 +285,8 @@ SKIP: foreach my $db_type ('mysql')
 
   is($ouk->id, 1, "load() uk 2 - $db_type");
   is($ouk->name, 'John', "load() uk 3 - $db_type");
-
+$DB::single = 1;
+$Rose::DB::Object::Debug = 1;
   ok($ouk->save, "save() uk 1 - $db_type");
 
   my $o2 = MyMySQLObject->new(id => $o->id);
@@ -292,8 +294,9 @@ SKIP: foreach my $db_type ('mysql')
   ok(ref $o2 && $o2->isa('MyMySQLObject'), "new() 2 - $db_type");
 
   is($o2->bits->to_Bin, '00101', "bits() (bitfield default value) - $db_type");
-$Rose::DB::Object::Debug = 1;
-$DB::single = 1;
+
+
+
   ok($o2->load, "load() 2 - $db_type");
 
   ok(!$o2->not_found, "not_found() 1 - $db_type");

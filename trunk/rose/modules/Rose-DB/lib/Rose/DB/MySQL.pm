@@ -88,6 +88,48 @@ sub validate_timestamp_keyword
 #   return join(', ', @_[2,1]);
 # }
 
+# sub parse_bitfield
+# {
+#   my($self, $val, $size, $from_db) = @_;
+# 
+#   if(ref $val)
+#   {
+#     if($size && $val->Size != $size)
+#     {
+#       return Bit::Vector->new_Bin($size, $val->to_Bin);
+#     }
+# 
+#     return $val;
+#   }
+# 
+#   if($from_db && $val =~ /^\d+$/)
+#   {
+# #$DB::single = 1;
+#     return Bit::Vector->new_Dec($size || (length($val) * 4), $val);
+#   }
+#   elsif($val =~ /^[10]+$/)
+#   {
+#     return Bit::Vector->new_Bin($size || length $val, $val);
+#   }
+#   elsif($val =~ /^\d*[2-9]\d*$/)
+#   {
+#     return Bit::Vector->new_Dec($size || (length($val) * 4), $val);
+#   }
+#   elsif($val =~ s/^0x// || $val =~ s/^X'(.*)'$/$1/ || $val =~ /^[0-9a-f]+$/i)
+#   {
+#     return Bit::Vector->new_Hex($size || (length($val) * 4), $val);
+#   }
+#   elsif($val =~ s/^B'([10]+)'$/$1/i)
+#   {
+#     return Bit::Vector->new_Bin($size || length $val, $val);
+#   }
+#   else
+#   {
+#     return undef;
+#     #return Bit::Vector->new_Bin($size || length($val), $val);
+#   }
+# }
+
 sub format_bitfield 
 {
   my($self, $vec, $size) = @_;
@@ -96,20 +138,20 @@ sub format_bitfield
 
   # XXX: Now using $dbh->{'mysql_unsafe_bind_type_guessing'} = 1 instead
   # MySQL 5.0.3 or later requires this crap...
-  #if($self->database_version >= 5_000_003)
-  #{
-  #  return q(b') . $vec->to_Bin . q('); # 'CAST(' . $vec->to_Dec . ' AS UNSIGNED)';
-  #}
+  if($self->database_version >= 5_000_003)
+  {
+    return q(b') . $vec->to_Bin . q('); # 'CAST(' . $vec->to_Dec . ' AS UNSIGNED)';
+  }
 
   return hex($vec->to_Hex);
 }
 
-# sub should_inline_bitfield_values
-# {
-#   # MySQL 5.0.3 or later requires this crap...
-#   return $_[0]->{'should_inline_bitfield_values'} ||= 
-#     (shift->database_version >= 5_000_003) ? 1 : 0;
-# }
+sub should_inline_bitfield_values
+{
+  # MySQL 5.0.3 or later requires this crap...
+  return $_[0]->{'should_inline_bitfield_values'} ||= 
+    (shift->database_version >= 5_000_003) ? 1 : 0;
+}
 
 sub select_bitfield_column_sql
 {
@@ -120,8 +162,7 @@ sub select_bitfield_column_sql
   {
     return q{CONCAT("b'", BIN(} . ($table_alias ? "$table_alias." : '') . 
             $self->quote_column_name($name) . q{ + 0), "'")};
-    #return q{DEC(} . ($table_alias ? "$table_alias." : '') . 
-    #        $self->quote_column_name($name) . q{ + 0)};
+    #return $self->quote_column_name($name) . q{ + 0};
   }
   else
   {

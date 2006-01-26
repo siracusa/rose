@@ -652,7 +652,7 @@ sub update
         no warnings;
         warn "$sql - bind params: ", join(', ', @$bind, @key_values), "\n";
       }
-
+$DB::single = 1;
       $sth = $dbh->prepare($sql); #, $meta->prepare_update_options);
       $sth->execute(@$bind, @key_values);
     }

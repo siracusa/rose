@@ -682,7 +682,7 @@ sub bitfield
     
         if(defined $self->{$formatted_key,$driver})
         {
-          $self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size);
+          $self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size, 1);
           $self->{$formatted_key,$driver} = undef;
           return $self->{$key};
         }
@@ -733,7 +733,7 @@ sub bitfield
     
         if(defined $self->{$formatted_key,$driver})
         {
-          $self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size);
+          $self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size, 1);
           $self->{$formatted_key,$driver} = undef;
           return $self->{$key};
         }
@@ -811,7 +811,7 @@ sub bitfield
     
         if(defined $self->{$formatted_key,$driver})
         {
-          $self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size);
+          $self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size, 1);
           $self->{$formatted_key,$driver} = undef;
           return $self->{$key};
         }
@@ -848,7 +848,7 @@ sub bitfield
     
         if(defined $self->{$formatted_key,$driver})
         {
-          $self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size);
+          $self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size, 1);
           $self->{$formatted_key,$driver} = undef;
           return $self->{$key};
         }
@@ -902,7 +902,7 @@ sub bitfield
   
       if(defined $self->{$formatted_key,$driver})
       {
-        $self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size);
+        $self->{$key} = $db->parse_bitfield($self->{$formatted_key,$driver}, $size, 1);
         $self->{$formatted_key,$driver} = undef;
         return $self->{$key};
       }

@@ -650,7 +650,7 @@ sub init_dbh
     }
   }
 
-  # Important: assign here before callingd database_version() below
+  # Important: assign here before calling database_version() below
   $self->{'dbh'} = $dbh;
 
   # MySQL 5.0.3 or later requires this in order to correctly bind BIT column
@@ -658,7 +658,7 @@ sub init_dbh
   if($self->{'consider_using_mysql_unsafe_bind_type_guessing'} && 
      $self->database_version >= 5_000_003)
   {
-    $dbh->{'mysql_unsafe_bind_type_guessing'} = 1;
+#    $dbh->{'mysql_unsafe_bind_type_guessing'} = 1;
   }
 
   return $dbh;
