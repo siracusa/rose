@@ -639,7 +639,7 @@ sub bitfield
           if($self->{STATE_LOADING()})
           {
             $self->{$key} = undef;
-            $self->{$formatted_key,$driver} = $_[0];
+            $self->{$formatted_key,$driver} = $_[0] + 0;
           }
           else
           {
@@ -671,7 +671,7 @@ sub bitfield
           $self->{$formatted_key,$driver} = $db->format_bitfield($self->{$key}, $size)
             unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
 
-          return $self->{$formatted_key,$driver};
+          return $self->{$formatted_key,$driver} + 0;
         }
 
         if(defined $self->{$key})
@@ -704,7 +704,7 @@ sub bitfield
           if($self->{STATE_LOADING()})
           {
             $self->{$key} = undef;
-            $self->{$formatted_key,$driver} = $_[0];
+            $self->{$formatted_key,$driver} = $_[0] + 0;
           }
           else
           {

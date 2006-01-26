@@ -658,9 +658,9 @@ sub init_dbh
   if($self->{'consider_using_mysql_unsafe_bind_type_guessing'} && 
      $self->database_version >= 5_000_003)
   {
-#    $dbh->{'mysql_unsafe_bind_type_guessing'} = 1;
+    $dbh->{'mysql_unsafe_bind_type_guessing'} = 1;
   }
-
+    $dbh->{'mysql_unsafe_bind_type_guessing'} = 1;
   return $dbh;
 }
 
