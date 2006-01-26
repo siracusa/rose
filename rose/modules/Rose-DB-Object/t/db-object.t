@@ -287,7 +287,7 @@ $DB::single = 1;
   is($ouk->id, 1, "load() uk 2 - $db_type");
   is($ouk->name, 'John', "load() uk 3 - $db_type");
 #$DB::single = 1;
-$Rose::DB::Object::Debug = 1;
+#$Rose::DB::Object::Debug = 1;
   ok($ouk->save, "save() uk 1 - $db_type");
 
   my $o2 = MyMySQLObject->new(id => $o->id);
