@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 348;
+use Test::More tests => 351;
 
 BEGIN 
 {
@@ -233,7 +233,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 74)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 77)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -277,6 +277,7 @@ SKIP: foreach my $db_type ('mysql')
   $o->enums('bar');
 
   my $ouk;
+$DB::single = 1;
   ok($ouk = MyMySQLObject->new(k1 => 1,
                                k2 => undef,
                                k3 => 3)->load, "load() uk 1 - $db_type");
@@ -285,7 +286,7 @@ SKIP: foreach my $db_type ('mysql')
 
   is($ouk->id, 1, "load() uk 2 - $db_type");
   is($ouk->name, 'John', "load() uk 3 - $db_type");
-$DB::single = 1;
+#$DB::single = 1;
 $Rose::DB::Object::Debug = 1;
   ok($ouk->save, "save() uk 1 - $db_type");
 
@@ -294,8 +295,7 @@ $Rose::DB::Object::Debug = 1;
   ok(ref $o2 && $o2->isa('MyMySQLObject'), "new() 2 - $db_type");
 
   is($o2->bits->to_Bin, '00101', "bits() (bitfield default value) - $db_type");
-
-
+  is($o2->bitz2->to_Bin, '00', "bitz2() (bitfield default value) - $db_type");
 
   ok($o2->load, "load() 2 - $db_type");
 
@@ -317,7 +317,9 @@ $Rose::DB::Object::Debug = 1;
   ok($@, 'set_status()');
 
   is($o2->bits->to_Bin, '00101', "load() verify 9 (bitfield value) - $db_type");
-
+  is($o2->bitz2->to_Bin, '00', "load() verify 10 (bitfield value) - $db_type");
+  is($o2->bitz3->to_Bin, '0011', "load() verify 11 (bitfield value) - $db_type");
+  
   my $clone = $o2->clone;
   ok($o2->start eq $clone->start, "clone() 1 - $db_type");
   $clone->start->set(year => '1960');
@@ -1022,7 +1024,7 @@ EOF
 
     sub init_db { Rose::DB->new('mysql') }
 
-    MyMySQLObject->meta->allow_inline_column_values(1);
+    #MyMySQLObject->meta->allow_inline_column_values(1);
 
     MyMySQLObject->meta->table('rose_db_object_test');
 
