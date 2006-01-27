@@ -82,12 +82,6 @@ sub validate_timestamp_keyword
 
 *format_timestamp = \&Rose::DB::format_datetime;
 
-# sub format_limit_with_offset
-# {
-#   #my($self, $limit, $offset) = @_;
-#   return join(', ', @_[2,1]);
-# }
-
 sub parse_bitfield
 {
   my($self, $val, $size, $from_db) = @_;
@@ -104,7 +98,6 @@ sub parse_bitfield
 
   if($from_db && $val =~ /^\d+$/)
   {
-#$DB::single = 1;
     return Bit::Vector->new_Dec($size || (length($val) * 4), $val);
   }
   elsif($val =~ /^[10]+$/)
@@ -136,14 +129,13 @@ sub format_bitfield
 
   $vec = Bit::Vector->new_Bin($size, $vec->to_Bin)  if($size);
 
-  # XXX: Now using $dbh->{'mysql_unsafe_bind_type_guessing'} = 1 instead
   # MySQL 5.0.3 or later requires this crap...
-  #if($self->database_version >= 5_000_003)
-  #{
-  #  return q(b') . $vec->to_Bin . q('); # 'CAST(' . $vec->to_Dec . ' AS UNSIGNED)';
-  #}
+  if($self->database_version >= 5_000_003)
+  {
+    return q(b') . $vec->to_Bin . q('); # 'CAST(' . $vec->to_Dec . ' AS UNSIGNED)';
+  }
 
-  return hex($vec->to_Hex) + 0;
+  return hex($vec->to_Hex);
 }
 
 sub should_inline_bitfield_values
@@ -160,17 +152,15 @@ sub select_bitfield_column_sql
   # MySQL 5.0.3 or later requires this crap...
   if($self->database_version >= 5_000_003)
   {
-    #return q{CONCAT("b'", BIN(} . ($table_alias ? "$table_alias." : '') . 
-    #        $self->quote_column_name($name) . q{ + 0), "'")};
-    return $self->quote_column_name($name) . q{ + 0};
+    return q{CONCAT("b'", BIN(} . ($table_alias ? "$table_alias." : '') . 
+            $self->quote_column_name($name) . q{ + 0), "'")};
   }
   else
   {
-    return q{BIN(} . ($table_alias ? "$table_alias." : '') . 
-            $self->quote_column_name($name) . q{ + 0)};
+    #return q{BIN(} . ($table_alias ? "$table_alias." : '') . 
+    #        $self->quote_column_name($name) . q{ + 0)};
+    return $self->quote_column_name($name) . q{ + 0};
   }
-
-  #return $self->quote_column_name($name);
 }
 
 sub refine_dbi_column_info
