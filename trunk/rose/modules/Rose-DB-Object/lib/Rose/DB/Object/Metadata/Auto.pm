@@ -818,7 +818,7 @@ sub perl_class_definition
   $isa = [ $isa ]  unless(ref $isa);
 
   my %use;
-  
+
   foreach my $fk ($self->foreign_keys)
   {
     $use{$fk->class}++;

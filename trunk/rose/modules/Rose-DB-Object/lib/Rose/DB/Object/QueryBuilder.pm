@@ -248,10 +248,6 @@ sub build_select
             $obj_meta ? $obj_meta->column($column)->select_sql($db) :
             $db ? $db->quote_column_name($column) : $column);
         }
-
-#        push(@select_columns, $multi_table ? 
-#             "$short_column AS ${table_alias}_$column" : 
-#             $db ? $db->quote_column_name($column) : $column);
       }
 
       foreach my $column_arg (grep { exists $query{$_} } map { ($_, "!$_") } 
@@ -332,8 +328,6 @@ sub build_select
             {
               push(@clauses, ($not ? "$not($sql_column = " . $dbh->quote($val) . ')' :
                               "$sql_column = " . $dbh->quote($val)));
-
-              #($not ? "$not(" : '') . "$sql_column = " . $dbh->quote($val) . ($not ? ')' : ''));
             }
           }
         }

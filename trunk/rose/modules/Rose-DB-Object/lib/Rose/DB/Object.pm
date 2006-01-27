@@ -86,24 +86,7 @@ sub db
     $self->{'db'}  = $new_db;
     $self->{'dbh'} = undef;
 
-    # Stupid hacks for MySQL
-    if($new_db->{'driver'} eq 'mysql')
-    {
-      # MySQL 5.0.3 or later requires this in order to correctly bind BIT column
-      # values during $sth->execute(@values).
-      if($new_db->{'dbh'} && $new_db->database_version >= 5_000_003)
-      {
-        $new_db->{'dbh'}->{'mysql_unsafe_bind_type_guessing'} = 1;
-      }
-      else
-      {
-        # Evil hack that will be detected and acted upon by Rose::DB's 
-        # connect() method.  Blah.
-        $new_db->{'consider_using_mysql_unsafe_bind_type_guessing'} = 1;
-      }
-    }
-
-    return $self->{'db'};
+    return $new_db;
   }
 
   return $self->{'db'} ||= $self->_init_db;
@@ -120,15 +103,6 @@ sub _init_db
   if($db->init_db_info)
   {
     $self->{FLAG_DB_IS_PRIVATE()} = 1;
-
-    # Stupid hack for MySQL
-    if($db->{'driver'} eq 'mysql')
-    {
-      # Evil hack that will be detected and acted upon by Rose::DB's 
-      # connect() method.  Blah.
-      $db->{'consider_using_mysql_unsafe_bind_type_guessing'} = 1;
-    }
-
     return $db;
   }
 
@@ -652,7 +626,7 @@ sub update
         no warnings;
         warn "$sql - bind params: ", join(', ', @$bind, @key_values), "\n";
       }
-$DB::single = 1;
+
       $sth = $dbh->prepare($sql); #, $meta->prepare_update_options);
       $sth->execute(@$bind, @key_values);
     }
