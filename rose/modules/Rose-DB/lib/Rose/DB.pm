@@ -650,18 +650,7 @@ sub init_dbh
     }
   }
 
-  # Important: assign here before calling database_version() below
-  $self->{'dbh'} = $dbh;
-
-  # MySQL 5.0.3 or later requires this in order to correctly bind BIT column
-  # values during $sth->execute(@values).  Many thanks to Rob Kinyon! :)
-  if($self->{'consider_using_mysql_unsafe_bind_type_guessing'} && 
-     $self->database_version >= 5_000_003)
-  {
-    $dbh->{'mysql_unsafe_bind_type_guessing'} = 1;
-  }
-    $dbh->{'mysql_unsafe_bind_type_guessing'} = 1;
-  return $dbh;
+  return $self->{'dbh'} = $dbh;
 }
 
 use constant MAX_SANE_TIMESTAMP => 30000000000000; # YYYYY MM DD HH MM SS
