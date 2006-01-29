@@ -1,3 +1,8 @@
+0.66 (01.28.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Disabled implicit primary table sort clause in the Manager when 
+      only fetching rows from the primary table.
+
 0.65 (01.27.2006) - John Siracusa <siracusa@mindspring.com>
 
     * More MySQL 5 bitfield fixes.  (Reported by Svilen Ivanov)
