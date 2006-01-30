@@ -121,6 +121,21 @@ sub _args_to_items
     }
   }
 
+  # Hrm, this is kind of ugly.  Set parent of the items to the parent of
+  # the group field itself, in order to get the correct naming for the
+  # items.  For example, a checkbox group named "food.fruits" needs
+  # checkboxes that are also named "food.fruits", differing in their
+  # value="..." attributes only.  Setting the parent of the items to the
+  # group field itself would cause all the checkboxes to be named
+  # "food.fruits.fruits", which is wrong.
+  if(my $parent = $self->parent_field)
+  {
+    foreach my $item (@$items)
+    {
+      $item->parent_field($parent);
+    }
+  }
+
   return (wantarray) ? @$items : $items;
 }
 

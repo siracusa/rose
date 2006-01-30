@@ -20,11 +20,15 @@ sub resync_name
   $self->SUPER::resync_name();
 
   # Resync item names too
-  my $name = $self->fq_name;
+  #my $name = $self->fq_name;
+  my $name = $self->local_name;
 
   foreach my $item ($self->items)
   {
+    #$item->name($name);
     $item->name($name);
+    #$item->resync_name;
+    #$item->name;
   }
 }
 
@@ -36,17 +40,21 @@ sub name
   {
     $self->local_name(shift);
     #my $name = $self->{'name'} = $self->fq_name;
+    #return $self->html_attr('name' => $self->fq_name);
     my $name = $self->html_attr('name' => $self->fq_name);
-
+$name = $self->local_name;
     # All items in the group must have the same name
     foreach my $item ($self->items)
     {
-$DB::single = 1;
+#$DB::single = 1;
 ###########################################
+#      $item->name($name);
       $item->name($name);
+      #$item->resync_name;
+      #$item->name;
     }
     
-    return $name;
+    #return $name;
   }
 
   my $name = $self->html_attr('name');
