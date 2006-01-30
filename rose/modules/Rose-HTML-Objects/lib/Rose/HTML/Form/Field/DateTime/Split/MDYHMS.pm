@@ -10,7 +10,7 @@ use Rose::HTML::Form::Field::Time::Split::HourMinuteSecond;
 use Rose::HTML::Form::Field::DateTime::Split;
 our @ISA = qw(Rose::HTML::Form::Field::DateTime::Split);
 
-our $VERSION = '0.012';
+our $VERSION = '0.35';
 
 sub build_field
 {
@@ -19,11 +19,11 @@ sub build_field
   my %fields;
 
   $fields{'date'} = 
-    Rose::HTML::Form::Field::DateTime::Split::MonthDayYear->new(name => $self->subfield_name('date'));
+    Rose::HTML::Form::Field::DateTime::Split::MonthDayYear->new(name => 'date'); #$self->subfield_name('date'));
 
   $fields{'time'} = 
-    Rose::HTML::Form::Field::Time::Split::HourMinuteSecond->new(name => $self->subfield_name('time'));
-
+    Rose::HTML::Form::Field::Time::Split::HourMinuteSecond->new(name => 'time'); #$self->subfield_name('time'));
+#$DB::single = 1;
   $self->add_fields(%fields);
 }
 

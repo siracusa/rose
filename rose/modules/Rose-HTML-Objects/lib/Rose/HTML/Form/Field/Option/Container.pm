@@ -38,7 +38,7 @@ sub _item_name_plural { 'options' }
 sub html_element  { 'select' }
 sub xhtml_element { 'select' }
 
-sub name { shift->html_attr('name', @_) }
+#sub name { shift->html_attr('name', @_) }
 
 sub html_field
 {

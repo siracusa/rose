@@ -59,8 +59,8 @@ ok($form->field('foo') eq $field &&
 @fields = $form->fields;
 is(@fields, 2, 'add_fields() objects check');
 
-my @field_names = $form->field_names;
-is(join(', ', @field_names), 'bar, foo', 'field_names()');
+my @field_monikers = $form->field_monikers;
+is(join(', ', @field_monikers), 'bar, foo', 'field_monikers()');
 
 $form->delete_fields();
 @fields = $form->fields;
@@ -257,7 +257,7 @@ my $html=<<"EOF";
 EOF
 
 is(join("\n", $form->start_html, 
-              (map { $form->field($_)->html } sort $form->field_names),
+              (map { $form->field($_)->html } sort $form->field_monikers),
               $form->end_html) . "\n", $html, 'html()');
 
 $form->params(age => '27', 'bday.month' => 12, 'bday.day' => 25, 'bday.year' => 1980, 
@@ -452,8 +452,8 @@ $form->build_form;
 
 is(scalar @fields, 4,'build_on_init() 2');
 
-
 $form = Rose::HTML::Form->new;
+$DB::single = 1;
 $form->add_field(Rose::HTML::Form::Field::DateTime::Split::MDYHMS->new(name => 'event'));
 $form->params(
 {
@@ -488,17 +488,17 @@ is($form->field('event')->html,
 
 $form = MyForm2->new;
 
-is(join(',', $form->field_names), 'name,hobbies,Gender,bday', 'compare_fields() 1');
+is(join(',', $form->field_monikers), 'name,hobbies,Gender,bday', 'compare_fields() 1');
 is(join(',', map { $_->name } $form->fields), 'name,hobbies,gender,bday', 'compare_fields() 2');
 
 $form = MyForm3->new;
 
-is(join(',', $form->field_names), 'name,hobbies,bday,Gender', 'field_names() 1');
-is(join(',', map { $_->name } $form->fields), 'your_name,hobbies,bday,gender', 'field_names() 2');
+is(join(',', $form->field_monikers), 'name,hobbies,bday,Gender', 'field_monikers() 1');
+is(join(',', map { $_->name } $form->fields), 'your_name,hobbies,bday,gender', 'field_monikers() 2');
 
 $form = MyForm4->new;
 
-is(join(',', $form->field_names), 'name,Gender,hobbies,bday', 'field rank() 1');
+is(join(',', $form->field_monikers), 'name,Gender,hobbies,bday', 'field rank() 1');
 is(join(',', map { $_->name } $form->fields), 'your_name,gender,hobbies,bday', 'field rank() 2');
 is($form->field('name')->rank, 1, 'field rank() 3');
 is($form->field('bday')->rank, 4, 'field rank() 4');
@@ -646,7 +646,7 @@ BEGIN
     $self->field('name')->html_attr(name => 'your_name');
   }
 
-  sub field_names { wantarray ? qw(name hobbies bday Gender) : [ qw(name hobbies bday Gender) ] }
+  sub field_monikers { wantarray ? qw(name hobbies bday Gender) : [ qw(name hobbies bday Gender) ] }
 
   package MyForm4;
 

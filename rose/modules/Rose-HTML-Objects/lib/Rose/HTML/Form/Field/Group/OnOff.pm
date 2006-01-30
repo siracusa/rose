@@ -9,26 +9,84 @@ use Rose::HTML::Util();
 use Rose::HTML::Form::Field::Group;
 our @ISA = qw(Rose::HTML::Form::Field::Group);
 
-our $VERSION = '0.011';
+our $VERSION = '0.35';
 
 our $Debug = undef;
+
+sub resync_name
+{
+  my($self) = shift;
+
+  $self->SUPER::resync_name();
+
+  # Resync item names too
+  my $name = $self->fq_name;
+
+  foreach my $item ($self->items)
+  {
+    $item->name($name);
+  }
+}
 
 sub name
 {
   my($self) = shift;
 
-  return $self->{'name'}  unless(@_);
-
-  my $name = shift;
-
-  # All items in the group must have the same name
-  foreach my $item ($self->items)
+  if(@_)
   {
-    $item->name($name);
+    $self->local_name(shift);
+    #my $name = $self->{'name'} = $self->fq_name;
+    my $name = $self->html_attr('name' => $self->fq_name);
+
+    # All items in the group must have the same name
+    foreach my $item ($self->items)
+    {
+$DB::single = 1;
+###########################################
+      $item->name($name);
+    }
+    
+    return $name;
   }
 
-  return $self->{'name'} = $name;
+  my $name = $self->html_attr('name');
+  
+  # The name HTML attr will be an empty string if it's a required attr,
+  # so use length() and not defined()
+  no warnings 'uninitialized';
+  unless(length $name)
+  {
+    return $self->html_attr('name', $self->fq_name);
+  }
+
+  return $name;
+
+#   my $name = $self->{'name'};
+#   
+#   unless(defined $name)
+#   {
+#     return $self->{'name'} = $self->fq_name;
+#   }
+# 
+#   return $name;
 }
+
+# sub name
+# {
+#   my($self) = shift;
+# 
+#   return $self->{'name'}  unless(@_);
+# 
+#   my $name = shift;
+# 
+#   # All items in the group must have the same name
+#   foreach my $item ($self->items)
+#   {
+#     $item->name($name);
+#   }
+# 
+#   return $self->{'name'} = $name;
+# }
 
 sub defaults
 {

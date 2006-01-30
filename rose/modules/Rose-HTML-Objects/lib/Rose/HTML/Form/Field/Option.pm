@@ -52,6 +52,13 @@ sub xhtml_field
 
 sub short_label { shift->html_attr('label', @_) }
 
+sub name
+{
+  my($self) = shift;
+  $self->local_name(shift)  if(@_);
+  return $self->fq_name;
+}
+
 1;
 
 __END__
