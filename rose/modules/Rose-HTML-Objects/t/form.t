@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 89;
+use Test::More 'no_plan'; #tests => 89;
 
 BEGIN 
 {
@@ -453,7 +453,7 @@ $form->build_form;
 is(scalar @fields, 4,'build_on_init() 2');
 
 $form = Rose::HTML::Form->new;
-$DB::single = 1;
+
 $form->add_field(Rose::HTML::Form::Field::DateTime::Split::MDYHMS->new(name => 'event'));
 $form->params(
 {
