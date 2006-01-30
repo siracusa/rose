@@ -447,25 +447,25 @@ sub _init_field
   my $on_off = $field->isa('Rose::HTML::Form::Field::OnOff');
 
   my $name       = $field->name;
-  my $field_name = $field->field_name;
+  my $moniker    = $field->moniker;
   my $name_attr  = $field->html_attr('name');
 
-  $Debug && warn "INIT FIELD $field_name ($name_attr)\n";
+  $Debug && warn "INIT FIELD $name ($name_attr)\n";
 
   my $name_exists       = $self->param_exists($name);
-  my $field_name_exists = $self->param_exists($field_name);
+  my $moniker_exists = $self->param_exists($moniker);
   my $name_attr_exists  = $self->param_exists($name_attr);
 
   if(!$name_exists && $field->isa('Rose::HTML::Form::Field::Compound'))
   {
-    foreach my $field_name ($field->field_names)
+    foreach my $moniker ($field->field_monikers)
     {
-      $self->_init_field($field->field($field_name));
+      $self->_init_field($field->field($moniker));
     }
   }
   else
   {
-    return  unless((($name_exists || $name_attr_exists || $field_name_exists) &&
+    return  unless((($name_exists || $name_attr_exists || $moniker_exists) &&
 		          !$field->isa('Rose::HTML::Form::Field::Submit')) || $on_off);
 
     if($field->isa('Rose::HTML::Form::Field::Group'))
@@ -475,10 +475,10 @@ sub _init_field
         $Debug && warn "$field->input_value(", $self->param($name), ")\n";
         $field->input_value($self->param($name));
       }
-      elsif($field_name_exists)
+      elsif($moniker_exists)
       {
-        $Debug && warn "$field->input_value(", $self->param($field_name), ")\n";
-        $field->input_value($self->param($field_name));
+        $Debug && warn "$field->input_value(", $self->param($moniker), ")\n";
+        $field->input_value($self->param($moniker));
       }
       else
       {
@@ -516,10 +516,10 @@ sub _init_field
           $Debug && warn "$field->input_value(", $self->param($name), ")\n";
           $field->input_value($self->param($name));
         }
-        elsif($field_name_exists)
+        elsif($moniker_exists)
         {
-          $Debug && warn "$field->input_value(", $self->param($field_name), ")\n";
-          $field->input_value($self->param($field_name));
+          $Debug && warn "$field->input_value(", $self->param($moniker), ")\n";
+          $field->input_value($self->param($moniker));
         }
         else
         {
@@ -708,11 +708,17 @@ sub add_forms
       $self->{'forms'}{$name} = $form;
     }
 
-    $self->_prefix_fields($form);
+#    $self->_prefix_fields($form);
     push(@added_forms, $form);
   }
 
+  foreach my $form (@added_forms)
+  {
+    $form->resync_field_names;
+  }
+
   $self->_clear_form_generated_values;
+  $self->resync_fields_by_name;
 
   return  unless(defined wantarray);
   return @added_forms;
@@ -720,14 +726,55 @@ sub add_forms
 
 *add_form = \&add_forms;
 
+sub resync_field_names
+{
+  my($self) = shift;
+  
+  foreach my $field ($self->fields)
+  {
+    $field->resync_name;
+  }
+  
+  foreach my $form ($self->forms)
+  {
+    $form->resync_field_names;
+  }
+}
+
+sub resync_fields_by_name
+{
+  my($self) = shift;
+
+  $self->{'fields_by_name'} = {};
+
+  foreach my $field ($self->fields)
+  {
+    $self->{'fields_by_name'}{$field->name} = $field;
+  }
+}
+
 sub _prefix_fields
 {
   my($self, $form) = @_;
 #$DB::single = 1;
-  foreach my $field ($form->fields)
-  {
-    $field->name($field->fq_name);
-  }
+#   foreach my $field ($form->fields)
+#   {
+#     my $parent_form = $field->parent_form;
+# 
+#     if(defined $parent_form && $parent_form ne $form)
+#     {
+#       my $new_name = $field->fq_name;
+#       my $old_name = $field->name;
+# 
+#       $old_name =~ s/$FORM_SEPARATOR_RE[^$FORM_SEPARATOR_RE]+$//;
+# 
+# print STDERR "old_name\n";
+# if($field->name eq 'person.name')
+# {
+# $DB::single = 1;
+# }
+#     $field->name($field->fq_name);
+#   }
 }
 
 sub compare_forms { no warnings 'uninitialized'; $_[1]->rank cmp $_[2]->rank }
@@ -818,7 +865,7 @@ sub _clear_form_generated_values
 {
   my($self) = shift;  
   $self->{'field_list'}  = undef;
-  $self->{'field_names'} = undef;
+  $self->{'field_monikers'} = undef;
   $self->{'form_list'}   = undef;
   $self->{'form_names'}  = undef;
 }
@@ -869,7 +916,7 @@ sub local_field
     $field->parent_form($self);
     no warnings 'uninitialized';
     $field->name($name)  unless(length $field->name);
-    $field->field_name($name);
+    $field->moniker($name);
     $self->{'fields_by_name'}{$field->name} = $field;
     return $self->{'fields'}{$name} = $field;
   }
@@ -948,18 +995,17 @@ sub fields
       /$FIELD_SEPARATOR_RE([^$FIELD_SEPARATOR_RE]+)/ || /(.*)/;
       $fields->{$1} || $fields_by_name->{$1} || $self->field($_)
     } 
-    $self->field_names 
+    $self->field_monikers 
   ];
 
   return wantarray ? @{$self->{'field_list'}} : $self->{'field_list'};
 }
 
-# XXX: revive field_name? as field storage name
-sub field_names
+sub field_monikers
 {
   my($self) = shift;
 
-  if(my $names = $self->{'field_names'})
+  if(my $names = $self->{'field_monikers'})
   {
     return wantarray ? @$names : $names;
   }
@@ -968,10 +1014,10 @@ sub field_names
 
   $self->_find_field_info($self, \@info);
 
-  $self->{'field_names'} = 
+  $self->{'field_monikers'} = 
     [ map { $_->[2] } sort { $self->compare_forms($a->[0], $b->[0]) || $self->compare_fields($a->[1], $b->[1]) } @info ];
 
-  return wantarray ? @{$self->{'field_names'}} : $self->{'field_names'};
+  return wantarray ? @{$self->{'field_monikers'}} : $self->{'field_monikers'};
 }
 
 sub _find_field_info
@@ -980,7 +1026,7 @@ sub _find_field_info
 
   while(my($name, $field) = each %{$form->{'fields'}})
   {
-    push(@$list, [ $form, $field, $field->fq_field_name ]);
+    push(@$list, [ $form, $field, $field->fq_moniker ]);
   }
 
   foreach my $sub_form ($form->forms)

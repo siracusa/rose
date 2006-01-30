@@ -9,7 +9,13 @@ use Rose::HTML::Form::Field::Hidden;
 use Rose::HTML::Form::Field;
 our @ISA = qw(Rose::HTML::Form::Field);
 
-our $VERSION = '0.32';
+use Rose::HTML::Form::Constants qw(FIELD_SEPARATOR FORM_SEPARATOR);
+
+# Variables for use in regexes
+our $FIELD_SEPARATOR_RE = quotemeta FIELD_SEPARATOR;
+our $FORM_SEPARATOR_RE  = quotemeta FORM_SEPARATOR;
+
+our $VERSION = '0.35';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -42,7 +48,7 @@ sub field
       Carp::croak "Not a Rose::HTML::Form::Field object: $field";
     }
 
-    $field->name($name);
+    $field->local_moniker($name);
     
     if($self->isa('Rose::HTML::Form'))
     {
@@ -68,7 +74,52 @@ sub field
     return $self->{'fields'}{$name};
   }
 
+  my $sep_pos;
+
+  # Non-hierarchical name
+  if(($sep_pos = index($name, FORM_SEPARATOR)) < 0)
+  {
+    return undef; # $self->local_field($name, @_);
+  }
+
+  # First check if it's a local compound field  
+  my $prefix = substr($name, 0, $sep_pos);
+  my $rest   = substr($name, $sep_pos + 1);
+  $field = $self->field($prefix);
+  
+  if(UNIVERSAL::isa($field, 'Rose::HTML::Form::Field::Compound'))
+  {
+    $field = $field->field($rest);
+    return $field  if($field);
+  }
+
+#   my($parent_form, $local_name) = $self->find_parent_form($name);
+# 
+#   return $parent_form->field($local_name, @_);
+  
   return undef;
+}
+
+sub find_parent_field
+{
+  my($self, $name) = @_;
+
+  # Non-hierarchical name
+  if(index($name, FORM_SEPARATOR) < 0)
+  {
+    return $self->local_form($name) ? ($self, $name) : undef;
+  }
+
+  my $parent_form;
+
+  while($name =~ s/^([^$FORM_SEPARATOR_RE]+)$FORM_SEPARATOR_RE//o)
+  {
+    my $parent_name = $1;
+    last  if($parent_form = $self->local_form($parent_name));
+  }
+
+  return unless(defined $parent_form);
+  return wantarray ? ($parent_form, $name) : $parent_form;
 }
 
 sub add_fields
@@ -83,13 +134,17 @@ sub add_fields
 
     if(UNIVERSAL::isa($arg, 'Rose::HTML::Form::Field'))
     {
-      unless(defined $arg->rank)
+      my $field = $arg;
+
+      $field->local_name($field->name);
+      
+      unless(defined $field->rank)
       {
-        $arg->rank($self->increment_field_rank_counter);
+        $field->rank($self->increment_field_rank_counter);
       }
 
-      $self->field($arg->name => $arg);
-      push(@added_fields, $arg);
+      $self->field($field->local_name => $field);
+      push(@added_fields, $field);
     }
     else
     {
@@ -99,6 +154,8 @@ sub add_fields
       {
         Carp::croak "Not a Rose::HTML::Form::Field object: $field";
       }
+
+      $field->local_moniker($arg);
 
       unless(defined $field->rank)
       {
@@ -111,6 +168,7 @@ sub add_fields
   }
 
   $self->_clear_field_generated_values;
+  $self->resync_field_names;
 
   return  unless(defined wantarray);
   return wantarray ? @added_fields : $added_fields[0];
@@ -119,6 +177,18 @@ sub add_fields
 *add_field = \&add_fields;
 
 sub compare_fields { $_[1]->name cmp $_[2]->name }
+
+sub resync_field_names
+{
+  my($self) = shift;
+  
+  foreach my $field ($self->fields)
+  {
+    $field->resync_name;
+    $field->resync_field_names  if($field->isa('Rose::HTML::Form::Field::Compound'));
+#    $field->name; # Pull the new name through to the name HTML attribute
+  }
+}
 
 sub fields
 {
@@ -131,16 +201,16 @@ sub fields
 
   my $fields = $self->{'fields'};
 
-  $self->{'field_list'} = [ grep { defined } map { $fields->{$_} } $self->field_names ];
+  $self->{'field_list'} = [ grep { defined } map { $fields->{$_} } $self->field_monikers ];
 
   return wantarray ? @{$self->{'field_list'}} : $self->{'field_list'};
 }
 
-sub field_names
+sub field_monikers
 {
   my($self) = shift;
 
-  if(my $names = $self->{'field_names'})
+  if(my $names = $self->{'field_monikers'})
   {
     return wantarray ? @$names : $names;
   }
@@ -152,10 +222,10 @@ sub field_names
     push(@info, [ $name, $field ]);
   }
 
-  $self->{'field_names'} = 
+  $self->{'field_monikers'} = 
     [ map { $_->[0] } sort { $self->compare_fields($a->[1], $b->[1]) } @info ];
 
-  return wantarray ? @{$self->{'field_names'}} : $self->{'field_names'};
+  return wantarray ? @{$self->{'field_monikers'}} : $self->{'field_monikers'};
 }
 
 sub delete_fields 
@@ -201,15 +271,17 @@ sub _clear_field_generated_values
 {
   my($self) = shift;  
   $self->{'field_list'}  = undef;
-  $self->{'field_names'} = undef;
+  $self->{'field_monikers'} = undef;
 }
 
 sub hidden_field
 {
   my($self) = shift;
 
-  my $name = $self->html_attr_exists('name') ? $self->html_attr('name') : 
-             $self->can('name') ? $self->name : undef;
+  no warnings 'uninitialized';
+  my $name = $self->fq_name;
+#   my $name = $self->html_attr_exists('name') ? $self->html_attr('name') : 
+#              $self->can('name') ? $self->name : undef;
 
   return 
     Rose::HTML::Form::Field::Hidden->new(

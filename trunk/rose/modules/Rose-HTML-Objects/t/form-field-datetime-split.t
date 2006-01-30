@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 55;
+use Test::More tests => 54;
 
 BEGIN 
 {
@@ -208,19 +208,18 @@ is($field->xhtml_field,
 
 $field->name('datetime');
 
-$field->field('datetime.date.month')->class('mm');
-$field->field('datetime.date.day')->class('dd');
-$field->field('datetime.date')->field('year')->class('yyy');
-$field->field('datetime.date.year')->class('yyyy');
+$field->field('date.month')->class('mm');
+$field->field('date.day')->class('dd');
+$field->field('date')->field('year')->class('yyy');
+$field->field('date.year')->class('yyyy');
 
 my $subfield = $field->field('date');
 
-is($field->field('datetime.date'), $subfield, 'Subfield access 1');
+is($field->field('date'), $subfield, 'Subfield access 1');
 
-$subfield = $field->field('datetime.date.year');
+$subfield = $field->field('date.year');
 
-is($field->field('datetime.date')->field('year'), $subfield, 'Subfield access 2');
-is($field->field('date')->field('year'), $subfield, 'Subfield access 3');
+is($field->field('date')->field('year'), $subfield, 'Subfield access 2');
 
 is($field->html_field, 
   '<span class="datetime">' .

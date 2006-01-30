@@ -29,7 +29,7 @@ use Rose::Object::MakeMethods::Generic
 (
   scalar => 
   [
-    qw(label description rank field_name type)
+    qw(label description rank type)
   ],
 
   boolean => [ qw(required is_cleared has_partial_value) ],
@@ -40,7 +40,9 @@ use Rose::Object::MakeMethods::Generic
 
   'scalar --get_set_init' => 
   [
-    qw(html_prefix html_suffix html_error_separator xhtml_error_separator) 
+    qw(html_prefix html_suffix html_error_separator xhtml_error_separator
+    local_moniker)
+#       fq_name fq_moniker form_context_name field_context_name local_moniker) 
   ],
 );
 
@@ -96,19 +98,41 @@ sub parent_form
 sub fq_name
 {
   my($self) = shift;
-  my $name = $self->name;
-  my $parent_form = $self->parent_form or return $name;
-  my $fq_form_name = $parent_form->fq_form_name or return $name;
-  return join(FORM_SEPARATOR, $fq_form_name, $name);
+  #my $local_name    = $self->local_name;
+  #my $form_context  = $self->form_context_name;
+  #my $field_context = $self->field_context_name;
+#  no warnings 'uninitialized';
+  return join(FIELD_SEPARATOR, grep { defined } $self->form_context_name, $self->field_context_name, $self->local_name);
+  #return join(FIELD_SEPARATOR, join(FORM_SEPARATOR, $self->form_context_name, $self->field_context_name), $self->local_name);
 }
 
-sub fq_field_name
+sub fq_moniker
 {
   my($self) = shift;
-  my $name = $self->field_name;
-  my $parent_form = $self->parent_form or return $name;
-  my $fq_form_name = $parent_form->fq_form_name or return $name;
-  return join(FORM_SEPARATOR, $fq_form_name, $name);
+  #my $local_moniker = $self->local_moniker;
+  #my $form_context  = $self->form_context_name;
+  #my $field_context = $self->field_context_name;
+
+  return join(FIELD_SEPARATOR, grep { defined } $self->form_context_name, $self->field_context_name, $self->local_moniker);
+
+#  no warnings 'uninitialized';
+#  return join(FIELD_SEPARATOR, join(FORM_SEPARATOR,  $self->form_context_name, $self->field_context_name), $self->local_moniker);
+}
+
+sub init_local_moniker { shift->local_name }
+
+sub form_context_name
+{
+  my($self) = shift;
+  my $parent_form = $self->parent_form or return;
+  return $parent_form->fq_form_name or return;
+}
+
+sub field_context_name
+{
+  my($self) = shift;
+  my $parent_field = $self->parent_field or return;
+  return $parent_field->fq_name or return;
 }
 
 sub init_html_prefix { '' }
@@ -131,22 +155,86 @@ sub value
   }
 }
 
+# sub local_name
+# {
+#   my($self) = shift;
+#   
+#   if(@_)
+#   {
+#     $self->{'fq_name'} = undef;
+#     $self->html_attr('name', undef);
+#     return $self->{'local_name'} = shift;
+#   }
+# 
+#   return $self->{'local_name'};
+# }
+
+sub resync_name
+{
+  my($self) = shift;
+  
+  $self->html_attr('name', undef);
+  $self->name  if($self->parent_field || $self->parent_form);
+  #$self->name($self->fq_name);
+}
+
+sub local_name
+{
+  my($self) = shift;
+
+  if(@_)
+  {
+    my $name = shift;
+
+    no warnings 'uninitialized';
+    if(index($name, FIELD_SEPARATOR) >= 0 && !$self->isa('Rose::HTML::Form::Field::Hidden'))
+    {
+      Carp::croak "Invalid local field name: $name";
+    }
+
+    return $self->{'local_name'} = $name;
+  }
+
+  my $name = $self->{'local_name'};
+  return $name  if(defined $name);
+  return $self->{'local_name'} = $self->{'local_moniker'};
+}
+
 sub name
 {
   my($self) = shift;
 
   if(@_)
   {
-    return $self->html_attr('name', shift);
+    $self->local_name(shift);
+    return $self->html_attr('name', $self->fq_name);
+  }
+
+  my $name = $self->html_attr('name');
+  
+  # The name HTML attr will be an empty string if it's a required attr,
+  # so use length() and not defined()
+  no warnings 'uninitialized';
+  unless(length $name)
+  {
+    return $self->html_attr('name', $self->fq_name);
+  }
+
+  return $name;
+}
+
+sub moniker
+{
+  my($self) = shift;
+
+  if(@_)
+  {
+    return $self->fq_moniker($self->{'moniker'} = shift);
   }
   else
   {
-    unless(defined $self->html_attr('name'))
-    {
-      return $self->field_name;
-    }
-
-    return $self->html_attr('name');
+    return $self->{'moniker'}  if(defined $self->{'moniker'});
+    return $self->{'moniker'} = $self->fq_moniker;
   }
 }
 

@@ -11,7 +11,7 @@ our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 use constant FIELD_SEPARATOR => '.';
 our $FIELD_SEPARATOR = FIELD_SEPARATOR;
 
-our $VERSION = '0.03';
+our $VERSION = '0.35';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -79,77 +79,99 @@ sub init_fields
   }
 }
 
+sub resync_name
+{
+  my($self) = shift;
+  
+  $self->SUPER::resync_name();
+  $self->resync_field_names;
+}
+
 sub name
 {
   my($self) = shift;
 
-  return $self->{'name'}  unless(@_);
-  my $old_name = $self->{'name'};
-  my $name     = $self->{'name'} = shift;
-  my %fields;
-
-  if(defined $old_name && defined $name && $name ne $old_name)
+  if(@_)
   {
-    my $replace = qr(^$old_name$FIELD_SEPARATOR);
-
-    foreach my $field ($self->fields)
-    {
-      my $subfield_name = $field->name;
-      $subfield_name =~ s/$replace/$name$FIELD_SEPARATOR/;
-      #$Debug && warn $field->name, " -> $subfield_name\n";
-      $field->name($subfield_name);
-      $fields{$subfield_name} = $field;
-    }
-
-    $self->delete_fields;
-    $self->add_fields(%fields);
+    $self->local_name(shift);
+    $self->resync_field_names;
+    return $self->fq_name;
   }
 
-  return $name;
+  return $self->fq_name;
 }
 
-sub field
-{
-  my($self, $name) = (shift, shift);
+# sub name
+# {
+#   my($self) = shift;
+# 
+#   return $self->{'name'}  unless(@_);
+#   my $old_name = $self->{'name'};
+#   my $name     = $self->{'name'} = shift;
+#   my %fields;
+# 
+#   if(defined $old_name && defined $name && $name ne $old_name)
+#   {
+#     my $replace = qr(^$old_name$FIELD_SEPARATOR);
+# 
+#     foreach my $field ($self->fields)
+#     {
+#       my $subfield_name = $field->name;
+#       $subfield_name =~ s/$replace/$name$FIELD_SEPARATOR/;
+#       #$Debug && warn $field->name, " -> $subfield_name\n";
+#       $field->name($subfield_name);
+#       $fields{$subfield_name} = $field;
+#     }
+# 
+#     $self->delete_fields;
+#     $self->add_fields(%fields);
+#   }
+# 
+#   return $name;
+# }
 
-  $Debug && warn "name($name) = ", $self->subfield_name($name), "\n";
-  $name = $self->subfield_name($name);
-
-  #return $self->SUPER::field($name, @_)  if(@_);
-
-  # Dig out sub-subfields
-  if(index($name, FIELD_SEPARATOR) != rindex($name, FIELD_SEPARATOR))
-  {
-    my $field_name    = $name;
-    my $subfield_name = $name;
-
-    while(!defined $self->SUPER::field($field_name))
-    {
-      unless($field_name =~ s/$FIELD_SEPARATOR[^$FIELD_SEPARATOR]+$//o)
-      {
-        # No such field: create or fail
-        return $self->SUPER::field($name, @_)  if(@_);
-        return undef;
-      }
-    }
-
-    my $field = $self->SUPER::field($field_name);
-
-    if($field->isa('Rose::HTML::Form::Field::Compound'))
-    {
-      return $field->field($subfield_name, @_);
-    }
-    else
-    {
-      $self->SUPER::field($field_name, @_)  if(@_);
-      return $field
-    }
-  }
-  else
-  {
-    $self->SUPER::field($name, @_);
-  }
-}
+# sub field
+# {
+#   my($self, $name) = (shift, shift);
+# 
+#   $Debug && warn "name($name) = ", $self->subfield_name($name), "\n";
+#   $name = $self->subfield_name($name);
+# 
+#   #return $self->SUPER::field($name, @_)  if(@_);
+# 
+#   # Dig out sub-subfields
+#   if(index($name, FIELD_SEPARATOR) != rindex($name, FIELD_SEPARATOR))
+#   {
+#     my $field_name    = $name;
+#     my $subfield_name = $name;
+# 
+#     while(!defined $self->SUPER::field($field_name))
+#     {
+#       unless($field_name =~ s/$FIELD_SEPARATOR[^$FIELD_SEPARATOR]+$//o)
+#       {
+#         # No such field: create or fail
+#         return $self->SUPER::field($name, @_)  if(@_);
+#         return undef;
+#       }
+#     }
+# 
+#     my $field = $self->SUPER::field($field_name);
+# 
+#     if($field->isa('Rose::HTML::Form::Field::Compound'))
+#     {
+#       return $field->field($subfield_name, @_);
+#     }
+#     else
+#     {
+#       $self->SUPER::field($field_name, @_)  if(@_);
+#       return $field
+#     }
+#   }
+#   else
+#   {
+#     $self->SUPER::field($name, @_);
+#   }
+# }
 
 sub clear
 {

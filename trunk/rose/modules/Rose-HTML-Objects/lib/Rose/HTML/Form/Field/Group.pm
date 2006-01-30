@@ -258,7 +258,7 @@ sub hidden_fields
 
   foreach my $item ($self->items)
   {
-    push(@hidden, $item->hidden_field)  if($item->internal_value);
+    push(@hidden, $item->hidden_field)  if(defined $item->internal_value);
   }
 
   return (wantarray) ? @hidden : \@hidden;
