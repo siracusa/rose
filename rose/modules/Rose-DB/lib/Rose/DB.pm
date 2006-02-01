@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.62';
+our $VERSION = '0.63';
 
 our $Debug = 0;
 
@@ -312,6 +312,12 @@ sub new
   $self->init(@_);
 
   return $self;
+}
+
+sub class 
+{
+  my($self) = shift; 
+  return $self->{'_origin_class'} || ref $self;
 }
 
 sub init

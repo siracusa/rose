@@ -4105,9 +4105,9 @@ Given the column object COLUMN and the method type TYPE, returns the correspondi
 
 Given the method name NAME and the class name CLASS, returns true if the method name is reserved (i.e., is used by the CLASS API), false otherwise.
 
-=item B<pre_init_hook [CODE]>
+=item B<pre_init_hook [ CODEREF | ARRAYREF ]>
 
-Get or set a reference to a subroutine that will be called just before the L<initialize|/initialize> method runs.  The subroutine arguments will be the metdata object itself and any arguments passed to the call to L<initialize|/initialize>.
+Get or set a reference to a subroutine or a reference to an array of code references that will be called just before the L<initialize|/initialize> method runs.  Each referenced subroutine will be passed the metadata object itself and any arguments passed to the call to L<initialize|/initialize>.
 
 =item B<primary_key [PK]>
 

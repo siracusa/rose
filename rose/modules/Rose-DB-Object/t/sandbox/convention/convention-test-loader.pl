@@ -3,6 +3,7 @@
 use lib '../../../lib';
 use lib 'lib';
 
+use My::DB;
 use Rose::DB::Object::Loader;
 
 my $include_tables = 
@@ -13,6 +14,8 @@ my $loader = Rose::DB::Object::Loader->new;
 $loader->make_classes(include_tables => $include_tables,
                       class_prefix   => 'My::Loaded',
                       #with_relationships => [ 'one to many', 'many to many' ],
+                      #db_class       => 'My::DB2',
+                      #db => My::DB->new
                       db_class       => 'My::DB');
 
 $p = My::Loaded::Product->new(id => 1)->load;
