@@ -17,7 +17,7 @@ use Rose::DB::Object::Metadata::Util qw(perl_hashref);
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.63';
+our $VERSION = '0.66';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -35,14 +35,22 @@ use Rose::Object::MakeMethods::Generic
     'pre_init_hook',
     'module_dir',
   ],
+  
+  'scalar --get_set_init' =>
+  [
+    'with_relationships',
+  ],
 
   boolean => 
   [
     'using_default_base_class',
-    'include_views' => { default => 0 },
-    'with_managers' => { default => 1 },
+    'include_views'     => { default => 0 },
+    'with_managers'     => { default => 1 },
+    'with_foreign_keys' => { default => 1 },
   ],
 );
+
+sub init_with_relationships { 1 }
 
 my $Base_Class_Counter = 1;
 
@@ -387,6 +395,8 @@ $hash
 EOF
 }
 
+sub default_pre_init_hook { }
+
 sub make_classes
 {
   my($self, %args) = @_;
@@ -399,6 +409,12 @@ sub make_classes
 
   my $with_managers = exists $args{'with_managers'} ? 
     delete $args{'with_managers'} : $self->with_managers;
+
+  $args{'with_relationships'} = $self->with_relationships
+    unless(exists $args{'with_relationships'});
+
+  my $with_foreign_keys = exists $args{'with_foreign_keys'} ? 
+    delete $args{'with_foreign_keys'} : $self->with_foreign_keys;
 
   my $pre_init_hook = exists $args{'pre_init_hook'} ? 
     delete $args{'pre_init_hook'} : $self->pre_init_hook;
@@ -432,6 +448,36 @@ sub make_classes
       return 1;
     };
   }
+
+  my $class_prefix =  exists $args{'class_prefix'} ? 
+    delete $args{'class_prefix'} : $self->class_prefix || '';
+
+  unless($class_prefix =~ /^(?:\w+::)*\w+(?:::)?$/)
+  {
+    croak "Illegal class prefix: $class_prefix";
+  }
+
+  $class_prefix .= '::'  unless($class_prefix =~ /::$/);
+
+  # When setting explicit values for attributes that cascade to
+  # affect other attributes, save off tehold values are restore
+  # them at the end.
+  my %save;
+  
+  if(exists $args{'db_class'})
+  {
+    if(defined(my $db_class = $self->db_class))
+    {
+      $save{'db_class'} = $db_class;
+    }
+
+    if(defined(my $db = $self->db))
+    {
+      $save{'db'} = $db;
+    }
+    
+    $self->db_class(delete $args{'db_class'});
+  }    
 
   #
   # Get or create the db object
@@ -617,8 +663,6 @@ sub make_classes
     }
   }
 
-  my $class_prefix = $self->class_prefix || '';
-
   my $cm = $self->convention_manager or die "Missing convention manager";
 
   my @classes;
@@ -647,7 +691,21 @@ sub make_classes
 
     my $meta = $obj_class->meta;
 
-    $meta->pre_init_hook($pre_init_hook)  if($pre_init_hook);
+    if($pre_init_hook)
+    {
+      if(ref $pre_init_hook eq 'CODE')
+      {
+        $pre_init_hook = [ $pre_init_hook ];
+      }
+      elsif(ref $pre_init_hook ne 'ARRAY')
+      {
+        Carp::croak "Invalid pre_init_hook: $pre_init_hook";
+      }
+    }
+
+    unshift(@$pre_init_hook, sub { $self->default_pre_init_hook(@_) });
+
+    $meta->pre_init_hook($pre_init_hook);
 
     $meta->table($table);
     $meta->convention_manager($cm_class->new);
@@ -665,6 +723,14 @@ sub make_classes
   }
 
   $classes[0]->meta_class->clear_all_dbs  if(@classes);
+
+  if(%save)
+  {
+    while(my($method, $value) = each(%save))
+    {
+      $self->$method($value);
+    }
+  }
 
   return wantarray ? @classes : \@classes;
 }

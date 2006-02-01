@@ -3,24 +3,19 @@
 use lib '../../../lib';
 use lib 'lib';
 
-use My::Auto::Price;
-use My::Auto::Product;
-use My::Auto::ProductColors;
+use Rose::DB::Object::Loader;
 
-# use My::Auto::Price;
-# use My::Auto::Color;
-# use My::Auto::Vendor;
-# $p = My::Auto::Product->new(id => 1, name => 'A');
-# $p->prices(My::Auto::Price->new(product_id => 1, region => 'IS', price => 1.23),
-#            My::Auto::Price->new(product_id => 1, region => 'DE', price => 4.56));
-# 
-# $p->colors(My::Auto::Color->new(code => 'CC1', name => 'red'),
-#            My::Auto::Color->new(code => 'CC2', name => 'green'));
-# 
-# $p->vendor(My::Auto::Vendor->new(id => 1, name => 'V1'));
-# $p->save;
+my $include_tables = 
+  '^(?:' . join('|', qw(product_colors prices products colors vendors)) . ')$';
 
-$p = My::Auto::Product->new(id => 1)->load;
+my $loader = Rose::DB::Object::Loader->new;
+
+$loader->make_classes(include_tables => $include_tables,
+                      class_prefix   => 'My::Loaded',
+                      #with_relationships => [ 'one to many', 'many to many' ],
+                      db_class       => 'My::DB');
+
+$p = My::Loaded::Product->new(id => 1)->load;
 print $p->vendor->name, "\n";
 
 print join(', ', map { $_->region . ': ' . $_->price } $p->prices), "\n";
