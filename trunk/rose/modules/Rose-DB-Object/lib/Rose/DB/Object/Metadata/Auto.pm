@@ -909,6 +909,8 @@ sub auto_init_foreign_keys
 {
   my($self, %args) = @_;
 
+  return  if(exists $args{'with_foreign_keys'} && !$args{'with_foreign_keys'});
+
   my $auto_foreign_keys     = $self->auto_generate_foreign_keys(%args);
   my $existing_foreign_keys = $self->foreign_keys;
 
@@ -1233,6 +1235,6 @@ KNOWN BUGS:
 MySQL:
 
 CHAR(6) column shows up as VARCHAR(6)
-BIT(5)  column shows up as TINYINT(1)
+BIT(5)  column shows up as TINYINT(1) (MySQL 5.0.2 or earlier) 
 BOOLEAN column shows up as TINYINT(1)
 No native support for array types in MySQL

@@ -1208,7 +1208,10 @@ sub initialize
 
   if(my $code = $self->pre_init_hook)
   {
-    $code->($self, @_);
+    foreach my $sub (ref $code eq 'ARRAY' ? @$code : $code)
+    {
+      $sub->($self, @_);
+    }
   }
 
   my $class = $self->class

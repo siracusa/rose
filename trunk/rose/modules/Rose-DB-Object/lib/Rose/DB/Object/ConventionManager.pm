@@ -222,6 +222,7 @@ sub looks_like_map_table_name
 
   if($table =~ m{^(?:
                     (?:\w+_){2,}map             # foo_bar_map
+                  | (?:\w+_)*\w+_(?:\w+_)*\w+s  # foo_bars
                   | (?:\w+_)*\w+s_(?:\w+_)*\w+s # foos_bars
                )$}x)
   {
@@ -904,6 +905,7 @@ The default implementation returns true if TABLE is in one of these forms:
     Regex                     Examples
     -----------------------   -----------------------------
     (\w+_){2,}map             pig_toe_map, pig_skin_toe_map
+    (\w+_)*\w+_(\w+_)*\w+s    pig_toes, pig_skin_toe_jams
     (\w+_)*\w+s_(\w+_)*\w+s   pigs_toes, pig_skins_toe_jams
 
 It returns false otherwise.
@@ -1257,14 +1259,9 @@ Using L<Rose::DB::Object>'s L<auto-initialization|Rose::DB::Object::Metadata/"AU
 
   package My::Auto::Product;
   use base 'My::Object';
-  __PACKAGE__->meta->relationships
-  (
-    prices => 'one to many',
-    colors => 'many to many',
-  );
   __PACKAGE__->meta->auto_initialize;
 
-Not a single table, column, or foreign key name is specified, and the "one to many" and "many to many" relationships in the C<My::Auto::Product> class have no information other than their names.  Yet everything still works:
+Not a single table, column, foreign key, or relationship is specified, yet everything still works:
 
   $p = My::Auto::Product->new(id => 1)->load;
 
@@ -1276,7 +1273,9 @@ Not a single table, column, or foreign key name is specified, and the "one to ma
   # "red, green"
   print join(', ', map { $_->name } $p->colors), "\n";
 
-I don't recommend this kind of extreme approach, but it is an effective demonstration of the power of the convention manager.
+More precisely, everything still works I<provided> that you load all the of the related modules.  For example, if you don't load C<My::Auto::Product> but don't load C<My::Auto::Price> (either from within the C<My::Auto::Product> class or in your program itself), then the C<My::Auto::Product> will not have a C<prices()> method (since your program will have no knowledge of the C<My::Auto::Price> class).  Use the L<loader|Rose::DB::Object::Loader> if you want to set up a bunch of related classes automatically without worrying about this kind of thing.
+
+Anyway, I don't recommend this kind of extreme approach, but it is an effective demonstration of the power of the convention manager.
 
 =head1 AUTHOR
 
