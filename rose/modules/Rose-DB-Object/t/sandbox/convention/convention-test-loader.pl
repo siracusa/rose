@@ -13,10 +13,15 @@ my $loader = Rose::DB::Object::Loader->new;
 
 $loader->make_classes(include_tables => $include_tables,
                       class_prefix   => 'My::Loaded',
+                      #with_foreign_keys  => 0,
+                      #with_unique_keys   => 0,
                       #with_relationships => [ 'one to many', 'many to many' ],
-                      #db_class       => 'My::DB2',
-                      #db => My::DB->new
-                      db_class       => 'My::DB');
+                      #db_class           => 'My::DB2',
+                      #db      => My::DB->new
+                      db_class => 'My::DB');
+
+#print 'FK: ', My::Loaded::Product->meta->foreign_keys, "\n";
+#print 'UK: ', My::Loaded::Product->meta->unique_keys, "\n";
 
 $p = My::Loaded::Product->new(id => 1)->load;
 print $p->vendor->name, "\n";
@@ -48,7 +53,9 @@ CREATE TABLE products
 (
   id        SERIAL NOT NULL PRIMARY KEY,
   name      VARCHAR(255),
-  vendor_id INT NOT NULL REFERENCES vendors (id)
+  vendor_id INT NOT NULL REFERENCES vendors (id),
+  
+  UNIQUE(name)
 );
 
 CREATE TABLE prices

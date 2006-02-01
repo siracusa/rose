@@ -870,6 +870,8 @@ sub auto_init_unique_keys
 {
   my($self, %args) = @_;
 
+  return  if(exists $args{'with_unique_keys'} && !$args{'with_unique_keys'});
+
   my $pk_cols = join("\0", $self->primary_key_columns);
 
   unless(length $pk_cols)
@@ -978,7 +980,6 @@ sub auto_init_relationships
 {
   my($self) = shift;
   my(%args) = @_;
-
 
   my $type_map  = $self->relationship_type_classes;
   my @all_types = keys %$type_map;
