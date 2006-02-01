@@ -1,7 +1,9 @@
-0.66 (01.28.2006) - John Siracusa <siracusa@mindspring.com>
+0.66 (01.31.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Disabled implicit primary table sort clause in the Manager when 
       only fetching rows from the primary table.
+    * TODO: arbitrary(?) join conditions for ... to many rels
+    * TODO: optionally auto-init ... to many rels
 
 0.65 (01.27.2006) - John Siracusa <siracusa@mindspring.com>
 
