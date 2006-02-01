@@ -48,9 +48,10 @@ use Rose::Object::MakeMethods::Generic
   boolean => 
   [
     allow_inline_column_values => { default => 0 },
-    is_initialized => { default => 0 },
-    allow_auto_initialization => { default => 0 },
-    was_auto_initialized => { default => 0 },
+    is_initialized             => { default => 0 },
+    allow_auto_initialization  => { default => 0 },
+    was_auto_initialized       => { default => 0 },
+    initialized_foreign_keys   => { default => 0 },
   ],
 
   array =>
