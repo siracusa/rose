@@ -5,7 +5,9 @@
     * Allow multiple pre_init_hook()s in the loader and metadata objects.
     * Improved auto-initialization of many-to-many relationships.
     * Added with_relationships, with_foreign_keys, with_unique_keys, db,
-      and db_class attributes and make_classes() parameters to the loader.
+      and db_class make_classes() parameters and loader object attributes.
+    * Renamed some obscure convention manager methods and altered the
+      default behavior of the is_map_class() method slightly.
     * TODO: arbitrary(?) join conditions for ... to many rels
 
 0.65 (01.27.2006) - John Siracusa <siracusa@mindspring.com>

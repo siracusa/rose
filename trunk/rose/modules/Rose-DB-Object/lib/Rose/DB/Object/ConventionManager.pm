@@ -192,14 +192,14 @@ sub is_map_class
 
   return 0  unless(UNIVERSAL::isa($class, 'Rose::DB::Object'));
 
-  my $is_map_table = $self->looks_like_map_table_name($class->meta->table);
-  my $is_map_class = $self->looks_like_map_class_name($class);
+  my $is_map_table = $self->looks_like_map_table($class->meta->table);
+  my $is_map_class = $self->looks_like_map_class($class);
 
   return 1  if($is_map_table && (!defined $is_map_class || $is_map_class));
   return 0;
 }
 
-sub looks_like_map_class_name
+sub looks_like_map_class
 {
   my($self, $class) = @_;
 
@@ -212,11 +212,12 @@ sub looks_like_map_class_name
   my @fks  = $meta->foreign_keys;
 
   return 1  if(@fks == 2);
-  return 0  if($meta->is_initialized && !$meta->has_deferred_foreign_keys);
+  return 0  if(($meta->is_initialized || $meta->initialized_foreign_keys) && 
+               !$meta->has_deferred_foreign_keys);
   return undef;
 }
 
-sub looks_like_map_table_name
+sub looks_like_map_table
 {
   my($self, $table) = @_;
 
@@ -666,7 +667,7 @@ Examples: C<colors>, C<prices>, C<customer_details>.  These relationships may po
 
 =item B<Mapping tables and their associated classes that participate in many-to-many relationships are named according a formula that combines the names of the two classes/tables that are being linked.>
 
-See the L<auto_relationship|/auto_relationship>, L<looks_like_map_class_name|/looks_like_map_class_name>, and L<looks_like_map_table_name|/looks_like_map_table_name> documentation for all the details. 
+See the L<auto_relationship|/auto_relationship>, L<looks_like_map_class|/looks_like_map_class>, and L<looks_like_map_table|/looks_like_map_table> documentation for all the details. 
 
 =back
 
@@ -886,17 +887,17 @@ Examples:
 
 Returns true if CLASS is a L<map class|Rose::DB::Object::Metadata::Relationship::ManyToMany/map_class> used as part of a L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany> relationship, false if it does not.
 
-The default implementations returns true if CLASS is derived from L<Rose::DB::Object> and its L<table|Rose::DB::Object::Metadata/table> name looks like a map table name according to the L<looks_like_map_table_name|/looks_like_map_table_name> method and the L<looks_like_map_class_name|/looks_like_map_class_name> method returns either true or undef.
+The default implementations returns true if CLASS is derived from L<Rose::DB::Object> and its L<table|Rose::DB::Object::Metadata/table> name looks like a map table name according to the L<looks_like_map_table|/looks_like_map_table> method and the L<looks_like_map_class|/looks_like_map_class> method returns either true or undef.
 
 Override this method to control which classes are considered map classes.  Note that it may be called several times on the same class at various stages of that class's construction.
 
-=item B<looks_like_map_class_name CLASS>
+=item B<looks_like_map_class CLASS>
 
 Given the class name CLASS, returns true if it looks like the name of a L<map class|Rose::DB::Object::Metadata::Relationship::ManyToMany/map_class> used as part of a L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany> relationship, false (but defined) if it does not, and undef if it's unsure.
 
-The default implementation returns true if CLASS is derived from L<Rose::DB::Object> and has exactly two foreign keys.  It returns false (but defined) if CLASS is derived from L<Rose::DB::Object> and has been L<initialized|Rose::DB::Object/initialize>, but does not have exactly two foreign keys.  It returns undef otherwise.
+The default implementation returns true if CLASS is derived from L<Rose::DB::Object> and has exactly two foreign keys.  It returns false (but defined) if CLASS is derived from L<Rose::DB::Object> and has been L<initialized|Rose::DB::Object/initialize> (or if the foreign keys have been L<auto-initialized|Rose::DB::Object/auto_init_foreign_keys>) and the CLASS has no deferred foreign keys.  It returns undef otherwise.
 
-=item B<looks_like_map_table_name TABLE>
+=item B<looks_like_map_table TABLE>
 
 Returns true if TABLE looks like the name of a mapping table used as part of a L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany> relationship, false (but defined) if it does not, and undef if it's unsure.
 
