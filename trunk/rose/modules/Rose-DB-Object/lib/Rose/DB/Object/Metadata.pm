@@ -19,7 +19,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.65';
+our $VERSION = '0.66';
 
 our $Debug = 0;
 
@@ -4282,11 +4282,31 @@ Auto-initialize the entire metadata object.  This is a wrapper for the individua
   $meta->auto_init_relationships(...);
   $meta->initialize;
 
-PARAMS are optional name/value pairs.  When applicable, these parameters are passed on to each of the "auto_init_*" methods.
+PARAMS are optional name/value pairs.  When applicable, these parameters are passed on to each of the "auto_init_*" methods.  Valid parameters are:
 
-If a C<replace_existing> parameter is passed with a true value, then the auto-generated columns, unique keys, foreign keys, and relationships entirely replace any existing columns, unique keys, foreign keys, and relationships, respectively.
+=over 4
 
-If a C<stay_connected> parameter is passed with a true value, then any database connections retained by the metadata objects belonging to the various L<Rose::DB::Object>-derived classes participating in the auto-initialization process will remain connected until an explicit call to the L<clear_all_dbs|/clear_all_dbs> class method.
+=item B<replace_existing BOOL>
+
+If true, then the auto-generated columns, unique keys, foreign keys, and relationships entirely replace any existing columns, unique keys, foreign keys, and relationships, respectively.
+
+=item B<stay_connected BOOL>
+
+If true, then any database connections retained by the metadata objects belonging to the various L<Rose::DB::Object>-derived classes participating in the auto-initialization process will remain connected until an explicit call to the L<clear_all_dbs|/clear_all_dbs> class method.
+
+=item B<with_foreign_keys BOOL>
+
+A boolean value indicating whether or not foreign key metadata will be auto-initialized.  Defaults to true.
+
+=item B<with_relationships [ BOOL | ARRAYREF ]>
+
+A boolean value or a reference to an array of relationship L<type|Rose::DB::Object::Metadata::Relationship/type> names.  If set to a simple boolean value, then the all types of relationships will be considered for auto-initialization.  If set to a list of relationship type names, then only relationships of those types will be considered.  Defaults to true.
+
+=item B<with_unique_keys BOOL>
+
+A boolean value indicating whether or not unique key metadata will be auto-initialized.  Defaults to true.
+
+=back
 
 During initialization, if one of the columns has a method name that clashes with a L<reserved method name|Rose::DB::Object/"RESERVED METHODS">, then the L<column_alias_generator|/column_alias_generator> will be called to remedy the situation by aliasing the column.  If the name still conflicts, then a fatal error will occur.
 

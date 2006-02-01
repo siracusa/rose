@@ -47,6 +47,7 @@ use Rose::Object::MakeMethods::Generic
     'include_views'     => { default => 0 },
     'with_managers'     => { default => 1 },
     'with_foreign_keys' => { default => 1 },
+    'with_unique_keys'  => { default => 1 },
   ],
 );
 
@@ -415,8 +416,11 @@ sub make_classes
   $args{'with_relationships'} = $self->with_relationships
     unless(exists $args{'with_relationships'});
 
-  my $with_foreign_keys = exists $args{'with_foreign_keys'} ? 
-    delete $args{'with_foreign_keys'} : $self->with_foreign_keys;
+  $args{'with_foreign_keys'} = $self->with_foreign_keys
+    unless(exists $args{'with_foreign_keys'});
+
+  $args{'with_unique_keys'} = $self->with_unique_keys
+    unless(exists $args{'with_unique_keys'});
 
   my $pre_init_hook = exists $args{'pre_init_hook'} ? 
     delete $args{'pre_init_hook'} : $self->pre_init_hook;
@@ -1032,6 +1036,10 @@ If true, database views will also be processed.  Defaults to the value of the lo
 
 A reference to a subroutine or a reference to an array of code references that will be called just before each L<Rose::DB::Object>-derived class is L<initialize|Rose::DB::Object::Metadata/initialize>ed.  Each referenced subroutine will be passed the class's L<metdata|Rose::DB::Object::Metadata> object plus any arguments to the L<initialize|Rose::DB::Object::Metadata/initialize> method.  Defaults to the value of the loader object's L<pre_init_hook|/pre_init_hook> attribute.
 
+=item B<with_foreign_keys BOOL>
+
+If true, set up foreign key metadata for each L<Rose::DB::Object>-derived.  Defaults to the value of the loader object's L<with_foreign_keys|/with_foreign_keys> attribute.
+
 =item B<with_managers BOOL>
 
 If true, create L<Rose::DB::Object::Manager|Rose::DB::Object::Manager>-derived manager classes for each L<Rose::DB::Object> subclass.  Defaults to the value of the loader object's L<with_managers|/with_managers> attribute.
@@ -1044,6 +1052,9 @@ The L<Rose::DB::Object> subclass's L<metadata object|Rose::DB::Object::Metadata>
 
 A boolean value or a reference to an array of relationship L<type|Rose::DB::Object::Metadata::Relationship/type> names.  If set to a simple boolean value, then all types of relationships will be considered when making classes.  If set to a list of relationship type names, then only relationships of those types will be considered.  Defaults to the value of the loader object's L<with_relationships|/with_relationships> attribute.
 
+=item B<with_unique_keys BOOL>
+
+If true, set up unique key metadata for each L<Rose::DB::Object>-derived.  Defaults to the value of the loader object's L<with_unique_keys|/with_unique_keys> attribute.
 
 =back
 
@@ -1081,6 +1092,10 @@ Get or set the path to the directory where L<make_modules|/make_modules> will cr
 
 Get or set a reference to a subroutine to be called just before each L<Rose::DB::Object>-derived class is L<initialize|Rose::DB::Object::Metadata/initialize>ed within the L<make_classes|/make_classes> method.  The subroutine will be passed the class's L<metdata|Rose::DB::Object::Metadata> object as an argument.
 
+=item B<with_foreign_keys BOOL>
+
+If true, the L<make_classes|/make_classes> method will set up foreign key metadata for each L<Rose::DB::Object>-derived class it creates.  Defaults to true.
+
 =item B<with_managers [BOOL]>
 
 If true, the L<make_classes|/make_classes> method will create L<Rose::DB::Object::Manager|Rose::DB::Object::Manager>-derived manager classes for each L<Rose::DB::Object> subclass by default.  Defaults to true.
@@ -1091,7 +1106,11 @@ The L<Rose::DB::Object> subclass's L<metadata object|Rose::DB::Object::Metadata>
 
 =item B<with_relationships [ BOOL | ARRAYREF ]>
 
-A boolean value or a reference to an array of relationship L<type|Rose::DB::Object::Metadata::Relationship/type> names.  If set to a simple boolean value, then the the L<make_classes|/make_classes> method will consider all types of relationships when making classes.  If set to a list of relationship type names, then only relationships of those types will be considered by  L<make_classes|/make_classes>.
+A boolean value or a reference to an array of relationship L<type|Rose::DB::Object::Metadata::Relationship/type> names.  If set to a simple boolean value, then the L<make_classes|/make_classes> method will consider all types of relationships when making classes.  If set to a list of relationship type names, then only relationships of those types will be considered by  L<make_classes|/make_classes>.  Defaults to true.
+
+=item B<with_unique_keys BOOL>
+
+If true, the L<make_classes|/make_classes> method will set up unique key metadata for each L<Rose::DB::Object>-derived class it creates.  Defaults to true.
 
 =back
 
