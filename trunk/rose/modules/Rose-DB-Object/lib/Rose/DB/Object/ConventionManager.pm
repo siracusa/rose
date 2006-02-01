@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Object;
 our @ISA = qw(Rose::DB::Object::Metadata::Object);
 
-our $VERSION = '0.60';
+our $VERSION = '0.66';
 
 our $Debug = 0;
 
@@ -655,15 +655,15 @@ For example, the primary key column name in the C<products> table might be C<id>
 
 Examples: C<product_sku>, C<vendor_id>, C<employee_address_id>.
 
-=item B<"one to one" and "many to one" relationship names are singular.>
+=item B<One-to-one and many-to-one relationship names are singular.>
 
-Examples: C<product>, C<vendor>, C<code>.  These relationships may point to zero or one foreign object.  The default method names generated from such relationships are based on the relationship name, so singular names make the most sense.
+Examples: C<product>, C<vendor>, C<code>.  These relationships may point to zero or one foreign object.  The default method names generated from such relationships are based on the relationship names, so singular names make the most sense.
 
-=item B<"one to many" and "many to many" relationship names are plural.>
+=item B<One-to-many and many-to-many relationship names are plural.>
 
-Examples: C<colors>, C<prices>, C<customer_details>.  These relationships may point to more than one foreign object.  The default method names generated from such relationships are based on the relationship name, so plural names make the most sense.
+Examples: C<colors>, C<prices>, C<customer_details>.  These relationships may point to more than one foreign object.  The default method names generated from such relationships are based on the relationship names, so plural names make the most sense.
 
-=item B<Mapping tables and their associated classes that participate in "many to many" relationships are named according a formula that combines the names of the two classes/tables that are being linked.>
+=item B<Mapping tables and their associated classes that participate in many-to-many relationships are named according a formula that combines the names of the two classes/tables that are being linked.>
 
 See the L<auto_relationship|/auto_relationship>, L<looks_like_map_class_name|/looks_like_map_class_name>, and L<looks_like_map_table_name|/looks_like_map_table_name> documentation for all the details. 
 
