@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1443;
+use Test::More tests => 1445;
 
 BEGIN 
 {
@@ -4067,7 +4067,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 387)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 389)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -4187,6 +4187,22 @@ SKIP: foreach my $db_type ('sqlite')
 
   my $oo23 = MySQLiteOtherObject2->new(id => 3, name => 'three', pid => $o_x->id);
   ok($oo23->save, "other object 2 save() 3 - $db_type");
+
+  # Begin experiment
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  my $no2s = $o->not_other2_objs;
+  
+  is(scalar @$no2s, 2, 'not equal one-to-many 1');
+  
+  my $nobjs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MySQLiteObject',
+      require_objects => [ 'not_other2_objs' ]);
+  
+  is(scalar @$nobjs, 2, 'not equal one-to-many 2');
+  
+  MySQLiteObject->meta->delete_relationship('not_other2_objs');
+  # End experiment
 
   my $o2s = $o->other2_objs;
 
@@ -6681,6 +6697,15 @@ EOF
           add_now         => 'add_other2_objs_now',
           add_on_save     => undef,
         },
+      },
+
+      # Hrm.  Experimental...
+      not_other2_objs =>
+      {
+        type  => 'one to many',
+        class => 'MySQLiteOtherObject2',
+        #column_map => { id => 'pid' },
+        query_args => [ id => { ne_sql => 'pid' } ],
       }
     );
 

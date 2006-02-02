@@ -1815,7 +1815,14 @@ sub objects_by_key
   my $meta       = $target_class->meta;
   my $ft_pk;
 
-  my $ft_columns = $args->{'key_columns'} or die "Missing key columns hash";
+  unless(exists $args->{'key_columns'} || exists $args->{'query_args'})
+  {
+    # The key_columns attr is aliased to column_map when used 
+    # through the OneToMany relationship.
+    die "Missing both column_map hash and query_args";
+  }
+
+  my $ft_columns = $args->{'key_columns'} || {};
   my $ft_manager = $args->{'manager_class'};
   my $ft_method  = $args->{'manager_method'} || 'get_objects';
   my $share_db   = $args->{'share_db'} || 1;

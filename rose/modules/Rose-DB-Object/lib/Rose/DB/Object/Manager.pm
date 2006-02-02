@@ -782,8 +782,17 @@ sub get_objects
         my $ft_class = $rel->class 
           or Carp::confess "$class - Missing foreign object class for '$name'";
 
-        my $ft_columns = $rel->key_columns 
-          or Carp::confess "$class - Missing key columns for '$name'";
+        my $ft_columns = $rel->key_columns;
+        
+        if(!$ft_columns && $rel_type ne 'one to many')
+        {
+          Carp::confess "$class - Missing key columns for '$name'";
+        }
+
+        if($rel->can('query_args') && (my $query_args = $rel->query_args))
+        {
+          push(@{$args{'query'}}, @$query_args);
+        }
 
         my $ft_meta = $ft_class->meta; 
 
@@ -822,7 +831,7 @@ sub get_objects
                         "$class";
 
         # Reset each() iterator
-        keys(%$ft_columns);
+        #keys(%$ft_columns);
 
         my(@redundant, @redundant_null);
 
@@ -1072,7 +1081,7 @@ sub get_objects
                         "$class";
 
         # Reset each() iterator
-        keys(%$ft_columns);
+        #keys(%$ft_columns);
 
         # Add join condition(s)
         while(my($local_column, $foreign_column) = each(%$ft_columns))
