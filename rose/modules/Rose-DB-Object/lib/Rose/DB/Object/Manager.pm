@@ -789,7 +789,7 @@ sub get_objects
           Carp::confess "$class - Missing key columns for '$name'";
         }
 
-        if($rel->can('query_args') && (my $query_args = $rel->query_args))
+        if($rel_type eq 'one to many' && (my $query_args = $rel->query_args))
         {
           push(@{$args{'query'}}, @$query_args);
         }
