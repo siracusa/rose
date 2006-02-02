@@ -116,7 +116,7 @@ sub is_ready_to_make_methods
     warn $self->parent->class, ': one-to-many relationship ', $self->name, " NOT READY - $err";
   }
 
-  return $self->class && $self->key_columns ? 1 : 0;
+  return $self->class && ($self->key_columns || $self->query_args) ? 1 : 0;
 }
 
 1;
