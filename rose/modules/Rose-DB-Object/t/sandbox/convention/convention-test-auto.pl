@@ -51,7 +51,7 @@ CREATE TABLE products
   id        SERIAL NOT NULL PRIMARY KEY,
   name      VARCHAR(255),
   vendor_id INT NOT NULL REFERENCES vendors (id),
-  
+
   UNIQUE(name)
 );
 
