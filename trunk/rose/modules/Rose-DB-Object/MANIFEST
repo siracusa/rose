@@ -142,6 +142,7 @@ t/makemethods.t
 t/multi-pk-sequences.t
 t/pod.t
 t/sandbox/convention/convention-test-auto.pl
+t/sandbox/convention/convention-test-loader.pl
 t/sandbox/convention/convention-test.pl
 t/sandbox/convention/lib/My/Auto/Color.pm
 t/sandbox/convention/lib/My/Auto/Price.pm

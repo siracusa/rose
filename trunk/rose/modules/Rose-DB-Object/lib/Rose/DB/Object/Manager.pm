@@ -783,7 +783,7 @@ sub get_objects
           or Carp::confess "$class - Missing foreign object class for '$name'";
 
         my $ft_columns = $rel->key_columns;
-        
+
         if(!$ft_columns && $rel_type ne 'one to many')
         {
           Carp::confess "$class - Missing key columns for '$name'";

@@ -35,7 +35,7 @@ use Rose::Object::MakeMethods::Generic
     'pre_init_hook',
     'module_dir',
   ],
-  
+
   'scalar --get_set_init' =>
   [
     'with_relationships',
@@ -489,7 +489,7 @@ sub make_classes
     {
       $save{'db'} = $db;
     }
-    
+
     $self->db_class($db_class);
   }    
 
