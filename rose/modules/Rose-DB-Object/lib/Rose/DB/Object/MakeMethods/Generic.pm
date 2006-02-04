@@ -2568,14 +2568,11 @@ sub objects_by_key
   return \%methods;
 }
 
+# XXX: These are duplicated from ManyToMany.pm because I don't want to use()
+# XXX: that module from here if I don't have to.  Lazy or foolish?  Hm.
+# XXX: Anyway, make sure they stay in sync!
 use constant MAP_RECORD_METHOD => 'map_record';
-use constant MAP_RECORD_ATTR   => PRIVATE_PREFIX . '_map_record';
-
-my $Map_Record_Method = sub 
-{
-  return $_[0]->{MAP_RECORD_ATTR()} = $_[1]  if(@_ > 1);
-  return shift->{MAP_RECORD_ATTR()};
-};
+use constant DEFAULT_REL_KEY   => PRIVATE_PREFIX . '_default_rel_key';
 
 sub objects_by_map
 {
@@ -2807,20 +2804,30 @@ sub objects_by_map
     $mgr_args->{'sort_by'} = $sort_by;
   }
 
-  my $map_record_method = $mgr_args->{'with_map_records'};
-
-  if($map_record_method)
+  my $map_record_method = $relationship->map_record_method;
+# if($map_class eq 'ARA::ArtykulGfxMap')
+# {
+# print "MAP REC METH: $map_record_method\n";
+# $DB::single = 1;
+# }
+  unless($map_record_method)
   {
-    if($map_record_method && $map_record_method eq '1')
+    if($map_record_method = $mgr_args->{'with_map_records'})
     {
-      $map_record_method = MAP_RECORD_METHOD;
+      if($map_record_method && $map_record_method eq '1')
+      {
+        $map_record_method = MAP_RECORD_METHOD;
+      }
     }
+  }
+  
+  if($map_record_method && !$map_to_class->can($map_record_method))
+  {
+    require Rose::DB::Object::Metadata::Relationship::ManyToMany;
 
-    unless($map_to_class->can($map_record_method))
-    {
-      no strict 'refs';
-      *{"${map_to_class}::$map_record_method"} = $Map_Record_Method;
-    }
+    no strict 'refs';
+    *{"${map_to_class}::$map_record_method"} = 
+      Rose::DB::Object::Metadata::Relationship::ManyToMany::make_map_record_method($map_class);
   }
 
   if($interface eq 'get_set' || $interface eq 'get_set_load')
@@ -3190,6 +3197,8 @@ sub objects_by_map
                                              db    => $db);
           die $map_manager->error  unless(defined $deleted);
 
+
+
           # Save all the objects.  Use the current list, even if it's
           # different than it was when the "set on save" was called.
           foreach my $object (@{$self->{$key} || []})
@@ -3220,8 +3229,18 @@ sub objects_by_map
             # Not sharing?  Aw.
             $object->db(undef)  unless($share_db);
 
-            # Create map record, connected to self
-            my $map_record = $map_class->new(%method_map_to_self, db => $db);
+            my $map_record;
+#$DB::single = 1;
+            # Create or retrieve map record, connected to self
+            if($map_record_method)
+            {
+              $map_record = $object->$map_record_method();
+              $map_record->init(%method_map_to_self, db => $db);
+            }
+            else
+            {
+              $map_record = $map_class->new(%method_map_to_self, db => $db);
+            }
 
             # Connect map record to remote object
             while(my($map_method, $remote_method) = each(%map_method_to_remote_method))
