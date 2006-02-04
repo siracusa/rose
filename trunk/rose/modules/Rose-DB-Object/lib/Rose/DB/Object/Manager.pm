@@ -920,12 +920,13 @@ sub get_objects
         my $rel_mgr_args = $rel->manager_args || {};
 
         my $map_record_method;
+        my $rel_map_record_method = $rel->map_record_method;
 
         if(my $rel_with_map_records = $rel_mgr_args->{'with_map_records'})
         {
           $map_record_method =
             ($with_map_records && exists $with_map_records->{$name}) ? $with_map_records->{$name} :
-            ($rel_with_map_records eq '1') ? MAP_RECORD_METHOD : $rel_with_map_records;
+            $rel_map_record_method ? $rel_map_record_method : MAP_RECORD_METHOD;
         }
         elsif($with_map_records)
         {

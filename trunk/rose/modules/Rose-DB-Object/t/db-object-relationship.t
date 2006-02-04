@@ -5460,9 +5460,9 @@ SKIP: foreach my $db_type ('sqlite')
 
   @colors = $o->colors3;  
 
-  is($colors[-1]->map_record->color_id, $colors[-1]->id, "with_map_records rel 3 - $db_type");
-  is($colors[-1]->map_record->obj_id, $o->id, "with_map_records rel 4 - $db_type");
-  is($colors[-1]->map_record->color_id, 1, "with_map_records rel 5 - $db_type");
+  is($colors[-1]->map_rec->color_id, $colors[-1]->id, "with_map_records rel 3 - $db_type");
+  is($colors[-1]->map_rec->obj_id, $o->id, "with_map_records rel 4 - $db_type");
+  is($colors[-1]->map_rec->color_id, 1, "with_map_records rel 5 - $db_type");
 
   my $objs = 
     Rose::DB::Object::Manager->get_objects(
