@@ -3026,8 +3026,18 @@ sub objects_by_map
             # Not sharing?  Aw.
             $object->db(undef)  unless($share_db);
 
-            # Create map record, connected to self
-            my $map_record = $map_class->new(%method_map_to_self, db => $db);
+            my $map_record;
+
+            # Create or retrieve map record, connected to self
+            if($map_record_method)
+            {
+              $map_record = $object->$map_record_method();
+              $map_record->init(%method_map_to_self, db => $db);
+            }
+            else
+            {
+              $map_record = $map_class->new(%method_map_to_self, db => $db);
+            }
 
             # Connect map record to remote object
             while(my($map_method, $remote_method) = each(%map_method_to_remote_method))
