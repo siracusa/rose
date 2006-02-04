@@ -10,6 +10,8 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
+use Rose::DB::Object::Constants qw(PRIVATE_PREFIX);
+
 our $VERSION = '0.57';
 
 our $Debug = 0;
@@ -19,7 +21,7 @@ __PACKAGE__->default_auto_method_types(qw(get_set_on_save add_on_save));
 __PACKAGE__->add_common_method_maker_argument_names
 (
   qw(share_db map_class map_from map_to manager_class manager_method
-     manager_args query_args)
+     manager_args query_args map_record_method)
 );
 
 use Rose::Object::MakeMethods::Generic
@@ -91,6 +93,86 @@ __PACKAGE__->method_maker_info
 );
 
 sub type { 'many to many' }
+
+use constant MAP_RECORD_ATTR   => PRIVATE_PREFIX . '_map_record';
+use constant MAP_RECORD_METHOD => 'map_record';
+
+MAKE_MAP_RECORD_METHOD:
+{
+  my $counter = 1;
+
+  sub make_map_record_method
+  {
+    my($map_class) = shift;
+
+    my $key = MAP_RECORD_ATTR . '_' . $counter++;
+
+    return sub 
+    {
+      my($self) = shift;
+      
+      if(@_)
+      {
+        my $arg = shift;
+        
+        if(ref $arg eq 'HASH')
+        {
+          return $self->{$key} = $map_class->new(%$arg);
+        }
+        elsif(!ref $arg || !UNIVERSAL::isa($arg, $map_class))
+        {
+          Carp::croak "Illegal map record argument: $arg";
+        }
+
+        return $self->{$key} = $arg;
+      }
+
+      return $self->{$key} ||= $map_class->new;
+    }
+  }
+}
+
+sub manager_args
+{
+  my($self) = shift;
+  
+  return $self->{'manager_args'}  unless(@_);
+  
+  my $args = $self->{'manager_args'} = shift;
+
+  if(my $method = $args->{'with_map_records'})
+  {
+    $method = MAP_RECORD_METHOD  unless($method =~ /^[A-Za-z_]\w*$/);
+
+    $self->map_record_method($method);
+    
+    my $map_class = $self->map_class;
+    return $args  unless($map_class);
+
+    unless($self->can($method))
+    {
+      no strict 'refs';
+      *{ref($self) . "::$method"} = make_map_record_method($map_class);
+    }
+  }
+
+  return $args;
+}
+
+sub map_class
+{
+  my($self) = shift;
+  
+  return $self->{'map_class'}  unless(@_);
+  
+  $self->{'map_class'} = shift;
+  my $manager_args = $self->manager_args;
+
+  # Set to same value to take advantage of the side-effects (see above)
+  $self->manager_args($manager_args)  if($manager_args);
+
+  return $self->{'map_class'};
+}
 
 sub build_method_name_for_type
 {
