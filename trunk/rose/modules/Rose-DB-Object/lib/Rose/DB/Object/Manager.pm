@@ -75,8 +75,6 @@ sub handle_error
   return 1;
 }
 
-use constant MAP_RECORD_ATTR   => PRIVATE_PREFIX . '_map_record';
-
 # XXX: These are duplicated from ManyToMany.pm because I don't want to use()
 # XXX: that module from here if I don't have to.  Lazy or foolish?  Hm.
 # XXX: Anyway, make sure they stay in sync!
