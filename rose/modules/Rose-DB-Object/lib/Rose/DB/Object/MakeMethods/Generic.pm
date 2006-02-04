@@ -17,7 +17,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.65';
+our $VERSION = '0.67';
 
 our $Debug = 0;
 
@@ -2805,11 +2805,7 @@ sub objects_by_map
   }
 
   my $map_record_method = $relationship->map_record_method;
-# if($map_class eq 'ARA::ArtykulGfxMap')
-# {
-# print "MAP REC METH: $map_record_method\n";
-# $DB::single = 1;
-# }
+
   unless($map_record_method)
   {
     if($map_record_method = $mgr_args->{'with_map_records'})
@@ -3240,7 +3236,7 @@ sub objects_by_map
             $object->db(undef)  unless($share_db);
 
             my $map_record;
-#$DB::single = 1;
+
             # Create or retrieve map record, connected to self
             if($map_record_method)
             {

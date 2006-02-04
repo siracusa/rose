@@ -104,7 +104,7 @@ MAKE_MAP_RECORD_METHOD:
   sub make_map_record_method
   {
     my($map_class) = shift;
-#$DB::single = 1;
+
     my $key = MAP_RECORD_ATTR . '_' . $counter++;
 
     return sub 
@@ -139,43 +139,16 @@ sub manager_args
   return $self->{'manager_args'}  unless(@_);
   
   my $args = $self->{'manager_args'} = shift;
-#if($self->parent && $self->parent->class eq 'ARA::Artykul')
-#{
-#$DB::single = 1;
-#}
+
   if(my $method = $args->{'with_map_records'})
   {
     $method = MAP_RECORD_METHOD  unless($method =~ /^[A-Za-z_]\w*$/);
 
     $self->map_record_method($method);
-
-#     my $map_class = $self->map_class;
-#     return $args  unless($map_class);
-# 
-#     unless($self->can($method))
-#     {
-#       no strict 'refs';
-#       *{ref($self) . "::$method"} = make_map_record_method($map_class);
-#     }
   }
 
   return $args;
 }
-
-# sub map_class
-# {
-#   my($self) = shift;
-#   
-#   return $self->{'map_class'}  unless(@_);
-#   
-#   $self->{'map_class'} = shift;
-#   my $manager_args = $self->manager_args;
-# 
-#   # Set to same value to take advantage of the side-effects (see above)
-#   $self->manager_args($manager_args)  if($manager_args);
-# 
-#   return $self->{'map_class'};
-# }
 
 sub build_method_name_for_type
 {
