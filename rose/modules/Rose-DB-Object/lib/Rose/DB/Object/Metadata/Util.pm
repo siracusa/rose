@@ -13,7 +13,7 @@ our %EXPORT_TAGS = (all => \@EXPORT_OK);
 our $DEFAULT_PERL_INDENT = 4;
 our $DEFAULT_PERL_BRACES = 'k&r';
 
-our $VERSION = '0.62';
+our $VERSION = '0.67';
 
 sub perl_hashref
 {
@@ -172,6 +172,8 @@ sub hash_key_padding
 sub perl_quote_key
 {
   my($key) = shift;
+
+  return $key  if($key =~ /^\d+$/);
 
   for($key)
   {
