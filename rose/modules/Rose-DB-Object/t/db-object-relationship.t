@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1445;
+use Test::More tests => 1447;
 
 BEGIN 
 {
@@ -4067,7 +4067,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 389)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 391)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -5568,6 +5568,22 @@ SKIP: foreach my $db_type ('sqlite')
   is($obj->colors2->[0]->map_record->obj_id, $o->id, "with_map_records map_record 2 - $db_type");
 
   # End with_map_records tests
+  
+  # Start create with map records tests
+
+  $o = MySQLiteObject->new(name => 'WMR');
+  
+  $o->colors3({ name => 'Gray', map_rec => { id => 999, arb_attr => 'Whee' } });
+
+  $o->save;
+
+  is($o->colors3->[0]->map_rec->arb_attr, 'Whee', "save with map_rec 1 - $db_type");
+
+  $o = MySQLiteColorMap->new(id => 999)->load;
+
+  is($o->arb_attr, 'Whee', "save with map_rec 2 - $db_type");
+
+  # End create with map records tests
 }
 
 BEGIN
@@ -5668,6 +5684,8 @@ CREATE TABLE rose_db_object_colors_map
   id        SERIAL PRIMARY KEY,
   obj_id    INT NOT NULL REFERENCES rose_db_object_test (id),
   color_id  INT NOT NULL REFERENCES rose_db_object_colors (id),
+  
+  arb_attr  VARCHAR(64),
 
   UNIQUE(obj_id, color_id)
 )
@@ -5989,6 +6007,8 @@ CREATE TABLE rose_db_object_colors_map
   obj_id    INT NOT NULL REFERENCES rose_db_object_test (id),
   color_id  INT NOT NULL REFERENCES rose_db_object_colors (id),
 
+  arb_attr  VARCHAR(64),
+
   UNIQUE(obj_id, color_id)
 )
 EOF
@@ -6302,6 +6322,8 @@ CREATE TABLE rose_db_object_colors_map
   obj_id    INT NOT NULL REFERENCES rose_db_object_test (id),
   color_id  INT NOT NULL REFERENCES rose_db_object_colors (id),
 
+  arb_attr  VARCHAR(64),
+
   UNIQUE(obj_id, color_id)
 )
 EOF
@@ -6605,6 +6627,8 @@ CREATE TABLE rose_db_object_colors_map
   obj_id    INT NOT NULL REFERENCES rose_db_object_test (id),
   color_id  INT NOT NULL REFERENCES rose_db_object_colors (id),
 
+  arb_attr  VARCHAR(64),
+
   UNIQUE(obj_id, color_id)
 )
 EOF
@@ -6822,6 +6846,7 @@ EOF
       id       => { type => 'serial', primary_key => 1 },
       obj_id   => { type => 'int', not_null => 1 },
       color_id => { type => 'int', not_null => 1 },
+      arb_attr => { type => 'varchar', length => 64 },
     );
 
     MySQLiteColorMap->meta->unique_keys([ 'obj_id', 'color_id' ]);

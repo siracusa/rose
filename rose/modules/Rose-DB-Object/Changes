@@ -1,3 +1,9 @@
+0.67 (02.06.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added the ability to directly set attributes in map records
+      when saving the parent object.
+    * Added some more details to the tutorial.
+
 0.66 (02.02.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Disabled implicit primary table sort clause in the Manager when 

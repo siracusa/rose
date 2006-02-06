@@ -18,13 +18,34 @@ For the sake of brevity, the C<use strict> directive and associated "my" declara
 
 Similarly, the traditional "1;" true value used at the end of each ".pm" file has been omitted from the examples.  Don't forget to add this to the end of your actual Perl module files.
 
+Finally, although most of the examples directly modify the C<@ISA> package variable in order to set up inheritance, the L<use base|base> directive works just as well.  In some situations, one may be preferable to the other (L<use base|base> is run at compile-time whereas the C<@ISA> modifications happen at run-time) but in the common case it shouldn't matter which you choose.
+
 =head1 TUTORIAL
 
 =head2 Preface
 
 Before doing anything useful with L<Rose::DB::Object>, it's necessary to create and configure a L<Rose::DB> subclass through which L<Rose::DB::Object>-derived objects will access the database.
 
-To get up to speed quickly with L<Rose::DB>, read the L<Rose::DB::Tutorial> documentation.  The rest of this tutorial will assume the existence of a C<My::DB> class created as L<described|Rose::DB::Tutorial/"Multiple data sources using namespaces"> in the L<Rose::DB tutorial|Rose::DB::Tutorial>.
+To get up to speed quickly with L<Rose::DB>, read the L<Rose::DB::Tutorial> documentation.  The rest of this tutorial will assume the existence of a C<My::DB> class created as L<described|Rose::DB::Tutorial/"Multiple data sources using namespaces"> in the L<Rose::DB tutorial|Rose::DB::Tutorial>.  Here's a simple incarnation of C<My::DB>.
+
+    package My::DB;
+    
+    use Rose::DB;
+    our @ISA = qw(Rose::DB);
+    
+    __PACKAGE__->use_private_registry;
+    
+    __PACKAGE__->register_db(
+      domain   => __PACKAGE__->default_domain,
+      type     => __PACKAGE__->default_type,
+      driver   => 'Pg',
+      database => 'mydb',
+      host     => 'localhost',
+      username => 'devuser',
+      password => 'mysecret',
+    );
+
+Read the L<Rose::DB tutorial|Rose::DB::Tutorial> for an explanation of this code.
 
 The PostgreSQL ("Postgres") database will be used in the examples in this tutorial, but the features demonstrated will not be specific to that database.  If you are following along with a different database, you may have to adjust the specific syntax used in the SQL table creation statements, but all of the same features should be present in some form.
 
@@ -93,57 +114,8 @@ Of course, L<earlier|/Preface> it was established that L<Rose::DB> needs to be s
 
     sub init_db { My::DB->new }
 
-Now C<Product> will create a L<My::DB> object when it needs to connect to the database.
+Now C<Product> will create a L<My::DB> object when it needs to connect to the database.  Note that this means that each C<Product> object will have its C<My::DB> object.  See the section, L<"A brief digression: database objects"> for an explanation and alternatives.
 
-=head3 A brief digression: database objects
-
-The L<Rose::DB>-derived database object used by each L<Rose::DB::Object>-derived object is available via the L<db|Rose::DB::Object/db> object attribute.
-
-    $p = Product->new(...);
-    $db = $p->db; # My::DB object
-
-See the L<Rose::DB> documentation to explore the capabilities of these db objects.  Most of the time, you won't have to be concerned about them.  But it is sometime important to ensure that all objects share the same C<db>.  For example, imagine creating several C<Product> objects in a single transaction.
-
-    $db = My::DB->new(...);
-
-    $db->begin_work; # Start transaction
-
-    # Use this $db with each product object
-
-    $p1 = Product->new(name => 'Bike', db => $db);
-    $p1->save;
-
-    $p2 = Product->new(name => 'Sled', db => $db);
-    $p2->save;
-
-    $p3 = Product->new(name => 'Kite', db => $db);
-    $p3->save;
-
-    if(...) # Now either commit them all or roll them all back
-    {
-      $db->commit;
-    }
-    else
-    {
-      $db->rollback;    
-    }
-
-Cross-database migration is another important use for C<db> objects.  Here's how to move a product from a production database to an archive database.
-
-    $production_db = My::DB->new('production');
-    $archive_db    = My::DB->new('archive');
-
-    # Load bike from production database
-    $p = Product->new(name => 'Bike', db => $production_db);
-    $p->load;
-
-    # Save the bike into the archive database
-    $p->db($archive_db);
-    $p->save(insert => 1); # force an insert instead of an update
-
-    # Delete the bike from the production database
-    $p->db($production_db);
-    $p->delete;
 
 =head3 Setting up your own base class
 
@@ -157,6 +129,8 @@ Looking forward, it's likely that all of our L<Rose::DB::Object>-derived classes
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { My::DB->new }
+
+(Again, note that all C<My::DB::Object>-derived objects will get their own C<My::DB> objects given this definition of C<init_db()>.  See the section, L<"A brief digression: database objects"> for more information.)
 
 Now the C<Product> class can inherit from C<My::DB::Object> instead of inheriting from L<Rose::DB::Object> directly.
 
@@ -173,7 +147,7 @@ Now the C<Product> class can inherit from C<My::DB::Object> instead of inheritin
 
 This use of a subclass is strongly recommended.  You will see this pattern repeated several times in this tutorial.  The creation of seemingly "trivial" subclasses is a cheap and easy way to ensure ease of extensibility later on.  
 
-For example, imagine we want to add a C<clone()> method to all of our database objects.  If they all inherit directly from C<Rose::DB::Object>, that's not easy to do.  But if they all inherit from C<My::DB::Object>, we can just add the C<clone()> method to that class.
+For example, imagine we want to add a C<copy()> method to all of our database objects.  If they all inherit directly from C<Rose::DB::Object>, that's not easy to do.  But if they all inherit from C<My::DB::Object>, we can just add the C<copy()> method to that class.
 
 The lesson is simple: when in doubt, subclass.  A few minutes spent now can save you a lot more time down the road.
 
@@ -427,7 +401,83 @@ The C<update_products()> method accepts the same kinds of arguments as the C<del
 
 This section has covered the I<bare minimum> usage and functionality of the L<Rose::DB::Object> module distribution.  Using these features alone, you can automate the basic CRUD operations (Create, Retrieve, Update, and Delete) for single or multiple objects.  But it's almost a shame to stop at this point.  There's a lot more that L<Rose::DB::Object> can do for you.  The "sweet spot" of effort vs. results is much farther along the curve.
 
-In the next section, we will expand upon our C<Product> class and tap more of L<Rose::DB::Object>'s features.
+In the next section, we will expand upon our C<Product> class and tap more of L<Rose::DB::Object>'s features.  But first...
+
+=head3 A brief digression: database objects
+
+The L<Rose::DB>-derived database object used by each L<Rose::DB::Object>-derived object is available via the L<db|Rose::DB::Object/db> object attribute.
+
+    $p = Product->new(...);
+    $db = $p->db; # My::DB object
+
+See the L<Rose::DB> documentation to explore the capabilities of these db objects.  Most of the time, you won't have to be concerned about them.  But it is sometime important to ensure that all objects share the same L<db|Rose::DB::Object/db>.
+
+If the L<db|Rose::DB::Object/db> attribute doesn't exist, it is created by calling L<init_db()|Rose::DB::Object/init_db>.  The typical C<init_db()> method simply builds a new database object and returns it.
+
+    package Product;
+    ...
+    sub init_db { My::DB->new }
+
+This means that each C<Product> object will have its C<My::DB> object and therefore (in the absence of modules like L<Apache::DBI>) its own connection to the database.  If this not what you want, you can make C<init_db()> return the same C<My::DB> object to every C<Product> object.  I don't recommend this approach since it's harder to ensure that the database handle will be closed when all C<Product> objects go out of scope, but that may not be important for your application.
+
+Since C<init_db()> is only called if a C<Product> object does not already have a L<db|Rose::DB::Object/db> object, one way to share a single C<My::DB> object amongst several C<Product> objects is to do so explicitly, either by pre-creating the C<My::DB> object:
+
+    $db = My::DB->new; # will share this db with the Products below
+    
+    $p1 = Product->new(db => $db, ...);
+    $p2 = Product->new(db => $db, ...);
+    $p3 = Product->new(db => $db, ...);
+
+or by letting one of the C<Product> objects provide the L<db|Rose::DB::Object/db> for the rest.
+
+    $p1 = Product->new(...);
+    $p2 = Product->new(db => $p1->db, ...); # use $p1's db
+    $p3 = Product->new(db => $p1->db, ...); # use $p1's db
+
+One final note for L<mod_perl> users: when using L<Apache::DBI>, even if each C<Product> has its own C<My::DB> object, remember that they will all share a single underlying L<DBI> database handle.
+
+Here's an example where sharing a database object is important: creating several C<Product> objects in a single transaction.
+
+    $db = My::DB->new(...);
+
+    $db->begin_work; # Start transaction
+
+    # Use this $db with each product object
+
+    $p1 = Product->new(name => 'Bike', db => $db);
+    $p1->save;
+
+    $p2 = Product->new(name => 'Sled', db => $db);
+    $p2->save;
+
+    $p3 = Product->new(name => 'Kite', db => $db);
+    $p3->save;
+
+    if(...) # Now either commit them all or roll them all back
+    {
+      $db->commit;
+    }
+    else
+    {
+      $db->rollback;    
+    }
+
+Cross-database migration is another important use for explicitly shared C<db> objects.  Here's how to move a product from a production database to an archive database.
+
+    $production_db = My::DB->new('production');
+    $archive_db    = My::DB->new('archive');
+
+    # Load bike from production database
+    $p = Product->new(name => 'Bike', db => $production_db);
+    $p->load;
+
+    # Save the bike into the archive database
+    $p->db($archive_db);
+    $p->save(insert => 1); # force an insert instead of an update
+
+    # Delete the bike from the production database
+    $p->db($production_db);
+    $p->delete;
 
 =head2 Mainstream usage
 
