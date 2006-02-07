@@ -120,7 +120,7 @@ Note that the C<My::DB-E<gt>new> call in C<init_db()> means that each C<Product>
 
 =head3 Setting up your own base class
 
-Looking forward, it's likely that all of our L<Rose::DB::Object>-derived classes will want to use L<My::DB> objects when connecting to the database.  It's tedious to repeat this code in all of those classes.  A subclass can provide a single, shared location for that code.
+Looking forward, it's likely that all of our L<Rose::DB::Object>-derived classes will want to use L<My::DB> objects when connecting to the database.  It's tedious to repeat this code in all of those classes.  A common base class can provide a single, shared location for that code.
 
     package My::DB::Object;
 
@@ -131,7 +131,7 @@ Looking forward, it's likely that all of our L<Rose::DB::Object>-derived classes
 
     sub init_db { My::DB->new }
 
-(Again, note that all C<My::DB::Object>-derived objects will get their own C<My::DB> objects given this definition of C<init_db()>.  See the L<section below|/"A brief digression: database objects"> for more information.)
+(Again, note that all C<My::DB::Object>-derived objects will get their own C<My::DB> objects given this definition of C<init_db()>.  See the L<"digression"|/"A brief digression: database objects"> section below for more information.)
 
 Now the C<Product> class can inherit from C<My::DB::Object> instead of inheriting from L<Rose::DB::Object> directly.
 
@@ -146,7 +146,7 @@ Now the C<Product> class can inherit from C<My::DB::Object> instead of inheritin
     __PACKAGE__->meta->add_unique_key('name');
     __PACKAGE__->meta->initialize;
 
-This use of a subclass is strongly recommended.  You will see this pattern repeated several times in this tutorial.  The creation of seemingly "trivial" subclasses is a cheap and easy way to ensure ease of extensibility later on.  
+This use of a common base class is strongly recommended.  You will see this pattern repeated in the L<Rose::DB tutorial|Rose::DB::Tutorial> as well.  The creation of seemingly "trivial" subclasses is a cheap and easy way to ensure ease of extensibility later on.  
 
 For example, imagine we want to add a C<copy()> method to all of our database objects.  If they all inherit directly from C<Rose::DB::Object>, that's not easy to do.  But if they all inherit from C<My::DB::Object>, we can just add the C<copy()> method to that class.
 
@@ -280,7 +280,7 @@ The call to L<make_manager_methods()|Rose::DB::Object::Manager/make_manager_meth
 
 The names are pretty much self-explanatory.  You can read the L<Rose::DB::Object::Manager> documentation for all the gory details.  The important thing to note is that the methods were all named based on the "products" argument to L<make_manager_methods()|Rose::DB::Object::Manager/make_manager_methods>.  You can see how "products" has been incorporated into each of the method names.
 
-This naming scheme is just a suggestion.  You can name these methods anything you want (using the C<methods> parameter to the L<make_manager_methods()|Rose::DB::Object::Manager/make_manager_methods> call), or you can even write the methods yourself.  Each of these methods is a thin wrapper around the generically-named methods in L<Rose::DB::Object::Manager>.  The wrappers pass the specified object class to the generic methods.
+This naming scheme is just a suggestion.  You can name these methods anything you want (using the C<methods> parameter to the L<make_manager_methods()|Rose::DB::Object::Manager/make_manager_methods> call), or you can even write the methods yourself.  Each of these methods is a merely a thin wrapper around the generically-named methods in L<Rose::DB::Object::Manager>.  The wrappers pass the specified object class to the generic methods.
 
 The Perl code for the C<Product::Manager> class shown above can be generated automatically with the L<perl_manager_class|Rose::DB::Object::Metadata/perl_manager_class> method.  The L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> method will both generate the code and L<eval|perlfunc/eval>uate it for you, automating the entire process of creating a manager class from within your L<Rose::DB::Object>-derived class.
 
@@ -311,7 +311,9 @@ This will be the last you see of this technique in this tutorial.  All of the ex
 
 =head4 Fetching objects
 
-The most common task for the manager is fetching multiple objects.  We'll use the C<get_products()> method to do that.  It's based on the L<get_objects()|Rose::DB::Object::Manager/get_objects> method, which takes many parameters.  One optional parameter is the now-familiar L<db|Rose::DB> object used to connect to the database.  This parameter is valid for all L<Rose::DB::Object::Manager> methods.  In the absence of this parameter, the L<init_db()|Rose::DB/init_db> method of the object class will be called in order to create one.
+The most common task for the manager is fetching multiple objects.  We'll use the C<get_products()> method to do that.  It's based on the L<get_objects()|Rose::DB::Object::Manager/get_objects> method, which takes many parameters.
+
+One (optional) parameter is the now-familiar L<db|Rose::DB> object used to connect to the database.  This parameter is valid for all L<Rose::DB::Object::Manager> methods.  In the absence of this parameter, the L<init_db()|Rose::DB/init_db> method of the object class will be called in order to create one.
 
 Passing no arguments at all will simply fetch every C<Product> object in the database.
 
@@ -417,13 +419,13 @@ The L<Rose::DB>-derived database object used by each L<Rose::DB::Object>-derived
 
 You can read the L<Rose::DB> documentation to explore the capabilities of these db objects.  Most of the time, you won't have to be concerned about them.  But it's sometime useful to deal with them directly.
 
-The first thing to understand is where the database object comes from.  If the L<db|Rose::DB::Object/db> attribute doesn't exist, it is created by calling L<init_db()|Rose::DB::Object/init_db>.  The typical C<init_db()> method simply builds a new database object and returns it.  (See the L<Rose::DB::Tutorial> for an explanation of the possible arguments to C<new()|Rose::DB/new>, and why there are none in the call below.)
+The first thing to understand is where the database object comes from.  If the L<db|Rose::DB::Object/db> attribute doesn't exist, it is created by calling L<init_db()|Rose::DB::Object/init_db>.  The typical C<init_db()> method simply builds a new database object and returns it.  (See the L<Rose::DB tutorial|Rose::DB::Tutorial> for an explanation of the possible arguments to L<new()|Rose::DB/new>, and why there are none in the call below.)
 
     package Product;
     ...
     sub init_db { My::DB->new }
 
-This means that each C<Product> object will have its own C<My::DB> object, and therefore (in the absence of modules like L<Apache::DBI>) its own connection to the database.  If this not what you want, you can make C<init_db()> return the same C<My::DB> object to every C<Product> object.  I don't recommend this approach since it's harder to ensure that the database handle will be closed when all C<Product> the objects go out of scope, but that may not be important for your application.
+This means that each C<Product> object will have its own C<My::DB> object, and therefore (in the absence of modules like L<Apache::DBI>) its own connection to the database.  If this not what you want, you can make C<init_db()> return the same C<My::DB> object to every C<Product> object.  I don't recommend this approach since it's harder to ensure that the database handle will be closed when all C<Product> objects go out of scope, but that may not be important for your application.
 
 Since C<init_db()> is only called if a C<Product> object does not already have a L<db|Rose::DB::Object/db> object, another way to share a single C<My::DB> object with several C<Product> objects is to do so explicitly, either by pre-creating the C<My::DB> object:
 
@@ -439,7 +441,7 @@ or by letting one of the C<Product> objects provide the L<db|Rose::DB::Object/db
     $p2 = Product->new(db => $p1->db, ...); # use $p1's db
     $p3 = Product->new(db => $p1->db, ...); # use $p1's db
 
-One final note for L<mod_perl> users: when using L<Apache::DBI>, even if each C<Product> has its own C<My::DB> object, remember that they will all share a single underlying L<DBI> database handle.
+A note for L<mod_perl> users: when using L<Apache::DBI>, even if each C<Product> has its own C<My::DB> object, remember that they will all share a single underlying L<DBI> database handle.  That is, each L<Rose::DB>-derived object of a given L<type|Rose::DB/type> and L<domain|Rose::DB/domain> will eventually call L<DBI>'s L<connect()|DBI/connect> method with the same arguments, and therefore return the same, cached database handle when running under L<Apache::DBI>.
 
 Here's an example where sharing a database object is important: creating several C<Product> objects in a single transaction.
 
