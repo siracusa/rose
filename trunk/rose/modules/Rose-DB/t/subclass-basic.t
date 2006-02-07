@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 90;
+use Test::More tests => 91;
 
 BEGIN
 {
@@ -192,6 +192,8 @@ ok($@ || $DBI::VERSION <  1.43, 'dsn() driver change');
 
 $db = My::DB2->new(domain  => 'test', type  => 'aux');
 my $adb = My::DB2->new(domain  => 'atest', type  => 'aaux');
+
+is($db->class, 'My::DB2', 'class() 1');
 
 foreach my $attr (qw(domain type driver database username password 
                      connect_options post_connect_sql))
