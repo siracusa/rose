@@ -66,13 +66,11 @@ First, consider the case where a namespace is not necessary.  You have a single 
     use Rose::DB;
     our @ISA = qw(Rose::DB);
 
-    use Rose::DB::Registry;
-
-    # Create a private registry for this class
-    __PACKAGE__->registry(Rose::DB::Registry->new);
+    # Use a private registry for this class
+    __PACKAGE__->use_private_registry;
 
     # Register your lone data source using the default type and domain
-    My::DB->register_db(
+    __PACKAGE__->register_db(
       domain   => My::DB->default_domain,
       type     => My::DB->default_type,
       driver   => 'Pg',
@@ -103,10 +101,8 @@ Here's an example that includes two domains "development" and "production", and 
     use Rose::DB;
     our @ISA = qw(Rose::DB);
 
-    use Rose::DB::Registry;
-
-    # Create a private registry for this class
-    __PACKAGE__->registry(Rose::DB::Registry->new);
+    # Use a private registry for this class
+    __PACKAGE__->use_private_registry;
 
     # Set the default domain and type
     __PACKAGE__->default_domain('development');
@@ -116,7 +112,7 @@ Here's an example that includes two domains "development" and "production", and 
 
     # Development:
 
-    My::DB->register_db(
+    __PACKAGE__->register_db(
       domain   => 'development',
       type     => 'main',
       driver   => 'Pg',
@@ -126,7 +122,7 @@ Here's an example that includes two domains "development" and "production", and 
       password => 'mysecret',
     );
 
-    My::DB->register_db(
+    __PACKAGE__->register_db(
       domain   => 'development',
       type     => 'session',
       driver   => 'mysql',
@@ -138,7 +134,7 @@ Here's an example that includes two domains "development" and "production", and 
 
     # Production:
 
-    My::DB->register_db(
+    __PACKAGE__->register_db(
       domain   => 'production',
       type     => 'main',
       driver   => 'Pg',
@@ -148,7 +144,7 @@ Here's an example that includes two domains "development" and "production", and 
       password => 'prodsecret',
     );
 
-    My::DB->register_db(
+    __PACKAGE__->register_db(
       domain   => 'production',
       type     => 'session',
       driver   => 'mysql',
