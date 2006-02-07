@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 90;
+use Test::More tests => 91;
 
 BEGIN
 {
@@ -192,6 +192,8 @@ ok($@ || $DBI::VERSION <  1.43, 'dsn() driver change');
 
 $db = Rose::DB->new(domain  => 'test', type  => 'aux');
 my $adb = Rose::DB->new(domain  => 'atest', type  => 'aaux');
+
+is($db->class, 'Rose::DB', 'class() 1');
 
 foreach my $attr (qw(domain type driver database username password 
                      connect_options post_connect_sql))
