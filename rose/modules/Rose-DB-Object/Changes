@@ -1,8 +1,8 @@
-0.67 (02.06.2006) - John Siracusa <siracusa@mindspring.com>
+0.67 (02.07.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added the ability to directly set attributes in map records
-      when saving the parent object.
-    * Added some more details to the tutorial.
+      when saving the parent object.  (Suggested by Bruno Czekay)
+    * Slightly rearranged and added to the tutorial.
 
 0.66 (02.02.2006) - John Siracusa <siracusa@mindspring.com>
 
