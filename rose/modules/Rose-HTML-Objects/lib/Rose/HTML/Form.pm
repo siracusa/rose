@@ -76,6 +76,13 @@ use Rose::Object::MakeMethods::Generic
   ],
 );
 
+use Rose::Class::MakeMethods::Generic
+(
+  inheritable_scalar => '_delegate_to_subforms', 
+);
+
+__PACKAGE__->delegate_to_subforms('compile');
+
 sub new
 {
   my($class) = shift;
@@ -113,6 +120,28 @@ sub method { shift->html_attr('method', @_) }
 
 sub build_form { }
 
+sub delegate_to_subforms
+{
+  my($class) = shift;
+  
+  $class = ref $class  if(ref $class);
+
+  if(@_)
+  {
+    my $value = shift;
+
+    $value = 'runtime'  if($value eq '1');
+
+    unless(!$value || $value eq 'compile' || $value eq 'runtime')
+    {
+      croak "Invalid delegate_to_subforms() value: '$value'";
+    }
+    
+    return $class->_delegate_to_subforms($value);
+  }
+
+  return $class->_delegate_to_subforms;
+}
 
 sub name
 {
@@ -596,7 +625,7 @@ sub object_from_form
 
   foreach my $field ($self->fields)
   {
-    my $name = $field->name;
+    my $name = $field->local_name;
 
     if($object->can($name))
     {
@@ -620,7 +649,7 @@ sub init_with_object
 
   foreach my $field ($self->fields)
   {
-    my $name = $field->name;
+    my $name = $field->local_name;
 
     if($object->can($name))
     {
@@ -1106,6 +1135,56 @@ sub form
   return $parent_form->form($local_name);
 }
 
+our $AUTOLOAD;
+
+sub AUTOLOAD
+{
+  my($self) = $_[0];
+
+  my $class = ref($self) or croak "$self is not an object";
+
+  my $delegate = $class->delegate_to_subforms;
+  
+  unless($delegate)
+  {
+    goto &Rose::HTML::Object::AUTOLOAD;
+  }
+  
+  my $method = $AUTOLOAD;
+  $method =~ s/.*://;
+
+  my $to_form;
+  
+  foreach my $form ($self->forms)
+  {
+    if($form->can($method))
+    {
+      $to_form = $form;
+      last;
+    }
+  }
+
+  unless($to_form)
+  {
+    goto &Rose::HTML::Object::AUTOLOAD;
+  }
+
+  if($delegate eq 'compile')
+  {
+    my $form_name = $to_form->form_name;
+
+    no strict 'refs';
+    *$AUTOLOAD = sub { shift->form($form_name)->$method(@_) };
+    ${$class . '::__AUTODELEGATED'}{$method} = 1;
+    goto &$AUTOLOAD;
+  }
+  elsif($delegate eq 'runtime')
+  {
+    $to_form->$method(@_);
+  }
+
+  goto &Rose::HTML::Object::AUTOLOAD;
+}
 
 1;
 

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More 'no_plan'; #tests => 89;
+use Test::More tests => 110;
 
 BEGIN 
 {
@@ -17,9 +17,9 @@ BEGIN
 
 my $person_form = MyPersonForm->new;
 
-my @fields = qw(age bday gender your_name);
+my @fields = qw(age bday gender your_name start);
 is_deeply([ $person_form->field_monikers ], \@fields, 'person field monikers');
-@fields = qw(age bday gender name);
+@fields = qw(age bday gender name start);
 is_deeply([ sort keys %{ $person_form->{'fields_by_name'} } ], \@fields, 'person field names 1');
 is_deeply([ map { $_->name } $person_form->fields ], \@fields, 'person field names 2');
 
@@ -55,11 +55,11 @@ is($address->zip, 11787, 'address zip 1');
 
 my $form = MyPersonAddressForm->new;
 
-@fields = qw(person.age person.bday person.gender person.your_name address.city address.your_state address.street address.zip);
+@fields = qw(person.age person.bday person.gender person.your_name person.start address.city address.your_state address.street address.zip);
 is_deeply([ $form->field_monikers ], \@fields, 'person address field monikers');
-@fields = qw(address.city address.state address.street address.zip person.age person.bday person.gender person.name);
+@fields = qw(address.city address.state address.street address.zip person.age person.bday person.gender person.name person.start);
 is_deeply([ sort keys %{ $form->{'fields_by_name'} } ], \@fields, 'person address field names 1');
-@fields = qw(person.age person.bday person.gender person.name address.city address.state address.street address.zip);
+@fields = qw(person.age person.bday person.gender person.name person.start address.city address.state address.street address.zip);
 is_deeply([ map { $_->name } $form->fields ], \@fields, 'person address field names 2');
 
 $person_form  = $form->form('person');
@@ -75,22 +75,6 @@ is($address_form->form_name, 'address', 'address form name 1');
 my $field = $form->field('person.bday');
 is(ref $field, 'Rose::HTML::Form::Field::DateTime::Split::MonthDayYear', 'person.bday field 1');
 
-# print $field->name, "\n";
-# $DB::single = 1;
-# print $form->field('person.bday.month'), "\n";
-# 
-# my $f = $form->fields;
-# my $fields = join(',', map { $_->name } $form->fields);
-# 
-# print $fields, "\n";
-
-# $DB::single = 1;
-# my @ff =  $form->fields;
-# print join(' ',  $form->field_monikers), "\n";
-# print join(' ', sort keys %{ $form->{'fields_by_name'} }), "\n";
-# print join(' ', map { $_->name } $form->fields), "\n";
-# exit;
-
 $form->params(
 {
   'person.name'    => 'John', 
@@ -102,7 +86,6 @@ $form->params(
   'address.state'  => ' NY ', 
   'address.zip'    => 11787  
 });
-
 
 $form->init_fields;
 
@@ -116,21 +99,21 @@ is($form->field('address.city')->internal_value, 'Smithtown', 'person_address ci
 is($form->field('address.state')->internal_value, 'NY', 'person_address state 1');
 is($form->field('address.zip')->internal_value, '11787', 'person_address zip 1');
 
-# $person = $form->person_from_form;
-# 
-# is(ref $person, 'MyPerson', 'person_from_form 1');
-# is($person->name, 'John', 'person name 1');
-# is($person->age, '10', 'person age 1');
-# is($person->gender, 'm', 'person gender 1');
-# is($person->bday->strftime('%Y-%m-%d'), '1983-01-02', 'person bday 1');
-# 
-# $address = $form->address_from_form;
-# 
-# is(ref $address, 'MyAddress', 'address_from_form 1');
-# is($address->street, '1 Main St.', 'address street 1');
-# is($address->city, 'Smithtown', 'address city 1');
-# is($address->state, 'NY', 'address state 1');
-# is($address->zip, 11787, 'address zip 1');
+$person = $form->person_from_form;
+
+is(ref $person, 'MyPerson', 'person_from_form 2');
+is($person->name, 'John', 'person name 2');
+is($person->age, '10', 'person age 2');
+is($person->gender, 'm', 'person gender 2');
+is($person->bday->strftime('%Y-%m-%d'), '1983-01-02', 'person bday 2');
+
+$address = $form->address_from_form;
+
+is(ref $address, 'MyAddress', 'address_from_form 2');
+is($address->street, '1 Main St.', 'address street 2');
+is($address->city, 'Smithtown', 'address city 2');
+is($address->state, 'NY', 'address state 2');
+is($address->zip, 11787, 'address zip 2');
 
 $form = MyPersonAddressDogForm->new;
 
@@ -175,16 +158,18 @@ is($field, $form->form('person_address.person')->field('bday')->field('month'), 
 @fields =
   qw(dog person_address.person.age person_address.person.bday
      person_address.person.gender person_address.person.your_name
-     person_address.address.city person_address.address.your_state
-     person_address.address.street person_address.address.zip);
+     person_address.person.start person_address.address.city 
+     person_address.address.your_state person_address.address.street
+     person_address.address.zip);
 
 is_deeply(scalar $form->field_monikers, \@fields, 'field_names() nested');
 
 @fields = 
   qw(dog person_address.person.age person_address.person.bday
      person_address.person.gender person_address.person.name
-     person_address.address.city person_address.address.state
-     person_address.address.street person_address.address.zip);
+     person_address.person.start person_address.address.city 
+     person_address.address.state person_address.address.street
+     person_address.address.zip);
 
 is_deeply([ map { $_->name } $form->fields ], \@fields, 'fields() name nested');
 
@@ -215,10 +200,66 @@ is($form->field('person_address.address.city')->internal_value, 'Smithtown', 'pe
 is($form->field('person_address.address.state')->internal_value, 'NY', 'person_address_dog state 1');
 is($form->field('person_address.address.zip')->internal_value, '11787', 'person_address_dog zip 1');
 
-# my @f = $form->fields;
-# print join(', ',  $form->field_monikers), "\n";
-# print join(', ', sort keys %{ $form->{'fields_by_name'} }), "\n";
-# print join(' ', map { $_->name } $form->fields), "\n";
+$person = $form->person_from_form;
+
+is(ref $person, 'MyPerson', 'person_from_form 3');
+is($person->name, 'John', 'person name 3');
+is($person->age, '10', 'person age 3');
+is($person->gender, 'm', 'person gender 3');
+is($person->bday->strftime('%Y-%m-%d'), '1983-01-02', 'person bday 3');
+
+$address = $form->address_from_form;
+
+is(ref $address, 'MyAddress', 'address_from_form 3');
+is($address->street, '1 Main St.', 'address street 3');
+is($address->city, 'Smithtown', 'address city 3');
+is($address->state, 'NY', 'address state 3');
+is($address->zip, 11787, 'address zip 3');
+
+$form->field('person_address.person.bday.day')->input_value(7);
+
+$person = $form->person_from_form;
+
+is($person->bday->strftime('%Y-%m-%d'), '1983-01-07', 'person bday change 1');
+
+$form->params(
+{
+  'dog'                           => 'Woof',
+  'person_address.person.name'    => 'John', 
+  'person_address.person.age' 	  => ' 10 ', 
+  'person_address.person.gender'  => 'm', 
+  'person_address.person.bday'    => '1/2/1983',
+  'person_address.address.street' => '1 Main St.', 
+  'person_address.address.city'   => 'Smithtown', 
+  'person_address.address.state'  => ' NY ', 
+  'person_address.address.zip'    => 11787,
+  'person_address.person.start'   => '2/3/2004 1:23pm',
+});
+
+$form->init_fields;
+
+is($form->field('person_address.person.start')->internal_value->strftime('%Y-%m-%d %H:%M:%S'), '2004-02-03 13:23:00', 'person_address_dog start 1');
+
+$person = $form->person_from_form;
+is($person->start->strftime('%Y-%m-%d %H:%M:%S'), '2004-02-03 13:23:00', 'person start 1');
+
+$field = $form->field('person_address.person.start.time.ampm');
+$person_form  = $form->form('person_address.person');
+$address_form = $form->form('person_address.address');
+
+is(ref $field, 'Rose::HTML::Form::Field::PopUpMenu', 'person_address.person.start.time.ampm verify 1');
+is($field->name, 'person_address.person.start.time.ampm', 'person_address.person.start.time.ampm verify 2');
+
+is($field, $person_form->field('start.time.ampm'), 'person_address.person.start.time.ampm 1');
+is($field, $person_form->field('start')->field('time')->field('ampm'), 'person_address.person.start.time.ampm 2');
+
+is($field, $form->form('person_address')->field('person.start.time')->field('ampm'), 'person_address.person.start.time.ampm 3');
+is($field, $form->form('person_address')->field('person.start')->field('time.ampm'), 'person_address.person.start.time.ampm 4');
+is($field, $form->form('person_address')->form('person')->field('start.time.ampm'), 'person_address.person.start.time.ampm 5');
+is($field, $form->form('person_address')->form('person')->field('start')->field('time')->field('ampm'), 'person_address.person.start.time.ampm 6');
+is($field, $form->form('person_address.person')->field('start.time.ampm'), 'person_address.person.start.time.ampm 7');
+is($field, $form->form('person_address.person')->field('start')->field('time.ampm'), 'person_address.person.start.time.ampm 8');
+is($field, $form->form('person_address.person')->field('start')->field('time')->field('ampm'), 'person_address.person.start.time.ampm 9');
 
 BEGIN
 {
@@ -227,7 +268,7 @@ BEGIN
   our @ISA = qw(Rose::Object);
   use Rose::Object::MakeMethods::Generic
   (
-    scalar => [ qw(name age bday gender) ],
+    scalar => [ qw(name age bday gender start) ],
   );
 
   package MyAddress;
@@ -267,6 +308,10 @@ BEGIN
     $fields{'bday'} = 
       Rose::HTML::Form::Field::DateTime::Split::MonthDayYear->new(
         name => 'bday');
+
+    $fields{'start'} = 
+      Rose::HTML::Form::Field::DateTime::Split::MDYHMS->new(
+        name => 'start');
 
     $self->add_fields(%fields);
   }
@@ -310,7 +355,7 @@ BEGIN
 
   package MyPersonAddressForm;
 
-  our @ISA = qw(MyAddressForm MyPersonForm);
+  our @ISA = qw(Rose::HTML::Form); #qw(MyAddressForm MyPersonForm);
 
   sub build_form 
   {
@@ -346,59 +391,3 @@ BEGIN
 	);
   }
 }
-
-# package MyPersonForm;
-# use base 'Rose::HTML::Form';
-# sub build_form 
-# {
-#   shift->add_fields
-#   (
-#     name   => 'text',
-#     age    => { type => 'text', size => 3 },
-#     bday   => 'date mdy split',
-#     gender => { 'radio group' choices => { 'm' => 'Male', 'f' => 'Female' },
-#                 default => 'm' },
-#   );
-# }
-# 
-# package MyAddressForm;
-# use base 'Rose::HTML::Form';
-# sub build_form 
-# {
-#   shift->add_fields
-#   (
-#     street => 'text',
-#     city   => 'text',
-#     state  => { type => 'text', size => 2 },
-#     zip    => 'us zipcode',
-#   );
-# }
-# 
-# package MyPersonAddressForm;
-# use base 'Rose::HTML::Form';
-# sub build_form 
-# {
-#   shift->add_forms
-#   (
-# 	person  => MyPersonForm->new,
-# 	address => MyAddressForm->new,
-#   );
-# }
-# 
-# package MyPersonAddressDogForm;
-# use base 'Rose::HTML::Form';
-# sub build_form 
-# {
-#   my($self) = shift;
-#   $self->add_field('dog');
-#   $self->add_forms(person_address => MyPersonAddressForm->new);
-# }
-# 
-# ...
-# 
-# # Field addressing: 5 ways to get at the same field
-# $form->field('person_address.person.bday.month')
-# $form->form('person_address')->field('person.bday.month')
-# $form->form('person_address')->field('person.bday')->field('month')
-# $form->form('person_address')->form('person')->field('bday.month')
-# $form->form('person_address')->form('person')->field('bday')->field('month')
