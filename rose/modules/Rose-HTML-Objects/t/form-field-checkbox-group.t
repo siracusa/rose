@@ -6,13 +6,13 @@ use Test::More tests => 42;
 
 BEGIN 
 {
-  use_ok('Rose::HTML::Form::Field::CheckBox');
-  use_ok('Rose::HTML::Form::Field::CheckBoxGroup');
+  use_ok('Rose::HTML::Form::Field::Checkbox');
+  use_ok('Rose::HTML::Form::Field::CheckboxGroup');
 }
 
-my $field = Rose::HTML::Form::Field::CheckBoxGroup->new(name => 'fruits');
+my $field = Rose::HTML::Form::Field::CheckboxGroup->new(name => 'fruits');
 
-ok(ref $field eq 'Rose::HTML::Form::Field::CheckBoxGroup', 'new()');
+ok(ref $field eq 'Rose::HTML::Form::Field::CheckboxGroup', 'new()');
 
 $field->checkboxes(apple  => 'Apple',
                    orange => 'Orange',
@@ -156,8 +156,8 @@ is($field->html_field,
   qq(<input name="fruits" type="checkbox" value="berry"> <label>Berry</label>),
   'add_checkboxes() hash');
 
-$field->add_checkboxes(Rose::HTML::Form::Field::CheckBox->new(value => 'squash', label => 'Squash'),
-                       Rose::HTML::Form::Field::CheckBox->new(value => 'cherry', label => 'Cherry'));
+$field->add_checkboxes(Rose::HTML::Form::Field::Checkbox->new(value => 'squash', label => 'Squash'),
+                       Rose::HTML::Form::Field::Checkbox->new(value => 'cherry', label => 'Cherry'));
 
 is($field->html_field, 
   qq(<input name="fruits" type="checkbox" value="apple"> <label>Apple</label><br>\n) .

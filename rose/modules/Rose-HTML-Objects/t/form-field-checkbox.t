@@ -6,16 +6,16 @@ use Test::More tests => 26;
 
 BEGIN 
 {
-  use_ok('Rose::HTML::Form::Field::CheckBox');
+  use_ok('Rose::HTML::Form::Field::Checkbox');
 }
 
-my $field = Rose::HTML::Form::Field::CheckBox->new(
+my $field = Rose::HTML::Form::Field::Checkbox->new(
   label       => 'Run tests', 
   description => 'Run diagnostic tests',
   name        => 'tests',  
   value       => 'yes');
 
-ok(ref $field && $field->isa('Rose::HTML::Form::Field::CheckBox'), 'new()');
+ok(ref $field && $field->isa('Rose::HTML::Form::Field::Checkbox'), 'new()');
 
 is($field->html_field, '<input name="tests" type="checkbox" value="yes"> <label>Run tests</label>', 'html_field() 1');
 is($field->xhtml_field, '<input name="tests" type="checkbox" value="yes" /> <label>Run tests</label>', 'xhtml_field() 1');

@@ -10,7 +10,7 @@ BEGIN
   use_ok('Rose::HTML::Form::Field::Text');
   use_ok('Rose::HTML::Form::Field::SelectBox');
   use_ok('Rose::HTML::Form::Field::RadioButtonGroup');
-  use_ok('Rose::HTML::Form::Field::CheckBoxGroup');
+  use_ok('Rose::HTML::Form::Field::CheckboxGroup');
   use_ok('Rose::HTML::Form::Field::DateTime::Split::MonthDayYear');
   use_ok('Rose::HTML::Form::Field::DateTime::Split::MDYHMS');
 }
@@ -179,7 +179,7 @@ is($form->html_hidden_fields,
       }),
 
   'status' =>
-    Rose::HTML::Form::Field::CheckBoxGroup->new(
+    Rose::HTML::Form::Field::CheckboxGroup->new(
       checkboxes => [ 'married', 'kids', 'tired' ],
       labels =>
       {
@@ -558,7 +558,7 @@ BEGIN
         default       => 'm');
 
     $fields{'hobbies'} = 
-      Rose::HTML::Form::Field::CheckBoxGroup->new(
+      Rose::HTML::Form::Field::CheckboxGroup->new(
         name       => 'hobbies',
         checkboxes => [ 'Chess', 'Checkers', 'Knitting' ],
         default    => 'Chess');
@@ -594,7 +594,7 @@ BEGIN
         default       => 'm');
 
     $fields{'hobbies'} = 
-      Rose::HTML::Form::Field::CheckBoxGroup->new(
+      Rose::HTML::Form::Field::CheckboxGroup->new(
         name       => 'hobbies',
         checkboxes => [ 'Chess', 'Checkers', 'Knitting' ],
         default    => 'Chess');
@@ -632,7 +632,7 @@ BEGIN
         default       => 'm');
 
     $fields{'hobbies'} = 
-      Rose::HTML::Form::Field::CheckBoxGroup->new(
+      Rose::HTML::Form::Field::CheckboxGroup->new(
         name       => 'hobbies',
         checkboxes => [ 'Chess', 'Checkers', 'Knitting' ],
         default    => 'Chess');
@@ -674,7 +674,7 @@ BEGIN
     $self->add_field(%fields); %fields = ();
 
     $fields{'hobbies'} = 
-      Rose::HTML::Form::Field::CheckBoxGroup->new(
+      Rose::HTML::Form::Field::CheckboxGroup->new(
         name       => 'hobbies',
         checkboxes => [ 'Chess', 'Checkers', 'Knitting' ],
         default    => 'Chess');
