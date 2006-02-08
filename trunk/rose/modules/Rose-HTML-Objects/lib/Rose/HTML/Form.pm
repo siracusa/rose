@@ -76,12 +76,62 @@ use Rose::Object::MakeMethods::Generic
   ],
 );
 
+#
+# Class data
+#
+
 use Rose::Class::MakeMethods::Generic
 (
   inheritable_scalar => '_delegate_to_subforms', 
+
+  inheritable_hash =>
+  [
+    field_type_classes => { interface => 'get_set_all' },
+    _field_type_class   => { interface => 'get_set', hash_key => 'field_type_classes' },
+    _delete_field_type_class => { interface => 'delete', hash_key => 'field_type_classes' },
+  ],
 );
 
 __PACKAGE__->delegate_to_subforms('compile');
+
+__PACKAGE__->field_type_classes
+(
+  'text'               => 'Rose::HTML::Form::Field::Text',
+  'scalar'             => 'Rose::HTML::Form::Field::Text',
+  'char'               => 'Rose::HTML::Form::Field::Text',
+  'character'          => 'Rose::HTML::Form::Field::Text',
+  'varchar'            => 'Rose::HTML::Form::Field::Text',
+  'string'             => 'Rose::HTML::Form::Field::Text',
+
+  'text area'          => 'Rose::HTML::Form::Field::TextArea',
+  'textarea'           => 'Rose::HTML::Form::Field::TextArea',
+  'blob'               => 'Rose::HTML::Form::Field::TextArea',
+
+  'checkbox'           => 'Rose::HTML::Form::Field::Checkbox',
+  'check'              => 'Rose::HTML::Form::Field::Checkbox',
+
+  'radio button'       => 'Rose::HTML::Form::Field::RadioButton',
+  'radio'              => 'Rose::HTML::Form::Field::RadioButton',
+
+  'checkboxes'         => 'Rose::HTML::Form::Field::CheckboxGroup',
+  'checks'             => 'Rose::HTML::Form::Field::CheckboxGroup',
+  'checkbox group'     => 'Rose::HTML::Form::Field::CheckboxGroup',
+  'check group'        => 'Rose::HTML::Form::Field::CheckboxGroup',
+
+  'radio buttons'      => 'Rose::HTML::Form::Field::RadioButton',
+  'radios'             => 'Rose::HTML::Form::Field::RadioButtonGroup',
+  'radio button group' => 'Rose::HTML::Form::Field::RadioButtonGroup',
+  'radio group'        => 'Rose::HTML::Form::Field::RadioButtonGroup',
+
+  'date'               => 'Rose::HTML::Form::Field::Date',
+  'datetime'           => 'Rose::HTML::Form::Field::DateTime',
+
+  # TODO: many more...
+);
+
+#
+# Class methods
+#
 
 sub new
 {
@@ -101,24 +151,17 @@ sub new
   return $self;
 }
 
-sub init_uri_separator { '&' }
-
-sub init
+sub field_type_class 
 {
-  my($self) = shift;  
-
-  $self->SUPER::init(@_);
-
-  $self->build_form()  if($self->build_on_init);
+  my($class, $type) = (shift, shift);
+  return $class->_field_type_class(lc $type, @_) 
 }
 
-sub html_element  { 'form' }
-sub xhtml_element { 'form' }
-
-sub action { shift->html_attr('action', @_) }
-sub method { shift->html_attr('method', @_) }
-
-sub build_form { }
+sub delete_field_type_class 
+{
+  my($class, $type) = (shift, shift);
+  return $class->_delete_field_type_class(lc $type, @_) 
+}
 
 sub delegate_to_subforms
 {
@@ -142,6 +185,29 @@ sub delegate_to_subforms
 
   return $class->_delegate_to_subforms;
 }
+
+#
+# Object methods
+#
+
+sub init_uri_separator { '&' }
+
+sub init
+{
+  my($self) = shift;  
+
+  $self->SUPER::init(@_);
+
+  $self->build_form()  if($self->build_on_init);
+}
+
+sub html_element  { 'form' }
+sub xhtml_element { 'form' }
+
+sub action { shift->html_attr('action', @_) }
+sub method { shift->html_attr('method', @_) }
+
+sub build_form { }
 
 sub name
 {
@@ -1587,7 +1653,7 @@ Examples:
           default       => 'm');
 
       $fields{'hobbies'} = 
-        Rose::HTML::Form::Field::CheckBoxGroup->new(
+        Rose::HTML::Form::Field::CheckboxGroup->new(
           name       => 'hobbies',
           checkboxes => [ 'Chess', 'Checkers', 'Knitting' ],
           default    => 'Chess');

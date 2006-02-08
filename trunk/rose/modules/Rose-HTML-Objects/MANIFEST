@@ -1,10 +1,12 @@
 Changes
 lib/Rose/HTML/Form.pm
+lib/Rose/HTML/Form/Constants.pm
 lib/Rose/HTML/Form/Field.pm
-lib/Rose/HTML/Form/Field/CheckBox.pm
-lib/Rose/HTML/Form/Field/CheckBoxGroup.pm
+lib/Rose/HTML/Form/Field/Checkbox.pm
+lib/Rose/HTML/Form/Field/CheckboxGroup.pm
 lib/Rose/HTML/Form/Field/Collection.pm
 lib/Rose/HTML/Form/Field/Compound.pm
+lib/Rose/HTML/Form/Field/Date.pm
 lib/Rose/HTML/Form/Field/DateTime.pm
 lib/Rose/HTML/Form/Field/DateTime/EndDate.pm
 lib/Rose/HTML/Form/Field/DateTime/Range.pm
@@ -75,6 +77,7 @@ t/form-field-textarea.t
 t/form-field-time-split.t
 t/form-field-time.t
 t/form-field.t
+t/form-nested.t
 t/form.t
 t/image.t
 t/label.t

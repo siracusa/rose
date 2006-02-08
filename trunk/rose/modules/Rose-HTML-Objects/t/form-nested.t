@@ -10,7 +10,7 @@ BEGIN
   use_ok('Rose::HTML::Form::Field::Text');
   use_ok('Rose::HTML::Form::Field::SelectBox');
   use_ok('Rose::HTML::Form::Field::RadioButtonGroup');
-  use_ok('Rose::HTML::Form::Field::CheckBoxGroup');
+  use_ok('Rose::HTML::Form::Field::CheckboxGroup');
   use_ok('Rose::HTML::Form::Field::DateTime::Split::MonthDayYear');
   use_ok('Rose::HTML::Form::Field::DateTime::Split::MDYHMS');
 }

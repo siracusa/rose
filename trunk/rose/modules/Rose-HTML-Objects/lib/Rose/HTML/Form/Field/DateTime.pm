@@ -102,7 +102,7 @@ __END__
 
 =head1 NAME
 
-Rose::HTML::Form::Field::DateTime - Text field that inflates valid dates into L<DateTime> objects.
+Rose::HTML::Form::Field::DateTime - Text field that inflates valid dates and times into L<DateTime> objects.
 
 =head1 SYNOPSIS
 
