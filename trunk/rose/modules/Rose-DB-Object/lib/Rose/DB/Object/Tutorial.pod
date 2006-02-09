@@ -993,7 +993,7 @@ Here's the output.
 
 =head2 Relationships
 
-=head3 "one to one" and "many to one" relationships
+=head3 One-to-one and many-to-one relationships
 
 Foreign keys are a database-native representation of a specific kind of inter-table relationship.  This concept can be further generalized to encompass other kinds of relationships as well.  But before we delve into that, let's consider the kind of relationship that a foreign key represents.
 
@@ -1081,7 +1081,7 @@ There's an even more convenient shorthand for that:
 
 (Again, this all depends on naming the tables, classes, and columns in accordance with the expectations of the L<convention manager|Rose::DB::Object::Metadata/convention_manager>.)  The resulting C<vendor()> and C<delete_vendor()> methods behave exactly the same as the methods created on behalf of the foreign key definition.
 
-=head3 "one to many" relationships
+=head3 One-to-many relationships
 
 Now let's explore the other two relationship types.  We'll start with "one to many" by adding region-specific pricing to our products.  First, we'll need a C<prices> table.
 
@@ -1269,7 +1269,7 @@ Finally, the L<delete()|Rose::DB::Object/delete> method can actually automate th
 
 Again, the recommended approach is to use triggers inside the database itself.  But if necessary, these other approaches will work too.
 
-=head3 "many to many" relationships
+=head3 Many-to-many relationships
 
 The final relationship type is the most complex.  In a "many to many" relationship, a single row in table A may be related to multiple rows in table B, while a single row in table B may also be related to multiple rows in table A.  (Confused?  A concrete example will follow shortly.)
 
