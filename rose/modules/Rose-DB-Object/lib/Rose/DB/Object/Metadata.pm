@@ -72,7 +72,7 @@ use Rose::Class::MakeMethods::Generic
   [
     column_type_classes => { interface => 'get_set_all' },
     _column_type_class   => { interface => 'get_set', hash_key => 'column_type_classes' },
-    delete_column_type_class => { interface => 'delete', hash_key => 'column_type_classes' },
+    _delete_column_type_class => { interface => 'delete', hash_key => 'column_type_classes' },
 
     auto_helper_classes      => { interface => 'get_set_all' },
     delete_auto_helper_class => { interface => 'delete', hash_key => 'auto_helper_classes' },
@@ -1023,6 +1023,12 @@ sub column_type_class
 {
   my($class, $type) = (shift, shift);
   return $class->_column_type_class(lc $type, @_) 
+}
+
+sub delete_column_type_class 
+{
+  my($class, $type) = (shift, shift);
+  return $class->_delete_column_type_class(lc $type, @_) 
 }
 
 sub load_relationship_class
