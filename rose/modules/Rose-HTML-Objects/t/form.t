@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More 'no_plan'; #tests => 89;
+use Test::More tests => 193;
 
 BEGIN 
 {
@@ -502,6 +502,33 @@ is(join(',', $form->field_monikers), 'name,Gender,hobbies,bday', 'field rank() 1
 is(join(',', map { $_->name } $form->fields), 'your_name,gender,hobbies,bday', 'field rank() 2');
 is($form->field('name')->rank, 1, 'field rank() 3');
 is($form->field('bday')->rank, 4, 'field rank() 4');
+
+#
+# Test field type to class map
+#
+
+my $map = MyForm->field_type_classes;
+my $i = 1;
+
+$form = MyForm->new;
+
+while(my($name, $class) = each(%$map))
+{
+  my $method = ('field', 'add_fields')[$i % 2];
+  ok(UNIVERSAL::isa($form->$method("test_$i" => { type => $name }), $class), 
+     "$method by hash ref - $name");
+  $i++;
+}
+
+$form->delete_fields;
+
+while(my($name, $class) = each(%$map))
+{
+  my $method = ('field', 'add_fields')[$i % 2];
+  ok(UNIVERSAL::isa($form->$method("test_$i" => $name), $class),
+     "$method by type name - $name");
+  $i++;
+}
 
 BEGIN
 {

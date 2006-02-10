@@ -17,6 +17,102 @@ our $FORM_SEPARATOR_RE  = quotemeta FORM_SEPARATOR;
 
 our $VERSION = '0.35';
 
+#
+# Class data
+#
+
+use Rose::Class::MakeMethods::Generic
+(
+  inheritable_hash =>
+  [
+    field_type_classes => { interface => 'get_set_all' },
+    _field_type_class  => { interface => 'get_set', hash_key => 'field_type_classes' },
+    _delete_field_type_class => { interface => 'delete', hash_key => 'field_type_classes' },
+  ],
+);
+
+__PACKAGE__->field_type_classes
+(
+  'text'               => 'Rose::HTML::Form::Field::Text',
+  'scalar'             => 'Rose::HTML::Form::Field::Text',
+  'char'               => 'Rose::HTML::Form::Field::Text',
+  'character'          => 'Rose::HTML::Form::Field::Text',
+  'varchar'            => 'Rose::HTML::Form::Field::Text',
+  'string'             => 'Rose::HTML::Form::Field::Text',
+
+  'text area'          => 'Rose::HTML::Form::Field::TextArea',
+  'textarea'           => 'Rose::HTML::Form::Field::TextArea',
+  'blob'               => 'Rose::HTML::Form::Field::TextArea',
+
+  'checkbox'           => 'Rose::HTML::Form::Field::Checkbox',
+  'check'              => 'Rose::HTML::Form::Field::Checkbox',
+
+  'radio button'       => 'Rose::HTML::Form::Field::RadioButton',
+  'radio'              => 'Rose::HTML::Form::Field::RadioButton',
+
+  'checkboxes'         => 'Rose::HTML::Form::Field::CheckboxGroup',
+  'checks'             => 'Rose::HTML::Form::Field::CheckboxGroup',
+  'checkbox group'     => 'Rose::HTML::Form::Field::CheckboxGroup',
+  'check group'        => 'Rose::HTML::Form::Field::CheckboxGroup',
+
+  'radio buttons'      => 'Rose::HTML::Form::Field::RadioButton',
+  'radios'             => 'Rose::HTML::Form::Field::RadioButtonGroup',
+  'radio button group' => 'Rose::HTML::Form::Field::RadioButtonGroup',
+  'radio group'        => 'Rose::HTML::Form::Field::RadioButtonGroup',
+
+  'pop-up menu'        => 'Rose::HTML::Form::Field::PopUpMenu',
+  'popup menu'         => 'Rose::HTML::Form::Field::PopUpMenu',
+  'menu'               => 'Rose::HTML::Form::Field::PopUpMenu',
+
+  'select box'         => 'Rose::HTML::Form::Field::SelectBox',
+  'selectbox'          => 'Rose::HTML::Form::Field::SelectBox',
+  'select'             => 'Rose::HTML::Form::Field::SelectBox',
+
+  'submit'             => 'Rose::HTML::Form::Field::Submit',
+  'submit button'      => 'Rose::HTML::Form::Field::Submit',
+
+  'reset'              => 'Rose::HTML::Form::Field::Reset',
+  'reset button'       => 'Rose::HTML::Form::Field::Reset',
+
+  'file'               => 'Rose::HTML::Form::Field::File',
+  'upload'             => 'Rose::HTML::Form::Field::File',
+
+  'password'           => 'Rose::HTML::Form::Field::Password',
+
+  'hidden'             => 'Rose::HTML::Form::Field::Hidden',
+
+  'email'              => 'Rose::HTML::Form::Field::Email',
+
+  'phone'              => 'Rose::HTML::Form::Field::PhoneNumber::US',
+  'phone us'           => 'Rose::HTML::Form::Field::PhoneNumber::US',
+
+  'phone us split'     => 'Rose::HTML::Form::Field::PhoneNumber::US::Split',
+
+  'set'                => 'Rose::HTML::Form::Field::Set',
+
+  'time'               => 'Rose::HTML::Form::Field::Time',
+  'time split hms'     => 'Rose::HTML::Form::Field::Time::Split::HourMinuteSecond',
+
+  'time hours'         => 'Rose::HTML::Form::Field::Time::Hours',
+  'time minutes'       => 'Rose::HTML::Form::Field::Time::Minutes',
+  'time seconds'       => 'Rose::HTML::Form::Field::Time::Seconds',
+
+  'date'               => 'Rose::HTML::Form::Field::Date',
+  'datetime'           => 'Rose::HTML::Form::Field::DateTime',
+
+  'datetime range'     => 'Rose::HTML::Form::Field::DateTime::Range',
+
+  'datetime start'     => 'Rose::HTML::Form::Field::DateTime::StartDate',
+  'datetime end'       => 'Rose::HTML::Form::Field::DateTime::EndDate',
+
+  'datetime split mdy'    => 'Rose::HTML::Form::Field::DateTime::Split::MonthDayYear',
+  'datetime split mdyhms' => 'Rose::HTML::Form::Field::DateTime::Split::MDYHMS',
+);
+
+#
+# Object data
+#
+
 use Rose::Object::MakeMethods::Generic
 (
   boolean => 'coalesce_hidden_fields',
@@ -26,6 +122,26 @@ use Rose::Object::MakeMethods::Generic
     'field_rank_counter',
   ],
 );
+
+#
+# Class methods
+#
+
+sub field_type_class 
+{
+  my($class, $type) = (shift, shift);
+  return $class->_field_type_class(lc $type, @_) 
+}
+
+sub delete_field_type_class 
+{
+  my($class, $type) = (shift, shift);
+  return $class->_delete_field_type_class(lc $type, @_) 
+}
+
+#
+# Object methods
+#
 
 sub init_field_rank_counter { 1 }
 
@@ -37,6 +153,49 @@ sub increment_field_rank_counter
   return $rank;
 }
 
+sub make_field
+{
+  my($self, $name, $value) = @_;
+
+  return $value  if(UNIVERSAL::isa($value, 'Rose::HTML::Form::Field'));
+
+  my($type, $args);
+
+  if(ref $value eq 'HASH')
+  {
+    $type = delete $value->{'type'} or Carp::croak "Missing field type";
+    $args = $value;
+  }
+  elsif(!ref $value)
+  {
+    $type = $value;
+    $args = {};
+  }
+  else
+  {
+    Carp::croak "Not a Rose::HTML::Form::Field object or hash ref: $value";
+  }
+
+  my $class = ref $self || $self;
+
+  my $field_class = $class->field_type_class($type) 
+    or Carp::croak "No field class found for field type '$type'";
+
+  unless($field_class->can('new'))
+  {
+    eval "require $field_class";
+    Carp::croak "Failed to load field class $field_class - $@"  if($@);
+  }
+
+  # Compound fields require a name
+  if(UNIVERSAL::isa($field_class, 'Rose::HTML::Form::Field::Compound'))
+  {
+    $args->{'name'} = $name;
+  }
+
+  return $field_class->new(%$args);
+}
+
 sub field
 {
   my($self, $name, $field) = @_;
@@ -45,7 +204,7 @@ sub field
   {
     unless(UNIVERSAL::isa($field, 'Rose::HTML::Form::Field'))
     {
-      Carp::croak "Not a Rose::HTML::Form::Field object: $field";
+      $field = $self->make_field($name, $field);
     }
 
     $field->local_moniker($name);
@@ -152,7 +311,7 @@ sub add_fields
 
       unless(UNIVERSAL::isa($field, 'Rose::HTML::Form::Field'))
       {
-        Carp::croak "Not a Rose::HTML::Form::Field object: $field";
+        $field = $self->make_field($arg, $field);
       }
 
       $field->local_moniker($arg);

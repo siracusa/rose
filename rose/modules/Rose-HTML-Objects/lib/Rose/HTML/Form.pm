@@ -83,51 +83,9 @@ use Rose::Object::MakeMethods::Generic
 use Rose::Class::MakeMethods::Generic
 (
   inheritable_scalar => '_delegate_to_subforms', 
-
-  inheritable_hash =>
-  [
-    field_type_classes => { interface => 'get_set_all' },
-    _field_type_class   => { interface => 'get_set', hash_key => 'field_type_classes' },
-    _delete_field_type_class => { interface => 'delete', hash_key => 'field_type_classes' },
-  ],
 );
 
 __PACKAGE__->delegate_to_subforms('compile');
-
-__PACKAGE__->field_type_classes
-(
-  'text'               => 'Rose::HTML::Form::Field::Text',
-  'scalar'             => 'Rose::HTML::Form::Field::Text',
-  'char'               => 'Rose::HTML::Form::Field::Text',
-  'character'          => 'Rose::HTML::Form::Field::Text',
-  'varchar'            => 'Rose::HTML::Form::Field::Text',
-  'string'             => 'Rose::HTML::Form::Field::Text',
-
-  'text area'          => 'Rose::HTML::Form::Field::TextArea',
-  'textarea'           => 'Rose::HTML::Form::Field::TextArea',
-  'blob'               => 'Rose::HTML::Form::Field::TextArea',
-
-  'checkbox'           => 'Rose::HTML::Form::Field::Checkbox',
-  'check'              => 'Rose::HTML::Form::Field::Checkbox',
-
-  'radio button'       => 'Rose::HTML::Form::Field::RadioButton',
-  'radio'              => 'Rose::HTML::Form::Field::RadioButton',
-
-  'checkboxes'         => 'Rose::HTML::Form::Field::CheckboxGroup',
-  'checks'             => 'Rose::HTML::Form::Field::CheckboxGroup',
-  'checkbox group'     => 'Rose::HTML::Form::Field::CheckboxGroup',
-  'check group'        => 'Rose::HTML::Form::Field::CheckboxGroup',
-
-  'radio buttons'      => 'Rose::HTML::Form::Field::RadioButton',
-  'radios'             => 'Rose::HTML::Form::Field::RadioButtonGroup',
-  'radio button group' => 'Rose::HTML::Form::Field::RadioButtonGroup',
-  'radio group'        => 'Rose::HTML::Form::Field::RadioButtonGroup',
-
-  'date'               => 'Rose::HTML::Form::Field::Date',
-  'datetime'           => 'Rose::HTML::Form::Field::DateTime',
-
-  # TODO: many more...
-);
 
 #
 # Class methods
@@ -149,18 +107,6 @@ sub new
   $self->init(@_);
 
   return $self;
-}
-
-sub field_type_class 
-{
-  my($class, $type) = (shift, shift);
-  return $class->_field_type_class(lc $type, @_) 
-}
-
-sub delete_field_type_class 
-{
-  my($class, $type) = (shift, shift);
-  return $class->_delete_field_type_class(lc $type, @_) 
 }
 
 sub delegate_to_subforms
@@ -803,7 +749,6 @@ sub add_forms
       $self->{'forms'}{$name} = $form;
     }
 
-#    $self->_prefix_fields($form);
     push(@added_forms, $form);
   }
 
@@ -846,30 +791,6 @@ sub resync_fields_by_name
   {
     $self->{'fields_by_name'}{$field->name} = $field;
   }
-}
-
-sub _prefix_fields
-{
-  my($self, $form) = @_;
-#$DB::single = 1;
-#   foreach my $field ($form->fields)
-#   {
-#     my $parent_form = $field->parent_form;
-# 
-#     if(defined $parent_form && $parent_form ne $form)
-#     {
-#       my $new_name = $field->fq_name;
-#       my $old_name = $field->name;
-# 
-#       $old_name =~ s/$FORM_SEPARATOR_RE[^$FORM_SEPARATOR_RE]+$//;
-# 
-# print STDERR "old_name\n";
-# if($field->name eq 'person.name')
-# {
-# $DB::single = 1;
-# }
-#     $field->name($field->fq_name);
-#   }
 }
 
 sub compare_forms { no warnings 'uninitialized'; $_[1]->rank cmp $_[2]->rank }
@@ -1005,9 +926,11 @@ die "FOO";
 sub local_field
 {
   my($self, $name) = (shift, shift);
-  
+
   if(my $field = shift)
   {
+    $field = $self->make_field($name, $field);
+
     $field->parent_form($self);
     no warnings 'uninitialized';
     $field->name($name)  unless(length $field->name);
@@ -1057,7 +980,7 @@ sub field
   # First check if it's a local compound field  
   my $prefix = substr($name, 0, $sep_pos);
   my $rest   = substr($name, $sep_pos + 1);
-  my $field = $self->field($prefix);
+  my $field  = $self->field($prefix);
   
   if(UNIVERSAL::isa($field, 'Rose::HTML::Form::Field::Compound'))
   {
