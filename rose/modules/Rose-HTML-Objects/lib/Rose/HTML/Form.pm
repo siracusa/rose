@@ -47,11 +47,10 @@ __PACKAGE__->add_required_html_attrs(
 
 use constant UNSAFE_URI_CHARS => '^\w\d?\057=.:-';
 
-use Rose::HTML::Form::Constants qw(FIELD_SEPARATOR FORM_SEPARATOR);
+use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-# Variables for use in regexes
-our $FIELD_SEPARATOR_RE = quotemeta FIELD_SEPARATOR;
-our $FORM_SEPARATOR_RE  = quotemeta FORM_SEPARATOR;
+# Variable for use in regexes
+our $FF_SEPARATOR_RE = quotemeta FF_SEPARATOR;
 
 our $Debug = 0;
 
@@ -173,32 +172,6 @@ sub name
     return $self->html_attr('name');
   }
 }
-
-# sub form_name
-# {
-#   my($self) = shift;
-# 
-#   if(@_)
-#   {
-#     $self->{'form_name'} = shift;
-# 
-#     unless(defined $self->name)
-#     {
-#       $self->html_attr(name => $self->{'form_name'})
-#     }
-# 
-#     return $self->{'form_name'};
-#   }
-#   else
-#   {
-#     unless(defined $self->{'form_name'})
-#     {
-#       return $self->{'form_name'} = $self->html_attr('name');
-#     }
-# 
-#     return $self->{'form_name'};
-#   }
-# }
 
 sub validate_field_html_attrs
 {
@@ -737,7 +710,7 @@ sub add_forms
       }
     }
 
-    if(index($name, FORM_SEPARATOR) >= 0)
+    if(index($name, FF_SEPARATOR) >= 0)
     {
       my $parent_form = $self->find_parent_form($name);
       $form->parent_form($parent_form);
@@ -957,7 +930,7 @@ sub field
   my $sep_pos;
 
   # Non-hierarchical name
-  if(($sep_pos = index($name, FORM_SEPARATOR)) < 0)
+  if(($sep_pos = index($name, FF_SEPARATOR)) < 0)
   {
     return $self->{'field_cache'}{$name} = $self->local_field($name, @_);
   }
@@ -974,10 +947,7 @@ sub field
   }
 
   my($parent_form, $local_name) = $self->find_parent_form($name);
-unless(defined $parent_form)
-{
-  $DB::single = 1;
-}
+
   return $self->{'field_cache'}{$name} = $parent_form->field($local_name, @_);
 }
 
@@ -998,7 +968,7 @@ sub fields
     grep { defined } 
     map 
     { 
-      /$FIELD_SEPARATOR_RE([^$FIELD_SEPARATOR_RE]+)/ || /(.*)/;
+      /$FF_SEPARATOR_RE([^$FF_SEPARATOR_RE]+)/ || /(.*)/;
       $fields->{$1} || $fields_by_name->{$1} || $self->field($_)
     } 
     $self->field_monikers 
@@ -1046,14 +1016,14 @@ sub find_parent_form
   my($self, $name) = @_;
 
   # Non-hierarchical name
-  if(index($name, FORM_SEPARATOR) < 0)
+  if(index($name, FF_SEPARATOR) < 0)
   {
     return $self->local_form($name) ? ($self, $name) : undef;
   }
 
   my $parent_form;
 
-  while($name =~ s/^([^$FORM_SEPARATOR_RE]+)$FORM_SEPARATOR_RE//o)
+  while($name =~ s/^([^$FF_SEPARATOR_RE]+)$FF_SEPARATOR_RE//o)
   {
     my $parent_name = $1;
     last  if($parent_form = $self->local_form($parent_name));
@@ -1084,7 +1054,7 @@ sub fq_form_name
     $form = $parent_form;
   }
 
-  return @parts ? join(FORM_SEPARATOR, @parts) : '';
+  return @parts ? join(FF_SEPARATOR, @parts) : '';
 }
 
 sub local_form
