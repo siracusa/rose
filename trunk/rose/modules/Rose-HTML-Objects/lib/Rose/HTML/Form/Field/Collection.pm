@@ -196,6 +196,13 @@ sub make_field
   return $field_class->new(%$args);
 }
 
+sub invalidate_field_caches
+{
+  my($self) = shift;
+  
+  $self->{'field_cache'} = {};
+}
+
 sub field
 {
   my($self, $name, $field) = @_;
@@ -225,10 +232,10 @@ sub field
       $field->rank($self->increment_field_rank_counter);
     }
 
-    return $self->{'fields'}{$name} = $field;
+    return $self->{'fields'}{$name} = $self->{'field_cache'}{$name} = $field;
   }
 
-  if(exists $self->{'fields'}{$name})
+  if($self->{'fields'}{$name})
   {
     return $self->{'fields'}{$name};
   }
@@ -241,7 +248,7 @@ sub field
     return undef; # $self->local_field($name, @_);
   }
 
-  # First check if it's a local compound field  
+  # Check if it's a local compound field  
   my $prefix = substr($name, 0, $sep_pos);
   my $rest   = substr($name, $sep_pos + 1);
   $field = $self->field($prefix);
@@ -249,13 +256,12 @@ sub field
   if(UNIVERSAL::isa($field, 'Rose::HTML::Form::Field::Compound'))
   {
     $field = $field->field($rest);
-    return $field  if($field);
+    return ($self->{'field_cache'}{$name} = $field)  if($field);
   }
 
-#   my($parent_form, $local_name) = $self->find_parent_form($name);
-# 
-#   return $parent_form->field($local_name, @_);
-  
+  #my($parent_form, $local_name) = $self->find_parent_form($name);
+  #return $parent_form->field($local_name, @_);
+
   return undef;
 }
 
@@ -403,6 +409,7 @@ sub delete_field
 
   $self->_clear_field_generated_values;
 
+  delete $self->{'field_cache'}{$name};
   delete $self->{'fields'}{$name};
 }
 
@@ -431,6 +438,7 @@ sub _clear_field_generated_values
   my($self) = shift;  
   $self->{'field_list'}  = undef;
   $self->{'field_monikers'} = undef;
+  $self->invalidate_field_caches;
 }
 
 sub hidden_field

@@ -192,7 +192,25 @@ sub local_name
       Carp::croak "Invalid local field name: $name";
     }
 
-    return $self->{'local_name'} = $name;
+    my $old_name = $self->{'local_name'};
+    $self->{'local_name'} = $name;    
+
+    if(defined $old_name && $name ne $old_name)
+    {
+      if(my $parent_form = $self->parent_form)
+      {
+        $parent_form->delete_field($old_name);
+        $parent_form->add_field($name => $self);
+      }
+      
+      if(my $parent_field = $self->parent_field)
+      {
+        $parent_field->delete_field($old_name);
+        $parent_field->add_field($name => $self);      
+      }
+    }
+
+    return $name;
   }
 
   my $name = $self->{'local_name'};
