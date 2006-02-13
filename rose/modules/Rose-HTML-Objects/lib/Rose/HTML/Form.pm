@@ -1149,35 +1149,23 @@ Rose::HTML::Form - HTML form base class.
 
 =head1 SYNOPSIS
 
-  package RegistrationForm;
+  package PersonForm;
 
   use Rose::HTML::Form;
   our @ISA = qw(Rose::HTML::Form);
 
   use Person;
-  use Rose::HTML::Form::Field::Text;
-  use Rose::HTML::Form::Field::Email;
-  use Rose::HTML::Form::Field::PhoneNumber::US;
 
   sub build_form 
   {
     my($self) = shift;
 
-    my %fields;
-
-    $fields{'name'} = 
-      Rose::HTML::Form::Field::Text->new(name => 'name',
-                                         size => 25);
-
-    $fields{'email'} = 
-      Rose::HTML::Form::Field::Email->new(name => 'email',
-                                          size  => 50);
-
-    $fields{'phone'} = 
-      Rose::HTML::Form::Field::PhoneNumber::US->new(name => 'phone');
-
-    ...
-    $self->add_fields(%fields);
+    $self->add_fields
+    (
+      name  => { type => 'text',  size => 25, required => 1 },
+      email => { type => 'email', size => 50, required => 1 },
+      phone => { type => 'phone' },
+    );
   }
 
   sub validate
@@ -1187,41 +1175,37 @@ Rose::HTML::Form - HTML form base class.
     my $ok = $self->SUPER::validate(@_);
     return $ok  unless($ok);
 
-    if($self->field('name')->internal_value =~ /foo/ && 
-       $self->field('phone')->internal_value =~ /123/)
+    # Other arbitrary inter-field validation
+    if($self->field('name')->internal_value =~ /foo/ &&
+       $self->field('phone')->internal_value =~ /^555/)
     {
       $self->error('...');
       return 0;
-    }      
+    }
     ...
     return 1;
   }
 
-  sub init_with_person 
+  sub init_with_person
   {
     my($self, $person) = @_;
-
     $self->init_with_object($person);
-
-    $self->field('phone2')->input_value($person->alt_phone);
-    $self->field('is_new')->input_value(1);
-    ...
   }
 
   sub person_from_form
   {
     my($self) = shift;
-
     my $person = $self->object_from_form(class => 'Person');
 
-    $person->alt_phone($self->field('phone2')->internal_value);
-    ...
+    # Set alt phone to the same as the regular phone
+    $person->alt_phone($self->field('phone')->internal_value);
+
     return $person;
   }
 
   ...
 
-  my $form = RegistrationForm->new;
+  $form = PersonForm->new;
 
   if(...)
   {
@@ -1252,13 +1236,13 @@ Rose::HTML::Form - HTML form base class.
 
 L<Rose::HTML::Form> is more than just an object representation of the E<lt>formE<gt> HTML tag.  It is meant to be a base class for custom form classes that can be initialized with and return "rich" values such as objects, or collections of objects.
 
-Building up a reusable library of form classes is extremely helpful when building large web applications with forms that may appear in many different places.  Similar forms can inherit from a common subclass.
+Building up a reusable library of form classes is extremely helpful when building large web applications with forms that may appear in many different places.  Similar forms can inherit from a common subclass, and forms may be nested.
 
 This class inherits from, and follows the conventions of, L<Rose::HTML::Object>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::HTML::Object> documentation for more information.
 
 =head1 OVERVIEW
 
-L<Rose::HTML::Form> objects are meant to encapsulate an entire HTML form, including all fields within the form. While individual fields may be queried and manipulated, the intended purpose of this class is to treat the form as a "black box" as much as possible.
+L<Rose::HTML::Form> objects are meant to encapsulate an entire HTML form, including all fields within the form.  While individual fields may be queried and manipulated, the intended purpose of this class is to treat the form as a "black box" as much as possible.
 
 For example, instead of asking a form object for the values of the "name", "email", and "phone" fields, the user would ask the form object to return a new "Person" object that encapsulates those values.
 
@@ -1266,13 +1250,91 @@ Form objects should also accept initialization through the same kinds of objects
 
 Form objects can also take input through a hash.  Each hash key correspond to a field (or subfield) name, and each value is either a scalar or a reference to an array of scalars (for multiple-value fields).  This hash of parameters can be queried and manipulated before finally calling L<init_fields()|/init_fields> in order to initialize the fields based on the current state of the parameters.
 
-Compound fields (fields consisting of more than one HTML field, such as a month/day/year date field with separate text fields for each element of the date) may be "addressed" by hash arguments using both top-level names (e.g., "birthday") or by subfield names (e.g., "birthday.month", "birthday.day", "birthday.year").  If the top-level name exists in the hash, then subfield names are ignored.
-
-(See L<Rose::HTML::Form::Field::Compound> for more information on compound fields.)
+Compound fields (fields consisting of more than one HTML field, such as a month/day/year date field with separate text fields for each element of the date) may be "addressed" by hash arguments using both top-level names (e.g., "birthday") or by subfield names (e.g., "birthday.month", "birthday.day", "birthday.year").  If the top-level name exists in the hash, then subfield names are ignored.  See L<Rose::HTML::Form::Field::Compound> for more information on compound fields.
 
 Each form has a list of field objects.  Each field object is stored under a name, which may or may not be the same as the field name, which may or may not be the same as the "name" HTML attribute for any of the HTML tags that make up that field.
 
-Forms are validated by calling L<validate()|Rose::HTML::Form::Field/validate> on each field object.  If any individual field does not validate, then the form is invalid. Inter-field validation is the responsibility of the form object.
+Forms are validated by calling L<validate()|Rose::HTML::Form::Field/validate> on each field object.  If any individual field does not validate, then the form is invalid.  Inter-field validation is the responsibility of the form object.
+
+=head1 NESTED FORMS
+
+Each form can have zero or more fields as well as zero or more sub-forms.  Since E<lt>formE<gt> HTML tags cannot be nested, this nesting of form objects is "flattened" from in the external interfaces such as HTML generation or field addressing.
+
+Here's a simple example of a nested form made up of a C<PersonForm> and an C<AddressForm>.  (Assume C<PersonForm> is constructed as per the L<synopsis|/SYNOPSIS> above, and C<AddressForm> is similar, with street, city, state, and zip code fields.)
+
+    package PersonAddressForm;
+
+    use PersonForm;
+    use AddressForm;
+    
+    sub build_field
+    {
+      my($self) = shift;
+      
+      $self->add_forms
+      (
+        person  => PersonForm->new,
+        address => AddressForm->new,
+      );
+    }
+
+Each sub-form is given a name.  Sub-field addressing incorporates that name in much the same way as L<compound field|Rose::HTML::Form::Field::Compound> addressing, with dots (".") used to delimit the hierarchy.  Here are two different ways to get at the person's email field.
+
+    $form = PersonAddressForm->new;
+
+    # These are equivalent
+    $email_field = $form->field('person.email');
+    $email_field = $form->form('person')->field('email');
+
+Methods on the sub-forms maybe accessed in a similar manner.
+
+    $person = $form->form('person')->person_from_form();
+
+By default, methods are delegated to sub-forms automatically, so this works too.
+
+    $person = $form->person_from_form();
+
+(See the L<delegate_to_subforms()|/delegate_to_subforms> method to learn how to alter this behavior.)
+
+Nested forms may have their own fields as well, and the nesting may continue to an arbitrary depth.  Here's a form that contains a C<PersonAddressForm> as well as two fields of its own.
+
+    package PersonAddressPetsForm;
+
+    use PersonAddressForm;
+    
+    sub build_field
+    {
+      my($self) = shift;
+      
+      $self->add_form(pa => PersonAddressForm->new);
+
+      $self->add_fields
+      (
+        dog => { type => 'text', size => 30 },
+        cat => { type => 'text', size => 30 },
+      );
+    }
+
+Sub-form and field addressing works as expected.  Here are several equivalent ways to get at the person's email field.
+
+    $form = PersonAddressPetsForm->new;
+
+    # These are all equivalent
+    $email_field = $form->field('pa.person.email');
+    $email_field = $form->form('pa.person')->field('email');
+    $email_field = $form->form('pa')->form('person')->field('email');
+
+Sub-form method calls and delegation also works as expected.
+
+    # Call method on the PersonForm, two different ways
+    $person = $form->form('pa')->form('person')->person_from_form();
+    $person = $form->form('pa.person')->person_from_form();
+
+    # Rely on delegation instead
+    $person = $form->form('pa')->person_from_form();
+    $person = $form->person_from_form();
+
+Nesting forms is a great technique for code reuse.  When combined with traditional subclassing, form generation can be entirely cleansed of duplicated code.
 
 =head1 HTML ATTRIBUTES
 
