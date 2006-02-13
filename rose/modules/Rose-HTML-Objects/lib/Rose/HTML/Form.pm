@@ -879,18 +879,10 @@ sub reset_forms
 
 sub _clear_form_generated_values
 {
-  my($self) = shift;  
-  $self->{'field_list'}  = undef;
-  $self->{'field_monikers'} = undef;
+  my($self) = shift;
   $self->{'form_list'}   = undef;
   $self->{'form_names'}  = undef;
-}
-
-sub subfield_name
-{
-  my($self, $name) = @_;
-  return $name  if(index($name,  $self->name . FIELD_SEPARATOR) == 0);
-  return $self->name . FIELD_SEPARATOR . $name
+  $self->_clear_field_generated_values;
 }
 
 sub form_name
@@ -902,22 +894,13 @@ sub form_name
   my $name     = $self->{'form_name'} = shift;
   my %forms;
 
-  if(defined $old_name && defined $name && $name ne $old_name)
+  if(my $parent_form = $self->parent_form)
   {
-die "FOO";
-#     my $replace = qr(^$old_name$FORM_SEPARATOR_RE);
-# 
-#     foreach my $form ($self->forms)
-#     {
-#       my $subform_name = $form->form_name;
-#       $subform_name =~ s/$replace/$name$FORM_SEPARATOR_RE/;
-#       #$Debug && warn $form->form_name, " -> $subform_name\n";
-#       $form->form_name($subform_name);
-#       $forms{$subform_name} = $form;
-#     }
-# 
-#     $self->delete_forms;
-#     $self->add_forms(%forms);
+    if(defined $old_name && defined $name && $name ne $old_name)
+    {
+      $parent_form->delete_form($old_name);
+      $parent_form->add_form($name => $self);
+    }
   }
 
   return $name;
@@ -969,12 +952,14 @@ sub field
 {
   my($self, $name) = (shift, shift);
 
+  return $self->{'field_cache'}{$name}  if($self->{'field_cache'}{$name});
+
   my $sep_pos;
 
   # Non-hierarchical name
   if(($sep_pos = index($name, FORM_SEPARATOR)) < 0)
   {
-    return $self->local_field($name, @_);
+    return $self->{'field_cache'}{$name} = $self->local_field($name, @_);
   }
 
   # First check if it's a local compound field  
@@ -985,12 +970,15 @@ sub field
   if(UNIVERSAL::isa($field, 'Rose::HTML::Form::Field::Compound'))
   {
     $field = $field->field($rest);
-    return $field  if($field);
+    return ($self->{'field_cache'}{$name} = $field) if($field);
   }
 
   my($parent_form, $local_name) = $self->find_parent_form($name);
-
-  return $parent_form->field($local_name, @_);
+unless(defined $parent_form)
+{
+  $DB::single = 1;
+}
+  return $self->{'field_cache'}{$name} = $parent_form->field($local_name, @_);
 }
 
 sub fields
@@ -1071,7 +1059,13 @@ sub find_parent_form
     last  if($parent_form = $self->local_form($parent_name));
   }
 
-  return unless(defined $parent_form);
+  unless(defined $parent_form)
+  {
+    # Maybe this form ($self) is the parent?
+    return ($self, $name)  if($self->local_field($name));
+    return undef;
+  }
+
   return wantarray ? ($parent_form, $name) : $parent_form;
 }
 

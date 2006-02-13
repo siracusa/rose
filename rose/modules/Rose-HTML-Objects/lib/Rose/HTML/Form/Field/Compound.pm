@@ -26,11 +26,6 @@ Rose::HTML::Form::Field::Collection->import_methods
 
 our $Debug = undef;
 
-# use Rose::Object::MakeMethods::Generic
-# (
-#   scalar => 'name',
-# );
-
 sub init
 {
   my($self) = shift;
@@ -100,78 +95,6 @@ sub name
 
   return $self->fq_name;
 }
-
-# sub name
-# {
-#   my($self) = shift;
-# 
-#   return $self->{'name'}  unless(@_);
-#   my $old_name = $self->{'name'};
-#   my $name     = $self->{'name'} = shift;
-#   my %fields;
-# 
-#   if(defined $old_name && defined $name && $name ne $old_name)
-#   {
-#     my $replace = qr(^$old_name$FIELD_SEPARATOR);
-# 
-#     foreach my $field ($self->fields)
-#     {
-#       my $subfield_name = $field->name;
-#       $subfield_name =~ s/$replace/$name$FIELD_SEPARATOR/;
-#       #$Debug && warn $field->name, " -> $subfield_name\n";
-#       $field->name($subfield_name);
-#       $fields{$subfield_name} = $field;
-#     }
-# 
-#     $self->delete_fields;
-#     $self->add_fields(%fields);
-#   }
-# 
-#   return $name;
-# }
-
-# sub field
-# {
-#   my($self, $name) = (shift, shift);
-# 
-#   $Debug && warn "name($name) = ", $self->subfield_name($name), "\n";
-#   $name = $self->subfield_name($name);
-# 
-#   #return $self->SUPER::field($name, @_)  if(@_);
-# 
-#   # Dig out sub-subfields
-#   if(index($name, FIELD_SEPARATOR) != rindex($name, FIELD_SEPARATOR))
-#   {
-#     my $field_name    = $name;
-#     my $subfield_name = $name;
-# 
-#     while(!defined $self->SUPER::field($field_name))
-#     {
-#       unless($field_name =~ s/$FIELD_SEPARATOR[^$FIELD_SEPARATOR]+$//o)
-#       {
-#         # No such field: create or fail
-#         return $self->SUPER::field($name, @_)  if(@_);
-#         return undef;
-#       }
-#     }
-# 
-#     my $field = $self->SUPER::field($field_name);
-# 
-#     if($field->isa('Rose::HTML::Form::Field::Compound'))
-#     {
-#       return $field->field($subfield_name, @_);
-#     }
-#     else
-#     {
-#       $self->SUPER::field($field_name, @_)  if(@_);
-#       return $field
-#     }
-#   }
-#   else
-#   {
-#     $self->SUPER::field($name, @_);
-#   }
-# }
 
 sub clear
 {

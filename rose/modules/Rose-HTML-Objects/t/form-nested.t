@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 110;
+use Test::More tests => 148;
 
 BEGIN 
 {
@@ -260,6 +260,136 @@ is($field, $form->form('person_address')->form('person')->field('start')->field(
 is($field, $form->form('person_address.person')->field('start.time.ampm'), 'person_address.person.start.time.ampm 7');
 is($field, $form->form('person_address.person')->field('start')->field('time.ampm'), 'person_address.person.start.time.ampm 8');
 is($field, $form->form('person_address.person')->field('start')->field('time')->field('ampm'), 'person_address.person.start.time.ampm 9');
+
+#
+# Rename forms
+#
+
+$form->clear;
+$form->form('person_address')->form_name('pa');
+
+$form->params(
+{
+  'dog'               => 'Woof',
+  'pa.person.name'    => 'John', 
+  'pa.person.age' 	  => ' 10 ', 
+  'pa.person.gender'  => 'm', 
+  'pa.person.bday'    => '1/2/1983',
+  'pa.address.street' => '1 Main St.', 
+  'pa.address.city'   => 'Smithtown', 
+  'pa.address.state'  => ' NY ', 
+  'pa.address.zip'    => 11787,
+  'pa.person.start'   => '2/3/2004 1:23pm',
+});
+
+$form->init_fields;
+
+is($form->field('pa.person.start')->internal_value->strftime('%Y-%m-%d %H:%M:%S'), '2004-02-03 13:23:00', 'person_address_dog start 2');
+
+$person = $form->person_from_form;
+is($person->start->strftime('%Y-%m-%d %H:%M:%S'), '2004-02-03 13:23:00', 'person start 2');
+
+$field = $form->field('pa.person.start.time.ampm');
+$person_form  = $form->form('pa.person');
+$address_form = $form->form('pa.address');
+
+is(ref $field, 'Rose::HTML::Form::Field::PopUpMenu', 'pa.person.start.time.ampm verify 1');
+is($field->name, 'pa.person.start.time.ampm', 'pa.person.start.time.ampm verify 2');
+
+is($field, $person_form->field('start.time.ampm'), 'pa.person.start.time.ampm 1');
+is($field, $person_form->field('start')->field('time')->field('ampm'), 'pa.person.start.time.ampm 2');
+
+is($field, $form->form('pa')->field('person.start.time')->field('ampm'), 'pa.person.start.time.ampm 3');
+is($field, $form->form('pa')->field('person.start')->field('time.ampm'), 'pa.person.start.time.ampm 4');
+is($field, $form->form('pa')->form('person')->field('start.time.ampm'), 'pa.person.start.time.ampm 5');
+is($field, $form->form('pa')->form('person')->field('start')->field('time')->field('ampm'), 'pa.person.start.time.ampm 6');
+is($field, $form->form('pa.person')->field('start.time.ampm'), 'pa.person.start.time.ampm 7');
+is($field, $form->form('pa.person')->field('start')->field('time.ampm'), 'pa.person.start.time.ampm 8');
+is($field, $form->form('pa.person')->field('start')->field('time')->field('ampm'), 'pa.person.start.time.ampm 9');
+
+$form->clear;
+$form->form('pa.person')->form_name('p');
+
+$form->params(
+{
+  'dog'               => 'Woof',
+  'pa.p.name'         => 'John', 
+  'pa.p.age' 	      => ' 10 ', 
+  'pa.p.gender'       => 'm', 
+  'pa.p.bday'         => '1/2/1983',
+  'pa.address.street' => '1 Main St.', 
+  'pa.address.city'   => 'Smithtown', 
+  'pa.address.state'  => ' NY ', 
+  'pa.address.zip'    => 11787,
+  'pa.p.start'        => '2/3/2004 1:23pm',
+});
+
+$form->init_fields;
+
+is($form->field('pa.p.start')->internal_value->strftime('%Y-%m-%d %H:%M:%S'), '2004-02-03 13:23:00', 'person_address_dog start 3');
+
+$person = $form->person_from_form;
+is($person->start->strftime('%Y-%m-%d %H:%M:%S'), '2004-02-03 13:23:00', 'person start 3');
+
+$field = $form->field('pa.p.start.time.ampm');
+$person_form  = $form->form('pa.p');
+$address_form = $form->form('pa.address');
+
+is(ref $field, 'Rose::HTML::Form::Field::PopUpMenu', 'pa.p.start.time.ampm verify 1');
+is($field->name, 'pa.p.start.time.ampm', 'pa.p.start.time.ampm verify 2');
+
+is($field, $person_form->field('start.time.ampm'), 'pa.p.start.time.ampm 1');
+is($field, $person_form->field('start')->field('time')->field('ampm'), 'pa.p.start.time.ampm 2');
+
+is($field, $form->form('pa')->field('p.start.time')->field('ampm'), 'pa.p.start.time.ampm 3');
+is($field, $form->form('pa')->field('p.start')->field('time.ampm'), 'pa.p.start.time.ampm 4');
+is($field, $form->form('pa')->form('p')->field('start.time.ampm'), 'pa.p.start.time.ampm 5');
+is($field, $form->form('pa')->form('p')->field('start')->field('time')->field('ampm'), 'pa.p.start.time.ampm 6');
+is($field, $form->form('pa.p')->field('start.time.ampm'), 'pa.p.start.time.ampm 7');
+is($field, $form->form('pa.p')->field('start')->field('time.ampm'), 'pa.p.start.time.ampm 8');
+is($field, $form->form('pa.p')->field('start')->field('time')->field('ampm'), 'pa.p.start.time.ampm 9');
+
+#
+# Rename fields
+#
+
+$form->field('pa.p.start')->name('st');
+
+$form->params(
+{
+  'dog'               => 'Woof',
+  'pa.p.name'         => 'John', 
+  'pa.p.age' 	      => ' 10 ', 
+  'pa.p.gender'       => 'm', 
+  'pa.p.bday'         => '1/2/1983',
+  'pa.address.street' => '1 Main St.', 
+  'pa.address.city'   => 'Smithtown', 
+  'pa.address.state'  => ' NY ', 
+  'pa.address.zip'    => 11787,
+  'pa.p.st'           => '2/3/2004 1:23pm',
+});
+
+$form->init_fields;
+
+is($form->field('pa.p.st')->internal_value->strftime('%Y-%m-%d %H:%M:%S'), '2004-02-03 13:23:00', 'person_address_dog start 4');
+
+$field = $form->field('pa.p.st.time.ampm');
+$person_form  = $form->form('pa.p');
+$address_form = $form->form('pa.address');
+
+is(ref $field, 'Rose::HTML::Form::Field::PopUpMenu', 'pa.p.st.time.ampm verify 1');
+is($field->name, 'pa.p.st.time.ampm', 'pa.p.st.time.ampm verify 2');
+
+is($field, $person_form->field('st.time.ampm'), 'pa.p.st.time.ampm 1');
+is($field, $person_form->field('st')->field('time')->field('ampm'), 'pa.p.st.time.ampm 2');
+
+is($field, $form->form('pa')->field('p.st.time')->field('ampm'), 'pa.p.st.time.ampm 3');
+is($field, $form->form('pa')->field('p.st')->field('time.ampm'), 'pa.p.st.time.ampm 4');
+is($field, $form->form('pa')->form('p')->field('st.time.ampm'), 'pa.p.st.time.ampm 5');
+is($field, $form->form('pa')->form('p')->field('st')->field('time')->field('ampm'), 'pa.p.st.time.ampm 6');
+is($field, $form->form('pa.p')->field('st.time.ampm'), 'pa.p.st.time.ampm 7');
+is($field, $form->form('pa.p')->field('st')->field('time.ampm'), 'pa.p.st.time.ampm 8');
+is($field, $form->form('pa.p')->field('st')->field('time')->field('ampm'), 'pa.p.st.time.ampm 9');
 
 BEGIN
 {
