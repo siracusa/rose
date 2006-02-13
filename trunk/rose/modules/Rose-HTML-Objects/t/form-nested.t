@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 148;
+use Test::More tests => 149;
 
 BEGIN 
 {
@@ -354,7 +354,7 @@ is($field, $form->form('pa.p')->field('start')->field('time')->field('ampm'), 'p
 #
 
 $form->field('pa.p.start')->name('st');
-
+   
 $form->params(
 {
   'dog'               => 'Woof',
@@ -390,6 +390,14 @@ is($field, $form->form('pa')->form('p')->field('st')->field('time')->field('ampm
 is($field, $form->form('pa.p')->field('st.time.ampm'), 'pa.p.st.time.ampm 7');
 is($field, $form->form('pa.p')->field('st')->field('time.ampm'), 'pa.p.st.time.ampm 8');
 is($field, $form->form('pa.p')->field('st')->field('time')->field('ampm'), 'pa.p.st.time.ampm 9');
+
+is($field->html, 
+   qq(<select class="ampm" name="pa.p.st.time.ampm" size="1">\n) .
+   qq(<option value=""></option>\n) .
+   qq(<option value="AM">AM</option>\n) .
+   qq(<option selected value="PM">PM</option>\n) .
+   qq(</select>),
+   'pa.p.st.time.ampm html 2');
 
 BEGIN
 {

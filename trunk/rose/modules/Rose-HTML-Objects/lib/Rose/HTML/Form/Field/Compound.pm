@@ -8,8 +8,7 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-use constant FIELD_SEPARATOR => '.';
-our $FIELD_SEPARATOR = FIELD_SEPARATOR;
+use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
 our $VERSION = '0.35';
 
@@ -118,8 +117,8 @@ sub reset
 sub subfield_name
 {
   my($self, $name) = @_;
-  return $name  if(index($name,  $self->name . FIELD_SEPARATOR) == 0);
-  return $self->name . FIELD_SEPARATOR . $name
+  return $name  if(index($name,  $self->name . FF_SEPARATOR) == 0);
+  return $self->name . FF_SEPARATOR . $name
 }
 
 sub decompose_value { {} }

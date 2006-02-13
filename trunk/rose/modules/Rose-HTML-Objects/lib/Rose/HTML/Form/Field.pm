@@ -15,11 +15,7 @@ our @ISA = qw(Rose::HTML::Object);
 use constant HTML_ERROR_SEP  => "<br>\n";
 use constant XHTML_ERROR_SEP => "<br />\n";
 
-use Rose::HTML::Form::Constants qw(FIELD_SEPARATOR FORM_SEPARATOR);
-
-# Variables for use in regexes
-our $FIELD_SEPARATOR = FIELD_SEPARATOR;
-our $FORM_SEPARATOR  = FORM_SEPARATOR;
+use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
 our $VERSION = '0.35';
 
@@ -98,25 +94,18 @@ sub parent_form
 sub fq_name
 {
   my($self) = shift;
-  #my $local_name    = $self->local_name;
-  #my $form_context  = $self->form_context_name;
-  #my $field_context = $self->field_context_name;
-#  no warnings 'uninitialized';
-  return join(FIELD_SEPARATOR, grep { defined } $self->form_context_name, $self->field_context_name, $self->local_name);
-  #return join(FIELD_SEPARATOR, join(FORM_SEPARATOR, $self->form_context_name, $self->field_context_name), $self->local_name);
+  return join(FF_SEPARATOR, grep { defined } $self->form_context_name, 
+                                             $self->field_context_name, 
+                                             $self->local_name);
 }
 
 sub fq_moniker
 {
   my($self) = shift;
-  #my $local_moniker = $self->local_moniker;
-  #my $form_context  = $self->form_context_name;
-  #my $field_context = $self->field_context_name;
 
-  return join(FIELD_SEPARATOR, grep { defined } $self->form_context_name, $self->field_context_name, $self->local_moniker);
-
-#  no warnings 'uninitialized';
-#  return join(FIELD_SEPARATOR, join(FORM_SEPARATOR,  $self->form_context_name, $self->field_context_name), $self->local_moniker);
+  return join(FF_SEPARATOR, grep { defined } $self->form_context_name,
+                                             $self->field_context_name, 
+                                             $self->local_moniker);
 }
 
 sub init_local_moniker { shift->local_name }
@@ -155,20 +144,6 @@ sub value
   }
 }
 
-# sub local_name
-# {
-#   my($self) = shift;
-#   
-#   if(@_)
-#   {
-#     $self->{'fq_name'} = undef;
-#     $self->html_attr('name', undef);
-#     return $self->{'local_name'} = shift;
-#   }
-# 
-#   return $self->{'local_name'};
-# }
-
 sub resync_name
 {
   my($self) = shift;
@@ -187,7 +162,7 @@ sub local_name
     my $name = shift;
 
     no warnings 'uninitialized';
-    if(index($name, FIELD_SEPARATOR) >= 0 && !$self->isa('Rose::HTML::Form::Field::Hidden'))
+    if(index($name, FF_SEPARATOR) >= 0 && !$self->isa('Rose::HTML::Form::Field::Hidden'))
     {
       Carp::croak "Invalid local field name: $name";
     }
@@ -255,46 +230,6 @@ sub moniker
     return $self->{'moniker'} = $self->fq_moniker;
   }
 }
-
-# =item B<field_name [NAME]>
-# 
-# When passed a NAME argument, it sets the name of the field.  If the "name"
-# HTML attribute is not defined, its value is also set to NAME.  NAME is then
-# returned.
-# 
-# If no arguments are passed, and if the field name is not defined, then the
-# field name is set to the value of the "name" HTML attribute and then
-# returned. If the field name was already defined, then it is simply
-# returned.
-# 
-# Note that this means that the field name and the "name" HTML attribute do
-# not necessarily have to be the same (but usually are).
-#
-# sub field_name
-# {
-#   my($self) = shift;
-# 
-#   if(@_)
-#   {
-#     $self->{'field_name'} = shift;
-# 
-#     unless(defined $self->name)
-#     {
-#       $self->html_attr(name => $self->{'field_name'})
-#     }
-# 
-#     return $self->{'field_name'};
-#   }
-#   else
-#   {
-#     unless(defined $self->{'field_name'})
-#     {
-#       return $self->{'field_name'} = $self->html_attr('name');
-#     }
-# 
-#     return $self->{'field_name'};
-#   }
-# }
 
 sub default_value
 {

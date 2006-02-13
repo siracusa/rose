@@ -9,11 +9,10 @@ use Rose::HTML::Form::Field::Hidden;
 use Rose::HTML::Form::Field;
 our @ISA = qw(Rose::HTML::Form::Field);
 
-use Rose::HTML::Form::Constants qw(FIELD_SEPARATOR FORM_SEPARATOR);
+use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
 # Variables for use in regexes
-our $FIELD_SEPARATOR_RE = quotemeta FIELD_SEPARATOR;
-our $FORM_SEPARATOR_RE  = quotemeta FORM_SEPARATOR;
+our $FF_SEPARATOR_RE = quotemeta FF_SEPARATOR;
 
 our $VERSION = '0.35';
 
@@ -243,7 +242,7 @@ sub field
   my $sep_pos;
 
   # Non-hierarchical name
-  if(($sep_pos = index($name, FORM_SEPARATOR)) < 0)
+  if(($sep_pos = index($name, FF_SEPARATOR)) < 0)
   {
     return undef; # $self->local_field($name, @_);
   }
@@ -270,14 +269,14 @@ sub find_parent_field
   my($self, $name) = @_;
 
   # Non-hierarchical name
-  if(index($name, FORM_SEPARATOR) < 0)
+  if(index($name, FF_SEPARATOR) < 0)
   {
     return $self->local_form($name) ? ($self, $name) : undef;
   }
 
   my $parent_form;
 
-  while($name =~ s/^([^$FORM_SEPARATOR_RE]+)$FORM_SEPARATOR_RE//o)
+  while($name =~ s/^([^$FF_SEPARATOR_RE]+)$FF_SEPARATOR_RE//o)
   {
     my $parent_name = $1;
     last  if($parent_form = $self->local_form($parent_name));
@@ -351,7 +350,7 @@ sub resync_field_names
   {
     $field->resync_name;
     $field->resync_field_names  if($field->isa('Rose::HTML::Form::Field::Compound'));
-#    $field->name; # Pull the new name through to the name HTML attribute
+    #$field->name; # Pull the new name through to the name HTML attribute
   }
 }
 
@@ -395,9 +394,10 @@ sub field_monikers
 
 sub delete_fields 
 {
-  $_[0]->_clear_field_generated_values;
-  $_[0]->{'fields'} = {};
-  $_[0]->field_rank_counter(undef);
+  my($self) = shift;
+  $self->_clear_field_generated_values;
+  $self->{'fields'} = {};
+  $self->field_rank_counter(undef);
   return;
 }
 
@@ -447,8 +447,6 @@ sub hidden_field
 
   no warnings 'uninitialized';
   my $name = $self->fq_name;
-#   my $name = $self->html_attr_exists('name') ? $self->html_attr('name') : 
-#              $self->can('name') ? $self->name : undef;
 
   return 
     Rose::HTML::Form::Field::Hidden->new(

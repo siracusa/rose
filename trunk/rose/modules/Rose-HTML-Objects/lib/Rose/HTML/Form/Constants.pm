@@ -7,11 +7,10 @@ our $VERSION = '0.35';
 require Exporter;
 our @ISA = qw(Exporter);
 
-our @EXPORT_OK = qw(FIELD_SEPARATOR FORM_SEPARATOR);
+our @EXPORT_OK = qw(FF_SEPARATOR);
 
 our %EXPORT_TAGS = (all => \@EXPORT_OK);
 
-use constant FIELD_SEPARATOR => '.';
-use constant FORM_SEPARATOR  => '.';
+use constant FF_SEPARATOR => '.';
 
 1;
