@@ -766,7 +766,7 @@ sub resync_fields_by_name
   }
 }
 
-sub compare_forms { no warnings 'uninitialized'; $_[1]->rank cmp $_[2]->rank }
+sub compare_forms { no warnings 'uninitialized'; $_[1]->rank <=> $_[2]->rank }
 
 sub forms
 {
@@ -1334,7 +1334,7 @@ Sub-form method calls and delegation also works as expected.
     $person = $form->form('pa')->person_from_form();
     $person = $form->person_from_form();
 
-Nesting forms is a great technique for code reuse.  When combined with traditional subclassing, form generation can be entirely cleansed of duplicated code.
+Nested forms are a great way to build on top of past work.  When combined with traditional subclassing, form generation can be entirely cleansed of duplicated code.
 
 =head1 HTML ATTRIBUTES
 
@@ -1397,17 +1397,39 @@ Convenience alias for L<add_fields()|/add_fields>.
 
 =item B<add_fields ARGS>
 
-Add the fields specified by ARGS to the list of fields contained in this form.
+Add the fields specified by ARGS to the list of fields contained in this form.  Valid formats for elements of ARGS are:
+
+=over 4 
+
+=item B<Field objects>
 
 If an argument is "isa" L<Rose::HTML::Form::Field>, then it is added to the list of fields, stored under the name returned by the field's L<name()|Rose::HTML::Form::Field/name> method.
 
-If an argument is anything else, it is used as the field name, and the next argument is used as the field object to store under that name.  If the next argument is not an object derived from L<Rose::HTML::Form::Field>, then a fatal error occurs.
+=item B<Field name/type pairs>
 
-The field object's L<name()|Rose::HTML::Form::Field/name> is set to the name that it is stored under, and its L<parent_field()|Rose::HTML::Form::Field/parent_field> is set to the form object.  If the field's L<rank|Rose::HTML::Form::Field/rank> is undefined, it's set to the value of the form's L<rank_counter|/rank_counter> attribute and the rank counter is incremented.
+A pair of simple scalars is taken as a field name and type.  The class that corresponds to the specified field type is determined by calling the L<field_type_class|/field_type_class> method.  Then a new object of that class is constructed and added to the form.
 
-Returns the full list of field objects, sorted by field name, in list context, or a reference to a list of the same in scalar context.
+=item B<Field name/hashref pairs>
+
+A simple scalar followed by a reference to a hash it taken as a field name and a collection of object attributes.  The referenced hash must contain a value for the C<type> key.  The field class that corresponds to the specified field type is determined by calling the L<field_type_class|/field_type_class> method.  Then a new object of that class is constructed, with the remaining key/value pairs in the hash are passed to the constructor.  The completed field object is then added to the form.
+
+=item B<Field name/object pairs>
+
+A simple scalar followed by an object that "isa" L<Rose::HTML::Form::Field> is stored as-is, under the specified name.
+
+=back
+
+Each field's L<parent_form()|Rose::HTML::Form::Field/parent_form> is set to the form object.  If the field's L<rank|Rose::HTML::Form::Field/rank> is undefined, it's set to the value of the form's L<rank_counter|/rank_counter> attribute and the rank counter is incremented.
 
 Examples:
+
+    # Name/hashref pairs
+    $form->add_fields(name  => { type => 'text',  size => 20 },
+                      email => { type => 'email', size => 30 });
+
+    # Name/type pairs
+    $form->add_fields(name  => 'text',
+                      email => 'email');
 
     $name_field = 
       Rose::HTML::Form::Field::Text->new(name => 'name',
@@ -1417,16 +1439,18 @@ Examples:
       Rose::HTML::Form::Field::Text->new(name => 'email',
                                          size => 50);
 
-    # Field arguments
-    $form1->add_fields($name_field, $email_field);
+    # Object arguments
+    $form->add_fields($name_field, $email_field);
 
-    # Name/field pairs
-    $form2->add_fields(name  => $name_field, 
-                       email => $email_field);
+    # Name/object pairs
+    $form->add_fields(name  => $name_field, 
+                      email => $email_field);
 
     # Mixed
-    $form3->add_fields($name_field, 
-                       email => $email_field);
+    $form->add_fields($name_field, 
+                      email => $email_field,
+                      nick  => { type => 'text', size => 15 },
+                      age   => 'text');
 
 =item B<add_param_value NAME, VALUE>
 
@@ -1455,21 +1479,12 @@ Subclasses should populate the field list in their overridden versions of L<buil
   {
     my($self) = shift;
 
-    my %fields;
-
-    $fields{'name'} = 
-      Rose::HTML::Form::Field::Text->new(name => 'name',
-                                         size => 25);
-
-    $fields{'email'} = 
-      Rose::HTML::Form::Field::Email->new(name => 'email',
-                                          size  => 50);
-
-    $fields{'phone'} = 
-      Rose::HTML::Form::Field::PhoneNumber::US->new(name => 'phone');
-
-    ...
-    $self->add_fields(%fields);
+    $self->add_fields
+    (
+      name  => { type => 'text',  size => 25, required => 1 },
+      email => { type => 'email', size => 50, required => 1 },
+      phone => { type => 'phone' },
+    );
   }
 
 =item B<clear>
@@ -1491,6 +1506,14 @@ Get or set the boolean flag that controls how compound field values are encoded 
 =item B<compare_fields [FIELD1, FIELD2]>
 
 Compare two fields, returning 1 if FIELD1 should come before FIELD2, -1 if FIELD2 should come before FIELD1, or 0 if neither field should come before the other.  This method is called from within the L<field_names|/field_names> method to determine the order of the fields in this form.
+
+The default implementation performs a string comparison on the L<name|Rose::HTML::Form::Field/name>s of the fields.
+
+=item B<compare_forms [FORM1, FORM2]>
+
+Compare two forms, returning 1 if FIELD1 should come before FIELD2, -1 if FIELD2 should come before FIELD1, or 0 if neither form should come before the other.  This method is called from within the L<form_names|/form_names> method to determine the order of the forms in this form.
+
+The default implementation compares the L<rank|/rank> of the forms in numeric context.
 
 =item B<delete_field NAME>
 
@@ -1542,7 +1565,7 @@ Returns the XHTML required to end a multipart form.
 
 Get or set the field specified by NAME.  If only a NAME argument is passed, then the field stored under the name NAME is returned.  If no field exists under that name exists, then undef is returned.
 
-If both NAME and VALUE arguments are passed, then the field VALUE is stored under the name NAME.  If VALUE is not an object derived from L<Rose::HTML::Form::Field>, then a fatal error occurs.
+If both NAME and VALUE arguments are passed, then the VALUE must be a L<Rose::HTML::Form::Field> or a reference to a hash whose contents are as described in the documentation for the L<add_fields|/add_fields> method. 
 
 =item B<fields>
 
@@ -1553,6 +1576,26 @@ Returns an ordered list of this form's field objects in list context, or a refer
 Returns an ordered list of field names in list context, or a reference to this list in scalar context.  The order is determined by the L<compare_fields|/compare_fields> method by default.
 
 You can override the L<compare_fields|/compare_fields> method in your subclass to provide a custom sort order, or you can override the L<field_names|/field_names> method itself to provide an arbitrary  order, ignoring the L<compare_fields|/compare_fields> method entirely.
+
+=item B<form NAME [, OBJECT]>
+
+Get or set the sub-form named NAME.  If just NAME is passed, the specified sub-form object is returned.  If no such sub-form exists, undef is returnend.
+
+If both NAME and OBJECT are passed, a new sub-form is added under NAME.
+
+NAME is a fully-qualified sub-form name.  Components of the hierarchy are separated by dots (".").  OBJECT must be an object that inherits from L<Rose::HTML::Form>.
+
+=item B<forms>
+
+Returns an ordered list of this form's sub-form objects (if any) in list context, or a reference to this list in scalar context.  The order of the form matches the order of the form names returned by the L<form_names|/form_names> method.
+
+See the L<nested forms|/"NESTED FORMS"> section to learn more about nested forms.
+
+=item B<form_names>
+
+Returns an ordered list of form names in list context, or a reference to this list in scalar context.  The order is determined by the L<compare_forms|/compare_forms> method by default.
+
+You can override the L<compare_forms|/compare_forms> method in your subclass to provide a custom sort order, or you can override the L<form_names|/form_names> method itself to provide an arbitrary  order, ignoring the L<compare_forms|/compare_forms> method entirely.
 
 =item B<hidden_fields>
 
@@ -1570,15 +1613,15 @@ Initialize the fields based on L<params()|/params>.  In general, this works as y
 
 The intention of L<init_fields()|/init_fields> is to set field values based solely and entirely on L<params()|/params>.  That means that default values for fields should not be considered unless they are explicitly part of L<params()|/params>.
 
-In  general, default values for fields exist for the purpose of displaying the HTML form with certain items pre-selected or filled in.  In a typical usage scenario, those default values will end up in the web browser form submission and, eventually, as as an explicit part of part L<params()|/params>, so they are not really ignored.
+In general, default values for fields exist for the purpose of displaying the HTML form with certain items pre-selected or filled in.  In a typical usage scenario, those default values will end up in the web browser form submission and, eventually, as as an explicit part of part L<params()|/params>, so they are not really ignored.
 
 But to preserve the intended functionality of L<init_fields()|/init_fields>, the first thing this method does is L<clear()|/clear> the form. If a C<no_clear> parameter with a true value is passed as part of ARGS, then this step is skipped.
 
-If a parameter name exactly matches a field's name (note: the field's L<name()|Rose::HTML::Form::Field/name>, I<not> the name that the field is stored under in the form, which may be different), then the (list context) value of that parameter is passed as the L<input_value()|Rose::HTML::Form::Field/input_value> for that field.
+If a parameter name exactly matches a field's name (note: the field's L<name|Rose::HTML::Form::Field/name>, which is not necessarily the the same as the name that the field is stored under in the form), then the (list context) value of that parameter is passed as the L<input_value()|Rose::HTML::Form::Field/input_value> for that field.
 
-If a field "isa" L<Rose::HTML::Form::Field::Compound>, and if no parameter exactly matches the L<name()|Rose::HTML::Form::Field/name> of the compound field, then each subfields may be initialized by a parameter name that matches the subfield's L<name()|Rose::HTML::Form::Field/name>.
+If a field "isa" L<Rose::HTML::Form::Field::Compound>, and if no parameter exactly matches the L<name|Rose::HTML::Form::Field/name> of the compound field, then each subfield may be initialized by a parameter name that matches the subfield's L<name|Rose::HTML::Form::Field/name>.
 
-If a field is an "on/off" type of field (e.g., a radio button or checkbox), then the field is turned "on" only if the value of the parameter that matches the field's L<name()|Rose::HTML::Form::Field/name> exactly matches (string comparison) the "value" HTML attribute of the field.  If not, and if L<params_exist()|/params_exist>, then the field is set to "off".  Otherwise, the field is not modified at all.
+If a field is an "on/off" type of field (e.g., a radio button or checkbox), then the field is turned "on" only if the value of the parameter that matches the field's L<name|Rose::HTML::Form::Field/name> exactly matches (string comparison) the "value" HTML attribute of the field.  If not, and if L<params_exist()|/params_exist>, then the field is set to "off".  Otherwise, the field is not modified at all.
 
 Examples:
 
@@ -1588,36 +1631,27 @@ Examples:
     {
       my($self) = shift;
 
-      my %fields;
+      $self->add_fields
+      (
+        name => { type => 'text', size => 25 },
 
-      $fields{'name'} = 
-        Rose::HTML::Form::Field::Text->new(
-          name => 'your_name',
-          size => 25);
+        gender => 
+        {
+          type    => 'radio group',
+          choices => { 'm' => 'Male', 'f' => 'Female' },
+          default => 'm'
+        },
 
-      $fields{'gender'} = 
-        Rose::HTML::Form::Field::RadioButtonGroup->new(
-          name          => 'gender',
-          radio_buttons => { 'm' => 'Male', 'f' => 'Female' },
-          default       => 'm');
+        hobbies =>
+        {
+          type    => 'checkbox group',
+          name    => 'hobbies',
+          choices => [ 'Chess', 'Checkers', 'Knitting' ],
+          default => 'Chess'
+        },
 
-      $fields{'hobbies'} = 
-        Rose::HTML::Form::Field::CheckboxGroup->new(
-          name       => 'hobbies',
-          checkboxes => [ 'Chess', 'Checkers', 'Knitting' ],
-          default    => 'Chess');
-
-      $fields{'bday'} = 
-        Rose::HTML::Form::Field::DateTime::Split::MonthDayYear->new(
-          name => 'bday');
-
-      $self->add_fields(%fields);
-
-      # Set a different "name" HTML attribute for this field.
-      # Has to be done after the call to add_fields() because
-      # add_fields() sets the name() of each field to match the
-      # name that it is stored under.
-      $self->field('name')->html_attr(name => 'your_name');
+        bday = => { type => 'date split mdy' }
+      );
     }
 
     ...
@@ -1641,7 +1675,7 @@ Examples:
 
     $form->reset;
     # Set using subfield names for "bday" compound field
-    $form->params('your_name'  => 'John',
+    $form->params('name'       => 'John',
                   'bday.month' => 1,
                   'bday.day'   => 24,
                   'bday.year'  => 1984);
@@ -1670,6 +1704,7 @@ Examples:
     # Fields are not cleared, but the existence of the hobbies
     # param with an empty value causes the hobbies list to be
     # empty, instead of the default Chess.  Thus:
+    #
     # No name, Male, no hobbies, no birthday
     $form->init_fields(no_clear => 1);
 
@@ -1714,6 +1749,18 @@ The field names may not match up exactly with the object method names. In such c
       $self->field('is_new')->input_value(1);
       ...
     }
+
+=item B<local_field NAME [, VALUE]>
+
+Get or set a field that is an immediate child of the current form.  That is, it does not belong to a L<nested form|/"NESTED FORMS">.  If the field specified by NAME does not meet these criteria, then undef is returned.  In all other respects, this method behaves like the L<field|/field> method.
+
+Note that NAME should be the name as seen from the perspective of the form object upon which this method is called.  So a nested form can always address its local fields using their "short" (unqualified) names even if the form is actually nested within another form.
+
+=item B<local_form NAME [, OBJECT]>
+
+Get or set a form that is an immediate child of the current form.  That is, it does not belong to a L<nested form|/"NESTED FORMS">.  If the form specified by NAME does not meet these criteria, then undef is returned.  In all other respects, this method behaves like the L<form|/form> method.
+
+Note that NAME should be the name as seen from the perspective of the form object upon which this method is called.  So a nested form can always address its local sub-forms using their "short" (unqualified) names even if the parent form itself is actually nested within another form.
 
 =item B<object_from_form OBJECT | CLASS | PARAMS>
 

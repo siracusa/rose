@@ -22,6 +22,8 @@ sub _item_name_plural { 'checkboxes' }
 *add_checkboxes = \&Rose::HTML::Form::Field::Group::add_items;
 *add_checkbox   = \&add_checkboxes;
 
+*choices = \&checkboxes;
+
 sub html_table
 {
   my($self, %args) = @_;
@@ -138,6 +140,10 @@ To set an ordered list of checkboxes along with labels in the constructor, use b
 Remember that methods are called in the order that they appear in the constructor arguments (see the L<Rose::Object> documentation), so L<checkboxes()|/checkboxes> will be called before L<labels()|/labels> in the example above.  This is important; it will not work in the opposite order.
 
 Returns a list of the checkbox group's L<Rose::HTML::Form::Field::Checkbox> objects in list context, or a reference to an array of the same in scalar context. These are the actual objects used in the field. Modifying them will modify the field itself.
+
+=item B<choices [CHECKBOXES]>
+
+This is an alias for the L<checkboxes|/checkboxes> method.
 
 =item B<columns [COLS]>
 
