@@ -9,7 +9,7 @@ use Rose::DB::Object::Metadata::Util qw(:all);
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.65';
+our $VERSION = '0.68';
 
 our $Debug = 0;
 
@@ -25,7 +25,7 @@ __PACKAGE__->default_auto_method_types(qw(get_set_on_save delete_on_save));
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
-  qw(hash_key share_db class key_columns foreign_key)
+  qw(hash_key share_db class key_columns foreign_key if_not_found)
 );
 
 use Rose::Object::MakeMethods::Generic
@@ -41,6 +41,15 @@ use Rose::Object::MakeMethods::Generic
   [
     key_column  => { hash_key  => 'key_columns' },
     key_columns => { interface => 'get_set_all' },
+  ],
+);
+
+# I'm using this just for it's support of check_in => ...
+use Rose::DB::Object::MakeMethods::Generic
+(
+  scalar =>
+  [
+    if_not_found => { default => 'fatal', check_in => [ 'ok', 'fatal' ] },
   ],
 );
 
@@ -434,6 +443,10 @@ Get or set the class name of the L<Rose::DB::Object>-derived object that encapsu
 =item B<column_map [HASH | HASHREF]>
 
 This is an alias for the L<key_columns|/key_columns> method.
+
+=item B<if_not_found [DECISION]>
+
+Get or set the attribute that determines what happens when the object this foreign key points to is not found.  Valid values for DECISION are C<fatal>, which will throw an exception if the foreign object is not found, and C<ok> which will merely cause the relevant method(s) to return undef.  The default is C<fatal>.
 
 =item B<key_column LOCAL [, FOREIGN]>
 
