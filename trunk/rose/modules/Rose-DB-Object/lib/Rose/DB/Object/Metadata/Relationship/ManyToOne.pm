@@ -10,13 +10,13 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.65';
+our $VERSION = '0.68';
 
 __PACKAGE__->default_auto_method_types(qw(get_set_on_save delete_on_save));
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
-  qw(class share_db key_columns)
+  qw(class share_db key_columns if_not_found)
 );
 
 use Rose::Object::MakeMethods::Generic
@@ -30,6 +30,15 @@ use Rose::Object::MakeMethods::Generic
   [
     _key_column  => { hash_key  => 'key_columns' },
     _key_columns => { interface => 'get_set_all' },
+  ],
+);
+
+# I'm using this just for it's support of check_in => ...
+use Rose::DB::Object::MakeMethods::Generic
+(
+  scalar =>
+  [
+    if_not_found => { default => 'fatal', check_in => [ 'ok', 'fatal' ] },
   ],
 );
 
@@ -243,6 +252,10 @@ Otherwise, undef is returned.
 Get or set the L<Rose::DB::Object::Metadata::ForeignKey> object to which this object delegates all responsibility.
 
 Many to one relationships encapsulate essentially the same information as foreign keys.  If a foreign key object is stored in this relationship object, then I<all compatible operations are passed through to the foreign key object.>  This includes making object method(s) and adding or modifying the local-to-foreign column map.  In other words, if a L<foreign_key|/foreign_key> is set, the relationship object simply acts as a proxy for the foreign key object.
+
+=item B<if_not_found [DECISION]>
+
+Get or set the attribute that determines what happens when the object this relationship points to is not found.  Valid values for DECISION are C<fatal>, which will throw an exception if the foreign object is not found, and C<ok> which will merely cause the relevant method(s) to return undef.  The default is C<fatal>.
 
 =item B<map_column LOCAL [, FOREIGN]>
 
