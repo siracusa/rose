@@ -19,7 +19,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.66';
+our $VERSION = '0.68';
 
 our $Debug = 0;
 
@@ -3270,10 +3270,6 @@ Also, don't forget that auto-initialization requires a database connection.  L<R
 First, auto-initialization cannot generate information that exists only in the mind of the programmer.  The most common example is a relationship between two database tables that is either ambiguous or totally unexpressed by the database itself.  
 
 For example, if a foreign key constraint does not exist, the relationship between rows in two different tables cannot be extracted from the database, and therefore cannot be auto-initialized.
-
-Similarly, in the L<synopsis|/SYNOPSIS> above, the "one to many" relationship between the C<Product> and C<Price> classes cannot be auto-initialized because it lacks an unambiguous analog within the database.  Even assuming that the "prices" table (fronted by the C<Price>) class has a foreign key that points to the "products" table, the lack of a corresponding foreign key in the "products" table that points back to the "prices" table does not necessarily mean that the relationship is "one product to many prices."  It could be that the relationship is really "one product to one price" and the foreign key constraint was omitted from the "products" table for performance reasons (to give just one example).
-
-As it turns out, the relationship really is "one product to many prices", but this is something that only the programmer knows for sure.  Therefore, this information must be specified manually, as shown near the bottom of the L<synopsis|/SYNOPSIS>.
 
 Even within the realm of information that, by all rights, should be available in the database, there are limitations.  Although there is a handy L<DBI> API for extracting metadata from databases, unfortunately, very few DBI drivers support it fully.  Some don't support it at all.  In almost all cases, some manual work is required to (often painfully) extract information from the database's "system tables" or "catalog."
 
