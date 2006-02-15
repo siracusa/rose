@@ -1183,6 +1183,8 @@ sub object_by_key
   my $meta       = $target_class->meta;
   my $fk_pk;
 
+  my $fatal_if_not_found = $args->{'if_not_found'} eq 'ok' ? 0 : 1;
+
   my $fk_columns = $args->{'key_columns'} or die "Missing key columns hash";
   my $share_db   = $args->{'share_db'};
 
@@ -1259,15 +1261,22 @@ sub object_by_key
 
       my $ret;
 
-      eval { $ret = $obj->load };
-
-      if($@ || !$ret)
+      if($fatal_if_not_found)
       {
-        $self->error("Could not load $fk_class with key ", 
-                     join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                     " - " . $obj->error);
-        $self->meta->handle_error($self);
-        return $ret;
+        eval { $ret = $obj->load };
+
+        if($@ || !$ret)
+        {
+          $self->error("Could not load $fk_class with key ", 
+                       join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
+                       " - " . $obj->error);
+          $self->meta->handle_error($self);
+          return $ret;
+        }
+      }
+      else
+      {
+        return undef  unless($obj->load(speculative => 1));
       }
 
       return $self->{$key} = $obj;
@@ -1407,15 +1416,22 @@ sub object_by_key
 
       my $ret;
 
-      eval { $ret = $obj->load };
-
-      if($@ || !$ret)
+      if($fatal_if_not_found)
       {
-        $self->error("Could not load $fk_class with key ", 
-                     join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                     " - " . $obj->error);
-        $self->meta->handle_error($self);
-        return $ret;
+        eval { $ret = $obj->load };
+  
+        if($@ || !$ret)
+        {
+          $self->error("Could not load $fk_class with key ", 
+                       join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
+                       " - " . $obj->error);
+          $self->meta->handle_error($self);
+          return $ret;
+        }
+      }
+      else
+      {
+        return undef  unless($obj->load(speculative => 1));
       }
 
       return $self->{$key} = $obj;
@@ -1563,15 +1579,22 @@ sub object_by_key
 
       my $ret;
 
-      eval { $ret = $obj->load };
-
-      if($@ || !$ret)
+      if($fatal_if_not_found)
       {
-        $self->error("Could not load $fk_class with key ", 
-                     join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                     " - " . $obj->error);
-        $self->meta->handle_error($self);
-        return $ret;
+        eval { $ret = $obj->load };
+  
+        if($@ || !$ret)
+        {
+          $self->error("Could not load $fk_class with key ", 
+                       join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
+                       " - " . $obj->error);
+          $self->meta->handle_error($self);
+          return $ret;
+        }
+      }
+      else
+      {
+        return undef  unless($obj->load(speculative => 1));
       }
 
       return $self->{$key} = $obj;
