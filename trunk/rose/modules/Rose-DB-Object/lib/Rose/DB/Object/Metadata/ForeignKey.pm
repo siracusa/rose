@@ -444,9 +444,9 @@ Get or set the class name of the L<Rose::DB::Object>-derived object that encapsu
 
 This is an alias for the L<key_columns|/key_columns> method.
 
-=item B<if_not_found [DECISION]>
+=item B<if_not_found [CONSEQUENCE]>
 
-Get or set the attribute that determines what happens when the object this foreign key points to is not found.  Valid values for DECISION are C<fatal>, which will throw an exception if the foreign object is not found, and C<ok> which will merely cause the relevant method(s) to return undef.  The default is C<fatal>.
+Get or set the attribute that determines what happens when the object this foreign key points to is not found.  Valid values for CONSEQUENCE are C<fatal>, which will throw an exception if the foreign object is not found, and C<ok> which will merely cause the relevant method(s) to return undef.  The default is C<fatal>.
 
 =item B<key_column LOCAL [, FOREIGN]>
 
