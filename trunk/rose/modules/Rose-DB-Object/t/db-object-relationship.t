@@ -2819,7 +2819,7 @@ SKIP: foreach my $db_type ('informix')
 
   is($o->other_obj, undef, "other_obj() 1 - $db_type");
 
-  $o->fk(99);
+  $o->fkone(99);
   $o->fk2(99);
   $o->fk3(99);
 

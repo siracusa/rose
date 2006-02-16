@@ -1183,7 +1183,7 @@ sub object_by_key
   my $meta       = $target_class->meta;
   my $fk_pk;
 
-  my $fatal_if_not_found = $args->{'if_not_found'} eq 'ok' ? 0 : 1;
+  my $fatal_if_not_found = ($args->{'if_not_found'} || '') eq 'ok' ? 0 : 1;
 
   my $fk_columns = $args->{'key_columns'} or die "Missing key columns hash";
   my $share_db   = $args->{'share_db'};
