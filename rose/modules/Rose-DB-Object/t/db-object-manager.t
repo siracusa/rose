@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 2900;
+use Test::More tests => 2939;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("Postgres tests", 731)  unless($HAVE_PG);
+  skip("Postgres tests", 744)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -1181,6 +1181,72 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   is($objs->[0]->id, 60, "get_objects() eq_sql 3 - $db_type");
 
   # End *_sql comparison tests
+
+  # Start IN NULL tests
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ id => [ undef, 60 ], '!id' => \'id + 1' ], #'
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() in null 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() in null 2 - $db_type");
+
+  is($objs->[0]->id, 60, "get_objects() in null 3 - $db_type");
+
+  # End IN NULL tests
+
+  # Start scalar ref tests
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ 'fk2' => \'fk3' ], #'
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() eq ref 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() eq ref 2 - $db_type");
+
+  is($objs->[0]->id, 60, "get_objects() eq ref 3 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ 'fk2' => [ \'fk3' ] ], #'
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() eq ref 4 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() eq ref 5 - $db_type");
+
+  is($objs->[0]->id, 60, "get_objects() eq ref 6 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ 'fk2' => { ne => \'fk3' } ], #'
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() eq ref 7 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 16, "get_objects() eq ref 8 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyPgObject',
+      query        => [ 'fk2' => { ne => [ \'fk3' ] } ], #'
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() eq ref 9 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 16, "get_objects() eq ref 10 - $db_type");
+
+  # End scalar ref tests
 
   # Start "many to many" tests
 
@@ -2616,7 +2682,7 @@ EOF
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 731)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 744)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -3661,6 +3727,72 @@ SKIP: foreach my $db_type ('mysql')
   is($objs->[0]->id, 60, "get_objects() eq_sql 3 - $db_type");
 
   # End *_sql comparison tests
+
+  # Start IN NULL tests
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ id => [ undef, 60 ], '!id' => \'id + 1' ], #'
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() in null 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() in null 2 - $db_type");
+
+  is($objs->[0]->id, 60, "get_objects() in null 3 - $db_type");
+
+  # End IN NULL tests
+
+  # Start scalar ref tests
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ 'fk2' => \'fk3' ], #'
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() eq ref 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() eq ref 2 - $db_type");
+
+  is($objs->[0]->id, 60, "get_objects() eq ref 3 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ 'fk2' => [ \'fk3' ] ], #'
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() eq ref 4 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() eq ref 5 - $db_type");
+
+  is($objs->[0]->id, 60, "get_objects() eq ref 6 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ 'fk2' => { ne => \'fk3' } ], #'
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() eq ref 7 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 16, "get_objects() eq ref 8 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyMySQLObject',
+      query        => [ 'fk2' => { ne => [ \'fk3' ] } ], #'
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() eq ref 9 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 16, "get_objects() eq ref 10 - $db_type");
+
+  # End scalar ref tests
 
   # Start "many to many" tests
 
@@ -5055,7 +5187,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(informix))
 {
-  skip("Informix tests", 694)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 707)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -6170,6 +6302,72 @@ SKIP: foreach my $db_type (qw(informix))
   is($objs->[0]->id, 60, "get_objects() eq_sql 3 - $db_type");
 
   # End *_sql comparison tests
+
+  # Start IN NULL tests
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ id => [ undef, 60 ], '!id' => \'id + 1' ], #'
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() in null 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() in null 2 - $db_type");
+
+  is($objs->[0]->id, 60, "get_objects() in null 3 - $db_type");
+
+  # End IN NULL tests
+
+  # Start scalar ref tests
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ 'fk2' => \'fk3' ], #'
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() eq ref 1 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() eq ref 2 - $db_type");
+
+  is($objs->[0]->id, 60, "get_objects() eq ref 3 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ 'fk2' => [ \'fk3' ] ], #'
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() eq ref 4 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 1, "get_objects() eq ref 5 - $db_type");
+
+  is($objs->[0]->id, 60, "get_objects() eq ref 6 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ 'fk2' => { ne => \'fk3' } ], #'
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() eq ref 7 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 16, "get_objects() eq ref 8 - $db_type");
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyInformixObject',
+      query        => [ 'fk2' => { ne => [ \'fk3' ] } ], #'
+      sort_by => 'id');
+
+  is(ref $objs, 'ARRAY', "get_objects() eq ref 9 - $db_type");
+  $objs ||= [];
+  is(scalar @$objs, 16, "get_objects() eq ref 10 - $db_type");
+
+  # End scalar ref tests
 
   # Start "many to many" tests
 
@@ -8637,7 +8835,7 @@ SKIP: foreach my $db_type (qw(sqlite))
 
   # Start IN NULL tests
 
-  local $Rose::DB::Object::Manager::Debug = 1;
+  #local $Rose::DB::Object::Manager::Debug = 1;
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class => 'MySQLiteObject',
