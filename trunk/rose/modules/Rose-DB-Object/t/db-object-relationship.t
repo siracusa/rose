@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1447;
+use Test::More tests => 1459;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 364)  unless($HAVE_PG);
+  skip("Postgres tests", 367)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -146,6 +146,15 @@ SKIP: foreach my $db_type ('pg')
   ok($oo2->save, "other object save() 2 - $db_type");
 
   is($o->other_obj, undef, "other_obj() 1 - $db_type");
+
+  $o->fkone(99);
+  $o->fk2(99);
+  $o->fk3(99);
+
+  eval { $o->other_obj };
+  ok($@, "fatal if_not_found - $db_type");
+  ok(!defined $o->other_obj_osoft, "ok if_not_found 1 - $db_type");
+  ok(!defined $o->other_obj_msoft, "ok if_not_found 2 - $db_type");
 
   $o->fkone(1);
   $o->fk2(2);
@@ -1413,7 +1422,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 334)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 337)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -1539,6 +1548,16 @@ SKIP: foreach my $db_type ('mysql')
   ok(@colors == 1 && $colors[0]->name eq 'pink', "colors 4 - $db_type");
 
   $o = MyMySQLObject->new(id => 1)->load;
+
+  $o->fk1(99);
+  $o->fk2(99);
+  $o->fk3(99);
+
+  eval { $o->other_obj };
+  ok($@, "fatal if_not_found - $db_type");
+  ok(!defined $o->other_obj_osoft, "ok if_not_found 1 - $db_type");
+  ok(!defined $o->other_obj_msoft, "ok if_not_found 2 - $db_type");
+
   $o->fk1(1);
   $o->fk2(2);
   $o->fk3(3);
@@ -2707,7 +2726,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 356)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 359)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -2799,6 +2818,15 @@ SKIP: foreach my $db_type ('informix')
   ok($oo2->save, "other object save() 2 - $db_type");
 
   is($o->other_obj, undef, "other_obj() 1 - $db_type");
+
+  $o->fk(99);
+  $o->fk2(99);
+  $o->fk3(99);
+
+  eval { $o->other_obj };
+  ok($@, "fatal if_not_found - $db_type");
+  ok(!defined $o->other_obj_osoft, "ok if_not_found 1 - $db_type");
+  ok(!defined $o->other_obj_msoft, "ok if_not_found 2 - $db_type");
 
   $o->fkone(1);
   $o->fk2(2);
@@ -4067,7 +4095,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 391)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 394)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -4159,6 +4187,15 @@ SKIP: foreach my $db_type ('sqlite')
   ok($oo2->save, "other object save() 2 - $db_type");
 
   is($o->other_obj, undef, "other_obj() 1 - $db_type");
+
+  $o->fkone(99);
+  $o->fk2(99);
+  $o->fk3(99);
+
+  eval { $o->other_obj };
+  ok($@, "fatal if_not_found - $db_type");
+  ok(!defined $o->other_obj_osoft, "ok if_not_found 1 - $db_type");
+  ok(!defined $o->other_obj_msoft, "ok if_not_found 2 - $db_type");
 
   $o->fkone(1);
   $o->fk2(2);
@@ -5792,7 +5829,33 @@ EOF
           add_now         => 'add_other2_objs_now',
           add_on_save     => undef,
         },
-      }
+      },
+
+      other_obj_osoft =>
+      {
+        type => 'one to one',
+        class => 'MyPgOtherObject',
+        column_map =>
+        {
+          fk1 => 'k1',
+          fk2 => 'k2',
+          fk3 => 'k3',
+        },
+        if_not_found => 'ok',
+      },
+
+      other_obj_msoft =>
+      {
+        type => 'many to one',
+        class => 'MyPgOtherObject',
+        column_map =>
+        {
+          fk1 => 'k1',
+          fk2 => 'k2',
+          fk3 => 'k3',
+        },
+        if_not_found => 'ok',
+      },
     );
 
     MyPgObject->meta->alias_column(fk1 => 'fkone');
@@ -6079,8 +6142,34 @@ EOF
       }
     );
 
-    MyMySQLObject->meta->add_relationship
+    MyMySQLObject->meta->add_relationships
     (
+      other_obj_osoft =>
+      {
+        type => 'one to one',
+        class => 'MyMySQLOtherObject',
+        column_map =>
+        {
+          fk1 => 'k1',
+          fk2 => 'k2',
+          fk3 => 'k3',
+        },
+        if_not_found => 'ok',
+      },
+
+      other_obj_msoft =>
+      {
+        type => 'many to one',
+        class => 'MyMySQLOtherObject',
+        column_map =>
+        {
+          fk1 => 'k1',
+          fk2 => 'k2',
+          fk3 => 'k3',
+        },
+        if_not_found => 'ok',
+      },
+
       other2_objs =>
       {
         type  => 'one to many',
@@ -6403,8 +6492,34 @@ EOF
       },
     );
 
-    MyInformixObject->meta->add_relationship
+    MyInformixObject->meta->add_relationships
     (
+      other_obj_osoft =>
+      {
+        type => 'one to one',
+        class => 'MyInformixOtherObject',
+        column_map =>
+        {
+          fk1 => 'k1',
+          fk2 => 'k2',
+          fk3 => 'k3',
+        },
+        if_not_found => 'ok',
+      },
+
+      other_obj_msoft =>
+      {
+        type => 'many to one',
+        class => 'MyInformixOtherObject',
+        column_map =>
+        {
+          fk1 => 'k1',
+          fk2 => 'k2',
+          fk3 => 'k3',
+        },
+        if_not_found => 'ok',
+      },
+
       other2_objs =>
       {
         type  => 'one to many',
@@ -6705,8 +6820,34 @@ EOF
       },
     );
 
-    MySQLiteObject->meta->add_relationship
+    MySQLiteObject->meta->add_relationships
     (
+      other_obj_osoft =>
+      {
+        type => 'one to one',
+        class => 'MySQLiteOtherObject',
+        column_map =>
+        {
+          fk1 => 'k1',
+          fk2 => 'k2',
+          fk3 => 'k3',
+        },
+        if_not_found => 'ok',
+      },
+
+      other_obj_msoft =>
+      {
+        type => 'many to one',
+        class => 'MySQLiteOtherObject',
+        column_map =>
+        {
+          fk1 => 'k1',
+          fk2 => 'k2',
+          fk3 => 'k3',
+        },
+        if_not_found => 'ok',
+      },
+
       other2_objs =>
       {
         type  => 'one to many',
@@ -6722,7 +6863,7 @@ EOF
           add_on_save     => undef,
         },
       },
-
+      
       # Hrm.  Experimental...
       not_other2_objs =>
       {
@@ -6730,7 +6871,7 @@ EOF
         class => 'MySQLiteOtherObject2',
         #column_map => { id => 'pid' },
         query_args => [ id => { ne_sql => 'pid' } ],
-      }
+      },
     );
 
     MySQLiteObject->meta->alias_column(fk1 => 'fkone');

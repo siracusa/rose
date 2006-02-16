@@ -154,7 +154,8 @@ sub id
   my $column_map = $self->column_map;
 
   return $self->parent->class . ' ' .   $self->class . ' ' . 
-    join("\0", map { join("\1", lc $_, lc $column_map->{$_}) } sort keys %$column_map);
+    join("\0", map { join("\1", lc $_, lc $column_map->{$_}) } sort keys %$column_map) .
+    join("\0", map { $_ . '=' . ($self->$_() || 0) } qw(if_not_found));
 }
 
 sub build_method_name_for_type
@@ -255,7 +256,7 @@ Many to one relationships encapsulate essentially the same information as foreig
 
 =item B<if_not_found [CONSEQUENCE]>
 
-Get or set the attribute that determines what happens when the object this relationship points to is not found.  Valid values for CONSEQUENCE are C<fatal>, which will throw an exception if the foreign object is not found, and C<ok> which will merely cause the relevant method(s) to return undef.  The default is C<fatal>.
+Get or set the attribute that determines what happens when the columns in the L<column_map|/column_map> have L<defined|perlfunc/defined> values, but the object they point to is not found.  Valid values for CONSEQUENCE are C<fatal>, which will throw an exception if the foreign object is not found, and C<ok> which will merely cause the relevant method(s) to return undef.  The default is C<fatal>.
 
 =item B<map_column LOCAL [, FOREIGN]>
 

@@ -52,6 +52,7 @@ use Rose::Object::MakeMethods::Generic
     allow_auto_initialization  => { default => 0 },
     was_auto_initialized       => { default => 0 },
     initialized_foreign_keys   => { default => 0 },
+    default_load_speculative   => { default => 0 },
   ],
 
   array =>
@@ -3893,6 +3894,10 @@ See the L<Rose::DB::Object::ConventionManager> documentation for more informatio
 =item B<db>
 
 Returns the L<Rose::DB>-derived object associated with this metadata object's L<class|/class>.  A fatal error will occur if L<class|/class> is undefined or if the L<Rose::DB> object could not be created.
+
+=item B<default_load_speculative [BOOL]>
+
+Get or set a boolean value that indicates whether or not the L<class|/class> associated with this metadata object will L<load|Rose::DB::Object/load> speculatively by default.  See the documentation for L<Rose::DB::Object>'s L<load()|Rose::DB::Object/load> method for details.  The default value is false.
 
 =item B<delete_column NAME>
 

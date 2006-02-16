@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 188;
+use Test::More tests => 196;
 
 BEGIN 
 {
@@ -18,7 +18,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 57)  unless($HAVE_PG);
+  skip("Postgres tests", 59)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -36,6 +36,16 @@ SKIP: foreach my $db_type ('pg')
   ok($o->load, "load() 1 - $db_type");
 
   is($o->other2_obj->name, 'def', "single column foreign key 1 - $db_type");
+
+  my $old_fks = $o->fks;
+  $o->other2_obj(undef);
+  $o->fks(0);
+  eval { $o->other2_obj };
+
+  ok($@, "fatal if_not_found - $db_type");
+  ok(!defined $o->other2_obj_soft, "ok if_not_found - $db_type");
+
+  $o->fks($old_fks);
 
   my $o2 = MyPgObject->new(id => $o->id);
 
@@ -187,7 +197,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 32)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 34)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -202,10 +212,19 @@ SKIP: foreach my $db_type ('mysql')
   $o->other2_obj(7);
 
   ok($o->save, "save() 1 - $db_type");
-
   ok($o->load, "load() 1 - $db_type");
 
   is($o->other2_obj->name, 'def', "single column foreign key 1 - $db_type");
+
+  my $old_fks = $o->fks;
+  $o->other2_obj(undef);
+  $o->fks(0);
+  eval { $o->other2_obj };
+
+  ok($@, "fatal if_not_found - $db_type");
+  ok(!defined $o->other2_obj_soft, "ok if_not_found - $db_type");
+
+  $o->fks($old_fks);
 
   my $o2 = MyMySQLObject->new(id => $o->id);
 
@@ -275,7 +294,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 49)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 51)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -293,6 +312,16 @@ SKIP: foreach my $db_type ('informix')
   ok($o->load, "load() 1 - $db_type");
 
   is($o->other2_obj->name, 'def', "single column foreign key 1 - $db_type");
+
+  my $old_fks = $o->fks;
+  $o->other2_obj(undef);
+  $o->fks(0);
+  eval { $o->other2_obj };
+
+  ok($@, "fatal if_not_found - $db_type");
+  ok(!defined $o->other2_obj_soft, "ok if_not_found - $db_type");
+
+  $o->fks($old_fks);
 
   my $o2 = MyInformixObject->new(id => $o->id);
 
@@ -408,7 +437,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 49)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 51)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -426,6 +455,16 @@ SKIP: foreach my $db_type ('sqlite')
   ok($o->load, "load() 1 - $db_type");
 
   is($o->other2_obj->name, 'def', "single column foreign key 1 - $db_type");
+
+  my $old_fks = $o->fks;
+  $o->other2_obj(undef);
+  $o->fks(0);
+  eval { $o->other2_obj };
+
+  ok($@, "fatal if_not_found - $db_type");
+  ok(!defined $o->other2_obj_soft, "ok if_not_found - $db_type");
+
+  $o->fks($old_fks);
 
   my $o2 = MySQLiteObject->new(id => $o->id);
 
@@ -708,6 +747,16 @@ EOF
           fks => 'id',
         },
       },
+
+      other2_obj_soft =>
+      {
+        class => 'MyPgOtherObject2',
+        key_columns =>
+        {
+          fks => 'id',
+        },
+        if_not_found => 'ok',
+      },
     );
 
     MyPgObject->meta->alias_column(fk1 => 'fkone');
@@ -882,6 +931,16 @@ EOF
           fks => 'id',
         },
       },
+
+      other2_obj_soft =>
+      {
+        class => 'MyMySQLOtherObject2',
+        key_columns =>
+        {
+          fks => 'id',
+        },
+        if_not_found => 'ok',
+      },
     );
 
     eval { MyMySQLObject->meta->initialize };
@@ -1047,6 +1106,16 @@ EOF
         {
           fks => 'id',
         },
+      },
+
+      other2_obj_soft =>
+      {
+        class => 'MyInformixOtherObject2',
+        key_columns =>
+        {
+          fks => 'id',
+        },
+        if_not_found => 'ok',
       },
     );
 
@@ -1214,6 +1283,16 @@ EOF
         {
           fks => 'id',
         },
+      },
+
+      other2_obj_soft =>
+      {
+        class => 'MySQLiteOtherObject2',
+        key_columns =>
+        {
+          fks => 'id',
+        },
+        if_not_found => 'ok',
       },
     );
 
