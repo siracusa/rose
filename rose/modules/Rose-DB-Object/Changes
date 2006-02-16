@@ -1,3 +1,11 @@
+0.68 (02.16.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added the default_load_speculative() metadata attribute.  
+      (Suggested by Teodor Zlatanov)
+    * Added if_not_found() foreign key and relationship attribute.
+      (Suggested by Teodor Zlatanov)
+    * Corrected some errors in the tutorial.
+
 0.67 (02.07.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added the ability to directly set attributes in map records

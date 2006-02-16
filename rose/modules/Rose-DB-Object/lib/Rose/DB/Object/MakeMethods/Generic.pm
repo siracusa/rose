@@ -17,7 +17,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.67';
+our $VERSION = '0.68';
 
 our $Debug = 0;
 
@@ -5052,6 +5052,10 @@ The L<Rose::DB::Object::Metadata::ForeignKey> object that describes the "key" th
 =item B<hash_key NAME>
 
 The key inside the hash-based object to use for the storage of the object.  Defaults to the name of the method.
+
+=item B<if_not_found CONSEQUENCE>
+
+This setting determines what happens when the key_columns have defined values, but the foreign object they point to is not found.  Valid values for CONSEQUENCE are C<fatal>, which will throw an exception if the foreign object is not found, and C<ok> which will merely cause the relevant method(s) to return undef.  The default is C<fatal>. 
 
 =item B<key_columns HASHREF>
 

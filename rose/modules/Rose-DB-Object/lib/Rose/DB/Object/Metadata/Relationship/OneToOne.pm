@@ -89,9 +89,9 @@ Get or set the L<Rose::DB::Object::Metadata::ForeignKey> object to which this ob
 
 One to one relationships encapsulate essentially the same information as foreign keys.  If a foreign key object is stored in this relationship object, then I<all compatible operations are passed through to the foreign key object.>  This includes making object method(s) and adding or modifying the local-to-foreign column map.  In other words, if a L<foreign_key|/foreign_key> is set, the relationship object simply acts as a proxy for the foreign key object.
 
-=item B<if_not_found [DECISION]>
+=item B<if_not_found [CONSEQUENCE]>
 
-Get or set the attribute that determines what happens when the object this relationship points to is not found.  Valid values for DECISION are C<fatal>, which will throw an exception if the foreign object is not found, and C<ok> which will merely cause the relevant method(s) to return undef.  The default is C<fatal>.
+Get or set the attribute that determines what happens when the columns in the L<column_map|/column_map> have L<defined|perlfunc/defined> values, but the object they point to is not found.  Valid values for CONSEQUENCE are C<fatal>, which will throw an exception if the foreign object is not found, and C<ok> which will merely cause the relevant method(s) to return undef.  The default is C<fatal>.
 
 =item B<map_column LOCAL [, FOREIGN]>
 

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 351;
+use Test::More tests => 381;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 138)  unless($HAVE_PG);
+  skip("Postgres tests", 150)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -224,6 +224,25 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   eval { $o->save };
   ok($@, "save() fatal - $db_type");
 
+  $o = MyPgObject->new(id => 9999); # no such id
+
+  $o->meta->error_mode('fatal');
+
+  eval { $o->load() };
+  ok($@, "load() non-speculative implicit - $db_type");  
+  ok(!$o->load(speculative => 1), "load() speculative explicit 1 - $db_type");
+  eval { $o->load(speculative => 0) };
+  ok($@, "load() non-speculative explicit 2 - $db_type");
+
+  $o->meta->default_load_speculative(1);
+
+  ok(!$o->load(), "load() speculative implicit - $db_type");  
+  ok(!$o->load(speculative => 1), "load() speculative explicit 2 - $db_type");
+  eval { $o->load(speculative => 0) };
+  ok($@, "load() non-speculative explicit 2 - $db_type");
+
+  # Reset for next trip through loop
+  $o->meta->default_load_speculative(0);
   $o->meta->error_mode('return');
 }
 
@@ -233,7 +252,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 77)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 83)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -433,6 +452,23 @@ SKIP: foreach my $db_type ('mysql')
   $ox->save;
   $ox = MyMySQLObject->new(id => $ox->id)->load;
   is($ox->bitz3->to_Bin(), '1111', "spot check bitfield 6 - $db_type");
+
+  $o = MyMySQLObject->new(id => 9999); # no such id
+
+  $o->meta->error_mode('fatal');
+
+  eval { $o->load() };
+  ok($@, "load() non-speculative implicit - $db_type");  
+  ok(!$o->load(speculative => 1), "load() speculative explicit 1 - $db_type");
+  eval { $o->load(speculative => 0) };
+  ok($@, "load() non-speculative explicit 2 - $db_type");
+
+  $o->meta->default_load_speculative(1);
+
+  ok(!$o->load(), "load() speculative implicit - $db_type");  
+  ok(!$o->load(speculative => 1), "load() speculative explicit 2 - $db_type");
+  eval { $o->load(speculative => 0) };
+  ok($@, "load() non-speculative explicit 2 - $db_type");
 }
 
 #
@@ -441,7 +477,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 67)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 73)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -615,7 +651,24 @@ SKIP: foreach my $db_type ('informix')
   eval { $o->save };
   ok($@, "save() fatal - $db_type");
 
-  $o->meta->error_mode('return');
+  #$o->meta->error_mode('return');
+
+  $o = MyInformixObject->new(id => 9999); # no such id
+
+  $o->meta->error_mode('fatal');
+
+  eval { $o->load() };
+  ok($@, "load() non-speculative implicit - $db_type");  
+  ok(!$o->load(speculative => 1), "load() speculative explicit 1 - $db_type");
+  eval { $o->load(speculative => 0) };
+  ok($@, "load() non-speculative explicit 2 - $db_type");
+
+  $o->meta->default_load_speculative(1);
+
+  ok(!$o->load(), "load() speculative implicit - $db_type");  
+  ok(!$o->load(speculative => 1), "load() speculative explicit 2 - $db_type");
+  eval { $o->load(speculative => 0) };
+  ok($@, "load() non-speculative explicit 2 - $db_type");
 }
 
 #
@@ -624,7 +677,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 67)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 73)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -790,6 +843,23 @@ SKIP: foreach my $db_type ('sqlite')
 
   is($o->k1, 3, "save() verify 3 multi-value primary key with generated values - $db_type");
   is($o->k2, 4, "save() verify 4 multi-value primary key with generated values - $db_type");
+
+  $o = MySQLiteObject->new(id => 9999); # no such id
+
+  $o->meta->error_mode('fatal');
+
+  eval { $o->load() };
+  ok($@, "load() non-speculative implicit - $db_type");  
+  ok(!$o->load(speculative => 1), "load() speculative explicit 1 - $db_type");
+  eval { $o->load(speculative => 0) };
+  ok($@, "load() non-speculative explicit 2 - $db_type");
+
+  $o->meta->default_load_speculative(1);
+
+  ok(!$o->load(), "load() speculative implicit - $db_type");  
+  ok(!$o->load(speculative => 1), "load() speculative explicit 2 - $db_type");
+  eval { $o->load(speculative => 0) };
+  ok($@, "load() non-speculative explicit 2 - $db_type");
 }
 
 BEGIN

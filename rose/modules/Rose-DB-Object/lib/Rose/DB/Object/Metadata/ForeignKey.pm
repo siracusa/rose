@@ -168,7 +168,8 @@ sub id
   my $key_columns = $self->key_columns;
 
   return $self->parent->class . ' ' . $self->class . ' ' . 
-    join("\0", map { join("\1", lc $_, lc $key_columns->{$_}) } sort keys %$key_columns);
+    join("\0", map { join("\1", lc $_, lc $key_columns->{$_}) } sort keys %$key_columns) . 
+    join("\0", map { $_ . '=' . ($self->$_() || 0) } qw(if_not_found));
 }
 
 sub sanity_check
@@ -446,7 +447,7 @@ This is an alias for the L<key_columns|/key_columns> method.
 
 =item B<if_not_found [CONSEQUENCE]>
 
-Get or set the attribute that determines what happens when the object this foreign key points to is not found.  Valid values for CONSEQUENCE are C<fatal>, which will throw an exception if the foreign object is not found, and C<ok> which will merely cause the relevant method(s) to return undef.  The default is C<fatal>.
+Get or set the attribute that determines what happens when the L<key columns|/key_columns> have L<defined|perlfunc/defined> values, but the object they point to is not found.  Valid values for CONSEQUENCE are C<fatal>, which will throw an exception if the foreign object is not found, and C<ok> which will merely cause the relevant method(s) to return undef.  The default is C<fatal>.
 
 =item B<key_column LOCAL [, FOREIGN]>
 

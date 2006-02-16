@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
 
-our $VERSION = '0.67';
+our $VERSION = '0.67_01';
 
 our $Debug = 0;
 
@@ -185,7 +185,7 @@ sub load
                                        'a non-null value') .
                    ' or another unique key with at least one non-null value.');
 
-      $self->meta->handle_error($self);
+      $meta->handle_error($self);
       return 0;
     }
   }
@@ -238,7 +238,7 @@ sub load
     if($@)
     {
       $self->error("load(with => ...) - $@");
-      $self->meta->handle_error($self);
+      $meta->handle_error($self);
       return undef;
     }
 
@@ -266,9 +266,13 @@ sub load
                    join(', ', @key_columns) . ' = ' . join(', ', @key_values));
       $self->{'not_found'} = 1;
 
-      unless($args{'speculative'})
+      my $speculative = 
+        exists $args{'speculative'} ? $args{'speculative'} :     
+        $meta->default_load_speculative;
+
+      unless($speculative)
       {
-        $self->meta->handle_error($self);
+        $meta->handle_error($self);
       }
 
       return 0;
@@ -370,15 +374,19 @@ sub load
   if($@)
   {
     $self->error("load() - $@");
-    $self->meta->handle_error($self);
+    $meta->handle_error($self);
     return undef;
   }
 
   unless($rows > 0)
   {
-    unless($args{'speculative'})
+    my $speculative = 
+      exists $args{'speculative'} ? $args{'speculative'} :     
+      $meta->default_load_speculative;
+
+    unless($speculative)
     {
-      $self->meta->handle_error($self);
+      $meta->handle_error($self);
     }
 
     return 0;
@@ -1641,7 +1649,7 @@ all columns will be fetched from the database, even L<lazy|Rose::DB::Object::Met
 
 =item C<speculative BOOL>
 
-If this parameter is passed with a true value, and if the load failed because the row was L<not found|/not_found>, then the L<error_mode|Rose::DB::Object::Metadata/error_mode> setting is ignored and zero (0) is returned.
+If this parameter is passed with a true value, and if the load failed because the row was L<not found|/not_found>, then the L<error_mode|Rose::DB::Object::Metadata/error_mode> setting is ignored and zero (0) is returned.  In the absence of an explicitly set value, this parameter defaults to the value returned my the L<metadata object|/meta>'s L<default_load_speculative|Rose::DB::Object::Metadata/default_load_speculative> method.
 
 =item C<with OBJECTS>
 
