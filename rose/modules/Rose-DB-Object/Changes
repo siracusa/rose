@@ -1,8 +1,11 @@
 0.68 (02.16.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Added support for literal query values using scalar references.
+    * Added translation of undef to the inline keyword NULL in 
+      multi-value query operations.  (Reported by Teodor Zlatanov)
     * Added the default_load_speculative() metadata attribute.  
       (Suggested by Teodor Zlatanov)
-    * Added if_not_found() foreign key and relationship attribute.
+    * Added the if_not_found() foreign key and relationship attribute.
       (Suggested by Teodor Zlatanov)
     * Corrected some errors in the tutorial.
 

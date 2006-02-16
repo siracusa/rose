@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.64';
+our $VERSION = '0.68';
 
 our $Debug = 0;
 
@@ -447,6 +447,12 @@ sub _build_clause
   my($dbh, $field, $op, $vals, $not, $field_mod, $bind, $db, $col_meta,
      $force_inline, $set) = @_;
 
+  if(ref $vals eq 'SCALAR')
+  {
+    $force_inline = 1;
+    $vals = $$vals;
+  }
+
   if(!defined $op && ref $vals eq 'HASH' && keys(%$vals) == 1)
   {
     my $op_arg = (keys(%$vals))[0];
@@ -529,12 +535,20 @@ sub _build_clause
 
             if($should_inline || $force_inline)
             {
-              push(@new_vals, $val);            
+              push(@new_vals, $val);
             }
-            else
+            elsif(ref $val eq 'SCALAR')
+            {
+              push(@new_vals, $$val);
+            }
+            elsif(defined $val)
             {
               push(@$bind, $val);
               push(@new_vals, '?');
+            }
+            else
+            {
+              push(@new_vals, 'NULL');
             }
           }
 
@@ -619,11 +633,13 @@ sub _build_clause
     {
       $sub_op = $OP_MAP{$raw_op} || Carp::croak "Unknown comparison operator: $raw_op";
 
-      if(!ref($vals->{$raw_op}))
+      my $ref_type = ref($vals->{$raw_op});
+
+      if(!$ref_type || $ref_type eq 'SCALAR')
       {
         push(@clauses, _build_clause($dbh, $field, $sub_op, $vals->{$raw_op}, $not, $field_mod, $bind, $db, $col_meta, $force_inline, $set));
       }
-      elsif(ref($vals->{$raw_op}) eq 'ARRAY')
+      elsif($ref_type eq 'ARRAY')
       {
         my $tmp_not = $all_in ? 0 : $not;
 
@@ -922,6 +938,15 @@ Comparisons:
 
     # (COLUMN OP 'foo' OR COLUMN OP 'goo')
     NAME => { OP => [ "foo", "goo" ] }
+
+If a value is a reference to a scalar, that scalar is "inlined" without any quoting.
+
+    'NAME' => \"foo"        # COLUMN = foo
+    'NAME' => [ "a", \"b" ] # COLUMN IN ('a', b)
+
+Undefined values are translated to the keyword NULL when included in a multi-value comparison.
+
+    'NAME' => [ "a", undef ] # COLUMN IN ('a', NULL)
 
 "OP" can be any of the following:
 
