@@ -11,7 +11,8 @@
       (Suggested by Teodor Zlatanov)
     * Added a referential_integrity() attribute to foreign keys and 
       ?-to-one relationships.  (Suggested by Teodor Zlatanov)
-    * Corrected some errors in the tutorial.
+    * Corrected some errors in the documentation and added more details
+      on the auto-initialization of relationships.
 
 0.67 (02.07.2006) - John Siracusa <siracusa@mindspring.com>
 
