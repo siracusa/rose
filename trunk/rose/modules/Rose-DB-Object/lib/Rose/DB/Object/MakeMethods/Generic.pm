@@ -1183,7 +1183,8 @@ sub object_by_key
   my $meta       = $target_class->meta;
   my $fk_pk;
 
-  my $fatal_if_not_found = ($args->{'if_not_found'} || '') eq 'ok' ? 0 : 1;
+  my $referential_integrity = 
+    exists $args->{'referential_integrity'} ? $args->{'referential_integrity'} : 1;
 
   my $fk_columns = $args->{'key_columns'} or die "Missing key columns hash";
   my $share_db   = $args->{'share_db'};
@@ -1261,7 +1262,7 @@ sub object_by_key
 
       my $ret;
 
-      if($fatal_if_not_found)
+      if($referential_integrity)
       {
         eval { $ret = $obj->load };
 
@@ -1416,7 +1417,7 @@ sub object_by_key
 
       my $ret;
 
-      if($fatal_if_not_found)
+      if($referential_integrity)
       {
         eval { $ret = $obj->load };
   
@@ -1579,7 +1580,7 @@ sub object_by_key
 
       my $ret;
 
-      if($fatal_if_not_found)
+      if($referential_integrity)
       {
         eval { $ret = $obj->load };
   

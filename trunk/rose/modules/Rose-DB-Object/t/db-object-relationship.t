@@ -152,9 +152,9 @@ SKIP: foreach my $db_type ('pg')
   $o->fk3(99);
 
   eval { $o->other_obj };
-  ok($@, "fatal if_not_found - $db_type");
-  ok(!defined $o->other_obj_osoft, "ok if_not_found 1 - $db_type");
-  ok(!defined $o->other_obj_msoft, "ok if_not_found 2 - $db_type");
+  ok($@, "fatal referential_integrity - $db_type");
+  ok(!defined $o->other_obj_osoft, "ok referential_integrity 1 - $db_type");
+  ok(!defined $o->other_obj_msoft, "ok referential_integrity 2 - $db_type");
 
   $o->fkone(1);
   $o->fk2(2);
@@ -1554,9 +1554,9 @@ SKIP: foreach my $db_type ('mysql')
   $o->fk3(99);
 
   eval { $o->other_obj };
-  ok($@, "fatal if_not_found - $db_type");
-  ok(!defined $o->other_obj_osoft, "ok if_not_found 1 - $db_type");
-  ok(!defined $o->other_obj_msoft, "ok if_not_found 2 - $db_type");
+  ok($@, "fatal referential_integrity - $db_type");
+  ok(!defined $o->other_obj_osoft, "ok referential_integrity 1 - $db_type");
+  ok(!defined $o->other_obj_msoft, "ok referential_integrity 2 - $db_type");
 
   $o->fk1(1);
   $o->fk2(2);
@@ -2824,9 +2824,9 @@ SKIP: foreach my $db_type ('informix')
   $o->fk3(99);
 
   eval { $o->other_obj };
-  ok($@, "fatal if_not_found - $db_type");
-  ok(!defined $o->other_obj_osoft, "ok if_not_found 1 - $db_type");
-  ok(!defined $o->other_obj_msoft, "ok if_not_found 2 - $db_type");
+  ok($@, "fatal referential_integrity - $db_type");
+  ok(!defined $o->other_obj_osoft, "ok referential_integrity 1 - $db_type");
+  ok(!defined $o->other_obj_msoft, "ok referential_integrity 2 - $db_type");
 
   $o->fkone(1);
   $o->fk2(2);
@@ -4193,9 +4193,9 @@ SKIP: foreach my $db_type ('sqlite')
   $o->fk3(99);
 
   eval { $o->other_obj };
-  ok($@, "fatal if_not_found - $db_type");
-  ok(!defined $o->other_obj_osoft, "ok if_not_found 1 - $db_type");
-  ok(!defined $o->other_obj_msoft, "ok if_not_found 2 - $db_type");
+  ok($@, "fatal referential_integrity - $db_type");
+  ok(!defined $o->other_obj_osoft, "ok referential_integrity 1 - $db_type");
+  ok(!defined $o->other_obj_msoft, "ok referential_integrity 2 - $db_type");
 
   $o->fkone(1);
   $o->fk2(2);
@@ -5841,7 +5841,7 @@ EOF
           fk2 => 'k2',
           fk3 => 'k3',
         },
-        if_not_found => 'ok',
+        referential_integrity => 0,
       },
 
       other_obj_msoft =>
@@ -5854,7 +5854,7 @@ EOF
           fk2 => 'k2',
           fk3 => 'k3',
         },
-        if_not_found => 'ok',
+        soft => 1,
       },
     );
 
@@ -6154,7 +6154,7 @@ EOF
           fk2 => 'k2',
           fk3 => 'k3',
         },
-        if_not_found => 'ok',
+        referential_integrity => 0,
       },
 
       other_obj_msoft =>
@@ -6167,7 +6167,7 @@ EOF
           fk2 => 'k2',
           fk3 => 'k3',
         },
-        if_not_found => 'ok',
+        soft => 1,
       },
 
       other2_objs =>
@@ -6504,7 +6504,7 @@ EOF
           fk2 => 'k2',
           fk3 => 'k3',
         },
-        if_not_found => 'ok',
+        referential_integrity => 0,
       },
 
       other_obj_msoft =>
@@ -6517,7 +6517,7 @@ EOF
           fk2 => 'k2',
           fk3 => 'k3',
         },
-        if_not_found => 'ok',
+        soft => 1,
       },
 
       other2_objs =>
@@ -6832,7 +6832,7 @@ EOF
           fk2 => 'k2',
           fk3 => 'k3',
         },
-        if_not_found => 'ok',
+        soft => 1,
       },
 
       other_obj_msoft =>
@@ -6845,7 +6845,7 @@ EOF
           fk2 => 'k2',
           fk3 => 'k3',
         },
-        if_not_found => 'ok',
+        referential_integrity => 0,
       },
 
       other2_objs =>

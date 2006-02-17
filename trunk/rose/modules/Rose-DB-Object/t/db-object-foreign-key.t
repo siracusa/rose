@@ -42,8 +42,8 @@ SKIP: foreach my $db_type ('pg')
   $o->fks(0);
   eval { $o->other2_obj };
 
-  ok($@, "fatal if_not_found - $db_type");
-  ok(!defined $o->other2_obj_soft, "ok if_not_found - $db_type");
+  ok($@, "fatal referential_integrity - $db_type");
+  ok(!defined $o->other2_obj_soft, "ok referential_integrity - $db_type");
 
   $o->fks($old_fks);
 
@@ -221,8 +221,8 @@ SKIP: foreach my $db_type ('mysql')
   $o->fks(0);
   eval { $o->other2_obj };
 
-  ok($@, "fatal if_not_found - $db_type");
-  ok(!defined $o->other2_obj_soft, "ok if_not_found - $db_type");
+  ok($@, "fatal referential_integrity - $db_type");
+  ok(!defined $o->other2_obj_soft, "ok referential_integrity - $db_type");
 
   $o->fks($old_fks);
 
@@ -318,8 +318,8 @@ SKIP: foreach my $db_type ('informix')
   $o->fks(0);
   eval { $o->other2_obj };
 
-  ok($@, "fatal if_not_found - $db_type");
-  ok(!defined $o->other2_obj_soft, "ok if_not_found - $db_type");
+  ok($@, "fatal referential_integrity - $db_type");
+  ok(!defined $o->other2_obj_soft, "ok referential_integrity - $db_type");
 
   $o->fks($old_fks);
 
@@ -461,8 +461,8 @@ SKIP: foreach my $db_type ('sqlite')
   $o->fks(0);
   eval { $o->other2_obj };
 
-  ok($@, "fatal if_not_found - $db_type");
-  ok(!defined $o->other2_obj_soft, "ok if_not_found - $db_type");
+  ok($@, "fatal referential_integrity - $db_type");
+  ok(!defined $o->other2_obj_soft, "ok referential_integrity - $db_type");
 
   $o->fks($old_fks);
 
@@ -755,7 +755,7 @@ EOF
         {
           fks => 'id',
         },
-        if_not_found => 'ok',
+        referential_integrity => 0,
       },
     );
 
@@ -939,7 +939,7 @@ EOF
         {
           fks => 'id',
         },
-        if_not_found => 'ok',
+        soft => 1,
       },
     );
 
@@ -1115,7 +1115,7 @@ EOF
         {
           fks => 'id',
         },
-        if_not_found => 'ok',
+        referential_integrity => 0,
       },
     );
 
@@ -1292,7 +1292,7 @@ EOF
         {
           fks => 'id',
         },
-        if_not_found => 'ok',
+        soft => 1,
       },
     );
 

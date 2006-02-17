@@ -16,7 +16,7 @@ __PACKAGE__->default_auto_method_types(qw(get_set_on_save delete_on_save));
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
-  qw(class share_db key_columns if_not_found)
+  qw(class share_db key_columns referential_integrity)
 );
 
 use Rose::Object::MakeMethods::Generic
@@ -24,21 +24,13 @@ use Rose::Object::MakeMethods::Generic
   boolean =>
   [
     '_share_db' => { default => 1 },
+    'referential_integrity' => { default => 1 },
   ],
 
   hash =>
   [
     _key_column  => { hash_key  => 'key_columns' },
     _key_columns => { interface => 'get_set_all' },
-  ],
-);
-
-# I'm using this just for it's support of check_in => ...
-use Rose::DB::Object::MakeMethods::Generic
-(
-  scalar =>
-  [
-    if_not_found => { default => 'fatal', check_in => [ 'ok', 'fatal' ] },
   ],
 );
 
@@ -155,7 +147,7 @@ sub id
 
   return $self->parent->class . ' ' .   $self->class . ' ' . 
     join("\0", map { join("\1", lc $_, lc $column_map->{$_}) } sort keys %$column_map) .
-    join("\0", map { $_ . '=' . ($self->$_() || 0) } qw(if_not_found));
+    join("\0", map { $_ . '=' . ($self->$_() || 0) } qw(referential_integrity));
 }
 
 sub build_method_name_for_type
@@ -172,6 +164,18 @@ sub build_method_name_for_type
   }
 
   return undef;
+}
+
+sub soft 
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    $self->referential_integrity(!$_[0]);
+  }
+
+  return ! $self->referential_integrity;
 }
 
 1;
@@ -254,10 +258,6 @@ Get or set the L<Rose::DB::Object::Metadata::ForeignKey> object to which this ob
 
 Many to one relationships encapsulate essentially the same information as foreign keys.  If a foreign key object is stored in this relationship object, then I<all compatible operations are passed through to the foreign key object.>  This includes making object method(s) and adding or modifying the local-to-foreign column map.  In other words, if a L<foreign_key|/foreign_key> is set, the relationship object simply acts as a proxy for the foreign key object.
 
-=item B<if_not_found [CONSEQUENCE]>
-
-Get or set the attribute that determines what happens when the columns in the L<column_map|/column_map> have L<defined|perlfunc/defined> values, but the object they point to is not found.  Valid values for CONSEQUENCE are C<fatal>, which will throw an exception if the foreign object is not found, and C<ok> which will merely cause the relevant method(s) to return undef.  The default is C<fatal>.
-
 =item B<map_column LOCAL [, FOREIGN]>
 
 If passed a local column name LOCAL, return the corresponding column name in the foreign table.  If passed both a local column name LOCAL and a foreign column name FOREIGN, set the local/foreign mapping and return the foreign column name.
@@ -265,6 +265,14 @@ If passed a local column name LOCAL, return the corresponding column name in the
 =item B<column_map [HASH | HASHREF]>
 
 Get or set a reference to a hash that maps local column names to foreign column names.
+
+=item B<referential_integrity [BOOL]>
+
+Get or set the boolean value that determines what happens when the columns in the L<column_map|/column_map> have L<defined|perlfunc/defined> values, but the object they point to is not found.  If true, a fatal error will occur.  If false, then the methods that service this relationship will simply return undef.  The default is true.
+
+=item B<soft [BOOL]>
+
+This method is the mirror image of the L<referential_integrity|/referential_integrity> method.   Passing a true is the same thing as setting L<referential_integrity|/referential_integrity> to false, and vice versa.  Similarly, the return value is the logical negation of L<referential_integrity|/referential_integrity>.
 
 =item B<type>
 
