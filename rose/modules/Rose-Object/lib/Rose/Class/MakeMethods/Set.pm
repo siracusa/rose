@@ -978,4 +978,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+Copyright (c) 2006 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
