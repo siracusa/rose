@@ -6,7 +6,7 @@
     * Added the default_load_speculative() metadata attribute.  
       (Suggested by Teodor Zlatanov)
     * Added a referential_integrity() attribute to foreign keys and 
-      "... to one" relationships.  (Suggested by Teodor Zlatanov)
+      ?-to-one relationships.  (Suggested by Teodor Zlatanov)
     * Corrected some errors in the tutorial.
 
 0.67 (02.07.2006) - John Siracusa <siracusa@mindspring.com>
