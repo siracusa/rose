@@ -712,9 +712,10 @@ sub add_forms
 
     if(index($name, FF_SEPARATOR) >= 0)
     {
-      my $parent_form = $self->find_parent_form($name);
+      my($parent_form, $local_name) = $self->find_parent_form($name);
+      $form->form_name($local_name);
       $form->parent_form($parent_form);
-      $parent_form->add_form($name => $form);
+      $parent_form->add_form($local_name => $form);
     }
     else
     {
@@ -1443,7 +1444,7 @@ Add the fields specified by ARGS to the list of fields contained in this form.  
 
 =item B<Field objects>
 
-If an argument is "isa" L<Rose::HTML::Form::Field>, then it is added to the list of fields, stored under the name returned by the field's L<name()|Rose::HTML::Form::Field/name> method.
+If an argument is "isa" L<Rose::HTML::Form::Field>, then it is added to the list of fields, stored under the name returned by the field's L<name|Rose::HTML::Form::Field/name> method.
 
 =item B<Field name/type pairs>
 
@@ -1459,7 +1460,7 @@ A simple scalar followed by an object that "isa" L<Rose::HTML::Form::Field> is s
 
 =back
 
-Each field's L<parent_form()|Rose::HTML::Form::Field/parent_form> is set to the form object.  If the field's L<rank|Rose::HTML::Form::Field/rank> is undefined, it's set to the value of the form's L<rank_counter|/rank_counter> attribute and the rank counter is incremented.
+Each field's L<parent_form|Rose::HTML::Form::Field/parent_form> is set to the form object.  If the field's L<rank|Rose::HTML::Form::Field/rank> is undefined, it's set to the value of the form's L<field_rank_counter|/field_rank_counter> attribute and the rank counter is incremented.
 
 Examples:
 
@@ -1491,6 +1492,60 @@ Examples:
                       email => $email_field,
                       nick  => { type => 'text', size => 15 },
                       age   => 'text');
+
+
+
+
+
+
+
+=item B<add_form ARGS>
+
+Convenience alias for L<add_forms()|/add_forms>.
+
+=item B<add_forms ARGS>
+
+Add the forms specified by ARGS to the list of sub-forms contained in this form.  See the L<nested forms|/"NESTED FORMS"> section for more information.
+
+Valid formats for elements of ARGS are:
+
+=over 4 
+
+=item B<Form objects>
+
+If an argument is "isa" L<Rose::HTML::Form>, then it is added to the list of forms, stored under the name returned by the form's L<form_name|/form_name> method.
+
+=item B<Form name/object pairs>
+
+A simple scalar followed by an object that "isa" L<Rose::HTML::Form> has its L<form_name|/form_name> set to the specified name and then is stored under that name.
+
+If the name contains any dots (".") it will be taken as a hierarchical name and the form will be added to the specified sub-form under an unqualified name consisting of the final part of the name.  (See examples below.)
+
+
+
+=back
+
+Each form's L<parent_form|/parent_form> is set to the form object it was added to.  If the form's L<rank|/rank> is undefined, it's set to the value of the form's L<form_rank_counter|/field_rank_counter> attribute and the rank counter is incremented.
+
+Examples:
+
+    $a_form = Rose::HTML::Form->new(...);
+    $b_form = Rose::HTML::Form->new(...);
+
+    # Object arguments
+    $form->add_forms($a_form, $b_form);
+
+    # Name/object pairs
+    $form->add_forms(a => $a_form, b => $b_form);
+
+    # Mixed
+    $form->add_forms($a_form, b => $b_form);
+
+    $c_form = Rose::HTML::Form->new(...);
+
+    # Add $c_form to $form->form('a')->form('b') under the name 'c'
+    $form->add_forms('a.b.c' => $c_form);
+#################################
 
 =item B<add_param_value NAME, VALUE>
 
@@ -1557,11 +1612,19 @@ The default implementation compares the L<rank|/rank> of the forms in numeric co
 
 =item B<delete_field NAME>
 
-Delete the field stored under the name NAME.  If NAME "isa" L<Rose::HTML::Form::Field>, then the L<name()|Rose::HTML::Form::Field/name> method is called on it and the return value is used as NAME.
+Delete the form stored under the name NAME.  If NAME "isa" L<Rose::HTML::Form::Field>, then the L<name|Rose::HTML::Form::Field/name> method is called on it and the return value is used as NAME.
 
 =item B<delete_fields>
 
-Delete all fields, leaving the list of fields empty.  The L<rank_counter|/rank_counter> is also reset to 1.
+Delete all fields, leaving the list of fields empty.  The L<field_rank_counter|/field_rank_counter> is also reset to 1.
+
+=item B<delete_form NAME>
+
+Delete the form stored under the name NAME.  If NAME "isa" L<Rose::HTML::Form>, then the L<form_name|/form_name> method is called on it and the return value is used as NAME.
+
+=item B<delete_forms>
+
+Delete all sub-forms, leaving the list of sub-forms empty.  The L<form_rank_counter|/form_rank_counter> is also reset to 1.
 
 =item B<delete_param NAME [, VALUES]>
 
@@ -1617,6 +1680,10 @@ Returns an ordered list of field names in list context, or a reference to this l
 
 You can override the L<compare_fields|/compare_fields> method in your subclass to provide a custom sort order, or you can override the L<field_names|/field_names> method itself to provide an arbitrary  order, ignoring the L<compare_fields|/compare_fields> method entirely.
 
+=item B<field_rank_counter [INT]>
+
+Get or set the value of the counter used to set the L<rank|Rose::HTML::Form::Field/rank> of fields as they're L<added|/add_fields> to the form.  The counter starts at 1 by default.
+
 =item B<form NAME [, OBJECT]>
 
 Get or set the sub-form named NAME.  If just NAME is passed, the specified sub-form object is returned.  If no such sub-form exists, undef is returnend.
@@ -1631,11 +1698,19 @@ Returns an ordered list of this form's sub-form objects (if any) in list context
 
 See the L<nested forms|/"NESTED FORMS"> section to learn more about nested forms.
 
+=item B<form_name [NAME]>
+
+Get or set the name of this form.  This name may or may not have any connection with the value of the "name" HTML attribute on the E<lt>formE<gt> tag.  See the documentation for the L<name|/name> method for details.
+
 =item B<form_names>
 
 Returns an ordered list of form names in list context, or a reference to this list in scalar context.  The order is determined by the L<compare_forms|/compare_forms> method by default.
 
 You can override the L<compare_forms|/compare_forms> method in your subclass to provide a custom sort order, or you can override the L<form_names|/form_names> method itself to provide an arbitrary  order, ignoring the L<compare_forms|/compare_forms> method entirely.
+
+=item B<form_rank_counter [INT]>
+
+Get or set the value of the counter used to set the L<rank|/rank> of sub-forms as they're L<added|/add_forms> to the form.  The counter starts at 1 by default.
 
 =item B<hidden_fields>
 
@@ -1802,6 +1877,14 @@ Get or set a form that is an immediate child of the current form.  That is, it d
 
 Note that NAME should be the name as seen from the perspective of the form object upon which this method is called.  So a nested form can always address its local sub-forms using their "short" (unqualified) names even if the parent form itself is actually nested within another form.
 
+=item B<name [NAME]>
+
+If passed a NAME argument, then the "name" HTML attribute is set to NAME.
+
+If called without any arguments, and if the "name" HTML attribute is empty, then the "name" HTML attribute is set to the L<form_name|/form_name>.
+
+Returns the value of the "name" HTML attribute.
+
 =item B<object_from_form OBJECT | CLASS | PARAMS>
 
 Returns an object built based on the contents of the form.  
@@ -1879,9 +1962,9 @@ A fatal error occurs unless both NAME and VALUE arguments are passed.
 
 Returns a URI-escaped (but I<not> HTML-escaped) query string that corresponds to the current state of the form.  If L<coalesce_query_string_params()|/coalesce_query_string_params> is true (which is the default), then compound fields are represented by a single query parameter.  Otherwise, the subfields of each compound field appear as separate query parameters.
 
-=item B<rank_counter [INT]>
+=item B<rank [INT]>
 
-Get or set the value of the counter used to set the L<rank|Rose::HTML::Form::Field/rank> of fields as they're L<added|/add_fields> to the form.  The counter starts at 1 by default.
+Get or set the form's rank.  This value can be used for any purpose that suits you, but by default it's used by the L<compare_forms()|Rose::HTML::Form/compare_forms> method to sort sub-forms.
 
 =item B<reset>
 

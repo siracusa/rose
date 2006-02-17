@@ -1019,7 +1019,7 @@ Get or set the name of this field from the perspective of the L<parent_form|/par
 
 If passed a NAME argument, then the L<local_name|/local_name> is set to NAME and the "name" HTML attribute is set to the fully-qualified field name, which may include dot (".") separated prefixes for the L<parent forms|/parent_form> and/or L<parent fields|/parent_field>.
 
-If called without any argument, and if the "name" HTML attribute is empty, then the "name" HTML attribute is set to the fully-qualified field name.
+If called without any arguments, and if the "name" HTML attribute is empty, then the "name" HTML attribute is set to the fully-qualified field name.
 
 Returns the value of the "name" HTML attribute.
 
