@@ -3249,7 +3249,7 @@ sub objects_by_map
               local $dbh->{'PrintError'} = 0;
               eval { $in_db = $object->load(speculative => 1) };
             }
-$DB::single = 1;
+
             # Save the object, if necessary
             unless($in_db)
             {
