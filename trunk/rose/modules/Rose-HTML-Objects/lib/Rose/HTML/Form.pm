@@ -1377,6 +1377,46 @@ Required attributes (default values in parentheses):
     enctype (application/x-www-form-urlencoded)
     method  (get)
 
+=head1 CLASS METHODS
+
+=over 4
+
+=item B<delegate_to_subforms [SETTING]>
+
+Get or set the value that determines how (or if) forms of this class delegate unresolved method calls to L<sub-forms|/"NESTED FORMS">.  If a method is called on a form of this class, and that method does not exist in this class or any other class in its inheritance hierarchy, then the method may optionally be delegated to a L<sub-forms|/"NESTED FORMS">.  Valid values for SETTING are:
+
+=over 4
+
+=item B<0>
+
+A value of "0" (well, any false value, really) means that no sub-form delegation will be attempted.
+
+=item B<1>
+
+A value of "1" means the same thing as a value of "runtime" (see below).
+
+=item B<compile>
+
+For each unresolved method call, each sub-form is is considered in the order that they are returned from the L<forms|/forms> method until one is found that L<can|perlobj/can> handle this method.  If one is found, then a new proxy method is added to this class that calls the requested method on the sub-form, passing all arguments unmodified.  That proxy method is then called.
+
+Subsequent invocations of this method will no longer trigger the search process.  Instead, they will be handled by the newly-compiled proxy method.  This is more efficient than repeating the sub-form search each time, but it also means that a change in the list of sub-forms could render the newly compiled method useless (e.g., if the sub-form it delegates to is removed).
+
+If no sub-form can handle the method, then a fatal "unknown method" error occurs.
+
+=item B<runtime>
+
+For each unresolved method call, each sub-form is is considered in the order that they are returned from the L<forms|/forms> method until one is found that L<can|perlobj/can> handle this method.  If one is found, then the method is called on that sub-form, passing all arguments unmodified.  
+
+Subsequent invocations of this method will trigger the same search process, again looking for a a sub-form that can handle it.  This is less efficient than compiling a new proxy method as described in the documentation for the "compile" setting above, but it does mean that any changes in the list of sub-forms will be handled correctly.
+
+If no sub-form can handle the method, then a fatal "unknown method" error occurs.
+
+=back
+
+The default value for SETTING is B<compile>.
+
+=back
+
 =head1 CONSTRUCTOR
 
 =over 4
@@ -1722,7 +1762,7 @@ Heck, at this point, the actual code for the L<init_with_object()|/init_with_obj
 
       foreach my $field ($self->fields)
       {
-        my $name = $field->name;
+        my $name = $field->local_name;
 
         if($object->can($name))
         {
@@ -1770,7 +1810,7 @@ For each field L<name()|Rose::HTML::Form::Field/name>, if the object has a metho
 
   foreach my $field ($self->fields)
   {
-    my $name = $field->name;
+    my $name = $field->local_name;
 
     if($object->can($name))
     {
