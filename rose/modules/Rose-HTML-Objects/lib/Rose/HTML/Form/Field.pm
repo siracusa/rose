@@ -1011,9 +1011,17 @@ Get or set the field label.  This label is used by the various label printing me
 
 Returns a L<Rose::HTML::Label> object with its C<for> HTML attribute set to the calling field's C<id> attribute and any other HTML attributes specified by the name/value pairs in ARGS.  The HTML contents of the label object are set to the field's L<label()|/label>, which has its HTML escaped if L<escape_html()|Rose::HTML::Object/escape_html> is true (which is the default).
 
+=item B<local_name [NAME]>
+
+Get or set the name of this field from the perspective of the L<parent_form|/parent_form> or L<parent_field|/parent_field>, depending on which type of thing is the direct parent of this field.  The local name should not change, regardless of how deeply this field is nested within other forms or fields.
+
 =item B<name [NAME]>
 
-Get or set the "name" HTML attribute, but return the L<field_name()|/field_name> if the "name" HTML attribute is undefined.
+If passed a NAME argument, then the L<local_name|/local_name> is set to NAME and the "name" HTML attribute is set to the fully-qualified field name, which may include dot (".") separated prefixes for the L<parent forms|/parent_form> and/or L<parent fields|/parent_field>.
+
+If called without any argument, and if the "name" HTML attribute is empty, then the "name" HTML attribute is set to the fully-qualified field name.
+
+Returns the value of the "name" HTML attribute.
 
 =item B<output_filter [CODE]>
 
@@ -1025,7 +1033,11 @@ Returns the output value.
 
 =item B<parent_field [FIELD]>
 
-Get or set the parent field.  This method is provided for the benefit of subclasses that might want to have a hierarchy of field objects.  The reference to the parent field is "weakened" using C<Scalar::Util::weaken()> in order to avoid memory leaks caused by circular references.
+Get or set the parent field.  The parent field should only be set if the direct parent of this field is another field.  The reference to the parent field is "weakened" using L<Scalar::Util::weaken()|Scalar::Util/weaken> in order to avoid memory leaks caused by circular references.
+
+=item B<parent_form [FORM]>
+
+Get or set the parent L<form|Rose::HTML::Form>.  The parent form should only be set if the direct parent of this field is a form.  The reference to the parent form is "weakened" using L<Scalar::Util::weaken()|Scalar::Util/weaken> in order to avoid memory leaks caused by circular references.
 
 =item B<rank [INT]>
 
