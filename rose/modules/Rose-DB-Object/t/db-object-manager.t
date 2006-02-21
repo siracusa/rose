@@ -8868,7 +8868,8 @@ SKIP: foreach my $db_type (qw(sqlite))
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class => 'MySQLiteObject',
-      query        => [ 'fk2' => [ \'fk3' ] ], #'
+      #query        => [ 'fk2' => [ \'fk3' ] ], #'
+      query        => [ 'fk2' => \'fk3' ], #'
       sort_by => 'id');
 
   is(ref $objs, 'ARRAY', "get_objects() eq ref 4 - $db_type");

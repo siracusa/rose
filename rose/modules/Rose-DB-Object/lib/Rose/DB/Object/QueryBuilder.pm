@@ -447,6 +447,11 @@ sub _build_clause
   my($dbh, $field, $op, $vals, $not, $field_mod, $bind, $db, $col_meta,
      $force_inline, $set) = @_;
 
+  #if(ref $vals eq 'ARRAY' && @$vals == 1)
+  #{
+  #  $vals = $vals->[0];
+  #}
+
   if(ref $vals eq 'SCALAR')
   {
     $force_inline = 1;
