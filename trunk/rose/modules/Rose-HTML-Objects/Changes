@@ -1,7 +1,7 @@
 0.50 (02.22.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added the ability to nest forms.
-    * Added a new, more concise syntax for adding fields to forms.
+    * Added a more concise syntax for adding fields to forms.
     * Revised sub-field addressing to accommodate sub-form addressing.
     * Added choices() aliases for the various divergently-named 
       radio_buttons(), checkboxes(), and options() methods.

@@ -23,7 +23,7 @@ __PACKAGE__->add_valid_html_attrs
   'onchange',    # %Script;       #IMPLIED  -- the element value was changed --
 );
 
-our $VERSION = '0.013';
+our $VERSION = '0.50';
 
 sub multiple { shift->html_attr('multiple', @_) }
 
