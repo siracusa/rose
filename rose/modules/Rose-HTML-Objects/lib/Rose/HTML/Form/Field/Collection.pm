@@ -258,9 +258,6 @@ sub field
     return ($self->{'field_cache'}{$name} = $field)  if($field);
   }
 
-  #my($parent_form, $local_name) = $self->find_parent_form($name);
-  #return $parent_form->field($local_name, @_);
-
   return undef;
 }
 

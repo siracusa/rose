@@ -114,13 +114,6 @@ sub reset
   $self->is_cleared(0);
 }
 
-sub subfield_name
-{
-  my($self, $name) = @_;
-  return $name  if(index($name,  $self->name . FF_SEPARATOR) == 0);
-  return $self->name . FF_SEPARATOR . $name
-}
-
 sub decompose_value { {} }
 
 # Evil hash grab for efficiency.  May change to shift->input_value()

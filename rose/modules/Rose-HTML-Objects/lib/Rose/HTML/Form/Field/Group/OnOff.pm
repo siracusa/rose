@@ -20,15 +20,11 @@ sub resync_name
   $self->SUPER::resync_name();
 
   # Resync item names too
-  #my $name = $self->fq_name;
   my $name = $self->local_name;
 
   foreach my $item ($self->items)
   {
-    #$item->name($name);
     $item->name($name);
-    #$item->resync_name;
-    #$item->name;
   }
 }
 
@@ -39,22 +35,14 @@ sub name
   if(@_)
   {
     $self->local_name(shift);
-    #my $name = $self->{'name'} = $self->fq_name;
-    #return $self->html_attr('name' => $self->fq_name);
-    my $name = $self->html_attr('name' => $self->fq_name);
-$name = $self->local_name;
+
+    my $name = $self->local_name;
+
     # All items in the group must have the same name
     foreach my $item ($self->items)
     {
-#$DB::single = 1;
-###########################################
-#      $item->name($name);
       $item->name($name);
-      #$item->resync_name;
-      #$item->name;
     }
-
-    #return $name;
   }
 
   my $name = $self->html_attr('name');
@@ -68,33 +56,7 @@ $name = $self->local_name;
   }
 
   return $name;
-
-#   my $name = $self->{'name'};
-#   
-#   unless(defined $name)
-#   {
-#     return $self->{'name'} = $self->fq_name;
-#   }
-# 
-#   return $name;
 }
-
-# sub name
-# {
-#   my($self) = shift;
-# 
-#   return $self->{'name'}  unless(@_);
-# 
-#   my $name = shift;
-# 
-#   # All items in the group must have the same name
-#   foreach my $item ($self->items)
-#   {
-#     $item->name($name);
-#   }
-# 
-#   return $self->{'name'} = $name;
-# }
 
 sub defaults
 {
