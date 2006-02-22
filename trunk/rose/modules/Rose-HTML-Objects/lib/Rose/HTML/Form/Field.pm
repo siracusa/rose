@@ -17,7 +17,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.35';
+our $VERSION = '0.50';
 
 #our $Debug = 0;
 
@@ -37,8 +37,7 @@ use Rose::Object::MakeMethods::Generic
   'scalar --get_set_init' => 
   [
     qw(html_prefix html_suffix html_error_separator xhtml_error_separator
-    local_moniker)
-#       fq_name fq_moniker form_context_name field_context_name local_moniker) 
+       local_moniker)
   ],
 );
 
@@ -147,7 +146,7 @@ sub value
 sub resync_name
 {
   my($self) = shift;
-  
+
   $self->html_attr('name', undef);
   $self->name  if($self->parent_field || $self->parent_form);
   #$self->name($self->fq_name);
@@ -177,7 +176,7 @@ sub local_name
         $parent_form->delete_field($old_name);
         $parent_form->add_field($name => $self);
       }
-      
+
       if(my $parent_field = $self->parent_field)
       {
         $parent_field->delete_field($old_name);
@@ -204,7 +203,7 @@ sub name
   }
 
   my $name = $self->html_attr('name');
-  
+
   # The name HTML attr will be an empty string if it's a required attr,
   # so use length() and not defined()
   no warnings 'uninitialized';

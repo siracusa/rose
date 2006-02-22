@@ -48,11 +48,11 @@ sub contents
 sub size
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     local $_ = shift;
-    
+
     if(my($cols, $rows) = /^(\d+)x(\d+)$/)
     {
       $self->cols($cols);

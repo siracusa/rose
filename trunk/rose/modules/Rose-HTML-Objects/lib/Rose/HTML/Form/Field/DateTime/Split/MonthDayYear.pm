@@ -9,29 +9,18 @@ use Rose::HTML::Form::Field::Text;
 use Rose::HTML::Form::Field::DateTime::Split;
 our @ISA = qw(Rose::HTML::Form::Field::DateTime::Split);
 
-our $VERSION = '0.02';
+our $VERSION = '0.50';
 
 sub build_field
 {
   my($self) = shift;
 
-  my %fields;
-
-  $fields{'month'} = 
-    Rose::HTML::Form::Field::Text->new(size      => 2,
-                                       maxlength => 2,
-                                       class     => 'month');
-
-  $fields{'day'} = 
-    Rose::HTML::Form::Field::Text->new(size      => 2,
-                                       maxlength => 2,
-                                       class     => 'day');
-  $fields{'year'} = 
-    Rose::HTML::Form::Field::Text->new(size      => 4,
-                                       maxlength => 4,
-                                       class     => 'year');
-
-  $self->add_fields(%fields);
+  $self->add_fields
+  (
+    month => { type => 'text', size => 2, maxlength => 2, class => 'month' },
+    day   => { type => 'text', size => 2, maxlength => 2, class => 'day' },
+    year  => { type => 'text', size => 4, maxlength => 4, class => 'year' },
+  );
 }
 
 sub decompose_value

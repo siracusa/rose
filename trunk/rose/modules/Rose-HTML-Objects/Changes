@@ -1,9 +1,11 @@
-0.35 (01.23.2006) - John Siracusa <siracusa@mindspring.com>
+0.50 (02.22.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added the ability to nest forms.
-    * TODO: radio_buttons | checkboxes | options -> choices
-    * TODO: hashref args to add_fields() and field(), map of names to classes
-    * TODO: cache field() lookups
+    * Added a new, more concise syntax for adding fields to forms.
+    * Revised sub-field addressing to accommodate sub-form addressing.
+    * Added choices() aliases for the various divergently-named 
+      radio_buttons(), checkboxes(), and options() methods.
+    * Big version number bump to signify substantial progress towards 1.0.
 
 0.34 (01.17.2006) - John Siracusa <siracusa@mindspring.com>
 

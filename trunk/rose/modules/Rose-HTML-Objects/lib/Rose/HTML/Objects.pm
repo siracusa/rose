@@ -3,7 +3,7 @@ package Rose::HTML::Objects;
 use strict;
 
 # The sole purpose of this module is to provide a version number
-our $VERSION = '0.34';
+our $VERSION = '0.50';
 
 1;
 
@@ -16,30 +16,26 @@ Rose::HTML::Objects - Object-oriented interfaces for HTML.
 =head1 SYNOPSIS
 
     use Rose::HTML::Form;
-    use Rose::HTML::Form::Field::Text;
-    use Rose::HTML::Form::Field::DateTime;
 
-    my $form = Rose::HTML::Form->new(action => '/foo',
-                                     method => 'get');
+    $form = Rose::HTML::Form->new(action => '/foo',
+                                  method => 'post');
 
-    my %fields =
+    $form->add_fields
     (
-      name   => Rose::HTML::Form::Field::Text->new,
-      height => Rose::HTML::Form::Field::Text->new(size => 5),
-      bday   => Rose::HTML::Form::Field::DateTime->new,
+      name   => { type => 'text', size => 20, required => 1 },
+      height => { type => 'text', size => 5, maxlength => 5 },
+      bday   => { type => 'datetime' },
     );
-
-    $form->add_fields(%fields);
 
     $form->params(name => 'John', height => '6ft', bday => '01/24/1984');
 
     $form->init_fields();
-    ...
-    my $bday = $form->field('bday')->internal_value;
-    print $bday->strftime('%m/%d/%Y')  if($bday);
-    ...
+
+    $bday = $form->field('bday')->internal_value; # DateTime object
+
+    print $bday->strftime('%A'); # Tuesday
+
     print $form->field('bday')->html;
-    ...
 
 =head1 DESCRIPTION
 

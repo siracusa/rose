@@ -9,7 +9,7 @@ use Rose::HTML::Util();
 use Rose::HTML::Form::Field::Group;
 our @ISA = qw(Rose::HTML::Form::Field::Group);
 
-our $VERSION = '0.35';
+our $VERSION = '0.50';
 
 our $Debug = undef;
 
@@ -53,12 +53,12 @@ $name = $self->local_name;
       #$item->resync_name;
       #$item->name;
     }
-    
+
     #return $name;
   }
 
   my $name = $self->html_attr('name');
-  
+
   # The name HTML attr will be an empty string if it's a required attr,
   # so use length() and not defined()
   no warnings 'uninitialized';

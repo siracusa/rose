@@ -24,30 +24,18 @@ Rose::HTML::Form::Field::Compound->import_methods
   'name',
 );
 
-our $VERSION = '0.02';
+our $VERSION = '0.50';
 
 sub build_field
 {
   my($self) = shift;
 
-  my %fields;
-
-  $fields{'area_code'} = 
-    Rose::HTML::Form::Field::Text->new(size      => 3,
-                                       maxlength => 3,
-                                       class     => 'area-code');
-
-  $fields{'exchange'} = 
-    Rose::HTML::Form::Field::Text->new(size      => 3,
-                                       maxlength => 3,
-                                       class     => 'exchange');
-
-  $fields{'number'} = 
-    Rose::HTML::Form::Field::Text->new(size      => 4,
-                                       maxlength => 4,
-                                       class     => 'number');
-
-  $self->add_fields(%fields);
+  $self->add_fields
+  (
+    area_code => { type => 'text', size => 3, maxlength => 3, class => 'area-code' },
+    exchange  => { type => 'text', size => 3, maxlength => 3, class => 'exchange' },
+    number    => { type => 'text', size => 4, maxlength => 4, class => 'number' },
+  );
 }
 
 sub decompose_value

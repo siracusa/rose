@@ -10,7 +10,7 @@ use Rose::HTML::Form::Field::Group;
 use Rose::HTML::Form::Field::Group::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
 
-our $VERSION = '0.35';
+our $VERSION = '0.50';
 
 sub _item_class       { 'Rose::HTML::Form::Field::RadioButton' }
 sub _item_name        { 'radio button' }

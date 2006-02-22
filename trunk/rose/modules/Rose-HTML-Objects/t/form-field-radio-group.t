@@ -14,9 +14,9 @@ my $field = Rose::HTML::Form::Field::RadioButtonGroup->new(name => 'fruits');
 
 ok(ref $field eq 'Rose::HTML::Form::Field::RadioButtonGroup', 'new()');
 
-$field->radio_buttons(apple  => 'Apple',
-                   orange => 'Orange',
-                   grape  => 'Grape');
+$field->choices(apple  => 'Apple',
+                orange => 'Orange',
+                grape  => 'Grape');
 
 is(join(',', sort $field->labels), 'Apple,Grape,Orange,apple,grape,orange', 'labels()');
 

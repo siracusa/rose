@@ -16,27 +16,30 @@ use Rose::Object::MakeMethods::Generic
   ]
 );
 
-our $VERSION = '0.01';
+our $VERSION = '0.50';
 
 sub build_field
 {
   my($self) = shift;
 
-  my %fields;
-
-  $fields{'min'} = 
-    Rose::HTML::Form::Field::DateTime::StartDate->new(
+  $self->add_fields
+  (
+    min => 
+    {
+      type      => 'datetime start',
       label     => 'minimum date',
       size      => 21,
-      maxlength => 25);
+      maxlength => 25,
+    },
 
-  $fields{'max'} = 
-    Rose::HTML::Form::Field::DateTime::EndDate->new(
-      label     => 'maximum date',
+    max =>
+    {
+      type      => 'datetime end',
+      label     => 'minimum date',
       size      => 21,
-      maxlength => 25);
-
-  $self->add_fields(%fields);
+      maxlength => 25,
+    },
+  );
 }
 
 sub size

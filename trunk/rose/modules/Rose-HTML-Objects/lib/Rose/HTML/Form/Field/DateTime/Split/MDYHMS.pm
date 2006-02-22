@@ -10,21 +10,17 @@ use Rose::HTML::Form::Field::Time::Split::HourMinuteSecond;
 use Rose::HTML::Form::Field::DateTime::Split;
 our @ISA = qw(Rose::HTML::Form::Field::DateTime::Split);
 
-our $VERSION = '0.35';
+our $VERSION = '0.50';
 
 sub build_field
 {
   my($self) = shift;
 
-  my %fields;
-
-  $fields{'date'} = 
-    Rose::HTML::Form::Field::DateTime::Split::MonthDayYear->new(name => 'date'); #$self->subfield_name('date'));
-
-  $fields{'time'} = 
-    Rose::HTML::Form::Field::Time::Split::HourMinuteSecond->new(name => 'time'); #$self->subfield_name('time'));
-#$DB::single = 1;
-  $self->add_fields(%fields);
+  $self->add_fields
+  (
+    date => 'datetime split mdy',
+    time => 'time split hms',
+  );
 }
 
 sub decompose_value
