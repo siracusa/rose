@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 149;
+use Test::More tests => 150;
 
 BEGIN 
 {
@@ -354,7 +354,7 @@ is($field, $form->form('pa.p')->field('start')->field('time')->field('ampm'), 'p
 #
 
 $form->field('pa.p.start')->name('st');
-   
+
 $form->params(
 {
   'dog'               => 'Woof',
@@ -398,6 +398,24 @@ is($field->html,
    qq(<option selected value="PM">PM</option>\n) .
    qq(</select>),
    'pa.p.st.time.ampm html 2');
+
+#
+# Check nested set
+#
+
+# Set nested form from the top-level
+my $w_form = Rose::HTML::Form->new;
+my $x_form = Rose::HTML::Form->new;
+my $y_form = Rose::HTML::Form->new;
+my $z_form = Rose::HTML::Form->new;
+
+$w_form->add_form('x' => $x_form);
+$x_form->add_form('y' => $y_form);
+
+# Add $z_form to $w_form->form('x')->form('y') under the name 'z'
+$w_form->add_form('x.y.z' => $z_form);
+
+is($z_form, $w_form->form('x')->form('y')->form('z'), 'nested set 1');
 
 BEGIN
 {

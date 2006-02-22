@@ -33,6 +33,8 @@ sub _item_name_plural { 'options' }
 *add_options = \&Rose::HTML::Form::Field::Group::add_items;
 *add_option  = \&Rose::HTML::Form::Field::Group::add_item;
 
+*choices = \&options;
+
 *_args_to_items = \&Rose::HTML::Form::Field::Group::_args_to_items;
 
 sub html_element  { 'select' }

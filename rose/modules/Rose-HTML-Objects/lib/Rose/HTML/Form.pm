@@ -13,7 +13,7 @@ use Rose::HTML::Form::Field::Collection;
 
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.35';
+our $VERSION = '0.50';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -111,7 +111,7 @@ sub new
 sub delegate_to_subforms
 {
   my($class) = shift;
-  
+
   $class = ref $class  if(ref $class);
 
   if(@_)
@@ -124,7 +124,7 @@ sub delegate_to_subforms
     {
       croak "Invalid delegate_to_subforms() value: '$value'";
     }
-    
+
     return $class->_delegate_to_subforms($value);
   }
 
@@ -712,7 +712,7 @@ sub add_forms
 
     if(index($name, FF_SEPARATOR) >= 0)
     {
-      my($parent_form, $local_name) = $self->find_parent_form($name);
+      my($parent_form, $local_name) = $self->choose_parent_form($name);
       $form->form_name($local_name);
       $form->parent_form($parent_form);
       $parent_form->add_form($local_name => $form);
@@ -743,12 +743,12 @@ sub add_forms
 sub resync_field_names
 {
   my($self) = shift;
-  
+
   foreach my $field ($self->fields)
   {
     $field->resync_name;
   }
-  
+
   foreach my $form ($self->forms)
   {
     $form->resync_field_names;
@@ -940,7 +940,7 @@ sub field
   my $prefix = substr($name, 0, $sep_pos);
   my $rest   = substr($name, $sep_pos + 1);
   my $field  = $self->field($prefix);
-  
+
   if(UNIVERSAL::isa($field, 'Rose::HTML::Form::Field::Compound'))
   {
     $field = $field->field($rest);
@@ -1040,6 +1040,27 @@ sub find_parent_form
   return wantarray ? ($parent_form, $name) : $parent_form;
 }
 
+sub choose_parent_form
+{
+  my($self, $name) = @_;
+
+  # Non-hierarchical name
+  if(index($name, FF_SEPARATOR) < 0)
+  {
+    return wantarray ? ($self, $name) : $self;
+  }
+
+  my($parent_form, $local_name);
+
+  while($name =~ s/^(.+)$FF_SEPARATOR_RE([^$FF_SEPARATOR_RE]+)$//o)
+  {
+    $local_name = $2;
+    last  if($parent_form = $self->form($1));
+  }
+
+  return wantarray ? ($parent_form, $local_name) : $parent_form;
+}
+
 sub fq_form_name
 {
   my($self) = shift;
@@ -1082,7 +1103,7 @@ sub form
   {
     return $form;
   }
-  
+
   # Look up nested form
   my($parent_form, $local_name) = $self->find_parent_form($name);
   return undef  unless(defined $parent_form);
@@ -1098,17 +1119,17 @@ sub AUTOLOAD
   my $class = ref($self) or croak "$self is not an object";
 
   my $delegate = $class->delegate_to_subforms;
-  
+
   unless($delegate)
   {
     goto &Rose::HTML::Object::AUTOLOAD;
   }
-  
+
   my $method = $AUTOLOAD;
   $method =~ s/.*://;
 
   my $to_form;
-  
+
   foreach my $form ($self->forms)
   {
     if($form->can($method))
@@ -1173,10 +1194,11 @@ Rose::HTML::Form - HTML form base class.
   {
     my($self) = shift;
 
+    # Base class does standalone field validation
     my $ok = $self->SUPER::validate(@_);
     return $ok  unless($ok);
 
-    # Other arbitrary inter-field validation
+    # Do other arbitrary inter-field validation here
     if($self->field('name')->internal_value =~ /foo/ &&
        $self->field('phone')->internal_value =~ /^555/)
     {
@@ -1206,12 +1228,18 @@ Rose::HTML::Form - HTML form base class.
 
   ...
 
+  #
+  # Sample usage in a hypothetical web application
+  #
+
   $form = PersonForm->new;
 
   if(...)
   {
+    # Get query parameters in a hash ref
     my $params = MyWebServer->get_query_params();
 
+    # Initialize the form with the params hash ref
     $form->params($params);
     $form->init_fields();
 
@@ -1220,15 +1248,19 @@ Rose::HTML::Form - HTML form base class.
       return error_page(error => $form->error);
     }
 
-    $person = $form->person_from_form();
+    $person = $form->person_from_form(); # $person is a Person object
 
     do_something_with($person);
     ...
   }
   else
   {
-    $person = get_person(...);
+    $person = ...; # Get or create a Person object
+
+    # Initialize the form with the Person object
     $form->init_with_person($person);
+
+    # Pass the initialized form object to the template
     display_page(form => $form);
   }
   ...
@@ -1267,11 +1299,11 @@ Here's a simple example of a nested form made up of a C<PersonForm> and an C<Add
 
     use PersonForm;
     use AddressForm;
-    
+
     sub build_field
     {
       my($self) = shift;
-      
+
       $self->add_forms
       (
         person  => PersonForm->new,
@@ -1302,11 +1334,11 @@ Nested forms may have their own fields as well, and the nesting may continue to 
     package PersonAddressPetsForm;
 
     use PersonAddressForm;
-    
+
     sub build_field
     {
       my($self) = shift;
-      
+
       $self->add_form(pa => PersonAddressForm->new);
 
       $self->add_fields
@@ -1388,15 +1420,15 @@ Get or set the value that determines how (or if) forms of this class delegate un
 
 =over 4
 
-=item B<0>
+=item "B<0>"
 
 A value of "0" (well, any false value, really) means that no sub-form delegation will be attempted.
 
-=item B<1>
+=item "B<1>"
 
 A value of "1" means the same thing as a value of "runtime" (see below).
 
-=item B<compile>
+=item "B<compile>"
 
 For each unresolved method call, each sub-form is is considered in the order that they are returned from the L<forms|/forms> method until one is found that L<can|perlobj/can> handle this method.  If one is found, then a new proxy method is added to this class that calls the requested method on the sub-form, passing all arguments unmodified.  That proxy method is then called.
 
@@ -1404,7 +1436,7 @@ Subsequent invocations of this method will no longer trigger the search process.
 
 If no sub-form can handle the method, then a fatal "unknown method" error occurs.
 
-=item B<runtime>
+=item "B<runtime>"
 
 For each unresolved method call, each sub-form is is considered in the order that they are returned from the L<forms|/forms> method until one is found that L<can|perlobj/can> handle this method.  If one is found, then the method is called on that sub-form, passing all arguments unmodified.  
 
@@ -1414,7 +1446,7 @@ If no sub-form can handle the method, then a fatal "unknown method" error occurs
 
 =back
 
-The default value for SETTING is B<compile>.
+The default value for SETTING is B<compile>.  See the  L<nested forms|/"NESTED FORMS"> section for some examples of sub-form delegation.
 
 =back
 
@@ -1493,15 +1525,9 @@ Examples:
                       nick  => { type => 'text', size => 15 },
                       age   => 'text');
 
-
-
-
-
-
-
 =item B<add_form ARGS>
 
-Convenience alias for L<add_forms()|/add_forms>.
+This is an alias for the L<add_forms()|/add_forms> method.
 
 =item B<add_forms ARGS>
 
@@ -1521,8 +1547,6 @@ A simple scalar followed by an object that "isa" L<Rose::HTML::Form> has its L<f
 
 If the name contains any dots (".") it will be taken as a hierarchical name and the form will be added to the specified sub-form under an unqualified name consisting of the final part of the name.  (See examples below.)
 
-
-
 =back
 
 Each form's L<parent_form|/parent_form> is set to the form object it was added to.  If the form's L<rank|/rank> is undefined, it's set to the value of the form's L<form_rank_counter|/field_rank_counter> attribute and the rank counter is incremented.
@@ -1541,11 +1565,17 @@ Examples:
     # Mixed
     $form->add_forms($a_form, b => $b_form);
 
-    $c_form = Rose::HTML::Form->new(...);
+    # Set nested form from the top-level
+    $w_form = Rose::HTML::Form->new(...);
+    $x_form = Rose::HTML::Form->new(...);
+    $y_form = Rose::HTML::Form->new(...);
+    $z_form = Rose::HTML::Form->new(...);
 
-    # Add $c_form to $form->form('a')->form('b') under the name 'c'
-    $form->add_forms('a.b.c' => $c_form);
-#################################
+    $w_form->add_form('x' => $x_form);
+    $x_form->add_form('y' => $y_form);
+
+    # Add $z_form to $w_form->form('x')->form('y') under the name 'z'
+    $w_form->add_form('x.y.z' => $z_form);
 
 =item B<add_param_value NAME, VALUE>
 
@@ -1564,7 +1594,7 @@ Get or set a boolean flag that indicates whether or not L<build_form()|/build_fo
 
 =item B<build_form>
 
-This method is a no-op in this class.  It is meant to be overridden by subclasses.  It is called at the end of the L<init()|Rose::Object/init> method if L<build_on_init()|/build_on_init> is true. (Remember that this class inherits from L<Rose::HTML::Object>, which inherits from L<Rose::Object>, which defines the L<init()|Rose::Object/init> method, which is called from the constructor.  See the L<Rose::Object> documentation for more information.)
+This default implementation of this method is a no-op.  It is meant to be overridden by subclasses.  It is called at the end of the L<init()|Rose::Object/init> method if L<build_on_init()|/build_on_init> is true. (Remember that this class inherits from L<Rose::HTML::Object>, which inherits from L<Rose::Object>, which defines the L<init()|Rose::Object/init> method, which is called from the constructor.  See the L<Rose::Object> documentation for more information.)
 
 If L<build_on_init()|/build_on_init> is false, then you must remember to call L<build_form()|/build_form> manually.
 
@@ -1606,7 +1636,7 @@ The default implementation performs a string comparison on the L<name|Rose::HTML
 
 =item B<compare_forms [FORM1, FORM2]>
 
-Compare two forms, returning 1 if FIELD1 should come before FIELD2, -1 if FIELD2 should come before FIELD1, or 0 if neither form should come before the other.  This method is called from within the L<form_names|/form_names> method to determine the order of the forms in this form.
+Compare two forms, returning 1 if FORM1 should come before FORM2, -1 if FORM2 should come before FORM1, or 0 if neither form should come before the other.  This method is called from within the L<form_names|/form_names> method to determine the order of the sub-forms nested within this form.
 
 The default implementation compares the L<rank|/rank> of the forms in numeric context.
 
@@ -1617,6 +1647,10 @@ Delete the form stored under the name NAME.  If NAME "isa" L<Rose::HTML::Form::F
 =item B<delete_fields>
 
 Delete all fields, leaving the list of fields empty.  The L<field_rank_counter|/field_rank_counter> is also reset to 1.
+
+=item B<delete_field_type_class TYPE>
+
+Delete the type/class L<mapping|/field_type_classes> entry for the field type TYPE.
 
 =item B<delete_form NAME>
 
@@ -1683,6 +1717,101 @@ You can override the L<compare_fields|/compare_fields> method in your subclass t
 =item B<field_rank_counter [INT]>
 
 Get or set the value of the counter used to set the L<rank|Rose::HTML::Form::Field/rank> of fields as they're L<added|/add_fields> to the form.  The counter starts at 1 by default.
+
+=item B<field_type_class TYPE [, CLASS]>
+
+Given the field type string TYPE, return the name of the L<Rose::HTML::Form::Field>-derived class mapped to that name.  If a CLASS is passed, the field type TYPE is mapped to CLASS.  In both cases, the TYPE argument is automatically converted to lowercase.
+
+=item B<field_type_classes [MAP]>
+
+Get or set the hash that maps field type strings to the names of the L<Rose::HTML::Form::Field>-derived classes.
+
+This hash is class data.  If you want to modify it, I suggest making your own subclass of L<Rose::HTML::Form> and then calling this method on your derived class.
+
+If passed MAP (a list of type/class pairs or a reference to a hash of the same) then MAP replaces the current field type mapping.  Returns a list of type/class pairs (in list context) or a reference to the hash of type/class mappings (in scalar context).
+
+The default mapping of type names to class names is:
+
+  'text'               => Rose::HTML::Form::Field::Text
+  'scalar'             => Rose::HTML::Form::Field::Text
+  'char'               => Rose::HTML::Form::Field::Text
+  'character'          => Rose::HTML::Form::Field::Text
+  'varchar'            => Rose::HTML::Form::Field::Text
+  'string'             => Rose::HTML::Form::Field::Text
+
+  'text area'          => Rose::HTML::Form::Field::TextArea
+  'textarea'           => Rose::HTML::Form::Field::TextArea
+  'blob'               => Rose::HTML::Form::Field::TextArea
+
+  'checkbox'           => Rose::HTML::Form::Field::Checkbox
+  'check'              => Rose::HTML::Form::Field::Checkbox
+
+  'radio button'       => Rose::HTML::Form::Field::RadioButton
+  'radio'              => Rose::HTML::Form::Field::RadioButton
+
+  'checkboxes'         => Rose::HTML::Form::Field::CheckboxGroup
+  'checks'             => Rose::HTML::Form::Field::CheckboxGroup
+  'checkbox group'     => Rose::HTML::Form::Field::CheckboxGroup
+  'check group'        => Rose::HTML::Form::Field::CheckboxGroup
+
+  'radio buttons'      => Rose::HTML::Form::Field::RadioButton
+  'radios'             => Rose::HTML::Form::Field::RadioButtonGroup
+  'radio button group' => Rose::HTML::Form::Field::RadioButtonGroup
+  'radio group'        => Rose::HTML::Form::Field::RadioButtonGroup
+
+  'pop-up menu'        => Rose::HTML::Form::Field::PopUpMenu
+  'popup menu'         => Rose::HTML::Form::Field::PopUpMenu
+  'menu'               => Rose::HTML::Form::Field::PopUpMenu
+
+  'select box'         => Rose::HTML::Form::Field::SelectBox
+  'selectbox'          => Rose::HTML::Form::Field::SelectBox
+  'select'             => Rose::HTML::Form::Field::SelectBox
+
+  'submit'             => Rose::HTML::Form::Field::Submit
+  'submit button'      => Rose::HTML::Form::Field::Submit
+
+  'reset'              => Rose::HTML::Form::Field::Reset
+  'reset button'       => Rose::HTML::Form::Field::Reset
+
+  'file'               => Rose::HTML::Form::Field::File
+  'upload'             => Rose::HTML::Form::Field::File
+
+  'password'           => Rose::HTML::Form::Field::Password
+
+  'hidden'             => Rose::HTML::Form::Field::Hidden
+
+  'email'              => Rose::HTML::Form::Field::Email
+
+  'phone'              => Rose::HTML::Form::Field::PhoneNumber::US
+  'phone us'           => Rose::HTML::Form::Field::PhoneNumber::US
+
+  'phone us split' =>
+    Rose::HTML::Form::Field::PhoneNumber::US::Split
+
+  'set'  => Rose::HTML::Form::Field::Set
+
+  'time' => Rose::HTML::Form::Field::Time
+
+  'time split hms' => 
+    Rose::HTML::Form::Field::Time::Split::HourMinuteSecond
+
+  'time hours'       => Rose::HTML::Form::Field::Time::Hours
+  'time minutes'     => Rose::HTML::Form::Field::Time::Minutes
+  'time seconds'     => Rose::HTML::Form::Field::Time::Seconds
+
+  'date'             => Rose::HTML::Form::Field::Date
+  'datetime'         => Rose::HTML::Form::Field::DateTime
+
+  'datetime range'   => Rose::HTML::Form::Field::DateTime::Range
+
+  'datetime start'   => Rose::HTML::Form::Field::DateTime::StartDate
+  'datetime end'     => Rose::HTML::Form::Field::DateTime::EndDate
+
+  'datetime split mdy' => 
+    Rose::HTML::Form::Field::DateTime::Split::MonthDayYear
+
+  'datetime split mdyhms' => 
+    Rose::HTML::Form::Field::DateTime::Split::MDYHMS
 
 =item B<form NAME [, OBJECT]>
 
@@ -1827,7 +1956,7 @@ Examples:
 
 Initialize the form based on OBJECT.  First, the form is L<clear()|/clear>ed.  Next, for each field L<name()|Rose::HTML::Form::Field/name>, if the object has a method with the same name, then the return value of that method (called in scalar context) is passed as the L<input_value()|Rose::HTML::Form::Field/input_value> for the form field of the same name.
 
-Heck, at this point, the actual code for the L<init_with_object()|/init_with_object> method is shorter and more clear than my description.  Basically, it does this:
+The actual code for the L<init_with_object()|/init_with_object> method may be more clear than the description above.  Essentially, it does this:
 
     sub init_with_object
     {
@@ -1846,7 +1975,7 @@ Heck, at this point, the actual code for the L<init_with_object()|/init_with_obj
       }
     }
 
-Use this method as a "helper" when writing your own methods such as C<init_with_person()>, as described in the example in the L<OVERVIEW>. L<init_with_object()|/init_with_object> should be called in the code for subclasses of L<Rose::HTML::Form>, but never by an end-user of such classes.
+Use this method as a "helper" when writing your own methods such as C<init_with_person()>, as described in the example in the L<OVERVIEW|/OVERVIEW>. L<init_with_object()|/init_with_object> should be called in the code for subclasses of L<Rose::HTML::Form>, but never by an end-user of such classes.
 
 The convention for naming such methods is "init_with_foo", where "foo" is a (lowercase, underscore-separated, please) description of the object (or objects) used to initialize the form.  You are free to accept and handle any kind or number of arguments in your "init_with_foo()"-style methods (all which you'll carefully document, of course).
 
@@ -1903,7 +2032,7 @@ For each field L<name()|Rose::HTML::Form::Field/name>, if the object has a metho
 
 To do this, the method needs an object.  If passed an OBJECT argument, then that's the object that's used.  If passed a CLASS name, then a new object is constructed by calling L<new()|/new> on that class.  OBJECT or CLASS may alternately be passed as a name/value pair in PARAMS.
 
-Use this method as a "helper" when writing your own methods such as C<person_from_form()>, as described in the example in the L<OVERVIEW>. L<object_from_form()|/object_from_form> should be called in the code for subclasses of L<Rose::HTML::Form>, but never by an end-user of such classes.
+Use this method as a "helper" when writing your own methods such as C<person_from_form()>, as described in the example in the L<OVERVIEW|/OVERVIEW>. L<object_from_form()|/object_from_form> should be called in the code for subclasses of L<Rose::HTML::Form>, but never by an end-user of such classes.
 
 The convention for naming such methods is "foo_from_form", where "foo" is a (lowercase, underscore-separated, please) description of the object constructed based on the values in the form's fields.
 
@@ -1957,6 +2086,10 @@ Returns true if a parameter named NAME exists, false otherwise.
 Determines if a parameter of a particular name exists and has a particular value. This method returns true if the parameter named NAME exists and also has a value that is equal to (string comparison) VALUE. Otherwise, it returns false.
 
 A fatal error occurs unless both NAME and VALUE arguments are passed.
+
+=item B<parent_form [FORM]>
+
+Get or set the parent form, if any.  The reference to the parent form is "weakened" using L<Scalar::Util::weaken()|Scalar::Util/weaken> in order to avoid memory leaks caused by circular references.
 
 =item B<query_string>
 

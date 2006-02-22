@@ -135,6 +135,10 @@ Add VALUE to the list of selected values.
 
 Add multiple values to the list of selected values.
 
+=item B<choices [OPTIONS]>
+
+This is an alias for the L<options|/options> method.
+
 =item B<has_value VALUE>
 
 Returns true if VALUE is selected in the select box, false otherwise.

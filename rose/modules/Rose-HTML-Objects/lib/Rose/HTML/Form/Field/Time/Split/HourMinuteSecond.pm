@@ -10,34 +10,46 @@ use Rose::HTML::Form::Field::PopUpMenu;
 use Rose::HTML::Form::Field::Time::Split;
 our @ISA = qw(Rose::HTML::Form::Field::Time::Split);
 
-our $VERSION = '0.012';
+our $VERSION = '0.50';
 
 sub build_field
 {
   my($self) = shift;
 
-  my %fields;
+  $self->add_fields
+  (
+    hour => 
+    {
+      type      => 'time hours',
+      size      => 2, 
+      maxlength => 2,
+      class     => 'hour',
+    },
 
-  $fields{'hour'} = 
-    Rose::HTML::Form::Field::Time::Hours->new(size      => 2,
-                                              maxlength => 2,
-                                              class     => 'hour');
+    minute =>
+    {
+      type      => 'time minutes',
+      size      => 2, 
+      maxlength => 2,
+      class     => 'minute',
+    },
 
-  $fields{'minute'} = 
-    Rose::HTML::Form::Field::Time::Minutes->new(size      => 2,
-                                                maxlength => 2,
-                                                class     => 'minute');
-  $fields{'second'} = 
-    Rose::HTML::Form::Field::Time::Seconds->new(size      => 2,
-                                                maxlength => 2,
-                                                class     => 'second');
+    second =>
+    {
+      type      => 'time seconds',
+      size      => 2, 
+      maxlength => 2,
+      class     => 'second',
+    },
 
-  $fields{'ampm'} = 
-    Rose::HTML::Form::Field::PopUpMenu->new(options => [ '', 'AM', 'PM' ],
-                                            class   => 'ampm',
-                                            default => '');
-
-  $self->add_fields(%fields);
+    ampm =>
+    {
+      type    => 'pop-up menu',
+      choices => [ '', 'AM', 'PM' ],
+      class   => 'ampm',
+      default => '',
+    },                        
+  );
 }
 
 sub is_full

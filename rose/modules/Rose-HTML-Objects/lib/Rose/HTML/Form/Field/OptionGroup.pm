@@ -125,6 +125,10 @@ Convenience alias for L<add_options()|/add_options>.
 
 Adds options to the option group.  OPTIONS may be a reference to a hash of value/label pairs, a reference to an array of values, or a list of L<Rose::HTML::Form::Field::Option> objects. Passing an odd number of items in the value/label argument list causes a fatal error. Options passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.  Options are added to the end of the existing list of options.
 
+=item B<choices [OPTIONS]>
+
+This is an alias for the L<options|/options> method.
+
 =item B<has_value VALUE>
 
 Returns true if VALUE is selected in the option group, false otherwise.

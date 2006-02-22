@@ -14,7 +14,7 @@ use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 # Variables for use in regexes
 our $FF_SEPARATOR_RE = quotemeta FF_SEPARATOR;
 
-our $VERSION = '0.35';
+our $VERSION = '0.50';
 
 #
 # Class data
@@ -198,7 +198,7 @@ sub make_field
 sub invalidate_field_caches
 {
   my($self) = shift;
-  
+
   $self->{'field_cache'} = {};
 }
 
@@ -214,7 +214,7 @@ sub field
     }
 
     $field->local_moniker($name);
-    
+
     if($self->isa('Rose::HTML::Form'))
     {
       $field->parent_form($self);
@@ -251,7 +251,7 @@ sub field
   my $prefix = substr($name, 0, $sep_pos);
   my $rest   = substr($name, $sep_pos + 1);
   $field = $self->field($prefix);
-  
+
   if(UNIVERSAL::isa($field, 'Rose::HTML::Form::Field::Compound'))
   {
     $field = $field->field($rest);
@@ -301,7 +301,7 @@ sub add_fields
       my $field = $arg;
 
       $field->local_name($field->name);
-      
+
       unless(defined $field->rank)
       {
         $field->rank($self->increment_field_rank_counter);
@@ -345,7 +345,7 @@ sub compare_fields { $_[1]->name cmp $_[2]->name }
 sub resync_field_names
 {
   my($self) = shift;
-  
+
   foreach my $field ($self->fields)
   {
     $field->resync_name;
