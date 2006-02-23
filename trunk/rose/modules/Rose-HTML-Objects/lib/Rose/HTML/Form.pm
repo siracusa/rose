@@ -13,7 +13,7 @@ use Rose::HTML::Form::Field::Collection;
 
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.50';
+our $VERSION = '0.51';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -118,7 +118,7 @@ sub delegate_to_subforms
   {
     my $value = shift;
 
-    $value = 'runtime'  if($value eq '1');
+    $value = 'runtime'  if($value == 1);
 
     unless(!$value || $value eq 'compile' || $value eq 'runtime')
     {
@@ -1291,7 +1291,7 @@ Forms are validated by calling L<validate()|Rose::HTML::Form::Field/validate> on
 
 =head1 NESTED FORMS
 
-Each form can have zero or more fields as well as zero or more sub-forms.  Since E<lt>formE<gt> HTML tags cannot be nested, this nesting of form objects is "flattened" from in the external interfaces such as HTML generation or field addressing.
+Each form can have zero or more fields as well as zero or more sub-forms.  Since E<lt>formE<gt> HTML tags cannot be nested, this nesting of form objects appears "flattened" in the external interfaces such as HTML generation or field addressing.
 
 Here's a simple example of a nested form made up of a C<PersonForm> and an C<AddressForm>.  (Assume C<PersonForm> is constructed as per the L<synopsis|/SYNOPSIS> above, and C<AddressForm> is similar, with street, city, state, and zip code fields.)
 
@@ -1422,7 +1422,7 @@ Get or set the value that determines how (or if) forms of this class delegate un
 
 =item "B<0>"
 
-A value of "0" (well, any false value, really) means that no sub-form delegation will be attempted.
+A value of "0" (or undef or any other false value) means that no sub-form delegation will be attempted.
 
 =item "B<1>"
 
@@ -1900,7 +1900,7 @@ Examples:
 
     ...
 
-    my $form = RegistrationForm->new();
+    $form = RegistrationForm->new();
 
     $form->params(name    => 'John', 
                   gender  => 'm',
