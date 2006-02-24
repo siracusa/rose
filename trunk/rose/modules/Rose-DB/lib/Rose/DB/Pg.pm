@@ -2,12 +2,13 @@ package Rose::DB::Pg;
 
 use strict;
 
+use DateTime::Infinite;
 use DateTime::Format::Pg;
 
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.60';
+our $VERSION = '0.69';
 
 our $Debug = 0;
 
