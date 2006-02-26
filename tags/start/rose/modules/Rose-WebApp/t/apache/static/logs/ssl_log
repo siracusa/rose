@@ -1,2 +1,0 @@
-[15/Mar/2005 10:50:43 03567] [error] SSL handshake failed (server yoshi.comcast.net:5443, client 206.82.55.25) (OpenSSL library error follows)
-[15/Mar/2005 10:50:43 03567] [error] OpenSSL: error:14094418:SSL routines:SSL3_READ_BYTES:tlsv1 alert unknown ca
