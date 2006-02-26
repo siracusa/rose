@@ -1,0 +1,64 @@
+=head1 INTRODUCTION
+
+This document provides a step-by-step introduction to the L<Rose::DB::Object> module distribution.  It demonstrates all of the important features using a realistic example database.  This does not replace the actual documentation for each module, however.  The "reference" documentation found in each ".pm" file is still essential, and contains some good examples of its own.
+
+This tutorial provides a gradual introduction to L<Rose::DB::Object>.  It also describes "best practices" for using L<Rose::DB::Object> in the most robust, maintainable manner.  If you're just trying to get a feel for what's possible, you can skip to the end and take a look at the completed example database and associated Perl code.  But I recommend reading the tutorial from start to finish at least once.
+
+The examples will start simple (less abstracted) and then get progressively more complex (more abstracted).  You, the developer, have to decide how much abstraction is appropriate for your particular task.
+
+=head1 CONVENTIONS
+
+The examples in this tutorial will use the fictional C<My::> namespace prefix.  Your code should use whatever namespace you deem appropriate.  Usually, it will be more akin to C<MyCorp::MyProject::> (i.e., your corporation, organization, and/or project).  I've chosen to use C<My::> simply because it's shorter, and will help this tutorial stay within an 80-column width.
+
+For the sake of brevity, the C<use strict> directive and associated "my" declarations have been omitted from the example code.  Needless to say, you should always C<use strict> in your actual code.
+
+Similarly, the traditional "1;" true value used at the end of each ".pm" file has been omitted from the examples.  Don't forget to add this to the end of your actual Perl module files.
+
+=head1 TUTORIAL
+
+=head2 Getting Started
+
+Before doing anything useful with L<Rose::DB::Object>, it's necessary to create and configure a L<Rose::DB> subclass through which L<Rose::DB::Object>-derived objects will access the database.
+
+To get up to speed quickly with L<Rose::DB>, read the L<Rose::DB::Tutorial> documentation.  The rest of this tutorial will assume the existence of a C<My::DB> class as L<described|Rose::DB::Tutorial/"Multiple data sources using namespaces"> in the L<Rose::DB tutorial|Rose::DB::Tutorial>.
+
+The PostgreSQL database will be used in the examples in this tutorial, but the features demonstrated will not be specific to that database.  If you are following along with a different database, you may have to adjust the specific syntax used in the SQL table creation statements, but all of the same features should be present in some form.
+
+We will start with a single table in a PostgreSQL database as part of a fictional store-like application.  The table and the corresponding example code will evolve over the course of this tutorial to become more complex.  But things will start simply.  Here is the initial database table, "products"
+
+    CREATE TABLE products
+    (
+      id      SERIAL NOT NULL PRIMARY KEY,
+      name    VARCHAR(255) NOT NULL,
+      price   DECIMAL(10,2) NOT NULL DEFAULT 0.00
+    );
+
+...
+
+
+
+
+
+=head1 DEVELOPMENT POLICY
+
+The L<Rose development policy|Rose/"DEVELOPMENT POLICY"> applies to this, and all C<Rose::*> modules.  Please install L<Rose> from CPAN and then run "C<perldoc Rose>" for more information.
+
+=head1 SUPPORT
+
+Any L<Rose::DB::Objects> questions or problems can be posted to the L<Rose::DB::Object> mailing list.  To subscribe to the list or view the archives, go here:
+
+L<http://lists.sourceforge.net/lists/listinfo/rose-db-object>
+
+Although the mailing list is the preferred support mechanism, you can also email the author (see below) or file bugs using the CPAN bug tracking system:
+
+L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB-Object>
+
+=head1 AUTHOR
+
+John C. Siracusa (siracusa@mindspring.com)
+
+=head1 COPYRIGHT
+
+Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same terms
+as Perl itself.
