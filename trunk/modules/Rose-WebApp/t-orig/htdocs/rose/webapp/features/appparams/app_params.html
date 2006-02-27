@@ -1,0 +1,14 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<title>Rose::Test::WebApp::Features::WithAppParams</title>
+</head>
+<body>
+
+<% q($app->app_param('a')) |h %> = <% $app->app_param('a') |h %><br/>
+<% q($app->app_param_exists('a')) |h %> = <% $app->app_param_exists('a') |h %><br/>
+<% q($app->app_param_exists('b')) |h %> = <% $app->app_param_exists('b') |h %><br/>
+
+</body>
+</html>

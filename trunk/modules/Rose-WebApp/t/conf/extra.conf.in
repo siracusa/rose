@@ -1,0 +1,71 @@
+#file:t/conf/extra.conf.in
+#-------------------------
+# this file will be Include-d by @ServerRoot@/conf/httpd.conf
+
+PerlInitHandler +Apache::StatINC
+
+PerlRequire conf/startup.pl
+
+<IfDefine PERLDB>
+
+<Perl>
+  use Apache::DB();
+  Apache::DB->init;
+</Perl>
+
+<Location />
+  PerlFixupHandler Apache::DB
+</Location>
+
+</IfDefine>
+
+#
+# Mason
+#
+
+PerlSetVar MasonDefaultEscapeFlags "n"
+
+#
+# Applicaton configuration
+#
+
+#Include conf/application.conf
+
+<Location /rose/webapp/server>
+  SetHandler perl-script
+  PerlHandler Rose::Test::MP1::WebApp::Server
+</Location>
+
+<Location /rose/webapp/module>
+  SetHandler perl-script
+  PerlHandler Rose::Test::MP1::WebApp::Server::Module
+</Location>
+
+<Location /rose/website>
+  SetHandler perl-script
+  PerlHandler Rose::Test::MP1::WebSite
+</Location>
+
+# <Location /rose/webapp/notes>
+#   SetHandler perl-script
+#   PerlHandler Rose::Test::MP1::WebApp::Server::Notes
+# </Location>
+# 
+# <Location /rose/myapp>
+#   PerlSetVar RoseWebAppClass "Rose::Test::MP1::MyApp"
+#   #PerlSetVar RoseWebAppNoCache 1
+#   SetHandler perl-script
+#   PerlHandler Rose::WebApp::Dispatch
+# </Location>
+# 
+# <Location /rose/webapp/features/logger>
+#   PerlSetVar RoseWebAppClass "Rose::Test::MP1::WebApp::Features::Logger"
+#   SetHandler perl-script
+#   PerlHandler Rose::WebApp::Dispatch
+# </Location>
+# 
+# <Location /rose/webapp/features/appparams>
+#   PerlSetVar RoseWebAppClass "Rose::Test::MP1::WebApp::Features::AppParams"
+#   SetHandler perl-script
+#   PerlHandler Rose::WebApp::Dispatch
+# </Location>
