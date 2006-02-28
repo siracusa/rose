@@ -258,9 +258,7 @@ EOF
     my $db = My::DB2->new('mysql_admin');
     $dbh = $db->retain_dbh or die My::DB2->error;
 
-    my $version = $dbh->get_info(18); # SQL_DBMS_VER  
-
-    die "MySQL version too old"  unless($version =~ /^4\./);
+    die "MySQL version too old"  unless($db->database_version >= 4_000_000);
 
     # Drop existing tables, ignoring errors
     {

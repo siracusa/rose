@@ -651,8 +651,7 @@ __PACKAGE__->meta->foreign_keys
 );
 EOF
 
-  my $version = $o->db->dbh->get_info(18); # SQL_DBMS_VER
-  my $mysql_41 = ($version =~ /^4\.1\./) ? 1 : 0;
+  my $mysql_41 = ($o->db->database_version >= 4_100_000) ? 1 : 0;
 
   is(MyMySQLObject->meta->perl_class_definition,
      <<"EOF", "perl_class_definition 1 - $db_type");
