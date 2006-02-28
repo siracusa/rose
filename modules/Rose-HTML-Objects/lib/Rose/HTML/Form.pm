@@ -4,6 +4,7 @@ use strict;
 
 use Carp;
 
+use Clone::PP;
 use Rose::URI;
 
 use URI::Escape qw(uri_escape);
@@ -118,7 +119,8 @@ sub delegate_to_subforms
   {
     my $value = shift;
 
-    $value = 'runtime'  if($value == 1);
+    # Dumb regex to avoid non-numeric comparison warning
+    $value = 'runtime'  if($value =~ /\d/ && $value == 1);
 
     unless(!$value || $value eq 'compile' || $value eq 'runtime')
     {
@@ -199,6 +201,29 @@ sub is_empty { 0 }
 
 sub delete_params { shift->{'params'} = {} }
 
+sub params_from_cgi
+{
+  my($self, $cgi) = @_;
+
+  croak "Missing CGI argument to params_from_cgi"  unless(@_ > 1);
+
+  unless(UNIVERSAL::isa($cgi, 'CGI') || UNIVERSAL::can($cgi, 'param'))
+  {
+    croak "Argument to params_from_cgi() is not a CGI object and ",
+          "does not have a param() method";
+  }
+
+  my %params;
+
+  foreach my $param ($cgi->param)
+  {
+    my @values = $cgi->param($param);
+    $params{$param} = @values > 1 ? \@values : $values[0];
+  }
+  
+  $self->params(\%params);
+}
+
 sub params
 {
   my($self) = shift;
@@ -207,11 +232,11 @@ sub params
   {
     if(@_ == 1 && ref $_[0] eq 'HASH')
     {
-      $self->{'params'} = { %{$_[0]} }; 
+      $self->{'params'} = $_[0]; 
     }
     elsif(@_ % 2 == 0)
     {
-      $self->{'params'} = { @_ };
+      $self->{'params'} = Clone::PP::clone({ @_ });
     }
     else
     {
@@ -231,7 +256,7 @@ sub params
   my $want = wantarray;
   return  unless(defined $want);
 
-  return ($want) ? $self->{'params'} : %{$self->{'params'}};
+  return ($want) ? %{ Clone::PP::clone($self->{'params'}) } : $self->{'params'};
 }
 
 sub param_exists
@@ -2063,15 +2088,15 @@ Failure to pass at least a NAME argument results in a fatal error.
 
 Get or set all parameters at once.
 
-PARAMS can be a reference to a hash or a list of name/value pairs.  If a parameter has multiple values, those values should be provided in the form of a references to an array of scalar values.  If the list of name/value pairs has an odd number of items, a fatal error occurs.
+PARAMS can be a reference to a hash or a list of name/value pairs.  If a parameter has multiple values, those values should be provided in the form of a reference to an array of scalar values.  If the list of name/value pairs has an odd number of items, a fatal error occurs.
+
+If PARAMS is a reference to a hash, then it is accepted as-is.  That is, no copying of values is done; the actual hash references is stored.  If PARAMS is a list of name/value pairs, then a deep copy is made during assignment.
 
 Regardless of the arguments, this method returns the complete set of parameters in the form of a hash (in list context) or a reference to a hash (in scalar context).
 
 In scalar context, the hash reference returned is a reference to the actual hash used to store parameter names and values in the object.  It should be treated as read-only.
 
-The hash returned in list context is a shallow copy of the actual hash used to store parameter names and values in the object.  It should also be treated as read-only.
-
-If you want a read/write copy, make a deep copy of the hash reference return value and then modify the copy.
+The hash returned in list context is a deep copy of the actual hash used to store parameter names and values in the object.  It may be treated as read/write.
 
 =item B<params_exist>
 
@@ -2080,6 +2105,18 @@ Returns true if any parameters exist, false otherwise.
 =item B<param_exists NAME>
 
 Returns true if a parameter named NAME exists, false otherwise.
+
+=item B<params_from_cgi CGI>
+
+Set L<params|/params> by extracting parameter names and values from a L<CGI> object.  Calling this method entirely replaces the previous L<params|/params>.  The CGI argument must be either a L<CGI> object or must have a C<param()> method that behaves in the following way:
+
+=over 4
+
+=item * When called in list context with no arguments, it returns a list of parameter names.
+
+=item * When called in list context with a single parameter name argument, it returns a list of values for that parameter.
+
+=back
 
 =item B<param_value_exists NAME, VALUE>
 

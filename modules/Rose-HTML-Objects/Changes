@@ -1,3 +1,9 @@
+0.51 (02.28.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added CGI integration methods: params_from_cgi() and
+      init_fields_with_cgi() <-- TODO
+    * Tweaked the copy/ref semantics of params()
+
 0.50 (02.22.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added the ability to nest forms.

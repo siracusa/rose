@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 193;
+use Test::More tests => 211;
 
 BEGIN 
 {
@@ -17,6 +17,80 @@ BEGIN
 
 my $form = Rose::HTML::Form->new;
 ok(ref $form && $form->isa('Rose::HTML::Form'), 'new()');
+
+my %p = (a => 'foo', b => [ 2, 3 ]);
+
+# Store reference
+$form->params(\%p);
+
+is($form->param('a'), 'foo', 'params store ref 1');
+is($form->param('b')->[0], 2, 'params store ref 2');
+
+$p{'a'}    = 2;
+$p{'b'}[0] = 5;
+
+is($form->param('a'), 2, 'params store ref 3');
+is($form->param('b')->[0], 5, 'params store ref 4');
+
+# Return copy
+my(%p2) = $form->params;
+
+$p2{'a'}    = 'bar';
+$p2{'b'}[0] = 99;
+
+is($form->param('a'), 2, 'params return copy 1');
+is($form->param('b')->[0], 5, 'params return copy 2');
+
+# Store copy
+%p = (a => 'foo', b => [ 2, 3 ]);
+
+$form->params(%p);
+
+is($form->param('a'), 'foo', 'params store copy 1');
+is($form->param('b')->[0], 2, 'params store copy 2');
+
+$p{'a'}    = 2;
+$p{'b'}[0] = 5;
+
+is($form->param('a'), 'foo', 'params store copy 3');
+is($form->param('b')->[0], 2, 'params store copy 4');
+
+my $fcgi = bless {}, 'FakeCGI';
+
+$form->params_from_cgi($fcgi);
+
+is($form->param('a'), 'b', 'params_from_cgi fake 1');
+is($form->param('c')->[1], 'e', 'params_from_cgi fake 2');
+
+$fcgi->_params->{'a'} = 'x';
+
+is($form->param('a'), 'b', 'params_from_cgi fake 3');
+is($form->param('c')->[1], 'e', 'params_from_cgi fake 4');
+
+eval { require CGI };
+
+if($@)
+{
+  SKIP: { skip('missing CGI', 4) }
+}
+else
+{
+  my $cgi = CGI->new('a=b;c=d;c=e');
+  
+  $form->params_from_cgi($cgi);
+  
+  is($form->param('a'), 'b', 'params_from_cgi real 1');
+  ok(($form->param('c')->[0] eq 'd' && $form->param('c')->[1] eq 'e') ||
+     ($form->param('c')->[0] eq 'd' && $form->param('c')->[1] eq 'e'),
+    'params_from_cgi real 2');
+  
+  $cgi->param(a => 'x');
+  
+  is($form->param('a'), 'b', 'params_from_cgi real 3');
+  ok(($form->param('c')->[0] eq 'd' && $form->param('c')->[1] eq 'e') ||
+     ($form->param('c')->[0] eq 'd' && $form->param('c')->[1] eq 'e'),
+    'params_from_cgi real 4');
+}
 
 $form->html_attr('action' => '/foo/bar');
 
@@ -718,4 +792,30 @@ BEGIN
   }
 
   sub compare_fields { $_[1]->rank <=> $_[2]->rank }
+}
+
+BEGIN
+{
+  my %params = (a => 'b', c => [ 'd', 'e' ]);
+
+  package FakeCGI;
+  
+  sub param 
+  {
+    my($self) = shift;
+    
+    if(wantarray)
+    {
+      if(@_)
+      {
+        return ref $params{$_[0]} ? @{$params{$_[0]}} : $params{$_[0]};
+      }
+  
+      return sort keys %params;
+    }
+    
+    die "Sorry!";
+  }
+  
+  sub _params { \%params }
 }
