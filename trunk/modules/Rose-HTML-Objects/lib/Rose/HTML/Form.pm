@@ -224,6 +224,85 @@ sub params_from_cgi
   $self->params(\%params);
 }
 
+# IIn a reasonably modern perl, the optimizer will eliminate the 
+# blocks of code that are conditional upon these constants when the 
+# value is zero.
+use constant MP2 => exists $ENV{'MOD_PERL_API_VERSION'} && 
+                    $ENV{'MOD_PERL_API_VERSION'} > 1 ? 1 : 0;
+
+use constant MP1 => 
+  $ENV{'MOD_PERL'} && (!exists $ENV{'MOD_PERL_API_VERSION'} || 
+  $ENV{'MOD_PERL_API_VERSION'} == 1) ? 1 : 0;
+
+use constant MP0 => $ENV{'MOD_PERL'} ? 0 : 1;
+
+my $Loaded_APR1 = 0;
+my $Loaded_APR2 = 0;
+
+sub params_from_apr
+{
+  my($self, $apr) = @_;
+
+  croak "Missing apache request argument to params_from_apr"  unless(@_ > 1);
+
+  if(MP0)
+  {
+    unless(UNIVERSAL::can($apr, 'param'))
+    {
+      croak "Argument to params_from_apr() does not have a param() method";
+    }
+  }
+  elsif(MP1)
+  {
+    if(UNIVERSAL::isa($apr, 'Apache'))
+    {
+      unless($Loaded_APR1) # cheaper than require (really!)
+      {
+        require Apache::Request;
+        $Loaded_APR1 = 1;
+      }
+
+      $apr = Apache::Request->instance($apr);
+    }
+    elsif(!UNIVERSAL::isa($apr, 'Apache::Request') && 
+          !UNIVERSAL::can($apr, 'param'))
+    {
+      croak "Argument to params_from_apr() is not an Apache or ",
+            "Apache::Request object and does not have a param() method";
+    } 
+  }
+  elsif(MP2)
+  {
+    if(UNIVERSAL::isa($apr, 'Apache2::RequestRec'))
+    {
+      unless($Loaded_APR2) # cheaper than require (really!)
+      {
+        require Apache2::Request;
+        $Loaded_APR2 = 1;
+      }
+
+      $apr = Apache2::Request->new($apr);
+    }
+    elsif(!UNIVERSAL::isa($apr, 'Apache2::Request') && 
+          !UNIVERSAL::can($apr, 'param'))
+    {
+      croak "Argument to params_from_apr() is not an Apache2::RequestRec or ",
+            "Apache2::Request object and does not have a param() method";
+    }
+  }
+
+  my %params;
+
+  foreach my $param ($apr->param)
+  {
+    my @values = $apr->param($param);
+    $params{$param} = @values > 1 ? \@values : $values[0];
+  }
+  
+  $self->params(\%params);
+}
+
+
 sub params
 {
   my($self) = shift;
@@ -2105,6 +2184,42 @@ Returns true if any parameters exist, false otherwise.
 =item B<param_exists NAME>
 
 Returns true if a parameter named NAME exists, false otherwise.
+
+=item B<params_from_apr APR>
+
+Set L<params|/params> by extracting parameter names and values from an apache request object.  Calling this method entirely replaces the previous L<params|/params>.
+
+If running under L<mod_perl> 1.x, the APR argument may be:
+
+=over 4
+
+=item * An L<Apache> object.  In this case, the L<Apache::Request> module must also be installed.
+
+=item * An L<Apache::Request> object.
+
+=back
+
+If running under L<mod_perl> 2.x, the APR may be:
+
+=over 4
+
+=item * An L<Apache2::RequestRec> object.  In this case, the L<Apache2::Request> module must also be installed.
+
+=item * An L<Apache2::Request> object.
+
+=back
+
+In all cases, APR may be an object that has a C<param()> method that behaves in the following way:
+
+=over 4
+
+=item * When called in list context with no arguments, it returns a list of parameter names.
+
+=item * When called in list context with a single parameter name argument, it returns a list of values for that parameter.
+
+=back
+
+=back
 
 =item B<params_from_cgi CGI>
 
