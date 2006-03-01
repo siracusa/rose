@@ -1,4 +1,4 @@
-package Rose::WebApp::Null::SelfStarter;
+package Rose::WebApp::SelfStarter::Null;
 
 use strict;
 

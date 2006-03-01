@@ -1,4 +1,4 @@
-package Rose::WebApp::Apache1::SelfStarter;
+package Rose::WebApp::SelfStarter::Apache1;
 
 use strict;
 
@@ -21,7 +21,7 @@ sub handler($$)
 {
   my($self, $r) = @_;
 
-  #  
+  #
   # Get application object
   #
 
