@@ -2137,7 +2137,7 @@ The actual code for the L<init_with_object()|/init_with_object> method may be mo
       }
     }
 
-Use this method as a "helper" when writing your own methods such as C<init_with_person()>, as described in the example in the L<OVERVIEW|/OVERVIEW>. L<init_with_object()|/init_with_object> should be called in the code for subclasses of L<Rose::HTML::Form>, but never by an end-user of such classes.
+Use this method as a "helper" when writing your own methods such as C<init_with_person()>, as described in the example in the L<overview|/OVERVIEW>. L<init_with_object()|/init_with_object> should be called in the code for subclasses of L<Rose::HTML::Form>, but never by an end-user of such classes.
 
 The convention for naming such methods is "init_with_foo", where "foo" is a (lowercase, underscore-separated, please) description of the object (or objects) used to initialize the form.  You are free to accept and handle any kind or number of arguments in your "init_with_foo()"-style methods (all which you'll carefully document, of course).
 
@@ -2194,7 +2194,7 @@ For each field L<name()|Rose::HTML::Form::Field/name>, if the object has a metho
 
 To do this, the method needs an object.  If passed an OBJECT argument, then that's the object that's used.  If passed a CLASS name, then a new object is constructed by calling L<new()|/new> on that class.  OBJECT or CLASS may alternately be passed as a name/value pair in PARAMS.
 
-Use this method as a "helper" when writing your own methods such as C<person_from_form()>, as described in the example in the L<OVERVIEW|/OVERVIEW>. L<object_from_form()|/object_from_form> should be called in the code for subclasses of L<Rose::HTML::Form>, but never by an end-user of such classes.
+Use this method as a "helper" when writing your own methods such as C<person_from_form()>, as described in the example in the L<overview|/OVERVIEW>. L<object_from_form()|/object_from_form> should be called in the code for subclasses of L<Rose::HTML::Form>, but never by an end-user of such classes.
 
 The convention for naming such methods is "foo_from_form", where "foo" is a (lowercase, underscore-separated, please) description of the object constructed based on the values in the form's fields.
 
