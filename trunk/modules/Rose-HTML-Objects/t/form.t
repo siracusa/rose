@@ -78,16 +78,16 @@ if($@)
 else
 {
   my $cgi = CGI->new('a=b;c=d;c=e');
-  
+
   $form->params_from_cgi($cgi);
-  
+
   is($form->param('a'), 'b', 'params_from_cgi real 1');
   ok(($form->param('c')->[0] eq 'd' && $form->param('c')->[1] eq 'e') ||
      ($form->param('c')->[0] eq 'd' && $form->param('c')->[1] eq 'e'),
     'params_from_cgi real 2');
-  
+
   $cgi->param(a => 'x');
-  
+
   is($form->param('a'), 'b', 'params_from_cgi real 3');
   ok(($form->param('c')->[0] eq 'd' && $form->param('c')->[1] eq 'e') ||
      ($form->param('c')->[0] eq 'd' && $form->param('c')->[1] eq 'e'),
@@ -833,20 +833,20 @@ BEGIN
   sub param 
   {
     my($self) = shift;
-    
+
     if(wantarray)
     {
       if(@_)
       {
         return ref $params{$_[0]} ? @{$params{$_[0]}} : $params{$_[0]};
       }
-  
+
       return sort keys %params;
     }
-    
+
     die "Sorry!";
   }
-  
+
   sub _params { \%params }
 
   package FakeApache;

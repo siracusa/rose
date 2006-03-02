@@ -220,7 +220,7 @@ sub params_from_cgi
     my @values = $cgi->param($param);
     $params{$param} = @values > 1 ? \@values : $values[0];
   }
-  
+
   $self->params(\%params);
 }
 
@@ -299,7 +299,7 @@ sub params_from_apache
     my @values = $apr->param($param);
     $params{$param} = @values > 1 ? \@values : $values[0];
   }
-  
+
   $self->params(\%params);
 }
 
@@ -548,18 +548,18 @@ sub validate
 
 sub init_fields_with_cgi
 {
-  my($self, $cgi) = @_;
-  
-  $self->params_from_cgi($cgi);
-  $self->init_fields;
+  my($self) = shift;  
+
+  $self->params_from_cgi(shift);
+  $self->init_fields(@_);
 }
 
 sub init_fields_with_apache
 {
-  my($self, $r) = @_;
-  
-  $self->params_from_apache($r);
-  $self->init_fields;
+  my($self) = shift;  
+
+  $self->params_from_apache(shift);
+  $self->init_fields(@_);
 }
 
 sub init_fields
@@ -1314,22 +1314,24 @@ Rose::HTML::Form - HTML form base class.
   {
     my($self) = shift;
 
-    # Base class does standalone field validation
+    # Base class will validate individual fields in isolation,
+    # confirming that all required fields are filled in, and that
+    # the email address and phone number are formatted correctly.
     my $ok = $self->SUPER::validate(@_);
     return $ok  unless($ok);
 
-    # Do other arbitrary inter-field validation here
-    if($self->field('name')->internal_value =~ /foo/ &&
+    # Inter-field validation goes here
+    if($self->field('name')->internal_value ne 'John Doe' &&
        $self->field('phone')->internal_value =~ /^555/)
     {
-      $self->error('...');
+      $self->error('Only John Doe can have a 555 phone number.');
       return 0;
     }
-    ...
+
     return 1;
   }
 
-  sub init_with_person
+  sub init_with_person # give a friendlier name to a base-class method
   {
     my($self, $person) = @_;
     $self->init_with_object($person);
@@ -1338,9 +1340,12 @@ Rose::HTML::Form - HTML form base class.
   sub person_from_form
   {
     my($self) = shift;
+
+    # Base class method does most of the work
     my $person = $self->object_from_form(class => 'Person');
 
-    # Set alt phone to the same as the regular phone
+    # Now fill in the non-obvious details...
+    # e.g., set alt phone to be the same as the regular phone
     $person->alt_phone($self->field('phone')->internal_value);
 
     return $person;
@@ -1360,14 +1365,14 @@ Rose::HTML::Form - HTML form base class.
     my $params = MyWebServer->get_query_params();
     $form->params($params);
 
-    # ...or  initialize params from a CGI object
+    # ...or  initialize form params from a CGI object
     # $form->params_from_cgi($cgi); # $cgi "isa" CGI
 
     # ...or initialize params from an Apache request object
     # (mod_perl 1 and 2 both supported)
     # $form->params_from_apache($r);
 
-    # Intialize the fields based on params
+    # Initialize the fields based on params
     $form->init_fields();
 
     unless($form->validate) 
@@ -1375,14 +1380,14 @@ Rose::HTML::Form - HTML form base class.
       return error_page(error => $form->error);
     }
 
-    $person = $form->person_from_form(); # $person is a Person object
+    $person = $form->person_from_form; # $person is a Person object
 
     do_something_with($person);
     ...
   }
   else
   {
-    $person = ...; # Get or create a Person object
+    $person = ...; # Get or create a Person object somehow
 
     # Initialize the form with the Person object
     $form->init_with_person($person);
@@ -2079,6 +2084,36 @@ Examples:
     # No name, Male, no hobbies, no birthday
     $form->init_fields(no_clear => 1);
 
+=item B<init_fields_with_cgi CGI [, ARGS]>
+
+This method is a shortcut for initializing the form's L<params|/params> with a CGI object and then calling L<init_fields|/init_fields>.  The CGI argument is passed to the L<params_from_cgi|/params_from_cgi> method and ARGS are passed to the L<init_fields|/init_fields> method.
+
+For example, this:
+
+    $form->init_fields_with_cgi($cgi, no_clear => 1);
+
+Is equivalent to this:
+
+    $form->params_from_cgi($cgi);
+    $form->init_fields(no_clear => 1);
+
+See the documentation for the L<params_from_cgi|/params_from_cgi> and L<init_fields|/init_fields> methods for more information.
+
+=item B<init_fields_with_apache APR [, ARGS]>
+
+This method is a shortcut for initializing the form's L<params|/params> with an apache request object and then calling L<init_fields|/init_fields>.  The APR argument is passed to the L<params_from_apache|/params_from_apache> method and ARGS are passed to the L<init_fields|/init_fields> method.
+
+For example, this:
+
+    $form->init_fields_with_apache($r, no_clear => 1);
+
+Is equivalent to this:
+
+    $form->params_from_apache($r);
+    $form->init_fields(no_clear => 1);
+
+See the documentation for the L<params_from_apache|/params_from_apache> and L<init_fields|/init_fields> methods for more information.
+
 =item B<init_with_object OBJECT>
 
 Initialize the form based on OBJECT.  First, the form is L<clear()|/clear>ed.  Next, for each field L<name()|Rose::HTML::Form::Field/name>, if the object has a method with the same name, then the return value of that method (called in scalar context) is passed as the L<input_value()|Rose::HTML::Form::Field/input_value> for the form field of the same name.
@@ -2239,8 +2274,6 @@ In all cases, APR may be an object that has a C<param()> method that behaves in 
 =item * When called in list context with no arguments, it returns a list of parameter names.
 
 =item * When called in list context with a single parameter name argument, it returns a list of values for that parameter.
-
-=back
 
 =back
 
