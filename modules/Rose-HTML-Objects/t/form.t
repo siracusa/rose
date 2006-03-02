@@ -2,10 +2,12 @@
 
 use strict;
 
-use Test::More tests => 211;
+use Test::More tests => 217;
 
 BEGIN 
 {
+  $ENV{'RHTMLO_TEST_MOD_PERL'} = 1;
+
   use_ok('Rose::HTML::Form');
   use_ok('Rose::HTML::Form::Field::Text');
   use_ok('Rose::HTML::Form::Field::SelectBox');
@@ -55,7 +57,7 @@ $p{'b'}[0] = 5;
 is($form->param('a'), 'foo', 'params store copy 3');
 is($form->param('b')->[0], 2, 'params store copy 4');
 
-my $fcgi = bless {}, 'FakeCGI';
+my $fcgi = FakeCGI->new;
 
 $form->params_from_cgi($fcgi);
 
@@ -92,6 +94,22 @@ else
     'params_from_cgi real 4');
 }
 
+my $r = FakeApache->new;
+
+$r->_params->{'a'} = 'b';
+$r->_params->{'c'} = [ 'd', 'e' ];
+
+$form->params_from_apache($r);
+
+is($form->param('a'), 'b', 'params_from_apache 1');
+is($form->param('c')->[1], 'e', 'params_from_apache 2');
+
+$r->_params->{'a'} = 'x';
+
+is($form->param('a'), 'b', 'params_from_apache 3');
+is($form->param('c')->[1], 'e', 'params_from_apache 4');
+
+
 $form->html_attr('action' => '/foo/bar');
 
 is($form->start_html, '<form action="/foo/bar" enctype="application/x-www-form-urlencoded" method="get">', 'start_html() 1');
@@ -115,6 +133,16 @@ my $field = Rose::HTML::Form::Field::Text->new();
 ok($form->add_field(foo => $field), 'add_field()');
 
 is($form->field('foo'), $field, 'field() set with field object');
+
+$fcgi = FakeCGI->new;
+$fcgi->_params->{'foo'} = 'bar';
+$form->init_fields_with_cgi($fcgi);
+is($form->field('foo')->internal_value, 'bar', 'init_fields_with_cgi 1');
+
+$r = FakeApache->new;
+$fcgi->_params->{'foo'} = 'baz';
+$form->init_fields_with_apache($r);
+is($form->field('foo')->internal_value, 'baz', 'init_fields_with_apache 1');
 
 my @fields = $form->fields;
 is(@fields, 1, 'fields()');
@@ -799,7 +827,9 @@ BEGIN
   my %params = (a => 'b', c => [ 'd', 'e' ]);
 
   package FakeCGI;
-  
+
+  sub new { bless {}, shift }
+
   sub param 
   {
     my($self) = shift;
@@ -818,4 +848,7 @@ BEGIN
   }
   
   sub _params { \%params }
+
+  package FakeApache;
+  our @ISA = qw(FakeCGI);
 }

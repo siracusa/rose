@@ -230,26 +230,27 @@ sub params_from_cgi
 use constant MP2 => exists $ENV{'MOD_PERL_API_VERSION'} && 
                     $ENV{'MOD_PERL_API_VERSION'} > 1 ? 1 : 0;
 
-use constant MP1 => 
-  $ENV{'MOD_PERL'} && (!exists $ENV{'MOD_PERL_API_VERSION'} || 
-  $ENV{'MOD_PERL_API_VERSION'} == 1) ? 1 : 0;
+use constant MP1 => # Special environment variable for the test suite
+  ($ENV{'MOD_PERL'} || $ENV{'RHTMLO_TEST_MOD_PERL'}) && 
+  (!exists $ENV{'MOD_PERL_API_VERSION'} || $ENV{'MOD_PERL_API_VERSION'} == 1) ?
+  1 : 0;
 
 use constant MP0 => $ENV{'MOD_PERL'} ? 0 : 1;
 
 my $Loaded_APR1 = 0;
 my $Loaded_APR2 = 0;
 
-sub params_from_apr
+sub params_from_apache
 {
   my($self, $apr) = @_;
 
-  croak "Missing apache request argument to params_from_apr"  unless(@_ > 1);
+  croak "Missing apache request argument to params_from_apache"  unless(@_ > 1);
 
   if(MP0)
   {
     unless(UNIVERSAL::can($apr, 'param'))
     {
-      croak "Argument to params_from_apr() does not have a param() method";
+      croak "Argument to params_from_apache() does not have a param() method";
     }
   }
   elsif(MP1)
@@ -267,7 +268,7 @@ sub params_from_apr
     elsif(!UNIVERSAL::isa($apr, 'Apache::Request') && 
           !UNIVERSAL::can($apr, 'param'))
     {
-      croak "Argument to params_from_apr() is not an Apache or ",
+      croak "Argument to params_from_apache() is not an Apache or ",
             "Apache::Request object and does not have a param() method";
     } 
   }
@@ -286,8 +287,8 @@ sub params_from_apr
     elsif(!UNIVERSAL::isa($apr, 'Apache2::Request') && 
           !UNIVERSAL::can($apr, 'param'))
     {
-      croak "Argument to params_from_apr() is not an Apache2::RequestRec or ",
-            "Apache2::Request object and does not have a param() method";
+      croak "Argument to params_from_apache() is not an Apache2::RequestRec ",
+            "or Apache2::Request object and does not have a param() method";
     }
   }
 
@@ -301,7 +302,6 @@ sub params_from_apr
   
   $self->params(\%params);
 }
-
 
 sub params
 {
@@ -544,6 +544,22 @@ sub validate
 
   return 0  if($fail);
   return 1;
+}
+
+sub init_fields_with_cgi
+{
+  my($self, $cgi) = @_;
+  
+  $self->params_from_cgi($cgi);
+  $self->init_fields;
+}
+
+sub init_fields_with_apache
+{
+  my($self, $r) = @_;
+  
+  $self->params_from_apache($r);
+  $self->init_fields;
 }
 
 sub init_fields
@@ -1340,11 +1356,18 @@ Rose::HTML::Form - HTML form base class.
 
   if(...)
   {
-    # Get query parameters in a hash ref
+    # Get query parameters in a hash ref and pass to the form
     my $params = MyWebServer->get_query_params();
-
-    # Initialize the form with the params hash ref
     $form->params($params);
+
+    # ...or  initialize params from a CGI object
+    # $form->params_from_cgi($cgi); # $cgi "isa" CGI
+
+    # ...or initialize params from an Apache request object
+    # (mod_perl 1 and 2 both supported)
+    # $form->params_from_apache($r);
+
+    # Intialize the fields based on params
     $form->init_fields();
 
     unless($form->validate) 
@@ -2185,7 +2208,7 @@ Returns true if any parameters exist, false otherwise.
 
 Returns true if a parameter named NAME exists, false otherwise.
 
-=item B<params_from_apr APR>
+=item B<params_from_apache APR>
 
 Set L<params|/params> by extracting parameter names and values from an apache request object.  Calling this method entirely replaces the previous L<params|/params>.
 
