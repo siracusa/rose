@@ -1750,7 +1750,7 @@ Get or set a single connection option.  Example:
     $val = $db->connect_option('RaiseError'); # get
     $db->connect_option(AutoCommit => 1);     # set
 
-Connection options are name/value pairs that are passed in a hash reference as the fourth argument to the call to C<DBI-E<gt>connect()>.  See the L<DBI> documentation for descriptions of the various options.
+Connection options are name/value pairs that are passed in a hash reference as the fourth argument to the call to L<DBI-E<gt>connect()|DBI/connect>.  See the L<DBI> documentation for descriptions of the various options.
 
 =item B<connect_options [HASHREF | PAIRS]>
 
@@ -1859,7 +1859,7 @@ Get or set the database catalog name.  This setting is only relevant to database
 
 =item B<connect_options [HASHREF | PAIRS]>
 
-Get or set the options passed in a hash reference as the fourth argument to the call to C<DBI-E<gt>connect()>.  See the L<DBI> documentation for descriptions of the various options.
+Get or set the options passed in a hash reference as the fourth argument to the call to L<DBI-E<gt>connect()|DBI/connect>.  See the L<DBI> documentation for descriptions of the various options.
 
 If a reference to a hash is passed, it replaces the connect options hash.  If a series of name/value pairs are passed, they are added to the connect options hash.
 
@@ -2044,7 +2044,7 @@ Converts the L<DateTime> object DATETIME into the appropriate format for the tim
 
 Parse BITS and return a corresponding L<Bit::Vector> object.  If SIZE is not passed, then it defaults to the number of bits in the parsed bit string.
 
-If BITS is a string of "1"s and "0"s or matches /^B'[10]+'$/, then the "1"s and "0"s are parsed as a binary string.
+If BITS is a string of "1"s and "0"s or matches C</^B'[10]+'$/>, then the "1"s and "0"s are parsed as a binary string.
 
 If BITS is a string of numbers, at least one of which is in the range 2-9, it is assumed to be a decimal (base 10) number and is converted to a bitfield as such.
 
@@ -2062,25 +2062,25 @@ Otherwise, undef is returned.
 
 Parse STRING and return a boolean value of 1 or 0.  STRING should be formatted according to the data source's native "boolean" data type.  The default implementation accepts 't', 'true', 'y', 'yes', and '1' values for true, and 'f', 'false', 'n', 'no', and '0' values for false.
 
-If STRING is a valid boolean keyword (according to L<validate_boolean_keyword|/validate_boolean_keyword>) or if it looks like a function call (matches /^\w+\(.*\)$/) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "boolean" value.
+If STRING is a valid boolean keyword (according to L<validate_boolean_keyword|/validate_boolean_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "boolean" value.
 
 =item B<parse_date STRING>
 
 Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the data source's native "date" (month, day, year) data type.
 
-If STRING is a valid date keyword (according to L<validate_date_keyword|/validate_date_keyword>) or if it looks like a function call (matches /^\w+\(.*\)$/) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "date" value.
+If STRING is a valid date keyword (according to L<validate_date_keyword|/validate_date_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "date" value.
 
 =item B<parse_datetime STRING>
 
 Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the data source's native "datetime" (month, day, year, hour, minute, second) data type.
 
-If STRING is a valid datetime keyword (according to L<validate_datetime_keyword|/validate_datetime_keyword>) or if it looks like a function call (matches /^\w+\(.*\)$/) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "datetime" value.
+If STRING is a valid datetime keyword (according to L<validate_datetime_keyword|/validate_datetime_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "datetime" value.
 
 =item B<parse_timestamp STRING>
 
 Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the data source's native "timestamp" (month, day, year, hour, minute, second, fractional seconds) data type.  Fractional seconds are optional, and the acceptable precision may vary depending on the data source.  
 
-If STRING is a valid timestamp keyword (according to L<validate_timestamp_keyword|/validate_timestamp_keyword>) or if it looks like a function call (matches /^\w+\(.*\)$/) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "timestamp" value.
+If STRING is a valid timestamp keyword (according to L<validate_timestamp_keyword|/validate_timestamp_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "timestamp" value.
 
 =item B<validate_boolean_keyword STRING>
 
