@@ -1,8 +1,11 @@
-0.51 (02.28.2006) - John Siracusa <siracusa@mindspring.com>
+0.51 (03.02.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * Added CGI integration methods: params_from_cgi() and
-      init_fields_with_cgi() <-- TODO
-    * Tweaked the copy/ref semantics of params()
+    * Added CGI and Apache integration methods to Rose::HTML::Form: 
+      params_from_cgi(), params_from_apache(), init_fields_with_cgi(), 
+      and init_fields_with_apache().
+    * Tweaked the copy/reference semantics of the params() method in
+      Rose::HTML::Form.
+    * Made some small fixes and additions to the documentation.
 
 0.50 (02.22.2006) - John Siracusa <siracusa@mindspring.com>
 
