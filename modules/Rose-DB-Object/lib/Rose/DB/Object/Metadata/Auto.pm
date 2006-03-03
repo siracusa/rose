@@ -342,7 +342,7 @@ sub auto_retrieve_primary_key_column_names
 
   if($@ || !@columns)
   {
-    $@ = 'no primary key coumns found'  unless(defined $@);
+    $@ = 'no primary key columns found'  unless(defined $@);
     Carp::croak "Could not auto-retrieve primary key columns for class $class - ",
                 ($@ || "no primary key info found for catalog '" . $catalog .
                 "' schema '" . $schema . "' table '" . lc $self->table, "'");
