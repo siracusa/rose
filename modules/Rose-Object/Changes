@@ -1,3 +1,8 @@
+0.80 (03.04.2005) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a typo in the documentation.
+    * Big version number bump to reflect progress towards 1.0.
+
 0.016 (10.26.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed a bug in the inheritable class hash method maker's "delete"
