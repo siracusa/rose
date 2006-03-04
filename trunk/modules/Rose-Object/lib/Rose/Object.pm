@@ -2,7 +2,7 @@ package Rose::Object;
 
 use strict;
 
-our $VERSION = '0.016';
+our $VERSION = '0.80';
 
 sub new
 {
@@ -45,7 +45,7 @@ Rose::Object - A simple object base class.
     sub bar { ... }
     ...
 
-    my $o = MyObject->new(foo => 'abc, bar => 5);
+    my $o = MyObject->new(foo => 'abc', bar => 5);
     ...
 
 =head1 DESCRIPTION
@@ -60,7 +60,7 @@ functionality, but a healthy dose of convention.
 =item B<new PARAMS>
 
 Constructs a new, empty, hash-based object based on PARAMS, where PARAMS
-are name/value pairs.  C<new> then calls C<init> (see below), passing
+are name/value pairs, and then calls L<init|/init> (see below), passing
 PARAMS to it unmodified.
 
 =item B<init PARAMS>

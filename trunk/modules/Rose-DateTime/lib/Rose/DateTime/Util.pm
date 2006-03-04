@@ -267,7 +267,7 @@ sub _timelocal
 # =begin comment
 # B<PLEASE NOTE:> The local time zone may not be known on all systems (in
 # particular, Win32 systems).  If you are on such a system, you will encounter a
-# fatal error if C<parse_date()> tries to construct a C<DateTime> object with
+# fatal error if C<parse_date()> tries to construct a L<DateTime> object with
 # a time zone of "local".
 # 
 # See the L<DateTime::TimeZone> documentation for information on the various
@@ -296,12 +296,12 @@ Rose::DateTime::Util - Some simple DateTime wrapper functions.
 
 =head1 DESCRIPTION
 
-C<Rose::DateTime::Util> is a thin wrapper around C<DateTime> that provides a very simple
+L<Rose::DateTime::Util> is a thin wrapper around L<DateTime> that provides a very simple
 date parser and a few extra date formatting options.
 
 =head1 EXPORTS
 
-C<Rose::DateTime::Util> does not export any function names by default.
+L<Rose::DateTime::Util> does not export any function names by default.
 
 The 'all' tag:
 
@@ -318,7 +318,7 @@ will cause the following function names to be imported:
 
 =item B<format_date DATETIME, FORMAT1, FORMAT2 ...>
 
-Takes a C<DateTime> object and a list of format strings.  In list context, it
+Takes a L<DateTime> object and a list of format strings.  In list context, it
 returns a list of strings with the formats interpolated.  In scalar context,
 it returns a single string constructed by joining all of the list-context
 return values with single spaces.  Examples:
@@ -334,18 +334,18 @@ return values with single spaces.  Examples:
 
 Returns undef on failure, or if passed an undefined value for DATETIME.  An
 exception will be raised if the DATETIME argument is defined, but is not a
-C<DateTime> object.
+L<DateTime> object.
 
-The supported formats are mostly based on those supported by C<DateTime>'s
-C<strftime()> method.  C<Rose::DateTime::Util> calls C<DateTime>'s C<strftime()> method
+The supported formats are mostly based on those supported by L<DateTime>'s
+C<strftime()> method.  L<Rose::DateTime::Util> calls L<DateTime>'s C<strftime()> method
 when interpolating these formats.
 
 Note that the C<%t> and C<%F> formats are I<not> passed to C<strftime()>, but
-are handled by C<Rose::DateTime::Util> instead.  See the "Non-standard formats" section
+are handled by L<Rose::DateTime::Util> instead.  See the "Non-standard formats" section
 below.
 
 The C<strftime()>-compatible formats listed below have been transcribed from
-the C<DateTime> documentation for the sake of convenience, but the C<DateTime>
+the L<DateTime> documentation for the sake of convenience, but the L<DateTime>
 documentation is the definitive source.
 
 Using any format strings not in the C<strftime()>-compatible set will be
@@ -575,19 +575,20 @@ Time as "%l:%M:%S %p" (1:23:45 PM)
 
 =item B<parse_date TEXT [, TIMEZONE]>
 
-Attempts to parse the date described by TEXT.  Returns a C<DateTime> object,
+Attempts to parse the date described by TEXT.  Returns a L<DateTime> object,
 or undef on failure, with an error message available via
-C<Rose::DateTime::Util-E<gt>error()>.
+C<Rose::DateTime::Util-E<gt>error()|/error>.
 
-If a C<DateTime> object is passed in place of the TEXT argument, it is
+If a L<DateTime> object is passed in place of the TEXT argument, it is
 returned as-is if there is no TIMEZONE argument, or after having
-C<set_time_zone(TIMEZONE)> called on it if there is a TIMEZONE argument.
+L<set_time_zone(TIMEZONE)|DateTime/set_time_zone> called on it if there is
+a TIMEZONE argument.
 
 Since the time zone is not part of any of the supported date string formats,
-C<parse_date()> takes an optional TIMEZONE argument which is passed to the
-C<DateTime> constructor as the value of the C<time_zone> parameter.  In the
+L<parse_date()|/parse_date> takes an optional TIMEZONE argument which is passed to the
+L<DateTime> constructor as the value of the C<time_zone> parameter.  In the
 absence of a TIMEZONE argument to C<parwse_date()>, the time zone defaults to
-the value returned by C<Rose::DateTime::Util>'s C<time_zone()> class method ("floating", by
+the value returned by the L<time_zone()|/time_zone> class method ("floating", by
 default)
 
 The formats understood and their interpretations are listed below.  Square
@@ -638,9 +639,9 @@ Returns a message describing the last error that occurred.
 =item B<time_zone [TZ]>
 
 Get or set the default time zone.  This value is passed to
-C<DateTime-E<gt>new(...)> as the value of the C<time_zone> parameter when
-C<parse_date()> creates the C<DateTime> object that it returns.  The default
-value is "floating".
+L<DateTime-E<gt>new(...)|DateTime> as the value of the C<time_zone>
+parameter when L<parse_date()|/parse_date> creates the L<DateTime> object
+that it returns. The default value is "floating".
 
 =back
 
