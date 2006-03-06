@@ -13,7 +13,7 @@ use Rose::Object::MakeMethods::Generic
   'scalar --get_set_init' => 'time_zone',
 );
 
-our $VERSION = '0.012';
+our $VERSION = '0.50';
 
 sub init_time_zone { Rose::DateTime::Util->time_zone }
 
@@ -27,6 +27,17 @@ sub parse_date
 }
 
 *parse_datetime = \&parse_date;
+
+sub parse_european_date
+{
+  my($self) = shift;
+  my $date = Rose::DateTime::Util::parse_european_date(shift, $self->time_zone);
+  return $date  if($date);
+  $self->error(Rose::DateTime::Util->error);
+  return $date;
+}
+
+*parse_european_datetime = \&parse_european_date;
 
 1;
 
@@ -48,7 +59,7 @@ Rose::DateTime::Parser - DateTime parser object.
 
 =head1 DESCRIPTION
 
-C<Rose::DateTime::Parser> encapsulates a particular kind of call to L<Rose::DateTime::Util>'s L<parse_date|Rose::DateTime::Util/parse_date> function.  The object maintains the desired time zone, which is then passed to each call to C<parse_date()>.
+L<Rose::DateTime::Parser> encapsulates a particular kind of call to L<Rose::DateTime::Util>'s L<parse_date|Rose::DateTime::Util/parse_date> and L<parse_european_date|Rose::DateTime::Util/parse_european_date> functions.  The object maintains the desired time zone, which is then passed to each call.
 
 This class inherits from, and follows the conventions of, L<Rose::Object>. See the L<Rose::Object> documentation for more information.
 
@@ -58,7 +69,7 @@ This class inherits from, and follows the conventions of, L<Rose::Object>. See t
 
 =item B<new PARAMS>
 
-Constructs a new C<Rose::DateTime::Parser> object based on PARAMS, where PARAMS are name/value pairs.  Any object method is a valid parameter name.
+Constructs a new L<Rose::DateTime::Parser> object based on PARAMS, where PARAMS are name/value pairs.  Any object method is a valid parameter name.
 
 =back
 
@@ -72,15 +83,23 @@ Get or set the error message string.
 
 =item B<parse_date STRING>
 
-Attempt to parse STRING by passing it to L<Rose::DateTime::Util>'s L<parse_date|Rose::DateTime::Util/parse_date> function. If parsing is successful, the resulting C<DateTime> object is returned. Otherwise, C<error()> is set and false is returned.
+Attempt to parse STRING by passing it to L<Rose::DateTime::Util>'s L<parse_date|Rose::DateTime::Util/parse_date> function. If parsing is successful, the resulting L<DateTime> object is returned.  Otherwise, L<error|/error> is set and false is returned.
 
 =item B<parse_datetime STRING>
 
-Alias for C<parse_date()>
+This method is an alias for L<parse_date()|/parse_date>
+
+=item B<parse_european_date STRING>
+
+Attempt to parse STRING by passing it to L<Rose::DateTime::Util>'s L<parse_european_date|Rose::DateTime::Util/parse_european_date> function. If parsing is successful, the resulting L<DateTime> object is returned.  Otherwise, L<error|/error> is set and false is returned.
+
+=item B<parse_european_datetime STRING>
+
+This method is an alias for L<parse_european_date()|/parse_european_date>
 
 =item B<time_zone [STRING]>
 
-Get or set the time zone string passed to L<Rose::DateTime::Util>'s L<parse_date|Rose::DateTime::Util/parse_date> function. Defaults to C<Rose::DateTime::Util-E<gt>time_zone>.
+Get or set the time zone string passed to L<Rose::DateTime::Util>'s L<parse_date|Rose::DateTime::Util/parse_date> function.  Defaults to L<Rose::DateTime::Util-E<gt>time_zone>|Rose::DateTime::Util/time_zone.
 
 =back
 
@@ -90,4 +109,4 @@ John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2006 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+Copyright (c) 2004-2006 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
