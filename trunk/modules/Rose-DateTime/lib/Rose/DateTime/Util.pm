@@ -18,10 +18,11 @@ our %EXPORT_TAGS =
   all => \@EXPORT_OK
 );
 
-our $VERSION = '0.0134';
+our $VERSION = '0.50';
 
-our $TZ    = 'floating';
+our $TZ = 'floating';
 our $Debug = 0;
+our $European_Dates = 0;
 our $Error;
 
 sub error { $Error }
@@ -31,6 +32,19 @@ sub time_zone
   my($class) = shift;
   return $TZ = shift  if(@_);
   return $TZ;
+}
+
+sub european_dates
+{
+  my($class) = shift;
+  return $European_Dates = $_[0] ? 1 : 0  if(@_);
+  return $European_Dates;
+}
+
+sub parse_european_date
+{
+  local $European_Dates = 1;
+  &parse_date; # implicitly pass the current args: @_
 }
 
 sub parse_date
@@ -67,9 +81,15 @@ sub parse_date
     $date = _timelocal($secs, $mins, $hours, $mday, $month, $year, $ampm, $fsecs, $time_zone);
   }
   elsif(($month, $mday, $year, $hours, $mins, $secs, $fsecs, $ampm) = 
-        ($arg =~ m#^(\d{1,2})[-/](\d{1,2})[-/](\d{4})(?:\s+(\d\d?)(?::(\d\d)(?::(\d\d))?)?(?:\.(\d{0,9}))?(?:\s*([aApP]\.?[mM]\.?))?)?$#))
+        ($arg =~ m#^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})(?:\s+(\d\d?)(?::(\d\d)(?::(\d\d))?)?(?:\.(\d{0,9}))?(?:\s*([aApP]\.?[mM]\.?))?)?$#))
   {
-    # mm/dd/yyyy, mm-dd-yyyy, [hh:mm[:ss][.nnnnnnnnn]] [am/pm]
+    # Normal:   mm/dd/yyyy, mm-dd-yyyy, mm.dd.yyyy [hh:mm[:ss][.nnnnnnnnn]] [am/pm]
+    # European: dd/mm/yyyy, dd-mm-yyyy, dd.mm.yyyy [hh:mm[:ss][.nnnnnnnnn]] [am/pm]
+
+    if($European_Dates)
+    {
+      ($mday, $month) = ($month, $mday); # swap month and day in Euro-mode
+    }
 
     $date = _timelocal($secs, $mins, $hours, $mday, $month, $year, $ampm, $fsecs, $time_zone);
   }
@@ -296,8 +316,7 @@ Rose::DateTime::Util - Some simple DateTime wrapper functions.
 
 =head1 DESCRIPTION
 
-L<Rose::DateTime::Util> is a thin wrapper around L<DateTime> that provides a very simple
-date parser and a few extra date formatting options.
+L<Rose::DateTime::Util> is a thin wrapper around L<DateTime> that provides a very simple date parser and a few extra date formatting options.
 
 =head1 EXPORTS
 
@@ -311,6 +330,25 @@ will cause the following function names to be imported:
 
     format_date()
     parse_date()
+    parse_european_date()
+
+=head1 CLASS METHODS
+
+=over 4
+
+=item B<error>
+
+Returns a message describing the last error that occurred.
+
+=item B<european_dates [BOOL]>
+
+Get or set a boolean flag that determines how "xx/xx/xxxx" dates are parsed by the L<parse_date|/parse_date> function.  If set to false, then such dates are parsed as "mm/dd/yyyy".  (This is the default.)  If set to true, then they're parsed as "dd/mm/yyyy".
+
+=item B<time_zone [TZ]>
+
+Get or set the default time zone.  This value is passed to L<DateTime-E<gt>new(...)|DateTime> as the value of the C<time_zone> parameter when L<parse_date()|/parse_date> creates the L<DateTime> object that it returns. The default value is "floating".
+
+=back
 
 =head1 FUNCTIONS
 
@@ -318,10 +356,7 @@ will cause the following function names to be imported:
 
 =item B<format_date DATETIME, FORMAT1, FORMAT2 ...>
 
-Takes a L<DateTime> object and a list of format strings.  In list context, it
-returns a list of strings with the formats interpolated.  In scalar context,
-it returns a single string constructed by joining all of the list-context
-return values with single spaces.  Examples:
+Takes a L<DateTime> object and a list of format strings.  In list context, it returns a list of strings with the formats interpolated.  In scalar context, it returns a single string constructed by joining all of the list-context return values with single spaces.  Examples:
 
   # $s = 'Friday 5PM' 
   $s = format_date(parse_date('1/23/2004 17:00'), '%A, %I%p');
@@ -332,24 +367,15 @@ return values with single spaces.  Examples:
   # $s = 'Friday 5 PM' 
   $s = format_date(parse_date('1/23/2004 17:00'), '%A', '%I', '%p');
 
-Returns undef on failure, or if passed an undefined value for DATETIME.  An
-exception will be raised if the DATETIME argument is defined, but is not a
-L<DateTime> object.
+Returns undef on failure, or if passed an undefined value for DATETIME.  An exception will be raised if the DATETIME argument is defined, but is not a L<DateTime> object.
 
-The supported formats are mostly based on those supported by L<DateTime>'s
-C<strftime()> method.  L<Rose::DateTime::Util> calls L<DateTime>'s C<strftime()> method
-when interpolating these formats.
+The supported formats are mostly based on those supported by L<DateTime>'s C<strftime()> method.  L<Rose::DateTime::Util> calls L<DateTime>'s C<strftime()> method when interpolating these formats.
 
-Note that the C<%t> and C<%F> formats are I<not> passed to C<strftime()>, but
-are handled by L<Rose::DateTime::Util> instead.  See the "Non-standard formats" section
-below.
+Note that the C<%t> and C<%F> formats are I<not> passed to C<strftime()>, but are handled by L<Rose::DateTime::Util> instead.  See the "Non-standard formats" section below.
 
-The C<strftime()>-compatible formats listed below have been transcribed from
-the L<DateTime> documentation for the sake of convenience, but the L<DateTime>
-documentation is the definitive source.
+The C<strftime()>-compatible formats listed below have been transcribed from the L<DateTime> documentation for the sake of convenience, but the L<DateTime> documentation is the definitive source.
 
-Using any format strings not in the C<strftime()>-compatible set will be
-slightly slower.
+Using any format strings not in the C<strftime()>-compatible set will be slightly slower.
 
 B<C<strftime()>-compatible formats>
 
@@ -385,20 +411,15 @@ The day of the month as a decimal number (range 01 to 31).
 
 =item * %D
 
-Equivalent to %m/%d/%y.  This is not a good standard format if you
-have want both Americans and Europeans to understand the date!
+Equivalent to %m/%d/%y.  This is not a good standard format if you have want both Americans and Europeans to understand the date!
 
 =item * %e
 
-Like %d, the day of the month as a decimal number, but a leading zero
-is replaced by a space.
+Like %d, the day of the month as a decimal number, but a leading zero is replaced by a space.
 
 =item * %G
 
-The ISO 8601 year with century as a decimal number.  The 4-digit year
-corresponding to the ISO week number (see %V).  This has the same
-format and value as %y, except that if the ISO week number belongs to
-the previous or next year, that year is used instead. (TZ)
+The ISO 8601 year with century as a decimal number.  The 4-digit year corresponding to the ISO week number (see %V).  This has the same format and value as %y, except that if the ISO week number belongs to the previous or next year, that year is used instead. (TZ)
 
 =item * %g
 
@@ -422,13 +443,11 @@ The day of the year as a decimal number (range 001 to 366).
 
 =item * %k
 
-The hour (24-hour clock) as a decimal number (range 0 to 23); single
-digits are preceded by a blank. (See also %H.)
+The hour (24-hour clock) as a decimal number (range 0 to 23); single digits are preceded by a blank. (See also %H.)
 
 =item * %l
 
-The hour (12-hour clock) as a decimal number (range 1 to 12); single
-digits are preceded by a blank. (See also %I.)
+The hour (12-hour clock) as a decimal number (range 1 to 12); single digits are preceded by a blank. (See also %I.)
 
 =item * %m
 
@@ -452,24 +471,19 @@ The fractional seconds digits. Default is 9 digits (nanoseconds).
 
 =item * %p
 
-Either `AM' or `PM' according to the given time value, or the
-corresponding strings for the current locale.  Noon is treated as `pm'
-and midnight as `am'.
+Either `AM' or `PM' according to the given time value, or the corresponding strings for the current locale.  Noon is treated as `pm' and midnight as `am'.
 
 =item * %P
 
-Like %p but in lowercase: `am' or `pm' or a corresponding string for
-the current locale.
+Like %p but in lowercase: `am' or `pm' or a corresponding string for the current locale.
 
 =item * %r
 
-The time in a.m.  or p.m. notation.  In the POSIX locale this is
-equivalent to `%I:%M:%S %p'.
+The time in a.m.  or p.m. notation.  In the POSIX locale this is equivalent to `%I:%M:%S %p'.
 
 =item * %R
 
-The time in 24-hour notation (%H:%M). (SU) For a version including the
-seconds, see %T below.
+The time in 24-hour notation (%H:%M). (SU) For a version including the seconds, see %T below.
 
 =item * %s
 
@@ -485,31 +499,23 @@ The time in 24-hour notation (%H:%M:%S).
 
 =item * %u
 
-The day of the week as a decimal, range 1 to 7, Monday being 1.  See
-also %w.
+The day of the week as a decimal, range 1 to 7, Monday being 1.  See also %w.
 
 =item * %U
 
-The week number of the current year as a decimal number, range 00 to
-53, starting with the first Sunday as the first day of week 01. See
-also %V and %W.
+The week number of the current year as a decimal number, range 00 to 53, starting with the first Sunday as the first day of week 01. See also %V and %W.
 
 =item * %V
 
-The ISO 8601:1988 week number of the current year as a decimal number,
-range 01 to 53, where week 1 is the first week that has at least 4
-days in the current year, and with Monday as the first day of the
-week. See also %U and %W.
+The ISO 8601:1988 week number of the current year as a decimal number, range 01 to 53, where week 1 is the first week that has at least 4 days in the current year, and with Monday as the first day of the week. See also %U and %W.
 
 =item * %w
 
-The day of the week as a decimal, range 0 to 6, Sunday being 0.  See
-also %u.
+The day of the week as a decimal, range 0 to 6, Sunday being 0.  See also %u.
 
 =item * %W
 
-The week number of the current year as a decimal number, range 00 to
-53, starting with the first Monday as the first day of week 01.
+The week number of the current year as a decimal number, range 00 to 53, starting with the first Monday as the first day of week 01.
 
 =item * %x
 
@@ -529,8 +535,7 @@ The year as a decimal number including the century.
 
 =item * %z
 
-The time-zone as hour offset from UTC.  Required to emit
-RFC822-conformant dates (using "%a, %d %b %Y %H:%M:%S %z").
+The time-zone as hour offset from UTC.  Required to emit RFC822-conformant dates (using "%a, %d %b %Y %H:%M:%S %z").
 
 =item * %Z
 
@@ -542,8 +547,7 @@ A literal `%' character.
 
 =item * %{method}
 
-Any method name may be specified using the format C<%{method}> name
-where "method" is a valid C<DateTime.pm> object method.
+Any method name may be specified using the format C<%{method}> name where "method" is a valid C<DateTime.pm> object method.
 
 =back
 
@@ -573,26 +577,35 @@ Time as "%l:%M:%S %p" (1:23:45 PM)
 
 =back
 
+=item B<parse_european_date TEXT [, TIMEZONE]>
+
+This function works the same as the L<parse_date|/parse_date> function, except it forces L<Eurpoean-style|european_dates> date parsing.  In other words, this:
+
+    parse_european_date($date, $tz);
+
+is equivalent to this:
+
+    # Save old value of the European date setting
+    my $save = Rose::DateTime::Util->european_dates;
+
+    # Turn European date parsing on
+    Rose::DateTime::Util->european_dates(1);
+
+    # Parse the date
+    parse_date($date, $tz);
+
+    # Restore the old European date setting
+    Rose::DateTime::Util->european_dates($save);
+
 =item B<parse_date TEXT [, TIMEZONE]>
 
-Attempts to parse the date described by TEXT.  Returns a L<DateTime> object,
-or undef on failure, with an error message available via
-C<Rose::DateTime::Util-E<gt>error()|/error>.
+Attempts to parse the date described by TEXT.  Returns a L<DateTime> object, or undef on failure, with an error message available via C<Rose::DateTime::Util-E<gt>error()|/error>.
 
-If a L<DateTime> object is passed in place of the TEXT argument, it is
-returned as-is if there is no TIMEZONE argument, or after having
-L<set_time_zone(TIMEZONE)|DateTime/set_time_zone> called on it if there is
-a TIMEZONE argument.
+If a L<DateTime> object is passed in place of the TEXT argument, it is returned as-is if there is no TIMEZONE argument, or after having L<set_time_zone(TIMEZONE)|DateTime/set_time_zone> called on it if there is a TIMEZONE argument.
 
-Since the time zone is not part of any of the supported date string formats,
-L<parse_date()|/parse_date> takes an optional TIMEZONE argument which is passed to the
-L<DateTime> constructor as the value of the C<time_zone> parameter.  In the
-absence of a TIMEZONE argument to C<parwse_date()>, the time zone defaults to
-the value returned by the L<time_zone()|/time_zone> class method ("floating", by
-default)
+Since the time zone is not part of any of the supported date string formats, L<parse_date()|/parse_date> takes an optional TIMEZONE argument which is passed to the L<DateTime> constructor as the value of the C<time_zone> parameter.  In the absence of a TIMEZONE argument to C<parwse_date()>, the time zone defaults to the value returned by the L<time_zone()|/time_zone> class method ("floating", by default)
 
-The formats understood and their interpretations are listed below.  Square
-brackets are used to undicate optional portions of the formats.
+The formats understood and their interpretations are listed below.  Square brackets are used to undicate optional portions of the formats.
 
 =over 4
 
@@ -606,15 +619,19 @@ Today, at 00:00:00.
 
 =item yyyy mm dd [hh:mm[:ss[.nnnnnnnnn]]] [am/pm]
 
-Exact date and time.  Also valid without spaces and with hyphens between the
-year, month, day, and time.  The time is optional and defaults to 00:00:00.
-Fractional seconds take a maximum of 9 digits, but fewer are also acceptable.
+Exact date and time.  Also valid without spaces and with hyphens between the year, month, day, and time.  The time is optional and defaults to 00:00:00. Fractional seconds take a maximum of 9 digits, but fewer are also acceptable.
 
 =item mm/dd/yyyy [hh:mm[:ss[.nnnnnnnnn]]] [am/pm]
 
-Exact date and time.  Also valid with hyphens instead of slashes.  The time is
-optional and defaults to 00:00:00.  Fractional seconds take a maximum of 9
-digits, but fewer are also acceptable.
+Exact date and time.  Also valid with hyphens ("-") or dots (".") instead of slashes ("/").  The time is optional and defaults to 00:00:00.  Fractional seconds take a maximum of 9 digits, but fewer are also acceptable.
+
+This format is only valid when L<european_dates|/european_dates> is set to B<false> (which is the default).
+
+=item dd/mm/yyyy [hh:mm[:ss[.nnnnnnnnn]]] [am/pm]
+
+Exact date and time.  Also valid with hyphens ("-") or dots (".") instead of slashes ("/").  The time is optional and defaults to 00:00:00.  Fractional seconds take a maximum of 9 digits, but fewer are also acceptable.
+
+This format is only valid when L<european_dates|/european_dates> is set to B<true>.
 
 =item [-]infinity
 
@@ -628,29 +645,10 @@ Interpreted as seconds since the Unix epoch.
 
 =back
 
-=head1 CLASS METHODS
-
-=over 4
-
-=item B<error>
-
-Returns a message describing the last error that occurred.
-
-=item B<time_zone [TZ]>
-
-Get or set the default time zone.  This value is passed to
-L<DateTime-E<gt>new(...)|DateTime> as the value of the C<time_zone>
-parameter when L<parse_date()|/parse_date> creates the L<DateTime> object
-that it returns. The default value is "floating".
-
-=back
-
 =head1 AUTHOR
 
 John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2004 by John C. Siracusa.  All rights reserved.  This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2004-2006 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

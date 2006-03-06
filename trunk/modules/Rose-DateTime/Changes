@@ -1,3 +1,8 @@
+0.50 (03.06.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added support for Euorpean-style (dd/mm/yyyy) dates.
+    * Big version number bump to reflect progress towards 1.0.
+
 0.0134 (08.22.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed incorrect version number in one file.

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1919;
+use Test::More tests => 5507;
 
 BEGIN 
 {
@@ -50,7 +50,7 @@ foreach my $month (qw(2 02))
     {
       foreach my $fsec ('', '.', '.0', '.123456789')
       {
-        foreach my $sep ('-', '/')
+        foreach my $sep ('-', '/', '.')
         {
           foreach my $sep3 ('', ' ')
           {
@@ -118,6 +118,135 @@ foreach my $month (qw(2 02))
     }
   }
 }
+
+# dd/mm/yyyy [hh:mm[:ss[.nnnnnnnnn]]] [am/pm]
+foreach my $month (qw(2 02))
+{
+  foreach my $day (qw(3 03))
+  {
+    foreach my $hour (qw(1 01))
+    {
+      foreach my $fsec ('', '.', '.0', '.123456789')
+      {
+        foreach my $sep ('-', '/', '.')
+        {
+          foreach my $sep3 ('', ' ')
+          {
+            foreach my $pm ('Pm', 'p.M.')
+            {
+              my $arg = "$day$sep$month${sep}2004 $hour:34:56$fsec$sep3$pm";
+
+              my $d = Rose::DateTime::Util::parse_european_date($arg);
+
+              ok($d && $d->isa('DateTime'), "$arg");
+
+              SKIP:
+              {
+                skip("Failed to parse '$arg'", 1)  unless($d);
+
+                if(index($fsec, '9') > 0)
+                {
+                  ok($d == $dt2, "$arg 2");
+                }
+                else
+                {
+                  ok($d == $dt1, "$arg 2");
+                }
+              }
+
+              $arg = "$day$sep$month${sep}2004 13:34:56$fsec";
+
+              $d = Rose::DateTime::Util::parse_european_date($arg);
+
+              ok($d && $d->isa('DateTime'), "$arg");
+
+              SKIP:
+              {
+                skip("Failed to parse '$arg'", 1)  unless($d);
+
+                if(index($fsec, '9') > 0)
+                {
+                  ok($d == $dt2, "$arg 2");
+                }
+                else
+                {
+                  ok($d == $dt1, "$arg 2");
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# dd/mm/yyyy [hh:mm[:ss[.nnnnnnnnn]]] [am/pm] (implicit European mode)
+is(Rose::DateTime::Util->european_dates, 0, 'european_dates() 1');
+is(Rose::DateTime::Util->european_dates('foo'), 1, 'european_dates() 2');
+
+foreach my $month (qw(2 02))
+{
+  foreach my $day (qw(3 03))
+  {
+    foreach my $hour (qw(1 01))
+    {
+      foreach my $fsec ('', '.', '.0', '.123456789')
+      {
+        foreach my $sep ('-', '/', '.')
+        {
+          foreach my $sep3 ('', ' ')
+          {
+            foreach my $pm ('Pm', 'p.M.')
+            {
+              my $arg = "$day$sep$month${sep}2004 $hour:34:56$fsec$sep3$pm";
+
+              my $d = Rose::DateTime::Util::parse_date($arg);
+
+              ok($d && $d->isa('DateTime'), "$arg");
+
+              SKIP:
+              {
+                skip("Failed to parse '$arg'", 1)  unless($d);
+
+                if(index($fsec, '9') > 0)
+                {
+                  ok($d == $dt2, "$arg 2");
+                }
+                else
+                {
+                  ok($d == $dt1, "$arg 2");
+                }
+              }
+
+              $arg = "$day$sep$month${sep}2004 13:34:56$fsec";
+
+              $d = Rose::DateTime::Util::parse_date($arg);
+
+              ok($d && $d->isa('DateTime'), "$arg");
+
+              SKIP:
+              {
+                skip("Failed to parse '$arg'", 1)  unless($d);
+
+                if(index($fsec, '9') > 0)
+                {
+                  ok($d == $dt2, "$arg 2");
+                }
+                else
+                {
+                  ok($d == $dt1, "$arg 2");
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+is(Rose::DateTime::Util->european_dates(''), 0, 'european_dates() 3');
 
 # yyyy-mm-dd [hh:mm[:ss[.nnnnnnnnn]]] [am/pm]
 foreach my $hour (qw(1 01))
@@ -198,6 +327,9 @@ my $d = parse_date('1/2/2003 8am');
 my $d2 = parse_date('1/2/2003 8:00:00.000000000 AM');
 
 ok($d == $d2, 'parse_date(m/d/yyyy ham)');
+$d2 = parse_date('2003-01-02 8:00:00.000000000 AM');
+
+ok($d == $d2, 'parse_date(m/d/yyyy ham) 2');
 
 my $now  = parse_date('now');
 my $inf  = parse_date('infinity');
