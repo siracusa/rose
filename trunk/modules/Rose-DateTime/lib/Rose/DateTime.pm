@@ -39,6 +39,10 @@ L<Rose::DateTime::Parser> encapsulates a date parser with an associated default 
 
 This module (C<Rose::DateTime>) exists mostly to provide a version number for CPAN.  See the individual modules for some actual documentation.
 
+=head1 SEE ALSO
+
+L<DateTime>, L<DateTime::TimeZone>
+
 =head1 AUTHOR
 
 John C. Siracusa (siracusa@mindspring.com)

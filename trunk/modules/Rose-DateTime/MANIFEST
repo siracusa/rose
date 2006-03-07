@@ -6,4 +6,4 @@ Makefile.PL
 MANIFEST
 t/basic.t
 t/parser.t
-
+t/pod.t
