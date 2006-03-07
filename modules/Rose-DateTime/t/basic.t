@@ -58,7 +58,7 @@ foreach my $month (qw(2 02))
             {
               my $arg = "$month$sep$day${sep}2004 $hour:34:56$fsec$sep3$pm";
 
-              my $d = Rose::DateTime::Util::parse_date($arg);
+              my $d = parse_date($arg);
 
               ok($d && $d->isa('DateTime'), "$arg");
 
@@ -136,7 +136,7 @@ foreach my $month (qw(2 02))
             {
               my $arg = "$day$sep$month${sep}2004 $hour:34:56$fsec$sep3$pm";
 
-              my $d = Rose::DateTime::Util::parse_european_date($arg);
+              my $d = parse_european_date($arg);
 
               ok($d && $d->isa('DateTime'), "$arg");
 

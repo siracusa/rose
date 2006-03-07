@@ -10,11 +10,11 @@ use DateTime::Infinite;
 require Exporter;
 our @ISA = qw(Exporter);
 
-our @EXPORT_OK = qw(format_date parse_date);
+our @EXPORT_OK = qw(format_date parse_date parse_european_date);
 
 our %EXPORT_TAGS =
 (
-  std => [ qw(format_date parse_date) ],
+  std => [ qw(format_date parse_date parse_european_date) ],
   all => \@EXPORT_OK
 );
 
@@ -308,11 +308,12 @@ Rose::DateTime::Util - Some simple DateTime wrapper functions.
     use Rose::DateTime::Util qw(:all);
 
     $now  = parse_date('now');
-    $then = parse_date('12/25/2001 6pm');
+    $then = parse_date('12/25/2001 11pm');
 
-    $date_text = format_date($then, "%D at %T %p");
+    print $now->day_of_week; # e.g., "Monday"
 
-    ...
+    # "December 25th 2001 at 11:00:00 PM"
+    $date_text = format_date($then, "%B %E %Y at %t");
 
 =head1 DESCRIPTION
 
@@ -644,6 +645,10 @@ Interpreted as seconds since the Unix epoch.
 =back
 
 =back
+
+=head1 SEE ALSO
+
+L<DateTime>, L<DateTime::TimeZone>
 
 =head1 AUTHOR
 
