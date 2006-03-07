@@ -9,7 +9,8 @@ our @ISA = qw(Rose::Object);
 
 use Rose::Object::MakeMethods::Generic
 (
-  scalar => 'error',
+  scalar  => 'error',
+  boolean => [ 'european' => { default => 0 } ],
   'scalar --get_set_init' => 'time_zone',
 );
 
@@ -20,7 +21,9 @@ sub init_time_zone { Rose::DateTime::Util->time_zone }
 sub parse_date
 {
   my($self) = shift;
-  my $date = Rose::DateTime::Util::parse_date(shift, $self->time_zone);
+  my $date = $self->european ?
+    Rose::DateTime::Util::parse_european_date(shift, $self->time_zone) :
+    Rose::DateTime::Util::parse_date(shift, $self->time_zone);
   return $date  if($date);
   $self->error(Rose::DateTime::Util->error);
   return $date;
@@ -36,8 +39,6 @@ sub parse_european_date
   $self->error(Rose::DateTime::Util->error);
   return $date;
 }
-
-*parse_european_datetime = \&parse_european_date;
 
 1;
 
@@ -81,9 +82,15 @@ Constructs a new L<Rose::DateTime::Parser> object based on PARAMS, where PARAMS 
 
 Get or set the error message string.
 
+=item B<european [BOOL]>
+
+Get or set a boolean value indicating the date style.  If true, then the L<parse_date|/parse_date> method will pass its arguments to L<Rose::DateTime::Util>'s L<parse_european_date|Rose::DateTime::Util/parse_european_date> method.  If false, then it will call L<Rose::DateTime::Util>'s L<parse_date|Rose::DateTime::Util/parse_date>.  The default value is false.
+
 =item B<parse_date STRING>
 
-Attempt to parse STRING by passing it to L<Rose::DateTime::Util>'s L<parse_date|Rose::DateTime::Util/parse_date> function. If parsing is successful, the resulting L<DateTime> object is returned.  Otherwise, L<error|/error> is set and false is returned.
+Attempt to parse STRING by passing it to L<Rose::DateTime::Util>'s L<parse_date|Rose::DateTime::Util/parse_date> function if the eL<european|/european> attribute is false, or L<Rose::DateTime::Util>'s L<parse_european_date|Rose::DateTime::Util/parse_european_date> if the eL<european|/european> attribute is true.
+
+If parsing is successful, the resulting L<DateTime> object is returned.  Otherwise, L<error|/error> is set and false is returned.
 
 =item B<parse_datetime STRING>
 
@@ -92,10 +99,6 @@ This method is an alias for L<parse_date()|/parse_date>
 =item B<parse_european_date STRING>
 
 Attempt to parse STRING by passing it to L<Rose::DateTime::Util>'s L<parse_european_date|Rose::DateTime::Util/parse_european_date> function. If parsing is successful, the resulting L<DateTime> object is returned.  Otherwise, L<error|/error> is set and false is returned.
-
-=item B<parse_european_datetime STRING>
-
-This method is an alias for L<parse_european_date()|/parse_european_date>
 
 =item B<time_zone [STRING]>
 
