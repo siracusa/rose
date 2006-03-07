@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 5;
+use Test::More tests => 7;
 
 BEGIN 
 {
@@ -31,3 +31,6 @@ $d1 = $floating_parser->parse_date('1/1/2002');
 $d2 = Rose::DateTime::Util::parse_date('1/1/2002', 'floating');
 
 ok($d1 == $d2, 'parse_date() 2');
+
+is($default_parser->european, 0, 'european 1');
+is($floating_parser->european, 0, 'european 2');
