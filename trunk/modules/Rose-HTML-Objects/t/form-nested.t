@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 150;
+use Test::More tests => 154;
 
 BEGIN 
 {
@@ -409,8 +409,14 @@ my $x_form = Rose::HTML::Form->new;
 my $y_form = Rose::HTML::Form->new;
 my $z_form = Rose::HTML::Form->new;
 
+is(scalar @{ $w_form->children }, 0, 'children scalar 1');
+is(scalar(() = $w_form->children), 0, 'children list 1');
+
 $w_form->add_form('x' => $x_form);
 $x_form->add_form('y' => $y_form);
+
+is(scalar @{ $w_form->children }, 0, 'children scalar 2');
+is(scalar(() = $w_form->children), 0, 'children list 2');
 
 # Add $z_form to $w_form->form('x')->form('y') under the name 'z'
 $w_form->add_form('x.y.z' => $z_form);

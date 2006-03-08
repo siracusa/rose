@@ -2,12 +2,16 @@
 
 use strict;
 
-use Test::More tests => 212;
+use Test::More tests => 214;
 
 BEGIN { use_ok('Rose::HTML::Object') }
 
 my $o = Rose::HTML::Object->new;
 ok(ref $o eq 'Rose::HTML::Object', 'new()');
+
+
+is(scalar @{ $o->children }, 0, 'children scalar');
+is(scalar(() = $o->children), 0, 'children list');
 
 is($o->validate_html_attrs(0), 0, 'validate_html_attrs(0)');
 

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 217;
+use Test::More tests => 221;
 
 BEGIN 
 {
@@ -109,7 +109,6 @@ $r->_params->{'a'} = 'x';
 is($form->param('a'), 'b', 'params_from_apache 3');
 is($form->param('c')->[1], 'e', 'params_from_apache 4');
 
-
 $form->html_attr('action' => '/foo/bar');
 
 is($form->start_html, '<form action="/foo/bar" enctype="application/x-www-form-urlencoded" method="get">', 'start_html() 1');
@@ -130,7 +129,13 @@ is($form->xhtml_error, '<span class="error">Foo > bar</span>', 'xhtml_error()');
 
 my $field = Rose::HTML::Form::Field::Text->new();
 
+is(scalar @{ $form->children }, 0, 'children scalar 1');
+is(scalar(() = $form->children), 0, 'children list 1');
+
 ok($form->add_field(foo => $field), 'add_field()');
+
+is(scalar @{ $form->children }, 1, 'children scalar 2');
+is(scalar(() = $form->children), 1, 'children list 2');
 
 is($form->field('foo'), $field, 'field() set with field object');
 

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More 'no_plan'; #tests => 14;
+use Test::More tests => 17;
 
 BEGIN 
 {
@@ -12,6 +12,9 @@ BEGIN
 
 my $field = Rose::HTML::Form::Field::Compound->new(name => 'date');
 ok(ref $field && $field->isa('Rose::HTML::Form::Field::Compound'), 'new()');
+
+is(scalar @{ $field->children }, 0, 'children scalar 1');
+is(scalar(() = $field->children), 0, 'children list 1');
 
 my %fields =
 (
@@ -29,6 +32,9 @@ my %fields =
 );
 
 ok($field->add_fields(%fields), 'add_fields()');
+
+is(scalar @{ $field->children }, 3, 'children scalar 2');
+is(scalar(() = $field->children), 3, 'children list 2');
 
 is($field->field('month'), $fields{'month'}, 'field() set with field hash');
 

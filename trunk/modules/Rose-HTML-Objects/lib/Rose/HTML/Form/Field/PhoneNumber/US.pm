@@ -5,7 +5,7 @@ use strict;
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.011';
+our $VERSION = '0.52';
 
 __PACKAGE__->add_required_html_attrs(
 {
@@ -16,7 +16,7 @@ sub validate
 {
   my($self) = shift;
 
-  my $number = $self->value;
+  my $number = $self->internal_value;
 
   return 1  if($number !~ /\S/);
 

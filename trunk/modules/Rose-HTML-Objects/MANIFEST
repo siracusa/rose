@@ -20,6 +20,7 @@ lib/Rose/HTML/Form/Field/Group.pm
 lib/Rose/HTML/Form/Field/Group/OnOff.pm
 lib/Rose/HTML/Form/Field/Hidden.pm
 lib/Rose/HTML/Form/Field/Input.pm
+lib/Rose/HTML/Form/Field/Integer.pm
 lib/Rose/HTML/Form/Field/OnOff.pm
 lib/Rose/HTML/Form/Field/OnOff/Checkable.pm
 lib/Rose/HTML/Form/Field/OnOff/Selectable.pm
@@ -61,6 +62,7 @@ t/form-field-datetime.t
 t/form-field-email.t
 t/form-field-file.t
 t/form-field-hidden.t
+t/form-field-integer.t
 t/form-field-option.t
 t/form-field-optiongroup.t
 t/form-field-password.t

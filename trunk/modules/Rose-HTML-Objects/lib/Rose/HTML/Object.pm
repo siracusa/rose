@@ -9,7 +9,7 @@ use Rose::HTML::Util();
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.011';
+our $VERSION = '0.52';
 
 our $Debug = undef;
 
@@ -117,6 +117,12 @@ sub init
   }
 
   $self->SUPER::init(@_);
+}
+
+sub children 
+{
+  croak "children() does not take any arguments"  if(@_ > 1);
+  return wantarray ? () : [];
 }
 
 sub html_attr_exists
@@ -811,6 +817,14 @@ Constructs a new L<Rose::HTML::Object> object based on PARAMS, where PARAMS are 
 =head1 OBJECT METHODS
 
 =over 4
+
+=item B<children>
+
+Returns a list (in list context) or a reference to an array (in scalar context) of L<Rose::HTML::Object>-derived objects that are contained within, or otherwise "children of" this object.
+
+The array reference return value should be treated as read-only.  The individual items may be treated as read/write provided that you understand that you're modifying the actual children, not copies.
+
+The default implementation returns an empty list when called in list context, and a reference to an empty array when called in scalar context.
 
 =item B<clear_all_html_attrs>
 

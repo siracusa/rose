@@ -9,7 +9,7 @@ use Rose::HTML::Util();
 use Rose::HTML::Form::Field;
 our @ISA = qw(Rose::HTML::Form::Field);
 
-our $VERSION = '0.012';
+our $VERSION = '0.52';
 
 our $Debug = undef;
 
@@ -47,6 +47,12 @@ sub _item_class       { '' }
 sub _item_group_class { '' }
 sub _item_name        { 'item' }
 sub _item_name_plural { 'items' }
+
+sub children 
+{
+  Carp::croak "children() does not take any arguments"  if(@_ > 1);
+  return shift->items();
+}
 
 sub items
 {
