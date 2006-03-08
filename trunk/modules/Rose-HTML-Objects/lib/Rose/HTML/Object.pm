@@ -824,8 +824,6 @@ Returns a list (in list context) or a reference to an array (in scalar context) 
 
 The array reference return value should be treated as read-only.  The individual items may be treated as read/write provided that you understand that you're modifying the actual children, not copies.
 
-The default implementation returns an empty list when called in list context, and a reference to an empty array when called in scalar context.
-
 =item B<clear_all_html_attrs>
 
 Clears all the HTML attributes by settings their values to undef.
