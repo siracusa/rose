@@ -42,7 +42,7 @@ sub auto_retrieve_primary_key_column_names
 
   if($@ || !@columns)
   {
-    $@ = 'no primary key coumns found'  unless(defined $@);
+    $@ = 'no primary key columns found'  unless(defined $@);
     Carp::croak "Could not auto-retrieve primary key columns for class $class - $@";
   }
 
@@ -90,7 +90,7 @@ sub auto_generate_unique_keys
   # This sort order is part of the API, and is essential to make the
   # test suite work.
   no warnings 'uninitialized';
-  my @uk = map { $unique_keys{$_} } sort { lc $a <=> lc $b } keys(%unique_keys);
+  my @uk = map { $unique_keys{$_} } sort { lc $a cmp lc $b } keys(%unique_keys);
 
   return wantarray ? @uk : \@uk;
 }

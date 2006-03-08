@@ -534,7 +534,7 @@ EOF
 
   if($@ || !@columns)
   {
-    $@ = 'no primary key coumns found'  unless(defined $@);
+    $@ = 'no primary key columns found'  unless(defined $@);
     Carp::croak "Could not auto-retrieve primary key columns for class $class - $@";
   }
 
