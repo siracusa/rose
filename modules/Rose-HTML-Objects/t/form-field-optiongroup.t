@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 54;
+use Test::More tests => 58;
 
 BEGIN 
 {
@@ -14,9 +14,15 @@ my $field = Rose::HTML::Form::Field::OptionGroup->new(name  => 'fruits',
 
 ok(ref $field eq 'Rose::HTML::Form::Field::OptionGroup', 'new()');
 
+is(scalar @{ $field->children }, 0, 'children scalar 1');
+is(scalar(() = $field->children), 0, 'children list 1');
+
 $field->options(apple  => 'Apple',
                 orange => 'Orange',
                 grape  => 'Grape');
+
+is(scalar @{ $field->children }, 3, 'children scalar 2');
+is(scalar(() = $field->children), 3, 'children list 2');
 
 $field->option('apple')->short_label('1.0');
 $field->option('orange')->short_label('2.0');

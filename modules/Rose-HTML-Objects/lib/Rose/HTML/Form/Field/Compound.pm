@@ -10,11 +10,12 @@ our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.50';
+our $VERSION = '0.52';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
 (
+  'children',
   'hidden_field',
   'hidden_fields',
   'html_hidden_field',

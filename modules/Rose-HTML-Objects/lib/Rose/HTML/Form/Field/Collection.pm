@@ -14,7 +14,7 @@ use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 # Variables for use in regexes
 our $FF_SEPARATOR_RE = quotemeta FF_SEPARATOR;
 
-our $VERSION = '0.50';
+our $VERSION = '0.52';
 
 #
 # Class data
@@ -349,6 +349,12 @@ sub resync_field_names
     $field->resync_field_names  if($field->isa('Rose::HTML::Form::Field::Compound'));
     #$field->name; # Pull the new name through to the name HTML attribute
   }
+}
+
+sub children 
+{
+  Carp::croak "children() does not take any arguments"  if(@_ > 1);
+  return wantarray ? shift->fields() : (shift->fields() || []);
 }
 
 sub fields

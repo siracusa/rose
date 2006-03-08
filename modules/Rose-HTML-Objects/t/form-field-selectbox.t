@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 70;
+use Test::More tests => 74;
 
 BEGIN 
 {
@@ -15,9 +15,15 @@ my $field = Rose::HTML::Form::Field::SelectBox->new(name => 'fruits');
 
 ok(ref $field eq 'Rose::HTML::Form::Field::SelectBox', 'new()');
 
+is(scalar @{ $field->children }, 0, 'children scalar 1');
+is(scalar(() = $field->children), 0, 'children list 1');
+
 $field->options(apple  => 'Apple',
                 orange => 'Orange',
                 grape  => 'Grape');
+
+is(scalar @{ $field->children }, 3, 'children scalar 2');
+is(scalar(() = $field->children), 3, 'children list 2');
 
 is(join(',', sort $field->labels), 'Apple,Grape,Orange,apple,grape,orange', 'labels()');
 

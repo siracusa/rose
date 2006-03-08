@@ -10,7 +10,7 @@ use Rose::HTML::Form::Field::Group;
 use Rose::HTML::Form::Field::Group::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
 
-our $VERSION = '0.50';
+our $VERSION = '0.52';
 
 sub _item_class       { 'Rose::HTML::Form::Field::Checkbox' }
 sub _item_name        { 'checkbox' }
