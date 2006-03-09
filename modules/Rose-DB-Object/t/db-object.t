@@ -43,7 +43,14 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $o->last_modified($o->date_created);
   $o->save_col(7);
 
-  ok($o->save, "save() 1 - $db_type");
+  if(rand >= 0.5)
+  {
+    ok($o->save, "save() 1 - $db_type");
+  }
+  else
+  {
+    ok($o->insert, "insert() 1 - $db_type");
+  }
 
   is($o->meta->primary_key->sequence_names->[0], 'rose_db_object_test_id_seq', 
      "pk sequence name - $db_type");
@@ -270,7 +277,15 @@ SKIP: foreach my $db_type ('mysql')
 
   $o->bitz3('11');
 
-  ok($o->save, "save() 1 - $db_type");
+  if(rand >= 0.5)
+  {
+    ok($o->save, "save() 1 - $db_type");
+  }
+  else
+  {
+    ok($o->insert, "insert() 1 - $db_type");
+  }
+
   ok($o->load, "load() 1 - $db_type");
 
   my $ox = MyMySQLObject->new(id => $o->id)->load;
@@ -496,7 +511,15 @@ SKIP: foreach my $db_type ('informix')
   $o->last_modified($o->date_created);
   $o->save_col(22);
 
-  ok($o->save, "save() 1 - $db_type");
+  if(rand >= 0.5)
+  {
+    ok($o->save, "save() 1 - $db_type");
+  }
+  else
+  {
+    ok($o->insert, "insert() 1 - $db_type");
+  }
+
   ok($o->load, "load() 1 - $db_type");
 
   $o->name('C' x 50);
@@ -693,7 +716,15 @@ SKIP: foreach my $db_type ('sqlite')
   $o->last_modified($o->date_created);
   $o->save_col(22);
 
-  ok($o->save, "save() 1 - $db_type");
+  if(rand >= 0.5)
+  {
+    ok($o->save, "save() 1 - $db_type");
+  }
+  else
+  {
+    ok($o->insert, "insert() 1 - $db_type");
+  }
+
   ok($o->load, "load() 1 - $db_type");
 
   $o->name('C' x 50);
