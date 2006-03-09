@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 34;
+use Test::More tests => (19 * 4) + 2;
 
 BEGIN 
 {
@@ -23,15 +23,60 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 8)  unless($Have{$db_type});
+    skip("$db_type tests", 19)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
+
+  MyMixIn->clear_export_tags;
+  MyMixIn->export_tag('all' => [ 'a', 'b' ]);
 
   my $class = 'My' . ucfirst($db_type) . 'Object';
 
   my $o = $class->new(id => 1, name => 'John');
   
+  my @tags = MyMixIn->export_tags;
+  is_deeply(\@tags, [ 'all' ], "export_tags() 1 - $db_type");
+
+  my $tags = MyMixIn->export_tags;
+  is_deeply($tags, [ 'all' ], "export_tags() 1 - $db_type");
+
+  eval { MyMixIn->export_tag('foo') };
+  ok($@, "export_tag() 1 - $db_type");
+  
+  MyMixIn->export_tag('foo' => [ 'bar', 'baz' ]);
+  
+  my @methods = sort(MyMixIn->export_tag('foo'));
+  is_deeply(\@methods, [ 'bar', 'baz' ], "export_tag() 1 - $db_type");
+  
+  my $methods = MyMixIn->export_tag('foo');
+  $methods = [ sort @$methods ];
+  is_deeply($methods, [ 'bar', 'baz' ], "export_tag() 2 - $db_type");
+
+  eval { MyMixIn->export_tag('foo', 'bar') };
+  ok($@, "export_tag() 3 - $db_type");
+
+  eval { MyMixIn->export_tag('foo', [ 'bar' ], 'baz') };
+  ok($@, "export_tag() 4 - $db_type");
+
+  MyMixIn->clear_export_tags;
+  @tags = MyMixIn->export_tags;
+  is_deeply(\@tags, [ ], "clear_export_tags() 1 - $db_type");
+
+  MyMixIn->add_export_tags('foo', 'all');
+  MyMixIn->delete_export_tags('foo', 'all');
+
+  @tags = MyMixIn->export_tags;
+  is_deeply(\@tags, [ ], "delete_export_tags() 1 - $db_type");
+
+  MyMixIn->export_tag('xx', [ 'a' ]);
+  @tags = MyMixIn->export_tags;
+  is_deeply(\@tags, [ 'xx' ], "export_tag() 5 - $db_type");
+
+  MyMixIn->delete_export_tag('xx');
+  @tags = MyMixIn->export_tags;
+  is_deeply(\@tags, [ ], "delete_export_tag() 1 - $db_type");  
+
   ok(!$o->load_speculative, "load_speculative() 1 - $db_type");
   ok($o->load_or_insert(), "load_or_insert() 1 - $db_type");
 
@@ -59,7 +104,7 @@ BEGIN
 
   my $dbh;
 
-  eval 
+  eval
   {
     $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
@@ -149,7 +194,7 @@ EOF
     
     eval { Rose::DB::Object::Helpers->import(qw(load_or_insert load_speculative)) };
     Test::More::ok($@, 'import conflict - mysql');
-    eval { Rose::DB::Object::Helpers->import(qw(-force load_or_insert load_speculative)) };
+    eval { Rose::DB::Object::Helpers->import(qw(--force load_or_insert load_speculative)) };
     Test::More::ok(!$@, 'import override - mysql');
 
     Rose::DB::Object::Helpers->import({ load_or_insert => 'find_or_create' });
@@ -251,7 +296,7 @@ EOF
     
     eval { Rose::DB::Object::Helpers->import(qw(:all)) };
     Test::More::ok($@, 'import conflict - sqlite');
-    eval { Rose::DB::Object::Helpers->import(qw(-force :all)) };
+    eval { Rose::DB::Object::Helpers->import(qw(--force :all)) };
     Test::More::ok(!$@, 'import override - sqlite');
 
     Rose::DB::Object::Helpers->import({ load_or_insert => 'find_or_create' });
@@ -261,6 +306,9 @@ EOF
     __PACKAGE__->meta->table('rose_db_object_test');
     __PACKAGE__->meta->auto_initialize;
   }
+  
+  package MyMixIn;
+  our @ISA = qw(Rose::DB::Object::MixIn);
 }
 
 END
