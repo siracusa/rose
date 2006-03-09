@@ -83,10 +83,28 @@ sub import
 sub export_tag
 {
   my($class, $tag) = (shift, shift);
-  $tag = ":$tag"  unless(index($tag, ':') == 0);
+
+  if(index($tag, ':') == 0)
+  {
+    croak 'Tag name arguments to export_tag() should not begin with ":"';
+  }
+
+  if(@_ && !$class->_export_tag_value($tag))
+  {
+    $class->add_export_tag($tag);
+  }
+
+  if(@_ && (@_ > 1 || (ref $_[0] || '') ne 'ARRAY'))
+  {
+    croak 'export_tag() expects either a single tag name argument, ',
+          'or a tagname and a reference to an array of method names';
+  }
+
+  my $ret = $class->_export_tag_value($tag, @_);
   
-  $class->add_export_tag($tag)  unless($class->_export_tag_value($tag));
-  return $class->_export_tag_value($tag, @_);
+  croak "No such tag: $tag"  unless($ret);
+
+  return wantarray ? @$ret : $ret;
 }
 
 1;
@@ -95,128 +113,102 @@ __END__
 
 =head1 NAME
 
-Rose::DB::Object::MixIn - Utility functions for use in Rose::DB::Object subclasses and method makers.
+Rose::DB::Object::MixIn - A base class for mix-ins.
 
 =head1 SYNOPSIS
 
-  package MyDBObject;
+  package MyMixInClass;
 
-  use Rose::DB::Object::MixIn qw(:all);
+  use Rose::DB::Object::MixIn(); # Use empty parentheses here
+  our @ISA = qw(Rose::DB::Object::MixIn);
 
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
+  __PACKAGE__->export_tag(all => [ q(my_cool_method my_other_method) ]);
+
+  sub my_cool_method  { ... }
+  sub my_other_method { ... }
   ...
-  sub whatever
-  {
-    my($self) = shift;
-    ...
-    if(is_loading($self)) 
-    {
-      ...
-      set_state_in_db($self);
-    }
-    ...
-  }
+
+  package MyClass;
+  # Import methods my_cool_method() and my_other_method()
+  use MyMixInClass qw(:all);
+  ...
+
+  package MyOtherClass;  
+  # Import just my_cool_method()
+  use MyMixInClass qw(my_cool_method);
+  ...
+
+  package YetAnotherClass;
+  # Import just my_cool_method() as cool()
+  use MyMixInClass { my_cool_method => 'cool' }
 
 =head1 DESCRIPTION
 
-L<Rose::DB::Object::MixIn> provides functions that are useful for developers who are subclassing L<Rose::DB::Object> or otherwise extending or modifying its behavior.
+L<Rose::DB::Object::MixIn> is a base class for mix-ins.  A mix-in is a class that exports methods into another class.  This export process is controlelr with an L<Exporter>-like interface, but L<Rose::DB::Object::MixIn> does not inherit from L<Exporter>.
 
-L<Rose::DB::Object>s have some awareness of their current situation.  Certain optimizations rely on this awareness.  For example, when loading column values directly from the database, there's no reason to validate the format of the data or immediately "inflate" the values.  The L<is_loading|/is_loading> function will tell you when these steps can safely be skipped.
+When you L<use|perlfunc/use> a L<Rose::DB::Object::MixIn>-derived class, its L<import|/import> method is called at compile time.  In other words, this:
 
-Similarly, it may be useful to set these state characteristics in your code.  The C<set_sate_*> functions provide that ability.
+    use Rose::DB::Object::MixIn 'foo', 'bar';
 
-=head1 EXPORTS
+is the same thing as this:
 
-C<Rose::DB::Object::MixIn> does not export any function names by default.
+    BEGIN { Rose::DB::Object::MixIn->import('foo', 'bar') }
 
-The 'get_state' tag:
+To prevent the L<import|/import> method from being run, put empty parentheses "()" after the package name instead of a list of arguments.
 
-    use Rose::DB::Object::MixIn qw(:get_state);
+    use Rose::DB::Object::MixIn();
 
-will cause the following function names to be imported:
+See the L<synopsis|/SYNOPSIS> for an example of when this is handy: using L<Rose::DB::Object::MixIn> from within a subclass.  Note that the empty parenthesis are important.  The following is I<not> equivalent:
 
-    is_in_db()
-    is_loading()
-    is_saving()
+    use Rose::DB::Object::MixIn; # not the same thing as the example above!
 
-The 'set_state' tag:
+See the documentation for the L<import|/import> method below to learn what arguments it accepts.
 
-    use Rose::DB::Object::MixIn qw(:set_state);
-
-will cause the following function names to be imported:
-
-    set_state_in_db()
-    set_state_loading()
-    set_state_saving()
-
-The 'unset_state' tag:
-
-    use Rose::DB::Object::MixIn qw(:unset_state);
-
-will cause the following function names to be imported:
-
-    unset_state_in_db()
-    unset_state_loading()
-    unset_state_saving()
-
-The 'all' tag:
-
-    use Rose::DB::Object::MixIn qw(:all);
-
-will cause the following function names to be imported:
-
-    is_in_db()
-    is_loading()
-    is_saving()
-
-    set_state_in_db()
-    set_state_loading()
-    set_state_saving()
-
-    unset_state_in_db()
-    unset_state_loading()
-    unset_state_saving()
-
-=head1 FUNCTIONS
+=head1 CLASS METHODS
 
 =over 4
 
-=item B<is_in_db OBJECT>
+=item B<import ARGS>
 
-Given the L<Rose::DB::Object>-derived object OBJECT, returns true if the object was L<load|Rose::DB::Object/load>ed from, or has ever been L<save|Rose::DB::Object/save>d into, the database, or false if it has not.
+Import the methods specified by ARGS into the package from which this method was called.  If the current class L<can|perlfunc/can> already perform one of these methods, a fatal error will occur.  To override an existing method, you must use the C<--force> argument (see below).
 
-=item B<is_loading OBJECT>
+Valid formats for ARGS are as follows:
 
-Given the L<Rose::DB::Object>-derived object OBJECT, returns true if the object is currently being L<load|Rose::DB::Object/load>ed, false otherwise.
+=over 4
 
-=item B<is_saving OBJECT>
+=item * B<A method name>
 
-Given the L<Rose::DB::Object>-derived object OBJECT, returns true if the object is currently being L<save|Rose::DB::Object/save>d, false otherwise.
+Literal method names will be imported as-is.
 
-=item B<set_state_in_db OBJECT>
+=item * B<A tag name>
 
-Mark the L<Rose::DB::Object>-derived object OBJECT as having been L<load|Rose::DB::Object/load>ed from or L<save|Rose::DB::Object/save>d into the database at some point in the past.
+Tags names are indicated by a leading colon.  For exampe, ":all" specifies the "all" tag.  A tag is a stand-in for a list of methods.  See the L<export_tag|/export_tag> method to learn how to create tags.
 
-=item B<set_state_loading OBJECT>
+=item * B<A reference to a hash>
 
-Indicate that the L<Rose::DB::Object>-derived object OBJECT is currently being L<load|Rose::DB::Object/load>ed from the database.
+Each key/vaue pair in this has is a method name and the name that it will be imported as.  In this way, you can import methods under different names in order to avoid conflicts.
 
-=item B<set_state_saving OBJECT>
+=item * B<-force>
 
-Indicate that the L<Rose::DB::Object>-derived object OBJECT is currently being L<save|Rose::DB::Object/save>d into the database.
+The special argument "-force" will cause the specified methods to be imported even if the calling class L<can|perlfunc/can> already perform one or more of those methods.
 
-=item B<unset_state_in_db OBJECT>
+=back
 
-Mark the L<Rose::DB::Object>-derived object OBJECT as B<not> having been L<load|Rose::DB::Object/load>ed from or L<save|Rose::DB::Object/save>d into the database at some point in the past.
+See the L<synopsis|/SYNOPSIS> for several examples of the L<import|/import> method in action.  (Remember, it's called implicitly when you L<use|perlfunc/use> a L<Rose::DB::Object::MixIn>-derived class with anything other than an empty set of parenthesis "()" as arguments.)
 
-=item B<unset_state_loading OBJECT>
+=item B<clear_export_tags>
 
-Indicate that the L<Rose::DB::Object>-derived object OBJECT is B<not> currently being L<load|Rose::DB::Object/load>ed from the database.
+Delete the entire list of L<export tags|/export_tags>.
 
-=item B<unset_state_saving OBJECT>
+=item B<export_tag NAME [, ARRAYREF]>
 
-Indicate that the L<Rose::DB::Object>-derived object OBJECT is B<not> currently being L<save|Rose::DB::Object/save>d into the database.
+Get or set the list of method names associated with a tag.  The tag name should not begin with a colon.  If ARRAYREF is passed, then the list methods associated with the specific tag is set.
+
+Returns a list (in list context) or a reference to an array (in scalar context).  The array reference return value should be treated as read-only.  If no such tag exists, and if an ARRAYREF is not passed, then a fatal error will occur.
+
+=item B<export_tags>
+
+Returns a list (in list context) and a reference to an array (in scalar context) containing the complete list of export tags.  The array reference return value should be treated as read-only.
 
 =back
 
