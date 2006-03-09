@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
 
-our $VERSION = '0.681';
+our $VERSION = '0.69';
 
 our $Debug = 0;
 
@@ -1627,6 +1627,20 @@ The cascaded delete feature described above plays it safe by only deleting rows 
 
 Returns the text message associated with the last error that occurred.
 
+=item B<insert [PARAMS]>
+
+Insert the current object to the database table.  This method should only be used when you're absolutely sure that you want to B<force> the current object to be inserted, rather than updated.  It is I<highly recommended> that you use the L<save|/save> method instead of this one in most circumstances.  The L<save|/save> method will "do the right thing," executing an insert or update as appropriate for the current situation.
+
+PARAMS are optional name/value pairs.  Valid PARAMS are:
+
+=over 4
+
+=item C<prepare_cached BOOL>
+
+If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will insert the object.  If omitted, the default value is determined by the L<metadata object|/meta>'s L<dbi_prepare_cached|Rose::DB::Object::Metadata/dbi_prepare_cached> class method.
+
+=back
+
 =item B<load [PARAMS]>
 
 Load a row from the database table, initializing the object with the values from that row.  An object can be loaded based on either a primary key or a unique key.
@@ -1797,6 +1811,21 @@ If your table has a multi-column primary key or does not use a column type that 
 
 See the L<Rose::DB::Object::Metadata> documentation for more information on custom primary key generators.
 
+=item B<update [PARAMS]>
+
+Update the current object in the database table.  This method should only be used when you're absolutely sure that you want to B<force> the current object to be updated, rather than inserted.  It is I<highly recommended> that you use the L<save|/save> method instead of this one in most circumstances.  The L<save|/save> method will "do the right thing," executing an insert or update as appropriate for the current situation.
+
+PARAMS are optional name/value pairs.  Valid PARAMS are:
+
+=over 4
+
+=item C<prepare_cached BOOL>
+
+If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will insert the object.  If omitted, the default value is determined by the L<metadata object|/meta>'s L<dbi_prepare_cached|Rose::DB::Object::Metadata/dbi_prepare_cached> class method.
+
+=back
+
+
 =back
 
 =head1 RESERVED METHODS
@@ -1805,6 +1834,7 @@ As described in the L<Rose::DB::Object::Metadata> documentation, each column in 
 
 Here is a list of method names reserved by the L<Rose::DB::Object> API.  If you have a column with one of these names, you must alias it.
 
+    clone
     db
     dbh
     delete
@@ -1820,7 +1850,7 @@ Here is a list of method names reserved by the L<Rose::DB::Object> API.  If you 
     save
     update
 
-Note that not all of these methods are public.  These methods do not suddenly become public just because you now know their names!  Remember the stated policy of the L<Rose> web application framework: if a method is not documented, it does not exist.  (And no, the list of method names above does not constitute "documentation")
+Note that not all of these methods are public.  These methods do not suddenly become public just because you now know their names!  Remember the stated policy of the L<Rose> web application framework: if a method is not documented, it does not exist.  (And no, the list of method names above does not constitute "documentation.")
 
 =head1 DEVELOPMENT POLICY
 
