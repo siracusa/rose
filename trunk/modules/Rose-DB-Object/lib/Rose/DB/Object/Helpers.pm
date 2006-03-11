@@ -21,16 +21,16 @@ sub load_or_insert
   
   if(wantarray)
   {
-    @ret = $self->load(speculative => 1);
+    @ret = $self->load(@_, speculative => 1);
     return @ret  if($ret[0]);
   }
   else
   {
-    $ret = $self->load(speculative => 1);
+    $ret = $self->load(@_, speculative => 1);
     return $ret  if($ret);
   }
   
-  return $self->insert(@_);
+  return $self->insert;
 }
 
 1;
@@ -39,128 +39,38 @@ __END__
 
 =head1 NAME
 
-Rose::DB::Object::MixIn - Utility functions for use in Rose::DB::Object subclasses and method makers.
+Rose::DB::Object::Helpers - A mix-in class containing convenience methods.
 
 =head1 SYNOPSIS
 
   package MyDBObject;
 
-  use Rose::DB::Object::MixIn qw(:all);
-
   use Rose::DB::Object;
   our @ISA = qw(Rose::DB::Object);
+
+  use Rose::DB::Object::Helpers { load_or_insert => 'find_or_create' });
   ...
-  sub whatever
-  {
-    my($self) = shift;
-    ...
-    if(is_loading($self)) 
-    {
-      ...
-      set_state_in_db($self);
-    }
-    ...
-  }
+
+  $obj = MyDBObject->new(id => 123);
+  $obj->find_or_create();
 
 =head1 DESCRIPTION
 
-L<Rose::DB::Object::MixIn> provides functions that are useful for developers who are subclassing L<Rose::DB::Object> or otherwise extending or modifying its behavior.
+L<Rose::DB::Object::Helpers> provides convenience methods from use with L<Rose::DB::Object>-derived classes.  These methods do not exist in the L<Rose::DB::Object> class in order to keep the method namespace clean.  (Each method added to L<Rose::DB::Object> is another potential naming conflict with a column accessor.)
 
-L<Rose::DB::Object>s have some awareness of their current situation.  Certain optimizations rely on this awareness.  For example, when loading column values directly from the database, there's no reason to validate the format of the data or immediately "inflate" the values.  The L<is_loading|/is_loading> function will tell you when these steps can safely be skipped.
+This class inherits from L<Rose::DB::Object::MixIn>.  See the L<Rose::DB::Object::MixIn> documentation for a full explanation of how to import methods from this class.  The helper methods themselves are described below.
 
-Similarly, it may be useful to set these state characteristics in your code.  The C<set_sate_*> functions provide that ability.
-
-=head1 EXPORTS
-
-C<Rose::DB::Object::MixIn> does not export any function names by default.
-
-The 'get_state' tag:
-
-    use Rose::DB::Object::MixIn qw(:get_state);
-
-will cause the following function names to be imported:
-
-    is_in_db()
-    is_loading()
-    is_saving()
-
-The 'set_state' tag:
-
-    use Rose::DB::Object::MixIn qw(:set_state);
-
-will cause the following function names to be imported:
-
-    set_state_in_db()
-    set_state_loading()
-    set_state_saving()
-
-The 'unset_state' tag:
-
-    use Rose::DB::Object::MixIn qw(:unset_state);
-
-will cause the following function names to be imported:
-
-    unset_state_in_db()
-    unset_state_loading()
-    unset_state_saving()
-
-The 'all' tag:
-
-    use Rose::DB::Object::MixIn qw(:all);
-
-will cause the following function names to be imported:
-
-    is_in_db()
-    is_loading()
-    is_saving()
-
-    set_state_in_db()
-    set_state_loading()
-    set_state_saving()
-
-    unset_state_in_db()
-    unset_state_loading()
-    unset_state_saving()
-
-=head1 FUNCTIONS
+=head1 OBJECT METHODS
 
 =over 4
 
-=item B<is_in_db OBJECT>
+=item B<load_or_insert [PARAMS]>
 
-Given the L<Rose::DB::Object>-derived object OBJECT, returns true if the object was L<load|Rose::DB::Object/load>ed from, or has ever been L<save|Rose::DB::Object/save>d into, the database, or false if it has not.
+Try to L<load|Rose::DB::Object/load> the object, passing PARAMS to the call to the L<load()|Rose::DB::Object/load> method.  If no such object is found, then L<insert|Rose::DB::Object/insert> the object instead.
 
-=item B<is_loading OBJECT>
+=item B<load_speculative [PARAMS]>
 
-Given the L<Rose::DB::Object>-derived object OBJECT, returns true if the object is currently being L<load|Rose::DB::Object/load>ed, false otherwise.
-
-=item B<is_saving OBJECT>
-
-Given the L<Rose::DB::Object>-derived object OBJECT, returns true if the object is currently being L<save|Rose::DB::Object/save>d, false otherwise.
-
-=item B<set_state_in_db OBJECT>
-
-Mark the L<Rose::DB::Object>-derived object OBJECT as having been L<load|Rose::DB::Object/load>ed from or L<save|Rose::DB::Object/save>d into the database at some point in the past.
-
-=item B<set_state_loading OBJECT>
-
-Indicate that the L<Rose::DB::Object>-derived object OBJECT is currently being L<load|Rose::DB::Object/load>ed from the database.
-
-=item B<set_state_saving OBJECT>
-
-Indicate that the L<Rose::DB::Object>-derived object OBJECT is currently being L<save|Rose::DB::Object/save>d into the database.
-
-=item B<unset_state_in_db OBJECT>
-
-Mark the L<Rose::DB::Object>-derived object OBJECT as B<not> having been L<load|Rose::DB::Object/load>ed from or L<save|Rose::DB::Object/save>d into the database at some point in the past.
-
-=item B<unset_state_loading OBJECT>
-
-Indicate that the L<Rose::DB::Object>-derived object OBJECT is B<not> currently being L<load|Rose::DB::Object/load>ed from the database.
-
-=item B<unset_state_saving OBJECT>
-
-Indicate that the L<Rose::DB::Object>-derived object OBJECT is B<not> currently being L<save|Rose::DB::Object/save>d into the database.
+Try to L<load|Rose::DB::Object/load> the object, passing PARAMS to the call to the L<load()|Rose::DB::Object/load> method along with the C<speculative> parameter with a true value.  See the documentation for L<Rose::DB::Object>'s L<load|Rose::DB::Object/load> method for more information.
 
 =back
 
