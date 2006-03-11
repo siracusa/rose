@@ -144,7 +144,7 @@ Rose::DB::Object::MixIn - A base class for mix-ins.
 
 =head1 DESCRIPTION
 
-L<Rose::DB::Object::MixIn> is a base class for mix-ins.  A mix-in is a class that exports methods into another class.  This export process is controlelr with an L<Exporter>-like interface, but L<Rose::DB::Object::MixIn> does not inherit from L<Exporter>.
+L<Rose::DB::Object::MixIn> is a base class for mix-ins.  A mix-in is a class that exports methods into another class.  This export process is controlled with an L<Exporter>-like interface, but L<Rose::DB::Object::MixIn> does not inherit from L<Exporter>.
 
 When you L<use|perlfunc/use> a L<Rose::DB::Object::MixIn>-derived class, its L<import|/import> method is called at compile time.  In other words, this:
 
@@ -170,7 +170,7 @@ See the documentation for the L<import|/import> method below to learn what argum
 
 =item B<import ARGS>
 
-Import the methods specified by ARGS into the package from which this method was called.  If the current class L<can|perlfunc/can> already perform one of these methods, a fatal error will occur.  To override an existing method, you must use the C<--force> argument (see below).
+Import the methods specified by ARGS into the package from which this method was called.  If the current class L<can|perlfunc/can> already perform one of these methods, a fatal error will occur.  To override an existing method, you must use the C<-force> argument (see below).
 
 Valid formats for ARGS are as follows:
 
@@ -182,11 +182,11 @@ Literal method names will be imported as-is.
 
 =item * B<A tag name>
 
-Tags names are indicated by a leading colon.  For exampe, ":all" specifies the "all" tag.  A tag is a stand-in for a list of methods.  See the L<export_tag|/export_tag> method to learn how to create tags.
+Tags names are indicated with a leading colon.  For example, ":all" specifies the "all" tag.  A tag is a stand-in for a list of methods.  See the L<export_tag|/export_tag> method to learn how to create tags.
 
 =item * B<A reference to a hash>
 
-Each key/vaue pair in this has is a method name and the name that it will be imported as.  In this way, you can import methods under different names in order to avoid conflicts.
+Each key/value pair in this hash contains a method name and the name that it will be imported as.  Use this feature to import methods under different names in order to avoid conflicts with existing methods.
 
 =item * B<-force>
 
@@ -194,7 +194,7 @@ The special argument "-force" will cause the specified methods to be imported ev
 
 =back
 
-See the L<synopsis|/SYNOPSIS> for several examples of the L<import|/import> method in action.  (Remember, it's called implicitly when you L<use|perlfunc/use> a L<Rose::DB::Object::MixIn>-derived class with anything other than an empty set of parenthesis "()" as arguments.)
+See the L<synopsis|/SYNOPSIS> for several examples of the L<import|/import> method in action.  (Remember, it's called implicitly when you L<use|perlfunc/use> a L<Rose::DB::Object::MixIn>-derived class with anything other than an empty set of parenthesis "()" as an argument.)
 
 =item B<clear_export_tags>
 
@@ -202,9 +202,9 @@ Delete the entire list of L<export tags|/export_tags>.
 
 =item B<export_tag NAME [, ARRAYREF]>
 
-Get or set the list of method names associated with a tag.  The tag name should not begin with a colon.  If ARRAYREF is passed, then the list methods associated with the specific tag is set.
+Get or set the list of method names associated with a tag.  The tag name should I<not> begin with a colon.  If ARRAYREF is passed, then the list of methods associated with the specific tag is set.
 
-Returns a list (in list context) or a reference to an array (in scalar context).  The array reference return value should be treated as read-only.  If no such tag exists, and if an ARRAYREF is not passed, then a fatal error will occur.
+Returns a list (in list context) or a reference to an array (in scalar context) of method names.  The array reference return value should be treated as read-only.  If no such tag exists, and if an ARRAYREF is not passed, then a fatal error will occur.
 
 =item B<export_tags>
 
