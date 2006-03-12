@@ -31,7 +31,7 @@ sub import
   my $target_class = (caller)[0];
 
   my($force, @methods, %import_as);
-  
+
   foreach my $arg (@_)
   {
     if($arg =~ /^-?-force$/)
@@ -101,7 +101,7 @@ sub export_tag
   }
 
   my $ret = $class->_export_tag_value($tag, @_);
-  
+
   croak "No such tag: $tag"  unless($ret);
 
   return wantarray ? @$ret : $ret;
@@ -160,7 +160,8 @@ To prevent the L<import|/import> method from being run, put empty parentheses "(
 
 See the L<synopsis|/SYNOPSIS> for an example of when this is handy: using L<Rose::DB::Object::MixIn> from within a subclass.  Note that the empty parenthesis are important.  The following is I<not> equivalent:
 
-    use Rose::DB::Object::MixIn; # not the same thing as the example above!
+    # This is not the same thing as the example above!
+    use Rose::DB::Object::MixIn;
 
 See the documentation for the L<import|/import> method below to learn what arguments it accepts.
 
@@ -188,9 +189,9 @@ Tags names are indicated with a leading colon.  For example, ":all" specifies th
 
 Each key/value pair in this hash contains a method name and the name that it will be imported as.  Use this feature to import methods under different names in order to avoid conflicts with existing methods.
 
-=item * B<-force>
+=item * C<-force>
 
-The special argument "-force" will cause the specified methods to be imported even if the calling class L<can|perlfunc/can> already perform one or more of those methods.
+The special literal argument "-force" will cause the specified methods to be imported even if the calling class L<can|perlfunc/can> already perform one or more of those methods.
 
 =back
 

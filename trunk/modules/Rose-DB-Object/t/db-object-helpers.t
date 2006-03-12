@@ -34,7 +34,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   my $class = 'My' . ucfirst($db_type) . 'Object';
 
   my $o = $class->new(id => 1, name => 'John');
-  
+
   my @tags = MyMixIn->export_tags;
   is_deeply(\@tags, [ 'all' ], "export_tags() 1 - $db_type");
 
@@ -43,12 +43,12 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
   eval { MyMixIn->export_tag('foo') };
   ok($@, "export_tag() 1 - $db_type");
-  
+
   MyMixIn->export_tag('foo' => [ 'bar', 'baz' ]);
-  
+
   my @methods = sort(MyMixIn->export_tag('foo'));
   is_deeply(\@methods, [ 'bar', 'baz' ], "export_tag() 1 - $db_type");
-  
+
   my $methods = MyMixIn->export_tag('foo');
   $methods = [ sort @$methods ];
   is_deeply($methods, [ 'bar', 'baz' ], "export_tag() 2 - $db_type");
@@ -138,7 +138,7 @@ EOF
     package MyPgObject;
     our @ISA = qw(Rose::DB::Object);
     use Rose::DB::Object::Helpers qw(:all);
-    
+
     eval { Rose::DB::Object::Helpers->import(qw(:all)) };
     Test::More::ok($@, 'import conflict - pg');
     eval { Rose::DB::Object::Helpers->import(qw(-force :all)) };
@@ -191,14 +191,14 @@ EOF
     package MyMysqlObject;
     our @ISA = qw(Rose::DB::Object);
     use Rose::DB::Object::Helpers qw(:all);
-    
+
     eval { Rose::DB::Object::Helpers->import(qw(load_or_insert load_speculative)) };
     Test::More::ok($@, 'import conflict - mysql');
     eval { Rose::DB::Object::Helpers->import(qw(--force load_or_insert load_speculative)) };
     Test::More::ok(!$@, 'import override - mysql');
 
     Rose::DB::Object::Helpers->import({ load_or_insert => 'find_or_create' });
-    
+
     sub init_db { Rose::DB->new('mysql') }
 
     __PACKAGE__->meta->table('rose_db_object_test');
@@ -242,7 +242,7 @@ EOF
     package MyInformixObject;
     our @ISA = qw(Rose::DB::Object);
     use Rose::DB::Object::Helpers qw(:all);
-    
+
     eval { Rose::DB::Object::Helpers->import(qw(:all)) };
     Test::More::ok($@, 'import conflict - informix');
     eval { Rose::DB::Object::Helpers->import(qw(-force :all)) };
@@ -293,7 +293,7 @@ EOF
     package MySqliteObject;
     our @ISA = qw(Rose::DB::Object);
     use Rose::DB::Object::Helpers qw(:all);
-    
+
     eval { Rose::DB::Object::Helpers->import(qw(:all)) };
     Test::More::ok($@, 'import conflict - sqlite');
     eval { Rose::DB::Object::Helpers->import(qw(--force :all)) };
@@ -306,7 +306,7 @@ EOF
     __PACKAGE__->meta->table('rose_db_object_test');
     __PACKAGE__->meta->auto_initialize;
   }
-  
+
   package MyMixIn;
   our @ISA = qw(Rose::DB::Object::MixIn);
 }
