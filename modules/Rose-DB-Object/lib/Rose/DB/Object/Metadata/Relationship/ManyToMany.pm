@@ -110,11 +110,11 @@ MAKE_MAP_RECORD_METHOD:
     return sub 
     {
       my($self) = shift;
-      
+
       if(@_)
       {
         my $arg = shift;
-        
+
         if(ref $arg eq 'HASH')
         {
           return $self->{$key} = $map_class->new(%$arg);
@@ -135,9 +135,9 @@ MAKE_MAP_RECORD_METHOD:
 sub manager_args
 {
   my($self) = shift;
-  
+
   return $self->{'manager_args'}  unless(@_);
-  
+
   my $args = $self->{'manager_args'} = shift;
 
   if(my $method = $args->{'with_map_records'})

@@ -106,7 +106,7 @@ sub type { 'foreign key' }
 sub soft 
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     $self->referential_integrity(!$_[0]);

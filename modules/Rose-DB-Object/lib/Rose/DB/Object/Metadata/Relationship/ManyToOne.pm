@@ -169,7 +169,7 @@ sub build_method_name_for_type
 sub soft 
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     $self->referential_integrity(!$_[0]);

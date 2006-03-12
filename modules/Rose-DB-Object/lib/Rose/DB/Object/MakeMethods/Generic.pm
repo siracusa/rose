@@ -1420,7 +1420,7 @@ sub object_by_key
       if($referential_integrity)
       {
         eval { $ret = $obj->load };
-  
+
         if($@ || !$ret)
         {
           $self->error("Could not load $fk_class with key ", 
@@ -1583,7 +1583,7 @@ sub object_by_key
       if($referential_integrity)
       {
         eval { $ret = $obj->load };
-  
+
         if($@ || !$ret)
         {
           $self->error("Could not load $fk_class with key ", 
@@ -2840,7 +2840,7 @@ sub objects_by_map
       }
     }
   }
-  
+
   if($map_record_method && !$map_to_class->can($map_record_method))
   {
     require Rose::DB::Object::Metadata::Relationship::ManyToMany;

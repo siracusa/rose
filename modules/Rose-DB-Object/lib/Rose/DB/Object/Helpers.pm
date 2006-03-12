@@ -16,9 +16,9 @@ sub load_speculative { shift->load(@_, speculative => 1) }
 sub load_or_insert
 {
   my($self) = shift;
-  
+
   my($ret, @ret);
-  
+
   if(wantarray)
   {
     @ret = $self->load(@_, speculative => 1);
@@ -29,7 +29,7 @@ sub load_or_insert
     $ret = $self->load(@_, speculative => 1);
     return $ret  if($ret);
   }
-  
+
   return $self->insert;
 }
 
@@ -39,7 +39,7 @@ __END__
 
 =head1 NAME
 
-Rose::DB::Object::Helpers - A mix-in class containing convenience methods.
+Rose::DB::Object::Helpers - A mix-in class containing convenience methods for Rose::DB::Object.
 
 =head1 SYNOPSIS
 
@@ -56,7 +56,7 @@ Rose::DB::Object::Helpers - A mix-in class containing convenience methods.
 
 =head1 DESCRIPTION
 
-L<Rose::DB::Object::Helpers> provides convenience methods from use with L<Rose::DB::Object>-derived classes.  These methods do not exist in the L<Rose::DB::Object> class in order to keep the method namespace clean.  (Each method added to L<Rose::DB::Object> is another potential naming conflict with a column accessor.)
+L<Rose::DB::Object::Helpers> provides convenience methods from use with L<Rose::DB::Object>-derived classes.  These methods do not exist in L<Rose::DB::Object> in order to keep the method namespace clean.  (Each method added to L<Rose::DB::Object> is another potential naming conflict with a column accessor.)
 
 This class inherits from L<Rose::DB::Object::MixIn>.  See the L<Rose::DB::Object::MixIn> documentation for a full explanation of how to import methods from this class.  The helper methods themselves are described below.
 
@@ -66,11 +66,29 @@ This class inherits from L<Rose::DB::Object::MixIn>.  See the L<Rose::DB::Object
 
 =item B<load_or_insert [PARAMS]>
 
-Try to L<load|Rose::DB::Object/load> the object, passing PARAMS to the call to the L<load()|Rose::DB::Object/load> method.  If no such object is found, then L<insert|Rose::DB::Object/insert> the object instead.
+Try to L<load|Rose::DB::Object/load> the object, passing PARAMS to the call to the L<load()|Rose::DB::Object/load> method.  The parameter "speculative => 1" is automatically added to PARAMS.  If no such object is found, then the object is L<inserted|Rose::DB::Object/insert>.
+
+Example:
+
+    # Get object id 123 if it exists, otherwise create it now.
+    $obj = MyDBObject->new(id => 123)->load_or_insert;
 
 =item B<load_speculative [PARAMS]>
 
-Try to L<load|Rose::DB::Object/load> the object, passing PARAMS to the call to the L<load()|Rose::DB::Object/load> method along with the C<speculative> parameter with a true value.  See the documentation for L<Rose::DB::Object>'s L<load|Rose::DB::Object/load> method for more information.
+Try to L<load|Rose::DB::Object/load> the object, passing PARAMS to the call to the L<load()|Rose::DB::Object/load> method along with the "speculative => 1" parameter.  See the documentation for L<Rose::DB::Object>'s L<load|Rose::DB::Object/load> method for more information.
+
+Example:
+
+    $obj = MyDBObject->new(id => 123);
+
+    if($obj->load_speculative)
+    {
+      print "Found object id 123\n";
+    }
+    else
+    {
+      print "Object id 123 not found\n";
+    }
 
 =back
 
