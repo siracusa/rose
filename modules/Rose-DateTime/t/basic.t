@@ -437,4 +437,3 @@ ok($d && $d->isa('DateTime'), $arg);
 is($d->time_zone->name, 'UTC', 'time_zone() UTC');
 
 is(Rose::DateTime::Util->time_zone, 'UTC', 'time_zone() get');
-
