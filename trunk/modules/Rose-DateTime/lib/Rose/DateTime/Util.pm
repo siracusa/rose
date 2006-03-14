@@ -22,7 +22,7 @@ our $VERSION = '0.50';
 
 our $TZ = 'floating';
 our $Debug = 0;
-our $European_Dates = 0;
+our $European_Dates = __PACKAGE__->init_european_dates;
 our $Error;
 
 sub error { $Error }
@@ -37,8 +37,32 @@ sub time_zone
 sub european_dates
 {
   my($class) = shift;
-  return $European_Dates = $_[0] ? 1 : 0  if(@_);
+  
+  if(@_)
+  {
+    if(defined $_[0])
+    {
+      return $European_Dates = $_[0] ? 1 : 0;
+    }
+
+    return $European_Dates = $class->init_european_dates;
+  }
+
   return $European_Dates;
+}
+
+sub init_european_dates
+{
+  #my($class) = shift;
+
+  my $locale_class = 'DateTime::Locale::' . DateTime->DefaultLocale();
+
+  if($locale_class->date_parts_order eq 'dmy')
+  {
+    return 1;
+  }
+  
+  return 0;
 }
 
 sub parse_european_date
@@ -343,7 +367,9 @@ Returns a message describing the last error that occurred.
 
 =item B<european_dates [BOOL]>
 
-Get or set a boolean flag that determines how "xx/xx/xxxx" dates are parsed by the L<parse_date|/parse_date> function.  If set to false, then such dates are parsed as "mm/dd/yyyy".  (This is the default.)  If set to true, then they're parsed as "dd/mm/yyyy".
+Get or set a boolean flag that determines how "xx/xx/xxxx" dates are parsed by the L<parse_date|/parse_date> function.  If set to a false-but-defined value, then such dates are parsed as "mm/dd/yyyy".  If set to true, then they're parsed as "dd/mm/yyyy".  If set to undef, then the attribute resets to its initial value, which is determined as described below.
+
+The initial value of this attribute is chosen based on the current locale as stored in L<DateTime>'s L<DefaultLocale|DateTime/DefaultLocale> setting.  This  initial value is looked up only once.  Any subsequent changes to L<DateTime>'s L<DefaultLocale|DateTime/DefaultLocale> setting will be ignored until/unless this attribute is reset to undef.
 
 =item B<time_zone [TZ]>
 

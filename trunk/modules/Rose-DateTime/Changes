@@ -1,3 +1,9 @@
+0.51 (03.14.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * The european_dates() setting is now initialized as appropriate for
+      the current locale, read via to DateTime->DefaultLocale().
+      (Suggested by Michael Lackhoff)
+
 0.50 (03.07.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added support for Euorpean-style (dd/mm/yyyy) dates.
