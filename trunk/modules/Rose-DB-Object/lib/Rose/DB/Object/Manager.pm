@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.67';
+our $VERSION = '0.691';
 
 our $Debug = 0;
 
@@ -761,7 +761,7 @@ sub get_objects
       my $rel_type = $rel->type;
 
       if($rel_type eq 'foreign key' || $rel_type eq 'one to one' ||
-         $rel_type eq 'one to many')
+         $rel_type eq 'many to one' || $rel_type eq 'one to many')
       {
         my $ft_class = $rel->class 
           or Carp::confess "$class - Missing foreign object class for '$name'";
