@@ -208,7 +208,12 @@ EOF
     }
 
     if($Use_PM{'DBIx::Class'})
-    {  
+    {
+      if($DBIx::Class::VERSION < 0.05999_03)
+      {
+        die "Sorry, this benchmark suite requires DBIx::Class version 0.05999_03 or later.\n";
+      }
+
       require MyTest::DBIC::Simple::Code;
       require MyTest::DBIC::Simple::CodeName;
       require MyTest::DBIC::Simple::Category;
@@ -775,6 +780,11 @@ sub Insert_Code_Names
 
     $db->commit;
     print ".\n";
+
+    if($db->driver eq 'pg')
+    {
+      $dbh->do('analyze');
+    }
   }
 }
 
@@ -1406,7 +1416,7 @@ EOF
         MyTest::RDBO::Simple::Product->new(
           db => $DB, 
           id => $i + 100_000);
-      $p->load;
+      $p->load(with => [ 'category' ]);
 
       my $cat = $p->category;
       my $n = $cat->name;
@@ -2277,7 +2287,12 @@ EOF
           'me.name' => { -like => 'Product %2%' },
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
-        }, { prefetch => [ 'category_id' ], rows => MAX_LIMIT});
+        },
+        {
+          prefetch => [ 'code_names', 'category_id' ],
+          software_limit => 1,
+          rows => MAX_LIMIT,
+        });
       die unless(@p);
 
       if($Debug && !$printed)
@@ -2410,7 +2425,6 @@ EOF
                     '>=' => 400_000 } 
         }, 
         {
-          prefetch => [ 'category_id' ],
           limit_dialect => $Limit_Dialect,
           limit  => LIMIT,
           offset => OFFSET 
@@ -2439,7 +2453,7 @@ EOF
           'me.name' => { -like => 'Product %2%' },
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
-        }, { prefetch => [ 'category_id' ], rows => LIMIT, offset => OFFSET });
+        }, { rows => LIMIT, offset => OFFSET });
 
       die unless(@p);
 
@@ -3423,7 +3437,7 @@ EOF
         MyTest::RDBO::Complex::Product->new(
           db => $DB, 
           id => $i + 1_100_000);
-      $p->load;
+      $p->load(with => [ 'category' ]);
 
       my $cat = $p->category;
       my $n = $cat->name;
@@ -4173,7 +4187,12 @@ EOF
           'me.name' => { -like => 'Product %2%' },
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
-        }, { prefetch => [ 'category_id' ], rows => MAX_LIMIT});
+        }, 
+        {
+          prefetch => [ 'category_id', 'code_names' ], 
+          software_limit => 1,
+          rows => MAX_LIMIT,
+        });
 
       die unless(@p);
 
@@ -4267,7 +4286,6 @@ EOF
                     '>=' => 400_000 } 
         }, 
         {
-          prefetch => [ 'category_id' ],
           limit_dialect => $Limit_Dialect,
           limit  => LIMIT,
           offset => OFFSET 
@@ -4296,7 +4314,7 @@ EOF
           'me.name' => { -like => 'Product %2%' },
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
-        }, { prefetch => [ 'category_id' ], rows => LIMIT, offset => OFFSET });
+        }, { rows => LIMIT, offset => OFFSET });
 
       die unless(@p);
 
