@@ -1,3 +1,8 @@
+0.691 (03.15.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a bug that prevented the Manager from correctly handling
+      many-to-one relationships.
+    
 0.69 (03.12.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added Rose::DB::Object::MixIn and Rose::DB::Object::Helpers.
