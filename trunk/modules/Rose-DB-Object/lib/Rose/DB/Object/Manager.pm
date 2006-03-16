@@ -669,7 +669,7 @@ sub get_objects
 
       my $rel_type = $key->type;
 
-      if(index($rel_type, 'many') >= 0)
+      if($rel_type =~ /\bmany$/)
       {
         $handle_dups  = 1;
         $has_dups[$i] = 1;
