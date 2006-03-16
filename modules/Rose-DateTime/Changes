@@ -1,7 +1,7 @@
-0.51 (03.14.2006) - John Siracusa <siracusa@mindspring.com>
+0.51 (03.16.2006) - John Siracusa <siracusa@mindspring.com>
 
     * The european_dates() setting is now initialized as appropriate for
-      the current locale, read via to DateTime->DefaultLocale().
+      the current locale, discovered via to DateTime->DefaultLocale().
       (Suggested by Michael Lackhoff)
 
 0.50 (03.07.2006) - John Siracusa <siracusa@mindspring.com>
