@@ -1,0 +1,10 @@
+Changes
+lib/Rose/DateTime.pm
+lib/Rose/DateTime/Parser.pm
+lib/Rose/DateTime/Util.pm
+Makefile.PL
+MANIFEST
+t/basic.t
+t/locale.t
+t/parser.t
+t/pod.t
