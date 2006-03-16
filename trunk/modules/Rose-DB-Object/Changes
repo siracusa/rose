@@ -1,7 +1,8 @@
-0.691 (03.15.2006) - John Siracusa <siracusa@mindspring.com>
+0.691 (03.16.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed a bug that prevented the Manager from correctly handling
-      many-to-one relationships.  (Reported by Michael Lackhoff)
+      many-to-one relationships in some situations.  (Reported by 
+      Michael Lackhoff)
 
 0.69 (03.12.2006) - John Siracusa <siracusa@mindspring.com>
 
