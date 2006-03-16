@@ -3682,8 +3682,6 @@ sub __args_to_object
   {
     my $arg = $args->[0];
 
-    $arg = $arg->[0]  if(ref $arg eq 'ARRAY');
-
     # Already an object
     if(UNIVERSAL::isa($arg, $object_class))
     {
