@@ -104,6 +104,8 @@ Use the L<min|/min> and :<max|/max> attributes to control whether the range of v
 
 =head1 OBJECT METHODS
 
+=over 4
+
 =item B<max [INT]>
 
 Get or set the maximum acceptable value.  If the field's L<internal_value()|Rose::HTML::Form::Field/internal_value> is B<greater than> this value, then the L<validate()|Rose::HTML::Form::Field/validate> method will return false.  If undefined, then no limit on the maximum value is enforced.
