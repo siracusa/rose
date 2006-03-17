@@ -86,3 +86,4 @@ t/label.t
 t/logo.png
 t/object-withcontents.t
 t/object.t
+t/pod.t
