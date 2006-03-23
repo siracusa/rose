@@ -1,4 +1,5 @@
 Changes
+lib/Rose/HTML/Anchor.pm
 lib/Rose/HTML/Form.pm
 lib/Rose/HTML/Form/Constants.pm
 lib/Rose/HTML/Form/Field.pm
@@ -56,6 +57,7 @@ lib/Rose/HTML/Script.pm
 lib/Rose/HTML/Util.pm
 Makefile.PL
 MANIFEST
+t/anchor.t
 t/attachments.t
 t/form-field-checkbox-group.t
 t/form-field-checkbox.t
