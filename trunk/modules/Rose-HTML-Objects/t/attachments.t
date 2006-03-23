@@ -3,7 +3,7 @@
 use strict;
 
 use Test::More 'no_plan'; #tests => 15;
-
+__END__
 BEGIN
 {
   use_ok('Rose::HTML::Object');
