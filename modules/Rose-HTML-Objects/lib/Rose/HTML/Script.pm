@@ -16,10 +16,10 @@ __PACKAGE__->default_support_older_browsers(1);
 
 __PACKAGE__->add_valid_html_attrs
 (
-  'charset',  # %Charset;      #IMPLIED  -- char encoding of linked resource --
-  'type',     # %ContentType;  #REQUIRED -- content type of script language --
-  'src',      # %URI;          #IMPLIED  -- URI for an external script --
-  'defer',    # (defer)        #IMPLIED  -- UA may defer execution of script --
+  'charset',  # %Charset;      #IMPLIED  -- char encoding of linked resource
+  'type',     # %ContentType;  #REQUIRED -- content type of script language
+  'src',      # %URI;          #IMPLIED  -- URI for an external script
+  'defer',    # (defer)        #IMPLIED  -- UA may defer execution of script
 );
 
 __PACKAGE__->add_required_html_attrs(
@@ -107,11 +107,11 @@ sub xhtml_tag
   if(length($self->src || ''))
   {
     no warnings;
-    return '<script' . $self->html_attrs_string . ' />';
+    return '<script' . $self->xhtml_attrs_string . ' />';
   }
 
   no warnings;
-  return '<script' . $self->html_attrs_string . '>' .
+  return '<script' . $self->xhtml_attrs_string . '>' .
          $self->xhtml_contents_escaped .
          '</script>';
 }

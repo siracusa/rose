@@ -9,13 +9,13 @@ our $VERSION = '0.53';
 
 __PACKAGE__->add_valid_html_attrs
 (
-  'charset',  # %Charset;      #IMPLIED  -- char encoding of linked resource --
-  'href',     # %URI;          #IMPLIED  -- URI for linked resource --
-  'hreflang', # %LanguageCode; #IMPLIED  -- language code --
-  'type',     # %ContentType;  #IMPLIED  -- advisory content type --
-  'rel',      # %LinkTypes;    #IMPLIED  -- forward link types --
-  'rev',      # %LinkTypes;    #IMPLIED  -- reverse link types --
-  'media',    # %MediaDesc;    #IMPLIED  -- for rendering on these media --
+  'charset',  # %Charset;      #IMPLIED  -- char encoding of linked resource
+  'href',     # %URI;          #IMPLIED  -- URI for linked resource
+  'hreflang', # %LanguageCode; #IMPLIED  -- language code
+  'type',     # %ContentType;  #IMPLIED  -- advisory content type
+  'rel',      # %LinkTypes;    #IMPLIED  -- forward link types
+  'rev',      # %LinkTypes;    #IMPLIED  -- reverse link types
+  'media',    # %MediaDesc;    #IMPLIED  -- for rendering on these media
 );
 
 sub rel  { shift->html_attr('rel', @_) }
