@@ -162,7 +162,7 @@ Get or set the contents of the text area.  If a TEXT argument is present, it is 
 
 =item B<size [COLSxROWS]>
 
-Get or set the the number of columns and rows (C<cols> and C<rows>) in the text area in the form of a string "COLSxROWS".  For example, "40x3" means 40 columns and 3 rows.  If the size argument is not in the correct format, a fatal error will occur.
+Get or set the number of columns and rows (C<cols> and C<rows>) in the text area in the form of a string "COLSxROWS".  For example, "40x3" means 40 columns and 3 rows.  If the size argument is not in the correct format, a fatal error will occur.
 
 =item B<value [TEXT]>
 

@@ -48,12 +48,15 @@ lib/Rose/HTML/Form/Field/Time/Split/HourMinuteSecond.pm
 lib/Rose/HTML/Form/Field/WithContents.pm
 lib/Rose/HTML/Image.pm
 lib/Rose/HTML/Label.pm
+lib/Rose/HTML/Link.pm
 lib/Rose/HTML/Object.pm
 lib/Rose/HTML/Object/WithContents.pm
 lib/Rose/HTML/Objects.pm
+lib/Rose/HTML/Script.pm
 lib/Rose/HTML/Util.pm
 Makefile.PL
 MANIFEST
+t/attachments.t
 t/form-field-checkbox-group.t
 t/form-field-checkbox.t
 t/form-field-compound.t
@@ -83,7 +86,9 @@ t/form-nested.t
 t/form.t
 t/image.t
 t/label.t
+t/link.t
 t/logo.png
 t/object-withcontents.t
 t/object.t
 t/pod.t
+t/script.t
