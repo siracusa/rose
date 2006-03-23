@@ -391,6 +391,42 @@ sub xhtml_tag
   return '<' . ref($self)->xhtml_element . $self->xhtml_attrs_string . ' />';
 }
 
+#
+# Lame start/end HTML fall-backs for lazy derived classes
+#
+
+sub start_html
+{
+  my($self) = shift;
+  my $html = $self->html;
+  $html =~ s{</\w+>\Z}{};
+  return $html;
+}
+
+sub end_html
+{
+  my($self) = shift;
+  my $html = $self->html;
+  $html =~ m{</\w+>\Z};
+  return $1 || '';
+}
+
+sub start_xhtml
+{
+  my($self) = shift;
+  my $xhtml = $self->xhtml;
+  $xhtml =~ s{</\w+>\Z}{};
+  return $xhtml;
+}
+
+sub end_xhtml
+{
+  my($self) = shift;
+  my $xhtml = $self->xhtml;
+  $xhtml =~ m{</\w+>\Z};
+  return $1 || '';
+}
+
 sub default_html_attr_value 
 {
   my($class) = shift;
