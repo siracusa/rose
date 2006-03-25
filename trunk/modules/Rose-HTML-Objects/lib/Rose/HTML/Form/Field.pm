@@ -17,7 +17,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.50';
+our $VERSION = '0.53';
 
 #our $Debug = 0;
 
@@ -934,7 +934,7 @@ Convenience wrapper for L<html_hidden_fields()|/html_hidden_fields>
 
 =item B<html_hidden_fields>
 
-Returns the HTML serialization of the fields returned by L<hidden_fields()|/hidden_fields>, joined by newlines.
+In scalar context, returns the HTML serialization of the fields returned by L<hidden_fields()|/hidden_fields>, joined by newlines.  In list context, returns a list containing the HTML serialization of the fields returned by L<hidden_fields()|/hidden_fields>.
 
 =item B<html_label [ARGS]>
 
@@ -1108,7 +1108,7 @@ Convenience wrapper for L<xhtml_hidden_fields()|/xhtml_hidden_fields>
 
 =item B<xhtml_hidden_fields>
 
-Returns the XHTML serialization of the fields returned by L<hidden_fields()|/hidden_fields>, joined by newlines.
+In scalar context, returns the XHTML serialization of the fields returned by L<hidden_fields()|/hidden_fields>, joined by newlines.  In list context, returns a list containing the XHTML serialization of the fields returned by L<hidden_fields()|/hidden_fields>.
 
 =item B<xhtml_label [ARGS]>
 
