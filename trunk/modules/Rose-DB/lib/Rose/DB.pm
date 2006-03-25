@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.65';
+our $VERSION = '0.66';
 
 our $Debug = 0;
 
@@ -691,7 +691,7 @@ sub _dbh_and_connect_option
 
   if(@_)
   {
-    my $val = ($_[0]) ? 1 : 0;
+    my $val = $_[0] ? 1 : 0;
     $self->connect_option($param => $val);
 
     $self->{'dbh'}{$param} = $val  if($self->{'dbh'});
@@ -803,6 +803,8 @@ sub rollback
 
   my $dbh = $self->dbh or return undef;
 
+  my $ac = $dbh->{'AutoCommit'};
+
   my $ret;
 
   #$Debug && warn "ROLLBACK TRX\n";
@@ -819,7 +821,7 @@ sub rollback
     return undef;
   }
 
-  unless($ret)
+  unless($ret || $ac)
   {
     $self->error('rollback() failed - ' . $dbh->errstr);
     return undef;
@@ -969,15 +971,20 @@ sub format_timestamp
 # Date parsing
 
 sub parse_date
-{  
-  return $_[1]  if($_[0]->validate_date_keyword($_[1]));
+{
+  my($self, $value) = @_;
+  
+  if(UNIVERSAL::isa($value, 'DateTime') || $self->validate_date_keyword($value))
+  {
+    return $value;
+  }
 
   my $dt;
-  eval { $dt = $_[0]->date_handler->parse_date($_[1]) };
+  eval { $dt = $self->date_handler->parse_date($value) };
 
   if($@)
   {
-    $_[0]->error("Could not parse date '$_[1]' - $@");
+    $self->error("Could not parse date '$value' - $@");
     return undef;
   }
 
@@ -986,14 +993,20 @@ sub parse_date
 
 sub parse_datetime
 {  
-  return $_[1]  if($_[0]->validate_datetime_keyword($_[1]));
+  my($self, $value) = @_;
+  
+  if(UNIVERSAL::isa($value, 'DateTime') || 
+    $self->validate_datetime_keyword($value))
+  {
+    return $value;
+  }
 
   my $dt;
-  eval { $dt = $_[0]->date_handler->parse_datetime($_[1]) };
+  eval { $dt = $self->date_handler->parse_datetime($value) };
 
   if($@)
   {
-    $_[0]->error("Could not parse datetime '$_[1]' - $@");
+    $self->error("Could not parse datetime '$value' - $@");
     return undef;
   }
 
@@ -1018,14 +1031,20 @@ sub parse_time
 
 sub parse_timestamp
 {  
-  return $_[1]  if($_[0]->validate_timestamp_keyword($_[1]));
+  my($self, $value) = @_;
+  
+  if(UNIVERSAL::isa($value, 'DateTime') || 
+    $self->validate_timestamp_keyword($value))
+  {
+    return $value;
+  }
 
   my $dt;
-  eval { $dt = $_[0]->date_handler->parse_timestamp($_[1]) };
+  eval { $dt = $self->date_handler->parse_timestamp($value) };
 
   if($@)
   {
-    $_[0]->error("Could not parse timestamp '$_[1]' - $@");
+    $self->error("Could not parse timestamp '$value' - $@");
     return undef;
   }
 
@@ -1837,7 +1856,7 @@ See the L<"Database Handle Life-Cycle Management"> section for more information 
 
 Roll back the current transaction by calling the L<rollback|DBI/rollback> method on the L<DBI> database handle.  If the L<DBI> database handle does not exist or is not connected, 0 is returned.
 
-If the call to L<DBI>'s L<rollback|DBI/rollback> method succeeds, 1 is returned.  If it fails, undef is returned.
+If the call to L<DBI>'s L<rollback|DBI/rollback> method succeeds or if auto-commit is enabled, 1 is returned.  If it fails, undef is returned.
 
 =back
 

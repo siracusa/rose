@@ -60,31 +60,38 @@ SKIP: foreach my $db_type ('pg')
 
   ok($db->rollback, "rollback() 1 - $db_type");
 
-  ok($db->begin_work, "begin_work() 3 - $db_type");
-
-  $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (3, 'c', 1)));
-  $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (4, 'd', 2)));
-
-  ok($db->rollback, "rollback() 2 - $db_type");
-
-  ok($db->do_transaction(sub
+  SKIP:
   {
+    # This broke in DBD::Pg 1.47, and 1.44-6 are broken in other ways
+    # so only run these tests with 1.43 or earlier.
+    skip('DBD::Pg 1.43+ bug?', 5)  if($DBD::Pg::VERSION > 1.43);
+
+    ok($db->begin_work, "begin_work() 3 - $db_type");
+  
     $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (3, 'c', 1)));
     $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (4, 'd', 2)));
-  }), "do_transaction() 1 - $db_type");
-
-  ok(!defined $db->do_transaction(sub
-  {
-    local $db->dbh->{'PrintError'} = 0;
-    $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (3, 'c', 1)));
-    $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (4, 'd', 2)));
-  }), "do_transaction() 2 - $db_type");
-
-  my $sth = $db->dbh->prepare('SELECT COUNT(*) FROM rose_db_test');
-  $sth->execute;
-  my $count = $sth->fetchrow_array;
-
-  is($count, 4, "do_transaction() 3 - $db_type");
+  
+    ok($db->rollback, "rollback() 2 - $db_type");
+  
+    ok($db->do_transaction(sub
+    {
+      $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (3, 'c', 1)));
+      $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (4, 'd', 2)));
+    }), "do_transaction() 1 - $db_type");
+  
+    ok(!defined $db->do_transaction(sub
+    {
+      local $db->dbh->{'PrintError'} = 0;
+      $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (3, 'c', 1)));
+      $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (4, 'd', 2)));
+    }), "do_transaction() 2 - $db_type");
+  
+    my $sth = $db->dbh->prepare('SELECT COUNT(*) FROM rose_db_test');
+    $sth->execute;
+    my $count = $sth->fetchrow_array;
+  
+    is($count, 4, "do_transaction() 3 - $db_type");
+  }
 }
 
 #
