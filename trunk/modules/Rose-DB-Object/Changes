@@ -1,3 +1,9 @@
+0.70 (03.27.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Silenced warning when querying datetime columns with undef values.
+    * Fixed a bug in the loader that prevented auto-generated base class
+      names from being correctly nested under class_prefix.
+
 0.691 (03.16.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed a bug that prevented the Manager from correctly handling

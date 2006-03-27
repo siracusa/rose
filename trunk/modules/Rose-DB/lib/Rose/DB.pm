@@ -556,9 +556,25 @@ sub retain_dbh
 
 sub release_dbh
 {
-  my($self) = shift;
+  my($self, %args) = @_;
 
   my $dbh = $self->{'dbh'} or return 0;
+
+  if($args{'force'})
+  {
+    $self->{'_dbh_refcount'} = 0;
+    $self->{'_dbh_is_private'} = 1;
+
+    # Account for possible Apache::DBI magic
+    if(UNIVERSAL::isa($dbh, 'Apache::DBI::db'))
+    {
+      return $dbh->DBI::db::disconnect; # bypass Apache::DBI
+    }
+    else
+    {
+      return $dbh->disconnect;
+    }
+  }
 
   #$Debug && warn "$self->{'_dbh_refcount'} -> ", ($self->{'_dbh_refcount'} - 1), " $dbh\n";
   $self->{'_dbh_refcount'}--;
@@ -713,7 +729,7 @@ sub disconnect
 {
   my($self) = shift;
 
-  $self->release_dbh or return undef;
+  $self->release_dbh(@_) or return undef;
 
   $self->{'dbh'} = undef;
 }
