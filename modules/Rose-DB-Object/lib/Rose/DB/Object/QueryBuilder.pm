@@ -693,7 +693,8 @@ sub _format_value
       }
       else
       {
-        $value = $col_meta->format_value($db, $col_meta->parse_value($db, $value));
+        $value = $col_meta->format_value($db, $col_meta->parse_value($db, $value))
+          if(defined $value);
       }
     }
   }
@@ -733,7 +734,8 @@ sub _format_value
     }
     else
     {
-      $value = $col_meta->format_value($db, $col_meta->parse_value($db, $value));
+      $value = $col_meta->format_value($db, $col_meta->parse_value($db, $value))
+        if(defined $value);
     }
   }
 
