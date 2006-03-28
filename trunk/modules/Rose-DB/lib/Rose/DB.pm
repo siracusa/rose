@@ -1204,6 +1204,7 @@ sub validate_date_keyword      { 0 }
 sub validate_datetime_keyword  { 0 }
 sub validate_time_keyword      { 0 }
 sub validate_timestamp_keyword { 0 }
+sub validate_interval_keyword  { 0 }
 
 sub next_value_in_sequence
 {

@@ -19,7 +19,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.68';
+our $VERSION = '0.70';
 
 our $Debug = 0;
 
@@ -142,6 +142,8 @@ __PACKAGE__->column_type_classes
   'numeric'   => 'Rose::DB::Object::Metadata::Column::Numeric',
   'decimal'   => 'Rose::DB::Object::Metadata::Column::Numeric',
   'float'     => 'Rose::DB::Object::Metadata::Column::Float',
+
+  'interval'  => 'Rose::DB::Object::Metadata::Column::Interval',
 
   'date'      => 'Rose::DB::Object::Metadata::Column::Date',
   'datetime'  => 'Rose::DB::Object::Metadata::Column::Datetime',
@@ -3407,6 +3409,8 @@ The default mapping of type names to class names is:
   numeric   => Rose::DB::Object::Metadata::Column::Numeric
   decimal   => Rose::DB::Object::Metadata::Column::Numeric
   float     => Rose::DB::Object::Metadata::Column::Float
+
+  interval  => Rose::DB::Object::Metadata::Column::Interval
 
   date      => Rose::DB::Object::Metadata::Column::Date
   datetime  => Rose::DB::Object::Metadata::Column::Datetime
