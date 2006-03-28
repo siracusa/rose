@@ -1,9 +1,11 @@
-0.66 (03.25.2006) - John Siracusa <siracusa@mindspring.com>
+0.66 (03.28.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Date parsing now passes DateTime objects through immediately 
       instead of trying to parse them as strings and then failing 
       over to Rose::DateTime::Util's parse_date() function.
     * Updated the test suite to avoid buggy behavior in DBD::Pg 1.43+.
+    * The database password attribute is now stored in a closure to 
+      prevent it from appearing in Data::Dumper output.
 
 0.65 (02.07.2006) - John Siracusa <siracusa@mindspring.com>
 

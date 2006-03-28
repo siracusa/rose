@@ -100,7 +100,7 @@ use Rose::Object::MakeMethods::Generic
   'scalar' =>
   [
     qw(database dbi_driver schema catalog host port username 
-       password _dbh_refcount id)
+       _dbh_refcount id)
   ],
 
   'boolean' =>
@@ -362,6 +362,22 @@ sub database_version
   my($self) = shift;
   return $self->{'database_version'}  if(defined $self->{'database_version'});
   return $self->{'database_version'} = $self->dbh->get_info(18); # SQL_DBMS_VER
+}
+
+# Use a closure to keep the password from appearing when the
+# object is dumped using Data::Dumper
+sub password
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    my $password = shift;
+    $self->{'password_closure'} = sub { $password };
+    return $password;
+  }
+
+  return $self->{'password_closure'} ? $self->{'password_closure'}->() : undef;
 }
 
 # These have to "cheat" to get the right values by going through
