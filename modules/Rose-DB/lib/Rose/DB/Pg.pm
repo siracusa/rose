@@ -183,6 +183,44 @@ sub format_array
   } @array) . '}';
 }
 
+my $Interval_Units_Regex = qr{
+(?:\b(dec) (?:ades?\b | s?\b)?\b)            | # decades
+(?:\b(d)   (?:ays?\b)?\b)                    | # days
+(?:\b(y)   (?:ears?\b)?\b)                   | # years
+(?:\b(h)   (?:ours?\b)?\b)                   | # hours
+(?:\b(mon) (?:s\b | ths?\b)?\b)              | # months
+(?:\b(mil) (?:s\b | lenniums?\b)?\b)         | # millenniums
+(?:\b(m)   (?:inutes?\b | ins?\b)?\b)        | # minutes
+(?:\b(s)   (?:ec(?:s | onds?)?)?\b)          | # seconds
+(?:\b(w)   (?:eeks?\b)?\b)                   | # weeks
+(?:\b(c)   (?:ent(?:s | ury | uries)?\b)?\b) | # centuries
+}ix;
+
+sub parse_interval
+{
+  my($self, $value) = @_;
+
+  my $dt_duration;
+  eval { $dt_duration = $self->date_handler->parse_interval($value) };
+
+  if($@)
+  {
+############################
+    #if($value =~ 
+    $self->error("Could not parse interval '$value' - $@");
+    return undef;
+  }
+  
+  return $dt_duration;
+}
+
+sub format_interval
+{
+  my($self, $dur) = @_;
+  return $dur  if($self->validate_interval_keyword($dur) || $dur =~ /^\w+\(.*\)$/);
+  return $self->date_handler->format_interval($dur);
+}
+
 sub next_value_in_sequence
 {
   my($self, $seq) = @_;

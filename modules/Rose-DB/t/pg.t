@@ -145,6 +145,8 @@ is($db->compare_timestamps('infinity', 'now'), 1, "compare_timestamps('infinity'
 is($db->compare_timestamps('now', 'infinity'), -1, "compare_timestamps('now', 'infinity')");
 is($db->compare_timestamps('infinity', 'infinity'), 1, "compare_timestamps('infinity', 'infinity')");
 
+# Interval values
+
 SKIP:
 {
   unless(lookup_ip($db->host))
