@@ -229,6 +229,9 @@ sub build_select
       my $rel_column    =  $table_map->{$table_tn} ?
         "$table_map->{$table_tn}.$column" : '';
 
+      # Avoid duplicate clauses if the table name matches the relationship name
+      $rel_column = ''  if($rel_column eq $fq_column);
+
       my $method = $obj_meta ? $obj_meta->column_rw_method_name($column) : undef;
 
       unless($query_only_columns || !$select_columns{$column})

@@ -6,7 +6,7 @@ use File::Spec;
 use File::Path;
 use FindBin qw($Bin);
 
-use Test::More tests => 1 + (5 * 18);
+use Test::More tests => 1 + (5 * 19);
 
 BEGIN 
 {
@@ -52,7 +52,7 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 18)  unless($Have{$db_type});
+    skip("$db_type tests", 19)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -193,8 +193,22 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 
   #$DB::single = 1;
   #$Rose::DB::Object::Debug = 1;
-}
 
+  my $vc = $class_prefix . '::Vendor';
+
+  my $sql = 
+    Rose::DB::Object::Manager->get_objects_sql(
+      object_class => $vc,
+      with_objects => [ 'products' ],
+      query => [ 'products.vendor_id' => undef ]);
+
+  if($db_type eq 'sqlite')
+  {
+    ok($sql =~ /WHERE \s+ t2\.vendor_id \s+ IS \s+ NULL \s+ ORDER \s+ BY/xi, 
+       "spot-check SQL generation - $db_type");
+  }
+  else { ok(1, "skip spot-check SQL generation - $db_type") }
+}
 
 BEGIN
 {

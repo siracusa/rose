@@ -1,8 +1,10 @@
-0.70 (03.27.2006) - John Siracusa <siracusa@mindspring.com>
+0.70 (03.28.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Silenced warning when querying datetime columns with undef values.
     * Fixed a bug in the loader that prevented auto-generated base class
       names from being correctly nested under class_prefix.
+    * Fixed a bug that caused duplicate WHERE clauses when a relationship
+      name was the same as the foreign table name.
 
 0.691 (03.16.2006) - John Siracusa <siracusa@mindspring.com>
 
