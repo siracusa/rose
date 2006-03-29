@@ -267,7 +267,7 @@ SKIP: foreach my $db_type ('mysql')
                              k1   => 1,
                              k2   => undef,
                              k3   => 3);
-
+$DB::single = 1;
   ok(ref $o && $o->isa('MyMySQLObject'), "new() 1 - $db_type");
 
   $o->flag2('true');
