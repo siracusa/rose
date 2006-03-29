@@ -73,14 +73,25 @@ First, consider the case where a namespace is not necessary.  You have a single 
     __PACKAGE__->register_db(
       domain   => My::DB->default_domain,
       type     => My::DB->default_type,
-      driver   => 'Pg',
+      driver   => 'pg',
       database => 'my_db',
       host     => 'localhost',
       username => 'joeuser',
       password => 'mysecret',
     );
 
-To use C<My::DB> in this kind of setup, simply omit the L<domain|Rose::DB/domain> and L<type|Rose::DB/type> attributes from your C<My::DB> objects.  They will automatically get the default values.
+The domain and type parameters can actually be omitted entirely and they will still default to the values shown above.  In other words, the following call to L<register_db|Rose::DB/register_db> is exactly equivalent to the one above.
+
+    # Register your lone data source using the default type and domain
+    __PACKAGE__->register_db(
+      driver   => 'pg',
+      database => 'my_db',
+      host     => 'localhost',
+      username => 'joeuser',
+      password => 'mysecret',
+    );
+    
+To use C<My::DB> in this kind of setup, simply omit the L<domain|Rose::DB/domain> and L<type|Rose::DB/type> parameters from your calls to C<My::DB-E<gt>new>.  They will automatically get the default values.
 
     use My::DB;
 
@@ -115,7 +126,7 @@ Here's an example that includes two domains "development" and "production", and 
     __PACKAGE__->register_db(
       domain   => 'development',
       type     => 'main',
-      driver   => 'Pg',
+      driver   => 'pg',
       database => 'dev_db',
       host     => 'localhost',
       username => 'devuser',
@@ -137,7 +148,7 @@ Here's an example that includes two domains "development" and "production", and 
     __PACKAGE__->register_db(
       domain   => 'production',
       type     => 'main',
-      driver   => 'Pg',
+      driver   => 'pg',
       database => 'big_db',
       host     => 'dbserver.mycorp.com',
       username => 'dbadmin',
