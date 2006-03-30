@@ -18,7 +18,7 @@ our %EXPORT_TAGS =
   all => \@EXPORT_OK
 );
 
-our $VERSION = '0.50';
+our $VERSION = '0.52';
 
 our $TZ = 'floating';
 our $Debug = 0;
@@ -78,7 +78,7 @@ sub parse_date
   $time_zone ||= $TZ;
 
   my($fsecs, $secs, $mins, $hours, $mday, $month, $year, $wday, $yday, $isdst,
-     $month_abbrev, $date, $ampm);
+     $month_abbrev, $date, $ampm, $hours2, $ampm2);
 
   $Error = undef;
 
@@ -97,15 +97,49 @@ sub parse_date
 
     return $arg;
   }
-  elsif(($year, $month, $mday, $hours, $mins, $secs, $fsecs, $ampm) =
-       ($arg =~ /^(\d{4})\s*-?\s*(\d{2})\s*-?\s*(\d{2})(?:\s*-?\s*(\d\d?)(?::(\d\d)(?::(\d\d))?)?(?:\.(\d{0,9}))?(?:\s*([aApP]\.?[mM]\.?))?)?$/))
+
+  
+
+  elsif(($year, $month, $mday, $hours, $mins, $secs, $fsecs, $ampm, $hours2, $ampm2) = ($arg =~ 
+  m{
+    ^
+    (\d{4}) \s* -? \s* # year
+    (\d{2}) \s* -? \s* # month
+    (\d{2})            # day
+    (?:
+      \s* [-T]? \s*
+      (?:
+        (\d\d?) :        # hour
+        (\d\d)           # min
+        (?: (?: : (\d\d) )? (?: \. (\d{0,9}) )? )? # sec? nanosec?
+        (?: \s* ([aApP]\.?[mM]\.?) )? # am/pm?
+        |
+        (\d\d?) # hour 
+        (?: \s* ([aApP]\.?[mM]\.?) ) # am/pm
+      )
+    )?
+    $
+  }x))
   {
     # yyyy mm dd [hh:mm[:ss[.nnnnnnnnn]]] [am/pm] also valid w/o spaces or w/ hyphens
 
+    $hours = $hours2  if(defined $hours2);
+    $ampm  = $ampm2   if(defined $ampm2);
+
     $date = _timelocal($secs, $mins, $hours, $mday, $month, $year, $ampm, $fsecs, $time_zone);
   }
-  elsif(($month, $mday, $year, $hours, $mins, $secs, $fsecs, $ampm) = 
-        ($arg =~ m#^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})(?:\s+(\d\d?)(?::(\d\d)(?::(\d\d))?)?(?:\.(\d{0,9}))?(?:\s*([aApP]\.?[mM]\.?))?)?$#))
+  elsif(($month, $mday, $year, $hours, $mins, $secs, $fsecs, $ampm) = ($arg =~ 
+  m{
+    ^
+    (\d{1,2}) [-/.] (\d{1,2}) [-/.] (\d{4}) # xx-xx-yyyy
+    (?:
+      \s+
+      (\d\d?) # hour
+      (?::(\d\d)(?::(\d\d))?)?(?:\.(\d{0,9}))? # min? sec? nanosec?
+      (?:\s*([aApP]\.?[mM]\.?))? # am/pm
+    )?
+    $
+  }x))
   {
     # Normal:   mm/dd/yyyy, mm-dd-yyyy, mm.dd.yyyy [hh:mm[:ss][.nnnnnnnnn]] [am/pm]
     # European: dd/mm/yyyy, dd-mm-yyyy, dd.mm.yyyy [hh:mm[:ss][.nnnnnnnnn]] [am/pm]
@@ -117,7 +151,7 @@ sub parse_date
 
     $date = _timelocal($secs, $mins, $hours, $mday, $month, $year, $ampm, $fsecs, $time_zone);
   }
-  elsif($arg =~ /^now$/i)
+  elsif(lc $arg eq 'now')
   {
     # Right now
     return DateTime->now(time_zone => $time_zone);
