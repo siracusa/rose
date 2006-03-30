@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 5507;
+use Test::More tests => 5509;
 
 BEGIN 
 {
@@ -437,3 +437,13 @@ ok($d && $d->isa('DateTime'), $arg);
 is($d->time_zone->name, 'UTC', 'time_zone() UTC');
 
 is(Rose::DateTime::Util->time_zone, 'UTC', 'time_zone() get');
+
+#
+# Epoch vs. yyyymmdd hh
+#
+
+$d = parse_date('19800102 8pm');
+is($d->strftime('%Y-%m-%d %H:%M:%S'), '1980-01-02 20:00:00', 'Epoch vs. yyyymmdd 1');
+
+$d = parse_date(1143744435);
+is($d->strftime('%Y-%m-%d %H:%M:%S'), '2006-03-30 18:47:15', 'Epoch vs. yyyymmdd 2');
