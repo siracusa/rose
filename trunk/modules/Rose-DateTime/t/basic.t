@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 5509;
+use Test::More tests => 5521;
 
 BEGIN 
 {
@@ -442,8 +442,45 @@ is(Rose::DateTime::Util->time_zone, 'UTC', 'time_zone() get');
 # Epoch vs. yyyymmdd hh
 #
 
-$d = parse_date('19800102 8pm');
-is($d->strftime('%Y-%m-%d %H:%M:%S'), '1980-01-02 20:00:00', 'Epoch vs. yyyymmdd 1');
-
 $d = parse_date(1143744435);
-is($d->strftime('%Y-%m-%d %H:%M:%S'), '2006-03-30 18:47:15', 'Epoch vs. yyyymmdd 2');
+is($d->strftime('%Y-%m-%d %H:%M:%S'), '2006-03-30 18:47:15', 'Epoch vs. yyyymmdd 1');
+
+$d = parse_date('1143744435.123456789');
+is($d->strftime('%Y-%m-%d %H:%M:%S.%N'), '2006-03-30 18:47:15.123456789', 'Epoch vs. yyyymmdd 2');
+
+$d = parse_date('1143744435.123456789');
+is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.12345', 'Epoch vs. yyyymmdd 3');
+
+$d = parse_date('1143744435.123');
+is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.12300', 'Epoch vs. yyyymmdd 4');
+
+$d = parse_date('1143744435.');
+is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.00000', 'Epoch vs. yyyymmdd 5');
+
+$d = parse_date('19800102 8pm');
+is($d->strftime('%Y-%m-%d %H:%M:%S'), '1980-01-02 20:00:00', 'yyyymmdd 1');
+
+$d = parse_date('198001028pm');
+is($d->strftime('%Y-%m-%d %H:%M:%S'), '1980-01-02 20:00:00', 'yyyymmdd 2');
+
+$d = parse_date('19800102T8pm');
+is($d->strftime('%Y-%m-%d %H:%M:%S'), '1980-01-02 20:00:00', 'yyyymmdd 4');
+
+$d = parse_date('19800102_8pm');
+is($d->strftime('%Y-%m-%d %H:%M:%S'), '1980-01-02 20:00:00', 'yyyymmdd 5');
+
+$d = parse_date('19800102-8pm');
+is($d->strftime('%Y-%m-%d %H:%M:%S'), '1980-01-02 20:00:00', 'yyyymmdd 6');
+
+$d = parse_date('1980.01.02.8:00');
+is($d->strftime('%Y-%m-%d %H:%M:%S'), '1980-01-02 08:00:00', 'yyyymmdd 7');
+
+$d = parse_date('1980_01_02T8:00');
+is($d->strftime('%Y-%m-%d %H:%M:%S'), '1980-01-02 08:00:00', 'yyyymmdd 8');
+
+$d = parse_date('1980_01.02-8:00');
+is($d->strftime('%Y-%m-%d %H:%M:%S'), '1980-01-02 08:00:00', 'yyyymmdd 9');
+
+$d = parse_date('01.02_1980-8');
+is($d->strftime('%Y-%m-%d %H:%M:%S'), '1980-01-02 08:00:00', 'yyyymmdd 10');
+
