@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 426;
+use Test::More tests => 427;
 
 BEGIN 
 {
@@ -288,7 +288,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 98)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 99)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -534,14 +534,15 @@ SKIP: foreach my $db_type ('mysql')
   $o->save;
 
   $o = MyMySQLObject->new(id => $o->id)->load;
-$DB::single = 1;
-my $x = $o->dur;
+
   is($o->dur->in_units('years'), 7, "interval in_units years 2 - $db_type");
   is($o->dur->in_units('months'), 84, "interval in_units months 2 - $db_type");
   is($o->dur->nanoseconds, 3000, "interval nanoseconds 2 - $db_type");
   is($o->dur->days, 0, "interval days 3 - $db_type");
   is($o->dur->minutes, 0, "interval minutes 3 - $db_type");
   is($o->dur->seconds, 0, "interval seconds 3 - $db_type");
+  
+  is($o->meta->column('dur')->precision, 6, "interval precision - $db_type");
 }
 
 #

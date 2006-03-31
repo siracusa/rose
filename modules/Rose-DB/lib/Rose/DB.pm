@@ -2373,6 +2373,10 @@ Converts the L<DateTime> object DATETIME into the appropriate format for the "da
 
 Converts the L<DateTime> object DATETIME into the appropriate format for the "datetime" (month, day, year, hour, minute, second) data type of the current data source.
 
+=item B<format_interval DURATION>
+
+Converts the L<DateTime::Duration> object DURATION into the appropriate format for the interval (years, months, days, hours, minutes, seconds) data type of the current data source. If DURATION is undefined, a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.
+
 =item B<format_timestamp DATETIME>
 
 Converts the L<DateTime> object DATETIME into the appropriate format for the timestamp (month, day, year, hour, minute, second, fractional seconds) data type of the current data source.  Fractional seconds are optional, and the useful precision may vary depending on the data source.
@@ -2412,6 +2416,12 @@ If STRING is a valid date keyword (according to L<validate_date_keyword|/validat
 Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the data source's native "datetime" (month, day, year, hour, minute, second) data type.
 
 If STRING is a valid datetime keyword (according to L<validate_datetime_keyword|/validate_datetime_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "datetime" value.
+
+=item B<parse_interval STRING>
+
+Parse STRING and return a L<DateTime::Duration> object.  STRING should be formatted according to the data source's native "interval" (years, months, days, hours, minutes, seconds) data type.
+
+If STRING is a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.  Otherwise, undef is returned if STRING could not be parsed as a valid "interval" value.
 
 =item B<parse_timestamp STRING>
 

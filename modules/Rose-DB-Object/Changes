@@ -1,5 +1,6 @@
-0.70 (03.28.2006) - John Siracusa <siracusa@mindspring.com>
+0.70 (03.29.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Added support for the interval data type.
     * Silenced warning when querying datetime columns with undef values.
     * Fixed a bug in the loader that prevented auto-generated base class
       names from being correctly nested under class_prefix.
