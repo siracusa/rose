@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 381;
+use Test::More tests => 426;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 150)  unless($HAVE_PG);
+  skip("Postgres tests", 180)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -251,6 +251,35 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   # Reset for next trip through loop
   $o->meta->default_load_speculative(0);
   $o->meta->error_mode('return');
+
+  $o = MyPgObject->new(name => 'John', 
+                       k1   => 1,
+                       k2   => undef,
+                       k3   => 3)->save;
+
+  is($o->dur->months, 2, "interval months 1 - $db_type");
+  is($o->dur->days, 5, "interval days 1 - $db_type");
+  is($o->dur->seconds, 3, "interval seconds 1 - $db_type");
+
+  $o->dur(DateTime::Duration->new(years => 7, nanoseconds => 3000));
+
+  is($o->dur->in_units('years'), 7, "interval in_units years 1 - $db_type");
+  is($o->dur->in_units('months'), 84, "interval in_units months 1 - $db_type");
+  is($o->dur->nanoseconds, 3000, "interval nanoseconds 1 - $db_type");
+  is($o->dur->days, 0, "interval days 2 - $db_type");
+  is($o->dur->minutes, 0, "interval minutes 2 - $db_type");
+  is($o->dur->seconds, 0, "interval seconds 2 - $db_type");
+
+  $o->save;
+
+  $o = MyPgObject->new(id => $o->id)->load;
+
+  is($o->dur->in_units('years'), 7, "interval in_units years 2 - $db_type");
+  is($o->dur->in_units('months'), 84, "interval in_units months 2 - $db_type");
+  is($o->dur->nanoseconds, 3000, "interval nanoseconds 2 - $db_type");
+  is($o->dur->days, 0, "interval days 3 - $db_type");
+  is($o->dur->minutes, 0, "interval minutes 3 - $db_type");
+  is($o->dur->seconds, 0, "interval seconds 3 - $db_type");
 }
 
 #
@@ -259,7 +288,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 83)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 98)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -267,7 +296,7 @@ SKIP: foreach my $db_type ('mysql')
                              k1   => 1,
                              k2   => undef,
                              k3   => 3);
-$DB::single = 1;
+
   ok(ref $o && $o->isa('MyMySQLObject'), "new() 1 - $db_type");
 
   $o->flag2('true');
@@ -484,6 +513,35 @@ $DB::single = 1;
   ok(!$o->load(speculative => 1), "load() speculative explicit 2 - $db_type");
   eval { $o->load(speculative => 0) };
   ok($@, "load() non-speculative explicit 2 - $db_type");
+
+  $o->meta->default_load_speculative(0);
+  
+  $o = MyMySQLObject->new(id => 1)->load;
+
+  is($o->dur->months, 2, "interval months 1 - $db_type");
+  is($o->dur->days, 5, "interval days 1 - $db_type");
+  is($o->dur->seconds, 3, "interval seconds 1 - $db_type");
+
+  $o->dur(DateTime::Duration->new(years => 7, nanoseconds => 3000));
+
+  is($o->dur->in_units('years'), 7, "interval in_units years 1 - $db_type");
+  is($o->dur->in_units('months'), 84, "interval in_units months 1 - $db_type");
+  is($o->dur->nanoseconds, 3000, "interval nanoseconds 1 - $db_type");
+  is($o->dur->days, 0, "interval days 2 - $db_type");
+  is($o->dur->minutes, 0, "interval minutes 2 - $db_type");
+  is($o->dur->seconds, 0, "interval seconds 2 - $db_type");
+
+  $o->save;
+
+  $o = MyMySQLObject->new(id => $o->id)->load;
+$DB::single = 1;
+my $x = $o->dur;
+  is($o->dur->in_units('years'), 7, "interval in_units years 2 - $db_type");
+  is($o->dur->in_units('months'), 84, "interval in_units months 2 - $db_type");
+  is($o->dur->nanoseconds, 3000, "interval nanoseconds 2 - $db_type");
+  is($o->dur->days, 0, "interval days 3 - $db_type");
+  is($o->dur->minutes, 0, "interval minutes 3 - $db_type");
+  is($o->dur->seconds, 0, "interval seconds 3 - $db_type");
 }
 
 #
@@ -949,6 +1007,7 @@ CREATE TABLE rose_db_object_test
   start          DATE,
   save           INT,
   nums           INT[],
+  dur            INTERVAL(6) DEFAULT '2 months 5 days 3 seconds',
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -974,6 +1033,7 @@ CREATE TABLE rose_db_object_private.rose_db_object_test
   start          DATE,
   save           INT,
   nums           INT[],
+  dur            INTERVAL(6) DEFAULT '2 months 5 days 3 seconds',
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1010,6 +1070,7 @@ EOF
       nums     => { type => 'array' },
       bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },
       decs     => { type => 'decimal', precision => 10, scale => 2 },
+      dur      => { type => 'interval', precision => 6, default => '2 months 5 days 3 seconds' },
       #last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );
@@ -1096,6 +1157,7 @@ CREATE TABLE rose_db_object_test
   save           INT,
   enums          ENUM('foo', 'bar', 'baz') DEFAULT 'foo',
   ndate          DATE NOT NULL DEFAULT '0000-00-00',
+  dur            VARCHAR(255) DEFAULT '2 months 5 days 3 seconds',
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1148,6 +1210,7 @@ EOF
       bitz2    => { type => 'bits', bits => 2, default => '0' },
       bitz3    => { type => 'bits', bits => 4 },
       decs     => { type => 'decimal', precision => 10, scale => 2 },
+      dur      => { type => 'interval', precision => 6, default => '2 months 5 days 3 seconds' },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );

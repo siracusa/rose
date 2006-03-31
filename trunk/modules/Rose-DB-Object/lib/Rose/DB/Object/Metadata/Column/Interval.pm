@@ -10,7 +10,7 @@ our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
 our $VERSION = '0.70';
 
-__PACKAGE__->add_common_method_maker_argument_names('default');
+__PACKAGE__->add_common_method_maker_argument_names('default', 'precision');
 
 Rose::Object::MakeMethods::Generic->make_methods
 (
