@@ -15,6 +15,7 @@ __PACKAGE__->add_common_method_maker_argument_names('default', 'precision');
 Rose::Object::MakeMethods::Generic->make_methods
 (
   { preserve_existing => 1 },
+  scalar => [ precision => { default => 0 } ],
   scalar => [ __PACKAGE__->common_method_maker_argument_names ]
 );
 
@@ -100,11 +101,17 @@ See the L<Rose::DB::Object::Metadata::Column|Rose::DB::Object::Metadata::Column/
 
 =item B<parse_value DB, VALUE>
 
-Convert VALUE to the equivalent C<DateTime> object.  VALUE maybe returned unmodified if it is a valid date keyword or otherwise has special meaning to the underlying database.  DB is a L<Rose::DB> object that is used as part of the parsing process.  Both arguments are required.
+Convert VALUE to the equivalent L<DateTime::Duration> object.  VALUE maybe returned unmodified if it is a valid interval keyword or otherwise has special meaning to the underlying database.  DB is a L<Rose::DB> object that is used as part of the parsing process.  Both arguments are required.
+
+=item B<precision [INT]>
+
+Get or set the integer number of places past the decimal point preserved for fractional seconds.  Defaults to 0.
+
+Returns "interval".
 
 =item B<type>
 
-Returns "date".
+Returns "interval".
 
 =back
 
