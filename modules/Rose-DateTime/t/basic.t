@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 5521;
+use Test::More tests => 5522;
 
 BEGIN 
 {
@@ -448,14 +448,17 @@ is($d->strftime('%Y-%m-%d %H:%M:%S'), '2006-03-30 18:47:15', 'Epoch vs. yyyymmdd
 $d = parse_date('1143744435.123456789');
 is($d->strftime('%Y-%m-%d %H:%M:%S.%N'), '2006-03-30 18:47:15.123456789', 'Epoch vs. yyyymmdd 2');
 
+$d = parse_date('-1143744435.123456789');
+is($d->strftime('%Y-%m-%d %H:%M:%S.%N'), '1933-10-04 05:12:45.123456789', 'Epoch vs. yyyymmdd 3');
+
 $d = parse_date('1143744435.123456789');
-is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.12345', 'Epoch vs. yyyymmdd 3');
+is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.12345', 'Epoch vs. yyyymmdd 4');
 
 $d = parse_date('1143744435.123');
-is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.12300', 'Epoch vs. yyyymmdd 4');
+is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.12300', 'Epoch vs. yyyymmdd 5');
 
 $d = parse_date('1143744435.');
-is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.00000', 'Epoch vs. yyyymmdd 5');
+is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.00000', 'Epoch vs. yyyymmdd 6');
 
 $d = parse_date('19800102 8pm');
 is($d->strftime('%Y-%m-%d %H:%M:%S'), '1980-01-02 20:00:00', 'yyyymmdd 1');
