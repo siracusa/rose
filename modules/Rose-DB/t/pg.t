@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 123);
+    Test::More->import(tests => 195);
   }
 }
 
@@ -146,6 +146,123 @@ is($db->compare_timestamps('now', 'infinity'), -1, "compare_timestamps('now', 'i
 is($db->compare_timestamps('infinity', 'infinity'), 1, "compare_timestamps('infinity', 'infinity')");
 
 # Interval values
+
+isa_ok($db->parse_interval('00:00:00'), 'DateTime::Duration');
+
+my @Intervals = 
+(
+  '+0::'               => '@ 0',
+  '-0:1:'              => '@ -1 minutes',
+  '2:'                 => '@ 120 minutes',
+  '1 D'                => '@ 1 days',
+  '-1 d 2 s'           => '@ -1 days 2 seconds',
+  '-1 y 3 h -57 M 4 s' => '@ -12 months 123 minutes 4 seconds',
+  '-1 y 2 mons  3 d'   => '@ -10 months 3 days',
+  '-1 y 2 mons -3 d'   => '@ -10 months -3 days',
+
+  '5 h -208 m -495 s'  => '@ 83 minutes 45 seconds',
+  '-208 m -495 s'      => '@ -216 minutes -15 seconds',
+  '5 h 208 m 495 s'    => '@ 516 minutes 15 seconds',
+
+  ':'         => undef,
+  '::'        => undef,
+  '123:456:'  => undef,
+  '1:-2:3'    => undef,
+  '1:2:-3'    => undef,
+  '1 h 1:1:1' => undef,
+  '1 d 2 d'   => undef,
+  '1: 2:'     => undef,
+  '1 s 2:'    => undef,
+  
+  '1 ys 2 h 3 m 4 s'  => undef,
+  '1 y s 2 h 3 m 4 s' => undef,
+  '1 ago'             => undef,
+  '1s ago'            => undef,
+  '1 s agos'          => undef,
+  '1 m ago ago 1 s'   => undef,
+  '1 m ago1 s'        => undef,
+  '1 m1 s'            => undef,
+
+  '1 mil 2 c 3 dec 4 y 5 mon 1 w -1 d 7 h 8 m 9 s' => 
+    '@ 14813 months 6 days 428 minutes 9 seconds',
+
+  '-1 mil -2 c -3 dec -4 y -5 mon -1 w 1 d -7 h -8 m -9 s' => 
+    '@ -14813 months -6 days -428 minutes -9 seconds',
+
+  '-1 mil -2 c -3 dec -4 y -5 mon -1 w 1 d -7 h -8 m -9 s ago' => 
+    '@ 14813 months 6 days 428 minutes 9 seconds',
+
+  '1 mils 2 cents 3 decs 4 years 5 mons 1 weeks -1 days 7 hours 8 mins 9 secs' => 
+    '@ 14813 months 6 days 428 minutes 9 seconds',
+  '1 millenniums 2 centuries 3 decades 4 years 5 months 1 weeks -1 days 7 hours 8 minutes 9 seconds' => 
+    '@ 14813 months 6 days 428 minutes 9 seconds',
+
+  '1 mil -1 d ago'     => '@ -12000 months 1 days',
+  '1 mil ago -1 d ago' => '@ -12000 months 1 days',
+);
+
+my %Alt_Intervals =
+(
+  '+0::'               => '',
+  '-0:1:'              => '-00:01:00',
+  '2:'                 => '02:00:00',
+  '1 D'                => '1 day',
+  '-1 d 2 s'           => '-1 days +00:00:02',
+  '-1 y 3 h -57 M 4 s' => '-1 years +02:03:04',
+  '-1 y 2 mons  3 d'   => '-10 mons +3 days',
+  '-1 y 2 mons -3 d'   => '-10 mons -3 days',
+
+  '5 h -208 m -495 s' => '01:23:45',
+  '-208 m -495 s'     => '-03:36:15',
+  '5 h 208 m 495 s'   => '08:36:15',
+
+  ':'         => undef,
+  '::'        => undef,
+  '123:456:'  => undef,
+  '1:-2:3'    => undef,
+  '1:2:-3'    => undef,
+  '1 h 1:1:1' => undef,
+  '1 d 2 d'   => undef,
+  '1: 2:'     => undef,
+  '1 s 2:'    => undef,
+
+  '1 ys 2 h 3 m 4 s'  => undef,
+  '1 y s 2 h 3 m 4 s' => undef,
+  '1 ago'             => undef,
+  '1s ago'            => undef,
+  '1 s agos'          => undef,
+  '1 m ago ago 1 s'   => undef,
+  '1 m ago1 s'        => undef,
+  '1 m1 s'            => undef,
+
+  '1 mil 2 c 3 dec 4 y 5 mon 1 w -1 d 7 h 8 m 9 s'             => '1234 years 5 mons 6 days 07:08:09',
+  '-1 mil -2 c -3 dec -4 y -5 mon -1 w 1 d -7 h -8 m -9 s'     => '-1234 years -5 mons -6 days -07:08:09',
+  '-1 mil -2 c -3 dec -4 y -5 mon -1 w 1 d -7 h -8 m -9 s ago' => '1234 years 5 mons 6 days 07:08:09',
+
+  '1 mils 2 cents 3 decs 4 years 5 mons 1 weeks -1 days 7 hours 8 mins 9 secs' => '1234 years 5 mons 6 days 07:08:09',
+
+  '1 millenniums 2 centuries 3 decades 4 years 5 months 1 weeks -1 days 7 hours 8 minutes 9 seconds' =>
+      '1234 years 5 mons 6 days 07:08:09',
+
+  '1 mil -1 d ago'     => '-1000 years +1 day',
+  '1 mil ago -1 d ago' => '-1000 years +1 day',
+);
+
+my $i = 0;
+
+while($i < @Intervals)
+{
+  my($val, $formatted) = ($Intervals[$i++], $Intervals[$i++]);
+
+  my $d = $db->parse_interval($val);
+
+  is($db->format_interval($d), $formatted, "parse_interval ($val)");  
+  my $alt_d = $db->parse_interval($Alt_Intervals{$val});
+  
+  ok((!defined $d && !defined $alt_d) || DateTime::Duration->compare($d, $alt_d) == 0, "parse_interval alt check $i");
+}
+
+is($db->parse_interval('foo()'), 'foo()', 'parse_interval (foo())');
 
 SKIP:
 {

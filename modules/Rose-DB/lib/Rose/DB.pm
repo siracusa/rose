@@ -33,6 +33,7 @@ use Rose::Class::MakeMethods::Generic
     'default_type',
     'registry',
     'max_array_characters',
+    'max_interval_characters',
   ]
 );
 
@@ -53,7 +54,8 @@ use Rose::Class::MakeMethods::Generic
 __PACKAGE__->default_domain('default');
 __PACKAGE__->default_type('default');
 
-__PACKAGE__->max_array_characters(255); # Used for array type emulation
+__PACKAGE__->max_array_characters(255);    # Used for array type emulation
+__PACKAGE__->max_interval_characters(255); # Used for interval type emulation
 
 __PACKAGE__->driver_classes
 (
@@ -1192,6 +1194,240 @@ sub format_array
   return $str;
 }
 
+my $Interval_Regex = qr{
+(?:
+  (?: (?: \s* ([+-]?) (\d+) : ([0-5]?\d)? (?:: ([0-5]?\d)? )?))  # (sign)hhh:mm:ss
+  |
+  (?:     \s* ( [+-]? \d+ ) \s+                      # quantity
+    (?:                                              # unit
+        (?:\b(dec) (?:ades?\b | s?\b)?\b)            # decades
+      | (?:\b(d)   (?:ays?\b)?\b)                    # days
+      | (?:\b(y)   (?:ears?\b)?\b)                   # years
+      | (?:\b(h)   (?:ours?\b)?\b)                   # hours
+      | (?:\b(mon) (?:s\b | ths?\b)?\b)              # months
+      | (?:\b(mil) (?:s\b | lenniums?\b)?\b)         # millenniums
+      | (?:\b(m)   (?:inutes?\b | ins?\b)?\b)        # minutes
+      | (?:\b(s)   (?:ec(?:s | onds?)?)?\b)          # seconds
+      | (?:\b(w)   (?:eeks?\b)?\b)                   # weeks
+      | (?:\b(c)   (?:ent(?:s | ury | uries)?\b)?\b) # centuries
+    )
+  )
+)
+(?: \s+ (ago) \b)?                                   # direction
+| (.+)
+}ix;
+
+sub parse_interval
+{
+  my($self, $value) = @_;
+
+  if(!defined $value || UNIVERSAL::isa($value, 'DateTime::Duration') || 
+     $self->validate_interval_keyword($value) || $value =~ /^\w+\(.*\)$/)
+  {
+    return $value;
+  }
+
+  for($value)
+  {
+    s/\A //;
+    s/ \z//;
+    s/\s+/ /g;
+  }
+
+  my(%units, $is_ago, $sign, $error, $dt_duration);
+
+  my $value_pos;
+
+  while(!$error && $value =~ /$Interval_Regex/go)
+  {
+    $value_pos = pos($value);
+
+    $is_ago = 1  if($16);
+
+    if($2 || $3 || $4)
+    {
+      if($sign || defined $units{'hours'} || defined $units{'minutes'} || 
+         defined $units{'seconds'})
+      {
+        $error = 1;
+        last;
+      }
+
+      $sign = ($1 && $1 eq '-') ? -1 : 1;
+      $units{'hours'}   = $sign * ($2 || 0);
+      $units{'minutes'} = $sign * ($3 || 0);
+      $units{'seconds'} = $sign * ($4 || 0);
+    }
+    elsif($6)
+    {
+      if($units{'decades'}) { $error = 1; last }
+      $units{'decades'} = $5;
+    }
+    elsif(defined $7)
+    {
+      if($units{'days'}) { $error = 1; last }
+      $units{'days'} = $5;
+    }
+    elsif(defined $8)
+    {
+      if($units{'years'}) { $error = 1; last }
+      $units{'years'} = $5;
+    }
+    elsif(defined $9)
+    {
+      if($units{'hours'}) { $error = 1; last }
+      $units{'hours'} = $5;
+    }
+    elsif(defined $10)
+    {
+      if($units{'months'}) { $error = 1; last }
+      $units{'months'} = $5;
+    }
+    elsif(defined $11)
+    {
+      if($units{'millenniums'}) { $error = 1; last }
+      $units{'millenniums'} = $5;
+    }
+    elsif(defined $12)
+    {
+      if($units{'minutes'}) { $error = 1; last }
+      $units{'minutes'} = $5;
+    }
+    elsif(defined $13)
+    {
+      if($units{'seconds'}) { $error = 1; last }
+      $units{'seconds'} = $5;
+    }
+    elsif(defined $14)
+    {
+      if($units{'weeks'}) { $error = 1; last }
+      $units{'weeks'} = $5;
+    }
+    elsif(defined $15)
+    {
+      if($units{'centuries'}) { $error = 1; last }
+      $units{'centuries'} = $5;
+    }
+    elsif(defined $17)
+    {
+      $error = 1;
+      last;
+    }
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse interval '$value' - found overlaping time units");
+    return undef;
+  }
+
+  if($value_pos != length($value)) 
+  {
+    $self->error("Could not parse interval '$value' - could not interpret all tokens");
+    return undef;
+  }
+
+  if(defined $units{'millenniums'})
+  {
+    $units{'years'} += 1000 * $units{'millenniums'};
+    delete $units{'millenniums'};
+  }
+  
+  if(defined $units{'centuries'})
+  {
+    $units{'years'} += 100 * $units{'centuries'};
+    delete $units{'centuries'};
+  }
+
+  if(defined $units{'decades'})
+  {
+    $units{'years'} += 10 * $units{'decades'};
+    delete $units{'decades'};
+  }
+
+  if($units{'hours'} || $units{'minutes'} || $units{'seconds'})
+  {
+    my $seconds = ($units{'hours'}   || 0) * 60 * 60 +
+                  ($units{'minutes'} || 0) * 60 +
+                  ($units{'seconds'} || 0);
+    $units{'hours'}   = int($seconds  / 3600);
+    $seconds         -= $units{'hours'} * 3600;
+    $units{'minutes'} = int($seconds  / 60);
+    $units{'seconds'} = $seconds - $units{'minutes'} * 60;
+  }
+
+  $dt_duration = $is_ago ? 
+    DateTime::Duration->new(%units)->inverse :
+    DateTime::Duration->new(%units);
+
+  return $dt_duration;
+}
+
+sub format_interval
+{
+  my($self, $dur) = @_;
+
+  if(!defined $dur || $self->validate_interval_keyword($dur) ||
+     $dur =~ /^\w+\(.*\)$/)
+  {
+    return $dur;
+  }
+
+  my $output = '';
+
+  my(%deltas, %unit, $neg);
+
+  @deltas{qw/years mons days h m s/} =
+    $dur->in_units(qw/years months days hours minutes seconds/);
+
+  foreach (qw/years mons days/)
+  {
+    $unit{$_} = $_;
+    $unit{$_} =~ s/s\z// if $deltas{$_} == 1;
+  }
+
+  $output .= "$deltas{'years'} $unit{'years'} "  if($deltas{'years'});
+  $neg = 1  if($deltas{'years'} < 0);
+
+  $output .= '+' if ($neg && $deltas{'mons'} > 0);
+  $output .= "$deltas{'mons'} $unit{'mons'} "  if($deltas{'mons'});
+  $neg = $deltas{'mons'}  < 0 ? 1 :
+         $deltas{'mons'}      ? 0 : 
+         $neg;
+
+  $output .= '+'  if($neg && $deltas{'days'} > 0);
+  $output .= "$deltas{'days'} $unit{'days'} "  if($deltas{'days'});
+
+  if($deltas{'h'} || $deltas{'m'} || $deltas{'s'})
+  {
+    $neg = $deltas{'days'}  < 0 ? 1 :
+           $deltas{'days'}      ? 0 :
+           $neg;
+
+    if($neg && (($deltas{'h'} > 0) || (!$deltas{'h'} &&  $deltas{'m'} > 0) ||
+                (!$deltas{'h'} && !$deltas{'m'} && $deltas{'s'} > 0)))
+    {
+      $output .= '+';
+    }
+
+    $output .= '-'  if(!$deltas{'h'} && ($deltas{'m'} < 0 || $deltas{'s'} < 0));
+    @deltas{qw/m s/} = (abs($deltas{'m'}), abs($deltas{'s'}));
+    $deltas{'hms'} = join(':', map { sprintf( "%.2d", $deltas{$_}) } (qw/h m s/));
+    $output .= "$deltas{'hms'}"  if($deltas{'hms'});
+  }
+
+  $output =~ s/ \z//;
+
+  if(length($output) > $self->max_interval_characters)
+  {
+    Carp::croak "Interval string is longer than ", ref($self),
+                "->max_interval_characters (", $self->max_interval_characters,
+                ") characters long: $output";
+  }
+
+  return $output;
+}
+
 sub build_dsn { 'override in subclass' }
 
 sub validate_boolean_keyword
@@ -2145,6 +2381,10 @@ Returns true if STRING is a valid keyword for the "date" (month, day, year) data
 =item B<validate_datetime_keyword STRING>
 
 Returns true if STRING is a valid keyword for the "datetime" (month, day, year, hour, minute, second) data type of the current data source, false otherwise.  The default implementation always returns false.
+
+=item B<validate_interval_keyword STRING>
+
+Returns true if STRING is a valid keyword for the "interval" (years, months, days, hours, minutes, seconds) data type of the current data source, false otherwise.  The default implementation always returns false.
 
 =item B<validate_timestamp_keyword STRING>
 
