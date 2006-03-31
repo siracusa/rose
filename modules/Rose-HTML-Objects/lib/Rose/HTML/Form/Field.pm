@@ -920,6 +920,14 @@ Returns one or more L<Rose::HTML::Form::Field::Hidden> objects that represent th
 
 Returns the HTML serialization of the field, along with the HTML error message, if any. The field and error HTML are joined by L<html_error_separator()|/html_error_separator>, which is "E<lt>brE<gt>\n" by default.
 
+=item B<html_error>
+
+Returns the error text, if any, as a snippet of HTML that looks like this:
+
+    <span class="error">Error text goes here</span>
+
+If the L<escape_html|/escape_html> flag is set to true (the default), then the error text has any HTML in it escaped.
+
 =item B<html_error_separator [STRING]>
 
 Get or set the string used to join the HTML field and HTML error message in the output of the L<html()|/html> method.  The default value is "E<lt>brE<gt>\n"
@@ -1093,6 +1101,14 @@ If a VALUE argument is passed, it sets both the input value and the "value" HTML
 =item B<xhtml>
 
 Returns the XHTML serialization of the field, along with the HTML error message, if any. The field and error HTML are joined by L<xhtml_error_separator()|/xhtml_error_separator>, which is "E<lt>br /E<gt>\n" by default.
+
+=item B<xhtml_error>
+
+Returns the error text, if any, as a snippet of XHTML that looks like this:
+
+    <span class="error">Error text goes here</span>
+
+If the L<escape_html|/escape_html> flag is set to true (the default), then the error text has any HTML in it escaped.
 
 =item B<xhtml_error_separator [STRING]>
 

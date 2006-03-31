@@ -1195,10 +1195,11 @@ sub format_array
 }
 
 my $Interval_Regex = qr{
+(?:\@\s*)?
 (?:
-  (?: (?: \s* ([+-]?) (\d+) : ([0-5]?\d)? (?:: ([0-5]?\d)? )?))  # (sign)hhh:mm:ss
+  (?: (?: \s* ([+-]?) (\d+) : ([0-5]?\d)? (?:: ([0-5]?\d (?:\.\d+)? )? )?))  # (sign)hhh:mm:ss
   |
-  (?:     \s* ( [+-]? \d+ ) \s+                      # quantity
+  (?:     \s* ( [+-]? \d+ (?:\.\d+(?=\s+s))? ) \s+      # quantity
     (?:                                              # unit
         (?:\b(dec) (?:ades?\b | s?\b)?\b)            # decades
       | (?:\b(d)   (?:ays?\b)?\b)                    # days
@@ -1254,9 +1255,31 @@ sub parse_interval
       }
 
       $sign = ($1 && $1 eq '-') ? -1 : 1;
+
+      my $secs = $4;
+
+      if($secs != int($secs))
+      {
+        my $fsecs = substr($secs, index($secs, '.') + 1);
+        $secs = int($secs);
+
+        my $len = length $fsecs;
+  
+        if($len < 9)
+        {
+          $fsecs .= ('0' x (9 - length $fsecs));
+        }
+        elsif($len > 9)
+        {
+          $fsecs = substr($fsecs, 0, 9);
+        }
+
+        $units{'nanoseconds'} = $sign * $fsecs;
+      }
+
       $units{'hours'}   = $sign * ($2 || 0);
       $units{'minutes'} = $sign * ($3 || 0);
-      $units{'seconds'} = $sign * ($4 || 0);
+      $units{'seconds'} = $sign * ($secs || 0);
     }
     elsif($6)
     {
@@ -1296,7 +1319,28 @@ sub parse_interval
     elsif(defined $13)
     {
       if($units{'seconds'}) { $error = 1; last }
-      $units{'seconds'} = $5;
+
+      my $secs = $5;
+
+      $units{'seconds'} = int($secs);
+
+      if($units{'seconds'} != $secs)
+      {
+        my $fsecs = substr($secs, index($secs, '.') + 1);
+
+        my $len = length $fsecs;
+  
+        if($len < 9)
+        {
+          $fsecs .= ('0' x (9 - length $fsecs));
+        }
+        elsif($len > 9)
+        {
+          $fsecs = substr($fsecs, 0, 9);
+        }
+
+        $units{'nanoseconds'} = $fsecs;
+      }
     }
     elsif(defined $14)
     {
@@ -1398,7 +1442,7 @@ sub format_interval
   $output .= '+'  if($neg && $deltas{'days'} > 0);
   $output .= "$deltas{'days'} $unit{'days'} "  if($deltas{'days'});
 
-  if($deltas{'h'} || $deltas{'m'} || $deltas{'s'})
+  if($deltas{'h'} || $deltas{'m'} || $deltas{'s'} || $dur->nanoseconds)
   {
     $neg = $deltas{'days'}  < 0 ? 1 :
            $deltas{'days'}      ? 0 :
@@ -1410,9 +1454,14 @@ sub format_interval
       $output .= '+';
     }
 
+    my $nsec = $dur->nanoseconds;
+
     $output .= '-'  if(!$deltas{'h'} && ($deltas{'m'} < 0 || $deltas{'s'} < 0));
     @deltas{qw/m s/} = (abs($deltas{'m'}), abs($deltas{'s'}));
-    $deltas{'hms'} = join(':', map { sprintf( "%.2d", $deltas{$_}) } (qw/h m s/));
+    $deltas{'hms'} = join(':', map { sprintf('%.2d', $deltas{$_}) } (qw/h m/)) .
+                     ($nsec ? sprintf(':%02d.%09d', $deltas{'s'}, $nsec) :         
+                              sprintf(':%02d', $deltas{'s'}));
+              
     $output .= "$deltas{'hms'}"  if($deltas{'hms'});
   }
 
