@@ -48,7 +48,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   # Really, I'm looking for a lack of warning in this test, but
   # I'm not sure how to check for that using Test::More.
 
-  ok($sql =~ /start IS NULL/, "sql check - $db_type");
+  ok($sql =~ /.?start.? IS NULL/, "sql check - $db_type");
 }
 
 BEGIN

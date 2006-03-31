@@ -1,5 +1,6 @@
 0.52 (03.30.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Allow negative epoch values in parse_date().
     * Fixed a bug in the yyyy-mm-dd date parsing that caused it to
       incorrectly match 10-digit seconds-since-epoch values.
       (Reported by Peter Karman)

@@ -1258,7 +1258,7 @@ sub parse_interval
 
       my $secs = $4;
 
-      if($secs != int($secs))
+      if(defined $secs && $secs != int($secs))
       {
         my $fsecs = substr($secs, index($secs, '.') + 1);
         $secs = int($secs);
