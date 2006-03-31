@@ -228,7 +228,7 @@ Rose::DB::Object::MakeMethods::Time - Create time-related methods for Rose::DB::
 
     use Rose::DB::Object::MakeMethods::Time
     (
-      date => 
+      interval => 
       [
         'start_date',
         'end_date' => { default => '2005-01-30' }
