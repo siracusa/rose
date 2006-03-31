@@ -1,3 +1,7 @@
+0.67 (03.31.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added support for the interval data type.
+
 0.66 (03.28.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Date parsing now passes DateTime objects through immediately 
