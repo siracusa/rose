@@ -1,3 +1,8 @@
+0.53 (03.29.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added Script, Link, and Anchor classes.
+    * Added missing documentation for xhtml_error().
+
 0.52 (03.08.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added a children() method to Rose::HTML::Object and all derived 

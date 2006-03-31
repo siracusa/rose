@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 129;
+use Test::More tests => 131;
 
 BEGIN
 {
@@ -361,3 +361,11 @@ ok($@, 'max_interval_characters 1');
 ok(Rose::DB->max_interval_characters != MyTest::DB2->max_interval_characters, 'max_interval_characters 2');
 
 is($db->parse_interval('foo()'), 'foo()', 'parse_interval (foo())');
+
+MyTest::DB2->max_interval_characters(255);
+
+my $d = $db->parse_interval('1 year 0.000003 seconds');
+
+is($d->nanoseconds, 3000, 'nanoseconds 1');
+
+is($db->format_interval($d), '1 year 00:00:00.000003000', 'nanoseconds 2');

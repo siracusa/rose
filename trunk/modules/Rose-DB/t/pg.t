@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 195);
+    Test::More->import(tests => 197);
   }
 }
 
@@ -263,6 +263,12 @@ while($i < @Intervals)
 }
 
 is($db->parse_interval('foo()'), 'foo()', 'parse_interval (foo())');
+
+my $d = $db->parse_interval('1 year 0.000003 seconds');
+
+is($d->nanoseconds, 3000, 'nanoseconds 1');
+
+is($db->format_interval($d), '@ 12 months 0.000003 seconds', 'nanoseconds 2');
 
 SKIP:
 {

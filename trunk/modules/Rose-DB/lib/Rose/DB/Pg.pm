@@ -204,7 +204,12 @@ sub format_interval
 {
   my($self, $dur) = @_;
   return $dur  if(!defined $dur || $self->validate_interval_keyword($dur) || $dur =~ /^\w+\(.*\)$/);
-  return $self->date_handler->format_interval($dur);
+  my $val = $self->date_handler->format_interval($dur);
+  
+  # Handle DateTime::Format::Pg bug
+  # http://rt.cpan.org/Public/Bug/Display.html?id=18487
+  $val =~ s/(\S+e\S+) seconds/sprintf('%f seconds', $1)/e;
+  return $val;
 }
 
 sub next_value_in_sequence

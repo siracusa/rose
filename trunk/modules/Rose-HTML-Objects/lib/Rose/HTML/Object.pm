@@ -890,7 +890,7 @@ Get or set an error string.
 
 =item B<escape_html [BOOL]>
 
-This flag may be used by other methods to decide whether or not to escape HTML.  It is set to true by default.  The only method in L<Rose::HTML::Object> that references it is C<html_error>.  All other HTML is escaped as appropriate regardless of the C<escape_html> setting (e.g. the text returned by C<html_attrs_string> always has its attribute values escaped).  Subclasses may consult this flag for similar purposes (which they must document, of course).
+This flag may be used by other methods to decide whether or not to escape HTML.  It is set to true by default.  The only method in L<Rose::HTML::Object> that references it is L<html_error|/html_error>.  All other HTML is escaped as appropriate regardless of the L<escape_html|/escape_html> setting (e.g. the text returned by C<html_attrs_string> always has its attribute values escaped).  Subclasses may consult this flag for similar purposes (which they must document, of course).
 
 =item B<html>
 
@@ -982,7 +982,7 @@ Returns the error text, if any, as a snippet of HTML that looks like this:
 
     <span class="error">Error text goes here</span>
 
-If the C<escape_html> flag is set to true (the default), then the error text has any HTML in it escaped.
+If the L<escape_html|/escape_html> flag is set to true (the default), then the error text has any HTML in it escaped.
 
 =item B<html_tag>
 
@@ -995,6 +995,14 @@ If set to true, HTML attribute arguments to C<html_attr> and C<html_attr_hook> w
 =item B<xhtml>
 
 A synonym for L<xhtml_tag()|/xhtml_tag>.
+
+=item B<xhtml_error>
+
+Returns the error text, if any, as a snippet of XHTML that looks like this:
+
+    <span class="error">Error text goes here</span>
+
+If the L<escape_html|/escape_html> flag is set to true (the default), then the error text has any HTML in it escaped.
 
 =item B<xhtml_tag>
 
