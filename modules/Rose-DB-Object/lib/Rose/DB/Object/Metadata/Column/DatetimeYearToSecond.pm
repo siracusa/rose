@@ -69,7 +69,7 @@ See the L<Rose::DB::Object::Metadata::Column|Rose::DB::Object::Metadata::Column/
 
 =item B<parse_value DB, VALUE>
 
-Convert VALUE to the equivalent C<DateTime> object suitable for storage in a "datetime year to second" column.  VALUE maybe returned unmodified if it is a valid "datetime year to second" keyword or otherwise has special meaning to the underlying database.  DB is a L<Rose::DB> object that is used as part of the parsing process.  Both arguments are required.
+Convert VALUE to the equivalent L<DateTime> object suitable for storage in a "datetime year to second" column.  VALUE maybe returned unmodified if it is a valid "datetime year to second" keyword or otherwise has special meaning to the underlying database.  DB is a L<Rose::DB> object that is used as part of the parsing process.  Both arguments are required.
 
 =item B<type>
 
