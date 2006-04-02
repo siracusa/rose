@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 427;
+use Test::More tests => 439;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 180)  unless($HAVE_PG);
+  skip("Postgres tests", 188)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -280,6 +280,20 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   is($o->dur->days, 0, "interval days 3 - $db_type");
   is($o->dur->minutes, 0, "interval minutes 3 - $db_type");
   is($o->dur->seconds, 0, "interval seconds 3 - $db_type");
+
+  is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1999-11-30 21:30:00', "epoch 1 - $db_type");
+
+  $o->hiepoch('943997400.123456');
+  is($o->hiepoch(format => '%Y-%m-%d %H:%M:%S.%6N'), '1999-11-30 21:30:00.123456', "epoch hires 1 - $db_type");
+
+  $o->epoch('5/6/1980 12:34:56');
+
+  $o->save;
+  
+  $o = MyPgObject->new(id => $o->id)->load;
+
+  is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1980-05-06 12:34:56', "epoch 2 - $db_type");
+  is($o->hiepoch(format => '%Y-%m-%d %H:%M:%S.%6N'), '1999-11-30 21:30:00.123456', "epoch hires 2 - $db_type");
 }
 
 #
@@ -288,7 +302,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 99)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 103)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -543,6 +557,20 @@ SKIP: foreach my $db_type ('mysql')
   is($o->dur->seconds, 0, "interval seconds 3 - $db_type");
   
   is($o->meta->column('dur')->precision, 6, "interval precision - $db_type");
+
+  is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1999-11-30 21:30:00', "epoch 1 - $db_type");
+
+  $o->hiepoch('943997400.123456');
+  is($o->hiepoch(format => '%Y-%m-%d %H:%M:%S.%6N'), '1999-11-30 21:30:00.123456', "epoch hires 1 - $db_type");
+
+  $o->epoch('5/6/1980 12:34:56');
+
+  $o->save;
+  
+  $o = MyMySQLObject->new(id => $o->id)->load;
+
+  is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1980-05-06 12:34:56', "epoch 2 - $db_type");
+  is($o->hiepoch(format => '%Y-%m-%d %H:%M:%S.%6N'), '1999-11-30 21:30:00.123456', "epoch hires 2 - $db_type");
 }
 
 #
@@ -1009,6 +1037,8 @@ CREATE TABLE rose_db_object_test
   save           INT,
   nums           INT[],
   dur            INTERVAL(6) DEFAULT '2 months 5 days 3 seconds',
+  epoch          INT DEFAULT 943997400,
+  hiepoch        DECIMAL(16,6),
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1035,6 +1065,8 @@ CREATE TABLE rose_db_object_private.rose_db_object_test
   save           INT,
   nums           INT[],
   dur            INTERVAL(6) DEFAULT '2 months 5 days 3 seconds',
+  epoch          INT DEFAULT 943997400,
+  hiepoch        DECIMAL(16,6),
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1072,6 +1104,8 @@ EOF
       bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },
       decs     => { type => 'decimal', precision => 10, scale => 2 },
       dur      => { type => 'interval', precision => 6, default => '2 months 5 days 3 seconds' },
+      epoch    => { type => 'epoch', default => '11/30/1999 9:30pm' },
+      hiepoch  => { type => 'epoch hires', default => '1144004926.123456' },
       #last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );
@@ -1159,6 +1193,8 @@ CREATE TABLE rose_db_object_test
   enums          ENUM('foo', 'bar', 'baz') DEFAULT 'foo',
   ndate          DATE NOT NULL DEFAULT '0000-00-00',
   dur            VARCHAR(255) DEFAULT '2 months 5 days 3 seconds',
+  epoch          INT DEFAULT 943997400,
+  hiepoch        DECIMAL(16,6),
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1212,6 +1248,8 @@ EOF
       bitz3    => { type => 'bits', bits => 4 },
       decs     => { type => 'decimal', precision => 10, scale => 2 },
       dur      => { type => 'interval', precision => 6, default => '2 months 5 days 3 seconds' },
+      epoch    => { type => 'epoch', default => '11/30/1999 9:30pm' },
+      hiepoch  => { type => 'epoch hires', default => '1144004926.123456' },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );

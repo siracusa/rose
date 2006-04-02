@@ -7,7 +7,7 @@ use Rose::DB::Object::MakeMethods::Date;
 use Rose::DB::Object::Metadata::Column::Date;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Date);
 
-our $VERSION = '0.04';
+our $VERSION = '0.70';
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -36,13 +36,17 @@ sub should_inline_value
 
 sub parse_value
 {
-  shift; 
-  my $db = shift;
+  my($self, $db) = (shift, shift);
+
   my $dt = $db->parse_datetime(@_);
 
-  unless($dt)
+  if($dt)
   {
-    $dt = Rose::DateTime::Util::parse_date($_[0], $db->server_time_zone)
+    $dt->set_time_zone($self->time_zone || $db->server_time_zone);
+  }
+  else
+  {
+    $dt = Rose::DateTime::Util::parse_date($_[0], $self->time_zone || $db->server_time_zone)
   }
 
   return $dt;
@@ -98,7 +102,11 @@ See the L<Rose::DB::Object::Metadata::Column|Rose::DB::Object::Metadata::Column/
 
 =item B<parse_value DB, VALUE>
 
-Convert VALUE to the equivalent C<DateTime> object.  VALUE maybe returned unmodified if it is a valid datetime keyword or otherwise has special meaning to the underlying database.  DB is a L<Rose::DB> object that is used as part of the parsing process.  Both arguments are required.
+Convert VALUE to the equivalent L<DateTime> object.  VALUE maybe returned unmodified if it is a valid datetime keyword or otherwise has special meaning to the underlying database.  DB is a L<Rose::DB> object that is used as part of the parsing process.  Both arguments are required.
+
+=item B<time_zone [TZ]>
+
+Get or set the time zone of the values stored in this column.  TZ should be a time zone name that is understood by L<DateTime::TimeZone>.
 
 =item B<type>
 
