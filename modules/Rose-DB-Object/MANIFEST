@@ -11,6 +11,7 @@ lib/Rose/DB/Object/MakeMethods/Date.pm
 lib/Rose/DB/Object/MakeMethods/Generic.pm
 lib/Rose/DB/Object/MakeMethods/Pg.pm
 lib/Rose/DB/Object/MakeMethods/Std.pm
+lib/Rose/DB/Object/MakeMethods/Time.pm
 lib/Rose/DB/Object/Manager.pm
 lib/Rose/DB/Object/Metadata.pm
 lib/Rose/DB/Object/Metadata/Auto.pm
@@ -38,8 +39,11 @@ lib/Rose/DB/Object/Metadata/Column/DatetimeYearToMinute.pm
 lib/Rose/DB/Object/Metadata/Column/DatetimeYearToSecond.pm
 lib/Rose/DB/Object/Metadata/Column/Decimal.pm
 lib/Rose/DB/Object/Metadata/Column/Enum.pm
+lib/Rose/DB/Object/Metadata/Column/Epoch.pm
+lib/Rose/DB/Object/Metadata/Column/Epoch/HiRes.pm
 lib/Rose/DB/Object/Metadata/Column/Float.pm
 lib/Rose/DB/Object/Metadata/Column/Integer.pm
+lib/Rose/DB/Object/Metadata/Column/Interval.pm
 lib/Rose/DB/Object/Metadata/Column/Numeric.pm
 lib/Rose/DB/Object/Metadata/Column/Pg/Chkpass.pm
 lib/Rose/DB/Object/Metadata/Column/Scalar.pm
