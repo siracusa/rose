@@ -7,7 +7,7 @@ use Rose::DB::Object::Metadata::Column::Serial;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::BigInt 
               Rose::DB::Object::Metadata::Column::Serial);
 
-our $VERSION = '0.60';
+our $VERSION = '0.70';
 
 sub type { 'bigserial' }
 
@@ -31,7 +31,7 @@ Rose::DB::Object::Metadata::Column::BigSerial - Big serial column metadata.
 
 Objects of this class store and manipulate metadata for big serial (sometimes called "serial8") columns in a database.  Column metadata objects store information about columns (data type, size, etc.) and are responsible for creating object methods that manipulate column values.
 
-This class inherits from L<Rose::DB::Object::Metadata::Column::Serial>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::Serial> documentation for more information.
+This class inherits from L<Rose::DB::Object::Metadata::Column::BigInt>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::BigInt> documentation for more information.
 
 =head1 METHOD MAP
 
@@ -39,15 +39,15 @@ This class inherits from L<Rose::DB::Object::Metadata::Column::Serial>. Inherite
 
 =item C<get_set>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::Generic/scalar>, C<interface =E<gt> 'get_set', ...>
+L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::BigNum/bigint>, C<interface =E<gt> 'get_set', ...>
 
 =item C<get>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::Generic/scalar>, C<interface =E<gt> 'get', ...>
+L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::BigNum/bigint>, C<interface =E<gt> 'get', ...>
 
 =item C<get_set>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::Generic/scalar>, C<interface =E<gt> 'set', ...>
+L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::BigNum/bigint>, C<interface =E<gt> 'set', ...>
 
 =back
 
