@@ -3755,25 +3755,25 @@ Rose::DB::Object::MakeMethods::Generic - Create generic object methods for Rose:
   sub init_type { 'C' }
   ...
 
-  $o = MyDBObject->new(...);
+  $obj = MyDBObject->new(...);
 
-  print $o->type; # C
+  print $obj->type; # C
 
-  $o->name('Bob');   # set
-  $o->set_type('C'); # set
-  $o->type('AA');    # set
+  $obj->name('Bob');   # set
+  $obj->set_type('C'); # set
+  $obj->type('AA');    # set
 
-  $o->set_type; # Fatal error: no argument passed to "set" method
+  $obj->set_type; # Fatal error: no argument passed to "set" method
 
-  $o->name('C' x 40); # truncate on set
-  print $o->name;     # 'CCCCCCCCCC'
+  $obj->name('C' x 40); # truncate on set
+  print $obj->name;     # 'CCCCCCCCCC'
 
-  $o->code('ABC'); # pad on set
-  print $o->code;  # 'ABC   '
+  $obj->code('ABC'); # pad on set
+  print $obj->code;  # 'ABC   '
 
-  eval { $o->type('foo') }; # fatal error: invalid value
+  eval { $obj->type('foo') }; # fatal error: invalid value
 
-  print $o->name, ' is ', $o->type; # get
+  print $obj->name, ' is ', $obj->type; # get
 
   $obj->is_red;         # returns undef
   $obj->is_red('true'); # returns 1 (assuming "true" a

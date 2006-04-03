@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 447;
+use Test::More tests => 449;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 196)  unless($HAVE_PG);
+  skip("Postgres tests", 198)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -304,6 +304,10 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   
   $o = MyPgObject->new(id => $o->id)->load;
   is($o->bint1, '9223372036854775801', "bigint 4 - $db_type");
+  
+  $o->bint3(5);
+  eval { $o->bint3(7) };
+  ok($@, "bigint 5 - $db_type");
 }
 
 #
@@ -1124,7 +1128,7 @@ EOF
       hiepoch  => { type => 'epoch hires', default => '1144004926.123456' },
       bint1    => { type => 'bigint', default => '9223372036854775800' },
       bint2    => { type => 'bigint', default => '-9223372036854775800' },
-      bint3    => { type => 'bigint', with_init => 1 },
+      bint3    => { type => 'bigint', with_init => 1, check_in => [ '9223372036854775000', 5 ] },
       #last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );
