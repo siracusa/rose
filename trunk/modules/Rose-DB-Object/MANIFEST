@@ -7,6 +7,7 @@ lib/Rose/DB/Object/ConventionManager/Null.pm
 lib/Rose/DB/Object/Helpers.pm
 lib/Rose/DB/Object/Iterator.pm
 lib/Rose/DB/Object/Loader.pm
+lib/Rose/DB/Object/MakeMethods/BigNum.pm
 lib/Rose/DB/Object/MakeMethods/Date.pm
 lib/Rose/DB/Object/MakeMethods/Generic.pm
 lib/Rose/DB/Object/MakeMethods/Pg.pm
@@ -22,6 +23,7 @@ lib/Rose/DB/Object/Metadata/Auto/Pg.pm
 lib/Rose/DB/Object/Metadata/Auto/SQLite.pm
 lib/Rose/DB/Object/Metadata/Column.pm
 lib/Rose/DB/Object/Metadata/Column/Array.pm
+lib/Rose/DB/Object/Metadata/Column/BigInt.pm
 lib/Rose/DB/Object/Metadata/Column/BigSerial.pm
 lib/Rose/DB/Object/Metadata/Column/Bitfield.pm
 lib/Rose/DB/Object/Metadata/Column/Blob.pm
