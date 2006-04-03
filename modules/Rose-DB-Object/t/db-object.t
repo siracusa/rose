@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 439;
+use Test::More tests => 447;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 188)  unless($HAVE_PG);
+  skip("Postgres tests", 196)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -103,10 +103,10 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   is($o2->start->ymd, '1980-12-24', "load() verify 8 (date value) - $db_type");
 
   $o2->set_status('foo');
-  is($o2->get_status, 'foo', 'get_status()');
+  is($o2->get_status, 'foo', "get_status() - $db_type");
   $o2->set_status('active');
   eval { $o2->set_status };
-  ok($@, 'set_status()');
+  ok($@, "set_status() - $db_type");
 
   is($o2->bits->to_Bin, '00101', "load() verify 9 (bitfield value) - $db_type");
 
@@ -294,6 +294,16 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
   is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1980-05-06 12:34:56', "epoch 2 - $db_type");
   is($o->hiepoch(format => '%Y-%m-%d %H:%M:%S.%6N'), '1999-11-30 21:30:00.123456', "epoch hires 2 - $db_type");
+
+  is($o->bint1, '9223372036854775800', "bigint 1 - $db_type");
+  is($o->bint2, '-9223372036854775800', "bigint 2 - $db_type");
+  is($o->bint3, '9223372036854775000', "bigint 3 - $db_type");
+
+  $o->bint1($o->bint1 + 1);
+  $o->save;
+  
+  $o = MyPgObject->new(id => $o->id)->load;
+  is($o->bint1, '9223372036854775801', "bigint 4 - $db_type");
 }
 
 #
@@ -1039,6 +1049,9 @@ CREATE TABLE rose_db_object_test
   dur            INTERVAL(6) DEFAULT '2 months 5 days 3 seconds',
   epoch          INT DEFAULT 943997400,
   hiepoch        DECIMAL(16,6),
+  bint1          BIGINT DEFAULT 9223372036854775800,
+  bint2          BIGINT DEFAULT -9223372036854775800,
+  bint3          BIGINT,
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1067,6 +1080,9 @@ CREATE TABLE rose_db_object_private.rose_db_object_test
   dur            INTERVAL(6) DEFAULT '2 months 5 days 3 seconds',
   epoch          INT DEFAULT 943997400,
   hiepoch        DECIMAL(16,6),
+  bint1          BIGINT DEFAULT 9223372036854775800,
+  bint2          BIGINT DEFAULT -9223372036854775800,
+  bint3          BIGINT,
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1106,6 +1122,9 @@ EOF
       dur      => { type => 'interval', precision => 6, default => '2 months 5 days 3 seconds' },
       epoch    => { type => 'epoch', default => '11/30/1999 9:30pm' },
       hiepoch  => { type => 'epoch hires', default => '1144004926.123456' },
+      bint1    => { type => 'bigint', default => '9223372036854775800' },
+      bint2    => { type => 'bigint', default => '-9223372036854775800' },
+      bint3    => { type => 'bigint', with_init => 1 },
       #last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );
@@ -1133,6 +1152,8 @@ EOF
     Test::More::ok(!defined MyPgObject->meta->column('k1')->primary_key_position, 'primary_key_position 2 - pg');
     MyPgObject->meta->column('k1')->primary_key_position(7);
     Test::More::ok(!defined MyPgObject->meta->column('k1')->primary_key_position, 'primary_key_position 3 - pg');
+    
+    sub init_bint3 { '9223372036854775000' }
   }
 
   #

@@ -5,7 +5,7 @@ use strict;
 use Rose::DB::Object::Metadata::Column::Integer;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Integer);
 
-our $VERSION = '0.60';
+our $VERSION = '0.70';
 
 sub type { 'serial' }
 
@@ -29,7 +29,7 @@ Rose::DB::Object::Metadata::Column::Serial - Serial column metadata.
 
 Objects of this class store and manipulate metadata for serial columns in a database.  Column metadata objects store information about columns (data type, size, etc.) and are responsible for creating object methods that manipulate column values.
 
-This class inherits from L<Rose::DB::Object::Metadata::Column::Scalar>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::Scalar> documentation for more information.
+This class inherits from L<Rose::DB::Object::Metadata::Column::Integer>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::Integer> documentation for more information.
 
 =head1 METHOD MAP
 

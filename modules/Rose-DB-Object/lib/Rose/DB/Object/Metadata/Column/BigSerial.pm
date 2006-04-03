@@ -2,8 +2,10 @@ package Rose::DB::Object::Metadata::Column::BigSerial;
 
 use strict;
 
+use Rose::DB::Object::Metadata::Column::BigInt;
 use Rose::DB::Object::Metadata::Column::Serial;
-our @ISA = qw(Rose::DB::Object::Metadata::Column::Serial);
+our @ISA = qw(Rose::DB::Object::Metadata::Column::BigInt 
+              Rose::DB::Object::Metadata::Column::Serial);
 
 our $VERSION = '0.60';
 
