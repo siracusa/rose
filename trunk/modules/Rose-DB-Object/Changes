@@ -1,6 +1,9 @@
-0.70 (03.29.2006) - John Siracusa <siracusa@mindspring.com>
+0.70 (04.03.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added support for the interval data type.
+    * Added support for big integer and serial columns via Math::BigInt.
+    * Added explicit support for columns that store a number of seconds
+      since the Unix epoch (both integer and fractional).
     * Silenced warning when querying datetime columns with undef values.
     * Fixed a bug in the loader that prevented auto-generated base class
       names from being correctly nested under class_prefix.
