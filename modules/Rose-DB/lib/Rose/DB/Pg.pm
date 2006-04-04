@@ -200,16 +200,33 @@ sub parse_interval
   return $dt_duration;
 }
 
-sub format_interval
+BEGIN
 {
-  my($self, $dur) = @_;
-  return $dur  if(!defined $dur || $self->validate_interval_keyword($dur) || $dur =~ /^\w+\(.*\)$/);
-  my $val = $self->date_handler->format_interval($dur);
-  
+  require DateTime::Format::Pg;
+
   # Handle DateTime::Format::Pg bug
-  # http://rt.cpan.org/Public/Bug/Display.html?id=18487
-  $val =~ s/(\S+e\S+) seconds/sprintf('%f seconds', $1)/e;
-  return $val;
+  # http://rt.cpan.org/Public/Bug/Display.html?id=18487  
+  if($DateTime::Format::Pg::VERSION < 0.11)
+  {
+    *format_interval = sub
+    {
+      my($self, $dur) = @_;
+      return $dur  if(!defined $dur || $self->validate_interval_keyword($dur) || $dur =~ /^\w+\(.*\)$/);
+      my $val = $self->date_handler->format_interval($dur);
+
+      $val =~ s/(\S+e\S+) seconds/sprintf('%f seconds', $1)/e;
+      return $val;
+    };
+  }
+  else
+  {
+    *format_interval = sub
+    {
+      my($self, $dur) = @_;
+      return $dur  if(!defined $dur || $self->validate_interval_keyword($dur) || $dur =~ /^\w+\(.*\)$/);
+      return $self->date_handler->format_interval($dur);
+    };
+  }
 }
 
 sub next_value_in_sequence
