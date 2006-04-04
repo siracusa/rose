@@ -36,7 +36,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
       db           => Rose::DB->new,
       class_prefix => $class_prefix);
 
-  my @classes = $loader->make_classes(include_tables => 'rose_db_object_test');
+  my @classes = $loader->make_classes(include_tables => '^rose_db_object_test$');
 
   my $object_class = $class_prefix . '::RoseDbObjectTest';
 
@@ -142,6 +142,14 @@ EOF
       local $dbh->{'PrintError'} = 0;
       $dbh->do('DROP TABLE rose_db_object_test');
     }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test 
+(
+  id     INTEGER PRIMARY KEY,
+  start  DATETIME YEAR TO SECOND
+)
+EOF
 
     $dbh->disconnect;
   }

@@ -42,7 +42,8 @@ sub parse_value
 
   if($dt)
   {
-    $dt->set_time_zone($self->time_zone || $db->server_time_zone);
+    $dt->set_time_zone($self->time_zone || $db->server_time_zone)
+      if(UNIVERSAL::isa($dt, 'DateTime'));
   }
   else
   {
