@@ -134,7 +134,7 @@ __PACKAGE__->column_type_classes
   'smallint'  => 'Rose::DB::Object::Metadata::Column::Integer',
 
   'bigint'    => 'Rose::DB::Object::Metadata::Column::BigInt',
-  
+
   'serial'    => 'Rose::DB::Object::Metadata::Column::Serial',
   'bigserial' => 'Rose::DB::Object::Metadata::Column::BigSerial',
 

@@ -289,7 +289,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $o->epoch('5/6/1980 12:34:56');
 
   $o->save;
-  
+
   $o = MyPgObject->new(id => $o->id)->load;
 
   is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1980-05-06 12:34:56', "epoch 2 - $db_type");
@@ -301,10 +301,10 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
   $o->bint1($o->bint1 + 1);
   $o->save;
-  
+
   $o = MyPgObject->new(id => $o->id)->load;
   is($o->bint1, '9223372036854775801', "bigint 4 - $db_type");
-  
+
   $o->bint3(5);
   eval { $o->bint3(7) };
   ok($@, "bigint 5 - $db_type");
@@ -543,7 +543,7 @@ SKIP: foreach my $db_type ('mysql')
   ok($@, "load() non-speculative explicit 2 - $db_type");
 
   $o->meta->default_load_speculative(0);
-  
+
   $o = MyMySQLObject->new(id => 1)->load;
 
   is($o->dur->months, 2, "interval months 1 - $db_type");
@@ -569,7 +569,7 @@ SKIP: foreach my $db_type ('mysql')
   is($o->dur->days, 0, "interval days 3 - $db_type");
   is($o->dur->minutes, 0, "interval minutes 3 - $db_type");
   is($o->dur->seconds, 0, "interval seconds 3 - $db_type");
-  
+
   is($o->meta->column('dur')->precision, 6, "interval precision - $db_type");
 
   is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1999-11-30 21:30:00', "epoch 1 - $db_type");
@@ -580,7 +580,7 @@ SKIP: foreach my $db_type ('mysql')
   $o->epoch('5/6/1980 12:34:56');
 
   $o->save;
-  
+
   $o = MyMySQLObject->new(id => $o->id)->load;
 
   is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1980-05-06 12:34:56', "epoch 2 - $db_type");
@@ -1156,7 +1156,7 @@ EOF
     Test::More::ok(!defined MyPgObject->meta->column('k1')->primary_key_position, 'primary_key_position 2 - pg');
     MyPgObject->meta->column('k1')->primary_key_position(7);
     Test::More::ok(!defined MyPgObject->meta->column('k1')->primary_key_position, 'primary_key_position 3 - pg');
-    
+
     sub init_bint3 { '9223372036854775000' }
   }
 

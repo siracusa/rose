@@ -55,7 +55,7 @@ sub bigint
 if(defined \$value)
     {
       my \$found = 0;
-      
+
       foreach my \$check (\@\$check_in)
       {
         if(\$value == \$check)
@@ -64,7 +64,7 @@ if(defined \$value)
           last;
         }
       }
-      
+
       Carp::croak "Invalid $name: '\$value'"  unless(\$found);
     }
 EOF
@@ -378,9 +378,9 @@ Creates a mutator method for a big integer object attribute.  When called with a
 Example:
 
     package MyDBObject;
-  
+
     our @ISA = qw(Rose::DB::Object);
-  
+
     use Rose::DB::Object::MakeMethods::BigNum
     (
       bigint => 
@@ -390,21 +390,23 @@ Example:
           with_init => 1,
           min       => 0,
         },
-  
+
         # Important: specify very large integer values as strings
         tally => { default => '9223372036854775800' },
       ],
     );
-  
+
     sub init_count { 12345 }
     ...
-  
+
     $obj = MyDBObject->new(...);
-  
+
     print $obj->count; # 12345
     print $obj->tally; # 9223372036854775800
 
     $obj->count(-1); # Fatal error: minimum value is 0
+
+=back
 
 =back
 
