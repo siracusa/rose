@@ -9,7 +9,7 @@ WriteMakefile(NAME         => 'Rose::DB',
               {
                 DBI                     => 0,
                 Bit::Vector::Overload   => '6.4',
-                DateTime::Format::Pg    => 0,
+                DateTime::Format::Pg    => 0.11,
                 DateTime::Format::MySQL => 0,
                 DateTime::Duration      => 0,
                 Test::More              => 0,
