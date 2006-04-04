@@ -1,4 +1,4 @@
-0.70 (04.03.2006) - John Siracusa <siracusa@mindspring.com>
+0.70 (04.04.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added support for the interval data type.
     * Added support for big integer and serial columns via Math::BigInt.
