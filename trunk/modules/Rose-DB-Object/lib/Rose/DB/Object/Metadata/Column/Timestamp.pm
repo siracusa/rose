@@ -8,7 +8,7 @@ use Rose::DB::Object::MakeMethods::Date;
 use Rose::DB::Object::Metadata::Column::Date;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Date);
 
-our $VERSION = '0.03';
+our $VERSION = '0.70';
 
 foreach my $type (__PACKAGE__->available_method_types)
 {
@@ -26,13 +26,18 @@ sub should_inline_value
 
 sub parse_value
 {
-  shift; 
-  my $db = shift;
+  my($self, $db) = (shift, shift);
+
   my $dt = $db->parse_timestamp(@_);
 
-  unless($dt)
+  if($dt)
   {
-    $dt = Rose::DateTime::Util::parse_date($_[0], $db->server_time_zone)
+    $dt->set_time_zone($self->time_zone || $db->server_time_zone)
+      if(UNIVERSAL::isa($dt, 'DateTime'));
+  }
+  else
+  {
+    $dt = Rose::DateTime::Util::parse_date($_[0], $self->time_zone || $db->server_time_zone)
   }
 
   return $dt;
@@ -60,7 +65,7 @@ Rose::DB::Object::Metadata::Column::Timestamp - Timestamp column metadata.
 
 Objects of this class store and manipulate metadata for timestamp columns in a database.  Column metadata objects store information about columns (data type, size, etc.) and are responsible for creating object methods that manipulate column values.
 
-This class inherits from L<Rose::DB::Object::Metadata::Date>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Date> documentation for more information.
+This class inherits from L<Rose::DB::Object::Metadata::Column::Date>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::Date> documentation for more information.
 
 =head1 METHOD MAP
 
