@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.66';
+our $VERSION = '0.67';
 
 our $Debug = 0;
 
@@ -627,6 +627,8 @@ sub release_dbh
   return 1;
 }
 
+use constant DID_PCSQL_KEY => 'private_rose_db_did_post_connect_sql';
+
 sub init_dbh
 {
   my($self) = shift;
@@ -654,12 +656,13 @@ sub init_dbh
 
   #$self->_update_driver;
 
-  if(my $sqls = $self->post_connect_sql)
+  if((my $sqls = $self->post_connect_sql) && !$dbh->{DID_PCSQL_KEY()})
   {
     eval
     {
       foreach my $sql (@$sqls)
       {
+        #$Debug && warn "$dbh DO: $sql\n";
         $dbh->do($sql) or die "$sql - " . $dbh->errstr;
       }
     };
@@ -670,6 +673,8 @@ sub init_dbh
       $dbh->disconnect;
       return undef;
     }
+
+    $dbh->{DID_PCSQL_KEY()} = 1;
   }
 
   return $self->{'dbh'} = $dbh;
@@ -2464,6 +2469,10 @@ L<http://lists.sourceforge.net/lists/listinfo/rose-db-object>
 Although the mailing list is the preferred support mechanism, you can also email the author (see below) or file bugs using the CPAN bug tracking system:
 
 L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB>
+
+=head1 CONTRIBUTORS
+
+Lucian Dragus
 
 =head1 AUTHOR
 
