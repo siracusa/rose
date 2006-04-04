@@ -1189,7 +1189,7 @@ Rose::DB::Object::MakeMethods::Date - Create date-related methods for Rose::DB::
       [
         'last_modified' => { default => '2005-01-30 12:34:56.123' }
       ],
-      
+
       epoch => 
       [
         due_date    => { default => '2003-01-02 12:34:56' },

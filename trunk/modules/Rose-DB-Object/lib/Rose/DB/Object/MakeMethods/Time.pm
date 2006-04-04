@@ -244,7 +244,7 @@ Rose::DB::Object::MakeMethods::Time - Create time-related methods for Rose::DB::
     print $o->t1->minutes;     # 5
     print $o->t1->nanoseconds; # 3000000
 
-    
+
 =head1 DESCRIPTION
 
 C<Rose::DB::Object::MakeMethods::Time> creates methods that deal with times, and inherits from L<Rose::Object::MakeMethods>.  See the L<Rose::Object::MakeMethods> documentation to learn about the interface.  The method types provided by this module are described below.
