@@ -75,7 +75,7 @@ Rose::DB::Object::Metadata::Column::Datetime - Datetime column metadata.
 
 Objects of this class store and manipulate metadata for datetime columns in a database.  Column metadata objects store information about columns (data type, size, etc.) and are responsible for creating object methods that manipulate column values.
 
-This class inherits from L<Rose::DB::Object::Metadata::Date>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Date> documentation for more information.
+This class inherits from L<Rose::DB::Object::Metadata::Column::Date>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::Date> documentation for more information.
 
 =head1 METHOD MAP
 
