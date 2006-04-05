@@ -1,3 +1,7 @@
+0.701 (04.05.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Removed stray "._*" files from module distribution.
+
 0.70 (04.04.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added support for the interval data type.
