@@ -1,3 +1,7 @@
+0.671 (04.04.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * The war against stray "._*" files continues!
+
 0.67 (04.04.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added support for the interval data type.  (Patch provided by
