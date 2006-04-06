@@ -5,6 +5,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(NAME         => 'Rose::URI',
               PMLIBDIRS    => [ 'lib' ],
               VERSION_FROM => 'lib/Rose/URI.pm',
+              DIST_CP      => 'cp', # Avoid Mac OS X ._* files
               PREREQ_PM =>
               {
                 Rose::Object => '0.015',

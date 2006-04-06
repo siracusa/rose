@@ -5,6 +5,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(NAME         => 'Rose',
               PMLIBDIRS    => [ 'lib' ],
               VERSION_FROM => 'lib/Rose.pm',
+              DIST_CP      => 'cp', # Avoid Mac OS X ._* files
               PREREQ_PM =>
               {
                 'Test::More'          => 0,

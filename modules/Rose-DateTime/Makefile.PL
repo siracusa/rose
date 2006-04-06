@@ -5,6 +5,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(NAME         => 'Rose::DateTime',
               PMLIBDIRS    => [ 'lib' ],
               VERSION_FROM => 'lib/Rose/DateTime.pm',
+              DIST_CP => 'cp', # Avoid Mac OS X ._* files
               PREREQ_PM =>
               {
                 'DateTime'     => 0,
