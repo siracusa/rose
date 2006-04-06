@@ -5,6 +5,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(NAME         => 'Rose::DB',
               PMLIBDIRS    => [ 'lib' ],
               VERSION_FROM => 'lib/Rose/DB.pm',
+              DIST_CP      => 'cp', # Avoid Mac OS X ._* files
               PREREQ_PM =>
               {
                 DBI                     => 0,

@@ -24,10 +24,11 @@ EOF
   }
 }
 
-WriteMakefile('NAME'         => 'Rose::HTML::Objects',
-              'PMLIBDIRS'    => [ 'lib' ],
-              'VERSION_FROM' => 'lib/Rose/HTML/Objects.pm',
-              'PREREQ_PM' =>
+WriteMakefile(NAME         => 'Rose::HTML::Objects',
+              PMLIBDIRS    => [ 'lib' ],
+              VERSION_FROM => 'lib/Rose/HTML/Objects.pm',
+              DIST_CP      => 'cp', # Avoid Mac OS X ._* files
+              PREREQ_PM =>
               {
                 'Carp'           => 0,
                 'Clone::PP'      => 0,
