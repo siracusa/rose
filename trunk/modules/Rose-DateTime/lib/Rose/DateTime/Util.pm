@@ -18,7 +18,7 @@ our %EXPORT_TAGS =
   all => \@EXPORT_OK
 );
 
-our $VERSION = '0.52';
+our $VERSION = '0.521';
 
 our $TZ = 'floating';
 our $Debug = 0;
