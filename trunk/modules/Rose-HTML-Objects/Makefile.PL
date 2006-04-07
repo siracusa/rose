@@ -27,7 +27,7 @@ EOF
 WriteMakefile(NAME         => 'Rose::HTML::Objects',
               PMLIBDIRS    => [ 'lib' ],
               VERSION_FROM => 'lib/Rose/HTML/Objects.pm',
-              DIST_CP      => 'cp', # Avoid Mac OS X ._* files
+              dist => { DIST_CP => 'cp' }, # Avoid Mac OS X ._* files
               PREREQ_PM =>
               {
                 'Carp'           => 0,

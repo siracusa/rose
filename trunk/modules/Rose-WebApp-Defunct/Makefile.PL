@@ -13,7 +13,7 @@ Apache::TestMM::generate_script('t/TEST');
 WriteMakefile(NAME         => 'Rose::WebApp',
               PMLIBDIRS    => [ 'lib' ],
               VERSION_FROM => 'lib/Rose/WebApp.pm',
-              DIST_CP => 'cp', # Avoid Mac OS X ._* files
+              dist => { DIST_CP => 'cp' }, # Avoid Mac OS X ._* files
               clean        =>
               {
                 FILES => 't/TEST',
