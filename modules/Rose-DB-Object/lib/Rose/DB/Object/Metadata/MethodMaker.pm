@@ -4,6 +4,7 @@ use strict;
 
 use Carp();
 
+use Clone::PP();
 use Rose::Object::MakeMethods::Generic;
 
 use Rose::DB::Object::Metadata::Object;
@@ -56,9 +57,23 @@ Rose::Object::MakeMethods::Generic->make_methods
 # Class methods
 #
 
-sub init_auto_method_types { shift->default_auto_method_types }
-
 our %Method_Maker_Info;
+
+OVERRIDE:
+{
+  my $orig_add_common_method_maker_argument_names = \&add_common_method_maker_argument_names;
+########################
+  no warnings 'redefined';
+  *add_common_method_maker_argument_names = sub
+  {
+    my($class) = shift;
+    
+    $Method_Maker_Info{$class} = undef;
+    $orig_add_common_method_maker_argument_names->($class, @_);
+  };
+}
+
+sub init_auto_method_types { shift->default_auto_method_types }
 
 # This is basically a Rose::Class::MakeMethods::Set::inherited_set
 # but it's keyed.  I'm only implementing a one-time superclass copy
@@ -67,7 +82,10 @@ our %Method_Maker_Info;
 sub init_method_maker_info
 {
   my($class) = shift;
-
+if($class eq 'Rose::DB::Object::Metadata::Column::Epoch::HiRes')
+{
+$DB::single = 1;
+}
   my $info = $Method_Maker_Info{$class};
 
   unless($info && %$info)
@@ -96,8 +114,9 @@ sub init_method_maker_info
             next  if(!$subclass_info->{$type}{$attr} ||
                      defined $info->{$type}{$attr});  
 
-            my $val = $subclass_info->{$type}{$attr};
-            $info->{$type}{$attr} = (ref $val && ref $val eq 'ARRAY') ? [ @$val ] : $val;
+            #my $val = $subclass_info->{$type}{$attr};
+            #$info->{$type}{$attr} = (ref $val && ref $val eq 'ARRAY') ? [ @$val ] : $val;
+            $info->{$type}{$attr} = Clone::PP::clone($subclass_info->{$type}{$attr});
           }
         }
       }
