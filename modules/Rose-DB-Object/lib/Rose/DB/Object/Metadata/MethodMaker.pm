@@ -10,7 +10,7 @@ use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::Metadata::Object;
 our @ISA = qw(Rose::DB::Object::Metadata::Object);
 
-our $VERSION = '0.02';
+our $VERSION = '0.702';
 
 #
 # Class data
@@ -61,15 +61,39 @@ our %Method_Maker_Info;
 
 OVERRIDE:
 {
-  my $orig_add_common_method_maker_argument_names = \&add_common_method_maker_argument_names;
-########################
-  no warnings 'redefined';
+  my $orig_add_method = \&add_common_method_maker_argument_names;
+
+  no warnings 'redefine';
   *add_common_method_maker_argument_names = sub
   {
     my($class) = shift;
-    
-    $Method_Maker_Info{$class} = undef;
-    $orig_add_common_method_maker_argument_names->($class, @_);
+
+    if(@_ && $Method_Maker_Info{$class})
+    {      
+      foreach my $type (keys %{$Method_Maker_Info{$class}})
+      {
+        push(@{$Method_Maker_Info{$class}{$type}{'args'}}, @_);
+      }
+    }
+
+    $orig_add_method->($class, @_);
+  };
+
+  my $orig_delete_method = \&delete_common_method_maker_argument_names;
+
+  *delete_common_method_maker_argument_names = sub
+  {
+    my($class) = shift;
+
+    if(@_ && $Method_Maker_Info{$class})
+    {      
+      foreach my $type (keys %{$Method_Maker_Info{$class}})
+      {
+        delete @{$Method_Maker_Info{$class}{$type}{'args'}}{@_};
+      }
+    }
+
+    $orig_delete_method->($class, @_);
   };
 }
 
@@ -82,10 +106,7 @@ sub init_auto_method_types { shift->default_auto_method_types }
 sub init_method_maker_info
 {
   my($class) = shift;
-if($class eq 'Rose::DB::Object::Metadata::Column::Epoch::HiRes')
-{
-$DB::single = 1;
-}
+
   my $info = $Method_Maker_Info{$class};
 
   unless($info && %$info)
@@ -109,15 +130,16 @@ $DB::single = 1;
         {
           next  unless($subclass_info->{$type});
 
-          foreach my $attr (qw(class type args))
+          foreach my $attr (qw(class type))
           {
             next  if(!$subclass_info->{$type}{$attr} ||
                      defined $info->{$type}{$attr});  
 
-            #my $val = $subclass_info->{$type}{$attr};
-            #$info->{$type}{$attr} = (ref $val && ref $val eq 'ARRAY') ? [ @$val ] : $val;
             $info->{$type}{$attr} = Clone::PP::clone($subclass_info->{$type}{$attr});
           }
+
+          # Args come from an already-inhereted set
+          $info->{$type}{'args'} = [ $class->common_method_maker_argument_names ];
         }
       }
     }

@@ -23,7 +23,7 @@ EOF
 WriteMakefile(NAME         => 'Rose::Object',
               PMLIBDIRS    => [ 'lib' ],
               VERSION_FROM => 'lib/Rose/Object.pm',
-              DIST_CP      => 'cp', # Avoid Mac OS X ._* files
+              dist => { DIST_CP => 'cp' }, # Avoid Mac OS X ._* files
               PREREQ_PM =>
               {
                 # This is a circular dependency...

@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(NAME         => 'Rose::BuildConf',
               PMLIBDIRS    => [ 'lib' ],
               VERSION_FROM => 'lib/Rose/BuildConf.pm',
-              DIST_CP      => 'cp', # Avoid Mac OS X ._* files
+              dist => { DIST_CP => 'cp' }, # Avoid Mac OS X ._* files
               PREREQ_PM =>
               {
                 'Rose::Object'   => 0,

@@ -10,12 +10,6 @@ our @ISA = qw(Rose::DB::Object::Metadata::Column::Epoch);
 our $VERSION = '0.702';
 
 __PACKAGE__->add_common_method_maker_argument_names('hires');
-#########################
-# foreach my $type (__PACKAGE__->available_method_types)
-# {
-#   __PACKAGE__->method_maker_class($type => 'Rose::DB::Object::MakeMethods::Date');
-#   __PACKAGE__->method_maker_type($type => 'epoch');
-# }
 
 sub type { 'epoch hires' }
 
