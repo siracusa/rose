@@ -7,7 +7,7 @@ use Rose::DB::Object::MakeMethods::Date;
 use Rose::DB::Object::Metadata::Column::Date;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Date);
 
-our $VERSION = '0.70';
+our $VERSION = '0.702';
 
 foreach my $type (__PACKAGE__->available_method_types)
 {
@@ -53,15 +53,15 @@ This class inherits from L<Rose::DB::Object::Metadata::Column::Date>. Inherited 
 
 =item C<get_set>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<date|Rose::DB::Object::MakeMethods::Date/epoch>, ...
+L<Rose::DB::Object::MakeMethods::Date>, L<epoch|Rose::DB::Object::MakeMethods::Date/epoch>, ...
 
 =item C<get>
 
-L<Rose::DB::Object::MakeMethods::Date>, L<date|Rose::DB::Object::MakeMethods::Date/epoch>, ...
+L<Rose::DB::Object::MakeMethods::Date>, L<epoch|Rose::DB::Object::MakeMethods::Date/epoch>, ...
 
 =item C<get_set>
 
-L<Rose::DB::Object::MakeMethods::Date>, L<date|Rose::DB::Object::MakeMethods::Date/epoch>, ...
+L<Rose::DB::Object::MakeMethods::Date>, L<epoch|Rose::DB::Object::MakeMethods::Date/epoch>, ...
 
 =back
 
