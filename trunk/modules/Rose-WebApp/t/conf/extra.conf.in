@@ -2,6 +2,8 @@
 #-------------------------
 # this file will be Include-d by @ServerRoot@/conf/httpd.conf
 
+ServerName localhost
+
 PerlInitHandler +Apache::StatINC
 
 PerlRequire conf/startup.pl
@@ -46,18 +48,18 @@ PerlSetVar MasonDefaultEscapeFlags "n"
   PerlHandler Rose::Test::MP1::WebSite
 </Location>
 
-# <Location /rose/webapp/notes>
-#   SetHandler perl-script
-#   PerlHandler Rose::Test::MP1::WebApp::Server::Notes
-# </Location>
-# 
-# <Location /rose/myapp>
-#   PerlSetVar RoseWebAppClass "Rose::Test::MP1::MyApp"
-#   #PerlSetVar RoseWebAppNoCache 1
-#   SetHandler perl-script
-#   PerlHandler Rose::WebApp::Dispatch
-# </Location>
-# 
+<Location /rose/webapp/notes>
+  SetHandler perl-script
+  PerlHandler Rose::Test::MP1::WebApp::Server::Notes
+</Location>
+
+<Location /rose/myapp>
+  PerlSetVar RoseWebAppClass "Rose::Test::MP1::MyApp"
+  #PerlSetVar RoseWebAppNoCache 1
+  SetHandler perl-script
+  PerlHandler Rose::WebApp::Dispatch
+</Location>
+
 # <Location /rose/webapp/features/logger>
 #   PerlSetVar RoseWebAppClass "Rose::Test::MP1::WebApp::Features::Logger"
 #   SetHandler perl-script

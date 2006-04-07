@@ -1,4 +1,4 @@
-package Rose::WebApp::Apache::Dispatch;
+package Rose::WebApp::Dispatch;
 
 use strict;
 

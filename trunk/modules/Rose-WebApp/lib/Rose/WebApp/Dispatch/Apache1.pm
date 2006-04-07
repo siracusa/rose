@@ -27,7 +27,7 @@ sub init_app
 {
   my($self) = shift;
 
-  my $r = $self->apache->request;
+  my $r = $self->server->request;
 
   my $class = $r->dir_config('RoseWebAppClass')
     or die "No RoseWebAppClass defined for this location (URI = ",  $r->uri, ")";
@@ -52,7 +52,7 @@ sub handler($$)
 
   $self->sanity_check() or return $self->status;
   my $app = $self->app;
-  $app->apache->request($r);
+  $app->server->request($r);
   $self->parse_query($r, $app) or return $self->status;
 
   return $self->handle_request($r, $app);

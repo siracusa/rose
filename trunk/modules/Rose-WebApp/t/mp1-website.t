@@ -21,24 +21,24 @@ chomp(my $compare=<<'EOF');
 
 <a href="/rose/website?foo=123">Link to self</a><br>
 <a href="/rose/website/redirect">Redirect</a><br>
-Apache: Rose::Apache<br>
+Server: Rose::WebApp::Server<br>
 Referrer: <br>
-site_host_secure: override.in.your.subclass<br>
-site_host_insecure: override.in.your.subclass<br>
+site_host_secure: localhost<br>
+site_host_insecure: localhost<br>
 site_port_secure: 443<br>
-site_port_insecure: 80<br>
-site_host: override.in.your.subclass<br>
-site_port: 80<br>
-site_url_secure: https://override.in.your.subclass<br>
-site_url_insecure: http://override.in.your.subclass<br>
-site_url: http://override.in.your.subclass<br>
-current_url_secure: https://override.in.your.subclass/rose/website?a=1&amp;b=2&amp;c=3&amp;c=4<br>
-current_url_insecure: http://override.in.your.subclass/rose/website?a=1&amp;b=2&amp;c=3&amp;c=4<br>
-site_domain_insecure: .your.subclass<br>
-site_domain_secure: .your.subclass<br>
-site_domain: .your.subclass<br>
-site_url_secure('/foo?a=1'): https://override.in.your.subclass/foo?a=1<br>
-site_url_insecure('/foo?a=1'): http://override.in.your.subclass/foo?a=1<br>
+site_port_insecure: 8529<br>
+site_host: localhost<br>
+site_port: 8529<br>
+site_url_secure: https://localhost<br>
+site_url_insecure: http://localhost:8529<br>
+site_url: http://localhost:8529<br>
+current_url_secure: https://localhost/rose/website?a=1&amp;b=2&amp;c=3&amp;c=4<br>
+current_url_insecure: http://localhost:8529/rose/website?a=1&amp;b=2&amp;c=3&amp;c=4<br>
+site_domain_insecure: localhost<br>
+site_domain_secure: localhost<br>
+site_domain: localhost<br>
+site_url_secure('/foo?a=1'): https://localhost/foo?a=1<br>
+site_url_insecure('/foo?a=1'): http://localhost:8529/foo?a=1<br>
 Args: a=1&amp;b=2&amp;c=3&amp;c=4<br>
 Path Info: <br>
 Req URI: /rose/website<br>
@@ -62,24 +62,24 @@ chomp($compare=<<'EOF');
 
 <a href="/rose/website?foo=123">Link to self</a><br>
 <a href="/rose/website/redirect">Redirect</a><br>
-Apache: Rose::Apache<br>
+Server: Rose::WebApp::Server<br>
 Referrer: <br>
-site_host_secure: override.in.your.subclass<br>
-site_host_insecure: override.in.your.subclass<br>
+site_host_secure: localhost<br>
+site_host_insecure: localhost<br>
 site_port_secure: 443<br>
-site_port_insecure: 80<br>
-site_host: override.in.your.subclass<br>
-site_port: 80<br>
-site_url_secure: https://override.in.your.subclass<br>
-site_url_insecure: http://override.in.your.subclass<br>
-site_url: http://override.in.your.subclass<br>
-current_url_secure: https://override.in.your.subclass/rose/website/foo/bar?a=1&amp;b=2&amp;c=3&amp;c=4<br>
-current_url_insecure: http://override.in.your.subclass/rose/website/foo/bar?a=1&amp;b=2&amp;c=3&amp;c=4<br>
-site_domain_insecure: .your.subclass<br>
-site_domain_secure: .your.subclass<br>
-site_domain: .your.subclass<br>
-site_url_secure('/foo?a=1'): https://override.in.your.subclass/foo?a=1<br>
-site_url_insecure('/foo?a=1'): http://override.in.your.subclass/foo?a=1<br>
+site_port_insecure: 8529<br>
+site_host: localhost<br>
+site_port: 8529<br>
+site_url_secure: https://localhost<br>
+site_url_insecure: http://localhost:8529<br>
+site_url: http://localhost:8529<br>
+current_url_secure: https://localhost/rose/website/foo/bar?a=1&amp;b=2&amp;c=3&amp;c=4<br>
+current_url_insecure: http://localhost:8529/rose/website/foo/bar?a=1&amp;b=2&amp;c=3&amp;c=4<br>
+site_domain_insecure: localhost<br>
+site_domain_secure: localhost<br>
+site_domain: localhost<br>
+site_url_secure('/foo?a=1'): https://localhost/foo?a=1<br>
+site_url_insecure('/foo?a=1'): http://localhost:8529/foo?a=1<br>
 Args: a=1&amp;b=2&amp;c=3&amp;c=4<br>
 Path Info: /foo/bar<br>
 Req URI: /rose/website/foo/bar<br>

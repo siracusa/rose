@@ -16,7 +16,7 @@ sub handler
 {
   my($r) = shift;
 
-  my $notes = Rose::Apache::Notes->new;
+  my $notes = Rose::WebApp::Server::Notes->new;
 
   $notes->foo('f' . int(rand(10000)) . ':' . $Num);
   $notes->bar('b' . int(rand(10000)) . ':' . $Num);
