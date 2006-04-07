@@ -33,7 +33,7 @@ use Rose::Object::MakeMethods::Generic
 (
   'scalar --get_set_init' =>
   [
-    'apache',
+    'server',
     'notes',
   ],
 
@@ -56,11 +56,11 @@ sub init
 
   $self->SUPER::init(@_);
 
-  $self->{'apache'} ||= $self->init_apache;
+  $self->{'server'} ||= $self->init_server;
   $self->{'notes'}  ||= $self->init_notes;
 }
 
-sub init_apache { Rose::WebApp::Server->new(request => $_[0]->{'request'} ||= Apache->request) }
+sub init_server { Rose::WebApp::Server->new(request => $_[0]->{'request'} ||= Apache->request) }
 sub init_notes  { Rose::WebApp::Server::Notes->new }
 
 sub handler($$)

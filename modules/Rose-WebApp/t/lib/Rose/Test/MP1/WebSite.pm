@@ -40,7 +40,7 @@ sub handler
 <a href="/rose/website/redirect">Redirect</a><br>
 EOF
 
-  $r->print('Apache: ', escape_html(ref Rose::WebSite->server), "<br>\n");
+  $r->print('Server: ', escape_html(ref Rose::WebSite->server), "<br>\n");
   $r->print('Referrer: ', escape_html(Rose::WebSite->referrer), "<br>\n");
 
   foreach my $method (qw(site_host_secure site_host_insecure site_port_secure

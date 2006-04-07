@@ -2,6 +2,7 @@ package Rose::Test::MP1::MyApp;
 
 use strict;
 
+use Rose::Test::MP1::MySite;
 use Rose::Test::MP1::MyApp::Form::Edit;
 
 use Rose::WebApp;
@@ -109,7 +110,7 @@ sub init
 }
 
 sub action_method_prefix { 'do_' }
-sub init_website_class   { 'Rose::Site::WebSite' }
+sub init_website_class   { 'Rose::Test::MP1::MySite' }
 sub init_default_action  { undef }
 sub init_comp_error_mode { 'inline' }
 

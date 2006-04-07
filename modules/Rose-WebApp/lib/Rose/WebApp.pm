@@ -136,10 +136,10 @@ sub action_uri_prefix_regex
   return $_[0]->{'action_uri_prefix_regex'};
 }
 
-sub init_root_uri { shift->apache->location }
+sub init_root_uri { shift->server->location }
 sub init_action_uri_prefix { 'exec' }
 
-sub apache { shift->website->apache(@_) }
+sub server { shift->website->server(@_) }
 
 sub init_default_action        { undef }
 sub init_action_method_prefix  { 'do_' }
@@ -239,7 +239,7 @@ sub comp_error_mode
   return $self->{'comp_error_mode'} || $self->init_comp_error_mode;
 }
 
-sub remote_user { shift->apache->remote_user }
+sub remote_user { shift->server->remote_user }
 
 our %Features;
 
@@ -381,7 +381,7 @@ sub send_http_header
   unless($self->http_header_sent)
   {
     #$Debug && warn "send_http_header ", join(':', (caller())[0,2]), " - ", ref $self, "\n";
-    $self->apache->send_http_header;
+    $self->server->send_http_header;
     $self->http_header_sent(1);
   }
 }
@@ -414,7 +414,7 @@ sub refresh
 {
   my($self) = shift;
 
-  $self->apache(undef);
+  $self->server(undef);
 
   $self->params({});
   $self->action(undef);
@@ -595,7 +595,7 @@ sub choose_action
       }
       else # 3. Look for page with this URI
       {
-        $uri = $self->apache->requested_uri;
+        $uri = $self->server->requested_uri;
 
         foreach my $page ($self->pages)
         {
@@ -679,7 +679,7 @@ sub file_based_dispatch
 
   $self->start;
 
-  my $uri  = $self->apache->requested_uri;
+  my $uri  = $self->server->requested_uri;
   my $path = $self->uri_to_path($uri);
 
   eval
@@ -736,7 +736,7 @@ sub add_output
   if($self->auto_print)
   {
     $self->send_http_header;
-    $self->apache->print($self->{'output_buffer'});
+    $self->server->print($self->{'output_buffer'});
     $self->{'output_buffer'} = undef;
   }
 
@@ -825,7 +825,7 @@ sub finish
     #$Debug && warn "print ", length $self->{'output'}, " chars from finish(): ", 
     #                substr($self->{'output'}, 0, 15), "...\n";
 
-    $self->apache->print($self->output_buffer);
+    $self->server->print($self->output_buffer);
 
     $self->clear_output_buffer;
     $self->reset_view_managers;
@@ -834,7 +834,7 @@ sub finish
   $self->status(OK)  unless(defined $self->status);
 }
 
-sub print { shift->apache->print(@_) }
+sub print { shift->server->print(@_) }
 
 sub perform_action
 {
@@ -1175,7 +1175,7 @@ sub return_error
   my($self) = shift;
   my $error = @_ ? join('', @_) : $self->public_error;
   $self->log_error($error);
-  $self->add_output('<div class="error">ERROR: ' . $self->apache->escape_html($error) . '</div>');
+  $self->add_output('<div class="error">ERROR: ' . $self->server->escape_html($error) . '</div>');
   $self->status(OK);
 }
 
@@ -1205,19 +1205,19 @@ EOF
   croak "$self->return_error_page(@_)";
 }
 
-sub log_level        { shift->apache->log_level(@_) }
-sub server_log_level { shift->apache->log_level(@_) }
+sub log_level        { shift->server->log_level(@_) }
+sub server_log_level { shift->server->log_level(@_) }
 
-sub server_log_level_constant { shift->apache->log_level_constant(@_) }
+sub server_log_level_constant { shift->server->log_level_constant(@_) }
 
-sub log_emergency { shift->apache->log_emergency(@_) }
-sub log_alert     { shift->apache->log_alert(@_)     }
-sub log_critical  { shift->apache->log_critical(@_)  }
-sub log_error     { shift->apache->log_error(@_)     }
-sub log_warning   { shift->apache->log_warning(@_)   }
-sub log_notice    { shift->apache->log_notice(@_)    }
-sub log_info      { shift->apache->log_info(@_)      }
-sub log_debug     { shift->apache->log_debug(@_)     }
+sub log_emergency { shift->server->log_emergency(@_) }
+sub log_alert     { shift->server->log_alert(@_)     }
+sub log_critical  { shift->server->log_critical(@_)  }
+sub log_error     { shift->server->log_error(@_)     }
+sub log_warning   { shift->server->log_warning(@_)   }
+sub log_notice    { shift->server->log_notice(@_)    }
+sub log_info      { shift->server->log_info(@_)      }
+sub log_debug     { shift->server->log_debug(@_)     }
 
 sub redirect { shift->website->redirect(@_) }
 sub internal_redirect { shift->website->internal_redirect(@_) }
@@ -1346,7 +1346,7 @@ sub dispatch_action_uri
 
 sub dispatch_uri
 {
-  my $uri   = $_[0]->apache->requested_uri;
+  my $uri   = $_[0]->server->requested_uri;
   my $regex = $_[0]->root_uri_regex;
   $uri =~ s/$regex//;
 

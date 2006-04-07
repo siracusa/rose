@@ -133,7 +133,7 @@ sub user_agent
 }
 
 sub hostname { shift->request->hostname }
-sub port     { shift->request->port }
+sub port     { shift->request->server->port }
 
 sub client_ip
 {

@@ -11,14 +11,14 @@ plan tests => 6;
 
 my $i = 0;
 
-$_ = GET_BODY '/rose/apache1/notes'; $i++;
+$_ = GET_BODY '/rose/webapp/notes'; $i++;
 
 ok(m{^foo:f(\d+):1<br>$}m, "foo $i");
 my $f1 = $1;
 ok(m{^bar:b(\d+):1<br>$}m, "bar $i");
 my $b1 = $1;
 
-$_ = GET_BODY '/rose/apache1/notes'; $i++;
+$_ = GET_BODY '/rose/webapp/notes'; $i++;
 
 ok(m{^foo:f(\d+):1<br>$}m, "foo $i");
 my $f2 = $1;

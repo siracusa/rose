@@ -48,7 +48,7 @@ sub site_host_secure
   return $host;
 }
 
-sub site_host_secure
+sub site_host_insecure
 {
   my($class) = shift;
   
@@ -77,7 +77,7 @@ sub site_port_secure
 
   unless($port)
   {
-    $host = $class->_site_port_secure($class->server->port);
+    $port = $class->_site_port_secure($class->server->port);
   }
 
   return $port;
@@ -96,14 +96,14 @@ sub site_port_insecure
 
   unless($port)
   {
-    $host = $class->_site_port_insecure($class->server->port);
+    $port = $class->_site_port_insecure($class->server->port);
   }
 
   return $port;
 }
 
-sub site_port_secure   { 443 }
-sub site_port_insecure { 80 }
+#sub site_port_secure   { 443 }
+#sub site_port_insecure { 80 }
 
 our $Server;
 

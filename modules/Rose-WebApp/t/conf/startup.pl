@@ -27,6 +27,7 @@ use Rose::WebApp::View::Mason;
 
 use Rose::Test::MP1::WebApp::Server;
 
+use Rose::Test::MP1::MyApp;
 use Rose::WebApp::Dispatch;
 
 1;
