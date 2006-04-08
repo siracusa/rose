@@ -157,7 +157,7 @@ foreach my $month (qw(2 02))
               }
 
               $arg = "$day$sep$month${sep}2004 13:34:56$fsec";
-
+print STDERR "# $arg\n";
               $d = Rose::DateTime::Util::parse_european_date($arg);
 
               ok($d && $d->isa('DateTime'), "$arg");
