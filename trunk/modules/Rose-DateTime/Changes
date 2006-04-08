@@ -1,7 +1,7 @@
 0.522 (04.08.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Updated the test suite to account for systems that can't handle
-      negative epoch values.
+      negative epoch values.  (Thanks to Michael Lackhoff)
 
 0.521 (04.05.2006) - John Siracusa <siracusa@mindspring.com>
 
