@@ -41,6 +41,8 @@ my $dt4 = DateTime->new(month => 2, day => 3, year => 2004,
                         nanosecond => '123400000',
                         time_zone => Rose::DateTime::Util->time_zone);
 
+Rose::DateTime::Util->european_dates(0);
+
 # mm/dd/yyyy [hh:mm[:ss[.nnnnnnnnn]]] [am/pm]
 foreach my $month (qw(2 02))
 {
