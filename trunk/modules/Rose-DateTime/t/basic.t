@@ -450,22 +450,17 @@ is($d->strftime('%Y-%m-%d %H:%M:%S'), '2006-03-30 18:47:15', 'Epoch vs. yyyymmdd
 $d = parse_date('1143744435.123456789');
 is($d->strftime('%Y-%m-%d %H:%M:%S.%N'), '2006-03-30 18:47:15.123456789', 'Epoch vs. yyyymmdd 2');
 
-eval { $d = parse_date('-1143744435.123456789') };
+# Check copied from DateTime's 04epoch.t test
+my $negative_epoch_ok = defined((localtime(-1))[0]) ? 1 : 0;
 
-if($@)
+if($negative_epoch_ok)
 {
-  if($^O =~ /windows/i)
-  {
-    ok(1, "DateTime can't negative epoch values on Windows");
-  }
-  else
-  {
-    ok(0, "parse_date('-1143744435.123456789') failed - $@");
-  }
+  $d = parse_date('-1143744435.123456789');
+  is($d->strftime('%Y-%m-%d %H:%M:%S.%N'), '1933-10-04 05:12:45.123456789', 'Epoch vs. yyyymmdd 3');
 }
 else
 {
-  is($d->strftime('%Y-%m-%d %H:%M:%S.%N'), '1933-10-04 05:12:45.123456789', 'Epoch vs. yyyymmdd 3');
+  ok(1, "This system ($^O) can't handle negative epoch values");
 }
 
 $d = parse_date('1143744435.123456789');
