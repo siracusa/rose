@@ -157,7 +157,7 @@ foreach my $month (qw(2 02))
               }
 
               $arg = "$day$sep$month${sep}2004 13:34:56$fsec";
-print STDERR "# $arg\n";
+
               $d = Rose::DateTime::Util::parse_european_date($arg);
 
               ok($d && $d->isa('DateTime'), "$arg");
@@ -450,8 +450,23 @@ is($d->strftime('%Y-%m-%d %H:%M:%S'), '2006-03-30 18:47:15', 'Epoch vs. yyyymmdd
 $d = parse_date('1143744435.123456789');
 is($d->strftime('%Y-%m-%d %H:%M:%S.%N'), '2006-03-30 18:47:15.123456789', 'Epoch vs. yyyymmdd 2');
 
-$d = parse_date('-1143744435.123456789');
-is($d->strftime('%Y-%m-%d %H:%M:%S.%N'), '1933-10-04 05:12:45.123456789', 'Epoch vs. yyyymmdd 3');
+eval { $d = parse_date('-1143744435.123456789') };
+
+if($@)
+{
+  if($^O =~ /windows/i)
+  {
+    ok(1, "DateTime can't negative epoch values on Windows");
+  }
+  else
+  {
+    ok(0, "parse_date('-1143744435.123456789') failed - $@");
+  }
+}
+else
+{
+  is($d->strftime('%Y-%m-%d %H:%M:%S.%N'), '1933-10-04 05:12:45.123456789', 'Epoch vs. yyyymmdd 3');
+}
 
 $d = parse_date('1143744435.123456789');
 is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.12345', 'Epoch vs. yyyymmdd 4');
