@@ -266,6 +266,8 @@ sub load
                    join(', ', @key_columns) . ' = ' . join(', ', @key_values));
       $self->{'not_found'} = 1;
 
+      $self->{STATE_IN_DB()} = 0;
+
       my $speculative = 
         exists $args{'speculative'} ? $args{'speculative'} :     
         $meta->default_load_speculative;
