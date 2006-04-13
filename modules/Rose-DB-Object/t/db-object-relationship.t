@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1459;
+use Test::More tests => 1461;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 367)  unless($HAVE_PG);
+  skip("Postgres tests", 368)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -832,6 +832,21 @@ SKIP: foreach my $db_type ('pg')
   $o2 = MyPgOtherObject2->new(id => 12)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set 2 one to many on save 20 - $db_type");
 
+  $o->save;
+
+  @o2s = $o->other2_objs_on_save;
+
+  push(@o2s, MyPgOtherObject2->new(name => 'added'));
+  $o->other2_objs_on_save(\@o2s);
+
+  $o->save;
+  
+  my $to = MyPgObject->new(id => $o->id)->load;
+  @o2s = $o->other2_objs_on_save;
+  
+  is_deeply([ 'seven', 'one', 'added' ], [ map { $_->name } @o2s ], "add one to many on save 1 - $db_type");
+  
+  
   #
   # "one to many" add_now
   #
@@ -4095,7 +4110,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 394)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 395)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -4894,6 +4909,20 @@ SKIP: foreach my $db_type ('sqlite')
   $o2 = MySQLiteOtherObject2->new(id => 12)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set 2 one to many on save 20 - $db_type");
 
+  $o->save;
+
+  @o2s = $o->other2_objs_on_save;
+
+  push(@o2s, MySQLiteOtherObject2->new(name => 'added'));
+  $o->other2_objs_on_save(\@o2s);
+
+  $o->save;
+  
+  my $to = MySQLiteObject->new(id => $o->id)->load;
+  @o2s = $o->other2_objs_on_save;
+  
+  is_deeply([ 'seven', 'one', 'added' ], [ map { $_->name } @o2s ], "add one to many on save 1 - $db_type");
+  
   #
   # "one to many" add_now
   #

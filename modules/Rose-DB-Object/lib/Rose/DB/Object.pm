@@ -370,6 +370,7 @@ sub load
       $self->error("No such " . ref($self) . ' where ' . 
                    join(', ', @key_columns) . ' = ' . join(', ', @key_values));
       $self->{'not_found'} = 1;
+      $self->{STATE_IN_DB()} = 0;
     }
   };
 
