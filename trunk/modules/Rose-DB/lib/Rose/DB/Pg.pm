@@ -8,7 +8,7 @@ use DateTime::Format::Pg;
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.67';
+our $VERSION = '0.672';
 
 our $Debug = 0;
 
@@ -337,7 +337,10 @@ sub refine_dbi_column_info
   {
     $col_info->{'TYPE_NAME'} = 'bits';
   }
-
+  elsif($col_info->{'TYPE_NAME'} eq 'real')
+  {
+    $col_info->{'TYPE_NAME'} = 'float';
+  }
 
   # Pg does not populate COLUMN_SIZE correctly for bit fields, so
   # we have to extract the number of bits from pg_type.
