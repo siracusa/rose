@@ -1,3 +1,8 @@
+0.672 (04.14.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Translate Postgres's "real" type to the standard "float" type.
+      (Patch from Lucian Dragus)
+
 0.671 (04.04.2006) - John Siracusa <siracusa@mindspring.com>
 
     * The war against stray "._*" files continues!
