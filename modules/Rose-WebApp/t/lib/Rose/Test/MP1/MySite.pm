@@ -18,9 +18,9 @@ sub mason_interp
     comp_root =>
     [
       [ docs  => $class->server->request->document_root ],
-      [ comps => $class->server->request->server_root_relative('comps') ],
+      [ comps => $class->server->server_root_relative('comps') ],
     ],
-    data_dir      => $class->server->request->server_root_relative('data'),
+    data_dir      => $class->server->server_root_relative('data'),
     #error_mode    => $MASON_ERROR_MODE,
     #error_format  => $MASON_ERROR_FORMAT,
     allow_globals => [ qw($r $app) ]);

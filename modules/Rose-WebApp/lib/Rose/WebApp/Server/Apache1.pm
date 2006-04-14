@@ -157,7 +157,7 @@ sub path_info
     return $self->request->path_info($self->notes->path_info($ENV{'PATH_INFO'} = shift));
   }
 
-  return $ENV{'PATH_INFO'};
+  return $self->request->path_info;
 }
 
 sub requested_uri

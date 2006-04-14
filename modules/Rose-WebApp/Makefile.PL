@@ -27,4 +27,5 @@ WriteMakefile(NAME         => 'Rose::WebApp',
                 'Class::Delegator' => 0,
                 'Apache::Test'     => 1.24,
                 'Path::Class'      => 0,
+                'HTML::Entities'   => 1.35,
               });

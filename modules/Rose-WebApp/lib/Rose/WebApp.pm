@@ -1202,7 +1202,7 @@ EOF
 
   $self->add_output('</body></html>');
 
-  croak "$self->return_error_page(@_)";
+  #croak "$self->return_error_page(@_)";
 }
 
 sub log_level        { shift->server->log_level(@_) }

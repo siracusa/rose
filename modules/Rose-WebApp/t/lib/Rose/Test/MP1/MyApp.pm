@@ -2,6 +2,8 @@ package Rose::Test::MP1::MyApp;
 
 use strict;
 
+use HTML::Mason::Escapes;
+
 use Rose::Test::MP1::MySite;
 use Rose::Test::MP1::MyApp::Form::Edit;
 
@@ -105,6 +107,11 @@ sub init
       path => 'end.mc',
     },
   });
+
+  $self->view_manager('mason')->mason_interp->set_escape
+  (
+    h => \&HTML::Mason::Escapes::basic_html_escape,
+  );
 
   $self->SUPER::init(@_);
 }

@@ -19,15 +19,15 @@ use Apache::Constants();
 ##
 
 use Rose::WebSite;
+use Rose::WebApp::Dispatch;
 use Rose::WebApp::View::Mason;
 
 ##
 ## Rose::WebApp test modules
 ##
 
-use Rose::Test::MP1::WebApp::Server;
-
 use Rose::Test::MP1::MyApp;
-use Rose::WebApp::Dispatch;
+use Rose::Test::MP1::WebApp::Server;
+use Rose::Test::MP1::WebApp::Features::AppParams;
 
 1;
