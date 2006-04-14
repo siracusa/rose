@@ -2,6 +2,6 @@
         "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<title>Rose::Test::WebApp</title>
+<title>Rose::Test::MP1::MyApp</title>
 </head>
 <body>

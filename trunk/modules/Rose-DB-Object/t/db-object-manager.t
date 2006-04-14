@@ -9350,7 +9350,7 @@ SKIP: foreach my $db_type (qw(sqlite))
   is(scalar @$nicks, 2, "get_objects() multi many with require 11 - $db_type");
   is($nicks->[0]->nick, 'ntwo', "get_objects() multi many with require 12 - $db_type");
   is($nicks->[1]->nick, 'nfour', "get_objects() multi many with require 13 - $db_type");
-
+#$DB::single = 1;
   $colors = $objs->[1]->{'colors'}; # make sure this isn't hitting the db
   ok($colors && ref $colors && @$colors == 2, "get_objects() multi many with require 14 - $db_type");
   ok($colors->[0]->id == 1 && $colors->[0]->name eq 'Red', "get_objects() multi many with require 15 - $db_type");

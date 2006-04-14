@@ -2,8 +2,8 @@ package Rose::WebApp::WithAppParams;
 
 use strict;
 
-use Rose::Test::WebApp;
-our @ISA = qw(Rose::Test::WebApp);
+use Rose::WebApp;
+our @ISA = qw(Rose::WebApp);
 
 __PACKAGE__->register_subclass;
 

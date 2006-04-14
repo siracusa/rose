@@ -5,10 +5,10 @@ use strict;
 use Carp;
 
 use Scalar::Util();
+use HTML::Mason::Interp;
+use HTML::Mason::Request();
 
 use Rose::WebApp::Server::Constants qw(OK NOT_FOUND SERVER_ERROR);
-
-use HTML::Mason::Request();
 
 use Rose::Object;
 our @ISA = qw(Rose::Object);
@@ -35,7 +35,22 @@ use Rose::Object::MakeMethods::Generic
 );
 
 sub init_mason_request { HTML::Mason::Request->instance }
-sub init_mason_interp  { shift->app->website->mason_interp }
+
+sub init_mason_interp
+{
+  my($self) = shift;
+  
+  my $site = $self->app->website;
+  
+  my $interp;
+
+  if($site->can('mason_interp'))
+  {
+    return $site->mason_interp;
+  }
+
+  return HTML::Mason::Interp->new;
+}
 
 sub app
 {

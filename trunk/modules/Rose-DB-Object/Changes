@@ -1,8 +1,10 @@
-0.702 (04.13.2006) - John Siracusa <siracusa@mindspring.com>
+0.71 (04.14.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Correctly clear the "in the database" state flag when a 
       speculative load fails because the object was not found.
       (Reported indirectly by Svilen Ivanov)
+    * Changed how multi-table queries are formulated for SQLite in 
+      order to make the new DBD::SQLite version (1.12) happy.
     * Fixed errors in the epoch column documentation.
     * Fixed some internal method-maker bugs.
 

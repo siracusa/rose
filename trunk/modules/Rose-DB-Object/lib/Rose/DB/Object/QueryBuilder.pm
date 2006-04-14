@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.69';
+our $VERSION = '0.71';
 
 our $Debug = 0;
 
@@ -405,10 +405,23 @@ sub build_select
         $i++;
       }
 
-      # Primary table first, then explicit joins, then implicit inner joins
-      $from_tables_sql =
-        join("\n", $primary_table, @joined_tables) .
-             (@normal_tables ? ",\n" . join(",\n", @normal_tables) : '');
+      # SQLite 1.12 seems to demand that explicit joins come last.
+      # Older versions seem to like it too, so I'll make it that
+      # way for SQLite in general.
+      if($dbh->{'Driver'}{'Name'} eq 'SQLite')
+      {
+        # Primary table first, then implicit joins, then explicit joins
+        $from_tables_sql = 
+          join(",\n", $primary_table, @normal_tables) .
+          join("\n", @joined_tables);
+      }
+      else
+      {
+        # Primary table first, then explicit joins, then implicit inner joins
+        $from_tables_sql =
+          join("\n", $primary_table, @joined_tables) .
+               (@normal_tables ? ",\n" . join(",\n", @normal_tables) : '');
+      }
     }
     else
     {

@@ -14,7 +14,7 @@ chomp(my $compare =<<'EOF');
         "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<title>Rose::Test::WebApp::Features::WithAppParams</title>
+<title>Rose::Test::MP1::WebApp::Features::WithAppParams</title>
 </head>
 <body>
 

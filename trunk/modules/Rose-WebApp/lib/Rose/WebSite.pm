@@ -23,7 +23,8 @@ use Rose::Class::MakeMethods::Generic
   [
     (map { '_' . $_ }
      qw(site_host_secure site_host_insecure
-       site_port_secure site_port_insecure)),
+        site_port_secure site_port_insecure)),
+
     'default_site_port_secure',
     'default_site_port_insecure',
   ]
