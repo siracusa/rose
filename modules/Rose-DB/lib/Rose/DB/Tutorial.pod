@@ -90,7 +90,7 @@ The domain and type parameters can actually be omitted entirely and they will st
       username => 'joeuser',
       password => 'mysecret',
     );
-    
+
 To use C<My::DB> in this kind of setup, simply omit the L<domain|Rose::DB/domain> and L<type|Rose::DB/type> parameters from your calls to C<My::DB-E<gt>new>.  They will automatically get the default values.
 
     use My::DB;
