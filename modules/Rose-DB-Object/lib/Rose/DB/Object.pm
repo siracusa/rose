@@ -219,11 +219,13 @@ sub load
     eval
     {
       $objects = 
-        $mgr_class->get_objects(object_class  => ref $self,
-                                query         => [ %query ],
-                                with_objects  => $with,
-                                multi_many_ok => 1,
-                                nonlazy       => $args{'nonlazy'},
+        $mgr_class->get_objects(object_class   => ref $self,
+                                db             => $db,
+                                query          => [ %query ],
+                                with_objects   => $with,
+                                multi_many_ok  => 1,
+                                nonlazy        => $args{'nonlazy'},
+                                inject_results => $args{'inject_results'},
                                 (exists $args{'prepare_cached'} ?
                                 (prepare_cached =>  $args{'prepare_cached'}) : 
                                 ()))
