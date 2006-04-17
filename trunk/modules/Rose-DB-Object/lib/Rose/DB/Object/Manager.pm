@@ -309,7 +309,7 @@ sub get_objects
   my $select           = $args{'select'};
 
   # Can't do direct inject with custom select lists
-  my $direct_inject = $select ? 0 : 1;#delete $args{'direct_inject'};
+  my $direct_inject = $select ? 0 : delete $args{'inject_results'};
 
   my(%fetch, %rel_name, %di_keys);
 
@@ -1606,11 +1606,10 @@ sub get_objects
 
                     #$Debug && warn "Make $object_class $pk\n";
 
-
+                    # Now, create the object from this new main table row
                     if($direct_inject)
                     {
                       $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
-                      #$object = _create_object($object_class, $row{$object_class,0}, $di_keys{$object_class}, \%object_args);
                     }
                     else
                     {
@@ -1620,13 +1619,6 @@ sub get_objects
                       $object->init(%{$row{$object_class,0}});
                       $object->{STATE_IN_DB()} = 1;
                     }
-
-                    # Now, create the object from this new main table row
-#                     $object = $object_class->new(%object_args);
-# 
-#                     local $object->{STATE_LOADING()} = 1;
-#                     $object->init(%{$row{$object_class,0}});
-#                     $object->{STATE_IN_DB()} = 1;
 
                     $last_object = $object; # This is the "last object" from now on
                     @sub_objects = ();      # The list of sub-objects is per-object
@@ -1655,10 +1647,10 @@ sub get_objects
 
                     unless($subobject)
                     {
+                      # Make sub-object
                       if($direct_inject)
                       {
                         $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args }, $class;
-                        #$subobject = _create_object($class, $row{$class,$i}, $di_keys{$class}, \%subobject_args);
                       }
                       else
                       {    
@@ -1668,12 +1660,6 @@ sub get_objects
                         $subobject->{STATE_IN_DB()} = 1;
                       }
 
-
-                      # Make sub-object
-#                       $subobject = $class->new(%subobject_args);
-#                       local $subobject->{STATE_LOADING()} = 1;
-#                       $subobject->init(%{$row{$class,$i}});
-#                       $subobject->{STATE_IN_DB()} = 1;
                       $seen[$i]{$sub_pk} = $subobject;
                     }
 
@@ -1885,7 +1871,6 @@ sub get_objects
                 if($direct_inject)
                 {
                   $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
-                  #$object = _create_object($object_class, $row{$object_class,0}, $di_keys{$object_class}, \%object_args);
                 }
                 else
                 {
@@ -1895,12 +1880,6 @@ sub get_objects
                   $object->init(%{$row{$object_class,0}});
                   $object->{STATE_IN_DB()} = 1;
                 }
-                    
-#                 $object = $object_class->new(%object_args);
-# 
-#                 local $object->{STATE_LOADING()} = 1;
-#                 $object->init(%{$row{$object_class,0}});
-#                 $object->{STATE_IN_DB()} = 1;
 
                 my @sub_objects;
 
@@ -1916,7 +1895,6 @@ sub get_objects
                     if($direct_inject)
                     {
                       $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args }, $class;
-                      #$subobject = _create_object($class, $row{$class,$i}, $di_keys{$class}, \%subobject_args);
                     }
                     else
                     {
@@ -1925,11 +1903,6 @@ sub get_objects
                       $subobject->init(%{$row{$class,$i}});
                       $subobject->{STATE_IN_DB()} = 1;
                     }
-                    
-#                     my $subobject = $class->new(%subobject_args);
-#                     local $subobject->{STATE_LOADING()} = 1;
-#                     $subobject->init(%{$row{$class,$i}});
-#                     $subobject->{STATE_IN_DB()} = 1;
 
                     $sub_objects[$i] = $subobject;
 
@@ -1998,7 +1971,6 @@ sub get_objects
               if($direct_inject)
               {
                 $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
-                #$object = _create_object($object_class, $row{$object_class,0}, $di_keys{$object_class}, \%object_args);
               }
               else
               {
@@ -2008,12 +1980,6 @@ sub get_objects
                 $object->init(%{$row{$object_class,0}});
                 $object->{STATE_IN_DB()} = 1;
               }
-            
-#               $object = $object_class->new(%object_args);
-# 
-#               local $object->{STATE_LOADING()} = 1;
-#               $object->init(%{$row{$object_class,0}});
-#               $object->{STATE_IN_DB()} = 1;
 
               $skip_first = 0;
               $self->{'_count'}++;
@@ -2109,10 +2075,10 @@ sub get_objects
               }
             }
 
+            # Now, create the object from this new main table row
             if($direct_inject)
             {
               $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
-#              $object = _create_object($object_class, $row{$object_class,0}, $di_keys{$object_class}, \%object_args);
             }
             else
             {
@@ -2122,13 +2088,6 @@ sub get_objects
               $object->init(%{$row{$object_class,0}});
               $object->{STATE_IN_DB()} = 1;
             }
-
-            # Now, create the object from this new main table row
-#             $object = $object_class->new(%object_args);
-# 
-#             local $object->{STATE_LOADING()} = 1;
-#             $object->init(%{$row{$object_class,0}});
-#             $object->{STATE_IN_DB()} = 1;
 
             $last_object = $object; # This is the "last object" from now on.
             @sub_objects = ();      # The list of sub-objects is per-object.
@@ -2157,10 +2116,10 @@ sub get_objects
 
             unless($subobject)
             {
+              # Make sub-object
               if($direct_inject)
               {
                 $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args },  $class;
-#                $subobject = _create_object($class, $row{$class,$i}, $di_keys{$class}, \%subobject_args);
               }
               else
               {    
@@ -2170,12 +2129,6 @@ sub get_objects
                 $subobject->{STATE_IN_DB()} = 1;
               }
 
-
-              # Make sub-object
-#               $subobject = $class->new(%subobject_args);
-#               local $subobject->{STATE_LOADING()} = 1;
-#               $subobject->init(%{$row{$class,$i}});
-#               $subobject->{STATE_IN_DB()} = 1;
               $seen[$i]{$sub_pk} = $subobject;
             }
 
@@ -2334,7 +2287,6 @@ sub get_objects
           if($direct_inject)
           {
             $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
-            #$object = _create_object($object_class, $row{$object_class,0}, $di_keys{$object_class}, \%object_args);
           }
           else
           {
@@ -2344,13 +2296,6 @@ sub get_objects
             $object->init(%{$row{$object_class,0}});
             $object->{STATE_IN_DB()} = 1;
           }
-            
-
-#           my $object = $object_class->new(%object_args);
-# 
-#           local $object->{STATE_LOADING()} = 1;
-#           $object->init(%{$row{$object_class,0}});
-#           $object->{STATE_IN_DB()} = 1;
 
           my @sub_objects;
 
@@ -2364,7 +2309,6 @@ sub get_objects
             if($direct_inject)
             {
               $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args }, $class;
-              #$subobject = _create_object($class, $row{$class,$i}, $di_keys{$class}, \%subobject_args);
             }
             else
             {
@@ -2373,11 +2317,6 @@ sub get_objects
               $subobject->init(%{$row{$class,$i}});
               $subobject->{STATE_IN_DB()} = 1;
             }
-          
-#             my $subobject = $class->new(%subobject_args);
-#             local $subobject->{STATE_LOADING()} = 1;
-#             $subobject->init(%{$row{$class,$i}});
-#             $subobject->{STATE_IN_DB()} = 1;
 
             $sub_objects[$i] = $subobject;
 
@@ -2426,8 +2365,6 @@ sub get_objects
 
         while($sth->fetch)
         {
-          #my $object = _create_object($object_class, $row{$object_class,0}, $key_map, \%object_args);
-          #push(@objects, $object);
           push(@objects, bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class);
         }
       }
@@ -3333,6 +3270,14 @@ This parameter conflicts with the C<fetch_only> parameter in the case where both
 ARRAYREF should be a reference to an array of table names or "tN" table aliases. Only the columns from the corresponding tables will be fetched.  In the case of relationships that involve more than one table, only the "most distant" table is considered.  (e.g., The map table is ignored in a "many to many" relationship.)  Columns from the primary table ("t1") are always selected, regardless of whether or not it appears in the list.
 
 This parameter conflicts with the C<distinct> parameter in the case where both provide a list of table names or aliases.  In this case, then a fatal error will occur.
+
+=item C<inject_results BOOL>
+
+If true, then the data returned from the database will be directly "injected" into the objects returned by this method, bypassing the constructor and column mutator methods for each object class.  The default is false.  This parameter is ignored (i.e., treated as if it were false) if the C<select> parameter is passed.
+
+This parameter is useful for situations where the performance of L<get_objects|/get_objects> is limited by the speed at which objects can be created.  It's safe to set this parameter to true provided that you know that the constructor and column mutator methods for all of the classes of the objects being fetched do not have any side-effects (or if you know that it's is okay to bypass any side-effects).
+
+The default L<Rose::DB::Object> constructor and the column mutator methods created by the column classes included in the L<Rose::DB::Object> module distribution do not have any side-effects and should therefore be safe to use with this parameter.
 
 =item C<limit NUM>
 
