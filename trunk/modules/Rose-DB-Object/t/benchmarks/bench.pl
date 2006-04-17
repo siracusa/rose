@@ -1416,7 +1416,7 @@ EOF
         MyTest::RDBO::Simple::Product->new(
           db => $DB, 
           id => $i + 100_000);
-      $p->load(with => [ 'category' ]);
+      $p->load(with => [ 'category' ], inject_results => 1);
 
       my $cat = $p->category;
       my $n = $cat->name;
@@ -3437,7 +3437,7 @@ EOF
         MyTest::RDBO::Complex::Product->new(
           db => $DB, 
           id => $i + 1_100_000);
-      $p->load(with => [ 'category' ]);
+      $p->load(with => [ 'category' ], inject_results => 1);
 
       my $cat = $p->category;
       my $n = $cat->name;
