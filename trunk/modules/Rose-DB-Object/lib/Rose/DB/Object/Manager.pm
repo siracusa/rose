@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.691';
+our $VERSION = '0.711';
 
 our $Debug = 0;
 
@@ -308,7 +308,10 @@ sub get_objects
   my $fetch            = delete $args{'fetch_only'};
   my $select           = $args{'select'};
 
-  my(%fetch, %rel_name);
+  # Can't do direct inject with custom select lists
+  my $direct_inject = $select ? 0 : 1;#delete $args{'direct_inject'};
+
+  my(%fetch, %rel_name, %di_keys);
 
   my $meta = $object_class->meta;
 
@@ -530,11 +533,13 @@ sub get_objects
     %columns     = ($tables[0] => scalar $meta->nonlazy_columns);
     %all_columns = ($tables[0] => scalar $meta->columns);
     %methods     = ($tables[0] => scalar $meta->nonlazy_column_mutator_method_names);
+    %di_keys     = ($object_class => scalar $meta->nonlazy_column_db_value_hash_keys);
   }
   else
   {
     %columns = ($tables[0] => scalar $meta->columns);
     %methods = ($tables[0] => scalar $meta->column_mutator_method_names);  
+    %di_keys = ($object_class => scalar $meta->column_db_value_hash_keys);
   }
 
   my %classes = ($tables[0] => $object_class);
@@ -797,22 +802,27 @@ sub get_objects
           $columns{$tables[-1]}     = $ft_meta->nonlazy_columns;
           $all_columns{$tables[-1]} = $ft_meta->columns;
           $methods{$tables[-1]}     = $ft_meta->nonlazy_column_mutator_method_names;
+          $di_keys{$classes[-1]}    = $ft_meta->nonlazy_column_db_value_hash_keys;
         }
         else
         {
-          $columns{$tables[-1]} = $ft_meta->columns;   
-          $methods{$tables[-1]} = $ft_meta->column_mutator_method_names;        
+          $columns{$tables[-1]}  = $ft_meta->columns;   
+          $methods{$tables[-1]}  = $ft_meta->column_mutator_method_names;        
+          $di_keys{$classes[-1]} = $ft_meta->column_db_value_hash_keys;
         }
 
         $classes{$tables[-1]} = $ft_class;
 
         $subobject_methods[$i - 1] = 
+          $direct_inject ? $rel->hash_key :
           $rel->method_name('get_set') ||
           $rel->method_name('get_set_now') ||
           $rel->method_name('get_set_on_save') ||
           Carp::confess "No 'get_set', 'get_set_now', or 'get_set_on_save' ",
                         "method found for relationship '$name' in class ",
                         "$class";
+
+        #$subobject_keys[$i - 1] = $rel->hash_key;
 
         # Reset each() iterator
         #keys(%$ft_columns);
@@ -944,11 +954,13 @@ sub get_objects
             $columns{$tables[-1]}     = $map_meta->nonlazy_columns;
             $all_columns{$tables[-1]} = $map_meta->columns;
             $methods{$tables[-1]}     = $map_meta->nonlazy_column_mutator_method_names;
+            $di_keys{$classes[-1]}    = $map_meta->nonlazy_column_db_value_hash_keys;
           }
           else
           {
-            $columns{$tables[-1]} = $map_meta->columns;   
-            $methods{$tables[-1]} = $map_meta->column_mutator_method_names;        
+            $columns{$tables[-1]}  = $map_meta->columns;   
+            $methods{$tables[-1]}  = $map_meta->column_mutator_method_names;        
+            $di_keys{$classes[-1]} = $map_meta->column_db_value_hash_keys;
           }
         }
         else
@@ -977,11 +989,23 @@ sub get_objects
           my $ft_class = $rel->foreign_class 
             or Carp::confess "$class - Missing foreign class for '$name'";
 
-          unless($ft_class->can($map_record_method))
+          if($ft_class->can($map_record_method))
           {
-            no strict 'refs';
-            *{"${ft_class}::$map_record_method"} = 
-              Rose::DB::Object::Metadata::Relationship::ManyToMany::make_map_record_method($map_class);
+            if($direct_inject && (my $map_record_key = $ft_class->meta->map_record_method_key($map_record_method)))
+            {
+              $mapped_object_methods[$i - 1] = $map_record_key;
+            }
+          }
+          else
+          {
+            my $map_record_key =
+              Rose::DB::Object::Metadata::Relationship::ManyToMany::make_map_record_method(
+                $ft_class, $map_record_method, $map_class);
+
+            if($direct_inject && $mapped_object_methods[$i - 1])
+            {
+              $mapped_object_methods[$i - 1] = $map_record_key;
+            }
           }
         }
 
@@ -1045,11 +1069,13 @@ sub get_objects
           $columns{$tables[-1]}     = $ft_meta->nonlazy_columns;
           $all_columns{$tables[-1]} = $ft_meta->columns;
           $methods{$tables[-1]}     = $ft_meta->nonlazy_column_mutator_method_names;
+          $di_keys{$classes[-1]}    = $ft_meta->nonlazy_column_db_value_hash_keys;
         }
         else
         {
-          $columns{$tables[-1]} = $ft_meta->columns;   
-          $methods{$tables[-1]} = $ft_meta->column_mutator_method_names;        
+          $columns{$tables[-1]}  = $ft_meta->columns;   
+          $methods{$tables[-1]}  = $ft_meta->column_mutator_method_names;        
+          $di_keys{$classes[-1]} = $ft_meta->column_db_value_hash_keys;
         }
 
         $classes{$tables[-1]} = $ft_class;
@@ -1059,12 +1085,15 @@ sub get_objects
         $i++;
 
         $subobject_methods[$i - 1] =
+          $direct_inject ? $rel->hash_key :
           $rel->method_name('get_set') ||
           $rel->method_name('get_set_now') ||
           $rel->method_name('get_set_on_save') ||
           Carp::confess "No 'get_set', 'get_set_now', or 'get_set_on_save' ",
                         "method found for relationship '$name' in class ",
                         "$class";
+
+        #$subobject_keys[$i - 1] = $rel->hash_key;
 
         # Reset each() iterator
         #keys(%$ft_columns);
@@ -1448,16 +1477,44 @@ sub get_objects
     }
     else
     {
-      foreach my $table (@tables)
+      if($direct_inject)
       {
-        my $class = $classes{$table};
+        my $driver = $db->driver || 'unknown';
 
-        foreach my $column (@{$methods{$table}})
+        foreach my $table (@tables)
         {
-          $sth->bind_col($col_num++, \$row{$class,$table_num}{$column});
+          my $class   = $classes{$table};
+          my $key_map = $di_keys{$class};
+  
+          foreach my $column (@{$methods{$table}})
+          {
+            if($key_map->{$column} eq $column)
+            {
+              $sth->bind_col($col_num++, \$row{$class,$table_num}{$column});
+            }
+            else # attribute uses a db-formatted key
+            {
+              $sth->bind_col($col_num++, \$row{$class,$table_num}{$key_map->{$column},$driver});
+            }
+          }
+  
+          $table_num++;
+        }
+      }
+      else
+      {
+        foreach my $table (@tables)
+        {
+          my $class = $classes{$table};
+  
+          foreach my $column (@{$methods{$table}})
+          {
+            $sth->bind_col($col_num++, \$row{$class,$table_num}{$column});
+          }
+  
+          $table_num++;
         }
 
-        $table_num++;
       }
     }
 
@@ -1517,11 +1574,24 @@ sub get_objects
                     {
                       #$Debug && warn "Finish $object_class $last_object->{'id'}\n";
 
-                      while(my($ident, $parent) = each(%parent_objects))
+                      if($direct_inject)
                       {
-                        while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                        while(my($ident, $parent) = each(%parent_objects))
                         {
-                          $parent->$method($subobjects);
+                          while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                          {
+                            $parent->{$method} = $subobjects;
+                          }
+                        }                      
+                      }
+                      else
+                      {
+                        while(my($ident, $parent) = each(%parent_objects))
+                        {
+                          while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                          {
+                            $parent->$method($subobjects);
+                          }
                         }
                       }
 
@@ -1536,12 +1606,27 @@ sub get_objects
 
                     #$Debug && warn "Make $object_class $pk\n";
 
-                    # Now, create the object from this new main table row
-                    $object = $object_class->new(%object_args);
 
-                    local $object->{STATE_LOADING()} = 1;
-                    $object->init(%{$row{$object_class,0}});
-                    $object->{STATE_IN_DB()} = 1;
+                    if($direct_inject)
+                    {
+                      $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
+                      #$object = _create_object($object_class, $row{$object_class,0}, $di_keys{$object_class}, \%object_args);
+                    }
+                    else
+                    {
+                      $object = $object_class->new(%object_args);
+  
+                      local $object->{STATE_LOADING()} = 1;
+                      $object->init(%{$row{$object_class,0}});
+                      $object->{STATE_IN_DB()} = 1;
+                    }
+
+                    # Now, create the object from this new main table row
+#                     $object = $object_class->new(%object_args);
+# 
+#                     local $object->{STATE_LOADING()} = 1;
+#                     $object->init(%{$row{$object_class,0}});
+#                     $object->{STATE_IN_DB()} = 1;
 
                     $last_object = $object; # This is the "last object" from now on
                     @sub_objects = ();      # The list of sub-objects is per-object
@@ -1570,11 +1655,25 @@ sub get_objects
 
                     unless($subobject)
                     {
+                      if($direct_inject)
+                      {
+                        $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args }, $class;
+                        #$subobject = _create_object($class, $row{$class,$i}, $di_keys{$class}, \%subobject_args);
+                      }
+                      else
+                      {    
+                        $subobject = $class->new(%subobject_args);
+                        local $subobject->{STATE_LOADING()} = 1;
+                        $subobject->init(%{$row{$class,$i}});
+                        $subobject->{STATE_IN_DB()} = 1;
+                      }
+
+
                       # Make sub-object
-                      $subobject = $class->new(%subobject_args);
-                      local $subobject->{STATE_LOADING()} = 1;
-                      $subobject->init(%{$row{$class,$i}});
-                      $subobject->{STATE_IN_DB()} = 1;
+#                       $subobject = $class->new(%subobject_args);
+#                       local $subobject->{STATE_LOADING()} = 1;
+#                       $subobject->init(%{$row{$class,$i}});
+#                       $subobject->{STATE_IN_DB()} = 1;
                       $seen[$i]{$sub_pk} = $subobject;
                     }
 
@@ -1592,7 +1691,16 @@ sub get_objects
                         if($map_record)
                         {
                           my $method = $mapped_object_methods[$i - 1] or next;
-                          $subobject->$method($map_record);
+                          
+                          if($direct_inject)
+                          {
+                            $subobject->{$method} = $map_record;
+                          }
+                          else
+                          {
+                            $subobject->$method($map_record);
+                          }
+
                           $map_record = 0;
                         }
 
@@ -1650,8 +1758,15 @@ sub get_objects
                       # Only assign "... to one" values once
                       next  if($seen{refaddr $parent_object,$method}++);
 
-                      local $parent_object->{STATE_LOADING()} = 1;
-                      $parent_object->$method($subobject);
+                      if($direct_inject)
+                      {
+                        $parent_object->{$method} = $subobject;
+                      }
+                      else
+                      {
+                        local $parent_object->{STATE_LOADING()} = 1;
+                        $parent_object->$method($subobject);
+                      }
                     }
                   }
 
@@ -1687,11 +1802,24 @@ sub get_objects
                 {
                   #$Debug && warn "Finish straggler $object_class $last_object->{'id'}\n";
 
-                  while(my($ident, $parent) = each(%parent_objects))
+                  if($direct_inject)
                   {
-                    while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                    while(my($ident, $parent) = each(%parent_objects))
                     {
-                      $parent->$method($subobjects);
+                      while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                      {
+                        $parent->{$method} = $subobjects;
+                      }
+                    }
+                  }
+                  else
+                  {
+                    while(my($ident, $parent) = each(%parent_objects))
+                    {
+                      while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                      {
+                        $parent->$method($subobjects);
+                      }
                     }
                   }
 
@@ -1754,11 +1882,25 @@ sub get_objects
 
                 next ROW  if($skip_first && ++$count <= $skip_first);
 
-                $object = $object_class->new(%object_args);
-
-                local $object->{STATE_LOADING()} = 1;
-                $object->init(%{$row{$object_class,0}});
-                $object->{STATE_IN_DB()} = 1;
+                if($direct_inject)
+                {
+                  $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
+                  #$object = _create_object($object_class, $row{$object_class,0}, $di_keys{$object_class}, \%object_args);
+                }
+                else
+                {
+                  $object = $object_class->new(%object_args);
+      
+                  local $object->{STATE_LOADING()} = 1;
+                  $object->init(%{$row{$object_class,0}});
+                  $object->{STATE_IN_DB()} = 1;
+                }
+                    
+#                 $object = $object_class->new(%object_args);
+# 
+#                 local $object->{STATE_LOADING()} = 1;
+#                 $object->init(%{$row{$object_class,0}});
+#                 $object->{STATE_IN_DB()} = 1;
 
                 my @sub_objects;
 
@@ -1769,20 +1911,49 @@ sub get_objects
                     my $method = $subobject_methods[$i];
                     my $class  = $classes[$i];
 
-                    my $subobject = $class->new(%subobject_args);
-                    local $subobject->{STATE_LOADING()} = 1;
-                    $subobject->init(%{$row{$class,$i}});
-                    $subobject->{STATE_IN_DB()} = 1;
-
-                    $sub_objects[$i] = $subobject;
-
-                    if(my $bt = $belongs_to[$i])
+                    my $subobject;
+                    
+                    if($direct_inject)
                     {
-                      $sub_objects[$bt]->$method($subobject);
+                      $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args }, $class;
+                      #$subobject = _create_object($class, $row{$class,$i}, $di_keys{$class}, \%subobject_args);
                     }
                     else
                     {
-                      $object->$method($subobject);
+                      $subobject = $class->new(%subobject_args);
+                      local $subobject->{STATE_LOADING()} = 1;
+                      $subobject->init(%{$row{$class,$i}});
+                      $subobject->{STATE_IN_DB()} = 1;
+                    }
+                    
+#                     my $subobject = $class->new(%subobject_args);
+#                     local $subobject->{STATE_LOADING()} = 1;
+#                     $subobject->init(%{$row{$class,$i}});
+#                     $subobject->{STATE_IN_DB()} = 1;
+
+                    $sub_objects[$i] = $subobject;
+
+                    if($direct_inject)
+                    {
+                      if(my $bt = $belongs_to[$i])
+                      {
+                        $sub_objects[$bt]->{$method} = $subobject;
+                      }
+                      else
+                      {
+                        $object->{$method} = $subobject;
+                      }
+                    }
+                    else
+                    {
+                      if(my $bt = $belongs_to[$i])
+                      {
+                        $sub_objects[$bt]->$method($subobject);
+                      }
+                      else
+                      {
+                        $object->$method($subobject);
+                      }
                     }
                   }
                 }
@@ -1824,11 +1995,25 @@ sub get_objects
 
               next ROW  if($skip_first && ++$count <= $skip_first);
 
-              $object = $object_class->new(%object_args);
-
-              local $object->{STATE_LOADING()} = 1;
-              $object->init(%{$row{$object_class,0}});
-              $object->{STATE_IN_DB()} = 1;
+              if($direct_inject)
+              {
+                $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
+                #$object = _create_object($object_class, $row{$object_class,0}, $di_keys{$object_class}, \%object_args);
+              }
+              else
+              {
+                $object = $object_class->new(%object_args);
+    
+                local $object->{STATE_LOADING()} = 1;
+                $object->init(%{$row{$object_class,0}});
+                $object->{STATE_IN_DB()} = 1;
+              }
+            
+#               $object = $object_class->new(%object_args);
+# 
+#               local $object->{STATE_LOADING()} = 1;
+#               $object->init(%{$row{$object_class,0}});
+#               $object->{STATE_IN_DB()} = 1;
 
               $skip_first = 0;
               $self->{'_count'}++;
@@ -1891,11 +2076,24 @@ sub get_objects
             # First, finish building the last object, if it exists
             if($last_object)
             {
-              while(my($ident, $parent) = each(%parent_objects))
+              if($direct_inject)
               {
-                while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                while(my($ident, $parent) = each(%parent_objects))
                 {
-                  $parent->$method($subobjects);
+                  while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                  {
+                    $parent->{$method} = $subobjects; # XXX
+                  }
+                }              
+              }
+              else
+              {
+                while(my($ident, $parent) = each(%parent_objects))
+                {
+                  while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                  {
+                    $parent->$method($subobjects);
+                  }
                 }
               }
 
@@ -1911,12 +2109,26 @@ sub get_objects
               }
             }
 
-            # Now, create the object from this new main table row
-            $object = $object_class->new(%object_args);
+            if($direct_inject)
+            {
+              $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
+#              $object = _create_object($object_class, $row{$object_class,0}, $di_keys{$object_class}, \%object_args);
+            }
+            else
+            {
+              $object = $object_class->new(%object_args);
+  
+              local $object->{STATE_LOADING()} = 1;
+              $object->init(%{$row{$object_class,0}});
+              $object->{STATE_IN_DB()} = 1;
+            }
 
-            local $object->{STATE_LOADING()} = 1;
-            $object->init(%{$row{$object_class,0}});
-            $object->{STATE_IN_DB()} = 1;
+            # Now, create the object from this new main table row
+#             $object = $object_class->new(%object_args);
+# 
+#             local $object->{STATE_LOADING()} = 1;
+#             $object->init(%{$row{$object_class,0}});
+#             $object->{STATE_IN_DB()} = 1;
 
             $last_object = $object; # This is the "last object" from now on.
             @sub_objects = ();      # The list of sub-objects is per-object.
@@ -1945,11 +2157,25 @@ sub get_objects
 
             unless($subobject)
             {
+              if($direct_inject)
+              {
+                $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args },  $class;
+#                $subobject = _create_object($class, $row{$class,$i}, $di_keys{$class}, \%subobject_args);
+              }
+              else
+              {    
+                $subobject = $class->new(%subobject_args);
+                local $subobject->{STATE_LOADING()} = 1;
+                $subobject->init(%{$row{$class,$i}});
+                $subobject->{STATE_IN_DB()} = 1;
+              }
+
+
               # Make sub-object
-              $subobject = $class->new(%subobject_args);
-              local $subobject->{STATE_LOADING()} = 1;
-              $subobject->init(%{$row{$class,$i}});
-              $subobject->{STATE_IN_DB()} = 1;
+#               $subobject = $class->new(%subobject_args);
+#               local $subobject->{STATE_LOADING()} = 1;
+#               $subobject->init(%{$row{$class,$i}});
+#               $subobject->{STATE_IN_DB()} = 1;
               $seen[$i]{$sub_pk} = $subobject;
             }
 
@@ -1967,7 +2193,16 @@ sub get_objects
                 if($map_record)
                 {
                   my $method = $mapped_object_methods[$i - 1] or next;
-                  $subobject->$method($map_record);
+                  
+                  if($direct_inject)
+                  {
+                    $subobject->{$method} = $map_record;
+                  }
+                  else
+                  {
+                    $subobject->$method($map_record);
+                  }
+
                   $map_record = 0;
                 }
 
@@ -2025,8 +2260,15 @@ sub get_objects
               # Only assign "... to one" values once
               next  if($seen{refaddr $parent_object,$method}++);
 
-              local $parent_object->{STATE_LOADING()} = 1;
-              $parent_object->$method($subobject);
+              if($direct_inject)
+              {
+                $parent_object->{$method} = $subobject;
+              }
+              else
+              {
+                local $parent_object->{STATE_LOADING()} = 1;
+                $parent_object->$method($subobject);
+              }
             }
           }
 
@@ -2045,11 +2287,24 @@ sub get_objects
         # added to the final list of objects to return.
         if($last_object && !$skip_first)
         {
-          while(my($ident, $parent) = each(%parent_objects))
+          if($direct_inject)
           {
-            while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+            while(my($ident, $parent) = each(%parent_objects))
             {
-              $parent->$method($subobjects);
+              while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+              {
+                $parent->{$method} = $subobjects; # XXX
+              }
+            }
+          }
+          else
+          {
+            while(my($ident, $parent) = each(%parent_objects))
+            {
+              while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+              {
+                $parent->$method($subobjects);
+              }
             }
           }
 
@@ -2074,11 +2329,28 @@ sub get_objects
 
         while($sth->fetch)
         {
-          my $object = $object_class->new(%object_args);
+          my $object;
 
-          local $object->{STATE_LOADING()} = 1;
-          $object->init(%{$row{$object_class,0}});
-          $object->{STATE_IN_DB()} = 1;
+          if($direct_inject)
+          {
+            $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
+            #$object = _create_object($object_class, $row{$object_class,0}, $di_keys{$object_class}, \%object_args);
+          }
+          else
+          {
+            $object = $object_class->new(%object_args);
+    
+            local $object->{STATE_LOADING()} = 1;
+            $object->init(%{$row{$object_class,0}});
+            $object->{STATE_IN_DB()} = 1;
+          }
+            
+
+#           my $object = $object_class->new(%object_args);
+# 
+#           local $object->{STATE_LOADING()} = 1;
+#           $object->init(%{$row{$object_class,0}});
+#           $object->{STATE_IN_DB()} = 1;
 
           my @sub_objects;
 
@@ -2087,20 +2359,49 @@ sub get_objects
             my $method = $subobject_methods[$i];
             my $class  = $classes[$i];
 
-            my $subobject = $class->new(%subobject_args);
-            local $subobject->{STATE_LOADING()} = 1;
-            $subobject->init(%{$row{$class,$i}});
-            $subobject->{STATE_IN_DB()} = 1;
+            my $subobject;
 
-            $sub_objects[$i] = $subobject;
-
-            if(my $bt = $belongs_to[$i])
+            if($direct_inject)
             {
-              $sub_objects[$bt]->$method($subobject);
+              $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args }, $class;
+              #$subobject = _create_object($class, $row{$class,$i}, $di_keys{$class}, \%subobject_args);
             }
             else
             {
-              $object->$method($subobject);
+              $subobject = $class->new(%subobject_args);
+              local $subobject->{STATE_LOADING()} = 1;
+              $subobject->init(%{$row{$class,$i}});
+              $subobject->{STATE_IN_DB()} = 1;
+            }
+          
+#             my $subobject = $class->new(%subobject_args);
+#             local $subobject->{STATE_LOADING()} = 1;
+#             $subobject->init(%{$row{$class,$i}});
+#             $subobject->{STATE_IN_DB()} = 1;
+
+            $sub_objects[$i] = $subobject;
+
+            if($direct_inject)
+            {
+              if(my $bt = $belongs_to[$i])
+              {
+                $sub_objects[$bt]->{$method} = $subobject;
+              }
+              else
+              {
+                $object->{$method} = $subobject;
+              }
+            }
+            else
+            {
+              if(my $bt = $belongs_to[$i])
+              {
+                $sub_objects[$bt]->$method($subobject);
+              }
+              else
+              {
+                $object->$method($subobject);
+              }
             }
           }
 
@@ -2119,15 +2420,29 @@ sub get_objects
         }
       }
 
-      while($sth->fetch)
+      if($direct_inject)
       {
-        my $object = $object_class->new(%object_args);
+        my $key_map = $di_keys{$object_class};
 
-        local $object->{STATE_LOADING()} = 1;
-        $object->init(%{$row{$object_class,0}});
-        $object->{STATE_IN_DB()} = 1;
-
-        push(@objects, $object);
+        while($sth->fetch)
+        {
+          #my $object = _create_object($object_class, $row{$object_class,0}, $key_map, \%object_args);
+          #push(@objects, $object);
+          push(@objects, bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class);
+        }
+      }
+      else
+      {
+        while($sth->fetch)
+        {
+          my $object = $object_class->new(%object_args);
+  
+          local $object->{STATE_LOADING()} = 1;
+          $object->init(%{$row{$object_class,0}});
+          $object->{STATE_IN_DB()} = 1;
+  
+          push(@objects, $object);
+        }
       }
     }
 

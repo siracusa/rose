@@ -8,7 +8,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.03';
+our $VERSION = '0.711';
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -30,6 +30,13 @@ foreach my $type (__PACKAGE__->available_method_types)
 
 sub parse_value  { shift; shift->parse_array(@_)  }
 sub format_value { shift; shift->format_array(@_) }
+
+sub method_uses_formatted_key
+{
+  my($self, $type) = @_;
+  return 1  if($type eq 'get' || $type eq 'set' || $type eq 'get_set');
+  return 0;
+}
 
 1;
 
