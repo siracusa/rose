@@ -1,5 +1,8 @@
 0.711 (04.18.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Changed the BigInt and BigSerial column classes to use normal Perl
+      scalars instead of Math::BigInt objects when perl has been compiled 
+      to use native 64-bit integers.  (Suggested by Jesse Brown)
     * Added the inject_results Manager parameter to bypass the standard
       object creation mechanism in cases where it's the dominant factor
       in overall performance.
