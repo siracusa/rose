@@ -1125,7 +1125,7 @@ EOF
     sub accessor_simple_category_dbic
     {
       #my $c = MyTest::DBIC::Simple::Category->find(1 + 300_000);
-      my $c = $DBIC_Simple_Category_RS->find(1 + 300_000);
+      my $c = $DBIC_Simple_Category_RS->search({ id => 1 + 300_000 })->next;
 
       for(1 .. ACCESSOR_ITERATIONS)
       {
@@ -1221,7 +1221,7 @@ EOF
     sub accessor_simple_product_dbic
     {
       #my $p = MyTest::DBIC::Simple::Product->find(1 + 300_000);
-      my $p = $DBIC_Simple_Product_RS->find(1 + 300_000);
+      my $p = $DBIC_Simple_Product_RS->search({ id => 1 + 300_000 })->next;
 
       for(1 .. ACCESSOR_ITERATIONS)
       {
@@ -1295,7 +1295,7 @@ EOF
     sub load_simple_category_dbic
     {
       #my $c = MyTest::DBIC::Simple::Category->find($i + 300_000);
-      my $c = $DBIC_Simple_Category_RS->find($i + 300_000);
+      my $c = $DBIC_Simple_Category_RS->search({ id => $i + 300_000 })->next;
       $i++;
     }
   }
@@ -1360,7 +1360,7 @@ EOF
     sub load_simple_product_dbic
     {
       #my $c = MyTest::DBIC::Simple::Product->find($i + 300_000);
-      my $c = $DBIC_Simple_Product_RS->find($i + 300_000);
+      my $c = $DBIC_Simple_Product_RS->search({ id => $i + 300_000 })->next;
       $i++;
     }
   }
@@ -1416,7 +1416,7 @@ EOF
         MyTest::RDBO::Simple::Product->new(
           db => $DB, 
           id => $i + 100_000);
-      $p->load(with => [ 'category' ], inject_results => 1);
+      $p->load;#(with => [ 'category' ], inject_results => 1, prepare_cached => 1);
 
       my $cat = $p->category;
       my $n = $cat->name;
@@ -1460,7 +1460,7 @@ EOF
     sub load_simple_product_and_category_dbic
     {
       #my $c = MyTest::DBIC::Simple::Product->find($i + 300_000);
-      my $c = $DBIC_Simple_Product_RS->find($i + 300_000);
+      my $c = $DBIC_Simple_Product_RS->search({ id => $i + 300_000 })->next;
       my $cat = $c->category_id;
       my $n = $cat->name;
       die  unless($n =~ /\S/);
@@ -1542,7 +1542,7 @@ EOF
     sub update_simple_category_dbic
     {
       #my $c = MyTest::DBIC::Simple::Category->find($i + 300_000);
-      my $c = $DBIC_Simple_Category_RS->find($i + 300_000);
+      my $c = $DBIC_Simple_Category_RS->search({ id => $i + 300_000 })->next;
       $c->name($c->name . ' updated');
       $c->update;
       $i++;
@@ -1620,7 +1620,7 @@ EOF
     sub update_simple_product_dbic
     {
       #my $p = MyTest::DBIC::Simple::Product->find($i + 300_000);
-      my $p = $DBIC_Simple_Product_RS->find($i + 300_000);
+      my $p = $DBIC_Simple_Product_RS->search({ id => $i + 300_000 })->next;
       $p->name($p->name . ' updated');
       $p->update;
       $i++;
@@ -1968,6 +1968,7 @@ EOF
           db => $DB,
           query_is_sql => 1,
           prepare_cached => 1,
+          inject_results => 1,
           query =>
           [
             id => { le => 100_000 + $Iterations },
@@ -2180,6 +2181,7 @@ EOF
           db => $DB,
           query_is_sql => 1,
           prepare_cached => 1,
+          inject_results => 1,
           query =>
           [
             id => { le => 100_000 + $Iterations },
@@ -3039,7 +3041,7 @@ EOF
     sub delete_simple_category_dbic
     {
       #my $c = MyTest::DBIC::Simple::Category->find($i + 300_000);
-      my $c = $DBIC_Simple_Category_RS->find($i + 300_000);
+      my $c = $DBIC_Simple_Category_RS->search({ id => $i + 300_000 })->next;
       $c->delete;
       $i++;
     }
@@ -3239,7 +3241,7 @@ EOF
     sub accessor_complex_category_dbic
     {
       #my $c = MyTest::DBIC::Complex::Category->find(1 + 300_000);
-      my $c = $DBIC_Complex_Category_RS->find(1 + 300_000);
+      my $c = $DBIC_Complex_Category_RS->search({ id => 1 + 300_000 })->next;
 
       for(1 .. ACCESSOR_ITERATIONS)
       {
@@ -3312,7 +3314,7 @@ EOF
     sub accessor_complex_product_dbic
     {
       #my $p = MyTest::DBIC::Complex::Product->find(1 + 300_000);
-      my $p = $DBIC_Complex_Product_RS->find(1 + 300_000);
+      my $p = $DBIC_Complex_Product_RS->search({ id => 1 + 300_000 })->next;
 
       for(1 .. ACCESSOR_ITERATIONS)
       {
@@ -3373,7 +3375,7 @@ EOF
     sub load_complex_category_dbic
     {
       #my $c = MyTest::DBIC::Complex::Category->find($i + 3_300_000);
-      my $c = $DBIC_Complex_Category_RS->find($i + 3_300_000);
+      my $c = $DBIC_Complex_Category_RS->search({ id => $i + 3_300_000 })->next;
       $i++;
     }
   }
@@ -3422,7 +3424,7 @@ EOF
     sub load_complex_product_dbic
     {
       #my $c = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
-      my $c = $DBIC_Complex_Product_RS->find($i + 3_300_000);
+      my $c = $DBIC_Complex_Product_RS->search({ id => $i + 3_300_000 })->next;
       $i++;
     }
   }
@@ -3437,7 +3439,7 @@ EOF
         MyTest::RDBO::Complex::Product->new(
           db => $DB, 
           id => $i + 1_100_000);
-      $p->load(with => [ 'category' ], inject_results => 1);
+      $p->load; #(with => [ 'category' ], inject_results => 1, prepare_cached => 1);
 
       my $cat = $p->category;
       my $n = $cat->name;
@@ -3481,7 +3483,7 @@ EOF
     sub load_complex_product_and_category_dbic
     {
       #my $c = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
-      my $c = $DBIC_Complex_Product_RS->find($i + 3_300_000);
+      my $c = $DBIC_Complex_Product_RS->search({ id => $i + 3_300_000 })->next;
       my $cat = $c->category_id;
       my $n = $cat->name;
       die  unless($n =~ /\S/);
@@ -3543,7 +3545,7 @@ EOF
     sub update_complex_category_dbic
     {
       #my $c = MyTest::DBIC::Complex::Category->find($i + 3_300_000);
-      my $c = $DBIC_Complex_Category_RS->find($i + 3_300_000);
+      my $c = $DBIC_Complex_Category_RS->search({ id => $i + 3_300_000 })->next;
       $c->name($c->name . ' updated');
       $c->update;
       $i++;
@@ -3612,7 +3614,7 @@ EOF
     sub update_complex_product_dbic
     {
       #my $p = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
-      my $p = $DBIC_Complex_Product_RS->find($i + 3_300_000);
+      my $p = $DBIC_Complex_Product_RS->search({ id => $i + 3_300_000 })->next;
       $p->name($p->name . ' updated');
       $p->published(\'2004-01-02 12:34:55'); #\'
       $p->update;
@@ -3871,6 +3873,7 @@ EOF
           db => $DB,
           query_is_sql => 1,
           prepare_cached => 1,
+          inject_results => 1,
           query =>
           [
             id => { le => 100_000 + $Iterations },
@@ -4081,6 +4084,7 @@ EOF
           db => $DB,
           query_is_sql => 1,
           prepare_cached => 1,
+          inject_results => 1,
           query =>
           [
             id   => { le => 100_000 + $Iterations },
@@ -4772,7 +4776,7 @@ EOF
     sub delete_complex_product_dbic
     {
       #my $c = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
-      my $c = $DBIC_Complex_Product_RS->find($i + 3_300_000);
+      my $c = $DBIC_Complex_Product_RS->search({ id => $i + 3_300_000 })->next;
       $c->delete;
       $i++;
     }

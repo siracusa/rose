@@ -3275,9 +3275,9 @@ This parameter conflicts with the C<distinct> parameter in the case where both p
 
 If true, then the data returned from the database will be directly "injected" into the objects returned by this method, bypassing the constructor and column mutator methods for each object class.  The default is false.  This parameter is ignored (i.e., treated as if it were false) if the C<select> parameter is passed.
 
-This parameter is useful for situations where the performance of L<get_objects|/get_objects> is limited by the speed at which objects can be created.  It's safe to set this parameter to true provided that you know that the constructor and column mutator methods for all of the classes of the objects being fetched do not have any side-effects (or if you know that it's is okay to bypass any side-effects).
+This parameter is useful for situations where the performance of L<get_objects|/get_objects> is limited by the speed at which L<Rose::DB::Object>-derived objects can be created.  It's safe to set this parameter to true only if the constructor and column mutator methods for all of the classes involved do not have any side-effects (or if it's is okay to bypass any side-effects).
 
-The default L<Rose::DB::Object> constructor and the column mutator methods created by the column classes included in the L<Rose::DB::Object> module distribution do not have any side-effects and should therefore be safe to use with this parameter.
+The default L<Rose::DB::Object> L<constructor|Rose::DB::Object/new> and the column mutator methods created by the column classes included in the L<Rose::DB::Object> module distribution do not have any side-effects and should therefore be safe to use with this parameter.
 
 =item C<limit NUM>
 
