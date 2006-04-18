@@ -1,3 +1,9 @@
+0.711 (04.17.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added the inject_results Manager parameter to bypass the object
+      creation bottleneck in cases where it's the dominant factor in
+      overall performance.
+
 0.71 (04.14.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Correctly clear the "in the database" state flag when a 
