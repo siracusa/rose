@@ -309,7 +309,7 @@ sub get_objects
   my $select           = $args{'select'};
 
   # Can't do direct inject with custom select lists
-  my $direct_inject = $select ? 0 : delete $args{'inject_results'};
+  my $direct_inject = $select ? 0 : 1;#(rand >= 0.5 ? 1 : 0); #delete $args{'inject_results'};
 
   my(%fetch, %rel_name, %di_keys);
 

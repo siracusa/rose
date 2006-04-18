@@ -444,6 +444,8 @@ sub boolean
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
 
+  my $formatted_key = column_value_formatted_key($key);
+
   my %methods;
 
   if($interface eq 'get_set')
@@ -452,42 +454,66 @@ sub boolean
 
     if(defined $default)
     {
-      $default = ($default) ? 1 : 0;
+      $default = ($default =~ /^(?:0(?:\.0*)?|f(?:alse)?|no?)$/) ? 0 : $default ? 1 : 0;
 
       $methods{$name} = sub
       {
         my $self = shift;
 
+        my $db = $self->db or die "Missing Rose::DB object attribute";
+        my $driver = $db->driver || 'unknown';
+
         if(@_)
         {
-          my $db = $self->db or die "Missing Rose::DB object attribute";
-
           if($_[0])
           {
-            if($_[0] =~ /^(?:1(?:\.0*)?|t(?:rue)?|y(?:es)?)$/i)
+            if($self->{STATE_LOADING()})
             {
-              return $self->{$key} = 1;
-            }
-            elsif($_[0] =~ /^(?:0(?:\.0*)?|f(?:alse)?|no?)$/i)
-            {
-              return $self->{$key} = 0;
+              $self->{$key} = undef;
+              return $self->{$formatted_key,$driver} = $_[0];
             }
             else
             {
-              my $value = $db->parse_boolean($_[0]);
-              Carp::croak($db->error)  unless(defined $value);
-              return $self->{$key} = $value;
+              if($_[0] =~ /^(?:1(?:\.0*)?|t(?:rue)?|y(?:es)?)$/i)
+              {
+                $self->{$formatted_key,$driver} = undef;
+                return $self->{$key} = 1;
+              }
+              elsif($_[0] =~ /^(?:0(?:\.0*)?|f(?:alse)?|no?)$/i)
+              {
+                $self->{$formatted_key,$driver} = undef;
+                return $self->{$key} = 0;
+              }
+              else
+              {
+                my $value = $db->parse_boolean($_[0]);
+                Carp::croak($db->error)  unless(defined $value);
+                $self->{$formatted_key,$driver} = undef;
+                return $self->{$key} = $value;
+              }
             }
           }
 
           return $self->{$key} = 0;
         }
 
+        # Pull default through if necessary
+        unless(defined $self->{$key} || defined $self->{$formatted_key,$driver})
+        {
+          $self->{$key} = $default;
+        }
+
         if($self->{STATE_SAVING()})
         {
-          my $db = $self->db or die "Missing Rose::DB object attribute";
-          return (defined $self->{$key}) ? $db->format_boolean($self->{$key}) : 
-                                           $db->format_boolean($self->{$key} = $default);
+          $self->{$formatted_key,$driver} = $db->format_boolean($self->{$key})
+            unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
+
+          return $self->{$formatted_key,$driver};
+        }
+
+        if(!defined $self->{$key} && defined $self->{$formatted_key,$driver})
+        {
+          return $self->{$key} = $db->parse_boolean($self->{$formatted_key,$driver});
         }
 
         return (defined $self->{$key}) ? $self->{$key} : ($self->{$key} = $default);
@@ -499,25 +525,40 @@ sub boolean
       {
         my $self = shift;
 
+        my $db = $self->db or die "Missing Rose::DB object attribute";
+        my $driver = $db->driver || 'unknown';
+
         if(@_)
         {
           my $db = $self->db or die "Missing Rose::DB object attribute";
+          my $driver = $db->driver || 'unknown';
 
           if($_[0])
           {
-            if($_[0] =~ /^(?:1(?:\.0*)?|t(?:rue)?|y(?:es)?)$/i)
+            if($self->{STATE_LOADING()})
             {
-              return $self->{$key} = 1;
-            }
-            elsif($_[0] =~ /^(?:0(?:\.0*)?|f(?:alse)?|no?)$/i)
-            {
-              return $self->{$key} = 0;
+              $self->{$key} = undef;
+              return $self->{$formatted_key,$driver} = $_[0];
             }
             else
             {
-              my $value = $db->parse_boolean($_[0]);
-              Carp::croak($db->error)  unless(defined $value);
-              return $self->{$key} = $value;
+              if($_[0] =~ /^(?:1(?:\.0*)?|t(?:rue)?|y(?:es)?)$/i)
+              {
+                $self->{$formatted_key,$driver} = undef;
+                return $self->{$key} = 1;
+              }
+              elsif($_[0] =~ /^(?:0(?:\.0*)?|f(?:alse)?|no?)$/i)
+              {
+                $self->{$formatted_key,$driver} = undef;
+                return $self->{$key} = 0;
+              }
+              else
+              {
+                my $value = $db->parse_boolean($_[0]);
+                Carp::croak($db->error)  unless(defined $value);
+                $self->{$formatted_key,$driver} = undef;
+                return $self->{$key} = $value;
+              }
             }
           }
 
@@ -526,8 +567,15 @@ sub boolean
 
         if($self->{STATE_SAVING()})
         {
-          my $db = $self->db or die "Missing Rose::DB object attribute";
-          return (defined $self->{$key}) ? $db->format_boolean($self->{$key}) : undef;
+          $self->{$formatted_key,$driver} = $db->format_boolean($self->{$key})
+            unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
+
+          return $self->{$formatted_key,$driver};
+        }
+
+        if(!defined $self->{$key} && defined $self->{$formatted_key,$driver})
+        {
+          return $self->{$key} = $db->parse_boolean($self->{$formatted_key,$driver});
         }
 
         return $self->{$key};
@@ -540,17 +588,32 @@ sub boolean
 
     if(defined $default)
     {
-      $default = ($default) ? 1 : 0;
+      $default = ($default =~ /^(?:0(?:\.0*)?|f(?:alse)?|no?)$/) ? 0 : $default ? 1 : 0;
 
       $methods{$name} = sub
       {
         my $self = shift;
 
+        my $db = $self->db or die "Missing Rose::DB object attribute";
+        my $driver = $db->driver || 'unknown';
+
+        # Pull default through if necessary
+        unless(defined $self->{$key} || defined $self->{$formatted_key,$driver})
+        {
+          $self->{$key} = $default;
+        }
+
         if($self->{STATE_SAVING()})
         {
-          my $db = $self->db or die "Missing Rose::DB object attribute";
-          return (defined $self->{$key}) ? $db->format_boolean($self->{$key}) : 
-                                           $db->format_boolean($self->{$key} = $default);
+          $self->{$formatted_key,$driver} = $db->format_boolean($self->{$key})
+            unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
+
+          return $self->{$formatted_key,$driver};
+        }
+
+        if(!defined $self->{$key} && defined $self->{$formatted_key,$driver})
+        {
+          return $self->{$key} = $db->parse_boolean($self->{$formatted_key,$driver});
         }
 
         return (defined $self->{$key}) ? $self->{$key} : ($self->{$key} = $default);
@@ -562,10 +625,20 @@ sub boolean
       {
         my $self = shift;
 
+        my $db = $self->db or die "Missing Rose::DB object attribute";
+        my $driver = $db->driver || 'unknown';
+
         if($self->{STATE_SAVING()})
         {
-          my $db = $self->db or die "Missing Rose::DB object attribute";
-          return (defined $self->{$key}) ? $db->format_boolean($self->{$key}) : undef;
+          $self->{$formatted_key,$driver} = $db->format_boolean($self->{$key})
+            unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
+
+          return $self->{$formatted_key,$driver};
+        }
+
+        if(!defined $self->{$key} && defined $self->{$formatted_key,$driver})
+        {
+          return $self->{$key} = $db->parse_boolean($self->{$formatted_key,$driver});
         }
 
         return $self->{$key};
@@ -574,30 +647,40 @@ sub boolean
   }
   elsif($interface eq 'set')
   {
-    my $default = $args->{'default'};
-
     $methods{$name} = sub
     {
       my $self = shift;
 
       Carp::croak "Missing argument in call to $name"  unless(@_);
       my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
 
       if($_[0])
       {
-        if($_[0] =~ /^(?:0*1(?:\.0*)?|t(?:rue)?|y(?:es)?)$/i)
+        if($self->{STATE_LOADING()})
         {
-          return $self->{$key} = 1;
-        }
-        elsif($_[0] =~ /^(?:0+(?:\.0*)?|f(?:alse)?|no?)$/i)
-        {
-          return $self->{$key} = 0;
+          $self->{$key} = undef;
+          return $self->{$formatted_key,$driver} = $_[0];
         }
         else
         {
-          my $value = $db->parse_boolean($_[0]);
-          Carp::croak($db->error)  unless(defined $value);
-          return $self->{$key} = $value;
+          if($_[0] =~ /^(?:0*1(?:\.0*)?|t(?:rue)?|y(?:es)?)$/i)
+          {
+            $self->{$formatted_key,$driver} = undef;
+            return $self->{$key} = 1;
+          }
+          elsif($_[0] =~ /^(?:0+(?:\.0*)?|f(?:alse)?|no?)$/i)
+          {
+            $self->{$formatted_key,$driver} = undef;
+            return $self->{$key} = 0;
+          }
+          else
+          {
+            my $value = $db->parse_boolean($_[0]);
+            Carp::croak($db->error)  unless(defined $value);
+            $self->{$formatted_key,$driver} = undef;
+            return $self->{$key} = $value;
+          }
         }
       }
 
@@ -1194,6 +1277,8 @@ sub set
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
 
+  my $formatted_key = column_value_formatted_key($key);
+
   my %methods;
 
   if($interface eq 'get_set')
@@ -1207,19 +1292,50 @@ sub set
         my $self = shift;
 
         my $db = $self->db or die "Missing Rose::DB object attribute";
+        my $driver = $db->driver || 'unknown';
 
         if(@_)
         {
-          $self->{$key} = $db->parse_set(@_);
+          if($self->{STATE_LOADING()})
+          {
+            $self->{$key} = undef;
+            $self->{$formatted_key,$driver} = $_[0];
+          }
+          else
+          {
+            $self->{$key} = $db->parse_set(@_);
+            $self->{$formatted_key,$driver} = undef;
+
+            unless(defined $self->{$key})
+            {
+              $self->error($db->error);
+            }
+          }
         }
         elsif(!defined $self->{$key})
         {
           $self->{$key} = $db->parse_set($default);
         }
 
+        return unless(defined wantarray);
+
+        # Pull default through if necessary
+        unless(defined $self->{$key} || defined $self->{$formatted_key,$driver})
+        {
+          $self->{$key} = $db->parse_set($default);
+
+          unless(defined $self->{$key})
+          {
+            $self->error($db->error);
+          }
+        }
+
         if($self->{STATE_SAVING()})
         {
-          return defined $self->{$key} ? $db->format_set($self->{$key}) : undef;
+          $self->{$formatted_key,$driver} = $db->format_set($self->{$key})
+            unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
+
+          return $self->{$formatted_key,$driver};
         }
 
         return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;        
@@ -1232,18 +1348,49 @@ sub set
         my $self = shift;
 
         my $db = $self->db or die "Missing Rose::DB object attribute";
+        my $driver = $db->driver || 'unknown';
 
         if(@_)
         {
-          $self->{$key} = $db->parse_set(@_);
+          if($self->{STATE_LOADING()})
+          {
+            $self->{$key} = undef;
+            $self->{$formatted_key,$driver} = $_[0];
+          }
+          else
+          {
+            $self->{$key} = $db->parse_set(@_);
+            $self->{$formatted_key,$driver} = undef;
+          }
         }
 
         if($self->{STATE_SAVING()})
         {
-          return defined $self->{$key} ? $db->format_set($self->{$key}) : undef;
+          return undef  unless(defined($self->{$formatted_key,$driver}) || defined($self->{$key}));
+
+          $self->{$formatted_key,$driver} = $db->format_set($self->{$key})
+            unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
+
+          return $self->{$formatted_key,$driver};
         }
 
-        return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;
+        return unless(defined wantarray);
+
+        if(defined $self->{$key})
+        {
+          $self->{$formatted_key,$driver} = undef;
+          return wantarray ? @{$self->{$key}} : $self->{$key};
+        }
+
+        if(defined $self->{$formatted_key,$driver})
+        {
+          $self->{$key} = $db->parse_set($self->{$formatted_key,$driver});
+          $self->{$formatted_key,$driver} = undef;
+
+          return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;
+        }
+
+        return undef;
       }
     }
   }
@@ -1258,18 +1405,48 @@ sub set
         my $self = shift;
 
         my $db = $self->db or die "Missing Rose::DB object attribute";
+        my $driver = $db->driver || 'unknown';
 
         if(!defined $self->{$key})
         {
           $self->{$key} = $db->parse_set($default);
         }
 
-        if($self->{STATE_SAVING()})
+        if(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key,$driver}))
         {
-          return defined $self->{$key} ? $db->format_set($self->{$key}) : undef;
+          $self->{$key} = $db->parse_set($default);
+
+          unless(defined $self->{$key})
+          {
+            $self->error($db->error);
+          }
         }
 
-        return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;        
+        if($self->{STATE_SAVING()})
+        {
+          $self->{$formatted_key,$driver} = $db->format_set($self->{$key})
+            unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
+
+          return $self->{$formatted_key,$driver};
+        }
+
+        return unless(defined wantarray);
+
+        if(defined $self->{$key})
+        {
+          $self->{$formatted_key,$driver} = undef;
+          return wantarray ? @{$self->{$key}} : $self->{$key};
+        }
+
+        if(defined $self->{$formatted_key,$driver})
+        {
+          $self->{$key} = $db->parse_set($self->{$formatted_key,$driver});
+          $self->{$formatted_key,$driver} = undef;
+
+          return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;
+        }
+
+        return undef;
       }
     }
     else
@@ -1279,13 +1456,35 @@ sub set
         my $self = shift;
 
         my $db = $self->db or die "Missing Rose::DB object attribute";
+        my $driver = $db->driver || 'unknown';
 
         if($self->{STATE_SAVING()})
         {
-          return defined $self->{$key} ? $db->format_set($self->{$key}) : undef;
+          return undef  unless(defined($self->{$formatted_key,$driver}) || defined($self->{$key}));
+
+          $self->{$formatted_key,$driver} = $db->format_set($self->{$key})
+            unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
+
+          return $self->{$formatted_key,$driver};
         }
 
-        return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;
+        return unless(defined wantarray);
+
+        if(defined $self->{$key})
+        {
+          $self->{$formatted_key,$driver} = undef;
+          return wantarray ? @{$self->{$key}} : $self->{$key};
+        }
+
+        if(defined $self->{$formatted_key,$driver})
+        {
+          $self->{$key} = $db->parse_set($self->{$formatted_key,$driver});
+          $self->{$formatted_key,$driver} = undef;
+
+          return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;
+        }
+
+        return undef;
       }
     }
   }
@@ -1296,17 +1495,47 @@ sub set
       my $self = shift;
 
       my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
 
       Carp::croak "Missing argument in call to $name"  unless(@_);
-      $self->{$key} = $db->parse_set(@_);
+
+      if($self->{STATE_LOADING()})
+      {
+        $self->{$key} = undef;
+        $self->{$formatted_key,$driver} = $_[0];
+      }
+      else
+      {
+        $self->{$key} = $db->parse_set($_[0]);
+        $self->{$formatted_key,$driver} = undef;
+      }
 
       if($self->{STATE_SAVING()})
       {
-        return defined $self->{$key} ? $db->format_set($self->{$key}) : undef;
+        return undef  unless(defined($self->{$formatted_key,$driver}) || defined($self->{$key}));
+
+        $self->{$formatted_key,$driver} = $db->format_set($self->{$key})
+          unless(defined $self->{$formatted_key,$driver} || !defined $self->{$key});
+
+        return $self->{$formatted_key,$driver};
       }
 
-      return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;
-    };
+      if(defined $self->{$key})
+      {
+        $self->{$formatted_key,$driver} = undef;
+        return wantarray ? @{$self->{$key}} : $self->{$key};
+      }
+
+      if(defined $self->{$formatted_key,$driver})
+      {
+        $self->{$key} = $db->parse_set($self->{$formatted_key,$driver});
+        $self->{$formatted_key,$driver} = undef;
+
+        return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;
+      }
+
+      return undef;
+    }
   }
   else { Carp::croak "Unknown interface: $interface" }
 
