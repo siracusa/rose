@@ -7,7 +7,7 @@ use Rose::DB::Object::Metadata::Column::Serial;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::BigInt 
               Rose::DB::Object::Metadata::Column::Serial);
 
-our $VERSION = '0.70';
+our $VERSION = '0.711';
 
 sub type { 'bigserial' }
 
@@ -34,6 +34,26 @@ Objects of this class store and manipulate metadata for big serial (sometimes ca
 This class inherits from L<Rose::DB::Object::Metadata::Column::BigInt>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::BigInt> documentation for more information.
 
 =head1 METHOD MAP
+
+If perl is compiled to use 64-bit integers, then the method map is:
+
+=over 4
+
+=item C<get_set>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::Generic/integer>, C<interface =E<gt> 'get_set', ...>
+
+=item C<get>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::Generic/integer>, C<interface =E<gt> 'get', ...>
+
+=item C<get_set>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::Generic/integer>, C<interface =E<gt> 'set', ...>
+
+=back
+
+Otherwise, the method map is:
 
 =over 4
 

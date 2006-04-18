@@ -7,28 +7,46 @@ use Rose::DB::Object::MakeMethods::BigNum;
 use Rose::DB::Object::Metadata::Column::Integer;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Integer);
 
-our $VERSION = '0.70';
+our $VERSION = '0.711';
 
-__PACKAGE__->method_maker_info
-(
-  get_set => 
-  {
-    class => 'Rose::DB::Object::MakeMethods::BigNum',
-    type  => 'bigint',
-  },
+INIT_METHOD_MAKER_INFO:
+{
+  use Config;
 
-  get =>
-  {
-    class => 'Rose::DB::Object::MakeMethods::BigNum',
-    type  => 'bigint',
-  },
+  my($class, $type);
 
-  set =>
+  if($Config{'use64bitint'})
   {
-    class => 'Rose::DB::Object::MakeMethods::BigNum',
-    type  => 'bigint',
-  },
-);
+    $class = 'Rose::DB::Object::MakeMethods::Generic';
+    $type  = 'integer';
+  }
+  else
+  {
+    $class = 'Rose::DB::Object::MakeMethods::BigNum';
+    $type  = 'bigint';
+  }
+
+  __PACKAGE__->method_maker_info
+  (
+    get_set => 
+    {
+      class => $class,
+      type  => $type,
+    },
+
+    get =>
+    {
+      class => $class,
+      type  => $type,
+    },
+
+    set =>
+    {
+      class => $class,
+      type  => $type,
+    },
+  );
+}
 
 sub type { 'bigint' }
 
@@ -55,6 +73,26 @@ Objects of this class store and manipulate metadata for big integer (sometimes c
 This class inherits from L<Rose::DB::Object::Metadata::Column::Integer>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::Integer> documentation for more information.
 
 =head1 METHOD MAP
+
+If perl is compiled to use 64-bit integers, then the method map is:
+
+=over 4
+
+=item C<get_set>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::Generic/integer>, C<interface =E<gt> 'get_set', ...>
+
+=item C<get>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::Generic/integer>, C<interface =E<gt> 'get', ...>
+
+=item C<get_set>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::Generic/integer>, C<interface =E<gt> 'set', ...>
+
+=back
+
+Otherwise, the method map is:
 
 =over 4
 
