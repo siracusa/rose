@@ -4,7 +4,7 @@
       database handles to leak.
     * Fixed a bug that could cause "empty" sub-objects to be created when
       processing certain with_objects parameters.
-    * Improved the accessor/mutator methods for the column types set, 
+    * Improved the accessor/mutator methods for these column types: set, 
       array, and boolean.
     * Changed the BigInt and BigSerial column classes to use normal Perl
       scalars instead of Math::BigInt objects when perl has been compiled 
