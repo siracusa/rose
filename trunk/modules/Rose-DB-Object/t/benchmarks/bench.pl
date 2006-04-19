@@ -1125,7 +1125,7 @@ EOF
     sub accessor_simple_category_dbic
     {
       #my $c = MyTest::DBIC::Simple::Category->find(1 + 300_000);
-      my $c = $DBIC_Simple_Category_RS->search({ id => 1 + 300_000 })->next;
+      my $c = $DBIC_Simple_Category_RS->single({ id => 1 + 300_000 });
 
       for(1 .. ACCESSOR_ITERATIONS)
       {
@@ -1221,7 +1221,7 @@ EOF
     sub accessor_simple_product_dbic
     {
       #my $p = MyTest::DBIC::Simple::Product->find(1 + 300_000);
-      my $p = $DBIC_Simple_Product_RS->search({ id => 1 + 300_000 })->next;
+      my $p = $DBIC_Simple_Product_RS->single({ id => 1 + 300_000 });
 
       for(1 .. ACCESSOR_ITERATIONS)
       {
@@ -1295,7 +1295,7 @@ EOF
     sub load_simple_category_dbic
     {
       #my $c = MyTest::DBIC::Simple::Category->find($i + 300_000);
-      my $c = $DBIC_Simple_Category_RS->search({ id => $i + 300_000 })->next;
+      my $c = $DBIC_Simple_Category_RS->single({ id => $i + 300_000 });
       $i++;
     }
   }
@@ -1360,7 +1360,7 @@ EOF
     sub load_simple_product_dbic
     {
       #my $c = MyTest::DBIC::Simple::Product->find($i + 300_000);
-      my $c = $DBIC_Simple_Product_RS->search({ id => $i + 300_000 })->next;
+      my $c = $DBIC_Simple_Product_RS->single({ id => $i + 300_000 });
       $i++;
     }
   }
@@ -1460,7 +1460,7 @@ EOF
     sub load_simple_product_and_category_dbic
     {
       #my $c = MyTest::DBIC::Simple::Product->find($i + 300_000);
-      my $c = $DBIC_Simple_Product_RS->search({ id => $i + 300_000 })->next;
+      my $c = $DBIC_Simple_Product_RS->single({ id => $i + 300_000 });
       my $cat = $c->category_id;
       my $n = $cat->name;
       die  unless($n =~ /\S/);
@@ -1542,7 +1542,7 @@ EOF
     sub update_simple_category_dbic
     {
       #my $c = MyTest::DBIC::Simple::Category->find($i + 300_000);
-      my $c = $DBIC_Simple_Category_RS->search({ id => $i + 300_000 })->next;
+      my $c = $DBIC_Simple_Category_RS->single({ id => $i + 300_000 });
       $c->name($c->name . ' updated');
       $c->update;
       $i++;
@@ -1620,7 +1620,7 @@ EOF
     sub update_simple_product_dbic
     {
       #my $p = MyTest::DBIC::Simple::Product->find($i + 300_000);
-      my $p = $DBIC_Simple_Product_RS->search({ id => $i + 300_000 })->next;
+      my $p = $DBIC_Simple_Product_RS->single({ id => $i + 300_000 });
       $p->name($p->name . ' updated');
       $p->update;
       $i++;
@@ -3041,7 +3041,7 @@ EOF
     sub delete_simple_category_dbic
     {
       #my $c = MyTest::DBIC::Simple::Category->find($i + 300_000);
-      my $c = $DBIC_Simple_Category_RS->search({ id => $i + 300_000 })->next;
+      my $c = $DBIC_Simple_Category_RS->single({ id => $i + 300_000 });
       $c->delete;
       $i++;
     }
@@ -3241,7 +3241,7 @@ EOF
     sub accessor_complex_category_dbic
     {
       #my $c = MyTest::DBIC::Complex::Category->find(1 + 300_000);
-      my $c = $DBIC_Complex_Category_RS->search({ id => 1 + 300_000 })->next;
+      my $c = $DBIC_Complex_Category_RS->single({ id => 1 + 300_000 });
 
       for(1 .. ACCESSOR_ITERATIONS)
       {
@@ -3314,7 +3314,7 @@ EOF
     sub accessor_complex_product_dbic
     {
       #my $p = MyTest::DBIC::Complex::Product->find(1 + 300_000);
-      my $p = $DBIC_Complex_Product_RS->search({ id => 1 + 300_000 })->next;
+      my $p = $DBIC_Complex_Product_RS->single({ id => 1 + 300_000 });
 
       for(1 .. ACCESSOR_ITERATIONS)
       {
@@ -3375,7 +3375,7 @@ EOF
     sub load_complex_category_dbic
     {
       #my $c = MyTest::DBIC::Complex::Category->find($i + 3_300_000);
-      my $c = $DBIC_Complex_Category_RS->search({ id => $i + 3_300_000 })->next;
+      my $c = $DBIC_Complex_Category_RS->single({ id => $i + 3_300_000 });
       $i++;
     }
   }
@@ -3424,7 +3424,7 @@ EOF
     sub load_complex_product_dbic
     {
       #my $c = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
-      my $c = $DBIC_Complex_Product_RS->search({ id => $i + 3_300_000 })->next;
+      my $c = $DBIC_Complex_Product_RS->single({ id => $i + 3_300_000 });
       $i++;
     }
   }
@@ -3483,7 +3483,7 @@ EOF
     sub load_complex_product_and_category_dbic
     {
       #my $c = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
-      my $c = $DBIC_Complex_Product_RS->search({ id => $i + 3_300_000 })->next;
+      my $c = $DBIC_Complex_Product_RS->single({ id => $i + 3_300_000 });
       my $cat = $c->category_id;
       my $n = $cat->name;
       die  unless($n =~ /\S/);
@@ -3545,7 +3545,7 @@ EOF
     sub update_complex_category_dbic
     {
       #my $c = MyTest::DBIC::Complex::Category->find($i + 3_300_000);
-      my $c = $DBIC_Complex_Category_RS->search({ id => $i + 3_300_000 })->next;
+      my $c = $DBIC_Complex_Category_RS->single({ id => $i + 3_300_000 });
       $c->name($c->name . ' updated');
       $c->update;
       $i++;
@@ -3614,7 +3614,7 @@ EOF
     sub update_complex_product_dbic
     {
       #my $p = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
-      my $p = $DBIC_Complex_Product_RS->search({ id => $i + 3_300_000 })->next;
+      my $p = $DBIC_Complex_Product_RS->single({ id => $i + 3_300_000 });
       $p->name($p->name . ' updated');
       $p->published(\'2004-01-02 12:34:55'); #\'
       $p->update;
@@ -4776,7 +4776,7 @@ EOF
     sub delete_complex_product_dbic
     {
       #my $c = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
-      my $c = $DBIC_Complex_Product_RS->search({ id => $i + 3_300_000 })->next;
+      my $c = $DBIC_Complex_Product_RS->single({ id => $i + 3_300_000 });
       $c->delete;
       $i++;
     }
