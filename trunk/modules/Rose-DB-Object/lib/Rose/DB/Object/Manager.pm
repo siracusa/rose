@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.711';
+our $VERSION = '0.72';
 
 our $Debug = 0;
 
@@ -1588,6 +1588,8 @@ sub get_objects
                       {
                         while(my($ident, $parent) = each(%parent_objects))
                         {
+                          local $parent->{STATE_LOADING()} = 1;
+
                           while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                           {
                             $parent->$method($subobjects);
@@ -1684,6 +1686,7 @@ sub get_objects
                           }
                           else
                           {
+                            local $subobject->{STATE_LOADING()} = 1;
                             $subobject->$method($map_record);
                           }
 
@@ -1802,6 +1805,8 @@ sub get_objects
                   {
                     while(my($ident, $parent) = each(%parent_objects))
                     {
+                      local $parent->{STATE_LOADING()} = 1;
+
                       while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                       {
                         $parent->$method($subobjects);
@@ -1924,10 +1929,12 @@ sub get_objects
                     {
                       if(my $bt = $belongs_to[$i])
                       {
+                        local $sub_objects[$bt]->{STATE_LOADING()} = 1;
                         $sub_objects[$bt]->$method($subobject);
                       }
                       else
                       {
+                        local $object->{STATE_LOADING()} = 1;
                         $object->$method($subobject);
                       }
                     }
@@ -2059,6 +2066,8 @@ sub get_objects
               {
                 while(my($ident, $parent) = each(%parent_objects))
                 {
+                  local $parent->{STATE_LOADING()} = 1;
+
                   while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                   {
                     $parent->$method($subobjects);
@@ -2156,6 +2165,7 @@ sub get_objects
                   }
                   else
                   {
+                    local $subobject->{STATE_LOADING()} = 1;
                     $subobject->$method($map_record);
                   }
 
@@ -2257,6 +2267,8 @@ sub get_objects
           {
             while(my($ident, $parent) = each(%parent_objects))
             {
+              local $parent->{STATE_LOADING()} = 1;
+
               while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
               {
                 $parent->$method($subobjects);
@@ -2341,10 +2353,12 @@ sub get_objects
             {
               if(my $bt = $belongs_to[$i])
               {
+                local $sub_objects[$bt]->{STATE_LOADING()} = 1;
                 $sub_objects[$bt]->$method($subobject);
               }
               else
               {
+                local $object->{STATE_LOADING()} = 1;
                 $object->$method($subobject);
               }
             }
