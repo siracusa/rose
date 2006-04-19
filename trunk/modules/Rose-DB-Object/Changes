@@ -1,5 +1,7 @@
 0.711 (04.18.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Fixed a bug that could cause "empty" sub-objects to be created when
+      processing certain with_objects parameters.
     * Changed the BigInt and BigSerial column classes to use normal Perl
       scalars instead of Math::BigInt objects when perl has been compiled 
       to use native 64-bit integers.  (Suggested by Jesse Brown)
