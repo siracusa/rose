@@ -263,7 +263,7 @@ SKIP: foreach my $db_type ('mysql')
   ok($o2->last_modified ne $o->last_modified, "save() verify 2 - $db_type");
   is($o2->start->ymd, '2001-05-24', "save() verify 3 (date value) - $db_type");
   is($o2->bits->to_Bin, '00101', "load() verify 10 (bitfield value) - $db_type");
-  
+
   my $o3 = MyMySQLObject->new();
 
   my $db = $o3->db or die $o3->error;

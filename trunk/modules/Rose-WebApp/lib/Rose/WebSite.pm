@@ -36,7 +36,7 @@ __PACKAGE__->default_site_port_insecure(80);
 sub site_host_secure
 {
   my($class) = shift;
-  
+
   return $class->_site_host_secure(@_)  if(@_);
 
   my $host = $class->_site_host_secure;
@@ -52,7 +52,7 @@ sub site_host_secure
 sub site_host_insecure
 {
   my($class) = shift;
-  
+
   return $class->_site_host_insecure(@_)  if(@_);
 
   my $host = $class->_site_host_insecure;

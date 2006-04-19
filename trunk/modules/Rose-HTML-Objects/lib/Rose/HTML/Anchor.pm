@@ -62,7 +62,7 @@ sub xhtml_contents
       $xhtml .= $item;
     }
   }
-  
+
   return $xhtml;
 }
 
@@ -83,7 +83,7 @@ sub html_contents
       $html .= $item;
     }
   }
-  
+
   return $html;
 }
 

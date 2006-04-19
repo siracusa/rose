@@ -1485,7 +1485,7 @@ sub get_objects
         {
           my $class   = $classes{$table};
           my $key_map = $di_keys{$class};
-  
+
           foreach my $column (@{$methods{$table}})
           {
             if($key_map->{$column} eq $column)
@@ -1497,7 +1497,7 @@ sub get_objects
               $sth->bind_col($col_num++, \$row{$class,$table_num}{$key_map->{$column},$driver});
             }
           }
-  
+
           $table_num++;
         }
       }
@@ -1506,12 +1506,12 @@ sub get_objects
         foreach my $table (@tables)
         {
           my $class = $classes{$table};
-  
+
           foreach my $column (@{$methods{$table}})
           {
             $sth->bind_col($col_num++, \$row{$class,$table_num}{$column});
           }
-  
+
           $table_num++;
         }
 
@@ -1616,7 +1616,7 @@ sub get_objects
                     else
                     {
                       $object = $object_class->new(%object_args);
-  
+
                       local $object->{STATE_LOADING()} = 1;
                       $object->init(%{$row{$object_class,0}});
                       $object->{STATE_IN_DB()} = 1;
@@ -1679,7 +1679,7 @@ sub get_objects
                         if($map_record)
                         {
                           my $method = $mapped_object_methods[$i - 1] or next;
-                          
+
                           if($direct_inject)
                           {
                             $subobject->{$method} = $map_record;
@@ -1880,7 +1880,7 @@ sub get_objects
                 else
                 {
                   $object = $object_class->new(%object_args);
-      
+
                   local $object->{STATE_LOADING()} = 1;
                   $object->init(%{$row{$object_class,0}});
                   $object->{STATE_IN_DB()} = 1;
@@ -1899,7 +1899,7 @@ sub get_objects
                     next  unless(grep { defined } values %{$row{$class,$i}});
 
                     my $subobject;
-                    
+
                     if($direct_inject)
                     {
                       $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args }, $class;
@@ -1985,7 +1985,7 @@ sub get_objects
               else
               {
                 $object = $object_class->new(%object_args);
-    
+
                 local $object->{STATE_LOADING()} = 1;
                 $object->init(%{$row{$object_class,0}});
                 $object->{STATE_IN_DB()} = 1;
@@ -2095,7 +2095,7 @@ sub get_objects
             else
             {
               $object = $object_class->new(%object_args);
-  
+
               local $object->{STATE_LOADING()} = 1;
               $object->init(%{$row{$object_class,0}});
               $object->{STATE_IN_DB()} = 1;
@@ -2158,7 +2158,7 @@ sub get_objects
                 if($map_record)
                 {
                   my $method = $mapped_object_methods[$i - 1] or next;
-                  
+
                   if($direct_inject)
                   {
                     $subobject->{$method} = $map_record;
@@ -2306,7 +2306,7 @@ sub get_objects
           else
           {
             $object = $object_class->new(%object_args);
-    
+
             local $object->{STATE_LOADING()} = 1;
             $object->init(%{$row{$object_class,0}});
             $object->{STATE_IN_DB()} = 1;
@@ -2393,11 +2393,11 @@ sub get_objects
         while($sth->fetch)
         {
           my $object = $object_class->new(%object_args);
-  
+
           local $object->{STATE_LOADING()} = 1;
           $object->init(%{$row{$object_class,0}});
           $object->{STATE_IN_DB()} = 1;
-  
+
           push(@objects, $object);
         }
       }

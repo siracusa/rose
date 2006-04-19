@@ -3186,7 +3186,7 @@ sub init_auto_helper
 sub map_record_method_key
 {
   my($self, $method) = (shift, shift);
-  
+
   if(@_)
   {
     return $self->{'map_record_method_key'}{$method} = shift;

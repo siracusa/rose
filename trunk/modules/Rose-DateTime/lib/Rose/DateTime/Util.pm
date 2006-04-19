@@ -37,7 +37,7 @@ sub time_zone
 sub european_dates
 {
   my($class) = shift;
-  
+
   if(@_)
   {
     if(defined $_[0])
@@ -61,7 +61,7 @@ sub init_european_dates
   {
     return 1;
   }
-  
+
   return 0;
 }
 
