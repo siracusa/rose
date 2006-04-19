@@ -1,3 +1,57 @@
+0.72 (04.19.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Many reference-count bugs fixed, including several that could cause 
+      database handles to leak.
+    * Fixed a bug that could cause "empty" sub-objects to be created when
+      processing certain with_objects parameters.
+    * Improved the accessor/mutator methods for these column types: set, 
+      array, and boolean.
+    * Changed the BigInt and BigSerial column classes to use normal Perl
+      scalars instead of Math::BigInt objects when perl has been compiled 
+      to use native 64-bit integers.  (Suggested by Jesse Brown)
+    * Added the inject_results Manager parameter to bypass the standard
+      object creation mechanism in cases where it's the dominant factor
+      in overall performance.
+
+0.71 (04.14.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Correctly clear the "in the database" state flag when a 
+      speculative load fails because the object was not found.
+      (Reported indirectly by Svilen Ivanov)
+    * Changed how multi-table queries are formulated for SQLite in 
+      order to make the new DBD::SQLite version (1.12) happy.
+    * Fixed errors in the epoch column documentation.
+    * Fixed some internal method-maker bugs.
+
+0.701 (04.05.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Removed stray "._*" files from module distribution.
+
+0.70 (04.04.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added support for the interval data type.
+    * Added support for big integer and serial columns via Math::BigInt.
+    * Added explicit support for columns that store a number of seconds
+      since the Unix epoch (both integer and fractional).
+    * Silenced warning when querying datetime columns with undef values.
+    * Fixed a bug in the loader that prevented auto-generated base class
+      names from being correctly nested under class_prefix.
+    * Fixed a bug that caused duplicate WHERE clauses when a relationship
+      name was the same as the foreign table name.
+
+0.691 (03.16.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a bug that prevented the Manager from correctly handling
+      many-to-one relationships in some situations.  (Reported by 
+      Michael Lackhoff)
+
+0.69 (03.12.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added Rose::DB::Object::MixIn and Rose::DB::Object::Helpers.
+    * Made insert() and update() part of Rose::DB::Object's public API.
+    * Fixed typos in some auto-initialization error messages.
+    * Improved checks for MySQL transaction support in the test suite.
+
 0.681 (02.16.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Removed debugging trigger accidentally left in the 0.68 release.

@@ -216,6 +216,7 @@ sub Init_Tasks
         [ "$FIND . -name '*~' -print | $PERL -lne unlink" ],
         [ "$FIND . -name '.DS_Store' -print | $PERL -lne unlink" ],
         [ "$FIND . -name '._*' -print | $PERL -lne unlink" ],
+        #[ "$FIND . -type f -exec SetFile -t '' -c '' {} \\;" ],
 
         [ $PERL, 'Makefile.PL' ],
         [ "$RM -f *.tar.gz" ],

@@ -1,15 +1,54 @@
-package Rose::DB::Object::Metadata::Column::BigSerial;
+package Rose::DB::Object::Metadata::Column::BigInt;
 
 use strict;
 
-use Rose::DB::Object::Metadata::Column::BigInt;
-use Rose::DB::Object::Metadata::Column::Serial;
-our @ISA = qw(Rose::DB::Object::Metadata::Column::BigInt 
-              Rose::DB::Object::Metadata::Column::Serial);
+use Rose::DB::Object::MakeMethods::BigNum;
+
+use Rose::DB::Object::Metadata::Column::Integer;
+our @ISA = qw(Rose::DB::Object::Metadata::Column::Integer);
 
 our $VERSION = '0.711';
 
-sub type { 'bigserial' }
+INIT_METHOD_MAKER_INFO:
+{
+  use Config;
+
+  my($class, $type);
+
+  if($Config{'use64bitint'})
+  {
+    $class = 'Rose::DB::Object::MakeMethods::Generic';
+    $type  = 'integer';
+  }
+  else
+  {
+    $class = 'Rose::DB::Object::MakeMethods::BigNum';
+    $type  = 'bigint';
+  }
+
+  __PACKAGE__->method_maker_info
+  (
+    get_set => 
+    {
+      class => $class,
+      type  => $type,
+    },
+
+    get =>
+    {
+      class => $class,
+      type  => $type,
+    },
+
+    set =>
+    {
+      class => $class,
+      type  => $type,
+    },
+  );
+}
+
+sub type { 'bigint' }
 
 1;
 
@@ -17,21 +56,21 @@ __END__
 
 =head1 NAME
 
-Rose::DB::Object::Metadata::Column::BigSerial - Big serial column metadata.
+Rose::DB::Object::Metadata::Column::BigInt - Big integer column metadata.
 
 =head1 SYNOPSIS
 
-  use Rose::DB::Object::Metadata::Column::BigSerial;
+  use Rose::DB::Object::Metadata::Column::BigInt;
 
-  $col = Rose::DB::Object::Metadata::Column::BigSerial->new(...);
+  $col = Rose::DB::Object::Metadata::Column::BigInt->new(...);
   $col->make_methods(...);
   ...
 
 =head1 DESCRIPTION
 
-Objects of this class store and manipulate metadata for big serial (sometimes called "serial8") columns in a database.  Column metadata objects store information about columns (data type, size, etc.) and are responsible for creating object methods that manipulate column values.
+Objects of this class store and manipulate metadata for big integer (sometimes called "int8") columns in a database.  Values are stored internally and returned as L<Math::BigInt> objects.  If the L<Math::BigInt::GMP> module is installed, it will be used transparently for better peformance.
 
-This class inherits from L<Rose::DB::Object::Metadata::Column::BigInt>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::BigInt> documentation for more information.
+This class inherits from L<Rose::DB::Object::Metadata::Column::Integer>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::Integer> documentation for more information.
 
 =head1 METHOD MAP
 
@@ -79,7 +118,7 @@ See the L<Rose::DB::Object::Metadata::Column|Rose::DB::Object::Metadata::Column/
 
 =item B<type>
 
-Returns "bigserial".
+Returns "bigint".
 
 =back
 

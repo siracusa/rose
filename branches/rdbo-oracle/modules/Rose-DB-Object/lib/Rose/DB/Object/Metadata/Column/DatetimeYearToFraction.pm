@@ -5,7 +5,7 @@ use strict;
 use Rose::DB::Object::Metadata::Column::Datetime;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Datetime);
 
-our $VERSION = '0.02';
+our $VERSION = '0.70';
 
 sub type { 'datetime year to fraction' }
 
@@ -16,7 +16,25 @@ sub should_inline_value
           ($_[1]->driver eq 'informix' || $_[2] =~ /^\w+\(.*\)$/)) ? 1 : 0;
 }
 
-sub parse_value  { shift; shift->parse_datetime_year_to_fraction(@_)  }
+sub parse_value
+{
+  my($self, $db) = (shift, shift);
+
+  my $dt = $db->parse_datetime_year_to_fraction(@_);
+
+  if($dt)
+  {
+    $dt->set_time_zone($self->time_zone || $db->server_time_zone)
+      if(UNIVERSAL::isa($dt, 'DateTime'));
+  }
+  else
+  {
+    $dt = Rose::DateTime::Util::parse_date($_[0], $self->time_zone || $db->server_time_zone)
+  }
+
+  return $dt;
+}
+
 sub format_value { shift; shift->format_datetime_year_to_fraction(@_) }
 
 1;
@@ -41,7 +59,7 @@ Rose::DB::Object::Metadata::Column::DatetimeYearToFraction - Datetime year to fr
 
 Objects of this class store and manipulate metadata for "datetime year to fraction" columns in a database.  Column metadata objects store information about columns (data type, size, etc.) and are responsible for creating object methods that manipulate column values.
 
-This class inherits from L<Rose::DB::Object::Metadata::Datetime>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Datetime> documentation for more information.
+This class inherits from L<Rose::DB::Object::Metadata::Column::Datetime>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::Datetime> documentation for more information.
 
 =head1 METHOD MAP
 
@@ -77,7 +95,7 @@ Returns C<datetime>.
 
 =item B<parse_value DB, VALUE>
 
-Convert VALUE to the equivalent C<DateTime> object suitable for storage in a "datetime year to fraction" column.  VALUE maybe returned unmodified if it is a valid "datetime year to fraction" keyword or otherwise has special meaning to the underlying database.  DB is a L<Rose::DB> object that is used as part of the parsing process.  Both arguments are required.
+Convert VALUE to the equivalent L<DateTime> object suitable for storage in a "datetime year to fraction" column.  VALUE maybe returned unmodified if it is a valid "datetime year to fraction" keyword or otherwise has special meaning to the underlying database.  DB is a L<Rose::DB> object that is used as part of the parsing process.  Both arguments are required.
 
 =item B<type>
 

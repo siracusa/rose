@@ -5,7 +5,7 @@ use strict;
 use Rose::DB::Object::Metadata::Column::Scalar;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Scalar);
 
-our $VERSION = '0.03';
+our $VERSION = '0.711';
 
 foreach my $type (__PACKAGE__->available_method_types)
 {
@@ -20,6 +20,13 @@ sub format_value { shift; shift->format_boolean(@_) }
 sub perl_column_defintion_attributes
 {
   grep { $_ ne 'length' } shift->SUPER::perl_column_defintion_attributes;
+}
+
+sub method_uses_formatted_key
+{
+  my($self, $type) = @_;
+  return 1  if($type eq 'get' || $type eq 'set' || $type eq 'get_set');
+  return 0;
 }
 
 1;

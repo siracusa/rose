@@ -19,7 +19,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.68';
+our $VERSION = '0.711';
 
 our $Debug = 0;
 
@@ -133,6 +133,8 @@ __PACKAGE__->column_type_classes
   'tinyint'   => 'Rose::DB::Object::Metadata::Column::Integer',
   'smallint'  => 'Rose::DB::Object::Metadata::Column::Integer',
 
+  'bigint'    => 'Rose::DB::Object::Metadata::Column::BigInt',
+
   'serial'    => 'Rose::DB::Object::Metadata::Column::Serial',
   'bigserial' => 'Rose::DB::Object::Metadata::Column::BigSerial',
 
@@ -142,6 +144,8 @@ __PACKAGE__->column_type_classes
   'numeric'   => 'Rose::DB::Object::Metadata::Column::Numeric',
   'decimal'   => 'Rose::DB::Object::Metadata::Column::Numeric',
   'float'     => 'Rose::DB::Object::Metadata::Column::Float',
+
+  'interval'  => 'Rose::DB::Object::Metadata::Column::Interval',
 
   'date'      => 'Rose::DB::Object::Metadata::Column::Date',
   'datetime'  => 'Rose::DB::Object::Metadata::Column::Datetime',
@@ -159,6 +163,9 @@ __PACKAGE__->column_type_classes
 
   'datetime year to second' => 'Rose::DB::Object::Metadata::Column::DatetimeYearToSecond',
   'datetime year to minute' => 'Rose::DB::Object::Metadata::Column::DatetimeYearToMinute',
+
+  'epoch'       => 'Rose::DB::Object::Metadata::Column::Epoch',
+  'epoch hires' => 'Rose::DB::Object::Metadata::Column::Epoch::HiRes',
 
   'array'     => 'Rose::DB::Object::Metadata::Column::Array',
   'set'       => 'Rose::DB::Object::Metadata::Column::Set',
@@ -2402,6 +2409,28 @@ sub nonlazy_column_mutator_method_names
                      $self->{'nonlazy_column_mutator_method_names'};
 }
 
+sub column_db_value_hash_keys
+{
+  my($self) = shift;
+
+  $self->{'column_db_value_hash_keys'} ||= 
+    { map { $_->mutator_method_name => $_->db_value_hash_key } $self->columns };
+
+  return wantarray ? %{$self->{'column_db_value_hash_keys'}} :
+                     $self->{'column_db_value_hash_keys'};
+}
+
+sub nonlazy_column_db_value_hash_keys
+{
+  my($self) = shift;
+
+  $self->{'nonlazy_column_db_value_hash_keys'} ||= 
+    { map { $_->mutator_method_name => $_->db_value_hash_key } $self->nonlazy_columns };
+
+  return wantarray ? %{$self->{'nonlazy_column_db_value_hash_keys'}} :
+                     $self->{'nonlazy_column_db_value_hash_keys'};
+}
+
 sub alias_column
 {
   my($self, $name, $new_name) = @_;
@@ -2855,6 +2884,8 @@ sub _clear_column_generated_values
   $self->{'nonlazy_column_accessor_method_names'} = undef;
   $self->{'column_mutator_method_names'}          = undef;
   $self->{'nonlazy_column_mutator_method_names'}  = undef;
+  $self->{'nonlazy_column_db_value_hash_keys'}    = undef;
+  $self->{'column_db_value_hash_keys'}            = undef;
   $self->{'select_nonlazy_columns_string_sql'}    = undef;
   $self->{'select_columns_string_sql'}            = undef;
   $self->{'select_columns_sql'}                   = undef;
@@ -3152,6 +3183,18 @@ sub init_auto_helper
   return 1;
 }
 
+sub map_record_method_key
+{
+  my($self, $method) = (shift, shift);
+
+  if(@_)
+  {
+    return $self->{'map_record_method_key'}{$method} = shift;
+  }
+
+  return $self->{'map_record_method_key'}{$method};
+}
+
 1;
 
 __END__
@@ -3408,6 +3451,8 @@ The default mapping of type names to class names is:
   decimal   => Rose::DB::Object::Metadata::Column::Numeric
   float     => Rose::DB::Object::Metadata::Column::Float
 
+  interval  => Rose::DB::Object::Metadata::Column::Interval
+
   date      => Rose::DB::Object::Metadata::Column::Date
   datetime  => Rose::DB::Object::Metadata::Column::Datetime
   timestamp => Rose::DB::Object::Metadata::Column::Timestamp
@@ -3441,6 +3486,9 @@ The default mapping of type names to class names is:
 
   'datetime year to minute' =>
     Rose::DB::Object::Metadata::Column::DatetimeYearToMinute
+
+  'epoch'       => Rose::DB::Object::Metadata::Column::Epoch
+  'epoch hires' => Rose::DB::Object::Metadata::Column::Epoch::HiRes
 
   array     => Rose::DB::Object::Metadata::Column::Array
   set       => Rose::DB::Object::Metadata::Column::Set

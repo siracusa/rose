@@ -5,7 +5,16 @@ use strict;
 use Rose::DB::Object::Metadata::Column::Scalar;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Scalar);
 
-our $VERSION = '0.60';
+our $VERSION = '0.70';
+
+__PACKAGE__->add_common_method_maker_argument_names(qw(min max));
+__PACKAGE__->delete_common_method_maker_argument_names(qw(length));
+
+Rose::Object::MakeMethods::Generic->make_methods
+(
+  { preserve_existing => 1 },
+  scalar => [ __PACKAGE__->common_method_maker_argument_names ]
+);
 
 foreach my $type (__PACKAGE__->available_method_types)
 {
@@ -64,6 +73,14 @@ See the L<Rose::DB::Object::Metadata::Column|Rose::DB::Object::Metadata::Column/
 =head1 OBJECT METHODS
 
 =over 4
+
+=item B<max [INT]>
+
+Get or set the maximum value this column is allowed to have.
+
+=item B<min [INT]>
+
+Get or set the minimum value this column is allowed to have.
 
 =item B<type>
 

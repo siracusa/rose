@@ -77,7 +77,7 @@ Rose::DB::Object::Iterator - Iterate over a series of Rose::DB::Objects.
 
 =head1 DESCRIPTION
 
-C<Rose::DB::Object::Iterator> is an iterator object that traverses a database query, returning L<Rose::DB::Object>-derived objects for each row.  C<Rose::DB::Object::Iterator> objects are created by calls to the C<get_objects_iterator|Rose::DB::Object::Manager/get_objects_iterator> method of L<Rose::DB::Object::Manager> or one of its subclasses.
+L<Rose::DB::Object::Iterator> is an iterator object that traverses a database query, returning L<Rose::DB::Object>-derived objects for each row.  L<Rose::DB::Object::Iterator> objects are created by calls to the L<get_objects_iterator|Rose::DB::Object::Manager/get_objects_iterator> method of L<Rose::DB::Object::Manager> or one of its subclasses.
 
 =head1 OBJECT METHODS
 

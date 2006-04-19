@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 381;
+use Test::More tests => 449;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 150)  unless($HAVE_PG);
+  skip("Postgres tests", 198)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -43,7 +43,14 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $o->last_modified($o->date_created);
   $o->save_col(7);
 
-  ok($o->save, "save() 1 - $db_type");
+  if(rand >= 0.5)
+  {
+    ok($o->save, "save() 1 - $db_type");
+  }
+  else
+  {
+    ok($o->insert, "insert() 1 - $db_type");
+  }
 
   is($o->meta->primary_key->sequence_names->[0], 'rose_db_object_test_id_seq', 
      "pk sequence name - $db_type");
@@ -96,10 +103,10 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   is($o2->start->ymd, '1980-12-24', "load() verify 8 (date value) - $db_type");
 
   $o2->set_status('foo');
-  is($o2->get_status, 'foo', 'get_status()');
+  is($o2->get_status, 'foo', "get_status() - $db_type");
   $o2->set_status('active');
   eval { $o2->set_status };
-  ok($@, 'set_status()');
+  ok($@, "set_status() - $db_type");
 
   is($o2->bits->to_Bin, '00101', "load() verify 9 (bitfield value) - $db_type");
 
@@ -244,6 +251,63 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   # Reset for next trip through loop
   $o->meta->default_load_speculative(0);
   $o->meta->error_mode('return');
+
+  $o = MyPgObject->new(name => 'John', 
+                       k1   => 1,
+                       k2   => undef,
+                       k3   => 3)->save;
+
+  is($o->dur->months, 2, "interval months 1 - $db_type");
+  is($o->dur->days, 5, "interval days 1 - $db_type");
+  is($o->dur->seconds, 3, "interval seconds 1 - $db_type");
+
+  $o->dur(DateTime::Duration->new(years => 7, nanoseconds => 3000));
+
+  is($o->dur->in_units('years'), 7, "interval in_units years 1 - $db_type");
+  is($o->dur->in_units('months'), 84, "interval in_units months 1 - $db_type");
+  is($o->dur->nanoseconds, 3000, "interval nanoseconds 1 - $db_type");
+  is($o->dur->days, 0, "interval days 2 - $db_type");
+  is($o->dur->minutes, 0, "interval minutes 2 - $db_type");
+  is($o->dur->seconds, 0, "interval seconds 2 - $db_type");
+
+  $o->save;
+
+  $o = MyPgObject->new(id => $o->id)->load;
+
+  is($o->dur->in_units('years'), 7, "interval in_units years 2 - $db_type");
+  is($o->dur->in_units('months'), 84, "interval in_units months 2 - $db_type");
+  is($o->dur->nanoseconds, 3000, "interval nanoseconds 2 - $db_type");
+  is($o->dur->days, 0, "interval days 3 - $db_type");
+  is($o->dur->minutes, 0, "interval minutes 3 - $db_type");
+  is($o->dur->seconds, 0, "interval seconds 3 - $db_type");
+
+  is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1999-11-30 21:30:00', "epoch 1 - $db_type");
+
+  $o->hiepoch('943997400.123456');
+  is($o->hiepoch(format => '%Y-%m-%d %H:%M:%S.%6N'), '1999-11-30 21:30:00.123456', "epoch hires 1 - $db_type");
+
+  $o->epoch('5/6/1980 12:34:56');
+
+  $o->save;
+
+  $o = MyPgObject->new(id => $o->id)->load;
+
+  is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1980-05-06 12:34:56', "epoch 2 - $db_type");
+  is($o->hiepoch(format => '%Y-%m-%d %H:%M:%S.%6N'), '1999-11-30 21:30:00.123456', "epoch hires 2 - $db_type");
+
+  is($o->bint1, '9223372036854775800', "bigint 1 - $db_type");
+  is($o->bint2, '-9223372036854775800', "bigint 2 - $db_type");
+  is($o->bint3, '9223372036854775000', "bigint 3 - $db_type");
+
+  $o->bint1($o->bint1 + 1);
+  $o->save;
+
+  $o = MyPgObject->new(id => $o->id)->load;
+  is($o->bint1, '9223372036854775801', "bigint 4 - $db_type");
+
+  $o->bint3(5);
+  eval { $o->bint3(7) };
+  ok($@, "bigint 5 - $db_type");
 }
 
 #
@@ -252,7 +316,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 83)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 103)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -270,7 +334,15 @@ SKIP: foreach my $db_type ('mysql')
 
   $o->bitz3('11');
 
-  ok($o->save, "save() 1 - $db_type");
+  if(rand >= 0.5)
+  {
+    ok($o->save, "save() 1 - $db_type");
+  }
+  else
+  {
+    ok($o->insert, "insert() 1 - $db_type");
+  }
+
   ok($o->load, "load() 1 - $db_type");
 
   my $ox = MyMySQLObject->new(id => $o->id)->load;
@@ -469,6 +541,50 @@ SKIP: foreach my $db_type ('mysql')
   ok(!$o->load(speculative => 1), "load() speculative explicit 2 - $db_type");
   eval { $o->load(speculative => 0) };
   ok($@, "load() non-speculative explicit 2 - $db_type");
+
+  $o->meta->default_load_speculative(0);
+
+  $o = MyMySQLObject->new(id => 1)->load;
+
+  is($o->dur->months, 2, "interval months 1 - $db_type");
+  is($o->dur->days, 5, "interval days 1 - $db_type");
+  is($o->dur->seconds, 3, "interval seconds 1 - $db_type");
+
+  $o->dur(DateTime::Duration->new(years => 7, nanoseconds => 3000));
+
+  is($o->dur->in_units('years'), 7, "interval in_units years 1 - $db_type");
+  is($o->dur->in_units('months'), 84, "interval in_units months 1 - $db_type");
+  is($o->dur->nanoseconds, 3000, "interval nanoseconds 1 - $db_type");
+  is($o->dur->days, 0, "interval days 2 - $db_type");
+  is($o->dur->minutes, 0, "interval minutes 2 - $db_type");
+  is($o->dur->seconds, 0, "interval seconds 2 - $db_type");
+
+  $o->save;
+
+  $o = MyMySQLObject->new(id => $o->id)->load;
+
+  is($o->dur->in_units('years'), 7, "interval in_units years 2 - $db_type");
+  is($o->dur->in_units('months'), 84, "interval in_units months 2 - $db_type");
+  is($o->dur->nanoseconds, 3000, "interval nanoseconds 2 - $db_type");
+  is($o->dur->days, 0, "interval days 3 - $db_type");
+  is($o->dur->minutes, 0, "interval minutes 3 - $db_type");
+  is($o->dur->seconds, 0, "interval seconds 3 - $db_type");
+
+  is($o->meta->column('dur')->precision, 6, "interval precision - $db_type");
+
+  is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1999-11-30 21:30:00', "epoch 1 - $db_type");
+
+  $o->hiepoch('943997400.123456');
+  is($o->hiepoch(format => '%Y-%m-%d %H:%M:%S.%6N'), '1999-11-30 21:30:00.123456', "epoch hires 1 - $db_type");
+
+  $o->epoch('5/6/1980 12:34:56');
+
+  $o->save;
+
+  $o = MyMySQLObject->new(id => $o->id)->load;
+
+  is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1980-05-06 12:34:56', "epoch 2 - $db_type");
+  is($o->hiepoch(format => '%Y-%m-%d %H:%M:%S.%6N'), '1999-11-30 21:30:00.123456', "epoch hires 2 - $db_type");
 }
 
 #
@@ -496,7 +612,15 @@ SKIP: foreach my $db_type ('informix')
   $o->last_modified($o->date_created);
   $o->save_col(22);
 
-  ok($o->save, "save() 1 - $db_type");
+  if(rand >= 0.5)
+  {
+    ok($o->save, "save() 1 - $db_type");
+  }
+  else
+  {
+    ok($o->insert, "insert() 1 - $db_type");
+  }
+
   ok($o->load, "load() 1 - $db_type");
 
   $o->name('C' x 50);
@@ -693,7 +817,15 @@ SKIP: foreach my $db_type ('sqlite')
   $o->last_modified($o->date_created);
   $o->save_col(22);
 
-  ok($o->save, "save() 1 - $db_type");
+  if(rand >= 0.5)
+  {
+    ok($o->save, "save() 1 - $db_type");
+  }
+  else
+  {
+    ok($o->insert, "insert() 1 - $db_type");
+  }
+
   ok($o->load, "load() 1 - $db_type");
 
   $o->name('C' x 50);
@@ -918,6 +1050,12 @@ CREATE TABLE rose_db_object_test
   start          DATE,
   save           INT,
   nums           INT[],
+  dur            INTERVAL(6) DEFAULT '2 months 5 days 3 seconds',
+  epoch          INT DEFAULT 943997400,
+  hiepoch        DECIMAL(16,6),
+  bint1          BIGINT DEFAULT 9223372036854775800,
+  bint2          BIGINT DEFAULT -9223372036854775800,
+  bint3          BIGINT,
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -943,6 +1081,12 @@ CREATE TABLE rose_db_object_private.rose_db_object_test
   start          DATE,
   save           INT,
   nums           INT[],
+  dur            INTERVAL(6) DEFAULT '2 months 5 days 3 seconds',
+  epoch          INT DEFAULT 943997400,
+  hiepoch        DECIMAL(16,6),
+  bint1          BIGINT DEFAULT 9223372036854775800,
+  bint2          BIGINT DEFAULT -9223372036854775800,
+  bint3          BIGINT,
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -979,6 +1123,12 @@ EOF
       nums     => { type => 'array' },
       bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },
       decs     => { type => 'decimal', precision => 10, scale => 2 },
+      dur      => { type => 'interval', precision => 6, default => '2 months 5 days 3 seconds' },
+      epoch    => { type => 'epoch', default => '11/30/1999 9:30pm' },
+      hiepoch  => { type => 'epoch hires', default => '1144004926.123456' },
+      bint1    => { type => 'bigint', default => '9223372036854775800' },
+      bint2    => { type => 'bigint', default => '-9223372036854775800' },
+      bint3    => { type => 'bigint', with_init => 1, check_in => [ '9223372036854775000', 5 ] },
       #last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );
@@ -1006,6 +1156,8 @@ EOF
     Test::More::ok(!defined MyPgObject->meta->column('k1')->primary_key_position, 'primary_key_position 2 - pg');
     MyPgObject->meta->column('k1')->primary_key_position(7);
     Test::More::ok(!defined MyPgObject->meta->column('k1')->primary_key_position, 'primary_key_position 3 - pg');
+
+    sub init_bint3 { '9223372036854775000' }
   }
 
   #
@@ -1065,6 +1217,9 @@ CREATE TABLE rose_db_object_test
   save           INT,
   enums          ENUM('foo', 'bar', 'baz') DEFAULT 'foo',
   ndate          DATE NOT NULL DEFAULT '0000-00-00',
+  dur            VARCHAR(255) DEFAULT '2 months 5 days 3 seconds',
+  epoch          INT DEFAULT 943997400,
+  hiepoch        DECIMAL(16,6),
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1117,6 +1272,9 @@ EOF
       bitz2    => { type => 'bits', bits => 2, default => '0' },
       bitz3    => { type => 'bits', bits => 4 },
       decs     => { type => 'decimal', precision => 10, scale => 2 },
+      dur      => { type => 'interval', precision => 6, default => '2 months 5 days 3 seconds' },
+      epoch    => { type => 'epoch', default => '11/30/1999 9:30pm' },
+      hiepoch  => { type => 'epoch hires', default => '1144004926.123456' },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );

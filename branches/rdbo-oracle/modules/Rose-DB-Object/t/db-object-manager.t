@@ -11369,7 +11369,6 @@ EOF
       $dbh->do('DROP TABLE rose_db_object_test CASCADE');
       $dbh->do('DROP TABLE rose_db_object_other CASCADE');
       $dbh->do('DROP TABLE rose_db_object_bb CASCADE');
-
     }
 
     $dbh->do(<<"EOF");
@@ -11845,6 +11844,8 @@ EOF
 
     Rose::DB::Object::Manager->make_manager_methods(object_class => 'MyInformixObject',
                                                     base_name    => 'objectz');
+
+    MyInformixObject->meta->clear_all_dbs;
   }
 
   #

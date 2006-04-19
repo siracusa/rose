@@ -33,7 +33,7 @@ Rose::DB::Object::Metadata::Column::DatetimeYearToFraction1 - Datetime year to f
 
 Objects of this class store and manipulate metadata for "datetime year to fraction(1)" columns in a database.  Column metadata objects store information about columns (data type, size, etc.) and are responsible for creating object methods that manipulate column values.
 
-This class inherits from L<Rose::DB::Object::Metadata::Datetime>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Datetime> documentation for more information.
+This class inherits from L<Rose::DB::Object::Metadata::Column::Datetime>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::Datetime> documentation for more information.
 
 =head1 METHOD MAP
 
@@ -61,7 +61,7 @@ See the L<Rose::DB::Object::Metadata::Column|Rose::DB::Object::Metadata::Column/
 
 =item B<parse_value DB, VALUE>
 
-Convert VALUE to the equivalent C<DateTime> object suitable for storage in a "datetime year to fraction(1)" column.  VALUE maybe returned unmodified if it is a valid "datetime year to fraction(1)" keyword or otherwise has special meaning to the underlying database.  DB is a L<Rose::DB> object that is used as part of the parsing process.  Both arguments are required.
+Convert VALUE to the equivalent L<DateTime> object suitable for storage in a "datetime year to fraction(1)" column.  VALUE maybe returned unmodified if it is a valid "datetime year to fraction(1)" keyword or otherwise has special meaning to the underlying database.  DB is a L<Rose::DB> object that is used as part of the parsing process.  Both arguments are required.
 
 =item B<type>
 

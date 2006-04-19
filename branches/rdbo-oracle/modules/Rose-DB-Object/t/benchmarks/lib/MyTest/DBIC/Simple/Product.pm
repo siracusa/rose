@@ -18,6 +18,6 @@ __PACKAGE__->add_relationship('category_id', 'MyTest::DBIC::Simple::Category',
 
 __PACKAGE__->add_relationship('code_names', 'MyTest::DBIC::Simple::CodeName',
                               { 'foreign.product_id' => 'self.id' },
-                              { accessor => 'multi' });
+                              { accessor => 'multi', join_type => 'LEFT OUTER' });
 
 1;

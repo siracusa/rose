@@ -13,7 +13,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.05';
+our $VERSION = '0.70';
 
 sub date
 {
@@ -860,6 +860,303 @@ sub timestamp
 
 *timestamp_with_time_zone = \&timestamp;
 
+sub epoch
+{
+  my($class, $name, $args) = @_;
+
+  my $key = $args->{'hash_key'} || $name;
+  my $interface = $args->{'interface'} || 'get_set';
+  my $tz = $args->{'time_zone'} || 0;
+  my $epoch_method = $args->{'hires'} ? 'hires_epoch' : 'epoch';
+
+  my $formatted_key = column_value_formatted_key($key);
+  my $default = $args->{'default'};
+
+  my %methods;
+
+  if($interface eq 'get_set')
+  {
+    $methods{$name} = sub
+    {
+      my $self = shift;
+
+      my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
+
+      if(@_)
+      {
+        if(@_ == 2)
+        {
+          my $dt = $self->{$key} || $self->{$formatted_key,$driver};
+
+          if(defined $dt && !ref $dt)
+          {
+            my $dt2 = $db->parse_date($dt);
+
+            unless($dt2)
+            {
+              $dt2 = Rose::DateTime::Util::parse_date($dt, $tz || $db->server_time_zone) or
+                Carp::croak "Could not parse date '$dt'";
+            }
+
+            $dt = $dt2;
+          }
+
+          if($_[0] eq 'format')
+          {
+            return $dt  unless(ref $dt);
+            return Rose::DateTime::Util::format_date($dt, (ref $_[1] ? @{$_[1]} : $_[1]));
+          }
+          elsif($_[0] eq 'truncate')
+          {
+            return undef  unless($self->{$key});
+            return $dt  unless(ref $dt);
+            return $dt->clone->truncate(to => $_[1]);
+          }
+          else
+          {
+            Carp::croak "Invalid argument(s) to $name: @_";
+          }
+        }
+
+        if(defined $_[0])
+        {
+          if($self->{STATE_LOADING()})
+          {
+            $self->{$key} = undef;
+            $self->{$formatted_key,$driver} = $_[0];
+          }
+          else
+          {
+            my $dt = $db->parse_date($_[0]);
+
+            unless($dt)
+            {
+              $dt = Rose::DateTime::Util::parse_date($_[0], $tz || $db->server_time_zone) or
+                Carp::croak "Invalid date: '$_[0]'";
+            }
+
+            if(ref $dt)
+            {
+              $dt->set_time_zone($tz || $db->server_time_zone);
+              $self->{$key} = $dt;
+              $self->{$formatted_key,$driver} = undef;
+            }
+            else
+            {
+              $self->{$key} = undef;
+              $self->{$formatted_key,$driver} = $dt;
+            }
+          }
+        }
+        else
+        {
+          $self->{$key} = undef;
+          $self->{$formatted_key,$driver} = undef;
+        }
+      }
+
+      return  unless(defined wantarray);
+
+      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      {
+        my $dt = $db->parse_date($default);
+
+        unless($dt)
+        {
+          $dt = Rose::DateTime::Util::parse_date($default, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid default date: '$default'";
+        }
+
+        if(ref $dt)
+        {
+          $dt->set_time_zone($tz || $db->server_time_zone);
+          $self->{$key} = $dt;
+          $self->{$formatted_key,$driver} = undef;
+        }
+        else
+        {
+          $self->{$key} = undef;
+          $self->{$formatted_key,$driver} = $dt;
+        }
+      }
+
+      if($self->{STATE_SAVING()})
+      {
+        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
+          ($self->{$formatted_key,$driver} ||= $self->{$key}->$epoch_method()) : undef;
+      }
+
+      return $self->{$key} ? $self->{$key} : 
+             $self->{$formatted_key,$driver} ? 
+             ($self->{$key} = $db->parse_date($self->{$formatted_key,$driver})) : undef;
+    };
+  }
+  elsif($interface eq 'get')
+  {
+    $methods{$name} = sub
+    {
+      my $self = shift;
+
+      my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
+
+      if(@_ == 2)
+      {
+        my $dt = $self->{$key} || $self->{$formatted_key,$driver};
+
+        if(defined $dt && !ref $dt)
+        {
+          my $dt2 = $db->parse_date($dt);
+
+          unless($dt2)
+          {
+            $dt2 = Rose::DateTime::Util::parse_date($dt, $tz || $db->server_time_zone) or
+              Carp::croak "Could not parse date '$dt'";
+          }
+
+          $dt = $dt2;
+        }
+
+        if($_[0] eq 'format')
+        {
+          return $dt  unless(ref $dt);
+          return Rose::DateTime::Util::format_date($dt, (ref $_[1] ? @{$_[1]} : $_[1]));
+        }
+        elsif($_[0] eq 'truncate')
+        {
+          return undef  unless($self->{$key});
+          return $dt  unless(ref $dt);
+          return $dt->clone->truncate(to => $_[1]);
+        }
+        else
+        {
+          Carp::croak "Invalid argument(s) to $name: @_";
+        }
+      }
+
+      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      {
+        my $dt = $db->parse_date($default);
+
+        unless($dt)
+        {
+          $dt = Rose::DateTime::Util::parse_date($default, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid default date: '$default'";
+        }
+
+        if(ref $dt)
+        {
+          $dt->set_time_zone($tz || $db->server_time_zone);
+          $self->{$key} = $dt;
+          $self->{$formatted_key,$driver} = undef;
+        }
+        else
+        {
+          $self->{$key} = undef;
+          $self->{$formatted_key,$driver} = $dt;
+        }
+      }
+
+      if($self->{STATE_SAVING()})
+      {
+        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
+          ($self->{$formatted_key,$driver} ||= $self->{$key}->$epoch_method()) : undef;
+      }
+
+      return $self->{$key} ? $self->{$key} : 
+             $self->{$formatted_key,$driver} ? 
+             ($self->{$key} = $db->parse_date($self->{$formatted_key,$driver})) : undef;
+    };
+  }
+  elsif($interface eq 'set')
+  {
+    $methods{$name} = sub
+    {
+      my $self = shift;
+
+      my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
+
+      Carp::croak "Missing argument in call to $name"  unless(@_);
+
+      if(defined $_[0])
+      {
+        if($self->{STATE_LOADING()})
+        {
+          $self->{$key} = undef;
+          $self->{$formatted_key,$driver} = $_[0];
+        }
+        else
+        {
+          my $dt = $db->parse_date($_[0]);
+
+          unless($dt)
+          {
+            $dt = Rose::DateTime::Util::parse_date($_[0], $tz || $db->server_time_zone) or
+              Carp::croak "Invalid date: '$_[0]'";
+          }
+
+          if(ref $dt)
+          {
+            $dt->set_time_zone($tz || $db->server_time_zone);
+            $self->{$key} = $dt;
+            $self->{$formatted_key,$driver} = undef;
+          }
+          else
+          {
+            $self->{$key} = undef;
+            $self->{$formatted_key,$driver} = $dt;
+          }
+        }
+      }
+      else
+      {
+        $self->{$key} = undef;
+        $self->{$formatted_key,$driver} = undef;
+      }
+
+      return  unless(defined wantarray);
+
+      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      {
+        my $dt = $db->parse_date($default);
+
+        unless($dt)
+        {
+          $dt = Rose::DateTime::Util::parse_date($default, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid default date: '$default'";
+        }
+
+        if(ref $dt)
+        {
+          $dt->set_time_zone($tz || $db->server_time_zone);
+          $self->{$key} = $dt;
+          $self->{$formatted_key,$driver} = undef;
+        }
+        else
+        {
+          $self->{$key} = undef;
+          $self->{$formatted_key,$driver} = $dt;
+        }
+      }
+
+      if($self->{STATE_SAVING()})
+      {
+        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
+          ($self->{$formatted_key,$driver} ||= $self->{$key}->$epoch_method()) : undef;
+      }
+
+      return $self->{$key} ? $self->{$key} : 
+             $self->{$formatted_key,$driver} ? 
+             ($self->{$key} = $db->parse_date($self->{$formatted_key,$driver})) : undef;
+    };
+  }
+  else { Carp::croak "Unknown interface: $interface" }
+
+  return \%methods;
+}
+
 1;
 
 __END__
@@ -892,6 +1189,12 @@ Rose::DB::Object::MakeMethods::Date - Create date-related methods for Rose::DB::
       [
         'last_modified' => { default => '2005-01-30 12:34:56.123' }
       ],
+
+      epoch => 
+      [
+        due_date    => { default => '2003-01-02 12:34:56' },
+        event_start => { hires => 1 },
+      ],
     );
 
     ...
@@ -909,6 +1212,10 @@ Rose::DB::Object::MakeMethods::Date - Create date-related methods for Rose::DB::
     print $o->other_date(format => '%m/%d/%Y %H:%M:%S'); 
 
     print $o->last_modified(format => '%S.%5N'); # 56.12300 
+
+    print $o->due_date(format => '%m/%d/%Y'); # 01/02/2003
+
+    $o->event_start('1980-10-11 6:00.123456');
 
 =head1 DESCRIPTION
 
@@ -955,13 +1262,13 @@ The time zone name, which must be in a format that is understood by L<DateTime::
 
 =item C<get_set>
 
-Creates a get/set method for a date (year, month, day) attribute.  When setting the attribute, the value is passed through the C<parse_date()> method of the object's L<db|Rose::DB::Object/db> attribute.  If that fails, the value is passed to L<Rose::DateTime::Util>'s C<parse_date()> function.  If that fails, a fatal error will occur.
+Creates a get/set method for a date (year, month, day) attribute.  When setting the attribute, the value is passed through the L<parse_date|Rose::DB/parse_date> method of the object's L<db|Rose::DB::Object/db> attribute.  If that fails, the value is passed to L<Rose::DateTime::Util>'s L<parse_date()|Rose::DateTime::Util/parse_date> function.  If that fails, a fatal error will occur.
 
 The time zone of the L<DateTime> object that results from a successful parse is set to the value of the C<time_zone> option, if defined.  Otherwise, it is set to the L<server_time_zone|Rose::DB/server_time_zone> value of the  object's L<db|Rose::DB::Object/db> attribute using L<DateTime>'s L<set_time_zone|DateTime/set_time_zone> method.
 
 When saving to the database, the method will pass the attribute value through the L<format_date|Rose::DateTime::Util/format_date> method of the object's L<db|Rose::DB::Object/db> attribute before returning it.  Otherwise, the value is returned as-is.
 
-This method is designed to allow date values to make a round trip from and back into the database without ever being "inflated" into L<DateTime> objects.  Any use of the attribute (get or set) outside the context of loading from or saving to the database will cause the value to be "inflated" using the  C<parse_date()> method of the object's L<db|Rose::DB::Object/db> attribute.  If that fails, L<Rose::DateTime::Util>'s C<parse_date()> function is tried.  If that fails, a fatal error will occur.
+This method is designed to allow date values to make a round trip from and back into the database without ever being "inflated" into L<DateTime> objects.  Any use of the attribute (get or set) outside the context of loading from or saving to the database will cause the value to be "inflated" using the  L<parse_date|Rose::DB/parse_date> method of the object's L<db|Rose::DB::Object/db> attribute.  If that fails, L<Rose::DateTime::Util>'s L<parse_date()|Rose::DateTime::Util/parse_date> function is tried.  If that fails, a fatal error will occur.
 
 If passed two arguments and the first argument is "format", then the second argument is taken as a format string and passed to L<Rose::DateTime::Util>'s L<format_date|Rose::DateTime::Util/format_date> function along with the current value of the date attribute.  Example:
 
@@ -986,7 +1293,7 @@ Creates an accessor method for a date (year, month, day) attribute.  This method
 
 =item C<set>
 
-Creates a mutator method for a date (year, month, day) attribute.  This method behaves like the C<get_set> method, except that a fatal error will occur if no arguments are passed.  It also does not support the C<truncate> and C<format> options.
+Creates a mutator method for a date (year, month, day) attribute.  This method behaves like the C<get_set> method, except that a fatal error will occur if no arguments are passed.  It also does not support the C<truncate> and C<format> parameters.
 
 =back
 
@@ -1057,13 +1364,13 @@ Any string that results in a set of method names that are supported by the objec
 
 Creates a get/set method for a "datetime" attribute.  The exact granularity of the "datetime" value is determined by the value of the C<type> option (see above).
 
-When setting the attribute, the value is passed through the C<parse_TYPE()> method of the object's L<db|Rose::DB::Object/db> attribute, where C<TYPE> is the value of the C<type> option.  If that fails, the value is passed to L<Rose::DateTime::Util>'s C<parse_date()> function.  If that fails, a fatal error will occur.
+When setting the attribute, the value is passed through the C<parse_TYPE()> method of the object's L<db|Rose::DB::Object/db> attribute, where C<TYPE> is the value of the C<type> option.  If that fails, the value is passed to L<Rose::DateTime::Util>'s L<parse_date()|Rose::DateTime::Util/parse_date> function.  If that fails, a fatal error will occur.
 
 The time zone of the L<DateTime> object that results from a successful parse is set to the value of the C<time_zone> option, if defined.  Otherwise, it is set to the L<server_time_zone|Rose::DB/server_time_zone> value of the  object's L<db|Rose::DB::Object/db> attribute using L<DateTime>'s L<set_time_zone|DateTime/set_time_zone> method.
 
 When saving to the database, the method will pass the attribute value through the C<format_TYPE()> method of the object's L<db|Rose::DB::Object/db> attribute before returning it, where C<TYPE> is the value of the C<type> option.  Otherwise, the value is returned as-is.
 
-This method is designed to allow datetime values to make a round trip from and back into the database without ever being "inflated" into L<DateTime> objects.  Any use of the attribute (get or set) outside the context of loading from or saving to the database will cause the value to be "inflated" using the  C<parse_TYPE()> method of the object's L<db|Rose::DB::Object/db> attribute, where C<TYPE> is the value of the C<type> option.  If that fails, L<Rose::DateTime::Util>'s C<parse_date()> function is tried.  If that fails, a fatal error will occur.
+This method is designed to allow datetime values to make a round trip from and back into the database without ever being "inflated" into L<DateTime> objects.  Any use of the attribute (get or set) outside the context of loading from or saving to the database will cause the value to be "inflated" using the  C<parse_TYPE()> method of the object's L<db|Rose::DB::Object/db> attribute, where C<TYPE> is the value of the C<type> option.  If that fails, L<Rose::DateTime::Util>'s L<parse_date()|Rose::DateTime::Util/parse_date> function is tried.  If that fails, a fatal error will occur.
 
 If passed two arguments and the first argument is "format", then the second argument is taken as a format string and passed to L<Rose::DateTime::Util>'s L<format_date|Rose::DateTime::Util/format_date> function along with the current value of the datetime attribute.  Example:
 
@@ -1088,7 +1395,7 @@ Creates an accessor method for a "datetime" attribute.  This method behaves like
 
 =item C<set>
 
-Creates a mutator method for a "datetime" attribute.  This method behaves like the C<get_set> method, except that a fatal error will occur if no arguments are passed.  It also does not support the C<truncate> and C<format> options.
+Creates a mutator method for a "datetime" attribute.  This method behaves like the C<get_set> method, except that a fatal error will occur if no arguments are passed.  It also does not support the C<truncate> and C<format> parameters.
 
 =back
 
@@ -1122,6 +1429,103 @@ Example:
 
     # 02/20/2001 12:34:00
     print $o->other_date(format => '%m/%d/%Y %H:%M:%S'); 
+
+=item B<epoch>
+
+Create get/set methods for an attribute that stores seconds since the Unix epoch.
+
+=over 4
+
+=item Options
+
+=over 4
+
+=item C<default>
+
+Determines the default value of the attribute.
+
+=item C<hash_key>
+
+The key inside the hash-based object to use for the storage of this
+attribute.  Defaults to the name of the method.
+
+=item C<hires>
+
+A boolean flag that indicates whether or not epoch values should be stored with fractional seconds.  If true, then up to six (6) digits past the decimal point are preserved.  The default is false.
+
+=item C<interface>
+
+Choose the interface.  The default is C<get_set>.
+
+=item C<time_zone>
+
+The time zone name, which must be in a format that is understood by L<DateTime::TimeZone>.
+
+=back
+
+=item Interfaces
+
+=over 4
+
+=item C<get_set>
+
+Creates a get/set method for an attribute that stores seconds since the Unix epoch.  When setting the attribute, the value is passed through L<Rose::DateTime::Util>'s L<parse_date()|Rose::DateTime::Util/parse_date> function.  If that fails, a fatal error will occur.
+
+The time zone of the L<DateTime> object that results from a successful parse is set to the value of the C<time_zone> option, if defined.  Otherwise, it is set to the L<server_time_zone|Rose::DB/server_time_zone> value of the  object's L<db|Rose::DB::Object/db> attribute using L<DateTime>'s L<set_time_zone|DateTime/set_time_zone> method.
+
+When saving to the database, the L<epoch|DateTime/epoch> or L<hires_epoch|DateTime/hires_epoch> method will be called on the L<DateTime> object, depending on the value of the C<hires> option.  (See above.)
+
+This method is designed to allow values to make a round trip from and back into the database without ever being "inflated" into L<DateTime> objects.  Any use of the attribute (get or set) outside the context of loading from or saving to the database will cause the value to be "inflated" using L<Rose::DateTime::Util>'s L<parse_date()|Rose::DateTime::Util/parse_date> function.  If that fails, a fatal error will occur.
+
+If passed two arguments and the first argument is "format", then the second argument is taken as a format string and passed to L<Rose::DateTime::Util>'s L<format_date|Rose::DateTime::Util/format_date> function along with the current value of the attribute.  Example:
+
+    $o->due_date('2004-05-22');
+    print $o->due_date(format => '%A'); # "Saturday"
+
+If passed two arguments and the first argument is "truncate", then the second argument is taken as the value of the C<to> argument to L<DateTime>'s L<truncate|DateTime/truncate> method, which is applied to a clone of the current value of the attribute, which is then returned.  Example:
+
+    $o->due_date('2004-05-22');
+
+    # Equivalent to: 
+    # $d = $o->due_date->clone->truncate(to => 'month')
+    $d = $o->due_date(truncate => 'month');
+
+If the attribute is undefined, then undef is returned (i.e., no clone or call to L<truncate|DateTime/truncate> is made).
+
+=item C<get>
+
+Creates an accessor method an attribute that stores seconds since the Unix epoch.  This method behaves like the C<get_set> method, except that the value cannot be set. 
+
+=item C<set>
+
+Creates a mutator method for an attribute that stores seconds since the Unix epoch.  This method behaves like the C<get_set> method, except that a fatal error will occur if no arguments are passed.  It also does not support the C<truncate> and C<format> parameters.
+
+=back
+
+=back
+
+Example:
+
+    package MyDBObject;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    use Rose::DB::Object::MakeMethods::Date
+    (
+      epoch => 
+      [
+        due_date    => { default => '2003-01-02 12:34:56' },
+        event_start => { hires => 1 },
+      ],
+    );
+
+    ...
+
+    print $o->due_date(format => '%m/%d/%Y'); # 01/02/2003
+    $dt = $o->due_date(truncate => 'week');
+
+    $o->event_start('1980-10-11 6:00.123456');
+    print $o->event_start(format => '%6N'); # 123456
 
 =item B<timestamp>
 
@@ -1158,13 +1562,13 @@ The time zone name, which must be in a format that is understood by L<DateTime::
 
 =item C<get_set>
 
-Creates a get/set method for a "timestamp" (year, month, day, hour, minute, second, fractional seconds) attribute.  When setting the attribute, the value is passed through the C<parse_timestamp()> method of the object's L<db|Rose::DB::Object/db> attribute.  If that fails, the value is passed to L<Rose::DateTime::Util>'s C<parse_date()> function.  If that fails, a fatal error will occur.
+Creates a get/set method for a "timestamp" (year, month, day, hour, minute, second, fractional seconds) attribute.  When setting the attribute, the value is passed through the C<parse_timestamp()> method of the object's L<db|Rose::DB::Object/db> attribute.  If that fails, the value is passed to L<Rose::DateTime::Util>'s L<parse_date()|Rose::DateTime::Util/parse_date> function.  If that fails, a fatal error will occur.
 
 The time zone of the L<DateTime> object that results from a successful parse is set to the value of the C<time_zone> option, if defined.  Otherwise, it is set to the L<server_time_zone|Rose::DB/server_time_zone> value of the  object's L<db|Rose::DB::Object/db> attribute using L<DateTime>'s L<set_time_zone|DateTime/set_time_zone> method.
 
 When saving to the database, the method will pass the attribute value through the L<format_date|Rose::DateTime::Util/format_date> method of the object's L<db|Rose::DB::Object/db> attribute before returning it.  Otherwise, the value is returned as-is.
 
-This method is designed to allow timestamp values to make a round trip from and back into the database without ever being "inflated" into L<DateTime> objects.  Any use of the attribute (get or set) outside the context of loading from or saving to the database will cause the value to be "inflated" using the  C<parse_timestamp()> method of the object's L<db|Rose::DB::Object/db> attribute.  If that fails, L<Rose::DateTime::Util>'s C<parse_date()> function is tried.  If that fails, a fatal error will occur.
+This method is designed to allow timestamp values to make a round trip from and back into the database without ever being "inflated" into L<DateTime> objects.  Any use of the attribute (get or set) outside the context of loading from or saving to the database will cause the value to be "inflated" using the  C<parse_timestamp()> method of the object's L<db|Rose::DB::Object/db> attribute.  If that fails, L<Rose::DateTime::Util>'s L<parse_date()|Rose::DateTime::Util/parse_date> function is tried.  If that fails, a fatal error will occur.
 
 If passed two arguments and the first argument is "format", then the second argument is taken as a format string and passed to L<Rose::DateTime::Util>'s L<format_date|Rose::DateTime::Util/format_date> function along with the current value of the timestamp attribute.  Example:
 
@@ -1189,7 +1593,7 @@ Creates an accessor method for a "timestamp" (year, month, day, hour, minute, se
 
 =item C<set>
 
-Creates a mutator method for a "timestamp" (year, month, day, hour, minute, second, fractional seconds) attribute.  This method behaves like the C<get_set> method, except that a fatal error will occur if no arguments are passed.  It also does not support the C<truncate> and C<format> options.
+Creates a mutator method for a "timestamp" (year, month, day, hour, minute, second, fractional seconds) attribute.  This method behaves like the C<get_set> method, except that a fatal error will occur if no arguments are passed.  It also does not support the C<truncate> and C<format> parameters.
 
 =back
 

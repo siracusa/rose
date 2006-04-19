@@ -4,12 +4,15 @@ lib/Rose/DB/Object/Cached.pm
 lib/Rose/DB/Object/Constants.pm
 lib/Rose/DB/Object/ConventionManager.pm
 lib/Rose/DB/Object/ConventionManager/Null.pm
+lib/Rose/DB/Object/Helpers.pm
 lib/Rose/DB/Object/Iterator.pm
 lib/Rose/DB/Object/Loader.pm
+lib/Rose/DB/Object/MakeMethods/BigNum.pm
 lib/Rose/DB/Object/MakeMethods/Date.pm
 lib/Rose/DB/Object/MakeMethods/Generic.pm
 lib/Rose/DB/Object/MakeMethods/Pg.pm
 lib/Rose/DB/Object/MakeMethods/Std.pm
+lib/Rose/DB/Object/MakeMethods/Time.pm
 lib/Rose/DB/Object/Manager.pm
 lib/Rose/DB/Object/Metadata.pm
 lib/Rose/DB/Object/Metadata/Auto.pm
@@ -20,6 +23,7 @@ lib/Rose/DB/Object/Metadata/Auto/Pg.pm
 lib/Rose/DB/Object/Metadata/Auto/SQLite.pm
 lib/Rose/DB/Object/Metadata/Column.pm
 lib/Rose/DB/Object/Metadata/Column/Array.pm
+lib/Rose/DB/Object/Metadata/Column/BigInt.pm
 lib/Rose/DB/Object/Metadata/Column/BigSerial.pm
 lib/Rose/DB/Object/Metadata/Column/Bitfield.pm
 lib/Rose/DB/Object/Metadata/Column/Blob.pm
@@ -37,8 +41,11 @@ lib/Rose/DB/Object/Metadata/Column/DatetimeYearToMinute.pm
 lib/Rose/DB/Object/Metadata/Column/DatetimeYearToSecond.pm
 lib/Rose/DB/Object/Metadata/Column/Decimal.pm
 lib/Rose/DB/Object/Metadata/Column/Enum.pm
+lib/Rose/DB/Object/Metadata/Column/Epoch.pm
+lib/Rose/DB/Object/Metadata/Column/Epoch/HiRes.pm
 lib/Rose/DB/Object/Metadata/Column/Float.pm
 lib/Rose/DB/Object/Metadata/Column/Integer.pm
+lib/Rose/DB/Object/Metadata/Column/Interval.pm
 lib/Rose/DB/Object/Metadata/Column/Numeric.pm
 lib/Rose/DB/Object/Metadata/Column/Pg/Chkpass.pm
 lib/Rose/DB/Object/Metadata/Column/Scalar.pm
@@ -59,6 +66,7 @@ lib/Rose/DB/Object/Metadata/Relationship/OneToMany.pm
 lib/Rose/DB/Object/Metadata/Relationship/OneToOne.pm
 lib/Rose/DB/Object/Metadata/UniqueKey.pm
 lib/Rose/DB/Object/Metadata/Util.pm
+lib/Rose/DB/Object/MixIn.pm
 lib/Rose/DB/Object/QueryBuilder.pm
 lib/Rose/DB/Object/Std.pm
 lib/Rose/DB/Object/Std/Cached.pm
@@ -115,6 +123,7 @@ t/db-object-cached.t
 t/db-object-convention.t
 t/db-object-foreign-key-auto.t
 t/db-object-foreign-key.t
+t/db-object-helpers.t
 t/db-object-loader.t
 t/db-object-loader-2.t
 t/db-object-loader-3.t
@@ -162,4 +171,5 @@ t/spot-check-02.t
 t/spot-check-03.t
 t/spot-check-04.t
 t/spot-check-05.t
+t/spot-check-06.t
 t/test-lib.pl

@@ -17,7 +17,7 @@ use Rose::DB::Object::Metadata::Util qw(perl_hashref);
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.66';
+our $VERSION = '0.70';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -59,16 +59,18 @@ sub generate_object_base_class_name
 {
   my($self) = shift;
 
-  return (($self->class_prefix . 'DB::Object::AutoBase') || "Rose::DB::Object::LoaderGenerated::AutoBase") . 
-          $Base_Class_Counter++;
+  return ((($self->class_prefix || ''). 'DB::Object::AutoBase') || 
+          "Rose::DB::Object::LoaderGenerated::AutoBase") . 
+         $Base_Class_Counter++;
 }
 
 sub generate_db_base_class_name
 {
   my($self) = shift;
 
-  return (($self->class_prefix . 'DB::AutoBase') || "Rose::DB::LoaderGenerated::AutoBase") . 
-          $Base_Class_Counter++;
+  return ((($self->class_prefix || '') . 'DB::AutoBase') || 
+          "Rose::DB::LoaderGenerated::AutoBase") . 
+         $Base_Class_Counter++;
 }
 
 sub generate_manager_class_name
@@ -464,6 +466,9 @@ sub make_classes
   }
 
   $class_prefix .= '::'  unless($class_prefix =~ /::$/);
+
+  # Evil masking of object attribute
+  local $self->{'class_prefix'} = $class_prefix; 
 
   # When setting explicit values for attributes that cascade to
   # affect other attributes, save off tehold values are restore

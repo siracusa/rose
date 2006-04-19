@@ -208,7 +208,12 @@ EOF
     }
 
     if($Use_PM{'DBIx::Class'})
-    {  
+    {
+      if($DBIx::Class::VERSION < 0.05999_03)
+      {
+        die "Sorry, this benchmark suite requires DBIx::Class version 0.05999_03 or later.\n";
+      }
+
       require MyTest::DBIC::Simple::Code;
       require MyTest::DBIC::Simple::CodeName;
       require MyTest::DBIC::Simple::Category;
@@ -775,6 +780,11 @@ sub Insert_Code_Names
 
     $db->commit;
     print ".\n";
+
+    if($db->driver eq 'pg')
+    {
+      $dbh->do('analyze');
+    }
   }
 }
 
@@ -1115,7 +1125,7 @@ EOF
     sub accessor_simple_category_dbic
     {
       #my $c = MyTest::DBIC::Simple::Category->find(1 + 300_000);
-      my $c = $DBIC_Simple_Category_RS->find(1 + 300_000);
+      my $c = $DBIC_Simple_Category_RS->search({ id => 1 + 300_000 })->next;
 
       for(1 .. ACCESSOR_ITERATIONS)
       {
@@ -1211,7 +1221,7 @@ EOF
     sub accessor_simple_product_dbic
     {
       #my $p = MyTest::DBIC::Simple::Product->find(1 + 300_000);
-      my $p = $DBIC_Simple_Product_RS->find(1 + 300_000);
+      my $p = $DBIC_Simple_Product_RS->search({ id => 1 + 300_000 })->next;
 
       for(1 .. ACCESSOR_ITERATIONS)
       {
@@ -1285,7 +1295,7 @@ EOF
     sub load_simple_category_dbic
     {
       #my $c = MyTest::DBIC::Simple::Category->find($i + 300_000);
-      my $c = $DBIC_Simple_Category_RS->find($i + 300_000);
+      my $c = $DBIC_Simple_Category_RS->search({ id => $i + 300_000 })->next;
       $i++;
     }
   }
@@ -1350,7 +1360,7 @@ EOF
     sub load_simple_product_dbic
     {
       #my $c = MyTest::DBIC::Simple::Product->find($i + 300_000);
-      my $c = $DBIC_Simple_Product_RS->find($i + 300_000);
+      my $c = $DBIC_Simple_Product_RS->search({ id => $i + 300_000 })->next;
       $i++;
     }
   }
@@ -1406,7 +1416,7 @@ EOF
         MyTest::RDBO::Simple::Product->new(
           db => $DB, 
           id => $i + 100_000);
-      $p->load;
+      $p->load;#(with => [ 'category' ], inject_results => 1, prepare_cached => 1);
 
       my $cat = $p->category;
       my $n = $cat->name;
@@ -1450,7 +1460,7 @@ EOF
     sub load_simple_product_and_category_dbic
     {
       #my $c = MyTest::DBIC::Simple::Product->find($i + 300_000);
-      my $c = $DBIC_Simple_Product_RS->find($i + 300_000);
+      my $c = $DBIC_Simple_Product_RS->search({ id => $i + 300_000 })->next;
       my $cat = $c->category_id;
       my $n = $cat->name;
       die  unless($n =~ /\S/);
@@ -1532,7 +1542,7 @@ EOF
     sub update_simple_category_dbic
     {
       #my $c = MyTest::DBIC::Simple::Category->find($i + 300_000);
-      my $c = $DBIC_Simple_Category_RS->find($i + 300_000);
+      my $c = $DBIC_Simple_Category_RS->search({ id => $i + 300_000 })->next;
       $c->name($c->name . ' updated');
       $c->update;
       $i++;
@@ -1610,7 +1620,7 @@ EOF
     sub update_simple_product_dbic
     {
       #my $p = MyTest::DBIC::Simple::Product->find($i + 300_000);
-      my $p = $DBIC_Simple_Product_RS->find($i + 300_000);
+      my $p = $DBIC_Simple_Product_RS->search({ id => $i + 300_000 })->next;
       $p->name($p->name . ' updated');
       $p->update;
       $i++;
@@ -1958,6 +1968,7 @@ EOF
           db => $DB,
           query_is_sql => 1,
           prepare_cached => 1,
+          inject_results => 1,
           query =>
           [
             id => { le => 100_000 + $Iterations },
@@ -2170,6 +2181,7 @@ EOF
           db => $DB,
           query_is_sql => 1,
           prepare_cached => 1,
+          inject_results => 1,
           query =>
           [
             id => { le => 100_000 + $Iterations },
@@ -2277,7 +2289,12 @@ EOF
           'me.name' => { -like => 'Product %2%' },
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
-        }, { prefetch => [ 'category_id' ], rows => MAX_LIMIT});
+        },
+        {
+          prefetch => [ 'code_names', 'category_id' ],
+          software_limit => 1,
+          rows => MAX_LIMIT,
+        });
       die unless(@p);
 
       if($Debug && !$printed)
@@ -2410,7 +2427,6 @@ EOF
                     '>=' => 400_000 } 
         }, 
         {
-          prefetch => [ 'category_id' ],
           limit_dialect => $Limit_Dialect,
           limit  => LIMIT,
           offset => OFFSET 
@@ -2439,7 +2455,7 @@ EOF
           'me.name' => { -like => 'Product %2%' },
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
-        }, { prefetch => [ 'category_id' ], rows => LIMIT, offset => OFFSET });
+        }, { rows => LIMIT, offset => OFFSET });
 
       die unless(@p);
 
@@ -3025,7 +3041,7 @@ EOF
     sub delete_simple_category_dbic
     {
       #my $c = MyTest::DBIC::Simple::Category->find($i + 300_000);
-      my $c = $DBIC_Simple_Category_RS->find($i + 300_000);
+      my $c = $DBIC_Simple_Category_RS->search({ id => $i + 300_000 })->next;
       $c->delete;
       $i++;
     }
@@ -3225,7 +3241,7 @@ EOF
     sub accessor_complex_category_dbic
     {
       #my $c = MyTest::DBIC::Complex::Category->find(1 + 300_000);
-      my $c = $DBIC_Complex_Category_RS->find(1 + 300_000);
+      my $c = $DBIC_Complex_Category_RS->search({ id => 1 + 300_000 })->next;
 
       for(1 .. ACCESSOR_ITERATIONS)
       {
@@ -3298,7 +3314,7 @@ EOF
     sub accessor_complex_product_dbic
     {
       #my $p = MyTest::DBIC::Complex::Product->find(1 + 300_000);
-      my $p = $DBIC_Complex_Product_RS->find(1 + 300_000);
+      my $p = $DBIC_Complex_Product_RS->search({ id => 1 + 300_000 })->next;
 
       for(1 .. ACCESSOR_ITERATIONS)
       {
@@ -3359,7 +3375,7 @@ EOF
     sub load_complex_category_dbic
     {
       #my $c = MyTest::DBIC::Complex::Category->find($i + 3_300_000);
-      my $c = $DBIC_Complex_Category_RS->find($i + 3_300_000);
+      my $c = $DBIC_Complex_Category_RS->search({ id => $i + 3_300_000 })->next;
       $i++;
     }
   }
@@ -3408,7 +3424,7 @@ EOF
     sub load_complex_product_dbic
     {
       #my $c = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
-      my $c = $DBIC_Complex_Product_RS->find($i + 3_300_000);
+      my $c = $DBIC_Complex_Product_RS->search({ id => $i + 3_300_000 })->next;
       $i++;
     }
   }
@@ -3423,7 +3439,7 @@ EOF
         MyTest::RDBO::Complex::Product->new(
           db => $DB, 
           id => $i + 1_100_000);
-      $p->load;
+      $p->load; #(with => [ 'category' ], inject_results => 1, prepare_cached => 1);
 
       my $cat = $p->category;
       my $n = $cat->name;
@@ -3467,7 +3483,7 @@ EOF
     sub load_complex_product_and_category_dbic
     {
       #my $c = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
-      my $c = $DBIC_Complex_Product_RS->find($i + 3_300_000);
+      my $c = $DBIC_Complex_Product_RS->search({ id => $i + 3_300_000 })->next;
       my $cat = $c->category_id;
       my $n = $cat->name;
       die  unless($n =~ /\S/);
@@ -3529,7 +3545,7 @@ EOF
     sub update_complex_category_dbic
     {
       #my $c = MyTest::DBIC::Complex::Category->find($i + 3_300_000);
-      my $c = $DBIC_Complex_Category_RS->find($i + 3_300_000);
+      my $c = $DBIC_Complex_Category_RS->search({ id => $i + 3_300_000 })->next;
       $c->name($c->name . ' updated');
       $c->update;
       $i++;
@@ -3598,7 +3614,7 @@ EOF
     sub update_complex_product_dbic
     {
       #my $p = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
-      my $p = $DBIC_Complex_Product_RS->find($i + 3_300_000);
+      my $p = $DBIC_Complex_Product_RS->search({ id => $i + 3_300_000 })->next;
       $p->name($p->name . ' updated');
       $p->published(\'2004-01-02 12:34:55'); #\'
       $p->update;
@@ -3857,6 +3873,7 @@ EOF
           db => $DB,
           query_is_sql => 1,
           prepare_cached => 1,
+          inject_results => 1,
           query =>
           [
             id => { le => 100_000 + $Iterations },
@@ -4067,6 +4084,7 @@ EOF
           db => $DB,
           query_is_sql => 1,
           prepare_cached => 1,
+          inject_results => 1,
           query =>
           [
             id   => { le => 100_000 + $Iterations },
@@ -4173,7 +4191,12 @@ EOF
           'me.name' => { -like => 'Product %2%' },
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
-        }, { prefetch => [ 'category_id' ], rows => MAX_LIMIT});
+        }, 
+        {
+          prefetch => [ 'category_id', 'code_names' ], 
+          software_limit => 1,
+          rows => MAX_LIMIT,
+        });
 
       die unless(@p);
 
@@ -4267,7 +4290,6 @@ EOF
                     '>=' => 400_000 } 
         }, 
         {
-          prefetch => [ 'category_id' ],
           limit_dialect => $Limit_Dialect,
           limit  => LIMIT,
           offset => OFFSET 
@@ -4296,7 +4318,7 @@ EOF
           'me.name' => { -like => 'Product %2%' },
           'me.id'   => { '<=' => 300_000 + $Iterations,
                          '>=' => 300_000 } 
-        }, { prefetch => [ 'category_id' ], rows => LIMIT, offset => OFFSET });
+        }, { rows => LIMIT, offset => OFFSET });
 
       die unless(@p);
 
@@ -4754,7 +4776,7 @@ EOF
     sub delete_complex_product_dbic
     {
       #my $c = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
-      my $c = $DBIC_Complex_Product_RS->find($i + 3_300_000);
+      my $c = $DBIC_Complex_Product_RS->search({ id => $i + 3_300_000 })->next;
       $c->delete;
       $i++;
     }

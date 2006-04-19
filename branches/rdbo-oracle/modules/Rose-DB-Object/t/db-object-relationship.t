@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1459;
+use Test::More tests => 1461;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 367)  unless($HAVE_PG);
+  skip("Postgres tests", 368)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -831,6 +831,21 @@ SKIP: foreach my $db_type ('pg')
 
   $o2 = MyPgOtherObject2->new(id => 12)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set 2 one to many on save 20 - $db_type");
+
+  $o->save;
+
+  @o2s = $o->other2_objs_on_save;
+
+  push(@o2s, MyPgOtherObject2->new(name => 'added'));
+  $o->other2_objs_on_save(\@o2s);
+
+  $o->save;
+
+  my $to = MyPgObject->new(id => $o->id)->load;
+  @o2s = $o->other2_objs_on_save;
+
+  is_deeply([ 'seven', 'one', 'added' ], [ map { $_->name } @o2s ], "add one to many on save 1 - $db_type");
+
 
   #
   # "one to many" add_now
@@ -4095,7 +4110,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 394)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 395)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -4228,16 +4243,16 @@ SKIP: foreach my $db_type ('sqlite')
   # Begin experiment
   #local $Rose::DB::Object::Manager::Debug = 1;
   my $no2s = $o->not_other2_objs;
-  
+
   is(scalar @$no2s, 2, 'not equal one-to-many 1');
-  
+
   my $nobjs = 
     Rose::DB::Object::Manager->get_objects(
       object_class => 'MySQLiteObject',
       require_objects => [ 'not_other2_objs' ]);
-  
+
   is(scalar @$nobjs, 2, 'not equal one-to-many 2');
-  
+
   MySQLiteObject->meta->delete_relationship('not_other2_objs');
   # End experiment
 
@@ -4894,6 +4909,20 @@ SKIP: foreach my $db_type ('sqlite')
   $o2 = MySQLiteOtherObject2->new(id => 12)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set 2 one to many on save 20 - $db_type");
 
+  $o->save;
+
+  @o2s = $o->other2_objs_on_save;
+
+  push(@o2s, MySQLiteOtherObject2->new(name => 'added'));
+  $o->other2_objs_on_save(\@o2s);
+
+  $o->save;
+
+  my $to = MySQLiteObject->new(id => $o->id)->load;
+  @o2s = $o->other2_objs_on_save;
+
+  is_deeply([ 'seven', 'one', 'added' ], [ map { $_->name } @o2s ], "add one to many on save 1 - $db_type");
+
   #
   # "one to many" add_now
   #
@@ -5487,7 +5516,7 @@ SKIP: foreach my $db_type ('sqlite')
   is($count, 5, "add 2 many to many on save 34 - $db_type");
 
   # End "many to many" tests
-  
+
   # Begin with_map_records tests
 
   @colors = $o->colors2;  
@@ -5528,7 +5557,7 @@ SKIP: foreach my $db_type ('sqlite')
   is($objs->[1]->colors3->[0]->map_rec->color_id, 9, "with_map_records map_rec 3 - $db_type");
   is($objs->[1]->colors3->[-1]->map_rec->color_id, 1, "with_map_records map_rec 4 - $db_type");
   is($objs->[0]->name, 'Zoom', "with_map_records map_rec 5 - $db_type");
-  
+
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class => 'MySQLiteObject',
@@ -5605,11 +5634,11 @@ SKIP: foreach my $db_type ('sqlite')
   is($obj->colors2->[0]->map_record->obj_id, $o->id, "with_map_records map_record 2 - $db_type");
 
   # End with_map_records tests
-  
+
   # Start create with map records tests
 
   $o = MySQLiteObject->new(name => 'WMR');
-  
+
   $o->colors3({ name => 'Gray', map_rec => { id => 999, arb_attr => 'Whee' } });
 
   $o->save;
@@ -5721,7 +5750,7 @@ CREATE TABLE rose_db_object_colors_map
   id        SERIAL PRIMARY KEY,
   obj_id    INT NOT NULL REFERENCES rose_db_object_test (id),
   color_id  INT NOT NULL REFERENCES rose_db_object_colors (id),
-  
+
   arb_attr  VARCHAR(64),
 
   UNIQUE(obj_id, color_id)
@@ -6863,7 +6892,7 @@ EOF
           add_on_save     => undef,
         },
       },
-      
+
       # Hrm.  Experimental...
       not_other2_objs =>
       {

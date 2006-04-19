@@ -36,9 +36,7 @@ To get up to speed quickly with L<Rose::DB>, read the L<Rose::DB::Tutorial> docu
     __PACKAGE__->use_private_registry;
 
     __PACKAGE__->register_db(
-      domain   => __PACKAGE__->default_domain,
-      type     => __PACKAGE__->default_type,
-      driver   => 'Pg',
+      driver   => 'pg',
       database => 'mydb',
       host     => 'localhost',
       username => 'devuser',

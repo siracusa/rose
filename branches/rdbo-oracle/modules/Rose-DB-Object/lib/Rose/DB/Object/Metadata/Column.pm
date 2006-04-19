@@ -22,7 +22,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 our $Triggers_Key      = 'triggers';
 our $Trigger_Index_Key = 'trigger_index';
 
-our $VERSION = '0.64';
+our $VERSION = '0.711';
 
 use overload
 (
@@ -118,6 +118,20 @@ sub default_value_sequence_name
   }
 
   return $self->{'default_value_sequence_name'}{$db_id};
+}
+
+sub db_value_hash_key
+{
+  my($self) = shift;
+
+  my $type = $self->method_name('set') ? 'set' : 'get_set';
+
+  if($self->method_uses_formatted_key($type))
+  {
+    return column_value_formatted_key($self->hash_key);
+  }
+
+  return $self->hash_key;
 }
 
 sub available_method_types
