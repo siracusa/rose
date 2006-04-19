@@ -123,7 +123,7 @@ sub default_value_sequence_name
 sub db_value_hash_key
 {
   my($self) = shift;
-  
+
   my $type = $self->method_name('set') ? 'set' : 'get_set';
 
   if($self->method_uses_formatted_key($type))

@@ -39,9 +39,9 @@ sub init_mason_request { HTML::Mason::Request->instance }
 sub init_mason_interp
 {
   my($self) = shift;
-  
+
   my $site = $self->app->website;
-  
+
   my $interp;
 
   if($site->can('mason_interp'))

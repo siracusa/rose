@@ -371,7 +371,7 @@ sub database_version
 sub password
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     my $password = shift;
@@ -1012,7 +1012,7 @@ sub format_timestamp
 sub parse_date
 {
   my($self, $value) = @_;
-  
+
   if(UNIVERSAL::isa($value, 'DateTime') || $self->validate_date_keyword($value))
   {
     return $value;
@@ -1033,7 +1033,7 @@ sub parse_date
 sub parse_datetime
 {  
   my($self, $value) = @_;
-  
+
   if(UNIVERSAL::isa($value, 'DateTime') || 
     $self->validate_datetime_keyword($value))
   {
@@ -1071,7 +1071,7 @@ sub parse_time
 sub parse_timestamp
 {  
   my($self, $value) = @_;
-  
+
   if(UNIVERSAL::isa($value, 'DateTime') || 
     $self->validate_timestamp_keyword($value))
   {
@@ -1269,7 +1269,7 @@ sub parse_interval
         $secs = int($secs);
 
         my $len = length $fsecs;
-  
+
         if($len < 9)
         {
           $fsecs .= ('0' x (9 - length $fsecs));
@@ -1334,7 +1334,7 @@ sub parse_interval
         my $fsecs = substr($secs, index($secs, '.') + 1);
 
         my $len = length $fsecs;
-  
+
         if($len < 9)
         {
           $fsecs .= ('0' x (9 - length $fsecs));
@@ -1381,7 +1381,7 @@ sub parse_interval
     $units{'years'} += 1000 * $units{'millenniums'};
     delete $units{'millenniums'};
   }
-  
+
   if(defined $units{'centuries'})
   {
     $units{'years'} += 100 * $units{'centuries'};
@@ -1466,7 +1466,7 @@ sub format_interval
     $deltas{'hms'} = join(':', map { sprintf('%.2d', $deltas{$_}) } (qw/h m/)) .
                      ($nsec ? sprintf(':%02d.%09d', $deltas{'s'}, $nsec) :         
                               sprintf(':%02d', $deltas{'s'}));
-              
+
     $output .= "$deltas{'hms'}"  if($deltas{'hms'});
   }
 

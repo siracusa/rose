@@ -38,7 +38,7 @@ sub type { shift->html_attr('type', @_) }
 sub support_older_browsers
 {
   my($self) = shift;
-  
+
   return $self->{'support_older_browsers'} = $_[0] ? 1 : 0  if(@_);
 
   unless(defined $self->{'support_older_browsers'})

@@ -53,7 +53,7 @@ is_deeply([ map { "$_" } $o->attachments('js') ],
 
 ok(ref $o->delete_attachment(name => 'js', uri => '/foo/bar.js') eq 
    'Rose::HTML::Object::Attachment::JavaScript', 'delete_attachment 1');
-   
+
 ok(!defined $o->delete_attachment(name => 'js', uri => 'nonesuch'), 'delete_attachment 2');
 
 $o->delete_attachments('js');
