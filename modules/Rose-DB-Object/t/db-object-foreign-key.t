@@ -231,9 +231,7 @@ SKIP: foreach my $db_type ('mysql')
   ok(ref $o2 && $o2->isa('MyMySQLObject'), "new() 2 - $db_type");
 
   is($o2->bits->to_Bin, '00101', "bits() (bitfield default value) - $db_type");
-local $Rose::DB::Object::Manager::Debug = 1;
-$DB::single = 1;
-#######################################
+
   ok($o2->load(with => [ 'other_obj' ]), "load() 2 - $db_type");
   ok(!$o2->not_found, "not_found() 1 - $db_type");
 
