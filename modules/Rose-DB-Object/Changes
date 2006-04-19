@@ -1,6 +1,6 @@
 0.72 (04.19.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * Many reference-count bugs fixes, including several that could cause 
+    * Many reference-count bugs fixed, including several that could cause 
       database handles to leak.
     * Fixed a bug that could cause "empty" sub-objects to be created when
       processing certain with_objects parameters.
