@@ -60,11 +60,11 @@ PerlSetVar MasonDefaultEscapeFlags "n"
   PerlHandler Rose::WebApp::Dispatch
 </Location>
 
-# <Location /rose/webapp/features/logger>
-#   PerlSetVar RoseWebAppClass "Rose::Test::MP1::WebApp::Features::Logger"
-#   SetHandler perl-script
-#   PerlHandler Rose::WebApp::Dispatch
-# </Location>
+<Location /rose/webapp/features/logger>
+  PerlSetVar RoseWebAppClass "Rose::Test::MP1::WebApp::Features::Logger"
+  SetHandler perl-script
+  PerlHandler Rose::WebApp::Dispatch
+</Location>
 
 <Location /rose/webapp/features/appparams>
   PerlSetVar RoseWebAppClass "Rose::Test::MP1::WebApp::Features::AppParams"

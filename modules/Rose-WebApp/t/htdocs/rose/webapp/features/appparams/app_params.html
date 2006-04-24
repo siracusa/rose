@@ -2,13 +2,13 @@
         "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<title>Rose::Test::MP1::WebApp::Features::WithAppParams</title>
+<title>Rose::Test::MP1::WebApp::Features::AppParams</title>
 </head>
 <body>
 
-<% q($app->app_param('a')) |h %> = <% $app->app_param('a') |h %><br/>
-<% q($app->app_param_exists('a')) |h %> = <% $app->app_param_exists('a') |h %><br/>
-<% q($app->app_param_exists('b')) |h %> = <% $app->app_param_exists('b') |h %><br/>
+<% q($app-&gt;app_param('a')) %> = <% $app->app_param('a') |h %><br/>
+<% q($app-&gt;app_param_exists('a')) %> = <% $app->app_param_exists('a') |h %><br/>
+<% q($app-&gt;app_param_exists('b')) %> = <% $app->app_param_exists('b') |h %><br/>
 
 </body>
 </html>

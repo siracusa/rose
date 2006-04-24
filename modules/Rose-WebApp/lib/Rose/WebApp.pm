@@ -114,6 +114,19 @@ use Rose::Object::MakeMethods::Generic
   ]
 );
 
+sub root_dir
+{
+  my($self) = shift;
+  
+  my $doc_root = $self->server->request->document_root;
+  $doc_root =~ s{/$}{};
+  
+  my $root_uri = $self->root_uri;
+  $root_uri = ''  if($root_uri eq '/');
+
+  return "$doc_root/$root_uri";
+}
+
 sub root_uri_regex
 {
   unless($_[0]->{'root_uri_regex'})

@@ -29,5 +29,6 @@ use Rose::WebApp::View::Mason;
 use Rose::Test::MP1::MyApp;
 use Rose::Test::MP1::WebApp::Server;
 use Rose::Test::MP1::WebApp::Features::AppParams;
+use Rose::Test::MP1::WebApp::Features::Logger;
 
 1;
