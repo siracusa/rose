@@ -43,13 +43,13 @@ sub _log
   {
     #print STDERR "FALLING BACK TO LOG NOTICE: ", $self->app->server_log_level, 
     #             " IS MORE RESTRICTIVE THAN $level_name\n";
-    $self->app->apache->log_notice(@_);
+    $self->app->server->log_notice(@_);
   }
 
   my $method = "log_$level_name";
 
   no strict 'refs';
-  $self->app->apache->$method(@_);
+  $self->app->server->$method(@_);
 }
 
 # XXX: Hard-code rank and name to avoid lookups.

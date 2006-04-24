@@ -42,14 +42,14 @@ sub init_mason_interp
 
   my $site = $self->app->website;
 
-  my $interp;
-
   if($site->can('mason_interp'))
   {
     return $site->mason_interp;
   }
 
-  return HTML::Mason::Interp->new;
+  HTML::Mason::Interp->new(
+    comp_root     => $self->app->server->request->document_root,
+    allow_globals => [ qw($r $app) ]);
 }
 
 sub app

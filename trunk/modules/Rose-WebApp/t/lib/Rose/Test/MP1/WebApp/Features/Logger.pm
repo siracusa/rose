@@ -1,13 +1,12 @@
-package Rose::Test::WebApp::Features::Logger;
+package Rose::Test::MP1::WebApp::Features::Logger;
 
 use strict;
 
-use Rose::WebApp;
-our @ISA = qw(Rose::WebApp);
+use Rose::Test::MP1::MyApp;
+our @ISA = qw(Rose::Test::MP1::MyApp);
 
 __PACKAGE__->use_features('logger');
 
-sub init_website_class  { 'Rose::Site::WebSite' }
 sub init_default_action { 'default' }
 
 sub do_default
@@ -38,13 +37,15 @@ sub do_default
     }
   }
 
-  my $error_log = $self->apache->server_root_relative('logs/error_log');
+  my $error_log = $self->server->server_root_relative('logs/error_log');
 
-  open(LOG, $error_log) or die "Could not open $error_log - $!";
+  my $log_fh;
+
+  open($log_fh, $error_log) or die "Could not open $error_log - $!";
   {
     local $/;
-    my $log = <LOG>;
-    close(LOG);
+    my $log = <$log_fh>;
+    close($log_fh);
 
     die "Found 'NOT OK' line in error log! $1"  if($log =~ m{^(.*NOT OK - .*)$}m);
   }
@@ -58,11 +59,11 @@ sub do_default
     $self->$method("OK $level");
   }
 
-  open(LOG, $error_log) or die "Could not open $error_log - $!";
+  open($log_fh, $error_log) or die "Could not open $error_log - $!";
   {
     local $/;
-    my $log = <LOG>;
-    close(LOG);
+    my $log = <$log_fh>;
+    close($log_fh);
 
     foreach my $level (qw(emergency alert critical error warn notice info debug))
     {
