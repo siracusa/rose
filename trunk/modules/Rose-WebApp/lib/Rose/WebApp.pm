@@ -350,13 +350,20 @@ sub register_features
 *register_subclass = \&register_features;
 *register_feature  = \&register_features;
 
+sub normalize_feature_name
+{
+  my($self_or_class, $name) = @_;
+  $name =~ s/[^\w:]+//g;
+  return $name;
+}
+
 sub use_features
 {
   my($class) = shift;
 
   foreach my $feature (@_)
   {
-    (my $name = $feature) =~ s/[^\w:]+//g;
+    my $name = $class->normalize_feature_name($feature);
 
     my $feature_meta = $Features{$name} 
       or croak "No feature registered under the name '$name'";

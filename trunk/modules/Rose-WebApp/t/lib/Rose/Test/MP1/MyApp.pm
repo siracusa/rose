@@ -4,6 +4,8 @@ use strict;
 
 use HTML::Mason::Escapes;
 
+use Rose::WebApp::View::Mason;
+
 use Rose::Test::MP1::MySite;
 use Rose::Test::MP1::MyApp::Form::Edit;
 
