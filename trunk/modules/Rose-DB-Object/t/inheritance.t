@@ -22,7 +22,7 @@ my $db_type = $HAVE{'sqlite'} ? 'sqlite' : (sort keys %HAVE)[0];
 
 SKIP:
 {
-  skip("No db available", 55)  unless($db_type);
+  skip("No db available", 54)  unless($db_type);
 
   package MyObject;
   use base 'Rose::DB::Object';
