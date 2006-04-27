@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
 
-our $VERSION = '0.72';
+our $VERSION = '0.721';
 
 our $Debug = 0;
 
