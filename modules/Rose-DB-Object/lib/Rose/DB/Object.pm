@@ -1548,21 +1548,17 @@ To define your own L<Rose::DB::Object>-derived class, you must describe the tabl
 
 Metadata objects can be populated manually or automatically.  Both techniques are shown in the L<synopsis|/SYNOPSIS> above.  The automatic mode works by asking the database itself for the information.  There are some caveats to this approach.  See the L<auto-initialization|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> section of the L<Rose::DB::Object::Metadata> documentation for more information.
 
-=head2 Error Handling
-
-Error handling for L<Rose::DB::Object>-derived objects is controlled by the L<error_mode|Rose::DB::Object::Metadata/error_mode> method of the L<Rose::DB::Object::Metadata> object associated with the class (accessible via the L<meta|/meta> method).  The default setting is "fatal", which means that L<Rose::DB::Object> methods will L<croak|Carp/croak> if they encounter an error.
-
-B<PLEASE NOTE:> The error return values described in the L<object method|/"OBJECT METHODS"> documentation are only relevant when the error mode is set to something "non-fatal."  In other words, if an error occurs, you'll never see any of those return values if the selected error mode L<die|perlfunc/die>s or L<croak|Carp/croak>s or otherwise throws an exception when an error occurs.
-
 =head2 Inheritance
 
 Simple inheritance between L<Rose::DB::Object>-derived classes is supported.  The first time the L<metadata object|/meta> for a given class is accessed, it is created by making a one-time "deep copy" of the base class's metadata object.  This includes all columns, relationships, foreign keys, and other metadata from the base class.  From that point on, the subclass may add to or modify its metadata without affecting any other class.
 
-B<Tip:> When using perl 5.8.0 or later, the L<Scalar::Util::Clone> module is highly recommended.  If it is installed, it will be used to more efficiently clone base class metadata objects.
+B<Tip:> When using perl 5.8.0 or later, the L<Scalar::Util::Clone> module is highly recommended.  If it's installed, it will be used to more efficiently clone base-class metadata objects.
 
-Each subclass must explicitly specify whether it wants to create a new set of column and relationship methods, or merely inherit the methods from the base class.  If the subclass contains any metadata modifications that affects method creation, then it must create a new set of methods to reflect those changes.  
+If the base class has already been L<initilized|Rose::DB::Object::Metadata/initialize>, the subclass must explicitly specify whether it wants to create a new set of column and relationship methods, or merely inherit the methods from the base class.  If the subclass contains any metadata modifications that affect method creation, then it must create a new set of methods to reflect those changes.  
 
-Finally, note that column types cannot be changed "in-place."  To change a column type, delete the old column and add a new one with the same name.  Here's an example.
+Finally, note that column types cannot be changed "in-place."  To change a column type, delete the old column and add a new one with the same name.
+
+Example:
 
   package BaseClass;
   use base 'Rose::DB::Object';
@@ -1581,7 +1577,7 @@ Finally, note that column types cannot be changed "in-place."  To change a colum
 
   package SubClass;
   use base 'BaseClass';
-  
+
   # Set a default value for this column.
   __PACKAGE__->meta->column('id')->default(123);
 
@@ -1605,7 +1601,7 @@ Finally, note that column types cannot be changed "in-place."  To change a colum
   $s = SubClass->new;
 
   $id = $s->id; # 123
-  
+
   $b->start('1/2/2003'); # Value is converted to a DateTime object
   print $b->start->strftime('%B'); # 'January'
 
@@ -1614,6 +1610,12 @@ To preserve all inherited methods in a subclass, do this instead:
   package SubClass;
   use base 'BaseClass';
   __PACKAGE__->meta->initialize(preserve_existing => 1);
+
+=head2 Error Handling
+
+Error handling for L<Rose::DB::Object>-derived objects is controlled by the L<error_mode|Rose::DB::Object::Metadata/error_mode> method of the L<Rose::DB::Object::Metadata> object associated with the class (accessible via the L<meta|/meta> method).  The default setting is "fatal", which means that L<Rose::DB::Object> methods will L<croak|Carp/croak> if they encounter an error.
+
+B<PLEASE NOTE:> The error return values described in the L<object method|/"OBJECT METHODS"> documentation are only relevant when the error mode is set to something "non-fatal."  In other words, if an error occurs, you'll never see any of those return values if the selected error mode L<die|perlfunc/die>s or L<croak|Carp/croak>s or otherwise throws an exception when an error occurs.
 
 =head1 CONSTRUCTOR
 
