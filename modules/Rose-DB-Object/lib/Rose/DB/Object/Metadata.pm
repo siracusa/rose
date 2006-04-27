@@ -3,7 +3,6 @@ package Rose::DB::Object::Metadata;
 use strict;
 
 use Carp();
-#use Clone::PP qw(clone);
 
 use Rose::Object;
 our @ISA = qw(Rose::Object);
@@ -18,6 +17,12 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
+
+# Attempt to load Scalar::Util::Clone at runtime and ignore any errors
+# to keep it from being a "hard" requirement.
+eval { require Scalar::Util::Clone };
+
+use Clone(); # This is the backup clone method
 
 our $VERSION = '0.721';
 
@@ -210,6 +215,46 @@ sub reset
   return;
 }
 
+sub clone
+{
+  my($self) = shift;
+
+  # The easy way: use Scalar::Util::Clone
+  if(defined $Scalar::Util::Clone::VERSION)
+  {
+    return Scalar::Util::Clone::clone($self);
+  }
+
+  # The hard way: Clone.pm plus mucking  
+
+  # Temporarily break all parent back-links to prevent infinite recursion
+  foreach my $item (grep { defined } $self->columns, $self->primary_key, 
+                    $self->unique_keys, $self->foreign_keys, 
+                    $self->relationships)
+  {
+    $item->parent(undef);
+  }
+
+  my $meta = Clone::clone($self);
+  
+  # Reset all the parent back-links
+  foreach my $item (grep { defined } $self->columns, $self->primary_key, 
+                    $self->unique_keys, $self->foreign_keys, 
+                    $self->relationships)
+  {
+    $item->parent($self);
+  }
+
+  foreach my $item (grep { defined } $meta->columns, $meta->primary_key, 
+                    $meta->unique_keys, $meta->foreign_keys, 
+                    $meta->relationships)
+  {
+    $item->parent($meta);
+  }
+
+  return $meta;
+}
+
 sub for_class
 {
   my($meta_class, $class) = (shift, shift);
@@ -218,14 +263,12 @@ sub for_class
   # Clone an ancestor meta object
   foreach my $parent_class (__get_parents($class))
   {
-    if($Objects{$parent_class})
+    # Don't clone a meta from the base-est of base classes
+    next  if($parent_class eq 'Rose::DB::Object');
+
+    if(my $parent_meta = $Objects{$parent_class})
     {
-      # Load Scalar::Util::Clone at runtime to keep it from being a "hard" 
-      # requirement to use the module at all, since this code only runs
-      # when an RDBO-derived class is subclassed.
-      require Scalar::Util::Clone;
-$DB::single = 1;
-      my $meta = Scalar::Util::Clone::clone($Objects{$parent_class});
+      my $meta = $parent_meta->clone;
 
       $meta->reset(0);
       $meta->class($class);
@@ -690,7 +733,6 @@ sub sync_keys_to_columns
 
   return;
 }
-
 
 sub column
 {
