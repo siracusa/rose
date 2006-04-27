@@ -3,7 +3,7 @@ package Rose::DB::Object::Metadata;
 use strict;
 
 use Carp();
-use Clone::PP qw(clone);
+#use Clone::PP qw(clone);
 
 use Rose::Object;
 our @ISA = qw(Rose::Object);
@@ -19,7 +19,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.711';
+our $VERSION = '0.721';
 
 our $Debug = 0;
 
@@ -198,6 +198,18 @@ sub new
 
 sub init_original_class { ref shift }
 
+sub reset
+{
+  my($self) = shift;
+  
+  $self->is_initialized(0);
+  $self->allow_auto_initialization(0);
+  $self->was_auto_initialized(0);
+  $self->initialized_foreign_keys(0);
+  
+  return;
+}
+
 sub for_class
 {
   my($meta_class, $class) = (shift, shift);
@@ -208,8 +220,16 @@ sub for_class
   {
     if($Objects{$parent_class})
     {
-      my $meta = clone($Objects{$parent_class});
+      # Load Scalar::Util::Clone at runtime to keep it from being a "hard" 
+      # requirement to use the module at all, since this code only runs
+      # when an RDBO-derived class is subclassed.
+      require Scalar::Util::Clone;
+$DB::single = 1;
+      my $meta = Scalar::Util::Clone::clone($Objects{$parent_class});
+
+      $meta->reset(0);
       $meta->class($class);
+
       return $Objects{$class} = $meta;
     }
   }
@@ -225,10 +245,10 @@ sub __get_parents
   no strict 'refs';
   foreach my $sub_class (@{"${class}::ISA"})
   {
-    push(@parents, __get_parents($sub_class))
+    push(@parents, __get_parents($sub_class))  if($sub_class->isa('Rose::DB::Object'));
   }
 
-  return @parents;
+  return $class, @parents;
 }
 
 sub clear_all_dbs
