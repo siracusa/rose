@@ -1554,6 +1554,65 @@ Error handling for L<Rose::DB::Object>-derived objects is controlled by the L<er
 
 B<PLEASE NOTE:> The error return values described in the L<object method|/"OBJECT METHODS"> documentation are only relevant when the error mode is set to something "non-fatal."  In other words, if an error occurs, you'll never see any of those return values if the selected error mode L<die|perlfunc/die>s or L<croak|Carp/croak>s or otherwise throws an exception when an error occurs.
 
+=head2 Inheritance
+
+Simple inheritance between L<Rose::DB::Object>-derived classes is supported.  The first time the L<metadata object|/meta> for a given class is accessed, it is created by making a one-time deep copy of the base class's metadata object.  This includes all columns, relationships, foreign keys, and other metadata from the base class.  From that point on, the subclass may add to or modify this metadata without affecting any other class.
+
+Each subclass must explicitly specify whether it wants to create a new set of column and relationship methods, or merely inherit the methods from the base class.  If the subclass contains any metadata modifications that affects method creation, then it must create a new set of methods to reflect those changes.  
+
+Finally, note that column types cannot be changed "in-place."  To change a column type, delete the old column and add a new one with the same name.  Here's an example.
+
+  package BaseClass;
+  use base 'Rose::DB::Object';
+
+  __PACKAGE__->meta->table('objects');
+
+  __PACKAGE__->meta->columns
+  (
+    id    => { type => 'int', primary_key => 1 },
+    start => { type => 'scalar' },
+  );
+
+  __PACKAGE__->meta->initialize;
+
+  ...
+
+  package SubClass;
+  use base 'BaseClass';
+  
+  # Set a default value for this column.
+  __PACKAGE__->meta->column('id')->default(123);
+
+  # Change the "start" column into a datetime column.
+  __PACKAGE__->meta->delete_column('start');
+  __PACKAGE__->meta->add_column(start => { type => 'datetime' });
+
+  # Initialize, replacing any inherited methods with newly created ones
+  __PACKAGE__->meta->initialize(replace_existing => 1);
+
+  ...
+
+  $b = BaseClass->new;
+
+  $id = $b->id; # undef
+
+  $b->start('1/2/2003');
+  print $b->start; # '1/2/2003' (plain string)
+
+
+  $s = SubClass->new;
+
+  $id = $s->id; # 123
+  
+  $b->start('1/2/2003'); # Value is converted to a DateTime object
+  print $b->start->strftime('%B'); # 'January'
+
+To preserve all inherited methods in a subclass, do this instead:
+
+  package SubClass;
+  use base 'BaseClass';
+  __PACKAGE__->meta->initialize(preserve_existing => 1);
+
 =head1 CONSTRUCTOR
 
 =over 4
