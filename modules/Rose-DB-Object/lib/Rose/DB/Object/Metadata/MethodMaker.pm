@@ -10,7 +10,7 @@ use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::Metadata::Object;
 our @ISA = qw(Rose::DB::Object::Metadata::Object);
 
-our $VERSION = '0.702';
+our $VERSION = '0.721';
 
 #
 # Class data
@@ -425,6 +425,11 @@ sub make_methods
       ]);
 
     $self->made_method_type($type => $method_name);
+    
+    if($self->can('method_code'))
+    {
+      $self->method_code($type => undef);
+    }
   }
 
   return;
