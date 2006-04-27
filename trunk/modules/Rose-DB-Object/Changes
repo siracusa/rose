@@ -1,7 +1,7 @@
-0.721 (04.26.2006) - John Siracusa <siracusa@mindspring.com>
+0.721 (04.27.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * Improved metadata inheritance.
-      
+    * Improved and documented metadata inheritance behavior.
+
 0.72 (04.19.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Many reference-count bugs fixed, including several that could cause 
