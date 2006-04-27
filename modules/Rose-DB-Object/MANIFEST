@@ -141,6 +141,7 @@ t/db-object-std-cached.t
 t/db-object-std.t
 t/db-object.t
 t/deep-joins.t
+t/inheritance.t
 t/lazy-columns.t
 t/lib/My/DB/Gene/Main.pm
 t/lib/My/DB/Gene2Unigene.pm
