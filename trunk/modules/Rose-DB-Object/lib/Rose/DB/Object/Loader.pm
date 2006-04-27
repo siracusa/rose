@@ -54,7 +54,7 @@ use Rose::Object::MakeMethods::Generic
 eval 
 {
   require Scalar::Util::Clone;
-  *clone = \&Scalar::Util::Clone::PP::clone;
+  *clone = \&Scalar::Util::Clone::clone;
 };
 
 if($@)
