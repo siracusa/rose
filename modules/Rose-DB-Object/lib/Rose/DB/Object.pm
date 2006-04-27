@@ -1556,9 +1556,9 @@ B<PLEASE NOTE:> The error return values described in the L<object method|/"OBJEC
 
 =head2 Inheritance
 
-Simple inheritance between L<Rose::DB::Object>-derived classes is supported.  The first time the L<metadata object|/meta> for a given class is accessed, it is created by making a one-time deep copy of the base class's metadata object.  This includes all columns, relationships, foreign keys, and other metadata from the base class.  From that point on, the subclass may add to or modify this metadata without affecting any other class.
+Simple inheritance between L<Rose::DB::Object>-derived classes is supported.  The first time the L<metadata object|/meta> for a given class is accessed, it is created by making a one-time "deep copy" of the base class's metadata object.  This includes all columns, relationships, foreign keys, and other metadata from the base class.  From that point on, the subclass may add to or modify its metadata without affecting any other class.
 
-B<Tip:> When using perl 5.8.0 or later, installing the L<Scalar::Util::Clone> module is highly recommended.  If it is installed, it will be used to more efficiently clone base class metadata objects.
+B<Tip:> When using perl 5.8.0 or later, the L<Scalar::Util::Clone> module is highly recommended.  If it is installed, it will be used to more efficiently clone base class metadata objects.
 
 Each subclass must explicitly specify whether it wants to create a new set of column and relationship methods, or merely inherit the methods from the base class.  If the subclass contains any metadata modifications that affects method creation, then it must create a new set of methods to reflect those changes.  
 

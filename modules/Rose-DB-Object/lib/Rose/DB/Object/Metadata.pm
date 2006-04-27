@@ -226,25 +226,9 @@ sub clone
   }
 
   # The hard way: Clone.pm plus mucking  
-
-  # Temporarily break all parent back-links to prevent infinite recursion
-  foreach my $item (grep { defined } $self->columns, $self->primary_key, 
-                    $self->unique_keys, $self->foreign_keys, 
-                    $self->relationships)
-  {
-    $item->parent(undef);
-  }
-
   my $meta = Clone::clone($self);
   
   # Reset all the parent back-links
-  foreach my $item (grep { defined } $self->columns, $self->primary_key, 
-                    $self->unique_keys, $self->foreign_keys, 
-                    $self->relationships)
-  {
-    $item->parent($self);
-  }
-
   foreach my $item (grep { defined } $meta->columns, $meta->primary_key, 
                     $meta->unique_keys, $meta->foreign_keys, 
                     $meta->relationships)
@@ -1853,6 +1837,7 @@ sub make_relationship_methods
 
       # Initialize/reset preserve_existing flag
       $args{'preserve_existing'} = $preserve_existing_arg || $self->allow_auto_initialization;
+      delete $args{'replace_existing'}  if($args{'preserve_existing'});
 
       # If a corresponding foreign key exists, the preserve any existing
       # methods with the same names.  This is a crude way to ensure that we
@@ -1867,6 +1852,7 @@ sub make_relationship_methods
           if($rel_id eq $fk->id)
           {
             $args{'preserve_existing'} = 1;
+            delete $args{'replace_existing'};
             last FK;
           }
         }
@@ -1988,6 +1974,8 @@ sub retry_deferred_relationships
 
       my $args = $relationship->deferred_make_method_args || {};
       $args->{'preserve_existing'} = 1;
+      delete $args->{'replace_existing'};
+
       $relationship->make_methods(%$args);
 
       # Reassign to list in case we rebuild above
