@@ -2,13 +2,13 @@ package Rose::DB::Object::Metadata::Object;
 
 use strict;
 
-use Clone::PP();
+use Clone();
 use Scalar::Util();
 
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.721';
+our $VERSION = '0.722';
 
 sub parent
 {
@@ -21,7 +21,7 @@ sub clone
 {
   my($self) = shift;
   
-  my $clone = Clone::PP::clone($self);
+  my $clone = Clone::clone($self);
   Scalar::Util::weaken($clone->{'parent'});
 
   return $clone;

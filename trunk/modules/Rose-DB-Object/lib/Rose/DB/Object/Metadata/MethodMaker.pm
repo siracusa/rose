@@ -4,13 +4,13 @@ use strict;
 
 use Carp();
 
-use Clone::PP();
+use Clone();
 use Rose::Object::MakeMethods::Generic;
 
 use Rose::DB::Object::Metadata::Object;
 our @ISA = qw(Rose::DB::Object::Metadata::Object);
 
-our $VERSION = '0.721';
+our $VERSION = '0.722';
 
 #
 # Class data
@@ -135,10 +135,10 @@ sub init_method_maker_info
             next  if(!$subclass_info->{$type}{$attr} ||
                      defined $info->{$type}{$attr});  
 
-            $info->{$type}{$attr} = Clone::PP::clone($subclass_info->{$type}{$attr});
+            $info->{$type}{$attr} = Clone::clone($subclass_info->{$type}{$attr});
           }
 
-          # Args come from an already-inhereted set
+          # Args come from an already-inherited set
           $info->{$type}{'args'} = [ $class->common_method_maker_argument_names ];
         }
       }
