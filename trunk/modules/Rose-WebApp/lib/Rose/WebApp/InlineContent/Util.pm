@@ -1,4 +1,4 @@
-package Rose::WebApp::Util::InlineContent;
+package Rose::WebApp::InlineContent::Util;
 
 use strict;
 
