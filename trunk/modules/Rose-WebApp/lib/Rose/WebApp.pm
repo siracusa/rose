@@ -915,6 +915,15 @@ sub redirect_to_page
   $self->website->redirect($uri);
 }
 
+sub inline_content_exists { }
+sub inline_content        { }
+
+sub add_inline_content
+{
+  croak qq(No such method: add_inline_content().  Did you forget to use ),
+        qq(the "inline-content" feature?);
+}
+
 sub show_comp
 {
   my($self, %args) = @_;

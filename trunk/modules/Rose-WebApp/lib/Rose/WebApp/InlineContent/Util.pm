@@ -24,9 +24,9 @@ __PACKAGE__->register_subclass;
 
 our %CONTENT_TYPES =
 (
-  'mason-comps' => 1,
-  'htdocs'      => 1,
-  'unknown'     => 1,
+  'mason-comp' => 1,
+  'html'       => 1,
+  'unknown'    => 1,
 );
 
 sub valid_content_types { sort keys %CONTENT_TYPES }
@@ -84,7 +84,7 @@ sub extract_inline_content
       %file = ();
       $line = 0;
     }
-    elsif(/^(File|Type|Lines|Mode): *(\S.*)$/i)
+    elsif(/^(Path|Type|Lines|Mode): *(\S.*)$/i)
     {
       $file{lc $1} = $2;
     }
@@ -99,7 +99,7 @@ sub extract_inline_content
 
       if($dest_is_hash)
       {
-        my $path = Path::Class::File->new($file{'file'});
+        my $path = Path::Class::File->new($file{'path'});
         $path->cleanup;
 
         if(exists $dest->{$file{'type'} || 'unknown'}{$path})
@@ -113,7 +113,7 @@ sub extract_inline_content
       }
       else # write files
       {
-        my $install_path = Path::Class::File->new($dest, $file{'file'});
+        my $install_path = Path::Class::File->new($dest, $file{'path'});
         $install_path->cleanup;
   
         if(-e $install_path && $noclobber)
@@ -261,7 +261,7 @@ sub _format_archive_file
 
   return<<"EOF";
 ---
-File: $path
+Path: $path
 Mode: $mode
 Type: $type
 Lines: $lines

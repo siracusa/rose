@@ -7,6 +7,7 @@ use Carp;
 use Scalar::Util();
 use HTML::Mason::Interp;
 use HTML::Mason::Request();
+use use HTML::Mason::Resolver::Null();
 
 use Rose::WebApp::Server::Constants qw(OK NOT_FOUND SERVER_ERROR);
 
@@ -28,11 +29,15 @@ use Rose::Object::MakeMethods::Generic
   'scalar --get_set_init' =>
   [
     'mason_interp',
+    'mason_interp_inline',
     'mason_request',
   ],
 
   boolean => 'inlined_error',
 );
+
+# For processing inline content
+our $Interp_Inline =
 
 sub init_mason_request { HTML::Mason::Request->instance }
 
@@ -47,9 +52,43 @@ sub init_mason_interp
     return $site->mason_interp;
   }
 
-  HTML::Mason::Interp->new(
-    comp_root     => $self->app->server->request->document_root,
-    allow_globals => [ qw($r $app) ]);
+  my $doc_root = $self->app->server->request->document_root;
+  my $comp_root = Path::Class::Dir->new($doc_root)->parent->subdir('comps');
+  my $data_dir  = Path::Class::Dir->new($doc_root)->parent->subdir('mason/data');
+
+  my %params = (allow_globals => [ qw($r $app) ]);
+  
+  if(-e $data_dir)
+  {
+    $params{'data_dir'} = $data_dir;
+  }
+  
+  if(-e $comp_root)
+  {
+    $params{'comp_root'} =
+    [
+      docs  => $doc_root,
+      comps => $comp_root,
+    ];
+  }
+  else
+  {
+    $params{'comp_root'} = $doc_root;
+  }
+
+  return HTML::Mason::Interp->new(%params);
+}
+
+sub init_mason_interp_inline 
+{
+  my($self) = shift;
+
+  my $interp = HTML::Mason::Interp->new(resolver_class => 'HTML::Mason::Resolver::Null');
+
+  $interp->set_global('app' => $self->app);
+  $interp->set_global('site' => $self->app->website_class);
+
+  return $interp;
 }
 
 sub app
@@ -118,7 +157,18 @@ sub run_comp
 
   my($buffer, $m);
 
-  if($m = $self->mason_request)
+  if(my $comp_source = $self->inline_content(type => 'mason-comp',
+                                             path => $path))
+  {
+    my $interp = $self->mason_interp_inline;
+#print STDERR "INLINE COMP WITH $interp\n";
+    $interp->set_global('app' => $self->app);
+
+    my $comp = $interp->make_component(comp_source => $comp_source);
+    my $request = $interp->make_request(out_method => \$buffer, comp => $comp);
+    eval { $request->exec };
+  }
+  elsif($m = $self->mason_request)
   {
 #print STDERR "CHECK COMP WITH $m\n";
     unless($m->interp->comp_exists($path))
@@ -147,7 +197,6 @@ sub run_comp
 
     $interp->out_method(\$buffer);
     $interp->set_global('app' => $self->app);
-    $interp->set_global('site' => $self->app->website_class);
 #print STDERR "RUN INTERP $path $@args\n";
     eval
     {
