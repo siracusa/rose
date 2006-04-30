@@ -3453,7 +3453,7 @@ This hybrid approach to metadata population strikes a good balance between upfro
 
 =item B<clear_all_dbs>
 
-Clears the L<db|/db> attribute of the metadata object for each L<registered class|registered_classes>.
+Clears the L<db|/db> attribute of the metadata object for each L<registered class|/registered_classes>.
 
 =item B<column_type_class TYPE [, CLASS]>
 
