@@ -20,8 +20,6 @@ our @EXPORT_OK =
 
 our %EXPORT_TAGS = (all => \@EXPORT_OK);
 
-__PACKAGE__->register_subclass;
-
 our %CONTENT_TYPES =
 (
   'mason-comp' => 1,
@@ -56,10 +54,16 @@ sub extract_inline_content
 
   my $dest_is_hash = ref $dest eq 'HASH' ? 1 : 0;
 
-  if(defined $type)
+  my $check_type;
+
+  if($type)
   {
-    $type = normalize_content_type($type);
-    croak "Invalid content type '$type'"  unless($CONTENT_TYPES{$type});
+    unless(ref $type eq 'CODE')
+    {
+      $type = normalize_content_type($type);
+      croak "Invalid content type '$type'"  unless($CONTENT_TYPES{$type});
+      $check_type = sub { normalize_content_type($_[0]) eq $type };
+    }
   }
 
   no strict 'refs';
@@ -84,7 +88,7 @@ sub extract_inline_content
       %file = ();
       $line = 0;
     }
-    elsif(/^(Path|Type|Lines|Mode): *(\S.*)$/i)
+    elsif(/^(Path|Type|Lines|Mode|Chomp): *(\S.*)$/i)
     {
       $file{lc $1} = $2;
     }
@@ -95,6 +99,14 @@ sub extract_inline_content
       foreach my $line (1 .. $file{'lines'})
       {
         $file{'contents'} .= <$fh>;
+      }
+
+      chomp($file{'contents'})  if($file{'chomp'});
+
+      if($check_type)
+      {
+        local $_ = $file{'type'};
+        next  unless($check_type->($file{'type'}));
       }
 
       if($dest_is_hash)
@@ -147,6 +159,14 @@ sub extract_inline_content
   }
 }
 
+sub choose_content_type
+{
+  /\.[sx]?html?$/i && return 'html';
+  /\.mc$/i         && return 'mason-comp';
+
+  return 'unknown';
+}
+
 sub create_inline_content
 {
   my(%args) = @_;
@@ -168,13 +188,11 @@ sub create_inline_content
     }
   }
 
-  my $type = $args{'type'} or croak "Missing type parameter";
-
-  croak "Invalid content type '$type'"  unless($CONTENT_TYPES{$type});
+  my $set_type = $args{'set_type'} || \&choose_content_type;
 
   my @files;
 
-  _archive_files_recursive($path, $prefix, $type, $path_re, $file_re, \@files);
+  _archive_files_recursive($path, $prefix, $set_type, $path_re, $file_re, \@files);
 
   return join('', @files), "\n";
 }
@@ -182,7 +200,7 @@ sub create_inline_content
 sub _archive_files_recursive
 {
   my $path = shift;
-  my($prefix, $type, $path_re, $file_re, $files) = @_;
+  my($prefix, $set_type, $path_re, $file_re, $files) = @_;
 
   croak "No such file or directory - '$path'"  unless(-e $path);
 
@@ -213,7 +231,7 @@ sub _archive_files_recursive
 
 sub _archive_file
 {
-  my($path, $prefix, $type, $path_re, $file_re, $files) = @_;
+  my($path, $prefix, $set_type, $path_re, $file_re, $files) = @_;
 
   my $file = Path::Class::File->new($path);
   $file->cleanup;
@@ -247,13 +265,17 @@ sub _archive_file
 
   my $contents = $file->slurp;
 
-  push(@$files, _format_archive_file($file, $full_rel_path, $contents, $type));
+  push(@$files, _format_archive_file($file, $full_rel_path, $contents, $set_type));
 }
 
 sub _format_archive_file
 {
-  my($file, $path, $contents, $type) = @_;
+  my($file, $path, $contents, $set_type) = @_;
 
+  local $_ = $path;
+  my $type = $set_type->($path) || 'unknown';
+
+  my $chomp = $contents =~ /\n\z/ ? 1 : 0;
   chomp($contents);
 
   my $mode  = (stat($file))[2];
@@ -261,9 +283,10 @@ sub _format_archive_file
 
   return<<"EOF";
 ---
-Path: $path
-Mode: $mode
-Type: $type
+Path:  $path
+Mode:  $mode
+Type:  $type
+Chomp: $chomp
 Lines: $lines
 
 $contents

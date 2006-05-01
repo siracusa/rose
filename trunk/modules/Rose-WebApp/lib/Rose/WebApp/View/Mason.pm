@@ -7,7 +7,7 @@ use Carp;
 use Scalar::Util();
 use HTML::Mason::Interp;
 use HTML::Mason::Request();
-use use HTML::Mason::Resolver::Null();
+use HTML::Mason::Resolver::Null();
 
 use Rose::WebApp::Server::Constants qw(OK NOT_FOUND SERVER_ERROR);
 
@@ -35,9 +35,6 @@ use Rose::Object::MakeMethods::Generic
 
   boolean => 'inlined_error',
 );
-
-# For processing inline content
-our $Interp_Inline =
 
 sub init_mason_request { HTML::Mason::Request->instance }
 
@@ -157,8 +154,7 @@ sub run_comp
 
   my($buffer, $m);
 
-  if(my $comp_source = $self->inline_content(type => 'mason-comp',
-                                             path => $path))
+  if(my $comp_source = $self->app->inline_content($path))
   {
     my $interp = $self->mason_interp_inline;
 #print STDERR "INLINE COMP WITH $interp\n";
@@ -253,6 +249,35 @@ sub output
   my $ref = $self->output_ref;
 
   return $ref ? $$ref : '';
+}
+
+package Rose::WebApp::View::Mason::Resolver::InlineContent;
+
+use HTML::Mason::ComponentSource;
+
+use HTML::Mason::Resolver::File;
+our @ISA = qw(HTML::Mason::Resolver::File);
+
+sub get_info 
+{
+  my($self) = shift;
+  my($path, $comp_root_key, $comp_root_path) = @_;
+
+  my $app = $HTML::Mason::Commands::app or return $self->SUPER::get_info(@_);
+  
+  if(my $content_ref = $app->inline_content_ref($path))
+  {
+    return
+      HTML::Mason::ComponentSource->new(
+        friendly_name   => "inline:$path",
+        comp_id         => "inine:$path",
+        last_modified   => 0,
+        comp_path       => $path,
+        comp_class      => 'HTML::Mason::Component',
+        source_callback => sub { $$content_ref });
+  }
+
+  return $self->SUPER::get_info(@_); 
 }
 
 1;

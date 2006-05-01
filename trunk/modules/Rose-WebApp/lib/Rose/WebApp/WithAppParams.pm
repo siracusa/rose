@@ -2,8 +2,8 @@ package Rose::WebApp::WithAppParams;
 
 use strict;
 
-use Rose::WebApp;
-our @ISA = qw(Rose::WebApp);
+use Rose::WebApp::Feature;
+our @ISA = qw(Rose::WebApp::Feature);
 
 __PACKAGE__->register_subclass;
 
@@ -23,7 +23,7 @@ use Rose::Object::MakeMethods::Generic
   ],
 );
 
-sub feature_name { 'appparams' }
+sub feature_name { 'app-params' }
 
 sub init_app_param_prefix { 'APP_' }
 

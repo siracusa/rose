@@ -259,10 +259,10 @@ our %Features;
 # Register bundled features
 __PACKAGE__->register_features
 (
-  selfstarter => 'Rose::WebApp::SelfStarter',
-  selfconfig  => 'Rose::WebApp::SelfConfig',
-  logger      => 'Rose::WebApp::WithLogger',
-  appparams   => { class => 'Rose::WebApp::WithAppParams', isa_position => 'start' },
+  'self-starter'   => 'Rose::WebApp::SelfStarter',
+  'inline-content' => 'Rose::WebApp::WithInlineContent',
+  'logger'         => 'Rose::WebApp::WithLogger',
+  'app-params'     => { class => 'Rose::WebApp::WithAppParams', isa_position => 'start' },
 );
 
 sub register_features
@@ -391,6 +391,8 @@ sub use_features
     {
       croak "Don't know how to honoe ISA position '$isa_pos' for feature '$name'";
     }
+    
+    $feature_class->feature_setup($class);
   }
 }
 
@@ -917,12 +919,7 @@ sub redirect_to_page
 
 sub inline_content_exists { }
 sub inline_content        { }
-
-sub add_inline_content
-{
-  croak qq(No such method: add_inline_content().  Did you forget to use ),
-        qq(the "inline-content" feature?);
-}
+sub inline_content_ref    { }
 
 sub show_comp
 {
