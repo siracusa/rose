@@ -64,8 +64,8 @@ sub init_mason_interp
   {
     $params{'comp_root'} =
     [
-      docs  => $doc_root,
-      comps => $comp_root,
+      [ docs  => $doc_root ],
+      [ comps => $comp_root ],
     ];
   }
   else
