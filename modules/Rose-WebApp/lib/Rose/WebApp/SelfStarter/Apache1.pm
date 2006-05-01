@@ -8,8 +8,8 @@ use Apache::Request();
 use Apache::Constants 
   qw(M_POST M_INVALID M_OPTIONS NOT_IMPLEMENTED DECLINED OK);
 
-use Rose::WebApp;
-our @ISA = qw(Rose::WebApp);
+use Rose::WebApp::Feature;
+our @ISA = qw(Rose::WebApp::Feature);
 
 our %Apps;
 

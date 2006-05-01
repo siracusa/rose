@@ -2,8 +2,8 @@ package Rose::WebApp::WithLogger;
 
 use strict;
 
-use Rose::WebApp;
-our @ISA = qw(Rose::WebApp);
+use Rose::WebApp::Feature;
+our @ISA = qw(Rose::WebApp::Feature);
 
 use Rose::WebApp::Logger::Apache;
 

@@ -26,9 +26,11 @@ sub feature_name
   {
     s/::(?:With(?=[A-Z]))?(\w+)$//;
     s/([a-z]\d*|^\d+)([A-Z])/$1-$2/g;
+    
+    return $name;
   }
-
-  return $name;
 }
+
+sub feature_setup { }
 
 1;

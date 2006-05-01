@@ -71,3 +71,9 @@ PerlSetVar MasonDefaultEscapeFlags "n"
   SetHandler perl-script
   PerlHandler Rose::WebApp::Dispatch
 </Location>
+
+<Location /rose/webapp/features/inlinecontent>
+  PerlSetVar RoseWebAppClass "Rose::Test::MP1::WebApp::Features::InlineContent"
+  SetHandler perl-script
+  PerlHandler Rose::WebApp::Dispatch
+</Location>

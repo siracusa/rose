@@ -30,5 +30,6 @@ use Rose::Test::MP1::MyApp;
 use Rose::Test::MP1::WebApp::Server;
 use Rose::Test::MP1::WebApp::Features::AppParams;
 use Rose::Test::MP1::WebApp::Features::Logger;
+use Rose::Test::MP1::WebApp::Features::InlineContent;
 
 1;
