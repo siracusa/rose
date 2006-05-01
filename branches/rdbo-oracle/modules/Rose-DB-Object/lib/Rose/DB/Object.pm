@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
 
-our $VERSION = '0.72';
+our $VERSION = '0.722';
 
 our $Debug = 0;
 
@@ -1547,6 +1547,69 @@ Before L<Rose::DB::Object> can do any useful work, you must register at least on
 To define your own L<Rose::DB::Object>-derived class, you must describe the table that your class will act as a front-end for.    This is done through the L<Rose::DB::Object::Metadata> object associated with each L<Rose::DB::Object>-dervied class.  The metadata object is accessible via L<Rose::DB::Object>'s L<meta|/meta> method.
 
 Metadata objects can be populated manually or automatically.  Both techniques are shown in the L<synopsis|/SYNOPSIS> above.  The automatic mode works by asking the database itself for the information.  There are some caveats to this approach.  See the L<auto-initialization|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> section of the L<Rose::DB::Object::Metadata> documentation for more information.
+
+=head2 Inheritance
+
+Simple inheritance between L<Rose::DB::Object>-derived classes is supported.  The first time the L<metadata object|/meta> for a given class is accessed, it is created by making a one-time "deep copy" of the base class's metadata object.  This includes all columns, relationships, foreign keys, and other metadata from the base class.  From that point on, the subclass may add to or modify its metadata without affecting any other class.
+
+B<Tip:> When using perl 5.8.0 or later, the L<Scalar::Util::Clone> module is highly recommended.  If it's installed, it will be used to more efficiently clone base-class metadata objects.
+
+If the base class has already been L<initilized|Rose::DB::Object::Metadata/initialize>, the subclass must explicitly specify whether it wants to create a new set of column and relationship methods, or merely inherit the methods from the base class.  If the subclass contains any metadata modifications that affect method creation, then it must create a new set of methods to reflect those changes.  
+
+Finally, note that column types cannot be changed "in-place."  To change a column type, delete the old column and add a new one with the same name.
+
+Example:
+
+  package BaseClass;
+  use base 'Rose::DB::Object';
+
+  __PACKAGE__->meta->table('objects');
+
+  __PACKAGE__->meta->columns
+  (
+    id    => { type => 'int', primary_key => 1 },
+    start => { type => 'scalar' },
+  );
+
+  __PACKAGE__->meta->initialize;
+
+  ...
+
+  package SubClass;
+  use base 'BaseClass';
+
+  # Set a default value for this column.
+  __PACKAGE__->meta->column('id')->default(123);
+
+  # Change the "start" column into a datetime column.
+  __PACKAGE__->meta->delete_column('start');
+  __PACKAGE__->meta->add_column(start => { type => 'datetime' });
+
+  # Initialize, replacing any inherited methods with newly created ones
+  __PACKAGE__->meta->initialize(replace_existing => 1);
+
+  ...
+
+  $b = BaseClass->new;
+
+  $id = $b->id; # undef
+
+  $b->start('1/2/2003');
+  print $b->start; # '1/2/2003' (plain string)
+
+
+  $s = SubClass->new;
+
+  $id = $s->id; # 123
+
+  $b->start('1/2/2003'); # Value is converted to a DateTime object
+  print $b->start->strftime('%B'); # 'January'
+
+To preserve all inherited methods in a subclass, do this instead:
+
+  package SubClass;
+  use base 'BaseClass';
+  __PACKAGE__->meta->initialize(preserve_existing => 1);
 
 =head2 Error Handling
 

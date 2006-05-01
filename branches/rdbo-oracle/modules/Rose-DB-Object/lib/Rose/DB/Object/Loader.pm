@@ -7,7 +7,6 @@ use File::Path;
 use File::Spec;
 use DBI;
 use Carp;
-use Clone::PP qw(clone);
 
 use Rose::DB;
 use Rose::DB::Object;
@@ -17,7 +16,7 @@ use Rose::DB::Object::Metadata::Util qw(perl_hashref);
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.70';
+our $VERSION = '0.721';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -50,6 +49,19 @@ use Rose::Object::MakeMethods::Generic
     'with_unique_keys'  => { default => 1 },
   ],
 );
+
+# Get the best available clone method
+eval 
+{
+  require Scalar::Util::Clone;
+  *clone = \&Scalar::Util::Clone::clone;
+};
+
+if($@)
+{
+  require Clone;
+  *clone = \&Clone::clone;
+}
 
 sub init_with_relationships { 1 }
 

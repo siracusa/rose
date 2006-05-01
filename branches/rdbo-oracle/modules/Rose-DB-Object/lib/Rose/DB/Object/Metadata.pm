@@ -3,7 +3,6 @@ package Rose::DB::Object::Metadata;
 use strict;
 
 use Carp();
-use Clone::PP qw(clone);
 
 use Rose::Object;
 our @ISA = qw(Rose::Object);
@@ -19,7 +18,13 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Column::Scalar;
 use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
-our $VERSION = '0.711';
+# Attempt to load Scalar::Util::Clone at runtime and ignore any errors
+# to keep it from being a "hard" requirement.
+eval { require Scalar::Util::Clone };
+
+use Clone(); # This is the backup clone method
+
+our $VERSION = '0.721';
 
 our $Debug = 0;
 
@@ -198,6 +203,42 @@ sub new
 
 sub init_original_class { ref shift }
 
+sub reset
+{
+  my($self) = shift;
+  
+  $self->is_initialized(0);
+  $self->allow_auto_initialization(0);
+  $self->was_auto_initialized(0);
+  $self->initialized_foreign_keys(0);
+  
+  return;
+}
+
+sub clone
+{
+  my($self) = shift;
+
+  # The easy way: use Scalar::Util::Clone
+  if(defined $Scalar::Util::Clone::VERSION)
+  {
+    return Scalar::Util::Clone::clone($self);
+  }
+
+  # The hard way: Clone.pm plus mucking  
+  my $meta = Clone::clone($self);
+  
+  # Reset all the parent back-links
+  foreach my $item (grep { defined } $meta->columns, $meta->primary_key, 
+                    $meta->unique_keys, $meta->foreign_keys, 
+                    $meta->relationships)
+  {
+    $item->parent($meta);
+  }
+
+  return $meta;
+}
+
 sub for_class
 {
   my($meta_class, $class) = (shift, shift);
@@ -206,10 +247,16 @@ sub for_class
   # Clone an ancestor meta object
   foreach my $parent_class (__get_parents($class))
   {
-    if($Objects{$parent_class})
+    # Don't clone a meta from the base-est of base classes
+    next  if($parent_class eq 'Rose::DB::Object');
+
+    if(my $parent_meta = $Objects{$parent_class})
     {
-      my $meta = clone($Objects{$parent_class});
+      my $meta = $parent_meta->clone;
+
+      $meta->reset(0);
       $meta->class($class);
+
       return $Objects{$class} = $meta;
     }
   }
@@ -225,10 +272,10 @@ sub __get_parents
   no strict 'refs';
   foreach my $sub_class (@{"${class}::ISA"})
   {
-    push(@parents, __get_parents($sub_class))
+    push(@parents, __get_parents($sub_class))  if($sub_class->isa('Rose::DB::Object'));
   }
 
-  return @parents;
+  return $class, @parents;
 }
 
 sub clear_all_dbs
@@ -670,7 +717,6 @@ sub sync_keys_to_columns
 
   return;
 }
-
 
 sub column
 {
@@ -1791,6 +1837,7 @@ sub make_relationship_methods
 
       # Initialize/reset preserve_existing flag
       $args{'preserve_existing'} = $preserve_existing_arg || $self->allow_auto_initialization;
+      delete $args{'replace_existing'}  if($args{'preserve_existing'});
 
       # If a corresponding foreign key exists, the preserve any existing
       # methods with the same names.  This is a crude way to ensure that we
@@ -1805,6 +1852,7 @@ sub make_relationship_methods
           if($rel_id eq $fk->id)
           {
             $args{'preserve_existing'} = 1;
+            delete $args{'replace_existing'};
             last FK;
           }
         }
@@ -1926,6 +1974,8 @@ sub retry_deferred_relationships
 
       my $args = $relationship->deferred_make_method_args || {};
       $args->{'preserve_existing'} = 1;
+      delete $args->{'replace_existing'};
+
       $relationship->make_methods(%$args);
 
       # Reassign to list in case we rebuild above
@@ -3403,7 +3453,7 @@ This hybrid approach to metadata population strikes a good balance between upfro
 
 =item B<clear_all_dbs>
 
-Clears the L<db|/db> attribute of the metadata object for each L<registered class|registered_classes>.
+Clears the L<db|/db> attribute of the metadata object for each L<registered class|/registered_classes>.
 
 =item B<column_type_class TYPE [, CLASS]>
 

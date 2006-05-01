@@ -9,8 +9,12 @@ our $VERSION = '0.02';
 
 use overload
 (
-  '""' => sub { join($", map { "$_" } shift->columns) },
-   fallback => 1,
+  '""' => sub 
+  {
+    my($self) = shift; 
+    return join($", map { "$_" } @{$self->{'columns'} ||= $self->auto_init_columns});
+  },
+  fallback => 1,
 );
 
 sub columns

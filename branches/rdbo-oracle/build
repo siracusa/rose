@@ -64,6 +64,8 @@ my($PERL, $MAKE, $FIND, $RM, $MV, $TAR, $GZIP, $ROOT_DIR, %Tasks);
 
 use FindBin qw($Bin);
 
+$ENV{'COPY_EXTENDED_ATTRIBUTES_DISABLE'} = 1; # Avoid ._ files on Mac OS X
+
 MAIN:
 {
   ($ROOT_DIR = $Bin) =~ s{/$}{};
