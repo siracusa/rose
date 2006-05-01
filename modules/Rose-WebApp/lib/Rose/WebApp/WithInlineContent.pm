@@ -21,18 +21,23 @@ use Rose::Class::MakeMethods::Generic
   inheritable_scalar => '_inline_content_hash',
 );
 
-__PACKAGE__->register_subclass;
+__PACKAGE__->register_feature;
+
+sub feature_name { 'inline-content' }
 
 sub feature_setup
 {
-  my($class, $using_class) = @_;
+  my($class, $for_class) = @_;
   
   my %inline_content;
-
-  extract_inline_content(class => $using_class, dest => \%inline_content);
+print STDERR "EXTRACTING INLINE CONTENT FOR $for_class\n";
+  extract_inline_content(class => $for_class, dest => \%inline_content);
   
   $class->_inline_content_hash(\%inline_content);
 }
+
+sub default_inline_content_group { Rose::WebApp::InlineContent::Util->default_group }
+sub inline_content_search_groups { [ 'htdocs', 'mason-comps' ] }
 
 sub inline_content
 {
@@ -48,21 +53,51 @@ sub inline_content
 
 sub inline_content_ref
 {
-  my($self, $path) = (shift, shift);
+  my($self) = shift;
   
+  if(my $info = $self->inline_content_info(@_))
+  {
+    return \$info->{'content'};
+  }
+
+  return undef;
+}
+
+sub inline_content_info
+{
+  my($self) = shift;
+  
+  my %args = @_ == 1 ? (path => $_[0]) : @_;
+  
+  my $path   = $args{'path'} or croak "Missing path argument";
+  my $groups = $args{'groups'} || 
+    [ $args{'group'} || @{$self->inline_content_search_groups} ];
+print STDERR "GET INLINE CONTENT INFO: @$groups - $path\n";
   my $class = ref($self) || $self;
 
   my $hash = $class->_inline_content_hash;
-
-  if(@_)
+use Data::Dumper;
+print STDERR "INLINE CONTENT HASH: ", Dumper($hash);
+  if(my $content = $args{'content'})
   {
-    $hash->{$path} = shift;
-    return $hash->{$path}{'contents'};
+    my $group = $args{'group'} || $self->default_group;
+
+    return $hash->{$group}{$path} = 
+    {
+      group    => $group,
+      content  => $content, 
+      modified => time 
+    };
   }
 
-  return undef  unless($hash->{$path});
+  foreach my $group (@$groups)
+  {
+    next  unless($hash->{$group}{$path});
+print STDERR "FOUND INLINE CONTENT: $path\n";
+    return $hash->{$group}{$path};
+  }
 
-  return \$hash->{$path}{'contents'};
+  return undef;
 }
 
 sub inline_content_exists

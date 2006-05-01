@@ -5,7 +5,7 @@ use strict;
 use Rose::WebApp::Feature;
 our @ISA = qw(Rose::WebApp::Feature);
 
-__PACKAGE__->register_subclass;
+__PACKAGE__->register_feature('app-params');
 
 our $VERSION = '0.01';
 
@@ -22,8 +22,6 @@ use Rose::Object::MakeMethods::Generic
     app_params => { interface => 'get_set' },
   ],
 );
-
-sub feature_name { 'app-params' }
 
 sub init_app_param_prefix { 'APP_' }
 

@@ -13,6 +13,9 @@ sub feature_name
 {
   my($self_or_class) = shift;
 
+  ##################################
+  # TODO: $feature->meta
+
   my $class = ref $self_or_class || $self_or_class;
 
   if($class eq __PACKAGE__)

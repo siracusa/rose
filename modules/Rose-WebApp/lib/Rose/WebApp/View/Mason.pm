@@ -29,7 +29,6 @@ use Rose::Object::MakeMethods::Generic
   'scalar --get_set_init' =>
   [
     'mason_interp',
-    'mason_interp_inline',
     'mason_request',
   ],
 
@@ -42,7 +41,8 @@ sub init_mason_interp
 {
   my($self) = shift;
 
-  my $site = $self->app->website;
+  my $app  = $self->app;
+  my $site = $app->website;
 
   if($site->can('mason_interp'))
   {
@@ -64,28 +64,21 @@ sub init_mason_interp
   {
     $params{'comp_root'} =
     [
-      [ docs  => $doc_root ],
-      [ comps => $comp_root ],
+      [ 'htdocs'      => $doc_root ],
+      [ 'mason-comps' => $comp_root ],
     ];
   }
   else
   {
     $params{'comp_root'} = $doc_root;
   }
+print STDERR "$app->uses_feature('inline-content') = ", $app->uses_feature('inline-content'), "\n";
+  if($app->uses_feature('inline-content'))
+  {
+    $params{'resolver_class'} = 'Rose::WebApp::View::Mason::Resolver::InlineContent';
+  }
 
   return HTML::Mason::Interp->new(%params);
-}
-
-sub init_mason_interp_inline 
-{
-  my($self) = shift;
-
-  my $interp = HTML::Mason::Interp->new(resolver_class => 'HTML::Mason::Resolver::Null');
-
-  $interp->set_global('app' => $self->app);
-  $interp->set_global('site' => $self->app->website_class);
-
-  return $interp;
 }
 
 sub app
@@ -154,17 +147,7 @@ sub run_comp
 
   my($buffer, $m);
 
-  if(my $comp_source = $self->app->inline_content($path))
-  {
-    my $interp = $self->mason_interp_inline;
-#print STDERR "INLINE COMP WITH $interp\n";
-    $interp->set_global('app' => $self->app);
-
-    my $comp = $interp->make_component(comp_source => $comp_source);
-    my $request = $interp->make_request(out_method => \$buffer, comp => $comp);
-    eval { $request->exec };
-  }
-  elsif($m = $self->mason_request)
+  if($m = $self->mason_request)
   {
 #print STDERR "CHECK COMP WITH $m\n";
     unless($m->interp->comp_exists($path))
@@ -262,19 +245,22 @@ sub get_info
 {
   my($self) = shift;
   my($path, $comp_root_key, $comp_root_path) = @_;
-
+print STDERR "MASON RESOLVER get_info($path, $comp_root_key, $comp_root_path)\n";
   my $app = $HTML::Mason::Commands::app or return $self->SUPER::get_info(@_);
   
-  if(my $content_ref = $app->inline_content_ref($path))
+  my $info = $app->can('inline_content_info') ? 
+    $app->inline_content_info($path) : undef;
+
+  if($info)
   {
     return
       HTML::Mason::ComponentSource->new(
         friendly_name   => "inline:$path",
         comp_id         => "inine:$path",
-        last_modified   => 0,
+        last_modified   => $info->{'modified'},
         comp_path       => $path,
         comp_class      => 'HTML::Mason::Component',
-        source_callback => sub { $$content_ref });
+        source_callback => sub { $info->{'content'} });
   }
 
   return $self->SUPER::get_info(@_); 

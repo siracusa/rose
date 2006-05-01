@@ -15,21 +15,28 @@ our @ISA = qw(Exporter);
 our $VERSION = '0.01';
 
 our @EXPORT_OK = 
-  qw(extract_inline_content create_inline_content normalize_content_type 
-     valid_content_types);
+  qw(extract_inline_content create_inline_content normalize_group_name 
+     valid_group_names);
 
 our %EXPORT_TAGS = (all => \@EXPORT_OK);
 
-our %CONTENT_TYPES =
+use Rose::Class::MakeMethods::Generic
 (
-  'mason-comp' => 1,
-  'html'       => 1,
-  'unknown'    => 1,
+  scalar => 'default_group',
 );
 
-sub valid_content_types { sort keys %CONTENT_TYPES }
+__PACKAGE__->default_group('htdocs');
 
-sub normalize_content_type
+our %GROUPS =
+(
+  'mason-comps' => 1,
+  'htdocs'      => 1,
+  'unknown'     => 1,
+);
+
+sub valid_group_names { sort keys %GROUPS }
+
+sub normalize_group_name
 {
   my($type) = shift;
 
@@ -48,23 +55,11 @@ sub extract_inline_content
 
   my $class     = $args{'class'} or croak "Missing class parameter";
   my $dest      = $args{'dest'}  or croak "Missing dest parameter";
-  my $type      = $args{'type'};
+  my $group     = $args{'group'} || __PACKAGE__->default_group;
   my $verbose   = $args{'verbose'} || 0;
   my $noclobber = $args{'noclobber'} || 0;
 
   my $dest_is_hash = ref $dest eq 'HASH' ? 1 : 0;
-
-  my $check_type;
-
-  if($type)
-  {
-    unless(ref $type eq 'CODE')
-    {
-      $type = normalize_content_type($type);
-      croak "Invalid content type '$type'"  unless($CONTENT_TYPES{$type});
-      $check_type = sub { normalize_content_type($_[0]) eq $type };
-    }
-  }
 
   no strict 'refs';
   my $fh = \*{"${class}::DATA"};
@@ -84,7 +79,7 @@ sub extract_inline_content
     elsif(/^---$/)
     {
       next  unless(%file);
-      croak "Syntax error on line $. - $_"  unless(exists $file{'contents'});
+      croak "Syntax error on line $. - $_"  unless(exists $file{'content'});
       %file = ();
       $line = 0;
     }
@@ -96,31 +91,31 @@ sub extract_inline_content
     {
       next  unless(%file);
 
+      $file{'group'} ||= $group;
+
       foreach my $line (1 .. $file{'lines'})
       {
-        $file{'contents'} .= <$fh>;
+        $file{'content'} .= <$fh>;
       }
 
-      chomp($file{'contents'})  if($file{'chomp'});
+      chomp($file{'content'})  if($file{'chomp'});
 
-      if($check_type)
-      {
-        local $_ = $file{'type'};
-        next  unless($check_type->($file{'type'}));
-      }
+      $file{'modified'} = $^T; # time the program started
+use Data::Dumper;
+print STDERR "EXTRACTED CONTENT: ", Dumper(\%file);
 
       if($dest_is_hash)
       {
         my $path = Path::Class::File->new($file{'path'});
         $path->cleanup;
 
-        if(exists $dest->{$file{'type'} || 'unknown'}{$path})
+        if(exists $dest->{$file{'group'}}{$path})
         {
           carp "Skipping duplicate file found in inline content: $path";
         }
         else
         {
-          $dest->{$file{'type'} || 'unknown'}{$path} = { %file };
+          $dest->{$file{'group'}}{$path} = { %file };
         }
       }
       else # write files
@@ -145,7 +140,7 @@ sub extract_inline_content
         open(my $fh, '>', $install_path->stringify) 
           or croak "Could not install file '$install_path' - $!";
   
-        print $fh $file{'contents'};
+        print $fh $file{'content'};
   
         close($fh) or croak "Could not write file '$install_path' - $!";
   
@@ -159,7 +154,7 @@ sub extract_inline_content
   }
 }
 
-sub choose_content_type
+sub choose_group_name
 {
   /\.[sx]?html?$/i && return 'html';
   /\.mc$/i         && return 'mason-comp';
@@ -188,11 +183,11 @@ sub create_inline_content
     }
   }
 
-  my $set_type = $args{'set_type'} || \&choose_content_type;
+  my $set_group = $args{'set_group'} || \&choose_group;
 
   my @files;
 
-  _archive_files_recursive($path, $prefix, $set_type, $path_re, $file_re, \@files);
+  _archive_files_recursive($path, $prefix, $set_group, $path_re, $file_re, \@files);
 
   return join('', @files), "\n";
 }
@@ -200,7 +195,7 @@ sub create_inline_content
 sub _archive_files_recursive
 {
   my $path = shift;
-  my($prefix, $set_type, $path_re, $file_re, $files) = @_;
+  my($prefix, $set_group, $path_re, $file_re, $files) = @_;
 
   croak "No such file or directory - '$path'"  unless(-e $path);
 
@@ -231,7 +226,7 @@ sub _archive_files_recursive
 
 sub _archive_file
 {
-  my($path, $prefix, $set_type, $path_re, $file_re, $files) = @_;
+  my($path, $prefix, $set_group, $path_re, $file_re, $files) = @_;
 
   my $file = Path::Class::File->new($path);
   $file->cleanup;
@@ -263,33 +258,33 @@ sub _archive_file
     return;
   }
 
-  my $contents = $file->slurp;
+  my $content = $file->slurp;
 
-  push(@$files, _format_archive_file($file, $full_rel_path, $contents, $set_type));
+  push(@$files, _format_archive_file($file, $full_rel_path, $content, $set_group));
 }
 
 sub _format_archive_file
 {
-  my($file, $path, $contents, $set_type) = @_;
+  my($file, $path, $content, $set_group) = @_;
 
   local $_ = $path;
-  my $type = $set_type->($path) || 'unknown';
+  my $group = $set_group->($path) || 'unknown';
 
-  my $chomp = $contents =~ /\n\z/ ? 1 : 0;
-  chomp($contents);
+  my $chomp = $content =~ /\n\z/ ? 1 : 0;
+  chomp($content);
 
   my $mode  = (stat($file))[2];
-  my $lines = ($contents =~ tr/\n/\n/) + 1;
+  my $lines = ($content =~ tr/\n/\n/) + 1;
 
   return<<"EOF";
 ---
 Path:  $path
 Mode:  $mode
-Type:  $type
+Group: $group
 Chomp: $chomp
 Lines: $lines
 
-$contents
+$content
 EOF
 }
 
