@@ -3,6 +3,7 @@ package Rose::WebApp;
 use strict;
 
 use Carp;
+use Class::C3;
 
 use Rose::WebApp::Server;
 use Rose::WebSite;
@@ -16,6 +17,8 @@ use Rose::WebApp::Server::Constants qw(OK SERVER_ERROR);
 
 use Rose::Object;
 our @ISA = qw(Rose::Object);
+
+Class::C3::initialize();
 
 our $Debug = 0;
 
@@ -32,7 +35,11 @@ use Rose::Class::MakeMethods::Generic
     using_features => { interface => 'keys', hash_key => '_features' },
     using_feature  => { interface => 'get_set', hash_key => '_features' },
   ],
+
+  inheritable_scalar => '_feature_use',
 );
+
+__PACKAGE__->_feature_use({});
 
 __PACKAGE__->view_type_classes
 (
@@ -269,45 +276,22 @@ sub register_features
 {
   my($self) = shift;
 
-  unless(@_) # register class and feature name
+  my $class = ref $self || $self;
+
+  if(@_ <= 1)
   {
-    my $class = (caller)[0];
+    my $name = $self->normalize_feature_name(shift || $class->feature_name);
 
-    $Features{$class} =
-      Rose::WebApp::Feature::Metadata->new(class => $class);
-
-    if($class->can('feature_name'))
+    if(exists $Features{$name})
     {
-      my $name = $class->feature_name;
+      return  if($Features{$name}->class eq $class); # already registered
 
-      if(exists $Features{$name})
-      {
-        return  if($Features{$name}->class eq $class); # already registered
-
-        croak "The the class ", $Features{$name}->class, 
-               " is already registered under the feature name '$name'";
-      }
-
-      $Features{$name} = $Features{$class};
+      croak "The the class ", $Features{$name}->class, 
+             " is already registered under the feature name '$name'";
     }
 
-    return;
-  }
-
-  if(@_ == 1)
-  {
-    my $name  = shift;
-    my $class = (caller)[0];
-
-    $name =~ s/[^\w:]+//g;
-
-    if($Features{$name})
-    {
-      croak "The the class $Features{$name} is already registered under the feature name '$name'";
-    }
-
-    return $Features{$name} = 
-      Rose::WebApp::Feature::Metadata->new(class => $class);
+    $Features{$name} = Rose::WebApp::Feature::Metadata->new(class => $class, name => $name);
+    return 1;
   }
 
   unless(@_ % 2 == 0)
@@ -320,7 +304,7 @@ sub register_features
     my $name = shift or croak "Missing feature name";
     my $info = shift or croak "Missing feature information";
 
-    $name =~ s/[^\w:]+//g;
+    $name = $self->normalize_feature_name($name);
 
     if($Features{$name})
     {
@@ -330,7 +314,7 @@ sub register_features
     if(!ref $info)
     {
       $Features{$name} = 
-        Rose::WebApp::Feature::Metadata->new(class => $info);
+        Rose::WebApp::Feature::Metadata->new(class => $info, name => $name);
     }
     else
     {
@@ -340,7 +324,7 @@ sub register_features
       }
 
       $Features{$name} = 
-        Rose::WebApp::Feature::Metadata->new(%$info);
+        Rose::WebApp::Feature::Metadata->new(%$info, name => $name);
     }
   }
 
@@ -353,8 +337,23 @@ sub register_features
 sub normalize_feature_name
 {
   my($self_or_class, $name) = @_;
-  $name =~ s/[^\w:]+//g;
-  return $name;
+  $name =~ s/[^-\w:]+//g;
+  return lc $name;
+}
+
+sub uses_feature
+{
+  my($self) = shift;
+
+  my $class = ref $self || $self;
+  
+  if(@_ > 1)
+  {
+    my($name, $value) = @_;
+    return $class->_feature_use->{$self->normalize_feature_name($name)} = $value;
+  }
+
+  return $class->_feature_use->{$self->normalize_feature_name($_[0])}
 }
 
 sub use_features
@@ -374,7 +373,8 @@ sub use_features
     next  if($class->isa($feature_class));
 
     eval "use $feature_class";
-    die $@  if($@);
+    croak "Could not use feature '$feature' because the module ",
+          "$feature_class failed to load - $@"  if($@);
 
     my $isa_pos = $feature_meta->isa_position;
 
@@ -389,11 +389,15 @@ sub use_features
     }
     else
     {
-      croak "Don't know how to honoe ISA position '$isa_pos' for feature '$name'";
+      croak "Don't know how to honor ISA position '$isa_pos' for feature '$name'";
     }
-    
+print STDERR "$class USES FEATURE $name\n";
+    $class->uses_feature($name => 1);
+
     $feature_class->feature_setup($class);
   }
+  
+  Class::C3::reinitialize();
 }
 
 sub send_http_header
@@ -916,10 +920,6 @@ sub redirect_to_page
 
   $self->website->redirect($uri);
 }
-
-sub inline_content_exists { }
-sub inline_content        { }
-sub inline_content_ref    { }
 
 sub show_comp
 {

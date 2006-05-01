@@ -14,6 +14,7 @@ use Rose::Object::MakeMethods::Generic
   scalar =>
   [
     'class',
+    'name',
   ],
 );
 
