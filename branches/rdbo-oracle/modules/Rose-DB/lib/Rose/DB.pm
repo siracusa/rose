@@ -1,4 +1,4 @@
-package Rose::DB; 
+package Rose::DB;
 
 use strict;
 
@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.65';
+our $VERSION = '0.672';
 
 our $Debug = 0;
 
@@ -33,6 +33,7 @@ use Rose::Class::MakeMethods::Generic
     'default_type',
     'registry',
     'max_array_characters',
+    'max_interval_characters',
   ]
 );
 
@@ -53,7 +54,8 @@ use Rose::Class::MakeMethods::Generic
 __PACKAGE__->default_domain('default');
 __PACKAGE__->default_type('default');
 
-__PACKAGE__->max_array_characters(255); # Used for array type emulation
+__PACKAGE__->max_array_characters(255);    # Used for array type emulation
+__PACKAGE__->max_interval_characters(255); # Used for interval type emulation
 
 __PACKAGE__->driver_classes
 (
@@ -82,9 +84,9 @@ my %Class_Loaded;
 # LOAD_SUBCLASSES:
 # {
 #   my %seen;
-#
+# 
 #   my $map = __PACKAGE__->driver_classes;
-#
+# 
 #   foreach my $class (values %$map)
 #   {
 #     eval qq(require $class)  unless($seen{$class}++);
@@ -100,8 +102,8 @@ use Rose::Object::MakeMethods::Generic
 (
   'scalar' =>
   [
-    qw(database dbi_driver schema catalog host port username
-       password _dbh_refcount id)
+    qw(database dbi_driver schema catalog host port username 
+       _dbh_refcount id)
   ],
 
   'boolean' =>
@@ -120,7 +122,7 @@ use Rose::Object::MakeMethods::Generic
     #'class',
   ],
 
-  'array' =>
+  'array' => 
   [
     'post_connect_sql',
     'pre_disconnect_sql',
@@ -204,7 +206,7 @@ sub alias_db
   my $entry = $registry->entry(domain => $src_domain, type => $src_type) or
     Carp::croak "No db defined for domain '$src_domain' and type '$src_type'";
 
-  $registry->add_entry(domain => $alias_domain,
+  $registry->add_entry(domain => $alias_domain, 
                        type   => $alias_type,
                        entry  => $entry);
 }
@@ -227,10 +229,10 @@ sub new
 
   my %args = @_;
 
-  my $domain =
+  my $domain = 
     exists $args{'domain'} ? $args{'domain'} : $class->default_domain;
 
-  my $type =
+  my $type = 
     exists $args{'type'} ? $args{'type'} : $class->default_type;
 
   my $db_info;
@@ -250,7 +252,7 @@ sub new
     Carp::croak "No database information found for domain '$domain' and type '$type'";
   }
 
-  my $driver = $db_info->{'driver'};
+  my $driver = $db_info->{'driver'}; 
 
   Carp::croak "No driver found for domain '$domain' and type '$type'"
     unless(defined $driver);
@@ -288,7 +290,7 @@ sub new
           # Make a new driver class based on the current class
           my $new_class = $class . '::__RoseDBPrivate__::' . $driver_class;
 
-          no strict 'refs';
+          no strict 'refs';        
           @{"${new_class}::ISA"} = ($driver_class, $class);
 
           $self = bless {}, $new_class;
@@ -302,7 +304,7 @@ sub new
 
       # Cache value
       $Rebless{$class,$driver_class} = ref $self;
-    }
+    }    
 
     $self->class($class);
   }
@@ -315,9 +317,9 @@ sub new
   return $self;
 }
 
-sub class
+sub class 
 {
-  my($self) = shift;
+  my($self) = shift; 
   return $self->{'_origin_class'} || ref $self;
 }
 
@@ -365,8 +367,24 @@ sub database_version
   return $self->{'database_version'} = $self->dbh->get_info(18); # SQL_DBMS_VER
 }
 
+# Use a closure to keep the password from appearing when the
+# object is dumped using Data::Dumper
+sub password
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    my $password = shift;
+    $self->{'password_closure'} = sub { $password };
+    return $password;
+  }
+
+  return $self->{'password_closure'} ? $self->{'password_closure'}->() : undef;
+}
+
 # These have to "cheat" to get the right values by going through
-# the real origin class because they may be called after the
+# the real origin class because they may be called after the 
 # re-blessing magic takes place.
 sub init_domain { shift->{'_origin_class'}->default_domain }
 sub init_type   { shift->{'_origin_class'}->default_type }
@@ -400,7 +418,7 @@ sub init_db_info
     Carp::croak "No database information found for domain '$domain' and type '$type'";
   }
 
-  unless($self->{'connect_options_for'}{$domain} &&
+  unless($self->{'connect_options_for'}{$domain} && 
          $self->{'connect_options_for'}{$domain}{$type})
   {
     $self->{'connect_options'} = undef;
@@ -416,7 +434,7 @@ sub init_db_info
 
   $self->driver($db_info->{'driver'});
 
-  my $dsn = $db_info->{'dsn'} ||= $self->build_dsn(domain => $domain,
+  my $dsn = $db_info->{'dsn'} ||= $self->build_dsn(domain => $domain, 
                                                    type   => $type,
                                                    %$db_info);
 
@@ -486,7 +504,7 @@ sub database_from_dsn
 
   if(DBI->can('parse_dsn'))
   {
-    ($scheme, $driver, $attr_string, $attr_hash, $driver_dsn) =
+    ($scheme, $driver, $attr_string, $attr_hash, $driver_dsn) = 
       DBI->parse_dsn($dsn);
   }
 
@@ -557,9 +575,25 @@ sub retain_dbh
 
 sub release_dbh
 {
-  my($self) = shift;
+  my($self, %args) = @_;
 
   my $dbh = $self->{'dbh'} or return 0;
+
+  if($args{'force'})
+  {
+    $self->{'_dbh_refcount'} = 0;
+    $self->{'_dbh_is_private'} = 1;
+
+    # Account for possible Apache::DBI magic
+    if(UNIVERSAL::isa($dbh, 'Apache::DBI::db'))
+    {
+      return $dbh->DBI::db::disconnect; # bypass Apache::DBI
+    }
+    else
+    {
+      return $dbh->disconnect;
+    }
+  }
 
   #$Debug && warn "$self->{'_dbh_refcount'} -> ", ($self->{'_dbh_refcount'} - 1), " $dbh\n";
   $self->{'_dbh_refcount'}--;
@@ -594,6 +628,8 @@ sub release_dbh
   return 1;
 }
 
+use constant DID_PCSQL_KEY => 'private_rose_db_did_post_connect_sql';
+
 sub init_dbh
 {
   my($self) = shift;
@@ -621,12 +657,13 @@ sub init_dbh
 
   #$self->_update_driver;
 
-  if(my $sqls = $self->post_connect_sql)
+  if((my $sqls = $self->post_connect_sql) && !$dbh->{DID_PCSQL_KEY()})
   {
     eval
     {
       foreach my $sql (@$sqls)
       {
+        #$Debug && warn "$dbh DO: $sql\n";
         $dbh->do($sql) or die "$sql - " . $dbh->errstr;
       }
     };
@@ -637,6 +674,8 @@ sub init_dbh
       $dbh->disconnect;
       return undef;
     }
+
+    $dbh->{DID_PCSQL_KEY()} = 1;
   }
 
   return $self->{'dbh'} = $dbh;
@@ -692,13 +731,13 @@ sub _dbh_and_connect_option
 
   if(@_)
   {
-    my $val = ($_[0]) ? 1 : 0;
+    my $val = $_[0] ? 1 : 0;
     $self->connect_option($param => $val);
 
     $self->{'dbh'}{$param} = $val  if($self->{'dbh'});
   }
 
-  return $self->{'dbh'} ? $self->{'dbh'}{$param} :
+  return $self->{'dbh'} ? $self->{'dbh'}{$param} : 
          $self->connect_option($param);
 }
 
@@ -714,7 +753,7 @@ sub disconnect
 {
   my($self) = shift;
 
-  $self->release_dbh or return undef;
+  $self->release_dbh(@_) or return undef;
 
   $self->{'dbh'} = undef;
 }
@@ -767,7 +806,7 @@ sub commit
   {
     my $ret;
 
-    #$Debug && warn "COMMIT TRX\n";
+    #$Debug && warn "COMMIT TRX\n";    
 
     eval
     {
@@ -783,8 +822,8 @@ sub commit
 
     unless($ret)
     {
-      $self->error('Could not commit transaction: ' .
-                   ($dbh->errstr || $DBI::errstr ||
+      $self->error('Could not commit transaction: ' . 
+                   ($dbh->errstr || $DBI::errstr || 
                     'Possibly a referential integrity violation.  ' .
                     'Check the database error log for more information.'));
       return undef;
@@ -804,6 +843,8 @@ sub rollback
 
   my $dbh = $self->dbh or return undef;
 
+  my $ac = $dbh->{'AutoCommit'};
+
   my $ret;
 
   #$Debug && warn "ROLLBACK TRX\n";
@@ -820,7 +861,7 @@ sub rollback
     return undef;
   }
 
-  unless($ret)
+  unless($ret || $ac)
   {
     $self->error('rollback() failed - ' . $dbh->errstr);
     return undef;
@@ -836,7 +877,7 @@ sub do_transaction
 {
   my($self, $code) = (shift, shift);
 
-  my $dbh = $self->dbh or return undef;
+  my $dbh = $self->dbh or return undef;  
 
   eval
   {
@@ -944,7 +985,7 @@ sub parse_boolean
 # Date formatting
 
 sub format_date
-{
+{  
   return $_[1]  if($_[0]->validate_date_keyword($_[1]) || $_[1] =~ /^\w+\(.*\)$/);
   return $_[0]->date_handler->format_date($_[1]);
 }
@@ -956,13 +997,13 @@ sub format_datetime
 }
 
 sub format_time
-{
+{  
   return $_[1]  if($_[0]->validate_time_keyword($_[1])) || $_[1] =~ /^\w+\(.*\)$/;
   return $_[0]->date_handler->format_time($_[1]);
 }
 
 sub format_timestamp
-{
+{  
   return $_[1]  if($_[0]->validate_timestamp_keyword($_[1]) || $_[1] =~ /^\w+\(.*\)$/);
   return $_[0]->date_handler->format_timestamp($_[1]);
 }
@@ -971,14 +1012,19 @@ sub format_timestamp
 
 sub parse_date
 {
-  return $_[1]  if($_[0]->validate_date_keyword($_[1]));
+  my($self, $value) = @_;
+  
+  if(UNIVERSAL::isa($value, 'DateTime') || $self->validate_date_keyword($value))
+  {
+    return $value;
+  }
 
   my $dt;
-  eval { $dt = $_[0]->date_handler->parse_date($_[1]) };
+  eval { $dt = $self->date_handler->parse_date($value) };
 
   if($@)
   {
-    $_[0]->error("Could not parse date '$_[1]' - $@");
+    $self->error("Could not parse date '$value' - $@");
     return undef;
   }
 
@@ -986,15 +1032,21 @@ sub parse_date
 }
 
 sub parse_datetime
-{
-  return $_[1]  if($_[0]->validate_datetime_keyword($_[1]));
+{  
+  my($self, $value) = @_;
+  
+  if(UNIVERSAL::isa($value, 'DateTime') || 
+    $self->validate_datetime_keyword($value))
+  {
+    return $value;
+  }
 
   my $dt;
-  eval { $dt = $_[0]->date_handler->parse_datetime($_[1]) };
+  eval { $dt = $self->date_handler->parse_datetime($value) };
 
   if($@)
   {
-    $_[0]->error("Could not parse datetime '$_[1]' - $@");
+    $self->error("Could not parse datetime '$value' - $@");
     return undef;
   }
 
@@ -1002,7 +1054,7 @@ sub parse_datetime
 }
 
 sub parse_time
-{
+{  
   return $_[1]  if($_[0]->validate_time_keyword($_[1]));
 
   my $dt;
@@ -1018,15 +1070,21 @@ sub parse_time
 }
 
 sub parse_timestamp
-{
-  return $_[1]  if($_[0]->validate_timestamp_keyword($_[1]));
+{  
+  my($self, $value) = @_;
+  
+  if(UNIVERSAL::isa($value, 'DateTime') || 
+    $self->validate_timestamp_keyword($value))
+  {
+    return $value;
+  }
 
   my $dt;
-  eval { $dt = $_[0]->date_handler->parse_timestamp($_[1]) };
+  eval { $dt = $self->date_handler->parse_timestamp($value) };
 
   if($@)
   {
-    $_[0]->error("Could not parse timestamp '$_[1]' - $@");
+    $self->error("Could not parse timestamp '$value' - $@");
     return undef;
   }
 
@@ -1070,7 +1128,7 @@ sub parse_bitfield
   }
 }
 
-sub format_bitfield
+sub format_bitfield 
 {
   my($self, $vec, $size) = @_;
 
@@ -1118,7 +1176,7 @@ sub format_array
 
   return undef  unless(@array && defined $array[0]);
 
-  my $str = '{' . join(',', map
+  my $str = '{' . join(',', map 
   {
     if(/^[-+]?\d+(?:\.\d*)?$/)
     {
@@ -1126,20 +1184,303 @@ sub format_array
     }
     else
     {
-      s/\\/\\\\/g;
+      s/\\/\\\\/g; 
       s/"/\\"/g;
-      qq("$_")
+      qq("$_") 
     }
   } @array) . '}';
 
   if(length($str) > $self->max_array_characters)
   {
-    Carp::croak "Array string is longer than ", ref($self),
+    Carp::croak "Array string is longer than ", ref($self), 
                 "->max_array_characters (", $self->max_array_characters,
                 ") characters long: $str";
   }
 
   return $str;
+}
+
+my $Interval_Regex = qr{
+(?:\@\s*)?
+(?:
+  (?: (?: \s* ([+-]?) (\d+) : ([0-5]?\d)? (?:: ([0-5]?\d (?:\.\d+)? )? )?))  # (sign)hhh:mm:ss
+  |
+  (?:     \s* ( [+-]? \d+ (?:\.\d+(?=\s+s))? ) \s+      # quantity
+    (?:                                              # unit
+        (?:\b(dec) (?:ades?\b | s?\b)?\b)            # decades
+      | (?:\b(d)   (?:ays?\b)?\b)                    # days
+      | (?:\b(y)   (?:ears?\b)?\b)                   # years
+      | (?:\b(h)   (?:ours?\b)?\b)                   # hours
+      | (?:\b(mon) (?:s\b | ths?\b)?\b)              # months
+      | (?:\b(mil) (?:s\b | lenniums?\b)?\b)         # millenniums
+      | (?:\b(m)   (?:inutes?\b | ins?\b)?\b)        # minutes
+      | (?:\b(s)   (?:ec(?:s | onds?)?)?\b)          # seconds
+      | (?:\b(w)   (?:eeks?\b)?\b)                   # weeks
+      | (?:\b(c)   (?:ent(?:s | ury | uries)?\b)?\b) # centuries
+    )
+  )
+)
+(?: \s+ (ago) \b)?                                   # direction
+| (.+)
+}ix;
+
+sub parse_interval
+{
+  my($self, $value) = @_;
+
+  if(!defined $value || UNIVERSAL::isa($value, 'DateTime::Duration') || 
+     $self->validate_interval_keyword($value) || $value =~ /^\w+\(.*\)$/)
+  {
+    return $value;
+  }
+
+  for($value)
+  {
+    s/\A //;
+    s/ \z//;
+    s/\s+/ /g;
+  }
+
+  my(%units, $is_ago, $sign, $error, $dt_duration);
+
+  my $value_pos;
+
+  while(!$error && $value =~ /$Interval_Regex/go)
+  {
+    $value_pos = pos($value);
+
+    $is_ago = 1  if($16);
+
+    if($2 || $3 || $4)
+    {
+      if($sign || defined $units{'hours'} || defined $units{'minutes'} || 
+         defined $units{'seconds'})
+      {
+        $error = 1;
+        last;
+      }
+
+      $sign = ($1 && $1 eq '-') ? -1 : 1;
+
+      my $secs = $4;
+
+      if(defined $secs && $secs != int($secs))
+      {
+        my $fsecs = substr($secs, index($secs, '.') + 1);
+        $secs = int($secs);
+
+        my $len = length $fsecs;
+  
+        if($len < 9)
+        {
+          $fsecs .= ('0' x (9 - length $fsecs));
+        }
+        elsif($len > 9)
+        {
+          $fsecs = substr($fsecs, 0, 9);
+        }
+
+        $units{'nanoseconds'} = $sign * $fsecs;
+      }
+
+      $units{'hours'}   = $sign * ($2 || 0);
+      $units{'minutes'} = $sign * ($3 || 0);
+      $units{'seconds'} = $sign * ($secs || 0);
+    }
+    elsif($6)
+    {
+      if($units{'decades'}) { $error = 1; last }
+      $units{'decades'} = $5;
+    }
+    elsif(defined $7)
+    {
+      if($units{'days'}) { $error = 1; last }
+      $units{'days'} = $5;
+    }
+    elsif(defined $8)
+    {
+      if($units{'years'}) { $error = 1; last }
+      $units{'years'} = $5;
+    }
+    elsif(defined $9)
+    {
+      if($units{'hours'}) { $error = 1; last }
+      $units{'hours'} = $5;
+    }
+    elsif(defined $10)
+    {
+      if($units{'months'}) { $error = 1; last }
+      $units{'months'} = $5;
+    }
+    elsif(defined $11)
+    {
+      if($units{'millenniums'}) { $error = 1; last }
+      $units{'millenniums'} = $5;
+    }
+    elsif(defined $12)
+    {
+      if($units{'minutes'}) { $error = 1; last }
+      $units{'minutes'} = $5;
+    }
+    elsif(defined $13)
+    {
+      if($units{'seconds'}) { $error = 1; last }
+
+      my $secs = $5;
+
+      $units{'seconds'} = int($secs);
+
+      if($units{'seconds'} != $secs)
+      {
+        my $fsecs = substr($secs, index($secs, '.') + 1);
+
+        my $len = length $fsecs;
+  
+        if($len < 9)
+        {
+          $fsecs .= ('0' x (9 - length $fsecs));
+        }
+        elsif($len > 9)
+        {
+          $fsecs = substr($fsecs, 0, 9);
+        }
+
+        $units{'nanoseconds'} = $fsecs;
+      }
+    }
+    elsif(defined $14)
+    {
+      if($units{'weeks'}) { $error = 1; last }
+      $units{'weeks'} = $5;
+    }
+    elsif(defined $15)
+    {
+      if($units{'centuries'}) { $error = 1; last }
+      $units{'centuries'} = $5;
+    }
+    elsif(defined $17)
+    {
+      $error = 1;
+      last;
+    }
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse interval '$value' - found overlaping time units");
+    return undef;
+  }
+
+  if($value_pos != length($value)) 
+  {
+    $self->error("Could not parse interval '$value' - could not interpret all tokens");
+    return undef;
+  }
+
+  if(defined $units{'millenniums'})
+  {
+    $units{'years'} += 1000 * $units{'millenniums'};
+    delete $units{'millenniums'};
+  }
+  
+  if(defined $units{'centuries'})
+  {
+    $units{'years'} += 100 * $units{'centuries'};
+    delete $units{'centuries'};
+  }
+
+  if(defined $units{'decades'})
+  {
+    $units{'years'} += 10 * $units{'decades'};
+    delete $units{'decades'};
+  }
+
+  if($units{'hours'} || $units{'minutes'} || $units{'seconds'})
+  {
+    my $seconds = ($units{'hours'}   || 0) * 60 * 60 +
+                  ($units{'minutes'} || 0) * 60 +
+                  ($units{'seconds'} || 0);
+    $units{'hours'}   = int($seconds  / 3600);
+    $seconds         -= $units{'hours'} * 3600;
+    $units{'minutes'} = int($seconds  / 60);
+    $units{'seconds'} = $seconds - $units{'minutes'} * 60;
+  }
+
+  $dt_duration = $is_ago ? 
+    DateTime::Duration->new(%units)->inverse :
+    DateTime::Duration->new(%units);
+
+  return $dt_duration;
+}
+
+sub format_interval
+{
+  my($self, $dur) = @_;
+
+  if(!defined $dur || $self->validate_interval_keyword($dur) ||
+     $dur =~ /^\w+\(.*\)$/)
+  {
+    return $dur;
+  }
+
+  my $output = '';
+
+  my(%deltas, %unit, $neg);
+
+  @deltas{qw/years mons days h m s/} =
+    $dur->in_units(qw/years months days hours minutes seconds/);
+
+  foreach (qw/years mons days/)
+  {
+    $unit{$_} = $_;
+    $unit{$_} =~ s/s\z// if $deltas{$_} == 1;
+  }
+
+  $output .= "$deltas{'years'} $unit{'years'} "  if($deltas{'years'});
+  $neg = 1  if($deltas{'years'} < 0);
+
+  $output .= '+' if ($neg && $deltas{'mons'} > 0);
+  $output .= "$deltas{'mons'} $unit{'mons'} "  if($deltas{'mons'});
+  $neg = $deltas{'mons'}  < 0 ? 1 :
+         $deltas{'mons'}      ? 0 : 
+         $neg;
+
+  $output .= '+'  if($neg && $deltas{'days'} > 0);
+  $output .= "$deltas{'days'} $unit{'days'} "  if($deltas{'days'});
+
+  if($deltas{'h'} || $deltas{'m'} || $deltas{'s'} || $dur->nanoseconds)
+  {
+    $neg = $deltas{'days'}  < 0 ? 1 :
+           $deltas{'days'}      ? 0 :
+           $neg;
+
+    if($neg && (($deltas{'h'} > 0) || (!$deltas{'h'} &&  $deltas{'m'} > 0) ||
+                (!$deltas{'h'} && !$deltas{'m'} && $deltas{'s'} > 0)))
+    {
+      $output .= '+';
+    }
+
+    my $nsec = $dur->nanoseconds;
+
+    $output .= '-'  if(!$deltas{'h'} && ($deltas{'m'} < 0 || $deltas{'s'} < 0));
+    @deltas{qw/m s/} = (abs($deltas{'m'}), abs($deltas{'s'}));
+    $deltas{'hms'} = join(':', map { sprintf('%.2d', $deltas{$_}) } (qw/h m/)) .
+                     ($nsec ? sprintf(':%02d.%09d', $deltas{'s'}, $nsec) :         
+                              sprintf(':%02d', $deltas{'s'}));
+              
+    $output .= "$deltas{'hms'}"  if($deltas{'hms'});
+  }
+
+  $output =~ s/ \z//;
+
+  if(length($output) > $self->max_interval_characters)
+  {
+    Carp::croak "Interval string is longer than ", ref($self),
+                "->max_interval_characters (", $self->max_interval_characters,
+                ") characters long: $output";
+  }
+
+  return $output;
 }
 
 sub build_dsn { 'override in subclass' }
@@ -1154,6 +1495,7 @@ sub validate_date_keyword      { 0 }
 sub validate_datetime_keyword  { 0 }
 sub validate_time_keyword      { 0 }
 sub validate_timestamp_keyword { 0 }
+sub validate_interval_keyword  { 0 }
 
 sub next_value_in_sequence
 {
@@ -1190,8 +1532,8 @@ sub refine_dbi_column_info
 {
   my($self, $col_info) = @_;
 
-  # Parse odd default value syntaxes
-  $col_info->{'COLUMN_DEF'} =
+  # Parse odd default value syntaxes  
+  $col_info->{'COLUMN_DEF'} = 
     $self->parse_dbi_column_info_default($col_info->{'COLUMN_DEF'});
 
   # Make sure the data type name is lowercase
@@ -1251,7 +1593,7 @@ sub error
     {
       return $self_or_class->{'error'} = $Error = shift;
     }
-    return $self_or_class->{'error'};
+    return $self_or_class->{'error'};  
   }
 
   # Class method
@@ -1342,7 +1684,7 @@ Rose::DB - A DBI wrapper and abstraction layer.
     $sth->execute(...);
     while($sth->fetch) { ... }
     $dbh->do(...);
-  })
+  }) 
   or die $db->error;
 
   $dt  = $db->parse_timestamp('2001-03-05 12:34:56.123');
@@ -1424,10 +1766,10 @@ When a L<Rose::DB> object is destroyed while it contains an active L<DBI> databa
 
 In the simplest case, L<Rose::DB> could be used for its data source abstractions features alone. For example, transiently creating a L<Rose::DB> and then retaining its L<DBI> database handle before it is destroyed:
 
-    $main_dbh = Rose::DB->new(type => 'main')->retain_dbh
+    $main_dbh = Rose::DB->new(type => 'main')->retain_dbh 
                   or die Rose::DB->error;
 
-    $aux_dbh  = Rose::DB->new(type => 'aux')->retain_dbh
+    $aux_dbh  = Rose::DB->new(type => 'aux')->retain_dbh  
                   or die Rose::DB->error;
 
 If the database handle was simply extracted via the L<dbh|/dbh> method instead of retained with L<retain_dbh|/retain_dbh>, it would be disconnected by the time the statement completed.
@@ -1463,14 +1805,14 @@ By default, all subclasses share the same data source "registry" with L<Rose::DB
 
 If called with no arguments, and if the attribute was never set for this
 class, then a left-most, breadth-first search of the parent classes is
-initiated.  The value returned is taken from first parent class
+initiated.  The value returned is taken from first parent class 
 encountered that has ever had this attribute set.
 
 (These attributes use the L<inheritable_scalar|Rose::Class::MakeMethods::Generic/inheritable_scalar> method type as defined in L<Rose::Class::MakeMethods::Generic>.)
 
 =item B<driver_class>, B<default_connect_options>
 
-These hashes of attributes are inherited by subclasses using a one-time, shallow copy from a superclass.  Any subclass that accesses or manipulates the hash in any way will immediately get its own private copy of the hash I<as it exists in the superclass at the time of the access or manipulation>.
+These hashes of attributes are inherited by subclasses using a one-time, shallow copy from a superclass.  Any subclass that accesses or manipulates the hash in any way will immediately get its own private copy of the hash I<as it exists in the superclass at the time of the access or manipulation>.  
 
 The superclass from which the hash is copied is the closest ("least super") class that has ever accessed or manipulated this hash.  The copy is a "shallow" copy, duplicating only the keys and values.  Reference values are not recursively copied.
 
@@ -1543,7 +1885,7 @@ Modify a data source, setting the attributes specified in PARAMS, where
 PARAMS are name/value pairs.  Any L<Rose::DB> object method that sets a L<data source configuration value|"Data Source Configuration"> is a valid parameter name.
 
     # Set new username for data source identified by domain and type
-    Rose::DB->modify_db(domain   => 'test',
+    Rose::DB->modify_db(domain   => 'test', 
                         type     => 'main',
                         username => 'tester');
 
@@ -1558,7 +1900,7 @@ PARAMS B<must> include a value for the C<driver> parameter.  If the C<type> or C
 
 The C<type> and C<domain> are used to identify the data source.  If either one is missing, a fatal error will occur.  See the L<"Data Source Abstraction"> section for more information on data source types and domains.
 
-The C<driver> is used to determine which class objects will be blessed into by the L<Rose::DB> constructor, L<new|/new>.  The driver name is automatically converted to lowercase.  If it is missing, a fatal error will occur.
+The C<driver> is used to determine which class objects will be blessed into by the L<Rose::DB> constructor, L<new|/new>.  The driver name is automatically converted to lowercase.  If it is missing, a fatal error will occur.  
 
 In most deployment scenarios, L<register_db|/register_db> is called early in the compilation process to ensure that the registered data sources are available when the "real" code runs.
 
@@ -1699,7 +2041,7 @@ name/value pairs.  Any object method is a valid parameter name.  Example:
 
 If a single argument is passed to L<new|/new>, it is used as the C<type> value:
 
-    $db = Rose::DB->new(type => 'aux');
+    $db = Rose::DB->new(type => 'aux'); 
     $db = Rose::DB->new('aux'); # same thing
 
 Each L<Rose::DB> object is associated with a particular data source, defined by the C<type> and C<domain> values.  If these are not part of PARAMS, then the default values are used.  If you do not want to use the default values for the C<type> and C<domain> attributes, you should specify them in the constructor PARAMS.
@@ -1728,13 +2070,13 @@ Attempt to start a transaction by calling the L<begin_work|DBI/begin_work> metho
 
 If necessary, the database handle will be constructed and connected to the current data source.  If this fails, undef is returned.  If there is no registered data source for the current C<type> and C<domain>, a fatal error will occur.
 
-If the "AutoCommit" database handle attribute is false, the handle is assumed to already be in a transaction and L<Rose::DB::Constants::IN_TRANSACTION> (-1) is returned.  If the call to L<DBI>'s L<begin_work|DBI/begin_work> method succeeds, 1 is returned.  If it fails, undef is returned.
+If the "AutoCommit" database handle attribute is false, the handle is assumed to already be in a transaction and L<Rose::DB::Constants::IN_TRANSACTION|Rose::DB::Constants> (-1) is returned.  If the call to L<DBI>'s L<begin_work|DBI/begin_work> method succeeds, 1 is returned.  If it fails, undef is returned.
 
 =item B<commit>
 
 Attempt to commit the current transaction by calling the L<commit|DBI/commit> method on the L<DBI> database handle.  If the L<DBI> database handle does not exist or is not connected, 0 is returned.
 
-If the "AutoCommit" database handle attribute is true, the handle is assumed to not be in a transaction and L<Rose::DB::Constants::IN_TRANSACTION> (-1) is returned.  If the call to L<DBI>'s L<commit|DBI/commit> method succeeds, 1 is returned.  If it fails, undef is returned.
+If the "AutoCommit" database handle attribute is true, the handle is assumed to not be in a transaction and L<Rose::DB::Constants::IN_TRANSACTION|Rose::DB::Constants> (-1) is returned.  If the call to L<DBI>'s L<commit|DBI/commit> method succeeds, 1 is returned.  If it fails, undef is returned.
 
 =item B<connect>
 
@@ -1742,7 +2084,7 @@ Constructs and connects the L<DBI> database handle for the current data source. 
 
 If any L<post_connect_sql|/post_connect_sql> statement failed to execute, the database handle is disconnected and then discarded.
 
-Returns true if the database handle was connected successfully and all L<post_connect_sql|/post_connect_sql> statements (if any) were run successfully, false otherwise.
+Returns true if the database handle was connected successfully and all L<post_connect_sql|/post_connect_sql> statements (if any) were run successfully, false otherwise.  
 
 =item B<connect_option NAME [, VALUE]>
 
@@ -1751,7 +2093,7 @@ Get or set a single connection option.  Example:
     $val = $db->connect_option('RaiseError'); # get
     $db->connect_option(AutoCommit => 1);     # set
 
-Connection options are name/value pairs that are passed in a hash reference as the fourth argument to the call to C<DBI-E<gt>connect()>.  See the L<DBI> documentation for descriptions of the various options.
+Connection options are name/value pairs that are passed in a hash reference as the fourth argument to the call to L<DBI-E<gt>connect()|DBI/connect>.  See the L<DBI> documentation for descriptions of the various options.
 
 =item B<connect_options [HASHREF | PAIRS]>
 
@@ -1838,7 +2180,7 @@ See the L<"Database Handle Life-Cycle Management"> section for more information 
 
 Roll back the current transaction by calling the L<rollback|DBI/rollback> method on the L<DBI> database handle.  If the L<DBI> database handle does not exist or is not connected, 0 is returned.
 
-If the call to L<DBI>'s L<rollback|DBI/rollback> method succeeds, 1 is returned.  If it fails, undef is returned.
+If the call to L<DBI>'s L<rollback|DBI/rollback> method succeeds or if auto-commit is enabled, 1 is returned.  If it fails, undef is returned.
 
 =back
 
@@ -1860,7 +2202,7 @@ Get or set the database catalog name.  This setting is only relevant to database
 
 =item B<connect_options [HASHREF | PAIRS]>
 
-Get or set the options passed in a hash reference as the fourth argument to the call to C<DBI-E<gt>connect()>.  See the L<DBI> documentation for descriptions of the various options.
+Get or set the options passed in a hash reference as the fourth argument to the call to L<DBI-E<gt>connect()|DBI/connect>.  See the L<DBI> documentation for descriptions of the various options.
 
 If a reference to a hash is passed, it replaces the connect options hash.  If a series of name/value pairs are passed, they are added to the connect options hash.
 
@@ -1878,7 +2220,7 @@ When L<init_db_info|/init_db_info> is called for the first time on an object (ei
       password => 'mysecret',
       connect_options =>
       {
-        RaiseError => 0,
+        RaiseError => 0, 
         AutoCommit => 0,
       }
     );
@@ -1891,7 +2233,7 @@ When L<init_db_info|/init_db_info> is called for the first time on an object (ei
     # RaiseError => 1,
     # Warn       => 0,
 
-    # The object's connect options are merged with default options
+    # The object's connect options are merged with default options 
     # since new() will trigger the first call to init_db_info()
     # for this object
     $db = Rose::DB->new(domain => 'development', type => 'main');
@@ -1915,10 +2257,10 @@ When L<init_db_info|/init_db_info> is called for the first time on an object (ei
     # TraceLevel => 2,
     # Warn       => 0,
 
-    # The object's connect options are NOT re-merged with the default
-    # connect options since this will trigger the second call to
+    # The object's connect options are NOT re-merged with the default 
+    # connect options since this will trigger the second call to 
     # init_db_info(), not the first
-    $db->connect or die $db->error;
+    $db->connect or die $db->error; 
 
     # $db->connect_options are still:
     #
@@ -2037,6 +2379,10 @@ Converts the L<DateTime> object DATETIME into the appropriate format for the "da
 
 Converts the L<DateTime> object DATETIME into the appropriate format for the "datetime" (month, day, year, hour, minute, second) data type of the current data source.
 
+=item B<format_interval DURATION>
+
+Converts the L<DateTime::Duration> object DURATION into the appropriate format for the interval (years, months, days, hours, minutes, seconds) data type of the current data source. If DURATION is undefined, a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.
+
 =item B<format_timestamp DATETIME>
 
 Converts the L<DateTime> object DATETIME into the appropriate format for the timestamp (month, day, year, hour, minute, second, fractional seconds) data type of the current data source.  Fractional seconds are optional, and the useful precision may vary depending on the data source.
@@ -2045,7 +2391,7 @@ Converts the L<DateTime> object DATETIME into the appropriate format for the tim
 
 Parse BITS and return a corresponding L<Bit::Vector> object.  If SIZE is not passed, then it defaults to the number of bits in the parsed bit string.
 
-If BITS is a string of "1"s and "0"s or matches /^B'[10]+'$/, then the "1"s and "0"s are parsed as a binary string.
+If BITS is a string of "1"s and "0"s or matches C</^B'[10]+'$/>, then the "1"s and "0"s are parsed as a binary string.
 
 If BITS is a string of numbers, at least one of which is in the range 2-9, it is assumed to be a decimal (base 10) number and is converted to a bitfield as such.
 
@@ -2063,25 +2409,31 @@ Otherwise, undef is returned.
 
 Parse STRING and return a boolean value of 1 or 0.  STRING should be formatted according to the data source's native "boolean" data type.  The default implementation accepts 't', 'true', 'y', 'yes', and '1' values for true, and 'f', 'false', 'n', 'no', and '0' values for false.
 
-If STRING is a valid boolean keyword (according to L<validate_boolean_keyword|/validate_boolean_keyword>) or if it looks like a function call (matches /^\w+\(.*\)$/) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "boolean" value.
+If STRING is a valid boolean keyword (according to L<validate_boolean_keyword|/validate_boolean_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "boolean" value.
 
 =item B<parse_date STRING>
 
 Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the data source's native "date" (month, day, year) data type.
 
-If STRING is a valid date keyword (according to L<validate_date_keyword|/validate_date_keyword>) or if it looks like a function call (matches /^\w+\(.*\)$/) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "date" value.
+If STRING is a valid date keyword (according to L<validate_date_keyword|/validate_date_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "date" value.
 
 =item B<parse_datetime STRING>
 
 Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the data source's native "datetime" (month, day, year, hour, minute, second) data type.
 
-If STRING is a valid datetime keyword (according to L<validate_datetime_keyword|/validate_datetime_keyword>) or if it looks like a function call (matches /^\w+\(.*\)$/) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "datetime" value.
+If STRING is a valid datetime keyword (according to L<validate_datetime_keyword|/validate_datetime_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "datetime" value.
+
+=item B<parse_interval STRING>
+
+Parse STRING and return a L<DateTime::Duration> object.  STRING should be formatted according to the data source's native "interval" (years, months, days, hours, minutes, seconds) data type.
+
+If STRING is a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.  Otherwise, undef is returned if STRING could not be parsed as a valid "interval" value.
 
 =item B<parse_timestamp STRING>
 
-Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the data source's native "timestamp" (month, day, year, hour, minute, second, fractional seconds) data type.  Fractional seconds are optional, and the acceptable precision may vary depending on the data source.
+Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the data source's native "timestamp" (month, day, year, hour, minute, second, fractional seconds) data type.  Fractional seconds are optional, and the acceptable precision may vary depending on the data source.  
 
-If STRING is a valid timestamp keyword (according to L<validate_timestamp_keyword|/validate_timestamp_keyword>) or if it looks like a function call (matches /^\w+\(.*\)$/) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "timestamp" value.
+If STRING is a valid timestamp keyword (according to L<validate_timestamp_keyword|/validate_timestamp_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "timestamp" value.
 
 =item B<validate_boolean_keyword STRING>
 
@@ -2094,6 +2446,10 @@ Returns true if STRING is a valid keyword for the "date" (month, day, year) data
 =item B<validate_datetime_keyword STRING>
 
 Returns true if STRING is a valid keyword for the "datetime" (month, day, year, hour, minute, second) data type of the current data source, false otherwise.  The default implementation always returns false.
+
+=item B<validate_interval_keyword STRING>
+
+Returns true if STRING is a valid keyword for the "interval" (years, months, days, hours, minutes, seconds) data type of the current data source, false otherwise.  The default implementation always returns false.
 
 =item B<validate_timestamp_keyword STRING>
 
@@ -2115,12 +2471,16 @@ Although the mailing list is the preferred support mechanism, you can also email
 
 L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB>
 
+=head1 CONTRIBUTORS
+
+Lucian Dragus
+
 =head1 AUTHOR
 
 John C. Siracusa (siracusa@mindspring.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2005 by John C. Siracusa.  All rights reserved.  This program is
+Copyright (c) 2006 by John C. Siracusa.  All rights reserved.  This program is
 free software; you can redistribute it and/or modify it under the same terms
 as Perl itself.
