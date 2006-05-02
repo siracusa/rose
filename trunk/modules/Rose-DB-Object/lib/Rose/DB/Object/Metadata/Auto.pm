@@ -849,7 +849,6 @@ package $class;
 use strict;
 
 use base qw(@$isa);
-
 $foreign_modules
 
 __PACKAGE__->meta->table('@{[ $self->table ]}');
