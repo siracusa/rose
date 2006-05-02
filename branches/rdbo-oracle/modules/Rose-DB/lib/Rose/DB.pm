@@ -1,4 +1,4 @@
-package Rose::DB;
+package Rose::DB; 
 
 use strict;
 
