@@ -98,7 +98,17 @@ sub extract_inline_content
         $file{'content'} .= <$fh>;
       }
 
-      chomp($file{'content'})  if($file{'chomp'});
+      if($file{'chomp'})
+      {
+        if($file{'chomp'} eq 'all')
+        {
+          $file{'content'} =~ tr/\n//;
+        }
+        else
+        {
+          chomp($file{'content'});
+        }
+      }
 
       $file{'modified'} = $^T; # time the program started
 use Data::Dumper;
@@ -260,21 +270,33 @@ sub _archive_file
 
   my $content = $file->slurp;
 
-  push(@$files, _format_archive_file($file, $full_rel_path, $content, $set_group));
+  push(@$files, _format_archive_file($file, $full_rel_path, \$content, $set_group));
 }
+
+use constant MAX_UNWRAPPED_CONTENT_LENGTH => 200;
 
 sub _format_archive_file
 {
-  my($file, $path, $content, $set_group) = @_;
+  my($file, $path, $content_ref, $set_group) = @_;
 
   local $_ = $path;
   my $group = $set_group->($path) || 'unknown';
 
-  my $chomp = $content =~ /\n\z/ ? 1 : 0;
-  chomp($content);
+  my $chomp = 0;
+
+  if($$content_ref !~ /\n/ && length($$content_ref) > MAX_UNWRAPPED_CONTENT_LENGTH)
+  {
+    $$content_ref =~ s/\G(.{1,80})/$1\n/g;
+    $chomp = 'all';
+  }
+  else
+  {
+    $chomp = $$content_ref =~ /\n\z/ ? 1 : 0;
+    chomp($$content_ref);
+  }
 
   my $mode  = (stat($file))[2];
-  my $lines = ($content =~ tr/\n/\n/) + 1;
+  my $lines = ($$content_ref =~ tr/\n/\n/) + 1;
 
   return<<"EOF";
 ---
@@ -284,7 +306,7 @@ Group: $group
 Chomp: $chomp
 Lines: $lines
 
-$content
+$$content_ref
 EOF
 }
 

@@ -149,6 +149,7 @@ sub run_comp
 
   if($m = $self->mason_request)
   {
+    $m->interp->set_global('app' => $self->app);
 #print STDERR "CHECK COMP WITH $m\n";
     unless($m->interp->comp_exists($path))
     {
@@ -157,14 +158,15 @@ sub run_comp
       $self->status(NOT_FOUND);
       return 0;
     }
-
-    $m->interp->set_global('app' => $self->app);
 #print STDERR "RUN $path $@args\n";
     eval { $m->comp($path, @$args) };
   }
   else
   {
     my $interp = $self->mason_interp;
+
+    $interp->set_global('app' => $self->app);
+
 #print STDERR "CHECK COMP WITH $interp\n";
     unless($interp->comp_exists($path))
     {
@@ -175,7 +177,7 @@ sub run_comp
     }
 
     $interp->out_method(\$buffer);
-    $interp->set_global('app' => $self->app);
+
 #print STDERR "RUN INTERP $path $@args\n";
     eval
     {
@@ -246,8 +248,10 @@ sub get_info
   my($self) = shift;
   my($path, $comp_root_key, $comp_root_path) = @_;
 print STDERR "MASON RESOLVER get_info($path, $comp_root_key, $comp_root_path)\n";
-  my $app = $HTML::Mason::Commands::app or return $self->SUPER::get_info(@_);
-  
+print STDERR "APP =  $HTML::Mason::Commands::app\n";
+  my $app = $HTML::Mason::Commands::app 
+    or Carp::croak "Could not get application object for resolver $self";
+
   my $info = $app->can('inline_content_info') ? 
     $app->inline_content_info($path) : undef;
 
