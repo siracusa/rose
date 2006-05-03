@@ -27,6 +27,12 @@ print STDERR<<"EOF";
 ##     RDBO_PG_USER     (@{[ nvl('RDBO_PG_USER', 'postgres') ]})
 ##     RDBO_PG_PASS     (@{[ nvl('RDBO_PG_PASS', '<none>') ]})
 ## 
+## Oracle:
+## 
+##     RDBO_ORACLE_DSN  (@{[ nvl('RDBO_ORACLE_DSN', 'dbi:Oracle:dbname=test') ]})
+##     RDBO_ORACLE_USER (@{[ nvl('RDBO_ORACLE_USER', '<none>') ]})
+##     RDBO_ORACLE_PASS (@{[ nvl('RDBO_ORACLE_PASS', '<none>') ]})
+## 
 ## MySQL:
 ## 
 ##     RDBO_MYSQL_DSN   (@{[ nvl('RDBO_MYSQL_DSN', 'dbi:mysql:database=test;host=localhost') ]})
