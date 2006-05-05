@@ -29,11 +29,31 @@ sub feature_setup
 {
   my($class, $for_class) = @_;
   
-  my %inline_content;
-print STDERR "EXTRACTING INLINE CONTENT FOR $for_class\n";
-  extract_inline_content(class => $for_class, dest => \%inline_content);
-  
-  $class->_inline_content_hash(\%inline_content);
+  no strict 'refs';
+
+  foreach my $isa_class ($for_class, @{"${for_class}::ISA"})
+  {
+    $for_class->load_inline_content_from_class($isa_class);
+  }
+}
+
+sub load_inline_content_from_class
+{
+  my($self_or_class, $from_class) = @_;
+
+  my $class = ref $self_or_class || $self_or_class;
+  my $hash  = $class->_inline_content_hash || {};  
+#print STDERR "EXTRACTING INLINE CONTENT FROM $from_class\n";
+  extract_inline_content(class => $from_class, dest => $hash);
+
+  $class->_inline_content_hash($hash);
+}
+
+sub delete_inline_content
+{
+  my($self_or_class) = shift;
+  my $class = ref $self_or_class || $self_or_class;
+  $class->_inline_content_hash({});
 }
 
 sub default_inline_content_group { Rose::WebApp::InlineContent::Util->default_group }
@@ -72,12 +92,12 @@ sub inline_content_info
   my $path   = $args{'path'} or croak "Missing path argument";
   my $groups = $args{'groups'} || 
     [ $args{'group'} || @{$self->inline_content_search_groups} ];
-print STDERR "GET INLINE CONTENT INFO: @$groups - $path\n";
+#print STDERR "GET INLINE CONTENT INFO: @$groups - $path\n";
   my $class = ref($self) || $self;
 
   my $hash = $class->_inline_content_hash;
-use Data::Dumper;
-print STDERR "INLINE CONTENT HASH: ", Dumper($hash);
+#use Data::Dumper;
+#print STDERR "INLINE CONTENT HASH: ", Dumper($hash);
   if(my $content = $args{'content'})
   {
     my $group = $args{'group'} || $self->default_group;
@@ -93,7 +113,7 @@ print STDERR "INLINE CONTENT HASH: ", Dumper($hash);
   foreach my $group (@$groups)
   {
     next  unless($hash->{$group}{$path});
-print STDERR "FOUND INLINE CONTENT: $path\n";
+#print STDERR "FOUND INLINE CONTENT: $path\n";
     return $hash->{$group}{$path};
   }
 

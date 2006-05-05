@@ -360,6 +360,8 @@ sub use_features
 {
   my($class) = shift;
 
+  my @feature_classes;
+
   foreach my $feature (@_)
   {
     my $name = $class->normalize_feature_name($feature);
@@ -391,12 +393,18 @@ sub use_features
     {
       croak "Don't know how to honor ISA position '$isa_pos' for feature '$name'";
     }
-print STDERR "$class USES FEATURE $name\n";
+#print STDERR "$class USES FEATURE $name\n";
     $class->uses_feature($name => 1);
 
+    push(@feature_classes, $feature_class);
+  }
+
+  # Do per-featrue setup  
+  foreach my $feature_class (@feature_classes)
+  {
     $feature_class->feature_setup($class);
   }
-  
+
   Class::C3::reinitialize();
 }
 

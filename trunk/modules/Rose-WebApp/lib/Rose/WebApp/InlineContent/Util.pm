@@ -64,7 +64,11 @@ sub extract_inline_content
   no strict 'refs';
   my $fh = \*{"${class}::DATA"};
 
-  croak "$class has no inline content to extract"  unless(fileno($fh));
+  unless(fileno($fh))
+  {
+    #croak "$class has no inline content to extract";
+    return 0;
+  }
 
   local $/ = "\n";
 
@@ -111,9 +115,9 @@ sub extract_inline_content
       }
 
       $file{'modified'} = $^T; # time the program started
-use Data::Dumper;
-print STDERR "EXTRACTED CONTENT: ", Dumper(\%file);
-
+      $file{'loaded_from_class'} = $class;
+#use Data::Dumper;
+#print STDERR "EXTRACTED CONTENT: ", Dumper(\%file);
       if($dest_is_hash)
       {
         my $path = Path::Class::File->new($file{'path'});
@@ -121,7 +125,15 @@ print STDERR "EXTRACTED CONTENT: ", Dumper(\%file);
 
         if(exists $dest->{$file{'group'}}{$path})
         {
-          carp "Skipping duplicate file found in inline content: $path";
+          if($noclobber)
+          {
+            my $loaded_from = $dest->{$file{'group'}}{$path}{'loaded_from_class'};
+
+            carp "Skipping duplicate $file{'group'} file found in inline ",
+                 "content '$path' - previously loaded from $loaded_from";
+          }
+
+          next;
         }
         else
         {
@@ -162,6 +174,8 @@ print STDERR "EXTRACTED CONTENT: ", Dumper(\%file);
       }
     }
   }
+
+  return 1;
 }
 
 sub choose_group_name
