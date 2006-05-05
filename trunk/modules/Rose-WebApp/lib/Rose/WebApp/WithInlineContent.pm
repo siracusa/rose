@@ -31,9 +31,23 @@ sub feature_setup
   
   no strict 'refs';
 
-  foreach my $isa_class ($for_class, @{"${for_class}::ISA"})
+  __traverse_class_hierarchy($for_class, sub 
   {
-    $for_class->load_inline_content_from_class($isa_class);
+    $for_class->load_inline_content_from_class($_[0]);
+  });
+}
+
+sub __traverse_class_hierarchy
+{
+  my($class, $code) = @_;
+
+  $code->($class);
+
+  no strict 'refs';
+  foreach my $isa_class (@{"${class}::ISA"})
+  {
+    next  unless($isa_class->isa('Rose::WebApp'));
+    __traverse_class_hierarchy($isa_class, $code);
   }
 }
 
