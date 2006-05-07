@@ -52,7 +52,7 @@ sub clone_and_reset
   my $class = ref $self;
   local $self->{STATE_CLONING()} = 1;
   my $clone = $class->new(map { $_ => $self->$_() } $self->meta->column_accessor_method_names);
-  
+
   my $meta = $class->meta;
 
   no strict 'refs';
@@ -62,7 +62,7 @@ sub clone_and_reset
   {
     $clone->$method(undef);
   }
-  
+
   foreach my $uk ($meta->unique_keys)
   {
     foreach my $column ($uk->columns)
@@ -102,7 +102,7 @@ Rose::DB::Object::Helpers - A mix-in class containing convenience methods for Ro
 
   $obj = MyDBObject->new(id => 123);
   $obj->find_or_create();
-  
+
   $obj2 = $obj->clone;
 
 =head1 DESCRIPTION
@@ -122,7 +122,7 @@ Returns a new object initialized with the column values of the existing object. 
     $a = Person->new(id => 123, name => 'John', age => 30);
 
 This use of the C<clone()> method:
-    
+
     $b = $a->clone;
 
 is equivalent to this:
@@ -138,7 +138,7 @@ For example, imagine a C<Person> class with three columns, C<id>, C<name>, and C
     $a = Person->new(id => 123, name => 'John', age => 30, db => $db);
 
 This use of the C<clone_and_reset()> method:
-    
+
     $b = $a->clone_and_reset;
 
 is equivalent to this:

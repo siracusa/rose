@@ -18,12 +18,12 @@ For the sake of brevity, the C<use strict> directive and associated "my" declara
 
 Similarly, the traditional "1;" true value used at the end of each ".pm" file has been omitted from the examples.  Don't forget to add this to the end of your actual Perl module files.
 
-Although most of the examples use the L<base> module to set up inheritance, directly modifying the C<@ISA> package variable usually works just as well.  In situations where there are circular relationships between classes, however, the C<use base ...> form is preferable because it runs at compile-time, whereas the C<@ISA> modifications happen at run-time.
+Although most of the examples in this tutorial use the L<base.pm|base> module to set up inheritance, directly modifying the C<@ISA> package variable usually works just as well.  In situations where there are circular relationships between classes, the C<use base ...> form is preferable because it runs at compile-time, whereas C<@ISA> modification happens at run-time.
 
 Finally, be sure to set up inheritance before loading any related modules.
 
     package Product;
-    
+
     # Set up inheritance first
     use base qw(Rose::DB::Object);
 
