@@ -840,7 +840,7 @@ sub perl_class_definition
 
   if(%use)
   {
-    $foreign_modules = "\n" . join("\n", map { "use $_;"} sort keys %use) . "\n";
+    $foreign_modules = "\n" . join("\n", map { "use $_;"} sort keys %use);
   }
 
   return<<"EOF";

@@ -3,6 +3,8 @@
     * Fixed a bug that caused Rose::DB::Object::Cached objects
       to stay in the cache after being delete()d.
     * Added clone() and clone_and_reset() Helper methods.
+    * The tutorial now recommends "use base ..." over direct modification
+      of @ISA in order to work better with circular relationships.
     * Simplified object destruction, delegating all database object
       clean up to Rose::DB.
 

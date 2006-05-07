@@ -285,13 +285,12 @@ package MyPgObject;
 
 use strict;
 
+use base qw(Rose::DB::Object);
+
 use MyPgOtherObject;
 use MyPgOtherObject2;
 use MyPgOtherObject3;
 use MyPgOtherObject4;
-
-use Rose::DB::Object;
-our \@ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
@@ -362,13 +361,12 @@ package MyPgObject;
 
 use strict;
 
+use base qw(Rose::DB::Object);
+
 use MyPgOtherObject;
 use MyPgOtherObject2;
 use MyPgOtherObject3;
 use MyPgOtherObject4;
-
-use Rose::DB::Object;
-our \@ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
@@ -659,13 +657,12 @@ package MyMySQLObject;
 
 use strict;
 
+use base qw(Rose::DB::Object);
+
 use MyMySQLOtherObject;
 use MyMySQLOtherObject2;
 use MyMySQLOtherObject3;
 use MyMySQLOtherObject4;
-
-use Rose::DB::Object;
-our \@ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
@@ -733,13 +730,12 @@ package MyMySQLObject;
 
 use strict;
 
+use base qw(Rose::DB::Object);
+
 use MyMySQLOtherObject;
 use MyMySQLOtherObject2;
 use MyMySQLOtherObject3;
 use MyMySQLOtherObject4;
-
-use Rose::DB::Object;
-our \@ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
@@ -1047,13 +1043,12 @@ package MyInformixObject;
 
 use strict;
 
+use base qw(Rose::DB::Object);
+
 use MyInformixOtherObject;
 use MyInformixOtherObject2;
 use MyInformixOtherObject3;
 use MyInformixOtherObject4;
-
-use Rose::DB::Object;
-our @ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
@@ -1122,13 +1117,12 @@ package MyInformixObject;
 
 use strict;
 
+use base qw(Rose::DB::Object);
+
 use MyInformixOtherObject;
 use MyInformixOtherObject2;
 use MyInformixOtherObject3;
 use MyInformixOtherObject4;
-
-use Rose::DB::Object;
-our @ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
@@ -1437,13 +1431,12 @@ package MySQLiteObject;
 
 use strict;
 
+use base qw(Rose::DB::Object);
+
 use MySQLiteOtherObject;
 use MySQLiteOtherObject2;
 use MySQLiteOtherObject3;
 use MySQLiteOtherObject4;
-
-use Rose::DB::Object;
-our @ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
@@ -1512,13 +1505,12 @@ package MySQLiteObject;
 
 use strict;
 
+use base qw(Rose::DB::Object);
+
 use MySQLiteOtherObject;
 use MySQLiteOtherObject2;
 use MySQLiteOtherObject3;
 use MySQLiteOtherObject4;
-
-use Rose::DB::Object;
-our @ISA = qw(Rose::DB::Object);
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 

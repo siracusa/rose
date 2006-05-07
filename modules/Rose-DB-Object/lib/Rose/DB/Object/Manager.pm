@@ -2784,14 +2784,15 @@ sub perl_class_definition
   no strict 'refs';
   my @isa = @{"${class}::ISA"};
 
-  my $use_bases = join("\n", map { "use $_;" } @isa);
+  my $use_bases = "use base qw(@isa);";
 
   return<<"EOF";
 package $class;
 
+$use_bases
+
 use $object_class;
 
-$use_bases
 our \@ISA = qw(@isa);
 
 sub object_class { '@{[ $class->object_class || $class->_object_class ]}' }

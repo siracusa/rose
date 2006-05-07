@@ -39,7 +39,7 @@ foreach my $pair ((map { [ "2 $_", 2 ] } qw(s sec secs second seconds)),
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 155)  unless($HAVE_PG);
+  skip("Postgres tests", 159)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
