@@ -9,7 +9,7 @@ our @ISA = qw(Rose::DB::Object);
 
 use Rose::DB::Object::Constants qw(STATE_IN_DB);
 
-our $VERSION = '0.02';
+our $VERSION = '0.723';
 
 our $Debug = 0;
 
@@ -170,6 +170,14 @@ sub save
   return $ret;
 }
 
+sub delete
+{
+  my($self) = shift;
+  my $ret = $self->SUPER::delete(@_);
+  $self->forget  if($ret);
+  return $ret;
+}
+
 sub forget
 {
   my($self) = shift;
@@ -285,6 +293,10 @@ Only the methods that are overridden are documented here.  See the L<Rose::DB::O
 =head1 OBJECT METHODS
 
 =over 4
+
+=item B<delete [PARAMS]>
+
+This method works like the L<delete|Rose::DB::Object/delete> method from L<Rose::DB::Object> except that it also calls the L<forget|/forget> method if the object was deleted successfully or did not exist in the first place.
 
 =item B<forget>
 

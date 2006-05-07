@@ -774,6 +774,8 @@ EOF
 
     package MyPgObject;
 
+    use Rose::DB::Object::Helpers qw(clone);
+
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('pg') }
@@ -877,6 +879,8 @@ EOF
     # Create test subclass
 
     package MyMySQLObject;
+
+    use Rose::DB::Object::Helpers qw(clone);
 
     our @ISA = qw(Rose::DB::Object);
 
@@ -1045,6 +1049,8 @@ EOF
     Test::More::is_deeply(\@pk, [ qw(k1 k2) ], 'auto_init_primary_key_columns - informix');
 
     package MyInformixObject;
+
+    use Rose::DB::Object::Helpers qw(clone);
 
     our @ISA = qw(Rose::DB::Object);
 

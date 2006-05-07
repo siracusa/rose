@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 407;
+use Test::More tests => 415;
 
 BEGIN 
 {
@@ -39,7 +39,7 @@ foreach my $pair ((map { [ "2 $_", 2 ] } qw(s sec secs second seconds)),
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 151)  unless($HAVE_PG);
+  skip("Postgres tests", 155)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -203,7 +203,13 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   is($a[2], 6, "load() verify 15 (array value) - $db_type");
   is(@a, 3, "load() verify 6 (array value) - $db_type");
 
+  ok(exists $MyPgObject::Objects_By_Id{$o->id}, "pre delete and forget pk - $db_type");
+  ok(exists $MyPgObject::Objects_By_Key{'name'}{$o->name}, "pre delete and forget uk - $db_type");
+  
   ok($o->delete, "delete() - $db_type");
+
+  ok(!exists $MyPgObject::Objects_By_Id{$o->id}, "post delete and forget pk - $db_type");
+  ok(!exists $MyPgObject::Objects_By_Key{'name'}{$o->name}, "post delete and forget uk - $db_type");
 
   eval { $o->meta->alias_column(nonesuch => 'foo') };
   ok($@, "alias_column() nonesuch - $db_type");

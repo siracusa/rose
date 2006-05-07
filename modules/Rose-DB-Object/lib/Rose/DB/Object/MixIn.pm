@@ -148,11 +148,11 @@ L<Rose::DB::Object::MixIn> is a base class for mix-ins.  A mix-in is a class tha
 
 When you L<use|perlfunc/use> a L<Rose::DB::Object::MixIn>-derived class, its L<import|/import> method is called at compile time.  In other words, this:
 
-    use Rose::DB::Object::MixIn 'foo', 'bar';
+    use Rose::DB::Object::MixIn 'a', 'b', { c => 'd' };
 
 is the same thing as this:
 
-    BEGIN { Rose::DB::Object::MixIn->import('foo', 'bar') }
+    BEGIN { Rose::DB::Object::MixIn->import('a', 'b', { c => 'd' }) }
 
 To prevent the L<import|/import> method from being run, put empty parentheses "()" after the package name instead of a list of arguments.
 

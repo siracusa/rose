@@ -10684,6 +10684,8 @@ EOF
 
     package MyPgObject;
 
+    use Rose::DB::Object::Helpers qw(clone);
+
     our @ISA = qw(Rose::DB::Object);
 
     sub extra { $_[0]->{'extra'} = $_[1]  if(@_ > 1); $_[0]->{'extra'} }
@@ -11220,6 +11222,8 @@ EOF
 
     package MyMySQLObject;
 
+    use Rose::DB::Object::Helpers qw(clone);
+
     our @ISA = qw(Rose::DB::Object);
 
     sub extra { $_[0]->{'extra'} = $_[1]  if(@_ > 1); $_[0]->{'extra'} }
@@ -11740,6 +11744,8 @@ EOF
 
     package MyInformixObject;
 
+    use Rose::DB::Object::Helpers qw(clone);
+
     our @ISA = qw(Rose::DB::Object);
 
     sub extra { $_[0]->{'extra'} = $_[1]  if(@_ > 1); $_[0]->{'extra'} }
@@ -12249,6 +12255,8 @@ EOF
     # Create test subclass
 
     package MySQLiteObject;
+
+    use Rose::DB::Object::Helpers qw(clone);
 
     our @ISA = qw(Rose::DB::Object);
 

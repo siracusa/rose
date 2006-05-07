@@ -1497,7 +1497,6 @@ Add a trigger, as specified by either an event and a code reference, or a set of
 
 If there are only two arguments, and the first is a valid event name, then the second must be a code reference.  Otherwise, the arguments are taken as named parameters.
 
-
 Valid parameters are:
 
 =over 4
