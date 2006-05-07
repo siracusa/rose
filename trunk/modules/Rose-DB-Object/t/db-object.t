@@ -1100,6 +1100,8 @@ EOF
 
     package MyPgObject;
 
+    use Rose::DB::Object::Helpers qw(clone);
+
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('pg') }
@@ -1244,6 +1246,8 @@ EOF
 
     package MyMySQLObject;
 
+    use Rose::DB::Object::Helpers qw(clone);
+
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('mysql') }
@@ -1383,6 +1387,8 @@ EOF
 
     package MyInformixObject;
 
+    use Rose::DB::Object::Helpers qw(clone);
+
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('informix') }
@@ -1496,6 +1502,8 @@ EOF
     # Create test subclass
 
     package MySQLiteObject;
+
+    use Rose::DB::Object::Helpers qw(clone);
 
     our @ISA = qw(Rose::DB::Object);
 

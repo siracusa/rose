@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => (19 * 4) + 2;
+use Test::More tests => (27 * 4) + 2;
 
 BEGIN 
 {
@@ -23,7 +23,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 19)  unless($Have{$db_type});
+    skip("$db_type tests", 27)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -33,7 +33,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
   my $class = 'My' . ucfirst($db_type) . 'Object';
 
-  my $o = $class->new(id => 1, name => 'John');
+  my $o = $class->new(id => 1, name => 'John', age => 30);
 
   my @tags = MyMixIn->export_tags;
   is_deeply(\@tags, [ 'all' ], "export_tags() 1 - $db_type");
@@ -91,6 +91,30 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
   $o = $class->new(id => 2);
   ok($o->load_speculative, "load_speculative() 3 - $db_type");
+  
+  my $o2 = $o->clone;
+  
+  is($o2->id, $o->id, "clone() 1 - $db_type");
+  is($o2->name, $o->name, "clone() 2 - $db_type");
+  is($o2->age, $o->age, "clone() 3 - $db_type");
+  ok(!defined $o2->{'db'}, "clone() 4 - $db_type");
+
+  $o2 = $o->clone_and_reset;
+
+  ok(!defined $o2->id, "clone_and_reset() 1 - $db_type");
+  
+  # Crazy MySQL prvides an empty string as a default value
+  if($db_type eq 'mysql') 
+  {
+    ok(!length $o2->name, "clone_and_reset() 2 - $db_type");
+  }
+  else
+  {
+    ok(!defined $o2->name, "clone_and_reset() 2 - $db_type");
+  }
+
+  is($o2->age, $o->age, "clone_and_reset() 3 - $db_type");
+  is($o2->db, $o->db, "clone_and_reset() 4 - $db_type");
 }
 
 
@@ -128,6 +152,7 @@ CREATE TABLE rose_db_object_test
 (
   id    SERIAL NOT NULL PRIMARY KEY,
   name  VARCHAR(255) NOT NULL,
+  age   INT,
 
   UNIQUE(name)
 )
@@ -181,6 +206,7 @@ CREATE TABLE rose_db_object_test
 (
   id    INT AUTO_INCREMENT PRIMARY KEY,
   name  VARCHAR(255) NOT NULL,
+  age   INT,
 
   UNIQUE(name)
 )
@@ -232,6 +258,7 @@ CREATE TABLE rose_db_object_test
 (
   id    SERIAL NOT NULL PRIMARY KEY,
   name  VARCHAR(255) NOT NULL,
+  age   INT,
 
   UNIQUE(name)
 )
@@ -283,6 +310,7 @@ CREATE TABLE rose_db_object_test
 (
   id    INTEGER PRIMARY KEY AUTOINCREMENT,
   name  VARCHAR(255) NOT NULL,
+  age   INT,
 
   UNIQUE(name)
 )

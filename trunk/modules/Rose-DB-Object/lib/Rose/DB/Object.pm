@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
 
-our $VERSION = '0.722';
+our $VERSION = '0.723';
 
 our $Debug = 0;
 
@@ -28,7 +28,7 @@ use Rose::Object::MakeMethods::Generic
   'scalar'  => [ 'error', 'not_found' ],
   'boolean' =>
   [
-    FLAG_DB_IS_PRIVATE,
+    #FLAG_DB_IS_PRIVATE,
     STATE_IN_DB,
     STATE_LOADING,
     STATE_SAVING,
@@ -65,7 +65,7 @@ sub db
 
   if(@_)
   {
-    $self->{FLAG_DB_IS_PRIVATE()} = 0;
+    #$self->{FLAG_DB_IS_PRIVATE()} = 0;
 
     my $new_db = shift;
 
@@ -102,7 +102,7 @@ sub _init_db
 
   if($db->init_db_info)
   {
-    $self->{FLAG_DB_IS_PRIVATE()} = 1;
+    #$self->{FLAG_DB_IS_PRIVATE()} = 1;
     return $db;
   }
 
@@ -1194,14 +1194,6 @@ sub delete
   }
 }
 
-sub clone
-{
-  my($self) = shift;
-  my $class = ref $self;
-  local $self->{STATE_CLONING()} = 1;
-  return $class->new(map { $_ => $self->$_() } $self->meta->column_accessor_method_names);
-}
-
 our $AUTOLOAD;
 
 sub AUTOLOAD
@@ -1252,19 +1244,19 @@ EOF
   Carp::confess qq(Can't locate object method "$2" via package "$1"$msg);
 }
 
-sub DESTROY
-{
-  my($self) = shift;
-
-  if($self->{FLAG_DB_IS_PRIVATE()})
-  {
-    if(my $db = $self->{'db'})
-    {
-      #$Debug && warn "$self DISCONNECT\n";
-      $db->disconnect;
-    }
-  }
-}
+sub DESTROY { }
+# {
+#   my($self) = shift;
+# 
+#   if($self->{FLAG_DB_IS_PRIVATE()})
+#   {
+#     if(my $db = $self->{'db'})
+#     {
+#       #$Debug && warn "$self DISCONNECT\n";
+#       $db->disconnect;
+#     }
+#   }
+# }
 
 1;
 
