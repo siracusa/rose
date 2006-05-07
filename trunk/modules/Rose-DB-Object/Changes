@@ -5,8 +5,9 @@
     * Added clone() and clone_and_reset() Helper methods.
     * The tutorial now recommends "use base ..." over direct modification
       of @ISA in order to work better with circular relationships.
+    * Generated Perl code now uses "use base ..." for the same reason.
     * Simplified object destruction, delegating all database object
-      clean up to Rose::DB.
+      clean-up to Rose::DB.
 
 0.722 (04.27.2006) - John Siracusa <siracusa@mindspring.com>
 
