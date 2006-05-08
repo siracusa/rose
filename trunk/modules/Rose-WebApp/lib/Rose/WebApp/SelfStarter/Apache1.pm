@@ -122,7 +122,7 @@ sub handler($$)
   # Run app
   #
 
-  $app->run();
+  $app->handle_request();
 
   return $app->status;
 }

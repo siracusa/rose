@@ -35,7 +35,7 @@ sub new
 
   $Debug && warn join(' line ', (caller)[0,2]), " - Getting new $self\n";
 
-  $self->request->register_cleanup(sub 
+  $self->apache_request->register_cleanup(sub 
   {
     $Debug && warn "Cleaning up $self\n";
     $self->{'notes'}->clear  if($self->{'notes'});
@@ -45,11 +45,11 @@ sub new
   return $self;
 }
 
-sub request
+sub apache_request
 {
   return @_ > 1 ? 
-    $_[0]->{'request'} = $_[1] :
-    $_[0]->{'request'} ||= Apache->request;
+    $_[0]->{'apache_request'} = $_[1] :
+    $_[0]->{'apache_request'} ||= Apache->request;
 }
 
 sub notes
@@ -98,46 +98,46 @@ sub log_level
   {
     my $level = shift;
     Carp::croak "Invalid log level: '$level'"  unless(exists $LOG_LEVEL_NAME_TO_CONST{$level});
-    $self->request->server->loglevel($LOG_LEVEL_NAME_TO_CONST{$level});
+    $self->apache_request->server->loglevel($LOG_LEVEL_NAME_TO_CONST{$level});
     return $level;
   }
 
-  return $LOG_LEVEL_CONST_TO_NAME{$self->request->server->loglevel} || $self->request->server->loglevel;
+  return $LOG_LEVEL_CONST_TO_NAME{$self->apache_request->server->loglevel} || $self->apache_request->server->loglevel;
 }
 
-sub log_level_constant { shift->request->server->loglevel(@_) }
+sub log_level_constant { shift->apache_request->server->loglevel(@_) }
 
-sub log { shift->request->log }
+sub log { shift->apache_request->log }
 
-sub log_emergency { shift->request->log->emerg(@_)  }
-sub log_alert     { shift->request->log->alert(@_)  }
-sub log_critical  { shift->request->log->crit(@_)   }
-sub log_error     { shift->request->log_error(@_)   }
-sub log_warning   { shift->request->log->warn(@_)   }
-sub log_notice    { shift->request->log->notice(@_) }
-sub log_info      { shift->request->log->info(@_)   }
-sub log_debug     { shift->request->log->debug(@_)  }
+sub log_emergency { shift->apache_request->log->emerg(@_)  }
+sub log_alert     { shift->apache_request->log->alert(@_)  }
+sub log_critical  { shift->apache_request->log->crit(@_)   }
+sub log_error     { shift->apache_request->log_error(@_)   }
+sub log_warning   { shift->apache_request->log->warn(@_)   }
+sub log_notice    { shift->apache_request->log->notice(@_) }
+sub log_info      { shift->apache_request->log->info(@_)   }
+sub log_debug     { shift->apache_request->log->debug(@_)  }
 
-sub print { shift->request->print(@_) }
+sub print { shift->apache_request->print(@_) }
 
 sub escape_html { shift; Apache::Util::escape_html(join('', @_) || '') }
 
-sub location             { $_[0]->request->location }
+sub location             { $_[0]->apache_request->location }
 sub server_root_relative { shift; Apache->server_root_relative(@_) }
 
-sub remote_user { $_[0]->request->connection->user }
+sub remote_user { $_[0]->apache_request->connection->user }
 
 sub user_agent
 {
-  $_[0]->request->header_in('User-Agent') || $ENV{'HTTP_USER_AGENT'} || '';
+  $_[0]->apache_request->header_in('User-Agent') || $ENV{'HTTP_USER_AGENT'} || '';
 }
 
-sub hostname { shift->request->hostname }
-sub port     { shift->request->server->port }
+sub hostname { shift->apache_request->hostname }
+sub port     { shift->apache_request->server->port }
 
 sub client_ip
 {
-  my $r = $_[0]->request;
+  my $r = $_[0]->apache_request;
 
   my $ip = $r->header_in('X-Forwarded-For') || $r->connection()->remote_ip() || '???';
 
@@ -148,16 +148,18 @@ sub client_ip
   return $ip;
 }
 
+sub document_root { shift->apache_request->document_root }
+
 sub path_info
 {
   my($self) = shift;
 
   if(@_)
   {
-    return $self->request->path_info($self->notes->path_info($ENV{'PATH_INFO'} = shift));
+    return $self->apache_request->path_info($self->notes->path_info($ENV{'PATH_INFO'} = shift));
   }
 
-  return $self->request->path_info;
+  return $self->apache_request->path_info;
 }
 
 sub requested_uri
@@ -173,7 +175,7 @@ sub requested_uri
 
   #$uri ||= $ENV{$AUTH_CONF{'REQ_URI_COOKIE'}};
 
-  my $r = $self->request;
+  my $r = $self->apache_request;
 
   return $self->notes->requested_uri($r->uri || '/');
 }
@@ -189,7 +191,7 @@ sub requested_uri_query
     return $query;
   }
 
-  return $self->notes->requested_uri_query(scalar $self->request->args);
+  return $self->notes->requested_uri_query(scalar $self->apache_request->args);
 }
 
 sub requested_uri_with_query
@@ -206,7 +208,7 @@ sub requested_uri_with_query
 
 sub referrer
 {
-  shift->request->header_in('Referer') || $ENV{'HTTP_REFERER'};
+  shift->apache_request->header_in('Referer') || $ENV{'HTTP_REFERER'};
 }
 
 sub is_secure
@@ -215,7 +217,7 @@ sub is_secure
 
   no warnings;
 
-  my $r = $self->request;
+  my $r = $self->apache_request;
   return ($r->header_in('X-Forwarded-For-SSL') ||
           $r->header_in('X-Forwarded-For-Method') eq 'https') ? 1 : 0;
 }
@@ -223,22 +225,22 @@ sub is_secure
 sub update_request_id
 {
   my($self) = shift;
-  my $r = $self->request;
+  my $r = $self->apache_request;
   $Request_Number++  if($r->is_initial_req);
   return $Request_Number;
 }
 
 sub request_id { $$ . ':' . $Request_Number }
 
-sub response_content_type { shift->request->content_type(@_) }
-sub response_add_header   { shift->request->headers_out->add(@_) }
-sub response_status       { shift->request->status(@_) }
+sub response_content_type { shift->apache_request->content_type(@_) }
+sub response_add_header   { shift->apache_request->headers_out->add(@_) }
+sub response_status       { shift->apache_request->status(@_) }
 
 sub redirect
 {
   my($self, $uri) = @_;
 
-  my $r = $self->request;
+  my $r = $self->apache_request;
 
   # Stop Apache from re-reading POSTed data (Mason bug)
   #$r->method('GET');
@@ -260,7 +262,7 @@ sub internal_redirect
 {
   my($self, $uri) = @_;
 
-  my $r = $self->request;
+  my $r = $self->apache_request;
 
   # Stop Apache from re-reading POSTed data (Mason bug)
   #$r->method('GET');
@@ -294,7 +296,7 @@ sub redirect_from_uri
   }
 
   my $uri = $self->notes->redirect_from(@_);
-  my $r   = $self->request;
+  my $r   = $self->apache_request;
 
   if(@_)
   {
@@ -343,7 +345,7 @@ sub redirect_to_uri
 
 sub send_http_header
 {
-  shift->request->send_http_header(@_);
+  shift->apache_request->send_http_header(@_);
 }
 
 1;

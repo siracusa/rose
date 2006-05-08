@@ -49,7 +49,7 @@ sub init_mason_interp
     return $site->mason_interp;
   }
 
-  my $doc_root = $self->app->server->request->document_root;
+  my $doc_root = $self->app->server->document_root;
   my $comp_root = Path::Class::Dir->new($doc_root)->parent->subdir('comps');
   my $data_dir  = Path::Class::Dir->new($doc_root)->parent->subdir('mason/data');
 
