@@ -81,8 +81,6 @@ use Rose::Object::MakeMethods::Generic
     'action_path',
     'action_method_prefix',
     'action_uri_prefix',
-
-    'call_count',
   ],
 
   hash =>
@@ -125,7 +123,7 @@ sub root_dir
 {
   my($self) = shift;
   
-  my $doc_root = $self->server->request->document_root;
+  my $doc_root = $self->server->document_root;
   $doc_root =~ s{/$}{};
   
   my $root_uri = $self->root_uri;
@@ -165,7 +163,6 @@ sub init_default_action        { undef }
 sub init_action_method_prefix  { 'do_' }
 
 sub init_default_form_action_method { 'post' }
-sub init_call_count { 0 }
 
 sub init_default_to_file_based_dispatch { 0 }
 
@@ -457,7 +454,6 @@ sub refresh
   $self->redispatched(0);
   $self->redispatched_from(undef);
   $self->http_header_sent(0);
-  $self->call_count(0);
 
   $self->output_buffer('');
 
@@ -494,7 +490,7 @@ sub do
 
   $self->action_args(\%args)  if(@_ > 2);
   $self->action($action);
-  $self->run;
+  $self->handle_request;
 }
 
 sub require_secure { shift->website_class->require_secure }
@@ -649,7 +645,7 @@ sub choose_action
   return defined $action ? $action : $self->default_action;
 }
 
-sub run
+sub handle_request
 {
   my($self) = shift;
 
@@ -748,7 +744,7 @@ sub redispatch
   $self->clear_output_buffer;
 
   $self->redispatched(1);
-  $self->run;
+  $self->handle_request;
 }
 
 sub clear_output_buffer
@@ -829,30 +825,13 @@ sub handle_comp_error
   }
 }
 
-sub inc_call_count { ++$_[0]->{'call_count'} }
-sub dec_call_count { --$_[0]->{'call_count'} }
-
-sub start
-{ 
-  my($self) = shift;
-
-  my $count = $self->inc_call_count;
-
-  #$Debug && warn "START(@{[ $count - 1 ]} -> $count) - ", join(':', (caller())[0,2]), "\n";  
-}
+sub start { }
 
 sub finish
 {
   my($self) = shift;
 
-  my $count = $self->dec_call_count;
-
-  #$Debug && warn "FINISH(@{[ $count + 1 ]} -> $count) - ", join(':', (caller())[0,2]), "\n";
-
-  croak "Negative call count ($self->{'call_count'}) in $self"
-    if($count < 0);
-
-  if($count == 0 && $self->status == OK)
+  if($self->status == OK)
   {
     $self->send_http_header;
 

@@ -12,7 +12,7 @@ sub handler
 {
   my($r) = shift;
 
-  my $s = Rose::WebApp::Server->new(request => $r);
+  my $s = Rose::WebApp::Server->new(apache_request => $r);
   $s->update_request_id;
 
   $r->content_type('text/html');
@@ -30,7 +30,7 @@ sub handler
 <body>
 EOF
 
-  $r->print('Request: ', escape_html($s->request), "<br>\n");
+  $r->print('Request: ', escape_html($s->apache_request), "<br>\n");
   $r->print('Notes: ', escape_html($s->notes), "<br>\n");
   $r->print('UA: ', escape_html($s->user_agent), "<br>\n");
   $r->print('IP: ', escape_html($s->client_ip), "<br>\n");

@@ -17,7 +17,7 @@ sub mason_interp
   HTML::Mason::Interp->new(
     comp_root =>
     [
-      [ docs  => $class->server->request->document_root ],
+      [ docs  => $class->server->document_root ],
       [ comps => $class->server->server_root_relative('comps') ],
     ],
     data_dir      => $class->server->server_root_relative('data'),

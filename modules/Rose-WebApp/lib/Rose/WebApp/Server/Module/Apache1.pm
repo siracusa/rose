@@ -60,7 +60,7 @@ sub init
   $self->{'notes'}  ||= $self->init_notes;
 }
 
-sub init_server { Rose::WebApp::Server->new(request => $_[0]->{'request'} ||= Apache->request) }
+sub init_server { Rose::WebApp::Server->new(apache_request => $_[0]->{'request'} ||= Apache->request) }
 sub init_notes  { Rose::WebApp::Server::Notes->new }
 
 sub handler($$)
