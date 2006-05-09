@@ -9,10 +9,10 @@ use Class::Delegator
 (
   send =>
   [
-    qw(notes user_agent client_ip path_info requested_uri 
-       requested_uri_query requested_uri_with_query referrer
-       is_secure request_id update_request_id redirect_from_uri
-       redirect_to_uri internal_redirect)
+    qw(notes client_user_agent client_ip path_info request_header
+       response_header request_is_secure requested_uri requested_uri_query
+       requested_uri_with_query referrer request_id update_request_id
+       redirect_from_uri redirect_to_uri internal_redirect)
   ],
   to => 'server',
 );
@@ -74,7 +74,7 @@ sub site_port_secure
   my $port = $class->_site_port_secure;
 
   return $port  if($port);
-  return $class->default_site_port_secure  unless($class->is_secure);
+  return $class->default_site_port_secure  unless($class->request_is_secure);
 
   unless($port)
   {
@@ -93,7 +93,7 @@ sub site_port_insecure
   my $port = $class->_site_port_insecure;
 
   return $port  if($port);
-  return $class->default_site_port_insecure  if($class->is_secure);
+  return $class->default_site_port_insecure  if($class->request_is_secure);
 
   unless($port)
   {
@@ -130,20 +130,20 @@ sub site_domain_secure
 
 sub site_domain
 {
-  ($_[0]->is_secure) ? $_[0]->site_domain_secure :  
-                       $_[0]->site_domain_insecure;
+  ($_[0]->request_is_secure) ? $_[0]->site_domain_secure :  
+                               $_[0]->site_domain_insecure;
 }
 
 sub site_host
 {
-  ($_[0]->is_secure) ? $_[0]->site_host_secure :  
-                       $_[0]->site_host_insecure;
+  ($_[0]->request_is_secure) ? $_[0]->site_host_secure :  
+                               $_[0]->site_host_insecure;
 }
 
 sub site_port
 {
-  ($_[0]->is_secure) ? $_[0]->site_port_secure :  
-                       $_[0]->site_port_insecure;
+  ($_[0]->request_is_secure) ? $_[0]->site_port_secure :  
+                               $_[0]->site_port_insecure;
 }
 
 sub site_url_secure
@@ -184,8 +184,8 @@ sub site_url
 {
   my($class, $path) = @_;
 
-  return ($class->is_secure) ? $class->site_url_secure($path) :
-                               $class->site_url_insecure($path);
+  return ($class->request_is_secure) ? $class->site_url_secure($path) :
+                                       $class->site_url_insecure($path);
 }
 
 sub current_url_secure
@@ -204,7 +204,7 @@ sub require_secure
 {
   my($class) = shift;
 
-  return 1  if($class->is_secure);
+  return 1  if($class->request_is_secure);
 
   $class->redirect($class->current_url_secure);
 }
@@ -227,57 +227,57 @@ sub redirect
   $class->server->redirect($uri);
 }
 
-sub session { undef }
-sub session_cookie_missing { shift->notes->session_cookie_missing(@_) }
-sub session_cookie_munged  { shift->notes->session_cookie_munged(@_) }
+#sub session { undef }
+#sub session_cookie_missing { shift->notes->session_cookie_missing(@_) }
+#sub session_cookie_munged  { shift->notes->session_cookie_munged(@_) }
 
-sub apparently_not_accepting_cookies
-{
-  my($class) = shift;
+# sub apparently_not_accepting_cookies
+# {
+#   my($class) = shift;
+# 
+#   if($class->session_cookie_missing)
+#   {
+#     foreach my $uri ($class->referrer) #, $class->redirect_from)
+#     {
+#       next  unless $uri;
+# 
+#       my $uri = Rose::URI->new($uri);
+# 
+#       $uri->path(undef);
+#       $uri->query(undef);
+#       $uri->fragment(undef);
+#       $uri->host(lc $uri->host);
+# 
+#       $uri = $uri->as_string;
+# 
+#       my $insecure = $class->site_url_insecure;
+#       my $secure   = $class->site_url_secure;
+# 
+#       if($uri eq $insecure || $uri eq $secure)
+#       {
+#         return 1;
+#       }
+#     }
+#   }
+# 
+#   return 0;
+# }
 
-  if($class->session_cookie_missing)
-  {
-    foreach my $uri ($class->referrer) #, $class->redirect_from)
-    {
-      next  unless $uri;
-
-      my $uri = Rose::URI->new($uri);
-
-      $uri->path(undef);
-      $uri->query(undef);
-      $uri->fragment(undef);
-      $uri->host(lc $uri->host);
-
-      $uri = $uri->as_string;
-
-      my $insecure = $class->site_url_insecure;
-      my $secure   = $class->site_url_secure;
-
-      if($uri eq $insecure || $uri eq $secure)
-      {
-        return 1;
-      }
-    }
-  }
-
-  return 0;
-}
-
-sub message
-{
-  my($class, $param, $value) = @_;
-
-  my $notes = $class->notes;
-
-  my $messages = $notes->messages || {};
-
-  if(@_ == 3)
-  {
-    $messages->{$param} = $value;
-    $notes->messages($messages);
-  }
-
-  return $messages->{$param};
-}
+# sub message
+# {
+#   my($class, $param, $value) = @_;
+# 
+#   my $notes = $class->notes;
+# 
+#   my $messages = $notes->messages || {};
+# 
+#   if(@_ == 3)
+#   {
+#     $messages->{$param} = $value;
+#     $notes->messages($messages);
+#   }
+# 
+#   return $messages->{$param};
+# }
 
 1;

@@ -52,13 +52,6 @@ sub apache_request
     $_[0]->{'apache_request'} ||= Apache->request;
 }
 
-sub notes
-{
-  return @_ > 1 ? 
-    $_[0]->{'notes'} = $_[1] :
-    $_[0]->{'notes'} ||= Rose::WebApp::Server::Notes->new;
-}
-
 sub constant
 {
   no strict 'refs';
@@ -127,10 +120,13 @@ sub server_root_relative { shift; Apache->server_root_relative(@_) }
 
 sub remote_user { $_[0]->apache_request->connection->user }
 
-sub user_agent
+sub client_user_agent
 {
   $_[0]->apache_request->header_in('User-Agent') || $ENV{'HTTP_USER_AGENT'} || '';
 }
+
+sub request_header  { shift->apache_request->header_in(@_) }
+sub response_header { shift->apache_request->header_out(@_) }
 
 sub hostname { shift->apache_request->hostname }
 sub port     { shift->apache_request->server->port }
@@ -211,14 +207,15 @@ sub referrer
   shift->apache_request->header_in('Referer') || $ENV{'HTTP_REFERER'};
 }
 
-sub is_secure
+sub request_is_secure
 {
   my($self) = shift;
 
   no warnings;
 
   my $r = $self->apache_request;
-  return ($r->header_in('X-Forwarded-For-SSL') ||
+  return (lc($r->subprocess_env('HTTPS') || '') eq 'on' || 
+          $r->header_in('X-Forwarded-For-SSL') ||
           $r->header_in('X-Forwarded-For-Method') eq 'https') ? 1 : 0;
 }
 
