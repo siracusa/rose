@@ -119,6 +119,18 @@ use Rose::Object::MakeMethods::Generic
   ]
 );
 
+use Class::Delegator
+(
+  send =>
+  [
+    qw(notes client_user_agent client_ip path_info request_header
+       response_header request_is_secure requested_uri requested_uri_query
+       requested_uri_with_query referrer request_id update_request_id
+       redirect_from_uri redirect_to_uri redirect internal_redirect)
+  ],
+  to => 'server',
+);
+
 sub root_dir
 {
   my($self) = shift;
@@ -1232,9 +1244,6 @@ sub log_notice    { shift->server->log_notice(@_)    }
 sub log_info      { shift->server->log_info(@_)      }
 sub log_debug     { shift->server->log_debug(@_)     }
 
-sub redirect { shift->website->redirect(@_) }
-sub internal_redirect { shift->website->internal_redirect(@_) }
-
 sub params_exist { scalar keys %{$_[0]->{'params'}} }
 
 sub params
@@ -1300,33 +1309,6 @@ sub param
   }
 
   croak(ref($self), '::param() requires a param name plus an optional value');
-}
-
-sub app_param_name { $_[0]->app_param_prefix . $_[1]  }
-
-sub app_param
-{
-  my($self) = shift;
-  my($name) = shift;
-  $name = $self->app_param_prefix . $name;
-  return @_ ? ($self->{'app_params'}{$name} = shift) :
-               $self->{'app_params'}{$name};
-}
-
-sub delete_app_param
-{
-  my($self) = shift;
-  my($name) = shift;
-  $name = $self->app_param_prefix . $name;
-  delete $self->{'app_params'};
-}
-
-sub app_param_exists
-{
-  my($self) = shift;
-  my($name) = shift;
-  $name = $self->app_param_prefix . $name;
-  return exists $self->{'app_params'}{$name};
 }
 
 sub action_uri

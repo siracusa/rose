@@ -13,4 +13,11 @@ BEGIN
   );
 }
 
+sub notes
+{
+  return @_ > 1 ? 
+    $_[0]->{'notes'} = $_[1] :
+    $_[0]->{'notes'} ||= Rose::WebApp::Server::Notes->new;
+}
+
 1;
