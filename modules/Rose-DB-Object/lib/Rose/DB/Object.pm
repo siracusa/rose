@@ -1546,7 +1546,7 @@ Simple inheritance between L<Rose::DB::Object>-derived classes is supported.  Th
 
 B<Tip:> When using perl 5.8.0 or later, the L<Scalar::Util::Clone> module is highly recommended.  If it's installed, it will be used to more efficiently clone base-class metadata objects.
 
-If the base class has already been L<initilized|Rose::DB::Object::Metadata/initialize>, the subclass must explicitly specify whether it wants to create a new set of column and relationship methods, or merely inherit the methods from the base class.  If the subclass contains any metadata modifications that affect method creation, then it must create a new set of methods to reflect those changes.  
+If the base class has already been L<initialized|Rose::DB::Object::Metadata/initialize>, the subclass must explicitly specify whether it wants to create a new set of column and relationship methods, or merely inherit the methods from the base class.  If the subclass contains any metadata modifications that affect method creation, then it must create a new set of methods to reflect those changes.  
 
 Finally, note that column types cannot be changed "in-place."  To change a column type, delete the old column and add a new one with the same name.
 
