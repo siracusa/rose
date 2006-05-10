@@ -1,3 +1,7 @@
+0.724 (05.10.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added the replace_column() Metadata method.
+
 0.723 (05.07.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed a bug that caused Rose::DB::Object::Cached objects
