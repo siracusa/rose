@@ -1528,8 +1528,10 @@ EOF
       bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },
       decs     => { type => 'decimal', precision => 10, scale => 2 },
       #last_modified => { type => 'timestamp' },
-      date_created  => { type => 'timestamp' },
+      date_created  => { type => 'scalar' },
     );
+
+    MySQLiteObject->meta->replace_column(date_created => { type => 'timestamp' });
 
     MySQLiteObject->meta->add_unique_key('save');
 

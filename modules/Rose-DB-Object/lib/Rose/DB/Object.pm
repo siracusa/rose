@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
 
-our $VERSION = '0.723';
+our $VERSION = '0.724';
 
 our $Debug = 0;
 
@@ -1548,7 +1548,7 @@ B<Tip:> When using perl 5.8.0 or later, the L<Scalar::Util::Clone> module is hig
 
 If the base class has already been L<initialized|Rose::DB::Object::Metadata/initialize>, the subclass must explicitly specify whether it wants to create a new set of column and relationship methods, or merely inherit the methods from the base class.  If the subclass contains any metadata modifications that affect method creation, then it must create a new set of methods to reflect those changes.  
 
-Finally, note that column types cannot be changed "in-place."  To change a column type, delete the old column and add a new one with the same name.
+Finally, note that column types cannot be changed "in-place."  To change a column type, delete the old column and add a new one with the same name.  This can be done in one step with the L<replace_column|/replace_column> method.
 
 Example:
 
@@ -1574,8 +1574,7 @@ Example:
   __PACKAGE__->meta->column('id')->default(123);
 
   # Change the "start" column into a datetime column.
-  __PACKAGE__->meta->delete_column('start');
-  __PACKAGE__->meta->add_column(start => { type => 'datetime' });
+  __PACKAGE__->meta->replace_column(start => { type => 'datetime' });
 
   # Initialize, replacing any inherited methods with newly created ones
   __PACKAGE__->meta->initialize(replace_existing => 1);
