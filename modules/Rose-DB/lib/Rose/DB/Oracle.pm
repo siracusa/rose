@@ -79,6 +79,7 @@ sub list_tables
     my($dbh) = $self -> dbh or die $self -> error;
 
     local $dbh->{'RaiseError'} = 1;
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
 
     my($sth)  = $dbh -> table_info($self -> catalog, $self -> schema, '%', $types);
     my($info) = $sth -> fetchall_arrayref({}); # The {} are mandatory.
