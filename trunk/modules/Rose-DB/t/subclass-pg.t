@@ -173,7 +173,7 @@ my @Intervals =
   '1 d 2 d'   => undef,
   '1: 2:'     => undef,
   '1 s 2:'    => undef,
-  
+
   '1 ys 2 h 3 m 4 s'  => undef,
   '1 y s 2 h 3 m 4 s' => undef,
   '1 ago'             => undef,
@@ -258,7 +258,7 @@ while($i < @Intervals)
 
   is($db->format_interval($d), $formatted, "parse_interval ($val)");  
   my $alt_d = $db->parse_interval($Alt_Intervals{$val});
-  
+
   ok((!defined $d && !defined $alt_d) || DateTime::Duration->compare($d, $alt_d) == 0, "parse_interval alt check $i");
 }
 
