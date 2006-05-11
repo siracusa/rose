@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.72';
+our $VERSION = '0.724';
 
 our $Debug = 0;
 
@@ -2282,7 +2282,7 @@ sub objects_by_key
           keys(%$ft_columns); # reset iterator
           $self->error("Could not fetch objects via $name() - the " .
                        "$local_method attribute is undefined");
-          return wantarray ? () : undef;
+          return;
         }
       }
 
@@ -2389,7 +2389,7 @@ sub objects_by_key
             keys(%$ft_columns); # reset iterator
             $self->error("Could not set objects via $name() - the " .
                          "$local_method attribute is undefined");
-            return wantarray ? () : undef;
+            return;
           }
         }
 
@@ -2498,7 +2498,7 @@ sub objects_by_key
           keys(%$ft_columns); # reset iterator
           $self->error("Could not fetch objects via $name() - the " .
                        "$local_method attribute is undefined");
-          return wantarray ? () : undef;
+          return;
         }
       }
 
@@ -2619,7 +2619,7 @@ sub objects_by_key
               keys(%$ft_columns); # reset iterator
               $welf->error("Could not set objects via $name() - the " .
                            "$local_method attribute is undefined");
-              return wantarray ? () : undef;
+              return;
             }
           }
 
@@ -2710,7 +2710,7 @@ sub objects_by_key
           keys(%$ft_columns); # reset iterator
           $self->error("Could not fetch objects via $name() - the " .
                        "$local_method attribute is undefined");
-          return wantarray ? () : undef;
+          return;
         }
       }
 
@@ -2762,7 +2762,7 @@ sub objects_by_key
       unless(@_)
       {
         $self->error("No $name to add");
-        return;
+        return wantarray ? () : 0;
       }
 
       # Can't add until the object is saved
@@ -2798,7 +2798,7 @@ sub objects_by_key
           keys(%$ft_columns); # reset iterator
           $self->error("Could add set objects via $name() - the " .
                        "$local_method attribute is undefined");
-          return wantarray ? () : undef;
+          return;
         }
       }
 
@@ -2855,10 +2855,10 @@ sub objects_by_key
         $self->error("Could not add $name - $@");
         $db->rollback  if($db && $started_new_tx);
         $meta->handle_error($self);
-        return undef;
+        return;
       }
 
-      return 1;
+      return @$objects;
     };
   }
   elsif($interface eq 'add_on_save')
@@ -2877,7 +2877,7 @@ sub objects_by_key
       unless(@_)
       {
         $self->error("No $name to add");
-        return undef;
+        return wantarray ? () : 0;
       }
 
       # Add all the new objects
@@ -2968,7 +2968,7 @@ sub objects_by_key
       };
 
       $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'} = $add_code;
-      return 1;
+      return @$objects;
     };
   }
   else { Carp::croak "Unknown interface: $interface" }
@@ -3263,7 +3263,7 @@ sub objects_by_map
           keys(%map_column_to_self_method); # reset iterator
           $self->error("Could not fetch indirect objects via $name() - the " .
                        "$self_method attribute is undefined");
-          return wantarray ? () : undef;
+          return;
         }
       }
 
@@ -3371,7 +3371,7 @@ sub objects_by_map
             keys(%map_column_to_self_method); # reset iterator
             $self->error("Could not fetch indirect objects via $name() - the " .
                          "$self_method attribute is undefined");
-            return wantarray ? () : undef;
+            return;
           }
         }
 
@@ -3497,7 +3497,7 @@ sub objects_by_map
           keys(%map_column_to_self_method); # reset iterator
           $self->error("Could not fetch indirect objects via $name() - the " .
                        "$foreign_method attribute is undefined");
-          return wantarray ? () : undef;
+          return;
         }
       }
 
@@ -3599,7 +3599,7 @@ sub objects_by_map
               keys(%map_column_to_self_method); # reset iterator
               $welf->error("Could not fetch indirect objects via $name() - the " .
                            "$self_method attribute is undefined");
-              return wantarray ? () : undef;
+              return;
             }
           }
 
@@ -3704,7 +3704,7 @@ sub objects_by_map
           keys(%map_column_to_self_method); # reset iterator
           $self->error("Could not fetch indirect objects via $name() - the " .
                        "$foreign_method attribute is undefined");
-          return wantarray ? () : undef;
+          return;
         }
       }
 
@@ -3762,7 +3762,7 @@ sub objects_by_map
       unless(@_)
       {
         $self->error("No $name to add");
-        return;
+        return wantarray ? () : 0;
       }
 
       # Can't set until the object is saved
@@ -3796,7 +3796,7 @@ sub objects_by_map
           keys(%map_column_to_self_method); # reset iterator
           $self->error("Could not fetch indirect objects via $name() - the " .
                        "$self_method attribute is undefined");
-          return wantarray ? () : undef;
+          return;
         }
       }
 
@@ -3879,10 +3879,10 @@ sub objects_by_map
         $self->error("Could not add $name objects - $@");
         $db->rollback  if($db && $started_new_tx);
         $meta->handle_error($self);
-        return undef;
+        return;
       }
 
-      return 1;
+      return @$objects;
     };
   }
   elsif($interface eq 'add_on_save')
@@ -3894,7 +3894,7 @@ sub objects_by_map
       unless(@_)
       {
         $self->error("No $name to add");
-        return undef;
+        return wantarray ? () : 0;
       }
 
       # Get all the new objects
@@ -3927,7 +3927,7 @@ sub objects_by_map
             keys(%map_column_to_self_method); # reset iterator
             $welf->error("Could not fetch indirect objects via $name() - the " .
                          "$self_method attribute is undefined");
-            return wantarray ? () : undef;
+            return;
           }
         }
 
@@ -3983,7 +3983,7 @@ sub objects_by_map
       };
 
       $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'} = $add_code;
-      return 1;
+      return @$objects;
     };
   }
   else { Carp::croak "Unknown interface: $interface" }
@@ -4974,6 +4974,8 @@ If the fetch succeeds, a list (in list context) or a reference to the array of o
 
 Creates a method that will add to a list of L<Rose::DB::Object>-derived objects that are related to the current object by a key formed from attributes of the current object.  The objects do not have to already exist in the database; they will be inserted if needed.
 
+This method returns the list of objects added when called in list context, and the number of objects added when called in scalar context.  If one or more objects could not be added, undef (in scalar context) or an empty list (in list context) is returned and the parent object's L<error|Rose::DB::Object/error> attribute is set.
+
 If passed an empty list, the method does nothing and the parent object's L<error|Rose::DB::Object/error> attribute is set.
 
 If passed any arguments, the parent object must have been L<load|Rose::DB::Object/load>ed or L<save|Rose::DB::Object/save>d prior to adding to the list of objects.  If this method is called with a non-empty list as an argument before the parent object has been  L<load|Rose::DB::Object/load>ed or L<save|Rose::DB::Object/save>d, a fatal error will occur.
@@ -5001,6 +5003,8 @@ The parent object's list of related objects is then set to undef, causing the re
 =item B<add_on_save>
 
 Creates a method that will add to a list of L<Rose::DB::Object>-derived objects that are related to the current object by a key formed from attributes of the current object.  The objects will be added to the database when the parent object is L<save|Rose::DB::Object/save>d.  The objects do not have to already exist in the database; they will be inserted if needed.
+
+This method returns the list of objects to be added when called in list context, and the number of items to be added when called in scalar context.
 
 If passed an empty list, the method does nothing and the parent object's L<error|Rose::DB::Object/error> attribute is set.
 
@@ -5369,6 +5373,8 @@ If the fetch succeeds, a list (in list context) or a reference to the array of o
 
 Creates a method that will add to a list of L<Rose::DB::Object>-derived objects that are related to the current object through the C<map_class>, and will also save objects to the database and map them to the parent object.  The objects do not have to already exist in the database; they will be inserted if needed.
 
+This method returns the list of objects added when called in list context, and the number of objects added when called in scalar context.  If one or more objects could not be added, undef (in scalar context) or an empty list (in list context) is returned and the parent object's L<error|Rose::DB::Object/error> attribute is set.
+
 If passed an empty list, the method does nothing and the parent object's L<error|Rose::DB::Object/error> attribute is set.
 
 If passed any arguments, the parent object must have been L<load|Rose::DB::Object/load>ed or L<save|Rose::DB::Object/save>d prior to adding to the list of objects.  If this method is called with a non-empty list as an argument before the parent object has been  L<load|Rose::DB::Object/load>ed or L<save|Rose::DB::Object/save>d, a fatal error will occur.
@@ -5392,6 +5398,8 @@ The parent object's list of related objects is then set to undef, causing the re
 =item B<add_on_save>
 
 Creates a method that will add to a list of L<Rose::DB::Object>-derived objects that are related to the current object through the C<map_class>, and will also save objects to the database and map them to the parent object when the "parent" object is L<save|Rose::DB::Object/save>d.  The objects and map records will be added to the database when the parent object is L<save|Rose::DB::Object/save>d.  The objects do not have to already exist in the database; they will be inserted if needed.
+
+This method returns the list of objects to be added when called in list context, and the number of items to be added when called in scalar context.
 
 If passed an empty list, the method does nothing and the parent object's L<error|Rose::DB::Object/error> attribute is set.
 
