@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1461;
+use Test::More tests => 1464;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 368)  unless($HAVE_PG);
+  skip("Postgres tests", 369)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -876,7 +876,7 @@ SKIP: foreach my $db_type ('pg')
 
   # Add, no args
   @o2s = ();
-  ok(!defined $o->add_other2_objs_now(@o2s), "add one to many now 1 - $db_type");
+  ok($o->add_other2_objs_now(@o2s) == 0, "add one to many now 1 - $db_type");
 
   # Add before load/save
   @o2s = 
@@ -891,7 +891,9 @@ SKIP: foreach my $db_type ('pg')
   # Add
   $o->load;
 
-  $o->add_other2_objs_now(@o2s);
+  my @oret = $o->add_other2_objs_now(@o2s);
+  is(scalar @oret, scalar @o2s && $oret[0] eq $o2s[0] && 
+     $oret[0]->isa('MyPgOtherObject2'), "add one to many now count - $db_type");
 
   @o2s = $o->other2_objs;
   ok(@o2s == 4, "add one to many now 3 - $db_type");
@@ -1226,7 +1228,7 @@ SKIP: foreach my $db_type ('pg')
                        flag => 1);
   # Add, no args
   @colors = ();
-  ok(!defined $o->add_colors(@colors), "add many to many now 1 - $db_type");
+  ok($o->add_colors(@colors) == 0, "add many to many now 1 - $db_type");
 
   # Add before load/save
   @colors = 
@@ -1294,7 +1296,8 @@ SKIP: foreach my $db_type ('pg')
   );
 
   # Add on save
-  ok($o->add_colors_on_save(@colors), "add many to many on save 1 - $db_type");
+  my $num = $o->add_colors_on_save(@colors);
+  is($num, scalar @colors, "add many to many on save 1 - $db_type");
 
   @colors = $o->colors;
   ok(@colors == 4, "add many to many on save 2 - $db_type");
@@ -1437,7 +1440,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 337)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 338)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -2180,7 +2183,7 @@ SKIP: foreach my $db_type ('mysql')
 
   # Add, no args
   @o2s = ();
-  ok(!defined $o->add_other2_objs_now(@o2s), "add one to many now 1 - $db_type");
+  ok($o->add_other2_objs_now(@o2s) == 0, "add one to many now 1 - $db_type");
 
   # Add before load/save
   @o2s = 
@@ -2195,7 +2198,9 @@ SKIP: foreach my $db_type ('mysql')
   # Add
   $o->load;
 
-  $o->add_other2_objs_now(@o2s);
+  my @oret = $o->add_other2_objs_now(@o2s);
+  is(scalar @oret, scalar @o2s && $oret[0] eq $o2s[0] && 
+     $oret[0]->isa('MyMySQLOtherObject2'), "add one to many now count - $db_type");
 
   @o2s = $o->other2_objs;
   ok(@o2s == 4, "add one to many now 3 - $db_type");
@@ -2530,7 +2535,7 @@ SKIP: foreach my $db_type ('mysql')
                           flag => 1);
   # Add, no args
   @colors = ();
-  ok(!defined $o->add_colors(@colors), "add many to many now 1 - $db_type");
+  ok($o->add_colors(@colors) == 0, "add many to many now 1 - $db_type");
 
   # Add before load/save
   @colors = 
@@ -3548,7 +3553,7 @@ SKIP: foreach my $db_type ('informix')
 
   # Add, no args
   @o2s = ();
-  ok(!defined $o->add_other2_objs_now(@o2s), "add one to many now 1 - $db_type");
+  ok($o->add_other2_objs_now(@o2s) == 0, "add one to many now 1 - $db_type");
 
   # Add before load/save
   @o2s = 
@@ -3898,7 +3903,7 @@ SKIP: foreach my $db_type ('informix')
                              flag => 1);
   # Add, no args
   @colors = ();
-  ok(!defined $o->add_colors(@colors), "add many to many now 1 - $db_type");
+  ok($o->add_colors(@colors) == 0, "add many to many now 1 - $db_type");
 
   # Add before load/save
   @colors = 
@@ -4110,7 +4115,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 395)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 396)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -4952,7 +4957,7 @@ SKIP: foreach my $db_type ('sqlite')
 
   # Add, no args
   @o2s = ();
-  ok(!defined $o->add_other2_objs_now(@o2s), "add one to many now 1 - $db_type");
+  ok($o->add_other2_objs_now(@o2s) == 0, "add one to many now 1 - $db_type");
 
   # Add before load/save
   @o2s = 
@@ -4967,7 +4972,8 @@ SKIP: foreach my $db_type ('sqlite')
   # Add
   $o->load;
 
-  $o->add_other2_objs_now(@o2s);
+  my $num = $o->add_other2_objs_now(@o2s);
+  is($num, scalar @o2s, "add one to many now count - $db_type");
 
   @o2s = $o->other2_objs;
   ok(@o2s == 4, "add one to many now 3 - $db_type");
@@ -5014,7 +5020,8 @@ SKIP: foreach my $db_type ('sqlite')
   );
 
   # Add on save
-  ok($o->add_other2_objs(@o2s), "add one to many on save 4 - $db_type");
+  $num = $o->add_other2_objs(@o2s);
+  is($num, scalar @o2s, "add one to many on save 4 - $db_type");
 
   @o2s = $o->other2_objs;
   ok(@o2s == 2, "add one to many on save 5 - $db_type");
@@ -5308,7 +5315,7 @@ SKIP: foreach my $db_type ('sqlite')
                              flag => 1);
   # Add, no args
   @colors = ();
-  ok(!defined $o->add_colors(@colors), "add many to many now 1 - $db_type");
+  ok($o->add_colors(@colors) == 0, "add many to many now 1 - $db_type");
 
   # Add before load/save
   @colors = 
