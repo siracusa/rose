@@ -24,7 +24,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.721';
+our $VERSION = '0.724';
 
 our $Debug = 0;
 
@@ -717,6 +717,19 @@ sub sync_keys_to_columns
   $self->unique_keys(@valid_uks);
 
   return;
+}
+
+sub replace_column
+{
+  my($self) = shift;
+
+  unless(@_ == 2)
+  {
+    Carp::croak "Missing column name and value arguments"        if(@_ < 2);
+    Carp::croak "Too many arguments passed to replace_column()"  if(@_ < 2);
+  }
+
+  return $self->column(@_);
 }
 
 sub column
@@ -4269,6 +4282,19 @@ If both NAME and HASHREF are passed, then the combination of NAME and HASHREF mu
 Get or set the full list of relationships.  If ARGS are passed, the relationship list is cleared and then ARGS are passed to the L<add_relationships|/add_relationships> method.
 
 Returns a list of relationship objects in list context, or a reference to an array of relationship objects in scalar context.
+
+=item B<replace_column NAME, [COLUMN | HASHREF]>
+
+Replace the column named NAME with a newly constructed column.  This method is equivalent to L<deleting|/delete_column> any existing column named NAME and then L<adding|/add_column> a new one.  In other words, this:
+
+    $meta->replace_column($name => $value);
+
+is equivalent to this:
+
+    $meta->delete_column($name);
+    $meta->add_column($name => $value);
+
+The value of the new column may be a L<Rose::DB::Object::Metadata::Column>-derived object or a reference to a hash suitable for passing to the L<add_columns|/add_columns> method.
 
 =item B<schema [SCHEMA]>
 

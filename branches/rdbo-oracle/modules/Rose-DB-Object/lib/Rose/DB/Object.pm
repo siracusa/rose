@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
 
-our $VERSION = '0.722';
+our $VERSION = '0.724';
 
 our $Debug = 0;
 
@@ -28,7 +28,7 @@ use Rose::Object::MakeMethods::Generic
   'scalar'  => [ 'error', 'not_found' ],
   'boolean' =>
   [
-    FLAG_DB_IS_PRIVATE,
+    #FLAG_DB_IS_PRIVATE,
     STATE_IN_DB,
     STATE_LOADING,
     STATE_SAVING,
@@ -65,7 +65,7 @@ sub db
 
   if(@_)
   {
-    $self->{FLAG_DB_IS_PRIVATE()} = 0;
+    #$self->{FLAG_DB_IS_PRIVATE()} = 0;
 
     my $new_db = shift;
 
@@ -102,7 +102,7 @@ sub _init_db
 
   if($db->init_db_info)
   {
-    $self->{FLAG_DB_IS_PRIVATE()} = 1;
+    #$self->{FLAG_DB_IS_PRIVATE()} = 1;
     return $db;
   }
 
@@ -1194,14 +1194,6 @@ sub delete
   }
 }
 
-sub clone
-{
-  my($self) = shift;
-  my $class = ref $self;
-  local $self->{STATE_CLONING()} = 1;
-  return $class->new(map { $_ => $self->$_() } $self->meta->column_accessor_method_names);
-}
-
 our $AUTOLOAD;
 
 sub AUTOLOAD
@@ -1252,19 +1244,19 @@ EOF
   Carp::confess qq(Can't locate object method "$2" via package "$1"$msg);
 }
 
-sub DESTROY
-{
-  my($self) = shift;
-
-  if($self->{FLAG_DB_IS_PRIVATE()})
-  {
-    if(my $db = $self->{'db'})
-    {
-      #$Debug && warn "$self DISCONNECT\n";
-      $db->disconnect;
-    }
-  }
-}
+sub DESTROY { }
+# {
+#   my($self) = shift;
+# 
+#   if($self->{FLAG_DB_IS_PRIVATE()})
+#   {
+#     if(my $db = $self->{'db'})
+#     {
+#       #$Debug && warn "$self DISCONNECT\n";
+#       $db->disconnect;
+#     }
+#   }
+# }
 
 1;
 
@@ -1554,9 +1546,9 @@ Simple inheritance between L<Rose::DB::Object>-derived classes is supported.  Th
 
 B<Tip:> When using perl 5.8.0 or later, the L<Scalar::Util::Clone> module is highly recommended.  If it's installed, it will be used to more efficiently clone base-class metadata objects.
 
-If the base class has already been L<initilized|Rose::DB::Object::Metadata/initialize>, the subclass must explicitly specify whether it wants to create a new set of column and relationship methods, or merely inherit the methods from the base class.  If the subclass contains any metadata modifications that affect method creation, then it must create a new set of methods to reflect those changes.  
+If the base class has already been L<initialized|Rose::DB::Object::Metadata/initialize>, the subclass must explicitly specify whether it wants to create a new set of column and relationship methods, or merely inherit the methods from the base class.  If the subclass contains any metadata modifications that affect method creation, then it must create a new set of methods to reflect those changes.  
 
-Finally, note that column types cannot be changed "in-place."  To change a column type, delete the old column and add a new one with the same name.
+Finally, note that column types cannot be changed "in-place."  To change a column type, delete the old column and add a new one with the same name.  This can be done in one step with the L<replace_column|/replace_column> method.
 
 Example:
 
@@ -1582,8 +1574,7 @@ Example:
   __PACKAGE__->meta->column('id')->default(123);
 
   # Change the "start" column into a datetime column.
-  __PACKAGE__->meta->delete_column('start');
-  __PACKAGE__->meta->add_column(start => { type => 'datetime' });
+  __PACKAGE__->meta->replace_column(start => { type => 'datetime' });
 
   # Initialize, replacing any inherited methods with newly created ones
   __PACKAGE__->meta->initialize(replace_existing => 1);

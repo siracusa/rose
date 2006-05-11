@@ -1100,6 +1100,8 @@ EOF
 
     package MyPgObject;
 
+    use Rose::DB::Object::Helpers qw(clone);
+
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('pg') }
@@ -1244,6 +1246,8 @@ EOF
 
     package MyMySQLObject;
 
+    use Rose::DB::Object::Helpers qw(clone);
+
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('mysql') }
@@ -1383,6 +1387,8 @@ EOF
 
     package MyInformixObject;
 
+    use Rose::DB::Object::Helpers qw(clone);
+
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('informix') }
@@ -1497,6 +1503,8 @@ EOF
 
     package MySQLiteObject;
 
+    use Rose::DB::Object::Helpers qw(clone);
+
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('sqlite') }
@@ -1520,8 +1528,10 @@ EOF
       bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },
       decs     => { type => 'decimal', precision => 10, scale => 2 },
       #last_modified => { type => 'timestamp' },
-      date_created  => { type => 'timestamp' },
+      date_created  => { type => 'scalar' },
     );
+
+    MySQLiteObject->meta->replace_column(date_created => { type => 'timestamp' });
 
     MySQLiteObject->meta->add_unique_key('save');
 

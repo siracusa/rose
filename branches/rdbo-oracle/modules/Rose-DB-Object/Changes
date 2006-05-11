@@ -1,3 +1,18 @@
+0.724 (05.10.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added the replace_column() Metadata method.
+
+0.723 (05.07.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a bug that caused Rose::DB::Object::Cached objects
+      to stay in the cache after being delete()d.
+    * Added clone() and clone_and_reset() Helper methods.
+    * The tutorial now recommends "use base ..." over direct modification
+      of @ISA in order to work better with circular relationships.
+    * Generated Perl code now uses "use base ..." for the same reason.
+    * Simplified object destruction, delegating all database object
+      clean-up to Rose::DB.
+
 0.722 (04.27.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Really remove Clone::PP this time...

@@ -1553,10 +1553,10 @@ sub object_by_key
   my $interface = $args->{'interface'} || 'get_set';
   my $target_class = $options->{'target_class'} or die "Missing target class";
 
-  my $fk         = $args->{'foreign_key'} || $args->{'relationship'};
-  my $fk_class   = $args->{'class'} or die "Missing foreign object class";
-  my $fk_meta    = $fk_class->meta;
-  my $meta       = $target_class->meta;
+  my $fk       = $args->{'foreign_key'} || $args->{'relationship'};
+  my $fk_class = $args->{'class'} or die "Missing foreign object class";
+  my $fk_meta  = $fk_class->meta;
+  my $meta     = $target_class->meta;
   my $fk_pk;
 
   my $referential_integrity = 

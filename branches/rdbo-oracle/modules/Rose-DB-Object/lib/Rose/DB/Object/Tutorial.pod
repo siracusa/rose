@@ -18,7 +18,19 @@ For the sake of brevity, the C<use strict> directive and associated "my" declara
 
 Similarly, the traditional "1;" true value used at the end of each ".pm" file has been omitted from the examples.  Don't forget to add this to the end of your actual Perl module files.
 
-Finally, although most of the examples directly modify the C<@ISA> package variable in order to set up inheritance, the L<use base|base> directive works just as well.  In some situations, one may be preferable to the other (L<use base|base> is run at compile-time whereas the C<@ISA> modifications happen at run-time) but in the common case it shouldn't matter which you choose.
+Although most of the examples in this tutorial use the L<base.pm|base> module to set up inheritance, directly modifying the C<@ISA> package variable usually works just as well.  In situations where there are circular relationships between classes, the C<use base ...> form is preferable because it runs at compile-time, whereas C<@ISA> modification happens at run-time.
+
+Finally, be sure to set up inheritance before loading any related modules.
+
+    package Product;
+
+    # Set up inheritance first
+    use base qw(Rose::DB::Object);
+
+    # Then load related modules
+    use Vendor;
+    use Color;
+    ...
 
 =head1 TUTORIAL
 
@@ -30,8 +42,7 @@ To get up to speed quickly with L<Rose::DB>, read the L<Rose::DB::Tutorial> docu
 
     package My::DB;
 
-    use Rose::DB;
-    our @ISA = qw(Rose::DB);
+    use base qw(Rose::DB);
 
     __PACKAGE__->use_private_registry;
 
@@ -66,8 +77,7 @@ Here's a basic L<Rose::DB::Object> class to front that table:
 
     package Product;
 
-    use Rose::DB::Object;
-    our @ISA = qw(Rose::DB::Object);
+    use base qw(Rose::DB::Object);
 
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->columns(qw(id name price));
@@ -101,8 +111,7 @@ Of course, L<earlier|/Preface> it was established that L<Rose::DB> needs to be s
 
     use My::DB;
 
-    use Rose::DB::Object;
-    our @ISA = qw(Rose::DB::Object);
+    use base qw(Rose::DB::Object);
 
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->columns(qw(id name price));
@@ -124,8 +133,7 @@ Looking forward, it's likely that all of our L<Rose::DB::Object>-derived classes
 
     use My::DB;
 
-    use Rose::DB::Object;
-    our @ISA = qw(Rose::DB::Object);
+    use base qw(Rose::DB::Object);
 
     sub init_db { My::DB->new }
 
@@ -135,8 +143,7 @@ Now the C<Product> class can inherit from C<My::DB::Object> instead of inheritin
 
     package Product;
 
-    use My::DB::Object;
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->columns(qw(id name price));
@@ -261,8 +268,7 @@ Anyway, let's see some examples.  Making a manager class is simply a matter of i
 
     package Product::Manager;
 
-    use Rose::DB::Object::Manager;
-    our @ISA = qw(Rose::DB::Object::Manager);
+    use base qw(Rose::DB::Object::Manager);
 
     sub object_class { 'Product' }
 
@@ -284,8 +290,7 @@ The Perl code for the C<Product::Manager> class shown above can be generated aut
 
     package Product;
 
-    use Rose::DB::Object;
-    our @ISA = qw(Rose::DB::Object);
+    use base qw(Rose::DB::Object);
     ...
 
     # This actually creates the Product::Manager class 
@@ -300,8 +305,7 @@ If you decide not to heed my advice and create these methods inside your L<Rose:
 
     use Rose::DB::Object::Manager;
 
-    use My::DB::Object;
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
     ...    
     Rose::DB::Object::Manager->make_manager_methods('products');
 
@@ -507,8 +511,7 @@ We could do a straightforward expansion of the C<Product> class as designed in t
 
     package Product;
 
-    use My::DB::Object;
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->columns(
@@ -529,8 +532,7 @@ Let's solve all of these problems.  If we more accurately describe the columns, 
 
     package Product;
 
-    use My::DB::Object;
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     __PACKAGE__->meta->table('products');
 
@@ -647,8 +649,7 @@ Let's start by applying auto-initialization to the C<Product> class.
 
     package Product;
 
-    use My::DB::Object;
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->auto_initialize;
@@ -659,8 +660,7 @@ In fact, that class can be shortened even further with the help of the L<convent
 
     package Product;
 
-    use My::DB::Object;
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     __PACKAGE__->meta->auto_initialize;
 
@@ -676,8 +676,7 @@ Auto-initialization seems like something that is best done only once, with the r
 
     package Product;
 
-    use My::DB::Object;
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->auto_initialize;
@@ -691,8 +690,7 @@ Here's the output of that print statement.  A few long lines were manually wrapp
 
   use strict;
 
-  use My::DB::Object
-  our @ISA = qw(My::DB::Object);
+  use base qw(My::DB::Object);
 
   __PACKAGE__->meta->table('products');
 
@@ -744,8 +742,7 @@ When dealing with any kind of inter-table relationship, L<Rose::DB::Object> requ
 
     package Vendor;  
 
-    use My::DB::Object
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     __PACKAGE__->meta->table('vendors');
     __PACKAGE__->meta->columns
@@ -780,8 +777,7 @@ Finally, here's how the foreign key definition looks in the Perl class.
 
     package Product;  
 
-    use My::DB::Object
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     use Vendor;
 
@@ -925,8 +921,7 @@ Since all of the column and table names are still in sync with the expected conv
 
     package Product;
 
-    use My::DB::Object;
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     __PACKAGE__->meta->auto_initialize;
 
@@ -936,8 +931,7 @@ The L<perl_class_definition()|Rose::DB::Object::Metadata/perl_class_definition> 
 
     package Product;
 
-    use My::DB::Object;
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     __PACKAGE__->meta->auto_initialize;
 
@@ -950,8 +944,7 @@ Here's the output.
 
   use strict;
 
-  use My::DB::Object
-  our @ISA = qw(My::DB::Object);
+  use base qw(My::DB::Object);
 
   __PACKAGE__->meta->table('products');
 
@@ -1045,8 +1038,7 @@ Here's an example of our C<Product> class as it might exist on a database that d
 
     package Product;  
 
-    use My::DB::Object
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     use Vendor;
 
@@ -1097,8 +1089,7 @@ This table needs a corresponding L<Rose::DB::Object>-derived class, of course.
 
     package Price;
 
-    use My::DB::Object;
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     use Product;
 
@@ -1141,8 +1132,7 @@ Finally, the C<Product> class needs to be modified to reference the C<prices> ta
 
     package Product;  
 
-    use My::DB::Object
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     use Price;
     use Vendor;
@@ -1288,8 +1278,7 @@ Here's a simple C<Color> class to front it.
 
     package Color;  
 
-    use My::DB::Object
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     use Product;
 
@@ -1385,8 +1374,7 @@ Here's the new C<Color> class.
 
     package Color;  
 
-    use My::DB::Object
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     __PACKAGE__->meta->table('colors');
     __PACKAGE__->meta->columns
@@ -1414,8 +1402,7 @@ Here's the map class.
 
     package ProductColorMap;  
 
-    use My::DB::Object
-    our @ISA = qw(My::DB::Object);
+    use base qw(My::DB::Object);
 
     use Product;
     use Color;
@@ -1600,9 +1587,7 @@ Finally, the same caveats L<described earlier|/"Cascading delete"> about deletin
 
 To summarize this exploration of inter-table relationships, here's a terse summary of the current state of our Perl classes, and the associated database tables.
 
-In the Perl code below, I've switched to using the L<base> module to specify the base class inheritance.  I've done this for the sake of brevity, but also to show that it works just as well as setting C<@ISA> directly.
-
-For similar reasons, I've also chosen to use the shorter versions of the foreign key and relationship definitions in the Perl classes.  Just remember that this only works when your tables, columns, and classes are named according to the expected L<conventions|Rose::DB::Object::ConventionManager>.
+For the sake of brevity, I've chosen to use the shorter versions of the foreign key and relationship definitions in the Perl classes shown below.  Just remember that this only works when your tables, columns, and classes are named according to the expected L<conventions|Rose::DB::Object::ConventionManager>.
 
 First, the database schema.
 
@@ -1812,8 +1797,7 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   use strict;
 
-  use My::DB::Object::Base1;
-  our @ISA = qw(My::DB::Object::Base1);
+  use base qw(My::DB::Object::Base1);
 
   __PACKAGE__->meta->table('colors');
 
@@ -1845,10 +1829,9 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   package My::Color::Manager;
 
-  use My::Color;
+  use base qw(Rose::DB::Object::Manager);
 
-  use Rose::DB::Object::Manager;
-  our @ISA = qw(Rose::DB::Object::Manager);
+  use My::Color;
 
   sub object_class { 'My::Color' }
 
@@ -1860,8 +1843,7 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   use strict;
 
-  use My::DB::Object::Base1;
-  our @ISA = qw(My::DB::Object::Base1);
+  use base qw(My::DB::Object::Base1);
 
   __PACKAGE__->meta->table('prices');
 
@@ -1896,10 +1878,9 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   package My::Price::Manager;
 
-  use My::Price;
+  use base qw(Rose::DB::Object::Manager);
 
-  use Rose::DB::Object::Manager;
-  our @ISA = qw(Rose::DB::Object::Manager);
+  use My::Price;
 
   sub object_class { 'My::Price' }
 
@@ -1911,8 +1892,7 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   use strict;
 
-  use My::DB::Object::Base1;
-  our @ISA = qw(My::DB::Object::Base1);
+  use base qw(My::DB::Object::Base1);
 
   __PACKAGE__->meta->table('product_color_map');
 
@@ -1951,10 +1931,9 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   package My::ProductColorMap::Manager;
 
-  use My::ProductColorMap;
+  use base qw(Rose::DB::Object::Manager);
 
-  use Rose::DB::Object::Manager;
-  our @ISA = qw(Rose::DB::Object::Manager);
+  use My::ProductColorMap;
 
   sub object_class { 'My::ProductColorMap' }
 
@@ -1966,8 +1945,7 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   use strict;
 
-  use My::DB::Object::Base1;
-  our @ISA = qw(My::DB::Object::Base1);
+  use base qw(My::DB::Object::Base1);
 
   __PACKAGE__->meta->table('product_colors');
 
@@ -1986,10 +1964,9 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   package My::ProductColor::Manager;
 
-  use My::ProductColor;
+  use base qw(Rose::DB::Object::Manager);
 
-  use Rose::DB::Object::Manager;
-  our @ISA = qw(Rose::DB::Object::Manager);
+  use My::ProductColor;
 
   sub object_class { 'My::ProductColor' }
 
@@ -2001,8 +1978,7 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   use strict;
 
-  use My::DB::Object::Base1;
-  our @ISA = qw(My::DB::Object::Base1);
+  use base qw(My::DB::Object::Base1);
 
   __PACKAGE__->meta->table('products');
 
@@ -2061,10 +2037,9 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   package My::Product::Manager;
 
-  use My::Product;
+  use base qw(Rose::DB::Object::Manager);
 
-  use Rose::DB::Object::Manager;
-  our @ISA = qw(Rose::DB::Object::Manager);
+  use My::Product;
 
   sub object_class { 'My::Product' }
 
@@ -2076,8 +2051,7 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   use strict;
 
-  use My::DB::Object::Base1;
-  our @ISA = qw(My::DB::Object::Base1);
+  use base qw(My::DB::Object::Base1);
 
   __PACKAGE__->meta->table('vendors');
 
@@ -2106,10 +2080,9 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   package My::Vendor::Manager;
 
-  use My::Vendor;
+  use base qw(Rose::DB::Object::Manager);
 
-  use Rose::DB::Object::Manager;
-  our @ISA = qw(Rose::DB::Object::Manager);
+  use My::Vendor;
 
   sub object_class { 'My::Vendor' }
 
