@@ -1,0 +1,421 @@
+package Rose::DB::Object::MakeMethods::BigNum;
+
+use strict;
+
+use Carp();
+
+use Math::BigInt lib => 'GMP';
+
+use Rose::Object::MakeMethods;
+our @ISA = qw(Rose::Object::MakeMethods);
+
+our $VERSION = '0.70';
+
+our $Debug = 0;
+
+sub bigint
+{
+  my($class, $name, $args) = @_;
+
+  my $key = $args->{'hash_key'} || $name;
+  my $interface = $args->{'interface'} || 'get_set';
+  my $default   = $args->{'default'};
+  my $check_in  = $args->{'check_in'};
+  my $min       = $args->{'min'};
+  my $max       = $args->{'min'};
+
+  my $init_method;
+
+  if(exists $args->{'with_init'} || exists $args->{'init_method'})
+  {
+    $init_method = $args->{'init_method'} || "init_$name";
+  }
+
+  ##
+  ## Build code snippets
+  ##
+
+  my $qkey = $key;
+  $qkey =~ s/'/\\'/g;
+  my $qname = $name;
+  $qname =~ s/"/\\"/g;
+
+  #
+  # check_in code
+  #
+
+  my $check_in_code = '';
+  my %check;
+
+  if($check_in)
+  {
+    $check_in = [ $check_in ] unless(ref $check_in);
+
+    $check_in_code=<<"EOF";
+if(defined \$value)
+    {
+      my \$found = 0;
+
+      foreach my \$check (\@\$check_in)
+      {
+        if(\$value == \$check)
+        {
+          \$found = 1;
+          last;
+        }
+      }
+
+      Carp::croak "Invalid $name: '\$value'"  unless(\$found);
+    }
+EOF
+  }
+
+  #
+  # min/max code
+  #
+
+  my $min_max_code = '';
+
+  if($min)
+  {
+    unless($min =~ /^-?\d+$/)
+    {
+      Carp::croak "Invalid minimum value for bigint column $qname: '$min'";
+    }
+
+    $min_max_code =<<"EOF";
+no warnings 'uninitialized';
+    if(\$value < $min)
+    {
+      Carp::croak ref(\$self), ": Value \$value for $qname() is too small.  ",
+                  "It must be greater than or equal to $min.";
+    }
+EOF
+  }
+
+  if($max)
+  {
+    unless($max =~ /^-?\d+$/)
+    {
+      Carp::croak "Invalid maximum value for bigint column $qname: '$max'";
+    }
+
+    $min_max_code =<<"EOF";
+no warnings 'uninitialized';
+    if(\$value < $min)
+    {
+      Carp::croak ref(\$self), ": Value \$value for $qname() is too large.  ",
+                  "It must be less than or equal to $max.";
+    }
+EOF
+  }
+
+  #
+  # set code
+  #
+
+  my $set_code = qq(\$self->{'$qkey'} = Math::BigInt->new(\$value););
+
+  #
+  # return code
+  #
+
+  my($return_code, $return_code_shift);
+
+  if(defined $default)
+  {
+    $default = Math::BigInt->new($default);
+
+    $return_code=<<"EOF";
+return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
+       (\$self->{'$qkey'} = \$default);
+EOF
+  }
+  elsif(defined $init_method)
+  {
+    $return_code=<<"EOF";
+return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
+       (\$self->{'$qkey'} = Math::BigInt->new(\$self->$init_method()));
+EOF
+  }
+  else
+  {
+    $return_code       = qq(return \$self->{'$qkey'};);
+    $return_code_shift = qq(return shift->{'$qkey'};);
+  }
+
+  $return_code_shift ||= $return_code;
+
+  my %methods;
+
+  if($interface eq 'get_set')
+  {
+    my $code;
+
+    # I can't help myself...
+    if(defined $default || defined $init_method)
+    {
+      $code=<<"EOF";
+sub
+{
+  my \$self = shift;
+
+  if(\@_)
+  {
+    my \$value = shift;
+
+    $check_in_code
+    $min_max_code
+    $set_code
+    $return_code
+  }
+
+  $return_code
+};
+EOF
+    }
+    else
+    {
+      $code=<<"EOF";
+sub
+{
+  if(\@_ > 1)
+  {
+    my \$self  = shift;
+    my \$value = shift;
+
+    $check_in_code
+    $min_max_code
+    return $set_code
+  }
+
+  $return_code_shift
+};
+EOF
+    }
+
+    $Debug && warn "sub $name = ", $code;
+    $methods{$name} = eval $code;
+
+    if($@)
+    {
+      Carp::croak "Error in generated code for method $name - $@\n",
+                  "Code was: $code";
+    }
+  }
+  elsif($interface eq 'get')
+  {
+    my $code;
+
+    # I can't help myself...
+    if(defined $default || defined $init_method)
+    {
+      $code = qq(sub { my \$self = shift; $return_code };);
+    }
+    else
+    {
+      $code = qq(sub { shift->{'$qkey'} });
+    }
+
+    $Debug && warn "sub $name = ", $code;
+    $methods{$name} = eval $code;
+
+    if($@)
+    {
+      Carp::croak "Error in generated code for method $name - $@\n",
+                  "Code was: $code";
+    }
+  }
+  elsif($interface eq 'set')
+  {
+    my $arg_check_code = 
+      qq(Carp::croak ref(\$_[0]), ": Missing argument in call to $qname"  unless(\@_ > 1););
+
+    my $code=<<"EOF";
+sub
+{
+  $arg_check_code
+  my \$self = shift;
+  my \$value = shift;
+
+  $check_in_code
+  $min_max_code
+  $set_code
+  $return_code
+};
+EOF
+
+    $Debug && warn "sub $name = ", $code;
+    $methods{$name} = eval $code;
+
+    if($@)
+    {
+      Carp::croak "Error in generated code for method $name - $@\n",
+                  "Code was: $code";
+    }
+  }
+  else { Carp::croak "Unknown interface: $interface" }
+
+  return \%methods;
+}
+
+1;
+
+__END__
+
+=head1 NAME
+
+Rose::DB::Object::MakeMethods::BigNum - Create object methods for arbitrary-precision numeric attributes for Rose::DB::Object-derived objects.
+
+=head1 SYNOPSIS
+
+  package MyDBObject;
+
+  our @ISA = qw(Rose::DB::Object);
+
+  use Rose::DB::Object::MakeMethods::BigNum
+  (
+    bigint => 
+    [
+      count => 
+      {
+        with_init => 1,
+        min       => 0,
+      },
+
+      # Important: specify very large integer values as strings
+      tally => { default => '9223372036854775800' },
+    ],
+  );
+
+  sub init_count { 12345 }
+  ...
+
+  $obj = MyDBObject->new(...);
+
+  print $obj->count; # 12345
+  print $obj->tally; # 9223372036854775800
+
+=head1 DESCRIPTION
+
+L<Rose::DB::Object::MakeMethods::BigNum> is a method maker that inherits from L<Rose::Object::MakeMethods>.  See the L<Rose::Object::MakeMethods> documentation to learn about the interface.  The method types provided by this module are described below.
+
+All method types defined by this module are designed to work with objects that are subclasses of (or otherwise conform to the interface of) L<Rose::DB::Object>.  See the L<Rose::DB::Object> documentation for more details.
+
+=head1 METHODS TYPES
+
+=over 4
+
+=item B<bigint>
+
+Create get/set methods for big integer attributes.  Values are stored internally and returned as L<Math::BigInt> objects.  When specifying very large integer values, use strings to be safe.  (See an example in the L<synopsis|/SYNOPSIS> above.)
+
+=over 4
+
+=item Options
+
+=over 4
+
+=item B<check_in ARRAYREF>
+
+A reference to an array of valid values.  When setting the attribute, if the new value is not equal to one of the valid values, a fatal error will occur.
+
+=item B<default VALUE>
+
+Determines the default value of the attribute.
+
+=item B<hash_key NAME>
+
+The key inside the hash-based object to use for the storage of this
+attribute.  Defaults to the name of the method.
+
+=item B<init_method NAME>
+
+The name of the method to call when initializing the value of an undefined attribute.  Defaults to the method name with the prefix C<init_> added.  This option implies C<with_init>.
+
+=item B<interface NAME>
+
+Choose the interface.  The default is C<get_set>.
+
+=item B<max INT>
+
+Get or set the maximum value this attribute is allowed to have.
+
+=item B<min INT>
+
+Get or set the minimum value this attribute is allowed to have.
+
+=item B<with_init BOOL>
+
+Modifies the behavior of the C<get_set> and C<get> interfaces.  If the attribute is undefined, the method specified by the C<init_method> option is called and the attribute is set to the return value of that method.
+
+=back
+
+=item Interfaces
+
+=over 4
+
+=item Interfaces
+
+=over 4
+
+=item B<get_set>
+
+Creates a get/set method for a big integer object attribute.  When called with an argument, the value of the attribute is set.  The current value of the attribute is returned.
+
+=item B<get>
+
+Creates an accessor method for a big integer object attribute that returns the current value of the attribute.
+
+=item B<set>
+
+Creates a mutator method for a big integer object attribute.  When called with an argument, the value of the attribute is set.  If called with no arguments, a fatal error will occur.
+
+=back
+
+=back
+
+Example:
+
+    package MyDBObject;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    use Rose::DB::Object::MakeMethods::BigNum
+    (
+      bigint => 
+      [
+        count => 
+        {
+          with_init => 1,
+          min       => 0,
+        },
+
+        # Important: specify very large integer values as strings
+        tally => { default => '9223372036854775800' },
+      ],
+    );
+
+    sub init_count { 12345 }
+    ...
+
+    $obj = MyDBObject->new(...);
+
+    print $obj->count; # 12345
+    print $obj->tally; # 9223372036854775800
+
+    $obj->count(-1); # Fatal error: minimum value is 0
+
+=back
+
+=back
+
+=head1 AUTHOR
+
+John C. Siracusa (siracusa@mindspring.com)
+
+=head1 COPYRIGHT
+
+Copyright (c) 2006 by John C. Siracusa.  All rights reserved.  This program is
+free software; you can redistribute it and/or modify it under the same terms
+as Perl itself.
