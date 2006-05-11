@@ -14,7 +14,7 @@ our $Debug;
 
 *Debug = \$Rose::DB::Object::Metadata::Debug;
 
-our $VERSION = '0.723';
+our $VERSION = '0.725';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -66,6 +66,8 @@ sub auto_generate_columns
 
     $db = $self->db;
     my $dbh = $db->dbh or die $db->error;
+
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
 
     $table = $self->table;
 
@@ -298,6 +300,8 @@ sub auto_retrieve_primary_key_column_names
     $db = $self->db;
     my $dbh = $db->dbh or die $db->error;
 
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
+
     my $table = lc $self->table;
 
     my $table_unquoted = $db->unquote_table_name($table);
@@ -372,6 +376,8 @@ sub auto_generate_foreign_keys
 
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
+
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
 
     my $catalog = $self->select_catalog($db);
     my $schema  = $self->select_schema($db); 
