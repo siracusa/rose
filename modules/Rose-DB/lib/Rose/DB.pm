@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.672';
+our $VERSION = '0.673';
 
 our $Debug = 0;
 
@@ -62,6 +62,7 @@ __PACKAGE__->driver_classes
   mysql    => 'Rose::DB::MySQL',
   pg       => 'Rose::DB::Pg',
   informix => 'Rose::DB::Informix',
+  oracle   => 'Rose::DB::Oracle',
   sqlite   => 'Rose::DB::SQLite',
   generic  => 'Rose::DB::Generic',
 );
@@ -1559,8 +1560,9 @@ sub list_tables
     my $dbh = $self->dbh or die $self->error;
 
     local $dbh->{'RaiseError'} = 1;
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
 
-    my $sth = $dbh->table_info($self->catalog, $self->schema, '', $types);
+    my $sth = $dbh->table_info($self->catalog, $self->schema, '%', $types);
 
     $sth->execute;
 
@@ -1715,6 +1717,8 @@ L<Rose::DB> currently supports the following L<DBI> database drivers:
     DBD::SQLite   (SQLite)
     DBD::Informix (Informix)
 
+Oracle (L<DBD::Oracle>) is I<partially> supported, but some features may not yet work correctly.
+
 L<Rose::DB> will attempt to service an unsupported database using a L<generic|Rose::DB::Generic> implementation that may or may not work.  Support for more drivers may be added in the future.  Patches are welcome.
 
 All database-specific behavior is contained and documented in the subclasses of L<Rose::DB>.  L<Rose::DB>'s constructor method (L<new()|/new>) returns  a database-specific subclass of L<Rose::DB>, chosen based on the L<driver|/driver> value of the selected L<data source|"Data Source Abstraction">.  The default mapping of databases to L<Rose::DB> subclasses is:
@@ -1723,7 +1727,8 @@ All database-specific behavior is contained and documented in the subclasses of 
     DBD::mysql    -> Rose::DB::MySQL
     DBD::SQLite   -> Rose::DB::SQLite
     DBD::Informix -> Rose::DB::Informix
-
+    DBD::Oracle   -> Rose::DB::Oracle
+    
 This mapping can be changed using the L<driver_class|/driver_class> class method.
 
 The L<Rose::DB> object method documentation found here defines the purpose of each method, as well as the default behavior of the method if it is not overridden by a subclass.  You must read the subclass documentation to learn about behaviors that are specific to each type of database.
@@ -2472,6 +2477,7 @@ L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB>
 
 =head1 CONTRIBUTORS
 
+Ron Savage
 Lucian Dragus
 
 =head1 AUTHOR

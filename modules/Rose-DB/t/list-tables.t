@@ -2,9 +2,9 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 2);
+use Test::More tests => 1 + (6 * 2);
 
-BEGIN 
+BEGIN
 {
   require 't/test-lib.pl';
   use_ok('Rose::DB');
@@ -20,7 +20,7 @@ our %Have;
 # Tests
 #
 
-foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
+foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
 {
   SKIP:
   {
@@ -36,7 +36,8 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 
   my $db = Rose::DB->new;
 
-  my @tables = sort grep { /$Regex/ } $db->list_tables;
+  # Oracle returns names in upper case.
+  my @tables = sort grep { /$Regex/i } $db->list_tables;
 
   if($db_type eq 'mysql')
   {
@@ -47,12 +48,17 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     # Informix shows views every time
     is_deeply(\@tables, [ sort(@Tables, 'rdbo_test_view') ], "$db_type tables");
   }
+  elsif($db_type eq 'oracle')
+  {
+    is_deeply(\@tables, [ map { uc } @Tables ], "$db_type tables 1");
+  }
   else
   {
     is_deeply(\@tables, \@Tables, "$db_type tables 1");
   }
 
-  @tables = sort grep { /$Regex/ } $db->list_tables(include_views => 1);
+  # Oracle returns names in upper case.
+  @tables = sort grep { /$Regex/i } $db->list_tables(include_views => 1);
 
   if($db_type =~ /^(?:pg(?:_with_schema)?|sqlite|informix)$/)
   {
@@ -63,6 +69,10 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     if($db_type eq 'mysql')
     {
       is_deeply(\@tables, [ sort(@Tables, 'read') ], "$db_type tables and views");
+    }
+    elsif($db_type eq 'oracle')
+    {
+      is_deeply(\@tables, [ map { uc } (@Tables, 'rdbo_test_view') ], "$db_type tables and views");
     }
     else
     {
@@ -81,7 +91,7 @@ BEGIN
 
   my $dbh;
 
-  eval 
+  eval
   {
     $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
@@ -134,7 +144,7 @@ CREATE TABLE rdbo_test_products
 
   vendor_id  INT REFERENCES rdbo_test_vendors (id),
 
-  status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
+  status  VARCHAR(128) NOT NULL DEFAULT 'inactive'
             CHECK(status IN ('inactive', 'active', 'defunct')),
 
   date_created  TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -199,7 +209,7 @@ CREATE TABLE Rose_db_object_private.rdbo_test_products
 
   vendor_id  INT REFERENCES rdbo_test_vendors (id),
 
-  status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
+  status  VARCHAR(128) NOT NULL DEFAULT 'inactive'
             CHECK(status IN ('inactive', 'active', 'defunct')),
 
   date_created  TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -242,7 +252,7 @@ CREATE TABLE Rose_db_object_private.rdbo_test_products_colors
 EOF
 
     $dbh->do(<<"EOF");
-CREATE VIEW Rose_db_object_private.rdbo_test_view AS 
+CREATE VIEW Rose_db_object_private.rdbo_test_view AS
   SELECT * FROM Rose_db_object_private.rdbo_test_colors
 EOF
 
@@ -250,10 +260,106 @@ EOF
   }
 
   #
+  # Oracle
+  #
+
+  eval
+  {
+    $dbh = Rose::DB->new('oracle_admin')->retain_dbh()
+      or die Rose::DB->error;
+  };
+
+  if(!$@ && $dbh)
+  {
+    $Have{'oracle'} = 1;
+
+    # Drop existing tables, ignoring errors
+    {
+      local $dbh->{'RaiseError'} = 0;
+      local $dbh->{'PrintError'} = 0;
+
+      $dbh->do('DROP VIEW rdbo_test_view');
+      $dbh->do('DROP TABLE rdbo_test_products_colors CASCADE CONSTRAINTS');
+      $dbh->do('DROP TABLE rdbo_test_colors CASCADE CONSTRAINTS');
+      $dbh->do('DROP TABLE rdbo_test_prices CASCADE CONSTRAINTS');
+      $dbh->do('DROP TABLE rdbo_test_products CASCADE CONSTRAINTS');
+      $dbh->do('DROP TABLE rdbo_test_vendors CASCADE CONSTRAINTS');
+    }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rdbo_test_vendors
+(
+  id    INT NOT NULL PRIMARY KEY,
+  name  VARCHAR(255) NOT NULL,
+
+  UNIQUE(name)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rdbo_test_products
+(
+  id      INT NOT NULL PRIMARY KEY,
+  name    VARCHAR(255) NOT NULL,
+  price   DECIMAL(10,2) DEFAULT 0.00 NOT NULL,
+
+  vendor_id  INT REFERENCES rdbo_test_vendors (id),
+
+  status  VARCHAR(128) DEFAULT 'inactive' NOT NULL
+            CHECK(status IN ('inactive', 'active', 'defunct')),
+
+  date_created  DATE,
+  release_date  DATE,
+
+  UNIQUE(name)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rdbo_test_prices
+(
+  id          INT NOT NULL PRIMARY KEY,
+  product_id  INT NOT NULL REFERENCES rdbo_test_products (id),
+  region      CHAR(2) DEFAULT 'US' NOT NULL,
+  price       DECIMAL(10,2) DEFAULT 0.00 NOT NULL,
+
+  UNIQUE(product_id, region)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rdbo_test_colors
+(
+  id    INT NOT NULL PRIMARY KEY,
+  name  VARCHAR(255) NOT NULL,
+
+  UNIQUE(name)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rdbo_test_products_colors
+(
+  product_id  INT NOT NULL REFERENCES rdbo_test_products (id),
+  color_id    INT NOT NULL REFERENCES rdbo_test_colors (id),
+
+  PRIMARY KEY(product_id, color_id)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE VIEW rdbo_test_view AS SELECT * FROM rdbo_test_colors
+EOF
+
+    $dbh->commit;
+    $dbh->disconnect;
+  }
+
+  #
   # MySQL
   #
 
-  eval 
+  eval
   {
     my $db = Rose::DB->new('mysql_admin');
     $dbh = $db->retain_dbh or die Rose::DB->error;
@@ -312,7 +418,7 @@ CREATE TABLE rdbo_test_products
 
   vendor_id  INT,
 
-  status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
+  status  VARCHAR(128) NOT NULL DEFAULT 'inactive'
             CHECK(status IN ('inactive', 'active', 'defunct')),
 
   date_created  TIMESTAMP,
@@ -599,6 +705,22 @@ END
     $dbh->do('DROP TABLE Rose_db_object_private.rdbo_test_vendors CASCADE');
 
     $dbh->do('DROP SCHEMA Rose_db_object_private CASCADE');
+
+    $dbh->disconnect;
+  }
+
+  if($Have{'oracle'})
+  {
+    # Oracle
+    my $dbh = Rose::DB->new('oracle_admin')->retain_dbh()
+      or die Rose::DB->error;
+
+    $dbh->do('DROP VIEW rdbo_test_view');
+    $dbh->do('DROP TABLE rdbo_test_products_colors CASCADE CONSTRAINTS');
+    $dbh->do('DROP TABLE rdbo_test_colors CASCADE CONSTRAINTS');
+    $dbh->do('DROP TABLE rdbo_test_prices CASCADE CONSTRAINTS');
+    $dbh->do('DROP TABLE rdbo_test_products CASCADE CONSTRAINTS');
+    $dbh->do('DROP TABLE rdbo_test_vendors CASCADE CONSTRAINTS');
 
     $dbh->disconnect;
   }

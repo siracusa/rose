@@ -11,27 +11,33 @@ print STDERR<<"EOF";
 ## to a database in order to run.  The tests need full privileges on this
 ## database: the ability to create and drop tables, insert, update, and delete
 ## rows, create schemas, sequences, functions, triggers, the works.
-## 
+##
 ## By default, the tests will try to connect to the database named "test"
 ## running on "localhost" using the default superuser username for each
 ## database type and an empty password.
-## 
+##
 ## If you have setup your database in a secure manner, these connection
 ## attempts will fail, and the tests will be skipped.  If you want to override
 ## these values, set the following environment variables before running tests.
 ## (The current values are shown in parentheses.)
-## 
+##
 ## Postgres:
 ## 
 ##     RDBO_PG_DSN      (@{[ nvl('RDBO_PG_DSN', 'dbi:Pg:dbname=test;host=localhost') ]})
 ##     RDBO_PG_USER     (@{[ nvl('RDBO_PG_USER', 'postgres') ]})
 ##     RDBO_PG_PASS     (@{[ nvl('RDBO_PG_PASS', '<none>') ]})
-## 
+##
 ## MySQL:
 ## 
 ##     RDBO_MYSQL_DSN   (@{[ nvl('RDBO_MYSQL_DSN', 'dbi:mysql:database=test;host=localhost') ]})
 ##     RDBO_MYSQL_USER  (@{[ nvl('RDBO_MYSQL_USER', 'root') ]})
 ##     RDBO_MYSQL_PASS  (@{[ nvl('RDBO_MYSQL_PASS', '<none>') ]})
+##
+## Oracle:
+## 
+##     RDBO_ORACLE_DSN  (@{[ nvl('RDBO_ORACLE_DSN', 'dbi:Oracle:dbname=test') ]})
+##     RDBO_ORACLE_USER (@{[ nvl('RDBO_ORACLE_USER', '<none>') ]})
+##     RDBO_ORACLE_PASS (@{[ nvl('RDBO_ORACLE_PASS', '<none>') ]})
 ##
 ## Informix:
 ## 
