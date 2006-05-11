@@ -152,7 +152,7 @@ Rose::DB::SQLite - SQLite driver class for Rose::DB.
   Rose::DB->default_type('main');
   ...
 
-  # Set max length of varchar columns used to emulate an array data type
+  # Set max length of varchar columns used to emulate the array data type
   Rose::DB::SQLite->max_array_characters(128);
 
   $db = Rose::DB->new; # $db is really a Rose::DB::SQLite object
@@ -186,7 +186,7 @@ SQLite doesn't care what value you pass for a given column, regardless of that c
 
 =item B<max_array_characters [INT]>
 
-Get or set the maximum length of varchar columns used to emulate an array data type.  The default value is 255.
+Get or set the maximum length of varchar columns used to emulate the array data type.  The default value is 255.
 
 SQLite does not have a native "ARRAY" data type, but it can be emulated using a "VARCHAR" column and a specially formatted string.  The formatting and parsing of this string is handled by the C<format_array()> and C<parse_array()> object methods.  The maximum length limit is honored by the C<format_array()> object method.
 

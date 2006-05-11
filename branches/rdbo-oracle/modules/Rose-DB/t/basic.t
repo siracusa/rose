@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 91;
+use Test::More tests => 131;
 
 BEGIN
 {
@@ -296,3 +296,76 @@ $db = MyTest::DB2->new;
 
 is($db->type, 'xdt', 'default type 2');
 is($db->domain, 'xdd', 'default domain 2');
+
+my @Intervals =
+(
+  '+0::'               => '',
+  '-0:1:'              => '-00:01:00',
+  '2:'                 => '02:00:00',
+  '1 D'                => '1 day',
+  '-1 d 2 s'           => '-1 days +00:00:02',
+  '-1 y 3 h -57 M 4 s' => '-1 years +02:03:04',
+  '-1 y 2 mons  3 d'   => '-10 mons +3 days',
+  '-1 y 2 mons -3 d'   => '-10 mons -3 days',
+
+  '5 h -208 m -495 s' => '01:23:45',
+  '-208 m -495 s'     => '-03:36:15',
+  '5 h 208 m 495 s'   => '08:36:15',
+
+  ':'         => undef,
+  '::'        => undef,
+  '123:456:'  => undef,
+  '1:-2:3'    => undef,
+  '1:2:-3'    => undef,
+  '1 h 1:1:1' => undef,
+  '1 d 2 d'   => undef,
+  '1: 2:'     => undef,
+  '1 s 2:'    => undef,
+
+  '1 ys 2 h 3 m 4 s'  => undef,
+  '1 y s 2 h 3 m 4 s' => undef,
+  '1 ago'             => undef,
+  '1s ago'            => undef,
+  '1 s agos'          => undef,
+  '1 m ago ago 1 s'   => undef,
+  '1 m ago1 s'        => undef,
+  '1 m1 s'            => undef,
+
+  '1 mil 2 c 3 dec 4 y 5 mon 1 w -1 d 7 h 8 m 9 s'             => '1234 years 5 mons 6 days 07:08:09',
+  '-1 mil -2 c -3 dec -4 y -5 mon -1 w 1 d -7 h -8 m -9 s'     => '-1234 years -5 mons -6 days -07:08:09',
+  '-1 mil -2 c -3 dec -4 y -5 mon -1 w 1 d -7 h -8 m -9 s ago' => '1234 years 5 mons 6 days 07:08:09',
+
+  '1 mils 2 cents 3 decs 4 years 5 mons 1 weeks -1 days 7 hours 8 mins 9 secs' => '1234 years 5 mons 6 days 07:08:09',
+
+  '1 millenniums 2 centuries 3 decades 4 years 5 months 1 weeks -1 days 7 hours 8 minutes 9 seconds' =>
+      '1234 years 5 mons 6 days 07:08:09',
+
+  '1 mil -1 d ago'     => '-1000 years +1 day',
+  '1 mil ago -1 d ago' => '-1000 years +1 day',
+);
+
+my $i = 0;
+
+while($i < @Intervals)
+{
+  my($val, $formatted) = ($Intervals[$i++], $Intervals[$i++]);
+
+  is($db->format_interval($db->parse_interval($val)), $formatted, "parse_interval ($val)");
+}
+
+MyTest::DB2->max_interval_characters(1);
+
+eval { $db->format_interval($db->parse_interval('1 day ago')) };
+ok($@, 'max_interval_characters 1');
+
+ok(Rose::DB->max_interval_characters != MyTest::DB2->max_interval_characters, 'max_interval_characters 2');
+
+is($db->parse_interval('foo()'), 'foo()', 'parse_interval (foo())');
+
+MyTest::DB2->max_interval_characters(255);
+
+my $d = $db->parse_interval('1 year 0.000003 seconds');
+
+is($d->nanoseconds, 3000, 'nanoseconds 1');
+
+is($db->format_interval($d), '1 year 00:00:00.000003000', 'nanoseconds 2');

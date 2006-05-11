@@ -9,7 +9,7 @@ use DateTime::Format::MySQL;
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.61';
+our $VERSION = '0.67';
 
 our $Debug = 0;
 
@@ -228,7 +228,7 @@ Rose::DB::MySQL - MySQL driver class for Rose::DB.
   Rose::DB->default_type('main');
   ...
 
-  # Set max length of varchar columns used to emulate an array data type
+  # Set max length of varchar columns used to emulate the array data type
   Rose::DB::MySQL->max_array_characters(128);
 
   $db = Rose::DB->new; # $db is really a Rose::DB::MySQL object
@@ -236,9 +236,9 @@ Rose::DB::MySQL - MySQL driver class for Rose::DB.
 
 =head1 DESCRIPTION
 
-This is the subclass that L<Rose::DB> blesses an object into when the C<driver> is "mysql".  This mapping of drivers to class names is configurable.  See the documentation for L<Rose::DB>'s C<new()> and C<driver_class()> methods for more information.
+This is the subclass that L<Rose::DB> blesses an object into when the L<driver|Rose::DB/driver> is "mysql".  This mapping of drivers to class names is configurable.  See the documentation for L<Rose::DB>'s L<new()|Rose::DB/new> and L<driver_class()|Rose::DB/driver_class> methods for more information.
 
-Using this class directly is not recommended.  Instead, use L<Rose::DB> and let it bless objects into the appropriate class for you, according to its C<driver_class()> mappings.
+Using this class directly is not recommended.  Instead, use L<Rose::DB> and let it bless objects into the appropriate class for you, according to its L<driver_class()|Rose::DB/driver_class> mappings.
 
 This class inherits from L<Rose::DB>.  B<Only the methods that are new or have  different behaviors are documented here.>  See the L<Rose::DB> documentation for information on the inherited methods.
 
@@ -248,9 +248,15 @@ This class inherits from L<Rose::DB>.  B<Only the methods that are new or have  
 
 =item B<max_array_characters [INT]>
 
-Get or set the maximum length of varchar columns used to emulate an array data type.  The default value is 255.
+Get or set the maximum length of varchar columns used to emulate the array data type.  The default value is 255.
 
-MySQL does not have a native "ARRAY" data type, but it can be emulated using a "VARCHAR" column and a specially formatted string.  The formatting and parsing of this string is handled by the C<format_array()> and C<parse_array()> object methods.  The maximum length limit is honored by the C<format_array()> object method.
+MySQL does not have a native "ARRAY" data type, but this data type can be emulated using a "VARCHAR" column and a specially formatted string.  The formatting and parsing of this string is handled by the L<format_array|/format_array> and L<parse_array|/parse_array> object methods.  The maximum length limit is honored by the L<format_array|/format_array> object method.
+
+=item B<max_interval_characters [INT]>
+
+Get or set the maximum length of varchar columns used to emulate the interval data type.  The default value is 255.
+
+MySQL does not have a native "interval" data type, but this data type can be emulated using a "VARCHAR" column and a specially formatted string.  The formatting and parsing of this string is handled by the L<format_interval|/format_interval> and L<parse_interval|/parse_interval> object methods.  The maximum length limit is honored by the L<format_interval|/format_interval> object method.
 
 =back
 
@@ -264,15 +270,27 @@ MySQL does not have a native "ARRAY" data type, but it can be emulated using a "
 
 Given a reference to an array or a list of values, return a specially formatted string.  Undef is returned if ARRAYREF points to an empty array or if LIST is not passed.  The array or list must not contain undefined values.
 
-If the resulting string is longer than C<max_array_characters()>, a fatal error will occur.
+If the resulting string is longer than L<max_array_characters|/max_array_characters>, a fatal error will occur.
+
+=item B<format_interval DURATION>
+
+Given a L<DateTime::Duration> object, return a string formatted according to the rules of PostgreSQL's "INTERVAL" column type.  If DURATION is undefined, a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|Rose::DB/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.
+
+If the resulting string is longer than L<max_interval_characters|/max_interval_characters>, a fatal error will occur.
 
 =item B<parse_array STRING | LIST | ARRAYREF>
 
-Parse STRING and return a reference to an array.  STRING should be formatted according to the MySQL array data type emulation format returned by C<format_array()>.  Undef is returned if STRING is undefined.
+Parse STRING and return a reference to an array.  STRING should be formatted according to the MySQL array data type emulation format returned by L<format_array()|/format_array>.  Undef is returned if STRING is undefined.
 
 If a LIST of more than one item is passed, a reference to an array containing the values in LIST is returned.
 
 If a an ARRAYREF is passed, it is returned as-is.
+
+=item B<parse_interval STRING>
+
+Parse STRING and return a L<DateTime::Duration> object.  STRING should be formatted according to the PostgreSQL native "interval" (years, months, days, hours, minutes, seconds) data type.
+
+If STRING is a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|Rose::DB/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.  Otherwise, undef is returned if STRING could not be parsed as a valid "interval" value.
 
 =item B<validate_date_keyword STRING>
 
