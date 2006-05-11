@@ -1,6 +1,10 @@
-0.724 (05.10.2006) - John Siracusa <siracusa@mindspring.com>
+0.724 (05.11.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added the replace_column() Metadata method.
+    * The add_now and add_on_save relationship methods now return
+      the number of items added when called in scalar context and 
+      the list of items added when called in list context.
+      (Suggested by Jesse Brown)
 
 0.723 (05.07.2006) - John Siracusa <siracusa@mindspring.com>
 
@@ -488,8 +492,8 @@
 0.042 (05.04.2005) - John Siracusa <siracusa@mindspring.com>
 
     * Added not_null attribute to column metadata objects.
-    * Removed use of prepare_cached() because it can't be used
-      across transactions in Informix.  Duh.
+    * Removed use of prepare_cached() because it apparently(?)
+      can't be used across transactions in Informix.
 
 0.041 (04.22.2005) - John Siracusa <siracusa@mindspring.com>
 
