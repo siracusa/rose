@@ -1,4 +1,4 @@
-0.673 (05.11.2006) - John Siracusa <siracusa@mindspring.com>
+0.673 (05.12.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added partial support for Oracle databases.  (Code by Ron Savage)
     * Fixed a bug that could cause list_tables() to fail when using
