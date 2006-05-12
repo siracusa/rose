@@ -1,3 +1,8 @@
+0.725 (05.11.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Modified auto-init system to account for custom FetchHashKeyName
+      DBI settings.
+
 0.724 (05.11.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added the replace_column() Metadata method.

@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.64';
+our $VERSION = '0.725';
 
 sub auto_retrieve_primary_key_column_names
 {
@@ -29,6 +29,8 @@ sub auto_retrieve_primary_key_column_names
 
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
+
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
 
     my $sth = $dbh->prepare('SHOW INDEX FROM ' . $self->fq_table_sql($db));
     $sth->execute;
@@ -66,6 +68,8 @@ sub auto_generate_unique_keys
 
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
+
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
 
     my $sth = $dbh->prepare('SHOW INDEX FROM ' . $self->fq_table_sql($db));
     $sth->execute;
@@ -115,6 +119,8 @@ sub auto_generate_foreign_keys
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
     my $db_name = $db->database;
+
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
 
     my $cm = $self->convention_manager;
 

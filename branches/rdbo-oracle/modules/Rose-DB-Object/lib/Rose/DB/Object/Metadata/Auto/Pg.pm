@@ -9,7 +9,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.58';
+our $VERSION = '0.725';
 
 # Other useful columns, not selected for now
 #   pg_get_indexdef(i.oid) AS indexdef
@@ -66,6 +66,8 @@ sub auto_generate_unique_keys
 
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
+
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
 
     my $schema = $self->select_schema($db);
     $schema = $db->default_implicit_schema  unless(defined $schema);

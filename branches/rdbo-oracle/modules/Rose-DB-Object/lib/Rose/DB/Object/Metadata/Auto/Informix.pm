@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.60';
+our $VERSION = '0.725';
 
 # syscolumns.coltype constants taken from:
 #
@@ -130,6 +130,8 @@ sub auto_generate_columns
 
     my $db  = $self->db;  
     my $dbh = $db->dbh or die $db->error;
+
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
 
     # Informix does not support DBI's column_info() method so we have
     # to get all that into "the hard way."
@@ -455,6 +457,8 @@ sub auto_retrieve_primary_key_column_names
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
 
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
+
     # We need the table owner.  Asking for column information is the only
     # way I know of to reliably get this information.
     #
@@ -560,6 +564,8 @@ sub auto_generate_unique_keys
 
     my $db  = $self->db;  
     my $dbh = $db->dbh or die $db->error;
+
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
 
     # We need the table id.  To get it, we need the "owner" name.  Asking
     # for column information is the only way I know of to reliably get
@@ -794,6 +800,8 @@ sub auto_generate_foreign_keys
 
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
+
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
 
     # I'm doing this to get the table id and owner.  Gotta be a better way...
     my @col_list = DBD::Informix::Metadata::ix_columns($dbh, lc $self->table);
@@ -1051,23 +1059,23 @@ sub _ix_numeric_scale
 # create procedure 'informix'.ansinumprecradix( coltype smallint)
 # returning int;
 # 
-# 	if (coltype >= 256) then
-# 	    let coltype = coltype - 256;
-# 	end if;
+#   if (coltype >= 256) then
+#       let coltype = coltype - 256;
+#   end if;
 # 
-# 	if (coltype = 1) or (coltype = 2) or 
-# 	   (coltype = 5) or (coltype = 6) or
-# 	   (coltype = 8) then
-# 	    return 10;
-# 	elif (coltype = 3) or (coltype = 4) then
-# 	    return 2;
-# 	else
-# 	    return NULL;
-# 	end if;
+#   if (coltype = 1) or (coltype = 2) or 
+#      (coltype = 5) or (coltype = 6) or
+#      (coltype = 8) then
+#       return 10;
+#   elif (coltype = 3) or (coltype = 4) then
+#       return 2;
+#   else
+#       return NULL;
+#   end if;
 # end procedure
 # document
-# 	'returns the precision radix of a numeric column',
-# 	'Synopsis: ansinumprecradix(smallint) returns int';
+#   'returns the precision radix of a numeric column',
+#   'Synopsis: ansinumprecradix(smallint) returns int';
 
 sub _ix_numeric_precision_radix
 {
