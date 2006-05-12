@@ -37,7 +37,6 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
   my $db = Rose::DB->new;
 
   # Oracle returns names in upper case.
-
   my @tables = sort grep { /$Regex/i } $db->list_tables;
 
   if($db_type eq 'mysql')
@@ -51,7 +50,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
   }
   elsif($db_type eq 'oracle')
   {
-    is_deeply(\@tables, [map{uc} @Tables], "$db_type tables 1");
+    is_deeply(\@tables, [ map { uc } @Tables ], "$db_type tables 1");
   }
   else
   {
@@ -59,7 +58,6 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
   }
 
   # Oracle returns names in upper case.
-
   @tables = sort grep { /$Regex/i } $db->list_tables(include_views => 1);
 
   if($db_type =~ /^(?:pg(?:_with_schema)?|sqlite|informix)$/)
@@ -74,7 +72,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
     }
     elsif($db_type eq 'oracle')
     {
-      is_deeply(\@tables, [map{uc} (@Tables, 'rdbo_test_view')], "$db_type tables and views");
+      is_deeply(\@tables, [ map { uc } (@Tables, 'rdbo_test_view') ], "$db_type tables and views");
     }
     else
     {

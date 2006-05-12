@@ -1,3 +1,9 @@
+0.673 (05.12.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added partial support for Oracle databases.  (Code by Ron Savage)
+    * Fixed a bug that could cause list_tables() to fail when using
+      the "generic" fall-back database driver.
+
 0.672 (04.14.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Translate Postgres's "real" type to the standard "float" type.

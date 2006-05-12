@@ -75,7 +75,7 @@ BEGIN
     password => '',
     post_connect_sql =>
     [
-    	"alter session set nls_timestamp_format = 'YYYY-MM-DD HH24:MI:SS'",
+      "alter session set nls_timestamp_format = 'YYYY-MM-DD HH24:MI:SS'",
     ],
   );
 
@@ -90,7 +90,7 @@ BEGIN
     password => '',
     post_connect_sql =>
     [
-    	"alter session set nls_timestamp_format = 'YYYY-MM-DD HH24:MI:SS'",
+      "alter session set nls_timestamp_format = 'YYYY-MM-DD HH24:MI:SS'",
     ],
   );
 
@@ -130,7 +130,11 @@ BEGIN
     type     => 'informix',
     driver   => 'Informix',
     database => 'test@test',
-    connect_options => { AutoCommit => 1 },
+    connect_options => 
+    {
+      AutoCommit => 1, 
+      ((rand() < 0.5) ? (FetchHashKeyName => 'NAME_lc') : ()),
+    },
     post_connect_sql =>
     [
       'SET LOCK MODE TO WAIT 60',
@@ -144,7 +148,11 @@ BEGIN
     type     => 'informix_admin',
     driver   => 'Informix',
     database => 'test@test',
-    connect_options => { AutoCommit => 1 },
+    connect_options => 
+    {
+      AutoCommit => 1, 
+      ((rand() < 0.5) ? (FetchHashKeyName => 'NAME_lc') : ()),
+    },
     post_connect_sql =>
     [
       'SET LOCK MODE TO WAIT 60',
@@ -182,7 +190,11 @@ BEGIN
       driver   => 'sqlite',
       database => "$Bin/sqlite.db",
       auto_create     => 0,
-      connect_options => { AutoCommit => 1 },
+      connect_options => 
+      {
+        AutoCommit => 1, 
+        ((rand() < 0.5) ? (FetchHashKeyName => 'NAME_lc') : ()),
+      },
       post_connect_sql =>
       [
         'PRAGMA synchronous = OFF',
@@ -196,7 +208,11 @@ BEGIN
       type     => 'sqlite_admin',
       driver   => 'sqlite',
       database => "$Bin/sqlite.db",
-      connect_options => { AutoCommit => 1 },
+      connect_options => 
+      {
+        AutoCommit => 1, 
+        ((rand() < 0.5) ? (FetchHashKeyName => 'NAME_lc') : ()),
+      },
       post_connect_sql =>
       [
         'PRAGMA synchronous = OFF',

@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.672';
+our $VERSION = '0.673';
 
 our $Debug = 0;
 
@@ -372,7 +372,7 @@ sub database_version
 sub password
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     my $password = shift;
@@ -1013,7 +1013,7 @@ sub format_timestamp
 sub parse_date
 {
   my($self, $value) = @_;
-  
+
   if(UNIVERSAL::isa($value, 'DateTime') || $self->validate_date_keyword($value))
   {
     return $value;
@@ -1034,7 +1034,7 @@ sub parse_date
 sub parse_datetime
 {  
   my($self, $value) = @_;
-  
+
   if(UNIVERSAL::isa($value, 'DateTime') || 
     $self->validate_datetime_keyword($value))
   {
@@ -1072,7 +1072,7 @@ sub parse_time
 sub parse_timestamp
 {  
   my($self, $value) = @_;
-  
+
   if(UNIVERSAL::isa($value, 'DateTime') || 
     $self->validate_timestamp_keyword($value))
   {
@@ -1270,7 +1270,7 @@ sub parse_interval
         $secs = int($secs);
 
         my $len = length $fsecs;
-  
+
         if($len < 9)
         {
           $fsecs .= ('0' x (9 - length $fsecs));
@@ -1335,7 +1335,7 @@ sub parse_interval
         my $fsecs = substr($secs, index($secs, '.') + 1);
 
         my $len = length $fsecs;
-  
+
         if($len < 9)
         {
           $fsecs .= ('0' x (9 - length $fsecs));
@@ -1382,7 +1382,7 @@ sub parse_interval
     $units{'years'} += 1000 * $units{'millenniums'};
     delete $units{'millenniums'};
   }
-  
+
   if(defined $units{'centuries'})
   {
     $units{'years'} += 100 * $units{'centuries'};
@@ -1467,7 +1467,7 @@ sub format_interval
     $deltas{'hms'} = join(':', map { sprintf('%.2d', $deltas{$_}) } (qw/h m/)) .
                      ($nsec ? sprintf(':%02d.%09d', $deltas{'s'}, $nsec) :         
                               sprintf(':%02d', $deltas{'s'}));
-              
+
     $output .= "$deltas{'hms'}"  if($deltas{'hms'});
   }
 
@@ -1560,8 +1560,9 @@ sub list_tables
     my $dbh = $self->dbh or die $self->error;
 
     local $dbh->{'RaiseError'} = 1;
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
 
-    my $sth = $dbh->table_info($self->catalog, $self->schema, '', $types);
+    my $sth = $dbh->table_info($self->catalog, $self->schema, '%', $types);
 
     $sth->execute;
 
@@ -1716,6 +1717,8 @@ L<Rose::DB> currently supports the following L<DBI> database drivers:
     DBD::SQLite   (SQLite)
     DBD::Informix (Informix)
 
+Oracle (L<DBD::Oracle>) is I<partially> supported, but some features may not yet work correctly.
+
 L<Rose::DB> will attempt to service an unsupported database using a L<generic|Rose::DB::Generic> implementation that may or may not work.  Support for more drivers may be added in the future.  Patches are welcome.
 
 All database-specific behavior is contained and documented in the subclasses of L<Rose::DB>.  L<Rose::DB>'s constructor method (L<new()|/new>) returns  a database-specific subclass of L<Rose::DB>, chosen based on the L<driver|/driver> value of the selected L<data source|"Data Source Abstraction">.  The default mapping of databases to L<Rose::DB> subclasses is:
@@ -1724,6 +1727,7 @@ All database-specific behavior is contained and documented in the subclasses of 
     DBD::mysql    -> Rose::DB::MySQL
     DBD::SQLite   -> Rose::DB::SQLite
     DBD::Informix -> Rose::DB::Informix
+    DBD::Oracle   -> Rose::DB::Oracle
 
 This mapping can be changed using the L<driver_class|/driver_class> class method.
 
@@ -2473,6 +2477,7 @@ L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB>
 
 =head1 CONTRIBUTORS
 
+Ron Savage
 Lucian Dragus
 
 =head1 AUTHOR

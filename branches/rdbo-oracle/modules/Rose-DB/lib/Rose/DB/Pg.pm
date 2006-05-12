@@ -8,7 +8,7 @@ use DateTime::Format::Pg;
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.672';
+our $VERSION = '0.673';
 
 our $Debug = 0;
 
@@ -436,6 +436,7 @@ sub list_tables
     my $dbh = $self->dbh or die $self->error;
 
     local $dbh->{'RaiseError'} = 1;
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
 
     my $sth = $dbh->table_info($self->catalog, $schema, '', $types,
                                { noprefix => 1, pg_noprefix => 1 });

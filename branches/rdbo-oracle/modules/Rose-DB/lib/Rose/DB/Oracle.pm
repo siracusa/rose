@@ -6,7 +6,7 @@ use Rose::DB;
 
 our $Debug    = 0;
 our @ISA      = qw(Rose::DB);
-our $VERSION  = '0.60';
+our $VERSION  = '0.725';
 
 # -----------------------------------------------
 #
@@ -63,7 +63,7 @@ sub database_version
 
 # -----------------------------------------------
 
-sub dbi_driver{'Oracle'}
+sub dbi_driver { 'Oracle' }
 
 # -----------------------------------------------
 
@@ -79,6 +79,7 @@ sub list_tables
     my($dbh) = $self -> dbh or die $self -> error;
 
     local $dbh->{'RaiseError'} = 1;
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
 
     my($sth)  = $dbh -> table_info($self -> catalog, $self -> schema, '%', $types);
     my($info) = $sth -> fetchall_arrayref({}); # The {} are mandatory.
@@ -149,7 +150,7 @@ Rose::DB::Oracle - Oracle driver class for Rose::DB.
 
   use Rose::DB;
 
-  Rose::DB -> register_db
+  Rose::DB->register_db
   (
     domain   => 'development',
     type     => 'main',
@@ -158,22 +159,22 @@ Rose::DB::Oracle - Oracle driver class for Rose::DB.
     host     => 'localhost',
     username => 'devuser',
     password => 'mysecret',
-    server_time_zone => 'UTC',
-    european_dates   => 1,
   );
 
-  Rose::DB -> default_domain('development');
-  Rose::DB -> default_type('main');
+  Rose::DB->default_domain('development');
+  Rose::DB->default_type('main');
   ...
 
-  $db = Rose::DB -> new; # $db is really a Rose::DB::Oracle object
+  $db = Rose::DB->new; # $db is really a Rose::DB::Oracle object
   ...
 
 =head1 DESCRIPTION
 
-This is the subclass that L<Rose::DB> blesses an object into when the C<driver> is "Oracle". This mapping of drivers to class names is configurable. See the documentation for L<Rose::DB>'s C<new()> and C<driver_class()> methods for more information.
+B<Note:> this class is a work in progress.  Support for Oracle databases is not yet complete.  If you would like to help, please contact John Siracusa at siracusa@mindspring.com or post to the L<mailing list|Rose::DB/SUPPORT>.
 
-Using this class directly is not recommended. Instead, use L<Rose::DB> and let it bless objects into the appropriate class for you, according to its C<driver_class()> mappings.
+This is the subclass that L<Rose::DB> blesses an object into when the C<driver> is "Oracle".  This mapping of drivers to class names is configurable.  See the documentation for L<Rose::DB>'s L<new()|Rose::DB/new> and L<driver_class()|Rose::DB/driver_class> methods for more information.
+
+Using this class directly is not recommended.  Instead, use L<Rose::DB> and let it bless objects into the appropriate class for you, according to its L<driver_class|Rose::DB/driver_class> mappings.
 
 This class inherits from L<Rose::DB>. B<Only the methods that are new or have different behaviors are documented here.> See the L<Rose::DB> documentation for information on the inherited methods.
 
