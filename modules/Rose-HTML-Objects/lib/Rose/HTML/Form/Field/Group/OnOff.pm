@@ -209,7 +209,7 @@ sub input_value
         $parent->is_cleared(0);
       }
 
-	  if($self->auto_invalidate_parent)
+      if($self->auto_invalidate_parent)
       {
         $parent->invalidate_value;
       }

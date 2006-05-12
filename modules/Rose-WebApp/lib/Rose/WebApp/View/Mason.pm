@@ -54,12 +54,12 @@ sub init_mason_interp
   my $data_dir  = Path::Class::Dir->new($doc_root)->parent->subdir('mason/data');
 
   my %params = (allow_globals => [ qw($r $app) ]);
-  
+
   if(-e $data_dir)
   {
     $params{'data_dir'} = $data_dir;
   }
-  
+
   if(-e $comp_root)
   {
     $params{'comp_root'} =

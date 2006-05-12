@@ -78,7 +78,7 @@ is(ref $field, 'Rose::HTML::Form::Field::DateTime::Split::MonthDayYear', 'person
 $form->params(
 {
   'person.name'    => 'John', 
-  'person.age' 	   => ' 10 ', 
+  'person.age'     => ' 10 ', 
   'person.gender'  => 'm', 
   'person.bday'    => '1/2/1983',
   'address.street' => '1 Main St.', 
@@ -177,7 +177,7 @@ $form->params(
 {
   'dog'                           => 'Woof',
   'person_address.person.name'    => 'John', 
-  'person_address.person.age' 	  => ' 10 ', 
+  'person_address.person.age'     => ' 10 ', 
   'person_address.person.gender'  => 'm', 
   'person_address.person.bday'    => '1/2/1983',
   'person_address.address.street' => '1 Main St.', 
@@ -226,7 +226,7 @@ $form->params(
 {
   'dog'                           => 'Woof',
   'person_address.person.name'    => 'John', 
-  'person_address.person.age' 	  => ' 10 ', 
+  'person_address.person.age'     => ' 10 ', 
   'person_address.person.gender'  => 'm', 
   'person_address.person.bday'    => '1/2/1983',
   'person_address.address.street' => '1 Main St.', 
@@ -272,7 +272,7 @@ $form->params(
 {
   'dog'               => 'Woof',
   'pa.person.name'    => 'John', 
-  'pa.person.age' 	  => ' 10 ', 
+  'pa.person.age'     => ' 10 ', 
   'pa.person.gender'  => 'm', 
   'pa.person.bday'    => '1/2/1983',
   'pa.address.street' => '1 Main St.', 
@@ -314,7 +314,7 @@ $form->params(
 {
   'dog'               => 'Woof',
   'pa.p.name'         => 'John', 
-  'pa.p.age' 	      => ' 10 ', 
+  'pa.p.age'          => ' 10 ', 
   'pa.p.gender'       => 'm', 
   'pa.p.bday'         => '1/2/1983',
   'pa.address.street' => '1 Main St.', 
@@ -359,7 +359,7 @@ $form->params(
 {
   'dog'               => 'Woof',
   'pa.p.name'         => 'John', 
-  'pa.p.age' 	      => ' 10 ', 
+  'pa.p.age'          => ' 10 ', 
   'pa.p.gender'       => 'm', 
   'pa.p.bday'         => '1/2/1983',
   'pa.address.street' => '1 Main St.', 
@@ -523,11 +523,11 @@ BEGIN
   {
     my($self) = shift;
 
-	$self->add_forms
-	(
-	  person  => MyPersonForm->new,
-	  address => MyAddressForm->new,
-	);
+    $self->add_forms
+    (
+      person  => MyPersonForm->new,
+      address => MyAddressForm->new,
+    );
   }
 
   package MyPersonAddressDogForm;
@@ -538,7 +538,7 @@ BEGIN
   {
     my($self) = shift;
 
-	my %fields;
+    my %fields;
 
     $fields{'dog'} = 
       Rose::HTML::Form::Field::Text->new(
@@ -547,9 +547,9 @@ BEGIN
 
     $self->add_fields(%fields);
 
-	$self->add_forms
-	(
-	  person_address  => MyPersonAddressForm->new,
-	);
+    $self->add_forms
+    (
+      person_address  => MyPersonAddressForm->new,
+    );
   }
 }

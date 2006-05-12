@@ -10,7 +10,7 @@ __PACKAGE__->use_features('inline-content');
 sub init
 {
   my($self) = shift;
-  
+
   $self->uri_dispatch(
   {
     '/virtual' => 'virtual',

@@ -23,13 +23,13 @@ sub feature_name
     Carp::confess "feature_name() should only be called from subclasses of ", 
                   __PACKAGE__;
   }
-  
+
   # Transform "My::Special::WithCoolFeature" into "cool-feature"
   for(my $name = $class)
   {
     s/::(?:With(?=[A-Z]))?(\w+)$//;
     s/([a-z]\d*|^\d+)([A-Z])/$1-$2/g;
-    
+
     return $name;
   }
 }

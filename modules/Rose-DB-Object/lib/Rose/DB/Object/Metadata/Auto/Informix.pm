@@ -1059,23 +1059,23 @@ sub _ix_numeric_scale
 # create procedure 'informix'.ansinumprecradix( coltype smallint)
 # returning int;
 # 
-# 	if (coltype >= 256) then
-# 	    let coltype = coltype - 256;
-# 	end if;
+#   if (coltype >= 256) then
+#       let coltype = coltype - 256;
+#   end if;
 # 
-# 	if (coltype = 1) or (coltype = 2) or 
-# 	   (coltype = 5) or (coltype = 6) or
-# 	   (coltype = 8) then
-# 	    return 10;
-# 	elif (coltype = 3) or (coltype = 4) then
-# 	    return 2;
-# 	else
-# 	    return NULL;
-# 	end if;
+#   if (coltype = 1) or (coltype = 2) or 
+#      (coltype = 5) or (coltype = 6) or
+#      (coltype = 8) then
+#       return 10;
+#   elif (coltype = 3) or (coltype = 4) then
+#       return 2;
+#   else
+#       return NULL;
+#   end if;
 # end procedure
 # document
-# 	'returns the precision radix of a numeric column',
-# 	'Synopsis: ansinumprecradix(smallint) returns int';
+#   'returns the precision radix of a numeric column',
+#   'Synopsis: ansinumprecradix(smallint) returns int';
 
 sub _ix_numeric_precision_radix
 {

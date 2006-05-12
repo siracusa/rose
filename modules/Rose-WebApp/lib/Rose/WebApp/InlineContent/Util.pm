@@ -144,28 +144,28 @@ sub extract_inline_content
       {
         my $install_path = Path::Class::File->new($dest, $file{'path'});
         $install_path->cleanup;
-  
+
         if(-e $install_path && $noclobber)
         {
           warn "Skip existing file: $install_path\n"  if($verbose);
           next;
         }
-  
+
         unless(-d $install_path->dir)
         {
           warn "Make directory: ", $install_path->dir, "\n"  if($verbose > 1);
           mkpath($install_path->dir->stringify);
         }
-  
+
         warn "Install: $install_path\n"  if($verbose);
-  
+
         open(my $fh, '>', $install_path->stringify) 
           or croak "Could not install file '$install_path' - $!";
-  
+
         print $fh $file{'content'};
-  
+
         close($fh) or croak "Could not write file '$install_path' - $!";
-  
+
         if(defined $file{'mode'})
         {
           chmod($file{'mode'}, $install_path)
@@ -197,7 +197,7 @@ sub create_inline_content
 
   my $path_re = $args{'path_match'};
   my $file_re = $args{'file_match'};
-  
+
   foreach my $value (grep { defined } ($path_re, $file_re))
   {
     if(!ref $value || ref $value ne 'CODE')

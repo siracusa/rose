@@ -609,7 +609,7 @@ sub _init_field
   else
   {
     return  unless((($name_exists || $name_attr_exists || $moniker_exists) &&
-		          !$field->isa('Rose::HTML::Form::Field::Submit')) || $on_off);
+                  !$field->isa('Rose::HTML::Form::Field::Submit')) || $on_off);
 
     if($field->isa('Rose::HTML::Form::Field::Group'))
     {
