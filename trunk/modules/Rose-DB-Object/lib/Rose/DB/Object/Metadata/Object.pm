@@ -20,7 +20,7 @@ sub parent
 sub clone
 {
   my($self) = shift;
-  
+
   my $clone = Clone::clone($self);
   Scalar::Util::weaken($clone->{'parent'});
 

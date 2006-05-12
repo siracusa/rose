@@ -134,10 +134,10 @@ use Class::Delegator
 sub root_dir
 {
   my($self) = shift;
-  
+
   my $doc_root = $self->server->document_root;
   $doc_root =~ s{/$}{};
-  
+
   my $root_uri = $self->root_uri;
   $root_uri = ''  if($root_uri eq '/');
 
@@ -355,7 +355,7 @@ sub uses_feature
   my($self) = shift;
 
   my $class = ref $self || $self;
-  
+
   if(@_ > 1)
   {
     my($name, $value) = @_;

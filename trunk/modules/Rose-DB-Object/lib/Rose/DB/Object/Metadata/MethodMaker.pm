@@ -425,7 +425,7 @@ sub make_methods
       ]);
 
     $self->made_method_type($type => $method_name);
-    
+
     if($self->can('method_code'))
     {
       $self->method_code($type => undef);

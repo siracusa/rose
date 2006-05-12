@@ -1728,7 +1728,7 @@ All database-specific behavior is contained and documented in the subclasses of 
     DBD::SQLite   -> Rose::DB::SQLite
     DBD::Informix -> Rose::DB::Informix
     DBD::Oracle   -> Rose::DB::Oracle
-    
+
 This mapping can be changed using the L<driver_class|/driver_class> class method.
 
 The L<Rose::DB> object method documentation found here defines the purpose of each method, as well as the default behavior of the method if it is not overridden by a subclass.  You must read the subclass documentation to learn about behaviors that are specific to each type of database.

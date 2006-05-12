@@ -26,6 +26,7 @@ t/subclass-basic.t
 t/subclass-informix.t
 t/subclass-list-tables.t
 t/subclass-mysql.t
+t/subclass-oracle.t
 t/subclass-pg.t
 t/subclass-sqlite.t
 t/subclass-trx.t

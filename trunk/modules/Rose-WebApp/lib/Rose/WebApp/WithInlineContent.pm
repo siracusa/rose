@@ -28,7 +28,7 @@ sub feature_name { 'inline-content' }
 sub feature_setup
 {
   my($class, $for_class) = @_;
-  
+
   no strict 'refs';
 
   __traverse_class_hierarchy($for_class, sub 
@@ -76,7 +76,7 @@ sub inline_content_search_groups { [ 'htdocs', 'mason-comps' ] }
 sub inline_content
 {
   my($self) = shift;
-  
+
   if(my $ref = $self->inline_content_ref(@_))
   {
     return $$ref;
@@ -88,7 +88,7 @@ sub inline_content
 sub inline_content_ref
 {
   my($self) = shift;
-  
+
   if(my $info = $self->inline_content_info(@_))
   {
     return \$info->{'content'};
@@ -100,9 +100,9 @@ sub inline_content_ref
 sub inline_content_info
 {
   my($self) = shift;
-  
+
   my %args = @_ == 1 ? (path => $_[0]) : @_;
-  
+
   my $path   = $args{'path'} or croak "Missing path argument";
   my $groups = $args{'groups'} || 
     [ $args{'group'} || @{$self->inline_content_search_groups} ];
@@ -137,7 +137,7 @@ sub inline_content_info
 sub inline_content_exists
 {
   my($self, $path) = (shift, shift);
-  
+
   my $class = ref($self) || $self;
   my $hash = $class->_inline_content_hash;
   return $hash->{$path} ? 1 : 0;
