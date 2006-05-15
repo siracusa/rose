@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 11;
+use Test::More tests => 13;
 
 BEGIN 
 {
@@ -20,6 +20,17 @@ BEGIN
     username => 'postgres',
   );
 
+  # Oracle
+  My::DB2->register_db(
+    domain   => 'default',
+    type     => 'oracle',
+    driver   => 'oracle',
+    database => 'test',
+    host     => 'localhost',
+    username => '',
+    password => '',
+  );
+  
   # MySQL
   My::DB2->register_db(
     domain   => 'default',
@@ -42,6 +53,10 @@ BEGIN
 my $db = My::DB2->new(domain => 'test', type => 'pg');
 is(ref $db, 'My::DB2::Pg', 'My::DB2::Pg 1');
 is($db->subclass_special_pg, 'PG', 'My::DB2::Pg 2');
+
+$db = My::DB2->new(domain => 'test', type => 'oracle');
+is(ref $db, 'My::DB2::Oracle', 'My::DB2::Oracle 1');
+is($db->subclass_special_oracle, 'ORACLE', 'My::DB2::Oracle 2');
 
 $db = My::DB2->new(domain => 'test', type => 'mysql');
 is(ref $db, 'My::DB2::MySQL', 'My::DB2::MySQL 1');
