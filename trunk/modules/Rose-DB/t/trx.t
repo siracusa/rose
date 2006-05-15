@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 45;
+use Test::More tests => 63;
 
 BEGIN 
 {
@@ -10,7 +10,7 @@ BEGIN
   use_ok('Rose::DB');
 }
 
-our($HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX);
+our($HAVE_PG, $HAVE_ORACLE, $HAVE_MYSQL, $HAVE_INFORMIX);
 
 Rose::DB->default_domain('test');
 
@@ -66,6 +66,82 @@ SKIP: foreach my $db_type ('pg')
     # so only run these tests with 1.43 or earlier, or 1.48 or later.
     skip('DBD::Pg 1.43-7 bug?', 5)  if($DBD::Pg::VERSION > 1.43 && $DBD::Pg::VERSION < 1.48);
 
+    ok($db->begin_work, "begin_work() 3 - $db_type");
+
+    $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (3, 'c', 1)));
+    $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (4, 'd', 2)));
+
+    ok($db->rollback, "rollback() 2 - $db_type");
+
+    ok($db->do_transaction(sub
+    {
+      $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (3, 'c', 1)));
+      $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (4, 'd', 2)));
+    }), "do_transaction() 1 - $db_type");
+
+    ok(!defined $db->do_transaction(sub
+    {
+      local $db->dbh->{'PrintError'} = 0;
+      $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (3, 'c', 1)));
+      $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (4, 'd', 2)));
+    }), "do_transaction() 2 - $db_type");
+
+    my $sth = $db->dbh->prepare('SELECT COUNT(*) FROM rose_db_test');
+    $sth->execute;
+    my $count = $sth->fetchrow_array;
+
+    is($count, 4, "do_transaction() 3 - $db_type");
+  }
+}
+
+#
+# Oracle
+#
+
+SKIP: foreach my $db_type ('oracle')
+{
+  skip("Oracle tests", 18)  unless($HAVE_ORACLE);
+
+  Rose::DB->default_type($db_type);
+
+  my $db = Rose::DB->new;
+
+  is($db->commit, 0, "commit() no-op - $db_type");
+  is($db->rollback, 0, "commit() no-op - $db_type");
+
+  is($db->autocommit, 1, "autocommit() 1 - $db_type");
+  is($db->raise_error, 1, "raise_error() 1 - $db_type");
+  is($db->print_error, 1, "print_error() 1 - $db_type");
+
+  ok($db->begin_work, "begin_work() 1 - $db_type");
+
+  ok(!$db->autocommit, "autocommit() 2 - $db_type");
+  is($db->raise_error, 1, "raise_error() 2 - $db_type");
+  is($db->print_error, 1, "print_error() 2 - $db_type");
+
+  $db->dbh->do(q(INSERT INTO rose_db_test_other (id, name) VALUES (1, 'a')));
+  $db->dbh->do(q(INSERT INTO rose_db_test_other (id, name) VALUES (2, 'b')));
+
+  $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (1, 'a', 1)));
+  $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (2, 'b', 2)));
+
+  ok($db->commit, "commit() 1 - $db_type");
+
+  FAIL_COMMIT:
+  {
+    local $db->dbh->{'PrintError'} = 0;
+    ok($db->begin_work, "begin_work() 2 - $db_type");
+
+    $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (3, 'c', 3)));
+    $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (4, 'd', 4)));
+
+    ok(!defined $db->commit && $db->error, "commit() 2 - $db_type");
+  }
+
+  ok($db->rollback, "rollback() 1 - $db_type");
+
+  SKIP:
+  {
     ok($db->begin_work, "begin_work() 3 - $db_type");
 
     $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (3, 'c', 1)));
@@ -241,6 +317,48 @@ EOF
   }
 
   #
+  # Oracle
+  #
+
+  eval 
+  {
+    $dbh = Rose::DB->new('oracle_admin')->retain_dbh()
+      or die Rose::DB->error;
+  };
+
+  if(!$@ && $dbh)
+  {
+    our $HAVE_ORACLE = 1;
+
+    # Drop existing table and create schema, ignoring errors
+    {
+      local $dbh->{'RaiseError'} = 0;
+      local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE rose_db_test');
+      $dbh->do('DROP TABLE rose_db_test_other');
+    }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_test_other
+(
+  id    INT NOT NULL PRIMARY KEY,
+  name  VARCHAR(32) NOT NULL
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_test
+(
+  id    INT NOT NULL PRIMARY KEY,
+  name  VARCHAR(32) NOT NULL,
+  fid   INT NOT NULL REFERENCES rose_db_test_other (id) INITIALLY DEFERRED
+)
+EOF
+
+    $dbh->disconnect;
+  }
+
+  #
   # MySQL
   #
 
@@ -313,6 +431,18 @@ END
   {
     # Postgres
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
+      or die Rose::DB->error;
+
+    $dbh->do('DROP TABLE rose_db_test');
+    $dbh->do('DROP TABLE rose_db_test_other');
+
+    $dbh->disconnect;
+  }
+
+  if($HAVE_ORACLE)
+  {
+    # Oracle
+    my $dbh = Rose::DB->new('oracle_admin')->retain_dbh()
       or die Rose::DB->error;
 
     $dbh->do('DROP TABLE rose_db_test');
