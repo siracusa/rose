@@ -1,7 +1,9 @@
-0.725 (05.16.2006) - John Siracusa <siracusa@mindspring.com>
+0.725 (05.17.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Modified auto-init system to account for custom FetchHashKeyName
       DBI settings.
+    * Fixed a bug that caused self-referential many-to-many relationships to
+      fail during cascaded save() operations.  (Reported by Michael Drozdov)
     * The test suite now requires DBD::SQLite version 1.11 or later.
 
 0.724 (05.11.2006) - John Siracusa <siracusa@mindspring.com>

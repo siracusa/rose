@@ -2393,9 +2393,6 @@ sub select_columns_sql
   return wantarray ? @$list : $list;
 }
 
-
-
-
 sub method_column
 {
   my($self, $method) = @_;
