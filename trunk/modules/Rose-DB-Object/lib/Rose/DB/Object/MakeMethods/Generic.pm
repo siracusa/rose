@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.724';
+our $VERSION = '0.725';
 
 our $Debug = 0;
 
@@ -3055,32 +3055,36 @@ sub objects_by_map
     {
       # Skip if there was an explicit local relationship name and
       # this is not that name.
-      next  if($map_from && $item->name ne $map_from);
-
-      if(%map_column_to_self_method)
+      unless($map_from && $item->name ne $map_from)
       {
-        Carp::croak "Map class $map_class has more than one foreign key ",
-                    "and/or 'many to one' relationship that points to the ",
-                    "class $target_class.  Please specify one by name ",
-                    "with a 'local' parameter in the 'map' hash";
-      }
-
-      $map_from = $local_rel = $item->name;
-
-      my $map_columns = 
-        $item->can('column_map') ? $item->column_map : $item->key_columns;
-
-      # "local" and "foreign" here are relative to the *mapper* class
-      while(my($local_column, $foreign_column) = each(%$map_columns))
-      {
-        my $foreign_method = $meta->column_accessor_method_name($foreign_column)
-          or Carp::croak "Missing accessor method for column '$foreign_column'", 
-                         " in class ", $meta->class;
-        $map_column_to_self_method{$local_column} = $foreign_method;
-        $map_column_to_self_column{$local_column} = $foreign_column;
+        if(%map_column_to_self_method)
+        {
+          Carp::croak "Map class $map_class has more than one foreign key ",
+                      "and/or 'many to one' relationship that points to the ",
+                      "class $target_class.  Please specify one by name ",
+                      "with a 'local' parameter in the 'map' hash";
+        }
+  
+        $map_from = $local_rel = $item->name;
+  
+        my $map_columns = 
+          $item->can('column_map') ? $item->column_map : $item->key_columns;
+  
+        # "local" and "foreign" here are relative to the *mapper* class
+        while(my($local_column, $foreign_column) = each(%$map_columns))
+        {
+          my $foreign_method = $meta->column_accessor_method_name($foreign_column)
+            or Carp::croak "Missing accessor method for column '$foreign_column'", 
+                           " in class ", $meta->class;
+          $map_column_to_self_method{$local_column} = $foreign_method;
+          $map_column_to_self_column{$local_column} = $foreign_column;
+        }
+        
+        next;
       }
     }
-    elsif($item->isa('Rose::DB::Object::Metadata::ForeignKey') ||
+
+    if($item->isa('Rose::DB::Object::Metadata::ForeignKey') ||
           $item->type eq 'many to one')
     {
       # Skip if there was an explicit foreign relationship name and
