@@ -1,3 +1,7 @@
+0.726 (05.17.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed incorrect skip count in t/spot-check-07.t
+
 0.725 (05.17.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed a bug that caused self-referential many-to-many relationships to
