@@ -1736,7 +1736,7 @@ B<SUBCLASS NOTE:> If you are going to override the L<load|/load> method in your 
     # calling the base class version of the method.
     sub load
     {
-      my $self = $_[0]; # Copy, no shift
+      my $self = $_[0]; # Copy, not shift
 
       ... # Do your stuff
 
