@@ -173,4 +173,5 @@ t/spot-check-03.t
 t/spot-check-04.t
 t/spot-check-05.t
 t/spot-check-06.t
+t/spot-check-07.t
 t/test-lib.pl
