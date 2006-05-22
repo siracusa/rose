@@ -1581,6 +1581,36 @@ sub list_tables
 }
 
 #
+# Storable hooks
+#
+
+sub STORABLE_freeze 
+{
+  my($self, $cloning) = @_;
+#$DB::single = 1;
+  return  if($cloning); # Regular default serialization
+
+  my $db = { %$self };
+  $db->{'dbh'} = undef;
+  $db->{'password'} = $self->password;
+  $db->{'password_closure'} = undef;
+
+  require Storable;
+  return Storable::freeze($db);
+}
+
+sub STORABLE_thaw
+{
+  my($self, $cloning, $serialized) = @_;
+
+  %$self = %{ Storable::thaw($serialized) };
+
+  my $password = delete $self->{'password'};
+
+  $self->{'password_closure'} = sub { $password }  if(defined $password);
+}
+
+#
 # This is both a class and an object method
 #
 
