@@ -6,7 +6,7 @@ opendir(my $dir, '.') or die "Could not opendir(.) - $!";
 
 while(my $file = readdir($dir))
 {
-  next  if($file !~ /\.t$/ || $file =~ /subclass|warning|pod/);
+  next  if($file !~ /\.t$/ || $file =~ /subclass|warning|pod|storable/);
 
   my $new_file = "subclass-$file";
 
