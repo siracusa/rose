@@ -366,7 +366,7 @@ sub _info_from_sql
 
   my $i = 1;
 
-  # Column defintiions
+  # Column definitions
   while($sql =~ s/^$Column_Def (?:\s*,\s*|\s*$)//six)
   {
     my $col_name    = $1;
