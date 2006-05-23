@@ -1587,9 +1587,11 @@ sub list_tables
 sub STORABLE_freeze 
 {
   my($self, $cloning) = @_;
-#$DB::single = 1;
-  return  if($cloning); # Regular default serialization
 
+  # I still don't quite get why this is recommended...
+  #return  if($cloning); # Regular default serialization
+
+  # Ditch the DBI $dbh and pull teh password out of its closure
   my $db = { %$self };
   $db->{'dbh'} = undef;
   $db->{'password'} = $self->password;
@@ -1605,8 +1607,8 @@ sub STORABLE_thaw
 
   %$self = %{ Storable::thaw($serialized) };
 
+  # Put the password back in a closure
   my $password = delete $self->{'password'};
-
   $self->{'password_closure'} = sub { $password }  if(defined $password);
 }
 
