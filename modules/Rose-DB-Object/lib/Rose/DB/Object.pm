@@ -1929,6 +1929,10 @@ Although the mailing list is the preferred support mechanism, you can also email
 
 L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB-Object>
 
+=head1 CONTRIBUTORS
+
+Cees Hek
+
 =head1 AUTHOR
 
 John C. Siracusa (siracusa@mindspring.com)

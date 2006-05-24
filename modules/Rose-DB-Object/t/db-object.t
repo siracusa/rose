@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 449;
+use Test::More tests => 451;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 198)  unless($HAVE_PG);
+  skip("Postgres tests", 200)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -128,6 +128,19 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   ok($o2->last_modified ne $o->last_modified, "save() verify 2 - $db_type");
   is($o2->start->ymd, '2001-05-24', "save() verify 3 (date value) - $db_type");
 
+  my $bo = MyPgObject->new(id => $o->id);
+  $bo->load;
+  $bo->flag(0);
+  $bo->save;
+  
+  $bo = MyPgObject->new(id => $o->id);
+  $bo->load;
+  
+  ok(!$bo->flag, "boolean check - $db_type");
+  
+  $bo->flag(0);
+  $bo->save;
+  
   my $o3 = MyPgObject->new();
 
   my $db = $o3->db or die $o3->error;

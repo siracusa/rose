@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.725';
+our $VERSION = '0.726';
 
 our $Debug = 0;
 
@@ -495,6 +495,7 @@ sub boolean
             }
           }
 
+          $self->{$formatted_key,$driver} = undef;
           return $self->{$key} = 0;
         }
 
@@ -563,6 +564,7 @@ sub boolean
             }
           }
 
+          $self->{$formatted_key,$driver} = undef;
           return $self->{$key} = 0;
         }
 
@@ -685,6 +687,7 @@ sub boolean
         }
       }
 
+      $self->{$formatted_key,$driver} = undef;
       return $self->{$key} = 0;
     }
   }
