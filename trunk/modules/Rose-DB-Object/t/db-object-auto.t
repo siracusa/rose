@@ -31,7 +31,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
                           k1   => 1,
                           k2   => undef,
                           k3   => 3);
-
+$DB::single = 1;
   ok(ref $o && $o->isa('MyPgObject'), "new() 1 - $db_type");
 
   $o->flag2('TRUE');

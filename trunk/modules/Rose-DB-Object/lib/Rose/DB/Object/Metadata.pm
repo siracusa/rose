@@ -24,7 +24,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.724';
+our $VERSION = '0.726';
 
 our $Debug = 0;
 
@@ -856,8 +856,10 @@ sub add_columns
       }
 
       #$Debug && warn $self->class, " - adding $name $column_class\n";
+      # XXX: Order of args is important here!  Parent must be set first
+      # because some params rely on it being present when they're set.
       my $column = $self->{'columns'}{$name} = 
-        $column_class->new(%$info, name => $name, parent => $self);
+        $column_class->new(parent => $self, %$info, name => $name);
 
       push(@columns, $column);
 
