@@ -970,6 +970,8 @@ sub primary_key_column_names
 
   my $table_unquoted = $self->unquote_table_name($table);
 
+  my @columns;
+
   eval
   {
     my $dbh = $self->dbh or die $self->error;
