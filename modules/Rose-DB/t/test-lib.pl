@@ -307,5 +307,36 @@ My::DBReg->register_db(
   host     => 'subhost',
   username => 'subuser');
 
+my %Have_DB;
+
+sub get_dbh
+{
+  my($type) = shift;
+  
+  my $dbh;
+
+  eval 
+  {
+    $dbh = Rose::DB->new($type)->retain_dbh()
+      or die Rose::DB->error;
+  };
+
+  if(!$@ && $dbh)
+  {
+    $Have_DB{$type} = 1;
+    return $dbh;
+  }
+
+  return $Have_DB{$type} = 0;
+}
+
+sub have_db
+{
+  my($type) = shift;
+
+  return $Have_DB{$type}  if(exists $Have_DB{$type});
+  return get_dbh($type) ? 1 : 0;
+}
+
 1;
 

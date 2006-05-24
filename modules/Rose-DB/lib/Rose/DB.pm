@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.673';
+our $VERSION = '0.674';
 
 our $Debug = 0;
 
@@ -950,6 +950,74 @@ BEGIN
   {
     *quote_identifier = \&quote_identifier_fallback;
   }
+}
+
+sub primary_key_column_names
+{
+  my($self, %args) = @_;
+
+  my $table = lc($args{'table'}) or Carp::croak "Missing table name parameter";
+
+  my $catalog = $args{'catalog'};
+  my $schema  = $args{'schema'};
+  $schema     = $self->default_implicit_schema  unless(defined $schema);
+
+  $schema  = lc $schema   
+    if(defined $schema && $self->likes_lowercase_schema_names);
+
+  $catalog = lc $catalog
+    if(defined $catalog && $self->likes_lowercase_catalog_names);
+
+  my $table_unquoted = $self->unquote_table_name($table);
+
+  eval
+  {
+    my $dbh = $self->dbh or die $self->error;
+
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
+
+    my $sth = $dbh->primary_key_info($catalog, $schema, $table_unquoted);
+
+    unless(defined $sth)
+    {
+      no warnings 'uninitialized'; # undef strings okay
+      die "No primary key information found for catalog '", $catalog,
+          "' schema '", $schema, "' table '", $table, "'";
+    }
+
+    PK: while(my $pk_info = $sth->fetchrow_hashref)
+    {
+      CHECK_TABLE: # Make sure this column is from the right table
+      {
+        no warnings; # Allow undef coercion to empty string
+
+        $pk_info->{'TABLE_NAME'} = 
+          $self->unquote_table_name($pk_info->{'TABLE_NAME'});
+
+        next PK  unless($pk_info->{'TABLE_CAT'}   eq $catalog &&
+                        $pk_info->{'TABLE_SCHEM'} eq $schema &&
+                        $pk_info->{'TABLE_NAME'}  eq $table_unquoted);
+      }
+
+      unless(defined $pk_info->{'COLUMN_NAME'})
+      {
+        Carp::croak "Could not extract column name from DBI primary_key_info()";
+      }
+
+      push(@columns, $pk_info->{'COLUMN_NAME'});
+    }
+  };
+
+  if($@ || !@columns)
+  {
+    no warnings 'uninitialized'; # undef strings okay
+    $@ = 'no primary key columns found'  unless(defined $@);
+    Carp::croak "Could not get primary key columns for catalog '" . 
+                $catalog . "' schema '" . $schema . "' table '" . 
+                $table_unquoted . "' - " . $@;
+  }
+
+  return wantarray ? @columns : \@columns;
 }
 
 #
