@@ -14,7 +14,7 @@ our $Debug;
 
 *Debug = \$Rose::DB::Object::Metadata::Debug;
 
-our $VERSION = '0.726';
+our $VERSION = '0.727';
 
 use Rose::Class::MakeMethods::Generic
 (
