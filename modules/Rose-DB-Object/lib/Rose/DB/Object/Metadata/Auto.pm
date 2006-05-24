@@ -14,7 +14,7 @@ our $Debug;
 
 *Debug = \$Rose::DB::Object::Metadata::Debug;
 
-our $VERSION = '0.725';
+our $VERSION = '0.726';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -854,8 +854,7 @@ package $class;
 
 use strict;
 
-use base qw(@$isa);
-$foreign_modules
+use base qw(@$isa);$foreign_modules
 
 __PACKAGE__->meta->table('@{[ $self->table ]}');
 
