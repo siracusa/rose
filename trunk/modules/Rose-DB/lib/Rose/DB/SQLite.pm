@@ -94,6 +94,10 @@ sub refine_dbi_column_info
   return;
 }
 
+#
+# Introspection
+#
+
 sub list_tables
 {
   my($self, %args) = @_;
@@ -126,6 +130,247 @@ sub list_tables
   }
 
   return wantarray ? @tables : \@tables;
+}
+
+sub primary_key_column_names
+{
+  my($self, %args) = @_;
+
+  my $table = $args{'table'} or Carp::croak "Missing table name parameter";
+
+  my($class, $col_info, $pk_columns);
+
+  eval
+  {
+    $pk_columns = ($self->_table_info($table))[1] || [];
+  };
+
+  if($@ || !@$pk_columns)
+  {
+    $@ = 'no primary key columns found'  unless(defined $@);
+    Carp::croak "Could not get primary key columns for table $table - $@";
+  }
+
+  return wantarray ? @$pk_columns : $pk_columns;
+}
+
+sub _table_info
+{
+  my($self, $table) = @_;
+
+  my $dbh = $self->dbh or Carp::croak $self->error;
+
+  my $table_unquoted = $self->unquote_table_name($table);
+
+  my $sth = $dbh->prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?");
+  my $sql;
+
+  $sth->execute($table_unquoted);
+  $sth->bind_columns(\$sql);
+  $sth->fetch;
+  $sth->finish;
+
+  return _info_from_sql($sql);
+}
+
+## Yay!  A Giant Wad o' Regexes "parser"!  Yeah, this is lame, but I really
+## don't want to load an actual parser, or even a regex lib or helper...
+
+our $Paren_Depth   = 15;
+our $Nested_Parens = '\(' . '([^()]|\(' x $Paren_Depth . '[^()]*' . '\))*' x $Paren_Depth . '\)';
+
+# This doesn't seem to work...
+#$Nested_Parens = qr{\( (?: (?> [^()]+ ) | (??{ $Nested_Parens }) )* \)}x;
+
+our $Quoted =   
+  qr{(?: ' (?: [^'] | '' )+ '
+     | " (?: [^"] | "" )+ "
+     | ` (?: [^`] | `` )+ `)}six;
+
+our $Name = qr{(?: $Quoted | \w+ )}six;
+
+our $Type = 
+  qr{\w+ (?: \s* \( \s* \d+ \s* (?: , \s* \d+ \s*)? \) )?}six;
+
+our $Conflict_Algorithm = 
+  qr{(?: ROLLBACK | ABORT | FAIL | IGNORE | REPLACE )}six;
+
+our $Conflict_Clause =
+  qr{(?: ON \s+ CONFLICT \s+ $Conflict_Algorithm )}six;
+
+our $Sort_Order = 
+  qr{(?: COLLATE \s+ \S+ \s+)? (?:ASC | DESC)}six;
+
+our $Column_Constraint = 
+  qr{(?: NOT \s+ NULL (?: \s+ $Conflict_Clause)?
+     | PRIMARY \s+ KEY (?: \s+ $Sort_Order)? (?: \s+ $Conflict_Clause)? (?: \s+ AUTOINCREMENT)? 
+     | UNIQUE (?: \s+ $Conflict_Clause)? 
+     | CHECK \s* $Nested_Parens (?: \s+ $Conflict_Clause)?
+     | REFERENCES \s+ $Name \s* \( \s* $Name \s* \)
+     | DEFAULT \s+ (?: $Name | \w+ \s* $Nested_Parens | [^,)]+ )
+     | COLLATE \s+ \S+)}six;
+
+our $Table_Constraint =
+  qr{(?: (?: PRIMARY \s+ KEY | UNIQUE | CHECK ) \s* $Nested_Parens 
+     | FOREIGN \s+ KEY \s+ (?: $Name \s+ )? $Nested_Parens \s+ REFERENCES \s+ $Name \s+ $Nested_Parens )}six;
+
+our $Column_Def =
+  qr{($Name) (?:\s+ ($Type))? ( (?: \s+ (?:CONSTRAINT \s+ $Name \s+)? $Column_Constraint )* )}six;
+
+# SQLite allows C comments to be unterminated if they're at the end of the 
+# input stream.  Crazy, but true: http://www.sqlite.org/lang_comment.html
+our $C_Comment_Cont = qr{/\*.*$}six;
+our $C_Comment      = qr{/\*[^*]*\*+(?:[^/*][^*]*\*+)*/}six;
+our $SQL_Comment    = qr{--[^\r\n]*(\r?\n)}six;
+our $Comment        = qr{($Quoted)|($C_Comment|$SQL_Comment|$C_Comment_Cont)}six;
+
+# These constants are from the DBI documentation.  Is there somewhere 
+# I can load these from?
+use constant SQL_NO_NULLS => 0;
+use constant SQL_NULLABLE => 1;
+
+sub _info_from_sql
+{
+  my $sql = shift;
+
+  my(@col_info, @pk_columns, @uk_info);
+
+  my($new_sql, $pos);
+
+  # Remove comments
+  while($sql =~ /\G((.*?)$Comment)/sgix)
+  {
+    $pos = pos($sql);
+
+    if(defined $4) # caught comment
+    {
+      no warnings 'uninitialized';
+      $new_sql .= "$2$3";
+    }
+    else
+    {
+      $new_sql .= $1;
+    }
+  }
+
+  $sql = $new_sql . substr($sql, $pos) if(defined $new_sql);
+
+  # Remove the start and end
+  $sql =~ s/^\s* CREATE \s+ (?:TEMP(?:ORARY)? \s+)? TABLE \s+ $Name \s*\(\s*//sgix;
+  $sql =~ s/\s*\)\s*$//six;
+
+  # Remove leading space from lines
+  $sql =~ s/^\s+//mg;
+
+  my $i = 1;
+
+  # Column definitions
+  while($sql =~ s/^$Column_Def (?:\s*,\s*|\s*$)//six)
+  {
+    my $col_name    = $1;
+    my $col_type    = $2 || 'scalar';
+    my $constraints = $3;
+
+    unless(defined $col_name)
+    {
+      Carp::croak "Could not extract column name from SQL: $sql";
+    }
+
+    my %col_info =
+    (
+      COLUMN_NAME      => $col_name,
+      TYPE_NAME        => $col_type,
+      ORDINAL_POSITION => $i++,
+    );
+
+    if($col_type =~ /^(\w+) \s* \( \s* (\d+) \s* \)$/x)
+    {
+      $col_info{'TYPE_NAME'}         = $1;
+      $col_info{'COLUMN_SIZE'}       = $2;
+      $col_info{'CHAR_OCTET_LENGTH'} = $2;
+    }
+    elsif($col_type =~ /^\s* (\w+) \s* \( \s* (\d+) \s* , \s* (\d+) \s* \) \s*$/x)
+    {
+      $col_info{'TYPE_NAME'}      = $1;
+      $col_info{'DECIMAL_DIGITS'} = $2;
+      $col_info{'COLUMN_SIZE'}    = $3;
+    }
+
+    while($constraints =~ s/^\s* (?:CONSTRAINT \s+ $Name \s+)? ($Column_Constraint) \s*//six)
+    {
+      local $_ = $1;
+
+      if(/^DEFAULT \s+ ( $Name | \w+ \s* $Nested_Parens | [^,)]+ )/six)
+      {
+        $col_info{'COLUMN_DEF'} = _unquote_name($1);
+      }
+      elsif(/^PRIMARY (?: \s+ KEY )? \b/six)
+      {
+        push(@pk_columns, $col_name)
+      }
+      elsif(/^\s* UNIQUE (?: \s+ KEY)? \b/six)
+      {
+        push(@uk_info, [ _unquote_name($col_name) ]);
+      }
+      elsif(/^NOT \s+ NULL \b/six)
+      {
+        $col_info{'NULLABLE'} = SQL_NO_NULLS;
+      }
+    }
+
+    $col_info{'NULLABLE'} = SQL_NULLABLE  unless(defined $col_info{'NULLABLE'});
+
+    push(@col_info, \%col_info);
+  }
+
+  while($sql =~ s/^($Table_Constraint) (?:\s*,\s*|\s*$)//six)
+  {
+    my $constraint = $1;
+
+    if($constraint =~ /^\s* PRIMARY \s+ KEY \s* ($Nested_Parens)/six)
+    {
+      @pk_columns = ();
+
+      my $columns = $1;
+      $columns =~ s/^\(\s*//;
+      $columns =~ s/\s*\)\s*$//;
+
+      while($columns =~ s/^\s* ($Name) (?:\s*,\s*|\s*$)//six)
+      {
+        push(@pk_columns, _unquote_name($1));
+      }
+    }
+    elsif($constraint =~ /^\s* UNIQUE \s* ($Nested_Parens)/six)
+    {
+      my $columns = $1;
+      $columns =~ s/^\(\s*//;
+      $columns =~ s/\s*\)\s*$//;
+
+      my @uk_columns;
+
+      while($columns =~ s/^\s* ($Name) (?:\s*,\s*|\s*$)//six)
+      {
+        push(@uk_columns, _unquote_name($1));
+      }
+
+      push(@uk_info, \@uk_columns);
+    }
+  }
+
+  return(\@col_info, \@pk_columns, \@uk_info);
+}
+
+sub _unquote_name
+{
+  my $name = shift;
+
+  if($name =~ s/^(['`"]) ( (?: [^\1]+ | \1\1 )+ ) \1 $/$2/six)
+  {
+    my $q = $1;
+    $name =~ s/$q$q/$q/g;
+  }
+
+  return $name;
 }
 
 1;

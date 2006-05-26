@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.674';
+our $VERSION = '0.68';
 
 our $Debug = 0;
 
@@ -952,17 +952,26 @@ BEGIN
   }
 }
 
+sub has_primary_key
+{
+  my($self) = shift;
+  my $columns = $self->primary_key_column_names(@_);
+  return (ref $columns && @$columns) ? 1 : 0;
+}
+
 sub primary_key_column_names
 {
   my($self, %args) = @_;
 
-  my $table = lc($args{'table'}) or Carp::croak "Missing table name parameter";
-
+  my $table   = $args{'table'} or Carp::croak "Missing table name parameter";
   my $catalog = $args{'catalog'};
   my $schema  = $args{'schema'};
-  $schema     = $self->default_implicit_schema  unless(defined $schema);
 
-  $schema  = lc $schema   
+  $schema = $self->default_implicit_schema  unless(defined $schema);
+
+  $table = lc $table  if($self->likes_lowercase_table_names);
+
+  $schema = lc $schema   
     if(defined $schema && $self->likes_lowercase_schema_names);
 
   $catalog = lc $catalog
