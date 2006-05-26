@@ -7,7 +7,7 @@ use Test::More tests => 4;
 
 BEGIN 
 {
-  use_ok('Rose::DB::Object::Metadata::Auto::SQLite');
+  use_ok('Rose::DB::SQLite');
 }
 
 my $sql =<<"EOF";
@@ -21,7 +21,7 @@ my $sql =<<"EOF";
  )
 EOF
 
-my @r = Rose::DB::Object::Metadata::Auto::SQLite::_info_from_sql($sql);
+my @r = Rose::DB::SQLite::_info_from_sql($sql);
 #print Dumper(\@r);
 
 is_deeply(\@r, 
@@ -64,7 +64,7 @@ $sql =<<"EOF";
  )
 EOF
 
-@r = Rose::DB::Object::Metadata::Auto::SQLite::_info_from_sql($sql);
+@r = Rose::DB::SQLite::_info_from_sql($sql);
 #print Dumper(\@r);
 
 is_deeply(\@r, 
@@ -127,7 +127,7 @@ blah
 
 EOF
 
-@r = Rose::DB::Object::Metadata::Auto::SQLite::_info_from_sql($sql);
+@r = Rose::DB::SQLite::_info_from_sql($sql);
 #print Dumper(\@r);
 
 is_deeply(\@r, 

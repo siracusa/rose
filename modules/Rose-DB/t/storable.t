@@ -57,8 +57,27 @@ SKIP:
   my $thawed = Storable::thaw($frozen);
 
   ok(!defined $thawed->{'dbh'}, 'check dbh');
-  ok(!defined $thawed->{'password'}, 'check password');
-  ok(ref $thawed->{'password_closure'}, 'check password closure');
+  
+  if($db->driver eq 'sqlite')
+  {
+    ok(!defined $thawed->{'password'}, 'check password');
+    ok(!defined $thawed->{'password_closure'}, 'check password closure');
+  }
+  else
+  {
+    ok(!defined $thawed->{'password'}, 'check password');
+    ok(ref $thawed->{'password_closure'}, 'check password closure');
+  }
 
   $thawed->dbh->do('DROP TABLE rose_db_storable_test');
+  $db = undef;
+}
+
+END
+{
+  if($db)
+  {
+    $db->disconnect;
+    $db->dbh->do('DROP TABLE rose_db_storable_test');
+  }
 }

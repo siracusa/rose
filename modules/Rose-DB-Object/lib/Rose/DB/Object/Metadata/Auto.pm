@@ -14,7 +14,7 @@ our $Debug;
 
 *Debug = \$Rose::DB::Object::Metadata::Debug;
 
-our $VERSION = '0.727';
+our $VERSION = '0.73';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -291,68 +291,29 @@ sub auto_retrieve_primary_key_column_names
     Carp::croak "Useless call to auto_retrieve_primary_key_column_names() in void context";
   }
 
-  my($db, $class, @columns, $catalog, $schema);
+  my $db      = $self->db;
+  my $catalog = $self->select_catalog($db);
+  my $schema  = $self->select_schema($db);
+  my $pk_columns;
 
   eval
   {
-    $class = $self->class or die "Missing class!";
-
-    $db = $self->db;
-    my $dbh = $db->dbh or die $db->error;
-
-    local $dbh->{'FetchHashKeyName'} = 'NAME';
-
-    my $table = lc $self->table;
-
-    my $table_unquoted = $db->unquote_table_name($table);
-
-    $catalog = $self->select_catalog($db);
-    $schema = $self->select_schema($db);
-    $schema = $db->default_implicit_schema  unless(defined $schema);
-
-    $schema  = lc $schema   if(defined $schema && $db->likes_lowercase_schema_names);
-    $catalog = lc $catalog  if(defined $catalog && $db->likes_lowercase_catalog_names);
-
-    my $sth = $dbh->primary_key_info($catalog, $schema, $table_unquoted);
-
-    unless(defined $sth)
-    {
-      no warnings; # undef strings okay
-      die "No primary key information found for catalog '", $catalog,
-          "' schema '", $schema, "' table '", $table, "'";
-    }
-
-    PK: while(my $pk_info = $sth->fetchrow_hashref)
-    {
-      CHECK_TABLE: # Make sure this column is from the right table
-      {
-        no warnings; # Allow undef coercion to empty string
-
-        $pk_info->{'TABLE_NAME'} = $db->unquote_table_name($pk_info->{'TABLE_NAME'});
-
-        next PK  unless($pk_info->{'TABLE_CAT'}   eq $catalog &&
-                        $pk_info->{'TABLE_SCHEM'} eq $schema &&
-                        $pk_info->{'TABLE_NAME'}  eq $table_unquoted);
-      }
-
-      unless(defined $pk_info->{'COLUMN_NAME'})
-      {
-        Carp::croak "Could not extract column name from DBI primary_key_info()";
-      }
-
-      push(@columns, $pk_info->{'COLUMN_NAME'});
-    }
+    $pk_columns = 
+      $self->db->primary_key_column_names(table   => $self->table,
+                                          catalog => $catalog,
+                                          schema  => $schema);
   };
-
-  if($@ || !@columns)
+  
+  if($@ || !@$pk_columns)
   {
     $@ = 'no primary key columns found'  unless(defined $@);
-    Carp::croak "Could not auto-retrieve primary key columns for class $class - ",
+    Carp::croak "Could not auto-retrieve primary key columns for class ",
+                $self->class, " - ",
                 ($@ || "no primary key info found for catalog '" . $catalog .
-                "' schema '" . $schema . "' table '" . lc $self->table, "'");
+                "' schema '" . $schema . "' table '" . $self->table, "'");
   }
 
-  return wantarray ? @columns : \@columns;
+  return wantarray ? @$pk_columns : $pk_columns;
 }
 
 my %Warned;
