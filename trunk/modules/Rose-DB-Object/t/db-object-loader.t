@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 16) + 3;
+use Test::More tests => 1 + (5 * 17) + 3;
 
 BEGIN 
 {
@@ -13,7 +13,7 @@ BEGIN
 our %Have;
 
 our @Tables = qw(vendors products prices colors products_colors);
-our $Include_Tables = join('|', @Tables);
+our $Include_Tables = join('|', @Tables, 'no_pk_test2?');
 
 our %Reserved_Words;
 
@@ -42,7 +42,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     unless($Have{$db_type})
     {
-      skip("$db_type tests", 16 + scalar @{$Reserved_Words{$db_type} ||= []});
+      skip("$db_type tests", 17 + scalar @{$Reserved_Words{$db_type} ||= []});
     }
   }
 
@@ -82,6 +82,15 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
       next  unless($class->isa('Rose::DB::Object'));
       $class->meta->allow_inline_column_values(1);
     }
+  }
+
+  if(defined Rose::DB->new->schema)
+  {
+    ok(!scalar(grep { /NoPk2/i } @classes), "pk classes only - $db_type");
+  }
+  else
+  {
+    ok(!scalar(grep { /NoPk\b/i } @classes), "pk classes only - $db_type");
   }
 
   my $product_class = $class_prefix . '::Product';
@@ -198,12 +207,16 @@ BEGIN
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
 
+      $dbh->do('DROP TABLE no_pk_test CASCADE');
+      $dbh->do('DROP TABLE no_pk_test2 CASCADE');
       $dbh->do('DROP TABLE products_colors CASCADE');
       $dbh->do('DROP TABLE colors CASCADE');
       $dbh->do('DROP TABLE prices CASCADE');
       $dbh->do('DROP TABLE products CASCADE');
       $dbh->do('DROP TABLE vendors CASCADE');
 
+      $dbh->do('DROP TABLE Rose_db_object_private.no_pk_test CASCADE');
+      $dbh->do('DROP TABLE Rose_db_object_private.no_pk_test2 CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.products_colors CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.colors CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.prices CASCADE');
@@ -213,6 +226,26 @@ BEGIN
       $dbh->do('DROP SCHEMA Rose_db_object_private CASCADE');
       $dbh->do('CREATE SCHEMA Rose_db_object_private');
     }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE no_pk_test
+(
+  id    SERIAL NOT NULL,
+  name  VARCHAR(255) NOT NULL,
+
+  UNIQUE(name)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE no_pk_test2
+(
+  id    SERIAL NOT NULL PRIMARY KEY,
+  name  VARCHAR(255) NOT NULL,
+
+  UNIQUE(name)
+)
+EOF
 
     $dbh->do(<<"EOF");
 CREATE TABLE vendors
@@ -274,6 +307,26 @@ CREATE TABLE products_colors
   color_id    INT NOT NULL REFERENCES colors (id),
 
   PRIMARY KEY(product_id, color_id)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE Rose_db_object_private.no_pk_test
+(
+  id    SERIAL NOT NULL PRIMARY KEY,
+  name  VARCHAR(255) NOT NULL,
+
+  UNIQUE(name)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE Rose_db_object_private.no_pk_test2
+(
+  id    SERIAL NOT NULL,
+  name  VARCHAR(255) NOT NULL,
+
+  UNIQUE(name)
 )
 EOF
 
@@ -359,6 +412,7 @@ EOF
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
 
+      $dbh->do('DROP TABLE no_pk_test CASCADE');
       $dbh->do('DROP TABLE products_colors CASCADE');
       $dbh->do('DROP TABLE colors CASCADE');
       $dbh->do('DROP TABLE prices CASCADE');
@@ -396,6 +450,16 @@ EOF
   if(!$@ && $dbh)
   {
     $Have{'mysql'} = 1;
+
+    $dbh->do(<<"EOF");
+CREATE TABLE no_pk_test
+(
+  id    INT NOT NULL,
+  name  VARCHAR(255) NOT NULL,
+
+  UNIQUE(name)
+)
+EOF
 
     $dbh->do(<<"EOF");
 CREATE TABLE products
@@ -497,12 +561,23 @@ EOF
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
 
+      $dbh->do('DROP TABLE no_pk_test CASCADE');
       $dbh->do('DROP TABLE products_colors CASCADE');
       $dbh->do('DROP TABLE colors CASCADE');
       $dbh->do('DROP TABLE prices CASCADE');
       $dbh->do('DROP TABLE products CASCADE');
       $dbh->do('DROP TABLE vendors CASCADE');
     }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE no_pk_test
+(
+  id    INT NOT NULL,
+  name  VARCHAR(255) NOT NULL,
+
+  UNIQUE(name)
+)
+EOF
 
     $dbh->do(<<"EOF");
 CREATE TABLE vendors
@@ -587,12 +662,23 @@ EOF
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
 
+      $dbh->do('DROP TABLE no_pk_test CASCADE');
       $dbh->do('DROP TABLE products_colors');
       $dbh->do('DROP TABLE colors');
       $dbh->do('DROP TABLE prices');
       $dbh->do('DROP TABLE products');
       $dbh->do('DROP TABLE vendors');
     }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE no_pk_test
+(
+  id    INT NOT NULL,
+  name  VARCHAR(255) NOT NULL,
+
+  UNIQUE(name)
+)
+EOF
 
     $dbh->do(<<"EOF");
 CREATE TABLE vendors
@@ -669,12 +755,16 @@ END
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
 
+    $dbh->do('DROP TABLE no_pk_test CASCADE');
+    $dbh->do('DROP TABLE no_pk_test2 CASCADE');
     $dbh->do('DROP TABLE products_colors CASCADE');
     $dbh->do('DROP TABLE colors CASCADE');
     $dbh->do('DROP TABLE prices CASCADE');
     $dbh->do('DROP TABLE products CASCADE');
     $dbh->do('DROP TABLE vendors CASCADE');
 
+    $dbh->do('DROP TABLE Rose_db_object_private.no_pk_test CASCADE');
+    $dbh->do('DROP TABLE Rose_db_object_private.no_pk_test2 CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_private.products_colors CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_private.colors CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_private.prices CASCADE');
@@ -692,6 +782,7 @@ END
     my $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
       or die Rose::DB->error;
 
+    $dbh->do('DROP TABLE no_pk_test CASCADE');
     $dbh->do('DROP TABLE products_colors CASCADE');
     $dbh->do('DROP TABLE colors CASCADE');
     $dbh->do('DROP TABLE prices CASCADE');
@@ -708,6 +799,7 @@ END
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
       or die Rose::DB->error;
 
+    $dbh->do('DROP TABLE no_pk_test CASCADE');
     $dbh->do('DROP TABLE products_colors CASCADE');
     $dbh->do('DROP TABLE colors CASCADE');
     $dbh->do('DROP TABLE prices CASCADE');
@@ -723,6 +815,7 @@ END
     my $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
       or die Rose::DB->error;
 
+    $dbh->do('DROP TABLE no_pk_test');
     $dbh->do('DROP TABLE products_colors');
     $dbh->do('DROP TABLE colors');
     $dbh->do('DROP TABLE prices');
