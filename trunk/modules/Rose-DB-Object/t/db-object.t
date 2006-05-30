@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 455;
+use Test::More tests => 453;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 204)  unless($HAVE_PG);
+  skip("Postgres tests", 202)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -173,12 +173,10 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
       #local $Rose::DB::Object::Debug = 1;
       ok($o->save, "save() 3 - $db_type");
 
-      $o = MyPgObject->new(id => $o->id)->load;
-      ok($o->password_is('foobar'), "chkpass() 5 - $db_type");
-      
+      $o = MyPgObject->new(id => $o->id)->load;      
       $o->code('C2');
       $o->save;
-      
+
       $o = MyPgObject->new(id => $o->id)->load;
       ok($o->password_is('foobar'), "chkpass() 6 - $db_type");
     }
