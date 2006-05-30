@@ -16,7 +16,7 @@ use Rose::DB::Object::Metadata::Util qw(perl_hashref);
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.721';
+our $VERSION = '0.73';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -709,6 +709,9 @@ sub make_classes
     local $_ = $table;
     next  unless(!$filter || $filter->($table));
 
+    # Skip tables with no primary keys
+    next  unless($db->has_primary_key($table));
+
     my $obj_class = $class_prefix . $cm->table_to_class($table);
 
     # Set up the class
@@ -995,13 +998,9 @@ Get or set the L<schema|Rose::DB/schema> for the database connection.
 
 Get or set the L<username|Rose::DB/username> used to connect to the database.
 
-=item B<include_tables REGEX>
-
-Table names that do not match REGEX will be skipped by default during calls to the L<make_classes|/make_classes> method.
-
 =item B<exclude_tables REGEX>
 
-Table names that match REGEX will be skipped during calls to the L<make_classes|/make_classes> method.
+Table names that match REGEX will be skipped during calls to the L<make_classes|/make_classes> method.  Tables without primary keys are automatically skipped.
 
 =item B<filter_tables CODEREF>
 
@@ -1013,13 +1012,17 @@ This attribute should not be combined with the L<exclude_tables|/exclude_tables>
 
 Given the name of a L<Rose::DB::Object>-derived class, returns a class name for a L<Rose::DB::Object::Manager>-derived class to manage such objects.  The default implementation calls the L<auto_manager_class_name|Rose::DB::Object::ConventionManager/auto_manager_class_name> method on the L<convention_manager|/convention_manager> object.
 
+=item B<include_tables REGEX>
+
+Table names that do not match REGEX will be skipped by default during calls to the L<make_classes|/make_classes> method.  Tables without primary keys are automatically (and always) skipped.
+
 =item B<include_views BOOL>
 
 If true, database views will also be processed by default during calls to the L<make_classes|/make_classes> method.  Defaults to false.
 
 =item B<make_classes [PARAMS]>
 
-Automatically create L<Rose::DB::Object> and (optionally) L<Rose::DB::Object::Manager> subclasses for some or all of the tables in a database.  The process is controlled by the object attributes described above.  Optional name/value pairs passed to this method may override some of those values.  Valid PARAMS are:
+Automatically create L<Rose::DB::Object> and (optionally) L<Rose::DB::Object::Manager> subclasses for some or all of the tables in a database.  The class creation process is controlled by the loader object's attributes.  Optional name/value pairs passed to this method may override some of those values.  Valid PARAMS are:
 
 =over 4
 
@@ -1033,17 +1036,17 @@ The name of the L<Rose::DB>-derived class used to construct a L<db|/db> object i
 
 =item B<include_tables REGEX>
 
-Table names that do not match REGEX will be skipped.  Defaults to the value of the loader object's L<include_tables|/include_tables> attribute.
+Table names that do not match REGEX will be skipped.  Defaults to the value of the loader object's L<include_tables|/include_tables> attribute.  Tables without primary keys are automatically (and always) skipped.
 
 =item B<exclude_tables REGEX>
 
-Table names that match REGEX will be skipped.  Defaults to the value of the loader object's L<exclude_tables|/exclude_tables> attribute.
+Table names that match REGEX will be skipped.  Defaults to the value of the loader object's L<exclude_tables|/exclude_tables> attribute.  Tables without primary keys are automatically skipped.
 
 =item B<filter_tables CODEREF>
 
 A reference to a subroutine that takes a single table name argument and returns true if the table should be processed, false if it should be skipped.  The C<$_> variable will also be set to the table name before the call.  This parameter cannot be combined with the C<exclude_tables> or C<include_tables> options.
 
-Defaults to the value of the loader object's L<filter_tables|/filter_tables> attribute, provided that both the C<exclude_tables> and C<include_tables> values are undefined.
+Defaults to the value of the loader object's L<filter_tables|/filter_tables> attribute, provided that both the C<exclude_tables> and C<include_tables> values are undefined.  Tables without primary keys are automatically skipped.
 
 =item B<include_views BOOL>
 
@@ -1051,7 +1054,7 @@ If true, database views will also be processed.  Defaults to the value of the lo
 
 =item B<pre_init_hook [ CODEREF | ARRAYREF ]>
 
-A reference to a subroutine or a reference to an array of code references that will be called just before each L<Rose::DB::Object>-derived class is L<initialize|Rose::DB::Object::Metadata/initialize>ed.  Each referenced subroutine will be passed the class's L<metdata|Rose::DB::Object::Metadata> object plus any arguments to the L<initialize|Rose::DB::Object::Metadata/initialize> method.  Defaults to the value of the loader object's L<pre_init_hook|/pre_init_hook> attribute.
+A reference to a subroutine or a reference to an array of code references that will be called just before each L<Rose::DB::Object>-derived class is L<initialize|Rose::DB::Object::Metadata/initialize>ed.  Each referenced subroutine will be passed the class's L<metadata|Rose::DB::Object::Metadata> object plus any arguments to the L<initialize|Rose::DB::Object::Metadata/initialize> method.  Defaults to the value of the loader object's L<pre_init_hook|/pre_init_hook> attribute.
 
 =item B<with_foreign_keys BOOL>
 
