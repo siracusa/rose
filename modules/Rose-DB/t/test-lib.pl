@@ -307,6 +307,8 @@ My::DBReg->register_db(
   host     => 'subhost',
   username => 'subuser');
 
+package main;
+
 my %Have_DB;
 
 sub get_dbh

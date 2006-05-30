@@ -9,7 +9,7 @@ use DateTime::Format::MySQL;
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.67';
+our $VERSION = '0.68';
 
 our $Debug = 0;
 
@@ -200,6 +200,37 @@ sub refine_dbi_column_info
 }
 
 sub likes_redundant_join_conditions { 1 }
+
+#
+# Introspection
+#
+
+sub _get_primary_key_column_names
+{
+  my($self, $catalog, $schema, $table) = @_;
+
+  my $dbh = $self->dbh or die $self->error;
+
+  local $dbh->{'FetchHashKeyName'} = 'NAME';
+
+  my $fq_table =
+    join('.', grep { defined } ($catalog, $schema, 
+                                $self->quote_table_name($table)));
+
+  my $sth = $dbh->prepare("SHOW INDEX FROM $fq_table");
+  $sth->execute;
+
+  my @columns;
+
+  while(my $row = $sth->fetchrow_hashref)
+  {
+    next  unless($row->{'Key_name'} eq 'PRIMARY');
+    push(@columns, $row->{'Column_name'});
+  }
+
+  return \@columns;
+}
+
 
 1;
 
