@@ -989,7 +989,7 @@ sub primary_key_column_names
       $self->_get_primary_key_column_names($catalog, $schema, $table_unquoted);
   };
 
-  if($@ || !$columns || !@$columns)
+  if($@ || !$columns)
   {
     no warnings 'uninitialized'; # undef strings okay
     $@ = 'no primary key columns found'  unless(defined $@);
@@ -1014,8 +1014,9 @@ sub _get_primary_key_column_names
   unless(defined $sth)
   {
     no warnings 'uninitialized'; # undef strings okay
-    die "No primary key information found for catalog '", $catalog,
-        "' schema '", $schema, "' table '", $table, "'";
+    $self->error("No primary key information found for catalog '", $catalog,
+                 "' schema '", $schema, "' table '", $table, "'");
+    return [];
   }
 
   my @columns;
@@ -2265,6 +2266,12 @@ Execute arbitrary code within a single transaction, rolling back if any of the c
 
 Get or set the error message associated with the last failure.  If a method fails, check this attribute to get the reason for the failure in the form of a text message.
 
+=item B<has_primary_key [ TABLE | PARAMS ]>
+
+Returns true if the specified table has a primary key (as determined by the L<primary_key_column_names|/primary_key_column_names> method), false otherwise.  
+
+The arguments are the same as those for the L<primary_key_column_names|/primary_key_column_names> method: either a table name or name/value pairs specifying C<table> and (optionally) C<catalog> and C<schema>.  See the documentation for the L<primary_key_column_names|/primary_key_column_names> for more information.
+
 =item B<init_db_info>
 
 Initialize data source configuration information based on the current values of the L<type|/type> and L<domain|/domain> attributes by pulling data from the corresponding registry entry.  If there is no registered data source for the current L<type|/type> and L<domain|/domain>, a fatal error will occur.  L<init_db_info|/init_db_info> is called as part of the L<new|/new> and L<connect|/connect> methods.
@@ -2455,6 +2462,30 @@ The SQL statements are run in the order that they are supplied in STATEMENTS.  I
 Get or set the SQL statements that will be run immediately after connecting to the database.  STATEMENTS should be a list or reference to an array of SQL statements.  Returns a reference to the array of SQL statements in scalar context, or a list of SQL statements in list context.
 
 The SQL statements are run in the order that they are supplied in STATEMENTS.  If any L<post_connect_sql|/post_connect_sql> statement fails when executed, the subsequent statements are ignored.
+
+=item B<primary_key_column_names [ TABLE | PARAMS ]>
+
+Returns a list (in list context) or reference to an array (in scalar context) of the names of the columns that make up the primary key for the specified table.  If the table has no primary key, an empty list (in list context) or reference to an empty array (in scalar context) will be returned.
+
+The table may be specified in two ways.  If one argument is passed, it is taken as the name of the table.  Otherwise, name/value pairs are expected.  Valid parameter names are:
+
+=over 4
+
+=item C<catalog>
+
+The name of the catalog that contains the table.  This parameter is optional.
+
+=item C<schema>
+
+The name of the schema that contains the table.  This parameter is optional.
+
+=item C<table>
+
+The name of the table.  This parameter is required.
+
+=back
+
+Case-sensitivity of names is determined by the underlying database.  If your database is case-sensitive, then you must pass names to this method with the expected case.
 
 =item B<print_error [VALUE]>
 
