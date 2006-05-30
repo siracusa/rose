@@ -8,7 +8,7 @@ use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
 use Rose::DB::Object::Constants qw(STATE_SAVING);
-     
+
 use constant SALT_CHARS => './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
 sub chkpass

@@ -1,4 +1,4 @@
-0.68 (05.26.2006) - John Siracusa <siracusa@mindspring.com>
+0.68 (05.30.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added primary_key_column_names() and has_primary_key() methods.
     * Added Storable hooks.

@@ -1,4 +1,4 @@
-0.73 (05.29.2006) - John Siracusa <siracusa@mindspring.com>
+0.73 (05.30.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Moved some database introspection code to a new version of Rose::DB, 
       which this version of Rose::DB::Object now requires.
@@ -12,7 +12,7 @@
       (Reported by Ethan Rowe)
     * Fixed a bug that caused false boolean values to be ignored when an
       object was loaded, modified, and then saved.  (Patch by Cees Hek)
-      
+
 0.726 (05.17.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed incorrect skip count in t/spot-check-07.t

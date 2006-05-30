@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.725';
+our $VERSION = '0.73';
 
 # syscolumns.coltype constants taken from:
 #
@@ -435,114 +435,6 @@ EOF
   $self->auto_alias_columns(values %columns);
 
   return wantarray ? values %columns : \%columns;
-}
-
-sub auto_retrieve_primary_key_column_names
-{
-  my($self) = shift;
-
-  unless(defined wantarray)
-  {
-    Carp::croak "Useless call to auto_retrieve_primary_key_column_names() in void context";
-  }
-
-  my($class, @columns);
-
-  eval
-  {
-    require DBD::Informix::Metadata;
-
-    $class = $self->class or die "Missing class!";
-
-    my $db  = $self->db;
-    my $dbh = $db->dbh or die $db->error;
-
-    local $dbh->{'FetchHashKeyName'} = 'NAME';
-
-    # We need the table owner.  Asking for column information is the only
-    # way I know of to reliably get this information.
-    #
-    # Informix does not support DBI's column_info() method so we have
-    # to get all that into "the hard way."
-    #
-    # Each item in @col_list is a reference to an array of values:
-    #
-    #   0     owner name
-    #   1     table name
-    #   2     column number
-    #   3     column name
-    #   4     data type (encoded)
-    #   5     data length (encoded)
-    #
-    my @col_list = DBD::Informix::Metadata::ix_columns($dbh, lc $self->table);
-
-    my $owner = $col_list[0][0];
-    my $table = $col_list[0][1]; # just in case...
-
-    unless(defined $owner)
-    {
-      die "Could not find owner for table ", $self->table;
-    }
-
-    # Then comes this monster query to get the primary key column names.
-    # I'd love to know a better/easier way to do this...
-    my $pk_sth = $dbh->prepare(<<'EOF');
-SELECT 
-  col.colname
-FROM
-  informix.sysconstraints con, 
-  informix.systables      tab,
-  informix.sysindexes     idx,
-  informix.syscolumns     col
-WHERE
-   constrtype  = 'P'       AND 
-   con.tabid   = tab.tabid AND
-   con.tabid   = idx.tabid AND
-   con.tabid   = col.tabid AND
-   con.idxname = idx.idxname
-   AND 
-   (
-     col.colno = idx.part1  OR
-     col.colno = idx.part2  OR
-     col.colno = idx.part3  OR
-     col.colno = idx.part4  OR
-     col.colno = idx.part5  OR
-     col.colno = idx.part6  OR
-     col.colno = idx.part7  OR
-     col.colno = idx.part8  OR
-     col.colno = idx.part9  OR
-     col.colno = idx.part10 OR
-     col.colno = idx.part11 OR
-     col.colno = idx.part12 OR
-     col.colno = idx.part13 OR
-     col.colno = idx.part14 OR
-     col.colno = idx.part15 OR
-     col.colno = idx.part16
-   )
-    AND
-    tab.tabname = ? AND
-    tab.owner   = ?
-EOF
-
-    $pk_sth->execute($table, $owner);
-
-    my $column;
-
-    $pk_sth->bind_columns(\$column);    
-
-    while($pk_sth->fetch)
-    {
-      push(@columns, $column);
-    }
-  };
-
-  if($@ || !@columns)
-  {
-    $@ = 'no primary key columns found'  unless(defined $@);
-    Carp::croak "Could not auto-retrieve primary key columns for class $class - $@";
-  }
-
-  return wantarray ? @columns : \@columns;
 }
 
 sub auto_generate_unique_keys

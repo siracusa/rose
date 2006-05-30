@@ -303,7 +303,7 @@ sub auto_retrieve_primary_key_column_names
                                           catalog => $catalog,
                                           schema  => $schema);
   };
-  
+
   if($@ || !@$pk_columns)
   {
     $@ = 'no primary key columns found'  unless(defined $@);
