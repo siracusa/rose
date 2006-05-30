@@ -428,6 +428,10 @@ sub format_limit_with_offset
   return @_ > 2 ? "SKIP $_[2] FIRST $_[1]" : "FIRST $_[1]";
 }
 
+#
+# Introspection
+#
+
 sub list_tables
 {
   my($self, %args) = @_;
@@ -479,6 +483,95 @@ sub list_tables
   }
 
   return wantarray ? @tables : \@tables;
+}
+
+sub _get_primary_key_column_names
+{
+  my($self, $catalog, $schema, $table_arg) = @_;
+
+  require DBD::Informix::Metadata;
+
+  my $dbh = $self->dbh or die $self->error;
+
+  local $dbh->{'FetchHashKeyName'} = 'NAME';
+
+  # We need the table owner.  Asking for column information is the only
+  # way I know of to reliably get this information.
+  #
+  # Informix does not support DBI's column_info() method so we have
+  # to get all that into "the hard way."
+  #
+  # Each item in @col_list is a reference to an array of values:
+  #
+  #   0     owner name
+  #   1     table name
+  #   2     column number
+  #   3     column name
+  #   4     data type (encoded)
+  #   5     data length (encoded)
+  #
+  my @col_list = DBD::Informix::Metadata::ix_columns($dbh, $table_arg);
+
+  my $owner = $col_list[0][0];
+  my $table = $col_list[0][1]; # just in case...
+
+  unless(defined $owner)
+  {
+    die "Could not find owner for table ", $table;
+  }
+
+  # Then comes this monster query to get the primary key column names.
+  # I'd love to know a better/easier way to do this...
+  my $pk_sth = $dbh->prepare(<<'EOF');
+SELECT 
+col.colname
+FROM
+informix.sysconstraints con, 
+informix.systables      tab,
+informix.sysindexes     idx,
+informix.syscolumns     col
+WHERE
+ constrtype  = 'P'       AND 
+ con.tabid   = tab.tabid AND
+ con.tabid   = idx.tabid AND
+ con.tabid   = col.tabid AND
+ con.idxname = idx.idxname
+ AND 
+ (
+   col.colno = idx.part1  OR
+   col.colno = idx.part2  OR
+   col.colno = idx.part3  OR
+   col.colno = idx.part4  OR
+   col.colno = idx.part5  OR
+   col.colno = idx.part6  OR
+   col.colno = idx.part7  OR
+   col.colno = idx.part8  OR
+   col.colno = idx.part9  OR
+   col.colno = idx.part10 OR
+   col.colno = idx.part11 OR
+   col.colno = idx.part12 OR
+   col.colno = idx.part13 OR
+   col.colno = idx.part14 OR
+   col.colno = idx.part15 OR
+   col.colno = idx.part16
+ )
+  AND
+  tab.tabname = ? AND
+  tab.owner   = ?
+EOF
+
+  $pk_sth->execute($table, $owner);
+
+  my(@columns, $column);
+
+  $pk_sth->bind_columns(\$column);
+
+  while($pk_sth->fetch)
+  {
+    push(@columns, $column);
+  }
+
+  return \@columns;
 }
 
 1;

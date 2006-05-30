@@ -7,7 +7,7 @@ use Carp();
 use Rose::DB;
 our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.53';
+our $VERSION = '0.68';
 
 #our $Debug = 0;
 
@@ -132,26 +132,11 @@ sub list_tables
   return wantarray ? @tables : \@tables;
 }
 
-sub primary_key_column_names
+sub _get_primary_key_column_names
 {
-  my($self, %args) = @_;
-
-  my $table = $args{'table'} or Carp::croak "Missing table name parameter";
-
-  my($class, $col_info, $pk_columns);
-
-  eval
-  {
-    $pk_columns = ($self->_table_info($table))[1] || [];
-  };
-
-  if($@ || !@$pk_columns)
-  {
-    $@ = 'no primary key columns found'  unless(defined $@);
-    Carp::croak "Could not get primary key columns for table $table - $@";
-  }
-
-  return wantarray ? @$pk_columns : $pk_columns;
+  my($self, $catalog, $schema, $table) = @_;
+  my $pk_columns = ($self->_table_info($table))[1] || [];
+  return $pk_columns;
 }
 
 sub _table_info
