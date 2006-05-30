@@ -966,8 +966,8 @@ sub primary_key_column_names
   my %args = @_ == 1 ? (table => @_) : @_;
 
   my $table   = $args{'table'} or Carp::croak "Missing table name parameter";
-  my $catalog = $args{'catalog'};
-  my $schema  = $args{'schema'};
+  my $catalog = $args{'catalog'} || $self->catalog;
+  my $schema  = $args{'schema'}  || $self->schema;
 
   $schema = $self->default_implicit_schema  unless(defined $schema);
 
@@ -2270,7 +2270,7 @@ Get or set the error message associated with the last failure.  If a method fail
 
 Returns true if the specified table has a primary key (as determined by the L<primary_key_column_names|/primary_key_column_names> method), false otherwise.  
 
-The arguments are the same as those for the L<primary_key_column_names|/primary_key_column_names> method: either a table name or name/value pairs specifying C<table> and (optionally) C<catalog> and C<schema>.  See the documentation for the L<primary_key_column_names|/primary_key_column_names> for more information.
+The arguments are the same as those for the L<primary_key_column_names|/primary_key_column_names> method: either a table name or name/value pairs specifying C<table>, C<catalog>, and C<schema>.  The  C<catalog> and C<schema> parameters are optional and default to the return values of the L<catalog|/catalog> and L<schema|/schema> methods, respectively.  See the documentation for the L<primary_key_column_names|/primary_key_column_names> for more information.
 
 =item B<init_db_info>
 
@@ -2473,11 +2473,11 @@ The table may be specified in two ways.  If one argument is passed, it is taken 
 
 =item C<catalog>
 
-The name of the catalog that contains the table.  This parameter is optional.
+The name of the catalog that contains the table.  This parameter is optional and defaults to the return value of the L<catalog|/catalog> method.
 
 =item C<schema>
 
-The name of the schema that contains the table.  This parameter is optional.
+The name of the schema that contains the table.  This parameter is optional and defaults to the return value of the L<schema|/schema> method.
 
 =item C<table>
 
