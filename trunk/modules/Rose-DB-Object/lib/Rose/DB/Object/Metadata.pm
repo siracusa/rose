@@ -58,6 +58,7 @@ use Rose::Object::MakeMethods::Generic
     was_auto_initialized       => { default => 0 },
     initialized_foreign_keys   => { default => 0 },
     default_load_speculative   => { default => 0 },
+    auto_load_related_classes  => { default => 0 },
   ],
 
   array =>
@@ -336,6 +337,67 @@ sub handle_error
   {
     Carp::croak "(Invalid error mode set: '$mode') - ", $object->error;
   }
+
+  return 1;
+}
+
+sub setup
+{
+  my($self) = shift;
+
+  return 1  if($self->is_initialized);
+
+  my $init_args = [];
+  my $auto_load;
+
+  PAIR: while(@_)
+  {
+    my $method = shift;
+    my $args   = shift;
+
+    unless($self->can($method))
+    {
+      Carp::croak "Invalid parameter name: '$method'";
+    }
+
+    if($method eq 'initialize')
+    {
+      $init_args = ref $args ? $args : [ $args ];
+      next PAIR;
+    }
+    elsif($method eq 'auto_load_related_classes')
+    {
+      $auto_load = $args;
+    }
+
+    if(ref $args)
+    {
+      if(ref $args ne 'ARRAY')
+      {
+        Carp::croak "Multiple values for the '$method' parameter must be ",
+                    "passed in a reference to an array";
+      }
+
+      # Special case for methods that accept a single array reference
+      # containing only non-reference values
+      if(($method eq 'unique_key' || $method eq 'add_unique_key') && 
+         !grep { ref } @$args)
+      {
+        $self->$method($args);
+      }
+      else
+      {
+        $self->$method(@$args);
+      }
+    }
+    else
+    {
+      $self->$method($args);
+    }
+  }
+
+  $self->auto_load_related_classes(1)  unless(defined $auto_load);
+  $self->initialize(@$init_args);
 
   return 1;
 }
@@ -1583,6 +1645,16 @@ sub make_foreign_key_methods
       $foreign_key->method_name($type => $method);
     }
 
+    if($self->auto_load_related_classes && (my $fclass = $foreign_key->class))
+    {
+      unless($fclass->isa('Rose::DB::Object'))
+      {
+        eval "require $fclass";
+        $Debug && print STDERR "FK REQUIRES $fclass - $@\n";
+      }
+      # Ignore errors to allow deferment system to work
+    }
+
     # We may need to defer the creation of some foreign key methods until
     # all the required pieces are loaded.
     if($foreign_key->is_ready_to_make_methods)
@@ -1874,6 +1946,35 @@ sub make_relationship_methods
       }
     }
 
+    if($self->auto_load_related_classes)
+    {
+      if($relationship->can('class'))
+      {
+        my $fclass = $relationship->class;
+
+        unless($fclass->isa('Rose::DB::Object'))
+        {
+          eval "require $fclass";
+          $Debug && print STDERR "REL ",  $relationship->name, 
+                                 " REQUIRES $fclass - $@\n";
+        }
+        # Ignore errors to allow deferment system to work
+      }
+
+      if($relationship->can('map_class'))
+      {
+        my $map_class = $relationship->map_class;
+
+        unless($map_class->isa('Rose::DB::Object'))
+        {
+          eval "require $map_class";
+          $Debug && print STDERR "REL ",  $relationship->name, 
+                                 " REQUIRES $map_class - $@\n";
+        }
+        # Ignore errors to allow deferment system to work
+      }
+    }
+
     # We may need to defer the creation of some relationship methods until
     # all the required pieces are loaded.
     if($relationship->is_ready_to_make_methods)
@@ -1970,9 +2071,9 @@ sub retry_deferred_relationships
     # Try to rebuild the relationship using the convention manager, since
     # new info may be available now.  Otherwise, leave it as-is.
     my $rebuild_rel = 
-         $self->convention_manager->auto_relationship(
-           $relationship->name, ref $relationship, 
-           scalar $relationship->spec_hash);
+      $self->convention_manager->auto_relationship(
+        $relationship->name, ref $relationship, 
+          scalar $relationship->spec_hash);
 
     if($rebuild_rel)
     {
