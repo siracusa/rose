@@ -2,11 +2,13 @@ package Rose::DB::Object::MakeMethods::Pg;
 
 use strict;
 
-our $VERSION = '0.03';
+our $VERSION = '0.73';
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
+use Rose::DB::Object::Constants qw(STATE_SAVING);
+     
 use constant SALT_CHARS => './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
 sub chkpass
@@ -16,13 +18,13 @@ sub chkpass
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
 
+  my $encrypted = $name . ($args->{'encrypted_suffix'} || '_encrypted');
+  my $cmp       = $name . ($args->{'cmp_suffix'} || '_is');
+
   my %methods;
 
   if($interface eq 'get_set')
   {
-    my $encrypted = $name . ($args->{'encrypted_suffix'} || '_encrypted');
-    my $cmp       = $name . ($args->{'cmp_suffix'} || '_is');
-
     $methods{$name} = sub
     {
       my($self) = shift;
@@ -46,6 +48,11 @@ sub chkpass
         }
 
         return $self->{$encrypted} = $self->{$key} = undef;
+      }
+
+      if($self->{STATE_SAVING()})
+      {
+        return $self->{$encrypted};
       }
 
       return $self->{$key};
@@ -104,7 +111,17 @@ sub chkpass
   }
   elsif($interface eq 'get')
   {
-    $methods{$name} = sub { shift->{$key} };
+    $methods{$name} = sub 
+    {
+      my($self) = shift;
+
+      if($self->{STATE_SAVING()})
+      {
+        return $self->{$encrypted};
+      }
+
+      return $self->{$key};
+    };
   }
   elsif($interface eq 'set')
   {

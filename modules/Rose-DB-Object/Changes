@@ -1,7 +1,9 @@
-0.73 (05.26.2006) - John Siracusa <siracusa@mindspring.com>
+0.73 (05.29.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Moved some database introspection code to a new version of Rose::DB, 
       which this version of Rose::DB::Object now requires.
+    * Fixed a bu that caused chkpass columns to be erased after soem save()s.
+      (Reported by Cees Hek)
 
 0.727 (05.24.2006) - John Siracusa <siracusa@mindspring.com>
 
