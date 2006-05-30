@@ -148,7 +148,7 @@ EOF
     MyTmpPgObject->meta->table('Rose_db_object_test');
 
     MyTmpPgObject->meta->auto_initialize;
-    
+
     my $code = MyTmpPgObject->meta->perl_class_definition;
     $code =~ s/\bMyTmpPgObject\b/MyPgObject/g;
 

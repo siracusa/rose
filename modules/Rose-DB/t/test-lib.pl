@@ -311,10 +311,22 @@ package main;
 
 my %Have_DB;
 
+sub get_db
+{
+  my($type) = shift;
+
+  if((defined $Have_DB{$type} && !$Have_DB{$type}) || !get_dbh($type))
+  {
+    return undef;
+  }
+
+  return Rose::DB->new($type);
+}
+
 sub get_dbh
 {
   my($type) = shift;
-  
+
   my $dbh;
 
   eval 
