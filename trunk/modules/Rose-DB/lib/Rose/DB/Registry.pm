@@ -93,13 +93,13 @@ sub add_entries
       $entry->type($type);
     }
 
-    Carp::croak "Missing domain for registry entry '$item'"
+    Carp::croak "$parent - Missing domain for registry entry: domain '$domain', type '$type'"
       unless(defined $domain);
 
-    Carp::croak "Missing type for registry entry '$item'"
+    Carp::croak "$parent - Missing type for registry entry: domain '$domain', type '$type'"
       unless(defined $type);
 
-    Carp::croak "Missing driver for registry entry '$item'"
+    Carp::croak "$parent - Missing driver for registry entry: domain '$domain', type '$type'"
       unless(defined $entry->driver);
 
     $i++  unless(defined $entries->{$domain}{$type});
