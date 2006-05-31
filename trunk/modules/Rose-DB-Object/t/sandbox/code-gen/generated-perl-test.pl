@@ -29,6 +29,9 @@ $c = My::Color->new(name => 'red')->load;
 
 print $c->name, ': ', $c->code, "\n";
 
+#My::Product->meta->auto_load_related_classes(0);
+#print My::Product->meta->perl_class_definition(braces => 'bsd', indent => 2);
+
 __END__
 
 DROP TABLE product_colors CASCADE;

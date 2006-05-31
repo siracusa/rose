@@ -340,7 +340,20 @@ sub _perl_class
 {
   my($class, $info, $args) = @_;
 
+  my $auto_load = $args->{'auto_load_related_classes'};
+  my $old_auto_load = $class->meta->auto_load_related_classes;
+
+  if(defined $auto_load)
+  {
+    $class->meta->auto_load_related_classes($auto_load);
+  }
+      
   my $code = $class->meta->perl_class_definition(%$args);
+
+  if(defined $auto_load)
+  {
+    $class->meta->auto_load_related_classes($old_auto_load);
+  }
 
   if(!$info->{'init_db_in_base_class'} && $info->{'perl_init_db'})
   {

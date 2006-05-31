@@ -935,7 +935,7 @@ sub perl_class_definition
 
   my $foreign_modules = '';
 
-  if(%use)
+  if(%use && !$self->auto_load_related_classes)
   {
     $foreign_modules = "\n\n" . join("\n", map { "use $_;"} sort keys %use);
   }
@@ -987,7 +987,7 @@ package $class;
 
 use strict;
 
-use base qw(@$isa);
+use base qw(@$isa);$foreign_modules
 
 $setup_start
 @{[join("\n\n", grep { /\S/ } $self->perl_table_definition(%args),
