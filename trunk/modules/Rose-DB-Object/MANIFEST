@@ -149,6 +149,7 @@ t/lib/My/DB/Object.pm
 t/lib/My/DB/Unigene/Main.pm
 t/makemethods-db.t
 t/makemethods.t
+t/make-modules.t
 t/multi-pk-sequences.t
 t/pod.t
 t/sandbox/code-gen/generated-perl-test.pl

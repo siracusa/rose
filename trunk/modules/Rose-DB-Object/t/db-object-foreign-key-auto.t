@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 257;
+use Test::More tests => 261;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL_WITH_INNODB, $HAVE_INFORMIX,
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 72)  unless($HAVE_PG);
+  skip("Postgres tests", 74)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -348,6 +348,77 @@ __PACKAGE__->meta->initialize;
 1;
 EOF
 
+  $chkpass = $PG_HAS_CHKPASS ? "        password      => { type => 'chkpass' },\n" : '';
+
+  is(MyPgObject->meta->perl_class_definition,
+     <<"EOF", "perl_class_definition 1 - $db_type");
+package MyPgObject;
+
+use strict;
+
+use base qw(Rose::DB::Object);
+
+__PACKAGE__->meta->setup(
+    table   => 'Rose_db_object_test',
+
+    columns => [
+        id            => { type => 'serial', not_null => 1 },
+$chkpass        name          => { type => 'varchar', length => 32, not_null => 1 },
+        flag          => { type => 'boolean', default => 'true', not_null => 1 },
+        flag2         => { type => 'boolean' },
+        status        => { type => 'varchar', default => 'active', length => 32 },
+        bits          => { type => 'bitfield', bits => 5, default => '00101', not_null => 1 },
+        start         => { type => 'date', default => '1980-12-24' },
+        save          => { type => 'integer', alias => 'save_col' },
+        nums          => { type => 'array' },
+        fk1           => { type => 'integer', alias => 'fkone' },
+        fk2           => { type => 'integer' },
+        fk3           => { type => 'integer' },
+        fother_id2    => { type => 'integer' },
+        fother_id3    => { type => 'integer' },
+        fother_id4    => { type => 'integer' },
+        last_modified => { type => 'timestamp' },
+        date_created  => { type => 'timestamp' },
+    ],
+
+    primary_key_columns => [ 'id' ],
+
+    foreign_keys => [
+        fother => {
+            class => 'MyPgOtherObject2',
+            key_columns => {
+                fother_id2 => 'id2',
+            },
+        },
+    
+        fother2 => {
+            class => 'MyPgOtherObject3',
+            key_columns => {
+                fother_id3 => 'id3',
+            },
+        },
+    
+        fother3 => {
+            class => 'MyPgOtherObject4',
+            key_columns => {
+                fother_id4 => 'id4',
+            },
+        },
+    
+        my_pg_other_object => {
+            class => 'MyPgOtherObject',
+            key_columns => {
+                fk1 => 'k1',
+                fk2 => 'k2',
+                fk3 => 'k3',
+            },
+        },
+    ],
+);
+
+1;
+EOF
+
   $chkpass = $PG_HAS_CHKPASS ? "  password      => { type => 'chkpass' },\n" : '';
 
   MyPgObject->meta->auto_load_related_classes(0);
@@ -432,6 +503,82 @@ __PACKAGE__->meta->foreign_keys
 );
 
 __PACKAGE__->meta->initialize;
+
+1;
+EOF
+
+  $chkpass = $PG_HAS_CHKPASS ? "        password      => { type => 'chkpass' },\n" : '';
+
+  is(MyPgObject->meta->perl_class_definition,
+     <<"EOF", "perl_class_definition 2 - $db_type");
+package MyPgObject;
+
+use strict;
+
+use base qw(Rose::DB::Object);
+
+use MyPgOtherObject;
+use MyPgOtherObject2;
+use MyPgOtherObject3;
+use MyPgOtherObject4;
+
+__PACKAGE__->meta->setup(
+    table   => 'Rose_db_object_test',
+
+    columns => [
+        id            => { type => 'serial', not_null => 1 },
+$chkpass        name          => { type => 'varchar', length => 32, not_null => 1 },
+        flag          => { type => 'boolean', default => 'true', not_null => 1 },
+        flag2         => { type => 'boolean' },
+        status        => { type => 'varchar', default => 'active', length => 32 },
+        bits          => { type => 'bitfield', bits => 5, default => '00101', not_null => 1 },
+        start         => { type => 'date', default => '1980-12-24' },
+        save          => { type => 'integer', alias => 'save_col' },
+        nums          => { type => 'array' },
+        fk1           => { type => 'integer', alias => 'fkone' },
+        fk2           => { type => 'integer' },
+        fk3           => { type => 'integer' },
+        fother_id2    => { type => 'integer' },
+        fother_id3    => { type => 'integer' },
+        fother_id4    => { type => 'integer' },
+        last_modified => { type => 'timestamp' },
+        date_created  => { type => 'timestamp' },
+    ],
+
+    primary_key_columns => [ 'id' ],
+
+    foreign_keys => [
+        fother => {
+            class => 'MyPgOtherObject2',
+            key_columns => {
+                fother_id2 => 'id2',
+            },
+        },
+    
+        fother2 => {
+            class => 'MyPgOtherObject3',
+            key_columns => {
+                fother_id3 => 'id3',
+            },
+        },
+    
+        fother3 => {
+            class => 'MyPgOtherObject4',
+            key_columns => {
+                fother_id4 => 'id4',
+            },
+        },
+    
+        my_pg_other_object => {
+            class => 'MyPgOtherObject',
+            key_columns => {
+                fk1 => 'k1',
+                fk2 => 'k2',
+                fk3 => 'k3',
+            },
+        },
+    ],
+);
 
 1;
 EOF
@@ -1193,7 +1340,7 @@ EOF
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 65)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 67)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -1485,6 +1632,75 @@ __PACKAGE__->meta->initialize;
 1;
 EOF
 
+  is(MySQLiteObject->meta->perl_class_definition,
+     <<'EOF', "perl_class_definition 1 - $db_type");
+package MySQLiteObject;
+
+use strict;
+
+use base qw(Rose::DB::Object);
+
+__PACKAGE__->meta->setup(
+    table   => 'Rose_db_object_test',
+
+    columns => [
+        id            => { type => 'integer', not_null => 1 },
+        name          => { type => 'varchar', length => 32, not_null => 1 },
+        flag          => { type => 'boolean', default => 't', not_null => 1 },
+        flag2         => { type => 'boolean' },
+        status        => { type => 'varchar', default => 'active', length => 32 },
+        bits          => { type => 'bitfield', bits => 5, default => '00101', not_null => 1 },
+        start         => { type => 'date', default => '1980-12-24' },
+        save          => { type => 'integer', alias => 'save_col' },
+        fk1           => { type => 'integer', alias => 'fkone' },
+        fk2           => { type => 'integer' },
+        fk3           => { type => 'integer' },
+        fother_id2    => { type => 'integer' },
+        fother_id3    => { type => 'integer' },
+        fother_id4    => { type => 'integer' },
+        last_modified => { type => 'datetime' },
+        date_created  => { type => 'datetime' },
+        nums          => { type => 'array' },
+    ],
+
+    primary_key_columns => [ 'id' ],
+
+    foreign_keys => [
+        fother => {
+            class => 'MySQLiteOtherObject2',
+            key_columns => {
+                fother_id2 => 'id2',
+            },
+        },
+    
+        fother2 => {
+            class => 'MySQLiteOtherObject3',
+            key_columns => {
+                fother_id3 => 'id3',
+            },
+        },
+    
+        fother3 => {
+            class => 'MySQLiteOtherObject4',
+            key_columns => {
+                fother_id4 => 'id4',
+            },
+        },
+    
+        my_sqlite_other_object => {
+            class => 'MySQLiteOtherObject',
+            key_columns => {
+                fk1 => 'k1',
+                fk2 => 'k2',
+                fk3 => 'k3',
+            },
+        },
+    ],
+);
+
+1;
+EOF
+
   MySQLiteObject->meta->auto_load_related_classes(0);
 
   is(MySQLiteObject->meta->perl_class_definition(braces => 'bsd', indent => 2, use_setup => 0),
@@ -1567,6 +1783,80 @@ __PACKAGE__->meta->foreign_keys
 );
 
 __PACKAGE__->meta->initialize;
+
+1;
+EOF
+
+  is(MySQLiteObject->meta->perl_class_definition,
+     <<'EOF', "perl_class_definition 2 - $db_type");
+package MySQLiteObject;
+
+use strict;
+
+use base qw(Rose::DB::Object);
+
+use MySQLiteOtherObject;
+use MySQLiteOtherObject2;
+use MySQLiteOtherObject3;
+use MySQLiteOtherObject4;
+
+__PACKAGE__->meta->setup(
+    table   => 'Rose_db_object_test',
+
+    columns => [
+        id            => { type => 'integer', not_null => 1 },
+        name          => { type => 'varchar', length => 32, not_null => 1 },
+        flag          => { type => 'boolean', default => 't', not_null => 1 },
+        flag2         => { type => 'boolean' },
+        status        => { type => 'varchar', default => 'active', length => 32 },
+        bits          => { type => 'bitfield', bits => 5, default => '00101', not_null => 1 },
+        start         => { type => 'date', default => '1980-12-24' },
+        save          => { type => 'integer', alias => 'save_col' },
+        fk1           => { type => 'integer', alias => 'fkone' },
+        fk2           => { type => 'integer' },
+        fk3           => { type => 'integer' },
+        fother_id2    => { type => 'integer' },
+        fother_id3    => { type => 'integer' },
+        fother_id4    => { type => 'integer' },
+        last_modified => { type => 'datetime' },
+        date_created  => { type => 'datetime' },
+        nums          => { type => 'array' },
+    ],
+
+    primary_key_columns => [ 'id' ],
+
+    foreign_keys => [
+        fother => {
+            class => 'MySQLiteOtherObject2',
+            key_columns => {
+                fother_id2 => 'id2',
+            },
+        },
+    
+        fother2 => {
+            class => 'MySQLiteOtherObject3',
+            key_columns => {
+                fother_id3 => 'id3',
+            },
+        },
+    
+        fother3 => {
+            class => 'MySQLiteOtherObject4',
+            key_columns => {
+                fother_id4 => 'id4',
+            },
+        },
+    
+        my_sqlite_other_object => {
+            class => 'MySQLiteOtherObject',
+            key_columns => {
+                fk1 => 'k1',
+                fk2 => 'k2',
+                fk3 => 'k3',
+            },
+        },
+    ],
+);
 
 1;
 EOF
