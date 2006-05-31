@@ -58,7 +58,7 @@ use Rose::Object::MakeMethods::Generic
     was_auto_initialized       => { default => 0 },
     initialized_foreign_keys   => { default => 0 },
     default_load_speculative   => { default => 0 },
-    auto_load_related_classes  => { default => 0 },
+    auto_load_related_classes  => { default => 1 },
   ],
 
   array =>

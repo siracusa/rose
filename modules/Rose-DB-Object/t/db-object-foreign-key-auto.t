@@ -279,18 +279,13 @@ EOF
 
   my $chkpass = $PG_HAS_CHKPASS ? "    password      => { type => 'chkpass' },\n" : '';
 
-  is(MyPgObject->meta->perl_class_definition,
-     <<"EOF", "perl_class_definition 1 - $db_type");
+  is(MyPgObject->meta->perl_class_definition(use_setup => 0),
+     <<"EOF", "perl_class_definition (trad) 1 - $db_type");
 package MyPgObject;
 
 use strict;
 
 use base qw(Rose::DB::Object);
-
-use MyPgOtherObject;
-use MyPgOtherObject2;
-use MyPgOtherObject3;
-use MyPgOtherObject4;
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
@@ -355,8 +350,10 @@ EOF
 
   $chkpass = $PG_HAS_CHKPASS ? "  password      => { type => 'chkpass' },\n" : '';
 
-  is(MyPgObject->meta->perl_class_definition(braces => 'bsd', indent => 2),
-     <<"EOF", "perl_class_definition 2 - $db_type");
+  MyPgObject->meta->auto_load_related_classes(0);
+
+  is(MyPgObject->meta->perl_class_definition(braces => 'bsd', indent => 2, use_setup => 0),
+     <<"EOF", "perl_class_definition (trad) 2 - $db_type");
 package MyPgObject;
 
 use strict;
@@ -651,18 +648,13 @@ EOF
 
   my $mysql_41 = ($o->db->database_version >= 4_100_000) ? 1 : 0;
 
-  is(MyMySQLObject->meta->perl_class_definition,
-     <<"EOF", "perl_class_definition 1 - $db_type");
+  is(MyMySQLObject->meta->perl_class_definition(use_setup => 0),
+     <<"EOF", "perl_class_definition (trad) 1 - $db_type");
 package MyMySQLObject;
 
 use strict;
 
 use base qw(Rose::DB::Object);
-
-use MyMySQLOtherObject;
-use MyMySQLOtherObject2;
-use MyMySQLOtherObject3;
-use MyMySQLOtherObject4;
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
@@ -724,8 +716,10 @@ __PACKAGE__->meta->initialize;
 1;
 EOF
 
-  is(MyMySQLObject->meta->perl_class_definition(braces => 'bsd', indent => 2),
-     <<"EOF", "perl_class_definition 2 - $db_type");
+  MyMySQLObject->meta->auto_load_related_classes(0);
+
+  is(MyMySQLObject->meta->perl_class_definition(braces => 'bsd', indent => 2, use_setup => 0),
+     <<"EOF", "perl_class_definition (trad) 2 - $db_type");
 package MyMySQLObject;
 
 use strict;
@@ -1037,18 +1031,13 @@ __PACKAGE__->meta->foreign_keys
 );
 EOF
 
-  is(MyInformixObject->meta->perl_class_definition,
-     <<'EOF', "perl_class_definition 1 - $db_type");
+  is(MyInformixObject->meta->perl_class_definition(use_setup => 0),
+     <<'EOF', "perl_class_definition (trad) 1 - $db_type");
 package MyInformixObject;
 
 use strict;
 
 use base qw(Rose::DB::Object);
-
-use MyInformixOtherObject;
-use MyInformixOtherObject2;
-use MyInformixOtherObject3;
-use MyInformixOtherObject4;
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
@@ -1111,8 +1100,10 @@ __PACKAGE__->meta->initialize;
 1;
 EOF
 
-  is(MyInformixObject->meta->perl_class_definition(braces => 'bsd', indent => 2),
-     <<'EOF', "perl_class_definition 2 - $db_type");
+  MyInformixObject->meta->auto_load_related_classes(0);
+
+  is(MyInformixObject->meta->perl_class_definition(braces => 'bsd', indent => 2, use_setup => 0),
+     <<'EOF', "perl_class_definition (trad) 2 - $db_type");
 package MyInformixObject;
 
 use strict;
@@ -1425,18 +1416,13 @@ __PACKAGE__->meta->foreign_keys
 );
 EOF
 
-  is(MySQLiteObject->meta->perl_class_definition,
-     <<'EOF', "perl_class_definition 1 - $db_type");
+  is(MySQLiteObject->meta->perl_class_definition(use_setup => 0),
+     <<'EOF', "perl_class_definition (trad) 1 - $db_type");
 package MySQLiteObject;
 
 use strict;
 
 use base qw(Rose::DB::Object);
-
-use MySQLiteOtherObject;
-use MySQLiteOtherObject2;
-use MySQLiteOtherObject3;
-use MySQLiteOtherObject4;
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
@@ -1499,8 +1485,10 @@ __PACKAGE__->meta->initialize;
 1;
 EOF
 
-  is(MySQLiteObject->meta->perl_class_definition(braces => 'bsd', indent => 2),
-     <<'EOF', "perl_class_definition 2 - $db_type");
+  MySQLiteObject->meta->auto_load_related_classes(0);
+
+  is(MySQLiteObject->meta->perl_class_definition(braces => 'bsd', indent => 2, use_setup => 0),
+     <<'EOF', "perl_class_definition (trad) 2 - $db_type");
 package MySQLiteObject;
 
 use strict;

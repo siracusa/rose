@@ -22,6 +22,8 @@ $loader->make_modules(module_dir   => 'lib',
                       braces       => 'bsd',
                       indent       => 2);
 
+# auto_load_related_classes => 0
+
 __END__
 
 DROP TABLE product_colors CASCADE;
