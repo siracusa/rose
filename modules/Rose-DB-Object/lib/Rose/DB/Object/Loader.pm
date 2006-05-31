@@ -366,8 +366,7 @@ sub _perl_base_class
   return<<"EOF";
 package $class;
 
-use Rose::DB::Object;
-our \@ISA = qw(Rose::DB::Object);
+use base 'Rose::DB::Object';
 $init_db
 1;
 EOF
@@ -395,17 +394,15 @@ package $class;
 
 use strict;
 
-use Rose::DB;
-our \@ISA = qw(Rose::DB);
+use base 'Rose::DB';
 
 __PACKAGE__->use_private_registry;
 
 __PACKAGE__->register_db
 (
-  domain => __PACKAGE__->default_domain,
-  type   => __PACKAGE__->default_type,
 $hash
 );
+
 1;
 EOF
 }
@@ -626,7 +623,7 @@ sub make_classes
     $init_db = sub { $db_class->new };
 
     $extra_info->{'perl_init_db'} =
-      "use $db_class;\n" .
+      "use $db_class;\n\n" .
       "sub init_db { $db_class->new }";
   }
   else
@@ -639,7 +636,7 @@ sub make_classes
                             indent     => 0);
 
     $extra_info->{'perl_init_db'} = 
-      "use $db_class;\n" .
+      "use $db_class;\n\n" .
       "sub init_db { $db_class->new($hash) }";
   }
 

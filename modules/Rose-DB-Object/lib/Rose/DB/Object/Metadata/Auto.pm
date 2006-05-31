@@ -521,6 +521,7 @@ sub perl_columns_definition
 
   $self->auto_init_columns  unless($self->was_auto_initialized);
 
+  my $for_setup = $args{'for_setup'};
   my $indent = defined $args{'indent'} ? $args{'indent'} : $self->default_perl_indent;
   my $braces = defined $args{'braces'} ? $args{'braces'} : $self->default_perl_braces;
 
@@ -532,15 +533,18 @@ sub perl_columns_definition
 
   $indent = ' ' x $indent;
 
-  my $def_start = "__PACKAGE__->meta->columns";
+  my $def_start = $for_setup ? 'columns => ' : "__PACKAGE__->meta->columns";
+
+  my $ob = $for_setup ? '[' : '(';
+  my $cb = $for_setup ? ']' : ')';
 
   if($braces eq 'bsd')
   {
-    $def_start .= "\n(\n";
+    $def_start .= "\n$ob\n";
   }
   elsif($braces eq 'k&r')
   {
-    $def_start .= "(\n";
+    $def_start .= "$ob\n";
   }
   else
   {
@@ -566,7 +570,20 @@ sub perl_columns_definition
                                                   name_padding => $max_len));
   }
 
-  return $def_start . join(",\n", map { "$indent$_" } @col_defs) . ",\n);\n";
+  $cb = $for_setup ? '],' : ');';
+
+  my $perl = $def_start . join(",\n", map { "$indent$_" } @col_defs) . ",\n$cb\n";
+  
+  if($for_setup)
+  {
+    for($perl)
+    {
+      s/^/$indent/mg;
+      s/\n\z//;
+    }
+  }
+
+  return $perl;
 }
 
 sub __by_rank
@@ -599,15 +616,22 @@ sub perl_foreign_keys_definition
 
   my $indent_txt = ' ' x $indent;
 
-  my $def = "__PACKAGE__->meta->foreign_keys";
+  my $for_setup = $args{'for_setup'};
+
+  my $def = $for_setup ? 
+    $indent_txt . 'foreign_keys => ' : 
+    '__PACKAGE__->meta->foreign_keys';
+
+  my $ob = $for_setup ? '[' : '(';
+  my $cb = $for_setup ? ']' : ')';
 
   if($braces eq 'bsd')
   {
-    $def .= "\n(\n";
+    $def .= "\n$ob\n";
   }
   elsif($braces eq 'k&r')
   {
-    $def .= "(\n";
+    $def .= "$ob\n";
   }
   else
   {
@@ -630,7 +654,23 @@ sub perl_foreign_keys_definition
     $def .= "$fk_def,\n" . ($fk_def eq $fk_defs[-1] ? '' : "\n");
   }
 
-  return $def . ");\n";
+  if($for_setup)
+  {
+    $def .= "],\n";
+
+    for($def)
+    {
+      s/^/$indent_txt/mg;
+      s/\n\z//;
+      s/\A$indent_txt//;
+    }
+
+    return $def;
+  }
+  else
+  {
+    return $def . ");\n";
+  }
 }
 
 sub perl_relationships_definition
@@ -650,15 +690,22 @@ sub perl_relationships_definition
 
   my $indent_txt = ' ' x $indent;
 
-  my $def = "__PACKAGE__->meta->relationships";
+  my $for_setup = $args{'for_setup'};
+
+  my $def = $for_setup ? 
+    $indent_txt . 'relationships => ' : 
+    '__PACKAGE__->meta->relationships';
+
+  my $ob = $for_setup ? '[' : '(';
+  my $cb = $for_setup ? ']' : ')';
 
   if($braces eq 'bsd')
   {
-    $def .= "\n(\n";
+    $def .= "\n$ob\n";
   }
   elsif($braces eq 'k&r')
   {
-    $def .= "(\n";
+    $def .= "$ob\n";
   }
   else
   {
@@ -682,7 +729,23 @@ sub perl_relationships_definition
     $def .= "$rel_def,\n" . ($rel_def eq $rel_defs[-1] ? '' : "\n");
   }
 
-  return $def . ");\n";
+  if($for_setup)
+  {
+    $def .= "],\n";
+
+    for($def)
+    {
+      s/^/$indent_txt/mg;
+      s/\n\z//;
+      s/\A$indent_txt//;
+    }
+
+    return $def;
+  }
+  else
+  {
+    return $def . ");\n";
+  }
 }
 
 sub perl_unique_keys_definition
@@ -728,19 +791,26 @@ sub perl_unique_keys_definition
 
   return ''  unless(@uk_defs);
 
-  my $def_start = "__PACKAGE__->meta->add_unique_keys";
+  my $for_setup = $args{'for_setup'};
+
+  my $def_start = $for_setup ? 
+    $indent . 'unique_keys => ' : 
+    '__PACKAGE__->meta->unique_keys';
+
+  my $ob = $for_setup ? '[' : '(';
+  my $cb = $for_setup ? ']' : ')';
 
   if(@uk_defs == 1)
   {
-    $def_start .= '(';
+    $def_start .= $ob;
   }
   elsif($braces eq 'bsd')
   {
-    $def_start .= "\n(\n";
+    $def_start .= "\n$ob\n";
   }
   elsif($braces eq 'k&r')
   {
-    $def_start .= "(\n";
+    $def_start .= "$ob\n";
   }
   else
   {
@@ -748,14 +818,61 @@ sub perl_unique_keys_definition
                 "brace style: '$braces'";
   }
 
-  if(@uk_defs == 1)
+  if($for_setup)
   {
-    return "$def_start$uk_defs[0]);\n";
+    if(@uk_defs == 1)
+    {
+      for($uk_defs[0])
+      {
+        s/\A\[ //;
+        s/ \]\z//;
+      }
+
+      return "$def_start $uk_defs[0] ],";
+    }
+    else
+    {
+      my $perl = $def_start . join(",\n", map { "$indent$_" } @uk_defs) . ",\n],";
+
+      for($perl)
+      {
+        s/^/$indent/mg;
+        s/\A$indent//;
+      }
+
+      return $perl;
+    }
   }
   else
   {
-    return $def_start . join(",\n", map { "$indent$_" } @uk_defs) . ",\n);\n";
+    if(@uk_defs == 1)
+    {
+      return "$def_start$uk_defs[0]);\n";
+    }
+    else
+    {
+      return $def_start . join(",\n", map { "$indent$_" } @uk_defs) . ",\n);\n";
+    }
   }
+}
+
+sub perl_table_definition
+{
+  my($self, %args) = @_;
+
+  my $for_setup = $args{'for_setup'};
+  my $indent = defined $args{'indent'} ? $args{'indent'} : $self->default_perl_indent;
+
+  my $table = $self->table;
+  $table =~ s/'/\\'/;
+  
+  if($args{'for_setup'})
+  {
+    $indent = ' ' x $indent;
+    return qq(${indent}table   => '$table',);
+  }
+
+  return qq(__PACKAGE__->meta->table('$table'););  
 }
 
 sub perl_primary_key_columns_definition
@@ -769,13 +886,26 @@ sub perl_primary_key_columns_definition
   Carp::croak "No primary key columns found for class ", ref($self)
     unless(@pk_cols);
 
-  return '__PACKAGE__->meta->primary_key_columns(' .
-         $self->primary_key->perl_array_definition . ");\n";
+  if($args{'for_setup'})
+  {
+    my $indent = defined $args{'indent'} ? $args{'indent'} : $self->default_perl_indent;
+    $indent = ' ' x $indent;
+    return $indent . 'primary_key_columns => ' . 
+           $self->primary_key->perl_array_definition . ',';
+  }
+  else
+  {
+    return '__PACKAGE__->meta->primary_key_columns(' .
+           $self->primary_key->perl_array_definition . ");\n";
+  }
 }
 
 sub perl_class_definition
 {
   my($self, %args) = @_;
+
+  my $indent = defined $args{'indent'} ? $args{'indent'} : $self->default_perl_indent;
+  my $braces = defined $args{'braces'} ? $args{'braces'} : $self->default_perl_braces;
 
   my $class = $self->class;
 
@@ -810,14 +940,16 @@ sub perl_class_definition
     $foreign_modules = "\n\n" . join("\n", map { "use $_;"} sort keys %use);
   }
 
-  return<<"EOF";
+  if(defined $args{'use_setup'} && !$args{'use_setup'})
+  {
+    return<<"EOF";
 package $class;
 
 use strict;
 
 use base qw(@$isa);$foreign_modules
 
-__PACKAGE__->meta->table('@{[ $self->table ]}');
+@{[ $self->perl_table_definition(%args) ]}
 
 @{[join("\n", grep { /\S/ } $self->perl_columns_definition(%args),
                             $self->perl_primary_key_columns_definition(%args),
@@ -828,6 +960,47 @@ __PACKAGE__->meta->initialize;
 
 1;
 EOF
+  }
+  else
+  {
+    my $setup_start = '__PACKAGE__->meta->setup';
+
+    if($braces eq 'bsd')
+    {
+      $setup_start .= "\n(";
+    }
+    elsif($braces eq 'k&r')
+    {
+      $setup_start .= "(";
+    }
+    else
+    {
+      Carp::croak 'Invalid ', (defined $args{'braces'} ? '' : 'default '),
+                  "brace style: '$braces'";
+    }
+  
+    $args{'for_setup'} = 1;
+    $indent = ' ' x $indent;
+
+    return<<"EOF";
+package $class;
+
+use strict;
+
+use base qw(@$isa);
+
+$setup_start
+@{[join("\n\n", grep { /\S/ } $self->perl_table_definition(%args),
+                              $self->perl_columns_definition(%args),
+                              $self->perl_primary_key_columns_definition(%args),
+                              $self->perl_unique_keys_definition(%args),
+                              $self->perl_foreign_keys_definition(%args),
+                              $self->perl_relationships_definition(%args))]}
+);
+
+1;
+EOF
+  }
 }
 
 sub auto_generate_unique_keys { die "Override in subclass" }
