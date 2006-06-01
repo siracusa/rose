@@ -348,6 +348,12 @@ sub have_db
 {
   my($type) = shift;
 
+  if($type =~ /^sqlite(?:_admin)$/ && $ENV{'RDBO_NO_SQLITE'})
+  {
+    return $Have_DB{$type} = 0;
+  }
+
+  return $Have_DB{$type} = shift if(@_);
   return $Have_DB{$type}  if(exists $Have_DB{$type});
   return get_dbh($type) ? 1 : 0;
 }

@@ -348,7 +348,6 @@ sub setup
   return 1  if($self->is_initialized);
 
   my $init_args = [];
-  my $auto_load;
 
   PAIR: while(@_)
   {
@@ -364,10 +363,6 @@ sub setup
     {
       $init_args = ref $args ? $args : [ $args ];
       next PAIR;
-    }
-    elsif($method eq 'auto_load_related_classes')
-    {
-      $auto_load = $args;
     }
 
     if(ref $args)
@@ -396,7 +391,6 @@ sub setup
     }
   }
 
-  $self->auto_load_related_classes(1)  unless(defined $auto_load);
   $self->initialize(@$init_args);
 
   return 1;
@@ -694,6 +688,7 @@ sub add_unique_keys
 }
 
 *add_unique_key = \&add_unique_keys;
+*unique_key     = \&add_unique_keys;
 
 sub delete_unique_keys { $_[0]->{'unique_keys'} = [] }
 
@@ -1945,14 +1940,14 @@ sub make_relationship_methods
         }
       }
     }
-
+$DB::single = 1;
     if($self->auto_load_related_classes)
     {
       if($relationship->can('class'))
       {
         my $fclass = $relationship->class;
 
-        unless($fclass->isa('Rose::DB::Object'))
+        unless($fclass->isa('Rose::DB::Object') && $fclass->meta->is_initialized)
         {
           eval "require $fclass";
           $Debug && print STDERR "REL ",  $relationship->name, 
@@ -1965,7 +1960,7 @@ sub make_relationship_methods
       {
         my $map_class = $relationship->map_class;
 
-        unless($map_class->isa('Rose::DB::Object'))
+        unless($map_class->isa('Rose::DB::Object') && $map_class->meta->is_initialized)
         {
           eval "require $map_class";
           $Debug && print STDERR "REL ",  $relationship->name, 

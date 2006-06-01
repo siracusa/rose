@@ -822,6 +822,8 @@ sub perl_unique_keys_definition
   {
     if(@uk_defs == 1)
     {
+      $def_start =~ s/^(\s*)unique_keys/$1unique_key/;
+
       for($uk_defs[0])
       {
         s/\A\[ //;

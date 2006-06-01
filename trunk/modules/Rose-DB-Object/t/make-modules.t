@@ -13,7 +13,7 @@ unless(-d $Lib_Dir)
 
 if(-d $Lib_Dir)
 {
-  Test::More->import(tests => 7);
+  Test::More->import(tests => 2 + (3 * 4));
 }
 else
 {
@@ -24,39 +24,71 @@ require 't/test-lib.pl';
 use_ok('Rose::DB::Object');
 use_ok('Rose::DB::Object::Loader');
 
-our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL_WITH_INNODB, $HAVE_INFORMIX, 
-    $HAVE_SQLITE);
-
 my $Include_Tables = '^(?:' . join('|', 
   qw(product_colors prices products colors vendors)) . ')$';
 $Include_Tables = qr($Include_Tables);
 
+my %Column_Defs =
+(
+  pg => 
+  {
+    id        => q(id        => { type => 'serial', not_null => 1 },),
+    vendor_id => q(vendor_id => { type => 'integer', not_null => 1 },),
+  },
+
+  mysql => 
+  {
+    id        => q(id        => { type => 'integer', not_null => 1 },),
+    vendor_id => q(vendor_id => { type => 'integer', default => '', not_null => 1 },),
+  },
+
+  sqlite => 
+  {
+    id        => q(id        => { type => 'integer' },),
+    vendor_id => q(vendor_id => { type => 'integer', not_null => 1 },),
+  },
+
+  informix => 
+  {
+    id        => q(id        => { type => 'serial', not_null => 1 },),
+    vendor_id => q(vendor_id => { type => 'integer', not_null => 1 },),
+  },
+);
+
 #
-# Postgres
+# Tests
 #
 
-SKIP: foreach my $db_type ('pg')
+foreach my $db_type (qw(pg mysql informix sqlite))
 {
-  skip("Postgres tests", 2)  unless($HAVE_PG);
+  unless(have_db($db_type))
+  {
+    SKIP: { skip("$db_type tests", 3) }
+    next;
+  }
+
+  Rose::DB::Object::Metadata->unregister_all_classes;
 
   Rose::DB->default_type($db_type);
 
+  my $class_prefix = 'My' . ucfirst($db_type);
+
   my $loader = 
     Rose::DB::Object::Loader->new(
-    db_class     => 'Rose::DB',
-    class_prefix => 'MyPg::',
+    db_class       => 'Rose::DB',
+    class_prefix   => $class_prefix,
     include_tables => $Include_Tables);
 
   $loader->make_modules(module_dir   => $Lib_Dir,
                         braces       => 'bsd',
                         indent       => 2);
   
-  is(slurp("$Lib_Dir/MyPg/Product.pm"), <<"EOF", "Product 1 - $db_type");
-package MyPg::Product;
+  is(slurp("$Lib_Dir/$class_prefix/Product.pm"), <<"EOF", "Product 1 - $db_type");
+package ${class_prefix}::Product;
 
 use strict;
 
-use base qw(MyPg::DB::Object::AutoBase1);
+use base qw(${class_prefix}::DB::Object::AutoBaseNNN);
 
 __PACKAGE__->meta->setup
 (
@@ -64,9 +96,9 @@ __PACKAGE__->meta->setup
 
   columns => 
   [
-    id        => { type => 'serial', not_null => 1 },
+    $Column_Defs{$db_type}{'id'}
     name      => { type => 'varchar', length => 255 },
-    vendor_id => { type => 'integer', not_null => 1 },
+    $Column_Defs{$db_type}{'vendor_id'}
   ],
 
   primary_key_columns => [ 'id' ],
@@ -81,7 +113,7 @@ __PACKAGE__->meta->setup
   [
     vendor => 
     {
-      class => 'MyPg::Vendor',
+      class => '${class_prefix}::Vendor',
       key_columns => 
       {
         vendor_id => 'id',
@@ -94,8 +126,8 @@ __PACKAGE__->meta->setup
     colors => 
     {
       column_map    => { product_id => 'id' },
-      foreign_class => 'MyPg::Color',
-      map_class     => 'MyPg::ProductColor',
+      foreign_class => '${class_prefix}::Color',
+      map_class     => '${class_prefix}::ProductColor',
       map_from      => 'product',
       map_to        => 'color',
       type          => 'many to many',
@@ -103,7 +135,7 @@ __PACKAGE__->meta->setup
   
     prices => 
     {
-      class       => 'MyPg::Price',
+      class       => '${class_prefix}::Price',
       key_columns => { id => 'product_id' },
       type        => 'one to many',
     },
@@ -114,12 +146,12 @@ __PACKAGE__->meta->setup
 
 EOF
 
-  is(slurp("$Lib_Dir/MyPg/Color.pm"), <<"EOF", "Color 1 - $db_type");
-package MyPg::Color;
+  is(slurp("$Lib_Dir/$class_prefix/Color.pm"), <<"EOF", "Color 1 - $db_type");
+package ${class_prefix}::Color;
 
 use strict;
 
-use base qw(MyPg::DB::Object::AutoBase1);
+use base qw(${class_prefix}::DB::Object::AutoBaseNNN);
 
 __PACKAGE__->meta->setup
 (
@@ -133,15 +165,15 @@ __PACKAGE__->meta->setup
 
   primary_key_columns => [ 'code' ],
 
-  unique_keys => [ 'name' ],
+  unique_key => [ 'name' ],
 
   relationships => 
   [
     products => 
     {
       column_map    => { color_code => 'code' },
-      foreign_class => 'MyPg::Product',
-      map_class     => 'MyPg::ProductColor',
+      foreign_class => '${class_prefix}::Product',
+      map_class     => '${class_prefix}::ProductColor',
       map_from      => 'color',
       map_to        => 'product',
       type          => 'many to many',
@@ -155,50 +187,21 @@ EOF
 
   unshift(@INC, $Lib_Dir);
 
-  # XXX: Test actual code by running external script with db type arg
+  # Test actual code by running external script with db type arg
+  my $ok = open(my $script_fh, '-|', '/usr/local/bin/perl', 't/make-modules.ext', $db_type);
+  
+  if($ok)
+  {
+    chomp(my $line = <$script_fh>);
+    close($script_fh);
+    is($line, 'V1; IS: 1.23, DE: 4.56; red, green; red: CC1', "external test - $db_type");
+  }
+  else
+  {
+    ok(0, "Failed to open external script for $db_type - $!");
+  }
 
   shift(@INC);
-}
-
-#
-# MySQL
-#
-
-SKIP: foreach my $db_type ('mysql')
-{
-  skip("MySQL tests", 1)  unless($HAVE_MYSQL_WITH_INNODB);
-
-  Rose::DB->default_type($db_type);
-}
-
-#
-# Informix
-#
-
-SKIP: foreach my $db_type ('informix')
-{
-  skip("Informix tests", 1)  unless($HAVE_INFORMIX);
-
-  Rose::DB->default_type($db_type);
-}
-
-#
-# SQLite
-#
-
-SKIP: foreach my $db_type ('sqlite')
-{
-  skip("SQLite tests", 1)  unless($HAVE_SQLITE);
-
-  Rose::DB->default_type($db_type);
-
-  my $loader = 
-    Rose::DB::Object::Loader->new(
-    class_prefix => 'MySQLite::');
-
-  $loader->make_modules(module_dir   => $Lib_Dir,
-                        braces       => 'bsd',
-                        indent       => 2);
 }
 
 BEGIN
@@ -209,19 +212,9 @@ BEGIN
   # Postgres
   #
 
-  my $dbh;
-
-  eval 
+  if(have_db('pg_admin'))
   {
-    $dbh = Rose::DB->new('pg_admin')->retain_dbh()
-      or die Rose::DB->error;
-  };
-
-  if(!$@ && $dbh)
-  {
-    our $HAVE_PG = 1;
-
-    #Rose::DB::Object::Metadata->unregister_all_classes;
+    my $dbh = get_dbh('pg_admin');
 
     # Drop existing tables, ignoring errors
     {
@@ -289,13 +282,11 @@ EOF
   # MySQL
   #
 
-  my $db_version;
-
   eval
   {
-    my $db = Rose::DB->new('mysql_admin');
-    $dbh = $db->retain_dbh or die Rose::DB->error;
-    $db_version = $db->database_version;
+    my $db = get_db('mysql_admin');
+    my $dbh = $db->retain_dbh or die Rose::DB->error;
+    my $db_version = $db->database_version;
 
     die "MySQL version too old"  unless($db_version >= 4_000_000);
 
@@ -314,7 +305,7 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE vendors
 (
-  id    SERIAL NOT NULL PRIMARY KEY,
+  id    INT AUTO_INCREMENT PRIMARY KEY,
   name  VARCHAR(255)
 )
 TYPE=InnoDB
@@ -325,7 +316,7 @@ EOF
     # check to make sure an InnoDB table was really created.
     my $db_name = $db->database;
     my $sth = $dbh->prepare("SHOW TABLE STATUS FROM `$db_name` LIKE ?");
-    $sth->execute('Rose_db_object_other');
+    $sth->execute('vendors');
     my $info = $sth->fetchrow_hashref;
 
     unless(lc $info->{'Type'} eq 'innodb' || lc $info->{'Engine'} eq 'innodb')
@@ -334,11 +325,16 @@ EOF
     }
   };
 
-  if(!$@ && $dbh)
+  if($@)
   {
-    our $HAVE_MYSQL_WITH_INNODB = 1;
-
-    #Rose::DB::Object::Metadata->unregister_all_classes;
+  print "$@";
+    have_db(mysql_admin => 0);
+    have_db(mysql => 0);
+  }
+  
+  if(have_db('mysql_admin'))
+  {
+    my $dbh = get_dbh('mysql_admin');
 
     $dbh->do(<<"EOF");
 CREATE TABLE colors
@@ -353,12 +349,16 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE products
 (
-  id        SERIAL NOT NULL PRIMARY KEY,
+  id        INT AUTO_INCREMENT PRIMARY KEY,
   name      VARCHAR(255),
-  vendor_id INT NOT NULL REFERENCES vendors (id),
-  
+  vendor_id INT NOT NULL,
+
   UNIQUE(name, vendor_id),
-  UNIQUE(name)
+  UNIQUE(name),
+
+  INDEX(vendor_id),
+  
+  FOREIGN KEY (vendor_id) REFERENCES vendors (id)
 )
 TYPE=InnoDB
 EOF
@@ -366,10 +366,14 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE prices
 (
-  price_id    SERIAL NOT NULL PRIMARY KEY,
-  product_id  INT NOT NULL REFERENCES products (id),
+  price_id    INT AUTO_INCREMENT PRIMARY KEY,
+  product_id  INT NOT NULL,
   region      CHAR(2) NOT NULL DEFAULT 'US',
-  price       DECIMAL(10,2) NOT NULL
+  price       DECIMAL(10,2) NOT NULL,
+
+  INDEX(product_id),
+
+  FOREIGN KEY (product_id) REFERENCES products (id)
 )
 TYPE=InnoDB
 EOF
@@ -377,9 +381,15 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE product_colors
 (
-  id           SERIAL NOT NULL PRIMARY KEY,
-  product_id   INT NOT NULL REFERENCES products (id),
-  color_code   CHAR(3) NOT NULL REFERENCES colors (code)
+  id           INT AUTO_INCREMENT PRIMARY KEY,
+  product_id   INT NOT NULL,
+  color_code   CHAR(3) NOT NULL,
+  
+  INDEX(product_id),
+  INDEX(color_code),
+  
+  FOREIGN KEY (product_id) REFERENCES products (id),
+  FOREIGN KEY (color_code) REFERENCES colors (code)
 )
 TYPE=InnoDB
 EOF
@@ -391,17 +401,9 @@ EOF
   # Informix
   #
 
-  eval
+  if(have_db('informix_admin'))
   {
-    $dbh = Rose::DB->new('informix_admin')->retain_dbh()
-      or die Rose::DB->error;
-  };
-
-  if(!$@ && $dbh)
-  {
-    our $HAVE_INFORMIX = 1;
-
-    #Rose::DB::Object::Metadata->unregister_all_classes;
+    my $dbh = get_dbh('informix_admin');
 
     # Drop existing tables, ignoring errors
     {
@@ -469,17 +471,9 @@ EOF
   # SQLite
   #
 
-  eval
+  if(have_db('sqlite_admin'))
   {
-    $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
-      or die Rose::DB->error;
-  };
-
-  if(!$@ && $dbh)
-  {
-    our $HAVE_SQLITE = 1;
-
-    #Rose::DB::Object::Metadata->unregister_all_classes;
+    my $dbh = get_dbh('sqlite_admin');
 
     # Drop existing tables, ignoring errors
     {
@@ -495,7 +489,7 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE vendors
 (
-  id    SERIAL NOT NULL PRIMARY KEY,
+  id    INTEGER PRIMARY KEY AUTOINCREMENT,
   name  VARCHAR(255)
 )
 EOF
@@ -512,7 +506,7 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE products
 (
-  id        SERIAL NOT NULL PRIMARY KEY,
+  id        INTEGER PRIMARY KEY AUTOINCREMENT,
   name      VARCHAR(255),
   vendor_id INT NOT NULL REFERENCES vendors (id),
   
@@ -524,7 +518,7 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE prices
 (
-  price_id    SERIAL NOT NULL PRIMARY KEY,
+  price_id    INTEGER PRIMARY KEY AUTOINCREMENT,
   product_id  INT NOT NULL REFERENCES products (id),
   region      CHAR(2) NOT NULL DEFAULT 'US',
   price       DECIMAL(10,2) NOT NULL
@@ -534,7 +528,7 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE product_colors
 (
-  id           SERIAL NOT NULL PRIMARY KEY,
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
   product_id   INT NOT NULL REFERENCES products (id),
   color_code   CHAR(3) NOT NULL REFERENCES colors (code)
 )
@@ -553,6 +547,9 @@ sub slurp
   open(my $fh, $path) or die "Could not open '$path' - $!";
   my $data = do { local $/; <$fh> };
 
+  # Normalize auto-numbered base classes
+  $data =~ s/::DB::Object::AutoBase\d+/::DB::Object::AutoBaseNNN/g;
+
   return $data;
 }
 
@@ -563,15 +560,14 @@ END
   # Delete the lib dir  
   unless($@)
   {
-    #File::Path::rmtree($Lib_Dir, 0, 1);
+    File::Path::rmtree($Lib_Dir, 0, 1);
   }
   
   # Delete test tables
 
-  if($HAVE_PG)
+  if(have_db('pg_admin'))
   {
-    my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
-      or die Rose::DB->error;
+    my $dbh = get_dbh('pg_admin');
 
     $dbh->do('DROP TABLE product_colors CASCADE');
     $dbh->do('DROP TABLE prices CASCADE');
@@ -582,10 +578,9 @@ END
     $dbh->disconnect;
   }
 
-  if($HAVE_MYSQL_WITH_INNODB)
+  if(have_db('mysql_admin'))
   {
-    my $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
-      or die Rose::DB->error;
+    my $dbh = get_dbh('mysql_admin');
 
     $dbh->do('DROP TABLE product_colors CASCADE');
     $dbh->do('DROP TABLE prices CASCADE');
@@ -596,10 +591,9 @@ END
     $dbh->disconnect;
   }
 
-  if($HAVE_INFORMIX)
+  if(have_db('informix_admin'))
   {
-    my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
-      or die Rose::DB->error;
+    my $dbh = get_dbh('informix_admin');
 
     $dbh->do('DROP TABLE product_colors CASCADE');
     $dbh->do('DROP TABLE prices CASCADE');
@@ -610,10 +604,9 @@ END
     $dbh->disconnect;
   }
 
-  if($HAVE_SQLITE)
+  if(have_db('sqlite_admin'))
   {
-    my $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
-      or die Rose::DB->error;
+    my $dbh = get_dbh('sqlite_admin');
 
     $dbh->do('DROP TABLE product_colors');
     $dbh->do('DROP TABLE prices');
