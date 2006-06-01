@@ -225,17 +225,17 @@ EOF
       ## Painfully derive the data type name (TYPE_NAME)
       ##
 
-      # If the coltype is a value greater than 256, the the column does
-      # not allow null values.  To determine the data type for a coltype
-      # column that contains a value greater than 256, subtract 256 from the
-      # value and evaluate the remainder, based on the possible coltype
-      # values.  For example, if a column has a coltype value of 262,
-      # subtracting 256 from 262 leaves a remainder of 6, which indicates
-      # that this column uses a SERIAL data type.
+      # If the coltype is a value greater than or equal to 256, the the
+      # column does not allow null values.  To determine the data type for
+      # a coltype column that contains a value greater than 256, subtract
+      # 256 from the value and evaluate the remainder, based on the
+      # possible coltype values.  For example, if a column has a coltype
+      # value of 262, subtracting 256 from 262 leaves a remainder of 6,
+      # which indicates that this column uses a SERIAL data type.
 
       my $type_num;
 
-      if($sc_row->{'coltype'} > 256)
+      if($sc_row->{'coltype'} >= 256)
       {
         $col_info->{'informix_type_num'} = $type_num = 
           $sc_row->{'coltype'} - 256;
