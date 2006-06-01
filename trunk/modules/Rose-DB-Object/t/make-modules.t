@@ -55,6 +55,15 @@ my %Column_Defs =
   },
 );
 
+use Config;
+
+my $Perl = $^X;
+
+if($^O ne 'VMS')
+{
+  $Perl .= $Config{'_exe'}  unless($Perl =~ /$Config{'_exe'}$/i);
+}
+
 #
 # Tests
 #
@@ -188,7 +197,7 @@ EOF
   unshift(@INC, $Lib_Dir);
 
   # Test actual code by running external script with db type arg
-  my $ok = open(my $script_fh, '-|', '/usr/local/bin/perl', 't/make-modules.ext', $db_type);
+  my $ok = open(my $script_fh, '-|', $Perl, 't/make-modules.ext', $db_type);
   
   if($ok)
   {
@@ -327,7 +336,6 @@ EOF
 
   if($@)
   {
-  print "$@";
     have_db(mysql_admin => 0);
     have_db(mysql => 0);
   }
