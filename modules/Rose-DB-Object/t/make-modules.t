@@ -197,8 +197,19 @@ EOF
   unshift(@INC, $Lib_Dir);
 
   # Test actual code by running external script with db type arg
-  my $ok = open(my $script_fh, '-|', $Perl, 't/make-modules.ext', $db_type);
+
+  my($ok, $script_fh);
   
+  # Perl 5.8.x and later support the FILEHANDLE,MODE,EXPR,LIST form of open
+  if($Config{'version'} =~ /^5\.([89]|10)\./)
+  {
+    $ok = open($script_fh, '-|', $Perl, 't/make-modules.ext', $db_type);
+  }
+  else
+  {
+    $ok = open($script_fh, "$Perl t/make-modules.ext $db_type |");
+  }
+
   if($ok)
   {
     chomp(my $line = <$script_fh>);
@@ -458,7 +469,7 @@ CREATE TABLE prices
 (
   price_id    SERIAL NOT NULL PRIMARY KEY,
   product_id  INT NOT NULL REFERENCES products (id),
-  region      CHAR(2) NOT NULL DEFAULT 'US',
+  region      CHAR(2) DEFAULT 'US' NOT NULL,
   price       DECIMAL(10,2) NOT NULL
 )
 EOF
