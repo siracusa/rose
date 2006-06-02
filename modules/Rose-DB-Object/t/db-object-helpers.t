@@ -130,13 +130,11 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
   $o = $class->new(id => 2, name => 'Alex3', age => 3);
 
-#  $o->insert_or_update;
-
-{
+  $o->meta->allow_inline_column_values(1);
   local $Rose::DB::Object::Debug = 1;
-$DB::single = 1;
   $o->insert(on_duplicate_key_update => 1);
-}
+  $o->meta->allow_inline_column_values(0);
+
   $o2 = $class->new(id => 2)->load;
   is($o2->name, 'Alex3', "insert_or_update() 3 - $db_type");
   is($o2->age, 3, "insert_or_update() 4 - $db_type");

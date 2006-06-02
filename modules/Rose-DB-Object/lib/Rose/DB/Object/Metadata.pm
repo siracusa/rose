@@ -2948,6 +2948,50 @@ sub insert_sql_with_inlining
   );
 }
 
+sub insert_and_on_duplicate_key_update_with_inlining_sql
+{
+  my($self, $obj, $db) = @_;
+
+  unless(@_ > 1)
+  {
+    Carp::croak 'Missing required object argument to ',
+                __PACKAGE__, '::insert_sql_with_inlining()'
+  }
+
+  $db ||= $obj->db or Carp::croak "Missing db";
+
+  my @bind;
+  my @places;
+
+  foreach my $column ($self->columns)
+  {
+    my $name   = $column->name;
+    my $method = $self->column_accessor_method_name($name);
+    my $value  = $obj->$method();
+
+    if($column->should_inline_value($db, $value))
+    {
+      push(@places, [ $name, " $value" ]);
+    }
+    else
+    {
+      push(@places, [ $name, " ?" ]);
+      push(@bind, $value);
+    }
+  }
+
+  return 
+  (
+    ($self->{'insert_odku_sql_with_inlining_start'}{$db->{'id'}} ||=
+    'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
+    join(",\n", map { "  $_" } $self->column_names_sql($db)) .
+    "\n)\nVALUES\n(\n") . join(",\n", map { " $_->[1]" } @places) . "\n)\n" .
+    "ON DUPLICATE KEY UPDATE\n" .
+    join(",\n", map { "$_->[0] =$_->[1]" } @places),
+    [ (@bind) x 2 ]
+  );
+}
+
 sub delete_sql
 {
   my($self, $db) = @_;
@@ -3037,7 +3081,9 @@ sub _clear_table_generated_values
   $self->{'fq_primary_key_sequence_names'} = undef;
   $self->{'primary_key_sequence_names'} = undef;
   $self->{'insert_sql'}        = undef;
+  $self->{'insert_odku_sql'}   = undef;
   $self->{'insert_sql_with_inlining_start'} = undef;
+  $self->{'insert_odku_sql_with_inlining_start'} = undef;
   $self->{'update_sql_prefix'} = undef;
   $self->{'update_sql_with_inlining_start'} = undef;
   $self->{'update_all_sql'}    = undef;
@@ -3075,7 +3121,9 @@ sub _clear_column_generated_values
   $self->{'update_all_sql'}         = undef;
   $self->{'update_sql_prefix'}      = undef;
   $self->{'insert_sql'}             = undef;
+  $self->{'insert_odku_sql'}        = undef;
   $self->{'insert_sql_with_inlining_start'} = undef;
+  $self->{'insert_odku_sql_with_inlining_start'} = undef;
   $self->{'update_sql_with_inlining_start'} = undef;
   $self->{'delete_sql'}             = undef;
 }

@@ -807,7 +807,16 @@ sub insert
 
     if($meta->allow_inline_column_values)
     {
-      my($sql, $bind) = $meta->insert_sql_with_inlining($self);
+      my($sql, $bind);
+  
+      if($args{'on_duplicate_key_update'})
+      {
+        ($sql, $bind) = $meta->insert_and_on_duplicate_key_update_with_inlining_sql($self, $db);
+      }
+      else
+      {
+        ($sql, $bind) = $meta->insert_sql_with_inlining($self);
+      }
 
       if($Debug)
       {
