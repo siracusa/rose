@@ -1,11 +1,17 @@
-0.73 (05.30.2006) - John Siracusa <siracusa@mindspring.com>
+0.73 (06.01.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * The new setup() method is now the new, officially recommended way 
+      to set up class metadata.
+    * Updated the documentation and the generated Perl code to use the
+      new setup() method.
+    * Related classes are now loaded automatically by default.  Added the
+      auto_load_related_classes metadata attribute to control this behavior.
+    * Added the pk_columns() alias for the primary_key_columns() method.
     * The Loader now automatically skips tables without primary keys.
     * Moved some database introspection code to a new version of Rose::DB, 
       which this version of Rose::DB::Object now requires.
     * Fixed a bug that caused chkpass columns to be erased after some save()s.
       (Reported by Cees Hek)
-    * XXX: perl_table_definition, unique_key, auto_load_related_classes
 
 0.727 (05.24.2006) - John Siracusa <siracusa@mindspring.com>
 

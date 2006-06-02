@@ -5,9 +5,8 @@ use strict;
 use Carp();
 
 use Rose::DB;
-our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.68';
+our $VERSION = '0.70';
 
 #our $Debug = 0;
 
@@ -42,7 +41,7 @@ sub init_dbh
                 "file: '$database'";
   }
 
-  $self->SUPER::init_dbh(@_);
+  $self->Rose::DB::init_dbh(@_);
 }
 
 sub last_insertid_from_sth { shift->dbh->func('last_insert_rowid') }
@@ -84,7 +83,7 @@ sub refine_dbi_column_info
 {
   my($self, $col_info) = @_;
 
-  $self->SUPER::refine_dbi_column_info($col_info);
+  $self->Rose::DB::refine_dbi_column_info($col_info);
 
   if($col_info->{'TYPE_NAME'} eq 'bit')
   {
@@ -385,20 +384,20 @@ Rose::DB::SQLite - SQLite driver class for Rose::DB.
   # Set max length of varchar columns used to emulate the array data type
   Rose::DB::SQLite->max_array_characters(128);
 
-  $db = Rose::DB->new; # $db is really a Rose::DB::SQLite object
+  $db = Rose::DB->new; # $db is really a Rose::DB::SQLite-derived object
   ...
 
 =head1 DESCRIPTION
 
-This is the subclass that L<Rose::DB> blesses an object into when the C<driver> is "sqlite".  This mapping of drivers to class names is configurable.  See the documentation for L<Rose::DB>'s C<new()> and C<driver_class()> methods for more information.
+L<Rose::DB> blesses objects into a class derived from L<Rose::DB::SQLite> when the L<driver|Rose::DB/driver> is "sqlite".  This mapping of driver names to class names is configurable.  See the documentation for L<Rose::DB>'s L<new()|Rose::DB/new> and L<driver_class()|Rose::DB/driver_class> methods for more information.
 
-Using this class directly is not recommended.  Instead, use L<Rose::DB> and let it bless objects into the appropriate class for you, according to its C<driver_class()> mappings.
+This class cannot be used directly.  You must use L<Rose::DB> and let its L<new()|Rose::DB/new> method return an object blessed into the appropriate class for you, according to its L<driver_class()|Rose::DB/driver_class> mappings.
 
-This class supports SQLite version 3 only.  See the SQLite web site for more information on the major vrsions of SQLite:
+This class supports SQLite version 3 only.  See the SQLite web site for more information on the major versions of SQLite:
 
 L<http://www.sqlite.org/>
 
-This class inherits from L<Rose::DB>.  B<Only the methods that are new or have  different behaviors are documented here.>  See the L<Rose::DB> documentation for information on the inherited methods.
+Only the methods that are new or have different behaviors than those in L<Rose::DB> are documented here.  See the L<Rose::DB> documentation for the full list of methods.
 
 =head1 DATA TYPES
 
