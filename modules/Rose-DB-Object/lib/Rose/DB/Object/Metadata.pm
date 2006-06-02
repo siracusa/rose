@@ -4466,9 +4466,11 @@ Get or set the database schema for this L<class|/class>.  This setting will B<ov
 
 =item B<setup PARAMS>
 
-Set up the metadata for this L<class|/class> all in a single method call.  This method is a convenient shortcut.  It does its work by delegating to other methods.
+Set up all the metadata for this L<class|/class> in a single method call.  This method is a convenient shortcut.  It does its work by delegating to other methods.
 
-The L<setup()|/setup> does nothing if the metadata object is already initialized (according to the L<is_initialized|/is_initialized> method).  PARAMS are method/arguments pairs.  In general, the following transformations apply.
+The L<setup()|/setup> method does nothing if the metadata object is already initialized (according to the L<is_initialized|/is_initialized> method).  
+
+PARAMS are method/arguments pairs.  In general, the following transformations apply.
 
 Given a method/arrayref pair:
 
@@ -4486,13 +4488,15 @@ The argument will be passed to METHOD as-is:
 
     $meta->METHOD(ARG);
 
-There is one exceptions to these transformation rules.  If METHOD is "unique_key" or "add_unique_key" and the argument is a reference to an array containing only non-reference values, then the array reference itself is passed to the method.  For example, this pair:
+There's one exception to these transformation rules.  If METHOD is "L<unique_key|/unique_key>" or "L<add_unique_key|/add_unique_key>" and the argument is a reference to an array containing only non-reference values, then the array reference itself is passed to the method.  For example, this pair:
 
     unique_key => [ 'name', 'status' ]
 
 will result in this method call:
 
     $meta->unique_key([ 'name', 'status' ]);
+
+(Note that these method names are I<singular>.  This exception does I<not> apply to the I<plural> variants, L<unique_keys|/unique_keys> and "L<add_unique_keys|/add_unique_keys>".)
 
 Method names may appear more than once in PARAMS.  The methods are called in the order that they appear in PARAMS, with the exception of the L<initialize|/initialize> method, which is always called last.  If "initialize" is not one of the method names, then it will be called automatically (with no arguments) as the very last method.  (If you do not want to pass any arguments to the  L<initialize|/initialize> method, standard practice is to omit it.)
 
