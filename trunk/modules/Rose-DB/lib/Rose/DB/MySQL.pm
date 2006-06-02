@@ -50,6 +50,13 @@ sub database_version
   return $self->{'database_version'} = $vers;
 }
 
+sub init_dbh
+{
+  my($self) = shift;
+  $self->{'supports_on_duplicate_key_update'} = undef;
+  return $self->Rose::DB::init_dbh(@_);
+}
+
 # These assume no ` characters in column or table names.
 # Because, come on, who would do such a thing... :)
 sub quote_column_name { qq(`$_[1]`) }
@@ -199,6 +206,23 @@ sub refine_dbi_column_info
 }
 
 sub likes_redundant_join_conditions { 1 }
+
+sub supports_on_duplicate_key_update
+{
+  my($self) = shift;
+  
+  if(defined $self->{'supports_on_duplicate_key_update'})
+  {
+    return $self->{'supports_on_duplicate_key_update'};
+  }
+  
+  if($self->database_version >= 4_001_000)
+  {
+    return $self->{'supports_on_duplicate_key_update'} = 1;
+  }
+
+  return $self->{'supports_on_duplicate_key_update'} = 0;
+}
 
 #
 # Introspection
