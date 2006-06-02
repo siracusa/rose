@@ -9,11 +9,14 @@ our @ISA = qw(Rose::DB::Object::MixIn);
 
 use Carp;
 
-our $VERSION = '0.723';
+our $VERSION = '0.73';
 
 __PACKAGE__->export_tag
 (
-  all => [ qw(clone clone_and_reset load_or_insert load_speculative) ]
+  all => 
+  [
+    qw(clone clone_and_reset load_or_insert insert_or_update load_speculative) 
+  ]
 );
 
 sub load_speculative { shift->load(@_, speculative => 1) }
@@ -36,6 +39,42 @@ sub load_or_insert
   }
 
   return $self->insert;
+}
+
+sub insert_or_update
+{
+  my($self) = shift;
+
+  # Initially trust the metadata
+  if($self->{STATE_IN_DB()})
+  {
+    eval { $self->update };
+    return $self || 1  unless($@); 
+  }
+
+  # This is more "correct"
+  #my $clone = clone($self);
+
+  # ...but this is a lot faster
+  my $clone = bless { %$self }, ref($self);
+
+  if($clone->load(speculative => 1))
+  {
+    return $self->update(@_);
+  }
+
+  return $self->insert(@_);
+}
+
+sub insert_or_update_on_duplicate_key
+{
+  my($self) = shift;
+  
+  unless($self->db->supports_on_duplicate_key_update)
+  {
+    return insert_or_update($self, @_);
+  }
+  
 }
 
 sub clone
@@ -147,6 +186,14 @@ is equivalent to this:
     $b->id(undef);   # reset primary key
     $b->name(undef); # reset unique key
     $b->db($a->db);  # copy db
+
+=item B<insert_or_update [PARAMS]>
+
+If the object already exists in the database, then L<update|Rose::DB::Object/update> it.  Otherwise, L<insert|Rose::DB::Object/insert> it.  Any PARAMS are passed to the calls to L<insert|Rose::DB::Object/insert> or L<update|Rose::DB::Object/update>.
+
+This method differs from the standard L<save|Rose::DB::Object/save> method in that L<save|Rose::DB::Object/save> decides to L<insert|Rose::DB::Object/insert> or L<update|Rose::DB::Object/update> based solely on whether or not the object was previously L<load|Rose::DB::Object/load>ed.  This method will take the extra step of actually attempting to L<load|Rose::DB::Object/load> the object to see whether or not it's in the database.
+
+The return value of the L<insert|Rose::DB::Object/insert> or L<update|Rose::DB::Object/update> method (whichever is called) is returned.
 
 =item B<load_or_insert [PARAMS]>
 

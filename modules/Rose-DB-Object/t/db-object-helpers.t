@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => (27 * 4) + 2;
+use Test::More tests => (31 * 4) + 2;
 
 BEGIN 
 {
@@ -23,7 +23,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 27)  unless($Have{$db_type});
+    skip("$db_type tests", 31)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -115,8 +115,32 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
   is($o2->age, $o->age, "clone_and_reset() 3 - $db_type");
   is($o2->db, $o->db, "clone_and_reset() 4 - $db_type");
-}
+  
+  $o = $class->new(id => 2, name => 'Alex', age => 2);
+  $o->insert_or_update;
+  
+  $o2 = $class->new(id => 2)->load;
+  is($o2->name, 'Alex', "insert_or_update() 1 - $db_type");
+  
+  $o->name('Alex2');
+  $o->insert_or_update;
 
+  $o2 = $class->new(id => 2)->load;
+  is($o2->name, 'Alex2', "insert_or_update() 2 - $db_type");
+
+  $o = $class->new(id => 2, name => 'Alex3', age => 3);
+
+#  $o->insert_or_update;
+
+{
+  local $Rose::DB::Object::Debug = 1;
+$DB::single = 1;
+  $o->insert(on_duplicate_key_update => 1);
+}
+  $o2 = $class->new(id => 2)->load;
+  is($o2->name, 'Alex3', "insert_or_update() 3 - $db_type");
+  is($o2->age, 3, "insert_or_update() 4 - $db_type");
+}
 
 BEGIN
 {
@@ -218,7 +242,7 @@ EOF
     our @ISA = qw(Rose::DB::Object);
     use Rose::DB::Object::Helpers qw(:all);
 
-    eval { Rose::DB::Object::Helpers->import(qw(load_or_insert load_speculative)) };
+    eval { Rose::DB::Object::Helpers->import(qw(load_or_insert load_speculative insert_or_update)) };
     Test::More::ok($@, 'import conflict - mysql');
     eval { Rose::DB::Object::Helpers->import(qw(--force load_or_insert load_speculative)) };
     Test::More::ok(!$@, 'import override - mysql');

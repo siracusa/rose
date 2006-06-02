@@ -2892,6 +2892,21 @@ sub insert_sql
     "\n)";
 }
 
+sub insert_and_on_duplicate_key_update_sql
+{
+  my($self, $obj, $db) = @_;
+
+  no warnings;
+  return $self->{'insert_odku_sql'}{$db->{'id'}} ||= 
+    'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
+    join(",\n", map { "  $_" } $self->column_names_sql($db)) .
+    "\n)\nVALUES\n(\n" . join(",\n", map { "  ?" } $self->column_names) .
+    "\n)\nON DUPLICATE KEY UPDATE\n" .
+    join(",\n", map { $self->column($_)->name_sql($db) . ' = ?' } 
+            grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
+            $self->columns);
+}
+
 sub insert_sql_with_inlining
 {
   my($self, $obj) = @_;

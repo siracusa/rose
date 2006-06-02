@@ -764,7 +764,7 @@ sub insert
 
   my $using_pk_placeholders = 0;
 
-  unless(@pk_values == @pk_methods)
+  unless(@pk_values == @pk_methods || $args{'on_duplicate_key_update'})
   {
     my @generated_pk_values = $meta->generate_primary_key_values($db);
 
@@ -822,36 +822,61 @@ sub insert
     {
       my $column_names = $meta->column_names;
 
-      $sth = $prepare_cached ? $dbh->prepare_cached($meta->insert_sql($db), undef, 3) : 
-                               $dbh->prepare($meta->insert_sql($db));
-
-      if($Debug)
+      if($args{'on_duplicate_key_update'})
       {
-        no warnings;
-        warn $meta->insert_sql($db), " - bind params: ", 
-          join(', ', (map { $self->$_() } $meta->column_accessor_method_names)), 
-          "\n";
+        my $sql = $meta->insert_and_on_duplicate_key_update_sql($self, $db);
+
+        $sth = $prepare_cached ? 
+          $dbh->prepare_cached($sql, undef, 3) : 
+          $dbh->prepare($sql);
+
+        if($Debug)
+        {
+          no warnings;
+          warn $sql, " - bind params: ", 
+            join(', ', (map { $self->$_() } $meta->column_accessor_method_names) x 2), 
+            "\n";
+        }
+
+        $sth->execute
+        (
+          (map { $self->$_() } $meta->column_accessor_method_names) x 2
+        );
       }
+      else
+      {
+        $sth = $prepare_cached ? 
+          $dbh->prepare_cached($meta->insert_sql($db), undef, 3) : 
+          $dbh->prepare($meta->insert_sql($db));
 
-      $sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
+        if($Debug)
+        {
+          no warnings;
+          warn $meta->insert_sql($db), " - bind params: ", 
+            join(', ', (map {$self->$_()} $meta->column_accessor_method_names)), 
+            "\n";
+        }
 
-      # Not ready to cross this bridge yet...
-      #if($meta->needs_data_type_hand_holding($db))
-      #{
-      #  my $i = 1;
-      #
-      #  foreach my $column ($meta->columns)
-      #  {
-      #    my $method = $column->accessor_method_name;
-      #    $sth->bind_param($i++,  $self->$method(), $column->dbi_data_type);
-      #  }
-      # 
-      #  $sth->execute;
-      #}
-      #else
-      #{
-      #  $sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
-      #}
+        $sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
+
+        # Not ready to cross this bridge yet...
+        #if($meta->needs_data_type_hand_holding($db))
+        #{
+        #  my $i = 1;
+        #
+        #  foreach my $column ($meta->columns)
+        #  {
+        #    my $method = $column->accessor_method_name;
+        #    $sth->bind_param($i++,  $self->$method(), $column->dbi_data_type);
+        #  }
+        # 
+        #  $sth->execute;
+        #}
+        #else
+        #{
+        #  $sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
+        #}
+      }
     }
 
     if(@pk_methods == 1)
