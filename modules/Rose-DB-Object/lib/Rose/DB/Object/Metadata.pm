@@ -2593,6 +2593,17 @@ sub nonlazy_column_db_value_hash_keys
                      $self->{'nonlazy_column_db_value_hash_keys'};
 }
 
+sub primary_key_column_db_value_hash_keys
+{
+  my($self) = shift;
+
+  $self->{'primary_key_column_db_value_hash_keys'} ||= 
+    [ map { $_->db_value_hash_key } $self->primary_key_columns ];
+
+  return wantarray ? @{$self->{'primary_key_column_db_value_hash_keys'}} :
+                     $self->{'primary_key_column_db_value_hash_keys'};
+}
+
 sub alias_column
 {
   my($self, $name, $new_name) = @_;
@@ -3108,6 +3119,7 @@ sub _clear_column_generated_values
   $self->{'column_mutator_method_names'}          = undef;
   $self->{'nonlazy_column_mutator_method_names'}  = undef;
   $self->{'nonlazy_column_db_value_hash_keys'}    = undef;
+  $self->{'primary_key_column_db_value_hash_keys'}= undef;
   $self->{'column_db_value_hash_keys'}            = undef;
   $self->{'select_nonlazy_columns_string_sql'}    = undef;
   $self->{'select_columns_string_sql'}            = undef;

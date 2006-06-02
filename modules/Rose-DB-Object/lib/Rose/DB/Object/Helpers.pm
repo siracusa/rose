@@ -15,7 +15,8 @@ __PACKAGE__->export_tag
 (
   all => 
   [
-    qw(clone clone_and_reset load_or_insert insert_or_update load_speculative) 
+    qw(clone clone_and_reset load_or_insert insert_or_update 
+       insert_or_update_on_duplicate_key load_speculative) 
   ]
 );
 
@@ -52,6 +53,8 @@ sub insert_or_update
     return $self || 1  unless($@); 
   }
 
+  my $meta = $self->meta;
+
   # This is more "correct"
   #my $clone = clone($self);
 
@@ -60,6 +63,16 @@ sub insert_or_update
 
   if($clone->load(speculative => 1))
   {
+    # The long way...
+    my %pk;
+    @pk{$meta->primary_key_column_mutator_names} = 
+      map { $clone->$_() } $meta->primary_key_column_accessor_names;
+    $self->init(%pk);
+
+    # The short (but dirty) way
+    #my @pk_keys = $meta->primary_key_column_db_value_hash_keys;
+    #@$self{@pk_keys} = @$clone{@pk_keys};
+
     return $self->update(@_);
   }
 
@@ -75,6 +88,7 @@ sub insert_or_update_on_duplicate_key
     return insert_or_update($self, @_);
   }
   
+  return $self->insert(on_duplicate_key_update => 1);
 }
 
 sub clone

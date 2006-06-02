@@ -1604,6 +1604,8 @@ sub format_limit_with_offset
   return @_ > 2 ? "$_[1] OFFSET $_[2]" : $_[1];
 }
 
+sub supports_on_duplicate_key_update { 0 }
+
 #
 # DBI introspection
 #
