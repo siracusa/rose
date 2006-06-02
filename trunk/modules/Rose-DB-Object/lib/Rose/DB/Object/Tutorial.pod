@@ -1116,10 +1116,7 @@ This table needs a corresponding L<Rose::DB::Object>-derived class, of course.
 
       primary_key_columns => [ 'id' ],
 
-      unique_keys => 
-      [
-        [ 'product_id', 'region' ],
-      ]
+      unique_key => [ 'product_id', 'region' ],
 
       foreign_keys =>
       [
@@ -1747,7 +1744,7 @@ Now the Perl classes.  Remember that these must each be in their own ".pm" files
       },
     ],
   
-    unique_keys => [ [ 'product_id', 'region' ] ],
+    unique_key  => [ 'product_id', 'region' ],
 
     foreign_key => [ 'product' ],
   );
@@ -1890,7 +1887,7 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
     primary_key_columns => [ 'id' ],
 
-    unique_keys => [ 'product_id', 'region' ],
+    unique_key => [ 'product_id', 'region' ],
 
     foreign_keys =>
     [
