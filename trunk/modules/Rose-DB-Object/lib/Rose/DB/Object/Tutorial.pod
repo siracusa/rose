@@ -79,11 +79,13 @@ Here's a basic L<Rose::DB::Object> class to front that table:
 
     use base qw(Rose::DB::Object);
 
-    __PACKAGE__->meta->table('products');
-    __PACKAGE__->meta->columns(qw(id name price));
-    __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->add_unique_key('name');
-    __PACKAGE__->meta->initialize;
+    __PACKAGE__->meta->setup
+    (
+      table      => 'products',
+      columns    => [ qw(id name price) ],
+      pk_columns => 'id',
+      unique_key => 'name',
+    );
 
 The steps are simple:
 
@@ -99,11 +101,11 @@ The steps are simple:
 
 =item 5. Add unique keys (if any).
 
-=item 6. Initialize.
+=item 6. Initialize. (Implied at the end of the L<setup|Rose::DB::Object::Metadata/setup> call)
 
 =back
 
-Operations 2 through 6 are done through the L<metadata object|Rose::DB::Object::Metadata> associated with this class.  The table must have a primary key, and may have zero or more unique keys.  The primary key and each unique key may contain multiple columns.
+Operations 2 through 6 are done through the L<setup|Rose::DB::Object::Metadata/setup> method on the L<metadata object|Rose::DB::Object::Metadata> associated with this class.  The table must have a primary key, and may have zero or more unique keys.  The primary key and each unique key may contain multiple columns.
 
 Of course, L<earlier|/Preface> it was established that L<Rose::DB> needs to be set up for any L<Rose::DB::Object> class to work properly.  To that end, this tutorial assumes the existence of a L<Rose::DB> subclass named L<My::DB> that is set up according to the L<best practices|Rose::DB::Tutorial> of L<Rose::DB>.  We need to make the C<Product> class use L<My::DB>.  Here's one way to do it:
 
@@ -113,11 +115,13 @@ Of course, L<earlier|/Preface> it was established that L<Rose::DB> needs to be s
 
     use base qw(Rose::DB::Object);
 
-    __PACKAGE__->meta->table('products');
-    __PACKAGE__->meta->columns(qw(id name price));
-    __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->add_unique_key('name');
-    __PACKAGE__->meta->initialize;
+    __PACKAGE__->meta->setup
+    (
+      table      => 'products',
+      columns    => [ qw(id name price) ],
+      pk_columns => 'id',
+      unique_key => 'name',
+    );
 
     sub init_db { My::DB->new }
 
@@ -143,13 +147,15 @@ Now the C<Product> class can inherit from C<My::DB::Object> instead of inheritin
 
     package Product;
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
-    __PACKAGE__->meta->table('products');
-    __PACKAGE__->meta->columns(qw(id name price));
-    __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->add_unique_key('name');
-    __PACKAGE__->meta->initialize;
+    __PACKAGE__->meta->setup
+    (
+      table      => 'products',
+      columns    => [ qw(id name price) ],
+      pk_columns => 'id',
+      unique_key => 'name',
+    );
 
 This use of a common base class is strongly recommended.  You will see this pattern repeated in the L<Rose::DB tutorial|Rose::DB::Tutorial> as well.  The creation of seemingly "trivial" subclasses is a cheap and easy way to ensure ease of extensibility later on.  
 
@@ -305,7 +311,7 @@ If you decide not to heed my advice and create these methods inside your L<Rose:
 
     use Rose::DB::Object::Manager;
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
     ...    
     Rose::DB::Object::Manager->make_manager_methods('products');
 
@@ -511,14 +517,15 @@ We could do a straightforward expansion of the C<Product> class as designed in t
 
     package Product;
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
-    __PACKAGE__->meta->table('products');
-    __PACKAGE__->meta->columns(
-      qw(id name price status date_created release_date));
-    __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->add_unique_key('name');
-    __PACKAGE__->meta->initialize;
+    __PACKAGE__->meta->setup
+    (
+      table      => 'products',
+      columns    => [ qw(id name price status date_created release_date) ],
+      pk_columns => 'id',
+      unique_key => 'name',
+    );
 
 But now we're faced with a few problems.  First, while the C<status> column only accepts a few pre-defined values, our C<Product> object will gladly accept any status value.  But maybe that's okay because the database will reject invalid values, causing an exception will be thrown when the object is saved.
 
@@ -532,40 +539,42 @@ Let's solve all of these problems.  If we more accurately describe the columns, 
 
     package Product;
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
-    __PACKAGE__->meta->table('products');
-
-    __PACKAGE__->meta->columns
+    __PACKAGE__->meta->setup
     (
-      id   => { type => 'serial', primary_key => 1, not_null => 1 },
-      name => { type => 'varchar', length => 255, not_null => 1 },
+      table => 'products',
 
-      price => 
-      {
-        type      => 'decimal',
-        precision => 10,
-        scale     => 2,
-        not_null  => 1,
-        default   => 0.00 
-      },
+      columns =>
+      [
+        id   => { type => 'serial', primary_key => 1, not_null => 1 },
+        name => { type => 'varchar', length => 255, not_null => 1 },
+  
+        price => 
+        {
+          type      => 'decimal',
+          precision => 10,
+          scale     => 2,
+          not_null  => 1,
+          default   => 0.00 
+        },
+  
+        status => 
+        {
+          type     => 'varchar', 
+          length   => 128,
+          not_null => 1, 
+          default  => 'inactive', 
+          check_in => [ 'inactive', 'active', 'defunct' ]
+        },
+  
+        date_created => { type => 'timestamp', not_null => 1, 
+                          default => 'now()' },
+        release_date => { type => 'timestamp' },
+      ],
 
-      status => 
-      {
-        type     => 'varchar', 
-        length   => 128,
-        not_null => 1, 
-        default  => 'inactive', 
-        check_in => [ 'inactive', 'active', 'defunct' ]
-      },
-
-      date_created => { type => 'timestamp', not_null => 1, 
-                        default => 'now()' },
-      release_date => { type => 'timestamp' },
+      unique_key => 'name';
     );
-
-    __PACKAGE__->meta->add_unique_key('name');
-    __PACKAGE__->meta->initialize;
 
 Before examining what new functionality this new class gives us, there are a few things to note about the definition.  First, the primary key is no longer specified with the L<primary_key_columns()|Rose::DB::Object::Metadata/primary_key_columns> method.  Instead, the C<id> column has its C<primary_key> attribute set to a true value in its description.
 
@@ -649,7 +658,7 @@ Let's start by applying auto-initialization to the C<Product> class.
 
     package Product;
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->auto_initialize;
@@ -660,7 +669,7 @@ In fact, that class can be shortened even further with the help of the L<convent
 
     package Product;
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
     __PACKAGE__->meta->auto_initialize;
 
@@ -676,7 +685,7 @@ Auto-initialization seems like something that is best done only once, with the r
 
     package Product;
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
     __PACKAGE__->meta->table('products');
     __PACKAGE__->meta->auto_initialize;
@@ -690,29 +699,30 @@ Here's the output of that print statement.  A few long lines were manually wrapp
 
   use strict;
 
-  use base qw(My::DB::Object);
+  use base 'My::DB::Object';
 
-  __PACKAGE__->meta->table('products');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id           => { type => 'integer', not_null => 1 },
-    name         => { type => 'varchar', length => 255, not_null => 1 },
-    price        => { type => 'numeric', default => '0.00', 
-                      not_null => 1, precision => 2, scale => 10 },
-    vendor_id    => { type => 'integer' },
-    status       => { type => 'varchar', default => 'inactive', 
-                      length => 128, not_null => 1 },
-    date_created => { type => 'timestamp', default => 'now()', 
-                      not_null => 1 },
-    release_date => { type => 'timestamp' },
+    table => 'products',
+
+    columns =>
+    [
+      id           => { type => 'integer', not_null => 1 },
+      name         => { type => 'varchar', length => 255, not_null => 1 },
+      price        => { type => 'numeric', default => '0.00', 
+                        not_null => 1, precision => 2, scale => 10 },
+      vendor_id    => { type => 'integer' },
+      status       => { type => 'varchar', default => 'inactive', 
+                        length => 128, not_null => 1 },
+      date_created => { type => 'timestamp', default => 'now()', 
+                        not_null => 1 },
+      release_date => { type => 'timestamp' },
+    ],
+
+    primary_key_columns => [ 'id' ],
+
+    unique_keys => [ 'name' ],
   );
-
-  __PACKAGE__->meta->primary_key_columns([ 'id' ]);
-
-  __PACKAGE__->meta->add_unique_keys([ 'name' ]);
-
-  __PACKAGE__->meta->initialize;
 
   1;
 
@@ -742,17 +752,18 @@ When dealing with any kind of inter-table relationship, L<Rose::DB::Object> requ
 
     package Vendor;  
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
-    __PACKAGE__->meta->table('vendors');
-    __PACKAGE__->meta->columns
+    __PACKAGE__->meta->setup
     (
-      id   => { type => 'serial', primary_key => 1, not_null => 1 },
-      name => { type => 'varchar', length => 255, not_null => 1 },
+      table => 'vendors',
+      columns =>
+      [
+        id   => { type => 'serial', primary_key => 1, not_null => 1 },
+        name => { type => 'varchar', length => 255, not_null => 1 },
+      ],
+      unique_key => 'name',
     );
-
-    __PACKAGE__->meta->add_unique_key('name');
-    __PACKAGE__->meta->initialize;
 
 Now we'll add the foreign key to our ever-growing C<products> table.
 
@@ -777,45 +788,43 @@ Finally, here's how the foreign key definition looks in the Perl class.
 
     package Product;  
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
-    use Vendor;
-
-    __PACKAGE__->meta->table('products');
-
-    __PACKAGE__->meta->columns
+    __PACKAGE__->meta->setup
     (
-      id           => { type => 'integer', not_null => 1 },
-      name         => { type => 'varchar', length => 255, not_null =>1 },
-      price        => { type => 'numeric', default => '0.00', 
-                        not_null => 1, precision => 2, scale => 10 },
-      vendor_id    => { type => 'int' },
-      status       => { type => 'varchar', default => 'inactive', 
-                        length => 128, not_null => 1 },
-      date_created => { type => 'timestamp', not_null => 1, 
-                        default => 'now()' },
-      release_date => { type => 'timestamp' },
+      table => 'products',
+  
+      columns =>
+      [
+        id           => { type => 'integer', not_null => 1 },
+        name         => { type => 'varchar', length => 255, not_null => 1 },
+        price        => { type => 'numeric', default => '0.00', 
+                          not_null => 1, precision => 2, scale => 10 },
+        vendor_id    => { type => 'integer' },
+        status       => { type => 'varchar', default => 'inactive', 
+                          length => 128, not_null => 1 },
+        date_created => { type => 'timestamp', default => 'now()', 
+                          not_null => 1 },
+        release_date => { type => 'timestamp' },
+      ],
+  
+      primary_key_columns => [ 'id' ],
+  
+      unique_keys => [ 'name' ],
+
+      foreign_keys =>
+      [
+        vendor =>
+        {
+          class       => 'Vendor',
+          key_columns => { vendor_id => 'id' },
+        },
+      ],
     );
 
-    __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->add_unique_key('name');
+Note that a C<vendor_id> column is added to the column list.  This needs to be done independently of any foreign key definition.  It's a new column, so it needs to be in the column list.  There's nothing more to it than that.
 
-    __PACKAGE__->meta->foreign_keys
-    (
-      vendor =>
-      {
-        class       => 'Vendor',
-        key_columns => { vendor_id => 'id' },
-      },
-    );
-
-    __PACKAGE__->meta->initialize;
-
-First, notice that the C<Vendor> class is loaded with a C<use> statement near the top of the class definition.  This is important.  A foreign key cannot be defined unless the L<Rose::DB::Object>-derived class that fronts the foreign table is also loaded.  The auto-initialization process will try to load such classes for you, but the "manual" approach shown above will not.  As usual, I prefer the more explicit approach.
-
-Next, note that a C<vendor_id> column is added to the column list.  This needs to be done independently of any foreign key definition.  It's a new column, so it needs to be in the column list.  There's nothing more to it than that.
-
-Finally, there's the foreign key definition itself.  The name/hashref-value pair passed to the L<foreign_keys()|Rose::DB::Object::Metadata/foreign_keys> method is (roughly) shorthand for this.
+There's also the foreign key definition itself.  The name/hashref-value pair passed to the L<foreign_keys()|Rose::DB::Object::Metadata/foreign_keys> method is (roughly) shorthand for this.
 
     Rose::DB::Object::Metadata::ForeignKey->new(
       name        => 'vendor',
@@ -824,9 +833,9 @@ Finally, there's the foreign key definition itself.  The name/hashref-value pair
 
 In other words, C<vendor> is the name of the foreign key, and the rest of the information is used to set attributes on the L<foreign key object|Rose::DB::Object::Metadata::ForeignKey>.  You could, in fact, construct your own foreign key objects and pass them to  L<foreign_keys()|Rose::DB::Object::Metadata/foreign_keys> (or  L<add_foreign_keys()|Rose::DB::Object::Metadata/add_foreign_keys>, etc.) but that would require even more typing.
 
-Going in the other direction, since our class and column names match up with what the convention manager expects, we could actually shorten the code to this.
+Going in the other direction, since our class and column names match up with what the convention manager expects, we could actually shorten the foreign key setup code to this.
 
-    __PACKAGE__->meta->foreign_keys('vendor');
+    foreign_keys => [ 'vendor' ],
 
 Given only a foreign key name, the convention manager will derive the C<Vendor> class name and will find the C<vendor_id> column in the C<Product> class and match it up to the primary key of the C<vendors> table.  As with most things in L<Rose::DB::Object> class setup, you can be as explicit or as terse as you feel comfortable with, depending on how closely you conform to the expected conventions.
 
@@ -921,7 +930,7 @@ Since all of the column and table names are still in sync with the expected conv
 
     package Product;
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
     __PACKAGE__->meta->auto_initialize;
 
@@ -931,7 +940,7 @@ The L<perl_class_definition()|Rose::DB::Object::Metadata/perl_class_definition> 
 
     package Product;
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
     __PACKAGE__->meta->auto_initialize;
 
@@ -940,45 +949,41 @@ The L<perl_class_definition()|Rose::DB::Object::Metadata/perl_class_definition> 
 
 Here's the output.
 
-  package Product;
+  package Product;  
 
-  use strict;
+  use base 'My::DB::Object';
 
-  use base qw(My::DB::Object);
-
-  __PACKAGE__->meta->table('products');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id           => { type => 'integer', not_null => 1 },
-    name         => { type => 'varchar', length => 255, not_null => 1 },
-    price        => { type => 'numeric', default => '0.00', not_null =>1,
-                      precision => 2, scale => 10 },
-    vendor_id    => { type => 'integer' },
-    status       => { type => 'varchar', default => 'inactive', 
-                      length => 128, not_null => 1 },
-    date_created => { type => 'timestamp', default => 'now()', 
-                      not_null => 1 },
-    release_date => { type => 'timestamp' },
-  );
+    table => 'products',
 
-  __PACKAGE__->meta->primary_key_columns([ 'id' ]);
+    columns =>
+    [
+      id           => { type => 'integer', not_null => 1 },
+      name         => { type => 'varchar', length => 255, not_null => 1 },
+      price        => { type => 'numeric', default => '0.00', 
+                        not_null => 1, precision => 2, scale => 10 },
+      vendor_id    => { type => 'integer' },
+      status       => { type => 'varchar', default => 'inactive', 
+                        length => 128, not_null => 1 },
+      date_created => { type => 'timestamp', default => 'now()', 
+                        not_null => 1 },
+      release_date => { type => 'timestamp' },
+    ],
 
-  __PACKAGE__->meta->add_unique_keys([ 'name' ]);
+    primary_key_columns => [ 'id' ],
 
-  __PACKAGE__->meta->foreign_keys
-  (
-    vendor => 
-    {
-      class => 'Vendor',
-      key_columns => 
+    unique_keys => [ 'name' ],
+
+    foreign_keys =>
+    [
+      vendor =>
       {
-        vendor_id => 'id',
+        class       => 'Vendor',
+        key_columns => { vendor_id => 'id' },
       },
-    },
+    ],
   );
-
-  __PACKAGE__->meta->initialize;
 
   1;
 
@@ -996,17 +1001,17 @@ L<Rose::DB::Object> describes inter-table relationships from the perspective of 
 
 If the relationship were different and each vendor was only allowed to have a single product, then the relationship would be "one to one."  Given only the foreign key definition as it exists in the database, it's not possible to determine whether the relationship is "many to one" or "one to one."  The default is "many to one" because that's the less restrictive choice.
 
-To override the default, a relationship type string can be included in the foreign description.
+To override the default, a relationship type string can be included in the foreign key description.
 
-    __PACKAGE__->meta->foreign_keys
-    (
+    foreign_keys =>
+    [
       vendor =>
       {
         class       => 'Vendor',
         key_columns => { vendor_id => 'id' },
         relationship_type => 'one to one',
       },
-    );
+    ],
 
 (The C<relationship_type> parameter may be shortened to C<rel_type>, if desired.)
 
@@ -1038,36 +1043,35 @@ Here's an example of our C<Product> class as it might exist on a database that d
 
     package Product;  
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
-    use Vendor;
-
-    __PACKAGE__->meta->table('products');
-    __PACKAGE__->meta->columns(...);
-    __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->add_unique_key('name');
-
-    __PACKAGE__->meta->relationships
+    __PACKAGE__->meta->setup
     (
-      vendor =>
-      {
-        type       => 'many to one',
-        class      => 'Vendor',
-        column_map => { vendor_id => 'id' },
-      },
-    );
+      table      => 'products',
+      columns    => [... ],
+      pk_columns => 'id',
+      unique_key => 'name',
 
-    __PACKAGE__->meta->initialize;
+      relationships =>
+      [
+        vendor =>
+        {
+          type       => 'many to one',
+          class      => 'Vendor',
+          column_map => { vendor_id => 'id' },
+        },
+      ],
+    );
 
 They syntax and semantics are similar to those L<described|/"Foreign keys"> for foreign keys.  The only slight differences are the names and types of parameters accepted by relationship objects.
 
 In the example above, a "many to one" relationship named "vendor" is set up.  As demonstrated before, this definition can be reduced much further, allowing the convention manager to fill in the details.  But unlike the case with the foreign key definition, where only the name was supplied, we must provide the relationship type as well. 
 
-  __PACKAGE__->meta->relationships(vendor => { type => 'many to one' });
+    relationships => [ vendor => { type => 'many to one' } ],
 
 There's an even more convenient shorthand for that:
 
-  __PACKAGE__->meta->relationships(vendor => 'many to one');
+    relationships => [ vendor => 'many to one' ],
 
 (Again, this all depends on naming the tables, classes, and columns in accordance with the expectations of the L<convention manager|Rose::DB::Object::Metadata/convention_manager>.)  The resulting C<vendor()> and C<delete_vendor()> methods behave exactly the same as the methods created on behalf of the foreign key definition.
 
@@ -1089,40 +1093,45 @@ This table needs a corresponding L<Rose::DB::Object>-derived class, of course.
 
     package Price;
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
-    use Product;
-
-    __PACKAGE__->meta->table('prices');
-
-    __PACKAGE__->meta->columns
+    __PACKAGE__->meta->setup
     (
-      id         => { type => 'serial', not_null => 1 },
-      product_id => { type => 'int', not_null => 1 },
-      region     => { type => 'char', length => 2, not_null => 1 },
-      price => 
-      {
-        type      => 'decimal',
-        precision => 10,
-        scale     => 2,
-        not_null  => 1,
-        default   => 0.00 
-      },
+      table => 'prices',
+
+      columns =>
+      [
+        id         => { type => 'serial', not_null => 1 },
+        product_id => { type => 'int', not_null => 1 },
+        region     => { type => 'char', length => 2, not_null => 1 },
+        price => 
+        {
+          type      => 'decimal',
+          precision => 10,
+          scale     => 2,
+          not_null  => 1,
+          default   => 0.00 
+        },
+      ],
+
+      primary_key_columns => [ 'id' ],
+
+      unique_keys => 
+      [
+        [ 'product_id', 'region' ],
+      ]
+
+      foreign_keys =>
+      [
+        product =>
+        {
+          class       => 'Product',
+          key_columns => { product_id => 'id' },
+        },
+      ],
     );
 
-    __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->add_unique_key([ 'product_id', 'region' ]);
-
-    __PACKAGE__->meta->foreign_keys
-    (
-      product =>
-      {
-        class       => 'Product',
-        key_columns => { product_id => 'id' },
-      },
-    );
-
-    __PACKAGE__->meta->initialize;
+Note how the multi-column unique key is specified as reference to an array containing another reference to an array of column names.  Removing the "wrapper" array reference would cause it to be interpreted as two single-column unique keys instead of one two-column unique key.
 
 The C<price> column can be removed from the C<products> table.
 
@@ -1132,17 +1141,19 @@ Finally, the C<Product> class needs to be modified to reference the C<prices> ta
 
     package Product;  
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
     use Price;
     use Vendor;
 
-    __PACKAGE__->meta->table('products');
-    __PACKAGE__->meta->columns(...);
-    __PACKAGE__->meta->primary_key_columns('id');
-    __PACKAGE__->meta->add_unique_key('name');
+    __PACKAGE__->meta->setup
+    (
+      table      => 'products',
+      columns    => [ ... ],
+      pk_columns => 'id',
+      unique_key => 'name',
 
-    __PACKAGE__->meta->foreign_keys
+      foreign_keys
     (
       vendor =>
       {
@@ -1185,13 +1196,17 @@ This is all from the perspective of the class in which the definitions appear.  
 
     package Price;
     ...
-    __PACKAGE__->meta->foreign_keys
+    __PACKAGE__->meta->setup
     (
-      product =>
-      {
-        class       => 'Product',
-        key_columns => { product_id => 'id' },
-      },
+      ...
+      foreign_keys =>
+      [
+        product =>
+        {
+          class       => 'Product',
+          key_columns => { product_id => 'id' },
+        },
+      ],
     );
 
 Here, the C<product_id> column in the local table (C<prices>) is connected to the C<id> column in the foreign table (C<products>).
@@ -1278,48 +1293,48 @@ Here's a simple C<Color> class to front it.
 
     package Color;  
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
-    use Product;
-
-    __PACKAGE__->meta->table('colors');
-    __PACKAGE__->meta->columns
+    __PACKAGE__->meta->setup
     (
-      id   => { type => 'serial', primary_key => 1, not_null => 1 },
-      name => { type => 'varchar', length => 255, not_null => 1 },
-      product_id => { type => 'int', not_null => 1 },
-    );
+      table => 'colors',
+      columns =>
+      [
+        id   => { type => 'serial', primary_key => 1, not_null => 1 },
+        name => { type => 'varchar', length => 255, not_null => 1 },
+        product_id => { type => 'int', not_null => 1 },
+      ],
 
-    __PACKAGE__->meta->foreign_keys
-    (
-      product =>
-      {
-        class       => 'Product',
-        key_columns => { product_id => 'id' },
-      },
+      foreign_keys =>
+      [
+        product =>
+        {
+          class       => 'Product',
+          key_columns => { product_id => 'id' },
+        },
+      ],
     );
-
-    __PACKAGE__->meta->initialize;
 
 Finally, let's add the the "one to many" relationship to the C<Product> class.
 
+    package Product;
 
-    package Product;  
+    use base 'My::DB::Object';
 
-    use Color;
-    ...
-    __PACKAGE__->meta->relationships
+    __PACKAGE__->meta->setup
     (
       ...
-      colors =>
-      {
-        type       => 'one to many',
-        class      => 'Color',
-        column_map => { id => 'product_id' },
-      },
+      relationships =>
+      [
+        colors =>
+        {
+          type       => 'one to many',
+          class      => 'Color',
+          column_map => { id => 'product_id' },
+        },
+        ...
+      ],
     );
-
-    __PACKAGE__->meta->initialize;
 
 It works as expected.
 
@@ -1374,17 +1389,19 @@ Here's the new C<Color> class.
 
     package Color;  
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
-    __PACKAGE__->meta->table('colors');
-    __PACKAGE__->meta->columns
+    __PACKAGE__->meta->setup
     (
-      id   => { type => 'serial', primary_key => 1, not_null => 1 },
-      name => { type => 'varchar', length => 255, not_null => 1 },
-    );
+      table   => 'colors',
+      columns =>
+      [
+        id   => { type => 'serial', primary_key => 1, not_null => 1 },
+        name => { type => 'varchar', length => 255, not_null => 1 },
+      ],
 
-    __PACKAGE__->meta->add_unique_key('name');
-    __PACKAGE__->meta->initialize;
+      unique_key => 'name',
+    );
 
 Since the C<colors> table no longer has a foreign key that points to the C<products> table, we need some way to connect the two tables: a mapping table.
 
@@ -1402,58 +1419,56 @@ Here's the map class.
 
     package ProductColorMap;  
 
-    use base qw(My::DB::Object);
+    use base 'My::DB::Object';
 
-    use Product;
-    use Color;
-
-    __PACKAGE__->meta->table('product_color_map');
-    __PACKAGE__->meta->columns
+    __PACKAGE__->meta->setup
     (
-      product_id => { type => 'int', not_null => 1 },
-      color_id   => { type => 'int', not_null => 1 },
+      table   => 'product_color_map',
+      columns =>
+      [
+        product_id => { type => 'int', not_null => 1 },
+        color_id   => { type => 'int', not_null => 1 },
+      ],
+
+      primary_key_columns => [ 'product_id', 'color_id' ],
+
+      foreign_keys =>
+      [
+        product =>
+        {
+          class       => 'Product',
+          key_columns => { product_id => 'id' },
+        },
+  
+        color =>
+        {
+          class       => 'Color',
+          key_columns => { color_id => 'id' },
+        },
+      ],
     );
-
-    __PACKAGE__->meta->primary_key_columns('product_id', 'color_id');
-
-    __PACKAGE__->meta->foreign_keys
-    (
-      product =>
-      {
-        class       => 'Product',
-        key_columns => { product_id => 'id' },
-      },
-
-      color =>
-      {
-        class       => 'Color',
-        key_columns => { color_id => 'id' },
-      },
-    );
-
-    __PACKAGE__->meta->initialize;
 
 It's important that the map class have either a foreign key or a "many to one" relationship pointing to each of the tables that it maps between.  In this case, there are two foreign keys.  Also note that both foreign classes, C<Product> and C<Color>, must be loaded by the map class.
 
 Finally, here's the "many to many" relationship definition in the C<Product> class.
 
-    package Product;  
-
-    use ProductColorMap;
+    package Product;
     ...
-    __PACKAGE__->meta->relationships
+    __PACKAGE__->meta->setup
     (
       ...
-      colors =>
-      {
-        type      => 'many to many',
-        map_class => 'ProductColorMap'
-        map_from  => 'product',
-        map_to    => 'color',
-      },
+      relationships =>
+      [
+        colors =>
+        {
+          type      => 'many to many',
+          map_class => 'ProductColorMap'
+          map_from  => 'product',
+          map_to    => 'color',
+        },
+        ...
+      ],
     );
-
-    __PACKAGE__->meta->initialize;
 
 Note that only the map class needs to be C<use>d in the C<Product> class.  The relationship definition specifies the name of the map class, and (optionally) the names of the foreign keys or "many to one" relationships in the map class that connect the two tables.
 
@@ -1464,34 +1479,45 @@ In this case, there is no ambiguity, so the relationship definition can be short
 
     use ProductColorMap;
     ...
-    __PACKAGE__->meta->relationships
+    __PACKAGE__->meta->setup
     (
+      relationships =>
+      [
+        colors =>
+        {
+          type      => 'many to many',
+          map_class => 'ProductColorMap'
+        },
+      ],
       ...
-      colors =>
-      {
-        type      => 'many to many',
-        map_class => 'ProductColorMap'
-      },
     );
 
 In fact, since the map table is named according to the default L<conventions|Rose::DB::Object::ConventionManager>, it can be shortened even further.
 
     use ProductColorMap;
     ...
-    __PACKAGE__->meta->relationships
+    __PACKAGE__->meta->setup
     (
+      relationships =>
+      [
+        colors => { type => 'many to many' },
+        ...
+      ],
       ...
-      colors => { type => 'many to many' },
     );
 
 And further still:
 
     use ProductColorMap;
     ...
-    __PACKAGE__->meta->relationships
+    __PACKAGE__->meta->setup
     (
+      relationships =>
+      [
+        colors => 'many to many',
+        ...
+      ],
       ...
-      colors => 'many to many',
     );
 
 (Classes can be shortened even more absurdly when auto-initialization is combined with the convention manager.  See the L<convention manager documentation|Rose::DB::Object::ConventionManager/"AUTO-INIT EXAMPLE"> for an example.)
@@ -1647,52 +1673,51 @@ Now the Perl classes.  Remember that these must each be in their own ".pm" files
 
   use base 'My::DB::Object';
 
-  __PACKAGE__->meta->table('vendors');
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id   => { type => 'serial', primary_key => 1, not_null => 1 },
-    name => { type => 'varchar', length => 255, not_null => 1 },
-  );
+    table   => 'vendors',
+    columns =>
+    [
+      id   => { type => 'serial', primary_key => 1, not_null => 1 },
+      name => { type => 'varchar', length => 255, not_null => 1 },
+    ],
 
-  __PACKAGE__->meta->add_unique_key('name');
-  __PACKAGE__->meta->initialize;
+    unique_key => 'name',
+  );
 
   1;
 
 
   package Product;
 
-  use Price;
-  use Vendor;
-  use ProductColorMap;
-
   use base 'My::DB::Object';
 
-  __PACKAGE__->meta->table('products');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id           => { type => 'integer', not_null => 1 },
-    name         => { type => 'varchar', length => 255, not_null => 1 },
+    table   => 'products',
+    columns =>
+    [
+      id           => { type => 'integer', not_null => 1 },
+      name         => { type => 'varchar', length => 255, not_null => 1 },
+  
+      vendor_id    => { type => 'int' },
+      status       => { type => 'varchar', default => 'inactive', 
+                        length => 128, not_null => 1 },
+      date_created => { type => 'timestamp', not_null => 1, 
+                        default => 'now()' },
+      release_date => { type => 'timestamp' },
+    ]
 
-    vendor_id    => { type => 'int' },
-    status       => { type => 'varchar', default => 'inactive', 
-                      length => 128, not_null => 1 },
-    date_created => { type => 'timestamp', not_null => 1, 
-                      default => 'now()' },
-    release_date => { type => 'timestamp' },
+    primary_key_columns => 'id',
+
+    unique_key => 'name',
+
+    relationships =>
+    [
+      prices => 'one to many',
+      colors => 'many to many',
+    ]
   );
-
-  __PACKAGE__->meta->primary_key_columns('id');
-  __PACKAGE__->meta->add_unique_key('name');
-
-  __PACKAGE__->meta->relationships
-  (
-    prices => 'one to many',
-    colors => 'many to many',
-  );
-
-  __PACKAGE__->meta->initialize;
 
   1;
 
@@ -1703,26 +1728,29 @@ Now the Perl classes.  Remember that these must each be in their own ".pm" files
 
   use base 'My::DB::Object';
 
-  __PACKAGE__->meta->table('prices');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id         => { type => 'serial', primary_key => 1, not_null => 1 },
-    product_id => { type => 'int', not_null => 1 },
-    region     => { type => 'char', length => 2, not_null => 1 },
-    price => 
-    {
-      type      => 'decimal',
-      precision => 10,
-      scale     => 2,
-      not_null  => 1,
-      default   => 0.00 
-    },
-  );
+    table => 'prices',
 
-  __PACKAGE__->meta->add_unique_key([ 'product_id', 'region' ]);
-  __PACKAGE__->meta->add_foreign_key('product');
-  __PACKAGE__->meta->initialize;
+    columns =>
+    [
+      id         => { type => 'serial', primary_key => 1, not_null => 1 },
+      product_id => { type => 'int', not_null => 1 },
+      region     => { type => 'char', length => 2, not_null => 1 },
+      price => 
+      {
+        type      => 'decimal',
+        precision => 10,
+        scale     => 2,
+        not_null  => 1,
+        default   => 0.00 
+      },
+    ],
+  
+    unique_keys => [ [ 'product_id', 'region' ] ],
+
+    foreign_key => [ 'product' ],
+  );
 
   1;
 
@@ -1731,36 +1759,35 @@ Now the Perl classes.  Remember that these must each be in their own ".pm" files
 
   use base 'My::DB::Object';
 
-  __PACKAGE__->meta->table('colors');
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id   => { type => 'serial', primary_key => 1, not_null => 1 },
-    name => { type => 'varchar', length => 255, not_null => 1 },
+    table => 'colors',
+    columns =>
+    [
+      id   => { type => 'serial', primary_key => 1, not_null => 1 },
+      name => { type => 'varchar', length => 255, not_null => 1 },
+    ],
+    unique_key => 'name',
   );
-
-  __PACKAGE__->meta->add_unique_key('name');
-  __PACKAGE__->meta->initialize;
 
   1;
 
 
   package ProductColorMap;  
 
-  use Product;
-  use Color;
-
   use base 'My::DB::Object';
 
-  __PACKAGE__->meta->table('product_color_map');
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    product_id => { type => 'int', not_null => 1 },
-    color_id   => { type => 'int', not_null => 1 },
+    table   => 'product_color_map',
+    columns =>
+    [
+      product_id => { type => 'int', not_null => 1 },
+      color_id   => { type => 'int', not_null => 1 },
+    ],
+    pk_columns   => [ 'product_id', 'color_id' ],
+    foreign_keys => [ 'product', 'color' ],
   );
-
-  __PACKAGE__->meta->primary_key_columns('product_id', 'color_id');
-  __PACKAGE__->meta->add_foreign_keys('product', 'color');
-  __PACKAGE__->meta->initialize;
 
    1;
 
@@ -1799,31 +1826,33 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   use base qw(My::DB::Object::Base1);
 
-  __PACKAGE__->meta->table('colors');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id   => { type => 'integer', not_null => 1 },
-    name => { type => 'varchar', length => 255, not_null => 1 },
+    table   => 'colors',
+
+    columns =>
+    [
+      id   => { type => 'integer', not_null => 1 },
+      name => { type => 'varchar', length => 255, not_null => 1 },
+    ],
+
+    primary_key_columns => [ 'id' ],
+
+    unique_keys => [ 'name' ],
+
+    relationships =>
+    [
+      products => 
+      {
+        column_map    => { color_id => 'id' },
+        foreign_class => 'My::Product',
+        map_class     => 'My::ProductColorMap',
+        map_from      => 'color',
+        map_to        => 'product',
+        type          => 'many to many',
+      },
+    ],
   );
-
-  __PACKAGE__->meta->primary_key_columns([ 'id' ]);
-  __PACKAGE__->meta->add_unique_keys([ 'name' ]);
-
-  __PACKAGE__->meta->relationships
-  (
-    products => 
-    {
-      column_map    => { color_id => 'id' },
-      foreign_class => 'My::Product',
-      map_class     => 'My::ProductColorMap',
-      map_from      => 'color',
-      map_to        => 'product',
-      type          => 'many to many',
-    },
-  );
-
-  __PACKAGE__->meta->initialize;
 
   1;
 
@@ -1845,34 +1874,36 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   use base qw(My::DB::Object::Base1);
 
-  __PACKAGE__->meta->table('prices');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id         => { type => 'integer', not_null => 1 },
-    product_id => { type => 'integer', not_null => 1 },
-    region     => { type => 'character', default => 'US', length => 2, 
-                     not_null => 1 },
-    price      => { type => 'numeric', default => '0.00', not_null => 1,
-                    precision => 2, scale => 10 },
-  );
+    table   => 'prices',
 
-  __PACKAGE__->meta->primary_key_columns([ 'id' ]);
-  __PACKAGE__->meta->add_unique_keys([ 'product_id', 'region' ]);
+    columns =>
+    [
+      id         => { type => 'integer', not_null => 1 },
+      product_id => { type => 'integer', not_null => 1 },
+      region     => { type => 'character', default => 'US', length => 2, 
+                       not_null => 1 },
+      price      => { type => 'numeric', default => '0.00', not_null => 1,
+                      precision => 2, scale => 10 },
+    ],
 
-  __PACKAGE__->meta->foreign_keys
-  (
-    product => 
-    {
-      class => 'My::Product',
-      key_columns => 
+    primary_key_columns => [ 'id' ],
+
+    unique_keys => [ 'product_id', 'region' ],
+
+    foreign_keys =>
+    [
+      product => 
       {
-        product_id => 'id',
+        class => 'My::Product',
+        key_columns => 
+        {
+          product_id => 'id',
+        },
       },
-    },
+    ],
   );
-
-  __PACKAGE__->meta->initialize;
 
   1;
 
@@ -1894,38 +1925,39 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   use base qw(My::DB::Object::Base1);
 
-  __PACKAGE__->meta->table('product_color_map');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    product_id => { type => 'integer', not_null => 1 },
-    color_id   => { type => 'integer', not_null => 1 },
-  );
+    table   => 'product_color_map',
 
-  __PACKAGE__->meta->primary_key_columns([ 'product_id', 'color_id' ]);
+    columns =>
+    [
+      product_id => { type => 'integer', not_null => 1 },
+      color_id   => { type => 'integer', not_null => 1 },
+    ],
 
-  __PACKAGE__->meta->foreign_keys
-  (
-    color => 
-    {
-      class => 'My::Color',
-      key_columns => 
+    primary_key_columns => [ 'product_id', 'color_id' ],
+
+    foreign_keys =>
+    [
+      color => 
       {
-        color_id => 'id',
+        class => 'My::Color',
+        key_columns => 
+        {
+          color_id => 'id',
+        },
       },
-    },
-
-    product => 
-    {
-      class => 'My::Product',
-      key_columns => 
+  
+      product => 
       {
-        product_id => 'id',
+        class => 'My::Product',
+        key_columns => 
+        {
+          product_id => 'id',
+        },
       },
-    },
+    ],
   );
-
-  __PACKAGE__->meta->initialize;
 
   1;
 
@@ -1947,18 +1979,19 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   use base qw(My::DB::Object::Base1);
 
-  __PACKAGE__->meta->table('product_colors');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id         => { type => 'integer', not_null => 1 },
-    product_id => { type => 'integer', not_null => 1 },
-    color_code => { type => 'character', length => 3, not_null => 1 },
+    table   => 'product_colors',
+
+    columns =>
+    [
+      id         => { type => 'integer', not_null => 1 },
+      product_id => { type => 'integer', not_null => 1 },
+      color_code => { type => 'character', length => 3, not_null => 1 },
+    ],
+
+    primary_key_columns => [ 'id' ],
   );
-
-  __PACKAGE__->meta->primary_key_columns([ 'id' ]);
-
-  __PACKAGE__->meta->initialize;
 
   1;
 
@@ -1980,58 +2013,60 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   use base qw(My::DB::Object::Base1);
 
-  __PACKAGE__->meta->table('products');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id           => { type => 'integer', not_null => 1 },
-    name         => { type => 'varchar', length => 255, not_null => 1 },
-    price        => { type => 'numeric', default => '0.00', not_null => 1, 
-                      precision => 2, scale => 10 },
-    vendor_id    => { type => 'integer' },
-    status       => { type => 'varchar', default => 'inactive', 
-                      length => 128, not_null => 1 },
-    date_created => { type => 'timestamp', default => 'now()', 
-                      not_null => 1 },
-    release_date => { type => 'timestamp' },
-  );
+    table   => 'products',
 
-  __PACKAGE__->meta->primary_key_columns([ 'id' ]);
-  __PACKAGE__->meta->add_unique_keys([ 'name' ]);
+    columns =>
+    [
+      id           => { type => 'integer', not_null => 1 },
+      name         => { type => 'varchar', length => 255, not_null => 1 },
+      price        => { type => 'numeric', default => '0.00', not_null => 1, 
+                        precision => 2, scale => 10 },
+      vendor_id    => { type => 'integer' },
+      status       => { type => 'varchar', default => 'inactive', 
+                        length => 128, not_null => 1 },
+      date_created => { type => 'timestamp', default => 'now()', 
+                        not_null => 1 },
+      release_date => { type => 'timestamp' },
+    ],
 
-  __PACKAGE__->meta->foreign_keys
-  (
-    vendor => 
-    {
-      class => 'My::Vendor',
-      key_columns => 
+    primary_key_columns => [ 'id' ],
+
+    unique_keys => [ 'name' ],
+
+    foreign_keys =>
+    [
+      vendor => 
       {
-        vendor_id => 'id',
+        class => 'My::Vendor',
+        key_columns => 
+        {
+          vendor_id => 'id',
+        },
       },
-    },
+    ],
+
+    relationships =>
+    [
+      colors => 
+      {
+        column_map    => { product_id => 'id' },
+        foreign_class => 'My::Color',
+        map_class     => 'My::ProductColorMap',
+        map_from      => 'product',
+        map_to        => 'color',
+        type          => 'many to many',
+      },
+  
+      prices => 
+      {
+        class       => 'My::Price',
+        key_columns => { id => 'product_id' },
+        type        => 'one to many',
+      },
+    ],
   );
-
-  __PACKAGE__->meta->relationships
-  (
-    colors => 
-    {
-      column_map    => { product_id => 'id' },
-      foreign_class => 'My::Color',
-      map_class     => 'My::ProductColorMap',
-      map_from      => 'product',
-      map_to        => 'color',
-      type          => 'many to many',
-    },
-
-    prices => 
-    {
-      class       => 'My::Price',
-      key_columns => { id => 'product_id' },
-      type        => 'one to many',
-    },
-  );
-
-  __PACKAGE__->meta->initialize;
 
   1;
 
@@ -2053,28 +2088,30 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
 
   use base qw(My::DB::Object::Base1);
 
-  __PACKAGE__->meta->table('vendors');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id   => { type => 'integer', not_null => 1 },
-    name => { type => 'varchar', length => 255, not_null => 1 },
+    table   => 'vendors',
+
+    columns =>
+    [
+      id   => { type => 'integer', not_null => 1 },
+      name => { type => 'varchar', length => 255, not_null => 1 },
+    ],
+
+    primary_key_columns => [ 'id' ],
+
+    unique_keys => [ 'name' ],
+
+    relationships =>
+    [
+      products => 
+      {
+        class       => 'My::Product',
+        key_columns => { id => 'vendor_id' },
+        type        => 'one to many',
+      },
+    ],
   );
-
-  __PACKAGE__->meta->primary_key_columns([ 'id' ]);
-  __PACKAGE__->meta->add_unique_keys([ 'name' ]);
-
-  __PACKAGE__->meta->relationships
-  (
-    products => 
-    {
-      class       => 'My::Product',
-      key_columns => { id => 'vendor_id' },
-      type        => 'one to many',
-    },
-  );
-
-  __PACKAGE__->meta->initialize;
 
   1;
 

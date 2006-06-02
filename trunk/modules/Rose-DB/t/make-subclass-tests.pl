@@ -15,8 +15,6 @@ while(my $file = readdir($dir))
 
   while(<$old>)
   {
-    s/'Rose::DB::Generic'/'My::DB2::__RoseDBPrivate__::Rose::DB::Generic'/;
-
     # I know, I know...
     unless(/^\s*use_ok|Rose::DB::(\w+)|->isa\(/)
     {

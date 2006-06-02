@@ -4,10 +4,7 @@ use strict;
 
 use Rose::DateTime::Util();
 
-use Rose::DB;
-our @ISA = qw(Rose::DB);
-
-our $VERSION = '0.02';
+our $VERSION = '0.70';
 
 our $Debug = 0;
 
@@ -605,7 +602,7 @@ Rose::DB::Informix - Informix driver class for Rose::DB.
   # Set max length of varchar columns used to emulate the array data type
   Rose::DB::Informix->max_array_characters(128);
 
-  $db = Rose::DB->new; # $db is really a Rose::DB::Informix object
+  $db = Rose::DB->new; # $db is really a Rose::DB::Informix-derived object
 
   $dt  = $db->parse_datetime_year_to_minute(...);
   $val = $db->format_datetime_year_to_minute($dt);
@@ -616,11 +613,11 @@ Rose::DB::Informix - Informix driver class for Rose::DB.
 
 =head1 DESCRIPTION
 
-This is the subclass that L<Rose::DB> blesses an object into when the C<driver> is "Informix".  This mapping of drivers to class names is configurable.  See the documentation for L<Rose::DB>'s C<new()> and C<driver_class()> methods for more information.
+L<Rose::DB> blesses objects into a class derived from L<Rose::DB::Informix> when the L<driver|Rose::DB/driver> is "informix".  This mapping of driver names to class names is configurable.  See the documentation for L<Rose::DB>'s L<new()|Rose::DB/new> and L<driver_class()|Rose::DB/driver_class> methods for more information.
 
-Using this class directly is not recommended.  Instead, use L<Rose::DB> and let it bless objects into the appropriate class for you, according to its C<driver_class()> mappings.
+This class cannot be used directly.  You must use L<Rose::DB> and let its L<new()|Rose::DB/new> method return an object blessed into the appropriate class for you, according to its L<driver_class()|Rose::DB/driver_class> mappings.
 
-This class inherits from L<Rose::DB>.  B<Only the methods that are new or have  different behaviors are documented here.>  See the L<Rose::DB> documentation for information on the inherited methods.
+Only the methods that are new or have different behaviors than those in L<Rose::DB> are documented here.  See the L<Rose::DB> documentation for the full list of methods.
 
 =head1 CLASS METHODS
 

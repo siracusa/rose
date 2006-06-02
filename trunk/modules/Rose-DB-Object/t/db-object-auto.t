@@ -288,7 +288,7 @@ EOF
 
   is(MyPgObject->meta->perl_unique_keys_definition,
      <<'EOF', "perl_unique_keys_definition 1 - $db_type");
-__PACKAGE__->meta->add_unique_keys(
+__PACKAGE__->meta->unique_keys(
     [ 'k1', 'k2', 'k3' ],
     [ 'save' ],
 );
@@ -296,7 +296,7 @@ EOF
 
   is(MyPgObject->meta->perl_unique_keys_definition(style => 'object', braces => 'bsd', indent => 2),
      <<'EOF', "perl_unique_keys_definition 2 - $db_type");
-__PACKAGE__->meta->add_unique_keys
+__PACKAGE__->meta->unique_keys
 (
   Rose::DB::Object::Metadata::UniqueKey->new(name => 'rose_db_object_test_k1_key', columns => [ 'k1', 'k2', 'k3' ]),
   Rose::DB::Object::Metadata::UniqueKey->new(name => 'rose_db_object_test_save_key', columns => [ 'save' ]),

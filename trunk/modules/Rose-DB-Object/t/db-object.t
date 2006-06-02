@@ -1343,19 +1343,20 @@ EOF
 
     MyMPKMySQLObject->meta->primary_key_columns('k1', 'k2');
 
-    MyMPKMySQLObject->meta->initialize;
-
     my $i = 1;
 
-    MyMPKMySQLObject->meta->primary_key_generator(sub
-    {
-      my($meta, $db) = @_;
-
-      my $k1 = $i++;
-      my $k2 = $i++;
-
-      return $k1, $k2;
-    });
+    MyMPKMySQLObject->meta->setup
+    (
+      primary_key_generator => sub
+      {
+        my($meta, $db) = @_;
+  
+        my $k1 = $i++;
+        my $k2 = $i++;
+  
+        return $k1, $k2;
+      },
+    );
   }
 
   #

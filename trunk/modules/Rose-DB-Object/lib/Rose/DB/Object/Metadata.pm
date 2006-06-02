@@ -352,7 +352,14 @@ sub setup
   PAIR: while(@_)
   {
     my $method = shift;
-    my $args   = shift;
+
+    if(ref $method eq 'CODE')
+    {
+      $method->($self);
+      next PAIR;
+    }
+
+    my $args = shift;
 
     unless($self->can($method))
     {
@@ -365,16 +372,11 @@ sub setup
       next PAIR;
     }
 
-    if(ref $args)
+    if(ref $args eq 'ARRAY')
     {
-      if(ref $args ne 'ARRAY')
-      {
-        Carp::croak "Multiple values for the '$method' parameter must be ",
-                    "passed in a reference to an array";
-      }
-
-      # Special case for methods that accept a single array reference
-      # containing only non-reference values
+      # Special case for the unique_key and add_unique_key methods
+      # when the argument is a single array reference containing only
+      # non-reference values
       if(($method eq 'unique_key' || $method eq 'add_unique_key') && 
          !grep { ref } @$args)
       {
@@ -628,6 +630,7 @@ sub init_primary_key
 sub primary_key_generator    { shift->primary_key->generator(@_)    }
 sub primary_key_columns      { shift->primary_key->columns(@_)      }
 sub primary_key_column_names { shift->primary_key->column_names(@_) }
+sub pk_columns               { shift->primary_key_columns(@_)       }
 
 sub init_primary_key_column_info
 {
@@ -662,7 +665,7 @@ sub add_primary_key_columns
   return;
 }
 
-*add_primary_key_column = \&add_primary_key_columns;
+sub add_primary_key_column { shift->add_primary_key_columns(@_) }
 
 sub add_unique_keys
 {
@@ -687,8 +690,9 @@ sub add_unique_keys
   return;
 }
 
-*add_unique_key = \&add_unique_keys;
-*unique_key     = \&add_unique_keys;
+
+sub add_unique_key { shift->add_unique_keys(@_)  }
+sub unique_key     { \shift->add_unique_keys(@_) }
 
 sub delete_unique_keys { $_[0]->{'unique_keys'} = [] }
 
@@ -961,7 +965,7 @@ sub add_columns
   push(@{$self->{'columns_ordered'}}, @columns);
 }
 
-*add_column = \&add_columns;
+sub add_column { shift->add_columns(@_) }
 
 sub relationship
 {
@@ -1127,7 +1131,7 @@ sub add_relationships
   }
 }
 
-*add_relationship = \&add_relationships;
+sub add_relationship { shift->add_relationships(@_) }
 
 my %Class_Loaded;
 
@@ -1294,7 +1298,7 @@ sub add_foreign_keys
   }
 }
 
-*add_foreign_key = \&add_foreign_keys;
+sub add_foreign_key { shift->add_foreign_keys(@_) }
 
 sub foreign_key
 {
@@ -1717,7 +1721,7 @@ sub add_deferred_tasks
   }
 }
 
-*add_deferred_task = \&add_deferred_tasks;
+sub add_deferred_task { shift->add_deferred_tasks(@_) }
 
 sub has_deferred_tasks
 {
@@ -1833,7 +1837,7 @@ my $check = 0;
   }
 }
 
-*add_deferred_foreign_key = \&add_deferred_foreign_keys;
+sub add_deferred_foreign_key { shift->add_deferred_foreign_keys(@_) }
 
 sub retry_deferred_foreign_keys
 {
@@ -1940,7 +1944,7 @@ sub make_relationship_methods
         }
       }
     }
-$DB::single = 1;
+
     if($self->auto_load_related_classes)
     {
       if($relationship->can('class'))
@@ -2050,7 +2054,7 @@ sub add_deferred_relationships
   }
 }
 
-*add_deferred_relationship = \&add_deferred_relationships;
+sub add_deferred_relationship { shift->add_deferred_relationships(@_) }
 
 sub retry_deferred_relationships
 {
@@ -3373,13 +3377,68 @@ Rose::DB::Object::Metadata - Database object metadata.
   # Auto-initialization
   #
 
-  $meta->table('products');
-
+  $meta->table('products'); # optional if class name ends with "::Product"
   $meta->auto_initialize;
 
   #
-  # ...or manual setup and initialization
+  # ...or manual setup
   #
+
+  $meta->setup
+  (
+    table => 'products',
+
+    columns =>
+    [
+      id          => { type => 'int', primary_key => 1 },
+      name        => { type => 'varchar', length => 255 },
+      description => { type => 'text' },
+      category_id => { type => 'int' },
+  
+      status => 
+      {
+        type      => 'varchar', 
+        check_in  => [ 'active', 'inactive' ],
+        default   => 'inactive',
+      },
+  
+      start_date  => { type => 'datetime' },
+      end_date    => { type => 'datetime' },
+  
+      date_created  => { type => 'timestamp', default => 'now' },  
+      last_modified => { type => 'timestamp', default => 'now' },
+    ],
+  
+    unique_key => 'name',
+  
+    foreign_keys =>
+    [
+      category =>
+      {
+        class       => 'Category',
+        key_columns =>
+        {
+          category_id => 'id',
+        }
+      },
+    ],
+  
+    relationships =>
+    [
+      prices =>
+      {
+        type       => 'one to many',
+        class      => 'Price',
+        column_map => { id => 'id_product' },
+      },
+    ],
+  );
+
+  #
+  # ...or even more verbose manual setup (old-style, not recommended)
+  #
+
+  $meta->table('products');
 
   $meta->columns
   (
@@ -3402,7 +3461,7 @@ Rose::DB::Object::Metadata - Database object metadata.
     last_modified => { type => 'timestamp', default => 'now' },
   );
 
-  $meta->add_unique_key('name');
+  $meta->unique_key('name');
 
   $meta->foreign_keys
   (
@@ -3416,8 +3475,7 @@ Rose::DB::Object::Metadata - Database object metadata.
     },
   );
 
-  # This part cannot be done automatically
-  $meta->add_relationship
+  $meta->relationships
   (
     prices =>
     {
@@ -3992,6 +4050,10 @@ In other words, L<DBD::Informix> has tried to quote the string "CURRENT", which 
 
 In order to make this work, the value "CURRENT" must be "inlined" rather than bound to a placeholder when it is the value of a "DATETIME YEAR TO SECOND" column in an Informix database.
 
+=item B<auto_load_related_classes [BOOL]>
+
+Get or set a flag that indicates whether or not classes related to this L<class|/class> through a L<foreign key|/foreign_keys> or other L<relationship|/relationships> will be automatically loaded when the class is L<initialize|/initialize>d.  The default value is true.
+
 =item B<cached_objects_expire_in [DURATION]>
 
 This method is only applicable if this metadata object is associated with a L<Rose::DB::Object::Cached>-derived class.  It controls the expiration cached objects.
@@ -4219,6 +4281,10 @@ If any column name in the primary key or any of the unique keys does not exist i
 
 ARGS, if any, are passed to the call to L<make_methods|/make_methods> that actually creates the methods.
 
+=item B<is_initialized [BOOL]>
+
+Get or set a boolean value that indicates whether or not this L<class|/class> was L<initialize|/initialize>d.  A successful call to the L<initialize|/initialize> method will automatically set this flag to true.
+
 =item B<make_manager_class [PARAMS | CLASS]>
 
 This method creates a L<Rose::DB::Object::Manager>-derived class to manage objects of this L<class|/class>.  To do so, it simply calls L<perl_manager_class|/perl_manager_class>, passing all arguments, and then L<eval|perlfunc/eval>uates the result.  See the L<perl_manager_class|/perl_manager_class> documentation for more information.
@@ -4319,6 +4385,10 @@ Given the column object COLUMN and the method type TYPE, returns the correspondi
 
 Given the method name NAME and the class name CLASS, returns true if the method name is reserved (i.e., is used by the CLASS API), false otherwise.
 
+=item B<pk_columns [COLUMNS]>
+
+This is an alias for the L<primary_key_columns|/primary_key_columns> method.
+
 =item B<pre_init_hook [ CODEREF | ARRAYREF ]>
 
 Get or set a reference to a subroutine or a reference to an array of code references that will be called just before the L<initialize|/initialize> method runs.  Each referenced subroutine will be passed the metadata object itself and any arguments passed to the call to L<initialize|/initialize>.
@@ -4393,6 +4463,74 @@ The value of the new column may be a L<Rose::DB::Object::Metadata::Column>-deriv
 =item B<schema [SCHEMA]>
 
 Get or set the database schema for this L<class|/class>.  This setting will B<override> any L<setting|Rose::DB/schema> in the L<db|Rose::DB::Object/db> object.  Use this method only if you know that the L<class|/class> will always point to a specific schema, regardless of what the L<Rose::DB>-derived database handle object specifies.
+
+=item B<setup PARAMS>
+
+Set up the metadata for this L<class|/class> all in a single method call.  This method is a convenient shortcut.  It does its work by delegating to other methods.
+
+The L<setup()|/setup> does nothing if the metadata object is already initialized (according to the L<is_initialized|/is_initialized> method).  PARAMS are method/arguments pairs.  In general, the following transformations apply.
+
+Given a method/arrayref pair:
+
+    METHOD => [ ARG1, ARG2 ]
+
+The arguments will be removed from their array reference and passed to METHOD like this:
+
+    $meta->METHOD(ARG1, ARG2);
+
+Given a method/value pair:
+
+    METHOD => ARG
+
+The argument will be passed to METHOD as-is:
+
+    $meta->METHOD(ARG);
+
+There is one exceptions to these transformation rules.  If METHOD is "unique_key" or "add_unique_key" and the argument is a reference to an array containing only non-reference values, then the array reference itself is passed to the method.  For example, this pair:
+
+    unique_key => [ 'name', 'status' ]
+
+will result in this method call:
+
+    $meta->unique_key([ 'name', 'status' ]);
+
+Method names may appear more than once in PARAMS.  The methods are called in the order that they appear in PARAMS, with the exception of the L<initialize|/initialize> method, which is always called last.  If "initialize" is not one of the method names, then it will be called automatically (with no arguments) as the very last method.  (If you do not want to pass any arguments to the  L<initialize|/initialize> method, standard practice is to omit it.)
+
+Here's an example L<setup()|/setup> method call, followed by the equivalent "long-hand" implementation.
+
+    $meta->setup
+    (
+      table => 'colors',
+    
+      columns => 
+      [
+        code => { type => 'character', length => 3, not_null => 1 },
+        name => { type => 'varchar', length => 255 },
+      ],
+    
+      primary_key_columns => [ 'code' ],
+
+      unique_key => [ 'name' ],
+    );
+
+The L<setup()|/setup> method call above is equivalent to the following code:
+
+    unless($meta->is_initialized)
+    {
+      $meta->table('colors');
+  
+      $meta->columns(
+      [
+        code => { type => 'character', length => 3, not_null => 1 },
+        name => { type => 'varchar', length => 255 },
+      ]);
+  
+      $meta->primary_key_columns('code');
+
+      $meta->unique_key([ 'name' ]),
+
+      $meta->initialize;
+    }
 
 =item B<table [TABLE]>
 
@@ -4651,6 +4789,10 @@ The integer number of spaces to use for each level of indenting in the generated
 
 The list of base classes to use in the generated class definition.  CLASSES should be a single class name, or a reference to an array of class names.  The default base class is L<Rose::DB::Object>.
 
+=item * use_setup BOOL
+
+If true, then the generated class definition will include a call to the L<setup|/setup> method.  Otherwise, the generated code will contain individual methods calls.  The default value for this parameter is B<true>; the L<setup|/setup> method is the recommended way to initialize a class.
+
 =back
 
 This method is simply a wrapper (with some glue) for the following methods: L<perl_columns_definition|/perl_columns_definition>, L<perl_primary_key_columns_definition|/perl_primary_key_columns_definition>, L<perl_unique_keys_definition|/perl_unique_keys_definition>,  L<perl_foreign_keys_definition|/perl_foreign_keys_definition>, and L<perl_relationships_definition|/perl_relationships_definition>.  The "braces" and "indent" parameters are passed on to these other methods.
@@ -4699,95 +4841,162 @@ Here's a complete example, which also serves as an example of the individual "pe
 
 First we'll auto-initialize the classes.
 
-    package Category;
-    our @ISA = qw(Rose::DB::Object);
-    Category->meta->table('topics');
-    Category->meta->auto_initialize;
-
     package Code;
-    our @ISA = qw(Rose::DB::Object);
-    Code->meta->table('codes');
-    Code->meta->auto_initialize;
+    use base qw(Rose::DB::Object);
+    __PACKAGE__->meta->auto_initialize;
+
+    package Category;
+    use base qw(Rose::DB::Object);
+    # Explicit table name required because the class name 
+    # does not match up with the table name in this case.
+    __PACKAGE__->meta->table('topics');
+    __PACKAGE__->meta->auto_initialize;
 
     package Product;
-    our @ISA = qw(Rose::DB::Object);
-    my $meta = Product->meta;
-    $meta->table('products');
-    Product->meta->auto_initialize;
+    use base qw(Rose::DB::Object);
+    __PACKAGE__->meta->auto_initialize;
 
     package Price;
-    our @ISA = qw(Rose::DB::Object);
-    Price->meta->table('prices');
-    Price->meta->auto_initialize;
+    use base qw(Rose::DB::Object);
+    __PACKAGE__->meta->auto_initialize;
 
-Then we'll print the C<Product> class definition;
+Now we'll print the C<Product> class definition;
 
     print Product->meta->perl_class_definition(braces => 'bsd', 
                                                indent => 2);
 
 The output looks like this:
 
- package Product;
+  package Product;
+ 
+  use strict;
+ 
+  use base qw(Rose::DB::Object);
 
- use strict;
+  __PACKAGE__->meta->setup
+  (
+    table => 'products',
+ 
+    columns =>
+    [
+      id            => { type => 'integer', not_null => 1 },
+      name          => { type => 'varchar', length => 32, not_null => 1 },
+      flag          => { type => 'boolean', default => 'true', not_null => 1 },
+      status        => { type => 'varchar', default => 'active', length => 32 },
+      topic_id      => { type => 'integer' },
+      fk1           => { type => 'integer' },
+      fk2           => { type => 'integer' },
+      fk3           => { type => 'integer' },
+      last_modified => { type => 'timestamp' },
+      date_created  => { type => 'timestamp' },
+    ],
+ 
+    primary_key_columns => [ 'id' ],
+ 
+    foreign_keys =>
+    [
+      code => 
+      {
+        class => 'Code',
+        key_columns => 
+        {
+          fk1 => 'k1',
+          fk2 => 'k2',
+          fk3 => 'k3',
+        },
+      },
+   
+      topic => 
+      {
+        class => 'Category',
+        key_columns => 
+        {
+          topic_id => 'id',
+        },
+      },
+    ],
+ 
+    relationships =>
+    [
+      prices => 
+      {
+        class       => 'Price',
+        key_columns => { id => 'product_id' },
+        type        => 'one to many',
+      },
+    ],
+  );
+ 
+  1;
+ 
+Here's the output when the C<use_setup> parameter is explicitly set to false.
 
- use Rose::DB::Object
- our @ISA = qw(Rose::DB::Object);
+    print Product->meta->perl_class_definition(braces    => 'bsd', 
+                                               indent    => 2,
+                                               use_setup => 0);
 
- __PACKAGE__->meta->table('products');
+Note that this approach is not recommended, but exists for historical reasons.
 
- __PACKAGE__->meta->columns
- (
-   id            => { type => 'integer', not_null => 1 },
-   name          => { type => 'varchar', length => 32, not_null => 1 },
-   flag          => { type => 'boolean', default => 'true', not_null => 1 },
-   status        => { type => 'varchar', default => 'active', length => 32 },
-   topic_id      => { type => 'integer' },
-   fk1           => { type => 'integer' },
-   fk2           => { type => 'integer' },
-   fk3           => { type => 'integer' },
-   last_modified => { type => 'timestamp' },
-   date_created  => { type => 'timestamp' },
- );
-
- __PACKAGE__->meta->primary_key_columns([ 'id' ]);
-
- __PACKAGE__->meta->foreign_keys
- (
-   code => 
-   {
-     class => 'Code',
-     key_columns => 
-     {
-       fk1 => 'k1',
-       fk2 => 'k2',
-       fk3 => 'k3',
-     },
-   },
-
-   topic => 
-   {
-     class => 'Category',
-     key_columns => 
-     {
-       topic_id => 'id',
-     },
-   },
- );
-
- __PACKAGE__->meta->relationships
- (
-   prices => 
-   {
-     class       => 'Price',
-     key_columns => { id => 'product_id' },
-     type        => 'one to many',
-   },
- );
-
- __PACKAGE__->meta->initialize;
-
- 1;
+  package Product;
+ 
+  use strict;
+ 
+  use base qw(Rose::DB::Object);
+ 
+  __PACKAGE__->meta->table('products');
+ 
+  __PACKAGE__->meta->columns
+  (
+    id            => { type => 'integer', not_null => 1 },
+    name          => { type => 'varchar', length => 32, not_null => 1 },
+    flag          => { type => 'boolean', default => 'true', not_null => 1 },
+    status        => { type => 'varchar', default => 'active', length => 32 },
+    topic_id      => { type => 'integer' },
+    fk1           => { type => 'integer' },
+    fk2           => { type => 'integer' },
+    fk3           => { type => 'integer' },
+    last_modified => { type => 'timestamp' },
+    date_created  => { type => 'timestamp' },
+  );
+ 
+  __PACKAGE__->meta->primary_key_columns([ 'id' ]);
+ 
+  __PACKAGE__->meta->foreign_keys
+  (
+    code => 
+    {
+      class => 'Code',
+      key_columns => 
+      {
+        fk1 => 'k1',
+        fk2 => 'k2',
+        fk3 => 'k3',
+      },
+    },
+ 
+    topic => 
+    {
+      class => 'Category',
+      key_columns => 
+      {
+        topic_id => 'id',
+      },
+    },
+  );
+ 
+  __PACKAGE__->meta->relationships
+  (
+    prices => 
+    {
+      class       => 'Price',
+      key_columns => { id => 'product_id' },
+      type        => 'one to many',
+    },
+  );
+ 
+  __PACKAGE__->meta->initialize;
+ 
+  1;
 
 See the L<auto-initialization|AUTO-INITIALIZATION> section for more discussion of Perl code generation.
 
@@ -4801,13 +5010,17 @@ Auto-initialize the columns (if necessary), then return the Perl source code tha
 
 The brace style to use in the generated Perl code.  STYLE must be either "k&r" or "bsd".  The default value is determined by the return value of the L<default_perl_braces|/default_perl_braces> class method.
 
+=item * for_setup BOOL
+
+If true, then the generated Perl code will be a method/arguments pair suitable for use as a parameter to L<setup|/setup> method.  The default is false.
+
 =item * indent INT
 
 The integer number of spaces to use for each level of indenting in the generated Perl code.  The default value is determined by the return value of the L<default_perl_indent|/default_perl_indent> class method.
 
 =back
 
-See the larger example in the documentation for the L<perl_class_definition|/perl_class_definition> method to see what the generated Perl code looks like.
+To see examples of the generated code, look in the documentation for the L<perl_class_definition|/perl_class_definition> method.
 
 =item B<perl_foreign_keys_definition [PARAMS]>
 
@@ -4819,13 +5032,17 @@ Auto-initialize the foreign keys (if necessary), then return the Perl source cod
 
 The brace style to use in the generated Perl code.  STYLE must be either "k&r" or "bsd".  The default value is determined by the return value of the L<default_perl_braces|/default_perl_braces> class method.
 
+=item * for_setup BOOL
+
+If true, then the generated Perl code will be a method/arguments pair suitable for use as a parameter to L<setup|/setup> method.  The default is false.
+
 =item * indent INT
 
 The integer number of spaces to use for each level of indenting in the generated Perl code.  The default value is determined by the return value of the L<default_perl_indent|/default_perl_indent> class method.
 
 =back
 
-See the larger example in the documentation for the L<perl_class_definition|/perl_class_definition> method to see what the generated Perl code looks like.
+To see examples of the generated code, look in the documentation for the L<perl_class_definition|/perl_class_definition> method.
 
 =item B<perl_manager_class [ PARAMS | BASE_NAME ]>
 
@@ -4888,13 +5105,39 @@ Auto-initialize the relationships (if necessary), then return the Perl source co
 
 The brace style to use in the generated Perl code.  STYLE must be either "k&r" or "bsd".  The default value is determined by the return value of the L<default_perl_braces|/default_perl_braces> class method.
 
+=item * for_setup BOOL
+
+If true, then the generated Perl code will be a method/arguments pair suitable for use as a parameter to L<setup|/setup> method.  The default is false.
+
 =item * indent INT
 
 The integer number of spaces to use for each level of indenting in the generated Perl code.  The default value is determined by the return value of the L<default_perl_indent|/default_perl_indent> class method.
 
 =back
 
-See the larger example in the documentation for the L<perl_class_definition|/perl_class_definition> method to see what the generated Perl code looks like.
+To see examples of the generated code, look in the documentation for the L<perl_class_definition|/perl_class_definition> method.
+
+=item B<perl_table_definition [PARAMS]>
+
+Auto-initialize the table name (if necessary), then return the Perl source code that is equivalent to the auto-initialization.  PARAMS are optional name/value pairs that may include the following:
+
+=over 4
+
+=item * braces STYLE
+
+The brace style to use in the generated Perl code.  STYLE must be either "k&r" or "bsd".  The default value is determined by the return value of the L<default_perl_braces|/default_perl_braces> class method.
+
+=item * for_setup BOOL
+
+If true, then the generated Perl code will be a method/arguments pair suitable for use as a parameter to L<setup|/setup> method.  The default is false.
+
+=item * indent INT
+
+The integer number of spaces to use for each level of indenting in the generated Perl code.  The default value is determined by the return value of the L<default_perl_indent|/default_perl_indent> class method.
+
+=back
+
+To see examples of the generated code, look in the documentation for the L<perl_class_definition|/perl_class_definition> method.
 
 =item B<perl_unique_keys_definition [PARAMS]>
 
@@ -4906,6 +5149,10 @@ Auto-initialize the unique keys, then return the Perl source code that is equiva
 
 The brace style to use in the generated Perl code.  STYLE must be either "k&r" or "bsd".  The default value is determined by the return value of the L<default_perl_braces|/default_perl_braces> class method.
 
+=item * for_setup BOOL
+
+If true, then the generated Perl code will be a method/arguments pair suitable for use as a parameter to L<setup|/setup> method.  The default is false.
+
 =item * indent INT
 
 The integer number of spaces to use for each level of indenting in the generated Perl code.  The default value is determined by the return value of the L<default_perl_indent|/default_perl_indent> class method.
@@ -4916,7 +5163,7 @@ Determines the style the initialization used in the generated Perl code.  STYLE 
 
 The "array" style passes references to arrays of column names:
 
-  __PACKAGE__->meta->add_unique_keys
+  __PACKAGE__->meta->unique_keys
   (
     [ 'id', 'name' ],
     [ 'flag', 'status' ],
@@ -4924,7 +5171,7 @@ The "array" style passes references to arrays of column names:
 
 The "object" style sets unique keys using calls to the L<Rose::DB::Object::Metadata::UniqueKey> constructor:
 
-  __PACKAGE__->meta->add_unique_keys
+  __PACKAGE__->meta->unique_keys
   (
     Rose::DB::Object::Metadata::UniqueKey->new(
       name    => 'products_id_key', 

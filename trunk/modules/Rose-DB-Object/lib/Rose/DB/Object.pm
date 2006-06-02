@@ -1287,33 +1287,22 @@ Rose::DB::Object - Extensible, high performance RDBMS-OO mapper.
 
   package Category;
 
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
-
+  use base qw(Rose::DB::Object);
   __PACKAGE__->meta->table('categories');
-
   __PACKAGE__->meta->auto_initialize;
 
   ...
 
   package Price;
-
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
-
+  use base qw(Rose::DB::Object);
   __PACKAGE__->meta->table('prices');
-
   __PACKAGE__->meta->auto_initialize;
 
   ...
 
   package Product;
-
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
-
+  use base qw(Rose::DB::Object);
   __PACKAGE__->meta->table('products');
-
   __PACKAGE__->meta->auto_initialize;
 
   #
@@ -1322,100 +1311,98 @@ Rose::DB::Object - Extensible, high performance RDBMS-OO mapper.
 
   package Category;
 
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
+  use base qw(Rose::DB::Object);
 
-  __PACKAGE__->meta->table('categories');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id          => { type => 'int', primary_key => 1 },
-    name        => { type => 'varchar', length => 255 },
-    description => { type => 'text' },
+    table => 'categories',
+
+    columns =>
+    [
+      id          => { type => 'int', primary_key => 1 },
+      name        => { type => 'varchar', length => 255 },
+      description => { type => 'text' },
+    ],
+
+    unique_key => 'name',
   );
-
-  __PACKAGE__->meta->add_unique_key('name');
-
-  __PACKAGE__->meta->initialize;
 
   ...
 
   package Price;
 
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
+  use base qw(Rose::DB::Object);
 
-  __PACKAGE__->meta->table('prices');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id         => { type => 'int', primary_key => 1 },
-    price      => { type => 'decimal' },
-    region     => { type => 'char', length => 3 },
-    product_id => { type => 'int' }
+    table => 'prices',
+
+    columns =>
+    [
+      id         => { type => 'int', primary_key => 1 },
+      price      => { type => 'decimal' },
+      region     => { type => 'char', length => 3 },
+      product_id => { type => 'int' }
+    ],
+
+    unique_key => [ 'product_id', 'region' ],
   );
-
-  __PACKAGE__->meta->add_unique_key('product_id', 'region');
-
-  __PACKAGE__->meta->initialize;
 
   ...
 
   package Product;
 
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
+  use base qw(Rose::DB::Object);
 
-  __PACKAGE__->meta->table('products');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id          => { type => 'int', primary_key => 1 },
-    name        => { type => 'varchar', length => 255 },
-    description => { type => 'text' },
-    category_id => { type => 'int' },
+    table => 'products',
 
-    status => 
-    {
-      type      => 'varchar', 
-      check_in  => [ 'active', 'inactive' ],
-      default   => 'inactive',
-    },
-
-    start_date  => { type => 'datetime' },
-    end_date    => { type => 'datetime' },
-
-    date_created     => { type => 'timestamp', default => 'now' },  
-    last_modified    => { type => 'timestamp', default => 'now' },
-  );
-
-  __PACKAGE__->meta->add_unique_key('name');
-
-  __PACKAGE__->meta->foreign_keys
-  (
-    category =>
-    {
-      class       => 'Category',
-      key_columns =>
+    columns =>
+    [
+      id          => { type => 'int', primary_key => 1 },
+      name        => { type => 'varchar', length => 255 },
+      description => { type => 'text' },
+      category_id => { type => 'int' },
+  
+      status => 
       {
-        category_id => 'id',
-      }
-    },
-  );
+        type      => 'varchar', 
+        check_in  => [ 'active', 'inactive' ],
+        default   => 'inactive',
+      },
+  
+      start_date  => { type => 'datetime' },
+      end_date    => { type => 'datetime' },
+  
+      date_created     => { type => 'timestamp', default => 'now' },  
+      last_modified    => { type => 'timestamp', default => 'now' },
+    ],
 
-  # This part cannot be done automatically.
-  # perldoc Rose::DB::Object::Metadata to find out why.
-  __PACKAGE__->meta->relationships
-  (
-    prices =>
-    {
-      type       => 'one to many',
-      class      => 'Price',
-      column_map => { id => 'product_id' },
-    },
-  );
+    unique_key => 'name',
 
-  __PACKAGE__->meta->initialize;
+    foreign_keys =>
+    [
+      category =>
+      {
+        class       => 'Category',
+        key_columns =>
+        {
+          category_id => 'id',
+        }
+      },
+    [,
+
+    relationships =>
+    [
+      prices =>
+      {
+        type       => 'one to many',
+        class      => 'Price',
+        column_map => { id => 'product_id' },
+      },
+    ],
+  );
 
   ...
 
@@ -1555,15 +1542,16 @@ Example:
   package BaseClass;
   use base 'Rose::DB::Object';
 
-  __PACKAGE__->meta->table('objects');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id    => { type => 'int', primary_key => 1 },
-    start => { type => 'scalar' },
-  );
+    table => 'objects',
 
-  __PACKAGE__->meta->initialize;
+    columns =>
+    [
+      id    => { type => 'int', primary_key => 1 },
+      start => { type => 'scalar' },
+    ],
+  );
 
   ...
 
@@ -1840,33 +1828,33 @@ If your table has a multi-column primary key or does not use a column type that 
 
     package MyDBObject;
 
-    use Rose::DB::Object;
-    our @ISA = qw(Rose::DB::Object);
+    use base qw(Rose::DB::Object);
 
-    __PACKAGE__->meta->table('mytable');
-
-    __PACKAGE__->meta->columns
+    __PACKAGE__->meta->setup
     (
-      k1   => { type => 'int', not_null => 1 },
-      k2   => { type => 'int', not_null => 1 },
-      name => { type => 'varchar', length => 255 },
-      ...
+      table => 'mytable',
+
+      columns =>
+      [
+        k1   => { type => 'int', not_null => 1 },
+        k2   => { type => 'int', not_null => 1 },
+        name => { type => 'varchar', length => 255 },
+        ...
+      ],
+
+      primary_key_columns => [ 'k1', 'k2' ],
+    
+      primary_key_generator => sub
+      {
+        my($meta, $db) = @_;
+  
+        # Generate primary key values somehow
+        my $k1 = ...;
+        my $k2 = ...;
+  
+        return $k1, $k2;
+      },
     );
-
-    __PACKAGE__->meta->primary_key_columns('k1', 'k2');
-
-    __PACKAGE__->meta->initialize;
-
-    __PACKAGE__->meta->primary_key_generator(sub
-    {
-      my($meta, $db) = @_;
-
-      # Generate primary key values somehow
-      my $k1 = ...;
-      my $k2 = ...;
-
-      return $k1, $k2;
-    });
 
 See the L<Rose::DB::Object::Metadata> documentation for more information on custom primary key generators.
 
@@ -1893,7 +1881,6 @@ As described in the L<Rose::DB::Object::Metadata> documentation, each column in 
 
 Here is a list of method names reserved by the L<Rose::DB::Object> API.  If you have a column with one of these names, you must alias it.
 
-    clone
     db
     dbh
     delete
