@@ -4052,7 +4052,7 @@ In order to make this work, the value "CURRENT" must be "inlined" rather than bo
 
 =item B<auto_load_related_classes [BOOL]>
 
-Get or set a flag that indicates whether or not classes related to this L<class|/class> through a L<foreign key|/foreign_keys> or other L<relationship|/relationships> will be automatically loaded when the class is L<initialize|/initialize>d.  The default value is true.
+Get or set a flag that indicates whether or not classes related to this L<class|/class> through a L<foreign key|/foreign_keys> or other L<relationship|/relationships> will be automatically loaded when this L<class|/class> is L<initialize|/initialize>d.  The default value is true.
 
 =item B<cached_objects_expire_in [DURATION]>
 
@@ -4496,9 +4496,9 @@ will result in this method call:
 
     $meta->unique_key([ 'name', 'status' ]);
 
-(Note that these method names are I<singular>.  This exception does I<not> apply to the I<plural> variants, L<unique_keys|/unique_keys> and "L<add_unique_keys|/add_unique_keys>".)
+(Note that these method names are I<singular>.  This exception does I<not> apply to the I<plural> variants, "L<unique_keys|/unique_keys>" and "L<add_unique_keys|/add_unique_keys>".)
 
-Method names may appear more than once in PARAMS.  The methods are called in the order that they appear in PARAMS, with the exception of the L<initialize|/initialize> method, which is always called last.  If "initialize" is not one of the method names, then it will be called automatically (with no arguments) as the very last method.  (If you do not want to pass any arguments to the  L<initialize|/initialize> method, standard practice is to omit it.)
+Method names may appear more than once in PARAMS.  The methods are called in the order that they appear in PARAMS, with the exception of the L<initialize|/initialize> method, which is always called last.  If "initialize" is not one of the method names, then it will be called automatically (with no arguments) at the end.  If you do not want to pass any arguments to the  L<initialize|/initialize> method, standard practice is to omit it.
 
 Here's an example L<setup()|/setup> method call, followed by the equivalent "long-hand" implementation.
 
