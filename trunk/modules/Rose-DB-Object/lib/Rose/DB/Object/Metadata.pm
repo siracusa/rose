@@ -3176,9 +3176,7 @@ sub _clear_table_generated_values
   $self->{'fq_primary_key_sequence_names'} = undef;
   $self->{'primary_key_sequence_names'} = undef;
   $self->{'insert_sql'}        = undef;
-  $self->{'insert_odku_sql'}   = undef;
   $self->{'insert_sql_with_inlining_start'} = undef;
-  $self->{'insert_odku_sql_with_inlining_start'} = undef;
   $self->{'update_sql_prefix'} = undef;
   $self->{'update_sql_with_inlining_start'} = undef;
   $self->{'update_all_sql'}    = undef;
@@ -3217,9 +3215,7 @@ sub _clear_column_generated_values
   $self->{'update_all_sql'}         = undef;
   $self->{'update_sql_prefix'}      = undef;
   $self->{'insert_sql'}             = undef;
-  $self->{'insert_odku_sql'}        = undef;
   $self->{'insert_sql_with_inlining_start'} = undef;
-  $self->{'insert_odku_sql_with_inlining_start'} = undef;
   $self->{'update_sql_with_inlining_start'} = undef;
   $self->{'delete_sql'}             = undef;
 }
