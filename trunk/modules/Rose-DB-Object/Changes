@@ -1,4 +1,4 @@
-0.73 (06.02.2006) - John Siracusa <siracusa@mindspring.com>
+0.73 (06.03.2006) - John Siracusa <siracusa@mindspring.com>
 
     * The new setup() method is now the new, officially recommended way 
       to set up class metadata.
@@ -7,12 +7,15 @@
     * Related classes are now loaded automatically by default.  Added the
       auto_load_related_classes metadata attribute to control this behavior.
     * Added the pk_columns() alias for the primary_key_columns() method.
+    * Added insert_or_update() and insert_or_update_on_duplicate_key()
+      helper methods.  (Suggested by Guillermo Roditi)
     * The Loader now automatically skips tables without primary keys.
     * Moved some database introspection code to a new version of Rose::DB, 
       which this version of Rose::DB::Object now requires.
     * Non-null character columns are now detected correctly in Informix.
     * Fixed a bug that caused chkpass columns to be erased after some save()s.
       (Reported by Cees Hek)
+    * Added an option to use InnoDB with MySQL in the benchmark suite.
 
 0.727 (05.24.2006) - John Siracusa <siracusa@mindspring.com>
 

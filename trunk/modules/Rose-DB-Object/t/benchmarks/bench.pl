@@ -61,6 +61,7 @@ GetOptions(\%Opt, 'help',
                   'simple',
                   'complex',
                   'iterations=i',
+                  'innodb|mysql-uses-innodb',
                   'simple-and-complex',
                   'hi-res-time',
                   'database|db=s') or Usage();
@@ -283,7 +284,7 @@ Usage: $prog --help | [--skip-intro] [--cpu-time <num>]
        [--compare-to <modules>] [--database <db>]
        [--time | --compare | --time-and-compare]
        [--simple | --complex | --simple-and-complex]
-       [--iterations <num>] [--hi-res-time]
+       [--iterations <num>] [--hi-res-time] [--innodb]
        [--benchmarks-match <regex>]
 
 --benchmarks-match <regex>
@@ -317,6 +318,10 @@ Usage: $prog --help | [--skip-intro] [--cpu-time <num>]
 --hi-res-time
 
     Use high-resolution wall-clock time measurement, if available.
+
+--innodb
+
+    When benchmarking against MySQL, use the InnoDB storage engine.
 
 --iterations <num>
 
@@ -4910,15 +4915,10 @@ EOF
 
     sub insert_or_update_simple_category_dbic
     {
-      #MyTest::DBIC::Simple::Category->create({ id => $i + 300_000, name => "xCat $i" });
-      $DBIC_Simple_Category_RS->update_or_create({ id => $i + 300_000, name => "xCat $i" });
+      my $c = $DBIC_Simple_Category_RS->update_or_create({ id => $i + 300_000, name => "xCat $i" });
       $i++;
     }
   }
-
-
-
-
 
   INSERT_OR_UPDATE_COMPLEX_CODE_NAME_RDBO_DKU:
   {
@@ -5393,8 +5393,8 @@ sub Run_Tests
   Bench('Simple: insert or update', $Iterations,
   {
     'DBI ' => \&insert_or_update_simple_category_dbi,
-    'RDBO' => \&insert_or_update_simple_category_rdbo_dku,
-    #'RDBO (std)' => \&insert_or_update_simple_category_rdbo_std,
+    'RDBO (dku)' => \&insert_or_update_simple_category_rdbo_dku,
+    'RDBO (std)' => \&insert_or_update_simple_category_rdbo_std,
     'CDBI' => \&insert_or_update_simple_category_cdbi,
     'CDBS' => \&insert_or_update_simple_category_cdbs,
     'DBIC' => \&insert_or_update_simple_category_dbic,
@@ -5600,6 +5600,8 @@ EOF
       $dbh->do('DROP TABLE rose_db_object_test_codes');
     }
 
+    my $innodb = $Opt{'innodb'} ? 'TYPE=InnoDB' : '';
+
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test_codes
 (
@@ -5610,6 +5612,7 @@ CREATE TABLE rose_db_object_test_codes
 
   PRIMARY KEY(k1, k2, k3)
 )
+$innodb
 EOF
 
     $dbh->do(<<"EOF");
@@ -5618,6 +5621,7 @@ CREATE TABLE rose_db_object_test_categories
   id    INT AUTO_INCREMENT PRIMARY KEY,
   name  VARCHAR(255) NOT NULL
 )
+$innodb
 EOF
 
     $dbh->do(<<"EOF");
@@ -5634,6 +5638,7 @@ CREATE TABLE rose_db_object_test_products
   last_modified  DATETIME,
   date_created   DATETIME
 )
+$innodb
 EOF
 
     $dbh->do(<<"EOF");
@@ -5645,6 +5650,7 @@ CREATE TABLE rose_db_object_test_code_names
 
   UNIQUE(name)
 )
+$innodb
 EOF
 
     foreach my $i (1 .. 10)

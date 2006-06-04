@@ -833,7 +833,7 @@ sub insert
 
       if($args{'on_duplicate_key_update'})
       {
-        my $sql = $meta->insert_and_on_duplicate_key_update_sql($self, $db);
+        my($sql, $bind) = $meta->insert_and_on_duplicate_key_update_sql($self, $db);
 
         $sth = $prepare_cached ? 
           $dbh->prepare_cached($sql, undef, 3) : 
@@ -842,15 +842,10 @@ sub insert
         if($Debug)
         {
           no warnings;
-          warn $sql, " - bind params: ", 
-            join(', ', (map { $self->$_() } $meta->column_accessor_method_names) x 2), 
-            "\n";
+          warn $sql, " - bind params: @$bind\n";
         }
 
-        $sth->execute
-        (
-          (map { $self->$_() } $meta->column_accessor_method_names) x 2
-        );
+        $sth->execute(@$bind);
       }
       else
       {

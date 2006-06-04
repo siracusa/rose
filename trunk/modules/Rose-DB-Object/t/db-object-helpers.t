@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => (31 * 4) + 2;
+use Test::More tests => (67 * 4) + 2;
 
 BEGIN 
 {
@@ -23,7 +23,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 31)  unless($Have{$db_type});
+    skip("$db_type tests", 67)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -116,28 +116,81 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   is($o2->age, $o->age, "clone_and_reset() 3 - $db_type");
   is($o2->db, $o->db, "clone_and_reset() 4 - $db_type");
   
-  $o = $class->new(id => 2, name => 'Alex', age => 2);
-  $o->insert_or_update;
+  my $clone = $class->new(id => 2)->load->clone;
+  $clone->laz('Z0');
+
+  foreach my $i (1, 2)
+  {
+    $clone->update; # reset to initial state
+
+    $o->meta->allow_inline_column_values($i == 2);
+ 
+    #local $Rose::DB::Object::Debug = 1;
+
+    # Insert or update
+
+    $o = $class->new(id => 2, name => 'Alex', age => 2);
+    $o->insert_or_update;
+    
+    $o2 = $class->new(id => 2)->load;
+    is($o2->name, 'Alex', "insert_or_update() 1.$i - $db_type");
+    is($o2->laz, 'Z0', "insert_or_update() 2.$i - $db_type");
+ 
+    # Insert or update - update regular and lazy columns
+
+    $o->name('Alex2');
+    $o->laz('Z1');
+ 
+    $o->insert_or_update;
   
-  $o2 = $class->new(id => 2)->load;
-  is($o2->name, 'Alex', "insert_or_update() 1 - $db_type");
+    $o2 = $class->new(id => 2)->load;
+    is($o2->name, 'Alex2', "insert_or_update() 3.$i - $db_type");
+    is($o2->laz, 'Z1', "insert_or_update() 4.$i - $db_type");
+
+    # Insert or update on duplicate key
+    
+    $o = $class->new(id => 2, name => 'Alex3', age => 3);
   
-  $o->name('Alex2');
-  $o->insert_or_update;
+    $o->insert_or_update_on_duplicate_key;
+  
+    $o2 = $class->new(id => 2)->load;
+    is($o2->name, 'Alex3', "insert_or_update_on_duplicate_key() 1.$i - $db_type");
+    is($o2->age, 3, "insert_or_update_on_duplicate_key() 2.$i - $db_type");
+    is($o2->laz, 'Z1', "insert_or_update_on_duplicate_key() 3.$i - $db_type");
+    is($o2->id, 2, "insert_or_update_on_duplicate_key() 4.$i - $db_type");
+    
+    # Insert or update on duplicate key - with unique key only
 
-  $o2 = $class->new(id => 2)->load;
-  is($o2->name, 'Alex2', "insert_or_update() 2 - $db_type");
+    $o = $class->new(name => 'Alex3', age => 5);
+    $o->insert_or_update_on_duplicate_key;
+  
+    $o = $class->new(name => 'Alex3')->load;
+    is($o->name, 'Alex3', "insert_or_update_on_duplicate_key() 5.$i - $db_type");
+    is($o->age, 5, "insert_or_update_on_duplicate_key() 6.$i - $db_type");
+    is($o->laz, 'Z1', "insert_or_update_on_duplicate_key() 7.$i - $db_type");
+    is($o->id, 2, "insert_or_update_on_duplicate_key() 8.$i - $db_type");
+  
+    $o = $class->new(name => 'Alex3', laz => 'Z2', age => 5);
+    $o->insert_or_update_on_duplicate_key;
+  
+    $o = $class->new(name => 'Alex3')->load;
+    is($o->name, 'Alex3', "insert_or_update_on_duplicate_key() 9.$i - $db_type");
+    is($o->age, 5, "insert_or_update_on_duplicate_key() 10.$i - $db_type");
+    is($o->laz, 'Z2', "insert_or_update_on_duplicate_key() 11.$i - $db_type");
+    is($o->id, 2, "insert_or_update_on_duplicate_key() 12.$i - $db_type");
 
-  $o = $class->new(id => 2, name => 'Alex3', age => 3);
+    $o = $class->new(name => 'Alex3')->load;
+    $o->age(6);
+    $o->insert_or_update_on_duplicate_key;
 
-  $o->meta->allow_inline_column_values(1);
-  local $Rose::DB::Object::Debug = 1;
-  $o->insert(on_duplicate_key_update => 1);
+    $o = $class->new(name => 'Alex3')->load;
+    is($o->name, 'Alex3', "insert_or_update_on_duplicate_key() 13.$i - $db_type");
+    is($o->age, 6, "insert_or_update_on_duplicate_key() 14.$i - $db_type");
+    is($o->laz, 'Z2', "insert_or_update_on_duplicate_key() 15.$i - $db_type");
+    is($o->id, 2, "insert_or_update_on_duplicate_key() 16.$i - $db_type");
+  }
+
   $o->meta->allow_inline_column_values(0);
-
-  $o2 = $class->new(id => 2)->load;
-  is($o2->name, 'Alex3', "insert_or_update() 3 - $db_type");
-  is($o2->age, 3, "insert_or_update() 4 - $db_type");
 }
 
 BEGIN
@@ -175,6 +228,7 @@ CREATE TABLE rose_db_object_test
   id    SERIAL NOT NULL PRIMARY KEY,
   name  VARCHAR(255) NOT NULL,
   age   INT,
+  laz   VARCHAR(255),
 
   UNIQUE(name)
 )
@@ -197,6 +251,8 @@ EOF
 
     __PACKAGE__->meta->table('rose_db_object_test');
     __PACKAGE__->meta->auto_initialize;
+    __PACKAGE__->meta->column('laz')->lazy(1);
+    __PACKAGE__->meta->initialize(replace_existing => 1);
   }
 
   #
@@ -229,6 +285,7 @@ CREATE TABLE rose_db_object_test
   id    INT AUTO_INCREMENT PRIMARY KEY,
   name  VARCHAR(255) NOT NULL,
   age   INT,
+  laz   VARCHAR(255),
 
   UNIQUE(name)
 )
@@ -251,6 +308,8 @@ EOF
 
     __PACKAGE__->meta->table('rose_db_object_test');
     __PACKAGE__->meta->auto_initialize;
+    __PACKAGE__->meta->column('laz')->lazy(1);
+    __PACKAGE__->meta->initialize(replace_existing => 1);
   }
 
   #
@@ -281,6 +340,7 @@ CREATE TABLE rose_db_object_test
   id    SERIAL NOT NULL PRIMARY KEY,
   name  VARCHAR(255) NOT NULL,
   age   INT,
+  laz   VARCHAR(255),
 
   UNIQUE(name)
 )
@@ -303,6 +363,8 @@ EOF
 
     __PACKAGE__->meta->table('rose_db_object_test');
     __PACKAGE__->meta->auto_initialize;
+    __PACKAGE__->meta->column('laz')->lazy(1);
+    __PACKAGE__->meta->initialize(replace_existing => 1);
   }
 
   #
@@ -333,6 +395,7 @@ CREATE TABLE rose_db_object_test
   id    INTEGER PRIMARY KEY AUTOINCREMENT,
   name  VARCHAR(255) NOT NULL,
   age   INT,
+  laz   VARCHAR(255),
 
   UNIQUE(name)
 )
@@ -355,6 +418,8 @@ EOF
 
     __PACKAGE__->meta->table('rose_db_object_test');
     __PACKAGE__->meta->auto_initialize;
+    __PACKAGE__->meta->column('laz')->lazy(1);
+    __PACKAGE__->meta->initialize(replace_existing => 1);
   }
 
   package MyMixIn;

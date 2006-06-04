@@ -8,7 +8,7 @@ use Rose::Object;
 our @ISA = qw(Rose::Object);
 
 use Rose::DB::Object::Util qw(lazy_column_values_loaded_key);
-use Rose::DB::Object::Constants qw(PRIVATE_PREFIX);
+use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_IN_DB);
 
 use Rose::DB::Object::ConventionManager;
 use Rose::DB::Object::ConventionManager::Null;
@@ -2464,7 +2464,7 @@ sub column_names_sql
   my($self, $db) = @_;
 
   my $list = $self->{'column_names_sql'}{$db->{'id'}} ||= 
-    [ map { $_->name_sql($db) } sort { $a->name cmp $b->name } $self->columns ];
+    [ map { $_->name_sql($db) } $self->columns ];
 
   return wantarray ? @$list : $list;
 }
@@ -2774,7 +2774,7 @@ sub update_sql
   no warnings;
   return ($self->{'update_sql_prefix'}{$db->{'id'}} ||=
     'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
-    join(",\n", map { '    ' . $self->column($_)->name_sql($db) . ' = ?' } 
+    join(",\n", map { '    ' . $_->name_sql($db) . ' = ?' } 
                 grep { !$key{$_->{'name'}} && (!$_->{'lazy'} || 
                        $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
                 $self->columns) .
@@ -2907,15 +2907,68 @@ sub insert_and_on_duplicate_key_update_sql
 {
   my($self, $obj, $db) = @_;
 
+  my(@columns, @names, @bind);
+
+  if($obj->{STATE_IN_DB()})
+  {
+    @columns =
+      grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
+      $self->columns;
+
+    @names = map { $_->name_sql($db) } @columns;
+
+    foreach my $column (@columns)
+    {
+      my $method = $self->column_accessor_method_name($column->{'name'});
+      push(@bind, $obj->$method());
+    }
+  }
+  else
+  {
+    my %skip;
+      
+    my @key_columns = $self->primary_key_column_names;
+    my @key_methods = $self->primary_key_column_accessor_names;
+    my @key_values  = grep { defined } map { $obj->$_() } @key_methods;
+
+    unless(@key_values)
+    {
+      @skip{@key_columns} = (1) x @key_columns;
+    }
+
+    foreach my $uk ($self->unique_keys)
+    {
+      @key_columns = $uk->columns;
+      @key_methods = map { $_->accessor_method_name } @key_columns;
+      @key_values  = grep { defined } map { $obj->$_() } @key_methods;
+
+      unless(@key_values)
+      {
+        @skip{@key_columns} = (1) x @key_columns;
+      }
+    }
+
+    @columns = 
+      grep { !$skip{"$_"} && (!$_->{'lazy'} || 
+             $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns;
+
+    @names = map { $_->name_sql($db) } @columns;
+
+    foreach my $column (@columns)
+    {
+      my $method = $self->column_accessor_method_name($column->{'name'});
+      push(@bind, $obj->$method());
+    }
+  }
+
   no warnings;
-  return $self->{'insert_odku_sql'}{$db->{'id'}} ||= 
+  return 
     'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
-    join(",\n", map { "  $_" } $self->column_names_sql($db)) .
-    "\n)\nVALUES\n(\n" . join(",\n", map { "  ?" } $self->column_names) .
+    join(",\n", @names) .
+    "\n)\nVALUES\n(\n" . join(",\n", map { "  ?" } @names) .
     "\n)\nON DUPLICATE KEY UPDATE\n" .
-    join(",\n", map { $self->column($_)->name_sql($db) . ' = ?' } 
-            grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
-            $self->columns);
+    join(",\n", map { "$_ = ?" } @names),
+    [ @bind, @bind ];
 }
 
 sub insert_sql_with_inlining
@@ -2963,20 +3016,53 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
 {
   my($self, $obj, $db) = @_;
 
-  unless(@_ > 1)
+  my(@columns, @names);
+    
+  if($obj->{STATE_IN_DB()})
   {
-    Carp::croak 'Missing required object argument to ',
-                __PACKAGE__, '::insert_sql_with_inlining()'
+    @columns =
+      grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
+      $self->columns;
+
+    @names = map { $_->name_sql($db) } @columns;
+  }
+  else
+  {
+    my %skip;
+      
+    my @key_columns = $self->primary_key_column_names;
+    my @key_methods = $self->primary_key_column_accessor_names;
+    my @key_values  = grep { defined } map { $obj->$_() } @key_methods;
+
+    unless(@key_values)
+    {
+      @skip{@key_columns} = (1) x @key_columns;
+    }
+
+    foreach my $uk ($self->unique_keys)
+    {
+      @key_columns = $uk->columns;
+      @key_methods = map { $_->accessor_method_name } @key_columns;
+      @key_values  = grep { defined } map { $obj->$_() } @key_methods;
+
+      unless(@key_values)
+      {
+        @skip{@key_columns} = (1) x @key_columns;
+      }
+    }
+
+    @columns = 
+      grep { !$skip{"$_"} && (!$_->{'lazy'} || 
+             $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns;
+
+    @names = map { $_->name_sql($db) } @columns;
   }
 
-  $db ||= $obj->db or Carp::croak "Missing db";
+  my(@bind, @places);
 
-  my @bind;
-  my @places;
-
-  foreach my $column ($self->columns)
+  foreach my $column (@columns)
   {
-    my $name   = $column->name;
+    my $name   = $column->{'name'};
     my $method = $self->column_accessor_method_name($name);
     my $value  = $obj->$method();
 
@@ -2991,16 +3077,14 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
     }
   }
 
+  no warnings;
   return 
-  (
-    ($self->{'insert_odku_sql_with_inlining_start'}{$db->{'id'}} ||=
     'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
-    join(",\n", map { "  $_" } $self->column_names_sql($db)) .
-    "\n)\nVALUES\n(\n") . join(",\n", map { " $_->[1]" } @places) . "\n)\n" .
+    join(",\n", @names) .
+    "\n)\nVALUES\n(\n" . join(",\n", map { " $_->[1]" } @places) . "\n)\n" .
     "ON DUPLICATE KEY UPDATE\n" .
     join(",\n", map { "$_->[0] =$_->[1]" } @places),
-    [ (@bind) x 2 ]
-  );
+    [ @bind, @bind ];
 }
 
 sub delete_sql
