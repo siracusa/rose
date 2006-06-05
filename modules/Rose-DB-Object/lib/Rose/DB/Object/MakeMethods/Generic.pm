@@ -14,11 +14,11 @@ use Rose::DB::Object::Manager;
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Constants 
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
-     STATE_SAVING ON_SAVE_ATTR_NAME);
+     STATE_SAVING ON_SAVE_ATTR_NAME MODIFIED_COLUMNS);
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.727';
+our $VERSION = '0.73';
 
 our $Debug = 0;
 
@@ -33,6 +33,8 @@ sub scalar
   my $default   = $args->{'default'};
   my $check_in  = $args->{'check_in'};
   my $type      = $args->{'_method_type'} || 'scalar';
+
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
   $length = undef  if($type eq 'integer'); # don't limit integers by length
 
@@ -145,6 +147,16 @@ EOF
   }
 
   #
+  # column modified code
+  #
+
+  my $col_name_escaped = $column_name;
+  $col_name_escaped =~ s/'/\\'/g;
+
+  my $column_modified_code = 
+    qq(\$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'} = 1);
+
+  #
   # return code
   #
 
@@ -157,13 +169,16 @@ EOF
     {
       $return_code=<<"EOF";
 return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
-  (\$self->{'$qkey'} = sprintf("%-${length}s", \$default));
+  (scalar($column_modified_code, 
+          \$self->{'$qkey'} = sprintf("%-${length}s", \$default)));
 EOF
     }
     else
     {
       $return_code=<<"EOF";
-return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : (\$self->{'$qkey'} = \$default);
+return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
+  (scalar($column_modified_code, 
+          \$self->{'$qkey'} = \$default));
 EOF
     }
   }
@@ -172,14 +187,17 @@ EOF
     if($type eq 'character')
     {
       $return_code=<<"EOF";
-return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : (\$self->{'$qkey'} = \$self->$init_method());
+return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
+  (scalar($column_modified_code, 
+          \$self->{'$qkey'} = sprintf("%-${length}s", \$self->$init_method())););
 EOF
     }
     else
     {
       $return_code=<<"EOF";
 return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
-  (\$self->{'$qkey'} = sprintf("%-${length}s", \$self->$init_method())););
+  (scalar($column_modified_code, 
+          \$self->{'$qkey'} = \$self->$init_method()));
 EOF
     }
   }
@@ -212,6 +230,7 @@ sub
     $check_in_code
     $length_check_code
     $set_code
+    $column_modified_code  unless(\$self->{STATE_LOADING()});
     $return_code
   }
 
@@ -231,6 +250,7 @@ sub
 
     $check_in_code
     $length_check_code
+    $column_modified_code  unless(\$self->{STATE_LOADING()});
     return $set_code
   }
 
@@ -286,6 +306,7 @@ sub
   $check_in_code
   $length_check_code
   $set_code
+  $column_modified_code  unless(\$self->{STATE_LOADING()});
   $return_code
 };
 EOF
@@ -310,6 +331,8 @@ sub enum
 
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
+
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
   my $values = $args->{'values'} || $args->{'check_in'};
 
@@ -338,13 +361,17 @@ sub enum
     {
       $methods{$name} = sub
       {
-        if(@_ > 1 && defined $_[1])
+        my($self) = shift;
+
+        if(@_ && defined $_[0])
         {
-          Carp::croak "Invalid $name: '$_[1]'"  unless(exists $values{$_[1]});
-          return $_[0]->{$key} = $_[1];
+          Carp::croak "Invalid $name: '$_[0]'"  unless(exists $values{$_[0]});
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          return $self->{$key} = $_[0];
         }
-        return (defined $_[0]->{$key}) ? $_[0]->{$key} : 
-                 ($_[0]->{$key} = $default);
+        return (defined $self->{$key}) ? $self->{$key} : 
+                 (scalar($self->{MODIFIED_COLUMNS()}{$column_name} = 1, 
+                         $self->{$key} = $default));
       };
     }
     elsif(exists $args->{'with_init'} || exists $args->{'init_method'})
@@ -353,25 +380,34 @@ sub enum
 
       $methods{$name} = sub
       {
-        if(@_ > 1 && defined $_[1])
+        my($self) = shift;
+
+        if(@_ && defined $_[0])
         {
-          Carp::croak "Invalid $name: '$_[1]'"  unless(exists $values{$_[1]});
-          return $_[0]->{$key} = $_[1];
+          Carp::croak "Invalid $name: '$_[0]'"  unless(exists $values{$_[0]});
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          return $self->{$key} = $_[0];
         }
-        return (defined $_[0]->{$key}) ? $_[0]->{$key} : 
-                 ($_[0]->{$key} = $_[0]->$init_method());
+
+        return (defined $self->{$key}) ? $self->{$key} : 
+                 (scalar($self->{MODIFIED_COLUMNS()}{$column_name} = 1, 
+                         $self->{$key} = $self->$init_method()));
       };
     }
     else
     {
       $methods{$name} = sub
       {
-        if(@_ > 1 && defined $_[1])
+        my($self) = shift;
+
+        if(@_ && defined $_[0])
         {
-          Carp::croak "Invalid $name: '$_[1]'"  unless(exists $values{$_[1]});
-          return $_[0]->{$key} = $_[1];
+          Carp::croak "Invalid $name: '$_[0]'"  unless(exists $values{$_[0]});
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          return $self->{$key} = $_[0];
         }
-        return $_[0]->{$key};
+
+        return $self->{$key};
       };
     }
   }
@@ -379,9 +415,12 @@ sub enum
   {
     $methods{$name} = sub
     {
-      Carp::croak "Missing argument in call to $name"  unless(@_ > 1);
-      Carp::croak "Invalid $name: '$_[1]'"  unless(exists $values{$_[1]});
-      return $_[0]->{$key} = $_[1];
+      my($self) = shift;
+
+      Carp::croak "Missing argument in call to $name"  unless(@_);
+      Carp::croak "Invalid $name: '$_[0]'"  unless(exists $values{$_[0]});
+      $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+      return $self->{$key} = $_[0];
     };
   }
   elsif($interface eq 'get')
@@ -390,8 +429,10 @@ sub enum
     {
       $methods{$name} = sub
       {
-        return (defined $_[0]->{$key}) ? $_[0]->{$key} : 
-                 ($_[0]->{$key} = $default);
+        my($self) = shift;
+        return (defined $self->{$key}) ? $self->{$key} : 
+                 (scalar($self->{MODIFIED_COLUMNS()}{$column_name} = 1,
+                         $self->{$key} = $default));
       };
     }
     elsif(exists $args->{'with_init'} || exists $args->{'init_method'})
@@ -400,16 +441,15 @@ sub enum
 
       $methods{$name} = sub
       {
-        return (defined $_[0]->{$key}) ? $_[0]->{$key} : 
-                 ($_[0]->{$key} = $_[0]->$init_method());
+        my($self) = shift;
+        return (defined $self->{$key}) ? $self->{$key} : 
+                 (scalar($self->{MODIFIED_COLUMNS()}{$column_name} = 1,
+                         $self->{$key} = $self->$init_method()));
       };
     }
     else
     {
-      $methods{$name} = sub
-      {
-        return $_[0]->{$key};
-      };
+      $methods{$name} = sub { shift->{$key} };
     }
   }
   else { Carp::croak "Unknown interface: $interface" }
@@ -445,6 +485,8 @@ sub boolean
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
 
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
+
   my $formatted_key = column_value_formatted_key($key);
 
   my %methods;
@@ -478,11 +520,13 @@ sub boolean
               if($_[0] =~ /^(?:1(?:\.0*)?|t(?:rue)?|y(?:es)?)$/i)
               {
                 $self->{$formatted_key,$driver} = undef;
+                $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
                 return $self->{$key} = 1;
               }
               elsif($_[0] =~ /^(?:0(?:\.0*)?|f(?:alse)?|no?)$/i)
               {
                 $self->{$formatted_key,$driver} = undef;
+                $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
                 return $self->{$key} = 0;
               }
               else
@@ -490,18 +534,21 @@ sub boolean
                 my $value = $db->parse_boolean($_[0]);
                 Carp::croak($db->error)  unless(defined $value);
                 $self->{$formatted_key,$driver} = undef;
+                $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
                 return $self->{$key} = $value;
               }
             }
           }
 
           $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           return $self->{$key} = 0;
         }
 
         # Pull default through if necessary
         unless(defined $self->{$key} || defined $self->{$formatted_key,$driver})
         {
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           $self->{$key} = $default;
         }
 
@@ -547,11 +594,13 @@ sub boolean
               if($_[0] =~ /^(?:1(?:\.0*)?|t(?:rue)?|y(?:es)?)$/i)
               {
                 $self->{$formatted_key,$driver} = undef;
+                $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
                 return $self->{$key} = 1;
               }
               elsif($_[0] =~ /^(?:0(?:\.0*)?|f(?:alse)?|no?)$/i)
               {
                 $self->{$formatted_key,$driver} = undef;
+                $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
                 return $self->{$key} = 0;
               }
               else
@@ -559,12 +608,14 @@ sub boolean
                 my $value = $db->parse_boolean($_[0]);
                 Carp::croak($db->error)  unless(defined $value);
                 $self->{$formatted_key,$driver} = undef;
+                $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
                 return $self->{$key} = $value;
               }
             }
           }
 
           $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           return $self->{$key} = 0;
         }
 
@@ -603,6 +654,7 @@ sub boolean
         # Pull default through if necessary
         unless(defined $self->{$key} || defined $self->{$formatted_key,$driver})
         {
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           $self->{$key} = $default;
         }
 
@@ -670,11 +722,13 @@ sub boolean
           if($_[0] =~ /^(?:0*1(?:\.0*)?|t(?:rue)?|y(?:es)?)$/i)
           {
             $self->{$formatted_key,$driver} = undef;
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
             return $self->{$key} = 1;
           }
           elsif($_[0] =~ /^(?:0+(?:\.0*)?|f(?:alse)?|no?)$/i)
           {
             $self->{$formatted_key,$driver} = undef;
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
             return $self->{$key} = 0;
           }
           else
@@ -682,6 +736,7 @@ sub boolean
             my $value = $db->parse_boolean($_[0]);
             Carp::croak($db->error)  unless(defined $value);
             $self->{$formatted_key,$driver} = undef;
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
             return $self->{$key} = $value;
           }
         }
@@ -702,6 +757,8 @@ sub bitfield
 
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
+
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
   my %methods;
 
@@ -731,11 +788,15 @@ sub bitfield
           else
           {
             $self->{$key} = $db->parse_bitfield($_[0], $size);
-            $self->{$formatted_key,$driver} = undef;
 
-            unless(defined $self->{$key})
+            if(!defined $_[0] || defined $self->{$key})
             {
-              $self->error($db->error);
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+            }
+            else
+            {
+              Carp::croak $self->error($db->error);
             }
           }
         }
@@ -747,9 +808,13 @@ sub bitfield
         {
           $self->{$key} = $db->parse_bitfield($default, $size);
 
-          unless(defined $self->{$key})
+          if(!defined $default || defined $self->{$key})
           {
-            $self->error($db->error);
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          }
+          else
+          {
+            Carp::croak $self->error($db->error);
           }
         }
 
@@ -796,7 +861,16 @@ sub bitfield
           else
           {
             $self->{$key} = $db->parse_bitfield($_[0], $size);
-            $self->{$formatted_key,$driver} = undef;
+
+            if(!defined $_[0] || defined $self->{$key})
+            {
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+            }
+            else
+            {
+              Carp::croak $self->error($db->error);
+            }
           }
         }
 
@@ -828,7 +902,6 @@ sub bitfield
         return undef;
       };
 
-
       if($args->{'with_intersects'})
       {
         my $method = $args->{'intersects'} || $name . '_intersects';
@@ -843,6 +916,7 @@ sub bitfield
           {
             my $db = $self->db or die "Missing Rose::DB object attribute";
             $vec = $db->parse_bitfield($vec, $size);
+            Carp::croak $self->error($db->error)  unless(defined $vec);
           }
 
           $vec = Bit::Vector->new_Bin($size, $vec->to_Bin)  if($vec->Size != $size);
@@ -874,9 +948,13 @@ sub bitfield
         {
           $self->{$key} = $db->parse_bitfield($default, $size);
 
-          unless(defined $self->{$key})
+          if(!defined $default || defined $self->{$key})
           {
-            $self->error($db->error);
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          }
+          else
+          {
+            Carp::croak $self->error($db->error);
           }
         }
 
@@ -968,7 +1046,16 @@ sub bitfield
       else
       {
         $self->{$key} = $db->parse_bitfield($_[0], $size);
-        $self->{$formatted_key,$driver} = undef;
+
+        if(!defined $_[0] || defined $self->{$key})
+        {
+          $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+        }
+        else
+        {
+          Carp::croak $self->error($db->error);
+        }
       }
 
       if($self->{STATE_SAVING()})
@@ -1009,6 +1096,8 @@ sub array
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
 
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
+
   my $formatted_key = column_value_formatted_key($key);
 
   my %methods;
@@ -1036,17 +1125,31 @@ sub array
           else
           {
             $self->{$key} = $db->parse_array(@_);
-            $self->{$formatted_key,$driver} = undef;
-
-            unless(defined $self->{$key})
+            
+            if(!defined $_[0] || defined $self->{$key})
             {
-              $self->error($db->error);
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+            }
+            else
+            {
+              Carp::croak $self->error($db->error);
             }
           }
         }
         elsif(!defined $self->{$key})
         {
           $self->{$key} = $db->parse_array($default);
+
+          if(!defined $default || defined $self->{$key})
+          {
+            $self->{$formatted_key,$driver} = undef;
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          }
+          else
+          {
+            Carp::croak $self->error($db->error);
+          }
         }
 
         return unless(defined wantarray);
@@ -1056,9 +1159,14 @@ sub array
         {
           $self->{$key} = $db->parse_array($default);
 
-          unless(defined $self->{$key})
+          if(!defined $default || defined $self->{$key})
           {
-            $self->error($db->error);
+            $self->{$formatted_key,$driver} = undef;
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          }
+          else
+          {
+            Carp::croak $self->error($db->error);
           }
         }
 
@@ -1092,7 +1200,16 @@ sub array
           else
           {
             $self->{$key} = $db->parse_array(@_);
-            $self->{$formatted_key,$driver} = undef;
+            
+            if(!defined $_[0] || defined $self->{$key})
+            {
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+            }
+            else
+            {
+              Carp::croak $self->error($db->error);
+            }
           }
         }
 
@@ -1139,18 +1256,18 @@ sub array
         my $db = $self->db or die "Missing Rose::DB object attribute";
         my $driver = $db->driver || 'unknown';
 
-        if(!defined $self->{$key})
-        {
-          $self->{$key} = $db->parse_array($default);
-        }
-
         if(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key,$driver}))
         {
           $self->{$key} = $db->parse_array($default);
 
-          unless(defined $self->{$key})
+          if(!defined $default || defined $self->{$key})
           {
-            $self->error($db->error);
+            $self->{$formatted_key,$driver} = undef;
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          }
+          else
+          {
+            Carp::croak $self->error($db->error);
           }
         }
 
@@ -1239,7 +1356,16 @@ sub array
       else
       {
         $self->{$key} = $db->parse_array($_[0]);
-        $self->{$formatted_key,$driver} = undef;
+
+        if(!defined $_[0] || defined $self->{$key})
+        {
+          $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+        }
+        else
+        {
+          Carp::croak $self->error($db->error);
+        }
       }
 
       if($self->{STATE_SAVING()})
@@ -1281,6 +1407,8 @@ sub set
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
 
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
+
   my $formatted_key = column_value_formatted_key($key);
 
   my %methods;
@@ -1308,17 +1436,31 @@ sub set
           else
           {
             $self->{$key} = $db->parse_set(@_);
-            $self->{$formatted_key,$driver} = undef;
 
-            unless(defined $self->{$key})
+            if(!defined $_[0] || defined $self->{$key})
             {
-              $self->error($db->error);
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
             }
+            else
+            {
+              Carp::croak $self->error($db->error);
+            }            
           }
         }
         elsif(!defined $self->{$key})
         {
           $self->{$key} = $db->parse_set($default);
+
+          if(!defined $default || defined $self->{$key})
+          {
+            $self->{$formatted_key,$driver} = undef;
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          }
+          else
+          {
+            Carp::croak $self->error($db->error);
+          } 
         }
 
         return unless(defined wantarray);
@@ -1328,9 +1470,14 @@ sub set
         {
           $self->{$key} = $db->parse_set($default);
 
-          unless(defined $self->{$key})
+          if(!defined $default || defined $self->{$key})
           {
-            $self->error($db->error);
+            $self->{$formatted_key,$driver} = undef;
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          }
+          else
+          {
+            Carp::croak $self->error($db->error);
           }
         }
 
@@ -1364,7 +1511,16 @@ sub set
           else
           {
             $self->{$key} = $db->parse_set(@_);
-            $self->{$formatted_key,$driver} = undef;
+
+            if(!defined $_[0] || defined $self->{$key})
+            {
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+            }
+            else
+            {
+              Carp::croak $self->error($db->error);
+            }
           }
         }
 
@@ -1411,18 +1567,18 @@ sub set
         my $db = $self->db or die "Missing Rose::DB object attribute";
         my $driver = $db->driver || 'unknown';
 
-        if(!defined $self->{$key})
-        {
-          $self->{$key} = $db->parse_set($default);
-        }
-
         if(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key,$driver}))
         {
           $self->{$key} = $db->parse_set($default);
 
-          unless(defined $self->{$key})
+          if(!defined $default || defined $self->{$key})
           {
-            $self->error($db->error);
+            $self->{$formatted_key,$driver} = undef;
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          }
+          else
+          {
+            Carp::croak $self->error($db->error);
           }
         }
 
@@ -1511,7 +1667,16 @@ sub set
       else
       {
         $self->{$key} = $db->parse_set($_[0]);
-        $self->{$formatted_key,$driver} = undef;
+
+        if(!defined $_[0] || defined $self->{$key})
+        {
+          $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+        }
+        else
+        {
+          Carp::croak $self->error($db->error);
+        }
       }
 
       if($self->{STATE_SAVING()})

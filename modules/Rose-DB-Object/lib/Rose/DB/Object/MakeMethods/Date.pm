@@ -9,11 +9,11 @@ our @ISA = qw(Rose::Object::MakeMethods);
 
 use Rose::DB::Object::Constants
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
-     STATE_SAVING);
+     STATE_SAVING MODIFIED_COLUMNS);
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.70';
+our $VERSION = '0.73';
 
 sub date
 {
@@ -22,6 +22,8 @@ sub date
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
   my $tz = $args->{'time_zone'} || 0;
+
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
@@ -101,12 +103,16 @@ sub date
               $self->{$key} = undef;
               $self->{$formatted_key,$driver} = $dt;
             }
+            
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           }
         }
         else
         {
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+            unless($self->{STATE_LOADING()});
         }
       }
 
@@ -133,6 +139,9 @@ sub date
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+        
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -210,6 +219,9 @@ sub date
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -262,12 +274,16 @@ sub date
             $self->{$key} = undef;
             $self->{$formatted_key,$driver} = $dt;
           }
+
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
         }
       }
       else
       {
         $self->{$key} = undef;
         $self->{$formatted_key,$driver} = undef;
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_LOADING()});
       }
 
       return  unless(defined wantarray);
@@ -293,6 +309,9 @@ sub date
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -319,6 +338,8 @@ sub datetime
   my $interface = $args->{'interface'} || 'get_set';
   my $type = $args->{'type'} || 'datetime';
   my $tz = $args->{'time_zone'} || 0;
+
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
   for($type)
   {
@@ -396,12 +417,16 @@ sub datetime
             $dt->set_time_zone($tz || $db->server_time_zone)  if(ref $dt);
             $self->{$key} = $dt;
             $self->{$formatted_key,$driver} = undef;
+
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           }
         }
         else
         {
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+            unless($self->{STATE_LOADING()});
         }
       }
 
@@ -428,6 +453,9 @@ sub datetime
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -471,6 +499,9 @@ sub datetime
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -515,12 +546,16 @@ sub datetime
           $dt->set_time_zone($tz || $db->server_time_zone)  if(ref $dt);
           $self->{$key} = $dt;
           $self->{$formatted_key,$driver} = undef;
+
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
         }
       }
       else
       {
         $self->{$key} = undef;
         $self->{$formatted_key,$driver} = undef;
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_LOADING()});
       }
 
       return  unless(defined wantarray);
@@ -546,6 +581,9 @@ sub datetime
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -585,6 +623,8 @@ sub timestamp
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
   my $tz = $args->{'time_zone'} || 0;
+
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
@@ -656,12 +696,16 @@ sub timestamp
             $dt->set_time_zone($tz || $db->server_time_zone)  if(ref $dt);
             $self->{$key} = $dt;
             $self->{$formatted_key,$driver} = undef;
+
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           }
         }
         else
         {
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+            unless($self->{STATE_LOADING()});
         }
       }
 
@@ -688,6 +732,9 @@ sub timestamp
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -765,6 +812,9 @@ sub timestamp
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -817,6 +867,8 @@ sub timestamp
         $self->{$formatted_key,$driver} = undef;
       }
 
+      $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+
       return  unless(defined wantarray);
 
       if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
@@ -840,6 +892,9 @@ sub timestamp
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -868,6 +923,8 @@ sub epoch
   my $interface = $args->{'interface'} || 'get_set';
   my $tz = $args->{'time_zone'} || 0;
   my $epoch_method = $args->{'hires'} ? 'hires_epoch' : 'epoch';
+
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
@@ -947,12 +1004,16 @@ sub epoch
               $self->{$key} = undef;
               $self->{$formatted_key,$driver} = $dt;
             }
+            
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           }
         }
         else
         {
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+            unless($self->{STATE_LOADING()});
         }
       }
 
@@ -979,6 +1040,9 @@ sub epoch
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -1056,6 +1120,9 @@ sub epoch
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -1115,6 +1182,8 @@ sub epoch
         $self->{$key} = undef;
         $self->{$formatted_key,$driver} = undef;
       }
+
+      $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
 
       return  unless(defined wantarray);
 
