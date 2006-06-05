@@ -7,7 +7,7 @@ our $VERSION = '0.73';
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
-use Rose::DB::Object::Constants qw(STATE_SAVING);
+use Rose::DB::Object::Constants qw(STATE_LOADING STATE_SAVING MODIFIED_COLUMNS);
 
 use constant SALT_CHARS => './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
@@ -17,6 +17,8 @@ sub chkpass
 
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
+
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
   my $encrypted = $name . ($args->{'encrypted_suffix'} || '_encrypted');
   my $cmp       = $name . ($args->{'cmp_suffix'} || '_is');
@@ -31,6 +33,9 @@ sub chkpass
 
       if(@_)
       {
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_LOADING()});
+
         if(defined $_[0])
         {
           if(index($_[0], ':') == 0)
@@ -64,6 +69,9 @@ sub chkpass
 
       if(@_)
       {
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_LOADING()});
+
         if(!defined $_[0] || index($_[0], ':') == 0)
         {
           return $self->{$encrypted} = shift;
@@ -132,6 +140,9 @@ sub chkpass
       my($self) = shift;
 
       Carp::croak "Missing argument in call to $name"  unless(@_);
+
+      $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+        unless($self->{STATE_LOADING()});
 
       if(defined $_[0])
       {

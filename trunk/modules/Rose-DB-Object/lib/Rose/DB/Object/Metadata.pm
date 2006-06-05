@@ -8,7 +8,8 @@ use Rose::Object;
 our @ISA = qw(Rose::Object);
 
 use Rose::DB::Object::Util qw(lazy_column_values_loaded_key);
-use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_IN_DB);
+use Rose::DB::Object::Constants 
+  qw(PRIVATE_PREFIX STATE_IN_DB MODIFIED_COLUMNS);
 
 use Rose::DB::Object::ConventionManager;
 use Rose::DB::Object::ConventionManager::Null;
@@ -52,13 +53,14 @@ use Rose::Object::MakeMethods::Generic
 
   boolean => 
   [
-    allow_inline_column_values => { default => 0 },
-    is_initialized             => { default => 0 },
-    allow_auto_initialization  => { default => 0 },
-    was_auto_initialized       => { default => 0 },
-    initialized_foreign_keys   => { default => 0 },
-    default_load_speculative   => { default => 0 },
-    auto_load_related_classes  => { default => 1 },
+    allow_inline_column_values  => { default => 0 },
+    is_initialized              => { default => 0 },
+    allow_auto_initialization   => { default => 0 },
+    was_auto_initialized        => { default => 0 },
+    initialized_foreign_keys    => { default => 0 },
+    default_load_speculative    => { default => 0 },
+    auto_load_related_classes   => { default => 1 },
+    default_update_changes_only => { default => 0 },
   ],
 
   array =>
@@ -2782,6 +2784,23 @@ sub update_sql
     join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns);
 }
 
+sub update_changes_only_sql
+{
+  my($self, $obj, $key_columns, $db) = @_;
+
+  $key_columns ||= $self->primary_key_column_names;
+
+  my @modified = map { $self->column($_) } keys %{$obj->{MODIFIED_COLUMNS()} || {}};
+
+  no warnings;
+  return ($self->{'update_sql_prefix'}{$db->{'id'}} ||=
+    'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
+    join(",\n", map { '    ' . $_->name_sql($db) . ' = ?' } @modified) .
+    "\nWHERE " . 
+    join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns),
+    [ map { my $m = $_->accessor_method_name; $obj->$m() } @modified ];
+}
+
 # This is nonsensical right now because the primary key always has to be
 # non-null, and any update will use the primary key instead of a unique
 # key. But I'll leave the code here (commented out) just in case.
@@ -2863,6 +2882,48 @@ sub update_sql_with_inlining
   foreach my $column (grep { !$key{$_} && (!$_->{'lazy'} || 
                              $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
                       $self->columns)
+  {
+    my $method = $self->column_accessor_method_name($column->name);
+    my $value  = $obj->$method();
+
+    if($column->should_inline_value($db, $value))
+    {
+      push(@updates, '  ' . $column->name_sql($db) . " = $value");
+    }
+    else
+    {
+      push(@updates, '  ' . $column->name_sql($db) . ' = ?');
+      push(@bind, $value);
+    }
+  }
+
+  my $i = 0;
+
+  no warnings;
+  return 
+  (
+    ($self->{'update_sql_with_inlining_start'}{$db->{'id'}} ||= 
+     'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
+    join(",\n", @updates) . "\nWHERE " . 
+    join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns),
+    \@bind
+  );
+}
+
+sub update_changes_only_sql_with_inlining
+{
+  my($self, $obj, $key_columns) = @_;
+
+  my $db = $obj->db or Carp::croak "Missing db";
+
+  $key_columns ||= $self->primary_key_column_names;
+
+  my $modified = $obj->{MODIFIED_COLUMNS()};
+
+  my @bind;
+  my @updates;
+
+  foreach my $column (grep { $modified->{$_->{'name'}} } $self->columns)
   {
     my $method = $self->column_accessor_method_name($column->name);
     my $value  = $obj->$method();

@@ -836,7 +836,7 @@ sub apply_triggers
   return;
 }
 
-*reapply_triggers = \&apply_triggers;
+sub reapply_triggers { shift->apply_triggers(@_) }
 
 sub apply_method_triggers
 {

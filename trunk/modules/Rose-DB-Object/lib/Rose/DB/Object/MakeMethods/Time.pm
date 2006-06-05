@@ -9,11 +9,11 @@ our @ISA = qw(Rose::Object::MakeMethods);
 
 use Rose::DB::Object::Constants
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
-     STATE_SAVING);
+     STATE_SAVING MODIFIED_COLUMNS);
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.70';
+our $VERSION = '0.73';
 
 sub interval
 {
@@ -21,6 +21,8 @@ sub interval
 
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
+
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
@@ -60,12 +62,16 @@ sub interval
               $self->{$key} = undef;
               $self->{$formatted_key,$driver} = $dt_duration;
             }
+
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           }
         }
         else
         {
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+            unless($self->{STATE_LOADING()});
         }
       }
 
@@ -86,6 +92,9 @@ sub interval
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt_duration;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -123,6 +132,8 @@ sub interval
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt_duration;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
       }
 
       if($self->{STATE_SAVING()})
@@ -176,6 +187,8 @@ sub interval
         $self->{$key} = undef;
         $self->{$formatted_key,$driver} = undef;
       }
+
+      $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
 
       return  unless(defined wantarray);
 

@@ -284,6 +284,7 @@ sub load
 
     $self->{STATE_IN_DB()} = 1;
     $self->{LOADED_FROM_DRIVER()} = $db->{'driver'};
+    $self->{MODIFIED_COLUMNS()} = {};
     return $self || 1;
   }
 
@@ -531,6 +532,8 @@ sub save
       return 0;
     }
 
+    $self->{MODIFIED_COLUMNS()} = {};
+
     return $ret;
   }
   else
@@ -557,6 +560,10 @@ sub update
     exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
     $meta->dbi_prepare_cached;
 
+  my $changes_only =
+    exists $args{'changes_only'} ? $args{'changes_only'} :
+    $meta->default_update_changes_only;
+
   local $self->{STATE_SAVING()} = 1;
 
   my @key_columns = $meta->primary_key_column_names;
@@ -569,38 +576,6 @@ sub update
 
   unless(@key_values == @key_columns)
   {
-    # This is nonsensical right now because the primary key 
-    # always has to be non-null, and any update will use the 
-    # primary key instead of a unique key.  But I'll leave the
-    # code here (commented out) just in case.
-    #foreach my $cols ($meta->unique_keys_column_names)
-    #{
-    #  my $defined = 0;
-    #  @key_columns = @$cols;
-    #  @key_methods = map { $meta->column_accessor_method_name($_) } @key_columns;
-    #  @key_values  = map { $defined++ if(defined $_); $_ } 
-    #                 map { $self->$_() } @key_methods;
-    #
-    #  if($defined)
-    #  {
-    #    $found_key = 1;
-    #    $null_key  = 1  unless($defined == @key_columns);
-    #    last;
-    #  }
-    #}
-    #
-    #unless($found_key)
-    #{
-    #  @key_columns = $meta->primary_key_column_names;
-    #
-    #  $self->error("Cannot update " . ref($self) . " without a primary key (" .
-    #               join(', ', @key_columns) . ') with ' .
-    #               (@key_columns > 1 ? 'non-null values in all columns' : 
-    #                                   'a non-null value') .
-    #               ' or another unique key with at least one non-null value.');
-    #  return 0;
-    #}
-
     $self->error("Cannot update " . ref($self) . " without a primary key (" .
                  join(', ', @key_columns) . ') with ' .
                  (@key_columns > 1 ? 'non-null values in all columns' : 
@@ -611,7 +586,7 @@ sub update
   #
   #unless($ret)
   #{
-  #  $self->error('Could not begin transaction before inserting - ' . $db->error);
+  #  $self->error('Could not begin transaction before updating - ' . $db->error);
   #  return undef;
   #}
   #
@@ -631,8 +606,19 @@ sub update
       #my($sql, $bind) = 
       #  $meta->update_sql_with_inlining($self, \@key_columns, \@key_values);
 
-      my($sql, $bind) = 
-        $meta->update_sql_with_inlining($self, \@key_columns);
+      my($sql, $bind);
+
+      if($changes_only)
+      {
+        # No changes to save...
+        return $self || 1  unless(%{$self->{MODIFIED_COLUMNS() || {}}});
+        ($sql, $bind) =
+          $meta->update_changes_only_sql_with_inlining($self, \@key_columns);
+      }
+      else
+      {
+        ($sql, $bind) = $meta->update_sql_with_inlining($self, \@key_columns);
+      }
 
       if($Debug)
       {
@@ -645,23 +631,26 @@ sub update
     }
     else
     {
-      # See comment above regarding primary keys vs. unique keys for updates
-      #my($sql, $sth);
-      #
-      #if($null_key)
-      #{
-      #  $sql = $meta->update_sql_with_null_key(\@key_columns, \@key_values, $db);
-      #  $sth = $dbh->prepare($sql); #, $meta->prepare_update_options);
-      #}
-      #else
-      #{
-      #  $sql = $meta->update_sql($self, \@key_columns, $db);
-      #  # $meta->prepare_update_options (defunct)
-      #  $sth = = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
-      #                             $dbh->prepare($sql);
-      #}
+      if($changes_only)
+      {
+        # No changes to save...
+        return $self || 1  unless(%{$self->{MODIFIED_COLUMNS() || {}}});
 
-      if($meta->has_lazy_columns)
+        my($sql, $bind) = $meta->update_changes_only_sql($self, \@key_columns, $db);
+
+        # $meta->prepare_update_options (defunct)
+        my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                    $dbh->prepare($sql);
+
+        if($Debug)
+        {
+          no warnings;
+          warn "$sql - bind params: ", join(', ', @$bind, @key_values), "\n";
+        }
+
+        $sth->execute(@$bind, @key_values);
+      }
+      elsif($meta->has_lazy_columns)
       {
         my $sql = $meta->update_sql($self, \@key_columns, $db);
 
@@ -690,7 +679,7 @@ sub update
             join(', ', @exec, grep { defined } @key_values), "\n";
         }
 
-        $sth->execute(@exec, @key_values)
+        $sth->execute(@exec, @key_values);
       }
       else
       {
@@ -730,6 +719,8 @@ sub update
     $self->meta->handle_error($self);
     return 0;
   }
+
+  $self->{MODIFIED_COLUMNS()} = {};
 
   return $self || 1;
 }
@@ -957,6 +948,8 @@ sub insert
     $self->meta->handle_error($self);
     return 0;
   }
+
+  $self->{MODIFIED_COLUMNS()} = {};
 
   return $self || 1;
 }
