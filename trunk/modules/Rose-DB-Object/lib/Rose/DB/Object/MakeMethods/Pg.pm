@@ -23,6 +23,8 @@ sub chkpass
   my $encrypted = $name . ($args->{'encrypted_suffix'} || '_encrypted');
   my $cmp       = $name . ($args->{'cmp_suffix'} || '_is');
 
+  my $default = $args->{'default'};
+  
   my %methods;
 
   if($interface eq 'get_set')
@@ -57,6 +59,20 @@ sub chkpass
 
       if($self->{STATE_SAVING()})
       {
+        if(!defined $self->{$encrypted} && defined $default)
+        {
+          if(index($default, ':') == 0)
+          {
+            $self->{$encrypted} = $default;
+          }
+          else
+          {
+            my $salt = substr(SALT_CHARS, int rand(length SALT_CHARS), 1) . 
+                       substr(SALT_CHARS, int rand(length SALT_CHARS), 1);
+            $self->{$encrypted} = ':' . crypt($default, $salt);
+          }
+        }
+
         return $self->{$encrypted};
       }
 
@@ -85,6 +101,20 @@ sub chkpass
         }
       }
 
+      if(!defined $self->{$encrypted} && defined $default)
+      {
+        if(index($default, ':') == 0)
+        {
+          $self->{$encrypted} = $default;
+        }
+        else
+        {
+          my $salt = substr(SALT_CHARS, int rand(length SALT_CHARS), 1) . 
+                     substr(SALT_CHARS, int rand(length SALT_CHARS), 1);
+          $self->{$encrypted} = ':' . crypt($default, $salt);
+        }
+      }
+
       return $self->{$encrypted};
     };
 
@@ -100,6 +130,20 @@ sub chkpass
       }
 
       my $crypted = $self->{$encrypted};
+
+      if(!defined $crypted && defined $default)
+      {
+        if(index($default, ':') == 0)
+        {
+          $crypted = $self->{$encrypted} = $default;
+        }
+        else
+        {
+          my $salt = substr(SALT_CHARS, int rand(length SALT_CHARS), 1) . 
+                     substr(SALT_CHARS, int rand(length SALT_CHARS), 1);
+          $crypted = $self->{$encrypted} = ':' . crypt($default, $salt);
+        }
+      }
 
       if(defined $crypted)
       {
@@ -125,6 +169,20 @@ sub chkpass
 
       if($self->{STATE_SAVING()})
       {
+        if(!defined $self->{$encrypted} && defined $default)
+        {
+          if(index($default, ':') == 0)
+          {
+            $self->{$encrypted} = $default;
+          }
+          else
+          {
+            my $salt = substr(SALT_CHARS, int rand(length SALT_CHARS), 1) . 
+                       substr(SALT_CHARS, int rand(length SALT_CHARS), 1);
+            $self->{$encrypted} = ':' . crypt($default, $salt);
+          }
+        }
+
         return $self->{$encrypted};
       }
 

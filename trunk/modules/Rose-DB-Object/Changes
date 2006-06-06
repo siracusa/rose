@@ -13,6 +13,7 @@
     * Moved some database introspection code to a new version of Rose::DB, 
       which this version of Rose::DB::Object now requires.
     * Non-null character columns are now detected correctly in Informix.
+    * Fixed many bugs related to explicit and auto-detected column values.
     * Fixed a bug that caused chkpass columns to be erased after some save()s.
       (Reported by Cees Hek)
     * Added an option to use InnoDB with MySQL in the benchmark suite.
