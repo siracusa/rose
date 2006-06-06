@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 2 + (0 * 4);
+use Test::More tests => 2 + (71 * 1);
 
 require 't/test-lib.pl';
 use_ok('Rose::DB::Object');
@@ -10,6 +10,8 @@ use_ok('Rose::DB::Object::Loader');
 
 my $Include_Tables = '^(?:' . join('|', qw(rose_db_object_test)) . ')$';
 $Include_Tables = qr($Include_Tables);
+
+use Rose::DB::Object::Util qw(:all);
 
 our $PG_HAS_CHKPASS;
 
@@ -26,25 +28,34 @@ my %Value =
   9  => '2 years',
   10 => [ 5, 6 ],
   11 => 24,
-  12 => 23372036854775800,
-  13 => 1009539509,
+  12 => '922337203685',
+  13 => '1009539509',
 );
 
 my %Default =
 (
   1  => 'varchar def',
-  2  => 'char def',
+  2  => 'char def        ',
   3  => 1,
   4  => 1.23,
-  5  => [ '10111', 'as_Bin' ],
+  5  => '00101',
   6  => 123.45,
-  7  => [ '1984-01-24', 'ymd' ],
-  8  => [ '1999-05-20 03:04:05', sub { shift->sprintf('%Y-%m-%d %H:%M:%S') },
-  9  => [ '2 years',
-  10 => [ 5, 6 ],
-  11 => 24,
-  12 => 23372036854775800,
-  13 => 1009539509,
+  7  => '2001-02-03',
+  8  => '2001-02-03 12:34:56',
+  9  => '@ 2 months 5 days 3 seconds',
+  10 => [ 3, 4 ],
+  11 => 123,
+  12 => '922337203685',
+  13 => '1973-02',
+);
+
+my %Method =
+(
+  5  => 'to_Bin',
+  7  => 'ymd',
+  8  => sub { shift; shift->strftime('%Y-%m-%d %H:%M:%S') },
+  9  => sub { shift->db->format_interval(shift) },
+  13 => sub { shift; shift->strftime('%Y-%m') },
 );
 
 #
@@ -76,18 +87,19 @@ foreach my $db_type (qw(pg))# mysql informix sqlite))
   my $class = $class_prefix . '::RoseDbObjectTest';
   
   $class->meta->replace_column(c13 => { type => 'epoch' });
-  $class->meta->replace_column(c13d => { type => 'epoch', default => 1149539509 });
+  $class->meta->replace_column(c13d => { type => 'epoch', default => 99539509 });
 
   unless($db_type eq 'pg')
   {
     $class->meta->replace_column(c5 => { type => 'bitfield', bits => 5 });
     $class->meta->replace_column(c5d => { type => 'bitfield', bits => 5, default => '00101' });
   }
-  
+
   $class->meta->initialize(replace_existing => 1);
+  #print $class->meta->perl_class_definition;
 
   my $num_cols = ($db_type eq 'pg' && $PG_HAS_CHKPASS) ? 14 : 13;
-  
+
   foreach my $n (1 .. $num_cols)
   {
     my $col = "c$n";
@@ -97,15 +109,66 @@ foreach my $db_type (qw(pg))# mysql informix sqlite))
     $o->save;
     
     ok(!has_modified_columns($o), "has_modified_columns $col 1 - $db_type");
-    
+
     $o->$col($Value{$n});
 
+    is_deeply([ modified_column_names($o) ], [ $col ], "modified column $col 1 - $db_type");
+    
+    foreach my $n (14 .. $num_cols)
+    {
+      my $col = "c$n";
+      my $def = "c${n}d";
+      my $val = $o->$col();
+      $val = $o->$def();
+    }
+
+    is_deeply([ modified_column_names($o) ], [ $col ], "modified column $col 2 - $db_type");      
+
+    #local $Rose::DB::Object::Debug = 1;
     $o->update(changes_only => 1);
+    #local $Rose::DB::Object::Debug = 0;
 
     ok(!has_modified_columns($o), "has_modified_columns $col 2 - $db_type");
     
     $o = $class->new(id => $o->id)->load;
+
+    if(ref $Default{$n})
+    {
+      is_deeply(scalar $o->$def(), $Default{$n}, "check default $def 1 - $db_type");
+    }
+    else
+    {
+      my $method = $Method{$n};
       
+      my $value;
+      
+      if(defined $method)
+      {
+        if(ref $method eq 'CODE')
+        {
+          $value = $method->($o, $o->$def());
+        }
+        else
+        {
+          $value = $o->$def()->$method();
+        }
+      }
+      else
+      {
+        $value = $o->$def;
+      }
+    
+      is($value, $Default{$n}, "check default $def 1 - $db_type");
+    }
+
+    if($n == 14)
+    {
+      ok($o->c14d_is('xyzzy'), "chkpass default - $db_type");
+    }
+    elsif($n == 13 && $db_type ne 'pg')
+    {
+      ok(1, "chkpass skipped - $db_type");
+    }
   }
 }
 
@@ -165,9 +228,9 @@ CREATE TABLE rose_db_object_test
   c11   INT,
   c11d  INT DEFAULT 123,
   c12   BIGINT,
-  c12d  BIGINT DEFAULT 9223372036854775800,
+  c12d  BIGINT DEFAULT 922337203685,
   c13   INT,
-  c13d  INT DEFAULT 1149539509,
+  c13d  INT DEFAULT 99539509,
   
   @{[ $PG_HAS_CHKPASS ? q(c14 CHKPASS, c14d CHKPASS DEFAULT 'xyzzy') : '' ]}
 )
