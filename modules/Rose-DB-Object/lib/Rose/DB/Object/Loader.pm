@@ -32,6 +32,7 @@ use Rose::Object::MakeMethods::Generic
     'exclude_tables',
     'filter_tables',
     'pre_init_hook',
+    'post_init_hook',
     'module_dir',
   ],
 
@@ -420,7 +421,8 @@ $hash
 EOF
 }
 
-sub default_pre_init_hook { }
+sub default_pre_init_hook  { }
+sub default_post_init_hook { }
 
 sub make_classes
 {
@@ -448,6 +450,9 @@ sub make_classes
 
   my $pre_init_hook = exists $args{'pre_init_hook'} ? 
     delete $args{'pre_init_hook'} : $self->pre_init_hook;
+
+  my $post_init_hook = exists $args{'post_init_hook'} ? 
+    delete $args{'post_init_hook'} : $self->post_init_hook;
 
   my $include = exists $args{'include_tables'} ? 
     delete $args{'include_tables'} : $self->include_tables;
@@ -751,6 +756,22 @@ sub make_classes
 
     $meta->pre_init_hook($pre_init_hook);
 
+    if($post_init_hook)
+    {
+      if(ref $post_init_hook eq 'CODE')
+      {
+        $post_init_hook = [ $post_init_hook ];
+      }
+      elsif(ref $post_init_hook ne 'ARRAY')
+      {
+        Carp::croak "Invalid post_init_hook: $post_init_hook";
+      }
+    }
+
+    unshift(@$post_init_hook, sub { $self->default_post_init_hook(@_) });
+
+    $meta->post_init_hook($post_init_hook);
+    
     $meta->table($table);
     $meta->convention_manager($cm_class->new);
 
@@ -1062,9 +1083,13 @@ Defaults to the value of the loader object's L<filter_tables|/filter_tables> att
 
 If true, database views will also be processed.  Defaults to the value of the loader object's L<include_views|/include_views> attribute.
 
+=item B<post_init_hook [ CODEREF | ARRAYREF ]>
+
+A reference to a subroutine or a reference to an array of code references that will be called just after each L<Rose::DB::Object>-derived class is L<initialize|Rose::DB::Object::Metadata/initialize>d.  Each referenced subroutine will be passed the class's L<metadata|Rose::DB::Object::Metadata> object plus any arguments to the L<initialize|Rose::DB::Object::Metadata/initialize> method.  Defaults to the value of the loader object's L<post_init_hook|/post_init_hook> attribute.
+
 =item B<pre_init_hook [ CODEREF | ARRAYREF ]>
 
-A reference to a subroutine or a reference to an array of code references that will be called just before each L<Rose::DB::Object>-derived class is L<initialize|Rose::DB::Object::Metadata/initialize>ed.  Each referenced subroutine will be passed the class's L<metadata|Rose::DB::Object::Metadata> object plus any arguments to the L<initialize|Rose::DB::Object::Metadata/initialize> method.  Defaults to the value of the loader object's L<pre_init_hook|/pre_init_hook> attribute.
+A reference to a subroutine or a reference to an array of code references that will be called just before each L<Rose::DB::Object>-derived class is L<initialize|Rose::DB::Object::Metadata/initialize>d.  Each referenced subroutine will be passed the class's L<metadata|Rose::DB::Object::Metadata> object plus any arguments to the L<initialize|Rose::DB::Object::Metadata/initialize> method.  Defaults to the value of the loader object's L<pre_init_hook|/pre_init_hook> attribute.
 
 =item B<with_foreign_keys BOOL>
 

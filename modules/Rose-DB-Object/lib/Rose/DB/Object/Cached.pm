@@ -127,7 +127,7 @@ sub load
     {
       $_[0] = $object;
       $_[0]->{STATE_IN_DB()} = 1;
-      return 1;
+      return $_[0] || 1;
     }
     elsif(!(defined $object && $object == CACHE_EXPIRED))
     {
@@ -142,7 +142,7 @@ sub load
         {
           $_[0] = $object;
           $_[0]->{STATE_IN_DB()} = 1;
-          return 1;
+          return $_[0] || 1;
         }
       }
     }
@@ -320,7 +320,7 @@ If set to a true value, then the data is always loaded from the database rather 
 
 =back
 
-Returns true if the object was loaded successfully, false if the row could not be loaded or did not exist in the database.
+Returns true if the object was loaded successfully, false if the row could not be loaded or did not exist in the database.  The true value returned on success will be the object itself.  If the object L<overload>s its boolean value such that it is not true, then a true value will be returned instead of the object itself.
 
 =item B<remember>
 
