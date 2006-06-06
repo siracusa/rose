@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 5525;
+use Test::More tests => 5527;
 
 BEGIN 
 {
@@ -372,6 +372,12 @@ is($d2->strftime('%Y-%m-%d %H:%M:%S.%N'), '1970-01-01 00:00:00.123000000', 'pars
 
 $d2 = parse_date('1.123');
 is($d2->strftime('%Y-%m-%d %H:%M:%S.%N'), '1970-01-01 00:00:01.123000000', 'parse_date(1.123)');
+
+$d2 = parse_date('19991201');
+is($d2->strftime('%Y-%m-%d'), '1999-12-01', 'parse_date(19991201)');
+
+$d2 = parse_epoch('19991201');
+is($d2->strftime('%Y-%m-%d'), '1970-08-20', 'parse_date(parse_epoch)');
 
 $d2 = parse_date($d, 'nonesuchasdf');
 ok(!defined $d2, 'parse_date(DateTime, invalid TZ)');

@@ -10,7 +10,7 @@ use DateTime::Infinite;
 require Exporter;
 our @ISA = qw(Exporter);
 
-our @EXPORT_OK = qw(format_date parse_date parse_european_date);
+our @EXPORT_OK = qw(format_date parse_date parse_european_date parse_epoch);
 
 our %EXPORT_TAGS =
 (
@@ -216,6 +216,61 @@ sub parse_date
   return $date;
 }
 
+sub parse_epoch
+{
+  my($arg, $time_zone) = @_;
+
+  $time_zone ||= $TZ;
+
+  $Error = undef;
+
+  my $date;
+
+  no warnings 'uninitialized';
+
+  if($arg =~ /^(?: (-?\d+)(?:\.(\d{0,9}))? | (-?\d*)\.(\d{1,9}) )$/x)
+  {
+    my $epoch = defined $1 ? $1 : $3;
+    my $fsecs = defined $2 ? $2 : $4;
+
+    $epoch = 0  if($epoch eq '-');
+
+    # In Unix time format (guessing)
+    $date = DateTime->from_epoch(epoch => $epoch || 0, time_zone => $time_zone);
+
+    if($fsecs)
+    {
+      my $len = length $fsecs;
+
+      if($len < 9)
+      {
+        $fsecs .= ('0' x (9 - length $fsecs));
+      }
+      elsif($len > 9)
+      {
+        $fsecs = substr($fsecs, 0, 9);
+      }
+
+      $date->set(nanosecond => $fsecs);
+    }
+
+    return $date;
+  }
+  else
+  {
+    return parse_date(@_);
+  }
+
+  unless($date)
+  {
+    $Error = "Could not parse epoch: $arg" .
+             (($Error) ? " - $Error" : '');
+    return undef;
+  }
+
+  return $date;
+}
+
 sub format_date
 {
   my($date, @formats) = @_;
@@ -392,6 +447,7 @@ will cause the following function names to be imported:
 
     format_date()
     parse_date()
+    parse_epoch()
     parse_european_date()
 
 =head1 CLASS METHODS
@@ -714,6 +770,15 @@ Positive or negative infinity.  Case insensitive.
 A positive or negative number with optional fractional seconds is interpreted as seconds since the Unix epoch.  Fractional seconds take a maximum of 9 digits, but fewer are also acceptable.
 
 =back
+
+=item B<parse_epoch TEXT [, TIMEZONE]>
+
+This function is the same as L<parse_date|/parse_date> except that it prefers Unix epoch values in cases where this format conflicts with another.  Example:
+
+    $arg = '19991231';
+    
+    $dt = parse_date($arg);  # Dec 31, 1999
+    $dt = parse_epoch($arg); # Aug 20, 1970
 
 =back
 
