@@ -376,7 +376,7 @@ sub refine_dbi_column_info
 
 sub parse_dbi_column_info_default 
 {
-  my($self, $string) = @_;
+  my($self, $string, $col_info) = @_;
 
   UNDEF_OK: # Avoid undef string warnings
   {
@@ -385,9 +385,19 @@ sub parse_dbi_column_info_default
 
     my $pg_vers = $self->dbh->{'pg_server_version'};
 
+    # Example: q(B'00101'::"bit")
+    if(/^B'([01]+)'::(?:bit|"bit")$/ && $col_info->{'TYPE_NAME'} eq 'bit')
+    {
+      return $1;
+    }
+    # Example: 922337203685::bigint
+    elsif(/^(.+)::"?bigint"?$/i && $col_info->{'TYPE_NAME'} eq 'bigint')
+    {
+      return $1;
+    }
     # Example: 'value'::character varying
     # Example: ('now'::text)::timestamp(0)
-    if(/^\(*'(.+)'::.+$/)
+    elsif(/^\(*'(.+)'::.+$/)
     {
       my $default = $1;
 
@@ -404,11 +414,6 @@ sub parse_dbi_column_info_default
       }
 
       return $default;
-    }
-    # Example: q(B'00101'::"bit")
-    elsif(/^B'([01]+)'::(?:bit|"bit")$/)
-    {
-      return $1;
     }
     # Handle sequence-based defaults elsewhere (if at all)
     elsif(/^nextval\(/)
