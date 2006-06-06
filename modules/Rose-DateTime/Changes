@@ -1,3 +1,8 @@
+0.53 (05.06.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * parse_date() now accepts epoch values in the full range, not
+      just 9 or 10 digit numbers.
+
 0.522 (04.08.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Updated the test suite to account for systems that can't handle

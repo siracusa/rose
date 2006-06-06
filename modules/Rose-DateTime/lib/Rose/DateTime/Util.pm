@@ -18,7 +18,7 @@ our %EXPORT_TAGS =
   all => \@EXPORT_OK
 );
 
-our $VERSION = '0.522';
+our $VERSION = '0.53';
 
 our $TZ = 'floating';
 our $Debug = 0;
@@ -81,6 +81,8 @@ sub parse_date
      $month_abbrev, $date, $ampm, $hours2, $ampm2);
 
   $Error = undef;
+
+  no warnings 'uninitialized';
 
   if(ref $arg && $arg->isa('DateTime'))
   {
@@ -153,12 +155,17 @@ sub parse_date
     # Right now
     return DateTime->now(time_zone => $time_zone);
   }
-  elsif($arg =~ /^(-?\d{9,10})(?:\.(\d{0,9}))?$/)
+  elsif($arg =~ /^(?: (-?\d+)(?:\.(\d{0,9}))? | (-?\d*)\.(\d{1,9}) )$/x)
   {
-    # In Unix time format (guessing)
-    $date = DateTime->from_epoch(epoch => $1, time_zone => $time_zone);
+    my $epoch = defined $1 ? $1 : $3;
+    my $fsecs = defined $2 ? $2 : $4;
 
-    if(my $fsecs = $2)
+    $epoch = 0  if($epoch eq '-');
+
+    # In Unix time format (guessing)
+    $date = DateTime->from_epoch(epoch => $epoch || 0, time_zone => $time_zone);
+
+    if($fsecs)
     {
       my $len = length $fsecs;
 
@@ -183,7 +190,6 @@ sub parse_date
     $date->minute(0);
     $date->second(0);
   }
-
   elsif($arg =~ /^(-)?infinity$/i)
   {
     if($1)
@@ -705,7 +711,7 @@ Positive or negative infinity.  Case insensitive.
 
 =item [-]dddddddddd[.nnnnnnnnn] seconds)
 
-A 9 or 10-digit positive or negative number with optional fractional seconds is interpreted as seconds since the Unix epoch.  Fractional seconds take a maximum of 9 digits, but fewer are also acceptable.
+A positive or negative number with optional fractional seconds is interpreted as seconds since the Unix epoch.  Fractional seconds take a maximum of 9 digits, but fewer are also acceptable.
 
 =back
 
