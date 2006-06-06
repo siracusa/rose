@@ -1175,6 +1175,8 @@ sub parse_bitfield
 {
   my($self, $val, $size) = @_;
 
+  return undef  unless(defined $val);
+
   if(ref $val)
   {
     if($size && $val->Size != $size)
@@ -1203,6 +1205,7 @@ sub parse_bitfield
   }
   else
   {
+    $self->error("Could not parse bitfield value '$val'");
     return undef;
     #return Bit::Vector->new_Bin($size || length($val), $val);
   }
@@ -1616,7 +1619,7 @@ sub refine_dbi_column_info
 
   # Parse odd default value syntaxes  
   $col_info->{'COLUMN_DEF'} = 
-    $self->parse_dbi_column_info_default($col_info->{'COLUMN_DEF'});
+    $self->parse_dbi_column_info_default($col_info->{'COLUMN_DEF'}, $col_info);
 
   # Make sure the data type name is lowercase
   $col_info->{'TYPE_NAME'} = lc $col_info->{'TYPE_NAME'};

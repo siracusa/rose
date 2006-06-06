@@ -4,6 +4,7 @@
     * Added Storable hooks.
     * Driver classes no longer inherit from Rose::DB.
     * Improved Oracle DSN generation and quoting.  (Suggested by Todd Lorenz)
+    * Improved parsing of default column values in Postgres databases.
 
 0.673 (05.12.2006) - John Siracusa <siracusa@mindspring.com>
 

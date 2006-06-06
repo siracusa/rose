@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 2 + (71 * 1);
+use Test::More tests => 2 + (71 * 4);
 
 require 't/test-lib.pl';
 use_ok('Rose::DB::Object');
@@ -34,7 +34,7 @@ my %Value =
 
 my %Default =
 (
-  1  => 'varchar def',
+  1  => 'varchar-def',
   2  => 'char def        ',
   3  => 1,
   4  => 1.23,
@@ -62,11 +62,11 @@ my %Method =
 # Tests
 #
 
-foreach my $db_type (qw(pg))# mysql informix sqlite))
+foreach my $db_type (qw(pg mysql informix sqlite))
 {
   unless(have_db($db_type))
   {
-    SKIP: { skip("$db_type tests", 3) }
+    SKIP: { skip("$db_type tests", 71) }
     next;
   }
 
@@ -89,21 +89,22 @@ foreach my $db_type (qw(pg))# mysql informix sqlite))
   $class->meta->replace_column(c13 => { type => 'epoch' });
   $class->meta->replace_column(c13d => { type => 'epoch', default => 99539509 });
 
-  unless($db_type eq 'pg')
-  {
-    $class->meta->replace_column(c5 => { type => 'bitfield', bits => 5 });
-    $class->meta->replace_column(c5d => { type => 'bitfield', bits => 5, default => '00101' });
-  }
-
   $class->meta->initialize(replace_existing => 1);
   #print $class->meta->perl_class_definition;
 
-  my $num_cols = ($db_type eq 'pg' && $PG_HAS_CHKPASS) ? 14 : 13;
+  my $num_cols = 14;
 
   foreach my $n (1 .. $num_cols)
   {
     my $col = "c$n";
     my $def = "c${n}d";
+
+    SKIP:
+    {
+      skip("column $n", 5)  unless($class->meta->column($col));
+    }
+    
+    next  unless($class->meta->column($col));
 
     my $o = $class->new;
     $o->save;
@@ -118,6 +119,9 @@ foreach my $db_type (qw(pg))# mysql informix sqlite))
     {
       my $col = "c$n";
       my $def = "c${n}d";
+      
+      next  unless($class->meta->column($col));
+
       my $val = $o->$col();
       $val = $o->$def();
     }
@@ -161,11 +165,11 @@ foreach my $db_type (qw(pg))# mysql informix sqlite))
       is($value, $Default{$n}, "check default $def 1 - $db_type");
     }
 
-    if($n == 14)
+    if($n == 14 && $db_type eq 'pg')
     {
       ok($o->c14d_is('xyzzy'), "chkpass default - $db_type");
     }
-    elsif($n == 13 && $db_type ne 'pg')
+    elsif($n == 1 && $db_type ne 'pg')
     {
       ok(1, "chkpass skipped - $db_type");
     }
@@ -206,7 +210,7 @@ CREATE TABLE rose_db_object_test
 (
   id    SERIAL NOT NULL PRIMARY KEY,
   c1    VARCHAR(255),
-  c1d   VARCHAR(255) DEFAULT 'varchar def',
+  c1d   VARCHAR(255) DEFAULT 'varchar-def',
   c2    CHAR(16),
   c2d   CHAR(16) DEFAULT 'char def',
   c3    BOOLEAN,
@@ -243,90 +247,139 @@ EOF
   # MySQL
   #
 
-#   eval
-#   {
-#     my $dbh = get_dbh('mysql_admin');
-# 
-#     local $dbh->{'RaiseError'} = 0;
-#     local $dbh->{'PrintError'} = 0;
-#     $dbh->do('DROP TABLE rose_db_object_test');
-#   };
-#   
-#   if(have_db('mysql_admin'))
-#   {
-#     my $dbh = get_dbh('mysql_admin');
-# 
-#     $dbh->do(<<"EOF");
-# CREATE TABLE rose_db_object_test
-# (
-#   id    SERIAL NOT NULL PRIMARY KEY,
-#   c1    VARCHAR(255),
-#   c1d   VARCHAR(255) DEFAULT 'def'
-# )
-# EOF
-# 
-#     $dbh->disconnect;
-#   }
-# 
-#   #
-#   # Informix
-#   #
-# 
-#   if(have_db('informix_admin'))
-#   {
-#     my $dbh = get_dbh('informix_admin');
-# 
-#     # Drop existing tables, ignoring errors
-#     {
-#       local $dbh->{'RaiseError'} = 0;
-#       local $dbh->{'PrintError'} = 0;
-#       $dbh->do('DROP TABLE rose_db_object_test');
-#     }
-# 
-#     $dbh->do(<<"EOF");
-# CREATE TABLE rose_db_object_test
-# (
-#   id    SERIAL NOT NULL PRIMARY KEY,
-#   c1    VARCHAR(255),
-#   c1d   VARCHAR(255) DEFAULT 'def'
-# )
-# EOF
-# 
-#     $dbh->disconnect;
-#   }
-# 
-#   #
-#   # SQLite
-#   #
-# 
-#   if(have_db('sqlite_admin'))
-#   {
-#     my $dbh = get_dbh('sqlite_admin');
-# 
-#     # Drop existing tables, ignoring errors
-#     {
-#       local $dbh->{'RaiseError'} = 0;
-#       local $dbh->{'PrintError'} = 0;
-#       $dbh->do('DROP TABLE rose_db_object_test');
-#     }
-# 
-#     $dbh->do(<<"EOF");
-# CREATE TABLE rose_db_object_test
-# (
-#   id    SERIAL NOT NULL PRIMARY KEY,
-#   c1    VARCHAR(255),
-#   c1d   VARCHAR(255) DEFAULT 'varchar def',
-#   c2    CHAR(16),
-#   c2d   CHAR(16) DEFAULT 'char def',
-#   c3    BOOLEAN,
-#   c3d   BOOLEAN DEFAULT 1,
-#   c4    BOOLEAN,
-#   c4d   BOOLEAN DEFAULT 1
-# )
-# EOF
-# 
-#     $dbh->disconnect;
-#   }
+  my $db_version;
+
+  eval
+  {
+    my $dbh = get_dbh('mysql_admin');
+
+    local $dbh->{'RaiseError'} = 0;
+    local $dbh->{'PrintError'} = 0;
+    $dbh->do('DROP TABLE rose_db_object_test');
+  };
+  
+  if(have_db('mysql_admin'))
+  {
+    my $dbh = get_dbh('mysql_admin');
+        
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test
+(
+  id    INT AUTO_INCREMENT PRIMARY KEY,
+  c1    VARCHAR(255),
+  c1d   VARCHAR(255) DEFAULT 'varchar-def',
+  c2    CHAR(16),
+  c2d   CHAR(16) DEFAULT 'char def',
+  c3    BOOLEAN,
+  c3d   BOOLEAN DEFAULT 1,
+  c4    FLOAT,
+  c4d   FLOAT DEFAULT 1.23,
+  c6    DECIMAL(10,2),
+  c6d   DECIMAL(10,2) DEFAULT 123.45,
+  c7    DATE,
+  c7d   DATE DEFAULT '2001-02-03',
+  c8    DATETIME,
+  c8d   DATETIME DEFAULT '2001-02-03 12:34:56',
+  c11   INT,
+  c11d  INT DEFAULT 123,
+  c12   BIGINT,
+  c12d  BIGINT DEFAULT 922337203685,
+  c13   INT,
+  c13d  INT DEFAULT 99539509
+)
+EOF
+
+    $dbh->disconnect;
+  }
+
+  #
+  # Informix
+  #
+
+  if(have_db('informix_admin'))
+  {
+    my $dbh = get_dbh('informix_admin');
+
+    # Drop existing tables, ignoring errors
+    {
+      local $dbh->{'RaiseError'} = 0;
+      local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE rose_db_object_test');
+    }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test
+(
+  id    SERIAL NOT NULL PRIMARY KEY,
+  c1    VARCHAR(255),
+  c1d   VARCHAR(255) DEFAULT 'varchar-def',
+  c2    CHAR(16),
+  c2d   CHAR(16) DEFAULT 'char def',
+  c3    BOOLEAN,
+  c3d   BOOLEAN DEFAULT 't',
+  c6    DECIMAL(10,2),
+  c6d   DECIMAL(10,2) DEFAULT 123.45,
+  c7    DATE,
+  c7d   DATE DEFAULT '02/03/2001',
+  -- DBD::Informix can't handle this default value, apparently...
+  -- c8    DATETIME YEAR TO SECOND,
+  -- c8d   DATETIME YEAR TO SECOND DEFAULT DATETIME(2001-02-03 12:34:56) YEAR TO SECOND,
+  c11   INT,
+  c11d  INT DEFAULT 123,
+  c12   INT8,
+  c12d  INT8 DEFAULT 922337203685,
+  c13   INT,
+  c13d  INT DEFAULT 99539509
+)
+EOF
+
+    $dbh->disconnect;
+  }
+
+  #
+  # SQLite
+  #
+
+  if(have_db('sqlite_admin'))
+  {
+    my $dbh = get_dbh('sqlite_admin');
+
+    # Drop existing tables, ignoring errors
+    {
+      local $dbh->{'RaiseError'} = 0;
+      local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE rose_db_object_test');
+    }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test
+(
+  id    INTEGER PRIMARY KEY AUTOINCREMENT,
+  c1    VARCHAR(255),
+  c1d   VARCHAR(255) DEFAULT 'varchar-def',
+  c2    CHAR(16),
+  c2d   CHAR(16) DEFAULT 'char def',
+  c3    BOOLEAN,
+  c3d   BOOLEAN DEFAULT 1,
+  c4    REAL,
+  c4d   REAL DEFAULT '1.23',
+  c6    REAL,
+  c6d   REAL DEFAULT '123.45',
+  c7    DATE,
+  c7d   DATE DEFAULT '2001-02-03',
+  c8    DATETIME,
+  c8d   DATETIME DEFAULT '2001-02-03 12:34:56',
+  c11   INT,
+  c11d  INT DEFAULT 123,
+  c12   BIGINT,
+  c12d  BIGINT DEFAULT 922337203685,
+  c13   INT,
+  c13d  INT DEFAULT 99539509
+)
+EOF
+
+    $dbh->disconnect;
+  }
 }
 
 END
@@ -342,30 +395,30 @@ END
     $dbh->disconnect;
   }
 
-#   if(have_db('mysql_admin'))
-#   {
-#     my $dbh = get_dbh('mysql_admin');
-# 
-#     $dbh->do('DROP TABLE rose_db_object_test');
-# 
-#     $dbh->disconnect;
-#   }
-# 
-#   if(have_db('informix_admin'))
-#   {
-#     my $dbh = get_dbh('informix_admin');
-# 
-#     $dbh->do('DROP TABLE rose_db_object_test');
-# 
-#     $dbh->disconnect;
-#   }
-# 
-#   if(have_db('sqlite_admin'))
-#   {
-#     my $dbh = get_dbh('sqlite_admin');
-# 
-#     $dbh->do('DROP TABLE rose_db_object_test');
-# 
-#     $dbh->disconnect;
-#   }
+  if(have_db('mysql_admin'))
+  {
+    my $dbh = get_dbh('mysql_admin');
+
+    $dbh->do('DROP TABLE rose_db_object_test');
+
+    $dbh->disconnect;
+  }
+
+  if(have_db('informix_admin'))
+  {
+    my $dbh = get_dbh('informix_admin');
+
+    $dbh->do('DROP TABLE rose_db_object_test');
+
+    $dbh->disconnect;
+  }
+
+  if(have_db('sqlite_admin'))
+  {
+    my $dbh = get_dbh('sqlite_admin');
+
+    $dbh->do('DROP TABLE rose_db_object_test');
+
+    $dbh->disconnect;
+  }
 }
