@@ -40,6 +40,7 @@ use Rose::Object::MakeMethods::Generic
     'class',
     'error',
     'pre_init_hook',
+    'post_init_hook',
   ],
 
   'scalar --get_set_init' =>
@@ -1402,6 +1403,14 @@ sub initialize
   $self->is_initialized(1);
 
   $Debug && warn $self->class, " - initialized\n";
+
+  if(my $code = $self->post_init_hook)
+  {
+    foreach my $sub (ref $code eq 'ARRAY' ? @$code : $code)
+    {
+      $sub->($self, @_);
+    }
+  }
 
   return;
 }
@@ -4604,6 +4613,10 @@ Given the method name NAME and the class name CLASS, returns true if the method 
 =item B<pk_columns [COLUMNS]>
 
 This is an alias for the L<primary_key_columns|/primary_key_columns> method.
+
+=item B<post_init_hook [ CODEREF | ARRAYREF ]>
+
+Get or set a reference to a subroutine or a reference to an array of code references that will be called just after the L<initialize|/initialize> method runs.  Each referenced subroutine will be passed the metadata object itself and any arguments passed to the call to L<initialize|/initialize>.
 
 =item B<pre_init_hook [ CODEREF | ARRAYREF ]>
 

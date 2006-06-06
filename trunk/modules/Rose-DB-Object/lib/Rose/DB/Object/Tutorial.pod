@@ -864,7 +864,9 @@ The C<vendor()> method can be used to link the two objects as well.  Let's start
 
     print $p->vendor->name; # "Smith"
 
-The C<vendor()> method actually takes several different kinds of arguments.  A C<Vendor> object was passed above, but other formats are possible.  Imagine a new product also made by Smith.
+Remember that there is no column named "vendor" in the "products" table.  There is a "vendor_id" column, which has its own C<vendor_id()> get/set method that accepts and returns an integer value, but that's not what we're doing in the example above.  Instead, we're calling the C<vendor()> method, which accepts and returns an entire C<Vendor> object.
+
+The C<vendor()> method actually accepts several different kinds of arguments, all of which it inflates into C<Vendor> objects.  An already-formed C<Vendor> object was passed above, but other formats are possible.  Imagine a new product also made by Smith.
 
     $p = Product->new(name => 'Rope')->save;
     $p->vendor(name => 'Smith');
