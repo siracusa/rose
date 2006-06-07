@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
 
-our $VERSION = '0.73';
+our $VERSION = '0.731';
 
 our $Debug = 0;
 
@@ -1408,10 +1408,7 @@ Rose::DB::Object - Extensible, high performance RDBMS-OO mapper.
       category =>
       {
         class       => 'Category',
-        key_columns =>
-        {
-          category_id => 'id',
-        }
+        key_columns => { category_id => 'id' },
       },
     [,
 
