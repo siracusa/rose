@@ -120,6 +120,8 @@ t/column-triggers.t
 t/db-migration.t
 t/db-object-auto.t
 t/db-object-cached.t
+t/db-object-changes-only-1.t
+t/db-object-changes-only-2.t
 t/db-object-convention.t
 t/db-object-foreign-key-auto.t
 t/db-object-foreign-key.t
