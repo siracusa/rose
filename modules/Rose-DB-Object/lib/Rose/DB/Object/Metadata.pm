@@ -2799,7 +2799,9 @@ sub update_changes_only_sql
 
   $key_columns ||= $self->primary_key_column_names;
 
-  my @modified = map { $self->column($_) } keys %{$obj->{MODIFIED_COLUMNS()} || {}};
+  my %key = map { ($_ => 1) } @$key_columns;
+
+  my @modified = map { !$key{$_} && $self->column($_) } keys %{$obj->{MODIFIED_COLUMNS()} || {}};
 
   no warnings;
   return ($self->{'update_sql_prefix'}{$db->{'id'}} ||=
@@ -2927,12 +2929,14 @@ sub update_changes_only_sql_with_inlining
 
   $key_columns ||= $self->primary_key_column_names;
 
+  my %key = map { ($_ => 1) } @$key_columns;
+
   my $modified = $obj->{MODIFIED_COLUMNS()};
 
   my @bind;
   my @updates;
 
-  foreach my $column (grep { $modified->{$_->{'name'}} } $self->columns)
+  foreach my $column (grep { !$key{$_->{'name'}} && $modified->{$_->{'name'}} } $self->columns)
   {
     my $method = $self->column_accessor_method_name($column->name);
     my $value  = $obj->$method();
