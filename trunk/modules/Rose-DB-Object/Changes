@@ -1,4 +1,4 @@
-0.73 (06.06.2006) - John Siracusa <siracusa@mindspring.com>
+0.73 (06.07.2006) - John Siracusa <siracusa@mindspring.com>
 
     * The new setup() method is now the new, officially recommended way 
       to set up class metadata.
@@ -19,7 +19,6 @@
     * Fixed a bug that caused chkpass columns to be erased after some save()s.
       (Reported by Cees Hek)
     * Added an option to use InnoDB with MySQL in the benchmark suite.
-    * XXX: Util::column_value_modified
 
 0.727 (05.24.2006) - John Siracusa <siracusa@mindspring.com>
 

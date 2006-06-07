@@ -172,6 +172,17 @@ will cause the following function names to be imported:
     unset_state_loading()
     unset_state_saving()
 
+The 'columns' tag:
+
+    use Rose::DB::Object::Util qw(:columns);
+
+will cause the following function names to be imported:
+
+    get_column_value_modified()
+    set_column_value_modified()
+    modified_column_names()
+    has_modified_columns()
+
 The 'all' tag:
 
     use Rose::DB::Object::Util qw(:all);
@@ -190,9 +201,22 @@ will cause the following function names to be imported:
     unset_state_loading()
     unset_state_saving()
 
+    get_column_value_modified()
+    set_column_value_modified()
+    modified_column_names()
+    has_modified_columns()
+
 =head1 FUNCTIONS
 
 =over 4
+
+=item B<get_column_value_modified OBJECT, COLUMN>
+
+Returns true if the column named COLUMN in OBJECT is modified, false otherwise.
+
+=item B<has_modified_columns OBJECT>
+
+Returns true if OBJECT has any modified columns, false otherwise.
 
 =item B<is_in_db OBJECT>
 
@@ -205,6 +229,14 @@ Given the L<Rose::DB::Object>-derived object OBJECT, returns true if the object 
 =item B<is_saving OBJECT>
 
 Given the L<Rose::DB::Object>-derived object OBJECT, returns true if the object is currently being L<save|Rose::DB::Object/save>d, false otherwise.
+
+=item B<modified_column_names OBJECT>
+
+Returns a list containing the names of all the modified columns in OBJECT.
+
+=item B<set_column_value_modified OBJECT, COLUMN>
+
+Mark the column named COLUMN in OBJECT as modified.
 
 =item B<set_state_in_db OBJECT>
 
