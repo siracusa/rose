@@ -122,7 +122,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $o2->last_modified('now');
   ok($o2->save, "save() 2 - $db_type");
   ok($o2->load, "load() 3 - $db_type");
-  
+
   ok(!has_modified_columns($o2), "no modified columns after load() - $db_type");
 
   $o2->name('John 2');
@@ -136,15 +136,15 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $bo->load;
   $bo->flag(0);
   $bo->save;
-  
+
   $bo = MyPgObject->new(id => $o->id);
   $bo->load;
-  
+
   ok(!$bo->flag, "boolean check - $db_type");
-  
+
   $bo->flag(0);
   $bo->save;
-  
+
   my $o3 = MyPgObject->new();
 
   my $db = $o3->db or die $o3->error;
@@ -1362,10 +1362,10 @@ EOF
       primary_key_generator => sub
       {
         my($meta, $db) = @_;
-  
+
         my $k1 = $i++;
         my $k2 = $i++;
-  
+
         return $k1, $k2;
       },
     );

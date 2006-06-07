@@ -24,7 +24,7 @@ sub chkpass
   my $cmp       = $name . ($args->{'cmp_suffix'} || '_is');
 
   my $default = $args->{'default'};
-  
+
   my %methods;
 
   if($interface eq 'get_set')

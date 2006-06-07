@@ -913,7 +913,7 @@ EOF
       ($db_version >= 5_000_003) ?
         q(bitz  BIT(5) NOT NULL DEFAULT B'00101') :
         q(bitz  BIT(5) NOT NULL DEFAULT '00101');
-        
+
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test
 (

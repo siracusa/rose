@@ -82,12 +82,12 @@ sub insert_or_update
 sub insert_or_update_on_duplicate_key
 {
   my($self) = shift;
-  
+
   unless($self->db->supports_on_duplicate_key_update)
   {
     return insert_or_update($self, @_);
   }
-  
+
   return $self->insert(@_, on_duplicate_key_update => 1);
 }
 
@@ -236,12 +236,12 @@ Otherwise, all columns are included in both clauses I<except> those belonging to
       id      INT PRIMARY KEY,
       code    CHAR(3) NOT NULL,
       status  CHAR(1),
-      
+
       UNIQUE(code)
     );
 
     INSERT INTO parts (id, code, status) VALUES (1, 'abc', 'x');
-    
+
 This code will update part id 1, setting its "status" column to "y".
 
     $p = Part->new(code => 'abc', status => 'y');
@@ -262,7 +262,7 @@ Yes, this method name is very long.  Remember that you can rename methods on imp
     ...
     use Rose::DB::Object::Helpers 
       { insert_or_update_on_duplicate_key => 'insert_or_update' };
-      
+
 =item B<load_or_insert [PARAMS]>
 
 Try to L<load|Rose::DB::Object/load> the object, passing PARAMS to the call to the L<load()|Rose::DB::Object/load> method.  The parameter "speculative => 1" is automatically added to PARAMS.  If no such object is found, then the object is L<inserted|Rose::DB::Object/insert>.

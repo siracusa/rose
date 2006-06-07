@@ -799,7 +799,7 @@ sub insert
     if($meta->allow_inline_column_values)
     {
       my($sql, $bind);
-  
+
       if($args{'on_duplicate_key_update'})
       {
         ($sql, $bind) = $meta->insert_and_on_duplicate_key_update_with_inlining_sql($self, $db);
@@ -1386,17 +1386,17 @@ Rose::DB::Object - Extensible, high performance RDBMS-OO mapper.
       name        => { type => 'varchar', length => 255 },
       description => { type => 'text' },
       category_id => { type => 'int' },
-  
+
       status => 
       {
         type      => 'varchar', 
         check_in  => [ 'active', 'inactive' ],
         default   => 'inactive',
       },
-  
+
       start_date  => { type => 'datetime' },
       end_date    => { type => 'datetime' },
-  
+
       date_created     => { type => 'timestamp', default => 'now' },  
       last_modified    => { type => 'timestamp', default => 'now' },
     ],
@@ -1867,15 +1867,15 @@ If your table has a multi-column primary key or does not use a column type that 
       ],
 
       primary_key_columns => [ 'k1', 'k2' ],
-    
+
       primary_key_generator => sub
       {
         my($meta, $db) = @_;
-  
+
         # Generate primary key values somehow
         my $k1 = ...;
         my $k2 = ...;
-  
+
         return $k1, $k2;
       },
     );

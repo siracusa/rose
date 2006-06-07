@@ -210,12 +210,12 @@ sub likes_redundant_join_conditions { 1 }
 sub supports_on_duplicate_key_update
 {
   my($self) = shift;
-  
+
   if(defined $self->{'supports_on_duplicate_key_update'})
   {
     return $self->{'supports_on_duplicate_key_update'};
   }
-  
+
   if($self->database_version >= 4_001_000)
   {
     return $self->{'supports_on_duplicate_key_update'} = 1;

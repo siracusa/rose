@@ -573,7 +573,7 @@ sub perl_columns_definition
   $cb = $for_setup ? '],' : ');';
 
   my $perl = $def_start . join(",\n", map { "$indent$_" } @col_defs) . ",\n$cb\n";
-  
+
   if($for_setup)
   {
     for($perl)
@@ -867,7 +867,7 @@ sub perl_table_definition
 
   my $table = $self->table;
   $table =~ s/'/\\'/;
-  
+
   if($args{'for_setup'})
   {
     $indent = ' ' x $indent;
@@ -980,7 +980,7 @@ EOF
       Carp::croak 'Invalid ', (defined $args{'braces'} ? '' : 'default '),
                   "brace style: '$braces'";
     }
-  
+
     $args{'for_setup'} = 1;
     $indent = ' ' x $indent;
 

@@ -776,7 +776,7 @@ A positive or negative number with optional fractional seconds is interpreted as
 This function is the same as L<parse_date|/parse_date> except that it prefers Unix epoch values in cases where this format conflicts with another.  Example:
 
     $arg = '19991231';
-    
+
     $dt = parse_date($arg);  # Dec 31, 1999
     $dt = parse_epoch($arg); # Aug 20, 1970
 
