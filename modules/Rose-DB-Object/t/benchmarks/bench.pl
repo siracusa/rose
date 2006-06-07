@@ -5393,8 +5393,9 @@ sub Run_Tests
   Bench('Simple: insert or update', $Iterations,
   {
     'DBI ' => \&insert_or_update_simple_category_dbi,
-    'RDBO (dku)' => \&insert_or_update_simple_category_rdbo_dku,
-    'RDBO (std)' => \&insert_or_update_simple_category_rdbo_std,
+    'RDBO' => \&insert_or_update_simple_category_rdbo_dku,
+    #'RDBO (dku)' => \&insert_or_update_simple_category_rdbo_dku,
+    #'RDBO (std)' => \&insert_or_update_simple_category_rdbo_std,
     'CDBI' => \&insert_or_update_simple_category_cdbi,
     'CDBS' => \&insert_or_update_simple_category_cdbs,
     'DBIC' => \&insert_or_update_simple_category_dbic,
@@ -5402,8 +5403,9 @@ sub Run_Tests
 
   Bench('Complex: insert or update', $Iterations,
   {
-    'RDBO (dku)' => \&insert_or_update_complex_code_name_rdbo_dku,
-    'RDBO (std)' => \&insert_or_update_complex_code_name_rdbo_std,
+    'RDBO' => \&insert_or_update_complex_code_name_rdbo_dku,
+    #'RDBO (dku)' => \&insert_or_update_complex_code_name_rdbo_dku,
+    #'RDBO (std)' => \&insert_or_update_complex_code_name_rdbo_std,
     'DBIC' => \&insert_or_update_complex_code_name_dbic,
   });
 
