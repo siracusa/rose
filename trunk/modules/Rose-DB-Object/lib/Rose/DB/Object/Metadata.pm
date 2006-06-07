@@ -2801,7 +2801,7 @@ sub update_changes_only_sql
 
   my %key = map { ($_ => 1) } @$key_columns;
 
-  my @modified = map { !$key{$_} && $self->column($_) } keys %{$obj->{MODIFIED_COLUMNS()} || {}};
+  my @modified = map { $self->column($_) } grep { !$key{$_} } keys %{$obj->{MODIFIED_COLUMNS()} || {}};
 
   no warnings;
   return ($self->{'update_sql_prefix'}{$db->{'id'}} ||=
