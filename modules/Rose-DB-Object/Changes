@@ -1,7 +1,7 @@
 0.73 (06.07.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * The new setup() method is now the new, officially recommended way 
-      to set up class metadata.
+    * The new setup() method is now the officially recommended way to set up
+      class metadata.
     * Updated the documentation and the generated Perl code to use the
       new setup() method.
     * Related classes are now loaded automatically by default.  Added the
@@ -13,7 +13,7 @@
     * Moved some database introspection code to a new version of Rose::DB, 
       which this version of Rose::DB::Object now requires.
     * Non-null character columns are now detected correctly in Informix.
-    * Fixed many bugs related to explicit and auto-detected column values.
+    * Fixed many bugs related to explicit and auto-detected column defaults.
     * Corrected the return value of Rose::DB::Object::Cached's load() method
       to match that of the standard load(). (Reported by Randal Schwartz)
     * Fixed a bug that caused chkpass columns to be erased after some save()s.
