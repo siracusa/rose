@@ -88,7 +88,7 @@ sub insert_or_update_on_duplicate_key
     return insert_or_update($self, @_);
   }
   
-  return $self->insert(on_duplicate_key_update => 1);
+  return $self->insert(@_, on_duplicate_key_update => 1);
 }
 
 sub clone
@@ -150,7 +150,8 @@ Rose::DB::Object::Helpers - A mix-in class containing convenience methods for Ro
   use Rose::DB::Object;
   our @ISA = qw(Rose::DB::Object);
 
-  use Rose::DB::Object::Helpers 'clone', { load_or_insert => 'find_or_create' };
+  use Rose::DB::Object::Helpers 'clone', 
+    { load_or_insert => 'find_or_create' };
   ...
 
   $obj = MyDBObject->new(id => 123);
@@ -203,12 +204,65 @@ is equivalent to this:
 
 =item B<insert_or_update [PARAMS]>
 
-If the object already exists in the database, then L<update|Rose::DB::Object/update> it.  Otherwise, L<insert|Rose::DB::Object/insert> it.  Any PARAMS are passed to the calls to L<insert|Rose::DB::Object/insert> or L<update|Rose::DB::Object/update>.
+If the object already exists in the database, then L<update|Rose::DB::Object/update> it.  Otherwise, L<insert|Rose::DB::Object/insert> it.  Any PARAMS are passed on to the calls to L<insert|Rose::DB::Object/insert> or L<update|Rose::DB::Object/update>.
 
 This method differs from the standard L<save|Rose::DB::Object/save> method in that L<save|Rose::DB::Object/save> decides to L<insert|Rose::DB::Object/insert> or L<update|Rose::DB::Object/update> based solely on whether or not the object was previously L<load|Rose::DB::Object/load>ed.  This method will take the extra step of actually attempting to L<load|Rose::DB::Object/load> the object to see whether or not it's in the database.
 
 The return value of the L<insert|Rose::DB::Object/insert> or L<update|Rose::DB::Object/update> method (whichever is called) is returned.
 
+=item B<insert_or_update_on_duplicate_key [PARAMS]>
+
+Update or insert a row with a single SQL statement, depending on whether or not a row with the same primary or unique key already exists.  Any PARAMS are passed on to the call to L<insert|Rose::DB::Object/insert> or L<update|Rose::DB::Object/update>.
+
+If the current database does not support the "ON DUPLICATE KEY UPDATE" SQL extension, then this method simply call the L<insert_or_update|/insert_or_update> method, pasing all PARAMS.
+
+Currently, the only database that supports "ON DUPLICATE KEY UPDATE" is MySQL, and only in version 4.1.0 or later.  You can read more about the feature here:
+
+L<http://dev.mysql.com/doc/refman/5.1/en/insert-on-duplicate.html>
+
+Here's a quick example of the SQL syntax:
+
+    INSERT INTO table (a, b, c) VALUES (1, 2, 3) 
+      ON DUPLICATE KEY UPDATE a = 1, b = 2, c = 3;
+
+Note that there are two sets of columns and values in the statement.  This presents a choice: which columns to put in the "INSERT" part, and which to put in the "UPDATE" part.
+
+When using this method, if the object was previously L<load|Rose::DB::Object/load>ed from the database, then values for all columns are put in both the "INSERT" and "UPDATE" portions of the statement.
+
+Otherwise, all columns are included in both clauses I<except> those belonging to primary keys or unique keys which have only undefined values.  This is important because it allows objects to be updated based on a single primary or unique key, even if other possible keys exist, but do not have values set.  For example, consider this table with the following data:
+
+    CREATE TABLE parts
+    (
+      id      INT PRIMARY KEY,
+      code    CHAR(3) NOT NULL,
+      status  CHAR(1),
+      
+      UNIQUE(code)
+    );
+
+    INSERT INTO parts (id, code, status) VALUES (1, 'abc', 'x');
+    
+This code will update part id 1, setting its "status" column to "y".
+
+    $p = Part->new(code => 'abc', status => 'y');
+    $p->insert_or_update_on_duplicate_key;
+
+The resulting SQL:
+
+    INSERT INTO parts (code, status) VALUES ('abc', 'y') 
+      ON DUPLICATE KEY UPDATE code = 'abc', status = 'y';
+
+Note that the "id" column is omitted because it has an undefined value.  The SQL statement will detect the duplicate value for the unique key "code" and then run the "UPDATE" portion of the query, setting "status" to "y".
+
+This method returns true if the row was inserted or updated successfully, false otherwise.  The true value returned on success will be the object itself.  If the object L<overload>s its boolean value such that it is not true, then a true value will be returned instead of the object itself.
+
+Yes, this method name is very long.  Remember that you can rename methods on import.  It is expected that most people will want to rename this method to "insert_or_update", using it in place of the normal L<insert_or_update|/insert_or_update> helper method:
+
+    package My::DB::Object;
+    ...
+    use Rose::DB::Object::Helpers 
+      { insert_or_update_on_duplicate_key => 'insert_or_update' };
+      
 =item B<load_or_insert [PARAMS]>
 
 Try to L<load|Rose::DB::Object/load> the object, passing PARAMS to the call to the L<load()|Rose::DB::Object/load> method.  The parameter "speculative => 1" is automatically added to PARAMS.  If no such object is found, then the object is L<inserted|Rose::DB::Object/insert>.
