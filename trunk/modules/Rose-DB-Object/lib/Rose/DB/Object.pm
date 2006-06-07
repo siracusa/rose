@@ -1710,6 +1710,8 @@ If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used 
 
 =back
 
+Returns true if the row was inserted successfully, false otherwise.  The true value returned on success will be the object itself.  If the object L<overload>s its boolean value such that it is not true, then a true value will be returned instead of the object itself.
+
 =item B<load [PARAMS]>
 
 Load a row from the database table, initializing the object with the values from that row.  An object can be loaded based on either a primary key or a unique key.
@@ -1894,6 +1896,7 @@ If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used 
 
 =back
 
+Returns true if the row was updated successfully, false otherwise.  The true value returned on success will be the object itself.  If the object L<overload>s its boolean value such that it is not true, then a true value will be returned instead of the object itself.
 
 =back
 
