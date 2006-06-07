@@ -549,7 +549,7 @@ Let's solve all of these problems.  If we more accurately describe the columns, 
       [
         id   => { type => 'serial', primary_key => 1, not_null => 1 },
         name => { type => 'varchar', length => 255, not_null => 1 },
-  
+
         price => 
         {
           type      => 'decimal',
@@ -558,7 +558,7 @@ Let's solve all of these problems.  If we more accurately describe the columns, 
           not_null  => 1,
           default   => 0.00 
         },
-  
+
         status => 
         {
           type     => 'varchar', 
@@ -567,7 +567,7 @@ Let's solve all of these problems.  If we more accurately describe the columns, 
           default  => 'inactive', 
           check_in => [ 'inactive', 'active', 'defunct' ]
         },
-  
+
         date_created => { type => 'timestamp', not_null => 1, 
                           default => 'now()' },
         release_date => { type => 'timestamp' },
@@ -793,7 +793,7 @@ Finally, here's how the foreign key definition looks in the Perl class.
     __PACKAGE__->meta->setup
     (
       table => 'products',
-  
+
       columns =>
       [
         id           => { type => 'integer', not_null => 1 },
@@ -807,9 +807,9 @@ Finally, here's how the foreign key definition looks in the Perl class.
                           not_null => 1 },
         release_date => { type => 'timestamp' },
       ],
-  
+
       primary_key_columns => [ 'id' ],
-  
+
       unique_keys => [ 'name' ],
 
       foreign_keys =>
@@ -1438,7 +1438,7 @@ Here's the map class.
           class       => 'Product',
           key_columns => { product_id => 'id' },
         },
-  
+
         color =>
         {
           class       => 'Color',
@@ -1698,7 +1698,7 @@ Now the Perl classes.  Remember that these must each be in their own ".pm" files
     [
       id           => { type => 'integer', not_null => 1 },
       name         => { type => 'varchar', length => 255, not_null => 1 },
-  
+
       vendor_id    => { type => 'int' },
       status       => { type => 'varchar', default => 'inactive', 
                         length => 128, not_null => 1 },
@@ -1745,7 +1745,7 @@ Now the Perl classes.  Remember that these must each be in their own ".pm" files
         default   => 0.00 
       },
     ],
-  
+
     unique_key  => [ 'product_id', 'region' ],
 
     foreign_key => [ 'product' ],
@@ -1946,7 +1946,7 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
           color_id => 'id',
         },
       },
-  
+
       product => 
       {
         class => 'My::Product',
@@ -2057,7 +2057,7 @@ The output is shown below.  Compare it to the manually created Perl code L<shown
         map_to        => 'color',
         type          => 'many to many',
       },
-  
+
       prices => 
       {
         class       => 'My::Price',
