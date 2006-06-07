@@ -103,7 +103,7 @@ sub date
               $self->{$key} = undef;
               $self->{$formatted_key,$driver} = $dt;
             }
-            
+
             $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           }
         }
@@ -139,7 +139,7 @@ sub date
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
-        
+
         $self->{MODIFIED_COLUMNS()}{$column_name} = 1
           unless($self->{STATE_IN_DB()});
       }
@@ -151,7 +151,7 @@ sub date
       }
 
       return $self->{$key}   if($self->{$key});
-      
+
       if(my $value = $self->{$formatted_key,$driver})
       {
         my $dt = $db->parse_date($value);
@@ -169,7 +169,7 @@ sub date
 
         return $self->{$key} = $dt;
       }
-      
+
       return undef;
     };
   }
@@ -249,7 +249,7 @@ sub date
       }
 
       return $self->{$key}   if($self->{$key});
-      
+
       if(my $value = $self->{$formatted_key,$driver})
       {
         my $dt = $db->parse_date($value);
@@ -267,7 +267,7 @@ sub date
 
         return $self->{$key} = $dt;
       }
-      
+
       return undef;
     };
   }
@@ -357,7 +357,7 @@ sub date
       }
 
       return $self->{$key}   if($self->{$key});
-      
+
       if(my $value = $self->{$formatted_key,$driver})
       {
         my $dt = $db->parse_date($value);
@@ -375,7 +375,7 @@ sub date
 
         return $self->{$key} = $dt;
       }
-      
+
       return undef;
     };
   }
@@ -519,7 +519,7 @@ sub datetime
       }
 
       return $self->{$key}   if($self->{$key});
-      
+
       if(my $value = $self->{$formatted_key,$driver})
       {
         my $dt = $db->$parse_method($value);
@@ -537,7 +537,7 @@ sub datetime
 
         return $self->{$key} = $dt;
       }
-      
+
       return undef;
     };
   }
@@ -583,7 +583,7 @@ sub datetime
       }
 
       return $self->{$key}   if($self->{$key});
-      
+
       if(my $value = $self->{$formatted_key,$driver})
       {
         my $dt = $db->$parse_method($value);
@@ -601,7 +601,7 @@ sub datetime
 
         return $self->{$key} = $dt;
       }
-      
+
       return undef;
     };
   }
@@ -683,7 +683,7 @@ sub datetime
       }
 
       return $self->{$key}   if($self->{$key});
-      
+
       if(my $value = $self->{$formatted_key,$driver})
       {
         my $dt = $db->$parse_method($value);
@@ -701,7 +701,7 @@ sub datetime
 
         return $self->{$key} = $dt;
       }
-      
+
       return undef;
     };
   }
@@ -852,7 +852,7 @@ sub timestamp
       }
 
       return $self->{$key}   if($self->{$key});
-      
+
       if(my $value = $self->{$formatted_key,$driver})
       {
         my $dt = $db->parse_timestamp($value);
@@ -870,7 +870,7 @@ sub timestamp
 
         return $self->{$key} = $dt;
       }
-      
+
       return undef;
     };
   }
@@ -950,7 +950,7 @@ sub timestamp
       }
 
       return $self->{$key}   if($self->{$key});
-      
+
       if(my $value = $self->{$formatted_key,$driver})
       {
         my $dt = $db->parse_timestamp($value);
@@ -968,7 +968,7 @@ sub timestamp
 
         return $self->{$key} = $dt;
       }
-      
+
       return undef;
     };
   }
@@ -1048,7 +1048,7 @@ sub timestamp
       }
 
       return $self->{$key}   if($self->{$key});
-      
+
       if(my $value = $self->{$formatted_key,$driver})
       {
         my $dt = $db->parse_timestamp($value);
@@ -1066,7 +1066,7 @@ sub timestamp
 
         return $self->{$key} = $dt;
       }
-      
+
       return undef;
     };
   }
@@ -1166,7 +1166,7 @@ sub epoch
               $self->{$key} = undef;
               $self->{$formatted_key,$driver} = $dt;
             }
-            
+
             $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           }
         }
@@ -1214,7 +1214,7 @@ sub epoch
       }
 
       return $self->{$key}   if($self->{$key});
-      
+
       if(my $value = $self->{$formatted_key,$driver})
       {
         my $dt = $db->parse_date($value);
@@ -1232,7 +1232,7 @@ sub epoch
 
         return $self->{$key} = $dt;
       }
-      
+
       return undef;
     };
   }
@@ -1312,7 +1312,7 @@ sub epoch
       }
 
       return $self->{$key}   if($self->{$key});
-      
+
       if(my $value = $self->{$formatted_key,$driver})
       {
         my $dt = $db->parse_date($value);
@@ -1330,7 +1330,7 @@ sub epoch
 
         return $self->{$key} = $dt;
       }
-      
+
       return undef;
     };
   }
@@ -1415,7 +1415,7 @@ sub epoch
       }
 
       return $self->{$key}   if($self->{$key});
-      
+
       if(my $value = $self->{$formatted_key,$driver})
       {
         my $dt = $db->parse_date($value);
@@ -1433,7 +1433,7 @@ sub epoch
 
         return $self->{$key} = $dt;
       }
-      
+
       return undef;
     };
   }

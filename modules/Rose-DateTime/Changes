@@ -1,8 +1,9 @@
-0.53 (06.06.2006) - John Siracusa <siracusa@mindspring.com>
+0.53 (06.07.2006) - John Siracusa <siracusa@mindspring.com>
 
     * parse_date() now accepts epoch values in the full range, not
       just 9 or 10 digit numbers.
-    * Added parse_epoch() function to resolve ambiguous epoch values.
+    * Added parse_epoch() function to resolve the now-ambiguous parse_date()
+      behavior with respect to epochs and YYYYMMDD values.
 
 0.522 (04.08.2006) - John Siracusa <siracusa@mindspring.com>
 

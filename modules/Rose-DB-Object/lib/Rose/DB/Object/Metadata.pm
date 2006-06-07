@@ -3000,7 +3000,7 @@ sub insert_and_on_duplicate_key_update_sql
   else
   {
     my %skip;
-      
+
     my @key_columns = $self->primary_key_column_names;
     my @key_methods = $self->primary_key_column_accessor_names;
     my @key_values  = grep { defined } map { $obj->$_() } @key_methods;
@@ -3091,7 +3091,7 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
   my($self, $obj, $db) = @_;
 
   my(@columns, @names);
-    
+
   if($obj->{STATE_IN_DB()})
   {
     @columns =
@@ -3103,7 +3103,7 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
   else
   {
     my %skip;
-      
+
     my @key_columns = $self->primary_key_column_names;
     my @key_methods = $self->primary_key_column_accessor_names;
     my @key_values  = grep { defined } map { $obj->$_() } @key_methods;
@@ -3623,23 +3623,23 @@ Rose::DB::Object::Metadata - Database object metadata.
       name        => { type => 'varchar', length => 255 },
       description => { type => 'text' },
       category_id => { type => 'int' },
-  
+
       status => 
       {
         type      => 'varchar', 
         check_in  => [ 'active', 'inactive' ],
         default   => 'inactive',
       },
-  
+
       start_date  => { type => 'datetime' },
       end_date    => { type => 'datetime' },
-  
+
       date_created  => { type => 'timestamp', default => 'now' },  
       last_modified => { type => 'timestamp', default => 'now' },
     ],
-  
+
     unique_key => 'name',
-  
+
     foreign_keys =>
     [
       category =>
@@ -3651,7 +3651,7 @@ Rose::DB::Object::Metadata - Database object metadata.
         }
       },
     ],
-  
+
     relationships =>
     [
       prices =>
@@ -4738,13 +4738,13 @@ Here's an example L<setup()|/setup> method call, followed by the equivalent "lon
     $meta->setup
     (
       table => 'colors',
-    
+
       columns => 
       [
         code => { type => 'character', length => 3, not_null => 1 },
         name => { type => 'varchar', length => 255 },
       ],
-    
+
       primary_key_columns => [ 'code' ],
 
       unique_key => [ 'name' ],
@@ -4755,13 +4755,13 @@ The L<setup()|/setup> method call above is equivalent to the following code:
     unless($meta->is_initialized)
     {
       $meta->table('colors');
-  
+
       $meta->columns(
       [
         code => { type => 'character', length => 3, not_null => 1 },
         name => { type => 'varchar', length => 255 },
       ]);
-  
+
       $meta->primary_key_columns('code');
 
       $meta->unique_key([ 'name' ]),
@@ -5105,15 +5105,15 @@ Now we'll print the C<Product> class definition;
 The output looks like this:
 
   package Product;
- 
+
   use strict;
- 
+
   use base qw(Rose::DB::Object);
 
   __PACKAGE__->meta->setup
   (
     table => 'products',
- 
+
     columns =>
     [
       id            => { type => 'integer', not_null => 1 },
@@ -5127,9 +5127,9 @@ The output looks like this:
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     ],
- 
+
     primary_key_columns => [ 'id' ],
- 
+
     foreign_keys =>
     [
       code => 
@@ -5142,7 +5142,7 @@ The output looks like this:
           fk3 => 'k3',
         },
       },
-   
+
       topic => 
       {
         class => 'Category',
@@ -5152,7 +5152,7 @@ The output looks like this:
         },
       },
     ],
- 
+
     relationships =>
     [
       prices => 
@@ -5163,9 +5163,9 @@ The output looks like this:
       },
     ],
   );
- 
+
   1;
- 
+
 Here's the output when the C<use_setup> parameter is explicitly set to false.
 
     print Product->meta->perl_class_definition(braces    => 'bsd', 
@@ -5175,13 +5175,13 @@ Here's the output when the C<use_setup> parameter is explicitly set to false.
 Note that this approach is not recommended, but exists for historical reasons.
 
   package Product;
- 
+
   use strict;
- 
+
   use base qw(Rose::DB::Object);
- 
+
   __PACKAGE__->meta->table('products');
- 
+
   __PACKAGE__->meta->columns
   (
     id            => { type => 'integer', not_null => 1 },
@@ -5195,9 +5195,9 @@ Note that this approach is not recommended, but exists for historical reasons.
     last_modified => { type => 'timestamp' },
     date_created  => { type => 'timestamp' },
   );
- 
+
   __PACKAGE__->meta->primary_key_columns([ 'id' ]);
- 
+
   __PACKAGE__->meta->foreign_keys
   (
     code => 
@@ -5210,7 +5210,7 @@ Note that this approach is not recommended, but exists for historical reasons.
         fk3 => 'k3',
       },
     },
- 
+
     topic => 
     {
       class => 'Category',
@@ -5220,7 +5220,7 @@ Note that this approach is not recommended, but exists for historical reasons.
       },
     },
   );
- 
+
   __PACKAGE__->meta->relationships
   (
     prices => 
@@ -5230,9 +5230,9 @@ Note that this approach is not recommended, but exists for historical reasons.
       type        => 'one to many',
     },
   );
- 
+
   __PACKAGE__->meta->initialize;
- 
+
   1;
 
 See the L<auto-initialization|AUTO-INITIALIZATION> section for more discussion of Perl code generation.

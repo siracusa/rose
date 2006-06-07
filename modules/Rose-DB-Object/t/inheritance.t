@@ -79,7 +79,7 @@ SKIP:
   ok(refaddr(MyObject->meta->column('id')) ne refaddr(MySubObject->meta->column('id')), "meta column 1 - $db_type");
   ok(refaddr(MyObject->meta->column('id')) ne refaddr(MySubObject2->meta->column('id')), "meta column 2 - $db_type");
   ok(refaddr(MySubObject->meta->column('id')) ne refaddr(MySubObject2->meta->column('id')), "meta column 3 - $db_type");
-  
+
   ok(isweak(MyObject->meta->column('id')->{'parent'}), "meta weakened 1 - $db_type");
   ok(isweak(MySubObject->meta->column('id')->{'parent'}), "meta weakened 2 - $db_type");
   ok(isweak(MySubObject2->meta->column('id')->{'parent'}), "meta weakened 3 - $db_type");
@@ -114,7 +114,7 @@ SKIP:
 
   # Test again, but without this module
   $Scalar::Util::Clone::VERSION = undef;
-  
+
   package My2Object;
   use base 'Rose::DB::Object';
   __PACKAGE__->meta->table('objects');
@@ -170,7 +170,7 @@ SKIP:
   ok(refaddr(My2Object->meta->column('id')) ne refaddr(My2SubObject->meta->column('id')), "meta column 1 - $db_type");
   ok(refaddr(My2Object->meta->column('id')) ne refaddr(My2SubObject2->meta->column('id')), "meta column 2 - $db_type");
   ok(refaddr(My2SubObject->meta->column('id')) ne refaddr(My2SubObject2->meta->column('id')), "meta column 3 - $db_type");
-  
+
   ok(isweak(My2Object->meta->column('id')->{'parent'}), "meta weakened 1 - $db_type");
   ok(isweak(My2SubObject->meta->column('id')->{'parent'}), "meta weakened 2 - $db_type");
   ok(isweak(My2SubObject2->meta->column('id')->{'parent'}), "meta weakened 3 - $db_type");

@@ -4809,7 +4809,7 @@ EOF
           {
             $vers = sprintf('%d%03d%03d', $1, $2, $3 || 0);
           }
-          
+
           if($vers >= 4_001_000)
           {
             $supports_on_duplicate_key_update = 1;
@@ -4838,7 +4838,7 @@ EOF
 
         my $found = $sth->fetchrow_arrayref;
         $sth->finish;
-        
+
         if($found)
         {
           $sth = $DBH->prepare_cached('UPDATE rose_db_object_test_categories SET name = ? WHERE id = ?');
@@ -5399,7 +5399,7 @@ sub Run_Tests
     'CDBS' => \&insert_or_update_simple_category_cdbs,
     'DBIC' => \&insert_or_update_simple_category_dbic,
   });
-  
+
   Bench('Complex: insert or update', $Iterations,
   {
     'RDBO (dku)' => \&insert_or_update_complex_code_name_rdbo_dku,
@@ -5532,7 +5532,7 @@ CREATE TABLE rose_db_object_test_code_names
   id          SERIAL PRIMARY KEY,
   product_id  INT NOT NULL REFERENCES rose_db_object_test_products (id),
   name        VARCHAR(32),
-  
+
   UNIQUE(name)
 )
 EOF

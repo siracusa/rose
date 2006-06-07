@@ -322,7 +322,7 @@ sub load_driver_class
   unless(defined ${"${driver_class}::VERSION"} || @{"${driver_class}::ISA"})
   {
     eval "require $driver_class";
-  
+
     Carp::croak "Could not load driver class '$driver_class' - $@"
       if($@ && !UNIVERSAL::isa($driver_class, 'Rose::DB'));
   }
@@ -2178,7 +2178,7 @@ The default driver-to-class mapping is as follows:
     informix -> Rose::DB::Informix
     oracle   -> Rose::DB::Oracle
     sqlite   -> Rose::DB::SQLite
-    
+
 You can change this mapping with the L<driver_class|/driver_class> class method.
 
 =back

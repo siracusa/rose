@@ -205,7 +205,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
   ok(exists $MyPgObject::Objects_By_Id{$o->id}, "pre delete and forget pk - $db_type");
   ok(exists $MyPgObject::Objects_By_Key{'name'}{$o->name}, "pre delete and forget uk - $db_type");
-  
+
   ok($o->delete, "delete() - $db_type");
 
   ok(!exists $MyPgObject::Objects_By_Id{$o->id}, "post delete and forget pk - $db_type");

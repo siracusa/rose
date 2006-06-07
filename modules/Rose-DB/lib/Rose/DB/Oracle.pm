@@ -35,7 +35,7 @@ sub build_dsn
   my($self_or_class, %args) = @_;
 
   my $database = $args{'db'} || $args{'database'};
-  
+
   if(my $host = $args{'host'})
   {
     return "dbi:Oracle:sid=$database;host=$host";

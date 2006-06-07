@@ -1125,7 +1125,7 @@ sub array
           else
           {
             $self->{$key} = $db->parse_array(@_);
-            
+
             if(!defined $_[0] || defined $self->{$key})
             {
               $self->{$formatted_key,$driver} = undef;
@@ -1200,7 +1200,7 @@ sub array
           else
           {
             $self->{$key} = $db->parse_array(@_);
-            
+
             if(!defined $_[0] || defined $self->{$key})
             {
               $self->{$formatted_key,$driver} = undef;

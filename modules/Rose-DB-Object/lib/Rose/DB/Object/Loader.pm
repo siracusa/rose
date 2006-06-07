@@ -348,7 +348,7 @@ sub _perl_class
   {
     $class->meta->auto_load_related_classes($auto_load);
   }
-      
+
   my $code = $class->meta->perl_class_definition(%$args);
 
   if(defined $auto_load)
@@ -771,7 +771,7 @@ sub make_classes
     unshift(@$post_init_hook, sub { $self->default_post_init_hook(@_) });
 
     $meta->post_init_hook($post_init_hook);
-    
+
     $meta->table($table);
     $meta->convention_manager($cm_class->new);
 

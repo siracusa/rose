@@ -10,7 +10,7 @@ use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
 use Rose::DB::Object::Constants qw(STATE_LOADING MODIFIED_COLUMNS);
-     
+
 our $VERSION = '0.73';
 
 our $Debug = 0;

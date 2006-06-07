@@ -91,9 +91,9 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
   $o = $class->new(id => 2);
   ok($o->load_speculative, "load_speculative() 3 - $db_type");
-  
+
   my $o2 = $o->clone;
-  
+
   is($o2->id, $o->id, "clone() 1 - $db_type");
   is($o2->name, $o->name, "clone() 2 - $db_type");
   is($o2->age, $o->age, "clone() 3 - $db_type");
@@ -102,7 +102,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   $o2 = $o->clone_and_reset;
 
   ok(!defined $o2->id, "clone_and_reset() 1 - $db_type");
-  
+
   # Crazy MySQL prvides an empty string as a default value
   if($db_type eq 'mysql') 
   {
@@ -115,7 +115,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
   is($o2->age, $o->age, "clone_and_reset() 3 - $db_type");
   is($o2->db, $o->db, "clone_and_reset() 4 - $db_type");
-  
+
   my $clone = $class->new(id => 2)->load->clone;
   $clone->laz('Z0');
 
@@ -124,55 +124,55 @@ foreach my $db_type (qw(mysql pg informix sqlite))
     $clone->update; # reset to initial state
 
     $o->meta->allow_inline_column_values($i == 2);
- 
+
     #local $Rose::DB::Object::Debug = 1;
 
     # Insert or update
 
     $o = $class->new(id => 2, name => 'Alex', age => 2);
     $o->insert_or_update;
-    
+
     $o2 = $class->new(id => 2)->load;
     is($o2->name, 'Alex', "insert_or_update() 1.$i - $db_type");
     is($o2->laz, 'Z0', "insert_or_update() 2.$i - $db_type");
- 
+
     # Insert or update - update regular and lazy columns
 
     $o->name('Alex2');
     $o->laz('Z1');
- 
+
     $o->insert_or_update;
-  
+
     $o2 = $class->new(id => 2)->load;
     is($o2->name, 'Alex2', "insert_or_update() 3.$i - $db_type");
     is($o2->laz, 'Z1', "insert_or_update() 4.$i - $db_type");
 
     # Insert or update on duplicate key
-    
+
     $o = $class->new(id => 2, name => 'Alex3', age => 3);
-  
+
     $o->insert_or_update_on_duplicate_key;
-  
+
     $o2 = $class->new(id => 2)->load;
     is($o2->name, 'Alex3', "insert_or_update_on_duplicate_key() 1.$i - $db_type");
     is($o2->age, 3, "insert_or_update_on_duplicate_key() 2.$i - $db_type");
     is($o2->laz, 'Z1', "insert_or_update_on_duplicate_key() 3.$i - $db_type");
     is($o2->id, 2, "insert_or_update_on_duplicate_key() 4.$i - $db_type");
-    
+
     # Insert or update on duplicate key - with unique key only
 
     $o = $class->new(name => 'Alex3', age => 5);
     $o->insert_or_update_on_duplicate_key;
-  
+
     $o = $class->new(name => 'Alex3')->load;
     is($o->name, 'Alex3', "insert_or_update_on_duplicate_key() 5.$i - $db_type");
     is($o->age, 5, "insert_or_update_on_duplicate_key() 6.$i - $db_type");
     is($o->laz, 'Z1', "insert_or_update_on_duplicate_key() 7.$i - $db_type");
     is($o->id, 2, "insert_or_update_on_duplicate_key() 8.$i - $db_type");
-  
+
     $o = $class->new(name => 'Alex3', laz => 'Z2', age => 5);
     $o->insert_or_update_on_duplicate_key;
-  
+
     $o = $class->new(name => 'Alex3')->load;
     is($o->name, 'Alex3', "insert_or_update_on_duplicate_key() 9.$i - $db_type");
     is($o->age, 5, "insert_or_update_on_duplicate_key() 10.$i - $db_type");
