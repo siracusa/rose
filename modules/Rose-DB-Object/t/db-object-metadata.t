@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 26;
+use Test::More tests => 28;
 
 BEGIN 
 {
@@ -24,7 +24,7 @@ $meta->table('mytable');
 
 #is($meta->schema, 'priv', 'schema()');
 is($meta->table, 'mytable', 'table()');
-
+  
 is($meta->fq_table_sql(MyDBObject->init_db), 'rose_db_object_private.mytable', 'fq_table_sql()');
 
 $meta->columns
@@ -65,6 +65,12 @@ is($aliases, undef, 'column_aliases() 3');
 
 $meta->alias_column(save => 'save_col');
 $meta->initialize(preserve_existing => 1);
+
+is($meta->class_for(table => 'mytable'), 'MyDBObject', 
+  'class_for() as object method');
+
+is(Rose::DB::Object::Metadata->class_for(table => 'mytable'), 'MyDBObject', 
+  'class_for() as class method');
 
 is(join(',', $meta->column_names), 'bar,baz,bits,date_created,flag,flag2,foo,id,last_modified,name,nums,password,save,start,status', 'column_names');
 

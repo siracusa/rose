@@ -302,14 +302,15 @@ sub build_select
             }
           }
 
+          my $placeholder = $col_meta ? $col_meta->placeholder_sql($db) : '?';
           my $sql_column = $multi_table ? $short_column :
-            $db ? $db->quote_column_name($column) : $column;
+                           $db ? $db->quote_column_name($column) : $column;
 
           if(ref($val))
           {
             push(@clauses, _build_clause($dbh, $sql_column, $op, $val, $not, 
-                                         undef, $do_bind ? \@bind : undef,
-                                         $db, $col_meta, $set));
+                                         undef, ($do_bind ? \@bind : undef),
+                                         $db, $col_meta, undef, $set, $placeholder));
           }
           elsif(!defined $val)
           {
@@ -324,7 +325,7 @@ sub build_select
             }
             elsif($do_bind)
             {
-              push(@clauses, ($not ? "$not($sql_column = ?)" : "$sql_column = ?"));
+              push(@clauses, ($not ? "$not($sql_column = $placeholder)" : "$sql_column = $placeholder"));
               push(@bind, $val);
             }
             else
@@ -461,7 +462,7 @@ sub build_select
 sub _build_clause
 {
   my($dbh, $field, $op, $vals, $not, $field_mod, $bind, $db, $col_meta,
-     $force_inline, $set) = @_;
+     $force_inline, $set, $placeholder) = @_;
 
   #if(ref $vals eq 'ARRAY' && @$vals == 1)
   #{
@@ -505,15 +506,15 @@ sub _build_clause
 
         if($op eq 'ANY IN SET' || $op eq 'ALL IN SET')
         {
-          return ($not ? "$not " : '') . "? IN $field ";
+          return ($not ? "$not " : '') . "$placeholder IN $field ";
         }
         elsif($op eq 'ANY IN ARRAY' || $op eq 'ALL IN ARRAY')
         {
-          return $not ? "NOT (? = ANY($field))" : "? = ANY($field)";
+          return $not ? "NOT ($placeholder = ANY($field))" : "$placeholder = ANY($field)";
         }
         else
         {
-          return ($not ? "$not(" : '') . "$field $op ?"  . ($not ? ')' : '');
+          return ($not ? "$not(" : '') . "$field $op $placeholder"  . ($not ? ')' : '');
         }
       }
 
@@ -565,7 +566,7 @@ sub _build_clause
             elsif(defined $val)
             {
               push(@$bind, $val);
-              push(@new_vals, '?');
+              push(@new_vals, $placeholder);
             }
             else
             {
@@ -594,7 +595,7 @@ sub _build_clause
           join($sep, map
           {
             push(@$bind, $_);
-            "? $field_sql "
+            "$placeholder $field_sql "
           }
           (ref $vals ? @$vals : ($vals))) . ')';
         }
@@ -623,7 +624,7 @@ sub _build_clause
           else
           {
             push(@$bind, $val);
-            push(@new_vals, '?');
+            push(@new_vals, $placeholder);
           }
         }
 
@@ -658,7 +659,7 @@ sub _build_clause
 
       if(!$ref_type || $ref_type eq 'SCALAR')
       {
-        push(@clauses, _build_clause($dbh, $field, $sub_op, $vals->{$raw_op}, $not, $field_mod, $bind, $db, $col_meta, $force_inline, $set));
+        push(@clauses, _build_clause($dbh, $field, $sub_op, $vals->{$raw_op}, $not, $field_mod, $bind, $db, $col_meta, $force_inline, $set, $placeholder));
       }
       elsif($ref_type eq 'ARRAY')
       {
@@ -666,7 +667,7 @@ sub _build_clause
 
         foreach my $val (@{$vals->{$raw_op}})
         {
-          push(@clauses, _build_clause($dbh, $field, $sub_op, $val, $tmp_not, $field_mod, $bind, $db, $col_meta, $force_inline, $set));
+          push(@clauses, _build_clause($dbh, $field, $sub_op, $val, $tmp_not, $field_mod, $bind, $db, $col_meta, $force_inline, $set, $placeholder));
         }
       }
       else

@@ -230,6 +230,7 @@ sub type   { 'scalar' }
 sub column { $_[0] }
 
 sub should_inline_value { 0 }
+sub inline_value_sql { $_[1] }
 
 sub name
 {
@@ -261,17 +262,18 @@ sub name_sql
   }
 }
 
+# XXX: Still need a way to format `table`.`column`
 sub select_sql
 {
-  my($self) = shift;
+  my($self, $db, $table) = @_;
 
-  # Optional args: db, table alias
-
-  if(my $db = shift)
+  # Optional args: db, alternate name
+  
+  if($db)
   {
-    if(@_) # table alias arg too
+    if(defined $table)
     {
-      return "$_[0]." . $db->quote_column_name($self->{'name'});
+      return $db->quote_table_name($table) . '.' . $db->quote_column_name($self->{'name'});
     }
     else
     {
@@ -283,6 +285,10 @@ sub select_sql
     return $self->{'name'};
   }
 }
+
+sub insert_placeholder_sql { '?' }
+sub update_placeholder_sql { '?' }
+sub placeholder_sql        { '?' }
 
 # sub dbi_data_type { () }
 
