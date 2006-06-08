@@ -9,11 +9,11 @@ our @ISA = qw(Rose::Object::MakeMethods);
 
 use Rose::DB::Object::Constants
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
-     STATE_SAVING);
+     STATE_SAVING MODIFIED_COLUMNS);
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.70';
+our $VERSION = '0.73';
 
 sub date
 {
@@ -22,6 +22,8 @@ sub date
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
   my $tz = $args->{'time_zone'} || 0;
+
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
@@ -101,12 +103,16 @@ sub date
               $self->{$key} = undef;
               $self->{$formatted_key,$driver} = $dt;
             }
+
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           }
         }
         else
         {
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+            unless($self->{STATE_LOADING()});
         }
       }
 
@@ -133,6 +139,9 @@ sub date
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -141,9 +150,27 @@ sub date
           ($self->{$formatted_key,$driver} ||= $db->format_date($self->{$key})) : undef;
       }
 
-      return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key,$driver} ? 
-             ($self->{$key} = $db->parse_date($self->{$formatted_key,$driver})) : undef;
+      return $self->{$key}   if($self->{$key});
+
+      if(my $value = $self->{$formatted_key,$driver})
+      {
+        my $dt = $db->parse_date($value);
+
+        unless($dt)
+        {
+          $dt = Rose::DateTime::Util::parse_date($value, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid date: '$value'";
+        }
+
+        if(ref $dt)
+        {
+          $dt->set_time_zone($tz || $db->server_time_zone);
+        }
+
+        return $self->{$key} = $dt;
+      }
+
+      return undef;
     };
   }
   elsif($interface eq 'get')
@@ -210,6 +237,9 @@ sub date
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -218,9 +248,27 @@ sub date
           ($self->{$formatted_key,$driver} ||= $db->format_date($self->{$key})) : undef;
       }
 
-      return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key,$driver} ? 
-             ($self->{$key} = $db->parse_date($self->{$formatted_key,$driver})) : undef;
+      return $self->{$key}   if($self->{$key});
+
+      if(my $value = $self->{$formatted_key,$driver})
+      {
+        my $dt = $db->parse_date($value);
+
+        unless($dt)
+        {
+          $dt = Rose::DateTime::Util::parse_date($value, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid date: '$value'";
+        }
+
+        if(ref $dt)
+        {
+          $dt->set_time_zone($tz || $db->server_time_zone);
+        }
+
+        return $self->{$key} = $dt;
+      }
+
+      return undef;
     };
   }
   elsif($interface eq 'set')
@@ -262,12 +310,16 @@ sub date
             $self->{$key} = undef;
             $self->{$formatted_key,$driver} = $dt;
           }
+
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
         }
       }
       else
       {
         $self->{$key} = undef;
         $self->{$formatted_key,$driver} = undef;
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_LOADING()});
       }
 
       return  unless(defined wantarray);
@@ -293,6 +345,9 @@ sub date
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -301,9 +356,27 @@ sub date
           ($self->{$formatted_key,$driver} ||= $db->format_date($self->{$key})) : undef;
       }
 
-      return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key,$driver} ? 
-             ($self->{$key} = $db->parse_date($self->{$formatted_key,$driver})) : undef;
+      return $self->{$key}   if($self->{$key});
+
+      if(my $value = $self->{$formatted_key,$driver})
+      {
+        my $dt = $db->parse_date($value);
+
+        unless($dt)
+        {
+          $dt = Rose::DateTime::Util::parse_date($value, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid date: '$value'";
+        }
+
+        if(ref $dt)
+        {
+          $dt->set_time_zone($tz || $db->server_time_zone);
+        }
+
+        return $self->{$key} = $dt;
+      }
+
+      return undef;
     };
   }
   else { Carp::croak "Unknown interface: $interface" }
@@ -319,6 +392,8 @@ sub datetime
   my $interface = $args->{'interface'} || 'get_set';
   my $type = $args->{'type'} || 'datetime';
   my $tz = $args->{'time_zone'} || 0;
+
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
   for($type)
   {
@@ -396,12 +471,16 @@ sub datetime
             $dt->set_time_zone($tz || $db->server_time_zone)  if(ref $dt);
             $self->{$key} = $dt;
             $self->{$formatted_key,$driver} = undef;
+
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           }
         }
         else
         {
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+            unless($self->{STATE_LOADING()});
         }
       }
 
@@ -428,6 +507,9 @@ sub datetime
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -436,9 +518,27 @@ sub datetime
           ($self->{$formatted_key,$driver} ||= $db->$format_method($self->{$key})) : undef;
       }
 
-      return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key,$driver} ? 
-             ($self->{$key} = $db->$parse_method($self->{$formatted_key,$driver})) : undef;
+      return $self->{$key}   if($self->{$key});
+
+      if(my $value = $self->{$formatted_key,$driver})
+      {
+        my $dt = $db->$parse_method($value);
+
+        unless($dt)
+        {
+          $dt = Rose::DateTime::Util::parse_date($value, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid datetime: '$value'";
+        }
+
+        if(ref $dt)
+        {
+          $dt->set_time_zone($tz || $db->server_time_zone);
+        }
+
+        return $self->{$key} = $dt;
+      }
+
+      return undef;
     };
   }
   elsif($interface eq 'get')
@@ -471,6 +571,9 @@ sub datetime
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -479,9 +582,27 @@ sub datetime
           ($self->{$formatted_key,$driver} ||= $db->$format_method($self->{$key})) : undef;
       }
 
-      return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key,$driver} ? 
-             ($self->{$key} = $db->$parse_method($self->{$formatted_key,$driver})) : undef;
+      return $self->{$key}   if($self->{$key});
+
+      if(my $value = $self->{$formatted_key,$driver})
+      {
+        my $dt = $db->$parse_method($value);
+
+        unless($dt)
+        {
+          $dt = Rose::DateTime::Util::parse_date($value, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid datetime: '$value'";
+        }
+
+        if(ref $dt)
+        {
+          $dt->set_time_zone($tz || $db->server_time_zone);
+        }
+
+        return $self->{$key} = $dt;
+      }
+
+      return undef;
     };
   }
   elsif($interface eq 'set')
@@ -515,12 +636,16 @@ sub datetime
           $dt->set_time_zone($tz || $db->server_time_zone)  if(ref $dt);
           $self->{$key} = $dt;
           $self->{$formatted_key,$driver} = undef;
+
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
         }
       }
       else
       {
         $self->{$key} = undef;
         $self->{$formatted_key,$driver} = undef;
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_LOADING()});
       }
 
       return  unless(defined wantarray);
@@ -546,6 +671,9 @@ sub datetime
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -554,9 +682,27 @@ sub datetime
           ($self->{$formatted_key,$driver} ||= $db->$format_method($self->{$key})) : undef;
       }
 
-      return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key,$driver} ? 
-             ($self->{$key} = $db->$parse_method($self->{$formatted_key,$driver})) : undef;
+      return $self->{$key}   if($self->{$key});
+
+      if(my $value = $self->{$formatted_key,$driver})
+      {
+        my $dt = $db->$parse_method($value);
+
+        unless($dt)
+        {
+          $dt = Rose::DateTime::Util::parse_date($value, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid datetime: '$value'";
+        }
+
+        if(ref $dt)
+        {
+          $dt->set_time_zone($tz || $db->server_time_zone);
+        }
+
+        return $self->{$key} = $dt;
+      }
+
+      return undef;
     };
   }
   else { Carp::croak "Unknown interface: $interface" }
@@ -585,6 +731,8 @@ sub timestamp
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
   my $tz = $args->{'time_zone'} || 0;
+
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
@@ -656,12 +804,16 @@ sub timestamp
             $dt->set_time_zone($tz || $db->server_time_zone)  if(ref $dt);
             $self->{$key} = $dt;
             $self->{$formatted_key,$driver} = undef;
+
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           }
         }
         else
         {
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+            unless($self->{STATE_LOADING()});
         }
       }
 
@@ -688,6 +840,9 @@ sub timestamp
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -696,9 +851,27 @@ sub timestamp
           ($self->{$formatted_key,$driver} ||= $db->format_timestamp($self->{$key})) : undef;
       }
 
-      return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key,$driver} ? 
-             ($self->{$key} = $db->parse_timestamp($self->{$formatted_key,$driver})) : undef;
+      return $self->{$key}   if($self->{$key});
+
+      if(my $value = $self->{$formatted_key,$driver})
+      {
+        my $dt = $db->parse_timestamp($value);
+
+        unless($dt)
+        {
+          $dt = Rose::DateTime::Util::parse_date($value, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid timestamp: '$value'";
+        }
+
+        if(ref $dt)
+        {
+          $dt->set_time_zone($tz || $db->server_time_zone);
+        }
+
+        return $self->{$key} = $dt;
+      }
+
+      return undef;
     };
   }
   elsif($interface eq 'get')
@@ -765,6 +938,9 @@ sub timestamp
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -773,9 +949,27 @@ sub timestamp
           ($self->{$formatted_key,$driver} ||= $db->format_timestamp($self->{$key})) : undef;
       }
 
-      return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key,$driver} ? 
-             ($self->{$key} = $db->parse_timestamp($self->{$formatted_key,$driver})) : undef;
+      return $self->{$key}   if($self->{$key});
+
+      if(my $value = $self->{$formatted_key,$driver})
+      {
+        my $dt = $db->parse_timestamp($value);
+
+        unless($dt)
+        {
+          $dt = Rose::DateTime::Util::parse_date($value, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid timestamp: '$value'";
+        }
+
+        if(ref $dt)
+        {
+          $dt->set_time_zone($tz || $db->server_time_zone);
+        }
+
+        return $self->{$key} = $dt;
+      }
+
+      return undef;
     };
   }
   elsif($interface eq 'set')
@@ -817,6 +1011,8 @@ sub timestamp
         $self->{$formatted_key,$driver} = undef;
       }
 
+      $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+
       return  unless(defined wantarray);
 
       if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
@@ -840,6 +1036,9 @@ sub timestamp
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -848,9 +1047,27 @@ sub timestamp
           ($self->{$formatted_key,$driver} ||= $db->format_timestamp($self->{$key})) : undef;
       }
 
-      return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key,$driver} ? 
-             ($self->{$key} = $db->parse_timestamp($self->{$formatted_key,$driver})) : undef;
+      return $self->{$key}   if($self->{$key});
+
+      if(my $value = $self->{$formatted_key,$driver})
+      {
+        my $dt = $db->parse_timestamp($value);
+
+        unless($dt)
+        {
+          $dt = Rose::DateTime::Util::parse_date($value, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid timestamp: '$value'";
+        }
+
+        if(ref $dt)
+        {
+          $dt->set_time_zone($tz || $db->server_time_zone);
+        }
+
+        return $self->{$key} = $dt;
+      }
+
+      return undef;
     };
   }
   else { Carp::croak "Unknown interface: $interface" }
@@ -868,6 +1085,8 @@ sub epoch
   my $interface = $args->{'interface'} || 'get_set';
   my $tz = $args->{'time_zone'} || 0;
   my $epoch_method = $args->{'hires'} ? 'hires_epoch' : 'epoch';
+
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
@@ -895,7 +1114,7 @@ sub epoch
 
             unless($dt2)
             {
-              $dt2 = Rose::DateTime::Util::parse_date($dt, $tz || $db->server_time_zone) or
+              $dt2 = Rose::DateTime::Util::parse_epoch($dt, $tz || $db->server_time_zone) or
                 Carp::croak "Could not parse date '$dt'";
             }
 
@@ -932,7 +1151,7 @@ sub epoch
 
             unless($dt)
             {
-              $dt = Rose::DateTime::Util::parse_date($_[0], $tz || $db->server_time_zone) or
+              $dt = Rose::DateTime::Util::parse_epoch($_[0], $tz || $db->server_time_zone) or
                 Carp::croak "Invalid date: '$_[0]'";
             }
 
@@ -947,12 +1166,16 @@ sub epoch
               $self->{$key} = undef;
               $self->{$formatted_key,$driver} = $dt;
             }
+
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           }
         }
         else
         {
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+            unless($self->{STATE_LOADING()});
         }
       }
 
@@ -964,8 +1187,8 @@ sub epoch
 
         unless($dt)
         {
-          $dt = Rose::DateTime::Util::parse_date($default, $tz || $db->server_time_zone) or
-            Carp::croak "Invalid default date: '$default'";
+          $dt = Rose::DateTime::Util::parse_epoch($default, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid default epoch: '$default'";
         }
 
         if(ref $dt)
@@ -979,6 +1202,9 @@ sub epoch
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -987,9 +1213,27 @@ sub epoch
           ($self->{$formatted_key,$driver} ||= $self->{$key}->$epoch_method()) : undef;
       }
 
-      return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key,$driver} ? 
-             ($self->{$key} = $db->parse_date($self->{$formatted_key,$driver})) : undef;
+      return $self->{$key}   if($self->{$key});
+
+      if(my $value = $self->{$formatted_key,$driver})
+      {
+        my $dt = $db->parse_date($value);
+
+        unless($dt)
+        {
+          $dt = Rose::DateTime::Util::parse_epoch($value, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid epoch: '$value'";
+        }
+
+        if(ref $dt)
+        {
+          $dt->set_time_zone($tz || $db->server_time_zone);
+        }
+
+        return $self->{$key} = $dt;
+      }
+
+      return undef;
     };
   }
   elsif($interface eq 'get')
@@ -1011,7 +1255,7 @@ sub epoch
 
           unless($dt2)
           {
-            $dt2 = Rose::DateTime::Util::parse_date($dt, $tz || $db->server_time_zone) or
+            $dt2 = Rose::DateTime::Util::parse_epoch($dt, $tz || $db->server_time_zone) or
               Carp::croak "Could not parse date '$dt'";
           }
 
@@ -1041,8 +1285,8 @@ sub epoch
 
         unless($dt)
         {
-          $dt = Rose::DateTime::Util::parse_date($default, $tz || $db->server_time_zone) or
-            Carp::croak "Invalid default date: '$default'";
+          $dt = Rose::DateTime::Util::parse_epoch($default, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid default epoch: '$default'";
         }
 
         if(ref $dt)
@@ -1056,6 +1300,9 @@ sub epoch
           $self->{$key} = undef;
           $self->{$formatted_key,$driver} = $dt;
         }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
       }
 
       if($self->{STATE_SAVING()})
@@ -1064,9 +1311,27 @@ sub epoch
           ($self->{$formatted_key,$driver} ||= $self->{$key}->$epoch_method()) : undef;
       }
 
-      return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key,$driver} ? 
-             ($self->{$key} = $db->parse_date($self->{$formatted_key,$driver})) : undef;
+      return $self->{$key}   if($self->{$key});
+
+      if(my $value = $self->{$formatted_key,$driver})
+      {
+        my $dt = $db->parse_date($value);
+
+        unless($dt)
+        {
+          $dt = Rose::DateTime::Util::parse_epoch($value, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid epoch: '$value'";
+        }
+
+        if(ref $dt)
+        {
+          $dt->set_time_zone($tz || $db->server_time_zone);
+        }
+
+        return $self->{$key} = $dt;
+      }
+
+      return undef;
     };
   }
   elsif($interface eq 'set')
@@ -1093,7 +1358,7 @@ sub epoch
 
           unless($dt)
           {
-            $dt = Rose::DateTime::Util::parse_date($_[0], $tz || $db->server_time_zone) or
+            $dt = Rose::DateTime::Util::parse_epoch($_[0], $tz || $db->server_time_zone) or
               Carp::croak "Invalid date: '$_[0]'";
           }
 
@@ -1116,6 +1381,8 @@ sub epoch
         $self->{$formatted_key,$driver} = undef;
       }
 
+      $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+
       return  unless(defined wantarray);
 
       if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
@@ -1124,8 +1391,8 @@ sub epoch
 
         unless($dt)
         {
-          $dt = Rose::DateTime::Util::parse_date($default, $tz || $db->server_time_zone) or
-            Carp::croak "Invalid default date: '$default'";
+          $dt = Rose::DateTime::Util::parse_epoch($default, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid default epoch: '$default'";
         }
 
         if(ref $dt)
@@ -1147,9 +1414,27 @@ sub epoch
           ($self->{$formatted_key,$driver} ||= $self->{$key}->$epoch_method()) : undef;
       }
 
-      return $self->{$key} ? $self->{$key} : 
-             $self->{$formatted_key,$driver} ? 
-             ($self->{$key} = $db->parse_date($self->{$formatted_key,$driver})) : undef;
+      return $self->{$key}   if($self->{$key});
+
+      if(my $value = $self->{$formatted_key,$driver})
+      {
+        my $dt = $db->parse_date($value);
+
+        unless($dt)
+        {
+          $dt = Rose::DateTime::Util::parse_epoch($value, $tz || $db->server_time_zone) or
+            Carp::croak "Invalid epoch: '$value'";
+        }
+
+        if(ref $dt)
+        {
+          $dt->set_time_zone($tz || $db->server_time_zone);
+        }
+
+        return $self->{$key} = $dt;
+      }
+
+      return undef;
     };
   }
   else { Carp::croak "Unknown interface: $interface" }

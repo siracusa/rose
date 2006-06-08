@@ -7,9 +7,8 @@ use Carp();
 use DateTime::Format::MySQL;
 
 use Rose::DB;
-our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.67';
+our $VERSION = '0.70';
 
 our $Debug = 0;
 
@@ -49,6 +48,13 @@ sub database_version
   }
 
   return $self->{'database_version'} = $vers;
+}
+
+sub init_dbh
+{
+  my($self) = shift;
+  $self->{'supports_on_duplicate_key_update'} = undef;
+  return $self->Rose::DB::init_dbh(@_);
 }
 
 # These assume no ` characters in column or table names.
@@ -167,7 +173,7 @@ sub refine_dbi_column_info
 {
   my($self, $col_info) = @_;
 
-  $self->SUPER::refine_dbi_column_info($col_info);
+  $self->Rose::DB::refine_dbi_column_info($col_info);
 
   if($col_info->{'TYPE_NAME'} eq 'timestamp' && defined $col_info->{'COLUMN_DEF'})
   {
@@ -201,6 +207,54 @@ sub refine_dbi_column_info
 
 sub likes_redundant_join_conditions { 1 }
 
+sub supports_on_duplicate_key_update
+{
+  my($self) = shift;
+
+  if(defined $self->{'supports_on_duplicate_key_update'})
+  {
+    return $self->{'supports_on_duplicate_key_update'};
+  }
+
+  if($self->database_version >= 4_001_000)
+  {
+    return $self->{'supports_on_duplicate_key_update'} = 1;
+  }
+
+  return $self->{'supports_on_duplicate_key_update'} = 0;
+}
+
+#
+# Introspection
+#
+
+sub _get_primary_key_column_names
+{
+  my($self, $catalog, $schema, $table) = @_;
+
+  my $dbh = $self->dbh or die $self->error;
+
+  local $dbh->{'FetchHashKeyName'} = 'NAME';
+
+  my $fq_table =
+    join('.', grep { defined } ($catalog, $schema, 
+                                $self->quote_table_name($table)));
+
+  my $sth = $dbh->prepare("SHOW INDEX FROM $fq_table");
+  $sth->execute;
+
+  my @columns;
+
+  while(my $row = $sth->fetchrow_hashref)
+  {
+    next  unless($row->{'Key_name'} eq 'PRIMARY');
+    push(@columns, $row->{'Column_name'});
+  }
+
+  return \@columns;
+}
+
+
 1;
 
 __END__
@@ -231,16 +285,16 @@ Rose::DB::MySQL - MySQL driver class for Rose::DB.
   # Set max length of varchar columns used to emulate the array data type
   Rose::DB::MySQL->max_array_characters(128);
 
-  $db = Rose::DB->new; # $db is really a Rose::DB::MySQL object
+  $db = Rose::DB->new; # $db is really a Rose::DB::MySQL-derived object
   ...
 
 =head1 DESCRIPTION
 
-This is the subclass that L<Rose::DB> blesses an object into when the L<driver|Rose::DB/driver> is "mysql".  This mapping of drivers to class names is configurable.  See the documentation for L<Rose::DB>'s L<new()|Rose::DB/new> and L<driver_class()|Rose::DB/driver_class> methods for more information.
+L<Rose::DB> blesses objects into a class derived from L<Rose::DB::MySQL> when the L<driver|Rose::DB/driver> is "mysql".  This mapping of driver names to class names is configurable.  See the documentation for L<Rose::DB>'s L<new()|Rose::DB/new> and L<driver_class()|Rose::DB/driver_class> methods for more information.
 
-Using this class directly is not recommended.  Instead, use L<Rose::DB> and let it bless objects into the appropriate class for you, according to its L<driver_class()|Rose::DB/driver_class> mappings.
+This class cannot be used directly.  You must use L<Rose::DB> and let its L<new()|Rose::DB/new> method return an object blessed into the appropriate class for you, according to its L<driver_class()|Rose::DB/driver_class> mappings.
 
-This class inherits from L<Rose::DB>.  B<Only the methods that are new or have  different behaviors are documented here.>  See the L<Rose::DB> documentation for information on the inherited methods.
+Only the methods that are new or have different behaviors than those in L<Rose::DB> are documented here.  See the L<Rose::DB> documentation for the full list of methods.
 
 =head1 CLASS METHODS
 

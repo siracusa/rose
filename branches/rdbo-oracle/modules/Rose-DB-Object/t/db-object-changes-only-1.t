@@ -122,7 +122,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $o2->last_modified('now');
   ok($o2->save, "save() 2 - $db_type");
   ok($o2->load, "load() 3 - $db_type");
-  
+
   ok(!has_modified_columns($o2), "no modified columns after load() - $db_type");
 
   $o2->name('John 2');
@@ -136,15 +136,15 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $bo->load;
   $bo->flag(0);
   $bo->save;
-  
+
   $bo = MyPgObject->new(id => $o->id);
   $bo->load;
-  
+
   ok(!$bo->flag, "boolean check - $db_type");
-  
+
   $bo->flag(0);
   $bo->save;
-  
+
   my $o3 = MyPgObject->new();
 
   my $db = $o3->db or die $o3->error;
@@ -539,6 +539,7 @@ SKIP: foreach my $db_type ('mysql')
   is($ox->bitz3->to_Bin(), '0011', "spot check bitfield 3 - $db_type");
 
   $ox->bitz3->Bit_On(3);
+  set_column_value_modified($ox, 'bitz3');
   is($ox->bitz3->to_Bin(), '1011', "spot check bitfield 4 - $db_type");
 
   $ox->save(insert => 1);
@@ -547,6 +548,7 @@ SKIP: foreach my $db_type ('mysql')
   is($ox->bitz3->to_Bin(), '1011', "spot check bitfield 5 - $db_type");
 
   $ox->bitz3->Bit_On(2);
+  set_column_value_modified($ox, 'bitz3');
   $ox->save;
   $ox = MyMySQLObject->new(id => $ox->id)->load;
   is($ox->bitz3->to_Bin(), '1111', "spot check bitfield 6 - $db_type");
@@ -1132,6 +1134,8 @@ EOF
 
     sub init_db { Rose::DB->new('pg') }
 
+    MyPgObject->meta->default_update_changes_only(1);
+
     MyPgObject->meta->table('rose_db_object_test');
 
     MyPgObject->meta->columns
@@ -1280,6 +1284,8 @@ EOF
 
     MyMySQLObject->meta->allow_inline_column_values(1);
 
+    MyMySQLObject->meta->default_update_changes_only(1);
+
     MyMySQLObject->meta->table('rose_db_object_test');
 
     MyMySQLObject->meta->columns
@@ -1336,6 +1342,8 @@ EOF
 
     sub init_db { Rose::DB->new('mysql') }
 
+    MyMPKMySQLObject->meta->default_update_changes_only(1);
+
     MyMPKMySQLObject->meta->table('rose_db_object_test2');
 
     MyMPKMySQLObject->meta->columns
@@ -1354,10 +1362,10 @@ EOF
       primary_key_generator => sub
       {
         my($meta, $db) = @_;
-  
+
         my $k1 = $i++;
         my $k2 = $i++;
-  
+
         return $k1, $k2;
       },
     );
@@ -1421,6 +1429,8 @@ EOF
     sub init_db { Rose::DB->new('informix') }
 
     MyInformixObject->meta->allow_inline_column_values(1);
+
+    MyInformixObject->meta->default_update_changes_only(1);
 
     MyInformixObject->meta->table('rose_db_object_test');
 
@@ -1536,6 +1546,8 @@ EOF
 
     sub init_db { Rose::DB->new('sqlite') }
 
+    MySQLiteObject->meta->default_update_changes_only(1);
+
     MySQLiteObject->meta->table('rose_db_object_test');
 
     MySQLiteObject->meta->columns
@@ -1598,6 +1610,8 @@ EOF
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('sqlite') }
+
+    MyMPKSQLiteObject->meta->default_update_changes_only(1);
 
     MyMPKSQLiteObject->meta->table('rose_db_object_test2');
 

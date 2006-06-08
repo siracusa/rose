@@ -4,10 +4,7 @@ use strict;
 
 use Rose::DateTime::Util();
 
-use Rose::DB;
-our @ISA = qw(Rose::DB);
-
-our $VERSION = '0.02';
+our $VERSION = '0.70';
 
 our $Debug = 0;
 
@@ -428,6 +425,10 @@ sub format_limit_with_offset
   return @_ > 2 ? "SKIP $_[2] FIRST $_[1]" : "FIRST $_[1]";
 }
 
+#
+# Introspection
+#
+
 sub list_tables
 {
   my($self, %args) = @_;
@@ -481,6 +482,95 @@ sub list_tables
   return wantarray ? @tables : \@tables;
 }
 
+sub _get_primary_key_column_names
+{
+  my($self, $catalog, $schema, $table_arg) = @_;
+
+  require DBD::Informix::Metadata;
+
+  my $dbh = $self->dbh or die $self->error;
+
+  local $dbh->{'FetchHashKeyName'} = 'NAME';
+
+  # We need the table owner.  Asking for column information is the only
+  # way I know of to reliably get this information.
+  #
+  # Informix does not support DBI's column_info() method so we have
+  # to get all that into "the hard way."
+  #
+  # Each item in @col_list is a reference to an array of values:
+  #
+  #   0     owner name
+  #   1     table name
+  #   2     column number
+  #   3     column name
+  #   4     data type (encoded)
+  #   5     data length (encoded)
+  #
+  my @col_list = DBD::Informix::Metadata::ix_columns($dbh, $table_arg);
+
+  my $owner = $col_list[0][0];
+  my $table = $col_list[0][1]; # just in case...
+
+  unless(defined $owner)
+  {
+    die "Could not find owner for table ", $table;
+  }
+
+  # Then comes this monster query to get the primary key column names.
+  # I'd love to know a better/easier way to do this...
+  my $pk_sth = $dbh->prepare(<<'EOF');
+SELECT 
+col.colname
+FROM
+informix.sysconstraints con, 
+informix.systables      tab,
+informix.sysindexes     idx,
+informix.syscolumns     col
+WHERE
+ constrtype  = 'P'       AND 
+ con.tabid   = tab.tabid AND
+ con.tabid   = idx.tabid AND
+ con.tabid   = col.tabid AND
+ con.idxname = idx.idxname
+ AND 
+ (
+   col.colno = idx.part1  OR
+   col.colno = idx.part2  OR
+   col.colno = idx.part3  OR
+   col.colno = idx.part4  OR
+   col.colno = idx.part5  OR
+   col.colno = idx.part6  OR
+   col.colno = idx.part7  OR
+   col.colno = idx.part8  OR
+   col.colno = idx.part9  OR
+   col.colno = idx.part10 OR
+   col.colno = idx.part11 OR
+   col.colno = idx.part12 OR
+   col.colno = idx.part13 OR
+   col.colno = idx.part14 OR
+   col.colno = idx.part15 OR
+   col.colno = idx.part16
+ )
+  AND
+  tab.tabname = ? AND
+  tab.owner   = ?
+EOF
+
+  $pk_sth->execute($table, $owner);
+
+  my(@columns, $column);
+
+  $pk_sth->bind_columns(\$column);
+
+  while($pk_sth->fetch)
+  {
+    push(@columns, $column);
+  }
+
+  return \@columns;
+}
+
 1;
 
 __END__
@@ -512,7 +602,7 @@ Rose::DB::Informix - Informix driver class for Rose::DB.
   # Set max length of varchar columns used to emulate the array data type
   Rose::DB::Informix->max_array_characters(128);
 
-  $db = Rose::DB->new; # $db is really a Rose::DB::Informix object
+  $db = Rose::DB->new; # $db is really a Rose::DB::Informix-derived object
 
   $dt  = $db->parse_datetime_year_to_minute(...);
   $val = $db->format_datetime_year_to_minute($dt);
@@ -523,11 +613,11 @@ Rose::DB::Informix - Informix driver class for Rose::DB.
 
 =head1 DESCRIPTION
 
-This is the subclass that L<Rose::DB> blesses an object into when the C<driver> is "Informix".  This mapping of drivers to class names is configurable.  See the documentation for L<Rose::DB>'s C<new()> and C<driver_class()> methods for more information.
+L<Rose::DB> blesses objects into a class derived from L<Rose::DB::Informix> when the L<driver|Rose::DB/driver> is "informix".  This mapping of driver names to class names is configurable.  See the documentation for L<Rose::DB>'s L<new()|Rose::DB/new> and L<driver_class()|Rose::DB/driver_class> methods for more information.
 
-Using this class directly is not recommended.  Instead, use L<Rose::DB> and let it bless objects into the appropriate class for you, according to its C<driver_class()> mappings.
+This class cannot be used directly.  You must use L<Rose::DB> and let its L<new()|Rose::DB/new> method return an object blessed into the appropriate class for you, according to its L<driver_class()|Rose::DB/driver_class> mappings.
 
-This class inherits from L<Rose::DB>.  B<Only the methods that are new or have  different behaviors are documented here.>  See the L<Rose::DB> documentation for information on the inherited methods.
+Only the methods that are new or have different behaviors than those in L<Rose::DB> are documented here.  See the L<Rose::DB> documentation for the full list of methods.
 
 =head1 CLASS METHODS
 

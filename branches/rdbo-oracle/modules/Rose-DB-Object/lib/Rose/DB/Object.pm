@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
 
-our $VERSION = '0.724';
+our $VERSION = '0.731';
 
 our $Debug = 0;
 
@@ -284,6 +284,7 @@ sub load
 
     $self->{STATE_IN_DB()} = 1;
     $self->{LOADED_FROM_DRIVER()} = $db->{'driver'};
+    $self->{MODIFIED_COLUMNS()} = {};
     return $self || 1;
   }
 
@@ -531,6 +532,8 @@ sub save
       return 0;
     }
 
+    $self->{MODIFIED_COLUMNS()} = {};
+
     return $ret;
   }
   else
@@ -557,6 +560,10 @@ sub update
     exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
     $meta->dbi_prepare_cached;
 
+  my $changes_only =
+    exists $args{'changes_only'} ? $args{'changes_only'} :
+    $meta->default_update_changes_only;
+
   local $self->{STATE_SAVING()} = 1;
 
   my @key_columns = $meta->primary_key_column_names;
@@ -569,38 +576,6 @@ sub update
 
   unless(@key_values == @key_columns)
   {
-    # This is nonsensical right now because the primary key 
-    # always has to be non-null, and any update will use the 
-    # primary key instead of a unique key.  But I'll leave the
-    # code here (commented out) just in case.
-    #foreach my $cols ($meta->unique_keys_column_names)
-    #{
-    #  my $defined = 0;
-    #  @key_columns = @$cols;
-    #  @key_methods = map { $meta->column_accessor_method_name($_) } @key_columns;
-    #  @key_values  = map { $defined++ if(defined $_); $_ } 
-    #                 map { $self->$_() } @key_methods;
-    #
-    #  if($defined)
-    #  {
-    #    $found_key = 1;
-    #    $null_key  = 1  unless($defined == @key_columns);
-    #    last;
-    #  }
-    #}
-    #
-    #unless($found_key)
-    #{
-    #  @key_columns = $meta->primary_key_column_names;
-    #
-    #  $self->error("Cannot update " . ref($self) . " without a primary key (" .
-    #               join(', ', @key_columns) . ') with ' .
-    #               (@key_columns > 1 ? 'non-null values in all columns' : 
-    #                                   'a non-null value') .
-    #               ' or another unique key with at least one non-null value.');
-    #  return 0;
-    #}
-
     $self->error("Cannot update " . ref($self) . " without a primary key (" .
                  join(', ', @key_columns) . ') with ' .
                  (@key_columns > 1 ? 'non-null values in all columns' : 
@@ -611,7 +586,7 @@ sub update
   #
   #unless($ret)
   #{
-  #  $self->error('Could not begin transaction before inserting - ' . $db->error);
+  #  $self->error('Could not begin transaction before updating - ' . $db->error);
   #  return undef;
   #}
   #
@@ -631,8 +606,19 @@ sub update
       #my($sql, $bind) = 
       #  $meta->update_sql_with_inlining($self, \@key_columns, \@key_values);
 
-      my($sql, $bind) = 
-        $meta->update_sql_with_inlining($self, \@key_columns);
+      my($sql, $bind);
+
+      if($changes_only)
+      {
+        # No changes to save...
+        return $self || 1  unless(%{$self->{MODIFIED_COLUMNS() || {}}});
+        ($sql, $bind) =
+          $meta->update_changes_only_sql_with_inlining($self, \@key_columns);
+      }
+      else
+      {
+        ($sql, $bind) = $meta->update_sql_with_inlining($self, \@key_columns);
+      }
 
       if($Debug)
       {
@@ -645,23 +631,26 @@ sub update
     }
     else
     {
-      # See comment above regarding primary keys vs. unique keys for updates
-      #my($sql, $sth);
-      #
-      #if($null_key)
-      #{
-      #  $sql = $meta->update_sql_with_null_key(\@key_columns, \@key_values, $db);
-      #  $sth = $dbh->prepare($sql); #, $meta->prepare_update_options);
-      #}
-      #else
-      #{
-      #  $sql = $meta->update_sql($self, \@key_columns, $db);
-      #  # $meta->prepare_update_options (defunct)
-      #  $sth = = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
-      #                             $dbh->prepare($sql);
-      #}
+      if($changes_only)
+      {
+        # No changes to save...
+        return $self || 1  unless(%{$self->{MODIFIED_COLUMNS() || {}}});
 
-      if($meta->has_lazy_columns)
+        my($sql, $bind) = $meta->update_changes_only_sql($self, \@key_columns, $db);
+
+        # $meta->prepare_update_options (defunct)
+        my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                    $dbh->prepare($sql);
+
+        if($Debug)
+        {
+          no warnings;
+          warn "$sql - bind params: ", join(', ', @$bind, @key_values), "\n";
+        }
+
+        $sth->execute(@$bind, @key_values);
+      }
+      elsif($meta->has_lazy_columns)
       {
         my $sql = $meta->update_sql($self, \@key_columns, $db);
 
@@ -690,7 +679,7 @@ sub update
             join(', ', @exec, grep { defined } @key_values), "\n";
         }
 
-        $sth->execute(@exec, @key_values)
+        $sth->execute(@exec, @key_values);
       }
       else
       {
@@ -731,6 +720,8 @@ sub update
     return 0;
   }
 
+  $self->{MODIFIED_COLUMNS()} = {};
+
   return $self || 1;
 }
 
@@ -764,7 +755,7 @@ sub insert
 
   my $using_pk_placeholders = 0;
 
-  unless(@pk_values == @pk_methods)
+  unless(@pk_values == @pk_methods || $args{'on_duplicate_key_update'})
   {
     my @generated_pk_values = $meta->generate_primary_key_values($db);
 
@@ -807,7 +798,16 @@ sub insert
 
     if($meta->allow_inline_column_values)
     {
-      my($sql, $bind) = $meta->insert_sql_with_inlining($self);
+      my($sql, $bind);
+
+      if($args{'on_duplicate_key_update'})
+      {
+        ($sql, $bind) = $meta->insert_and_on_duplicate_key_update_with_inlining_sql($self, $db);
+      }
+      else
+      {
+        ($sql, $bind) = $meta->insert_sql_with_inlining($self);
+      }
 
       if($Debug)
       {
@@ -822,36 +822,56 @@ sub insert
     {
       my $column_names = $meta->column_names;
 
-      $sth = $prepare_cached ? $dbh->prepare_cached($meta->insert_sql($db), undef, 3) : 
-                               $dbh->prepare($meta->insert_sql($db));
-
-      if($Debug)
+      if($args{'on_duplicate_key_update'})
       {
-        no warnings;
-        warn $meta->insert_sql($db), " - bind params: ", 
-          join(', ', (map { $self->$_() } $meta->column_accessor_method_names)), 
-          "\n";
+        my($sql, $bind) = $meta->insert_and_on_duplicate_key_update_sql($self, $db);
+
+        $sth = $prepare_cached ? 
+          $dbh->prepare_cached($sql, undef, 3) : 
+          $dbh->prepare($sql);
+
+        if($Debug)
+        {
+          no warnings;
+          warn $sql, " - bind params: @$bind\n";
+        }
+
+        $sth->execute(@$bind);
       }
+      else
+      {
+        $sth = $prepare_cached ? 
+          $dbh->prepare_cached($meta->insert_sql($db), undef, 3) : 
+          $dbh->prepare($meta->insert_sql($db));
 
-      $sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
+        if($Debug)
+        {
+          no warnings;
+          warn $meta->insert_sql($db), " - bind params: ", 
+            join(', ', (map {$self->$_()} $meta->column_accessor_method_names)), 
+            "\n";
+        }
 
-      # Not ready to cross this bridge yet...
-      #if($meta->needs_data_type_hand_holding($db))
-      #{
-      #  my $i = 1;
-      #
-      #  foreach my $column ($meta->columns)
-      #  {
-      #    my $method = $column->accessor_method_name;
-      #    $sth->bind_param($i++,  $self->$method(), $column->dbi_data_type);
-      #  }
-      # 
-      #  $sth->execute;
-      #}
-      #else
-      #{
-      #  $sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
-      #}
+        $sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
+
+        # Not ready to cross this bridge yet...
+        #if($meta->needs_data_type_hand_holding($db))
+        #{
+        #  my $i = 1;
+        #
+        #  foreach my $column ($meta->columns)
+        #  {
+        #    my $method = $column->accessor_method_name;
+        #    $sth->bind_param($i++,  $self->$method(), $column->dbi_data_type);
+        #  }
+        # 
+        #  $sth->execute;
+        #}
+        #else
+        #{
+        #  $sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
+        #}
+      }
     }
 
     if(@pk_methods == 1)
@@ -928,6 +948,8 @@ sub insert
     $self->meta->handle_error($self);
     return 0;
   }
+
+  $self->{MODIFIED_COLUMNS()} = {};
 
   return $self || 1;
 }
@@ -1287,33 +1309,22 @@ Rose::DB::Object - Extensible, high performance RDBMS-OO mapper.
 
   package Category;
 
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
-
+  use base qw(Rose::DB::Object);
   __PACKAGE__->meta->table('categories');
-
   __PACKAGE__->meta->auto_initialize;
 
   ...
 
   package Price;
-
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
-
+  use base qw(Rose::DB::Object);
   __PACKAGE__->meta->table('prices');
-
   __PACKAGE__->meta->auto_initialize;
 
   ...
 
   package Product;
-
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
-
+  use base qw(Rose::DB::Object);
   __PACKAGE__->meta->table('products');
-
   __PACKAGE__->meta->auto_initialize;
 
   #
@@ -1322,100 +1333,95 @@ Rose::DB::Object - Extensible, high performance RDBMS-OO mapper.
 
   package Category;
 
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
+  use base qw(Rose::DB::Object);
 
-  __PACKAGE__->meta->table('categories');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id          => { type => 'int', primary_key => 1 },
-    name        => { type => 'varchar', length => 255 },
-    description => { type => 'text' },
+    table => 'categories',
+
+    columns =>
+    [
+      id          => { type => 'int', primary_key => 1 },
+      name        => { type => 'varchar', length => 255 },
+      description => { type => 'text' },
+    ],
+
+    unique_key => 'name',
   );
-
-  __PACKAGE__->meta->add_unique_key('name');
-
-  __PACKAGE__->meta->initialize;
 
   ...
 
   package Price;
 
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
+  use base qw(Rose::DB::Object);
 
-  __PACKAGE__->meta->table('prices');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id         => { type => 'int', primary_key => 1 },
-    price      => { type => 'decimal' },
-    region     => { type => 'char', length => 3 },
-    product_id => { type => 'int' }
+    table => 'prices',
+
+    columns =>
+    [
+      id         => { type => 'int', primary_key => 1 },
+      price      => { type => 'decimal' },
+      region     => { type => 'char', length => 3 },
+      product_id => { type => 'int' }
+    ],
+
+    unique_key => [ 'product_id', 'region' ],
   );
-
-  __PACKAGE__->meta->add_unique_key('product_id', 'region');
-
-  __PACKAGE__->meta->initialize;
 
   ...
 
   package Product;
 
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
+  use base qw(Rose::DB::Object);
 
-  __PACKAGE__->meta->table('products');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id          => { type => 'int', primary_key => 1 },
-    name        => { type => 'varchar', length => 255 },
-    description => { type => 'text' },
-    category_id => { type => 'int' },
+    table => 'products',
 
-    status => 
-    {
-      type      => 'varchar', 
-      check_in  => [ 'active', 'inactive' ],
-      default   => 'inactive',
-    },
+    columns =>
+    [
+      id          => { type => 'int', primary_key => 1 },
+      name        => { type => 'varchar', length => 255 },
+      description => { type => 'text' },
+      category_id => { type => 'int' },
 
-    start_date  => { type => 'datetime' },
-    end_date    => { type => 'datetime' },
-
-    date_created     => { type => 'timestamp', default => 'now' },  
-    last_modified    => { type => 'timestamp', default => 'now' },
-  );
-
-  __PACKAGE__->meta->add_unique_key('name');
-
-  __PACKAGE__->meta->foreign_keys
-  (
-    category =>
-    {
-      class       => 'Category',
-      key_columns =>
+      status => 
       {
-        category_id => 'id',
-      }
-    },
-  );
+        type      => 'varchar', 
+        check_in  => [ 'active', 'inactive' ],
+        default   => 'inactive',
+      },
 
-  # This part cannot be done automatically.
-  # perldoc Rose::DB::Object::Metadata to find out why.
-  __PACKAGE__->meta->relationships
-  (
-    prices =>
-    {
-      type       => 'one to many',
-      class      => 'Price',
-      column_map => { id => 'product_id' },
-    },
-  );
+      start_date  => { type => 'datetime' },
+      end_date    => { type => 'datetime' },
 
-  __PACKAGE__->meta->initialize;
+      date_created     => { type => 'timestamp', default => 'now' },  
+      last_modified    => { type => 'timestamp', default => 'now' },
+    ],
+
+    unique_key => 'name',
+
+    foreign_keys =>
+    [
+      category =>
+      {
+        class       => 'Category',
+        key_columns => { category_id => 'id' },
+      },
+    [,
+
+    relationships =>
+    [
+      prices =>
+      {
+        type       => 'one to many',
+        class      => 'Price',
+        column_map => { id => 'product_id' },
+      },
+    ],
+  );
 
   ...
 
@@ -1555,15 +1561,16 @@ Example:
   package BaseClass;
   use base 'Rose::DB::Object';
 
-  __PACKAGE__->meta->table('objects');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id    => { type => 'int', primary_key => 1 },
-    start => { type => 'scalar' },
-  );
+    table => 'objects',
 
-  __PACKAGE__->meta->initialize;
+    columns =>
+    [
+      id    => { type => 'int', primary_key => 1 },
+      start => { type => 'scalar' },
+    ],
+  );
 
   ...
 
@@ -1700,6 +1707,8 @@ If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used 
 
 =back
 
+Returns true if the row was inserted successfully, false otherwise.  The true value returned on success will be the object itself.  If the object L<overload>s its boolean value such that it is not true, then a true value will be returned instead of the object itself.
+
 =item B<load [PARAMS]>
 
 Load a row from the database table, initializing the object with the values from that row.  An object can be loaded based on either a primary key or a unique key.
@@ -1736,7 +1745,7 @@ B<SUBCLASS NOTE:> If you are going to override the L<load|/load> method in your 
     # calling the base class version of the method.
     sub load
     {
-      my $self = $_[0]; # Copy, no shift
+      my $self = $_[0]; # Copy, not shift
 
       ... # Do your stuff
 
@@ -1840,33 +1849,33 @@ If your table has a multi-column primary key or does not use a column type that 
 
     package MyDBObject;
 
-    use Rose::DB::Object;
-    our @ISA = qw(Rose::DB::Object);
+    use base qw(Rose::DB::Object);
 
-    __PACKAGE__->meta->table('mytable');
-
-    __PACKAGE__->meta->columns
+    __PACKAGE__->meta->setup
     (
-      k1   => { type => 'int', not_null => 1 },
-      k2   => { type => 'int', not_null => 1 },
-      name => { type => 'varchar', length => 255 },
-      ...
+      table => 'mytable',
+
+      columns =>
+      [
+        k1   => { type => 'int', not_null => 1 },
+        k2   => { type => 'int', not_null => 1 },
+        name => { type => 'varchar', length => 255 },
+        ...
+      ],
+
+      primary_key_columns => [ 'k1', 'k2' ],
+
+      primary_key_generator => sub
+      {
+        my($meta, $db) = @_;
+
+        # Generate primary key values somehow
+        my $k1 = ...;
+        my $k2 = ...;
+
+        return $k1, $k2;
+      },
     );
-
-    __PACKAGE__->meta->primary_key_columns('k1', 'k2');
-
-    __PACKAGE__->meta->initialize;
-
-    __PACKAGE__->meta->primary_key_generator(sub
-    {
-      my($meta, $db) = @_;
-
-      # Generate primary key values somehow
-      my $k1 = ...;
-      my $k2 = ...;
-
-      return $k1, $k2;
-    });
 
 See the L<Rose::DB::Object::Metadata> documentation for more information on custom primary key generators.
 
@@ -1884,6 +1893,7 @@ If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used 
 
 =back
 
+Returns true if the row was updated successfully, false otherwise.  The true value returned on success will be the object itself.  If the object L<overload>s its boolean value such that it is not true, then a true value will be returned instead of the object itself.
 
 =back
 
@@ -1893,7 +1903,6 @@ As described in the L<Rose::DB::Object::Metadata> documentation, each column in 
 
 Here is a list of method names reserved by the L<Rose::DB::Object> API.  If you have a column with one of these names, you must alias it.
 
-    clone
     db
     dbh
     delete
@@ -1928,6 +1937,10 @@ L<http://lists.sourceforge.net/lists/listinfo/rose-db-object>
 Although the mailing list is the preferred support mechanism, you can also email the author (see below) or file bugs using the CPAN bug tracking system:
 
 L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB-Object>
+
+=head1 CONTRIBUTORS
+
+Cees Hek
 
 =head1 AUTHOR
 

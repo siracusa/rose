@@ -10,46 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.725';
-
-sub auto_retrieve_primary_key_column_names
-{
-  my($self) = shift;
-
-  unless(defined wantarray)
-  {
-    Carp::croak "Useless call to auto_retrieve_primary_key_column_names() in void context";
-  }
-
-  my($class, @columns);
-
-  eval
-  {
-    $class = $self->class or die "Missing class!";
-
-    my $db  = $self->db;
-    my $dbh = $db->dbh or die $db->error;
-
-    local $dbh->{'FetchHashKeyName'} = 'NAME';
-
-    my $sth = $dbh->prepare('SHOW INDEX FROM ' . $self->fq_table_sql($db));
-    $sth->execute;
-
-    while(my $row = $sth->fetchrow_hashref)
-    {
-      next  unless($row->{'Key_name'} eq 'PRIMARY');
-      push(@columns, $row->{'Column_name'});
-    }
-  };
-
-  if($@ || !@columns)
-  {
-    $@ = 'no primary key columns found'  unless(defined $@);
-    Carp::croak "Could not auto-retrieve primary key columns for class $class - $@";
-  }
-
-  return wantarray ? @columns : \@columns;
-}
+our $VERSION = '0.73';
 
 sub auto_generate_unique_keys
 {

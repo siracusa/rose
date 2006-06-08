@@ -307,5 +307,56 @@ My::DBReg->register_db(
   host     => 'subhost',
   username => 'subuser');
 
+package main;
+
+my %Have_DB;
+
+sub get_db
+{
+  my($type) = shift;
+
+  if((defined $Have_DB{$type} && !$Have_DB{$type}) || !get_dbh($type))
+  {
+    return undef;
+  }
+
+  return Rose::DB->new($type);
+}
+
+sub get_dbh
+{
+  my($type) = shift;
+
+  my $dbh;
+
+  eval 
+  {
+    $dbh = Rose::DB->new($type)->retain_dbh()
+      or die Rose::DB->error;
+  };
+
+  if(!$@ && $dbh)
+  {
+    $Have_DB{$type} = 1;
+    return $dbh;
+  }
+
+  return $Have_DB{$type} = 0;
+}
+
+sub have_db
+{
+  my($type) = shift;
+
+  if($type =~ /^sqlite(?:_admin)$/ && $ENV{'RDBO_NO_SQLITE'})
+  {
+    return $Have_DB{$type} = 0;
+  }
+
+  return $Have_DB{$type} = shift if(@_);
+  return $Have_DB{$type}  if(exists $Have_DB{$type});
+  return get_dbh($type) ? 1 : 0;
+}
+
 1;
 

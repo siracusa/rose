@@ -3,7 +3,7 @@ package Rose::DB::Object::Util;
 use strict;
 
 use Rose::DB::Object::Constants
-  qw(PRIVATE_PREFIX STATE_IN_DB STATE_LOADING STATE_SAVING);
+  qw(PRIVATE_PREFIX STATE_IN_DB STATE_LOADING STATE_SAVING MODIFIED_COLUMNS);
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -13,24 +13,20 @@ our @EXPORT_OK =
      set_state_in_db set_state_loading set_state_saving
      unset_state_in_db unset_state_loading unset_state_saving
      row_id column_value_formatted_key column_value_is_inflated_key
-     lazy_column_values_loaded_key);
+     lazy_column_values_loaded_key modified_column_names has_modified_columns
+     set_column_value_modified get_column_value_modified);
 
 our %EXPORT_TAGS = 
 (
-  all => 
-  [
-    qw(is_in_db is_loading is_saving
-       set_state_in_db set_state_loading set_state_saving
-       unset_state_in_db unset_state_loading unset_state_saving
-       row_id column_value_formatted_key column_value_is_inflated_key
-       lazy_column_values_loaded_key) 
-  ],
+  all         => \@EXPORT_OK,
   get_state   => [ qw(is_in_db is_loading is_saving) ],
   set_state   => [ qw(set_state_in_db set_state_loading set_state_saving) ],
   unset_state => [ qw(unset_state_in_db unset_state_loading unset_state_saving) ],
+  columns     => [ qw(set_column_value_modified get_column_value_modified 
+                      modified_column_names has_modified_columns) ],
 );
 
-our $VERSION = '0.58';
+our $VERSION = '0.73';
 
 sub is_in_db   { shift->{STATE_IN_DB()}   }
 sub is_loading { shift->{STATE_LOADING()} }
@@ -43,6 +39,33 @@ sub set_state_saving  { shift->{STATE_SAVING()} = 1  }
 sub unset_state_in_db   { shift->{STATE_IN_DB()} = 0   }
 sub unset_state_loading { shift->{STATE_LOADING()} = 0 }
 sub unset_state_saving  { shift->{STATE_SAVING()} = 0  }
+
+sub get_column_value_modified
+{
+  my($object, $name) = (shift, shift);
+  return $object->{MODIFIED_COLUMNS()}{$name};
+}
+
+sub set_column_value_modified
+{
+  my($object, $name) = (shift, shift);
+  return $object->{MODIFIED_COLUMNS()}{$name} = 1;
+}
+
+sub modified_column_names
+{
+  keys(%{shift->{MODIFIED_COLUMNS()} || {}});
+}
+
+sub has_modified_columns
+{
+  if(@_ > 1 && !$_[1])
+  {
+    shift->{MODIFIED_COLUMNS()} = {};
+  }
+
+  scalar %{shift->{MODIFIED_COLUMNS()} || {}}
+}
 
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
@@ -149,6 +172,17 @@ will cause the following function names to be imported:
     unset_state_loading()
     unset_state_saving()
 
+The 'columns' tag:
+
+    use Rose::DB::Object::Util qw(:columns);
+
+will cause the following function names to be imported:
+
+    get_column_value_modified()
+    set_column_value_modified()
+    modified_column_names()
+    has_modified_columns()
+
 The 'all' tag:
 
     use Rose::DB::Object::Util qw(:all);
@@ -167,9 +201,22 @@ will cause the following function names to be imported:
     unset_state_loading()
     unset_state_saving()
 
+    get_column_value_modified()
+    set_column_value_modified()
+    modified_column_names()
+    has_modified_columns()
+
 =head1 FUNCTIONS
 
 =over 4
+
+=item B<get_column_value_modified OBJECT, COLUMN>
+
+Returns true if the column named COLUMN in OBJECT is modified, false otherwise.
+
+=item B<has_modified_columns OBJECT>
+
+Returns true if OBJECT has any modified columns, false otherwise.
 
 =item B<is_in_db OBJECT>
 
@@ -182,6 +229,14 @@ Given the L<Rose::DB::Object>-derived object OBJECT, returns true if the object 
 =item B<is_saving OBJECT>
 
 Given the L<Rose::DB::Object>-derived object OBJECT, returns true if the object is currently being L<save|Rose::DB::Object/save>d, false otherwise.
+
+=item B<modified_column_names OBJECT>
+
+Returns a list containing the names of all the modified columns in OBJECT.
+
+=item B<set_column_value_modified OBJECT, COLUMN>
+
+Mark the column named COLUMN in OBJECT as modified.
 
 =item B<set_state_in_db OBJECT>
 

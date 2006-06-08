@@ -2,10 +2,12 @@ package Rose::DB::Object::MakeMethods::Pg;
 
 use strict;
 
-our $VERSION = '0.03';
+our $VERSION = '0.73';
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
+
+use Rose::DB::Object::Constants qw(STATE_LOADING STATE_SAVING MODIFIED_COLUMNS);
 
 use constant SALT_CHARS => './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
@@ -16,19 +18,26 @@ sub chkpass
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
 
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
+
+  my $encrypted = $name . ($args->{'encrypted_suffix'} || '_encrypted');
+  my $cmp       = $name . ($args->{'cmp_suffix'} || '_is');
+
+  my $default = $args->{'default'};
+
   my %methods;
 
   if($interface eq 'get_set')
   {
-    my $encrypted = $name . ($args->{'encrypted_suffix'} || '_encrypted');
-    my $cmp       = $name . ($args->{'cmp_suffix'} || '_is');
-
     $methods{$name} = sub
     {
       my($self) = shift;
 
       if(@_)
       {
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_LOADING()});
+
         if(defined $_[0])
         {
           if(index($_[0], ':') == 0)
@@ -48,6 +57,25 @@ sub chkpass
         return $self->{$encrypted} = $self->{$key} = undef;
       }
 
+      if($self->{STATE_SAVING()})
+      {
+        if(!defined $self->{$encrypted} && defined $default)
+        {
+          if(index($default, ':') == 0)
+          {
+            $self->{$encrypted} = $default;
+          }
+          else
+          {
+            my $salt = substr(SALT_CHARS, int rand(length SALT_CHARS), 1) . 
+                       substr(SALT_CHARS, int rand(length SALT_CHARS), 1);
+            $self->{$encrypted} = ':' . crypt($default, $salt);
+          }
+        }
+
+        return $self->{$encrypted};
+      }
+
       return $self->{$key};
     };
 
@@ -57,6 +85,9 @@ sub chkpass
 
       if(@_)
       {
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_LOADING()});
+
         if(!defined $_[0] || index($_[0], ':') == 0)
         {
           return $self->{$encrypted} = shift;
@@ -67,6 +98,20 @@ sub chkpass
                      substr(SALT_CHARS, int rand(length SALT_CHARS), 1);
           $self->{$encrypted} = ':' . crypt($_[0], $salt);
           $self->{$key} = $_[0];
+        }
+      }
+
+      if(!defined $self->{$encrypted} && defined $default)
+      {
+        if(index($default, ':') == 0)
+        {
+          $self->{$encrypted} = $default;
+        }
+        else
+        {
+          my $salt = substr(SALT_CHARS, int rand(length SALT_CHARS), 1) . 
+                     substr(SALT_CHARS, int rand(length SALT_CHARS), 1);
+          $self->{$encrypted} = ':' . crypt($default, $salt);
         }
       }
 
@@ -86,6 +131,20 @@ sub chkpass
 
       my $crypted = $self->{$encrypted};
 
+      if(!defined $crypted && defined $default)
+      {
+        if(index($default, ':') == 0)
+        {
+          $crypted = $self->{$encrypted} = $default;
+        }
+        else
+        {
+          my $salt = substr(SALT_CHARS, int rand(length SALT_CHARS), 1) . 
+                     substr(SALT_CHARS, int rand(length SALT_CHARS), 1);
+          $crypted = $self->{$encrypted} = ':' . crypt($default, $salt);
+        }
+      }
+
       if(defined $crypted)
       {
         my $salt = substr($crypted, 1, 2);
@@ -104,7 +163,31 @@ sub chkpass
   }
   elsif($interface eq 'get')
   {
-    $methods{$name} = sub { shift->{$key} };
+    $methods{$name} = sub 
+    {
+      my($self) = shift;
+
+      if($self->{STATE_SAVING()})
+      {
+        if(!defined $self->{$encrypted} && defined $default)
+        {
+          if(index($default, ':') == 0)
+          {
+            $self->{$encrypted} = $default;
+          }
+          else
+          {
+            my $salt = substr(SALT_CHARS, int rand(length SALT_CHARS), 1) . 
+                       substr(SALT_CHARS, int rand(length SALT_CHARS), 1);
+            $self->{$encrypted} = ':' . crypt($default, $salt);
+          }
+        }
+
+        return $self->{$encrypted};
+      }
+
+      return $self->{$key};
+    };
   }
   elsif($interface eq 'set')
   {
@@ -115,6 +198,9 @@ sub chkpass
       my($self) = shift;
 
       Carp::croak "Missing argument in call to $name"  unless(@_);
+
+      $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+        unless($self->{STATE_LOADING()});
 
       if(defined $_[0])
       {

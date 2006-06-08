@@ -6,9 +6,8 @@ use DateTime::Infinite;
 use DateTime::Format::Pg;
 
 use Rose::DB;
-our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.673';
+our $VERSION = '0.70';
 
 our $Debug = 0;
 
@@ -39,9 +38,9 @@ sub init_date_handler
   my($self) = shift;
   my $parser = 
     DateTime::Format::Pg->new(
-      ($self->SUPER::european_dates ? (european => 1) : ()),
-      ($self->SUPER::server_time_zone ? 
-        (server_tz => $self->SUPER::server_time_zone) : ()));
+      ($self->Rose::DB::european_dates ? (european => 1) : ()),
+      ($self->Rose::DB::server_time_zone ? 
+        (server_tz => $self->Rose::DB::server_time_zone) : ()));
 
   return $parser;
 }
@@ -86,7 +85,7 @@ sub parse_datetime
     return DateTime::Infinite::Future->new if($_[1] eq 'infinity');
   }
 
-  shift->SUPER::parse_datetime(@_);
+  shift->Rose::DB::parse_datetime(@_);
 }
 
 sub parse_timestamp
@@ -97,7 +96,7 @@ sub parse_timestamp
     return DateTime::Infinite::Future->new if($_[1] eq 'infinity');
   }
 
-  shift->SUPER::parse_timestamp(@_);
+  shift->Rose::DB::parse_timestamp(@_);
 }
 
 sub validate_date_keyword
@@ -123,13 +122,13 @@ sub validate_timestamp_keyword
 sub server_time_zone
 {
   $_[0]->{'date_handler'} = undef  if(@_ > 1);
-  shift->SUPER::server_time_zone(@_)
+  shift->Rose::DB::server_time_zone(@_)
 }
 
 sub european_dates
 {
   $_[0]->{'date_handler'} = undef  if(@_ > 1);
-  shift->SUPER::european_dates(@_)
+  shift->Rose::DB::european_dates(@_)
 }
 
 sub parse_array
@@ -196,7 +195,7 @@ sub parse_interval
   my $dt_duration;
   eval { $dt_duration = $self->date_handler->parse_interval($value) };
 
-  return $self->SUPER::parse_interval($value)  if($@);
+  return $self->Rose::DB::parse_interval($value)  if($@);
   return $dt_duration;
 }
 
@@ -277,7 +276,7 @@ sub refine_dbi_column_info
   # Save default value
   my $default = $col_info->{'COLUMN_DEF'};
 
-  $self->SUPER::refine_dbi_column_info($col_info);
+  $self->Rose::DB::refine_dbi_column_info($col_info);
 
   # Set sequence name key, if present
   if(defined $default && $default =~ /^nextval\(\(?'((?:''|[^']+))'::\w+/)
@@ -377,7 +376,7 @@ sub refine_dbi_column_info
 
 sub parse_dbi_column_info_default 
 {
-  my($self, $string) = @_;
+  my($self, $string, $col_info) = @_;
 
   UNDEF_OK: # Avoid undef string warnings
   {
@@ -386,9 +385,19 @@ sub parse_dbi_column_info_default
 
     my $pg_vers = $self->dbh->{'pg_server_version'};
 
+    # Example: q(B'00101'::"bit")
+    if(/^B'([01]+)'::(?:bit|"bit")$/ && $col_info->{'TYPE_NAME'} eq 'bit')
+    {
+      return $1;
+    }
+    # Example: 922337203685::bigint
+    elsif(/^(.+)::"?bigint"?$/i && $col_info->{'TYPE_NAME'} eq 'bigint')
+    {
+      return $1;
+    }
     # Example: 'value'::character varying
     # Example: ('now'::text)::timestamp(0)
-    if(/^\(*'(.+)'::.+$/)
+    elsif(/^\(*'(.+)'::.+$/)
     {
       my $default = $1;
 
@@ -405,11 +414,6 @@ sub parse_dbi_column_info_default
       }
 
       return $default;
-    }
-    # Example: q(B'00101'::"bit")
-    elsif(/^B'([01]+)'::(?:bit|"bit")$/)
-    {
-      return $1;
     }
     # Handle sequence-based defaults elsewhere (if at all)
     elsif(/^nextval\(/)
@@ -508,16 +512,16 @@ Rose::DB::Pg - PostgreSQL driver class for Rose::DB.
   Rose::DB->default_type('main');
   ...
 
-  $db = Rose::DB->new; # $db is really a Rose::DB::Pg object
+  $db = Rose::DB->new; # $db is really a Rose::DB::Pg-derived object
   ...
 
 =head1 DESCRIPTION
 
-This is the subclass that L<Rose::DB> blesses an object into when the L<driver|Rose::DB/driver> is "Pg".  This mapping of drivers to class names is configurable.  See the documentation for L<Rose::DB>'s L<new()|Rose::DB/new> and C<driver_class()|Rose::DB/driver_class> methods for more information.
+L<Rose::DB> blesses objects into a class derived from L<Rose::DB::Pg> when the L<driver|Rose::DB/driver> is "pg".  This mapping of driver names to class names is configurable.  See the documentation for L<Rose::DB>'s L<new()|Rose::DB/new> and L<driver_class()|Rose::DB/driver_class> methods for more information.
 
-Using this class directly is not recommended.  Instead, use L<Rose::DB> and let it bless objects into the appropriate class for you, according to its C<driver_class()|Rose::DB/driver_class> mappings.
+This class cannot be used directly.  You must use L<Rose::DB> and let its L<new()|Rose::DB/new> method return an object blessed into the appropriate class for you, according to its L<driver_class()|Rose::DB/driver_class> mappings.
 
-This class inherits from L<Rose::DB>.  B<Only the methods that are new or have  different behaviors are documented here.>  See the L<Rose::DB> documentation for information on the inherited methods.
+Only the methods that are new or have different behaviors than those in L<Rose::DB> are documented here.  See the L<Rose::DB> documentation for the full list of methods.
 
 =head1 OBJECT METHODS
 

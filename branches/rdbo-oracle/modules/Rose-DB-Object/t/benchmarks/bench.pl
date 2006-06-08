@@ -61,6 +61,7 @@ GetOptions(\%Opt, 'help',
                   'simple',
                   'complex',
                   'iterations=i',
+                  'innodb|mysql-uses-innodb',
                   'simple-and-complex',
                   'hi-res-time',
                   'database|db=s') or Usage();
@@ -283,7 +284,7 @@ Usage: $prog --help | [--skip-intro] [--cpu-time <num>]
        [--compare-to <modules>] [--database <db>]
        [--time | --compare | --time-and-compare]
        [--simple | --complex | --simple-and-complex]
-       [--iterations <num>] [--hi-res-time]
+       [--iterations <num>] [--hi-res-time] [--innodb]
        [--benchmarks-match <regex>]
 
 --benchmarks-match <regex>
@@ -317,6 +318,10 @@ Usage: $prog --help | [--skip-intro] [--cpu-time <num>]
 --hi-res-time
 
     Use high-resolution wall-clock time measurement, if available.
+
+--innodb
+
+    When benchmarking against MySQL, use the InnoDB storage engine.
 
 --iterations <num>
 
@@ -4781,6 +4786,182 @@ EOF
       $i++;
     }
   }
+
+  #
+  # Insert or update
+  #
+
+  INSERT_OR_UPDATE_SIMPLE_CATEGORY_DBI:
+  {
+    my $i = 1;
+    my $supports_on_duplicate_key_update;
+
+    sub insert_or_update_simple_category_dbi
+    {
+      unless(defined $supports_on_duplicate_key_update)
+      {
+        if(lc $DBH->{'Driver'}{'Name'} eq 'mysql')
+        {
+          my $vers = $DBH->get_info(18); # SQL_DBMS_VER
+
+          # Convert to an integer, e.g., 5.1.13 -> 5001013
+          if($vers =~ /^(\d+)\.(\d+)(?:\.(\d+))?/)
+          {
+            $vers = sprintf('%d%03d%03d', $1, $2, $3 || 0);
+          }
+
+          if($vers >= 4_001_000)
+          {
+            $supports_on_duplicate_key_update = 1;
+          }
+        }
+        else
+        {
+          $supports_on_duplicate_key_update = 0;
+        }
+      }
+
+      if($supports_on_duplicate_key_update)
+      {
+        my $sth = $DBH->prepare_cached(<<'EOF');
+INSERT INTO rose_db_object_test_categories (id, name) VALUES (?, ?) 
+ON DUPLICATE KEY UPDATE
+id = ?,
+name = ?
+EOF
+        $sth->execute($i + 500_000,  "xCat $i", $i + 500_000,  "xCat $i");
+      }
+      else
+      {
+        my $sth = $DBH->prepare_cached('SELECT * FROM rose_db_object_test_categories WHERE id = ?');
+        $sth->execute($i + 500_000);
+
+        my $found = $sth->fetchrow_arrayref;
+        $sth->finish;
+
+        if($found)
+        {
+          $sth = $DBH->prepare_cached('UPDATE rose_db_object_test_categories SET name = ? WHERE id = ?');
+          $sth->execute("xCat $i", $i + 500_000);
+        }
+        else
+        {
+          $sth = $DBH->prepare_cached('INSERT INTO rose_db_object_test_categories (id, name) VALUES (?, ?)');
+          $sth->execute($i + 500_000,  "xCat $i");
+        }
+      }
+
+      $i++;
+    }
+  }
+
+  INSERT_OR_UPDATE_SIMPLE_CATEGORY_RDBO_DKU:
+  {
+    my $i = 1;
+
+    sub insert_or_update_simple_category_rdbo_dku
+    {
+      my $c = 
+        MyTest::RDBO::Simple::Category->new(
+          db   => $DB, 
+          id   => $i + 100_000,
+          name => "xCat $i");
+      $c->insert_or_update;
+      $i++;
+    }
+  }
+
+  INSERT_OR_UPDATE_SIMPLE_CATEGORY_RDBO_STD:
+  {
+    my $i = 1;
+
+    sub insert_or_update_simple_category_rdbo_std
+    {
+      my $c = 
+        MyTest::RDBO::Simple::Category->new(
+          db   => $DB, 
+          id   => $i + 100_000,
+          name => "xCat $i");
+      $c->insert_or_update_std;
+      $i++;
+    }
+  }
+
+  INSERT_OR_UPDATE_SIMPLE_CATEGORY_CDBI:
+  {
+    my $i = 1;
+
+    sub insert_or_update_simple_category_cdbi
+    {
+      my $c = MyTest::CDBI::Simple::Category->find_or_create({ id => $i + 200_000, name => "xCat $i" });
+      $i++;
+    }
+  }
+
+  INSERT_OR_UPDATE_SIMPLE_CATEGORY_CDBS:
+  {
+    my $i = 1;
+
+    sub insert_or_update_simple_category_cdbs
+    {
+      my $c = MyTest::CDBI::Sweet::Simple::Category->find_or_create({ id => $i + 400_000, name => "xCat $i" });
+      $i++;
+    }
+  }
+
+  INSERT_OR_UPDATE_SIMPLE_CATEGORY_DBIC:
+  {
+    my $i = 1;
+
+    sub insert_or_update_simple_category_dbic
+    {
+      my $c = $DBIC_Simple_Category_RS->update_or_create({ id => $i + 300_000, name => "xCat $i" });
+      $i++;
+    }
+  }
+
+  INSERT_OR_UPDATE_COMPLEX_CODE_NAME_RDBO_DKU:
+  {
+    my $i = 1;
+
+    sub insert_or_update_complex_code_name_rdbo_dku
+    {
+      my $c = 
+        MyTest::RDBO::Complex::CodeName->new(
+          db         => $DB, 
+          product_id => $i + 1_100_000, 
+          name       => "CN 1.1x1 $i");
+      $c->insert_or_update;
+      $i++;
+    }
+  }
+
+  INSERT_OR_UPDATE_COMPLEX_CODE_NAME_RDBO_STD:
+  {
+    my $i = 1;
+
+    sub insert_or_update_complex_code_name_rdbo_std
+    {
+      my $c = 
+        MyTest::RDBO::Complex::CodeName->new(
+          db         => $DB, 
+          product_id => $i + 1_100_000, 
+          name       => "CN 1.1x1 $i");
+      $c->insert_or_update_std;
+      $i++;
+    }
+  }
+
+  INSERT_OR_UPDATE_COMPLEX_CODE_NAME_DBIC:
+  {
+    my $i = 1;
+
+    sub insert_or_update_complex_code_name_dbic
+    {
+      $DBIC_Complex_CodeName_RS->update_or_create({ product_id => $i + 3_300_000, name => "CN 3.3x1 $i" });
+      $i++;
+    }
+  }
 }
 
 sub Bench
@@ -4789,7 +4970,7 @@ sub Bench
 
   my %filtered_tests;
 
-  my $db_regex = '\b(?:RDBO|' . join('|', map { $Cmp_Abbreviation{$_} } @Cmp_To) . ')\b';
+  my $db_regex = '\b(?:RDBO.*|' . join('|', map { $Cmp_Abbreviation{$_} } @Cmp_To) . ')\b';
   $db_regex = qr($db_regex);
 
   if(($name =~ /^Simple:/ &&  !($Opt{'simple'} || $Opt{'simple-and-complex'})) ||
@@ -5209,6 +5390,25 @@ sub Run_Tests
     'DBIC' => \&delete_complex_product_dbic,
   });
 
+  Bench('Simple: insert or update', $Iterations,
+  {
+    'DBI ' => \&insert_or_update_simple_category_dbi,
+    'RDBO' => \&insert_or_update_simple_category_rdbo_dku,
+    #'RDBO (dku)' => \&insert_or_update_simple_category_rdbo_dku,
+    #'RDBO (std)' => \&insert_or_update_simple_category_rdbo_std,
+    'CDBI' => \&insert_or_update_simple_category_cdbi,
+    'CDBS' => \&insert_or_update_simple_category_cdbs,
+    'DBIC' => \&insert_or_update_simple_category_dbic,
+  });
+
+  Bench('Complex: insert or update', $Iterations,
+  {
+    'RDBO' => \&insert_or_update_complex_code_name_rdbo_dku,
+    #'RDBO (dku)' => \&insert_or_update_complex_code_name_rdbo_dku,
+    #'RDBO (std)' => \&insert_or_update_complex_code_name_rdbo_std,
+    'DBIC' => \&insert_or_update_complex_code_name_dbic,
+  });
+
   $DB && $DB->disconnect;
 }
 
@@ -5333,7 +5533,9 @@ CREATE TABLE rose_db_object_test_code_names
 (
   id          SERIAL PRIMARY KEY,
   product_id  INT NOT NULL REFERENCES rose_db_object_test_products (id),
-  name        VARCHAR(32)
+  name        VARCHAR(32),
+
+  UNIQUE(name)
 )
 EOF
 
@@ -5400,6 +5602,8 @@ EOF
       $dbh->do('DROP TABLE rose_db_object_test_codes');
     }
 
+    my $innodb = $Opt{'innodb'} ? 'TYPE=InnoDB' : '';
+
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test_codes
 (
@@ -5410,6 +5614,7 @@ CREATE TABLE rose_db_object_test_codes
 
   PRIMARY KEY(k1, k2, k3)
 )
+$innodb
 EOF
 
     $dbh->do(<<"EOF");
@@ -5418,6 +5623,7 @@ CREATE TABLE rose_db_object_test_categories
   id    INT AUTO_INCREMENT PRIMARY KEY,
   name  VARCHAR(255) NOT NULL
 )
+$innodb
 EOF
 
     $dbh->do(<<"EOF");
@@ -5434,6 +5640,7 @@ CREATE TABLE rose_db_object_test_products
   last_modified  DATETIME,
   date_created   DATETIME
 )
+$innodb
 EOF
 
     $dbh->do(<<"EOF");
@@ -5441,8 +5648,11 @@ CREATE TABLE rose_db_object_test_code_names
 (
   id          INT AUTO_INCREMENT PRIMARY KEY,
   product_id  INT NOT NULL REFERENCES rose_db_object_test_products (id),
-  name        VARCHAR(32)
+  name        VARCHAR(32),
+
+  UNIQUE(name)
 )
+$innodb
 EOF
 
     foreach my $i (1 .. 10)
@@ -5549,7 +5759,9 @@ CREATE TABLE rose_db_object_test_code_names
 (
   id          SERIAL PRIMARY KEY,
   product_id  INT NOT NULL REFERENCES rose_db_object_test_products (id),
-  name        VARCHAR(32)
+  name        VARCHAR(32),
+
+  UNIQUE(name)
 )
 EOF
 

@@ -1,3 +1,11 @@
+0.70 (06.07.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added primary_key_column_names() and has_primary_key() methods.
+    * Added Storable hooks.
+    * Driver classes no longer inherit from Rose::DB.
+    * Improved Oracle DSN generation and quoting.  (Suggested by Todd Lorenz)
+    * Improved parsing of default column values in Postgres databases.
+
 0.673 (05.12.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added partial support for Oracle databases.  (Code by Ron Savage)

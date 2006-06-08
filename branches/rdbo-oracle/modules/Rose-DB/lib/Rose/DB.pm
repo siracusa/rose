@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.673';
+our $VERSION = '0.70';
 
 our $Debug = 0;
 
@@ -277,39 +277,20 @@ sub new
     }
     else
     {
-      # Special, simple case for Rose::DB
-      if($class eq __PACKAGE__)
-      {
-        $self = bless {}, $driver_class;
-      }
-      else # Handle Rose::DB subclasses
-      {
-        # If this is a default Rose::DB driver class
-        if(index($driver_class, 'Rose::DB::') == 0)
-        {
-          # Make a new driver class based on the current class
-          my $new_class = $class . '::__RoseDBPrivate__::' . $driver_class;
+      # Make a new driver class based on the current class
+      my $new_class = $class . '::__RoseDBPrivate__::' . $driver_class;
 
-          no strict 'refs';        
-          @{"${new_class}::ISA"} = ($driver_class, $class);
+      no strict 'refs';        
+      @{"${new_class}::ISA"} = ($driver_class, $class);
 
-          $self = bless {}, $new_class;
-        }
-        else
-        {
-          # Otherwise use the (apparently custom) driver class
-          $self = bless {}, $driver_class;
-        }
-      }
+      $self = bless {}, $new_class;
 
       # Cache value
       $Rebless{$class,$driver_class} = ref $self;
-    }    
-
-    $self->class($class);
+    }
   }
 
-  $self->{'_origin_class'} = $class;
+  $self->class($class);
   $self->{'id'} = "$domain\0$type";
 
   $self->init(@_);
@@ -319,7 +300,8 @@ sub new
 
 sub class 
 {
-  my($self) = shift; 
+  my($self) = shift;
+  return $self->{'_origin_class'} = shift  if(@_);
   return $self->{'_origin_class'} || ref $self;
 }
 
@@ -336,10 +318,14 @@ sub load_driver_class
 
   my $driver_class = $class->driver_class($arg) || $arg;
 
-  eval "require $driver_class";
+  no strict 'refs';
+  unless(defined ${"${driver_class}::VERSION"} || @{"${driver_class}::ISA"})
+  {
+    eval "require $driver_class";
 
-  Carp::croak "Could not load driver class '$driver_class' - $@"
-    if($@ && !UNIVERSAL::isa($driver_class, 'Rose::DB'));
+    Carp::croak "Could not load driver class '$driver_class' - $@"
+      if($@ && !UNIVERSAL::isa($driver_class, 'Rose::DB'));
+  }
 
   $Class_Loaded{$driver_class}++;
 }
@@ -407,7 +393,7 @@ sub init_db_info
   # of using object methods.  I'll fix it when the first person emails me to
   # complain that I'm breaking their Rose::DB or Rose::DB::Registry[::Entry]
   # subclass by doing this.  Call it "demand-paged programming" :)
-  my $registry = $class->registry->hash;
+  my $registry = $self->class->registry->hash;
 
   if(exists $registry->{$domain} && exists $registry->{$domain}{$type})
   {
@@ -952,6 +938,100 @@ BEGIN
   }
 }
 
+sub has_primary_key
+{
+  my($self) = shift;
+  my $columns = $self->primary_key_column_names(@_);
+  return (ref $columns && @$columns) ? 1 : 0;
+}
+
+sub primary_key_column_names
+{
+  my($self) = shift;
+
+  my %args = @_ == 1 ? (table => @_) : @_;
+
+  my $table   = $args{'table'} or Carp::croak "Missing table name parameter";
+  my $catalog = $args{'catalog'} || $self->catalog;
+  my $schema  = $args{'schema'}  || $self->schema;
+
+  $schema = $self->default_implicit_schema  unless(defined $schema);
+
+  $table = lc $table  if($self->likes_lowercase_table_names);
+
+  $schema = lc $schema   
+    if(defined $schema && $self->likes_lowercase_schema_names);
+
+  $catalog = lc $catalog
+    if(defined $catalog && $self->likes_lowercase_catalog_names);
+
+  my $table_unquoted = $self->unquote_table_name($table);
+
+  my $columns;
+
+  eval 
+  {
+    $columns = 
+      $self->_get_primary_key_column_names($catalog, $schema, $table_unquoted);
+  };
+
+  if($@ || !$columns)
+  {
+    no warnings 'uninitialized'; # undef strings okay
+    $@ = 'no primary key columns found'  unless(defined $@);
+    Carp::croak "Could not get primary key columns for catalog '" . 
+                $catalog . "' schema '" . $schema . "' table '" . 
+                $table_unquoted . "' - " . $@;
+  }
+
+  return wantarray ? @$columns : $columns;
+}
+
+sub _get_primary_key_column_names
+{
+  my($self, $catalog, $schema, $table) = @_;
+
+  my $dbh = $self->dbh or die $self->error;
+
+  local $dbh->{'FetchHashKeyName'} = 'NAME';
+
+  my $sth = $dbh->primary_key_info($catalog, $schema, $table);
+
+  unless(defined $sth)
+  {
+    no warnings 'uninitialized'; # undef strings okay
+    $self->error("No primary key information found for catalog '", $catalog,
+                 "' schema '", $schema, "' table '", $table, "'");
+    return [];
+  }
+
+  my @columns;
+
+  PK: while(my $pk_info = $sth->fetchrow_hashref)
+  {
+    CHECK_TABLE: # Make sure this column is from the right table
+    {
+      no warnings; # Allow undef coercion to empty string
+
+      $pk_info->{'TABLE_NAME'} = 
+        $self->unquote_table_name($pk_info->{'TABLE_NAME'});
+
+      next PK  unless($pk_info->{'TABLE_CAT'}   eq $catalog &&
+                      $pk_info->{'TABLE_SCHEM'} eq $schema &&
+                      $pk_info->{'TABLE_NAME'}  eq $table);
+    }
+
+    unless(defined $pk_info->{'COLUMN_NAME'})
+    {
+      Carp::croak "Could not extract column name from DBI primary_key_info()";
+    }
+
+    push(@columns, $pk_info->{'COLUMN_NAME'});
+  }
+
+  return \@columns;
+}
+
 #
 # These methods could/should be overriden in driver-specific subclasses
 #
@@ -1095,6 +1175,8 @@ sub parse_bitfield
 {
   my($self, $val, $size) = @_;
 
+  return undef  unless(defined $val);
+
   if(ref $val)
   {
     if($size && $val->Size != $size)
@@ -1123,6 +1205,7 @@ sub parse_bitfield
   }
   else
   {
+    $self->error("Could not parse bitfield value '$val'");
     return undef;
     #return Bit::Vector->new_Bin($size || length($val), $val);
   }
@@ -1524,6 +1607,8 @@ sub format_limit_with_offset
   return @_ > 2 ? "$_[1] OFFSET $_[2]" : $_[1];
 }
 
+sub supports_on_duplicate_key_update { 0 }
+
 #
 # DBI introspection
 #
@@ -1534,7 +1619,7 @@ sub refine_dbi_column_info
 
   # Parse odd default value syntaxes  
   $col_info->{'COLUMN_DEF'} = 
-    $self->parse_dbi_column_info_default($col_info->{'COLUMN_DEF'});
+    $self->parse_dbi_column_info_default($col_info->{'COLUMN_DEF'}, $col_info);
 
   # Make sure the data type name is lowercase
   $col_info->{'TYPE_NAME'} = lc $col_info->{'TYPE_NAME'};
@@ -1578,6 +1663,38 @@ sub list_tables
   }
 
   return wantarray ? @tables : \@tables;
+}
+
+#
+# Storable hooks
+#
+
+sub STORABLE_freeze 
+{
+  my($self, $cloning) = @_;
+
+  # I still don't quite get why this is recommended...
+  #return  if($cloning); # Regular default serialization
+
+  # Ditch the DBI $dbh and pull teh password out of its closure
+  my $db = { %$self };
+  $db->{'dbh'} = undef;
+  $db->{'password'} = $self->password;
+  $db->{'password_closure'} = undef;
+
+  require Storable;
+  return Storable::freeze($db);
+}
+
+sub STORABLE_thaw
+{
+  my($self, $cloning, $serialized) = @_;
+
+  %$self = %{ Storable::thaw($serialized) };
+
+  # Put the password back in a closure
+  my $password = delete $self->{'password'};
+  $self->{'password_closure'} = sub { $password }  if(defined $password);
 }
 
 #
@@ -2048,17 +2165,19 @@ If a single argument is passed to L<new|/new>, it is used as the C<type> value:
     $db = Rose::DB->new(type => 'aux'); 
     $db = Rose::DB->new('aux'); # same thing
 
-Each L<Rose::DB> object is associated with a particular data source, defined by the C<type> and C<domain> values.  If these are not part of PARAMS, then the default values are used.  If you do not want to use the default values for the C<type> and C<domain> attributes, you should specify them in the constructor PARAMS.
+Each L<Rose::DB> object is associated with a particular data source, defined by the L<type|/type> and L<domain|/domain> values.  If these are not part of PARAMS, then the default values are used.  If you do not want to use the default values for the L<type|/type> and L<domain|/domain> attributes, you should specify them in the constructor PARAMS.
 
-The default C<type> and C<domain> can be set using the L<default_type|/default_type> and L<default_domain|/default_domain> class methods.  See the L<"Data Source Abstraction"> section for more information on data sources.
+The default L<type|/type> and L<domain|/domain> can be set using the L<default_type|/default_type> and L<default_domain|/default_domain> class methods.  See the L<"Data Source Abstraction"> section for more information on data sources.
 
-The object returned by L<new|/new> will be a database-specific subclass of L<Rose::DB>, chosen based on the L<driver|/driver> value of the selected data source.  If there is no registered data source for the specified C<type> and C<domain>, or if a fatal error will occur.
+The object returned by L<new|/new> will be derived from a database-specific driver class, chosen based on the L<driver|/driver> value of the selected data source.  If there is no registered data source for the specified L<type|/type> and L<domain|/domain>, a fatal error will occur.
 
 The default driver-to-class mapping is as follows:
 
-    Pg       -> Rose::DB::Pg
+    pg       -> Rose::DB::Pg
     mysql    -> Rose::DB::MySQL
-    Informix -> Rose::DB::Informix
+    informix -> Rose::DB::Informix
+    oracle   -> Rose::DB::Oracle
+    sqlite   -> Rose::DB::SQLite
 
 You can change this mapping with the L<driver_class|/driver_class> class method.
 
@@ -2139,6 +2258,12 @@ Execute arbitrary code within a single transaction, rolling back if any of the c
 =item B<error [MSG]>
 
 Get or set the error message associated with the last failure.  If a method fails, check this attribute to get the reason for the failure in the form of a text message.
+
+=item B<has_primary_key [ TABLE | PARAMS ]>
+
+Returns true if the specified table has a primary key (as determined by the L<primary_key_column_names|/primary_key_column_names> method), false otherwise.  
+
+The arguments are the same as those for the L<primary_key_column_names|/primary_key_column_names> method: either a table name or name/value pairs specifying C<table>, C<catalog>, and C<schema>.  The  C<catalog> and C<schema> parameters are optional and default to the return values of the L<catalog|/catalog> and L<schema|/schema> methods, respectively.  See the documentation for the L<primary_key_column_names|/primary_key_column_names> for more information.
 
 =item B<init_db_info>
 
@@ -2285,17 +2410,19 @@ Get or set the data source domain.  See the L<"Data Source Abstraction"> section
 
 =item B<driver [DRIVER]>
 
-Get or set the driver name.  The driver name can only be set during object construction (i.e., as an argument to L<new|/new>) since it determines the object class (according to the mapping set by the L<driver_class|/driver_class> class method).  After the object is constructed, setting the driver to anything other than the same value it already has will cause a fatal error.
+Get or set the driver name.  The driver name can only be set during object construction (i.e., as an argument to L<new|/new>) since it determines the object class.  After the object is constructed, setting the driver to anything other than the same value it already has will cause a fatal error.
 
 Even in the call to L<new|/new>, setting the driver name explicitly is not recommended.  Instead, specify the driver when calling L<register_db|/register_db> for each data source and allow the L<driver|/driver> to be set automatically based on the L<domain|/domain> and L<type|/type>.
 
 The driver names for the L<currently supported database types|"DATABASE SUPPORT"> are:
 
-    Pg
+    pg
     mysql
-    Informix
+    informix
+    oracle
+    sqlite
 
-The driver names are case-sensitive.
+Driver names should only use lowercase letters.
 
 =item B<dsn [DSN]>
 
@@ -2330,6 +2457,30 @@ The SQL statements are run in the order that they are supplied in STATEMENTS.  I
 Get or set the SQL statements that will be run immediately after connecting to the database.  STATEMENTS should be a list or reference to an array of SQL statements.  Returns a reference to the array of SQL statements in scalar context, or a list of SQL statements in list context.
 
 The SQL statements are run in the order that they are supplied in STATEMENTS.  If any L<post_connect_sql|/post_connect_sql> statement fails when executed, the subsequent statements are ignored.
+
+=item B<primary_key_column_names [ TABLE | PARAMS ]>
+
+Returns a list (in list context) or reference to an array (in scalar context) of the names of the columns that make up the primary key for the specified table.  If the table has no primary key, an empty list (in list context) or reference to an empty array (in scalar context) will be returned.
+
+The table may be specified in two ways.  If one argument is passed, it is taken as the name of the table.  Otherwise, name/value pairs are expected.  Valid parameter names are:
+
+=over 4
+
+=item C<catalog>
+
+The name of the catalog that contains the table.  This parameter is optional and defaults to the return value of the L<catalog|/catalog> method.
+
+=item C<schema>
+
+The name of the schema that contains the table.  This parameter is optional and defaults to the return value of the L<schema|/schema> method.
+
+=item C<table>
+
+The name of the table.  This parameter is required.
+
+=back
+
+Case-sensitivity of names is determined by the underlying database.  If your database is case-sensitive, then you must pass names to this method with the expected case.
 
 =item B<print_error [VALUE]>
 

@@ -9,7 +9,9 @@ use Math::BigInt lib => 'GMP';
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
-our $VERSION = '0.70';
+use Rose::DB::Object::Constants qw(STATE_LOADING MODIFIED_COLUMNS);
+
+our $VERSION = '0.73';
 
 our $Debug = 0;
 
@@ -23,6 +25,8 @@ sub bigint
   my $check_in  = $args->{'check_in'};
   my $min       = $args->{'min'};
   my $max       = $args->{'min'};
+
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
   my $init_method;
 
@@ -117,6 +121,16 @@ EOF
   my $set_code = qq(\$self->{'$qkey'} = Math::BigInt->new(\$value););
 
   #
+  # column modified code
+  #
+
+  my $col_name_escaped = $column_name;
+  $col_name_escaped =~ s/'/\\'/g;
+
+  my $column_modified_code = 
+    qq(\$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'} = 1);
+
+  #
   # return code
   #
 
@@ -128,14 +142,16 @@ EOF
 
     $return_code=<<"EOF";
 return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
-       (\$self->{'$qkey'} = \$default);
+  (scalar($column_modified_code, 
+          \$self->{'$qkey'} = \$default));
 EOF
   }
   elsif(defined $init_method)
   {
     $return_code=<<"EOF";
 return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
-       (\$self->{'$qkey'} = Math::BigInt->new(\$self->$init_method()));
+  (scalar($column_modified_code, 
+          (\$self->{'$qkey'} = Math::BigInt->new(\$self->$init_method()))));
 EOF
   }
   else
@@ -167,6 +183,7 @@ sub
     $check_in_code
     $min_max_code
     $set_code
+    $column_modified_code  unless(\$self->{STATE_LOADING()});
     $return_code
   }
 
@@ -186,6 +203,7 @@ sub
 
     $check_in_code
     $min_max_code
+    $column_modified_code  unless(\$self->{STATE_LOADING()});
     return $set_code
   }
 
@@ -241,6 +259,7 @@ sub
   $check_in_code
   $min_max_code
   $set_code
+  $column_modified_code  unless(\$self->{STATE_LOADING()});
   $return_code
 };
 EOF

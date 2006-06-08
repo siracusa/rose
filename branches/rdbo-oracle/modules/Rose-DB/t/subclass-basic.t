@@ -122,7 +122,7 @@ is(My::DB2->driver_class('Pg'), 'MyPgClass', 'driver_class() 3');
 
 $db = My::DB2->new('aux');
 
-is(ref $db, 'MyPgClass', 'new() single arg');
+ok($db->isa('MyPgClass'), 'new() single arg');
 
 is($db->error('foo'), 'foo', 'subclass 1');
 is($db->error, 'foo', 'subclass 2');
@@ -214,7 +214,7 @@ is($db->connect_options, $adb->connect_options, "alias connect_options() mod");
 
 $db = My::DB2->new('generic');
 
-is(ref($db), 'My::DB2::__RoseDBPrivate__::Rose::DB::Generic', 'generic class');
+ok($db->isa('Rose::DB::Generic'), 'generic class');
 
 is($db->dsn, 'dbi:NoneSuch:dbname=test;host=localhost', 'generic dsn');
 

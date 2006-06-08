@@ -120,6 +120,8 @@ t/column-triggers.t
 t/db-migration.t
 t/db-object-auto.t
 t/db-object-cached.t
+t/db-object-changes-only-1.t
+t/db-object-changes-only-2.t
 t/db-object-convention.t
 t/db-object-foreign-key-auto.t
 t/db-object-foreign-key.t
@@ -149,8 +151,13 @@ t/lib/My/DB/Object.pm
 t/lib/My/DB/Unigene/Main.pm
 t/makemethods-db.t
 t/makemethods.t
+t/make-modules.ext
+t/make-modules.t
 t/multi-pk-sequences.t
 t/pod.t
+t/sandbox/code-gen/generated-perl-test.pl
+t/sandbox/code-gen/lib/.placeholder
+t/sandbox/code-gen/make-modules.pl
 t/sandbox/convention/convention-test-auto.pl
 t/sandbox/convention/convention-test-loader.pl
 t/sandbox/convention/convention-test.pl
@@ -173,4 +180,6 @@ t/spot-check-03.t
 t/spot-check-04.t
 t/spot-check-05.t
 t/spot-check-06.t
+t/spot-check-07.t
+t/spot-check-08.t
 t/test-lib.pl
