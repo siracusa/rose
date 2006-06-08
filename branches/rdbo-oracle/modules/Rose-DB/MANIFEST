@@ -35,4 +35,3 @@ t/subclass-trx.t
 t/subclass.t
 t/test-lib.pl
 t/trx.t
-META.yml                                 Module meta-data (added by MakeMaker)
