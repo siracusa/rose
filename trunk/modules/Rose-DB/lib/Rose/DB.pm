@@ -17,7 +17,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.70';
+our $VERSION = '0.71';
 
 our $Debug = 0;
 
@@ -282,6 +282,8 @@ sub new
 
       no strict 'refs';        
       @{"${new_class}::ISA"} = ($driver_class, $class);
+      *{"${new_class}::STORABLE_freeze"} = \&STORABLE_freeze;
+      *{"${new_class}::STORABLE_thaw"}   = \&STORABLE_thaw;
 
       $self = bless {}, $new_class;
 

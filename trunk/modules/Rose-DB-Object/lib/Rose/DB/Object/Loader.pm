@@ -121,22 +121,22 @@ sub base_classes
     $bc = [ $bc ];
   }
 
-  my $found_rdbo = 0;
+  #my $found_rdbo = 0;
 
   foreach my $class (@$bc)
   {
     unless($class =~ /^(?:\w+::)*\w+$/)
     {
-      croak "Illegal class name: $class";
+      croak "Illegal base class name: $class";
     }
 
-    $found_rdbo = 1  if(UNIVERSAL::isa($class, 'Rose::DB::Object'));
+    #$found_rdbo = 1  if(UNIVERSAL::isa($class, 'Rose::DB::Object'));
   }
 
-  unless($found_rdbo)
-  {
-    croak "None of the base classes inherit from Rose::DB::Object";
-  }
+  #unless($found_rdbo)
+  #{
+  #  croak "None of the base classes inherit from Rose::DB::Object";
+  #}
 
   $self->using_default_base_class(0);
   $self->{'base_classes'} = $bc;
@@ -145,6 +145,46 @@ sub base_classes
 }
 
 *base_class = \&base_classes;
+
+sub manager_base_classes
+{
+  my($self) = shift;
+
+  if(my $bc = shift)
+  {
+    unless(ref $bc)
+    {
+      $bc = [ $bc ];
+    }
+  
+    #my $found_base = 0;
+  
+    foreach my $class (@$bc)
+    {
+      unless($class =~ /^(?:\w+::)*\w+$/)
+      {
+        croak "Illegal manager base class name: $class";
+      }
+
+      #$found_base = 1  if(UNIVERSAL::isa($class, 'Rose::DB::Object::Manager'));
+    }
+  
+    #unless($found_base)
+    #{
+    #  croak "None of the manager base classes inherit from ",
+    #        "Rose::DB::Object::Manager";
+    #}
+  
+    $self->{'manager_base_classes'} = $bc;
+  }
+
+  return  unless($self->{'manager_base_classes'});
+
+  return wantarray ? @{$self->{'manager_base_classes'}} : 
+                     $self->{'manager_base_classes'};
+}
+
+*manager_base_class = \&manager_base_classes;
 
 sub convention_manager
 {
@@ -782,8 +822,14 @@ sub make_classes
     # Make the manager class
     if($with_managers)
     {
-      $meta->make_manager_class($cm->auto_manager_base_name($table, $obj_class));
-      push(@classes, $self->generate_manager_class_name($obj_class));
+      my $mgr_class   = $self->generate_manager_class_name($obj_class);
+
+      $meta->make_manager_class(
+        class     => $mgr_class,
+        base_name => $cm->auto_manager_base_name($table, $obj_class),
+        isa       => $self->manager_base_classes);
+
+      push(@classes, $mgr_class);
     }
   }
 

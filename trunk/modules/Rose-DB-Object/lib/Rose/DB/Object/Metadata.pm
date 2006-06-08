@@ -1142,10 +1142,13 @@ sub load_column_class
 {
   my($self, $column_class) = @_;
 
-  eval "require $column_class";
-
-  Carp::croak "Could not load column class '$column_class' - $@"
-    if($@);
+  unless(UNIVERSAL::isa($column_class, 'Rose::DB::Object::Metadata::Column'))
+  {
+    eval "require $column_class";
+  
+    Carp::croak "Could not load column class '$column_class' - $@"
+      if($@);
+  }
 
   $Class_Loaded{$column_class}++;
 }
@@ -1481,9 +1484,12 @@ sub unregister_all_classes
 
 sub class_for
 {
-  my($self, %args) = @_;
+  my($self_or_class, %args) = @_;
 
-  my $db = $self->db;
+  my $self  = ref($self_or_class) ? $self_or_class : undef;
+  my $class = ref($self) || $self_or_class;
+
+  my $db = $self ? $self->db : undef;
 
   my $catalog = $args{'catalog'};
   my $schema  = $args{'schema'};
@@ -1491,15 +1497,15 @@ sub class_for
   $catalog = NULL_CATALOG  unless(defined $catalog);
   $schema  = NULL_SCHEMA   unless(defined $schema);
 
-  my $default_schema = $db->default_implicit_schema;
+  my $default_schema = $db ? $db->default_implicit_schema : undef;
   $default_schema = NULL_SCHEMA   unless(defined $default_schema);
 
   my $table = $args{'table'} 
     or Carp::croak "Missing required table parameter";
 
-  $table = lc $table  if($db->likes_lowercase_table_names);
+  $table = lc $table  if($db && $db->likes_lowercase_table_names);
 
-  my $reg = $self->registry_key->class_registry;
+  my $reg = $class->registry_key->class_registry;
 
   # Combine keys using $;, which is "\034" (0x1C) by default. But just to
   # make sure, we'll localize it.  What we're looking for is a value that
@@ -2706,7 +2712,12 @@ sub load_all_sql
   return $self->{'load_all_sql'}{$db->{'id'}}{join("\0", @$key_columns)} ||= 
     'SELECT ' . $self->select_columns_string_sql($db) . ' FROM ' .
     $self->fq_table_sql($db) . ' WHERE ' .
-    join(' AND ',  map { "$_ = ?" } @$key_columns);
+    join(' AND ',  map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql . ' = ' . $c->placeholder_sql($db)
+    }
+    @$key_columns);
 }
 
 sub load_sql
@@ -2719,7 +2730,12 @@ sub load_sql
   return $self->{'load_sql'}{$db->{'id'}}{join("\0", @$key_columns)} ||= 
     'SELECT ' . $self->select_nonlazy_columns_string_sql($db) . ' FROM ' .
     $self->fq_table_sql($db) . ' WHERE ' .
-    join(' AND ',  map { "$_ = ?" } @$key_columns);
+    join(' AND ', map
+    {
+      my $c = $self->column($_);
+      $c->name_sql . ' = ' . $c->placeholder_sql($db)
+    }
+    @$key_columns);
 }
 
 sub load_all_sql_with_null_key
@@ -2732,7 +2748,12 @@ sub load_all_sql_with_null_key
   return 
     'SELECT ' . $self->select_columns_string_sql($db) . ' FROM ' .
     $self->fq_table_sql($db) . ' WHERE ' .
-    join(' AND ',  map { defined $key_values->[$i++] ? "$_ = ?" : "$_ IS NULL" }
+    join(' AND ', map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql . 
+      (defined $key_values->[$i++] ? ' = ' . $c->placeholder_sql : ' IS NULL')
+    }
     @$key_columns);
 }
 
@@ -2746,7 +2767,12 @@ sub load_sql_with_null_key
   return 
     'SELECT ' . $self->select_nonlazy_columns_string_sql($db) . ' FROM ' .
     $self->fq_table_sql($db) . ' WHERE ' .
-    join(' AND ',  map { defined $key_values->[$i++] ? "$_ = ?" : "$_ IS NULL" }
+    join(' AND ', map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql . 
+      (defined $key_values->[$i++] ? ' = ' . $c->placeholder_sql : ' IS NULL')
+    }
     @$key_columns);
 }
 
@@ -2766,10 +2792,18 @@ sub update_all_sql
   no warnings;
   return $self->{'update_all_sql'}{$cache_key} = 
     'UPDATE ' . $self->fq_table_sql($db) . " SET \n" .
-    join(",\n", map { '    ' . $self->column($_)->name_sql($db) . ' = ?' } 
-                grep { !$key{$_} } $self->column_names) .
+    join(",\n", map 
+    {
+      '    ' . $_->name_sql($db) . ' = ' . $_->update_placeholder_sql($db)
+    } 
+    grep { !$key{$_->name} } $self->columns) .
     "\nWHERE " . 
-    join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns);
+    join(' AND ', map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql . ' = ' . $c->placeholder_sql
+    }
+    @$key_columns);
 }
 
 use constant LAZY_LOADED_KEY => lazy_column_values_loaded_key();
@@ -2785,12 +2819,20 @@ sub update_sql
   no warnings;
   return ($self->{'update_sql_prefix'}{$db->{'id'}} ||=
     'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
-    join(",\n", map { '    ' . $_->name_sql($db) . ' = ?' } 
-                grep { !$key{$_->{'name'}} && (!$_->{'lazy'} || 
-                       $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
-                $self->columns) .
+    join(",\n", map 
+    {
+      '    ' . $_->name_sql($db) . ' = ' . $_->update_placeholder_sql($db)
+    } 
+    grep { !$key{$_->name} && (!$_->lazy || 
+           $obj->{LAZY_LOADED_KEY()}{$_->name}) } 
+    $self->columns) .
     "\nWHERE " . 
-    join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns);
+    join(' AND ', map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql($db) . ' = ' . $c->placeholder_sql($db)
+    }
+    @$key_columns);
 }
 
 sub update_changes_only_sql
@@ -2806,9 +2848,18 @@ sub update_changes_only_sql
   no warnings;
   return ($self->{'update_sql_prefix'}{$db->{'id'}} ||=
     'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
-    join(",\n", map { '    ' . $_->name_sql($db) . ' = ?' } @modified) .
+    join(",\n", map 
+    {
+      '    ' . $_->name_sql($db) . ' = ' . $_->update_placeholder_sql($db)
+    }
+    @modified) .
     "\nWHERE " . 
-    join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns),
+    join(' AND ', map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql($db) . ' = ' . $c->placeholder_sql($db)
+    }
+    @$key_columns),
     [ map { my $m = $_->accessor_method_name; $obj->$m() } @modified ];
 }
 
@@ -2899,11 +2950,12 @@ sub update_sql_with_inlining
 
     if($column->should_inline_value($db, $value))
     {
-      push(@updates, '  ' . $column->name_sql($db) . " = $value");
+      push(@updates, $column->name_sql($db) . " = $value");
     }
     else
     {
-      push(@updates, '  ' . $column->name_sql($db) . ' = ?');
+      push(@updates, $column->name_sql($db) . ' = ' .
+                     $column->update_placeholder_sql($db));
       push(@bind, $value);
     }
   }
@@ -2916,7 +2968,12 @@ sub update_sql_with_inlining
     ($self->{'update_sql_with_inlining_start'}{$db->{'id'}} ||= 
      'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
     join(",\n", @updates) . "\nWHERE " . 
-    join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns),
+    join(' AND ', map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql($db) . ' = ' . $c->placeholder_sql($db)
+    }
+    @$key_columns),
     \@bind
   );
 }
@@ -2947,7 +3004,8 @@ sub update_changes_only_sql_with_inlining
     }
     else
     {
-      push(@updates, '  ' . $column->name_sql($db) . ' = ?');
+      push(@updates, $column->name_sql($db) . ' = ' .
+                     $column->update_placeholder_sql($db));
       push(@bind, $value);
     }
   }
@@ -2960,7 +3018,12 @@ sub update_changes_only_sql_with_inlining
     ($self->{'update_sql_with_inlining_start'}{$db->{'id'}} ||= 
      'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
     join(",\n", @updates) . "\nWHERE " . 
-    join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns),
+    join(' AND ', map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql($db) . ' = ' . $c->placeholder_sql($db)
+    }
+    @$key_columns),
     \@bind
   );
 }
@@ -2973,8 +3036,15 @@ sub insert_sql
   return $self->{'insert_sql'}{$db->{'id'}} ||= 
     'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
     join(",\n", map { "  $_" } $self->column_names_sql($db)) .
-    "\n)\nVALUES\n(\n" . join(",\n", map { "  ?" } $self->column_names) .
+    "\n)\nVALUES\n(\n" . $self->insert_column_placeholders_sql($db) .
     "\n)";
+}
+
+sub insert_column_placeholders_sql
+{
+  my($self, $db) = @_;
+  return $self->{'insert_column_placeholders_sql'}{$db->{'id'}} ||= 
+    join(",\n", map { '  ' . $_->insert_placeholder_sql($db) } $self->columns)
 }
 
 sub insert_and_on_duplicate_key_update_sql
@@ -3039,9 +3109,14 @@ sub insert_and_on_duplicate_key_update_sql
   return 
     'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
     join(",\n", @names) .
-    "\n)\nVALUES\n(\n" . join(",\n", map { "  ?" } @names) .
+    "\n)\nVALUES\n(\n" . 
+    join(",\n", map { $_->insert_placeholder_sql($db) } @columns) .
     "\n)\nON DUPLICATE KEY UPDATE\n" .
-    join(",\n", map { "$_ = ?" } @names),
+    join(",\n", map 
+    { 
+      $_->name_sql($db) . ' = ' . $_->update_placeholder_sql($db)
+    }
+    @columns),
     [ @bind, @bind ];
 }
 
@@ -3071,7 +3146,7 @@ sub insert_sql_with_inlining
     }
     else
     {
-      push(@places, "  ?");
+      push(@places, $column->insert_placeholder_sql($db));
       push(@bind, $value);
     }
   }
@@ -3142,11 +3217,11 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
 
     if($column->should_inline_value($db, $value))
     {
-      push(@places, [ $name, " $value" ]);
+      push(@places, [ $name, $column->inline_value_sql($value) ]);
     }
     else
     {
-      push(@places, [ $name, " ?" ]);
+      push(@places, [ $name, $column->insert_placeholder_sql($_) ]);
       push(@bind, $value);
     }
   }
@@ -3155,9 +3230,9 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
   return 
     'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
     join(",\n", @names) .
-    "\n)\nVALUES\n(\n" . join(",\n", map { " $_->[1]" } @places) . "\n)\n" .
+    "\n)\nVALUES\n(\n" . join(",\n", map { $_->[1] } @places) . "\n)\n" .
     "ON DUPLICATE KEY UPDATE\n" .
-    join(",\n", map { "$_->[0] =$_->[1]" } @places),
+    join(",\n", map { "$_->[0] = $_->[1]" } @places),
     [ @bind, @bind ];
 }
 
@@ -3166,8 +3241,9 @@ sub delete_sql
   my($self, $db) = @_;
   return $self->{'delete_sql'}{$db->{'id'}} ||= 
     'DELETE FROM ' . $self->fq_table_sql($db) . ' WHERE ' .
-    join(' AND ', map {  $self->column($_)->name_sql($db) . ' = ?' } 
-                  $self->primary_key_column_names);
+    join(' AND ', 
+      map {  $_->name_sql($db) . ' = ' . $_->placeholder_sql($db) } 
+      $self->primary_key_columns);
 }
 
 sub get_column_value
@@ -3186,7 +3262,12 @@ sub get_column_value
 
     $sql = $column->{'get_column_sql_tmpl'}{$db->{'id'}} = 
       'SELECT __COLUMN__ FROM ' . $self->fq_table_sql($db) . ' WHERE ' .
-      join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns);
+      join(' AND ', map 
+      {
+        my $c = $self->column($_);
+        $c->name_sql($db) . ' = ' . $c->placeholder_sql($db)
+      }
+      @$key_columns);
   }
 
   $sql =~ s/__COLUMN__/$column->name_sql/e;
@@ -3292,6 +3373,7 @@ sub _clear_column_generated_values
   $self->{'insert_sql_with_inlining_start'} = undef;
   $self->{'update_sql_with_inlining_start'} = undef;
   $self->{'delete_sql'}             = undef;
+  $self->{'insert_column_placeholders_sql'} = undef;
 }
 
 sub _clear_primary_key_column_generated_values
@@ -4315,6 +4397,8 @@ Get or set the L<Rose::DB::Object>-derived class associated with this metadata o
 =item B<class_for PARAMS>
 
 Returns the name of the L<Rose::DB::Object>-derived class associated with the C<catalog>, C<schema>, and C<table> specified by the name/value paris in PARAMS.  Catalog and/or schema maybe omitted if unknown or inapplicable, and the "best" match will be returned.  Returns undef if there is no class name registered under the specified PARAMS.
+
+Note: This method may also be called as a class method, but may require explicit C<catalog> and/or C<schema> arguments when dealing with databases that support these concepts I<and> have default implicit values for them.
 
 =item B<clear_object_cache>
 

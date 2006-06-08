@@ -1,3 +1,7 @@
+0.71 (06.08.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a bug in the Storable hook support.  (Discovered by Drew Taylor)
+
 0.70 (06.07.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added primary_key_column_names() and has_primary_key() methods.
