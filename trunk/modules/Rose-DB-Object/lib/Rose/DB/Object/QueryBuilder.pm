@@ -302,7 +302,7 @@ sub build_select
             }
           }
 
-          my $placeholder = $col_meta ? $col_meta->placeholder_sql($db) : '?';
+          my $placeholder = $col_meta ? $col_meta->query_placeholder_sql($db) : '?';
           my $sql_column = $multi_table ? $short_column :
                            $db ? $db->quote_column_name($column) : $column;
 
