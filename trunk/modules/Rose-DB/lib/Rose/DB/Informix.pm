@@ -28,7 +28,7 @@ sub build_dsn
 sub last_insertid_from_sth { $_[1]->{'ix_sqlerrd'}[1] }
 
 sub likes_lowercase_table_names { 1 }
-sub generate_primary_key_values { }
+sub generate_primary_key_values { return; } # old perls seem to like this...
 
 sub generate_primary_key_placeholders
 {

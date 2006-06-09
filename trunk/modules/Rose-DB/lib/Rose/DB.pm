@@ -1242,7 +1242,7 @@ sub format_bitfield
   return sprintf('%b', hex($vec->to_Hex));
 }
 
-sub select_bitfield_column_sql { shift->quote_column_with_table(@_) }
+sub select_bitfield_column_sql { shift->auto_quote_column_with_table(@_) }
 
 sub should_inline_bitfield_values { 0 }
 
