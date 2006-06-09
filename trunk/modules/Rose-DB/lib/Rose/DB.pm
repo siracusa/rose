@@ -669,46 +669,6 @@ sub init_dbh
   return $self->{'dbh'} = $dbh;
 }
 
-use constant MAX_SANE_TIMESTAMP => 30000000000000; # YYYYY MM DD HH MM SS
-
-sub compare_timestamps
-{
-  my($self, $t1, $t2) = @_;
-
-  foreach my $t ($t1, $t2)
-  {
-    if($t eq $self->min_timestamp)
-    {
-      $t = -1;
-    }
-    elsif($t eq $self->max_timestamp)
-    {
-      $t = MAX_SANE_TIMESTAMP;
-    }
-    else
-    {
-      $t = $self->parse_timestamp($t);
-
-      # Last attempt to get a DateTime object
-      unless(ref $t)
-      {
-        my $d = Rose::DateTime::Util::parse_date($t);
-        $t = $d  if(defined $d);
-      }
-
-      if(ref $t)
-      {
-        $t = Rose::DateTime::Util::format_date($t, '%Y%m%d.%N');
-      }
-    }
-  }
-
-  return -1  if($t1 < 0 && $t2 < 0);
-  return 1   if($t1 == MAX_SANE_TIMESTAMP && $t2 == MAX_SANE_TIMESTAMP);
-
-  return $t1 <=> $t2;
-}
-
 sub print_error { shift->_dbh_and_connect_option('PrintError', @_) }
 sub raise_error { shift->_dbh_and_connect_option('RaiseError', @_) }
 sub autocommit  { shift->_dbh_and_connect_option('AutoCommit', @_) }
