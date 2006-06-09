@@ -241,7 +241,7 @@ sub build_select
           push(@select_columns, 
             $obj_meta ? ($obj_meta->column($column)->select_sql($db, $table_alias) . 
                          ' AS ' . $db->quote_column_name("${table_alias}_$column")) :
-            $db ? ($db->quote_column_name($short_column) . 
+            $db ? ($db->quote_column_with_table($column, $table) . 
                    ' AS ' . $db->quote_column_name("${table_alias}_$column")) :
             "$short_column AS ${table_alias}_$column");
         }

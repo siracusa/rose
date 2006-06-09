@@ -940,6 +940,16 @@ BEGIN
   }
 }
 
+sub quote_column_with_table 
+{
+  my($self, $column, $table) = @_;
+  
+  return $table ?
+         $self->quote_table_name($table) . '.' .
+         $self->quote_column_name($column) :
+         $self->quote_column_name($column);
+}
+
 sub has_primary_key
 {
   my($self) = shift;
@@ -1226,7 +1236,7 @@ sub format_bitfield
   return sprintf('%b', hex($vec->to_Hex));
 }
 
-sub select_bitfield_column_sql { shift->quote_column_name(shift) }
+sub select_bitfield_column_sql { shift->quote_column_with_table(@_) }
 
 sub should_inline_bitfield_values { 0 }
 
