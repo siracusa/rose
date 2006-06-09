@@ -2690,6 +2690,15 @@ sub fq_table_sql
   return $self->{'fq_table_sql'}{$db->{'id'}} ||= 
     join('.', grep { defined } ($self->select_catalog($db), 
                                 $self->select_schema($db), 
+                                $db->auto_quote_table_name($self->table)));
+}
+
+sub fqq_table_sql
+{
+  my($self, $db) = @_;
+  return $self->{'fq_table_sql'}{$db->{'id'}} ||= 
+    join('.', grep { defined } ($self->select_catalog($db), 
+                                $self->select_schema($db), 
                                 $db->quote_table_name($self->table)));
 }
 

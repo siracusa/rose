@@ -60,27 +60,15 @@ sub init_dbh
 sub quote_column_name 
 {
   my $name = $_[1];
-
-  if($name =~ /\W/)
-  {
-    $name =~ s/`/``/g;
-    return qq(`$name`);
-  }
-
-  return $name;
+  $name =~ s/`/``/g;
+  return qq(`$name`);
 }
 
 sub quote_table_name
 {
   my $name = $_[1];
-
-  if($name =~ /\W/)
-  {
-    $name =~ s/`/``/g;
-    return qq(`$name`);
-  }
-
-  return $name;
+  $name =~ s/`/``/g;
+  return qq(`$name`);
 }
 
 sub init_date_handler { DateTime::Format::MySQL->new }
@@ -180,12 +168,12 @@ sub select_bitfield_column_sql
   if($self->database_version >= 5_000_003)
   {
     return q{CONCAT("b'", BIN(} . 
-           $self->quote_column_with_table($column, $table) .
+           $self->auto_quote_column_with_table($column, $table) .
            q{ + 0), "'")};
   }
   else
   {
-    return $self->quote_column_with_table($column, $table) . q{ + 0};
+    return $self->auto_quote_column_with_table($column, $table) . q{ + 0};
   }
 }
 
@@ -243,6 +231,9 @@ sub supports_on_duplicate_key_update
 
   return $self->{'supports_on_duplicate_key_update'} = 0;
 }
+
+our %Reserved_Words = map { $_ => 1 } qw(read);
+sub is_reserved_word { $Reserved_Words{lc $_[1]} }
 
 #
 # Introspection

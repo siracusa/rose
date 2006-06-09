@@ -894,7 +894,43 @@ sub do_transaction
   return 1;
 }
 
-sub quote_column_name { $_[1] }
+sub auto_quote_table_name
+{
+  my($self, $name) = @_;
+
+  if($name =~ /\W/ || $self->is_reserved_word($name))
+  {
+    return $self->quote_table_name($name, @_);
+  }
+
+  return $name;
+}
+
+sub auto_quote_column_name
+{
+  my($self, $name) = @_;
+
+  if($name =~ /\W/ || $self->is_reserved_word($name))
+  {
+    return $self->quote_column_name($name, @_);
+  }
+
+  return $name;
+}
+
+sub quote_column_name 
+{
+  my $name = $_[1];
+  $name =~ s/"/""/g;
+  return qq("$name");
+}
+
+sub quote_table_name
+{
+  my $name = $_[1];
+  $name =~ s/"/""/g;
+  return qq("$name");
+}
 
 sub unquote_column_name
 {
@@ -911,9 +947,9 @@ sub unquote_column_name
   return $name;
 }
 
-sub quote_table_name { $_[1] }
-
 *unquote_table_name = \&unquote_column_name;
+
+sub is_reserved_word { 0 }
 
 BEGIN
 {
@@ -948,6 +984,16 @@ sub quote_column_with_table
          $self->quote_table_name($table) . '.' .
          $self->quote_column_name($column) :
          $self->quote_column_name($column);
+}
+
+sub auto_quote_column_with_table 
+{
+  my($self, $column, $table) = @_;
+  
+  return $table ?
+         $self->auto_quote_table_name($table) . '.' .
+         $self->auto_quote_column_name($column) :
+         $self->auto_quote_column_name($column);
 }
 
 sub has_primary_key

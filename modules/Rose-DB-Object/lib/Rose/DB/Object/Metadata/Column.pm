@@ -254,7 +254,7 @@ sub name_sql
 
   if(my $db = shift)
   {
-    return $self->{'name_sql'}{$db->{'driver'}} ||= $db->quote_column_name($self->{'name'});
+    return $self->{'name_sql'}{$db->{'driver'}} ||= $db->auto_quote_column_name($self->{'name'});
   }
   else
   {
@@ -266,18 +266,16 @@ sub name_sql
 sub select_sql
 {
   my($self, $db, $table) = @_;
-
-  # Optional args: db, alternate name
   
   if($db)
   {
     if(defined $table)
     {
-      $db->quote_column_with_table($self->{'name'}, $table);
+      $db->auto_quote_column_with_table($self->{'name'}, $table);
     }
     else
     {
-      return $self->{'select_sql'}{$db->{'driver'}} ||= $db->quote_column_name($self->{'name'});
+      return $self->{'select_sql'}{$db->{'driver'}} ||= $db->auto_quote_column_name($self->{'name'});
     }
   }
   else

@@ -233,23 +233,23 @@ sub build_select
       $rel_column = ''  if($rel_column eq $fq_column);
 
       my $method = $obj_meta ? $obj_meta->column_rw_method_name($column) : undef;
-
+$DB::single = 1;
       unless($query_only_columns || !$select_columns{$column})
       {
         if($multi_table)
         {
           push(@select_columns, 
             $obj_meta ? ($obj_meta->column($column)->select_sql($db, $table_alias) . 
-                         ' AS ' . $db->quote_column_name("${table_alias}_$column")) :
-            $db ? ($db->quote_column_with_table($column, $table) . 
-                   ' AS ' . $db->quote_column_name("${table_alias}_$column")) :
+                         ' AS ' . $db->auto_quote_column_name("${table_alias}_$column")) :
+            $db ? ($db->auto_quote_column_with_table($column, $table) . 
+                   ' AS ' . $db->auto_quote_column_name("${table_alias}_$column")) :
             "$short_column AS ${table_alias}_$column");
         }
         else
         {
           push(@select_columns, 
             $obj_meta ? $obj_meta->column($column)->select_sql($db) :
-            $db ? $db->quote_column_name($column) : $column);
+            $db ? $db->auto_quote_column_name($column) : $column);
         }
       }
 
@@ -304,7 +304,7 @@ sub build_select
 
           my $placeholder = $col_meta ? $col_meta->query_placeholder_sql($db) : '?';
           my $sql_column = $multi_table ? $short_column :
-                           $db ? $db->quote_column_name($column) : $column;
+                           $db ? $db->auto_quote_column_name($column) : $column;
 
           if(ref($val))
           {

@@ -88,27 +88,15 @@ sub refine_dbi_column_info
 sub quote_column_name 
 {
   my $name = $_[1];
-
-  if($name =~ /\W/)
-  {
-    $name =~ s/"/""/g;
-    return qq("$name");
-  }
-
-  return $name;
+  $name =~ s/"/""/g;
+  return qq("$name");
 }
 
 sub quote_table_name
 {
   my $name = $_[1];
-
-  if($name =~ /\W/)
-  {
-    $name =~ s/"/""/g;
-    return qq("$name");
-  }
-
-  return $name;
+  $name =~ s/"/""/g;
+  return qq("$name");
 }
 
 #
