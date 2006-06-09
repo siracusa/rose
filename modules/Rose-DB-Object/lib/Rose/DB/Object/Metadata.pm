@@ -2715,7 +2715,7 @@ sub load_all_sql
     join(' AND ',  map 
     {
       my $c = $self->column($_);
-      $c->name_sql . ' = ' . $c->placeholder_sql($db)
+      $c->name_sql . ' = ' . $c->query_placeholder_sql($db)
     }
     @$key_columns);
 }
@@ -2733,7 +2733,7 @@ sub load_sql
     join(' AND ', map
     {
       my $c = $self->column($_);
-      $c->name_sql . ' = ' . $c->placeholder_sql($db)
+      $c->name_sql . ' = ' . $c->query_placeholder_sql($db)
     }
     @$key_columns);
 }
@@ -2752,7 +2752,7 @@ sub load_all_sql_with_null_key
     {
       my $c = $self->column($_);
       $c->name_sql . 
-      (defined $key_values->[$i++] ? ' = ' . $c->placeholder_sql : ' IS NULL')
+      (defined $key_values->[$i++] ? ' = ' . $c->query_placeholder_sql : ' IS NULL')
     }
     @$key_columns);
 }
@@ -2771,7 +2771,7 @@ sub load_sql_with_null_key
     {
       my $c = $self->column($_);
       $c->name_sql . 
-      (defined $key_values->[$i++] ? ' = ' . $c->placeholder_sql : ' IS NULL')
+      (defined $key_values->[$i++] ? ' = ' . $c->query_placeholder_sql : ' IS NULL')
     }
     @$key_columns);
 }
@@ -2801,7 +2801,7 @@ sub update_all_sql
     join(' AND ', map 
     {
       my $c = $self->column($_);
-      $c->name_sql . ' = ' . $c->placeholder_sql
+      $c->name_sql . ' = ' . $c->query_placeholder_sql
     }
     @$key_columns);
 }
@@ -2830,7 +2830,7 @@ sub update_sql
     join(' AND ', map 
     {
       my $c = $self->column($_);
-      $c->name_sql($db) . ' = ' . $c->placeholder_sql($db)
+      $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
     }
     @$key_columns);
 }
@@ -2857,7 +2857,7 @@ sub update_changes_only_sql
     join(' AND ', map 
     {
       my $c = $self->column($_);
-      $c->name_sql($db) . ' = ' . $c->placeholder_sql($db)
+      $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
     }
     @$key_columns),
     [ map { my $m = $_->accessor_method_name; $obj->$m() } @modified ];
@@ -2971,7 +2971,7 @@ sub update_sql_with_inlining
     join(' AND ', map 
     {
       my $c = $self->column($_);
-      $c->name_sql($db) . ' = ' . $c->placeholder_sql($db)
+      $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
     }
     @$key_columns),
     \@bind
@@ -3021,7 +3021,7 @@ sub update_changes_only_sql_with_inlining
     join(' AND ', map 
     {
       my $c = $self->column($_);
-      $c->name_sql($db) . ' = ' . $c->placeholder_sql($db)
+      $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
     }
     @$key_columns),
     \@bind
@@ -3036,14 +3036,14 @@ sub insert_sql
   return $self->{'insert_sql'}{$db->{'id'}} ||= 
     'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
     join(",\n", map { "  $_" } $self->column_names_sql($db)) .
-    "\n)\nVALUES\n(\n" . $self->insert_column_placeholders_sql($db) .
+    "\n)\nVALUES\n(\n" . $self->insert_columns_placeholders_sql($db) .
     "\n)";
 }
 
-sub insert_column_placeholders_sql
+sub insert_columns_placeholders_sql
 {
   my($self, $db) = @_;
-  return $self->{'insert_column_placeholders_sql'}{$db->{'id'}} ||= 
+  return $self->{'insert_columns_placeholders_sql'}{$db->{'id'}} ||= 
     join(",\n", map { '  ' . $_->insert_placeholder_sql($db) } $self->columns)
 }
 
@@ -3242,7 +3242,7 @@ sub delete_sql
   return $self->{'delete_sql'}{$db->{'id'}} ||= 
     'DELETE FROM ' . $self->fq_table_sql($db) . ' WHERE ' .
     join(' AND ', 
-      map {  $_->name_sql($db) . ' = ' . $_->placeholder_sql($db) } 
+      map {  $_->name_sql($db) . ' = ' . $_->query_placeholder_sql($db) } 
       $self->primary_key_columns);
 }
 
@@ -3265,7 +3265,7 @@ sub get_column_value
       join(' AND ', map 
       {
         my $c = $self->column($_);
-        $c->name_sql($db) . ' = ' . $c->placeholder_sql($db)
+        $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
       }
       @$key_columns);
   }
@@ -3373,7 +3373,7 @@ sub _clear_column_generated_values
   $self->{'insert_sql_with_inlining_start'} = undef;
   $self->{'update_sql_with_inlining_start'} = undef;
   $self->{'delete_sql'}             = undef;
-  $self->{'insert_column_placeholders_sql'} = undef;
+  $self->{'insert_columns_placeholders_sql'} = undef;
 }
 
 sub _clear_primary_key_column_generated_values

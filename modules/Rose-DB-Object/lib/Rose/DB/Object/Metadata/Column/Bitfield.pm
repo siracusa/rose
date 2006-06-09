@@ -77,8 +77,6 @@ sub method_uses_formatted_key
 sub select_sql
 {
   my($self, $db, $table) = @_;
-
-  # Optional args: db, alternate name
   
   if($db)
   {
@@ -95,26 +93,6 @@ sub select_sql
   {
     return $self->{'name'};
   }
-  
-#  my($self) = shift;
-  
-  # Optional args: db, table alias
-
-#   if(my $db = shift)
-#   {
-#     if(@_) # table alias arg too
-#     {
-#       return $db->select_bitfield_column_sql($self->{'name'}, @_);
-#     }
-#     else
-#     {
-#       return $self->{'select_sql'}{$db->{'driver'}} ||= $db->select_bitfield_column_sql($self->{'name'});
-#     }
-#   }
-#   else
-#   {
-#     return $self->{'name'};
-#   }
 }
 
 1;

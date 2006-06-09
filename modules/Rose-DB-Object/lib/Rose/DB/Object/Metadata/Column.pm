@@ -288,7 +288,7 @@ sub select_sql
 
 sub insert_placeholder_sql { '?' }
 sub update_placeholder_sql { '?' }
-sub placeholder_sql        { '?' }
+sub query_placeholder_sql  { '?' }
 
 # sub dbi_data_type { () }
 

@@ -17,7 +17,7 @@ use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
 
 our $VERSION = '0.731';
 
-our $Debug = 0;
+our $Debug = 1;
 
 #
 # Object data
