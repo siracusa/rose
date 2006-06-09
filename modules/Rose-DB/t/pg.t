@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 197);
+    Test::More->import(tests => 191);
   }
 }
 
@@ -135,15 +135,6 @@ is($db->parse_boolean('0'), 0, 'parse_boolean (0)');
 is($db->parse_boolean('FALSE'), 'FALSE', 'parse_boolean (FALSE)');
 
 is($db->parse_boolean('Foo(Bar)'), 'Foo(Bar)', 'parse_boolean (Foo(Bar))');
-
-# Undocumented, and may go away, but leave tests for now...
-is($db->compare_timestamps('-infinity', 'now'), -1, "compare_timestamps('-infinity', 'now')");
-is($db->compare_timestamps('now', '-infinity'), 1, "compare_timestamps('now', '-infinity')");
-is($db->compare_timestamps('-infinity', '-infinity'), -1, "compare_timestamps('-infinity', '-infinity')");
-
-is($db->compare_timestamps('infinity', 'now'), 1, "compare_timestamps('infinity', 'now')");
-is($db->compare_timestamps('now', 'infinity'), -1, "compare_timestamps('now', 'infinity')");
-is($db->compare_timestamps('infinity', 'infinity'), 1, "compare_timestamps('infinity', 'infinity')");
 
 # Interval values
 
