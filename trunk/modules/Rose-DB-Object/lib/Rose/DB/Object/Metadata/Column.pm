@@ -273,7 +273,7 @@ sub select_sql
   {
     if(defined $table)
     {
-      return $db->quote_table_name($table) . '.' . $db->quote_column_name($self->{'name'});
+      $db->quote_column_with_table($self->{'name'}, $table);
     }
     else
     {

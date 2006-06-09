@@ -265,6 +265,32 @@ sub auto_sequence_name
   return lc "${table}_${column}_seq";
 }
 
+sub quote_column_name 
+{
+  my $name = $_[1];
+
+  if($name =~ /\W/)
+  {
+    $name =~ s/"/""/g;
+    return qq("$name");
+  }
+
+  return $name;
+}
+
+sub quote_table_name
+{
+  my $name = $_[1];
+
+  if($name =~ /\W/)
+  {
+    $name =~ s/"/""/g;
+    return qq("$name");
+  }
+
+  return $name;
+}
+
 #
 # DBI introspection
 #
