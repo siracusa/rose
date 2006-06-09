@@ -258,7 +258,7 @@ $DB::single = 1;
                               (defined $method && $method ne $column ? $method : ())))
       {
         $not = (index($column_arg, '!') == 0) ? 'NOT' : '';
-
+$DB::single = 1;
         # Deflate/format values using prototype objects
         foreach my $val (@{$query{$column_arg}})
         {
