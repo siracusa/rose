@@ -228,9 +228,11 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 
 
   $ENV{'PERL5LIB'} = $ENV{'PERL5LIB'} ? 
-    "$Bin/../../Rose-DB/lib:$ENV{'PERL5LIB'}" : "$Bin/../../Rose-DB/lib";
+    "$Bin/../lib:$Bin/../../Rose-DB/lib:$ENV{'PERL5LIB'}" : 
+    "$Bin/../lib:$Bin/../../Rose-DB/lib";
 
-  my @cmd = ($^X, '-I', $Module_Dir, "-M$product_class", '-e', '0');
+  my @cmd = ($^X, '-I', $Module_Dir, '-I', "$Bin/../../Rose-DB/lib",
+             '-I', "$Bin/../lib", "-M$product_class", '-e', '0');
   system(@cmd);
 
   is($? >> 8, 0, "external load - $db_type");

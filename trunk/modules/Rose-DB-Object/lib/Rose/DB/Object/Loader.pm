@@ -146,6 +146,8 @@ sub base_classes
 
 *base_class = \&base_classes;
 
+use constant DEFAULT_MANAGER_BASE_CLASS => 'Rose::DB::Object::Manager';
+
 sub manager_base_classes
 {
   my($self) = shift;
@@ -178,10 +180,15 @@ sub manager_base_classes
     $self->{'manager_base_classes'} = $bc;
   }
 
-  return  unless($self->{'manager_base_classes'});
+  my $bc = $self->{'manager_base_classes'};
 
-  return wantarray ? @{$self->{'manager_base_classes'}} : 
-                     $self->{'manager_base_classes'};
+  unless(defined $bc && @$bc)
+  {
+    return wantarray ? DEFAULT_MANAGER_BASE_CLASS : [ DEFAULT_MANAGER_BASE_CLASS ];
+  }
+
+  return wantarray ? @{$self->{'manager_base_classes'}} :
+                     $self->{'manager_base_classes'}
 }
 
 *manager_base_class = \&manager_base_classes;
@@ -827,7 +834,7 @@ sub make_classes
       $meta->make_manager_class(
         class     => $mgr_class,
         base_name => $cm->auto_manager_base_name($table, $obj_class),
-        isa       => $self->manager_base_classes);
+        isa       => scalar $self->manager_base_classes);
 
       push(@classes, $mgr_class);
     }
