@@ -662,7 +662,7 @@ EOF
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
 
-      $dbh->do('DROP TABLE no_pk_test CASCADE');
+      $dbh->do('DROP TABLE no_pk_test');
       $dbh->do('DROP TABLE products_colors');
       $dbh->do('DROP TABLE colors');
       $dbh->do('DROP TABLE prices');

@@ -32,7 +32,7 @@ sub auto_generate_unique_keys
 
     local $dbh->{'FetchHashKeyName'} = 'NAME';
 
-    my $sth = $dbh->prepare('SHOW INDEX FROM ' . $self->fq_table_sql($db));
+    my $sth = $dbh->prepare('SHOW INDEX FROM ' . $self->fqq_table_sql($db));
     $sth->execute;
 
     while(my $row = $sth->fetchrow_hashref)

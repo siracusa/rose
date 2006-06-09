@@ -53,13 +53,6 @@ sub likes_lowercase_sequence_names { 1 }
 
 sub supports_schema { 1 }
 
-sub insertid_param { 'unsupported' }
-sub null_date      { '0000-00-00'  }
-sub null_datetime  { '0000-00-00 00:00:00' }
-sub null_timestamp { '00000000000000' }
-sub min_timestamp  { '-infinity' }
-sub max_timestamp  { 'infinity' }
-
 sub last_insertid_from_sth
 {
   #my($self, $sth, $obj) = @_;
@@ -265,31 +258,8 @@ sub auto_sequence_name
   return lc "${table}_${column}_seq";
 }
 
-sub quote_column_name 
-{
-  my $name = $_[1];
-
-  if($name =~ /\W/)
-  {
-    $name =~ s/"/""/g;
-    return qq("$name");
-  }
-
-  return $name;
-}
-
-sub quote_table_name
-{
-  my $name = $_[1];
-
-  if($name =~ /\W/)
-  {
-    $name =~ s/"/""/g;
-    return qq("$name");
-  }
-
-  return $name;
-}
+our %Reserved_Words = map { $_ => 1 } qw(role);
+sub is_reserved_word { $Reserved_Words{lc $_[1]} }
 
 #
 # DBI introspection
