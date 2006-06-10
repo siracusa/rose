@@ -34,7 +34,6 @@ sub finish
 {
   my($self) = shift;
   $self->active(0);
-#print STDERR "IN FINISH OVERRIDE NEXT FOR $self\n";
   $self->_next_code(sub { Carp::croak "Invalid call to next() - iteration finished" });
   return $self->_finish_code->($self, @_);
 }
