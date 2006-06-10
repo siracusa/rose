@@ -331,7 +331,7 @@ sub get_objects
       $class->handle_error($class);
       return undef;
     }
-#print STDERR "MGR RETAINED $dbh ($db refcnt $db->{'_dbh_refcount'})\n";
+
     $dbh_retained = 1;
   }
 
@@ -602,7 +602,7 @@ sub get_objects
       $args{'offset'} = ($page - 1) * $per_page;
     }
   }
-$DB::single = 1;
+
   # Pre-process sort_by args
   if(my $sort_by = $args{'sort_by'})
   {
@@ -2010,14 +2010,10 @@ $DB::single = 1;
 
       $iterator->_finish_code(sub
       {
-$DB::single = 1;
         $sth->finish      if($sth);
-#print STDERR "MGR RELEASING $db->{'dbh'} ($db refcnt $db->{'_dbh_refcount'})\n";
         $db->release_dbh  if($db && $dbh_retained);
         $sth = undef;
         $db = undef;
-#  print STDERR "IN FINISH CODE OVERRIDE NEXT FOR $iterator\n";
-#        $iterator->_next_code(sub { Carp::croak "Invalid call to next() - iteration finished" });
       });
 
       return $iterator;
