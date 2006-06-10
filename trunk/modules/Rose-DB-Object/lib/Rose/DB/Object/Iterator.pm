@@ -2,10 +2,12 @@ package Rose::DB::Object::Iterator;
 
 use strict;
 
+use Carp();
+
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.60';
+our $VERSION = '0.731';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -32,6 +34,8 @@ sub finish
 {
   my($self) = shift;
   $self->active(0);
+#print STDERR "IN FINISH OVERRIDE NEXT FOR $self\n";
+  $self->_next_code(sub { Carp::croak "Invalid call to next() - iteration finished" });
   return $self->_finish_code->($self, @_);
 }
 

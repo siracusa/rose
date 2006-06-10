@@ -566,12 +566,12 @@ sub release_dbh
   my($self, %args) = @_;
 
   my $dbh = $self->{'dbh'} or return 0;
-
+#print STDERR "RELEASE $dbh (refcnt $self->{'_dbh_refcount'})\n";
   if($args{'force'})
   {
     $self->{'_dbh_refcount'} = 0;
     $self->{'_dbh_is_private'} = 1;
-
+#print STDERR "DISCONNECT (force) $dbh ($self)\n";
     # Account for possible Apache::DBI magic
     if(UNIVERSAL::isa($dbh, 'Apache::DBI::db'))
     {
@@ -607,7 +607,7 @@ sub release_dbh
         return undef;
       }
     }
-
+#print STDERR "DISCONNECT $dbh  ($self)\n";
     #$Debug && warn "DISCONNECT $dbh ", join(':', (caller(3))[0,2]), "\n";
     return $dbh->disconnect;
   }
@@ -618,6 +618,7 @@ sub release_dbh
 
 use constant DID_PCSQL_KEY => 'private_rose_db_did_post_connect_sql';
 
+my $CON_CNT;
 sub init_dbh
 {
   my($self) = shift;
@@ -632,7 +633,11 @@ sub init_dbh
   $self->{'database_version'} = undef;
 
   my $dbh = DBI->connect($self->dsn, $self->username, $self->password, $options);
-
+#print STDERR "CONNECT $dbh ($self)\n";
+if(++$CON_CNT == 3)
+{
+  $DB::single = 1;
+}
   unless($dbh)
   {
     $self->error("Could not connect to database: $DBI::errstr");
@@ -1739,6 +1744,8 @@ sub error
 
 sub DESTROY
 {
+#print STDERR "DESTROY $_[0] ($_[0]->{'dbh'})\n";
+
   $_[0]->disconnect;
 }
 

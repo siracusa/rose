@@ -233,7 +233,7 @@ sub build_select
       $rel_column = ''  if($rel_column eq $fq_column);
 
       my $method = $obj_meta ? $obj_meta->column_rw_method_name($column) : undef;
-$DB::single = 1;
+
       unless($query_only_columns || !$select_columns{$column})
       {
         if($multi_table)
@@ -258,7 +258,7 @@ $DB::single = 1;
                               (defined $method && $method ne $column ? $method : ())))
       {
         $not = (index($column_arg, '!') == 0) ? 'NOT' : '';
-$DB::single = 1;
+
         # Deflate/format values using prototype objects
         foreach my $val (@{$query{$column_arg}})
         {
