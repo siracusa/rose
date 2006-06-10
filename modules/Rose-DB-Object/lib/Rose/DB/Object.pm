@@ -85,7 +85,7 @@ sub db
 
     $self->{'db'}  = $new_db;
     $self->{'dbh'} = undef;
-
+#print STDERR "NEW DB $new_db ($new_db->{'dbh'}) FOR $self\n";
     return $new_db;
   }
 
@@ -1266,7 +1266,9 @@ EOF
   Carp::confess qq(Can't locate object method "$2" via package "$1"$msg);
 }
 
-sub DESTROY { }
+sub DESTROY { 
+#print STDERR "DESTROY $_[0] $_[0]->{'cntid'} ($_[0]->{'db'}) $_[0]->{'db'}{'dbh'}\n";
+}
 # {
 #   my($self) = shift;
 # 
