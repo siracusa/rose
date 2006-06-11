@@ -34,7 +34,7 @@ sub finish
 {
   my($self) = shift;
   $self->active(0);
-  $self->_next_code(sub { Carp::croak "Invalid call to next() - iteration finished" });
+  $self->_next_code(sub { 0 });
   return $self->_finish_code->($self, @_);
 }
 
