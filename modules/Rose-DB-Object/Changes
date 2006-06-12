@@ -1,10 +1,10 @@
 0.731 (06.12.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * Fixed a database handle leak in the get_objects_iterator() method,
+    * Fixed a database handle leak in the get_objects_iterator() method.
       (Reported by Martin Rubli)
     * Documented the changes_only parameter to the save() and update()
-      methods.  This feature was actually implemented in version 0.73, but 
-      I forgot to document it.
+      methods.  (This feature was actually implemented in version 0.73, but 
+      I forgot to document it.)
     * The class_for() metadata method may now be called as a class method,
       with some caveats.
 
