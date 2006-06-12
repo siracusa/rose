@@ -21,6 +21,8 @@ use FindBin qw($Bin);
 require 't/test-lib.pl';
 use_ok('Rose::DB');
 
+my $frozen_file = "$Bin/frozen";
+  
 my $Perl = $^X;
 
 if($^O ne 'VMS')
@@ -57,8 +59,6 @@ foreach my $db_type (qw(pg mysql informix sqlite oracle))
   }
 
   my $frozen = Storable::freeze($db);
-
-  my $frozen_file = "$Bin/frozen";
 
   Storable::nstore($db, $frozen_file);
 
