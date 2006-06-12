@@ -2013,6 +2013,72 @@ Setting to hash to undef (using the 'reset' interface) will cause it to be re-co
 
 =back
 
+=head1 SERIALIZATION
+
+A L<Rose::DB> object may contain a L<DBI> database handle, and L<DBI> database handles usually don't survive the serialize process intact.  L<Rose::DB> objects also hide database passwords inside closures, which also don't serialize well.    In order for a L<Rose::DB> object to survive serialization, custom hooks are required.
+
+L<Rose::DB> has hooks for the L<Storable> serialization module, but there is an important caveat.  Since L<Rose::DB> objects are blessed into a dynamically generated class (derived from the L<driver class|/driver_class>), you must load your L<Rose::DB>-derived class with all its registered data sources before you can successfully L<thaw|Storable/thaw> a L<frozen|Storable/freeze> L<Rose::DB>-derived object.  Here's an example.
+
+Imagine that this is your L<Rose::DB>-derived class:
+
+    package My::DB;
+  
+    use Rose::DB;
+    our @ISA = qw(Rose::DB);
+  
+    My::DB->register_db(
+      domain   => 'dev',
+      type     => 'main',
+      driver   => 'Pg',
+      ...
+    );
+
+    My::DB->register_db(
+      domain   => 'prod',
+      type     => 'main',
+      driver   => 'Pg',
+      ...
+    );
+
+    My::DB->default_domain('dev');
+    My::DB->default_type('main');
+
+In one program, a C<My::DB> object is L<frozen|Storable/freeze> using L<Storable>:
+
+    # my_freeze_script.pl
+
+    use My::DB;
+    use Storable qw(nstore);
+
+    # Create My::DB object
+    $db = My::DB->new(domain => 'dev', type => 'main');
+
+    # Do work...
+    $db->dbh->db('CREATE TABLE some_table (...)');
+    ...
+
+    # Serialize $db and store it in frozen_data_file
+    nstore($db, 'frozen_data_file');
+
+Now another program wants to L<thaw|Storable/thaw> out that C<My::DB> object and use it.  To do so, it must be sure to load the L<My::DB> module (which registers all its data sources when loaded) I<before> attempting to deserialize the C<My::DB> object serialized by C<my_freeze_script.pl>.
+
+    # my_thaw_script.pl
+
+    # IMPORTANT: load db modules with all data sources registered before
+    #            attempting to deserialize objects of this class.
+    use My::DB; 
+
+    use Storable qw(retrieve);
+    
+    # Retrieve frozen My::DB object from frozen_data_file
+    $db = retrieve('frozen_data_file');
+
+    # Do work...
+    $db->dbh->db('DROP TABLE some_table');
+    ...
+
+Note that this rule about loading a L<Rose::DB>-derived class with all its data sources registered prior to deserializing such an object only applies if the serialization was done in a different process.  If you L<freeze|Storable/freeze> and L<thaw|Storable/thaw> within the same process, you don't have to worry about it.
+
 =head1 CLASS METHODS
 
 =over 4

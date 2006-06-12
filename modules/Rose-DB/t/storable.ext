@@ -9,12 +9,11 @@ require 't/test-lib.pl';
 use Storable;
 
 my $frozen_file = "$Bin/frozen";
-open(my $fh, $frozen_file) or die "Could not open $frozen_file - $!";
-my $frozen = do { local $/; <$fh> };
-close($fh);
 
-my $thawed = Storable::thaw($frozen);
+my $thawed = Storable::retrieve($frozen_file);
 
 $thawed->dbh->do('DROP TABLE rose_db_storable_test');
 
 print "dropped\n";
+
+unlink($frozen_file); # ignore errors
