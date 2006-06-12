@@ -59,9 +59,8 @@ foreach my $db_type (qw(pg mysql informix sqlite oracle))
   my $frozen = Storable::freeze($db);
 
   my $frozen_file = "$Bin/frozen";
-  open(my $fh, ">$frozen_file") or die "Could not open $frozen_file - $!";
-  print $fh $frozen;
-  close($fh) or die "Could not write $frozen_file - $!";
+
+  Storable::nstore($db, $frozen_file);
 
   my $thawed = Storable::thaw($frozen);
 
@@ -129,6 +128,8 @@ foreach my $db_type (qw(pg mysql informix sqlite oracle))
 
 END
 {
+  unlink($frozen_file); # ignore errors
+
   foreach my $code (@Cleanup)
   {
     $code->();
