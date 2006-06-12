@@ -288,28 +288,6 @@ sub insert_placeholder_sql { '?' }
 sub update_placeholder_sql { '?' }
 sub query_placeholder_sql  { '?' }
 
-sub build_query_clause
-{
-  my($self, $value, $db, $obj, $get_method, $set_method) = @_;
-  
-  my $ref = ref $value;
-  
-  my $inline = $ref eq 'SCALAR' || $self->should_inline_value($db, $value);
-
-
-  {
-        if($col_meta->manager_uses_method)
-      {
-        $object->$set_method($value);
-        $value = $object->$get_method();
-      }
-      else
-      {
-        $value = $col_meta->format_value($db, $col_meta->parse_value($db, $value))
-          if(defined $value);
-      }
-}
-
 # sub dbi_data_type { () }
 
 sub parse_value  { $_[2] }

@@ -4,7 +4,6 @@ use strict;
 
 use Carp();
 
-use Rose::DB::Object::Metadata::Column;
 use Rose::DB::Object::Constants qw(STATE_SAVING);
 
 require Exporter;
@@ -164,7 +163,6 @@ sub build_select
   my $multi_table = @$tables > 1 ? 1 : 0;
   my $table_num = 1;
 
-  my $def_col_meta = Rose::DB::Object::Metadata::Column->new;
   my($db, %proto); # db object and prototype objects used for formatting values
 
   foreach my $table (@$tables)
@@ -264,31 +262,13 @@ sub build_select
         # Deflate/format values using prototype objects
         foreach my $val (@{$query{$column_arg}})
         {
-          if($column_arg eq $column && ($column_count{$column} || 0) > 1)
-          {
-            if($args{'no_ambiguous_columns'})
-            {
-              Carp::croak "Column '$column' is ambiguous; it appears in ",
-                          "$column_count{$column} tables.  Use a fully-qualified ",
-                          "column name instead (e.g., $fq_column or $short_column)";
-            }
-            else # unprefixed columns are considered part of t1
-            {
-              next  unless($table_alias eq 't1');
-            }
-          }
+          my $col_meta;
 
-          my($clause, $bind);
-
-          if($query_is_sql)
-          {
-            ($clause, $bind) = _build_query_clause($val, $db));
-          }
-          else
-          {
+          unless($query_is_sql)
+          {      
             my $obj;
 
-            my $col_meta = $obj_meta->column($column) || $obj_meta->method_column($column)
+            $col_meta = $obj_meta->column($column) || $obj_meta->method_column($column)
               or Carp::confess "Could not get column metadata object for '$column'";
 
             unless($obj = $proto{$obj_class})
@@ -303,48 +283,57 @@ sub build_select
             my $set_method = $obj_meta->column_mutator_method_name($column)
               or Carp::confess "Missing mutator method for column '$column'";
 
-            ($clause, $bind) = $col_meta->build_query_clause($val, $db, $obj, $get_method, $set_method);
-
-#            my %tmp = ($column_arg => $val);
-#            _format_value($db, \%tmp, $column_arg, $obj, $col_meta, $get_method, $set_method, $val);
-#            $val = $tmp{$column_arg};
+            my %tmp = ($column_arg => $val);
+            _format_value($db, \%tmp, $column_arg, $obj, $col_meta, $get_method, $set_method, $val);
+            $val = $tmp{$column_arg};
           }
 
-          push(@clauses, $clause);
-          push(@bind, $@bind)  if($db_bind);
+          if($column_arg eq $column && ($column_count{$column} || 0) > 1)
+          {
+            if($args{'no_ambiguous_columns'})
+            {
+              Carp::croak "Column '$column' is ambiguous; it appears in ",
+                          "$column_count{$column} tables.  Use a fully-qualified ",
+                          "column name instead (e.g., $fq_column or $short_column)";
+            }
+            else # unprefixed columns are considered part of t1
+            {
+              next  unless($table_alias eq 't1');
+            }
+          }
 
-#           my $placeholder = $col_meta ? $col_meta->query_placeholder_sql($db) : '?';
-#           my $sql_column = $multi_table ? $short_column :
-#                            $db ? $db->auto_quote_column_name($column) : $column;
-# 
-#           if(ref($val))
-#           {
-#             push(@clauses, _build_clause($dbh, $sql_column, $op, $val, $not, 
-#                                          undef, ($do_bind ? \@bind : undef),
-#                                          $db, $col_meta, undef, $set, $placeholder));
-#           }
-#           elsif(!defined $val)
-#           {
-#             push(@clauses, $set ? "$sql_column = NULL" : 
-#                                   ("$sql_column IS " . ($not ? "$not " : '') . 'NULL'));
-#           }
-#           else
-#           {
-#             if($col_meta && $db && $col_meta->should_inline_value($db, $val))
-#             {
-#               push(@clauses, ($not ? "$not($sql_column = $val)" : "$sql_column = $val"));
-#             }
-#             elsif($do_bind)
-#             {
-#               push(@clauses, ($not ? "$not($sql_column = $placeholder)" : "$sql_column = $placeholder"));
-#               push(@bind, $val);
-#             }
-#             else
-#             {
-#               push(@clauses, ($not ? "$not($sql_column = " . $dbh->quote($val) . ')' :
-#                               "$sql_column = " . $dbh->quote($val)));
-#             }
-#           }
+          my $placeholder = $col_meta ? $col_meta->query_placeholder_sql($db) : '?';
+          my $sql_column = $multi_table ? $short_column :
+                           $db ? $db->auto_quote_column_name($column) : $column;
+
+          if(ref($val))
+          {
+            push(@clauses, _build_clause($dbh, $sql_column, $op, $val, $not, 
+                                         undef, ($do_bind ? \@bind : undef),
+                                         $db, $col_meta, undef, $set, $placeholder));
+          }
+          elsif(!defined $val)
+          {
+            push(@clauses, $set ? "$sql_column = NULL" : 
+                                  ("$sql_column IS " . ($not ? "$not " : '') . 'NULL'));
+          }
+          else
+          {
+            if($col_meta && $db && $col_meta->should_inline_value($db, $val))
+            {
+              push(@clauses, ($not ? "$not($sql_column = $val)" : "$sql_column = $val"));
+            }
+            elsif($do_bind)
+            {
+              push(@clauses, ($not ? "$not($sql_column = $placeholder)" : "$sql_column = $placeholder"));
+              push(@bind, $val);
+            }
+            else
+            {
+              push(@clauses, ($not ? "$not($sql_column = " . $dbh->quote($val) . ')' :
+                              "$sql_column = " . $dbh->quote($val)));
+            }
+          }
         }
       }
     }
