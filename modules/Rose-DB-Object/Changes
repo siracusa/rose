@@ -1,10 +1,12 @@
-0.731 (06.11.2006) - John Siracusa <siracusa@mindspring.com>
+0.731 (06.12.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * The class_for() metadata method may now be called as a class method,
-      with some caveats.
     * Fixed a database handle leak in the get_objects_iterator() method,
       (Reported by Martin Rubli)
-    * XXX: document changes_only
+    * Documented the changes_only parameter to the save() and update()
+      methods.  This feature was actually implemented in version 0.73, but 
+      I forgot to document it.
+    * The class_for() metadata method may now be called as a class method,
+      with some caveats.
 
 0.73 (06.07.2006) - John Siracusa <siracusa@mindspring.com>
 
