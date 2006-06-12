@@ -4489,6 +4489,10 @@ Returns the L<Rose::DB>-derived object associated with this metadata object's L<
 
 Get or set a boolean value that indicates whether or not the L<class|/class> associated with this metadata object will L<load|Rose::DB::Object/load> speculatively by default.  See the documentation for L<Rose::DB::Object>'s L<load()|Rose::DB::Object/load> method for details.  The default value is false.
 
+=item B<default_update_changes_only [BOOL]>
+
+Get or set a boolean value that indicates whether or not the L<class|/class> associated with this metadata object will L<update|Rose::DB::Object/update> only an object's modified columns by default (instead of updating all columns).  See the documentation for L<Rose::DB::Object>'s L<update()|Rose::DB::Object/update> method for details.  The default value is false.
+
 =item B<delete_column NAME>
 
 Delete the column named NAME.

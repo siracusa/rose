@@ -1785,7 +1785,11 @@ PARAMS are name/value pairs.  Valid parameters are:
 
 =over 4
 
-=item C<insert>
+=item C<changes_only BOOL>
+
+If true, and if the object is being updated rather than inserted, then only the columns whose values have been modified will be updated.  Otherwise, all columns whose values have been loaded from the database will be updated.  If omitted, the default value of this parameter is determined by the L<metadata object|/meta>'s L<default_update_changes_only|Rose::DB::Object::Metadata/default_update_changes_only> class method, which returns false by default.
+
+=item C<insert BOOL>
 
 If set to a true value, then an insert is attempted, regardless of whether or not the object was previously L<load|/load>ed from the database.
 
@@ -1793,7 +1797,7 @@ If set to a true value, then an insert is attempted, regardless of whether or no
 
 If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will save the object.  If omitted, the default value is determined by the L<metadata object|/meta>'s L<dbi_prepare_cached|Rose::DB::Object::Metadata/dbi_prepare_cached> class method.
 
-=item C<update>
+=item C<update BOOL>
 
 If set to a true value, then an update is attempted, regardless of whether or not the object was previously L<load|/load>ed from the database.
 
@@ -1887,9 +1891,13 @@ PARAMS are optional name/value pairs.  Valid PARAMS are:
 
 =over 4
 
+=item C<changes_only BOOL>
+
+If true, then only the columns whose values have been modified will be updated.  Otherwise, all columns whose values have been loaded from the database will be updated.  If omitted, the default value of this parameter is determined by the L<metadata object|/meta>'s L<default_update_changes_only|Rose::DB::Object::Metadata/default_update_changes_only> class method, which returns false by default.
+
 =item C<prepare_cached BOOL>
 
-If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will insert the object.  If omitted, the default value is determined by the L<metadata object|/meta>'s L<dbi_prepare_cached|Rose::DB::Object::Metadata/dbi_prepare_cached> class method.
+If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will insert the object.  If omitted, the default value of this parameter is determined by the L<metadata object|/meta>'s L<dbi_prepare_cached|Rose::DB::Object::Metadata/dbi_prepare_cached> class method.
 
 =back
 
