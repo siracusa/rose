@@ -141,8 +141,53 @@ use Rose::Object::MakeMethods::Generic
 sub register_db
 {
   my $class = shift;
+
   # Smuggle parent/caller in with an otherwise nonsensical arrayref arg
-  $class->registry->add_entry([ $class ], @_);
+  my $entry = $class->registry->add_entry([ $class ], @_);
+  
+  if($entry)
+  {
+    my $driver = $entry->driver;
+    
+    Carp::confess "No driver found for registry entry $entry"
+      unless(defined $driver);
+  
+    $class->setup_dynamic_class_for_driver($driver);
+  }
+
+  return $entry;
+}
+
+our %Rebless;
+
+sub setup_dynamic_class_for_driver
+{
+  my($class, $driver) = @_;
+
+  my $driver_class = $class->driver_class($driver) ||
+     $class->driver_class('generic') || Carp::croak
+    "No driver class found for drivers '$driver' or 'generic'";
+
+  unless($Rebless{$class,$driver_class})
+  {
+    unless($Class_Loaded{$driver_class})
+    {
+      eval "require $driver_class"; # ignore errors
+    }
+
+    # Make a new driver class based on the current class
+    my $new_class = $class . '::__RoseDBPrivate__::' . $driver_class;
+
+    no strict 'refs';        
+    @{"${new_class}::ISA"} = ($driver_class, $class);
+    *{"${new_class}::STORABLE_thaw"}   = \&STORABLE_thaw;
+    *{"${new_class}::STORABLE_freeze"} = \&STORABLE_freeze;
+
+    # Cache result
+    $Rebless{$class,$driver_class} = $new_class;
+  }
+  
+  return $Rebless{$class,$driver_class};
 }
 
 sub unregister_db { shift->registry->delete_entry(@_) }
@@ -213,13 +258,22 @@ sub alias_db
 
 sub unregister_domain { shift->registry->delete_domain(@_) }
 
-sub driver_class { shift->_driver_class(lc shift, @_) }
+sub driver_class
+{
+  my($class, $driver) = (shift, lc shift);
+  
+  if(@_)
+  {
+    $class->_driver_class($driver, @_);
+    $class->setup_dynamic_class_for_driver($driver);
+  }
+
+  return $class->_driver_class($driver);
+}
 
 #
 # Object methods
 #
-
-my %Rebless;
 
 sub new
 {
@@ -282,12 +336,10 @@ sub new
 
       no strict 'refs';        
       @{"${new_class}::ISA"} = ($driver_class, $class);
-      *{"${new_class}::STORABLE_freeze"} = \&STORABLE_freeze;
-      *{"${new_class}::STORABLE_thaw"}   = \&STORABLE_thaw;
 
       $self = bless {}, $new_class;
 
-      # Cache value
+      # Cache result
       $Rebless{$class,$driver_class} = ref $self;
     }
   }
@@ -1692,8 +1744,7 @@ sub STORABLE_freeze
 {
   my($self, $cloning) = @_;
 
-  # I still don't quite get why this is recommended...
-  #return  if($cloning); # Regular default serialization
+  return  if($cloning);
 
   # Ditch the DBI $dbh and pull teh password out of its closure
   my $db = { %$self };
