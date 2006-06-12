@@ -108,7 +108,6 @@ use Rose::Object::MakeMethods::Generic
 
   'boolean' =>
   [
-    '_dbh_is_private',
     'auto_create'    => { default => 1 },
     'european_dates' => { default => 0 },
   ],
@@ -609,7 +608,6 @@ sub retain_dbh
   my $dbh = $self->dbh or return undef;
   #$Debug && warn "$self->{'_dbh_refcount'} -> ", ($self->{'_dbh_refcount'} + 1), " $dbh\n";
   $self->{'_dbh_refcount'}++;
-  $self->{'_dbh_is_private'} = 0;
   return $dbh;
 }
 
@@ -622,7 +620,6 @@ sub release_dbh
   if($args{'force'})
   {
     $self->{'_dbh_refcount'} = 0;
-    $self->{'_dbh_is_private'} = 1;
 
     # Account for possible Apache::DBI magic
     if(UNIVERSAL::isa($dbh, 'Apache::DBI::db'))
@@ -640,8 +637,6 @@ sub release_dbh
 
   unless($self->{'_dbh_refcount'})
   {
-    $self->{'_dbh_is_private'} = 1;
-
     if(my $sqls = $self->pre_disconnect_sql)
     {
       eval
@@ -670,7 +665,6 @@ sub release_dbh
 
 use constant DID_PCSQL_KEY => 'private_rose_db_did_post_connect_sql';
 
-my $CON_CNT;
 sub init_dbh
 {
   my($self) = shift;
@@ -694,7 +688,6 @@ sub init_dbh
 
   $self->{'_dbh_refcount'}++;
   #$Debug && warn "CONNECT $dbh ", join(':', (caller(3))[0,2]), "\n";
-  $self->{'_dbh_is_private'} = 1;
 
   #$self->_update_driver;
 
