@@ -9,7 +9,7 @@ use Rose::HTML::Form::Field::Text;
 use Rose::HTML::Form::Field::DateTime::Split;
 our @ISA = qw(Rose::HTML::Form::Field::DateTime::Split);
 
-our $VERSION = '0.50';
+our $VERSION = '0.53';
 
 sub build_field
 {
@@ -56,7 +56,7 @@ sub is_full
 {
   my($self) = shift;
 
-  my $count = grep { defined } 
+  my $count = grep { defined && length } 
               map { $self->field($_)->internal_value }  qw(month day year);
 
   return $count == 3 ? 1 : 0;

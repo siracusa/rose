@@ -166,7 +166,15 @@ sub invalidate_value
   }
   else
   {
-    $self->has_partial_value(1);
+    if($self->is_empty)
+    {
+      $self->has_partial_value(0);
+    }
+    else
+    {
+      $self->has_partial_value(1);
+    }
+
     $self->_set_input_value(undef);
   }
 

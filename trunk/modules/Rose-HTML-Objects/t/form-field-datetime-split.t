@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 54;
+use Test::More tests => 61;
 
 BEGIN 
 {
@@ -119,9 +119,18 @@ ok($form->field('start')->error, 'mdy validate partial 2');
 
 $field = Rose::HTML::Form::Field::DateTime::Split::MonthDayYear->new(name => 'start');
 
-ok($field->validate, 'mdy empty validate');
-ok($field->is_empty, 'mdy empty is_empty');
+ok($field->validate, 'mdy empty validate 1');
+ok($field->is_empty, 'mdy empty is_empty 1');
+ok(!$field->is_full, 'mdy empty is_full 1');
 ok(!$field->has_partial_value, 'mdy empty has_partial_value');
+
+$field->field('month')->input_value('');
+$field->field('day')->input_value('');
+$field->field('year')->input_value('');
+
+ok($field->validate, 'mdy empty validate 2');
+ok($field->is_empty, 'mdy empty is_empty 2');
+ok(!$field->is_full, 'mdy empty is_full 2');
 
 #
 # Rose::HTML::Form::Field::DateTime::Split::MDYHMS
@@ -329,3 +338,18 @@ $field->internal_value;
 
 is($field->internal_value->strftime('%Y-%m-%d %I:%M:%S %p'), 
    '2001-12-31 12:00:00 PM', 'mdyhms month, day, year, hour am/pm');
+
+$field = Rose::HTML::Form::Field::DateTime::Split::MDYHMS->new(name => 'dt');
+
+$field->field('date.month')->input_value('');
+$field->field('date.day')->input_value('');
+$field->field('date.year')->input_value('');
+
+$field->field('time.hour')->input_value('');
+$field->field('time.minute')->input_value('');
+$field->field('time.second')->input_value('');
+$field->field('time.ampm')->input_value('');
+
+ok($field->validate, 'mdyhms empty validate 1');
+ok($field->is_empty, 'mdyhms empty is_empty 1');
+ok(!$field->is_full, 'mdyhms empty is_full 1');
