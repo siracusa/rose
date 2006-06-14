@@ -16,7 +16,7 @@ use Rose::DB::Object::Metadata::Util qw(perl_hashref);
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.73';
+our $VERSION = '0.732';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -232,12 +232,15 @@ sub class_prefix
 
   my $class_prefix = shift;
 
-  unless($class_prefix =~ /^(?:\w+::)*\w+(?:::)?$/)
+  if(length $class_prefix)
   {
-    croak "Illegal class prefix: $class_prefix";
-  }
+    unless($class_prefix =~ /^(?:\w+::)*\w+(?:::)?$/)
+    {
+      croak "Illegal class prefix: $class_prefix";
+    }
 
-  $class_prefix .= '::'  unless($class_prefix =~ /::$/);
+    $class_prefix .= '::'  unless($class_prefix =~ /::$/);
+  }
 
   return $self->{'class_prefix'} = $class_prefix;
 }
@@ -534,12 +537,15 @@ sub make_classes
   my $class_prefix =  exists $args{'class_prefix'} ? 
     delete $args{'class_prefix'} : $self->class_prefix || '';
 
-  unless($class_prefix =~ /^(?:\w+::)*\w+(?:::)?$/)
+  if(length $class_prefix)
   {
-    croak "Illegal class prefix: $class_prefix";
-  }
+    unless($class_prefix =~ /^(?:\w+::)*\w+(?:::)?$/)
+    {
+      croak "Illegal class prefix: $class_prefix";
+    }
 
-  $class_prefix .= '::'  unless($class_prefix =~ /::$/);
+    $class_prefix .= '::'  unless($class_prefix =~ /::$/);
+  }
 
   # Evil masking of object attribute
   local $self->{'class_prefix'} = $class_prefix; 
