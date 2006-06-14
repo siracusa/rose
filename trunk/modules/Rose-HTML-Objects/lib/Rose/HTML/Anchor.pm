@@ -43,7 +43,7 @@ sub contents
   return wantarray ? @{$self->{'contents'} || []} : ${$self->{'contents'} || []}[0];
 }
 
-*link = \&contents;
+sub link { shift->contents(@_) }
 
 sub xhtml_contents
 {

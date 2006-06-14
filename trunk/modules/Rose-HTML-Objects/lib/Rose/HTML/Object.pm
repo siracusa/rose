@@ -399,7 +399,7 @@ sub start_html
 {
   my($self) = shift;
   my $html = $self->html;
-  $html =~ s{</\w+>\Z}{};
+  $html =~ s{</\w+>\z}{};
   return $html;
 }
 
@@ -407,7 +407,7 @@ sub end_html
 {
   my($self) = shift;
   my $html = $self->html;
-  $html =~ m{</\w+>\Z};
+  $html =~ m{</\w+>\z};
   return $1 || '';
 }
 
@@ -415,7 +415,7 @@ sub start_xhtml
 {
   my($self) = shift;
   my $xhtml = $self->xhtml;
-  $xhtml =~ s{</\w+>\Z}{};
+  $xhtml =~ s{</\w+>\z}{};
   return $xhtml;
 }
 
@@ -423,7 +423,7 @@ sub end_xhtml
 {
   my($self) = shift;
   my $xhtml = $self->xhtml;
-  $xhtml =~ m{</\w+>\Z};
+  $xhtml =~ m{</\w+>\z};
   return $1 || '';
 }
 

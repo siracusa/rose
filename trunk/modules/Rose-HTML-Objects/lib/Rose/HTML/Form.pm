@@ -2362,7 +2362,7 @@ Get or set the character used to separate parameter name/value pairs in the retu
 
 Validate the form by calling L<validate()|Rose::HTML::Form::Field/validate> on each field.  If any field returns false from its L<validate()|Rose::HTML::Form::Field/validate> call, then this method returns false. Otherwise, it returns true.
 
-If this method returns false and an L<error|/error> is not defined, then the L<error|/error> attribute is set to a generic error message.
+If this method returns false and an L<error|Rose::HTML::Object/error> is not defined, then the L<error|Rose::HTML::Object/error> attribute is set to a generic error message.
 
 =item B<validate_field_html_attrs [BOOL]>
 
