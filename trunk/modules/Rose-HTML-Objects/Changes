@@ -2,7 +2,7 @@
 
     * Added Script, Link, and Anchor tag classes.
     * Added missing documentation for xhtml_error().
-    * Fixed a bug that cause some compound date/time fields to consider
+    * Fixed a bug that caused some compound date/time fields to consider
       empty strings as "non-empty" values.  (Reported by Guillermo Roditi)
 
 0.52 (03.08.2006) - John Siracusa <siracusa@mindspring.com>
