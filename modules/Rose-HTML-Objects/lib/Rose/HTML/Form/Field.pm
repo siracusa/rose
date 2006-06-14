@@ -926,7 +926,7 @@ Returns the error text, if any, as a snippet of HTML that looks like this:
 
     <span class="error">Error text goes here</span>
 
-If the L<escape_html|/escape_html> flag is set to true (the default), then the error text has any HTML in it escaped.
+If the L<escape_html|Rose::HTML::Object/escape_html> flag is set to true (the default), then the error text has any HTML in it escaped.
 
 =item B<html_error_separator [STRING]>
 
@@ -1016,7 +1016,7 @@ Get or set the field label.  This label is used by the various label printing me
 
 =item B<label_object [ARGS]>
 
-Returns a L<Rose::HTML::Label> object with its C<for> HTML attribute set to the calling field's C<id> attribute and any other HTML attributes specified by the name/value pairs in ARGS.  The HTML contents of the label object are set to the field's L<label()|/label>, which has its HTML escaped if L<escape_html()|Rose::HTML::Object/escape_html> is true (which is the default).
+Returns a L<Rose::HTML::Label> object with its C<for> HTML attribute set to the calling field's C<id> attribute and any other HTML attributes specified by the name/value pairs in ARGS.  The HTML contents of the label object are set to the field's L<label()|/label>, which has its HTML escaped if L<escape_html|Rose::HTML::Object/escape_html> is true (which is the default).
 
 =item B<local_name [NAME]>
 
@@ -1108,7 +1108,7 @@ Returns the error text, if any, as a snippet of XHTML that looks like this:
 
     <span class="error">Error text goes here</span>
 
-If the L<escape_html|/escape_html> flag is set to true (the default), then the error text has any HTML in it escaped.
+If the L<escape_html|Rose::HTML::Object/escape_html> flag is set to true (the default), then the error text has any HTML in it escaped.
 
 =item B<xhtml_error_separator [STRING]>
 

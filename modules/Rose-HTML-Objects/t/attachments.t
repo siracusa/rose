@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More 'no_plan'; #tests => 15;
+use Test::More skip_all => 'disabled'; #tests => 15;
 __END__
 BEGIN
 {
