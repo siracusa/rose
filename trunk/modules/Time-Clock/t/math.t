@@ -8,6 +8,10 @@ use Time::Clock;
 
 my $t = Time::Clock->new;
 
+#
+# Add
+#
+
 $t->add(seconds => 1);
 is($t->as_string, '00:00:01', 'add 1 second');
 
@@ -104,3 +108,78 @@ ok($@, 'bad delta string 125:161:162.2345678901');
 
 eval { $t->add(':161:162.2345678901') };
 ok($@, 'bad delta string :161:162.2345678901');
+
+#
+# Subtract
+#
+
+$t->parse('00:00:01');
+$t->subtract(seconds => 1);
+is($t->as_string, '00:00:00', 'subtract 1 second');
+
+$t->parse('00:00:00.000000001');
+$t->subtract(nanoseconds => 1);
+is($t->as_string, '00:00:00.000000000', 'subtract 1 nanosecond');
+
+$t->parse('00:01:00');
+$t->subtract(minutes => 1);
+is($t->as_string, '00:00:00', 'subtract 1 minute');
+
+$t->parse('01:00:00');
+$t->subtract(hours => 1);
+is($t->as_string, '00:00:00', 'subtract 1 hour');
+
+# Unit wrap
+
+$t->parse('00:00:01.000000000');
+$t->subtract(nanoseconds => 1);
+is($t->as_string, '00:00:00.999999999', 'subtract 1 nanosecond - unit wrap');
+
+$t->parse('00:01:00');
+$t->subtract(seconds => 1);
+is($t->as_string, '00:00:59', 'subtract 1 second - unit wrap');
+
+$t->parse('01:00:00');
+$t->subtract(minutes => 1);
+is($t->as_string, '00:59:00', 'subtract 1 minute - unit wrap');
+
+$t->parse('00:00:00');
+$t->subtract(hours => 1);
+is($t->as_string, '23:00:00', 'subtract 1 hour - unit wrap');
+
+# Bulk units
+
+$t->parse('12:34:58.789000123');
+$t->subtract(nanoseconds => 2_000_000_123);
+is($t->as_string, '12:34:56.789', 'subtract 2,000,000,123 nanoseconds');
+
+$t->parse('02:05:23');
+$t->subtract(seconds => 3800);
+is($t->as_string, '01:02:03', 'subtract 3,800 seconds');
+
+$t->parse('02:04:03');
+$t->subtract(minutes => 62);
+is($t->as_string, '01:02:03', 'subtract 62 minutes');
+
+$t->parse('01:02:03');
+$t->subtract(hours => 24);
+is($t->as_string, '01:02:03', 'subtract 24 hours');
+
+$t->parse('02:02:03');
+$t->subtract(hours => 25);
+is($t->as_string, '01:02:03', 'subtract 25 hours');
+
+# Mixed units
+
+$t->parse('04:04:04.000054321');
+$t->subtract(hours => 3, minutes => 2, seconds => 1, nanoseconds => 54321);
+is($t->as_string, '01:02:03.000000000', 'subtract 03:02:01.000054321');
+
+$t->parse('08:45:45.234567890');
+$t->subtract(hours => 125, minutes => 161, seconds => 161, nanoseconds => 1_234_567_890);
+is($t->as_string, '01:02:02.000000000', 'subtract 125:161:162.234567890');
+
+$t->parse('08:45:45.234567890');
+$t->subtract(nanoseconds => 1_234_567_890);
+is($t->as_string, '08:45:44.000000000', 'subtract 0.234567890');
+

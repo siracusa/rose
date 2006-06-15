@@ -346,6 +346,47 @@ sub add
   return;
 }
 
+sub subtract
+{
+  my($self) = shift;
+
+  my %args = $self->parse_delta(@_);
+  my $secs = $self->as_integer_seconds - $self->delta_as_integer_seconds(%args);
+
+  if(defined $args{'nanoseconds'})
+  {
+    my $ns_arg = $args{'nanoseconds'};
+    my $nsec   = $self->nanosecond || 0;
+
+    if($nsec - $ns_arg >= 0)
+    {
+      $self->nanosecond($nsec - $ns_arg);
+    }
+    else
+    {
+      if(abs($nsec - $ns_arg) >= NANOSECONDS_IN_A_SECOND)
+      {
+        $secs -= int($ns_arg / NANOSECONDS_IN_A_SECOND);
+      }
+      else
+      {
+        $secs--;
+      }
+
+      $self->nanosecond(($nsec - $ns_arg) % NANOSECONDS_IN_A_SECOND);
+    }
+  }
+
+  if($secs < 0)
+  {
+    $secs = $secs % SECONDS_IN_A_CLOCK;
+  }
+
+  $self->init_with_seconds($secs);
+
+  return;
+}
+
 sub init_with_seconds
 {
   my($self, $secs) = @_;
