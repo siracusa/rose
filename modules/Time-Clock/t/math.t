@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More 'no_plan'; #tests => 18;
+use Test::More tests => 39;
 
 use Time::Clock;
 
@@ -176,8 +176,12 @@ $t->subtract(hours => 3, minutes => 2, seconds => 1, nanoseconds => 54321);
 is($t->as_string, '01:02:03.000000000', 'subtract 03:02:01.000054321');
 
 $t->parse('08:45:45.234567890');
+# for(1 .. 125) { $t->subtract(hours => 1) }
+# for(1 .. 161) { $t->subtract(minutes => 1) }
+# for(1 .. 161) { $t->subtract(seconds => 1) }
+# for(1 .. 1_234_567_890) { $t->subtract(nanoseconds => 1) }
 $t->subtract(hours => 125, minutes => 161, seconds => 161, nanoseconds => 1_234_567_890);
-is($t->as_string, '01:02:02.000000000', 'subtract 125:161:162.234567890');
+is($t->as_string, '01:02:03.000000000', 'subtract 125:161:162.234567890');
 
 $t->parse('08:45:45.234567890');
 $t->subtract(nanoseconds => 1_234_567_890);
