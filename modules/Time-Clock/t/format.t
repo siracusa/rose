@@ -12,7 +12,7 @@ $t->parse('12:34:56.123456789');
 is($t->format('%H %I %i %M %S %N %n %p'), '12 12 12 34 56 123456789 .123456789 PM', 'format %H %I %i %M %S %N %p 1');
 
 $t->parse('13:34:56.123');
-is($t->format('%H %I %i %M %S %N %n %p'), '13 01 1 34 56 123000000 .123000000 PM', 'format %H %I %i %M %S %N %p 2');
+is($t->format('%H %I %i %M %S %N %n %p'), '13 01 1 34 56 123000000 .123 PM', 'format %H %I %i %M %S %N %p 2');
 
 $t->parse('1:23:45');
 is($t->format('%n'), '', 'format %n 1');

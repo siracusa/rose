@@ -12,9 +12,10 @@ use overload
    fallback => 1,
 );
 
-use constant NANOSECONDS_IN_A_SECOND => 999_999_999;
+use constant NANOSECONDS_IN_A_SECOND => 1_000_000_000;
 use constant SECONDS_IN_A_MINUTE     => 60;
 use constant SECONDS_IN_AN_HOUR      => SECONDS_IN_A_MINUTE * 60;
+use constant SECONDS_IN_A_CLOCK      => SECONDS_IN_AN_HOUR * 24;
 
 use constant DEFAULT_FORMAT => '%H:%M:%S%n';
 
@@ -43,7 +44,7 @@ sub new
   my($class) = shift;
 
   my $self = bless {}, $class;
-
+  @_ = (parse => @_)  if(@_ == 1);
   $self->init(@_);
 
   return $self;
@@ -119,8 +120,8 @@ sub nanosecond
   {
     my $nanosecond = shift;
 
-    croak "nanosecond must be between 0 and ", NANOSECONDS_IN_A_SECOND
-      unless(!defined $nanosecond || ($nanosecond >= 0 && $nanosecond <= NANOSECONDS_IN_A_SECOND));
+    croak "nanosecond must be between 0 and ", (NANOSECONDS_IN_A_SECOND - 1)
+      unless(!defined $nanosecond || ($nanosecond >= 0 && $nanosecond < NANOSECONDS_IN_A_SECOND));
 
     return $self->{'nanosecond'} = $nanosecond;
   }
@@ -192,6 +193,8 @@ sub format
     'p' => uc $self->ampm,
   );
 
+  $formats{'n'} =~ s/([1-9])0+$/$1/;
+
   for($format)
   {
     s/%([HIiMSNnp])/$formats{$1}/g;
@@ -237,7 +240,7 @@ sub parse
   
       if($len < 9)
       {
-        $fsec .= ('0' x (9 - length $fsec));
+        $fsec .= ('0' x (9 - $len));
       }
       elsif($len > 9)
       {
@@ -254,3 +257,121 @@ sub parse
 
   return 1;
 }
+
+sub as_integer_seconds
+{
+  my($self) = shift;
+  
+  return ($self->hour * SECONDS_IN_AN_HOUR) +
+         ($self->minute * SECONDS_IN_A_MINUTE) +
+         $self->second;
+}
+
+sub delta_as_integer_seconds
+{
+  my($self, %args) = @_;
+  return (($args{'hours'} || 0) * SECONDS_IN_AN_HOUR) +
+         (($args{'minutes'} || 0) * SECONDS_IN_A_MINUTE) +
+         ($args{'seconds'} || 0);
+}
+
+sub parse_delta
+{
+  my($self) = shift;
+  
+  if(@_ == 1)
+  {
+    my $delta = shift;
+    
+    if(my($hour, $min, $sec, $fsec) = ($delta =~ 
+    m{^
+        (\d+)            # hours
+        (?::(\d+))?      # minutes
+        (?::(\d+))?      # seconds
+        (?:\.(\d{0,9}))? # nanoseconds
+      $
+    }x))
+    {
+      if(defined $fsec)
+      {
+        my $len = length $fsec;
+    
+        if($len < 9)
+        {
+          $fsec .= ('0' x (9 - $len));
+        }
+        
+        $fsec = $fsec + 0;
+      }
+      
+      return
+      (
+        hours       => $hour,
+        minutes     => $min,
+        seconds     => $sec,
+        nanoseconds => $fsec,
+      );
+    }
+    else { croak "Time delta not understood: $delta" }
+  }
+
+  return @_;
+}
+
+sub add
+{
+  my($self) = shift;
+
+  my %args = $self->parse_delta(@_);
+  my $secs = $self->as_integer_seconds + $self->delta_as_integer_seconds(%args);
+
+  if(defined $args{'nanoseconds'})
+  {
+    my $ns_arg = $args{'nanoseconds'};
+    my $nsec   = $self->nanosecond || 0;
+
+    if($ns_arg + $nsec < NANOSECONDS_IN_A_SECOND)
+    {
+      $self->nanosecond($ns_arg + $nsec);
+    }
+    else
+    {
+      $secs += int(($ns_arg + $nsec) / NANOSECONDS_IN_A_SECOND);
+      $self->nanosecond(($ns_arg + $nsec) % NANOSECONDS_IN_A_SECOND);
+    }
+  }
+
+  $self->init_with_seconds($secs);
+
+  return;
+}
+
+sub init_with_seconds
+{
+  my($self, $secs) = @_;
+
+  if($secs >= SECONDS_IN_A_CLOCK)
+  {
+    $secs = $secs % SECONDS_IN_A_CLOCK;
+  }
+
+  if($secs >= SECONDS_IN_AN_HOUR)
+  {
+    $self->hour(int($secs / SECONDS_IN_AN_HOUR));
+    $secs -= $self->hour * SECONDS_IN_AN_HOUR;
+  }
+  else { $self->hour(0) }
+  
+  if($secs >= SECONDS_IN_A_MINUTE)
+  {
+    $self->minute(int($secs / SECONDS_IN_A_MINUTE));
+    $secs -= $self->minute * SECONDS_IN_A_MINUTE;
+  }
+  else { $self->minute(0) }
+
+  $self->second($secs);
+
+  return;
+}
+
+1;

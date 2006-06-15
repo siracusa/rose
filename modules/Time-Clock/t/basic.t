@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 28;
+use Test::More tests => 29;
 
 BEGIN 
 {
@@ -19,7 +19,10 @@ is("$t", '12:34:56', 'as_string 2');
 
 $t->nanosecond(123000000);
 
-is("$t", '12:34:56.123000000', 'as string 3');
+is("$t", '12:34:56.123', 'as string 3');
+
+$t = Time::Clock->new('01:02:03');
+is($t->as_string, '01:02:03', 'as_string 4');
 
 # Hour
 
