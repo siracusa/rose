@@ -193,7 +193,7 @@ sub format
     'p' => uc $self->ampm,
   );
 
-  $formats{'n'} =~ s/([1-9])0+$/$1/;
+  $formats{'n'} =~ s/\.?0+$//;
 
   for($format)
   {

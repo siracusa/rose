@@ -15,7 +15,7 @@ ok($t->parse('12:34:56.123456789 pm'), 'parse 12:34:56.123456789 pm');
 is($t->as_string, '12:34:56.123456789', 'check 12:34:56.123456789 pm');
 
 ok($t->parse('12:34:56. A.m.'), 'parse 12:34:56. A.m.');
-is($t->as_string, '00:34:56.000000000', 'check 12:34:56 am');
+is($t->as_string, '00:34:56', 'check 12:34:56 am');
 
 ok($t->parse('12:34:56 pm'), 'parse 12:34:56 pm');
 is($t->as_string, '12:34:56', 'check 12:34:56 pm');
