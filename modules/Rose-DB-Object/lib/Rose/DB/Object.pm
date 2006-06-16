@@ -1410,7 +1410,7 @@ Rose::DB::Object - Extensible, high performance RDBMS-OO mapper.
         class       => 'Category',
         key_columns => { category_id => 'id' },
       },
-    [,
+    ],
 
     relationships =>
     [
