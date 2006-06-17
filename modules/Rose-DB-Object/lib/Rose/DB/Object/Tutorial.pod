@@ -565,7 +565,7 @@ Let's solve all of these problems.  If we more accurately describe the columns, 
           length   => 128,
           not_null => 1, 
           default  => 'inactive', 
-          check_in => [ 'inactive', 'active', 'defunct' ]
+          check_in => [ 'inactive', 'active', 'defunct' ],
         },
 
         date_created => { type => 'timestamp', not_null => 1, 
