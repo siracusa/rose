@@ -568,7 +568,12 @@ sub slurp
   my $data = do { local $/; <$fh> };
 
   # Normalize auto-numbered base classes
-  $data =~ s/::DB::Object::AutoBase\d+/::DB::Object::AutoBaseNNN/g;
+  for($data)
+  {
+    s/::DB::Object::AutoBase\d+/::DB::Object::AutoBaseNNN/g;
+    # MySQL 4.1.2 apparently defaults INTEGER NOT NULL columns to 0
+    s/default => '0',/default => '',/;
+  }
 
   return $data;
 }
