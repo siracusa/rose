@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.73';
+our $VERSION = '0.732';
 
 our $Debug = 0;
 
@@ -363,6 +363,11 @@ sub setup
     }
 
     my $args = shift;
+
+    if($method =~ /^((?:auto_(?!helper)|(?:default_)?perl_)\w*)$/)
+    {
+      $self->init_auto_helper;
+    }
 
     unless($self->can($method))
     {
