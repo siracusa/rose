@@ -1,7 +1,9 @@
-0.732 (06.13.2006) - John Siracusa <siracusa@mindspring.com>
+0.732 (06.19.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed a bug that caused the Loader to refuse to use empty or 
       undefined class_prefix values.
+    * Fixed a bug that prevented auto_* methods names from working in
+      calls to the setup() method.
 
 0.731 (06.12.2006) - John Siracusa <siracusa@mindspring.com>
 
