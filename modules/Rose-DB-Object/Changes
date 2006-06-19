@@ -4,6 +4,7 @@
       undefined class_prefix values.
     * Fixed a bug that prevented auto_* methods names from working in
       calls to the setup() method.
+    * XXX: document manager_base_class(es) Loader methods.
 
 0.731 (06.12.2006) - John Siracusa <siracusa@mindspring.com>
 
