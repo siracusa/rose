@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.72';
+our $VERSION = '0.723';
 
 our $Debug = 0;
 
@@ -2794,8 +2794,6 @@ $use_bases
 
 use $object_class;
 
-our \@ISA = qw(@isa);
-
 sub object_class { '@{[ $class->object_class || $class->_object_class ]}' }
 
 __PACKAGE__->make_manager_methods('@{[ $class->_base_name ]}');
@@ -2820,8 +2818,7 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
 
   package Category;
 
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
+  use base 'Rose::DB::Object';
 
   __PACKAGE__->meta->table('categories');
 
@@ -2841,8 +2838,7 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
 
   use Product;
 
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
+  use base 'Rose::DB::Object';
 
   __PACKAGE__->meta->table('code_names');
 
@@ -2872,8 +2868,7 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
   use Category;
   use CodeName;
 
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
+  use base 'Rose::DB::Object';
 
   __PACKAGE__->meta->table('products');
 
