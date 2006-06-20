@@ -50,7 +50,7 @@ Rose::Object - A simple object base class.
 
 =head1 DESCRIPTION
 
-C<Rose::Object> is a generic object base class.  It provides very little
+L<Rose::Object> is a generic object base class.  It provides very little
 functionality, but a healthy dose of convention.
 
 =head1 METHODS

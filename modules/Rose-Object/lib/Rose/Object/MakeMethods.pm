@@ -4,7 +4,7 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.012';
+our $VERSION = '0.81';
 
 sub import
 {
@@ -299,17 +299,17 @@ Rose::Object::MakeMethods - A simple method maker base class.
 
 =head1 DESCRIPTION
 
-C<Rose::Object::MakeMethods> is the base class for a family of method
+L<Rose::Object::MakeMethods> is the base class for a family of method
 makers. A method maker is a module that's used to define methods in
 other packages. The actual method makers are subclasses of
-C<Rose::Object::MakeMethods> that define the names and options of the
+L<Rose::Object::MakeMethods> that define the names and options of the
 different kinds of methods that they can make.
 
 There are method makers that make both object methods and class methods.
 The object method makers are in the C<Rose::Object::MakeMethods::*>
 namespace. The class method makers are in
 the C<Rose::Class::MakeMethods::*> namespace for the sake of clarity, but
-still inherit from C<Rose::Object::MakeMethods> and therefore share the
+still inherit from L<Class::MethodMaker> and therefore share the
 same method making interface.
 
 Several useful method makers are included under the
@@ -317,11 +317,11 @@ C<Rose::Object::MakeMethods::*> and C<Rose::Class::MakeMethods::*>
 namespaces, mostly for use by other C<Rose::*> objects and classes. 
 
 This family of modules is not as powerful or flexible as the one that
-inspired it: C<Class::MethodMaker>.  I found that I was only using a tiny
-corner of the functionality provided by C<Class::MethodMaker>, so I wrote
+inspired it: L<Class::MethodMaker>.  I found that I was only using a tiny
+corner of the functionality provided by L<Class::MethodMaker>, so I wrote
 this as a simple, smaller replacement.
 
-The fact that many C<Rose::*> modules use C<Rose::Object::MakeMethods>
+The fact that many C<Rose::*> modules use L<Rose::Object::MakeMethods>
 subclasses to make their methods should be considered an implementation
 detail that can change at any time.
 
@@ -549,7 +549,7 @@ different formats.
       ]
     );
 
-In the documentation for the various C<Rose::Object::MakeMethods> subclasses,
+In the documentation for the various L<Rose::Object::MakeMethods> subclasses,
 any of the valid forms may be used in the examples.
 
 =item B<make_methods SPEC>
@@ -562,8 +562,8 @@ method is only meant to be called implicitly by C<use>.)
 
 =head1 SUBCLASSING
 
-In order to make a C<Rose::Object::MakeMethods> subclass that can
-actually make some methods, simply subclass C<Rose::Object::MakeMethods>
+In order to make a L<Rose::Object::MakeMethods> subclass that can
+actually make some methods, simply subclass L<Rose::Object::MakeMethods>
 and define one subroutine for each method type you want to support.
 
 The subroutine will be passed three arguments when it is called:
@@ -634,7 +634,7 @@ prepending C<add_> and C<delete_> and appending C<s> to the supplied
 method name argument, C<book>.
 
 Anything not specified in this documentation is simply a matter of
-convention.  For example, the C<Rose::Object::MakeMethods> subclasses
+convention.  For example, the L<Rose::Object::MakeMethods> subclasses
 all use a common set of method options: C<hash_key>, C<interface>,
 etc.  As you read their documentation, this will become apparent.
 
