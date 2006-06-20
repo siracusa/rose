@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 18;
+use Test::More tests => 27;
 
 use Time::Clock;
 
@@ -34,3 +34,21 @@ is($t->as_string, '15:00:00', 'check 3pm');
 
 ok($t->parse('4 p.M.'), 'parse 4 p.M.');
 is($t->as_string, '16:00:00', 'check 4 p.M.');
+
+ok($t->parse('24:00:00'), 'parse 24:00:00');
+is($t->as_string, '24:00:00', 'check 24:00:00');
+
+ok($t->parse('24:00:00 PM'), 'parse 24:00:00 PM');
+is($t->as_string, '24:00:00', 'check 24:00:00 PM');
+
+ok($t->parse('24:00'), 'parse 24:00');
+is($t->as_string, '24:00:00', 'check 24:00');
+
+eval { $t->parse('24:00:00.000000001') };
+ok($@ =~ /only allowed if/,  'parse fail 24:00:00.000000001');
+
+eval { $t->parse('24:00:01') };
+ok($@ =~ /only allowed if/,  'parse fail 24:00:01');
+
+eval { $t->parse('24:01') };
+ok($@ =~ /only allowed if/,  'parse fail 24:01');
