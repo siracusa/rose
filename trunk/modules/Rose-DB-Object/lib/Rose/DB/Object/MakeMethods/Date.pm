@@ -1454,7 +1454,7 @@ Rose::DB::Object::MakeMethods::Date - Create date-related methods for Rose::DB::
 
     package MyDBObject;
 
-    our @ISA = qw(Rose::DB::Object);
+    use base 'Rose::DB::Object';
 
     use Rose::DB::Object::MakeMethods::Date
     (
@@ -1588,7 +1588,7 @@ Example:
 
     package MyDBObject;
 
-    our @ISA = qw(Rose::DB::Object);
+    use base 'Rose::DB::Object';
 
     use Rose::DB::Object::MakeMethods::Date
     (
@@ -1690,7 +1690,7 @@ Example:
 
     package MyDBObject;
 
-    our @ISA = qw(Rose::DB::Object);
+    use base 'Rose::DB::Object';
 
     use Rose::DB::Object::MakeMethods::Date
     (
@@ -1793,7 +1793,7 @@ Example:
 
     package MyDBObject;
 
-    our @ISA = qw(Rose::DB::Object);
+    use base 'Rose::DB::Object';
 
     use Rose::DB::Object::MakeMethods::Date
     (
@@ -1888,7 +1888,7 @@ Example:
 
     package MyDBObject;
 
-    our @ISA = qw(Rose::DB::Object);
+    use base 'Rose::DB::Object';
 
     use Rose::DB::Object::MakeMethods::Date
     (
