@@ -4,7 +4,7 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.014';
+our $VERSION = '0.81';
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
@@ -611,7 +611,7 @@ Rose::Object::MakeMethods::Generic - Create simple object methods.
 
 =head1 DESCRIPTION
 
-C<Rose::Object::MakeMethods::Generic> is a method maker that inherits
+L<Rose::Object::MakeMethods::Generic> is a method maker that inherits
 from L<Rose::Object::MakeMethods>.  See the L<Rose::Object::MakeMethods>
 documentation to learn about the interface.  The method types provided
 by this module are described below.  All methods work only with

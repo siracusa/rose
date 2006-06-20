@@ -84,14 +84,14 @@ sub inheritable_set
       no strict 'refs';
 
       my @parents = ($class);
-  
+
       while(my $parent = shift(@parents))
       {
         no strict 'refs';
         foreach my $subclass (@{$parent . '::ISA'})
         {
           push(@parents, $subclass);
-  
+
           if(exists $Inheritable_Set{$name}{$subclass})
           {
             while(my($k, $v) = each(%{$Inheritable_Set{$name}{$subclass}}))
@@ -624,7 +624,7 @@ Rose::Class::MakeMethods::Set - Create class methods to manage sets.
 
 =head1 DESCRIPTION
 
-C<Rose::Class::MakeMethods::Set> is a method maker that inherits from L<Rose::Object::MakeMethods>.  See the L<Rose::Object::MakeMethods> documentation to learn about the interface.  The method types provided by this module are described below.  All methods work only with classes, not objects.
+L<Rose::Class::MakeMethods::Set> is a method maker that inherits from L<Rose::Object::MakeMethods>.  See the L<Rose::Object::MakeMethods> documentation to learn about the interface.  The method types provided by this module are described below.  All methods work only with classes, not objects.
 
 =head1 METHODS TYPES
 

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 310;
+use Test::More tests => 311;
 
 BEGIN
 {
@@ -498,6 +498,9 @@ MyObject->clear_required_names;
 my @names = MyObject->required_names;
 ok(@names == 0, 'clear_required_names()');
 
+@names = MySubObject4->inheritable_items;
+is_deeply([ sort @names ], [ 'abase', 'bbase' ], 'inheritable_items() 1');
+
 #
 # inherited_set
 #
@@ -891,6 +894,8 @@ BEGIN
       },
     ],
 
+    inheritable_set => 'inheritable_item',
+
     inherited_set =>
     [
       valid_name =>
@@ -907,6 +912,8 @@ BEGIN
       },
     ],
   );
+
+  MyObject->add_inheritable_items(qw(abase bbase));
 
   package MySubObject;
   our @ISA = qw(MyObject);

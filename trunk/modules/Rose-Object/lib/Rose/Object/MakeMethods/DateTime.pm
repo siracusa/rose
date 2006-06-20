@@ -4,7 +4,7 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.011';
+our $VERSION = '0.81';
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
@@ -145,7 +145,7 @@ Rose::Object::MakeMethods::DateTime - Create methods that store DateTime objects
 
 =head1 DESCRIPTION
 
-C<Rose::Object::MakeMethods::DateTime> is a method maker that inherits
+L<Rose::Object::MakeMethods::DateTime> is a method maker that inherits
 from L<Rose::Object::MakeMethods>.  See the L<Rose::Object::MakeMethods>
 documentation to learn about the interface.  The method types provided
 by this module are described below.  All methods work only with
@@ -157,7 +157,7 @@ hash-based objects.
 
 =item B<datetime>
 
-Create get/set methods for scalar attributes that store C<DateTime>
+Create get/set methods for scalar attributes that store L<DateTime>
 objects.
 
 =over 4
@@ -179,9 +179,10 @@ C<get_set_init> interface. Defaults to the method name with the prefix
 C<init_> added.
 
 This method should return a value that can be parsed by
-L<Rose::DateTime::Util>'s the C<parse_date()> function. If the return
-value is a C<DateTime> object, it will have its time zone set (see the
-C<tz> option below) using C<DateTime>'s C<set_time_zone()> method.
+L<Rose::DateTime::Util>'s the L<parse_date()|Rose::DateTime::Util/parse_date>
+function. If the return value is a L<DateTime> object, it will have its time
+zone set (see the C<tz> option below) using L<DateTime>'s
+L<set_time_zone()|DateTime/set_time_zone> method.
 
 =item C<interface>
 
@@ -189,13 +190,13 @@ Chooses one of the two possible interfaces.  Defaults to C<get_set>.
 
 =item C<tz>
 
-The time zone of the C<DateTime> object to be stored.  If present, this
-value will be passed as the second argument to L<Rose::DateTime::Util>'s
-the C<parse_date()> function when creating C<DateTime> objects for
-storage. If absent, C<DateTime> objects will use the default time zone
-of the L<Rose::DateTime::Util> class, which is set by
-L<Rose::DateTime::Util>'s C<time_zone()> class method.  See the
-L<Rose::DateTime::Util> documentation for more information.
+The time zone of the L<DateTime> object to be stored.  If present, this value
+will be passed as the second argument to L<Rose::DateTime::Util>'s the
+L<parse_date()|Rose::DateTime::Util/parse_date> function when creating
+L<DateTime> objects for storage. If absent, L<DateTime> objects will use the
+default time zone of the L<Rose::DateTime::Util> class, which is set by
+L<Rose::DateTime::Util>'s L<time_zone()|Rose::DateTime::Util/time_zone> class
+method.  See the L<Rose::DateTime::Util> documentation for more information.
 
 =back
 
@@ -206,18 +207,19 @@ L<Rose::DateTime::Util> documentation for more information.
 =item C<get_set>
 
 Creates a get/set accessor method for an object attribute that stores a
-C<DateTime> object.
+L<DateTime> object.
 
 When called with a single argument, the argument is passed through
-L<Rose::DateTime::Util>'s C<parse_date()> function in order to create
-the C<DateTime> object that is stored.  The current value of the
-attribute is returned.  Passing a value that is not understood by
-L<Rose::DateTime::Util>'s C<parse_date()> function causes a fatal error.
+L<Rose::DateTime::Util>'s L<parse_date()|Rose::DateTime::Util/parse_date>
+function in order to create the L<DateTime> object that is stored.  The
+current value of the attribute is returned.  Passing a value that is not
+understood by L<Rose::DateTime::Util>'s
+L<parse_date()|Rose::DateTime::Util/parse_date> function causes a fatal error.
 
-When called with two arguments and the first argument is the string
-'format', then the second argument is taken as a format specifier which
-is passed to L<Rose::DateTime::Util>'s C<format_date()> function.  The
-formatted string is returned.  In other words, this:
+When called with two arguments and the first argument is the string 'format',
+then the second argument is taken as a format specifier which is passed to
+L<Rose::DateTime::Util>'s L<format_date()|Rose::DateTime::Util/format_date>
+function.  The formatted string is returned.  In other words, this:
 
     $obj->birthday(format => '%m/%d/%Y');
 
@@ -227,9 +229,9 @@ Is just a shortcut for this:
                                       '%m/%d/%Y');
 
 When called with two arguments and the first argument is the string
-'truncate', then the second argument is taken as a truncation specifier
-which is passed to C<DateTime>'s C<truncate()> method called on a clone
-of the existing C<DateTime> object.  The cloned, truncated C<DateTime>
+'truncate', then the second argument is taken as a truncation specifier which
+is passed to L<DateTime>'s L<truncate()|DateTime/truncate> method called on a
+clone of the existing L<DateTime> object.  The cloned, truncated L<DateTime>
 object is returned.  In other words, this:
 
     $obj->birthday(truncate => 'month');
@@ -243,13 +245,14 @@ first argument is not 'format' or 'truncate' will cause a fatal error.
 
 =item C<get_set_init> 
 
-Behaves like the C<get_set> interface unless the value of the attribute
-is undefined.  In that case, the method specified by the C<init_method>
-option is called, the return value is passed through
-L<Rose::DateTime::Util>'s C<parse_date()> function, and the attribute is
+Behaves like the C<get_set> interface unless the value of the attribute is
+undefined.  In that case, the method specified by the C<init_method> option is
+called, the return value is passed through L<Rose::DateTime::Util>'s
+L<parse_date()|Rose::DateTime::Util/parse_date> function, and the attribute is
 set to the return value.  An init method that returns a value that is not
-understood by L<Rose::DateTime::Util>'s C<parse_date()> function will
-cause a fatal error.
+understood by L<Rose::DateTime::Util>'s
+L<parse_date()|Rose::DateTime::Util/parse_date> function will cause a fatal
+error.
 
 =back
 

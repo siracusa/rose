@@ -2,7 +2,7 @@ package Rose::Class;
 
 use strict;
 
-our $VERSION = '0.011';
+our $VERSION = '0.81';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -32,15 +32,15 @@ Rose::Class - A very simple class base class.
 
 =head1 DESCRIPTION
 
-C<Rose::Class> is a generic base class for classes.  It provides a
+L<Rose::Class> is a generic base class for classes.  It provides a
 single class method (C<error>), but may be expanded further in the
 future.
 
-A class that inherits from C<Rose::Class> is not expected to allow
+A class that inherits from L<Rose::Class> is not expected to allow
 objects of that class to be instantiated, since the namespace for class
 and object methods is shared.  For example, it is common for
 L<Rose::Object>-derived classes to have C<error> methods, but this would
-conflict with the C<Rose::Class> method of the same name.
+conflict with the L<Rose::Class> method of the same name.
 
 =head1 CLASS METHODS
 
