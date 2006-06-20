@@ -37,7 +37,7 @@ WriteMakefile(NAME         => 'Rose::HTML::Objects',
                 'Image::Size'    => 0,
                 'Scalar::Util'   => 0,
                 'URI::Escape'    => 0,
-                'Rose::Object'   => '0.015',
+                'Rose::Object'   => '0.81',
                 'Rose::DateTime' => '0.0133',
                 'Rose::URI'      => '0.021',
               });
