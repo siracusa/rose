@@ -1,3 +1,7 @@
+0.72 (06.20.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added support for the time data type.
+
 0.71 (06.12.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed broken Storable support and documented serialization caveats.

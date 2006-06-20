@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 191);
+    Test::More->import(tests => 230);
   }
 }
 
@@ -261,6 +261,62 @@ is($d->nanoseconds, 3000, 'nanoseconds 1');
 
 is($db->format_interval($d), '@ 12 months 0.000003 seconds', 'nanoseconds 2');
 
+# Time vaues
+
+my $tc;
+
+ok($tc = $db->parse_time('12:34:56.123456789'), 'parse time 12:34:56.123456789');
+is($tc->as_string, '12:34:56.123456789', 'check time 12:34:56.123456789');
+is($db->format_time($tc), '12:34:56.123456789', 'format time 12:34:56.123456789');
+
+ok($tc = $db->parse_time('12:34:56.123456789 pm'), 'parse time 12:34:56.123456789 pm');
+is($tc->as_string, '12:34:56.123456789', 'check time 12:34:56.123456789 pm');
+is($db->format_time($tc), '12:34:56.123456789', 'format time 12:34:56.123456789 pm');
+
+ok($tc = $db->parse_time('12:34:56. A.m.'), 'parse time 12:34:56. A.m.');
+is($tc->as_string, '00:34:56', 'check time 12:34:56 am');
+is($db->format_time($tc), '00:34:56', 'format time 12:34:56 am');
+
+ok($tc = $db->parse_time('12:34:56 pm'), 'parse time 12:34:56 pm');
+is($tc->as_string, '12:34:56', 'check time 12:34:56 pm');
+is($db->format_time($tc), '12:34:56', 'format time 12:34:56 pm');
+
+ok($tc = $db->parse_time('2:34:56 pm'), 'parse time 2:34:56 pm');
+is($tc->as_string, '14:34:56', 'check time 14:34:56 pm');
+is($db->format_time($tc), '14:34:56', 'format time 14:34:56 pm');
+
+ok($tc = $db->parse_time('2:34 pm'), 'parse time 2:34 pm');
+is($tc->as_string, '14:34:00', 'check time 2:34 pm');
+is($db->format_time($tc), '14:34:00', 'format time 2:34 pm');
+
+ok($tc = $db->parse_time('2 pm'), 'parse time 2 pm');
+is($tc->as_string, '14:00:00', 'check time 2 pm');
+is($db->format_time($tc), '14:00:00', 'format time 2 pm');
+
+ok($tc = $db->parse_time('3pm'), 'parse time 3pm');
+is($tc->as_string, '15:00:00', 'check time 3pm');
+is($db->format_time($tc), '15:00:00', 'format time 3pm');
+
+ok($tc = $db->parse_time('4 p.M.'), 'parse time 4 p.M.');
+is($tc->as_string, '16:00:00', 'check time 4 p.M.');
+is($db->format_time($tc), '16:00:00', 'format time 4 p.M.');
+
+ok($tc = $db->parse_time('24:00:00'), 'parse time 24:00:00');
+is($tc->as_string, '24:00:00', 'check time 24:00:00');
+is($db->format_time($tc), '24:00:00', 'format time 24:00:00');
+
+ok($tc = $db->parse_time('24:00:00 PM'), 'parse time 24:00:00 PM');
+is($tc->as_string, '24:00:00', 'check time 24:00:00 PM');
+is($db->format_time($tc), '24:00:00', 'format time 24:00:00 PM');
+
+ok($tc = $db->parse_time('24:00'), 'parse time 24:00');
+is($tc->as_string, '24:00:00', 'check time 24:00');
+is($db->format_time($tc), '24:00:00', 'format time 24:00');
+
+ok(!defined $db->parse_time('24:00:00.000000001'), 'parse time fail 24:00:00.000000001');
+ok(!defined $db->parse_time('24:00:01'), 'parse time fail 24:00:01');
+ok(!defined $db->parse_time('24:01'), 'parse time fail 24:01');
+
 SKIP:
 {
   unless(lookup_ip($db->host))
@@ -285,7 +341,7 @@ SKIP:
   is($db->format_datetime(parse_date('12/31/2002 12:34:56.123456789', 'floating')), '2002-12-31 12:34:56.123456789', "format_datetime() floating");
 
   is($db->format_timestamp(parse_date('12/31/2002 12:34:56.12345', 'floating')), '2002-12-31 12:34:56.123450000', "format_timestamp() floating");
-  is($db->format_time(parse_date('12/31/2002 12:34:56', 'floating')), '12:34:56', "format_datetime() floating");
+  is($db->format_datetime(parse_date('12/31/2002 12:34:56', 'floating')), '2002-12-31 12:34:56', "format_datetime() floating");
 
   $db->server_time_zone('UTC');
 
@@ -293,7 +349,7 @@ SKIP:
   is($db->format_datetime(parse_date('12/31/2002 12:34:56', 'UTC')), '2002-12-31 12:34:56+0000', "format_datetime()");
 
   is($db->format_timestamp(parse_date('12/31/2002 12:34:56')), '2002-12-31 12:34:56', "format_timestamp()");
-  is($db->format_time(parse_date('12/31/2002 12:34:56')), '12:34:56', "format_datetime()");
+  is($db->format_datetime(parse_date('12/31/2002 12:34:56')), '2002-12-31 12:34:56', "format_datetime()");
 
   is($db->parse_date('12-31-2002'), parse_date('12/31/2002', 'UTC'),  "parse_date()");
   is($db->parse_datetime('2002-12-31 12:34:56'), parse_date('12/31/2002 12:34:56', 'UTC'),  "parse_datetime()");

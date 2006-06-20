@@ -6,6 +6,7 @@ use DBI;
 use Carp();
 use Bit::Vector::Overload;
 
+use Time::Clock;
 use Rose::DateTime::Util();
 
 use Rose::DB::Registry;
@@ -17,7 +18,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.71';
+our $VERSION = '0.72';
 
 our $Debug = 0;
 
@@ -1129,27 +1130,32 @@ sub parse_boolean
 # Date formatting
 
 sub format_date
-{  
-  return $_[1]  if($_[0]->validate_date_keyword($_[1]) || $_[1] =~ /^\w+\(.*\)$/);
-  return $_[0]->date_handler->format_date($_[1]);
+{
+  my($self, $date) = @_;
+  return $date  if($self->validate_date_keyword($date) || $date =~ /^\w+\(.*\)$/);
+  return $self->date_handler->format_date($date);
 }
 
 sub format_datetime
 {
-  return $_[1]  if($_[0]->validate_datetime_keyword($_[1]) || $_[1] =~ /^\w+\(.*\)$/);
-  return $_[0]->date_handler->format_datetime($_[1]);
+  my($self, $date) = @_;
+  return $date  if($self->validate_datetime_keyword($date) || $date =~ /^\w+\(.*\)$/);
+  return $self->date_handler->format_datetime($date);
 }
 
 sub format_time
-{  
-  return $_[1]  if($_[0]->validate_time_keyword($_[1])) || $_[1] =~ /^\w+\(.*\)$/;
-  return $_[0]->date_handler->format_time($_[1]);
+{
+  my($self, $time, $precision) = @_;
+  return $time  if($self->validate_time_keyword($time) || $time =~ /^\w+\(.*\)$/);
+  no warnings 'uninitialized';
+  return $time->format("%H:%M:%S%${precision}n");
 }
 
 sub format_timestamp
 {  
-  return $_[1]  if($_[0]->validate_timestamp_keyword($_[1]) || $_[1] =~ /^\w+\(.*\)$/);
-  return $_[0]->date_handler->format_timestamp($_[1]);
+  my($self, $date) = @_;
+  return $date  if($self->validate_timestamp_keyword($date) || $date =~ /^\w+\(.*\)$/);
+  return $self->date_handler->format_timestamp($date);
 }
 
 # Date parsing
@@ -1197,22 +1203,6 @@ sub parse_datetime
   return $dt;
 }
 
-sub parse_time
-{  
-  return $_[1]  if($_[0]->validate_time_keyword($_[1]));
-
-  my $dt;
-  eval { $dt = $_[0]->date_handler->parse_time($_[1]) };
-
-  if($@)
-  {
-    $_[0]->error("Could not parse time '$_[1]' - $@");
-    return undef;
-  }
-
-  return $dt;
-}
-
 sub parse_timestamp
 {  
   my($self, $value) = @_;
@@ -1233,6 +1223,43 @@ sub parse_timestamp
   }
 
   return $dt;
+}
+
+sub parse_time
+{
+  my($self, $value) = @_;
+
+  if(!defined $value || UNIVERSAL::isa($value, 'Time::Clock') || 
+     $self->validate_time_keyword($value) || $value =~ /^\w+\(.*\)$/)
+  {
+    return $value;
+  }
+
+  my $time;
+
+  eval 
+  {
+    $time = Time::Clock->new->parse($value);
+  };
+
+  if($@)
+  {
+    eval 
+    {
+      my $dt = $self->date_handler->parse_time($value);
+      # Using parse()/strftime() is faster than using the 
+      # Time::Clock constructor and the DateTime accessors.
+      $time = Time::Clock->new->parse($dt->strftime('%H:%M:%S.%N'));
+    };
+    
+    if($@)
+    {
+      $self->error("Could not parse time '$value' - $@");
+      return undef;
+    }
+  }
+
+  return $time;
 }
 
 sub parse_bitfield
