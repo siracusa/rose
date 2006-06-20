@@ -284,7 +284,7 @@ sub parse
     croak "Could not parse time '$time'";
   }
 
-  return 1;
+  return $self;
 }
 
 sub as_integer_seconds

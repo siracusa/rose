@@ -225,6 +225,216 @@ sub interval
   return \%methods;
 }
 
+sub time
+{
+  my($class, $name, $args) = @_;
+
+  my $key = $args->{'hash_key'} || $name;
+  my $interface = $args->{'interface'} || 'get_set';
+
+  my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
+
+  my $formatted_key = column_value_formatted_key($key);
+  my $default = $args->{'default'};
+
+  my %methods;
+
+  if($interface eq 'get_set')
+  {
+    $methods{$name} = sub
+    {
+      my $self = shift;
+
+      my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
+
+      if(@_)
+      {
+        if(defined $_[0])
+        {
+          if($self->{STATE_LOADING()})
+          {
+            $self->{$key} = undef;
+            $self->{$formatted_key,$driver} = $_[0];
+          }
+          else
+          {
+            my $time = $db->parse_time($_[0]);
+            Carp::croak $db->error  unless(defined $time);
+
+            if(ref $time)
+            {
+              $self->{$key} = $time;
+              $self->{$formatted_key,$driver} = undef;
+            }
+            else
+            {
+              $self->{$key} = undef;
+              $self->{$formatted_key,$driver} = $time;
+            }
+
+            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          }
+        }
+        else
+        {
+          $self->{$key} = undef;
+          $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+            unless($self->{STATE_LOADING()});
+        }
+      }
+
+      return  unless(defined wantarray);
+
+      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      {
+        my $time = $db->parse_time($default);
+        Carp::croak $db->error  unless(defined $time);
+
+        if(ref $time)
+        {
+          $self->{$key} = $time;
+          $self->{$formatted_key,$driver} = undef;
+        }
+        else
+        {
+          $self->{$key} = undef;
+          $self->{$formatted_key,$driver} = $time;
+        }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_IN_DB()});
+      }
+
+      if($self->{STATE_SAVING()})
+      {
+        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
+          ($self->{$formatted_key,$driver} ||= $db->format_time($self->{$key})) : undef;
+      }
+
+      return $self->{$key} ? $self->{$key} : 
+             $self->{$formatted_key,$driver} ? 
+             ($self->{$key} = $db->parse_time($self->{$formatted_key,$driver})) : undef;
+    };
+  }
+  elsif($interface eq 'get')
+  {
+    $methods{$name} = sub
+    {
+      my $self = shift;
+
+      my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
+
+      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      {
+        my $time = $db->parse_time($default);
+        Carp::croak $db->error  unless(defined $time);
+
+        if(ref $time)
+        {
+          $self->{$key} = $time;
+          $self->{$formatted_key,$driver} = undef;
+        }
+        else
+        {
+          $self->{$key} = undef;
+          $self->{$formatted_key,$driver} = $time;
+        }
+
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+      }
+
+      if($self->{STATE_SAVING()})
+      {
+        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
+          ($self->{$formatted_key,$driver} ||= $db->format_time($self->{$key})) : undef;
+      }
+
+      return $self->{$key} ? $self->{$key} : 
+             $self->{$formatted_key,$driver} ? 
+             ($self->{$key} = $db->parse_time($self->{$formatted_key,$driver})) : undef;
+    };
+  }
+  elsif($interface eq 'set')
+  {
+    $methods{$name} = sub
+    {
+      my $self = shift;
+
+      my $db = $self->db or die "Missing Rose::DB object attribute";
+      my $driver = $db->driver || 'unknown';
+
+      Carp::croak "Missing argument in call to $name"  unless(@_);
+
+      if(defined $_[0])
+      {
+        if($self->{STATE_LOADING()})
+        {
+          $self->{$key} = undef;
+          $self->{$formatted_key,$driver} = $_[0];
+        }
+        else
+        {
+          my $time = $db->parse_time($_[0]);
+          Carp::croak $db->error  unless(defined $time);
+
+          if(ref $time)
+          {
+            $self->{$key} = $time;
+            $self->{$formatted_key,$driver} = undef;
+          }
+          else
+          {
+            $self->{$key} = undef;
+            $self->{$formatted_key,$driver} = $time;
+          }
+        }
+      }
+      else
+      {
+        $self->{$key} = undef;
+        $self->{$formatted_key,$driver} = undef;
+      }
+
+      $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+
+      return  unless(defined wantarray);
+
+      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      {
+        my $time = $db->parse_time($default);
+        Carp::croak $db->error  unless(defined $time);
+
+        if(ref $time)
+        {
+          $self->{$key} = $time;
+          $self->{$formatted_key,$driver} = undef;
+        }
+        else
+        {
+          $self->{$key} = undef;
+          $self->{$formatted_key,$driver} = $time;
+        }
+      }
+
+      if($self->{STATE_SAVING()})
+      {
+        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
+          ($self->{$formatted_key,$driver} ||= $db->format_time($self->{$key})) : undef;
+      }
+
+      return $self->{$key} ? $self->{$key} : 
+             $self->{$formatted_key,$driver} ? 
+             ($self->{$key} = $db->parse_time($self->{$formatted_key,$driver})) : undef;
+    };
+  }
+  else { Carp::croak "Unknown interface: $interface" }
+
+  return \%methods;
+}
+
 1;
 
 __END__

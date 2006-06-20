@@ -154,6 +154,7 @@ __PACKAGE__->column_type_classes
   'decimal'   => 'Rose::DB::Object::Metadata::Column::Numeric',
   'float'     => 'Rose::DB::Object::Metadata::Column::Float',
 
+  'time'      => 'Rose::DB::Object::Metadata::Column::Time',
   'interval'  => 'Rose::DB::Object::Metadata::Column::Interval',
 
   'date'      => 'Rose::DB::Object::Metadata::Column::Date',
@@ -3992,6 +3993,7 @@ The default mapping of type names to class names is:
   decimal   => Rose::DB::Object::Metadata::Column::Numeric
   float     => Rose::DB::Object::Metadata::Column::Float
 
+  time      => Rose::DB::Object::Metadata::Column::Time
   interval  => Rose::DB::Object::Metadata::Column::Interval
 
   date      => Rose::DB::Object::Metadata::Column::Date
