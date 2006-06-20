@@ -1,3 +1,9 @@
+0.81 (06.20.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a bug in the inheritable_set method maker that caused
+      set values not to be inherited by subclasses more than one
+      superclass away.
+
 0.80 (03.07.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed a typo in the documentation.
