@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 48;
+use Test::More tests => 49;
 
 use Time::Clock;
 
@@ -221,3 +221,6 @@ $t->parse('08:45:45.234567890');
 $t->subtract(nanoseconds => 1_234_567_890);
 is($t->as_string, '08:45:44', 'subtract 0.234567890');
 
+$t->parse('24:00');
+$t->subtract(hours => 3, minutes => 2, seconds => 1, nanoseconds => 54321);
+is($t->as_string, '20:57:58.999945679', 'subtract 03:02:01.000054321');

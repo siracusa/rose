@@ -12,6 +12,9 @@ use overload
    fallback => 1,
 );
 
+# Allow an hour value of 24
+our $Allow_Hour_24 = 0;
+
 use constant NANOSECONDS_IN_A_SECOND => 1_000_000_000;
 use constant SECONDS_IN_A_MINUTE     => 60;
 use constant SECONDS_IN_AN_HOUR      => SECONDS_IN_A_MINUTE * 60;
@@ -69,8 +72,16 @@ sub hour
   {
     my $hour = shift;
 
-    croak "hour must be between 0 and 23"  
-      unless(!defined $hour || ($hour >= 0 && $hour <= 23));
+    if($Allow_Hour_24)
+    {
+      croak "hour must be between 0 and 24"  
+        unless(!defined $hour || ($hour >= 0 && $hour <= 24));
+    }
+    else
+    {
+      croak "hour must be between 0 and 23"  
+        unless(!defined $hour || ($hour >= 0 && $hour <= 23));
+    }
 
     return $self->{'hour'} = $hour;
   }
@@ -229,7 +240,25 @@ sub parse
     $
   }x))
   {
-    $self->hour($hour);
+    # Special case to allow times of 24:00:00, which the Postgres
+    # database considers valid (presumably in order to account for
+    # leap seconds)
+    if($hour == 24)
+    {
+      no warnings 'uninitialized';
+      if($min == 0 && $sec == 0 && $fsec == 0)
+      {
+        local $Allow_Hour_24 = 1;
+        $self->hour($hour);
+      }
+      else
+      {
+        croak "Could not parse time '$time' - an hour value of 24 is only ",
+              "allowed if minutes, seconds, and nanoseconds are all zero"  
+      }
+    }
+    else { $self->hour($hour) }
+
     $self->minute($min);
     $self->second($sec);
     $self->ampm($ampm);
