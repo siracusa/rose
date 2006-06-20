@@ -20,6 +20,6 @@ WriteMakefile(NAME         => 'Rose::DB::Object',
                 #'Scalar::Util::Clone'  => 0.04,
                 'Rose::DateTime::Util'  => 0.53,
                 'Rose::Object'          => 0.81,
-                'Rose::DB'              => 0.71,
+                'Rose::DB'              => 0.72,
               },
               clean => { FILES => "t/*.db" });
