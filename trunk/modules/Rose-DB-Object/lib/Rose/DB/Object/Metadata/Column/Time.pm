@@ -27,6 +27,16 @@ foreach my $type (__PACKAGE__->available_method_types)
 
 sub type { 'time' }
 
+sub init_with_dbi_column_info
+{
+  my($self, $col_info) = @_;
+
+  $self->SUPER::init_with_dbi_column_info($col_info);
+  $self->precision($col_info->{'TIME_PRECISION'});
+
+  return;
+}
+
 sub should_inline_value
 {
   #my($self, $db, $value) = @_;
