@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 17) + 3;
+use Test::More tests => 1 + (5 * 22) + 3;
 
 BEGIN 
 {
@@ -42,7 +42,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     unless($Have{$db_type})
     {
-      skip("$db_type tests", 17 + scalar @{$Reserved_Words{$db_type} ||= []});
+      skip("$db_type tests", 22 + scalar @{$Reserved_Words{$db_type} ||= []});
     }
   }
 
@@ -108,6 +108,23 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   }
 
   is($p->db->class, 'Rose::DB', "db 1 - $db_type");
+
+  if($db_type =~ /^pg/)
+  {
+    ok($p->can('tee_time') && $p->can('tee_time5'), "time methods - $db_type");
+    is($p->meta->column('tee_time5')->precision, 5, "time precision check 1 - $db_type");
+    is($p->meta->column('tee_time')->precision || 0, 0, "time precision check 2 - $db_type");
+    is($p->tee_time5->as_string, '12:34:56.12345', "time default 1 - $db_type");
+    is($p->meta->column('tee_time5')->default, '12:34:56.12345', "time default 2 - $db_type");
+  }
+  else
+  {
+    ok(!$p->can('tee_time') && !$p->can('tee_time5'), "time methods - $db_type");
+    ok(!$p->meta->column('tee_time5'), "time precision check 1 - $db_type");
+    ok(!$p->meta->column('tee_time'), "time precision check 2 - $db_type");
+    ok(1, "time default 1 - $db_type");
+    ok(1, "time default 2 - $db_type");
+  }
 
   OBJECT_CLASS:
   {
@@ -271,6 +288,9 @@ CREATE TABLE products
   status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
             CHECK(status IN ('inactive', 'active', 'defunct')),
 
+  tee_time      TIME,
+  tee_time5     TIME(5) DEFAULT '12:34:56.12345',
+
   date_created  TIMESTAMP NOT NULL DEFAULT NOW(),
   release_date  TIMESTAMP,
 
@@ -353,6 +373,9 @@ CREATE TABLE Rose_db_object_private.products
 
   status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
             CHECK(status IN ('inactive', 'active', 'defunct')),
+
+  tee_time      TIME,
+  tee_time5     TIME(5) DEFAULT '12:34:56.12345',
 
   date_created  TIMESTAMP NOT NULL DEFAULT NOW(),
   release_date  TIMESTAMP,
