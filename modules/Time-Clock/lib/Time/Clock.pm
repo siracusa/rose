@@ -12,6 +12,9 @@ use overload
    fallback => 1,
 );
 
+eval { require Time::HiRes };
+our $Have_HiRes_Time = $@ ? 0 : 1;
+
 # Allow an hour value of 24
 our $Allow_Hour_24 = 0;
 
@@ -278,6 +281,18 @@ sub parse
     }
     
     $self->nanosecond($fsec);
+  }
+  elsif($time eq 'now')
+  {
+    if($Have_HiRes_Time)
+    {
+      (my $fsecs = Time::HiRes::time()) =~ s/^.*\.//;
+      return $self->parse(sprintf("%d:%02d:%02d.$fsecs", (localtime(time))[2,1,0]));
+    }
+    else
+    {
+      return $self->parse(sprintf('%d:%02d:%02d', (localtime(time))[2,1,0]));
+    }
   }
   else
   {

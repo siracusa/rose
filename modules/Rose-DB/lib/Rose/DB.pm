@@ -1147,7 +1147,7 @@ sub format_time
 {
   my($self, $time, $precision) = @_;
   return $time  if($self->validate_time_keyword($time) || $time =~ /^\w+\(.*\)$/);
-  no warnings 'uninitialized';
+  $precision ||= '';
   return $time->format("%H:%M:%S%${precision}n");
 }
 
@@ -1244,7 +1244,7 @@ sub parse_time
 
   if($@)
   {
-    eval 
+    eval
     {
       my $dt = $self->date_handler->parse_time($value);
       # Using parse()/strftime() is faster than using the 
@@ -1254,7 +1254,7 @@ sub parse_time
     
     if($@)
     {
-      $self->error("Could not parse time '$value' - $@");
+      $self->error("Could not parse time '$value' - Time::Clock::parse() failed and $@");
       return undef;
     }
   }

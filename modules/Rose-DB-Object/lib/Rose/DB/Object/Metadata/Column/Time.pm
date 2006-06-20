@@ -30,6 +30,7 @@ sub type { 'time' }
 sub should_inline_value
 {
   #my($self, $db, $value) = @_;
+  no warnings 'uninitialized';
   return ($_[1]->validate_time_keyword($_[2]) || $_[2] =~ /^\w+\(.*\)$/) ? 1 : 0;
 }
 

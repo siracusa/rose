@@ -236,6 +236,7 @@ sub time
 
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
+  my $precision = $args->{'precision'};
 
   my %methods;
 
@@ -310,7 +311,7 @@ sub time
       if($self->{STATE_SAVING()})
       {
         return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
-          ($self->{$formatted_key,$driver} ||= $db->format_time($self->{$key})) : undef;
+          ($self->{$formatted_key,$driver} ||= $db->format_time($self->{$key}, $precision)) : undef;
       }
 
       return $self->{$key} ? $self->{$key} : 
@@ -349,7 +350,7 @@ sub time
       if($self->{STATE_SAVING()})
       {
         return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
-          ($self->{$formatted_key,$driver} ||= $db->format_time($self->{$key})) : undef;
+          ($self->{$formatted_key,$driver} ||= $db->format_time($self->{$key}, $precision)) : undef;
       }
 
       return $self->{$key} ? $self->{$key} : 
@@ -422,7 +423,7 @@ sub time
       if($self->{STATE_SAVING()})
       {
         return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
-          ($self->{$formatted_key,$driver} ||= $db->format_time($self->{$key})) : undef;
+          ($self->{$formatted_key,$driver} ||= $db->format_time($self->{$key}, $precision)) : undef;
       }
 
       return $self->{$key} ? $self->{$key} : 
