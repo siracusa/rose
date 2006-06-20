@@ -2,9 +2,12 @@
 
 use strict;
 
-use Test::More tests => 27;
+use Test::More tests => 31;
 
 use Time::Clock;
+
+eval { require Time::HiRes };
+our $Have_HiRes_Time = $@ ? 0 : 1;
 
 my $t = Time::Clock->new;
 
@@ -52,3 +55,21 @@ ok($@ =~ /only allowed if/,  'parse fail 24:00:01');
 
 eval { $t->parse('24:01') };
 ok($@ =~ /only allowed if/,  'parse fail 24:01');
+
+
+if($Have_HiRes_Time)
+{
+  ok($t->parse('now'), 'parse now hires');
+  ok($t->as_string =~ /^\d\d:\d\d:\d\d\.\d+$/, 'now hires');
+  
+  local $Time::Clock::Have_HiRes_Time = 0;
+  ok($t->parse('now'), 'parse now lowres');
+  ok($t->as_string =~ /^\d\d:\d\d:\d\d$/, 'check now lowres');
+}
+else
+{
+  ok($t->parse('now'), 'parse now hires (skipped)');
+  ok($t->as_string =~ /^\d\d:\d\d:\d\d\.\d+$/, 'now hires (skipped)');
+  ok($t->parse('now'), 'parse now');
+  ok($t->as_string =~ /^\d\d:\d\d:\d\d$/, 'check now lowres');
+}
