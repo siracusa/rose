@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 49);
+    Test::More->import(tests => 48);
   }
 }
 
@@ -90,7 +90,7 @@ is($db->format_date('Foo(Bar)'), 'Foo(Bar)', 'format_date (Foo(Bar))');
 
 ok(!$db->validate_time_keyword($rand), "validate_time_keyword ($rand)");
 
-is($db->format_time('Foo(Bar)'), 'Foo(Bar)', 'format_time (Foo(Bar))');
+is($db->format_time($db->parse_time('Foo(Bar)')), 'Foo(Bar)', 'format_time (Foo(Bar))');
 
 is($db->format_array([ 'a', 'b' ]), q({"a","b"}), 'format_array() 1');
 is($db->format_array('a', 'b'), q({"a","b"}), 'format_array() 2');
@@ -106,11 +106,11 @@ SKIP:
 {
   unless(lookup_ip($db->host))
   {
-    skip("Host '@{[$db->host]}' not found", 19);
+    skip("Host '@{[$db->host]}' not found", 18);
   }
 
   eval { $db->connect };
-  skip("Could not connect to db 'test', 'mysql' - $@", 19)  if($@);
+  skip("Could not connect to db 'test', 'mysql' - $@", 18)  if($@);
   $dbh = $db->dbh;
 
   is($db->domain, 'test', "domain()");
@@ -126,7 +126,6 @@ SKIP:
   is($db->format_datetime(parse_date('12/31/2002 12:34:56', 'floating')), '2002-12-31 12:34:56', "format_datetime() floating");
 
   is($db->format_timestamp(parse_date('12/31/2002 12:34:56', 'floating')), '2002-12-31 12:34:56', "format_timestamp() floating");
-  is($db->format_time(parse_date('12/31/2002 12:34:56', 'floating')), '12:34:56', "format_time() floating");
 
   if($db->database_version >= 5_000_003)
   {

@@ -7,7 +7,7 @@ use DateTime::Format::Pg;
 
 use Rose::DB;
 
-our $VERSION = '0.732';
+our $VERSION = '0.72';
 
 our $Debug = 0;
 
@@ -583,7 +583,7 @@ Returns true if STRING is a valid keyword for the PostgreSQL "date" data type.  
     tomorrow
     yesterday
 
-The keywords are case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid date keyword.
+The keywords are case sensitive.  Any string that looks like a function call (matches C</^\w+\(.*\)$/>) is also considered a valid date keyword.
 
 =item B<validate_datetime_keyword STRING>
 
@@ -598,7 +598,16 @@ Returns true if STRING is a valid keyword for the PostgreSQL "datetime" data typ
     tomorrow
     yesterday
 
-The keywords are case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid datetime keyword.
+The keywords are case sensitive.  Any string that looks like a function call (matches C</^\w+\(.*\)$/>) is also considered a valid datetime keyword.
+
+=item B<validate_time_keyword STRING>
+
+Returns true if STRING is a valid keyword for the PostgreSQL "time" data type, false otherwise.  Valid timestamp keywords are:
+
+    allballs
+    now
+
+The keywords are case sensitive.  Any string that looks like a function call (matches C</^\w+\(.*\)$/>) is also considered a valid timestamp keyword.
 
 =item B<validate_timestamp_keyword STRING>
 
@@ -613,7 +622,7 @@ Returns true if STRING is a valid keyword for the PostgreSQL "timestamp" data ty
     tomorrow
     yesterday
 
-The keywords are case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid timestamp keyword.
+The keywords are case sensitive.  Any string that looks like a function call (matches C</^\w+\(.*\)$/>) is also considered a valid timestamp keyword.
 
 =back
 
