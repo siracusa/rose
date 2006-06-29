@@ -1,4 +1,4 @@
-0.732 (06.20.2006) - John Siracusa <siracusa@mindspring.com>
+0.732 (06.29.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added the Time column type.
     * Fixed a bug that caused the Loader to refuse to use empty or 
@@ -7,6 +7,7 @@
       calls to the setup() method.
     * Removed redundant @ISA declaration from generated Manager classes.
     * XXX: document manager_base_class(es) Loader methods.
+    * XXX: document changes_only class default and insert param
 
 0.731 (06.12.2006) - John Siracusa <siracusa@mindspring.com>
 
