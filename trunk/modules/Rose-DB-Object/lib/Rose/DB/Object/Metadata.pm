@@ -62,6 +62,7 @@ use Rose::Object::MakeMethods::Generic
     default_load_speculative    => { default => 0 },
     auto_load_related_classes   => { default => 1 },
     default_update_changes_only => { default => 0 },
+    default_insert_changes_only => { default => 0 },
   ],
 
   array =>
@@ -3055,6 +3056,41 @@ sub insert_sql
     "\n)";
 }
 
+sub insert_changes_only_sql
+{
+  my($self, $obj, $db) = @_;
+
+  my $modified = $obj->{MODIFIED_COLUMNS()} || {};
+  my @modified = grep { $modified->{$_->{'name'}} || $_->default_exists } $self->columns;
+
+  unless(@modified)
+  {
+    # Make a last-ditch attempt to insert with no modified columns
+    # using the DEFAULT keyword on an arbitrary column.  This works 
+    # in MySQL and Postgres.
+    if($db->supports_arbitrary_defaults_on_insert)
+    {
+      return 
+        'INSERT INTO ' . $self->fq_table_sql($db) . ' (' .
+        ($self->columns)[-1]->name_sql($db) . ') VALUES (DEFAULT)',
+        [];
+    }
+    else
+    {
+      Carp::croak "Cannot insert row into table '", $self->table, 
+                  "' - No columns have modified or default values";
+    }
+  }
+
+  no warnings;
+  return ($self->{'insert_changes_only_sql_prefix'}{$db->{'id'}} ||=
+    'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n") .
+    join(",\n", map { $_->name_sql($db) } @modified) .
+    "\n)\nVALUES\n(\n" . 
+    join(",\n", map { $_->insert_placeholder_sql($db) } @modified) . "\n)",
+    [ map { my $m = $_->accessor_method_name; $obj->$m() } @modified ];
+}
+
 sub insert_columns_placeholders_sql
 {
   my($self, $db) = @_;
@@ -3064,15 +3100,16 @@ sub insert_columns_placeholders_sql
 
 sub insert_and_on_duplicate_key_update_sql
 {
-  my($self, $obj, $db) = @_;
+  my($self, $obj, $db, $changes_only) = @_;
 
   my(@columns, @names, @bind);
 
   if($obj->{STATE_IN_DB()})
   {
-    @columns =
-      grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
-      $self->columns;
+    @columns = $changes_only ?
+      (map { $self->column($_) } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
+      (grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
+       $self->columns);
 
     @names = map { $_->name_sql($db) } @columns;
 
@@ -3107,9 +3144,10 @@ sub insert_and_on_duplicate_key_update_sql
       }
     }
 
-    @columns = 
-      grep { !$skip{"$_"} && (!$_->{'lazy'} || 
-             $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns;
+    @columns = $changes_only ?
+      (map { $self->column($_) } grep { !$skip{"$_"} } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
+      (grep { !$skip{"$_"} && (!$_->{'lazy'} || 
+              $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns);
 
     @names = map { $_->name_sql($db) } @columns;
 
@@ -3138,12 +3176,6 @@ sub insert_and_on_duplicate_key_update_sql
 sub insert_sql_with_inlining
 {
   my($self, $obj) = @_;
-
-  unless(@_ > 1)
-  {
-    Carp::croak 'Missing required object argument to ',
-                __PACKAGE__, '::insert_sql_with_inlining()'
-  }
 
   my $db = $obj->db or Carp::croak "Missing db";
 
@@ -3178,15 +3210,16 @@ sub insert_sql_with_inlining
 
 sub insert_and_on_duplicate_key_update_with_inlining_sql
 {
-  my($self, $obj, $db) = @_;
+  my($self, $obj, $db, $changes_only) = @_;
 
   my(@columns, @names);
 
   if($obj->{STATE_IN_DB()})
   {
-    @columns =
-      grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
-      $self->columns;
+    @columns = $changes_only ?
+      (map { $self->column($_) } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
+      (grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
+       $self->columns);
 
     @names = map { $_->name_sql($db) } @columns;
   }
@@ -3215,9 +3248,10 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
       }
     }
 
-    @columns = 
-      grep { !$skip{"$_"} && (!$_->{'lazy'} || 
-             $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns;
+    @columns = $changes_only ?
+      (map { $self->column($_) } grep { !$skip{"$_"} } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
+      (grep { !$skip{"$_"} && (!$_->{'lazy'} || 
+              $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns);
 
     @names = map { $_->name_sql($db) } @columns;
   }
@@ -3249,6 +3283,62 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
     "ON DUPLICATE KEY UPDATE\n" .
     join(",\n", map { "$_->[0] = $_->[1]" } @places),
     [ @bind, @bind ];
+}
+
+sub insert_changes_only_sql_with_inlining
+{
+  my($self, $obj) = @_;
+
+  my $db = $obj->db or Carp::croak "Missing db";
+
+  my $modified = $obj->{MODIFIED_COLUMNS()} || {};
+  my @modified = grep { $modified->{$_->{'name'}} || $_->default_exists } $self->columns;
+
+  unless(@modified)
+  {
+    # Make a last-ditch attempt to insert with no modified columns
+    # using the DEFAULT keyword on an arbitrary column.  This works 
+    # in MySQL and Postgres.
+    if($db->supports_arbitrary_defaults_on_insert)
+    {
+      return 
+        'INSERT INTO ' . $self->fq_table_sql($db) . ' (' .
+        ($self->columns)[-1]->name_sql($db) . ') VALUES (DEFAULT)',
+        [];
+    }
+    else
+    {
+      Carp::croak "Cannot insert row into table '", $self->table, 
+                  "' - No columns have modified or default values";
+    }
+  }
+
+  my @bind;
+  my @places;
+
+  foreach my $column (@modified)
+  {
+    my $method = $self->column_accessor_method_name($column->name);
+    my $value  = $obj->$method();
+
+    if($column->should_inline_value($db, $value))
+    {
+      push(@places, "  $value");
+    }
+    else
+    {
+      push(@places, $column->insert_placeholder_sql($db));
+      push(@bind, $value);
+    }
+  }
+
+  return 
+  (
+    'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
+    join(",\n", map { $_->name_sql($db) } @modified) .
+    "\n)\nVALUES\n(\n" . join(",\n", @places) . "\n)",
+    \@bind
+  );
 }
 
 sub delete_sql
@@ -3347,6 +3437,7 @@ sub _clear_table_generated_values
   $self->{'primary_key_sequence_names'} = undef;
   $self->{'insert_sql'}        = undef;
   $self->{'insert_sql_with_inlining_start'} = undef;
+  $self->{'insert_changes_only_sql_prefix'} = undef;
   $self->{'update_sql_prefix'} = undef;
   $self->{'update_sql_with_inlining_start'} = undef;
   $self->{'update_all_sql'}    = undef;
@@ -3387,6 +3478,7 @@ sub _clear_column_generated_values
   $self->{'insert_sql'}             = undef;
   $self->{'insert_sql_with_inlining_start'} = undef;
   $self->{'update_sql_with_inlining_start'} = undef;
+  $self->{'insert_changes_only_sql_prefix'} = undef;
   $self->{'delete_sql'}             = undef;
   $self->{'insert_columns_placeholders_sql'} = undef;
 }
