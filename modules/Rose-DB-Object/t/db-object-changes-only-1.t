@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 455;
+use Test::More tests => 481;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 204)  unless($HAVE_PG);
+  skip("Postgres tests", 224)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -334,6 +334,39 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $o->bint3(5);
   eval { $o->bint3(7) };
   ok($@, "bigint 5 - $db_type");
+
+  #local $Rose::DB::Object::Debug = 1;  
+  $o = MyPgObject2->new->save(changes_only => 1);
+  $o = MyPgObject2->new(id => $o->id)->load;
+  
+  is($o->num, 123, "insert changes only 1 - $db_type");
+  is($o->flag, 2, "insert changes only 2 - $db_type");
+
+  $o = MyPgObject2->new(flag => 7)->save(changes_only => 1);
+  $o = MyPgObject2->new(id => $o->id)->load;
+  
+  is($o->num, 123, "insert changes only 3 - $db_type");
+  is($o->flag, 7, "insert changes only 4 - $db_type");
+
+  #local $Rose::DB::Object::Debug = 1;  
+  $o = MyPgObject3->new->save;
+  $o = MyPgObject3->new(id => $o->id)->load;
+  
+  is($o->num, 123, "insert changes only 5 - $db_type");
+  is($o->flag, 1, "insert changes only 6 - $db_type");
+
+  $o = MyPgObject2->new(flag => 7)->save(changes_only => 1);
+  $o = MyPgObject2->new(id => $o->id)->load;
+  
+  is($o->num, 123, "insert changes only 7 - $db_type");
+  is($o->flag, 7, "insert changes only 8 - $db_type");
+
+  MyPgObject3->meta->allow_inline_column_values(1);
+  $o = MyPgObject3->new(dt => 'now()')->save(changes_only => 1);
+  $o = MyPgObject3->new(id => $o->id)->load;
+
+  is($o->num, 123, "insert changes only 9 - $db_type");
+  is($o->flag, 1, "insert changes only 10 - $db_type");
 }
 
 #
@@ -342,7 +375,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 103)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 105)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -613,6 +646,13 @@ SKIP: foreach my $db_type ('mysql')
 
   is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1980-05-06 12:34:56', "epoch 2 - $db_type");
   is($o->hiepoch(format => '%Y-%m-%d %H:%M:%S.%6N'), '1999-11-30 21:30:00.123456', "epoch hires 2 - $db_type");
+
+  local $Rose::DB::Object::Debug = 1;  
+  $o = MyMySQLObject3->new->save;
+  $o = MyMySQLObject3->new(id => $o->id)->load;
+  
+  is($o->num, 123, "insert changes only 5 - $db_type");
+  is($o->flag, 1, "insert changes only 6 - $db_type");
 }
 
 #
@@ -829,7 +869,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 73)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 77)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -1020,6 +1060,19 @@ SKIP: foreach my $db_type ('sqlite')
   ok(!$o->load(speculative => 1), "load() speculative explicit 2 - $db_type");
   eval { $o->load(speculative => 0) };
   ok($@, "load() non-speculative explicit 2 - $db_type");
+
+  #local $Rose::DB::Object::Debug = 1;  
+  $o = MySQLiteObject3->new->save;
+  $o = MySQLiteObject3->new(id => $o->id)->load;
+  
+  is($o->num, 123, "insert changes only 1 - $db_type");
+  is($o->flag, 2, "insert changes only 2 - $db_type");
+
+  $o = MySQLiteObject3->new(flag => 7)->save;
+  $o = MySQLiteObject3->new(id => $o->id)->load;
+  
+  is($o->num, 123, "insert changes only 1 - $db_type");
+  is($o->flag, 7, "insert changes only 2 - $db_type");
 }
 
 BEGIN
@@ -1045,7 +1098,11 @@ BEGIN
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
       $dbh->do('DROP TABLE rose_db_object_test');
+      $dbh->do('DROP TABLE rose_db_object_test2');
+      $dbh->do('DROP TABLE rose_db_object_test3');
       $dbh->do('DROP TABLE rose_db_object_private.rose_db_object_test');
+      $dbh->do('DROP TABLE rose_db_object_private.rose_db_object_test2');
+      $dbh->do('DROP TABLE rose_db_object_private.rose_db_object_test3');
       $dbh->do('DROP TABLE rose_db_object_chkpass_test');
       $dbh->do('CREATE SCHEMA rose_db_object_private');
     }
@@ -1122,6 +1179,46 @@ CREATE TABLE rose_db_object_private.rose_db_object_test
 )
 EOF
 
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test2
+(
+  id     SERIAL PRIMARY KEY,
+  num    INT DEFAULT 123,
+  flag   INT DEFAULT 1,
+  f2     INT
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_private.rose_db_object_test2
+(
+  id     SERIAL PRIMARY KEY,
+  num    INT DEFAULT 123,
+  flag   INT DEFAULT 1,
+  f2     INT
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test3
+(
+  id     SERIAL PRIMARY KEY,
+  num    INT DEFAULT 123,
+  flag   INT DEFAULT 1,
+  dt     TIMESTAMP
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_private.rose_db_object_test3
+(
+  id     SERIAL PRIMARY KEY,
+  num    INT DEFAULT 123,
+  flag   INT DEFAULT 1,
+  dt     TIMESTAMP
+)
+EOF
+
     $dbh->disconnect;
 
     # Create test subclass
@@ -1190,6 +1287,37 @@ EOF
     Test::More::ok(!defined MyPgObject->meta->column('k1')->primary_key_position, 'primary_key_position 3 - pg');
 
     sub init_bint3 { '9223372036854775000' }
+
+    package MyPgObject2;
+    our @ISA = qw(Rose::DB::Object);
+    sub init_db { Rose::DB->new('pg') }
+    MyPgObject2->meta->setup
+    (
+      table   => 'rose_db_object_test2',
+      columns =>
+      [
+        id   => { type => 'serial', primary_key => 1 },
+        num  => { type => 'int' }, # default is 123
+        flag => { type => 'int', default => 2 },
+        f2   => { type => 'int' },
+      ],
+    );
+
+    package MyPgObject3;
+    our @ISA = qw(Rose::DB::Object);
+    sub init_db { Rose::DB->new('pg') }
+    MyPgObject3->meta->setup
+    (
+      table   => 'rose_db_object_test3',
+      columns =>
+      [
+        id   => { type => 'serial', primary_key => 1 },
+        num  => { type => 'int' }, # default is 123
+        flag => { type => 'int' }, # default is 1
+        dt   => { type => 'timestamp' },
+      ],
+      default_insert_changes_only => 1,
+    );
   }
 
   #
@@ -1215,6 +1343,7 @@ EOF
       local $dbh->{'PrintError'} = 0;
       $dbh->do('DROP TABLE rose_db_object_test');
       $dbh->do('DROP TABLE rose_db_object_test2');
+      $dbh->do('DROP TABLE rose_db_object_test3');
     }
 
     # MySQL 5.0.3 or later has a completely stupid "native" BIT type
@@ -1267,6 +1396,14 @@ CREATE TABLE rose_db_object_test2
   name           VARCHAR(32),
 
   UNIQUE(k1, k2)
+)
+EOF
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test3
+(
+  id     INT AUTO_INCREMENT PRIMARY KEY,
+  num    INT DEFAULT 123,
+  flag   INT DEFAULT 1
 )
 EOF
 
@@ -1368,6 +1505,21 @@ EOF
 
         return $k1, $k2;
       },
+    );
+
+    package MyMySQLObject3;
+    our @ISA = qw(Rose::DB::Object);
+    sub init_db { Rose::DB->new('mysql') }
+    MyMySQLObject3->meta->setup
+    (
+      table   => 'rose_db_object_test3',
+      columns =>
+      [
+        id   => { type => 'serial', primary_key => 1 },
+        num  => { type => 'int' }, # default is 123
+        flag => { type => 'int' }, # default is 1
+      ],
+      default_insert_changes_only => 1,
     );
   }
 
@@ -1497,6 +1649,7 @@ EOF
       local $dbh->{'PrintError'} = 0;
       $dbh->do('DROP TABLE rose_db_object_test');
       $dbh->do('DROP TABLE rose_db_object_test2');
+      $dbh->do('DROP TABLE rose_db_object_test3');
     }
 
     $dbh->do(<<"EOF");
@@ -1516,6 +1669,7 @@ CREATE TABLE rose_db_object_test
   start          DATE,
   save           INT,
   nums           VARCHAR(255),
+  nonmod         VARCHAR(255) DEFAULT 'defmod',
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1531,6 +1685,15 @@ CREATE TABLE rose_db_object_test2
   name           VARCHAR(32),
 
   UNIQUE(k1, k2)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test3
+(
+  id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  num    INT DEFAULT 123,
+  flag   INT DEFAULT 1
 )
 EOF
 
@@ -1564,6 +1727,7 @@ EOF
       start    => { type => 'date', default => '12/24/1980', lazy => 1 },
       save     => { type => 'scalar' },
       nums     => { type => 'array' },
+      nonmod   => { type => 'varchar', length => 255 },
       bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },
       decs     => { type => 'decimal', precision => 10, scale => 2 },
       #last_modified => { type => 'timestamp' },
@@ -1637,6 +1801,21 @@ EOF
 
       return $k1, $k2;
     });
+
+    package MySQLiteObject3;
+    our @ISA = qw(Rose::DB::Object);
+    sub init_db { Rose::DB->new('sqlite') }
+    MySQLiteObject3->meta->setup
+    (
+      table   => 'rose_db_object_test3',
+      columns =>
+      [
+        id   => { type => 'serial', primary_key => 1 },
+        num  => { type => 'int' }, # default is 123
+        flag => { type => 'int', default => 2 },
+      ],
+      default_insert_changes_only => 1,
+    );
   }
 }
 
@@ -1652,7 +1831,11 @@ END
 
     $dbh->do('DROP TABLE rose_db_object_test');
     $dbh->do('DROP TABLE rose_db_object_private.rose_db_object_test');
-    $dbh->do('DROP SCHEMA rose_db_object_private CASCADE');
+    $dbh->do('DROP TABLE rose_db_object_test2');
+    $dbh->do('DROP TABLE rose_db_object_test3');
+    $dbh->do('DROP TABLE rose_db_object_private.rose_db_object_test2');
+    $dbh->do('DROP TABLE rose_db_object_private.rose_db_object_test3');
+    $dbh->do('DROP SCHEMA rose_db_object_private CASCADE');    
 
     $dbh->disconnect;
   }
@@ -1665,6 +1848,7 @@ END
 
     $dbh->do('DROP TABLE rose_db_object_test');
     $dbh->do('DROP TABLE rose_db_object_test2');
+    $dbh->do('DROP TABLE rose_db_object_test3');
 
     $dbh->disconnect;
   }
@@ -1688,6 +1872,7 @@ END
 
     $dbh->do('DROP TABLE rose_db_object_test');
     $dbh->do('DROP TABLE rose_db_object_test2');
+    $dbh->do('DROP TABLE rose_db_object_test3');
 
     $dbh->disconnect;
   }

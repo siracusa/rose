@@ -738,6 +738,10 @@ sub insert
     exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
     $meta->dbi_prepare_cached;
 
+  my $changes_only =
+    exists $args{'changes_only'} ? $args{'changes_only'} :
+    $meta->default_insert_changes_only;
+
   local $self->{STATE_SAVING()} = 1;
 
   my @pk_methods = $meta->primary_key_column_accessor_names;
@@ -802,7 +806,13 @@ sub insert
 
       if($args{'on_duplicate_key_update'})
       {
-        ($sql, $bind) = $meta->insert_and_on_duplicate_key_update_with_inlining_sql($self, $db);
+        ($sql, $bind) = 
+          $meta->insert_and_on_duplicate_key_update_with_inlining_sql(
+            $self, $db, $changes_only);
+      }
+      elsif($changes_only)
+      {
+        ($sql, $bind) = $meta->insert_changes_only_sql_with_inlining($self);
       }
       else
       {
@@ -822,19 +832,30 @@ sub insert
     {
       my $column_names = $meta->column_names;
 
-      if($args{'on_duplicate_key_update'})
+      if($args{'on_duplicate_key_update'} || $changes_only)
       {
-        my($sql, $bind) = $meta->insert_and_on_duplicate_key_update_sql($self, $db);
+        my($sql, $bind);
 
-        $sth = $prepare_cached ? 
-          $dbh->prepare_cached($sql, undef, 3) : 
-          $dbh->prepare($sql);
+        if($args{'on_duplicate_key_update'})
+        {
+          ($sql, $bind) = 
+            $meta->insert_and_on_duplicate_key_update_sql(
+              $self, $db, $changes_only);
+        }
+        else
+        {
+          ($sql, $bind) = $meta->insert_changes_only_sql($self, $db);
+        }
 
         if($Debug)
         {
           no warnings;
           warn $sql, " - bind params: @$bind\n";
         }
+
+        $sth = $prepare_cached ? 
+          $dbh->prepare_cached($sql, undef, 3) : 
+          $dbh->prepare($sql);
 
         $sth->execute(@$bind);
       }

@@ -1682,6 +1682,7 @@ sub next_value_in_sequence
 sub auto_sequence_name { undef }
 
 sub supports_limit_with_offset { 1 }
+sub supports_arbitrary_defaults_on_insert { 0 }
 
 sub likes_redundant_join_conditions { 0 }
 sub likes_lowercase_table_names     { 0 }

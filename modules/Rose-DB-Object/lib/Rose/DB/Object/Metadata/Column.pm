@@ -22,7 +22,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 our $Triggers_Key      = 'triggers';
 our $Trigger_Index_Key = 'trigger_index';
 
-our $VERSION = '0.711';
+our $VERSION = '0.732';
 
 use overload
 (
@@ -119,6 +119,13 @@ sub default_value_sequence_name
 
   return $self->{'default_value_sequence_name'}{$db_id};
 }
+
+# These methods rely on knowledge of the hash key used to make the
+# methods for the common_method_maker_argument_names in the base
+# class, Rose::DB::Object::Metadata::MethodMaker.  Luckily, it's just
+# the attribute name by default.
+sub default_exists { exists $_[0]->{'default'} }
+sub delete_default { delete $_[0]->{'default'} }
 
 sub db_value_hash_key
 {
@@ -1571,6 +1578,14 @@ Return a method name for the column method type TYPE.  The default implementatio
 =item B<default [VALUE]>
 
 Get or set the default value of the column.
+
+=item B<default_exists>
+
+Returns true if a default value exists for this column (even if it is undef), false otherwise.
+
+=item B<delete_default>
+
+Deletes the default value for this column.
 
 =item B<delete_trigger PARAMS>
 

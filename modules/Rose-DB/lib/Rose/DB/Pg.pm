@@ -51,6 +51,8 @@ sub likes_lowercase_schema_names   { 1 }
 sub likes_lowercase_catalog_names  { 1 }
 sub likes_lowercase_sequence_names { 1 }
 
+sub supports_arbitrary_defaults_on_insert { 1 }
+
 sub supports_schema { 1 }
 
 sub last_insertid_from_sth
