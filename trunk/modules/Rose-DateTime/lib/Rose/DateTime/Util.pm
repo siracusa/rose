@@ -667,7 +667,7 @@ A literal `%' character.
 
 =item * %{method}
 
-Any method name may be specified using the format C<%{method}> name where "method" is a valid C<DateTime.pm> object method.
+Any method name may be specified using the format C<%{method}> name where "method" is a valid L<DateTime> object method.
 
 =back
 
