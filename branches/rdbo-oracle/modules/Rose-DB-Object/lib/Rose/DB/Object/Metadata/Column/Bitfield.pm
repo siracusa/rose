@@ -76,15 +76,13 @@ sub method_uses_formatted_key
 
 sub select_sql
 {
-  my($self) = shift;
-
-  # Optional args: db, table alias
-
-  if(my $db = shift)
+  my($self, $db, $table) = @_;
+  
+  if($db)
   {
-    if(@_) # table alias arg too
+    if(defined $table)
     {
-      return $db->select_bitfield_column_sql($self->{'name'}, @_);
+      return $db->select_bitfield_column_sql($self->{'name'}, $table);
     }
     else
     {

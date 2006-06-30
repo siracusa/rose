@@ -292,7 +292,7 @@ The names are pretty much self-explanatory.  You can read the L<Rose::DB::Object
 
 This naming scheme is just a suggestion.  You can name these methods anything you want (using the C<methods> parameter to the L<make_manager_methods()|Rose::DB::Object::Manager/make_manager_methods> call), or you can even write the methods yourself.  Each of these methods is a merely a thin wrapper around the generically-named methods in L<Rose::DB::Object::Manager>.  The wrappers pass the specified object class to the generic methods.
 
-The Perl code for the C<Product::Manager> class shown above can be generated automatically with the L<perl_manager_class|Rose::DB::Object::Metadata/perl_manager_class> method.  The L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> method will both generate the code and L<eval|perlfunc/eval>uate it for you, automating the entire process of creating a manager class from within your L<Rose::DB::Object>-derived class.
+The Perl code for the C<Product::Manager> class shown above can be generated automatically by calling the L<perl_manager_class|Rose::DB::Object::Metadata/perl_manager_class> method on the L<Rose::DB::Object::Metadata> that's associated with the C<Product> class.  Similarly, the L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> method called on the C<Product> metadata object will both generate the code and L<eval|perlfunc/eval>uate it for you, automating the entire process of creating a manager class from within your L<Rose::DB::Object>-derived class.
 
     package Product;
 
@@ -305,7 +305,7 @@ The Perl code for the C<Product::Manager> class shown above can be generated aut
 
 As the comment says, the call to L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> will create a standalone C<Product::Manager> class in memory.  See the documentation for the L<perl_manager_class|Rose::DB::Object::Metadata/perl_manager_class> and L<make_manager_class|Rose::DB::Object::Metadata/make_manager_class> methods for more information.
 
-If you decide not to heed my advice and create these methods inside your L<Rose::DB::Object>-derived class directly, then just call L<make_manager_methods()|Rose::DB::Object::Manager/make_manager_methods> from within your object class.
+If you decide not to heed my advice, but instead decide to create these methods inside your L<Rose::DB::Object>-derived class directly, you can do so by calling L<make_manager_methods()|Rose::DB::Object::Manager/make_manager_methods> from within your object class.
 
     package Product;
 
@@ -565,7 +565,7 @@ Let's solve all of these problems.  If we more accurately describe the columns, 
           length   => 128,
           not_null => 1, 
           default  => 'inactive', 
-          check_in => [ 'inactive', 'active', 'defunct' ]
+          check_in => [ 'inactive', 'active', 'defunct' ],
         },
 
         date_created => { type => 'timestamp', not_null => 1, 

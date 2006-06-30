@@ -47,7 +47,8 @@ sub add_entries
   $parent ||= $self->parent;
 
   my $entries = $self->hash;
-  my $i = 0;
+
+  my @added;
 
   foreach my $item (@_)
   {
@@ -102,11 +103,11 @@ sub add_entries
     Carp::croak "$parent - Missing driver for registry entry: domain '$domain', type '$type'"
       unless(defined $entry->driver);
 
-    $i++  unless(defined $entries->{$domain}{$type});
-    $entries->{$domain}{$type} = $entry;
+    $entries->{$domain}{$type} = $entry;    
+    push(@added, $entry);
   }
 
-  return $i;
+  return wantarray ? @added : \@added;
 }
 
 sub add_entry
@@ -118,10 +119,10 @@ sub add_entry
 
   if(@_ == 1 || (ref $_[0] && $_[0]->isa('Rose::DB::Registry::Entry')))
   {
-    return $self->add_entries(($parent ? $parent : ()), @_);
+    return ($self->add_entries(($parent ? $parent : ()), @_))[0];
   }
 
-  return $self->add_entries(($parent ? $parent : ()), { @_ });
+  return ($self->add_entries(($parent ? $parent : ()), { @_ }))[0];
 }
 
 sub entry_exists
@@ -231,6 +232,8 @@ Each ENTRY must have a defined domain and type, either in the L<Rose::DB::Regist
 
 If a registry entry for the specified domain and type already exists, then the new entry will overwrite it.  If you want to know beforehand whether or not an entry exists under a specific domain and type, use the C<entry_exists()> method.
 
+Returns a list (in list context) or reference to an array (in scalar context) of L<Rose::DB::Registry::Entry> objects added.
+
 =item B<add_entry ENTRY>
 
 Add a registry entry.  ENTRY must be either a L<Rose::DB::Registry::Entry>-derived object or a list of name/value pairs.  The name/value pairs must be valid arguments for L<Rose::DB::Registry::Entry>'s constructor.
@@ -238,6 +241,8 @@ Add a registry entry.  ENTRY must be either a L<Rose::DB::Registry::Entry>-deriv
 The ENTRY must have a defined domain and type, either in the L<Rose::DB::Registry::Entry>-derived object or in the name/value pairs.  A fatal error will occur if these values are not defined.
 
 If a registry entry for the specified domain and type already exists, then the new entry will overwrite it.  If you want to know beforehand whether or not an entry exists under a specific domain and type, use the C<entry_exists()> method.
+
+Returns the L<Rose::DB::Registry::Entry> object added.
 
 =item B<delete_domain DOMAIN>
 

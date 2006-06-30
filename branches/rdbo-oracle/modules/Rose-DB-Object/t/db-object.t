@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 455;
+use Test::More tests => 468;
 
 BEGIN 
 {
@@ -13,6 +13,9 @@ BEGIN
 
 Rose::DB::Object::Util->import(':all');
 
+eval { require Time::HiRes };
+our $Have_HiRes_Time = $@ ? 0 : 1;
+
 our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 #
@@ -21,7 +24,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 204)  unless($HAVE_PG);
+  skip("Postgres tests", 212)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -334,6 +337,23 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $o->bint3(5);
   eval { $o->bint3(7) };
   ok($@, "bigint 5 - $db_type");
+  
+  is($o->tee_time5->as_string, '12:34:56.12345', "time(5) - $db_type");
+
+  $o->tee_time0('1pm');
+  $o->tee_time('allballs');
+  $o->tee_time9('now');
+  $o->save;
+  
+  $o =  MyPgObject->new(id => $o->id)->load;
+  is($o->tee_time->as_string, '00:00:00', "time allballs - $db_type");
+  ok($o->tee_time9->as_string =~ /^\d\d:\d\d:\d\d\.\d{6}$/, "time now - $db_type");
+  
+  $o->tee_time(Time::Clock->new->parse('6:30 PM'));
+  $o->save;
+
+  $o =  MyPgObject->new(id => $o->id)->load;
+  is($o->tee_time->as_string, '18:30:00', "time 6:30 PM - $db_type");
 }
 
 #
@@ -342,7 +362,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 103)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 108)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -611,6 +631,33 @@ SKIP: foreach my $db_type ('mysql')
 
   is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1980-05-06 12:34:56', "epoch 2 - $db_type");
   is($o->hiepoch(format => '%Y-%m-%d %H:%M:%S.%6N'), '1999-11-30 21:30:00.123456', "epoch hires 2 - $db_type");
+
+  is($o->tee_time5->as_string, '12:34:56.12345', "time(5) - $db_type");
+
+  $o->tee_time0('1pm');
+  eval { $o->tee_time('allballs') };
+  ok($@, "allballs - $db_type");
+  $o->tee_time('0:00');
+  $o->tee_time9('now');
+  $o->save;
+
+  $o = MyMySQLObject->new(id => $o->id)->load;
+  is($o->tee_time->as_string, '00:00:00', "time allballs - $db_type");
+  
+  if($Have_HiRes_Time)
+  {
+    ok($o->tee_time9->as_string =~ /^\d\d:\d\d:\d\d\.\d+$/, "time now - $db_type");
+  }
+  else
+  {
+    ok($o->tee_time9->as_string =~ /^\d\d:\d\d:\d\d$/, "time now - $db_type");
+  }
+  
+  $o->tee_time(Time::Clock->new->parse('6:30 PM'));
+  $o->save;
+
+  $o =  MyMySQLObject->new(id => $o->id)->load;
+  is($o->tee_time->as_string, '18:30:00', "time 6:30 PM - $db_type");
 }
 
 #
@@ -1082,6 +1129,10 @@ CREATE TABLE rose_db_object_test
   bint1          BIGINT DEFAULT 9223372036854775800,
   bint2          BIGINT DEFAULT -9223372036854775800,
   bint3          BIGINT,
+  tee_time       TIME,
+  tee_time0      TIME(0),
+  tee_time5      TIME(5),
+  tee_time9      TIME(9),
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1113,6 +1164,10 @@ CREATE TABLE rose_db_object_private.rose_db_object_test
   bint1          BIGINT DEFAULT 9223372036854775800,
   bint2          BIGINT DEFAULT -9223372036854775800,
   bint3          BIGINT,
+  tee_time       TIME,
+  tee_time0      TIME(0),
+  tee_time5      TIME(5),
+  tee_time9      TIME(9),
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1157,6 +1212,10 @@ EOF
       bint1    => { type => 'bigint', default => '9223372036854775800' },
       bint2    => { type => 'bigint', default => '-9223372036854775800' },
       bint3    => { type => 'bigint', with_init => 1, check_in => [ '9223372036854775000', 5 ] },
+      tee_time  => { type => 'time' },
+      tee_time0 => { type => 'time', precision => 0 },
+      tee_time5 => { type => 'time', precision => 5, default => '12:34:56.123456789' },
+      tee_time9 => { type => 'time', precision => 9 },
       #last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );
@@ -1248,6 +1307,10 @@ CREATE TABLE rose_db_object_test
   dur            VARCHAR(255) DEFAULT '2 months 5 days 3 seconds',
   epoch          INT DEFAULT 943997400,
   hiepoch        DECIMAL(16,6),
+  tee_time       VARCHAR(32),
+  tee_time0      VARCHAR(32),
+  tee_time5      VARCHAR(32) DEFAULT '12:34:56.123456789',
+  tee_time9      VARCHAR(32),
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1305,6 +1368,10 @@ EOF
       dur      => { type => 'interval', precision => 6, default => '2 months 5 days 3 seconds' },
       epoch    => { type => 'epoch', default => '11/30/1999 9:30pm' },
       hiepoch  => { type => 'epoch hires', default => '1144004926.123456' },
+      tee_time  => { type => 'time' },
+      tee_time0 => { type => 'time', precision => 0 },
+      tee_time5 => { type => 'time', precision => 5, default => '12:34:56.123456789' },
+      tee_time9 => { type => 'time', precision => 9 },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );

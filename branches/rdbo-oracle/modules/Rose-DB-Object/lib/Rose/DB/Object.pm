@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
 
-our $VERSION = '0.731';
+our $VERSION = '0.74';
 
 our $Debug = 0;
 
@@ -738,6 +738,10 @@ sub insert
     exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
     $meta->dbi_prepare_cached;
 
+  my $changes_only =
+    exists $args{'changes_only'} ? $args{'changes_only'} :
+    $meta->default_insert_changes_only;
+
   local $self->{STATE_SAVING()} = 1;
 
   my @pk_methods = $meta->primary_key_column_accessor_names;
@@ -802,7 +806,13 @@ sub insert
 
       if($args{'on_duplicate_key_update'})
       {
-        ($sql, $bind) = $meta->insert_and_on_duplicate_key_update_with_inlining_sql($self, $db);
+        ($sql, $bind) = 
+          $meta->insert_and_on_duplicate_key_update_with_inlining_sql(
+            $self, $db, $changes_only);
+      }
+      elsif($changes_only)
+      {
+        ($sql, $bind) = $meta->insert_changes_only_sql_with_inlining($self);
       }
       else
       {
@@ -822,19 +832,30 @@ sub insert
     {
       my $column_names = $meta->column_names;
 
-      if($args{'on_duplicate_key_update'})
+      if($args{'on_duplicate_key_update'} || $changes_only)
       {
-        my($sql, $bind) = $meta->insert_and_on_duplicate_key_update_sql($self, $db);
+        my($sql, $bind);
 
-        $sth = $prepare_cached ? 
-          $dbh->prepare_cached($sql, undef, 3) : 
-          $dbh->prepare($sql);
+        if($args{'on_duplicate_key_update'})
+        {
+          ($sql, $bind) = 
+            $meta->insert_and_on_duplicate_key_update_sql(
+              $self, $db, $changes_only);
+        }
+        else
+        {
+          ($sql, $bind) = $meta->insert_changes_only_sql($self, $db);
+        }
 
         if($Debug)
         {
           no warnings;
           warn $sql, " - bind params: @$bind\n";
         }
+
+        $sth = $prepare_cached ? 
+          $dbh->prepare_cached($sql, undef, 3) : 
+          $dbh->prepare($sql);
 
         $sth->execute(@$bind);
       }
@@ -1410,7 +1431,7 @@ Rose::DB::Object - Extensible, high performance RDBMS-OO mapper.
         class       => 'Category',
         key_columns => { category_id => 'id' },
       },
-    [,
+    ],
 
     relationships =>
     [
@@ -1695,11 +1716,17 @@ Returns the text message associated with the last error that occurred.
 
 =item B<insert [PARAMS]>
 
-Insert the current object to the database table.  This method should only be used when you're absolutely sure that you want to B<force> the current object to be inserted, rather than updated.  It is I<highly recommended> that you use the L<save|/save> method instead of this one in most circumstances.  The L<save|/save> method will "do the right thing," executing an insert or update as appropriate for the current situation.
+Insert the current object to the database table.  This method should only be used when you're absolutely sure that you want to B<force> the current object to be inserted, rather than updated.  It is recommended that you use the L<save|/save> method instead of this one in most circumstances.  The L<save|/save> method will "do the right thing," executing an insert or update as appropriate for the current situation.
 
 PARAMS are optional name/value pairs.  Valid PARAMS are:
 
 =over 4
+
+=item C<changes_only BOOL>
+
+If true, then only the columns whose values have been modified will be included in the insert query.  Otherwise, all columns will be included.  Note that any column that has a L<default|Rose::DB::Object::Metadata::Column/default> value set in its L<column metadata|Rose::DB::Object::Metadata::Column> is considered "modified" during an insert operation.
+
+If omitted, the default value of this parameter is determined by the L<metadata object|/meta>'s L<default_insert_changes_only|Rose::DB::Object::Metadata/default_insert_changes_only> class method, which returns false by default.
 
 =item C<prepare_cached BOOL>
 
@@ -1785,7 +1812,13 @@ PARAMS are name/value pairs.  Valid parameters are:
 
 =over 4
 
-=item C<insert>
+=item C<changes_only BOOL>
+
+If true, then only the columns whose values have been modified will be included in the insert or update query.  Otherwise, all eligible columns will be included.  Note that any column that has a L<default|Rose::DB::Object::Metadata::Column/default> value set in its L<column metadata|Rose::DB::Object::Metadata::Column> is considered "modified" during an insert operation.
+
+If omitted, the default value of this parameter is determined by the L<metadata object|/meta>'s L<default_update_changes_only|Rose::DB::Object::Metadata/default_update_changes_only> class method on update, and the L<default_insert_changes_only|Rose::DB::Object::Metadata/default_insert_changes_only> class method on insert, both of which return false by default.
+
+=item C<insert BOOL>
 
 If set to a true value, then an insert is attempted, regardless of whether or not the object was previously L<load|/load>ed from the database.
 
@@ -1793,7 +1826,7 @@ If set to a true value, then an insert is attempted, regardless of whether or no
 
 If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will save the object.  If omitted, the default value is determined by the L<metadata object|/meta>'s L<dbi_prepare_cached|Rose::DB::Object::Metadata/dbi_prepare_cached> class method.
 
-=item C<update>
+=item C<update BOOL>
 
 If set to a true value, then an update is attempted, regardless of whether or not the object was previously L<load|/load>ed from the database.
 
@@ -1881,15 +1914,19 @@ See the L<Rose::DB::Object::Metadata> documentation for more information on cust
 
 =item B<update [PARAMS]>
 
-Update the current object in the database table.  This method should only be used when you're absolutely sure that you want to B<force> the current object to be updated, rather than inserted.  It is I<highly recommended> that you use the L<save|/save> method instead of this one in most circumstances.  The L<save|/save> method will "do the right thing," executing an insert or update as appropriate for the current situation.
+Update the current object in the database table.  This method should only be used when you're absolutely sure that you want to B<force> the current object to be updated, rather than inserted.  It is recommended that you use the L<save|/save> method instead of this one in most circumstances.  The L<save|/save> method will "do the right thing," executing an insert or update as appropriate for the current situation.
 
 PARAMS are optional name/value pairs.  Valid PARAMS are:
 
 =over 4
 
+=item C<changes_only BOOL>
+
+If true, then only the columns whose values have been modified will be updated.  Otherwise, all columns whose values have been loaded from the database will be updated.  If omitted, the default value of this parameter is determined by the L<metadata object|/meta>'s L<default_update_changes_only|Rose::DB::Object::Metadata/default_update_changes_only> class method, which returns false by default.
+
 =item C<prepare_cached BOOL>
 
-If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will insert the object.  If omitted, the default value is determined by the L<metadata object|/meta>'s L<dbi_prepare_cached|Rose::DB::Object::Metadata/dbi_prepare_cached> class method.
+If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will insert the object.  If omitted, the default value of this parameter is determined by the L<metadata object|/meta>'s L<dbi_prepare_cached|Rose::DB::Object::Metadata/dbi_prepare_cached> class method.
 
 =back
 

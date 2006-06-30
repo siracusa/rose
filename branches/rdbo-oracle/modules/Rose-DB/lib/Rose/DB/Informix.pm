@@ -4,7 +4,7 @@ use strict;
 
 use Rose::DateTime::Util();
 
-our $VERSION = '0.70';
+our $VERSION = '0.71';
 
 our $Debug = 0;
 
@@ -25,18 +25,10 @@ sub build_dsn
   return "dbi:$args{'driver'}:" . ($args{'db'} || $args{'database'});
 }
 
-sub insertid_param { 'unsupported' }
-sub null_date      { '0000-00-00'  }
-sub null_datetime  { '0000-00-00 00:00:00' }
-sub null_timestamp { '0000-00-00 00:00:00.00000' }
-sub min_timestamp  { '0001-01-01 00:00:00.00000' }
-sub max_timestamp  { '9999-12-31 23:59:59.99999' }
-
 sub last_insertid_from_sth { $_[1]->{'ix_sqlerrd'}[1] }
 
 sub likes_lowercase_table_names { 1 }
-
-sub generate_primary_key_values { return; }
+sub generate_primary_key_values { return; } # old perls seem to like this...
 
 sub generate_primary_key_placeholders
 {

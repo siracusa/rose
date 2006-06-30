@@ -22,7 +22,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 our $Triggers_Key      = 'triggers';
 our $Trigger_Index_Key = 'trigger_index';
 
-our $VERSION = '0.711';
+our $VERSION = '0.74';
 
 use overload
 (
@@ -119,6 +119,13 @@ sub default_value_sequence_name
 
   return $self->{'default_value_sequence_name'}{$db_id};
 }
+
+# These methods rely on knowledge of the hash key used to make the
+# methods for the common_method_maker_argument_names in the base
+# class, Rose::DB::Object::Metadata::MethodMaker.  Luckily, it's just
+# the attribute name by default.
+sub default_exists { exists $_[0]->{'default'} }
+sub delete_default { delete $_[0]->{'default'} }
 
 sub db_value_hash_key
 {
@@ -230,6 +237,7 @@ sub type   { 'scalar' }
 sub column { $_[0] }
 
 sub should_inline_value { 0 }
+sub inline_value_sql { $_[1] }
 
 sub name
 {
@@ -253,7 +261,7 @@ sub name_sql
 
   if(my $db = shift)
   {
-    return $self->{'name_sql'}{$db->{'driver'}} ||= $db->quote_column_name($self->{'name'});
+    return $self->{'name_sql'}{$db->{'driver'}} ||= $db->auto_quote_column_name($self->{'name'});
   }
   else
   {
@@ -261,21 +269,20 @@ sub name_sql
   }
 }
 
+# XXX: Still need a way to format `table`.`column`
 sub select_sql
 {
-  my($self) = shift;
-
-  # Optional args: db, table alias
-
-  if(my $db = shift)
+  my($self, $db, $table) = @_;
+  
+  if($db)
   {
-    if(@_) # table alias arg too
+    if(defined $table)
     {
-      return "$_[0]." . $db->quote_column_name($self->{'name'});
+      $db->auto_quote_column_with_table($self->{'name'}, $table);
     }
     else
     {
-      return $self->{'select_sql'}{$db->{'driver'}} ||= $db->quote_column_name($self->{'name'});
+      return $self->{'select_sql'}{$db->{'driver'}} ||= $db->auto_quote_column_name($self->{'name'});
     }
   }
   else
@@ -283,6 +290,10 @@ sub select_sql
     return $self->{'name'};
   }
 }
+
+sub insert_placeholder_sql { '?' }
+sub update_placeholder_sql { '?' }
+sub query_placeholder_sql  { '?' }
 
 # sub dbi_data_type { () }
 
@@ -1567,6 +1578,14 @@ Return a method name for the column method type TYPE.  The default implementatio
 =item B<default [VALUE]>
 
 Get or set the default value of the column.
+
+=item B<default_exists>
+
+Returns true if a default value exists for this column (even if it is undef), false otherwise.
+
+=item B<delete_default>
+
+Deletes the default value for this column.
 
 =item B<delete_trigger PARAMS>
 

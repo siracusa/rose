@@ -1,3 +1,24 @@
+0.74 (06.30.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added the Time column type.
+    * Added support for the changes_only parameter to the insert() method.
+    * Documented the manager_base_class(es) Loader methods.
+    * Fixed a bug that caused the Loader to refuse to use empty or 
+      undefined class_prefix values.
+    * Fixed a bug that prevented auto_* methods names from working in
+      calls to the setup() method.
+    * Removed redundant @ISA declaration from generated Manager classes.
+
+0.731 (06.12.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a database handle leak in the get_objects_iterator() method.
+      (Reported by Martin Rubli)
+    * Documented the changes_only parameter to the save() and update()
+      methods.  (This feature was actually implemented in version 0.73, but 
+      I forgot to document it.)
+    * The class_for() metadata method may now be called as a class method,
+      with some caveats.
+
 0.73 (06.07.2006) - John Siracusa <siracusa@mindspring.com>
 
     * The new setup() method is now the officially recommended way to set up

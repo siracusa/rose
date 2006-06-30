@@ -2,10 +2,12 @@ package Rose::DB::Object::Iterator;
 
 use strict;
 
+use Carp();
+
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.60';
+our $VERSION = '0.731';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -32,6 +34,7 @@ sub finish
 {
   my($self) = shift;
   $self->active(0);
+  $self->_next_code(sub { 0 });
   return $self->_finish_code->($self, @_);
 }
 

@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.73';
+our $VERSION = '0.74';
 
 our $Debug = 0;
 
@@ -62,6 +62,7 @@ use Rose::Object::MakeMethods::Generic
     default_load_speculative    => { default => 0 },
     auto_load_related_classes   => { default => 1 },
     default_update_changes_only => { default => 0 },
+    default_insert_changes_only => { default => 0 },
   ],
 
   array =>
@@ -108,7 +109,6 @@ __PACKAGE__->auto_helper_classes
   'informix' => 'Rose::DB::Object::Metadata::Auto::Informix',
   'pg'       => 'Rose::DB::Object::Metadata::Auto::Pg',
   'mysql'    => 'Rose::DB::Object::Metadata::Auto::MySQL',
-  'oracle'   => 'Rose::DB::Object::Metadata::Auto::Oracle',
   'sqlite'   => 'Rose::DB::Object::Metadata::Auto::SQLite',
   'generic'  => 'Rose::DB::Object::Metadata::Auto::Generic',
 );
@@ -155,6 +155,7 @@ __PACKAGE__->column_type_classes
   'decimal'   => 'Rose::DB::Object::Metadata::Column::Numeric',
   'float'     => 'Rose::DB::Object::Metadata::Column::Float',
 
+  'time'      => 'Rose::DB::Object::Metadata::Column::Time',
   'interval'  => 'Rose::DB::Object::Metadata::Column::Interval',
 
   'date'      => 'Rose::DB::Object::Metadata::Column::Date',
@@ -364,6 +365,11 @@ sub setup
     }
 
     my $args = shift;
+
+    if($method =~ /^((?:auto_(?!helper)|(?:default_)?perl_)\w*)$/)
+    {
+      $self->init_auto_helper;
+    }
 
     unless($self->can($method))
     {
@@ -1143,10 +1149,13 @@ sub load_column_class
 {
   my($self, $column_class) = @_;
 
-  eval "require $column_class";
-
-  Carp::croak "Could not load column class '$column_class' - $@"
-    if($@);
+  unless(UNIVERSAL::isa($column_class, 'Rose::DB::Object::Metadata::Column'))
+  {
+    eval "require $column_class";
+  
+    Carp::croak "Could not load column class '$column_class' - $@"
+      if($@);
+  }
 
   $Class_Loaded{$column_class}++;
 }
@@ -1482,9 +1491,12 @@ sub unregister_all_classes
 
 sub class_for
 {
-  my($self, %args) = @_;
+  my($self_or_class, %args) = @_;
 
-  my $db = $self->db;
+  my $self  = ref($self_or_class) ? $self_or_class : undef;
+  my $class = ref($self) || $self_or_class;
+
+  my $db = $self ? $self->db : undef;
 
   my $catalog = $args{'catalog'};
   my $schema  = $args{'schema'};
@@ -1492,15 +1504,15 @@ sub class_for
   $catalog = NULL_CATALOG  unless(defined $catalog);
   $schema  = NULL_SCHEMA   unless(defined $schema);
 
-  my $default_schema = $db->default_implicit_schema;
+  my $default_schema = $db ? $db->default_implicit_schema : undef;
   $default_schema = NULL_SCHEMA   unless(defined $default_schema);
 
   my $table = $args{'table'} 
     or Carp::croak "Missing required table parameter";
 
-  $table = lc $table  if($db->likes_lowercase_table_names);
+  $table = lc $table  if($db && $db->likes_lowercase_table_names);
 
-  my $reg = $self->registry_key->class_registry;
+  my $reg = $class->registry_key->class_registry;
 
   # Combine keys using $;, which is "\034" (0x1C) by default. But just to
   # make sure, we'll localize it.  What we're looking for is a value that
@@ -2685,6 +2697,15 @@ sub fq_table_sql
   return $self->{'fq_table_sql'}{$db->{'id'}} ||= 
     join('.', grep { defined } ($self->select_catalog($db), 
                                 $self->select_schema($db), 
+                                $db->auto_quote_table_name($self->table)));
+}
+
+sub fqq_table_sql
+{
+  my($self, $db) = @_;
+  return $self->{'fq_table_sql'}{$db->{'id'}} ||= 
+    join('.', grep { defined } ($self->select_catalog($db), 
+                                $self->select_schema($db), 
                                 $db->quote_table_name($self->table)));
 }
 
@@ -2707,7 +2728,12 @@ sub load_all_sql
   return $self->{'load_all_sql'}{$db->{'id'}}{join("\0", @$key_columns)} ||= 
     'SELECT ' . $self->select_columns_string_sql($db) . ' FROM ' .
     $self->fq_table_sql($db) . ' WHERE ' .
-    join(' AND ',  map { "$_ = ?" } @$key_columns);
+    join(' AND ',  map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql . ' = ' . $c->query_placeholder_sql($db)
+    }
+    @$key_columns);
 }
 
 sub load_sql
@@ -2720,7 +2746,12 @@ sub load_sql
   return $self->{'load_sql'}{$db->{'id'}}{join("\0", @$key_columns)} ||= 
     'SELECT ' . $self->select_nonlazy_columns_string_sql($db) . ' FROM ' .
     $self->fq_table_sql($db) . ' WHERE ' .
-    join(' AND ',  map { "$_ = ?" } @$key_columns);
+    join(' AND ', map
+    {
+      my $c = $self->column($_);
+      $c->name_sql . ' = ' . $c->query_placeholder_sql($db)
+    }
+    @$key_columns);
 }
 
 sub load_all_sql_with_null_key
@@ -2733,7 +2764,12 @@ sub load_all_sql_with_null_key
   return 
     'SELECT ' . $self->select_columns_string_sql($db) . ' FROM ' .
     $self->fq_table_sql($db) . ' WHERE ' .
-    join(' AND ',  map { defined $key_values->[$i++] ? "$_ = ?" : "$_ IS NULL" }
+    join(' AND ', map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql . 
+      (defined $key_values->[$i++] ? ' = ' . $c->query_placeholder_sql : ' IS NULL')
+    }
     @$key_columns);
 }
 
@@ -2747,7 +2783,12 @@ sub load_sql_with_null_key
   return 
     'SELECT ' . $self->select_nonlazy_columns_string_sql($db) . ' FROM ' .
     $self->fq_table_sql($db) . ' WHERE ' .
-    join(' AND ',  map { defined $key_values->[$i++] ? "$_ = ?" : "$_ IS NULL" }
+    join(' AND ', map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql . 
+      (defined $key_values->[$i++] ? ' = ' . $c->query_placeholder_sql : ' IS NULL')
+    }
     @$key_columns);
 }
 
@@ -2767,10 +2808,18 @@ sub update_all_sql
   no warnings;
   return $self->{'update_all_sql'}{$cache_key} = 
     'UPDATE ' . $self->fq_table_sql($db) . " SET \n" .
-    join(",\n", map { '    ' . $self->column($_)->name_sql($db) . ' = ?' } 
-                grep { !$key{$_} } $self->column_names) .
+    join(",\n", map 
+    {
+      '    ' . $_->name_sql($db) . ' = ' . $_->update_placeholder_sql($db)
+    } 
+    grep { !$key{$_->name} } $self->columns) .
     "\nWHERE " . 
-    join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns);
+    join(' AND ', map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql . ' = ' . $c->query_placeholder_sql
+    }
+    @$key_columns);
 }
 
 use constant LAZY_LOADED_KEY => lazy_column_values_loaded_key();
@@ -2786,12 +2835,20 @@ sub update_sql
   no warnings;
   return ($self->{'update_sql_prefix'}{$db->{'id'}} ||=
     'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
-    join(",\n", map { '    ' . $_->name_sql($db) . ' = ?' } 
-                grep { !$key{$_->{'name'}} && (!$_->{'lazy'} || 
-                       $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
-                $self->columns) .
+    join(",\n", map 
+    {
+      '    ' . $_->name_sql($db) . ' = ' . $_->update_placeholder_sql($db)
+    } 
+    grep { !$key{$_->name} && (!$_->lazy || 
+           $obj->{LAZY_LOADED_KEY()}{$_->name}) } 
+    $self->columns) .
     "\nWHERE " . 
-    join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns);
+    join(' AND ', map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
+    }
+    @$key_columns);
 }
 
 sub update_changes_only_sql
@@ -2807,9 +2864,18 @@ sub update_changes_only_sql
   no warnings;
   return ($self->{'update_sql_prefix'}{$db->{'id'}} ||=
     'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
-    join(",\n", map { '    ' . $_->name_sql($db) . ' = ?' } @modified) .
+    join(",\n", map 
+    {
+      '    ' . $_->name_sql($db) . ' = ' . $_->update_placeholder_sql($db)
+    }
+    @modified) .
     "\nWHERE " . 
-    join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns),
+    join(' AND ', map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
+    }
+    @$key_columns),
     [ map { my $m = $_->accessor_method_name; $obj->$m() } @modified ];
 }
 
@@ -2900,11 +2966,12 @@ sub update_sql_with_inlining
 
     if($column->should_inline_value($db, $value))
     {
-      push(@updates, '  ' . $column->name_sql($db) . " = $value");
+      push(@updates, $column->name_sql($db) . " = $value");
     }
     else
     {
-      push(@updates, '  ' . $column->name_sql($db) . ' = ?');
+      push(@updates, $column->name_sql($db) . ' = ' .
+                     $column->update_placeholder_sql($db));
       push(@bind, $value);
     }
   }
@@ -2917,7 +2984,12 @@ sub update_sql_with_inlining
     ($self->{'update_sql_with_inlining_start'}{$db->{'id'}} ||= 
      'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
     join(",\n", @updates) . "\nWHERE " . 
-    join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns),
+    join(' AND ', map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
+    }
+    @$key_columns),
     \@bind
   );
 }
@@ -2948,7 +3020,8 @@ sub update_changes_only_sql_with_inlining
     }
     else
     {
-      push(@updates, '  ' . $column->name_sql($db) . ' = ?');
+      push(@updates, $column->name_sql($db) . ' = ' .
+                     $column->update_placeholder_sql($db));
       push(@bind, $value);
     }
   }
@@ -2961,7 +3034,12 @@ sub update_changes_only_sql_with_inlining
     ($self->{'update_sql_with_inlining_start'}{$db->{'id'}} ||= 
      'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
     join(",\n", @updates) . "\nWHERE " . 
-    join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns),
+    join(' AND ', map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
+    }
+    @$key_columns),
     \@bind
   );
 }
@@ -2974,21 +3052,64 @@ sub insert_sql
   return $self->{'insert_sql'}{$db->{'id'}} ||= 
     'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
     join(",\n", map { "  $_" } $self->column_names_sql($db)) .
-    "\n)\nVALUES\n(\n" . join(",\n", map { "  ?" } $self->column_names) .
+    "\n)\nVALUES\n(\n" . $self->insert_columns_placeholders_sql($db) .
     "\n)";
+}
+
+sub insert_changes_only_sql
+{
+  my($self, $obj, $db) = @_;
+
+  my $modified = $obj->{MODIFIED_COLUMNS()} || {};
+  my @modified = grep { $modified->{$_->{'name'}} || $_->default_exists } $self->columns;
+
+  unless(@modified)
+  {
+    # Make a last-ditch attempt to insert with no modified columns
+    # using the DEFAULT keyword on an arbitrary column.  This works 
+    # in MySQL and Postgres.
+    if($db->supports_arbitrary_defaults_on_insert)
+    {
+      return 
+        'INSERT INTO ' . $self->fq_table_sql($db) . ' (' .
+        ($self->columns)[-1]->name_sql($db) . ') VALUES (DEFAULT)',
+        [];
+    }
+    else
+    {
+      Carp::croak "Cannot insert row into table '", $self->table, 
+                  "' - No columns have modified or default values";
+    }
+  }
+
+  no warnings;
+  return ($self->{'insert_changes_only_sql_prefix'}{$db->{'id'}} ||=
+    'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n") .
+    join(",\n", map { $_->name_sql($db) } @modified) .
+    "\n)\nVALUES\n(\n" . 
+    join(",\n", map { $_->insert_placeholder_sql($db) } @modified) . "\n)",
+    [ map { my $m = $_->accessor_method_name; $obj->$m() } @modified ];
+}
+
+sub insert_columns_placeholders_sql
+{
+  my($self, $db) = @_;
+  return $self->{'insert_columns_placeholders_sql'}{$db->{'id'}} ||= 
+    join(",\n", map { '  ' . $_->insert_placeholder_sql($db) } $self->columns)
 }
 
 sub insert_and_on_duplicate_key_update_sql
 {
-  my($self, $obj, $db) = @_;
+  my($self, $obj, $db, $changes_only) = @_;
 
   my(@columns, @names, @bind);
 
   if($obj->{STATE_IN_DB()})
   {
-    @columns =
-      grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
-      $self->columns;
+    @columns = $changes_only ?
+      (map { $self->column($_) } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
+      (grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
+       $self->columns);
 
     @names = map { $_->name_sql($db) } @columns;
 
@@ -3023,9 +3144,10 @@ sub insert_and_on_duplicate_key_update_sql
       }
     }
 
-    @columns = 
-      grep { !$skip{"$_"} && (!$_->{'lazy'} || 
-             $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns;
+    @columns = $changes_only ?
+      (map { $self->column($_) } grep { !$skip{"$_"} } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
+      (grep { !$skip{"$_"} && (!$_->{'lazy'} || 
+              $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns);
 
     @names = map { $_->name_sql($db) } @columns;
 
@@ -3040,21 +3162,20 @@ sub insert_and_on_duplicate_key_update_sql
   return 
     'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
     join(",\n", @names) .
-    "\n)\nVALUES\n(\n" . join(",\n", map { "  ?" } @names) .
+    "\n)\nVALUES\n(\n" . 
+    join(",\n", map { $_->insert_placeholder_sql($db) } @columns) .
     "\n)\nON DUPLICATE KEY UPDATE\n" .
-    join(",\n", map { "$_ = ?" } @names),
+    join(",\n", map 
+    { 
+      $_->name_sql($db) . ' = ' . $_->update_placeholder_sql($db)
+    }
+    @columns),
     [ @bind, @bind ];
 }
 
 sub insert_sql_with_inlining
 {
   my($self, $obj) = @_;
-
-  unless(@_ > 1)
-  {
-    Carp::croak 'Missing required object argument to ',
-                __PACKAGE__, '::insert_sql_with_inlining()'
-  }
 
   my $db = $obj->db or Carp::croak "Missing db";
 
@@ -3072,7 +3193,7 @@ sub insert_sql_with_inlining
     }
     else
     {
-      push(@places, "  ?");
+      push(@places, $column->insert_placeholder_sql($db));
       push(@bind, $value);
     }
   }
@@ -3089,15 +3210,16 @@ sub insert_sql_with_inlining
 
 sub insert_and_on_duplicate_key_update_with_inlining_sql
 {
-  my($self, $obj, $db) = @_;
+  my($self, $obj, $db, $changes_only) = @_;
 
   my(@columns, @names);
 
   if($obj->{STATE_IN_DB()})
   {
-    @columns =
-      grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
-      $self->columns;
+    @columns = $changes_only ?
+      (map { $self->column($_) } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
+      (grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
+       $self->columns);
 
     @names = map { $_->name_sql($db) } @columns;
   }
@@ -3126,9 +3248,10 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
       }
     }
 
-    @columns = 
-      grep { !$skip{"$_"} && (!$_->{'lazy'} || 
-             $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns;
+    @columns = $changes_only ?
+      (map { $self->column($_) } grep { !$skip{"$_"} } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
+      (grep { !$skip{"$_"} && (!$_->{'lazy'} || 
+              $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns);
 
     @names = map { $_->name_sql($db) } @columns;
   }
@@ -3143,11 +3266,11 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
 
     if($column->should_inline_value($db, $value))
     {
-      push(@places, [ $name, " $value" ]);
+      push(@places, [ $name, $column->inline_value_sql($value) ]);
     }
     else
     {
-      push(@places, [ $name, " ?" ]);
+      push(@places, [ $name, $column->insert_placeholder_sql($_) ]);
       push(@bind, $value);
     }
   }
@@ -3156,10 +3279,66 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
   return 
     'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
     join(",\n", @names) .
-    "\n)\nVALUES\n(\n" . join(",\n", map { " $_->[1]" } @places) . "\n)\n" .
+    "\n)\nVALUES\n(\n" . join(",\n", map { $_->[1] } @places) . "\n)\n" .
     "ON DUPLICATE KEY UPDATE\n" .
-    join(",\n", map { "$_->[0] =$_->[1]" } @places),
+    join(",\n", map { "$_->[0] = $_->[1]" } @places),
     [ @bind, @bind ];
+}
+
+sub insert_changes_only_sql_with_inlining
+{
+  my($self, $obj) = @_;
+
+  my $db = $obj->db or Carp::croak "Missing db";
+
+  my $modified = $obj->{MODIFIED_COLUMNS()} || {};
+  my @modified = grep { $modified->{$_->{'name'}} || $_->default_exists } $self->columns;
+
+  unless(@modified)
+  {
+    # Make a last-ditch attempt to insert with no modified columns
+    # using the DEFAULT keyword on an arbitrary column.  This works 
+    # in MySQL and Postgres.
+    if($db->supports_arbitrary_defaults_on_insert)
+    {
+      return 
+        'INSERT INTO ' . $self->fq_table_sql($db) . ' (' .
+        ($self->columns)[-1]->name_sql($db) . ') VALUES (DEFAULT)',
+        [];
+    }
+    else
+    {
+      Carp::croak "Cannot insert row into table '", $self->table, 
+                  "' - No columns have modified or default values";
+    }
+  }
+
+  my @bind;
+  my @places;
+
+  foreach my $column (@modified)
+  {
+    my $method = $self->column_accessor_method_name($column->name);
+    my $value  = $obj->$method();
+
+    if($column->should_inline_value($db, $value))
+    {
+      push(@places, "  $value");
+    }
+    else
+    {
+      push(@places, $column->insert_placeholder_sql($db));
+      push(@bind, $value);
+    }
+  }
+
+  return 
+  (
+    'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
+    join(",\n", map { $_->name_sql($db) } @modified) .
+    "\n)\nVALUES\n(\n" . join(",\n", @places) . "\n)",
+    \@bind
+  );
 }
 
 sub delete_sql
@@ -3167,8 +3346,9 @@ sub delete_sql
   my($self, $db) = @_;
   return $self->{'delete_sql'}{$db->{'id'}} ||= 
     'DELETE FROM ' . $self->fq_table_sql($db) . ' WHERE ' .
-    join(' AND ', map {  $self->column($_)->name_sql($db) . ' = ?' } 
-                  $self->primary_key_column_names);
+    join(' AND ', 
+      map {  $_->name_sql($db) . ' = ' . $_->query_placeholder_sql($db) } 
+      $self->primary_key_columns);
 }
 
 sub get_column_value
@@ -3187,7 +3367,12 @@ sub get_column_value
 
     $sql = $column->{'get_column_sql_tmpl'}{$db->{'id'}} = 
       'SELECT __COLUMN__ FROM ' . $self->fq_table_sql($db) . ' WHERE ' .
-      join(' AND ', map { $self->column($_)->name_sql($db) . ' = ?' } @$key_columns);
+      join(' AND ', map 
+      {
+        my $c = $self->column($_);
+        $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
+      }
+      @$key_columns);
   }
 
   $sql =~ s/__COLUMN__/$column->name_sql/e;
@@ -3252,6 +3437,7 @@ sub _clear_table_generated_values
   $self->{'primary_key_sequence_names'} = undef;
   $self->{'insert_sql'}        = undef;
   $self->{'insert_sql_with_inlining_start'} = undef;
+  $self->{'insert_changes_only_sql_prefix'} = undef;
   $self->{'update_sql_prefix'} = undef;
   $self->{'update_sql_with_inlining_start'} = undef;
   $self->{'update_all_sql'}    = undef;
@@ -3292,7 +3478,9 @@ sub _clear_column_generated_values
   $self->{'insert_sql'}             = undef;
   $self->{'insert_sql_with_inlining_start'} = undef;
   $self->{'update_sql_with_inlining_start'} = undef;
+  $self->{'insert_changes_only_sql_prefix'} = undef;
   $self->{'delete_sql'}             = undef;
+  $self->{'insert_columns_placeholders_sql'} = undef;
 }
 
 sub _clear_primary_key_column_generated_values
@@ -3897,6 +4085,7 @@ The default mapping of type names to class names is:
   decimal   => Rose::DB::Object::Metadata::Column::Numeric
   float     => Rose::DB::Object::Metadata::Column::Float
 
+  time      => Rose::DB::Object::Metadata::Column::Time
   interval  => Rose::DB::Object::Metadata::Column::Interval
 
   date      => Rose::DB::Object::Metadata::Column::Date
@@ -4317,6 +4506,8 @@ Get or set the L<Rose::DB::Object>-derived class associated with this metadata o
 
 Returns the name of the L<Rose::DB::Object>-derived class associated with the C<catalog>, C<schema>, and C<table> specified by the name/value paris in PARAMS.  Catalog and/or schema maybe omitted if unknown or inapplicable, and the "best" match will be returned.  Returns undef if there is no class name registered under the specified PARAMS.
 
+Note: This method may also be called as a class method, but may require explicit C<catalog> and/or C<schema> arguments when dealing with databases that support these concepts I<and> have default implicit values for them.
+
 =item B<clear_object_cache>
 
 Clear the memory cache for all objects of the L<Rose::DB::Object::Cached>-derived class associated with this metadata object.
@@ -4396,6 +4587,10 @@ Returns the L<Rose::DB>-derived object associated with this metadata object's L<
 =item B<default_load_speculative [BOOL]>
 
 Get or set a boolean value that indicates whether or not the L<class|/class> associated with this metadata object will L<load|Rose::DB::Object/load> speculatively by default.  See the documentation for L<Rose::DB::Object>'s L<load()|Rose::DB::Object/load> method for details.  The default value is false.
+
+=item B<default_update_changes_only [BOOL]>
+
+Get or set a boolean value that indicates whether or not the L<class|/class> associated with this metadata object will L<update|Rose::DB::Object/update> only an object's modified columns by default (instead of updating all columns).  See the documentation for L<Rose::DB::Object>'s L<update()|Rose::DB::Object/update> method for details.  The default value is false.
 
 =item B<delete_column NAME>
 

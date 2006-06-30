@@ -64,14 +64,6 @@ sub validate_timestamp_keyword
   !ref $_[1] && $_[1] =~ /^\w+\(.*\)$/;
 }
 
-sub quote_table_name
-{
-  my($self, $table) = @_;
-
-  $table =~ s/'/''/g;
-  return qq('$table');
-}
-
 sub format_bitfield 
 {
   my($self, $vec, $size) = @_;
@@ -91,6 +83,20 @@ sub refine_dbi_column_info
   }
 
   return;
+}
+
+sub quote_column_name 
+{
+  my $name = $_[1];
+  $name =~ s/"/""/g;
+  return qq("$name");
+}
+
+sub quote_table_name
+{
+  my $name = $_[1];
+  $name =~ s/"/""/g;
+  return qq("$name");
 }
 
 #

@@ -16,7 +16,7 @@ use Rose::DB::Object::Metadata::Util qw(perl_hashref);
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.73';
+our $VERSION = '0.74';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -121,22 +121,22 @@ sub base_classes
     $bc = [ $bc ];
   }
 
-  my $found_rdbo = 0;
+  #my $found_rdbo = 0;
 
   foreach my $class (@$bc)
   {
     unless($class =~ /^(?:\w+::)*\w+$/)
     {
-      croak "Illegal class name: $class";
+      croak "Illegal base class name: $class";
     }
 
-    $found_rdbo = 1  if(UNIVERSAL::isa($class, 'Rose::DB::Object'));
+    #$found_rdbo = 1  if(UNIVERSAL::isa($class, 'Rose::DB::Object'));
   }
 
-  unless($found_rdbo)
-  {
-    croak "None of the base classes inherit from Rose::DB::Object";
-  }
+  #unless($found_rdbo)
+  #{
+  #  croak "None of the base classes inherit from Rose::DB::Object";
+  #}
 
   $self->using_default_base_class(0);
   $self->{'base_classes'} = $bc;
@@ -144,7 +144,54 @@ sub base_classes
   return wantarray ? @$bc : $bc;
 }
 
-*base_class = \&base_classes;
+sub base_class { shift->base_classes(@_) }
+
+use constant DEFAULT_MANAGER_BASE_CLASS => 'Rose::DB::Object::Manager';
+
+sub manager_base_classes
+{
+  my($self) = shift;
+
+  if(my $bc = shift)
+  {
+    unless(ref $bc)
+    {
+      $bc = [ $bc ];
+    }
+  
+    #my $found_base = 0;
+  
+    foreach my $class (@$bc)
+    {
+      unless($class =~ /^(?:\w+::)*\w+$/)
+      {
+        croak "Illegal manager base class name: $class";
+      }
+
+      #$found_base = 1  if(UNIVERSAL::isa($class, 'Rose::DB::Object::Manager'));
+    }
+  
+    #unless($found_base)
+    #{
+    #  croak "None of the manager base classes inherit from ",
+    #        "Rose::DB::Object::Manager";
+    #}
+  
+    $self->{'manager_base_classes'} = $bc;
+  }
+
+  my $bc = $self->{'manager_base_classes'};
+
+  unless(defined $bc && @$bc)
+  {
+    return wantarray ? DEFAULT_MANAGER_BASE_CLASS : [ DEFAULT_MANAGER_BASE_CLASS ];
+  }
+
+  return wantarray ? @{$self->{'manager_base_classes'}} :
+                     $self->{'manager_base_classes'}
+}
+
+sub manager_base_class { shift->manager_base_classes(@_) }
 
 sub convention_manager
 {
@@ -185,12 +232,15 @@ sub class_prefix
 
   my $class_prefix = shift;
 
-  unless($class_prefix =~ /^(?:\w+::)*\w+(?:::)?$/)
+  if(length $class_prefix)
   {
-    croak "Illegal class prefix: $class_prefix";
-  }
+    unless($class_prefix =~ /^(?:\w+::)*\w+(?:::)?$/)
+    {
+      croak "Illegal class prefix: $class_prefix";
+    }
 
-  $class_prefix .= '::'  unless($class_prefix =~ /::$/);
+    $class_prefix .= '::'  unless($class_prefix =~ /::$/);
+  }
 
   return $self->{'class_prefix'} = $class_prefix;
 }
@@ -233,8 +283,8 @@ sub db_dsn
   return $self->{'db_dsn'} = $db_dsn;
 }
 
-*dsn     = \&db_dsn;
-*dbi_dsn = \&db_dsn;
+sub dsn     { shift->db_dsn(@_) }
+sub dbi_dsn { shift->db_dsn(@_) }
 
 sub db_class
 {
@@ -487,12 +537,15 @@ sub make_classes
   my $class_prefix =  exists $args{'class_prefix'} ? 
     delete $args{'class_prefix'} : $self->class_prefix || '';
 
-  unless($class_prefix =~ /^(?:\w+::)*\w+(?:::)?$/)
+  if(length $class_prefix)
   {
-    croak "Illegal class prefix: $class_prefix";
-  }
+    unless($class_prefix =~ /^(?:\w+::)*\w+(?:::)?$/)
+    {
+      croak "Illegal class prefix: $class_prefix";
+    }
 
-  $class_prefix .= '::'  unless($class_prefix =~ /::$/);
+    $class_prefix .= '::'  unless($class_prefix =~ /::$/);
+  }
 
   # Evil masking of object attribute
   local $self->{'class_prefix'} = $class_prefix; 
@@ -782,8 +835,14 @@ sub make_classes
     # Make the manager class
     if($with_managers)
     {
-      $meta->make_manager_class($cm->auto_manager_base_name($table, $obj_class));
-      push(@classes, $self->generate_manager_class_name($obj_class));
+      my $mgr_class   = $self->generate_manager_class_name($obj_class);
+
+      $meta->make_manager_class(
+        class     => $mgr_class,
+        base_name => $cm->auto_manager_base_name($table, $obj_class),
+        isa       => scalar $self->manager_base_classes);
+
+      push(@classes, $mgr_class);
     }
   }
 
@@ -979,7 +1038,7 @@ This is an alias for the L<base_classes|/base_classes> method.
 
 =item B<base_classes [ CLASS | ARRAYREF ]>
 
-Get or set the list of base classes to use for the L<Rose::DB::Object> subclasses created by the L<make_classes|/make_classes> method.  The argument may be a class name or a reference to an array of class names.  At least one of the classes must inherit from L<Rose::DB::Object>.
+Get or set the list of base classes to use for the L<Rose::DB::Object> subclasses created by the L<make_classes|/make_classes> method.  The argument may be a class name or a reference to an array of class names.  At least one of the classes should inherit from L<Rose::DB::Object>.
 
 Returns a list (in list context) or reference to an array (in scalar context) of base class names.  Defaults to a dynamically-generated L<Rose::DB::Object> subclass name.
 
@@ -1166,6 +1225,16 @@ A boolean value or a reference to an array of relationship L<type|Rose::DB::Obje
 =item B<with_unique_keys BOOL>
 
 If true, the L<make_classes|/make_classes> method will set up unique key metadata for each L<Rose::DB::Object>-derived class it creates.  Defaults to true.
+
+=item B<manager_base_class CLASS>
+
+This is an alias for the L<manager_base_classes|/manager_base_classes> method.
+
+=item B<manager_base_classes [ CLASS | ARRAYREF ]>
+
+Get or set the list of base classes to use for the L<Rose::DB::Object::Manager> subclasses created by the L<make_classes|/make_classes> method.  The argument may be a class name or a reference to an array of class names.  At least one of the classes should inherit from L<Rose::DB::Object::Manager>.
+
+Returns a list (in list context) or reference to an array (in scalar context) of base class names.  Defaults to L<Rose::DB::Object::Manager>.
 
 =back
 

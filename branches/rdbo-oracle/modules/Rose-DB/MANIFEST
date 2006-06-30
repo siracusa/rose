@@ -24,6 +24,7 @@ t/pk-columns.t
 t/pod.t
 t/sqlite.t
 t/storable.t
+t/storable.ext
 t/subclass-basic.t
 t/subclass-informix.t
 t/subclass-list-tables.t

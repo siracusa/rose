@@ -57,10 +57,19 @@ sub init_dbh
   return $self->Rose::DB::init_dbh(@_);
 }
 
-# These assume no ` characters in column or table names.
-# Because, come on, who would do such a thing... :)
-sub quote_column_name { qq(`$_[1]`) }
-sub quote_table_name  { qq(`$_[1]`) }
+sub quote_column_name 
+{
+  my $name = $_[1];
+  $name =~ s/`/``/g;
+  return qq(`$name`);
+}
+
+sub quote_table_name
+{
+  my $name = $_[1];
+  $name =~ s/`/``/g;
+  return qq(`$name`);
+}
 
 sub init_date_handler { DateTime::Format::MySQL->new }
 
@@ -153,19 +162,18 @@ sub should_inline_bitfield_values
 
 sub select_bitfield_column_sql
 {
-  my($self, $name, $table_alias) = @_;
+  my($self, $column, $table) = @_;
 
   # MySQL 5.0.3 or later requires this crap...
   if($self->database_version >= 5_000_003)
   {
-    return q{CONCAT("b'", BIN(} . ($table_alias ? "$table_alias." : '') . 
-            $self->quote_column_name($name) . q{ + 0), "'")};
+    return q{CONCAT("b'", BIN(} . 
+           $self->auto_quote_column_with_table($column, $table) .
+           q{ + 0), "'")};
   }
   else
   {
-    #return q{BIN(} . ($table_alias ? "$table_alias." : '') . 
-    #        $self->quote_column_name($name) . q{ + 0)};
-    return $self->quote_column_name($name) . q{ + 0};
+    return $self->auto_quote_column_with_table($column, $table) . q{ + 0};
   }
 }
 
@@ -205,6 +213,8 @@ sub refine_dbi_column_info
   return;
 }
 
+sub supports_arbitrary_defaults_on_insert { 1 }
+
 sub likes_redundant_join_conditions { 1 }
 
 sub supports_on_duplicate_key_update
@@ -223,6 +233,9 @@ sub supports_on_duplicate_key_update
 
   return $self->{'supports_on_duplicate_key_update'} = 0;
 }
+
+our %Reserved_Words = map { $_ => 1 } qw(read);
+sub is_reserved_word { $Reserved_Words{lc $_[1]} }
 
 #
 # Introspection

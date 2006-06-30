@@ -6,6 +6,7 @@ use DBI;
 use Carp();
 use Bit::Vector::Overload;
 
+use Time::Clock;
 use Rose::DateTime::Util();
 
 use Rose::DB::Registry;
@@ -17,7 +18,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.70';
+our $VERSION = '0.72';
 
 our $Debug = 0;
 
@@ -108,7 +109,6 @@ use Rose::Object::MakeMethods::Generic
 
   'boolean' =>
   [
-    '_dbh_is_private',
     'auto_create'    => { default => 1 },
     'european_dates' => { default => 0 },
   ],
@@ -141,8 +141,53 @@ use Rose::Object::MakeMethods::Generic
 sub register_db
 {
   my $class = shift;
+
   # Smuggle parent/caller in with an otherwise nonsensical arrayref arg
-  $class->registry->add_entry([ $class ], @_);
+  my $entry = $class->registry->add_entry([ $class ], @_);
+  
+  if($entry)
+  {
+    my $driver = $entry->driver;
+    
+    Carp::confess "No driver found for registry entry $entry"
+      unless(defined $driver);
+  
+    $class->setup_dynamic_class_for_driver($driver);
+  }
+
+  return $entry;
+}
+
+our %Rebless;
+
+sub setup_dynamic_class_for_driver
+{
+  my($class, $driver) = @_;
+
+  my $driver_class = $class->driver_class($driver) ||
+     $class->driver_class('generic') || Carp::croak
+    "No driver class found for drivers '$driver' or 'generic'";
+
+  unless($Rebless{$class,$driver_class})
+  {
+    unless($Class_Loaded{$driver_class})
+    {
+      eval "require $driver_class"; # ignore errors
+    }
+
+    # Make a new driver class based on the current class
+    my $new_class = $class . '::__RoseDBPrivate__::' . $driver_class;
+
+    no strict 'refs';        
+    @{"${new_class}::ISA"} = ($driver_class, $class);
+    *{"${new_class}::STORABLE_thaw"}   = \&STORABLE_thaw;
+    *{"${new_class}::STORABLE_freeze"} = \&STORABLE_freeze;
+
+    # Cache result
+    $Rebless{$class,$driver_class} = $new_class;
+  }
+  
+  return $Rebless{$class,$driver_class};
 }
 
 sub unregister_db { shift->registry->delete_entry(@_) }
@@ -213,13 +258,22 @@ sub alias_db
 
 sub unregister_domain { shift->registry->delete_domain(@_) }
 
-sub driver_class { shift->_driver_class(lc shift, @_) }
+sub driver_class
+{
+  my($class, $driver) = (shift, lc shift);
+  
+  if(@_)
+  {
+    $class->_driver_class($driver, @_);
+    $class->setup_dynamic_class_for_driver($driver);
+  }
+
+  return $class->_driver_class($driver);
+}
 
 #
 # Object methods
 #
-
-my %Rebless;
 
 sub new
 {
@@ -285,7 +339,7 @@ sub new
 
       $self = bless {}, $new_class;
 
-      # Cache value
+      # Cache result
       $Rebless{$class,$driver_class} = ref $self;
     }
   }
@@ -555,7 +609,6 @@ sub retain_dbh
   my $dbh = $self->dbh or return undef;
   #$Debug && warn "$self->{'_dbh_refcount'} -> ", ($self->{'_dbh_refcount'} + 1), " $dbh\n";
   $self->{'_dbh_refcount'}++;
-  $self->{'_dbh_is_private'} = 0;
   return $dbh;
 }
 
@@ -568,7 +621,6 @@ sub release_dbh
   if($args{'force'})
   {
     $self->{'_dbh_refcount'} = 0;
-    $self->{'_dbh_is_private'} = 1;
 
     # Account for possible Apache::DBI magic
     if(UNIVERSAL::isa($dbh, 'Apache::DBI::db'))
@@ -586,8 +638,6 @@ sub release_dbh
 
   unless($self->{'_dbh_refcount'})
   {
-    $self->{'_dbh_is_private'} = 1;
-
     if(my $sqls = $self->pre_disconnect_sql)
     {
       eval
@@ -639,7 +689,6 @@ sub init_dbh
 
   $self->{'_dbh_refcount'}++;
   #$Debug && warn "CONNECT $dbh ", join(':', (caller(3))[0,2]), "\n";
-  $self->{'_dbh_is_private'} = 1;
 
   #$self->_update_driver;
 
@@ -665,46 +714,6 @@ sub init_dbh
   }
 
   return $self->{'dbh'} = $dbh;
-}
-
-use constant MAX_SANE_TIMESTAMP => 30000000000000; # YYYYY MM DD HH MM SS
-
-sub compare_timestamps
-{
-  my($self, $t1, $t2) = @_;
-
-  foreach my $t ($t1, $t2)
-  {
-    if($t eq $self->min_timestamp)
-    {
-      $t = -1;
-    }
-    elsif($t eq $self->max_timestamp)
-    {
-      $t = MAX_SANE_TIMESTAMP;
-    }
-    else
-    {
-      $t = $self->parse_timestamp($t);
-
-      # Last attempt to get a DateTime object
-      unless(ref $t)
-      {
-        my $d = Rose::DateTime::Util::parse_date($t);
-        $t = $d  if(defined $d);
-      }
-
-      if(ref $t)
-      {
-        $t = Rose::DateTime::Util::format_date($t, '%Y%m%d.%N');
-      }
-    }
-  }
-
-  return -1  if($t1 < 0 && $t2 < 0);
-  return 1   if($t1 == MAX_SANE_TIMESTAMP && $t2 == MAX_SANE_TIMESTAMP);
-
-  return $t1 <=> $t2;
 }
 
 sub print_error { shift->_dbh_and_connect_option('PrintError', @_) }
@@ -892,7 +901,43 @@ sub do_transaction
   return 1;
 }
 
-sub quote_column_name { $_[1] }
+sub auto_quote_table_name
+{
+  my($self, $name) = @_;
+
+  if($name =~ /\W/ || $self->is_reserved_word($name))
+  {
+    return $self->quote_table_name($name, @_);
+  }
+
+  return $name;
+}
+
+sub auto_quote_column_name
+{
+  my($self, $name) = @_;
+
+  if($name =~ /\W/ || $self->is_reserved_word($name))
+  {
+    return $self->quote_column_name($name, @_);
+  }
+
+  return $name;
+}
+
+sub quote_column_name 
+{
+  my $name = $_[1];
+  $name =~ s/"/""/g;
+  return qq("$name");
+}
+
+sub quote_table_name
+{
+  my $name = $_[1];
+  $name =~ s/"/""/g;
+  return qq("$name");
+}
 
 sub unquote_column_name
 {
@@ -909,9 +954,9 @@ sub unquote_column_name
   return $name;
 }
 
-sub quote_table_name { $_[1] }
-
 *unquote_table_name = \&unquote_column_name;
+
+sub is_reserved_word { 0 }
 
 BEGIN
 {
@@ -936,6 +981,26 @@ BEGIN
   {
     *quote_identifier = \&quote_identifier_fallback;
   }
+}
+
+sub quote_column_with_table 
+{
+  my($self, $column, $table) = @_;
+  
+  return $table ?
+         $self->quote_table_name($table) . '.' .
+         $self->quote_column_name($column) :
+         $self->quote_column_name($column);
+}
+
+sub auto_quote_column_with_table 
+{
+  my($self, $column, $table) = @_;
+  
+  return $table ?
+         $self->auto_quote_table_name($table) . '.' .
+         $self->auto_quote_column_name($column) :
+         $self->auto_quote_column_name($column);
 }
 
 sub has_primary_key
@@ -1065,27 +1130,32 @@ sub parse_boolean
 # Date formatting
 
 sub format_date
-{  
-  return $_[1]  if($_[0]->validate_date_keyword($_[1]) || $_[1] =~ /^\w+\(.*\)$/);
-  return $_[0]->date_handler->format_date($_[1]);
+{
+  my($self, $date) = @_;
+  return $date  if($self->validate_date_keyword($date) || $date =~ /^\w+\(.*\)$/);
+  return $self->date_handler->format_date($date);
 }
 
 sub format_datetime
 {
-  return $_[1]  if($_[0]->validate_datetime_keyword($_[1]) || $_[1] =~ /^\w+\(.*\)$/);
-  return $_[0]->date_handler->format_datetime($_[1]);
+  my($self, $date) = @_;
+  return $date  if($self->validate_datetime_keyword($date) || $date =~ /^\w+\(.*\)$/);
+  return $self->date_handler->format_datetime($date);
 }
 
 sub format_time
-{  
-  return $_[1]  if($_[0]->validate_time_keyword($_[1])) || $_[1] =~ /^\w+\(.*\)$/;
-  return $_[0]->date_handler->format_time($_[1]);
+{
+  my($self, $time, $precision) = @_;
+  return $time  if($self->validate_time_keyword($time) || $time =~ /^\w+\(.*\)$/);
+  $precision ||= '';
+  return $time->format("%H:%M:%S%${precision}n");
 }
 
 sub format_timestamp
 {  
-  return $_[1]  if($_[0]->validate_timestamp_keyword($_[1]) || $_[1] =~ /^\w+\(.*\)$/);
-  return $_[0]->date_handler->format_timestamp($_[1]);
+  my($self, $date) = @_;
+  return $date  if($self->validate_timestamp_keyword($date) || $date =~ /^\w+\(.*\)$/);
+  return $self->date_handler->format_timestamp($date);
 }
 
 # Date parsing
@@ -1133,22 +1203,6 @@ sub parse_datetime
   return $dt;
 }
 
-sub parse_time
-{  
-  return $_[1]  if($_[0]->validate_time_keyword($_[1]));
-
-  my $dt;
-  eval { $dt = $_[0]->date_handler->parse_time($_[1]) };
-
-  if($@)
-  {
-    $_[0]->error("Could not parse time '$_[1]' - $@");
-    return undef;
-  }
-
-  return $dt;
-}
-
 sub parse_timestamp
 {  
   my($self, $value) = @_;
@@ -1169,6 +1223,43 @@ sub parse_timestamp
   }
 
   return $dt;
+}
+
+sub parse_time
+{
+  my($self, $value) = @_;
+
+  if(!defined $value || UNIVERSAL::isa($value, 'Time::Clock') || 
+     $self->validate_time_keyword($value) || $value =~ /^\w+\(.*\)$/)
+  {
+    return $value;
+  }
+
+  my $time;
+
+  eval 
+  {
+    $time = Time::Clock->new->parse($value);
+  };
+
+  if($@)
+  {
+    eval
+    {
+      my $dt = $self->date_handler->parse_time($value);
+      # Using parse()/strftime() is faster than using the 
+      # Time::Clock constructor and the DateTime accessors.
+      $time = Time::Clock->new->parse($dt->strftime('%H:%M:%S.%N'));
+    };
+    
+    if($@)
+    {
+      $self->error("Could not parse time '$value' - Time::Clock::parse() failed and $@");
+      return undef;
+    }
+  }
+
+  return $time;
 }
 
 sub parse_bitfield
@@ -1224,7 +1315,7 @@ sub format_bitfield
   return sprintf('%b', hex($vec->to_Hex));
 }
 
-sub select_bitfield_column_sql { shift->quote_column_name(shift) }
+sub select_bitfield_column_sql { shift->auto_quote_column_with_table(@_) }
 
 sub should_inline_bitfield_values { 0 }
 
@@ -1591,6 +1682,7 @@ sub next_value_in_sequence
 sub auto_sequence_name { undef }
 
 sub supports_limit_with_offset { 1 }
+sub supports_arbitrary_defaults_on_insert { 0 }
 
 sub likes_redundant_join_conditions { 0 }
 sub likes_lowercase_table_names     { 0 }
@@ -1673,8 +1765,7 @@ sub STORABLE_freeze
 {
   my($self, $cloning) = @_;
 
-  # I still don't quite get why this is recommended...
-  #return  if($cloning); # Regular default serialization
+  return  if($cloning);
 
   # Ditch the DBI $dbh and pull teh password out of its closure
   my $db = { %$self };
@@ -1942,6 +2033,72 @@ Setting to hash to undef (using the 'reset' interface) will cause it to be re-co
 (These attributes use the L<inheritable_hash|Rose::Class::MakeMethods::Generic/inheritable_hash> method type as defined in L<Rose::Class::MakeMethods::Generic>.)
 
 =back
+
+=head1 SERIALIZATION
+
+A L<Rose::DB> object may contain a L<DBI> database handle, and L<DBI> database handles usually don't survive the serialize process intact.  L<Rose::DB> objects also hide database passwords inside closures, which also don't serialize well.    In order for a L<Rose::DB> object to survive serialization, custom hooks are required.
+
+L<Rose::DB> has hooks for the L<Storable> serialization module, but there is an important caveat.  Since L<Rose::DB> objects are blessed into a dynamically generated class (derived from the L<driver class|/driver_class>), you must load your L<Rose::DB>-derived class with all its registered data sources before you can successfully L<thaw|Storable/thaw> a L<frozen|Storable/freeze> L<Rose::DB>-derived object.  Here's an example.
+
+Imagine that this is your L<Rose::DB>-derived class:
+
+    package My::DB;
+  
+    use Rose::DB;
+    our @ISA = qw(Rose::DB);
+  
+    My::DB->register_db(
+      domain   => 'dev',
+      type     => 'main',
+      driver   => 'Pg',
+      ...
+    );
+
+    My::DB->register_db(
+      domain   => 'prod',
+      type     => 'main',
+      driver   => 'Pg',
+      ...
+    );
+
+    My::DB->default_domain('dev');
+    My::DB->default_type('main');
+
+In one program, a C<My::DB> object is L<frozen|Storable/freeze> using L<Storable>:
+
+    # my_freeze_script.pl
+
+    use My::DB;
+    use Storable qw(nstore);
+
+    # Create My::DB object
+    $db = My::DB->new(domain => 'dev', type => 'main');
+
+    # Do work...
+    $db->dbh->db('CREATE TABLE some_table (...)');
+    ...
+
+    # Serialize $db and store it in frozen_data_file
+    nstore($db, 'frozen_data_file');
+
+Now another program wants to L<thaw|Storable/thaw> out that C<My::DB> object and use it.  To do so, it must be sure to load the L<My::DB> module (which registers all its data sources when loaded) I<before> attempting to deserialize the C<My::DB> object serialized by C<my_freeze_script.pl>.
+
+    # my_thaw_script.pl
+
+    # IMPORTANT: load db modules with all data sources registered before
+    #            attempting to deserialize objects of this class.
+    use My::DB; 
+
+    use Storable qw(retrieve);
+    
+    # Retrieve frozen My::DB object from frozen_data_file
+    $db = retrieve('frozen_data_file');
+
+    # Do work...
+    $db->dbh->db('DROP TABLE some_table');
+    ...
+
+Note that this rule about loading a L<Rose::DB>-derived class with all its data sources registered prior to deserializing such an object only applies if the serialization was done in a different process.  If you L<freeze|Storable/freeze> and L<thaw|Storable/thaw> within the same process, you don't have to worry about it.
 
 =head1 CLASS METHODS
 
@@ -2538,6 +2695,10 @@ Converts the L<DateTime> object DATETIME into the appropriate format for the "da
 
 Converts the L<DateTime::Duration> object DURATION into the appropriate format for the interval (years, months, days, hours, minutes, seconds) data type of the current data source. If DURATION is undefined, a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.
 
+=item B<format_time TIMECLOCK>
+
+Converts the L<Time::Clock> object TIMECLOCK into the appropriate format for the time (hour, minute, second, fractional seconds) data type of the current data source.  Fractional seconds are optional, and the useful precision may vary depending on the data source.
+
 =item B<format_timestamp DATETIME>
 
 Converts the L<DateTime> object DATETIME into the appropriate format for the timestamp (month, day, year, hour, minute, second, fractional seconds) data type of the current data source.  Fractional seconds are optional, and the useful precision may vary depending on the data source.
@@ -2584,6 +2745,12 @@ Parse STRING and return a L<DateTime::Duration> object.  STRING should be format
 
 If STRING is a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.  Otherwise, undef is returned if STRING could not be parsed as a valid "interval" value.
 
+=item B<parse_time STRING>
+
+Parse STRING and return a L<Time::Clock> object.  STRING should be formatted according to the data source's native "time" (hour, minute, second, fractional seconds) data type.
+
+If STRING is a valid time keyword (according to L<validate_time_keyword|/validate_time_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "time" value.
+
 =item B<parse_timestamp STRING>
 
 Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the data source's native "timestamp" (month, day, year, hour, minute, second, fractional seconds) data type.  Fractional seconds are optional, and the acceptable precision may vary depending on the data source.  
@@ -2605,6 +2772,10 @@ Returns true if STRING is a valid keyword for the "datetime" (month, day, year, 
 =item B<validate_interval_keyword STRING>
 
 Returns true if STRING is a valid keyword for the "interval" (years, months, days, hours, minutes, seconds) data type of the current data source, false otherwise.  The default implementation always returns false.
+
+=item B<validate_time_keyword STRING>
+
+Returns true if STRING is a valid keyword for the "time" (hour, minute, second, fractional seconds) data type of the current data source, false otherwise.  The default implementation always returns false.
 
 =item B<validate_timestamp_keyword STRING>
 

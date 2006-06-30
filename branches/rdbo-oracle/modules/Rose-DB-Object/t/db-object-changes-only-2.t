@@ -19,7 +19,7 @@ my %Value =
 (
   1  => 'varchar val',
   2  => 'char val',
-  3  => 'true',
+  3  => 1,
   4  => 4.56,
   5  => '10111',
   6  => 78.90,
@@ -162,6 +162,11 @@ foreach my $db_type (qw(pg mysql informix sqlite))
         $value = $o->$def;
       }
     
+      if($db_type eq 'mysql' && $n == 2 && $o->db->database_version < 5_000_000)
+      {
+        $value .= '        '; # MySQL < 5 seems to mess up CHAR fields
+      }
+
       is($value, $Default{$n}, "check default $def 1 - $db_type");
     }
 
@@ -260,8 +265,12 @@ EOF
   
   if(have_db('mysql_admin'))
   {
-    my $dbh = get_dbh('mysql_admin');
-        
+    my $db  = get_db('mysql_admin');
+    my $dbh = $db->retain_dbh;
+
+    my $bool_columns = ($db->database_version >= 5_000_000) ?
+        qq(c3    BOOLEAN,\n  c3d   BOOLEAN DEFAULT 1,) : '';
+
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test
 (
@@ -270,8 +279,7 @@ CREATE TABLE rose_db_object_test
   c1d   VARCHAR(255) DEFAULT 'varchar-def',
   c2    CHAR(16),
   c2d   CHAR(16) DEFAULT 'char def',
-  c3    BOOLEAN,
-  c3d   BOOLEAN DEFAULT 1,
+  $bool_columns
   c4    FLOAT,
   c4d   FLOAT DEFAULT 1.23,
   c6    DECIMAL(10,2),

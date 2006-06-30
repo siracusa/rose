@@ -200,8 +200,9 @@ EOF
 
   my($ok, $script_fh);
   
-  # Perl 5.8.x and later support the FILEHANDLE,MODE,EXPR,LIST form of open
-  if($Config{'version'} =~ /^5\.([89]|10)\./)
+  # Perl 5.8.x and later support the FILEHANDLE,MODE,EXPR,LIST form of 
+  # open, but not (apparently) on Windows
+  if($Config{'version'} =~ /^5\.([89]|10)\./ && $^O !~ /Win32/i)
   {
     $ok = open($script_fh, '-|', $Perl, 't/make-modules.ext', $db_type);
   }
@@ -567,7 +568,12 @@ sub slurp
   my $data = do { local $/; <$fh> };
 
   # Normalize auto-numbered base classes
-  $data =~ s/::DB::Object::AutoBase\d+/::DB::Object::AutoBaseNNN/g;
+  for($data)
+  {
+    s/::DB::Object::AutoBase\d+/::DB::Object::AutoBaseNNN/g;
+    # MySQL 4.1.2 apparently defaults INTEGER NOT NULL columns to 0
+    s/default => '0',/default => '',/;
+  }
 
   return $data;
 }
