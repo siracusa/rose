@@ -1716,11 +1716,17 @@ Returns the text message associated with the last error that occurred.
 
 =item B<insert [PARAMS]>
 
-Insert the current object to the database table.  This method should only be used when you're absolutely sure that you want to B<force> the current object to be inserted, rather than updated.  It is I<highly recommended> that you use the L<save|/save> method instead of this one in most circumstances.  The L<save|/save> method will "do the right thing," executing an insert or update as appropriate for the current situation.
+Insert the current object to the database table.  This method should only be used when you're absolutely sure that you want to B<force> the current object to be inserted, rather than updated.  It is recommended that you use the L<save|/save> method instead of this one in most circumstances.  The L<save|/save> method will "do the right thing," executing an insert or update as appropriate for the current situation.
 
 PARAMS are optional name/value pairs.  Valid PARAMS are:
 
 =over 4
+
+=item C<changes_only BOOL>
+
+If true, then only the columns whose values have been modified will be included in the insert query.  Otherwise, all columns will be included.  Note that any column that has a L<default|Rose::DB::Object::Metadata::Column/default> value set in its L<column metadata|Rose::DB::Object::Metadata::Column> is considered "modified" during an insert operation.
+
+If omitted, the default value of this parameter is determined by the L<metadata object|/meta>'s L<default_insert_changes_only|Rose::DB::Object::Metadata/default_insert_changes_only> class method, which returns false by default.
 
 =item C<prepare_cached BOOL>
 
@@ -1808,7 +1814,9 @@ PARAMS are name/value pairs.  Valid parameters are:
 
 =item C<changes_only BOOL>
 
-If true, and if the object is being updated rather than inserted, then only the columns whose values have been modified will be updated.  Otherwise, all columns whose values have been loaded from the database will be updated.  If omitted, the default value of this parameter is determined by the L<metadata object|/meta>'s L<default_update_changes_only|Rose::DB::Object::Metadata/default_update_changes_only> class method, which returns false by default.
+If true, then only the columns whose values have been modified will be included in the insert or update query.  Otherwise, all eligible columns will be included.  Note that any column that has a L<default|Rose::DB::Object::Metadata::Column/default> value set in its L<column metadata|Rose::DB::Object::Metadata::Column> is considered "modified" during an insert operation.
+
+If omitted, the default value of this parameter is determined by the L<metadata object|/meta>'s L<default_update_changes_only|Rose::DB::Object::Metadata/default_update_changes_only> class method on update, and the L<default_insert_changes_only|Rose::DB::Object::Metadata/default_insert_changes_only> class method on insert, both of which return false by default.
 
 =item C<insert BOOL>
 
@@ -1906,7 +1914,7 @@ See the L<Rose::DB::Object::Metadata> documentation for more information on cust
 
 =item B<update [PARAMS]>
 
-Update the current object in the database table.  This method should only be used when you're absolutely sure that you want to B<force> the current object to be updated, rather than inserted.  It is I<highly recommended> that you use the L<save|/save> method instead of this one in most circumstances.  The L<save|/save> method will "do the right thing," executing an insert or update as appropriate for the current situation.
+Update the current object in the database table.  This method should only be used when you're absolutely sure that you want to B<force> the current object to be updated, rather than inserted.  It is recommended that you use the L<save|/save> method instead of this one in most circumstances.  The L<save|/save> method will "do the right thing," executing an insert or update as appropriate for the current situation.
 
 PARAMS are optional name/value pairs.  Valid PARAMS are:
 
