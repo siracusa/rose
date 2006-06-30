@@ -647,7 +647,7 @@ SKIP: foreach my $db_type ('mysql')
   is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1980-05-06 12:34:56', "epoch 2 - $db_type");
   is($o->hiepoch(format => '%Y-%m-%d %H:%M:%S.%6N'), '1999-11-30 21:30:00.123456', "epoch hires 2 - $db_type");
 
-  local $Rose::DB::Object::Debug = 1;  
+  #local $Rose::DB::Object::Debug = 1;  
   $o = MyMySQLObject3->new->save;
   $o = MyMySQLObject3->new(id => $o->id)->load;
   
