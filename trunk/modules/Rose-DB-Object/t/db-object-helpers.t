@@ -181,7 +181,9 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
     $o = $class->new(name => 'Alex3')->load;
     $o->age(6);
-    $o->insert_or_update_on_duplicate_key;
+
+    #local $Rose::DB::Object::Debug = 1;
+    $o->insert_or_update_on_duplicate_key(changes_only => 1);
 
     $o = $class->new(name => 'Alex3')->load;
     is($o->name, 'Alex3', "insert_or_update_on_duplicate_key() 13.$i - $db_type");

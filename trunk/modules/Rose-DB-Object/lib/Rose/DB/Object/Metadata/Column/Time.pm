@@ -8,7 +8,7 @@ use Rose::DB::Object::MakeMethods::Time;
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.732';
+our $VERSION = '0.74';
 
 __PACKAGE__->add_common_method_maker_argument_names('default', 'precision');
 
