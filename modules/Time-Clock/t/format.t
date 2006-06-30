@@ -2,19 +2,20 @@
 
 use strict;
 
-use Test::More tests => 24;
+use Test::More tests => 25;
 
 use Time::Clock;
 
 my $t = Time::Clock->new;
 
 $t->parse('12:34:56.123456789');
-is($t->format('%H %I %i %M %S %N %n %p'), '12 12 12 34 56 123456789 .123456789 PM', 'format %H %I %i %M %S %N %p 1');
+is($t->format('%H %k %I %i %M %S %N %n %p %P %T'), '12 12 12 12 34 56 123456789 .123456789 PM pm 12:34:56', 'format %H %I %i %M %S %N %p %P %T 1');
 
 $t->parse('13:34:56.123');
-is($t->format('%H %I %i %M %S %N %n %p'), '13 01 1 34 56 123000000 .123 PM', 'format %H %I %i %M %S %N %p 2');
+is($t->format('%H %k %I %i %M %S %N %n %p %P %T'), '13 13 01 1 34 56 123000000 .123 PM pm 13:34:56', 'format %H %I %i %M %S %N %p %P %T 2');
 
 $t->parse('1:23:45');
+is($t->format('%k'), '1', 'format %k');
 is($t->format('%n'), '', 'format %n 1');
 
 $t->nanosecond(0);

@@ -71,14 +71,14 @@ ok($@, 'nanosecond 1,000,000,000');
 # AM/PM
 
 $t->hour(0);
-is($t->ampm, 'am', 'am 1');
+is($t->ampm, 'AM', 'am 1');
 $t->hour(11);
-is($t->ampm, 'am', 'am 2');
+is($t->ampm, 'AM', 'am 2');
 
 $t->hour(12);
-is($t->ampm, 'pm', 'pm 1');
+is($t->ampm, 'PM', 'pm 1');
 $t->hour(23);
-is($t->ampm, 'pm', 'pm 2');
+is($t->ampm, 'PM', 'pm 2');
 
 $t->hour(1);
 $t->ampm('pm');
