@@ -1,3 +1,8 @@
+0.741 (07.01.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Tweaked the JOIN syntax for MySQL in order to better accomodate
+      MySQL version 5.x.  (Reported by Glenn Gallien)
+
 0.74 (06.30.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added the Time column type.

@@ -371,7 +371,7 @@ sub build_select
     #
     # If this parameter is passed, then every table except t1 that has 
     # a join type and condition will be joined with an explicit JOIN
-    # statement.  Otherwise, an inplicit inner join willbe used.
+    # statement.  Otherwise, an inplicit inner join will be used.
     if($joins && @$joins)
     {
       my $i = 1;
@@ -406,10 +406,12 @@ sub build_select
         $i++;
       }
 
-      # SQLite 1.12 seems to demand that explicit joins come last.
-      # Older versions seem to like it too, so I'll make it that
-      # way for SQLite in general.
-      if($dbh->{'Driver'}{'Name'} eq 'SQLite')
+      my $driver = $dbh->{'Driver'}{'Name'};
+
+      # SQLite 1.12 and MySQL 5.x seem to demand that explicit joins come 
+      # last.  Older versions seem to like it too, so I'll make it that
+      # way for SQLite and MySQL in general.
+      if($driver eq 'SQLite' || $driver eq 'mysql')
       {
         # Primary table first, then implicit joins, then explicit joins
         $from_tables_sql = 
