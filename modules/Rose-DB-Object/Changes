@@ -1,6 +1,8 @@
 0.741 (07.03.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added end_of_month_mode parameter to the interval column class.
+    * Prevented perl_* code generation methods from attempting to 
+      auto-initialize missing metadata.
     * Tweaked the JOIN syntax for MySQL in order to better accomodate
       MySQL version 5.x.  (Reported by Glenn Gallien)
 
