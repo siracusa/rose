@@ -1,5 +1,6 @@
-0.741 (07.01.2006) - John Siracusa <siracusa@mindspring.com>
+0.741 (07.03.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Added end_of_month_mode parameter to the interval column class.
     * Tweaked the JOIN syntax for MySQL in order to better accomodate
       MySQL version 5.x.  (Reported by Glenn Gallien)
 

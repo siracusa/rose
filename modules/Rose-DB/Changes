@@ -1,5 +1,6 @@
 0.721 (07.03.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Added end-of-month mode parameter to parse_interval()
     * Added "cast" to the list of reserved words for Postgres.
 
 0.72 (06.30.2006) - John Siracusa <siracusa@mindspring.com>
