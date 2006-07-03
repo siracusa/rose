@@ -7,7 +7,7 @@ use DateTime::Format::Pg;
 
 use Rose::DB;
 
-our $VERSION = '0.72';
+our $VERSION = '0.721';
 
 our $Debug = 0;
 
@@ -260,7 +260,7 @@ sub auto_sequence_name
   return lc "${table}_${column}_seq";
 }
 
-our %Reserved_Words = map { $_ => 1 } qw(role);
+our %Reserved_Words = map { $_ => 1 } qw(role cast);
 sub is_reserved_word { $Reserved_Words{lc $_[1]} }
 
 #
