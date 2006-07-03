@@ -14,7 +14,7 @@ our $Debug;
 
 *Debug = \$Rose::DB::Object::Metadata::Debug;
 
-our $VERSION = '0.73';
+our $VERSION = '0.741';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -519,8 +519,6 @@ sub perl_columns_definition
 {
   my($self, %args) = @_;
 
-  $self->auto_init_columns  unless($self->was_auto_initialized);
-
   my $for_setup = $args{'for_setup'};
   my $indent = defined $args{'indent'} ? $args{'indent'} : $self->default_perl_indent;
   my $braces = defined $args{'braces'} ? $args{'braces'} : $self->default_perl_braces;
@@ -603,8 +601,6 @@ sub perl_foreign_keys_definition
 {
   my($self, %args) = @_;
 
-  $self->auto_init_foreign_keys  unless($self->was_auto_initialized);
-
   my $indent = defined $args{'indent'} ? $args{'indent'} : $self->default_perl_indent;
   my $braces = defined $args{'braces'} ? $args{'braces'} : $self->default_perl_braces;
 
@@ -676,8 +672,6 @@ sub perl_foreign_keys_definition
 sub perl_relationships_definition
 {
   my($self, %args) = @_;
-
-  $self->auto_init_relationships  unless($self->was_auto_initialized);
 
   my $indent = defined $args{'indent'} ? $args{'indent'} : $self->default_perl_indent;
   my $braces = defined $args{'braces'} ? $args{'braces'} : $self->default_perl_braces;
@@ -751,8 +745,6 @@ sub perl_relationships_definition
 sub perl_unique_keys_definition
 {
   my($self, %args) = @_;
-
-  $self->auto_init_unique_keys  unless($self->was_auto_initialized);
 
   my $style  = defined $args{'style'}  ? $args{'style'}  : $self->default_perl_unique_key_style;
   my $indent = defined $args{'indent'} ? $args{'indent'} : $self->default_perl_indent;
@@ -880,8 +872,6 @@ sub perl_table_definition
 sub perl_primary_key_columns_definition
 {
   my($self, %args) = @_;
-
-  $self->auto_init_primary_key_columns  unless($self->was_auto_initialized);
 
   my @pk_cols = $self->primary_key->column_names;
 
