@@ -631,7 +631,7 @@ In the documentation, the adjectives "local" and "foreign" are used to distingui
 
 =head1 SUMMARY OF DEFAULT CONVENTIONS
 
-Although the object method documentation below includes all the information required to understand the default conventions, it's also quite spread out.  What follows is a summary of the default conventions.  Some details have necessarily been omitted or glossed over for the sake of brevity, of course.  But this summary should give you a good starting point for further exploration.
+Although the object method documentation below includes all the information required to understand the default conventions, it's also quite spread out.  What follows is a summary of the default conventions.  Some details have necessarily been omitted or simplified for the sake of brevity, but this summary should give you a good starting point for further exploration.
 
 Here's a brief summary of the default conventions as implemented in L<Rose::DB::Object::ConventionManager>.
 
@@ -647,7 +647,7 @@ Examples: C<products>, C<vendors>, C<codes>, C<customer_details>, C<employee_add
 
 =item B<Class names are singular, title-cased, with nothing separating words.>
 
-Examples: C<Product>, C<Vendor>, C<Code>, C<CustomerDetails>, C<EmployeeAddress>.
+Examples: C<Product>, C<Vendor>, C<Code>, C<CustomerDetail>, C<EmployeeAddress>.
 
 =item B<Primary key column names do not contain the table name.>
 
