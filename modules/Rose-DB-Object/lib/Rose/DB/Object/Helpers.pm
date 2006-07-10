@@ -9,16 +9,24 @@ our @ISA = qw(Rose::DB::Object::MixIn);
 
 use Carp;
 
-our $VERSION = '0.73';
+our $VERSION = '0.741';
 
-__PACKAGE__->export_tag
+__PACKAGE__->export_tags
 (
   all => 
   [
     qw(clone clone_and_reset load_or_insert insert_or_update 
        insert_or_update_on_duplicate_key load_speculative
-       column_value_pairs column_accessor_value_pairs column_mutator_value_pairs) 
-  ]
+       column_value_pairs column_accessor_value_pairs 
+       column_mutator_value_pairs column_values_as_yaml) 
+  ],
+
+  # This exists for the benefit of the test suite, really...
+  all_noprereq =>
+  [
+    qw(clone clone_and_reset load_or_insert insert_or_update 
+       insert_or_update_on_duplicate_key load_speculative)
+  ],
 );
 
 sub load_speculative { shift->load(@_, speculative => 1) }
@@ -92,7 +100,13 @@ sub insert_or_update_on_duplicate_key
   return $self->insert(@_, on_duplicate_key_update => 1);
 }
 
-#__PACKAGE__->pre_import_hook(column_value_pairs => sub { die "FOO!" });
+__PACKAGE__->pre_import_hook(column_values_as_yaml => sub { require YAML::Syck });
+
+sub column_values_as_yaml
+{
+  local $_[0]->{STATE_SAVING()} = 1;
+  YAML::Syck::Dump({ ref $_[0] => scalar shift->column_value_pairs })
+}
 
 sub column_value_pairs
 {
@@ -249,6 +263,18 @@ is equivalent to this:
     $b->id(undef);   # reset primary key
     $b->name(undef); # reset unique key
     $b->db($a->db);  # copy db
+
+=item B<column_accessor_value_pairs>
+
+Returns a hash (in list context) or reference to a hash (in scalar context) of column accessor method names and column values.  The keys of the hash are the L<accessor method names|Rose::DB::Object::Metadata::Column/accessor_method_name> for the columns.  The values are retrieved by calling the L<accessor method|Rose::DB::Object::Metadata::Column/accessor_method_name> for each column.
+
+=item B<column_mutator_value_pairs>
+
+Returns a hash (in list context) or reference to a hash (in scalar context) of column mutator method names and column values.  The keys of the hash are the L<mutator method names|Rose::DB::Object::Metadata::Column/mutator_method_name> for the columns.  The values are retrieved by calling the L<accessor method|Rose::DB::Object::Metadata::Column/accessor_method_name> for each column.
+
+=item B<column_value_pairs>
+
+Returns a hash (in list context) or reference to a hash (in scalar context) of column name and value pairs.  The keys of the hash are the L<names|Rose::DB::Object::Metadata::Column/name> of the columns.  The values are retrieved by calling the L<accessor method|Rose::DB::Object::Metadata::Column/accessor_method_name> for each column.
 
 =item B<insert_or_update [PARAMS]>
 

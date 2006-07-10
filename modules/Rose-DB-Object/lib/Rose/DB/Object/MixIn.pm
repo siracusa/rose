@@ -14,10 +14,9 @@ use Rose::Class::MakeMethods::Set
   [
     '_export_tag' =>
     {
+      list_method    => '_export_tags',
       clear_method   => 'clear_export_tags',
-      list_method    => 'export_tags',
-      add_method     => 'add_export_tag',
-      adds_method    => 'add_export_tags',
+      add_method     => '_add_export_tag',
       delete_method  => 'delete_export_tag',
       deletes_method => 'delete_export_tags',
     },
@@ -114,7 +113,7 @@ sub export_tag
 
   if(@_ && !$class->_export_tag_value($tag))
   {
-    $class->add_export_tag($tag);
+    $class->_add_export_tag($tag);
   }
 
   if(@_ && (@_ > 1 || (ref $_[0] || '') ne 'ARRAY'))
@@ -128,6 +127,25 @@ sub export_tag
   croak "No such tag: $tag"  unless($ret);
 
   return wantarray ? @$ret : $ret;
+}
+
+sub export_tags
+{
+  my($class) = shift;
+  return $class->_export_tags  unless(@_);
+  $class->clear_export_tags;
+  $class->add_export_tags(@_);
+}
+
+sub add_export_tags
+{
+  my($class) = shift;
+  
+  while(@_)
+  {
+    my($tag, $arg) = (shift, shift);
+    $class->export_tag($tag, $arg);
+  }
 }
 
 sub pre_import_hook
