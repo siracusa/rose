@@ -11,7 +11,7 @@ BEGIN
   use_ok('Rose::DB::Object::Helpers');
 }
 
-our %Have;
+our(%Have, $Have_YAML, $Have_JSON);
 
 #
 # Tests
@@ -63,7 +63,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   @tags = MyMixIn->export_tags;
   is_deeply(\@tags, [ ], "clear_export_tags() 1 - $db_type");
 
-  MyMixIn->add_export_tags('foo', 'all');
+  MyMixIn->add_export_tags('foo' => [], 'all' => []);
   MyMixIn->delete_export_tags('foo', 'all');
 
   @tags = MyMixIn->export_tags;
@@ -205,11 +205,31 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   is_deeply(scalar $o->column_mutator_value_pairs(), 
            { age => 6, id => 2, set_laz => 'Z2', name => 'Alex3' },
            "column_mutator_value_pairs() - $db_type");
+
+  #if($Have_YAML)
+  #{
+  #  local $YAML::Syck::SortKeys = 1;
+  #  is($o->column_values_as_yaml, '', "column_values_as_yaml() - $db_type");
+  #}
 }
 
 BEGIN
 {
-  our %Have;
+  our(%Have, $Have_YAML, $Have_JSON, $All);
+
+  eval { require YAML::Syck; require JSON::Syck; };
+
+  $All = $@ ? ':all_noprereq' : ':all';
+
+  unless($@)
+  {
+    $Have_YAML = $Have_JSON = 1;
+  }
+}
+
+BEGIN
+{
+  our(%Have, $Have_YAML, $Have_JSON, $All);
 
   #
   # Postgres
@@ -252,11 +272,11 @@ EOF
 
     package MyPgObject;
     our @ISA = qw(Rose::DB::Object);
-    use Rose::DB::Object::Helpers qw(:all);
+    use Rose::DB::Object::Helpers ($All);
 
-    eval { Rose::DB::Object::Helpers->import(qw(:all)) };
+    eval { Rose::DB::Object::Helpers->import($All) };
     Test::More::ok($@, 'import conflict - pg');
-    eval { Rose::DB::Object::Helpers->import(qw(-force :all)) };
+    eval { Rose::DB::Object::Helpers->import('-force', $All) };
     Test::More::ok(!$@, 'import override - pg');
 
     Rose::DB::Object::Helpers->import({ load_or_insert => 'find_or_create' });
@@ -310,7 +330,7 @@ EOF
 
     package MyMysqlObject;
     our @ISA = qw(Rose::DB::Object);
-    use Rose::DB::Object::Helpers qw(:all);
+    use Rose::DB::Object::Helpers ($All);
 
     eval { Rose::DB::Object::Helpers->import(qw(load_or_insert load_speculative insert_or_update)) };
     Test::More::ok($@, 'import conflict - mysql');
@@ -366,11 +386,11 @@ EOF
 
     package MyInformixObject;
     our @ISA = qw(Rose::DB::Object);
-    use Rose::DB::Object::Helpers qw(:all);
+    use Rose::DB::Object::Helpers ($All);
 
-    eval { Rose::DB::Object::Helpers->import(qw(:all)) };
+    eval { Rose::DB::Object::Helpers->import($All) };
     Test::More::ok($@, 'import conflict - informix');
-    eval { Rose::DB::Object::Helpers->import(qw(-force :all)) };
+    eval { Rose::DB::Object::Helpers->import('-force', $All) };
     Test::More::ok(!$@, 'import override - informix');
 
     Rose::DB::Object::Helpers->import({ load_or_insert => 'find_or_create' });
@@ -422,11 +442,11 @@ EOF
 
     package MySqliteObject;
     our @ISA = qw(Rose::DB::Object);
-    use Rose::DB::Object::Helpers qw(:all);
+    use Rose::DB::Object::Helpers ($All);
 
-    eval { Rose::DB::Object::Helpers->import(qw(:all)) };
+    eval { Rose::DB::Object::Helpers->import($All) };
     Test::More::ok($@, 'import conflict - sqlite');
-    eval { Rose::DB::Object::Helpers->import(qw(--force :all)) };
+    eval { Rose::DB::Object::Helpers->import('--force', $All) };
     Test::More::ok(!$@, 'import override - sqlite');
 
     Rose::DB::Object::Helpers->import({ load_or_insert => 'find_or_create' });
