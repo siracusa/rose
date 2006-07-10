@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => (67 * 4) + 2;
+use Test::More tests => (70 * 4) + 2;
 
 BEGIN 
 {
@@ -23,7 +23,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 67)  unless($Have{$db_type});
+    skip("$db_type tests", 70)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -193,6 +193,18 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   }
 
   $o->meta->allow_inline_column_values(0);
+
+  is_deeply(scalar $o->column_value_pairs(), 
+           { age => 6, id => 2, laz => 'Z2', name => 'Alex3' },
+           "column_value_pairs() - $db_type");
+
+  is_deeply(scalar $o->column_accessor_value_pairs(), 
+           { age => 6, id => 2, get_laz => 'Z2', name => 'Alex3' },
+           "column_accessor_value_pairs() - $db_type");
+
+  is_deeply(scalar $o->column_mutator_value_pairs(), 
+           { age => 6, id => 2, set_laz => 'Z2', name => 'Alex3' },
+           "column_mutator_value_pairs() - $db_type");
 }
 
 BEGIN
@@ -254,6 +266,7 @@ EOF
     __PACKAGE__->meta->table('rose_db_object_test');
     __PACKAGE__->meta->auto_initialize;
     __PACKAGE__->meta->column('laz')->lazy(1);
+    __PACKAGE__->meta->column('laz')->add_auto_method_types(qw(get set));
     __PACKAGE__->meta->initialize(replace_existing => 1);
   }
 
@@ -311,6 +324,7 @@ EOF
     __PACKAGE__->meta->table('rose_db_object_test');
     __PACKAGE__->meta->auto_initialize;
     __PACKAGE__->meta->column('laz')->lazy(1);
+    __PACKAGE__->meta->column('laz')->add_auto_method_types(qw(get set));
     __PACKAGE__->meta->initialize(replace_existing => 1);
   }
 
@@ -366,6 +380,7 @@ EOF
     __PACKAGE__->meta->table('rose_db_object_test');
     __PACKAGE__->meta->auto_initialize;
     __PACKAGE__->meta->column('laz')->lazy(1);
+    __PACKAGE__->meta->column('laz')->add_auto_method_types(qw(get set));
     __PACKAGE__->meta->initialize(replace_existing => 1);
   }
 
@@ -421,6 +436,7 @@ EOF
     __PACKAGE__->meta->table('rose_db_object_test');
     __PACKAGE__->meta->auto_initialize;
     __PACKAGE__->meta->column('laz')->lazy(1);
+    __PACKAGE__->meta->column('laz')->add_auto_method_types(qw(get set));
     __PACKAGE__->meta->initialize(replace_existing => 1);
   }
 

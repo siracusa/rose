@@ -16,7 +16,8 @@ __PACKAGE__->export_tag
   all => 
   [
     qw(clone clone_and_reset load_or_insert insert_or_update 
-       insert_or_update_on_duplicate_key load_speculative) 
+       insert_or_update_on_duplicate_key load_speculative
+       column_value_pairs column_accessor_value_pairs column_mutator_value_pairs) 
   ]
 );
 
@@ -89,6 +90,53 @@ sub insert_or_update_on_duplicate_key
   }
 
   return $self->insert(@_, on_duplicate_key_update => 1);
+}
+
+#__PACKAGE__->pre_import_hook(column_value_pairs => sub { die "FOO!" });
+
+sub column_value_pairs
+{
+  my($self) = shift;
+
+  my %pairs;
+
+  my $methods = $self->meta->column_accessor_method_names_hash;
+
+  while(my($column, $method) = each(%$methods))
+  {
+    $pairs{$column} = $self->$method();
+  }
+
+  return wantarray ? %pairs : \%pairs;
+}
+
+sub column_accessor_value_pairs
+{
+  my($self) = shift;
+
+  my %pairs;
+
+  foreach my $method ($self->meta->column_accessor_method_names)
+  {
+    $pairs{$method} = $self->$method();
+  }
+
+  return wantarray ? %pairs : \%pairs;
+}
+
+sub column_mutator_value_pairs
+{
+  my($self) = shift;
+
+  my %pairs;
+
+  foreach my $column ($self->meta->columns)
+  {
+    my $method = $column->accessor_method_name;
+    $pairs{$column->mutator_method_name} = $self->$method();
+  }
+
+  return wantarray ? %pairs : \%pairs;
 }
 
 sub clone
