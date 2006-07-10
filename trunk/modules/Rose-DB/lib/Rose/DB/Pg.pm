@@ -268,7 +268,7 @@ sub auto_sequence_name
   return lc "${table}_${column}_seq";
 }
 
-our %Reserved_Words = map { $_ => 1 } qw(role cast);
+our %Reserved_Words = map { $_ => 1 } qw(role cast user);
 sub is_reserved_word { $Reserved_Words{lc $_[1]} }
 
 #

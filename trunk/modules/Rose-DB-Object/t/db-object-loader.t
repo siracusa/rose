@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 22) + 3;
+use Test::More tests => 1 + (5 * 22) + 7;
 
 BEGIN 
 {
@@ -197,8 +197,8 @@ BEGIN
 
   our %Reserved_Words =
   (
-    'pg' => [ 'role' ],
-    'pg_with_schema' => [ 'role' ],
+    'pg' => [ qw(role cast user) ],
+    'pg_with_schema' => [ qw(role cast user) ],
     'mysql' => [ 'read' ],
   );
 
@@ -281,7 +281,7 @@ CREATE TABLE products
   name    VARCHAR(255) NOT NULL,
   price   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
 
-  @{[ join(', ', map { "$_ INT" } @{$Reserved_Words{'pg'}}) . ',' ]}
+  @{[ join(', ', map { qq("$_" INT) } @{$Reserved_Words{'pg'}}) . ',' ]}
 
   vendor_id  INT REFERENCES vendors (id),
 
@@ -367,7 +367,7 @@ CREATE TABLE Rose_db_object_private.products
   name    VARCHAR(255) NOT NULL,
   price   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
 
-  @{[ join(', ', map { "$_ INT" } @{$Reserved_Words{'pg'}}) . ',' ]}
+  @{[ join(', ', map { qq("$_" INT) } @{$Reserved_Words{'pg'}}) . ',' ]}
 
   vendor_id  INT REFERENCES vendors (id),
 
