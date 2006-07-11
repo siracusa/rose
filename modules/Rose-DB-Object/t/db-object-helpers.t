@@ -219,6 +219,11 @@ foreach my $db_type (qw(mysql pg informix sqlite))
     is($c->column_values_as_yaml, "--- \nage: 6\nid: 2\nlaz: Z2\nname: Alex3\n",
        "init_with_yaml() - $db_type")
   }
+  else 
+  {
+    ok(1, "skip column_values_as_yaml() - $db_type");
+    ok(1, "skip init_with_yaml() - $db_type");
+  }
 
   if($Have_JSON)
   {
@@ -226,16 +231,20 @@ foreach my $db_type (qw(mysql pg informix sqlite))
     # {"laz":"Z2","name":"Alex3","id":2,"age":6}
     my $json = $o->column_values_as_json;
     ok($json =~ /^\{/ && $json =~ /"laz":"Z2"/ &&
-       $json =~ /"name":"Alex3"/ && $json =~ /"id":2/ &&
-       $json =~ /"age":6/ && $json =~ /\}\z/, "column_values_as_json() - $db_type");
+       $json =~ /"name":"Alex3"/ && $json =~ /"id":(?:2|"2")/ &&
+       $json =~ /"age":(?:6|"6")/ && $json =~ /\}\z/, "column_values_as_json() - $db_type");
 
     my $c = $class->new(age => 456);
     $c->init_with_json($json);
     ok($json =~ /^\{/ && $json =~ /"laz":"Z2"/ &&
-       $json =~ /"name":"Alex3"/ && $json =~ /"id":2/ &&
-       $json =~ /"age":6/ && $json =~ /\}\z/, "init_with_json() - $db_type");
+       $json =~ /"name":"Alex3"/ && $json =~ /"id":(?:2|"2")/ &&
+       $json =~ /"age":(?:6|"6")/ && $json =~ /\}\z/, "init_with_json() - $db_type");
   }
-  exit;
+  else 
+  {
+    ok(1, "skip column_values_as_json() - $db_type");
+    ok(1, "skip init_with_json() - $db_type");
+  }
 }
 
 BEGIN
