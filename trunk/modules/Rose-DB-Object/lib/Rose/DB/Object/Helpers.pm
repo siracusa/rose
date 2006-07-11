@@ -316,6 +316,14 @@ is equivalent to this:
     $b->name(undef); # reset unique key
     $b->db($a->db);  # copy db
 
+=item B<column_values_as_json>
+
+Returns a string containing a JSON representation of the object's column values.  You must have the L<JSON::Syck> module installed in order to use this helper method.
+
+=item B<column_values_as_yaml>
+
+Returns a string containing a YAML representation of the object's column values.  You must have the L<YAML::Syck> module installed in order to use this helper method.
+
 =item B<column_accessor_value_pairs>
 
 Returns a hash (in list context) or reference to a hash (in scalar context) of column accessor method names and column values.  The keys of the hash are the L<accessor method names|Rose::DB::Object::Metadata::Column/accessor_method_name> for the columns.  The values are retrieved by calling the L<accessor method|Rose::DB::Object::Metadata::Column/accessor_method_name> for each column.
@@ -327,6 +335,32 @@ Returns a hash (in list context) or reference to a hash (in scalar context) of c
 =item B<column_value_pairs>
 
 Returns a hash (in list context) or reference to a hash (in scalar context) of column name and value pairs.  The keys of the hash are the L<names|Rose::DB::Object::Metadata::Column/name> of the columns.  The values are retrieved by calling the L<accessor method|Rose::DB::Object::Metadata::Column/accessor_method_name> for each column.
+
+=item B<init_with_json JSON>
+
+Initialize the object with a JSON-formatted string.  The JSON string must be in the format returned by the L<column_values_as_json|/column_values_as_json> method.  Example:
+
+    $p1 = Person->new(name => 'John', age => 30);
+    $json = $p1->column_values_as_json;
+
+    $p2 = Person->new;
+    $p2->init_with_json($json);
+
+    print $p2->name; # John
+    print $p2->age;  # 30
+
+=item B<init_with_json YAML>
+
+Initialize the object with a YAML-formatted string.  The YAML string must be in the format returned by the L<column_values_as_yaml|/column_values_as_yaml> method.  Example:
+
+    $p1 = Person->new(name => 'John', age => 30);
+    $yaml = $p1->column_values_as_yaml;
+
+    $p2 = Person->new;
+    $p2->init_with_yaml($yaml);
+
+    print $p2->name; # John
+    print $p2->age;  # 30
 
 =item B<insert_or_update [PARAMS]>
 

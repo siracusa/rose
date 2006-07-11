@@ -459,7 +459,7 @@ Rose::DB::Object::MakeMethods::Time - Create time-related methods for Rose::DB::
         t1 => { precision => 6 },
         t2 => { default => '3 days 6 minutes 5 seconds' },
       ],
-      
+
       time =>
       [
         start => { precision => 5 },
@@ -475,16 +475,16 @@ Rose::DB::Object::MakeMethods::Time - Create time-related methods for Rose::DB::
 
     print $o->t1->minutes;    # 5
     print $o->t1->nanosecond; # 3000000
-    
+
     $o->start('12:34:56.12345');
-    
+
     print $o->start->nanosecond; # 123450000
     print $o->start->as_string;  # 12:34:56.12345
 
     $o->end('6pm');
-    
+
     $tc = $o->end; # Time::Clock object
-    
+
     print $o->end->hour; # 18
     print $o->end->ampm; # PM
 
@@ -655,23 +655,23 @@ Example:
     );
 
     ...
-    
+
     $o->start('12:34:56.12345');
-    
+
     print $o->start->nanosecond; # 123450000
     print $o->start->as_string;  # 12:34:56.12345
 
     $o->end('6pm');
-    
+
     $tc = $o->end; # Time::Clock object
-    
+
     print $o->end->hour; # 18
     print $o->end->ampm; # PM
 
     print $o->end->format('%I:%M %p'); # 6:00 PM
     $o->end->add(hours => 1);
     print $o->end->format('%I:%M %p'); # 7:00 PM
-    
+
 =back
 
 =head1 AUTHOR
