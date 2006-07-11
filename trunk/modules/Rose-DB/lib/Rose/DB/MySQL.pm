@@ -8,7 +8,7 @@ use DateTime::Format::MySQL;
 
 use Rose::DB;
 
-our $VERSION = '0.70';
+our $VERSION = '0.721';
 
 our $Debug = 0;
 
@@ -234,7 +234,7 @@ sub supports_on_duplicate_key_update
   return $self->{'supports_on_duplicate_key_update'} = 0;
 }
 
-our %Reserved_Words = map { $_ => 1 } qw(read);
+our %Reserved_Words = map { $_ => 1 } qw(read for case);
 sub is_reserved_word { $Reserved_Words{lc $_[1]} }
 
 #
