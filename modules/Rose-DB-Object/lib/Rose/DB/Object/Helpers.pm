@@ -18,14 +18,18 @@ __PACKAGE__->export_tags
     qw(clone clone_and_reset load_or_insert insert_or_update 
        insert_or_update_on_duplicate_key load_speculative
        column_value_pairs column_accessor_value_pairs 
-       column_mutator_value_pairs column_values_as_yaml) 
+       column_mutator_value_pairs 
+       column_values_as_yaml column_values_as_json
+       init_with_yaml init_with_json) 
   ],
 
-  # This exists for the benefit of the test suite, really...
+  # This exists for the benefit of the test suite
   all_noprereq =>
   [
     qw(clone clone_and_reset load_or_insert insert_or_update 
-       insert_or_update_on_duplicate_key load_speculative)
+       insert_or_update_on_duplicate_key load_speculative
+       column_value_pairs column_accessor_value_pairs 
+       column_mutator_value_pairs)
   ],
 );
 
@@ -105,7 +109,55 @@ __PACKAGE__->pre_import_hook(column_values_as_yaml => sub { require YAML::Syck }
 sub column_values_as_yaml
 {
   local $_[0]->{STATE_SAVING()} = 1;
-  YAML::Syck::Dump({ ref $_[0] => scalar shift->column_value_pairs })
+  YAML::Syck::Dump(scalar shift->column_value_pairs)
+}
+
+__PACKAGE__->pre_import_hook(column_values_as_json => sub { require JSON::Syck });
+
+sub column_values_as_json
+{
+  local $_[0]->{STATE_SAVING()} = 1;
+  JSON::Syck::Dump(scalar shift->column_value_pairs)
+}
+
+__PACKAGE__->pre_import_hook(init_with_json => sub { require YAML::Syck });
+
+sub init_with_yaml
+{
+  my($self, $yaml) = @_;
+
+  my $hash = YAML::Syck::Load($yaml);
+  my $meta = $self->meta;
+
+  local $self->{STATE_LOADING()} = 1;
+
+  while(my($column, $value) = each(%$hash))
+  {
+    my $method = $meta->column($column)->mutator_method_name;
+    $self->$method($value);
+  }
+
+  return $self;
+}
+
+__PACKAGE__->pre_import_hook(init_with_json => sub { require JSON::Syck });
+
+sub init_with_json
+{
+  my($self, $json) = @_;
+
+  my $hash = JSON::Syck::Load($json);
+  my $meta = $self->meta;
+
+  local $self->{STATE_LOADING()} = 1;
+
+  while(my($column, $value) = each(%$hash))
+  {
+    my $method = $meta->column($column)->mutator_method_name;
+    $self->$method($value);
+  }
+
+  return $self;
 }
 
 sub column_value_pairs
