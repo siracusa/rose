@@ -17,9 +17,9 @@ sub type { 'boolean' }
 sub parse_value  { shift; shift->parse_boolean(@_)  }
 sub format_value { shift; shift->format_boolean(@_) }
 
-sub perl_column_defintion_attributes
+sub perl_column_definition_attributes
 {
-  grep { $_ ne 'length' } shift->SUPER::perl_column_defintion_attributes;
+  grep { $_ ne 'length' } shift->SUPER::perl_column_definition_attributes;
 }
 
 sub method_uses_formatted_key
