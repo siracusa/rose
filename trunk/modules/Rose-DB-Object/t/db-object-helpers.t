@@ -2,7 +2,8 @@
 
 use strict;
 
-use Test::More tests => (70 * 4) + 2;
+#use Test::LongString;
+use Test::More tests => (74 * 4) + 2;
 
 BEGIN 
 {
@@ -23,7 +24,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 70)  unless($Have{$db_type});
+    skip("$db_type tests", 74)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -206,11 +207,35 @@ foreach my $db_type (qw(mysql pg informix sqlite))
            { age => 6, id => 2, set_laz => 'Z2', name => 'Alex3' },
            "column_mutator_value_pairs() - $db_type");
 
-  #if($Have_YAML)
-  #{
-  #  local $YAML::Syck::SortKeys = 1;
-  #  is($o->column_values_as_yaml, '', "column_values_as_yaml() - $db_type");
-  #}
+  if($Have_YAML)
+  {
+    local $YAML::Syck::SortKeys = 1;
+    my $yaml = $o->column_values_as_yaml;
+    is($yaml, "--- \nage: 6\nid: 2\nlaz: Z2\nname: Alex3\n",
+       "column_values_as_yaml() - $db_type");
+
+    my $c = $class->new(age => 456);
+    $c->init_with_yaml($yaml);
+    is($c->column_values_as_yaml, "--- \nage: 6\nid: 2\nlaz: Z2\nname: Alex3\n",
+       "init_with_yaml() - $db_type")
+  }
+
+  if($Have_JSON)
+  {
+    # I don't know if I can rely on this key order...
+    # {"laz":"Z2","name":"Alex3","id":2,"age":6}
+    my $json = $o->column_values_as_json;
+    ok($json =~ /^\{/ && $json =~ /"laz":"Z2"/ &&
+       $json =~ /"name":"Alex3"/ && $json =~ /"id":2/ &&
+       $json =~ /"age":6/ && $json =~ /\}\z/, "column_values_as_json() - $db_type");
+
+    my $c = $class->new(age => 456);
+    $c->init_with_json($json);
+    ok($json =~ /^\{/ && $json =~ /"laz":"Z2"/ &&
+       $json =~ /"name":"Alex3"/ && $json =~ /"id":2/ &&
+       $json =~ /"age":6/ && $json =~ /\}\z/, "init_with_json() - $db_type");
+  }
+  exit;
 }
 
 BEGIN
