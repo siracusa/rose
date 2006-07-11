@@ -425,6 +425,8 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   ok(!$iterator->next, "offset iterator with colors description authors nicknames 1 - $db_type");
   is($iterator->total, 1, "offset iterator with colors description authors nicknames 2 - $db_type");
 
+  #local $Rose::DB::Object::Manager::Debug = 1;
+
   $products = 
     $manager_class->get_products(
       require_objects => [ 'vendor.region', 'prices.region' ],
@@ -432,6 +434,8 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
       multi_many_ok   => 1,
       limit           => 2,
       sort_by => [ 'colors.name DESC', 'authors.name' ]);
+
+  #exit;
 
   is($products->[0]{'vendor'}{'name'}, 'V1', "p1 - vendor 1 - $db_type");
   is($products->[0]{'vendor'}{'region'}{'name'}, 'Germany', "p1 - vendor 2 - $db_type");
