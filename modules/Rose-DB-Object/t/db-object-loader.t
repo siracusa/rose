@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 22) + 7;
+use Test::More tests => 1 + (5 * 22) + 9;
 
 BEGIN 
 {
@@ -199,7 +199,7 @@ BEGIN
   (
     'pg' => [ qw(role cast user) ],
     'pg_with_schema' => [ qw(role cast user) ],
-    'mysql' => [ 'read' ],
+    'mysql' => [ qw(read for case) ],
   );
 
   #
