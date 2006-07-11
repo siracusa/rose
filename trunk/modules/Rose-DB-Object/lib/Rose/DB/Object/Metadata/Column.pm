@@ -344,7 +344,7 @@ sub init_with_dbi_column_info
   return;
 }
 
-sub perl_column_defintion_attributes
+sub perl_column_definition_attributes
 {
   my($self) = shift;
 
@@ -454,7 +454,7 @@ sub perl_hash_definition
 
   my %hash;
 
-  foreach my $attr ($self->perl_column_defintion_attributes)
+  foreach my $attr ($self->perl_column_definition_attributes)
   {
     $hash{$attr} = $self->$attr();
   }

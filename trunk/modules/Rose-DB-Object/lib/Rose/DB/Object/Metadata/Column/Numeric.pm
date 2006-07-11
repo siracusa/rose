@@ -36,9 +36,9 @@ sub init_with_dbi_column_info
   return;
 }
 
-sub perl_column_defintion_attributes
+sub perl_column_definition_attributes
 {
-  grep { $_ ne 'length' } shift->SUPER::perl_column_defintion_attributes;
+  grep { $_ ne 'length' } shift->SUPER::perl_column_definition_attributes;
 }
 
 1;
