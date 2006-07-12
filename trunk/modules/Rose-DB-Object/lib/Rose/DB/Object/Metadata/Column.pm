@@ -1457,7 +1457,7 @@ Each piece of code responding to an C<on_load> event will be passed a single arg
 
 =item B<inflate>
 
-Triggered when a column value that came directly from the database is retrieved for some purpose I<other than> storage in the database.  For example, when end-user code retrieves a column value by calling an accessor method, and that value came directly from the database, this event is triggered.
+Triggered when a column value is retrieved for some purpose I<other than> storage in the database.  For example, when end-user code retrieves a column value by calling an accessor method, and that value came directly from the database, this event is triggered.
 
 Inflation will only happen "as needed."  That is, a value that has already been inflated will not be inflated again, and a value that comes from the database and goes back into it without ever being retrieved by end-user code will never be inflated at all.
 
