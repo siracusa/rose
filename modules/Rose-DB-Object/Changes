@@ -3,7 +3,7 @@
     * Added end_of_month_mode parameter to the interval column class.
     * Prevented perl_* code generation methods from attempting to 
       auto-initialize missing metadata.
-    * Added name/value pair helper methods.
+    * Added name/value pair, JSON, and YAML helper methods.
     * Tweaked the JOIN syntax for MySQL in order to better accommodate
       MySQL version 5.0.12+.  (Reported by Glenn Gallien)
     * Some small POD corrections.
