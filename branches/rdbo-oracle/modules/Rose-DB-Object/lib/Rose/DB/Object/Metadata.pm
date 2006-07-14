@@ -906,7 +906,7 @@ sub add_columns
         #$Debug && warn $self->class, " - adding primary key column $name\n";
         $self->add_primary_key_column($name);
       }
-
+      
       my $methods     = delete $info->{'methods'};
       my $add_methods = delete $info->{'add_methods'};
 
@@ -924,6 +924,13 @@ sub add_columns
       unless($self->column_class_is_loaded($column_class))
       {
         $self->load_column_class($column_class);
+      }
+
+      my %triggers;
+
+      foreach my $event ($column_class->trigger_events)
+      {
+        $triggers{$event} = delete $info->{$event}  if(exists $info->{$event});
       }
 
       #$Debug && warn $self->class, " - adding $name $column_class\n";
@@ -964,6 +971,21 @@ sub add_columns
       {
         $column->alias($alias);
         $self->alias_column($name, $alias);
+      }
+      
+      if(%triggers)
+      {
+        while(my($event, $value) = each(%triggers))
+        {
+          Carp::croak "Missing code reference for $event trigger"
+            unless($value);
+
+          foreach my $code (ref $value eq 'ARRAY' ? @$value : $value)
+          {
+            $column->add_trigger(event => $event, 
+                                 code  => $code);
+          }
+        }
       }
     }
     else
@@ -4225,6 +4247,8 @@ Otherwise, only name/value pairs are considered, where the name is taken as the 
 If the hash contains the key "primary_key" with a true value, then the column is marked as a L<primary_key_member|Rose::DB::Object::Metadata::Column/is_primary_key_member> and the column name is added to the list of primary key columns by calling the L<add_primary_key_column|/add_primary_key_column> method with the column name as its argument.
 
 If the hash contains the key "alias", then the value of that key is used as the alias for the column.  This is a shorthand equivalent to explicitly calling the L<alias_column|/alias_column> column method.
+
+If the hash contains a key with the same name as a L<column trigger event type|Rose::DB::Object::Metadata::Column/TRIGGERS> (e.g., "on_set", "on_load", "inflate") then the value of that key must be a code reference or a reference to an array of code references, which will be L<added|Rose::DB::Object::Metadata::Column/add_trigger> to the list of the column's L<triggers|Rose::DB::Object::Metadata::Column/TRIGGERS> for the specified event type.
 
 If the hash contains the key "methods", then its value must be a reference to an array or a reference to a hash.  The L<auto_method_types|Rose::DB::Object::Metadata::Column/auto_method_types> of the column are then set to the values of the referenced array, or the keys of the referenced hash.  The values of the referenced hash are used to set the L<method_name|Rose::DB::Object::Metadata::Column/method_name> for their corresponding method types.
 

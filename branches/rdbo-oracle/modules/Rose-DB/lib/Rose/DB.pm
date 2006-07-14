@@ -18,7 +18,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.72';
+our $VERSION = '0.721';
 
 our $Debug = 0;
 
@@ -1400,7 +1400,7 @@ my $Interval_Regex = qr{
 
 sub parse_interval
 {
-  my($self, $value) = @_;
+  my($self, $value, $end_of_month_mode) = @_;
 
   if(!defined $value || UNIVERSAL::isa($value, 'DateTime::Duration') || 
      $self->validate_interval_keyword($value) || $value =~ /^\w+\(.*\)$/)
@@ -1579,6 +1579,8 @@ sub parse_interval
     $units{'minutes'} = int($seconds  / 60);
     $units{'seconds'} = $seconds - $units{'minutes'} * 60;
   }
+
+  $units{'end_of_month'} = $end_of_month_mode  if(defined $end_of_month_mode);
 
   $dt_duration = $is_ago ? 
     DateTime::Duration->new(%units)->inverse :
@@ -2739,11 +2741,15 @@ Parse STRING and return a L<DateTime> object.  STRING should be formatted accord
 
 If STRING is a valid datetime keyword (according to L<validate_datetime_keyword|/validate_datetime_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "datetime" value.
 
-=item B<parse_interval STRING>
+=item B<parse_interval STRING [, MODE]>
 
 Parse STRING and return a L<DateTime::Duration> object.  STRING should be formatted according to the data source's native "interval" (years, months, days, hours, minutes, seconds) data type.
 
 If STRING is a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.  Otherwise, undef is returned if STRING could not be parsed as a valid "interval" value.
+
+This optional MODE argyment determines how math is done on duration objects.  If defined, the C<end_of_month> setting for each L<DateTime::Duration> object created by this column will have its mode set to MODE.  Otherwise, the C<end_of_month> parameter will not be passed to the L<DateTime::Duration> constructor.
+
+Valid modes are C<wrap>, C<limit>, and C<preserve>.  See the documentation for L<DateTime::Duration> for a full explanation.
 
 =item B<parse_time STRING>
 

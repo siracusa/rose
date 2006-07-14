@@ -8,9 +8,9 @@ use Rose::DB::Object::MakeMethods::Time;
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.74';
+our $VERSION = '0.741';
 
-__PACKAGE__->add_common_method_maker_argument_names('default', 'precision');
+__PACKAGE__->add_common_method_maker_argument_names('default', 'precision', 'end_of_month_mode');
 
 Rose::Object::MakeMethods::Generic->make_methods
 (
@@ -98,6 +98,12 @@ See the L<Rose::DB::Object::Metadata::Column|Rose::DB::Object::Metadata::Column/
 =head1 OBJECT METHODS
 
 =over 4
+
+=item B<end_of_month_mode MODE>
+
+This mode determines how math is done on duration objects.  If defined, the C<end_of_month> setting for each L<DateTime::Duration> object created by this column will have its mode set to MODE.  Otherwise, the C<end_of_month> parameter will not be passed to the L<DateTime::Duration> constructor.
+
+Valid modes are C<wrap>, C<limit>, and C<preserve>.  See the documentation for L<DateTime::Duration> for a full explanation.
 
 =item B<parse_value DB, VALUE>
 

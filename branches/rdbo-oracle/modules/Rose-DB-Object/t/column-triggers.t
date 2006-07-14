@@ -31,7 +31,8 @@ SETUP:
   MyObject->meta->columns
   (
     id       => { primary_key => 1, not_null => 1 },
-    name     => { type => 'varchar', length => 32 },
+    name     => { type => 'varchar', length => 32, on_set => sub { die "foo" },
+                  on_get => [  sub { die "bar" }, sub { die "baz" } ] },
     code     => { type => 'varchar', length => 32 },
     start    => { type => 'date', default => '12/24/1980' },
     ended    => { type => 'scalar', default => '11/22/2003' },
@@ -49,9 +50,13 @@ SETUP:
 
   foreach my $event (qw(on_set on_get on_load on_save inflate deflate))
   {
-    $column->add_trigger($event => sub { die "foo" });
-    $column->add_trigger($event => sub { die "bar" });
-    $column->add_trigger($event => sub { die "baz" });
+    $column->add_trigger($event => sub { die "foo" })  unless($event eq 'on_set');
+
+    unless($event eq 'on_get')
+    {
+      $column->add_trigger($event => sub { die "bar" });
+      $column->add_trigger($event => sub { die "baz" });
+    }
   }
 
   $column->delete_triggers('on_set');

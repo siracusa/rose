@@ -344,7 +344,7 @@ sub init_with_dbi_column_info
   return;
 }
 
-sub perl_column_defintion_attributes
+sub perl_column_definition_attributes
 {
   my($self) = shift;
 
@@ -454,7 +454,7 @@ sub perl_hash_definition
 
   my %hash;
 
-  foreach my $attr ($self->perl_column_defintion_attributes)
+  foreach my $attr ($self->perl_column_definition_attributes)
   {
     $hash{$attr} = $self->$attr();
   }
@@ -588,6 +588,9 @@ our %Trigger_Events =
   on_get  => 1,
 );
 
+sub trigger_events { keys %Trigger_Events }
+sub trigger_event_exists { exists $Trigger_Events{$_[1]} }
+
 sub builtin_triggers
 {
   # So evil...
@@ -599,7 +602,8 @@ sub triggers
 {
   my($self, $event) = (shift, shift);
 
-  Carp::croak "Invalid event: $event"  unless(exists $Trigger_Events{$event});
+  Carp::croak "Invalid event: $event"  
+    unless($self->trigger_event_exists($event));
 
   if(@_)
   {
@@ -639,11 +643,13 @@ sub delete_triggers
 {
   my($self, $event) = @_;
 
-  my @events = $event ? $event : keys %Trigger_Events;
+  my @events = $event ? $event : $self->trigger_events;
 
   foreach my $event (@events)
   {
-    Carp::croak "Invalid event: $event"  unless(exists $Trigger_Events{$event});
+    Carp::croak "Invalid event: $event" 
+      unless($self->trigger_event_exists($event));
+
     $self->{$Triggers_Key}{$event} = undef;
     $self->{$Trigger_Index_Key}{$event} = undef;
   }
@@ -658,7 +664,7 @@ sub add_builtin_trigger
 {
   my($self, %args) = @_;
 
-  if(@_ == 3 && $Trigger_Events{$_[1]})
+  if(@_ == 3 && $self->trigger_event_exists($_[1]))
   {
     my $event = $_[1];
     my $code  = $_[2];
@@ -677,7 +683,7 @@ sub add_trigger
 
   my($event, $position, $code, $name);
 
-  if(@_ == 3 && $Trigger_Events{$_[1]})
+  if(@_ == 3 && $self->trigger_event_exists($_[1]))
   {
     $event = $_[1];
     $code  = $_[2];
@@ -695,7 +701,7 @@ sub add_trigger
   my $builtin_prefix = $builtin ? 'builtin_' : '';
 
   Carp::croak "Invalid event: '$event'"  
-    unless(exists $Trigger_Events{$event});
+    unless($self->trigger_event_exists($event));
 
   unless((ref($code) || '') eq 'CODE')
   {
@@ -789,7 +795,7 @@ sub delete_trigger
   my $builtin_prefix = $builtin ? 'builtin_' : '';
 
   Carp::croak "Invalid event: '$event'"  
-    unless(exists $Trigger_Events{$event});
+    unless($self->trigger_event_exists($event));
 
   my $index = $builtin ? $self->builtin_trigger_index($event, $name) :
                          $self->trigger_index($event, $name);
@@ -1451,7 +1457,7 @@ Each piece of code responding to an C<on_load> event will be passed a single arg
 
 =item B<inflate>
 
-Triggered when a column value that came directly from the database is retrieved for some purpose I<other than> storage in the database.  For example, when end-user code retrieves a column value by calling an accessor method, and that value came directly from the database, this event is triggered.
+Triggered when a column value is retrieved for some purpose I<other than> storage in the database.  For example, when end-user code retrieves a column value by calling an accessor method, and that value came directly from the database, this event is triggered.
 
 Inflation will only happen "as needed."  That is, a value that has already been inflated will not be inflated again, and a value that comes from the database and goes back into it without ever being retrieved by end-user code will never be inflated at all.
 

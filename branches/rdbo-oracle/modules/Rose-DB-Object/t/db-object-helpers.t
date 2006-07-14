@@ -2,7 +2,8 @@
 
 use strict;
 
-use Test::More tests => (67 * 4) + 2;
+#use Test::LongString;
+use Test::More tests => (74 * 4) + 2;
 
 BEGIN 
 {
@@ -11,7 +12,7 @@ BEGIN
   use_ok('Rose::DB::Object::Helpers');
 }
 
-our %Have;
+our(%Have, $Have_YAML, $Have_JSON);
 
 #
 # Tests
@@ -23,7 +24,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 67)  unless($Have{$db_type});
+    skip("$db_type tests", 74)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -63,7 +64,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   @tags = MyMixIn->export_tags;
   is_deeply(\@tags, [ ], "clear_export_tags() 1 - $db_type");
 
-  MyMixIn->add_export_tags('foo', 'all');
+  MyMixIn->add_export_tags('foo' => [], 'all' => []);
   MyMixIn->delete_export_tags('foo', 'all');
 
   @tags = MyMixIn->export_tags;
@@ -193,11 +194,76 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   }
 
   $o->meta->allow_inline_column_values(0);
+
+  is_deeply(scalar $o->column_value_pairs(), 
+           { age => 6, id => 2, laz => 'Z2', name => 'Alex3' },
+           "column_value_pairs() - $db_type");
+
+  is_deeply(scalar $o->column_accessor_value_pairs(), 
+           { age => 6, id => 2, get_laz => 'Z2', name => 'Alex3' },
+           "column_accessor_value_pairs() - $db_type");
+
+  is_deeply(scalar $o->column_mutator_value_pairs(), 
+           { age => 6, id => 2, set_laz => 'Z2', name => 'Alex3' },
+           "column_mutator_value_pairs() - $db_type");
+
+  if($Have_YAML)
+  {
+    local $YAML::Syck::SortKeys = 1;
+    my $yaml = $o->column_values_as_yaml;
+    is($yaml, "--- \nage: 6\nid: 2\nlaz: Z2\nname: Alex3\n",
+       "column_values_as_yaml() - $db_type");
+
+    my $c = $class->new(age => 456);
+    $c->init_with_yaml($yaml);
+    is($c->column_values_as_yaml, "--- \nage: 6\nid: 2\nlaz: Z2\nname: Alex3\n",
+       "init_with_yaml() - $db_type")
+  }
+  else 
+  {
+    ok(1, "skip column_values_as_yaml() - $db_type");
+    ok(1, "skip init_with_yaml() - $db_type");
+  }
+
+  if($Have_JSON)
+  {
+    # I don't know if I can rely on this key order...
+    # {"laz":"Z2","name":"Alex3","id":2,"age":6}
+    my $json = $o->column_values_as_json;
+    ok($json =~ /^\{/ && $json =~ /"laz":"Z2"/ &&
+       $json =~ /"name":"Alex3"/ && $json =~ /"id":(?:2|"2")/ &&
+       $json =~ /"age":(?:6|"6")/ && $json =~ /\}\z/, "column_values_as_json() - $db_type");
+
+    my $c = $class->new(age => 456);
+    $c->init_with_json($json);
+    ok($json =~ /^\{/ && $json =~ /"laz":"Z2"/ &&
+       $json =~ /"name":"Alex3"/ && $json =~ /"id":(?:2|"2")/ &&
+       $json =~ /"age":(?:6|"6")/ && $json =~ /\}\z/, "init_with_json() - $db_type");
+  }
+  else 
+  {
+    ok(1, "skip column_values_as_json() - $db_type");
+    ok(1, "skip init_with_json() - $db_type");
+  }
 }
 
 BEGIN
 {
-  our %Have;
+  our(%Have, $Have_YAML, $Have_JSON, $All);
+
+  eval { require YAML::Syck; require JSON::Syck; };
+
+  $All = $@ ? ':all_noprereq' : ':all';
+
+  unless($@)
+  {
+    $Have_YAML = $Have_JSON = 1;
+  }
+}
+
+BEGIN
+{
+  our(%Have, $Have_YAML, $Have_JSON, $All);
 
   #
   # Postgres
@@ -240,11 +306,11 @@ EOF
 
     package MyPgObject;
     our @ISA = qw(Rose::DB::Object);
-    use Rose::DB::Object::Helpers qw(:all);
+    use Rose::DB::Object::Helpers ($All);
 
-    eval { Rose::DB::Object::Helpers->import(qw(:all)) };
+    eval { Rose::DB::Object::Helpers->import($All) };
     Test::More::ok($@, 'import conflict - pg');
-    eval { Rose::DB::Object::Helpers->import(qw(-force :all)) };
+    eval { Rose::DB::Object::Helpers->import('-force', $All) };
     Test::More::ok(!$@, 'import override - pg');
 
     Rose::DB::Object::Helpers->import({ load_or_insert => 'find_or_create' });
@@ -254,6 +320,7 @@ EOF
     __PACKAGE__->meta->table('rose_db_object_test');
     __PACKAGE__->meta->auto_initialize;
     __PACKAGE__->meta->column('laz')->lazy(1);
+    __PACKAGE__->meta->column('laz')->add_auto_method_types(qw(get set));
     __PACKAGE__->meta->initialize(replace_existing => 1);
   }
 
@@ -297,7 +364,7 @@ EOF
 
     package MyMysqlObject;
     our @ISA = qw(Rose::DB::Object);
-    use Rose::DB::Object::Helpers qw(:all);
+    use Rose::DB::Object::Helpers ($All);
 
     eval { Rose::DB::Object::Helpers->import(qw(load_or_insert load_speculative insert_or_update)) };
     Test::More::ok($@, 'import conflict - mysql');
@@ -311,6 +378,7 @@ EOF
     __PACKAGE__->meta->table('rose_db_object_test');
     __PACKAGE__->meta->auto_initialize;
     __PACKAGE__->meta->column('laz')->lazy(1);
+    __PACKAGE__->meta->column('laz')->add_auto_method_types(qw(get set));
     __PACKAGE__->meta->initialize(replace_existing => 1);
   }
 
@@ -352,11 +420,11 @@ EOF
 
     package MyInformixObject;
     our @ISA = qw(Rose::DB::Object);
-    use Rose::DB::Object::Helpers qw(:all);
+    use Rose::DB::Object::Helpers ($All);
 
-    eval { Rose::DB::Object::Helpers->import(qw(:all)) };
+    eval { Rose::DB::Object::Helpers->import($All) };
     Test::More::ok($@, 'import conflict - informix');
-    eval { Rose::DB::Object::Helpers->import(qw(-force :all)) };
+    eval { Rose::DB::Object::Helpers->import('-force', $All) };
     Test::More::ok(!$@, 'import override - informix');
 
     Rose::DB::Object::Helpers->import({ load_or_insert => 'find_or_create' });
@@ -366,6 +434,7 @@ EOF
     __PACKAGE__->meta->table('rose_db_object_test');
     __PACKAGE__->meta->auto_initialize;
     __PACKAGE__->meta->column('laz')->lazy(1);
+    __PACKAGE__->meta->column('laz')->add_auto_method_types(qw(get set));
     __PACKAGE__->meta->initialize(replace_existing => 1);
   }
 
@@ -407,11 +476,11 @@ EOF
 
     package MySqliteObject;
     our @ISA = qw(Rose::DB::Object);
-    use Rose::DB::Object::Helpers qw(:all);
+    use Rose::DB::Object::Helpers ($All);
 
-    eval { Rose::DB::Object::Helpers->import(qw(:all)) };
+    eval { Rose::DB::Object::Helpers->import($All) };
     Test::More::ok($@, 'import conflict - sqlite');
-    eval { Rose::DB::Object::Helpers->import(qw(--force :all)) };
+    eval { Rose::DB::Object::Helpers->import('--force', $All) };
     Test::More::ok(!$@, 'import override - sqlite');
 
     Rose::DB::Object::Helpers->import({ load_or_insert => 'find_or_create' });
@@ -421,6 +490,7 @@ EOF
     __PACKAGE__->meta->table('rose_db_object_test');
     __PACKAGE__->meta->auto_initialize;
     __PACKAGE__->meta->column('laz')->lazy(1);
+    __PACKAGE__->meta->column('laz')->add_auto_method_types(qw(get set));
     __PACKAGE__->meta->initialize(replace_existing => 1);
   }
 

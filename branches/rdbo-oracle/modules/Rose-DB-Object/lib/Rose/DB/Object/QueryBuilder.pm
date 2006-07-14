@@ -40,6 +40,9 @@ my %OP_MAP =
 
 @OP_MAP{map { $_ . '_sql' } keys %OP_MAP} = values(%OP_MAP);
 
+BEGIN { eval { require DBI::Const::GetInfoType }; }
+use constant SQL_DBMS_VER => $DBI::Const::GetInfoType::GetInfoType{'SQL_DBMS_VER'} || 18;
+
 sub build_where_clause { build_select(@_, where_only => 1) }
 
 sub build_select
@@ -371,7 +374,7 @@ sub build_select
     #
     # If this parameter is passed, then every table except t1 that has 
     # a join type and condition will be joined with an explicit JOIN
-    # statement.  Otherwise, an inplicit inner join willbe used.
+    # statement.  Otherwise, an inplicit inner join will be used.
     if($joins && @$joins)
     {
       my $i = 1;
@@ -406,11 +409,31 @@ sub build_select
         $i++;
       }
 
-      # SQLite 1.12 seems to demand that explicit joins come last.
-      # Older versions seem to like it too, so I'll make it that
-      # way for SQLite in general.
-      if($dbh->{'Driver'}{'Name'} eq 'SQLite')
+      my $driver = $dbh->{'Driver'}{'Name'};
+
+      if($driver eq 'mysql' && @normal_tables &&
+         (($db && $db->database_version >= 5_000_012) ||
+          $dbh->get_info(SQL_DBMS_VER) =~ /5\.\d+\.(?:1[2-9]|[2-9]\d)/))
       {
+        # MySQL 5.0.12 and later require the implicitly joined tables
+        # to be grouped with parentheses or explicitly joined.
+
+        # Explicitly joined:
+        #$from_tables_sql = 
+        #  join(" JOIN\n",  $primary_table, @normal_tables) . "\n" . 
+        #  join("\n", @joined_tables);
+
+        # Grouped by parens:
+        $from_tables_sql = 
+          "  (\n" . join(",\n  ", "  $primary_table", @normal_tables) . "\n  )\n" .
+          join("\n", @joined_tables);
+      }
+      elsif($driver eq 'SQLite')
+      {
+        # SQLite 1.12 seems to demand that explicit joins come last. 
+        # Older versions seem to like it too, so we'll doit that way
+        # for SQLite in general.
+
         # Primary table first, then implicit joins, then explicit joins
         $from_tables_sql = 
           join(",\n", $primary_table, @normal_tables) .

@@ -106,7 +106,7 @@ sub perl_hash_definition
   my $inline = defined $args{'inline'} ? $args{'inline'} : 0;
   my $inline_limit = defined $args{'inline'} ? $args{'inline_limit'} : $DEFAULT_INLINE_LIMIT;
 
-  my %attrs = map { $_ => 1 } $self->perl_relationship_defintion_attributes;
+  my %attrs = map { $_ => 1 } $self->perl_relationship_definition_attributes;
   my %hash = $self->spec_hash;
 
   my @delete_keys = grep { !$attrs{$_} } keys %hash;
@@ -143,7 +143,7 @@ sub perl_hash_definition
   }
 }
 
-sub perl_relationship_defintion_attributes
+sub perl_relationship_definition_attributes
 {
   my($self) = shift;
 

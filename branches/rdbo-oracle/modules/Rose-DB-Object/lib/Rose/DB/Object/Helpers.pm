@@ -9,15 +9,28 @@ our @ISA = qw(Rose::DB::Object::MixIn);
 
 use Carp;
 
-our $VERSION = '0.73';
+our $VERSION = '0.741';
 
-__PACKAGE__->export_tag
+__PACKAGE__->export_tags
 (
   all => 
   [
     qw(clone clone_and_reset load_or_insert insert_or_update 
-       insert_or_update_on_duplicate_key load_speculative) 
-  ]
+       insert_or_update_on_duplicate_key load_speculative
+       column_value_pairs column_accessor_value_pairs 
+       column_mutator_value_pairs 
+       column_values_as_yaml column_values_as_json
+       init_with_yaml init_with_json) 
+  ],
+
+  # This exists for the benefit of the test suite
+  all_noprereq =>
+  [
+    qw(clone clone_and_reset load_or_insert insert_or_update 
+       insert_or_update_on_duplicate_key load_speculative
+       column_value_pairs column_accessor_value_pairs 
+       column_mutator_value_pairs)
+  ],
 );
 
 sub load_speculative { shift->load(@_, speculative => 1) }
@@ -89,6 +102,107 @@ sub insert_or_update_on_duplicate_key
   }
 
   return $self->insert(@_, on_duplicate_key_update => 1);
+}
+
+__PACKAGE__->pre_import_hook(column_values_as_yaml => sub { require YAML::Syck });
+
+sub column_values_as_yaml
+{
+  local $_[0]->{STATE_SAVING()} = 1;
+  YAML::Syck::Dump(scalar shift->column_value_pairs)
+}
+
+__PACKAGE__->pre_import_hook(column_values_as_json => sub { require JSON::Syck });
+
+sub column_values_as_json
+{
+  local $_[0]->{STATE_SAVING()} = 1;
+  JSON::Syck::Dump(scalar shift->column_value_pairs)
+}
+
+__PACKAGE__->pre_import_hook(init_with_json => sub { require YAML::Syck });
+
+sub init_with_yaml
+{
+  my($self, $yaml) = @_;
+
+  my $hash = YAML::Syck::Load($yaml);
+  my $meta = $self->meta;
+
+  local $self->{STATE_LOADING()} = 1;
+
+  while(my($column, $value) = each(%$hash))
+  {
+    my $method = $meta->column($column)->mutator_method_name;
+    $self->$method($value);
+  }
+
+  return $self;
+}
+
+__PACKAGE__->pre_import_hook(init_with_json => sub { require JSON::Syck });
+
+sub init_with_json
+{
+  my($self, $json) = @_;
+
+  my $hash = JSON::Syck::Load($json);
+  my $meta = $self->meta;
+
+  local $self->{STATE_LOADING()} = 1;
+
+  while(my($column, $value) = each(%$hash))
+  {
+    my $method = $meta->column($column)->mutator_method_name;
+    $self->$method($value);
+  }
+
+  return $self;
+}
+
+sub column_value_pairs
+{
+  my($self) = shift;
+
+  my %pairs;
+
+  my $methods = $self->meta->column_accessor_method_names_hash;
+
+  while(my($column, $method) = each(%$methods))
+  {
+    $pairs{$column} = $self->$method();
+  }
+
+  return wantarray ? %pairs : \%pairs;
+}
+
+sub column_accessor_value_pairs
+{
+  my($self) = shift;
+
+  my %pairs;
+
+  foreach my $method ($self->meta->column_accessor_method_names)
+  {
+    $pairs{$method} = $self->$method();
+  }
+
+  return wantarray ? %pairs : \%pairs;
+}
+
+sub column_mutator_value_pairs
+{
+  my($self) = shift;
+
+  my %pairs;
+
+  foreach my $column ($self->meta->columns)
+  {
+    my $method = $column->accessor_method_name;
+    $pairs{$column->mutator_method_name} = $self->$method();
+  }
+
+  return wantarray ? %pairs : \%pairs;
 }
 
 sub clone
@@ -201,6 +315,52 @@ is equivalent to this:
     $b->id(undef);   # reset primary key
     $b->name(undef); # reset unique key
     $b->db($a->db);  # copy db
+
+=item B<column_values_as_json>
+
+Returns a string containing a JSON representation of the object's column values.  You must have the L<JSON::Syck> module installed in order to use this helper method.
+
+=item B<column_values_as_yaml>
+
+Returns a string containing a YAML representation of the object's column values.  You must have the L<YAML::Syck> module installed in order to use this helper method.
+
+=item B<column_accessor_value_pairs>
+
+Returns a hash (in list context) or reference to a hash (in scalar context) of column accessor method names and column values.  The keys of the hash are the L<accessor method names|Rose::DB::Object::Metadata::Column/accessor_method_name> for the columns.  The values are retrieved by calling the L<accessor method|Rose::DB::Object::Metadata::Column/accessor_method_name> for each column.
+
+=item B<column_mutator_value_pairs>
+
+Returns a hash (in list context) or reference to a hash (in scalar context) of column mutator method names and column values.  The keys of the hash are the L<mutator method names|Rose::DB::Object::Metadata::Column/mutator_method_name> for the columns.  The values are retrieved by calling the L<accessor method|Rose::DB::Object::Metadata::Column/accessor_method_name> for each column.
+
+=item B<column_value_pairs>
+
+Returns a hash (in list context) or reference to a hash (in scalar context) of column name and value pairs.  The keys of the hash are the L<names|Rose::DB::Object::Metadata::Column/name> of the columns.  The values are retrieved by calling the L<accessor method|Rose::DB::Object::Metadata::Column/accessor_method_name> for each column.
+
+=item B<init_with_json JSON>
+
+Initialize the object with a JSON-formatted string.  The JSON string must be in the format returned by the L<column_values_as_json|/column_values_as_json> method.  Example:
+
+    $p1 = Person->new(name => 'John', age => 30);
+    $json = $p1->column_values_as_json;
+
+    $p2 = Person->new;
+    $p2->init_with_json($json);
+
+    print $p2->name; # John
+    print $p2->age;  # 30
+
+=item B<init_with_json YAML>
+
+Initialize the object with a YAML-formatted string.  The YAML string must be in the format returned by the L<column_values_as_yaml|/column_values_as_yaml> method.  Example:
+
+    $p1 = Person->new(name => 'John', age => 30);
+    $yaml = $p1->column_values_as_yaml;
+
+    $p2 = Person->new;
+    $p2->init_with_yaml($yaml);
+
+    print $p2->name; # John
+    print $p2->age;  # 30
 
 =item B<insert_or_update [PARAMS]>
 

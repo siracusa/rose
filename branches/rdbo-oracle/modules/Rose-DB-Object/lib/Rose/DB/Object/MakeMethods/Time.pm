@@ -27,6 +27,8 @@ sub interval
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
 
+  my $eomm = $args->{'end_of_month_mode'};
+
   my %methods;
 
   if($interface eq 'get_set')
@@ -49,7 +51,7 @@ sub interval
           }
           else
           {
-            my $dt_duration = $db->parse_interval($_[0]);
+            my $dt_duration = $db->parse_interval($_[0], $eomm);
             Carp::croak $db->error  unless(defined $dt_duration);
 
             if(ref $dt_duration)
@@ -79,7 +81,7 @@ sub interval
 
       if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
       {
-        my $dt_duration = $db->parse_interval($default);
+        my $dt_duration = $db->parse_interval($default, $eomm);
         Carp::croak $db->error  unless(defined $dt_duration);
 
         if(ref $dt_duration)
@@ -105,7 +107,7 @@ sub interval
 
       return $self->{$key} ? $self->{$key} : 
              $self->{$formatted_key,$driver} ? 
-             ($self->{$key} = $db->parse_interval($self->{$formatted_key,$driver})) : undef;
+             ($self->{$key} = $db->parse_interval($self->{$formatted_key,$driver}, $eomm)) : undef;
     };
   }
   elsif($interface eq 'get')
@@ -119,7 +121,7 @@ sub interval
 
       if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
       {
-        my $dt_duration = $db->parse_interval($default);
+        my $dt_duration = $db->parse_interval($default, $eomm);
         Carp::croak $db->error  unless(defined $dt_duration);
 
         if(ref $dt_duration)
@@ -144,7 +146,7 @@ sub interval
 
       return $self->{$key} ? $self->{$key} : 
              $self->{$formatted_key,$driver} ? 
-             ($self->{$key} = $db->parse_interval($self->{$formatted_key,$driver})) : undef;
+             ($self->{$key} = $db->parse_interval($self->{$formatted_key,$driver}, $eomm)) : undef;
     };
   }
   elsif($interface eq 'set')
@@ -167,7 +169,7 @@ sub interval
         }
         else
         {
-          my $dt_duration = $db->parse_interval($_[0]);
+          my $dt_duration = $db->parse_interval($_[0], $eomm);
           Carp::croak $db->error  unless(defined $dt_duration);
 
           if(ref $dt_duration)
@@ -194,7 +196,7 @@ sub interval
 
       if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
       {
-        my $dt_duration = $db->parse_interval($default);
+        my $dt_duration = $db->parse_interval($default, $eomm);
         Carp::croak $db->error  unless(defined $dt_duration);
 
         if(ref $dt_duration)
@@ -217,7 +219,7 @@ sub interval
 
       return $self->{$key} ? $self->{$key} : 
              $self->{$formatted_key,$driver} ? 
-             ($self->{$key} = $db->parse_interval($self->{$formatted_key,$driver})) : undef;
+             ($self->{$key} = $db->parse_interval($self->{$formatted_key,$driver}, $eomm)) : undef;
     };
   }
   else { Carp::croak "Unknown interface: $interface" }
@@ -457,7 +459,7 @@ Rose::DB::Object::MakeMethods::Time - Create time-related methods for Rose::DB::
         t1 => { precision => 6 },
         t2 => { default => '3 days 6 minutes 5 seconds' },
       ],
-      
+
       time =>
       [
         start => { precision => 5 },
@@ -473,16 +475,16 @@ Rose::DB::Object::MakeMethods::Time - Create time-related methods for Rose::DB::
 
     print $o->t1->minutes;    # 5
     print $o->t1->nanosecond; # 3000000
-    
+
     $o->start('12:34:56.12345');
-    
+
     print $o->start->nanosecond; # 123450000
     print $o->start->as_string;  # 12:34:56.12345
 
     $o->end('6pm');
-    
+
     $tc = $o->end; # Time::Clock object
-    
+
     print $o->end->hour; # 18
     print $o->end->ampm; # PM
 
@@ -513,6 +515,12 @@ Create get/set methods for interval (years, months, days, hours, minutes, second
 =item C<default>
 
 Determines the default value of the attribute.
+
+=item C<end_of_month_mode>
+
+This mode determines how math is done on duration objects.  If defined, the C<end_of_month> setting for each L<DateTime::Duration> object created by this method will be set to the specified mode.  Otherwise, the C<end_of_month> parameter will not be passed to the L<DateTime::Duration> constructor.
+
+Valid modes are C<wrap>, C<limit>, and C<preserve>.  See the documentation for L<DateTime::Duration> for a full explanation.
 
 =item C<hash_key>
 
@@ -647,23 +655,23 @@ Example:
     );
 
     ...
-    
+
     $o->start('12:34:56.12345');
-    
+
     print $o->start->nanosecond; # 123450000
     print $o->start->as_string;  # 12:34:56.12345
 
     $o->end('6pm');
-    
+
     $tc = $o->end; # Time::Clock object
-    
+
     print $o->end->hour; # 18
     print $o->end->ampm; # PM
 
     print $o->end->format('%I:%M %p'); # 6:00 PM
     $o->end->add(hours => 1);
     print $o->end->format('%I:%M %p'); # 7:00 PM
-    
+
 =back
 
 =head1 AUTHOR

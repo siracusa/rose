@@ -1514,7 +1514,6 @@ sub get_objects
 
           $table_num++;
         }
-
       }
     }
 

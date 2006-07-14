@@ -14,12 +14,20 @@ use Rose::Class::MakeMethods::Set
   [
     '_export_tag' =>
     {
+      list_method    => '_export_tags',
       clear_method   => 'clear_export_tags',
-      list_method    => 'export_tags',
-      add_method     => 'add_export_tag',
-      adds_method    => 'add_export_tags',
+      add_method     => '_add_export_tag',
       delete_method  => 'delete_export_tag',
       deletes_method => 'delete_export_tags',
+    },
+    
+    '_pre_import_hook',
+    {
+      clear_method   => 'clear_pre_import_hooks',
+      add_method     => 'add_pre_import_hook',
+      adds_method    => 'add_pre_import_hooks',
+      delete_method  => 'delete_pre_import_hook',
+      deletes_method => 'delete_pre_import_hooks',    
     },
   ],
 );
@@ -74,6 +82,20 @@ sub import
             "existing methods."
     }
 
+    if(my $hooks = $class->pre_import_hooks($method))
+    {
+      foreach my $code (@$hooks)
+      {
+        eval { $code->($class, $method, $target_class, $import_as) };
+  
+        if($@)
+        {
+          croak "Could not import method '$import_as' from $class into ",
+                "$target_class - $@";
+        }
+      }
+    }
+
     no strict 'refs';      
     $Debug && warn "${target_class}::$import_as = ${class}->$method\n";
     *{$target_class . '::' . $import_as} = $code;
@@ -91,13 +113,13 @@ sub export_tag
 
   if(@_ && !$class->_export_tag_value($tag))
   {
-    $class->add_export_tag($tag);
+    $class->_add_export_tag($tag);
   }
 
   if(@_ && (@_ > 1 || (ref $_[0] || '') ne 'ARRAY'))
   {
     croak 'export_tag() expects either a single tag name argument, ',
-          'or a tagname and a reference to an array of method names';
+          'or a tag name and a reference to an array of method names';
   }
 
   my $ret = $class->_export_tag_value($tag, @_);
@@ -106,6 +128,56 @@ sub export_tag
 
   return wantarray ? @$ret : $ret;
 }
+
+sub export_tags
+{
+  my($class) = shift;
+  return $class->_export_tags  unless(@_);
+  $class->clear_export_tags;
+  $class->add_export_tags(@_);
+}
+
+sub add_export_tags
+{
+  my($class) = shift;
+  
+  while(@_)
+  {
+    my($tag, $arg) = (shift, shift);
+    $class->export_tag($tag, $arg);
+  }
+}
+
+sub pre_import_hook
+{
+  my($class, $method) = (shift, shift);
+
+  if(@_ && !$class->_pre_import_hook_value($method))
+  {
+    $class->add_pre_import_hook($method);
+  }
+
+  if(@_ && (@_ > 1 || (ref $_[0] && (ref $_[0] || '') !~ /\A(?:ARRAY|CODE)\z/)))
+  {
+    croak 'pre_import_hook() expects either a single method name argument, ',
+          'or a method name and a code reference or a reference to an array ',
+          'of code references';
+  }
+
+  if(@_)
+  {
+    unless(ref $_[0] eq 'ARRAY')
+    {
+      $_[0] = [ $_[0] ];
+    }
+  }
+
+  my $ret = $class->_pre_import_hook_value($method, @_) || [];
+
+  return wantarray ? @$ret : $ret;
+}
+
+sub pre_import_hooks { shift->pre_import_hook(shift) }
 
 1;
 

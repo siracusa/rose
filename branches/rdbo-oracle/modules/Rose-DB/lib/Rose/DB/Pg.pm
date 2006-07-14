@@ -7,7 +7,7 @@ use DateTime::Format::Pg;
 
 use Rose::DB;
 
-our $VERSION = '0.72';
+our $VERSION = '0.721';
 
 our $Debug = 0;
 
@@ -179,7 +179,7 @@ sub format_array
 
 sub parse_interval
 {
-  my($self, $value) = @_;
+  my($self, $value, $end_of_month_mode) = @_;
 
   if(!defined $value || UNIVERSAL::isa($value, 'DateTime::Duration') || 
      $self->validate_interval_keyword($value) || $value =~ /^\w+\(.*\)$/)
@@ -189,8 +189,16 @@ sub parse_interval
 
   my $dt_duration;
   eval { $dt_duration = $self->date_handler->parse_interval($value) };
+  
+  return $self->Rose::DB::parse_interval($value, $end_of_month_mode)  if($@);
 
-  return $self->Rose::DB::parse_interval($value)  if($@);
+  if(defined $end_of_month_mode && $dt_duration)
+  {
+    # XXX: There is no mutator for end_of_month_mode, so I'm being evil
+    # XXX: and setting it directly.  Blah.
+    $dt_duration->{'end_of_month'} = $end_of_month_mode;
+  }
+
   return $dt_duration;
 }
 
@@ -260,7 +268,7 @@ sub auto_sequence_name
   return lc "${table}_${column}_seq";
 }
 
-our %Reserved_Words = map { $_ => 1 } qw(role);
+our %Reserved_Words = map { $_ => 1 } qw(role cast user);
 sub is_reserved_word { $Reserved_Words{lc $_[1]} }
 
 #

@@ -245,10 +245,10 @@ while($i < @Intervals)
 {
   my($val, $formatted) = ($Intervals[$i++], $Intervals[$i++]);
 
-  my $d = $db->parse_interval($val);
+  my $d = $db->parse_interval($val, 'preserve');
 
   is($db->format_interval($d), $formatted, "parse_interval ($val)");  
-  my $alt_d = $db->parse_interval($Alt_Intervals{$val});
+  my $alt_d = $db->parse_interval($Alt_Intervals{$val}, 'preserve');
 
   ok((!defined $d && !defined $alt_d) || DateTime::Duration->compare($d, $alt_d) == 0, "parse_interval alt check $i");
 }
