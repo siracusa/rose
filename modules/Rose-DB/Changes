@@ -1,4 +1,4 @@
-0.721 (07.11.2006) - John Siracusa <siracusa@mindspring.com>
+0.721 (07.14.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added end-of-month mode parameter to parse_interval()
     * Added to the list of reserved words for Postgres and MySQL.
