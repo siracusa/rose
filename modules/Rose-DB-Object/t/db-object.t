@@ -347,7 +347,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   
   $o =  MyPgObject->new(id => $o->id)->load;
   is($o->tee_time->as_string, '00:00:00', "time allballs - $db_type");
-  ok($o->tee_time9->as_string =~ /^\d\d:\d\d:\d\d\.\d{6}$/, "time now - $db_type");
+  ok($o->tee_time9->as_string =~ /^\d\d:\d\d:\d\d\.\d{1,6}$/, "time now - $db_type");
   
   $o->tee_time(Time::Clock->new->parse('6:30 PM'));
   $o->save;
