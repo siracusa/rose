@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.74';
+our $VERSION = '0.742';
 
 our $Debug = 0;
 
@@ -130,6 +130,7 @@ __PACKAGE__->column_type_classes
 
   'text'      => 'Rose::DB::Object::Metadata::Column::Text',
   'blob'      => 'Rose::DB::Object::Metadata::Column::Blob',
+  'bytea'     => 'Rose::DB::Object::Metadata::Column::Pg::Bytea',
 
   'bits'      => 'Rose::DB::Object::Metadata::Column::Bitfield',
   'bitfield'  => 'Rose::DB::Object::Metadata::Column::Bitfield',
@@ -3503,6 +3504,7 @@ sub _clear_column_generated_values
   $self->{'insert_changes_only_sql_prefix'} = undef;
   $self->{'delete_sql'}             = undef;
   $self->{'insert_columns_placeholders_sql'} = undef;
+  $self->{'dbi_requires_bind_param'} = undef;
 }
 
 sub _clear_primary_key_column_generated_values
@@ -3569,6 +3571,31 @@ sub method_name_from_column
   }
 
   return $method_name;
+}
+
+sub dbi_requires_bind_param
+{
+  my($self, $db) = @_;
+
+  return $self->{'dbi_requires_bind_param'}{$db->{'id'}}  
+    if(defined $self->{'dbi_requires_bind_param'}{$db->{'id'}});
+
+  foreach my $column ($self->columns)
+  {
+    if($column->dbi_requires_bind_param($db))
+    {
+      return $self->{'dbi_requires_bind_param'}{$db->{'id'}} = 1;
+    }
+  }
+
+  return $self->{'dbi_requires_bind_param'}{$db->{'id'}} = 0;
+}
+
+sub dbi_bind_params
+{
+  my($self, $sth, $bind, $columns) = @_;
+  
+  
 }
 
 sub make_manager_class
@@ -4084,6 +4111,7 @@ The default mapping of type names to class names is:
 
   text      => Rose::DB::Object::Metadata::Column::Text
   blob      => Rose::DB::Object::Metadata::Column::Blob
+  bytea     => Rose::DB::Object::Metadata::Column::Pg::Bytea
 
   bits      => Rose::DB::Object::Metadata::Column::Bitfield
   bitfield  => Rose::DB::Object::Metadata::Column::Bitfield
@@ -4552,7 +4580,7 @@ Returns a list of column objects in list context, or a reference to an array of 
 
 =item B<column_accessor_method_name NAME>
 
-Returns the name of the "get" method for the column named NAME.  This is just a shortcut for C<$meta->column(NAME)-E<gt>accessor_method_name>.
+Returns the name of the "get" method for the column named NAME.  This is just a shortcut for C<$meta-E<gt>column(NAME)-E<gt>accessor_method_name>.
 
 =item B<column_accessor_method_names>
 
@@ -4566,7 +4594,7 @@ Note that modifying this map has no effect if L<initialize|/initialize>, L<make_
 
 =item B<column_mutator_method_name NAME>
 
-Returns the name of the "set" method for the column named NAME.  This is just a shortcut for C<$meta->column(NAME)-E<gt>mutator_method_name>.
+Returns the name of the "set" method for the column named NAME.  This is just a shortcut for C<$meta-E<gt>column(NAME)-E<gt>mutator_method_name>.
 
 =item B<column_mutator_method_names>
 
@@ -4584,7 +4612,7 @@ If defined, the subroutine should take four arguments: the metadata object, the 
 
 =item B<column_rw_method_name NAME>
 
-Returns the name of the "get_set" method for the column named NAME.  This is just a shortcut for C<$meta->column(NAME)-E<gt>rw_method_name>.
+Returns the name of the "get_set" method for the column named NAME.  This is just a shortcut for C<$meta-E<gt>column(NAME)-E<gt>rw_method_name>.
 
 =item B<column_rw_method_names>
 

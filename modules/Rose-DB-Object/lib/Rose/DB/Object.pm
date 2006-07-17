@@ -873,25 +873,24 @@ sub insert
             "\n";
         }
 
-        $sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
+        #$sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
 
-        # Not ready to cross this bridge yet...
-        #if($meta->needs_data_type_hand_holding($db))
-        #{
-        #  my $i = 1;
-        #
-        #  foreach my $column ($meta->columns)
-        #  {
-        #    my $method = $column->accessor_method_name;
-        #    $sth->bind_param($i++,  $self->$method(), $column->dbi_data_type);
-        #  }
-        # 
-        #  $sth->execute;
-        #}
-        #else
-        #{
-        #  $sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
-        #}
+        if($meta->dbi_requires_bind_param($db))
+        {
+          my $i = 1;
+        
+          foreach my $column ($meta->columns)
+          {
+            my $method = $column->accessor_method_name;
+            $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs);
+          }
+         
+          $sth->execute;
+        }
+        else
+        {
+          $sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
+        }
       }
     }
 
