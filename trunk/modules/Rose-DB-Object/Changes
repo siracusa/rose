@@ -1,7 +1,9 @@
 0.742 (07.17.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * XXX: Added byeta column type and support for custom DBI bind types.
     * Fixed a bug in the test suite that could cause the TIME(9)
       column type test to fail in Postgres.
+    * Fixed some POD formatting errors.
 
 0.741 (07.14.2006) - John Siracusa <siracusa@mindspring.com>
 

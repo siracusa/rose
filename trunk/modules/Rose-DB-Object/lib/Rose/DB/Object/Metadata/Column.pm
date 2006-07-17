@@ -22,7 +22,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 our $Triggers_Key      = 'triggers';
 our $Trigger_Index_Key = 'trigger_index';
 
-our $VERSION = '0.74';
+our $VERSION = '0.742';
 
 use overload
 (
@@ -1332,6 +1332,9 @@ sub make_methods
   $self->SUPER::make_methods(@_);
   $self->apply_triggers;
 }
+
+sub dbi_requires_bind_param { 0 }
+sub dbi_bind_param_attrs { {} }
 
 1;
 
