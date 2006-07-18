@@ -1334,7 +1334,7 @@ sub make_methods
 }
 
 sub dbi_requires_bind_param { 0 }
-sub dbi_bind_param_attrs { {} }
+sub dbi_bind_param_attrs { }
 
 1;
 

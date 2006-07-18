@@ -701,9 +701,31 @@ sub update
                         grep { defined } @key_values), "\n";
         }
 
-        $sth->execute(
-          (map { $self->$_() } grep { !$key{$_} } @$method_names), 
-          @key_values);
+        if($meta->dbi_requires_bind_param($db))
+        {
+          my $i = 1;
+
+          foreach my $column (grep { !$key{$_->name} } $meta->columns)
+          {
+            my $method = $column->accessor_method_name;
+            $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
+          }
+         
+          foreach my $column_name (@key_columns)
+          {
+            my $column = $meta->column($column_name);
+            my $method = $column->accessor_method_name;
+            $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
+          }
+
+          $sth->execute;
+        }
+        else
+        {
+          $sth->execute(
+            (map { $self->$_() } grep { !$key{$_} } @$method_names), 
+            @key_values);
+        }
       }
     }
     #if($started_new_tx)
@@ -834,7 +856,7 @@ sub insert
 
       if($args{'on_duplicate_key_update'} || $changes_only)
       {
-        my($sql, $bind);
+        my($sql, $bind, $columns);
 
         if($args{'on_duplicate_key_update'})
         {
@@ -844,7 +866,7 @@ sub insert
         }
         else
         {
-          ($sql, $bind) = $meta->insert_changes_only_sql($self, $db);
+          ($sql, $bind, $columns) = $meta->insert_changes_only_sql($self, $db);
         }
 
         if($Debug)
@@ -882,7 +904,7 @@ sub insert
           foreach my $column ($meta->columns)
           {
             my $method = $column->accessor_method_name;
-            $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs);
+            $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
           }
          
           $sth->execute;
