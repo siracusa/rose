@@ -28,6 +28,7 @@ lib/Rose/DB/Object/Metadata/Column/BigSerial.pm
 lib/Rose/DB/Object/Metadata/Column/Bitfield.pm
 lib/Rose/DB/Object/Metadata/Column/Blob.pm
 lib/Rose/DB/Object/Metadata/Column/Boolean.pm
+lib/Rose/DB/Object/Metadata/Column/Pg/Bytea.pm
 lib/Rose/DB/Object/Metadata/Column/Character.pm
 lib/Rose/DB/Object/Metadata/Column/Date.pm
 lib/Rose/DB/Object/Metadata/Column/Datetime.pm
@@ -117,6 +118,7 @@ t/benchmarks/lib/MyTest/RDBO/Simple/Code.pm
 t/benchmarks/lib/MyTest/RDBO/Simple/CodeName.pm
 t/benchmarks/lib/MyTest/RDBO/Simple/Product.pm
 t/benchmarks/lib/MyTest/RDBO/Simple/Product/Manager.pm
+t/bind-param.t
 t/column-triggers.t
 t/db-migration.t
 t/db-object-auto.t

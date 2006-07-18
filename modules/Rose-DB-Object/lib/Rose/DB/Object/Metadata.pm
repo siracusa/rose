@@ -3111,7 +3111,8 @@ sub insert_changes_only_sql
     join(",\n", map { $_->name_sql($db) } @modified) .
     "\n)\nVALUES\n(\n" . 
     join(",\n", map { $_->insert_placeholder_sql($db) } @modified) . "\n)",
-    [ map { my $m = $_->accessor_method_name; $obj->$m() } @modified ];
+    [ map { my $m = $_->accessor_method_name; $obj->$m() } @modified ],
+    \@modified;
 }
 
 sub insert_columns_placeholders_sql
