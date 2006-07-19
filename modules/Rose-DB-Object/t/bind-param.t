@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (2 * 8);
+use Test::More tests => 1 + (2 * 10);
 
 BEGIN 
 {
@@ -22,7 +22,7 @@ foreach my $db_type (qw(pg mysql))
 {
   SKIP:
   {
-    skip("$db_type tests", 8)  unless($Have{$db_type});
+    skip("$db_type tests", 10)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -108,12 +108,12 @@ foreach my $db_type (qw(pg mysql))
   $o->save;
 
   $o = $object_class->new(id => $o->id)->load;
-  is($o->data, $data, "save 1 - $db_type");
+  is($o->data, $data, "inline - save 1 - $db_type");
 
   $o->save;
 
   $o = $object_class->new(id => $o->id)->load;
-  is($o->data, $data, "save 2 - $db_type");  
+  is($o->data, $data, "inline - save 2 - $db_type");  
 
   # Changes only
   
@@ -123,33 +123,33 @@ foreach my $db_type (qw(pg mysql))
   $o->save(changes_only => 1);
 
   $o = $object_class->new(id => $o->id)->load;
-  is($o->data, $short_data, "update changes only - $db_type");  
+  is($o->data, $short_data, "inline - update changes only - $db_type");  
 
-#   $o = $object_class->new(data => $short_data);
-#   $o->save(changes_only => 1);
-# 
-#   $o = $object_class->new(id => $o->id)->load;
-#   is($o->data, $short_data, "insert changes only - $db_type");
-# 
-#   # On duplicate key update
-#   
-#   if($o->db->supports_on_duplicate_key_update)
-#   {
-#     # Force the bind_param code to be triggered (should be harmless)
-#     local $object_class->meta->{'dbi_requires_bind_param'}{$o->db->{'id'}} = 1;
-# 
-#     my $data = "\000\001\002";
-# 
-#     $o->data($data);
-#     $o->insert(on_duplicate_key_update => 1);
-# 
-#     $o = $object_class->new(id => $o->id)->load;
-#     is($o->data, $data, "on duplicate key update - $db_type");
-#   }
-#   else
-#   {
-#     ok(1, "on duplicate key update not supported - $db_type");
-#   }
+  $o = $object_class->new(data => $short_data);
+  $o->save(changes_only => 1);
+
+  $o = $object_class->new(id => $o->id)->load;
+  is($o->data, $short_data, "inline - insert changes only - $db_type");
+
+  # On duplicate key update
+  
+  if($o->db->supports_on_duplicate_key_update)
+  {
+    # Force the bind_param code to be triggered (should be harmless)
+    local $object_class->meta->{'dbi_requires_bind_param'}{$o->db->{'id'}} = 1;
+
+    my $data = "\000\001\002";
+
+    $o->data($data);
+    $o->insert(on_duplicate_key_update => 1);
+
+    $o = $object_class->new(id => $o->id)->load;
+    is($o->data, $data, "inline - on duplicate key update - $db_type");
+  }
+  else
+  {
+    ok(1, "inline - on duplicate key update not supported - $db_type");
+  }
 }
 
 BEGIN

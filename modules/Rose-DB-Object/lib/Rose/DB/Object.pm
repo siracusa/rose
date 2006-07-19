@@ -881,7 +881,7 @@ sub insert
       }
       elsif($changes_only)
       {
-        ($sql, $bind) = $meta->insert_changes_only_sql_with_inlining($self);
+        ($sql, $bind, $bind_params) = $meta->insert_changes_only_sql_with_inlining($self);
       }
       else
       {
