@@ -2899,7 +2899,8 @@ sub update_changes_only_sql
       $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
     }
     @$key_columns),
-    [ map { my $m = $_->accessor_method_name; $obj->$m() } @modified ];
+    [ map { my $m = $_->accessor_method_name; $obj->$m() } @modified ],
+    \@modified;
 }
 
 # This is nonsensical right now because the primary key always has to be
@@ -2977,8 +2978,9 @@ sub update_sql_with_inlining
 
   my %key = map { ($_ => 1) } @$key_columns;
 
-  my @bind;
-  my @updates;
+  my(@bind, @updates, @bind_params);
+
+  my $do_bind_params = $self->dbi_requires_bind_param($db);
 
   foreach my $column (grep { !$key{$_} && (!$_->{'lazy'} || 
                              $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
@@ -2996,6 +2998,11 @@ sub update_sql_with_inlining
       push(@updates, $column->name_sql($db) . ' = ' .
                      $column->update_placeholder_sql($db));
       push(@bind, $value);
+
+      if($do_bind_params)
+      {
+        push(@bind_params, $column->dbi_bind_param_attrs($db));
+      }
     }
   }
 
@@ -3013,7 +3020,8 @@ sub update_sql_with_inlining
       $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
     }
     @$key_columns),
-    \@bind
+    \@bind,
+    ($do_bind_params ? \@bind_params : ())
   );
 }
 
@@ -3029,8 +3037,9 @@ sub update_changes_only_sql_with_inlining
 
   my $modified = $obj->{MODIFIED_COLUMNS()};
 
-  my @bind;
-  my @updates;
+  my(@bind, @updates, @bind_params);
+
+  my $do_bind_params = $self->dbi_requires_bind_param($db);
 
   foreach my $column (grep { !$key{$_->{'name'}} && $modified->{$_->{'name'}} } $self->columns)
   {
@@ -3046,6 +3055,11 @@ sub update_changes_only_sql_with_inlining
       push(@updates, $column->name_sql($db) . ' = ' .
                      $column->update_placeholder_sql($db));
       push(@bind, $value);
+
+      if($do_bind_params)
+      {
+        push(@bind_params, $column->dbi_bind_param_attrs($db));
+      }
     }
   }
 
@@ -3063,7 +3077,8 @@ sub update_changes_only_sql_with_inlining
       $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
     }
     @$key_columns),
-    \@bind
+    \@bind,
+    ($do_bind_params ? \@bind_params : ())
   );
 }
 
@@ -3194,7 +3209,8 @@ sub insert_and_on_duplicate_key_update_sql
       $_->name_sql($db) . ' = ' . $_->update_placeholder_sql($db)
     }
     @columns),
-    [ @bind, @bind ];
+    [ @bind, @bind ],
+    [ @columns, @columns ];
 }
 
 sub insert_sql_with_inlining
@@ -3203,9 +3219,10 @@ sub insert_sql_with_inlining
 
   my $db = $obj->db or Carp::croak "Missing db";
 
-  my @bind;
-  my @places;
+  my(@bind, @places, @bind_params);
 
+  my $do_bind_params = $self->dbi_requires_bind_param($db);
+  
   foreach my $column ($self->columns)
   {
     my $method = $self->column_accessor_method_name($column->name);
@@ -3219,16 +3236,26 @@ sub insert_sql_with_inlining
     {
       push(@places, $column->insert_placeholder_sql($db));
       push(@bind, $value);
+
+      if($do_bind_params)
+      {
+        push(@bind_params, $column->dbi_bind_param_attrs($db));
+      }
     }
   }
 
+  if($do_bind_params)
+  {
+  
+  }
   return 
   (
     ($self->{'insert_sql_with_inlining_start'}{$db->{'id'}} ||=
     'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
     join(",\n", map { "  $_" } $self->column_names_sql($db)) .
     "\n)\nVALUES\n(\n") . join(",\n", @places) . "\n)",
-    \@bind
+    \@bind,
+    ($do_bind_params ? \@bind_params : ())
   );
 }
 
@@ -3237,6 +3264,8 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
   my($self, $obj, $db, $changes_only) = @_;
 
   my(@columns, @names);
+
+  my $do_bind_params = $self->dbi_requires_bind_param($db);
 
   if($obj->{STATE_IN_DB()})
   {
@@ -3280,7 +3309,7 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
     @names = map { $_->name_sql($db) } @columns;
   }
 
-  my(@bind, @places);
+  my(@bind, @places, @bind_params);
 
   foreach my $column (@columns)
   {
@@ -3296,6 +3325,11 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
     {
       push(@places, [ $name, $column->insert_placeholder_sql($_) ]);
       push(@bind, $value);
+
+      if($do_bind_params)
+      {
+        push(@bind_params, $column->dbi_bind_param_attrs($db));
+      }
     }
   }
 
@@ -3306,7 +3340,8 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
     "\n)\nVALUES\n(\n" . join(",\n", map { $_->[1] } @places) . "\n)\n" .
     "ON DUPLICATE KEY UPDATE\n" .
     join(",\n", map { "$_->[0] = $_->[1]" } @places),
-    [ @bind, @bind ];
+    [ @bind, @bind ],
+    ($do_bind_params ? \@bind_params : ());
 }
 
 sub insert_changes_only_sql_with_inlining

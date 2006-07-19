@@ -1334,7 +1334,9 @@ sub make_methods
 }
 
 sub dbi_requires_bind_param { 0 }
-sub dbi_bind_param_attrs { }
+
+# It's improtant to return undef or a hashref, not an empty list
+sub dbi_bind_param_attrs { undef } 
 
 1;
 
