@@ -3372,8 +3372,9 @@ sub insert_changes_only_sql_with_inlining
     }
   }
 
-  my @bind;
-  my @places;
+  my(@bind, @places, @bind_params);
+
+  my $do_bind_params = $self->dbi_requires_bind_param($db);
 
   foreach my $column (@modified)
   {
@@ -3388,6 +3389,11 @@ sub insert_changes_only_sql_with_inlining
     {
       push(@places, $column->insert_placeholder_sql($db));
       push(@bind, $value);
+
+      if($do_bind_params)
+      {
+        push(@bind_params, $column->dbi_bind_param_attrs($db));
+      }
     }
   }
 
@@ -3396,7 +3402,8 @@ sub insert_changes_only_sql_with_inlining
     'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
     join(",\n", map { $_->name_sql($db) } @modified) .
     "\n)\nVALUES\n(\n" . join(",\n", @places) . "\n)",
-    \@bind
+    \@bind,
+    ($do_bind_params ? \@bind_params : ())
   );
 }
 
