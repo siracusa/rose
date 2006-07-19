@@ -540,7 +540,7 @@ L<Rose::URI> is an alternative to L<URI>.  The important differences are as foll
 
 L<Rose::URI> provides a rich set of query string manipulation methods. Query parameters can be added, removed, and checked for their existence. L<URI> allows the entire query to be set or returned as a whole via the L<query_form|URI/query_form> or L<query|URI/query> methods, and the L<URI::QueryParam> module provides a few more methods for query string manipulation.
 
-L<Rose::URI> supports query parameters with multiple values (e.g. "a=1&a=2"). L<URI> has  limited support for this (through L<query_form|URI/query_form>'s list return value.  Better methods are available in L<URI::QueryParam>.
+L<Rose::URI> supports query parameters with multiple values (e.g. "a=1&a=2"). L<URI> has  limited support for this through L<query_form|URI/query_form>'s list return value.  Better methods are available in L<URI::QueryParam>.
 
 L<Rose::URI> uses Apache's C-based URI parsing and HTML escaping functions when running in a mod_perl 1.x web server environment.
 
