@@ -32,6 +32,7 @@ use Rose::Class::MakeMethods::Generic
     '_object_class',
     '_base_name',
     'default_objects_per_page',
+    'default_subselect_limit',
     'dbi_prepare_cached',
   ],
 );
@@ -307,6 +308,11 @@ sub get_objects
   my $distinct         = delete $args{'distinct'};
   my $fetch            = delete $args{'fetch_only'};
   my $select           = $args{'select'};
+
+  my $try_subselect_limit = (exists $args{'subselect_limit'}) ? 
+    $args{'subselect_limit'} : $class->default_subselect_limit;
+
+  my $subselect_limit = 0;
 
   # Can't do direct inject with custom select lists
   my $direct_inject = $select ? 0 : delete $args{'inject_results'};
@@ -606,15 +612,11 @@ sub get_objects
   # Pre-process sort_by args
   if(my $sort_by = $args{'sort_by'})
   {
-    # Alter sort_by SQL, replacing table and relationship names with aliases.
-    # This is to prevent databases like Postgres from "adding missing FROM
-    # clause"s.  See: http://sql-info.de/postgresql/postgres-gotchas.html#1_5
     if($num_subtables > 0)
     {
-      my $i = 0;
       $sort_by = [ $sort_by ]  unless(ref $sort_by);
     }
-    else # otherwise, trim t1. prefixes
+    else # trim t1. prefixes
     {
       foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
       {
@@ -693,7 +695,21 @@ sub get_objects
 
         if($args{'limit'})
         {
-          $manual_limit = delete $args{'limit'};
+          if($try_subselect_limit && $db->supports_select_from_subselect && 
+             (!$args{'offset'} || $db->supports_limit_with_offset) && 
+             !$args{'select'})
+          {
+            unless($fetch && @$fetch && $fetch->[0] eq 't1')
+            {
+              $subselect_limit = 1;
+              delete $args{'limit'};
+              delete $args{'offset'};
+            }
+          }
+          else
+          {
+            $manual_limit = delete $args{'limit'};
+          }
         }
 
         # This restriction seems unnecessary now
@@ -724,7 +740,7 @@ sub get_objects
           qq(produce many redundant rows, and the query may be ),
           qq(slow.  If you're sure you want to do this, you can ),
           qq(silence this warning by using the "multi_many_ok" ),
-          qq(parameter);
+          qq(parameter\n);
       }
     }
 
@@ -1389,7 +1405,7 @@ sub get_objects
     Carp::croak "Offset argument is invalid without a limit argument"
       unless($args{'limit'} || $manual_limit);
 
-    if($db->supports_limit_with_offset && !$manual_limit)
+    if($db->supports_limit_with_offset && !$manual_limit && !$subselect_limit)
     {
       $args{'limit'} = $db->format_limit_with_offset($args{'limit'}, $args{'offset'});
       delete $args{'offset'};
@@ -1429,9 +1445,67 @@ sub get_objects
                    joins       => \@joins,
                    meta        => \%meta,
                    db          => $db,
-                   pretty      => $Debug,
+                   pretty      => 1,#$Debug,
                    bind_params => \@bind_params,
                    %args);
+
+    if($subselect_limit)
+    {
+      my($class, %sub_args) = @_;
+
+      # The sort clause is important, so it can't be deleted, but it 
+      # also can't contain references to any table but t1.
+      if($args{'sort_by'} && $num_subtables > 0)
+      {
+        my @sort_by;
+
+        foreach my $arg (@{$args{'sort_by'}})
+        {
+          push(@sort_by, $arg)  if(index($arg, 't1') == 0);
+        }
+
+        $sub_args{'sort_by'} = \@sort_by;
+      }
+
+      delete $sub_args{'with_objects'};
+
+      $sub_args{'fetch_only'}  = [ 't1' ];
+
+      my @t1_bind_params;
+      $sub_args{'bind_params'} = \@t1_bind_params;
+
+      my($t1_sql, $t1_bind) = $class->get_objects_sql(%sub_args);
+
+      my $columns = $sub_args{'select'};
+      
+      unless($columns)
+      {
+        my $multi_table = 
+          ($sub_args{'with_objects'} && (!ref $sub_args{'with_objects'} || @{$sub_args{'with_objects'}})) ||
+          ($sub_args{'require_objects'} && (!ref $sub_args{'require_objects'} || @{$sub_args{'require_objects'}}));
+
+        $columns = $multi_table ?
+          join(', ', map { "t1.$_" } @{$columns{$tables[0]}}) :
+          join(', ', map { $_ } @{$columns{$tables[0]}});
+      }
+
+      my $distinct = ($num_with_objects && scalar @has_dups[1 .. $num_with_objects]) ? ' DISTINCT' : '';
+
+      for($t1_sql)
+      {
+        s/\ASELECT.*FROM\s/SELECT$distinct $columns FROM\n/s;
+        s/^/    /mg  if($Debug);
+      }
+      
+      $sql =~ s/(FROM\s*)\S.+\s+t1/$1(\n$t1_sql\n  ) t1/;
+
+      unshift(@$bind, @$t1_bind);
+
+      if(@t1_bind_params)
+      {
+        unshift(@bind_params, @t1_bind_params);
+      }
+    }
   }
 
   if($return_sql)

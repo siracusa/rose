@@ -7,7 +7,7 @@ use DateTime::Format::Pg;
 
 use Rose::DB;
 
-our $VERSION = '0.721';
+our $VERSION = '0.722';
 
 our $Debug = 0;
 
@@ -52,6 +52,7 @@ sub likes_lowercase_catalog_names  { 1 }
 sub likes_lowercase_sequence_names { 1 }
 
 sub supports_arbitrary_defaults_on_insert { 1 }
+sub supports_select_from_subselect        { 1 }
 
 sub supports_schema { 1 }
 
