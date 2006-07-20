@@ -1215,7 +1215,7 @@ sub get_objects
     delete $args{'offset'};
     delete $args{'sort_by'};
 
-    my($sql, $bind);
+    my($sql, $bind, @bind_params);
 
     my $use_distinct = 0; # Do we have to use DISTINCT to count?
 
@@ -1256,6 +1256,7 @@ sub get_objects
                      meta        => \%meta,
                      db          => $db,
                      pretty      => $Debug,
+                     bind_params => \@bind_params,
                      %args);
     }
 
@@ -1273,7 +1274,24 @@ sub get_objects
       $Debug && warn "$sql\n";
       my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
                                   $dbh->prepare($sql);
-      $sth->execute(@$bind);
+
+      if(@bind_params)
+      {
+        my $i = 1;
+  
+        foreach my $value (@$bind)
+        {
+          $sth->bind_param($i, $value, $bind_params[$i - 1]);
+          $i++;
+        }
+  
+        $sth->execute;
+      }
+      else
+      {
+        $sth->execute(@$bind);
+      }
+
       $count = $sth->fetchrow_array;
       $sth->finish;
     };
@@ -1395,7 +1413,7 @@ sub get_objects
 
   my($count, @objects, $iterator);
 
-  my($sql, $bind);
+  my($sql, $bind, @bind_params);
 
   BUILD_SQL:
   {
@@ -1412,6 +1430,7 @@ sub get_objects
                    meta        => \%meta,
                    db          => $db,
                    pretty      => $Debug,
+                   bind_params => \@bind_params,
                    %args);
   }
 
@@ -1432,7 +1451,22 @@ sub get_objects
 
     $sth->{'RaiseError'} = 1;
 
-    $sth->execute(@$bind);
+    if(@bind_params)
+    {
+      my $i = 1;
+
+      foreach my $value (@$bind)
+      {
+        $sth->bind_param($i, $value, $bind_params[$i - 1]);
+        $i++;
+      }
+
+      $sth->execute;
+    }
+    else
+    {
+      $sth->execute(@$bind);
+    }
 
     my %row;
 
@@ -2489,6 +2523,9 @@ sub delete_objects
   # Yes, I'm re-using get_objects() code like crazy, and often
   # in weird ways.  Shhhh, it's a secret.
 
+  my @bind_params;
+  $args{'bind_params'} = \@bind_params;
+
   my($where, $bind) = 
     $class->get_objects(%args, return_sql => 1, where_only => 1);
 
@@ -2506,7 +2543,23 @@ sub delete_objects
     my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
                                 $dbh->prepare($sql) or die $dbh->errstr;
 
-    $sth->execute(@$bind);
+    if(@bind_params)
+    {
+      my $i = 1;
+
+      foreach my $value (@$bind)
+      {
+        $sth->bind_param($i, $value, $bind_params[$i - 1]);
+        $i++;
+      }
+
+      $sth->execute;
+    }
+    else
+    {
+      $sth->execute(@$bind);
+    }
+
     $count = $sth->rows || 0;
   };
 
@@ -2573,6 +2626,9 @@ sub update_objects
   # Yes, I'm re-using get_objects() code like crazy, and often
   # in weird ways.  Shhhh, it's a secret.
 
+  my @bind_params;
+  $args{'bind_params'} = \@bind_params;
+
   $args{'query'} = $set;
 
   my($set_sql, $set_bind) = 
@@ -2608,7 +2664,23 @@ sub update_objects
     my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
                                 $dbh->prepare($sql) or die $dbh->errstr;
 
-    $sth->execute(@$set_bind, @$where_bind);
+    if(@bind_params)
+    {
+      my $i = 1;
+
+      foreach my $value (@$set_bind, @$where_bind)
+      {
+        $sth->bind_param($i, $value, $bind_params[$i - 1]);
+        $i++;
+      }
+
+      $sth->execute;
+    }
+    else
+    {
+      $sth->execute(@$set_bind, @$where_bind);
+    }
+
     $count = $sth->rows || 0;
   };
 
