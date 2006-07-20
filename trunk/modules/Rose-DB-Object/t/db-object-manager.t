@@ -25,6 +25,9 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   Rose::DB->default_type($db_type);
 
+  # Test the subselect limit code
+  Rose::DB::Object::Manager->default_subselect_limit(1);
+  
   my $db = MyPgObject->init_db;
 
   my $o = MyPgObject->new(db         => $db,
@@ -2680,6 +2683,9 @@ EOF
   }
 
   # End custom select tests
+
+  # End test of the subselect limit code
+  Rose::DB::Object::Manager->default_subselect_limit(0);
 }
 
 #

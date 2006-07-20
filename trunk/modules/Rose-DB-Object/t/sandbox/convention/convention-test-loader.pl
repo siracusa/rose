@@ -29,6 +29,17 @@ print $p->vendor->name, "\n";
 print join(', ', map { $_->region . ': ' . $_->price } $p->prices), "\n";
 print join(', ', map { $_->name } $p->colors), "\n";
 
+# Testing subselect limit
+#local $Rose::DB::Object::Manager::Debug = 1;
+my $ps = 
+  My::Loaded::Product::Manager->get_products(
+    with_objects    => [ 'prices' ],
+    require_objects => [ 'vendor', 'colors' ],
+    multi_many_ok => 1,
+    query  => [ 't1.id' => { lt => 999 }, 'prices.price' => 9 ],
+    limit  => 1,
+    offset => 1);
+
 __END__
 
 DROP TABLE product_colors CASCADE;

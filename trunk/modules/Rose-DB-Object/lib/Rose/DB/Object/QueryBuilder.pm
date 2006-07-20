@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.71';
+our $VERSION = '0.742';
 
 our $Debug = 0;
 

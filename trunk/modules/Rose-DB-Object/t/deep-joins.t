@@ -37,6 +37,9 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 
   Rose::DB::Object::Metadata->unregister_all_classes;
 
+  # Test of the subselect limit code
+  Rose::DB::Object::Manager->default_subselect_limit(1)  if($db_type =~ /^pg/);
+
   my $class_prefix = 
     ucfirst($db_type eq 'pg_with_schema' ? 'pgws' : $db_type);
 
@@ -763,6 +766,9 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 
   ok(!$iterator->next, "query iterator with colors vendors description authors nicknames 1 - $db_type");
   is($iterator->total, 1, "query iterator with colors vendors description authors nicknames 2 - $db_type");
+
+  # End test of the subselect limit code
+  Rose::DB::Object::Manager->default_subselect_limit(0);
 }
 
 BEGIN
