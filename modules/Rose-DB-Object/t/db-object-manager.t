@@ -38,6 +38,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
                           start      => '2001-01-02',
                           save_col   => 5,     
                           nums       => [ 1, 2, 3 ],
+                          data       => "\000\001\002",
                           last_modified => 'now',
                           date_created  => '2004-03-30 12:34:56');
 
@@ -279,6 +280,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
                            start      => '2002-05-20',
                            save_col   => 123,
                            nums       => [ 4, 5, 6 ],
+                           data       => "\000\001\002",
                            fkone      => 1,
                            fk2        => 2,
                            fk3        => 3,
@@ -440,6 +442,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
         flag2      => 1,
         bits       => '10101',
         't2.nick'  => { like => 'n%' },
+        data       => "\000\001\002",
         start      => '5/20/2002',
         '!start'   => { gt => DateTime->new(year  => '2005', 
                                             month => 12,
@@ -496,6 +499,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
         flag2      => 1,
         bits       => '10101',
         't3.nick'  => { like => 'n%' },
+        data       => "\000\001\002",
         start      => '5/20/2002',
         '!start'   => { gt => DateTime->new(year  => '2005', 
                                             month => 12,
@@ -1029,6 +1033,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
         status     => 'active',
         bits       => '1',
         start      => '1/2/2001',
+        data       => "\000\001\002",
         '!start'   => { gt => DateTime->new(year  => '2005', 
                                             month => 1,
                                             day   => 1) },
@@ -1511,7 +1516,8 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       share_db      => 1,
       with_objects  => [ 'bb1', 'nicks', 'other_obj', 'colors', 'bb2' ],
       multi_many_ok => 1,
-      query         => [ 't1.id' => [ 1, 2, 5 ] ],
+      query         => [ 't1.id' => [ 1, 2, 5 ], data => { ne => "\001" }, 
+                         data => { ne => \"'0'::bytea" } ], #"
       sort_by       => 't1.name');
 
   $o = $iterator->next;
@@ -10386,6 +10392,7 @@ CREATE TABLE rose_db_object_test
   fk3            INT,
   b1             INT REFERENCES rose_db_object_bb (id),
   b2             INT REFERENCES rose_db_object_bb (id),
+  data           BYTEA,
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -10708,6 +10715,7 @@ EOF
       fk3      => { type => 'int' },
       b1       => { type => 'int' },
       b2       => { type => 'int' },
+      data     => { type => 'bytea' },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (2 * 10);
+use Test::More tests => 1 + (2 * 13);
 
 BEGIN 
 {
@@ -22,7 +22,7 @@ foreach my $db_type (qw(pg mysql))
 {
   SKIP:
   {
-    skip("$db_type tests", 10)  unless($Have{$db_type});
+    skip("$db_type tests", 13)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -150,6 +150,55 @@ foreach my $db_type (qw(pg mysql))
   {
     ok(1, "inline - on duplicate key update not supported - $db_type");
   }
+  
+  #
+  # Manager
+  #
+  
+  my $os =
+    $manager_class->get_rose_db_object_test(
+      query => [ data => $o->data, id => $o->id ]);
+
+  ok($os && @$os == 1 && $os->[0]->id == $o->id, "manager 1 - $db_type");
+
+  $os =
+    $manager_class->get_rose_db_object_test(
+      query =>
+      [
+        data => [ "\000\001", $o->data ], 
+        or =>
+        [
+          data => [ "\000\002", $o->data ],
+          id   => { ne => [ 123, 456 ] },
+        ],
+        id => $o->id ]);
+
+  ok($os && @$os == 1 && $os->[0]->id == $o->id, "manager 2 - $db_type");
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  $os =
+    $manager_class->get_rose_db_object_test(
+      query =>
+      [
+        data => [ "\000\001", $o->data ],
+        num  => undef,
+        or =>
+        [
+          data => [ "\000\002", $o->data ],
+          id   => { ne => [ 123, 456 ] },
+          or =>
+          [
+            data => [ "\001\003", $o->data ],
+            data => { ne => "\000" },
+            id   => { ne => undef },
+            num  => undef,
+            '!data' => "\002\003",
+            data => $o->data,
+          ]
+        ],
+        id => $o->id ]);
+
+  ok($os && @$os == 1 && $os->[0]->id == $o->id, "manager 3 - $db_type");
 }
 
 BEGIN
