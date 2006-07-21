@@ -68,6 +68,7 @@ sub build_select
   my $set         = delete $args{'set'};
   my $table_map   = delete $args{'table_map'} || {};
   my $bind_params = $args{'bind_params'};
+  my $from_and_where_only = delete $args{'from_and_where_only'};
 
   $all_columns = $columns  unless(%$all_columns);
 
@@ -472,7 +473,15 @@ sub build_select
 
     my $prefix_limit = (defined $limit && $use_prefix_limit) ? "$limit " : '';
     $select ||= join(",\n", map { "  $_" } @select_columns);
-    $qs = "SELECT $prefix_limit$distinct\n$select\nFROM\n$from_tables_sql\n";
+    
+    if($from_and_where_only)
+    {
+      $qs = "$from_tables_sql\n";
+    }
+    else
+    {
+      $qs = "SELECT $prefix_limit$distinct\n$select\nFROM\n$from_tables_sql\n";
+    }
   }
 
   if($where)

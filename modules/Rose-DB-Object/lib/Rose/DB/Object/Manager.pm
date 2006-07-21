@@ -1470,6 +1470,7 @@ sub get_objects
       delete $sub_args{'with_objects'};
 
       $sub_args{'fetch_only'}  = [ 't1' ];
+      $sub_args{'from_and_where_only'} = 1;
 
       my @t1_bind_params;
       $sub_args{'bind_params'} = \@t1_bind_params;
@@ -1491,13 +1492,10 @@ sub get_objects
 
       my $distinct = ($num_with_objects && scalar @has_dups[1 .. $num_with_objects]) ? ' DISTINCT' : '';
 
-      for($t1_sql)
-      {
-        s/\ASELECT.*FROM\s/SELECT$distinct $columns FROM\n/s;
-        s/^/    /mg  if($Debug);
-      }
+      $t1_sql = "SELECT$distinct $columns FROM\n$t1_sql";
+      $t1_sql =~ s/^/    /mg  if($Debug);
       
-      $sql =~ s/(FROM\s*)\S.+\s+t1/$1(\n$t1_sql\n  ) t1/;
+      $sql =~ s/(\nFROM\n\s*)\S.+\s+t1\b/$1(\n$t1_sql\n  ) t1/;
 
       unshift(@$bind, @$t1_bind);
 
