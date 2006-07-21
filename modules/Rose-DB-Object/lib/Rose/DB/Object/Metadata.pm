@@ -907,7 +907,7 @@ sub add_columns
         #$Debug && warn $self->class, " - adding primary key column $name\n";
         $self->add_primary_key_column($name);
       }
-      
+
       my $methods     = delete $info->{'methods'};
       my $add_methods = delete $info->{'add_methods'};
 
@@ -973,7 +973,7 @@ sub add_columns
         $column->alias($alias);
         $self->alias_column($name, $alias);
       }
-      
+
       if(%triggers)
       {
         while(my($event, $value) = each(%triggers))
@@ -1175,7 +1175,7 @@ sub load_column_class
   unless(UNIVERSAL::isa($column_class, 'Rose::DB::Object::Metadata::Column'))
   {
     eval "require $column_class";
-  
+
     Carp::croak "Could not load column class '$column_class' - $@"
       if($@);
   }
@@ -3222,7 +3222,7 @@ sub insert_sql_with_inlining
   my(@bind, @places, @bind_params);
 
   my $do_bind_params = $self->dbi_requires_bind_param($db);
-  
+
   foreach my $column ($self->columns)
   {
     my $method = $self->column_accessor_method_name($column->name);
@@ -3246,7 +3246,7 @@ sub insert_sql_with_inlining
 
   if($do_bind_params)
   {
-  
+
   }
   return 
   (
@@ -3637,8 +3637,8 @@ sub dbi_requires_bind_param
 sub dbi_bind_params
 {
   my($self, $sth, $bind, $columns) = @_;
-  
-  
+
+
 }
 
 sub make_manager_class

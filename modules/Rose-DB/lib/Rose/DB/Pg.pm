@@ -190,7 +190,7 @@ sub parse_interval
 
   my $dt_duration;
   eval { $dt_duration = $self->date_handler->parse_interval($value) };
-  
+
   return $self->Rose::DB::parse_interval($value, $end_of_month_mode)  if($@);
 
   if(defined $end_of_month_mode && $dt_duration)

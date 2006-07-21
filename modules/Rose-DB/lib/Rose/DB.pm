@@ -144,14 +144,14 @@ sub register_db
 
   # Smuggle parent/caller in with an otherwise nonsensical arrayref arg
   my $entry = $class->registry->add_entry([ $class ], @_);
-  
+
   if($entry)
   {
     my $driver = $entry->driver;
-    
+
     Carp::confess "No driver found for registry entry $entry"
       unless(defined $driver);
-  
+
     $class->setup_dynamic_class_for_driver($driver);
   }
 
@@ -186,7 +186,7 @@ sub setup_dynamic_class_for_driver
     # Cache result
     $Rebless{$class,$driver_class} = $new_class;
   }
-  
+
   return $Rebless{$class,$driver_class};
 }
 
@@ -261,7 +261,7 @@ sub unregister_domain { shift->registry->delete_domain(@_) }
 sub driver_class
 {
   my($class, $driver) = (shift, lc shift);
-  
+
   if(@_)
   {
     $class->_driver_class($driver, @_);
@@ -986,7 +986,7 @@ BEGIN
 sub quote_column_with_table 
 {
   my($self, $column, $table) = @_;
-  
+
   return $table ?
          $self->quote_table_name($table) . '.' .
          $self->quote_column_name($column) :
@@ -996,7 +996,7 @@ sub quote_column_with_table
 sub auto_quote_column_with_table 
 {
   my($self, $column, $table) = @_;
-  
+
   return $table ?
          $self->auto_quote_table_name($table) . '.' .
          $self->auto_quote_column_name($column) :
@@ -1251,7 +1251,7 @@ sub parse_time
       # Time::Clock constructor and the DateTime accessors.
       $time = Time::Clock->new->parse($dt->strftime('%H:%M:%S.%N'));
     };
-    
+
     if($@)
     {
       $self->error("Could not parse time '$value' - Time::Clock::parse() failed and $@");
@@ -1686,6 +1686,7 @@ sub auto_sequence_name { undef }
 sub supports_limit_with_offset { 1 }
 sub supports_arbitrary_defaults_on_insert { 0 }
 sub supports_select_from_subselect        { 0 }
+sub format_select_from_subselect { "(\n$_[1]\n  )" }
 
 sub likes_redundant_join_conditions { 0 }
 sub likes_lowercase_table_names     { 0 }
@@ -2046,10 +2047,10 @@ L<Rose::DB> has hooks for the L<Storable> serialization module, but there is an 
 Imagine that this is your L<Rose::DB>-derived class:
 
     package My::DB;
-  
+
     use Rose::DB;
     our @ISA = qw(Rose::DB);
-  
+
     My::DB->register_db(
       domain   => 'dev',
       type     => 'main',
@@ -2093,7 +2094,7 @@ Now another program wants to L<thaw|Storable/thaw> out that C<My::DB> object and
     use My::DB; 
 
     use Storable qw(retrieve);
-    
+
     # Retrieve frozen My::DB object from frozen_data_file
     $db = retrieve('frozen_data_file');
 

@@ -340,7 +340,7 @@ sub build_select
             {
               push(@clauses, ($not ? "$not($sql_column = $placeholder)" : "$sql_column = $placeholder"));
               push(@bind, $val);
-              
+
               if($do_bind_params)
               {
                 push(@$bind_params, $col_meta->dbi_bind_param_attrs($db));
@@ -473,7 +473,7 @@ sub build_select
 
     my $prefix_limit = (defined $limit && $use_prefix_limit) ? "$limit " : '';
     $select ||= join(",\n", map { "  $_" } @select_columns);
-    
+
     if($from_and_where_only)
     {
       $qs = "$from_tables_sql\n";

@@ -1295,13 +1295,13 @@ sub get_objects
       if(@bind_params)
       {
         my $i = 1;
-  
+
         foreach my $value (@$bind)
         {
           $sth->bind_param($i, $value, $bind_params[$i - 1]);
           $i++;
         }
-  
+
         $sth->execute;
       }
       else
@@ -1479,7 +1479,7 @@ sub get_objects
       my($t1_sql, $t1_bind) = $class->get_objects_sql(%sub_args);
 
       my $columns = $sub_args{'select'};
-      
+
       unless($columns)
       {
         my $multi_table = 
@@ -1495,9 +1495,10 @@ sub get_objects
 
       $t1_sql = "SELECT$distinct $columns FROM\n$t1_sql";
       $t1_sql =~ s/^/    /mg  if($Debug);
-      
-      $sql =~ s/(\nFROM\n\s*)\S.+\s+t1\b/$1(\n$t1_sql\n  ) t1/;
+      $t1_sql = $db->format_select_from_subselect($t1_sql);
 
+      $sql =~ s/(\nFROM\n\s*)\S.+\s+t1\b/$1$t1_sql t1/;
+print STDERR $sql, "\n";
       unshift(@$bind, @$t1_bind);
 
       if(@t1_bind_params)
