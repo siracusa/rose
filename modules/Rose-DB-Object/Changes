@@ -1,10 +1,9 @@
-0.742 (07.20.2006) - John Siracusa <siracusa@mindspring.com>
+0.742 (07.21.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * XXX: document subselect_limit, default_subselect_limit
     * Added support for a more efficient subselect-based limit/offset 
       implementation for queries that would otherwise have to be
       scanned through manually.
-    * Added support for PostgreSQL's BYTEA column type.
+    * Added a column class for PostgreSQL's BYTEA column type.
     * Added support for DBI bind_param() attributes for all column types.
     * Fixed a bug in the test suite that could cause the TIME(9)
       column type test to fail in Postgres.

@@ -25,7 +25,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   Rose::DB->default_type($db_type);
 
   # Test the subselect limit code
-  Rose::DB::Object::Manager->default_subselect_limit(1);
+  #Rose::DB::Object::Manager->default_limit_with_subselect(1);
 
   TEST_HACK:
   {
@@ -244,7 +244,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   # End delete tests
 
   # End test of the subselect limit code
-  Rose::DB::Object::Manager->default_subselect_limit(0);
+  #Rose::DB::Object::Manager->default_limit_with_subselect(0);
 }
 
 #

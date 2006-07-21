@@ -32,13 +32,14 @@ use Rose::Class::MakeMethods::Generic
     '_object_class',
     '_base_name',
     'default_objects_per_page',
-    'default_subselect_limit',
+    'default_limit_with_subselect',
     'dbi_prepare_cached',
   ],
 );
 
 __PACKAGE__->error_mode('fatal');
 __PACKAGE__->default_objects_per_page(20);
+__PACKAGE__->default_limit_with_subselect(1);
 __PACKAGE__->dbi_prepare_cached(0);
 
 sub handle_error
@@ -309,8 +310,8 @@ sub get_objects
   my $fetch            = delete $args{'fetch_only'};
   my $select           = $args{'select'};
 
-  my $try_subselect_limit = (exists $args{'subselect_limit'}) ? 
-    $args{'subselect_limit'} : $class->default_subselect_limit;
+  my $try_subselect_limit = (exists $args{'limit_with_subselect'}) ? 
+    $args{'limit_with_subselect'} : $class->default_limit_with_subselect;
 
   my $subselect_limit = 0;
 
@@ -3280,6 +3281,10 @@ Class methods are provided for fetching objects all at once, one at a time throu
 
 Get or set a boolean value that indicates whether or not this class will use L<DBI>'s L<prepare_cached|DBI/prepare_cached> method by default (instead of the L<prepare|DBI/prepare> method) when preparing SQL queries.  The default value is false.
 
+=item B<default_limit_with_subselect [BOOL]>
+
+Get or set a boolean value that determines whether or not this class will consider using a sub-query to express C<limit>/C<offset> constraints when fetching sub-objects related through one of the "...-to-many" relationship types.  Not all databases support this syntax, and not all queries can use it even in supported databases.  If this parameter is true, the feature will be used when possible, by default.  The default value is true.
+
 =item B<default_objects_per_page [NUM]>
 
 Get or set the default number of items per page, as returned by the L<get_objects|/get_objects> method when used with the C<page> and/or C<per_page> parameters.  The default value is 20.
@@ -3442,6 +3447,12 @@ The default L<Rose::DB::Object> L<constructor|Rose::DB::Object/new> and the colu
 =item C<limit NUM>
 
 Return a maximum of NUM objects.
+
+=item C<limit_with_subselect BOOL>
+
+This parameter controls whether or not this method will consider using a sub-query to express  C<limit>/C<offset> constraints when fetching sub-objects related through one of the "...-to-many" relationship types.  Not all databases support this syntax, and not all queries can use it even in supported databases.  If this parameter is true, the feature will be used when possible.
+
+The default value is determined by the L<default_limit_with_subselect|/default_limit_with_subselect> class method.
 
 =item C<multi_many_ok BOOL>
 
