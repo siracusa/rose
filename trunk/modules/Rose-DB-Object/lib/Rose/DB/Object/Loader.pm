@@ -158,9 +158,9 @@ sub manager_base_classes
     {
       $bc = [ $bc ];
     }
-  
+
     #my $found_base = 0;
-  
+
     foreach my $class (@$bc)
     {
       unless($class =~ /^(?:\w+::)*\w+$/)
@@ -170,13 +170,13 @@ sub manager_base_classes
 
       #$found_base = 1  if(UNIVERSAL::isa($class, 'Rose::DB::Object::Manager'));
     }
-  
+
     #unless($found_base)
     #{
     #  croak "None of the manager base classes inherit from ",
     #        "Rose::DB::Object::Manager";
     #}
-  
+
     $self->{'manager_base_classes'} = $bc;
   }
 

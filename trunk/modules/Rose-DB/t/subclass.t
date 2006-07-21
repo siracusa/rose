@@ -30,7 +30,7 @@ BEGIN
     username => '',
     password => '',
   );
-  
+
   # MySQL
   My::DB2->register_db(
     domain   => 'default',

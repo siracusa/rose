@@ -273,7 +273,7 @@ sub name_sql
 sub select_sql
 {
   my($self, $db, $table) = @_;
-  
+
   if($db)
   {
     if(defined $table)

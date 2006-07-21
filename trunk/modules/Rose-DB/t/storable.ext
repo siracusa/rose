@@ -5,7 +5,7 @@ use lib 'lib';
 use FindBin qw($Bin);
 
 require 't/test-lib.pl';
-  
+
 use Storable;
 
 my $frozen_file = "$Bin/frozen";

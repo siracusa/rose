@@ -681,9 +681,9 @@ sub update
             my $method = $column->accessor_method_name;
             $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
           }
-         
+
           my $kv_idx = 0;
-  
+
           foreach my $column_name (@key_columns)
           {
             my $column = $meta->column($column_name);
@@ -757,7 +757,7 @@ sub update
             my $method = $column->accessor_method_name;
             $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
           }
-         
+
           foreach my $column_name (@key_columns)
           {
             my $column = $meta->column($column_name);
@@ -895,7 +895,7 @@ sub insert
       }
 
       $sth = $dbh->prepare($sql); #, $options);
-      
+
       if($bind_params)
       {
         my $i = 1;
@@ -978,13 +978,13 @@ sub insert
         if($meta->dbi_requires_bind_param($db))
         {
           my $i = 1;
-        
+
           foreach my $column ($meta->columns)
           {
             my $method = $column->accessor_method_name;
             $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
           }
-         
+
           $sth->execute;
         }
         else

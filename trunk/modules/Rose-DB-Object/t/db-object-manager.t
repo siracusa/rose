@@ -5694,6 +5694,7 @@ SKIP: foreach my $db_type (qw(informix))
     MyInformixObjectManager->get_objectz_iterator(
       share_db     => 1,
       with_objects => [ 'bb2', 'nicks' ],
+      limit_with_subselect => 0,
       query        =>
       [
         't1.id'  => { ge => 2 },
@@ -5721,6 +5722,7 @@ SKIP: foreach my $db_type (qw(informix))
       [
         't1.id'  => { ge => 2 },
       ],
+      limit_with_subselect => 0,
       nonlazy => [ 'nicks' ],
       sort_by => 't1.name',
       limit   => 3);
@@ -5752,6 +5754,7 @@ SKIP: foreach my $db_type (qw(informix))
       [
         't1.id'  => { ge => 2 },
       ],
+      limit_with_subselect => 0,
       sort_by => 't1.name',
       limit   => 2);
 
@@ -5770,6 +5773,7 @@ SKIP: foreach my $db_type (qw(informix))
       [
         't1.id'  => { ge => 2 },
       ],
+      limit_with_subselect => 0,
       nonlazy => 1,
       sort_by => 't1.name',
       limit   => 3);
@@ -5795,6 +5799,7 @@ SKIP: foreach my $db_type (qw(informix))
       [
         't1.id'  => { ge => 2 },
       ],
+      limit_with_subselect => 0,
       nonlazy => 1,
       sort_by => 't1.name',
       limit   => 2,
@@ -5823,6 +5828,7 @@ SKIP: foreach my $db_type (qw(informix))
       [
         't1.id'  => { ge => 2 },
       ],
+      limit_with_subselect => 0,
       nonlazy => 1,
       sort_by => 't1.name',
       limit   => 3,
@@ -5851,6 +5857,7 @@ SKIP: foreach my $db_type (qw(informix))
       [
         't1.id'  => { ge => 2 },
       ],
+      limit_with_subselect => 0,
       nonlazy => 1,
       sort_by => 't1.name',
       limit   => 2,
@@ -5874,6 +5881,7 @@ SKIP: foreach my $db_type (qw(informix))
       [
         't1.id'  => { ge => 2 },
       ],
+      limit_with_subselect => 0,
       nonlazy => 1,
       sort_by => 't1.name',
       limit   => 3,

@@ -20,7 +20,7 @@ use Rose::Class::MakeMethods::Set
       delete_method  => 'delete_export_tag',
       deletes_method => 'delete_export_tags',
     },
-    
+
     '_pre_import_hook',
     {
       clear_method   => 'clear_pre_import_hooks',
@@ -87,7 +87,7 @@ sub import
       foreach my $code (@$hooks)
       {
         eval { $code->($class, $method, $target_class, $import_as) };
-  
+
         if($@)
         {
           croak "Could not import method '$import_as' from $class into ",
@@ -140,7 +140,7 @@ sub export_tags
 sub add_export_tags
 {
   my($class) = shift;
-  
+
   while(@_)
   {
     my($tag, $arg) = (shift, shift);

@@ -22,7 +22,7 @@ require 't/test-lib.pl';
 use_ok('Rose::DB');
 
 my $frozen_file = "$Bin/frozen";
-  
+
 my $Perl = $^X;
 
 if($^O ne 'VMS')
