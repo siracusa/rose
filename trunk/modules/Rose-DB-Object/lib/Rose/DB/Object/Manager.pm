@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.723';
+our $VERSION = '0.742';
 
 our $Debug = 0;
 
@@ -1498,7 +1498,7 @@ sub get_objects
       $t1_sql = $db->format_select_from_subselect($t1_sql);
 
       $sql =~ s/(\nFROM\n\s*)\S.+\s+t1\b/$1$t1_sql t1/;
-print STDERR $sql, "\n";
+
       unshift(@$bind, @$t1_bind);
 
       if(@t1_bind_params)
