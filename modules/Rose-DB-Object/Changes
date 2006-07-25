@@ -1,5 +1,7 @@
 0.743 (07.25.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Passing invalid query parameters to Manager methods will now 
+      cause a fatal error.
     * Minor tweaks to the subselect-based limit/offset code.
 
 0.742 (07.21.2006) - John Siracusa <siracusa@mindspring.com>

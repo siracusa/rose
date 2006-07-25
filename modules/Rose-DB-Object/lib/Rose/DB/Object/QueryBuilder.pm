@@ -353,8 +353,15 @@ sub build_select
             }
           }
         }
+        delete $query{$column_arg};
       }
     }
+  }
+
+  if(%query)
+  {
+    my $s = (scalar keys %query > 1) ? 's' : '';
+    Carp::croak "Invalid query parameter$s: ", join(', ', sort keys %query);
   }
 
   if($clauses_arg)
@@ -1006,7 +1013,7 @@ Furthermore, if there is no explicit value for the C<select> parameter, then eac
 
 =item B<query PARAMS>
 
-The query parameters, passed as a reference to an array of name/value pairs.  PARAMS may include an arbitrary list of selection parameters used to modify the "WHERE" clause of the SQL select statement.
+The query parameters, passed as a reference to an array of name/value pairs.  PARAMS may include an arbitrary list of selection parameters used to modify the "WHERE" clause of the SQL select statement.  Any query parameter that is not in one of the forms described below will cause a fatal error.
 
 Valid selection parameters are described below, along with the SQL clause they add to the select statement.
 
