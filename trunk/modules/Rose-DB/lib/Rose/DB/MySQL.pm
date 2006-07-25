@@ -214,8 +214,7 @@ sub refine_dbi_column_info
 }
 
 sub supports_arbitrary_defaults_on_insert { 1 }
-
-sub likes_redundant_join_conditions { 1 }
+sub likes_redundant_join_conditions       { 1 }
 
 sub supports_on_duplicate_key_update
 {

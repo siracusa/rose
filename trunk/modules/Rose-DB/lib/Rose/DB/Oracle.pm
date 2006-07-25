@@ -6,7 +6,8 @@ use Rose::DB;
 
 our $Debug    = 0;
 our @ISA      = qw(Rose::DB);
-our $VERSION  = '0.73';
+# Overshot distribution version, so freeze until it catches up
+our $VERSION  = '0.73'; 
 
 # -----------------------------------------------
 #
@@ -130,6 +131,8 @@ sub next_value_in_sequence
 
   return $id;
 }
+
+sub supports_schema { 1 }
 
 1;
 
