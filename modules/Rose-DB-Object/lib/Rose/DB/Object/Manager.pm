@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.742';
+our $VERSION = '0.743';
 
 our $Debug = 0;
 
@@ -1462,7 +1462,7 @@ sub get_objects
 
         foreach my $arg (@{$args{'sort_by'}})
         {
-          push(@sort_by, $arg)  if(index($arg, 't1') == 0);
+          push(@sort_by, $arg)  if(index($arg, 't1.') == 0);
         }
 
         $sub_args{'sort_by'} = \@sort_by;
