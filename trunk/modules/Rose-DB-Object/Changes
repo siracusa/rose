@@ -1,5 +1,7 @@
-0.743 (07.25.2006) - John Siracusa <siracusa@mindspring.com>
+0.743 (07.29.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * The object_class parameter to Manager methods now defaults to the 
+      return value of the object_class() class method.
     * Passing invalid query parameters to Manager methods will now 
       cause a fatal error.
     * Minor tweaks to the subselect-based limit/offset code.
