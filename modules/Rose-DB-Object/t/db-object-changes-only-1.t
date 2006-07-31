@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 481;
+use Test::More tests => 483;
 
 BEGIN 
 {
@@ -869,7 +869,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 77)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 79)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -1073,6 +1073,17 @@ SKIP: foreach my $db_type ('sqlite')
   
   is($o->num, 123, "insert changes only 1 - $db_type");
   is($o->flag, 7, "insert changes only 2 - $db_type");
+
+  $o = MySQLiteObject4->new(id => 1)->save;
+  $o = MySQLiteObject4->new(id => 1)->load;
+  ok($o->save, "noop update pk only 1 - $db_type");
+  
+  $o->meta->default_insert_changes_only(0);
+  $o->meta->default_update_changes_only(0);
+
+  $o = MySQLiteObject4->new(id => 2)->save;
+  $o = MySQLiteObject4->new(id => 2)->load;
+  ok($o->save, "noop update pk only 2 - $db_type");
 }
 
 BEGIN
@@ -1650,6 +1661,7 @@ EOF
       $dbh->do('DROP TABLE rose_db_object_test');
       $dbh->do('DROP TABLE rose_db_object_test2');
       $dbh->do('DROP TABLE rose_db_object_test3');
+      $dbh->do('DROP TABLE rose_db_object_test4');
     }
 
     $dbh->do(<<"EOF");
@@ -1694,6 +1706,13 @@ CREATE TABLE rose_db_object_test3
   id     INTEGER PRIMARY KEY AUTOINCREMENT,
   num    INT DEFAULT 123,
   flag   INT DEFAULT 1
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test4
+(
+  id INTEGER PRIMARY KEY
 )
 EOF
 
@@ -1815,6 +1834,21 @@ EOF
         flag => { type => 'int', default => 2 },
       ],
       default_insert_changes_only => 1,
+      default_update_changes_only => 1,
+    );
+
+    package MySQLiteObject4;
+    our @ISA = qw(Rose::DB::Object);
+    sub init_db { Rose::DB->new('sqlite') }
+    MySQLiteObject4->meta->setup
+    (
+      table   => 'rose_db_object_test4',
+      columns =>
+      [
+        id   => { type => 'int', primary_key => 1 },
+      ],
+      default_insert_changes_only => 1,
+      default_update_changes_only => 1,
     );
   }
 }
@@ -1873,6 +1907,7 @@ END
     $dbh->do('DROP TABLE rose_db_object_test');
     $dbh->do('DROP TABLE rose_db_object_test2');
     $dbh->do('DROP TABLE rose_db_object_test3');
+    $dbh->do('DROP TABLE rose_db_object_test4');
 
     $dbh->disconnect;
   }
