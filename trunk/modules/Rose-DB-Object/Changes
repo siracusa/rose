@@ -1,5 +1,6 @@
 0.743 (07.31.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * xxx (document) Added a cascade option to save().
     * The object_class parameter to Manager methods now defaults to the 
       return value of the object_class() class method.
     * Passing invalid query parameters to Manager methods will now 

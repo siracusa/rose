@@ -314,6 +314,20 @@ sub spec_hash
   return wantarray ? %spec : \%spec;
 }
 
+sub object_has_foreign_object
+{
+  my($self, $object) = @_;
+  
+  unless($object->isa($self->parent->class))
+  {
+    my $class = $self->parent->class;
+    Carp::croak "Cannot check for foreign object related through the ", $self->name,
+                " foreign key.  Object does not inherit from $class: $object";
+  }
+
+  return $object->{$self->hash_key} || 0;
+}
+
 1;
 
 __END__
