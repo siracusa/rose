@@ -832,6 +832,12 @@ sub columns
     [ sort { $a->name cmp $b->name } values %{$self->{'columns'} ||= {}} ];
 }
 
+sub num_columns
+{
+  my($self) = shift;
+  return $self->{'num_columns'} ||= scalar(@{$self->columns});
+}
+
 sub nonlazy_columns
 {
   my($self) = shift;
@@ -3516,6 +3522,7 @@ sub _clear_column_generated_values
   $self->{'fq_table'}               = undef;
   $self->{'fq_table_sql'}           = undef;
   $self->{'column_names'}           = undef;
+  $self->{'num_columns'}            = undef;
   $self->{'nonlazy_column_names'}   = undef;
   $self->{'lazy_column_names'}      = undef;
   $self->{'get_column_sql_tmpl'}    = undef;

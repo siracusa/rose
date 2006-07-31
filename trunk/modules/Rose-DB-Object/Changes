@@ -1,9 +1,11 @@
-0.743 (07.29.2006) - John Siracusa <siracusa@mindspring.com>
+0.743 (07.31.2006) - John Siracusa <siracusa@mindspring.com>
 
     * The object_class parameter to Manager methods now defaults to the 
       return value of the object_class() class method.
     * Passing invalid query parameters to Manager methods will now 
       cause a fatal error.
+    * Fixed a bug that caused update() to fail for tables where all columns
+      are part of the primary key.  (Reported by Danial Pearce)
     * Minor tweaks to the subselect-based limit/offset code.
 
 0.742 (07.21.2006) - John Siracusa <siracusa@mindspring.com>

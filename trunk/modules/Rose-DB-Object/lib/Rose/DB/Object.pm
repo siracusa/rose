@@ -400,6 +400,7 @@ sub load
 
   $self->{STATE_IN_DB()} = 1;
   $self->{LOADED_FROM_DRIVER()} = $db->{'driver'};
+  $self->{MODIFIED_COLUMNS()} = {};
   return $self || 1;
 }
 
@@ -569,6 +570,9 @@ sub update
   my @key_columns = $meta->primary_key_column_names;
   my @key_methods = $meta->primary_key_column_accessor_names;
   my @key_values  = grep { defined } map { $self->$_() } @key_methods;
+
+  # Special case for tables where all columns are part of the primary key
+  return $self || 1  if(@key_columns == $meta->num_columns);
 
   # See comment below
   #my $null_key  = 0;
