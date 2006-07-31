@@ -63,6 +63,7 @@ use Rose::Object::MakeMethods::Generic
     auto_load_related_classes   => { default => 1 },
     default_update_changes_only => { default => 0 },
     default_insert_changes_only => { default => 0 },
+    default_cascade_save        => { default => 0 },
   ],
 
   array =>
@@ -2147,7 +2148,7 @@ sub retry_deferred_relationships
       $relationship->make_methods(%$args);
 
       # Reassign to list in case we rebuild above
-      $self->relationship($relationship->name => $relationship);
+      $relationship->parent->relationship($relationship->name => $relationship);
     }
     else
     {

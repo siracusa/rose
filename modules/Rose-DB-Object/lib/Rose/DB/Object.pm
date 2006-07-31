@@ -13,7 +13,8 @@ our @ISA = qw(Rose::Object);
 use Rose::DB::Object::Manager;
 use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
-use Rose::DB::Object::Util qw(row_id lazy_column_values_loaded_key);
+use Rose::DB::Object::Util 
+  qw(row_id lazy_column_values_loaded_key has_modified_columns);
 
 our $VERSION = '0.743';
 
@@ -408,8 +409,14 @@ sub save
 {
   my($self, %args) = @_;
 
-  # Keep trigger-encumbered code in separate code path
-  if($self->{ON_SAVE_ATTR_NAME()})
+  my $meta = $self->meta;
+
+  my $cascade =
+    exists $args{'cascade'} ? $args{'cascade'} :
+    $meta->default_cascade_save;
+
+  # Keep trigger-encumbered and cascade code in separate code path
+  if($self->{ON_SAVE_ATTR_NAME()} || $cascade)
   {
     my $db  = $self->db or return 0;
     my $ret = $db->begin_work;
@@ -424,7 +431,6 @@ sub save
 
     eval
     {
-      my $meta = $self->meta;
       my %did_set;
 
       #
@@ -495,6 +501,19 @@ sub save
           $code->() or die $self->error;
         }
       }
+      
+      if($cascade)
+      {
+        foreach my $fk ($meta->foreign_keys)
+        {
+          # Don't save if this object was just set above
+          next  if($todo->{'fk'}{$fk->name}{'set'});
+
+          my $foreign_object = $fk->object_has_foreign_object($self) || next;
+          $Debug && warn "$self - save foreign ", $fk->name, " - $foreign_object\n";
+          $foreign_object->save(%args)  if(has_modified_columns($foreign_object));
+        }
+      }
 
       # Relationships
       foreach my $rel_name (keys %{$todo->{'rel'}})
@@ -514,6 +533,23 @@ sub save
         if($code  = $todo->{'rel'}{$rel_name}{'add'})
         {
           $code->() or die $self->error;
+        }
+      }
+
+      if($cascade)
+      {
+        foreach my $rel ($meta->relationships)
+        {
+          # Don't save if this object was just set above
+          next  if($todo->{'rel'}{$rel->name}{'set'});
+
+          my $related_objects = $rel->object_has_related_objects($self) || next;
+          
+          foreach my $related_object (@$related_objects)
+          {
+            $Debug && warn "$self - save related ", $rel->name, " - $related_object\n";
+            $related_object->save(%args)  if(has_modified_columns($related_object));
+          }
         }
       }
 
