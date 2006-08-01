@@ -45,7 +45,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
      'Rose_db_object_g_main, Rose_db_object_ug_main', "foreign_keys 1 - $db_type");  
 
   is(join(', ', map { $_->name . ' ' . $_->type} My::DB::Gene::Main->meta->relationships),
-     'genes many to many, unigenes many to many', "relationships 1 - $db_type");
+     'unigenes many to many', "relationships 1 - $db_type");
 
   is(join(', ', map { $_->name . ' ' . $_->type} My::DB::Unigene::Main->meta->relationships),
      'genes many to many', "relationships 2 - $db_type");
