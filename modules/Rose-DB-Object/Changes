@@ -1,6 +1,6 @@
-0.743 (07.31.2006) - John Siracusa <siracusa@mindspring.com>
+0.743 (08.01.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * xxx (document + default_cascade_save) Added a cascade option to save().
+    * Added a cascade option to save().
     * The object_class parameter to Manager methods now defaults to the 
       return value of the object_class() class method.
     * Passing invalid query parameters to Manager methods will now 

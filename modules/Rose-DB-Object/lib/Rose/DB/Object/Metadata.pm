@@ -4687,6 +4687,10 @@ See the L<Rose::DB::Object::ConventionManager> documentation for more informatio
 
 Returns the L<Rose::DB>-derived object associated with this metadata object's L<class|/class>.  A fatal error will occur if L<class|/class> is undefined or if the L<Rose::DB> object could not be created.
 
+=item B<default_cascade_save [BOOL]>
+
+Get or set a boolean value that indicates whether or not the L<class|/class> associated with this metadata object will L<save|Rose::DB::Object/save> related objects when the parent object is L<saved|Rose::DB::Object/save>.  See the documentation for L<Rose::DB::Object>'s L<save()|Rose::DB::Object/save> method for details.  The default value is false.
+
 =item B<default_load_speculative [BOOL]>
 
 Get or set a boolean value that indicates whether or not the L<class|/class> associated with this metadata object will L<load|Rose::DB::Object/load> speculatively by default.  See the documentation for L<Rose::DB::Object>'s L<load()|Rose::DB::Object/load> method for details.  The default value is false.
