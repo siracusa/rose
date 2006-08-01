@@ -158,6 +158,7 @@ t/make-modules.ext
 t/make-modules.t
 t/multi-pk-sequences.t
 t/pod.t
+t/save-cascade.t
 t/sandbox/code-gen/generated-perl-test.pl
 t/sandbox/code-gen/lib/.placeholder
 t/sandbox/code-gen/make-modules.pl

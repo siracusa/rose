@@ -351,7 +351,7 @@ CREATE TABLE prices
 (
   price_id    SERIAL PRIMARY KEY,
   product_id  INT NOT NULL REFERENCES products (id),
-  region      CHAR(2) NOT NULL DEFAULT 'US',
+  region      CHAR(2) DEFAULT 'US' NOT NULL,
   price       DECIMAL(10,2) NOT NULL
 )
 EOF

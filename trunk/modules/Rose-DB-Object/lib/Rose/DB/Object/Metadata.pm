@@ -3152,8 +3152,12 @@ sub insert_and_on_duplicate_key_update_sql
 
   if($obj->{STATE_IN_DB()})
   {
+    my %seen;
+
     @columns = $changes_only ?
-      (map { $self->column($_) } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
+      (map { $self->column($_) } grep { !$seen{$_}++ }  
+       ($self->primary_key_column_names, 
+        keys %{$obj->{MODIFIED_COLUMNS()} || {}})) :
       (grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
        $self->columns);
 
@@ -3276,8 +3280,12 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
 
   if($obj->{STATE_IN_DB()})
   {
+    my %seen;
+
     @columns = $changes_only ?
-      (map { $self->column($_) } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
+      (map { $self->column($_) } grep { !$seen{$_}++ }  
+       ($self->primary_key_column_names, 
+        keys %{$obj->{MODIFIED_COLUMNS()} || {}})) :
       (grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
        $self->columns);
 
