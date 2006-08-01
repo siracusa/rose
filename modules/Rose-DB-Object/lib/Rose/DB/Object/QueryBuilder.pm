@@ -98,6 +98,9 @@ sub build_select
     {
       if($query_arg->[$i] =~ /^(?:and|or)$/i)
       {
+        my $query = $query_arg->[$i + 1];
+        next  unless(ref $query && @$query);
+
         my($sql, $bind);
 
         if($do_bind)
@@ -105,7 +108,7 @@ sub build_select
           ($sql, $bind) =
             build_select(%args, 
                          where_only => 1,
-                         query => $query_arg->[$i + 1],
+                         query => $query,
                          logic => uc $query_arg->[$i],
                          set => $set);
 
@@ -116,7 +119,7 @@ sub build_select
           $sql =
             build_select(%args, 
                          where_only => 1,
-                         query => $query_arg->[$i + 1],
+                         query => $query,
                          logic => uc $query_arg->[$i],
                          set => $set);
         }
