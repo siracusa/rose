@@ -250,4 +250,52 @@ sub have_db
   return get_dbh($type) ? 1 : 0;
 }
 
+sub mysql_supports_innodb
+{
+  my $db = get_db('mysql_admin') or return 0;
+
+  eval
+  {
+    my $dbh = $db->dbh;
+
+    CLEAR:
+    {
+      local $dbh->{'RaiseError'} = 0;
+      local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE rdbo_innodb_test');
+    }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rdbo_innodb_test 
+(
+  id INTEGER PRIMARY KEY
+)
+TYPE=InnoDB
+EOF
+
+    # MySQL will silently ignore the "TYPE=InnoDB" part and create
+    # a MyISAM table instead.  MySQL is evil!  Now we have to manually
+    # check to make sure an InnoDB table was really created.
+    my $db_name = $db->database;
+    my $sth = $dbh->prepare("SHOW TABLE STATUS FROM `$db_name` LIKE ?");
+    $sth->execute('rdbo_innodb_test');
+    my $info = $sth->fetchrow_hashref;
+
+    unless(lc $info->{'Type'} eq 'innodb' || lc $info->{'Engine'} eq 'innodb')
+    {
+      die "Missing InnoDB support";
+    }
+    
+    $dbh->do('DROP TABLE rdbo_innodb_test');
+  };
+  
+  if($@)
+  {
+    warn $@  unless($@ =~ /Missing InnoDB support/);
+    return 0;
+  }
+  
+  return 1;
+}
+
 1;
