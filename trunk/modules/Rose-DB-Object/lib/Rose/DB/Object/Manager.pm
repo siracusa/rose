@@ -2557,7 +2557,7 @@ sub delete_objects
 
   $class->error(undef);
 
-  my $object_class = delete $args{'object_class'} 
+  my $object_class = $args{'object_class'} 
     or $class->object_class or Carp::croak "Missing object class argument";
 
   my $meta = $object_class->meta;
@@ -2656,7 +2656,7 @@ sub update_objects
 
   $class->error(undef);
 
-  my $object_class = delete $args{'object_class'} 
+  my $object_class = $args{'object_class'} 
     or $class->object_class or Carp::croak "Missing object class argument";
 
   my $meta = $object_class->meta;

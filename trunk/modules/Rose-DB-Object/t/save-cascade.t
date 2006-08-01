@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 5;
+use Test::More tests => 1 + (22 * 4);
 
 BEGIN 
 {
@@ -22,11 +22,12 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 1)  unless($Have{$db_type});
+    skip("$db_type tests", 22)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
 
+  Rose::DB::Object::Metadata->unregister_all_classes;
   Rose::DB->default_type($db_type);
 
   my $class_prefix =  ucfirst($db_type);
@@ -46,18 +47,74 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
   my $product_class = $class_prefix . '::Product';
   my $vendor_class  = $class_prefix . '::Vendor';
+  my $price_class   = $class_prefix . '::Price';
+  my $color_class   = $class_prefix . '::Color';
 
-  my $p = $product_class->new(name => 'p1', vendor => { name => 'v1' });
-  $p->save;
+  foreach my $i (0, 1)
+  {
+    $product_class->meta->default_update_changes_only($i);
+    $product_class->meta->default_insert_changes_only($i);
 
-  $p = $product_class->new(id => $p->id)->load;
+    # Foreign key
   
-  my $v = $p->vendor;
-  $v->name('v1.1');
-  $p->save(cascade => 1);
+    my $p = $product_class->new(name => 'p1', vendor => { name => 'v1' });
+    $p->save;
 
-  $v = $vendor_class->new(id => $v->id)->load;
-  is($v->name, 'v1.1', "cascade fk 1 - $db_type");
+    $p = $product_class->new(id => $p->id)->load;
+    
+    my $v = $p->vendor;
+    $v->name('v1.1');
+    $p->save(cascade => 1);
+  
+    $v = $vendor_class->new(id => $v->id)->load;
+    is($v->name, 'v1.1', "cascade fk 1.$i - $db_type");
+  
+    # One-to-many
+  
+    $p->prices([ { price => 1.23 } ]);
+    $p->save;
+  
+    $p = $product_class->new(id => $p->id)->load;
+    
+    my $price = $p->prices->[0];
+    is($price->price, 1.23, "cascade one-to-many 1.$i - $db_type");
+    is($price->region, 'US', "cascade one-to-many 2.$i - $db_type");
+    $price->region('UK');
+    $p->add_prices({ price => 4.56 });
+    $p->save(cascade => 1);
+  
+    $price = $price_class->new(price_id => $price->price_id)->load;
+    is($price->region, 'UK', "cascade one-to-many 3.$i - $db_type");
+    $price = (sort { $a->price <=> $b->price } @{$p->prices})[-1];
+    is($price->price, 4.56, "cascade one-to-many 4.$i - $db_type");
+    is($price->region, 'US', "cascade one-to-many 5.$i - $db_type");
+  
+    # Many-to-many
+  
+    $p->colors([ { code => 'f00', name => 'red' } ]);
+    $p->save;
+  
+    $p = $product_class->new(id => $p->id)->load;
+    
+    my $color = $p->colors->[0];
+    is($color->code, 'f00', "cascade many-to-many 1.$i - $db_type");
+    is($color->name, 'red', "cascade many-to-many 2.$i - $db_type");
+    $color->name('r3d');
+    $p->add_colors({ code => '0f0', name => 'green' });
+    $p->save(cascade => 1);
+
+    $color = $color_class->new(code => $color->code)->load;
+    is($color->name, 'r3d', "cascade many-to-many 3.$i - $db_type");
+    $color = (sort { $a->name cmp $b->name } @{$p->colors})[0];
+    is($color->code, '0f0', "cascade many-to-many 4.$i - $db_type");
+    is($color->name, 'green', "cascade many-to-many 5.$i - $db_type");
+  
+    $p->dbh->do('DELETE FROM product_colors');
+    $p->dbh->do('DELETE FROM colors');
+    $p->dbh->do('DELETE FROM prices');
+    $p->dbh->do('DELETE FROM products');
+    $p->dbh->do('DELETE FROM vendors');
+  }
 }
 
 BEGIN
@@ -151,6 +208,8 @@ EOF
     my $db = Rose::DB->new('mysql_admin');
     $dbh = $db->retain_dbh or die Rose::DB->error;
 
+    die "No innodb support"  unless(mysql_supports_innodb());
+
     # Drop existing tables, ignoring errors
     {
       local $dbh->{'RaiseError'} = 0;
@@ -174,6 +233,7 @@ CREATE TABLE vendors
   id    INT AUTO_INCREMENT PRIMARY KEY,
   name  VARCHAR(255)
 )
+TYPE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -182,6 +242,7 @@ CREATE TABLE colors
   code  CHAR(3) NOT NULL PRIMARY KEY,
   name  VARCHAR(255)
 )
+TYPE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -189,29 +250,44 @@ CREATE TABLE products
 (
   id        INT AUTO_INCREMENT PRIMARY KEY,
   name      VARCHAR(255),
-  vendor_id INT NOT NULL REFERENCES vendors (id),
+  vendor_id INT NOT NULL,
 
-  UNIQUE(name)
+  UNIQUE(name),
+
+  FOREIGN KEY (vendor_id) REFERENCES vendors (id)
 )
+TYPE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
 CREATE TABLE prices
 (
   price_id    INT AUTO_INCREMENT PRIMARY KEY,
-  product_id  INT NOT NULL REFERENCES products (id),
+  product_id  INT NOT NULL,
   region      CHAR(2) NOT NULL DEFAULT 'US',
-  price       DECIMAL(10,2) NOT NULL
+  price       DECIMAL(10,2) NOT NULL,
+
+  INDEX(product_id),
+  
+  FOREIGN KEY (product_id) REFERENCES products (id)
 )
+TYPE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
 CREATE TABLE product_colors
 (
   id           INT AUTO_INCREMENT PRIMARY KEY,
-  product_id   INT NOT NULL REFERENCES products (id),
-  color_code   CHAR(3) NOT NULL REFERENCES colors (code)
+  product_id   INT NOT NULL,
+  color_code   CHAR(3) NOT NULL,
+
+  INDEX(product_id),
+  INDEX(color_code),
+
+  FOREIGN KEY (product_id) REFERENCES products (id),
+  FOREIGN KEY (color_code) REFERENCES colors (code)
 )
+TYPE=InnoDB
 EOF
 
     $dbh->disconnect;
