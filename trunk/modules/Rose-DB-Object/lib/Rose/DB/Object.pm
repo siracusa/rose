@@ -418,8 +418,10 @@ sub save
   # Keep trigger-encumbered and cascade code in separate code path
   if($self->{ON_SAVE_ATTR_NAME()} || $cascade)
   {
-    my $db  = $self->db or return 0;
+    my $db  = $args{'db'} || $self->db || return 0;
     my $ret = $db->begin_work;
+
+    $args{'db'} ||= $db;
 
     unless($ret)
     {
@@ -1839,7 +1841,7 @@ For each "many to many" relationship, all of the rows in the "mapping table" tha
 
 For each "one to one" relationship or foreign key with a "one to one" L<relationship type|Rose::DB::Object::Metadata::ForeignKey/relationship_type>, all of the rows in the foreign table that reference the current object will deleted in "delete" mode, or will have the column(s) that reference the current object set to NULL in "null" mode.
 
-In all modes, if the L<db|/db> is not currently in a transaction (i.e., if L<AutoCommit|Rose::DB/autocommit> is turned off), a new transaction is started.  If any part of the cascaded delete fails, the transaction is rolled back.
+In all modes, if the L<db|/db> is not currently in a transaction, a new transaction is started.  If any part of the cascaded delete fails, the transaction is rolled back.
 
 =item C<prepare_cached BOOL>
 
@@ -1950,6 +1952,24 @@ Save the current object to the database table.  In the absence of PARAMS, if the
 PARAMS are name/value pairs.  Valid parameters are:
 
 =over 4
+
+=item C<cascade BOOL>
+
+If true, then sub-objects related to this object through a foreign key or relationship that have been previously loaded using methods called on this object and that contain unsaved changes will be L<saved|/save> after the parent object is saved.  This proceeds recursively through all sub-objects.  (All other parameters to the original call to L<save|/save> are also passed on when saving sub-objects.)
+
+All database operations are done within a single transaction.  If the L<db|/db> is not currently in a transaction, a new transaction is started.  If any part of the cascaded save fails, the transaction is rolled back.
+
+If omitted, the default value of this parameter is determined by the L<metadata object|/meta>'s L<default_cascade_save|Rose::DB::Object::Metadata/default_cascade_save> class method, which returns false by default.
+
+Example:
+
+    $p = Product->new(id => 123)->load;
+
+    print join(', ', $p->colors); # related Color objects loaded
+    $p->colors->[0]->code('zzz'); # one Color object is modified
+
+    # The Product object and the modified Color object are saved
+    $p->save(cascade => 1);
 
 =item C<changes_only BOOL>
 
