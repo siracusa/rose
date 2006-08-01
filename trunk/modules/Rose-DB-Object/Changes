@@ -5,6 +5,8 @@
       return value of the object_class() class method.
     * Passing invalid query parameters to Manager methods will now 
       cause a fatal error.
+    * Ignore empty "and" and "or" query parameters in QueryBuilder.
+      (Suggested by Jonathan Vanasco)
     * Fixed a bug that caused update() to fail for tables where all columns
       are part of the primary key.  (Reported by Danial Pearce)
     * Minor tweaks to the subselect-based limit/offset code.

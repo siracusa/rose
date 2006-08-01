@@ -464,6 +464,8 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
                               day   => 3)
         },
 
+        or         => [],
+        and        => [],
         save_col   => [ 1, 5, 123 ],
         nums       => [ 4, 5, 6 ],
         fk1        => 1,
@@ -3031,6 +3033,8 @@ SKIP: foreach my $db_type ('mysql')
                               day   => 3)
         },
 
+        or         => [],
+        and        => [],
         save_col   => [ 1, 5, 123 ],
         nums       => [ 4, 5, 6 ],
         fk1        => 1,
@@ -5572,6 +5576,8 @@ SKIP: foreach my $db_type (qw(informix))
                               day   => 3)
         },
 
+        or         => [],
+        and        => [],
         save_col   => [ 1, 5, 123 ],
         nums       => [ 4, 5, 6 ],
         fk1        => 1,
@@ -8144,6 +8150,8 @@ SKIP: foreach my $db_type (qw(sqlite))
                               day   => 3)
         },
 
+        or         => [],
+        and        => [],
         save_col   => [ 1, 5, 123 ],
         #nums       => [ 4, 5, 6 ],
         fk1        => 1,
