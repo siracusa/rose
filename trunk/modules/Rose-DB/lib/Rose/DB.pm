@@ -1916,7 +1916,7 @@ Rose::DB - A DBI wrapper and abstraction layer.
 
 =head1 DESCRIPTION
 
-L<Rose::DB> is a wrapper and abstraction layer for C<DBI>-related functionality.  A L<Rose::DB> object "has a" L<DBI> object; it is not a subclass of L<DBI>.
+L<Rose::DB> is a wrapper and abstraction layer for L<DBI>-related functionality.  A L<Rose::DB> object "has a" L<DBI> object; it is not a subclass of L<DBI>.
 
 Please see the L<tutorial|Rose::DB::Tutorial> (perldoc Rose::DB::Tutorial) for an example usage scenario that reflects "best practices" for this module.
 
@@ -2155,6 +2155,8 @@ The default mapping of driver names to class names is as follows:
     mysql    -> Rose::DB::MySQL
     pg       -> Rose::DB::Pg
     informix -> Rose::DB::Informix
+    sqlite   -> Rose::DB::SQLite
+    oracle   -> Rose::DB::Oracle
     generic  -> Rose::DB::Generic
 
 The class mapped to the special driver name "generic" will be used for any driver name that does not have an entry in the map.
@@ -2297,13 +2299,13 @@ Unregisters an entire domain.  Returns true if the domain was unregistered succe
 
 Unregistering a domain removes all knowledge of all of the data sources that existed under it.  This may be harmful to any existing L<Rose::DB> objects that are associated with any of those data sources.
 
-=item use_private_registry
+=item B<use_private_registry>
 
-This is a convenience method used to give a class its own private L<registry|/registry>.  In other words, this:
+This method is used to give a class its own private L<registry|/registry>.  In other words, this:
 
     __PACKAGE__->use_private_registry;
 
-is equivalent to this:
+is roughly equivalent to this:
 
     use Rose::DB::Registry;
     __PACKAGE__->registry(Rose::DB::Registry->new);
