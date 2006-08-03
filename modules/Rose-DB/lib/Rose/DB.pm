@@ -2810,6 +2810,7 @@ L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB>
 =head1 CONTRIBUTORS
 
 Ron Savage
+
 Lucian Dragus
 
 =head1 AUTHOR
