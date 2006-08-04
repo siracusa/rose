@@ -6980,6 +6980,7 @@ EOF
         type  => 'many to one',
         class => 'MySQLiteObject',
         column_map => { pid => 'id' },
+        required => 1,
       },
     );
 

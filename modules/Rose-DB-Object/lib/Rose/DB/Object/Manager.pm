@@ -854,7 +854,7 @@ sub get_objects
           # Use outer joins to handle duplicate or optional information.
           # Foreign keys that have all non-null columns are never outer-
           # joined, however.
-          if(!($rel_type eq 'foreign key' && $rel->is_required) &&
+          if(!($rel_type eq 'foreign key' && $rel->is_required && $rel->referential_integrity) &&
              ($outer_joins_only || $with_objects{$arg}))
           {
             # Aliased table names

@@ -10,21 +10,21 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.68';
+our $VERSION = '0.743';
 
 __PACKAGE__->default_auto_method_types(qw(get_set_on_save delete_on_save));
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
-  qw(class share_db key_columns referential_integrity)
+  qw(class share_db key_columns required)
 );
 
 use Rose::Object::MakeMethods::Generic
 (
   boolean =>
   [
+    #'required' => { default => 1 },
     '_share_db' => { default => 1 },
-    'referential_integrity' => { default => 1 },
   ],
 
   hash =>
@@ -94,6 +94,12 @@ sub _fk_or_self
 {
   my($self, $method) = (shift, shift);
 
+  if((@_ && $method eq 'key_columns') || 
+     (@_ > 1 && $method eq 'key_column'))
+  {
+    $self->{'default_required'} = undef;
+  }
+
   if(my $fk = $self->foreign_key)
   {
     return $fk->$method(@_);
@@ -147,7 +153,7 @@ sub id
 
   return $self->parent->class . ' ' .   $self->class . ' ' . 
     join("\0", map { join("\1", lc $_, lc $column_map->{$_}) } sort keys %$column_map) .
-    join("\0", map { $_ . '=' . ($self->$_() || 0) } qw(referential_integrity));
+    join("\0", map { $_ . '=' . ($self->$_() || 0) } qw(required));
 }
 
 sub build_method_name_for_type
@@ -166,17 +172,65 @@ sub build_method_name_for_type
   return undef;
 }
 
-sub soft 
+sub optional 
 {
   my($self) = shift;
 
   if(@_)
   {
-    $self->referential_integrity(!$_[0]);
+    $self->required(!$_[0]);
   }
 
-  return ! $self->referential_integrity;
+  return ! $self->required;
 }
+
+*soft = \&optional;
+
+sub required
+{
+  my($self) = shift;
+
+  my $fk = $self->foreign_key;
+  return $fk->referential_integrity(@_)  if($fk);
+
+  return $self->{'required'} = ($_[0] ? 1 : 0)    if(@_);
+  return $self->{'required'}  if(defined $self->{'required'});
+  return $self->{'default_required'}  if(defined $self->{'default_required'});
+
+  my $meta = $self->parent or 
+    Carp::croak "Missing parent for foreign key '", $self->name, "'";
+
+  my $column_map = $self->column_map;
+
+  # If any local key column allows null values, then 
+  # the related object is not required.
+  foreach my $column_name (keys %$column_map)
+  {
+    my $column = $meta->column($column_name) 
+      or Carp::confess "No such column '$column_name' in table '",
+           $self->parent->table, "' referenced from relationship '",
+           $self->name, "'";
+
+    unless($column->not_null)
+    {
+      return $self->{'default_required'} = 0;
+    }
+  }
+
+  # If the local key columns are the same as the primary key columns
+  # then the related object is not required.
+  my $local_columns = join("\0", sort keys %$column_map);
+  my $pk_columns    = join("\0", sort $meta->primary_key_column_names);
+
+  if($local_columns eq $pk_columns && length($local_columns))
+  {
+    return $self->{'default_required'} = 0;
+  }
+
+  return $self->{'default_required'} = 1;
+}
+
+*referential_integrity = \&required;
 
 1;
 
@@ -242,6 +296,10 @@ Get or set the default list of L<auto_method_types|Rose::DB::Object::Metadata::R
 
 =over 4
 
+=item B<column_map [HASH | HASHREF]>
+
+Get or set a reference to a hash that maps local column names to foreign column names.
+
 =item B<build_method_name_for_type TYPE>
 
 Return a method name for the relationship method type TYPE.  
@@ -262,17 +320,13 @@ Many to one relationships encapsulate essentially the same information as foreig
 
 If passed a local column name LOCAL, return the corresponding column name in the foreign table.  If passed both a local column name LOCAL and a foreign column name FOREIGN, set the local/foreign mapping and return the foreign column name.
 
-=item B<column_map [HASH | HASHREF]>
+=item B<optional [BOOL]>
 
-Get or set a reference to a hash that maps local column names to foreign column names.
+This method is the mirror image of the L<required|/required> method.   Passing a true value to this method is the same thing as setting L<required|/required> to false, and vice versa.  Similarly, the return value is the logical negation of L<required|/required>.
 
-=item B<referential_integrity [BOOL]>
+Get or set the boolean value that determines what happens when the local columns in the L<column_map|/column_map> have L<defined|perlfunc/defined> values, but the object they relate to is not found.  If true, a fatal error will occur when the methods that fetch objects through this relationship are called.  If false, then the methods will simply return undef.
 
-Get or set the boolean value that determines what happens when the columns in the L<column_map|/column_map> have L<defined|perlfunc/defined> values, but the object they point to is not found.  If true, a fatal error will occur.  If false, then the methods that service this relationship will simply return undef.  The default is true.
-
-=item B<soft [BOOL]>
-
-This method is the mirror image of the L<referential_integrity|/referential_integrity> method.   Passing a true is the same thing as setting L<referential_integrity|/referential_integrity> to false, and vice versa.  Similarly, the return value is the logical negation of L<referential_integrity|/referential_integrity>.
+The default is false if one or more of the local columns L<allow null values|Rose::DB::Object::Metadata::Column/not_null> or if the local columns in the column map are the same as the L<primary key columns|Rose::DB::Object::Metadata/primary_key_columns>, true otherwise.
 
 =item B<type>
 

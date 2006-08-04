@@ -1727,8 +1727,16 @@ sub object_by_key
   my $meta     = $target_class->meta;
   my $fk_pk;
 
-  my $referential_integrity = 
+  my $required = 
+    exists $args->{'required'} ? $args->{'required'} :
     exists $args->{'referential_integrity'} ? $args->{'referential_integrity'} : 1;
+
+  if(exists $args->{'required'} && exists $args->{'referential_integrity'} &&
+    (!$args->{'required'} != !$$args->{'referential_integrity'}))
+  {
+    Carp::croak "The required and referential_integrity parameters conflict. ",
+                "Please pass one or the other, not both.";
+  }
 
   my $fk_columns = $args->{'key_columns'} or die "Missing key columns hash";
   my $share_db   = $args->{'share_db'};
@@ -1806,7 +1814,7 @@ sub object_by_key
 
       my $ret;
 
-      if($referential_integrity)
+      if($required)
       {
         eval { $ret = $obj->load };
 
@@ -1961,7 +1969,7 @@ sub object_by_key
 
       my $ret;
 
-      if($referential_integrity)
+      if($required)
       {
         eval { $ret = $obj->load };
 
@@ -2126,7 +2134,7 @@ sub object_by_key
 
       my $ret;
 
-      if($referential_integrity)
+      if($required)
       {
         eval { $ret = $obj->load };
 
@@ -5613,7 +5621,7 @@ The name of the L<Rose::DB::Object>-derived class of the object to be loaded.  T
 
 =item B<foreign_key OBJECT>
 
-The L<Rose::DB::Object::Metadata::ForeignKey> object that describes the "key" through which the "object_by_key" is fetched.  This is required when using the "delete_now", "delete_on_save", and "get_set_on_save" interfaces.
+The L<Rose::DB::Object::Metadata::ForeignKey> object that describes the "key" through which the "object_by_key" is fetched.  This (or the C<relationship> parameter) is required when using the "delete_now", "delete_on_save", and "get_set_on_save" interfaces.
 
 =item B<hash_key NAME>
 
@@ -5630,6 +5638,22 @@ A reference to a hash that maps column names in the current object to those of t
 =item B<interface NAME>
 
 Choose the interface.  The default is C<get_set>.
+
+=item B<relationship OBJECT>
+
+The L<Rose::DB::Object::Metadata::Relationship>-derived object that describes the relationship through which the object is fetched.  This (or the C<foreign_key> parameter) is required when using the "delete_now", "delete_on_save", and "get_set_on_save" interfaces.
+
+=item B<referential_integrity BOOL>
+
+If true, then a fatal error will occur when a method in one of the "get*" interfaces is called and no related object is found.  The default is determined by the L<referential_integrity|Rose::DB::Object::Metadata::ForeignKey/referential_integrity> attribute of the C<foreign_key> object, or true if no C<foreign_key> parameter is passed.
+
+This parameter conflicts with the C<required> parameter.  Only one of the two should be passed.
+
+=item B<required BOOL>
+
+If true, then a fatal error will occur when a method in one of the "get*" interfaces is called and no related object is found.  The default is determined by the L<required|Rose::DB::Object::Metadata::Relationship::OneToOne/required> attribute of the C<relationship> object, or true if no C<relationship> parameter is passed.
+
+This parameter conflicts with the C<referential_integrity> parameter.  Only one of the two should be passed.
 
 =item B<share_db BOOL>
 
