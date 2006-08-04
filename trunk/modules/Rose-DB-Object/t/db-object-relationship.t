@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1464;
+use Test::More tests => 1478;
 
 BEGIN 
 {
@@ -19,7 +19,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 369)  unless($HAVE_PG);
+  skip("Postgres tests", 373)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -171,7 +171,11 @@ SKIP: foreach my $db_type ('pg')
   $o->fk2(12);
   $o->fk3(13);
 
+  ok(!$o->has_loaded_related('other_obj'), "has_loaded_related() 1 - $db_type");
+
   $obj = $o->other_obj or warn "# ", $o->error, "\n";
+
+  ok($o->has_loaded_related('other_obj'), "has_loaded_related() 2 - $db_type");
 
   is(ref $obj, 'MyPgOtherObject', "other_obj() 4 - $db_type");
   is($obj->name, 'two', "other_obj() 5 - $db_type");
@@ -185,7 +189,11 @@ SKIP: foreach my $db_type ('pg')
   my $oo23 = MyPgOtherObject2->new(id => 3, name => 'three', pid => $o_x->id);
   ok($oo23->save, "other object 2 save() 3 - $db_type");
 
+  ok(!$o->has_loaded_related('other2_objs'), "has_loaded_related() 3 - $db_type");
+
   my $o2s = $o->other2_objs;
+
+  ok($o->has_loaded_related('other2_objs'), "has_loaded_related() 4 - $db_type");
 
   ok(ref $o2s eq 'ARRAY' && @$o2s == 2 && 
      $o2s->[0]->name eq 'two' && $o2s->[1]->name eq 'one',
@@ -1440,7 +1448,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 338)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 340)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -1513,7 +1521,11 @@ SKIP: foreach my $db_type ('mysql')
   my $oo23 = MyMySQLOtherObject2->new(id => 3, name => 'three', pid => $o_x->id);
   ok($oo23->save, "other object 2 save() 3 - $db_type");
 
+  ok(!$o->has_loaded_related('other2_objs'), "has_loaded_related() 1 - $db_type");
+
   my $o2s = $o->other2_objs;
+
+  ok($o->has_loaded_related('other2_objs'), "has_loaded_related() 2 - $db_type");
 
   ok(ref $o2s eq 'ARRAY' && @$o2s == 2 && 
      $o2s->[0]->name eq 'two' && $o2s->[1]->name eq 'one',
@@ -2746,7 +2758,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 359)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 363)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -2862,7 +2874,11 @@ SKIP: foreach my $db_type ('informix')
   $o->fk2(12);
   $o->fk3(13);
 
+  ok(!$o->has_loaded_related('other_obj'), "has_loaded_related() 1 - $db_type");
+
   $obj = $o->other_obj or warn "# ", $o->error, "\n";
+
+  ok($o->has_loaded_related('other_obj'), "has_loaded_related() 2 - $db_type");
 
   is(ref $obj, 'MyInformixOtherObject', "other_obj() 4 - $db_type");
   is($obj->name, 'two', "other_obj() 5 - $db_type");
@@ -2876,7 +2892,11 @@ SKIP: foreach my $db_type ('informix')
   my $oo23 = MyInformixOtherObject2->new(id => 3, name => 'three', pid => $o_x->id);
   ok($oo23->save, "other object 2 save() 3 - $db_type");
 
+  ok(!$o->has_loaded_related('other2_objs'), "has_loaded_related() 3 - $db_type");
+
   my $o2s = $o->other2_objs;
+
+  ok($o->has_loaded_related('other2_objs'), "has_loaded_related() 4 - $db_type");
 
   ok(ref $o2s eq 'ARRAY' && @$o2s == 2 && 
      $o2s->[0]->name eq 'two' && $o2s->[1]->name eq 'one',
@@ -4115,7 +4135,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 396)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 400)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -4231,7 +4251,11 @@ SKIP: foreach my $db_type ('sqlite')
   $o->fk2(12);
   $o->fk3(13);
 
+  ok(!$o->has_loaded_related('other_obj'), "has_loaded_related() 1 - $db_type");
+
   $obj = $o->other_obj or warn "# ", $o->error, "\n";
+
+  ok($o->has_loaded_related('other_obj'), "has_loaded_related() 2 - $db_type");
 
   is(ref $obj, 'MySQLiteOtherObject', "other_obj() 4 - $db_type");
   is($obj->name, 'two', "other_obj() 5 - $db_type");
@@ -4261,7 +4285,11 @@ SKIP: foreach my $db_type ('sqlite')
   MySQLiteObject->meta->delete_relationship('not_other2_objs');
   # End experiment
 
+  ok(!$o->has_loaded_related('other2_objs'), "has_loaded_related() 3 - $db_type");
+
   my $o2s = $o->other2_objs;
+
+  ok($o->has_loaded_related('other2_objs'), "has_loaded_related() 4 - $db_type");
 
   ok(ref $o2s eq 'ARRAY' && @$o2s == 2 && 
      $o2s->[0]->name eq 'two' && $o2s->[1]->name eq 'one',
@@ -5790,6 +5818,7 @@ EOF
 
     package MyPgObject;
 
+    use Rose::DB::Object::Helpers qw(has_loaded_related);
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('pg') }
@@ -6140,6 +6169,7 @@ EOF
 
     package MyMySQLObject;
 
+    use Rose::DB::Object::Helpers qw(has_loaded_related);
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('mysql') }
@@ -6484,6 +6514,7 @@ EOF
 
     package MyInformixObject;
 
+    use Rose::DB::Object::Helpers qw(has_loaded_related);
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('informix') }
@@ -6815,6 +6846,7 @@ EOF
 
     package MySQLiteObject;
 
+    use Rose::DB::Object::Helpers qw(has_loaded_related);
     our @ISA = qw(Rose::DB::Object);
 
     sub init_db { Rose::DB->new('sqlite') }
