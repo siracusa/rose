@@ -4452,7 +4452,7 @@ Example:
       Rose::DB::Object::Metadata::ForeignKey->new(...),
     );
 
-For each foreign key added, a corresponding relationship with the same name is added if it does not already exist.  The relationship type is determined by the value o fthe foreign key object's L<relationship|Rose::DB::Object::Metadata::ForeignKey/relationship_type> attribute.  The default is "many to one".  The class of the relationship is chosen by calling L<relationship_type_class|/relationship_type_class> with the relationship type as an argument.
+For each foreign key added, a corresponding relationship with the same name is added if it does not already exist.  The relationship type is determined by the value of the foreign key object's L<relationship|Rose::DB::Object::Metadata::ForeignKey/relationship_type> attribute.  The default is "many to one".  The class of the relationship is chosen by calling L<relationship_type_class|/relationship_type_class> with the relationship type as an argument.
 
 =item B<add_primary_key_column COLUMN>
 

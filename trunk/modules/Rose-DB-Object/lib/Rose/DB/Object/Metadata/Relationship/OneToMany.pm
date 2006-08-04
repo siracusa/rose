@@ -111,9 +111,13 @@ sub is_ready_to_make_methods
   {
     my $err;
     if(!$self->class) { $err = "does not belong to a class" }
-    elsif(!$self->key_columns) { $err = "has no key columns" }
+    elsif(!$self->key_columns && !$self->query_args)
+    {
+      $err = "has no key columns or query args";
+    }
 
-    warn $self->parent->class, ': one-to-many relationship ', $self->name, " NOT READY - $err";
+    warn $self->parent->class, ': one-to-many relationship ', $self->name, " NOT READY - $err"
+      if($err);
   }
 
   return $self->class && ($self->key_columns || $self->query_args) ? 1 : 0;

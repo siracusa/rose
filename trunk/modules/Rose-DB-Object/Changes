@@ -1,8 +1,13 @@
-0.743 (08.01.2006) - John Siracusa <siracusa@mindspring.com>
+0.743 (08.03.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added a cascade option to save().
     * The object_class parameter to Manager methods now defaults to the 
       return value of the object_class() class method.
+    * The soft() and referential_integrity() methods of the ManyToOne and
+      OneToOne relationship classes have been renamed to optional() and
+      required(), respectively.  The old method names still work, but may
+      be removed at some later date.  Also, the default values are now 
+      determined by a new set of rules, rather than a constant.
     * Passing invalid query parameters to Manager methods will now 
       cause a fatal error.
     * Ignore empty "and" and "or" query parameters in QueryBuilder.

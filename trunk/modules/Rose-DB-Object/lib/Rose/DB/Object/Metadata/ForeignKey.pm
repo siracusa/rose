@@ -40,10 +40,34 @@ use Rose::Object::MakeMethods::Generic
 
   hash =>
   [
-    key_column  => { hash_key  => 'key_columns' },
-    key_columns => { interface => 'get_set_all' },
+    _key_column  => { hash_key  => 'key_columns' },
+    _key_columns => { interface => 'get_set_all' },
   ],
 );
+
+sub key_column
+{
+  my($self) = shift;
+
+  if(@_ > 1)
+  {
+    $self->{'is_required'} = undef;
+  }
+  
+  return $self->_key_column(@_);
+}
+
+sub key_columns
+{
+  my($self) = shift;
+
+  if(@_)
+  {
+    $self->{'is_required'} = undef;
+  }
+  
+  return $self->_key_columns(@_);
+}
 
 *column_map = \&key_columns;
 
@@ -119,6 +143,7 @@ sub is_required
 {
   my($self) = shift;
 
+  return $self->{'required'}     if(defined $self->{'required'});
   return $self->{'is_required'}  if(defined $self->{'is_required'});
 
   my $meta = $self->parent or 
@@ -126,6 +151,8 @@ sub is_required
 
   my $key_columns = $self->key_columns;
 
+  # If any local key column allows null values, then 
+  # the foreign object is not required.
   foreach my $column_name (keys %$key_columns)
   {
     my $column = $meta->column($column_name) 
@@ -173,7 +200,8 @@ sub id
 
   return $self->parent->class . ' ' . $self->class . ' ' . 
     join("\0", map { join("\1", lc $_, lc $key_columns->{$_}) } sort keys %$key_columns) . 
-    join("\0", map { $_ . '=' . ($self->$_() || 0) } qw(referential_integrity));
+    #join("\0", map { $_ . '=' . ($self->$_() || 0) } qw(...));
+    'required=' . $self->referential_integrity;
 }
 
 sub sanity_check
@@ -515,7 +543,7 @@ Get or set the name of the foreign key.  This name must be unique among all othe
 
 =item B<referential_integrity [BOOL]>
 
-Get or set the boolean value that determines what happens when the L<key columns|/key_columns> have L<defined|perlfunc/defined> values, but the object they point to is not found.  If true, a fatal error will occur.  If false, then the methods that service this foreign key will simply return undef.  The default is true.
+Get or set the boolean value that determines what happens when the local L<key columns|/key_columns> have L<defined|perlfunc/defined> values, but the object they point to is not found.  If true, a fatal error will occur when the methods that fetch objects through this foreign key are called.  If false, then the methods will simply return undef.  The default is true.
 
 =item B<rel_type [TYPE]>
 
