@@ -5849,6 +5849,7 @@ EOF
           fk2 => 'k2',
           fk3 => 'k3',
         },
+        required => 1,
       },
 
       other2_objs =>
@@ -5950,6 +5951,7 @@ EOF
         type  => 'one to one',
         class => 'MyPgObject',
         column_map => { pid => 'id' },
+        required => 1,
       },
     );
 
@@ -6175,6 +6177,7 @@ EOF
           fk2 => 'k2',
           fk3 => 'k3',
         },
+        required => 1,
       }
     );
 
@@ -6298,6 +6301,7 @@ EOF
         type  => 'many to one',
         class => 'MyMySQLObject',
         column_map => { pid => 'id' },
+        required => 1,
       },
     );
 
@@ -6629,6 +6633,7 @@ EOF
         type  => 'many to one',
         class => 'MyInformixObject',
         column_map => { pid => 'id' },
+        required => 1,
       },
     );
 
