@@ -246,6 +246,8 @@ foreach my $db_type (qw(mysql pg informix sqlite))
     ok(1, "skip column_values_as_json() - $db_type");
     ok(1, "skip init_with_json() - $db_type");
   }
+  
+  # has_loaded_related() tesed in db-object-relationship.t
 }
 
 BEGIN

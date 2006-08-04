@@ -20,7 +20,8 @@ __PACKAGE__->export_tags
        column_value_pairs column_accessor_value_pairs 
        column_mutator_value_pairs 
        column_values_as_yaml column_values_as_json
-       init_with_yaml init_with_json) 
+       init_with_yaml init_with_json
+       has_loaded_related) 
   ],
 
   # This exists for the benefit of the test suite
@@ -29,7 +30,8 @@ __PACKAGE__->export_tags
     qw(clone clone_and_reset load_or_insert insert_or_update 
        insert_or_update_on_duplicate_key load_speculative
        column_value_pairs column_accessor_value_pairs 
-       column_mutator_value_pairs)
+       column_mutator_value_pairs
+       has_loaded_related)
   ],
 );
 
@@ -249,6 +251,58 @@ sub clone_and_reset
   return $clone;
 }
 
+sub has_loaded_related
+{
+  my($self) = shift;
+  
+  my $rel; # really a relationship or fk
+  
+  my $meta = $self->meta;
+
+  if(@_ == 1)
+  {
+    my $name = shift;
+    
+    if($rel = $meta->foreign_key($name))
+    {
+      return $rel->object_has_foreign_object($self) ? 1 : 0;
+    }
+    elsif($rel = $meta->relationship($name))
+    {
+      return $rel->object_has_related_objects($self) ? 1 : 0;
+    }
+    else
+    {
+      croak "No foreign key or relationship named '$name' found in ",
+            $meta->class;
+    }
+  }
+  else
+  {
+    my %args = @_;
+    my $name;
+
+    if($name = $args{'foreign_key'})
+    {
+      $rel = $meta->foreign_key($name) 
+        or croak "No foreign key named '$name' found in ", $meta->class;
+
+      return $rel->object_has_foreign_object($self) ? 1 : 0;
+    }
+    elsif($name = $args{'relationship'})
+    {
+      $rel = $meta->relationship($name) 
+        or croak "No relationship named '$name' found in ", $meta->class;
+
+      return $rel->object_has_related_objects($self) ? 1 : 0;
+    }
+    else
+    {
+      croak "Missing foreign key or relationship name argument";
+    }
+  }
+}
+
 1;
 
 __END__
@@ -335,6 +389,19 @@ Returns a hash (in list context) or reference to a hash (in scalar context) of c
 =item B<column_value_pairs>
 
 Returns a hash (in list context) or reference to a hash (in scalar context) of column name and value pairs.  The keys of the hash are the L<names|Rose::DB::Object::Metadata::Column/name> of the columns.  The values are retrieved by calling the L<accessor method|Rose::DB::Object::Metadata::Column/accessor_method_name> for each column.
+
+=item B<has_loaded_related [ NAME | PARAMS ]>
+
+Given a foreign key or relationship name, return true if one or more related have been loaded into the current object, false otherwise.
+
+If the name is passed as a plain string NAME, then a foreign key with that name is looked up.  If not such foreign key exists, then a relationship with that name is looked up.  If no such relationship or foreign key exists, a fatal error will occur.  Example:
+
+    $foo->has_loaded_related('bar');
+
+It's generally not a good idea to add a foreign key and a relationships with the same name, but it is technically possible.  To specify the domain of the name, pass the name as the value of a C<foreign_key> or C<relationship> parameter.  Example:
+
+    $foo->has_loaded_related(foreign_key => 'bar');
+    $foo->has_loaded_related(relationship => 'bar');
 
 =item B<init_with_json JSON>
 
