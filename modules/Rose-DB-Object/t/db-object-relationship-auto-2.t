@@ -147,9 +147,9 @@ __PACKAGE__->meta->relationships(
     },
 
     prices => {
-        class       => '${class_prefix}Price',
-        key_columns => { id => 'product_id' },
-        type        => 'one to many',
+        class      => '${class_prefix}Price',
+        column_map => { id => 'product_id' },
+        type       => 'one to many',
     },
 );
 EOF
@@ -170,9 +170,9 @@ __PACKAGE__->meta->relationships
 
   prices => 
   {
-    class       => '${class_prefix}Price',
-    key_columns => { id => 'product_id' },
-    type        => 'one to many',
+    class      => '${class_prefix}Price',
+    column_map => { id => 'product_id' },
+    type       => 'one to many',
   },
 );
 EOF

@@ -112,6 +112,8 @@ sub perl_hash_definition
   my @delete_keys = grep { !$attrs{$_} } keys %hash;
   delete @hash{@delete_keys};
 
+  $hash{'column_map'} = delete $hash{'key_columns'}  if(exists $hash{'key_columns'});
+
   my $max_len = 0;
   my $min_len = -1;
 
@@ -235,6 +237,8 @@ sub object_has_related_objects
 
   return $ref ? [ $related_objects ] : 0;
 }
+
+sub requires_preexisting_parent_object { } # override in subclass
 
 1;
 

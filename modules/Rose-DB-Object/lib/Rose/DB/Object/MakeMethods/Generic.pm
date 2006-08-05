@@ -2021,18 +2021,26 @@ sub object_by_key
           }
 
           delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
+          delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$fk_name}{'set'};
           return $self->{$key} = undef;
         }
 
         my $object = __args_to_object($self, $key, $fk_class, \$fk_pk, \@_);
 
-        # Set the foreign key columns
-        while(my($local_column, $foreign_column) = each(%$fk_columns))
-        {
-          my $local_method   = $meta->column_mutator_method_name($local_column);
-          my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
+        my $linked_up = 0;
+        
+        if(!$fk->requires_preexisting_parent_object || $self->{STATE_IN_DB()})
+        {   
+          # Set the foreign key columns
+          while(my($local_column, $foreign_column) = each(%$fk_columns))
+          {
+            my $local_method   = $meta->column_mutator_method_name($local_column);
+            my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
+  
+            $self->$local_method($object->$foreign_method);
+          }
 
-          $self->$local_method($object->$foreign_method);
+          $linked_up = 1;
         }
 
         # Set the attribute
@@ -2047,6 +2055,18 @@ sub object_by_key
           my $object = $welf->{$key} or return;
 
           my $db;
+
+          unless($linked_up)
+          {
+            while(my($local_column, $foreign_column) = each(%$fk_columns))
+            {
+              my $local_method   = $meta->column_mutator_method_name($local_column);
+              my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
+    
+              $object->$foreign_method($self->$local_method)
+                unless(defined $object->$foreign_method);
+            }
+          }
 
           eval
           {
@@ -2096,7 +2116,15 @@ sub object_by_key
           return $welf->{$key};
         };
 
-        $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'} = $save_code;
+        if($linked_up)
+        {
+          $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'} = $save_code;
+        }
+        else
+        {
+          $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$fk_name}{'set'} = $save_code;
+        }
+
         return $self->{$key};
       }
 
@@ -2185,7 +2213,8 @@ sub object_by_key
           keys(%$fk_columns); # reset iterator
 
           # If this failed because we haven't saved it yet
-          if(delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'})
+          if(delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'} ||
+             delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$fk_name}{'set'})
           {
             # Clear foreign key columns
             foreach my $local_column (keys %$fk_columns)
@@ -2206,7 +2235,7 @@ sub object_by_key
 
       $object->init(%key);
 
-      my($db, $started_new_tx, $deleted, %save_fk, $to_save);
+      my($db, $started_new_tx, $deleted, %save_fk, $to_save_pre, $to_save_post);
 
       eval
       {
@@ -2232,7 +2261,8 @@ sub object_by_key
         }
 
         # Forget about any value we were going to set on save
-        $to_save = delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
+        $to_save_pre  = delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
+        $to_save_post = delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$fk_name}{'set'};
 
         $self->save or die $self->error;
 
@@ -2259,9 +2289,12 @@ sub object_by_key
         }
 
         # Restore any value we were going to set on save
-        $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'} = $to_save
-          if($to_save);
+        $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'} = $to_save_pre
+          if($to_save_pre);
 
+        $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$fk_name}{'set'} = $to_save_post
+          if($to_save_post);
+          
         $meta->handle_error($self);
         return undef;
       }
@@ -2299,7 +2332,8 @@ sub object_by_key
           keys(%$fk_columns); # reset iterator
 
           # If this failed because we haven't saved it yet
-          if(delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'})
+          if(delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'} ||
+             delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$fk_name}{'set'})
           {
             # Clear foreign key columns
             foreach my $local_column (keys %$fk_columns)
@@ -2332,6 +2366,7 @@ sub object_by_key
 
       # Forget about any value we were going to set on save
       delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
+      delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$fk_name}{'set'};
 
       # Clear the foreignobject attribute
       $self->{$key} = undef;
