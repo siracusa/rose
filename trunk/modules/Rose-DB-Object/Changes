@@ -1,4 +1,4 @@
-0.743 (08.03.2006) - John Siracusa <siracusa@mindspring.com>
+0.743 (08.04.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added a cascade option to save().
     * The object_class parameter to Manager methods now defaults to the 
@@ -10,6 +10,8 @@
       determined by a new set of rules, rather than a constant.
     * Passing invalid query parameters to Manager methods will now 
       cause a fatal error.
+    * Scalar references now work correctly when used in IN(...) queries 
+      built by QueryBuilder.  (Patch by Perrin Harkins)
     * Ignore empty "and" and "or" query parameters in QueryBuilder.
       (Suggested by Jonathan Vanasco)
     * Fixed a bug that caused update() to fail for tables where all columns
