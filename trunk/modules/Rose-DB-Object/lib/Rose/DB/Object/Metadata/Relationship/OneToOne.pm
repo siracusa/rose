@@ -9,6 +9,28 @@ our $VERSION = '0.68';
 
 sub type { 'one to one' }
 
+sub requires_preexisting_parent_object
+{
+  my($self) = shift;
+
+  my $meta   = $self->parent;
+  my $f_meta = $self->class->meta;
+
+  my $column_map = $self->column_map;
+  my %pk = map { $_ => 1 } $meta->primary_key_column_names;
+
+
+  foreach my $local_column (keys %$column_map)
+  {
+    if($pk{$local_column})
+    {
+      return $self->{'requires_preexisting_parent_object'} = 1;
+    }
+  }
+
+  return $self->{'requires_preexisting_parent_object'} = 0;
+}
+
 1;
 
 __END__

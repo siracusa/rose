@@ -202,28 +202,22 @@ SKIP: foreach my $db_type ('pg')
      <<'EOF', "perl_foreign_keys_definition 1 - $db_type");
 __PACKAGE__->meta->foreign_keys(
     fother => {
-        class => 'MyPgOtherObject2',
-        key_columns => {
-            fother_id2 => 'id2',
-        },
+        class       => 'MyPgOtherObject2',
+        key_columns => { fother_id2 => 'id2' },
     },
 
     fother2 => {
-        class => 'MyPgOtherObject3',
-        key_columns => {
-            fother_id3 => 'id3',
-        },
+        class       => 'MyPgOtherObject3',
+        key_columns => { fother_id3 => 'id3' },
     },
 
     fother3 => {
-        class => 'MyPgOtherObject4',
-        key_columns => {
-            fother_id4 => 'id4',
-        },
+        class       => 'MyPgOtherObject4',
+        key_columns => { fother_id4 => 'id4' },
     },
 
     my_pg_other_object => {
-        class => 'MyPgOtherObject',
+        class       => 'MyPgOtherObject',
         key_columns => {
             fk1 => 'k1',
             fk2 => 'k2',
@@ -239,34 +233,25 @@ __PACKAGE__->meta->foreign_keys
 (
   fother => 
   {
-    class => 'MyPgOtherObject2',
-    key_columns => 
-    {
-      fother_id2 => 'id2',
-    },
+    class       => 'MyPgOtherObject2',
+    key_columns => { fother_id2 => 'id2' },
   },
 
   fother2 => 
   {
-    class => 'MyPgOtherObject3',
-    key_columns => 
-    {
-      fother_id3 => 'id3',
-    },
+    class       => 'MyPgOtherObject3',
+    key_columns => { fother_id3 => 'id3' },
   },
 
   fother3 => 
   {
-    class => 'MyPgOtherObject4',
-    key_columns => 
-    {
-      fother_id4 => 'id4',
-    },
+    class       => 'MyPgOtherObject4',
+    key_columns => { fother_id4 => 'id4' },
   },
 
   my_pg_other_object => 
   {
-    class => 'MyPgOtherObject',
+    class       => 'MyPgOtherObject',
     key_columns => 
     {
       fk1 => 'k1',
@@ -313,28 +298,22 @@ __PACKAGE__->meta->primary_key_columns([ 'id' ]);
 
 __PACKAGE__->meta->foreign_keys(
     fother => {
-        class => 'MyPgOtherObject2',
-        key_columns => {
-            fother_id2 => 'id2',
-        },
+        class       => 'MyPgOtherObject2',
+        key_columns => { fother_id2 => 'id2' },
     },
 
     fother2 => {
-        class => 'MyPgOtherObject3',
-        key_columns => {
-            fother_id3 => 'id3',
-        },
+        class       => 'MyPgOtherObject3',
+        key_columns => { fother_id3 => 'id3' },
     },
 
     fother3 => {
-        class => 'MyPgOtherObject4',
-        key_columns => {
-            fother_id4 => 'id4',
-        },
+        class       => 'MyPgOtherObject4',
+        key_columns => { fother_id4 => 'id4' },
     },
 
     my_pg_other_object => {
-        class => 'MyPgOtherObject',
+        class       => 'MyPgOtherObject',
         key_columns => {
             fk1 => 'k1',
             fk2 => 'k2',
@@ -385,28 +364,22 @@ $chkpass        name          => { type => 'varchar', length => 32, not_null => 
 
     foreign_keys => [
         fother => {
-            class => 'MyPgOtherObject2',
-            key_columns => {
-                fother_id2 => 'id2',
-            },
+            class       => 'MyPgOtherObject2',
+            key_columns => { fother_id2 => 'id2' },
         },
     
         fother2 => {
-            class => 'MyPgOtherObject3',
-            key_columns => {
-                fother_id3 => 'id3',
-            },
+            class       => 'MyPgOtherObject3',
+            key_columns => { fother_id3 => 'id3' },
         },
     
         fother3 => {
-            class => 'MyPgOtherObject4',
-            key_columns => {
-                fother_id4 => 'id4',
-            },
+            class       => 'MyPgOtherObject4',
+            key_columns => { fother_id4 => 'id4' },
         },
     
         my_pg_other_object => {
-            class => 'MyPgOtherObject',
+            class       => 'MyPgOtherObject',
             key_columns => {
                 fk1 => 'k1',
                 fk2 => 'k2',
@@ -465,34 +438,25 @@ __PACKAGE__->meta->foreign_keys
 (
   fother => 
   {
-    class => 'MyPgOtherObject2',
-    key_columns => 
-    {
-      fother_id2 => 'id2',
-    },
+    class       => 'MyPgOtherObject2',
+    key_columns => { fother_id2 => 'id2' },
   },
 
   fother2 => 
   {
-    class => 'MyPgOtherObject3',
-    key_columns => 
-    {
-      fother_id3 => 'id3',
-    },
+    class       => 'MyPgOtherObject3',
+    key_columns => { fother_id3 => 'id3' },
   },
 
   fother3 => 
   {
-    class => 'MyPgOtherObject4',
-    key_columns => 
-    {
-      fother_id4 => 'id4',
-    },
+    class       => 'MyPgOtherObject4',
+    key_columns => { fother_id4 => 'id4' },
   },
 
   my_pg_other_object => 
   {
-    class => 'MyPgOtherObject',
+    class       => 'MyPgOtherObject',
     key_columns => 
     {
       fk1 => 'k1',
@@ -549,28 +513,22 @@ $chkpass        name          => { type => 'varchar', length => 32, not_null => 
 
     foreign_keys => [
         fother => {
-            class => 'MyPgOtherObject2',
-            key_columns => {
-                fother_id2 => 'id2',
-            },
+            class       => 'MyPgOtherObject2',
+            key_columns => { fother_id2 => 'id2' },
         },
     
         fother2 => {
-            class => 'MyPgOtherObject3',
-            key_columns => {
-                fother_id3 => 'id3',
-            },
+            class       => 'MyPgOtherObject3',
+            key_columns => { fother_id3 => 'id3' },
         },
     
         fother3 => {
-            class => 'MyPgOtherObject4',
-            key_columns => {
-                fother_id4 => 'id4',
-            },
+            class       => 'MyPgOtherObject4',
+            key_columns => { fother_id4 => 'id4' },
         },
     
         my_pg_other_object => {
-            class => 'MyPgOtherObject',
+            class       => 'MyPgOtherObject',
             key_columns => {
                 fk1 => 'k1',
                 fk2 => 'k2',
@@ -718,28 +676,22 @@ SKIP: foreach my $db_type ('mysql')
      <<'EOF', "perl_foreign_keys_definition 1 - $db_type");
 __PACKAGE__->meta->foreign_keys(
     fother => {
-        class => 'MyMySQLOtherObject2',
-        key_columns => {
-            fother_id2 => 'id2',
-        },
+        class       => 'MyMySQLOtherObject2',
+        key_columns => { fother_id2 => 'id2' },
     },
 
     fother2 => {
-        class => 'MyMySQLOtherObject3',
-        key_columns => {
-            fother_id3 => 'id3',
-        },
+        class       => 'MyMySQLOtherObject3',
+        key_columns => { fother_id3 => 'id3' },
     },
 
     fother3 => {
-        class => 'MyMySQLOtherObject4',
-        key_columns => {
-            fother_id4 => 'id4',
-        },
+        class       => 'MyMySQLOtherObject4',
+        key_columns => { fother_id4 => 'id4' },
     },
 
     my_my_sqlother_object => {
-        class => 'MyMySQLOtherObject',
+        class       => 'MyMySQLOtherObject',
         key_columns => {
             fk1 => 'k1',
             fk2 => 'k2',
@@ -755,34 +707,25 @@ __PACKAGE__->meta->foreign_keys
 (
   fother => 
   {
-    class => 'MyMySQLOtherObject2',
-    key_columns => 
-    {
-      fother_id2 => 'id2',
-    },
+    class       => 'MyMySQLOtherObject2',
+    key_columns => { fother_id2 => 'id2' },
   },
 
   fother2 => 
   {
-    class => 'MyMySQLOtherObject3',
-    key_columns => 
-    {
-      fother_id3 => 'id3',
-    },
+    class       => 'MyMySQLOtherObject3',
+    key_columns => { fother_id3 => 'id3' },
   },
 
   fother3 => 
   {
-    class => 'MyMySQLOtherObject4',
-    key_columns => 
-    {
-      fother_id4 => 'id4',
-    },
+    class       => 'MyMySQLOtherObject4',
+    key_columns => { fother_id4 => 'id4' },
   },
 
   my_my_sqlother_object => 
   {
-    class => 'MyMySQLOtherObject',
+    class       => 'MyMySQLOtherObject',
     key_columns => 
     {
       fk1 => 'k1',
@@ -828,28 +771,22 @@ __PACKAGE__->meta->primary_key_columns([ 'id' ]);
 
 __PACKAGE__->meta->foreign_keys(
     fother => {
-        class => 'MyMySQLOtherObject2',
-        key_columns => {
-            fother_id2 => 'id2',
-        },
+        class       => 'MyMySQLOtherObject2',
+        key_columns => { fother_id2 => 'id2' },
     },
 
     fother2 => {
-        class => 'MyMySQLOtherObject3',
-        key_columns => {
-            fother_id3 => 'id3',
-        },
+        class       => 'MyMySQLOtherObject3',
+        key_columns => { fother_id3 => 'id3' },
     },
 
     fother3 => {
-        class => 'MyMySQLOtherObject4',
-        key_columns => {
-            fother_id4 => 'id4',
-        },
+        class       => 'MyMySQLOtherObject4',
+        key_columns => { fother_id4 => 'id4' },
     },
 
     my_my_sqlother_object => {
-        class => 'MyMySQLOtherObject',
+        class       => 'MyMySQLOtherObject',
         key_columns => {
             fk1 => 'k1',
             fk2 => 'k2',
@@ -906,34 +843,25 @@ __PACKAGE__->meta->foreign_keys
 (
   fother => 
   {
-    class => 'MyMySQLOtherObject2',
-    key_columns => 
-    {
-      fother_id2 => 'id2',
-    },
+    class       => 'MyMySQLOtherObject2',
+    key_columns => { fother_id2 => 'id2' },
   },
 
   fother2 => 
   {
-    class => 'MyMySQLOtherObject3',
-    key_columns => 
-    {
-      fother_id3 => 'id3',
-    },
+    class       => 'MyMySQLOtherObject3',
+    key_columns => { fother_id3 => 'id3' },
   },
 
   fother3 => 
   {
-    class => 'MyMySQLOtherObject4',
-    key_columns => 
-    {
-      fother_id4 => 'id4',
-    },
+    class       => 'MyMySQLOtherObject4',
+    key_columns => { fother_id4 => 'id4' },
   },
 
   my_my_sqlother_object => 
   {
-    class => 'MyMySQLOtherObject',
+    class       => 'MyMySQLOtherObject',
     key_columns => 
     {
       fk1 => 'k1',
@@ -1103,28 +1031,22 @@ SKIP: foreach my $db_type ('informix')
      <<'EOF', "perl_foreign_keys_definition 1 - $db_type");
 __PACKAGE__->meta->foreign_keys(
     fother => {
-        class => 'MyInformixOtherObject2',
-        key_columns => {
-            fother_id2 => 'id2',
-        },
+        class       => 'MyInformixOtherObject2',
+        key_columns => { fother_id2 => 'id2' },
     },
 
     fother2 => {
-        class => 'MyInformixOtherObject3',
-        key_columns => {
-            fother_id3 => 'id3',
-        },
+        class       => 'MyInformixOtherObject3',
+        key_columns => { fother_id3 => 'id3' },
     },
 
     fother3 => {
-        class => 'MyInformixOtherObject4',
-        key_columns => {
-            fother_id4 => 'id4',
-        },
+        class       => 'MyInformixOtherObject4',
+        key_columns => { fother_id4 => 'id4' },
     },
 
     my_informix_other_object => {
-        class => 'MyInformixOtherObject',
+        class       => 'MyInformixOtherObject',
         key_columns => {
             fk1 => 'k1',
             fk2 => 'k2',
@@ -1140,34 +1062,25 @@ __PACKAGE__->meta->foreign_keys
 (
   fother => 
   {
-    class => 'MyInformixOtherObject2',
-    key_columns => 
-    {
-      fother_id2 => 'id2',
-    },
+    class       => 'MyInformixOtherObject2',
+    key_columns => { fother_id2 => 'id2' },
   },
 
   fother2 => 
   {
-    class => 'MyInformixOtherObject3',
-    key_columns => 
-    {
-      fother_id3 => 'id3',
-    },
+    class       => 'MyInformixOtherObject3',
+    key_columns => { fother_id3 => 'id3' },
   },
 
   fother3 => 
   {
-    class => 'MyInformixOtherObject4',
-    key_columns => 
-    {
-      fother_id4 => 'id4',
-    },
+    class       => 'MyInformixOtherObject4',
+    key_columns => { fother_id4 => 'id4' },
   },
 
   my_informix_other_object => 
   {
-    class => 'MyInformixOtherObject',
+    class       => 'MyInformixOtherObject',
     key_columns => 
     {
       fk1 => 'k1',
@@ -1212,28 +1125,22 @@ __PACKAGE__->meta->primary_key_columns([ 'id' ]);
 
 __PACKAGE__->meta->foreign_keys(
     fother => {
-        class => 'MyInformixOtherObject2',
-        key_columns => {
-            fother_id2 => 'id2',
-        },
+        class       => 'MyInformixOtherObject2',
+        key_columns => { fother_id2 => 'id2' },
     },
 
     fother2 => {
-        class => 'MyInformixOtherObject3',
-        key_columns => {
-            fother_id3 => 'id3',
-        },
+        class       => 'MyInformixOtherObject3',
+        key_columns => { fother_id3 => 'id3' },
     },
 
     fother3 => {
-        class => 'MyInformixOtherObject4',
-        key_columns => {
-            fother_id4 => 'id4',
-        },
+        class       => 'MyInformixOtherObject4',
+        key_columns => { fother_id4 => 'id4' },
     },
 
     my_informix_other_object => {
-        class => 'MyInformixOtherObject',
+        class       => 'MyInformixOtherObject',
         key_columns => {
             fk1 => 'k1',
             fk2 => 'k2',
@@ -1291,34 +1198,25 @@ __PACKAGE__->meta->foreign_keys
 (
   fother => 
   {
-    class => 'MyInformixOtherObject2',
-    key_columns => 
-    {
-      fother_id2 => 'id2',
-    },
+    class       => 'MyInformixOtherObject2',
+    key_columns => { fother_id2 => 'id2' },
   },
 
   fother2 => 
   {
-    class => 'MyInformixOtherObject3',
-    key_columns => 
-    {
-      fother_id3 => 'id3',
-    },
+    class       => 'MyInformixOtherObject3',
+    key_columns => { fother_id3 => 'id3' },
   },
 
   fother3 => 
   {
-    class => 'MyInformixOtherObject4',
-    key_columns => 
-    {
-      fother_id4 => 'id4',
-    },
+    class       => 'MyInformixOtherObject4',
+    key_columns => { fother_id4 => 'id4' },
   },
 
   my_informix_other_object => 
   {
-    class => 'MyInformixOtherObject',
+    class       => 'MyInformixOtherObject',
     key_columns => 
     {
       fk1 => 'k1',
@@ -1488,28 +1386,22 @@ SKIP: foreach my $db_type ('sqlite')
      <<'EOF', "perl_foreign_keys_definition 1 - $db_type");
 __PACKAGE__->meta->foreign_keys(
     fother => {
-        class => 'MySQLiteOtherObject2',
-        key_columns => {
-            fother_id2 => 'id2',
-        },
+        class       => 'MySQLiteOtherObject2',
+        key_columns => { fother_id2 => 'id2' },
     },
 
     fother2 => {
-        class => 'MySQLiteOtherObject3',
-        key_columns => {
-            fother_id3 => 'id3',
-        },
+        class       => 'MySQLiteOtherObject3',
+        key_columns => { fother_id3 => 'id3' },
     },
 
     fother3 => {
-        class => 'MySQLiteOtherObject4',
-        key_columns => {
-            fother_id4 => 'id4',
-        },
+        class       => 'MySQLiteOtherObject4',
+        key_columns => { fother_id4 => 'id4' },
     },
 
     my_sqlite_other_object => {
-        class => 'MySQLiteOtherObject',
+        class       => 'MySQLiteOtherObject',
         key_columns => {
             fk1 => 'k1',
             fk2 => 'k2',
@@ -1525,34 +1417,25 @@ __PACKAGE__->meta->foreign_keys
 (
   fother => 
   {
-    class => 'MySQLiteOtherObject2',
-    key_columns => 
-    {
-      fother_id2 => 'id2',
-    },
+    class       => 'MySQLiteOtherObject2',
+    key_columns => { fother_id2 => 'id2' },
   },
 
   fother2 => 
   {
-    class => 'MySQLiteOtherObject3',
-    key_columns => 
-    {
-      fother_id3 => 'id3',
-    },
+    class       => 'MySQLiteOtherObject3',
+    key_columns => { fother_id3 => 'id3' },
   },
 
   fother3 => 
   {
-    class => 'MySQLiteOtherObject4',
-    key_columns => 
-    {
-      fother_id4 => 'id4',
-    },
+    class       => 'MySQLiteOtherObject4',
+    key_columns => { fother_id4 => 'id4' },
   },
 
   my_sqlite_other_object => 
   {
-    class => 'MySQLiteOtherObject',
+    class       => 'MySQLiteOtherObject',
     key_columns => 
     {
       fk1 => 'k1',
@@ -1597,28 +1480,22 @@ __PACKAGE__->meta->primary_key_columns([ 'id' ]);
 
 __PACKAGE__->meta->foreign_keys(
     fother => {
-        class => 'MySQLiteOtherObject2',
-        key_columns => {
-            fother_id2 => 'id2',
-        },
+        class       => 'MySQLiteOtherObject2',
+        key_columns => { fother_id2 => 'id2' },
     },
 
     fother2 => {
-        class => 'MySQLiteOtherObject3',
-        key_columns => {
-            fother_id3 => 'id3',
-        },
+        class       => 'MySQLiteOtherObject3',
+        key_columns => { fother_id3 => 'id3' },
     },
 
     fother3 => {
-        class => 'MySQLiteOtherObject4',
-        key_columns => {
-            fother_id4 => 'id4',
-        },
+        class       => 'MySQLiteOtherObject4',
+        key_columns => { fother_id4 => 'id4' },
     },
 
     my_sqlite_other_object => {
-        class => 'MySQLiteOtherObject',
+        class       => 'MySQLiteOtherObject',
         key_columns => {
             fk1 => 'k1',
             fk2 => 'k2',
@@ -1667,28 +1544,22 @@ __PACKAGE__->meta->setup(
 
     foreign_keys => [
         fother => {
-            class => 'MySQLiteOtherObject2',
-            key_columns => {
-                fother_id2 => 'id2',
-            },
+            class       => 'MySQLiteOtherObject2',
+            key_columns => { fother_id2 => 'id2' },
         },
     
         fother2 => {
-            class => 'MySQLiteOtherObject3',
-            key_columns => {
-                fother_id3 => 'id3',
-            },
+            class       => 'MySQLiteOtherObject3',
+            key_columns => { fother_id3 => 'id3' },
         },
     
         fother3 => {
-            class => 'MySQLiteOtherObject4',
-            key_columns => {
-                fother_id4 => 'id4',
-            },
+            class       => 'MySQLiteOtherObject4',
+            key_columns => { fother_id4 => 'id4' },
         },
     
         my_sqlite_other_object => {
-            class => 'MySQLiteOtherObject',
+            class       => 'MySQLiteOtherObject',
             key_columns => {
                 fk1 => 'k1',
                 fk2 => 'k2',
@@ -1745,34 +1616,25 @@ __PACKAGE__->meta->foreign_keys
 (
   fother => 
   {
-    class => 'MySQLiteOtherObject2',
-    key_columns => 
-    {
-      fother_id2 => 'id2',
-    },
+    class       => 'MySQLiteOtherObject2',
+    key_columns => { fother_id2 => 'id2' },
   },
 
   fother2 => 
   {
-    class => 'MySQLiteOtherObject3',
-    key_columns => 
-    {
-      fother_id3 => 'id3',
-    },
+    class       => 'MySQLiteOtherObject3',
+    key_columns => { fother_id3 => 'id3' },
   },
 
   fother3 => 
   {
-    class => 'MySQLiteOtherObject4',
-    key_columns => 
-    {
-      fother_id4 => 'id4',
-    },
+    class       => 'MySQLiteOtherObject4',
+    key_columns => { fother_id4 => 'id4' },
   },
 
   my_sqlite_other_object => 
   {
-    class => 'MySQLiteOtherObject',
+    class       => 'MySQLiteOtherObject',
     key_columns => 
     {
       fk1 => 'k1',
@@ -1827,28 +1689,22 @@ __PACKAGE__->meta->setup(
 
     foreign_keys => [
         fother => {
-            class => 'MySQLiteOtherObject2',
-            key_columns => {
-                fother_id2 => 'id2',
-            },
+            class       => 'MySQLiteOtherObject2',
+            key_columns => { fother_id2 => 'id2' },
         },
     
         fother2 => {
-            class => 'MySQLiteOtherObject3',
-            key_columns => {
-                fother_id3 => 'id3',
-            },
+            class       => 'MySQLiteOtherObject3',
+            key_columns => { fother_id3 => 'id3' },
         },
     
         fother3 => {
-            class => 'MySQLiteOtherObject4',
-            key_columns => {
-                fother_id4 => 'id4',
-            },
+            class       => 'MySQLiteOtherObject4',
+            key_columns => { fother_id4 => 'id4' },
         },
     
         my_sqlite_other_object => {
-            class => 'MySQLiteOtherObject',
+            class       => 'MySQLiteOtherObject',
             key_columns => {
                 fk1 => 'k1',
                 fk2 => 'k2',

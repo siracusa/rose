@@ -1197,7 +1197,96 @@ sub sort_relationship_types
   return $self->relationship_type_rank($a) <=> $self->relationship_type_rank($b);
 }
 
-sub auto_init_one_to_one_relationships { }
+sub auto_init_one_to_one_relationships
+{
+  my($self, %args) = @_;
+
+  my $class = $self->class;
+
+  # For each foreign key in this class, try to make a "one to one"
+  # relationship in the table that the foreign key points to.  But
+  # don't do so unless the keys on both sides of the relationship
+  # are unique or primary keys.
+  FK: foreach my $fk ($self->foreign_keys)
+  {
+    my $f_class = $fk->class;
+
+    next  unless($f_class && UNIVERSAL::isa($f_class, 'Rose::DB::Object'));
+
+    my $f_meta  = $f_class->meta;
+    my $key_cols = $fk->key_columns;
+    
+    # If both sides of the column map are unique or primary keys, then
+    # this is really a one-to-one relationship
+    my $local_key  = join("\0", sort keys %$key_cols);
+    my $remote_key = join("\0", sort values %$key_cols);
+
+    my($local_unique, $remote_unique);
+
+    my $local_meta = $class->meta;
+
+    foreach my $uk ($local_meta->primary_key, $local_meta->unique_keys)
+    {
+      my $key = join("\0", sort $uk->columns);
+
+      if($key eq $local_key)
+      {
+        $local_unique = 1;
+        last;
+      }
+    }
+
+    foreach my $uk ($f_meta->primary_key, $f_meta->unique_keys)
+    {
+      my $key = join("\0", sort $uk->columns);
+
+      if($key eq $remote_key)
+      {
+        $remote_unique = 1;
+        last;
+      }
+    }
+    
+    unless($local_unique && $remote_unique)
+    {
+      next FK;
+    }
+    
+    my $cm = $self->convention_manager;
+
+    # Also don't add add one to one relationships between a class
+    # and one of its map classes
+    if($cm->is_map_class($class))
+    {
+      $Debug && warn "$f_class - Refusing to make one to one relationship ",
+                     "to map class to $class\n";
+      next FK;
+    }
+
+    # XXX: skip of there's already a relationship with the same id
+
+    # Add the one to many relationship to the foreign class
+    my $name = $cm->auto_relationship_name_one_to_one($self->table, $class);
+
+    unless($f_meta->relationship($name))
+    {
+      $Debug && warn "$f_class - Adding one to one relationship ",
+                     "'$name' to $class\n";
+      $f_meta->add_relationship($name =>
+                                {
+                                  type       => 'one to one',
+                                  class      => $class,
+                                  column_map => { reverse %$key_cols },
+                                });
+    }
+
+    # Create the methods, preserving existing methods
+    $f_meta->make_relationship_methods(name => $name, preserve_existing => 1);
+  }
+
+  return;
+}
+
 sub auto_init_many_to_one_relationships { }
 
 sub auto_init_one_to_many_relationships 
@@ -1237,7 +1326,43 @@ sub auto_init_one_to_many_relationships
         next FK  if($skip);
       }
     }
+    
+    # If both sides of the column map are unique or primary keys, then
+    # this is really a one-to-one relationship
+    my $local_key  = join("\0", sort keys %$key_cols);
+    my $remote_key = join("\0", sort values %$key_cols);
 
+    my($local_unique, $remote_unique);
+
+    my $local_meta = $class->meta;
+
+    foreach my $uk ($local_meta->primary_key, $local_meta->unique_keys)
+    {
+      my $key = join("\0", sort $uk->columns);
+
+      if($key eq $local_key)
+      {
+        $local_unique = 1;
+        last;
+      }
+    }
+
+    foreach my $uk ($f_meta->primary_key, $f_meta->unique_keys)
+    {
+      my $key = join("\0", sort $uk->columns);
+
+      if($key eq $remote_key)
+      {
+        $remote_unique = 1;
+        last;
+      }
+    }
+    
+    if($local_unique && $remote_unique)
+    {
+      next FK;
+    }
+    
     my $cm = $self->convention_manager;
 
     # Also don't add add one to many relationships between a class

@@ -186,6 +186,12 @@ sub auto_relationship_name_one_to_many
   return $table;
 }
 
+sub auto_relationship_name_one_to_one
+{
+  my($self, $table, $class) = @_;
+  return $self->plural_to_singular($table);
+}
+
 sub is_map_class
 {
   my($self, $class) = @_;
@@ -726,6 +732,10 @@ Given the name of a L<Rose::DB::Object>-derived class, returns a class name for 
 =item B<auto_relationship_name_one_to_many TABLE, CLASS>
 
 Return the name of a "one to many" relationship that fetches objects from the specified TABLE and CLASS.  The default implementation simply returns the table name.
+
+=item B<auto_relationship_name_one_to_one TABLE, CLASS>
+
+Return the name of a "one to one" relationship that fetches an object from the specified TABLE and CLASS.  The default implementation returns a singular version of the table name.
 
 =item B<auto_primary_key_column_names>
 

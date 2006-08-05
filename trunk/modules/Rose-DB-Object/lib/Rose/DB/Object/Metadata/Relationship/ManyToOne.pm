@@ -232,6 +232,8 @@ sub required
 
 *referential_integrity = \&required;
 
+sub requires_preexisting_parent_object { 0 }
+
 1;
 
 __END__

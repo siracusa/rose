@@ -260,6 +260,8 @@ sub is_ready_to_make_methods
   return $@ ? 0 : 1;
 }
 
+our $DEFAULT_INLINE_LIMIT = 80;
+
 sub perl_hash_definition
 {
   my($self, %args) = @_;
@@ -272,39 +274,58 @@ sub perl_hash_definition
   my $braces = defined $args{'braces'} ? $args{'braces'} : 
                  ($meta ? $meta->default_perl_braces : undef);
 
-  my $indent_txt = ' ' x $indent;
+  my $inline = defined $args{'inline'} ? $args{'inline'} : 0;
+  my $inline_limit = defined $args{'inline'} ? $args{'inline_limit'} : $DEFAULT_INLINE_LIMIT;
 
-  my $def = perl_quote_key($self->name) . ' => ' .
-            ($braces eq 'bsd' ? "\n{\n" : "{\n") .
-            $indent_txt . 'class => ' . perl_quote_value($self->class) . ",\n";
+  my $name_padding = $args{'name_padding'};
+
+  my %attrs = map { $_ => 1 } $self->perl_foreign_key_definition_attributes;
+  my %hash = $self->spec_hash;
+
+  my @delete_keys = grep { !$attrs{$_} } keys %hash;
+  delete @hash{@delete_keys};
 
   my $key_columns = $self->key_columns;
+
+  # Only inline single-pair key column mappings
+  if(keys %$key_columns > 1)
+  {
+    $inline_limit = 1;
+    $inline = 0;
+  }
 
   my $max_len = 0;
   my $min_len = -1;
 
-  foreach my $name (keys %$key_columns)
+  foreach my $name (keys %hash)
   {
     $max_len = length($name)  if(length $name > $max_len);
     $min_len = length($name)  if(length $name < $min_len || $min_len < 0);
   }
 
-  $def .= $indent_txt . 'key_columns => ' . ($braces eq 'bsd' ? "\n" : '');
-
-  my $hash = perl_hashref(hash => $key_columns, indent => $indent * 2, inline => 0);
-
-  for($hash)
+  if(defined $name_padding && $name_padding > 0)
   {
-    s/^/$indent_txt/g;
-    s/\A$indent_txt//;
-    s/\}\Z/$indent_txt}/;
-    s/\A(\s*\{)/$indent_txt$1/  if($braces eq 'bsd');
+    return sprintf('%-*s => ', $name_padding, perl_quote_key($self->name)) .
+           perl_hashref(hash         => \%hash, 
+                        braces       => $braces,
+                        inline       => $inline, 
+                        inline_limit => $inline_limit,
+                        indent       => $indent,
+                        key_padding  => hash_key_padding(\%hash));
   }
-
-  $def .= $hash . ",\n}";
-
-  return $def;
+  else
+  {
+    return perl_quote_key($self->name) . ' => ' .
+           perl_hashref(hash         => \%hash, 
+                        braces       => $braces,
+                        inline       => $inline,
+                        inline_limit => $inline_limit,
+                        indent       => $indent,
+                        key_padding  => hash_key_padding(\%hash));
+  }
 }
+
+sub perl_foreign_key_definition_attributes { qw(class key_columns soft) }
 
 # Some object keys have different names when they appear
 # in hashref-style foreign key specs.  This hash maps
@@ -313,7 +334,8 @@ sub spec_hash_map
 {
   {
     # object key    spec key
-    method_name => 'methods',
+    method_name  => 'methods',
+    _key_columns => 'key_columns',
   }
 }
 
@@ -355,6 +377,8 @@ sub object_has_foreign_object
 
   return $object->{$self->hash_key} || 0;
 }
+
+sub requires_preexisting_parent_object { 0 }
 
 1;
 
