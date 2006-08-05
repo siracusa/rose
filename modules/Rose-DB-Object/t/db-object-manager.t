@@ -55,6 +55,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       query        =>
       [
         id         => { ge => 1 },
+        id         => [ \'1', \'id' ], #'
         name       => 'John',  
         flag       => 't',
         flag2      => 'f',

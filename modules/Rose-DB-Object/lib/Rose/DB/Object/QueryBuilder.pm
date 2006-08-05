@@ -607,48 +607,48 @@ sub _build_clause
     {
       if($op eq '=')
       {
-        if($bind)
+        my @new_vals;
+
+        foreach my $val (@$vals)
         {
-          my @new_vals;
+          my $should_inline = 
+            ($db && $col_meta && $col_meta->should_inline_value($db, $val));
 
-          foreach my $val (@$vals)
+          if($should_inline || $force_inline)
           {
-            my $should_inline = 
-              ($db && $col_meta && $col_meta->should_inline_value($db, $val));
-
-            if($should_inline || $force_inline)
+            push(@new_vals, $val);
+          }
+          elsif(ref $val eq 'SCALAR')
+          {
+            push(@new_vals, $$val);
+          }
+          else
+          {
+            if($bind)
             {
-              push(@new_vals, $val);
-            }
-            elsif(ref $val eq 'SCALAR')
-            {
-              push(@new_vals, $$val);
-            }
-            elsif(defined $val)
-            {
-              push(@$bind, $val);
-              push(@new_vals, $placeholder);
-
-              if($bind_params)
+              if(defined $val)
               {
-                push(@$bind_params, $col_meta->dbi_bind_param_attrs($db));
+                push(@$bind, $val);
+                push(@new_vals, $placeholder);
+
+                if($bind_params)
+                {
+                  push(@$bind_params, $col_meta->dbi_bind_param_attrs($db));
+                }
+              }
+              else
+              {
+                push(@new_vals, 'NULL');
               }
             }
             else
             {
-              push(@new_vals, 'NULL');
+              push(@new_vals, $dbh->quote($val));
             }
           }
-
-          return "$field " . ($not ? "$not " : '') . 'IN (' . join(', ', @new_vals) . ')';
         }
 
-        return "$field " . ($not ? "$not " : '') . 'IN (' . join(', ', map 
-               {
-                 ($force_inline || ($db && $col_meta && $col_meta->should_inline_value($db, $_))) ? 
-                 $_ : $dbh->quote($_)
-               }
-               @$vals) . ')';
+        return "$field " . ($not ? "$not " : '') . 'IN (' . join(', ', @new_vals) . ')';
       }
       elsif($op =~ /^(A(?:NY|LL)) IN (SET|ARRAY)$/)
       {

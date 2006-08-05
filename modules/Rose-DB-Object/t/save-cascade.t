@@ -253,6 +253,7 @@ CREATE TABLE products
   vendor_id INT NOT NULL,
 
   UNIQUE(name),
+  INDEX(vendor_id),
 
   FOREIGN KEY (vendor_id) REFERENCES vendors (id)
 )
