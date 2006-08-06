@@ -326,6 +326,8 @@ If passed a local column name LOCAL, return the corresponding column name in the
 
 This method is the mirror image of the L<required|/required> method.   Passing a true value to this method is the same thing as setting L<required|/required> to false, and vice versa.  Similarly, the return value is the logical negation of L<required|/required>.
 
+=item B<required [BOOL]>
+
 Get or set the boolean value that determines what happens when the local columns in the L<column_map|/column_map> have L<defined|perlfunc/defined> values, but the object they relate to is not found.  If true, a fatal error will occur when the methods that fetch objects through this relationship are called.  If false, then the methods will simply return undef.
 
 The default is false if one or more of the local columns L<allow null values|Rose::DB::Object::Metadata::Column/not_null> or if the local columns in the column map are the same as the L<primary key columns|Rose::DB::Object::Metadata/primary_key_columns>, true otherwise.
