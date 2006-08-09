@@ -1053,6 +1053,7 @@ Undefined values are translated to the keyword NULL when included in a multi-val
     -------------       ------------
     regex, regexp       REGEXP
     like                LIKE
+    ilike               ILIKE
     rlike               RLIKE
     ne                  <>
     eq                  =
