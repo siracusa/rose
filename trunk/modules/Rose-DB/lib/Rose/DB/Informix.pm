@@ -35,6 +35,8 @@ sub generate_primary_key_placeholders
   (@_ == 1 || (@_ > 1 && $_[1] == 1)) ? 0 : ((undef) x $_[1]) 
 }
 
+# Informix doesn't like anything to be quoted and appears to
+# accept everything without quotes.
 sub is_reserved_word { 0 }
 
 # Boolean formatting and parsing
