@@ -35,6 +35,8 @@ sub generate_primary_key_placeholders
   (@_ == 1 || (@_ > 1 && $_[1] == 1)) ? 0 : ((undef) x $_[1]) 
 }
 
+sub is_reserved_word { 0 }
+
 # Boolean formatting and parsing
 
 sub format_boolean { $_[1] ? 't' : 'f' }
