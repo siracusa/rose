@@ -2211,6 +2211,10 @@ EOF
         die  unless($n =~ /\S/);
         my $cn = $p->code_names->[0];
         die  unless($cn->name =~ /^CN /);
+#unless($printed++)
+#{
+#print "RDBO: P $p->{'id'} C $cat->{'name'} CN ", scalar(@{[ $p->code_names ]}), "\n";
+#}
       }
     }
   }
@@ -2287,13 +2291,14 @@ EOF
 
     sub search_simple_product_and_category_and_code_name_dbic
     {
+      $DB::single = 1;
       my @p = 
         #MyTest::DBIC::Simple::Product->search(
         $DBIC_Simple_Product_RS->search(
         {
           'me.name' => { -like => 'Product %2%' },
-          'me.id'   => { '<=' => 300_000 + $Iterations,
-                         '>=' => 300_000 } 
+          'me.id'   => { '<=' => 100_000 + $Iterations,
+                         '>=' => 100_000 } 
         },
         {
           prefetch => [ 'code_names', 'category_id' ],
@@ -2316,6 +2321,10 @@ EOF
         my $rs = $p->code_names;
         my $cn = $rs->next;
         die  unless($cn->name =~ /^CN /);
+#unless($printed++)
+#{
+#print "DBIC: P ", $p->id, " C ", $cat->name, " CN ", scalar(@{[ $p->code_names->all ]}), "\n";
+#}
       }
     }
   }
