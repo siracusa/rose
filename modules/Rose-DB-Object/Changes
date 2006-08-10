@@ -1,4 +1,4 @@
-0.743 (08.05.2006) - John Siracusa <siracusa@mindspring.com>
+0.75 (08.10.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added a cascade option to save().
     * Added auto-detection one one-to-one relationships to the Loader.

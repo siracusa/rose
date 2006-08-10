@@ -10,7 +10,7 @@ use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::Metadata::Object;
 our @ISA = qw(Rose::DB::Object::Metadata::Object);
 
-our $VERSION = '0.722';
+our $VERSION = '0.75';
 
 #
 # Class data
