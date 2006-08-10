@@ -5,6 +5,7 @@ use strict;
 use Carp();
 
 use DateTime::Format::MySQL;
+use SQL::ReservedWords::MySQL();
 
 use Rose::DB;
 
@@ -233,8 +234,10 @@ sub supports_on_duplicate_key_update
   return $self->{'supports_on_duplicate_key_update'} = 0;
 }
 
-our %Reserved_Words = map { $_ => 1 } qw(read for case);
-sub is_reserved_word { $Reserved_Words{lc $_[1]} }
+#our %Reserved_Words = map { $_ => 1 } qw(read for case);
+#sub is_reserved_word { $Reserved_Words{lc $_[1]} }
+
+*is_reserved_word = \&SQL::ReservedWords::MySQL::is_reserved;
 
 #
 # Introspection

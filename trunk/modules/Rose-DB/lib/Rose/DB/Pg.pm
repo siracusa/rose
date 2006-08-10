@@ -4,6 +4,7 @@ use strict;
 
 use DateTime::Infinite;
 use DateTime::Format::Pg;
+use SQL::ReservedWords::PostgreSQL();
 
 use Rose::DB;
 
@@ -269,8 +270,10 @@ sub auto_sequence_name
   return lc "${table}_${column}_seq";
 }
 
-our %Reserved_Words = map { $_ => 1 } qw(role cast user);
-sub is_reserved_word { $Reserved_Words{lc $_[1]} }
+#our %Reserved_Words = map { $_ => 1 } qw(role cast user);
+#sub is_reserved_word { $Reserved_Words{lc $_[1]} }
+
+*is_reserved_word = \&SQL::ReservedWords::PostgreSQL::is_reserved;
 
 #
 # DBI introspection

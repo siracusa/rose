@@ -5,6 +5,7 @@ use strict;
 use DBI;
 use Carp();
 use Bit::Vector::Overload;
+use SQL::ReservedWords();
 
 use Time::Clock;
 use Rose::DateTime::Util();
@@ -956,7 +957,9 @@ sub unquote_column_name
 
 *unquote_table_name = \&unquote_column_name;
 
-sub is_reserved_word { 0 }
+#sub is_reserved_word { 0 }
+
+*is_reserved_word = \&SQL::ReservedWords::is_reserved;
 
 BEGIN
 {
