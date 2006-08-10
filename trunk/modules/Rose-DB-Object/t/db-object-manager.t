@@ -7805,7 +7805,8 @@ SKIP: foreach my $db_type (qw(sqlite))
       query        =>
       [
         id         => { ge => 1 },
-        name       => 'John',  
+        name       => 'John', 
+        name       => { field => 'LOWER(name)', eq => 'john' },
         flag       => 1,
         flag2      => 0,
         status     => 'active',
