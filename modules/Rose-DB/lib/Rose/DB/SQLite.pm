@@ -5,6 +5,7 @@ use strict;
 use Carp();
 
 use Rose::DB;
+use SQL::ReservedWords::SQLite();
 
 our $VERSION = '0.70';
 
@@ -84,6 +85,8 @@ sub refine_dbi_column_info
 
   return;
 }
+
+*is_reserved_word = \&SQL::ReservedWords::SQLite::is_reserved;
 
 sub quote_column_name 
 {

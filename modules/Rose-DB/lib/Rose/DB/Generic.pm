@@ -3,9 +3,8 @@ package Rose::DB::Generic;
 use strict;
 
 use Rose::DB;
-our @ISA = qw(Rose::DB);
 
-our $VERSION = '0.1';
+our $VERSION = '0.11';
 
 #
 # Object methods

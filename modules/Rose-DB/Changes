@@ -1,5 +1,6 @@
-0.723 (07.25.2006) - John Siracusa <siracusa@mindspring.com>
+0.723 (08.10.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Delegate to SQL::ReservedWords to determine which words are reserved.
     * Correctly indicate that Oracle supports schemas.
 
 0.722 (07.21.2006) - John Siracusa <siracusa@mindspring.com>
