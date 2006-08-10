@@ -2216,7 +2216,7 @@ EOF
           die  unless(index($cn->name, 'CN ') == 0);
         }
 
-        print "R P $p->{'id'} C $cat->{'name'} CN ", scalar(@{[ $p->code_names ]}), "\n";
+        #print "R P $p->{'id'} C $cat->{'name'} CN ", scalar(@{[ $p->code_names ]}), "\n";
       }
     }
   }
@@ -2337,7 +2337,7 @@ EOF
           die  unless(index($cn->name, 'CN ') == 0);
         }
 
-        print "D P ", $p->id, " C ", $cat->name, " CN $rs\n";
+        #print "D P ", $p->id, " C ", $cat->name, " CN $rs\n";
       }
     }
   }
