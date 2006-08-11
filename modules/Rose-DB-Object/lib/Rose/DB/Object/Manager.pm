@@ -2968,109 +2968,105 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
 
   use base 'Rose::DB::Object';
 
-  __PACKAGE__->meta->table('categories');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id          => { type => 'int', primary_key => 1 },
-    name        => { type => 'varchar', length => 255 },
-    description => { type => 'text' },
-  );
+    table   => 'categories',
+    columns =>
+    [
+      id          => { type => 'int', primary_key => 1 },
+      name        => { type => 'varchar', length => 255 },
+      description => { type => 'text' },
+    ],
 
-  __PACKAGE__->meta->add_unique_key('name');
-  __PACKAGE__->meta->initialize;
+    unique_key => 'name',
+  );
 
   ...
 
   package CodeName;
 
-  use Product;
-
   use base 'Rose::DB::Object';
 
-  __PACKAGE__->meta->table('code_names');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id          => { type => 'int', primary_key => 1 },
-    product_id  => { type => 'int' },
-    name        => { type => 'varchar', length => 255 },
-    applied     => { type => 'date', not_null => 1 },
-  );
+    table   => 'code_names',
+    columns =>
+    [
+      id          => { type => 'int', primary_key => 1 },
+      product_id  => { type => 'int' },
+      name        => { type => 'varchar', length => 255 },
+      applied     => { type => 'date', not_null => 1 },
+    ],
 
-  __PACKAGE__->foreign_keys
-  (
-    product =>
-    {
-      class       => 'Product',
-      key_columns => { product_id => 'id' },
-    },
+    foreign_keys =>
+    [
+      product =>
+      {
+        class       => 'Product',
+        key_columns => { product_id => 'id' },
+      },
+    ],
   );
-
-  __PACKAGE__->meta->initialize;
 
   ...
 
   package Product;
 
-  use Category;
-  use CodeName;
-
   use base 'Rose::DB::Object';
 
-  __PACKAGE__->meta->table('products');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id          => { type => 'int', primary_key => 1 },
-    name        => { type => 'varchar', length => 255 },
-    description => { type => 'text' },
-    category_id => { type => 'int' },
-    region_num  => { type => 'int' },
+    table   => 'products',
+    columns =>
+    [
+      id          => { type => 'int', primary_key => 1 },
+      name        => { type => 'varchar', length => 255 },
+      description => { type => 'text' },
+      category_id => { type => 'int' },
+      region_num  => { type => 'int' },
 
-    status => 
-    {
-      type      => 'varchar', 
-      check_in  => [ 'active', 'inactive' ],
-      default   => 'inactive',
-    },
-
-    start_date  => { type => 'datetime' },
-    end_date    => { type => 'datetime' },
-
-    date_created  => { type => 'timestamp', default => 'now' },  
-    last_modified => { type => 'timestamp', default => 'now' },
-  );
-
-  __PACKAGE__->meta->add_unique_key('name');
-
-  __PACKAGE__->meta->foreign_keys
-  (
-    category =>
-    {
-      class       => 'Category',
-      key_columns =>
+      status => 
       {
-        category_id => 'id',
-      }
-    },
-  );
-
-  __PACKAGE__->meta->relationships
-  (
-    code_names =>
-    {
-      type  => 'one to many',
-      class => 'CodeName',
-      column_map   => { id => 'product_id' },
-      manager_args => 
-      {
-        sort_by => CodeName->meta->table . '.applied DESC',
+        type      => 'varchar', 
+        check_in  => [ 'active', 'inactive' ],
+        default   => 'inactive',
       },
-    }
-  );
 
-  __PACKAGE__->meta->initialize;
+      start_date  => { type => 'datetime' },
+      end_date    => { type => 'datetime' },
+
+      date_created  => { type => 'timestamp', default => 'now' },  
+      last_modified => { type => 'timestamp', default => 'now' },
+    ],
+
+    unique_key => 'name',
+
+    foreign_keys =>
+    [
+      category =>
+      {
+        class       => 'Category',
+        key_columns =>
+        {
+          category_id => 'id',
+        }
+      },
+    ],
+
+    relationships =>
+    [
+      code_names =>
+      {
+        type  => 'one to many',
+        class => 'CodeName',
+        column_map   => { id => 'product_id' },
+        manager_args => 
+        {
+          sort_by => CodeName->meta->table . '.applied DESC',
+        },
+      },
+    ],
+  );
 
   ...
 
@@ -3080,8 +3076,7 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
 
   package Product::Manager;
 
-  use Rose::DB::Object::Manager;
-  our @ISA = qw(Rose::DB::Object::Manager);
+  use base 'Rose::DB::Object::Manager';
 
   sub object_class { 'Product' }
 
