@@ -3650,13 +3650,6 @@ sub dbi_requires_bind_param
   return $self->{'dbi_requires_bind_param'}{$db->{'id'}} = 0;
 }
 
-sub dbi_bind_params
-{
-  my($self, $sth, $bind, $columns) = @_;
-
-
-}
-
 sub make_manager_class
 {
   eval shift->perl_manager_class(@_);
