@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 22);
+    Test::More->import(tests => 53);
   }
 }
 
