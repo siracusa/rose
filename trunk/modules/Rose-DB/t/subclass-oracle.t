@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 53);
+    Test::More->import(tests => 22);
   }
 }
 
@@ -66,11 +66,11 @@ SKIP:
 {
   unless(lookup_ip($db->host))
   {
-    skip("Host '@{[$db->host]}' not found", 42);
+    skip("Host '@{[$db->host]}' not found", 11);
   }
 
   eval { $db->connect };
-  skip("Could not connect to db 'test', 'oracle' - $@", 42)  if($@);
+  skip("Could not connect to db 'test', 'oracle' - $@", 11)  if($@);
   $dbh = $db->dbh;
 
   is($db->domain, 'test', "domain()");
