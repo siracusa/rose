@@ -374,12 +374,10 @@ sub load_driver_class
   my $driver_class = $class->driver_class($arg) || $arg;
 
   no strict 'refs';
-  unless(defined ${"${driver_class}::VERSION"} || @{"${driver_class}::ISA"})
+  unless(defined ${"${driver_class}::VERSION"})
   {
     eval "require $driver_class";
-
-    Carp::croak "Could not load driver class '$driver_class' - $@"
-      if($@ && !UNIVERSAL::isa($driver_class, 'Rose::DB'));
+    Carp::croak "Could not load driver class '$driver_class' - $@"  if($@);
   }
 
   $Class_Loaded{$driver_class}++;
