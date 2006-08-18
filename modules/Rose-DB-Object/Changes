@@ -1,6 +1,8 @@
-0.751 (08.13.2006) - John Siracusa <siracusa@mindspring.com>
+0.751 (08.18.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Improved detection of ambiguous columns in QueryBuilder.
+    * Removed optimization of the with_objects parameters to the Manager's
+      get_objects_count() method.
 
 0.75 (08.10.2006) - John Siracusa <siracusa@mindspring.com>
 

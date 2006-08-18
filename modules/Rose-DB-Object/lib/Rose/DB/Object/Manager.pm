@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.75';
+our $VERSION = '0.751';
 
 our $Debug = 0;
 
@@ -380,58 +380,49 @@ sub get_objects
       $use_redundant_join_conditions = $db->likes_redundant_join_conditions;
     }
 
-    # Don't honor the with_objects parameter when counting, since the
-    # count is of the rows from the "main" table (t1) only.
-    if($count_only)
+    if(ref $with_objects) # copy argument (shallow copy)
     {
-      $with_objects = undef;
+      $with_objects = [ @$with_objects ];
     }
     else
     {
-      if(ref $with_objects) # copy argument (shallow copy)
-      {
-        $with_objects = [ @$with_objects ];
-      }
-      else
-      {
-        $with_objects = [ $with_objects ];
-      }
-
-      # Expand multi-level arguments
-      if(first { index($_, '.') >= 0 } @$with_objects)
-      {
-        my @with_objects;
-
-        foreach my $arg (@$with_objects)
-        {
-          next  if($seen_rel{$arg});
-
-          if(index($arg, '.') < 0)
-          {
-            $seen_rel{$arg} = 'with';
-            push(@with_objects, $arg);
-          }
-          else
-          {
-            my @expanded = ($arg);
-            $seen_rel{$arg} = 'with';
-
-            while($arg =~ s/\.([^.]+)$//)
-            {
-              next  if($seen_rel{$arg}++);
-              unshift(@expanded, $arg);
-            }
-
-            push(@with_objects, @expanded);          
-          }
-        }
-
-        $with_objects = \@with_objects;
-      }
-
-      $num_with_objects = @$with_objects;
-      %with_objects = map { $_ => 1 } @$with_objects;
+      $with_objects = [ $with_objects ];
     }
+
+    # Expand multi-level arguments
+    if(first { index($_, '.') >= 0 } @$with_objects)
+    {
+      my @with_objects;
+
+      foreach my $arg (@$with_objects)
+      {
+        next  if($seen_rel{$arg});
+
+        if(index($arg, '.') < 0)
+        {
+          $seen_rel{$arg} = 'with';
+          push(@with_objects, $arg);
+        }
+        else
+        {
+          my @expanded = ($arg);
+          $seen_rel{$arg} = 'with';
+
+          while($arg =~ s/\.([^.]+)$//)
+          {
+            next  if($seen_rel{$arg}++);
+            unshift(@expanded, $arg);
+          }
+
+          push(@with_objects, @expanded);          
+        }
+      }
+
+      $with_objects = \@with_objects;
+    }
+
+    $num_with_objects = @$with_objects;
+    %with_objects = map { $_ => 1 } @$with_objects;
   }
 
   if($require_objects)
@@ -3594,8 +3585,6 @@ B<Note:> the C<with_objects> list currently cannot be used to simultaneously fet
 =item B<get_objects_count [PARAMS]>
 
 Accepts the same arguments as L<get_objects|/get_objects>, but just returns the number of objects that would have been fetched, or undef if there was an error.
-
-Note that the C<with_objects> parameter is ignored by this method, since it counts the number of primary objects, irrespective of how many sub-objects exist for each primary object.  If you want to count the number of primary objects that have sub-objects matching certain criteria, use the C<require_objects> parameter instead.
 
 =item B<get_objects_from_sql [ SQL | PARAMS ]>
 
