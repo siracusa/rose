@@ -32,20 +32,32 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
   my $class_prefix = ucfirst($db_type);
 
-  my $loader = 
-    Rose::DB::Object::Loader->new(
-      db           => Rose::DB->new,
-      class_prefix => $class_prefix);
-
-  my @classes = $loader->make_classes(include_tables => '^(foos|bars)$');
-
-  #foreach my $class (@classes)
-  #{
-  #  print $class->meta->perl_class_definition if($class->can('meta'));
-  #}
-
   my $foo_class = $class_prefix . '::Foo';
   my $bar_class = $class_prefix . '::Bar';
+
+  my $auto = (rand() >= 0.5) ? 'auto_initialize => [],' : 'auto => 1,';
+
+  my $perl=<<"EOF";
+{
+  package $foo_class;
+  use base qw(Rose::DB::Object);
+  __PACKAGE__->meta->setup
+  (
+    table => 'foos',
+    $auto
+  );
+
+  package $bar_class;
+  use base qw(Rose::DB::Object);
+  __PACKAGE__->meta->setup
+  (
+    table => 'bars',
+    $auto
+  );
+}
+EOF
+
+  eval $perl or warn $@;
 
   is($foo_class->meta->relationship('bar')->type, 'one to one', "check rel type - $db_type");
 
