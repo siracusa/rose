@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.742';
+our $VERSION = '0.751';
 
 our $Debug = 0;
 
@@ -355,6 +355,7 @@ sub setup
   return 1  if($self->is_initialized);
 
   my $init_args = [];
+  my $auto_init = 0;
 
   PAIR: while(@_)
   {
@@ -373,15 +374,25 @@ sub setup
       $self->init_auto_helper;
     }
 
-    unless($self->can($method))
-    {
-      Carp::croak "Invalid parameter name: '$method'";
-    }
-
     if($method eq 'initialize')
     {
       $init_args = ref $args ? $args : [ $args ];
       next PAIR;
+    }
+    elsif($method eq 'auto_initialize' || $method eq 'auto')
+    {
+      unless($method eq 'auto' && !ref $args)
+      {
+        $init_args = ref $args ? $args : [ $args ];
+      }
+
+      $auto_init = 1;
+      next PAIR;
+    }
+
+    unless($self->can($method))
+    {
+      Carp::croak "Invalid parameter name: '$method'";
     }
 
     if(ref $args eq 'ARRAY')
@@ -405,7 +416,14 @@ sub setup
     }
   }
 
-  $self->initialize(@$init_args);
+  if($auto_init)
+  {
+    $self->auto_initialize(@$init_args);
+  }
+  else
+  {
+    $self->initialize(@$init_args);
+  }
 
   return 1;
 }
@@ -5035,9 +5053,28 @@ will result in this method call:
 
 (Note that these method names are I<singular>.  This exception does I<not> apply to the I<plural> variants, "L<unique_keys|/unique_keys>" and "L<add_unique_keys|/add_unique_keys>".)
 
-Method names may appear more than once in PARAMS.  The methods are called in the order that they appear in PARAMS, with the exception of the L<initialize|/initialize> method, which is always called last.  If "initialize" is not one of the method names, then it will be called automatically (with no arguments) at the end.  If you do not want to pass any arguments to the  L<initialize|/initialize> method, standard practice is to omit it.
+Method names may appear more than once in PARAMS.  The methods are called in the order that they appear in PARAMS, with the exception of the L<initialize|/initialize> (or L<auto_initialize|/auto_initialize>) method, which is always called last.
 
-Here's an example L<setup()|/setup> method call, followed by the equivalent "long-hand" implementation.
+If "initialize" is not one of the method names, then it will be called automatically (with no arguments) at the end.  If you do not want to pass any arguments to the L<initialize|/initialize> method, standard practice is to omit it.
+
+If "auto_initialize" is one of the method names, then the  L<auto_initialize|/auto_initialize> method will be called instead of the L<initialize|/initialize> method.  This is useful if you want to manually set up a few pieces of metadata, but want the auto-initialization system to set up the rest.
+
+The name "auto" is considered equivalent to "auto_initialize", but any arguments are ignored unless they are encapsulated in a reference to an array.  For example, these are equivalent:
+
+    $meta->setup(
+      table => 'mytable',
+      # Call auto_initialize() with no arguments
+      auto_initialize => [],
+    );
+
+    $meta->setup(
+      table => 'mytable',
+      # The value "1" is ignored because it's not a reference to an array.
+      # auto_initialize() will be called with no arguments.
+      auto => 1, 
+    );
+
+Finally, here's a full example of a L<setup()|/setup> method call followed by the equivalent "long-hand" implementation.
 
     $meta->setup
     (
