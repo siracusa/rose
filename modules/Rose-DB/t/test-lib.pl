@@ -3,7 +3,6 @@
 use strict;
 
 use FindBin qw($Bin);
-use lib "$Bin/lib";
 
 use Rose::DB;
 
@@ -265,11 +264,6 @@ package My::DB;
 package My::DB2;
 @My::DB2::ISA = qw(My::DB);
 
-My::DB2->driver_class(Oracle => 'My::DB2::Oracle');
-My::DB2->driver_class(Pg => 'My::DB2::Pg');
-My::DB2->driver_class(mysql => 'My::DB2::MySQL');
-My::DB2->driver_class(Informix => 'My::DB2::Informix');
-
 package My::DB2::Oracle;
 @My::DB2::Oracle::ISA = qw(Rose::DB::Oracle);
 
@@ -289,6 +283,11 @@ package My::DB2::Informix;
 @My::DB2::Informix::ISA = qw(Rose::DB::Informix);
 
 sub subclass_special_informix { 'INFORMIX' }
+
+My::DB2->driver_class(Oracle => 'My::DB2::Oracle');
+My::DB2->driver_class(Pg => 'My::DB2::Pg');
+My::DB2->driver_class(mysql => 'My::DB2::MySQL');
+My::DB2->driver_class(Informix => 'My::DB2::Informix');
 
 package My::DB3;
 @My::DB3::ISA = qw(My::DB2);
