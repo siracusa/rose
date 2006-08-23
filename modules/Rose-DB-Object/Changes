@@ -1,9 +1,10 @@
-0.751 (08.21.2006) - John Siracusa <siracusa@mindspring.com>
+0.751 (08.23.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Improved detection of ambiguous columns in QueryBuilder.
     * Removed a potentially dubious optimization of the with_objects 
       parameter to the Manager's get_objects_count() method.
     * Added support for auto-initialization in setup() calls.
+    * XXX: document prime_caches()
 
 0.75 (08.10.2006) - John Siracusa <siracusa@mindspring.com>
 
