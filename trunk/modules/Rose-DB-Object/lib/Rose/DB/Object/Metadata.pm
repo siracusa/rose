@@ -3556,6 +3556,16 @@ sub has_lazy_columns
   return $self->{'has_lazy_columns'} = grep { $_->lazy } $self->columns;
 }
 
+sub prime_all_caches
+{
+  my($class) = shift;
+
+  foreach my $obj_class ($class->registered_classes)
+  {
+    $obj_class->meta->prime_caches();
+  }
+}
+
 sub prime_caches
 {
   my($self) = shift;
