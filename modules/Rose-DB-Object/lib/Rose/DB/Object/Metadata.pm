@@ -50,6 +50,7 @@ use Rose::Object::MakeMethods::Generic
     'primary_key',
     'column_name_to_method_name_mapper',
     'original_class',
+    'default_prime_caches',
   ],
 
   boolean => 
@@ -210,6 +211,8 @@ sub new
 }
 
 sub init_original_class { ref shift }
+
+sub init_default_prime_caches { $ENV{'MOD_PERL'} ? 1 : 0 }
 
 sub reset
 {
@@ -1470,6 +1473,8 @@ sub initialize
     }
   }
 
+  $self->prime_caches  if($self->default_prime_caches);
+
   return;
 }
 
@@ -2573,7 +2578,7 @@ sub method_column
 
   unless(defined $self->{'method_columns'})
   {
-    foreach my $column ($self->column_names)
+    foreach my $column ($self->columns)
     {
       foreach my $type ($column->defined_method_types)
       {
@@ -2881,8 +2886,8 @@ sub update_sql
   my %key = map { ($_ => 1) } @$key_columns;
 
   no warnings;
-  return ($self->{'update_sql_prefix'}{$db->{'id'}} ||=
-    'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
+  return ($self->{'update_sql_prefix'}{$db->{'id'}} ||
+          $self->init_update_sql_prefix($db)) .
     join(",\n", map 
     {
       '    ' . $_->name_sql($db) . ' = ' . $_->update_placeholder_sql($db)
@@ -2897,6 +2902,13 @@ sub update_sql
       $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
     }
     @$key_columns);
+}
+
+sub init_update_sql_prefix
+{
+  my($self, $db) = @_;
+  return $self->{'update_sql_prefix'}{$db->{'id'}} =
+         'UPDATE ' . $self->fq_table_sql($db) . " SET \n";
 }
 
 sub update_changes_only_sql
@@ -3036,8 +3048,8 @@ sub update_sql_with_inlining
   no warnings;
   return 
   (
-    ($self->{'update_sql_with_inlining_start'}{$db->{'id'}} ||= 
-     'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
+    ($self->{'update_sql_with_inlining_start'}{$db->{'id'}} || 
+     $self->init_update_sql_with_inlining_start($db)) .
     join(",\n", @updates) . "\nWHERE " . 
     join(' AND ', map 
     {
@@ -3048,6 +3060,13 @@ sub update_sql_with_inlining
     \@bind,
     ($do_bind_params ? \@bind_params : ())
   );
+}
+
+sub init_update_sql_with_inlining_start
+{
+  my($self, $db) = @_;
+  return $self->{'update_sql_with_inlining_start'}{$db->{'id'}} = 
+         'UPDATE ' . $self->fq_table_sql($db) . " SET \n";
 }
 
 sub update_changes_only_sql_with_inlining
@@ -3146,13 +3165,21 @@ sub insert_changes_only_sql
   }
 
   no warnings;
-  return ($self->{'insert_changes_only_sql_prefix'}{$db->{'id'}} ||=
-    'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n") .
+  return ($self->{'insert_changes_only_sql_prefix'}{$db->{'id'}} ||
+          $self->init_insert_changes_only_sql_prefix($db)) .
     join(",\n", map { $_->name_sql($db) } @modified) .
     "\n)\nVALUES\n(\n" . 
     join(",\n", map { $_->insert_placeholder_sql($db) } @modified) . "\n)",
     [ map { my $m = $_->accessor_method_name; $obj->$m() } @modified ],
     \@modified;
+}
+
+sub init_insert_changes_only_sql_prefix
+{
+  my($self, $db) = @_;
+  return $self->{'insert_changes_only_sql_prefix'}{$db->{'id'}} =
+         'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n";
+;
 }
 
 sub insert_columns_placeholders_sql
@@ -3273,19 +3300,23 @@ sub insert_sql_with_inlining
     }
   }
 
-  if($do_bind_params)
-  {
-
-  }
   return 
   (
-    ($self->{'insert_sql_with_inlining_start'}{$db->{'id'}} ||=
-    'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
-    join(",\n", map { "  $_" } $self->column_names_sql($db)) .
-    "\n)\nVALUES\n(\n") . join(",\n", @places) . "\n)",
+    ($self->{'insert_sql_with_inlining_start'}{$db->{'id'}} ||
+     $self->init_insert_sql_with_inlining_start($db)) .
+    join(",\n", @places) . "\n)",
     \@bind,
     ($do_bind_params ? \@bind_params : ())
   );
+}
+
+sub init_insert_sql_with_inlining_start
+{
+  my($self, $db) = @_;
+  $self->{'insert_sql_with_inlining_start'}{$db->{'id'}} =
+    'INSERT INTO ' . $self->fq_table_sql($db) . "\n(\n" .
+    join(",\n", map { "  $_" } $self->column_names_sql($db)) .
+    "\n)\nVALUES\n(\n";
 }
 
 sub insert_and_on_duplicate_key_update_with_inlining_sql
@@ -3457,22 +3488,8 @@ sub get_column_value
   my $db  = $object->db or Carp::confess $object->error;
   my $dbh = $db->dbh or Carp::confess $db->error;
 
-  my $sql = $self->{'get_column_sql_tmpl'};
-
-  unless($sql)
-  {
-    my $key_columns = $self->primary_key_column_names;
-    my %key = map { ($_ => 1) } @$key_columns;  
-
-    $sql = $column->{'get_column_sql_tmpl'}{$db->{'id'}} = 
-      'SELECT __COLUMN__ FROM ' . $self->fq_table_sql($db) . ' WHERE ' .
-      join(' AND ', map 
-      {
-        my $c = $self->column($_);
-        $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
-      }
-      @$key_columns);
-  }
+  my $sql = $self->{'get_column_sql_tmpl'}{$db->{'id'}} || 
+            $self->init_get_column_sql_tmpl($db);
 
   $sql =~ s/__COLUMN__/$column->name_sql/e;
 
@@ -3501,6 +3518,23 @@ sub get_column_value
   return $value;
 }
 
+sub init_get_column_sql_tmpl
+{
+  my($self, $db) = @_;
+
+  my $key_columns = $self->primary_key_column_names;
+  my %key = map { ($_ => 1) } @$key_columns;  
+
+  return $self->{'get_column_sql_tmpl'}{$db->{'id'}} = 
+    'SELECT __COLUMN__ FROM ' . $self->fq_table_sql($db) . ' WHERE ' .
+    join(' AND ', map 
+    {
+      my $c = $self->column($_);
+      $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
+    }
+    @$key_columns);
+}
+
 sub refresh_lazy_column_tracking
 {
   my($self) = shift;
@@ -3520,6 +3554,54 @@ sub has_lazy_columns
   my($self) = shift;
   return $self->{'has_lazy_columns'}  if(defined $self->{'has_lazy_columns'});
   return $self->{'has_lazy_columns'} = grep { $_->lazy } $self->columns;
+}
+
+sub prime_caches
+{
+  my($self) = shift;
+
+  my @methods =
+    qw(column_names num_columns nonlazy_column_names lazy_column_names
+       column_rw_method_names column_accessor_method_names
+       nonlazy_column_accessor_method_names column_mutator_method_names
+       nonlazy_column_mutator_method_names nonlazy_column_db_value_hash_keys
+       primary_key_column_db_value_hash_keys column_db_value_hash_keys
+       column_accessor_method_names column_mutator_method_names
+       column_rw_method_names dbi_requires_bind_param);
+
+  foreach my $method (@methods)
+  {
+    $self->$method();
+  }
+
+  my $db = $self->class->init_db;
+
+  $self->method_column('nonesuch');
+  $self->fq_primary_key_sequence_names(db => $db);
+
+  @methods =
+    qw(fq_table fq_table_sql init_get_column_sql_tmpl delete_sql
+       primary_key_sequence_names insert_sql 
+       init_insert_sql_with_inlining_start
+       init_insert_changes_only_sql_prefix init_update_sql_prefix
+       init_update_sql_with_inlining_start column_names_string_sql
+       nonlazy_column_names_string_sql select_nonlazy_columns_string_sql
+       select_columns_string_sql select_columns_sql);
+
+  foreach my $method (@methods)
+  {
+    $self->$method($db);
+  }
+
+  @methods = undef; # reclaim memory?
+
+  foreach my $key ($self->primary_key, $self->unique_keys)
+  {
+    foreach my $method (qw(update_all_sql load_sql load_all_sql))
+    {
+      $self->update_all_sql(scalar $key->columns, $db);
+    }
+  }
 }
 
 sub _clear_table_generated_values
@@ -3553,7 +3635,6 @@ sub _clear_column_generated_values
   $self->{'nonlazy_column_names'}   = undef;
   $self->{'lazy_column_names'}      = undef;
   $self->{'get_column_sql_tmpl'}    = undef;
-  $self->{'columns_names_sql'}      = undef;
   $self->{'column_names_string_sql'} = undef;
   $self->{'nonlazy_column_names_string_sql'}      = undef;
   $self->{'column_rw_method_names'}               = undef;
@@ -5638,7 +5719,7 @@ The name of the manager class.  Defaults to the L<object class|/class> with "::M
 
 =item * isa CLASSES
 
-The name of a single class or a reference to an array of class names to be included in the C<@ISA> array for the manager class.  One of these classes must inherit from L<Rose::DB::Object::Manager>.  Defaults to C<Rose::DB::Object::Manager>.
+The name of a single class or a reference to an array of class names to be included in the C<@ISA> array for the manager class.  One of these classes must inherit from L<Rose::DB::Object::Manager>.  Defaults to L<Rose::DB::Object::Manager>.
 
 =back
 
