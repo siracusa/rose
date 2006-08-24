@@ -4,7 +4,7 @@ use strict;
 
 use Carp;
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 use overload
 (
@@ -207,6 +207,7 @@ sub format
     'n' => defined $ns ? sprintf('.%09d', $ns) : '',
     'p' => $self->ampm,
     'P' => lc $self->ampm,
+    's' => $self->as_integer_seconds,
   );
 
   $formats{'n'} =~ s/\.?0+$//;
@@ -215,7 +216,7 @@ sub format
   {
     s{ ((?:%%|[^%]+)*) %T }{$1%H:%M:%S}gx;
 
-    s/%([HIikMSNnpP])/$formats{$1}/g;
+    s/%([HIikMSsNnpP])/$formats{$1}/g;
 
     no warnings 'uninitialized';
     s{ ((?:%%|[^%]+)*) % ([1-9]) N }{ $1 . substr(sprintf("%09d", $ns || 0), 0, $2) }gex;
@@ -579,6 +580,10 @@ Setting a clock whose L<hour|/hour> is less than 12 to PM will cause its  L<hour
 
 Return the string "AM" if the L<hour|/hour> is less than 12, "PM" otherwise.
 
+=item B<as_integer_seconds>
+
+Returns the integer number of seconds since 00:00:00.
+
 =item B<as_string>
 
 Returns a string representation of the clock, formatted according to the clock object's L<default_format|/default_format>.
@@ -669,6 +674,10 @@ Like %p but lowercase: "am" or "pm"
 =item C<%S>
 
 The second as a two-digit, zero-padded integer (range 00 to 61).
+
+=item C<%s>
+
+The integer number of seconds since 00:00:00.
 
 =item C<%T>
 
