@@ -470,7 +470,7 @@ __END__
 
 =head1 NAME
 
-Time::Clock - Twenty-four hour clock objects with nanosecond precision.
+Time::Clock - Twenty-four hour clock object with nanosecond precision.
 
 =head1 SYNOPSIS
 
