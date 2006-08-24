@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 25;
+use Test::More tests => 26;
 
 use Time::Clock;
 
@@ -17,6 +17,7 @@ is($t->format('%H %k %I %i %M %S %N %n %p %P %T'), '13 13 01 1 34 56 123000000 .
 $t->parse('1:23:45');
 is($t->format('%k'), '1', 'format %k');
 is($t->format('%n'), '', 'format %n 1');
+is($t->format('%s'), 5025, 'format %s 1');
 
 $t->nanosecond(0);
 is($t->format('%n'), '', 'format %n 2');

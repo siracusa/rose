@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 29;
+use Test::More tests => 31;
 
 BEGIN 
 {
@@ -16,6 +16,8 @@ $t = Time::Clock->new(hour => 12, minute => 34, second => 56);
 
 is($t->as_string, '12:34:56', 'as_string 1');
 is("$t", '12:34:56', 'as_string 2');
+is($t->as_integer_seconds, 45296, 'as_integer_seconds 1');
+is(Time::Clock->new('00:00:01.12345')->as_integer_seconds, 1, 'as_integer_seconds 2');
 
 $t->nanosecond(123000000);
 
