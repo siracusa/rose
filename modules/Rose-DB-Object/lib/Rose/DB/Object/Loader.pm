@@ -483,6 +483,8 @@ sub make_classes
 
   my $db = delete $args{'db'};
 
+  $args{'passive'} = 1  unless(exists $args{'passive'});
+
   my $include_views = exists $args{'include_views'} ? 
     delete $args{'include_views'} : $self->include_views;
 
@@ -846,7 +848,22 @@ sub make_classes
     }
   }
 
-  $classes[0]->meta_class->clear_all_dbs  if(@classes);
+  if(@classes)
+  {
+    my $meta_class = $classes[0]->meta_class;
+
+    # Retry deferred stuff
+    foreach my $obj_class ($meta_class->registered_classes)
+    {
+      my $meta = $obj_class->meta;
+
+      $meta->retry_deferred_tasks;
+      $meta->retry_deferred_foreign_keys;
+      $meta->retry_deferred_relationships;
+    }
+
+    $meta_class->clear_all_dbs;
+  }
 
   if(%save)
   {

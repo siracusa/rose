@@ -1449,10 +1449,13 @@ sub initialize
 
   $self->register_class;
 
-  # Retry deferred stuff
-  $self->retry_deferred_tasks;
-  $self->retry_deferred_foreign_keys;
-  $self->retry_deferred_relationships;
+  unless($args{'passive'})
+  {
+    # Retry deferred stuff
+    $self->retry_deferred_tasks;
+    $self->retry_deferred_foreign_keys;
+    $self->retry_deferred_relationships;
+  }
 
   $self->refresh_lazy_column_tracking;
 
