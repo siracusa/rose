@@ -1439,7 +1439,7 @@ sub get_objects
                    joins       => \@joins,
                    meta        => \%meta,
                    db          => $db,
-                   pretty      => 1,#$Debug,
+                   pretty      => $Debug,
                    bind_params => \@bind_params,
                    %args);
 
@@ -1461,7 +1461,8 @@ sub get_objects
         $sub_args{'sort_by'} = \@sort_by;
       }
 
-      delete $sub_args{'with_objects'};
+      # Not safe to delete this if the query references columns in these tables
+      #delete $sub_args{'with_objects'};
 
       $sub_args{'fetch_only'}  = [ 't1' ];
       $sub_args{'from_and_where_only'} = 1;
@@ -1484,7 +1485,7 @@ sub get_objects
           join(', ', map { $_ } @{$columns{$tables[0]}});
       }
 
-      my $distinct = ($num_with_objects && scalar @has_dups[1 .. $num_with_objects]) ? ' DISTINCT' : '';
+      my $distinct = ($num_with_objects && scalar @{[ @has_dups[1 .. $num_with_objects] ]}) ? ' DISTINCT' : '';
 
       $t1_sql = "SELECT$distinct $columns FROM\n$t1_sql";
       $t1_sql =~ s/^/    /mg  if($Debug);

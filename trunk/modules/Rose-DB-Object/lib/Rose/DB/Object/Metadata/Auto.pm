@@ -1469,14 +1469,18 @@ sub auto_initialize
   $self->auto_init_unique_keys(@_);
   $self->auto_init_foreign_keys(@_);
   $self->auto_init_relationships(@_);
-  $self->initialize;
+  $self->initialize(@_);
 
-  for(1 .. 2) # two passes are required to catch everything
-  {
-    $self->retry_deferred_foreign_keys;
-    $self->retry_deferred_relationships;
-    $self->retry_deferred_tasks;
-  }
+  # Don't seem to need this anymore...
+  #unless($args{'passive'})
+  #{
+  #  for(1 .. 2) # two passes are required to catch everything
+  #  {
+  #    $self->retry_deferred_foreign_keys;
+  #    $self->retry_deferred_relationships;
+  #    $self->retry_deferred_tasks;
+  #  }
+  #}
 
   unless($args{'stay_connected'})
   {
