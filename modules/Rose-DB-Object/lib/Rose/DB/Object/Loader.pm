@@ -800,6 +800,8 @@ sub make_classes
 
     my $meta = $obj_class->meta;
 
+    $meta->db($db);
+
     if($pre_init_hook)
     {
       if(ref $pre_init_hook eq 'CODE')
