@@ -18,6 +18,8 @@ our @ISA = qw(Rose::Object);
 
 our $VERSION = '0.74';
 
+our $Debug = 0;
+
 use Rose::Object::MakeMethods::Generic
 (
   scalar =>
@@ -483,6 +485,7 @@ sub make_classes
 
   my $db = delete $args{'db'};
 
+  $args{'stay_connected'} = 1;
   $args{'passive'} = 1  unless(exists $args{'passive'});
 
   my $include_views = exists $args{'include_views'} ? 
@@ -782,6 +785,8 @@ sub make_classes
     # Skip tables with no primary keys
     next  unless($db->has_primary_key($table));
 
+    $Debug && warn "Loader loading table: $table\n";
+
     my $obj_class = $class_prefix . $cm->table_to_class($table);
 
     # Set up the class
@@ -850,19 +855,17 @@ sub make_classes
 
   if(@classes)
   {
-    my $meta_class = $classes[0]->meta_class;
+    my $meta = $classes[0]->meta;
 
-    # Retry deferred stuff
-    foreach my $obj_class ($meta_class->registered_classes)
+    # Retry deferred stuff: two passes
+    for(1 .. 2)
     {
-      my $meta = $obj_class->meta;
-
       $meta->retry_deferred_tasks;
       $meta->retry_deferred_foreign_keys;
       $meta->retry_deferred_relationships;
     }
 
-    $meta_class->clear_all_dbs;
+    $classes[0]->meta_class->clear_all_dbs;
   }
 
   if(%save)

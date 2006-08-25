@@ -1,5 +1,6 @@
 0.751 (08.25.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * The Loader is now much, much faster when loading many tables.
     * Improved detection of ambiguous columns in QueryBuilder.
     * Removed a potentially dubious optimization of the with_objects
       argument to the get_objects() and get_objects_count() methods.
