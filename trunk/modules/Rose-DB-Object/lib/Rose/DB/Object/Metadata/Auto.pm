@@ -1312,6 +1312,8 @@ sub auto_init_one_to_many_relationships
     # key's columns.  If found, don't try to make the one to many rel.
     REL: foreach my $rel ($f_meta->relationships)
     {
+      next  unless($rel->class eq $class);
+
       if($rel->type eq 'one to one' && !$rel->foreign_key)
       {
         my $skip = 1;
