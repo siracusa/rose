@@ -5082,6 +5082,10 @@ Get or set the list of database sequence names used to populate the primary key 
 
 If you do not set this value, it will be derived for you based on the name of the primary key columns.  In the common case, you do not need to be concerned about this method.  If you are using the built-in SERIAL or AUTO_INCREMENT types in your database for your primary key columns, everything should just work.
 
+=item B<prime_caches>
+
+By default, secondary metadata derived from the attributes of this object is created and cached on demand.  Call this method to pre-cache this metadata all at once.  This method is useful when running in an environment like L<mod_perl> where it's advantageous to load as much data as possible on start-up.
+
 =item B<relationship NAME [, RELATIONSHIP | HASHREF]>
 
 Get or set the relationship named NAME.  If just NAME is passed, the L<Rose::DB::Object::Metadata::Relationship>-derived relationship object for that NAME is returned.  If no such relationship exists, undef is returned.

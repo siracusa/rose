@@ -94,8 +94,6 @@ __PACKAGE__->method_maker_info
 
 sub type { 'many to many' }
 
-*class = \&foreign_class;
-
 use constant MAP_RECORD_ATTR   => PRIVATE_PREFIX . '_map_record';
 use constant MAP_RECORD_METHOD => 'map_record';
 

@@ -21,6 +21,11 @@ use Rose::Object::MakeMethods::Generic
     'singular_to_plural_function',
     'plural_to_singular_function',
   ],
+  
+  boolean => 
+  [
+    tables_are_singular => { default => 0 },
+  ],
 );
 
 *meta = \&Rose::DB::Object::Metadata::Object::parent;
@@ -68,7 +73,7 @@ sub table_to_class
 sub auto_manager_base_name
 {
   my($self, $table, $object_class) = @_;
-  return $table;
+  return $self->tables_are_singular ? $self->singular_to_plural($table) : $table;
 }
 
 sub auto_manager_class_name
@@ -88,6 +93,34 @@ sub related_table_to_class
 {
   my($self, $table, $local_class, $plural) = @_;
   return $self->table_to_class($table, $self->class_prefix($local_class), $plural);
+}
+
+sub table_singular
+{
+  my($self) = shift;
+ 
+  my $table = $self->meta->table;
+  
+  if($self->tables_are_singular)
+  {
+    return $table;
+  }
+  
+  return $self->plural_to_singular($table);
+}
+
+sub table_plural
+{
+  my($self) = shift;
+ 
+  my $table = $self->meta->table;
+  
+  if($self->tables_are_singular)
+  {
+    return $self->singular_to_plural($table);
+  }
+
+  return $table;
 }
 
 sub auto_table_name { shift->class_to_table_plural }
@@ -163,7 +196,7 @@ sub auto_foreign_key_name
 sub auto_table_to_relationship_name_plural
 {
   my($self, $table) = @_;
-  return $table;
+  return $self->tables_are_singular ? $self->singular_to_plural($table) : $table;
 }
 
 sub auto_class_to_relationship_name_plural
@@ -182,8 +215,7 @@ sub auto_relationship_name_one_to_many
 {
   my($self, $table, $class) = @_;
   #return $self->auto_class_to_relationship_name_plural($class);
-  #return $self->auto_table_to_relationship_name_plural($class);
-  return $table;
+  return $self->auto_table_to_relationship_name_plural($table);
 }
 
 sub auto_relationship_name_one_to_one
@@ -651,6 +683,8 @@ Examples:  C<products>, C<street_address>, C<date_created>, C<vendor_id>.
 
 Examples: C<products>, C<vendors>, C<codes>, C<customer_details>, C<employee_addresses>.
 
+(This convention can be overridden via the L<tables_are_singular|/tables_are_singular> method.)
+
 =item B<Class names are singular, title-cased, with nothing separating words.>
 
 Examples: C<Product>, C<Vendor>, C<Code>, C<CustomerDetail>, C<EmployeeAddress>.
@@ -723,7 +757,9 @@ Calls L<plural_to_singular|/plural_to_singular>, passing the L<table|Rose::DB::O
 
 =item B<auto_manager_base_name TABLE, CLASS>
 
-Given a table name and the name of the L<Rose::DB::Object>-derived class that fronts it, return a base name suitable for use as the value of the C<base_name> parameter to L<Rose::DB::Object::Manager>'s L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.  The default implementation simply returns the table name.
+Given a table name and the name of the L<Rose::DB::Object>-derived class that fronts it, return a base name suitable for use as the value of the C<base_name> parameter to L<Rose::DB::Object::Manager>'s L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.  
+
+If L<tables_are_singular|/tables_are_singular> is true, then TABLE is passed to the L<singular_to_plural|/singular_to_plural> method and the result is returned.  Otherwise, TABLE is returned as-is.
 
 =item B<auto_manager_class_name CLASS>
 
@@ -731,7 +767,9 @@ Given the name of a L<Rose::DB::Object>-derived class, returns a class name for 
 
 =item B<auto_relationship_name_one_to_many TABLE, CLASS>
 
-Return the name of a "one to many" relationship that fetches objects from the specified TABLE and CLASS.  The default implementation simply returns the table name.
+Return the name of a "one to many" relationship that fetches objects from the specified TABLE and CLASS.  
+
+If L<tables_are_singular|/tables_are_singular> is true, then TABLE is passed to the L<singular_to_plural|/singular_to_plural> method and the result is returned.  Otherwise, TABLE is returned as-is.
 
 =item B<auto_relationship_name_one_to_one TABLE, CLASS>
 
@@ -933,6 +971,20 @@ Returns the singular version of STRING.  If a L<plural_to_singular_function|/plu
 
 Get or set a reference to the function used to convert strings to singular.  The function should take a single string as an argument and return a singular version of the string.  This function is undefined by default.
 
+=item B<related_table_to_class TABLE, LOCAL_CLASS>
+
+Given a table name and a local class name, return the name of the related class that fronts the table.
+
+To do this, L<table_to_class|/table_to_class> is called with TABLE and the L<class_prefix|/class_prefix> of LOCAL_CLASS passed as arguments.
+
+Examples:
+
+    Table         Local Class     Related Class
+    -----------   ------------    ----------------
+    prices        My::Product     My::Price
+    big_hats      A::B::FooBar    A::B::BigHat
+    a1_steaks     Meat            A1Steak
+
 =item B<singular_to_plural STRING>
 
 Returns the plural version of STRING.  If a L<singular_to_plural_function|/singular_to_plural_function> is defined, then this method simply passes STRING to that function.  Otherwise, the following rules are used to form the plural.
@@ -947,19 +999,17 @@ Returns the plural version of STRING.  If a L<singular_to_plural_function|/singu
 
 Get or set a reference to the function used to convert strings to plural.  The function should take a single string as an argument and return a plural version of the string.  This function is undefined by default.
 
-=item B<related_table_to_class TABLE, LOCAL_CLASS>
+=item B<table_singular>
 
-Given a table name and a local class name, return the name of the related class that fronts the table.
+Let TABLE be the return value of the L<table|Rose::DB::Object::Metadata/table> method called on the L<meta|/meta> attribute of this object.
 
-To do this, L<table_to_class|/table_to_class> is called with TABLE and the L<class_prefix|/class_prefix> of LOCAL_CLASS passed as arguments.
+If L<tables_are_singular|/tables_are_singular> is true, then TABLE is returned as-is.  Otherwise, TABLE is passed to the L<plural_to_singular|/plural_to_singular> method and the result is returned.  Otherwise, TABLE is returned as-is.
 
-Examples:
+=item B<table_plural>
 
-    Table         Local Class     Related Class
-    -----------   ------------    ----------------
-    prices        My::Product     My::Price
-    big_hats      A::B::FooBar    A::B::BigHat
-    a1_steaks     Meat            A1Steak
+Let TABLE be the return value of the L<table|Rose::DB::Object::Metadata/table> method called on the L<meta|/meta> attribute of this object.
+
+If L<tables_are_singular|/tables_are_singular> is true, then TABLE is passed to the L<singular_to_plural|/singular_to_plural> method and the result is returned.  Otherwise, TABLE is returned as-is.
 
 =item B<table_to_class TABLE [, PREFIX]>
 
@@ -975,6 +1025,10 @@ Examples:
     products      <none>   Product
     big_hats      My::     My::BigHat
     my5_hat_pig   <none>   My5HatPig
+
+=item B<tables_are_singular [BOOL]>
+
+Get or set a boolean value that indicates whether or not table names are expected to be singular.  The default value is false, meaning that table names are expected to be plural.
 
 =back
 
