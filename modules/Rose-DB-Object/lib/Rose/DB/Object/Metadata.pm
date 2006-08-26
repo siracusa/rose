@@ -50,7 +50,7 @@ use Rose::Object::MakeMethods::Generic
     'primary_key',
     'column_name_to_method_name_mapper',
     'original_class',
-    'default_prime_caches',
+    'auto_prime_caches',
   ],
 
   boolean => 
@@ -212,7 +212,7 @@ sub new
 
 sub init_original_class { ref shift }
 
-sub init_default_prime_caches { $ENV{'MOD_PERL'} ? 1 : 0 }
+sub init_auto_prime_caches { $ENV{'MOD_PERL'} ? 1 : 0 }
 
 sub reset
 {
@@ -1476,7 +1476,7 @@ sub initialize
     }
   }
 
-  $self->prime_caches  if($self->default_prime_caches);
+  $self->prime_caches  if($self->auto_prime_caches);
 
   return;
 }
@@ -4248,6 +4248,10 @@ This hybrid approach to metadata population strikes a good balance between upfro
 
 =over 4
 
+=item B<auto_prime_caches [BOOL]>
+
+Get or set a boolean value that indicates whether or not the L<prime_caches|/prime_caches> method will be called from within the L<initialize|/initialize> method.  The default is true if the C<MOD_PERL> environment variable (C<$ENV{'MOD_PERL'}>) is set to a true value, false otherwise.
+
 =item B<clear_all_dbs>
 
 Clears the L<db|/db> attribute of the metadata object for each L<registered class|/registered_classes>.
@@ -4376,6 +4380,10 @@ Returns (or creates, if needed) the single L<Rose::DB::Object::Metadata> object 
 This class method should return a reference to a subroutine that maps column names to method names, or false if it does not want to do any custom mapping.  The default implementation returns zero (0).
 
 If defined, the subroutine should take four arguments: the metadata object, the column name, the column method type, and the method name that would be used if the mapper subroutine did not exist.  It should return a method name.
+
+=item B<prime_all_caches>
+
+Call L<prime_caches|/prime_caches> on all L<registered_classes|/registered_classes>.
 
 =item B<relationship_type_class TYPE>
 
@@ -4925,6 +4933,8 @@ Initialize the L<Rose::DB::Object>-derived class associated with this metadata o
 If any column name in the primary key or any of the unique keys does not exist in the list of L<columns|/columns>, then that primary or unique key is deleted.  (As per the above, this will trigger a fatal error if any column in the primary key is not in the column list.)
 
 ARGS, if any, are passed to the call to L<make_methods|/make_methods> that actually creates the methods.
+
+If L<auto_prime_caches|/auto_prime_caches> is true, then the L<prime_caches|/prime_caches> method will be called at the end of the initialization process.
 
 =item B<is_initialized [BOOL]>
 
