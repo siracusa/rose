@@ -774,8 +774,6 @@ sub make_classes
   my %list_args;
   $list_args{'include_views'} = 1  if($include_views);
 
-  my $cm_class = ref $cm;
-
   # Iterate over tables, creating RDBO classes for each
   foreach my $table ($db->list_tables(%list_args))
   {
@@ -835,7 +833,7 @@ sub make_classes
     $meta->post_init_hook($post_init_hook);
 
     $meta->table($table);
-    $meta->convention_manager($cm_class->new);
+    $meta->convention_manager($cm->clone);
 
     $meta->auto_initialize(%args);
 
