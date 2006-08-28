@@ -1,4 +1,4 @@
-0.751 (08.26.2006) - John Siracusa <siracusa@mindspring.com>
+0.751 (08.28.2006) - John Siracusa <siracusa@mindspring.com>
 
     * The Loader is now much, much faster when loading many tables.
     * Added a tables_are_singular() method to the default ConventionManager.
@@ -9,6 +9,8 @@
     * Added prime_caches(), auto_prime_caches(), and prime_all_caches() 
       Metadata methods to help increase shared memory when running under
       mod_perl and other similar environments.
+    * Fixed a bug that caused save() with sub-objects to fail in some cases.
+      (Reported by Wiggins d'Anconia)
 
 0.75 (08.10.2006) - John Siracusa <siracusa@mindspring.com>
 

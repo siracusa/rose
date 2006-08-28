@@ -1947,9 +1947,20 @@ See the L<Rose::DB::Object::Metadata> documentation for more information.
 
 =item B<save [PARAMS]>
 
-Save the current object to the database table.  In the absence of PARAMS, if the object was previously L<load|/load>ed from the database, the row will be updated.  Otherwise, a new row will be created.
+Save the current object to the database table.  In the absence of PARAMS, if the object was previously L<load|/load>ed from the database, the row will be updated.  Otherwise, a new row will be created.  PARAMS are name/value pairs.  Valid PARAMS are listed below.
 
-PARAMS are name/value pairs.  Valid parameters are:
+Actions associated with sub-objects that were added or deleted using one of the "*_on_save" relationship or foreign key method types are also performed when this method is called.  If there are any such actions to perform, a new transaction is started if the L<db|/db> is not already in one, and L<rollback()|Rose::DB/rollback> is called if any of the actions fail during the L<save()|/save>.  Example:
+
+    $product = Product->new(name => 'Sled');
+    $vendor  = Vendor->new(name => 'Acme');  
+
+    # Product and vendor records created and linked together,
+    # all within a single transaction.
+    $product->save;
+    
+See the "making methods" sections of the L<Rose::DB::Object::Relationship|Rose::DB::Object::Relationship/"MAKING METHODS"> and L<Rose::DB::Object::ForeignKey|Rose::DB::Object::ForeignKey/"MAKING METHODS"> documentation for a description of the "method map" associated with each relationship and foreign key.  Only the actions initiated through one of the "*_on_save" method types are handled when L<save()|/save> is called.  See the documentation for each individual "*_on_save" method type for more specific information.
+
+Valid parameters to L<save()|/save> are:
 
 =over 4
 
