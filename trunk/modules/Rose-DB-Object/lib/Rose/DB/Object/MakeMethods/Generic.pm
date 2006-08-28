@@ -2637,6 +2637,9 @@ sub objects_by_key
             # the current transaction
             $object->db($db); 
 
+            # Map object to parent
+            $object->init(%map);
+
             # Try to load the object if doesn't appear to exist already.
             # If anything was delete above, we have to try loading no
             # matter what.
@@ -2648,9 +2651,6 @@ sub objects_by_key
               local $dbh->{'PrintError'} = 0;
               eval { $object->load(speculative => 1) };
             }
-
-            # Map object to parent
-            $object->init(%map);
 
             # Save the object
             $object->save or die $object->error;
@@ -2852,6 +2852,9 @@ sub objects_by_key
             # the current transaction
             $object->db($db); 
 
+            # Map object to parent
+            $object->init(%map);
+
             # Try to load the object if doesn't appear to exist already.
             # If anything was delete above, we have to try loading no
             # matter what.
@@ -2863,9 +2866,6 @@ sub objects_by_key
               local $dbh->{'PrintError'} = 0;
               eval { $object->load(speculative => 1) };
             }
-
-            # Map object to parent
-            $object->init(%map);
 
             # Save the object
             $object->save or die $object->error;
