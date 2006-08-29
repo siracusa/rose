@@ -1,4 +1,4 @@
-0.751 (08.28.2006) - John Siracusa <siracusa@mindspring.com>
+0.751 (08.29.2006) - John Siracusa <siracusa@mindspring.com>
 
     * The Loader is now much, much faster when loading many tables.
     * Added a tables_are_singular() method to the default ConventionManager.
@@ -15,6 +15,8 @@
       case-insensitive by default.
     * Fixed a bug that caused save() with sub-objects to fail in some cases.
       (Reported by Wiggins d'Anconia)
+    * Added examples of the add_on_save relationship method types to the
+      tutorial.
 
 0.75 (08.10.2006) - John Siracusa <siracusa@mindspring.com>
 

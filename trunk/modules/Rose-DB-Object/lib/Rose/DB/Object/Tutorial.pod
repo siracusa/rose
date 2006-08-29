@@ -1130,8 +1130,6 @@ This table needs a corresponding L<Rose::DB::Object>-derived class, of course.
       ],
     );
 
-Note how the multi-column unique key is specified as reference to an array containing another reference to an array of column names.  Removing the "wrapper" array reference would cause it to be interpreted as two single-column unique keys instead of one two-column unique key.
-
 The C<price> column can be removed from the C<products> table.
 
     ALTER TABLE products DROP COLUMN price;
@@ -1152,26 +1150,25 @@ Finally, the C<Product> class needs to be modified to reference the C<prices> ta
       pk_columns => 'id',
       unique_key => 'name',
 
-      foreign_keys
-    (
-      vendor =>
-      {
-        class       => 'Vendor',
-        key_columns => { vendor_id => 'id' },
-      },
-    );
+      foreign_keys =>
+      [
+        vendor =>
+        {
+          class       => 'Vendor',
+          key_columns => { vendor_id => 'id' },
+        },
+      ],
 
-    __PACKAGE__->meta->relationships
-    (
-      prices =>
-      {
-        type       => 'one to many',
-        class      => 'Price',
-        column_map => { id => 'product_id' },
-      },
+      relationships =>
+      [
+        prices =>
+        {
+          type       => 'one to many',
+          class      => 'Price',
+          column_map => { id => 'product_id' },
+        },
+      ],
     );
-
-    __PACKAGE__->meta->initialize;
 
 Note that both the L<column map|Rose::DB::Object::Metadata::Relationship::OneToMany/column_map> for the "one to many" relationship and the L<key columns|Rose::DB::Object::Metadata::ForeignKey/key_columns> for the foreign key connect "local" columns to "foreign" columns.
 
@@ -1234,6 +1231,19 @@ Setting a new list of prices will delete all the old prices.  As with foreign ke
 
     # US: 1.23, UK: 4.56
     print join(', ', map { $_->region . ': ' . $_->price } $p->prices);
+
+New prices can be added without deleting and resetting the entire list:
+
+    # Add two prices to the existing list
+    $p->add_prices({ price => 7.89, region => 'DE' },
+                   { price => 1.11, region => 'JP' });
+
+    $p->save; # database is modified here
+
+Passing a reference to an empty array will cause all the prices to be deleted:
+
+    $p->prices([]); # delete all prices associated with this product
+    $p->save;       # database is modified here
 
 =head3 Cascading delete
 
@@ -1596,7 +1606,15 @@ Setting the list of colors replaces the old list, but in the case of a "many to 
     # Delete old rows in the mapping table and create new ones
     $p->save; 
 
-Passing a reference to an empty array will remove all colors associated with a particular product by deleting all its mapping table entries.
+New colors can be added without deleting and resetting the entire list:
+
+    # Add two colors to the existing list
+    $p->add_colors({ name => 'gray' },
+                   { name => 'red'  });
+
+    $p->save; # database is modified here
+
+Passing a reference to an empty array will remove all colors associated with a particular product by deleting all the mapping table entries.
 
     $p->colors([]);
     $p->save; # all mapping table entries for this product deleted here
