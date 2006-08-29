@@ -521,6 +521,9 @@ SKIP: foreach my $db_type ('informix')
   ok($o->save, "save() 1 - $db_type");
   ok($o->load, "load() 1 - $db_type");
 
+  $o->htsec('8am');
+  $o->save;
+
   is(ref $o->other_date, 'DateTime', 'other_date 1');
   is(ref $o->other_datetime, 'DateTime', 'other_datetime 1');
 
@@ -1005,7 +1008,8 @@ CREATE TABLE Rose_db_object_test
   frac2          DATETIME YEAR TO FRACTION(2),
   frac3          DATETIME YEAR TO FRACTION(3),
   frac4          DATETIME YEAR TO FRACTION(4),
-  frac5          DATETIME YEAR TO FRACTION(5)
+  frac5          DATETIME YEAR TO FRACTION(5),
+  htsec          DATETIME HOUR TO SECOND
 )
 EOF
 
@@ -1062,7 +1066,7 @@ EOF
 
     # No native support for bit types in Informix
     MyInformixObject->meta->column(bits => { type => 'bitfield', bits => 5, default => 101 });
-
+    
     # No native support for array types in Informix
     MyInformixObject->meta->column(nums => { type => 'array' });
 

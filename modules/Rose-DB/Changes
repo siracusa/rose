@@ -1,3 +1,7 @@
+0.725 (08.29.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added time column support to Informix.
+
 0.724 (08.29.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Corrected the number of tests in oracle.t and subclass-oracle.t.
