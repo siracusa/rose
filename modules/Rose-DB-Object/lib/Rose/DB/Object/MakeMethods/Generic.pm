@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.75';
+our $VERSION = '0.751';
 
 our $Debug = 0;
 
