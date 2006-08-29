@@ -40,6 +40,8 @@ use Rose::Object::MakeMethods::Generic
     'column_alias_generator',
     'foreign_key_name_generator',
   ],
+  
+  scalar => 'auto_init_args',
 );
 
 __PACKAGE__->relationship_type_ranks
@@ -1256,7 +1258,7 @@ sub auto_init_one_to_one_relationships
 
     # Also don't add add one to one relationships between a class
     # and one of its map classes
-    if($cm->is_map_class($class))
+    if($cm->is_map_class($class) && !$args{'include_map_class_relationships'})
     {
       $Debug && warn "$f_class - Refusing to make one to one relationship ",
                      "to map class to $class\n";
@@ -1376,7 +1378,7 @@ sub auto_init_one_to_many_relationships
 
     # Also don't add add one to many relationships between a class
     # and one of its map classes
-    if($cm->is_map_class($class))
+    if($cm->is_map_class($class) && !$args{'include_map_class_relationships'})
     {
       $Debug && warn "$f_class - Refusing to make one to many relationship ",
                      "to map class to $class\n";
@@ -1470,6 +1472,8 @@ sub auto_initialize
 {
   my($self) = shift;
   my(%args) = @_;
+
+  $self->auto_init_args({ %args });
 
   $self->allow_auto_initialization(1);
 

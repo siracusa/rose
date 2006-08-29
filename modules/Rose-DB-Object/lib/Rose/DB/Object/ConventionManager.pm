@@ -233,10 +233,7 @@ sub is_map_class
   my $is_map_table = $self->looks_like_map_table($class->meta->table);
   my $is_map_class = $self->looks_like_map_class($class);
 
-  my $fks = $class->meta->foreign_keys;
-
-  return 1  if($fks && @$fks >= 2 && $is_map_table && 
-               (!defined $is_map_class || $is_map_class));
+  return 1  if($is_map_table && (!defined $is_map_class || $is_map_class));
   return 0;
 }
 
@@ -938,7 +935,7 @@ Examples:
 
 Returns true if CLASS is a L<map class|Rose::DB::Object::Metadata::Relationship::ManyToMany/map_class> used as part of a L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany> relationship, false if it does not.
 
-The default implementations returns true if CLASS is derived from L<Rose::DB::Object> and has at least two L<foreign keys|Rose::DB::Object::Metadata/foreign_keys> and its L<table|Rose::DB::Object::Metadata/table> name looks like a map table name according to the L<looks_like_map_table|/looks_like_map_table> method and the L<looks_like_map_class|/looks_like_map_class> method returns either true or undef.
+The default implementations returns true if CLASS is derived from L<Rose::DB::Object> and its L<table|Rose::DB::Object::Metadata/table> name looks like a map table name according to the L<looks_like_map_table|/looks_like_map_table> method and the L<looks_like_map_class|/looks_like_map_class> method returns either true or undef.
 
 Override this method to control which classes are considered map classes.  Note that it may be called several times on the same class at various stages of that class's construction.
 

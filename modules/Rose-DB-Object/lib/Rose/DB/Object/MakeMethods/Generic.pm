@@ -2649,7 +2649,14 @@ sub objects_by_key
 
               # It's okay if this fails (e.g., if the primary key is undefined)
               local $dbh->{'PrintError'} = 0;
-              eval { $object->load(speculative => 1) };
+              eval
+              {
+                if($object->load(speculative => 1))
+                {
+                  # Re-map object to parent
+                  $object->init(%map);
+                }
+              };
             }
 
             # Save the object
@@ -2864,7 +2871,14 @@ sub objects_by_key
 
               # It's okay if this fails (e.g., if the primary key is undefined)
               local $dbh->{'PrintError'} = 0;
-              eval { $object->load(speculative => 1) };
+              eval
+              {
+                if($object->load(speculative => 1))
+                {
+                  # Re-map object to parent
+                  $object->init(%map);
+                }
+              };
             }
 
             # Save the object
