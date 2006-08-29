@@ -3,7 +3,7 @@
     * Corrected the number of tests in oracle.t and subclass-oracle.t.
       (Reported by Michael Lackhoff)
     * Failure to load a driver class is now a fatal error.
-    * Fixed parsing of emptry string default values in Postgres.
+    * Fixed parsing of empty string default values in Postgres.
 
 0.723 (08.10.2006) - John Siracusa <siracusa@mindspring.com>
 
