@@ -1963,7 +1963,8 @@ sub retry_deferred_foreign_keys
   {
     my $meta = $class->meta;
     next  unless($meta->allow_auto_initialization && $meta->has_outstanding_metadata_tasks);
-    $self->auto_init_relationships(restore_types => 1);
+    $self->auto_init_relationships(%{ $self->auto_init_args || {} }, 
+                                   restore_types => 1);
   }
 }
 
@@ -5337,6 +5338,12 @@ PARAMS are optional name/value pairs.  When applicable, these parameters are pas
 
 =over 4
 
+=item B<include_map_class_relationships BOOL>
+
+By default, if a class is a L<map class|Rose::DB::Object::Metadata::Relationship::ManyToMany/map_class> (according to the L<is_map_class|Rose::DB::Object::ConventionManager/is_map_class> method of the L<convention manager|/convention_manager>), then relationships directly between that class and the current L<class|/class> will not be created.  Set this parameter to true to allow such relationships to be created.
+
+B<Note:> If some classes that are not actually map classes are being skipped, you should not use this parameter to force them to be included.  It's more appropriate to make your own custom L<convention manager|Rose::DB::Object::ConventionManager> subclass and then override the L<is_map_class|Rose::DB::Object::ConventionManager/is_map_class> method to make the correct determination.
+
 =item B<replace_existing BOOL>
 
 If true, then the auto-generated columns, unique keys, foreign keys, and relationships entirely replace any existing columns, unique keys, foreign keys, and relationships, respectively.
@@ -5382,6 +5389,12 @@ Auto-retrieve the names of the columns that make up the primary key for this tab
 Auto-populate the list of L<relationships|/relationships> for this L<class|/class>.  PARAMS are optional name/value pairs.
 
 =over 4
+
+=item B<include_map_class_relationships BOOL>
+
+By default, if a class is a L<map class|Rose::DB::Object::Metadata::Relationship::ManyToMany/map_class> (according to the L<is_map_class|Rose::DB::Object::ConventionManager/is_map_class> method of the L<convention manager|/convention_manager>), then relationships directly between that class and the current L<class|/class> will not be created.  Set this parameter to true to allow such relationships to be created.
+
+B<Note:> If some classes that are not actually map classes are being skipped, you should not use this parameter to force them to be included.  It's more appropriate to make your own custom L<convention manager|Rose::DB::Object::ConventionManager> subclass and then override the L<is_map_class|Rose::DB::Object::ConventionManager/is_map_class> method to make the correct determination.
 
 =item C<replace_existing BOOL> 
 
