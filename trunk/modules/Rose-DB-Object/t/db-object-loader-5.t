@@ -17,7 +17,6 @@ BEGIN
 our %Have;
 
 our @Tables = qw(vendors products prices colors product_color_map);
-our $Include_Tables = join('|', @Tables);
 our $Module_Dir = File::Spec->catfile($Bin, 'loader_lib');
 
 SETUP:
@@ -151,7 +150,7 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 
   Rose::DB->registry($empty_registry);
 
-  my @classes = $loader->make_modules(include_tables => $Include_Tables,
+  my @classes = $loader->make_modules(include_tables => \@Tables,
                                       module_dir     => $Module_Dir);
 
   if($db_type eq 'pg')

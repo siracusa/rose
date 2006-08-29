@@ -78,6 +78,7 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
       base_classes => [ qw(My::DB::Object MyWeirdClass) ],
       class_prefix => $class_prefix);
 
+  # XXX: This is the important part of this test
   $loader->convention_manager->tables_are_singular(1);
 
   Rose::DB->registry($empty_registry);

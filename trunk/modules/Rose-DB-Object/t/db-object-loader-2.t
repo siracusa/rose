@@ -12,7 +12,7 @@ BEGIN
 
 our %Have;
 
-our @Tables = qw(vendors products prices colors product_color_map);
+our @Tables = qw(vendors Products prices Colors product_color_map);
 our $Include_Tables = join('|', @Tables);
 
 SETUP:
