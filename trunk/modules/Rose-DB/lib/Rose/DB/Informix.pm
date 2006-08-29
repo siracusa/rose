@@ -80,11 +80,11 @@ sub format_datetime_year_to_minute
   return Rose::DateTime::Util::format_date($_[1], '%Y-%m-%d %H:%M');
 }
 
-sub format_time
-{  
-  return $_[1]  if($_[0]->validate_time_keyword($_[1]));
-  return Rose::DateTime::Util::format_date($_[1], '%H:%M:%S');
-}
+# sub format_time
+# {
+#   return $_[1]  if($_[0]->validate_time_keyword($_[1]));
+#   return Rose::DateTime::Util::format_date($_[1], '%H:%M:%S');
+# }
 
 sub format_timestamp
 {  

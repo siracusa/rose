@@ -1,3 +1,8 @@
+0.752 (08.29.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a bug that caused Informix datetime column values to have
+      incorrect largest qualifier values for values other than "year." 
+
 0.751 (08.29.2006) - John Siracusa <siracusa@mindspring.com>
 
     * The Loader is now much, much faster when loading many tables.

@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.73';
+our $VERSION = '0.752';
 
 # syscolumns.coltype constants taken from:
 #
@@ -100,6 +100,8 @@ my %Datetime_Qualifiers =
   14 => 'fraction(4)',
   15 => 'fraction(5)',
 );
+
+my %Datetime_Qualifiers_Reverse = (reverse %Datetime_Qualifiers);
 
 # $INFORMIXDIR/etc/xpg4_is.sql
 # http://www-306.ibm.com/software/data/informix/pubs/library/datablade/dbdk/sqlr/01.fm50.html
@@ -310,7 +312,7 @@ EOF
       elsif($type_num == DATETIME)
       {
         # Determine the full "datetime X to Y" type string
-        $type_name = _ix_datetime_specific_type($type_num, $sc_row->{'collength'});
+        $type_name = _ix_datetime_specific_type($self, $type_num, $sc_row->{'collength'});
       }
       else
       {
@@ -1100,17 +1102,17 @@ sub _ix_max_length
 #
 # The above is all just a fancy way of saying:
 #
-# largest_qualifier_value  = collength & 0xF0
+# largest_qualifier_value  = (collength & 0xF0) >> 4
 # smallest_qualifier_value = collength & 0xF
 #
 
 sub _ix_datetime_specific_type
 {
-  my($type_num, $collength) = @_;
+  my($meta, $type_num, $collength) = @_;
 
   return  unless($type_num == DATETIME);
 
-  my $largest_qualifier  = $collength & 0xF0;
+  my $largest_qualifier  = ($collength & 0xF0) >> 4;
   my $smallest_qualifier = $collength & 0xF;
 
   unless(exists $Datetime_Qualifiers{$largest_qualifier} &&
@@ -1119,7 +1121,23 @@ sub _ix_datetime_specific_type
     die "No datetime qualifier(s) found for collength $collength";
   }
 
-  return "datetime $Datetime_Qualifiers{$largest_qualifier} to $Datetime_Qualifiers{$smallest_qualifier}";
+  # Handle DATETIME HOUR TO (MINUTE|SECOND) as a "time" column
+  if($largest_qualifier == $Datetime_Qualifiers_Reverse{'hour'} &&
+     ($smallest_qualifier == $Datetime_Qualifiers_Reverse{'minute'} ||
+      $smallest_qualifier == $Datetime_Qualifiers_Reverse{'second'}))
+  {
+    return 'time';
+  }
+
+  my $type = "datetime $Datetime_Qualifiers{$largest_qualifier} to $Datetime_Qualifiers{$smallest_qualifier}";
+
+  # Punt on unsupported datetime column granularities
+  unless($meta->column_type_class($type))
+  {
+    return 'scalar';
+  }
+  
+  return $type;
 }
 
 1;
