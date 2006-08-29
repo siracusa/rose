@@ -5176,11 +5176,12 @@ The name "auto" is considered equivalent to "auto_initialize", but any arguments
       auto_initialize => [],
     );
 
+    # This is another way of writing the same thing as the above
     $meta->setup(
       table => 'mytable',
-      # The value "1" is ignored because it's not a reference to an array.
-      # auto_initialize() will be called with no arguments.
-      auto => 1, 
+      # The value "1" is ignored because it's not an arrayref,
+      # so auto_initialize() will be called with no arguments.
+      auto => 1,
     );
 
 Finally, here's a full example of a L<setup()|/setup> method call followed by the equivalent "long-hand" implementation.
