@@ -415,7 +415,7 @@ sub parse_dbi_column_info_default
     }
     # Example: 'value'::character varying
     # Example: ('now'::text)::timestamp(0)
-    elsif(/^\(*'(.+)'::.+$/)
+    elsif(/^\(*'(.*)'::.+$/)
     {
       my $default = $1;
 

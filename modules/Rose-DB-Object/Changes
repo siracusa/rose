@@ -9,6 +9,10 @@
     * Added prime_caches(), auto_prime_caches(), and prime_all_caches() 
       Metadata methods to help increase shared memory when running under
       mod_perl and other similar environments.
+    * The Loader's include_tables and exclude_tables attributes now accept
+      references to arrays of table names as well as regular expressions.
+    * The Loader's include_tables and exclude_tables attributes are now
+      case-insensitive by default.
     * Fixed a bug that caused save() with sub-objects to fail in some cases.
       (Reported by Wiggins d'Anconia)
 
