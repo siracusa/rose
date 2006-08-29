@@ -15,10 +15,6 @@ MANIFEST
 t/00-warning.t
 t/basic.t
 t/informix.t
-t/lib/My/DB2/Informix.pm
-t/lib/My/DB2/MySQL.pm
-t/lib/My/DB2/Oracle.pm
-t/lib/My/DB2/Pg.pm
 t/list-tables.t
 t/make-subclass-tests.pl
 t/mysql.t

@@ -1957,7 +1957,7 @@ Actions associated with sub-objects that were added or deleted using one of the 
     # Product and vendor records created and linked together,
     # all within a single transaction.
     $product->save;
-    
+
 See the "making methods" sections of the L<Rose::DB::Object::Relationship|Rose::DB::Object::Relationship/"MAKING METHODS"> and L<Rose::DB::Object::ForeignKey|Rose::DB::Object::ForeignKey/"MAKING METHODS"> documentation for a description of the "method map" associated with each relationship and foreign key.  Only the actions initiated through one of the "*_on_save" method types are handled when L<save()|/save> is called.  See the documentation for each individual "*_on_save" method type for more specific information.
 
 Valid parameters to L<save()|/save> are:
