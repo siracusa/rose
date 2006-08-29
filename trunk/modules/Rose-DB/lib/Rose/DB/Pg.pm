@@ -8,7 +8,7 @@ use SQL::ReservedWords::PostgreSQL();
 
 use Rose::DB;
 
-our $VERSION = '0.723';
+our $VERSION = '0.724';
 
 our $Debug = 0;
 
