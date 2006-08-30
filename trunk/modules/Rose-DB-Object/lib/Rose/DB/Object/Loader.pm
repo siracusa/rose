@@ -800,12 +800,20 @@ sub make_classes
     # Skip tables with no primary keys
     next  unless($db->has_primary_key($table));
 
-    $Debug && warn "Loader loading table: $table\n";
-
     my $obj_class = $class_prefix . $cm->table_to_class($table);
 
-    # Set up the class
+    $Debug && warn "Loader loading table: $table - $obj_class\n";
+
     no strict 'refs';
+    # Skip classes that have already been created
+    if($obj_class->isa('Rose::DB::Object') && $obj_class->meta->is_initialized)
+    {
+      $Debug && warn "Skipping: $obj_class already initialized\n";
+      next;
+    }
+
+    # Set up the class
+
     @{"${obj_class}::ISA"} = @base_classes;
 
     unless($extra_info->{'init_db_in_base_class'})

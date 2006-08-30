@@ -3900,13 +3900,16 @@ sub init_auto_helper
   {
     my $class = ref($self) || $self;
 
-    eval 'use ' . $self->auto_helper_class;
+    my $auto_helper_class = $self->auto_helper_class;
 
-    Carp::croak "Could not load ", $self->auto_helper_class, " - $@"  if($@);
+    no strict 'refs';
+    unless(${"${auto_helper_class}::VERSION"})
+    {
+      eval "use $auto_helper_class";
+      Carp::croak "Could not load '$auto_helper_class' - $@"  if($@);
+    }
 
     $self->original_class($class);
-
-    my $auto_helper_class = $self->auto_helper_class;
 
     REBLESS: # Do slightly evil re-blessing magic
     {

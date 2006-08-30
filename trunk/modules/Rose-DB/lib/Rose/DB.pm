@@ -2468,7 +2468,7 @@ Given a L<DBI> statement handle, returns the value of the auto-generated unique 
 
 =item B<list_tables>
 
-Returns a list (in list context) or reference to an array (in scalar context) of table in the database.  The current L<catalog|/catalog> and L<schema|/schema> are honored.
+Returns a list (in list context) or reference to an array (in scalar context) of tables in the database.  The current L<catalog|/catalog> and L<schema|/schema> are honored.
 
 =item B<quote_column_name NAME>
 

@@ -190,7 +190,29 @@ sub auto_foreign_key_name
 {
   my($self, $f_class, $current_name) = @_;
   my $f_meta = $f_class->meta or return $current_name;
-  return $self->plural_to_singular($f_meta->table) || $current_name;
+  my $name = $self->plural_to_singular($f_meta->table) || $current_name;
+
+  # Avoid method name conflicts
+  if($self->meta->class->can($name))
+  {
+    foreach my $s ('_obj', '_object')
+    {
+      # Try the name with a suffix appended
+      unless($self->meta->class->can($name . $s))
+      {
+        return $name . $s;
+      }
+
+      my $i = 1;
+
+      # Give up and go with numbers...
+      $i++  while($self->meta->class->can($name . $i));
+
+      return $name . $i;
+    }
+  }
+
+  return $name;
 }
 
 sub auto_table_to_relationship_name_plural
@@ -215,13 +237,85 @@ sub auto_relationship_name_one_to_many
 {
   my($self, $table, $class) = @_;
   #return $self->auto_class_to_relationship_name_plural($class);
-  return $self->auto_table_to_relationship_name_plural($table);
+  my $name = $self->auto_table_to_relationship_name_plural($table);
+
+  # Avoid method name conflicts
+  if($self->meta->class->can($name))
+  {
+    foreach my $s ('_objs', '_objects')
+    {
+      # Try the name with a suffix appended
+      unless($self->meta->class->can($name . $s))
+      {
+        return $name . $s;
+      }
+
+      my $i = 1;
+
+      # Give up and go with numbers...
+      $i++  while($self->meta->class->can($name . $i));
+
+      return $name . $i;
+    }
+  }
+
+  return $name;
+}
+
+sub auto_relationship_name_many_to_many
+{
+  my($self, $fk, $map_class) = @_;
+  my $name = $self->auto_foreign_key_to_relationship_name_plural($fk);
+
+  # Avoid method name conflicts
+  if($self->meta->class->can($name))
+  {
+    foreach my $s ('_objs', '_objects')
+    {
+      # Try the name with a suffix appended
+      unless($self->meta->class->can($name . $s))
+      {
+        return $name . $s;
+      }
+
+      my $i = 1;
+
+      # Give up and go with numbers...
+      $i++  while($self->meta->class->can($name . $i));
+
+      return $name . $i;
+    }
+  }
+
+  return $name;
 }
 
 sub auto_relationship_name_one_to_one
 {
   my($self, $table, $class) = @_;
-  return $self->plural_to_singular($table);
+  my $name = $self->plural_to_singular($table);
+
+  # Avoid method name conflicts
+  if($self->meta->class->can($name))
+  {
+    foreach my $s ('_obj', '_object')
+    {
+      # Try the name with a suffix appended
+      unless($self->meta->class->can($name . $s))
+      {
+        return $name . $s;
+      }
+
+      my $i = 1;
+
+      # Give up and go with numbers...
+      $i++  while($self->meta->class->can($name . $i));
+
+      return $name . $i;
+    }
+  }
+  
+  return $name;
 }
 
 sub is_map_class
@@ -753,7 +847,9 @@ Consider column maps in this order:
 
 Given the name of a foreign class and an optional pre-existing foreign key name, return a L<name|Rose::DB::Object::Metadata::ForeignKey/name>  for the foreign key.
 
-Calls L<plural_to_singular|/plural_to_singular>, passing the L<table|Rose::DB::Object::Metadata/table> name of the foreign class.  Returns the current name if the call to L<plural_to_singular|/plural_to_singular> does not return a true value.
+Calls L<plural_to_singular|/plural_to_singular>, passing the L<table|Rose::DB::Object::Metadata/table> name of the foreign class.  The current name is used if the call to L<plural_to_singular|/plural_to_singular> does not return a true value.
+
+If the selected name is the name of an existing method in the target class, then the suffixes "obj_" and "_object" are tried in that order.  If neither of those suffixes resolves the situation, then ascending numeric suffixes starting with "1" are tried until a unique name is found.
 
 =item B<auto_manager_base_name TABLE, CLASS>
 
@@ -765,15 +861,27 @@ If L<tables_are_singular|/tables_are_singular> is true, then TABLE is passed to 
 
 Given the name of a L<Rose::DB::Object>-derived class, returns a class name for a L<Rose::DB::Object::Manager>-derived class to manage such objects.  The default implementation simply appends "::Manager" to the L<Rose::DB::Object>-derived class name.
 
+=item B<auto_relationship_name_many_to_many FK, MAPCLASS>
+
+Return the name of a "many to many" relationship that fetches objects from the table pointed to by the L<Rose::DB::Object::Metadata::ForeignKey> object FK by going through the class MAPCLASS.
+
+The default implementation passes the name of the table pointed to by FK through the L<singular_to_plural|/singular_to_plural> method in order to build the name.
+
+If the selected name is the name of an existing method in the target class, then the suffixes "objs_" and "_objects" are tried in that order.  If neither of those suffixes resolves the situation, then ascending numeric suffixes starting with "1" are tried until a unique name is found.
+
 =item B<auto_relationship_name_one_to_many TABLE, CLASS>
 
-Return the name of a "one to many" relationship that fetches objects from the specified TABLE and CLASS.  
+Return the name of a "one to many" relationship that fetches objects from the specified TABLE and CLASS.
 
-If L<tables_are_singular|/tables_are_singular> is true, then TABLE is passed to the L<singular_to_plural|/singular_to_plural> method and the result is returned.  Otherwise, TABLE is returned as-is.
+If L<tables_are_singular|/tables_are_singular> is true, then TABLE is passed to the L<singular_to_plural|/singular_to_plural> method and the result is used as the name.  Otherwise, TABLE is used as-is.
+
+If the selected name is the name of an existing method in the target class, then the suffixes "objs_" and "_objects" are tried in that order.  If neither of those suffixes resolves the situation, then ascending numeric suffixes starting with "1" are tried until a unique name is found.
 
 =item B<auto_relationship_name_one_to_one TABLE, CLASS>
 
 Return the name of a "one to one" relationship that fetches an object from the specified TABLE and CLASS.  The default implementation returns a singular version of the table name.
+
+If the selected name is the name of an existing method in the target class, then the suffixes "obj_" and "_object" are tried in that order.  If neither of those suffixes resolves the situation, then ascending numeric suffixes starting with "1" are tried until a unique name is found.
 
 =item B<auto_primary_key_column_names>
 

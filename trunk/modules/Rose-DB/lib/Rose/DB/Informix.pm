@@ -442,11 +442,15 @@ sub list_tables
 
     my @table_info = $dbh->func('user', '_tables');
 
+    my $schema = $self->schema;
+
     #if($args{'include_views'})
     #{
     #  my @view_info = $dbh->func('view', '_tables');
     #  push(@table_info, @view_info);
     #}
+
+    my %seen;
 
     foreach my $item (@table_info)
     {
@@ -462,9 +466,22 @@ sub list_tables
       #
       # "jsiracusa                       ".test
 
-      if($item =~ /^(?: "(?:""|[^"]+)+" | [^".]+ ) \. (?: "((?:""|[^"]+)+)" | ([^"]+) )$/x)
+      if($item =~ /^(?: "((?:""|[^"]+)+)" | ([^"]+) ) \. (?: "((?:""|[^"]+)+)" | ([^"]+) )$/x)
       {
-        push(@tables, defined $1 ? $1 : $2);
+        my $user  = defined $1 ? $1 : $2;
+        my $table = defined $3 ? $3 : $4;
+
+        for($user, $table)
+        {
+          s/""/"/g;
+        }
+
+        next  if($seen{$table}++);
+
+        if(!defined $schema || $schema eq $user)
+        {
+          push(@tables, $table);
+        }
       }
       else
       {

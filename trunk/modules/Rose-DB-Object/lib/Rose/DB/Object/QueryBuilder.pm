@@ -1331,7 +1331,9 @@ If omitted, this boolean flag is false.  If true, then the values of the C<query
 
 Here the date value "2003-12-25 20:00:00" must be in the format that the current database expects for columns of that data type.
 
-But if C<query_is_sql> is false or omitted, then any query value that can be handled by the L<Rose::DB::Object>-derived object method that services the corresponding database column is valid.  Example:
+But if C<query_is_sql> is false or omitted, then any query value that can be handled by the L<Rose::DB::Object>-derived object method that services the corresponding database column is valid.  (Note that this is only possible when this method is called from one of the built-in L<Rose::DB::Object::Manager> methods, e.g., L<get_objects()|Rose::DB::Object::Manager/get_objects>.)
+
+Example:
 
     $dt = DateTime->new(year => 2001, month => 1, day => 31);
 
@@ -1345,15 +1347,13 @@ But if C<query_is_sql> is false or omitted, then any query value that can be han
       ...
     );
 
-Here a C<DateTime> object and a loosely formatted date are passed as values.  Provided the L<Rose::DB::Object>-derived object method that services the "date" column can handle such values, they will be parsed and formatted as appropriate for the current database.
+Here a L<DateTime> object and a loosely formatted date are passed as values.  Provided the L<Rose::DB::Object>-derived object method that services the "date" column can handle such values, they will be parsed and formatted as appropriate for the current database.
 
 The advantage of this approach is that the query values do not have to be so rigorously specified, nor do they have to be in a database-specific format.
 
 The disadvantage is that all of this parsing and formatting is done for every query value, and that adds additional overhead to each call.
 
 Usually, this overhead is dwarfed by the time required for the database to service the query, and, perhaps more importantly, the reduced maintenance headache and busywork required to properly format all query values.
-
-In the end, it's up to the developer to decide on a case-by-case basis whether or not C<query_is_sql> should be true or false.
 
 =back
 

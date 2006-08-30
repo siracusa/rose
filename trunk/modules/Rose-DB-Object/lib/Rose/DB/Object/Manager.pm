@@ -299,7 +299,7 @@ sub get_objects
   $class->error(undef);
 
   my $object_class = delete $args{'object_class'} 
-    or $class->object_class or Carp::croak "Missing object class argument";
+    || $class->object_class || Carp::croak "Missing object class argument";
 
   my $return_sql       = delete $args{'return_sql'};
   my $return_iterator  = delete $args{'return_iterator'};

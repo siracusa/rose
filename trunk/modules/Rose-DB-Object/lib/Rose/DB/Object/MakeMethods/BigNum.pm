@@ -4,7 +4,13 @@ use strict;
 
 use Carp();
 
-use Math::BigInt lib => 'GMP';
+require Math::BigInt;
+
+# Not sure what version this feature was added in...
+unless($Math::BigInt::VERSION < 1.69)
+{
+  Math::BigInt->import(lib => 'GMP');
+}
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
