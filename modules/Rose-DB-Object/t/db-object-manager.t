@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 2939;
+use Test::More tests => 2987;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("Postgres tests", 744)  unless($HAVE_PG);
+  skip("Postgres tests", 756)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -2611,8 +2611,8 @@ EOF
 
   my @selects =
   (
-    't2.nick, id, t2.id, name, UPPER(name) AS derived',
-    't1.id, t2.nick, t2.id, t1.name, UPPER(name) AS derived',
+    't2.nick, id, t2.id, name, UPPER(name) AS derived, fk1',
+    't1.id, t2.nick, t2.id, t1.name, UPPER(name) AS derived, t1.fk1',
     'rose_db_object_nicks.id, rose_db_object_test.id, rose_db_object_nicks.nick, rose_db_object_test.name, UPPER(name) AS derived',
     [ qw(id name t2.nick nicks.id), 'UPPER(name) AS derived' ],
     [ qw(t2.nick t2.id t1.id t1.name), 'UPPER(name) AS derived' ],
@@ -2685,6 +2685,72 @@ EOF
     is(scalar @$objs, 2, "custom select $i - $db_type");
   }
 
+  @selects =
+  (
+    't2.nick, t1.*, t2.id, name, UPPER(name) AS derived',
+    [ qw(t2.nick t2.id t1.*), 'UPPER(name) AS derived' ],
+  );
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+
+  foreach my $select (@selects)
+  {
+    $iterator = 
+      Rose::DB::Object::Manager->get_objects_iterator(
+        object_class    => 'MyPgObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    $o = $iterator->next;
+
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+     $i++;
+
+    $o = $iterator->next;
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    ok(!$iterator->next, "custom select $i - $db_type");
+
+    $objs = 
+      Rose::DB::Object::Manager->get_objects(
+        object_class    => 'MyPgObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    ok($objs->[0]->id > 2 && defined $objs->[0]->name && defined $objs->[0]->nicks->[0]->nick &&
+       !defined $objs->[0]->nicks->[0]->type_id && defined $objs->[0]->flag2 &&
+       $objs->[0]->derived eq 'DERIVED: ' . uc($objs->[0]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+
+    ok($objs->[1]->id > 2 && defined $objs->[1]->name && defined $objs->[1]->nicks->[0]->nick &&
+       !defined $objs->[1]->nicks->[0]->type_id && defined $objs->[1]->flag2 &&
+       $objs->[1]->derived eq 'DERIVED: ' . uc($objs->[1]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    is(scalar @$objs, 2, "custom select $i - $db_type");
+  }
+
   # End custom select tests
 
   # End test of the subselect limit code
@@ -2697,7 +2763,7 @@ EOF
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 744)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 756)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -5123,8 +5189,8 @@ EOF
 
   my @selects =
   (
-    't2.nick, id, t2.id, name, UPPER(name) AS derived',
-    't1.id, t2.nick, t2.id, t1.name, UPPER(name) AS derived',
+    't2.nick, id, t2.id, name, UPPER(name) AS derived, fk1',
+    't1.id, t2.nick, t2.id, t1.name, UPPER(name) AS derived, t1.fk1',
     'rose_db_object_nicks.id, rose_db_object_test.id, rose_db_object_nicks.nick, rose_db_object_test.name, UPPER(name) AS derived',
     [ qw(id name t2.nick nicks.id), 'UPPER(name) AS derived' ],
     [ qw(t2.nick t2.id t1.id t1.name), 'UPPER(name) AS derived' ],
@@ -5195,6 +5261,72 @@ EOF
     is(scalar @$objs, 2, "custom select $i - $db_type");
   }
 
+  @selects =
+  (
+    't2.nick, t1.*, t2.id, name, UPPER(name) AS derived',
+    [ qw(t2.nick t2.id t1.*), 'UPPER(name) AS derived' ],
+  );
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+
+  foreach my $select (@selects)
+  {
+    $iterator = 
+      Rose::DB::Object::Manager->get_objects_iterator(
+        object_class    => 'MyMySQLObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    $o = $iterator->next;
+
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+     $i++;
+
+    $o = $iterator->next;
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    ok(!$iterator->next, "custom select $i - $db_type");
+
+    $objs = 
+      Rose::DB::Object::Manager->get_objects(
+        object_class    => 'MyMySQLObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    ok($objs->[0]->id > 2 && defined $objs->[0]->name && defined $objs->[0]->nicks->[0]->nick &&
+       !defined $objs->[0]->nicks->[0]->type_id && defined $objs->[0]->flag2 &&
+       $objs->[0]->derived eq 'DERIVED: ' . uc($objs->[0]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+
+    ok($objs->[1]->id > 2 && defined $objs->[1]->name && defined $objs->[1]->nicks->[0]->nick &&
+       !defined $objs->[1]->nicks->[0]->type_id && defined $objs->[1]->flag2 &&
+       $objs->[1]->derived eq 'DERIVED: ' . uc($objs->[1]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    is(scalar @$objs, 2, "custom select $i - $db_type");
+  }
+
   # End custom select tests
 }
 
@@ -5204,7 +5336,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(informix))
 {
-  skip("Informix tests", 707)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 719)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -7698,8 +7830,8 @@ EOF
 
   my @selects =
   (
-    't2.nick, id, t2.id, name, UPPER(name) AS derived',
-    't1.id, t2.nick, t2.id, t1.name, UPPER(name) AS derived',
+    't2.nick, id, t2.id, name, UPPER(name) AS derived, fk1',
+    't1.id, t2.nick, t2.id, t1.name, UPPER(name) AS derived, t1.fk1',
     'rose_db_object_nicks.id, rose_db_object_test.id, rose_db_object_nicks.nick, rose_db_object_test.name, UPPER(name) AS derived',
     [ qw(id name t2.nick nicks.id), 'UPPER(name) AS derived' ],
     [ qw(t2.nick t2.id t1.id t1.name), 'UPPER(name) AS derived' ],
@@ -7770,6 +7902,72 @@ EOF
     is(scalar @$objs, 2, "custom select $i - $db_type");
   }
 
+  @selects =
+  (
+    't2.nick, t1.*, t2.id, name, UPPER(name) AS derived',
+    [ qw(t2.nick t2.id t1.*), 'UPPER(name) AS derived' ],
+  );
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+
+  foreach my $select (@selects)
+  {
+    $iterator = 
+      Rose::DB::Object::Manager->get_objects_iterator(
+        object_class    => 'MyInformixObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    $o = $iterator->next;
+
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+     $i++;
+
+    $o = $iterator->next;
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    ok(!$iterator->next, "custom select $i - $db_type");
+
+    $objs = 
+      Rose::DB::Object::Manager->get_objects(
+        object_class    => 'MyInformixObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    ok($objs->[0]->id > 2 && defined $objs->[0]->name && defined $objs->[0]->nicks->[0]->nick &&
+       !defined $objs->[0]->nicks->[0]->type_id && defined $objs->[0]->flag2 &&
+       $objs->[0]->derived eq 'DERIVED: ' . uc($objs->[0]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+
+    ok($objs->[1]->id > 2 && defined $objs->[1]->name && defined $objs->[1]->nicks->[0]->nick &&
+       !defined $objs->[1]->nicks->[0]->type_id && defined $objs->[1]->flag2 &&
+       $objs->[1]->derived eq 'DERIVED: ' . uc($objs->[1]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    is(scalar @$objs, 2, "custom select $i - $db_type");
+  }
+
   # End custom select tests
 }
 
@@ -7779,7 +7977,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 742)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 754)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -10233,8 +10431,8 @@ EOF
 
   my @selects =
   (
-    't2.nick, id, t2.id, name, UPPER(name) AS derived',
-    't1.id, t2.nick, t2.id, t1.name, UPPER(name) AS derived',
+    't2.nick, id, t2.id, name, UPPER(name) AS derived, fk1',
+    't1.id, t2.nick, t2.id, t1.name, UPPER(name) AS derived, t1.fk1',
     'rose_db_object_nicks.id, rose_db_object_test.id, rose_db_object_nicks.nick, rose_db_object_test.name, UPPER(name) AS derived',
     [ qw(id name t2.nick nicks.id), 'UPPER(name) AS derived' ],
     [ qw(t2.nick t2.id t1.id t1.name), 'UPPER(name) AS derived' ],
@@ -10298,6 +10496,72 @@ EOF
 
     ok($objs->[1]->id > 2 && defined $objs->[1]->name && defined $objs->[1]->nicks->[0]->nick &&
        !defined $objs->[1]->nicks->[0]->type_id && !defined $objs->[1]->flag2 &&
+       $objs->[1]->derived eq 'DERIVED: ' . uc($objs->[1]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    is(scalar @$objs, 2, "custom select $i - $db_type");
+  }
+
+  @selects =
+  (
+    't2.nick, t1.*, t2.id, name, UPPER(name) AS derived',
+    [ qw(t2.nick t2.id t1.*), 'UPPER(name) AS derived' ],
+  );
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+
+  foreach my $select (@selects)
+  {
+    $iterator = 
+      Rose::DB::Object::Manager->get_objects_iterator(
+        object_class    => 'MySQLiteObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    $o = $iterator->next;
+
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+     $i++;
+
+    $o = $iterator->next;
+    ok($o->id > 2 && defined $o->name && defined $o->nicks->[0]->nick &&
+       !defined $o->nicks->[0]->type_id && defined $o->flag2 &&
+       $o->derived eq 'DERIVED: ' . uc($o->name),
+       "custom select $i - $db_type");
+
+    $i++;
+    ok(!$iterator->next, "custom select $i - $db_type");
+
+    $objs = 
+      Rose::DB::Object::Manager->get_objects(
+        object_class    => 'MySQLiteObject',
+        select          => $select,
+        require_objects => [ 'nicks' ],
+        query           => [ id => { gt => 2 } ],
+        sort_by         => 'id',
+        limit           => 2);
+
+    $i++;
+
+    ok($objs->[0]->id > 2 && defined $objs->[0]->name && defined $objs->[0]->nicks->[0]->nick &&
+       !defined $objs->[0]->nicks->[0]->type_id && defined $objs->[0]->flag2 &&
+       $objs->[0]->derived eq 'DERIVED: ' . uc($objs->[0]->name),
+       "custom select $i - $db_type");
+
+    $i++;
+
+    ok($objs->[1]->id > 2 && defined $objs->[1]->name && defined $objs->[1]->nicks->[0]->nick &&
+       !defined $objs->[1]->nicks->[0]->type_id && defined $objs->[1]->flag2 &&
        $objs->[1]->derived eq 'DERIVED: ' . uc($objs->[1]->name),
        "custom select $i - $db_type");
 

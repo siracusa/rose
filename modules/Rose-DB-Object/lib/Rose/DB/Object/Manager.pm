@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.751';
+our $VERSION = '0.752';
 
 our $Debug = 0;
 
@@ -1198,22 +1198,75 @@ sub get_objects
 
     my $i = 1;
     %tn = map { $_ => $i++ } @tables;
+    my $expand_dotstar = 0;
 
     foreach my $item (@$select)
     {
+      my($column, $tn);
+
       if(index($item, '.') < 0 && $item !~ / AS /i)
       {
+        $column = $item;
         $item = "t1.$item"  if($num_subtables > 0);
+        $tn = 1;
       }
       elsif($item =~ /^t(\d+)\.(.+)$/)
       {
-        $item = $2 if($num_subtables == 0);
+        $tn     = $1;
+        $item   = $2 if($num_subtables == 0);
+        $column = $2;
+        $expand_dotstar = 1  if($item =~ /^t\d+\.\*$/);
       }
-      elsif($item =~ /^(['"]?)([^.]+)\1\.(['"]?)(.+\3)$/)
+      elsif($item =~ /^(['"]?)([^.]+)\1\.(['"]?)(.+)(\3)$/)
       {
         my $num = $tn{$2} || $rel_tn{$2};
-        $item = "t$num.$3$4";
+        $item = "t$num.$3$4$5";
+        $tn = $num;
+        $column = $4;
+        $expand_dotstar = 1  if($item =~ /^t\d+\.\*$/);
       }
+
+      if(defined $tn)
+      {
+        my $meta = $meta{$classes{$tables[$tn - 1]}};
+  
+        if($meta->column($column) && (my $alias = $meta->column($column)->alias))
+        {
+          $item .= ' AS ' . $alias;
+        }
+      }
+    }
+
+    # Expand tN.* specificers, if necessary
+    if($expand_dotstar)
+    {
+      my @select;
+
+      foreach my $item (@$select)
+      {
+        unless($item =~ /^t(\d+)\.\*$/)
+        {
+          push(@select, $item);
+          next;
+        }
+
+        my $tn = $1;
+        my $meta = $meta{$classes{$tables[$tn - 1]}};
+        
+        foreach my $column ($meta->columns)
+        {
+          if(my $alias = $column->alias)
+          {
+            push(@select, "t$tn.$column AS $alias");
+          }
+          else
+          {
+            push(@select, "t$tn.$_");
+          }
+        }
+      }
+  
+      $select = \@select;
     }
 
     $args{'select'} = $select;
@@ -3529,7 +3582,7 @@ B<Note:> the C<require_objects> list currently cannot be used to simultaneously 
 
 Select only the columns specified in LIST, which must be a comma-separated string of column names or a reference to an array of column names.  Strings are naively split between each comma.  If you need more complex parsing, please use the array-reference argument format instead.
 
-Column names should be prefixed by the appropriate "tN" table alias, the table name, or the foreign key or relationship name.  Unprefixed columns are assumed to belong to the primary table ("t1").  The prefix should be joined to the column name with a dot (".").  Examples: C<t2.name>, C<vendors.age>.
+Column names should be prefixed by the appropriate "tN" table alias, the table name, or the foreign key or relationship name.  Unprefixed columns are assumed to belong to the primary table ("t1").  The prefix should be joined to the column name with a dot (".").  Examples: C<t2.name>, C<vendors.age>.  If the column name is "*" (e.g., C<t1.*>) then all columns from that table are selected.
 
 If selecting sub-objects via the C<with_objects> or C<require_objects> parameters, you must select the primary key columns from each sub-object table.  Failure to do so will cause those sub-objects I<not> to be created.
 
