@@ -530,7 +530,13 @@ sub _get_primary_key_column_names
 
   unless(defined $owner)
   {
-    die "Could not find owner for table ", $table;
+    #die "Could not find owner for table ", $table;
+
+    # Failure to find an owner is sometimes caused by 
+    # DBD::Informix::Metadata's annoying habit of returning
+    # sequences along with the list of tables.  So we'll just
+    # say that it has no primary key columns.
+    return [];
   }
 
   # Then comes this monster query to get the primary key column names.
