@@ -2,20 +2,21 @@ package Rose::DB::Object::Metadata::Column::Time;
 
 use strict;
 
+use Carp();
+
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Time;
 
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.74';
+our $VERSION = '0.752';
 
-__PACKAGE__->add_common_method_maker_argument_names('default', 'precision');
+__PACKAGE__->add_common_method_maker_argument_names('default', 'precision', 'scale');
 
 Rose::Object::MakeMethods::Generic->make_methods
 (
   { preserve_existing => 1 },
-  scalar => [ precision => { default => 0 } ],
   scalar => [ __PACKAGE__->common_method_maker_argument_names ]
 );
 
@@ -32,7 +33,12 @@ sub init_with_dbi_column_info
   my($self, $col_info) = @_;
 
   $self->SUPER::init_with_dbi_column_info($col_info);
-  $self->precision($col_info->{'TIME_PRECISION'});
+
+  $self->scale($col_info->{'TIME_SCALE'})
+    if(defined $col_info->{'TIME_SCALE'});
+
+  $self->precision($col_info->{'TIME_PRECISION'})
+    if(defined $col_info->{'TIME_PRECISION'});
 
   return;
 }
@@ -62,6 +68,47 @@ sub method_uses_formatted_key
   my($self, $type) = @_;
   return 1  if($type eq 'get' || $type eq 'set' || $type eq 'get_set');
   return 0;
+}
+
+use constant DEFAULT_PRECISION => 6; # HHMMSS
+use constant DEFAULT_SCALE     => 0; # HHMMSS (no fractional seconds)
+
+sub precision
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    my $p = shift;
+
+    unless($p == 2 || $p == 4 || $p >= 6)
+    {
+      Carp::croak "Invalid precision: $p.  Time column precision must be 2, 4, or >= 6";
+    }
+
+    $self->{'precision'} = $p;
+    $self->{'scale'} = $self->{'precision'} - DEFAULT_PRECISION;
+    $self->{'scale'} = 0  if($self->{'scale'} < 0);
+    return $self->{'precision'};
+  }
+
+  return $self->{'precision'}  if(defined $self->{'precision'});
+  return $self->{'precision'} = DEFAULT_PRECISION;
+}
+
+sub scale
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    $self->{'scale'} = defined $_[0] ? $_[0] : 0;
+    $self->{'precision'} = DEFAULT_PRECISION + $self->{'scale'};
+    return $self->{'scale'};
+  }
+
+  return $self->{'scale'}  if(defined $self->{'scale'});
+  return $self->{'scale'} = DEFAULT_PRECISION;
 }
 
 1;
@@ -116,7 +163,11 @@ Convert VALUE to the equivalent L<Time::Clock> object.  VALUE maybe returned unm
 
 =item B<precision [INT]>
 
-Get or set the integer number of places past the decimal point preserved for fractional seconds.  Defaults to 0.
+Get or set the precision of the time value.  The precision is the total count of digits in the whole time.  For example, 12:34 has a precision of 4, and 12:34:56.12 has a precision of 8.  The precision value must be 2, 4, or greater than or equal to 6.  The default precision is 6.  When the precision is set, the L<scale|/scale> is also set automatically.
+
+=item B<scale [INT]>
+
+Get or set the integer number of places past the decimal point preserved for fractional seconds.  The default scale is 0.  When the scale is set, the L<precision|/precision> is also set automatically.
 
 Returns "time".
 

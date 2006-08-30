@@ -356,7 +356,7 @@ sub refine_dbi_column_info
   {
     $col_info->{'TYPE_NAME'} = 'time';
     $col_info->{'pg_type'} =~ /^time(?:\((\d+)\))? without time zone$/i;
-    $col_info->{'TIME_PRECISION'} = $1 || 0;
+    $col_info->{'TIME_SCALE'} = $1 || 0;
   }
 
   # Pg does not populate COLUMN_SIZE correctly for bit fields, so
