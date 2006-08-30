@@ -1446,7 +1446,7 @@ sub auto_init_many_to_many_relationships
     # XXX: skip of there's already a relationship with the same id
 
     my $meta = $class1->meta;
-    my $name = $cm->auto_foreign_key_to_relationship_name_plural($fk2);
+    my $name = $cm->auto_relationship_name_many_to_many($fk2, $map_class);
 
     unless($meta->relationship($name))
     {
