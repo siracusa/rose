@@ -1,5 +1,8 @@
-0.752 (08.29.2006) - John Siracusa <siracusa@mindspring.com>
+0.752 (08.30.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Altered the meaning of the precision() attribute on time columns,
+      and added a scale() attribute to take over the previous meaning
+      of precision.
     * Fixed a bug that caused Informix datetime column values to have
       incorrect largest qualifier values for values other than "year." 
 

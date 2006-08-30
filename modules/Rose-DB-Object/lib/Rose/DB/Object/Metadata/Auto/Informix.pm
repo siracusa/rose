@@ -103,6 +103,12 @@ my %Datetime_Qualifiers =
 
 my %Datetime_Qualifiers_Reverse = (reverse %Datetime_Qualifiers);
 
+# Value minus this delta = scale for fraction(n) types
+use constant FRACTION_SCALE_DELTA  => 10;
+
+use constant MIN_DATETIME_FRACTION => 11; # fraction(1)
+use constant MAX_DATETIME_FRACTION => 15; # fraction(5)
+
 # $INFORMIXDIR/etc/xpg4_is.sql
 # http://www-306.ibm.com/software/data/informix/pubs/library/datablade/dbdk/sqlr/01.fm50.html
 my %Numeric_Precision =
@@ -312,7 +318,7 @@ EOF
       elsif($type_num == DATETIME)
       {
         # Determine the full "datetime X to Y" type string
-        $type_name = _ix_datetime_specific_type($self, $type_num, $sc_row->{'collength'});
+        $type_name = _ix_datetime_specific_type($self, $type_num, $sc_row->{'collength'}, $col_info);
       }
       else
       {
@@ -1108,7 +1114,7 @@ sub _ix_max_length
 
 sub _ix_datetime_specific_type
 {
-  my($meta, $type_num, $collength) = @_;
+  my($meta, $type_num, $collength, $col_info) = @_;
 
   return  unless($type_num == DATETIME);
 
@@ -1121,11 +1127,28 @@ sub _ix_datetime_specific_type
     die "No datetime qualifier(s) found for collength $collength";
   }
 
-  # Handle DATETIME HOUR TO (MINUTE|SECOND) as a "time" column
+  # Handle DATETIME HOUR TO (MINUTE|SECOND|FRACTION(1-5)) as a "time" column.
   if($largest_qualifier == $Datetime_Qualifiers_Reverse{'hour'} &&
      ($smallest_qualifier == $Datetime_Qualifiers_Reverse{'minute'} ||
-      $smallest_qualifier == $Datetime_Qualifiers_Reverse{'second'}))
+      $smallest_qualifier == $Datetime_Qualifiers_Reverse{'second'} ||
+      ($smallest_qualifier >= MIN_DATETIME_FRACTION && 
+       $smallest_qualifier <= MAX_DATETIME_FRACTION)))
   {
+    if($smallest_qualifier >= MIN_DATETIME_FRACTION && 
+       $smallest_qualifier <= MAX_DATETIME_FRACTION)
+    {
+      $col_info->{'TIME_SCALE'} = $smallest_qualifier - FRACTION_SCALE_DELTA;
+    }
+    else
+    {
+      delete $col_info->{'TIME_SCALE'};
+
+      if($smallest_qualifier == $Datetime_Qualifiers_Reverse{'minute'})
+      {
+        $col_info->{'TIME_PRECISION'} = 4; # HH:MM
+      }
+    }
+
     return 'time';
   }
 
