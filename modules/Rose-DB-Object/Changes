@@ -1,5 +1,7 @@
 0.752 (08.30.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * The select parameter to the Manager's get_objects() now accepts 
+      tN.* column specifiers.  (Suggested by Jonathan Vanasco).
     * Added the auto_relationship_name_one_to_many() method to the
       convention manager.
     * Added rudimentary name conflict resolution abilities to some of
@@ -7,6 +9,8 @@
     * Altered the meaning of the precision() attribute on time columns
       and added a scale() attribute to take over the previous meaning
       of precision.
+    * Aliased columns now work correctly with the select parameter to 
+      Manager's get_objects() method.
     * Fixed a bug that caused the get_objects() Manager method to fail
       to extract the object_class value from the object_class() method.
     * Fixed a bug that caused Informix datetime column values to have
