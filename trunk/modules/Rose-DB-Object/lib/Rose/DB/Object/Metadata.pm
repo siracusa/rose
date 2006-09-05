@@ -3581,7 +3581,7 @@ sub prime_caches
        nonlazy_column_mutator_method_names nonlazy_column_db_value_hash_keys
        primary_key_column_db_value_hash_keys column_db_value_hash_keys
        column_accessor_method_names column_mutator_method_names
-       column_rw_method_names dbi_requires_bind_param);
+       column_rw_method_names);
 
   foreach my $method (@methods)
   {
@@ -3594,7 +3594,7 @@ sub prime_caches
   $self->fq_primary_key_sequence_names(db => $db);
 
   @methods =
-    qw(fq_table fq_table_sql init_get_column_sql_tmpl delete_sql
+    qw(dbi_requires_bind_param fq_table fq_table_sql init_get_column_sql_tmpl delete_sql
        primary_key_sequence_names insert_sql 
        init_insert_sql_with_inlining_start
        init_insert_changes_only_sql_prefix init_update_sql_prefix

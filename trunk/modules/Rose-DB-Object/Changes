@@ -1,4 +1,4 @@
-0.752 (08.30.2006) - John Siracusa <siracusa@mindspring.com>
+0.752 (09.04.2006) - John Siracusa <siracusa@mindspring.com>
 
     * The select parameter to the Manager's get_objects() now accepts 
       tN.* column specifiers.  (Suggested by Jonathan Vanasco).
@@ -15,6 +15,8 @@
       to extract the object_class value from the object_class() method.
     * Fixed a bug that caused Informix datetime column values to have
       incorrect largest qualifier values for values other than "year." 
+    * Eliminated an "uninitialized value" warning when running under mod_perl
+      (Patch by Graham Barr)
 
 0.751 (08.29.2006) - John Siracusa <siracusa@mindspring.com>
 
