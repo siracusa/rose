@@ -10,7 +10,7 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.75';
+our $VERSION = '0.752';
 
 __PACKAGE__->default_auto_method_types(qw(get_set_on_save delete_on_save));
 

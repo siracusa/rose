@@ -14,7 +14,7 @@ our $Debug;
 
 *Debug = \$Rose::DB::Object::Metadata::Debug;
 
-our $VERSION = '0.751';
+our $VERSION = '0.752';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -1288,12 +1288,6 @@ sub auto_init_one_to_one_relationships
       $Debug && warn "$f_class - Adding one to one relationship ",
                      "'$name' to $class\n";
       $f_meta->add_relationship($relationship);
-#       $f_meta->add_relationship($name =>
-#                                 {
-#                                   type       => 'one to one',
-#                                   class      => $class,
-#                                   column_map => { reverse %$key_cols },
-#                                 });
     }
 
     # Create the methods, preserving existing methods
@@ -1422,12 +1416,6 @@ sub auto_init_one_to_many_relationships
       $Debug && warn "$f_class - Adding one to many relationship ",
                      "'$name' to $class\n";
       $f_meta->add_relationship($relationship);
-#       $f_meta->add_relationship($name =>
-#                                 {
-#                                   type       => 'one to many',
-#                                   class      => $class,
-#                                   column_map => { reverse %$key_cols },
-#                                 });
     }
 
     # Create the methods, preserving existing methods
@@ -1495,13 +1483,6 @@ sub auto_init_many_to_many_relationships
       $Debug && warn "$class1 - Adding many to many relationship '$name' ",
                      "through $map_class to $class2\n";
       $meta->add_relationship($relationship);
-#       $meta->add_relationship($name =>
-#                               {
-#                                 type      => 'many to many',
-#                                 map_class => $map_class,
-#                                 map_from  => $fk1->name,
-#                                 map_to    => $fk2->name,
-#                               });
     }
 
     # Create the methods, preserving existing methods

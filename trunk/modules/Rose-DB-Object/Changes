@@ -1,23 +1,21 @@
 0.752 (09.06.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * The select parameter to the Manager's get_objects() now accepts 
-      tN.* column specifiers.  (Suggested by Jonathan Vanasco).
-    * Added the auto_relationship_name_one_to_many() method to the
-      convention manager.
-    * Added rudimentary name conflict resolution abilities to some of
-      the convention manager's auto_*_name() methods.
-    * Altered the meaning of the precision() attribute on time columns
-      and added a scale() attribute to take over the previous meaning
-      of precision.
-    * Renamed the precision() attribute on interval columns to scale().
+    * The select parameter to the Manager's get_objects() method now 
+      accepts tN.* column specifiers.  (Suggested by Jonathan Vanasco)
+    * Added auto_relationship_name_*() methods to the convention manager.
+    * Added rudimentary name conflict resolution abilities to the 
+      convention manager's auto_*_name() methods.
+    * Altered the meaning of the time column's precision() attribute
+      and added a scale() attribute to take over the previous meaning.
+    * Renamed the interval column's precision() attribute to scale().
     * Aliased columns now work correctly with the select parameter to 
       Manager's get_objects() method.
     * Fixed a bug that caused the get_objects() Manager method to fail
       to extract the object_class value from the object_class() method.
     * Fixed a bug that caused Informix datetime column values to have
-      incorrect largest qualifier values for values other than "year." 
-    * Eliminated an "uninitialized value" warning when running under mod_perl
-      (Patch by Graham Barr)
+      incorrect "largest qualifier" values for values other than "year."
+    * Eliminated an "uninitialized value" warning when running under 
+      mod_perl (Patch by Graham Barr)
 
 0.751 (08.29.2006) - John Siracusa <siracusa@mindspring.com>
 

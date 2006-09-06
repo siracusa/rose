@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.751';
+our $VERSION = '0.752';
 
 our $Debug = 0;
 
@@ -1142,27 +1142,6 @@ sub add_relationships
         $self->_build_relationship(name => $name,
                                    type => $type,
                                    info => $info);
-
-#       my $relationship_class = $class->relationship_type_class($type)
-#         or Carp::croak "No relationship class set for relationship type '$type'";
-# 
-#       unless($self->relationship_class_is_loaded($relationship_class))
-#       {
-#         $self->load_relationship_class($relationship_class);
-#       }
-# 
-#       $Debug && warn $self->class, " - adding $name $relationship_class\n";
-#       my $relationship = $self->{'relationships'}{$name} = 
-#         $self->convention_manager->auto_relationship($name, $relationship_class, $info) ||
-#         $relationship_class->new(%$info, name => $name);
-# 
-#       unless($relationship)
-#       {
-#         Carp::croak "$class - Incomplete relationship specification could not be ",
-#                     "completed by convention manager: $name";
-#       }
-# 
-#       $relationship->parent($self);
 
       # Set or add auto-created method names
       if($methods || $add_methods)
@@ -3633,8 +3612,8 @@ sub prime_caches
   $self->fq_primary_key_sequence_names(db => $db);
 
   @methods =
-    qw(dbi_requires_bind_param fq_table fq_table_sql init_get_column_sql_tmpl delete_sql
-       primary_key_sequence_names insert_sql 
+    qw(dbi_requires_bind_param fq_table fq_table_sql init_get_column_sql_tmpl 
+       delete_sql primary_key_sequence_names insert_sql 
        init_insert_sql_with_inlining_start
        init_insert_changes_only_sql_prefix init_update_sql_prefix
        init_update_sql_with_inlining_start column_names_string_sql
