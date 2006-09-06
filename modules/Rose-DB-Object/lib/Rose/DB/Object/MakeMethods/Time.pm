@@ -13,7 +13,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.74';
+our $VERSION = '0.752';
 
 sub interval
 {

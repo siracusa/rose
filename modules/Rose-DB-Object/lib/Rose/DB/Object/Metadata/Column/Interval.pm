@@ -8,7 +8,7 @@ use Rose::DB::Object::MakeMethods::Time;
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.741';
+our $VERSION = '0.752';
 
 __PACKAGE__->add_common_method_maker_argument_names('default', 'scale', 'end_of_month_mode');
 
