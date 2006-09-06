@@ -1254,7 +1254,7 @@ sub auto_init_one_to_one_relationships
       next FK;
     }
     
-    my $cm = $self->convention_manager;
+    my $cm = $f_meta->convention_manager;
 
     # Also don't add add one to one relationships between a class
     # and one of its map classes
@@ -1264,22 +1264,36 @@ sub auto_init_one_to_one_relationships
                      "to map class to $class\n";
       next FK;
     }
-
-    # XXX: skip of there's already a relationship with the same id
-
-    # Add the one to many relationship to the foreign class
+  
     my $name = $cm->auto_relationship_name_one_to_one($self->table, $class);
 
+    my $relationship = 
+      $f_meta->_build_relationship(name => $name,
+                                   type => 'one to one',
+                                   info => 
+                                   {
+                                     class      => $class,
+                                     column_map => { reverse %$key_cols },
+                                   });
+
+    # Skip if there's already a relationship with the same id
+    foreach my $rel ($f_meta->relationships)
+    {
+      next FK  if($relationship->id eq $rel->id);
+    }
+
+    # Add the one to one relationship to the foreign class    
     unless($f_meta->relationship($name))
     {
       $Debug && warn "$f_class - Adding one to one relationship ",
                      "'$name' to $class\n";
-      $f_meta->add_relationship($name =>
-                                {
-                                  type       => 'one to one',
-                                  class      => $class,
-                                  column_map => { reverse %$key_cols },
-                                });
+      $f_meta->add_relationship($relationship);
+#       $f_meta->add_relationship($name =>
+#                                 {
+#                                   type       => 'one to one',
+#                                   class      => $class,
+#                                   column_map => { reverse %$key_cols },
+#                                 });
     }
 
     # Create the methods, preserving existing methods
@@ -1374,7 +1388,7 @@ sub auto_init_one_to_many_relationships
       next FK;
     }
     
-    my $cm = $self->convention_manager;
+    my $cm = $f_meta->convention_manager;
 
     # Also don't add add one to many relationships between a class
     # and one of its map classes
@@ -1385,21 +1399,35 @@ sub auto_init_one_to_many_relationships
       next FK;
     }
 
-    # XXX: skip of there's already a relationship with the same id
-
-    # Add the one to many relationship to the foreign class
     my $name = $cm->auto_relationship_name_one_to_many($self->table, $class);
 
+    my $relationship = 
+      $f_meta->_build_relationship(name => $name,
+                                   type => 'one to many',
+                                   info => 
+                                   {
+                                     class      => $class,
+                                     column_map => { reverse %$key_cols },
+                                   });
+
+    # Skip if there's already a relationship with the same id
+    foreach my $rel ($f_meta->relationships)
+    {
+      next FK  if($relationship->id eq $rel->id);
+    }
+
+    # Add the one to many relationship to the foreign class    
     unless($f_meta->relationship($name))
     {
       $Debug && warn "$f_class - Adding one to many relationship ",
                      "'$name' to $class\n";
-      $f_meta->add_relationship($name =>
-                                {
-                                  type       => 'one to many',
-                                  class      => $class,
-                                  column_map => { reverse %$key_cols },
-                                });
+      $f_meta->add_relationship($relationship);
+#       $f_meta->add_relationship($name =>
+#                                 {
+#                                   type       => 'one to many',
+#                                   class      => $class,
+#                                   column_map => { reverse %$key_cols },
+#                                 });
     }
 
     # Create the methods, preserving existing methods
@@ -1443,22 +1471,37 @@ sub auto_init_many_to_many_relationships
     my $class1 = $fk1->class;
     my $class2 = $fk2->class;
 
-    # XXX: skip of there's already a relationship with the same id
-
     my $meta = $class1->meta;
     my $name = $cm->auto_relationship_name_many_to_many($fk2, $map_class);
+
+    my $relationship = 
+      $meta->_build_relationship(name => $name,
+                                 type => 'many to many',
+                                 info => 
+                                 {
+                                   map_class => $map_class,
+                                   map_from  => $fk1->name,
+                                   map_to    => $fk2->name,
+                                 });
+
+    # Skip if there's already a relationship with the same id
+    foreach my $rel ($meta->relationships)
+    {
+      next PAIR  if($relationship->id eq $rel->id);
+    }
 
     unless($meta->relationship($name))
     {
       $Debug && warn "$class1 - Adding many to many relationship '$name' ",
                      "through $map_class to $class2\n";
-      $meta->add_relationship($name =>
-                              {
-                                type      => 'many to many',
-                                map_class => $map_class,
-                                map_from  => $fk1->name,
-                                map_to    => $fk2->name,
-                              });
+      $meta->add_relationship($relationship);
+#       $meta->add_relationship($name =>
+#                               {
+#                                 type      => 'many to many',
+#                                 map_class => $map_class,
+#                                 map_from  => $fk1->name,
+#                                 map_to    => $fk2->name,
+#                               });
     }
 
     # Create the methods, preserving existing methods

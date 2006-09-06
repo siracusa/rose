@@ -1,4 +1,4 @@
-0.752 (09.04.2006) - John Siracusa <siracusa@mindspring.com>
+0.752 (09.06.2006) - John Siracusa <siracusa@mindspring.com>
 
     * The select parameter to the Manager's get_objects() now accepts 
       tN.* column specifiers.  (Suggested by Jonathan Vanasco).
@@ -9,6 +9,7 @@
     * Altered the meaning of the precision() attribute on time columns
       and added a scale() attribute to take over the previous meaning
       of precision.
+    * Renamed the precision() attribute on interval columns to scale().
     * Aliased columns now work correctly with the select parameter to 
       Manager's get_objects() method.
     * Fixed a bug that caused the get_objects() Manager method to fail

@@ -631,7 +631,7 @@ SKIP: foreach my $db_type ('mysql')
   is($o->dur->minutes, 0, "interval minutes 3 - $db_type");
   is($o->dur->seconds, 0, "interval seconds 3 - $db_type");
 
-  is($o->meta->column('dur')->precision, 6, "interval precision - $db_type");
+  is($o->meta->column('dur')->scale, 6, "interval scale - $db_type");
 
   is($o->epoch(format => '%Y-%m-%d %H:%M:%S'), '1999-11-30 21:30:00', "epoch 1 - $db_type");
 
@@ -1263,7 +1263,7 @@ EOF
       nums     => { type => 'array' },
       bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },
       decs     => { type => 'decimal', precision => 10, scale => 2 },
-      dur      => { type => 'interval', precision => 6, default => '2 months 5 days 3 seconds' },
+      dur      => { type => 'interval', scale => 6, default => '2 months 5 days 3 seconds' },
       epoch    => { type => 'epoch', default => '11/30/1999 9:30pm' },
       hiepoch  => { type => 'epoch hires', default => '1144004926.123456' },
       bint1    => { type => 'bigint', default => '9223372036854775800' },
@@ -1456,7 +1456,7 @@ EOF
       bitz2    => { type => 'bits', bits => 2, default => '0' },
       bitz3    => { type => 'bits', bits => 4 },
       decs     => { type => 'decimal', precision => 10, scale => 2 },
-      dur      => { type => 'interval', precision => 6, default => '2 months 5 days 3 seconds' },
+      dur      => { type => 'interval', scale => 6, default => '2 months 5 days 3 seconds' },
       epoch    => { type => 'epoch', default => '11/30/1999 9:30pm' },
       hiepoch  => { type => 'epoch hires', default => '1144004926.123456' },
       last_modified => { type => 'timestamp' },

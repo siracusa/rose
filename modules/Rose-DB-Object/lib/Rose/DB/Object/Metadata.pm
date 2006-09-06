@@ -1138,26 +1138,31 @@ sub add_relationships
       my $type = $info->{'type'} or 
         Carp::croak "Missing type parameter for relationship '$name'";
 
-      my $relationship_class = $class->relationship_type_class($type)
-        or Carp::croak "No relationship class set for relationship type '$type'";
+      my $relationship = $self->{'relationships'}{$name} =
+        $self->_build_relationship(name => $name,
+                                   type => $type,
+                                   info => $info);
 
-      unless($self->relationship_class_is_loaded($relationship_class))
-      {
-        $self->load_relationship_class($relationship_class);
-      }
-
-      $Debug && warn $self->class, " - adding $name $relationship_class\n";
-      my $relationship = $self->{'relationships'}{$name} = 
-        $self->convention_manager->auto_relationship($name, $relationship_class, $info) ||
-        $relationship_class->new(%$info, name => $name);
-
-      unless($relationship)
-      {
-        Carp::croak "$class - Incomplete relationship specification could not be ",
-                    "completed by convention manager: $name";
-      }
-
-      $relationship->parent($self);
+#       my $relationship_class = $class->relationship_type_class($type)
+#         or Carp::croak "No relationship class set for relationship type '$type'";
+# 
+#       unless($self->relationship_class_is_loaded($relationship_class))
+#       {
+#         $self->load_relationship_class($relationship_class);
+#       }
+# 
+#       $Debug && warn $self->class, " - adding $name $relationship_class\n";
+#       my $relationship = $self->{'relationships'}{$name} = 
+#         $self->convention_manager->auto_relationship($name, $relationship_class, $info) ||
+#         $relationship_class->new(%$info, name => $name);
+# 
+#       unless($relationship)
+#       {
+#         Carp::croak "$class - Incomplete relationship specification could not be ",
+#                     "completed by convention manager: $name";
+#       }
+# 
+#       $relationship->parent($self);
 
       # Set or add auto-created method names
       if($methods || $add_methods)
@@ -1190,6 +1195,40 @@ sub add_relationships
       Carp::croak "Invalid relationship name or specification: $_[0]";
     }
   }
+}
+
+sub _build_relationship
+{
+  my($self, %args) = @_;
+
+  my $class = ref $self;
+  my $name = $args{'name'} or Carp::croak "Missing name parameter";
+  my $info = $args{'info'} or Carp::croak "Missing info parameter";
+  my $type = $args{'type'} or 
+    Carp::croak "Missing type parameter for relationship '$name'";
+
+  my $relationship_class = $class->relationship_type_class($type)
+    or Carp::croak "No relationship class set for relationship type '$type'";
+
+  unless($self->relationship_class_is_loaded($relationship_class))
+  {
+    $self->load_relationship_class($relationship_class);
+  }
+
+  $Debug && warn $self->class, " - adding $name $relationship_class\n";
+  my $relationship =  
+    $self->convention_manager->auto_relationship($name, $relationship_class, $info) ||
+    $relationship_class->new(%$info, name => $name);
+
+  unless($relationship)
+  {
+    Carp::croak "$class - Incomplete relationship specification could not be ",
+                "completed by convention manager: $name";
+  }
+
+  $relationship->parent($self);
+  
+  return $relationship;
 }
 
 sub add_relationship { shift->add_relationships(@_) }
@@ -1963,7 +2002,7 @@ sub retry_deferred_foreign_keys
   {
     my $meta = $class->meta;
     next  unless($meta->allow_auto_initialization && $meta->has_outstanding_metadata_tasks);
-    $self->auto_init_relationships(%{ $self->auto_init_args || {} }, 
+    $meta->auto_init_relationships(%{ $meta->auto_init_args || {} }, 
                                    restore_types => 1);
   }
 }

@@ -1204,8 +1204,9 @@ sub get_objects
     {
       my($column, $tn);
 
-      if(index($item, '.') < 0 && $item !~ / AS /i)
+      if(index($item, '.') < 0 && $item !~ /\s+ AS \s+ \w+ \s* \Z/xi)
       {
+        $expand_dotstar = 1  if($item eq '*');
         $column = $item;
         $item = "t1.$item"  if($num_subtables > 0);
         $tn = 1;
@@ -1244,24 +1245,26 @@ sub get_objects
 
       foreach my $item (@$select)
       {
-        unless($item =~ /^t(\d+)\.\*$/)
+        unless($item =~ /^(?: t(\d+)\. )? \* $/x)
         {
           push(@select, $item);
           next;
         }
 
-        my $tn = $1;
+        my $tn = $1 || 1;
         my $meta = $meta{$classes{$tables[$tn - 1]}};
         
+        my $prefix = $num_subtables ? "t$tn." : '';
+
         foreach my $column ($meta->columns)
         {
           if(my $alias = $column->alias)
           {
-            push(@select, "t$tn.$column AS $alias");
+            push(@select, "$prefix$column AS $alias");
           }
           else
           {
-            push(@select, "t$tn.$_");
+            push(@select, "$prefix$_");
           }
         }
       }
@@ -3582,7 +3585,11 @@ B<Note:> the C<require_objects> list currently cannot be used to simultaneously 
 
 Select only the columns specified in LIST, which must be a comma-separated string of column names or a reference to an array of column names.  Strings are naively split between each comma.  If you need more complex parsing, please use the array-reference argument format instead.
 
-Column names should be prefixed by the appropriate "tN" table alias, the table name, or the foreign key or relationship name.  Unprefixed columns are assumed to belong to the primary table ("t1").  The prefix should be joined to the column name with a dot (".").  Examples: C<t2.name>, C<vendors.age>.  If the column name is "*" (e.g., C<t1.*>) then all columns from that table are selected.
+Column names should be prefixed by the appropriate "tN" table alias, the table name, or the foreign key or relationship name.  The prefix should be joined to the column name with a dot (".").  Examples: C<t2.name>, C<vendors.age>.
+
+Unprefixed columns are assumed to belong to the primary table ("t1") and are explicitly prefixed as such when selecting from more than one table.  If a column name matches C</ AS \w+$/> then no prefix is applied.
+
+If the column name is "*" (e.g., C<t1.*>) then all columns from that table are selected.
 
 If selecting sub-objects via the C<with_objects> or C<require_objects> parameters, you must select the primary key columns from each sub-object table.  Failure to do so will cause those sub-objects I<not> to be created.
 
