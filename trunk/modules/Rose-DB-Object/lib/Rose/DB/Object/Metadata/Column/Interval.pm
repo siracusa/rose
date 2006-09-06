@@ -10,12 +10,12 @@ our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
 our $VERSION = '0.741';
 
-__PACKAGE__->add_common_method_maker_argument_names('default', 'precision', 'end_of_month_mode');
+__PACKAGE__->add_common_method_maker_argument_names('default', 'scale', 'end_of_month_mode');
 
 Rose::Object::MakeMethods::Generic->make_methods
 (
   { preserve_existing => 1 },
-  scalar => [ precision => { default => 0 } ],
+  scalar => [ scale => { default => 0 } ],
   scalar => [ __PACKAGE__->common_method_maker_argument_names ]
 );
 
@@ -109,7 +109,7 @@ Valid modes are C<wrap>, C<limit>, and C<preserve>.  See the documentation for L
 
 Convert VALUE to the equivalent L<DateTime::Duration> object.  VALUE maybe returned unmodified if it is a valid interval keyword or otherwise has special meaning to the underlying database.  DB is a L<Rose::DB> object that is used as part of the parsing process.  Both arguments are required.
 
-=item B<precision [INT]>
+=item B<scale [INT]>
 
 Get or set the integer number of places past the decimal point preserved for fractional seconds.  Defaults to 0.
 

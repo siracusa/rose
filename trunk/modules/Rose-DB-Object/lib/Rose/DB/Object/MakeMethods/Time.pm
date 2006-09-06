@@ -456,13 +456,13 @@ Rose::DB::Object::MakeMethods::Time - Create time-related methods for Rose::DB::
     (
       interval => 
       [
-        t1 => { precision => 6 },
+        t1 => { scale => 6 },
         t2 => { default => '3 days 6 minutes 5 seconds' },
       ],
 
       time =>
       [
-        start => { precision => 5 },
+        start => { scale => 5 },
         end   => { default => '12:34:56' },
       ],
     );
@@ -531,7 +531,7 @@ attribute.  Defaults to the name of the method.
 
 Choose the interface.  The default is C<get_set>.
 
-=item C<precision>
+=item C<scale>
 
 An integer number of places past the decimal point preserved for fractional seconds.  Defaults to 0.
 
@@ -572,7 +572,7 @@ Example:
     (
       time => 
       [
-        't1' => { precision => 6 },
+        't1' => { scale => 6 },
         't2' => { default => '3 days 6 minutes 5 seconds' },
       ],
     );
@@ -609,7 +609,7 @@ attribute.  Defaults to the name of the method.
 
 Choose the interface.  The default is C<get_set>.
 
-=item C<precision>
+=item C<scale>
 
 An integer number of places past the decimal point preserved for fractional seconds.  Defaults to 0.  The maximum value is 9.
 
@@ -649,7 +649,7 @@ Example:
     (
       time =>
       [
-        start => { precision => 5 },
+        start => { scale => 5 },
         end   => { default => '12:34:56' },
       ],
     );

@@ -87,6 +87,17 @@ sub type { 'one to many' }
 *map_column = \&key_column;
 *column_map = \&key_columns;
 
+sub id
+{
+  my($self) = shift;
+
+  my $column_map = $self->column_map;
+
+  return $self->parent->class . ' ' .   $self->class . ' ' . 
+    join("\0", map { join("\1", lc $_, lc $column_map->{$_}) } sort keys %$column_map);
+    #join("\0", map { $_ . '=' . ($self->$_() || 0) } qw(required));
+}
+
 sub build_method_name_for_type
 {
   my($self, $type) = @_;

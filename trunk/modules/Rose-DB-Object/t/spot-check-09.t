@@ -39,10 +39,10 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
   my @classes = $loader->make_classes(include_tables => '^(foos|bars)$');
 
-  #foreach my $class (@classes)
-  #{
-  #  print $class->meta->perl_class_definition if($class->can('meta'));
-  #}
+  foreach my $class (@classes)
+  {
+    print $class->meta->perl_class_definition if($class->can('meta'));
+  }
 
   my $foo_class = $class_prefix . '::Foo';
   my $bar_class = $class_prefix . '::Bar';
