@@ -182,7 +182,7 @@ sub plural_to_singular
     return $code->($word);
   }
 
-  return $word  if($word =~ /ss$/);
+  return $word  if($word =~ /[aeiouy]ss$/i);
 
   $word =~ s/s$//;
   return $word;
@@ -1122,7 +1122,7 @@ Get or set the L<Rose::DB::Object::Metadata> object associated with the class th
 
 Returns the singular version of STRING.  If a L<plural_to_singular_function|/plural_to_singular_function> is defined, then this method simply passes STRING to that function.
 
-Otherwise, the following rules are applied.  If STRING ends in "ss", it is returned unmodified.  For all other cases, the letter "s" is removed from the end of STRING and the result is returned.
+Otherwise, the following rules are applied.  If STRING matches C</[aeiouy]ss$/i>, it is returned unmodified.  For all other cases, the letter "s" is removed from the end of STRING and the result is returned.
 
 =item B<plural_to_singular_function [CODEREF]>
 
