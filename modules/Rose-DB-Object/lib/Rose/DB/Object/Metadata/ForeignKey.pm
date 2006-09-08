@@ -155,16 +155,11 @@ sub is_required
   # the foreign object is not required.
   foreach my $column_name (keys %$key_columns)
   {
-    my $column = $meta->column($column_name);
-    
-    unless($column)
-    {
-      $DB::single = 1;
-      #or
-      Carp::confess "No such column '$column_name' in table '",
+    my $column = $meta->column($column_name) 
+      or Carp::confess "No such column '$column_name' in table '",
            $self->parent->table, "' referenced from foreign key '",
            $self->name, "'";
-    }
+
     unless($column->not_null)
     {
       return $self->{'is_required'} = 0;
