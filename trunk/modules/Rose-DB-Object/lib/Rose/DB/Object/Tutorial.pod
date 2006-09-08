@@ -342,7 +342,7 @@ The return value is a reference to an array of C<Product> objects.  Now let's go
           id   => { ge => 7 },
           or   => 
           [
-            price => 5.00,
+            price => 15.00,
             price => { lt => 10.00 },
           ],
         ],
@@ -355,7 +355,7 @@ That call produces SQL that looks something like this:
     SELECT id, name, price FROM products WHERE
       name LIKE '%Hat' AND
       id >= 7 AND
-      (price = 5.00 OR price < 10.00)
+      (price = 15.00 OR price < 10.00)
     ORDER BY name
     LIMIT 10 OFFSET 50
 
