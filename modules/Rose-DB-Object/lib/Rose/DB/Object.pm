@@ -16,7 +16,7 @@ use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util 
   qw(row_id lazy_column_values_loaded_key has_modified_columns);
 
-our $VERSION = '0.752';
+our $VERSION = '0.753';
 
 our $Debug = 0;
 
