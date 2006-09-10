@@ -1,7 +1,10 @@
-0.753 (09.08.2006) - John Siracusa <siracusa@mindspring.com>
+0.753 (09.10.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Improved the convention manager's default plural_to_singular()
       method.
+    * Fixed a bug that caused the update_objects() and delete_objects()
+      Manager methods to fail to extract the object_class value from the
+      object_class() method.  (Patch by Graham Barr)
 
 0.752 (09.06.2006) - John Siracusa <siracusa@mindspring.com>
 
