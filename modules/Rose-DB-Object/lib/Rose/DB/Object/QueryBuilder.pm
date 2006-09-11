@@ -11,12 +11,15 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.75';
+our $VERSION = '0.753';
 
 our $Debug = 0;
 
 my %OP_MAP = 
 (
+  similar    => 'SIMILAR TO',
+  match      => '~',
+  imatch     => '~*',
   regex      => 'REGEXP',
   regexp     => 'REGEXP',
   like       => 'LIKE',
@@ -1052,6 +1055,9 @@ Undefined values are translated to the keyword NULL when included in a multi-val
 
     OP                  SQL operator
     -------------       ------------
+    similar             SIMILAR TO
+    match               ~
+    imatch              ~*
     regex, regexp       REGEXP
     like                LIKE
     ilike               ILIKE

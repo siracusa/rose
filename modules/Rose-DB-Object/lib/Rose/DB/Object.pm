@@ -2147,7 +2147,7 @@ L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB-Object>
 
 =head1 CONTRIBUTORS
 
-Graham Barr, Perrin Harkins, Cees Hek
+Graham Barr, Lucian Dragus, Perrin Harkins, Cees Hek
 
 =head1 AUTHOR
 
