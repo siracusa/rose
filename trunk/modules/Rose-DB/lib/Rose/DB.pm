@@ -19,7 +19,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.725';
+our $VERSION = '0.726';
 
 our $Debug = 0;
 
@@ -1719,6 +1719,7 @@ sub likes_lowercase_table_names     { 0 }
 sub likes_lowercase_schema_names    { 0 }
 sub likes_lowercase_catalog_names   { 0 }
 sub likes_lowercase_sequence_names  { 0 }
+sub likes_implicit_joins            { 0 }
 
 sub supports_schema  { 0 }
 sub supports_catalog { 0 }

@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.73';
+our $VERSION = '0.753';
 
 sub auto_generate_columns
 {
@@ -114,6 +114,10 @@ sub auto_generate_foreign_keys
     my $db  = $self->db;
     my $dbh = $db->dbh or die $db->error;
     my $table_quoted = $db->quote_table_name($self->table);
+
+    # Silence this stupid warning when a table has no foreign keys:
+    # DBD::SQLite::st fetchrow_hashref warning: not an error(0) at dbdimp.c line 504
+    local $dbh->{'PrintWarn'} = 0;
 
     my $sth = $dbh->prepare("PRAGMA foreign_key_list($table_quoted)");
     $sth->execute;

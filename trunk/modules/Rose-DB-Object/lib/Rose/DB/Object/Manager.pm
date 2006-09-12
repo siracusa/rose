@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.752';
+our $VERSION = '0.753';
 
 our $Debug = 0;
 
@@ -314,7 +314,8 @@ sub get_objects
 
   my $try_subselect_limit = (exists $args{'limit_with_subselect'}) ? 
     $args{'limit_with_subselect'} : $class->default_limit_with_subselect;
-
+  
+  
   my $subselect_limit = 0;
 
   # Can't do direct inject with custom select lists
@@ -343,6 +344,9 @@ sub get_objects
 
     $dbh_retained = 1;
   }
+
+  my $use_explicit_joins =  (defined $args{'explicit_joins'}) ? 
+    $args{'explicit_joins'} : !$db->likes_implicit_joins;
 
   my $with_map_records;
 
@@ -880,11 +884,24 @@ sub get_objects
           }
           else
           {
-            # Aliased table names
-            push(@$clauses, "t${parent_tn}.$local_column = t$i.$foreign_column");
-
-            # Fully-qualified table names
-            #push(@$clauses, "$tables[$parent_tn - 1].$local_column = $tables[-1].$foreign_column");
+            if($use_explicit_joins)
+            {
+              # Aliased table names
+              push(@{$joins[$i]{'conditions'}}, "t${parent_tn}.$local_column = t$i.$foreign_column");
+  
+              # Fully-qualified table names
+              #push(@{$joins[$i]{'conditions'}}, "$tables[$parent_tn - 1].$local_column = $tables[-1].$foreign_column");
+  
+              $joins[$i]{'type'} = 'JOIN';  
+            }
+            else # implicit join with no ON clause
+            {
+              # Aliased table names
+              push(@$clauses, "t${parent_tn}.$local_column = t$i.$foreign_column");
+  
+              # Fully-qualified table names
+              #push(@$clauses, "$tables[$parent_tn - 1].$local_column = $tables[-1].$foreign_column");
+            }
           }
         }
 
@@ -1035,11 +1052,24 @@ sub get_objects
           }
           else
           {
-            # Aliased table names
-            push(@$clauses, "t$i.$local_column = t${parent_tn}.$foreign_column");
-
-            # Fully-qualified table names
-            #push(@$clauses, "$tables[-1].$local_column = $tables[$parent_tn - 1].$foreign_column");
+            if($use_explicit_joins)
+            {
+              # Aliased table names
+              push(@{$joins[$i]{'conditions'}}, "t$i.$local_column = t${parent_tn}.$foreign_column");
+  
+              # Fully-qualified table names
+              #push(@{$joins[$i]{'conditions'}}, "$tables[-1].$local_column = $tables[$parent_tn - 1].$foreign_column");
+  
+              $joins[$i]{'type'} = 'JOIN';
+            }
+            else # implicit join with no ON clause
+            {
+              # Aliased table names
+              push(@$clauses, "t$i.$local_column = t${parent_tn}.$foreign_column");
+  
+              # Fully-qualified table names
+              #push(@$clauses, "$tables[-1].$local_column = $tables[$parent_tn - 1].$foreign_column");
+            }
           }
         }
 
@@ -1124,11 +1154,24 @@ sub get_objects
           }
           else
           {
-            # Aliased table names
-            push(@$clauses, 't' . ($i - 1) . ".$local_column = t$i.$foreign_column");
-
-            # Fully-qualified table names
-            #push(@$clauses, "$tables[-2].$local_column = $tables[-1].$foreign_column");
+            if($use_explicit_joins)
+            {
+              # Aliased table names
+              push(@{$joins[$i]{'conditions'}}, 't' . ($i - 1) . ".$local_column = t$i.$foreign_column");
+  
+              # Fully-qualified table names
+              #push(@{$joins[$i]{'conditions'}}, "$tables[-2].$local_column = $tables[-1].$foreign_column");
+  
+              $joins[$i]{'type'} = 'JOIN';
+            }
+            else # implicit join with no ON clause
+            {
+              # Aliased table names
+              push(@$clauses, 't' . ($i - 1) . ".$local_column = t$i.$foreign_column");
+  
+              # Fully-qualified table names
+              #push(@$clauses, "$tables[-2].$local_column = $tables[-1].$foreign_column");
+            }
           }
         }
 
@@ -1319,6 +1362,7 @@ sub get_objects
                      columns     => \%columns,
                      all_columns => \%all_columns,
                      classes     => \%classes,
+                     joins       => \@joins,
                      meta        => \%meta,
                      db          => $db,
                      pretty      => $Debug,
