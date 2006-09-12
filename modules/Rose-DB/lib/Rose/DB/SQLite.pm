@@ -86,6 +86,8 @@ sub refine_dbi_column_info
   return;
 }
 
+sub likes_implicit_joins { 1 }
+
 *is_reserved_word = \&SQL::ReservedWords::SQLite::is_reserved;
 
 sub quote_column_name 

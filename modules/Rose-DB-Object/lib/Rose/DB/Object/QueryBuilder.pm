@@ -432,7 +432,7 @@ sub build_select
           unless($joins->[$i]{'conditions'});
 
         push(@joined_tables, 
-             "  $joins->[$i]{'type'} $tables_sql->[$i - 1] t$i ON(" .
+             "  $joins->[$i]{'type'} $tables_sql->[$i - 1] t$i ON (" .
              join(' AND ', @{$joins->[$i]{'conditions'}}) . ")");
 
         $i++;
