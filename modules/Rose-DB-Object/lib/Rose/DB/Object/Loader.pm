@@ -301,12 +301,15 @@ sub db_class
     croak "Illegal class name: $db_class";
   }
 
-  eval "require $db_class";
-
-  no strict 'refs';
-  if(!$@ && @{"${db_class}::ISA"} && !UNIVERSAL::isa($db_class, 'Rose::DB'))
+  unless(UNIVERSAL::isa($db_class, 'Rose::DB'))
   {
-    croak "Not a Rose::DB-derived class: $db_class";
+    eval "require $db_class";
+
+    no strict 'refs';
+    if(!$@ && @{"${db_class}::ISA"} && !UNIVERSAL::isa($db_class, 'Rose::DB'))
+    {
+      croak "Not a Rose::DB-derived class: $db_class";
+    }
   }
 
   if(my $db = $self->db)
