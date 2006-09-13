@@ -617,22 +617,25 @@ sub make_classes
   {
     $db_class = $self->db_class;
 
-    if($db_class && !UNIVERSAL::isa($db_class, 'Rose::DB'))
+    if($db_class)
     {
-      eval "require $db_class";
-
-      if($@)
+      unless(UNIVERSAL::isa($db_class, 'Rose::DB'))
       {
-        # Failed to load existing module
-        unless($@ =~ /^Can't locate $db_class\.pm/)
+        eval "require $db_class";
+  
+        if($@)
         {
-          croak "Could not load db class '$db_class' - $@";
+          # Failed to load existing module
+          unless($@ =~ /^Can't locate $db_class\.pm/)
+          {
+            croak "Could not load db class '$db_class' - $@";
+          }
+  
+          # Make the class
+          no strict 'refs';
+          @{"${db_class}::ISA"} = qw(Rose::DB);
+          $db_class->registry(clone(Rose::DB->registry));
         }
-
-        # Make the class
-        no strict 'refs';
-        @{"${db_class}::ISA"} = qw(Rose::DB);
-        $db_class->registry(clone(Rose::DB->registry));
       }
     }
     else
