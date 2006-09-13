@@ -1,14 +1,16 @@
 0.753 (09.13.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * Improved the convention manager's default plural_to_singular()
-      method.
+    * Improved the convention manager's plural_to_singular() method.
+    * Added "match", "imatch", and "similar" operators to QueryBuilder.
+      (Patch by Lucian Dragus)
     * The Loader will now check if a db_class "isa" Rose::DB already
       before attempting to load it.  (Reported by Randal Schwartz)
     * Fixed a bug that caused the update_objects() and delete_objects()
       Manager methods to fail to extract the object_class value from the
       object_class() method.  (Patch by Graham Barr)
-    * Added "match", "imatch", and "similar" operators to QueryBuilder.
-      (Patch by Lucian Dragus)
+    * Fixed a bug that caused "like" and other match operators to be
+      provided with incorrectly formatted arguments when used with
+      fixed-length CHAR columns.  (Reported by Ask Bjørn Hansen)
 
 0.752 (09.06.2006) - John Siracusa <siracusa@mindspring.com>
 
