@@ -1,7 +1,9 @@
-0.753 (09.10.2006) - John Siracusa <siracusa@mindspring.com>
+0.753 (09.13.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Improved the convention manager's default plural_to_singular()
       method.
+    * The Loader will now check if a db_class "isa" Rose::DB already
+      before attempting to load it.  (Reported by Randal Schwartz)
     * Fixed a bug that caused the update_objects() and delete_objects()
       Manager methods to fail to extract the object_class value from the
       object_class() method.  (Patch by Graham Barr)
