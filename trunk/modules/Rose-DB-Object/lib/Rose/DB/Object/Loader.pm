@@ -614,7 +614,7 @@ sub make_classes
   {
     $db_class = $self->db_class;
 
-    if($db_class)
+    if($db_class && !UNIVERSAL::isa($db_class, 'Rose::DB'))
     {
       eval "require $db_class";
 
