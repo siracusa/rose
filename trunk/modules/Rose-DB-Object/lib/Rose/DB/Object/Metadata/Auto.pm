@@ -1253,7 +1253,34 @@ sub auto_init_one_to_one_relationships
     {
       next FK;
     }
-    
+
+
+    # This is really a one-to-one fk/relationship
+    $fk->relationship_type('one to one');
+      
+    # Find the associated relationship and change its type
+    foreach my $rel ($self->relationships)
+    {
+      next  unless($rel->can('foreign_key'));
+      my $rel_fk = $rel->foreign_key or next;
+
+      if($rel_fk eq $fk) # string match on stringified object 
+      {
+        my $new_rel = 
+          $self->_build_relationship(name => $rel->name,
+                                     type => 'one to one',
+                                     info => 
+                                     {
+                                       class      => $rel->class,
+                                       column_map => scalar $rel->column_map,
+                                     });
+
+        $new_rel->foreign_key($fk);
+
+        $self->relationship($rel->name => $new_rel);
+      }
+    }
+      
     my $cm = $f_meta->convention_manager;
 
     # Also don't add add one to one relationships between a class

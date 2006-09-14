@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (3 * 4);
+use Test::More tests => 1 + (5 * 4);
 
 BEGIN 
 {
@@ -22,7 +22,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 3)  unless($Have{$db_type});
+    skip("$db_type tests", 5)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -63,6 +63,15 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
   is($check_foo->foo, 'xyz', "check foo - $db_type");
   is($check_bar->bar, 'some text', "check bar - $db_type");
+  
+  is($bar_class->meta->relationship('foo')->type, 'one to one', "check foo one to one - $db_type");
+  is($bar_class->meta->relationship('foo')->foreign_key, 
+     $bar_class->meta->foreign_key('foo'), "check foo fk rel - $db_type");
+  
+  #foreach my $rel ($bar_class->meta->relationships)
+  #{
+  #  print $rel->name, ' ', $rel->type, "\n";
+  #}
 }
 
 BEGIN
