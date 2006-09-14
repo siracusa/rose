@@ -325,7 +325,7 @@ sub perl_hash_definition
   }
 }
 
-sub perl_foreign_key_definition_attributes { qw(class key_columns soft) }
+sub perl_foreign_key_definition_attributes { qw(class key_columns soft rel_type) }
 
 # Some object keys have different names when they appear
 # in hashref-style foreign key specs.  This hash maps
@@ -336,6 +336,7 @@ sub spec_hash_map
     # object key    spec key
     method_name  => 'methods',
     _key_columns => 'key_columns',
+    relationship_type => 'rel_type',
   }
 }
 
@@ -360,6 +361,9 @@ sub spec_hash
       $spec{$key} = $self->{$key};
     }
   }
+
+  # Don't include this key if it has the default value.  Anal, I know...
+  delete $spec{'rel_type'}  if($spec{'rel_type'} eq $self->init_relationship_type);
 
   return wantarray ? %spec : \%spec;
 }
