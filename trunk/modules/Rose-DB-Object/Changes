@@ -1,4 +1,4 @@
-0.753 (09.14.2006) - John Siracusa <siracusa@mindspring.com>
+0.753 (09.17.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Improved the convention manager's plural_to_singular() method.
     * Added "match", "imatch", and "similar" operators to QueryBuilder.

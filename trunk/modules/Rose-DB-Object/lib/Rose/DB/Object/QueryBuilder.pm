@@ -1123,6 +1123,14 @@ would produce this SQL:
 
 where "legs" and "eyes" are both left unquoted.
 
+The same NAME string may be repeated multiple times.  (This is the primary reason that the query is a reference to an I<array> of name/value pairs, rather than a reference to a hash, which would only allow each NAME once.)  Example:
+
+    query =>
+    [
+      age => { gt => 10 },
+      age => { lt => 20 },
+    ]
+
 The string "NAME" can take many forms, each of which eventually resolves to a database column (COLUMN in the examples above).
 
 =over 4
@@ -1226,7 +1234,9 @@ which returns an SQL statement something like this:
       AND
       (title LIKE '%million%' OR title LIKE '%resident%')
 
-If you have a column named "and" or "or", you'll have to use the fully-qualified (table.column) or alias-qualified (tN.column) forms in order to address the column.
+The C<and> and C<or> keywords can be used multiple times within a query (just like all other NAME specifiers described earlier) and can be arbitrarily nested.
+
+If you have a column named "and" or "or", you'll have to use the fully-qualified (table.column) or alias-qualified (tN.column) forms in order to address that column.
 
 If C<query_is_sql> is false or omitted, all of the parameter values are passed through the C<parse_value()> and C<format_value()> methods of their corresponding L<Rose::DB::Object::Metadata::Column>-dervied column objects.
 
