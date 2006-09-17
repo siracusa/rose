@@ -11,6 +11,13 @@ our $Debug = 0;
 # Overshot distribution version, so freeze until it catches up
 our $VERSION  = '0.73'; 
 
+sub schema
+{
+  my($self) = shift;
+  $self->{'schema'} = shift  if(@_);
+  return $self->{'schema'} || $self->username;
+}
+
 sub auto_sequence_name
 {
   my($self, %args) = @_;
@@ -73,8 +80,8 @@ sub list_tables
     local $dbh->{'RaiseError'} = 1;
     local $dbh->{'FetchHashKeyName'} = 'NAME';
 
-    my($sth)  = $dbh -> table_info($self -> catalog, $self -> schema, '%', $types);
-    my($info) = $sth -> fetchall_arrayref({}); # The {} are mandatory.
+    my $sth  = $dbh->table_info($self->catalog, uc $self->schema, '%', $types);
+    my $info = $sth->fetchall_arrayref({}); # The {} are mandatory.
 
     for my $table (@$info)
     {
@@ -122,6 +129,42 @@ sub next_value_in_sequence
 
 sub supports_schema { 1 }
 
+sub primary_key_column_names
+{
+  my($self) = shift;
+
+  my %args = @_ == 1 ? (table => @_) : @_;
+
+  my $table   = $args{'table'} or Carp::croak "Missing table name parameter";
+  my $schema  = $args{'schema'} || $self->schema;
+  my $catalog = $args{'catalog'} || $self->catalog;
+
+  $table   = uc $table;
+  $schema  = uc $schema;
+  $catalog = uc $catalog;
+
+  my $table_unquoted = $self->unquote_table_name($table);
+
+  my $columns;
+
+  eval 
+  {
+    $columns = 
+      $self->_get_primary_key_column_names($catalog, $schema, $table_unquoted);
+  };
+
+  if($@ || !$columns)
+  {
+    no warnings 'uninitialized'; # undef strings okay
+    $@ = 'no primary key columns found'  unless(defined $@);
+    Carp::croak "Could not get primary key columns for catalog '" . 
+                $catalog . "' schema '" . $schema . "' table '" . 
+                $table_unquoted . "' - " . $@;
+  }
+
+  return wantarray ? @$columns : $columns;
+}
+
 1;
 
 __END__
@@ -162,9 +205,24 @@ This class cannot be used directly.  You must use L<Rose::DB> and let its L<new(
 
 Only the methods that are new or have different behaviors than those in L<Rose::DB> are documented here.  See the L<Rose::DB> documentation for the full list of methods.
 
+
+=head1 OBJECT METHODS
+
+=over 4
+
+=item B<schema [SCHEMA]>
+
+Get or set the database schema name.  In Oracle, every user has a corresponding schema.  The schema is comprised of all objects that user owns, and has the same name as that user.  Therefore, this attribute defaults to the L<username|Rose::DB/username> if it is not set explicitly.
+
+=back
+
+=head1 CONTRIBUTORS
+
+John C. Siracusa (siracusa@mindspring.com)
+
 =head1 AUTHOR
 
-Ron Savage <ron@savage.net.au>
+Ron Savage (ron@savage.net.au)
 
 http://savage.net.au/index.html
 
