@@ -19,7 +19,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.726';
+our $VERSION = '0.727';
 
 our $Debug = 0;
 
@@ -1753,6 +1753,18 @@ sub refine_dbi_column_info
   return;
 }
 
+sub refine_dbi_foreign_key_info
+{
+  my($self, $fk_info) = @_;
+  
+  # Unquote column names
+  foreach my $param (qw(FK_COLUMN_NAME UK_COLUMN_NAME))
+  {
+    $fk_info->{$param} = $self->unquote_column_name($fk_info->{$param});
+  }
+
+  return;
+}
 
 sub parse_dbi_column_info_default { $_[1] }
 

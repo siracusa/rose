@@ -65,7 +65,7 @@ sub key_columns
   {
     $self->{'is_required'} = undef;
   }
-  
+
   return $self->_key_columns(@_);
 }
 

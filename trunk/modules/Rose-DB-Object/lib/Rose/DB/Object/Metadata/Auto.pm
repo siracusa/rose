@@ -14,7 +14,7 @@ our $Debug;
 
 *Debug = \$Rose::DB::Object::Metadata::Debug;
 
-our $VERSION = '0.752';
+our $VERSION = '0.754';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -384,6 +384,8 @@ sub auto_generate_foreign_keys
 
     FK_INFO: foreach my $fk_info (@fk_info)
     {
+      $db->refine_dbi_foreign_key_info($fk_info, $self);
+
       my $foreign_class = 
         $self->class_for(catalog => $fk_info->{'UK_TABLE_CAT'},
                          schema  => $fk_info->{'UK_TABLE_SCHEM'},
