@@ -1,3 +1,8 @@
+0.754 (09.18.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a bug that caused foreign key column lookups to fail in
+      Postgres when using the unicode database encoding.
+
 0.753 (09.17.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Improved the convention manager's plural_to_singular() method.
