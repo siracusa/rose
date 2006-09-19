@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 221;
+use Test::More tests => 222;
 
 BEGIN 
 {
@@ -16,6 +16,8 @@ BEGIN
   use_ok('Rose::HTML::Form::Field::DateTime::Split::MonthDayYear');
   use_ok('Rose::HTML::Form::Field::DateTime::Split::MDYHMS');
 }
+
+our $Have_RDBO;
 
 my $form = Rose::HTML::Form->new;
 ok(ref $form && $form->isa('Rose::HTML::Form'), 'new()');
@@ -637,8 +639,53 @@ while(my($name, $class) = each(%$map))
   $i++;
 }
 
+SKIP:
+{
+  skip('RDBO tests', 1)  unless($Have_RDBO);
+
+  my $form = Rose::HTML::Form->new;
+  $form->add_fields(id => 'text', b => 'checkbox');
+  $form->params({ b => "on", id => 123 });
+  $form->init_fields;
+  my $o = $form->object_from_form('MyRDBO');
+  is($o->b, 1, 'checkbox to RDBO boolean column');
+}
+
+
 BEGIN
 {
+  our $Have_RDBO;
+
+  package MyRDBO;
+
+  eval 
+  {
+    require Rose::DB::Object;
+    require Rose::DB;
+  };
+  
+  if($@)
+  {
+    $Have_RDBO = 0;
+  }
+  else
+  {
+    Rose::DB->register_db(driver => 'sqlite');
+
+    $Have_RDBO = 1;
+    our @ISA = qw(Rose::DB::Object);
+    
+    MyRDBO->meta->setup
+    (
+      table => 'foo',
+      columns =>
+      [
+        id => { type => 'serial', primary_key => 1 },
+        b  => { type => 'boolean' },
+      ],
+    );
+  }
+
   package MyObject;
 
   sub new

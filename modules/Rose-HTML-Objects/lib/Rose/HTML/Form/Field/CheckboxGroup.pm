@@ -41,13 +41,23 @@ sub html_table
     unless((exists $args{'table'} && !defined $args{'table'}) ||
            exists $args{'table'}{'cellspacing'});
 
-  return
-    $self->SUPER::html_table(items       => scalar $self->checkboxes,
-                             format_item => \&Rose::HTML::Form::Field::Group::_html_item,
-                             %args);
+  if(delete $args{'_xhtml'})
+  {
+    return
+      $self->SUPER::html_table(items       => scalar $self->checkboxes,
+                               format_item => \&Rose::HTML::Form::Field::Group::_xhtml_item,
+                               %args);
+  }
+  else
+  {
+    return
+      $self->SUPER::html_table(items       => scalar $self->checkboxes,
+                               format_item => \&Rose::HTML::Form::Field::Group::_html_item,
+                               %args);
+  }
 }
 
-*xhtml_table = \&html_table;
+sub xhtml_table { shift->html_table(@_, _xhtml => 1) }
 
 1;
 
@@ -263,7 +273,7 @@ Get or set the XHTML linebreak string.  The default is "E<lt>br /E<gt>\n"
 
 =item B<xhtml_table>
 
-Equivalent to L<html_table()|/html_table>.
+Equivalent to L<html_table()|/html_table> but using XHTML markup for each checkbox.
 
 =back
 
