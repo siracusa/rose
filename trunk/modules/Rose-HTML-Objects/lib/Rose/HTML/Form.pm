@@ -14,7 +14,7 @@ use Rose::HTML::Form::Field::Collection;
 
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.52';
+our $VERSION = '0.531';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -737,14 +737,43 @@ sub object_from_form
 
   $object ||= $class->new();
 
-  foreach my $field ($self->fields)
+  # Special handling of boolean columns for RDBO
+  if($object->isa('Rose::DB::Object'))
   {
-    my $name = $field->local_name;
+    my $meta = $object->meta;
 
-    if($object->can($name))
+    foreach my $field ($self->fields)
     {
-      #$Debug && warn "$class object $name(", $field->internal_value, ")";
-      $object->$name($field->internal_value);
+      my $name = $field->local_name;
+
+      if($object->can($name))
+      {
+        # Checkboxes setting boolean columns
+        if($field->isa('Rose::HTML::Form::Field::Checkbox') &&
+           $meta->column($name) && $meta->column($name)->type eq 'boolean')
+        {
+          #$Debug && warn "$class object $name(", $field->is_on, ")";
+          $object->$name($field->is_on);        
+        }
+        else # everything else
+        {
+          #$Debug && warn "$class object $name(", $field->internal_value, ")";
+          $object->$name($field->internal_value);
+        }
+      }
+    }
+  }
+  else
+  {
+    foreach my $field ($self->fields)
+    {
+      my $name = $field->local_name;
+  
+      if($object->can($name))
+      {
+        #$Debug && warn "$class object $name(", $field->internal_value, ")";
+        $object->$name($field->internal_value);
+      }
     }
   }
 
