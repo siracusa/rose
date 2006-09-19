@@ -1,3 +1,10 @@
+0.531 (09.19.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * The xhtml_table() method for checkbox and radio button groups now
+      correctly returns XHTML markup.  (Reported by Jacques Supcik)
+    * Added special handling to object_from_form() for checkboxes that
+      set boolean columns in Rose::DB::Object-derived objects.
+
 0.53 (06.14.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added Script, Link, and Anchor tag classes.

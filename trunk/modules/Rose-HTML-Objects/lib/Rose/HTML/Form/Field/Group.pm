@@ -70,6 +70,7 @@ sub items
 *fields = \&items;
 
 sub _html_item { $_[1]->html_field }
+sub _xhtml_item { $_[1]->xhtml_field }
 
 sub _args_to_items
 {
