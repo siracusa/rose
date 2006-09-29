@@ -9,9 +9,10 @@ use Rose::URI;
 
 use URI::Escape qw(uri_escape);
 
+use Rose::HTML::Object::Errors qw(:form);
+
 use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
-
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
 our $VERSION = '0.531';
@@ -547,7 +548,8 @@ sub validate
   {
     unless(defined $self->error)
     {
-      $self->error('One or more fields have errors.');
+      #$self->error('One or more fields have errors.');
+      $self->error_id(FORM_HAS_ERRORS);
     }
 
     return 0;
@@ -1319,7 +1321,21 @@ sub AUTOLOAD
   goto &Rose::HTML::Object::AUTOLOAD;
 }
 
+if($ENV{'MOD_PERL'} || $ENV{'RHTMLO_PRIME_CACHES'})
+{
+  __PACKAGE__->load_all_messages;
+}
+
 1;
+
+__DATA__
+[% LOCALE en %]
+
+FORM_HAS_ERRORS = "One or more fields have errors."
+
+[% LOCALE fr %]
+
+FORM_HAS_ERRORS = "Une ou plusieurs zones ont des erreurs."
 
 __END__
 

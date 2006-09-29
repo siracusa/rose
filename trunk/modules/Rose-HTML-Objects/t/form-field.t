@@ -104,8 +104,8 @@ $field->validate;
 is($field->html_field, '<>', 'html_field() 2');
 is($field->xhtml_field, '< />', 'xhtml_field() 2');
 
-is($field->html, qq(<><br>\n<span class="error">Name is a required field</span>), 'html() 2');
-is($field->xhtml, qq(< /><br />\n<span class="error">Name is a required field</span>), 'xhtml() 2');
+is($field->html, qq(<><br>\n<span class="error">Name is a required field.</span>), 'html() 2');
+is($field->xhtml, qq(< /><br />\n<span class="error">Name is a required field.</span>), 'xhtml() 2');
 
 $field->label('Name> ');
 

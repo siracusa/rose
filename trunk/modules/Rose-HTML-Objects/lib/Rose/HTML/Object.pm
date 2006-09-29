@@ -5,18 +5,25 @@ use strict;
 use Carp;
 
 use Rose::HTML::Util();
+use Rose::HTML::Object::Message::Localizer;
 
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.52';
+our $VERSION = '0.531';
 
 our $Debug = undef;
 
+use Rose::HTML::Object::MakeMethods
+(
+  localized_errors =>
+  [
+    'errors',
+  ],
+);
+
 use Rose::Object::MakeMethods::Generic
 (
-  scalar  => 'error',
-
   boolean =>
   [
     'escape_html'         => { default => 1 },
@@ -31,6 +38,8 @@ use Rose::Class::MakeMethods::Generic
     'html_element',  # may be read-only in subclasses
     'xhtml_element', # may be read-only in subclasses
     'autoload_html_attr_methods',
+    'default_localizer',
+    'default_locale',
   ],
 );
 
@@ -61,6 +70,8 @@ use Rose::Class::MakeMethods::Set
     },
   ]
 );
+
+__PACKAGE__->localizer(Rose::HTML::Object::Message::Localizer->new);
 
 __PACKAGE__->autoload_html_attr_methods(1);
 
@@ -143,6 +154,7 @@ sub delete_html_attrs
 
   if(@_)
   {
+    local $_;
     delete $self->{'html_attrs'}{$_}  for(@_);
     return scalar @_;
   }
@@ -160,6 +172,7 @@ sub clear_html_attrs
 
   if(@_)
   {
+    local $_;
     $self->{'html_attrs'}{$_} = undef  for(@_);
     return scalar @_;
   }
@@ -294,6 +307,7 @@ sub html_attrs_string
 
   my @html;
 
+  local $_;
   my $required_attrs = $self->required_html_attrs_hash;
   my %boolean_attrs  = map { $_ => 1 } $self->boolean_html_attrs;
   my %attrs = map { $_ => 1 } (keys(%{$self->{'html_attrs'}}), keys(%$required_attrs));
@@ -337,6 +351,7 @@ sub xhtml_attrs_string
 
   my @html;
 
+  local $_;
   my $required_attrs = $self->required_html_attrs_hash;
   my %boolean_attrs  = map { $_ => 1 } $self->boolean_html_attrs;
   my %attrs = map { $_ => 1 } (keys(%{$self->{'html_attrs'}}), keys(%$required_attrs));
@@ -492,6 +507,219 @@ sub create_html_attr_methods
 
   return $count;
 }
+
+sub localizer
+{
+  my($invocant) = shift;
+  
+  # Called as object method
+  if(my $class = ref $invocant)
+  {
+    if(@_)
+    {
+      return $invocant->{'localizer'} = shift;
+    }
+
+    return $invocant->{'localizer'} || $class->default_localizer;
+  }
+  else # Called as class method
+  {
+    if(@_)
+    {
+      return $invocant->default_localizer(shift);
+    }
+
+    return $invocant->default_localizer
+  }
+}
+
+sub locale
+{
+  my($invocant) = shift;
+  
+  # Called as object method
+  if(my $class = ref $invocant)
+  {
+    if(@_)
+    {
+      return $invocant->{'locale'} = shift;
+    }
+
+    return $invocant->{'locale'} || $invocant->localizer->locale;
+  }
+  else # Called as class method
+  {
+    if(@_)
+    {
+      return $invocant->default_locale(shift);
+    }
+
+    return $invocant->localizer->locale;
+  }
+}
+
+sub get_localized_message
+{
+  my($self, $id, $locale) = @_;
+
+  my $localizer = $self->localizer;
+
+  my $name = ($id =~ /^[a-z][A-Z]/) ? $id : 
+    $localizer->get_message_name($id);
+
+  $locale = lc $locale;
+
+  my $msg = $self->_get_localized_message($name, $locale);
+  return $msg  if(defined $msg);
+
+  no strict 'refs';
+  foreach my $class (@{ref($self) . '::ISA'})
+  {
+    my $msg = $self->_get_localized_message($name, $locale, $class);
+    return $msg  if(defined $msg);
+  }
+  
+  return undef;
+}
+
+my $Locale_Declaration = qr(^\s* \[% \s* LOCALE \s* (\S+) \s* %\] \s*$)x;
+my $Message_Spec = qr(^ \s* ([A-Z0-9_]+) \s* = \s* "(.*)" \s* $)x;
+my $Comment_Or_Blank = qr(^ \s* \# | ^ \s* $)x;
+my $End_Messages = qr(^=\w|^\s*__END__);
+
+my %Data_Pos;
+
+sub _get_localized_message
+{
+  my($self, $name, $locale, $class) = @_;
+
+  $class ||= ref $self;
+
+  my $localizer = $self->localizer;
+
+  if($localizer->localized_message_exists($name, $locale))
+  {
+    return $localizer->get_localized_message($name, $locale);
+  }
+
+  my $in_locale = '';
+
+  no strict 'refs';
+  my $fh = \*{"${class}::DATA"};
+
+  if(fileno($fh))
+  {
+    local $/ = "\n";
+
+    if($Data_Pos{$class})
+    {
+      # Rewind to the start of the __DATA__ section
+      seek($fh, $Data_Pos{$class}, 0);
+    }
+    else
+    {
+      $Data_Pos{$class} = tell($fh);
+    }
+
+   local $_;
+
+    while(<$fh>)
+    {
+      last  if(/$End_Messages/);
+
+      #$Debug && warn "PROC: $_";
+
+      if(/$Locale_Declaration/)
+      {
+        $in_locale = $1;
+      }
+      elsif(/$Message_Spec/)
+      {
+        if($in_locale eq $locale && $1 eq $name)
+        {
+          (my $text = $2) =~ s/\\n/\n/g;
+          $localizer->add_localized_message_text(name   => $name,
+                                                 locale => $in_locale,
+                                                 text   => $text);
+          return $text;
+        }
+      }
+      elsif(!/$Comment_Or_Blank/)
+      {
+        chomp;
+        warn "WARNING: Localized message line not understood: $_";
+      }
+    }
+  }
+
+  no strict 'refs';
+  foreach my $class (@{"${class}::ISA"})
+  {
+    my $msg = $self->_get_localized_message($name, $locale, $class);
+    return $msg  if(defined $msg);
+  }
+
+  return undef;
+}
+
+sub load_all_messages
+{
+  my($class) = shift;
+
+  my $localizer = $class->localizer;
+  my $in_locale = '';
+
+  no strict 'refs';
+  my $fh = \*{"${class}::DATA"};
+
+  if(fileno($fh))
+  {
+    local $/ = "\n";
+
+    if($Data_Pos{$class})
+    {
+      # Rewind to the start of the __DATA__ section
+      seek($fh, $Data_Pos{$class}, 0);
+    }
+    else
+    {
+      $Data_Pos{$class} = tell($fh);
+    }
+
+    local $_;
+
+    while(<$fh>)
+    {
+      last  if(/$End_Messages/);
+
+      #$Debug && warn "PROC: $_";
+
+      if(/$Locale_Declaration/)
+      {
+        $in_locale = $1;
+      }
+      elsif($in_locale && /$Message_Spec/)
+      {
+        my $name = $1;
+        (my $text = $2) =~ s/\\n/\n/g;
+
+        $localizer->add_localized_message_text(name   => $name,
+                                               locale => $in_locale,
+                                               text   => $text);
+      }
+      elsif(!/$Comment_Or_Blank/)
+      {
+        chomp;
+        warn qq(Localized message line not understood in $class __DATA__ section line $. - "$_");
+      }
+    }
+  }
+}
+
+# if($ENV{'MOD_PERL'} || $ENV{'RHTMLO_PRIME_CACHES'})
+# {
+#   __PACKAGE__->load_all_messages;
+# }
 
 # XXX: This is undocumented for now...
 #
