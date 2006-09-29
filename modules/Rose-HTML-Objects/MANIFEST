@@ -60,7 +60,6 @@ lib/Rose/HTML/Object/Message.pm
 lib/Rose/HTML/Object/Message/Localized.pm
 lib/Rose/HTML/Object/Message/Localizer.pm
 lib/Rose/HTML/Object/Messages.pm
-lib/Rose/HTML/Object/Messages.pm.orig.pm
 lib/Rose/HTML/Object/WithContents.pm
 lib/Rose/HTML/Objects.pm
 lib/Rose/HTML/Script.pm
