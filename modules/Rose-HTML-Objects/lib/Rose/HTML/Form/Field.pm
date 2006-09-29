@@ -723,7 +723,7 @@ sub validator
 sub message_for_error_id
 {
   my($self, %args) = @_;
-  
+
   my $error_id  = $args{'error_id'};
   my $msg_class = $args{'msg_class'};
   my $args      = $args{'args'} || [];
@@ -741,7 +741,7 @@ sub message_for_error_id
     {
       $msg->id(FIELD_REQUIRED_GENERIC);
     }
-    
+
     return $msg;
   }
   elsif($error_id == FIELD_INVALID)
@@ -756,7 +756,7 @@ sub message_for_error_id
     {
       $msg->id(FIELD_INVALID_GENERIC);
     }
-    
+
     return $msg;
   }
 
@@ -798,7 +798,7 @@ sub localizer
       }
       else { return $class->default_localizer }
     }
-    
+
     return $localizer || $class->default_localizer;
   }
   else # Called as class method
@@ -826,26 +826,23 @@ sub locale
 
     my $locale = $invocant->{'locale'};
 
-    unless($locale)
+    return $locale  if($locale);
+
+    if(my $parent_field = $invocant->parent_field)
     {
-      if(my $parent_field = $invocant->parent_field)
+      if(my $locale = $parent_field->locale)
       {
-        if(my $locale = $parent_field->locale)
-        {
-          return $locale;
-        }
+        return $locale;
       }
-      elsif(my $parent_form = $invocant->parent_form)
-      {
-        if(my $locale = $parent_form->locale)
-        {
-          return $locale;
-        }      
-      }
-      else { return $class->default_locale }
     }
-    
-    return $locale || $class->default_locale;
+    elsif(my $parent_form = $invocant->parent_form)
+    {
+      if(my $locale = $parent_form->locale)
+      {
+        return $locale;
+      }      
+    }
+    else { return $invocant->localizer->locale || $class->default_locale }
   }
   else # Called as class method
   {

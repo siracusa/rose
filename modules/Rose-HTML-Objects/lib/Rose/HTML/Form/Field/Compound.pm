@@ -269,7 +269,6 @@ sub validate
     if(@missing)
     {
       $self->error_id(FIELD_REQUIRED, { missing => \@missing });
-      #$self->error('Missing ' . join(', ', @missing));
       return 0;
     }
   }
@@ -280,7 +279,7 @@ sub validate
 sub message_for_error_id
 {
   my($self, %args) = @_;
-  
+
   my $error_id  = $args{'error_id'};
   my $msg_class = $args{'msg_class'};
   my $args      = $args{'args'} || [];
@@ -298,7 +297,7 @@ sub message_for_error_id
     {
       $msg->id(FIELD_REQUIRED_GENERIC);
     }
-    
+
     return $msg;
   }
 

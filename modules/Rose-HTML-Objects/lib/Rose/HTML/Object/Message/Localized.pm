@@ -34,11 +34,11 @@ __PACKAGE__->default_localizer(Rose::HTML::Object::Message::Localizer->new);
 sub args
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     my %args;
-  
+
     if(@_ == 1 && ref $_[0] eq 'ARRAY')
     {
       my $i = 1;
@@ -49,7 +49,7 @@ sub args
       %args = %{$_[0]};
 
       my $i = 1;
-      
+
       foreach my $key (keys %args)
       {
         $args{$i} = $args{$key}  unless(exists $args{$i});
@@ -86,7 +86,7 @@ sub localized_text
 sub localizer
 {
   my($invocant) = shift;
-  
+
   # Called as object method
   if(my $class = ref $invocant)
   {
@@ -108,7 +108,7 @@ sub localizer
       }
       else { return $class->default_localizer }
     }
-    
+
     return $localizer || $class->default_localizer;
   }
   else # Called as class method
@@ -125,7 +125,7 @@ sub localizer
 sub locale
 {
   my($invocant) = shift;
-  
+
   # Called as object method
   if(my $class = ref $invocant)
   {
@@ -147,7 +147,7 @@ sub locale
       }
       else { return $class }
     }
-    
+
     return $locale;
   }
   else # Called as class method

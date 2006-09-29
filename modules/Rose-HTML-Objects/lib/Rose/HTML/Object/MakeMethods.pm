@@ -30,7 +30,7 @@ sub localized_message
     $methods{$name} = sub
     {
       my($self) = shift;
-      
+
       if(@_)
       {
         if(@_ > 1)
@@ -53,12 +53,12 @@ sub localized_message
             $id = $self->localizer->get_message_id($id) || 
               Carp::croak "Unknown message id: '$id'";
           }
-          
+
           return $self->$name($msg_class->new(id => $id, parent => $self, @args));
         }
-        
+
         my $msg = shift;
-        
+
         if(UNIVERSAL::isa($msg, $accept_msg_class))
         {
           $msg->parent($self);
@@ -69,14 +69,14 @@ sub localized_message
           return $self->{$key} = $msg_class->new(text => $msg, parent => $self);
         }
       }
-      
+
       return $self->{$key};
     };
 
     $methods{$id_method} = sub
     {
       my($self) = shift;
-      
+
       if(@_)
       {
         my($id, @args) = @_;
@@ -118,7 +118,7 @@ sub localized_error
     $methods{$name} = sub
     {
       my($self) = shift;
-      
+
       if(@_)
       {
         return $self->{$key} = undef  unless(defined $_[0]);
@@ -147,11 +147,11 @@ sub localized_error
           unshift(@args, error_id => $id, msg_class => $msg_class);
 
           my $message;
-          
+
           if($self->can('message_for_error_id'))
           {
             $message = $self->message_for_error_id(@args);
-            
+
             unless(defined $message)
             {
               $message = $self->localizer->message_for_error_id(@args);
@@ -162,13 +162,13 @@ sub localized_error
             $message = $self->localizer->message_for_error_id(@args);
           }
 
-                         
+
           return $self->$name($error_class->new(id => $id, parent => $self,
                               message => $message));
         }
-        
+
         my $error = shift;
-        
+
         if(UNIVERSAL::isa($error, $accept_error_class))
         {
           $error->parent($self);
@@ -180,14 +180,14 @@ sub localized_error
             $error_class->new(message => $msg_class->new($error), parent => $self);
         }
       }
-      
+
       return $self->{$key};
     };
 
     $methods{$id_method} = sub
     {
       my($self) = shift;
-      
+
       if(@_)
       {
         my($id) = shift;
@@ -212,11 +212,11 @@ sub localized_error
         unshift(@args, error_id => $id, msg_class => $msg_class);
 
         my $message;
-        
+
         if($self->can('message_for_error_id'))
         {
           $message = $self->message_for_error_id(@args);
-          
+
           unless(defined $message)
           {
             $message = $self->localizer->message_for_error_id(@args);
@@ -227,7 +227,7 @@ sub localized_error
           $message = $self->localizer->message_for_error_id(@args);
         }
 
-                       
+
         return $self->$name($error_class->new(id => $id, parent => $self,
                             message => $message));
       }
@@ -236,7 +236,7 @@ sub localized_error
       return $error->id  if(UNIVERSAL::can($error, 'id'));
       return undef;
     };
-    
+
   }
   else { Carp::croak "Unknown interface: $interface" }
 
@@ -277,7 +277,7 @@ sub localized_errors
     $methods{$plural_name} = sub
     {
       my($self) = shift;
-      
+
       if(@_)
       {
         if(!defined $_[0] || (ref $_[0] eq 'ARRAY' && !@{$_[0]}))
@@ -288,14 +288,14 @@ sub localized_errors
         $self->{$key} = undef;
         $self->$adds_method(@_);
       }
-      
+
       return wantarray ? @{$self->{$key} || []} : $self->{$key};
     };
 
     $methods{$singular_name} = sub
     {
       my($self) = shift;
-      
+
       if(@_)
       {
         return $self->{$key} = undef  unless(defined $_[0]);
@@ -324,11 +324,11 @@ sub localized_errors
           unshift(@args, error_id => $id, msg_class => $msg_class);
 
           my $message;
-          
+
           if($self->can('message_for_error_id'))
           {
             $message = $self->message_for_error_id(@args);
-            
+
             unless(defined $message)
             {
               $message = $self->localizer->message_for_error_id(@args);
@@ -339,15 +339,15 @@ sub localized_errors
             $message = $self->localizer->message_for_error_id(@args);
           }
 
-                         
+
           $self->{$key} = 
             [ $error_class->new(id => $id, parent => $self, message => $message) ];
-          
+
           return $self->{$key}[-1];
         }
-        
+
         my $error = shift;
-        
+
         if(UNIVERSAL::isa($error, $accept_error_class))
         {
           $error->parent($self);
@@ -359,14 +359,14 @@ sub localized_errors
             [ $error_class->new(message => $msg_class->new($error), parent => $self) ];
         }
       }
-      
+
       return $self->{$key}[-1];
     };
 
     $methods{$adds_method} = sub
     {
       my($self) = shift;
-      
+
       return  unless(@_);
 
       my $errors = __errors_from_args($self, \@_, $error_class, $msg_class, $accept_error_class, 0, 0);
@@ -379,7 +379,7 @@ sub localized_errors
     $methods{$add_method} = sub
     {
       my($self) = shift;
-      
+
       return  unless(@_);
 
       my $errors = __errors_from_args($self, \@_, $error_class, $msg_class, $accept_error_class, 0, 1);
@@ -392,7 +392,7 @@ sub localized_errors
     $methods{$id_method} = sub
     {
       my($self) = shift;
-      
+
       if(@_)
       {
         my $errors = __errors_from_args($self, \@_, $error_class, $msg_class, $accept_error_class, 1, 1);
@@ -406,7 +406,7 @@ sub localized_errors
     $methods{$ids_method} = sub
     {
       my($self) = shift;
-      
+
       if(@_)
       {
         my $errors = __errors_from_args($self, \@_, $error_class, $msg_class, $accept_error_class, 1, 0);
@@ -426,7 +426,7 @@ sub localized_errors
     $methods{$add_ids_method} = sub
     {
       my($self) = shift;
-      
+
       return  unless(@_);
 
       my $errors = __errors_from_args($self, \@_, $error_class, $msg_class, $accept_error_class, 1, 1);
@@ -438,14 +438,14 @@ sub localized_errors
         my @ids = map { $_->id } @$errors;
         return $want ? @ids : \@ids;
       }
-      
+
       return;
     };
 
     $methods{$add_id_method} = sub
     {
       my($self) = shift;
-      
+
       return  unless(@_);
 
       my $errors = __errors_from_args($self, \@_, $error_class, $msg_class, $accept_error_class, 1, 0);
@@ -457,7 +457,7 @@ sub localized_errors
         my @ids = map { $_->id } @$errors;
         return $want ? @ids : \@ids;
       }
-      
+
       return;
     };
 
@@ -498,7 +498,7 @@ sub __errors_from_args
   for(my $i = 0; $i <= $#$args; $i++)
   {
     my $arg = $args->[$i];
-    
+
     if(UNIVERSAL::isa($arg, $accept_error_class))
     {
       $arg->parent($self);
@@ -535,7 +535,7 @@ sub __errors_from_args
       if($self->can('message_for_error_id'))
       {
         $message = $self->message_for_error_id(@msg_args);
-        
+
         unless(defined $message)
         {
           $message = $self->localizer->message_for_error_id(@msg_args);

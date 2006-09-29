@@ -19,14 +19,14 @@ BEGIN
 {
   *error_id_exists   = \&Rose::HTML::Object::Messages::message_id_exists;
   *error_name_exists = \&Rose::HTML::Object::Messages::error_name_exists;
-  
+
   *get_error_id   = \&Rose::HTML::Object::Messages::get_message_id;
   *get_error_name = \&Rose::HTML::Object::Messages::get_message_name;
-  
+
   *add_error    = \&Rose::HTML::Object::Messages::add_message;
   *add_errors   = \&Rose::HTML::Object::Messages::add_messages;
   *get_error_id = \&Rose::HTML::Object::Messages::get_message_id;
-  
+
   *add_error  = \&Rose::HTML::Object::Messages::add_message;
   *add_errors = \&Rose::HTML::Object::Messages::add_messages;
 }
@@ -53,7 +53,8 @@ use constant NUM_BELOW_MIN                => 1303;
 use constant NUM_ABOVE_MAX                => 1304;
 
 # Date errors
-use constant DATE_MIN_GREATER_THAN_MAX => 1500;
+use constant DATE_INVALID              => 1500;
+use constant DATE_MIN_GREATER_THAN_MAX => 1501;
 
 # Time errors
 use constant TIME_INVALID         => 1550;

@@ -546,7 +546,7 @@ sub validate
 
   if($fail)
   {
-    unless(defined $self->error)
+    unless($self->has_errors)
     {
       #$self->error('One or more fields have errors.');
       $self->error_id(FORM_HAS_ERRORS);
@@ -770,7 +770,7 @@ sub object_from_form
     foreach my $field ($self->fields)
     {
       my $name = $field->local_name;
-  
+
       if($object->can($name))
       {
         #$Debug && warn "$class object $name(", $field->internal_value, ")";

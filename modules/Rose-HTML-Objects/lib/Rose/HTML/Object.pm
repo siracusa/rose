@@ -29,7 +29,7 @@ use Rose::Object::MakeMethods::Generic
     'escape_html'         => { default => 1 },
     'validate_html_attrs' => { default => 1 }
   ],
-  
+
   'scalar' =>
   [
     'html_error_formatter',
@@ -565,7 +565,7 @@ sub create_html_attr_methods
 sub localizer
 {
   my($invocant) = shift;
-  
+
   # Called as object method
   if(my $class = ref $invocant)
   {
@@ -590,7 +590,7 @@ sub localizer
 sub locale
 {
   my($invocant) = shift;
-  
+
   # Called as object method
   if(my $class = ref $invocant)
   {
@@ -599,7 +599,8 @@ sub locale
       return $invocant->{'locale'} = shift;
     }
 
-    return $invocant->{'locale'} || $invocant->localizer->locale;
+    return $invocant->{'locale'} || $invocant->localizer->locale || 
+           $invocant->localizer->default_locale;
   }
   else # Called as class method
   {
@@ -608,7 +609,7 @@ sub locale
       return $invocant->default_locale(shift);
     }
 
-    return $invocant->localizer->locale;
+    return $invocant->localizer->locale || $invocant->localizer->default_locale;
   }
 }
 
@@ -632,7 +633,7 @@ sub get_localized_message
     my $msg = $self->_get_localized_message($name, $locale, $class);
     return $msg  if(defined $msg);
   }
-  
+
   return undef;
 }
 
@@ -778,7 +779,7 @@ sub load_messages_from_fh
       {
         my $name = $1;
         my $text = $2;
-        
+
         for($text)
         {
           s/\\n/\n/g;
@@ -801,7 +802,7 @@ sub load_messages_from_fh
       warn "WARNING: Localized message line not understood: $_";
     }
   }
-  
+
   return wantarray ? @text : $text[0];
   return;
 }
