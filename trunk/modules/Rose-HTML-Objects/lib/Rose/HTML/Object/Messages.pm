@@ -37,6 +37,7 @@ sub init_export_tags
     field  => [ grep { /^FIELD_/ } @{$class->message_names_list} ],
     form   => [ grep { /^FORM_/ } @{$class->message_names_list} ],
     date   => [ grep { /^DATE_/ } @{$class->message_names_list} ],
+    time   => [ grep { /^TIME_/ } @{$class->message_names_list} ],
     email  => [ grep { /^EMAIL_/ } @{$class->message_names_list} ],
     phone  => [ grep { /^PHONE_/ } @{$class->message_names_list} ],
     number => [ grep { /^NUM_/ } @{$class->message_names_list} ],
@@ -180,6 +181,8 @@ use constant FIELD_REQUIRED_GENERIC  => 4;
 use constant FIELD_REQUIRED_LABELLED => 5;
 use constant FIELD_REQUIRED_SUBFIELD => 6;
 use constant FIELD_PARTIAL_VALUE     => 7;
+use constant FIELD_INVALID_GENERIC   => 9;
+use constant FIELD_INVALID_LABELLED  => 10;
 
 # Forms
 use constant FORM_HAS_ERRORS => 100;
@@ -193,6 +196,13 @@ use constant NUM_ABOVE_MAX                => 1304;
 
 # Date messages
 use constant DATE_MIN_GREATER_THAN_MAX => 1500;
+
+# Time messages
+use constant TIME_INVALID         => 1550;
+use constant TIME_INVALID_HOUR    => 1551;
+use constant TIME_INVALID_MINUTE  => 1552;
+use constant TIME_INVALID_SECONDS => 1553;
+use constant TIME_INVALID_AMPM    => 1554;
 
 # Email messages
 use constant EMAIL_INVALID => 1600;

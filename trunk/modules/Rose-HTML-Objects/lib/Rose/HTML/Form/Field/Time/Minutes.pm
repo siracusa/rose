@@ -2,6 +2,8 @@ package Rose::HTML::Form::Field::Time::Minutes;
 
 use strict;
 
+use Rose::HTML::Object::Errors qw(:time);
+
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
@@ -23,15 +25,20 @@ sub validate
 
   unless($value =~ /^\d\d?$/ && $value >= 0 && $value <= 59)
   {
-    $self->error('Invalid minute');
+    $self->add_error_id(TIME_INVALID_MINUTE);
     return 0;
   }
-
 
   return 1;
 }
 
 1;
+
+__DATA__
+
+[% LOCALE en %]
+
+TIME_INVALID_MINUTE = "Invalid minute."
 
 __END__
 

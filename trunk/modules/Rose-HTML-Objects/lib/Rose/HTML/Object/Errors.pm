@@ -40,6 +40,7 @@ use constant CUSTOM_ERROR => -1;
 # Field errors
 use constant FIELD_REQUIRED      => 3;
 use constant FIELD_PARTIAL_VALUE => 7;
+use constant FIELD_INVALID       => 8;
 
 # Form errors
 use constant FORM_HAS_ERRORS => 100;
@@ -53,6 +54,13 @@ use constant NUM_ABOVE_MAX                => 1304;
 
 # Date errors
 use constant DATE_MIN_GREATER_THAN_MAX => 1500;
+
+# Time errors
+use constant TIME_INVALID         => 1550;
+use constant TIME_INVALID_HOUR    => 1551;
+use constant TIME_INVALID_MINUTE  => 1552;
+use constant TIME_INVALID_SECONDS => 1553;
+use constant TIME_INVALID_AMPM    => 1554;
 
 # Email errors
 use constant EMAIL_INVALID => 1600;

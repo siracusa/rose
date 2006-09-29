@@ -2,6 +2,8 @@ package Rose::HTML::Form::Field::Time::Hours;
 
 use strict;
 
+use Rose::HTML::Object::Errors qw(:time);
+
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
@@ -28,20 +30,20 @@ sub validate
 
   unless($value =~ /^\d\d?$/)
   {
-    $self->error('Invalid hour');
+    $self->add_error_id(TIME_INVALID_HOUR);
     return 0;
   }
 
   if($self->military)
   {
     return 1  if($value >= 0 && $value <= 23);
-    $self->error('Invalid hour');
+    $self->add_error_id(TIME_INVALID_HOUR);
     return 0;
   }
   else
   {
     return 1  if($value >= 0 && $value <= 12);
-    $self->error('Invalid hour');
+    $self->add_error_id(TIME_INVALID_HOUR);
     return 0;
   }
 
@@ -49,6 +51,12 @@ sub validate
 }
 
 1;
+
+__DATA__
+
+[% LOCALE en %]
+
+TIME_INVALID_HOUR = "Invalid hour."
 
 __END__
 
