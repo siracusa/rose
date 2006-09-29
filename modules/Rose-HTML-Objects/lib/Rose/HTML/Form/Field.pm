@@ -8,6 +8,8 @@ use Scalar::Util();
 use Rose::HTML::Util();
 
 use Rose::HTML::Label;
+use Rose::HTML::Object::Errors qw(:field);
+use Rose::HTML::Object::Messages qw(:field);
 
 use Rose::HTML::Object;
 our @ISA = qw(Rose::HTML::Object);
@@ -17,16 +19,21 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.53';
+our $VERSION = '0.531';
 
 #our $Debug = 0;
 
+use Rose::HTML::Object::MakeMethods
+(
+  localized_message =>
+  [
+    qw(label description)
+  ],
+);
+
 use Rose::Object::MakeMethods::Generic
 (
-  scalar => 
-  [
-    qw(label description rank type)
-  ],
+  scalar => [ qw(rank type) ],
 
   boolean => [ qw(required is_cleared has_partial_value) ],
   boolean => 
@@ -258,7 +265,7 @@ sub input_value
     $self->{'is_cleared'} = 0;
     $self->{'internal_value'} = undef;
     $self->{'output_value'} = undef;
-    $self->{'error'} = undef;
+    $self->{'errors'} = undef;
     $self->{'input_value'} = shift;
 
     if(my $parent = $self->parent_field)
@@ -587,6 +594,11 @@ sub xhtml
   return $field;
 }
 
+# sub label
+# {
+# 
+# }
+
 sub label_object
 {
   my($self) = shift;
@@ -640,8 +652,18 @@ sub validate
       (ref $value eq 'ARRAY' && !@$value)))
   {
     my $label = $self->label;
-    $label = 'This'  unless(defined $label);
-    $self->error("$label is a required field");
+
+    if(defined $label)
+    {
+      #$self->error_id(FIELD_REQUIRED, $label);
+      #$self->error_id(FIELD_REQUIRED, [ $label ]);
+      $self->error_id(FIELD_REQUIRED, { label => $label });
+    }
+    else
+    {
+      $self->error_id(FIELD_REQUIRED);
+    }
+
     return 0;
   }
 
@@ -689,7 +711,146 @@ sub validator
 
 *__escape_html = \&Rose::HTML::Util::escape_html;
 
+sub message_for_error_id
+{
+  my($self, %args) = @_;
+  
+  my $error_id  = $args{'error_id'};
+  my $msg_class = $args{'msg_class'};
+  my $args      = $args{'args'} || [];
+
+  no warnings 'uninitialized';
+  if($error_id == FIELD_REQUIRED)
+  {
+    my $msg = $msg_class->new(args => $args);
+
+    if((ref $args eq 'HASH' && keys %$args) || (ref $args eq 'ARRAY' && @$args))
+    {
+      $msg->id(FIELD_REQUIRED_LABELLED);
+    }
+    else
+    {
+      $msg->id(FIELD_REQUIRED_GENERIC);
+    }
+    
+    return $msg;
+  }
+
+  return undef;
+}
+
+sub localize_label       { shift->label_message_id(FIELD_LABEL) }
+sub localize_description { shift->description_message_id(FIELD_DESCRIPTION) }
+
+sub localizer
+{
+  my($invocant) = shift;
+
+  # Called as object method
+  if(my $class = ref $invocant)
+  {
+    if(@_)
+    {
+      return $invocant->{'localizer'} = shift;
+    }
+
+    my $localizer = $invocant->{'localizer'};
+
+    unless($localizer)
+    {
+      if(my $parent_field = $invocant->parent_field)
+      {
+        if(my $localizer = $parent_field->localizer)
+        {
+          return $localizer;
+        }
+      }
+      elsif(my $parent_form = $invocant->parent_form)
+      {
+        if(my $localizer = $parent_form->localizer)
+        {
+          return $localizer;
+        }      
+      }
+      else { return $class->default_localizer }
+    }
+    
+    return $localizer || $class->default_localizer;
+  }
+  else # Called as class method
+  {
+    if(@_)
+    {
+      return $invocant->default_localizer(shift);
+    }
+
+    return $invocant->default_localizer;
+  }
+}
+
+sub locale
+{
+  my($invocant) = shift;
+
+  # Called as object method
+  if(my $class = ref $invocant)
+  {
+    if(@_)
+    {
+      return $invocant->{'locale'} = shift;
+    }
+
+    my $locale = $invocant->{'locale'};
+
+    unless($locale)
+    {
+      if(my $parent_field = $invocant->parent_field)
+      {
+        if(my $locale = $parent_field->locale)
+        {
+          return $locale;
+        }
+      }
+      elsif(my $parent_form = $invocant->parent_form)
+      {
+        if(my $locale = $parent_form->locale)
+        {
+          return $locale;
+        }      
+      }
+      else { return $class->default_locale }
+    }
+    
+    return $locale || $class->default_locale;
+  }
+  else # Called as class method
+  {
+    if(@_)
+    {
+      return $invocant->default_locale(shift);
+    }
+
+    return $invocant->default_locale;
+  }
+}
+
+if($ENV{'MOD_PERL'} || $ENV{'RHTMLO_PRIME_CACHES'})
+{
+  __PACKAGE__->load_all_messages;
+}
+
 1;
+
+__DATA__
+[% LOCALE en %]
+
+FIELD_REQUIRED_GENERIC = "This is a required field."
+FIELD_REQUIRED_LABELLED = "[1] is a required field."
+
+[% LOCALE fr %]
+
+FIELD_REQUIRED_GENERIC = "C'est une zone exigée."
+FIELD_REQUIRED_LABELLED = "[1] est une zone exigée."
 
 __END__
 

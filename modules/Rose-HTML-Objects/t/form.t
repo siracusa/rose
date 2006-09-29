@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 222;
+use Test::More tests => 231;
 
 BEGIN 
 {
@@ -650,6 +650,26 @@ SKIP:
   my $o = $form->object_from_form('MyRDBO');
   is($o->b, 1, 'checkbox to RDBO boolean column');
 }
+
+use Rose::HTML::Object::Errors qw(:form :field);
+
+$form = MyForm->new;
+$form->field('name')->required(1);
+$form->validate;
+
+$form->locale('en');
+is($form->error->id, FORM_HAS_ERRORS, 'form error id 1');
+is($form->error->as_string, 'One or more fields have errors.', 'form error msg 1');
+is($form->field('name')->error->id, FIELD_REQUIRED, 'form field error id 1');
+is($form->field('name')->error->as_string, 'This is a required field.', 'form field error message 1');
+$form->locale('fr');
+is($form->error->as_string, 'Une ou plusieurs zones ont des erreurs.', 'form error msg 2');
+is($form->field('name')->error->id, FIELD_REQUIRED, 'form field error id 1');
+is($form->field('name')->error->as_string, "C'est une zone exigée.", 'form field error message 2');
+$form->locale('nonesuch');
+
+is($form->error->as_string, 'One or more fields have errors.', 'form error msg 3');
+is($form->field('name')->error->as_string, 'This is a required field.', 'form field error message 3');
 
 
 BEGIN
