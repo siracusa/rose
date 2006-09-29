@@ -2,7 +2,9 @@
 
 use strict;
 
-use Test::More tests => 20;
+use Test::More tests => 23;
+
+use Rose::HTML::Object::Errors qw(:phone);
 
 BEGIN 
 {
@@ -106,3 +108,9 @@ $field->field('area_code')->input_value(555);
 $field->field('number')->input_value(4567);
 
 is($field->internal_value, '555-123-4567', 'US::Split area code, exchange, and number');
+
+$field->input_value(123);
+$field->validate;
+ok($field->has_error, 'has_error 1');
+is($field->error_id, PHONE_INVALID, 'error_id 1');
+is($field->error, 'Phone number must be 10 digits, including area code.', 'error 1');

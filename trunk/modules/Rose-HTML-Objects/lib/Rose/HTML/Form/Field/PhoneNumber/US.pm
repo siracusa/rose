@@ -2,6 +2,8 @@ package Rose::HTML::Form::Field::PhoneNumber::US;
 
 use strict;
 
+use Rose::HTML::Object::Errors qw(:phone);
+
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
@@ -24,7 +26,7 @@ sub validate
 
   return 1  if(length $number == 10);
 
-  $self->error("Phone number must be 10 digits, including area code");
+  $self->add_error_id(PHONE_INVALID);
 
   return;
 }
@@ -48,6 +50,12 @@ sub inflate_value
 *deflate_value = \&inflate_value;
 
 1;
+
+__DATA__
+
+[% LOCALE en %]
+
+PHONE_INVALID = "Phone number must be 10 digits, including area code."
 
 __END__
 
