@@ -15,13 +15,6 @@ BEGIN
   __PACKAGE__->message_name_to_id_map({});
 }
 
-__PACKAGE__->export_tags
-(
-  all   => __PACKAGE__->message_names_list,
-  field => [ grep { /^FIELD_/ } @{__PACKAGE__->message_names_list} ],
-  form  => [ grep { /^FORM_/ } @{__PACKAGE__->message_names_list} ],
-);
-
 BEGIN
 {
   *error_id_exists   = \&Rose::HTML::Object::Messages::message_id_exists;
@@ -42,9 +35,27 @@ BEGIN
 # Errors
 #
 
-use constant CUSTOM_ERROR    => -1;
-use constant FIELD_REQUIRED  => 3;
+use constant CUSTOM_ERROR => -1;
+
+# Field errors
+use constant FIELD_REQUIRED      => 3;
+use constant FIELD_PARTIAL_VALUE => 7;
+
+# Form errors
 use constant FORM_HAS_ERRORS => 100;
+
+# Numerical errors
+use constant NUM_INVALID_INTEGER          => 1300;
+use constant NUM_INVALID_INTEGER_POSITIVE => 1301;
+use constant NUM_NOT_POSITIVE_INTEGER     => 1302;
+use constant NUM_BELOW_MIN                => 1303;
+use constant NUM_ABOVE_MAX                => 1304;
+
+# Date errors
+use constant DATE_MIN_GREATER_THAN_MAX => 1500;
+
+# Email errors
+use constant EMAIL_INVALID => 1600;
 
 BEGIN { __PACKAGE__->add_errors }
 

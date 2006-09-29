@@ -3,6 +3,7 @@ package Rose::HTML::Form::Field::Compound;
 use strict;
 
 use Carp();
+use Scalar::Defer;
 
 use Rose::HTML::Object::Errors qw(:field);
 use Rose::HTML::Object::Messages qw(:field);
@@ -258,15 +259,16 @@ sub validate
 
     foreach my $field ($self->fields)
     {
+      no warnings 'uninitialized';
       unless(length $field->input_value_filtered)
       {
-        push(@missing, $field->label || $field->name);
+        push(@missing, defer { $field->label || $field->name });
       }
     }
 
     if(@missing)
     {
-      $self->error_id(FIELD_REQUIRED, { missing => join(', ', @missing) });
+      $self->error_id(FIELD_REQUIRED, { missing => \@missing });
       #$self->error('Missing ' . join(', ', @missing));
       return 0;
     }
@@ -309,7 +311,11 @@ __DATA__
 
 [% LOCALE en %]
 
-FIELD_REQUIRED_SUBFIELD = "Missing [missing]."
+FIELD_REQUIRED_SUBFIELD = "Missing [@missing]."
+
+[% LOCALE xx %]
+
+FIELD_REQUIRED_SUBFIELD = "Missing [@missing( : )]."
 
 __END__
 

@@ -57,6 +57,8 @@ __PACKAGE__->add_valid_html_attrs(qw(
   tabindex
 ));
 
+*label_id = \&label_message_id;
+
 sub auto_invalidate_parent
 {
   my($self) = shift;
@@ -849,6 +851,8 @@ FIELD_REQUIRED_GENERIC = "This is a required field."
 [% START FIELD_REQUIRED_LABELLED %]
 [1] is a required field.
 [% END FIELD_REQUIRED_LABELLED %]
+
+FIELD_PARTIAL_VALUE = "Incomplete value."
 
 [% LOCALE xx %] # for testing only
 

@@ -2,6 +2,8 @@ package Rose::HTML::Form::Field::DateTime::Range;
 
 use strict;
 
+use Rose::HTML::Object::Errors qw(:date);
+
 use Rose::HTML::Form::Field::DateTime::StartDate;
 use Rose::HTML::Form::Field::DateTime::EndDate;
 
@@ -181,7 +183,7 @@ sub html
          '<tr valign="baseline"><td class="min">' .
          $self->field('min')->html . '</td><td> - </td><td class="max">' .
          $self->field('max')->html . '</td></tr>' .
-         ($self->error ? '<tr><td colspan="3">' . $self->html_error . '</td></tr>' : '') .
+         ($self->has_errors ? '<tr><td colspan="3">' . $self->html_errors . '</td></tr>' : '') .
          '</table>';
 }
 
@@ -193,7 +195,7 @@ sub xhtml
          '<tr valign="baseline"><td class="min">' .
          $self->field('min')->xhtml . '</td><td> - </td><td class="max">' .
          $self->field('max')->xhtml . '</td></tr>' .
-         ($self->error ? '<tr><td colspan="3">' . $self->xhtml_error . '</td></tr>' : '') .
+         ($self->has_errors ? '<tr><td colspan="3">' . $self->xhtml_errors . '</td></tr>' : '') .
          '</table>';
 }
 
@@ -209,7 +211,7 @@ sub validate
 
   foreach my $field (qw(min max))
   {
-    push(@errors, $self->field($field)->error) 
+    push(@errors, $self->field($field)->errors) 
       unless($self->field($field)->validate);
   }
 
@@ -219,14 +221,14 @@ sub validate
 
     if($min && $max && $min > $max)
     {
-      $self->error('The min date cannot be later than the max date.');
+      $self->add_error_id(DATE_MIN_GREATER_THAN_MAX);
       return 0;
     }
   }
 
   if(@errors)
   {
-    $self->error(join(', ', @errors));
+    $self->add_errors(map { $_->clone } @errors);
     return 0;
   }
 
@@ -234,6 +236,12 @@ sub validate
 }
 
 1;
+
+__DATA__
+
+[% LOCALE en %]
+
+DATE_MIN_GREATER_THAN_MAX = "The min date cannot be later than the max date."
 
 __END__
 
