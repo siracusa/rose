@@ -845,11 +845,17 @@ __DATA__
 [% LOCALE en %]
 
 FIELD_REQUIRED_GENERIC = "This is a required field."
-FIELD_REQUIRED_LABELLED = "[1] is a required field."
 
-[% LOCALE fr %]
+[% START FIELD_REQUIRED_LABELLED %]
+[1] is a required field.
+[% END FIELD_REQUIRED_LABELLED %]
 
-FIELD_REQUIRED_GENERIC = "C'est une zone exigée."
+[% LOCALE xx %] # for testing only
+
+[% START FIELD_REQUIRED_GENERIC %]
+C'est une zone exigée.
+[% END FIELD_REQUIRED_GENERIC %]
+
 FIELD_REQUIRED_LABELLED = "[1] est une zone exigée."
 
 __END__

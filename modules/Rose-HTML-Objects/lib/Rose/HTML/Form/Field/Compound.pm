@@ -4,6 +4,9 @@ use strict;
 
 use Carp();
 
+use Rose::HTML::Object::Errors qw(:field);
+use Rose::HTML::Object::Messages qw(:field);
+
 use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
@@ -263,7 +266,8 @@ sub validate
 
     if(@missing)
     {
-      $self->error('Missing ' . join(', ', @missing));
+      $self->error_id(FIELD_REQUIRED, { missing => join(', ', @missing) });
+      #$self->error('Missing ' . join(', ', @missing));
       return 0;
     }
   }
@@ -271,7 +275,41 @@ sub validate
   return $self->SUPER::validate(@_);
 }
 
+sub message_for_error_id
+{
+  my($self, %args) = @_;
+  
+  my $error_id  = $args{'error_id'};
+  my $msg_class = $args{'msg_class'};
+  my $args      = $args{'args'} || [];
+
+  no warnings 'uninitialized';
+  if($error_id == FIELD_REQUIRED)
+  {
+    my $msg = $msg_class->new(args => $args);
+
+    if((ref $args eq 'HASH' && keys %$args) || (ref $args eq 'ARRAY' && @$args))
+    {
+      $msg->id(FIELD_REQUIRED_SUBFIELD);
+    }
+    else
+    {
+      $msg->id(FIELD_REQUIRED_GENERIC);
+    }
+    
+    return $msg;
+  }
+
+  return undef;
+}
+
 1;
+
+__DATA__
+
+[% LOCALE en %]
+
+FIELD_REQUIRED_SUBFIELD = "Missing [missing]."
 
 __END__
 

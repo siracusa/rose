@@ -110,6 +110,7 @@ t/lib/MyObject/Messages2.pm
 t/lib/MyObject2.pm
 t/link.t
 t/logo.png
+t/msgs.txt
 t/object-l10n.t
 t/object-withcontents.t
 t/object.t

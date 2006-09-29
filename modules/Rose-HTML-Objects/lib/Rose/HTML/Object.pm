@@ -582,8 +582,10 @@ sub get_localized_message
   return undef;
 }
 
-my $Locale_Declaration = qr(^\s* \[% \s* LOCALE \s* (\S+) \s* %\] \s*$)x;
-my $Message_Spec = qr(^ \s* ([A-Z0-9_]+) \s* = \s* "(.*)" \s* $)x;
+my $Locale_Declaration = qr(^\s* \[% \s* LOCALE \s* (\S+) \s* %\] \s* (?: \#.*)?$)x;
+my $Start_Message = qr(^\s* \[% \s* START \s+ ([A-Z0-9_]+) \s* %\] \s* (?: \#.*)?$)x;
+my $End_Message = qr(^\s* \[% \s* END \s+ ([A-Z0-9_]+)? \s* %\] \s* (?: \#.*)?$)x;
+my $Message_Spec = qr(^ \s* ([A-Z0-9_]+) \s* = \s* "(.*)" \s* (?: \#.*)? $)x;
 my $Comment_Or_Blank = qr(^ \s* \# | ^ \s* $)x;
 my $End_Messages = qr(^=\w|^\s*__END__);
 
@@ -602,8 +604,6 @@ sub _get_localized_message
     return $localizer->get_localized_message($name, $locale);
   }
 
-  my $in_locale = '';
-
   no strict 'refs';
   my $fh = \*{"${class}::DATA"};
 
@@ -621,35 +621,8 @@ sub _get_localized_message
       $Data_Pos{$class} = tell($fh);
     }
 
-   local $_;
-
-    while(<$fh>)
-    {
-      last  if(/$End_Messages/);
-
-      #$Debug && warn "PROC: $_";
-
-      if(/$Locale_Declaration/)
-      {
-        $in_locale = $1;
-      }
-      elsif(/$Message_Spec/)
-      {
-        if($in_locale eq $locale && $1 eq $name)
-        {
-          (my $text = $2) =~ s/\\n/\n/g;
-          $localizer->add_localized_message_text(name   => $name,
-                                                 locale => $in_locale,
-                                                 text   => $text);
-          return $text;
-        }
-      }
-      elsif(!/$Comment_Or_Blank/)
-      {
-        chomp;
-        warn "WARNING: Localized message line not understood: $_";
-      }
-    }
+   my $text = $class->load_messages_from_fh($fh, $locale, $name);
+   return $text  if(defined $text);
   }
 
   no strict 'refs';
@@ -666,9 +639,6 @@ sub load_all_messages
 {
   my($class) = shift;
 
-  my $localizer = $class->localizer;
-  my $in_locale = '';
-
   no strict 'refs';
   my $fh = \*{"${class}::DATA"};
 
@@ -686,34 +656,93 @@ sub load_all_messages
       $Data_Pos{$class} = tell($fh);
     }
 
-    local $_;
+    $class->load_messages_from_fh($fh);
+  }
+}
 
-    while(<$fh>)
+sub load_messages_from_file
+{
+  my($class, $file) = @_;
+  open(my $fh, $file) or croak "Could no open messages file '$file' - $!";
+  $class->load_messages_from_fh($fh);
+  close($fh);
+}
+
+sub load_messages_from_fh
+{
+  my($class, $fh, $locales, $msg_names) = @_;
+
+  $locales   = { $locales => 1 }    if($locales && !ref $locales);
+  $msg_names = { $msg_names => 1 }  if($msg_names && !ref $msg_names);
+
+  my $localizer = $class->localizer;
+
+  my @text;
+  my $in_locale = '';
+  my $in_msg    = '';
+  my $text      = '';
+
+  no strict 'refs';
+
+  local $_;
+
+  while(<$fh>)
+  {
+    last  if(/$End_Messages/);
+
+    #$Debug && warn "PROC: $_";
+
+    if(/$End_Message/ && (!$2 || $2 eq $in_msg))
     {
-      last  if(/$End_Messages/);
-
-      #$Debug && warn "PROC: $_";
-
-      if(/$Locale_Declaration/)
+      if(!$msg_names || $msg_names->{$in_msg})
       {
-        $in_locale = $1;
-      }
-      elsif($in_locale && /$Message_Spec/)
-      {
-        my $name = $1;
-        (my $text = $2) =~ s/\\n/\n/g;
+        for($text)
+        {
+          s/\A(\s*\n)+//;
+          s/(\s*\n)+\z//;
+        }
 
-        $localizer->add_localized_message_text(name   => $name,
+        $localizer->add_localized_message_text(name   => $in_msg,
                                                locale => $in_locale,
                                                text   => $text);
       }
-      elsif(!/$Comment_Or_Blank/)
+
+      $text = '';
+      $in_msg = '';
+    }
+    elsif($in_msg)
+    {
+      $text .= $_;
+    }
+    elsif(/$Locale_Declaration/)
+    {
+      $in_locale = $1;
+    }
+    elsif(/$Message_Spec/)
+    {
+      if((!$locales || $locales->{$in_locale}) && (!$msg_names || $msg_names->{$1}))
       {
-        chomp;
-        warn qq(Localized message line not understood in $class __DATA__ section line $. - "$_");
+        my $name = $1;
+        (my $text = $2) =~ s/\\n/\n/g;
+        $localizer->add_localized_message_text(name   => $name,
+                                               locale => $in_locale,
+                                               text   => $text);
+        push(@text, $text)  if($msg_names);
       }
     }
+    elsif(/$Start_Message/)
+    {
+      $in_msg = $1;
+    }
+    elsif(!/$Comment_Or_Blank/)
+    {
+      chomp;
+      warn "WARNING: Localized message line not understood: $_";
+    }
   }
+  
+  return wantarray ? @text : $text[0];
+  return;
 }
 
 # if($ENV{'MOD_PERL'} || $ENV{'RHTMLO_PRIME_CACHES'})

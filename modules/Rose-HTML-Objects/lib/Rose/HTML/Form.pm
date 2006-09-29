@@ -1333,7 +1333,7 @@ __DATA__
 
 FORM_HAS_ERRORS = "One or more fields have errors."
 
-[% LOCALE fr %]
+[% LOCALE xx %] # for testing only
 
 FORM_HAS_ERRORS = "Une ou plusieurs zones ont des erreurs."
 

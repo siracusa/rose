@@ -25,7 +25,7 @@ $o->localize_label;
 $o->localize_description;
 
 is($o->label, 'Dog', 'localized label 1');
-$o->locale('fr');
+$o->locale('xx');
 is($o->label, 'Chien', 'localized label 2');
 
 MyField->localizer->add_localized_message_text( 
@@ -33,7 +33,7 @@ MyField->localizer->add_localized_message_text(
   text => 
   {
     en => 'Cat',
-    fr => 'Chat',
+    xx => 'Chat',
   });
 
 is($o->label, 'Chat', 'localized label 3');
@@ -43,7 +43,7 @@ is($o->label, 'Cat', 'localized label 4');
 $o->label('Cow');
 
 is($o->label, 'Cow', 'unlocalized label 1');
-$o->locale('fr');
+$o->locale('xx');
 is($o->label, 'Cow', 'unlocalized label 2');
 
 is($o->description, undef, 'localized description 1');
@@ -53,14 +53,14 @@ my $id = MyField->localizer->add_localized_message(
   text => 
   {
     en => 'Email',
-    fr => 'Courriel',
+    xx => 'Courriel',
   });
 
 $o->label_message_id($id);
 
 $o->locale('en');
 is($o->label, 'Email', 'new localized label 1');
-$o->locale('fr');
+$o->locale('xx');
 is($o->label, 'Courriel', 'new localized label 2');
 
 $id = MyField->localizer->add_localized_message( 
@@ -68,7 +68,7 @@ $id = MyField->localizer->add_localized_message(
   text => 
   {
     en => 'Name',
-    fr => 'Nom',
+    xx => 'Nom',
   });
 
 MyField->localizer->import_message_ids(':all');
@@ -77,7 +77,7 @@ $o->label_message_id(NAME_FIELD_LABEL());
 
 $o->locale('en');
 is($o->label, 'Name', 'new localized label 3');
-$o->locale('fr');
+$o->locale('xx');
 is($o->label, 'Nom', 'new localized label 4');
 
 $o->locale('en');
