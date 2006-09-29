@@ -256,6 +256,7 @@ sub localized_errors
   my $plural_name    = $args->{'plural_name'} || $name;
   my $singular_name  = $args->{'singular_name'} || plural_to_singular($plural_name);
   my $has_method     = $args->{'has_error_method'} || 'has_' . $plural_name;
+  my $has_method2    = $args->{'has_errors_method'} || 'has_' . $singular_name;
   my $add_method     = $args->{'add_error_method'} || 'add_' . $singular_name;
   my $adds_method    = $args->{'add_errors_method'} || 'add_' . $plural_name;
   my $id_method      = $args->{'error_id_method'} || $singular_name . '_id';
@@ -460,7 +461,8 @@ sub localized_errors
       return;
     };
 
-    $methods{$has_method} = sub { scalar @{shift->{$key} || []} };
+    $methods{$has_method}  = sub { scalar @{shift->{$key} || []} };
+    $methods{$has_method2} = $methods{$has_method};
   }
   else { Carp::croak "Unknown interface: $interface" }
 

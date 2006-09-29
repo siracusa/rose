@@ -5,7 +5,7 @@ use strict;
 use Rose::HTML::Form::Field::Input;
 our @ISA = qw(Rose::HTML::Form::Field::Input);
 
-our $VERSION = '0.011';
+our $VERSION = '0.531';
 
 __PACKAGE__->delete_valid_html_attrs(qw(disabled ismap usemap alt src tabindex
 checked maxlength onblur onchange onclick ondblclick onfocus onkeydown
@@ -19,9 +19,12 @@ sub hidden_fields       { (wantarray) ? shift : [ shift ] }
 sub html_hidden_fields  { (wantarray) ? shift->html_field : [ shift->html_field ] }
 sub xhtml_hidden_fields { (wantarray) ? shift->xhtml_field : [ shift->xhtml_field ] }
 
-sub clear    {   }
-sub error    {   }
-sub validate { 1 }
+sub clear      {   }
+sub error      {   }
+sub errors     {   }
+sub has_error  { 0 }
+sub has_errors { 0 }
+sub validate   { 1 }
 
 sub html_field
 {
@@ -89,6 +92,20 @@ Required attributes (default values in parentheses):
 =item B<new PARAMS>
 
 Constructs a new L<Rose::HTML::Form::Field::Hidden> object based on PARAMS, where PARAMS are name/value pairs.  Any object method is a valid parameter name.
+
+=back
+
+=head1 OBJECT METHODS
+
+=over 4
+
+=item B<error>
+
+This method is a no-op.
+
+=item B<has_error>
+
+Returns false.
 
 =back
 

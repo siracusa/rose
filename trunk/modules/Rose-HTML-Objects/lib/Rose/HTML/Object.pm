@@ -1120,6 +1120,10 @@ Get or set an error string.
 
 This flag may be used by other methods to decide whether or not to escape HTML.  It is set to true by default.  The only method in L<Rose::HTML::Object> that references it is L<html_error|/html_error>.  All other HTML is escaped as appropriate regardless of the L<escape_html|/escape_html> setting (e.g. the text returned by C<html_attrs_string> always has its attribute values escaped).  Subclasses may consult this flag for similar purposes (which they must document, of course).
 
+=item B<has_error>
+
+Returns true if an L<error|/error> is set, false otherwise.
+
 =item B<html>
 
 A synonym for L<html_tag()|/html_tag>.
