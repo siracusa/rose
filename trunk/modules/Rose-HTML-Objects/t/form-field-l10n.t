@@ -82,8 +82,16 @@ is($o->label, 'Nom', 'new localized label 4');
 
 $o->locale('en');
 
+# has_error(s)
+ok(!$o->has_error, 'has_error 1');
+ok(!$o->has_errors, 'has_errors 1');
+
 # errors
 $o->errors('Error one', 'Error two');
+
+ok($o->has_error, 'has_error 2');
+ok($o->has_errors, 'has_errors 2');
+
 my @errors = $o->errors;
 is(scalar @errors, 2, 'errors 1');
 is_deeply([ map { "$_" } @errors ], [ 'Error one', 'Error two' ], 'errors 2');
@@ -117,4 +125,26 @@ is_deeply([ map { "$_" } @errors ], [ 'This is a required field.', 'Error two',
           'This is a required field.', ], 'add_error_id 1');
 is_deeply([ map { $_->id } @errors ], [ FIELD_REQUIRED, CUSTOM_ERROR, FIELD_REQUIRED, ], 'add_error_id 2');
 
+ok($o->has_error, 'has_error 3');
+ok($o->has_errors, 'has_errors 3');
 
+$o->error('Foo');
+@errors = $o->errors;
+is(scalar @errors, 1, 'error 1');
+
+ok($o->has_error, 'has_error 4');
+ok($o->has_errors, 'has_errors 4');
+
+$o->error(undef);
+ok(!$o->has_error, 'has_error 5');
+ok(!$o->has_errors, 'has_errors 5');
+
+$o->errors('foo', 'bar');
+$o->errors(undef);
+ok(!$o->has_error, 'has_error 6');
+ok(!$o->has_errors, 'has_errors 6');
+
+$o->errors('foo');
+$o->errors([]);
+ok(!$o->has_error, 'has_error 7');
+ok(!$o->has_errors, 'has_errors 7');
