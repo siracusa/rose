@@ -2,6 +2,8 @@ package Rose::HTML::Form::Field::Set;
 
 use strict;
 
+use Rose::HTML::Object::Errors qw(:set);
+
 use Rose::HTML::Form::Field::TextArea;
 our @ISA = qw(Rose::HTML::Form::Field::TextArea);
 
@@ -42,29 +44,29 @@ sub inflate_value
 
     last  unless(length($value));
 
-    if($value =~ s/^"((?:[^"\\]+|\\.)*)"//)
+    if($value =~ s/^"((?:[^"\\]+|\\.)*)"//s)
     {
       my $string = $1;
       # Interpolate backslash escapes
-      my $interpolated = eval qq("$string");
+      my $interpolated = $string;
+      $interpolated =~ s/\\(.)/eval qq("\\$1")/ge;
 
       if($@)
       {
-        $self->error(qq(Invalid quoted string: "$string"));
+        $self->add_error_id(SET_INVALID_QUOTED_STRING, { string => $string });
         next;
       }
 
       push(@strings, $interpolated);
     }
-    elsif($value =~ s/^([^,\s]+)//)
+    elsif($value =~ s/^([^,"\s]+)//)
     {
       push(@strings, $1);
     }
     else
     {
-      $self->error(qq(Could not parse input: parse error at ),
-                   ((length($value) < 5) ? qq("...$value") : 
-                   q("...) . substr($value, 0, 5) . q(")));
+      $self->error(SET_PARSE_ERROR, { context => (length($value) < 5) ? "...$value" : 
+                                                 '...' . substr($value, 0, 5) });
       last;
     }
   }
@@ -73,6 +75,13 @@ sub inflate_value
 }
 
 1;
+
+__DATA__
+
+[% LOCALE en %]
+
+SET_INVALID_QUOTED_STRING = "Invalid quoted string: \"[string]\""  # Testing parser "
+SET_PARSE_ERROR = "Could not parse input: parse error at \[[context]\]"
 
 __END__
 

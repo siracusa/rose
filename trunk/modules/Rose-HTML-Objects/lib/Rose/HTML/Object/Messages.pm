@@ -40,6 +40,7 @@ sub init_export_tags
     email  => [ grep { /^EMAIL_/ } @{$class->message_names_list} ],
     phone  => [ grep { /^PHONE_/ } @{$class->message_names_list} ],
     number => [ grep { /^NUM_/ } @{$class->message_names_list} ],
+    set    => [ grep { /^SET_/ } @{$class->message_names_list} ],
   );
 }
 
@@ -198,6 +199,10 @@ use constant EMAIL_INVALID => 1600;
 
 # Phone messages
 use constant PHONE_INVALID => 1650;
+
+# Set messages
+use constant SET_INVALID_QUOTED_STRING => 1700;
+use constant SET_PARSE_ERROR           => 1701;
 
 BEGIN { __PACKAGE__->add_messages }
 
