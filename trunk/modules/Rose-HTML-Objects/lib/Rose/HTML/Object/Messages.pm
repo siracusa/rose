@@ -151,6 +151,13 @@ sub add_messages
       $fq_sub =~ s/^\*//;
 
       next  unless(defined *{$fq_sub}{'CODE'} && $name =~ /^[A-Z0-9_]+$/);
+
+      my $code = $class->can($sub);
+
+      # Skip it if it's not a constant
+      next  unless(defined prototype($code) && !length(prototype($code)));
+
+      # Should not need this check?
       next  if($thing =~ /^(BEGIN|DESTROY|AUTOLOAD|TIE.*)$/);
 
       $Debug && warn "$class ADD $name = ", &$fq_sub, "\n";
