@@ -2,9 +2,11 @@
 
 use strict;
 
+use Rose::HTML::Object::Errors qw(:number);
+
 BEGIN
 {
-  use Test::More tests => 28;
+  use Test::More tests => 32;
   use_ok('Rose::HTML::Form::Field::Integer');
 }
 
@@ -46,7 +48,8 @@ is($field->xhtml_field, '<input class="foo" id="bar" maxlength="7" name="num" si
 
 $field->input_value('bad');  
 ok(!$field->validate, 'validate() 1');
-is($field->error, 'Num must be an integer', 'error() 1');
+is($field->error, 'Num must be an integer.', 'error() 1');
+is($field->error_id, NUM_INVALID_INTEGER, 'error_id() 1');
 
 $field->input_value('7^7');  
 ok(!$field->validate, 'validate() 2');
@@ -65,18 +68,21 @@ ok(!$field->error, 'error() 3');
 
 $field->min(0);
 ok(!$field->validate, 'validate() 6');
-is($field->error, 'Num must be a positive integer', 'error() 4');
+is($field->error, 'Num must be a positive integer.', 'error() 4');
+is($field->error_id, NUM_NOT_POSITIVE_INTEGER, 'error_id() 2');
 
 $field->min(1);
 ok(!$field->validate, 'validate() 7');
-is($field->error, 'Num must be greater than 0', 'error() 4');
+is($field->error, 'Num must be greater than 0.', 'error() 4');
+is($field->error_id, NUM_BELOW_MIN, 'error_id() 3');
 
 $field->max(100);
 $field->input_value(100);
 
 ok($field->validate, 'validate() 8');
-ok(!$field->error, 'error() 4');
+ok(!$field->has_error, 'error() 4');
 
 $field->input_value(101);
 ok(!$field->validate, 'validate() 9');
-is($field->error, 'Num must be less than or equal to 100', 'error() 4');
+is($field->error, 'Num must be less than or equal to 100.', 'error() 4');
+is($field->error_id, NUM_ABOVE_MAX, 'error_id() 4');

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 17;
+use Test::More tests => 19;
 
 BEGIN 
 {
@@ -90,3 +90,23 @@ is(join("\n", map { $_->html_field } $field->fields),
    qq(<input name="date.day" size="2" type="text" value="">\n) .
    qq(<input name="date.month" size="2" type="text" value="">\n) .
    qq(<input name="date.year" size="4" type="text" value="">), 'clear()');
+
+my $id = ref($field)->localizer->add_localized_message( 
+  name => 'DAY_FIELD_LABEL',
+  text => 
+  {
+    en => 'Day',
+    xx => 'Le Day',
+  });
+
+$field->field('day')->label_id($id);
+$field->required(1);
+$field->field('month')->required(1);
+$field->field('month')->input_value(2);
+$field->validate;
+
+is($field->error, 'Missing Day, date.year.', 'error 1');
+
+$field->locale('xx');
+
+is($field->error, 'Missing Le Day : date.year.', 'error 2');

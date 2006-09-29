@@ -2,6 +2,8 @@ package Rose::HTML::Form::Field::DateTime;
 
 use strict;
 
+use Rose::HTML::Object::Errors qw(:field);
+
 use Rose::DateTime::Util();
 use Rose::DateTime::Parser;
 
@@ -64,7 +66,7 @@ sub validate
 
   if($self->has_partial_value)
   {
-    $self->error('Incomplete value');
+    $self->add_error_id(FIELD_PARTIAL_VALUE);
     return 0;
   }
 
@@ -76,19 +78,8 @@ sub validate
 
   unless(defined $date)
   {
-    $self->error($self->date_parser->error)
+    $self->add_error($self->date_parser->error)
       if($self->date_parser->can('error'));
-
-    # XXX: I don't remember what I was thinking here...
-    #if($error =~ /^(?:Invalid |Could not parse)/)
-    #{
-    #  $error =~ s/\s+\(.*\)//;
-    #  $self->error($error);
-    #}
-    #else
-    #{
-    #  $self->error('Invalid date: '. $self->input_value);
-    #}
 
     return 0;
   }

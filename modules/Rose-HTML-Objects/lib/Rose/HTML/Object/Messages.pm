@@ -27,25 +27,27 @@ BEGIN
   __PACKAGE__->message_name_to_id_map({});
 }
 
-__PACKAGE__->export_tags
-(
-  all   => __PACKAGE__->message_names_list,
-  field => [ grep { /^FIELD_/ } @{__PACKAGE__->message_names_list} ],
-  form  => [ grep { /^FORM_/ } @{__PACKAGE__->message_names_list} ],
-);
+sub init_export_tags
+{
+  my($class) = shift;
+
+  $class->export_tags
+  (
+    all    => $class->message_names_list,
+    field  => [ grep { /^FIELD_/ } @{$class->message_names_list} ],
+    form   => [ grep { /^FORM_/ } @{$class->message_names_list} ],
+    date   => [ grep { /^DATE_/ } @{$class->message_names_list} ],
+    email  => [ grep { /^EMAIL_/ } @{$class->message_names_list} ],
+    number => [ grep { /^NUM_/ } @{$class->message_names_list} ],
+  );
+}
 
 sub import
 {
   my($class) = shift;
 
   $class->use_private_messages;
-  
-  $class->export_tags
-  (
-    all => $class->message_names_list,
-    field => [ grep { /^FIELD_/ } @{$class->message_names_list} ],
-    form  => [ grep { /^FORM_/ } @{$class->message_names_list} ],
-  );
+  $class->init_export_tags;
 
   if($Rose::HTML::Object::Exporter::Target_Class)
   {
@@ -160,14 +162,33 @@ sub add_messages
 # Messages
 #
 
-use constant CUSTOM_MESSAGE          => -1;
+use constant CUSTOM_MESSAGE => -1;
+
+# Fields
 use constant FIELD_LABEL             => 1;
 use constant FIELD_DESCRIPTION       => 2;
 use constant FIELD_REQUIRED_GENERIC  => 4;
 use constant FIELD_REQUIRED_LABELLED => 5;
 use constant FIELD_REQUIRED_SUBFIELD => 6;
+use constant FIELD_PARTIAL_VALUE     => 7;
 
+# Forms
 use constant FORM_HAS_ERRORS => 100;
+
+# Numerical messages
+use constant NUM_INVALID_INTEGER          => 1300;
+use constant NUM_INVALID_INTEGER_POSITIVE => 1301;
+use constant NUM_NOT_POSITIVE_INTEGER     => 1302;
+use constant NUM_BELOW_MIN                => 1303;
+use constant NUM_ABOVE_MAX                => 1304;
+
+# Date messages
+use constant DATE_MIN_GREATER_THAN_MAX => 1500;
+
+# Email errors
+use constant EMAIL_INVALID => 1600;
+
+
 
 BEGIN { __PACKAGE__->add_messages }
 

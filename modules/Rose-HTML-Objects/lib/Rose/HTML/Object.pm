@@ -29,6 +29,12 @@ use Rose::Object::MakeMethods::Generic
     'escape_html'         => { default => 1 },
     'validate_html_attrs' => { default => 1 }
   ],
+  
+  'scalar' =>
+  [
+    'html_error_formatter',
+    'xhtml_error_formatter',
+  ],
 );
 
 use Rose::Class::MakeMethods::Generic
@@ -287,6 +293,11 @@ sub html_error
 {
   my($self) = shift;
 
+  if(my $code = $self->html_error_formatter)
+  {
+    return $code->($self);
+  }
+
   my $error = $self->error;
 
   if($error)
@@ -299,7 +310,50 @@ sub html_error
   return '';
 }
 
-*xhtml_error = \&html_error;
+sub xhtml_error
+{
+  my($self) = shift;
+
+  if(my $code = $self->html_error_formatter)
+  {
+    return $code->($self);
+  }
+
+  return $self->html_error;
+}
+
+sub html_errors
+{
+  my($self) = shift;
+
+  if(my $code = $self->html_error_formatter)
+  {
+    return $code->($self);
+  }
+
+  my $error = join(', ', $self->errors);
+
+  if($error)
+  {
+    return qq(<span class="error">) . 
+           (($self->escape_html) ? Rose::HTML::Util::escape_html($error) : $error) .
+           '</span>';
+  }
+
+  return '';
+}
+
+sub xhtml_errors
+{
+  my($self) = shift;
+
+  if(my $code = $self->html_error_formatter)
+  {
+    return $code->($self);
+  }
+
+  return $self->html_errors;
+}
 
 sub html_attrs_string
 {

@@ -148,6 +148,10 @@ sub process_placeholders
 
   for($text)
   {
+    # Process [@123(...)] and [@foo(...)] placeholders
+    s{ ( (?:\\.|[^\[]*)* ) \[ \@ (\d+ | [a-zA-Z]\w* ) (?: \( (.*) \) )? \] }
+     { $1 . join(defined $3 ? $3 : ', ', ref $args->{$2} ? @{$args->{$2}} : $args->{$2}) }gex;
+    
     # Process [123] and [foo] placeholders
     s{ ( (?:\\.|[^\[]*)* ) \[ (\d+ | [a-zA-Z]\w* ) \] }{$1$args->{$2}}gx;
 

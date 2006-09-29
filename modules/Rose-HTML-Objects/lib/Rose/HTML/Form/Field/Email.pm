@@ -4,6 +4,8 @@ use strict;
 
 use Email::Valid;
 
+use Rose::HTML::Object::Errors qw(:email);
+
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
@@ -23,7 +25,7 @@ sub validate
 
   unless($ok)
   {
-    $self->error('Invalid email address');
+    $self->add_error_id(EMAIL_INVALID);
     return 0;
   }
 
@@ -31,6 +33,12 @@ sub validate
 }
 
 1;
+
+__DATA__
+
+[% LOCALE en %]
+
+EMAIL_INVALID = "Invalid email address."
 
 __END__
 
