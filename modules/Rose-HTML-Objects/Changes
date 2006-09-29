@@ -6,6 +6,8 @@
       correctly returns XHTML markup.  (Reported by Jacques Supcik)
     * Added special handling to object_from_form() for checkboxes that
       set boolean columns in Rose::DB::Object-derived objects.
+    * Preliminary localization infrastructure created.  (No public APIs
+      are available yet.)
 
 0.53 (06.14.2006) - John Siracusa <siracusa@mindspring.com>
 
