@@ -57,6 +57,9 @@ use constant DATE_MIN_GREATER_THAN_MAX => 1500;
 # Email errors
 use constant EMAIL_INVALID => 1600;
 
+# Phone errors
+use constant PHONE_INVALID => 1650;
+
 BEGIN { __PACKAGE__->add_errors }
 
 1;

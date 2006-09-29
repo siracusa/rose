@@ -38,6 +38,7 @@ sub init_export_tags
     form   => [ grep { /^FORM_/ } @{$class->message_names_list} ],
     date   => [ grep { /^DATE_/ } @{$class->message_names_list} ],
     email  => [ grep { /^EMAIL_/ } @{$class->message_names_list} ],
+    phone  => [ grep { /^PHONE_/ } @{$class->message_names_list} ],
     number => [ grep { /^NUM_/ } @{$class->message_names_list} ],
   );
 }
@@ -185,10 +186,11 @@ use constant NUM_ABOVE_MAX                => 1304;
 # Date messages
 use constant DATE_MIN_GREATER_THAN_MAX => 1500;
 
-# Email errors
+# Email messages
 use constant EMAIL_INVALID => 1600;
 
-
+# Phone messages
+use constant PHONE_INVALID => 1650;
 
 BEGIN { __PACKAGE__->add_messages }
 
