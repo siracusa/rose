@@ -662,7 +662,7 @@ is($form->error->id, FORM_HAS_ERRORS, 'form error id 1');
 is($form->error->as_string, 'One or more fields have errors.', 'form error msg 1');
 is($form->field('name')->error->id, FIELD_REQUIRED, 'form field error id 1');
 is($form->field('name')->error->as_string, 'This is a required field.', 'form field error message 1');
-$form->locale('fr');
+$form->locale('xx');
 is($form->error->as_string, 'Une ou plusieurs zones ont des erreurs.', 'form error msg 2');
 is($form->field('name')->error->id, FIELD_REQUIRED, 'form field error id 1');
 is($form->field('name')->error->as_string, "C'est une zone exigée.", 'form field error message 2');

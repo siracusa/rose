@@ -158,6 +158,8 @@ sub process_placeholders
   return $text;
 }
 
+sub load_messages_from_file { shift->parent->load_messages_from_file(@_) }
+
 sub get_message_name { shift->messages_class->get_message_name(@_) }
 sub get_message_id   { shift->messages_class->get_message_id(@_) }
 

@@ -23,7 +23,7 @@ __DATA__
 
 MYOBJ_MSG1 = "This is my object msg 1: [2], [1]"
 
-[% LOCALE fr %]
+[% LOCALE xx %]
 
 MYOBJ_MSG1 = "C'est mon object\nmsg 1: [b], [a]"
 

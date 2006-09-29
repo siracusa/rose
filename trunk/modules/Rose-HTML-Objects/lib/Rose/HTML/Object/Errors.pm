@@ -42,9 +42,8 @@ BEGIN
 # Errors
 #
 
-use constant CUSTOM_ERROR   => -1;
-use constant FIELD_REQUIRED => 3;
-
+use constant CUSTOM_ERROR    => -1;
+use constant FIELD_REQUIRED  => 3;
 use constant FORM_HAS_ERRORS => 100;
 
 BEGIN { __PACKAGE__->add_errors }

@@ -27,11 +27,11 @@ is(Rose::HTML::Object->localizer->locale, 'en', 'default_locale 1');
 my $o = Rose::HTML::Object->new;
 is($o->locale, 'en', 'locale 1');
 
-Rose::HTML::Object->localizer->locale('fr');
-is($o->locale, 'fr', 'locale 2');
+Rose::HTML::Object->localizer->locale('xx');
+is($o->locale, 'xx', 'locale 2');
 
 $o = Rose::HTML::Object->new;
-is($o->locale, 'fr', 'locale 3');
+is($o->locale, 'xx', 'locale 3');
 
 $o->error('test error');
 
@@ -81,12 +81,12 @@ is($o->error . '', 'a bummer', 'localized error 1');
 # Scalar text
 
 Rose::HTML::Object->localizer->locale('en');
-$o->locale('fr');
+$o->locale('xx');
 
-is($o->locale, 'fr', 'object locale');
+is($o->locale, 'xx', 'object locale');
 is(Rose::HTML::Object->locale, 'en', 'class locale');
 
-$o->localizer->add_localized_message_text(name => 'BUMMER', locale => 'fr', text => 'le bummer');
+$o->localizer->add_localized_message_text(name => 'BUMMER', locale => 'xx', text => 'le bummer');
 is($o->error . '', 'le bummer', 'localized error 2');
 
 $o->localizer->add_localized_message_text(name => 'BUMMER', locale => 'en', text => 'a bummer 2');
@@ -96,7 +96,7 @@ is($o->error . '', 'a bummer 2', 'localized error 3');
 # Hash text
 
 $id = $o->localizer->add_localized_message(name => 'DOOM', 
-                                text => { en => 'doom', fr => 'le doom' });
+                                text => { en => 'doom', xx => 'le doom' });
 $o->localizer->add_localized_error(name => 'DOOM', id => $id);
 
 $o->error_id($id);
@@ -109,7 +109,7 @@ $o->localizer->add_localized_message_text(name => 'DOOM', locale => 'jp', text =
 $o->locale('jp');
 is($o->error . '', 'doom-san', 'localized error 4');
 
-$o->locale('fr');
+$o->locale('xx');
 is($o->error . '', 'le doom', 'localized error 5');
 
 #
@@ -175,8 +175,8 @@ $o->error_id(MYOBJ_ERR1, { a => 'A', b => 'B' });
 
 is($o->error->as_string, 'This is my object msg 1: B, A', 'MYOBJ_ERR1 en');
 
-$o->locale('fr');
-is($o->error->as_string, "C'est mon object\nmsg 1: B, A", 'MYOBJ_ERR1 fr');
+$o->locale('xx');
+is($o->error->as_string, "C'est mon object\nmsg 1: B, A", 'MYOBJ_ERR1 xx');
 
 MyObject->localizer->locale_cascade(
 {
@@ -203,8 +203,8 @@ $o->error_id('MYOBJ_ERR2', { a => 'A', b => 'B' });
 
 is($o->error->as_string, 'my msg 2: B, A', 'MYOBJ_ERR2 en');
 
-$o->locale('fr');
-is($o->error->as_string, "mon\nmsg 2: B, A", 'MYOBJ_ERR2 fr');
+$o->locale('xx');
+is($o->error->as_string, "mon\nmsg 2: B, A", 'MYOBJ_ERR2 xx');
 
 $o->locale('en-us');
 
@@ -215,6 +215,6 @@ is($o->error->as_string, 'my msg 2: B, A', 'MYOBJ_ERR2 en 2');
 
 $o->error_id(MYOBJ_ERR3(), { a => 'A', b => 'B' });
 is($o->error->as_string, 'my msg 3: B, A', 'MYOBJ_ERR3 en');
-$o->locale('fr');
-is($o->error->as_string, "mon\nmsg 3: B, A", 'MYOBJ_ERR3 fr');
+$o->locale('xx');
+is($o->error->as_string, "mon\nmsg 3: B, A", 'MYOBJ_ERR3 xx');
 

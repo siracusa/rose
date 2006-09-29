@@ -19,7 +19,7 @@ __DATA__
 
 FIELD_LABEL = "Dog"
 
-[% LOCALE fr %]
+[% LOCALE xx %]
 
 FIELD_LABEL = "Chien"
 

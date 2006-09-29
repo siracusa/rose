@@ -1,5 +1,7 @@
 package MyObject2;
 
+use FindBin qw($Bin);
+
 use MyObject::Errors2 qw(:all);
 use MyObject::Messages2 qw(:all);
 
@@ -24,8 +26,8 @@ __PACKAGE__->localizer->add_localized_message
   id   => $id,
   text => 
   {
-    en => 'my msg 3: [2], [1]',
-    fr => "mon\nmsg 3: [b], [a]",
+    en => 'x my msg 3: [2], [1]',
+    xx => "mon\nmsg 3: [b], [a]",
   },
 );
 
@@ -34,9 +36,11 @@ __PACKAGE__->localizer->add_localized_message_text
   name => 'MYOBJ_ERR2',
   text => 
   {
-    en => 'my msg 2: [2], [1]',
-    fr => "mon\nmsg 2: [b], [a]",
+    en => 'x my msg 2: [2], [1]',
+    xx => "x mon\nmsg 2: [b], [a]",
   },
 );
+
+__PACKAGE__->load_messages_from_file("$Bin/msgs.txt");
 
 1;

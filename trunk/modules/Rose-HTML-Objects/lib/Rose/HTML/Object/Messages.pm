@@ -165,6 +165,7 @@ use constant FIELD_LABEL             => 1;
 use constant FIELD_DESCRIPTION       => 2;
 use constant FIELD_REQUIRED_GENERIC  => 4;
 use constant FIELD_REQUIRED_LABELLED => 5;
+use constant FIELD_REQUIRED_SUBFIELD => 6;
 
 use constant FORM_HAS_ERRORS => 100;
 
