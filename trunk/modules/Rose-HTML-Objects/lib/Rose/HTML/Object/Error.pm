@@ -43,9 +43,9 @@ sub parent
 sub localizer 
 {
   my($self) = shift;
-  
+
   my $parent = $self->parent;
-  
+
   if(ref $parent || defined $parent)
   {
     return $parent->localizer;
@@ -76,7 +76,7 @@ sub id
   }
 
   my $id = $self->{'id'};
-  
+
   return $id  if(defined $id);
 
   my $msg = $self->message;
@@ -91,15 +91,15 @@ sub is_custom
   my($self) = shift;
 
   my $id = $self->id;
-  
+
   unless(defined $id)
   {
     my $msg = $self->message;
-    
+
     return 1  if($msg && $msg->is_custom);
     return undef;
   }
-  
+
   return $id == CUSTOM_ERROR;
 }
 

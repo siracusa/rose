@@ -2,7 +2,7 @@ package Rose::HTML::Form::Field::DateTime;
 
 use strict;
 
-use Rose::HTML::Object::Errors qw(:field);
+use Rose::HTML::Object::Errors qw(:field :date);
 
 use Rose::DateTime::Util();
 use Rose::DateTime::Parser;
@@ -78,8 +78,16 @@ sub validate
 
   unless(defined $date)
   {
-    $self->add_error($self->date_parser->error)
-      if($self->date_parser->can('error'));
+    # XXX: Parser errors ar English-only right now...
+    if($self->locale eq 'en')
+    {
+      $self->add_error($self->date_parser->error)
+        if($self->date_parser->can('error'));
+    }
+    else
+    {
+      $self->add_error_id(DATE_INVALID);
+    }
 
     return 0;
   }
@@ -88,6 +96,12 @@ sub validate
 }
 
 1;
+
+__DATA__
+
+[% LOCALE en %]
+
+DATE_INVALID = "Invalid date."
 
 __END__
 

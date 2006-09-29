@@ -63,7 +63,7 @@ sub text
       $self->id($_[0]->id);
       return $self->{'text'} = $_[0]->text;
     }
-    
+
     $self->id(CUSTOM_MESSAGE);
     return $self->{'text'} = $_[0];
   }

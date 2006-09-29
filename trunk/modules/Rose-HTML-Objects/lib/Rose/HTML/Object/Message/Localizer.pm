@@ -22,7 +22,7 @@ use Rose::Object::MakeMethods::Generic
   [
     'localized_messages_hash',
   ],
-  
+
   'scalar --get_set_init' => 
   [
     'locale',
@@ -70,9 +70,9 @@ sub init_locale_cascade
 sub locale_cascade
 {
   my($self) = shift;
-  
+
   my $hash = $self->{'locale_cascade'} ||= ref($self)->init_locale_cascade;
-  
+
   if(@_)
   {
     if(@_ == 1)
@@ -88,7 +88,7 @@ sub locale_cascade
     }
     else { croak "Odd number of arguments passed to locale_cascade()" }
   }
-  
+
   return wantarray ? %$hash : $hash;
 }
 
@@ -123,7 +123,7 @@ sub localize_message
   my $parent = $args{'parent'} || croak "Missing parent";
   my $args   = $args{'args'}   || $msg->args;
   my $locale = $args{'locale'} || $msg->locale || $self->locale;
-  
+
   my $id = $msg->id;
 
   my $text = $parent->get_localized_message($id, $locale);
@@ -132,13 +132,13 @@ sub localize_message
 
   my $cascade = $self->locale_cascade($locale) ||
                 $self->locale_cascade('default') || return undef;
-  
+
   foreach my $other_locale (@$cascade)
   {
     $text = $parent->get_localized_message($id, $other_locale);
     return $self->process_placeholders($text, $args) if(defined $text);  
   }
-  
+
   return undef;
 }
 
@@ -151,7 +151,7 @@ sub process_placeholders
     # Process [@123(...)] and [@foo(...)] placeholders
     s{ ( (?:\\.|[^\[]*)* ) \[ \@ (\d+ | [a-zA-Z]\w* ) (?: \( (.*) \) )? \] }
      { $1 . join(defined $3 ? $3 : ', ', ref $args->{$2} ? @{$args->{$2}} : $args->{$2}) }gex;
-    
+
     # Process [123] and [foo] placeholders
     s{ ( (?:\\.|[^\[]*)* ) \[ (\d+ | [a-zA-Z]\w* ) \] }{$1$args->{$2}}gx;
 
@@ -202,7 +202,7 @@ sub localized_message_exists
   {
     return 1;
   }
-  
+
   return 0;
 }
 
@@ -228,7 +228,7 @@ sub add_localized_message_text
   my $name   = $args{'name'};
   my $locale = $args{'locale'} || $self->locale;
   my $text   = $args{'text'};
-  
+
   croak "Missing new localized message text"  unless(defined $text);
 
   if($name =~ /[^A-Z0-9_]/)
@@ -277,7 +277,7 @@ sub add_localized_message_text
 sub import_message_ids
 {
   my($self) = shift;
-  
+
   if($Rose::HTML::Object::Exporter::Target_Class)
   {
     $self->messages_class->import(@_);
@@ -322,7 +322,7 @@ sub add_localized_message
     croak "Message names must be uppercase and may contain only ",
           "letters, numbers, and underscores";
   }
-  
+
   unless(ref $text eq 'HASH')
   {
     $text = { $locale => $text };
@@ -337,7 +337,7 @@ sub add_localized_message
   {
     croak "A constant or subroutine named $name already exists in the class $msgs_class";
   }
-  
+
   $msgs_class->add_message($name, $id);
 
   eval "package $msgs_class; use constant $name => $id;";
@@ -382,7 +382,7 @@ sub generate_error_id
 sub add_localized_error
 {
   my($self, %args) = @_;
-  
+
   my $id   = $args{'id'} || $self->generate_error_id;
   my $name = $args{'name'} or croak "Missing localized error name";
 
@@ -399,7 +399,7 @@ sub add_localized_error
 
   eval "package $errors_class; use constant $name => $id;";
   croak "Could not eval new error constant - $@"  if($@);
-  
+
   return $id;
 }
 

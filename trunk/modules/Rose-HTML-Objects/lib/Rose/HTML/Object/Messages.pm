@@ -107,7 +107,7 @@ sub add_message
       croak "Could not add message '$name' - a message with that name already exists ",
             '(', $class->message_name_to_id_map->{$name}, ')';
     }
-  
+
     if(exists $class->message_id_to_name_map->{$id} &&
        $class->message_id_to_name_map->{$id} ne $name)
     {
@@ -195,7 +195,8 @@ use constant NUM_BELOW_MIN                => 1303;
 use constant NUM_ABOVE_MAX                => 1304;
 
 # Date messages
-use constant DATE_MIN_GREATER_THAN_MAX => 1500;
+use constant DATE_INVALID              => 1500;
+use constant DATE_MIN_GREATER_THAN_MAX => 1501;
 
 # Time messages
 use constant TIME_INVALID         => 1550;
