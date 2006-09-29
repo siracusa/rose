@@ -548,8 +548,7 @@ sub validate
   {
     unless($self->has_errors)
     {
-      #$self->error('One or more fields have errors.');
-      $self->error_id(FORM_HAS_ERRORS);
+      $self->add_error_id(FORM_HAS_ERRORS);
     }
 
     return 0;
