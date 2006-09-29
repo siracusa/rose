@@ -639,7 +639,7 @@ sub get_localized_message
 my $Locale_Declaration = qr(^\s* \[% \s* LOCALE \s* (\S+) \s* %\] \s* (?: \#.*)?$)x;
 my $Start_Message = qr(^\s* \[% \s* START \s+ ([A-Z0-9_]+) \s* %\] \s* (?: \#.*)?$)x;
 my $End_Message = qr(^\s* \[% \s* END \s+ ([A-Z0-9_]+)? \s* %\] \s* (?: \#.*)?$)x;
-my $Message_Spec = qr(^ \s* ([A-Z0-9_]+) \s* = \s* "(.*)" \s* (?: \#.*)? $)x;
+my $Message_Spec = qr(^ \s* ([A-Z0-9_]+) \s* = \s* "((?:[^"\\]+|\\.)*)" \s* (?: \#.*)? $)x;
 my $Comment_Or_Blank = qr(^ \s* \# | ^ \s* $)x;
 my $End_Messages = qr(^=\w|^\s*__END__);
 
@@ -777,7 +777,14 @@ sub load_messages_from_fh
       if((!$locales || $locales->{$in_locale}) && (!$msg_names || $msg_names->{$1}))
       {
         my $name = $1;
-        (my $text = $2) =~ s/\\n/\n/g;
+        my $text = $2;
+        
+        for($text)
+        {
+          s/\\n/\n/g;
+          s/\\(.)/$1/g;
+        }
+
         $localizer->add_localized_message_text(name   => $name,
                                                locale => $in_locale,
                                                text   => $text);

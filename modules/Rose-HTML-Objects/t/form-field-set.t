@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 17;
+use Test::More tests => 18;
 
 BEGIN
 {
@@ -128,3 +128,6 @@ ok(ref $vals eq 'ARRAY' &&
 
 is($field->output_value, '"AB,C", "D EF", "G\\\\H", "I\"J"', 'output_value 8');
 
+$field->input_value(qq("""));
+$field->validate;
+is($field->error, 'Could not parse input: parse error at [..."]', 'error 1');

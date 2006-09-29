@@ -60,6 +60,10 @@ use constant EMAIL_INVALID => 1600;
 # Phone errors
 use constant PHONE_INVALID => 1650;
 
+# Set errors
+use constant SET_INVALID_QUOTED_STRING => 1700;
+use constant SET_PARSE_ERROR           => 1701;
+
 BEGIN { __PACKAGE__->add_errors }
 
 1;
