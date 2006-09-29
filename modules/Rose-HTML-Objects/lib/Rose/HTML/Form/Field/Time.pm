@@ -2,6 +2,8 @@ package Rose::HTML::Form::Field::Time;
 
 use strict;
 
+use Rose::HTML::Object::Errors qw(:time);
+
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
@@ -57,7 +59,7 @@ sub validate
 
   unless($time =~ /^(\d\d):(\d\d):(\d\d) ([AP]M)$/)
   {
-    $self->error("Invalid time");
+    $self->add_error_id(TIME_INVALID);
     return 0;
   }
 
@@ -68,13 +70,13 @@ sub validate
 
   if($hour > 12 && $ampm)
   {
-    $self->error('AM/PM only valid with hours less than 12');
+    $self->add_error_id(TIME_INVALID_AMPM);
     return 0;
   }
 
   if($hour > 12 || $min > 59 || $sec > 59)
   {
-    $self->error("Invalid time");
+    $self->add_error_id(TIME_INVALID);
     return 0;  
   }
 
@@ -82,6 +84,13 @@ sub validate
 }
 
 1;
+
+__DATA__
+
+[% LOCALE en %]
+
+TIME_INVALID = "Invalid time."
+TIME_INVALID_AMPM = "AM/PM only valid with hours less than 12."
 
 __END__
 

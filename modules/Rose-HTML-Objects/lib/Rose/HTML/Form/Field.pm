@@ -657,13 +657,13 @@ sub validate
 
     if(defined $label)
     {
-      #$self->error_id(FIELD_REQUIRED, $label);
-      #$self->error_id(FIELD_REQUIRED, [ $label ]);
-      $self->error_id(FIELD_REQUIRED, { label => $label });
+      #$self->add_error_id(FIELD_REQUIRED, $label);
+      #$self->add_error_id(FIELD_REQUIRED, [ $label ]);
+      $self->add_error_id(FIELD_REQUIRED, { label => $label });
     }
     else
     {
-      $self->error_id(FIELD_REQUIRED);
+      $self->add_error_id(FIELD_REQUIRED);
     }
 
     return 0;
@@ -677,11 +677,18 @@ sub validate
     #$Debug && warn "running $code->($self)\n";
     my $ok = $code->($self);
 
-    if(!$ok && !defined $self->error)
+    if(!$ok && !$self->has_errors)
     {
       my $label = $self->label;
-      $label = 'Value'  unless(defined $label);
-      $self->error("$label is invalid");
+
+      if(defined $label)
+      {
+        $self->add_error_id(FIELD_INVALID, { label => $label })
+      }
+      else
+      {
+        $self->add_error_id(FIELD_INVALID);
+      }
     }
 
     return $ok;
@@ -733,6 +740,21 @@ sub message_for_error_id
     else
     {
       $msg->id(FIELD_REQUIRED_GENERIC);
+    }
+    
+    return $msg;
+  }
+  elsif($error_id == FIELD_INVALID)
+  {
+    my $msg = $msg_class->new(args => $args);
+
+    if((ref $args eq 'HASH' && keys %$args) || (ref $args eq 'ARRAY' && @$args))
+    {
+      $msg->id(FIELD_INVALID_LABELLED);
+    }
+    else
+    {
+      $msg->id(FIELD_INVALID_GENERIC);
     }
     
     return $msg;
@@ -853,6 +875,8 @@ FIELD_REQUIRED_GENERIC = "This is a required field."
 [% END FIELD_REQUIRED_LABELLED %]
 
 FIELD_PARTIAL_VALUE = "Incomplete value."
+FIELD_INVALID_GENERIC = "Value is invalid."
+FIELD_INVALID_LABELLED = "[label] is invalid."
 
 [% LOCALE xx %] # for testing only
 
