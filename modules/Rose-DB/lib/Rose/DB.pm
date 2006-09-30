@@ -669,6 +669,8 @@ sub release_dbh
 
 use constant DID_PCSQL_KEY => 'private_rose_db_did_post_connect_sql';
 
+sub has_dbh { defined shift->{'dbh'} }
+
 sub init_dbh
 {
   my($self) = shift;
@@ -2460,6 +2462,10 @@ Execute arbitrary code within a single transaction, rolling back if any of the c
 =item B<error [MSG]>
 
 Get or set the error message associated with the last failure.  If a method fails, check this attribute to get the reason for the failure in the form of a text message.
+
+=item B<has_dbh>
+
+Returns true if the object has a L<DBI> database handle (L<dbh|/dbh>), false if it does not.
 
 =item B<has_primary_key [ TABLE | PARAMS ]>
 

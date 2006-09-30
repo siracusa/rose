@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 230);
+    Test::More->import(tests => 231);
   }
 }
 
@@ -37,9 +37,11 @@ eval { $dbh = $db->dbh };
 
 SKIP:
 {
-  skip("Could not connect to db - $@", 8)  if($@);
+  skip("Could not connect to db - $@", 9)  if($@);
 
   ok($dbh, 'dbh() 1');
+
+  ok($db->has_dbh, 'has_dbh() 1');
 
   my $db2 = Rose::DB->new();
 

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 170;
+use Test::More tests => 171;
 
 BEGIN
 {
@@ -217,6 +217,8 @@ $db = My::DB2->new('generic');
 ok($db->isa('Rose::DB::Generic'), 'generic class');
 
 is($db->dsn, 'dbi:NoneSuch:dbname=test;host=localhost', 'generic dsn');
+
+ok(!$db->has_dbh, 'has_dbh() 1');
 
 #
 # Registry tests

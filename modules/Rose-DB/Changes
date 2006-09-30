@@ -1,5 +1,6 @@
-0.727 (09.18.2006) - John Siracusa <siracusa@mindspring.com>
+0.727 (09.30.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Added the has_dbh() method.
     * Changes to support Rose::DB::Object 0.754.
     
 0.726 (09.17.2006) - John Siracusa <siracusa@mindspring.com>
