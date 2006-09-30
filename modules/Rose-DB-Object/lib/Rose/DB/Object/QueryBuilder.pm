@@ -789,7 +789,16 @@ sub _format_value
       }
       else
       {
-        $value = $col_meta->format_value($db, $col_meta->parse_value($db, $value))
+        my $parsed_value = $col_meta->parse_value($db, $value);
+
+        # XXX: Every column class should support parse_error(), but for now
+        # XXX: the undef check should cover those that don't
+        if(defined $value && !defined $parsed_value) #|| $col_meta->parse_error)
+        {
+          Carp::croak $col_meta->parse_error;
+        }
+
+        $value = $col_meta->format_value($db, $parsed_value)
           if(defined $value);
       }
     }
@@ -830,7 +839,16 @@ sub _format_value
     }
     else
     {
-      $value = $col_meta->format_value($db, $col_meta->parse_value($db, $value))
+      my $parsed_value = $col_meta->parse_value($db, $value);
+
+      # XXX: Every column class should support parse_error(), but for now
+      # XXX: the undef check should cover those that don't
+      if(defined $value && !defined $parsed_value) #|| $col_meta->parse_error)
+      {
+        Carp::croak $col_meta->parse_error;
+      }
+
+      $value = $col_meta->format_value($db, $parsed_value)
         if(defined $value);
     }
   }
