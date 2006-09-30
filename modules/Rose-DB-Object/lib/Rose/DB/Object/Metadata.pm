@@ -3584,13 +3584,13 @@ sub prime_all_caches
 
   foreach my $obj_class ($class->registered_classes)
   {
-    $obj_class->meta->prime_caches();
+    $obj_class->meta->prime_caches(@_);
   }
 }
 
 sub prime_caches
 {
-  my($self) = shift;
+  my($self, %args) = @_;
 
   my @methods =
     qw(column_names num_columns nonlazy_column_names lazy_column_names
@@ -3606,7 +3606,7 @@ sub prime_caches
     $self->$method();
   }
 
-  my $db = $self->class->init_db;
+  my $db = $args{'db'} || $self->class->init_db;
 
   $self->method_column('nonesuch');
   $self->fq_primary_key_sequence_names(db => $db);
@@ -4403,9 +4403,17 @@ This class method should return a reference to a subroutine that maps column nam
 
 If defined, the subroutine should take four arguments: the metadata object, the column name, the column method type, and the method name that would be used if the mapper subroutine did not exist.  It should return a method name.
 
-=item B<prime_all_caches>
+=item B<prime_all_caches [PARAMS]>
 
-Call L<prime_caches|/prime_caches> on all L<registered_classes|/registered_classes>.
+Call L<prime_caches|/prime_caches> on all L<registered_classes|/registered_classes>, passing PARAMS to each call.  PARAMS are name/value pairs.  Valid parameters are:
+
+=over 4
+
+=item C<db DB>
+
+A L<Rose::DB>-derived object used to determine which data source the cached metadata will be generated on behalf of.  (Each data source has its own set of cached metadata.)  This parameter is optional.  If it is not passed, then the L<Rose::DB>-derived object returned by the L<init_db|Rose::DB::Object/init_db> method for each L<class|/class> will be used instead.
+
+=back
 
 =item B<relationship_type_class TYPE>
 
@@ -5114,9 +5122,19 @@ Get or set the list of database sequence names used to populate the primary key 
 
 If you do not set this value, it will be derived for you based on the name of the primary key columns.  In the common case, you do not need to be concerned about this method.  If you are using the built-in SERIAL or AUTO_INCREMENT types in your database for your primary key columns, everything should just work.
 
-=item B<prime_caches>
+=item B<prime_caches [PARAMS]>
 
 By default, secondary metadata derived from the attributes of this object is created and cached on demand.  Call this method to pre-cache this metadata all at once.  This method is useful when running in an environment like L<mod_perl> where it's advantageous to load as much data as possible on start-up.
+
+PARAMS are name/value pairs.  Valid parameters are:
+
+=over 4
+
+=item C<db DB>
+
+A L<Rose::DB>-derived object used to determine which data source the cached metadata will be generated on behalf of.  (Each data source has its own set of cached metadata.)  This parameter is optional.  If it is not passed, then the L<Rose::DB>-derived object returned by the L<init_db|Rose::DB::Object/init_db> method for this L<class|/class> will be used instead.
+
+=back
 
 =item B<relationship NAME [, RELATIONSHIP | HASHREF]>
 
