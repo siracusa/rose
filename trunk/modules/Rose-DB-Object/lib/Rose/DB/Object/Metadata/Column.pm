@@ -61,6 +61,7 @@ Rose::Object::MakeMethods::Generic->make_methods
   [
     'alias',
     'ordinal_position',
+    'parse_error',
     __PACKAGE__->common_method_maker_argument_names,
   ],
 

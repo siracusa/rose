@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3035;
+use Test::More tests => 3039;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("Postgres tests", 768)  unless($HAVE_PG);
+  skip("Postgres tests", 769)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -99,6 +99,18 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   $o4->name('Bob');
 
   ok($o4->save, "object save() 4 - $db_type");
+
+  eval
+  {
+    $objs = 
+      MySQLiteObject->get_objectz(
+        query  =>
+        [
+          date_created => '205-1-2', # invalid date
+        ]);
+  };
+  
+  ok($@, "Invalid date - $db_type");
 
   $objs = 
     MyPgObjectManager->get_objectz(
@@ -2824,7 +2836,7 @@ EOF
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 768)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 769)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -2887,6 +2899,18 @@ SKIP: foreach my $db_type ('mysql')
   $o4->name('Bob');
 
   ok($o4->save, "object save() 4 - $db_type");
+
+  eval
+  {
+    $objs = 
+      MySQLiteObject->get_objectz(
+        query  =>
+        [
+          date_created => '205-1-2', # invalid date
+        ]);
+  };
+  
+  ok($@, "Invalid date - $db_type");
 
   $objs = 
     MyMySQLObjectManager->get_objectz(
@@ -5459,7 +5483,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(informix))
 {
-  skip("Informix tests", 731)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 732)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -5526,6 +5550,18 @@ SKIP: foreach my $db_type (qw(informix))
   $o4->name('Bob');
 
   ok($o4->save, "object save() 4 - $db_type");
+
+  eval
+  {
+    $objs = 
+      MySQLiteObject->get_objectz(
+        query  =>
+        [
+          date_created => '205-1-2', # invalid date
+        ]);
+  };
+  
+  ok($@, "Invalid date - $db_type");
 
   $objs = 
     MyInformixObjectManager->get_objectz(
@@ -8161,7 +8197,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 766)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 767)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -8179,7 +8215,7 @@ SKIP: foreach my $db_type (qw(sqlite))
                           date_created  => '2004-03-30 12:34:56');
 
   ok($o->save, "object save() 1 - $db_type");
-
+      
   my $objs = 
     MySQLiteObject->get_objectz(
       share_db     => 1,
@@ -8228,6 +8264,18 @@ SKIP: foreach my $db_type (qw(sqlite))
   $o4->name('Bob');
 
   ok($o4->save, "object save() 4 - $db_type");
+
+  eval
+  {
+    $objs = 
+      MySQLiteObject->get_objectz(
+        query  =>
+        [
+          date_created => '205-1-2', # invalid date
+        ]);
+  };
+  
+  ok($@, "Invalid date - $db_type");
 
   $objs = 
     MySQLiteObjectManager->get_objectz(

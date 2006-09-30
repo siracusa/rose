@@ -20,6 +20,8 @@ sub parse_value
 {
   my($self, $db) = (shift, shift);
 
+  $self->parse_error(undef);
+
   my $dt = $db->parse_datetime_year_to_fraction(@_);
 
   if($dt)
@@ -29,7 +31,13 @@ sub parse_value
   }
   else
   {
-    $dt = Rose::DateTime::Util::parse_date($_[0], $self->time_zone || $db->server_time_zone)
+    $dt = Rose::DateTime::Util::parse_date($_[0], $self->time_zone || $db->server_time_zone);
+    
+    if(my $error = Rose::DateTime::Util->error)
+    {
+      $self->parse_error("Could not parse value '$_[0]' for column $self: $error")
+        if(defined $_[0]);
+    }
   }
 
   return $dt;

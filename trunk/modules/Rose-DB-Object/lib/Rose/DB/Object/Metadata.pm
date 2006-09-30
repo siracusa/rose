@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.752';
+our $VERSION = '0.754';
 
 our $Debug = 0;
 
