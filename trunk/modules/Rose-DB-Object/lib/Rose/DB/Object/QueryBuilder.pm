@@ -419,18 +419,26 @@ sub build_select
         # Main table gets treated specially
         if($i == 1)
         {
-          $primary_table = "  $tables_sql->[$i - 1] t$i";
-          
-#           if($db && $db->supports_hints)
-#           {
-#             $primary_table .= $db->apply_hints($hints->{'t1'}
-#           }
+          #$primary_table = "  $tables_sql->[$i - 1] t$i";
+          if($db)
+          {
+            $primary_table = '  ' . 
+              $db->format_table_with_alias($tables_sql->[$i - 1], "t$i", $hints);
+          }
+          else
+          {
+            $primary_table = "  $tables_sql->[$i - 1] t$i";
+          }
+
           $i++;
           next;
         }
         elsif(!$joins->[$i])
         {
-          push(@normal_tables, "  $tables_sql->[$i - 1] t$i");
+          #push(@normal_tables, "  $tables_sql->[$i - 1] t$i");
+          push(@normal_tables, '  ' .
+            $db->format_table_with_alias($tables_sql->[$i - 1], "t$i", 
+                                         $joins->[$i]{'hints'}));
           $i++;
           next;
         }
@@ -441,9 +449,19 @@ sub build_select
         Carp::croak "Missing join conditions for table '$table'"
           unless($joins->[$i]{'conditions'});
 
-        push(@joined_tables, 
-             "  $joins->[$i]{'type'} $tables_sql->[$i - 1] t$i ON (" .
-             join(' AND ', @{$joins->[$i]{'conditions'}}) . ")");
+        if($db)
+        {
+          push(@joined_tables, "  $joins->[$i]{'type'} " .
+            $db->format_table_with_alias($tables_sql->[$i - 1], "t$i", 
+                                         $joins->[$i]{'hints'}) .
+            " ON (" . join(' AND ', @{$joins->[$i]{'conditions'}}) . ")");
+        }
+        else
+        {
+          push(@joined_tables, 
+               "  $joins->[$i]{'type'} $tables_sql->[$i - 1] t$i ON (" .
+               join(' AND ', @{$joins->[$i]{'conditions'}}) . ")");
+        }
 
         $i++;
       }

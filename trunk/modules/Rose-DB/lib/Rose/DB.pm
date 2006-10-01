@@ -1732,6 +1732,12 @@ sub format_limit_with_offset
   return @_ > 2 ? "$_[1] OFFSET $_[2]" : $_[1];
 }
 
+sub format_table_with_alias
+{
+  #my($self, $table, $alias, $hints) = @_;
+  return "$_[1] $_[2]";
+}
+
 sub supports_on_duplicate_key_update { 0 }
 
 #

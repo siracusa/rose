@@ -78,6 +78,48 @@ sub insertid_param { 'mysql_insertid' }
 
 sub last_insertid_from_sth { $_[1]->{'mysql_insertid'} }
 
+sub format_table_with_alias
+{
+  my($self, $table, $alias, $hints) = @_;
+  
+  my $version = $self->database_version;
+
+  if($hints && $version >= 3_023_012)
+  {
+    my $sql = "$table $alias ";
+
+    # "ignore index()" and "use index()" were added in 3.23.12 (07 March 2000)
+    # "force index()" was added in 4.0.9 (09 January 2003)
+    my @types = (($version >= 4_000_009 ? 'force' : ()), qw(use ignore));
+
+    foreach my $index_hint_type (@types)
+    {
+      my $key = "${index_hint_type}_index";
+
+      if($hints->{$key})
+      {
+        $sql .= uc($index_hint_type) . ' INDEX (';
+
+        if(ref $hints->{$key} eq 'ARRAY')
+        {
+          $sql .= join(', ', @{$hints->{$key}});
+        }
+        else { $sql .= $hints->{$key} }
+        
+        $sql .= ')';
+        
+        # Only one of these hints is allowed
+        last;
+      }
+    }
+
+    return $sql;
+  }
+
+  return "$table $alias";
+}
+
+
 sub validate_date_keyword
 {
   no warnings;
