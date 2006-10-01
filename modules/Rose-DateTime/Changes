@@ -1,3 +1,8 @@
+0.531 (10.01.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * parse_date() now accepts "now!" as an alias for "now".
+    * Fixed a typo in the documentation.
+
 0.53 (06.07.2006) - John Siracusa <siracusa@mindspring.com>
 
     * parse_date() now accepts epoch values in the full range, not

@@ -18,7 +18,7 @@ our %EXPORT_TAGS =
   all => \@EXPORT_OK
 );
 
-our $VERSION = '0.53';
+our $VERSION = '0.531';
 
 our $TZ = 'floating';
 our $Debug = 0;
@@ -150,7 +150,7 @@ sub parse_date
 
     $date = _timelocal($secs, $mins, $hours, $mday, $month, $year, $ampm, $fsecs, $time_zone);
   }
-  elsif(lc $arg eq 'now')
+  elsif(lc $arg eq 'now' || lc $arg eq 'now!')
   {
     # Right now
     return DateTime->now(time_zone => $time_zone);
@@ -731,7 +731,7 @@ The formats understood and their interpretations are listed below.  Square brack
 
 =item now
 
-Right now.
+Right now.  Also valid with an exclamation point: "now!"
 
 =item today
 
