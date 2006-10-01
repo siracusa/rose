@@ -103,7 +103,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   eval
   {
     $objs = 
-      MySQLiteObject->get_objectz(
+      MyPgObjectManager->get_objectz(
         query  =>
         [
           date_created => '205-1-2', # invalid date
@@ -3100,7 +3100,9 @@ SKIP: foreach my $db_type ('mysql')
         't1.id'    => { ge => 2 },
         't1.name'  => { like => '%tt%' },
       ],
-      require_objects => [ 'other_obj', 'bb1', 'bb2' ]);
+      require_objects => [ 'other_obj', 'bb1', 'bb2' ],
+      hints   => { t2 => { ignore_index => 'rose_db_object_other_idx', 
+                           use_index =>  'rose_db_object_other_idx2' } },);
 
   ok(ref $objs->[0]->{'other_obj'} eq 'MyMySQLOtherObject', "foreign object 2 - $db_type");
   is($objs->[0]->other_obj->k2, 2, "foreign object 3 - $db_type");
@@ -3195,6 +3197,8 @@ SKIP: foreach my $db_type ('mysql')
         date_created  => '5/10/2002 10:34:56 am'
       ],
       clauses => [ "LOWER(status) LIKE 'w%'" ],
+      hints   => { nicks => { force_index => 'rose_db_object_nicks_idx' },
+                   t1 => { ignore_index => 'rose_db_object_test_idx' } },
       sort_by => 'id');
 
   is(ref $objs, 'ARRAY', "get_objects() with many 1 - $db_type");
@@ -3249,6 +3253,7 @@ SKIP: foreach my $db_type ('mysql')
         last_modified => { le => '6/6/2020' }, # XXX: breaks in 2020!
         date_created  => '5/10/2002 10:34:56 am'
       ],
+      hints   => { ignore_index => 'rose_db_object_test_idx' },
       clauses => [ "LOWER(status) LIKE 'w%'" ],
       sort_by => 'id');
 
@@ -5554,7 +5559,7 @@ SKIP: foreach my $db_type (qw(informix))
   eval
   {
     $objs = 
-      MySQLiteObject->get_objectz(
+      MyInformixObjectManager->get_objectz(
         query  =>
         [
           date_created => '205-1-2', # invalid date
@@ -11453,6 +11458,14 @@ CREATE TABLE rose_db_object_other
 EOF
 
     $dbh->do(<<"EOF");
+CREATE INDEX rose_db_object_other_idx ON rose_db_object_other (name)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE INDEX rose_db_object_other_idx2 ON rose_db_object_other (k1)
+EOF
+
+    $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_bb
 (
   id    INT NOT NULL PRIMARY KEY,
@@ -11524,6 +11537,10 @@ CREATE TABLE rose_db_object_test
 EOF
 
     $dbh->do(<<"EOF");
+CREATE INDEX rose_db_object_test_idx ON rose_db_object_test (name)
+EOF
+
+    $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_nick_types2
 (
   id    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -11548,6 +11565,10 @@ CREATE TABLE rose_db_object_nicks
   nick  VARCHAR(32),
   type_id INT REFERENCES rose_db_object_nick_types (id)
 )
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE INDEX rose_db_object_nicks_idx ON rose_db_object_nicks (nick)
 EOF
 
     $dbh->do(<<"EOF");
