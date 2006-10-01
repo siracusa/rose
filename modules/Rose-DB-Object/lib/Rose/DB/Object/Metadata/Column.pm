@@ -1415,7 +1415,7 @@ L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethod
 
 L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::Generic/scalar>, C<interface =E<gt> 'get', ...>
 
-=item C<get_set>
+=item C<set>
 
 L<Rose::DB::Object::MakeMethods::Generic>, L<scalar|Rose::DB::Object::MakeMethods::Generic/scalar>, C<interface =E<gt> 'set', ...>
 
@@ -1459,7 +1459,7 @@ The C<on_load> event occurs I<after> the column value has been loaded.  Each pie
 
 Triggered when a column value is retrieved while an object is being L<save|Rose::DB::Object/save>d into the database.
 
-Each piece of code responding to an C<on_load> event will be passed a single argument: a reference to the object itself.  The return value is not used.
+Each piece of code responding to an C<on_save> event will be passed a single argument: a reference to the object itself.  The return value is not used.
 
 =item B<inflate>
 
