@@ -75,15 +75,15 @@ This class inherits from L<Rose::DB::Object::Metadata::Column::Datetime>. Inheri
 
 =item C<get_set>
 
-L<Rose::DB::Object::MakeMethods::Date>, L<datetime|Rose::DB::Object::MakeMethods::Date/datetime>, C<type =E<gt> 'datetime year to minute', ...>
+L<Rose::DB::Object::MakeMethods::Date>, L<datetime|Rose::DB::Object::MakeMethods::Date/datetime>, C<type =E<gt> 'datetime year to minute', interface =E<gt> 'get_set', ...>
 
 =item C<get>
 
-L<Rose::DB::Object::MakeMethods::Date>, L<datetime|Rose::DB::Object::MakeMethods::Date/datetime>, C<type =E<gt> 'datetime year to minute', ...>
+L<Rose::DB::Object::MakeMethods::Date>, L<datetime|Rose::DB::Object::MakeMethods::Date/datetime>, C<type =E<gt> 'datetime year to minute', interface =E<gt> 'get', ...>
 
-=item C<get_set>
+=item C<set>
 
-L<Rose::DB::Object::MakeMethods::Date>, L<datetime|Rose::DB::Object::MakeMethods::Date/datetime>, C<type =E<gt> 'datetime year to minute', ...>
+L<Rose::DB::Object::MakeMethods::Date>, L<datetime|Rose::DB::Object::MakeMethods::Date/datetime>, C<type =E<gt> 'datetime year to minute', interface =E<gt> 'set', ...>
 
 =back
 

@@ -72,6 +72,7 @@ sub build_select
   my $clauses_arg = delete $args{'clauses'};  
   my $pretty      = exists $args{'pretty'} ? $args{'pretty'} : $Debug;
   my $joins       = $args{'joins'};
+  my $hints       = $args{'hints'} || {};
   my $set         = delete $args{'set'};
   my $table_map   = delete $args{'table_map'} || {};
   my $bind_params = $args{'bind_params'};
@@ -419,6 +420,11 @@ sub build_select
         if($i == 1)
         {
           $primary_table = "  $tables_sql->[$i - 1] t$i";
+          
+#           if($db && $db->supports_hints)
+#           {
+#             $primary_table .= $db->apply_hints($hints->{'t1'}
+#           }
           $i++;
           next;
         }

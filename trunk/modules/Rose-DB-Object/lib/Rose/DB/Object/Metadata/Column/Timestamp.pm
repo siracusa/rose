@@ -81,15 +81,15 @@ This class inherits from L<Rose::DB::Object::Metadata::Column::Date>. Inherited 
 
 =item C<get_set>
 
-L<Rose::DB::Object::MakeMethods::Generic>, L<timestamp|Rose::DB::Object::MakeMethods::Date/timestamp>, ...
+L<Rose::DB::Object::MakeMethods::Date>, L<timestamp|Rose::DB::Object::MakeMethods::Date/timestamp>, C<interface =E<gt> 'get_set', ...>
 
 =item C<get>
 
-L<Rose::DB::Object::MakeMethods::Date>, L<timestamp|Rose::DB::Object::MakeMethods::Date/timestamp>, ...
+L<Rose::DB::Object::MakeMethods::Date>, L<timestamp|Rose::DB::Object::MakeMethods::Date/timestamp>, C<interface =E<gt> 'get', ...>
 
-=item C<get_set>
+=item C<set>
 
-L<Rose::DB::Object::MakeMethods::Date>, L<timestamp|Rose::DB::Object::MakeMethods::Date/timestamp>, ...
+L<Rose::DB::Object::MakeMethods::Date>, L<timestamp|Rose::DB::Object::MakeMethods::Date/timestamp>, C<interface =E<gt> 'set', ...>
 
 =back
 
