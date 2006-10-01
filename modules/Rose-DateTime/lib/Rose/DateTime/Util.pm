@@ -719,7 +719,7 @@ is equivalent to this:
 
 =item B<parse_date TEXT [, TIMEZONE]>
 
-Attempts to parse the date described by TEXT.  Returns a L<DateTime> object, or undef on failure, with an error message available via C<Rose::DateTime::Util-E<gt>error()|/error>.
+Attempts to parse the date described by TEXT.  Returns a L<DateTime> object, or undef on failure, with an error message available via L<Rose::DateTime::Util-E<gt>error()|/error>.
 
 If a L<DateTime> object is passed in place of the TEXT argument, it is returned as-is if there is no TIMEZONE argument, or after having L<set_time_zone(TIMEZONE)|DateTime/set_time_zone> called on it if there is a TIMEZONE argument.
 
