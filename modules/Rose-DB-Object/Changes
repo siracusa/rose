@@ -7,6 +7,7 @@
     * Invalid dates are now detected in the query portio of Manager calls.
     * The test suite now refuses to run SQLite tests if the buggy 
       DBD::SQLite version 1.13 is installed.
+    * Fixed some typos in the documenation.
 
 0.753 (09.17.2006) - John Siracusa <siracusa@mindspring.com>
 
