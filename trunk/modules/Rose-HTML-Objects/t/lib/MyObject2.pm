@@ -41,6 +41,6 @@ __PACKAGE__->localizer->add_localized_message_text
   },
 );
 
-__PACKAGE__->load_messages_from_file("$Bin/msgs.txt");
+__PACKAGE__->localizer->load_messages_from_file("$Bin/msgs.txt");
 
 1;

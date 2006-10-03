@@ -1322,7 +1322,7 @@ sub AUTOLOAD
 
 if($ENV{'MOD_PERL'} || $ENV{'RHTMLO_PRIME_CACHES'})
 {
-  __PACKAGE__->load_all_messages;
+  __PACKAGE__->localizer->load_all_messages;
 }
 
 1;

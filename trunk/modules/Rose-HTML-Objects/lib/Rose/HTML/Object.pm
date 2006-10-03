@@ -7,20 +7,20 @@ use Carp;
 use Rose::HTML::Util();
 use Rose::HTML::Object::Message::Localizer;
 
-use Rose::Object;
-our @ISA = qw(Rose::Object);
+use Rose::HTML::Object::Localized;
+our @ISA = qw(Rose::HTML::Object::Localized);
 
 our $VERSION = '0.531';
 
 our $Debug = undef;
 
-use Rose::HTML::Object::MakeMethods
-(
-  localized_errors =>
-  [
-    'errors',
-  ],
-);
+# use Rose::HTML::Object::MakeMethods
+# (
+#   localized_errors =>
+#   [
+#     'errors',
+#   ],
+# );
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -44,8 +44,6 @@ use Rose::Class::MakeMethods::Generic
     'html_element',  # may be read-only in subclasses
     'xhtml_element', # may be read-only in subclasses
     'autoload_html_attr_methods',
-    'default_localizer',
-    'default_locale',
   ],
 );
 
@@ -562,255 +560,61 @@ sub create_html_attr_methods
   return $count;
 }
 
-sub localizer
-{
-  my($invocant) = shift;
-
-  # Called as object method
-  if(my $class = ref $invocant)
-  {
-    if(@_)
-    {
-      return $invocant->{'localizer'} = shift;
-    }
-
-    return $invocant->{'localizer'} || $class->default_localizer;
-  }
-  else # Called as class method
-  {
-    if(@_)
-    {
-      return $invocant->default_localizer(shift);
-    }
-
-    return $invocant->default_localizer
-  }
-}
-
-sub locale
-{
-  my($invocant) = shift;
-
-  # Called as object method
-  if(my $class = ref $invocant)
-  {
-    if(@_)
-    {
-      return $invocant->{'locale'} = shift;
-    }
-
-    return $invocant->{'locale'} || $invocant->localizer->locale || 
-           $invocant->localizer->default_locale;
-  }
-  else # Called as class method
-  {
-    if(@_)
-    {
-      return $invocant->default_locale(shift);
-    }
-
-    return $invocant->localizer->locale || $invocant->localizer->default_locale;
-  }
-}
-
-sub get_localized_message
-{
-  my($self, $id, $locale) = @_;
-
-  my $localizer = $self->localizer;
-
-  my $name = ($id =~ /^[a-z][A-Z]/) ? $id : 
-    $localizer->get_message_name($id);
-
-  $locale = lc $locale;
-
-  my $msg = $self->_get_localized_message($name, $locale);
-  return $msg  if(defined $msg);
-
-  no strict 'refs';
-  foreach my $class (@{ref($self) . '::ISA'})
-  {
-    my $msg = $self->_get_localized_message($name, $locale, $class);
-    return $msg  if(defined $msg);
-  }
-
-  return undef;
-}
-
-my $Locale_Declaration = qr(^\s* \[% \s* LOCALE \s* (\S+) \s* %\] \s* (?: \#.*)?$)x;
-my $Start_Message = qr(^\s* \[% \s* START \s+ ([A-Z0-9_]+) \s* %\] \s* (?: \#.*)?$)x;
-my $End_Message = qr(^\s* \[% \s* END \s+ ([A-Z0-9_]+)? \s* %\] \s* (?: \#.*)?$)x;
-my $Message_Spec = qr(^ \s* ([A-Z0-9_]+) \s* = \s* "((?:[^"\\]+|\\.)*)" \s* (?: \#.*)? $)x;
-my $Comment_Or_Blank = qr(^ \s* \# | ^ \s* $)x;
-my $End_Messages = qr(^=\w|^\s*__END__);
-
-my %Data_Pos;
-
-sub _get_localized_message
-{
-  my($self, $name, $locale, $class) = @_;
-
-  $class ||= ref $self;
-
-  my $localizer = $self->localizer;
-
-  if($localizer->localized_message_exists($name, $locale))
-  {
-    return $localizer->get_localized_message($name, $locale);
-  }
-
-  no strict 'refs';
-  my $fh = \*{"${class}::DATA"};
-
-  if(fileno($fh))
-  {
-    local $/ = "\n";
-
-    if($Data_Pos{$class})
-    {
-      # Rewind to the start of the __DATA__ section
-      seek($fh, $Data_Pos{$class}, 0);
-    }
-    else
-    {
-      $Data_Pos{$class} = tell($fh);
-    }
-
-   my $text = $class->load_messages_from_fh($fh, $locale, $name);
-   return $text  if(defined $text);
-  }
-
-  no strict 'refs';
-  foreach my $class (@{"${class}::ISA"})
-  {
-    my $msg = $self->_get_localized_message($name, $locale, $class);
-    return $msg  if(defined $msg);
-  }
-
-  return undef;
-}
-
-sub load_all_messages
-{
-  my($class) = shift;
-
-  no strict 'refs';
-  my $fh = \*{"${class}::DATA"};
-
-  if(fileno($fh))
-  {
-    local $/ = "\n";
-
-    if($Data_Pos{$class})
-    {
-      # Rewind to the start of the __DATA__ section
-      seek($fh, $Data_Pos{$class}, 0);
-    }
-    else
-    {
-      $Data_Pos{$class} = tell($fh);
-    }
-
-    $class->load_messages_from_fh($fh);
-  }
-}
-
-sub load_messages_from_file
-{
-  my($class, $file) = @_;
-  open(my $fh, $file) or croak "Could no open messages file '$file' - $!";
-  $class->load_messages_from_fh($fh);
-  close($fh);
-}
-
-sub load_messages_from_fh
-{
-  my($class, $fh, $locales, $msg_names) = @_;
-
-  $locales   = { $locales => 1 }    if($locales && !ref $locales);
-  $msg_names = { $msg_names => 1 }  if($msg_names && !ref $msg_names);
-
-  my $localizer = $class->localizer;
-
-  my @text;
-  my $in_locale = '';
-  my $in_msg    = '';
-  my $text      = '';
-
-  no strict 'refs';
-
-  local $_;
-
-  while(<$fh>)
-  {
-    last  if(/$End_Messages/);
-
-    #$Debug && warn "PROC: $_";
-
-    if(/$End_Message/ && (!$2 || $2 eq $in_msg))
-    {
-      if(!$msg_names || $msg_names->{$in_msg})
-      {
-        for($text)
-        {
-          s/\A(\s*\n)+//;
-          s/(\s*\n)+\z//;
-        }
-
-        $localizer->add_localized_message_text(name   => $in_msg,
-                                               locale => $in_locale,
-                                               text   => $text);
-      }
-
-      $text = '';
-      $in_msg = '';
-    }
-    elsif($in_msg)
-    {
-      $text .= $_;
-    }
-    elsif(/$Locale_Declaration/)
-    {
-      $in_locale = $1;
-    }
-    elsif(/$Message_Spec/)
-    {
-      if((!$locales || $locales->{$in_locale}) && (!$msg_names || $msg_names->{$1}))
-      {
-        my $name = $1;
-        my $text = $2;
-
-        for($text)
-        {
-          s/\\n/\n/g;
-          s/\\(.)/$1/g;
-        }
-
-        $localizer->add_localized_message_text(name   => $name,
-                                               locale => $in_locale,
-                                               text   => $text);
-        push(@text, $text)  if($msg_names);
-      }
-    }
-    elsif(/$Start_Message/)
-    {
-      $in_msg = $1;
-    }
-    elsif(!/$Comment_Or_Blank/)
-    {
-      chomp;
-      warn "WARNING: Localized message line not understood: $_";
-    }
-  }
-
-  return wantarray ? @text : $text[0];
-  return;
-}
-
-# if($ENV{'MOD_PERL'} || $ENV{'RHTMLO_PRIME_CACHES'})
+# sub localizer
 # {
-#   __PACKAGE__->load_all_messages;
+#   my($invocant) = shift;
+# 
+#   # Called as object method
+#   if(my $class = ref $invocant)
+#   {
+#     if(@_)
+#     {
+#       return $invocant->{'localizer'} = shift;
+#     }
+# 
+#     return $invocant->{'localizer'} || $class->default_localizer;
+#   }
+#   else # Called as class method
+#   {
+#     if(@_)
+#     {
+#       return $invocant->default_localizer(shift);
+#     }
+# 
+#     return $invocant->default_localizer
+#   }
 # }
+
+# sub locale
+# {
+#   my($invocant) = shift;
+# 
+#   # Called as object method
+#   if(my $class = ref $invocant)
+#   {
+#     if(@_)
+#     {
+#       return $invocant->{'locale'} = shift;
+#     }
+# 
+#     return $invocant->{'locale'} || $invocant->localizer->locale || 
+#            $invocant->localizer->default_locale;
+#   }
+#   else # Called as class method
+#   {
+#     if(@_)
+#     {
+#       return $invocant->default_locale(shift);
+#     }
+# 
+#     return $invocant->localizer->locale || $invocant->localizer->default_locale;
+#   }
+# }
+
+if($ENV{'MOD_PERL'} || $ENV{'RHTMLO_PRIME_CACHES'})
+{
+  __PACKAGE__->localizer->load_all_messages;
+}
 
 # XXX: This is undocumented for now...
 #
