@@ -501,7 +501,7 @@ sub _get_localized_message
 sub load_all_messages
 {
   my($class) = shift;
-$DB::single = 1;
+
   my $load_from_class = @_ ? $_[0] : (caller)[0];
 
   no strict 'refs';
