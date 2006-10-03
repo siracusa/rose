@@ -7,6 +7,14 @@ use Carp();
 use Rose::HTML::Form::Field::Input;
 our @ISA = qw(Rose::HTML::Form::Field::Input);
 
+use Rose::HTML::Object::MakeMethods
+(
+  localized_message =>
+  [
+    qw(_value)
+  ],
+);
+
 __PACKAGE__->add_required_html_attrs(
 {
   type  => 'submit',
@@ -19,8 +27,6 @@ sub hidden_fields      { (wantarray) ? () : [] }
 sub html_hidden_fields { (wantarray) ? () : [] }
 
 *xhtml_hidden_fields = \&html_hidden_fields;
-
-sub value { shift->html_attr('value', @_) }
 
 sub clear { }
 sub reset { }
@@ -64,6 +70,41 @@ sub __image_html
   }
 
   return $ret;
+}
+
+sub value_message_id
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    $self->_value_message_id(@_);
+    return $self->html_attr(value => $self->_value);
+  }
+
+  return $self->_value_message_id;
+}
+
+*value_id = \&value_message_id;
+
+sub value
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    my $value = $self->_value(@_);
+    return $self->SUPER::value($value);
+  }
+
+  my $value = $self->html_attr('value');
+  
+  unless(defined $value)
+  {
+    return $self->html_attr(value => $self->_value);
+  }
+  
+  return $value;
 }
 
 1;

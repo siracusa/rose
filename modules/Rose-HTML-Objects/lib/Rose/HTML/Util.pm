@@ -18,27 +18,29 @@ our %EXPORT_TAGS =
   ]
 );
 
-use HTML::Entities;
+use HTML::Entities();
 use URI::Escape;
 
 if(exists $ENV{'MOD_PERL'} && require mod_perl && $mod_perl::VERSION < 1.99)
 {
   require Apache::Util;
 
-  *escape_html   = \&HTML::Entities::encode;
+  #*escape_html   = \&HTML::Entities::encode;
+  *escape_html   = \&encode_entities;
   *unescape_html = \&Apache::Util::unescape_html;
   *escape_uri_component = \&Apache::Util::escape_uri;
 }
 else
 {
-  *escape_html   = \&HTML::Entities::encode;
+  #*escape_html   = \&HTML::Entities::encode;
+  *escape_html   = \&encode_entities;
   *unescape_html = \&HTML::Entities::decode;
   *escape_uri_component = \&URI::Escape::uri_escape;
 }
 
 our $VERSION = '0.011';
 
-*encode_entities = \&HTML::Entities::encode;
+sub encode_entities { HTML::Entities::encode_entities($_[0], @_ > 1 ? $_[1] : '<>&"') }
 
 sub escape_uri
 {
@@ -124,26 +126,26 @@ will cause the following function names to be imported:
 
 =over 4
 
-=item B<escape_html STRING>
+=item B<escape_html STRING [, UNSAFE]>
 
-Alias for C<HTML::Entities::encode()>
+This method passes its arguments to L<HTML::Entities::encode_entities()|HTML::Entities/encode_entities>.  If the list of unsafe characters is omitted, it defaults to C<E<lt>E<gt>&">
 
 =item B<unescape_html STRING>
 
-When running under mod_perl 1.x, this is an alias for C<Apache::Util::unescape_html()>. Otherwise, it's an alias for C<HTML::Entities::decode()>.
+When running under mod_perl 1.x, this is an alias for C<Apache::Util::unescape_html()>. Otherwise, it's an alias for L<HTML::Entities::decode()|HTML::Entities/decode>.
 
 =item B<escape_uri STRING>
 
-This is a wrapper for C<URI::Escape::uri_escape()> that is intended to escape entire URIs.  Example:
+This is a wrapper for L<URI::Escape::uri_escape()|URI::Escapeuri_escape> that is intended to escape entire URIs.  Example:
 
     $str = 'http://foo.com/bar?baz=1%&blay=foo bar'
     $esc = escape_uri($str);
 
     print $esc; # http://foo.com/bar?baz=1%25&blay=foo%20bar
 
-In other words, it tries to escape all characters that need to be escaped in a URI I<except> those characters that are legitimately part of the URI: forward slashes, a question mark before the query, etc.
+In other words, it tries to escape all characters that need to be escaped in a URI I<except> those characters that are legitimately part of the URI: forward slashes, the question mark before the query, etc.
 
-This is the goal of the wrapper, but the implementation may change in order to better achieve this goal.  The current implementation escapes all characters except those in this set:
+The current implementation escapes all characters except those in this set:
 
     A-Za-z0-9\-_.,'!~*#?&()/?@:[]=
 
@@ -153,11 +155,11 @@ Note that the URI-escaped string is not HTML-escaped.  In order make a URI safe 
 
 =item B<escape_uri_component STRING>
 
-When running under mod_perl 1.x, this is an alias for C<Apache::Util::escape_uri()>. Otherwise, it's an alias for C<URI::Escape::uri_escape()>.
+When running under mod_perl 1.x, this is an alias for L<Apache::Util::escape_uri()|Apache::Util/escape_uri>. Otherwise, it's an alias for L<URI::Escape::uri_escape()|URI::Escapeuri_escape>.
 
-=item B<encode_entities STRING>
+=item B<encode_entities STRING [, UNSAFE]>
 
-Alias for C<HTML::Entities::encode()>
+This method passes its arguments to L<HTML::Entities::encode_entities()|HTML::Entities/encode_entities>.  If the list of unsafe characters is omitted, it defaults to C<E<lt>E<gt>&">
 
 =back
 

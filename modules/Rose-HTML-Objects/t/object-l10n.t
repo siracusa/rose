@@ -172,7 +172,6 @@ BEGIN
 $o = MyObject->new;
 
 $o->error_id(MYOBJ_ERR1, { a => 'A', b => 'B' });
-
 is($o->error->as_string, 'This is my object msg 1: B, A', 'MYOBJ_ERR1 en');
 
 $o->locale('xx');

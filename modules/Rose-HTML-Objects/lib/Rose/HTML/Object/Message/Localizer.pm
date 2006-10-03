@@ -120,13 +120,26 @@ sub localize_message
   return $msg  unless($msg->can('text') && $msg->can('id'));  
   return $msg->text  if($msg->is_custom);
 
-  my $parent = $args{'parent'} || croak "Missing parent";
+  my $child = $msg;
+
+  if($child->can('parent'))
+  {
+    $child = $child->parent;
+  }
+  
+  if($child && $child->isa('Rose::HTML::Object::Error'))
+  {
+    $child = $child->parent;
+  }
+
+  my $calling_class = $child ? ref($child) : $args{'caller'} || (caller)[0];
+  
   my $args   = $args{'args'}   || $msg->args;
   my $locale = $args{'locale'} || $msg->locale || $self->locale;
 
   my $id = $msg->id;
 
-  my $text = $parent->get_localized_message($id, $locale);
+  my $text = $self->get_localized_message($id, $locale, $calling_class);
 
   return $self->process_placeholders($text, $args)  if(defined $text);  
 
@@ -135,7 +148,7 @@ sub localize_message
 
   foreach my $other_locale (@$cascade)
   {
-    $text = $parent->get_localized_message($id, $other_locale);
+    $text = $self->get_localized_message($id, $other_locale, $calling_class);
     return $self->process_placeholders($text, $args) if(defined $text);  
   }
 
@@ -161,8 +174,6 @@ sub process_placeholders
 
   return $text;
 }
-
-sub load_messages_from_file { shift->parent->load_messages_from_file(@_) }
 
 sub get_message_name { shift->messages_class->get_message_name(@_) }
 sub get_message_id   { shift->messages_class->get_message_id(@_) }
@@ -204,20 +215,6 @@ sub localized_message_exists
   }
 
   return 0;
-}
-
-sub get_localized_message
-{
-  my($self, $name, $locale) = @_;
-
-  my $msgs = $self->localized_messages_hash;
-
-  if(exists $msgs->{$name} && exists $msgs->{$name}{$locale})
-  {
-    return $msgs->{$name}{$locale};
-  }
-
-  return undef;
 }
 
 sub add_localized_message_text
@@ -401,6 +398,226 @@ sub add_localized_error
   croak "Could not eval new error constant - $@"  if($@);
 
   return $id;
+}
+
+###########################
+
+# sub get_localized_message
+# {
+#   my($self, $name, $locale) = @_;
+# 
+#   my $msgs = $self->localized_messages_hash;
+# 
+#   if(exists $msgs->{$name} && exists $msgs->{$name}{$locale})
+#   {
+#     return $msgs->{$name}{$locale};
+#   }
+# 
+#   return undef;
+# }
+
+sub get_localized_message
+{
+  my($self, $id_or_name, $locale, $load_from_class) = @_;
+
+  $load_from_class ||= (caller)[0];
+
+  my $name = $self->get_message_name($id_or_name) || $id_or_name;
+
+  $locale = lc $locale;
+
+  my $msgs = $self->localized_messages_hash;
+
+  if(exists $msgs->{$name} && exists $msgs->{$name}{$locale})
+  {
+    return $msgs->{$name}{$locale};
+  }
+
+  my $msg = $self->_get_localized_message($name, $locale, $load_from_class);
+  return $msg  if(defined $msg);
+
+  return undef;
+}
+
+my $Locale_Declaration = qr(^\s* \[% \s* LOCALE \s* (\S+) \s* %\] \s* (?: \#.*)?$)x;
+my $Start_Message = qr(^\s* \[% \s* START \s+ ([A-Z0-9_]+) \s* %\] \s* (?: \#.*)?$)x;
+my $End_Message = qr(^\s* \[% \s* END \s+ ([A-Z0-9_]+)? \s* %\] \s* (?: \#.*)?$)x;
+my $Message_Spec = qr(^ \s* ([A-Z0-9_]+) \s* = \s* "((?:[^"\\]+|\\.)*)" \s* (?: \#.*)? $)x;
+my $Comment_Or_Blank = qr(^ \s* \# | ^ \s* $)x;
+my $End_Messages = qr(^=\w|^\s*__END__);
+
+my %Data_Pos;
+
+sub _get_localized_message
+{
+  my($self, $name, $locale, $load_from_class) = @_;
+
+  $load_from_class ||= $self->messages_class;
+
+  if($self->localized_message_exists($name, $locale))
+  {
+    return $self->get_localized_message($name, $locale);
+  }
+
+  no strict 'refs';
+  my $fh = \*{"${load_from_class}::DATA"};
+
+  if(fileno($fh))
+  {
+    local $/ = "\n";
+
+    if($Data_Pos{$load_from_class})
+    {
+      # Rewind to the start of the __DATA__ section
+      seek($fh, $Data_Pos{$load_from_class}, 0);
+    }
+    else
+    {
+      $Data_Pos{$load_from_class} = tell($fh);
+    }
+
+   my $text = $self->load_messages_from_fh($fh, $locale, $name);
+   return $text  if(defined $text);
+  }
+
+  no strict 'refs';
+
+  my @classes = @{"${load_from_class}::ISA"};
+  my %seen;
+
+  while(@classes)
+  {
+    my $class = pop(@classes);
+    next  if($seen{$class}++);
+    #$Debug && warn "$self SEARCHING $class FOR $name ($locale)\n";
+    my $msg = $self->_get_localized_message($name, $locale, $class);
+    return $msg  if(defined $msg);
+    push(@classes, grep { !$seen{$_} } @{"${class}::ISA"});
+  }
+
+  return undef;
+}
+
+sub load_all_messages
+{
+  my($class) = shift;
+$DB::single = 1;
+  my $load_from_class = @_ ? $_[0] : (caller)[0];
+
+  no strict 'refs';
+  my $fh = \*{"${load_from_class}::DATA"};
+
+  if(fileno($fh))
+  {
+    local $/ = "\n";
+
+    if($Data_Pos{$load_from_class})
+    {
+      # Rewind to the start of the __DATA__ section
+      seek($fh, $Data_Pos{$load_from_class}, 0);
+    }
+    else
+    {
+      $Data_Pos{$load_from_class} = tell($fh);
+    }
+
+    $class->load_messages_from_fh($fh);
+  }
+}
+
+sub load_messages_from_file
+{
+  my($class, $file) = @_;
+  open(my $fh, $file) or croak "Could no open messages file '$file' - $!";
+  $class->load_messages_from_fh($fh);
+  close($fh);
+}
+
+sub load_messages_from_fh
+{
+  my($self, $fh, $locales, $msg_names) = @_;
+
+  $locales   = { $locales => 1 }    if($locales && !ref $locales);
+  $msg_names = { $msg_names => 1 }  if($msg_names && !ref $msg_names);
+
+  my @text;
+  my $in_locale = '';
+  my $in_msg    = '';
+  my $text      = '';
+
+  my $pos = tell($fh);;
+
+  no strict 'refs';
+
+  local $_;
+
+  while(<$fh>)
+  {
+    last  if(/$End_Messages/);
+
+    #$Debug && warn "PROC: $_";
+
+    if(/$End_Message/ && (!$2 || $2 eq $in_msg))
+    {
+      if(!$msg_names || $msg_names->{$in_msg})
+      {
+        for($text)
+        {
+          s/\A(\s*\n)+//;
+          s/(\s*\n)+\z//;
+        }
+
+        $self->add_localized_message_text(name   => $in_msg,
+                                          locale => $in_locale,
+                                          text   => $text);
+      }
+
+      $text = '';
+      $in_msg = '';
+    }
+    elsif($in_msg)
+    {
+      $text .= $_;
+    }
+    elsif(/$Locale_Declaration/)
+    {
+      $in_locale = $1;
+    }
+    elsif(/$Message_Spec/)
+    {
+      if((!$locales || $locales->{$in_locale}) && (!$msg_names || $msg_names->{$1}))
+      {
+        my $name = $1;
+        my $text = $2;
+
+        for($text)
+        {
+          s/\\n/\n/g;
+          s/\\(.)/$1/g;
+        }
+
+        $self->add_localized_message_text(name   => $name,
+                                          locale => $in_locale,
+                                          text   => $text);
+        push(@text, $text)  if($msg_names);
+      }
+    }
+    elsif(/$Start_Message/)
+    {
+      $in_msg = $1;
+    }
+    elsif(!/$Comment_Or_Blank/)
+    {
+      chomp;
+      warn "WARNING: Localized message line not understood: $_";
+    }
+  }
+
+  # Rewind to the starting position
+  seek($fh, $pos, 0);
+
+  return wantarray ? @text : $text[0];
+  return;
 }
 
 1;
