@@ -1818,7 +1818,7 @@ sub STORABLE_freeze
 
   return  if($cloning);
 
-  # Ditch the DBI $dbh and pull teh password out of its closure
+  # Ditch the DBI $dbh and pull the password out of its closure
   my $db = { %$self };
   $db->{'dbh'} = undef;
   $db->{'password'} = $self->password;
