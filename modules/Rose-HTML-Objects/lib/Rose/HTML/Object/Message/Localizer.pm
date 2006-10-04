@@ -400,21 +400,14 @@ sub add_localized_error
   return $id;
 }
 
-###########################
-
-# sub get_localized_message
-# {
-#   my($self, $name, $locale) = @_;
-# 
-#   my $msgs = $self->localized_messages_hash;
-# 
-#   if(exists $msgs->{$name} && exists $msgs->{$name}{$locale})
-#   {
-#     return $msgs->{$name}{$locale};
-#   }
-# 
-#   return undef;
-# }
+sub dump_messages
+{
+  my($self, $code) = @_;
+  my $msgs = $self->localized_messages_hash;
+  return $code->($msgs)  if($code);
+  require Data::Dumper;
+  return Data::Dumper::Dumper($msgs);
+}
 
 sub get_localized_message
 {
