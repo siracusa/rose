@@ -1,4 +1,4 @@
-0.531 (09.29.2006) - John Siracusa <siracusa@mindspring.com>
+0.531 (10.04.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added has_error() method.
     * Scalar::Defer is now a prerequisite.

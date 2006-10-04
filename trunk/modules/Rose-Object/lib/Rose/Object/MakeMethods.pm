@@ -4,7 +4,9 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.81';
+our $VERSION = '0.811';
+
+our $Preserve_Existing = 0;
 
 sub import
 {
@@ -80,7 +82,7 @@ sub __make_methods
 
       if($target_class->can($name))
       {
-        next  if($options->{'preserve_existing'});
+        next  if($options->{'preserve_existing'} || $Preserve_Existing);
 
         unless($options->{'override_existing'})
         {
