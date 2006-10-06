@@ -6,7 +6,7 @@ use Carp;
 
 our $Debug = 0;
 
-our $VERSION = '0.62';
+our $VERSION = '0.754';
 
 use Rose::Class::MakeMethods::Set
 (
@@ -78,7 +78,7 @@ sub import
     {
       croak "Could not import method '$import_as' from $class into ",
             "$target_class - a method by that name already exists. ",
-            "Pass a '--force' argument to import() to override ",
+            "Pass a '-force' argument to import() to override ",
             "existing methods."
     }
 
