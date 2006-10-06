@@ -3,7 +3,6 @@ package Rose::HTML::Form::Field::Compound;
 use strict;
 
 use Carp();
-use Scalar::Defer;
 
 use Rose::HTML::Object::Errors qw(:field);
 use Rose::HTML::Object::Messages qw(:field);
@@ -14,7 +13,7 @@ our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.52';
+our $VERSION = '0.54';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -262,7 +261,7 @@ sub validate
       no warnings 'uninitialized';
       unless(length $field->input_value_filtered)
       {
-        push(@missing, defer { $field->label || $field->name });
+        push(@missing, sub { $field->label || $field->name });
       }
     }
 

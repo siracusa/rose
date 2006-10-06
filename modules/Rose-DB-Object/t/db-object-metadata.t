@@ -24,7 +24,7 @@ $meta->table('mytable');
 
 #is($meta->schema, 'priv', 'schema()');
 is($meta->table, 'mytable', 'table()');
-  
+
 is($meta->fq_table_sql(MyDBObject->init_db), 'rose_db_object_private.mytable', 'fq_table_sql()');
 
 $meta->columns

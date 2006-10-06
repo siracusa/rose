@@ -2,14 +2,12 @@ package Rose::HTML::Form::Field::Integer;
 
 use strict;
 
-use Scalar::Defer;
-
 use Rose::HTML::Object::Errors qw(:number);
 
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.52';
+our $VERSION = '0.54';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -31,7 +29,7 @@ sub validate
   my $min = $self->min;
   my $max = $self->max;
 
-  my $name = defer { $self->label || $self->name };
+  my $name = sub { $self->label || $self->name };
 
   unless($value =~ /^-?\d+$/)
   {

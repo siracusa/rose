@@ -81,7 +81,7 @@ sub last_insertid_from_sth { $_[1]->{'mysql_insertid'} }
 sub format_table_with_alias
 {
   my($self, $table, $alias, $hints) = @_;
-  
+
   my $version = $self->database_version;
 
   if($hints && $version >= 3_023_012)
@@ -105,9 +105,9 @@ sub format_table_with_alias
           $sql .= join(', ', @{$hints->{$key}});
         }
         else { $sql .= $hints->{$key} }
-        
+
         $sql .= ')';
-        
+
         # Only one of these hints is allowed
         last;
       }

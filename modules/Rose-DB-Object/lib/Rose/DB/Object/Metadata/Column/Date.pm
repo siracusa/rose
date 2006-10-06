@@ -68,7 +68,7 @@ sub parse_value
   else
   {
     $dt = Rose::DateTime::Util::parse_date($_[0], $self->time_zone || $db->server_time_zone);
-    
+
     if(my $error = Rose::DateTime::Util->error)
     {
       $self->parse_error("Could not parse value '$_[0]' for column $self: $error")

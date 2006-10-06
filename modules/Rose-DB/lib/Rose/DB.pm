@@ -1157,7 +1157,7 @@ sub format_time
 {
   my($self, $time, $precision) = @_;
   return $time  if($self->validate_time_keyword($time) || $time =~ /^\w+\(.*\)$/);
-  
+
   if(defined $precision)
   {
     if($precision > HHMMSS_PRECISION)
@@ -1764,7 +1764,7 @@ sub refine_dbi_column_info
 sub refine_dbi_foreign_key_info
 {
   my($self, $fk_info) = @_;
-  
+
   # Unquote column names
   foreach my $param (qw(FK_COLUMN_NAME UK_COLUMN_NAME))
   {

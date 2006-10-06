@@ -285,16 +285,16 @@ EOF
     {
       die "Missing InnoDB support";
     }
-    
+
     $dbh->do('DROP TABLE rdbo_innodb_test');
   };
-  
+
   if($@)
   {
     warn $@  unless($@ =~ /Missing InnoDB support/);
     return 0;
   }
-  
+
   return 1;
 }
 

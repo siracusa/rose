@@ -46,7 +46,28 @@ is($o->label, 'Cow', 'unlocalized label 1');
 $o->locale('xx');
 is($o->label, 'Cow', 'unlocalized label 2');
 
-is($o->description, undef, 'localized description 1');
+if($^V lt v5.8.7)
+{
+  if($^V ge v5.8.0)
+  {
+    no warnings 'uninitialized';
+    my $desc = $o->description;
+    is("$desc", '', 'localized description 1 (5.8.0-7)');  
+  }
+  else
+  {
+    # XXX: This causes perl 5.6.x to segfault on me.  Blah.
+    #is("$desc", '', 'localized description 1 (<5.8.7)');  
+    #no warnings 'uninitialized';
+    #my $desc = $o->description;
+    SKIP: { skip('localized description in perl < 5.8.7', 1); }
+  }
+}
+else
+{
+  # XXX: This works fine for me in 5.8.8...
+  is($o->description, undef, 'localized description 1 (5.8.8+)');
+}
 
 my $id = MyField->localizer->add_localized_message( 
   name => 'EMAIL_FIELD_LABEL',

@@ -256,7 +256,7 @@ EOF
 
 is($field->xhtml_table(table => { cellpadding => 1, cellspacing => 2, border => 1 }),
    $table, 'html_table() 2');
-   
+
 $table =<<"EOF";
 <table cellpadding="2" cellspacing="0">
 <tr valign="top">

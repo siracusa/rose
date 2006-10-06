@@ -1159,7 +1159,7 @@ sub _ix_datetime_specific_type
   {
     return 'scalar';
   }
-  
+
   return $type;
 }
 

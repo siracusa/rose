@@ -126,14 +126,14 @@ sub localize_message
   {
     $child = $child->parent;
   }
-  
+
   if($child && $child->isa('Rose::HTML::Object::Error'))
   {
     $child = $child->parent;
   }
 
   my $calling_class = $child ? ref($child) : $args{'caller'} || (caller)[0];
-  
+
   my $args   = $args{'args'}   || $msg->args;
   my $locale = $args{'locale'} || $msg->locale || $self->locale;
 
@@ -155,18 +155,44 @@ sub localize_message
   return undef;
 }
 
+# All this to avoid making Scalar::Defer a prerequisite....sight.
+sub _evaluate
+{  
+  no warnings 'uninitialized';
+  return $_[0]  unless(ref $_[0] eq 'CODE');
+  return $_[0]->();
+}
+
 sub process_placeholders
 {
   my($self, $text, $args) = @_;
+
+  my %args = $args ? %$args : ();
+
+   # Values will be modified in-place
+  foreach my $value (values %args)
+  {
+    if(my $ref = ref($value))
+    {
+      if($ref eq 'ARRAY')
+      {
+        $value = [ map { _evaluate($_) } @$value ];
+      }
+      else
+      {
+        $value = _evaluate($value);
+      }
+    }
+  }
 
   for($text)
   {
     # Process [@123(...)] and [@foo(...)] placeholders
     s{ ( (?:\\.|[^\[]*)* ) \[ \@ (\d+ | [a-zA-Z]\w* ) (?: \( (.*) \) )? \] }
-     { $1 . join(defined $3 ? $3 : ', ', ref $args->{$2} ? @{$args->{$2}} : $args->{$2}) }gex;
+     { $1 . join(defined $3 ? $3 : ', ', ref $args{$2} ? @{$args{$2}} : $args{$2}) }gex;
 
     # Process [123] and [foo] placeholders
-    s{ ( (?:\\.|[^\[]*)* ) \[ (\d+ | [a-zA-Z]\w* ) \] }{$1$args->{$2}}gx;
+    s{ ( (?:\\.|[^\[]*)* ) \[ (\d+ | [a-zA-Z]\w* ) \] }{$1$args{$2}}gx;
 
     # Unescape escaped opening square brackets
     s/\\\[/[/g;

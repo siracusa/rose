@@ -76,7 +76,7 @@ use constant DEFAULT_SCALE     => 0; # HHMMSS (no fractional seconds)
 sub precision
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     my $p = shift;
@@ -99,7 +99,7 @@ sub precision
 sub scale
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     $self->{'scale'} = defined $_[0] ? $_[0] : 0;

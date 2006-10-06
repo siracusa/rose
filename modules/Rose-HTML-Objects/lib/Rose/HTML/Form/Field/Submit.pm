@@ -75,7 +75,7 @@ sub __image_html
 sub value_message_id
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     $self->_value_message_id(@_);
@@ -90,7 +90,7 @@ sub value_message_id
 sub value
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     my $value = $self->_value(@_);
@@ -98,12 +98,12 @@ sub value
   }
 
   my $value = $self->html_attr('value');
-  
+
   unless(defined $value)
   {
     return $self->html_attr(value => $self->_value);
   }
-  
+
   return $value;
 }
 

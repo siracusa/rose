@@ -53,7 +53,7 @@ sub key_column
   {
     $self->{'is_required'} = undef;
   }
-  
+
   return $self->_key_column(@_);
 }
 
@@ -371,7 +371,7 @@ sub spec_hash
 sub object_has_foreign_object
 {
   my($self, $object) = @_;
-  
+
   unless($object->isa($self->parent->class))
   {
     my $class = $self->parent->class;

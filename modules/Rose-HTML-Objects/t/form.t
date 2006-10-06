@@ -686,7 +686,7 @@ BEGIN
     require Rose::DB::Object;
     require Rose::DB;
   };
-  
+
   if($@)
   {
     $Have_RDBO = 0;
@@ -697,7 +697,7 @@ BEGIN
 
     $Have_RDBO = 1;
     our @ISA = qw(Rose::DB::Object);
-    
+
     MyRDBO->meta->setup
     (
       table => 'foo',

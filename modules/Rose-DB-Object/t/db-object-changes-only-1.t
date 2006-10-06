@@ -338,26 +338,26 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   #local $Rose::DB::Object::Debug = 1;  
   $o = MyPgObject2->new->save(changes_only => 1);
   $o = MyPgObject2->new(id => $o->id)->load;
-  
+
   is($o->num, 123, "insert changes only 1 - $db_type");
   is($o->flag, 2, "insert changes only 2 - $db_type");
 
   $o = MyPgObject2->new(flag => 7)->save(changes_only => 1);
   $o = MyPgObject2->new(id => $o->id)->load;
-  
+
   is($o->num, 123, "insert changes only 3 - $db_type");
   is($o->flag, 7, "insert changes only 4 - $db_type");
 
   #local $Rose::DB::Object::Debug = 1;  
   $o = MyPgObject3->new->save;
   $o = MyPgObject3->new(id => $o->id)->load;
-  
+
   is($o->num, 123, "insert changes only 5 - $db_type");
   is($o->flag, 1, "insert changes only 6 - $db_type");
 
   $o = MyPgObject2->new(flag => 7)->save(changes_only => 1);
   $o = MyPgObject2->new(id => $o->id)->load;
-  
+
   is($o->num, 123, "insert changes only 7 - $db_type");
   is($o->flag, 7, "insert changes only 8 - $db_type");
 
@@ -650,7 +650,7 @@ SKIP: foreach my $db_type ('mysql')
   #local $Rose::DB::Object::Debug = 1;  
   $o = MyMySQLObject3->new->save;
   $o = MyMySQLObject3->new(id => $o->id)->load;
-  
+
   is($o->num, 123, "insert changes only 5 - $db_type");
   is($o->flag, 1, "insert changes only 6 - $db_type");
 }
@@ -1064,20 +1064,20 @@ SKIP: foreach my $db_type ('sqlite')
   #local $Rose::DB::Object::Debug = 1;  
   $o = MySQLiteObject3->new->save;
   $o = MySQLiteObject3->new(id => $o->id)->load;
-  
+
   is($o->num, 123, "insert changes only 1 - $db_type");
   is($o->flag, 2, "insert changes only 2 - $db_type");
 
   $o = MySQLiteObject3->new(flag => 7)->save;
   $o = MySQLiteObject3->new(id => $o->id)->load;
-  
+
   is($o->num, 123, "insert changes only 1 - $db_type");
   is($o->flag, 7, "insert changes only 2 - $db_type");
 
   $o = MySQLiteObject4->new(id => 1)->save;
   $o = MySQLiteObject4->new(id => 1)->load;
   ok($o->save, "noop update pk only 1 - $db_type");
-  
+
   $o->meta->default_insert_changes_only(0);
   $o->meta->default_update_changes_only(0);
 

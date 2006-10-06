@@ -518,7 +518,7 @@ sub save
           $code->() or die $self->error;
         }
       }
-      
+
       if($cascade)
       {
         foreach my $fk ($meta->foreign_keys)
@@ -561,7 +561,7 @@ sub save
           next  if($todo->{'rel'}{$rel->name}{'set'});
 
           my $related_objects = $rel->object_has_related_objects($self) || next;
-          
+
           foreach my $related_object (@$related_objects)
           {
             $Debug && warn "$self - save related ", $rel->name, " - $related_object\n";

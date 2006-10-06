@@ -21,7 +21,7 @@ use Rose::Object::MakeMethods::Generic
     'singular_to_plural_function',
     'plural_to_singular_function',
   ],
-  
+
   boolean => 
   [
     tables_are_singular => { default => 0 },
@@ -98,23 +98,23 @@ sub related_table_to_class
 sub table_singular
 {
   my($self) = shift;
- 
+
   my $table = $self->meta->table;
-  
+
   if($self->tables_are_singular)
   {
     return $table;
   }
-  
+
   return $self->plural_to_singular($table);
 }
 
 sub table_plural
 {
   my($self) = shift;
- 
+
   my $table = $self->meta->table;
-  
+
   if($self->tables_are_singular)
   {
     return $self->singular_to_plural($table);
@@ -361,7 +361,7 @@ sub auto_relationship_name_one_to_one
       return $name . $i;
     }
   }
-  
+
   return $name;
 }
 

@@ -219,14 +219,14 @@ sub perl_relationship_definition_attributes
 sub object_has_related_objects
 {
   my($self, $object) = @_;
-  
+
   unless($object->isa($self->parent->class))
   {
     my $class = $self->parent->class;
     Carp::croak "Cannot check for items related through the ", $self->name,
                 " relationship.  Object does not inherit from $class: $object";
   }
-  
+
   my $related_objects = $object->{$self->hash_key};
   my $ref = ref $related_objects;
 

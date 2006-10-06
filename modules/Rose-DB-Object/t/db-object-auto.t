@@ -1079,7 +1079,7 @@ EOF
 
     # No native support for bit types in Informix
     MyInformixObject->meta->column(bits => { type => 'bitfield', bits => 5, default => 101 });
-    
+
     # No native support for array types in Informix
     MyInformixObject->meta->column(nums => { type => 'array' });
 

@@ -1,7 +1,6 @@
 0.54 (10.06.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added has_error() method.
-    * Scalar::Defer is now a prerequisite.
     * The xhtml_table() method for checkbox and radio button groups now
       correctly returns XHTML markup.  (Reported by Jacques Supcik)
     * Added special handling to object_from_form() for checkboxes that

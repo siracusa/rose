@@ -2210,7 +2210,7 @@ EOF
         my $cat = $p->category;
         my $n = $cat->name;
         die  unless($n =~ /\S/);
-        
+
         foreach my $cn ($p->code_names)
         {
           die  unless(index($cn->name, 'CN ') == 0);

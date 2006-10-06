@@ -40,7 +40,7 @@ use Rose::Object::MakeMethods::Generic
     'column_alias_generator',
     'foreign_key_name_generator',
   ],
-  
+
   scalar => 'auto_init_args',
 );
 
@@ -1219,7 +1219,7 @@ sub auto_init_one_to_one_relationships
 
     my $f_meta  = $f_class->meta;
     my $key_cols = $fk->key_columns;
-    
+
     # If both sides of the column map are unique or primary keys, then
     # this is really a one-to-one relationship
     my $local_key  = join("\0", sort keys %$key_cols);
@@ -1250,7 +1250,7 @@ sub auto_init_one_to_one_relationships
         last;
       }
     }
-    
+
     unless($local_unique && $remote_unique)
     {
       next FK;
@@ -1259,7 +1259,7 @@ sub auto_init_one_to_one_relationships
 
     # This is really a one-to-one fk/relationship
     $fk->relationship_type('one to one');
-      
+
     # Find the associated relationship and change its type
     foreach my $rel ($self->relationships)
     {
@@ -1282,7 +1282,7 @@ sub auto_init_one_to_one_relationships
         $self->relationship($rel->name => $new_rel);
       }
     }
-      
+
     my $cm = $f_meta->convention_manager;
 
     # Also don't add add one to one relationships between a class
@@ -1293,7 +1293,7 @@ sub auto_init_one_to_one_relationships
                      "to map class to $class\n";
       next FK;
     }
-  
+
     my $name = $cm->auto_relationship_name_one_to_one($self->table, $class);
 
     my $relationship = 
@@ -1374,7 +1374,7 @@ sub auto_init_one_to_many_relationships
         next FK  if($skip);
       }
     }
-    
+
     # If both sides of the column map are unique or primary keys, then
     # this is really a one-to-one relationship
     my $local_key  = join("\0", sort keys %$key_cols);
@@ -1405,12 +1405,12 @@ sub auto_init_one_to_many_relationships
         last;
       }
     }
-    
+
     if($local_unique && $remote_unique)
     {
       next FK;
     }
-    
+
     my $cm = $f_meta->convention_manager;
 
     # Also don't add add one to many relationships between a class
