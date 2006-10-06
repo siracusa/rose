@@ -1,7 +1,8 @@
-0.727 (09.30.2006) - John Siracusa <siracusa@mindspring.com>
+0.727 (10.06.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added the has_dbh() method.
     * Changes to support Rose::DB::Object 0.754.
+    * Fixed some Informix date/time parsing bugs.
     * The test suite now refuses to run SQLite tests if the buggy 
       DBD::SQLite version 1.13 is installed.
 
