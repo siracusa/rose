@@ -328,7 +328,7 @@ sub add_fields
       {
         $field = $self->make_field($arg, $field);
       }
-      
+
       $field->local_moniker($arg);
 
       unless(defined $field->rank)

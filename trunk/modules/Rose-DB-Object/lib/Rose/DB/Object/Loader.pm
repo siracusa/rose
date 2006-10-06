@@ -622,7 +622,7 @@ sub make_classes
       unless(UNIVERSAL::isa($db_class, 'Rose::DB'))
       {
         eval "require $db_class";
-  
+
         if($@)
         {
           # Failed to load existing module
@@ -630,7 +630,7 @@ sub make_classes
           {
             croak "Could not load db class '$db_class' - $@";
           }
-  
+
           # Make the class
           no strict 'refs';
           @{"${db_class}::ISA"} = qw(Rose::DB);

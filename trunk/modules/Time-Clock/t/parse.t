@@ -61,7 +61,7 @@ if($Have_HiRes_Time)
 {
   ok($t->parse('now'), 'parse now hires');
   ok($t->as_string =~ /^\d\d:\d\d:\d\d\.\d+$/, 'now hires');
-  
+
   local $Time::Clock::Have_HiRes_Time = 0;
   ok($t->parse('now'), 'parse now lowres');
   ok($t->as_string =~ /^\d\d:\d\d:\d\d$/, 'check now lowres');

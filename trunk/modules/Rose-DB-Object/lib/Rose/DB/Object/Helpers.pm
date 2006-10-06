@@ -254,15 +254,15 @@ sub clone_and_reset
 sub has_loaded_related
 {
   my($self) = shift;
-  
+
   my $rel; # really a relationship or fk
-  
+
   my $meta = $self->meta;
 
   if(@_ == 1)
   {
     my $name = shift;
-    
+
     if($rel = $meta->foreign_key($name))
     {
       return $rel->object_has_foreign_object($self) ? 1 : 0;

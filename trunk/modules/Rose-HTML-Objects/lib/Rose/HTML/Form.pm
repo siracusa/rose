@@ -844,7 +844,7 @@ sub add_forms
     if(UNIVERSAL::isa($arg, 'Rose::HTML::Form'))
     {
       $form = $arg;
-      
+
       if(refaddr($form) eq refaddr($self))
       {
         croak "Cannot nest a form within itself";

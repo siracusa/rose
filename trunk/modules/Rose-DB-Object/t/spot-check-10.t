@@ -136,7 +136,7 @@ foreach my $db_type (qw(pg))
 
   $employer->add_offerings(\@offerings);
   $employer->save;
-  
+
   my $employers = 
     Rose::DB::Object::Manager->get_objects(
       object_class => $employer_class,
@@ -462,7 +462,7 @@ CREATE TABLE offering_sequences
   years            VARCHAR(2) DEFAULT '' NOT NULL,
   sequence_number  SMALLINT DEFAULT 0 NOT NULL,
   browse           BOOLEAN DEFAULT true NOT NULL,
-  
+
   PRIMARY KEY (company_code, eid, years, sequence_number)
 )
 EOF

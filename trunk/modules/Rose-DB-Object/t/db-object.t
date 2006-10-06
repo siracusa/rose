@@ -125,7 +125,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $o2->last_modified('now');
   ok($o2->save, "save() 2 - $db_type");
   ok($o2->load, "load() 3 - $db_type");
-  
+
   ok(!has_modified_columns($o2), "no modified columns after load() - $db_type");
 
   $o2->name('John 2');
@@ -139,15 +139,15 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $bo->load;
   $bo->flag(0);
   $bo->save;
-  
+
   $bo = MyPgObject->new(id => $o->id);
   $bo->load;
-  
+
   ok(!$bo->flag, "boolean check - $db_type");
-  
+
   $bo->flag(0);
   $bo->save;
-  
+
   my $o3 = MyPgObject->new();
 
   my $db = $o3->db or die $o3->error;
@@ -337,18 +337,18 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $o->bint3(5);
   eval { $o->bint3(7) };
   ok($@, "bigint 5 - $db_type");
-  
+
   is($o->tee_time5->as_string, '12:34:56.12345', "time(5) - $db_type");
 
   $o->tee_time0('1pm');
   $o->tee_time('allballs');
   $o->tee_time9('now');
   $o->save;
-  
+
   $o =  MyPgObject->new(id => $o->id)->load;
   is($o->tee_time->as_string, '00:00:00', "time allballs - $db_type");
   ok($o->tee_time9->as_string =~ /^\d\d:\d\d:\d\d\.\d{1,6}$/, "time now - $db_type");
-  
+
   $o->tee_time(Time::Clock->new->parse('6:30 PM'));
   $o->save;
 
@@ -643,7 +643,7 @@ SKIP: foreach my $db_type ('mysql')
 
   $o = MyMySQLObject->new(id => $o->id)->load;
   is($o->tee_time->as_string, '00:00:00', "time allballs - $db_type");
-  
+
   if($Have_HiRes_Time)
   {
     ok($o->tee_time9->as_string =~ /^\d\d:\d\d:\d\d\.\d+$/, "time now - $db_type");
@@ -652,7 +652,7 @@ SKIP: foreach my $db_type ('mysql')
   {
     ok($o->tee_time9->as_string =~ /^\d\d:\d\d:\d\d$/, "time now - $db_type");
   }
-  
+
   $o->tee_time(Time::Clock->new->parse('6:30 PM'));
   $o->save;
 
@@ -1421,10 +1421,10 @@ EOF
       primary_key_generator => sub
       {
         my($meta, $db) = @_;
-  
+
         my $k1 = $i++;
         my $k2 = $i++;
-  
+
         return $k1, $k2;
       },
     );

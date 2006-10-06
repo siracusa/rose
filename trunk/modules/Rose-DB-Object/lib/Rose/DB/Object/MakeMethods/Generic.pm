@@ -2028,7 +2028,7 @@ sub object_by_key
         my $object = __args_to_object($self, $key, $fk_class, \$fk_pk, \@_);
 
         my $linked_up = 0;
-        
+
         if(!$fk->requires_preexisting_parent_object || $self->{STATE_IN_DB()})
         {   
           # Set the foreign key columns
@@ -2036,7 +2036,7 @@ sub object_by_key
           {
             my $local_method   = $meta->column_mutator_method_name($local_column);
             my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
-  
+
             $self->$local_method($object->$foreign_method);
           }
 
@@ -2062,7 +2062,7 @@ sub object_by_key
             {
               my $local_method   = $meta->column_mutator_method_name($local_column);
               my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
-    
+
               $object->$foreign_method($self->$local_method)
                 unless(defined $object->$foreign_method);
             }
@@ -2294,7 +2294,7 @@ sub object_by_key
 
         $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$fk_name}{'set'} = $to_save_post
           if($to_save_post);
-          
+
         $meta->handle_error($self);
         return undef;
       }
