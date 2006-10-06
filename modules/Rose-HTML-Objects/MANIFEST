@@ -55,6 +55,7 @@ lib/Rose/HTML/Object/Error.pm
 lib/Rose/HTML/Object/Error/Localized.pm
 lib/Rose/HTML/Object/Errors.pm
 lib/Rose/HTML/Object/Exporter.pm
+lib/Rose/HTML/Object/Localized.pm
 lib/Rose/HTML/Object/MakeMethods.pm
 lib/Rose/HTML/Object/Message.pm
 lib/Rose/HTML/Object/Message/Localized.pm

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 154;
+use Test::More tests => 158;
 
 BEGIN 
 {
@@ -55,12 +55,21 @@ is($address->zip, 11787, 'address zip 1');
 
 my $form = MyPersonAddressForm->new;
 
+eval { $form->add_form($form) };
+ok($@, 'recursive form nesting failure 1');
+
+eval { $form->add_form(foo => $form) };
+ok($@, 'recursive form nesting failure 2');
+
 @fields = qw(person.age person.bday person.gender person.your_name person.start address.city address.your_state address.street address.zip);
 is_deeply([ $form->field_monikers ], \@fields, 'person address field monikers');
+is_deeply([ $form->field_names ], \@fields, 'person address field names');
 @fields = qw(address.city address.state address.street address.zip person.age person.bday person.gender person.name person.start);
 is_deeply([ sort keys %{ $form->{'fields_by_name'} } ], \@fields, 'person address field names 1');
 @fields = qw(person.age person.bday person.gender person.name person.start address.city address.state address.street address.zip);
 is_deeply([ map { $_->name } $form->fields ], \@fields, 'person address field names 2');
+
+is_deeply(scalar $form->form_names, [ 'person', 'address' ], 'person address form names 1');
 
 $person_form  = $form->form('person');
 is(ref $person_form, 'MyPersonForm', 'person form 1');

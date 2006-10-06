@@ -10,7 +10,7 @@ use Rose::HTML::Object::Message::Localizer;
 use Rose::HTML::Object::Localized;
 our @ISA = qw(Rose::HTML::Object::Localized);
 
-our $VERSION = '0.531';
+our $VERSION = '0.54';
 
 our $Debug = undef;
 

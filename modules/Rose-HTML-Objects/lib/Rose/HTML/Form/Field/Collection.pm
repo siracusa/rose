@@ -3,6 +3,7 @@ package Rose::HTML::Form::Field::Collection;
 use strict;
 
 use Carp();
+use Scalar::Util qw(refaddr);
 
 use Rose::HTML::Form::Field::Hidden;
 
@@ -297,6 +298,11 @@ sub add_fields
     {
       my $field = $arg;
 
+      if(refaddr($field) eq refaddr($self))
+      {
+        Carp::croak "Cannot nest a field within itself";
+      }
+
       $field->local_name($field->name);
 
       unless(defined $field->rank)
@@ -311,11 +317,18 @@ sub add_fields
     {
       my $field = shift;
 
-      unless(UNIVERSAL::isa($field, 'Rose::HTML::Form::Field'))
+      if(UNIVERSAL::isa($field, 'Rose::HTML::Form::Field'))
+      {
+        if(refaddr($field) eq refaddr($self))
+        {
+          Carp::croak "Cannot nest a field within itself";
+        }
+      }
+      else
       {
         $field = $self->make_field($arg, $field);
       }
-
+      
       $field->local_moniker($arg);
 
       unless(defined $field->rank)

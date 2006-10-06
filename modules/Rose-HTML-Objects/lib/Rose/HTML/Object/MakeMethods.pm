@@ -7,7 +7,7 @@ use Carp();
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
-our $VERSION = '0.531';
+our $VERSION = '0.54';
 
 sub localized_message
 {

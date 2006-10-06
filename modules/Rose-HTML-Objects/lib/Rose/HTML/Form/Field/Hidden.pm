@@ -5,7 +5,7 @@ use strict;
 use Rose::HTML::Form::Field::Input;
 our @ISA = qw(Rose::HTML::Form::Field::Input);
 
-our $VERSION = '0.531';
+our $VERSION = '0.54';
 
 __PACKAGE__->delete_valid_html_attrs(qw(disabled ismap usemap alt src tabindex
 checked maxlength onblur onchange onclick ondblclick onfocus onkeydown
