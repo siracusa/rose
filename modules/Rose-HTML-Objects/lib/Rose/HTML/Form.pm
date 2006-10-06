@@ -1156,6 +1156,8 @@ sub field_monikers
   return wantarray ? @{$self->{'field_monikers'}} : $self->{'field_monikers'};
 }
 
+sub field_names { shift->field_monikers(@_) }
+
 sub _find_field_info
 {
   my($self, $form, $list) = @_;
@@ -1821,7 +1823,7 @@ The default implementation performs a string comparison on the L<name|Rose::HTML
 
 =item B<compare_forms [FORM1, FORM2]>
 
-Compare two forms, returning 1 if FORM1 should come before FORM2, -1 if FORM2 should come before FORM1, or 0 if neither form should come before the other.  This method is called from within the L<form_names|/form_names> method to determine the order of the sub-forms nested within this form.
+Compare two forms, returning 1 if FORM1 should come before FORM2, -1 if FORM2 should come before FORM1, or 0 if neither form should come before the other.  This method is called from within the L<form_monikers|/form_monikers> method to determine the order of the sub-forms nested within this form.
 
 The default implementation compares the L<rank|/rank> of the forms in numeric context.
 
@@ -1891,13 +1893,17 @@ If both NAME and VALUE arguments are passed, then the VALUE must be a L<Rose::HT
 
 =item B<fields>
 
-Returns an ordered list of this form's field objects in list context, or a reference to this list in scalar context.  The order of the fields matches the order of the field names returned by the L<field_names|/field_names> method.
+Returns an ordered list of this form's field objects in list context, or a reference to this list in scalar context.  The order of the fields matches the order of the field names returned by the L<field_monikers|/field_monikers> method.
+
+=item B<field_monikers>
+
+Returns an ordered list of field monikers in list context, or a reference to this list in scalar context.  A "moniker" is a fully qualified name, including any sub-form or sub-field prefixes  (e.g., "pa.person.email" as seen in the L<nested forms|/"NESTED FORMS"> section above).
+
+The order is determined by the L<compare_forms|/compare_forms> and L<compare_fields|/compare_fields> methods.  The L<compare_forms|/compare_forms> method is passed the parent form of each field.  If it returns a true value, then that value is used to sort the two fields being compared.  If it returns false, then the L<compare_fields|/compare_fields> method is called with the two field objects as arguments and its return value is used to determine the order.  See the documentation for the L<compare_forms|/compare_forms> and L<compare_fields|/compare_fields> methods for more information.
 
 =item B<field_names>
 
-Returns an ordered list of field names in list context, or a reference to this list in scalar context.  The order is determined by the L<compare_fields|/compare_fields> method by default.
-
-You can override the L<compare_fields|/compare_fields> method in your subclass to provide a custom sort order, or you can override the L<field_names|/field_names> method itself to provide an arbitrary  order, ignoring the L<compare_fields|/compare_fields> method entirely.
+This method simply calls L<field_monikers|/field_monikers>.
 
 =item B<field_rank_counter [INT]>
 
@@ -2008,7 +2014,7 @@ NAME is a fully-qualified sub-form name.  Components of the hierarchy are separa
 
 =item B<forms>
 
-Returns an ordered list of this form's sub-form objects (if any) in list context, or a reference to this list in scalar context.  The order of the form matches the order of the form names returned by the L<form_names|/form_names> method.
+Returns an ordered list of this form's sub-form objects (if any) in list context, or a reference to this list in scalar context.  The order of the form matches the order of the form names returned by the L<form_monikers|/form_monikers> method.
 
 See the L<nested forms|/"NESTED FORMS"> section to learn more about nested forms.
 
@@ -2018,9 +2024,7 @@ Get or set the name of this form.  This name may or may not have any connection 
 
 =item B<form_names>
 
-Returns an ordered list of form names in list context, or a reference to this list in scalar context.  The order is determined by the L<compare_forms|/compare_forms> method by default.
-
-You can override the L<compare_forms|/compare_forms> method in your subclass to provide a custom sort order, or you can override the L<form_names|/form_names> method itself to provide an arbitrary  order, ignoring the L<compare_forms|/compare_forms> method entirely.
+Returns an ordered list of form names in list context, or a reference to this list in scalar context.  The order is determined by the L<compare_forms|/compare_forms> method.  Note that this only lists the forms that are direct children of the current form.  Forms that are nested more than one level deep are not listed.
 
 =item B<form_rank_counter [INT]>
 
@@ -2358,7 +2362,7 @@ Returns a URI-escaped (but I<not> HTML-escaped) query string that corresponds to
 
 =item B<rank [INT]>
 
-Get or set the form's rank.  This value can be used for any purpose that suits you, but by default it's used by the L<compare_forms()|Rose::HTML::Form/compare_forms> method to sort sub-forms.
+Get or set the form's rank.  This value can be used for any purpose that suits you, but by default it's used by the L<compare_forms|/compare_forms> method to sort sub-forms.
 
 =item B<reset>
 
