@@ -160,6 +160,11 @@ sub load
 
   unless(@key_values == @key_columns)
   {
+    my $alt_columns;
+
+    # Prefer unique keys where we have defined values for all
+    # key calumns, but fall back to teh first unique key found 
+    # where we have at least one defined value.
     foreach my $cols ($meta->unique_keys_column_names)
     {
       my $defined = 0;
@@ -168,12 +173,22 @@ sub load
       @key_values  = map { $defined++ if(defined $_); $_ } 
                      map { $self->$_() } @key_methods;
 
-      if($defined)
+      if($defined == @key_columns)
       {
         $found_key = 1;
-        $null_key  = 1  unless($defined == @key_columns);
         last;
       }
+
+      $alt_columns ||= $cols  if($defined);
+    }
+
+    if(!$found_key && $alt_columns)
+    {
+      @key_columns = @$alt_columns;
+      @key_methods = map { $meta->column_accessor_method_name($_) }  @key_columns;
+      @key_values  = map { $self->$_() } @key_methods;
+      $null_key    = 1;
+      $found_key   = 1;
     }
 
     unless($found_key)
@@ -1882,6 +1897,8 @@ Returns true if the row was inserted successfully, false otherwise.  The true va
 Load a row from the database table, initializing the object with the values from that row.  An object can be loaded based on either a primary key or a unique key.
 
 Returns true if the row was loaded successfully, undef if the row could not be loaded due to an error, or zero (0) if the row does not exist.  The true value returned on success will be the object itself.  If the object L<overload>s its boolean value such that it is not true, then a true value will be returned instead of the object itself.
+
+When loading based on a unique key, unique keys are considered in the order in which they were defined in the L<metadata|/meta> for this class.  If the object has defined values for every column in a unique key, then that key is used.  If no such keys are found, then the first key for which the object has at least one defined value is used.
 
 PARAMS are optional name/value pairs.  Valid PARAMS are:
 
