@@ -39,7 +39,7 @@ WriteMakefile(NAME         => 'Rose::HTML::Objects',
                 'Scalar::Defer'  => 0.07,
                 'URI::Escape'    => 0,
                 'Scalar::Util'   => 0,
-                'Rose::Object'   => 0.81,
+                'Rose::Object'   => 0.82,
                 'Rose::DateTime' => 0.0133,
                 'Rose::URI'      => 0.021,
               });
