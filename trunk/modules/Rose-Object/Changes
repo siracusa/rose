@@ -3,7 +3,7 @@
     * Forcibly reloading a module that uses one of the method makers
       no longer causes a fatal "method redefined" error.
     * Added the allow_apparent_reload() class attribute to control
-      the new ability described above.      
+      the new ability described above.
 
 0.81 (06.20.2006) - John Siracusa <siracusa@mindspring.com>
 
