@@ -78,6 +78,7 @@ sub parse_datetime
 {
   unless(ref $_[1])
   {
+    no warnings 'uninitialized';
     return DateTime::Infinite::Past->new   if($_[1] eq '-infinity');
     return DateTime::Infinite::Future->new if($_[1] eq 'infinity');
   }
@@ -89,6 +90,7 @@ sub parse_timestamp
 {
   unless(ref $_[1])
   {
+    no warnings 'uninitialized';
     return DateTime::Infinite::Past->new   if($_[1] eq '-infinity');
     return DateTime::Infinite::Future->new if($_[1] eq 'infinity');
   }

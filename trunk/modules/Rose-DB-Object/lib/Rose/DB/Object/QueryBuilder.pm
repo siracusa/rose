@@ -811,7 +811,7 @@ sub _format_value
         $object->$set_method($value);
         $value = $object->$get_method();
       }
-      else
+      elsif(defined $value)
       {
         my $parsed_value = $col_meta->parse_value($db, $value);
 
@@ -861,7 +861,7 @@ sub _format_value
       $object->$set_method($value);
       $value = $object->$get_method();
     }
-    else
+    elsif(defined $value)
     {
       my $parsed_value = $col_meta->parse_value($db, $value);
 
