@@ -1,4 +1,4 @@
-0.531 (10.01.2006) - John Siracusa <siracusa@mindspring.com>
+0.531 (10.06.2006) - John Siracusa <siracusa@mindspring.com>
 
     * parse_date() now accepts "now!" as an alias for "now".
     * Fixed a typo in the documentation.

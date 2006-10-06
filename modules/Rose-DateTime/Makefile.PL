@@ -9,5 +9,5 @@ WriteMakefile(NAME         => 'Rose::DateTime',
               PREREQ_PM =>
               {
                 'DateTime'     => 0,
-                'Rose::Object' => 0,
+                'Rose::Object' => 0.82,
               });
