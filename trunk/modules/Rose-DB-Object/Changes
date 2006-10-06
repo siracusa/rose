@@ -1,4 +1,4 @@
-0.754 (10.05.2006) - John Siracusa <siracusa@mindspring.com>
+0.754 (10.06.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added an optional db argument to the prime_all_caches() and
       prime_caches() metadata methods.  (Suggested by Jonathan Vanasco)
