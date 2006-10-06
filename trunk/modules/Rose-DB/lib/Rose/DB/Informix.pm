@@ -112,13 +112,20 @@ sub format_datetime_year_to_fraction_5 { format_datetime_year_to_fraction(@_, 5)
 
 sub parse_date
 {
-  return $_[1]  if($_[0]->validate_date_keyword($_[1]));
+  my($self, $value) = @_;
 
-  my $dt = Rose::DateTime::Util::parse_date($_[1]);
+  if(UNIVERSAL::isa($value, 'DateTime') || 
+    $self->validate_date_keyword($value))
+  {
+    return $value;
+  }
+
+  my $dt;
+  eval { $dt = Rose::DateTime::Util::parse_date($value) };
 
   if($@)
   {
-    $_[0]->error("Could not parse date '$_[1]' - $@");
+    $self->error("Could not parse date '$value' - $@");
     return undef;
   }
 
@@ -127,13 +134,20 @@ sub parse_date
 
 sub parse_datetime
 {
-  return $_[1]  if($_[0]->validate_datetime_keyword($_[1]));
+  my($self, $value) = @_;
 
-  my $dt = Rose::DateTime::Util::parse_date($_[1]);
+  if(UNIVERSAL::isa($value, 'DateTime') || 
+    $self->validate_datetime_keyword($value))
+  {
+    return $value;
+  }
+
+  my $dt;
+  eval { $dt = Rose::DateTime::Util::parse_date($value) };
 
   if($@)
   {
-    $_[0]->error("Could not parse datetime '$_[1]' - $@");
+    $self->error("Could not parse datetime '$value' - $@");
     return undef;
   }
 
@@ -142,13 +156,20 @@ sub parse_datetime
 
 sub parse_datetime_year_to_second
 {
-  return $_[1]  if($_[0]->validate_datetime_keyword($_[1]));
+  my($self, $value) = @_;
 
-  my $dt = Rose::DateTime::Util::parse_date($_[1]);
+  if(UNIVERSAL::isa($value, 'DateTime') || 
+    $self->validate_datetime_year_to_second_keyword($value))
+  {
+    return $value;
+  }
+
+  my $dt;
+  eval { $dt = Rose::DateTime::Util::parse_date($value) };
 
   if($@)
   {
-    $_[0]->error("Could not parse datetime year to second '$_[1]' - $@");
+    $self->error("Could not parse datetime year to second '$value' - $@");
     return undef;
   }
 
@@ -164,11 +185,12 @@ sub parse_datetime_year_to_fraction
 
   $fraction ||= 3;
 
-  my $dt = Rose::DateTime::Util::parse_date($arg);
+  my $dt;
+  eval { $dt = Rose::DateTime::Util::parse_date($arg) };
 
   if($@)
   {
-    $self->error("Could not parse datetime year to second '$arg' - $@");
+    $self->error("Could not parse datetime year to fraction '$arg' - $@");
     return undef;
   }
 
@@ -197,14 +219,20 @@ sub parse_datetime_year_to_fraction
 
 sub parse_datetime_year_to_minute
 {
-  return $_[1]  if($_[0]->validate_datetime_keyword($_[1]));
+  my($self, $value) = @_;
 
-  my $dt = Rose::DateTime::Util::parse_date($_[1]);
+  if(UNIVERSAL::isa($value, 'DateTime') || 
+    $self->validate_datetime_year_to_minute_keyword($value))
+  {
+    return $value;
+  }
 
+  my $dt;  
+  eval { $dt = Rose::DateTime::Util::parse_date($value) };
 
   if($@)
   {
-    $_[0]->error("Could not parse datetime year to minute '$_[1]' - $@");
+    $self->error("Could not parse datetime year to minute '$value' - $@");
     return undef;
   }
 
@@ -214,13 +242,20 @@ sub parse_datetime_year_to_minute
 
 sub parse_timestamp
 {
-  return $_[1]  if($_[0]->validate_timestamp_keyword($_[1]));
+  my($self, $value) = @_;
 
-  my $dt = Rose::DateTime::Util::parse_date($_[1]);
+  if(UNIVERSAL::isa($value, 'DateTime') || 
+    $self->validate_timestamp_keyword($value))
+  {
+    return $value;
+  }
+
+  my $dt;  
+  eval { $dt = Rose::DateTime::Util::parse_date($value) };
 
   if($@)
   {
-    $_[0]->error("Could not parse timestamp '$_[1]' - $@");
+    $self->error("Could not parse timestamp '$value' - $@");
     return undef;
   }
 
@@ -711,37 +746,37 @@ If a an ARRAYREF is passed, it is returned as-is.
 
 Parse STRING and return a boolean value of 1 or 0.  STRING should be formatted according to Informix's native "boolean" data type.  Acceptable values are 't', 'T', or '1' for true, and 'f', 'F', or '0' for false.
 
-If STRING is a valid boolean keyword (according to C<validate_boolean_keyword()>) or if it looks like a function call (matches /^\w+\(.*\)$/) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "boolean" value.
+If STRING is a valid boolean keyword (according to L<validate_boolean_keyword|/boolean_keyword>) or if it looks like a function call (matches /^\w+\(.*\)$/) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "boolean" value.
 
 =item B<parse_datetime STRING>
 
 Parse STRING and return a C<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO SECOND" data type.
 
-If STRING is a valid "datetime year to second" keyword (according to C<validate_datetime_year_to_second_keyword()>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO SECOND" value.
+If STRING is a valid "datetime year to second" keyword (according to L<validate_datetime_year_to_second_keyword|/datetime_year_to_second_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO SECOND" value.
 
 =item B<parse_datetime_year_to_fraction STRING>
 
 Parse STRING and return a C<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO FRACTION" data type.
 
-If STRING is a valid "datetime year to fraction" keyword (according to C<validate_datetime_year_to_fraction_keyword()>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO FRACTION" value.
+If STRING is a valid "datetime year to fraction" keyword (according to L<validate_datetime_year_to_fraction_keyword|/datetime_year_to_fraction_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO FRACTION" value.
 
 =item B<parse_datetime_year_to_fraction_[1-5] STRING>
 
 These five methods parse STRING and return a C<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO FRACTION(N)" data type, where N is an integer from 1 to 5.
 
-If STRING is a valid "datetime year to fraction" keyword (according to C<validate_datetime_year_to_fraction_keyword()>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO FRACTION(N)" value.
+If STRING is a valid "datetime year to fraction" keyword (according to L<validate_datetime_year_to_fraction_keyword|/datetime_year_to_fraction_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO FRACTION(N)" value.
 
 =item B<parse_datetime_year_to_minute STRING>
 
 Parse STRING and return a C<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO MINUTE" data type.
 
-If STRING is a valid "datetime year to minute" keyword (according to C<validate_datetime_year_to_minute_keyword()>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO MINUTE" value.
+If STRING is a valid "datetime year to minute" keyword (according to L<validate_datetime_year_to_minute_keyword|/datetime_year_to_minute_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO MINUTE" value.
 
 =item B<parse_datetime_year_to_second STRING>
 
 Parse STRING and return a C<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO SECOND" data type.
 
-If STRING is a valid "datetime year to second" keyword (according to C<validate_datetime_year_to_second_keyword()>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO SECOND" value.
+If STRING is a valid "datetime year to second" keyword (according to L<validate_datetime_year_to_second_keyword|/datetime_year_to_second_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO SECOND" value.
 
 =item B<parse_set STRING | LIST | ARRAYREF>
 
@@ -755,7 +790,7 @@ If a an ARRAYREF is passed, it is returned as-is.
 
 Parse STRING and return a C<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO FRACTION(5)" data type.
 
-If STRING is a valid timestamp keyword (according to C<validate_timestamp_keyword()>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO FRACTION(5)" value.
+If STRING is a valid timestamp keyword (according to L<validate_timestamp_keyword|/timestamp_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO FRACTION(5)" value.
 
 =item B<validate_date_keyword STRING>
 
