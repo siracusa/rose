@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 231;
+use Test::More tests => 233;
 
 BEGIN 
 {
@@ -216,7 +216,10 @@ $fields{'name'} = Rose::HTML::Form::Field::Text->new;
 $fields{'age'}  = Rose::HTML::Form::Field::Text->new(size => 2);
 $fields{'bday'} = Rose::HTML::Form::Field::DateTime::Split::MonthDayYear->new(name => 'bday');
 
-$form->add_fields(%fields);
+$form->add_fields(map { $_ => $fields{$_} } sort keys %fields);
+
+is_deeply(scalar $form->field_names, [ 'age', 'bday', 'name' ], 'field_names() 1');
+is_deeply(scalar $form->field_monikers, [ 'age', 'bday', 'name' ], 'field_monikers() 1');
 
 is($form->html_hidden_fields, 
    qq(<input name="age" type="hidden" value="">\n) .

@@ -11,7 +11,7 @@ our @ISA = qw(Rose::Object);
 
 use Rose::HTML::Object::Errors qw(CUSTOM_ERROR);
 
-our $VERSION = '0.531';
+our $VERSION = '0.54';
 
 #our $Debug = 0;
 

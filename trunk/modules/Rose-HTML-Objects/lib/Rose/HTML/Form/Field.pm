@@ -19,7 +19,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.531';
+our $VERSION = '0.54';
 
 #our $Debug = 0;
 

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 81;
+use Test::More tests => 83;
 
 BEGIN 
 {
@@ -15,6 +15,12 @@ my $field = Rose::HTML::Form::Field->new(
   description => 'Your name',
   default     => 'Anonymous 1');
 ok(ref $field eq 'Rose::HTML::Form::Field', 'new()');
+
+eval { $field->add_field($field) };
+ok($@, 'recursive field nesting failure 1');
+
+eval { $field->add_field(foo => $field) };
+ok($@, 'recursive field nesting failure 2');
 
 is($field->input_value('John'), 'John', 'input_value()');
 is($field->internal_value, 'John', 'internal_value() 1');

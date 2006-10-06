@@ -6,7 +6,7 @@ use Carp;
 
 use Clone::PP;
 use Rose::URI;
-
+use Scalar::Util qw(refaddr);
 use URI::Escape qw(uri_escape);
 
 use Rose::HTML::Object::Errors qw(:form);
@@ -15,7 +15,7 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.531';
+our $VERSION = '0.54';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -844,6 +844,12 @@ sub add_forms
     if(UNIVERSAL::isa($arg, 'Rose::HTML::Form'))
     {
       $form = $arg;
+      
+      if(refaddr($form) eq refaddr($self))
+      {
+        croak "Cannot nest a form within itself";
+      }
+
       $name = $form->form_name;
 
       unless(defined $form->rank)
@@ -856,7 +862,14 @@ sub add_forms
       $name = $arg;
       $form = shift;
 
-      unless(UNIVERSAL::isa($form, 'Rose::HTML::Form'))
+      if(UNIVERSAL::isa($form, 'Rose::HTML::Form'))
+      {
+        if(refaddr($form) eq refaddr($self))
+        {
+          croak "Cannot nest a form within itself";
+        }
+      }
+      else
       {
         Carp::croak "Not a Rose::HTML::Form object: $form";
       }
