@@ -1,13 +1,15 @@
-0.754 (09.30.2006) - John Siracusa <siracusa@mindspring.com>
+0.754 (10.05.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added an optional db argument to the prime_all_caches() and
       prime_caches() metadata methods.  (Suggested by Jonathan Vanasco)
+    * Improved and documented the way that unique keys are selected by
+      the load() method.  (Patch by Graham Barr)
     * Fixed a bug that caused foreign key column lookups to fail in
       Postgres when using the unicode database encoding.
-    * Invalid dates are now detected in the query portio of Manager calls.
+    * Invalid dates are now detected in the query portion of Manager calls.
     * The test suite now refuses to run SQLite tests if the buggy 
       DBD::SQLite version 1.13 is installed.
-    * Fixed some typos in the documenation.
+    * Fixed some typos in the documentation.
 
 0.753 (09.17.2006) - John Siracusa <siracusa@mindspring.com>
 
