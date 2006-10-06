@@ -1836,7 +1836,7 @@ The default implementation performs a string comparison on the L<name|Rose::HTML
 
 =item B<compare_forms [FORM1, FORM2]>
 
-Compare two forms, returning 1 if FORM1 should come before FORM2, -1 if FORM2 should come before FORM1, or 0 if neither form should come before the other.  This method is called from within the L<form_monikers|/form_monikers> method to determine the order of the sub-forms nested within this form.
+Compare two forms, returning 1 if FORM1 should come before FORM2, -1 if FORM2 should come before FORM1, or 0 if neither form should come before the other.  This method is called from within the L<form_names|/form_names> and L<field_monikers|/field_monikers> methods to determine the order of the sub-forms nested within this form.
 
 The default implementation compares the L<rank|/rank> of the forms in numeric context.
 
@@ -2027,7 +2027,7 @@ NAME is a fully-qualified sub-form name.  Components of the hierarchy are separa
 
 =item B<forms>
 
-Returns an ordered list of this form's sub-form objects (if any) in list context, or a reference to this list in scalar context.  The order of the form matches the order of the form names returned by the L<form_monikers|/form_monikers> method.
+Returns an ordered list of this form's sub-form objects (if any) in list context, or a reference to this list in scalar context.  The order of the form matches the order of the form names returned by the L<form_names|/form_names> method.
 
 See the L<nested forms|/"NESTED FORMS"> section to learn more about nested forms.
 
