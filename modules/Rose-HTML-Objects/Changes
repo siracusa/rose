@@ -1,12 +1,12 @@
 0.54 (10.06.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * Added has_error() method.
-    * The xhtml_table() method for checkbox and radio button groups now
-      correctly returns XHTML markup.  (Reported by Jacques Supcik)
+    * Added the has_error() method.
     * Added special handling to object_from_form() for checkboxes that
       set boolean columns in Rose::DB::Object-derived objects.
+    * The xhtml_table() method for checkbox and radio button groups now
+      correctly returns XHTML markup.  (Reported by Jacques Supcik)
     * Restored the field_names() method, making it call the newly documented
-      field_monikers() method.  (Bug reported by Andrei Kozovski)
+      field_monikers() method.  (Reported by Andrei Kozovski)
     * Nesting a field or form within itself now results in a fatal error
       instead of an infinite loop.
     * Preliminary localization infrastructure created.  (No public APIs
