@@ -508,9 +508,22 @@ sub build_select
     {
       my $i = 0;
 
-      $from_tables_sql = $multi_table ?
-        join(",\n", map { $i++; "  $_ t$i" } @$tables_sql) :
-        "  $tables_sql->[0]";
+      if($db)
+      {
+        $from_tables_sql = $multi_table ?
+          join(",\n", map 
+          {
+            $i++;
+            '  ' . $db->format_table_with_alias($_, "t$i", $hints->{"t$i"})
+          } @$tables_sql) :
+          '  ' . $db->format_table_with_alias($tables_sql->[0], "t1", $hints->{'t1'} || $hints);
+      }
+      else
+      {
+        $from_tables_sql = $multi_table ?
+          join(",\n", map { $i++; "  $_ t$i" } @$tables_sql) :
+          "  $tables_sql->[0]";
+      }
     }
 
     my $prefix_limit = (defined $limit && $use_prefix_limit) ? "$limit " : '';
