@@ -7,7 +7,7 @@ use Rose::HTML::Object::Errors qw(:time);
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.01';
+our $VERSION = '0.541';
 
 __PACKAGE__->add_required_html_attrs(
 {
@@ -39,6 +39,10 @@ __DATA__
 [% LOCALE en %]
 
 TIME_INVALID_MINUTE = "Invalid minute."
+
+[% LOCALE de %]
+
+TIME_INVALID_MINUTE  = "Ungültige Minuten."
 
 __END__
 

@@ -10,7 +10,7 @@ use Rose::DateTime::Parser;
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.33';
+our $VERSION = '0.541';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -102,6 +102,10 @@ __DATA__
 [% LOCALE en %]
 
 DATE_INVALID = "Invalid date."
+
+[% LOCALE de %]
+
+DATE_INVALID = "Ungültiges Datum."
 
 __END__
 

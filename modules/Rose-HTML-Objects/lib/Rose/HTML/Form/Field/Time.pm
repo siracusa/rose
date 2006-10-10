@@ -7,7 +7,7 @@ use Rose::HTML::Object::Errors qw(:time);
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.012';
+our $VERSION = '0.541';
 
 __PACKAGE__->add_required_html_attr(
 {
@@ -91,6 +91,11 @@ __DATA__
 
 TIME_INVALID = "Invalid time."
 TIME_INVALID_AMPM = "AM/PM only valid with hours less than 12."
+
+[% LOCALE de %]
+
+TIME_INVALID = "Ungültige Zeit."
+TIME_INVALID_AMPM = "AM und PM nur gültig mit Stunden kleiner 12."
 
 __END__
 
