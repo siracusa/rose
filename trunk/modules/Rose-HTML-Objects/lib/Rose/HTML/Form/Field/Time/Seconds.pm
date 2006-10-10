@@ -41,6 +41,10 @@ __DATA__
 
 TIME_INVALID_SECONDS = "Invalid seconds."
 
+[% LOCALE de %]
+
+TIME_INVALID_SECONDS = "Ungültige Sekunden."
+
 __END__
 
 =head1 NAME

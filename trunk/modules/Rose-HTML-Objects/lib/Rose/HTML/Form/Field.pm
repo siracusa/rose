@@ -19,7 +19,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.54';
+our $VERSION = '0.541';
 
 #our $Debug = 0;
 
@@ -875,13 +875,15 @@ FIELD_PARTIAL_VALUE = "Incomplete value."
 FIELD_INVALID_GENERIC = "Value is invalid."
 FIELD_INVALID_LABELLED = "[label] is invalid."
 
-[% LOCALE xx %] # for testing only
+[% LOCALE de %]
 
-[% START FIELD_REQUIRED_GENERIC %]
-C'est une zone exigée.
-[% END FIELD_REQUIRED_GENERIC %]
+FIELD_REQUIRED_GENERIC  = "Dies ist ein Pflichtfeld."
+FIELD_REQUIRED_LABELLED = "[1] ist ein Pflichtfeld."
 
-FIELD_REQUIRED_LABELLED = "[1] est une zone exigée."
+# ganze Sätze oder nur "Wert unvollständig/ungültig"?
+FIELD_PARTIAL_VALUE    = "Der Wert ist unvollständig."
+FIELD_INVALID_GENERIC  = "Der Wert ist ungültig."
+FIELD_INVALID_LABELLED = "[label] ist ungültig."
 
 __END__
 

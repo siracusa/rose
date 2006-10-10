@@ -12,6 +12,8 @@ use Rose::HTML::Object::Messages();
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
+our $VERSION = '0.541';
+
 #
 # Object data
 #

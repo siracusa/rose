@@ -7,7 +7,7 @@ use Rose::HTML::Object::Errors qw(:number);
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.54';
+our $VERSION = '0.541';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -78,6 +78,14 @@ NUM_INVALID_INTEGER_POSITIVE = "[label] must be a positive integer."
 NUM_NOT_POSITIVE_INTEGER     = "[label] must be a positive integer."
 NUM_BELOW_MIN                = "[label] must be greater than [value]."
 NUM_ABOVE_MAX                = "[label] must be less than or equal to [value]."
+
+[% LOCALE de %]
+
+NUM_INVALID_INTEGER          = "[label] muß eine Ganzzahl sein."
+NUM_INVALID_INTEGER_POSITIVE = "[label] muß eine positive Ganzzahl sein."
+NUM_NOT_POSITIVE_INTEGER     = "[label] muß eine positive Ganzzahl sein."
+NUM_BELOW_MIN                = "[label] muß größer als [value] sein."
+NUM_ABOVE_MAX                = "[label] muß kleiner oder gleich [value] sein."
 
 __END__
 
