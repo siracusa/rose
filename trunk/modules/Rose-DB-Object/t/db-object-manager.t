@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3039;
+use Test::More tests => 3042;
 
 BEGIN 
 {
@@ -2836,7 +2836,7 @@ EOF
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 769)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 772)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -3091,6 +3091,88 @@ SKIP: foreach my $db_type ('mysql')
   $fo1 = $o5->bb2;
   ok($fo1 && ref $fo1 && $fo1->id == 4, "bb foreign object 2 - $db_type");
 
+  #local $Rose::DB::Object::Manager::Debug = 1;
+
+  # Conservative version check for hints support
+  if($objs->[0]->db->database_version >= 4_000_009)
+  {
+    my $sql = 
+      Rose::DB::Object::Manager->get_objects_sql(
+        object_class => 'MyMySQLObject',
+        share_db     => 1,
+        query        =>
+        [
+          't1.id'    => { ge => 2 },
+          't1.name'  => { like => '%tt%' },
+        ],
+        hints => { t1 => { ignore_index => 'rose_db_object_test_idx' } });
+        
+    $objs = 
+      MyMySQLObject->get_objectz(
+        object_class => 'MyMySQLObject',
+        share_db     => 1,
+        query        =>
+        [
+          't1.id'    => { ge => 2 },
+          't1.name'  => { like => '%tt%' },
+        ],
+        hints => { t1 => { ignore_index => 'rose_db_object_test_idx' } });
+  
+    ok($sql =~ m{\bIGNORE INDEX \(rose_db_object_test_idx\)}, "hints single table - $db_type");
+  
+    $sql = 
+      Rose::DB::Object::Manager->get_objects_sql(
+        object_class => 'MyMySQLObject',
+        share_db     => 1,
+        query        =>
+        [
+          't1.id'    => { ge => 2 },
+          't1.name'  => { like => '%tt%' },
+        ],
+        hints => { ignore_index => 'rose_db_object_test_idx' });
+        
+    $objs = 
+      MyMySQLObject->get_objectz(
+        object_class => 'MyMySQLObject',
+        share_db     => 1,
+        query        =>
+        [
+          't1.id'    => { ge => 2 },
+          't1.name'  => { like => '%tt%' },
+        ],
+        hints => { ignore_index => 'rose_db_object_test_idx' });
+  
+    ok($sql =~ m{\bIGNORE INDEX \(rose_db_object_test_idx\)}, "hints single table 2 - $db_type");
+  
+    $sql = 
+      Rose::DB::Object::Manager->get_objects_sql(
+        object_class => 'MyMySQLObject',
+        share_db     => 1,
+        query        =>
+        [
+          't1.id'    => { ge => 2 },
+          't1.name'  => { like => '%tt%' },
+        ],
+        hints => { rose_db_object_test => { ignore_index => 'rose_db_object_test_idx' } });
+        
+    $objs = 
+      MyMySQLObject->get_objectz(
+        object_class => 'MyMySQLObject',
+        share_db     => 1,
+        query        =>
+        [
+          't1.id'    => { ge => 2 },
+          't1.name'  => { like => '%tt%' },
+        ],
+        hints => { rose_db_object_test => { ignore_index => 'rose_db_object_test_idx' } });
+  
+    ok($sql =~ m{\bIGNORE INDEX \(rose_db_object_test_idx\)}, "hints single table 3 - $db_type");
+  }
+  else
+  {
+    SKIP: {  skip("hints single table - $db_type", 3) }
+  }
+
   $objs = 
     MyMySQLObject->get_objectz(
       object_class => 'MyMySQLObject',
@@ -3102,7 +3184,7 @@ SKIP: foreach my $db_type ('mysql')
       ],
       require_objects => [ 'other_obj', 'bb1', 'bb2' ],
       hints   => { t2 => { ignore_index => 'rose_db_object_other_idx', 
-                           use_index =>  'rose_db_object_other_idx2' } },);
+                           use_index =>  'rose_db_object_other_idx2' } });
 
   ok(ref $objs->[0]->{'other_obj'} eq 'MyMySQLOtherObject', "foreign object 2 - $db_type");
   is($objs->[0]->other_obj->k2, 2, "foreign object 3 - $db_type");

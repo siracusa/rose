@@ -313,11 +313,8 @@ sub get_objects
   my $hints            = delete $args{'hints'} || {};
   my $select           = $args{'select'};
 
-  $args{'hints'} = $hints->{'t1'} || $hints;
-
   my $try_subselect_limit = (exists $args{'limit_with_subselect'}) ? 
     $args{'limit_with_subselect'} : $class->default_limit_with_subselect;
-
 
   my $subselect_limit = 0;
 
@@ -327,6 +324,8 @@ sub get_objects
   my(%fetch, %rel_name, %di_keys);
 
   my $meta = $object_class->meta;
+
+  $args{'hints'} = $hints->{'t1'} || $hints->{$meta->table} || $hints;
 
   my $prepare_cached = 
     exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
