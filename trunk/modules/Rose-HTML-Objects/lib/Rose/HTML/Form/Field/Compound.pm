@@ -310,6 +310,11 @@ sub message_for_error_id
   return undef;
 }
 
+if(__PACKAGE__->localizer->auto_load_messages)
+{
+  __PACKAGE__->localizer->load_all_messages;
+}
+
 1;
 
 __DATA__
@@ -328,11 +333,6 @@ FIELD_REQUIRED_SUBFIELDS = "Nicht vorhanden: [@missing]."
 
 FIELD_REQUIRED_SUBFIELD  = "Le champ [@missing] manque."
 FIELD_REQUIRED_SUBFIELDS = "Les champs [@missing] manquent."
-
-[% LOCALE xx %] # for testing only
-
-FIELD_REQUIRED_SUBFIELD  = "Missing [@missing( : )]."
-FIELD_REQUIRED_SUBFIELDS = "Missing [@missing( : )]."
 
 __END__
 

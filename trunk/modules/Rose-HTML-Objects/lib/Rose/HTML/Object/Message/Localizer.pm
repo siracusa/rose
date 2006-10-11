@@ -14,6 +14,8 @@ our @ISA = qw(Rose::Object);
 
 our $VERSION = '0.541';
 
+our $Debug = 0;
+
 #
 # Object data
 #
@@ -44,7 +46,12 @@ use Rose::Class::MakeMethods::Set
 
 use Rose::Class::MakeMethods::Generic
 (
-  inheritable_scalar => [ 'default_locale' ],
+  inheritable_scalar => 
+  [
+    'default_locale',
+    '_auto_load_messages',
+    '_auto_load_locales',
+  ],
 );
 
 __PACKAGE__->default_locale('en');
@@ -291,6 +298,7 @@ sub add_localized_message_text
 
   while(my($l, $t) = each(%$text))
   {
+    $Debug && warn qq($self - Adding text $name ($l) - "$t"\n);
     $msgs->{$name}{$l} = "$t"; # force stringification
   }
 
@@ -370,6 +378,7 @@ sub add_localized_message
 
   while(my($l, $t) = each(%$text))
   {
+    $Debug && warn qq($self - Adding message $name ($l) = "$t"\n);
     $msgs->{$name}{$l} = "$t"; # force stringification
   }
 
@@ -497,8 +506,10 @@ sub _get_localized_message
       $Data_Pos{$load_from_class} = tell($fh);
     }
 
-   my $text = $self->load_messages_from_fh($fh, $locale, $name);
-   return $text  if(defined $text);
+    my $text = $self->load_messages_from_fh(fh      => $fh, 
+                                            locales => $locale,
+                                            names   => $name);
+    return $text  if(defined $text);
   }
 
   no strict 'refs';
@@ -514,6 +525,54 @@ sub _get_localized_message
     my $msg = $self->_get_localized_message($name, $locale, $class);
     return $msg  if(defined $msg);
     push(@classes, grep { !$seen{$_} } @{"${class}::ISA"});
+  }
+
+  return undef;
+}
+
+sub auto_load_locales
+{
+  my($self_or_class) = shift;
+  
+  my $class = ref($self_or_class) || $self_or_class;
+  
+  if(@_)
+  {
+    my $locales = (@_ == 1 && ref $_[0] eq 'ARRAY') ? [ @{$_[0]} ] : [ @_ ];
+    return $class->_auto_load_locales($locales);
+  }
+
+  my $locales = $class->_auto_load_locales;
+  return wantarray ? @$locales : $locales  if(defined $locales);
+  
+  if(my $locales = $ENV{'RHTMLO_LOCALES'})
+  {
+    $locales = [ split(/\s*,\s*/, $locales) ]  unless(ref $locales);
+    $class->_auto_load_locales($locales);
+    return wantarray ? @$locales : $locales;
+  }
+
+  return wantarray ? () : [];
+}
+
+sub auto_load_messages
+{
+  my($self_or_class) = shift;
+  
+  my $class = ref($self_or_class) || $self_or_class;
+  
+  if(@_)
+  {
+    return $class->_auto_load_messages(@_);
+  }
+  
+  my $ret = $class->_auto_load_messages;
+  return $ret  if(defined $ret);
+  
+  if(($ENV{'MOD_PERL'} && (!defined($ENV{'RHTMLO_PRIME_CACHES'}) || $ENV{'RHTMLO_PRIME_CACHES'})) ||
+     $ENV{'RHTMLO_PRIME_CACHES'})
+  {
+    return $class->_auto_load_messages(1);
   }
 
   return undef;
@@ -542,23 +601,51 @@ sub load_all_messages
       $Data_Pos{$load_from_class} = tell($fh);
     }
 
-    $class->load_messages_from_fh($fh);
+    my $locales = $class->auto_load_locales;
+
+    $Debug && warn "$class - Loading messages from DATA section of $load_from_class\n";
+    $class->load_messages_from_fh(fh => $fh, locales => $locales);
   }
 }
 
 sub load_messages_from_file
 {
-  my($class, $file) = @_;
-  open(my $fh, $file) or croak "Could no open messages file '$file' - $!";
-  $class->load_messages_from_fh($fh);
-  close($fh);
+  my($class) = shift;
+  
+  my %args;
+  if(@_ == 1)
+  {
+    $args{'file'} = shift;
+  }
+  elsif(@_ > 1)
+  {
+    croak "Odd number of arguments passed to load_messages_from_file()"
+      if(@_ % 2 != 0);
+    %args = @_;
+  }
+
+  my $file = delete $args{'file'} or croak "Missing file argument";
+
+  open($args{'fh'}, $file) or croak "Could no open messages file '$file' - $!";
+  $class->load_messages_from_fh(%args);
+  close($args{'fh'});
 }
 
 sub load_messages_from_fh
 {
-  my($self, $fh, $locales, $msg_names) = @_;
+  my($self, %args) = @_;
+  
+  my($fh, $locales, $msg_names) = @args{qw(fh locales names)};
 
-  $locales   = { $locales => 1 }    if($locales && !ref $locales);
+  if(ref $locales eq 'ARRAY')
+  {
+    $locales = @$locales ? { map { $_ => 1} @$locales } : undef;
+  }
+  elsif($locales && !ref $locales)
+  {
+    $locales = { $locales => 1 };
+  }
+
   $msg_names = { $msg_names => 1 }  if($msg_names && !ref $msg_names);
 
   my @text;

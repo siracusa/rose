@@ -855,7 +855,7 @@ sub locale
   }
 }
 
-if($ENV{'MOD_PERL'} || $ENV{'RHTMLO_PRIME_CACHES'})
+if(__PACKAGE__->localizer->auto_load_messages)
 {
   __PACKAGE__->localizer->load_all_messages;
 }
@@ -865,15 +865,12 @@ if($ENV{'MOD_PERL'} || $ENV{'RHTMLO_PRIME_CACHES'})
 __DATA__
 [% LOCALE en %]
 
-FIELD_REQUIRED_GENERIC = "This is a required field."
+FIELD_REQUIRED_GENERIC  = "This is a required field."
+FIELD_REQUIRED_LABELLED = "[1] is a required field."
 
-[% START FIELD_REQUIRED_LABELLED %]
-[1] is a required field.
-[% END FIELD_REQUIRED_LABELLED %]
-
-FIELD_PARTIAL_VALUE = "Incomplete value."
-FIELD_INVALID_GENERIC = "Value is invalid."
-FIELD_INVALID_LABELLED = "[label] is invalid."
+FIELD_PARTIAL_VALUE     = "Incomplete value."
+FIELD_INVALID_GENERIC   = "Value is invalid."
+FIELD_INVALID_LABELLED  = "[label] is invalid."
 
 [% LOCALE de %]
 

@@ -110,6 +110,7 @@ t/lib/MyObject/Messages.pm
 t/lib/MyObject/Messages2.pm
 t/lib/MyObject2.pm
 t/link.t
+t/localizer-auto-load-messages.t
 t/logo.png
 t/msgs.txt
 t/object-l10n.t

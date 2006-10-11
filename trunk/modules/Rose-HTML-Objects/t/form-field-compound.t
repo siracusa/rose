@@ -2,6 +2,8 @@
 
 use strict;
 
+use FindBin qw($Bin);
+
 use Test::More tests => 23;
 
 BEGIN 
@@ -12,6 +14,8 @@ BEGIN
 
 my $field = Rose::HTML::Form::Field::Compound->new(name => 'date');
 ok(ref $field && $field->isa('Rose::HTML::Form::Field::Compound'), 'new()');
+
+$field->localizer->load_messages_from_file("$Bin/localized-messages");
 
 is(scalar @{ $field->children }, 0, 'children scalar 1');
 is(scalar(() = $field->children), 0, 'children list 1');
