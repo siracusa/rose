@@ -326,8 +326,8 @@ FIELD_REQUIRED_SUBFIELDS = "Missing [@missing]."
 
 [% LOCALE de %]
 
-FIELD_REQUIRED_SUBFIELD  = "Nicht vorhanden: [@missing]."
-FIELD_REQUIRED_SUBFIELDS = "Nicht vorhanden: [@missing]."
+FIELD_REQUIRED_SUBFIELD  = "[@missing] fehlt."
+FIELD_REQUIRED_SUBFIELDS = "[@missing] fehlen."
 
 [% LOCALE fr %]
 
