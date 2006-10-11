@@ -175,14 +175,15 @@ sub add_messages
 use constant CUSTOM_MESSAGE => -1;
 
 # Fields
-use constant FIELD_LABEL             => 1;
-use constant FIELD_DESCRIPTION       => 2;
-use constant FIELD_REQUIRED_GENERIC  => 4;
-use constant FIELD_REQUIRED_LABELLED => 5;
-use constant FIELD_REQUIRED_SUBFIELD => 6;
-use constant FIELD_PARTIAL_VALUE     => 7;
-use constant FIELD_INVALID_GENERIC   => 9;
-use constant FIELD_INVALID_LABELLED  => 10;
+use constant FIELD_LABEL              => 1;
+use constant FIELD_DESCRIPTION        => 2;
+use constant FIELD_REQUIRED_GENERIC   => 4;
+use constant FIELD_REQUIRED_LABELLED  => 5;
+use constant FIELD_REQUIRED_SUBFIELD  => 6;
+use constant FIELD_REQUIRED_SUBFIELDS => 7;
+use constant FIELD_PARTIAL_VALUE      => 8;
+use constant FIELD_INVALID_GENERIC    => 10;
+use constant FIELD_INVALID_LABELLED   => 11;
 
 # Forms
 use constant FORM_HAS_ERRORS => 100;

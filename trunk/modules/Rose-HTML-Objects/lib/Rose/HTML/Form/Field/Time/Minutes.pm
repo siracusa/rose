@@ -42,7 +42,11 @@ TIME_INVALID_MINUTE = "Invalid minute."
 
 [% LOCALE de %]
 
-TIME_INVALID_MINUTE  = "Ungültige Minuten."
+TIME_INVALID_MINUTE = "Ungültige Minuten."
+
+[% LOCALE fr %]
+
+TIME_INVALID_MINUTE = "Minute invalide."
 
 __END__
 

@@ -45,6 +45,10 @@ TIME_INVALID_SECONDS = "Invalid seconds."
 
 TIME_INVALID_SECONDS = "Ungültige Sekunden."
 
+[% LOCALE fr %]
+
+TIME_INVALID_SECONDS = "Secondes invalides."
+
 __END__
 
 =head1 NAME

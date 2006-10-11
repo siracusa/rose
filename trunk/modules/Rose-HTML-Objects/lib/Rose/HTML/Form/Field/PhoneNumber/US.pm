@@ -61,6 +61,10 @@ PHONE_INVALID = "Phone number must be 10 digits, including area code."
 
 PHONE_INVALID = "Die Telefon-Nummer muß 10 Stellen enthalten (einschließlich Vorwahl)."
 
+[% LOCALE fr %]
+
+PHONE_INVALID = "Le numéro de téléphone, indicatif compris, doit avoir 10 chiffres."
+
 __END__
 
 =head1 NAME

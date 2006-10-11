@@ -62,6 +62,10 @@ TIME_INVALID_HOUR = "Invalid hour."
 
 TIME_INVALID_HOUR = "Ungültige Stunde."
 
+[% LOCALE fr %]
+
+TIME_INVALID_HOUR = "Heure invalide."
+
 __END__
 
 =head1 NAME

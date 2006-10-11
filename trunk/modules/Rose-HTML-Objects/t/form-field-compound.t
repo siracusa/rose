@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 19;
+use Test::More tests => 23;
 
 BEGIN 
 {
@@ -108,5 +108,19 @@ $field->validate;
 is($field->error, 'Missing Day, date.year.', 'error 1');
 
 $field->locale('xx');
-
 is($field->error, 'Missing Le Day : date.year.', 'error 2');
+
+$field->locale('fr');
+is($field->error, 'Les champs Day, date.year manquent.', 'error 3');
+
+$field->field('year')->input_value(2000);
+$field->validate;
+
+$field->locale('en');
+is($field->error, 'Missing Day.', 'error 4');
+
+$field->locale('xx');
+is($field->error, 'Missing Le Day.', 'error 5');
+
+$field->locale('fr');
+is($field->error, 'Le champ Day manque.', 'error 6');

@@ -45,6 +45,10 @@ EMAIL_INVALID = "Invalid email address."
 # oder "Ungültige Email."
 EMAIL_INVALID = "Ungültige Email-Adresse."
 
+[% LOCALE fr %]
+
+EMAIL_INVALID = "Adresse e-mail invalide."
+
 __END__
 
 =head1 NAME

@@ -87,6 +87,14 @@ NUM_NOT_POSITIVE_INTEGER     = "[label] muß eine positive Ganzzahl sein."
 NUM_BELOW_MIN                = "[label] muß größer als [value] sein."
 NUM_ABOVE_MAX                = "[label] muß kleiner oder gleich [value] sein."
 
+[% LOCALE fr %]
+
+NUM_INVALID_INTEGER          = "[label] doit être un entier."
+NUM_INVALID_INTEGER_POSITIVE = "[label] doit être un entier positif."
+NUM_NOT_POSITIVE_INTEGER     = "[label] doit être un entier positif."
+NUM_BELOW_MIN                = "[label] doit être plus grand que [value]."
+NUM_ABOVE_MAX                = "[label] doit être plus petit ou égal à [value]."
+
 __END__
 
 =head1 NAME

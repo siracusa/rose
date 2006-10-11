@@ -107,6 +107,10 @@ DATE_INVALID = "Invalid date."
 
 DATE_INVALID = "Ungültiges Datum."
 
+[% LOCALE fr %]
+
+DATE_INVALID = "Date invalide."
+
 __END__
 
 =head1 NAME
