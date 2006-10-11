@@ -88,6 +88,11 @@ SET_PARSE_ERROR = "Could not parse input: parse error at \[[context]\]"
 SET_INVALID_QUOTED_STRING = "Ungültig gequoteter String: \"[string]\""
 SET_PARSE_ERROR = "Konnte Eingabe nicht parsen: Fehler bei \[[context]\]"
 
+[% LOCALE fr %]
+
+SET_INVALID_QUOTED_STRING = "Texte entre guillemets invalide: \"[string]\""
+SET_PARSE_ERROR = "Impossible d'évaluer la saisie : erreur à \[[context]\]"
+
 __END__
 
 =head1 NAME

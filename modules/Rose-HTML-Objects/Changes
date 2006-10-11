@@ -1,7 +1,7 @@
-0.541 (10.10.2006) - John Siracusa <siracusa@mindspring.com>
+0.541 (10.11.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added German localization, translated by Uwe Voelker.
-      (Localization is still undocumented.)
+    * Added French localization, translated by Jacques Supcik.
     * Corrected some of the English error messages.
 
 0.54 (10.06.2006) - John Siracusa <siracusa@mindspring.com>

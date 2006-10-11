@@ -248,6 +248,10 @@ DATE_MIN_GREATER_THAN_MAX = "The min date cannot be later than the max date."
 # von/bis oder doch min/max?
 DATE_MIN_GREATER_THAN_MAX = "Das Von-Datum darf nicht größer sein, als das Bis-Datum."
 
+[% LOCALE fr %]
+
+DATE_MIN_GREATER_THAN_MAX = "La date min ne peut pas être postérieure à la date max."
+
 __END__
 
 =head1 NAME

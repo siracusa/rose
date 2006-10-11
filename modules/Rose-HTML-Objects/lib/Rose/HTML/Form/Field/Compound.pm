@@ -288,9 +288,16 @@ sub message_for_error_id
   {
     my $msg = $msg_class->new(args => $args);
 
-    if((ref $args eq 'HASH' && keys %$args) || (ref $args eq 'ARRAY' && @$args))
+    if(ref $args eq 'HASH' && keys %$args)
     {
-      $msg->id(FIELD_REQUIRED_SUBFIELD);
+      if(@{$args->{'missing'}} > 1)
+      {
+        $msg->id(FIELD_REQUIRED_SUBFIELDS);
+      }
+      else
+      {
+        $msg->id(FIELD_REQUIRED_SUBFIELD);
+      }
     }
     else
     {
@@ -309,15 +316,23 @@ __DATA__
 
 [% LOCALE en %]
 
-FIELD_REQUIRED_SUBFIELD = "Missing [@missing]."
+FIELD_REQUIRED_SUBFIELD  = "Missing [@missing]."
+FIELD_REQUIRED_SUBFIELDS = "Missing [@missing]."
 
 [% LOCALE de %]
 
-FIELD_REQUIRED_SUBFIELD = "Nicht vorhanden: [@missing]."
+FIELD_REQUIRED_SUBFIELD  = "Nicht vorhanden: [@missing]."
+FIELD_REQUIRED_SUBFIELDS = "Nicht vorhanden: [@missing]."
+
+[% LOCALE fr %]
+
+FIELD_REQUIRED_SUBFIELD  = "Le champ [@missing] manque."
+FIELD_REQUIRED_SUBFIELDS = "Les champs [@missing] manquent."
 
 [% LOCALE xx %] # for testing only
 
-FIELD_REQUIRED_SUBFIELD = "Missing [@missing( : )]."
+FIELD_REQUIRED_SUBFIELD  = "Missing [@missing( : )]."
+FIELD_REQUIRED_SUBFIELDS = "Missing [@missing( : )]."
 
 __END__
 

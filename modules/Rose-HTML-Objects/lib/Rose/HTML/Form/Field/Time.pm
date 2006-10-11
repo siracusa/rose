@@ -97,6 +97,11 @@ TIME_INVALID_AMPM = "AM/PM only valid with hours less than 12."
 TIME_INVALID = "Ungültige Zeit."
 TIME_INVALID_AMPM = "AM und PM nur gültig mit Stunden kleiner 12."
 
+[% LOCALE fr %]
+
+TIME_INVALID         = "Heure invalide."
+TIME_INVALID_AMPM    = "AM/PM n'est possible que si l'heure est plus petite que 12."
+
 __END__
 
 =head1 NAME

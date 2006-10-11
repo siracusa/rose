@@ -885,6 +885,15 @@ FIELD_PARTIAL_VALUE    = "Der Wert ist unvollständig."
 FIELD_INVALID_GENERIC  = "Der Wert ist ungültig."
 FIELD_INVALID_LABELLED = "[label] ist ungültig."
 
+[% LOCALE fr %]
+
+FIELD_REQUIRED_GENERIC  = "Ce champ est obligatoire."
+FIELD_REQUIRED_LABELLED = "[1] est un champ obligatoire."
+
+FIELD_PARTIAL_VALUE     = "Valeur incomplète."
+FIELD_INVALID_GENERIC   = "Valeur invalide."
+FIELD_INVALID_LABELLED  = "[label] est invalide."
+
 __END__
 
 =head1 NAME

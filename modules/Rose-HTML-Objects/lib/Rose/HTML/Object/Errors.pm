@@ -39,8 +39,8 @@ use constant CUSTOM_ERROR => -1;
 
 # Field errors
 use constant FIELD_REQUIRED      => 3;
-use constant FIELD_PARTIAL_VALUE => 7;
-use constant FIELD_INVALID       => 8;
+use constant FIELD_PARTIAL_VALUE => 8;
+use constant FIELD_INVALID       => 9;
 
 # Form errors
 use constant FORM_HAS_ERRORS => 100;

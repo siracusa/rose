@@ -1352,6 +1352,10 @@ FORM_HAS_ERRORS = "One or more fields have errors."
 # oder "Es sind Fehler aufgetreten."
 FORM_HAS_ERRORS = "Ein oder mehrere Felder sind fehlerhaft."
 
+[% LOCALE fr %]
+
+FORM_HAS_ERRORS = "Erreurs dans un ou plusieurs champs."
+
 __END__
 
 =head1 NAME
