@@ -1335,7 +1335,7 @@ sub AUTOLOAD
   goto &Rose::HTML::Object::AUTOLOAD;
 }
 
-if($ENV{'MOD_PERL'} || $ENV{'RHTMLO_PRIME_CACHES'})
+if(__PACKAGE__->localizer->auto_load_messages)
 {
   __PACKAGE__->localizer->load_all_messages;
 }

@@ -10,17 +10,9 @@ use Rose::HTML::Object::Message::Localizer;
 use Rose::HTML::Object::Localized;
 our @ISA = qw(Rose::HTML::Object::Localized);
 
-our $VERSION = '0.54';
+our $VERSION = '0.541';
 
 our $Debug = undef;
-
-# use Rose::HTML::Object::MakeMethods
-# (
-#   localized_errors =>
-#   [
-#     'errors',
-#   ],
-# );
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -558,62 +550,6 @@ sub create_html_attr_methods
   }
 
   return $count;
-}
-
-# sub localizer
-# {
-#   my($invocant) = shift;
-# 
-#   # Called as object method
-#   if(my $class = ref $invocant)
-#   {
-#     if(@_)
-#     {
-#       return $invocant->{'localizer'} = shift;
-#     }
-# 
-#     return $invocant->{'localizer'} || $class->default_localizer;
-#   }
-#   else # Called as class method
-#   {
-#     if(@_)
-#     {
-#       return $invocant->default_localizer(shift);
-#     }
-# 
-#     return $invocant->default_localizer
-#   }
-# }
-
-# sub locale
-# {
-#   my($invocant) = shift;
-# 
-#   # Called as object method
-#   if(my $class = ref $invocant)
-#   {
-#     if(@_)
-#     {
-#       return $invocant->{'locale'} = shift;
-#     }
-# 
-#     return $invocant->{'locale'} || $invocant->localizer->locale || 
-#            $invocant->localizer->default_locale;
-#   }
-#   else # Called as class method
-#   {
-#     if(@_)
-#     {
-#       return $invocant->default_locale(shift);
-#     }
-# 
-#     return $invocant->localizer->locale || $invocant->localizer->default_locale;
-#   }
-# }
-
-if($ENV{'MOD_PERL'} || $ENV{'RHTMLO_PRIME_CACHES'})
-{
-  __PACKAGE__->localizer->load_all_messages;
 }
 
 # XXX: This is undocumented for now...
