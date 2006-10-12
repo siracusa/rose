@@ -13,8 +13,7 @@ our @ISA = qw(Rose::Object);
 use Rose::DB::Object::Manager;
 use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
-use Rose::DB::Object::Util 
-  qw(row_id lazy_column_values_loaded_key has_modified_columns);
+use Rose::DB::Object::Util();
 
 our $VERSION = '0.755';
 
@@ -133,7 +132,8 @@ sub dbh
   }
 }
 
-use constant LAZY_LOADED_KEY => lazy_column_values_loaded_key();
+use constant LAZY_LOADED_KEY => 
+  Rose::DB::Object::Util::lazy_column_values_loaded_key();
 
 sub load
 {
@@ -479,7 +479,7 @@ sub save
 
         # Track which rows were set so we can avoid deleting
         # them later in the "delete on save" code
-        $did_set{'fk'}{$fk_name}{row_id($object)} = 1;
+        $did_set{'fk'}{$fk_name}{Rose::DB::Object::Util::row_id($object)} = 1;
       }
 
       #
@@ -513,7 +513,7 @@ sub save
           my $object = $item->{'object'};
 
           # Don't run the code to delete this object if we just set it above
-          next  if($did_set{'fk'}{$fk_name}{row_id($object)});
+          next  if($did_set{'fk'}{$fk_name}{Rose::DB::Object::Util::row_id($object)});
 
           $code->() or die $self->error;
         }
@@ -528,7 +528,7 @@ sub save
 
           my $foreign_object = $fk->object_has_foreign_object($self) || next;
           $Debug && warn "$self - save foreign ", $fk->name, " - $foreign_object\n";
-          $foreign_object->save(%args)  if(has_modified_columns($foreign_object));
+          $foreign_object->save(%args)  if(Rose::DB::Object::Util::has_modified_columns($foreign_object));
         }
       }
 
@@ -565,7 +565,7 @@ sub save
           foreach my $related_object (@$related_objects)
           {
             $Debug && warn "$self - save related ", $rel->name, " - $related_object\n";
-            $related_object->save(%args)  if(has_modified_columns($related_object));
+            $related_object->save(%args)  if(Rose::DB::Object::Util::has_modified_columns($related_object));
           }
         }
       }
