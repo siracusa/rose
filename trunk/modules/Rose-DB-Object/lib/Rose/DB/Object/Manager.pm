@@ -616,11 +616,14 @@ sub get_objects
     {
       $sort_by = [ $sort_by ]  unless(ref $sort_by);
     }
-    else # trim t1. prefixes
+    else # trim t1. or primary table prefixes
     {
+      my $prefix_re = '\b(?:t1|' . $meta->table . ')\.';
+      $prefix_re = qr($prefix_re);
+
       foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
       {
-        $sort =~ s/\bt1\.//g;
+        $sort =~ s/$prefix_re//g;
       }
     }
 

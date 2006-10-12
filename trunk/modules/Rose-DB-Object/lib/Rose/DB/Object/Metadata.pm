@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.754';
+our $VERSION = '0.755';
 
 our $Debug = 0;
 
@@ -4828,7 +4828,7 @@ If undef is passed, then a L<Rose::DB::Object::ConventionManager::Null> object i
 
 If a L<Rose::DB::Object::ConventionManager>-derived object is passed, its L<meta|Rose::DB::Object::ConventionManager/meta> attribute set to this metadata object and then it is used as the convention manager for this L<class|/class>.
 
-If a L<Rose::DB::Object::ConventionManager>-derived class name us passed, a new object of that class is created with its L<meta|Rose::DB::Object::ConventionManager/meta> attribute set to this metadata object.  Then it is used as the convention manager for this L<class|/class>.
+If a L<Rose::DB::Object::ConventionManager>-derived class name is passed, a new object of that class is created with its L<meta|Rose::DB::Object::ConventionManager/meta> attribute set to this metadata object.  Then it is used as the convention manager for this L<class|/class>.
 
 If a convention manager name is passed, then the corresponding class is looked up in the L<convention manager class map|convention_manager_classes>, a new object of that class is constructed, its L<meta|Rose::DB::Object::ConventionManager/meta> attribute set to this metadata object, and it is used as the convention manager for this L<class|/class>.  If there is no class mapped to NAME, a fatal error will occur.
 
