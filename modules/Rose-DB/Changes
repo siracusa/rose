@@ -3,6 +3,7 @@
     * Added the has_dbh() method.
     * Added the registered_domains(), registered_types(), and dump()
       methods to Rose::DB::Registry.
+    * Added a dump() method to Rose::DB::Registry::Entry.
     * Changes to support Rose::DB::Object 0.754.
     * Fixed some Informix date/time parsing bugs.
     * The test suite now refuses to run SQLite tests if the buggy 

@@ -2,10 +2,12 @@ package Rose::DB::Registry::Entry;
 
 use strict;
 
+use Clone::PP();
+
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.57';
+our $VERSION = '0.727';
 
 our $Debug = 0;
 
@@ -52,6 +54,34 @@ sub driver
   return $self->{'driver'}  unless(@_);
   $self->{'dbi_driver'} = shift;
   return $self->{'driver'} = lc $self->{'dbi_driver'};
+}
+
+sub dump
+{
+  my($self) = shift;
+
+  my %dump;
+
+  foreach my $attr (qw(database dsn driver host password port
+                       server_time_zone schema catalog type username
+                       connect_options pre_disconnect_sql 
+                       post_connect_sql))
+  {
+    my $value = $self->$attr();
+    next  unless(defined $value);
+    $dump{$attr} = Clone::PP::clone($value);
+  }
+
+  # These booleans have default, but we only want the ones 
+  # where the values were explicitly set.  Ugly...
+  foreach my $attr (qw(auto_create european_dates))
+  {
+    my $value = $self->{$attr};
+    next  unless(defined $value);
+    $dump{$attr} = Clone::PP::clone($value);
+  }
+  
+  return \%dump;
 }
 
 1;
@@ -139,6 +169,10 @@ Get or set the driver name.  The DRIVER argument is converted to lowercase befor
 =item B<dsn [DSN]>
 
 Get or set the C<DBI> DSN (Data Source Name).  Note that an explicitly set DSN may render some other attributes inaccurate.  For example, the DSN may contain a host name that is different than the object's current C<host()> value.  I recommend not setting the DSN value explicitly unless you are also willing to manually synchronize (or ignore) the corresponding object attributes.
+
+=item B<dump>
+
+Returns a reference to a hash of the entry's attributes.  Only those attributes with defined values are included in the hash keys.  All values are deep copies.
 
 =item B<host [NAME]>
 
