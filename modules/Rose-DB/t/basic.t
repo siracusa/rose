@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 171;
+use Test::More tests => 174;
 
 BEGIN
 {
@@ -68,6 +68,18 @@ BEGIN
   @MyPgClass::ISA = qw(Rose::DB::Pg);
   sub format_date { die "boo!" }
 }
+
+is_deeply(scalar Rose::DB->registry->registered_domains, 
+          [ qw(atest catalog_test default test) ], 'registered_domains()');
+
+is_deeply(scalar Rose::DB->registry->registered_types('test'), 
+          [ qw(aux default generic informix informix_admin mysql mysql_admin
+               oracle oracle_admin pg pg_admin pg_with_schema sqlite sqlite_admin) ],
+          'registered_types()');
+
+# Lame arbitrary test of one dump attr
+my $dump = Rose::DB->registry->dump;
+is($dump->{'test'}{'aux'}{'username'}, 'postgres', 'dump() 1');
 
 is(IN_TRANSACTION, -1, 'IN_TRANSACTION');
 
