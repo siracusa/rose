@@ -3,13 +3,14 @@ package Rose::DB::Registry;
 use strict;
 
 use Carp();
+use Clone::PP();
 
 use Rose::DB::Registry::Entry;
 
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.59';
+our $VERSION = '0.727';
 
 our $Debug = 0;
 
@@ -159,6 +160,56 @@ sub delete_domain
   delete $entries->{$domain};
 }
 
+sub registered_types
+{
+  my($self, $domain) = @_;
+  my @types = sort keys %{ $self->hash->{$domain} || {} };
+  return wantarray ? @types : \@types;
+}
+
+sub registered_domains
+{  
+  my @domains = sort keys %{ shift->hash };
+  return wantarray ? @domains : \@domains;
+}
+
+sub dump
+{
+  my($self) = shift;
+  
+  my $entries = $self->hash;
+  my %reg;
+  
+  foreach my $domain ($self->registered_domains)
+  {
+    foreach my $type ($self->registered_types($domain))
+    {
+      my $entry = $entries->{$domain}{$type};
+
+      foreach my $attr (qw(database dsn driver host password port
+                           server_time_zone schema catalog type username
+                           connect_options pre_disconnect_sql 
+                           post_connect_sql))
+      {
+        my $value = $entry->$attr();
+        next  unless(defined $value);
+        $reg{$domain}{$type}{$attr} = Clone::PP::clone($value);
+      }
+
+      # These booleans have default, but we only want the ones 
+      # where the values were explicitly set.  Ugly...
+      foreach my $attr (qw(auto_create european_dates))
+      {
+        my $value = $entry->{$attr};
+        next  unless(defined $value);
+        $reg{$domain}{$type}{$attr} = Clone::PP::clone($value);
+      }
+    }
+  }
+  
+  return \%reg;
+}
+
 1;
 
 __END__
@@ -205,9 +256,9 @@ Rose::DB::Registry - Data source registry.
 
 =head1 DESCRIPTION
 
-C<Rose::DB::Registry> objects manage information about L<Rose::DB> data sources.  Each data source has a corresponding L<Rose::DB::Registry::Entry> object that contains its information.  The registry entries are organized in a two-level namespace based on a "domain" and a "type."  See the L<Rose::DB> documentation for more information on data source domains and types.
+L<Rose::DB::Registry> objects manage information about L<Rose::DB> data sources.  Each data source has a corresponding L<Rose::DB::Registry::Entry> object that contains its information.  The registry entries are organized in a two-level namespace based on a "domain" and a "type."  See the L<Rose::DB> documentation for more information on data source domains and types.
 
-C<Rose::DB::Registry> inherits from, and follows the conventions of, L<Rose::Object>.  See the L<Rose::Object> documentation for more information.
+L<Rose::DB::Registry> inherits from, and follows the conventions of, L<Rose::Object>.  See the L<Rose::Object> documentation for more information.
 
 =head1 CONSTRUCTOR
 
@@ -215,7 +266,7 @@ C<Rose::DB::Registry> inherits from, and follows the conventions of, L<Rose::Obj
 
 =item B<new PARAMS>
 
-Constructs a C<Rose::DB::Registry> object based on PARAMS, where PARAMS are
+Constructs a L<Rose::DB::Registry> object based on PARAMS, where PARAMS are
 name/value pairs.  Any object method is a valid parameter name.
 
 =back
@@ -230,7 +281,7 @@ Add registry entries.  Each ENTRY must be either a L<Rose::DB::Registry::Entry>-
 
 Each ENTRY must have a defined domain and type, either in the L<Rose::DB::Registry::Entry>-derived object or in the name/value pairs.  A fatal error will occur if these values are not defined.
 
-If a registry entry for the specified domain and type already exists, then the new entry will overwrite it.  If you want to know beforehand whether or not an entry exists under a specific domain and type, use the C<entry_exists()> method.
+If a registry entry for the specified domain and type already exists, then the new entry will overwrite it.  If you want to know beforehand whether or not an entry exists under a specific domain and type, use the L<entry_exists|/entry_exists> method.
 
 Returns a list (in list context) or reference to an array (in scalar context) of L<Rose::DB::Registry::Entry> objects added.
 
@@ -240,9 +291,42 @@ Add a registry entry.  ENTRY must be either a L<Rose::DB::Registry::Entry>-deriv
 
 The ENTRY must have a defined domain and type, either in the L<Rose::DB::Registry::Entry>-derived object or in the name/value pairs.  A fatal error will occur if these values are not defined.
 
-If a registry entry for the specified domain and type already exists, then the new entry will overwrite it.  If you want to know beforehand whether or not an entry exists under a specific domain and type, use the C<entry_exists()> method.
+If a registry entry for the specified domain and type already exists, then the new entry will overwrite it.  If you want to know beforehand whether or not an entry exists under a specific domain and type, use the L<entry_exists|/entry_exists> method.
 
 Returns the L<Rose::DB::Registry::Entry> object added.
+
+=item B<dump>
+
+Returns a reference to a hash containing information about all registered data sources.  The hash is structured like this:
+
+    {
+      domain1 =>
+      {
+        type1 =>
+        {
+          # Rose::DB::Registry::Entry attributes
+          driver   => ...,
+          database => ...,
+          host     => ...,
+          ...
+        },
+        
+        type2 =>
+        {
+          ...
+        },
+        ...
+      },
+
+      domain2 =>
+      {
+        ...
+      },
+
+      ...
+    }
+
+All the registry entry attribute values are copies, not the actual values.
 
 =item B<delete_domain DOMAIN>
 
@@ -261,6 +345,14 @@ Get the registry entry specified by PARAMS, where PARAMS must be name/value pair
 =item B<entry_exists PARAMS>
 
 Returns true if the registry entry specified by PARAMS exists, false otherwise.  PARAMS must be name/value pairs with defined values for C<domain> and C<type>.  A fatal error will occur if either one is missing or undefined.
+
+=item B<registered_types DOMAIN>
+
+Returns a list (in list context) or reference to an array (in scalar context) of the names of all registered types under the domain named DOMAIN.
+
+=item B<registered_domains>
+
+Returns a list (in list context) or reference to an array (in scalar context) of the names of all registered domains.
 
 =back
 
