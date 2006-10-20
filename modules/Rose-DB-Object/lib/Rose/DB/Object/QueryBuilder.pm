@@ -77,6 +77,7 @@ sub build_select
   my $table_map   = delete $args{'table_map'} || {};
   my $bind_params = $args{'bind_params'};
   my $from_and_where_only = delete $args{'from_and_where_only'};
+  my $allow_empty_lists   = $args{'allow_empty_lists'};
 
   $all_columns = $columns  unless(%$all_columns);
 
@@ -307,7 +308,9 @@ sub build_select
               or Carp::confess "Missing mutator method for column '$column'";
 
             my %tmp = ($column_arg => $val);
-            _format_value($db, \%tmp, $column_arg, $obj, $col_meta, $get_method, $set_method, $val);
+
+            _format_value($db, \%tmp, $column_arg, $obj, $col_meta, $get_method, $set_method, $val, 
+                          undef, undef, $allow_empty_lists);
             $val = $tmp{$column_arg};
           }
 
@@ -335,7 +338,8 @@ sub build_select
             push(@clauses, _build_clause($dbh, $sql_column, $op, $val, $not, 
                                          undef, ($do_bind ? \@bind : undef),
                                          $db, $col_meta, undef, $set, 
-                                         $placeholder, $bind_params));
+                                         $placeholder, $bind_params, 
+                                         $allow_empty_lists));
           }
           elsif(!defined $val)
           {
@@ -563,7 +567,7 @@ sub build_select
 sub _build_clause
 {
   my($dbh, $field, $op, $vals, $not, $field_mod, $bind, $db, $col_meta,
-     $force_inline, $set, $placeholder, $bind_params) = @_;
+     $force_inline, $set, $placeholder, $bind_params, $allow_empty_lists) = @_;
 
   #if(ref $vals eq 'ARRAY' && @$vals == 1)
   #{
@@ -648,7 +652,12 @@ sub _build_clause
 
   if($ref eq 'ARRAY')
   {
-    if(@$vals)
+    if(!@$vals)
+    {
+      Carp::croak "Empty list not allowed for $field query parameter"
+        unless($allow_empty_lists);
+    }
+    else
     {
       if($op eq '=')
       {
@@ -811,7 +820,8 @@ sub _build_clause
 
 sub _format_value
 {
-  my($db, $store, $param, $object, $col_meta, $get_method, $set_method, $value, $asis, $depth) = @_;
+  my($db, $store, $param, $object, $col_meta, $get_method, $set_method, 
+     $value, $asis, $depth, $allow_empty_lists) = @_;
 
   $depth ||= 1;
 
@@ -842,10 +852,13 @@ sub _format_value
   }
   elsif(ref $value eq 'ARRAY')
   {
+    Carp::croak "Empty list not allowed for $param query parameter"
+      unless(@$value || $allow_empty_lists);
+
     if($asis || $col_meta->type eq 'array' ||
        ($col_meta->type eq 'set' && $depth == 1))
     {
-      $value = _format_value($db, $value, undef, $object, $col_meta, $get_method, $set_method, $value, 1, $depth + 1);
+      $value = _format_value($db, $value, undef, $object, $col_meta, $get_method, $set_method, $value, 1, $depth + 1, $allow_empty_lists);
     }
     elsif($col_meta->type ne 'set')
     {
@@ -853,7 +866,7 @@ sub _format_value
 
       foreach my $subval (@$value)
       {
-        _format_value($db, \@vals, undef, $object, $col_meta, $get_method, $set_method, $subval, 0, $depth + 1);
+        _format_value($db, \@vals, undef, $object, $col_meta, $get_method, $set_method, $subval, 0, $depth + 1, $allow_empty_lists);
       }
 
       $value = \@vals;
@@ -864,7 +877,7 @@ sub _format_value
     foreach my $key (keys %$value)
     {
       next  if($key =~ /_?sql$/); # skip inline values
-      _format_value($db, $value, $key, $object, $col_meta, $get_method, $set_method, $value->{$key}, 0, $depth + 1);
+      _format_value($db, $value, $key, $object, $col_meta, $get_method, $set_method, $value->{$key}, 0, $depth + 1, $allow_empty_lists);
     }
   }
   else
