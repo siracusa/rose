@@ -1,10 +1,12 @@
-0.755 (10.12.2006) - John Siracusa <siracusa@mindspring.com>
+0.755 (10.20.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed a bug that could cause ...-to-many accessors with
       custom sort orders to fail in some situations.
     * Removed some imported functions to correctly reflect the 
       documented list of reserved method names.  (Reported by
       Uwe Voelker)
+    * Added the allow_empty_lists parameter to the Manager's 
+      get_objects() method.  (Suggested by Ask Bjørn Hansen)
     * Fixed bugs in the query hints implementation.
 
 0.754 (10.06.2006) - John Siracusa <siracusa@mindspring.com>
