@@ -1,4 +1,4 @@
-0.727 (10.19.2006) - John Siracusa <siracusa@mindspring.com>
+0.727 (10.20.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added the has_dbh() method.
     * Added the registered_domains(), registered_types(), and dump()
