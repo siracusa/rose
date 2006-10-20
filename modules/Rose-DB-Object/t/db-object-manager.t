@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3046;
+use Test::More tests => 3058;
 
 BEGIN 
 {
@@ -2868,7 +2868,7 @@ EOF
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 772)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 776)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -2935,7 +2935,7 @@ SKIP: foreach my $db_type ('mysql')
   eval
   {
     $objs = 
-      MySQLiteObject->get_objectz(
+      MyMySQLObjectManager->get_objectz(
         query  =>
         [
           date_created => '205-1-2', # invalid date
@@ -2943,6 +2943,38 @@ SKIP: foreach my $db_type ('mysql')
   };
   
   ok($@, "Invalid date - $db_type");
+
+  eval
+  {
+    $objs = 
+      MyMySQLObjectManager->get_objectz(
+        query => [ flag => [] ]);
+  };
+  
+  ok($@, "Empty list 1 - $db_type");
+
+  $objs = 
+    MyMySQLObjectManager->get_objectz(
+      allow_empty_lists => 1,
+      query  => [ flag => [] ]);
+
+  is(scalar @$objs, 4, "Empty list 2 - $db_type");
+
+  eval
+  {
+    $objs = 
+      MyMySQLObjectManager->get_objectz(
+        query => [ or => [ flag => 1, status => [] ] ]);
+  };
+
+  ok($@, "Empty list 3 - $db_type");
+
+  $objs = 
+    MyMySQLObjectManager->get_objectz(
+      allow_empty_lists => 1,
+        query => [ or => [ flag => 1, status => [] ] ]);
+
+  is(scalar @$objs, 4, "Empty list 4 - $db_type");
 
   $objs = 
     MyMySQLObjectManager->get_objectz(
@@ -5602,7 +5634,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(informix))
 {
-  skip("Informix tests", 732)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 736)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -5682,6 +5714,38 @@ SKIP: foreach my $db_type (qw(informix))
   
   ok($@, "Invalid date - $db_type");
 
+  eval
+  {
+    $objs = 
+      MyInformixObjectManager->get_objectz(
+        query => [ flag => [] ]);
+  };
+
+  ok($@, "Empty list 1 - $db_type");
+
+  $objs = 
+    MyInformixObjectManager->get_objectz(
+      allow_empty_lists => 1,
+      query  => [ flag => [] ]);
+
+  is(scalar @$objs, 4, "Empty list 2 - $db_type");
+
+  eval
+  {
+    $objs = 
+      MyInformixObjectManager->get_objectz(
+        query => [ or => [ flag => 1, status => [] ] ]);
+  };
+
+  ok($@, "Empty list 3 - $db_type");
+
+  $objs = 
+    MyInformixObjectManager->get_objectz(
+      allow_empty_lists => 1,
+        query => [ or => [ flag => 1, status => [] ] ]);
+
+  is(scalar @$objs, 4, "Empty list 4 - $db_type");
+ 
   $objs = 
     MyInformixObjectManager->get_objectz(
       share_db     => 1,
@@ -8316,7 +8380,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 767)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 771)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -8395,6 +8459,38 @@ SKIP: foreach my $db_type (qw(sqlite))
   };
   
   ok($@, "Invalid date - $db_type");
+
+  eval
+  {
+    $objs = 
+      MySQLiteObject->get_objectz(
+        query => [ flag => [] ]);
+  };
+
+  ok($@, "Empty list 1 - $db_type");
+
+  $objs = 
+    MySQLiteObject->get_objectz(
+      allow_empty_lists => 1,
+      query  => [ flag => [] ]);
+
+  is(scalar @$objs, 4, "Empty list 2 - $db_type");
+
+  eval
+  {
+    $objs = 
+      MySQLiteObject->get_objectz(
+        query => [ or => [ flag => 1, status => [] ] ]);
+  };
+
+  ok($@, "Empty list 3 - $db_type");
+
+  $objs = 
+    MySQLiteObject->get_objectz(
+      allow_empty_lists => 1,
+        query => [ or => [ flag => 1, status => [] ] ]);
+
+  is(scalar @$objs, 4, "Empty list 4 - $db_type");
 
   $objs = 
     MySQLiteObjectManager->get_objectz(
