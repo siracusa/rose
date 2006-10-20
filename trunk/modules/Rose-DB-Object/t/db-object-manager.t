@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3042;
+use Test::More tests => 3046;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("Postgres tests", 769)  unless($HAVE_PG);
+  skip("Postgres tests", 773)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -111,6 +111,38 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   };
   
   ok($@, "Invalid date - $db_type");
+
+  eval
+  {
+    $objs = 
+      MyPgObjectManager->get_objectz(
+        query => [ flag => [] ]);
+  };
+  
+  ok($@, "Empty list 1 - $db_type");
+
+  $objs = 
+    MyPgObjectManager->get_objectz(
+      allow_empty_lists => 1,
+      query  => [ flag => [] ]);
+
+  is(scalar @$objs, 4, "Empty list 2 - $db_type");
+
+  eval
+  {
+    $objs = 
+      MyPgObjectManager->get_objectz(
+        query => [ or => [ flag => 1, nums => { all_in_array => [] } ] ]);
+  };
+
+  ok($@, "Empty list 3 - $db_type");
+
+  $objs = 
+    MyPgObjectManager->get_objectz(
+      allow_empty_lists => 1,
+      query => [ or => [ flag => 1, nums => { all_in_array => [] } ] ]);
+
+  is(scalar @$objs, 4, "Empty list 4 - $db_type");
 
   $objs = 
     MyPgObjectManager->get_objectz(
