@@ -1,14 +1,17 @@
-0.727 (10.20.2006) - John Siracusa <siracusa@mindspring.com>
+0.728 (10.20.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * Added the has_dbh() method.
     * Added the registered_domains(), registered_types(), and dump()
       methods to Rose::DB::Registry.
     * Added a dump() method to Rose::DB::Registry::Entry.
+    * Clone::PP is now a prerequisite.
+
+0.727 (10.06.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added the has_dbh() method.
     * Changes to support Rose::DB::Object 0.754.
     * Fixed some Informix date/time parsing bugs.
     * The test suite now refuses to run SQLite tests if the buggy 
       DBD::SQLite version 1.13 is installed.
-    * Clone::PP is now a prerequisite.
 
 0.726 (09.17.2006) - John Siracusa <siracusa@mindspring.com>
 

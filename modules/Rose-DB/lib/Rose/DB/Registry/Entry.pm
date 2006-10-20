@@ -7,7 +7,7 @@ use Clone::PP();
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.727';
+our $VERSION = '0.728';
 
 our $Debug = 0;
 
