@@ -533,7 +533,7 @@ sub _get_localized_message
 sub auto_load_locales
 {
   my($self_or_class) = shift;
-  
+  $DB::single = 1;
   my $class = ref($self_or_class) || $self_or_class;
   
   if(@_)

@@ -7,6 +7,7 @@ use FindBin qw($Bin);
 use Test::More tests => 7;
 
 $ENV{'RHTMLO_LOCALES'} = 'fr,en';
+$ENV{'RHTMLO_PRIME_CACHES'} = 1;
 use_ok('Rose::HTML::Form::Field');
 
 my $msgs = Rose::HTML::Form::Field->localizer->localized_messages_hash;
