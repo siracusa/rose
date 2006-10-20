@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.753';
+our $VERSION = '0.755';
 
 our $Debug = 0;
 
@@ -3371,9 +3371,9 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
 
 =head1 DESCRIPTION
 
-C<Rose::DB::Object::Manager> is a base class for classes that select rows from tables fronted by L<Rose::DB::Object>-derived classes.  Each row in the table(s) queried is converted into the equivalent L<Rose::DB::Object>-derived object.
+L<Rose::DB::Object::Manager> is a base class for classes that select rows from tables fronted by L<Rose::DB::Object>-derived classes.  Each row in the table(s) queried is converted into the equivalent L<Rose::DB::Object>-derived object.
 
-Class methods are provided for fetching objects all at once, one at a time through the use of an iterator, or just getting the object count.  Subclasses are expected to create syntactically pleasing wrappers for C<Rose::DB::Object::Manager> class methods, either manually or with the L<make_manager_methods|/make_manager_methods> method.  A very minimal example is shown in the L<synopsis|/SYNOPSIS> above.
+Class methods are provided for fetching objects all at once, one at a time through the use of an iterator, or just getting the object count.  Subclasses are expected to create syntactically pleasing wrappers for L<Rose::DB::Object::Manager> class methods, either manually or with the L<make_manager_methods|/make_manager_methods> method.  A very minimal example is shown in the L<synopsis|/SYNOPSIS> above.
 
 =head1 CLASS METHODS
 
@@ -3518,11 +3518,26 @@ Valid parameters to L<get_objects|/get_objects> are:
 
 =over 4
 
+=item B<allow_empty_lists BOOL>
+
+If set to true, C<query> parameters with empty lists as values are allowed.  For example:
+
+    @ids = (); # empty list
+
+    Product::Manager->get_products(
+      query =>
+      [
+        id => \@ids,
+        ...
+      ]);
+
+By default, passing an empty list as a value will cause a fatal error.
+
 =item C<db DB>
 
 A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> object method of the C<object_class>.
 
-=item C<distinct [BOOL|ARRAYREF]>
+=item C<distinct [ BOOL | ARRAYREF ]>
 
 If set to any kind of true value, then the "DISTINCT" SQL keyword will be added to the "SELECT" statement.  Specific values trigger the behaviors described below.
 
