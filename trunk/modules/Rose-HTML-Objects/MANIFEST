@@ -99,6 +99,7 @@ t/form-nested.t
 t/form.t
 t/image.t
 t/label.t
+t/localized-messages
 t/lib/MyField.pm
 t/lib/MyObject.pm
 t/lib/MyObject/BadErrors.pm
