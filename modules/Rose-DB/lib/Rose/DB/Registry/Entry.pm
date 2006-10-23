@@ -85,6 +85,8 @@ sub dump
   return \%dump;
 }
 
+sub clone { Clone::PP::clone($_[0]) }
+
 1;
 
 __END__
@@ -142,6 +144,10 @@ Get or set the value of the "AutoCommit" connect option.
 =item B<catalog [CATALOG]>
 
 Get or set the database catalog name.  This setting is only relevant to databases that support the concept of catalogs.
+
+=item B<clone>
+
+Returns a clone (i.e., deep copy) of the current object.
 
 =item B<connect_option NAME [, VALUE]>
 
