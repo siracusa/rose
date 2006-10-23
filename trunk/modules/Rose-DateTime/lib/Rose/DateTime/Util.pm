@@ -18,7 +18,7 @@ our %EXPORT_TAGS =
   all => \@EXPORT_OK
 );
 
-our $VERSION = '0.531';
+our $VERSION = '0.532';
 
 our $TZ = 'floating';
 our $Debug = 0;
@@ -55,7 +55,7 @@ sub init_european_dates
 {
   #my($class) = shift;
 
-  my $locale_class = 'DateTime::Locale::' . DateTime->DefaultLocale();
+  my $locale_class = DateTime::Locale->load(DateTime->DefaultLocale);
 
   if($locale_class->date_parts_order eq 'dmy')
   {
