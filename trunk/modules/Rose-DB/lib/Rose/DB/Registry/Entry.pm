@@ -7,7 +7,7 @@ use Clone::PP();
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.728';
+our $VERSION = '0.729';
 
 our $Debug = 0;
 
@@ -20,7 +20,8 @@ use Rose::Object::MakeMethods::Generic
   'scalar' =>
   [
     qw(database domain dsn dbi_driver host password port
-       server_time_zone schema catalog type username)
+       server_time_zone schema catalog type username
+       description)
   ],
 
   'boolean' =>
@@ -63,8 +64,8 @@ sub dump
   my %dump;
 
   foreach my $attr (qw(database dsn driver host password port
-                       server_time_zone schema catalog type username
-                       connect_options pre_disconnect_sql 
+                       description server_time_zone schema catalog 
+                       type username connect_options pre_disconnect_sql 
                        post_connect_sql))
   {
     my $value = $self->$attr();
@@ -157,6 +158,10 @@ Returns a reference to the hash of options in scalar context, or a list of name/
 =item B<database [NAME]>
 
 Get or set the database name.
+
+=item B<description [TEXT]>
+
+A description of the data source.
 
 =item B<domain [DOMAIN]>
 

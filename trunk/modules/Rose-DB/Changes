@@ -1,3 +1,7 @@
+0.729 (10.23.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added a description attribute to Rose::DB::Registry::Entry.
+
 0.728 (10.20.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added the registered_domains(), registered_types(), and dump()
