@@ -9,7 +9,7 @@ our @ISA = qw(Rose::DB::Object::MixIn);
 
 use Carp;
 
-our $VERSION = '0.741';
+our $VERSION = '0.756';
 
 __PACKAGE__->export_tags
 (
@@ -416,7 +416,7 @@ Initialize the object with a JSON-formatted string.  The JSON string must be in 
     print $p2->name; # John
     print $p2->age;  # 30
 
-=item B<init_with_json YAML>
+=item B<init_with_yaml YAML>
 
 Initialize the object with a YAML-formatted string.  The YAML string must be in the format returned by the L<column_values_as_yaml|/column_values_as_yaml> method.  Example:
 

@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.755';
+our $VERSION = '0.756';
 
 our $Debug = 0;
 
@@ -1943,7 +1943,7 @@ Now here's the wrong way:
     # calling the base class version of the method.
     sub load
     {
-      my $self = shift; # WRONG!  The alias to original object is now lost!
+      my $self = shift; # WRONG! The alias to the object is now lost!
 
       ... # Do your stuff
 
