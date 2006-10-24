@@ -1,6 +1,9 @@
 0.756 (10.24.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Corrected some typos in the documentation.
+    * Fixed a bug in the Manager that cause the with_objects parameter 
+      to be ignored when the count_only parameter is set.  (Reported
+      by Uwe Voelker)
 
 0.755 (10.20.2006) - John Siracusa <siracusa@mindspring.com>
 
