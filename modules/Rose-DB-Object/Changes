@@ -4,6 +4,9 @@
     * Fixed a bug in the Manager that cause the with_objects parameter 
       to be ignored when the count_only parameter is set.  (Reported
       by Uwe Voelker)
+    * The column_values_as_*() helper methods no longer require the 
+      column_value_pairs() helper to also be imported.  (Reported
+      by Jonathan Vanasco)
 
 0.755 (10.20.2006) - John Siracusa <siracusa@mindspring.com>
 
