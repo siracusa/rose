@@ -7,6 +7,8 @@
     * The column_values_as_*() helper methods no longer require the 
       column_value_pairs() helper to also be imported.  (Reported
       by Jonathan Vanasco)
+    * Setting a fixed-length character column to undef now works
+      correctly.
 
 0.755 (10.20.2006) - John Siracusa <siracusa@mindspring.com>
 

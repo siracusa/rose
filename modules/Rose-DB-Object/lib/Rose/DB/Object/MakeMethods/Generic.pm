@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.751';
+our $VERSION = '0.756';
 
 our $Debug = 0;
 
@@ -139,7 +139,7 @@ EOF
 
   if($type eq 'character')
   {
-    $set_code = qq(\$self->{'$qkey'} = sprintf("%-${length}s", \$value););
+    $set_code = qq(\$self->{'$qkey'} = defined \$value ? sprintf("%-${length}s", \$value) : undef;);
   }
   else
   {
