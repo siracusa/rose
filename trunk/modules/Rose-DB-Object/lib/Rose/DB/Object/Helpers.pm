@@ -111,7 +111,7 @@ __PACKAGE__->pre_import_hook(column_values_as_yaml => sub { require YAML::Syck }
 sub column_values_as_yaml
 {
   local $_[0]->{STATE_SAVING()} = 1;
-  YAML::Syck::Dump(scalar shift->column_value_pairs)
+  YAML::Syck::Dump(scalar Rose::DB::Object::Helpers::column_value_pairs(shift))
 }
 
 __PACKAGE__->pre_import_hook(column_values_as_json => sub { require JSON::Syck });
@@ -119,7 +119,7 @@ __PACKAGE__->pre_import_hook(column_values_as_json => sub { require JSON::Syck }
 sub column_values_as_json
 {
   local $_[0]->{STATE_SAVING()} = 1;
-  JSON::Syck::Dump(scalar shift->column_value_pairs)
+  JSON::Syck::Dump(scalar Rose::DB::Object::Helpers::column_value_pairs(shift))
 }
 
 __PACKAGE__->pre_import_hook(init_with_json => sub { require YAML::Syck });
