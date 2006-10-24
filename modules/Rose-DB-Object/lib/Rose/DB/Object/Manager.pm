@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.755';
+our $VERSION = '0.756';
 
 our $Debug = 0;
 
@@ -305,7 +305,7 @@ sub get_objects
   my $return_iterator  = delete $args{'return_iterator'};
   my $count_only       = delete $args{'count_only'};
   my $require_objects  = delete $args{'require_objects'};
-  my $with_objects     = !$count_only ? delete $args{'with_objects'} : undef;
+  my $with_objects     = delete $args{'with_objects'};
 
   my $skip_first       = delete $args{'skip_first'} || 0;
   my $distinct         = delete $args{'distinct'};
