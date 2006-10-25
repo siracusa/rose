@@ -189,11 +189,8 @@ sub auto_generate_foreign_keys
       my %key_columns;
       @key_columns{@local_columns} = @foreign_columns;
 
-      my $key_name = $cm->auto_foreign_key_name($foreign_class);
-
       my $fk = 
         Rose::DB::Object::Metadata::ForeignKey->new(
-          name        => $key_name,
           class       => $foreign_class,
           key_columns => \%key_columns);
 
@@ -210,15 +207,25 @@ sub auto_generate_foreign_keys
       sort { lc $a->class->meta->table cmp lc $b->class->meta->table } 
       @foreign_keys;
 
+    my %used_names;
+
     foreach my $fk (@foreign_keys)
     {
-      my $name = $self->foreign_key_name_generator->($self, $fk);
+      my $name =
+        $cm->auto_foreign_key_name($fk->class, $fk->name, scalar $fk->key_columns, \%used_names);
+
+      unless(defined $name)
+      {
+        $fk->name($name = $self->foreign_key_name_generator->($self, $fk));
+      }
 
       unless(defined $name && $name =~ /^\w+$/)
       {
         die "Missing or invalid key name '$name' for foreign key ",
             "generated in $class for ", $fk->class;
       }
+
+      $used_names{$name}++;
 
       $fk->name($name);
     }

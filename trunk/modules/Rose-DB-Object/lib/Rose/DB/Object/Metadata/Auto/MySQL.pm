@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.73';
+our $VERSION = '0.756';
 
 sub auto_generate_unique_keys
 {
@@ -124,84 +124,79 @@ EOF
                              $table_catalog, $table_schema, $table_name, $local_column,
                              $foreign_schema, $foreign_table, $foreign_column));
         my($current_constraint, %fk_info);
-#################################
+
         while($sth->fetch)
         {
           # No cross-database foreign keys in MySQL for now...
           next  unless(!defined $foreign_schema || lc $foreign_schema eq lc $db_name);
 
-          if(!$current_constraint || $constraint_name eq $current_constraint)
+          my $info = $fk_info{$constraint_name} ||= { foreign_table => $foreign_table };
+
+          push(@{$info->{'local_columns'}}, $local_column);
+          push(@{$info->{'foreign_columns'}}, $foreign_column);
+        }
+
+        my $cm = $self->convention_manager;
+
+        FK: while(my($constraint_name, $info) = each %fk_info)
+        {
+          my $foreign_table   = $info->{'foreign_table'};
+          my @local_columns   = @{$info->{'local_columns'}};
+          my @foreign_columns = @{$info->{'foreign_columns'}};
+
+          unless(@local_columns > 0 && @local_columns == @foreign_columns)
           {
-            $current_constraint ||= $constraint_name;
-
-            my $info = $fk_info{$foreign_table} ||= {};
-
-            push(@{$info->{'local_columns'}}, $local_column);
-            push(@{$info->{'foreign_columns'}}, $foreign_column);
+            die "Failed to extrat foreign key information from ",
+                "information_schema for table '", $self->table, "' ",
+                " in database '$db_name'";
           }
-          else
-          {
-            $current_constraint = $constraint_name;
 
-            FK: while(my($foreign_table, $info) = each %fk_info)
+          my $foreign_class = $self->class_for(table => $foreign_table);
+
+          unless($foreign_class)
+          {
+            # Add deferred task
+            $self->add_deferred_task(
             {
-              my @local_columns   = @{$info->{'local_columns'}};
-              my @foreign_columns = @{$info->{'foreign_columns'}};
-    
-              unless(@local_columns > 0 && @local_columns == @foreign_columns)
+              class  => $self->class, 
+              method => 'auto_init_foreign_keys',
+              args   => \%args,
+
+              code => sub
               {
-                die "Failed to extrat foreign key information from ",
-                    "information_schema for table '", $self->table, "' ",
-                    " in database '$db_name'";
-              }
-    
-              my $foreign_class = $self->class_for(table => $foreign_table);
-    
-              unless($foreign_class)
+                $self->auto_init_foreign_keys(%args);
+                $self->make_foreign_key_methods(%args, preserve_existing => 1);
+              },
+
+              check => sub
               {
-                # Add deferred task
-                $self->add_deferred_task(
-                {
-                  class  => $self->class, 
-                  method => 'auto_init_foreign_keys',
-                  args   => \%args,
-    
-                  code => sub
-                  {
-                    $self->auto_init_foreign_keys(%args);
-                    $self->make_foreign_key_methods(%args, preserve_existing => 1);
-                  },
-    
-                  check => sub
-                  {
-                    my $fks = $self->foreign_keys;
-                    return @$fks == $total_fks ? 1 : 0;
-                  }
-                });
-    
-                unless($no_warnings || $self->allow_auto_initialization)
-                {
-                  no warnings; # Allow undef coercion to empty string
-                  warn "No Rose::DB::Object-derived class found for table ",
-                       "'$foreign_table'";
-                }
-    
-                $total_fks++;
-                next FK;
+                my $fks = $self->foreign_keys;
+                return @$fks == $total_fks ? 1 : 0;
               }
-    
-              my %key_columns;
-              @key_columns{@local_columns} = @foreign_columns;
-    
-              my $fk = 
-                Rose::DB::Object::Metadata::ForeignKey->new(
-                  class       => $foreign_class,
-                  key_columns => \%key_columns);
-    
-              push(@foreign_keys, $fk);
-              $total_fks++;
+            });
+
+            unless($no_warnings || $self->allow_auto_initialization)
+            {
+              no warnings; # Allow undef coercion to empty string
+              warn "No Rose::DB::Object-derived class found for table ",
+                   "'$foreign_table'";
             }
+
+            $total_fks++;
+            next FK;
           }
+
+          my %key_columns;
+          @key_columns{@local_columns} = @foreign_columns;
+
+          my $fk = 
+            Rose::DB::Object::Metadata::ForeignKey->new(
+              name        => $constraint_name,
+              class       => $foreign_class,
+              key_columns => \%key_columns);
+
+          push(@foreign_keys, $fk);
+          $total_fks++;
         }
 
         $information_schema_ok = 1;
@@ -307,9 +302,10 @@ EOF
 
             my %key_columns;
             @key_columns{@local_columns} = @foreign_columns;
-
+      
             my $fk = 
               Rose::DB::Object::Metadata::ForeignKey->new(
+                name        => $constraint_name,
                 class       => $foreign_class,
                 key_columns => \%key_columns);
 
@@ -329,19 +325,28 @@ EOF
       sort { lc $a->class->meta->table cmp lc $b->class->meta->table } 
       @foreign_keys;
 
+    my %used_names;
+
     foreach my $fk (@foreign_keys)
     {
-      my $key_name = 
-        $cm->auto_foreign_key_name($fk->class) ||
-        $self->foreign_key_name_generator->($self, $fk);
+#$DB::single = 1;
+      my $name =
+        $cm->auto_foreign_key_name($fk->class, $fk->name, scalar $fk->key_columns, \%used_names);
 
-      unless(defined $key_name && $key_name =~ /^\w+$/)
+      unless(defined $name)
       {
-        die "Missing or invalid key name '$key_name' for foreign key ",
+        $fk->name($name = $self->foreign_key_name_generator->($self, $fk));
+      }
+
+      unless(defined $name && $name =~ /^\w+$/)
+      {
+        die "Missing or invalid key name '$name' for foreign key ",
             "generated in $class for ", $fk->class;
       }
 
-      $fk->name($key_name);
+      $used_names{$name}++;
+
+      $fk->name($name);
     }
   };
 

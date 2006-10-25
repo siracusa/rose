@@ -14,7 +14,7 @@ our $Debug;
 
 *Debug = \$Rose::DB::Object::Metadata::Debug;
 
-our $VERSION = '0.754';
+our $VERSION = '0.756';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -201,40 +201,37 @@ DEFAULT_FK_NAME_GEN:
 
     my $name = $fk->name;
 
-    unless(defined $name && length $name)
+    # No single column whose name we can steal and then
+    # mangle to make the foreign key name, so we'll derive
+    # the foreign key name from the foreign class name.
+    if(keys %$key_columns > 1)
     {
-      # No single column whose name we can steal and then
-      # mangle to make the foreign key name, so we'll derive
-      # the foreign key name from the foreign class name.
-      if(keys %$key_columns > 1)
+      $name = $fk->class;
+      $name =~ s/::/_/g;
+      $name =~ s/([a-z])([A-Z])/$1_$2/g;
+      $name = lc $name;
+    }
+    else
+    {
+      my($local_column, $foreign_column) = %$key_columns;
+
+      # Try to lop off foreign column name.  Example:
+      # my_foreign_object_id -> my_foreign_object
+      if($local_column =~ s/(?:_|.)$foreign_column$//)
       {
-        $name = $fk->class;
-        $name =~ s/::/_/g;
-        $name =~ s/([a-z])([A-Z])/$1_$2/g;
-        $name = lc $name;
+        $name = $local_column;
       }
       else
       {
-        my($local_column, $foreign_column) = each(%$key_columns);
-
-        # Try to lop off foreign column name.  Example:
-        # my_foreign_object_id -> my_foreign_object
-        if($local_column =~ s/_?$foreign_column$//)
+        # Usually, the actual column name is taken by the column accessor,
+        # but if it's not, we'll use it.
+        if(!$meta->class->can($local_column))
         {
           $name = $local_column;
         }
-        else
+        else # otherwise, append "_object"
         {
-          # Usually, the actual column name is taken by the column accessor,
-          # but if it's not, we'll use it.
-          if(!$meta->class->can($local_column))
-          {
-            $name = $local_column;
-          }
-          else # otherwise, append "_object"
-          {
-            $name = $local_column . '_object';
-          }
+          $name = $local_column . '_object';
         }
       }
     }
@@ -331,7 +328,7 @@ sub auto_generate_foreign_keys
 
   my $no_warnings = $args{'no_warnings'};
 
-  my($class, @foreign_keys, $total_fks);
+  my($class, @foreign_keys, $total_fks, %used_names);
 
   eval
   {
@@ -445,20 +442,24 @@ sub auto_generate_foreign_keys
         next FK_INFO;
       }
 
-      my $key_name =
-        $cm->auto_foreign_key_name($foreign_class, $fk_info->{'UK_NAME'});
-
-      if(defined $key_name && length $key_name)
-      {
-        $fk{$fk_info->{'UK_NAME'}}{'name'} = $key_name;
-      }
-
       my $local_column   = $fk_info->{'FK_COLUMN_NAME'};
       my $foreign_column = $fk_info->{'UK_COLUMN_NAME'};
 
       $fk{$fk_info->{'UK_NAME'}}{'class'} = $foreign_class;
       $fk{$fk_info->{'UK_NAME'}}{'key_columns'}{$local_column} = $foreign_column;
 
+      my $key_name =
+        $cm->auto_foreign_key_name($foreign_class, $fk_info->{'UK_NAME'}, 
+                                   $fk{$fk_info->{'UK_NAME'}}{'key_columns'},
+                                   \%used_names);
+
+      $used_names{$key_name}++  if(defined $key_name);
+
+      if(defined $key_name && length $key_name)
+      {
+        $fk{$fk_info->{'UK_NAME'}}{'name'} = $key_name;
+      }
+      
       $total_fks++;
     }
 
@@ -472,15 +473,10 @@ sub auto_generate_foreign_keys
 
       next  unless(defined $fk->class);
 
-      my $name = $self->foreign_key_name_generator->($self, $fk);
-
-      unless(defined $name && $name =~ /^\w+$/)
+      unless(defined $fk->name)
       {
-        die "Missing or invalid key name '$name' for foreign key ",
-            "generated in $class for ", $fk->class;
+        $fk->name($self->foreign_key_name_generator->($self, $fk));
       }
-
-      $fk->name($name);
 
       push(@foreign_keys, $fk);
     }

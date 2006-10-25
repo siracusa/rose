@@ -39,6 +39,12 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 
   my @classes = $loader->make_classes(include_tables => 'rdbo_album.*');
 
+  #foreach my $class (@classes)
+  #{
+  #  print $class->meta->perl_class_definition(braces => 'k&r', indent => 2)
+  #    if($class->can('meta'));
+  #}
+
   my $manager_class = $class_prefix . '::RdboAlbumArtwork::Manager';
 
   my $results = 
@@ -48,7 +54,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 
   foreach my $res (@$results) 
   {
-    my $album = $res->rdbo_album;
+    my $album = $res->album;
     is($album->name, 'album1', "album 1 - $db_type");
   }
 }
