@@ -217,7 +217,7 @@ DEFAULT_FK_NAME_GEN:
 
       # Try to lop off foreign column name.  Example:
       # my_foreign_object_id -> my_foreign_object
-      if($local_column =~ s/(?:_|.)$foreign_column$//)
+      if($local_column =~ s/_$foreign_column$//)
       {
         $name = $local_column;
       }
