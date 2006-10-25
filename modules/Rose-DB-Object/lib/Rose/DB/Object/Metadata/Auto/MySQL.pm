@@ -329,7 +329,6 @@ EOF
 
     foreach my $fk (@foreign_keys)
     {
-#$DB::single = 1;
       my $name =
         $cm->auto_foreign_key_name($fk->class, $fk->name, scalar $fk->key_columns, \%used_names);
 
