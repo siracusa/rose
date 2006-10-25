@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.753';
+our $VERSION = '0.756';
 
 sub auto_generate_columns
 {

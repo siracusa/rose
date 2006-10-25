@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.755';
+our $VERSION = '0.756';
 
 our $Debug = 0;
 
@@ -5480,7 +5480,7 @@ The default column alias generator simply appends the string "_col" to the end o
 
 =item B<foreign_key_name_generator [CODEREF]>
 
-Get or set the code reference to the subroutine used to generate L<foreign key|Rose::DB::Object::Metadata::ForeignKey> names.  B<Note:> This code will only be called if the L<convention_manager|/convention_manager>'s L<auto_foreign_key_name|Rose::DB::Object::ConventionManager/auto_foreign_key_name> method fails to (or declines to) produce a foreign key name.
+Get or set the code reference to the subroutine used to generate L<foreign key|Rose::DB::Object::Metadata::ForeignKey> names.  B<Note:> This code will only be called if the L<convention_manager|/convention_manager>'s L<auto_foreign_key_name|Rose::DB::Object::ConventionManager/auto_foreign_key_name> method fails to (or declines to) produce a defined foreign key name.
 
 The subroutine should take two arguments: a metadata object and a L<Rose::DB::Object::Metadata::ForeignKey> object.  It should return a name for the foreign key.
 
