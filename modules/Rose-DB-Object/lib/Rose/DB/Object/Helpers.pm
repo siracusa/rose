@@ -135,6 +135,7 @@ sub init_with_yaml
 
   while(my($column, $value) = each(%$hash))
   {
+    next  unless(length $column);
     my $method = $meta->column($column)->mutator_method_name;
     $self->$method($value);
   }
@@ -155,6 +156,7 @@ sub init_with_json
 
   while(my($column, $value) = each(%$hash))
   {
+    next  unless(length $column);
     my $method = $meta->column($column)->mutator_method_name;
     $self->$method($value);
   }

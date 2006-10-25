@@ -1,4 +1,4 @@
-0.756 (10.24.2006) - John Siracusa <siracusa@mindspring.com>
+0.756 (10.25.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Corrected some typos in the documentation.
     * Fixed a bug in the Manager that cause the with_objects parameter 
@@ -7,6 +7,8 @@
     * The column_values_as_*() helper methods no longer require the 
       column_value_pairs() helper to also be imported.  (Reported
       by Jonathan Vanasco)
+    * Fixed a bug caused by blank lines in JSON and YAML output. 
+      (Patch by Jonathan Vanasco)
     * Setting a fixed-length character column to undef now works
       correctly.
 
