@@ -1,6 +1,10 @@
 0.756 (10.25.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * Corrected some typos in the documentation.
+    * Changed the interaction and behavior of the metadata object's 
+      foreign_key_name_generator() method and the convention manager's
+      auto_foreign_key_name() method to avoid some name conflict bugs
+      and create a more sensible flow for foreign key naming.
+      (Suggested by Graham Barr)
     * Fixed a bug in the Manager that cause the with_objects parameter 
       to be ignored when the count_only parameter is set.  (Reported
       by Uwe Voelker)
@@ -11,6 +15,7 @@
       (Patch by Jonathan Vanasco)
     * Setting a fixed-length character column to undef now works
       correctly.
+    * Corrected some typos in the documentation.
 
 0.755 (10.20.2006) - John Siracusa <siracusa@mindspring.com>
 

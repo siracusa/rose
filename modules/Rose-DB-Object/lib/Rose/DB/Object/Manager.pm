@@ -1337,9 +1337,10 @@ sub get_objects
 
     my($sql, $bind, @bind_params);
 
-    my $use_distinct = 0; # Do we have to use DISTINCT to count?
+    # Do we have to use DISTINCT to count?
+    my $use_distinct = $with_objects ? 1 : 0;
 
-    if($require_objects)
+    if(!$use_distinct && $require_objects)
     {
       foreach my $name (@$require_objects)
       {

@@ -5480,7 +5480,9 @@ The default column alias generator simply appends the string "_col" to the end o
 
 =item B<foreign_key_name_generator [CODEREF]>
 
-Get or set the code reference to the subroutine used to generate L<foreign key|Rose::DB::Object::Metadata::ForeignKey> names.  The subroutine should take two arguments: a metadata object and a L<Rose::DB::Object::Metadata::ForeignKey> object.  It should return a name for the foreign key.
+Get or set the code reference to the subroutine used to generate L<foreign key|Rose::DB::Object::Metadata::ForeignKey> names.  B<Note:> This code will only be called if the L<convention_manager|/convention_manager>'s L<auto_foreign_key_name|Rose::DB::Object::ConventionManager/auto_foreign_key_name> method fails to (or declines to) produce a foreign key name.
+
+The subroutine should take two arguments: a metadata object and a L<Rose::DB::Object::Metadata::ForeignKey> object.  It should return a name for the foreign key.
 
 Each foreign key must have a name that is unique within the class.  By default, this name will also be the name of the method generated to access the object referred to by the foreign key, so it must be unique among method names in the class as well.
 

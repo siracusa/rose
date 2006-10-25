@@ -206,7 +206,8 @@ EOF
     my $db = Rose::DB->new('mysql_admin');
     $dbh = $db->retain_dbh or die Rose::DB->error;
 
-    die "MySQL version too old"  unless($db->database_version >= 4_000_000);
+    die "MySQL version too old"  unless($db->database_version >= 4_000_000 && 
+                                        mysql_supports_innodb());
 
     # Drop existing tables, ignoring errors
     {
@@ -232,19 +233,6 @@ CREATE TABLE Rose_db_object_ug_main
 )
 TYPE=InnoDB
 EOF
-
-    # MySQL will silently ignore the "TYPE=InnoDB" part and create
-    # a MyISAM table instead.  MySQL is evil!  Now we have to manually
-    # check to make sure an InnoDB table was really created.
-    my $db_name = $db->database;
-    my $sth = $dbh->prepare("SHOW TABLE STATUS FROM `$db_name` LIKE ?");
-    $sth->execute('Rose_db_object_ug_main');
-    my $info = $sth->fetchrow_hashref;
-
-    unless(lc $info->{'Type'} eq 'innodb' || lc $info->{'Engine'} eq 'innodb')
-    {
-      die "Missing InnoDB support";
-    }
   };
 
   if(!$@ && $dbh)
