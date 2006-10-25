@@ -191,5 +191,6 @@ t/spot-check-07.t
 t/spot-check-08.t
 t/spot-check-09.t
 t/spot-check-10.t
+t/spot-check-11.t
 t/test-lib.pl
 t/unique-key-prefs.t
