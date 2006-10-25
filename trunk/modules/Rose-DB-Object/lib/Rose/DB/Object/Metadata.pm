@@ -5488,7 +5488,7 @@ Each foreign key must have a name that is unique within the class.  By default, 
 
 The default foreign key name generator uses the following algorithm:
 
-If the foreign key has only one column, and if the name of that column ends with an optional underscore and the name of the referenced column, then that part of the column name is removed and the remaining string is used as the foreign key name.  For example, given the following tables:
+If the foreign key has only one column, and if the name of that column ends with an underscore and the name of the referenced column, then that part of the column name is removed and the remaining string is used as the foreign key name.  For example, given the following tables:
 
     CREATE TABLE categories
     (
