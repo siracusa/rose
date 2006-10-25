@@ -112,7 +112,7 @@ WHERE
   REFERENCED_TABLE_NAME IS NOT NULL AND
   TABLE_SCHEMA = ? AND TABLE_NAME = ?
 ORDER BY
-  REFERENCED_TABLE_SCHEMA, REFERENCED_TABLE_NAME
+  REFERENCED_TABLE_SCHEMA, REFERENCED_TABLE_NAME, CONSTRAINT_NAME
 EOF
         $sth->execute($db_name, $self->table);
 
@@ -123,76 +123,85 @@ EOF
         $sth->bind_columns(\($constraint_catalog, $constraint_schema, $constraint_name,
                              $table_catalog, $table_schema, $table_name, $local_column,
                              $foreign_schema, $foreign_table, $foreign_column));
-        my %fk_info;
-
+        my($current_constraint, %fk_info);
+#################################
         while($sth->fetch)
         {
           # No cross-database foreign keys in MySQL for now...
           next  unless(!defined $foreign_schema || lc $foreign_schema eq lc $db_name);
 
-          my $info = $fk_info{$foreign_table} ||= {};
-
-          push(@{$info->{'local_columns'}}, $local_column);
-          push(@{$info->{'foreign_columns'}}, $foreign_column);
-        }
-
-        FK: while(my($foreign_table, $info) = each %fk_info)
-        {
-          my @local_columns   = @{$info->{'local_columns'}};
-          my @foreign_columns = @{$info->{'foreign_columns'}};
-
-          unless(@local_columns > 0 && @local_columns == @foreign_columns)
+          if(!$current_constraint || $constraint_name eq $current_constraint)
           {
-            die "Failed to extrat foreign key information from ",
-                "information_schema for table '", $self->table, "' ",
-                " in database '$db_name'";
+            $current_constraint ||= $constraint_name;
+
+            my $info = $fk_info{$foreign_table} ||= {};
+
+            push(@{$info->{'local_columns'}}, $local_column);
+            push(@{$info->{'foreign_columns'}}, $foreign_column);
           }
-
-          my $foreign_class = $self->class_for(table => $foreign_table);
-
-          unless($foreign_class)
+          else
           {
-            # Add deferred task
-            $self->add_deferred_task(
+            $current_constraint = $constraint_name;
+
+            FK: while(my($foreign_table, $info) = each %fk_info)
             {
-              class  => $self->class, 
-              method => 'auto_init_foreign_keys',
-              args   => \%args,
-
-              code => sub
+              my @local_columns   = @{$info->{'local_columns'}};
+              my @foreign_columns = @{$info->{'foreign_columns'}};
+    
+              unless(@local_columns > 0 && @local_columns == @foreign_columns)
               {
-                $self->auto_init_foreign_keys(%args);
-                $self->make_foreign_key_methods(%args, preserve_existing => 1);
-              },
-
-              check => sub
-              {
-                my $fks = $self->foreign_keys;
-                return @$fks == $total_fks ? 1 : 0;
+                die "Failed to extrat foreign key information from ",
+                    "information_schema for table '", $self->table, "' ",
+                    " in database '$db_name'";
               }
-            });
-
-            unless($no_warnings || $self->allow_auto_initialization)
-            {
-              no warnings; # Allow undef coercion to empty string
-              warn "No Rose::DB::Object-derived class found for table ",
-                   "'$foreign_table'";
+    
+              my $foreign_class = $self->class_for(table => $foreign_table);
+    
+              unless($foreign_class)
+              {
+                # Add deferred task
+                $self->add_deferred_task(
+                {
+                  class  => $self->class, 
+                  method => 'auto_init_foreign_keys',
+                  args   => \%args,
+    
+                  code => sub
+                  {
+                    $self->auto_init_foreign_keys(%args);
+                    $self->make_foreign_key_methods(%args, preserve_existing => 1);
+                  },
+    
+                  check => sub
+                  {
+                    my $fks = $self->foreign_keys;
+                    return @$fks == $total_fks ? 1 : 0;
+                  }
+                });
+    
+                unless($no_warnings || $self->allow_auto_initialization)
+                {
+                  no warnings; # Allow undef coercion to empty string
+                  warn "No Rose::DB::Object-derived class found for table ",
+                       "'$foreign_table'";
+                }
+    
+                $total_fks++;
+                next FK;
+              }
+    
+              my %key_columns;
+              @key_columns{@local_columns} = @foreign_columns;
+    
+              my $fk = 
+                Rose::DB::Object::Metadata::ForeignKey->new(
+                  class       => $foreign_class,
+                  key_columns => \%key_columns);
+    
+              push(@foreign_keys, $fk);
+              $total_fks++;
             }
-
-            $total_fks++;
-            next FK;
           }
-
-          my %key_columns;
-          @key_columns{@local_columns} = @foreign_columns;
-
-          my $fk = 
-            Rose::DB::Object::Metadata::ForeignKey->new(
-              class       => $foreign_class,
-              key_columns => \%key_columns);
-
-          push(@foreign_keys, $fk);
-          $total_fks++;
         }
 
         $information_schema_ok = 1;
