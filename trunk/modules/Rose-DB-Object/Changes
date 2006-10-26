@@ -1,10 +1,13 @@
-0.756 (10.25.2006) - John Siracusa <siracusa@mindspring.com>
+0.756 (10.26.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Changed the interaction and behavior of the metadata object's 
       foreign_key_name_generator() method and the convention manager's
       auto_foreign_key_name() method to avoid some name conflict bugs
       and create a more sensible flow for foreign key naming.
       (Suggested by Graham Barr)
+    * Fixed a bug that causes save(changes_only => 1, cascade => 1) to
+      fail in cases where a child object set a key column valid in the
+      parent object.  (Reported by Lucian Dragus)
     * Fixed a bug in the Manager that cause the with_objects parameter 
       to be ignored when the count_only parameter is set.  (Reported
       by Uwe Voelker)

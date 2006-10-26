@@ -14,7 +14,7 @@ our @EXPORT_OK =
      unset_state_in_db unset_state_loading unset_state_saving
      row_id column_value_formatted_key column_value_is_inflated_key
      lazy_column_values_loaded_key modified_column_names has_modified_columns
-     set_column_value_modified get_column_value_modified);
+     set_column_value_modified unset_column_value_modified get_column_value_modified);
 
 our %EXPORT_TAGS = 
 (
@@ -23,10 +23,11 @@ our %EXPORT_TAGS =
   set_state   => [ qw(set_state_in_db set_state_loading set_state_saving) ],
   unset_state => [ qw(unset_state_in_db unset_state_loading unset_state_saving) ],
   columns     => [ qw(set_column_value_modified get_column_value_modified 
-                      modified_column_names has_modified_columns) ],
+                      unset_column_value_modified modified_column_names 
+                      has_modified_columns) ],
 );
 
-our $VERSION = '0.73';
+our $VERSION = '0.756';
 
 sub is_in_db   { shift->{STATE_IN_DB()}   }
 sub is_loading { shift->{STATE_LOADING()} }
@@ -50,6 +51,12 @@ sub set_column_value_modified
 {
   my($object, $name) = (shift, shift);
   return $object->{MODIFIED_COLUMNS()}{$name} = 1;
+}
+
+sub unset_column_value_modified
+{
+  my($object, $name) = (shift, shift);
+  return delete $object->{MODIFIED_COLUMNS()}{$name};
 }
 
 sub modified_column_names
@@ -180,6 +187,7 @@ will cause the following function names to be imported:
 
     get_column_value_modified()
     set_column_value_modified()
+    unset_column_value_modified()
     modified_column_names()
     has_modified_columns()
 
@@ -203,6 +211,7 @@ will cause the following function names to be imported:
 
     get_column_value_modified()
     set_column_value_modified()
+    unset_column_value_modified()
     modified_column_names()
     has_modified_columns()
 
@@ -237,6 +246,10 @@ Returns a list containing the names of all the modified columns in OBJECT.
 =item B<set_column_value_modified OBJECT, COLUMN>
 
 Mark the column named COLUMN in OBJECT as modified.
+
+=item B<unset_column_value_modified OBJECT, COLUMN>
+
+Clear the modified mark, if any, on the column named COLUMN in OBJECT.
 
 =item B<set_state_in_db OBJECT>
 
