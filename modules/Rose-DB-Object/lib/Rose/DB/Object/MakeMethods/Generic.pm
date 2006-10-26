@@ -2030,7 +2030,7 @@ sub object_by_key
         my $linked_up = 0;
 
         if(!$fk->requires_preexisting_parent_object || $self->{STATE_IN_DB()})
-        {   
+        {
           # Set the foreign key columns
           while(my($local_column, $foreign_column) = each(%$fk_columns))
           {

@@ -671,6 +671,12 @@ sub update
         return $self || 1  unless(%{$self->{MODIFIED_COLUMNS() || {}}});
         ($sql, $bind, $bind_params) =
           $meta->update_changes_only_sql_with_inlining($self, \@key_columns);
+
+        unless($sql) # skip key-only updates
+        {
+          $self->{MODIFIED_COLUMNS()} = {};
+          return $self || 1;
+        }
       }
       else
       {
@@ -718,6 +724,12 @@ sub update
         return $self || 1  unless(%{$self->{MODIFIED_COLUMNS() || {}}});
 
         my($sql, $bind, $columns) = $meta->update_changes_only_sql($self, \@key_columns, $db);
+
+        unless($sql) # skip key-only updates
+        {
+          $self->{MODIFIED_COLUMNS()} = {};
+          return $self || 1;
+        }
 
         # $meta->prepare_update_options (defunct)
         my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 

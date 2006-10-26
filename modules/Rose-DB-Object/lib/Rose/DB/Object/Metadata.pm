@@ -2943,6 +2943,8 @@ sub update_changes_only_sql
 
   my @modified = map { $self->column($_) } grep { !$key{$_} } keys %{$obj->{MODIFIED_COLUMNS()} || {}};
 
+  return  unless(@modified);
+
   no warnings;
   return ($self->{'update_sql_prefix'}{$db->{'id'}} ||=
     'UPDATE ' . $self->fq_table_sql($db) . " SET \n") .
@@ -3128,6 +3130,8 @@ sub update_changes_only_sql_with_inlining
       }
     }
   }
+
+  return  unless(@updates);
 
   my $i = 0;
 
