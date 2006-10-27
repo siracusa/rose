@@ -230,9 +230,9 @@ sub object_has_related_objects
   my $related_objects = $object->{$self->hash_key};
   my $ref = ref $related_objects;
 
-  if($ref eq 'ARRAY' && @{$related_objects})
+  if($ref eq 'ARRAY')
   {
-    return $related_objects;
+    return @{$related_objects} ? $related_objects : 0;
   }
 
   return $ref ? [ $related_objects ] : 0;

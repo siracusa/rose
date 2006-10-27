@@ -394,13 +394,13 @@ Returns a hash (in list context) or reference to a hash (in scalar context) of c
 
 =item B<has_loaded_related [ NAME | PARAMS ]>
 
-Given a foreign key or relationship name, return true if one or more related have been loaded into the current object, false otherwise.
+Given a foreign key or relationship name, return true if one or more related objects have been loaded into the current object, false otherwise.
 
-If the name is passed as a plain string NAME, then a foreign key with that name is looked up.  If not such foreign key exists, then a relationship with that name is looked up.  If no such relationship or foreign key exists, a fatal error will occur.  Example:
+If the name is passed as a plain string NAME, then a foreign key with that name is looked up.  If no such foreign key exists, then a relationship with that name is looked up.  If no such relationship or foreign key exists, a fatal error will occur.  Example:
 
     $foo->has_loaded_related('bar');
 
-It's generally not a good idea to add a foreign key and a relationships with the same name, but it is technically possible.  To specify the domain of the name, pass the name as the value of a C<foreign_key> or C<relationship> parameter.  Example:
+It's generally not a good idea to add a foreign key and a relationship with the same name, but it is technically possible.  To specify the domain of the name, pass the name as the value of a C<foreign_key> or C<relationship> parameter.  Example:
 
     $foo->has_loaded_related(foreign_key => 'bar');
     $foo->has_loaded_related(relationship => 'bar');

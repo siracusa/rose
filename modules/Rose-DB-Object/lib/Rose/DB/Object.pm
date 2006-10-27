@@ -528,7 +528,12 @@ sub save
 
           my $foreign_object = $fk->object_has_foreign_object($self) || next;
           $Debug && warn "$self - save foreign ", $fk->name, " - $foreign_object\n";
-          $foreign_object->save(%args)  if(Rose::DB::Object::Util::has_modified_columns($foreign_object));
+
+          if(Rose::DB::Object::Util::has_modified_columns($foreign_object) ||
+             Rose::DB::Object::Util::has_modified_children($foreign_object))
+          {
+            $foreign_object->save(%args);
+          }
         }
       }
 
@@ -565,7 +570,12 @@ sub save
           foreach my $related_object (@$related_objects)
           {
             $Debug && warn "$self - save related ", $rel->name, " - $related_object\n";
-            $related_object->save(%args)  if(Rose::DB::Object::Util::has_modified_columns($related_object));
+
+            if(Rose::DB::Object::Util::has_modified_columns($related_object) ||
+               Rose::DB::Object::Util::has_modified_children($related_object))
+            {
+              $related_object->save(%args);
+            }
           }
         }
       }
@@ -668,7 +678,7 @@ sub update
       if($changes_only)
       {
         # No changes to save...
-        return $self || 1  unless(%{$self->{MODIFIED_COLUMNS() || {}}});
+        return $self || 1  unless(%{$self->{MODIFIED_COLUMNS()} || {}});
         ($sql, $bind, $bind_params) =
           $meta->update_changes_only_sql_with_inlining($self, \@key_columns);
 
@@ -721,7 +731,7 @@ sub update
       if($changes_only)
       {
         # No changes to save...
-        return $self || 1  unless(%{$self->{MODIFIED_COLUMNS() || {}}});
+        return $self || 1  unless(%{$self->{MODIFIED_COLUMNS()} || {}});
 
         my($sql, $bind, $columns) = $meta->update_changes_only_sql($self, \@key_columns, $db);
 
