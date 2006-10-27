@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1;
+use Test::More tests => 2;
 
 require 't/test-lib.pl';
 
@@ -116,6 +116,15 @@ EOF
   #$Rose::DB::Object::Manager::Debug = 1;
 
   ok($c->save( cascade => 1, changes_only => 1 ), 'save cascade changes only');
+
+
+  $c = Rose::DB::Object::Manager->get_objects(
+         object_class => 'Clients', 
+         with_objects => 'address')->[0];
+
+  $c->address->street('s2');
+
+  ok($c->save(cascade => 1, changes_only => 1), 'save cascade changes only - loaded with Manager');
 }
 
 END
