@@ -1,4 +1,4 @@
-0.756 (10.26.2006) - John Siracusa <siracusa@mindspring.com>
+0.756 (10.27.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Changed the interaction and behavior of the metadata object's 
       foreign_key_name_generator() method and the convention manager's
@@ -7,6 +7,8 @@
       (Suggested by Graham Barr)
     * Added has_modified_children() has_loaded_related() methods to
       Rose::DB::Object::Util.
+    * Added an init_with_column_value_pairs() helper method.  (Requested
+      by Jonathan Vanasco)
     * Modified child objects are now correctly detected and handled by 
       cascading save().  (Reported by Lucian Dragus)
     * Fixed a bug that caused save(changes_only => 1, cascade => 1) to

@@ -3,7 +3,7 @@
 use strict;
 
 #use Test::LongString;
-use Test::More tests => (74 * 4) + 2;
+use Test::More tests => (78 * 4) + 2;
 
 BEGIN 
 {
@@ -24,7 +24,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 74)  unless($Have{$db_type});
+    skip("$db_type tests", 78)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -206,6 +206,16 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   is_deeply(scalar $o->column_mutator_value_pairs(), 
            { age => 6, id => 2, set_laz => 'Z2', name => 'Alex3' },
            "column_mutator_value_pairs() - $db_type");
+
+  my $c = $class->new(age => 456);    
+  $c->init_with_column_value_pairs({ age => 6, laz => 'Z3', name => 'Alex4' });
+  is($c->get_laz, 'Z3', "init_with_column_value_pairs() 1 - $db_type");
+  is($c->name, 'Alex4', "init_with_column_value_pairs() 2 - $db_type");
+
+  $c = $class->new(age => 456);    
+  $c->init_with_column_value_pairs(age => 6, laz => 'Z4', name => 'Alex5');
+  is($c->get_laz, 'Z4', "init_with_column_value_pairs() 3 - $db_type");
+  is($c->name, 'Alex5', "init_with_column_value_pairs() 4 - $db_type");
 
   if($Have_YAML)
   {

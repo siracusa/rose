@@ -20,7 +20,7 @@ __PACKAGE__->export_tags
        column_value_pairs column_accessor_value_pairs 
        column_mutator_value_pairs 
        column_values_as_yaml column_values_as_json
-       init_with_yaml init_with_json
+       init_with_yaml init_with_json init_with_column_value_pairs
        has_loaded_related) 
   ],
 
@@ -30,7 +30,7 @@ __PACKAGE__->export_tags
     qw(clone clone_and_reset load_or_insert insert_or_update 
        insert_or_update_on_duplicate_key load_speculative
        column_value_pairs column_accessor_value_pairs 
-       column_mutator_value_pairs
+       column_mutator_value_pairs init_with_column_value_pairs
        has_loaded_related)
   ],
 );
@@ -150,6 +150,25 @@ sub init_with_json
   my($self, $json) = @_;
 
   my $hash = JSON::Syck::Load($json);
+  my $meta = $self->meta;
+
+  local $self->{STATE_LOADING()} = 1;
+
+  while(my($column, $value) = each(%$hash))
+  {
+    next  unless(length $column);
+    my $method = $meta->column($column)->mutator_method_name;
+    $self->$method($value);
+  }
+
+  return $self;
+}
+
+sub init_with_column_value_pairs
+{
+  my($self) = shift;
+
+  my $hash = @_ == 1 ? shift : { @_ };
   my $meta = $self->meta;
 
   local $self->{STATE_LOADING()} = 1;
@@ -404,6 +423,21 @@ It's generally not a good idea to add a foreign key and a relationship with the 
 
     $foo->has_loaded_related(foreign_key => 'bar');
     $foo->has_loaded_related(relationship => 'bar');
+
+=item B<init_with_column_value_pairs [ HASH | HASHREF ]>
+
+Initialize an object with a hash or reference to a hash of column/value pairs.  This differs from the inherited L<init|Rose::Object/init> method in that it accepts column names rather than method names.  A column name may not be the same as its mutator method name if the column is L<aliased|Rose::DB::Object::Metadata/alias_column>, for example.
+
+    $p = Person->new; # assume "type" column is aliased to "person_type"
+
+    # init() takes method/value pairs
+    $p->init(person_type => 'cool', age => 30);
+
+    # Helper takes a hashref of column/value pairs
+    $p->init_with_column_value_pairs({ type => 'cool', age => 30 });
+
+    # ...or a hash of column/value pairs
+    $p->init_with_column_value_pairs(type => 'cool', age => 30);
 
 =item B<init_with_json JSON>
 
