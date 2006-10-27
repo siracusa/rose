@@ -1807,7 +1807,7 @@ sub get_objects
                           while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                           {
                             $parent->$method($subobjects);
-                            $parent->{MODIFIED_COLUMNS()} = {};
+                            #$parent->{MODIFIED_COLUMNS()} = {};
                           }
                         }
                       }
