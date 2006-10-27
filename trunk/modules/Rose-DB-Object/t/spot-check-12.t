@@ -2,9 +2,11 @@
 
 use strict;
 
-use Test::More tests => 2;
+use Test::More tests => 5;
 
 require 't/test-lib.pl';
+
+use Rose::DB::Object::Util qw(:children);
 
 #
 # This test was created by Lucian Dragus
@@ -12,7 +14,7 @@ require 't/test-lib.pl';
 
 SKIP:
 {
-  skip('sqlite tests', 1)  unless(have_db('sqlite_admin'));
+  skip('sqlite tests', 5)  unless(have_db('sqlite_admin'));
 
   Rose::DB->default_type('sqlite');
 
@@ -122,9 +124,16 @@ EOF
          object_class => 'Clients', 
          with_objects => 'address')->[0];
 
+  ok(has_loaded_related($c, 'address'), 'has_loaded_related() 1');
+  ok(has_loaded_related(object => $c, relationship => 'address'), 'has_loaded_related() 2');
+
   $c->address->street('s2');
 
   ok($c->save(cascade => 1, changes_only => 1), 'save cascade changes only - loaded with Manager');
+
+  $a = Addresses->new(id => $a->id)->load;
+  
+  is($a->street, 's2', 'save cascade changes only - check');
 }
 
 END

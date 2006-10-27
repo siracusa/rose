@@ -5,7 +5,14 @@
       auto_foreign_key_name() method to avoid some name conflict bugs
       and create a more sensible flow for foreign key naming.
       (Suggested by Graham Barr)
-    * Fixed a bug that causes save(changes_only => 1, cascade => 1) to
+    * Added has_modified_children() has_loaded_related() methods to
+      Rose::DB::Object::Util.
+    * Modified child objects are now correctly detected and handled by 
+      cascading save().  (Reported by Lucian Dragus)
+    * Fixed a bug that caused save(changes_only => 1, cascade => 1) to
+      fail in cases where a child object set a key column valid in the
+      parent object.  (Reported by Lucian Dragus)
+    * Fixed a bug that caused save(changes_only => 1, cascade => 1) to
       fail in cases where a child object set a key column valid in the
       parent object.  (Reported by Lucian Dragus)
     * Fixed a bug in the Manager that cause the with_objects parameter 
