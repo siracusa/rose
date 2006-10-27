@@ -1,4 +1,4 @@
-0.729 (10.25.2006) - John Siracusa <siracusa@mindspring.com>
+0.729 (10.27.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added a description attribute and a clone() method to
       Rose::DB::Registry::Entry.
