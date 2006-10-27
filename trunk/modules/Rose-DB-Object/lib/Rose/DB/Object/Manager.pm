@@ -9,7 +9,8 @@ use Scalar::Util qw(refaddr);
 
 use Rose::DB::Object::Iterator;
 use Rose::DB::Object::QueryBuilder qw(build_select);
-use Rose::DB::Object::Constants qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB);
+use Rose::DB::Object::Constants
+  qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB MODIFIED_COLUMNS);
 
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
@@ -1806,6 +1807,7 @@ sub get_objects
                           while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                           {
                             $parent->$method($subobjects);
+                            $parent->{MODIFIED_COLUMNS()} = {};
                           }
                         }
                       }
@@ -1901,6 +1903,7 @@ sub get_objects
                           {
                             local $subobject->{STATE_LOADING()} = 1;
                             $subobject->$method($map_record);
+                            #$subobject->{MODIFIED_COLUMNS()} = {};
                           }
 
                           $map_record = 0;
@@ -1968,6 +1971,7 @@ sub get_objects
                       {
                         local $parent_object->{STATE_LOADING()} = 1;
                         $parent_object->$method($subobject);
+                        #$parent_object->{MODIFIED_COLUMNS()} = {};
                       }
                     }
                   }
@@ -2023,6 +2027,7 @@ sub get_objects
                       while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                       {
                         $parent->$method($subobjects);
+                        #$parent->{MODIFIED_COLUMNS()} = {};
                       }
                     }
                   }
@@ -2144,11 +2149,13 @@ sub get_objects
                       {
                         local $sub_objects[$bt]->{STATE_LOADING()} = 1;
                         $sub_objects[$bt]->$method($subobject);
+                        #$sub_objects[$bt]->{MODIFIED_COLUMNS()} = {};
                       }
                       else
                       {
                         local $object->{STATE_LOADING()} = 1;
                         $object->$method($subobject);
+                        #$object->{MODIFIED_COLUMNS()} = {};
                       }
                     }
                   }
@@ -2285,6 +2292,7 @@ sub get_objects
                   while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                   {
                     $parent->$method($subobjects);
+                    #$parent->{MODIFIED_COLUMNS()} = {};
                   }
                 }
               }
@@ -2381,6 +2389,7 @@ sub get_objects
                   {
                     local $subobject->{STATE_LOADING()} = 1;
                     $subobject->$method($map_record);
+                    #$subobject->{MODIFIED_COLUMNS()} = {};
                   }
 
                   $map_record = 0;
@@ -2448,6 +2457,7 @@ sub get_objects
               {
                 local $parent_object->{STATE_LOADING()} = 1;
                 $parent_object->$method($subobject);
+                #$parent_object->{MODIFIED_COLUMNS()} = {};
               }
             }
           }
@@ -2486,6 +2496,7 @@ sub get_objects
               while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
               {
                 $parent->$method($subobjects);
+                #$parent->{MODIFIED_COLUMNS()} = {};
               }
             }
           }
@@ -2569,11 +2580,13 @@ sub get_objects
               {
                 local $sub_objects[$bt]->{STATE_LOADING()} = 1;
                 $sub_objects[$bt]->$method($subobject);
+                #$sub_objects[$bt]->{MODIFIED_COLUMNS()} = {};
               }
               else
               {
                 local $object->{STATE_LOADING()} = 1;
                 $object->$method($subobject);
+                #$object->{MODIFIED_COLUMNS()} = {};
               }
             }
           }
@@ -3010,6 +3023,8 @@ sub get_objects_from_sql
         my $method = $methods->{$col};
         $object->$method($val);
       }
+
+      $object->{MODIFIED_COLUMNS()} = {};
 
       push(@objects, $object);
     }

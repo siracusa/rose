@@ -2,19 +2,19 @@
 
 use strict;
 
-use Test::More tests => 5;
+use Test::More tests => 6;
 
 require 't/test-lib.pl';
 
 use Rose::DB::Object::Util qw(:children);
-
+use Rose::DB::Object::Constants qw(MODIFIED_COLUMNS);
 #
 # This test was created by Lucian Dragus
 #
 
 SKIP:
 {
-  skip('sqlite tests', 5)  unless(have_db('sqlite_admin'));
+  skip('sqlite tests', 6)  unless(have_db('sqlite_admin'));
 
   Rose::DB->default_type('sqlite');
 
@@ -123,6 +123,8 @@ EOF
   $c = Rose::DB::Object::Manager->get_objects(
          object_class => 'Clients', 
          with_objects => 'address')->[0];
+
+  ok(!keys %{ $c->{MODIFIED_COLUMNS()} || {} }, 'check modified columns');
 
   ok(has_loaded_related($c, 'address'), 'has_loaded_related() 1');
   ok(has_loaded_related(object => $c, relationship => 'address'), 'has_loaded_related() 2');
