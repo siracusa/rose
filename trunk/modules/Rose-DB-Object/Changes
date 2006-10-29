@@ -1,4 +1,4 @@
-0.756 (10.27.2006) - John Siracusa <siracusa@mindspring.com>
+0.756 (10.28.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Changed the interaction and behavior of the metadata object's 
       foreign_key_name_generator() method and the convention manager's
@@ -27,6 +27,8 @@
       (Patch by Jonathan Vanasco)
     * Setting a fixed-length character column to undef now works
       correctly.
+    * Fixed a bug that caused the benchmark suite to fail under SQLite 
+      due to a mishandling of the query_is_sql Manager parameter.
     * Corrected some typos in the documentation.
 
 0.755 (10.20.2006) - John Siracusa <siracusa@mindspring.com>
