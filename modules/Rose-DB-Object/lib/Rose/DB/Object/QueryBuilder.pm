@@ -191,6 +191,8 @@ sub build_select
 
     my($classes, $meta, $obj_class, $obj_meta);
 
+    $db = $args{'db'};
+
     unless($query_is_sql)
     {
       $classes = $args{'classes'} or 
@@ -198,8 +200,8 @@ sub build_select
 
       $meta = $args{'meta'} || {};
 
-      $db = $args{'db'} or
-        Carp::croak "Missing 'db' arg which is required unless 'query_is_sql' is true";
+      Carp::croak "Missing 'db' arg which is required unless 'query_is_sql' is true"
+        unless($db);
 
       $obj_class = $classes->{$table}
         or Carp::confess "No class name found for table '$table'";
@@ -265,7 +267,7 @@ sub build_select
           push(@select_columns, 
             $obj_meta ? ($obj_meta->column($column)->select_sql($db, $table_alias) . 
                          ' AS ' . $db->auto_quote_column_name("${table_alias}_$column")) :
-            $db ? ($db->auto_quote_column_with_table($column, $table) . 
+            $db ? ($db->auto_quote_column_with_table($column, $table_alias) . 
                    ' AS ' . $db->auto_quote_column_name("${table_alias}_$column")) :
             "$short_column AS ${table_alias}_$column");
         }
@@ -439,10 +441,17 @@ sub build_select
         }
         elsif(!$joins->[$i])
         {
-          #push(@normal_tables, "  $tables_sql->[$i - 1] t$i");
-          push(@normal_tables, '  ' .
-            $db->format_table_with_alias($tables_sql->[$i - 1], "t$i", 
-                                         $joins->[$i]{'hints'}));
+          if($db)
+          {
+            push(@normal_tables, '  ' .
+              $db->format_table_with_alias($tables_sql->[$i - 1], "t$i", 
+                                           $joins->[$i]{'hints'}));
+          }
+          else
+          {
+            push(@normal_tables, "  $tables_sql->[$i - 1] t$i");
+          }
+
           $i++;
           next;
         }
