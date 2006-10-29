@@ -95,7 +95,7 @@ our %Limit_Dialect =
 (
   pg       => 'LimitOffset',
   mysql    => 'LimitXY',
-  sqlite   => 'LimitYX',
+  sqlite   => 'LimitOffset',
   informix => 'First',
 );
 
@@ -695,6 +695,30 @@ sub Prompt
   return $response;
 }
 
+sub Refresh_DBs
+{
+  $Debug && warn "Reconnect to database...\n";
+
+  $DB  = Rose::DB->new;
+  $DBH = Rose::DB->new->retain_dbh;
+
+  if(UNIVERSAL::isa('MyTest::CDBI::Base', 'Class::DBI') &&
+     MyTest::CDBI::Base->can('db_Main'))
+  {
+    my $dbh = MyTest::CDBI::Base->db_Main;
+    $dbh->{'CachedKids'} = {};
+    $dbh->disconnect;
+  }
+
+  if(UNIVERSAL::isa('MyTest::CDBI::Sweet::Base', 'Class::DBI::Sweet') &&
+     MyTest::CDBI::Sweet::Base->can('db_Main'))
+  {
+    my $dbh = MyTest::CDBI::Sweet::Base->db_Main;
+    $dbh->{'CachedKids'} = {};
+    $dbh->disconnect;
+  }
+}
+
 use constant MAX_CODE_NAMES_RANGE => 10;
 use constant MIN_CODE_NAMES       => 1;
 
@@ -813,9 +837,7 @@ sub Insert_Code_Names
     }
     elsif($db->driver eq 'sqlite')
     {
-      print STDERR "RECONNECT...\n";
-      $DB  = Rose::DB->new;
-      $DBH = Rose::DB->new->retain_dbh;
+      Refresh_DBs();
     }
   }
 }
@@ -852,9 +874,7 @@ EOF
 
   if($DB->driver eq 'sqlite')
   {
-    print STDERR "RECONNECT...\n";
-    $DB  = Rose::DB->new;
-    $DBH = Rose::DB->new->retain_dbh;
+    Refresh_DBs();
   }
 }
 
@@ -898,9 +918,7 @@ EOF
 
   if($DB->driver eq 'sqlite')
   {
-    print STDERR "RECONNECT...\n";
-    $DB  = Rose::DB->new;
-    $DBH = Rose::DB->new->retain_dbh;
+    Refresh_DBs();
   }
 }
 
