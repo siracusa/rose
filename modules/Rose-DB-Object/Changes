@@ -1,4 +1,4 @@
-0.756 (10.28.2006) - John Siracusa <siracusa@mindspring.com>
+0.756 (10.29.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Changed the interaction and behavior of the metadata object's 
       foreign_key_name_generator() method and the convention manager's
@@ -29,6 +29,8 @@
       correctly.
     * Fixed a bug that caused the benchmark suite to fail under SQLite 
       due to a mishandling of the query_is_sql Manager parameter.
+    * Altered the CDBI-derived classes to make them work in the test
+      suite under SQLite.
     * Corrected some typos in the documentation.
 
 0.755 (10.20.2006) - John Siracusa <siracusa@mindspring.com>
