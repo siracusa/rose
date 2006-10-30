@@ -100,7 +100,7 @@ our %Limit_Dialect =
 );
 
 # DBIx::Class schema objects
-our($DBIC_Simple_Code_RS, $DBIC_Simple_CodeName_RS, 
+our($Schema, $DBIC_Simple_Code_RS, $DBIC_Simple_CodeName_RS, 
     $DBIC_Simple_Category_RS, $DBIC_Simple_Product_RS,
     $DBIC_Complex_Code_RS, $DBIC_Complex_CodeName_RS,
     $DBIC_Complex_Category_RS, $DBIC_Complex_Product_RS);
@@ -226,12 +226,12 @@ EOF
       require MyTest::DBIC::Simple::Category;
       require MyTest::DBIC::Simple::Product;
 
-      my $schema = MyTest::DBIC::Base->schema_instance;
+      $Schema = MyTest::DBIC::Base->schema_instance;
 
-      $DBIC_Simple_Code_RS     = $schema->resultset('MyTest::DBIC::Simple::Code');      
-      $DBIC_Simple_CodeName_RS = $schema->resultset('MyTest::DBIC::Simple::CodeName');      
-      $DBIC_Simple_Category_RS = $schema->resultset('MyTest::DBIC::Simple::Category');      
-      $DBIC_Simple_Product_RS  = $schema->resultset('MyTest::DBIC::Simple::Product');      
+      $DBIC_Simple_Code_RS     = $Schema->resultset('MyTest::DBIC::Simple::Code');      
+      $DBIC_Simple_CodeName_RS = $Schema->resultset('MyTest::DBIC::Simple::CodeName');      
+      $DBIC_Simple_Category_RS = $Schema->resultset('MyTest::DBIC::Simple::Category');      
+      $DBIC_Simple_Product_RS  = $Schema->resultset('MyTest::DBIC::Simple::Product');      
 
       if($Opt{'complex'} || $Opt{'simple-and-complex'})
       {
@@ -240,10 +240,10 @@ EOF
         require MyTest::DBIC::Complex::Category;
         require MyTest::DBIC::Complex::Product;
 
-        $DBIC_Complex_Code_RS     = $schema->resultset('MyTest::DBIC::Complex::Code');      
-        $DBIC_Complex_CodeName_RS = $schema->resultset('MyTest::DBIC::Complex::CodeName');      
-        $DBIC_Complex_Category_RS = $schema->resultset('MyTest::DBIC::Complex::Category');      
-        $DBIC_Complex_Product_RS  = $schema->resultset('MyTest::DBIC::Complex::Product');   
+        $DBIC_Complex_Code_RS     = $Schema->resultset('MyTest::DBIC::Complex::Code');      
+        $DBIC_Complex_CodeName_RS = $Schema->resultset('MyTest::DBIC::Complex::CodeName');      
+        $DBIC_Complex_Category_RS = $Schema->resultset('MyTest::DBIC::Complex::Category');      
+        $DBIC_Complex_Product_RS  = $Schema->resultset('MyTest::DBIC::Complex::Product');   
       }
 
       #MyTest::DBIC::Base->refresh;
@@ -714,6 +714,13 @@ sub Refresh_DBs
      MyTest::CDBI::Sweet::Base->can('db_Main'))
   {
     my $dbh = MyTest::CDBI::Sweet::Base->db_Main;
+    $dbh->{'CachedKids'} = {};
+    $dbh->disconnect;
+  }
+
+  if($Schema)
+  {
+    my $dbh = $Schema->storage->dbh;
     $dbh->{'CachedKids'} = {};
     $dbh->disconnect;
   }

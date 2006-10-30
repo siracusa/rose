@@ -6,6 +6,8 @@ use Rose::DB;
 
 use base 'Class::DBI';
 
+our $DB;
+
 sub refresh
 {
   no strict;
@@ -26,8 +28,8 @@ sub refresh
     };
   };
 
-  my $db = Rose::DB->new;
-  __PACKAGE__->connection($db->dsn, $db->username, $db->password, scalar $db->connect_options);
+  $DB = Rose::DB->new;
+  __PACKAGE__->connection($DB->dsn, $DB->username, $DB->password, scalar $DB->connect_options);
 }
 
 1;
