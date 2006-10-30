@@ -27,7 +27,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   # Test the subselect limit code
   #Rose::DB::Object::Manager->default_limit_with_subselect(1);
-  
+
   my $db = MyPgObject->init_db;
 
   my $o = MyPgObject->new(db         => $db,
@@ -109,7 +109,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
           date_created => '205-1-2', # invalid date
         ]);
   };
-  
+
   ok($@, "Invalid date - $db_type");
 
   eval
@@ -118,7 +118,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       MyPgObjectManager->get_objectz(
         query => [ flag => [] ]);
   };
-  
+
   ok($@, "Empty list 1 - $db_type");
 
   $objs = 
@@ -2941,7 +2941,7 @@ SKIP: foreach my $db_type ('mysql')
           date_created => '205-1-2', # invalid date
         ]);
   };
-  
+
   ok($@, "Invalid date - $db_type");
 
   eval
@@ -2950,7 +2950,7 @@ SKIP: foreach my $db_type ('mysql')
       MyMySQLObjectManager->get_objectz(
         query => [ flag => [] ]);
   };
-  
+
   ok($@, "Empty list 1 - $db_type");
 
   $objs = 
@@ -3170,7 +3170,7 @@ SKIP: foreach my $db_type ('mysql')
           't1.name'  => { like => '%tt%' },
         ],
         hints => { t1 => { ignore_index => 'rose_db_object_test_idx' } });
-        
+
     $objs = 
       MyMySQLObject->get_objectz(
         object_class => 'MyMySQLObject',
@@ -3181,9 +3181,9 @@ SKIP: foreach my $db_type ('mysql')
           't1.name'  => { like => '%tt%' },
         ],
         hints => { t1 => { ignore_index => 'rose_db_object_test_idx' } });
-  
+
     ok($sql =~ m{\bIGNORE INDEX \(rose_db_object_test_idx\)}, "hints single table - $db_type");
-  
+
     $sql = 
       Rose::DB::Object::Manager->get_objects_sql(
         object_class => 'MyMySQLObject',
@@ -3194,7 +3194,7 @@ SKIP: foreach my $db_type ('mysql')
           't1.name'  => { like => '%tt%' },
         ],
         hints => { ignore_index => 'rose_db_object_test_idx' });
-        
+
     $objs = 
       MyMySQLObject->get_objectz(
         object_class => 'MyMySQLObject',
@@ -3205,9 +3205,9 @@ SKIP: foreach my $db_type ('mysql')
           't1.name'  => { like => '%tt%' },
         ],
         hints => { ignore_index => 'rose_db_object_test_idx' });
-  
+
     ok($sql =~ m{\bIGNORE INDEX \(rose_db_object_test_idx\)}, "hints single table 2 - $db_type");
-  
+
     $sql = 
       Rose::DB::Object::Manager->get_objects_sql(
         object_class => 'MyMySQLObject',
@@ -3218,7 +3218,7 @@ SKIP: foreach my $db_type ('mysql')
           't1.name'  => { like => '%tt%' },
         ],
         hints => { rose_db_object_test => { ignore_index => 'rose_db_object_test_idx' } });
-        
+
     $objs = 
       MyMySQLObject->get_objectz(
         object_class => 'MyMySQLObject',
@@ -3229,7 +3229,7 @@ SKIP: foreach my $db_type ('mysql')
           't1.name'  => { like => '%tt%' },
         ],
         hints => { rose_db_object_test => { ignore_index => 'rose_db_object_test_idx' } });
-  
+
     ok($sql =~ m{\bIGNORE INDEX \(rose_db_object_test_idx\)}, "hints single table 3 - $db_type");
   }
   else
@@ -5711,7 +5711,7 @@ SKIP: foreach my $db_type (qw(informix))
           date_created => '205-1-2', # invalid date
         ]);
   };
-  
+
   ok($@, "Invalid date - $db_type");
 
   eval
@@ -5745,7 +5745,7 @@ SKIP: foreach my $db_type (qw(informix))
         query => [ or => [ flag => 1, status => [] ] ]);
 
   is(scalar @$objs, 4, "Empty list 4 - $db_type");
- 
+
   $objs = 
     MyInformixObjectManager->get_objectz(
       share_db     => 1,
@@ -8398,7 +8398,7 @@ SKIP: foreach my $db_type (qw(sqlite))
                           date_created  => '2004-03-30 12:34:56');
 
   ok($o->save, "object save() 1 - $db_type");
-      
+
   my $objs = 
     MySQLiteObject->get_objectz(
       share_db     => 1,
@@ -8457,7 +8457,7 @@ SKIP: foreach my $db_type (qw(sqlite))
           date_created => '205-1-2', # invalid date
         ]);
   };
-  
+
   ok($@, "Invalid date - $db_type");
 
   eval

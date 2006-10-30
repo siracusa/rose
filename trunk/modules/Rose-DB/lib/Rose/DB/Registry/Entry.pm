@@ -81,7 +81,7 @@ sub dump
     next  unless(defined $value);
     $dump{$attr} = Clone::PP::clone($value);
   }
-  
+
   return \%dump;
 }
 

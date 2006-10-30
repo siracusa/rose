@@ -156,13 +156,13 @@ EOF
       require MyTest::RDBO::Simple::CodeName;
       require MyTest::RDBO::Simple::Category;
       require MyTest::RDBO::Simple::Product;
-  
+
       if($Opt{'simple'} || $Opt{'simple-and-complex'})
       {
         require MyTest::RDBO::Simple::Product::Manager;
         require MyTest::RDBO::Simple::Category::Manager;
       }
-  
+
       if($Opt{'complex'} || $Opt{'simple-and-complex'})
       {
         require MyTest::RDBO::Complex::Code;
@@ -173,7 +173,7 @@ EOF
         require MyTest::RDBO::Complex::Category::Manager;
       }
     }
-    
+
     $DB  = Rose::DB->new;
     $DBH = Rose::DB->new->retain_dbh;
 
@@ -772,7 +772,7 @@ sub Insert_Code_Names
           $sth->execute($i + 1_100_000, "CN 1.1x$n $i")  if($complex);
         }
       }
-  
+
       print '.';
     }
 
@@ -6093,7 +6093,7 @@ END
 
     $dbh->disconnect;
   }
-  
+
   if($Inited_DB{'informix'})
   {
     my $dbh = Rose::DB->new('informix')->retain_dbh()

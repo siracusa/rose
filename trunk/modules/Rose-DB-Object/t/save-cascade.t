@@ -56,46 +56,46 @@ foreach my $db_type (qw(mysql pg informix sqlite))
     $product_class->meta->default_insert_changes_only($i);
 
     # Foreign key
-  
+
     my $p = $product_class->new(name => 'p1', vendor => { name => 'v1' });
     $p->save;
 
     $p = $product_class->new(id => $p->id)->load;
-    
+
     my $v = $p->vendor;
     $v->name('v1.1');
     $p->save(cascade => 1);
-  
+
     $v = $vendor_class->new(id => $v->id)->load;
     is($v->name, 'v1.1', "cascade fk 1.$i - $db_type");
-  
+
     # One-to-many
-  
+
     $p->prices([ { price => 1.23 } ]);
     $p->save;
-  
+
     $p = $product_class->new(id => $p->id)->load;
-    
+
     my $price = $p->prices->[0];
     is($price->price, 1.23, "cascade one-to-many 1.$i - $db_type");
     is($price->region, 'US', "cascade one-to-many 2.$i - $db_type");
     $price->region('UK');
     $p->add_prices({ price => 4.56 });
     $p->save(cascade => 1);
-  
+
     $price = $price_class->new(price_id => $price->price_id)->load;
     is($price->region, 'UK', "cascade one-to-many 3.$i - $db_type");
     $price = (sort { $a->price <=> $b->price } @{$p->prices})[-1];
     is($price->price, 4.56, "cascade one-to-many 4.$i - $db_type");
     is($price->region, 'US', "cascade one-to-many 5.$i - $db_type");
-  
+
     # Many-to-many
-  
+
     $p->colors([ { code => 'f00', name => 'red' } ]);
     $p->save;
-  
+
     $p = $product_class->new(id => $p->id)->load;
-    
+
     my $color = $p->colors->[0];
     is($color->code, 'f00', "cascade many-to-many 1.$i - $db_type");
     is($color->name, 'red', "cascade many-to-many 2.$i - $db_type");
@@ -108,7 +108,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
     $color = (sort { $a->name cmp $b->name } @{$p->colors})[0];
     is($color->code, '0f0', "cascade many-to-many 4.$i - $db_type");
     is($color->name, 'green', "cascade many-to-many 5.$i - $db_type");
-  
+
     $p->dbh->do('DELETE FROM product_colors');
     $p->dbh->do('DELETE FROM colors');
     $p->dbh->do('DELETE FROM prices');
@@ -269,7 +269,7 @@ CREATE TABLE prices
   price       DECIMAL(10,2) NOT NULL,
 
   INDEX(product_id),
-  
+
   FOREIGN KEY (product_id) REFERENCES products (id)
 )
 TYPE=InnoDB

@@ -302,7 +302,7 @@ EOF
 
             my %key_columns;
             @key_columns{@local_columns} = @foreign_columns;
-      
+
             my $fk = 
               Rose::DB::Object::Metadata::ForeignKey->new(
                 name        => $constraint_name,
