@@ -578,6 +578,7 @@ sub perl_columns_definition
     {
       s/^/$indent/mg;
       s/\n\z//;
+      s/^[ \t]+$//mg;
     }
   }
 
@@ -646,7 +647,12 @@ sub perl_foreign_keys_definition
 
   foreach my $fk_def (@fk_defs)
   {
-    $fk_def =~ s/^/$indent_txt/mg;
+    for($fk_def)
+    {
+      s/^/$indent_txt/mg;
+      s/^[ \t]+$//mg;
+    }
+
     $def .= "$fk_def,\n" . ($fk_def eq $fk_defs[-1] ? '' : "\n");
   }
 
@@ -659,6 +665,7 @@ sub perl_foreign_keys_definition
       s/^/$indent_txt/mg;
       s/\n\z//;
       s/\A$indent_txt//;
+      s/^[ \t]+$//mg;
     }
 
     return $def;
@@ -719,7 +726,12 @@ sub perl_relationships_definition
 
   foreach my $rel_def (@rel_defs)
   {
-    $rel_def =~ s/^/$indent_txt/mg;
+    for($rel_def)
+    {
+      s/^/$indent_txt/mg;
+      s/^[ \t]+$//mg;
+    }
+
     $def .= "$rel_def,\n" . ($rel_def eq $rel_defs[-1] ? '' : "\n");
   }
 
@@ -732,6 +744,7 @@ sub perl_relationships_definition
       s/^/$indent_txt/mg;
       s/\n\z//;
       s/\A$indent_txt//;
+      s/^[ \t]+$//mg;
     }
 
     return $def;
@@ -832,6 +845,7 @@ sub perl_unique_keys_definition
       {
         s/^/$indent/mg;
         s/\A$indent//;
+        s/^[ \t]+$//mg;
       }
 
       return $perl;
