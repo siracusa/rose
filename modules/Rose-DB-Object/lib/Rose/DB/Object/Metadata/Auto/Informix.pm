@@ -812,7 +812,7 @@ EOF
           name        => $key_name,
           class       => $foreign_class,
           key_columns => \%key_columns);
-      
+
       push(@foreign_keys, $fk);
       $total_fks++;
     }
@@ -837,7 +837,7 @@ EOF
       {
         $fk->name($name = $self->foreign_key_name_generator->($self, $fk));
       }
-      
+
       unless(defined $name && $name =~ /^\w+$/)
       {
         die "Missing or invalid key name '$name' for foreign key ",

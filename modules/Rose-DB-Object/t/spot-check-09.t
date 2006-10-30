@@ -63,11 +63,11 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
   is($check_foo->foo, 'xyz', "check foo - $db_type");
   is($check_bar->bar, 'some text', "check bar - $db_type");
-  
+
   is($bar_class->meta->relationship('foo')->type, 'one to one', "check foo one to one - $db_type");
   is($bar_class->meta->relationship('foo')->foreign_key, 
      $bar_class->meta->foreign_key('foo'), "check foo fk rel - $db_type");
-  
+
   #foreach my $rel ($bar_class->meta->relationships)
   #{
   #  print $rel->name, ' ', $rel->type, "\n";

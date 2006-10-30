@@ -49,7 +49,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   $class->new(a => 1, b => 2, c => 3)->save;
 
   my $o = $class->new(a => 1, c => 3);
-  
+
   ok($o->load(speculative => 1), "unique key precedence 1 - $db_type");
 }
 
@@ -89,7 +89,7 @@ CREATE TABLE rose_db_object_uk_test
   a    INT,
   b    INT,
   c    INT,
-  
+
   UNIQUE(a, b, c),
   UNIQUE(a, c)
 )
@@ -127,7 +127,7 @@ CREATE TABLE rose_db_object_uk_test
   a    INT,
   b    INT,
   c    INT,
-  
+
   UNIQUE(a, b, c),
   UNIQUE(a, c)
 )
@@ -165,7 +165,7 @@ CREATE TABLE rose_db_object_uk_test
   a    INT,
   b    INT,
   c    INT,
-  
+
   UNIQUE(a, b, c),
   UNIQUE(a, c)
 )
@@ -203,7 +203,7 @@ CREATE TABLE rose_db_object_uk_test
   a    INT,
   b    INT,
   c    INT,
-  
+
   UNIQUE(a, b, c),
   UNIQUE(a, c)
 )

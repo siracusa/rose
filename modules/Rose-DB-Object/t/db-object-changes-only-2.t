@@ -83,9 +83,9 @@ foreach my $db_type (qw(pg mysql informix sqlite))
     include_tables => $Include_Tables);
 
   $loader->make_classes;
-  
+
   my $class = $class_prefix . '::RoseDbObjectTest';
-  
+
   $class->meta->replace_column(c13 => { type => 'epoch' });
   $class->meta->replace_column(c13d => { type => 'epoch', default => 99539509 });
 
@@ -103,23 +103,23 @@ foreach my $db_type (qw(pg mysql informix sqlite))
     {
       skip("column $n", 5)  unless($class->meta->column($col));
     }
-    
+
     next  unless($class->meta->column($col));
 
     my $o = $class->new;
     $o->save;
-    
+
     ok(!has_modified_columns($o), "has_modified_columns $col 1 - $db_type");
 
     $o->$col($Value{$n});
 
     is_deeply([ modified_column_names($o) ], [ $col ], "modified column $col 1 - $db_type");
-    
+
     foreach my $n (14 .. $num_cols)
     {
       my $col = "c$n";
       my $def = "c${n}d";
-      
+
       next  unless($class->meta->column($col));
 
       my $val = $o->$col();
@@ -133,7 +133,7 @@ foreach my $db_type (qw(pg mysql informix sqlite))
     #local $Rose::DB::Object::Debug = 0;
 
     ok(!has_modified_columns($o), "has_modified_columns $col 2 - $db_type");
-    
+
     $o = $class->new(id => $o->id)->load;
 
     if(ref $Default{$n})
@@ -143,9 +143,9 @@ foreach my $db_type (qw(pg mysql informix sqlite))
     else
     {
       my $method = $Method{$n};
-      
+
       my $value;
-      
+
       if(defined $method)
       {
         if(ref $method eq 'CODE')
@@ -161,7 +161,7 @@ foreach my $db_type (qw(pg mysql informix sqlite))
       {
         $value = $o->$def;
       }
-    
+
       if($db_type eq 'mysql' && $n == 2 && $o->db->database_version < 5_000_000)
       {
         $value .= '        '; # MySQL < 5 seems to mess up CHAR fields
@@ -240,7 +240,7 @@ CREATE TABLE rose_db_object_test
   c12d  BIGINT DEFAULT 922337203685,
   c13   INT,
   c13d  INT DEFAULT 99539509,
-  
+
   @{[ $PG_HAS_CHKPASS ? q(c14 CHKPASS, c14d CHKPASS DEFAULT 'xyzzy') : '' ]}
 )
 EOF
@@ -262,7 +262,7 @@ EOF
     local $dbh->{'PrintError'} = 0;
     $dbh->do('DROP TABLE rose_db_object_test');
   };
-  
+
   if(have_db('mysql_admin'))
   {
     my $db  = get_db('mysql_admin');

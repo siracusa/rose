@@ -238,7 +238,7 @@ sub auto_foreign_key_name
   my($self, $f_class, $current_name, $key_columns, $used_names) = @_;
   my $f_meta = $f_class->meta or return $current_name;
   my $name = $self->plural_to_singular($f_meta->table) || $current_name;
-  
+
   if(keys %$key_columns == 1)
   {
     my($local_column, $foreign_column) = %$key_columns;

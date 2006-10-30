@@ -535,7 +535,7 @@ sub auto_load_locales
   my($self_or_class) = shift;
 
   my $class = ref($self_or_class) || $self_or_class;
-  
+
   if(@_)
   {
     my $locales = (@_ == 1 && ref $_[0] eq 'ARRAY') ? [ @{$_[0]} ] : [ @_ ];
@@ -544,7 +544,7 @@ sub auto_load_locales
 
   my $locales = $class->_auto_load_locales;
   return wantarray ? @$locales : $locales  if(defined $locales);
-  
+
   if(my $locales = $ENV{'RHTMLO_LOCALES'})
   {
     $locales = [ split(/\s*,\s*/, $locales) ]  unless(ref $locales);
@@ -558,17 +558,17 @@ sub auto_load_locales
 sub auto_load_messages
 {
   my($self_or_class) = shift;
-  
+
   my $class = ref($self_or_class) || $self_or_class;
-  
+
   if(@_)
   {
     return $class->_auto_load_messages(@_);
   }
-  
+
   my $ret = $class->_auto_load_messages;
   return $ret  if(defined $ret);
-  
+
   if(($ENV{'MOD_PERL'} && (!defined($ENV{'RHTMLO_PRIME_CACHES'}) || $ENV{'RHTMLO_PRIME_CACHES'})) ||
      $ENV{'RHTMLO_PRIME_CACHES'})
   {
@@ -611,7 +611,7 @@ sub load_all_messages
 sub load_messages_from_file
 {
   my($class) = shift;
-  
+
   my %args;
   if(@_ == 1)
   {
@@ -634,7 +634,7 @@ sub load_messages_from_file
 sub load_messages_from_fh
 {
   my($self, %args) = @_;
-  
+
   my($fh, $locales, $msg_names) = @args{qw(fh locales names)};
 
   if(ref $locales eq 'ARRAY')

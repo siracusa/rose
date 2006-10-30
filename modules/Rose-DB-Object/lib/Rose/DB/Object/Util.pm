@@ -96,7 +96,7 @@ sub has_loaded_related
 sub has_modified_children
 {
   my($self) = shift;
-  
+
   my $meta = $self->meta;
 
   foreach my $fk ($meta->foreign_keys)

@@ -175,10 +175,10 @@ sub registered_domains
 sub dump
 {
   my($self) = shift;
-  
+
   my $entries = $self->hash;
   my %reg;
-  
+
   foreach my $domain ($self->registered_domains)
   {
     foreach my $type ($self->registered_types($domain))
@@ -186,7 +186,7 @@ sub dump
       $reg{$domain}{$type} = $entries->{$domain}{$type}->dump;
     }
   }
-  
+
   return \%reg;
 }
 
@@ -291,7 +291,7 @@ Returns a reference to a hash containing information about all registered data s
           host     => ...,
           ...
         },
-        
+
         type2 =>
         {
           ...

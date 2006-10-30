@@ -459,7 +459,7 @@ sub auto_generate_foreign_keys
       {
         $fk{$fk_info->{'UK_NAME'}}{'name'} = $key_name;
       }
-      
+
       $total_fks++;
     }
 

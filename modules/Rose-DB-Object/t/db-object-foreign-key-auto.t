@@ -367,17 +367,17 @@ $chkpass        name          => { type => 'varchar', length => 32, not_null => 
             class       => 'MyPgOtherObject2',
             key_columns => { fother_id2 => 'id2' },
         },
-    
+
         fother2 => {
             class       => 'MyPgOtherObject3',
             key_columns => { fother_id3 => 'id3' },
         },
-    
+
         fother3 => {
             class       => 'MyPgOtherObject4',
             key_columns => { fother_id4 => 'id4' },
         },
-    
+
         my_pg_other_object => {
             class       => 'MyPgOtherObject',
             key_columns => {
@@ -516,17 +516,17 @@ $chkpass        name          => { type => 'varchar', length => 32, not_null => 
             class       => 'MyPgOtherObject2',
             key_columns => { fother_id2 => 'id2' },
         },
-    
+
         fother2 => {
             class       => 'MyPgOtherObject3',
             key_columns => { fother_id3 => 'id3' },
         },
-    
+
         fother3 => {
             class       => 'MyPgOtherObject4',
             key_columns => { fother_id4 => 'id4' },
         },
-    
+
         my_pg_other_object => {
             class       => 'MyPgOtherObject',
             key_columns => {
@@ -1547,17 +1547,17 @@ __PACKAGE__->meta->setup(
             class       => 'MySQLiteOtherObject2',
             key_columns => { fother_id2 => 'id2' },
         },
-    
+
         fother2 => {
             class       => 'MySQLiteOtherObject3',
             key_columns => { fother_id3 => 'id3' },
         },
-    
+
         fother3 => {
             class       => 'MySQLiteOtherObject4',
             key_columns => { fother_id4 => 'id4' },
         },
-    
+
         my_sqlite_other_object => {
             class       => 'MySQLiteOtherObject',
             key_columns => {
@@ -1692,17 +1692,17 @@ __PACKAGE__->meta->setup(
             class       => 'MySQLiteOtherObject2',
             key_columns => { fother_id2 => 'id2' },
         },
-    
+
         fother2 => {
             class       => 'MySQLiteOtherObject3',
             key_columns => { fother_id3 => 'id3' },
         },
-    
+
         fother3 => {
             class       => 'MySQLiteOtherObject4',
             key_columns => { fother_id4 => 'id4' },
         },
-    
+
         my_sqlite_other_object => {
             class       => 'MySQLiteOtherObject',
             key_columns => {

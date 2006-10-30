@@ -91,7 +91,7 @@ foreach my $db_type (qw(pg mysql informix sqlite))
   $loader->make_modules(module_dir   => $Lib_Dir,
                         braces       => 'bsd',
                         indent       => 2);
-  
+
   is(slurp("$Lib_Dir/$class_prefix/Product.pm"), <<"EOF", "Product 1 - $db_type");
 package ${class_prefix}::Product;
 
@@ -138,7 +138,7 @@ __PACKAGE__->meta->setup
       map_to        => 'color',
       type          => 'many to many',
     },
-  
+
     prices => 
     {
       class      => '${class_prefix}::Price',
@@ -196,7 +196,7 @@ EOF
   # Test actual code by running external script with db type arg
 
   my($ok, $script_fh);
-  
+
   # Perl 5.8.x and later support the FILEHANDLE,MODE,EXPR,LIST form of 
   # open, but not (apparently) on Windows
   if($Config{'version'} =~ /^5\.([89]|10)\./ && $^O !~ /Win32/i)
@@ -268,7 +268,7 @@ CREATE TABLE products
   id        SERIAL NOT NULL PRIMARY KEY,
   name      VARCHAR(255),
   vendor_id INT NOT NULL REFERENCES vendors (id),
-  
+
   UNIQUE(name, vendor_id),
   UNIQUE(name)
 )
@@ -348,7 +348,7 @@ EOF
     have_db(mysql_admin => 0);
     have_db(mysql => 0);
   }
-  
+
   if(have_db('mysql_admin'))
   {
     my $dbh = get_dbh('mysql_admin');
@@ -374,7 +374,7 @@ CREATE TABLE products
   UNIQUE(name),
 
   INDEX(vendor_id),
-  
+
   FOREIGN KEY (vendor_id) REFERENCES vendors (id)
 )
 TYPE=InnoDB
@@ -401,10 +401,10 @@ CREATE TABLE product_colors
   id           INT AUTO_INCREMENT PRIMARY KEY,
   product_id   INT NOT NULL,
   color_code   CHAR(3) NOT NULL,
-  
+
   INDEX(product_id),
   INDEX(color_code),
-  
+
   FOREIGN KEY (product_id) REFERENCES products (id),
   FOREIGN KEY (color_code) REFERENCES colors (code)
 )
@@ -456,7 +456,7 @@ CREATE TABLE products
   id        SERIAL NOT NULL PRIMARY KEY,
   name      VARCHAR(255),
   vendor_id INT NOT NULL REFERENCES vendors (id),
-  
+
   UNIQUE(name, vendor_id),
   UNIQUE(name)
 )
@@ -526,7 +526,7 @@ CREATE TABLE products
   id        INTEGER PRIMARY KEY AUTOINCREMENT,
   name      VARCHAR(255),
   vendor_id INT NOT NULL REFERENCES vendors (id),
-  
+
   UNIQUE(name, vendor_id),
   UNIQUE(name)
 )
@@ -584,7 +584,7 @@ END
   {
     File::Path::rmtree($Lib_Dir, 0, 1);
   }
-  
+
   # Delete test tables
 
   if(have_db('pg_admin'))
