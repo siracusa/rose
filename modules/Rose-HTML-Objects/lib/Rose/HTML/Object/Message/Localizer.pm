@@ -12,7 +12,7 @@ use Rose::HTML::Object::Messages();
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.541';
+our $VERSION = '0.542';
 
 our $Debug = 0;
 
@@ -610,7 +610,7 @@ sub load_all_messages
 
 sub load_messages_from_file
 {
-  my($class) = shift;
+  my($self) = shift;
 
   my %args;
   if(@_ == 1)
@@ -627,7 +627,7 @@ sub load_messages_from_file
   my $file = delete $args{'file'} or croak "Missing file argument";
 
   open($args{'fh'}, $file) or croak "Could no open messages file '$file' - $!";
-  $class->load_messages_from_fh(%args);
+  $self->load_messages_from_fh(%args);
   close($args{'fh'});
 }
 

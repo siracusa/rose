@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 58;
+use Test::More tests => 62;
 
 BEGIN 
 {
@@ -379,3 +379,42 @@ is($field->xhtml_field,
   qq(<option value="cherry">Cherry</option>\n) .
   qq(</optgroup>),
   'xhtml_field() 2');
+
+my $id = ref($field)->localizer->add_localized_message( 
+  name => 'ORANGE_LABEL',
+  text => 
+  {
+    en => 'Orange EN',
+    xx => 'Le Orange',
+  });
+
+$field->option('orange')->label_id($id);
+
+is($field->option('orange')->label->as_string, 'Orange EN', 'localized label 1');
+is($field->xhtml_field, 
+  qq(<optgroup disabled="disabled" label="Fruits">\n) .
+  qq(<option label="1.0" value="apple">Apple</option>\n) .
+  qq(<option value="orange">Orange EN</option>\n) .
+  qq(<option value="grape">Grape</option>\n) .
+  qq(<option value="pear">Pear</option>\n) .
+  qq(<option value="berry">Berry</option>\n) .
+  qq(<option value="squash">Squash</option>\n) .
+  qq(<option value="cherry">Cherry</option>\n) .
+  qq(</optgroup>),
+  'localized label 2');
+
+$field->localizer->locale('xx');
+
+is($field->option('orange')->label->as_string, 'Le Orange', 'localized label 3');
+is($field->xhtml_field, 
+  qq(<optgroup disabled="disabled" label="Fruits">\n) .
+  qq(<option label="1.0" value="apple">Apple</option>\n) .
+  qq(<option value="orange">Le Orange</option>\n) .
+  qq(<option value="grape">Grape</option>\n) .
+  qq(<option value="pear">Pear</option>\n) .
+  qq(<option value="berry">Berry</option>\n) .
+  qq(<option value="squash">Squash</option>\n) .
+  qq(<option value="cherry">Cherry</option>\n) .
+  qq(</optgroup>),
+  'localized label 4');
+  
