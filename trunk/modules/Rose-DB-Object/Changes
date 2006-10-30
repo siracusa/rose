@@ -12,13 +12,10 @@
     * Modified child objects are now correctly detected and handled by 
       cascading save().  (Reported by Lucian Dragus)
     * Fixed a bug that caused save(changes_only => 1, cascade => 1) to
-      fail in cases where a child object set a key column valid in the
-      parent object.  (Reported by Lucian Dragus)
-    * Fixed a bug that caused save(changes_only => 1, cascade => 1) to
-      fail in cases where a child object set a key column valid in the
-      parent object.  (Reported by Lucian Dragus)
-    * Fixed a bug in the Manager that cause the with_objects parameter 
-      to be ignored when the count_only parameter is set.  (Reported
+      fail in cases where a child object set a key column in the parent
+      object.  (Reported by Lucian Dragus)
+    * Fixed a bug in the Manager that caused the with_objects parameter 
+      to be ignored when the count_only parameter was set.  (Reported
       by Uwe Voelker)
     * The column_values_as_*() helper methods no longer require the 
       column_value_pairs() helper to also be imported.  (Reported
