@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 47;
+use Test::More tests => 51;
 
 BEGIN 
 {
@@ -300,3 +300,38 @@ is($field->html_field,
   qq(<input name="fruits" type="checkbox" value="squash"> <label>Squash</label><br>\n) .
   qq(<input name="fruits" type="checkbox" value="cherry"> <label>Cherry</label>),
   'reset() 4');
+
+my $id = ref($field)->localizer->add_localized_message( 
+  name => 'ORANGE_LABEL',
+  text => 
+  {
+    en => 'Orange EN',
+    xx => 'Le Orange',
+  });
+
+$field->checkbox('orange')->label_id($id);
+
+is($field->checkbox('orange')->label->as_string, 'Orange EN', 'localized label 1');
+is($field->html_field, 
+  qq(<input name="fruits" type="checkbox" value="apple"> <label>Apple</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="orange"> <label>Orange EN</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="grape"> <label>Grape</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="pear"> <label>Pear</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="berry"> <label>Berry</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="squash"> <label>Squash</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="cherry"> <label>Cherry</label>),
+  'localized label 2');
+
+$field->localizer->locale('xx');
+
+is($field->checkbox('orange')->label->as_string, 'Le Orange', 'localized label 3');
+is($field->html_field, 
+  qq(<input name="fruits" type="checkbox" value="apple"> <label>Apple</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="orange"> <label>Le Orange</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="grape"> <label>Grape</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="pear"> <label>Pear</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="berry"> <label>Berry</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="squash"> <label>Squash</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="cherry"> <label>Cherry</label>),
+  'localized label 4');
+  

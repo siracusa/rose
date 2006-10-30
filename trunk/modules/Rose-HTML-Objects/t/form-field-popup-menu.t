@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 35;
+use Test::More tests => 39;
 
 BEGIN 
 {
@@ -201,3 +201,41 @@ is($field->html_field,
 eval { $field->input_value([ 'apple', 'cherry' ]) };
 
 ok($@, 'multiple values');
+
+my $id = ref($field)->localizer->add_localized_message( 
+  name => 'ORANGE_LABEL',
+  text => 
+  {
+    en => 'Orange EN',
+    xx => 'Le Orange',
+  });
+
+$field->option('orange')->label_id($id);
+
+is($field->option('orange')->label->as_string, 'Orange EN', 'localized label 1');
+is($field->html_field, 
+  qq(<select name="fruits" size="1">\n) .
+  qq(<option selected value="apple">Apple</option>\n) .
+  qq(<option value="orange">Orange EN</option>\n) .
+  qq(<option value="grape">Grape</option>\n) .
+  qq(<option value="pear">Pear</option>\n) .
+  qq(<option value="berry">Berry</option>\n) .
+  qq(<option value="squash">Squash</option>\n) .
+  qq(<option value="cherry">Cherry</option>\n) .
+  qq(</select>),
+  'localized label 2');
+
+$field->localizer->locale('xx');
+
+is($field->option('orange')->label->as_string, 'Le Orange', 'localized label 3');
+is($field->html_field, 
+  qq(<select name="fruits" size="1">\n) .
+  qq(<option selected value="apple">Apple</option>\n) .
+  qq(<option value="orange">Le Orange</option>\n) .
+  qq(<option value="grape">Grape</option>\n) .
+  qq(<option value="pear">Pear</option>\n) .
+  qq(<option value="berry">Berry</option>\n) .
+  qq(<option value="squash">Squash</option>\n) .
+  qq(<option value="cherry">Cherry</option>\n) .
+  qq(</select>),
+  'localized label 4');

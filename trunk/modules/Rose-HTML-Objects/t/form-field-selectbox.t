@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 74;
+use Test::More tests => 78;
 
 BEGIN 
 {
@@ -456,3 +456,50 @@ is(join("\n", map { $_->xhtml } $field->hidden_fields),
   qq(<input name="fruits" type="hidden" value="apple" />\n) .
   qq(<input name="fruits" type="hidden" value="juji" />),
   'option group hidden_fields() xhtml');
+
+my $id = ref($field)->localizer->add_localized_message( 
+  name => 'ORANGE_LABEL',
+  text => 
+  {
+    en => 'Orange EN',
+    xx => 'Le Orange',
+  });
+
+$field->option('orange')->label_id($id);
+
+is($field->option('orange')->label->as_string, 'Orange EN', 'localized label 1');
+is($field->html_field, 
+  qq(<select multiple name="fruits" size="6">\n) .
+  qq(<option label="1.0" selected value="apple">Apple</option>\n) .
+  qq(<option value="orange">Orange EN</option>\n) .
+  qq(<option value="grape">Grape</option>\n) .
+  qq(<option value="pear">Pear</option>\n) .
+  qq(<option value="berry">Berry</option>\n) .
+  qq(<option value="squash">Squash</option>\n) .
+  qq(<option value="cherry">Cherry</option>\n) .
+  qq(<optgroup label="Group1">\n) .
+  qq(<option selected value="juji">Juji</option>\n) .
+  qq(<option label="2.1" value="peach">Peach</option>\n) .
+  qq(</optgroup>\n) .
+  qq(</select>),
+  'localized label 2');
+
+$field->localizer->locale('xx');
+
+is($field->option('orange')->label->as_string, 'Le Orange', 'localized label 3');
+is($field->html_field, 
+  qq(<select multiple name="fruits" size="6">\n) .
+  qq(<option label="1.0" selected value="apple">Apple</option>\n) .
+  qq(<option value="orange">Le Orange</option>\n) .
+  qq(<option value="grape">Grape</option>\n) .
+  qq(<option value="pear">Pear</option>\n) .
+  qq(<option value="berry">Berry</option>\n) .
+  qq(<option value="squash">Squash</option>\n) .
+  qq(<option value="cherry">Cherry</option>\n) .
+  qq(<optgroup label="Group1">\n) .
+  qq(<option selected value="juji">Juji</option>\n) .
+  qq(<option label="2.1" value="peach">Peach</option>\n) .
+  qq(</optgroup>\n) .
+  qq(</select>),
+  'localized label 4');
+  

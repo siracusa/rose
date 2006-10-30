@@ -2,6 +2,8 @@ package Rose::HTML::Form::Field::OnOff::Selectable;
 
 use strict;
 
+use Scalar::Defer;
+
 use Rose::HTML::Form::Field::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::OnOff);
 

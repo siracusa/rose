@@ -9,7 +9,7 @@ use Rose::HTML::Util();
 use Rose::HTML::Form::Field;
 our @ISA = qw(Rose::HTML::Form::Field);
 
-our $VERSION = '0.52';
+our $VERSION = '0.542';
 
 our $Debug = undef;
 
@@ -140,6 +140,13 @@ sub _args_to_items
     foreach my $item (@$items)
     {
       $item->parent_field($parent);
+    }
+  }
+  else # If there is no grandparent, at least set the localizer
+  {
+    foreach my $item (@$items)
+    {
+      $item->localizer($self->localizer);
     }
   }
 

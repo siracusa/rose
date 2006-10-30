@@ -1,3 +1,8 @@
+0.542 (10.30.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed localization inheritence for checkboxes, options, and
+      other nested, labeled elements.
+
 0.541 (10.20.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added German localization, translated by Uwe Voelker.
