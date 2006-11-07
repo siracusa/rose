@@ -19,7 +19,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.729';
+our $VERSION = '0.730';
 
 our $Debug = 0;
 
@@ -2434,11 +2434,13 @@ Get or set the L<DBI> connect options hash.  If a reference to a hash is passed,
 
 Returns a reference to the connect options has in scalar context, or a list of name/value pairs in list context.
 
-=item B<dbh>
+=item B<dbh [DBH]>
 
-Returns the L<DBI> database handle connected to the current data source.  If the database handle does not exist or is not already connected, this method will do everything necessary to do so.
+Get or set the L<DBI> database handle connected to the current data source.  If the database handle does not exist or is not already connected, this method will do everything necessary to do so.
 
 Returns undef if the database handle could not be constructed and connected.  If there is no registered data source for the current C<type> and C<domain>, a fatal error will occur.
+
+Note: when setting this attribute, you I<must> pass in a L<DBI> database handle that has the same L<driver|/driver> as the object.  For example, if the L<driver|/driver> is C<mysql> then the L<DBI> database handle must be connected to a MySQL database.  Passing in a mismatched database handle will cause a fatal error.
 
 =item B<disconnect>
 

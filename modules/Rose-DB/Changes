@@ -1,3 +1,7 @@
+0.730 (11.07.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Documented the ability to set the dbh().
+      
 0.729 (10.29.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added a description attribute and a clone() method to
