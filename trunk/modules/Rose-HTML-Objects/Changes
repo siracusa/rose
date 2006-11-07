@@ -1,4 +1,4 @@
-0.542 (10.30.2006) - John Siracusa <siracusa@mindspring.com>
+0.542 (11.07.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed localization inheritence for checkboxes, options, and
       other nested, labeled elements.
