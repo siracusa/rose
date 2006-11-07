@@ -20,7 +20,7 @@ SKIP:
 {
   if($@)
   {
-     skip("datetime tests: could not load Rose::DateTime::Util", 1);
+    skip("datetime tests: could not load Rose::DateTime::Util", 1);
   }
 
   require Person2;
