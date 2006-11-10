@@ -37,7 +37,7 @@ eval { $dbh = $db->dbh };
 
 SKIP:
 {
-  skip("Could not connect to db - $@", 7)  if($@);
+  skip("Could not connect to db - $@", 8)  if($@);
 
   ok($dbh, 'dbh() 1');
 
@@ -52,6 +52,15 @@ SKIP:
     is($db2->$field(), $db->$field(), "$field()");
   }
 
+  if($db->dbh->{'ix_ProductVersion'} >= 1000)
+  {
+    ok($db->supports_limit_with_offset, 'supports_limit_with_offset');
+  }
+  else
+  {
+    ok(!$db->supports_limit_with_offset, 'supports_limit_with_offset');
+  }
+
   $db->disconnect;
   $db2->disconnect;
 }
@@ -61,15 +70,6 @@ $db = My::DB2->new();
 ok(ref $db && $db->isa('Rose::DB'), "new()");
 
 $db->init_db_info;
-
-if($db->dbh->{'ix_ProductVersion'} >= 1000)
-{
-  ok($db->supports_limit_with_offset, 'supports_limit_with_offset');
-}
-else
-{
-  ok(!$db->supports_limit_with_offset, 'supports_limit_with_offset');
-}
 
 ok($db->validate_timestamp_keyword('today'), 'validate_timestamp_keyword (today)');
 ok($db->validate_timestamp_keyword('current'), 'validate_timestamp_keyword (current)');
@@ -179,7 +179,7 @@ ok(@$s == 2 && $s->[0] eq 'a' && $s->[1] eq 'b', 'parse_set() 1');
 SKIP:
 {
   eval { $db->connect };
-  skip("Could not connect to db 'test', 'informix' - $@", 27)  if($@);
+  skip("Could not connect to db 'test', 'informix' - $@", 37)  if($@);
   $dbh = $db->dbh;
 
   is($db->domain, 'test', "domain()");
