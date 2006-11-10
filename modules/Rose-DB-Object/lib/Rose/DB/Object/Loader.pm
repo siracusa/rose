@@ -50,6 +50,7 @@ use Rose::Object::MakeMethods::Generic
     'with_managers'     => { default => 1 },
     'with_foreign_keys' => { default => 1 },
     'with_unique_keys'  => { default => 1 },
+    'convention_manager_was_set' => { default => 0 },
   ],
 );
 
@@ -90,8 +91,9 @@ sub generate_db_base_class_name
 
 sub generate_manager_class_name
 {
-  my($self, $object_class) = @_;
-  return $self->convention_manager->auto_manager_class_name($object_class);
+  my($self, $object_class, $cm) = @_;
+  return $cm ? $cm->auto_manager_class_name($object_class) :
+    $self->convention_manager->auto_manager_class_name($object_class);
 }
 
 sub base_classes
@@ -221,9 +223,11 @@ sub convention_manager
 
       $self->{'convention_manager'} = $cm->new;
     }
+
+    $self->convention_manager_was_set(1);
   }
 
-  return $self->{'convention_manager'};
+  return $self->{'convention_manager'} ||= Rose::DB::Object::ConventionManager->new;
 }
 
 sub class_prefix
@@ -790,9 +794,23 @@ sub make_classes
     }
   }
 
-  my $cm = $self->convention_manager ||
-           $base_classes[0]->meta->convention_manager ||
-           die "Missing convention manager";
+  my $cm;
+  
+  # XXX: Lame way to check if the convention_manager attribute has
+  # XXX: been set or fetched.
+  if($self->{'convention_manager'})
+  {
+    $cm = $self->convention_manager;
+  }
+  else
+  {
+    $cm = $base_classes[0]->meta->convention_manager;
+    $self->convention_manager($cm);
+  }
+
+  die "Missing convention manager"  unless($cm);
+
+  $self->convention_manager($cm);
 
   my @classes;
 
@@ -875,7 +893,7 @@ sub make_classes
     # Make the manager class
     if($with_managers)
     {
-      my $mgr_class   = $self->generate_manager_class_name($obj_class);
+      my $mgr_class   = $self->generate_manager_class_name($obj_class, $cm);
 
       $meta->make_manager_class(
         class     => $mgr_class,
@@ -1101,9 +1119,9 @@ Get or set the prefix affixed to all class names created by the L<make_classes|/
 
 =item B<convention_manager [ CLASS | MANAGER ]>
 
-Get or set the L<Rose::DB::Object::ConventionManager>-derived class name or object to be used during the L<auto-initialization|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> process for each class created by the L<make_classes|/make_classes> method.  Returns a L<Rose::DB::Object::ConventionManager>-derived object.
+Get or set the L<Rose::DB::Object::ConventionManager>-derived class name or object to be used during the L<auto-initialization|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> process for each class created by the L<make_classes|/make_classes> method.  Returns a L<Rose::DB::Object::ConventionManager>-derived object, which defaults to a new L<Rose::DB::Object::ConventionManager> object.
 
-If left undefined, then the convention manager object used by L<make_classes|/make_classes> will be produced by calling the L<convention_manager|Rose::DB::Object::Metadata/convention_manager> method of the metadata object of the first (left-most) L<base class|/base_classes>.
+Unless this attribute is explicitly set and/or fetched before the call to  the L<make_classes|/make_classes> method, the convention manager object used by L<make_classes|/make_classes> will be produced by calling the L<convention_manager|Rose::DB::Object::Metadata/convention_manager> method of the metadata object of the first (left-most) L<base class|/base_classes>.
 
 =item B<db [DB]>
 
@@ -1155,9 +1173,9 @@ Get or set a reference to a subroutine that takes a single table name argument a
 
 This attribute should not be combined with the L<exclude_tables|/exclude_tables> or L<include_tables|/include_tables> attributes.
 
-=item B<generate_manager_class_name CLASS>
+=item B<generate_manager_class_name CLASS [, CM]>
 
-Given the name of a L<Rose::DB::Object>-derived class, returns a class name for a L<Rose::DB::Object::Manager>-derived class to manage such objects.  The default implementation calls the L<auto_manager_class_name|Rose::DB::Object::ConventionManager/auto_manager_class_name> method on the L<convention_manager|/convention_manager> object.
+Given the name of a L<Rose::DB::Object>-derived class, returns a class name for a L<Rose::DB::Object::Manager>-derived class to manage such objects.  The default implementation calls the L<auto_manager_class_name|Rose::DB::Object::ConventionManager/auto_manager_class_name> method on the convention manager object passed as the optional CM argument, or returned from the L<convention_manager|/convention_manager> method if a CM argument is not passed. 
 
 =item B<include_tables [ REGEX | ARRAYREF ]>
 
