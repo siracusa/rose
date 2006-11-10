@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.756';
+our $VERSION = '0.757';
 
 our $Debug = 0;
 
@@ -52,7 +52,6 @@ sub meta
 
   return $Rose::DB::Object::Metadata::Objects{$self} || 
          $self->meta_class->for_class($self);
-  return $self->meta_class->for_class($self);
 }
 
 #
@@ -1747,7 +1746,7 @@ Metadata objects can be populated manually or automatically.  Both techniques ar
 
 =head2 Inheritance
 
-Simple inheritance between L<Rose::DB::Object>-derived classes is supported.  The first time the L<metadata object|/meta> for a given class is accessed, it is created by making a one-time "deep copy" of the base class's metadata object.  This includes all columns, relationships, foreign keys, and other metadata from the base class.  From that point on, the subclass may add to or modify its metadata without affecting any other class.
+Simple inheritance between L<Rose::DB::Object>-derived classes is supported.  The first time the L<metadata object|/meta> for a given class is accessed, it is created by making a one-time "deep copy" of the base class's metadata object (as long that the base class has one or more L<columns|Rose::DB::Object::Metadata/columns> set).  This includes all columns, relationships, foreign keys, and other metadata from the base class.  From that point on, the subclass may add to or modify its metadata without affecting any other class.
 
 B<Tip:> When using perl 5.8.0 or later, the L<Scalar::Util::Clone> module is highly recommended.  If it's installed, it will be used to more efficiently clone base-class metadata objects.
 

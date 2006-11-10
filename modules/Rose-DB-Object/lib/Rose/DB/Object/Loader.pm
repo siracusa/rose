@@ -16,7 +16,7 @@ use Rose::DB::Object::Metadata::Util qw(perl_hashref);
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.753';
+our $VERSION = '0.757';
 
 our $Debug = 0;
 
@@ -223,7 +223,7 @@ sub convention_manager
     }
   }
 
-  return $self->{'convention_manager'} ||= Rose::DB::Object::ConventionManager->new;
+  return $self->{'convention_manager'};
 }
 
 sub class_prefix
@@ -790,7 +790,9 @@ sub make_classes
     }
   }
 
-  my $cm = $self->convention_manager or die "Missing convention manager";
+  my $cm = $self->convention_manager ||
+           $base_classes[0]->meta->convention_manager ||
+           die "Missing convention manager";
 
   my @classes;
 
@@ -1099,7 +1101,9 @@ Get or set the prefix affixed to all class names created by the L<make_classes|/
 
 =item B<convention_manager [ CLASS | MANAGER ]>
 
-Get or set the L<Rose::DB::Object::ConventionManager>-derived class name or object to be used during the L<auto-initialization|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> process for each class created by the L<make_classes|/make_classes> method.  Returns a L<Rose::DB::Object::ConventionManager>-derived object, which defaults to a new L<Rose::DB::Object::ConventionManager> object.
+Get or set the L<Rose::DB::Object::ConventionManager>-derived class name or object to be used during the L<auto-initialization|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> process for each class created by the L<make_classes|/make_classes> method.  Returns a L<Rose::DB::Object::ConventionManager>-derived object.
+
+If left undefined, then the convention manager object used by L<make_classes|/make_classes> will be produced by calling the L<convention_manager|Rose::DB::Object::Metadata/convention_manager> method of the metadata object of the first (left-most) L<base class|/base_classes>.
 
 =item B<db [DB]>
 
