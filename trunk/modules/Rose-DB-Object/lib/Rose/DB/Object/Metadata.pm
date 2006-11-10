@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.756';
+our $VERSION = '0.757';
 
 our $Debug = 0;
 
@@ -250,6 +250,12 @@ sub clone
   return $meta;
 }
 
+sub allow_inheritance_from_meta
+{
+  my($class, $meta) = @_;
+  return $meta->num_columns > 0 ? 1 : 0;
+}
+
 sub for_class
 {
   my($meta_class, $class) = (shift, shift);
@@ -258,11 +264,10 @@ sub for_class
   # Clone an ancestor meta object
   foreach my $parent_class (__get_parents($class))
   {
-    # Don't clone a meta from the base-est of base classes
-    next  if($parent_class eq 'Rose::DB::Object');
-
     if(my $parent_meta = $Objects{$parent_class})
     {
+      next  unless($meta_class->allow_inheritance_from_meta($parent_meta));
+
       my $meta = $parent_meta->clone;
 
       $meta->reset(0);
