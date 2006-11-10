@@ -4,7 +4,7 @@ use strict;
 
 use Rose::DateTime::Util();
 
-our $VERSION = '0.754';
+our $VERSION = '0.754'; # XXX: whoops, overshot version number...
 
 our $Debug = 0;
 
@@ -22,7 +22,7 @@ __PACKAGE__->max_array_characters(255);
 sub build_dsn
 {
   my($self_or_class, %args) = @_;
-  return "dbi:$args{'driver'}:" . ($args{'db'} || $args{'database'});
+  return "dbi:Informix:" . ($args{'db'} || $args{'database'});
 }
 
 sub last_insertid_from_sth { $_[1]->{'ix_sqlerrd'}[1] }
