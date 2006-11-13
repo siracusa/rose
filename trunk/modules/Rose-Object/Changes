@@ -1,3 +1,7 @@
+0.821 (11.12.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Minor fix to the test suite.
+
 0.82 (10.06.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Forcibly reloading a module that uses one of the method makers
