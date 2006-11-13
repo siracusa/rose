@@ -1121,7 +1121,7 @@ Get or set the prefix affixed to all class names created by the L<make_classes|/
 
 Get or set the L<Rose::DB::Object::ConventionManager>-derived class name or object to be used during the L<auto-initialization|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> process for each class created by the L<make_classes|/make_classes> method.  Returns a L<Rose::DB::Object::ConventionManager>-derived object, which defaults to a new L<Rose::DB::Object::ConventionManager> object.
 
-Unless this attribute is explicitly set and/or fetched before the call to  the L<make_classes|/make_classes> method, the convention manager object used by L<make_classes|/make_classes> will be produced by calling the L<convention_manager|Rose::DB::Object::Metadata/convention_manager> method of the metadata object of the first (left-most) L<base class|/base_classes>.
+Unless this attribute is explicitly set or fetched before the call to the L<make_classes|/make_classes> method, the convention manager object used by L<make_classes|/make_classes> will be produced by calling the L<convention_manager|Rose::DB::Object::Metadata/convention_manager> method of the metadata object of the first (left-most) L<base class|/base_classes>.
 
 =item B<db [DB]>
 
