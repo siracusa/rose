@@ -11,34 +11,36 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.753';
+our $VERSION = '0.757';
 
 our $Debug = 0;
 
 our %OP_MAP = 
-(
-  similar    => 'SIMILAR TO',
-  match      => '~',
-  imatch     => '~*',
-  regex      => 'REGEXP',
-  regexp     => 'REGEXP',
-  like       => 'LIKE',
-  ilike      => 'ILIKE',
-  rlike      => 'RLIKE',
-  lt         => '<',
-  le         => '<=',
-  ge         => '>=',
-  gt         => '>',
-  ne         => '<>',
-  eq         => '=',
-  ''         => '=',
-  sql        => '=',
-  in_set     => 'ANY IN SET',
-  any_in_set => 'ANY IN SET',
-  all_in_set => 'ALL IN SET',
-  in_array      => 'ANY IN ARRAY',
-  any_in_array  => 'ANY IN ARRAY',
-  all_in_array  => 'ALL IN ARRAY',
+(  
+  similar      => 'SIMILAR TO',
+  match        => '~',
+  imatch       => '~*',
+  regex        => 'REGEXP',
+  regexp       => 'REGEXP',
+  like         => 'LIKE',
+  ilike        => 'ILIKE',
+  rlike        => 'RLIKE',
+  lt           => '<',
+  le           => '<=',
+  ge           => '>=',
+  gt           => '>',
+  ne           => '<>',
+  eq           => '=',
+  '&'          => '&',
+  ''           => '=',
+  sql          => '=',
+  in_set       => 'ANY IN SET',
+  any_in_set   => 'ANY IN SET',
+  all_in_set   => 'ALL IN SET',
+  find_in_set  => 'FIND IN SET',
+  in_array     => 'ANY IN ARRAY',
+  any_in_array => 'ANY IN ARRAY',
+  all_in_array => 'ALL IN ARRAY',
 );
 
 @OP_MAP{map { $_ . '_sql' } keys %OP_MAP} = values(%OP_MAP);
@@ -598,8 +600,15 @@ sub _build_clause
       $force_inline = 1;
     }
 
-    $op = $OP_MAP{$op_arg} or 
-      Carp::croak "Unknown comparison operator: $op_arg";
+    if(ref $op_arg eq 'SCALAR')
+    {
+      $op = \$op_arg;
+    }
+    else
+    {
+      $op = $OP_MAP{$op_arg} or 
+        Carp::croak "Unknown comparison operator: $op_arg";
+    }
   }
   else { $op ||= '=' }
 
@@ -626,6 +635,10 @@ sub _build_clause
         if($op eq 'ANY IN SET' || $op eq 'ALL IN SET')
         {
           return ($not ? "$not " : '') . "$placeholder IN $field ";
+        }
+        elsif($op eq 'FIND IN SET')
+        {
+          return ($not ? "$not " : '') . "FIND_IN_SET($placeholder, $field) ";
         }
         elsif($op eq 'ANY IN ARRAY' || $op eq 'ALL IN ARRAY')
         {

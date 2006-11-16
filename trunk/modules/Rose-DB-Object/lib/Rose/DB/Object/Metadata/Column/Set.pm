@@ -8,11 +8,11 @@ use Rose::DB::Object::MakeMethods::Generic;
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.711';
+our $VERSION = '0.757';
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
-  qw(default)
+  qw(default values)
 );
 
 Rose::Object::MakeMethods::Generic->make_methods
@@ -28,6 +28,8 @@ foreach my $type (__PACKAGE__->available_method_types)
 
 sub type { 'set' }
 
+*check_in = \&values;
+
 sub parse_value  { shift; shift->parse_set(@_)  }
 sub format_value { shift; shift->format_set(@_) }
 
@@ -36,6 +38,20 @@ sub method_uses_formatted_key
   my($self, $type) = @_;
   return 1  if($type eq 'get' || $type eq 'set' || $type eq 'get_set');
   return 0;
+}
+
+sub init_with_dbi_column_info
+{
+  my($self, $col_info) = @_;
+
+  $self->SUPER::init_with_dbi_column_info($col_info);
+
+  if(ref $col_info->{'RDBO_SET_VALUES'})
+  {
+    $self->values($col_info->{'RDBO_SET_VALUES'});
+  }
+
+  return;
 }
 
 1;

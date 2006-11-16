@@ -1,5 +1,6 @@
-0.731 (11.10.2006) - John Siracusa <siracusa@mindspring.com>
+0.731 (11.16.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Added support for MySQL's SET data type. (Patch by Ask Bjørn Hansen)
     * Fixed an Informix DSN construction bug.
     * Corrected the skip-counts for Informix tests.
 

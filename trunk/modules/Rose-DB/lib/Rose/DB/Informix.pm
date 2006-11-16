@@ -308,7 +308,7 @@ sub parse_set
 {
   my($self) = shift;
 
-  return $_[0]  if(ref $_[0]);
+  return $_[0]  if(ref $_[0] eq 'ARRAY');
   return [ @_ ] if(@_ > 1);
 
   my $val = $_[0];
@@ -728,7 +728,7 @@ Converts the C<DateTime> object DATETIME into the appropriate format for the "DA
 
 =item B<format_set ARRAYREF | LIST>
 
-Given a reference to an array or a list of values, return a string formatted according to the rules of Informix's "SET" data type.  Undef is returned if ARRAYREF points to an empty array or if LIST is not passed.  If th array or list  contains undefined values, a fatal error will occur.
+Given a reference to an array or a list of values, return a string formatted according to the rules of Informix's "SET" data type.  Undef is returned if ARRAYREF points to an empty array or if LIST is not passed.  If th array or list contains undefined values, a fatal error will occur.
 
 =item B<format_timestamp DATETIME>
 

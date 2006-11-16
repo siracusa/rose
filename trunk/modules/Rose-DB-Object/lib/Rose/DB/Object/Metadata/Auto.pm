@@ -14,7 +14,9 @@ our $Debug;
 
 *Debug = \$Rose::DB::Object::Metadata::Debug;
 
-our $VERSION = '0.756';
+our $Sort_Columns_Alphabetically = 0; # hack for test suite
+
+our $VERSION = '0.757';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -590,12 +592,12 @@ sub __by_rank
   my $pos1 = $a->ordinal_position;
   my $pos2 = $b->ordinal_position;
 
-  if(defined $pos1 && defined $pos2)
+  if(!$Sort_Columns_Alphabetically && defined $pos1 && defined $pos2)
   {
-    return $pos1 <=> $pos2 || lc $a->name cmp lc $b->name;
+    return $pos1 <=> $pos2 || lc($a->name) cmp lc($b->name);
   }
 
-  return lc $a->name cmp lc $b->name;
+  return lc($a->name) cmp lc($b->name);
 }
 
 sub perl_foreign_keys_definition

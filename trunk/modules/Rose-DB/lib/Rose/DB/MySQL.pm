@@ -9,7 +9,7 @@ use SQL::ReservedWords::MySQL();
 
 use Rose::DB;
 
-our $VERSION = '0.721';
+our $VERSION = '0.731';
 
 our $Debug = 0;
 
@@ -220,6 +220,42 @@ sub select_bitfield_column_sql
   }
 }
 
+sub parse_set
+{
+  my($self) = shift;
+  
+  return $_[0]  if(ref $_[0] eq 'ARRAY');
+  return [ @_ ] if(@_ > 1);
+  
+  my $val = $_[0];
+  
+  return undef  unless(defined $val);
+  
+  my @set = split(/,/, $val);
+  
+  return \@set;
+}
+
+sub format_set
+{
+  my($self) = shift;
+
+  my @set = (ref $_[0]) ? @{$_[0]} : @_;
+
+  return undef  unless(@set && defined $set[0]);
+
+  return join(',', map 
+  {
+    if(!defined $_)
+    {
+      Carp::croak 'Undefined value found in array or list passed to ',
+                  __PACKAGE__, '::format_set()';
+    }
+    else { $_ }
+  }
+  @set);
+}
+
 sub refine_dbi_column_info
 {
   my($self, $col_info) = @_;
@@ -247,11 +283,17 @@ sub refine_dbi_column_info
     }
   }
 
-  # Put valid enum values in standard key
-  if($col_info->{'TYPE_NAME'} eq 'enum')
+  # Put valid SET and ENUM values in standard keys
+  if($col_info->{'TYPE_NAME'} eq 'set')
+  {
+
+    $col_info->{'RDBO_SET_VALUES'} = $col_info->{'mysql_values'};
+  }
+  elsif($col_info->{'TYPE_NAME'} eq 'enum')
   {
     $col_info->{'RDBO_ENUM_VALUES'} = $col_info->{'mysql_values'};
   }
+
 
   return;
 }
@@ -389,6 +431,10 @@ Given a L<DateTime::Duration> object, return a string formatted according to the
 
 If the resulting string is longer than L<max_interval_characters|/max_interval_characters>, a fatal error will occur.
 
+=item B<format_set ARRAYREF | LIST>
+
+Given a reference to an array or a list of values, return a string formatted according to the rules of MySQL's "SET" data type.  Undef is returned if ARRAYREF points to an empty array or if LIST is not passed.  If th array or list contains undefined values, a fatal error will occur.
+
 =item B<parse_array STRING | LIST | ARRAYREF>
 
 Parse STRING and return a reference to an array.  STRING should be formatted according to the MySQL array data type emulation format returned by L<format_array()|/format_array>.  Undef is returned if STRING is undefined.
@@ -402,6 +448,14 @@ If a an ARRAYREF is passed, it is returned as-is.
 Parse STRING and return a L<DateTime::Duration> object.  STRING should be formatted according to the PostgreSQL native "interval" (years, months, days, hours, minutes, seconds) data type.
 
 If STRING is a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|Rose::DB/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.  Otherwise, undef is returned if STRING could not be parsed as a valid "interval" value.
+
+=item B<parse_set STRING | LIST | ARRAYREF>
+
+Parse STRING and return a reference to an array.  STRING should be formatted according to MySQL's "SET" data type.  Undef is returned if STRING is undefined.
+
+If a LIST of more than one item is passed, a reference to an array containing the values in LIST is returned.
+
+If a an ARRAYREF is passed, it is returned as-is.
 
 =item B<validate_date_keyword STRING>
 

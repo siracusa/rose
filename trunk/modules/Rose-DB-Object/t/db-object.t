@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 468;
+use Test::More tests => 470;
 
 BEGIN 
 {
@@ -362,7 +362,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 108)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 110)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -390,6 +390,8 @@ SKIP: foreach my $db_type ('mysql')
   }
 
   ok($o->load, "load() 1 - $db_type");
+
+  is_deeply([ sort $o->items ], [ qw(a c) ], "set default - $db_type");
 
   my $ox = MyMySQLObject->new(id => $o->id)->load;
   is($ox->bitz2->to_Bin(), '00', "spot check bitfield 1 - $db_type");
@@ -486,9 +488,13 @@ SKIP: foreach my $db_type ('mysql')
   ok(!$o4->load(speculative => 1), "load() nonexistent - $db_type");
   ok($o4->not_found, "not_found() 2 - $db_type");
 
+  $o->items('a', 'b');
   $o->nums([ 4, 5, 6 ]);
+
   ok($o->save, "save() 3 - $db_type");
   ok($o->load, "load() 4 - $db_type");
+
+  is_deeply([ sort $o->items ], [ qw(a b) ], "set default - $db_type");
 
   is($o->nums->[0], 4, "load() verify 10 (array value) - $db_type");
   is($o->nums->[1], 5, "load() verify 11 (array value) - $db_type");
@@ -1283,6 +1289,11 @@ EOF
         q(bitz2  BIT(2) NOT NULL DEFAULT B'00') :
         q(bitz2  BIT(2) NOT NULL DEFAULT '0');
 
+    my $set_col = 
+      ($db_version >= 5_000_000) ?
+        q(items  SET('a','b','c') NOT NULL DEFAULT 'a,c') :
+        q(items  VARCHAR(255) NOT NULL DEFAULT 'a,c');
+
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test
 (
@@ -1297,6 +1308,7 @@ CREATE TABLE rose_db_object_test
   status         VARCHAR(32) DEFAULT 'active',
   $bit_col1,
   $bit_col2,
+  $set_col,
   bitz3          BIT(4),
   decs           FLOAT(10,2),
   nums           VARCHAR(255),
@@ -1364,6 +1376,7 @@ EOF
       bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },
       bitz2    => { type => 'bits', bits => 2, default => '0' },
       bitz3    => { type => 'bits', bits => 4 },
+      items    => { type => 'set', check_in => [ qw(a b c) ], default => 'a,c' },
       decs     => { type => 'decimal', precision => 10, scale => 2 },
       dur      => { type => 'interval', scale => 6, default => '2 months 5 days 3 seconds' },
       epoch    => { type => 'epoch', default => '11/30/1999 9:30pm' },

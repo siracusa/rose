@@ -1,5 +1,6 @@
-0.757 (11.10.2006) - John Siracusa <siracusa@mindspring.com>
+0.757 (11.16.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Added support for MySQL's SET data type.
     * Modified the rules that govern metadata inheritance in order to
       allow multiple layers of abstract base classes.
     * The Loader will now pick up custom convention manager classes

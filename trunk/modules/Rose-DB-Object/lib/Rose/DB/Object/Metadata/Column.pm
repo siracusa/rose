@@ -22,7 +22,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 our $Triggers_Key      = 'triggers';
 our $Trigger_Index_Key = 'trigger_index';
 
-our $VERSION = '0.742';
+our $VERSION = '0.757';
 
 use overload
 (
@@ -364,10 +364,19 @@ sub perl_column_definition_attributes
 
     my $val = $self->can($attr) ? $self->$attr() : next ATTR;
 
-    if($attr eq 'check_in' && ref $val && ref $val eq 'ARRAY')
+    if(($attr eq 'check_in' || $attr eq 'values') &&
+       ref $val && ref $val eq 'ARRAY')
     {
-      $val = perl_arrayref(array => $val, inline => 1);
-      $attr = 'values';
+      if($self->type eq 'set')
+      {
+        $val = perl_arrayref(array => $val, inline => 1);
+        $attr = 'values';      
+      }
+      else
+      {
+        $val = perl_arrayref(array => $val, inline => 1);
+        $attr = 'values';
+      }
     }
     elsif(!defined $val || ref $val || ($attr eq 'not_null' && !$self->not_null))
     {

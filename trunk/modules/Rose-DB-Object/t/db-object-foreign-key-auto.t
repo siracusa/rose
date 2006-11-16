@@ -738,6 +738,14 @@ EOF
 
   my $mysql_41 = ($o->db->database_version >= 4_100_000) ? 1 : 0;
 
+  my $mysql_5  = ($o->db->database_version >= 5_000_000) ? 1 : 0;
+
+  my $set_col = $mysql_5 ? 
+    q(items         => { type => 'set', default => 'a,c', not_null => 1, values => [ 'a', 'b', 'c' ] },) :
+    q(items         => { type => 'varchar', default => 'a,c', length => 255, not_null => 1 },);
+
+  local $Rose::DB::Object::Metadata::Auto::Sort_Columns_Alphabetically = 1;
+
   is(MyMySQLObject->meta->perl_class_definition(use_setup => 0),
      <<"EOF", "perl_class_definition (trad) 1 - $db_type");
 package MyMySQLObject;
@@ -750,21 +758,22 @@ __PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns(
     bits          => { type => 'bitfield', bits => 5, default => 101 },
-    id            => { type => 'integer', not_null => 1 },
-    name          => { type => 'varchar', default => '', length => 32, not_null => 1 },
-    status        => { type => 'varchar', default => 'active', length => 32 },
-    start         => { type => 'date', default => '1980-12-24' },
-    save          => { type => 'integer', alias => 'save_col' },
+    date_created  => { type => 'datetime' },
     fk1           => { type => 'integer', alias => 'fkone' },
     fk2           => { type => 'integer' },
     fk3           => { type => 'integer' },
-    fother_id3    => { type => 'integer' },
-    fother_id4    => { type => 'integer' },
-    last_modified => { type => 'datetime' },
-    date_created  => { type => 'datetime' },
     flag          => { type => 'boolean', default => 1 },
     flag2         => { type => 'boolean' },
     fother_id2    => { type => 'integer' },
+    fother_id3    => { type => 'integer' },
+    fother_id4    => { type => 'integer' },
+    id            => { type => 'integer', not_null => 1 },
+    $set_col
+    last_modified => { type => 'datetime' },
+    name          => { type => 'varchar', default => '', length => 32, not_null => 1 },
+    save          => { type => 'integer', alias => 'save_col' },
+    start         => { type => 'date', default => '1980-12-24' },
+    status        => { type => 'varchar', default => 'active', length => 32 },
 );
 
 __PACKAGE__->meta->primary_key_columns([ 'id' ]);
@@ -820,21 +829,22 @@ __PACKAGE__->meta->table('Rose_db_object_test');
 __PACKAGE__->meta->columns
 (
   bits          => { type => 'bitfield', bits => 5, default => 101 },
-  id            => { type => 'integer', not_null => 1 },
-  name          => { type => 'varchar', default => '', length => 32, not_null => 1 },
-  status        => { type => 'varchar', default => 'active', length => 32 },
-  start         => { type => 'date', default => '1980-12-24' },
-  save          => { type => 'integer', alias => 'save_col' },
+  date_created  => { type => 'datetime' },
   fk1           => { type => 'integer', alias => 'fkone' },
   fk2           => { type => 'integer' },
   fk3           => { type => 'integer' },
-  fother_id3    => { type => 'integer' },
-  fother_id4    => { type => 'integer' },
-  last_modified => { type => 'datetime' },
-  date_created  => { type => 'datetime' },
   flag          => { type => 'boolean', default => 1 },
   flag2         => { type => 'boolean' },
   fother_id2    => { type => 'integer' },
+  fother_id3    => { type => 'integer' },
+  fother_id4    => { type => 'integer' },
+  id            => { type => 'integer', not_null => 1 },
+  $set_col
+  last_modified => { type => 'datetime' },
+  name          => { type => 'varchar', default => '', length => 32, not_null => 1 },
+  save          => { type => 'integer', alias => 'save_col' },
+  start         => { type => 'date', default => '1980-12-24' },
+  status        => { type => 'varchar', default => 'active', length => 32 },
 );
 
 __PACKAGE__->meta->primary_key_columns([ 'id' ]);
@@ -2032,6 +2042,11 @@ EOF
         q(bits  TINYINT(1) NOT NULL DEFAULT '00101') :
         q(bits  BIT(5) NOT NULL DEFAULT '00101');
 
+    my $set_col = 
+      ($db_version >= 5_000_000) ?
+        q(items  SET('a','b','c') NOT NULL DEFAULT 'a,c') :
+        q(items  VARCHAR(255) NOT NULL DEFAULT 'a,c');
+
     $dbh->do(<<"EOF");
 CREATE TABLE Rose_db_object_test
 (
@@ -2041,6 +2056,7 @@ CREATE TABLE Rose_db_object_test
   flag2          TINYINT(1),
   status         VARCHAR(32) DEFAULT 'active',
   $bit_col,
+  $set_col,
   start          DATE DEFAULT '1980-12-24',
   save           INT,
   fk1            INT UNSIGNED,

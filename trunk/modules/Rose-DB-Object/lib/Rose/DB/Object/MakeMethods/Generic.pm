@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.756';
+our $VERSION = '0.757';
 
 our $Debug = 0;
 
@@ -1139,7 +1139,8 @@ sub array
         }
         elsif(!defined $self->{$key})
         {
-          $self->{$key} = $db->parse_array($default);
+          $self->{$key} = $db->parse_array(defined $self->{$formatted_key,$driver} ? 
+                                           $self->{$formatted_key,$driver} : $default);
 
           if(!defined $default || defined $self->{$key})
           {
@@ -1408,6 +1409,8 @@ sub set
   my $interface = $args->{'interface'} || 'get_set';
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
+  my $choices = $args->{'choices'} || $args->{'check_in'};
+  my %choices = $choices ? (map { $_ => 1 } @$choices) : ();
 
   my $formatted_key = column_value_formatted_key($key);
 
@@ -1435,7 +1438,18 @@ sub set
           }
           else
           {
-            $self->{$key} = $db->parse_set(@_);
+            my $set = $db->parse_set(@_);
+
+            if($choices)
+            {
+              foreach my $val (@$set)
+              {
+                Carp::croak "Invalid value for set $key - '$val'"
+                  unless(exists $choices{$val});
+              }
+            }
+
+            $self->{$key} = $set;
 
             if(!defined $_[0] || defined $self->{$key})
             {
@@ -1450,7 +1464,19 @@ sub set
         }
         elsif(!defined $self->{$key})
         {
-          $self->{$key} = $db->parse_set($default);
+          my $set = $db->parse_set(defined $self->{$formatted_key,$driver} ? 
+                                   $self->{$formatted_key,$driver} : $default);
+
+          if($choices)
+          {
+            foreach my $val (@$set)
+            {
+              Carp::croak "Invalid default value for set $key - '$val'"
+                unless(exists $choices{$val});
+            }
+          }
+
+          $self->{$key} = $set;
 
           if(!defined $default || defined $self->{$key})
           {
@@ -1510,7 +1536,18 @@ sub set
           }
           else
           {
-            $self->{$key} = $db->parse_set(@_);
+            my $set = $db->parse_set(@_);
+
+            if($choices)
+            {
+              foreach my $val (@$set)
+              {
+                Carp::croak "Invalid value for set $key - '$val'"
+                  unless(exists $choices{$val});
+              }
+            }
+
+            $self->{$key} = $set;
 
             if(!defined $_[0] || defined $self->{$key})
             {
@@ -1569,7 +1606,18 @@ sub set
 
         if(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key,$driver}))
         {
-          $self->{$key} = $db->parse_set($default);
+          my $set = $db->parse_set($default);
+
+          if($choices)
+          {
+            foreach my $val (@$set)
+            {
+              Carp::croak "Invalid default value for set $key - '$val'"
+                unless(exists $choices{$val});
+            }
+          }
+
+          $self->{$key} = $set;
 
           if(!defined $default || defined $self->{$key})
           {
@@ -1666,7 +1714,18 @@ sub set
       }
       else
       {
-        $self->{$key} = $db->parse_set($_[0]);
+        my $set = $db->parse_set(@_);
+ 
+        if($choices)
+        {
+          foreach my $val (@$set)
+          {
+            Carp::croak "Invalid value for set $key - '$val'"
+              unless(exists $choices{$val});
+          }
+        }
+ 
+        $self->{$key} = $set;
 
         if(!defined $_[0] || defined $self->{$key})
         {
@@ -6088,7 +6147,7 @@ Create get/set methods for "set" attributes.   A "set" column in a database tabl
 
 =over 4
 
-=item B<default VALUE>
+=item B<default ARRAYREF>
 
 Determines the default value of the attribute.  The value should be a reference to an array.
 
@@ -6100,6 +6159,10 @@ attribute.  Defaults to the name of the method.
 =item B<interface NAME>
 
 Choose the interface.  The default is C<get_set>.
+
+=item B<values ARRAYREF>
+
+A reference to an array of valid values for the set.  If present, attempting to use an invalid value will cause a fatal error.
 
 =back
 
