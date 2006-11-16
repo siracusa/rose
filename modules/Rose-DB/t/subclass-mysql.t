@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 49);
+    Test::More->import(tests => 54);
   }
 }
 
@@ -103,6 +103,19 @@ ok($@, 'format_array() 3');
 my $a = $db->parse_array(q({"a","b"}));
 
 ok(@$a == 2 && $a->[0] eq 'a' && $a->[1] eq 'b', 'parse_array() 1');
+
+is($db->format_set([ 'a', 'b' ]), 'a,b', 'format_set() 1');
+is($db->format_set('a', 'b'), 'a,b', 'format_set() 2');
+
+eval { $db->format_set('a', undef) };
+ok($@ =~ /undefined/i, 'format_set() 3');
+
+eval { $db->format_set([ 'a', undef ]) };
+ok($@ =~ /undefined/i, 'format_set() 4');
+
+my $s = $db->parse_set('a,b');
+
+ok(@$s == 2 && $s->[0] eq 'a' && $s->[1] eq 'b', 'parse_set() 1');
 
 SKIP:
 {
