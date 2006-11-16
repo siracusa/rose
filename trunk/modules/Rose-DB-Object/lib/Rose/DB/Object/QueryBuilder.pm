@@ -37,13 +37,14 @@ our %OP_MAP =
   in_set       => 'ANY IN SET',
   any_in_set   => 'ANY IN SET',
   all_in_set   => 'ALL IN SET',
-  find_in_set  => 'FIND IN SET',
   in_array     => 'ANY IN ARRAY',
   any_in_array => 'ANY IN ARRAY',
   all_in_array => 'ALL IN ARRAY',
 );
 
 @OP_MAP{map { $_ . '_sql' } keys %OP_MAP} = values(%OP_MAP);
+
+our $Strict_Ops = 0;
 
 our %Op_Arg_PassThru = map { $_ => 1 } 
   qw(similar match imatch regex regexp like ilike rlike in_set any_in_set all_in_set
@@ -481,6 +482,7 @@ sub build_select
         $i++;
       }
 
+      # XXX: This sucks
       my $driver = $dbh->{'Driver'}{'Name'};
 
       if($driver eq 'mysql' && @normal_tables &&
@@ -600,19 +602,21 @@ sub _build_clause
       $force_inline = 1;
     }
 
-    if(ref $op_arg eq 'SCALAR')
+    unless($op = $OP_MAP{$op_arg})
     {
-      $op = \$op_arg;
-    }
-    else
-    {
-      $op = $OP_MAP{$op_arg} or 
+      if($Strict_Ops)
+      {
         Carp::croak "Unknown comparison operator: $op_arg";
+      }
+      else { $op = $op_arg }
     }
   }
   else { $op ||= '=' }
 
   my $ref;
+
+  # XXX: This sucks
+  my $driver = $db ? $db->driver : '';
 
   unless($ref = ref($vals))
   {
@@ -634,11 +638,15 @@ sub _build_clause
 
         if($op eq 'ANY IN SET' || $op eq 'ALL IN SET')
         {
-          return ($not ? "$not " : '') . "$placeholder IN $field ";
-        }
-        elsif($op eq 'FIND IN SET')
-        {
-          return ($not ? "$not " : '') . "FIND_IN_SET($placeholder, $field) ";
+          if($driver eq 'mysql')
+          {
+            return ($not ? "$not(" : '') . 
+                   "FIND_IN_SET($placeholder, $field) > 0" . ($not ? ')' : '');
+          }
+          else
+          {
+            return ($not ? "$not " : '') . "$placeholder IN $field ";
+          }
         }
         elsif($op eq 'ANY IN ARRAY' || $op eq 'ALL IN ARRAY')
         {
@@ -652,12 +660,22 @@ sub _build_clause
 
       if($op eq 'ANY IN SET' || $op eq 'ALL IN SET')
       {
-        return ($not ? "$not(" : '') . $dbh->quote($vals) . " $op $field " .
-               $dbh->quote($vals)  . ($not ? ')' : '');
+        if($driver eq 'mysql')
+        {
+          return ($not ? "$not(" : '') . 'FIND_IN_SET(' . 
+                 (($should_inline || $force_inline) ? $vals : $dbh->quote($vals)) . 
+                 ", $field) > 0" . ($not ? ')' : '');
+        }
+        else
+        {
+          return ($not ? "$not(" : '') . 
+                 (($should_inline || $force_inline) ? $vals : $dbh->quote($vals)) .
+                 " IN $field " . ($not ? ')' : '');
+        }
       }
       elsif($op eq 'ANY IN ARRAY' || $op eq 'ALL IN ARRAY')
       {
-        my $qval = $dbh->quote($vals);
+        my $qval = ($should_inline || $force_inline) ? $vals : $dbh->quote($vals);
         return $not ? "NOT ($qval = ANY($field)) " : "$qval = ANY($field) ";
       }
       else
@@ -801,6 +819,7 @@ sub _build_clause
     $field_mod = delete $vals->{'field'}  if(exists $vals->{'field'});
 
     my $all_in = ($op eq 'ALL IN SET' || $op eq 'ALL IN ARRAY') ? 1 : 0;
+    my $any_in = ($op eq 'ANY IN SET' || $op eq 'ANY IN ARRAY') ? 1 : 0;
 
     foreach my $raw_op (keys(%$vals))
     {
@@ -827,9 +846,27 @@ sub _build_clause
       }
     }
 
-    if($not && $all_in)
+    if($all_in)
     {
-      return 'NOT(' . join(' AND ', @clauses) . ')';
+      if($not)
+      {
+        return 'NOT(' . join(' AND ', @clauses) . ')';
+      }
+      else
+      {
+        return @clauses == 1 ? $clauses[0] : ('(' . join(' AND ', @clauses) . ')');
+      }
+    }
+    elsif($any_in)
+    {
+      if($not)
+      {
+        return join(' AND ', @clauses);
+      }
+      else
+      {
+        return @clauses == 1 ? $clauses[0] : ('(' . join(' OR ', @clauses) . ')');
+      }    
     }
     else
     {
