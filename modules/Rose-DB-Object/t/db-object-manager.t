@@ -2887,6 +2887,10 @@ SKIP: foreach my $db_type ('mysql')
 
   ok($o->save, "object save() 1 - $db_type");
 
+  my $msql_5 = ($o->db->database_version >= 5_000_003) ? 1 : 0;
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+
   my $objs = 
     MyMySQLObject->get_objectz(
       share_db     => 1,
@@ -2898,6 +2902,15 @@ SKIP: foreach my $db_type ('mysql')
         flag2      => 0,
         status     => 'active',
         bits       => '00001',
+        ($msql_5 ? (items => { any_in_set => [ 'a', 'c' ] }) : ()),
+        ($msql_5 ? (items => { any_in_set_sql => [ q('a'), q('c') ] }) : ()),
+        ($msql_5 ? ('!items' => { any_in_set => [ 'x', 'y' ] }) : ()),
+        ($msql_5 ? (items => { all_in_set => [ 'a', 'c' ] }) : ()),
+        ($msql_5 ? ('!items' => { all_in_set => [ 'a', 'x' ] }) : ()),
+        ($msql_5 ? (items => { in_set => 'a' }) : ()),
+        ($msql_5 ? ('!items' => { in_set => 'x' }) : ()),
+        ($msql_5 ? (items => { all_in_set => 'c' }) : ()),
+        ($msql_5 ? (items => { '&' => 1 }) : ()),
         fixed      => { like => 'nee%' },
         or         => [ and => [ '!bits' => '00001', bits => { ne => '11111' } ],
                         and => [ bits => { lt => '10101' }, '!bits' => '10000' ] ],
@@ -6703,6 +6716,7 @@ SKIP: foreach my $db_type (qw(informix))
         id         => { ge => 1 },
         name       => 'John',  
         nums       => { any_in_set => [ 1, 99, 100 ] },
+        '!nums'    => { any_in_set => [ 7, 9 ] },
         nums       => { in_set => [ 2, 22, 222 ] },
         nums       => { in_set => 2 },
         nums       => { all_in_set => [ 1, 2, 3 ] },
@@ -11723,6 +11737,11 @@ EOF
         q(bits  BIT(5) NOT NULL DEFAULT B'00101') :
         q(bits  BIT(5) NOT NULL DEFAULT '00101');
 
+    my $set_col = 
+      ($db_version >= 5_000_000) ?
+        q(items  SET('a','b','c') NOT NULL DEFAULT 'a,c') :
+        q(items  VARCHAR(255) NOT NULL DEFAULT 'a,c');
+
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test
 (
@@ -11732,6 +11751,7 @@ CREATE TABLE rose_db_object_test
   flag2          TINYINT(1),
   status         VARCHAR(32) DEFAULT 'active',
   $bit_col,
+  $set_col,
   fixed          CHAR(16) DEFAULT 'needed',
   nums           VARCHAR(255),
   start          DATE,
@@ -12065,7 +12085,8 @@ EOF
       start    => { type => 'date', default => '12/24/1980', lazy => 1 },
       save     => { type => 'scalar' },
       bits     => { type => 'bitfield', bits => 5, default => 101 },
-      fixed    => { type => 'char', length => 16, default => 'needed' },,
+      items    => { type => 'set', check_in => [ qw(a b c) ], default => 'a,c' },
+      fixed    => { type => 'char', length => 16, default => 'needed' },
       nums     => { type => 'array' },
       fk1      => { type => 'int' },
       fk2      => { type => 'int' },
