@@ -1198,6 +1198,8 @@ Undefined values are translated to the keyword NULL when included in a multi-val
 
 Set operations:
 
+    ### Informix ###
+
     # A IN COLUMN
     'NAME' => { in_set => 'A' } 
 
@@ -1208,7 +1210,7 @@ Set operations:
     'NAME' => { in_set => [ 'A', 'B'] } 
     'NAME' => { any_in_set => [ 'A', 'B'] } 
 
-    # NOT(A IN COLUMN OR B IN COLUMN)
+    # NOT(A IN COLUMN) AND NOT(B IN COLUMN)
     '!NAME' => { in_set => [ 'A', 'B'] } 
     '!NAME' => { any_in_set => [ 'A', 'B'] } 
 
@@ -1216,6 +1218,28 @@ Set operations:
     'NAME' => { all_in_set => [ 'A', 'B'] } 
 
     # NOT(A IN COLUMN AND B IN COLUMN)
+    '!NAME' => { all_in_set => [ 'A', 'B'] } 
+
+    ### MySQL ###
+
+    # FIND_IN_SET(A, COLUMN) > 0
+    'NAME' => { in_set => 'A' } 
+
+    # NOT(FIND_IN_SET(A, COLUMN) > 0)
+    '!NAME' => { in_set => 'A' } 
+
+    # (FIND_IN_SET(A, COLUMN) > 0 OR FIND_IN_SET(B, COLUMN) > 0)
+    'NAME' => { in_set => [ 'A', 'B'] } 
+    'NAME' => { any_in_set => [ 'A', 'B'] } 
+
+    # NOT(FIND_IN_SET(A, COLUMN) > 0) AND NOT(FIND_IN_SET(B, COLUMN) > 0)
+    '!NAME' => { in_set => [ 'A', 'B'] } 
+    '!NAME' => { any_in_set => [ 'A', 'B'] } 
+
+    # (FIND_IN_SET(A, COLUMN) > 0 AND FIND_IN_SET(B, COLUMN) > 0)
+    'NAME' => { all_in_set => [ 'A', 'B'] } 
+
+    # NOT(FIND_IN_SET(A, COLUMN) > 0 AND FIND_IN_SET(B, COLUMN) > 0)
     '!NAME' => { all_in_set => [ 'A', 'B'] } 
 
 Array operations:
