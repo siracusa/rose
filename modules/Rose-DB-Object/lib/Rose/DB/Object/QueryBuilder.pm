@@ -842,6 +842,7 @@ sub _build_clause
       }
       else
       {
+
         Carp::croak "Don't know how to handle comparison values: $vals->{$raw_op}";
       }
     }
