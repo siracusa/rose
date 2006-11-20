@@ -3,7 +3,7 @@
 use strict;
 
 #use Test::LongString;
-use Test::More tests => (78 * 4) + 2;
+use Test::More tests => (80 * 4) + 2;
 
 BEGIN 
 {
@@ -24,7 +24,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 78)  unless($Have{$db_type});
+    skip("$db_type tests", 80)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -33,7 +33,8 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   MyMixIn->export_tag('all' => [ 'a', 'b' ]);
 
   my $class = 'My' . ucfirst($db_type) . 'Object';
-
+  my $other_class = 'My' . ucfirst($db_type) . 'OtherObject';
+  
   my $o = $class->new(id => 1, name => 'John', age => 30);
 
   my @tags = MyMixIn->export_tags;
@@ -92,6 +93,19 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
   $o = $class->new(id => 2);
   ok($o->load_speculative, "load_speculative() 3 - $db_type");
+
+  my $other = $other_class->new(name => 'foo');
+
+  my $o3 =
+    $class->new(id => 5, 
+                name => 'load_or_save',
+                rose_db_object_test_other => $other)->load_or_save;
+
+  $o3 = $class->new(id => $o3->id)->load;
+  is($o3->name, 'load_or_save', "load_or_save() 1 - $db_type");
+
+  $other = $other_class->new(id => $other->id)->load;
+  is($other->name, 'foo', "load_or_save() 2 - $db_type");
 
   my $o2 = $o->clone;
 
@@ -300,6 +314,7 @@ BEGIN
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
 
+      $dbh->do('DROP TABLE rose_db_object_test_other');
       $dbh->do('DROP TABLE rose_db_object_test');
     }
 
@@ -312,6 +327,15 @@ CREATE TABLE rose_db_object_test
   laz   VARCHAR(255),
 
   UNIQUE(name)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test_other
+(
+  id    SERIAL NOT NULL PRIMARY KEY,
+  name  VARCHAR(255) NOT NULL,
+  rose_db_object_test_id INT REFERENCES rose_db_object_test (id)
 )
 EOF
 
@@ -335,6 +359,12 @@ EOF
     __PACKAGE__->meta->column('laz')->lazy(1);
     __PACKAGE__->meta->column('laz')->add_auto_method_types(qw(get set));
     __PACKAGE__->meta->initialize(replace_existing => 1);
+
+    package MyPgOtherObject;
+    our @ISA = qw(Rose::DB::Object);
+    sub init_db { Rose::DB->new('pg') }
+    __PACKAGE__->meta->table('rose_db_object_test_other');
+    __PACKAGE__->meta->auto_initialize;
   }
 
   #
@@ -353,6 +383,7 @@ EOF
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
 
+      $dbh->do('DROP TABLE rose_db_object_test_other');
       $dbh->do('DROP TABLE rose_db_object_test');
     }
   };
@@ -373,8 +404,17 @@ CREATE TABLE rose_db_object_test
 )
 EOF
 
-    $dbh->disconnect;
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test_other
+(
+  id    INT AUTO_INCREMENT PRIMARY KEY,
+  name  VARCHAR(255) NOT NULL,
+  rose_db_object_test_id INT REFERENCES rose_db_object_test (id)
+)
+EOF
 
+    $dbh->disconnect;
+    
     package MyMysqlObject;
     our @ISA = qw(Rose::DB::Object);
     use Rose::DB::Object::Helpers ($All);
@@ -392,7 +432,24 @@ EOF
     __PACKAGE__->meta->auto_initialize;
     __PACKAGE__->meta->column('laz')->lazy(1);
     __PACKAGE__->meta->column('laz')->add_auto_method_types(qw(get set));
-    __PACKAGE__->meta->initialize(replace_existing => 1);
+
+    __PACKAGE__->meta->add_relationship
+    (
+      rose_db_object_test_other => 
+      {
+        class      => 'MyMysqlOtherObject',
+        column_map => { id => 'rose_db_object_test_id' },
+        type       => 'one to many',
+      }
+    );
+
+    __PACKAGE__->meta->initialize(replace_existing => 1);    
+
+    package MyMysqlOtherObject;
+    our @ISA = qw(Rose::DB::Object);
+    sub init_db { Rose::DB->new('mysql') }
+    __PACKAGE__->meta->table('rose_db_object_test_other');
+    __PACKAGE__->meta->auto_initialize;
   }
 
   #
@@ -414,6 +471,7 @@ EOF
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
 
+      $dbh->do('DROP TABLE rose_db_object_test_other');
       $dbh->do('DROP TABLE rose_db_object_test');
     }
 
@@ -426,6 +484,15 @@ CREATE TABLE rose_db_object_test
   laz   VARCHAR(255),
 
   UNIQUE(name)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test_other
+(
+  id    SERIAL NOT NULL PRIMARY KEY,
+  name  VARCHAR(255) NOT NULL,
+  rose_db_object_test_id INT REFERENCES rose_db_object_test (id)
 )
 EOF
 
@@ -449,6 +516,12 @@ EOF
     __PACKAGE__->meta->column('laz')->lazy(1);
     __PACKAGE__->meta->column('laz')->add_auto_method_types(qw(get set));
     __PACKAGE__->meta->initialize(replace_existing => 1);
+
+    package MyInformixOtherObject;
+    our @ISA = qw(Rose::DB::Object);
+    sub init_db { Rose::DB->new('sqlite') }
+    __PACKAGE__->meta->table('rose_db_object_test_other');
+    __PACKAGE__->meta->auto_initialize;
   }
 
   #
@@ -470,6 +543,7 @@ EOF
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
 
+      $dbh->do('DROP TABLE rose_db_object_test_other');
       $dbh->do('DROP TABLE rose_db_object_test');
     }
 
@@ -482,6 +556,15 @@ CREATE TABLE rose_db_object_test
   laz   VARCHAR(255),
 
   UNIQUE(name)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test_other
+(
+  id    INTEGER PRIMARY KEY AUTOINCREMENT,
+  name  VARCHAR(255) NOT NULL,
+  rose_db_object_test_id INT REFERENCES rose_db_object_test (id)
 )
 EOF
 
@@ -505,6 +588,12 @@ EOF
     __PACKAGE__->meta->column('laz')->lazy(1);
     __PACKAGE__->meta->column('laz')->add_auto_method_types(qw(get set));
     __PACKAGE__->meta->initialize(replace_existing => 1);
+   
+    package MySqliteOtherObject;
+    our @ISA = qw(Rose::DB::Object);
+    sub init_db { Rose::DB->new('sqlite') }
+    __PACKAGE__->meta->table('rose_db_object_test_other');
+    __PACKAGE__->meta->auto_initialize;
   }
 
   package MyMixIn;
@@ -520,7 +609,9 @@ END
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
 
+    $dbh->do('DROP TABLE rose_db_object_test_other');
     $dbh->do('DROP TABLE rose_db_object_test');
+
     $dbh->disconnect;
   }
 
@@ -530,7 +621,9 @@ END
     my $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
       or die Rose::DB->error;
 
+    $dbh->do('DROP TABLE rose_db_object_test_other');
     $dbh->do('DROP TABLE rose_db_object_test');
+
     $dbh->disconnect;
   }
 
@@ -540,7 +633,9 @@ END
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
       or die Rose::DB->error;
 
+    $dbh->do('DROP TABLE rose_db_object_test_other');
     $dbh->do('DROP TABLE rose_db_object_test');
+
     $dbh->disconnect;
   }
 
@@ -550,7 +645,9 @@ END
     my $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
       or die Rose::DB->error;
 
+    $dbh->do('DROP TABLE rose_db_object_test_other');
     $dbh->do('DROP TABLE rose_db_object_test');
+
     $dbh->disconnect;
   }
 }
