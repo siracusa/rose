@@ -3,6 +3,8 @@
     * Added load_or_save() helper method.
     * Added support for MySQL's SET data type.
     * Fixed some SET and ARRAY bugs in QueryBuilder.
+    * Fixed a bug that caused QueryBuilder to choke on inflated
+      BigInt columns.  (Reported by Jud)
     * Modified the rules that govern metadata inheritance in order to
       allow multiple layers of abstract base classes.
     * The Loader will now pick up custom convention manager classes

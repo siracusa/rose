@@ -7,7 +7,7 @@ use Rose::DB::Object::MakeMethods::BigNum;
 use Rose::DB::Object::Metadata::Column::Integer;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Integer);
 
-our $VERSION = '0.711';
+our $VERSION = '0.757';
 
 INIT_METHOD_MAKER_INFO:
 {
@@ -49,6 +49,12 @@ INIT_METHOD_MAKER_INFO:
 }
 
 sub type { 'bigint' }
+
+sub format_value
+{
+  my($self, $db, $value) = @_;
+  return ref $value ? $value->bstr : $value;
+}
 
 1;
 
