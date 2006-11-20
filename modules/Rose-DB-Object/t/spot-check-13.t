@@ -23,6 +23,8 @@ foreach my $db_type (qw(pg))
     skip("$db_type tests", 1)  unless($Have{$db_type});
   }
 
+  next  unless($Have{$db_type});
+
   my $t1 = T1->new(id => 1)->save;
   my $t2 = T2->new(id => 1)->save;
   my $tt = T1T2Map->new;

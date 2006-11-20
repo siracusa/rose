@@ -23,6 +23,8 @@ foreach my $db_type (qw(mysql))
     skip("$db_type tests", 3)  unless($Have{$db_type});
   }
 
+  next  unless($Have{$db_type});
+
   Rose::DB->default_type($db_type);
 
   my $class = ucfirst($db_type) . 'Foo';
