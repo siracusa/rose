@@ -9,13 +9,13 @@ our @ISA = qw(Rose::DB::Object::MixIn);
 
 use Carp;
 
-our $VERSION = '0.756';
+our $VERSION = '0.757';
 
 __PACKAGE__->export_tags
 (
   all => 
   [
-    qw(clone clone_and_reset load_or_insert insert_or_update 
+    qw(clone clone_and_reset load_or_insert load_or_save insert_or_update 
        insert_or_update_on_duplicate_key load_speculative
        column_value_pairs column_accessor_value_pairs 
        column_mutator_value_pairs 
@@ -27,7 +27,7 @@ __PACKAGE__->export_tags
   # This exists for the benefit of the test suite
   all_noprereq =>
   [
-    qw(clone clone_and_reset load_or_insert insert_or_update 
+    qw(clone clone_and_reset load_or_insert load_or_save insert_or_update 
        insert_or_update_on_duplicate_key load_speculative
        column_value_pairs column_accessor_value_pairs 
        column_mutator_value_pairs init_with_column_value_pairs
@@ -56,6 +56,27 @@ sub load_or_insert
 
   return $self->insert;
 }
+
+sub load_or_save
+{
+  my($self) = shift;
+
+  my($ret, @ret);
+
+  if(wantarray)
+  {
+    @ret = $self->load(@_, speculative => 1);
+    return @ret  if($ret[0]);
+  }
+  else
+  {
+    $ret = $self->load(@_, speculative => 1);
+    return $ret  if($ret);
+  }
+
+  return $self->save;
+}
+
 
 sub insert_or_update
 {
@@ -528,12 +549,27 @@ Yes, this method name is very long.  Remember that you can rename methods on imp
 
 =item B<load_or_insert [PARAMS]>
 
-Try to L<load|Rose::DB::Object/load> the object, passing PARAMS to the call to the L<load()|Rose::DB::Object/load> method.  The parameter "speculative => 1" is automatically added to PARAMS.  If no such object is found, then the object is L<inserted|Rose::DB::Object/insert>.
+Try to L<load|Rose::DB::Object/load> the object, passing PARAMS to the call to the L<load()|Rose::DB::Object/load> method.  The parameter "speculative => 1" is automatically added to PARAMS.  If no such object is found, then the object is L<insert|Rose::DB::Object/insert>ed.
 
 Example:
 
     # Get object id 123 if it exists, otherwise create it now.
     $obj = MyDBObject->new(id => 123)->load_or_insert;
+
+=item B<load_or_save [PARAMS]>
+
+Try to L<load|Rose::DB::Object/load> the object, passing PARAMS to the call to the L<load()|Rose::DB::Object/load> method.  The parameter "speculative => 1" is automatically added to PARAMS.  If no such object is found, then the object is L<save|Rose::DB::Object/save>d.
+
+This methods differs from L<load_or_insert|/load_or_insert> in that the L<save|Rose::DB::Object/save> method will also save sub-objects.  See the documentation for L<Rose::DB::Object>'s L<save|Rose::DB::Object/save> method for more information.
+
+Example:
+
+    @perms = (Permission->new(...), Permission->new(...));
+
+    # Get person id 123 if it exists, otherwise create it now
+    # along with permission sub-objects.
+    $person = Person->new(id    => 123, 
+                          perms => \@perms)->load_or_insert;
 
 =item B<load_speculative [PARAMS]>
 

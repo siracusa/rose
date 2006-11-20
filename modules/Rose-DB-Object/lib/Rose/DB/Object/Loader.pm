@@ -795,7 +795,7 @@ sub make_classes
   }
 
   my $cm;
-  
+
   # XXX: Lame way to check if the convention_manager attribute has
   # XXX: been set or fetched.
   if($self->{'convention_manager'})
