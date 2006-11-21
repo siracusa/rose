@@ -2,12 +2,10 @@ package Rose::HTML::Form::Field::OnOff::Selectable;
 
 use strict;
 
-use Scalar::Defer;
-
 use Rose::HTML::Form::Field::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::OnOff);
 
-our $VERSION = '0.011';
+our $VERSION = '0.543';
 
 __PACKAGE__->required_html_attr_value
 (
