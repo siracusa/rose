@@ -1,4 +1,4 @@
-0.543 (11.21.2006) - John Siracusa <siracusa@mindspring.com>
+0.543 (11.22.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Removed a stray reference to Scalar::Defer, which is not
       a prerequesite.  (Reported by Sebastian Riedel)
