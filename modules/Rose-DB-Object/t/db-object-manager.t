@@ -2,11 +2,12 @@
 
 use strict;
 
-use Test::More tests => 3058;
+use Test::More tests => 3059;
 
 BEGIN 
 {
   require 't/test-lib.pl';
+  use_ok('DateTime');
   use_ok('Rose::DB::Object');
   use_ok('Rose::DB::Object::Manager');
 }
@@ -3018,7 +3019,8 @@ SKIP: foreach my $db_type ('mysql')
 
   my $count =
     MyMySQLObject->get_objectz_count(
-      with_objects => [ 'nicks', 'bb1', 'bb2' ],
+      #debug        => 1,
+      with_objects => [ 'bb1', 'nicks',  'bb2' ],
       share_db     => 1,
       query        =>
       [
@@ -12139,6 +12141,12 @@ EOF
         type  => 'one to many',
         class => 'MyMySQLNick',
         column_map => { id => 'o_id' },
+        join_args    =>
+        [
+          't1.name' => { ne => \'t2.nick' },
+          'rose_db_object_test.name' => { ne => \'rose_db_object_nicks.nick' },
+          'date_created' => { gt => DateTime->now->subtract(years => 100) },
+        ],
         manager_args => { sort_by => 'nick DESC' },
       },
 

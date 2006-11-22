@@ -8,14 +8,14 @@ use List::Util qw(first);
 use Scalar::Util qw(refaddr);
 
 use Rose::DB::Object::Iterator;
-use Rose::DB::Object::QueryBuilder qw(build_select);
+use Rose::DB::Object::QueryBuilder qw(build_select build_where_clause);
 use Rose::DB::Object::Constants
   qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB MODIFIED_COLUMNS);
 
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.756';
+our $VERSION = '0.757';
 
 our $Debug = 0;
 
@@ -313,6 +313,8 @@ sub get_objects
   my $fetch            = delete $args{'fetch_only'};
   my $hints            = delete $args{'hints'} || {};
   my $select           = $args{'select'};
+
+  local $Debug = $args{'debug'}  if(exists $args{'debug'});
 
   my $try_subselect_limit = (exists $args{'limit_with_subselect'}) ? 
     $args{'limit_with_subselect'} : $class->default_limit_with_subselect;
@@ -911,6 +913,35 @@ sub get_objects
               #push(@$clauses, "$tables[$parent_tn - 1].$local_column = $tables[-1].$foreign_column");
             }
           }
+        }
+
+        # XXX: Undocumented for now...
+        if($rel_type eq 'one to many' && (my $join_args = $rel->join_args))
+        {
+          my $cond = 
+            build_where_clause(dbh         => $dbh,
+                               tables      => [ @tables[$parent_tn - 1, $i - 1] ],
+                               columns     => \%columns,
+                               all_columns => \%all_columns,
+                               classes     => \%classes,
+                               meta        => \%meta,
+                               db          => $db,
+                               pretty      => $Debug,
+                               query       => $join_args);
+
+          # XXX: Ugly hack...
+          for($cond)
+          {
+            s/(?:^| )@{[ $tables[$parent_tn - 1] ]}\./t$parent_tn./mg;
+            s/(?:^| )@{[ $tables[$i - 1] ]}\./t$i./mg;
+            s/(?:^| )t1\./t$parent_tn./mg;
+            s/(?:^| )t2\./t$i./mg;
+            s/^\s\s+/ /mg;
+            s/\A\s+//;
+            s/\n/ /g;
+          }
+
+          push(@{$joins[$i]{'conditions'}}, $cond);
         }
 
         if(@redundant)
