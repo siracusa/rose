@@ -1199,7 +1199,7 @@ Undefined values are translated to the keyword NULL when included in a multi-val
 
 Set operations:
 
-    ### Informix ###
+    ### Informix (default) ###
 
     # A IN COLUMN
     'NAME' => { in_set => 'A' } 
@@ -1221,7 +1221,7 @@ Set operations:
     # NOT(A IN COLUMN AND B IN COLUMN)
     '!NAME' => { all_in_set => [ 'A', 'B'] } 
 
-    ### MySQL ###
+    ### MySQL (requires db parameter)  ###
 
     # FIND_IN_SET(A, COLUMN) > 0
     'NAME' => { in_set => 'A' } 
