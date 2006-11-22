@@ -12,7 +12,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 our $Debug = 0;
 
-our $VERSION = '0.57';
+our $VERSION = '0.757';
 
 __PACKAGE__->default_auto_method_types(qw(get_set_on_save add_on_save));
 

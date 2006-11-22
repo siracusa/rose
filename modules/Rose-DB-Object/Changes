@@ -1,4 +1,4 @@
-0.757 (11.20.2006) - John Siracusa <siracusa@mindspring.com>
+0.757 (11.22.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added load_or_save() helper method.
     * Added support for MySQL's SET data type.
