@@ -502,4 +502,7 @@ is($field->html_field,
   qq(</optgroup>\n) .
   qq(</select>),
   'localized label 4');
+
+$field->disabled(1);
+
   

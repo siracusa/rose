@@ -16,6 +16,7 @@ __PACKAGE__->add_required_html_attrs(
 __PACKAGE__->add_boolean_html_attrs
 (
   'multiple',
+  'disabled',
 );
 
 __PACKAGE__->add_valid_html_attrs
@@ -23,7 +24,7 @@ __PACKAGE__->add_valid_html_attrs
   'onchange',    # %Script;       #IMPLIED  -- the element value was changed --
 );
 
-our $VERSION = '0.50';
+our $VERSION = '0.544';
 
 sub multiple { shift->html_attr('multiple', @_) }
 
@@ -72,6 +73,7 @@ Valid attributes:
     accesskey
     class
     dir
+    disabled
     id
     lang
     multiple
@@ -103,6 +105,7 @@ Required attributes:
 
 Boolean attributes:
 
+    disabled
     multiple
 
 =head1 CONSTRUCTOR
