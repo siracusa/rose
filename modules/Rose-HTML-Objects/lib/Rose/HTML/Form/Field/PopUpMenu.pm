@@ -5,7 +5,7 @@ use strict;
 use Rose::HTML::Form::Field::SelectBox;
 our @ISA = qw(Rose::HTML::Form::Field::SelectBox);
 
-our $VERSION = '0.50';
+our $VERSION = '0.544';
 
 __PACKAGE__->required_html_attr_value(size => 1);
 __PACKAGE__->delete_valid_html_attr('multiple');
@@ -58,6 +58,7 @@ Valid attributes:
     accesskey
     class
     dir
+    disabled
     id
     lang
     name
@@ -85,6 +86,10 @@ Required attributes:
 
     name
     size
+
+Boolean attributes:
+
+    disabled
 
 =head1 CONSTRUCTOR
 

@@ -239,3 +239,5 @@ is($field->html_field,
   qq(<option value="cherry">Cherry</option>\n) .
   qq(</select>),
   'localized label 4');
+
+$field->disabled(1);
