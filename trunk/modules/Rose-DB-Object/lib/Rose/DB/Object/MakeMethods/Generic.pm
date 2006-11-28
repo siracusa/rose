@@ -1780,10 +1780,10 @@ sub object_by_key
   my $interface = $args->{'interface'} || 'get_set';
   my $target_class = $options->{'target_class'} or die "Missing target class";
 
-  my $fk       = $args->{'foreign_key'} || $args->{'relationship'};
+  weaken(my $fk       = $args->{'foreign_key'} || $args->{'relationship'});
   my $fk_class = $args->{'class'} or die "Missing foreign object class";
-  my $fk_meta  = $fk_class->meta;
-  my $meta     = $target_class->meta;
+  weaken(my $fk_meta  = $fk_class->meta);
+  weaken(my $meta     = $target_class->meta);
   my $fk_pk;
 
   my $required = 
@@ -2106,7 +2106,7 @@ sub object_by_key
         $self->{$key} = $object;
 
         weaken(my $welf = $self);
-
+        
         # Make the code that will run on save()
         my $save_code = sub
         {
@@ -2485,8 +2485,8 @@ sub objects_by_key
 
   my $relationship = $args->{'relationship'};
 
-  my $ft_class   = $args->{'class'} or die "Missing foreign object class";
-  my $meta       = $target_class->meta;
+  my $ft_class    = $args->{'class'} or die "Missing foreign object class";
+  weaken(my $meta = $target_class->meta);
   my $ft_pk;
 
   unless(exists $args->{'key_columns'} || exists $args->{'query_args'})
@@ -3279,7 +3279,7 @@ sub objects_by_map
   my $relationship = $args->{'relationship'} or die "Missing relationship";
   my $rel_name     = $relationship->name;
   my $map_class    = $args->{'map_class'} or die "Missing map class";
-  my $map_meta     = $map_class->meta or die "Missing meta for $map_class";
+  weaken(my $map_meta = $map_class->meta or die "Missing meta for $map_class");
   my $map_from     = $args->{'map_from'};
   my $map_to       = $args->{'map_to'};
   my $map_manager  = $args->{'manager_class'};
@@ -3560,14 +3560,14 @@ sub objects_by_map
       if($share_db)
       {
         $objs =
-          $map_manager->$map_method(query        => [ %join_map_to_self, @$query_args ],
+          $map_manager->$map_method(query => [ %join_map_to_self, @$query_args ],
                                     require_objects => $require_objects,
                                     %$mgr_args, db => $self->db);
       }
       else
       {
         $objs = 
-          $map_manager->$map_method(query        => [ %join_map_to_self, @$query_args ],
+          $map_manager->$map_method(query => [ %join_map_to_self, @$query_args ],
                                     require_objects => $require_objects,
                                     %$mgr_args);
       }

@@ -1,3 +1,7 @@
+0.758 (11.28.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Memory cycle stuff (in progress...)
+
 0.757 (11.22.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added load_or_save() helper method.
