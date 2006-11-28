@@ -18,18 +18,14 @@ For the sake of brevity, the C<use strict> directive and associated "my" declara
 
 Similarly, the traditional "1;" true value used at the end of each ".pm" file has been omitted from the examples.  Don't forget to add this to the end of your actual Perl module files.
 
-Although most of the examples in this tutorial use the L<base.pm|base> module to set up inheritance, directly modifying the C<@ISA> package variable usually works just as well.  In situations where there are circular relationships between classes, the C<use base ...> form is preferable because it runs at compile-time, whereas C<@ISA> modification happens at run-time.
-
-Finally, be sure to set up inheritance before loading any related modules.
+Although most of the examples in this tutorial use the L<base.pm|base> module to set up inheritance, directly modifying the C<@ISA> package variable usually works just as well.  In situations where there are circular relationships between classes, the C<use base ...> form may be preferable because it runs at compile-time, whereas C<@ISA> modification happens at run-time.  In either case, it's a good idea to set up inheritance as early as possible in each module.
 
     package Product;
 
     # Set up inheritance first
     use base qw(Rose::DB::Object);
 
-    # Then load related modules
-    use Vendor;
-    use Color;
+    # Then do other stuff...
     ...
 
 =head1 TUTORIAL
@@ -369,7 +365,7 @@ The iterator method takes the same kinds of arguments, but returns an iterator t
     {
       print $product->id, ' ', $product->name, "\n";
 
-      $iterator->finish  if(...);  # exit early?
+      $iterator->finish  if(...); # exit early?
     }
 
     print $iterator->total; # total iterated over
