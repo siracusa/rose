@@ -936,7 +936,7 @@ __END__
 
 =head1 NAME
 
-Rose::DB::Object::Loader - Automatically create Rose::DB::Object subclasses for all the tables in a database.
+Rose::DB::Object::Loader - Automatically create Rose::DB::Object subclasses based on database table definitions.
 
 =head1 SYNOPSIS
 

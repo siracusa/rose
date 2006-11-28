@@ -3,6 +3,7 @@ package Rose::DB::Object::Metadata::Relationship::ManyToMany;
 use strict;
 
 use Carp();
+use Scalar::Util qw(weaken);
 
 use Rose::DB::Object::Metadata::Relationship;
 our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
@@ -12,7 +13,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 use Rose::DB::Object::Constants qw(PRIVATE_PREFIX);
 
-our $VERSION = '0.725';
+our $VERSION = '0.758';
 
 our $Debug = 0;
 
@@ -114,7 +115,8 @@ MAKE_MAP_RECORD_METHOD:
 
       if(@_)
       {
-        my $arg = shift;
+        my $arg    = shift;
+        my $weaken = shift;
 
         if(ref $arg eq 'HASH')
         {
@@ -125,7 +127,7 @@ MAKE_MAP_RECORD_METHOD:
           Carp::croak "Illegal map record argument: $arg";
         }
 
-        return $self->{$key} = $arg;
+        return $weaken ? (weaken($self->{$key} = $arg)) : ($self->{$key} = $arg);
       }
 
       return $self->{$key} ||= $map_class->new;
