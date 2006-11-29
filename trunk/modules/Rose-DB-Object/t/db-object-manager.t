@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3100;
+use Test::More tests => 3102;
 
 BEGIN 
 {
@@ -2910,7 +2910,7 @@ EOF
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 786)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 788)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -3216,15 +3216,18 @@ SKIP: foreach my $db_type ('mysql')
   # Conservative version check for hints support
   if($objs->[0]->db->database_version >= 4_000_009)
   {
+
     my $sql = 
       Rose::DB::Object::Manager->get_objects_sql(
         object_class => 'MyMySQLObject',
         share_db     => 1,
+        with_objects => [ 'bb1' ],
         query        =>
         [
           't1.id'    => { ge => 2 },
           't1.name'  => { like => '%tt%' },
         ],
+        unique_aliases => 1,
         hints => { t1 => { ignore_index => 'rose_db_object_test_idx' } });
 
     $objs = 
@@ -3239,11 +3242,13 @@ SKIP: foreach my $db_type ('mysql')
         hints => { t1 => { ignore_index => 'rose_db_object_test_idx' } });
 
     ok($sql =~ m{\bIGNORE INDEX \(rose_db_object_test_idx\)}, "hints single table - $db_type");
+    ok($sql =~ m{ t1_name,}, "unique_aliases 1 - $db_type");
 
     $sql = 
       Rose::DB::Object::Manager->get_objects_sql(
         object_class => 'MyMySQLObject',
         share_db     => 1,
+        with_objects => [ 'bb1' ],
         query        =>
         [
           't1.id'    => { ge => 2 },
@@ -3263,6 +3268,7 @@ SKIP: foreach my $db_type ('mysql')
         hints => { ignore_index => 'rose_db_object_test_idx' });
 
     ok($sql =~ m{\bIGNORE INDEX \(rose_db_object_test_idx\)}, "hints single table 2 - $db_type");
+    ok($sql !~ m{ t1_name,}, "unique_aliases 2 - $db_type");
 
     $sql = 
       Rose::DB::Object::Manager->get_objects_sql(

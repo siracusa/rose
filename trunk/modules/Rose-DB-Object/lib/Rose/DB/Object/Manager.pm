@@ -3860,6 +3860,23 @@ Within each string, any instance of "NAME." will be replaced with the appropriat
 
 If selecting sub-objects (via C<require_objects> or C<with_objects>) that are related through "one to many" or "many to many" relationships, the first condition in the sort order clause must be a column in the primary table (t1).  If this condition is not met, the list of primary key columns will be added to the beginning of the sort order clause automatically.
 
+=item C<unique_aliases BOOL>
+
+If true, and if there is no explicit value for the C<select> parameter and more than one table is participating in the query, then each selected column will be given a unique alias by prefixing it with its table alias and an underscore.  The default value is false.  Example:
+
+    SELECT
+      t1.id    AS t1_id,
+      t1.name  AS t1_name,
+      t2.id    AS t2_id,
+      t2.name  AS t2_name
+    FROM
+      foo AS t1,
+      bar AS t2
+    WHERE
+      ...
+
+These unique aliases provide a technique of last resort for unambiguously addressing a column in a query clause.
+
 =item C<with_map_records [ BOOL | METHOD | HASHREF ]>
 
 When fetching related objects through a "L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany>" relationship, objects of the L<map class|Rose::DB::Object::Metadata::Relationship::ManyToMany/map_class> are not retrieved by default.  Use this parameter to override the default behavior.

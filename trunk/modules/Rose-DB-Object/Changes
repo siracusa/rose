@@ -1,5 +1,10 @@
 0.758 (11.29.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Added the get_objects_iterator_from_sql() Manager method and an
+      iterator option for the make_manager_method_from_sql() method.
+      (Suggested by George Hartzell)
+    * Turned off unique column aliases by default, and added the
+      unique_aliases Manager parameter to turn them back on.
     * Fixed some circular references.  (Reported by Bruno Czekay) 
 
 0.757 (11.22.2006) - John Siracusa <siracusa@mindspring.com>
