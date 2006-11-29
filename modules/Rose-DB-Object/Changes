@@ -3,7 +3,7 @@
     * Added the get_objects_iterator_from_sql() Manager method and an
       iterator option for the make_manager_method_from_sql() method.
       (Suggested by George Hartzell)
-    * Turned off unique column aliases by default, and added the
+    * Turned off unique column aliases by default and added the
       unique_aliases Manager parameter to turn them back on.
     * Fixed some circular references that could have caused database
       connections to leak.  (Reported by Bruno Czekay) 
