@@ -81,7 +81,8 @@ sub build_select
   my $bind_params = $args{'bind_params'};
   my $from_and_where_only = delete $args{'from_and_where_only'};
   my $allow_empty_lists   = $args{'allow_empty_lists'};
-
+  my $unique_aliases = $args{'unique_aliases'};
+  
   $all_columns = $columns  unless(%$all_columns);
 
   $logic = " $logic"  unless($logic eq ',');
@@ -268,11 +269,17 @@ sub build_select
         if($multi_table)
         {
           push(@select_columns, 
-            $obj_meta ? ($obj_meta->column($column)->select_sql($db, $table_alias) . 
-                         ' AS ' . $db->auto_quote_column_name("${table_alias}_$column")) :
-            $db ? ($db->auto_quote_column_with_table($column, $table_alias) . 
-                   ' AS ' . $db->auto_quote_column_name("${table_alias}_$column")) :
-            "$short_column AS ${table_alias}_$column");
+            $obj_meta ? 
+            (
+              $obj_meta->column($column)->select_sql($db, $table_alias) . 
+              ($unique_aliases ? (' AS ' . $db->auto_quote_column_name("${table_alias}_$column")) : '')
+            ) :
+            $db ?
+            (
+              $db->auto_quote_column_with_table($column, $table_alias) . 
+              ($unique_aliases ? (' AS ' . $db->auto_quote_column_name("${table_alias}_$column")) : '')
+            ) :
+            ($unique_aliases ? "$short_column AS ${table_alias}_$column" : $short_column));
         }
         else
         {
@@ -1109,42 +1116,6 @@ A string indicating the logic that will be used to join the statements in the WH
 
 If true, the SQL returned will have slightly nicer formatting.
 
-=item B<select COLUMNS>
-
-The names of the columns to select from the table.  COLUMNS may be a string of comma-separated column names, or a reference to an array of column names.  If this parameter is omitted, it defaults to all of the columns in all of the tables participating in the query (according to the value of the C<columns> argument).
-
-=item B<sort_by CLAUSE>
-
-A fully formed SQL "ORDER BY ..." clause, sans the words "ORDER BY", or a reference to an array of strings to be joined with a comma and appended to the "ORDER BY" clause.
-
-=item B<tables TABLES>
-
-A reference to an array of table names.  This argument is required.  A fatal error will occur if it is omitted.
-
-If more than one table is in the list, then each table is aliased to "tN", where N is an ascending number starting with 1.  The tables are numbered according to their order in TABLES.  Example:
-
-    $sql = build_select(tables => [ 'foo', 'bar', 'baz' ], ...);
-
-    print $sql;
-
-    # SELECT ... FROM
-    #   foo AS t1,
-    #   bar AS t2,
-    #   baz AS t3
-    # ...
-
-Furthermore, if there is no explicit value for the C<select> parameter, then each selected column is aliased with a "tN_" prefix in a multi-table query.  Example:
-
-    SELECT
-      t1.id    AS t1_id,
-      t1.name  AS t1_name,
-      t2.id    AS t2_id,
-      t2.name  AS t2_name
-    FROM
-      foo AS t1,
-      bar AS t2
-    WHERE
-      ...
 
 =item B<query PARAMS>
 
@@ -1460,13 +1431,13 @@ Finally, here's an example using more than one table:
 The above returns an SQL statement something like this:
 
     SELECT
-      t1.id          AS t1_id,
-      t1.name        AS t1_name,
-      t1.category_id AS t1_category_id,
-      t1.date        AS t1_date,
-      t2.id          AS t2_id,
-      t2.name        AS t2_name,
-      t2.description AS t2_description
+      t1.id,
+      t1.name,
+      t1.category_id,
+      t1.date,
+      t2.id,
+      t2.name,
+      t2.description
     FROM
       articles   t1,
       categories t2
@@ -1522,6 +1493,49 @@ The advantage of this approach is that the query values do not have to be so rig
 The disadvantage is that all of this parsing and formatting is done for every query value, and that adds additional overhead to each call.
 
 Usually, this overhead is dwarfed by the time required for the database to service the query, and, perhaps more importantly, the reduced maintenance headache and busywork required to properly format all query values.
+
+=item B<select COLUMNS>
+
+The names of the columns to select from the table.  COLUMNS may be a string of comma-separated column names, or a reference to an array of column names.  If this parameter is omitted, it defaults to all of the columns in all of the tables participating in the query (according to the value of the C<columns> argument).
+
+=item B<sort_by CLAUSE>
+
+A fully formed SQL "ORDER BY ..." clause, sans the words "ORDER BY", or a reference to an array of strings to be joined with a comma and appended to the "ORDER BY" clause.
+
+=item B<tables TABLES>
+
+A reference to an array of table names.  This argument is required.  A fatal error will occur if it is omitted.
+
+If more than one table is in the list, then each table is aliased to "tN", where N is an ascending number starting with 1.  The tables are numbered according to their order in TABLES.  Example:
+
+    $sql = build_select(tables => [ 'foo', 'bar', 'baz' ], ...);
+
+    print $sql;
+
+    # SELECT ... FROM
+    #   foo AS t1,
+    #   bar AS t2,
+    #   baz AS t3
+    # ...
+
+Furthermore, if there is no explicit value for the C<select> parameter and if the C<unique_aliases> parameter is set to true, then each selected column is aliased with a "tN_" prefix in a multi-table query.  Example:
+
+    SELECT
+      t1.id    AS t1_id,
+      t1.name  AS t1_name,
+      t2.id    AS t2_id,
+      t2.name  AS t2_name
+    FROM
+      foo AS t1,
+      bar AS t2
+    WHERE
+      ...
+
+These unique aliases provide a technique of last resort for unambiguously addressing a column in a query clause.
+
+=item C<unique_aliases BOOL>
+
+If true, then each selected column will be given a unique alias by prefixing it with its table alias and an underscore.  The default value is false.  See the documentation for the C<tables> parameter above for an example.
 
 =back
 
