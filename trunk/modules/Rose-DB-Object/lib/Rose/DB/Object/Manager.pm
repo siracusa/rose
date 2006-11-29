@@ -3953,7 +3953,11 @@ Examples:
 
 =item B<get_objects_iterator [PARAMS]>
 
-Accepts any valid L<get_objects|/get_objects> argument, but return a L<Rose::DB::Object::Iterator> object which can be used to fetch the objects one at a time, or undef if there was an error.
+Accepts any valid L<get_objects|/get_objects> arguments, but return a L<Rose::DB::Object::Iterator> object, or undef if there was an error.
+
+=item B<get_objects_iterator_from_sql [PARAMS]>
+
+Accepts any valid L<get_objects_from_sql|/get_objects_from_sql> arguments, but return a L<Rose::DB::Object::Iterator> object, or undef if there was an error.
 
 =item B<get_objects_sql [PARAMS]>
 
@@ -4198,9 +4202,15 @@ This is the typical evolution of an object manager method.  It starts out as bei
 
 =item B<make_manager_method_from_sql [ NAME =E<gt> SQL | PARAMS ]>
 
-Create a class method in the calling class that will fetch objects using a custom SQL query.  Pass either a method name and an SQL query string or name/value parameters as arguments.  Valid parameters are:
+Create a class method in the calling class that will fetch objects using a custom SQL query.  The method created will return a reference to an array of objects or a L<Rose::DB::Object::Iterator> object, depending on whether the C<iterator> parameter is set (see below).
+
+Pass either a method name and an SQL query string or name/value parameters as arguments.  Valid parameters are:
 
 =over 4
+
+=item C<iterator BOOL>
+
+If true, the method created will return a L<Rose::DB::Object::Iterator> object.
 
 =item C<object_class CLASS>
 
@@ -4234,7 +4244,7 @@ Arguments passed to the created method will be passed to L<DBI>'s L<execute|DBI/
 
 Returns a code reference to the method created.
 
-Example:
+Examples:
 
     package Product::Manager;
 
@@ -4245,7 +4255,7 @@ Example:
     __PACKAGE__->make_manager_method_from_sql(get_odd_products =><<"EOF");
     SELECT * FROM products WHERE sku % 2 != 0 
     EOF
-
+    
     # Make method that takes one positional parameter
     __PACKAGE__->make_manager_method_from_sql(get_new_products =><<"EOF");
     SELECT * FROM products WHERE release_date > ?
@@ -4269,6 +4279,27 @@ Example:
       Product::Manager->get_named_products(
         name => 'Kite%', 
         type => 'toy');
+
+    # Make method that takes named parameters and returns an iterator
+    __PACKAGE__->make_manager_method_from_sql(
+      method   => 'get_named_products_iterator',
+      iterator => 1,
+      params   => [ qw(type name) ],
+      sql      => <<"EOF");
+    SELECT * FROM products WHERE type = ? AND name LIKE ?
+    EOF
+
+    $iterator = 
+      Product::Manager->get_named_products_iterator(
+        name => 'Kite%', 
+        type => 'toy');
+
+    while(my $product = $iterator->next)
+    {
+      ... # do something with $product
+
+      $iterator->finish  if(...); # finish early?
+    }
 
 =item B<object_class>
 
