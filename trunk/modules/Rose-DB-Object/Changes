@@ -6,7 +6,7 @@
     * Turned off unique column aliases by default and added the
       unique_aliases Manager parameter to turn them back on.
     * Fixed some circular references that could have caused database
-      connections to leak.  (Reported by Bruno Czekay) 
+      connections to leak.  (Reported by Bruno Czekay)
 
 0.757 (11.22.2006) - John Siracusa <siracusa@mindspring.com>
 
