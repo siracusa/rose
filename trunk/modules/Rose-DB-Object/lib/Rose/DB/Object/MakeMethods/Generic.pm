@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.757';
+our $VERSION = '0.758';
 
 our $Debug = 0;
 
@@ -3578,7 +3578,7 @@ sub objects_by_map
                      "$map_class - " . $map_manager->error);
         return wantarray ? () : $objs;
       }
-$DB::single = 1;
+
       if($map_record_method)
       {
         $self->{$key} = 

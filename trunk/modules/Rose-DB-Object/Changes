@@ -1,6 +1,6 @@
-0.758 (11.28.2006) - John Siracusa <siracusa@mindspring.com>
+0.758 (11.29.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * Memory cycle stuff (in progress...)
+    * Fixed some circular references.  (Reported by Bruno Czekay) 
 
 0.757 (11.22.2006) - John Siracusa <siracusa@mindspring.com>
 
