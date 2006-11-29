@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1478;
+use Test::More tests => 1479;
 
 BEGIN 
 {
@@ -11,7 +11,14 @@ BEGIN
   use_ok('Rose::DB::Object::Manager');
 }
 
-our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
+our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE, 
+    $HAVE_TEST_MEMORY_CYCLE);
+
+eval
+{
+  require Test::Memory::Cycle;
+  $HAVE_TEST_MEMORY_CYCLE = 1;
+};
 
 #
 # Postgres
@@ -4135,7 +4142,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 400)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 401)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -5553,16 +5560,18 @@ SKIP: foreach my $db_type ('sqlite')
   # End "many to many" tests
 
   # Begin with_map_records tests
-print find_cycle($o);
-print "######################\n";
-$DB::single = 1;
+  
+  test_memory_cycle_ok($o, "with_map_records memory cycle 1 - $db_type");
+# print find_cycle($o);
+# print "######################\n";
+#$DB::single = 1;
   @colors = $o->colors2;  
-use Devel::Cycle;
-print find_cycle($o);
-exit;
+# use Devel::Cycle;
+# print find_cycle($o);
+# exit;
   is($colors[0]->map_record->color_id, $colors[0]->id, "with_map_records rel 1 - $db_type");
   is($colors[0]->map_record->obj_id, $o->id, "with_map_records rel 2 - $db_type");
-
+#exit;
   @colors = $o->colors3;  
 
   is($colors[-1]->map_rec->color_id, $colors[-1]->id, "with_map_records rel 3 - $db_type");
@@ -7087,6 +7096,13 @@ EOF
 
     MySQLiteColorMap->meta->initialize;
   }
+}
+
+sub test_memory_cycle_ok
+{
+  $HAVE_TEST_MEMORY_CYCLE ? 
+    Test::Memory::Cycle::memory_cycle_ok(@_) : 
+    ok(1, 'Test::Memory::Cycle not installed');
 }
 
 END
