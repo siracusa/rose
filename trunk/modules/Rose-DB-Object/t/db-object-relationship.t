@@ -5553,13 +5553,13 @@ SKIP: foreach my $db_type ('sqlite')
   # End "many to many" tests
 
   # Begin with_map_records tests
-#print find_cycle($o);
-#print "######################\n";
-#$DB::single = 1;
+print find_cycle($o);
+print "######################\n";
+$DB::single = 1;
   @colors = $o->colors2;  
-#use Devel::Cycle;
-#print find_cycle($o);
-#exit;
+use Devel::Cycle;
+print find_cycle($o);
+exit;
   is($colors[0]->map_record->color_id, $colors[0]->id, "with_map_records rel 1 - $db_type");
   is($colors[0]->map_record->obj_id, $o->id, "with_map_records rel 2 - $db_type");
 

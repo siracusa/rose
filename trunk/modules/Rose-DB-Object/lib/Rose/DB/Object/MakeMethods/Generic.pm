@@ -5,7 +5,7 @@ use strict;
 use Bit::Vector::Overload;
 
 use Carp();
-use Scalar::Util qw(weaken);
+use Scalar::Util qw(weaken refaddr);
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
@@ -3578,15 +3578,22 @@ sub objects_by_map
                      "$map_class - " . $map_manager->error);
         return wantarray ? () : $objs;
       }
-
+$DB::single = 1;
       if($map_record_method)
       {
         $self->{$key} = 
         [
           map 
           {
-            my $o = $_->$map_to_method();
-            $o->$map_record_method($_); 
+            my $map_rec = $_;
+            my $o = $map_rec->$map_to_method();
+
+            if(refaddr($map_rec->{$map_to}) == refaddr($o))
+            {
+              weaken($map_rec->{$map_to} = $o);
+            }
+
+            $o->$map_record_method($map_rec); 
             $o;
           }
           @$objs
