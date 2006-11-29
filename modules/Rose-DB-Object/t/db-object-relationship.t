@@ -11,14 +11,8 @@ BEGIN
   use_ok('Rose::DB::Object::Manager');
 }
 
-our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE, 
-    $HAVE_TEST_MEMORY_CYCLE);
+our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
-eval
-{
-  require Test::Memory::Cycle;
-  $HAVE_TEST_MEMORY_CYCLE = 1;
-};
 
 #
 # Postgres
@@ -7096,13 +7090,6 @@ EOF
 
     MySQLiteColorMap->meta->initialize;
   }
-}
-
-sub test_memory_cycle_ok
-{
-  $HAVE_TEST_MEMORY_CYCLE ? 
-    Test::Memory::Cycle::memory_cycle_ok(@_) : 
-    ok(1, 'Test::Memory::Cycle not installed');
 }
 
 END

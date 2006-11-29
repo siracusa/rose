@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3059;
+use Test::More tests => 3060;
 
 BEGIN 
 {
@@ -8396,7 +8396,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 771)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 772)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -9629,6 +9629,8 @@ SKIP: foreach my $db_type (qw(sqlite))
       with_map_records => 'map_record',
       query         => [ 't1.id' => [ 1, 2, 5 ] ],
       sort_by       => 't1.name');
+
+  test_memory_cycle_ok($objs, "get_objects() with many to many cycle - $db_type");
 
   is(ref $objs, 'ARRAY', "get_objects() with many to many 1 - $db_type");
   $objs ||= [];

@@ -298,4 +298,21 @@ EOF
   return 1;
 }
 
+our $HAVE_TEST_MEMORY_CYCLE;
+
+eval
+{
+  require Test::Memory::Cycle;
+  $HAVE_TEST_MEMORY_CYCLE = 1;
+};
+
+sub test_memory_cycle_ok
+{
+  my($val, $msg) = @_;
+
+  $HAVE_TEST_MEMORY_CYCLE ? 
+    Test::Memory::Cycle::memory_cycle_ok($val, $msg) : 
+    Test::More::ok(1, "$msg (skipped)");
+}
+
 1;
