@@ -2,10 +2,12 @@ package Rose::HTML::Form::Field::Text;
 
 use strict;
 
+use Rose::HTML::Object::Errors qw(:string);
+
 use Rose::HTML::Form::Field::Input;
 our @ISA = qw(Rose::HTML::Form::Field::Input);
 
-our $VERSION = '0.011';
+our $VERSION = '0.544';
 
 __PACKAGE__->delete_valid_html_attrs(qw(ismap usemap alt src));
 
@@ -31,7 +33,41 @@ sub xhtml_field
   return $self->SUPER::xhtml_field(@_);
 }
 
+sub validate
+{
+  my($self) = shift;
+
+  my $ok = $self->SUPER::validate(@_);
+  return $ok  unless($ok);
+
+  my $value = $self->input_value;
+  return 1  unless(defined $value && length $value);
+
+  my $maxlength = $self->maxlength;
+
+  my $name = sub { $self->label || $self->name };
+
+  if(defined $maxlength && length($value) > $maxlength)
+  {
+    $self->add_error_id(STRING_OVERFLOW, { label => $name, value => $maxlength });
+    return 0;
+  }
+
+  return 1;
+}
+
+if(__PACKAGE__->localizer->auto_load_messages)
+{
+  __PACKAGE__->localizer->load_all_messages;
+}
+
 1;
+
+__DATA__
+
+[% LOCALE en %]
+
+STRING_OVERFLOW = "[label] must not exceed [maxlength] characters."
 
 __END__
 

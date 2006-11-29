@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 233;
+use Test::More tests => 235;
 
 BEGIN 
 {
@@ -337,6 +337,8 @@ $form->params(name => '<John>', age => 27, bday => '1980-12-25',
 
 $form->init_fields();
 
+is($form->field_value('age'), 27, 'field_value() 1');
+
 ok($form->validate, 'validate()');
 
 is($form->html_hidden_fields, 
@@ -478,6 +480,8 @@ $form->params(name    => 'John',
               bday    => '1/24/1984');
 
 $form->init_fields;
+
+is($form->field_value('bday')->day, 24, 'field_value() 2');
 
 my $vals = join(':', map { defined $_ ? $_ : '' } 
              $form->field('name')->internal_value,
