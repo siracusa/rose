@@ -519,7 +519,7 @@ EOF
 
     package MyInformixOtherObject;
     our @ISA = qw(Rose::DB::Object);
-    sub init_db { Rose::DB->new('sqlite') }
+    sub init_db { Rose::DB->new('informix') }
     __PACKAGE__->meta->table('rose_db_object_test_other');
     __PACKAGE__->meta->auto_initialize;
   }
