@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3060;
+use Test::More tests => 3070;
 
 BEGIN 
 {
@@ -8396,7 +8396,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 772)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 782)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -10326,6 +10326,23 @@ EOF
   is($objs->[18]->save_col, 5, "get_objects_from_sql 3 - $db_type");
   is($objs->[18]->name, 'John', "get_objects_from_sql 4 - $db_type");
 
+  $iterator = 
+    MySQLiteObjectManager->get_objects_iterator_from_sql(
+      db  => MySQLiteObject->init_db,
+      object_class => 'MySQLiteObject',
+      prepare_cached => 1,
+      sql => <<"EOF");
+SELECT * FROM rose_db_object_test WHERE id != fk1 ORDER BY id DESC
+EOF
+
+  for(0 .. 17) { $iterator->next }
+
+  $o = $iterator->next;
+  is($o->id, 1, "get_objects_iterator_from_sql 1 - $db_type");
+  is($o->save_col, 5, "get_objects_iterator_from_sql 2 - $db_type");
+  is($o->name, 'John', "get_objects_iterator_from_sql 3 - $db_type");
+  ok(!$iterator->next,  "get_objects_iterator_from_sql 4 - $db_type");
+
   $objs = MySQLiteObjectManager->get_objects_from_sql(<<"EOF");
 SELECT * FROM rose_db_object_test WHERE id != fk1 ORDER BY id DESC
 EOF
@@ -10364,6 +10381,30 @@ EOF
   is($objs->[17]->id, 3, "make_manager_method_from_sql 6 - $db_type");
   is($objs->[17]->extra, 7, "make_manager_method_from_sql 7 - $db_type");
   is($objs->[17]->name, 'Sue', "make_manager_method_from_sql 8 - $db_type");  
+
+  $method = 
+    MySQLiteObjectManager->make_manager_method_from_sql(
+      iterator => 1, method => 'iter_em', sql => <<"EOF");
+SELECT *, save + fk1 AS extra FROM rose_db_object_test WHERE id != fk1 ORDER BY id DESC
+EOF
+
+  $iterator = MySQLiteObjectManager->iter_em;
+
+  for(0 .. 16) { $iterator->next }
+
+  $o = $iterator->next;
+  is($objs->[17]->id, 3, "make_manager_method_from_sql iterator 1 - $db_type");
+  is($objs->[17]->extra, 7, "make_manager_method_from_sql iterator 2 - $db_type");
+  is($objs->[17]->name, 'Sue', "make_manager_method_from_sql iterator 3 - $db_type");  
+
+  $iterator = $method->('MySQLiteObjectManager');
+
+  for(0 .. 16) { $iterator->next }
+
+  $o = $iterator->next;
+  is($objs->[17]->id, 3, "make_manager_method_from_sql iterator 4 - $db_type");
+  is($objs->[17]->extra, 7, "make_manager_method_from_sql iterator 5 - $db_type");
+  is($objs->[17]->name, 'Sue', "make_manager_method_from_sql iterator 6 - $db_type");   
 
   $method = 
     MySQLiteObjectManager->make_manager_method_from_sql(
