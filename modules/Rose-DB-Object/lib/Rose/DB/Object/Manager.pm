@@ -5,7 +5,7 @@ use strict;
 use Carp();
 
 use List::Util qw(first);
-use Scalar::Util qw(refaddr);
+use Scalar::Util qw(weaken refaddr);
 
 use Rose::DB::Object::Iterator;
 use Rose::DB::Object::QueryBuilder qw(build_select build_where_clause);
@@ -2926,6 +2926,9 @@ sub make_manager_method_from_sql
 
   $args{'_methods'} = {}; # Will fill in on first run
 
+  my $worker_method = $args{'iterator'} ?
+    'get_objects_iterator_from_sql' : 'get_objects_from_sql';
+
   if($named_args)
   {    
     my @params = @$named_args; # every little bit counts
@@ -2933,7 +2936,7 @@ sub make_manager_method_from_sql
     $code = sub 
     {
       my($self, %margs) = @_;
-      $self->get_objects_from_sql(
+      $self->$worker_method(
         %args,
         args => [ delete @margs{@params} ], 
         %margs);
@@ -2941,7 +2944,7 @@ sub make_manager_method_from_sql
   }
   else
   {
-    $code = sub { shift->get_objects_from_sql(%args, args => \@_) };
+    $code = sub { shift->$worker_method(%args, args => \@_) };
   }
 
   no strict 'refs';
@@ -3060,6 +3063,149 @@ sub get_objects_from_sql
   }
 
   return \@objects;
+}
+
+sub get_objects_iterator_from_sql
+{
+  my($class) = shift;
+
+  my(%args, $sql);
+
+  if(@_ == 1) { $sql = shift }
+  else
+  {
+    %args = @_;
+    $sql = $args{'sql'};
+  }
+
+  Carp::croak "Missing SQL"  unless($sql);
+
+  my $object_class = $args{'object_class'} || $class->object_class ||
+    Carp::croak "Missing object class";
+
+  weaken(my $meta = $object_class->meta
+    or Carp::croak "Could not get meta for $object_class");
+
+  my $prepare_cached = 
+    exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
+    $class->dbi_prepare_cached;
+
+  my $methods   = $args{'_methods'};
+  my $exec_args = $args{'args'} || [];
+
+  my $have_methods = ($args{'_methods'} && %{$args{'_methods'}}) ? 1 : 0;
+
+  my $db  = delete $args{'db'} || $object_class->init_db;
+  my $dbh = delete $args{'dbh'};
+  my $dbh_retained = 0;
+
+  unless($dbh)
+  {
+    unless($dbh = $db->retain_dbh)
+    {
+      $class->error($db->error);
+      $class->handle_error($class);
+      return undef;
+    }
+
+    $dbh_retained = 1;
+  }
+
+  my %object_args =
+  (
+    (exists $args{'share_db'} ? $args{'share_db'} : 1) ? (db => $db) : ()
+  );
+
+  my $sth;
+
+  eval
+  {
+    local $dbh->{'RaiseError'} = 1;
+
+    $Debug && warn "$sql\n";
+    $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                             $dbh->prepare($sql) or die $dbh->errstr;
+
+    $sth->execute(@$exec_args);
+  };
+
+  if($@)
+  {
+    $db->release_dbh  if($dbh_retained);
+    $class->total(undef);
+    $class->error("get_objects_iterator_from_sql() - $@");
+    $class->handle_error($class);
+    return undef;
+  }
+
+  my $iterator = Rose::DB::Object::Iterator->new(active => 1);
+
+  $iterator->_next_code(sub
+  {
+    my($self) = shift;
+  
+    my $object = 0;
+
+    eval
+    {
+      ROW: for(;;)
+      {
+        my $row = $sth->fetchrow_hashref or return 0;
+
+        unless($have_methods)
+        {
+          foreach my $col (keys %$row)
+          {
+            if($meta->column($col))
+            {
+              $methods->{$col} = $meta->column_mutator_method_name($col);
+            }
+            elsif($object_class->can($col))
+            {
+              $methods->{$col} = $col;
+            }
+          }
+  
+          $have_methods = 1;
+        }
+  
+        $object = $object_class->new(%object_args);
+  
+        local $object->{STATE_LOADING()} = 1;
+        $object->{STATE_IN_DB()} = 1;
+  
+        while(my($col, $val) = each(%$row))
+        {
+          my $method = $methods->{$col};
+          $object->$method($val);
+        }
+  
+        $object->{MODIFIED_COLUMNS()} = {};
+  
+        $self->{'_count'}++;
+        last ROW;
+      }
+      
+      if($@)
+      {
+        $self->error("next() - $@");
+        $class->handle_error($self);
+        return undef;
+      }
+
+      return $object;
+    };
+  });
+
+  $iterator->_finish_code(sub
+  {
+    $sth->finish      if($sth);
+    $db->release_dbh  if($db && $dbh_retained);
+    $sth = undef;
+    $db = undef;
+  });
+
+  return $iterator;
 }
 
 sub perl_class_definition
