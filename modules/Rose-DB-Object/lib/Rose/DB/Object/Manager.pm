@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.757';
+our $VERSION = '0.758';
 
 our $Debug = 0;
 
@@ -3143,7 +3143,7 @@ sub get_objects_iterator_from_sql
   $iterator->_next_code(sub
   {
     my($self) = shift;
-  
+
     my $object = 0;
 
     eval
@@ -3165,27 +3165,27 @@ sub get_objects_iterator_from_sql
               $methods->{$col} = $col;
             }
           }
-  
+
           $have_methods = 1;
         }
-  
+
         $object = $object_class->new(%object_args);
-  
+
         local $object->{STATE_LOADING()} = 1;
         $object->{STATE_IN_DB()} = 1;
-  
+
         while(my($col, $val) = each(%$row))
         {
           my $method = $methods->{$col};
           $object->$method($val);
         }
-  
+
         $object->{MODIFIED_COLUMNS()} = {};
-  
+
         $self->{'_count'}++;
         last ROW;
       }
-      
+
       if($@)
       {
         $self->error("next() - $@");
@@ -4272,7 +4272,7 @@ Examples:
     __PACKAGE__->make_manager_method_from_sql(get_odd_products =><<"EOF");
     SELECT * FROM products WHERE sku % 2 != 0 
     EOF
-    
+
     # Make method that takes one positional parameter
     __PACKAGE__->make_manager_method_from_sql(get_new_products =><<"EOF");
     SELECT * FROM products WHERE release_date > ?

@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.757';
+our $VERSION = '0.758';
 
 our $Debug = 0;
 
@@ -82,7 +82,7 @@ sub build_select
   my $from_and_where_only = delete $args{'from_and_where_only'};
   my $allow_empty_lists   = $args{'allow_empty_lists'};
   my $unique_aliases = $args{'unique_aliases'};
-  
+
   $all_columns = $columns  unless(%$all_columns);
 
   $logic = " $logic"  unless($logic eq ',');
