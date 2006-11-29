@@ -6,7 +6,7 @@ use Carp;
 
 use base 'Rose::HTML::Object::Exporter';
 
-our $VERSION = '0.54';
+our $VERSION = '0.544';
 
 our $Debug = 0;
 
@@ -42,6 +42,7 @@ sub init_export_tags
     phone  => [ grep { /^PHONE_/ } @{$class->message_names_list} ],
     number => [ grep { /^NUM_/ } @{$class->message_names_list} ],
     set    => [ grep { /^SET_/ } @{$class->message_names_list} ],
+    string => [ grep { /^STRING_/ } @{$class->message_names_list} ],
   );
 }
 
@@ -194,6 +195,9 @@ use constant NUM_INVALID_INTEGER_POSITIVE => 1301;
 use constant NUM_NOT_POSITIVE_INTEGER     => 1302;
 use constant NUM_BELOW_MIN                => 1303;
 use constant NUM_ABOVE_MAX                => 1304;
+
+# String messages
+use constant STRING_OVERFLOW => 1400;
 
 # Date messages
 use constant DATE_INVALID              => 1500;

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 27;
+use Test::More tests => 31;
 
 BEGIN 
 {
@@ -95,6 +95,19 @@ $field->html_attr(disabled => 1);
 
 is($field->html_field, '<input class="foo" disabled id="bar" maxlength="20" name="name" size="15" style="baz" type="text" value="Anonymous">', 'html_field() 7');
 is($field->xhtml_field, '<input class="foo" disabled="disabled" id="bar" maxlength="20" name="name" size="15" style="baz" type="text" value="Anonymous" />', 'xhtml_field() 7');
+
+
+$field->value('bad--12345678901234567');
+ok(!$field->validate, 'validate() 1');
+
+$field->value('bad--1234567890123456');
+ok(!$field->validate, 'validate() 2');
+
+$field->value('good-123456789012345');
+ok($field->validate, 'validate() 3');
+
+$field->value('');
+ok($field->validate, 'validate() 4');
 
 BEGIN
 {

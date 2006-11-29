@@ -61,6 +61,10 @@ Although the mailing list is the preferred support mechanism, you can also email
 
 L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-HTML-Objects>
 
+=head1 CONTRIBUTORS
+
+Uwe Voelker, Jacques Supcik, Cees Hek
+
 =head1 AUTHOR
 
 John C. Siracusa (siracusa@mindspring.com)

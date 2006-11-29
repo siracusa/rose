@@ -15,7 +15,7 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.541';
+our $VERSION = '0.544';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -1094,6 +1094,8 @@ sub delete_field
   return $field1 || $field2;
 }
 
+sub field_value { shift->field(shift)->internal_value }
+
 sub field
 {
   my($self, $name) = (shift, shift);
@@ -2021,6 +2023,16 @@ The default mapping of type names to class names is:
 
   'datetime split mdyhms' => 
     Rose::HTML::Form::Field::DateTime::Split::MDYHMS
+
+=item B<field_value NAME>
+
+Returns the L<internal_value|Rose::HTML::Form::Field/internal_value> of the field named NAME.  In other words, this:
+
+    $val = $form->field_value('zip_code');
+
+is just a shorter way to write this:
+
+    $val = $form->field('zip_code')->internal_value;
 
 =item B<form NAME [, OBJECT]>
 
