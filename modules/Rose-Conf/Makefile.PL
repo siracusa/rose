@@ -5,7 +5,8 @@ use ExtUtils::MakeMaker;
 WriteMakefile(NAME         => 'Rose::Conf',
               PMLIBDIRS    => [ 'lib' ],
               VERSION_FROM => 'lib/Rose/Conf.pm',
-              dist => { DIST_CP => 'cp' }, # Avoid Mac OS X ._* files
+              ($^O =~ /darwin/i ?
+               (dist => { DIST_CP => 'cp' }) : ()), # Avoid Mac OS X ._* files
               PREREQ_PM =>
               {
                 'Rose::Object' => 0,
