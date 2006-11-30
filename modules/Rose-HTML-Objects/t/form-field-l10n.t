@@ -92,7 +92,9 @@ $id = MyField->localizer->add_localized_message(
     xx => 'Nom',
   });
 
+#$Rose::HTML::Object::Exporter::Debug = 1;
 MyField->localizer->import_message_ids(':all');
+#$Rose::HTML::Object::Exporter::Debug = 0;
 
 $o->label_message_id(NAME_FIELD_LABEL());
 
