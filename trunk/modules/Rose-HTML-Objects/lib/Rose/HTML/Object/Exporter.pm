@@ -4,6 +4,8 @@ use strict;
 
 use Carp;
 
+our $VERSION = 0.544_01;
+
 our $Debug = 0;
 
 use Rose::Class::MakeMethods::Set
@@ -86,9 +88,18 @@ sub import
     my $code = $class->can($symbol) or 
       croak "Could not import symbol '$symbol' from $class - no such symbol";
 
+    my $is_constant = (defined prototype($code) && !length(prototype($code))) ? 1 : 0;
+
     my $import_as = $import_as{$symbol} || $symbol;
 
-    if($target_class->can($import_as) && !$force)
+    my $existing_code = $target_class->can($import_as);
+    
+    no strict 'refs';
+    no warnings 'uninitialized';
+
+    if($existing_code && !$force && (
+         ($is_constant && $existing_code eq \&{"${target_class}::$import_as"}) ||
+         (!$is_constant && $existing_code)))
     {
       next  if($Imported{$target_class}{$import_as});
 
@@ -112,9 +123,18 @@ sub import
       }
     }
 
-    no strict 'refs';
-    $Debug && warn "${target_class}::$import_as = ${class}->$symbol\n";
-    *{$target_class . '::' . $import_as} = $code;
+    if($is_constant)
+    {
+      no strict 'refs';
+      $Debug && warn "${target_class}::$import_as = ${class}::$symbol\n";
+      *{$target_class . '::' . $import_as} = *{"${class}::$symbol"};
+    }
+    else
+    {
+      no strict 'refs';
+      $Debug && warn "${target_class}::$import_as = ${class}->$symbol\n";
+      *{$target_class . '::' . $import_as} = $code;
+    }
 
     $Imported{$target_class}{$import_as}{'from'} = $class;
   }

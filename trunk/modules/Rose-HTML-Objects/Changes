@@ -1,3 +1,7 @@
+0.544_01 (11.30.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Improved importing of message constants.
+
 0.544 (11.29.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added a field_value() method to Rose::HTML::Form.  (Suggested by
