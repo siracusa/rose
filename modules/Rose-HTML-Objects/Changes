@@ -1,5 +1,6 @@
-0.544_01 (11.30.2006) - John Siracusa <siracusa@mindspring.com>
+0.545 (11.30.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Corrected the string overflow error message construction.
     * Improved importing of message constants.
 
 0.544 (11.29.2006) - John Siracusa <siracusa@mindspring.com>
