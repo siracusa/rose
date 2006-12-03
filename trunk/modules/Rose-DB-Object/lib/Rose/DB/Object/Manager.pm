@@ -1313,7 +1313,7 @@ sub get_objects
         $expand_dotstar = 1  if($item =~ /^t\d+\.\*$/);
       }
 
-      if(defined $tn)
+      if($args{'unique_aliases'} && defined $tn)
       {
         my $meta = $meta{$classes{$tables[$tn - 1]}};
 

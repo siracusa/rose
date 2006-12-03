@@ -1,3 +1,8 @@
+0.759 (12.03.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a bug that cuased the unique_keys Manager parameter to be
+      ignored when a custom select parameter is passed.
+
 0.758 (11.29.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added the get_objects_iterator_from_sql() Manager method and an
