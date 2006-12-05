@@ -6,7 +6,7 @@ use Rose::HTML::Object::Errors qw(:number);
 
 BEGIN
 {
-  use Test::More tests => 32;
+  use Test::More tests => 41;
   use_ok('Rose::HTML::Form::Field::Integer');
 }
 
@@ -86,3 +86,31 @@ $field->input_value(101);
 ok(!$field->validate, 'validate() 9');
 is($field->error, 'Num must be less than or equal to 100.', 'error() 4');
 is($field->error_id, NUM_ABOVE_MAX, 'error_id() 4');
+
+$field->negative(1);
+$field->input_value(300);
+ok(!$field->validate, 'validate() 10');
+
+$field->input_value(-300);
+ok($field->validate, 'validate() 11');
+
+$field->input_value(0);
+ok($field->validate, 'validate() 12');
+
+$field->positive(1);
+ok($field->validate, 'validate() 13');
+
+$field->input_value(-400);
+ok(!$field->validate, 'validate() 14');
+
+$field->input_value(400);
+ok($field->validate, 'validate() 15');
+
+$field->negative(0);
+ok($field->validate, 'validate() 16');
+
+$field->positive(0);
+$field->input_value(-400);
+ok($field->validate, 'validate() 17');
+$field->input_value(400);
+ok($field->validate, 'validate() 18');

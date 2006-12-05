@@ -261,12 +261,17 @@ sub validate
       no warnings 'uninitialized';
       unless(length $field->input_value_filtered)
       {
-        push(@missing, sub { $field->label || $field->name });
+        push(@missing, sub { $field->label || $field->local_name });
       }
     }
 
     if(@missing)
     {
+      if(@missing == $self->num_fields)
+      {
+        return $self->SUPER::validate(@_);
+      }
+
       $self->error_id(FIELD_REQUIRED, { missing => \@missing });
       return 0;
     }
@@ -290,13 +295,20 @@ sub message_for_error_id
 
     if(ref $args eq 'HASH' && keys %$args)
     {
-      if(@{$args->{'missing'}} > 1)
+      if($args->{'missing'})
       {
-        $msg->id(FIELD_REQUIRED_SUBFIELDS);
+        if(@{$args->{'missing'}} > 1)
+        {
+          $msg->id(FIELD_REQUIRED_SUBFIELDS);
+        }
+        else
+        {
+          $msg->id(FIELD_REQUIRED_SUBFIELD);
+        }
       }
       else
       {
-        $msg->id(FIELD_REQUIRED_SUBFIELD);
+        $msg->id(FIELD_REQUIRED_LABELLED);
       }
     }
     else

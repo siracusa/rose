@@ -389,6 +389,12 @@ sub fields
   return wantarray ? @{$self->{'field_list'}} : $self->{'field_list'};
 }
 
+sub num_fields
+{
+  my $fields = shift->fields;
+  return $fields && @$fields ? scalar @$fields : 0;
+}
+
 sub field_monikers
 {
   my($self) = shift;
