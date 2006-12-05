@@ -109,13 +109,13 @@ $field->field('month')->required(1);
 $field->field('month')->input_value(2);
 $field->validate;
 
-is($field->error, 'Missing Day, date.year.', 'error 1');
+is($field->error, 'Missing Day, year.', 'error 1');
 
 $field->locale('xx');
-is($field->error, 'Missing Le Day : date.year.', 'error 2');
+is($field->error, 'Missing Le Day : year.', 'error 2');
 
 $field->locale('fr');
-is($field->error, 'Les champs Day, date.year manquent.', 'error 3');
+is($field->error, 'Les champs Day, year manquent.', 'error 3');
 
 $field->field('year')->input_value(2000);
 $field->validate;

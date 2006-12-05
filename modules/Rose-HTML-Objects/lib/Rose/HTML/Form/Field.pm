@@ -863,6 +863,7 @@ if(__PACKAGE__->localizer->auto_load_messages)
 1;
 
 __DATA__
+
 [% LOCALE en %]
 
 FIELD_REQUIRED_GENERIC  = "This is a required field."

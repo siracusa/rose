@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 61;
+use Test::More tests => 70;
 
 BEGIN 
 {
@@ -354,5 +354,31 @@ ok($field->validate, 'mdyhms empty validate 1');
 ok($field->is_empty, 'mdyhms empty is_empty 1');
 ok(!$field->is_full, 'mdyhms empty is_full 1');
 
-$field = Rose::HTML::Form::Field::DateTime::Split::MonthDayYear->new(name => 'd', required => 1);
-$field->validate;
+$field = 
+  Rose::HTML::Form::Field::DateTime::Split::MonthDayYear->new(
+    name => 'start', required => 1, label => 'Start');
+
+my $ok = $field->validate;
+
+ok(defined $ok, 'empty compound validate 1');
+ok($ok == 0, 'empty compound validate 2');
+
+is($field->error, 'Start is a required field.', 'empty compound error labeled');
+
+$field = 
+  Rose::HTML::Form::Field::DateTime::Split::MonthDayYear->new(
+    name => 'start', required => 1);
+
+$ok = $field->validate;
+ok(defined $ok, 'empty compound validate 3');
+ok($ok == 0, 'empty compound validate 4');
+
+is($field->error, 'This is a required field.', 'empty compound error unlabeled');
+
+$field->field('day')->input_value(5);
+
+$ok = $field->validate;
+ok(defined $ok, 'empty compound validate 5');
+ok($ok == 0, 'empty compound validate 6');
+
+is($field->error, 'Missing month, year.', 'empty compound error unlabeled');

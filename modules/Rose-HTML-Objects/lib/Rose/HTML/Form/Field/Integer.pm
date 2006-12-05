@@ -7,7 +7,7 @@ use Rose::HTML::Object::Errors qw(:number);
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.541';
+our $VERSION = '0.545';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -15,6 +15,36 @@ use Rose::Object::MakeMethods::Generic
 );
 
 __PACKAGE__->default_html_attr_value(size  => 6);
+
+sub positive
+{
+  my($self) = shift;
+
+  if(!@_ || $_[0])
+  {
+    $self->min(0);
+    $self->max(undef);
+  }
+  elsif(@_)
+  {
+    $self->min(undef);
+  }
+}
+
+sub negative
+{
+  my($self) = shift;
+
+  if(!@_ || $_[0])
+  {
+    $self->max(0);
+    $self->min(undef);
+  }
+  elsif(@_)
+  {
+    $self->max(undef);
+  }
+}
 
 sub validate
 {
@@ -153,6 +183,14 @@ Get or set the maximum acceptable value.  If the field's L<internal_value()|Rose
 =item B<min [INT]>
 
 Get or set the minimum acceptable value.  If the field's L<internal_value()|Rose::HTML::Form::Field/internal_value> is B<less than> this value, then the L<validate()|Rose::HTML::Form::Field/validate> method will return false.  If undefined, then no limit on the minimum value is enforced.
+
+=item B<negative [BOOL]>
+
+If BOOL is true or omitted, sets L<max|/max> to C<0>.  If BOOL is false, sets L<max|/max> to undef.
+
+=item B<positive [BOOL]>
+
+If BOOL is true or omitted, sets L<min|/min> to C<0>.  If BOOL is false, sets L<min|/min> to undef.
 
 =back
 
