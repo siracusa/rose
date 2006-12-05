@@ -165,12 +165,34 @@ BEGIN
     );
   }
 
+  #
+  # Oracle
+  #
+
+  # Main
+  Rose::DB->register_db(
+    domain   => 'test',
+    type     => 'oracle',
+    driver   => 'oracle',
+    database => 'test@test',
+    connect_options => { AutoCommit => 1 },
+  );
+
+  # Admin
+  Rose::DB->register_db(
+    domain   => 'test',
+    type     => 'oracle_admin',
+    driver   => 'oracle',
+    database => 'test@test',
+    connect_options => { AutoCommit => 1 },
+  );
+
   my @types = qw(pg pg_with_schema pg_admin mysql mysql_admin 
-                 informix informix_admin);
+                 informix informix_admin oracle oracle_admin);
 
   unless($Rose::DB::Object::Test::NoDefaults)
   {
-    foreach my $db_type (qw(PG MYSQL INFORMIX))
+    foreach my $db_type (qw(PG MYSQL INFORMIX ORACLE))
     {
       if(my $dsn = $ENV{"RDBO_${db_type}_DSN"})
       {

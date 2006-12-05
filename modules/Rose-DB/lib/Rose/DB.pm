@@ -19,7 +19,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.731';
+our $VERSION = '0.732';
 
 our $Debug = 0;
 
@@ -1728,8 +1728,19 @@ sub supports_catalog { 0 }
 
 sub format_limit_with_offset
 {
-  #my($self, $limit, $offset) = @_;
-  return @_ > 2 ? "$_[1] OFFSET $_[2]" : $_[1];
+  my($self, $limit, $offset, $args) = @_;
+
+  delete $args->{'limit'};
+  delete $args->{'offset'};
+
+  if(defined $offset)
+  {
+    $args->{'limit_suffix'} = "LIMIT $limit OFFSET $offset";
+  }
+  else
+  {
+    $args->{'limit_suffix'} = "LIMIT $limit";
+  }
 }
 
 sub format_table_with_alias

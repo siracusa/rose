@@ -450,10 +450,22 @@ sub supports_limit_with_offset
   return 0;
 }
 
+
 sub format_limit_with_offset
 {
-  #my($self, $limit, $offset) = @_;
-  return @_ > 2 ? "SKIP $_[2] FIRST $_[1]" : "FIRST $_[1]";
+  my($self, $limit, $offset, $args) = @_;
+
+  delete $args->{'limit'};
+  delete $args->{'offset'};
+
+  if(defined $offset)
+  {
+    $args->{'limit_prefix'} = "SKIP $offset FIRST $limit";
+  }
+  else
+  {
+    $args->{'limit_prefix'} = "LIMIT $limit OFFSET $offset";
+  }
 }
 
 sub supports_select_from_subselect { 0 } # can't handle serial columns in multiset
