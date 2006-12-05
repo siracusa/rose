@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3102;
+use Test::More tests => 3104;
 
 BEGIN 
 {
@@ -12,7 +12,7 @@ BEGIN
   use_ok('Rose::DB::Object::Manager');
 }
 
-our($HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
+our($HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE, $HAVE_ORACLE);
 
 # XXX: TODO - outer join where fo is null
 
@@ -11268,6 +11268,16 @@ EOF
   # End custom select tests
 }
 
+#
+# Oracle
+#
+
+SKIP: foreach my $db_type (qw(oracle))
+{
+  skip("Oracle tests", 2)  unless($HAVE_ORACLE);
+
+}
+
 BEGIN
 {
   #
@@ -13396,15 +13406,526 @@ EOF
                                                       'object_count()' => 'count'
                                                     });
   }
+
+  #
+  # Oracle
+  #
+
+  eval 
+  {
+    $dbh = Rose::DB->new('oracle_admin')->retain_dbh()
+      or die Rose::DB->error;
+  };
+
+  if(!$@ && $dbh)
+  {
+    our $HAVE_ORACLE = 1;
+
+    Rose::DB->default_type('oracle');
+
+    # Drop existing table and create schema, ignoring errors
+    {
+      local $dbh->{'RaiseError'} = 0;
+      local $dbh->{'PrintError'} = 0;
+      $dbh->do('DROP TABLE rose_db_object_color_map CASCADE CONSTRAINTS');
+      $dbh->do('DROP TABLE rose_db_object_colors CASCADE CONSTRAINTS');
+      $dbh->do('DROP TABLE rose_db_object_nicks CASCADE CONSTRAINTS');
+      $dbh->do('DROP TABLE rose_db_object_nick_types2 CASCADE CONSTRAINTS');
+      $dbh->do('DROP TABLE rose_db_object_nick_types CASCADE CONSTRAINTS');
+      $dbh->do('DROP TABLE rose_db_object_nicks2 CASCADE CONSTRAINTS');
+      $dbh->do('DROP TABLE rose_db_object_nick_alts CASCADE CONSTRAINTS');
+      $dbh->do('DROP TABLE rose_db_object_nick_opts CASCADE CONSTRAINTS');
+      $dbh->do('DROP TABLE rose_db_object_test CASCADE CONSTRAINTS');
+      $dbh->do('DROP TABLE rose_db_object_other CASCADE CONSTRAINTS');
+      $dbh->do('DROP TABLE rose_db_object_bb CASCADE CONSTRAINTS');
+    }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_other
+(
+  k1    INT NOT NULL,
+  k2    INT NOT NULL,
+  k3    INT NOT NULL,
+  name  VARCHAR(32),
+
+  UNIQUE(k1, k2, k3)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_bb
+(
+  id    INT NOT NULL PRIMARY KEY,
+  name  VARCHAR(32)
+)
+EOF
+
+    # Create test foreign subclasses
+
+    package MyOracleOtherObject;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyOracleOtherObject->meta->table('rose_db_object_other');
+
+    MyOracleOtherObject->meta->columns
+    (
+      name => { type => 'varchar'},
+      k1   => { type => 'int' },
+      k2   => { type => 'int' },
+      k3   => { type => 'int' },
+    );
+
+    MyOracleOtherObject->meta->primary_key_columns(qw(k1 k2 k3));
+
+    MyOracleOtherObject->meta->initialize;
+
+    package MyOracleBB;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyOracleBB->meta->table('rose_db_object_bb');
+
+    MyOracleBB->meta->columns
+    (
+      id   => { type => 'int', primary_key => 1 },
+      name => { type => 'varchar'},
+    );
+
+    MyOracleBB->meta->initialize;
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_test
+(
+  id             INT NOT NULL PRIMARY KEY,
+  name           VARCHAR(32) NOT NULL,
+  flag           NUMBER(1) NOT NULL,
+  flag2          NUMBER(1),
+  status         VARCHAR(32) DEFAULT 'active',
+  bits           VARCHAR(5) DEFAULT '00101' NOT NULL,
+  fixed          CHAR(16) DEFAULT 'needed',
+  start_date     DATE,
+  save           INT,
+  fk1            INT,
+  fk2            INT,
+  fk3            INT,
+  b1             INT REFERENCES rose_db_object_bb (id),
+  b2             INT REFERENCES rose_db_object_bb (id),
+  last_modified  DATE,
+  date_created   DATE,
+
+  FOREIGN KEY (fk1, fk2, fk3) REFERENCES rose_db_object_other (k1, k2, k3)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_nick_types2
+(
+  id    INT NOT NULL PRIMARY KEY,
+  name  VARCHAR(32) NOT NULL UNIQUE
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_nick_types
+(
+  id     INT NOT NULL PRIMARY KEY,
+  name   VARCHAR(32) NOT NULL UNIQUE,
+  t2_id  INT REFERENCES rose_db_object_nick_types2 (id)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_nicks
+(
+  id    INT NOT NULL PRIMARY KEY,
+  o_id  INT NOT NULL REFERENCES rose_db_object_test (id),
+  nick  VARCHAR(32),
+  type_id INT REFERENCES rose_db_object_nick_types (id)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_nick_alts
+(
+  id       INT NOT NULL PRIMARY KEY,
+  nick_id  INT NOT NULL REFERENCES rose_db_object_nicks (id),
+  alt      VARCHAR(32)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_nick_opts
+(
+  id       INT NOT NULL PRIMARY KEY,
+  nick_id  INT NOT NULL REFERENCES rose_db_object_nicks (id),
+  opt      VARCHAR(32)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_nicks2
+(
+  id     INT NOT NULL PRIMARY KEY,
+  o_id   INT NOT NULL REFERENCES rose_db_object_test (id),
+  nick2  VARCHAR(32)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_colors
+(
+  id     INT NOT NULL PRIMARY KEY,
+  name   VARCHAR(32) NOT NULL
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE rose_db_object_color_map
+(
+  id         INT NOT NULL PRIMARY KEY,
+  object_id  INT NOT NULL REFERENCES rose_db_object_test (id),
+  color_id   INT NOT NULL REFERENCES rose_db_object_colors (id)
+)
+EOF
+
+    $dbh->disconnect;
+
+    package MyOracleNickType2;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyOracleNickType2->meta->table('rose_db_object_nick_types2');
+
+    MyOracleNickType2->meta->columns
+    (
+      id      => { type => 'serial', primary_key => 1 },
+      name    => { type => 'varchar', length => 32 },
+    );
+
+    MyOracleNickType2->meta->add_unique_key('name');
+    MyOracleNickType2->meta->initialize;
+
+    package MyOracleNickType;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyOracleNickType->meta->table('rose_db_object_nick_types');
+
+    MyOracleNickType->meta->columns
+    (
+      id    => { type => 'serial', primary_key => 1 },
+      name  => { type => 'varchar', length => 32 },
+      t2_id => { type => 'int' },
+    );
+
+    MyOracleNickType->meta->add_unique_key('name');
+
+    MyOracleNickType->meta->foreign_keys
+    (
+      t2 =>
+      {
+        class => 'MyOracleNickType2',
+        key_columns => { t2_id => 'id' },
+      }
+    );
+
+    MyOracleNickType->meta->initialize;
+
+    package MyOracleNick;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyOracleNick->meta->table('rose_db_object_nicks');
+
+    MyOracleNick->meta->columns
+    (
+      id   => { type => 'serial', primary_key => 1 },
+      o_id => { type => 'int' },
+      nick => { type => 'varchar', lazy => 1 },
+      type_id => { type => 'int' },
+    );
+
+    MyOracleNick->meta->foreign_keys
+    (
+      obj =>
+      {
+        class => 'MyOracleObject',
+        key_columns => { o_id => 'id' },
+      },
+
+      type =>
+      {
+        class => 'MyOracleNickType',
+        key_columns => { type_id => 'id' },
+      },
+    );
+
+    MyOracleNick->meta->relationships
+    (
+      alts =>
+      {
+        type  => 'one to many',
+        class => 'MyOracleNickAlt',
+        key_columns => { id => 'nick_id' },
+      },
+
+      opts =>
+      {
+        type  => 'one to many',
+        class => 'MyOracleNickOpt',
+        key_columns => { id => 'nick_id' },
+      },
+    );
+
+    MyOracleNick->meta->initialize;
+
+    package MyOracleNick2;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyOracleNick2->meta->table('rose_db_object_nicks2');
+
+    MyOracleNick2->meta->columns
+    (
+      id    => { type => 'serial', primary_key => 1 },
+      o_id  => { type => 'int' },
+      nick2 => { type => 'varchar'},
+    );
+
+    MyOracleNick2->meta->foreign_keys
+    (
+      obj =>
+      {
+        class => 'MyOracleObject',
+        key_columns => { o_id => 'id' },
+      },
+    );
+
+    MyOracleNick2->meta->initialize;
+
+    package MyOracleNickAlt;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyOracleNickAlt->meta->table('rose_db_object_nick_alts');
+
+    MyOracleNickAlt->meta->columns
+    (
+      id      => { type => 'serial', primary_key => 1 },
+      nick_id => { type => 'int' },
+      alt     => { type => 'varchar' },
+    );
+
+    MyOracleNickAlt->meta->foreign_keys
+    (
+      type =>
+      {
+        class => 'MyOracleNick',
+        key_columns => { nick_id => 'id' },
+      },
+    );
+
+    MyOracleNickAlt->meta->initialize;
+
+    package MyOracleNickOpt;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyOracleNickOpt->meta->table('rose_db_object_nick_opts');
+
+    MyOracleNickOpt->meta->columns
+    (
+      id      => { type => 'serial', primary_key => 1 },
+      nick_id => { type => 'int' },
+      opt     => { type => 'varchar' },
+    );
+
+    MyOracleNickOpt->meta->foreign_keys
+    (
+      type =>
+      {
+        class => 'MyOracleNick',
+        key_columns => { nick_id => 'id' },
+      },
+    );
+
+    MyOracleNickOpt->meta->initialize;
+
+    package MyOracleColor;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyOracleColor->meta->table('rose_db_object_colors');
+
+    MyOracleColor->meta->columns
+    (
+      id   => { type => 'serial', primary_key => 1 },
+      name => { type => 'varchar', not_null => 1 },
+    );
+
+    MyOracleColor->meta->relationships
+    (
+      objects =>
+      {
+        type      => 'many to many',
+        map_class => 'MyOracleColorMap',
+      },
+    );
+
+    MyOracleColor->meta->initialize;
+
+    package MyOracleColorMap;
+
+    our @ISA = qw(Rose::DB::Object);
+
+    MyOracleColorMap->meta->table('rose_db_object_color_map');
+
+    MyOracleColorMap->meta->columns
+    (
+      id        => { type => 'serial', primary_key => 1 },
+      object_id => { type => 'int', not_null => 1 },
+      color_id  => { type => 'int', not_null => 1 },
+    );
+
+    MyOracleColorMap->meta->foreign_keys
+    (
+      color =>
+      {
+        class => 'MyOracleColor',
+        key_columns => { color_id => 'id' },
+      },
+
+      object =>
+      {
+        class => 'MyOracleObject',
+        key_columns => { object_id => 'id' },
+      },
+    );
+
+    MyOracleColorMap->meta->initialize;
+
+    # Create test subclass
+
+    package MyOracleObject;
+
+    use Rose::DB::Object::Helpers qw(clone);
+
+    our @ISA = qw(Rose::DB::Object);
+
+    sub extra { $_[0]->{'extra'} = $_[1]  if(@_ > 1); $_[0]->{'extra'} }
+
+    MyOracleObject->meta->table('rose_db_object_test');
+
+    MyOracleObject->meta->columns
+    (
+      'name',
+      id       => { primary_key => 1 },
+      flag     => { type => 'boolean', default => 1 },
+      flag2    => { type => 'boolean' },
+      status   => { default => 'active', lazy => 1 },
+      start    => { type => 'date', default => '12/24/1980', lazy => 1 },
+      save     => { type => 'scalar' },
+      bits     => { type => 'bitfield', bits => 5, default => 101 },
+      fixed    => { type => 'char', length => 16, default => 'needed' },,
+      fk1      => { type => 'int' },
+      fk2      => { type => 'int' },
+      fk3      => { type => 'int' },
+      b1       => { type => 'int' },
+      b2       => { type => 'int' },
+      last_modified => { type => 'timestamp' },
+      date_created  => { type => 'timestamp' },
+    );
+
+    sub derived 
+    {
+      return 'DERIVED: ' . $_[0]->{'derived'}  if(@_ == 1);
+      return $_[0]->{'derived'} = $_[1] 
+    }
+
+    MyOracleObject->meta->foreign_keys
+    (
+      other_obj =>
+      {
+        class => 'MyOracleOtherObject',
+        key_columns =>
+        {
+          fk1 => 'k1',
+          fk2 => 'k2',
+          fk3 => 'k3',
+        }
+      },
+
+      bb1 =>
+      {
+        class => 'MyOracleBB',
+        key_columns => { b1 => 'id' },
+      },
+
+      bb2 =>
+      {
+        class => 'MyOracleBB',
+        key_columns => { b2 => 'id' },
+      },
+    );
+
+    MyOracleObject->meta->relationships
+    (
+      nicks =>
+      {
+        type  => 'one to many',
+        class => 'MyOracleNick',
+        column_map => { id => 'o_id' },
+        manager_args => { sort_by => 'nick DESC' },
+      },
+
+      nicks2 =>
+      {
+        type  => 'one to many',
+        class => 'MyOracleNick2',
+        column_map => { id => 'o_id' },
+        manager_args => { sort_by => 'nick2 DESC' },
+      },
+
+      colors =>
+      {
+        type      => 'many to many',
+        map_class => 'MyOracleColorMap',
+        manager_args => { sort_by => MyOracleColor->meta->table . '.name DESC' },
+      },
+    );
+
+    MyOracleObject->meta->alias_column(fk1 => 'fkone');
+
+    eval { MyOracleObject->meta->initialize };
+    Test::More::ok($@, 'meta->initialize() reserved method - oracle');
+
+    MyOracleObject->meta->alias_column(save => 'save_col');
+    MyOracleObject->meta->initialize(preserve_existing => 1);
+
+    Rose::DB::Object::Manager->make_manager_methods('objectz');
+
+    eval { Rose::DB::Object::Manager->make_manager_methods('objectz') };
+    Test::More::ok($@, 'make_manager_methods clash - oracle');
+
+    package MyOracleObjectManager;
+    our @ISA = qw(Rose::DB::Object::Manager);
+
+    sub object_class { 'MyOracleObject' }
+
+    Rose::DB::Object::Manager->make_manager_methods(object_class => 'MyOracleObject',
+                                                    base_name    => 'objectz');
+
+    MyOracleObject->meta->clear_all_dbs;
+  }
 }
 
 END
 {
-  # Delete test table
+  # Delete test tables
 
   if($HAVE_PG)
   {
-    # Postgres
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
 
@@ -13425,7 +13946,6 @@ END
 
   if($HAVE_MYSQL)
   {
-    # MySQL
     my $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
       or die Rose::DB->error;
 
@@ -13446,7 +13966,6 @@ END
 
   if($HAVE_INFORMIX)
   {
-    # Informix
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
       or die Rose::DB->error;
 
@@ -13467,7 +13986,6 @@ END
 
   if($HAVE_SQLITE)
   {
-    # SQLite
     my $dbh = Rose::DB->new('sqlite_admin')->retain_dbh()
       or die Rose::DB->error;
 
@@ -13482,6 +14000,26 @@ END
     $dbh->do('DROP TABLE rose_db_object_test');
     $dbh->do('DROP TABLE rose_db_object_other');
     $dbh->do('DROP TABLE rose_db_object_bb');
+
+    $dbh->disconnect;
+  }
+
+  if($HAVE_ORACLE)
+  {
+    my $dbh = Rose::DB->new('oracle_admin')->retain_dbh()
+      or die Rose::DB->error;
+
+    $dbh->do('DROP TABLE rose_db_object_color_map CASCADE CONSTRAINTS');
+    $dbh->do('DROP TABLE rose_db_object_colors CASCADE CONSTRAINTS');
+    $dbh->do('DROP TABLE rose_db_object_nicks CASCADE CONSTRAINTS');
+    $dbh->do('DROP TABLE rose_db_object_nick_types2 CASCADE CONSTRAINTS');
+    $dbh->do('DROP TABLE rose_db_object_nick_types CASCADE CONSTRAINTS');
+    $dbh->do('DROP TABLE rose_db_object_nicks2 CASCADE CONSTRAINTS');
+    $dbh->do('DROP TABLE rose_db_object_nick_alts CASCADE CONSTRAINTS');
+    $dbh->do('DROP TABLE rose_db_object_nick_opts CASCADE CONSTRAINTS');
+    $dbh->do('DROP TABLE rose_db_object_test CASCADE CONSTRAINTS');
+    $dbh->do('DROP TABLE rose_db_object_other CASCADE CONSTRAINTS');
+    $dbh->do('DROP TABLE rose_db_object_bb CASCADE CONSTRAINTS');
 
     $dbh->disconnect;
   }

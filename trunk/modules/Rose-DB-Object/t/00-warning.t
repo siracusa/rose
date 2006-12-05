@@ -33,6 +33,12 @@ print STDERR<<"EOF";
 ##     RDBO_MYSQL_USER  (@{[ nvl('RDBO_MYSQL_USER', 'root') ]})
 ##     RDBO_MYSQL_PASS  (@{[ nvl('RDBO_MYSQL_PASS', '<none>') ]})
 ##
+## Oracle:
+## 
+##     RDBO_ORACLE_DSN  (@{[ nvl('RDBO_ORACLE_DSN', 'dbi:Oracle:dbname=test') ]})
+##     RDBO_ORACLE_USER (@{[ nvl('RDBO_ORACLE_USER', '<none>') ]})
+##     RDBO_ORACLE_PASS (@{[ nvl('RDBO_ORACLE_PASS', '<none>') ]})
+##
 ## Informix:
 ## 
 ##     RDBO_INFORMIX_DSN   (@{[ nvl('RDBO_INFORMIX_DSN', 'dbi:Informix:test@test') ]})

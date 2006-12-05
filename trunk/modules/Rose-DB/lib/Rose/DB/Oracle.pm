@@ -165,6 +165,53 @@ sub primary_key_column_names
   return wantarray ? @$columns : $columns;
 }
 
+sub format_limit_with_offset
+{
+  my($self, $limit, $offset, $args) = @_;
+
+  delete $args->{'limit'};
+  delete $args->{'offset'};
+
+  if($offset)
+  {
+    # http://www.oracle.com/technology/oramag/oracle/06-sep/o56asktom.html
+    # select * 
+    #   from ( select /*+ FIRST_ROWS(n) */ 
+    #   a.*, ROWNUM rnum 
+    #       from ( your_query_goes_here, 
+    #       with order by ) a 
+    #       where ROWNUM <= 
+    #       :MAX_ROW_TO_FETCH ) 
+    # where rnum  >= :MIN_ROW_TO_FETCH;
+
+#           if ($limit =~ m/(\d+)(\sOFFSET\s(\d+))?/) {
+#               my $o_size = $1;
+#               my $o_start = $3 ? $3+1 : 0;
+#               my $o_end = $o_start + $o_size - ($3 ? 1 : 0);
+#               $qs = q[ select * from (select oquery.*, rownum oracle_rownum from (] .
+#                     $qs .
+#                     q[) oquery where rownum <= ?) where oracle_rownum > ?];
+#               push @bind, $o_end, $o_start;
+#               
+# m/(\d+)(\sOFFSET\s(\d+))?/) {
+    my $size  = $limit;
+    my $start = $offset + 1;
+    my $end   = $start + $size - 1;
+    my $n     = $offset + $limit;
+
+    $args->{'limit_prefix'} = 
+      "SELECT * FROM (SELECT /*+ FIRST_ROWS($n) */\na.*, ROWNUM rnum FROM (";
+
+    $args->{'limit_suffix'} = 
+      "a WHERE ROWNUM <= $end) WHERE rnum >= $start";
+  }
+  else
+  {
+    $args->{'limit_prefix'} = "SELECT /*+ FIRST_ROWS($limit) */ * FROM (";
+    $args->{'limit_suffix'} = ") WHERE ROWNUM <= $limit";
+  }
+}
+
 1;
 
 __END__

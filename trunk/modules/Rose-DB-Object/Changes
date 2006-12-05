@@ -1,5 +1,6 @@
 0.759 (12.04.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Added support for limit/offset in Oracle.
     * Added a "state" export tag to Rose::DB::Object::Util.
     * Fixed a bug that caused the Manager to unconditionally alias
       selected columns in some situations.
