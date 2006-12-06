@@ -4,7 +4,7 @@ use strict;
 
 use Rose::DateTime::Util();
 
-our $VERSION = '0.754'; # XXX: whoops, overshot version number...
+our $VERSION = '0.759';
 
 our $Debug = 0;
 
@@ -464,7 +464,7 @@ sub format_limit_with_offset
   }
   else
   {
-    $args->{'limit_prefix'} = "LIMIT $limit OFFSET $offset";
+    $args->{'limit_prefix'} = "FIRST $limit";
   }
 }
 
