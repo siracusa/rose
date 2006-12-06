@@ -948,6 +948,8 @@ sub unquote_column_name
 {
   my($self_or_class, $name) = @_;
 
+  no warnings 'uninitialized';
+
   # handle quoted strings with quotes doubled inside them
   if($name =~ /^(['"`])(.+)\1$/)
   {
