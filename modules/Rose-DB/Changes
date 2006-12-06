@@ -1,5 +1,8 @@
 0.732 (12.05.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Fixed a bug that prevented foreign keys with columns that use
+      that used reserved from being auto-initialized correctly.
+      (Reported by Clayton Scott)
     * Support for Rose::DB::Object 0.759.
 
 0.731 (11.22.2006) - John Siracusa <siracusa@mindspring.com>
