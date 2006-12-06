@@ -353,13 +353,6 @@ sub get_objects
   my $use_explicit_joins =  (defined $args{'explicit_joins'}) ? 
     $args{'explicit_joins'} : !$db->likes_implicit_joins;
 
-  # XXX: Hack to avoid suprious ORA-00918 errors
-  # XXX: http://ora-00918.ora-code.com/msg/28663.html
-  if($args{'offset'} && $dbh->{'Driver'}{'Name'} eq 'Oracle')
-  {
-    $args{'unique_aliases'} = 1;
-  }
-
   my $with_map_records;
 
   if($with_map_records = delete $args{'with_map_records'})
@@ -647,6 +640,13 @@ sub get_objects
 
   if($with_objects)
   {
+    # XXX: Hack to avoid suprious ORA-00918 errors
+    # XXX: http://ora-00918.ora-code.com/msg/28663.html
+    if($args{'offset'} && $dbh->{'Driver'}{'Name'} eq 'Oracle')
+    {
+      $args{'unique_aliases'} = 1;
+    }
+
     # Copy clauses arg
     $clauses = $args{'clauses'} ? [ @{$args{'clauses'}} ] : [];
 
