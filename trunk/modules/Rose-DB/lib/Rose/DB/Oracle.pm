@@ -8,8 +8,23 @@ use Rose::DB;
 
 our $Debug = 0;
 
-# Overshot distribution version, so freeze until it catches up
-our $VERSION  = '0.73'; 
+our $VERSION  = '0.732'; 
+
+use Rose::Object::MakeMethods::Generic
+(
+  'array --get_set_init' => 
+  [
+    'post_connect_sql',
+  ],
+);
+
+sub init_post_connect_sql
+{
+  [
+    q(ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS'),
+    q(ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SSxFF') 
+  ],
+}
 
 sub schema
 {
@@ -200,14 +215,16 @@ sub format_limit_with_offset
     my $n     = $offset + $limit;
 
     $args->{'limit_prefix'} = 
-      "SELECT * FROM (SELECT /*+ FIRST_ROWS($n) */\na.*, ROWNUM rnum FROM (";
+      #"SELECT * FROM (SELECT /*+ FIRST_ROWS($n) */\na.*, ROWNUM oracle_rownum
+      "SELECT * FROM (SELECT a.*, ROWNUM oracle_rownum FROM (";
 
     $args->{'limit_suffix'} = 
-      "a WHERE ROWNUM <= $end) WHERE rnum >= $start";
+      ") a WHERE ROWNUM <= $end) WHERE oracle_rownum >= $start";
   }
   else
   {
-    $args->{'limit_prefix'} = "SELECT /*+ FIRST_ROWS($limit) */ * FROM (";
+    #$args->{'limit_prefix'} = "SELECT /*+ FIRST_ROWS($limit) */ * FROM (";
+    $args->{'limit_prefix'} = "SELECT * FROM (";
     $args->{'limit_suffix'} = ") WHERE ROWNUM <= $limit";
   }
 }

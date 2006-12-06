@@ -1776,10 +1776,15 @@ sub refine_dbi_foreign_key_info
 {
   my($self, $fk_info) = @_;
 
-  # Unquote column names
-  foreach my $param (qw(FK_COLUMN_NAME UK_COLUMN_NAME))
+  # Unquote names
+  foreach my $name (qw(NAME COLUMN_NAME DATA_TYPE TABLE_NAME TABLE_CAT TABLE_SCHEM))
   {
-    $fk_info->{$param} = $self->unquote_column_name($fk_info->{$param});
+    foreach my $prefix (qw(FK_ UK_))
+    {
+      my $param = $prefix . $name;
+      $fk_info->{$param} = $self->unquote_column_name($fk_info->{$param})
+        if(exists $fk_info->{$param});
+    }
   }
 
   return;

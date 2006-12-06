@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.758';
+our $VERSION = '0.759';
 
 our $Debug = 0;
 
@@ -265,6 +265,14 @@ sub build_select
       my $rel_column    =  $table_map->{$table_tn} ?
         "$table_map->{$table_tn}.$column" : '';
 
+      my $fq_column_trimmed;
+      
+      TRIM:
+      {
+        (my $t = $table) =~ s/^[^.]+\.//;
+        $fq_column_trimmed = "$t.$column";
+      }
+      
       # Avoid duplicate clauses if the table name matches the relationship name
       $rel_column = ''  if($rel_column eq $fq_column);
 
@@ -296,7 +304,8 @@ sub build_select
       }
 
       foreach my $column_arg (grep { exists $query{$_} } map { ($_, "!$_") } 
-                              ($column, $fq_column, $short_column, $rel_column, $unique_column, 
+                              ($column, $fq_column, $fq_column_trimmed, $short_column,
+                               $rel_column, $unique_column, 
                               (defined $method && $method ne $column ? $method : ())))
       {
         $not = (index($column_arg, '!') == 0) ? 'NOT' : '';
@@ -562,7 +571,14 @@ sub build_select
     }
     else
     {
-      $qs = "SELECT $limit_prefix$distinct\n$select\nFROM\n$from_tables_sql\n";
+      if($limit_prefix !~ /^SELECT /)
+      {
+        $qs = "SELECT $limit_prefix$distinct\n$select\nFROM\n$from_tables_sql\n";
+      }
+      else
+      {
+        $qs = "${limit_prefix}SELECT$distinct\n$select\nFROM\n$from_tables_sql\n";
+      }
     }
   }
 

@@ -353,6 +353,13 @@ sub get_objects
   my $use_explicit_joins =  (defined $args{'explicit_joins'}) ? 
     $args{'explicit_joins'} : !$db->likes_implicit_joins;
 
+  # XXX: Hack to avoid suprious ORA-00918 errors
+  # XXX: http://ora-00918.ora-code.com/msg/28663.html
+  if($args{'offset'} && $dbh->{'Driver'}{'Name'} eq 'Oracle')
+  {
+    $args{'unique_aliases'} = 1;
+  }
+
   my $with_map_records;
 
   if($with_map_records = delete $args{'with_map_records'})
@@ -1261,7 +1268,10 @@ sub get_objects
       my $tn = 't' . ($i + 1);
       my $rel_name = $rel_name{$tn} || '';
 
-      unless($fetch{$tn} || $fetch{$tables[$i]} || $fetch{$table_names[$i]} || $fetch{$rel_name})
+      (my $trimmed_table = $tables[$i]) =~ s/^[^.]+\.//;
+
+      unless($fetch{$tn} || $fetch{$tables[$i]} || $fetch{$trimmed_table} || 
+             $fetch{$table_names[$i]} || $fetch{$rel_name})
       {
         $columns{$tables[$i]} = [];
         $methods{$tables[$i]} = [];
@@ -1477,6 +1487,9 @@ sub get_objects
         $i++; # Table aliases are 1-based
 
         my $table_unquoted = $db->unquote_table_name($table);
+
+        # Conditionalize schema part, if necessary
+        $table_unquoted =~ s/^([^.]+\.)/(?:\Q$1\E)?/;
 
         foreach my $sort (@$sort_by)
         {
