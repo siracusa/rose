@@ -417,4 +417,3 @@ is($field->xhtml_field,
   qq(<option value="cherry">Cherry</option>\n) .
   qq(</optgroup>),
   'localized label 4');
-  

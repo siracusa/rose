@@ -334,4 +334,3 @@ is($field->html_field,
   qq(<input name="fruits" type="checkbox" value="squash"> <label>Squash</label><br>\n) .
   qq(<input name="fruits" type="checkbox" value="cherry"> <label>Cherry</label>),
   'localized label 4');
-  

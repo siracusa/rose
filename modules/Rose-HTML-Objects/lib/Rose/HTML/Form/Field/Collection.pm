@@ -313,7 +313,7 @@ sub add_fields
         Carp::croak "Cannot add field with the same name as an existing sub-form: ", 
                     $field->local_name;
       }
-        
+
       unless(defined $field->rank)
       {
         $field->rank($self->increment_field_rank_counter);
@@ -394,7 +394,7 @@ sub subfield_names
   {
     push(@names, $field->name, ($field->can('_subfield_names') ? $field->_subfield_names : ()));
   }
-  
+
   return wantarray ? @names : \@names;
 }
 
