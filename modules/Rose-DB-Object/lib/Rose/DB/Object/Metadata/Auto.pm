@@ -360,8 +360,6 @@ sub auto_generate_foreign_keys
 
     FK: while(my $fk_info = $sth->fetchrow_hashref)
     {
-      $db->refine_dbi_foreign_key_info($fk_info, $self);
-
       CHECK_TABLE: # Make sure this column is from the right table
       {
         no warnings; # Allow undef coercion to empty string
@@ -385,6 +383,8 @@ sub auto_generate_foreign_keys
 
     FK_INFO: foreach my $fk_info (@fk_info)
     {
+      $db->refine_dbi_foreign_key_info($fk_info, $self);
+
       my $foreign_class = 
         $self->class_for(catalog => $fk_info->{'UK_TABLE_CAT'},
                          schema  => $fk_info->{'UK_TABLE_SCHEM'},

@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.759';
+our $VERSION = '0.758';
 
 our $Debug = 0;
 
@@ -59,35 +59,29 @@ sub build_select
 {
   my(%args) = @_;
 
-  my $dbh          = $args{'dbh'};
-  my $tables       = $args{'tables'} || Carp::croak "Missing 'tables' argument";
-  my $tables_sql   = $args{'tables_sql'} || $tables;
-  my $logic        = delete $args{'logic'} || 'AND';
-  my $columns      = $args{'columns'};  
-  my $all_columns  = $args{'all_columns'} || {};
-  my $query_arg    = delete $args{'query'};
-  my $sort_by      = delete $args{'sort_by'};
-  my $group_by     = delete $args{'group_by'};
-  my $limit_suffix = delete $args{'limit_suffix'};
-  my $limit_prefix = delete $args{'limit_prefix'} || '';
-  my $distinct     = delete $args{'distinct'} ? 'DISTINCT ' : '';
-  my $select       = $args{'select'};
-  my $where_only   = delete $args{'where_only'};
-  my $clauses_arg  = delete $args{'clauses'};  
-  my $pretty       = exists $args{'pretty'} ? $args{'pretty'} : $Debug;
-  my $joins        = $args{'joins'};
-  my $hints        = $args{'hints'} || {};
-  my $set          = delete $args{'set'};
-  my $table_map    = delete $args{'table_map'} || {};
-  my $bind_params  = $args{'bind_params'};
+  my $dbh         = $args{'dbh'};
+  my $tables      = $args{'tables'} || Carp::croak "Missing 'tables' argument";
+  my $tables_sql  = $args{'tables_sql'} || $tables;
+  my $logic       = delete $args{'logic'} || 'AND';
+  my $columns     = $args{'columns'};  
+  my $all_columns = $args{'all_columns'} || {};
+  my $query_arg   = delete $args{'query'};
+  my $sort_by     = delete $args{'sort_by'};
+  my $group_by    = delete $args{'group_by'};
+  my $limit       = delete $args{'limit'};
+  my $distinct    = delete $args{'distinct'} ? 'DISTINCT ' : '';
+  my $select      = $args{'select'};
+  my $where_only  = delete $args{'where_only'};
+  my $clauses_arg = delete $args{'clauses'};  
+  my $pretty      = exists $args{'pretty'} ? $args{'pretty'} : $Debug;
+  my $joins       = $args{'joins'};
+  my $hints       = $args{'hints'} || {};
+  my $set         = delete $args{'set'};
+  my $table_map   = delete $args{'table_map'} || {};
+  my $bind_params = $args{'bind_params'};
   my $from_and_where_only = delete $args{'from_and_where_only'};
   my $allow_empty_lists   = $args{'allow_empty_lists'};
   my $unique_aliases = $args{'unique_aliases'};
-
-  if($args{'limit'})
-  {
-    $limit_suffix = 'LIMIT ' . delete $args{'limit'};
-  }
 
   $all_columns = $columns  unless(%$all_columns);
 
@@ -265,14 +259,6 @@ sub build_select
       my $rel_column    =  $table_map->{$table_tn} ?
         "$table_map->{$table_tn}.$column" : '';
 
-      my $fq_column_trimmed;
-      
-      TRIM:
-      {
-        (my $t = $table) =~ s/^[^.]+\.//;
-        $fq_column_trimmed = "$t.$column";
-      }
-      
       # Avoid duplicate clauses if the table name matches the relationship name
       $rel_column = ''  if($rel_column eq $fq_column);
 
@@ -304,8 +290,7 @@ sub build_select
       }
 
       foreach my $column_arg (grep { exists $query{$_} } map { ($_, "!$_") } 
-                              ($column, $fq_column, $fq_column_trimmed, $short_column,
-                               $rel_column, $unique_column, 
+                              ($column, $fq_column, $short_column, $rel_column, $unique_column, 
                               (defined $method && $method ne $column ? $method : ())))
       {
         $not = (index($column_arg, '!') == 0) ? 'NOT' : '';
@@ -425,6 +410,8 @@ sub build_select
   }
 
   my $qs;
+
+  my $use_prefix_limit = $dbh->{'Driver'}{'Name'} eq 'Informix' ? 1 : 0;
 
   if(!$where_only)
   {
@@ -563,6 +550,7 @@ sub build_select
       }
     }
 
+    my $prefix_limit = (defined $limit && $use_prefix_limit) ? "$limit " : '';
     $select ||= join(",\n", map { "  $_" } @select_columns);
 
     if($from_and_where_only)
@@ -571,14 +559,7 @@ sub build_select
     }
     else
     {
-      if($limit_prefix !~ /^SELECT /)
-      {
-        $qs = "SELECT $limit_prefix$distinct\n$select\nFROM\n$from_tables_sql\n";
-      }
-      else
-      {
-        $qs = "${limit_prefix}SELECT$distinct\n$select\nFROM\n$from_tables_sql\n";
-      }
+      $qs = "SELECT $prefix_limit$distinct\n$select\nFROM\n$from_tables_sql\n";
     }
   }
 
@@ -596,7 +577,7 @@ sub build_select
 
   $qs .= "\nGROUP BY " . $group_by if($group_by);
   $qs .= "\nORDER BY " . $sort_by  if($sort_by);
-  $qs .= "\n" . $limit_suffix      if(defined $limit_suffix);
+  $qs .= "\nLIMIT "    . $limit    if(defined $limit && !$use_prefix_limit);
 
   $Debug && warn "$qs\n";
 
@@ -1125,7 +1106,7 @@ A fully formed SQL "GROUP BY ..." clause, sans the words "GROUP BY", or a refere
 
 =item B<limit NUMBER>
 
-A number to use in the "LIMIT ..." clause.
+A number to use in the "LIMIT ..." (or "FIRST ...") clause.
 
 =item B<logic LOGIC>
 

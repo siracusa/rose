@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.759';
+our $VERSION = '0.758';
 
 our $Debug = 0;
 
@@ -640,13 +640,6 @@ sub get_objects
 
   if($with_objects)
   {
-    # XXX: Hack to avoid suprious ORA-00918 errors
-    # XXX: http://ora-00918.ora-code.com/msg/28663.html
-    if($args{'offset'} && $dbh->{'Driver'}{'Name'} eq 'Oracle')
-    {
-      $args{'unique_aliases'} = 1;
-    }
-
     # Copy clauses arg
     $clauses = $args{'clauses'} ? [ @{$args{'clauses'}} ] : [];
 
@@ -1268,10 +1261,7 @@ sub get_objects
       my $tn = 't' . ($i + 1);
       my $rel_name = $rel_name{$tn} || '';
 
-      (my $trimmed_table = $tables[$i]) =~ s/^[^.]+\.//;
-
-      unless($fetch{$tn} || $fetch{$tables[$i]} || $fetch{$trimmed_table} || 
-             $fetch{$table_names[$i]} || $fetch{$rel_name})
+      unless($fetch{$tn} || $fetch{$tables[$i]} || $fetch{$table_names[$i]} || $fetch{$rel_name})
       {
         $columns{$tables[$i]} = [];
         $methods{$tables[$i]} = [];
@@ -1329,7 +1319,7 @@ sub get_objects
 
         if($meta->column($column) && (my $alias = $meta->column($column)->alias))
         {
-          $item .= ' AS ' . $alias  unless($alias eq $column);
+          $item .= ' AS ' . $alias;
         }
       }
     }
@@ -1488,9 +1478,6 @@ sub get_objects
 
         my $table_unquoted = $db->unquote_table_name($table);
 
-        # Conditionalize schema part, if necessary
-        $table_unquoted =~ s/^([^.]+\.)/(?:\Q$1\E)?/;
-
         foreach my $sort (@$sort_by)
         {
           unless($sort =~ s/^(['"`]?)\w+\1(?:\s+(?:ASC|DESC))?$/t1.$sort/ ||
@@ -1558,9 +1545,8 @@ sub get_objects
 
     if($db->supports_limit_with_offset && !$manual_limit && !$subselect_limit)
     {
-      $db->format_limit_with_offset($args{'limit'}, $args{'offset'}, \%args);
-      #$args{'limit'} = $db->format_limit_with_offset($args{'limit'}, $args{'offset'});
-      #delete $args{'offset'};
+      $args{'limit'} = $db->format_limit_with_offset($args{'limit'}, $args{'offset'});
+      delete $args{'offset'};
       $skip_first = 0;
     }
     elsif($manual_limit)
@@ -1571,14 +1557,12 @@ sub get_objects
     {
       $skip_first += delete $args{'offset'};
       $args{'limit'} += $skip_first;
-      $db->format_limit_with_offset($args{'limit'}, undef, \%args);
-      #$args{'limit'} = $db->format_limit_with_offset($args{'limit'});
+      $args{'limit'} = $db->format_limit_with_offset($args{'limit'});
     }
   }
   elsif($args{'limit'})
   {
-    $db->format_limit_with_offset($args{'limit'}, undef, \%args);
-    #$args{'limit'} = $db->format_limit_with_offset($args{'limit'});
+    $args{'limit'} = $db->format_limit_with_offset($args{'limit'});
   }
 
   my($count, @objects, $iterator);
@@ -3715,7 +3699,7 @@ Valid parameters to L<get_objects|/get_objects> are:
 
 =over 4
 
-=item C<allow_empty_lists BOOL>
+=item B<allow_empty_lists BOOL>
 
 If set to true, C<query> parameters with empty lists as values are allowed.  For example:
 
@@ -3744,7 +3728,7 @@ If set to a reference to an array of table names, "tN" table aliases, or relatio
 
 This parameter conflicts with the C<fetch_only> parameter in the case where both provide a list of table names or aliases.  In this case, if the value of the C<distinct> parameter is also reference to an array table names or aliases, then a fatal error will occur.
 
-=item C<fetch_only ARRAYREF>
+=item C<fetch_only [ARRAYREF]>
 
 ARRAYREF should be a reference to an array of table names or "tN" table aliases. Only the columns from the corresponding tables will be fetched.  In the case of relationships that involve more than one table, only the "most distant" table is considered.  (e.g., The map table is ignored in a "many to many" relationship.)  Columns from the primary table ("t1") are always selected, regardless of whether or not it appears in the list.
 
@@ -3868,7 +3852,7 @@ If this parameter is omitted, then all columns from all participating tables are
 
 If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it is constructed.  Defaults to true.
 
-=item C<sort_by [ CLAUSE | ARRAYREF ]>
+=item C<sort_by CLAUSE | ARRAYREF>
 
 A fully formed SQL "ORDER BY ..." clause, sans the words "ORDER BY", or a reference to an array of strings to be joined with a comma and appended to the "ORDER BY" clause.
 
