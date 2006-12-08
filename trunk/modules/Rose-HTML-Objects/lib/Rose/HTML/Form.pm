@@ -354,14 +354,14 @@ sub params_exist { (keys %{$_[0]->{'params'}}) ? 1 : 0 }
 sub param_exists_for_field
 {
   my($self, $name) = @_;
-  
+
   $name = $name->name  if(UNIVERSAL::isa($name, 'Rose::HTML::Form::Field'));
 
   return 0  unless($self->field($name));
 
   my $nibble = $name;
   my $found_form = 0;
-  
+
   while(length $nibble)
   {
     if($self->form($nibble) && !$self->field($nibble))
@@ -896,7 +896,7 @@ sub add_forms
 
       croak "Cannot add form with the same name as an existing field: $name"
         if($self->field($name));
-      
+
       unless(defined $form->rank)
       {
         $form->rank($self->increment_form_rank_counter);
@@ -1755,6 +1755,8 @@ A simple scalar followed by an object that "isa" L<Rose::HTML::Form::Field> is s
 
 Each field's L<parent_form|Rose::HTML::Form::Field/parent_form> is set to the form object.  If the field's L<rank|Rose::HTML::Form::Field/rank> is undefined, it's set to the value of the form's L<field_rank_counter|/field_rank_counter> attribute and the rank counter is incremented.
 
+Adding a field with the same name as an existing L<sub-form|/"NESTED FORMS"> will cause a fatal error.
+
 Examples:
 
     # Name/hashref pairs
@@ -1811,6 +1813,8 @@ If the name contains any dots (".") it will be taken as a hierarchical name and 
 =back
 
 Each form's L<parent_form|/parent_form> is set to the form object it was added to.  If the form's L<rank|/rank> is undefined, it's set to the value of the form's L<form_rank_counter|/field_rank_counter> attribute and the rank counter is incremented.
+
+Adding a form with the same name as an existing field will cause a fatal error.
 
 Examples:
 
@@ -2391,29 +2395,29 @@ Returns true if a parameter named NAME exists, false otherwise.
 
 Returns true if a L<param|/param> exists that addresses the field named NAME or the L<Rose::HTML::Form::Field>-derived object FIELD, false otherwise.
 
-This method is useful for determining if any query parameters exist that address a compound field.  For example, a compound field named C<a.b.c.d> could be addressed by any one of the following query parameters: C<a>, C<a.b>, C<a.b.c>, or C<a.b.c.d>.  This method also works with fields in nested forms.  Examples:
+This method is useful for determining if any query parameters exist that address a compound field.  For example, a compound field named C<a.b.c.d> could be addressed by any one of the following query parameters: C<a>, C<a.b>, C<a.b.c>, or C<a.b.c.d>.  This method also works with fields inside L<sub-form|/"NESTED FORMS">.  Examples:
 
     $form = Rose::HTML::Form->new;
     $form->add_field(when => { type => 'datetime split mdyhms' });
-    
+
     $form->params({ 'when.date' => '2004-01-02' });
-    
+
     $form->param_exists_for_field('when');            # true
     $form->param_exists_for_field('when.date');       # true
     $form->param_exists_for_field('when.date.month'); # true
     $form->param_exists_for_field('when.time.hour');  # false
-    
+
     $subform = Rose::HTML::Form->new;
     $subform->add_field(subwhen => { type => 'datetime split mdyhms' });
     $form->add_form(subform => $subform);
-    
+
     $form->params({ 'subform.subwhen.date' => '2004-01-02' });
-    
+
     $form->param_exists_for_field('subform.subwhen');            # true
     $form->param_exists_for_field('subform.subwhen.date');       # true
     $form->param_exists_for_field('subform.subwhen.date.month'); # true
     $form->param_exists_for_field('subform.subwhen.time.hour');  # false
-    
+
     $form->param_exists_for_field('when');            # false
     $form->param_exists_for_field('when.date');       # false
     $form->param_exists_for_field('when.date.month'); # false

@@ -294,4 +294,3 @@ is($field->html_field,
   qq(<input name="fruits" type="radio" value="squash"> <label>Squash</label><br>\n) .
   qq(<input name="fruits" type="radio" value="cherry"> <label>Cherry</label>),
   'localized label 4');
-  

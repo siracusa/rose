@@ -435,14 +435,14 @@ is($z_form, $w_form->form('x')->form('y')->form('z'), 'nested set 1');
 # Test a nested field with the same name as a field in the parent
 
 my $f1 = Rose::HTML::Form->new();
-  
+
 $f1->add_fields
 (
   id => { type => 'int' },
 );
 
 my $f2 = Rose::HTML::Form->new();
-  
+
 $f2->add_fields
 (
   id => { type => 'text' },

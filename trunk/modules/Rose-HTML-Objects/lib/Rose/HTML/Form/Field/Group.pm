@@ -238,7 +238,7 @@ sub clear_labels
     $item->label_id(undef);
     $item->label('');
   }
-  
+
   return;
 }
 
@@ -254,7 +254,7 @@ sub reset_labels
     $item->label_id(undef);
     $item->label($item->value);
   }
-  
+
   return;
 }
 

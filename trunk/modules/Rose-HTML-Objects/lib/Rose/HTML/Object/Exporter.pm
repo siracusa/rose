@@ -93,7 +93,7 @@ sub import
     my $import_as = $import_as{$symbol} || $symbol;
 
     my $existing_code = $target_class->can($import_as);
-    
+
     no strict 'refs';
     no warnings 'uninitialized';
 
