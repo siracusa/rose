@@ -308,6 +308,12 @@ sub add_fields
 
       $field->local_name($field->name);
 
+      if($self->can('form') && $self->form($field->local_name))
+      {
+        Carp::croak "Cannot add field with the same name as an existing sub-form: ", 
+                    $field->local_name;
+      }
+        
       unless(defined $field->rank)
       {
         $field->rank($self->increment_field_rank_counter);
@@ -319,6 +325,11 @@ sub add_fields
     else
     {
       my $field = shift;
+
+      if($self->can('form') && $self->form($arg))
+      {
+        Carp::croak "Cannot add field with the same name as an existing sub-form: $arg";
+      }
 
       if(UNIVERSAL::isa($field, 'Rose::HTML::Form::Field'))
       {
@@ -371,6 +382,25 @@ sub children
 {
   Carp::croak "children() does not take any arguments"  if(@_ > 1);
   return wantarray ? shift->fields() : (shift->fields() || []);
+}
+
+sub subfield_names
+{
+  my($self) = shift;
+
+  my @names;
+
+  foreach my $field ($self->fields)
+  {
+    push(@names, $field->name, ($field->can('_subfield_names') ? $field->_subfield_names : ()));
+  }
+  
+  return wantarray ? @names : \@names;
+}
+
+sub _subfield_names
+{
+  map { $_->can('subfield_names') ? $_->subfield_names : $_->name } shift->fields;
 }
 
 sub fields

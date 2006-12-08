@@ -1,5 +1,6 @@
-0.545 (12.04.2006) - John Siracusa <siracusa@mindspring.com>
+0.545 (12.08.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Added param_exists_for_field() method to Rose::HTML::Form.
     * Added positive() and negative() methods to integer fields.
     * Fixed a bug that caused validation to fail for certain compound 
       fields with labels.  (Reported by Guillermo Roditi)

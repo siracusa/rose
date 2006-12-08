@@ -15,7 +15,7 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.544';
+our $VERSION = '0.545';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -350,6 +350,48 @@ sub param_exists
 }
 
 sub params_exist { (keys %{$_[0]->{'params'}}) ? 1 : 0 }
+
+sub param_exists_for_field
+{
+  my($self, $name) = @_;
+  
+  $name = $name->name  if(UNIVERSAL::isa($name, 'Rose::HTML::Form::Field'));
+
+  return 0  unless($self->field($name));
+
+  my $nibble = $name;
+  my $found_form = 0;
+  
+  while(length $nibble)
+  {
+    if($self->form($nibble) && !$self->field($nibble))
+    {
+      $found_form = 1;
+      last;
+    }
+
+    return 1  if($self->param_exists($nibble));
+    $nibble =~ s/\.[^.]+$// || last;
+  }
+
+  foreach my $field ($found_form ? $self->form($nibble)->fields : 
+                                   $self->field($name))
+  {
+    if($field->can('subfield_names'))
+    {
+      foreach my $subname ($field->subfield_names)
+      {
+        # Skip unrelated subfields
+        next unless(index($name, $subname) == 0 || 
+                    index($subname, $name) == 0);
+
+        return 1  if($self->param_exists($subname));
+      }
+    }
+  }
+
+  return 0;
+}
 
 sub param_value_exists
 {
@@ -852,6 +894,9 @@ sub add_forms
 
       $name = $form->form_name;
 
+      croak "Cannot add form with the same name as an existing field: $name"
+        if($self->field($name));
+      
       unless(defined $form->rank)
       {
         $form->rank($self->increment_form_rank_counter);
@@ -861,6 +906,9 @@ sub add_forms
     {
       $name = $arg;
       $form = shift;
+
+      croak "Cannot add form with the same name as an existing field: $name"
+        if($self->field($name));
 
       if(UNIVERSAL::isa($form, 'Rose::HTML::Form'))
       {
@@ -2338,6 +2386,38 @@ Returns true if any parameters exist, false otherwise.
 =item B<param_exists NAME>
 
 Returns true if a parameter named NAME exists, false otherwise.
+
+=item B<param_exists_for_field [ NAME | FIELD ]>
+
+Returns true if a L<param|/param> exists that addresses the field named NAME or the L<Rose::HTML::Form::Field>-derived object FIELD, false otherwise.
+
+This method is useful for determining if any query parameters exist that address a compound field.  For example, a compound field named C<a.b.c.d> could be addressed by any one of the following query parameters: C<a>, C<a.b>, C<a.b.c>, or C<a.b.c.d>.  This method also works with fields in nested forms.  Examples:
+
+    $form = Rose::HTML::Form->new;
+    $form->add_field(when => { type => 'datetime split mdyhms' });
+    
+    $form->params({ 'when.date' => '2004-01-02' });
+    
+    $form->param_exists_for_field('when');            # true
+    $form->param_exists_for_field('when.date');       # true
+    $form->param_exists_for_field('when.date.month'); # true
+    $form->param_exists_for_field('when.time.hour');  # false
+    
+    $subform = Rose::HTML::Form->new;
+    $subform->add_field(subwhen => { type => 'datetime split mdyhms' });
+    $form->add_form(subform => $subform);
+    
+    $form->params({ 'subform.subwhen.date' => '2004-01-02' });
+    
+    $form->param_exists_for_field('subform.subwhen');            # true
+    $form->param_exists_for_field('subform.subwhen.date');       # true
+    $form->param_exists_for_field('subform.subwhen.date.month'); # true
+    $form->param_exists_for_field('subform.subwhen.time.hour');  # false
+    
+    $form->param_exists_for_field('when');            # false
+    $form->param_exists_for_field('when.date');       # false
+    $form->param_exists_for_field('when.date.month'); # false
+    $form->param_exists_for_field('when.time.hour');  # false
 
 =item B<params_from_apache APR>
 

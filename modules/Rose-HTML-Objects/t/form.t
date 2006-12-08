@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 239;
+use Test::More tests => 276;
 
 BEGIN 
 {
@@ -678,6 +678,98 @@ $form->locale('nonesuch');
 is($form->error->as_string, 'One or more fields have errors.', 'form error msg 3');
 is($form->field('name')->error->as_string, 'This is a required field.', 'form field error message 3');
 
+$form =  Rose::HTML::Form->new;
+$field = Rose::HTML::Form::Field::DateTime::Split::MDYHMS->new(name => 'event');
+
+$form->add_field($field);
+
+ok(!$form->param_exists_for_field('event'), 'param_exists_for_field() 1');
+ok(!$form->param_exists_for_field($field), 'param_exists_for_field() 2');
+
+$form->params({ 'event.date' => '2004-01-02' });
+
+ok($form->param_exists_for_field('event'), 'param_exists_for_field() 3');
+ok($form->param_exists_for_field($field), 'param_exists_for_field() 4');
+
+$form->params({ 'event.date.month' => 10 });
+
+ok($form->param_exists_for_field('event'), 'param_exists_for_field() 5');
+ok($form->param_exists_for_field($field), 'param_exists_for_field() 6');
+
+$form->params({ 'event' => '2004-01-02 12:34:56' });
+
+ok($form->param_exists_for_field('event'), 'param_exists_for_field() 7');
+ok($form->param_exists_for_field($field), 'param_exists_for_field() 8');
+
+my $subform = Rose::HTML::Form->new;
+my $subfield = Rose::HTML::Form::Field::DateTime::Split::MDYHMS->new(name => 'event');
+$subform->add_field($subfield);
+
+$form->form(sub => $subform);
+
+eval { $form->add_field(sub => { type => 'text' }) };
+ok($@, 'Illegal subfield name');
+
+$form->params({ });
+
+ok(!$form->param_exists_for_field('sub.event'), 'param_exists_for_field() nested 1');
+ok(!$form->param_exists_for_field($subfield), 'param_exists_for_field() nested 2');
+
+$form->params({ 'sub.event.date' => '2004-01-02' });
+
+ok($form->param_exists_for_field('sub.event'), 'param_exists_for_field() nested 3');
+ok($form->param_exists_for_field($subfield), 'param_exists_for_field() nested 4');
+
+$form->params({ 'sub.event.date.month' => 10 });
+
+ok($form->param_exists_for_field('sub.event'), 'param_exists_for_field() nested 5');
+ok($form->param_exists_for_field($subfield), 'param_exists_for_field() nested 6');
+
+$form->params({ 'sub.event' => '2004-01-02 12:34:56' });
+
+ok($form->param_exists_for_field('sub.event'), 'param_exists_for_field() nested 7');
+ok($form->param_exists_for_field($subfield), 'param_exists_for_field() nested 8');
+
+$form->params({ 'sub.event' => '2004-01-02 12:34:56' });
+
+ok(!$form->param_exists_for_field('sub'), 'param_exists_for_field() nested 9');
+ok($form->param_exists_for_field('sub.event'), 'param_exists_for_field() nested 10');
+ok($form->param_exists_for_field('sub.event.date'), 'param_exists_for_field() nested 11');
+ok($form->param_exists_for_field('sub.event.date.month'), 'param_exists_for_field() nested 12');
+
+$form->params({ 'sub.x' => '2004-01-02 12:34:56' });
+
+ok(!$form->param_exists_for_field('sub'), 'param_exists_for_field() nested 13');
+ok(!$form->param_exists_for_field('sub.event'), 'param_exists_for_field() nested 14');
+ok(!$form->param_exists_for_field('sub.event.date'), 'param_exists_for_field() nested 15');
+ok(!$form->param_exists_for_field('sub.event.date.month'), 'param_exists_for_field() nested 16');
+
+$form = Rose::HTML::Form->new;
+$form->add_field(when => { type => 'datetime split mdyhms' });
+
+$form->params({ 'when.date' => '2004-01-02' });
+
+ok($form->param_exists_for_field('when'), 'param_exists_for_field() nested 2.1');
+ok($form->param_exists_for_field('when.date'), 'param_exists_for_field() nested 2.2');
+ok($form->param_exists_for_field('when.date.month'), 'param_exists_for_field() nested 2.3');
+ok(!$form->param_exists_for_field('when.time.hour'), 'param_exists_for_field() nested 2.4');
+
+$subform = Rose::HTML::Form->new;
+$subform->add_field(subwhen => { type => 'datetime split mdyhms' });
+
+$form->add_form(subform => $subform);
+
+$form->params({ 'subform.subwhen.date' => '2004-01-02' });
+
+ok($form->param_exists_for_field('subform.subwhen'), 'param_exists_for_field() nested 2.5');
+ok($form->param_exists_for_field('subform.subwhen.date'), 'param_exists_for_field() nested 2.6');
+ok($form->param_exists_for_field('subform.subwhen.date.month'), 'param_exists_for_field() nested 2.7');
+ok(!$form->param_exists_for_field('subform.subwhen.time.hour'), 'param_exists_for_field() nested 2.8');
+
+ok(!$form->param_exists_for_field('when'), 'param_exists_for_field() nested 2.9');
+ok(!$form->param_exists_for_field('when.date'), 'param_exists_for_field() nested 2.10');
+ok(!$form->param_exists_for_field('when.date.month'), 'param_exists_for_field() nested 2.11');
+ok(!$form->param_exists_for_field('when.time.hour'), 'param_exists_for_field() nested 2.12');
 
 BEGIN
 {
