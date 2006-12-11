@@ -15,7 +15,7 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.545';
+our $VERSION = '0.546';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -1141,8 +1141,6 @@ sub delete_field
   my $field2 = delete $self->{'fields_by_name'}{$name};
   return $field1 || $field2;
 }
-
-sub field_value { shift->field(shift)->internal_value }
 
 sub field
 {

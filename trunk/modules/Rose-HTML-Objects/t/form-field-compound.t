@@ -4,7 +4,7 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 23;
+use Test::More tests => 24;
 
 BEGIN 
 {
@@ -45,6 +45,8 @@ is($field->field('month'), $fields{'month'}, 'field() set with field hash');
 #is($field->field('date.month'), $fields{'month'}, 'field() addressing');
 
 $field->init_fields(month => 12, day => 25, year => 1980);
+
+is($field->field_value('day'), 25, 'field_value() 1');
 
 is(join("\n", map { $_->html_field } $field->fields),
    qq(<input name="date.day" size="2" type="text" value="25">\n) .

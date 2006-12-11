@@ -13,7 +13,7 @@ our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.541';
+our $VERSION = '0.546';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -662,6 +662,16 @@ Returns the full list of field objects, sorted by field name, in list context, o
 =item B<field_names>
 
 Returns a sorted list of field names in list context, or a reference to a list of the same in scalar context.
+
+=item B<field_value NAME>
+
+Returns the L<internal_value|Rose::HTML::Form::Field/internal_value> of the sub-field named NAME.  In other words, this:
+
+    $val = $field->field_value('zip_code');
+
+is just a shorter way to write this:
+
+    $val = $field->field('zip_code')->internal_value;
 
 =item B<invalidate_value>
 
