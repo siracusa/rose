@@ -15,7 +15,7 @@ use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 # Variables for use in regexes
 our $FF_SEPARATOR_RE = quotemeta FF_SEPARATOR;
 
-our $VERSION = '0.545';
+our $VERSION = '0.546';
 
 #
 # Class data
@@ -383,6 +383,10 @@ sub children
   Carp::croak "children() does not take any arguments"  if(@_ > 1);
   return wantarray ? shift->fields() : (shift->fields() || []);
 }
+
+sub field_value { shift->field(shift)->internal_value }
+
+*subfield_value = \&field_value;
 
 sub subfield_names
 {
