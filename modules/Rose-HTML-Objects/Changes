@@ -1,3 +1,10 @@
+0.546 (12.11.2006) - John Siracusa <siracusa@mindspring.com>
+
+    * Added a field_value() method to the Compound field class.
+      (Suggested by Guillermo Roditi)
+    * Added a cascade parameter to validate(), which defaults to true.
+      (Suggested by Guillermo Roditi)
+
 0.545 (12.08.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added param_exists_for_field() method to Rose::HTML::Form.

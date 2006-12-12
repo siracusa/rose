@@ -576,9 +576,25 @@ sub query_string
 
 sub validate
 {
-  my($self) = shift;
+  my($self, %args) = @_;
+
+  $args{'cascade'} = 1  unless(exists $args{'cascade'});
 
   my $fail = 0;
+
+  if($args{'cascade'})
+  {
+    foreach my $form ($self->forms)
+    {
+      $Debug && warn "Validating sub-form ", $form->form_name, "\n";
+  
+      unless($form->validate(%args))
+      {
+        $self->add_error($form->error)  if($form->error);
+        $fail++;
+      }
+    }
+  }
 
   foreach my $field ($self->fields)
   {
@@ -595,6 +611,7 @@ sub validate
 
     return 0;
   }
+
   return 1;
 }
 
@@ -2527,11 +2544,21 @@ Get or set the URI of the form, minus the value of the "action" HTML attribute. 
 
 Get or set the character used to separate parameter name/value pairs in the return value of L<query_string()|/query_string> (which is in turn used to construct the return value of L<self_uri()|/self_uri>).  The default is "&".
 
-=item B<validate>
+=item B<validate [PARAMS]>
 
-Validate the form by calling L<validate()|Rose::HTML::Form::Field/validate> on each field.  If any field returns false from its L<validate()|Rose::HTML::Form::Field/validate> call, then this method returns false. Otherwise, it returns true.
+Validate the form by calling L<validate()|Rose::HTML::Form::Field/validate> on each field and L<validate()|/validate> on each each L<sub-form|/"NESTED FORMS">.  If any field or form returns false from its C<validate()> method call, then this method returns false.  Otherwise, it returns true.
 
-If this method returns false and an L<error|Rose::HTML::Object/error> is not defined, then the L<error|Rose::HTML::Object/error> attribute is set to a generic error message.
+If this method returns false and an L<error|Rose::HTML::Object/error> is not defined on any invalid field or form, then the L<error|Rose::HTML::Object/error> attribute of this form is set to a generic error message.  Otherwise, this form's error attribute is set to the error attribute of the last invalid field or form.
+
+PARAMS are name/value pairs.  Valid parameters are:
+
+=over 4
+
+=item C<cascade BOOL>
+
+If true, then the L<validate()|/validate> method of each sub-form is called, as described above.  The default value is true.
+
+=back
 
 =item B<validate_field_html_attrs [BOOL]>
 
