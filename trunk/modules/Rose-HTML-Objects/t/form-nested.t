@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 159;
+use Test::More tests => 163;
 
 BEGIN 
 {
@@ -208,6 +208,16 @@ is($form->field('person_address.address.street')->internal_value, '1 Main St.', 
 is($form->field('person_address.address.city')->internal_value, 'Smithtown', 'person_address_dog city 1');
 is($form->field('person_address.address.state')->internal_value, 'NY', 'person_address_dog state 1');
 is($form->field('person_address.address.zip')->internal_value, '11787', 'person_address_dog zip 1');
+
+ok($person_address_form->validate, 'validate() 1');
+ok($person_address_form->validate(cascade => 0), 'validate() 2');
+
+$person_address_form->field('person_address.address.zip')->input_value(666);
+
+ok(!$person_address_form->validate, 'validate() 3');
+ok($person_address_form->validate(cascade => 0), 'validate() 4');
+
+$person_address_form->field('person_address.address.zip')->input_value(11787);
 
 $person = $form->person_from_form;
 
@@ -540,6 +550,14 @@ BEGIN
         size => 2);
 
     $self->add_fields(%fields);
+  }
+  
+  sub validate
+  {
+    my($self) = shift;
+    
+    $self->SUPER::validate or return 0;
+    return ($self->field('zip')->internal_value == 666) ? 0 : 1;
   }
 
   sub address_from_form { shift->object_from_form('MyAddress') }
