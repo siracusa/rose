@@ -587,7 +587,9 @@ sub validate
     foreach my $form ($self->forms)
     {
       $Debug && warn "Validating sub-form ", $form->form_name, "\n";
-  
+
+      local $args{'form_only'} = 1;
+
       unless($form->validate(%args))
       {
         $self->add_error($form->error)  if($form->error);
@@ -596,10 +598,13 @@ sub validate
     }
   }
 
-  foreach my $field ($self->fields)
+  unless($args{'form_only'})
   {
-    $Debug && warn "Validating ", $field->name, "\n";
-    $fail++  unless($field->validate);
+    foreach my $field ($self->fields)
+    {
+      $Debug && warn "Validating ", $field->name, "\n";
+      $fail++  unless($field->validate);
+    }
   }
 
   if($fail)
@@ -2556,9 +2561,39 @@ PARAMS are name/value pairs.  Valid parameters are:
 
 =item C<cascade BOOL>
 
-If true, then the L<validate()|/validate> method of each sub-form is called, as described above.  The default value is true.
+If true, then the L<validate()|/validate> method of each sub-form is called, passing PARAMS, with a C<form_only> parameter set to true.  The default value of the C<cascade> parameter is true.  Note that all fields in all nested forms are validated regardless of the value of this parameter.
+
+=item C<form_only BOOL>
+
+If true, then the  L<validate|Rose::HTML::Form::Field/validate> method is not called on the fields of this form and its sub-forms.  Defaults to false, but is set to true when calling  L<validate()|/validate> on sub-forms in response to the C<cascade> parameter.
 
 =back
+
+Examples:
+
+    $form = Rose::HTML::Form->new;
+    $form->add_field(foo => { type => 'text' });
+
+    $subform = Rose::HTML::Form->new;
+    $subform->add_field(bar => { type => 'text' });
+
+    $form->add_form(sub => $subform);
+
+    # Call validate() on fields "foo" and "sub.bar" and
+    # call validate(form_only => 1) on the sub-form "sub"
+    $form->validate;
+
+    # Same as above
+    $form->validate(cascade => 1);
+
+    # Call validate() on fields "foo" and "sub.bar"
+    $form->validate(cascade => 0);
+
+    # Call validate(form_only => 1) on the sub-form "sub"
+    $form->validate(form_only => 1);
+
+    # Don't call validate() on any fields or sub-forms
+    $form->validate(form_only => 1, cascade => 0);
 
 =item B<validate_field_html_attrs [BOOL]>
 
