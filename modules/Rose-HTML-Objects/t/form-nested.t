@@ -462,6 +462,30 @@ $f1->add_form(f2 => $f2);
 
 is(join(',', sort map { $_->name } $f1->fields), 'f2.id,id', 'nested same-name fields');
 
+$form = Rose::HTML::Form->new;
+$form->add_field(foo => { type => 'text' });
+
+my $subform = Rose::HTML::Form->new;
+$subform->add_field(bar => { type => 'text' });
+
+$form->add_form(sub => $subform);
+#local $Rose::HTML::Form::Debug = 1;
+# Call validate() on fields "foo" and "sub.bar" and
+# call validate(form_only => 1) on the sub-form "sub"
+$form->validate;
+#print STDERR "---\n";
+# Same as above
+$form->validate(cascade => 1);
+#print STDERR "---\n";
+# Call validate() on fields "foo" and "sub.bar"
+$form->validate(cascade => 0);
+#print STDERR "---\n";
+# Call validate(form_only => 1) on the sub-form "sub"
+$form->validate(form_only => 1);
+#print STDERR "---\n";
+# Don't call validate() on any fields or sub-forms
+$form->validate(form_only => 1, cascade => 0);
+    
 BEGIN
 {
   package MyPerson;
