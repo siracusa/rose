@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1479;
+use Test::More tests => 1511;
 
 BEGIN 
 {
@@ -20,7 +20,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 373)  unless($HAVE_PG);
+  skip("Postgres tests", 381)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -189,6 +189,43 @@ SKIP: foreach my $db_type ('pg')
 
   my $oo23 = MyPgOtherObject2->new(id => 3, name => 'three', pid => $o_x->id);
   ok($oo23->save, "other object 2 save() 3 - $db_type");
+
+  # Begin filtered collection tests
+
+  my $x = MyPgObject->new(id => $o->id)->load;
+  $x->other2_a_objs({ id => 100, name => 'aoo' }, { id => 101, name => 'abc' });
+
+  $x->save;
+
+  $x = MyPgObject->new(id => $o->id)->load;
+
+  my $ao = $x->other2_a_objs;
+  my $oo = $x->other2_objs;
+
+  is(scalar @$ao, 2, "filtered one-to-many 1 - $db_type");
+  is(join(',', map { $_->name } @$ao), 'abc,aoo', "filtered one-to-many 2 - $db_type");
+
+  is(scalar @$oo, 4, "filtered one-to-many 3 - $db_type");
+  is(join(',', sort map { $_->name } @$oo), 'abc,aoo,one,two', "filtered one-to-many 4 - $db_type");
+
+  $x->other2_a_objs({ id => 102, name => 'axx' });
+  $x->save;
+
+  $x = MyPgObject->new(id => $o->id)->load;
+
+  $ao = $x->other2_a_objs;
+  $oo = $x->other2_objs;
+
+  is(scalar @$ao, 1, "filtered one-to-many 5 - $db_type");
+  is(join(',', map { $_->name } @$ao), 'axx', "filtered one-to-many 6 - $db_type");
+
+  is(scalar @$oo, 3, "filtered one-to-many 7 - $db_type");
+  is(join(',', sort map { $_->name } @$oo), 'axx,one,two', "filtered one-to-many 8 - $db_type");
+
+  $x->other2_a_objs([]);
+  $x->save;
+
+  # End filtered collection tests
 
   ok(!$o->has_loaded_related('other2_objs'), "has_loaded_related() 3 - $db_type");
 
@@ -1449,7 +1486,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 340)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 348)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -1521,6 +1558,43 @@ SKIP: foreach my $db_type ('mysql')
 
   my $oo23 = MyMySQLOtherObject2->new(id => 3, name => 'three', pid => $o_x->id);
   ok($oo23->save, "other object 2 save() 3 - $db_type");
+
+  # Begin filtered collection tests
+
+  my $x = MyMySQLObject->new(id => $o->id)->load;
+  $x->other2_a_objs({ name => 'aoo' }, { name => 'abc' });
+
+  $x->save;
+
+  $x = MyMySQLObject->new(id => $o->id)->load;
+
+  my $ao = $x->other2_a_objs;
+  my $oo = $x->other2_objs;
+
+  is(scalar @$ao, 2, "filtered one-to-many 1 - $db_type");
+  is(join(',', map { $_->name } @$ao), 'abc,aoo', "filtered one-to-many 2 - $db_type");
+
+  is(scalar @$oo, 4, "filtered one-to-many 3 - $db_type");
+  is(join(',', sort map { $_->name } @$oo), 'abc,aoo,one,two', "filtered one-to-many 4 - $db_type");
+
+  $x->other2_a_objs({ name => 'axx' });
+  $x->save;
+
+  $x = MyMySQLObject->new(id => $o->id)->load;
+
+  $ao = $x->other2_a_objs;
+  $oo = $x->other2_objs;
+
+  is(scalar @$ao, 1, "filtered one-to-many 5 - $db_type");
+  is(join(',', map { $_->name } @$ao), 'axx', "filtered one-to-many 6 - $db_type");
+
+  is(scalar @$oo, 3, "filtered one-to-many 7 - $db_type");
+  is(join(',', sort map { $_->name } @$oo), 'axx,one,two', "filtered one-to-many 8 - $db_type");
+
+  $x->other2_a_objs([]);
+  $x->save;
+
+  # End filtered collection tests
 
   ok(!$o->has_loaded_related('other2_objs'), "has_loaded_related() 1 - $db_type");
 
@@ -2759,7 +2833,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 363)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 371)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -2892,6 +2966,43 @@ SKIP: foreach my $db_type ('informix')
 
   my $oo23 = MyInformixOtherObject2->new(id => 3, name => 'three', pid => $o_x->id);
   ok($oo23->save, "other object 2 save() 3 - $db_type");
+
+  # Begin filtered collection tests
+
+  my $x = MyInformixObject->new(id => $o->id)->load;
+  $x->other2_a_objs({ id => 100, name => 'aoo' }, { id => 101, name => 'abc' });
+
+  $x->save;
+
+  $x = MyInformixObject->new(id => $o->id)->load;
+
+  my $ao = $x->other2_a_objs;
+  my $oo = $x->other2_objs;
+
+  is(scalar @$ao, 2, "filtered one-to-many 1 - $db_type");
+  is(join(',', map { $_->name } @$ao), 'abc,aoo', "filtered one-to-many 2 - $db_type");
+
+  is(scalar @$oo, 4, "filtered one-to-many 3 - $db_type");
+  is(join(',', sort map { $_->name } @$oo), 'abc,aoo,one,two', "filtered one-to-many 4 - $db_type");
+
+  $x->other2_a_objs({ id => 102, name => 'axx' });
+  $x->save;
+
+  $x = MyInformixObject->new(id => $o->id)->load;
+
+  $ao = $x->other2_a_objs;
+  $oo = $x->other2_objs;
+
+  is(scalar @$ao, 1, "filtered one-to-many 5 - $db_type");
+  is(join(',', map { $_->name } @$ao), 'axx', "filtered one-to-many 6 - $db_type");
+
+  is(scalar @$oo, 3, "filtered one-to-many 7 - $db_type");
+  is(join(',', sort map { $_->name } @$oo), 'axx,one,two', "filtered one-to-many 8 - $db_type");
+
+  $x->other2_a_objs([]);
+  $x->save;
+
+  # End filtered collection tests
 
   ok(!$o->has_loaded_related('other2_objs'), "has_loaded_related() 3 - $db_type");
 
@@ -4136,7 +4247,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 401)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 409)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -4274,18 +4385,55 @@ SKIP: foreach my $db_type ('sqlite')
   #local $Rose::DB::Object::Manager::Debug = 1;
   my $no2s = $o->not_other2_objs;
 
-  is(scalar @$no2s, 2, 'not equal one-to-many 1');
+  is(scalar @$no2s, 2, "not equal one-to-many 1 - $db_type");
 
   my $nobjs = 
     Rose::DB::Object::Manager->get_objects(
       object_class => 'MySQLiteObject',
       require_objects => [ 'not_other2_objs' ]);
 
-  is(scalar @$nobjs, 2, 'not equal one-to-many 2');
+  is(scalar @$nobjs, 2, "not equal one-to-many 2 - $db_type");
 
   MySQLiteObject->meta->delete_relationship('not_other2_objs');
   # End experiment
 
+  # Begin filtered collection tests
+
+  my $x = MySQLiteObject->new(id => $o->id)->load;
+  $x->other2_a_objs({ name => 'aoo' }, { name => 'abc' });
+
+  $x->save;
+
+  $x = MySQLiteObject->new(id => $o->id)->load;
+
+  my $ao = $x->other2_a_objs;
+  my $oo = $x->other2_objs;
+
+  is(scalar @$ao, 2, "filtered one-to-many 1 - $db_type");
+  is(join(',', map { $_->name } @$ao), 'abc,aoo', "filtered one-to-many 2 - $db_type");
+
+  is(scalar @$oo, 4, "filtered one-to-many 3 - $db_type");
+  is(join(',', sort map { $_->name } @$oo), 'abc,aoo,one,two', "filtered one-to-many 4 - $db_type");
+
+  $x->other2_a_objs({ name => 'axx' });
+  $x->save;
+
+  $x = MySQLiteObject->new(id => $o->id)->load;
+
+  $ao = $x->other2_a_objs;
+  $oo = $x->other2_objs;
+
+  is(scalar @$ao, 1, "filtered one-to-many 5 - $db_type");
+  is(join(',', map { $_->name } @$ao), 'axx', "filtered one-to-many 6 - $db_type");
+
+  is(scalar @$oo, 3, "filtered one-to-many 7 - $db_type");
+  is(join(',', sort map { $_->name } @$oo), 'axx,one,two', "filtered one-to-many 8 - $db_type");
+
+  $x->other2_a_objs([]);
+  $x->save;
+
+  # End filtered collection tests
+  
   ok(!$o->has_loaded_related('other2_objs'), "has_loaded_related() 3 - $db_type");
 
   my $o2s = $o->other2_objs;
@@ -5904,6 +6052,15 @@ EOF
         },
       },
 
+      other2_a_objs =>
+      {
+        type  => 'one to many',
+        class => 'MyPgOtherObject2',
+        column_map => { id => 'pid' },
+        query_args => [ name => { like => 'a%' } ],
+        manager_args => { sort_by => 'name' },
+      },
+
       other_obj_osoft =>
       {
         type => 'one to one',
@@ -6260,7 +6417,16 @@ EOF
           add_now         => 'add_other2_objs_now',
           add_on_save     => undef,
         },
-      }
+      },
+
+      other2_a_objs =>
+      {
+        type  => 'one to many',
+        class => 'MyMySQLOtherObject2',
+        column_map => { id => 'pid' },
+        query_args => [ name => { like => 'a%' } ],
+        manager_args => { sort_by => 'name' },
+      },
     );
 
     MyMySQLObject->meta->foreign_keys
@@ -6612,7 +6778,16 @@ EOF
           add_now         => 'add_other2_objs_now',
           add_on_save     => undef,
         },
-      }
+      },
+
+      other2_a_objs =>
+      {
+        type  => 'one to many',
+        class => 'MyInformixOtherObject2',
+        column_map => { id => 'pid' },
+        query_args => [ name => { like => 'a%' } ],
+        manager_args => { sort_by => 'name' },
+      },
     );
 
     MyInformixObject->meta->alias_column(fk1 => 'fkone');
@@ -6942,6 +7117,15 @@ EOF
           add_now         => 'add_other2_objs_now',
           add_on_save     => undef,
         },
+      },
+
+      other2_a_objs =>
+      {
+        type  => 'one to many',
+        class => 'MySQLiteOtherObject2',
+        column_map => { id => 'pid' },
+        query_args => [ name => { like => 'a%' } ],
+        manager_args => { sort_by => 'name' },
       },
 
       # Hrm.  Experimental...

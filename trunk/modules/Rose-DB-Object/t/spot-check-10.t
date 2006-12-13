@@ -158,10 +158,18 @@ foreach my $db_type (qw(pg))
   my $offerings = 
     Rose::DB::Object::Manager->get_objects(
       object_class => $offering_class,
-      sort_by      => [ 'company_code', 'sort_order' ]);
+      sort_by      => [ 'company_code', 'sort_order', 'years' ]);
 
   is_deeply([ map { scalar $_->Rose::DB::Object::Helpers::column_value_pairs } @$offerings ],
    [
+     {
+       'browse' => 1,
+       'discrete_sequences' => 1,
+       'sort_order' => '0',
+       'years' => '05',
+       'eid' => '',
+       'company_code' => ''
+     },
      {
        'browse' => 1,
        'discrete_sequences' => 1,
@@ -175,14 +183,6 @@ foreach my $db_type (qw(pg))
        'discrete_sequences' => 1,
        'sort_order' => '0',
        'years' => '15',
-       'eid' => '',
-       'company_code' => ''
-     },
-     {
-       'browse' => 1,
-       'discrete_sequences' => 1,
-       'sort_order' => '0',
-       'years' => '05',
        'eid' => '',
        'company_code' => ''
      },
