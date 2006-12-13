@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.758';
+our $VERSION = '0.759';
 
 our $Debug = 0;
 
@@ -1779,6 +1779,7 @@ sub object_by_key
   my $key = $args->{'hash_key'} || $name;
   my $interface = $args->{'interface'} || 'get_set';
   my $target_class = $options->{'target_class'} or die "Missing target class";
+  #my $query_args = $args->{'query_args'} || [];
 
   weaken(my $fk       = $args->{'foreign_key'} || $args->{'relationship'});
   my $fk_class = $args->{'class'} or die "Missing foreign object class";
@@ -2682,7 +2683,7 @@ sub objects_by_key
           # Delete any existing objects
           my $deleted = 
             $ft_manager->$ft_delete_method(object_class => $ft_class,
-                                           where => [ %key ], 
+                                           where => [ %key, @$query_args ], 
                                            db => $db);
           die $ft_manager->error  unless(defined $deleted);
 
@@ -2905,7 +2906,7 @@ sub objects_by_key
           # Delete any existing objects
           my $deleted = 
             $ft_manager->$ft_delete_method(object_class => $ft_class,
-                                           where => [ %key ], 
+                                           where => [ %key, @$query_args ], 
                                            db => $db);
           die $ft_manager->error  unless(defined $deleted);
 
