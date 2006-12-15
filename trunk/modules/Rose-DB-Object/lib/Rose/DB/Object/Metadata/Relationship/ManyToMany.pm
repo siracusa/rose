@@ -13,7 +13,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 use Rose::DB::Object::Constants qw(PRIVATE_PREFIX);
 
-our $VERSION = '0.758';
+our $VERSION = '0.759';
 
 our $Debug = 0;
 
@@ -435,24 +435,13 @@ The class that maps between the other two classes is called the "L<map class|/ma
 
 When it comes to actually creating the three classes that participate in a "many to many" relationship, there's a bit of a "chicken and egg" problem.  All these classes need to know about each other more or less "simultaneously," but they must be defined in a serial fashion, and may be loaded in any order by the user.
 
-In order to account for this, method creation may be deferred for any foreign key or relationship that does not yet have all the information it requires to do its job.  This should be transparent to the developer, provided that following guidelines are obeyed:
+In order to account for this, method creation may be deferred for any foreign key or relationship that does not yet have all the information it requires to do its job.  This should be transparent to the developer.
 
-=over 4
-
-=item * The L<map class|/map_class> should C<use> both of the classes that it maps between.
-
-=item * The other two classes should C<use> the L<map class|/map_class>.
-
-=back
-
-Here's a complete example using the C<Widget>, C<Color>, and C<WidgetColorMap> classes.  First, the C<Widget> class which has a "many to many" relationship through which it can retrieve its colors.  The C<Widget> class needs to load the map class, C<WidgetColorMap>.
+Here's a complete example using the C<Widget>, C<Color>, and C<WidgetColorMap> classes.  First, the C<Widget> class which has a "many to many" relationship through which it can retrieve its colors.
 
   package Widget;
 
-  use WidgetColorMap; # load map class
-
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
+  use base 'Rose::DB::Object';
 
   __PACKAGE__->meta->table('widgets');
   __PACKAGE__->meta->columns
@@ -479,14 +468,11 @@ Here's a complete example using the C<Widget>, C<Color>, and C<WidgetColorMap> c
 
   1;
 
-Next, the C<Color> class which has a "many to many" relationship through which it can retrieve all the widgets that have this color.  The C<Color> class also needs to load the map class, C<WidgetColorMap>.
+Next, the C<Color> class which has a "many to many" relationship through which it can retrieve all the widgets that have this color.
 
   package Color;
 
-  use WidgetColorMap; # load map class
-
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
+  use base 'Rose::DB::Object';
 
   __PACKAGE__->meta->table('colors');
   __PACKAGE__->meta->columns
@@ -513,16 +499,11 @@ Next, the C<Color> class which has a "many to many" relationship through which i
 
   1;
 
-Finally, the C<WidgetColorMap> class which must load both of the classes that it maps between (C<Widget> and C<Color>) and must have a foreign key or "many to one" relationship that points to each of them.
+Finally, the C<WidgetColorMap> class must have a foreign key or "many to one" relationship for each of the two classes that it maps between (C<Widget> and C<Color>).
 
   package WidgetColorMap;
 
-  # Load both classes that this class maps between
-  use Widget;
-  use Color;
-
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
+  use base 'Rose::DB::Object';
 
   __PACKAGE__->meta->table('widget_color_map');
   __PACKAGE__->meta->columns
@@ -580,38 +561,6 @@ Now the code:
   $color->load;
 
   @widgets = map { $_->name } $c->widgets; # ('Sprocket')
-
-Phew!  It's actually not as complex as it seems.  On the other hand, there is something to be said for manually creating the C<colors()> and C<widgets()> methods.  If you look to see what's being done on your behalf behind the scenes, it's actually not that complex.  Most of the work involves determining which columns of which tables point to which columns in which other tables.  You, the programmer, already know this information, so manual "many to many" method definitions are usually straightforward.
-
-For example, here's a custom implementation of the C<Widget> class's C<colors()> method:
-
-  package Widget;
-  ...
-  use WidgetColorMap;
-  use Rose::DB::Object::Manager;
-  ...
-
-  sub colors
-  {
-    my $self = shift;
-
-    my $map_records = 
-      Rose::DB::Object::Manager->get_objects(
-        object_class => 'WidgetColorMap',
-        with_objects => [ 'color' ],
-        query =>
-        [
-          widget_id => $self->id
-        ]);
-
-    my @colors = map { $_->color } @$map_records;
-
-    return wantarray ? @colors : \@colors;
-  }
-
-You might notice that that's actually about the same amount of typing as what's required to setup all the relationships to take advantage of the automatic method generation.  On the other hand, the relationship definitions provide a central location for this information, which might aid in maintenance.
-
-In the end, it's up to you.  Which technique makes more sense in terms of initial effort and ongoing ease of maintenance is a question you'll have to answer yourself.
 
 =head1 METHOD MAP
 
@@ -728,7 +677,7 @@ This can be used to limit the objects fetched via this relationship.  For exampl
     },
   );
 
-This would ensure that a C<Widget>'s C<colors()> would be limited to those that contain the letter "e".  See the documentation for L<Rose::DB::Object::Manager>'s L<get_objects|Rose::DB::Object::Manager/get_objects> method for a full list of valid C<query> arguments, but remember that you can define your own custom L<manager_class> and thus can also define what kinds of query arguments it takes.
+See the documentation for L<Rose::DB::Object::Manager>'s L<get_objects|Rose::DB::Object::Manager/get_objects> method for a full list of valid C<query> arguments.
 
 =item B<share_db [BOOL]>
 
