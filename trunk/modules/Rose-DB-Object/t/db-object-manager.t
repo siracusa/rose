@@ -8731,7 +8731,7 @@ SKIP: foreach my $db_type (qw(sqlite))
   $objs->[0]->b1(undef);
   $objs->[0]->save;
   $b1->delete;
-$DB::single = 1;
+
   my $iterator = 
     MySQLiteObjectManager->get_objectz_iterator(
       share_db     => 1,
@@ -8768,7 +8768,7 @@ $DB::single = 1;
   $o = $iterator->next;
   is($o, 0, "iterator next() 5 - $db_type");
   is($iterator->total, 2, "iterator total() - $db_type");
-$DB::single = 1;
+
   my $fo = MySQLiteOtherObject->new(name => 'Foo 1',
                                 k1   => 1,
                                 k2   => 2,
