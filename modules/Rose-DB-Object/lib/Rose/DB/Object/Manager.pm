@@ -2277,6 +2277,13 @@ sub get_objects
         $db = undef;
       });
 
+      $iterator->_destroy_code(sub
+      {
+        $db->release_dbh  if($db && $dbh_retained);
+        $sth = undef;
+        $db = undef;
+      });
+      
       return $iterator;
     }
 
@@ -3216,6 +3223,13 @@ sub get_objects_iterator_from_sql
   $iterator->_finish_code(sub
   {
     $sth->finish      if($sth);
+    $db->release_dbh  if($db && $dbh_retained);
+    $sth = undef;
+    $db = undef;
+  });
+
+  $iterator->_destroy_code(sub
+  {
     $db->release_dbh  if($db && $dbh_retained);
     $sth = undef;
     $db = undef;

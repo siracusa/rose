@@ -1,4 +1,4 @@
-0.759 (12.13.2006) - John Siracusa <siracusa@mindspring.com>
+0.759 (12.18.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added support for limit/offset in Oracle.
     * Added a "state" export tag to Rose::DB::Object::Util.
@@ -6,6 +6,8 @@
       selected columns in some situations.
     * Added the (dubious) ability to set a list of filtered 
       one-to-many items.
+    * Fixed a database handle leak in the iterator class.
+      (Reported by Peter Karman)
 
 0.758 (11.29.2006) - John Siracusa <siracusa@mindspring.com>
 
