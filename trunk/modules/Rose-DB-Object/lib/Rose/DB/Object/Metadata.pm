@@ -2462,7 +2462,7 @@ sub primary_key_sequence_names
                                    $column);
     }
     # Set auto-created serial column sequence names for Pg only
-    elsif($column->type =~ /^(?:big)?serial$/ && $db->driver eq 'pg')
+    elsif($column->type =~ /^(?:big)?serial$/ && $db->use_auto_sequence_name)
     {
       $seq = $db->auto_sequence_name(table => $table, column => $column);
     }

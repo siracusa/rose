@@ -8,7 +8,7 @@ use SQL::ReservedWords::PostgreSQL();
 
 use Rose::DB;
 
-our $VERSION = '0.724';
+our $VERSION = '0.732';
 
 our $Debug = 0;
 
@@ -258,6 +258,8 @@ sub next_value_in_sequence
 
   return $id;
 }
+
+sub use_auto_sequence_name { 1 }
 
 sub auto_sequence_name
 {

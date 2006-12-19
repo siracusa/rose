@@ -10,20 +10,61 @@ our $Debug = 0;
 
 our $VERSION  = '0.732'; 
 
-use Rose::Object::MakeMethods::Generic
+use Rose::Class::MakeMethods::Generic
 (
-  'array --get_set_init' => 
-  [
-    'post_connect_sql',
-  ],
+  inheritable_scalar => '_default_post_connect_sql',
 );
 
-sub init_post_connect_sql
-{
+__PACKAGE__->_default_post_connect_sql
+(
   [
     q(ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS'),
     q(ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SSxFF') 
-  ],
+  ]
+);
+
+sub default_post_connect_sql
+{
+  my($class) = shift;
+
+  if(@_)
+  {
+    if(@_ == 1 && ref $_[0] eq 'ARRAY')
+    {
+      $class->_default_post_connect_sql(@_);
+    }
+    else
+    {
+      $class->_default_post_connect_sql([ @_ ]);
+    }
+  }
+  
+  return $class->_default_post_connect_sql;
+}
+
+sub post_connect_sql
+{
+  my($self) = shift;
+
+  unless(@_)
+  {
+    return wantarray ? 
+      ( @{ $self->default_post_connect_sql || [] }, @{$self->{'post_connect_sql'} || [] } ) :
+      [ @{ $self->default_post_connect_sql || [] }, @{$self->{'post_connect_sql'} || [] } ];
+  }
+
+  if(@_ == 1 && ref $_[0] eq 'ARRAY')
+  {
+    $self->{'post_connect_sql'} = $_[0];
+  }
+  else
+  {
+    $self->{'post_connect_sql'} = [ @_ ];
+  }
+
+  return wantarray ? 
+    ( @{ $self->default_post_connect_sql || [] }, @{$self->{'post_connect_sql'} || [] } ) :
+    [ @{ $self->default_post_connect_sql || [] }, @{$self->{'post_connect_sql'} || [] } ];
 }
 
 sub schema
@@ -32,6 +73,8 @@ sub schema
   $self->{'schema'} = shift  if(@_);
   return $self->{'schema'} || $self->username;
 }
+
+sub use_auto_sequence_name { 1 }
 
 sub auto_sequence_name
 {
