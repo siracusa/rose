@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 6;
+use Test::More tests => 11;
 
 BEGIN 
 {
@@ -22,7 +22,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 1)  unless($Have{$db_type});
+    skip("$db_type tests", 2)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -56,6 +56,33 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     my $album = $res->album;
     is($album->name, 'album1', "album 1 - $db_type");
+  }
+
+  LEAK_TEST:
+  {
+    $RDBO::LeakTest = 0;
+
+    no warnings;
+    local *Rose::DB::DESTROY = sub
+    {
+      $_[0]->disconnect;
+      $RDBO::LeakTest++;
+    };
+
+    INNER:
+    {
+      my $iter = 
+        $manager_class->get_rdbo_album_artwork_iterator(
+          query   => [ art_filename => 'album1.jpg' ],
+          sort_by => 'art_filename');
+      
+      while(my $res = $iter->next)
+      {
+        # do nothing
+      }
+    }
+
+    is($RDBO::LeakTest, 1, "iterator db leak check - $db_type");
   }
 }
 
