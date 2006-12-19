@@ -1728,6 +1728,8 @@ sub likes_implicit_joins            { 0 }
 sub supports_schema  { 0 }
 sub supports_catalog { 0 }
 
+sub use_auto_sequence_name { 0 }
+
 sub format_limit_with_offset
 {
   my($self, $limit, $offset, $args) = @_;
