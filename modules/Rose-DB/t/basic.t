@@ -4,7 +4,7 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 177;
+use Test::More tests => 178;
 
 BEGIN
 {
@@ -464,7 +464,7 @@ if(have_db('sqlite'))
     type   => 'default',
     driver => 'SQLite',
   );
-  
+
   $db = Rose::DB->new
   (
     domain => 'handel',
@@ -475,4 +475,23 @@ if(have_db('sqlite'))
   my $dbh = $db->dbh;
   
   is($db->dsn, "dbi:SQLite:dbname=$Bin/sqlite.db", 'dsn preservation 1');
+
+  $db = Rose::DB->new
+  (
+    domain   => 'handel',
+    type     => 'default',
+    database => "$Bin/sqlitex.db",
+  );
+
+  $dbh = $db->dbh;
+  
+  is($db->dsn, "dbi:SQLite:dbname=$Bin/sqlitex.db", 'dsn preservation 2');
+
+  unlink("$Bin/sqlite.db");
+  unlink("$Bin/sqlitex.db");
+}
+else
+{
+  ok(1, 'skipping - dsn preservation requires sqlite 1');
+  ok(1, 'skipping - dsn preservation requires sqlite 2');
 }

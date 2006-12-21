@@ -104,8 +104,7 @@ use Rose::Object::MakeMethods::Generic
 (
   'scalar' =>
   [
-    qw(database dbi_driver schema catalog host port username 
-       _dbh_refcount id)
+    qw(dbi_driver username _dbh_refcount id)
   ],
 
   'boolean' =>
@@ -370,8 +369,8 @@ sub class
 sub init
 {
   my($self) = shift;
-  $self->init_db_info;
   $self->SUPER::init(@_);
+  $self->init_db_info;
 }
 
 sub load_driver_class
@@ -404,6 +403,71 @@ sub load_driver_classes
   }
 
   return;
+}
+
+sub database
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    $self->{'dsn'} = undef  unless($self->{'explicit_dsn'});
+    return $self->{'database'} = shift;
+  }
+
+  return $self->{'database'};
+}
+
+sub schema
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    $self->{'dsn'} = undef  unless($self->{'explicit_dsn'});
+    return $self->{'schema'} = shift;
+  }
+
+  return $self->{'schema'};
+}
+
+sub catalog
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    $self->{'dsn'} = undef  unless($self->{'explicit_dsn'});
+    return $self->{'catalog'} = shift;
+  }
+
+  return $self->{'catalog'};
+}
+
+sub host
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    $self->{'dsn'} = undef  unless($self->{'explicit_dsn'});
+    return $self->{'host'} = shift;
+  }
+
+  return $self->{'host'};
+}
+
+sub port
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    $self->{'dsn'} = undef  unless($self->{'explicit_dsn'});
+    return $self->{'port'} = shift;
+  }
+
+  return $self->{'port'};
 }
 
 sub database_version
@@ -441,8 +505,6 @@ sub init_server_time_zone { 'floating' }
 sub init_db_info
 {
   my($self) = shift;
-
-  return  if($self->{'db_info_inited'});
 
   my $class = ref $self;
 
@@ -482,18 +544,13 @@ sub init_db_info
 
   $self->driver($db_info->{'driver'});
 
-  my $dsn = $self->{'dsn'} || 
-            ($db_info->{'dsn'} ||= $self->build_dsn(domain => $domain, 
-                                                    type   => $type,
-                                                    %$db_info));
-
   while(my($field, $value) = each(%$db_info))
   {
-    next  if($field eq 'connect_options');
-    $self->$field($value);
+    if($field ne 'connect_options' && defined $value && !defined $self->{$field})
+    {
+      $self->$field($value);
+    }
   }
-
-  $self->{'db_info_inited'} = 1;
 
   return 1;
 }
@@ -518,9 +575,19 @@ sub dsn
 {
   my($self) = shift;
 
-  return $self->{'dsn'}  unless(@_);
+  unless(@_)
+  {
+    return $self->{'dsn'} || $self->build_dsn(%$self);
+  }
 
-  $self->{'dsn'} = shift;
+  if(defined($self->{'dsn'} = shift))
+  {
+    $self->{'explicit_dsn'} = 1;
+  }
+  else
+  {
+    $self->{'explicit_dsn'} = 0;
+  }
 
   if(DBI->can('parse_dsn'))
   {
@@ -537,7 +604,7 @@ sub dsn
     else { $self->error("Couldn't parse DSN '$self->{'dsn'}'") }
   }
 
-  return $self->{'dsn'};
+  return $self->{'dsn'} || $self->build_dsn(%$self);
 }
 
 sub database_from_dsn
@@ -683,16 +750,18 @@ sub init_dbh
 {
   my($self) = shift;
 
-  $self->init_db_info;
+  #$self->init_db_info;
 
   my $options = $self->connect_options;
 
-  $Debug && warn "DBI->connect('", $self->dsn, "', '", $self->username, "', ...)\n";
+  my $dsn = $self->{'dsn'} || ($self->{'dsn'} = $self->dsn);
+
+  $Debug && warn "DBI->connect('$dsn', '", $self->username, "', ...)\n";
 
   $self->{'error'} = undef;
   $self->{'database_version'} = undef;
 
-  my $dbh = DBI->connect($self->dsn, $self->username, $self->password, $options);
+  my $dbh = DBI->connect($dsn, $self->username, $self->password, $options);
 
   unless($dbh)
   {
