@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 23);
+    Test::More->import(tests => 24);
   }
 }
 
@@ -63,6 +63,22 @@ $db = My::DB2->new();
 ok(ref $db && $db->isa('Rose::DB'), "new()");
 
 $db->init_db_info;
+
+My::DB2->register_db
+(
+  domain => 'stub',
+  type   => 'default',
+  driver => 'oracle',
+);
+
+$db = My::DB2->new
+(
+  domain => 'stub',
+  type   => 'default',
+  dsn    => "dbi:Oracle:mydb",
+);
+  
+is($db->database, 'mydb', 'parse_dsn() 1');
 
 SKIP:
 {

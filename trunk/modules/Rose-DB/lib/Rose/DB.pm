@@ -19,7 +19,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.731_02';
+our $VERSION = '0.731_03';
 
 our $Debug = 0;
 
@@ -411,7 +411,7 @@ sub database
   
   if(@_)
   {
-    $self->{'dsn'} = undef  unless($self->{'explicit_dsn'});
+    $self->{'dsn'} = undef  if($self->{'dsn'});
     return $self->{'database'} = shift;
   }
 
@@ -424,7 +424,7 @@ sub schema
   
   if(@_)
   {
-    $self->{'dsn'} = undef  unless($self->{'explicit_dsn'});
+    $self->{'dsn'} = undef  if($self->{'dsn'});
     return $self->{'schema'} = shift;
   }
 
@@ -437,7 +437,7 @@ sub catalog
   
   if(@_)
   {
-    $self->{'dsn'} = undef  unless($self->{'explicit_dsn'});
+    $self->{'dsn'} = undef  if($self->{'dsn'});
     return $self->{'catalog'} = shift;
   }
 
@@ -450,7 +450,7 @@ sub host
   
   if(@_)
   {
-    $self->{'dsn'} = undef  unless($self->{'explicit_dsn'});
+    $self->{'dsn'} = undef  if($self->{'dsn'});
     return $self->{'host'} = shift;
   }
 
@@ -463,7 +463,7 @@ sub port
   
   if(@_)
   {
-    $self->{'dsn'} = undef  unless($self->{'explicit_dsn'});
+    $self->{'dsn'} = undef  if($self->{'dsn'});
     return $self->{'port'} = shift;
   }
 
@@ -505,6 +505,8 @@ sub init_server_time_zone { 'floating' }
 sub init_db_info
 {
   my($self) = shift;
+
+  return 1  if($self->{'dsn'});
 
   my $class = ref $self;
 
@@ -580,36 +582,38 @@ sub dsn
     return $self->{'dsn'} || $self->build_dsn(%$self);
   }
 
-  if(defined($self->{'dsn'} = shift))
+  if(my $dsn = shift)
   {
-    $self->{'explicit_dsn'} = 1;
+    foreach my $method (qw(database host port))
+    {
+      $self->$method(undef);
+    }
+
+    $self->init($self->parse_dsn($dsn));
+    return $self->{'dsn'} = $dsn;
   }
   else
   {
-    $self->{'explicit_dsn'} = 0;
+    $self->{'dsn'} = undef;
+    return $self->build_dsn(%$self);
   }
-
-  if(DBI->can('parse_dsn'))
-  {
-    if(my($scheme, $driver, $attr_string, $attr_hash, $driver_dsn) =
-         DBI->parse_dsn($self->{'dsn'}))
-    {
-      $self->driver($driver)  if($driver);
-
-      if($attr_string)
-      {
-        $self->_parsed_dsn($attr_hash, $driver_dsn);
-      }
-    }
-    else { $self->error("Couldn't parse DSN '$self->{'dsn'}'") }
-  }
-
-  return $self->{'dsn'} || $self->build_dsn(%$self);
 }
 
-sub database_from_dsn
+my %DSN_Attr_Method =
+(
+  db       => 'database',
+  dbname   => 'database',
+  user     => 'username',
+  hostname => 'host',
+  hostaddr => 'host',
+  sid      => 'database',
+);
+
+sub dsn_attribute_to_db_method { $DSN_Attr_Method{$_[1]} }
+
+sub parse_dsn
 {
-  my($self_or_class, $dsn) = @_;
+  my($self, $dsn) = @_;
 
   my($scheme, $driver, $attr_string, $attr_hash, $driver_dsn);
 
@@ -625,26 +629,46 @@ sub database_from_dsn
     ($scheme, $driver, $attr_string, $attr_hash, $driver_dsn) = 
       DBI->parse_dsn($dsn);
   }
-
-  my $db = $attr_hash->{'dbname'} || $attr_hash->{'database'};
-
-  unless($db)
+  else
   {
-    # Wing it...
-    unless($attr_string ||= $driver_dsn)
-    {
-      ($attr_string = $dsn) =~ s/^dbi:\w+://i;
-    }
-
-    $attr_string =~ /(?:dbname|database)=([^; ]+)|^([^; ]+)/i;
-
-    $db = $1 || $2;
+    ($scheme, $driver, $attr_string, $driver_dsn) = 
+      ($dsn =~ /^((?i)dbi) : (\w+) : (?: \( ([^)]+) \) : )? (.*)/x);
   }
 
-  return $db;
+  my %init =
+  (
+    dbi_driver => $driver,
+    driver     => $driver,
+  );
+
+  while($driver_dsn =~ /\G(\w+)=([^;]+)(?:;|$)?/g)
+  {
+    my($name, $value) = ($1, $2);
+
+    if(my $method = $self->dsn_attribute_to_db_method($name))
+    {
+      $init{$method} = $value;
+    }
+    elsif($self->can($name))
+    {
+      $init{$name} = $value;
+    }
+  }
+
+  unless($init{'database'})
+  {
+    $init{'database'} = $driver_dsn;
+  }
+
+  return %init;
 }
 
-sub _parsed_dsn { }
+sub database_from_dsn
+{
+  my($self_or_class, $dsn) = @_;
+  my %attrs = $self_or_class->parse_dsn($dsn);
+  return $attrs{'database'};
+}
 
 sub dbh
 {
@@ -752,7 +776,7 @@ sub init_dbh
 
   my $options = $self->connect_options;
 
-  my $dsn = $self->{'dsn'} || ($self->{'dsn'} = $self->dsn);
+  my $dsn = $self->dsn;
 
   $Debug && warn "DBI->connect('$dsn', '", $self->username, "', ...)\n";
 
@@ -2741,11 +2765,9 @@ Driver names should only use lowercase letters.
 
 Get or set the L<DBI> DSN (Data Source Name) passed to the call to L<DBI>'s L<connect|DBI/connect> method.
 
-If using L<DBI> version 1.43 or later, an attempt is made to parse the new DSN using L<DBI>'s L<parse_dsn|DBI/parse_dsn> method.  Any parts successfully extracted are assigned to the corresponding L<Rose::DB> attributes (e.g., host, port, database).
+An attempt is made to parse the new DSN.  Any parts successfully extracted are assigned to the corresponding L<Rose::DB> attributes (e.g., L<host|/host>, L<port|/port>, L<database|/database>).  If no value could be extracted for an attribute, it is set to undef.
 
-Note that an explicitly set DSN may render some other attributes inaccurate.  For example, the DSN may contain a host name that is different than the object's current L<host|/host> value.  If the host name is not successfully extracted from the DSN and applied to the object's L<host|/host> attribute, then the two values are out of sync.  I recommend not setting the DSN value explicitly unless you are also willing to manually synchronize (or ignore) the corresponding object attributes.
-
-If the DSN is never set explicitly, it is initialized with the DSN constructed from the appropriate object attribute values when L<init_db_info|/init_db_info> or L<connect|/connect> is called.
+If the DSN is never set explicitly, it is built automatically based on the relevant object attributes.
 
 =item B<host [NAME]>
 
