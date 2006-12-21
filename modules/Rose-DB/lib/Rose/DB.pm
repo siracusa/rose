@@ -19,7 +19,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.731_01';
+our $VERSION = '0.731_02';
 
 our $Debug = 0;
 
@@ -2404,6 +2404,8 @@ If a single argument is passed to L<new|/new>, it is used as the C<type> value:
 Each L<Rose::DB> object is associated with a particular data source, defined by the L<type|/type> and L<domain|/domain> values.  If these are not part of PARAMS, then the default values are used.  If you do not want to use the default values for the L<type|/type> and L<domain|/domain> attributes, you should specify them in the constructor PARAMS.
 
 The default L<type|/type> and L<domain|/domain> can be set using the L<default_type|/default_type> and L<default_domain|/default_domain> class methods.  See the L<"Data Source Abstraction"> section for more information on data sources.
+
+Object attributes are set based on the L<registry|/registry> entry specified by the type and domain.  This registry entry must exist, or a fatal error will occur.  Any additional PARAMS will override the values taken from the registry entry.
 
 The object returned by L<new|/new> will be derived from a database-specific driver class, chosen based on the L<driver|/driver> value of the selected data source.  If there is no registered data source for the specified L<type|/type> and L<domain|/domain>, a fatal error will occur.
 

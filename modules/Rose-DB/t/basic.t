@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 174;
+use Test::More tests => 176;
 
 BEGIN
 {
@@ -136,6 +136,14 @@ is(Rose::DB->driver_class('xxx'), undef, 'driver_class() 2');
 
 Rose::DB->driver_class(Pg => 'MyPgClass');
 is(Rose::DB->driver_class('Pg'), 'MyPgClass', 'driver_class() 3');
+
+$db = Rose::DB->new(type => 'aux', database => 'xyzzy');
+
+is($db->database, 'xyzzy', 'override on new() 1');
+
+$db = Rose::DB->new(type => 'aux', dsn => 'dbi:Pg:host=foo;database=bar');
+
+is($db->dsn, 'dbi:Pg:host=foo;database=bar', 'override on new() 2');
 
 $db = Rose::DB->new('aux');
 
