@@ -1,5 +1,7 @@
-0.732 (12.15.2006) - John Siracusa <siracusa@mindspring.com>
+0.732 (12.20.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Documented new() behavior when parameters beyond just type and 
+      domain are passed.  (Suggested by Christopher H. Laco)
     * Fixed a bug that prevented foreign keys with columns that use
       reserved words from being auto-initialized correctly.
       (Reported by Clayton Scott)
