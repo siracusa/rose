@@ -97,16 +97,17 @@ sub _init_db
 {
   my($self) = shift;
 
-  my $db = $self->init_db;
+  my $db;
+  
+  eval { $db = $self->init_db };
 
-  if($db->init_db_info)
+  unless($@)
   {
     #$self->{FLAG_DB_IS_PRIVATE()} = 1;
     return $db;
   }
 
-  $self->error($db->error);
-
+  $self->error("Could not init_db() - $@ - " . ($db ? $db->error : ''));
   $self->meta->handle_error($self);
   return undef;
 }

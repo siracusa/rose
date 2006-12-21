@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 54);
+    Test::More->import(tests => 55);
   }
 }
 
@@ -199,6 +199,22 @@ $db->dsn('dbi:mysql:dbname=dbfoo;host=hfoo;port=pfoo');
 eval { $db->dsn('dbi:Pg:dbname=dbfoo;host=hfoo;port=pfoo') };
 
 ok($@ || $DBI::VERSION <  1.43, 'dsn() driver change');
+
+My::DB2->register_db
+(
+  domain => 'stub',
+  type   => 'default',
+  driver => 'MySQL',
+);
+
+$db = My::DB2->new
+(
+  domain => 'stub',
+  type   => 'default',
+  dsn    => "dbi:mysql:mydb",
+);
+  
+is($db->database, 'mydb', 'parse_dsn() 1');
 
 sub lookup_ip
 {
