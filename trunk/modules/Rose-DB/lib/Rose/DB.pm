@@ -442,6 +442,8 @@ sub init_db_info
 {
   my($self) = shift;
 
+  return  if($self->{'db_info_inited'});
+
   my $class = ref $self;
 
   my $domain = $self->domain;
@@ -490,6 +492,8 @@ sub init_db_info
     next  if($field eq 'connect_options');
     $self->$field($value);
   }
+
+  $self->{'db_info_inited'} = 1;
 
   return 1;
 }
