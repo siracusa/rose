@@ -2405,7 +2405,7 @@ Each L<Rose::DB> object is associated with a particular data source, defined by 
 
 The default L<type|/type> and L<domain|/domain> can be set using the L<default_type|/default_type> and L<default_domain|/default_domain> class methods.  See the L<"Data Source Abstraction"> section for more information on data sources.
 
-Object attributes are set based on the L<registry|/registry> entry specified by the type and domain.  This registry entry must exist, or a fatal error will occur.  Any additional PARAMS will override the values taken from the registry entry.
+Object attributes are set based on the L<registry|/registry> entry specified by the C<type> and C<domain> parameters.  This registry entry must exist, or a fatal error will occur.  Any additional PARAMS will override the values taken from the registry entry.
 
 The object returned by L<new|/new> will be derived from a database-specific driver class, chosen based on the L<driver|/driver> value of the selected data source.  If there is no registered data source for the specified L<type|/type> and L<domain|/domain>, a fatal error will occur.
 
