@@ -477,9 +477,10 @@ sub init_db_info
 
   $self->driver($db_info->{'driver'});
 
-  my $dsn = $db_info->{'dsn'} ||= $self->build_dsn(domain => $domain, 
-                                                   type   => $type,
-                                                   %$db_info);
+  my $dsn = $self->{'dsn'} || 
+            ($db_info->{'dsn'} ||= $self->build_dsn(domain => $domain, 
+                                                    type   => $type,
+                                                    %$db_info));
 
   while(my($field, $value) = each(%$db_info))
   {
