@@ -2,7 +2,9 @@
 
 use strict;
 
-use Test::More tests => 174;
+use FindBin qw($Bin);
+
+use Test::More tests => 178;
 
 BEGIN
 {
@@ -136,6 +138,14 @@ is(My::DB2->driver_class('xxx'), undef, 'driver_class() 2');
 
 My::DB2->driver_class(Pg => 'MyPgClass');
 is(My::DB2->driver_class('Pg'), 'MyPgClass', 'driver_class() 3');
+
+$db = My::DB2->new(type => 'aux', database => 'xyzzy');
+
+is($db->database, 'xyzzy', 'override on new() 1');
+
+$db = My::DB2->new(type => 'aux', dsn => 'dbi:Pg:host=foo;database=bar');
+
+is($db->dsn, 'dbi:Pg:host=foo;database=bar', 'override on new() 2');
 
 $db = My::DB2->new('aux');
 
@@ -444,3 +454,44 @@ is($db->format_time($tc), '24:00:00', 'format time 24:00');
 ok(!defined $db->parse_time('24:00:00.000000001'), 'parse time fail 24:00:00.000000001');
 ok(!defined $db->parse_time('24:00:01'), 'parse time fail 24:00:01');
 ok(!defined $db->parse_time('24:01'), 'parse time fail 24:01');
+
+
+if(have_db('sqlite'))
+{
+  My::DB2->register_db
+  (
+    domain => 'handel',
+    type   => 'default',
+    driver => 'SQLite',
+  );
+
+  $db = My::DB2->new
+  (
+    domain => 'handel',
+    type   => 'default',
+    dsn    => "dbi:SQLite:dbname=$Bin/sqlite.db",
+  );
+
+  my $dbh = $db->dbh;
+  
+  is($db->dsn, "dbi:SQLite:dbname=$Bin/sqlite.db", 'dsn preservation 1');
+
+  $db = My::DB2->new
+  (
+    domain   => 'handel',
+    type     => 'default',
+    database => "$Bin/sqlitex.db",
+  );
+
+  $dbh = $db->dbh;
+  
+  is($db->dsn, "dbi:SQLite:dbname=$Bin/sqlitex.db", 'dsn preservation 2');
+
+  unlink("$Bin/sqlite.db");
+  unlink("$Bin/sqlitex.db");
+}
+else
+{
+  ok(1, 'skipping - dsn preservation requires sqlite 1');
+  ok(1, 'skipping - dsn preservation requires sqlite 2');
+}

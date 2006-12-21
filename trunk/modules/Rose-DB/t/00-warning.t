@@ -22,32 +22,32 @@ print STDERR<<"EOF";
 ## (The current values are shown in parentheses.)
 ##
 ## Postgres:
-## 
-##     RDBO_PG_DSN      (@{[ nvl('RDBO_PG_DSN', 'dbi:Pg:dbname=test;host=localhost') ]})
-##     RDBO_PG_USER     (@{[ nvl('RDBO_PG_USER', 'postgres') ]})
-##     RDBO_PG_PASS     (@{[ nvl('RDBO_PG_PASS', '<none>') ]})
+##
+##     RDBO_PG_DSN        (@{[ nvl('RDBO_PG_DSN', 'dbi:Pg:dbname=test;host=localhost') ]})
+##     RDBO_PG_USER       (@{[ nvl('RDBO_PG_USER', 'postgres') ]})
+##     RDBO_PG_PASS       (@{[ nvl('RDBO_PG_PASS', '<none>') ]})
 ##
 ## MySQL:
 ## 
-##     RDBO_MYSQL_DSN   (@{[ nvl('RDBO_MYSQL_DSN', 'dbi:mysql:database=test;host=localhost') ]})
-##     RDBO_MYSQL_USER  (@{[ nvl('RDBO_MYSQL_USER', 'root') ]})
-##     RDBO_MYSQL_PASS  (@{[ nvl('RDBO_MYSQL_PASS', '<none>') ]})
+##     RDBO_MYSQL_DSN     (@{[ nvl('RDBO_MYSQL_DSN', 'dbi:mysql:database=test;host=localhost') ]})
+##     RDBO_MYSQL_USER    (@{[ nvl('RDBO_MYSQL_USER', 'root') ]})
+##     RDBO_MYSQL_PASS    (@{[ nvl('RDBO_MYSQL_PASS', '<none>') ]})
 ##
 ## Oracle:
-## 
-##     RDBO_ORACLE_DSN  (@{[ nvl('RDBO_ORACLE_DSN', 'dbi:Oracle:dbname=test') ]})
-##     RDBO_ORACLE_USER (@{[ nvl('RDBO_ORACLE_USER', '<none>') ]})
-##     RDBO_ORACLE_PASS (@{[ nvl('RDBO_ORACLE_PASS', '<none>') ]})
+##
+##     RDBO_ORACLE_DSN    (@{[ nvl('RDBO_ORACLE_DSN', 'dbi:Oracle:dbname=test') ]})
+##     RDBO_ORACLE_USER   (@{[ nvl('RDBO_ORACLE_USER', '<none>') ]})
+##     RDBO_ORACLE_PASS   (@{[ nvl('RDBO_ORACLE_PASS', '<none>') ]})
 ##
 ## Informix:
-## 
-##     RDBO_INFORMIX_DSN   (@{[ nvl('RDBO_INFORMIX_DSN', 'dbi:Informix:test@test') ]})
-##     RDBO_INFORMIX_USER  (@{[ nvl('RDBO_INFORMIX_USER', '<none>') ]})
-##     RDBO_INFORMIX_PASS  (@{[ nvl('RDBO_INFORMIX_PASS', '<none>') ]})
-## 
+##
+##     RDBO_INFORMIX_DSN  (@{[ nvl('RDBO_INFORMIX_DSN', 'dbi:Informix:test@test') ]})
+##     RDBO_INFORMIX_USER (@{[ nvl('RDBO_INFORMIX_USER', '<none>') ]})
+##     RDBO_INFORMIX_PASS (@{[ nvl('RDBO_INFORMIX_PASS', '<none>') ]})
+##
 ## SQLite: To disable the SQLite tests, set this environment varible
 ##
-##     RDBO_NO_SQLITE  (@{[ nvl('RDBO_NO_SQLITE', '<undef>') ]})
+##     RDBO_NO_SQLITE (@{[ nvl('RDBO_NO_SQLITE', '<undef>') ]})
 ##
 ## Press return to continue (or wait 60 seconds)
 EOF

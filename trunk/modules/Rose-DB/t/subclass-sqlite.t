@@ -161,12 +161,19 @@ My::DB2->register_db(
   domain      => My::DB2->default_domain,
   type        => 'nonesuch',
   driver      => 'SQLITE',
-  database    => '/tmp/does_not_exist.db',
+  database    => '/tmp/rdbo_does_not_exist.db',
   auto_create => 0,
 );
 
-$db = My::DB2->new('nonesuch');
-
-eval { $db->connect };
-
-ok($@ =~ /^Refus/, 'nonesuch database');
+if((! -e '/tmp/rdbo_does_not_exist.db') || unlink('/tmp/rdbo_does_not_exist.db'))
+{
+  $db = My::DB2->new('nonesuch');
+  
+  eval { $db->connect };
+  
+  ok($@ =~ /^Refus/, 'nonesuch database');
+}
+else
+{
+  ok(1, "could not unlink /tmp/rdbo_does_not_exist.db - $!");
+}
