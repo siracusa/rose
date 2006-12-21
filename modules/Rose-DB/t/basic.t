@@ -2,7 +2,9 @@
 
 use strict;
 
-use Test::More tests => 176;
+use FindBin qw($Bin);
+
+use Test::More tests => 177;
 
 BEGIN
 {
@@ -452,3 +454,25 @@ is($db->format_time($tc), '24:00:00', 'format time 24:00');
 ok(!defined $db->parse_time('24:00:00.000000001'), 'parse time fail 24:00:00.000000001');
 ok(!defined $db->parse_time('24:00:01'), 'parse time fail 24:00:01');
 ok(!defined $db->parse_time('24:01'), 'parse time fail 24:01');
+
+
+if(have_db('sqlite'))
+{
+  Rose::DB->register_db
+  (
+    domain => 'handel',
+    type   => 'default',
+    driver => 'SQLite',
+  );
+  
+  $db = Rose::DB->new
+  (
+    domain => 'handel',
+    type   => 'default',
+    dsn    => "dbi:SQLite:dbname=$Bin/sqlite.db",
+  );
+
+  my $dbh = $db->dbh;
+  
+  is($db->dsn, "dbi:SQLite:dbname=$Bin/sqlite.db", 'dsn preservation 1');
+}
