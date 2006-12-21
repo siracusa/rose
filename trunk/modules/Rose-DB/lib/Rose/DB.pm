@@ -750,8 +750,6 @@ sub init_dbh
 {
   my($self) = shift;
 
-  #$self->init_db_info;
-
   my $options = $self->connect_options;
 
   my $dsn = $self->{'dsn'} || ($self->{'dsn'} = $self->dsn);
@@ -771,8 +769,6 @@ sub init_dbh
 
   $self->{'_dbh_refcount'}++;
   #$Debug && warn "CONNECT $dbh ", join(':', (caller(3))[0,2]), "\n";
-
-  #$self->_update_driver;
 
   if((my $sqls = $self->post_connect_sql) && !$dbh->{DID_PCSQL_KEY()})
   {
