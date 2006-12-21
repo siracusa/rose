@@ -289,10 +289,10 @@ sub new
   my %args = @_;
 
   my $domain = 
-    exists $args{'domain'} ? $args{'domain'} : $class->default_domain;
+    exists $args{'domain'} ? delete $args{'domain'} : $class->default_domain;
 
   my $type = 
-    exists $args{'type'} ? $args{'type'} : $class->default_type;
+    exists $args{'type'} ? delete $args{'type'} : $class->default_type;
 
   my $db_info;
 
@@ -350,7 +350,10 @@ sub new
   }
 
   $self->class($class);
-  $self->{'id'} = "$domain\0$type";
+
+  $self->{'id'}     = "$domain\0$type";
+  $self->{'type'}   = $type;
+  $self->{'domain'} = $domain;
 
   $self->init(@_);
 
@@ -367,8 +370,8 @@ sub class
 sub init
 {
   my($self) = shift;
-  $self->SUPER::init(@_);
   $self->init_db_info;
+  $self->SUPER::init(@_);
 }
 
 sub load_driver_class
