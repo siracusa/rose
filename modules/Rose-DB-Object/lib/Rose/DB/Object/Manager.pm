@@ -809,7 +809,20 @@ sub get_objects
 
         if($rel_type eq 'one to many' && (my $query_args = $rel->query_args))
         {
-          push(@{$args{'query'}}, @$query_args);
+          # (Re)map query parameters to the correct table
+          # t1 -> No change (the primary table)
+          # t2 -> The foreign table
+          for(my $i = 0; $i < @$query_args; $i += 2)
+          {
+            my $param = $query_args->[$i];
+
+            unless($param =~ s/^t2\./$rel_tn{$arg}./)
+            {
+              $param = "t$rel_tn{$arg}.$param"  unless($param =~ /^t\d+\./);
+            }
+
+            push(@{$args{'query'}}, $param, $query_args->[$i + 1]);
+          }
         }
 
         my $ft_meta = $ft_class->meta; 
