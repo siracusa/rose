@@ -2362,8 +2362,8 @@ sub fq_primary_key_sequence_names
     {
       if(defined $seq && index($seq, '.') < 0)
       {
-        $seq = $db->quote_identifier($self->select_catalog($db),
-                                     $self->select_schema($db), $seq);
+        $seq = $db->quote_identifier_for_sequence($self->select_catalog($db),
+                                                  $self->select_schema($db), $seq);
       }
     }
 

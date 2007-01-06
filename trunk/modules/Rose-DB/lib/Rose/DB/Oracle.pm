@@ -110,11 +110,11 @@ sub database_version
 
   return $self->{'database_version'} if (defined $self->{'database_version'});
 
-  my($version) = $self -> dbh -> get_info(18); # SQL_DBMS_VER.
+  my($version) = $self->dbh->get_info(18); # SQL_DBMS_VER.
 
   # Convert to an integer, e.g., 10.02.0100 -> 100020100
 
-  if ($version =~ /^(\d+)\.(\d+)(?:\.(\d+))?/)
+  if($version =~ /^(\d+)\.(\d+)(?:\.(\d+))?/)
   {
     $version = sprintf('%d%03d%04d', $1, $2, $3);
   }
@@ -133,7 +133,7 @@ sub list_tables
 
   eval
   {
-    my($dbh) = $self -> dbh or die $self -> error;
+    my($dbh) = $self->dbh or die $self->error;
 
     local $dbh->{'RaiseError'} = 1;
     local $dbh->{'FetchHashKeyName'} = 'NAME';
@@ -149,7 +149,7 @@ sub list_tables
 
   if($@)
   {
-    Carp::croak 'Could not list tables from ', $self -> dsn, " - $@";
+    Carp::croak 'Could not list tables from ', $self->dsn, " - $@";
   }
 
   return wantarray ? @tables : \@tables;
@@ -158,24 +158,24 @@ sub list_tables
 sub next_value_in_sequence
 {
   my($self, $seq) = @_;
-  my($dbh)        = $self -> dbh or return undef;
+  my($dbh)        = $self->dbh or return undef;
 
   my $id;
 
   eval
   {
-    my($sth) = $dbh -> prepare("SELECT $seq.nextval FROM dual");
+    my($sth) = $dbh->prepare("SELECT $seq.nextval FROM dual");
 
-    $sth -> execute($seq);
+    $sth->execute;
 
-    $id = ${$sth -> fetch()}[0];
+    $id = ${$sth->fetch}[0];
 
-    $sth -> finish();
+    $sth->finish;
   };
 
   if ($@)
   {
-    $self -> error("Could not get the next value in the sequence '$seq' - $@");
+    $self->error("Could not get the next value in the sequence '$seq' - $@");
 
     return undef;
   }
@@ -184,6 +184,12 @@ sub next_value_in_sequence
 }
 
 *is_reserved_word = \&SQL::ReservedWords::Oracle::is_reserved;
+
+sub quote_identifier_for_sequence
+{
+  my($self, $catalog, $schema, $table) = @_;
+  return join('.', grep { defined } ($schema, $table));
+}
 
 sub supports_schema { 1 }
 
