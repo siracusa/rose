@@ -2509,7 +2509,8 @@ Object attributes are set based on the L<registry|/registry> entry specified by 
 
 If C<type> and C<domain> parameters are not passed, but a C<driver> parameter is passed, then a new "empty" object will be returned.  Examples:
 
-    $db = Rose::DB->new(driver => 'sqlite'); # ok
+    # This is ok, even if no registered data sources exist
+    $db = Rose::DB->new(driver => 'sqlite'); 
 
 The object returned by L<new|/new> will be derived from a database-specific driver class, chosen based on the L<driver|/driver> value of the selected data source.  If there is no registered data source for the specified L<type|/type> and L<domain|/domain>, a fatal error will occur.
 

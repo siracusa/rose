@@ -1,5 +1,7 @@
-0.732 (12.21.2006) - John Siracusa <siracusa@mindspring.com>
+0.732 (01.06.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Rose::DB objects can now be constructed by specifying only a driver,
+      even if no data sources are registered.
     * Documented new() behavior when parameters beyond just type and 
       domain are passed.  (Suggested by Christopher H. Laco)
     * Fixed a bug that prevented foreign keys with columns that use
