@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 24);
+    Test::More->import(tests => 55);
   }
 }
 
@@ -33,6 +33,32 @@ Rose::DB->default_type('oracle');
 my $db = Rose::DB->new();
 
 ok(ref $db && $db->isa('Rose::DB'), 'new()');
+
+is($db->parse_boolean('t'), 1, 'parse_boolean (t)');
+is($db->parse_boolean('true'), 1, 'parse_boolean (true)');
+is($db->parse_boolean('y'), 1, 'parse_boolean (y)');
+is($db->parse_boolean('yes'), 1, 'parse_boolean (yes)');
+is($db->parse_boolean('1'), 1, 'parse_boolean (1)');
+is($db->parse_boolean('TRUE'), 'TRUE', 'parse_boolean (TRUE)');
+
+is($db->parse_boolean('f'), 0, 'parse_boolean (f)');
+is($db->parse_boolean('false'), 0, 'parse_boolean (false)');
+is($db->parse_boolean('n'), 0, 'parse_boolean (n)');
+is($db->parse_boolean('no'), 0, 'parse_boolean (no)');
+is($db->parse_boolean('0'), 0, 'parse_boolean (0)');
+is($db->parse_boolean('FALSE'), 'FALSE', 'parse_boolean (FALSE)');
+
+is($db->parse_boolean('Foo(Bar)'), 'Foo(Bar)', 'parse_boolean (Foo(Bar))');
+
+foreach my $val (qw(t 1 true True T y Y yes Yes))
+{
+  is($db->format_boolean($db->parse_boolean($val)), 't', "format_boolean ($val)");
+}
+
+foreach my $val (qw(f 0 false False F n N no No))
+{
+  is($db->format_boolean($db->parse_boolean($val)), 'f', "format_boolean ($val)");
+}
 
 my $dbh;
 eval { $dbh = $db->dbh };

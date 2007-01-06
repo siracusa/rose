@@ -1233,8 +1233,8 @@ sub parse_boolean
 {
   my($self, $value) = @_;
   return $value  if($self->validate_boolean_keyword($_[1]) || $_[1] =~ /^\w+\(.*\)$/);
-  return 1  if($value =~ /^(?:t(?:rue)?|y(?:es)?|1)$/);
-  return 0  if($value =~ /^(?:f(?:alse)?|no?|0)$/);
+  return 1  if($value =~ /^(?:t(?:rue)?|y(?:es)?|1)$/i);
+  return 0  if($value =~ /^(?:f(?:alse)?|no?|0)$/i);
 
   $self->error("Invalid boolean value: '$value'");
   return undef;
