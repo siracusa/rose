@@ -2,11 +2,15 @@
 
 use strict;
 
+use FindBin qw($Bin);
+
+chdir($Bin) or die "chdir($Bin) - $!";
+
 opendir(my $dir, '.') or die "Could not opendir(.) - $!";
 
 while(my $file = readdir($dir))
 {
-  next  if($file !~ /\.t$/ || $file =~ /subclass|warning|pod|storable|pk-columns/);
+  next  if($file !~ /\.t$/ || $file =~ /subclass|warning|pod|storable|pk-columns|no-registry/);
 
   my $new_file = "subclass-$file";
 

@@ -18,6 +18,7 @@ t/informix.t
 t/list-tables.t
 t/make-subclass-tests.pl
 t/mysql.t
+t/no-registry.t
 t/oracle.t
 t/pg.t
 t/pk-columns.t

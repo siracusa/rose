@@ -164,7 +164,7 @@ sub next_value_in_sequence
 
   eval
   {
-    my($sth) = $dbh -> prepare("SELECT $seq.nextval from dual");
+    my($sth) = $dbh -> prepare("SELECT $seq.nextval FROM dual");
 
     $sth -> execute($seq);
 
@@ -242,16 +242,6 @@ sub format_limit_with_offset
     #       :MAX_ROW_TO_FETCH ) 
     # where rnum  >= :MIN_ROW_TO_FETCH;
 
-#           if ($limit =~ m/(\d+)(\sOFFSET\s(\d+))?/) {
-#               my $o_size = $1;
-#               my $o_start = $3 ? $3+1 : 0;
-#               my $o_end = $o_start + $o_size - ($3 ? 1 : 0);
-#               $qs = q[ select * from (select oquery.*, rownum oracle_rownum from (] .
-#                     $qs .
-#                     q[) oquery where rownum <= ?) where oracle_rownum > ?];
-#               push @bind, $o_end, $o_start;
-#               
-# m/(\d+)(\sOFFSET\s(\d+))?/) {
     my $size  = $limit;
     my $start = $offset + 1;
     my $end   = $start + $size - 1;
@@ -312,7 +302,6 @@ This class cannot be used directly.  You must use L<Rose::DB> and let its L<new(
 
 Only the methods that are new or have different behaviors than those in L<Rose::DB> are documented here.  See the L<Rose::DB> documentation for the full list of methods.
 
-
 =head1 OBJECT METHODS
 
 =over 4
@@ -323,18 +312,10 @@ Get or set the database schema name.  In Oracle, every user has a corresponding 
 
 =back
 
-=head1 CONTRIBUTORS
+=head1 AUTHORS
 
-John C. Siracusa (siracusa@mindspring.com)
-
-=head1 AUTHOR
-
-Ron Savage (ron@savage.net.au)
-
-http://savage.net.au/index.html
+John C. Siracusa (siracusa@mindspring.com), Ron Savage (ron@savage.net.au)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2006 by Ron Savage. All rights reserved. This program is
-free software; you can redistribute it and/or modify it under the same terms
-as Perl itself.
+Copyright (c) 2007 by John Siracusa and Ron Savage.  All rights reserved. This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
