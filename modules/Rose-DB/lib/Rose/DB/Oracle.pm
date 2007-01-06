@@ -262,6 +262,8 @@ sub format_limit_with_offset
   }
 }
 
+sub format_boolean { $_[1] ? 't' : 'f' }
+
 1;
 
 __END__
