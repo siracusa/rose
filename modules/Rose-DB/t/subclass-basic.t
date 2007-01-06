@@ -455,7 +455,6 @@ ok(!defined $db->parse_time('24:00:00.000000001'), 'parse time fail 24:00:00.000
 ok(!defined $db->parse_time('24:00:01'), 'parse time fail 24:00:01');
 ok(!defined $db->parse_time('24:01'), 'parse time fail 24:01');
 
-
 if(have_db('sqlite'))
 {
   My::DB2->register_db

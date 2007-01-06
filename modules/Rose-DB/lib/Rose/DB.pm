@@ -287,6 +287,8 @@ sub new
 
   my %args = @_;
 
+  my $allow_empty = $args{'driver'} && !($args{'type'} || $args{'domain'});
+
   my $domain = 
     exists $args{'domain'} ? delete $args{'domain'} : $class->default_domain;
 
@@ -305,12 +307,14 @@ sub new
   {
     $db_info = $registry->{$domain}{$type}
   }
-  else
+  elsif(!$allow_empty)
   {
-    Carp::croak "No database information found for domain '$domain' and type '$type'";
+    Carp::croak "No database information found for domain '$domain' and ",
+                "type '$type' and no driver type specified in call to ",
+                "$class->new(...)";
   }
 
-  my $driver = $db_info->{'driver'}; 
+  my $driver = $db_info->{'driver'} || $args{'driver'}; 
 
   Carp::croak "No driver found for domain '$domain' and type '$type'"
     unless(defined $driver);
@@ -356,6 +360,8 @@ sub new
 
   $self->init(@_);
 
+  $self->init_db_info;
+
   return $self;
 }
 
@@ -366,12 +372,12 @@ sub class
   return $self->{'_origin_class'} || ref $self;
 }
 
-sub init
-{
-  my($self) = shift;
-  $self->SUPER::init(@_);
-  $self->init_db_info;
-}
+# sub init
+# {
+#   my($self) = shift;
+#   $self->SUPER::init(@_);
+#   $self->init_db_info;
+# }
 
 sub load_driver_class
 {
@@ -527,6 +533,7 @@ sub init_db_info
   }
   else
   {
+    return 1  if($self->{'driver'});
     Carp::croak "No database information found for domain '$domain' and type '$type'";
   }
 
@@ -690,16 +697,16 @@ sub driver
 {
   if(@_ > 1)
   {
-    $_[1] = lc $_[1];
+    my $driver = lc $_[1];
 
-    if(defined $_[1] && defined $_[0]->{'driver'} && $_[0]->{'driver'} ne $_[1])
+    if(defined $driver && defined $_[0]->{'driver'} && $_[0]->{'driver'} ne $driver)
     {
       Carp::croak "Attempt to change driver from '$_[0]->{'driver'}' to ",
-                  "'$_[1]' detected.  The driver cannot be changed after ",
+                  "'$driver' detected.  The driver cannot be changed after ",
                   "object creation.";
     }
 
-    return $_[0]->{'driver'} = $_[1];
+    return $_[0]->{'driver'} = $driver;
   }
 
   return $_[0]->{'driver'};
@@ -2498,7 +2505,11 @@ Each L<Rose::DB> object is associated with a particular data source, defined by 
 
 The default L<type|/type> and L<domain|/domain> can be set using the L<default_type|/default_type> and L<default_domain|/default_domain> class methods.  See the L<"Data Source Abstraction"> section for more information on data sources.
 
-Object attributes are set based on the L<registry|/registry> entry specified by the C<type> and C<domain> parameters.  This registry entry must exist, or a fatal error will occur.  Any additional PARAMS will override the values taken from the registry entry.
+Object attributes are set based on the L<registry|/registry> entry specified by the C<type> and C<domain> parameters.  This registry entry must exist or a fatal error will occur (with one exception; see below).  Any additional PARAMS will override the values taken from the registry entry.
+
+If C<type> and C<domain> parameters are not passed, but a C<driver> parameter is passed, then a new "empty" object will be returned.  Examples:
+
+    $db = Rose::DB->new(driver => 'sqlite'); # ok
 
 The object returned by L<new|/new> will be derived from a database-specific driver class, chosen based on the L<driver|/driver> value of the selected data source.  If there is no registered data source for the specified L<type|/type> and L<domain|/domain>, a fatal error will occur.
 
