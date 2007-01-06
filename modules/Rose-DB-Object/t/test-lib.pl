@@ -320,6 +320,16 @@ EOF
   return 1;
 }
 
+sub oracle_is_broken
+{
+  return undef  unless(have_db('oracle'));
+
+  my $db = get_db('oracle');
+
+  # This particular version of Oracle 10g on Mac OS X is broken
+  return ($db->database_version == 10_001_0300 && $^O =~ /darwin/i) ? 1 : 0;
+}
+
 our $HAVE_TEST_MEMORY_CYCLE;
 
 eval

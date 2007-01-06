@@ -1096,6 +1096,8 @@ BEGIN
   }
 }
 
+*quote_identifier_for_sequence = \&quote_identifier;
+
 sub quote_column_with_table 
 {
   my($self, $column, $table) = @_;

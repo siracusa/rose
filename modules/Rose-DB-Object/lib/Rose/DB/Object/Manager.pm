@@ -3066,6 +3066,14 @@ sub get_objects_from_sql
           {
             $methods->{$col} = $col;
           }
+          elsif($meta->column(lc $col))
+          {
+            $methods->{$col} = $meta->column_mutator_method_name(lc $col);
+          }
+          elsif($object_class->can(lc $col))
+          {
+            $methods->{$col} = lc $col;
+          }
         }
 
         $have_methods = 1;
