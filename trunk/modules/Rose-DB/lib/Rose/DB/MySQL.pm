@@ -35,6 +35,13 @@ sub build_dsn
 
 sub dbi_driver { 'mysql' }
 
+sub mysql_auto_reconnect { shift->dbh_attribute_boolean('mysql_auto_reconnect', @_) }
+sub mysql_enable_utf8    { shift->dbh_attribute_boolean('mysql_enable_utf8', @_) }
+sub mysql_use_result     { shift->dbh_attribute_boolean('mysql_use_result', @_) }
+
+
+sub dbh_attributes { qw(mysql_auto_reconnect mysql_use_result mysql_enable_utf8) }
+
 sub database_version
 {
   my($self) = shift;
@@ -414,6 +421,34 @@ MySQL does not have a native "interval" data type, but this data type can be emu
 =back
 
 =head1 OBJECT METHODS
+
+=over 4
+
+=item B<mysql_auto_reconnect [BOOL]>
+
+Get or set the L<mysql_auto_reconnect|DBD::mysql/mysql_auto_reconnect> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring stead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_use_result> documentation to learn more about this attribute.
+
+=item B<mysql_enable_utf8 [BOOL]>
+
+Get or set the L<mysql_enable_utf8|DBD::mysql/mysql_enable_utf8> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring stead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_use_result> documentation to learn more about this attribute.
+
+=item B<mysql_use_result [BOOL]>
+
+Get or set the L<mysql_use_result|DBD::mysql/mysql_use_result> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring stead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_use_result> documentation to learn more about this attribute.
+
+=back
 
 =head2 Value Parsing and Formatting
 

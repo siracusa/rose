@@ -1745,6 +1745,136 @@ To define your own L<Rose::DB::Object>-derived class, you must describe the tabl
 
 Metadata objects can be populated manually or automatically.  Both techniques are shown in the L<synopsis|/SYNOPSIS> above.  The automatic mode works by asking the database itself for the information.  There are some caveats to this approach.  See the L<auto-initialization|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> section of the L<Rose::DB::Object::Metadata> documentation for more information.
 
+=head2 Serial and Auto-Incremented Columns
+
+Most databases provide a way to use a series of arbitrary integers as primary key column values.  Some support a native C<SERIAL> column data type.  Others use a special auto-increment column attribute.
+
+L<Rose::DB::Object> supports at least one such serial or auto-incremented column type in each supported database.  In all cases, the L<Rose::DB::Object>-derived class setup is the same:
+
+    package My::DB::Object;
+    ...
+    __PACKAGE__->meta->setup
+    (
+      columns =>
+      [
+        id => { type => 'serial', primary_key => 1, not_null => 1 },
+        ...
+      ],
+      ...
+    );
+
+(Note that the column doesn't have to be named "id"; it can be named anything.)
+
+If the database column uses big integers, use "L<bigserial|Rose::DB::Object::Metadata::Column::BigSerial>" column C<type> instead.
+
+Given the column metadata definition above, L<Rose::DB::Object> will automatically generate and/or retrieve the primary key column value when an object is L<save()|/save>d.  Example:
+
+    $o = My::DB::Object->new(name => 'bud'); # no id specified
+    $o->save; # new id value generated here
+
+    print "Generated new id value: ", $o->id;
+
+This will only work, however, if the corresponding column definition in the database is set up correctly.  The exact technique varies from vendor to vendor.  Below are examples of primary key column definitions that provide auto-generated values.  There's one example for each of the databases supported by L<Rose::DB>.
+
+=over
+
+=item * PostgreSQL
+
+    CREATE TABLE mytable
+    (
+      id   SERIAL PRIMARY KEY,
+      ...
+    );
+
+=item * MySQL
+
+    CREATE TABLE mytable
+    (
+      id   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      ...
+    );
+
+=item * SQLite
+
+    CREATE TABLE mytable
+    (
+      id   INTEGER PRIMARY KEY AUTOINCREMENT,
+      ...
+    );
+
+=item * Informix
+
+    CREATE TABLE mytable
+    (
+      id   SERIAL NOT NULL PRIMARY KEY,
+      ...
+    );
+
+=item * Oracle
+
+Since Oracle does not natively support a serial or auto-incremented column data type, an explicit sequence and trigger must be created to simulate the behavior.  The sequence should be named according to this convention: C<E<lt>tableE<gt>_E<lt>columnE<gt>_seq>.  For example, if the table is named C<mytable> and the column is named C<id>, then the sequence should be named C<mytable_id_seq>.  Here's an example database setup.
+
+    CREATE TABLE mytable
+    (
+      id   INT NOT NULL PRIMARY KEY,
+      ...
+    );
+  
+    CREATE SEQUENCE mytable_id_seq;
+  
+    CREATE TRIGGER mytable_insert BEFORE INSERT ON mytable
+    FOR EACH ROW
+    BEGIN
+        SELECT NVL(:new.id, mytable_id_seq.nextval) 
+          INTO :new.id FROM dual;
+    END;
+
+Note the use of C<NVL()> in the trigger, which allows the value of the C<id> column to be set explicitly.  If a non-NULL value for the C<id> column is provided, then a new value is not pulled from the sequence.
+
+If the sequence is not named according to the C<E<lt>tableE<gt>_E<lt>columnE<gt>_seq> convention, you can specify the sequence name explicitly in the column metadata.  Example:
+
+    columns =>
+    [
+      id => { type => 'serial', primary_key => 1, not_null => 1,
+              sequence => 'some_other_seq' },
+      ...
+
+=back
+
+If the table has a multi-column primary key or does not use a column type that supports auto-generated values, you can define a custom primary key generator function using the L<primary_key_generator|Rose::DB::Object::Metadata/primary_key_generator> method of the L<Rose::DB::Object::Metadata>-derived object that contains the metadata for this class.  Example:
+
+    package MyDBObject;
+
+    use base qw(Rose::DB::Object);
+
+    __PACKAGE__->meta->setup
+    (
+      table => 'mytable',
+
+      columns =>
+      [
+        k1   => { type => 'int', not_null => 1 },
+        k2   => { type => 'int', not_null => 1 },
+        name => { type => 'varchar', length => 255 },
+        ...
+      ],
+
+      primary_key_columns => [ 'k1', 'k2' ],
+
+      primary_key_generator => sub
+      {
+        my($meta, $db) = @_;
+
+        # Generate primary key values somehow
+        my $k1 = ...;
+        my $k2 = ...;
+
+        return $k1, $k2;
+      },
+    );
+
+See the L<Rose::DB::Object::Metadata> documentation for more information on custom primary key generators.
+
 =head2 Inheritance
 
 Simple inheritance between L<Rose::DB::Object>-derived classes is supported.  The first time the L<metadata object|/meta> for a given class is accessed, it is created by making a one-time "deep copy" of the base class's metadata object (as long that the base class has one or more L<columns|Rose::DB::Object::Metadata/columns> set).  This includes all columns, relationships, foreign keys, and other metadata from the base class.  From that point on, the subclass may add to or modify its metadata without affecting any other class.
@@ -2045,81 +2175,7 @@ It is an error to pass both the C<insert> and C<update> parameters in a single c
 
 Returns true if the row was inserted or updated successfully, false otherwise.  The true value returned on success will be the object itself.  If the object L<overload>s its boolean value such that it is not true, then a true value will be returned instead of the object itself.
 
-If an insert was performed and the primary key is a single column that supports auto-generated values, then the object accessor for the primary key column will contain the auto-generated value.
-
-Here are examples of primary key column definitions that provide auto-generated  values, one for each of the databases supported by L<Rose::DB>.
-
-=over
-
-=item * PostgreSQL
-
-    CREATE TABLE mytable
-    (
-      id   SERIAL PRIMARY KEY,
-      ...
-    );
-
-=item * MySQL
-
-    CREATE TABLE mytable
-    (
-      id   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-      ...
-    );
-
-=item * SQLite
-
-    CREATE TABLE mytable
-    (
-      id   INTEGER PRIMARY KEY AUTOINCREMENT,
-      ...
-    );
-
-=item * Informix
-
-    CREATE TABLE mytable
-    (
-      id   SERIAL NOT NULL PRIMARY KEY,
-      ...
-    );
-
-=back
-
-Other data definitions are possible, of course, but the three definitions above are used in the L<Rose::DB::Object> test suite and are therefore guaranteed to work.  If you have success with alternative approaches, patches and/or new tests are welcome.
-
-If your table has a multi-column primary key or does not use a column type that supports auto-generated values, you can define a custom primary key generator function using the L<primary_key_generator|Rose::DB::Object::Metadata/primary_key_generator> method of the L<Rose::DB::Object::Metadata>-derived object that contains the metadata for this class.  Example:
-
-    package MyDBObject;
-
-    use base qw(Rose::DB::Object);
-
-    __PACKAGE__->meta->setup
-    (
-      table => 'mytable',
-
-      columns =>
-      [
-        k1   => { type => 'int', not_null => 1 },
-        k2   => { type => 'int', not_null => 1 },
-        name => { type => 'varchar', length => 255 },
-        ...
-      ],
-
-      primary_key_columns => [ 'k1', 'k2' ],
-
-      primary_key_generator => sub
-      {
-        my($meta, $db) = @_;
-
-        # Generate primary key values somehow
-        my $k1 = ...;
-        my $k2 = ...;
-
-        return $k1, $k2;
-      },
-    );
-
-See the L<Rose::DB::Object::Metadata> documentation for more information on custom primary key generators.
+If an insert was performed and the primary key is a single column that supports auto-generated values, then the object accessor for the primary key column will contain the auto-generated value.  See the L<Serial and Auto-Incremented Columns|/"Serial and Auto-Incremented Columns"> section for more information.
 
 =item B<update [PARAMS]>
 

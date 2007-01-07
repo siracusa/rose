@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 55);
+    Test::More->import(tests => 64);
   }
 }
 
@@ -119,13 +119,13 @@ ok(@$s == 2 && $s->[0] eq 'a' && $s->[1] eq 'b', 'parse_set() 1');
 
 SKIP:
 {
-  unless(lookup_ip($db->host))
+  unless(have_db('mysql'))
   {
-    skip("Host '@{[$db->host]}' not found", 18);
+    skip("MySQL connection tests", 27);
   }
 
   eval { $db->connect };
-  skip("Could not connect to db 'test', 'mysql' - $@", 18)  if($@);
+  skip("Could not connect to db 'test', 'mysql' - $@", 27)  if($@);
   $dbh = $db->dbh;
 
   is($db->domain, 'test', "domain()");
@@ -188,6 +188,20 @@ SKIP:
   my $dbh_copy = $db->retain_dbh;
 
   $db->disconnect;
+
+  foreach my $attr (qw(mysql_auto_reconnect mysql_enable_utf8 mysql_use_result))
+  {
+    $db = Rose::DB->new($attr => (1, 2)[int(rand(2))]);
+    is($db->$attr(), 1, "$attr 1");
+    $db->connect;
+    
+    if($attr eq 'mysql_auto_reconnect') # can't read back the other two
+    {
+      is($db->$attr(), 1, "$attr 2");
+      is($db->dbh->{$attr}, 1, "$attr 3");
+    }
+    else { SKIP: { skip("$attr dbh read-back", 2) } }
+  }
 }
 
 $db->dsn('dbi:mysql:dbname=dbfoo;host=hfoo;port=pfoo');
