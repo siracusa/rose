@@ -773,9 +773,43 @@ sub release_dbh
   return 1;
 }
 
-use constant DID_PCSQL_KEY => 'private_rose_db_did_post_connect_sql';
+sub dbh_attribute
+{
+  my($self, $name) = (shift, shift);
+  
+  if(@_)
+  {
+    if(my $dbh = $self->{'dbh'})
+    {
+      return $self->{'dbh'}{$name} = $self->{"__dbh_attr_$name"} = shift;
+    }
+    else
+    {
+      return $self->{"__dbh_attr_$name"} = shift;
+    }
+  }
+  
+  if(my $dbh = $self->{'dbh'})
+  {
+    return $self->{'dbh'}{$name};
+  }
+  else
+  {
+    return $self->{"__dbh_attr_$name"};
+  }
+}
+
+sub dbh_attribute_boolean
+{
+  my($self, $name) = (shift, shift);
+  return $self->dbh_attribute($name, (@_ ? ($_[0] ? 1 : 0) : ()));
+}
 
 sub has_dbh { defined shift->{'dbh'} }
+
+sub dbh_attributes { () }
+
+use constant DID_PCSQL_KEY => 'private_rose_db_did_post_connect_sql';
 
 sub init_dbh
 {
@@ -800,6 +834,14 @@ sub init_dbh
 
   $self->{'_dbh_refcount'}++;
   #$Debug && warn "CONNECT $dbh ", join(':', (caller(3))[0,2]), "\n";
+
+  foreach my $attr ($self->dbh_attributes)
+  {
+$DB::single = 1;
+    my $val = $self->dbh_attribute($attr);
+    next  unless(defined $val);
+    $dbh->{$attr} = $val;
+  }
 
   if((my $sqls = $self->post_connect_sql) && !$dbh->{DID_PCSQL_KEY()})
   {
