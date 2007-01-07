@@ -387,7 +387,7 @@ __END__
 
 =head1 NAME
 
-Rose::DB::Object::Metadata::Relationship::ManyToMany - One to many table relationship metadata object.
+Rose::DB::Object::Metadata::Relationship::ManyToMany - Many to many table relationship metadata object.
 
 =head1 SYNOPSIS
 
