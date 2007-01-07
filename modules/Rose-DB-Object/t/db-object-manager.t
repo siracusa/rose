@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3597;
+use Test::More tests => 3884;
 
 BEGIN 
 {
@@ -11274,7 +11274,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(oracle))
 {
-  skip("Oracle tests", 495)  unless($HAVE_ORACLE);
+  skip("Oracle tests", 782)  unless($HAVE_ORACLE);
 
   Rose::DB->default_type($db_type);
 
@@ -13231,9 +13231,9 @@ SKIP: foreach my $db_type (qw(oracle))
 
   # Start get_objects_from_sql tests
 
-  if(1 || oracle_is_broken())
+  if(oracle_is_broken())
   {
-    SKIP: { skip("tests that trigger the dreaded ORA-00600 kpofdr-long error", 7) }
+    SKIP: { skip("tests that trigger the dreaded ORA-00600 kpofdr-long error", 287) }
   }
   else
   {
@@ -13293,7 +13293,7 @@ EOF
     my $method = 
       MyOracleObjectManager->make_manager_method_from_sql(
         get_em => <<"EOF");
-SELECT *, save + fk1 AS extra FROM rose_db_object_test WHERE id != fk1 ORDER BY id DESC
+SELECT r.*, save + fk1 AS extra FROM rose_db_object_test r WHERE id != fk1 ORDER BY id DESC
 EOF
   
     $objs = MyOracleObjectManager->get_em;
@@ -13313,7 +13313,7 @@ EOF
     $method = 
       MyOracleObjectManager->make_manager_method_from_sql(
         iterator => 1, method => 'iter_em', sql => <<"EOF");
-SELECT *, save + fk1 AS extra FROM rose_db_object_test WHERE id != fk1 ORDER BY id DESC
+SELECT r.*, save + fk1 AS extra FROM rose_db_object_test r WHERE id != fk1 ORDER BY id DESC
 EOF
   
     $iterator = MyOracleObjectManager->iter_em;
@@ -13337,7 +13337,7 @@ EOF
     $method = 
       MyOracleObjectManager->make_manager_method_from_sql(
         get_more => <<"EOF");
-SELECT *, save + fk1 AS extra FROM rose_db_object_test WHERE id > ? ORDER BY id DESC
+SELECT r.*, save + fk1 AS extra FROM rose_db_object_test r WHERE id > ? ORDER BY id DESC
 EOF
   
     $objs = MyOracleObjectManager->get_more(18);
@@ -13349,7 +13349,7 @@ EOF
         method => 'get_more_np',
         params => [ qw(id name) ],
         sql    => <<"EOF");
-SELECT *, save + fk1 AS extra FROM rose_db_object_test WHERE 
+SELECT r.*, save + fk1 AS extra FROM rose_db_object_test r WHERE 
 id > ? AND name != ? ORDER BY id DESC
 EOF
   
@@ -13763,8 +13763,8 @@ EOF
         with_objects  => [ 'nicks.alts' ],
         multi_many_ok => 1,
         nonlazy       => 1,
-        sort_by       => 'alts.alt');
-  
+        sort_by       => 'alts.alt DESC');
+
     ok(@$objs == 21, "deep join multi with 1 - $db_type");
     is($objs->[1]->id, 2, "deep join multi with 2 - $db_type");
     is($objs->[4]->id, 5, "deep join multi with 3 - $db_type");
@@ -13783,10 +13783,10 @@ EOF
     #  $objs->[4]{'nicks'} = [ sort { $a->{'nick'} cmp $b->{'nick'} } @{$objs->[4]{'nicks'}} ];
     #  $objs->[4]{'nicks'}[1]{'alts'} = [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$objs->[4]{'nicks'}[3]{'alts'}} ];
     #}
-  
-    is($objs->[4]{'nicks'}[3]{'alts'}[0]{'alt'}, 'alt one 1', "deep join multi with 6 - $db_type");
+
+    is($objs->[4]{'nicks'}[3]{'alts'}[0]{'alt'}, 'alt one 3', "deep join multi with 6 - $db_type");
     is($objs->[4]{'nicks'}[3]{'alts'}[1]{'alt'}, 'alt one 2', "deep join multi with 7 - $db_type");
-    is($objs->[4]{'nicks'}[3]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi with 8 - $db_type");
+    is($objs->[4]{'nicks'}[3]{'alts'}[2]{'alt'}, 'alt one 1', "deep join multi with 8 - $db_type");
     is(scalar @{$objs->[4]{'nicks'}[3]{'alts'}}, 3, "deep join multi with 11 - $db_type");
   
     is(scalar @{$objs->[0]{'nicks'} || []}, 0, "deep join multi with 12 - $db_type");
@@ -13820,7 +13820,7 @@ EOF
         multi_many_ok => 1,
         nonlazy       => 1,
         #query => [ id => 2 ],
-        sort_by       => 'alts.alt');
+        sort_by       => 'alts.alt DESC');
   
     $o = $iterator->next;
     is(scalar @{$o->{'nicks'} ||= []}, 0, "deep join multi iter with 1 - $db_type");
@@ -13848,9 +13848,9 @@ EOF
     #  $o->{'nicks'}[3]{'alts'} = [ sort { $a->{'alt'} cmp $b->{'alt'} } @{$o->{'nicks'}[3]{'alts'}} ];
     #}
   
-    is($o->{'nicks'}[3]{'alts'}[0]{'alt'}, 'alt one 1', "deep join multi iter with 5 - $db_type");
+    is($o->{'nicks'}[3]{'alts'}[0]{'alt'}, 'alt one 3', "deep join multi iter with 5 - $db_type");
     is($o->{'nicks'}[3]{'alts'}[1]{'alt'}, 'alt one 2', "deep join multi iter with 6 - $db_type");
-    is($o->{'nicks'}[3]{'alts'}[2]{'alt'}, 'alt one 3', "deep join multi iter with 7 - $db_type");
+    is($o->{'nicks'}[3]{'alts'}[2]{'alt'}, 'alt one 1', "deep join multi iter with 7 - $db_type");
     is(scalar @{$o->{'nicks'}[3]{'alts'}}, 3, "deep join multi iter with 8 - $db_type");
   
     while($iterator->next) { }
@@ -13936,8 +13936,8 @@ EOF
   
     @selects =
     (
-      't2.nick, t1.*, t2.id, name, UPPER(name) AS derived',
-      [ qw(t2.nick t2.id t1.*), 'UPPER(name) AS derived' ],
+      #'t2.nick, t1.*, t2.id, t1.name, UPPER(t1.name) AS derived',
+      [ qw(t2.nick t2.id t1.*), 'UPPER(t1.name) AS derived' ],
     );
   
     #local $Rose::DB::Object::Manager::Debug = 1;
@@ -13950,7 +13950,7 @@ EOF
           select          => $select,
           require_objects => [ 'nicks' ],
           query           => [ id => { gt => 2 } ],
-          sort_by         => 'id',
+          sort_by         => 't1.id',
           limit           => 2);
   
       $i++;
@@ -13979,7 +13979,7 @@ EOF
           select          => $select,
           require_objects => [ 'nicks' ],
           query           => [ id => { gt => 2 } ],
-          sort_by         => 'id',
+          sort_by         => 't1.id',
           limit           => 2);
   
       $i++;
@@ -14002,8 +14002,8 @@ EOF
   
     @selects =
     (
-      '*, name, UPPER(name) AS derived',
-      [ '*', 'UPPER(name) AS derived' ],
+      '*, UPPER(t1.name) AS derived',
+      [ '*', 'UPPER(t1.name) AS derived' ],
     );
   
     #local $Rose::DB::Object::Manager::Debug = 1;
@@ -14015,7 +14015,7 @@ EOF
           object_class    => 'MyOracleObject',
           select          => $select,
           query           => [ id => { gt => 2 } ],
-          sort_by         => 'id',
+          sort_by         => 't1.id',
           limit           => 2);
   
       $i++;
@@ -14041,7 +14041,7 @@ EOF
           object_class    => 'MyOracleObject',
           select          => $select,
           query           => [ id => { gt => 2 } ],
-          sort_by         => 'id',
+          sort_by         => 't1.id',
           limit           => 2);
   
       $i++;

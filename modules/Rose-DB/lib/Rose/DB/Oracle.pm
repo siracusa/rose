@@ -262,9 +262,9 @@ sub format_limit_with_offset
   }
   else
   {
-    #$args->{'limit_prefix'} = "SELECT /*+ FIRST_ROWS($limit) */ * FROM (";
-    $args->{'limit_prefix'} = "SELECT * FROM (";
-    $args->{'limit_suffix'} = ") WHERE ROWNUM <= $limit";
+    #$args->{'limit_prefix'} = "SELECT /*+ FIRST_ROWS($limit) */ a.* FROM (";
+    $args->{'limit_prefix'} = "SELECT a.* FROM (";
+    $args->{'limit_suffix'} = ") a WHERE ROWNUM <= $limit";
   }
 }
 

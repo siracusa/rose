@@ -356,8 +356,10 @@ sub build_select
             }
           }
 
+          my $oracle_hack = $dbh->{'Driver'}{'Name'} eq 'Oracle' && $limit_prefix;
+
           my $placeholder = $col_meta ? $col_meta->query_placeholder_sql($db) : '?';
-          my $sql_column = $multi_table ? $short_column :
+          my $sql_column = ($multi_table || $oracle_hack) ? $short_column :
                            $db ? $db->auto_quote_column_name($column) : $column;
 
           if(ref($val))

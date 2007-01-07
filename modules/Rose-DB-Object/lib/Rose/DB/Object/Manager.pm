@@ -556,7 +556,8 @@ sub get_objects
   my %meta    = ($object_class => $meta);
 
   my @table_names = ($meta->table);
-
+  my @rel_names   = ($meta->table);
+  
   my(@joins, @subobject_methods, @mapped_object_methods, $clauses);
 
   my $handle_dups = 0;
@@ -612,10 +613,15 @@ sub get_objects
     }
   }
 
+  # XXX: Hack to avoid suprious ORA-00918 errors
+  # XXX: http://ora-00918.ora-code.com/msg/28663.html
+  my $oracle_hack = 
+    ($dbh->{'Driver'}{'Name'} eq 'Oracle' && ($args{'limit'} || $args{'offset'})) ? 1 : 0;
+
   # Pre-process sort_by args
   if(my $sort_by = $args{'sort_by'})
   {
-    if($num_subtables > 0)
+    if($num_subtables > 0 || $oracle_hack)
     {
       $sort_by = [ $sort_by ]  unless(ref $sort_by);
     }
@@ -640,9 +646,7 @@ sub get_objects
 
   if($with_objects)
   {
-    # XXX: Hack to avoid suprious ORA-00918 errors
-    # XXX: http://ora-00918.ora-code.com/msg/28663.html
-    if($args{'offset'} && $dbh->{'Driver'}{'Name'} eq 'Oracle')
+    if($oracle_hack)
     {
       $args{'unique_aliases'} = 1;
     }
@@ -831,7 +835,8 @@ sub get_objects
 
         push(@tables, $ft_meta->fq_table($db));
         push(@tables_sql, $ft_meta->fq_table_sql($db));
-        push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
+        push(@rel_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
+        push(@table_names, $ft_meta->table);
         push(@classes, $ft_class);
 
         # Iterator will be the tN value: the first sub-table is t2, and so on
@@ -975,7 +980,7 @@ sub get_objects
         {
           # Don't bother sorting by columns if we're not even selecting them
           if($mgr_args->{'sort_by'} && (!%fetch || 
-             ($fetch{$tables[-1]} && !$fetch{$table_names[-1]})))
+             ($fetch{$tables[-1]} && !$fetch{$rel_names[-1]})))
           {
             my $sort_by = $mgr_args->{'sort_by'};
 
@@ -1010,7 +1015,8 @@ sub get_objects
 
         push(@tables, $map_meta->fq_table($db));
         push(@tables_sql, $map_meta->fq_table_sql($db));
-        push(@table_names, $rel_name{'t' . (scalar(@tables) + 1)} = $rel->name);
+        push(@rel_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
+        push(@table_names, $map_meta->table);
         push(@classes, $map_class);
 
         my $rel_mgr_args = $rel->manager_args || {};
@@ -1160,7 +1166,8 @@ sub get_objects
 
         push(@tables, $ft_meta->fq_table($db));
         push(@tables_sql, $ft_meta->fq_table_sql($db));
-        push(@table_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
+        push(@rel_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
+        push(@table_names, $ft_meta->table);
         push(@classes, $ft_class);
 
         my $use_lazy_columns = (!ref $nonlazy || $nonlazy{$name}) ? 0 : $ft_meta->has_lazy_columns;
@@ -1243,7 +1250,7 @@ sub get_objects
         {
           # Don't bother sorting by columns if we're not even selecting them
           if($mgr_args->{'sort_by'} && (!%fetch || 
-             ($fetch{$tables[-1]} && !$fetch{$table_names[-1]})))
+             ($fetch{$tables[-1]} && !$fetch{$rel_names[-1]})))
           {
             my $sort_by = $mgr_args->{'sort_by'};
 
@@ -1284,7 +1291,7 @@ sub get_objects
       (my $trimmed_table = $tables[$i]) =~ s/^[^.]+\.//;
 
       unless($fetch{$tn} || $fetch{$tables[$i]} || $fetch{$trimmed_table} || 
-             $fetch{$table_names[$i]} || $fetch{$rel_name})
+             $fetch{$rel_names[$i]} || $fetch{$rel_name})
       {
         $columns{$tables[$i]} = [];
         $methods{$tables[$i]} = [];
@@ -1306,7 +1313,7 @@ sub get_objects
     $select = [ split(/\s*,\s*/, $select) ]  unless(ref $select);
 
     my $i = 1;
-    %tn = map { $_ => $i++ } @tables;
+    %tn = map { $_ => $i++ } @table_names; # @tables;
     my $expand_dotstar = 0;
 
     foreach my $item (@$select)
@@ -1323,11 +1330,11 @@ sub get_objects
       elsif($item =~ /^t(\d+)\.(.+)$/)
       {
         $tn     = $1;
-        $item   = $2 if($num_subtables == 0);
+        $item   = $2 if($num_subtables == 0 && !$oracle_hack);
         $column = $2;
         $expand_dotstar = 1  if($item =~ /^t\d+\.\*$/);
       }
-      elsif($item =~ /^(['"]?)([^.]+)\1\.(['"]?)(.+)(\3)$/)
+      elsif($item =~ /^(['"]?)([^.(]+)\1\.(['"]?)(.+)(\3)$/)
       {
         my $num = $tn{$2} || $rel_tn{$2};
         $item = "t$num.$3$4$5";
@@ -1363,7 +1370,7 @@ sub get_objects
         my $tn = $1 || 1;
         my $meta = $meta{$classes{$tables[$tn - 1]}};
 
-        my $prefix = $num_subtables ? "t$tn." : '';
+        my $prefix = ($num_subtables || $oracle_hack) ? "t$tn." : '';
 
         foreach my $column ($meta->columns)
         {
@@ -1491,7 +1498,7 @@ sub get_objects
     # Alter sort_by SQL, replacing table and relationship names with aliases.
     # This is to prevent databases like Postgres from "adding missing FROM
     # clause"s.  See: http://sql-info.de/postgresql/postgres-gotchas.html#1_5
-    if($num_subtables > 0)
+    if($num_subtables > 0 || $oracle_hack)
     {
       my $i = 0;
 
@@ -1542,7 +1549,7 @@ sub get_objects
         }
       }
     }
-    else # otherwise, trim t1. prefixes
+    elsif(!$oracle_hack) # otherwise, trim t1. prefixes
     {
       foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
       {
@@ -1739,12 +1746,18 @@ sub get_objects
           $class = $classes[$table_num];
           $column ||= $2;
         }
-        elsif($item =~ /^(['"]?)([^.]+)\1\.(['"]?)(.+)\3$/)
+        elsif($item =~ /^(['"]?)([^.(]+)\1\.(['"]?)(.+)\3$/)
         {
           my $table = $2;
           $class = $classes{$table};
           $column ||= $4;
           my $table_num = $tn{$table} || $rel_tn{$table};
+        }
+        else
+        {
+          $table_num = 0;
+          $class = $classes[$table_num];
+          $column ||= $item;
         }
 
         $sth->bind_col($col_num++, \$row{$class,$table_num}{$column});
@@ -3207,6 +3220,14 @@ sub get_objects_iterator_from_sql
             elsif($object_class->can($col))
             {
               $methods->{$col} = $col;
+            }
+            elsif($meta->column(lc $col))
+            {
+              $methods->{$col} = $meta->column_mutator_method_name(lc $col);
+            }
+            elsif($object_class->can(lc $col))
+            {
+              $methods->{$col} = lc $col;
             }
           }
 
