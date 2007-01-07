@@ -613,15 +613,10 @@ sub get_objects
     }
   }
 
-  # XXX: Hack to avoid suprious ORA-00918 errors
-  # XXX: http://ora-00918.ora-code.com/msg/28663.html
-  my $oracle_hack = 
-    ($dbh->{'Driver'}{'Name'} eq 'Oracle' && ($args{'limit'} || $args{'offset'})) ? 1 : 0;
-
   # Pre-process sort_by args
   if(my $sort_by = $args{'sort_by'})
   {
-    if($num_subtables > 0)# || $oracle_hack)
+    if($num_subtables > 0)
     {
       $sort_by = [ $sort_by ]  unless(ref $sort_by);
     }
@@ -646,7 +641,9 @@ sub get_objects
 
   if($with_objects)
   {
-    if($oracle_hack)
+    # XXX: Hack to avoid suprious ORA-00918 errors
+    # XXX: http://ora-00918.ora-code.com/msg/28663.html
+    if(($args{'limit'} || $args{'offset'}) && $dbh->{'Driver'}{'Name'} eq 'Oracle')
     {
       $args{'unique_aliases'} = 1;
     }
@@ -1015,7 +1012,8 @@ sub get_objects
 
         push(@tables, $map_meta->fq_table($db));
         push(@tables_sql, $map_meta->fq_table_sql($db));
-        push(@rel_names, $rel_name{'t' . (scalar @tables)} = $rel->name);
+        # %rel_name gets the foreign table (below), not the map table here
+        push(@rel_names, $rel->name);
         push(@table_names, $map_meta->table);
         push(@classes, $map_class);
 
@@ -1330,7 +1328,7 @@ sub get_objects
       elsif($item =~ /^t(\d+)\.(.+)$/)
       {
         $tn     = $1;
-        $item   = $2 if($num_subtables == 0);# && !$oracle_hack);
+        $item   = $2 if($num_subtables == 0);
         $column = $2;
         $expand_dotstar = 1  if($item =~ /^t\d+\.\*$/);
       }
@@ -1369,8 +1367,7 @@ sub get_objects
 
         my $tn = $1 || 1;
         my $meta = $meta{$classes{$tables[$tn - 1]}};
-#                                   || $oracle_hack
-        my $prefix = ($num_subtables) ? "t$tn." : '';
+        my $prefix = $num_subtables ? "t$tn." : '';
 
         foreach my $column ($meta->columns)
         {
@@ -1498,7 +1495,7 @@ sub get_objects
     # Alter sort_by SQL, replacing table and relationship names with aliases.
     # This is to prevent databases like Postgres from "adding missing FROM
     # clause"s.  See: http://sql-info.de/postgresql/postgres-gotchas.html#1_5
-    if($num_subtables > 0)# || $oracle_hack)
+    if($num_subtables > 0)
     {
       my $i = 0;
 
@@ -1549,7 +1546,7 @@ sub get_objects
         }
       }
     }
-    else#if(!$oracle_hack) # otherwise, trim t1. prefixes
+    else # otherwise, trim t1. prefixes
     {
       foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
       {
