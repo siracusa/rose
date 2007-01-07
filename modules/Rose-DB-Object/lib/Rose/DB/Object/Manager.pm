@@ -621,7 +621,7 @@ sub get_objects
   # Pre-process sort_by args
   if(my $sort_by = $args{'sort_by'})
   {
-    if($num_subtables > 0 || $oracle_hack)
+    if($num_subtables > 0)# || $oracle_hack)
     {
       $sort_by = [ $sort_by ]  unless(ref $sort_by);
     }
@@ -1330,7 +1330,7 @@ sub get_objects
       elsif($item =~ /^t(\d+)\.(.+)$/)
       {
         $tn     = $1;
-        $item   = $2 if($num_subtables == 0 && !$oracle_hack);
+        $item   = $2 if($num_subtables == 0);# && !$oracle_hack);
         $column = $2;
         $expand_dotstar = 1  if($item =~ /^t\d+\.\*$/);
       }
@@ -1369,8 +1369,8 @@ sub get_objects
 
         my $tn = $1 || 1;
         my $meta = $meta{$classes{$tables[$tn - 1]}};
-
-        my $prefix = ($num_subtables || $oracle_hack) ? "t$tn." : '';
+#                                   || $oracle_hack
+        my $prefix = ($num_subtables) ? "t$tn." : '';
 
         foreach my $column ($meta->columns)
         {
@@ -1498,7 +1498,7 @@ sub get_objects
     # Alter sort_by SQL, replacing table and relationship names with aliases.
     # This is to prevent databases like Postgres from "adding missing FROM
     # clause"s.  See: http://sql-info.de/postgresql/postgres-gotchas.html#1_5
-    if($num_subtables > 0 || $oracle_hack)
+    if($num_subtables > 0)# || $oracle_hack)
     {
       my $i = 0;
 
@@ -1549,7 +1549,7 @@ sub get_objects
         }
       }
     }
-    elsif(!$oracle_hack) # otherwise, trim t1. prefixes
+    else#if(!$oracle_hack) # otherwise, trim t1. prefixes
     {
       foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
       {
