@@ -327,7 +327,7 @@ sub oracle_is_broken
   my $db = get_db('oracle');
 
   # This particular version of Oracle 10g on Mac OS X is broken
-  return ($db->database_version == 10_001_0300 && $^O =~ /darwin/i) ? 1 : 0;
+  return ($db->database_version == 100010300 && $^O =~ /darwin/i) ? 1 : 0;
 }
 
 our $HAVE_TEST_MEMORY_CYCLE;
