@@ -1,4 +1,4 @@
-0.546 (12.11.2006) - John Siracusa <siracusa@mindspring.com>
+0.546 (01.08.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Added a field_value() method to the Compound field class.
       (Suggested by Guillermo Roditi)

@@ -261,7 +261,7 @@ sub validate
       no warnings 'uninitialized';
       unless(length $field->input_value_filtered)
       {
-        push(@missing, sub { $field->label || $field->local_name });
+        push(@missing, sub { $field->error_label || $field->local_name });
       }
     }
 
