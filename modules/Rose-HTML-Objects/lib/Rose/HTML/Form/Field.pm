@@ -19,7 +19,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.541';
+our $VERSION = '0.546';
 
 #our $Debug = 0;
 
@@ -27,7 +27,7 @@ use Rose::HTML::Object::MakeMethods
 (
   localized_message =>
   [
-    qw(label description)
+    qw(_error_label label description)
   ],
 );
 
@@ -58,6 +58,36 @@ __PACKAGE__->add_valid_html_attrs(qw(
 ));
 
 *label_id = \&label_message_id;
+
+sub error_label
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    return $self->_error_label(@_);
+  }
+
+  my $label = $self->_error_label;
+
+  no warnings 'uninitialized';
+  return (defined $label) ? (length $label ? $label : undef) : $self->label;
+}
+
+sub error_label_id
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    return $self->_error_label_id(@_);
+  }
+
+  my $label = $self->_error_label_id;
+
+  no warnings 'uninitialized';
+  return (defined $label) ? (length $label ? $label : undef) : $self->label;
+}
 
 sub auto_invalidate_parent
 {
@@ -653,7 +683,7 @@ sub validate
      ((!ref $value && (!defined $value || ($self->trim_spaces && $value !~ /\S/))) ||
       (ref $value eq 'ARRAY' && !@$value)))
   {
-    my $label = $self->label;
+    my $label = $self->error_label;
 
     if(defined $label)
     {

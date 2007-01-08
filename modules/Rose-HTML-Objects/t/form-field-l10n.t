@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 40;
+use Test::More tests => 42;
 
 use FindBin qw($Bin);
 
@@ -171,3 +171,13 @@ $o->errors('foo');
 $o->errors([]);
 ok(!$o->has_error, 'has_error 7');
 ok(!$o->has_errors, 'has_errors 7');
+
+$o->error_label('Foo');
+$o->required(1);
+$o->clear;
+$o->validate;
+is($o->error, 'Foo is a required field.', 'error label 1');
+
+$o->error_label('');
+$o->validate;
+is($o->error, 'This is a required field.', 'error label 2');
