@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 163;
+use Test::More tests => 167;
 
 BEGIN 
 {
@@ -83,6 +83,26 @@ is($address_form->form_name, 'address', 'address form name 1');
 
 my $field = $form->field('person.bday');
 is(ref $field, 'Rose::HTML::Form::Field::DateTime::Split::MonthDayYear', 'person.bday field 1');
+
+$form->params(
+{
+  'person.name'    => 'John', 
+  'person.age'     => ' 10 ', 
+  'person.gender'  => 'm', 
+  'person.bday'    => '1/2/1983',
+  'address.street' => '1 Main St.', 
+  'address.city'   => 'Smithtown', 
+  'address.state'  => ' NY ', 
+  'address.zip'    => 11787  
+});
+
+is($form->form('person')->param('person.name'), 'John', 'shared params 1');
+is($form->form('address')->param('person.name'), 'John', 'shared params 2');
+
+$form->delete_params;
+
+is($form->form('person')->param('person.name'), undef, 'shared params 3');
+is($form->form('address')->param('person.name'), undef, 'shared params 4');
 
 $form->params(
 {
@@ -485,7 +505,7 @@ $form->validate(form_only => 1);
 #print STDERR "---\n";
 # Don't call validate() on any fields or sub-forms
 $form->validate(form_only => 1, cascade => 0);
-    
+
 BEGIN
 {
   package MyPerson;
