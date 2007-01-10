@@ -201,7 +201,8 @@ sub _set_input_value { }
 sub is_full  { 0 }
 sub is_empty { 0 }
 
-sub delete_params { shift->{'params'} = {} }
+# Empty contents instead of replacing ref
+sub delete_params { %{shift->{'params'}} = () }
 
 sub params_from_cgi
 {
@@ -331,6 +332,11 @@ sub params
         delete $self->{'params'}{$param};
         $self->{'params'}{$1} = 1;
       }
+    }
+
+    foreach my $form ($self->forms)
+    {
+      $form->params($self->{'params'});
     }
   }
 
@@ -1327,6 +1333,25 @@ sub fq_form_name
   }
 
   return @parts ? join(FF_SEPARATOR, @parts) : '';
+}
+
+sub form_name_context
+{
+  my($self) = shift;
+
+  return undef  unless($self->parent_form);
+
+  my @context;
+  my $form = $self;
+
+  for(;;)
+  {
+    last  unless($form->parent_form);
+    unshift(@context, $form->form_name);
+    $form = $form->parent_form;
+  }
+
+  return join(FF_SEPARATOR, @context) . FF_SEPARATOR;
 }
 
 sub local_form
