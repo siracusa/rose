@@ -239,9 +239,9 @@ CREATE TABLE rose_db_object_test
   c12   BIGINT,
   c12d  BIGINT DEFAULT 922337203685,
   c13   INT,
-  c13d  INT DEFAULT 99539509,
+  c13d  INT DEFAULT 99539509
 
-  @{[ $PG_HAS_CHKPASS ? q(c14 CHKPASS, c14d CHKPASS DEFAULT 'xyzzy') : '' ]}
+  @{[ $PG_HAS_CHKPASS ? q(, c14 CHKPASS, c14d CHKPASS DEFAULT 'xyzzy') : '' ]}
 )
 EOF
 
