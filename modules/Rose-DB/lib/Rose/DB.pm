@@ -837,7 +837,6 @@ sub init_dbh
 
   foreach my $attr ($self->dbh_attributes)
   {
-$DB::single = 1;
     my $val = $self->dbh_attribute($attr);
     next  unless(defined $val);
     $dbh->{$attr} = $val;

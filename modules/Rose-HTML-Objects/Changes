@@ -1,5 +1,7 @@
-0.546 (01.08.2006) - John Siracusa <siracusa@mindspring.com>
+0.546 (01.15.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Fixed a bug that prevented params() from correctly appearing
+      in nested forms.
     * Added a field_value() method to the Compound field class.
       (Suggested by Guillermo Roditi)
     * Added a cascade parameter to validate(), which defaults to true.

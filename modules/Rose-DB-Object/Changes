@@ -1,11 +1,10 @@
-0.759 (01.02.2007) - John Siracusa <siracusa@mindspring.com>
+0.759 (01.15.2007) - John Siracusa <siracusa@mindspring.com>
 
-    * Added support for limit/offset in Oracle.
+    * Oracle support improved significantly.
     * Added a "state" export tag to Rose::DB::Object::Util.
-    * Fixed a bug that caused the Manager to unconditionally alias
-      selected columns in some situations.
-    * Added the (dubious) ability to set a list of filtered 
-      one-to-many items.
+    * Fixed a bug that caused the Manager to unconditionally alias selected
+      columns in some situations.
+    * Added the (dubious) ability to set a list of filtered one-to-many items.
     * Fixed a database handle leak in the iterator class.
       (Reported by Peter Karman)
 

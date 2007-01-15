@@ -98,7 +98,7 @@ sub _init_db
   my($self) = shift;
 
   my $db;
-  
+
   eval { $db = $self->init_db };
 
   unless($@)
@@ -1819,9 +1819,9 @@ Since Oracle does not natively support a serial or auto-incremented column data 
       id   INT NOT NULL PRIMARY KEY,
       ...
     );
-  
+
     CREATE SEQUENCE mytable_id_seq;
-  
+
     CREATE TRIGGER mytable_insert BEFORE INSERT ON mytable
     FOR EACH ROW
     BEGIN
