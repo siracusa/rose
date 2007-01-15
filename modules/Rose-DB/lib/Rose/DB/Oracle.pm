@@ -38,7 +38,7 @@ sub default_post_connect_sql
       $class->_default_post_connect_sql([ @_ ]);
     }
   }
-  
+
   return $class->_default_post_connect_sql;
 }
 
@@ -254,16 +254,16 @@ sub format_limit_with_offset
     my $n     = $offset + $limit;
 
     $args->{'limit_prefix'} = 
-      #"SELECT * FROM (SELECT /*+ FIRST_ROWS($n) */\na.*, ROWNUM oracle_rownum
-      "SELECT * FROM (SELECT a.*, ROWNUM oracle_rownum FROM (";
+      "SELECT * FROM (SELECT /*+ FIRST_ROWS($n) */\na.*, ROWNUM oracle_rownum FROM (";
+      #"SELECT * FROM (SELECT a.*, ROWNUM oracle_rownum FROM (";
 
     $args->{'limit_suffix'} = 
       ") a WHERE ROWNUM <= $end) WHERE oracle_rownum >= $start";
   }
   else
   {
-    #$args->{'limit_prefix'} = "SELECT /*+ FIRST_ROWS($limit) */ a.* FROM (";
-    $args->{'limit_prefix'} = "SELECT a.* FROM (";
+    $args->{'limit_prefix'} = "SELECT /*+ FIRST_ROWS($limit) */ a.* FROM (";
+    #$args->{'limit_prefix'} = "SELECT a.* FROM (";
     $args->{'limit_suffix'} = ") a WHERE ROWNUM <= $limit";
   }
 }
@@ -302,17 +302,46 @@ Rose::DB::Oracle - Oracle driver class for Rose::DB.
 
 =head1 DESCRIPTION
 
-B<Note:> this class is a work in progress.  Support for Oracle databases is not yet complete.  If you would like to help, please contact John Siracusa at siracusa@mindspring.com or post to the L<mailing list|Rose::DB/SUPPORT>.
-
 L<Rose::DB> blesses objects into a class derived from L<Rose::DB::Oracle> when the L<driver|Rose::DB/driver> is "oracle".  This mapping of driver names to class names is configurable.  See the documentation for L<Rose::DB>'s L<new()|Rose::DB/new> and L<driver_class()|Rose::DB/driver_class> methods for more information.
 
 This class cannot be used directly.  You must use L<Rose::DB> and let its L<new()|Rose::DB/new> method return an object blessed into the appropriate class for you, according to its L<driver_class()|Rose::DB/driver_class> mappings.
 
 Only the methods that are new or have different behaviors than those in L<Rose::DB> are documented here.  See the L<Rose::DB> documentation for the full list of methods.
 
+B<Note:> this class is a work in progress.  Support for Oracle databases is not yet complete.  If you would like to help, please contact John Siracusa at siracusa@mindspring.com or post to the L<mailing list|Rose::DB/SUPPORT>.
+
+=head1 CLASS METHODS
+
+=over 4
+
+=item B<default_post_connect_sql [STATEMENTS]>
+
+Get or set the default list of SQL statements that will be run immediately after connecting to the database.  STATEMENTS should be a list or reference to an array of SQL statements.  Returns a reference to the array of SQL statements in scalar context, or a list of SQL statements in list context.
+
+The L<default_post_connect_sql|/default_post_connect_sql> statements will be run before any statements set using the L<post_connect_sql|/post_connect_sql> method.  The default list contains the following:
+
+    ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS'
+    ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SSxFF'
+
+These statements enable date/time column value parsing and formatting to work correctly.
+
+=back
+
 =head1 OBJECT METHODS
 
 =over 4
+
+=item B<post_connect_sql [STATEMENTS]>
+
+Get or set the SQL statements that will be run immediately after connecting to the database.  STATEMENTS should be a list or reference to an array of SQL statements.  Returns a reference to an array (in scalar) or a list of the L<default_post_connect_sql|/default_post_connect_sql> statements and the L<post_connect_sql|/post_connect_sql> statements.  Example:
+
+    $db->post_connect_sql('UPDATE mytable SET num = num + 1');
+
+    print join("\n", $db->post_connect_sql);
+
+    ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS'
+    ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SSxFF'
+    UPDATE mytable SET num = num + 1
 
 =item B<schema [SCHEMA]>
 

@@ -1,5 +1,6 @@
-0.732 (01.07.2006) - John Siracusa <siracusa@mindspring.com>
+0.732 (01.15.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Oracle support improved significantly.
     * Added MySQL $dbh attributes: mysql_auto_reconnect, mysql_enable_utf8,
       and mysql_use_result.
     * Rose::DB objects can now be constructed by specifying only a driver,
