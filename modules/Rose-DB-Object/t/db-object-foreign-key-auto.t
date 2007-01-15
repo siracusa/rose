@@ -744,6 +744,7 @@ EOF
     q(items         => { type => 'set', default => 'a,c', not_null => 1, values => [ 'a', 'b', 'c' ] },) :
     q(items         => { type => 'varchar', default => 'a,c', length => 255, not_null => 1 },);
 
+  no warnings 'once';
   local $Rose::DB::Object::Metadata::Auto::Sort_Columns_Alphabetically = 1;
 
   is(MyMySQLObject->meta->perl_class_definition(use_setup => 0),
