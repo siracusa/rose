@@ -2146,7 +2146,7 @@ L<Rose::DB> currently supports the following L<DBI> database drivers:
     DBD::SQLite   (SQLite)
     DBD::Informix (Informix)
 
-Oracle (L<DBD::Oracle>) is I<partially> supported, but some features may not yet work correctly.
+Oracle (L<DBD::Oracle>) is mostly supported, but some features may not yet work correctly.
 
 L<Rose::DB> will attempt to service an unsupported database using a L<generic|Rose::DB::Generic> implementation that may or may not work.  Support for more drivers may be added in the future.  Patches are welcome.
 
