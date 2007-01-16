@@ -174,6 +174,10 @@ foreach my $db_type (qw(pg mysql informix sqlite))
     {
       ok($o->c14d_is('xyzzy'), "chkpass default - $db_type");
     }
+    elsif($n == 13 &&  $db_type eq 'pg' && !$PG_HAS_CHKPASS)
+    {
+      ok(1, "no chkpass - $db_type");
+    }
     elsif($n == 1 && $db_type ne 'pg')
     {
       ok(1, "chkpass skipped - $db_type");

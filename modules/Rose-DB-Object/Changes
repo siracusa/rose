@@ -1,3 +1,9 @@
+0.760 (01.15.2007) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a mistake in the test suite that caused spurious failures
+      when testing against Pg without the CHKPASS column type installed.
+      (Reported by Randal Schwartz)
+
 0.759 (01.15.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Oracle support improved significantly.
