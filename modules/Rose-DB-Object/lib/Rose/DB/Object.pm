@@ -163,7 +163,7 @@ sub load
     my $alt_columns;
 
     # Prefer unique keys where we have defined values for all
-    # key calumns, but fall back to teh first unique key found 
+    # key columns, but fall back to the first unique key found 
     # where we have at least one defined value.
     foreach my $cols ($meta->unique_keys_column_names)
     {
