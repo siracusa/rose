@@ -1754,7 +1754,12 @@ sub make_foreign_key_methods
         eval "require $fclass";
         $Debug && print STDERR "FK REQUIRES $fclass - $@\n";
       }
-      # Ignore errors to allow deferment system to work
+
+      # Ignore non-syntax errors to allow deferment system to work
+      if($@ && $@ =~ /^syntax error /)
+      {
+        Carp::confess "Could not load $fclass - $@";
+      }
     }
 
     # We may need to defer the creation of some foreign key methods until
@@ -2061,7 +2066,12 @@ sub make_relationship_methods
           $Debug && print STDERR "REL ",  $relationship->name, 
                                  " REQUIRES $fclass - $@\n";
         }
-        # Ignore errors to allow deferment system to work
+
+        # Ignore non-syntax errors to allow deferment system to work
+        if($@ && $@ =~ /^syntax error /)
+        {
+          Carp::confess "Could not load $fclass - $@";
+        }
       }
 
       if($relationship->can('map_class'))
@@ -2074,7 +2084,12 @@ sub make_relationship_methods
           $Debug && print STDERR "REL ",  $relationship->name, 
                                  " REQUIRES $map_class - $@\n";
         }
-        # Ignore errors to allow deferment system to work
+
+        # Ignore non-syntax errors to allow deferment system to work
+        if($@ && $@ =~ /^syntax error /)
+        {
+          Carp::confess "Could not load $map_class - $@";
+        }
       }
     }
 

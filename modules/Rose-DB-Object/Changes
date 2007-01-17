@@ -1,3 +1,8 @@
+0.761 (01.17.2007) - John Siracusa <siracusa@mindspring.com>
+
+    * Improved reporting of syntax errors in auto-loaded related 
+      modules.
+
 0.760 (01.16.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed a mistake in the test suite that caused spurious failures
