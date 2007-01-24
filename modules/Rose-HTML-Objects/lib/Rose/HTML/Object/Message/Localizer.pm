@@ -150,6 +150,15 @@ sub localize_message
 
   my $text = $self->get_localized_message($id, $locale, $calling_class);
 
+  # Look for messages in parent fields
+  while(!defined $text && $child && $child->can('parent_field'))
+  {
+    if($child = $child->parent_field)
+    {
+      $text = $self->get_localized_message($id, $locale, ref($child));
+    }
+  }
+
   return $self->process_placeholders($text, $args)  if(defined $text);  
 
   my $cascade = $self->locale_cascade($locale) ||

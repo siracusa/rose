@@ -3,16 +3,24 @@ package Rose::HTML::Form::Field::Time::Minutes;
 use strict;
 
 use Rose::HTML::Object::Errors qw(:time);
+use Rose::HTML::Object::Messages qw(:time);
 
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.541';
+our $VERSION = '0.547';
 
 __PACKAGE__->add_required_html_attrs(
 {
   size => 2,
 });
+
+sub init
+{
+  my($self) = shift;
+  $self->label_id(FIELD_LABEL_MINUTE);
+  $self->SUPER::init(@_);
+}
 
 sub validate
 {
@@ -43,6 +51,7 @@ __DATA__
 
 [% LOCALE en %]
 
+FIELD_LABEL_MINUTE  = "Minute"
 TIME_INVALID_MINUTE = "Invalid minute."
 
 [% LOCALE de %]

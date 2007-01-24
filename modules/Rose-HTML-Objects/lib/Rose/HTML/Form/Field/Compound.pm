@@ -255,7 +255,7 @@ sub validate
   if($self->required)
   {
     my @missing;
-
+$DB::single = 1;
     foreach my $field ($self->fields)
     {
       no warnings 'uninitialized';
