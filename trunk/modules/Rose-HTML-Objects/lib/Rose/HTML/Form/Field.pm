@@ -19,7 +19,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.546';
+our $VERSION = '0.547';
 
 #our $Debug = 0;
 
@@ -443,8 +443,12 @@ sub output_value
 
 sub is_empty
 {
-  no warnings;
-  return (shift->internal_value =~ /\S/) ? 0 : 1;
+  my($self) = shift;
+  
+  my $value = $self->internal_value;
+
+  no warnings;  
+  return ($value =~ /\S/ || (!$self->trim_spaces && length $value)) ? 0 : 1;
 }
 
 sub is_full { !shift->is_empty }
@@ -1235,7 +1239,7 @@ Returns true if the field is cleared (i.e., if L<clear()|/clear> has been called
 
 =item B<is_empty>
 
-Returns false if the internal value contains any non-whitespace characters, true otherwise.  Subclasses should be sure to override this if they use internal values other than strings.
+Returns false if the internal value contains any non-whitespace characters or if L<trim_spaces|/trim_spaces> is false and the internal value has a non-zero length, true otherwise.  Subclasses should be sure to override this if they use internal values other than strings.
 
 =item B<is_full>
 
