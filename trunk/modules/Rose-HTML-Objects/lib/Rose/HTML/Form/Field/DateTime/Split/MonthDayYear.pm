@@ -9,7 +9,10 @@ use Rose::HTML::Form::Field::Text;
 use Rose::HTML::Form::Field::DateTime::Split;
 our @ISA = qw(Rose::HTML::Form::Field::DateTime::Split);
 
-our $VERSION = '0.53';
+use Rose::HTML::Object::Messages
+  qw(FIELD_LABEL_MONTH FIELD_LABEL_DAY FIELD_LABEL_YEAR);
+
+our $VERSION = '0.547';
 
 sub build_field
 {
@@ -17,9 +20,32 @@ sub build_field
 
   $self->add_fields
   (
-    month => { type => 'text', size => 2, maxlength => 2, class => 'month' },
-    day   => { type => 'text', size => 2, maxlength => 2, class => 'day' },
-    year  => { type => 'text', size => 4, maxlength => 4, class => 'year' },
+    month =>
+    {
+      type      => 'text',
+      size      => 2,
+      maxlength => 2,
+      class     => 'month',
+      label_id  => FIELD_LABEL_MONTH,
+    },
+
+    day =>
+    {
+      type      => 'text',
+      size      => 2,
+      maxlength => 2,
+      class     => 'day',
+      label_id  => FIELD_LABEL_DAY,
+    },
+
+    year =>
+    {
+      type      => 'text',
+      size      => 4,
+      maxlength => 4,
+      class     => 'year',
+      label_id  => FIELD_LABEL_YEAR,
+    },
   );
 }
 
@@ -98,7 +124,20 @@ sub xhtml_field
          '</span>';
 }
 
+if(__PACKAGE__->localizer->auto_load_messages)
+{
+  __PACKAGE__->localizer->load_all_messages;
+}
+
 1;
+
+__DATA__
+
+[% LOCALE en %]
+
+FIELD_LABEL_MONTH = "Month"
+FIELD_LABEL_DAY   = "Day"
+FIELD_LABEL_YEAR  = "Year"
 
 __END__
 

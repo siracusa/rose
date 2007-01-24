@@ -97,6 +97,10 @@ __DATA__
 TIME_INVALID = "Invalid time."
 TIME_INVALID_AMPM = "AM/PM only valid with hours less than 12."
 
+FIELD_LABEL_HOUR   = "Month"
+FIELD_LABEL_MINUTE = "Day"
+FIELD_LABEL_SECOND = "Year"
+
 [% LOCALE de %]
 
 TIME_INVALID = "Ungültige Zeit."

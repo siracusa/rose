@@ -6,7 +6,7 @@ use Carp;
 
 use base 'Rose::HTML::Object::Exporter';
 
-our $VERSION = '0.544';
+our $VERSION = '0.547';
 
 our $Debug = 0;
 
@@ -37,7 +37,8 @@ sub init_export_tags
     field  => [ grep { /^FIELD_/ } @{$class->message_names_list} ],
     form   => [ grep { /^FORM_/ } @{$class->message_names_list} ],
     date   => [ grep { /^DATE_/ } @{$class->message_names_list} ],
-    time   => [ grep { /^TIME_/ } @{$class->message_names_list} ],
+    time   => [ grep { /^TIME_|_(?:HOUR|MINUTE|SECOND)$/ } 
+                @{$class->message_names_list} ],
     email  => [ grep { /^EMAIL_/ } @{$class->message_names_list} ],
     phone  => [ grep { /^PHONE_/ } @{$class->message_names_list} ],
     number => [ grep { /^NUM_/ } @{$class->message_names_list} ],
@@ -175,7 +176,7 @@ sub add_messages
 
 use constant CUSTOM_MESSAGE => -1;
 
-# Fields
+# Fields and labels
 use constant FIELD_LABEL              => 1;
 use constant FIELD_DESCRIPTION        => 2;
 use constant FIELD_REQUIRED_GENERIC   => 4;
@@ -185,6 +186,13 @@ use constant FIELD_REQUIRED_SUBFIELDS => 7;
 use constant FIELD_PARTIAL_VALUE      => 8;
 use constant FIELD_INVALID_GENERIC    => 10;
 use constant FIELD_INVALID_LABELLED   => 11;
+
+use constant FIELD_LABEL_YEAR   => 10_000;
+use constant FIELD_LABEL_MONTH  => 10_001;
+use constant FIELD_LABEL_DAY    => 10_002;
+use constant FIELD_LABEL_HOUR   => 10_003;
+use constant FIELD_LABEL_MINUTE => 10_004;
+use constant FIELD_LABEL_SECOND => 10_005;
 
 # Forms
 use constant FORM_HAS_ERRORS => 100;
