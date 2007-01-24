@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.757';
+our $VERSION = '0.761';
 
 our $Debug = 0;
 
@@ -1755,10 +1755,13 @@ sub make_foreign_key_methods
         $Debug && print STDERR "FK REQUIRES $fclass - $@\n";
       }
 
-      # Ignore non-syntax errors to allow deferment system to work
-      if($@ && $@ =~ /^syntax error /)
+      if($@)
       {
-        Carp::confess "Could not load $fclass - $@";
+        # Ignore missing module errors to allow deferment system to work
+        if($@ =~ m{^Can't locate (\S+) in \@INC } && $INC{$1})
+        {
+          Carp::confess "Could not load $fclass - $@";
+        }
       }
     }
 
@@ -2067,10 +2070,13 @@ sub make_relationship_methods
                                  " REQUIRES $fclass - $@\n";
         }
 
-        # Ignore non-syntax errors to allow deferment system to work
-        if($@ && $@ =~ /^syntax error /)
+        if($@)
         {
-          Carp::confess "Could not load $fclass - $@";
+          # Ignore missing module errors to allow deferment system to work
+          if($@ =~ m{^Can't locate (\S+) in \@INC } && $INC{$1})
+          {
+            Carp::confess "Could not load $fclass - $@";
+          }
         }
       }
 
