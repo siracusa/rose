@@ -80,10 +80,10 @@ sub error_label_id
   
   if(@_)
   {
-    return $self->_error_label_id(@_);
+    return $self->_error_label_message_id(@_);
   }
 
-  my $label = $self->_error_label_id;
+  my $label = $self->_error_label_message_id;
 
   no warnings 'uninitialized';
   return (defined $label) ? (length $label ? $label : undef) : $self->label;

@@ -69,8 +69,9 @@ __DATA__
 
 [% LOCALE en %]
 
-FIELD_LABEL_HOUR  = "Hour"
-TIME_INVALID_HOUR = "Invalid hour."
+FIELD_LABEL_HOUR       = "Hour"
+FIELD_ERROR_LABEL_HOUR = "hour"
+TIME_INVALID_HOUR      = "Invalid hour."
 
 [% LOCALE de %]
 

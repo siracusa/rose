@@ -381,4 +381,4 @@ $ok = $field->validate;
 ok(defined $ok, 'empty compound validate 5');
 ok($ok == 0, 'empty compound validate 6');
 
-is($field->error, 'Missing Month, Year.', 'empty compound error unlabeled');
+is($field->error, 'Missing month, year.', 'empty compound error unlabeled');
