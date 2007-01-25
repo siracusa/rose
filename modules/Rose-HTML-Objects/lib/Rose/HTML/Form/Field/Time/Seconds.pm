@@ -51,8 +51,9 @@ __DATA__
 
 [% LOCALE en %]
 
-FIELD_LABEL_SECOND   = "Second"
-TIME_INVALID_SECONDS = "Invalid seconds."
+FIELD_LABEL_SECOND       = "Second"
+FIELD_ERROR_LABEL_SECOND = "second"
+TIME_INVALID_SECONDS     = "Invalid seconds."
 
 [% LOCALE de %]
 

@@ -36,7 +36,8 @@ sub init_export_tags
     all    => $class->message_names_list,
     field  => [ grep { /^FIELD_/ } @{$class->message_names_list} ],
     form   => [ grep { /^FORM_/ } @{$class->message_names_list} ],
-    date   => [ grep { /^DATE_/ } @{$class->message_names_list} ],
+    date   => [ grep { /^DATE_|_(?:YEAR|MONTH|DAY)$/ }
+                @{$class->message_names_list} ],
     time   => [ grep { /^TIME_|_(?:HOUR|MINUTE|SECOND)$/ } 
                 @{$class->message_names_list} ],
     email  => [ grep { /^EMAIL_/ } @{$class->message_names_list} ],
@@ -193,6 +194,13 @@ use constant FIELD_LABEL_DAY    => 10_002;
 use constant FIELD_LABEL_HOUR   => 10_003;
 use constant FIELD_LABEL_MINUTE => 10_004;
 use constant FIELD_LABEL_SECOND => 10_005;
+
+use constant FIELD_ERROR_LABEL_YEAR   => 11_000;
+use constant FIELD_ERROR_LABEL_MONTH  => 11_001;
+use constant FIELD_ERROR_LABEL_DAY    => 11_002;
+use constant FIELD_ERROR_LABEL_HOUR   => 11_003;
+use constant FIELD_ERROR_LABEL_MINUTE => 11_004;
+use constant FIELD_ERROR_LABEL_SECOND => 11_005;
 
 # Forms
 use constant FORM_HAS_ERRORS => 100;
