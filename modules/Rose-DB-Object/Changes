@@ -1,7 +1,8 @@
-0.761 (01.24.2007) - John Siracusa <siracusa@mindspring.com>
+0.761 (01.25.2007) - John Siracusa <siracusa@mindspring.com>
 
-    * Improved reporting of errors in auto-loaded related 
-      modules.
+    * Fixed a bug that caused numeric columns to have invalid length
+      restrictions.  (Reported by Fred Cox)
+    * Improved reporting of errors in auto-loaded related modules.
 
 0.760 (01.16.2007) - John Siracusa <siracusa@mindspring.com>
 
