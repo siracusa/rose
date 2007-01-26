@@ -149,6 +149,12 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
   is(@$prods, 1, "get_products 2 - $db_type");
   is($prods->[0]->id, $p->id, "get_products 3 - $db_type");
 
+  if($db_type eq 'pg')
+  {
+    # Check for float bug fixed in 0.761
+    $prods->[0]->num(37.3053); # dies with "value too long" in <0.761
+  }
+
   #$DB::single = 1;
   #$Rose::DB::Object::Debug = 1;
 }
@@ -217,6 +223,8 @@ CREATE TABLE product
 
   status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
             CHECK(status IN ('inactive', 'active', 'defunct')),
+
+  num     float(4),
 
   date_created  TIMESTAMP NOT NULL DEFAULT NOW(),
   release_date  TIMESTAMP,
