@@ -1,6 +1,9 @@
-0.547 (01.24.2007) - John Siracusa <siracusa@mindspring.com>
+0.547 (01.30.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Made is_empty() smarter about honoring the trim_spaces() setting.
+    * Fixed a bug that caused option containers to fail to display hidden
+      fields when a selected option had a false, but defined value.
+      (Reported by Andrei Kozovski)
 
 0.546 (01.15.2007) - John Siracusa <siracusa@mindspring.com>
 
