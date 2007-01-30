@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.759';
+our $VERSION = '0.761';
 
 our $Debug = 0;
 
@@ -2521,7 +2521,129 @@ sub objects_by_key
     $mgr_args->{'object_class'} = $ft_class;
   }
 
-  if($interface eq 'get_set' || $interface eq 'get_set_load')
+  if($interface eq 'find')
+  {
+    my $cache_key = PRIVATE_PREFIX . '_' . $name;
+
+    $methods{$name} = sub
+    {
+      my($self) = shift;
+
+      my %args;
+
+      if(my $ref = ref $_[0])
+      {
+        if($ref eq 'HASH')
+        {
+          %args = (query => [ %{shift(@_)} ], @_);
+        }
+        elsif(ref $_[0] eq 'ARRAY')
+        {
+          %args = (query => shift, @_);
+        }
+      }
+      else { %args = @_ }
+
+      if(delete $args{'from_cache'})
+      {
+        if(keys %args)
+        {
+          Carp::croak "Additional parameters not allowed in call to ",
+                      "$name() with from_cache parameter";
+        }
+
+        if(defined $self->{$cache_key})
+        {
+          return wantarray ? @{$self->{$cache_key}} : $self->{$cache_key};
+        }
+      }
+
+      my $objs;
+
+      # Get query key
+      my %key;
+
+      while(my($local_column, $foreign_column) = each(%$ft_columns))
+      {
+        my $local_method = $meta->column_accessor_method_name($local_column);
+
+        $key{$foreign_column} = $self->$local_method();
+
+        # Comment this out to allow null keys
+        unless(defined $key{$foreign_column})
+        {
+          keys(%$ft_columns); # reset iterator
+          $self->error("Could not fetch objects via $name() - the " .
+                       "$local_method attribute is undefined");
+          return;
+        }
+      }
+
+      my $cache = delete $args{'cache'};
+
+      # Merge query args
+      my @query = (%key, @$query_args, @{delete $args{'query'} || []});      
+
+      # Merge the rest of the arguments
+      foreach my $param (keys %args)
+      {
+        if(exists $mgr_args->{$param})
+        {
+          my $ref = ref $args{$param};
+
+          if($ref eq 'ARRAY')
+          {
+            unshift(@{$args{$param}}, ref $mgr_args->{$param} ? 
+                    @{$mgr_args->{$param}} :  $mgr_args->{$param});
+          }
+          elsif($ref eq 'HASH')
+          {
+            while(my($k, $v) = each(%{$mgr_args->{$param}}))
+            {
+              $args{$param}{$k} = $v  unless(exists $args{$param}{$k});
+            }
+          }
+        }
+      }
+
+      while(my($k, $v) = each(%$mgr_args))
+      {
+        $args{$k} = $v  unless(exists $args{$k});
+      }
+
+      # Make query for object list
+      eval
+      {
+        #local $Rose::DB::Object::Manager::Debug = 1;
+        if($share_db)
+        {
+          $objs = 
+            $ft_manager->$ft_method(query => \@query, db => $self->db, %args)
+              or die $ft_manager->error;
+        }
+        else
+        {
+          $objs = 
+            $ft_manager->$ft_method(query    => \@query, 
+                                    db       => $self->db,
+                                    share_db => 0, %args)
+              or die $ft_manager->error;
+        }
+      };
+
+      if($@ || !$objs)
+      {
+        $self->error("Could not find $ft_class objects - " . $ft_manager->error);
+        $self->meta->handle_error($self);
+        return $objs;
+      }
+
+      $self->{$cache_key} = $objs  if($cache);
+
+      return wantarray ? @$objs: $objs;
+    };
+  }
+  elsif($interface eq 'get_set' || $interface eq 'get_set_load')
   {
     $methods{$name} = sub
     {
@@ -2571,7 +2693,9 @@ sub objects_by_key
         else
         {
           $objs = 
-            $ft_manager->$ft_method(query => [ %key, @$query_args ], %$mgr_args)
+            $ft_manager->$ft_method(query    => [ %key, @$query_args ],
+                                    db       => $self->db, 
+                                    share_db => 0, %$mgr_args)
               or die $ft_manager->error;
         }
       };
@@ -2793,7 +2917,9 @@ sub objects_by_key
         else
         {
           $objs = 
-            $ft_manager->$ft_method(query => [ %key, @$query_args ], %$mgr_args)
+            $ft_manager->$ft_method(query    => [ %key, @$query_args ],
+                                    db       => $self->db,
+                                    share_db => 0, %$mgr_args)
               or die $ft_manager->error;
         }
       };
@@ -3012,7 +3138,10 @@ sub objects_by_key
         else
         {
           $objs = 
-            $ft_manager->$ft_method(query => [ %key, @$query_args ], %$mgr_args)
+            $ft_manager->$ft_method(query    => [ %key, @$query_args ],
+                                    db       => $self->db, 
+                                    share_db => 0,
+                                    %$mgr_args)
               or die $ft_manager->error;
         }
       };
@@ -3570,6 +3699,7 @@ sub objects_by_map
         $objs = 
           $map_manager->$map_method(query => [ %join_map_to_self, @$query_args ],
                                     require_objects => $require_objects,
+                                    db => $self->db, share_db => 0,
                                     %$mgr_args);
       }
 
@@ -3835,6 +3965,7 @@ sub objects_by_map
         $objs = 
           $map_manager->$map_method(query        => [ %join_map_to_self, @$query_args ],
                                     require_objects => $require_objects,
+                                    db => $self->db, share_db => 0,
                                     %$mgr_args);
       }
 
@@ -4073,6 +4204,7 @@ sub objects_by_map
         $objs = 
           $map_manager->$map_method(query        => [ %join_map_to_self, @$query_args ],
                                     require_objects => $require_objects,
+                                    db => $self->db, share_db => 0,
                                     %$mgr_args);
       }
 

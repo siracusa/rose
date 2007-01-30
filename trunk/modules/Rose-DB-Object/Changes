@@ -1,5 +1,7 @@
-0.761 (01.25.2007) - John Siracusa <siracusa@mindspring.com>
+0.761 (01.30.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Added a "find" method type to one-to-many relationships for ad-hoc queries.
+      (No docs yet...)
     * Fixed a bug that caused numeric columns to have invalid length
       restrictions.  (Reported by Fred Cox)
     * Improved reporting of errors in auto-loaded related modules.
