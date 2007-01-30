@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.759';
+our $VERSION = '0.761';
 
 our $Debug = 0;
 
@@ -266,13 +266,13 @@ sub build_select
         "$table_map->{$table_tn}.$column" : '';
 
       my $fq_column_trimmed;
-      
+
       TRIM:
       {
         (my $t = $table) =~ s/^[^.]+\.//;
         $fq_column_trimmed = "$t.$column";
       }
-      
+
       # Avoid duplicate clauses if the table name matches the relationship name
       $rel_column = ''  if($rel_column eq $fq_column);
 
@@ -545,6 +545,8 @@ sub build_select
     {
       my $i = 0;
 
+      my $oracle_hack = $dbh->{'Driver'}{'Name'} eq 'Oracle' && $limit_prefix;
+
       if($db)
       {
         $from_tables_sql = $multi_table ?
@@ -553,7 +555,9 @@ sub build_select
             $i++;
             '  ' . $db->format_table_with_alias($_, "t$i", $hints->{"t$i"})
           } @$tables_sql) :
-          '  ' . $db->format_table_with_alias($tables_sql->[0], "t1", $hints->{'t1'} || $hints);
+          '  ' . (($oracle_hack || keys %$hints) ? 
+            $db->format_table_with_alias($tables_sql->[0], "t1", $hints->{'t1'} || $hints) :
+            $tables_sql->[0]);
       }
       else
       {

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1511;
+use Test::More tests => 1529;
 
 BEGIN 
 {
@@ -4247,7 +4247,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 409)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 427)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -4903,10 +4903,57 @@ SKIP: foreach my $db_type ('sqlite')
 
   @o2s = $o->other2_objs_now;
   ok(@o2s == 3, "set one to many now 3 - $db_type");
-
+  
   ok($o2s[0]->id == 2 && $o2s[0]->pid == 111, "set one to many now 4 - $db_type");
   ok($o2s[1]->id == 3 && $o2s[1]->pid == 111, "set one to many now 5 - $db_type");
   ok($o2s[2]->id == 1 && $o2s[2]->pid == 111, "set one to many now 6 - $db_type");
+
+  my @fos = $o->find_other2_objs(query    => [ id => { gt => 1 } ],
+                                 sort_by  => 'id desc', 
+                                 share_db => 0);
+
+  ok($fos[0]->id == 3 && $fos[0]->pid == 111, "find one to many 1 - $db_type");
+  ok($fos[1]->id == 2 && $fos[1]->pid == 111, "find one to many 2 - $db_type");
+  ok(!defined $fos[0]->{'db'}, "find one to many 3 - $db_type");
+  ok(!defined $fos[1]->{'db'}, "find one to many 4 - $db_type");
+
+  @fos = $o->find_other2_objs([ id => { gt => 1 } ],
+                              sort_by  => 'id desc', 
+                              share_db => 0);
+
+  ok($fos[0]->id == 3 && $fos[0]->pid == 111, "find one to many array query 1 - $db_type");
+  ok($fos[1]->id == 2 && $fos[1]->pid == 111, "find one to many array query 2 - $db_type");
+  ok(!defined $fos[0]->{'db'}, "find one to many array query 3 - $db_type");
+  ok(!defined $fos[1]->{'db'}, "find one to many array query 4 - $db_type");
+
+  @fos = $o->find_other2_objs([ id => 2 ]);
+
+  ok($fos[0]->id == 2 && $fos[0]->pid == 111, "find one to many array query 5 - $db_type");
+
+  @fos = $o->find_other2_objs({ id => { gt => 1 } },
+                              sort_by  => 'id desc', 
+                              share_db => 0);
+
+  ok($fos[0]->id == 3 && $fos[0]->pid == 111, "find one to many hash query 1 - $db_type");
+  ok($fos[1]->id == 2 && $fos[1]->pid == 111, "find one to many hash query 2 - $db_type");
+  ok(!defined $fos[0]->{'db'}, "find one to many hash query 3 - $db_type");
+  ok(!defined $fos[1]->{'db'}, "find one to many hash query 4 - $db_type");
+
+  @fos = $o->find_other2_objs({ id => 2 });
+
+  ok($fos[0]->id == 2 && $fos[0]->pid == 111, "find one to many hash query 5 - $db_type");
+
+  @fos = $o->find_other2_objs(query    => [ id => { le => 2 } ],
+                              sort_by  => 'id desc', 
+                              cache    => 1);
+
+  ok($fos[0]->id == 2 && $fos[0]->pid == 111, "find one to many cache 1 - $db_type");
+  ok($fos[1]->id == 1 && $fos[1]->pid == 111, "find one to many cache 2 - $db_type");
+
+  my @fos2 = $o->find_other2_objs(from_cache => 1);
+
+  ok($fos2[0] eq $fos[0], "find one to many from_cache 1 - $db_type");
+  ok($fos2[1] eq $fos[1], "find one to many from_cache 2 - $db_type");
 
   $o2 = MySQLiteOtherObject2->new(id => 1)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set one to many now 7 - $db_type");
@@ -7111,6 +7158,7 @@ EOF
         manager_args => { sort_by => 'rose_db_object_other2.name DESC' },
         methods =>
         {
+          find            => undef,
           get_set         => undef,
           get_set_now     => 'other2_objs_now',
           get_set_on_save => 'other2_objs_on_save',

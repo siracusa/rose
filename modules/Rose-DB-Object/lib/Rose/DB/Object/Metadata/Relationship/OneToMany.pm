@@ -46,6 +46,13 @@ Rose::Object::MakeMethods::Generic->make_methods
 
 __PACKAGE__->method_maker_info
 (
+  find =>
+  {
+    class     => 'Rose::DB::Object::MakeMethods::Generic',
+    type      => 'objects_by_key',
+    interface => 'find',
+  },
+
   get_set =>
   {
     class     => 'Rose::DB::Object::MakeMethods::Generic',
@@ -109,6 +116,10 @@ sub build_method_name_for_type
   elsif($type eq 'add_now' || $type eq 'add_on_save')
   {
     return 'add_' . $self->name;
+  }
+  elsif($type eq 'find')
+  {
+    return 'find_' . $self->name;
   }
 
   return undef;
