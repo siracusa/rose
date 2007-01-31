@@ -15,7 +15,7 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.546';
+our $VERSION = '0.547';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -588,7 +588,9 @@ sub validate
 
   my $fail = 0;
 
-  if($args{'cascade'})
+  my $cascade = $args{'cascade'};
+
+  if($cascade)
   {
     foreach my $form ($self->forms)
     {
@@ -608,8 +610,15 @@ sub validate
   {
     foreach my $field ($self->fields)
     {
-      $Debug && warn "Validating ", $field->name, "\n";
-      $fail++  unless($field->validate);
+      if($cascade && $field->parent_form ne $self)
+      {
+        $Debug && warn "Skipping redundant validation of ", $field->name, "\n";
+      }
+      else
+      {
+        $Debug && warn "Validating ", $field->name, "\n";
+        $fail++  unless($field->validate);
+      }
     }
   }
 
