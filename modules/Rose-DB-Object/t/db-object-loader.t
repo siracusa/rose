@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 22) + 9;
+use Test::More tests => 1 + (5 * 23) + 9;
 
 BEGIN 
 {
@@ -42,7 +42,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     unless($Have{$db_type})
     {
-      skip("$db_type tests", 22 + scalar @{$Reserved_Words{$db_type} ||= []});
+      skip("$db_type tests", 23 + scalar @{$Reserved_Words{$db_type} ||= []});
     }
   }
 
@@ -81,7 +81,17 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     {
       next  unless($class->isa('Rose::DB::Object'));
       $class->meta->allow_inline_column_values(1);
+  
+      if($class->meta->column('release_day'))
+      {
+        is($class->meta->column('release_day')->type, 'datetime year to month', 
+           "datetime year to month - $db_type");
+      }
     }
+  }
+  else
+  {
+    ok(1, "skip datetime year to month - $db_type");
   }
 
   if(defined Rose::DB->new->schema)
@@ -100,6 +110,14 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   ##
 
   my $p = $product_class->new(name => "Sled $i");
+
+  if($p->can('release_day'))
+  {
+    $p->release_day('2001-02');
+    die "datetime year to month not truncated"  unless($p->release_day->day == 1);
+    $p->release_day('2001-02-05');
+    die "datetime year to month not truncated"  unless($p->release_day->day == 1);
+  }
 
   # Check reserved methods
   foreach my $word (@{$Reserved_Words{$db_type} ||= []})
@@ -626,7 +644,8 @@ CREATE TABLE products
 
   date_created  DATETIME YEAR TO SECOND,
   release_date  DATETIME YEAR TO SECOND,
-
+  release_day   DATETIME YEAR TO MONTH,
+  
   UNIQUE(name)
 )
 EOF

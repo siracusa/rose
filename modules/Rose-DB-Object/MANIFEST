@@ -39,6 +39,7 @@ lib/Rose/DB/Object/Metadata/Column/DatetimeYearToFraction3.pm
 lib/Rose/DB/Object/Metadata/Column/DatetimeYearToFraction4.pm
 lib/Rose/DB/Object/Metadata/Column/DatetimeYearToFraction5.pm
 lib/Rose/DB/Object/Metadata/Column/DatetimeYearToMinute.pm
+lib/Rose/DB/Object/Metadata/Column/DatetimeYearToMonth.pm
 lib/Rose/DB/Object/Metadata/Column/DatetimeYearToSecond.pm
 lib/Rose/DB/Object/Metadata/Column/Decimal.pm
 lib/Rose/DB/Object/Metadata/Column/Enum.pm
