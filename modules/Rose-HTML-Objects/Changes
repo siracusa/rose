@@ -1,10 +1,12 @@
-0.547 (01.31.2007) - John Siracusa <siracusa@mindspring.com>
+0.547 (02.05.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Eliminated redundant validation of fields in nested forms.
     * Made is_empty() smarter about honoring the trim_spaces() setting.
     * Fixed a bug that caused option containers to fail to display hidden
       fields when a selected option had a false, but defined value.
       (Reported by Andrei Kozovski)
+    * Fixed a bug that caused a fatal error when requesting a subfield of a
+      compound field from a from that does not contain the parent field.
 
 0.546 (01.15.2007) - John Siracusa <siracusa@mindspring.com>
 

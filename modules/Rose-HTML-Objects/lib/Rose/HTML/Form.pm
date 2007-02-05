@@ -1206,6 +1206,8 @@ sub field
 
   my($parent_form, $local_name) = $self->find_parent_form($name);
 
+  return undef  unless($parent_form);
+
   return $self->{'field_cache'}{$name} = $parent_form->field($local_name, @_);
 }
 
