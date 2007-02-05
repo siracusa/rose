@@ -4,7 +4,7 @@ use strict;
 
 use Rose::DateTime::Util();
 
-our $VERSION = '0.759';
+our $VERSION = '0.759'; # overshot version number, freeze until caught up
 
 our $Debug = 0;
 
@@ -78,6 +78,12 @@ sub format_datetime_year_to_minute
 {
   return $_[1]  if($_[0]->validate_datetime_keyword($_[1]));
   return Rose::DateTime::Util::format_date($_[1], '%Y-%m-%d %H:%M');
+}
+
+sub format_datetime_year_to_month
+{
+  return $_[1]  if($_[0]->validate_datetime_keyword($_[1]));
+  return Rose::DateTime::Util::format_date($_[1], '%Y-%m');
 }
 
 # sub format_time
@@ -240,6 +246,32 @@ sub parse_datetime_year_to_minute
   return $dt;
 }
 
+sub parse_datetime_year_to_month
+{
+  my($self, $value) = @_;
+
+  if(UNIVERSAL::isa($value, 'DateTime') || 
+    $self->validate_datetime_year_to_month_keyword($value))
+  {
+    return $value;
+  }
+
+  # Append day to YYYY-MM
+  $value .= '-01'  if($value =~ /^\d{4}-\d\d$/);
+
+  my $dt;  
+  eval { $dt = Rose::DateTime::Util::parse_date($value) };
+
+  if($@)
+  {
+    $self->error("Could not parse datetime year to month '$value' - $@");
+    return undef;
+  }
+
+  $dt->truncate(to => 'month')  if(ref $dt);
+  return $dt;
+}
+
 sub parse_timestamp
 {
   my($self, $value) = @_;
@@ -301,7 +333,13 @@ sub validate_datetime_year_to_second_keyword
 sub validate_datetime_year_to_minute_keyword
 {
   no warnings;
-  $_[1] =~ /^(?:current(?: +year +to +(?:minute|hour|day|month))?|today|\w+\(.*\))$/i;
+  $_[1] =~ /^(?:current(?: +year +to +(?:second|minute|hour|day|month))?|today|\w+\(.*\))$/i;
+}
+
+sub validate_datetime_year_to_month_keyword
+{
+  no warnings;
+  $_[1] =~ /^(?:current(?: +year +to +(?:second|minute|hour|day|month))?|today|\w+\(.*\))$/i;
 }
 
 sub parse_set
@@ -716,27 +754,31 @@ If the resulting string is longer than C<max_array_characters()>, a fatal error 
 
 =item B<format_date DATETIME>
 
-Converts the C<DateTime> object DATETIME into the appropriate format for the "DATE" data type.
+Converts the L<DateTime> object DATETIME into the appropriate format for the "DATE" data type.
 
 =item B<format_datetime DATETIME>
 
-Converts the C<DateTime> object DATETIME into the appropriate format for the "DATETIME YEAR TO SECOND" data type.
+Converts the L<DateTime> object DATETIME into the appropriate format for the "DATETIME YEAR TO SECOND" data type.
 
 =item B<format_datetime_year_to_fraction DATETIME>
 
-Converts the C<DateTime> object DATETIME into the appropriate format for the "DATETIME YEAR TO FRACTION" data type.
+Converts the L<DateTime> object DATETIME into the appropriate format for the "DATETIME YEAR TO FRACTION" data type.
 
 =item B<format_datetime_year_to_fraction_[1-5] DATETIME>
 
-Converts the C<DateTime> object DATETIME into the appropriate format for the "DATETIME YEAR TO FRACTION(N)" data type, where N is an integer from 1 to 5.
+Converts the L<DateTime> object DATETIME into the appropriate format for the "DATETIME YEAR TO FRACTION(N)" data type, where N is an integer from 1 to 5.
 
 =item B<format_datetime_year_to_minute DATETIME>
 
-Converts the C<DateTime> object DATETIME into the appropriate format for the "DATETIME YEAR TO MINUTE" data type.
+Converts the L<DateTime> object DATETIME into the appropriate format for the "DATETIME YEAR TO MINUTE" data type.
+
+=item B<format_datetime_year_to_month DATETIME>
+
+Converts the L<DateTime> object DATETIME into the appropriate format for the "DATETIME YEAR TO MONTH" data type.
 
 =item B<format_datetime_year_to_second DATETIME>
 
-Converts the C<DateTime> object DATETIME into the appropriate format for the "DATETIME YEAR TO SECOND" data type.
+Converts the L<DateTime> object DATETIME into the appropriate format for the "DATETIME YEAR TO SECOND" data type.
 
 =item B<format_set ARRAYREF | LIST>
 
@@ -744,7 +786,7 @@ Given a reference to an array or a list of values, return a string formatted acc
 
 =item B<format_timestamp DATETIME>
 
-Converts the C<DateTime> object DATETIME into the appropriate format for the "DATETIME YEAR TO FRACTION(5)" data type.
+Converts the L<DateTime> object DATETIME into the appropriate format for the "DATETIME YEAR TO FRACTION(5)" data type.
 
 =item B<parse_array STRING | LIST | ARRAYREF>
 
@@ -762,31 +804,37 @@ If STRING is a valid boolean keyword (according to L<validate_boolean_keyword|/v
 
 =item B<parse_datetime STRING>
 
-Parse STRING and return a C<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO SECOND" data type.
+Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO SECOND" data type.
 
 If STRING is a valid "datetime year to second" keyword (according to L<validate_datetime_year_to_second_keyword|/validate_datetime_year_to_second_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO SECOND" value.
 
 =item B<parse_datetime_year_to_fraction STRING>
 
-Parse STRING and return a C<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO FRACTION" data type.
+Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO FRACTION" data type.
 
 If STRING is a valid "datetime year to fraction" keyword (according to L<validate_datetime_year_to_fraction_keyword|/validate_datetime_year_to_fraction_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO FRACTION" value.
 
 =item B<parse_datetime_year_to_fraction_[1-5] STRING>
 
-These five methods parse STRING and return a C<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO FRACTION(N)" data type, where N is an integer from 1 to 5.
+These five methods parse STRING and return a L<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO FRACTION(N)" data type, where N is an integer from 1 to 5.
 
 If STRING is a valid "datetime year to fraction" keyword (according to L<validate_datetime_year_to_fraction_keyword|/validate_datetime_year_to_fraction_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO FRACTION(N)" value.
 
 =item B<parse_datetime_year_to_minute STRING>
 
-Parse STRING and return a C<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO MINUTE" data type.
+Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO MINUTE" data type.
 
 If STRING is a valid "datetime year to minute" keyword (according to L<validate_datetime_year_to_minute_keyword|/validate_datetime_year_to_minute_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO MINUTE" value.
 
+=item B<parse_datetime_year_to_month STRING>
+
+Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO MINUTE" data type.
+
+If STRING is a valid "datetime year to month" keyword (according to L<validate_datetime_year_to_month_keyword|/validate_datetime_year_to_month_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO MONTH" value.
+
 =item B<parse_datetime_year_to_second STRING>
 
-Parse STRING and return a C<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO SECOND" data type.
+Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO SECOND" data type.
 
 If STRING is a valid "datetime year to second" keyword (according to L<validate_datetime_year_to_second_keyword|/validate_datetime_year_to_second_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO SECOND" value.
 
@@ -800,7 +848,7 @@ If a an ARRAYREF is passed, it is returned as-is.
 
 =item B<parse_timestamp STRING>
 
-Parse STRING and return a C<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO FRACTION(5)" data type.
+Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the Informix "DATETIME YEAR TO FRACTION(5)" data type.
 
 If STRING is a valid timestamp keyword (according to L<validate_timestamp_keyword|/validate_timestamp_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME YEAR TO FRACTION(5)" value.
 
@@ -859,6 +907,7 @@ The keywords are not case sensitive.  Any string that looks like a function call
 Returns true if STRING is a valid keyword for the Informix "datetime year to minute" data type, false otherwise.  Valid "datetime year to minute" keywords are:
 
     current
+    current year to second
     current year to minute
     current year to hour
     current year to day
@@ -866,6 +915,20 @@ Returns true if STRING is a valid keyword for the Informix "datetime year to min
     today
 
 The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid "datetime year to minute" keyword.
+
+=item B<validate_datetime_year_to_month_keyword STRING>
+
+Returns true if STRING is a valid keyword for the Informix "datetime year to month" data type, false otherwise.  Valid "datetime year to month" keywords are:
+
+    current
+    current year to second
+    current year to minute
+    current year to hour
+    current year to day
+    current year to month
+    today
+
+The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid "datetime year to month" keyword.
 
 =item B<validate_datetime_year_to_second_keyword STRING>
 

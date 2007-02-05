@@ -178,6 +178,8 @@ __PACKAGE__->column_type_classes
   'datetime year to second' => 'Rose::DB::Object::Metadata::Column::DatetimeYearToSecond',
   'datetime year to minute' => 'Rose::DB::Object::Metadata::Column::DatetimeYearToMinute',
 
+  'datetime year to month' => 'Rose::DB::Object::Metadata::Column::DatetimeYearToMonth',
+
   'epoch'       => 'Rose::DB::Object::Metadata::Column::Epoch',
   'epoch hires' => 'Rose::DB::Object::Metadata::Column::Epoch::HiRes',
 
@@ -4392,6 +4394,9 @@ The default mapping of type names to class names is:
   'datetime year to minute' =>
     Rose::DB::Object::Metadata::Column::DatetimeYearToMinute
 
+  'datetime year to month' =>
+    Rose::DB::Object::Metadata::Column::DatetimeYearToMonth
+  
   'epoch'       => Rose::DB::Object::Metadata::Column::Epoch
   'epoch hires' => Rose::DB::Object::Metadata::Column::Epoch::HiRes
 

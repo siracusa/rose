@@ -1,3 +1,7 @@
+0.733 (02.15.2007) - John Siracusa <siracusa@mindspring.com>
+
+    * Added support for Informix's "datetime year to month" column type.
+
 0.732 (01.15.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Oracle support improved significantly.
