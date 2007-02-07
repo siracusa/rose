@@ -256,8 +256,16 @@ sub parse_datetime_year_to_month
     return $value;
   }
 
-  # Append day to YYYY-MM
-  $value .= '-01'  if($value =~ /^\d{4}-\d\d$/);
+  if($value =~ m{^(\d\d?)/(\d{4})$})
+  {
+    # Add day to MM/YYYY
+    $value = "$1/01/$2";
+  }
+  elsif($value =~ /^\d{4}-\d\d$/);
+  {
+    # Append day to YYYY-MM
+    $value .= '-01';
+  }
 
   my $dt;  
   eval { $dt = Rose::DateTime::Util::parse_date($value) };

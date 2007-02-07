@@ -32,7 +32,7 @@ use overload
 
 __PACKAGE__->add_default_auto_method_types('get_set');
 
-__PACKAGE__->add_common_method_maker_argument_names(qw(column default type hash_key));
+__PACKAGE__->add_common_method_maker_argument_names(qw(column default type hash_key smart_modification));
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -57,20 +57,21 @@ __PACKAGE__->event_method_types
 Rose::Object::MakeMethods::Generic->make_methods
 (
   { preserve_existing => 1 },
-  scalar => 
-  [
-    'alias',
-    'ordinal_position',
-    'parse_error',
-    __PACKAGE__->common_method_maker_argument_names,
-  ],
-
   boolean => 
   [
     'manager_uses_method',
     'is_primary_key_member',
     'not_null',
     'triggers_disabled',
+    'smart_modification',
+  ],
+
+  scalar => 
+  [
+    'alias',
+    'ordinal_position',
+    'parse_error',
+    __PACKAGE__->common_method_maker_argument_names,
   ],
 );
 

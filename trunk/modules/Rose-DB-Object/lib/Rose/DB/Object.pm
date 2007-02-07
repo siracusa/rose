@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.760_03';
+our $VERSION = '0.760_04';
 
 our $Debug = 0;
 
@@ -523,15 +523,16 @@ sub save
       {
         foreach my $fk ($meta->foreign_keys)
         {
-          # Don't save if this object was just set above
-          next  if($todo->{'fk'}{$fk->name}{'set'});
+          # If this object was just set above, just save changes (there 
+          # should be none) as a way to continue the cascade
+          local $args{'changes_only'} = 1  if($todo->{'fk'}{$fk->name}{'set'});
 
           my $foreign_object = $fk->object_has_foreign_object($self) || next;
-          $Debug && warn "$self - save foreign ", $fk->name, " - $foreign_object\n";
 
           if(Rose::DB::Object::Util::has_modified_columns($foreign_object) ||
              Rose::DB::Object::Util::has_modified_children($foreign_object))
           {
+            $Debug && warn "$self - save foreign ", $fk->name, " - $foreign_object\n";
             $foreign_object->save(%args);
           }
         }
@@ -562,18 +563,18 @@ sub save
       {
         foreach my $rel ($meta->relationships)
         {
-          # Don't save if this object was just set above
-          next  if($todo->{'rel'}{$rel->name}{'set'});
+          # If this object was just set above, just save changes (there 
+          # should be none) as a way to continue the cascade
+          local $args{'changes_only'} = 1  if($todo->{'rel'}{$rel->name}{'set'});
 
           my $related_objects = $rel->object_has_related_objects($self) || next;
 
           foreach my $related_object (@$related_objects)
           {
-            $Debug && warn "$self - save related ", $rel->name, " - $related_object\n";
-
             if(Rose::DB::Object::Util::has_modified_columns($related_object) ||
                Rose::DB::Object::Util::has_modified_children($related_object))
             {
+              $Debug && warn "$self - save related ", $rel->name, " - $related_object\n";
               $related_object->save(%args);
             }
           }
