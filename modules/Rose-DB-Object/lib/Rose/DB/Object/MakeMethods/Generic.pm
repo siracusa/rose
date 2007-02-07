@@ -32,6 +32,7 @@ sub scalar
   my $overflow  = $args->{'overflow'};
   my $default   = $args->{'default'};
   my $check_in  = $args->{'check_in'};
+  my $smart     = $args->{'smart_modification'};
   my $type      = $args->{'_method_type'} || 'scalar';
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
@@ -155,18 +156,24 @@ EOF
 
   my $column_modified_code = 
     qq(\$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'} = 1);
-
+  
   #
   # return code
   #
 
   my $return_code = '';
+  my $return_code_get = '';
   my $return_code_shift = '';
 
   if(defined $default)
   {
     if($type eq 'character')
     {
+      $return_code_get=<<"EOF";
+return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
+  (\$self->{'$qkey'} = sprintf("%-${length}s", \$default));
+EOF
+
       $return_code=<<"EOF";
 return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
   (scalar($column_modified_code, 
@@ -175,6 +182,11 @@ EOF
     }
     else
     {
+      $return_code_get=<<"EOF";
+return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
+  (\$self->{'$qkey'} = \$default);
+EOF
+
       $return_code=<<"EOF";
 return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
   (scalar($column_modified_code, 
@@ -186,14 +198,24 @@ EOF
   {
     if($type eq 'character')
     {
+      $return_code_get=<<"EOF";
+return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
+  (\$self->{'$qkey'} = sprintf("%-${length}s", \$self->$init_method()));
+EOF
+
       $return_code=<<"EOF";
 return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
   (scalar($column_modified_code, 
-          \$self->{'$qkey'} = sprintf("%-${length}s", \$self->$init_method())););
+          \$self->{'$qkey'} = sprintf("%-${length}s", \$self->$init_method())));
 EOF
     }
     else
     {
+      $return_code_get=<<"EOF";
+return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
+  (\$self->{'$qkey'} = \$self->$init_method());
+EOF
+
       $return_code=<<"EOF";
 return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
   (scalar($column_modified_code, 
@@ -207,7 +229,19 @@ EOF
     $return_code_shift = qq(return shift->{'$qkey'};);
   }
 
+  $return_code_get   ||= $return_code;
   $return_code_shift ||= $return_code;
+
+  my $save_old_val_code = $smart ? 
+    qq(no warnings 'uninitialized';\nmy \$old_val = \$self->{'$qkey'};) : '';
+
+  my $mod_cond_code =  $smart ? 
+    qq(unless(\$self->{STATE_LOADING()} || \$old_val eq \$self->{'$qkey'});) :
+    qq(unless(\$self->{STATE_LOADING()}););
+
+  my $mod_cond_pre_set_code = $smart ?
+    qq(unless(\$self->{STATE_LOADING()} || \$value eq \$self->{'$qkey'});) :
+    qq(unless(\$self->{STATE_LOADING()}););
 
   my %methods;
 
@@ -229,12 +263,13 @@ sub
 
     $check_in_code
     $length_check_code
+    $save_old_val_code
     $set_code
-    $column_modified_code  unless(\$self->{STATE_LOADING()});
+    $column_modified_code  $mod_cond_code
     $return_code
   }
 
-  $return_code
+  $return_code_get
 };
 EOF
     }
@@ -248,9 +283,10 @@ sub
     my \$self  = shift;
     my \$value = shift;
 
+    no warnings 'uninitialized';
     $check_in_code
     $length_check_code
-    $column_modified_code  unless(\$self->{STATE_LOADING()});
+    $column_modified_code  $mod_cond_pre_set_code
     return $set_code
   }
 
@@ -305,8 +341,9 @@ sub
 
   $check_in_code
   $length_check_code
+  $save_old_val_code
   $set_code
-  $column_modified_code  unless(\$self->{STATE_LOADING()});
+  $column_modified_code  $mod_cond_code
   $return_code
 };
 EOF

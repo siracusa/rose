@@ -69,6 +69,8 @@ Objects of this class store and manipulate metadata for "datetime year to month"
 
 This class inherits from L<Rose::DB::Object::Metadata::Column::Datetime>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::Datetime> documentation for more information.
 
+The L<DateTime> objects stored by this column type automatically have the day set to the first of the month.
+
 =head1 METHOD MAP
 
 =over 4
