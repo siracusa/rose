@@ -116,13 +116,11 @@ sub dbh
 {
   my($self) = shift;
 
-  return $self->{'dbh'}  if($self->{'dbh'});
+  my $db = $self->db or return undef;
 
-  my $db = $self->db or return 0;
-
-  if(my $dbh = $db->dbh)
+  if(my $dbh = $db->dbh(@_))
   {
-    return $self->{'dbh'} = $dbh;
+    return $dbh;
   }
   else
   {
@@ -1993,9 +1991,9 @@ Returns the L<Rose::DB>-derived object used to access the database in the absenc
 
 Override this method in your subclass in order to use a different default data source.  B<Note:> This method must be callable as both an object method and a class method.
 
-=item B<dbh>
+=item B<dbh [DBH]>
 
-Returns the L<DBI> database handle contained in L<db|/db>.
+Get or set the L<DBI> database handle contained in L<db|/db>.
 
 =item B<delete [PARAMS]>
 
