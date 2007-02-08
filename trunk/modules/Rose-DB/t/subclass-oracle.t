@@ -108,11 +108,6 @@ is($db->database, 'mydb', 'parse_dsn() 1');
 
 SKIP:
 {
-  unless(have_db('oracle'))
-  {
-    skip("Host '@{[$db->host]}' not found", 11);
-  }
-
   $db = My::DB2->new;
 
   eval { $db->connect };
