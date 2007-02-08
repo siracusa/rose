@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.759';
+our $VERSION = '0.761';
 
 our $Debug = 0;
 
@@ -3655,7 +3655,7 @@ If set to a true value, this parameter indicates an explicit request to delete a
 
 =item C<db DB>
 
-A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> object method of the C<object_class>. 
+A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> method of the C<object_class>. 
 
 =item C<prepare_cached BOOL>
 
@@ -3785,7 +3785,7 @@ By default, passing an empty list as a value will cause a fatal error.
 
 =item C<db DB>
 
-A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> object method of the C<object_class>.
+A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> method of the C<object_class>.
 
 =item C<distinct [ BOOL | ARRAYREF ]>
 
@@ -3996,7 +3996,7 @@ A reference to an array of arguments to be passed to L<DBI>'s L<execute|DBI/exec
 
 =item C<db DB>
 
-A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> object method of the C<object_class>.
+A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> method of the C<object_class>.
 
 =item C<object_class CLASS>
 
@@ -4424,7 +4424,7 @@ If set to a true value, this parameter indicates an explicit request to update a
 
 =item C<db DB>
 
-A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> object method of the C<object_class>.
+A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> method of the C<object_class>.
 
 =item C<object_class CLASS>
 
