@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.760_04';
+our $VERSION = '0.760_05';
 
 our $Debug = 0;
 
@@ -1959,6 +1959,12 @@ Returns a new L<Rose::DB::Object> constructed according to PARAMS, where PARAMS 
 
 =over 4
 
+=item B<init_db>
+
+Returns the L<Rose::DB>-derived object used to access the database in the absence of an explicit L<db|/db> value.  The default implementation simply calls L<Rose::DB-E<gt>new()|Rose::DB/new> with no arguments.
+
+Override this method in your subclass in order to use a different default data source.  B<Note:> This method must be callable as both an object method and a class method.
+
 =item B<meta>
 
 Returns the L<Rose::DB::Object::Metadata>-derived object associated with this class.  This object describes the database table whose rows are fronted by this class: the name of the table, its columns, unique keys, foreign keys, etc.
@@ -1983,9 +1989,9 @@ If it does not already exist, this object is created with a simple, argument-les
 
 =item B<init_db>
 
-Returns the L<Rose::DB>-derived object used to access the database in the absence of an explicit L<db|/db> value.  The default implementation simply calls C<Rose::DB-E<gt>new()> with no arguments.
+Returns the L<Rose::DB>-derived object used to access the database in the absence of an explicit L<db|/db> value.  The default implementation simply calls L<Rose::DB-E<gt>new()|Rose::DB/new> with no arguments.
 
-Override this method in your subclass in order to use a different default data source.
+Override this method in your subclass in order to use a different default data source.  B<Note:> This method must be callable as both an object method and a class method.
 
 =item B<dbh>
 
