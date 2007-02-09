@@ -82,8 +82,7 @@ sub db
       }
     }
 
-    $self->{'db'}  = $new_db;
-    $self->{'dbh'} = undef;
+    $self->{'db'} = $new_db;
 
     return $new_db;
   }
