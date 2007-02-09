@@ -12,9 +12,9 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 our $Debug = 0;
 
-our $VERSION = '0.757';
+our $VERSION = '0.761';
 
-__PACKAGE__->default_auto_method_types(qw(get_set_on_save add_on_save));
+__PACKAGE__->default_auto_method_types(qw(find get_set_on_save add_on_save));
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -171,6 +171,10 @@ This class inherits from L<Rose::DB::Object::Metadata::Relationship>. Inherited 
 
 =over 4
 
+=item C<find>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'find'> ...
+
 =item C<get_set>
 
 L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, 
@@ -202,7 +206,7 @@ See the L<Rose::DB::Object::Metadata::Relationship|Rose::DB::Object::Metadata::R
 
 =item B<default_auto_method_types [TYPES]>
 
-Get or set the default list of L<auto_method_types|Rose::DB::Object::Metadata::Relationship/auto_method_types>.  TYPES should be a list of relationship method types.  Returns the list of default relationship method types (in list context) or a reference to an array of the default relationship method types (in scalar context).  The default list contains "get_set_on_save" and "add_on_save".
+Get or set the default list of L<auto_method_types|Rose::DB::Object::Metadata::Relationship/auto_method_types>.  TYPES should be a list of relationship method types.  Returns the list of default relationship method types (in list context) or a reference to an array of the default relationship method types (in scalar context).  The default list contains "find", "get_set_on_save", and "add_on_save".
 
 =back
 
@@ -222,11 +226,11 @@ Otherwise, undef is returned.
 
 =item B<manager_class [CLASS]>
 
-Get or set the name of the L<Rose::DB::Object::Manager>-derived class used to fetch records.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<Rose::DB::Object::Manager> if this value is left undefined.
+Get or set the name of the L<Rose::DB::Object::Manager>-derived class used to fetch objects.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<Rose::DB::Object::Manager> if this value is left undefined.
 
 =item B<manager_method [METHOD]>
 
-Get or set the name of the L<manager_class|/manager_class> class method to call when fetching records.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<get_objects|Rose::DB::Object::Manager/get_objects> if this value is left undefined.
+Get or set the name of the L<manager_class|/manager_class> class method to call when fetching objects.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<get_objects|Rose::DB::Object::Manager/get_objects> if this value is left undefined.
 
 =item B<manager_args [HASHREF]>
 

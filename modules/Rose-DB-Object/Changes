@@ -1,5 +1,7 @@
-0.761 (02.08.2007) - John Siracusa <siracusa@mindspring.com>
+0.761 (02.09.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Added support for query_args and other Manager parameters to
+      one-to-one and one-to-many relationships.
     * Added a "find" method type to one-to-many relationships for 
       ad-hoc queries. (No docs yet...)
     * Added support for Informix's "datetime year to month" column type.
