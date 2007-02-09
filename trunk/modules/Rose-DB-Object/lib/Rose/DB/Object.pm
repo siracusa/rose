@@ -549,6 +549,12 @@ sub save
           $code->() or die $self->error;
         }
 
+        # Delete value(s)
+        if($code  = $todo->{'rel'}{$rel_name}{'delete'})
+        {
+          $code->() or die $self->error;
+        }
+
         # Add value(s)
         if($code  = $todo->{'rel'}{$rel_name}{'add'})
         {

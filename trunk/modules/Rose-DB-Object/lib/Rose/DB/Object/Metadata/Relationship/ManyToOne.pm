@@ -10,13 +10,14 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.752';
+our $VERSION = '0.761';
 
 __PACKAGE__->default_auto_method_types(qw(get_set_on_save delete_on_save));
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
-  qw(class share_db key_columns required)
+  qw(class share_db key_columns required manager_class manager_method 
+     manager_args query_args join_args object_args)
 );
 
 use Rose::Object::MakeMethods::Generic
@@ -318,13 +319,33 @@ Get or set the L<Rose::DB::Object::Metadata::ForeignKey> object to which this ob
 
 Many to one relationships encapsulate essentially the same information as foreign keys.  If a foreign key object is stored in this relationship object, then I<all compatible operations are passed through to the foreign key object.>  This includes making object method(s) and adding or modifying the local-to-foreign column map.  In other words, if a L<foreign_key|/foreign_key> is set, the relationship object simply acts as a proxy for the foreign key object.
 
+=item B<manager_class [CLASS]>
+
+Get or set the name of the L<Rose::DB::Object::Manager>-derived class used to fetch the object.
+
+=item B<manager_method [METHOD]>
+
+Get or set the name of the L<manager_class|/manager_class> class method to call when fetching the object.
+
+=item B<manager_args [HASHREF]>
+
+Get or set a reference to a hash of name/value arguments to pass to the L<manager_method|/manager_method> when fetching the object.  See the documentation for L<Rose::DB::Object::Manager>'s L<get_objects|Rose::DB::Object::Manager/get_objects> method for a full list of valid arguments for use with the C<manager_args> parameter.
+
 =item B<map_column LOCAL [, FOREIGN]>
 
 If passed a local column name LOCAL, return the corresponding column name in the foreign table.  If passed both a local column name LOCAL and a foreign column name FOREIGN, set the local/foreign mapping and return the foreign column name.
 
+=item B<object_args [HASHREF]>
+
+Get or set a reference to a hash of name/value pairs to pass to the L<new|Rose::DB::Object/new> method when constructing the related object.  This attribute conflicts with any use of the C<manager_*> or C<query_args> attributes.
+
 =item B<optional [BOOL]>
 
 This method is the mirror image of the L<required|/required> method.   Passing a true value to this method is the same thing as setting L<required|/required> to false, and vice versa.  Similarly, the return value is the logical negation of L<required|/required>.
+
+=item B<query_args [ARRAYREF]>
+
+Get or set a reference to an array of query arguments to add to the L<query|Rose::DB::Object::Manager/query> passed to the L<manager_method|/manager_method> when fetching the object.
 
 =item B<required [BOOL]>
 

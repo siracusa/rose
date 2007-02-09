@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1529;
+use Test::More tests => 1530;
 
 BEGIN 
 {
@@ -4247,7 +4247,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 427)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 428)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -4406,9 +4406,11 @@ SKIP: foreach my $db_type ('sqlite')
 
   $x = MySQLiteObject->new(id => $o->id)->load;
 
+  my $one_o = $x->other2_one_obj;
   my $ao = $x->other2_a_objs;
   my $oo = $x->other2_objs;
 
+  is($one_o->id, 1, "filtered one-to-one 1 - $db_type");
   is(scalar @$ao, 2, "filtered one-to-many 1 - $db_type");
   is(join(',', map { $_->name } @$ao), 'abc,aoo', "filtered one-to-many 2 - $db_type");
 
@@ -7174,6 +7176,14 @@ EOF
         column_map => { id => 'pid' },
         query_args => [ name => { like => 'a%' } ],
         manager_args => { sort_by => 'name' },
+      },
+
+      other2_one_obj =>
+      {
+        type  => 'one to one',
+        class => 'MySQLiteOtherObject2',
+        column_map => { id => 'pid' },
+        query_args => [ name => 'one' ],
       },
 
       # Hrm.  Experimental...

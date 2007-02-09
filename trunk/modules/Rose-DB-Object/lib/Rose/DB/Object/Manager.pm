@@ -295,7 +295,22 @@ sub get_objects_sql      { shift->get_objects(@_, return_sql => 1) }
 
 sub get_objects
 {
-  my($class, %args) = @_;
+  my($class) = shift;
+
+  my %args;
+
+  if(my $ref = ref $_[0])
+  {
+    if($ref eq 'HASH')
+    {
+      %args = (query => [ %{shift(@_)} ], @_);
+    }
+    elsif(ref $_[0] eq 'ARRAY')
+    {
+      %args = (query => shift, @_);
+    }
+  }
+  else { %args = @_ }
 
   $class->error(undef);
 
