@@ -261,7 +261,7 @@ sub parse_datetime_year_to_month
     # Add day to MM/YYYY
     $value = "$1/01/$2";
   }
-  elsif($value =~ /^\d{4}-\d\d$/);
+  elsif($value =~ /^\d{4}-\d\d$/)
   {
     # Append day to YYYY-MM
     $value .= '-01';
