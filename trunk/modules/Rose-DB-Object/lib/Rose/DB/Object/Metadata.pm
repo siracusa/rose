@@ -1759,8 +1759,7 @@ sub make_foreign_key_methods
 
       if($@)
       {
-        # Ignore missing module errors to allow deferment system to work
-        if($@ =~ m{^Can't locate (\S+) in \@INC } && $INC{$1})
+        if($@ =~ /^syntax error /)
         {
           Carp::confess "Could not load $fclass - $@";
         }
@@ -2074,8 +2073,7 @@ sub make_relationship_methods
 
         if($@)
         {
-          # Ignore missing module errors to allow deferment system to work
-          if($@ =~ m{^Can't locate (\S+) in \@INC } && $INC{$1})
+          if($@ =~ /^syntax error /)
           {
             Carp::confess "Could not load $fclass - $@";
           }
@@ -2093,7 +2091,6 @@ sub make_relationship_methods
                                  " REQUIRES $map_class - $@\n";
         }
 
-        # Ignore non-syntax errors to allow deferment system to work
         if($@ && $@ =~ /^syntax error /)
         {
           Carp::confess "Could not load $map_class - $@";

@@ -7,7 +7,7 @@ use Rose::DB::Object::Metadata::Util qw(perl_quote_value);
 use Rose::DB::Object::Metadata::ColumnList;
 our @ISA = qw(Rose::DB::Object::Metadata::ColumnList);
 
-our $VERSION = '0.01';
+our $VERSION = '0.631';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -17,9 +17,7 @@ use Rose::Object::MakeMethods::Generic
   ]
 );
 
-my $i = 1;
-
-sub init_name { 'auto_unique_key_' . $i++ }
+sub init_name { join('_', shift->column_names) || undef }
 
 sub perl_array_definition
 {
@@ -85,7 +83,7 @@ Delete the entire list of columns that make up the unique key.
 
 =item B<name [NAME]>
 
-Get or set the name of the unique key.  This name should be unique among all unique keys for a given table.  Traditionally, it is the name of the index that the database uses to maintain the unique key, but databases vary.  If left undefined, the default value is "auto_unique_key_N", where "N" is an integer that is incremented as default values are generated.
+Get or set the name of the unique key.  This name should be unique among all unique keys for a given table.  Traditionally, it is the name of the index that the database uses to maintain the unique key, but practices vary.  If left undefined, the default value is a string created by joining the L<column_names|/column_names> with underscores.
 
 =item B<parent [META]>
 
