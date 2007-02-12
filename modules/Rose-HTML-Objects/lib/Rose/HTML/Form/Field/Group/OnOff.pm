@@ -9,7 +9,7 @@ use Rose::HTML::Util();
 use Rose::HTML::Form::Field::Group;
 our @ISA = qw(Rose::HTML::Form::Field::Group);
 
-our $VERSION = '0.50';
+our $VERSION = '0.547';
 
 our $Debug = undef;
 
@@ -182,7 +182,7 @@ sub input_value
     $self->clear();
     $self->is_cleared(0);
 
-    if(@_ == 1 && ref $_[0])
+    if(@_ == 1 && ref $_[0] eq 'ARRAY')
     {
       %values = map { $_ => 1 } @{$_[0]};
     }
