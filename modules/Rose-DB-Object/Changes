@@ -1,5 +1,6 @@
-0.761 (02.09.2007) - John Siracusa <siracusa@mindspring.com>
+0.761 (02.12.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Added the ability to specify a unique key by name in calls to load().
     * Added support for query_args and other Manager parameters to
       one-to-one and one-to-many relationships.
     * Added a "find" method type to one-to-many relationships for 

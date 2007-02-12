@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 543;
+use Test::More tests => 547;
 
 BEGIN 
 {
@@ -363,7 +363,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 110)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 114)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -663,8 +663,21 @@ SKIP: foreach my $db_type ('mysql')
   $o->tee_time(Time::Clock->new->parse('6:30 PM'));
   $o->save;
 
-  $o =  MyMySQLObject->new(id => $o->id)->load;
+  $o = MyMySQLObject->new(id => $o->id)->load;
   is($o->tee_time->as_string, '18:30:00', "time 6:30 PM - $db_type");
+
+  MyMySQLObject->meta->column('save')->default('x');
+  MyMySQLObject->meta->make_column_methods(replace_existing => 1);
+
+  $o->meta->default_load_speculative(0);
+
+  $o = MyMySQLObject->new(k1 => 1, k3 => 3);
+  ok(!$o->load(speculative => 1), "load default key - $db_type"); 
+
+  $o->load(key => 'k1_k2_k3');
+  is($o->k1, 1, "load specific key 1 - $db_type");  
+  is($o->k3, 3, "load specific key 2 - $db_type");
+  is($o->name, 'John', "load specific key 3 - $db_type");
 }
 
 #

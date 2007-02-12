@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.760_05';
+our $VERSION = '0.760_06';
 
 our $Debug = 0;
 
@@ -149,57 +149,88 @@ sub load
 
   local $self->{STATE_SAVING()} = 1;
 
-  my @key_columns = $meta->primary_key_column_names;
-  my @key_methods = $meta->primary_key_column_accessor_names;
-  my @key_values  = grep { defined } map { $self->$_() } @key_methods;
+  my(@key_columns, @key_methods, @key_values);
+
   my $null_key  = 0;
   my $found_key = 0;
 
-  unless(@key_values == @key_columns)
+  if(my $key = delete $args{'key'})
   {
-    my $alt_columns;
-
-    # Prefer unique keys where we have defined values for all
-    # key columns, but fall back to the first unique key found 
-    # where we have at least one defined value.
-    foreach my $cols ($meta->unique_keys_column_names)
+    my @uk = grep { $_->name eq $key } $meta->unique_keys;
+    
+    if(@uk == 1)
     {
       my $defined = 0;
-      @key_columns = @$cols;
+      @key_columns = $uk[0]->column_names;
       @key_methods = map { $meta->column_accessor_method_name($_) } @key_columns;
       @key_values  = map { $defined++ if(defined $_); $_ } 
                      map { $self->$_() } @key_methods;
 
-      if($defined == @key_columns)
+      unless($defined)
       {
-        $found_key = 1;
-        last;
+        $self->error("Could not load() based on key '$key' - column(s) have undefined values");
+        $meta->handle_error($self);
+        return undef;
       }
-
-      $alt_columns ||= $cols  if($defined);
+      
+      if(@key_values != $defined)
+      {
+        $null_key = 1;
+      }
     }
-
-    if(!$found_key && $alt_columns)
+  }
+  else
+  {
+    @key_columns = $meta->primary_key_column_names;
+    @key_methods = $meta->primary_key_column_accessor_names;
+    @key_values  = grep { defined } map { $self->$_() } @key_methods;
+  
+    unless(@key_values == @key_columns)
     {
-      @key_columns = @$alt_columns;
-      @key_methods = map { $meta->column_accessor_method_name($_) }  @key_columns;
-      @key_values  = map { $self->$_() } @key_methods;
-      $null_key    = 1;
-      $found_key   = 1;
-    }
-
-    unless($found_key)
-    {
-      @key_columns = $meta->primary_key_column_names;
-
-      $self->error("Cannot load " . ref($self) . " without a primary key (" .
-                   join(', ', @key_columns) . ') with ' .
-                   (@key_columns > 1 ? 'non-null values in all columns' : 
-                                       'a non-null value') .
-                   ' or another unique key with at least one non-null value.');
-
-      $meta->handle_error($self);
-      return 0;
+      my $alt_columns;
+  
+      # Prefer unique keys where we have defined values for all
+      # key columns, but fall back to the first unique key found 
+      # where we have at least one defined value.
+      foreach my $cols ($meta->unique_keys_column_names)
+      {
+        my $defined = 0;
+        @key_columns = @$cols;
+        @key_methods = map { $meta->column_accessor_method_name($_) } @key_columns;
+        @key_values  = map { $defined++ if(defined $_); $_ } 
+                       map { $self->$_() } @key_methods;
+  
+        if($defined == @key_columns)
+        {
+          $found_key = 1;
+          last;
+        }
+  
+        $alt_columns ||= $cols  if($defined);
+      }
+  
+      if(!$found_key && $alt_columns)
+      {
+        @key_columns = @$alt_columns;
+        @key_methods = map { $meta->column_accessor_method_name($_) }  @key_columns;
+        @key_values  = map { $self->$_() } @key_methods;
+        $null_key    = 1;
+        $found_key   = 1;
+      }
+  
+      unless($found_key)
+      {
+        @key_columns = $meta->primary_key_column_names;
+  
+        $self->error("Cannot load " . ref($self) . " without a primary key (" .
+                     join(', ', @key_columns) . ') with ' .
+                     (@key_columns > 1 ? 'non-null values in all columns' : 
+                                         'a non-null value') .
+                     ' or another unique key with at least one non-null value.');
+  
+        $meta->handle_error($self);
+        return 0;
+      }
     }
   }
 
@@ -2060,11 +2091,15 @@ Load a row from the database table, initializing the object with the values from
 
 Returns true if the row was loaded successfully, undef if the row could not be loaded due to an error, or zero (0) if the row does not exist.  The true value returned on success will be the object itself.  If the object L<overload>s its boolean value such that it is not true, then a true value will be returned instead of the object itself.
 
-When loading based on a unique key, unique keys are considered in the order in which they were defined in the L<metadata|/meta> for this class.  If the object has defined values for every column in a unique key, then that key is used.  If no such keys are found, then the first key for which the object has at least one defined value is used.
+When loading based on a unique key, unique keys are considered in the order in which they were defined in the L<metadata|/meta> for this class.  If the object has defined values for every column in a unique key, then that key is used.  If no such key is found, then the first key for which the object has at least one defined value is used.
 
 PARAMS are optional name/value pairs.  Valid PARAMS are:
 
 =over 4
+
+=item B<key KEY>
+
+Use the unique key L<name|Rose::DB::Object::Metadata::UniqueKey/name>d KEY to load the object.  This overrides the unique key selection process described above.  The key must have a defined value in at least one of its L<columns|Rose::DB::Object::Metadata::UniqueKey/columns>.
 
 =item C<nonlazy BOOL>
 
