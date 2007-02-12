@@ -596,8 +596,6 @@ sub validate
     {
       $Debug && warn "Validating sub-form ", $form->form_name, "\n";
 
-      local $args{'form_only'} = 1;
-
       unless($form->validate(%args))
       {
         $self->add_error($form->error)  if($form->error);

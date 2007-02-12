@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 167;
+use Test::More tests => 168;
 
 BEGIN 
 {
@@ -506,6 +506,22 @@ $form->validate(form_only => 1);
 # Don't call validate() on any fields or sub-forms
 $form->validate(form_only => 1, cascade => 0);
 
+# no warnings 'redefine';
+# *MyAddressForm::validate = sub
+# {
+#   my($self) = shift;
+#   $self->field('street')->error('Blah');
+#   $self->Rose::HTML::Form::validate(@_);
+# };
+
+$form = MyPersonAddressForm->new;
+
+$form->add_field(x => { type => 'text' });
+$DB::single = 1;
+$form->validate();
+
+is($form->field('address.street')->error, 'Blah', 'nested validate');
+
 BEGIN
 {
   package MyPerson;
@@ -601,6 +617,8 @@ BEGIN
     my($self) = shift;
     
     $self->SUPER::validate or return 0;
+    $self->field('street')->error('Blah');
+    no warnings 'uninitialized';
     return ($self->field('zip')->internal_value == 666) ? 0 : 1;
   }
 
