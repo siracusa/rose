@@ -9,7 +9,7 @@ use Rose::HTML::Util();
 use Rose::HTML::Form::Field;
 our @ISA = qw(Rose::HTML::Form::Field);
 
-our $VERSION = '0.542';
+our $VERSION = '0.547';
 
 our $Debug = undef;
 
@@ -221,6 +221,8 @@ sub clear
     $item->clear;
   }
 
+  $self->error(undef);
+  $self->has_partial_value(0);
   $self->is_cleared(1);
 
   $self->init_items;
@@ -269,6 +271,8 @@ sub reset
     $item->reset;
   }
 
+  $self->error(undef);
+  $self->has_partial_value(0);
   $self->is_cleared(0);
 
   $self->init_items;
