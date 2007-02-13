@@ -2,6 +2,8 @@
 
     * Eliminated redundant validation of fields in nested forms.
     * Made is_empty() smarter about honoring the trim_spaces() setting.
+    * Pop-up menus and other group-type fields now correctly clear errors
+      on reset() and clear().
     * Fixed a bug that caused option containers to fail to display hidden
       fields when a selected option had a false, but defined value.
       (Reported by Andrei Kozovski)

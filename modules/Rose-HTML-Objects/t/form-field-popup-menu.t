@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 43;
+use Test::More tests => 45;
 
 BEGIN 
 {
@@ -25,6 +25,14 @@ is(scalar @{ $field->children }, 3, 'children scalar 2');
 is(scalar(() = $field->children), 3, 'children list 2');
 
 is(join(',', sort $field->labels), 'Apple,Grape,Orange,apple,grape,orange', 'labels()');
+
+$field->error('bar');
+$field->clear;
+ok(!defined $field->error, 'clear error');
+
+$field->error('foo');
+$field->reset;
+ok(!defined $field->error, 'reset error');
 
 is($field->html_field, 
   qq(<select name="fruits" size="1">\n) .
