@@ -365,6 +365,7 @@ sub perl_column_definition_attributes
 
     my $val = $self->can($attr) ? $self->$attr() : next ATTR;
 
+    no warnings 'uninitialized';
     if(($attr eq 'check_in' || $attr eq 'values') &&
        ref $val && ref $val eq 'ARRAY')
     {

@@ -159,7 +159,7 @@ BEGIN
       $dbh->do('CREATE SCHEMA Rose_db_object_private');
     }
 
-    our $PG_HAS_CHKPASS = 1  unless($@);
+    our $PG_HAS_CHKPASS = pg_has_chkpass();
 
     $dbh->do(<<"EOF");
 CREATE TABLE Rose_db_object_MD

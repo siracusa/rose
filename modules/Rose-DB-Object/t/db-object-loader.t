@@ -132,8 +132,12 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     ok($p->can('tee_time') && $p->can('tee_time5'), "time methods - $db_type");
     is($p->meta->column('tee_time5')->scale, 5, "time precision check 1 - $db_type");
     is($p->meta->column('tee_time')->scale || 0, 0, "time precision check 2 - $db_type");
+    my $t = $p->tee_time5->as_string;
+    $t =~ s/0+$//;
     is($p->tee_time5->as_string, '12:34:56.12345', "time default 1 - $db_type");
-    is($p->meta->column('tee_time5')->default, '12:34:56.12345', "time default 2 - $db_type");
+    $t = $p->meta->column('tee_time5')->default;
+    $t =~ s/0+$//;
+    is($t, '12:34:56.12345', "time default 2 - $db_type");
   }
   else
   {
