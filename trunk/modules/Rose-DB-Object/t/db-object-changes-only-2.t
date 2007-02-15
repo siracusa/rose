@@ -204,15 +204,7 @@ BEGIN
       $dbh->do('DROP TABLE rose_db_object_test');
     }
 
-    eval
-    {
-      local $dbh->{'RaiseError'} = 1;
-      local $dbh->{'PrintError'} = 0;
-      $dbh->do('CREATE TABLE rose_db_object_chkpass_test (pass CHKPASS)');
-      $dbh->do('DROP TABLE rose_db_object_chkpass_test');
-    };
-
-    our $PG_HAS_CHKPASS = $@ ? 0 : 1;
+    our $PG_HAS_CHKPASS = pg_has_chkpass();
 
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test

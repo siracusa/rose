@@ -320,6 +320,21 @@ EOF
   return 1;
 }
 
+sub pg_has_chkpass
+{
+  my $dbh = get_dbh('pg_admin') or return undef;
+
+  eval
+  {
+    local $dbh->{'RaiseError'} = 1;
+    local $dbh->{'PrintError'} = 0;
+    $dbh->do('CREATE TABLE rose_db_object_chkpass_test (pass CHKPASS)');
+    $dbh->do('DROP TABLE rose_db_object_chkpass_test');
+  };
+
+  return $@ ? 0 : 1;
+}
+
 sub oracle_is_broken
 {
   return undef  unless(have_db('oracle'));
