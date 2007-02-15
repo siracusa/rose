@@ -22,7 +22,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 our $Triggers_Key      = 'triggers';
 our $Trigger_Index_Key = 'trigger_index';
 
-our $VERSION = '0.757';
+our $VERSION = '0.761';
 
 use overload
 (
@@ -378,6 +378,12 @@ sub perl_column_definition_attributes
         $val = perl_arrayref(array => $val, inline => 1);
         $attr = 'values';
       }
+    }
+    elsif($attr eq 'smart_modification' && 
+          (($self->smart_modification == ref($self)->new->smart_modification) ||
+           ($self->parent && $self->smart_modification == $self->parent->default_smart_modification)))
+    {
+      next ATTR;
     }
     elsif(!defined $val || ref $val || ($attr eq 'not_null' && !$self->not_null))
     {
