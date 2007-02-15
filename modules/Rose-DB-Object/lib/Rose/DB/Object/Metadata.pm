@@ -65,6 +65,7 @@ use Rose::Object::MakeMethods::Generic
     default_update_changes_only => { default => 0 },
     default_insert_changes_only => { default => 0 },
     default_cascade_save        => { default => 0 },
+    default_smart_modification  => { default => 0 },
   ],
 
   array =>
@@ -1027,6 +1028,15 @@ sub add_columns
     else
     {
       Carp::croak "Invalid column name or specification: $_[0]";
+    }
+  }
+
+  # Handle as-yet undocumented smart modification defaults
+  foreach my $column (@columns)
+  {
+    if($column->can('smart_modification') && !defined $column->{'smart_modification'})
+    {
+      $column->smart_modification($self->default_smart_modification);
     }
   }
 
