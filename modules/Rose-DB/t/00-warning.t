@@ -52,6 +52,26 @@ print STDERR<<"EOF";
 ## Press return to continue (or wait 60 seconds)
 EOF
 
+eval { require DBD::SQLite };
+
+if(!$@ && $DBD::SQLite::VERSION == 1.13)
+{
+print STDERR<<"EOF";
+
+***
+*** WARNING: DBD::SQLite version 1.13 detected.  This version has some
+*** serious bugs that prevent the test suite from working correctly.
+*** In particular:
+***
+***     http://rt.cpan.org/Public/Bug/Display.html?id=21472
+***
+*** The SQLite tests will be skipped.  Please install DBD::SQLite 1.12
+*** or a version that fixes the bugs in 1.13.
+***
+*** Press return to continue (or wait 60 seconds)
+EOF
+}
+
 my %old;
 
 $old{'ALRM'} = $SIG{'ALRM'} || 'DEFAULT';

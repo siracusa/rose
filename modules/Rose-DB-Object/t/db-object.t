@@ -674,7 +674,7 @@ SKIP: foreach my $db_type ('mysql')
   $o = MyMySQLObject->new(k1 => 1, k3 => 3);
   ok(!$o->load(speculative => 1), "load default key - $db_type"); 
 
-  $o->load(key => 'k1_k2_k3');
+  $o->load(use_key => 'k1_k2_k3');
   is($o->k1, 1, "load specific key 1 - $db_type");  
   is($o->k3, 3, "load specific key 2 - $db_type");
   is($o->name, 'John', "load specific key 3 - $db_type");

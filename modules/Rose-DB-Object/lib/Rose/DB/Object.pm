@@ -154,7 +154,7 @@ sub load
   my $null_key  = 0;
   my $found_key = 0;
 
-  if(my $key = delete $args{'key'})
+  if(my $key = delete $args{'use_key'})
   {
     my @uk = grep { $_->name eq $key } $meta->unique_keys;
     
@@ -2097,10 +2097,6 @@ PARAMS are optional name/value pairs.  Valid PARAMS are:
 
 =over 4
 
-=item B<key KEY>
-
-Use the unique key L<name|Rose::DB::Object::Metadata::UniqueKey/name>d KEY to load the object.  This overrides the unique key selection process described above.  The key must have a defined value in at least one of its L<columns|Rose::DB::Object::Metadata::UniqueKey/columns>.
-
 =item C<nonlazy BOOL>
 
 If true, then all columns will be fetched from the database, even L<lazy|Rose::DB::Object::Metadata::Column/load_on_demand> columns.  If omitted, the default is false.
@@ -2114,6 +2110,10 @@ all columns will be fetched from the database, even L<lazy|Rose::DB::Object::Met
 =item C<speculative BOOL>
 
 If this parameter is passed with a true value, and if the load failed because the row was L<not found|/not_found>, then the L<error_mode|Rose::DB::Object::Metadata/error_mode> setting is ignored and zero (0) is returned.  In the absence of an explicitly set value, this parameter defaults to the value returned my the L<metadata object|/meta>'s L<default_load_speculative|Rose::DB::Object::Metadata/default_load_speculative> method.
+
+=item B<use_key KEY>
+
+Use the unique key L<name|Rose::DB::Object::Metadata::UniqueKey/name>d KEY to load the object.  This overrides the unique key selection process described above.  The key must have a defined value in at least one of its L<columns|Rose::DB::Object::Metadata::UniqueKey/columns>.
 
 =item C<with OBJECTS>
 
