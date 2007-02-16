@@ -110,6 +110,11 @@ SKIP:
   # Test with schema override
   #
 
+  # Rose::DB::MySQL currently supports schema as a stand-in for database.
+  # We need to turn that off for this test because we don't control the
+  # database(s) the test suite runs against.
+  Rose::DB::MySQL->supports_schema(0);
+
   $a1 = AlbumWS->new(id => 10, db => $db_pg, name => 'Ten', year => 2001, dt => '1/2/2003 4:56:12')->save;
   $a2 = AlbumWS->new(id => 20, db => $db_pg, name => 'Twe', year => 2002, dt => '2/2/2003 4:56:12')->save;
   $a3 = AlbumWS->new(id => 30, db => $db_ws, name => 'Thi', year => 2003, dt => '3/2/2003 4:56:12')->save;
