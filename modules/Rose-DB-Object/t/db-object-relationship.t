@@ -5905,7 +5905,7 @@ BEGIN
       or die Rose::DB->error;
   };
 
-  if(!$@ && $dbh && pg_max_connections() >= 23)
+  if(!$@ && $dbh)
   {
     our $HAVE_PG = 1;
 
@@ -5996,7 +5996,9 @@ EOF
 
     our @ISA = qw(Rose::DB::Object);
 
-    sub init_db { Rose::DB->new('pg') }
+    our $DB;
+
+    sub init_db { $DB ||= Rose::DB->new('pg') }
 
     MyPgOtherObject->meta->table('rose_db_object_other');
 
@@ -6017,7 +6019,9 @@ EOF
     use Rose::DB::Object::Helpers qw(has_loaded_related);
     our @ISA = qw(Rose::DB::Object);
 
-    sub init_db { Rose::DB->new('pg') }
+    our $DB;
+
+    sub init_db { $DB ||= Rose::DB->new('pg') }
 
     MyPgObject->meta->table('rose_db_object_test');
 
@@ -6167,7 +6171,9 @@ EOF
 
     our @ISA = qw(Rose::DB::Object);
 
-    sub init_db { Rose::DB->new('pg') }
+    our $DB;
+
+    sub init_db { $DB ||= Rose::DB->new('pg') }
 
     MyPgOtherObject2->meta->table('rose_db_object_other2');
 
@@ -6205,7 +6211,9 @@ EOF
 
     our @ISA = qw(Rose::DB::Object);
 
-    sub init_db { Rose::DB->new('pg') }
+    our $DB;
+
+    sub init_db { $DB ||= Rose::DB->new('pg') }
 
     MyPgColor->meta->table('rose_db_object_colors');
 
@@ -6221,7 +6229,9 @@ EOF
 
     our @ISA = qw(Rose::DB::Object);
 
-    sub init_db { Rose::DB->new('pg') }
+    our $DB;
+
+    sub init_db { $DB ||= Rose::DB->new('pg') }
 
     MyPgColorMap->meta->table('rose_db_object_colors_map');
 
@@ -6356,7 +6366,9 @@ EOF
 
     our @ISA = qw(Rose::DB::Object);
 
-    sub init_db { Rose::DB->new('mysql') }
+    our $DB;
+
+    sub init_db { $DB ||= Rose::DB->new('mysql') }
 
     MyMySQLOtherObject->meta->table('rose_db_object_other');
 
@@ -6377,7 +6389,9 @@ EOF
     use Rose::DB::Object::Helpers qw(has_loaded_related);
     our @ISA = qw(Rose::DB::Object);
 
-    sub init_db { Rose::DB->new('mysql') }
+    our $DB;
+
+    sub init_db { $DB ||= Rose::DB->new('mysql') }
 
     MyMySQLObject->meta->allow_inline_column_values(1);
 
@@ -6527,7 +6541,9 @@ EOF
 
     our @ISA = qw(Rose::DB::Object);
 
-    sub init_db { Rose::DB->new('mysql') }
+    our $DB;
+
+    sub init_db { $DB ||= Rose::DB->new('mysql') }
 
     MyMySQLOtherObject2->meta->table('rose_db_object_other2');
 
@@ -6564,7 +6580,9 @@ EOF
 
     our @ISA = qw(Rose::DB::Object);
 
-    sub init_db { Rose::DB->new('mysql') }
+    our $DB;
+
+    sub init_db { $DB ||= Rose::DB->new('mysql') }
 
     MyMySQLColor->meta->table('rose_db_object_colors');
 
@@ -6580,7 +6598,9 @@ EOF
 
     our @ISA = qw(Rose::DB::Object);
 
-    sub init_db { Rose::DB->new('mysql') }
+    our $DB;
+
+    sub init_db { $DB ||= Rose::DB->new('mysql') }
 
     MyMySQLColorMap->meta->table('rose_db_object_colors_map');
 
@@ -6710,7 +6730,9 @@ EOF
 
     our @ISA = qw(Rose::DB::Object);
 
-    sub init_db { Rose::DB->new('informix') }
+    our $DB;
+
+    sub init_db { $DB ||= Rose::DB->new('mysql') }
 
     MyInformixOtherObject->meta->table('rose_db_object_other');
 
@@ -6731,7 +6753,9 @@ EOF
     use Rose::DB::Object::Helpers qw(has_loaded_related);
     our @ISA = qw(Rose::DB::Object);
 
-    sub init_db { Rose::DB->new('informix') }
+    our $DB;
+
+    sub init_db { $DB ||= Rose::DB->new('informix') }
 
     MyInformixObject->meta->table('rose_db_object_test');
 
@@ -6869,7 +6893,9 @@ EOF
 
     our @ISA = qw(Rose::DB::Object);
 
-    sub init_db { Rose::DB->new('informix') }
+    our $DB;
+
+    sub init_db { $DB ||= Rose::DB->new('informix') }
 
     MyInformixOtherObject2->meta->table('rose_db_object_other2');
 
@@ -6906,7 +6932,9 @@ EOF
 
     our @ISA = qw(Rose::DB::Object);
 
-    sub init_db { Rose::DB->new('informix') }
+    our $DB;
+
+    sub init_db { $DB ||= Rose::DB->new('informix') }
 
     MyInformixColor->meta->table('rose_db_object_colors');
 
@@ -6922,7 +6950,9 @@ EOF
 
     our @ISA = qw(Rose::DB::Object);
 
-    sub init_db { Rose::DB->new('informix') }
+    our $DB;
+
+    sub init_db { $DB ||= Rose::DB->new('informix') }
 
     MyInformixColorMap->meta->table('rose_db_object_colors_map');
 
