@@ -2153,11 +2153,13 @@ sub object_by_key
         # Set the attribute
         $self->{$key} = $object;
 
-        weaken(my $welf = $self);
+        #weaken(my $welf = $self);
         
         # Make the code that will run on save()
         my $save_code = sub
         {
+          my $welf = shift;
+
           # Bail if there's nothing to do
           my $object = $welf->{$key} or return;
 
@@ -2478,11 +2480,13 @@ sub object_by_key
       # Clear the foreignobject attribute
       $self->{$key} = undef;
 
-      weaken(my $welf = $self);
+      #weaken(my $welf = $self);
 
       # Make the code to run on save
       my $delete_code = sub
       {  
+        my $welf = shift;
+
         my $db;
 
         eval
@@ -3139,10 +3143,12 @@ sub objects_by_key
         # Set the attribute
         $self->{$key} = $objects;
 
-        weaken(my $welf = $self);
+        #weaken(my $welf = $self);
 
         my $save_code = sub
         {
+          my $welf = shift;
+
           # Set up join conditions and column map
           my(%key, %map);
 
@@ -3433,10 +3439,12 @@ sub objects_by_key
 
       $self->{$key} = undef;
 
-      weaken(my $welf = $self);
+      #weaken(my $welf = $self);
 
       my $delete_code = sub
       {
+        my $welf = shift;
+
         # Set up join conditions and column map
         my(%key, %map);
 
@@ -3648,10 +3656,12 @@ sub objects_by_key
         push(@{$self->{$key}}, @$objects);
       }
 
-      weaken(my $welf = $self);
+      #weaken(my $welf = $self);
 
       my $add_code = sub
       {
+        my $welf = shift;
+
         # Set up column map
         my %map;
 
@@ -4382,10 +4392,12 @@ sub objects_by_map
         # Set the attribute
         $self->{$key} = $objects;
 
-        weaken(my $welf = $self);
+        #weaken(my $welf = $self);
 
         my $save_code = sub
         {
+          my $welf = shift;
+
           # Set up join conditions and map record connections
           my(%join_map_to_self,    # map column => self value
              %method_map_to_self); # map method => self value
@@ -4742,10 +4754,12 @@ sub objects_by_map
         push(@{$self->{$key}}, @$objects);
       }
 
-      weaken(my $welf = $self);
+      #weaken(my $welf = $self);
 
       my $add_code = sub
       {
+        my $welf = shift;
+
         # Set up join conditions and map record connections
         my(%join_map_to_self,    # map column => self value
            %method_map_to_self); # map method => self value

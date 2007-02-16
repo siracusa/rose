@@ -35,6 +35,7 @@ use Rose::Class::MakeMethods::Generic
     'default_objects_per_page',
     'default_limit_with_subselect',
     'dbi_prepare_cached',
+    'allow_quick_query',
   ],
 );
 
@@ -42,6 +43,7 @@ __PACKAGE__->error_mode('fatal');
 __PACKAGE__->default_objects_per_page(20);
 __PACKAGE__->default_limit_with_subselect(1);
 __PACKAGE__->dbi_prepare_cached(0);
+__PACKAGE__->allow_quick_query(1);
 
 sub handle_error
 {
@@ -196,11 +198,22 @@ sub make_manager_methods
             if(defined &{$method});
         }
 
-        *{$method_name} = sub
+        if($class->allow_quick_query)
         {
-          shift;
-          $class_invocant->get_objects(@_, object_class => $object_class);
-        };
+          *{$method_name} = sub
+          {
+            shift;
+            $class_invocant->get_objects_query(@_, object_class => $object_class);
+          };
+        }
+        else
+        {
+          *{$method_name} = sub
+          {
+            shift;
+            $class_invocant->get_objects(@_, object_class => $object_class);
+          };
+        }
       }
       elsif($type eq 'count')
       {
@@ -214,12 +227,24 @@ sub make_manager_methods
             if(defined &{$method});
         }
 
-        *{$method_name} = sub
+        if($class->allow_quick_query)
         {
-          shift;
-          $class_invocant->get_objects(
-            @_, count_only => 1, object_class => $object_class)
-        };
+          *{$method_name} = sub
+          {
+            shift;
+            $class_invocant->get_objects_query(
+              @_, count_only => 1, object_class => $object_class)
+          };
+        }
+        else
+        {
+          *{$method_name} = sub
+          {
+            shift;
+            $class_invocant->get_objects(
+              @_, count_only => 1, object_class => $object_class)
+          };
+        }
       }
       elsif($type eq 'iterator')
       {
@@ -233,12 +258,24 @@ sub make_manager_methods
             if(defined &{$method});
         }
 
-        *{$method_name} = sub
+        if($class->allow_quick_query)
         {
-          shift;
-          $class_invocant->get_objects(
-            @_, return_iterator => 1, object_class => $object_class)
-        };
+          *{$method_name} = sub
+          {
+            shift;
+            $class_invocant->get_objects_query(
+              @_, return_iterator => 1, object_class => $object_class)
+          };
+        }
+        else
+        {
+          *{$method_name} = sub
+          {
+            shift;
+            $class_invocant->get_objects(
+              @_, return_iterator => 1, object_class => $object_class)
+          };
+        }
       }
       elsif($type eq 'delete')
       {
@@ -293,26 +330,50 @@ sub get_objects_count
 sub get_objects_iterator { shift->get_objects(@_, return_iterator => 1) }
 sub get_objects_sql      { shift->get_objects(@_, return_sql => 1) }
 
-sub get_objects
+sub get_objects_query
 {
   my($class) = shift;
-
-  my %args;
 
   if(my $ref = ref $_[0])
   {
     if($ref eq 'HASH')
     {
-      %args = (query => [ %{shift(@_)} ], @_);
+      return $class->get_objects(query => [ %{shift(@_)} ], @_);
     }
     elsif(ref $_[0] eq 'ARRAY')
     {
-      %args = (query => shift, @_);
+      return $class->get_objects(query => shift, @_);
     }
   }
-  else { %args = @_ }
+  else
+  {
+    return $class->get_objects(@_);
+  }
+}
 
-  unshift(@_, $class); # restore original args
+sub get_objects
+{
+  my($class, %args) = @_;
+
+  # Not allowing this by default.  See get_objects_query() for alternative.
+  #my $class = shift;
+  #
+  #my %args;
+  #
+  #if(my $ref = ref $_[0])
+  #{
+  #  if($ref eq 'HASH')
+  #  {
+  #    %args = (query => [ %{shift(@_)} ], @_);
+  #  }
+  #  elsif(ref $_[0] eq 'ARRAY')
+  #  {
+  #    %args = (query => shift, @_);
+  #  }
+  #}
+  #else { %args = @_ }
+  #
+  #unshift(@_, $class); # restore original args
 
   $class->error(undef);
 
