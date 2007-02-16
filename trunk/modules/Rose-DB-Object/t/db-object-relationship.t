@@ -6732,7 +6732,7 @@ EOF
 
     our $DB;
 
-    sub init_db { $DB ||= Rose::DB->new('mysql') }
+    sub init_db { $DB ||= Rose::DB->new('informix') }
 
     MyInformixOtherObject->meta->table('rose_db_object_other');
 
@@ -7371,7 +7371,6 @@ END
     $dbh->do('DROP TABLE rose_db_object_colors');
     $dbh->do('DROP TABLE rose_db_object_other');
     $dbh->do('DROP TABLE rose_db_object_other2');
-
 
     $dbh->disconnect;
   }
