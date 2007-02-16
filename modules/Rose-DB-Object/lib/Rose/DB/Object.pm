@@ -497,7 +497,7 @@ sub save
         #}
 
         my $code   = $todo->{'fk'}{$fk_name}{'set'} or next;
-        my $object = $code->();
+        my $object = $code->($self);
 
         # Account for objects that evaluate to false to due overloading
         unless($object || ref $object)
@@ -543,7 +543,7 @@ sub save
           # Don't run the code to delete this object if we just set it above
           next  if($did_set{'fk'}{$fk_name}{Rose::DB::Object::Util::row_id($object)});
 
-          $code->() or die $self->error;
+          $code->($self) or die $self->error;
         }
       }
 
@@ -577,19 +577,19 @@ sub save
         # Set value(s)
         if($code  = $todo->{'rel'}{$rel_name}{'set'})
         {
-          $code->() or die $self->error;
+          $code->($self) or die $self->error;
         }
 
         # Delete value(s)
         if($code  = $todo->{'rel'}{$rel_name}{'delete'})
         {
-          $code->() or die $self->error;
+          $code->($self) or die $self->error;
         }
 
         # Add value(s)
         if($code  = $todo->{'rel'}{$rel_name}{'add'})
         {
-          $code->() or die $self->error;
+          $code->($self) or die $self->error;
         }
       }
 
