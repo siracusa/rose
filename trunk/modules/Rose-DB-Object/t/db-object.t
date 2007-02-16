@@ -190,7 +190,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
     }
     else
     {
-      skip("chkpass tests", 5);
+      skip("chkpass tests", 6);
     }
   }
 

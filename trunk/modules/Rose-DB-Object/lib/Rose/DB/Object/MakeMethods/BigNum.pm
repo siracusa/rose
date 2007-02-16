@@ -6,10 +6,9 @@ use Carp();
 
 require Math::BigInt;
 
-# Not sure what version this feature was added in...
-unless($Math::BigInt::VERSION < 1.69)
+if($Math::BigInt::VERSION >= 1.78)
 {
-  Math::BigInt->import(lib => 'GMP');
+  Math::BigInt->import(try => 'GMP');
 }
 
 use Rose::Object::MakeMethods;
