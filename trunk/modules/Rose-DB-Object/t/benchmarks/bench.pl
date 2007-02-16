@@ -3267,7 +3267,7 @@ EOF
         name        => "Product $i",
         category_id => 2,
         status      => 'temp',
-        published   => \'2005-01-02 12:34:56' }); 
+        published   => '2005-01-02 12:34:56' }); 
       $i++;
     }
   }
@@ -3709,7 +3709,7 @@ EOF
       #my $p = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
       my $p = $DBIC_Complex_Product_RS->single({ id => $i + 3_300_000 });
       $p->name($p->name . ' updated');
-      $p->published(\'2004-01-02 12:34:55');
+      $p->published('2004-01-02 12:34:55');
       $p->update;
       $i++;
     }
