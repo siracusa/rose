@@ -320,8 +320,12 @@ EOF
   return 1;
 }
 
+our $PG_HAS_CHKPASS = $ENV{'PG_HAS_CHKPASS'};
+
 sub pg_has_chkpass
 {
+  return $PG_HAS_CHKPASS  if(defined $PG_HAS_CHKPASS);
+
   my $dbh = get_dbh('pg_admin') or return undef;
 
   eval
@@ -332,7 +336,7 @@ sub pg_has_chkpass
     $dbh->do('DROP TABLE rose_db_object_chkpass_test');
   };
 
-  return $@ ? 0 : 1;
+  return $PG_HAS_CHKPASS = $@ ? 0 : 1;
 }
 
 sub oracle_is_broken

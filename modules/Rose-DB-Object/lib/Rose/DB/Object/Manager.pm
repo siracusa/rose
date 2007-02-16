@@ -303,14 +303,16 @@ sub get_objects
   {
     if($ref eq 'HASH')
     {
-      %args = @_ = (query => [ %{shift(@_)} ], @_);
+      %args = (query => [ %{shift(@_)} ], @_);
     }
     elsif(ref $_[0] eq 'ARRAY')
     {
-      %args = @_ = (query => shift, @_);
+      %args = (query => shift, @_);
     }
   }
   else { %args = @_ }
+
+  unshift(@_, $class); # restore original args
 
   $class->error(undef);
 
