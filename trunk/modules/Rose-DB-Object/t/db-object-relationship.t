@@ -5905,7 +5905,7 @@ BEGIN
       or die Rose::DB->error;
   };
 
-  if(!$@ && $dbh)
+  if(!$@ && $dbh && pg_max_connections() >= 23)
   {
     our $HAVE_PG = 1;
 
