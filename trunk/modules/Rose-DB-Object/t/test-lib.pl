@@ -339,8 +339,12 @@ sub pg_has_chkpass
   return $PG_HAS_CHKPASS = $@ ? 0 : 1;
 }
 
+our $PG_MAX_CONNECTIONS;
+
 sub pg_max_connections
 {
+  return $PG_MAX_CONNECTIONS  if(defined $PG_MAX_CONNECTIONS);
+
   my $dbh = get_dbh('pg') or return 0;
   my @dbh = ($dbh);
 
@@ -350,7 +354,7 @@ sub pg_max_connections
     last if($@ || @dbh > 50);
   }
 
-  return scalar @dbh;
+  return $PG_MAX_CONNECTIONS = @dbh;
 }
 
 sub oracle_is_broken
