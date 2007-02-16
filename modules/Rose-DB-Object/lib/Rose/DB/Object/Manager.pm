@@ -43,7 +43,7 @@ __PACKAGE__->error_mode('fatal');
 __PACKAGE__->default_objects_per_page(20);
 __PACKAGE__->default_limit_with_subselect(1);
 __PACKAGE__->dbi_prepare_cached(0);
-__PACKAGE__->allow_quick_query(1);
+__PACKAGE__->allow_quick_query(0);
 
 sub handle_error
 {
