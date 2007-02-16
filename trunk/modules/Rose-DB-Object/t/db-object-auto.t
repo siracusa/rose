@@ -717,17 +717,12 @@ BEGIN
       $dbh->do('CREATE SCHEMA Rose_db_object_private');
     }
 
-    eval
-    {
-      local $dbh->{'RaiseError'} = 1;
-      local $dbh->{'PrintError'} = 0;
-      $dbh->do('CREATE TABLE Rose_db_object_chkpass_test (pass CHKPASS)');
-      $dbh->do('DROP TABLE Rose_db_object_chkpass_test');
-    };
-
-    our $PG_HAS_CHKPASS = 1  unless($@);
+    our $PG_HAS_CHKPASS = pg_has_chkpass();
 
     $dbh->do('CREATE SEQUENCE Rose_db_object_test_seq');
+
+    my $pg_vers = $dbh->{'pg_server_version'};
+    my $active = $pg_vers >= 80100 ? q('act''ive') : q('act\'ive');
 
     $dbh->do(<<"EOF");
 CREATE TABLE Rose_db_object_test
@@ -741,7 +736,7 @@ CREATE TABLE Rose_db_object_test
   code           CHAR(6),
   flag           BOOLEAN NOT NULL DEFAULT 't',
   flag2          BOOLEAN,
-  status         VARCHAR(32) DEFAULT 'act''ive',
+  status         VARCHAR(32) DEFAULT $active,
   bits           BIT(5) NOT NULL DEFAULT B'00101',
   start          DATE DEFAULT '1980-12-24',
   save           INT,
@@ -768,7 +763,7 @@ CREATE TABLE Rose_db_object_private.Rose_db_object_test
   code           CHAR(6),
   flag           BOOLEAN NOT NULL DEFAULT 't',
   flag2          BOOLEAN,
-  status         VARCHAR(32) DEFAULT 'act''ive',
+  status         VARCHAR(32) DEFAULT $active,
   bits           BIT(5) NOT NULL DEFAULT B'00101',
   start          DATE DEFAULT '1980-12-24',
   save           INT,
