@@ -1,7 +1,8 @@
-0.733 (02.15.2007) - John Siracusa <siracusa@mindspring.com>
+0.733 (02.16.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Schema support enabled for MySQL.
     * Added support for Informix's "datetime year to month" column type.
+    * Tweaked handling of doubled quotes in Postgres default column values.
 
 0.732 (01.15.2007) - John Siracusa <siracusa@mindspring.com>
 

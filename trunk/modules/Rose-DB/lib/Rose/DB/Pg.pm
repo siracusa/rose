@@ -424,8 +424,9 @@ sub parse_dbi_column_info_default
       my $default = $1;
 
       # Single quotes are backslash-escaped, but Postgres 8.1 and
-      # later uses doubled quotes '' instead.
-      if($pg_vers >= 80100 && index($default, q('')) > 0)
+      # later uses doubled quotes '' instead.  Strangely, I see
+      # doubled quotes in 8.0.x as well...
+      if($pg_vers >= 80000 && index($default, q('')) > 0)
       {
         $default =~ s/''/'/g;
       }
