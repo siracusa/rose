@@ -2161,7 +2161,7 @@ See the L<Rose::DB::Object::Metadata> documentation for more information.
 
 =item B<save [PARAMS]>
 
-Save the current object to the database table.  In the absence of PARAMS, if the object was previously L<load|/load>ed from the database, the row will be updated.  Otherwise, a new row will be created.  PARAMS are name/value pairs.  Valid PARAMS are listed below.
+Save the current object to the database table.  In the absence of PARAMS, if the object was previously L<load|/load>ed from the database, the row will be L<update|/update>d.  Otherwise, a new row will be L<insert|/insert>ed.  PARAMS are name/value pairs.  Valid PARAMS are listed below.
 
 Actions associated with sub-objects that were added or deleted using one of the "*_on_save" relationship or foreign key method types are also performed when this method is called.  If there are any such actions to perform, a new transaction is started if the L<db|/db> is not already in one, and L<rollback()|Rose::DB/rollback> is called if any of the actions fail during the L<save()|/save>.  Example:
 
@@ -2204,7 +2204,7 @@ If omitted, the default value of this parameter is determined by the L<metadata 
 
 =item C<insert BOOL>
 
-If set to a true value, then an insert is attempted, regardless of whether or not the object was previously L<load|/load>ed from the database.
+If set to a true value, then an L<insert|/insert> is attempted, regardless of whether or not the object was previously L<load|/load>ed from the database.
 
 =item C<prepare_cached BOOL>
 
@@ -2212,7 +2212,7 @@ If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used 
 
 =item C<update BOOL>
 
-If set to a true value, then an update is attempted, regardless of whether or not the object was previously L<load|/load>ed from the database.
+If set to a true value, then an L<update|/update> is attempted, regardless of whether or not the object was previously L<load|/load>ed from the database.
 
 =back
 
