@@ -35,7 +35,6 @@ use Rose::Class::MakeMethods::Generic
     'default_objects_per_page',
     'default_limit_with_subselect',
     'dbi_prepare_cached',
-    'allow_quick_query',
   ],
 );
 
@@ -43,7 +42,6 @@ __PACKAGE__->error_mode('fatal');
 __PACKAGE__->default_objects_per_page(20);
 __PACKAGE__->default_limit_with_subselect(1);
 __PACKAGE__->dbi_prepare_cached(0);
-__PACKAGE__->allow_quick_query(0);
 
 sub handle_error
 {
@@ -198,22 +196,11 @@ sub make_manager_methods
             if(defined &{$method});
         }
 
-        if($class->allow_quick_query)
+        *{$method_name} = sub
         {
-          *{$method_name} = sub
-          {
-            shift;
-            $class_invocant->get_objects_query(@_, object_class => $object_class);
-          };
-        }
-        else
-        {
-          *{$method_name} = sub
-          {
-            shift;
-            $class_invocant->get_objects(@_, object_class => $object_class);
-          };
-        }
+          shift;
+          $class_invocant->get_objects(@_, object_class => $object_class);
+        };
       }
       elsif($type eq 'count')
       {
@@ -227,24 +214,12 @@ sub make_manager_methods
             if(defined &{$method});
         }
 
-        if($class->allow_quick_query)
+        *{$method_name} = sub
         {
-          *{$method_name} = sub
-          {
-            shift;
-            $class_invocant->get_objects_query(
-              @_, count_only => 1, object_class => $object_class)
-          };
-        }
-        else
-        {
-          *{$method_name} = sub
-          {
-            shift;
-            $class_invocant->get_objects(
-              @_, count_only => 1, object_class => $object_class)
-          };
-        }
+          shift;
+          $class_invocant->get_objects(
+            @_, count_only => 1, object_class => $object_class)
+        };
       }
       elsif($type eq 'iterator')
       {
@@ -258,24 +233,12 @@ sub make_manager_methods
             if(defined &{$method});
         }
 
-        if($class->allow_quick_query)
+        *{$method_name} = sub
         {
-          *{$method_name} = sub
-          {
-            shift;
-            $class_invocant->get_objects_query(
-              @_, return_iterator => 1, object_class => $object_class)
-          };
-        }
-        else
-        {
-          *{$method_name} = sub
-          {
-            shift;
-            $class_invocant->get_objects(
-              @_, return_iterator => 1, object_class => $object_class)
-          };
-        }
+          shift;
+          $class_invocant->get_objects(
+            @_, return_iterator => 1, object_class => $object_class)
+        };
       }
       elsif($type eq 'delete')
       {
@@ -330,50 +293,30 @@ sub get_objects_count
 sub get_objects_iterator { shift->get_objects(@_, return_iterator => 1) }
 sub get_objects_sql      { shift->get_objects(@_, return_sql => 1) }
 
-sub get_objects_query
+sub get_objects
 {
-  my($class) = shift;
+  my($class, %args);
 
-  if(my $ref = ref $_[0])
+  if(ref $_[1])
   {
-    if($ref eq 'HASH')
+    $class = shift;
+
+    if(ref $_[0] eq 'HASH')
     {
-      return $class->get_objects(query => [ %{shift(@_)} ], @_);
+      %args = (query => [ %{shift(@_)} ], @_);
     }
     elsif(ref $_[0] eq 'ARRAY')
     {
-      return $class->get_objects(query => shift, @_);
+      %args = (query => shift, @_);
     }
+    else { Carp::croak 'Invalid arguments: ', join(', ', @_) }
+
+    unshift(@_, $class); # restore original args  
   }
   else
   {
-    return $class->get_objects(@_);
+    ($class, %args) = @_;
   }
-}
-
-sub get_objects
-{
-  my($class, %args) = @_;
-
-  # Not allowing this by default.  See get_objects_query() for alternative.
-  #my $class = shift;
-  #
-  #my %args;
-  #
-  #if(my $ref = ref $_[0])
-  #{
-  #  if($ref eq 'HASH')
-  #  {
-  #    %args = (query => [ %{shift(@_)} ], @_);
-  #  }
-  #  elsif(ref $_[0] eq 'ARRAY')
-  #  {
-  #    %args = (query => shift, @_);
-  #  }
-  #}
-  #else { %args = @_ }
-  #
-  #unshift(@_, $class); # restore original args
 
   $class->error(undef);
 
@@ -886,7 +829,7 @@ sub get_objects
           Carp::confess "$class - Missing key columns for '$name'";
         }
 
-        if($rel_type eq 'one to many' && (my $query_args = $rel->query_args))
+        if($rel->can('query_args') && (my $query_args = $rel->query_args))
         {
           # (Re)map query parameters to the correct table
           # t1 -> No change (the primary table)
@@ -1016,7 +959,7 @@ sub get_objects
         }
 
         # XXX: Undocumented for now...
-        if($rel_type eq 'one to many' && (my $join_args = $rel->join_args))
+        if($rel->can('join_args') && (my $join_args = $rel->join_args))
         {
           my $cond = 
             build_where_clause(dbh         => $dbh,
@@ -2813,7 +2756,28 @@ sub save_objects   { shift->_map_action('save', @_)   }
 
 sub delete_objects
 {
-  my($class, %args) = @_;
+  my($class, %args);
+
+  if(ref $_[1])
+  {
+    $class = shift;
+
+    if(ref $_[0] eq 'HASH')
+    {
+      %args = (where => [ %{shift(@_)} ], @_);
+    }
+    elsif(ref $_[0] eq 'ARRAY')
+    {
+      %args = (where => shift, @_);
+    }
+    else { Carp::croak 'Invalid arguments: ', join(', ', @_) }
+
+    unshift(@_, $class); # restore original args  
+  }
+  else
+  {
+    ($class, %args) = @_;
+  }
 
   $class->error(undef);
 
