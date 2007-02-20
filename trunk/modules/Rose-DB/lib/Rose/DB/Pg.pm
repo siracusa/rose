@@ -8,7 +8,7 @@ use SQL::ReservedWords::PostgreSQL();
 
 use Rose::DB;
 
-our $VERSION = '0.732';
+our $VERSION = '0.733';
 
 our $Debug = 0;
 
@@ -362,6 +362,11 @@ sub refine_dbi_column_info
     $col_info->{'pg_type'} =~ /^time(?:\((\d+)\))? without time zone$/i;
     $col_info->{'TIME_SCALE'} = $1 || 0;
   }
+  elsif($type_name eq 'double precision')
+  {
+    $col_info->{'COLUMN_SIZE'} = undef;
+  }
+
 
   # Pg does not populate COLUMN_SIZE correctly for bit fields, so
   # we have to extract the number of bits from pg_type.
