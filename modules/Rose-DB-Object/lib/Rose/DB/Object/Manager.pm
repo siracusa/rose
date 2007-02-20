@@ -829,7 +829,8 @@ sub get_objects
           Carp::confess "$class - Missing key columns for '$name'";
         }
 
-        if($rel->can('query_args') && (my $query_args = $rel->query_args))
+        if($rel_type ne 'foreign key' && $rel_type ne 'many to many' && 
+           (my $query_args = $rel->query_args))
         {
           # (Re)map query parameters to the correct table
           # t1 -> No change (the primary table)
@@ -959,7 +960,8 @@ sub get_objects
         }
 
         # XXX: Undocumented for now...
-        if($rel->can('join_args') && (my $join_args = $rel->join_args))
+        if($rel_type ne 'foreign key' && $rel_type ne 'many to many' &&
+           (my $join_args = $rel->join_args))
         {
           my $cond = 
             build_where_clause(dbh         => $dbh,
