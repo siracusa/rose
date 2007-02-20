@@ -1,4 +1,4 @@
-0.761 (02.16.2007) - John Siracusa <siracusa@mindspring.com>
+0.761 (02.20.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added the ability to specify a unique key by name in calls to load().
     * Added support for query_args and other Manager parameters to
@@ -9,6 +9,7 @@
     * Updated the dbh() method to be a more conventional proxy for ->db->dbh().
     * Eliminated warning in the BigNum column type when the GMP math library
       is not installed.
+    * Added a double precision column type and class for Postgres.
     * Fixed a bug that cause cascaded save() to fail to cascade beyond
       a set-on-save related object.
     * Improved reporting of errors in auto-loaded related modules.

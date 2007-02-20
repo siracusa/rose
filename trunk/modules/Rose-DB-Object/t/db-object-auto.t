@@ -39,6 +39,9 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $o->last_modified($o->date_created);
   $o->save_col(7);
 
+  $o->dp(37.3960614524039);
+  $o->f8(37.3960614524039);
+
   ok($o->save, "save() 1 - $db_type");
 
   is($o->id, 1, "auto-generated primary key - $db_type");
@@ -235,6 +238,8 @@ $chkpass  name          => { type => 'varchar', length => 32, not_null => 1 },
   start         => { type => 'date', default => '1980-12-24' },
   save          => { type => 'integer', alias => 'save_col' },
   nums          => { type => 'array' },
+  dp            => { type => 'double precision' },
+  f8            => { type => 'double precision' },
   last_modified => { type => 'timestamp' },
   date_created  => { type => 'timestamp' },
 );
@@ -258,6 +263,8 @@ $chkpass    name          => { type => 'varchar', length => 32, not_null => 1 },
     start         => { type => 'date', default => '1980-12-24' },
     save          => { type => 'integer', alias => 'save_col' },
     nums          => { type => 'array' },
+    dp            => { type => 'double precision' },
+    f8            => { type => 'double precision' },
     last_modified => { type => 'timestamp' },
     date_created  => { type => 'timestamp' },
 );
@@ -281,6 +288,8 @@ $chkpass    name          => { type => 'varchar', length => 32, not_null => 1 },
     start         => { type => 'date', default => '1980-12-24' },
     save          => { type => 'integer', alias => 'save_col' },
     nums          => { type => 'array' },
+    dp            => { type => 'double precision' },
+    f8            => { type => 'double precision' },
     last_modified => { type => 'timestamp' },
     date_created  => { type => 'timestamp' },
 );
@@ -741,6 +750,8 @@ CREATE TABLE Rose_db_object_test
   start          DATE DEFAULT '1980-12-24',
   save           INT,
   nums           INT[],
+  dp             DOUBLE PRECISION,
+  f8             FLOAT8,
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -768,6 +779,8 @@ CREATE TABLE Rose_db_object_private.Rose_db_object_test
   start          DATE DEFAULT '1980-12-24',
   save           INT,
   nums           INT[],
+  dp             DOUBLE PRECISION,
+  f8             FLOAT8,
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
