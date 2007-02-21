@@ -42,6 +42,7 @@ lib/Rose/DB/Object/Metadata/Column/DatetimeYearToMinute.pm
 lib/Rose/DB/Object/Metadata/Column/DatetimeYearToMonth.pm
 lib/Rose/DB/Object/Metadata/Column/DatetimeYearToSecond.pm
 lib/Rose/DB/Object/Metadata/Column/Decimal.pm
+lib/Rose/DB/Object/Metadata/Column/DoublePrecision.pm
 lib/Rose/DB/Object/Metadata/Column/Enum.pm
 lib/Rose/DB/Object/Metadata/Column/Epoch.pm
 lib/Rose/DB/Object/Metadata/Column/Epoch/HiRes.pm
