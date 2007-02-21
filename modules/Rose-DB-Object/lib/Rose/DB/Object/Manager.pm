@@ -401,7 +401,10 @@ sub get_objects
      $num_with_objects, %with_objects,
      @belongs_to, %seen_rel, %rel_tn);
 
-  my $use_redundant_join_conditions = delete $args{'redundant_join_conditions'};
+  # Putting join conditions inthe WHERE clause can change the meaning of
+  # the query when outer joins are used, so disable them in that case.
+  my $use_redundant_join_conditions = 
+    $outer_joins_only ? 0 : delete $args{'redundant_join_conditions'};
 
   if($with_objects)
   {
@@ -829,8 +832,7 @@ sub get_objects
           Carp::confess "$class - Missing key columns for '$name'";
         }
 
-        if($rel_type ne 'foreign key' && $rel_type ne 'many to many' && 
-           (my $query_args = $rel->query_args))
+        if($rel->can('query_args') && (my $query_args = $rel->query_args))
         {
           # (Re)map query parameters to the correct table
           # t1 -> No change (the primary table)
@@ -960,8 +962,7 @@ sub get_objects
         }
 
         # XXX: Undocumented for now...
-        if($rel_type ne 'foreign key' && $rel_type ne 'many to many' &&
-           (my $join_args = $rel->join_args))
+        if($rel->can('join_args') && (my $join_args = $rel->join_args))
         {
           my $cond = 
             build_where_clause(dbh         => $dbh,
