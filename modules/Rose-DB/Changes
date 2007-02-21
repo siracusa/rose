@@ -1,4 +1,4 @@
-0.733 (02.20.2007) - John Siracusa <siracusa@mindspring.com>
+0.733 (02.21.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Schema support enabled for MySQL.
     * Added support for Informix's "datetime year to month" column type.
