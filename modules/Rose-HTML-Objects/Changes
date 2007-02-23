@@ -1,4 +1,4 @@
-0.547 (02.12.2007) - John Siracusa <siracusa@mindspring.com>
+0.547 (02.23.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Eliminated redundant validation of fields in nested forms.
     * Made is_empty() smarter about honoring the trim_spaces() setting.
@@ -8,7 +8,7 @@
       fields when a selected option had a false, but defined value.
       (Reported by Andrei Kozovski)
     * Fixed a bug that caused a fatal error when requesting a subfield of a
-      compound field from a from that does not contain the parent field.
+      compound field from a form that does not contain the parent field.
     * Fixed a bug that caused input_value() in on/off groups to treat any
       reference as an array reference.  (Reported by Derek Watson)
 
