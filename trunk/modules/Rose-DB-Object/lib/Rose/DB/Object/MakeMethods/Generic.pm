@@ -156,7 +156,7 @@ EOF
 
   my $column_modified_code = 
     qq(\$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'} = 1);
-  
+
   #
   # return code
   #
@@ -1752,7 +1752,7 @@ sub set
       else
       {
         my $set = $db->parse_set(@_);
- 
+
         if($choices)
         {
           foreach my $val (@$set)
@@ -1761,7 +1761,7 @@ sub set
               unless(exists $choices{$val});
           }
         }
- 
+
         $self->{$key} = $set;
 
         if(!defined $_[0] || defined $self->{$key})
@@ -2154,7 +2154,7 @@ sub object_by_key
         $self->{$key} = $object;
 
         #weaken(my $welf = $self);
-        
+
         # Make the code that will run on save()
         my $save_code = sub
         {
@@ -5920,7 +5920,7 @@ Example setup:
           },
           manager_args => { sort_by => 'date_submitted DESC' },
         },
-        
+
         bugs => 
         {
           interface => '...', # get_set, get_set_now, get_set_on_save
@@ -6006,7 +6006,7 @@ Example - find interface:
     #   ],
     #   sort_by => 'name');
     ...
-    
+
 Example - get_set interface:
 
     # Read from the programs table
