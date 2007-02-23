@@ -3210,14 +3210,14 @@ EOF
 
     sub insert_complex_product_rdbo
     {
-      my $p =
-        MyTest::RDBO::Complex::Product->new(
-          db           => $DB, 
-          id           => $i + 1_100_000, 
-          name         => "Product $i",
-          category_id  => 2,
-          status       => 'temp',
-          published    => '2005-01-02 12:34:56');
+      my $p = MyTest::RDBO::Complex::Product->new;
+      set_state_loading($p);
+      $p->init(db           => $DB, 
+               id           => $i + 1_100_000, 
+               name         => "Product $i",
+               category_id  => 2,
+               status       => 'temp',
+               published    => '2005-01-02 12:34:56');      
       $p->save;
       $i++;
     }
@@ -3658,14 +3658,9 @@ EOF
       $p->load;
       $p->name($p->name . ' updated');
 
-      # These state calls give over a 100% speed boost, but they're a bit
-      # inappropriate since no one is going to use them in practice.  OTOH,
-      # none of the other modules validate their input, so I reserve the
-      # right to uncomment them for a better "apples to apples" comparison
-      # in the future :)
-      #set_state_loading($p);
+      set_state_loading($p);
       $p->published('2004-01-02 12:34:55');
-      #unset_state_loading($p);
+      unset_state_loading($p);
 
       $p->save;
       $i++;
