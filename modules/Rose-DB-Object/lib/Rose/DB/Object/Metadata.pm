@@ -4370,7 +4370,7 @@ The default mapping of type names to class names is:
 
   'double precision' =>
     Rose::DB::Object::Metadata::Column::DoublePrecision
-  
+
   time      => Rose::DB::Object::Metadata::Column::Time
   interval  => Rose::DB::Object::Metadata::Column::Interval
 
@@ -4410,7 +4410,7 @@ The default mapping of type names to class names is:
 
   'datetime year to month' =>
     Rose::DB::Object::Metadata::Column::DatetimeYearToMonth
-  
+
   'epoch'       => Rose::DB::Object::Metadata::Column::Epoch
   'epoch hires' => Rose::DB::Object::Metadata::Column::Epoch::HiRes
 
