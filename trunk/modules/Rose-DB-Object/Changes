@@ -1,3 +1,9 @@
+0.763 (02.24.2007) - John Siracusa <siracusa@mindspring.com>
+
+    * Re-enabled the DBD::SQLite 1.13 work-around in the test suite, which
+      I temporarily disabled to test a 1.14 candidate and then forgot to
+      re-enable before the 0.762 release.
+
 0.762 (02.24.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed an unparseable version number in MakeMethods::BigNum
