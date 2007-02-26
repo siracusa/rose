@@ -15,7 +15,7 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.547';
+our $VERSION = '0.548';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -674,7 +674,7 @@ sub _init_field
   $Debug && warn "INIT FIELD $name ($name_attr)\n";
 
   my $name_exists       = $self->param_exists($name);
-  my $moniker_exists = $self->param_exists($moniker);
+  my $moniker_exists    = $self->param_exists($moniker);
   my $name_attr_exists  = $self->param_exists($name_attr);
 
   if(!$name_exists && $field->isa('Rose::HTML::Form::Field::Compound'))
@@ -712,7 +712,8 @@ sub _init_field
       # Must handle lone checkboxes and radio buttons here
       if($on_off)
       {
-        if($self->param($name) eq $field->html_attr('value'))
+        no warnings 'uninitialized';
+        if($name_exists && $self->param($name) eq $field->html_attr('value'))
         {
           $Debug && warn "$self->param($name) = checked\n";
           $field->checked(1);
