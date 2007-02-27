@@ -1,3 +1,9 @@
+0.764 (02.27.2007) - John Siracusa <siracusa@mindspring.com>
+
+    * Added test and prerequisite version for a Rose::DB bug that
+      prevented certain reserved words from being detected as primary
+      key columns in Postgres.  (Reported by Fred Cox)
+
 0.763 (02.24.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Re-enabled the DBD::SQLite 1.13 work-around in the test suite, which
