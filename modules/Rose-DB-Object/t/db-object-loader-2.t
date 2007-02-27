@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 17);
+use Test::More tests => 1 + (5 * 18);
 
 BEGIN 
 {
@@ -12,7 +12,7 @@ BEGIN
 
 our %Have;
 
-our @Tables = qw(vendors Products prices Colors product_color_map);
+our @Tables = qw(vendors Products prices Colors product_color_map pk_test);
 our $Include_Tables = join('|', @Tables);
 
 SETUP:
@@ -39,7 +39,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 17)  unless($Have{$db_type});
+    skip("$db_type tests", 18)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -66,6 +66,12 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   #  next  unless($class->isa('Rose::DB::Object'));
   #  print $class->meta->perl_class_definition, "\n";
   #}
+
+  my $pk_class = $class_prefix . '::PkTest';
+  
+  my @pk_cols = $pk_class->meta->primary_key_column_names;
+
+  is_deeply(\@pk_cols, [ qw(num year) ], "multi pk - $db_type");
 
   my $product_class = $class_prefix . '::Product';
 
@@ -171,6 +177,7 @@ BEGIN
       $dbh->do('DROP TABLE prices CASCADE');
       $dbh->do('DROP TABLE products CASCADE');
       $dbh->do('DROP TABLE vendors CASCADE');
+      $dbh->do('DROP TABLE pk_test CASCADE');
 
       $dbh->do('DROP TABLE Rose_db_object_private.product_color_map CASCADE');
       $dbh->do('DROP TABLE Rose_db_object_private.colors CASCADE');
@@ -181,6 +188,17 @@ BEGIN
       $dbh->do('DROP SCHEMA Rose_db_object_private CASCADE');
       $dbh->do('CREATE SCHEMA Rose_db_object_private');
     }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE pk_test
+(
+  num   INT NOT NULL,
+  year  VARCHAR(255) NOT NULL,
+  name  VARCHAR(255),
+
+  PRIMARY KEY(num, year)
+)
+EOF
 
     $dbh->do(<<"EOF");
 CREATE TABLE vendors
@@ -240,6 +258,17 @@ CREATE TABLE product_color_map
   color_id    INT NOT NULL REFERENCES colors (id),
 
   PRIMARY KEY(product_id, color_id)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE Rose_db_object_private.pk_test
+(
+  num   INT NOT NULL,
+  year  VARCHAR(255) NOT NULL,
+  name  VARCHAR(255),
+
+  PRIMARY KEY(num, year)
 )
 EOF
 
@@ -328,6 +357,7 @@ EOF
       $dbh->do('DROP TABLE prices CASCADE');
       $dbh->do('DROP TABLE products CASCADE');
       $dbh->do('DROP TABLE vendors CASCADE');
+      $dbh->do('DROP TABLE pk_test CASCADE');
     }
 
     # Foreign key stuff requires InnoDB support
@@ -359,6 +389,17 @@ EOF
   if(!$@ && $dbh)
   {
     $Have{'mysql'} = 1;
+
+    $dbh->do(<<"EOF");
+CREATE TABLE pk_test
+(
+  num   INT NOT NULL,
+  year  VARCHAR(255) NOT NULL,
+  name  VARCHAR(255),
+
+  PRIMARY KEY(num, year)
+)
+EOF
 
     $dbh->do(<<"EOF");
 CREATE TABLE products
@@ -454,7 +495,19 @@ EOF
       $dbh->do('DROP TABLE prices CASCADE');
       $dbh->do('DROP TABLE products CASCADE');
       $dbh->do('DROP TABLE vendors CASCADE');
+      $dbh->do('DROP TABLE pk_test CASCADE');
     }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE pk_test
+(
+  num   INT NOT NULL,
+  year  VARCHAR(255) NOT NULL,
+  name  VARCHAR(255),
+
+  PRIMARY KEY(num, year)
+)
+EOF
 
     $dbh->do(<<"EOF");
 CREATE TABLE vendors
@@ -544,7 +597,19 @@ EOF
       $dbh->do('DROP TABLE prices');
       $dbh->do('DROP TABLE products');
       $dbh->do('DROP TABLE vendors');
+      $dbh->do('DROP TABLE pk_test');
     }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE pk_test
+(
+  num   INT NOT NULL,
+  year  VARCHAR(255) NOT NULL,
+  name  VARCHAR(255),
+
+  PRIMARY KEY(num, year)
+)
+EOF
 
     $dbh->do(<<"EOF");
 CREATE TABLE vendors
@@ -626,6 +691,7 @@ END
     $dbh->do('DROP TABLE prices CASCADE');
     $dbh->do('DROP TABLE products CASCADE');
     $dbh->do('DROP TABLE vendors CASCADE');
+    $dbh->do('DROP TABLE pk_test CASCADE');
 
     $dbh->do('DROP TABLE Rose_db_object_private.product_color_map CASCADE');
     $dbh->do('DROP TABLE Rose_db_object_private.colors CASCADE');
@@ -649,6 +715,7 @@ END
     $dbh->do('DROP TABLE prices CASCADE');
     $dbh->do('DROP TABLE products CASCADE');
     $dbh->do('DROP TABLE vendors CASCADE');
+    $dbh->do('DROP TABLE pk_test CASCADE');
 
     $dbh->disconnect;
   }
@@ -664,6 +731,7 @@ END
     $dbh->do('DROP TABLE prices CASCADE');
     $dbh->do('DROP TABLE products CASCADE');
     $dbh->do('DROP TABLE vendors CASCADE');
+    $dbh->do('DROP TABLE pk_test CASCADE');
 
     $dbh->disconnect;
   }
@@ -679,6 +747,7 @@ END
     $dbh->do('DROP TABLE prices');
     $dbh->do('DROP TABLE products');
     $dbh->do('DROP TABLE vendors');
+    $dbh->do('DROP TABLE pk_test');
 
     $dbh->disconnect;
   }

@@ -19,7 +19,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.733';
+our $VERSION = '0.733_01';
 
 our $Debug = 0;
 
@@ -1247,7 +1247,7 @@ sub _get_primary_key_column_names
       Carp::croak "Could not extract column name from DBI primary_key_info()";
     }
 
-    push(@columns, $pk_info->{'COLUMN_NAME'});
+    push(@columns, $self->unquote_column_name($pk_info->{'COLUMN_NAME'}));
   }
 
   return \@columns;
