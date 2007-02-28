@@ -664,6 +664,7 @@ sub label_object
 sub html_label
 {
   my($self) = shift;
+  no warnings 'uninitialized';
   return ''  unless(length $self->label);
   return $self->label_object(($self->required ? (class => 'required') : ()), @_)->html_tag;
 }
@@ -671,6 +672,7 @@ sub html_label
 sub xhtml_label
 {
   my($self) = shift;
+  no warnings 'uninitialized';
   return ''  unless(length $self->label);
   return $self->label_object(($self->required ? (class => 'required') : ()), @_)->xhtml_tag;
 }
