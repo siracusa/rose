@@ -427,24 +427,24 @@ is($dates->[0]->day_name, 'Tuesday', 'internal_value 5 - date range');
 
 is($field->html_field, '<span class="date-range"><input maxlength="25" name="date.min" size="21" type="text" value="1980-05-06 03:00:00 PM"> - <input maxlength="25" name="date.max" size="21" type="text" value="2003-01-06 11:59:59 PM"></span>', 'html_field 1 - date range');
 
-is($field->html, '<table class="date-range" cellpadding="0" cellspacing="0"><tr valign="baseline"><td class="min"><input maxlength="25" name="date.min" size="21" type="text" value="1980-05-06 03:00:00 PM"></td><td> - </td><td class="max"><input maxlength="25" name="date.max" size="21" type="text" value="2003-01-06 11:59:59 PM"></td></tr></table>', 'html 1 - date range');
+is($field->html, '<table class="date-range"><tr><td class="min"><input maxlength="25" name="date.min" size="21" type="text" value="1980-05-06 03:00:00 PM"></td><td> - </td><td class="max"><input maxlength="25" name="date.max" size="21" type="text" value="2003-01-06 11:59:59 PM"></td></tr></table>', 'html 1 - date range');
 
 $field->input_value([ '2/3/2009', '7/8/2001' ]);
 
 ok(!$field->validate, 'validate 1 - date range');
 
-is($field->html, '<table class="date-range" cellpadding="0" cellspacing="0"><tr valign="baseline"><td class="min"><input maxlength="25" name="date.min" size="21" type="text" value="2009-02-03 12:00:00 AM"></td><td> - </td><td class="max"><input maxlength="25" name="date.max" size="21" type="text" value="2001-07-08 11:59:59 PM"></td></tr><tr><td colspan="3"><span class="error">The min date cannot be later than the max date.</span></td></tr></table>', 'html 2 - date range');
+is($field->html, '<table class="date-range"><tr><td class="min"><input maxlength="25" name="date.min" size="21" type="text" value="2009-02-03 12:00:00 AM"></td><td> - </td><td class="max"><input maxlength="25" name="date.max" size="21" type="text" value="2001-07-08 11:59:59 PM"></td></tr><tr><td colspan="3"><span class="error">The min date cannot be later than the max date.</span></td></tr></table>', 'html 2 - date range');
 
-is($field->xhtml, '<table class="date-range" cellpadding="0" cellspacing="0"><tr valign="baseline"><td class="min"><input maxlength="25" name="date.min" size="21" type="text" value="2009-02-03 12:00:00 AM" /></td><td> - </td><td class="max"><input maxlength="25" name="date.max" size="21" type="text" value="2001-07-08 11:59:59 PM" /></td></tr><tr><td colspan="3"><span class="error">The min date cannot be later than the max date.</span></td></tr></table>', 'xhtml 1 - date range');
+is($field->xhtml, '<table class="date-range"><tr><td class="min"><input maxlength="25" name="date.min" size="21" type="text" value="2009-02-03 12:00:00 AM" /></td><td> - </td><td class="max"><input maxlength="25" name="date.max" size="21" type="text" value="2001-07-08 11:59:59 PM" /></td></tr><tr><td colspan="3"><span class="error">The min date cannot be later than the max date.</span></td></tr></table>', 'xhtml 1 - date range');
 
 $field->field('min')->input_value('asdf');
 
 ok(!$field->validate, 'validate 2 - date range');
 
-is($field->html, '<table class="date-range" cellpadding="0" cellspacing="0"><tr valign="baseline"><td class="min"><input maxlength="25" name="date.min" size="21" type="text" value="asdf"><br>
+is($field->html, '<table class="date-range"><tr><td class="min"><input maxlength="25" name="date.min" size="21" type="text" value="asdf"><br>
 <span class="error">Could not parse date: asdf</span></td><td> - </td><td class="max"><input maxlength="25" name="date.max" size="21" type="text" value="2001-07-08 11:59:59 PM"></td></tr><tr><td colspan="3"><span class="error">Could not parse date: asdf</span></td></tr></table>', 'html 3 - date range');
 
-is($field->xhtml, '<table class="date-range" cellpadding="0" cellspacing="0"><tr valign="baseline"><td class="min"><input maxlength="25" name="date.min" size="21" type="text" value="asdf" /><br />
+is($field->xhtml, '<table class="date-range"><tr><td class="min"><input maxlength="25" name="date.min" size="21" type="text" value="asdf" /><br />
 <span class="error">Could not parse date: asdf</span></td><td> - </td><td class="max"><input maxlength="25" name="date.max" size="21" type="text" value="2001-07-08 11:59:59 PM" /></td></tr><tr><td colspan="3"><span class="error">Could not parse date: asdf</span></td></tr></table>', 'xhtml 2 - date range');
 
 $field->field('min')->input_value('3/6/1970');
