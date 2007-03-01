@@ -8,11 +8,11 @@ use Rose::DB::Object::MakeMethods::Generic;
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.757';
+our $VERSION = '0.764';
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
-  qw(default values)
+  qw(default check_in)
 );
 
 Rose::Object::MakeMethods::Generic->make_methods
@@ -28,7 +28,7 @@ foreach my $type (__PACKAGE__->available_method_types)
 
 sub type { 'set' }
 
-*check_in = \&values;
+*values = \&check_in;
 
 sub parse_value  { shift; shift->parse_set(@_)  }
 sub format_value { shift; shift->format_set(@_) }

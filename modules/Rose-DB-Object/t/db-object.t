@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 547;
+use Test::More tests => 548;
 
 BEGIN 
 {
@@ -363,7 +363,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 114)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 115)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -488,6 +488,10 @@ SKIP: foreach my $db_type ('mysql')
   my $o4 = MyMySQLObject->new(id => 999);
   ok(!$o4->load(speculative => 1), "load() nonexistent - $db_type");
   ok($o4->not_found, "not_found() 2 - $db_type");
+
+  eval { $o->items('z') };
+  
+  ok($@ =~ /Invalid value/, "set invalid value - $db_type");
 
   $o->items('a', 'b');
   $o->nums([ 4, 5, 6 ]);

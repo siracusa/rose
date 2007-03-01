@@ -1,8 +1,10 @@
-0.764 (02.27.2007) - John Siracusa <siracusa@mindspring.com>
+0.764 (03.01.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added test and prerequisite version for a Rose::DB bug that
       prevented certain reserved words from being detected as primary
       key columns in Postgres.  (Reported by Fred Cox)
+    * Fixed a bug that caused values not to be checked against the list
+      of valid values in SET columns.  (Reported by Adrian Howard)
 
 0.763 (02.24.2007) - John Siracusa <siracusa@mindspring.com>
 
