@@ -8,6 +8,8 @@
     * Fixed a bug that caused column (get/)set methods not to return the
       correct value when an on_set trigger was applied to the column.
       (Reported by Cory Bennett)
+    * Fixed a bug that caused enum columns to be incorrectly marked as
+      modified in some circumstances.  (Reported by Cory Bennett)
 
 0.763 (02.24.2007) - John Siracusa <siracusa@mindspring.com>
 

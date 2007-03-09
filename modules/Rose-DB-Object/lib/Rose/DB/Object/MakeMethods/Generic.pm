@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.761';
+our $VERSION = '0.764';
 
 our $Debug = 0;
 
@@ -403,7 +403,7 @@ sub enum
         if(@_ && defined $_[0])
         {
           Carp::croak "Invalid $name: '$_[0]'"  unless(exists $values{$_[0]});
-          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1  unless($self->{STATE_LOADING()});
           return $self->{$key} = $_[0];
         }
         return (defined $self->{$key}) ? $self->{$key} : 
@@ -440,7 +440,7 @@ sub enum
         if(@_ && defined $_[0])
         {
           Carp::croak "Invalid $name: '$_[0]'"  unless(exists $values{$_[0]});
-          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1  unless($self->{STATE_LOADING()});
           return $self->{$key} = $_[0];
         }
 
@@ -456,7 +456,7 @@ sub enum
 
       Carp::croak "Missing argument in call to $name"  unless(@_);
       Carp::croak "Invalid $name: '$_[0]'"  unless(exists $values{$_[0]});
-      $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+      $self->{MODIFIED_COLUMNS()}{$column_name} = 1   unless($self->{STATE_LOADING()});
       return $self->{$key} = $_[0];
     };
   }
