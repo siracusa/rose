@@ -2111,7 +2111,7 @@ all columns will be fetched from the database, even L<lazy|Rose::DB::Object::Met
 
 If this parameter is passed with a true value, and if the load failed because the row was L<not found|/not_found>, then the L<error_mode|Rose::DB::Object::Metadata/error_mode> setting is ignored and zero (0) is returned.  In the absence of an explicitly set value, this parameter defaults to the value returned my the L<metadata object|/meta>'s L<default_load_speculative|Rose::DB::Object::Metadata/default_load_speculative> method.
 
-=item B<use_key KEY>
+=item C<use_key KEY>
 
 Use the unique key L<name|Rose::DB::Object::Metadata::UniqueKey/name>d KEY to load the object.  This overrides the unique key selection process described above.  The key must have a defined value in at least one of its L<columns|Rose::DB::Object::Metadata::UniqueKey/columns>.
 

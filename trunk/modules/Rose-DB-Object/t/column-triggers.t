@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 259;
+use Test::More tests => 269;
 
 BEGIN 
 {
@@ -83,7 +83,7 @@ SETUP:
   $column->add_trigger(event => 'on_get', 
                        code => sub { $Temp{'get'}{'name'} = shift->name });
 
-  # This relies on knowledge of how generate_trigger_name() works
+  # XXX: This relies on knowledge of how generate_trigger_name() works
   my $dyn_name = "dyntrig_${$}_19"; 
 
   # 0: warn, die, dyn
@@ -241,8 +241,7 @@ foreach my $db_type (@dbs)
 {
   SKIP:
   {
-    # 44
-    skip("$db_type tests", 44)  unless($Have{$db_type});
+    skip("$db_type tests", 46)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -266,12 +265,12 @@ foreach my $db_type (@dbs)
 
   my $o = MyObject->new;
 
-  $o->name('Fred');
+  is($o->name('Fred'), 'Fred', "on_set return 1 - $db_type");
   is($Temp{'set'}{'name'}, 'Fred', "on_set 1 - $db_type");
   is(keys %Temp, 1, "on_set 2 - $db_type");
   %Temp = ();
 
-  $o->xset_name('Fred');
+  is($o->xset_name('Fred'), 'Fred', "on_set return 2 - $db_type");
   is($Temp{'set'}{'name'}, 'Fred', "on_set 3 - $db_type");
   is(keys %Temp, 1, "on_set 4 - $db_type");
   %Temp = ();

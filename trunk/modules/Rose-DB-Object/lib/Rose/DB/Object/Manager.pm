@@ -1497,7 +1497,7 @@ sub get_objects
         $sth->execute(@$bind);
       }
 
-      $count = $sth->fetchrow_array;
+      ($count) = $sth->fetchrow_array;
       $sth->finish;
     };
 
