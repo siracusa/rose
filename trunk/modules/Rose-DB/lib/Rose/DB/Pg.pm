@@ -8,7 +8,7 @@ use SQL::ReservedWords::PostgreSQL();
 
 use Rose::DB;
 
-our $VERSION = '0.733';
+our $VERSION = '0.734';
 
 our $Debug = 0;
 
@@ -311,7 +311,7 @@ sub refine_dbi_column_info
         $seq =~ s/^$implicit_schema\.//;
       }
 
-      $col_info->{'rdbo_default_value_sequence_name'} = $seq;
+      $col_info->{'rdbo_default_value_sequence_name'} = $self->unquote_column_name($seq);
 
       # Pg returns serial columns as integer or bigint
       if($col_info->{'TYPE_NAME'} eq 'integer' ||
