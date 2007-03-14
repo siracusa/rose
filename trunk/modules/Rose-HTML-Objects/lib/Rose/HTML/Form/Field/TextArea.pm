@@ -7,7 +7,7 @@ use Carp();
 use Rose::HTML::Form::Field::WithContents;
 our @ISA = qw(Rose::HTML::Form::Field::WithContents);
 
-our $VERSION = '0.34';
+our $VERSION = '0.548';
 
 __PACKAGE__->add_valid_html_attrs
 (
@@ -34,7 +34,7 @@ __PACKAGE__->add_boolean_html_attrs
 sub html_element  { 'textarea' }
 sub xhtml_element { 'textarea' }
 
-sub value { shift->contents(@_) }
+sub value { shift->input_value(@_) }
 
 sub escape_html_contents { 1 }
 
