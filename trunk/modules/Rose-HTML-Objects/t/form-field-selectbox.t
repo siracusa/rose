@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 78;
+use Test::More tests => 79;
 
 BEGIN 
 {
@@ -207,6 +207,12 @@ $field->clear;
 
 is(join('', $field->internal_value), '', 'clear() 1');
 
+$field->multiple(0);
+
+is(scalar $field->internal_value, undef, 'clear() 2');
+
+$field->multiple(1);
+
 is($field->html_field, 
   qq(<select multiple name="fruits" size="6">\n) .
   qq(<option value="apple">Apple</option>\n) .
@@ -217,7 +223,7 @@ is($field->html_field,
   qq(<option value="squash">Squash</option>\n) .
   qq(<option value="cherry">Cherry</option>\n) .
   qq(</select>),
-  'clear() 2');
+  'clear() 3');
 
 $field->reset;
 
@@ -317,7 +323,7 @@ is($field->html_field,
 
 $field->clear;
 
-is(join(',', $field->internal_value), '', 'clear() 3');
+is(join(',', $field->internal_value), '', 'clear() 4');
 
 is($field->html_field, 
   qq(<select multiple name="fruits" size="6">\n) .
@@ -329,7 +335,7 @@ is($field->html_field,
   qq(<option value="squash">Squash</option>\n) .
   qq(<option value="cherry">Cherry</option>\n) .
   qq(</select>),
-  'clear() 4');
+  'clear() 5');
 
 $field->option('apple')->short_label('1.0');
 
