@@ -7,6 +7,8 @@ use Carp();
 use Rose::HTML::Form::Field::Option::Container;
 our @ISA = qw(Rose::HTML::Form::Field::Option::Container);
 
+our $VERSION = '0.548';
+
 __PACKAGE__->add_required_html_attrs(
 {
   name => '',
@@ -24,9 +26,17 @@ __PACKAGE__->add_valid_html_attrs
   'onchange',    # %Script;       #IMPLIED  -- the element value was changed --
 );
 
-our $VERSION = '0.544';
-
 sub multiple { shift->html_attr('multiple', @_) }
+
+sub internal_value
+{
+  my($self) = shift;
+
+  return $self->SUPER::internal_value(@_)  if($self->multiple);
+
+  my($value) =  $self->SUPER::internal_value(@_);
+  return $value;
+}
 
 1;
 
@@ -145,6 +155,10 @@ This is an alias for the L<options|/options> method.
 =item B<has_value VALUE>
 
 Returns true if VALUE is selected in the select box, false otherwise.
+
+=item B<internal_value>
+
+If L<multiple|/multiple> is true, a reference to an array of selected values is returned in scalar context, and a list of selected values is returned in list context.  Otherwise, the selected value is returned (or undef if no value is selected).
 
 =item B<labels [LABELS]>
 

@@ -1,5 +1,7 @@
-0.548 (03.14.2007) - John Siracusa <siracusa@mindspring.com>
+0.548 (03.20.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Changed the behavior of internal_value() on SelectBox objects to
+      return an array ref in scalar context only when multiple() is true.
     * Fixed a TextArea bug that prevented errors from showing up in
       the html() and xhtml() output.  (Reported by Drew Taylor)
     * Silenced an uninitialized value warning in Rose::HTML::Form.
