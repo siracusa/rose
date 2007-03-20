@@ -1717,6 +1717,7 @@ Valid attributes:
     onsubmit
     style
     tabindex
+    target
     title
     value
     xml:lang
