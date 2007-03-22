@@ -478,9 +478,9 @@ sub save
     {
       my %did_set;
 
-      my %code_args = $self->{ON_SAVE_ATTR_NAME()} ?
+      my %code_args = 
         map { ($_ => $args{$_}) } grep { exists $args{$_} } 
-        qw(changes_only prepare_cached cascade) : ();
+        qw(changes_only prepare_cached cascade);
 
       #
       # Do pre-save stuff
