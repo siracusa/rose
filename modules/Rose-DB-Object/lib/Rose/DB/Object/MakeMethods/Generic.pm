@@ -14,7 +14,7 @@ use Rose::DB::Object::Manager;
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Constants 
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
-     STATE_SAVING ON_SAVE_ATTR_NAME MODIFIED_COLUMNS);
+     STATE_SAVING ON_SAVE_ATTR_NAME MODIFIED_COLUMNS SET_COLUMNS);
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
@@ -235,12 +235,15 @@ EOF
   my $save_old_val_code = $smart ? 
     qq(no warnings 'uninitialized';\nmy \$old_val = \$self->{'$qkey'};) : '';
 
+  my $was_set_code = $smart ?
+    qq(\$self->{SET_COLUMNS()}{'$col_name_escaped'} = 1;) : '';
+
   my $mod_cond_code =  $smart ? 
-    qq(unless(\$self->{STATE_LOADING()} || \$old_val eq \$self->{'$qkey'});) :
+    qq(unless(\$self->{STATE_LOADING()} || (!defined \$old_val && !defined \$self->{'$qkey'}) || \$old_val eq \$self->{'$qkey'});) :
     qq(unless(\$self->{STATE_LOADING()}););
 
   my $mod_cond_pre_set_code = $smart ?
-    qq(unless(\$self->{STATE_LOADING()} || \$value eq \$self->{'$qkey'});) :
+    qq(unless(\$self->{STATE_LOADING()} || (!defined \$value && !defined \$self->{'$qkey'}) || \$value eq \$self->{'$qkey'});) :
     qq(unless(\$self->{STATE_LOADING()}););
 
   my %methods;
@@ -266,6 +269,7 @@ sub
     $save_old_val_code
     $set_code
     $column_modified_code  $mod_cond_code
+    $was_set_code
     $return_code
   }
 
@@ -287,6 +291,7 @@ sub
     $check_in_code
     $length_check_code
     $column_modified_code  $mod_cond_pre_set_code
+    $was_set_code
     return $set_code
   }
 
@@ -344,6 +349,7 @@ sub
   $save_old_val_code
   $set_code
   $column_modified_code  $mod_cond_code
+  $was_set_code
   $return_code
 };
 EOF
@@ -3183,13 +3189,16 @@ sub objects_by_key
             # below can see the delete (above) which happened in
             # the current transaction
             $object->db($db); 
-$DB::single = 1;
+
             # Map object to parent
-            MAP_TO_PARENT:
+            $object->init(%map);
+
+            # Mark all previously set-but-not-modified columns as modified
+            # if saving changes since this object may have been deleted by 
+            # the manager call above.
+            if($args->{'changes_only'})
             {
-              # Must ensure that this mapping is seen as a modification
-              local $self->{STATE_SAVING()} = 0;
-              $object->init(%map);
+              $object->{MODIFIED_COLUMNS()}{$_} = 1  for(keys %{$object->{SET_COLUMNS()}});
             }
 
             # Try to load the object if doesn't appear to exist already.
@@ -4447,6 +4456,14 @@ sub objects_by_map
             # Save the object, if necessary
             unless($in_db)
             {
+              # Mark all previously set-but-not-modified columns as modified
+              # if saving changes since this object may have been deleted by 
+              # the manager call above.
+              if($args->{'changes_only'})
+              {
+                $object->{MODIFIED_COLUMNS()}{$_} = 1  for(keys %{$object->{SET_COLUMNS()}});
+              }
+
               $object->save(%$args) or die $object->error;
             }
 
@@ -4473,7 +4490,7 @@ sub objects_by_map
             }
 
             # Save the map record
-            $map_record->save or die $map_record->error;
+            $map_record->save(%$args) or die $map_record->error;
           }
 
           # Forget about any adds if we just set the list
