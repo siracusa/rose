@@ -3183,9 +3183,14 @@ sub objects_by_key
             # below can see the delete (above) which happened in
             # the current transaction
             $object->db($db); 
-
+$DB::single = 1;
             # Map object to parent
-            $object->init(%map);
+            MAP_TO_PARENT:
+            {
+              # Must ensure that this mapping is seen as a modification
+              local $self->{STATE_SAVING()} = 0;
+              $object->init(%map);
+            }
 
             # Try to load the object if doesn't appear to exist already.
             # If anything was delete above, we have to try loading no
