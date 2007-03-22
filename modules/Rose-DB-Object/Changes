@@ -1,5 +1,7 @@
-0.764 (03.09.2007) - John Siracusa <siracusa@mindspring.com>
+0.764 (03.20.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Made changes_only, cascade, and prepare_cached arguments to save()
+      also apply to *_on_save collections.  XXX: Needs tests
     * Added test and prerequisite version for a Rose::DB bug that
       prevented certain reserved words from being detected as primary
       key columns in Postgres.  (Reported by Fred Cox)
