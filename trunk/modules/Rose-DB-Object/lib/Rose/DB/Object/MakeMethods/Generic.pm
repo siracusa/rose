@@ -2153,15 +2153,13 @@ sub object_by_key
         # Set the attribute
         $self->{$key} = $object;
 
-        #weaken(my $welf = $self);
-
         # Make the code that will run on save()
         my $save_code = sub
         {
-          my $welf = shift;
+          my($self, $args) = @_;
 
           # Bail if there's nothing to do
-          my $object = $welf->{$key} or return;
+          my $object = $self->{$key} or return;
 
           my $db;
 
@@ -2179,13 +2177,13 @@ sub object_by_key
 
           eval
           {
-            $db = $welf->db;
+            $db = $self->db;
             $object->db($db)  if($share_db);
 
             # Save the object, load or create if necessary
             if($object->{STATE_IN_DB()})
             {
-              $object->save or die $object->error;
+              $object->save(%$args) or die $object->error;
             }
             else
             {
@@ -2199,7 +2197,7 @@ sub object_by_key
 
               unless($ret)
               {
-                $object->save or die $object->error;
+                $object->save(%$args) or die $object->error;
               }
             }
 
@@ -2209,20 +2207,20 @@ sub object_by_key
               my $local_method   = $meta->column_mutator_method_name($local_column);
               my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
 
-              $welf->$local_method($object->$foreign_method);
+              $self->$local_method($object->$foreign_method);
             }
 
-            return $welf->{$key} = $object;
+            return $self->{$key} = $object;
           };
 
           if($@)
           {
-            $welf->error("Could not add $name object - $@");
-            $meta->handle_error($welf);
+            $self->error("Could not add $name object - $@");
+            $meta->handle_error($self);
             return undef;
           }
 
-          return $welf->{$key};
+          return $self->{$key};
         };
 
         if($linked_up)
@@ -2480,33 +2478,31 @@ sub object_by_key
       # Clear the foreignobject attribute
       $self->{$key} = undef;
 
-      #weaken(my $welf = $self);
-
       # Make the code to run on save
       my $delete_code = sub
       {  
-        my $welf = shift;
+        my $self = shift;
 
         my $db;
 
         eval
         {
-          $db = $welf->db;
+          $db = $self->db;
           $object->db($db)  if($share_db);
           $object->delete(@_) or die $object->error;
         };
 
         if($@)
         {
-          $welf->error("Could not delete $name object - $@");
+          $self->error("Could not delete $name object - $@");
 
           # Restore old foreign key column values if prudent
           while(my($method, $value) = each(%save_fk))
           {
-            $welf->$method($value)  unless(defined $welf->$method);
+            $self->$method($value)  unless(defined $self->$method);
           }
 
-          $meta->handle_error($welf);
+          $meta->handle_error($self);
           return undef;
         }
 
@@ -3143,11 +3139,9 @@ sub objects_by_key
         # Set the attribute
         $self->{$key} = $objects;
 
-        #weaken(my $welf = $self);
-
         my $save_code = sub
         {
-          my $welf = shift;
+          my($self, $args) = @_;
 
           # Set up join conditions and column map
           my(%key, %map);
@@ -3160,19 +3154,19 @@ sub objects_by_key
             my $local_method   = $meta->column_accessor_method_name($local_column);
             my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
 
-            $key{$foreign_column} = $map{$foreign_method} = $welf->$local_method();
+            $key{$foreign_column} = $map{$foreign_method} = $self->$local_method();
 
             # Comment this out to allow null keys
             unless(defined $key{$foreign_column})
             {
               keys(%$ft_columns); # reset iterator
-              $welf->error("Could not set objects via $name() - the " .
+              $self->error("Could not set objects via $name() - the " .
                            "$local_method attribute is undefined");
               return;
             }
           }
 
-          my $db = $welf->db;
+          my $db = $self->db;
 
           # Delete any existing objects
           my $deleted = 
@@ -3183,7 +3177,7 @@ sub objects_by_key
 
           # Save all the objects.  Use the current list, even if it's
           # different than it was when the "set on save" was called.
-          foreach my $object (@{$welf->{$key} || []})
+          foreach my $object (@{$self->{$key} || []})
           {
             # It's essential to share the db so that the load()
             # below can see the delete (above) which happened in
@@ -3213,23 +3207,23 @@ sub objects_by_key
             }
 
             # Save the object
-            $object->save or die $object->error;
+            $object->save(%$args) or die $object->error;
 
             # Not sharing?  Aw.
             $object->db(undef)  unless($share_db);
           }
 
           # Forget about any adds if we just set the list
-          if(defined $welf->{$key})
+          if(defined $self->{$key})
           {
             # Set to undef instead of deleting because this code ref
             # will be called while iterating over this very hash.
-            $welf->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'} = undef;
+            $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'} = undef;
           }
 
           # Blank the attribute, causing the objects to be fetched from
           # the db next time, if there's a custom sort order
-          $welf->{$key} = undef  if(defined $mgr_args->{'sort_by'});
+          $self->{$key} = undef  if(defined $mgr_args->{'sort_by'});
 
           return 1;
         };
@@ -3439,11 +3433,11 @@ sub objects_by_key
 
       $self->{$key} = undef;
 
-      #weaken(my $welf = $self);
+      #weaken(my $self = $self);
 
       my $delete_code = sub
       {
-        my $welf = shift;
+        my $self = shift;
 
         # Set up join conditions and column map
         my(%key, %map);
@@ -3456,19 +3450,19 @@ sub objects_by_key
           my $local_method   = $meta->column_accessor_method_name($local_column);
           my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
 
-          $key{$foreign_column} = $map{$foreign_method} = $welf->$local_method();
+          $key{$foreign_column} = $map{$foreign_method} = $self->$local_method();
 
           # Comment this out to allow null keys
           unless(defined $key{$foreign_column})
           {
             keys(%$ft_columns); # reset iterator
-            $welf->error("Could not set objects via $name() - the " .
+            $self->error("Could not set objects via $name() - the " .
                          "$local_method attribute is undefined");
             return;
           }
         }
 
-        my $db = $welf->db;
+        my $db = $self->db;
 
         # Delete existing objects
         my $deleted = 
@@ -3477,7 +3471,7 @@ sub objects_by_key
                                          db => $db);
         die $ft_manager->error  unless(defined $deleted);
 
-        $welf->{$key} = undef;
+        $self->{$key} = undef;
 
         return 1;
       };
@@ -3656,11 +3650,9 @@ sub objects_by_key
         push(@{$self->{$key}}, @$objects);
       }
 
-      #weaken(my $welf = $self);
-
       my $add_code = sub
       {
-        my $welf = shift;
+        my($self, $args) = @_;
 
         # Set up column map
         my %map;
@@ -3673,18 +3665,18 @@ sub objects_by_key
           my $local_method   = $meta->column_accessor_method_name($local_column);
           my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
 
-          $map{$foreign_method} = $welf->$local_method();
+          $map{$foreign_method} = $self->$local_method();
 
           # Comment this out to allow null keys
           unless(defined $map{$foreign_method})
           {
             keys(%$ft_columns); # reset iterator
-            die $welf->error("Could not add objects via $name() - the " .
+            die $self->error("Could not add objects via $name() - the " .
                              "$local_method attribute is undefined");
           }
         }
 
-        my $db = $welf->db;
+        my $db = $self->db;
 
         # Add all the objects.
         foreach my $object (@$objects)
@@ -3702,13 +3694,13 @@ sub objects_by_key
 
           unless($ret)
           {
-            $object->save or die $object->error;
+            $object->save(%$args) or die $object->error;
           }
         }
 
         # Blank the attribute, causing the objects to be fetched from
         # the db next time, if there's a custom sort order
-        $welf->{$key} = undef  if(defined $mgr_args->{'sort_by'});
+        $self->{$key} = undef  if(defined $mgr_args->{'sort_by'});
 
         return 1;
       };
@@ -4392,11 +4384,9 @@ sub objects_by_map
         # Set the attribute
         $self->{$key} = $objects;
 
-        #weaken(my $welf = $self);
-
         my $save_code = sub
         {
-          my $welf = shift;
+          my($self, $args) = @_;
 
           # Set up join conditions and map record connections
           my(%join_map_to_self,    # map column => self value
@@ -4407,19 +4397,19 @@ sub objects_by_map
             my $map_method = $map_meta->column_accessor_method_name($map_column);
 
             $method_map_to_self{$map_method} = $join_map_to_self{$map_column} = 
-              $welf->$self_method();
+              $self->$self_method();
 
             # Comment this out to allow null keys
             unless(defined $join_map_to_self{$map_column})
             {
               keys(%map_column_to_self_method); # reset iterator
-              $welf->error("Could not fetch indirect objects via $name() - the " .
+              $self->error("Could not fetch indirect objects via $name() - the " .
                            "$self_method attribute is undefined");
               return;
             }
           }
 
-          my $db = $welf->db;
+          my $db = $self->db;
 
           # Delete any existing objects
           my $deleted = 
@@ -4430,7 +4420,7 @@ sub objects_by_map
 
           # Save all the objects.  Use the current list, even if it's
           # different than it was when the "set on save" was called.
-          foreach my $object (@{$welf->{$key} || []})
+          foreach my $object (@{$self->{$key} || []})
           {
             # It's essential to share the db so that the load()
             # below can see the delete (above) which happened in
@@ -4452,7 +4442,7 @@ sub objects_by_map
             # Save the object, if necessary
             unless($in_db)
             {
-              $object->save or die $object->error;
+              $object->save(%$args) or die $object->error;
             }
 
             # Not sharing?  Aw.
@@ -4482,16 +4472,16 @@ sub objects_by_map
           }
 
           # Forget about any adds if we just set the list
-          if(defined $welf->{$key})
+          if(defined $self->{$key})
           {
             # Set to undef instead of deleting because this code ref
             # will be called while iterating over this very hash.
-            $welf->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'} = undef;
+            $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'} = undef;
           }
 
           # Blank the attribute, causing the objects to be fetched from
           # the db next time, if there's a custom sort order
-          $welf->{$key} = undef  if(defined $mgr_args->{'sort_by'});
+          $self->{$key} = undef  if(defined $mgr_args->{'sort_by'});
 
           return 1;
         };
@@ -4754,11 +4744,9 @@ sub objects_by_map
         push(@{$self->{$key}}, @$objects);
       }
 
-      #weaken(my $welf = $self);
-
       my $add_code = sub
       {
-        my $welf = shift;
+        my($self, $args) = @_;
 
         # Set up join conditions and map record connections
         my(%join_map_to_self,    # map column => self value
@@ -4769,19 +4757,19 @@ sub objects_by_map
           my $map_method = $map_meta->column_accessor_method_name($map_column);
 
           $method_map_to_self{$map_method} = $join_map_to_self{$map_column} = 
-            $welf->$self_method();
+            $self->$self_method();
 
           # Comment this out to allow null keys
           unless(defined $join_map_to_self{$map_column})
           {
             keys(%map_column_to_self_method); # reset iterator
-            $welf->error("Could not fetch indirect objects via $name() - the " .
+            $self->error("Could not fetch indirect objects via $name() - the " .
                          "$self_method attribute is undefined");
             return;
           }
         }
 
-        my $db = $welf->db;
+        my $db = $self->db;
 
         # Add all the objects.
         foreach my $object (@$objects)
@@ -4806,7 +4794,7 @@ sub objects_by_map
           # Save the object, if necessary
           unless($in_db)
           {
-            $object->save or die $object->error;
+            $object->save(%$args) or die $object->error;
           }
 
           # Not sharing?  Aw.
@@ -4827,7 +4815,7 @@ sub objects_by_map
 
         # Blank the attribute, causing the objects to be fetched from
         # the db next time, if there's a custom sort order
-        $welf->{$key} = undef  if(defined $mgr_args->{'sort_by'});
+        $self->{$key} = undef  if(defined $mgr_args->{'sort_by'});
 
         return 1;
       };

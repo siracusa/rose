@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.763_02';
+our $VERSION = '0.763_03';
 
 our $Debug = 0;
 
@@ -478,6 +478,10 @@ sub save
     {
       my %did_set;
 
+      my %code_args = $self->{ON_SAVE_ATTR_NAME()} ?
+        map { ($_ => $args{$_}) } grep { exists $args{$_} } 
+        qw(changes_only prepare_cached cascade) : ();
+
       #
       # Do pre-save stuff
       #
@@ -497,7 +501,7 @@ sub save
         #}
 
         my $code   = $todo->{'fk'}{$fk_name}{'set'} or next;
-        my $object = $code->($self);
+        my $object = $code->($self, \%code_args);
 
         # Account for objects that evaluate to false to due overloading
         unless($object || ref $object)
@@ -543,7 +547,7 @@ sub save
           # Don't run the code to delete this object if we just set it above
           next  if($did_set{'fk'}{$fk_name}{Rose::DB::Object::Util::row_id($object)});
 
-          $code->($self) or die $self->error;
+          $code->($self, \%code_args) or die $self->error;
         }
       }
 
@@ -577,19 +581,19 @@ sub save
         # Set value(s)
         if($code  = $todo->{'rel'}{$rel_name}{'set'})
         {
-          $code->($self) or die $self->error;
+          $code->($self, \%code_args) or die $self->error;
         }
 
         # Delete value(s)
         if($code  = $todo->{'rel'}{$rel_name}{'delete'})
         {
-          $code->($self) or die $self->error;
+          $code->($self, \%code_args) or die $self->error;
         }
 
         # Add value(s)
         if($code  = $todo->{'rel'}{$rel_name}{'add'})
         {
-          $code->($self) or die $self->error;
+          $code->($self, \%code_args) or die $self->error;
         }
       }
 
