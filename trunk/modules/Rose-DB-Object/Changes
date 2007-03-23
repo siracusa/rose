@@ -1,4 +1,4 @@
-0.764 (03.20.2007) - John Siracusa <siracusa@mindspring.com>
+0.764 (03.23.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Made changes_only, cascade, and prepare_cached arguments to save()
       also apply to *_on_save collections.  XXX: Needs tests
@@ -12,6 +12,8 @@
       (Reported by Cory Bennett)
     * Fixed a bug that caused enum columns to be incorrectly marked as
       modified in some circumstances.  (Reported by Cory Bennett)
+    * Fixed a bug that caused inflate/deflate triggers to fail under some
+      circumstances.  (Patch by Cory Bennett)
 
 0.763 (02.24.2007) - John Siracusa <siracusa@mindspring.com>
 
