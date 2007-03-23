@@ -1,5 +1,7 @@
 0.764 (03.23.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Added module_preamble and module_postamble features to the Loader's
+      make_modules() method.  (Patch by David Christensen)
     * Made changes_only, cascade, and prepare_cached arguments to save()
       also apply to *_on_save collections.  XXX: Needs tests
     * Added test and prerequisite version for a Rose::DB bug that
