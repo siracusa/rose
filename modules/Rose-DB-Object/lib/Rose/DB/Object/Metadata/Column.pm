@@ -1084,7 +1084,7 @@ sub apply_method_triggers
                   $key_was_defined = 0;
                   # Invoke built-in default and inflation code
                   # (The call must not be in void context)
-                  $value = $method_code->($self, @_[1 .. $#$_]);
+                  $value = $method_code->($self, @_[1 .. $#_]);
                 }
 
                 unless($self->{$is_inflated_key} && $key_was_defined)
@@ -1230,7 +1230,7 @@ sub apply_method_triggers
                 $key_was_defined = 0;
                 # Invoke built-in default and inflation code
                 # (The call must not be in void context)
-                $value = $method_code->($self, @_[1 .. $#$_]);
+                $value = $method_code->($self, @_[1 .. $#_]);
               }
 
               unless($self->{$is_inflated_key} && $key_was_defined)
