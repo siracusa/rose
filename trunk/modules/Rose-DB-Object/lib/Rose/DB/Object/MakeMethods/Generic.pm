@@ -56,6 +56,12 @@ sub scalar
   $qname =~ s/"/\\"/g;
 
   #
+  # equivalence op
+  #
+  
+  my $eq = ($type eq 'integer') ? '==' : 'eq';
+
+  #
   # check_in code
   #
 
@@ -239,11 +245,11 @@ EOF
     qq(\$self->{SET_COLUMNS()}{'$col_name_escaped'} = 1;) : '';
 
   my $mod_cond_code =  $smart ? 
-    qq(unless(\$self->{STATE_LOADING()} || (!defined \$old_val && !defined \$self->{'$qkey'}) || \$old_val eq \$self->{'$qkey'});) :
+    qq(unless(\$self->{STATE_LOADING()} || (!defined \$old_val && !defined \$self->{'$qkey'}) || \$old_val $eq \$self->{'$qkey'});) :
     qq(unless(\$self->{STATE_LOADING()}););
 
   my $mod_cond_pre_set_code = $smart ?
-    qq(unless(\$self->{STATE_LOADING()} || (!defined \$value && !defined \$self->{'$qkey'}) || \$value eq \$self->{'$qkey'});) :
+    qq(unless(\$self->{STATE_LOADING()} || (!defined \$value && !defined \$self->{'$qkey'}) || \$value $eq \$self->{'$qkey'});) :
     qq(unless(\$self->{STATE_LOADING()}););
 
   my %methods;
@@ -2487,7 +2493,10 @@ sub object_by_key
       # Make the code to run on save
       my $delete_code = sub
       {  
-        my $self = shift;
+        my($self, $args) = @_;
+
+        my @delete_args = 
+          map { ($_ => $args->{$_}) } grep { exists $args->{$_} } qw(prepare_cached);
 
         my $db;
 
@@ -2495,7 +2504,7 @@ sub object_by_key
         {
           $db = $self->db;
           $object->db($db)  if($share_db);
-          $object->delete(@_) or die $object->error;
+          $object->delete(@delete_args) or die $object->error;
         };
 
         if($@)
@@ -3451,7 +3460,10 @@ sub objects_by_key
 
       my $delete_code = sub
       {
-        my $self = shift;
+        my($self, $args) = @_;
+
+        my @delete_args = 
+          map { ($_ => $args->{$_}) } grep { exists $args->{$_} } qw(prepare_cached);
 
         # Set up join conditions and column map
         my(%key, %map);
@@ -3482,7 +3494,7 @@ sub objects_by_key
         my $deleted = 
           $ft_manager->$ft_delete_method(object_class => $ft_class,
                                          where => [ %key, @$query_args ], 
-                                         db => $db);
+                                         db => $db, @delete_args);
         die $ft_manager->error  unless(defined $deleted);
 
         $self->{$key} = undef;
