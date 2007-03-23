@@ -113,6 +113,7 @@ __PACKAGE__->auto_helper_classes
   'pg'       => 'Rose::DB::Object::Metadata::Auto::Pg',
   'mysql'    => 'Rose::DB::Object::Metadata::Auto::MySQL',
   'sqlite'   => 'Rose::DB::Object::Metadata::Auto::SQLite',
+  'oracle'   => 'Rose::DB::Object::Metadata::Auto::Oracle',
   'generic'  => 'Rose::DB::Object::Metadata::Auto::Generic',
 );
 
