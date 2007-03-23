@@ -19,6 +19,7 @@ lib/Rose/DB/Object/Metadata/Auto.pm
 lib/Rose/DB/Object/Metadata/Auto/Generic.pm
 lib/Rose/DB/Object/Metadata/Auto/Informix.pm
 lib/Rose/DB/Object/Metadata/Auto/MySQL.pm
+lib/Rose/DB/Object/Metadata/Auto/Oracle.pm
 lib/Rose/DB/Object/Metadata/Auto/Pg.pm
 lib/Rose/DB/Object/Metadata/Auto/SQLite.pm
 lib/Rose/DB/Object/Metadata/Column.pm
