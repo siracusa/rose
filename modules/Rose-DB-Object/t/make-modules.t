@@ -13,7 +13,7 @@ unless(-d $Lib_Dir)
 
 if(-d $Lib_Dir)
 {
-  Test::More->import(tests => 2 + (3 * 4));
+  Test::More->import(tests => 2 + (4 * 4));
 }
 else
 {
@@ -72,7 +72,7 @@ foreach my $db_type (qw(pg mysql informix sqlite))
 {
   unless(have_db($db_type))
   {
-    SKIP: { skip("$db_type tests", 3) }
+    SKIP: { skip("$db_type tests", 4) }
     next;
   }
 
@@ -86,13 +86,21 @@ foreach my $db_type (qw(pg mysql informix sqlite))
     Rose::DB::Object::Loader->new(
     db_class       => 'Rose::DB',
     class_prefix   => $class_prefix,
+    module_preamble => "# My Preamble\n",
+    module_postamble => 'This will be hidden',
     include_tables => $Include_Tables);
 
   $loader->make_modules(module_dir   => $Lib_Dir,
                         braces       => 'bsd',
-                        indent       => 2);
+                        indent       => 2,
+                        module_postamble => 
+                        sub
+                        {
+                          "# My Postamble for " . $_[0]->class . "\n";
+                        });
 
   is(slurp("$Lib_Dir/$class_prefix/Product.pm"), <<"EOF", "Product 1 - $db_type");
+# My Preamble
 package ${class_prefix}::Product;
 
 use strict;
@@ -150,9 +158,28 @@ __PACKAGE__->meta->setup
 
 1;
 
+# My Postamble for ${class_prefix}::Product
+EOF
+
+  is(slurp("$Lib_Dir/$class_prefix/Product/Manager.pm"), <<"EOF", "Product Manager 1 - $db_type");
+# My Preamble
+package ${class_prefix}::Product::Manager;
+
+use base qw(Rose::DB::Object::Manager);
+
+use ${class_prefix}::Product;
+
+sub object_class { '${class_prefix}::Product' }
+
+__PACKAGE__->make_manager_methods('products');
+
+1;
+
+# My Postamble for ${class_prefix}::Product
 EOF
 
   is(slurp("$Lib_Dir/$class_prefix/Color.pm"), <<"EOF", "Color 1 - $db_type");
+# My Preamble
 package ${class_prefix}::Color;
 
 use strict;
@@ -189,6 +216,7 @@ __PACKAGE__->meta->setup
 
 1;
 
+# My Postamble for ${class_prefix}::Color
 EOF
 
   unshift(@INC, $Lib_Dir);
