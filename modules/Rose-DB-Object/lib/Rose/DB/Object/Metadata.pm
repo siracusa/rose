@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.761';
+our $VERSION = '0.764';
 
 our $Debug = 0;
 
@@ -1685,7 +1685,20 @@ sub make_column_methods
 
     $column->make_methods(%args);
 
+    # Primary key columns cannot be aliased
+    if($method ne $name)
+    {
+      foreach my $column ($self->primary_key_column_names)
+      {
+        if($name eq $column)
+        {
+          Carp::croak "Primary key columns cannot be aliased (the culprit: '$name')";
+        }
+      }
+    }
+
     # Allow primary keys to be aliased
+    # XXX: Disabled because the Manager is not happy with this.
     #if($method ne $name)
     #{
     #  # Primary key columns can be aliased, but we make a column-named 
@@ -2752,18 +2765,19 @@ sub alias_column
   Carp::croak "No such column '$name' in table ", $self->table
     unless($self->{'columns'}{$name});
 
-  Carp::croak "Pointless alias for '$name' to '$new_name' for table ", $self->table
+  Carp::cluck "Pointless alias for '$name' to '$new_name' for table ", $self->table
     unless($name ne $new_name);
 
-  # We now allow this, but create a duplicate method using the real
-  # column name anyway in make_column_methods().
-  #foreach my $column ($self->primary_key_column_names)
-  #{
-  #  if($name eq $column)
-  #  {
-  #    Carp::croak "Cannot alias primary key column '$name'";
-  #  }
-  #}
+  # XXX: We now allow this, but create a duplicate method using the real
+  # XXX: column name anyway in make_column_methods().
+  # XXX: Not really.  Disregard the above.
+  foreach my $column ($self->primary_key_column_names)
+  {
+    if($name eq $column)
+    {
+      Carp::croak "Primary key columns cannot be aliased (the culprit: '$name')";
+    }
+  }
 
   $self->_clear_column_generated_values;
 
