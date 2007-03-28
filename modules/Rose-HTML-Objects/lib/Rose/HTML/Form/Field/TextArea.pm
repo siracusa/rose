@@ -4,10 +4,17 @@ use strict;
 
 use Carp();
 
+use Rose::HTML::Object::Errors qw(:string);
+
 use Rose::HTML::Form::Field::WithContents;
 our @ISA = qw(Rose::HTML::Form::Field::WithContents);
 
 our $VERSION = '0.548';
+
+use Rose::Object::MakeMethods::Generic
+(
+  scalar => 'maxlength',
+);
 
 __PACKAGE__->add_valid_html_attrs
 (
@@ -68,6 +75,28 @@ sub size
   return $self->cols . 'x' . $self->rows;
 }
 
+sub validate
+{
+  my($self) = shift;
+
+  my $ok = $self->SUPER::validate(@_);
+  return $ok  unless($ok);
+
+  my $value = $self->input_value;
+  return 1  unless(defined $value && length $value);
+
+  my $maxlength = $self->maxlength;
+
+  my $name = sub { $self->label || $self->name };
+
+  if(defined $maxlength && length($value) > $maxlength)
+  {
+    $self->add_error_id(STRING_OVERFLOW, { label => $name, maxlength => $maxlength });
+    return 0;
+  }
+
+  return 1;
+}
 1;
 
 __END__
@@ -159,6 +188,10 @@ Constructs a new L<Rose::HTML::Form::Field::TextArea> object based on PARAMS, wh
 =item B<contents [TEXT]>
 
 Get or set the contents of the text area.  If a TEXT argument is present, it is passed to L<input_value()|Rose::HTML::Form::Field/input_value> and the return value of that method call is then returned. Otherwise, L<output_value()|Rose::HTML::Form::Field/output_value> is called with no arguments.
+
+=item B<maxlength [INT]>
+
+Get or set the maximum length of the input value.  Note that this is not an HTML attribute; this limit is enforced by the L<validate|Rose::HTML::Form::Field/validate> method, not by the web browser.
 
 =item B<size [COLSxROWS]>
 
