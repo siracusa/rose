@@ -2,12 +2,14 @@
 
 use strict;
 
-use Test::More tests => 23;
+use Test::More tests => 25;
 
 BEGIN 
 {
   use_ok('Rose::HTML::Form::Field::TextArea');
 }
+
+use Rose::HTML::Object::Errors qw(:string);
 
 my $field = Rose::HTML::Form::Field::TextArea->new(
   name    => 'name',  
@@ -107,3 +109,11 @@ is($field->xhtml,
    qq(<textarea class="foo" cols="50" disabled="disabled" id="bar" name="name" rows="3" style="baz"></textarea><br />\n) . 
    qq(<span class="error">This is a required field.</span>),
    'xhtml() 1');
+
+$field->clear;
+$field->maxlength(10);
+
+$field->input_value('12345678901');
+
+ok(!$field->validate, 'maxlength 1');
+is($field->error_id, STRING_OVERFLOW, 'maxlength 2');
