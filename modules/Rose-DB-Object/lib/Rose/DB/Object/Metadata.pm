@@ -4530,7 +4530,7 @@ This is an alias for the L<add_columns|/add_columns> method.
 
 =item B<add_columns ARGS>
 
-Add the columns specified by ARGS to the list of columns for the table.  Columns can be specified in ARGS in several ways.
+Add the columns specified by ARGS to the list of columns for the table.  Returns the list of columns added.  Columns can be specified in ARGS in several ways.
 
 If an argument is a subclass of L<Rose::DB::Object::Metadata::Column>, it is added as-is.
 
