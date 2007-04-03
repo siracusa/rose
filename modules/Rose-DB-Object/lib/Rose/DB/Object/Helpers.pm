@@ -255,7 +255,13 @@ sub clone
   my $class = ref $self;
   local $self->{STATE_CLONING()} = 1;
   my @mutators = $self->meta->column_mutator_method_names;
-  return $class->new(map { shift(@mutators) => $self->$_() } $self->meta->column_accessor_method_names);
+  my $mutator;
+  return $class->new(map
+  {
+    (defined($mutator = shift(@mutators)) && defined $_) ? 
+      ($mutator => $self->$_()) : ()
+  }
+  $self->meta->column_accessor_method_names);
 }
 
 sub clone_and_reset
@@ -264,7 +270,13 @@ sub clone_and_reset
   my $class = ref $self;
   local $self->{STATE_CLONING()} = 1;
   my @mutators = $self->meta->column_mutator_method_names;
-  my $clone = $class->new(map { shift(@mutators) => $self->$_() } $self->meta->column_accessor_method_names);
+  my $mutator;
+  my $clone = $class->new(map
+  {
+    (defined($mutator = shift(@mutators)) && defined $_) ? 
+      ($mutator => $self->$_()) : ()
+  }
+  $self->meta->column_accessor_method_names);
 
   my $meta = $class->meta;
 
