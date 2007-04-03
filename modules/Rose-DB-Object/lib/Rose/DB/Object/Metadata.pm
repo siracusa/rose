@@ -1045,6 +1045,8 @@ sub add_columns
   }
 
   push(@{$self->{'columns_ordered'}}, @columns);
+
+  return wantarray ? @columns : \@columns;
 }
 
 sub add_column { shift->add_columns(@_) }
@@ -4530,7 +4532,7 @@ This is an alias for the L<add_columns|/add_columns> method.
 
 =item B<add_columns ARGS>
 
-Add the columns specified by ARGS to the list of columns for the table.  Returns the list of columns added.  Columns can be specified in ARGS in several ways.
+Add the columns specified by ARGS to the list of columns for the table.  Returns the list of columns added in list context, or a reference to an array of columns added in scalar context.  Columns can be specified in ARGS in several ways.
 
 If an argument is a subclass of L<Rose::DB::Object::Metadata::Column>, it is added as-is.
 
