@@ -1,5 +1,6 @@
-0.764 (03.23.2007) - John Siracusa <siracusa@mindspring.com>
+0.764 (04.03.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Added and documented a return value for add_columns().
     * Added module_preamble and module_postamble features to the Loader's
       make_modules() method.  (Patch by David Christensen)
     * Made changes_only, cascade, and prepare_cached arguments to save()
