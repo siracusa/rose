@@ -9,6 +9,8 @@
       prevented certain reserved words from being detected as primary
       key columns in Postgres.  (Reported by Fred Cox)
     * Baseline Oracle support added to the Loader.  (Patch by Teodor Zlatanov)
+    * The clone() and clone_and_reset() methods now handle missing or
+      differently named accessor/mutator methods.
     * Fixed a bug that caused values not to be checked against the list
       of valid values in SET columns.  (Reported by Adrian Howard)
     * Fixed a bug that caused column (get/)set methods not to return the
