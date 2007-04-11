@@ -2567,6 +2567,8 @@ sub objects_by_key
   my $query_args = $args->{'query_args'} || [];
   my $single     = $args->{'single'} || 0;
 
+  my $ft_count_method = $args->{'manager_count_method'} || 'get_objects_count';
+
   if($mgr_args->{'query'})
   {
     Carp::croak "Cannot use the key 'query' in the manager_args parameter ",
@@ -2595,7 +2597,129 @@ sub objects_by_key
                 "Please pass one or the other, not both.";
   }
 
-  if($interface eq 'find')
+  if($interface eq 'count')
+  {
+    my $cache_key = PRIVATE_PREFIX . '_' . $name;
+
+    $methods{$name} = sub
+    {
+      my($self) = shift;
+
+      my %args;
+
+      if(my $ref = ref $_[0])
+      {
+        if($ref eq 'HASH')
+        {
+          %args = (query => [ %{shift(@_)} ], @_);
+        }
+        elsif(ref $_[0] eq 'ARRAY')
+        {
+          %args = (query => shift, @_);
+        }
+      }
+      else { %args = @_ }
+
+      if(delete $args{'from_cache'})
+      {
+        if(keys %args)
+        {
+          Carp::croak "Additional parameters not allowed in call to ",
+                      "$name() with from_cache parameter";
+        }
+
+        if(defined $self->{$cache_key})
+        {
+          return wantarray ? @{$self->{$cache_key}} : $self->{$cache_key};
+        }
+      }
+
+      my $count;
+
+      # Get query key
+      my %key;
+
+      while(my($local_column, $foreign_column) = each(%$ft_columns))
+      {
+        my $local_method = $meta->column_accessor_method_name($local_column);
+
+        $key{$foreign_column} = $self->$local_method();
+
+        # Comment this out to allow null keys
+        unless(defined $key{$foreign_column})
+        {
+          keys(%$ft_columns); # reset iterator
+          $self->error("Could not fetch objects via $name() - the " .
+                       "$local_method attribute is undefined");
+          return;
+        }
+      }
+
+      my $cache = delete $args{'cache'};
+
+      # Merge query args
+      my @query = (%key, @$query_args, @{delete $args{'query'} || []});      
+
+      # Merge the rest of the arguments
+      foreach my $param (keys %args)
+      {
+        if(exists $mgr_args->{$param})
+        {
+          my $ref = ref $args{$param};
+
+          if($ref eq 'ARRAY')
+          {
+            unshift(@{$args{$param}}, ref $mgr_args->{$param} ? 
+                    @{$mgr_args->{$param}} :  $mgr_args->{$param});
+          }
+          elsif($ref eq 'HASH')
+          {
+            while(my($k, $v) = each(%{$mgr_args->{$param}}))
+            {
+              $args{$param}{$k} = $v  unless(exists $args{$param}{$k});
+            }
+          }
+        }
+      }
+
+      while(my($k, $v) = each(%$mgr_args))
+      {
+        $args{$k} = $v  unless(exists $args{$k});
+      }
+
+      # Make query for object count
+      eval
+      {
+        #local $Rose::DB::Object::Manager::Debug = 1;
+        if($share_db)
+        {
+          $count = 
+            $ft_manager->$ft_count_method(query => \@query, db => $self->db, %args)
+              or die $ft_manager->error;
+        }
+        else
+        {
+          $count = 
+            $ft_manager->$ft_count_method(query    => \@query, 
+                                          db       => $self->db,
+                                          share_db => 0, %args)
+              or die $ft_manager->error;
+        }
+      };
+
+      if($@ || !defined $count)
+      {
+        $self->error("Could not count $ft_class objects - " . $ft_manager->error);
+        $self->meta->handle_error($self);
+        return wantarray ? () : $count;
+      }
+
+      $self->{$cache_key} = $count  if($cache);
+
+      return $count;
+    };
+  }
+  elsif($interface eq 'find')
   {
     my $cache_key = PRIVATE_PREFIX . '_' . $name;
 
@@ -5757,6 +5881,10 @@ The name of the L<Rose::DB::Object::Manager>-derived class used to fetch the obj
 
 The name of the class method to call on C<manager_class> in order to fetch the objects.  Defaults to C<get_objects>.
 
+=item B<manager_count_method NAME>
+
+The name of the class method to call on C<manager_class> in order to count the objects.  Defaults to C<get_objects_count>.
+
 =item B<interface NAME>
 
 Choose the interface.  The C<get_set> interface is the default.
@@ -5778,6 +5906,16 @@ A reference to an array of arguments added to the value of the C<query> paramete
 =item Interfaces
 
 =over 4
+
+=item B<count>
+
+Creates a method that will attempt to count L<Rose::DB::Object>-derived objects based on a key formed from attributes of the current object, plus any additional parameters passed to the method call.  Since the objects counted are partially determined by the arguments passed to the method, the count is not retained.  It is simply returned.  Each call counts the specified objects again, even if the arguments are the same as the previous call.
+
+If the first argument is a reference to a hash or array, it is converted to a reference to an array (if necessary) and taken as the value of the C<query> parameter.  All arguments are passed on to the C<manager_class>'s C<manager_count_method> method, augmented by the key formed from attributes of the current object.  Query parameters are added to the existing contents of the C<query> parameter.  Other parameters replace existing parameters if the existing values are simple scalars, or augment existing parameters if the existing values are references to hashes or arrays.
+
+The count may fail for several reasons.  The count will not even be attempted if any of the key attributes in the current object are undefined.  Instead, undef (in scalar context) or an empty list (in list context) will be returned.  If the call to C<manager_class>'s C<manager_count_method> method returns undef, the behavior is determined by the L<metadata object|Rose::DB::Object/meta>'s L<error_mode|Rose::DB::Object::Metadata/error_mode>.  If the mode is C<return>, that false value (in scalar context) or an empty list (in list context) is returned.
+
+If the count succeeds, the number is returned.  (If the count finds zero objects, the count will be 0.  This is still considered success.)
 
 =item B<find>
 
