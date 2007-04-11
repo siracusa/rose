@@ -1,5 +1,8 @@
-0.764 (04.03.2007) - John Siracusa <siracusa@mindspring.com>
+0.764 (04.11.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Improved detection of errors when auto-loading related classes.
+    * Duplicate auto-created map record method names are now detected and 
+      reported as a fatal error.
     * Added and documented a return value for add_columns().
     * Added module_preamble and module_postamble features to the Loader's
       make_modules() method.  (Patch by David Christensen)

@@ -1755,6 +1755,8 @@ sub make_foreign_key_methods
 
   foreach my $foreign_key ($self->foreign_keys)
   {
+    #next  unless($foreign_key->is_ready_to_make_methods);
+
     foreach my $type ($foreign_key->auto_method_types)
     {
       my $method = 
@@ -1783,7 +1785,7 @@ sub make_foreign_key_methods
       if($@)
       {
         # XXX: Need to distinguish recoverable errors from unrecoverable errors
-        if($@ !~ /No column|Missing or invalid foreign class|Foreign class not initialized|\.pm in \@INC/)
+        if($@ !~ /\.pm in \@INC/ && !UNIVERSAL::isa($@, 'Rose::DB::Object::Exception::ClassNotReady'))
         {
           Carp::confess "Could not load $fclass - $@";
         }
@@ -2041,6 +2043,7 @@ sub make_relationship_methods
   REL: foreach my $relationship ($self->relationships)
   {
     next  if($args{'name'} && $relationship->name ne $args{'name'});
+    #next  unless($relationship->is_ready_to_make_methods);
 
     foreach my $type ($relationship->auto_method_types)
     {
@@ -2098,7 +2101,7 @@ sub make_relationship_methods
         if($@)
         {
           # XXX: Need to distinguish recoverable errors from unrecoverable errors
-          if($@ !~ /No column|Missing or invalid foreign class|Foreign class not initialized|\.pm in \@INC/)
+          if($@ !~ /\.pm in \@INC/ && !UNIVERSAL::isa($@, 'Rose::DB::Object::Exception::ClassNotReady'))
           {
             Carp::confess "Could not load $fclass - $@";
           }

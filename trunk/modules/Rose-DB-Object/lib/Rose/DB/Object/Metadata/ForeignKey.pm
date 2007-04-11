@@ -9,7 +9,9 @@ use Rose::DB::Object::Metadata::Util qw(:all);
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.756';
+use Rose::DB::Object::Exception;
+
+our $VERSION = '0.764';
 
 our $Debug = 0;
 
@@ -228,8 +230,9 @@ sub is_ready_to_make_methods
 
   eval
   {
-    $self->class->isa('Rose::DB::Object') 
-      or die "Missing or invalid foreign class";
+    $self->class->isa('Rose::DB::Object') or die
+      Rose::DB::Object::Exception::ClassNotReady->new(
+        "Missing or invalid foreign class");
 
     my $fk_meta = $self->class->meta;
 
@@ -239,13 +242,15 @@ sub is_ready_to_make_methods
     {
       unless($fk_meta->column($column_name))
       {
-        die "No column '$column_name' in class ", $fk_meta->class;
+        die Rose::DB::Object::Exception::ClassNotReady->new(
+              "No column '$column_name' in class " . $fk_meta->class);
       }
 
       unless($fk_meta->column_accessor_method_name($column_name) && 
              $fk_meta->column_mutator_method_name($column_name))
       {
-        die "Foreign class not initialized";
+        die Rose::DB::Object::Exception::ClassNotReady->new(
+              "Foreign class not initialized");
       }
     }
   };
