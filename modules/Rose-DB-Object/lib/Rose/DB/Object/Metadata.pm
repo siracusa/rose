@@ -1688,15 +1688,9 @@ sub make_column_methods
     $column->make_methods(%args);
 
     # Primary key columns cannot be aliased
-    if($method ne $name)
+    if($column->is_primary_key_member && $column->alias && $column->alias ne $column->name)
     {
-      foreach my $column ($self->primary_key_column_names)
-      {
-        if($name eq $column)
-        {
-          Carp::croak "Primary key columns cannot be aliased (the culprit: '$name')";
-        }
-      }
+      Carp::croak "Primary key columns cannot be aliased (the culprit: '$name')";
     }
 
     # Allow primary keys to be aliased
@@ -1788,7 +1782,8 @@ sub make_foreign_key_methods
 
       if($@)
       {
-        if($@ =~ /^syntax error /)
+        # XXX: Need to distinguish recoverable errors from unrecoverable errors
+        if($@ !~ /No column|Missing or invalid foreign class|Foreign class not initialized|\.pm in \@INC/)
         {
           Carp::confess "Could not load $fclass - $@";
         }
@@ -1902,7 +1897,7 @@ sub retry_deferred_tasks
     }
   }
 
-  if(@Deferred_Tasks != @tasks)
+  if(join(',', sort @Deferred_Tasks) ne join(',', sort @tasks))
   {
     @Deferred_Tasks = @tasks;
   }
@@ -2014,7 +2009,7 @@ sub retry_deferred_foreign_keys
     }
   }
 
-  if(@Deferred_Foreign_Keys != @foreign_keys)
+  if(join(',', sort @Deferred_Foreign_Keys) ne join(',', sort @foreign_keys))
   {
     @Deferred_Foreign_Keys = @foreign_keys;
   }
@@ -2102,7 +2097,8 @@ sub make_relationship_methods
 
         if($@)
         {
-          if($@ =~ /^syntax error /)
+          # XXX: Need to distinguish recoverable errors from unrecoverable errors
+          if($@ !~ /No column|Missing or invalid foreign class|Foreign class not initialized|\.pm in \@INC/)
           {
             Carp::confess "Could not load $fclass - $@";
           }
@@ -2255,7 +2251,7 @@ sub retry_deferred_relationships
     }
   }
 
-  if(@Deferred_Relationships != @relationships)
+  if(join(',', sort @Deferred_Relationships) ne join(',', sort @relationships))
   {
     @Deferred_Relationships = @relationships;
   }

@@ -33,7 +33,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
                           K2   => undef,
                           K3   => 3);
 
-  ok(!$o->can('id'), "primary key alias - $db_type");
+  ok($o->can('id'), "no primary key alias - $db_type");
 
   ok(ref $o && $o->isa('MyPgObject'), "new() 1 - $db_type");
 
@@ -232,7 +232,7 @@ SKIP: foreach my $db_type ('mysql')
 
   ok(ref $o && $o->isa('MyMySQLObject'), "new() 1 - $db_type");
 
-  ok(!$o->can('id'), "primary key alias - $db_type");
+  ok($o->can('id'), "no primary key alias - $db_type");
 
   $o->FLAG2('true');
   $o->DATE_CREATED('now');
@@ -404,7 +404,7 @@ SKIP: foreach my $db_type ('informix')
 
   ok(ref $o && $o->isa('MyInformixObject'), "new() 1 - $db_type");
 
-  ok(!$o->can('id'), "primary key alias - $db_type");
+  ok($o->can('id'), "no primary key alias - $db_type");
 
   $o->meta->allow_inline_column_values(1);
 
@@ -583,7 +583,7 @@ SKIP: foreach my $db_type ('sqlite')
 
   ok(ref $o && $o->isa('MySQLiteObject'), "new() 1 - $db_type");
 
-  ok(!$o->can('id'), "primary key alias - $db_type");
+  ok($o->can('id'), "no primary key alias - $db_type");
 
   $o->meta->allow_inline_column_values(1);
 
@@ -850,6 +850,8 @@ EOF
       date_created  => { type => 'timestamp' },
     );
 
+    sub MyPgObject::ID { shift->id(@_) }
+    
     MyPgObject->meta->add_unique_key('save');
 
     MyPgObject->meta->add_unique_key([ qw(k1 k2 k3) ]);
@@ -861,7 +863,7 @@ EOF
     MyPgObject->meta->column_name_to_method_name_mapper(sub 
     {
       my($meta,  $column_name, $method_type, $method_name) = @_;
-      return uc $method_name;
+      return $method_name eq 'id' ? 'id' : uc $method_name;
     });
 
     MyPgObject->meta->alias_column(save => 'save_col');
@@ -977,10 +979,12 @@ EOF
       date_created  => { type => 'timestamp' },
     );
 
+    sub MyMySQLObject::ID { shift->id(@_) }
+
     MyMySQLObject->meta->column_name_to_method_name_mapper(sub 
     {
       my($meta,  $column_name, $method_type, $method_name) = @_;
-      return uc $method_name;
+      return $method_name eq 'id' ? 'id' : uc $method_name;
     });
 
     MyMySQLObject->meta->alias_column(save => 'save_col');
@@ -1015,10 +1019,13 @@ EOF
 
     MyMPKMySQLObject->meta->primary_key_columns('k1', 'k2');
 
+    sub MyMPKMySQLObject::K1 { shift->k1(@_) }
+    sub MyMPKMySQLObject::K2 { shift->k2(@_) }
+
     MyMPKMySQLObject->meta->column_name_to_method_name_mapper(sub 
     {
       my($meta,  $column_name, $method_type, $method_name) = @_;
-      return uc $method_name;
+      return $method_name =~ /^k[12]$/ ? $method_name : uc $method_name;
     });
 
     MyMPKMySQLObject->meta->initialize;
@@ -1114,10 +1121,12 @@ EOF
       date_created  => { type => 'datetime year to fraction(5)' },
     );
 
+    sub MyInformixObject::ID { shift->id(@_) }
+    
     MyInformixObject->meta->column_name_to_method_name_mapper(sub 
     {
       my($meta,  $column_name, $method_type, $method_name) = @_;
-      return uc $method_name;
+      return $method_name eq 'id' ? 'id' : uc $method_name;
     });
 
     MyInformixObject->meta->prepare_options({ix_CursorWithHold => 1});    
@@ -1211,10 +1220,12 @@ EOF
       date_created  => { type => 'datetime' },
     );
 
+    sub MySQLiteObject::ID { shift->id(@_) }
+    
     MySQLiteObject->meta->column_name_to_method_name_mapper(sub 
     {
       my($meta,  $column_name, $method_type, $method_name) = @_;
-      return uc $method_name;
+      return $method_name eq 'id' ? 'id' : uc $method_name;
     });
 
     MySQLiteObject->meta->prepare_options({ix_CursorWithHold => 1});    

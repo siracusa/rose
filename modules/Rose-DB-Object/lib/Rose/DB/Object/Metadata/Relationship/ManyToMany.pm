@@ -130,7 +130,7 @@ MAKE_MAP_RECORD_METHOD:
         return $weaken ? (weaken($self->{$key} = $arg)) : ($self->{$key} = $arg);
       }
 
-      return $self->{$key} ||= $map_class->new;
+      return $self->{$key}; # ||= $map_class->new;
     };
 
     $map_to_class->meta->map_record_method_key($map_record_method => $key);
