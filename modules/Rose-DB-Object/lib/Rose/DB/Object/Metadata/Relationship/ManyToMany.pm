@@ -8,6 +8,7 @@ use Scalar::Util qw(weaken);
 use Rose::DB::Object::Metadata::Relationship;
 our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 
+use Rose::DB::Object::Exception;
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
@@ -368,7 +369,10 @@ sub is_ready_to_make_methods
                   "in $map_class that points to a class other than $target_class"
     }
 
-    die "Missing foreign class"  unless($foreign_class);
+    unless($foreign_class)
+    {
+      die Rose::DB::Object::Exception::ClassNotReady->new("Missing foreign class");
+    }
   };
 
   if($@ && ($Debug || $Rose::DB::Object::Metadata::Debug))
