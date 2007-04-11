@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1530;
+use Test::More tests => 1531;
 
 BEGIN 
 {
@@ -13,6 +13,13 @@ BEGIN
 
 our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
+
+use FindBin qw($Bin);
+
+eval { require "$Bin/map-record-name-conflict.pl" };
+
+ok($@ =~ /^\QAlready made a map record method named map_record in class JCS::B on behalf of the relationship 'bs' in class JCS::A.  Please choose another name for the map record method for the relationship named 'bs' in JCS::C.\E/,
+   'many-to-many map record name conflict');
 
 #
 # Postgres
