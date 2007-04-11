@@ -3746,6 +3746,8 @@ sub objects_by_key
 use constant MAP_RECORD_METHOD => 'map_record';
 use constant DEFAULT_REL_KEY   => PRIVATE_PREFIX . '_default_rel_key';
 
+our %Made_Map_Record_Method;
+    
 sub objects_by_map
 {
   my($class, $name, $args, $options) = @_;
@@ -3993,12 +3995,35 @@ sub objects_by_map
     }
   }
 
-  if($map_record_method && !$map_to_class->can($map_record_method))
+  if($map_record_method)
   {
+    if($map_to_class->can($map_record_method) && 
+      (my $info = $Made_Map_Record_Method{"${map_to_class}::$map_record_method"}))
+    {
+      unless($info->{'rel_class'} eq $target_class &&
+             $info->{'rel_name'} eq $relationship->name)
+      {
+        Carp::croak "Already made a map record method named $map_record_method in ",
+                    "class $map_to_class on behalf of the relationship ",
+                    "'$info->{'rel_name'}' in class $info->{'rel_class'}.  ",
+                    "Please choose another name for the map record method for ",
+                    "the relationship named '", $relationship->name, "' in $target_class.";
+      }
+    }
+
     require Rose::DB::Object::Metadata::Relationship::ManyToMany;
 
-    Rose::DB::Object::Metadata::Relationship::ManyToMany::make_map_record_method(
-      $map_to_class, $map_record_method, $map_class);
+    unless($map_to_class->can($map_record_method))
+    {
+      Rose::DB::Object::Metadata::Relationship::ManyToMany::make_map_record_method(
+        $map_to_class, $map_record_method, $map_class);
+  
+      $Made_Map_Record_Method{"${map_to_class}::$map_record_method"} =
+      {
+        rel_class => $target_class,
+        rel_name  => $relationship->name,
+      };
+    }
   }
 
   if($interface eq 'get_set' || $interface eq 'get_set_load')
@@ -5772,11 +5797,11 @@ If passed a single argument of undef, the C<hash_key> used to store the objects 
 
 =over 4
 
-=item * An object of type C<class>
+=item * An object of type C<class>.
 
 =item * A reference to a hash containing method name/value pairs.
 
-=item * A single scalar primary key value
+=item * A single scalar primary key value.
 
 =back
 
@@ -5800,11 +5825,11 @@ Otherwise, the argument(s) must be a list or reference to an array containing it
 
 =over 4
 
-=item * An object of type C<class>
+=item * An object of type C<class>.
 
 =item * A reference to a hash containing method name/value pairs.
 
-=item * A single scalar primary key value
+=item * A single scalar primary key value.
 
 =back
 
@@ -5832,11 +5857,11 @@ Otherwise, the argument(s) must be a list or reference to an array containing it
 
 =over 4
 
-=item * An object of type C<class>
+=item * An object of type C<class>.
 
 =item * A reference to a hash containing method name/value pairs.
 
-=item * A single scalar primary key value
+=item * A single scalar primary key value.
 
 =back
 
@@ -5866,11 +5891,11 @@ The argument(s) must be a list or reference to an array containing items in one 
 
 =over 4
 
-=item * An object of type C<class>
+=item * An object of type C<class>.
 
 =item * A reference to a hash containing method name/value pairs.
 
-=item * A single scalar primary key value
+=item * A single scalar primary key value.
 
 =back
 
@@ -5894,11 +5919,11 @@ Otherwise, the argument(s) must be a list or reference to an array containing it
 
 =over 4
 
-=item * An object of type C<class>
+=item * An object of type C<class>.
 
 =item * A reference to a hash containing method name/value pairs.
 
-=item * A single scalar primary key value
+=item * A single scalar primary key value.
 
 =back
 
@@ -6241,11 +6266,11 @@ If passed a single argument of undef, the C<hash_key> used to store the objects 
 
 =over 4
 
-=item * An object of type C<class>
+=item * An object of type C<class>.
 
 =item * A reference to a hash containing method name/value pairs.
 
-=item * A single scalar primary key value
+=item * A single scalar primary key value.
 
 =back
 
@@ -6267,11 +6292,11 @@ Otherwise, the argument(s) must be a list or reference to an array containing it
 
 =over 4
 
-=item * An object of type C<class>
+=item * An object of type C<class>.
 
 =item * A reference to a hash containing method name/value pairs.
 
-=item * A single scalar primary key value
+=item * A single scalar primary key value.
 
 =back
 
@@ -6299,11 +6324,11 @@ Otherwise, the argument(s) must be a list or reference to an array containing it
 
 =over 4
 
-=item * An object of type C<class>
+=item * An object of type C<class>.
 
 =item * A reference to a hash containing method name/value pairs.
 
-=item * A single scalar primary key value
+=item * A single scalar primary key value.
 
 =back
 
@@ -6333,11 +6358,11 @@ The argument(s) must be a list or reference to an array containing items in one 
 
 =over 4
 
-=item * An object of type C<class>
+=item * An object of type C<class>.
 
 =item * A reference to a hash containing method name/value pairs.
 
-=item * A single scalar primary key value
+=item * A single scalar primary key value.
 
 =back
 
@@ -6357,11 +6382,11 @@ Otherwise, the argument(s) must be a list or reference to an array containing it
 
 =over 4
 
-=item * An object of type C<class>
+=item * An object of type C<class>.
 
 =item * A reference to a hash containing method name/value pairs.
 
-=item * A single scalar primary key value
+=item * A single scalar primary key value.
 
 =back
 
@@ -6469,7 +6494,7 @@ If passed a single argument of undef, the C<hash_key> used to store the object i
 
 =item * A reference to a hash containing method name/value pairs.
 
-=item * A single scalar primary key value
+=item * A single scalar primary key value.
 
 =back
 
@@ -6499,7 +6524,7 @@ If passed a single argument of undef, the C<hash_key> used to store the object i
 
 =item * A reference to a hash containing method name/value pairs.
 
-=item * A single scalar primary key value
+=item * A single scalar primary key value.
 
 =back
 
@@ -6533,7 +6558,7 @@ If passed a single argument of undef, the C<hash_key> used to store the object i
 
 =item * A reference to a hash containing method name/value pairs.
 
-=item * A single scalar primary key value
+=item * A single scalar primary key value.
 
 =back
 
