@@ -4,6 +4,7 @@ lib/Rose/DB/Object/Cached.pm
 lib/Rose/DB/Object/Constants.pm
 lib/Rose/DB/Object/ConventionManager.pm
 lib/Rose/DB/Object/ConventionManager/Null.pm
+lib/Rose/DB/Object/Exception.pm
 lib/Rose/DB/Object/Helpers.pm
 lib/Rose/DB/Object/Iterator.pm
 lib/Rose/DB/Object/Loader.pm
@@ -161,6 +162,7 @@ t/makemethods-db.t
 t/makemethods.t
 t/make-modules.ext
 t/make-modules.t
+t/map-record-name-conflict.pl
 t/multi-pk-sequences.t
 t/pod.t
 t/query-builder.t
