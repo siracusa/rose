@@ -2101,7 +2101,7 @@ sub make_relationship_methods
         if($@)
         {
           # XXX: Need to distinguish recoverable errors from unrecoverable errors
-          if($@ !~ /\.pm in \@INC/ && !UNIVERSAL::isa($@, 'Rose::DB::Object::Exception::ClassNotReady'))
+          if($@ =~ /\.pm in \@INC/) # && !UNIVERSAL::isa($@, 'Rose::DB::Object::Exception::ClassNotReady'))
           {
             Carp::confess "Could not load $fclass - $@";
           }

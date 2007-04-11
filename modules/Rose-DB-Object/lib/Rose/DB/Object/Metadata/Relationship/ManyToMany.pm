@@ -239,10 +239,11 @@ sub is_ready_to_make_methods
         {
           if(%map_column_to_self_method)
           {
-            Carp::croak "Map class $map_class has more than one foreign key ",
-                        "and/or 'many to one' relationship that points to the ",
-                        "class $target_class.  Please specify one by name ",
-                        "with a 'local' parameter in the 'map' hash";
+            die Rose::DB::Object::Exception::ClassNotReady->new(
+              "Map class $map_class has more than one foreign key " .
+              "and/or 'many to one' relationship that points to the " .
+              "class $target_class.  Please specify one by name " .
+              "with a 'local' parameter in the 'map' hash");
           }
 
           $map_from = $local_rel = $item->name;
@@ -254,8 +255,9 @@ sub is_ready_to_make_methods
           while(my($local_column, $foreign_column) = each(%$map_columns))
           {
             my $foreign_method = $meta->column_accessor_method_name($foreign_column)
-              or Carp::croak "Missing accessor method for column '$foreign_column'", 
-                             " in class ", $meta->class;
+              or die Rose::DB::Object::Exception::ClassNotReady->new(
+                   "Missing accessor method for column '$foreign_column'" .
+                   " in class " . $meta->class);
             $map_column_to_self_method{$local_column} = $foreign_method;
             $map_column_to_self_column{$local_column} = $foreign_column;
           }
@@ -275,10 +277,11 @@ sub is_ready_to_make_methods
 
         if($require_objects)
         {
-          Carp::croak "Map class $map_class has more than one foreign key ",
-                      "and/or 'many to one' relationship that points to a ",
-                      "class other than $target_class.  Please specify one ",
-                      "by name with a 'foreign' parameter in the 'map' hash";
+          die Rose::DB::Object::Exception::ClassNotReady->new(
+            "Map class $map_class has more than one foreign key " .
+            "and/or 'many to one' relationship that points to a " .
+            "class other than $target_class.  Please specify one " .
+            "by name with a 'foreign' parameter in the 'map' hash");
         }
 
         $map_to_class = $item->class;
@@ -291,12 +294,14 @@ sub is_ready_to_make_methods
         while(my($local_column, $foreign_column) = each(%$map_columns))
         {
           my $local_method = $map_meta->column_accessor_method_name($local_column)
-            or Carp::croak "Missing accessor method for column '$local_column'", 
-                           " in class ", $map_meta->class;
+            or die Rose::DB::Object::Exception::ClassNotReady->new(
+              "Missing accessor method for column '$local_column'" .
+              " in class " . $map_meta->class);
 
           my $foreign_method = $map_to_meta->column_accessor_method_name($foreign_column)
-            or Carp::croak "Missing accessor method for column '$foreign_column'", 
-                           " in class ", $map_to_meta->class;
+            or die Rose::DB::Object::Exception::ClassNotReady->new(
+              "Missing accessor method for column '$foreign_column'" .
+              " in class " . $map_to_meta->class);
 
           # local           foreign
           # Map:color_id => Color:id
@@ -309,21 +314,23 @@ sub is_ready_to_make_methods
         $map_to_method = $item->method_name('get_set') || 
                          $item->method_name('get_set_now') ||
                          $item->method_name('get_set_on_save') ||
-                         Carp::confess "No 'get_*' method found for ",
-                                       $item->name;
+                         die Rose::DB::Object::Exception::ClassNotReady->new(
+                           "No 'get_*' method found for " . $item->name);
       }
     }
 
     unless(%map_column_to_self_method)
     {
-      Carp::croak "Could not find a foreign key or 'many to one' relationship ",
-                  "in $map_class that points to $target_class";
+      die Rose::DB::Object::Exception::ClassNotReady->new(
+        "Could not find a foreign key or 'many to one' relationship "  .
+        "in $map_class that points to $target_class");
     }
 
     unless(%map_column_to_self_column)
     {
-      Carp::croak "Could not find a foreign key or 'many to one' relationship ",
-                  "in $map_class that points to ", ($map_to_class || $map_to);
+      die Rose::DB::Object::Exception::ClassNotReady->new(
+        "Could not find a foreign key or 'many to one' relationship " .
+        "in $map_class that points to " . ($map_to_class || $map_to));
     }
 
     unless($require_objects)
@@ -345,11 +352,12 @@ sub is_ready_to_make_methods
         {  
           if($require_objects)
           {
-            Carp::croak "Map class $map_class has more than two foreign keys ",
-                        "and/or 'many to one' relationships that points to a ",
-                        "$target_class.  Please specify which ones to use ",
-                        "by including 'local' and 'foreign' parameters in the ",
-                        "'map' hash";
+            die Rose::DB::Object::Exception::ClassNotReady->new(
+              "Map class $map_class has more than two foreign keys " .
+              "and/or 'many to one' relationships that points to a " .
+              "$target_class.  Please specify which ones to use " .
+              "by including 'local' and 'foreign' parameters in the " .
+              "'map' hash");
           }
 
           $require_objects = [ $item->name ];
@@ -357,16 +365,17 @@ sub is_ready_to_make_methods
           $map_to_method = $item->method_name('get_set') ||
                            $item->method_name('get_set_now') ||
                            $item->method_name('get_set_on_save') ||
-                           Carp::confess "No 'get_*' method found for ",
-                                         $item->name;
+                           die Rose::DB::Object::Exception::ClassNotReady->new(
+                             "No 'get_*' method found for " . $item->name);
         }
       }
     }
 
     unless($require_objects)
     {
-      Carp::croak "Could not find a foreign key or 'many to one' relationship ",
-                  "in $map_class that points to a class other than $target_class"
+      die Rose::DB::Object::Exception::ClassNotReady->new(
+        "Could not find a foreign key or 'many to one' relationship " .
+        "in $map_class that points to a class other than $target_class");
     }
 
     unless($foreign_class)
@@ -377,7 +386,7 @@ sub is_ready_to_make_methods
 
   if($@ && ($Debug || $Rose::DB::Object::Metadata::Debug))
   {
-    my $err = $@;
+    my $err = "$@";
     $err =~ s/ at .*//;
     warn $self->parent->class, ': many-to-many relationship ', $self->name, " NOT READY - $err";
   }
