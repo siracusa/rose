@@ -522,7 +522,7 @@ $vals = join(':', map { defined $_ ? $_ : '' }
              join(', ', $form->field('hobbies')->internal_value),
              $form->field('bday')->internal_value);
 
-is($vals, 'John::1984-01-24T00:00:00', 'init_fields() 6');
+is($vals, 'John:::1984-01-24T00:00:00', 'init_fields() 6');
 
 $form->reset;
 $form->params('bday'       => '1/24/1984',
@@ -538,7 +538,7 @@ $vals = join(':', map { defined $_ ? $_ : '' }
              join(', ', $form->field('hobbies')->internal_value),
              $form->field('bday')->internal_value);
 
-is($vals, '::1984-01-24T00:00:00', 'init_fields() 7');
+is($vals, ':::1984-01-24T00:00:00', 'init_fields() 7');
 
 $form->reset;
 $form->field('hobbies')->input_value('Knitting');

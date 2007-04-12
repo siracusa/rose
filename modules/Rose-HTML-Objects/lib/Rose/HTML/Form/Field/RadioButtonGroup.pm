@@ -10,7 +10,7 @@ use Rose::HTML::Form::Field::Group;
 use Rose::HTML::Form::Field::Group::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
 
-our $VERSION = '0.545';
+our $VERSION = '0.548';
 
 sub _item_class       { 'Rose::HTML::Form::Field::RadioButton' }
 sub _item_name        { 'radio button' }
@@ -27,6 +27,13 @@ sub _item_name_plural { 'radio buttons' }
 
 *choices           = \&radio_buttons;
 *choices_localized = \&radio_buttons_localized;
+
+sub internal_value
+{
+  my($self) = shift;
+  my($value) =  $self->SUPER::internal_value(@_);
+  return $value;
+}
 
 sub html_table
 {
@@ -197,6 +204,10 @@ To remove HTML attributes that have default values, simply pass undef as the val
     # <table>
     # <tr>
     # <td>...
+
+=item B<internal_value>
+
+The selected value is returned (or undef if no value is selected).
 
 =item B<labels [LABELS]>
 

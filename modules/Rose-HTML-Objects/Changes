@@ -1,6 +1,9 @@
-0.548 (03.28.2007) - John Siracusa <siracusa@mindspring.com>
+0.548 (04.12.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added maxlength limit to TextArea.
+    * Changed the behavior of internal_value() on RadioButtonGroup objects
+      to return the selected value in scalar context, rather than a reference 
+      to an array.
     * Changed the behavior of internal_value() on SelectBox objects to
       return an array ref in scalar context only when multiple() is true.
     * Fixed a TextArea bug that prevented errors from showing up in
