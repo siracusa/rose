@@ -179,6 +179,8 @@ A list or reference to an array containing a mix of value/label pairs, value/has
     $field->add_options(@args);  # list
     $field->add_options(\@args); # reference to an array
 
+Note that the second form (passing a reference to an array) requires that at least one item in the referenced array is not a plain scalar, lest it be confused with "a reference to an array of containing B<only> plain scalar values.
+
 All options are added to the end of the existing list of options.
 
 Option groups may also be added by nesting another level of array references.  For example, this:
