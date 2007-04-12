@@ -1,5 +1,7 @@
 0.548 (04.12.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Added more flexible syntax for specifying choices in group fields
+      (radio button groups, select boxes, etc.)
     * Added maxlength limit to TextArea.
     * Changed the behavior of internal_value() on RadioButtonGroup objects
       to return the selected value in scalar context, rather than a reference 

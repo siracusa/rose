@@ -18,8 +18,11 @@ is(scalar @{ $field->children }, 0, 'children scalar 1');
 is(scalar(() = $field->children), 0, 'children list 1');
 
 $field->choices(apple  => 'Apple',
-                orange => 'Orange',
-                grape  => 'Grape');
+                orange => 
+                {
+                  label => 'Orange',
+                },
+                Rose::HTML::Form::Field::RadioButton->new(value => 'grape', label => 'Grape'));
 
 is(scalar @{ $field->children }, 3, 'children scalar 2');
 is(scalar(() = $field->children), 3, 'children list 2');
@@ -31,6 +34,19 @@ is($field->html_field,
   qq(<input name="fruits" type="radio" value="orange"> <label>Orange</label><br>\n) .
   qq(<input name="fruits" type="radio" value="grape"> <label>Grape</label>),
   'html_field() 1');
+
+$field = 
+  Rose::HTML::Form::Field::RadioButtonGroup->new(
+    name => 'fruits',
+    choices =>
+    [
+      Rose::HTML::Form::Field::RadioButton->new(value => 'apple', label => 'Apple'),
+      orange  => 'Orange',
+      grape => 
+      {
+        label => 'Grape',
+      }
+    ]);
 
 is($field->value_label('apple'), 'Apple', 'value_label()');
 

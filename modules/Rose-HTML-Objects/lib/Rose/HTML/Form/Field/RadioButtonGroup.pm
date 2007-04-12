@@ -125,9 +125,79 @@ Constructs a new L<Rose::HTML::Form::Field::RadioButtonGroup> object based on PA
 
 Convenience alias for L<add_radio_buttons()|/add_radio_buttons>.
 
-=item B<add_radio_buttons RADIO_BUTTONS>
+B<add_radio_buttons RADIO_BUTTONS>
 
-Adds radio buttons to the radio button group.  RADIO_BUTTONS may be a reference to a hash of value/label pairs, an ordered list of value/label pairs, a reference to an array of values, or a list of L<Rose::HTML::Form::Field::RadioButton> objects. Passing an odd number of items in the value/label argument list causes a fatal error. Radio button values and labels passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function. Radio buttons are added to the end of the existing list of radio buttons.
+Adds radio buttons to the radio button group.  RADIO_BUTTONS may take the following forms.
+
+A reference to a hash of value/label pairs:
+
+    $field->add_radio_buttons
+    (
+      {
+        value1 => 'label1',
+        value2 => 'label2',
+        ...
+      }
+    );
+
+An ordered list of value/label pairs:
+
+    $field->add_radio_buttons
+    (
+      value1 => 'label1',
+      value2 => 'label2',
+      ...
+    );
+
+(Radio button values and labels passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.)
+
+A reference to an array of containing B<only> plain scalar values:
+
+    $field->add_radio_buttons([ 'value1', 'value2', ... ]);
+
+A list or reference to an array of L<Rose::HTML::Form::Field::RadioButton> objects:
+
+    $field->add_radio_buttons
+    (
+      Rose::HTML::Form::Field::RadioButton->new(...),
+      Rose::HTML::Form::Field::RadioButton->new(...),
+      ...
+    );
+
+    $field->add_radio_buttons
+    (
+      [
+        Rose::HTML::Form::Field::RadioButton->new(...),
+        Rose::HTML::Form::Field::RadioButton->new(...),
+        ...
+      ]
+    );
+
+A list or reference to an array containing a mix of value/label pairs, value/hashref pairs, and L<Rose::HTML::Form::Field::RadioButton> objects:
+
+    @args = 
+    (
+      # value/label pair
+      value1 => 'label1',
+
+      # value/hashref pair
+      value2 =>
+      {
+        label => 'Some Label',
+        id    => 'my_id',
+        ...
+      },
+
+      # object
+      Rose::HTML::Form::Field::RadioButton->new(...),
+
+      ...
+    );
+
+    $field->add_radio_buttons(@args);  # list
+    $field->add_radio_buttons(\@args); # reference to an array
+
+All radio buttons are added to the end of the existing list of radio buttons.
 
 =item B<choices [RADIO_BUTTONS]>
 

@@ -18,8 +18,11 @@ is(scalar @{ $field->children }, 0, 'children scalar 1');
 is(scalar(() = $field->children), 0, 'children list 1');
 
 $field->checkboxes(apple  => 'Apple',
-                   orange => 'Orange',
-                   grape  => 'Grape');
+                   orange => 
+                   {
+                     label => 'Orange',
+                   },
+                   Rose::HTML::Form::Field::Checkbox->new(value => 'grape', label => 'Grape'));
 
 is(scalar @{ $field->children }, 3, 'children scalar 2');
 is(scalar(() = $field->children), 3, 'children list 2');
@@ -31,6 +34,19 @@ is($field->html_field,
   qq(<input name="fruits" type="checkbox" value="orange"> <label>Orange</label><br>\n) .
   qq(<input name="fruits" type="checkbox" value="grape"> <label>Grape</label>),
   'html_field() 1');
+
+$field = 
+  Rose::HTML::Form::Field::CheckboxGroup->new(
+    name => 'fruits',
+    choices =>
+    [
+      Rose::HTML::Form::Field::Checkbox->new(value => 'apple', label => 'Apple'),
+      orange  => 'Orange',
+      grape => 
+      {
+        label => 'Grape',
+      }
+    ]);
 
 $field->checkbox('apple')->label('<b>Apple</b>');
 $field->escape_html(0);

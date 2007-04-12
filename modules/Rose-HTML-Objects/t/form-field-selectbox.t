@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 79;
+use Test::More tests => 80;
 
 BEGIN 
 {
@@ -19,8 +19,11 @@ is(scalar @{ $field->children }, 0, 'children scalar 1');
 is(scalar(() = $field->children), 0, 'children list 1');
 
 $field->options(apple  => 'Apple',
-                orange => 'Orange',
-                grape  => 'Grape');
+                orange => 
+                {
+                  label => 'Orange',
+                },
+                Rose::HTML::Form::Field::Option->new(value => 'grape', label => 'Grape'));
 
 is(scalar @{ $field->children }, 3, 'children scalar 2');
 is(scalar(() = $field->children), 3, 'children list 2');
@@ -353,12 +356,24 @@ is($field->html_field,
 
 $field->add_value('apple');
 
-my $group = Rose::HTML::Form::Field::OptionGroup->new(label => 'Group 1');
+# my $group = Rose::HTML::Form::Field::OptionGroup->new(label => 'Group 1');
+# 
+# $group->options(juji  => 'Juji',
+#                 peach => 'Peach');
+# 
+# $field->add_options($group);
 
-$group->options(juji  => 'Juji',
-                peach => 'Peach');
-
-$field->add_options($group);
+$field->add_options
+(
+  'Group 1' =>
+  [
+    juji  => 
+    {
+      label => 'Juji',
+    },
+    peach => 'Peach'
+  ],
+);
 
 is($field->html_field, 
   qq(<select multiple name="fruits" size="6">\n) .
@@ -511,4 +526,32 @@ is($field->html_field,
 
 $field->disabled(1);
 
-  
+$field = Rose::HTML::Form::Field::SelectBox->new(name => 'fruits');
+
+$field->options(apple  => 'Apple',
+                orange => 'Orange',
+                grape  => 'Grape');
+
+my $group = Rose::HTML::Form::Field::OptionGroup->new(label => 'Others');
+
+$group->options(juji  => 'Juji',
+                peach => 'Peach');
+
+$field->add_options($group);
+    
+my $field2 = 
+  Rose::HTML::Form::Field::SelectBox->new(
+    name    => 'fruits',
+    options =>
+    [
+      apple  => 'Apple',
+      orange => 'Orange',
+      grape  => 'Grape',
+      Others =>
+      [
+        juji  => { label => 'Juji' },
+        peach => { label => 'Peach' },
+      ],
+    ]);
+
+is($field->xhtml, $field2->xhtml, 'nested option group 1');
