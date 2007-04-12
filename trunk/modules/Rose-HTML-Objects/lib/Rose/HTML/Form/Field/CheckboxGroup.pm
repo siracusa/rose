@@ -10,7 +10,7 @@ use Rose::HTML::Form::Field::Group;
 use Rose::HTML::Form::Field::Group::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
 
-our $VERSION = '0.52';
+our $VERSION = '0.548';
 
 sub _item_class       { 'Rose::HTML::Form::Field::Checkbox' }
 sub _item_name        { 'checkbox' }
@@ -121,7 +121,77 @@ Convenience alias for L<add_checkboxes()|/add_checkboxes>.
 
 =item B<add_checkboxes CHECKBOXES>
 
-Adds checkboxes to the checkbox group.  CHECKBOXES may be a reference to a hash of value/label pairs, an ordered list of value/label pairs, a reference to an array of values, or a list of L<Rose::HTML::Form::Field::Checkbox> objects. Passing an odd number of items in the value/label argument list causes a fatal error. Checkbox values and labels passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.  Checkboxes are added to the end of the existing list of checkboxes.
+Adds checkboxes to the checkbox group.  CHECKBOXES may take the following forms.
+
+A reference to a hash of value/label pairs:
+
+    $field->add_checkboxes
+    (
+      {
+        value1 => 'label1',
+        value2 => 'label2',
+        ...
+      }
+    );
+
+An ordered list of value/label pairs:
+
+    $field->add_checkboxes
+    (
+      value1 => 'label1',
+      value2 => 'label2',
+      ...
+    );
+
+(Checkbox values and labels passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.)
+
+A reference to an array of containing B<only> plain scalar values:
+
+    $field->add_checkboxes([ 'value1', 'value2', ... ]);
+
+A list or reference to an array of L<Rose::HTML::Form::Field::Checkbox> objects:
+
+    $field->add_checkboxes
+    (
+      Rose::HTML::Form::Field::Checkbox->new(...),
+      Rose::HTML::Form::Field::Checkbox->new(...),
+      ...
+    );
+
+    $field->add_checkboxes
+    (
+      [
+        Rose::HTML::Form::Field::Checkbox->new(...),
+        Rose::HTML::Form::Field::Checkbox->new(...),
+        ...
+      ]
+    );
+
+A list or reference to an array containing a mix of value/label pairs, value/hashref pairs, and L<Rose::HTML::Form::Field::Checkbox> objects:
+
+    @args = 
+    (
+      # value/label pair
+      value1 => 'label1',
+
+      # value/hashref pair
+      value2 =>
+      {
+        label => 'Some Label',
+        id    => 'my_id',
+        ...
+      },
+
+      # object
+      Rose::HTML::Form::Field::Checkbox->new(...),
+
+      ...
+    );
+
+    $field->add_checkboxes(@args);  # list
+    $field->add_checkboxes(\@args); # reference to an array
+
+All checkboxes are added to the end of the existing list of checkboxes.
 
 =item B<add_value VALUE>
 

@@ -104,7 +104,116 @@ Convenience alias for L<add_options()|/add_options>.
 
 =item B<add_options OPTIONS>
 
-Adds options to the pop-up menu.  OPTIONS may be a reference to a hash of value/label pairs, a reference to an array of values, or a list of objects that are of, or inherit from, the classes L<Rose::HTML::Form::Field::Option> or L<Rose::HTML::Form::Field::OptionGroup>. Passing an odd number of items in the value/label argument list causes a fatal error. Options passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.  Options are added to the end of the existing list of options.
+Adds options to the pop-up menu.  OPTIONS may take the following forms.
+
+A reference to a hash of value/label pairs:
+
+    $field->add_options
+    (
+      {
+        value1 => 'label1',
+        value2 => 'label2',
+        ...
+      }
+    );
+
+An ordered list of value/label pairs:
+
+    $field->add_options
+    (
+      value1 => 'label1',
+      value2 => 'label2',
+      ...
+    );
+
+(Option values and labels passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.)
+
+A reference to an array of containing B<only> plain scalar values:
+
+    $field->add_options([ 'value1', 'value2', ... ]);
+
+A list or reference to an array of L<Rose::HTML::Form::Field::Option> or L<Rose::HTML::Form::Field::OptionGroup> objects:
+
+    $field->add_options
+    (
+      Rose::HTML::Form::Field::Option->new(...),
+      Rose::HTML::Form::Field::OptionGroup->new(...),
+      Rose::HTML::Form::Field::Option->new(...),
+      ...
+    );
+
+    $field->add_options
+    (
+      [
+      Rose::HTML::Form::Field::Option->new(...),
+      Rose::HTML::Form::Field::OptionGroup->new(...),
+      Rose::HTML::Form::Field::Option->new(...),
+        ...
+      ]
+    );
+
+A list or reference to an array containing a mix of value/label pairs, value/hashref pairs, and L<Rose::HTML::Form::Field::Option> or L<Rose::HTML::Form::Field::OptionGroup> objects:
+
+    @args = 
+    (
+      # value/label pair
+      value1 => 'label1',
+
+      # option group object
+      Rose::HTML::Form::Field::OptionGroup->new(...),
+      
+      # value/hashref pair
+      value2 =>
+      {
+        label => 'Some Label',
+        id    => 'my_id',
+        ...
+      },
+
+      # option object
+      Rose::HTML::Form::Field::Option->new(...),
+
+      ...
+    );
+
+    $field->add_options(@args);  # list
+    $field->add_options(\@args); # reference to an array
+
+All options are added to the end of the existing list of options.
+
+Option groups may also be added by nesting another level of array references.  For example, this:
+
+    $field = Rose::HTML::Form::Field::PopUpMenu->new(name => 'fruits');
+
+    $field->options(apple  => 'Apple',
+                    orange => 'Orange',
+                    grape  => 'Grape');
+
+    $group = Rose::HTML::Form::Field::OptionGroup->new(label => 'Others');
+
+    $group->options(juji  => 'Juji',
+                    peach => 'Peach');
+
+    $field->add_options($group);
+
+is equivalent to this:
+
+    $field = 
+      Rose::HTML::Form::Field::PopUpMenu->new(
+        name    => 'fruits',
+        options =>
+        [
+          apple  => 'Apple',
+          orange => 'Orange',
+          grape  => 'Grape',
+          Others =>
+          [
+            juji  => { label => 'Juji' },
+            peach => { label => 'Peach' },
+          ],
+        ]);
+
+    $field->add_options($group);
 
 =item B<choices [OPTIONS]>
 

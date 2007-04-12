@@ -376,7 +376,9 @@ sub init_items
 
     foreach my $item ($self->items)
     {
-      if(exists $defaults->{$item->html_attr('value')})
+      my $value = $item->html_attr('value');
+
+      if(defined $value && exists $defaults->{$value})
       {
         $item->default_value(1);
       }

@@ -94,39 +94,77 @@ sub _args_to_items
 
   my $class = $self->_item_class;
   my $group_class = $self->_item_group_class;
+  my $label_method = $options->{'localized'} ? 'label_id' : 'label';
 
   if(@_ == 1 && ref $_[0] eq 'HASH')
   {
     %labels = %{$_[0]};
     @choices = sort keys %labels;
   }
-  elsif(@_ == 1 && ref $_[0] eq 'ARRAY')
-  {
-    if(UNIVERSAL::isa($_[0][0], $class) || UNIVERSAL::isa($_[0][0], $group_class))
-    {
-      $items = $_[0];
-    }
-    else
-    {
-      @choices = @{$_[0]};
-      %labels = map { $_ => $_  } @choices;
-    }
-  }
-  elsif(UNIVERSAL::isa($_[0], $class) || UNIVERSAL::isa($_[0], $group_class))
-  {
-    $items = [ @_ ];
-  }
   else
   {
-    Carp::croak "Odd number of " . $self->_item_name_plural . " found in hash argument"
-      unless(@_ % 2 == 0);
+    my $args;
 
-    for(my $i = 0; $i < $#_; $i += 2)
+    # XXX: Hack to allow a reference to an array of plain scalars
+    # XXX: to be taken as a list of values.
+    if(@_ == 1 && ref $_[0] eq 'ARRAY')
     {
-      push(@choices, $_[$i]);
-    }
+      $args = $_[0];
 
-    %labels = @_;
+      unless(grep { ref $_ } @$args)
+      {
+        $args = [ map { $_ => $_  } @$args ];
+      }
+    }
+    else { $args = \@_ }
+
+    while(@$args)
+    {
+      my $arg = shift(@$args);
+
+      if(UNIVERSAL::isa($arg, $class) || UNIVERSAL::isa($arg, $group_class))
+      {
+        push(@$items, $arg);
+      }
+      elsif(!ref $arg)
+      {
+        my $item = $class->new(value => $arg);
+        
+        if(!ref $args->[0])
+        {
+          $item->$label_method(shift(@$args));
+          push(@$items, $item);
+        }
+        elsif(ref $args->[0] eq 'HASH')
+        {
+          my $pairs = shift(@$args);
+
+          while(my($method, $value) = each(%$pairs))
+          {
+            $item->$method($value);
+          }
+          
+          push(@$items, $item);
+        }
+        elsif(ref $args->[0] eq 'ARRAY')
+        {
+          my $group = $group_class->new(label => $arg,
+                                        items => shift @$args);
+          push(@$items, $group);
+        }
+        else
+        {
+          Carp::croak "Illegal or incorrectly positioned ", $self->_item_name_plural,
+                      " argument: $args->[0]";
+        }
+       
+      }
+      else
+      {
+        Carp::croak "Illegal or incorrectly positioned ", $self->_item_name_plural,
+                    " argument: $args->[0]";
+      }
+    }
   }
 
   if(keys %labels)
@@ -135,7 +173,6 @@ sub _args_to_items
 
     my $class = $self->_item_class;
 
-    my $label_method = $options->{'localized'} ? 'label_id' : 'label';
     foreach my $value (@choices)
     {
       push(@$items, $class->new(value         => $value, 

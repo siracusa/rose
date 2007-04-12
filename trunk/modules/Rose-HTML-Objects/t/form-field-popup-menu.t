@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 45;
+use Test::More tests => 46;
 
 BEGIN 
 {
@@ -294,3 +294,33 @@ is($field->html_field,
   'reset labels 1');
 
 $field->disabled(1);
+
+$field = Rose::HTML::Form::Field::PopUpMenu->new(name => 'fruits');
+
+$field->options(apple  => 'Apple',
+                orange => 'Orange',
+                grape  => 'Grape');
+
+my $group = Rose::HTML::Form::Field::OptionGroup->new(label => 'Others');
+
+$group->options(juji  => 'Juji',
+                peach => 'Peach');
+
+$field->add_options($group);
+    
+my $field2 = 
+  Rose::HTML::Form::Field::PopUpMenu->new(
+    name    => 'fruits',
+    options =>
+    [
+      apple  => 'Apple',
+      orange => 'Orange',
+      grape  => 'Grape',
+      Others =>
+      [
+        juji  => { label => 'Juji' },
+        peach => { label => 'Peach' },
+      ],
+    ]);
+
+is($field->xhtml, $field2->xhtml, 'nested option group 1');
