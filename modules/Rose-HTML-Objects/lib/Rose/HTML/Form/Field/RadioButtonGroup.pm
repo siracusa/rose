@@ -199,6 +199,8 @@ A list or reference to an array containing a mix of value/label pairs, value/has
 
 All radio buttons are added to the end of the existing list of radio buttons.
 
+Note that the second form (passing a reference to an array) requires that at least one item in the referenced array is not a plain scalar, lest it be confused with "a reference to an array of containing B<only> plain scalar values.
+
 =item B<choices [RADIO_BUTTONS]>
 
 This is an alias for the L<radio_buttons|/radio_buttons> method.
