@@ -120,7 +120,7 @@ $form->init_fields;
 
 is($form->field('person.name')->internal_value, 'John', 'person_address name 1');
 is($form->field('person.age')->internal_value, '10', 'person_address age 1');
-is($form->field('person.gender')->internal_value->[0], 'm', 'person_address gender 1');
+is($form->field('person.gender')->internal_value, 'm', 'person_address gender 1');
 is($form->field('person.bday')->internal_value->strftime('%Y-%m-%d'), '1983-01-02', 'person_address bday 1');
 
 is($form->field('address.street')->internal_value, '1 Main St.', 'person_address street 1');
@@ -221,7 +221,7 @@ is($form->field('dog')->internal_value, 'Woof', 'person_address_dog dog 1');
 is($form->field('person_address.person.name')->internal_value, 'John', 'person_address_dog name 1');
 
 is($form->field('person_address.person.age')->internal_value, '10', 'person_address_dog age 1');
-is($form->field('person_address.person.gender')->internal_value->[0], 'm', 'person_address_dog gender 1');
+is($form->field('person_address.person.gender')->internal_value, 'm', 'person_address_dog gender 1');
 is($form->field('person_address.person.bday')->internal_value->strftime('%Y-%m-%d'), '1983-01-02', 'person_address_dog bday 1');
 
 is($form->field('person_address.address.street')->internal_value, '1 Main St.', 'person_address_dog street 1');
