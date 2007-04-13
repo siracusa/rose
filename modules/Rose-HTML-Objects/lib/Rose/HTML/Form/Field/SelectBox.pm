@@ -213,7 +213,7 @@ A list or reference to an array containing a mix of value/label pairs, value/has
     $field->add_options(@args);  # list
     $field->add_options(\@args); # reference to an array
 
-B<Please note:> the second form (passing a reference to an array) requires that at least one item in the referenced array is not a plain scalar, lest it be confused with "a reference to an array of containing only plain scalar values.
+B<Please note:> the second form (passing a reference to an array) requires that at least one item in the referenced array is not a plain scalar, lest it be confused with "a reference to an array of containing only plain scalar values."
 
 All options are added to the end of the existing list of options.
 
