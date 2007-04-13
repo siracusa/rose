@@ -1,5 +1,6 @@
-0.734 (02.27.2007) - John Siracusa <siracusa@mindspring.com>
+0.734 (04.05.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Improved detection of SKIP ... FIRST ... support in Informix.
     * Fixed a bug that prevented certain reserved words from being detected 
       as primary key columns in Postgres.  (Reported by Fred Cox)
 

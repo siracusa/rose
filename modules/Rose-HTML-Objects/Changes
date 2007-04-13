@@ -1,8 +1,9 @@
-0.548 (04.12.2007) - John Siracusa <siracusa@mindspring.com>
+0.548 (04.13.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added more flexible syntax for specifying choices in group fields
       (radio button groups, select boxes, etc.)
     * Added maxlength limit to TextArea.
+    * Added a disabled() method to the Compound field base class.
     * Changed the behavior of internal_value() on RadioButtonGroup objects
       to return the selected value in scalar context, rather than a reference 
       to an array.

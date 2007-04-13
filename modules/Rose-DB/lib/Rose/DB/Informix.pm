@@ -10,7 +10,11 @@ our $Debug = 0;
 
 use Rose::Class::MakeMethods::Generic
 (
-  inheritable_scalar => 'max_array_characters',
+  inheritable_scalar => 
+  [
+    'max_array_characters',
+    'default_supports_limit_with_offset',
+  ],
 );
 
 __PACKAGE__->max_array_characters(255);
@@ -485,14 +489,39 @@ sub next_value_in_sequence
   return $id;
 }
 
+use constant VERSION_SQL =>
+  q(SELECT FIRST 1 DBINFO('version', 'major') from 'informix'.systables);
+
+our %Major_Version_Cache;
+
+use constant MAX_TO_CACHE => 500;
+
 sub supports_limit_with_offset
 {
   my($self) = shift;
 
+  my $ok = ref($self)->default_supports_limit_with_offset;
+  return $ok  if(defined $ok);
+
   my $dbh = $self->dbh or return 0;
 
-  # "1000" is what Informix version 10 seems to return
-  return $dbh->{'ix_ProductVersion'} >= 1000 ? 1 : 0;
+  unless(defined $Major_Version_Cache{$dbh})
+  {
+    my $version;
+
+    eval
+    {
+      $Debug && warn VERSION_SQL, "\n";
+      my $sth = $dbh->prepare(VERSION_SQL);
+      $sth->execute;
+      ($version) = $sth->fetchrow_array;
+    };
+    
+    %Major_Version_Cache = ()  if(keys %Major_Version_Cache > MAX_TO_CACHE);
+    $Major_Version_Cache{$dbh} = $version || 0;
+  }
+
+  return $Major_Version_Cache{$dbh} >= 10 ? 1 : 0;
   return 0;
 }
 
@@ -737,6 +766,10 @@ Only the methods that are new or have different behaviors than those in L<Rose::
 =head1 CLASS METHODS
 
 =over 4
+
+=item B<default_supports_limit_with_offset [BOOL]>
+
+Get or set a boolean value that indicates whether or not all Informix databases that you plan to connect to support the "SELECT SKIP N FIRST M ..." syntax.  If undefined, this feature will be looked up on a per-connection basis as needed.  The default is undefined.
 
 =item B<max_array_characters [INT]>
 

@@ -13,7 +13,7 @@ our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.546';
+our $VERSION = '0.548';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -255,7 +255,7 @@ sub validate
   if($self->required)
   {
     my @missing;
-$DB::single = 1;
+
     foreach my $field ($self->fields)
     {
       no warnings 'uninitialized';
@@ -278,6 +278,16 @@ $DB::single = 1;
   }
 
   return $self->SUPER::validate(@_);
+}
+
+sub disabled
+{
+  my($self) = shift;
+  
+  foreach my $field ($self->fields)
+  {
+    $field->disabled(@_)  if($field->can('disabled'));
+  }
 }
 
 sub message_for_error_id
@@ -648,6 +658,10 @@ In the example below, the method's job is to decompose a full name into first, m
         last   => join(' ', @parts[2 .. $#parts]),
       };      
     }
+
+=item B<disabled [BOOL]>
+
+This method calls the C<disabled()> method on all L<fields|/fields> that possess such a method, passing all arguments.  Set to true to disable all eligible sub-fields, false to enable them.
 
 =item B<field NAME [, VALUE]>
 
