@@ -125,7 +125,7 @@ Constructs a new L<Rose::HTML::Form::Field::RadioButtonGroup> object based on PA
 
 Convenience alias for L<add_radio_buttons()|/add_radio_buttons>.
 
-B<add_radio_buttons RADIO_BUTTONS>
+=item B<add_radio_buttons RADIO_BUTTONS>
 
 Adds radio buttons to the radio button group.  RADIO_BUTTONS may take the following forms.
 
