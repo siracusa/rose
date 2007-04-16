@@ -2101,7 +2101,7 @@ sub make_relationship_methods
         if($@)
         {
           # XXX: Need to distinguish recoverable errors from unrecoverable errors
-          if($@ =~ /^syntax error |requires explicit package name/)
+          if($@ =~ /syntax error at |requires explicit package name/)
           {
             Carp::confess "Could not load $fclass - $@";
           }
