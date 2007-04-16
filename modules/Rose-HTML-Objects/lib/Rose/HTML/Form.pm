@@ -2142,15 +2142,25 @@ The default mapping of type names to class names is:
   'datetime split mdyhms' => 
     Rose::HTML::Form::Field::DateTime::Split::MDYHMS
 
-=item B<field_value NAME>
+=item B<field_value NAME [, VALUE]>
 
-Returns the L<internal_value|Rose::HTML::Form::Field/internal_value> of the field named NAME.  In other words, this:
+If passed NAME and VALUE arguments, then the L<input_value|Rose::HTML::Form::Field/input_value> of the field named NAME is set to VALUE.  If passed only a NAME, then the L<internal_value|Rose::HTML::Form::Field/internal_value> of the field named NAME is returned.  In other words, this:
+
+    $form->field_value(zip_code => '11787');
+
+is equivalent to this:
+
+    $form->field('zip_code')->input_value('11787');
+
+and this:
 
     $val = $form->field_value('zip_code');
 
-is just a shorter way to write this:
+is equivalent to this:
 
     $val = $form->field('zip_code')->internal_value;
+
+If no field named NAME exists, a fatal error will occur.
 
 =item B<form NAME [, OBJECT]>
 

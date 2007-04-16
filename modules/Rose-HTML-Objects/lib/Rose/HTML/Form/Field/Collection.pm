@@ -384,7 +384,16 @@ sub children
   return wantarray ? shift->fields() : (shift->fields() || []);
 }
 
-sub field_value { shift->field(shift)->internal_value }
+sub field_value
+{
+  my($self, $name) = (shift, shift);
+  
+  my $field = $self->field($name) 
+    or Carp::croak "No field named '$name' in $self";
+
+  return $field->input_value(@_)  if(@_);
+  return $field->internal_value;
+}
 
 *subfield_value = \&field_value;
 

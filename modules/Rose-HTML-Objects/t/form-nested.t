@@ -517,7 +517,6 @@ $form->validate(form_only => 1, cascade => 0);
 $form = MyPersonAddressForm->new;
 
 $form->add_field(x => { type => 'text' });
-$DB::single = 1;
 $form->validate();
 
 is($form->field('address.street')->error, 'Blah', 'nested validate');

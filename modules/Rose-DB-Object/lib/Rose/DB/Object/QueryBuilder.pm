@@ -370,8 +370,9 @@ sub build_select
           }
           elsif(!defined $val)
           {
+            no warnings 'uninitialized';
             push(@clauses, $set ? "$sql_column = NULL" : 
-                                  ("$sql_column IS " . ($not ? "$not " : '') . 'NULL'));
+                                  ("$sql_column IS " . (($not || $op eq '<>') ? "NOT " : '') . 'NULL'));
           }
           else
           {
@@ -716,8 +717,10 @@ sub _build_clause
                ($not ? ')' : '');
       }
     }
+
+    no warnings 'uninitialized';
     return $set ? ("$field = NULL") :
-                  ("$field IS " . ($not ? "$not " : '') . 'NULL');
+                  ("$field IS " . (($not || $op eq '<>') ? "NOT " : '') . 'NULL');
   }
 
   if($ref eq 'ARRAY')
@@ -1154,8 +1157,13 @@ Simple equality:
     'NAME'  => [ "a", "b" ] # COLUMN IN ('a', 'b')
     '!NAME' => [ "a", "b" ] # COLUMN NOT(IN ('a', 'b'))
 
-    'NAME'  => undef        # COLUMN IS NULL
-    '!NAME' => undef        # COLUMN IS NOT NULL
+Is/is not null:
+
+    'NAME'  => undef            # COLUMN IS NULL
+    '!NAME' => undef            # COLUMN IS NOT NULL
+
+    'NAME'  => { eq => undef }  # COLUMN IS NULL
+    'NAME'  => { ne => undef }  # COLUMN IS NOT NULL
 
 Comparisons:
 

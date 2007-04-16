@@ -144,7 +144,7 @@ is($form->field('foo'), $field, 'field() set with field object');
 $fcgi = FakeCGI->new;
 $fcgi->_params->{'foo'} = 'bar';
 $form->init_fields_with_cgi($fcgi);
-is($form->field('foo')->internal_value, 'bar', 'init_fields_with_cgi 1');
+is($form->field_value('foo'), 'bar', 'init_fields_with_cgi 1');
 
 $r = FakeApache->new;
 $fcgi->_params->{'foo'} = 'baz';
@@ -541,7 +541,8 @@ $vals = join(':', map { defined $_ ? $_ : '' }
 is($vals, ':::1984-01-24T00:00:00', 'init_fields() 7');
 
 $form->reset;
-$form->field('hobbies')->input_value('Knitting');
+#$form->field('hobbies')->input_value('Knitting');
+$form->field_value(hobbies => 'Knitting');
 $form->params('hobbies' => undef);
 
 $form->init_fields(no_clear => 1);

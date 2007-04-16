@@ -1,4 +1,4 @@
-0.764 (04.11.2007) - John Siracusa <siracusa@mindspring.com>
+0.764 (04.16.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Improved detection of errors when auto-loading related classes.
     * Duplicate auto-created map record method names are now detected and 
@@ -14,6 +14,7 @@
     * Baseline Oracle support added to the Loader.  (Patch by Teodor Zlatanov)
     * The clone() and clone_and_reset() methods now handle missing or
       differently named accessor/mutator methods.
+    * QueryBuilder now supports eq/ne undef for is/is not null comparisons.
     * Fixed a bug that caused values not to be checked against the list
       of valid values in SET columns.  (Reported by Adrian Howard)
     * Fixed a bug that caused column (get/)set methods not to return the
