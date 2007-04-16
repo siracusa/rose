@@ -8548,9 +8548,12 @@ SKIP: foreach my $db_type (qw(sqlite))
     MySQLiteObject->get_objectz(
       share_db     => 1,
       #query_is_sql => 1,
+      #debug => 1,
       query        =>
       [
         id         => { ge => 1 },
+        id         => { ne => undef },
+        fk3        => { eq => undef },
         name       => 'John', 
         name       => { field => 'LOWER(name)', eq => 'john' },
         flag       => 1,
