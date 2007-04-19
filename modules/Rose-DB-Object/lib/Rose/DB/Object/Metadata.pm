@@ -2101,7 +2101,7 @@ sub make_relationship_methods
         if($@)
         {
           # XXX: Need to distinguish recoverable errors from unrecoverable errors
-          if($@ =~ /syntax error at |requires explicit package name|not allowed while "strict/)
+          if($@ =~ /syntax error at |requires explicit package name|not allowed while "strict|already has a relationship named/)
           {
             Carp::confess "Could not load $fclass - $@";
           }
