@@ -1,5 +1,7 @@
-0.734 (04.05.2007) - John Siracusa <siracusa@mindspring.com>
+0.734 (04.20.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Fixed a dbh reference counting bug that was triggered when a Rose::DB
+      object was given a $dbh that was generated elsewhere.
     * Improved detection of SKIP ... FIRST ... support in Informix.
     * Fixed a bug that prevented certain reserved words from being detected 
       as primary key columns in Postgres.  (Reported by Fred Cox)
