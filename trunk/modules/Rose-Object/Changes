@@ -1,3 +1,7 @@
+0.83 (04.20.2007) - John Siracusa <siracusa@mindspring.com>
+
+    * Moved Rose::Object::MixIn here from Rose::DB::Object.
+
 0.821 (11.13.2006) - John Siracusa <siracusa@mindspring.com>
 
     * Minor fix to the test suite.
