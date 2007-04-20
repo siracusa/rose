@@ -367,31 +367,24 @@ sub strip
 
   my %leave = map { $_ => 1 } (ref $args{'leave'} ? @{$args{'leave'}} : ($args{'leave'} || ''));
 
-  if($leave{'db'})
-  {
-    $self->{'db'}->dbh(undef)  if($self->{'db'});
-  }
-  else
-  {
-    delete $self->{'db'};
-  }
-  
+  my $meta = $self->meta;
+
   if($leave{'relationships'} || $leave{'related_objects'})
   {
-    foreach my $rel ($self->meta->relationships)
+    foreach my $rel ($meta->relationships)
     {
       if(my $objs = $rel->object_has_related_objects($self))
       {
         foreach my $obj (@$objs)
         {
-          $obj->strip(@_);
+          Rose::DB::Object::Helpers::strip($obj, @_);
         }
       }
     }
   }
   else
   {
-    foreach my $rel ($self->meta->relationships)
+    foreach my $rel ($meta->relationships)
     {
       delete $self->{$rel->name};
     }
@@ -399,20 +392,29 @@ sub strip
 
   if($leave{'foreign_keys'} || $leave{'related_objects'})
   {
-    foreach my $rel ($self->meta->foreign_keys)
+    foreach my $rel ($meta->foreign_keys)
     {
       if(my $obj = $rel->object_has_foreign_object($self))
       {
-        $obj->strip(@_);
+        Rose::DB::Object::Helpers::strip($obj, @_);
       }
     }
   }
   else
   {
-    foreach my $fk ($self->meta->foreign_keys)
+    foreach my $fk ($meta->foreign_keys)
     {
       delete $self->{$fk->name};
     }
+  }
+
+  if($leave{'db'})
+  {
+    $self->{'db'}->dbh(undef)  if($self->{'db'});
+  }
+  else
+  {
+    delete $self->{'db'};
   }
 
   delete $self->{META_ATTR_NAME()};

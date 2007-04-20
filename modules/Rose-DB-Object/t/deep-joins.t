@@ -2,12 +2,13 @@
 
 use strict;
 
-use Test::More tests => 1496;
+use Test::More tests => 1497;
 
 BEGIN 
 {
   require 't/test-lib.pl';
   use_ok('Rose::DB::Object::Loader');
+  use_ok('Rose::DB::Object::Helpers');
 }
 
 our %Have;
@@ -314,6 +315,19 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   is(scalar @{$products->[0]{'colors'}[0]{'description'}{'authors'}[1]{'nicknames'}}, 1, "p2 - offset with colors description authors nicknames 5 - $db_type");
 
   is(scalar @{$products->[0]{'colors'}[1]{'description'}{'authors'}[1]{'nicknames'} || []}, 0, "p2 - offset with colors description authors nicknames 6 - $db_type");
+
+  $products = 
+    $manager_class->get_products(
+      with_objects    => [ 'colors.description.authors.nicknames' ],
+      multi_many_ok   => 1,
+      limit           => 1,
+      offset          => 1,
+      sort_by => [ 'colors.name DESC', 'authors.name' ]);
+
+  Rose::DB::Object::Helpers::strip($products->[0], leave => [ 'related_objects' ]);
+  Rose::DB::Object::Helpers::strip($products->[0], leave => 'foreign_keys');
+  Rose::DB::Object::Helpers::strip($products->[0], leave => [ 'relationships' ]);
+  Rose::DB::Object::Helpers::strip($products->[0]);
 
   $iterator = 
     $manager_class->get_products_iterator(
