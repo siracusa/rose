@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 17;
+use Test::More tests => 21;
 
 BEGIN
 {
@@ -38,11 +38,33 @@ is(Person->error, undef, 'class get 1');
 is(Person->error('foo'), 'foo', 'class set 1');
 is(Person->error, 'foo', 'class get 2');
 
+is($p->yippee, 'yip', 'mixin yip');
+is($p->bark, 'bark', 'mixin bark');
+is($p->roar, 'rawr', 'mixin rawr');
+is($p->hiss, 'hiss', 'mixin hiss');
+
 BEGIN
 {
+  use strict;
+
+  package DogLike;
+  use Rose::Object::MixIn();
+  our @ISA = qw(Rose::Object::MixIn);
+  __PACKAGE__->export_tags(all => [ qw(bark yip) ]);
+  sub bark { 'bark' }
+  sub yip { 'yip' }
+
+  package CatLike;
+  use Rose::Object::MixIn();
+  our @ISA = qw(Rose::Object::MixIn);
+  __PACKAGE__->export_tags(all => [ qw(rawr hiss) ], mean => [ 'hiss' ]);
+  sub rawr { 'rawr' }
+  sub hiss { 'hiss' }
+
   package Person;
 
-  use strict;
+  DogLike->import('bark', { yip => 'yippee' });
+  CatLike->import({ rawr => 'roar' }, ':mean');
 
   @Person::ISA = qw(Rose::Class Rose::Object);
 
