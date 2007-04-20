@@ -19,7 +19,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.733_03';
+our $VERSION = '0.733_04';
 
 our $Debug = 0;
 
@@ -690,6 +690,7 @@ sub dbh
 
   $self->driver($_[0]->{'Driver'}{'Name'});
 
+  $self->{'_dbh_refcount'}++;
   return $self->{'dbh'} = $_[0];
 }
 
