@@ -9,7 +9,7 @@ our @ISA = qw(Rose::DB::Object::MixIn);
 
 use Carp;
 
-our $VERSION = '0.757';
+our $VERSION = '0.764';
 
 __PACKAGE__->export_tags
 (
