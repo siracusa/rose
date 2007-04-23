@@ -902,7 +902,7 @@ sub get_objects
         #keys(%$ft_columns);
 
         my(@redundant, @redundant_null);
-print STDERR "I = $i\n";
+
         # Add join condition(s)
         while(my($local_column, $foreign_column) = each(%$ft_columns))
         {
