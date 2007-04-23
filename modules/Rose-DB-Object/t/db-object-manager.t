@@ -5125,6 +5125,8 @@ EOF
 
   ok($@, "deep join conflict 1 - $db_type");
 
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  #$DB::single = 1;
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class => 'MyMySQLObject',

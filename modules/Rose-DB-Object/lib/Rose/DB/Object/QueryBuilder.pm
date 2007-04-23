@@ -441,8 +441,9 @@ sub build_select
     # statement.  Otherwise, an inplicit inner join will be used.
     if($joins && @$joins)
     {
+print STDERR 'JOINS: ', Dumper($joins);
       my $i = 1;
-      my($primary_table, @normal_tables, @joined_tables);
+      my($primary_table, @normal_tables, @joined_tables, @nested);
 
       foreach my $table (@$tables)
       {
@@ -486,21 +487,66 @@ sub build_select
         Carp::croak "Missing join conditions for table '$table'"
           unless($joins->[$i]{'conditions'});
 
-        if($db)
+
+        if(my $parent_tn = $joins->[$i]{'parent_tn'})
         {
-          push(@joined_tables, "  $joins->[$i]{'type'} " .
-            $db->format_table_with_alias($tables_sql->[$i - 1], "t$i", 
-                                         $joins->[$i]{'hints'}) .
-            " ON (" . join(' AND ', @{$joins->[$i]{'conditions'}}) . ")");
+          push(@{$nested[$parent_tn]}, $i);
         }
         else
         {
-          push(@joined_tables, 
-               "  $joins->[$i]{'type'} $tables_sql->[$i - 1] t$i ON (" .
-               join(' AND ', @{$joins->[$i]{'conditions'}}) . ")");
+          $nested[$i] = [];
         }
 
+#         if($db)
+#         {
+#           push(@joined_tables, "  $joins->[$i]{'type'} " .
+#             $db->format_table_with_alias($tables_sql->[$i - 1], "t$i", 
+#                                          $joins->[$i]{'hints'}) .
+#             " ON (" . join(' AND ', @{$joins->[$i]{'conditions'}}) . ")");
+#         }
+#         else
+#         {
+#           push(@joined_tables, 
+#                "  $joins->[$i]{'type'} $tables_sql->[$i - 1] t$i ON (" .
+#                join(' AND ', @{$joins->[$i]{'conditions'}}) . ")");
+#         }
+
         $i++;
+      }
+use Data::Dumper;
+print STDERR 'NESTED: ', Dumper(\@nested);
+      my @seen;
+
+      for($i = 1; $i <= $#nested; $i++)
+      {
+        next  if($seen[$i]++);
+print STDERR "HANDLE $i\n";
+        my $children = $nested[$i];
+
+        next  unless($children);
+
+        if(@$children)
+        {
+          push(@joined_tables, '  ' . _build_nested_join($joins, \@nested, $i, $tables_sql, $db, \@seen));
+        }
+        else
+        {
+          if($db)
+          {
+            push(@joined_tables, "  $joins->[$i]{'type'} " .
+              $db->format_table_with_alias($tables_sql->[$i - 1], "t$i", 
+                                           $joins->[$i]{'hints'}) .
+              " ON (" . join(' AND ', @{$joins->[$i]{'conditions'}}) . ")");
+          }
+          else
+          {
+            push(@joined_tables, 
+                 "  $joins->[$i]{'type'} $tables_sql->[$i - 1] t$i ON (" .
+                 join(' AND ', @{$joins->[$i]{'conditions'}}) . ")");
+          }
+        }
+        
+        print STDERR "JOINED TABLES:\n", join("\n", map { "### $_" } @joined_tables), "\n";
       }
 
       # XXX: This sucks
@@ -909,6 +955,98 @@ sub _build_clause
   }
 
   Carp::croak "Don't know how to handle comparison values $vals";
+}
+
+sub _build_nested_join
+{
+  my($joins, $nested, $i, $tables_sql, $db, $seen) = @_;
+
+  $seen->[$i] = 1;
+
+  if($nested->[$i] && @{$nested->[$i]})
+  {
+print STDERR "$i HAS NESTED\n";
+    my $join_sql;
+    
+    if($joins->[$i])
+    {
+print STDERR "$i HAS JOINS\n";
+      my $child_num = 0;
+
+      $join_sql = " $joins->[$i]{'type'} (";
+
+      if($db)
+      {
+        $join_sql .=
+          $db->format_table_with_alias($tables_sql->[$i - 1], "t$i", 
+                                       $joins->[$i]{'hints'});
+      }
+      else
+      {
+        $join_sql .= "$tables_sql->[$i - 1] t$i";
+      }
+
+      foreach my $child_tn (@{$nested->[$i]})
+      {
+print STDERR "HANDLE CHILD TN $child_tn: $join_sql\n";
+#         if($child_num++)
+#         {
+#           $join_sql .= " $joins->[$child_tn]{'type'} (";
+# print STDERR "NOW1: $join_sql\n";
+#         }
+#         else
+#         {
+#           $join_sql .= '(';
+# print STDERR "NOW2: $join_sql\n";
+#         }
+# 
+#         if($db)
+#         {
+#           $join_sql .=
+#             $db->format_table_with_alias($tables_sql->[$i - 1], "t$i", 
+#                                          $joins->[$i]{'hints'});
+#         }
+#         else
+#         {
+#           $join_sql .= "$tables_sql->[$i - 1] t$i";
+#         }
+        
+
+print STDERR "RECURSE ON $child_tn: $tables_sql->[$child_tn - 1]\n";
+        $join_sql .= _build_nested_join($joins, $nested, $child_tn, $tables_sql, $db, $seen);
+      }
+
+      $join_sql .=  ") ON (" . join(' AND ', @{$joins->[$i]{'conditions'}}) . ")";
+      return $join_sql;
+    }
+    else
+    {
+      foreach my $child_tn (@{$nested->[$i]})
+      {
+print STDERR "RECURSE2 ON $child_tn: $joins->[$child_tn]{'type'} $tables_sql->[$child_tn - 1]\n";
+        $join_sql .= _build_nested_join($joins, $nested, $child_tn, $tables_sql, $db, $seen);
+      }
+
+      return $join_sql;
+    }
+  }
+  else
+  {
+print STDERR "$i HAS NO NESTED\n";
+    if($db)
+    {
+      return  " $joins->[$i]{'type'} " .
+        $db->format_table_with_alias($tables_sql->[$i - 1], "t$i", 
+                                     $joins->[$i]{'hints'}) .
+        " ON (" . join(' AND ', @{$joins->[$i]{'conditions'}}) . ")";
+    }
+    else
+    {
+      return 
+        " $joins->[$i]{'type'} $tables_sql->[$i - 1] t$i ON (" .
+        join(' AND ', @{$joins->[$i]{'conditions'}}) . ")";
+    }
+  }
 }
 
 sub _format_value
