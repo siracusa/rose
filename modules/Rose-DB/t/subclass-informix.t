@@ -52,14 +52,7 @@ SKIP:
     is($db2->$field(), $db->$field(), "$field()");
   }
 
-  if($db->dbh->{'ix_ProductVersion'} >= 1000)
-  {
-    ok($db->supports_limit_with_offset, 'supports_limit_with_offset');
-  }
-  else
-  {
-    ok(!$db->supports_limit_with_offset, 'supports_limit_with_offset');
-  }
+  ok(defined $db->supports_limit_with_offset, 'supports_limit_with_offset');
 
   $db->disconnect;
   $db2->disconnect;
