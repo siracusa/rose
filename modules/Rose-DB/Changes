@@ -1,4 +1,4 @@
-0.734 (04.20.2007) - John Siracusa <siracusa@mindspring.com>
+0.734 (04.23.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Fixed a dbh reference counting bug that was triggered when a Rose::DB
       object was given a $dbh that was generated elsewhere.
