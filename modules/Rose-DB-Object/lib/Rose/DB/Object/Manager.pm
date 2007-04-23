@@ -902,7 +902,7 @@ sub get_objects
         #keys(%$ft_columns);
 
         my(@redundant, @redundant_null);
-
+print STDERR "I = $i\n";
         # Add join condition(s)
         while(my($local_column, $foreign_column) = each(%$ft_columns))
         {
@@ -968,7 +968,7 @@ sub get_objects
           }
         }
 
-        $joins[$i]{'parent_tn'} = $parent_tn  if($joins[$i]{'type'} eq 'JOIN');
+        $joins[$i]{'parent_tn'} = $parent_tn  if($joins[$i] && $joins[$i]{'type'} eq 'JOIN');
 
         # XXX: Undocumented for now...
         if($rel->can('join_args') && (my $join_args = $rel->join_args))
@@ -1171,7 +1171,7 @@ sub get_objects
           }
         }
 
-        $joins[$i]{'parent_tn'} = $parent_tn  if($joins[$i]{'type'} eq 'JOIN');
+        $joins[$i]{'parent_tn'} = $parent_tn  if($joins[$i] && $joins[$i]{'type'} eq 'JOIN');
 
         #
         # Now add table, columns, and clauses for the foreign object
@@ -1278,7 +1278,7 @@ sub get_objects
           }
         }
 
-        $joins[$i]{'parent_tn'} = $i - 1  if($joins[$i]{'type'} eq 'JOIN');
+        $joins[$i]{'parent_tn'} = $i - 1  if($joins[$i] && $joins[$i]{'type'} eq 'JOIN');
 
         # Add sub-object sort conditions
         if($rel->can('manager_args') && (my $mgr_args = $rel->manager_args))
