@@ -1,5 +1,8 @@
-0.764 (04.16.2007) - John Siracusa <siracusa@mindspring.com>
+0.764 (04.23.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Added support for nested joins.
+    * Fixed a bug that caused some optional related objects to be improperly
+      transformed into required objects.  (Reported by Ethan Rowe)
     * Improved detection of errors when auto-loading related classes.
     * Duplicate auto-created map record method names are now detected and 
       reported as a fatal error.

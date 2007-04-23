@@ -534,7 +534,7 @@ sub build_select
   
           if(@$children)
           {
-            push(@joined_tables, '  ' . _build_nested_join($joins, \@nested, $i, $tables_sql, $db, \@seen));
+            push(@joined_tables, _build_nested_join($joins, \@nested, $i, $tables_sql, $db, \@seen));
           }
           else
           {
@@ -977,7 +977,7 @@ sub _build_nested_join
     {
       my $child_num = 0;
 
-      $join_sql = " $joins->[$i]{'type'} (";
+      $join_sql = "  $joins->[$i]{'type'} (";
 
       if($db)
       {
@@ -1012,7 +1012,7 @@ sub _build_nested_join
   {
     if($db)
     {
-      return  " $joins->[$i]{'type'} " .
+      return  "  $joins->[$i]{'type'} " .
         $db->format_table_with_alias($tables_sql->[$i - 1], "t$i", 
                                      $joins->[$i]{'hints'}) .
         " ON (" . join(' AND ', @{$joins->[$i]{'conditions'}}) . ")";
@@ -1020,7 +1020,7 @@ sub _build_nested_join
     else
     {
       return 
-        " $joins->[$i]{'type'} $tables_sql->[$i - 1] t$i ON (" .
+        "  $joins->[$i]{'type'} $tables_sql->[$i - 1] t$i ON (" .
         join(' AND ', @{$joins->[$i]{'conditions'}}) . ")";
     }
   }
