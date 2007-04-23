@@ -374,7 +374,7 @@ sub get_objects
     $dbh_retained = 1;
   }
 
-  my $nested_joins = $db->supports_nested_joins ?
+  my $nested_joins = $args{'nested_joins'} = $db->supports_nested_joins ?
     (defined $args{'nested_joins'} ? $args{'nested_joins'} : $class->default_nested_joins) : 0;
 
   my $use_explicit_joins = (defined $args{'explicit_joins'}) ? 
