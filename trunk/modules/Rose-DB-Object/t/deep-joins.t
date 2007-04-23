@@ -149,7 +149,6 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 
   my $products = 
     $manager_class->get_products(
-    debug => 1,
       require_objects => [ 'vendor.vendor', 'vendor.region' ]);
 
   is(scalar @$products, 2, "require vendors 1 - $db_type");
