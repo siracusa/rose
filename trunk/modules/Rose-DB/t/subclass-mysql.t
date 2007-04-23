@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 64);
+    Test::More->import(tests => 65);
   }
 }
 
@@ -121,7 +121,7 @@ SKIP:
 {
   unless(have_db('mysql'))
   {
-    skip("MySQL connection tests", 27);
+    skip("MySQL connection tests", 28);
   }
 
   eval { $db->connect };
@@ -202,6 +202,17 @@ SKIP:
     }
     else { SKIP: { skip("$attr dbh read-back", 2) } }
   }
+
+  TEST:
+  {
+    my $dbh = My::DB2->new->retain_dbh;
+    $db = My::DB2->new(dbh => $dbh);
+  }
+
+  $db->retain_dbh;
+  $db->release_dbh;
+  
+  ok($db->{'dbh'}{'Active'}, 'retain stuffed dbh');
 }
 
 $db->dsn('dbi:mysql:dbname=dbfoo;host=hfoo;port=pfoo');
