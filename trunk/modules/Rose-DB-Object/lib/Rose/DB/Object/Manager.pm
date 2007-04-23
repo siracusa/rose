@@ -5,6 +5,7 @@ use strict;
 use Carp();
 
 use List::Util qw(first);
+use List::MoreUtils qw(uniq);
 use Scalar::Util qw(weaken refaddr);
 
 use Rose::DB::Object::Iterator;
@@ -415,7 +416,7 @@ sub get_objects
 
     if(ref $with_objects) # copy argument (shallow copy)
     {
-      $with_objects = [ @$with_objects ];
+      $with_objects = [ uniq @$with_objects ];
     }
     else
     {
@@ -462,7 +463,7 @@ sub get_objects
   {
     if(ref $require_objects) # copy argument (shallow copy)
     {
-      $require_objects = [ @$require_objects ];
+      $require_objects = [ uniq @$require_objects ];
     }
     else
     {
@@ -961,6 +962,8 @@ sub get_objects
           }
         }
 
+        $joins[$i]{'parent_tn'} = $parent_tn  if($joins[$i]{'type'} eq 'JOIN');
+
         # XXX: Undocumented for now...
         if($rel->can('join_args') && (my $join_args = $rel->join_args))
         {
@@ -1162,6 +1165,8 @@ sub get_objects
           }
         }
 
+        $joins[$i]{'parent_tn'} = $parent_tn  if($joins[$i]{'type'} eq 'JOIN');
+
         #
         # Now add table, columns, and clauses for the foreign object
         #
@@ -1266,6 +1271,8 @@ sub get_objects
             }
           }
         }
+
+        $joins[$i]{'parent_tn'} = $i - 1  if($joins[$i]{'type'} eq 'JOIN');
 
         # Add sub-object sort conditions
         if($rel->can('manager_args') && (my $mgr_args = $rel->manager_args))
