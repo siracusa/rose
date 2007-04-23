@@ -19,6 +19,11 @@ our %Have;
 
 #$Rose::DB::Object::Manager::Debug = 1;
 
+if(defined $ENV{'RDBO_NESTED_JOINS'} && Rose::DB::Object::Manager->can('default_nested_joins'))
+{
+  Rose::DB::Object::Manager->default_nested_joins($ENV{'RDBO_NESTED_JOINS'});
+}
+
 my $Include = 
   '^(?:' . join('|', qw(colors descriptions authors nicknames
                         description_author_map product_color_map

@@ -16,6 +16,11 @@ our($HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE, $HAVE_ORACLE);
 
 # XXX: TODO - outer join where fo is null
 
+if(defined $ENV{'RDBO_NESTED_JOINS'} && Rose::DB::Object::Manager->can('default_nested_joins'))
+{
+  Rose::DB::Object::Manager->default_nested_joins($ENV{'RDBO_NESTED_JOINS'});
+}
+
 #
 # Postgres
 #

@@ -16,7 +16,7 @@ use Rose::DB::Object::Constants
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.761';
+our $VERSION = '0.764';
 
 our $Debug = 0;
 
@@ -374,9 +374,8 @@ sub get_objects
     $dbh_retained = 1;
   }
 
-  my $nested_joins = (defined $args{'nested_joins'}) ? 
-    $args{'nested_joins'} : ($db->supports_nested_joins ?
-    $class->default_nested_joins : 0);
+  my $nested_joins = $db->supports_nested_joins ?
+    (defined $args{'nested_joins'} ? $args{'nested_joins'} : $class->default_nested_joins) : 0;
 
   my $use_explicit_joins = (defined $args{'explicit_joins'}) ? 
     $args{'explicit_joins'} : !$db->likes_implicit_joins;
@@ -910,8 +909,9 @@ sub get_objects
           # Use outer joins to handle duplicate or optional information.
           # Foreign keys that have all non-null columns are never outer-
           # joined, however.
-          if(!$nested_joins || (!($rel_type eq 'foreign key' && $rel->is_required && $rel->referential_integrity) &&
-             ($outer_joins_only || $with_objects{$arg})))
+          if(!($rel_type eq 'foreign key' && $rel->is_required &&
+               $rel->referential_integrity && !$nested_joins) &&
+             ($outer_joins_only || $with_objects{$arg}))
           {
             # Aliased table names
             push(@{$joins[$i]{'conditions'}}, "t${parent_tn}.$local_column = t$i.$foreign_column");
@@ -3697,7 +3697,7 @@ Get or set a boolean value that determines whether or not this class will consid
 
 =item B<default_nested_joins [BOOL]>
 
-Get or set a boolean value that determines whether or not this class will consider using a nested JOIN syntax when fetching related objects.  Not all databases support this syntax, and not all queries can use it even in supported databases.  If this parameter is true, the feature will be used when possible, by default.  The default value is true.
+Get or set a boolean value that determines whether or not this class will consider using nested JOIN syntax when fetching related objects.  Not all databases support this syntax, and not all queries can use it even in supported databases.  If this parameter is true, the feature will be used when possible, by default.  The default value is true.
 
 =item B<default_objects_per_page [NUM]>
 
@@ -3886,6 +3886,12 @@ Return a maximum of NUM objects.
 This parameter controls whether or not this method will consider using a sub-query to express  C<limit>/C<offset> constraints when fetching sub-objects related through one of the "...-to-many" relationship types.  Not all databases support this syntax, and not all queries can use it even in supported databases.  If this parameter is true, the feature will be used when possible.
 
 The default value is determined by the L<default_limit_with_subselect|/default_limit_with_subselect> class method.
+
+=item C<nested_joins BOOL>
+
+This parameter controls whether or not this method will consider using nested JOIN syntax when fetching related objects.  Not all databases support this syntax, and not all queries will use it even in supported databases.  If this parameter is true, the feature will be used when possible.
+
+The default value is determined by the L<default_nested_joins|/default_nested_joins> class method.
 
 =item C<multi_many_ok BOOL>
 
