@@ -35,6 +35,7 @@ use Rose::Class::MakeMethods::Generic
     '_base_name',
     'default_objects_per_page',
     'default_limit_with_subselect',
+    'default_nested_joins',
     'dbi_prepare_cached',
   ],
 );
@@ -42,6 +43,7 @@ use Rose::Class::MakeMethods::Generic
 __PACKAGE__->error_mode('fatal');
 __PACKAGE__->default_objects_per_page(20);
 __PACKAGE__->default_limit_with_subselect(1);
+__PACKAGE__->default_nested_joins(1);
 __PACKAGE__->dbi_prepare_cached(0);
 
 sub handle_error
@@ -372,7 +374,11 @@ sub get_objects
     $dbh_retained = 1;
   }
 
-  my $use_explicit_joins =  (defined $args{'explicit_joins'}) ? 
+  my $nested_joins = (defined $args{'nested_joins'}) ? 
+    $args{'nested_joins'} : ($db->supports_nested_joins ?
+    $class->default_nested_joins : 0);
+
+  my $use_explicit_joins = (defined $args{'explicit_joins'}) ? 
     $args{'explicit_joins'} : !$db->likes_implicit_joins;
 
   my $with_map_records;
@@ -904,8 +910,8 @@ sub get_objects
           # Use outer joins to handle duplicate or optional information.
           # Foreign keys that have all non-null columns are never outer-
           # joined, however.
-          if(!($rel_type eq 'foreign key' && $rel->is_required && $rel->referential_integrity) &&
-             ($outer_joins_only || $with_objects{$arg}))
+          if(!$nested_joins || (!($rel_type eq 'foreign key' && $rel->is_required && $rel->referential_integrity) &&
+             ($outer_joins_only || $with_objects{$arg})))
           {
             # Aliased table names
             push(@{$joins[$i]{'conditions'}}, "t${parent_tn}.$local_column = t$i.$foreign_column");
@@ -3688,6 +3694,10 @@ Get or set a boolean value that indicates whether or not this class will use L<D
 =item B<default_limit_with_subselect [BOOL]>
 
 Get or set a boolean value that determines whether or not this class will consider using a sub-query to express C<limit>/C<offset> constraints when fetching sub-objects related through one of the "...-to-many" relationship types.  Not all databases support this syntax, and not all queries can use it even in supported databases.  If this parameter is true, the feature will be used when possible, by default.  The default value is true.
+
+=item B<default_nested_joins [BOOL]>
+
+Get or set a boolean value that determines whether or not this class will consider using a nested JOIN syntax when fetching related objects.  Not all databases support this syntax, and not all queries can use it even in supported databases.  If this parameter is true, the feature will be used when possible, by default.  The default value is true.
 
 =item B<default_objects_per_page [NUM]>
 
