@@ -19,7 +19,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.733_04';
+our $VERSION = '0.733_05';
 
 our $Debug = 0;
 
@@ -1861,6 +1861,7 @@ sub next_value_in_sequence
 
 sub auto_sequence_name { undef }
 
+sub supports_nested_joins { 1 }
 sub supports_limit_with_offset { 1 }
 sub supports_arbitrary_defaults_on_insert { 0 }
 sub supports_select_from_subselect        { 0 }
