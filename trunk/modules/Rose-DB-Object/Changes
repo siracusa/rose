@@ -1,5 +1,7 @@
-0.764 (04.23.2007) - John Siracusa <siracusa@mindspring.com>
+0.764 (04.27.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Added a "find" method type to many-to-many relationships.
+    * Added a "count" method type to ...-to-many relationships.
     * Added support for nested joins.
     * Fixed a bug that caused some optional related objects to be improperly
       transformed into required objects.  (Reported by Ethan Rowe)

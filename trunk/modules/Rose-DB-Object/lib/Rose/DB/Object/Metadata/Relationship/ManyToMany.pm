@@ -18,7 +18,7 @@ our $VERSION = '0.759';
 
 our $Debug = 0;
 
-__PACKAGE__->default_auto_method_types(qw(get_set_on_save add_on_save));
+__PACKAGE__->default_auto_method_types(qw(find get_set_on_save add_on_save));
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -58,6 +58,20 @@ Rose::Object::MakeMethods::Generic->make_methods
 
 __PACKAGE__->method_maker_info
 (
+  count =>
+  {
+    class     => 'Rose::DB::Object::MakeMethods::Generic',
+    type      => 'objects_by_map',
+    interface => 'count',
+  },
+
+  find =>
+  {
+    class     => 'Rose::DB::Object::MakeMethods::Generic',
+    type      => 'objects_by_map',
+    interface => 'find',
+  },
+
   get_set =>
   {
     class => 'Rose::DB::Object::MakeMethods::Generic',
@@ -169,6 +183,14 @@ sub build_method_name_for_type
   elsif($type eq 'add_now' || $type eq 'add_on_save')
   {
     return 'add_' . $self->name;
+  }
+  elsif($type eq 'find')
+  {
+    return 'find_' . $self->name;
+  }
+  elsif($type eq 'count')
+  {
+    return $self->name . '_count';
   }
 
   return undef;
@@ -578,6 +600,14 @@ Now the code:
 =head1 METHOD MAP
 
 =over 4
+
+=item C<count>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_map>, C<interface =E<gt> 'count'> ...
+
+=item C<find>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_map>, C<interface =E<gt> 'find'> ...
 
 =item C<get_set>
 

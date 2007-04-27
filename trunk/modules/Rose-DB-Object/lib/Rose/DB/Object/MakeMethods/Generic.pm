@@ -3893,6 +3893,8 @@ sub objects_by_map
   my $mgr_args     = $args->{'manager_args'} || {};
   my $query_args   = $args->{'query_args'} || [];
 
+  my $count_method = $args->{'manager_count_method'} || 'get_objects_count';
+  
   if($mgr_args->{'query'})
   {
     Carp::croak "Cannot use the key 'query' in the manager_args parameter ",
@@ -4150,7 +4152,292 @@ sub objects_by_map
     }
   }
 
-  if($interface eq 'get_set' || $interface eq 'get_set_load')
+  if($interface eq 'find')
+  {
+    my $cache_key = PRIVATE_PREFIX . '_' . $name;
+
+    $methods{$name} = sub
+    {
+      my($self) = shift;
+
+      my %args;
+
+      if(my $ref = ref $_[0])
+      {
+        if($ref eq 'HASH')
+        {
+          %args = (query => [ %{shift(@_)} ], @_);
+        }
+        elsif(ref $_[0] eq 'ARRAY')
+        {
+          %args = (query => shift, @_);
+        }
+      }
+      else { %args = @_ }
+
+      if(delete $args{'from_cache'})
+      {
+        if(keys %args)
+        {
+          Carp::croak "Additional parameters not allowed in call to ",
+                      "$name() with from_cache parameter";
+        }
+
+        if(defined $self->{$cache_key})
+        {
+          return wantarray ? @{$self->{$cache_key}} : $self->{$cache_key};
+        }
+      }
+
+      my %join_map_to_self;
+
+      while(my($map_column, $self_method) = each(%map_column_to_self_method))
+      {
+        $join_map_to_self{$map_column} = $self->$self_method();
+
+        # Comment this out to allow null keys
+        unless(defined $join_map_to_self{$map_column})
+        {
+          keys(%map_column_to_self_method); # reset iterator
+          $self->error("Could not fetch indirect objects via $name() - the " .
+                       "$self_method attribute is undefined");
+          return;
+        }
+      }
+
+      my $objs;
+
+      my $cache = delete $args{'cache'};
+
+      # Merge query args
+      my @query = (%join_map_to_self, @$query_args, @{delete $args{'query'} || []});
+
+      # Merge the rest of the arguments
+      foreach my $param (keys %args)
+      {
+        if(exists $mgr_args->{$param})
+        {
+          my $ref = ref $args{$param};
+
+          if($ref eq 'ARRAY')
+          {
+            unshift(@{$args{$param}}, ref $mgr_args->{$param} ? 
+                    @{$mgr_args->{$param}} :  $mgr_args->{$param});
+          }
+          elsif($ref eq 'HASH')
+          {
+            while(my($k, $v) = each(%{$mgr_args->{$param}}))
+            {
+              $args{$param}{$k} = $v  unless(exists $args{$param}{$k});
+            }
+          }
+        }
+      }
+
+      while(my($k, $v) = each(%$mgr_args))
+      {
+        $args{$k} = $v  unless(exists $args{$k});
+      }
+
+      eval
+      {
+        if($share_db)
+        {
+          $objs =
+            $map_manager->$map_method(query => \@query,
+                                      require_objects => $require_objects,
+                                      %$mgr_args, db => $self->db);
+        }
+        else
+        {
+          $objs = 
+            $map_manager->$map_method(query => \@query,
+                                      require_objects => $require_objects,
+                                      db => $self->db, share_db => 0,
+                                      %$mgr_args);
+        }
+      };
+
+      if($@ || !$objs)
+      {
+        $self->error("Could not find $foreign_class objects - " . $map_manager->error);
+        $self->meta->handle_error($self);
+        return wantarray ? () : $objs;
+      }
+
+      if($map_record_method)
+      {
+        $objs =
+        [
+          map 
+          {
+            my $map_rec = $_;
+            my $o = $map_rec->$map_to_method();
+
+            # This should work too, if we want to keep the ref
+            #if(refaddr($map_rec->{$map_to}) == refaddr($o))
+            #{
+            #  weaken($map_rec->{$map_to} = $o);
+            #}
+
+            # Ditch the map record's reference to the foreign object
+            delete $map_rec->{$map_to};
+            $o->$map_record_method($map_rec); 
+            $o;
+          }
+          @$objs
+        ];
+      }
+      else
+      {
+        $objs =
+        [
+          map 
+          {
+            # This should work too, if we want to keep the ref
+            #my $map_rec = $_;
+            #my $o = $map_rec->$map_to_method();
+            #
+            #if(refaddr($map_rec->{$map_to}) == refaddr($o))
+            #{
+            #  weaken($map_rec->{$map_to} = $o);
+            #}
+            #
+            #$o;
+
+            # Ditch the map record's reference to the foreign object
+            my $o = $_->$map_to_method();
+            $_->$map_to_method(undef);
+            $o;
+          }
+          @$objs 
+        ];
+      }
+
+      $self->{$cache_key} = $objs  if($cache);
+
+      return wantarray ? @$objs: $objs;
+    };
+  }
+  elsif($interface eq 'count')
+  {
+    my $cache_key = PRIVATE_PREFIX . '_' . $name;
+
+    $methods{$name} = sub
+    {
+      my($self) = shift;
+
+      my %args;
+
+      if(my $ref = ref $_[0])
+      {
+        if($ref eq 'HASH')
+        {
+          %args = (query => [ %{shift(@_)} ], @_);
+        }
+        elsif(ref $_[0] eq 'ARRAY')
+        {
+          %args = (query => shift, @_);
+        }
+      }
+      else { %args = @_ }
+
+      if(delete $args{'from_cache'})
+      {
+        if(keys %args)
+        {
+          Carp::croak "Additional parameters not allowed in call to ",
+                      "$name() with from_cache parameter";
+        }
+
+        if(defined $self->{$cache_key})
+        {
+          return wantarray ? @{$self->{$cache_key}} : $self->{$cache_key};
+        }
+      }
+
+      my %join_map_to_self;
+
+      while(my($map_column, $self_method) = each(%map_column_to_self_method))
+      {
+        $join_map_to_self{$map_column} = $self->$self_method();
+
+        # Comment this out to allow null keys
+        unless(defined $join_map_to_self{$map_column})
+        {
+          keys(%map_column_to_self_method); # reset iterator
+          $self->error("Could not count indirect objects via $name() - the " .
+                       "$self_method attribute is undefined");
+          return;
+        }
+      }
+
+      my $cache = delete $args{'cache'};
+
+      # Merge query args
+      my @query = (%join_map_to_self, @$query_args, @{delete $args{'query'} || []});
+
+      # Merge the rest of the arguments
+      foreach my $param (keys %args)
+      {
+        if(exists $mgr_args->{$param})
+        {
+          my $ref = ref $args{$param};
+
+          if($ref eq 'ARRAY')
+          {
+            unshift(@{$args{$param}}, ref $mgr_args->{$param} ? 
+                    @{$mgr_args->{$param}} :  $mgr_args->{$param});
+          }
+          elsif($ref eq 'HASH')
+          {
+            while(my($k, $v) = each(%{$mgr_args->{$param}}))
+            {
+              $args{$param}{$k} = $v  unless(exists $args{$param}{$k});
+            }
+          }
+        }
+      }
+
+      while(my($k, $v) = each(%$mgr_args))
+      {
+        $args{$k} = $v  unless(exists $args{$k});
+      }
+
+      my $count;
+
+      eval
+      {
+        if($share_db)
+        {
+          $count =
+            $map_manager->$count_method(query => \@query,
+                                        require_objects => $require_objects,
+                                        %$mgr_args, db => $self->db);
+        }
+        else
+        {
+          $count = 
+            $map_manager->$count_method(query => \@query,
+                                        require_objects => $require_objects,
+                                        db => $self->db, share_db => 0,
+                                        %$mgr_args);
+        }
+      };
+
+      if($@ || !defined $count)
+      {
+        $self->error("Could not count $foreign_class objects - " . $map_manager->error);
+        $self->meta->handle_error($self);
+        return $count;
+      }
+
+      $self->{$cache_key} = $count  if($cache);
+
+      return $count;
+    };
+  }
+  elsif($interface eq 'get_set' || $interface eq 'get_set_load')
   {
     $methods{$name} = sub
     {
@@ -5909,7 +6196,9 @@ A reference to an array of arguments added to the value of the C<query> paramete
 
 =item B<count>
 
-Creates a method that will attempt to count L<Rose::DB::Object>-derived objects based on a key formed from attributes of the current object, plus any additional parameters passed to the method call.  Since the objects counted are partially determined by the arguments passed to the method, the count is not retained.  It is simply returned.  Each call counts the specified objects again, even if the arguments are the same as the previous call.
+Creates a method that will attempt to count L<Rose::DB::Object>-derived objects based on a key formed from attributes of the current object, plus any additional parameters passed to the method call.  Note that this method counts the objects I<in the database at the time of the call>.  This may be different than the number of objects attached to the current object or otherwise in memory.
+
+Since the objects counted are partially determined by the arguments passed to the method, the count is not retained.  It is simply returned.  Each call counts the specified objects again, even if the arguments are the same as the previous call.
 
 If the first argument is a reference to a hash or array, it is converted to a reference to an array (if necessary) and taken as the value of the C<query> parameter.  All arguments are passed on to the C<manager_class>'s C<manager_count_method> method, augmented by the key formed from attributes of the current object.  Query parameters are added to the existing contents of the C<query> parameter.  Other parameters replace existing parameters if the existing values are simple scalars, or augment existing parameters if the existing values are references to hashes or arrays.
 
@@ -6366,6 +6655,10 @@ The name of the L<Rose::DB::Object::Manager>-derived class that the C<map_class>
 
 The name of the class method to call on C<manager_class> in order to fetch the objects.  Defaults to C<get_objects>.
 
+=item B<manager_count_method NAME>
+
+The name of the class method to call on C<manager_class> in order to count the objects.  Defaults to C<get_objects_count>.
+
 =item B<map_class CLASS>
 
 The name of the L<Rose::DB::Object>-derived class that maps between the other two L<Rose::DB::Object>-derived classes.  This class must have a foreign key and/or "many to one" relationship for each of the two tables that it maps between.
@@ -6395,6 +6688,28 @@ A reference to an array of arguments added to the value of the C<query> paramete
 =item Interfaces
 
 =over 4
+
+=item B<count>
+
+Creates a method that will attempt to count L<Rose::DB::Object>-derived objects that are related to the current object through the C<map_class>, plus any additional parameters passed to the method call.  Note that this method counts the objects I<in the database at the time of the call>.  This may be different than the number of objects attached to the current object or otherwise in memory.
+
+Since the objects counted are partially determined by the arguments passed to the method, the count is not retained.  It is simply returned.  Each call counts the specified objects again, even if the arguments are the same as the previous call.
+
+If the first argument is a reference to a hash or array, it is converted to a reference to an array (if necessary) and taken as the value of the C<query> parameter.  All arguments are passed on to the C<manager_class>'s C<manager_count_method> method, augmented by the mapping to the current object.  Query parameters are added to the existing contents of the C<query> parameter.  Other parameters replace existing parameters if the existing values are simple scalars, or augment existing parameters if the existing values are references to hashes or arrays.
+
+The count may fail for several reasons.  The count will not even be attempted if any of the key attributes in the current object are undefined.  Instead, undef (in scalar context) or an empty list (in list context) will be returned.  If the call to C<manager_class>'s C<manager_count_method> method returns undef, the behavior is determined by the L<metadata object|Rose::DB::Object/meta>'s L<error_mode|Rose::DB::Object::Metadata/error_mode>.  If the mode is C<return>, that false value (in scalar context) or an empty list (in list context) is returned.
+
+If the count succeeds, the number is returned.  (If the count finds zero objects, the count will be 0.  This is still considered success.)
+
+=item B<find>
+
+Creates a method that will attempt to fetch L<Rose::DB::Object>-derived that are related to the current object through the C<map_class>, plus any additional parameters passed to the method call.  Since the objects fetched are partially determined by the arguments passed to the method, the list of objects is not retained.  It is simply returned.  Each call fetches the requested objects again, even if the arguments are the same as the previous call.
+
+If the first argument is a reference to a hash or array, it is converted to a reference to an array (if necessary) and taken as the value of the C<query> parameter.  All arguments are passed on to the C<manager_class>'s C<manager_method> method, augmented by the mapping to the current object.  Query parameters are added to the existing contents of the C<query> parameter.  Other parameters replace existing parameters if the existing values are simple scalars, or augment existing parameters if the existing values are references to hashes or arrays.
+
+The fetch may fail for several reasons.  The fetch will not even be attempted if any of the key attributes in the current object are undefined.  Instead, undef (in scalar context) or an empty list (in list context) will be returned.  If the call to C<manager_class>'s C<manager_method> method returns false, the behavior is determined by the L<metadata object|Rose::DB::Object/meta>'s L<error_mode|Rose::DB::Object::Metadata/error_mode>.  If the mode is C<return>, that false value (in scalar context) or an empty list (in list context) is returned.
+
+If the fetch succeeds, a list (in list context) or a reference to the array of objects (in scalar context) is returned.  (If the fetch finds zero objects, the list or array reference will simply be empty.  This is still considered success.)
 
 =item B<get_set>
 
