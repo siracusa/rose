@@ -3,6 +3,8 @@
     * Added a "find" method type to many-to-many relationships.
     * Added a "count" method type to ...-to-many relationships.
     * Added support for nested joins.
+    * The setup() method now supports a "helpers" shortcut for importing
+      methods from Rose::DB::Object::Helpers.
     * Added the dubious require_primary_key parameter and object attribute
       to the Loader.  (Requested by Teodor Zlatanov)
     * Fixed a bug that caused some optional related objects to be improperly

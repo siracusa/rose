@@ -404,6 +404,15 @@ sub setup
       $auto_init = 1;
       next PAIR;
     }
+    elsif($method eq 'helpers')
+    {
+      require Rose::DB::Object::Helpers;
+
+      Rose::DB::Object::Helpers->import(
+        '--target-class' => $self->class, (ref $args eq 'ARRAY' ? @$args : $args));
+
+      next PAIR;
+    }
 
     unless($self->can($method))
     {
@@ -5256,7 +5265,9 @@ The argument will be passed to METHOD as-is:
 
     $meta->METHOD(ARG);
 
-There's one exception to these transformation rules.  If METHOD is "L<unique_key|/unique_key>" or "L<add_unique_key|/add_unique_key>" and the argument is a reference to an array containing only non-reference values, then the array reference itself is passed to the method.  For example, this pair:
+There are two exceptions to these transformation rules.
+
+If METHOD is "L<unique_key|/unique_key>" or "L<add_unique_key|/add_unique_key>" and the argument is a reference to an array containing only non-reference values, then the array reference itself is passed to the method.  For example, this pair:
 
     unique_key => [ 'name', 'status' ]
 
@@ -5265,6 +5276,15 @@ will result in this method call:
     $meta->unique_key([ 'name', 'status' ]);
 
 (Note that these method names are I<singular>.  This exception does I<not> apply to the I<plural> variants, "L<unique_keys|/unique_keys>" and "L<add_unique_keys|/add_unique_keys>".)
+
+If METHOD is "helpers", then the argument is dereferenced (if it's an array reference) and passed on to L<Rose::DB::Object::Helpers>.  That is, this:
+
+    helpers => [ 'load_or_save', { load_or_insert => 'find_or_create' } ],
+
+Is equivalent to having this in your L<class|/class>:
+
+    use Rose::DB::Object::Helpers 
+      'load_or_save', { load_or_insert => 'find_or_create' };
 
 Method names may appear more than once in PARAMS.  The methods are called in the order that they appear in PARAMS, with the exception of the L<initialize|/initialize> (or L<auto_initialize|/auto_initialize>) method, which is always called last.
 

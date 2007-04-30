@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 6;
+use Test::More tests => 10;
 
 require 't/test-lib.pl';
 
@@ -14,7 +14,7 @@ use Rose::DB::Object::Constants qw(MODIFIED_COLUMNS);
 
 SKIP:
 {
-  skip('sqlite tests', 6)  unless(have_db('sqlite_admin'));
+  skip('sqlite tests', 10)  unless(have_db('sqlite_admin'));
 
   Rose::DB->default_type('sqlite');
 
@@ -30,6 +30,9 @@ SKIP:
       ],
 
       primary_key_columns => ['id'],
+
+      helpers => 'load_or_save',
+      helpers => { load_or_insert => 'find_or_create2' }, 
 
       unique_key => ['name'],
 
@@ -59,6 +62,8 @@ SKIP:
       primary_key_columns => ['id'],
 
       unique_key => ['client_id'],
+
+      helpers => [ 'load_or_save', { load_or_insert => 'find_or_create' } ],
 
       ###foreign_keys => [
       ###    client => {
@@ -108,6 +113,12 @@ EOF
 
   Clients->new( name => 'c1' )->save;
 
+  ok(Addresses->can('load_or_save'), 'helpers 1');
+  ok(Addresses->can('find_or_create'), 'helpers 2');
+
+  ok(Clients->can('load_or_save'), 'helpers 3');
+  ok(Clients->can('find_or_create2'), 'helpers 4');
+  
   my $c = Clients->new( name => 'c1' );
   $c->load;
 
