@@ -1,4 +1,4 @@
-0.764 (04.27.2007) - John Siracusa <siracusa@mindspring.com>
+0.764 (04.30.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added a "find" method type to many-to-many relationships.
     * Added a "count" method type to ...-to-many relationships.
@@ -20,6 +20,8 @@
     * The clone() and clone_and_reset() methods now handle missing or
       differently named accessor/mutator methods.
     * QueryBuilder now supports eq/ne undef for is/is not null comparisons.
+    * Foreign key columns that are also primary key columns are no longer set 
+      to undef when a foreign object is set to undef.  (Reported by Ovid)
     * Fixed a bug that caused values not to be checked against the list
       of valid values in SET columns.  (Reported by Adrian Howard)
     * Fixed a bug that caused column (get/)set methods not to return the
