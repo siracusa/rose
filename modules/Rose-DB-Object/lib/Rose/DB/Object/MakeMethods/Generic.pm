@@ -6922,7 +6922,7 @@ If true, the L<db|Rose::DB::Object/db> attribute of the current object is shared
 
 =item B<delete_now>
 
-Deletes a L<Rose::DB::Object>-derived object from the database based on a primary key formed from attributes of the current object.  First, the "parent" object will have all of its attributes that refer to the "foreign" set to null, and it will be saved into the database.  This needs to be done first because a database that enforces referential integrity will not allow a row to be deleted if it is still referenced by a foreign key in another table.
+Deletes a L<Rose::DB::Object>-derived object from the database based on a primary key formed from attributes of the current object.  First, the "parent" object will have all of its attributes that refer to the "foreign" object (except any columns that are also part of the primary key) set to null , and it will be saved into the database.  This needs to be done first because a database that enforces referential integrity will not allow a row to be deleted if it is still referenced by a foreign key in another table.
 
 Any previously pending C<get_set_on_save> action is discarded.
 
@@ -6932,7 +6932,7 @@ Returns true if the foreign object was deleted successfully or did not exist in 
 
 =item B<delete_on_save>
 
-Deletes a L<Rose::DB::Object>-derived object from the database when the "parent" object is L<save|Rose::DB::Object/save>d, based on a primary key formed from attributes of the current object.  The "parent" object will have all of its attributes that refer to the "foreign" set to null immediately, but the actual delete will not be done until the parent is saved.
+Deletes a L<Rose::DB::Object>-derived object from the database when the "parent" object is L<save|Rose::DB::Object/save>d, based on a primary key formed from attributes of the current object.  The "parent" object will have all of its attributes that refer to the "foreign" object (except any columns that are also part of the primary key) set to null immediately, but the actual delete will not be done until the parent is saved.
 
 Any previously pending C<get_set_on_save> action is discarded.
 
