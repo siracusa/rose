@@ -1878,6 +1878,7 @@ sub object_by_key
           # Set the foreign key columns
           while(my($local_column, $foreign_column) = each(%$fk_columns))
           {
+            next  if($meta->column($local_column)->is_primary_key_member);
             my $local_method = $meta->column_mutator_method_name($local_column);
             $self->$local_method(undef);
           }
@@ -1978,6 +1979,7 @@ sub object_by_key
           # Set the foreign key columns
           while(my($local_column, $foreign_column) = each(%$fk_columns))
           {
+            next  if($meta->column($local_column)->is_primary_key_member);
             my $local_method = $meta->column_mutator_method_name($local_column);
             $self->$local_method(undef);
           }
@@ -2135,6 +2137,7 @@ sub object_by_key
           # Set the foreign key columns
           while(my($local_column, $foreign_column) = each(%$fk_columns))
           {
+            next  if($meta->column($local_column)->is_primary_key_member);
             my $local_method = $meta->column_mutator_method_name($local_column);
             $self->$local_method(undef);
           }
@@ -2338,6 +2341,7 @@ sub object_by_key
             # Clear foreign key columns
             foreach my $local_column (keys %$fk_columns)
             {
+              next  if($meta->column($local_column)->is_primary_key_member);
               my $local_method = $meta->column_accessor_method_name($local_column);
               $self->$local_method(undef);
             }
@@ -2374,6 +2378,7 @@ sub object_by_key
         # Clear columns that reference the foreign key
         foreach my $local_column (keys %$fk_columns)
         {
+          next  if($meta->column($local_column)->is_primary_key_member);
           my $local_method = $meta->column_accessor_method_name($local_column);
           $save_fk{$local_method} = $self->$local_method();
           $self->$local_method(undef);
@@ -2457,6 +2462,7 @@ sub object_by_key
             # Clear foreign key columns
             foreach my $local_column (keys %$fk_columns)
             {
+              next  if($meta->column($local_column)->is_primary_key_member);
               my $local_method = $meta->column_accessor_method_name($local_column);
               $self->$local_method(undef);
             }
@@ -2478,6 +2484,7 @@ sub object_by_key
       # Clear columns that reference the foreign key, saving old values
       foreach my $local_column (keys %$fk_columns)
       {
+        next  if($meta->column($local_column)->is_primary_key_member);
         my $local_method = $meta->column_accessor_method_name($local_column);
         $save_fk{$local_method} = $self->$local_method();
         $self->$local_method(undef);
@@ -6937,7 +6944,7 @@ Returns true if the foreign object was deleted successfully or did not exist in 
 
 Creates a method that will attempt to create and load a L<Rose::DB::Object>-derived object based on a primary key formed from attributes of the current object.
 
-If passed a single argument of undef, the C<hash_key> used to store the object is set to undef.  Otherwise, the argument must be one of the following:
+If passed a single argument of undef, the C<hash_key> used to store the object and the columns that participate in the key are set to undef.  (If any key column is part of the primary key, however, it is not set to undef.)  Otherwise, the argument must be one of the following:
 
 =over 4
 
@@ -6967,7 +6974,7 @@ If the load succeeds, the object is returned.
 
 Creates a method that will attempt to create and load a L<Rose::DB::Object>-derived object based on a primary key formed from attributes of the current object, and will also save the object to the database when called with an appropriate object as an argument.
 
-If passed a single argument of undef, the C<hash_key> used to store the object is set to undef.  Otherwise, the argument must be one of the following:
+If passed a single argument of undef, the C<hash_key> used to store the object and the columns that participate in the key are set to undef.  (If any key column is part of the primary key, however, it is not set to undef.)  Otherwise, the argument must be one of the following:
 
 =over 4
 
@@ -7001,7 +7008,7 @@ If the load succeeds, the object is returned.
 
 Creates a method that will attempt to create and load a L<Rose::DB::Object>-derived object based on a primary key formed from attributes of the current object, and save the object when the "parent" object is L<save|Rose::DB::Object/save>d.
 
-If passed a single argument of undef, the C<hash_key> used to store the object is set to undef.  Otherwise, the argument must be one of the following:
+If passed a single argument of undef, the C<hash_key> used to store the object and the columns that participate in the key are set to undef.  (If any key column is part of the primary key, however, it is not set to undef.)  Otherwise, the argument must be one of the following:
 
 =over 4
 
