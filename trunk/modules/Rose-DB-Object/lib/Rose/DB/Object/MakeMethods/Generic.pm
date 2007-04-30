@@ -1849,6 +1849,9 @@ sub object_by_key
     exists $args->{'required'} ? $args->{'required'} :
     exists $args->{'referential_integrity'} ? $args->{'referential_integrity'} : 1;
 
+  my $ref_integrity = 
+    ($fk && $fk->isa('Rose::DB::Object::Metadata::ForeignKey')) ? $fk->referential_integrity : 0;
+
   if(exists $args->{'required'} && exists $args->{'referential_integrity'} &&
     (!$args->{'required'} != !$$args->{'referential_integrity'}))
   {
@@ -1875,12 +1878,15 @@ sub object_by_key
 
         unless(defined $_[0]) # undef argument
         {
-          # Set the foreign key columns
-          while(my($local_column, $foreign_column) = each(%$fk_columns))
+          if($ref_integrity || $required)
           {
-            next  if($meta->column($local_column)->is_primary_key_member);
-            my $local_method = $meta->column_mutator_method_name($local_column);
-            $self->$local_method(undef);
+            # Set the foreign key columns
+            while(my($local_column, $foreign_column) = each(%$fk_columns))
+            {
+              next  if($meta->column($local_column)->is_primary_key_member);
+              my $local_method = $meta->column_mutator_method_name($local_column);
+              $self->$local_method(undef);
+            }
           }
 
           return $self->{$key} = undef;
@@ -1976,12 +1982,15 @@ sub object_by_key
 
         unless(defined $_[0]) # undef argument
         {
-          # Set the foreign key columns
-          while(my($local_column, $foreign_column) = each(%$fk_columns))
+          if($ref_integrity || $required)
           {
-            next  if($meta->column($local_column)->is_primary_key_member);
-            my $local_method = $meta->column_mutator_method_name($local_column);
-            $self->$local_method(undef);
+            # Set the foreign key columns
+            while(my($local_column, $foreign_column) = each(%$fk_columns))
+            {
+              next  if($meta->column($local_column)->is_primary_key_member);
+              my $local_method = $meta->column_mutator_method_name($local_column);
+              $self->$local_method(undef);
+            }
           }
 
           return $self->{$key} = undef;
@@ -2134,12 +2143,15 @@ sub object_by_key
 
         unless(defined $_[0]) # undef argument
         {
-          # Set the foreign key columns
-          while(my($local_column, $foreign_column) = each(%$fk_columns))
+          if($ref_integrity || $required)
           {
-            next  if($meta->column($local_column)->is_primary_key_member);
-            my $local_method = $meta->column_mutator_method_name($local_column);
-            $self->$local_method(undef);
+            # Set the foreign key columns
+            while(my($local_column, $foreign_column) = each(%$fk_columns))
+            {
+              next  if($meta->column($local_column)->is_primary_key_member);
+              my $local_method = $meta->column_mutator_method_name($local_column);
+              $self->$local_method(undef);
+            }
           }
 
           delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
@@ -2338,12 +2350,15 @@ sub object_by_key
           if(delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'} ||
              delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$fk_name}{'set'})
           {
-            # Clear foreign key columns
-            foreach my $local_column (keys %$fk_columns)
+            if($ref_integrity || $required)
             {
-              next  if($meta->column($local_column)->is_primary_key_member);
-              my $local_method = $meta->column_accessor_method_name($local_column);
-              $self->$local_method(undef);
+              # Clear foreign key columns
+              foreach my $local_column (keys %$fk_columns)
+              {
+                next  if($meta->column($local_column)->is_primary_key_member);
+                my $local_method = $meta->column_accessor_method_name($local_column);
+                $self->$local_method(undef);
+              }
             }
 
             $self->{$key} = undef;
@@ -2375,13 +2390,16 @@ sub object_by_key
 
         $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
 
-        # Clear columns that reference the foreign key
-        foreach my $local_column (keys %$fk_columns)
+        if($ref_integrity || $required)
         {
-          next  if($meta->column($local_column)->is_primary_key_member);
-          my $local_method = $meta->column_accessor_method_name($local_column);
-          $save_fk{$local_method} = $self->$local_method();
-          $self->$local_method(undef);
+          # Clear columns that reference the foreign key
+          foreach my $local_column (keys %$fk_columns)
+          {
+            next  if($meta->column($local_column)->is_primary_key_member);
+            my $local_method = $meta->column_accessor_method_name($local_column);
+            $save_fk{$local_method} = $self->$local_method();
+            $self->$local_method(undef);
+          }
         }
 
         # Forget about any value we were going to set on save
@@ -2459,12 +2477,15 @@ sub object_by_key
           if(delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'} ||
              delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$fk_name}{'set'})
           {
-            # Clear foreign key columns
-            foreach my $local_column (keys %$fk_columns)
+            if($ref_integrity || $required)
             {
-              next  if($meta->column($local_column)->is_primary_key_member);
-              my $local_method = $meta->column_accessor_method_name($local_column);
-              $self->$local_method(undef);
+              # Clear foreign key columns
+              foreach my $local_column (keys %$fk_columns)
+              {
+                next  if($meta->column($local_column)->is_primary_key_member);
+                my $local_method = $meta->column_accessor_method_name($local_column);
+                $self->$local_method(undef);
+              }
             }
 
             $self->{$key} = undef;
@@ -2481,13 +2502,16 @@ sub object_by_key
 
       my %save_fk;
 
-      # Clear columns that reference the foreign key, saving old values
-      foreach my $local_column (keys %$fk_columns)
+      if($ref_integrity || $required)
       {
-        next  if($meta->column($local_column)->is_primary_key_member);
-        my $local_method = $meta->column_accessor_method_name($local_column);
-        $save_fk{$local_method} = $self->$local_method();
-        $self->$local_method(undef);
+        # Clear columns that reference the foreign key, saving old values
+        foreach my $local_column (keys %$fk_columns)
+        {
+          next  if($meta->column($local_column)->is_primary_key_member);
+          my $local_method = $meta->column_accessor_method_name($local_column);
+          $save_fk{$local_method} = $self->$local_method();
+          $self->$local_method(undef);
+        }
       }
 
       # Forget about any value we were going to set on save
@@ -6922,7 +6946,7 @@ If true, the L<db|Rose::DB::Object/db> attribute of the current object is shared
 
 =item B<delete_now>
 
-Deletes a L<Rose::DB::Object>-derived object from the database based on a primary key formed from attributes of the current object.  First, the "parent" object will have all of its attributes that refer to the "foreign" object (except any columns that are also part of the primary key) set to null , and it will be saved into the database.  This needs to be done first because a database that enforces referential integrity will not allow a row to be deleted if it is still referenced by a foreign key in another table.
+Deletes a L<Rose::DB::Object>-derived object from the database based on a primary key formed from attributes of the current object.  If C<referential_integrity> or C<required> is true, then the "parent" object will have all of its attributes that refer to the "foreign" object (except any columns that are also part of the primary key) set to null , and it will be saved into the database.  This needs to be done first because a database that enforces referential integrity will not allow a row to be deleted if it is still referenced by a foreign key in another table.
 
 Any previously pending C<get_set_on_save> action is discarded.
 
@@ -6932,7 +6956,7 @@ Returns true if the foreign object was deleted successfully or did not exist in 
 
 =item B<delete_on_save>
 
-Deletes a L<Rose::DB::Object>-derived object from the database when the "parent" object is L<save|Rose::DB::Object/save>d, based on a primary key formed from attributes of the current object.  The "parent" object will have all of its attributes that refer to the "foreign" object (except any columns that are also part of the primary key) set to null immediately, but the actual delete will not be done until the parent is saved.
+Deletes a L<Rose::DB::Object>-derived object from the database when the "parent" object is L<save|Rose::DB::Object/save>d, based on a primary key formed from attributes of the current object.  If C<referential_integrity> or C<required> is true, then the "parent" object will have all of its attributes that refer to the "foreign" object (except any columns that are also part of the primary key) set to null immediately, but the actual delete will not be done until the parent is saved.
 
 Any previously pending C<get_set_on_save> action is discarded.
 
@@ -6944,7 +6968,7 @@ Returns true if the foreign object was deleted successfully or did not exist in 
 
 Creates a method that will attempt to create and load a L<Rose::DB::Object>-derived object based on a primary key formed from attributes of the current object.
 
-If passed a single argument of undef, the C<hash_key> used to store the object and the columns that participate in the key are set to undef.  (If any key column is part of the primary key, however, it is not set to undef.)  Otherwise, the argument must be one of the following:
+If passed a single argument of undef, the C<hash_key> used to store the object is set to undef.  If C<referential_integrity> or C<required> is true, then the columns that participate in the key are set to undef.  (If any key column is part of the primary key, however, it is not set to undef.)  Otherwise, the argument must be one of the following:
 
 =over 4
 
@@ -6974,7 +6998,7 @@ If the load succeeds, the object is returned.
 
 Creates a method that will attempt to create and load a L<Rose::DB::Object>-derived object based on a primary key formed from attributes of the current object, and will also save the object to the database when called with an appropriate object as an argument.
 
-If passed a single argument of undef, the C<hash_key> used to store the object and the columns that participate in the key are set to undef.  (If any key column is part of the primary key, however, it is not set to undef.)  Otherwise, the argument must be one of the following:
+If passed a single argument of undef, the C<hash_key> used to store the object is set to undef.  If C<referential_integrity> or C<required> is true, then the columns that participate in the key are set to undef.  (If any key column is part of the primary key, however, it is not set to undef.) Otherwise, the argument must be one of the following:
 
 =over 4
 
@@ -7008,7 +7032,7 @@ If the load succeeds, the object is returned.
 
 Creates a method that will attempt to create and load a L<Rose::DB::Object>-derived object based on a primary key formed from attributes of the current object, and save the object when the "parent" object is L<save|Rose::DB::Object/save>d.
 
-If passed a single argument of undef, the C<hash_key> used to store the object and the columns that participate in the key are set to undef.  (If any key column is part of the primary key, however, it is not set to undef.)  Otherwise, the argument must be one of the following:
+If passed a single argument of undef, the C<hash_key> used to store the object is set to undef.  If C<referential_integrity> or C<required> is true, then the columns that participate in the key are set to undef.  (If any key column is part of the primary key, however, it is not set to undef.) Otherwise, the argument must be one of the following:
 
 =over 4
 
