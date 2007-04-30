@@ -18,6 +18,8 @@ our $Sort_Columns_Alphabetically = 0; # hack for test suite
 
 our $VERSION = '0.757';
 
+our $Missing_PK_OK = 0;
+
 use Rose::Class::MakeMethods::Generic
 (
   inheritable_scalar => 
@@ -305,7 +307,7 @@ sub auto_retrieve_primary_key_column_names
                                           schema  => $schema);
   };
 
-  if($@ || !@$pk_columns)
+  if($@ || (!$Missing_PK_OK && !@$pk_columns))
   {
     $@ = 'no primary key columns found'  unless(defined $@);
     Carp::croak "Could not auto-retrieve primary key columns for class ",
@@ -313,6 +315,8 @@ sub auto_retrieve_primary_key_column_names
                 ($@ || "no primary key info found for catalog '" . $catalog .
                 "' schema '" . $schema . "' table '" . $self->table, "'");
   }
+
+  $pk_columns ||= [];
 
   return wantarray ? @$pk_columns : $pk_columns;
 }
@@ -1107,9 +1111,16 @@ sub auto_init_primary_key_columns
 
   my $primary_key_columns = $self->auto_retrieve_primary_key_column_names;
 
-  unless(@$primary_key_columns)
+  unless($primary_key_columns && @$primary_key_columns)
   {
-    Carp::croak "Could not retrieve primary key columns for class ", ref($self);
+    if($Missing_PK_OK)
+    {
+      $primary_key_columns = [];
+    }
+    else
+    {
+      Carp::croak "Could not retrieve primary key columns for class ", ref($self);
+    }
   }
 
   # Wipe pk defaults because stupid MySQL adds them implicitly

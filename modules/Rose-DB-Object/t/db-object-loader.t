@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 23) + 9;
+use Test::More tests => 1 + (5 * 24) + 9;
 
 BEGIN 
 {
@@ -42,7 +42,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     unless($Have{$db_type})
     {
-      skip("$db_type tests", 23 + scalar @{$Reserved_Words{$db_type} ||= []});
+      skip("$db_type tests", 24 + scalar @{$Reserved_Words{$db_type} ||= []});
     }
   }
 
@@ -65,6 +65,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     Rose::DB::Object::Loader->new(
       db            => Rose::DB->new,
       class_prefix  => $class_prefix,
+      ($db_type eq 'mysql' ? (require_primary_key => 0) : ()),
       pre_init_hook => sub { $pre_init_hook++ });
 
   $loader->convention_manager($i % 2 ? 'MyCM' : MyCM->new);
@@ -100,7 +101,14 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   }
   else
   {
-    ok(!scalar(grep { /NoPk\b/i } @classes), "pk classes only - $db_type");
+    if($db_type eq 'mysql')
+    {
+      ok(1, "pk classes - $db_type");
+    }
+    else
+    {
+      ok(!scalar(grep { /NoPk\b/i } @classes), "pk classes only - $db_type");
+    }
   }
 
   my $product_class = $class_prefix . '::Product';
@@ -202,12 +210,14 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     is($o->read, 'Foo', "reserved table name 1 - $db_type");
     my $os = Mysql::Read::Manager->get_read;
     ok(@$os == 1 && $os->[0]->read eq 'Foo', "reserved table name 2 - $db_type");
+    
+    ok(Mysql::NoPkTest->isa('Rose::DB::Object'), "require_primary_key 1 - $db_type")
   }
   else
   {
     SKIP:
     {
-      skip("reserved table name tests", 2);
+      skip("reserved table name and no pk tests", 3);
     }
   }
 }
