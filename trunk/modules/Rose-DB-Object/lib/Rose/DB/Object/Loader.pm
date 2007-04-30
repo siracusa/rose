@@ -12,6 +12,7 @@ use Rose::DB;
 use Rose::DB::Object;
 use Rose::DB::Object::ConventionManager;
 use Rose::DB::Object::Metadata::Util qw(perl_hashref);
+use Rose::DB::Object::Metadata::Auto;
 
 use Rose::Object;
 our @ISA = qw(Rose::Object);
@@ -48,10 +49,11 @@ use Rose::Object::MakeMethods::Generic
   boolean => 
   [
     'using_default_base_class',
-    'include_views'     => { default => 0 },
-    'with_managers'     => { default => 1 },
-    'with_foreign_keys' => { default => 1 },
-    'with_unique_keys'  => { default => 1 },
+    'require_primary_key' => { default => 1 },
+    'include_views'       => { default => 0 },
+    'with_managers'       => { default => 1 },
+    'with_foreign_keys'   => { default => 1 },
+    'with_unique_keys'    => { default => 1 },
     'convention_manager_was_set' => { default => 0 },
   ],
 );
@@ -535,6 +537,9 @@ sub make_classes
   $args{'stay_connected'} = 1;
   $args{'passive'} = 1  unless(exists $args{'passive'});
 
+  my $require_primary_key = exists $args{'require_primary_key'} ? 
+    delete $args{'require_primary_key'} : $self->require_primary_key;
+
   my $include_views = exists $args{'include_views'} ? 
     delete $args{'include_views'} : $self->include_views;
 
@@ -857,6 +862,10 @@ sub make_classes
   my %list_args;
   $list_args{'include_views'} = 1  if($include_views);
 
+  # XXX: Horrible hack.  Replce eventually...
+  local $Rose::DB::Object::Metadata::Auto::Missing_PK_OK = 
+    $require_primary_key ? 0 : 1;
+
   # Iterate over tables, creating RDBO classes for each
   foreach my $table ($db->list_tables(%list_args))
   {
@@ -864,7 +873,7 @@ sub make_classes
     next  unless(!$filter || $filter->($table));
 
     # Skip tables with no primary keys
-    next  unless($db->has_primary_key($table));
+    next  if($require_primary_key && !$db->has_primary_key($table));
 
     my $obj_class = $class_prefix . $cm->table_to_class($table);
 
@@ -1271,6 +1280,10 @@ A reference to a subroutine or a reference to an array of code references that w
 
 A reference to a subroutine or a reference to an array of code references that will be called just before each L<Rose::DB::Object>-derived class is L<initialize|Rose::DB::Object::Metadata/initialize>d.  Each referenced subroutine will be passed the class's L<metadata|Rose::DB::Object::Metadata> object plus any arguments to the L<initialize|Rose::DB::Object::Metadata/initialize> method.  Defaults to the value of the loader object's L<pre_init_hook|/pre_init_hook> attribute.
 
+=item B<require_primary_key BOOL>
+
+If true, then any table that does not have a primary key will be skipped.  Defaults to the value of the loader object's L<require_primary_key|/require_primary_key> attribute.  Note that a L<Rose::DB::Object>-derived class based on a table with no primary key will not function correctly in all circumstances.  Use this feature at your own risk.
+
 =item B<with_foreign_keys BOOL>
 
 If true, set up foreign key metadata for each L<Rose::DB::Object>-derived.  Defaults to the value of the loader object's L<with_foreign_keys|/with_foreign_keys> attribute.
@@ -1346,6 +1359,12 @@ If defined as a scalar, inserts the contents of the variable into the auto-gener
 =item B<pre_init_hook [CODE]>
 
 Get or set a reference to a subroutine to be called just before each L<Rose::DB::Object>-derived class is L<initialize|Rose::DB::Object::Metadata/initialize>ed within the L<make_classes|/make_classes> method.  The subroutine will be passed the class's L<metdata|Rose::DB::Object::Metadata> object as an argument.
+
+=item B<require_primary_key BOOL>
+
+Get or set a boolean value that determines whether or not the L<make_classes|/make_classes> method will skip any table that does not have a primary key will be skipped.  Defaults to true.
+
+Note that a L<Rose::DB::Object>-derived class based on a table with no primary key will not function correctly in all circumstances.  Use this feature at your own risk.
 
 =item B<with_foreign_keys BOOL>
 
