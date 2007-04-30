@@ -15,6 +15,8 @@ MANIFEST
 t/00-warning.t
 t/basic.t
 t/informix.t
+t/lib/My/DB.pm
+t/lib/My/FixUp.pm
 t/list-tables.t
 t/make-subclass-tests.pl
 t/mysql.t
@@ -23,9 +25,11 @@ t/oracle.t
 t/pg.t
 t/pk-columns.t
 t/pod.t
+t/rosedbrc
+t/setup.t
 t/sqlite.t
-t/storable.t
 t/storable.ext
+t/storable.t
 t/subclass-basic.t
 t/subclass-informix.t
 t/subclass-list-tables.t
