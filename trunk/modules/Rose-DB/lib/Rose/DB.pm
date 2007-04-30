@@ -19,7 +19,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.733_05';
+our $VERSION = '0.733_07';
 
 our $Debug = 0;
 
@@ -1978,6 +1978,106 @@ sub list_tables
 }
 
 #
+# Setup overrides
+#
+
+# - Rose::DB development init file - Perl code
+# - Rose::DB fixup rc file - YAML format
+
+sub auto_load_fixups
+{
+  my($class) = shift;
+
+  # Load a file full of fix-ups for the data sources (usually just passwords)
+  # from a "well-known" (or at least "well-specified") location.
+  my $fixup_file = $ENV{'ROSEDBRC'};
+  $fixup_file = '/etc/rosedbrc'  unless(defined $fixup_file && -e $fixup_file);
+
+  if(-e $fixup_file)
+  {
+    if(-r $fixup_file)
+    {
+      $class->load_yaml_fixup_file($fixup_file);
+    }
+    else
+    {
+      warn "Cannot read Rose::DB fixup file '$fixup_file'";
+    }
+  }
+
+  # Load a file or package full of arbitrary perl used to alter the data
+  # source registry.  This is intended for use in development only.
+  my $rosedb_devinit = $ENV{'ROSEDB_DEVINIT'};
+  
+  if(defined $rosedb_devinit)
+  {
+    if(-e $rosedb_devinit)
+    {
+      do $rosedb_devinit;
+    }
+    else
+    {
+      eval qq(require $rosedb_devinit);
+    }
+  }
+  
+  if($@ || !defined $rosedb_devinit)
+  {
+    my $username = lc getpwuid($<);
+    $rosedb_devinit = "Rose::DB::Devel::Init::$username";
+    eval qq(require $rosedb_devinit);
+    eval { do $rosedb_devinit }  if($@);
+  }
+}
+
+# YAML syntax example:
+#
+# ---
+# production:
+#  g3db:
+#   password: mysecret
+# ---
+# mqa:
+#  g3db:
+#   password: myothersecret
+
+sub load_yaml_fixup_file
+{
+  my($class, $file) = @_;
+
+  my $registry = $class->registry;
+
+  require YAML::Syck;
+
+  $Debug && warn "$class - Loading fixups from $file...\n";
+  my @data = YAML::Syck::LoadFile($file);
+
+  foreach my $data (@data)
+  {
+    foreach my $domain (sort keys %$data)
+    {
+      foreach my $type (sort keys %{$data->{$domain}})
+      {
+        my $entry = $registry->entry(domain => $domain, type => $type);
+
+        unless($entry)
+        {
+          warn "No $class data source found for domain '$domain' ",
+               "and type '$type'";
+          next;
+        }
+
+        while(my($method, $value) = each(%{$data->{$domain}{$type}}))
+        {
+          #$Debug && warn "$class - $domain:$type - $method = $value\n";
+          $entry->$method($value);
+        }
+      }
+    }
+  }
+}
+
+#
 # Storable hooks
 #
 
@@ -2322,6 +2422,84 @@ Now another program wants to L<thaw|Storable/thaw> out that C<My::DB> object and
 
 Note that this rule about loading a L<Rose::DB>-derived class with all its data sources registered prior to deserializing such an object only applies if the serialization was done in a different process.  If you L<freeze|Storable/freeze> and L<thaw|Storable/thaw> within the same process, you don't have to worry about it.
 
+=head1 ENVIRONMENT
+
+There are two ways to alter the initial L<Rose::DB> data source registry.
+
+=over 4
+
+=item * The ROSEDB_DEVINIT file or module, which can add, modify, or remove data sources and alter the default L<domain|Rose::DB/domain> and L<type|Rose::DB/type>.
+
+=item * The ROSEDBRC file, which can modify existing data sources.
+
+=back
+
+=head2 ROSEDB_DEVINIT
+
+The C<ROSEDB_DEVINIT> file or module is used during development, usually to set up data sources for a particular developer's database or project.  If the C<ROSEDB_DEVINIT> environment variable is set, it should be the name of a Perl module or file.
+
+If the C<ROSEDB_DEVINIT> environment variable is not set, or if the specified file does not exist or has errors, then it defaults to the package name C<Rose::DB::Devel::Init::username>, where "username" is the account name of the current user.
+
+The C<ROSEDB_DEVINIT> file or module may contain arbitrary Perl code which will be loaded and evaluated in the context of L<Rose::DB>.  Example:
+
+    Rose::DB->default_domain('development');
+
+    Rose::DB->modify_db(domain   => 'development', 
+                        type     => 'main_db',
+                        database => 'main',
+                        username => 'jdoe',
+                        password => 'mysecret');
+
+    1;
+
+Remember to end the file with a true value.
+
+The C<ROSEDB_DEVINIT> file or module must be read explicitly by calling the L<auto_load_fixups|/auto_load_fixups> class method.
+
+=head2 ROSEDBRC
+
+The C<ROSEDBRC> file contains configuration "fix-up" information.  This file is most often used to dynamically set passwords that are too sensitive to be included directly in the source code of a L<Rose::DB>-derived class.
+
+The path to the fix-up file is determined by the C<ROSEDBRC> environment variable.  If this variable is not set, or if the file it points to does not exist, then it defaults to C</etc/rosedbrc>.
+
+This file should be in YAML format with the following structure:
+
+    ---
+    somedomain:
+        sometype:
+            somemethod: somevalue
+    ---
+    otherdomain:
+        othertype:
+            othermethod: othervalue
+
+Each entry modifies an existing registered data source.   Any valid L<registry entry|Rose::DB::Registry::Entry> object method can be used (in place of "somemethod" and "othermethod" in the YAML example above).
+
+This file must be read explicitly by calling the L<auto_load_fixups|/auto_load_fixups> class method I<after> setting up all your data sources.  Example:
+
+    package My::DB;
+    
+    use Rose::DB;
+    our @ISA = qw(Rose::DB);
+
+    __PACKAGE__->use_private_registry;
+
+    # Register all data sources
+    __PACKAGE__->register_db(
+      domain   => 'development',
+      type     => 'main',
+      driver   => 'Pg',
+      database => 'dev_db',
+      host     => 'localhost',
+      username => 'devuser',
+      password => 'mysecret',
+    );
+
+    ...
+
+    # Load fix-up files, if any
+    __PACKAGE__->auto_load_fixups;
+
 =head1 CLASS METHODS
 
 =over 4
@@ -2334,6 +2512,10 @@ Make one data source an alias for another by pointing them both to the same regi
                        alias  => { domain => 'dev', type => 'aux' });
 
 This makes the "dev/aux" data source point to the same registry entry as the "dev/main" data source.  Modifications to either registry entry (via L<modify_db|/modify_db>) will be reflected in both.
+
+=item B<auto_load_fixups>
+
+Attempt to load both the YAML-based L<ROSEDBRC|/ROSEDBRC> and Perl-based L<ROSEDB_DEVINIT|/ROSEDB_DEVINIT> fix-up files, if any exist, in that order.  The L<ROSEDBRC|/ROSEDBRC> file will modify the data source L<registry|/registry> of the calling class.  See the L<ENVIRONMENT|/ENVIRONMENT> section above for more information.
 
 =item B<db_exists PARAMS>
 
