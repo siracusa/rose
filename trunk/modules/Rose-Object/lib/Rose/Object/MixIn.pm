@@ -42,9 +42,19 @@ sub import
 
   foreach my $arg (@_)
   {
+    if(!defined $target_class)
+    {
+      $target_class = $arg;
+      next;
+    }
     if($arg =~ /^-?-force$/)
     {
       $force = 1;
+    }
+    elsif($arg =~ /^-?-target-class$/)
+    {
+      $target_class = undef; # set on next iteration...lame
+      next;
     }
     elsif($arg =~ /^:(.+)/)
     {

@@ -4,8 +4,8 @@ use strict;
 
 use Rose::DB::Object::Constants qw(:all);
 
-use Rose::DB::Object::MixIn;
-our @ISA = qw(Rose::DB::Object::MixIn);
+use Rose::Object::MixIn;
+our @ISA = qw(Rose::Object::MixIn);
 
 use Carp;
 
