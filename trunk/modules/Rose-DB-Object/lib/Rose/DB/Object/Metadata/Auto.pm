@@ -16,7 +16,7 @@ our $Debug;
 
 our $Sort_Columns_Alphabetically = 0; # hack for test suite
 
-our $VERSION = '0.757';
+our $VERSION = '0.764';
 
 our $Missing_PK_OK = 0;
 
