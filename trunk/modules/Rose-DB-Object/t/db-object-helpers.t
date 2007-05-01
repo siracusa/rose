@@ -618,6 +618,7 @@ EOF
   }
 
   package MyMixIn;
+  use Rose::DB::Object::MixIn;
   our @ISA = qw(Rose::DB::Object::MixIn);
 }
 
