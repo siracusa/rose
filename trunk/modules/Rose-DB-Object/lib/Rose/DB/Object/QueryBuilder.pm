@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.761';
+our $VERSION = '0.764';
 
 our $Debug = 0;
 
@@ -113,12 +113,17 @@ sub build_select
 
   if($query_arg)
   {
-    for(my $i = 0; $i < $#$query_arg; $i += 2)
+    for(my $i = 0; $i <= $#$query_arg; $i++)
     {
       if($query_arg->[$i] =~ /^(?:and|or)$/i)
       {
         my $query = $query_arg->[$i + 1];
-        next  unless(ref $query && @$query);
+
+        unless(ref $query && @$query)
+        {
+          $i++;
+          next;
+        }
 
         my($sql, $bind);
 
@@ -161,10 +166,40 @@ sub build_select
         {
           push(@clauses, "($sql)");
         }
+        
+        $i++;
+      }
+      elsif(my $ref = ref $query_arg->[$i])
+      {
+        if($ref eq 'SCALAR')
+        {
+          push(@clauses, ${$query_arg->[$i]});
+        }
+        elsif($ref eq 'ARRAY')
+        {
+          my $list = $query_arg->[$i];
+
+          no warnings 'uninitialized';
+          unless(ref $list->[0] eq 'SCALAR')
+          {
+            Carp::croak "Invalid array reference argument: [ @$list ] - ",
+                        "Expected a reference to a scalar followed by zero or more ",
+                        "bind arguments";
+          }
+
+          push(@clauses, ${shift(@$list)});
+
+          if($do_bind)
+          {
+            push(@bind, @$list);
+            push(@$bind_params, undef); # need to offset this list with empty items
+          }
+        }
       }
       else
       {
         push(@{$query{$query_arg->[$i]}}, $query_arg->[$i + 1]);
+        $i++;
       }
     }
   }
@@ -1260,7 +1295,7 @@ If true, the SQL returned will have slightly nicer formatting.
 
 =item B<query PARAMS>
 
-The query parameters, passed as a reference to an array of name/value pairs.  PARAMS may include an arbitrary list of selection parameters used to modify the "WHERE" clause of the SQL select statement.  Any query parameter that is not in one of the forms described below will cause a fatal error.
+The query parameters, passed as a reference to an array of name/value pairs, scalar references, or array references.  PARAMS may include an arbitrary list of selection parameters used to modify the "WHERE" clause of the SQL select statement.  Any query parameter that is not in one of the forms described below will cause a fatal error.
 
 Valid selection parameters are described below, along with the SQL clause they add to the select statement.
 
@@ -1401,6 +1436,14 @@ The same NAME string may be repeated multiple times.  (This is the primary reaso
     ]
 
 The string "NAME" can take many forms, each of which eventually resolves to a database column (COLUMN in the examples above).
+
+Literal SQL can be included by providing a reference to a scalar:
+
+    \'mycol > 123'
+
+To use placeholders and bind values, pass a reference to an array containing a scalar reference to the literal SQL with placeholders as the first item, followed by a list of values to bind:
+
+    [ \'mycol > ?' => 123 ]
 
 =over 4
 

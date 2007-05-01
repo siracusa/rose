@@ -1,4 +1,4 @@
-0.764 (04.30.2007) - John Siracusa <siracusa@mindspring.com>
+0.764 (05.01.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added a "find" method type to many-to-many relationships.
     * Added a "count" method type to ...-to-many relationships.
@@ -7,6 +7,7 @@
       methods from Rose::DB::Object::Helpers.
     * Added the dubious require_primary_key parameter and object attribute
       to the Loader.  (Requested by Teodor Zlatanov)
+    * Added two syntaxes for literal SQL to QueryBuilder.
     * Fixed a bug that caused some optional related objects to be improperly
       transformed into required objects.  (Reported by Ethan Rowe)
     * Improved detection of errors when auto-loading related classes.

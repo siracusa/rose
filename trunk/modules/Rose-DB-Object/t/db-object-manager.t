@@ -1081,12 +1081,26 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       db           => $db,
       object_class => 'MyPgObject',
       share_db     => 1,
+      #debug => 1,
       query        =>
       [
         id         => { ge => 1 },
         name       => 'John',  
         flag       => 1,
         flag2      => 0,
+        \q((1 = 1 and 5 > 2)),
+        [ \q(fk1 > ?), 1 ],
+        or =>
+        [
+          bits => '00001',
+          \q((2 = 2 and 6 > 3)),
+          fk1 => { gt => 1 },
+          and =>
+          [
+            status => 'active',
+            [ \q(7 > ?), 3 ],
+          ],
+        ],
         status     => 'active',
         bits       => '1',
         start      => '1/2/2001',
@@ -2947,6 +2961,19 @@ SKIP: foreach my $db_type ('mysql')
         name       => 'John',  
         flag       => 1,
         flag2      => 0,
+        \q((1 = 1 and 5 > 2)),
+        [ \q(fk1 > ?), 1 ],
+        or =>
+        [
+          bits => '00001',
+          \q((2 = 2 and 6 > 3)),
+          fk1 => { gt => 1 },
+          and =>
+          [
+            status => 'active',
+            [ \q(7 > ?), 3 ],
+          ],
+        ],
         status     => 'active',
         bits       => '00001',
         ($msql_5 ? (items => { any_in_set => [ 'a', 'c' ] }) : ()),
@@ -6736,6 +6763,19 @@ SKIP: foreach my $db_type (qw(informix))
         name       => 'John',  
         flag       => 1,
         flag2      => 0,
+        \q((1 = 1 and 5 > 2)),
+        [ \q(fk1 > ?), 1 ],
+        or =>
+        [
+          bits => '1',
+          \q((2 = 2 and 6 > 3)),
+          fk1 => { gt => 1 },
+          and =>
+          [
+            status => 'active',
+            [ \q(7 > ?), 3 ],
+          ],
+        ],
         status     => 'active',
         bits       => '1',
         start      => '1/2/2001',
@@ -8565,6 +8605,19 @@ SKIP: foreach my $db_type (qw(sqlite))
         name       => { field => 'LOWER(name)', eq => 'john' },
         flag       => 1,
         flag2      => 0,
+        \q((1 = 1 and 5 > 2)),
+        [ \q(fk1 > ?), 1 ],
+        or =>
+        [
+          bits => '00001',
+          \q((2 = 2 and 6 > 3)),
+          save_col => [ 1, 5 ],
+          and =>
+          [
+            status => 'active',
+            [ \q(7 > ?), 3 ],
+          ],
+        ],
         status     => 'active',
         bits       => '00001',
         fixed      => { like => 'nee%' },
