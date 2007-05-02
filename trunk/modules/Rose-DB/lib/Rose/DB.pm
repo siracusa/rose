@@ -19,7 +19,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.733_07';
+our $VERSION = '0.733_08';
 
 our $Debug = 0;
 
@@ -938,6 +938,12 @@ sub begin_work
   }
 
   return IN_TRANSACTION;
+}
+
+sub in_transaction
+{
+  my $dbh = shift->{'dbh'} or return undef;
+  return ($dbh->{'AutoCommit'}) ? 0 : 1;
 }
 
 sub commit
@@ -2840,6 +2846,10 @@ Returns true if the object has a L<DBI> database handle (L<dbh|/dbh>), false if 
 Returns true if the specified table has a primary key (as determined by the L<primary_key_column_names|/primary_key_column_names> method), false otherwise.  
 
 The arguments are the same as those for the L<primary_key_column_names|/primary_key_column_names> method: either a table name or name/value pairs specifying C<table>, C<catalog>, and C<schema>.  The  C<catalog> and C<schema> parameters are optional and default to the return values of the L<catalog|/catalog> and L<schema|/schema> methods, respectively.  See the documentation for the L<primary_key_column_names|/primary_key_column_names> for more information.
+
+=item B<in_transaction>
+
+Return true if the L<dbh|/dbh> is currently in the middle of a transaction, false (but defined) if it is not.  If no L<dbh|/dbh> exists, then undef is returned. 
 
 =item B<init_db_info>
 

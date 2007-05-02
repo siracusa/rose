@@ -1,5 +1,6 @@
-0.734 (04.30.2007) - John Siracusa <siracusa@mindspring.com>
+0.734 (05.02.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Added the in_transaction() object method.
     * Added support for YAML and Perl-based fix-up files.
     * Fixed a dbh reference counting bug that was triggered when a Rose::DB
       object was given a $dbh that was generated elsewhere.
