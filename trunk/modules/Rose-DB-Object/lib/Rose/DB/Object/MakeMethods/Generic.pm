@@ -1880,6 +1880,8 @@ sub object_by_key
         {
           if($ref_integrity || $required)
           {
+            local $fk->{'disable_column_triggers'} = 1;
+
             # Set the foreign key columns
             while(my($local_column, $foreign_column) = each(%$fk_columns))
             {
@@ -1893,6 +1895,8 @@ sub object_by_key
         }
 
         my $object = __args_to_object($self, $key, $fk_class, \$fk_pk, \@_);
+
+        local $fk->{'disable_column_triggers'} = 1;
 
         while(my($local_column, $foreign_column) = each(%$fk_columns))
         {
@@ -1984,6 +1988,8 @@ sub object_by_key
         {
           if($ref_integrity || $required)
           {
+            local $fk->{'disable_column_triggers'} = 1;
+
             # Set the foreign key columns
             while(my($local_column, $foreign_column) = each(%$fk_columns))
             {
@@ -2034,6 +2040,8 @@ sub object_by_key
               $object->save or die $object->error;
             }
           }
+
+          local $fk->{'disable_column_triggers'} = 1;
 
           while(my($local_column, $foreign_column) = each(%$fk_columns))
           {
@@ -2145,6 +2153,8 @@ sub object_by_key
         {
           if($ref_integrity || $required)
           {
+            local $fk->{'disable_column_triggers'} = 1;
+
             # Set the foreign key columns
             while(my($local_column, $foreign_column) = each(%$fk_columns))
             {
@@ -2165,6 +2175,8 @@ sub object_by_key
 
         if($is_fk && (!$fk->requires_preexisting_parent_object || $self->{STATE_IN_DB()}))
         {
+          local $fk->{'disable_column_triggers'} = 1;
+
           # Set the foreign key columns
           while(my($local_column, $foreign_column) = each(%$fk_columns))
           {
@@ -2227,6 +2239,8 @@ sub object_by_key
                 $object->save(%$args) or die $object->error;
               }
             }
+
+            local $fk->{'disable_column_triggers'} = 1;
 
             # Set the foreign key columns
             while(my($local_column, $foreign_column) = each(%$fk_columns))
@@ -2352,6 +2366,8 @@ sub object_by_key
           {
             if($ref_integrity || $required)
             {
+              local $fk->{'disable_column_triggers'} = 1;
+
               # Clear foreign key columns
               foreach my $local_column (keys %$fk_columns)
               {
@@ -2392,6 +2408,8 @@ sub object_by_key
 
         if($ref_integrity || $required)
         {
+          local $fk->{'disable_column_triggers'} = 1;
+
           # Clear columns that reference the foreign key
           foreach my $local_column (keys %$fk_columns)
           {
@@ -2479,6 +2497,8 @@ sub object_by_key
           {
             if($ref_integrity || $required)
             {
+              local $fk->{'disable_column_triggers'} = 1;
+
               # Clear foreign key columns
               foreach my $local_column (keys %$fk_columns)
               {
@@ -2504,6 +2524,8 @@ sub object_by_key
 
       if($ref_integrity || $required)
       {
+        local $fk->{'disable_column_triggers'} = 1;
+
         # Clear columns that reference the foreign key, saving old values
         foreach my $local_column (keys %$fk_columns)
         {

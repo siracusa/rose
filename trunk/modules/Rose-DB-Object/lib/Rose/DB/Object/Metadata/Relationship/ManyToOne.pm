@@ -10,7 +10,7 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.761';
+our $VERSION = '0.764';
 
 __PACKAGE__->default_auto_method_types(qw(get_set_on_save delete_on_save));
 
@@ -26,6 +26,8 @@ use Rose::Object::MakeMethods::Generic
   [
     #'required' => { default => 1 },
     '_share_db' => { default => 1 },
+    'with_column_triggers' => { default => 0 },
+    'disable_column_triggers',
   ],
 
   hash =>
@@ -143,7 +145,43 @@ sub make_methods
     return $fk->make_methods(@_);
   }
 
-  return $self->SUPER::make_methods(@_);
+  $self->SUPER::make_methods(@_);
+
+  if($self->with_column_triggers)
+  {
+    my $method = $self->method_name('get_set_on_save') ||
+                 $self->method_name('get_set');
+  
+    if($method)
+    {
+      my $meta = $self->parent or 
+        Carp::croak "Missing parent for relationship '", $self->name, "'";
+    
+      my $column_map = $self->column_map;
+
+      foreach my $column_name (keys %$column_map)
+      {
+        Scalar::Util::weaken(my $column = $meta->column($column_name));
+        my $accessor = $column->accessor_method_name;
+
+        my $trigger_name = 'clear_rel_' . $self->name;
+
+        unless(defined $column->builtin_trigger_index('on_set', $trigger_name))
+        {
+          $column->add_builtin_trigger(
+            event => 'on_set',
+            name  => $trigger_name,
+            code  => sub 
+            {
+              my($obj) = shift;
+              return  if($self->{'disable_column_triggers'});
+              local $column->{'triggers_disabled'} = 1;
+              $obj->$method(undef)  unless(defined $obj->$accessor());
+            });
+        }
+      }
+    }
+  }
 }
 
 sub id
@@ -356,6 +394,10 @@ The default is false if one or more of the local columns L<allow null values|Ros
 =item B<type>
 
 Returns "many to one".
+
+=item B<with_column_triggers [BOOL]>
+
+Get or set a boolean value that indicates whether or not L<triggers|Rose::DB::Object::Metadata::Column/TRIGGERS> should be added to the local columns in the L<column map|/column_map> in an attempt to keep related objects and local columns in sync.  Defaults to false.
 
 =back
 

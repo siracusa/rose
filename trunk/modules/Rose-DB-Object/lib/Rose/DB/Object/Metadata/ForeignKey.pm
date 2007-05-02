@@ -3,6 +3,7 @@ package Rose::DB::Object::Metadata::ForeignKey;
 use strict;
 
 use Carp();
+use Scalar::Util();
 
 use Rose::DB::Object::Metadata::Util qw(:all);
 
@@ -36,6 +37,8 @@ use Rose::Object::MakeMethods::Generic
   [
     'share_db' => { default => 1 },
     'referential_integrity' => { default => 1 },
+    'with_column_triggers' => { default => 0 },
+    'disable_column_triggers',
   ],
 
   scalar => 'deferred_make_method_args',
@@ -176,6 +179,41 @@ sub make_methods
   my($self) = shift;
   $self->is_required; # initialize
   $self->SUPER::make_methods(@_);
+
+  if($self->with_column_triggers)
+  {
+    my $method = $self->method_name('get_set_on_save') ||
+                 $self->method_name('get_set');
+  
+    if($method)
+    {
+      my $meta = $self->parent or 
+        Carp::croak "Missing parent for foreign key '", $self->name, "'";
+    
+      my $key_columns = $self->key_columns;
+    
+      foreach my $column_name (keys %$key_columns)
+      {
+        Scalar::Util::weaken(my $column = $meta->column($column_name));
+        my $accessor     = $column->accessor_method_name;
+        my $trigger_name = 'clear_fk' . $self->name;
+
+        unless(defined $column->builtin_trigger_index('on_set', $trigger_name))
+        {
+          $column->add_builtin_trigger(
+            event => 'on_set',
+            name  => $trigger_name,
+            code  => sub 
+            {
+              my($obj) = shift;
+              return  if($self->{'disable_column_triggers'});
+              local $column->{'triggers_disabled'} = 1;
+              $obj->$method(undef)  unless(defined $obj->$accessor());
+            });
+        }
+      }
+    }
+  }
 }
 
 sub build_method_name_for_type
@@ -534,7 +572,7 @@ Get or set a hash that maps local column names to foreign column names in the ta
 
 =item B<make_methods PARAMS>
 
-Create object method used to manipulate object referenced by the foreign key.  PARAMS are name/value pairs.  Valid PARAMS are:
+Create object method used to manipulate object referenced by the foreign key.  Any applicable L<column triggers|/with_column_triggers> are also added.  PARAMS are name/value pairs.  Valid PARAMS are:
 
 =over 4
 
@@ -597,6 +635,10 @@ This method is the mirror image of the L<referential_integrity|/referential_inte
 =item B<type>
 
 Returns "foreign key".
+
+=item B<with_column_triggers [BOOL]>
+
+Get or set a boolean value that indicates whether or not L<triggers|Rose::DB::Object::Metadata::Column/TRIGGERS> should be added to the L<key columns|/key_columns> in an attempt to keep foreign objects and foreign key columns in sync.  Defaults to false.
 
 =back
 
