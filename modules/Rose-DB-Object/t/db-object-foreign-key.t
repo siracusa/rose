@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 196;
+use Test::More tests => 197;
 
 BEGIN 
 {
@@ -18,7 +18,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 59)  unless($HAVE_PG);
+  skip("Postgres tests", 60)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -38,7 +38,9 @@ SKIP: foreach my $db_type ('pg')
   is($o->other2_obj->name, 'def', "single column foreign key 1 - $db_type");
 
   my $old_fks = $o->fks;
+
   $o->other2_obj(undef);
+
   $o->fks(0);
   eval { $o->other2_obj };
 
@@ -184,6 +186,9 @@ SKIP: foreach my $db_type ('pg')
 
   is(ref $obj, 'MyPgOtherObject', 'other_obj() 4');
   is($obj->name, 'two', 'other_obj() 5');
+
+  $o->fk2(undef);  
+  is($o->other_obj, undef, "key_column_triggers - $db_type");
 
   ok($o->delete, "delete() - $db_type");
 
@@ -728,7 +733,8 @@ EOF
           fk1 => 'k1',
           fk2 => 'k2',
           fk3 => 'k3',
-        }
+        },
+        with_column_triggers => 1,
       },
 
       other2_obj =>
@@ -738,6 +744,7 @@ EOF
         {
           fks => 'id',
         },
+        with_column_triggers => 1,
       },
 
       other2_obj_soft =>
@@ -748,6 +755,7 @@ EOF
           fks => 'id',
         },
         referential_integrity => 0,
+        with_column_triggers => 1,
       },
     );
 

@@ -8,6 +8,8 @@
     * Added the dubious require_primary_key parameter and object attribute
       to the Loader.  (Requested by Teodor Zlatanov)
     * Added two syntaxes for literal SQL to QueryBuilder.
+    * Added the with_column_triggers attribute to foreign keys and singular
+      relationships in order to keep columns and related objects in sync.
     * Fixed a bug that caused some optional related objects to be improperly
       transformed into required objects.  (Reported by Ethan Rowe)
     * Improved detection of errors when auto-loading related classes.

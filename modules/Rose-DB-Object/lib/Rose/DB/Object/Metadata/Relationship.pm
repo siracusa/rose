@@ -361,7 +361,7 @@ Get or set the name of the L<Rose::DB::Object>-derived class that fronts the for
 
 =item B<make_methods PARAMS>
 
-Create object method used to manipulate objects in related tables.  PARAMS are name/value pairs.  Valid PARAMS are:
+Create object method used to manipulate objects in related tables.  Any applicable column triggers are also added.  PARAMS are name/value pairs.  Valid PARAMS are:
 
 =over 4
 

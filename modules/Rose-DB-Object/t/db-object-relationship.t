@@ -7297,6 +7297,7 @@ EOF
           fk3 => 'k3',
         },
         referential_integrity => 0,
+        with_column_triggers => 1,
       },
 
       other2_objs =>
@@ -7331,6 +7332,7 @@ EOF
         class => 'MySQLiteOtherObject2',
         column_map => { id => 'pid' },
         query_args => [ name => 'one' ],
+        with_column_triggers => 1,
       },
 
       # Hrm.  Experimental...
