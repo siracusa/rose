@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 63;
+use Test::More tests => 72;
 
 BEGIN 
 {
@@ -20,7 +20,7 @@ My::DB2->default_domain('test');
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 18)  unless($HAVE_PG);
+  skip("Postgres tests", 21)  unless($HAVE_PG);
 
   My::DB2->default_type($db_type);
 
@@ -33,7 +33,11 @@ SKIP: foreach my $db_type ('pg')
   is($db->raise_error, 1, "raise_error() 1 - $db_type");
   is($db->print_error, 1, "print_error() 1 - $db_type");
 
+  is($db->in_transaction, undef, "in_transaction() 1 - $db_type");
+
   ok($db->begin_work, "begin_work() 1 - $db_type");
+
+  is($db->in_transaction, 1, "in_transaction() 2 - $db_type");
 
   ok(!$db->autocommit, "autocommit() 2 - $db_type");
   is($db->raise_error, 1, "raise_error() 2 - $db_type");
@@ -47,6 +51,8 @@ SKIP: foreach my $db_type ('pg')
 
   ok($db->commit, "commit() 1 - $db_type");
 
+  is($db->in_transaction, 0, "in_transaction() 3 - $db_type");
+  
   FAIL_COMMIT:
   {
     local $db->dbh->{'PrintError'} = 0;
@@ -100,7 +106,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('oracle')
 {
-  skip("Oracle tests", 18)  unless($HAVE_ORACLE);
+  skip("Oracle tests", 21)  unless($HAVE_ORACLE);
 
   My::DB2->default_type($db_type);
 
@@ -113,7 +119,11 @@ SKIP: foreach my $db_type ('oracle')
   is($db->raise_error, 1, "raise_error() 1 - $db_type");
   is($db->print_error, 1, "print_error() 1 - $db_type");
 
+  is($db->in_transaction, undef, "in_transaction() 1 - $db_type");
+
   ok($db->begin_work, "begin_work() 1 - $db_type");
+
+  is($db->in_transaction, 1, "in_transaction() 2 - $db_type");
 
   ok(!$db->autocommit, "autocommit() 2 - $db_type");
   is($db->raise_error, 1, "raise_error() 2 - $db_type");
@@ -126,6 +136,8 @@ SKIP: foreach my $db_type ('oracle')
   $db->dbh->do(q(INSERT INTO rose_db_test (id, name, fid) VALUES (2, 'b', 2)));
 
   ok($db->commit, "commit() 1 - $db_type");
+
+  is($db->in_transaction, 0, "in_transaction() 3 - $db_type");
 
   FAIL_COMMIT:
   {
@@ -226,7 +238,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 13)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 16)  unless($HAVE_INFORMIX);
 
   My::DB2->default_type($db_type);
 
@@ -239,7 +251,11 @@ SKIP: foreach my $db_type ('informix')
   is($db->raise_error, 1, "raise_error() 1 - $db_type");
   is($db->print_error, 1, "print_error() 1 - $db_type");
 
+  is($db->in_transaction, undef, "in_transaction() 1 - $db_type");
+
   ok($db->begin_work, "begin_work() 1 - $db_type");
+
+  is($db->in_transaction, 1, "in_transaction() 2 - $db_type");
 
   ok(!$db->autocommit, "autocommit() 2 - $db_type");
   is($db->raise_error, 1, "raise_error() 2 - $db_type");
@@ -249,6 +265,8 @@ SKIP: foreach my $db_type ('informix')
   $db->dbh->do(q(INSERT INTO rose_db_test (id, name) VALUES (2, 'b')));
 
   ok($db->commit, "commit() 1 - $db_type");
+
+  is($db->in_transaction, 0, "in_transaction() 3 - $db_type");
 
   ok($db->do_transaction(sub
   {
