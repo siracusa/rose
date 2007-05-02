@@ -6577,6 +6577,7 @@ EOF
           fk3 => 'k3',
         },
         soft => 1,
+        with_column_triggers => 1,
       },
 
       other2_objs =>
@@ -6685,6 +6686,7 @@ EOF
         class => 'MyMySQLObject',
         column_map => { pid => 'id' },
         required => 1,
+        with_column_triggers => 1,
       },
     );
 
@@ -6950,6 +6952,7 @@ EOF
           fk3 => 'k3',
         },
         soft => 1,
+        with_column_triggers => 1,
       },
 
       other2_objs =>
@@ -7039,6 +7042,7 @@ EOF
         class => 'MyInformixObject',
         column_map => { pid => 'id' },
         required => 1,
+        with_column_triggers => 1,
       },
     );
 
@@ -7418,6 +7422,7 @@ EOF
         class => 'MySQLiteObject',
         column_map => { pid => 'id' },
         required => 1,
+        with_column_triggers => 1,
       },
     );
 
