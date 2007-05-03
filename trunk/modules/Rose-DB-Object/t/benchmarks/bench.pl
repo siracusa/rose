@@ -221,32 +221,32 @@ EOF
         die "Sorry, this benchmark suite requires DBIx::Class version 0.05999_03 or later.\n";
       }
 
-      require MyTest::DBIC::Simple::Code;
-      require MyTest::DBIC::Simple::CodeName;
-      require MyTest::DBIC::Simple::Category;
-      require MyTest::DBIC::Simple::Product;
+      require MyTest::DBIC::Schema;
+      require MyTest::DBIC::Schema::Simple::Code;
+      require MyTest::DBIC::Schema::Simple::CodeName;
+      require MyTest::DBIC::Schema::Simple::Category;
+      require MyTest::DBIC::Schema::Simple::Product;
 
-      $Schema = MyTest::DBIC::Base->schema_instance;
+      $MyTest::DBIC::Schema::DB = Rose::DB->new;
+      $Schema = MyTest::DBIC::Schema->connect(sub { $MyTest::DBIC::Schema::DB->retain_dbh });
 
-      $DBIC_Simple_Code_RS     = $Schema->resultset('MyTest::DBIC::Simple::Code');      
-      $DBIC_Simple_CodeName_RS = $Schema->resultset('MyTest::DBIC::Simple::CodeName');      
-      $DBIC_Simple_Category_RS = $Schema->resultset('MyTest::DBIC::Simple::Category');      
-      $DBIC_Simple_Product_RS  = $Schema->resultset('MyTest::DBIC::Simple::Product');      
+      $DBIC_Simple_Code_RS     = $Schema->resultset('MyTest::DBIC::Schema::Simple::Code');      
+      $DBIC_Simple_CodeName_RS = $Schema->resultset('MyTest::DBIC::Schema::Simple::CodeName');      
+      $DBIC_Simple_Category_RS = $Schema->resultset('MyTest::DBIC::Schema::Simple::Category');      
+      $DBIC_Simple_Product_RS  = $Schema->resultset('MyTest::DBIC::Schema::Simple::Product');      
 
       if($Opt{'complex'} || $Opt{'simple-and-complex'})
       {
-        require MyTest::DBIC::Complex::Code;
-        require MyTest::DBIC::Complex::CodeName;
-        require MyTest::DBIC::Complex::Category;
-        require MyTest::DBIC::Complex::Product;
+        require MyTest::DBIC::Schema::Complex::Code;
+        require MyTest::DBIC::Schema::Complex::CodeName;
+        require MyTest::DBIC::Schema::Complex::Category;
+        require MyTest::DBIC::Schema::Complex::Product;
 
-        $DBIC_Complex_Code_RS     = $Schema->resultset('MyTest::DBIC::Complex::Code');      
-        $DBIC_Complex_CodeName_RS = $Schema->resultset('MyTest::DBIC::Complex::CodeName');      
-        $DBIC_Complex_Category_RS = $Schema->resultset('MyTest::DBIC::Complex::Category');      
-        $DBIC_Complex_Product_RS  = $Schema->resultset('MyTest::DBIC::Complex::Product');   
+        $DBIC_Complex_Code_RS     = $Schema->resultset('MyTest::DBIC::Schema::Complex::Code');      
+        $DBIC_Complex_CodeName_RS = $Schema->resultset('MyTest::DBIC::Schema::Complex::CodeName');      
+        $DBIC_Complex_Category_RS = $Schema->resultset('MyTest::DBIC::Schema::Complex::Category');      
+        $DBIC_Complex_Product_RS  = $Schema->resultset('MyTest::DBIC::Schema::Complex::Product');   
       }
-
-      #MyTest::DBIC::Base->refresh;
     }
 
     Run_Tests();
@@ -999,7 +999,7 @@ BEGIN
 
     sub insert_simple_category_dbic
     {
-      #MyTest::DBIC::Simple::Category->create({ id => $i + 300_000, name => "xCat $i" });
+      #MyTest::DBIC::Schema::Simple::Category->create({ id => $i + 300_000, name => "xCat $i" });
       $DBIC_Simple_Category_RS->create({ id => $i + 300_000, name => "xCat $i" });
       $i++;
     }
@@ -1100,7 +1100,7 @@ EOF
 
     sub insert_simple_product_dbic
     {
-      #MyTest::DBIC::Simple::Product->create({
+      #MyTest::DBIC::Schema::Simple::Product->create({
       $DBIC_Simple_Product_RS->create({
         id            => $i + 300_000, 
         name          => "Product $i",
@@ -1195,7 +1195,7 @@ EOF
   {
     sub accessor_simple_category_dbic
     {
-      #my $c = MyTest::DBIC::Simple::Category->find(1 + 300_000);
+      #my $c = MyTest::DBIC::Schema::Simple::Category->find(1 + 300_000);
       my $c = $DBIC_Simple_Category_RS->single({ id => 1 + 300_000 });
 
       for(1 .. ACCESSOR_ITERATIONS)
@@ -1291,7 +1291,7 @@ EOF
   {
     sub accessor_simple_product_dbic
     {
-      #my $p = MyTest::DBIC::Simple::Product->find(1 + 300_000);
+      #my $p = MyTest::DBIC::Schema::Simple::Product->find(1 + 300_000);
       my $p = $DBIC_Simple_Product_RS->single({ id => 1 + 300_000 });
 
       for(1 .. ACCESSOR_ITERATIONS)
@@ -1365,7 +1365,7 @@ EOF
 
     sub load_simple_category_dbic
     {
-      #my $c = MyTest::DBIC::Simple::Category->find($i + 300_000);
+      #my $c = MyTest::DBIC::Schema::Simple::Category->find($i + 300_000);
       my $c = $DBIC_Simple_Category_RS->single({ id => $i + 300_000 });
       $i++;
     }
@@ -1430,7 +1430,7 @@ EOF
 
     sub load_simple_product_dbic
     {
-      #my $c = MyTest::DBIC::Simple::Product->find($i + 300_000);
+      #my $c = MyTest::DBIC::Schema::Simple::Product->find($i + 300_000);
       my $c = $DBIC_Simple_Product_RS->single({ id => $i + 300_000 });
       $i++;
     }
@@ -1530,7 +1530,7 @@ EOF
 
     sub load_simple_product_and_category_dbic
     {
-      #my $c = MyTest::DBIC::Simple::Product->find($i + 300_000);
+      #my $c = MyTest::DBIC::Schema::Simple::Product->find($i + 300_000);
       my $c = $DBIC_Simple_Product_RS->single({ id => $i + 300_000 });
       my $cat = $c->category_id;
       my $n = $cat->name;
@@ -1612,7 +1612,7 @@ EOF
 
     sub update_simple_category_dbic
     {
-      #my $c = MyTest::DBIC::Simple::Category->find($i + 300_000);
+      #my $c = MyTest::DBIC::Schema::Simple::Category->find($i + 300_000);
       my $c = $DBIC_Simple_Category_RS->single({ id => $i + 300_000 });
       $c->name($c->name . ' updated');
       $c->update;
@@ -1690,7 +1690,7 @@ EOF
 
     sub update_simple_product_dbic
     {
-      #my $p = MyTest::DBIC::Simple::Product->find($i + 300_000);
+      #my $p = MyTest::DBIC::Schema::Simple::Product->find($i + 300_000);
       my $p = $DBIC_Simple_Product_RS->single({ id => $i + 300_000 });
       $p->name($p->name . ' updated');
       $p->update;
@@ -1811,7 +1811,7 @@ EOF
     sub search_simple_category_dbic
     {
       my @c = 
-        #MyTest::DBIC::Simple::Category->search(
+        #MyTest::DBIC::Schema::Simple::Category->search(
         $DBIC_Simple_Category_RS->search(
         {
           name => { -like => 'xCat %2%' },
@@ -1951,7 +1951,7 @@ EOF
     sub search_simple_product_dbic
     {
       my @p = 
-        #MyTest::DBIC::Simple::Product->search(
+        #MyTest::DBIC::Schema::Simple::Product->search(
         $DBIC_Simple_Product_RS->search(
         {
           name => { -like => 'Product %2%' },
@@ -2136,7 +2136,7 @@ EOF
     sub search_simple_product_and_category_dbic
     {
       my @p = 
-        #MyTest::DBIC::Simple::Product->search(
+        #MyTest::DBIC::Schema::Simple::Product->search(
         $DBIC_Simple_Product_RS->search(
         {
           'me.name' => { -like => 'Product %2%' },
@@ -2370,7 +2370,7 @@ EOF
     sub search_simple_product_and_category_and_code_name_dbic
     {
       my @p = 
-        #MyTest::DBIC::Simple::Product->search(
+        #MyTest::DBIC::Schema::Simple::Product->search(
         $DBIC_Simple_Product_RS->search(
         {
           'me.name' => { -like => 'Product %2%' },
@@ -2542,7 +2542,7 @@ EOF
     sub search_limit_offset_simple_product_dbic
     {
       my @p =
-        #MyTest::DBIC::Simple::Product->search(
+        #MyTest::DBIC::Schema::Simple::Product->search(
         $DBIC_Simple_Product_RS->search(
         {
           'me.name' => { -like => 'Product %2%' },
@@ -2695,7 +2695,7 @@ EOF
     sub iterate_simple_category_dbic
     {
       my $iter = 
-        #MyTest::DBIC::Simple::Category->search(
+        #MyTest::DBIC::Schema::Simple::Category->search(
         $DBIC_Simple_Category_RS->search(
         {
           name => { -like => 'xCat %2%' },
@@ -2861,7 +2861,7 @@ EOF
     sub iterate_simple_product_dbic
     {
       my $iter = 
-        #MyTest::DBIC::Simple::Product->search(
+        #MyTest::DBIC::Schema::Simple::Product->search(
         $DBIC_Simple_Product_RS->search(
         {
           name => { -like => 'Product %2%' },
@@ -3045,7 +3045,7 @@ EOF
     sub iterate_simple_product_and_category_dbic
     {
       my $iter = 
-        #MyTest::DBIC::Simple::Product->search(
+        #MyTest::DBIC::Schema::Simple::Product->search(
         $DBIC_Simple_Product_RS->search(
         {
           'me.name' => { -like => 'Product %2%' },
@@ -3133,7 +3133,7 @@ EOF
 
     sub delete_simple_category_dbic
     {
-      #my $c = MyTest::DBIC::Simple::Category->find($i + 300_000);
+      #my $c = MyTest::DBIC::Schema::Simple::Category->find($i + 300_000);
       my $c = $DBIC_Simple_Category_RS->single({ id => $i + 300_000 });
       $c->delete;
       $i++;
@@ -3198,7 +3198,7 @@ EOF
 
     sub insert_complex_category_dbic
     {
-      #MyTest::DBIC::Complex::Category->create({ id => $i + 3_300_000, name => "xCat $i" });
+      #MyTest::DBIC::Schema::Complex::Category->create({ id => $i + 3_300_000, name => "xCat $i" });
       $DBIC_Complex_Category_RS->create({ id => $i + 3_300_000, name => "xCat $i" });
       $i++;
     }
@@ -3261,7 +3261,7 @@ EOF
 
     sub insert_complex_product_dbic
     {
-      #MyTest::DBIC::Complex::Product->create({
+      #MyTest::DBIC::Schema::Complex::Product->create({
       $DBIC_Complex_Product_RS->create({
         id          => $i + 3_300_000, 
         name        => "Product $i",
@@ -3333,7 +3333,7 @@ EOF
   {
     sub accessor_complex_category_dbic
     {
-      #my $c = MyTest::DBIC::Complex::Category->find(1 + 300_000);
+      #my $c = MyTest::DBIC::Schema::Complex::Category->find(1 + 300_000);
       my $c = $DBIC_Complex_Category_RS->single({ id => 1 + 300_000 });
 
       for(1 .. ACCESSOR_ITERATIONS)
@@ -3406,7 +3406,7 @@ EOF
   {
     sub accessor_complex_product_dbic
     {
-      #my $p = MyTest::DBIC::Complex::Product->find(1 + 300_000);
+      #my $p = MyTest::DBIC::Schema::Complex::Product->find(1 + 300_000);
       my $p = $DBIC_Complex_Product_RS->single({ id => 1 + 300_000 });
 
       for(1 .. ACCESSOR_ITERATIONS)
@@ -3467,7 +3467,7 @@ EOF
 
     sub load_complex_category_dbic
     {
-      #my $c = MyTest::DBIC::Complex::Category->find($i + 3_300_000);
+      #my $c = MyTest::DBIC::Schema::Complex::Category->find($i + 3_300_000);
       my $c = $DBIC_Complex_Category_RS->single({ id => $i + 3_300_000 });
       $i++;
     }
@@ -3516,7 +3516,7 @@ EOF
 
     sub load_complex_product_dbic
     {
-      #my $c = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
+      #my $c = MyTest::DBIC::Schema::Complex::Product->find($i + 3_300_000);
       my $c = $DBIC_Complex_Product_RS->single({ id => $i + 3_300_000 });
       $i++;
     }
@@ -3575,7 +3575,7 @@ EOF
 
     sub load_complex_product_and_category_dbic
     {
-      #my $c = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
+      #my $c = MyTest::DBIC::Schema::Complex::Product->find($i + 3_300_000);
       my $c = $DBIC_Complex_Product_RS->single({ id => $i + 3_300_000 });
       my $cat = $c->category_id;
       my $n = $cat->name;
@@ -3637,7 +3637,7 @@ EOF
 
     sub update_complex_category_dbic
     {
-      #my $c = MyTest::DBIC::Complex::Category->find($i + 3_300_000);
+      #my $c = MyTest::DBIC::Schema::Complex::Category->find($i + 3_300_000);
       my $c = $DBIC_Complex_Category_RS->single({ id => $i + 3_300_000 });
       $c->name($c->name . ' updated');
       $c->update;
@@ -3701,7 +3701,7 @@ EOF
 
     sub update_complex_product_dbic
     {
-      #my $p = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
+      #my $p = MyTest::DBIC::Schema::Complex::Product->find($i + 3_300_000);
       my $p = $DBIC_Complex_Product_RS->single({ id => $i + 3_300_000 });
       $p->name($p->name . ' updated');
       $p->published('2004-01-02 12:34:55');
@@ -3795,7 +3795,7 @@ EOF
     sub search_complex_category_dbic
     {
       my @c = 
-        #MyTest::DBIC::Complex::Category->search(
+        #MyTest::DBIC::Schema::Complex::Category->search(
         $DBIC_Complex_Category_RS->search(
         {
           name => { -like => 'xCat %2%' },
@@ -3932,7 +3932,7 @@ EOF
     sub search_complex_product_dbic
     {
       my @p = 
-        #MyTest::DBIC::Complex::Product->search(
+        #MyTest::DBIC::Schema::Complex::Product->search(
         $DBIC_Complex_Product_RS->search(
         {
           name => { -like => 'Product %2%' },
@@ -4056,7 +4056,7 @@ EOF
     sub search_complex_product_and_category_dbic
     {
       my @p =
-        #MyTest::DBIC::Complex::Product->search(
+        #MyTest::DBIC::Schema::Complex::Product->search(
         $DBIC_Complex_Product_RS->search(
         {
           'me.name' => { -like => 'Product %2%' },
@@ -4288,7 +4288,7 @@ EOF
     sub search_complex_product_and_category_and_code_name_dbic
     {
       my @p = 
-        #MyTest::DBIC::Complex::Product->search(
+        #MyTest::DBIC::Schema::Complex::Product->search(
         $DBIC_Complex_Product_RS->search(
         {
           'me.name' => { -like => 'Product %2%' },
@@ -4419,7 +4419,7 @@ EOF
     sub search_limit_offset_complex_product_dbic
     {
       my @p = 
-        #MyTest::DBIC::Complex::Product->search(
+        #MyTest::DBIC::Schema::Complex::Product->search(
         $DBIC_Complex_Product_RS->search(
         {
           'me.name' => { -like => 'Product %2%' },
@@ -4540,7 +4540,7 @@ EOF
     sub iterate_complex_category_dbic
     {
       my $iter = 
-        #MyTest::DBIC::Complex::Category->search(
+        #MyTest::DBIC::Schema::Complex::Category->search(
         $DBIC_Complex_Category_RS->search(
         {
           name => { -like => 'xCat %2%' },
@@ -4662,7 +4662,7 @@ EOF
     sub iterate_complex_product_dbic
     {
       my $iter = 
-        #MyTest::DBIC::Complex::Product->search(
+        #MyTest::DBIC::Schema::Complex::Product->search(
         $DBIC_Complex_Product_RS->search(
         {
           name => { -like => 'Product %2%' },
@@ -4794,7 +4794,7 @@ EOF
     sub iterate_complex_product_and_category_dbic
     {
       my $iter = 
-        #MyTest::DBIC::Complex::Product->search(
+        #MyTest::DBIC::Schema::Complex::Product->search(
         $DBIC_Complex_Product_RS->search(
         {
           'me.name' => { -like => 'Product %2%' },
@@ -4882,7 +4882,7 @@ EOF
 
     sub delete_complex_product_dbic
     {
-      #my $c = MyTest::DBIC::Complex::Product->find($i + 3_300_000);
+      #my $c = MyTest::DBIC::Schema::Complex::Product->find($i + 3_300_000);
       my $c = $DBIC_Complex_Product_RS->single({ id => $i + 3_300_000 });
       $c->delete;
       $i++;
