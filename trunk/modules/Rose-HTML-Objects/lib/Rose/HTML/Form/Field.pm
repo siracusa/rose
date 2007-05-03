@@ -19,7 +19,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.547';
+our $VERSION = '0.548';
 
 #our $Debug = 0;
 
@@ -891,6 +891,8 @@ sub locale
   }
 }
 
+sub prepare { }
+
 if(__PACKAGE__->localizer->auto_load_messages)
 {
   __PACKAGE__->localizer->load_all_messages;
@@ -1282,6 +1284,24 @@ Get or set the parent field.  The parent field should only be set if the direct 
 =item B<parent_form [FORM]>
 
 Get or set the parent L<form|Rose::HTML::Form>.  The parent form should only be set if the direct parent of this field is a form.  The reference to the parent form is "weakened" using L<Scalar::Util::weaken()|Scalar::Util/weaken> in order to avoid memory leaks caused by circular references.
+
+=item B<prepare>
+
+Prepares the field for use in a form.  Override this method in your custom field subclass to do any work required for each field before each use of that field.  Be sure to call the superclass implementation as well.  Example:
+
+    package MyField;
+    use base 'Rose::HTML::Form::Field';
+    ...
+    sub prepare
+    {
+      my($self) = shift;
+
+      # Do anything that needs to be done before each use of this field
+      ...
+      
+      # Call superclass implementation
+      $self->SUPER::prepare(@_);
+    }
 
 =item B<rank [INT]>
 

@@ -1,5 +1,7 @@
-0.548 (04.16.2007) - John Siracusa <siracusa@mindspring.com>
+0.548 (05.03.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Added prepare() methods to Field and Form.
+    * Added a was_submitted() method to Form.
     * Expanded the powers of the field_value() method in the Form class.
     * Added more flexible syntax for specifying choices in group fields
       (radio button groups, select boxes, etc.)

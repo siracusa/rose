@@ -6,7 +6,7 @@ use Carp;
 
 use Clone::PP;
 use Rose::URI;
-use Scalar::Util qw(refaddr);
+use Scalar::Util();
 use URI::Escape qw(uri_escape);
 
 use Rose::HTML::Object::Errors qw(:form);
@@ -764,6 +764,18 @@ sub _init_field
   }
 }
 
+sub was_submitted
+{
+  my($self) = shift;
+  
+  foreach my $field ($self->fields)
+  {
+    return 1  if($self->param_exists_for_field($field->name));
+  }
+
+  return 0;
+}
+
 sub start_html
 {
   my($self) = shift;
@@ -924,7 +936,7 @@ sub add_forms
     {
       $form = $arg;
 
-      if(refaddr($form) eq refaddr($self))
+      if(Scalar::Util::refaddr($form) eq Scalar::Util::refaddr($self))
       {
         croak "Cannot nest a form within itself";
       }
@@ -949,7 +961,7 @@ sub add_forms
 
       if(UNIVERSAL::isa($form, 'Rose::HTML::Form'))
       {
-        if(refaddr($form) eq refaddr($self))
+        if(Scalar::Util::refaddr($form) eq Scalar::Util::refaddr($self))
         {
           croak "Cannot nest a form within itself";
         }
@@ -1394,6 +1406,20 @@ sub form
   my($parent_form, $local_name) = $self->find_parent_form($name);
   return undef  unless(defined $parent_form);
   return $parent_form->form($local_name);
+}
+
+sub app
+{
+  my($self) = shift; 
+  return Scalar::Util::weaken($self->{'app'} = shift)  if(@_);
+  return $self->{'app'};
+}
+
+sub app_form
+{
+  my($self) = shift; 
+  return Scalar::Util::weaken($self->{'app_form'} = shift)  if(@_);
+  return $self->{'app_form'};
 }
 
 our $AUTOLOAD;
@@ -2546,6 +2572,10 @@ A fatal error occurs unless both NAME and VALUE arguments are passed.
 
 Get or set the parent form, if any.  The reference to the parent form is "weakened" using L<Scalar::Util::weaken()|Scalar::Util/weaken> in order to avoid memory leaks caused by circular references.
 
+=item B<prepare>
+
+Calls L<prepare|Rose::HTML::Form::Field/prepare> on each L<field|/fields>, passing all arguments.
+
 =item B<query_string>
 
 Returns a URI-escaped (but I<not> HTML-escaped) query string that corresponds to the current state of the form.  If L<coalesce_query_string_params()|/coalesce_query_string_params> is true (which is the default), then compound fields are represented by a single query parameter.  Otherwise, the subfields of each compound field appear as separate query parameters.
@@ -2645,6 +2675,10 @@ Examples:
 =item B<validate_field_html_attrs [BOOL]>
 
 Get or set a boolean flag that indicates whether or not the fields of this form will validate their HTML attributes.  If a BOOL argument is passed, then it is passed as the argument to a call to L<validate_html_attrs()|Rose::HTML::Object/validate_html_attrs> on each field.  In either case, the current value of this flag is returned.
+
+=item B<was_submitted>
+
+Returns true id L<params exist|/param_exists_for_field> for any L<field|/fields>, false otherwise.
 
 =item B<xhtml_hidden_fields>
 
