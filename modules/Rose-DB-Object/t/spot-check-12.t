@@ -118,7 +118,7 @@ EOF
 
   ok(Clients->can('load_or_save'), 'helpers 3');
   ok(Clients->can('find_or_create2'), 'helpers 4');
-  
+
   my $c = Clients->new( name => 'c1' );
   $c->load;
 
@@ -145,7 +145,7 @@ EOF
   ok($c->save(cascade => 1, changes_only => 1), 'save cascade changes only - loaded with Manager');
 
   $a = Addresses->new(id => $a->id)->load;
-  
+
   is($a->street, 's2', 'save cascade changes only - check');
 }
 

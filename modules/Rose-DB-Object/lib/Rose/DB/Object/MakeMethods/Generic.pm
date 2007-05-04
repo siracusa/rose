@@ -58,7 +58,7 @@ sub scalar
   #
   # equivalence op
   #
-  
+
   my $eq = ($type eq 'integer') ? '==' : 'eq';
 
   #
@@ -3924,7 +3924,7 @@ use constant MAP_RECORD_METHOD => 'map_record';
 use constant DEFAULT_REL_KEY   => PRIVATE_PREFIX . '_default_rel_key';
 
 our %Made_Map_Record_Method;
-    
+
 sub objects_by_map
 {
   my($class, $name, $args, $options) = @_;
@@ -3947,7 +3947,7 @@ sub objects_by_map
   my $query_args   = $args->{'query_args'} || [];
 
   my $count_method = $args->{'manager_count_method'} || 'get_objects_count';
-  
+
   if($mgr_args->{'query'})
   {
     Carp::croak "Cannot use the key 'query' in the manager_args parameter ",
@@ -4196,7 +4196,7 @@ sub objects_by_map
     {
       Rose::DB::Object::Metadata::Relationship::ManyToMany::make_map_record_method(
         $map_to_class, $map_record_method, $map_class);
-  
+
       $Made_Map_Record_Method{"${map_to_class}::$map_record_method"} =
       {
         rel_class => $target_class,

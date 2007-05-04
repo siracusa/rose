@@ -610,11 +610,11 @@ BEGIN
 
     $self->add_fields(%fields);
   }
-  
+
   sub validate
   {
     my($self) = shift;
-    
+
     $self->SUPER::validate or return 0;
     $self->field('street')->error('Blah');
     no warnings 'uninitialized';

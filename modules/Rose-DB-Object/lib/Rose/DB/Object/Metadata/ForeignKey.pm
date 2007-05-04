@@ -184,14 +184,14 @@ sub make_methods
   {
     my $method = $self->method_name('get_set_on_save') ||
                  $self->method_name('get_set');
-  
+
     if($method)
     {
       my $meta = $self->parent or 
         Carp::croak "Missing parent for foreign key '", $self->name, "'";
-    
+
       my $key_columns = $self->key_columns;
-    
+
       foreach my $column_name (keys %$key_columns)
       {
         Scalar::Util::weaken(my $column = $meta->column($column_name));

@@ -516,7 +516,7 @@ sub supports_limit_with_offset
       $sth->execute;
       ($version) = $sth->fetchrow_array;
     };
-    
+
     %Major_Version_Cache = ()  if(keys %Major_Version_Cache > MAX_TO_CACHE);
     $Major_Version_Cache{$dbh} = $version || 0;
   }

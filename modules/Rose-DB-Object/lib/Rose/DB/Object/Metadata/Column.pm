@@ -969,7 +969,7 @@ sub apply_method_triggers
                 }
               }
             }
-            
+
             return wantarray ? @ret : $ret[0];
           }
           else

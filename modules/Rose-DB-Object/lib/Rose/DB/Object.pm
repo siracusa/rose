@@ -157,7 +157,7 @@ sub load
   if(my $key = delete $args{'use_key'})
   {
     my @uk = grep { $_->name eq $key } $meta->unique_keys;
-    
+
     if(@uk == 1)
     {
       my $defined = 0;
@@ -172,7 +172,7 @@ sub load
         $meta->handle_error($self);
         return undef;
       }
-      
+
       if(@key_values != $defined)
       {
         $null_key = 1;
@@ -184,11 +184,11 @@ sub load
     @key_columns = $meta->primary_key_column_names;
     @key_methods = $meta->primary_key_column_accessor_names;
     @key_values  = grep { defined } map { $self->$_() } @key_methods;
-  
+
     unless(@key_values == @key_columns)
     {
       my $alt_columns;
-  
+
       # Prefer unique keys where we have defined values for all
       # key columns, but fall back to the first unique key found 
       # where we have at least one defined value.
@@ -199,16 +199,16 @@ sub load
         @key_methods = map { $meta->column_accessor_method_name($_) } @key_columns;
         @key_values  = map { $defined++ if(defined $_); $_ } 
                        map { $self->$_() } @key_methods;
-  
+
         if($defined == @key_columns)
         {
           $found_key = 1;
           last;
         }
-  
+
         $alt_columns ||= $cols  if($defined);
       }
-  
+
       if(!$found_key && $alt_columns)
       {
         @key_columns = @$alt_columns;
@@ -217,17 +217,17 @@ sub load
         $null_key    = 1;
         $found_key   = 1;
       }
-  
+
       unless($found_key)
       {
         @key_columns = $meta->primary_key_column_names;
-  
+
         $self->error("Cannot load " . ref($self) . " without a primary key (" .
                      join(', ', @key_columns) . ') with ' .
                      (@key_columns > 1 ? 'non-null values in all columns' : 
                                          'a non-null value') .
                      ' or another unique key with at least one non-null value.');
-  
+
         $meta->handle_error($self);
         return 0;
       }

@@ -767,7 +767,7 @@ sub _init_field
 sub was_submitted
 {
   my($self) = shift;
-  
+
   foreach my $field ($self->fields)
   {
     return 1  if($self->param_exists_for_field($field->name));

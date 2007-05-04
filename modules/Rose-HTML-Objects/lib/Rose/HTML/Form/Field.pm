@@ -62,7 +62,7 @@ __PACKAGE__->add_valid_html_attrs(qw(
 sub error_label
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     return $self->_error_label(@_);
@@ -77,7 +77,7 @@ sub error_label
 sub error_label_id
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     return $self->_error_label_message_id(@_);
@@ -444,7 +444,7 @@ sub output_value
 sub is_empty
 {
   my($self) = shift;
-  
+
   my $value = $self->internal_value;
 
   no warnings;  
@@ -1298,7 +1298,7 @@ Prepares the field for use in a form.  Override this method in your custom field
 
       # Do anything that needs to be done before each use of this field
       ...
-      
+
       # Call superclass implementation
       $self->SUPER::prepare(@_);
     }

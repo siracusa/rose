@@ -303,7 +303,7 @@ SKIP: foreach my $db_type ('pg')
   $count = $o->colors_count([ name => { like => 'r%' } ]);
 
   is($count, 1, "count colors 2 - $db_type");
-  
+
   my @colors = $o->colors;
 
   ok(@colors == 2 && $colors[0]->name eq 'blue' && $colors[1]->name eq 'red',
@@ -4526,7 +4526,7 @@ SKIP: foreach my $db_type ('sqlite')
   $x->save;
 
   # End filtered collection tests
-  
+
   ok(!$o->has_loaded_related('other2_objs'), "has_loaded_related() 3 - $db_type");
 
   my $o2s = $o->other2_objs;
@@ -4588,7 +4588,7 @@ SKIP: foreach my $db_type ('sqlite')
      ref $colors2 eq 'ARRAY' && @$colors2 == 1 && $colors2->[0]->name eq 'red' &&
      $colors->[0] eq $colors2->[0],
      "find colors from cache - $db_type");
-     
+
   my $count = $o->colors_count;
 
   is($count, 2, "count colors 1 - $db_type");
@@ -5024,7 +5024,7 @@ SKIP: foreach my $db_type ('sqlite')
 
   @o2s = $o->other2_objs_now;
   ok(@o2s == 3, "set one to many now 3 - $db_type");
-  
+
   ok($o2s[0]->id == 2 && $o2s[0]->pid == 111, "set one to many now 4 - $db_type");
   ok($o2s[1]->id == 3 && $o2s[1]->pid == 111, "set one to many now 5 - $db_type");
   ok($o2s[2]->id == 1 && $o2s[2]->pid == 111, "set one to many now 6 - $db_type");
@@ -5870,7 +5870,7 @@ SKIP: foreach my $db_type ('sqlite')
   # End "many to many" tests
 
   # Begin with_map_records tests
-  
+
   test_memory_cycle_ok($o, "with_map_records memory cycle 1 - $db_type");
 # print find_cycle($o);
 # print "######################\n";

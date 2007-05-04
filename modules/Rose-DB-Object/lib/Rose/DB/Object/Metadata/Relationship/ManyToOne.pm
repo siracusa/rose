@@ -151,12 +151,12 @@ sub make_methods
   {
     my $method = $self->method_name('get_set_on_save') ||
                  $self->method_name('get_set');
-  
+
     if($method)
     {
       my $meta = $self->parent or 
         Carp::croak "Missing parent for relationship '", $self->name, "'";
-    
+
       my $column_map = $self->column_map;
 
       foreach my $column_name (keys %$column_map)

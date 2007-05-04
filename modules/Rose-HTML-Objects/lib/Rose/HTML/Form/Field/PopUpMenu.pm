@@ -161,7 +161,7 @@ A list or reference to an array containing a mix of value/label pairs, value/has
 
       # option group object
       Rose::HTML::Form::Field::OptionGroup->new(...),
-      
+
       # value/hashref pair
       value2 =>
       {

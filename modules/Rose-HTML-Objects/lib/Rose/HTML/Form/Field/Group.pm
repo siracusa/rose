@@ -129,7 +129,7 @@ sub _args_to_items
       elsif(!ref $arg)
       {
         my $item = $class->new(value => $arg);
-        
+
         if(!ref $args->[0])
         {
           $item->$label_method(shift(@$args));
@@ -143,7 +143,7 @@ sub _args_to_items
           {
             $item->$method($value);
           }
-          
+
           push(@$items, $item);
         }
         elsif(ref $args->[0] eq 'ARRAY')
@@ -157,7 +157,7 @@ sub _args_to_items
           Carp::croak "Illegal or incorrectly positioned ", $self->_item_name_plural,
                       " argument: $args->[0]";
         }
-       
+
       }
       else
       {

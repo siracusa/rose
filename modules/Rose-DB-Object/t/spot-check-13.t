@@ -33,7 +33,7 @@ foreach my $db_type (qw(pg))
   $tt->save;
 
   my @results = $t2->t1s;
-  
+
   is(scalar @results, 1, "bigint keys - $db_type");
 }
 
@@ -96,7 +96,7 @@ EOF
 
     package T1;
     our @ISA = qw(Rose::DB::Object);
-    
+
     __PACKAGE__->meta->setup
     (
       table   => 't1',
@@ -104,7 +104,7 @@ EOF
       [
         id => { type => 'bigint', not_null => 1, primary_key => 1 },
       ],
-  
+
       relationships => 
       [
         related => 
@@ -116,10 +116,10 @@ EOF
         },
       ],
     );
-    
+
     package T1T2Map;
     our @ISA = qw(Rose::DB::Object);
-    
+
     __PACKAGE__->meta->setup
     (
       table   => 't1_t2_map',
@@ -128,7 +128,7 @@ EOF
         t1_id => { type => 'bigint', not_null => 1 },
         t2_id => { type => 'bigint', not_null => 1 },
       ],
-  
+
       primary_key_columns => ['t1_id', 't2_id'],
 
       foreign_keys => 
@@ -137,10 +137,10 @@ EOF
         t2 => { class => 'T2' },
       ],
     );
-    
+
     package T2;
     our @ISA = qw(Rose::DB::Object);
-    
+
     __PACKAGE__->meta->setup
     (
       table   => 't2',
@@ -148,7 +148,7 @@ EOF
       [
         id => { type => 'bigint', not_null => 1, primary_key => 1 },
       ],
-  
+
       relationships =>
       [
         t1s => 

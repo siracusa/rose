@@ -587,7 +587,7 @@ sub get_objects
 
   my @table_names = ($meta->table);
   my @rel_names   = ($meta->table);
-  
+
   my(@joins, @subobject_methods, @mapped_object_methods, $clauses);
 
   my $handle_dups = 0;
@@ -2343,7 +2343,7 @@ sub get_objects
         $sth = undef;
         $db = undef;
       });
-      
+
       return $iterator;
     }
 

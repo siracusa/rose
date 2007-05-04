@@ -68,7 +68,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   #}
 
   my $pk_class = $class_prefix . '::PkTest';
-  
+
   my @pk_cols = $pk_class->meta->primary_key_column_names;
 
   is_deeply(\@pk_cols, [ qw(num year) ], "multi pk - $db_type");

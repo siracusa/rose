@@ -75,7 +75,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
         $manager_class->get_rdbo_album_artwork_iterator(
           query   => [ art_filename => 'album1.jpg' ],
           sort_by => 'art_filename');
-      
+
       while(my $res = $iter->next)
       {
         # do nothing
