@@ -115,12 +115,12 @@ is($field->xhtml, qq(< /><br />\n<span class="error">Name is a required field.</
 
 $field->label('Name> ');
 
-is($field->html_label, '<label class="required">Name&gt; </label>', 'html_label() 1');
-is($field->xhtml_label, '<label class="required">Name&gt; </label>', 'xhtml_label() 1');
+is($field->html_label, '<label class="required error">Name&gt; </label>', 'html_label() 1');
+is($field->xhtml_label, '<label class="required error">Name&gt; </label>', 'xhtml_label() 1');
 $field->escape_html(0);
 
-is($field->html_label, '<label class="required">Name> </label>', 'html_label() 2');
-is($field->xhtml_label, '<label class="required">Name> </label>', 'xhtml_label() 2');
+is($field->html_label, '<label class="required error">Name> </label>', 'html_label() 2');
+is($field->xhtml_label, '<label class="required error">Name> </label>', 'xhtml_label() 2');
 
 $field->validator(sub { 0 });
 

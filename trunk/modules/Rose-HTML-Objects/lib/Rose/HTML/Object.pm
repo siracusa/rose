@@ -290,10 +290,10 @@ sub html_error
 
   my $error = $self->error;
 
-  if($error)
+  if($error && length "$error")
   {
     return qq(<span class="error">) . 
-           (($self->escape_html) ? Rose::HTML::Util::escape_html($error) : $error) .
+           ($self->escape_html ? Rose::HTML::Util::escape_html($error) : $error) .
            '</span>';
   }
 
@@ -326,7 +326,7 @@ sub html_errors
   if($error)
   {
     return qq(<span class="error">) . 
-           (($self->escape_html) ? Rose::HTML::Util::escape_html($error) : $error) .
+           ($self->escape_html ? Rose::HTML::Util::escape_html($error) : $error) .
            '</span>';
   }
 
