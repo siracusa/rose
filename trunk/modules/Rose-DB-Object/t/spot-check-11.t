@@ -43,11 +43,11 @@ foreach my $db_type (qw(mysql))
   #  print $class->meta->perl_class_definition(braces => 'k&r', indent => 2)
   #    if($class->can('meta'));
   #}
-  
+
   my $user_connection_class = $class_prefix . '::UserConnection';
-  
+
   my @fks = sort { $a->name cmp $b->name } $user_connection_class->meta->foreign_keys;
-  
+
   is_deeply(scalar $fks[0]->key_columns, { from_id => 'id' }, "fk 1.1 - $db_type");
   is($fks[0]->name, 'from', "fk 1.2 - $db_type");
 

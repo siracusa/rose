@@ -166,7 +166,7 @@ sub build_select
         {
           push(@clauses, "($sql)");
         }
-        
+
         $i++;
       }
       elsif(my $ref = ref $query_arg->[$i])
@@ -558,15 +558,15 @@ sub build_select
       if($nested_joins)
       {
         my @seen;
-  
+
         for($i = 1; $i <= $#nested; $i++)
         {
           next  if($seen[$i]++);
-  
+
           my $children = $nested[$i];
-  
+
           next  unless($children);
-  
+
           if(@$children)
           {
             push(@joined_tables, _build_nested_join($joins, \@nested, $i, $tables_sql, $db, \@seen));
@@ -1007,7 +1007,7 @@ sub _build_nested_join
   if($nested->[$i] && @{$nested->[$i]})
   {
     my $join_sql;
-    
+
     if($joins->[$i])
     {
       my $child_num = 0;

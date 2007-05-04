@@ -236,16 +236,16 @@ sub select_bitfield_column_sql
 sub parse_set
 {
   my($self) = shift;
-  
+
   return $_[0]  if(ref $_[0] eq 'ARRAY');
   return [ @_ ] if(@_ > 1);
-  
+
   my $val = $_[0];
-  
+
   return undef  unless(defined $val);
-  
+
   my @set = split(/,/, $val);
-  
+
   return \@set;
 }
 

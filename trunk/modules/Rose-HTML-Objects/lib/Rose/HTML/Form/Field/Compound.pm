@@ -283,7 +283,7 @@ sub validate
 sub disabled
 {
   my($self) = shift;
-  
+
   foreach my $field ($self->fields)
   {
     $field->disabled(@_)  if($field->can('disabled'));

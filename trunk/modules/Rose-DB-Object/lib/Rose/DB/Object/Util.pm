@@ -172,7 +172,7 @@ sub lazy_column_values_loaded_key
 sub post_save_set_related_objects_code
 {
   my($object, $rel_name, $code) = @_;
-  
+
   if(@_ > 2)
   {
     if(defined $code)
@@ -203,7 +203,7 @@ sub post_save_add_related_objects_code
       return delete $object->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'};
     }
   }
-  
+
   return $object->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'};
 }
 
@@ -222,7 +222,7 @@ sub pre_save_set_foreign_object_code
       return delete $object->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
     }
   }
-  
+
   return $object->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
 }
 

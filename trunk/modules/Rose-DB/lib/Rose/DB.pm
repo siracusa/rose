@@ -414,7 +414,7 @@ sub load_driver_classes
 sub database
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     $self->{'dsn'} = undef  if($self->{'dsn'});
@@ -427,7 +427,7 @@ sub database
 sub schema
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     $self->{'dsn'} = undef  if($self->{'dsn'});
@@ -440,7 +440,7 @@ sub schema
 sub catalog
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     $self->{'dsn'} = undef  if($self->{'dsn'});
@@ -453,7 +453,7 @@ sub catalog
 sub host
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     $self->{'dsn'} = undef  if($self->{'dsn'});
@@ -466,7 +466,7 @@ sub host
 sub port
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     $self->{'dsn'} = undef  if($self->{'dsn'});
@@ -777,7 +777,7 @@ sub release_dbh
 sub dbh_attribute
 {
   my($self, $name) = (shift, shift);
-  
+
   if(@_)
   {
     if(my $dbh = $self->{'dbh'})
@@ -789,7 +789,7 @@ sub dbh_attribute
       return $self->{"__dbh_attr_$name"} = shift;
     }
   }
-  
+
   if(my $dbh = $self->{'dbh'})
   {
     return $self->{'dbh'}{$name};
@@ -2014,7 +2014,7 @@ sub auto_load_fixups
   # Load a file or package full of arbitrary perl used to alter the data
   # source registry.  This is intended for use in development only.
   my $rosedb_devinit = $ENV{'ROSEDB_DEVINIT'};
-  
+
   if(defined $rosedb_devinit)
   {
     if(-e $rosedb_devinit)
@@ -2026,7 +2026,7 @@ sub auto_load_fixups
       eval qq(require $rosedb_devinit);
     }
   }
-  
+
   if($@ || !defined $rosedb_devinit)
   {
     my $username = lc getpwuid($<);
@@ -2484,7 +2484,7 @@ Each entry modifies an existing registered data source.   Any valid L<registry e
 This file must be read explicitly by calling the L<auto_load_fixups|/auto_load_fixups> class method I<after> setting up all your data sources.  Example:
 
     package My::DB;
-    
+
     use Rose::DB;
     our @ISA = qw(Rose::DB);
 

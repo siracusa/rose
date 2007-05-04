@@ -44,15 +44,15 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   #  print $class->meta->perl_class_definition(braces => 'k&r', indent => 2)
   #    if($class->can('meta'));
   #}
-  
+
   my $a_class = $class_prefix . '::RoseDbObjectA';
   my $b_class = $class_prefix . '::RoseDbObjectB';
-  
+
   my $a = $a_class->new(id => 1, name => 'A')->save;
   my $b = $b_class->new(id => 1, name => 'B')->save;
-  
+
   $b = $b_class->new(id => 1)->load;
-  
+
   $b->rose_db_object_a(undef);
   eval { $b->save };
 

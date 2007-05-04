@@ -851,7 +851,7 @@ EOF
     );
 
     sub MyPgObject::ID { shift->id(@_) }
-    
+
     MyPgObject->meta->add_unique_key('save');
 
     MyPgObject->meta->add_unique_key([ qw(k1 k2 k3) ]);
@@ -1122,7 +1122,7 @@ EOF
     );
 
     sub MyInformixObject::ID { shift->id(@_) }
-    
+
     MyInformixObject->meta->column_name_to_method_name_mapper(sub 
     {
       my($meta,  $column_name, $method_type, $method_name) = @_;
@@ -1221,7 +1221,7 @@ EOF
     );
 
     sub MySQLiteObject::ID { shift->id(@_) }
-    
+
     MySQLiteObject->meta->column_name_to_method_name_mapper(sub 
     {
       my($meta,  $column_name, $method_type, $method_name) = @_;

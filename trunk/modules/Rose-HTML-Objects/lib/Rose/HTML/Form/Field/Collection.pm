@@ -397,7 +397,7 @@ sub children
 sub field_value
 {
   my($self, $name) = (shift, shift);
-  
+
   my $field = $self->field($name) 
     or Carp::croak "No field named '$name' in $self";
 

@@ -102,13 +102,13 @@ EOF
 
     package Mysql::A;
     our @ISA = qw(Rose::DB::Object);
-    
+
     __PACKAGE__->meta->setup
     (
       table => 'rose_db_object_test_a',
-    
+
       columns => [ qw(id name) ],
-    
+
       relationships =>
       [
         bs =>
@@ -119,14 +119,14 @@ EOF
         },
       ],
     );
-    
+
     package Mysql::B;
     our @ISA = qw(Rose::DB::Object);
-    
+
     __PACKAGE__->meta->setup
     (
       table => 'rose_db_object_test_b',
-    
+
       columns => 
       [
         id => { type => 'serial', primary_key => 1 },
@@ -134,7 +134,7 @@ EOF
         a_id => { type => 'integer', not_null => 1 },
         c_id => { type => 'integer', not_null => 1 },
       ],
-    
+
       foreign_keys =>
       [
         a =>
@@ -142,7 +142,7 @@ EOF
           class => 'Mysql::A',
           key_columns => { a_id => 'id' },
         },
-    
+
         c =>
         {
           class => 'Mysql::C',
@@ -150,14 +150,14 @@ EOF
         }
       ],
     );
-    
+
     package Mysql::C;
     our @ISA = qw(Rose::DB::Object);
-    
+
     __PACKAGE__->meta->setup
     (
       table => 'rose_db_object_test_c',
-    
+
       columns => 
       [
         id => { type => 'serial', primary_key => 1 },

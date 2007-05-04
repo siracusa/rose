@@ -82,7 +82,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     {
       next  unless($class->isa('Rose::DB::Object'));
       $class->meta->allow_inline_column_values(1);
-  
+
       if($class->meta->column('release_day'))
       {
         is($class->meta->column('release_day')->type, 'datetime year to month', 
@@ -210,7 +210,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     is($o->read, 'Foo', "reserved table name 1 - $db_type");
     my $os = Mysql::Read::Manager->get_read;
     ok(@$os == 1 && $os->[0]->read eq 'Foo', "reserved table name 2 - $db_type");
-    
+
     ok(Mysql::NoPkTest->isa('Rose::DB::Object'), "require_primary_key 1 - $db_type")
   }
   else
@@ -659,7 +659,7 @@ CREATE TABLE products
   date_created  DATETIME YEAR TO SECOND,
   release_date  DATETIME YEAR TO SECOND,
   release_day   DATETIME YEAR TO MONTH,
-  
+
   UNIQUE(name)
 )
 EOF

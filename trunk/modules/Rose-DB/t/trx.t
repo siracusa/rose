@@ -52,7 +52,7 @@ SKIP: foreach my $db_type ('pg')
   ok($db->commit, "commit() 1 - $db_type");
 
   is($db->in_transaction, 0, "in_transaction() 3 - $db_type");
-  
+
   FAIL_COMMIT:
   {
     local $db->dbh->{'PrintError'} = 0;
