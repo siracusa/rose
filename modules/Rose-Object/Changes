@@ -1,4 +1,4 @@
-0.83 (04.20.2007) - John Siracusa <siracusa@mindspring.com>
+0.83 (05.04.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Moved Rose::Object::MixIn here from Rose::DB::Object.
 
