@@ -1,4 +1,4 @@
-0.734 (05.02.2007) - John Siracusa <siracusa@mindspring.com>
+0.734 (05.04.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added the in_transaction() object method.
     * Added support for YAML and Perl-based fix-up files.
