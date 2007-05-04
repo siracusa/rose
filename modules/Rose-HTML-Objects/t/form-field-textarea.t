@@ -102,8 +102,8 @@ ok($field->error, 'error 1');
 
 $field->label('Stuff');
 
-is($field->html_label, '<label class="required" for="bar">Stuff</label>', 'html_label() 1');
-is($field->xhtml_label, '<label class="required" for="bar">Stuff</label>', 'xhtml_label() 1');
+is($field->html_label, '<label class="required error" for="bar">Stuff</label>', 'html_label() 1');
+is($field->xhtml_label, '<label class="required error" for="bar">Stuff</label>', 'xhtml_label() 1');
 
 is($field->xhtml,
    qq(<textarea class="foo" cols="50" disabled="disabled" id="bar" name="name" rows="3" style="baz"></textarea><br />\n) . 

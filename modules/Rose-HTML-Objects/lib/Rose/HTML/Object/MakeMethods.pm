@@ -175,7 +175,7 @@ sub localized_error
           $error->parent($self);
           return $self->{$key} = $error;
         }
-        elsif(defined $error && length $error)
+        elsif(defined $error)
         {
           return $self->{$key} = 
             $error_class->new(message => $msg_class->new($error), parent => $self);
@@ -354,7 +354,7 @@ sub localized_errors
           $error->parent($self);
           $self->{$key} = [ $error ];
         }
-        elsif(defined $error && length $error)
+        elsif(defined $error)
         {
           $self->{$key} = 
             [ $error_class->new(message => $msg_class->new($error), parent => $self) ];
