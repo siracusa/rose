@@ -1,3 +1,7 @@
+0.549 (05.07.2007) - John Siracusa <siracusa@mindspring.com>
+
+    * Corrected html_fiel() class HTML attribute value.
+
 0.548 (05.04.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added prepare() methods to Field and Form.
