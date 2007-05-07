@@ -19,7 +19,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.548';
+our $VERSION = '0.549';
 
 #our $Debug = 0;
 
@@ -599,13 +599,13 @@ sub html_tag
     my $class = $self->html_attr('class');
     $self->html_attr(class => $class ? "$class error" : 'error');
 
-    my $html = $self->html_field(@_);
+    my $html = $self->Rose::HTML::Object::html_tag(@_);
     $self->html_attr(class => $class);
     return $html;
   }
   else
   {
-    $self->html_field(@_);
+    $self->Rose::HTML::Object::html_tag(@_);
   }
 }
 
@@ -618,18 +618,18 @@ sub xhtml_tag
     my $class = $self->html_attr('class');
     $self->html_attr(class => $class ? "$class error" : 'error');
 
-    my $html = $self->xhtml_field(@_);
+    my $html = $self->Rose::HTML::Object::xhtml_tag(@_);
     $self->html_attr(class => $class);
     return $html;
   }
   else
   {
-    $self->xhtml_field(@_);
+    $self->Rose::HTML::Object::xhtml_tag(@_);
   }
 }
 
-*html_field  = \&Rose::HTML::Object::html_tag;
-*xhtml_field = \&Rose::HTML::Object::xhtml_tag;
+*html_field  = \&html_tag;
+*xhtml_field = \&xhtml_tag;
 
 sub html
 {
