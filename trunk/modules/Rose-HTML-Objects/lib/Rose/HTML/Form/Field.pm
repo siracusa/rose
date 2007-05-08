@@ -44,7 +44,7 @@ use Rose::Object::MakeMethods::Generic
   'scalar --get_set_init' => 
   [
     qw(html_prefix html_suffix html_error_separator xhtml_error_separator
-       local_moniker)
+       local_moniker apply_error_class)
   ],
 );
 
@@ -88,6 +88,8 @@ sub error_label_id
   no warnings 'uninitialized';
   return (defined $label) ? (length $label ? $label : undef) : $self->label;
 }
+
+sub init_apply_error_class { 1 }
 
 sub auto_invalidate_parent
 {
@@ -594,7 +596,7 @@ sub html_tag
 {
   my($self) = shift;
 
-  if(defined $self->error)
+  if($self->html_element && $self->apply_error_class && defined $self->error)
   {
     my $class = $self->html_attr('class');
     $self->html_attr(class => $class ? "$class error" : 'error');
@@ -605,7 +607,7 @@ sub html_tag
   }
   else
   {
-    $self->Rose::HTML::Object::html_tag(@_);
+    $self->SUPER::html_tag(@_);
   }
 }
 
@@ -613,7 +615,7 @@ sub xhtml_tag
 {
   my($self) = shift;
 
-  if(defined $self->error)
+  if($self->html_element && $self->apply_error_class && defined $self->error)
   {
     my $class = $self->html_attr('class');
     $self->html_attr(class => $class ? "$class error" : 'error');
@@ -624,7 +626,7 @@ sub xhtml_tag
   }
   else
   {
-    $self->Rose::HTML::Object::xhtml_tag(@_);
+    $self->SUPER::xhtml_tag(@_);
   }
 }
 
