@@ -10,7 +10,7 @@ use Rose::HTML::Object::Message::Localizer;
 use Rose::HTML::Object::Localized;
 our @ISA = qw(Rose::HTML::Object::Localized);
 
-our $VERSION = '0.541';
+our $VERSION = '0.549';
 
 our $Debug = undef;
 
@@ -278,6 +278,9 @@ sub html_attr_hook
 }
 
 sub delete_html_attr_hook { shift->html_attr_hook($_[0] => undef) }
+
+sub set_error   { shift->error('')    }
+sub unset_error { shift->error(undef) }
 
 sub html_error
 {
@@ -1050,6 +1053,14 @@ If the L<escape_html|/escape_html> flag is set to true (the default), then the e
 =item B<html_tag>
 
 Serializes the object as an HTML tag.  In other words, it is the concatenation of the strings returned by L<html_element()|/html_element> and L<html_attrs_string()|/html_attrs_string>, wrapped with the appropriate angled brackets.
+
+=item B<set_error>
+
+Set the L<error|/error> to a defined but "invisible" (zero-length) value.  This value will not be displayed by the L<html_error|/html_error> or L<xhtml_error|/xhtml_error>.  Use this method when you want to flag a field as having an error, but don't want a visible error message.
+
+=item B<unset_error>
+
+Set the L<error|/error> to a undef.
 
 =item B<validate_html_attrs BOOL>
 

@@ -15,11 +15,12 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.548';
+our $VERSION = '0.549';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
 (
+  'prepare',
   'children',
   'hidden_field',
   'hidden_fields',

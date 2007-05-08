@@ -7,7 +7,7 @@ use Rose::HTML::Object::Errors qw(:number);
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.545';
+our $VERSION = '0.549';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -59,7 +59,7 @@ sub validate
   my $min = $self->min;
   my $max = $self->max;
 
-  my $name = sub { $self->label || $self->name };
+  my $name = sub { $self->error_label || $self->name };
 
   unless($value =~ /^-?\d+$/)
   {

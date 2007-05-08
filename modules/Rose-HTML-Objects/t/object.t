@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 214;
+use Test::More tests => 216;
 
 BEGIN { use_ok('Rose::HTML::Object') }
 
@@ -32,6 +32,12 @@ ok($o->html_attr_exists('name') && $o->html_attr('name') eq 'John' &&
    'html_attrs()');
 
 is($o->html_attrs_string, ' age="27" name="John"', 'html_attrs_string() 1');
+
+$o->set_error;
+ok(defined $o->error && length $o->error == 0, 'set_error');
+
+$o->unset_error;
+ok(!defined $o->error, 'unset_error');
 
 $o->error('Foo > bar');
 is($o->error, 'Foo > bar', 'error()');
