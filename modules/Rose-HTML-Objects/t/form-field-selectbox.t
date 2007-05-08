@@ -98,7 +98,7 @@ is($field->xhtml_field,
 $field->error("Do not pick orange!");
 
 is($field->html, 
-  qq(<select name="fruits" size="6">\n) .
+  qq(<select class="error" name="fruits" size="6">\n) .
   qq(<option value="apple">Apple</option>\n) .
   qq(<option selected value="orange">Orange</option>\n) .
   qq(<option value="grape">Grape</option>\n) .
@@ -107,7 +107,7 @@ is($field->html,
   'html()');
 
 is($field->xhtml, 
-  qq(<select name="fruits" size="6">\n) .
+  qq(<select class="error" name="fruits" size="6">\n) .
   qq(<option value="apple">Apple</option>\n) .
   qq(<option selected="selected" value="orange">Orange</option>\n) .
   qq(<option value="grape">Grape</option>\n) .

@@ -106,7 +106,7 @@ is($field->html_label, '<label class="required error" for="bar">Stuff</label>', 
 is($field->xhtml_label, '<label class="required error" for="bar">Stuff</label>', 'xhtml_label() 1');
 
 is($field->xhtml,
-   qq(<textarea class="foo" cols="50" disabled="disabled" id="bar" name="name" rows="3" style="baz"></textarea><br />\n) . 
+   qq(<textarea class="foo error" cols="50" disabled="disabled" id="bar" name="name" rows="3" style="baz"></textarea><br />\n) . 
    qq(<span class="error">This is a required field.</span>),
    'xhtml() 1');
 

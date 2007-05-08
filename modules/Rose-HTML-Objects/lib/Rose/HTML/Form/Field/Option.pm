@@ -9,13 +9,13 @@ use Rose::HTML::Form::Field::OnOff::Selectable;
 our @ISA = qw(Rose::HTML::Form::Field::OnOff::Selectable Rose::HTML::Form::Field::WithContents);
 
 # Multiple inheritence never quite works out the way I want it to...
-Rose::HTML::Form::Field::WithContents->import_methods(
-{
-  html_tag  => '_html_tag',
-  xhtml_tag => '_xhtml_tag',  
-});
+Rose::HTML::Form::Field::WithContents->import_methods
+(
+  'html_tag',
+  'xhtml_tag',  
+);
 
-our $VERSION = '0.011';
+our $VERSION = '0.549';
 
 __PACKAGE__->add_valid_html_attrs
 (
@@ -39,7 +39,7 @@ sub html_field
   my($self) = shift;
   $self->contents(Rose::HTML::Util::escape_html($self->label));
   $self->html_attr(selected => $self->selected);
-  return $self->_html_tag(@_);
+  return $self->html_tag(@_);
 }
 
 sub xhtml_field
@@ -47,7 +47,7 @@ sub xhtml_field
   my($self) = shift; 
   $self->contents(Rose::HTML::Util::escape_html($self->label));
   $self->html_attr(selected => $self->selected);
-  return $self->_xhtml_tag(@_);
+  return $self->xhtml_tag(@_);
 }
 
 sub short_label { shift->html_attr('label', @_) }
