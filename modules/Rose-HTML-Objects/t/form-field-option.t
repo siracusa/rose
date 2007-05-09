@@ -29,7 +29,7 @@ $field->default(1);
 
 is($field->html_field, '<option class="foo" id="bar" selected style="baz" value="john">John</option>', 'html_field() 3');
 is($field->xhtml_field, '<option class="foo" id="bar" selected="selected" style="baz" value="john">John</option>', 'xhtml_field() 3');
-$DB::single = 1;
+
 is($field->html_tag, '<option class="foo" id="bar" selected style="baz" value="john">John</option>', 'html_tag() 1');
 is($field->xhtml_tag, '<option class="foo" id="bar" selected="selected" style="baz" value="john">John</option>', 'xhtml_tag() 1');
 
