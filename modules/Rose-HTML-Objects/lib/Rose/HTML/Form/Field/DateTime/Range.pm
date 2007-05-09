@@ -218,8 +218,7 @@ sub validate
 
   foreach my $field (qw(min max))
   {
-    push(@errors, $self->field($field)->errors) 
-      if($self->field($field)->has_errors);
+    $self->field($field)->validate;
   }
 
   unless(@errors)
