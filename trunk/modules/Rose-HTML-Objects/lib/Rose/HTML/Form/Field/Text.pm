@@ -50,7 +50,7 @@ sub validate
 
   if(defined $maxlength && length($value) > $maxlength)
   {
-    $self->error_id(STRING_OVERFLOW, { label => $name, maxlength => $maxlength });
+    $self->add_error_id(STRING_OVERFLOW, { label => $name, maxlength => $maxlength });
     return 0;
   }
 
