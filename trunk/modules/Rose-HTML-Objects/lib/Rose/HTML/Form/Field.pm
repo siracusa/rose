@@ -722,10 +722,6 @@ sub xhtml_label
   my($self) = shift;
   no warnings 'uninitialized';
   return ''  unless(length $self->label);
-if($self->name =~ /expire/)
-{
-$DB::single = 1;
-}
   return $self->label_object(@_)->xhtml_tag;
 }
 
