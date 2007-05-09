@@ -7,7 +7,7 @@ use Rose::HTML::Object::Errors qw(:string);
 use Rose::HTML::Form::Field::Input;
 our @ISA = qw(Rose::HTML::Form::Field::Input);
 
-our $VERSION = '0.545';
+our $VERSION = '0.549';
 
 __PACKAGE__->delete_valid_html_attrs(qw(ismap usemap alt src));
 
@@ -45,7 +45,7 @@ sub validate
 
   my $maxlength = $self->maxlength;
 
-  my $name = sub { $self->label || $self->name };
+  my $name = sub { $self->error_label || $self->name };
 
   if(defined $maxlength && length($value) > $maxlength)
   {
