@@ -41,6 +41,7 @@ sub validate
   return $ok  unless($ok);
 
   my $value = $self->input_value;
+  $value = $self->output_value  if(ref $value);
   return 1  unless(defined $value && length $value);
 
   my $maxlength = $self->maxlength;
@@ -49,7 +50,7 @@ sub validate
 
   if(defined $maxlength && length($value) > $maxlength)
   {
-    $self->add_error_id(STRING_OVERFLOW, { label => $name, maxlength => $maxlength });
+    $self->error_id(STRING_OVERFLOW, { label => $name, maxlength => $maxlength });
     return 0;
   }
 
