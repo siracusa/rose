@@ -1,5 +1,12 @@
+0.765 (05.10.2007) - John Siracusa <siracusa@mindspring.com>
+
+    * Fixed a Manager bug that caused count queries to use incorrect
+      table aliases when passed empty with_objects or require_objects
+      array reference values.  (Reported by Denis Moskowitz)
+
 0.764 (05.04.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Added the strip() helper method.
     * Added a "find" method type to many-to-many relationships.
     * Added a "count" method type to ...-to-many relationships.
     * Added support for nested joins.

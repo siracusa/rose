@@ -16,7 +16,7 @@ use Rose::DB::Object::Constants
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.764';
+our $VERSION = '0.765';
 
 our $Debug = 0;
 
@@ -337,6 +337,9 @@ sub get_objects
   my $fetch            = delete $args{'fetch_only'};
   my $hints            = delete $args{'hints'} || {};
   my $select           = $args{'select'};
+
+  $with_objects    = undef  if(ref $with_objects && !@$with_objects);
+  $require_objects = undef  if(ref $require_objects && !@$require_objects);
 
   local $Debug = $args{'debug'}  if(exists $args{'debug'});
 
