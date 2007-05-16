@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 484;
+use Test::More tests => 486;
 
 BEGIN 
 {
@@ -21,7 +21,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 224)  unless($HAVE_PG);
+  skip("Postgres tests", 225)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -324,6 +324,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   is($o->bint1, '9223372036854775800', "bigint 1 - $db_type");
   is($o->bint2, '-9223372036854775800', "bigint 2 - $db_type");
   is($o->bint3, '9223372036854775000', "bigint 3 - $db_type");
+  is($o->bint4, undef, "bigint 3.1 - $db_type");
 
   $o->bint1($o->bint1 + 1);
   $o->save;
@@ -1152,6 +1153,7 @@ CREATE TABLE rose_db_object_test
   bint1          BIGINT DEFAULT 9223372036854775800,
   bint2          BIGINT DEFAULT -9223372036854775800,
   bint3          BIGINT,
+  bint4          BIGINT,
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1183,6 +1185,7 @@ CREATE TABLE rose_db_object_private.rose_db_object_test
   bint1          BIGINT DEFAULT 9223372036854775800,
   bint2          BIGINT DEFAULT -9223372036854775800,
   bint3          BIGINT,
+  bint4          BIGINT,
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1269,9 +1272,12 @@ EOF
       bint1    => { type => 'bigint', default => '9223372036854775800' },
       bint2    => { type => 'bigint', default => '-9223372036854775800' },
       bint3    => { type => 'bigint', with_init => 1, check_in => [ '9223372036854775000', 5 ] },
+      bint4    => { type => 'bigint', with_init => 1 },
       #last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
     );
+
+    sub init_bint4 { undef }
 
     MyPgObject->meta->add_unique_key('save');
 

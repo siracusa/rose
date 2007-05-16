@@ -4,7 +4,7 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.73'; # move up to make CPAN happy
+our $VERSION = '0.765'; # move up to make CPAN happy
 
 require Math::BigInt;
 
@@ -123,7 +123,7 @@ EOF
   # set code
   #
 
-  my $set_code = qq(\$self->{'$qkey'} = Math::BigInt->new(\$value););
+  my $set_code = qq(\$self->{'$qkey'} = defined \$value ? Math::BigInt->new(\$value) : undef;);
 
   #
   # column modified code
@@ -143,7 +143,7 @@ EOF
 
   if(defined $default)
   {
-    $default = Math::BigInt->new($default);
+    $default = defined $default ? Math::BigInt->new($default) : undef;
 
     $return_code=<<"EOF";
 return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
@@ -154,9 +154,10 @@ EOF
   elsif(defined $init_method)
   {
     $return_code=<<"EOF";
-return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
-  (scalar($column_modified_code, 
-          (\$self->{'$qkey'} = Math::BigInt->new(\$self->$init_method()))));
+return \$self->{'$qkey'}  if(defined \$self->{'$qkey'});
+$column_modified_code;
+my \$init_value = \$self->$init_method();
+return \$self->{'$qkey'} = defined \$init_value ? Math::BigInt->new(\$init_value) : undef;
 EOF
   }
   else
