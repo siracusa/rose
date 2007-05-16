@@ -1,5 +1,7 @@
-0.765 (05.10.2007) - John Siracusa <siracusa@mindspring.com>
+0.765 (05.16.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Setting a BigInt column to undef no longer sets it to zero.
+      (Reported by Jeffrey Horn)
     * Fixed a Manager bug that caused count queries to use incorrect
       table aliases when passed empty with_objects or require_objects
       array reference values.  (Reported by Denis Moskowitz)
