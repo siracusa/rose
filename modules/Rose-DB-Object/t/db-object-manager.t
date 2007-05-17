@@ -2954,6 +2954,7 @@ SKIP: foreach my $db_type ('mysql')
 
   my $objs = 
     MyMySQLObject->get_objectz(
+      #debug => 1,
       share_db     => 1,
       query        =>
       [
@@ -2971,6 +2972,7 @@ SKIP: foreach my $db_type ('mysql')
           and =>
           [
             status => 'active',
+            status => { ne_sql => "'active'" },
             [ \q(7 > ?), 3 ],
           ],
         ],
@@ -2991,7 +2993,7 @@ SKIP: foreach my $db_type ('mysql')
         start      => '2001-01-02',
         save_col   => [ 1, 5 ],
         last_modified => { le => 'now' },
-        date_created  => '2004-03-30 12:34:56'
+        date_created  => '2004-03-30 12:34:56',
       ],
       clauses => [ "LOWER(status) LIKE 'ac%'" ],
       limit   => 5,
