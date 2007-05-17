@@ -6,7 +6,7 @@ use Carp;
 
 our $Debug = 0;
 
-our $VERSION = '0.83';
+our $VERSION = '0.84';
 
 use Rose::Class::MakeMethods::Set
 (
@@ -42,11 +42,12 @@ sub import
 
   foreach my $arg (@_)
   {
-    if(!defined $target_class)
+    if(!defined $target_class && $arg !~ /^-/)
     {
       $target_class = $arg;
       next;
     }
+
     if($arg =~ /^-?-force$/)
     {
       $force = 1;
