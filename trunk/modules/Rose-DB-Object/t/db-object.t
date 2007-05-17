@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 548;
+use Test::More tests => 549;
 
 BEGIN 
 {
@@ -363,7 +363,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 115)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 116)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -677,6 +677,9 @@ SKIP: foreach my $db_type ('mysql')
 
   $o = MyMySQLObject->new(k1 => 1, k3 => 3);
   ok(!$o->load(speculative => 1), "load default key - $db_type"); 
+
+  eval { $o->load(use_key => 'id') };
+  ok($@, "use_key no such key - $db_type");
 
   $o->load(use_key => 'k1_k2_k3');
   is($o->k1, 1, "load specific key 1 - $db_type");  
