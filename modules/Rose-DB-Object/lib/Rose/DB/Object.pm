@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.764_02';
+our $VERSION = '0.764_03';
 
 our $Debug = 0;
 
@@ -178,6 +178,7 @@ sub load
         $null_key = 1;
       }
     }
+    else { Carp::croak "No unique key named '$key' is defined in ", ref($self) }
   }
   else
   {
