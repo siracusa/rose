@@ -221,7 +221,7 @@ sub validate
     unless($self->field($field)->validate)
     {
       push(@errors, $self->field($field)->errors);
-      $self->field($field)->error(undef);
+      $self->field($field)->set_error;
     }
   }
 
