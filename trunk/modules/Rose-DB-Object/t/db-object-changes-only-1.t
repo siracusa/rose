@@ -21,7 +21,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 225)  unless($HAVE_PG);
+  skip("Postgres tests", 226)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
