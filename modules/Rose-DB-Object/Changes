@@ -1,4 +1,4 @@
-0.764_03 (05.21.2007) - John Siracusa <siracusa@mindspring.com>
+0.765 (05.21.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Setting a BigInt column to undef no longer sets it to zero.
       (Reported by Jeffrey Horn)
