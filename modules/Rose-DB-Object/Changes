@@ -1,5 +1,7 @@
 0.765 (05.21.2007) - John Siracusa <siracusa@mindspring.com>
 
+    * Added a normalize_get_object_args() utility method to make
+      custom Manager methods less cumbersome to impelement. XXX: Needs Docs
     * Setting a BigInt column to undef no longer sets it to zero.
       (Reported by Jeffrey Horn)
     * Fixed a Manager bug that caused count queries to use incorrect

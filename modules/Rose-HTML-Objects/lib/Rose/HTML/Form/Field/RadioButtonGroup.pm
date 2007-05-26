@@ -10,7 +10,7 @@ use Rose::HTML::Form::Field::Group;
 use Rose::HTML::Form::Field::Group::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
 
-our $VERSION = '0.548';
+our $VERSION = '0.549';
 
 sub _item_class       { 'Rose::HTML::Form::Field::RadioButton' }
 sub _item_name        { 'radio button' }
@@ -39,19 +39,27 @@ sub html_table
 {
   my($self, %args) = @_;
 
-  $args{'cellpadding'} = 2  unless(exists $args{'cellpadding'});
-  $args{'cellspacing'} = 0  unless(exists $args{'cellspacing'});
-  $args{'tr'} = { valign => 'top' }  unless(exists $args{'tr'});
+  $args{'class'} = defined $args{'class'} ? 
+    "$args{'class'} radio-button-group" : 'radio-button-group';
+
+  #$args{'cellpadding'} = 2  unless(exists $args{'cellpadding'});
+  #$args{'cellspacing'} = 0  unless(exists $args{'cellspacing'});
+  #$args{'tr'} = { valign => 'top' }  unless(exists $args{'tr'});
+
+  $args{'tr'} ||= {};
   $args{'td'} ||= {};
 
-  $args{'table'}{'cellpadding'} = $args{'cellpadding'}
-    unless((exists $args{'table'} && !defined $args{'table'}) || 
-           exists $args{'table'}{'cellpadding'});
+  $args{'table'}{'class'} = defined $args{'table'}{'class'} ? 
+    "$args{'table'}{'class'} radio-button-group" : 
+    defined $args{'class'} ? $args{'class'} : undef;
 
-  $args{'table'}{'cellspacing'} = $args{'cellspacing'}
-    unless((exists $args{'table'} && !defined $args{'table'}) ||
-           exists $args{'table'}{'cellspacing'});
+  #$args{'table'}{'cellpadding'} = $args{'cellpadding'}
+  #  unless((exists $args{'table'} && !defined $args{'table'}) || 
+  #         exists $args{'table'}{'cellpadding'});
 
+  #$args{'table'}{'cellspacing'} = $args{'cellspacing'}
+  #  unless((exists $args{'table'} && !defined $args{'table'}) ||
+  #         exists $args{'table'}{'cellspacing'});
 
   if(delete $args{'_xhtml'})
   {
@@ -227,13 +235,9 @@ Returns an HTML table containing the radio buttons.  The table is constructed ac
 
 =over 4
 
-=item cellpadding
+=item class
 
-The value of the "table" tag's "cellpadding" HTML attribute. Defaults to 2.
-
-=item cellspacing
-
-The value of the "table" tag's "cellspacing" HTML attribute. Defaults to 0.
+The value of the "table" tag's "class" HTML attribute.  Defaults to C<radio-button-group>.  Any value passed for this attribute joined to C<radio-button-group> with a single space.
 
 =item columns
 
@@ -249,7 +253,7 @@ The number of rows in the table.  Defaults to L<rows()|/rows>, or 1 if L<rows()|
 
 =item table
 
-A reference to a hash of HTML attribute/value pairs to be used in the "table" tag.  Some attribute values be overridden by the equivalent standalone arguments (e.g., cellpadding and cellspacing).
+A reference to a hash of HTML attribute/value pairs to be used in the "table" tag.
 
 =item td
 
@@ -257,25 +261,11 @@ A reference to a hash of HTML attribute/value pairs to be used in the "td" tag, 
 
 =item tr
 
-A reference to a hash of HTML attribute/value pairs to be used in the "tr" tag, or an array of such hashes to be used in order for the table rows.  If the array contains fewer entries than the number of rows in the table, then the last entry is used for all of the remaining rows.  Defaults to C<{ valign =E<gt> 'top' }>.
+A reference to a hash of HTML attribute/value pairs to be used in the "tr" tag, or an array of such hashes to be used in order for the table rows.  If the array contains fewer entries than the number of rows in the table, then the last entry is used for all of the remaining rows.  Defaults to a reference to an empty hash, C<{}>.
 
 =back
 
 Specifying "rows" and "columns" values (either as ARGS or via L<rows()|/rows> and L<columns()|/columns>) that are both greater than 1 leads to undefined behavior if there are not exactly "rows x columns" radio buttons.  For predictable behavior, set either rows or columns to a value greater than 1, but not both.
-
-To remove HTML attributes that have default values, simply pass undef as the value for those attributes.  Example:
-
-    print $field->html_table();    
-
-    # <table cellpadding="2" cellspacing="0">
-    # <tr valign="top">
-    # <td>...
-
-    print $field->html_table(table => undef, tr => undef);
-
-    # <table>
-    # <tr>
-    # <td>...
 
 =item B<internal_value>
 

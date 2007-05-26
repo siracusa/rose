@@ -190,8 +190,8 @@ is($field->html_field,
   'clear()');
 
 my $table =<<"EOF";
-<table cellpadding="2" cellspacing="0">
-<tr valign="top">
+<table class="radio-button-group">
+<tr>
 <td><input name="fruits" type="radio" value="apple"> <label>Apple</label><br>
 <input name="fruits" type="radio" value="orange"> <label>Orange</label><br>
 <input name="fruits" type="radio" value="grape"> <label>Grape</label><br>
@@ -206,8 +206,8 @@ EOF
 is($field->html_table, $table, 'html_table() 1');
 
 $table =<<"EOF";
-<table border="1" cellpadding="1" cellspacing="2">
-<tr valign="top">
+<table border="1" cellpadding="1" cellspacing="2" class="zzz radio-button-group">
+<tr>
 <td><input name="fruits" type="radio" value="apple" /> <label>Apple</label><br>
 <input name="fruits" type="radio" value="orange" /> <label>Orange</label><br>
 <input name="fruits" type="radio" value="grape" /> <label>Grape</label><br>
@@ -219,12 +219,12 @@ $table =<<"EOF";
 </table>
 EOF
 
-is($field->xhtml_table(table => { cellpadding => 1, cellspacing => 2, border => 1 }),
+is($field->xhtml_table(class => 'yyy', table => { cellpadding => 1, cellspacing => 2, border => 1, class => 'zzz' }),
    $table, 'xhtml_table() 1');
 
 $table =<<"EOF";
-<table border="1" cellpadding="1" cellspacing="2">
-<tr valign="top">
+<table border="1" cellpadding="1" cellspacing="2" class="xxx radio-button-group">
+<tr>
 <td><input name="fruits" type="radio" value="apple"> <label>Apple</label><br>
 <input name="fruits" type="radio" value="orange"> <label>Orange</label><br>
 <input name="fruits" type="radio" value="grape"> <label>Grape</label><br>
@@ -236,12 +236,12 @@ $table =<<"EOF";
 </table>
 EOF
 
-is($field->html_table(table => { cellpadding => 1, cellspacing => 2, border => 1 }),
+is($field->html_table(class => 'xxx', table => { cellpadding => 1, cellspacing => 2, border => 1 }),
    $table, 'html_table() 2');
 
 $table =<<"EOF";
-<table cellpadding="2" cellspacing="0">
-<tr valign="top">
+<table class="radio-button-group">
+<tr>
 <td><input name="fruits" type="radio" value="apple"> <label>Apple</label><br>
 <input name="fruits" type="radio" value="orange"> <label>Orange</label><br>
 <input name="fruits" type="radio" value="grape"> <label>Grape</label><br>
