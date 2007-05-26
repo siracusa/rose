@@ -81,6 +81,32 @@ sub handle_error
   return 1;
 }
 
+sub normalize_get_object_args
+{
+  # Handle all these arg forms:
+  #
+  #   get_objects(a => b, c => d, ...);
+  #   get_objects([ ... ], a => b, c => d, ...)
+  #   get_objects({ ... }, a => b, c => d, ...)
+
+  if(ref $_[1])
+  {
+    my $class = shift;
+
+    if(ref $_[0] eq 'HASH')
+    {
+      return ($class, query => [ %{shift(@_)} ], @_);
+    }
+    elsif(ref $_[0] eq 'ARRAY')
+    {
+      return ($class, query => shift, @_);
+    }
+    else { Carp::croak 'Invalid arguments: ', join(', ', @_) }
+  }
+
+  return @_;
+}
+
 # XXX: These are duplicated from ManyToMany.pm because I don't want to use()
 # XXX: that module from here if I don't have to.  Lazy or foolish?  Hm.
 # XXX: Anyway, make sure they stay in sync!

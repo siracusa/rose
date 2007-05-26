@@ -1,9 +1,10 @@
-0.549 (05.09.2007) - John Siracusa <siracusa@mindspring.com>
+0.549 (05.18.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Corrected html_field() class HTML attribute value.
     * Added the set_error() and unset_error() methods.
     * Corrected error messages for Integer fields.
     * Connected Form's prepare() method with the correct implementation.
+    * Made DateTime fields more flexible about handling infinity.
     * Improved built-in maxlength validation.
 
 0.548 (05.04.2007) - John Siracusa <siracusa@mindspring.com>
