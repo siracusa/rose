@@ -208,12 +208,12 @@ is($field->html_table, $table, 'html_table() 1');
 $table =<<"EOF";
 <table border="1" cellpadding="1" cellspacing="2" class="zzz radio-button-group">
 <tr>
-<td><input name="fruits" type="radio" value="apple" /> <label>Apple</label><br>
-<input name="fruits" type="radio" value="orange" /> <label>Orange</label><br>
-<input name="fruits" type="radio" value="grape" /> <label>Grape</label><br>
-<input name="fruits" type="radio" value="pear" /> <label>Pear</label><br>
-<input name="fruits" type="radio" value="berry" /> <label>Berry</label><br>
-<input name="fruits" type="radio" value="squash" /> <label>Squash</label><br>
+<td><input name="fruits" type="radio" value="apple" /> <label>Apple</label><br />
+<input name="fruits" type="radio" value="orange" /> <label>Orange</label><br />
+<input name="fruits" type="radio" value="grape" /> <label>Grape</label><br />
+<input name="fruits" type="radio" value="pear" /> <label>Pear</label><br />
+<input name="fruits" type="radio" value="berry" /> <label>Berry</label><br />
+<input name="fruits" type="radio" value="squash" /> <label>Squash</label><br />
 <input name="fruits" type="radio" value="cherry" /> <label>Cherry</label></td>
 </tr>
 </table>

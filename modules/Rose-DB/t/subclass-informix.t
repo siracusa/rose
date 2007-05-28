@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 133);
+    Test::More->import(tests => 135);
   }
 }
 
@@ -179,6 +179,12 @@ my $s = $db->parse_set(q(SET{'a','b'}));
 
 ok(@$s == 2 && $s->[0] eq 'a' && $s->[1] eq 'b', 'parse_set() 1');
 
+$s = $db->parse_set(q(SET{'4     '}));
+ok(@$s == 1 && $s->[0] eq '4     ', 'parse_set() 2');
+
+$s = $db->parse_set(q(SET{'4     '}), { value_type => 'integer' });
+ok(@$s == 1 && $s->[0] eq '4', 'parse_set() 3');
+
 SKIP:
 {
   eval { $db->connect };
@@ -206,7 +212,7 @@ SKIP:
   is($db->format_datetime_year_to_second(parse_date('12/31/2002 12:34:56', 'floating')), '2002-12-31 12:34:56', "format_datetime_year_to_second() floating");
   is($db->format_datetime_year_to_minute(parse_date('12/31/2002 12:34:56', 'floating')), '2002-12-31 12:34', "format_datetime_year_to_minute() floating");
   is($db->format_datetime_year_to_month(parse_date('12/31/2002 12:34:56', 'floating')), '2002-12', "format_datetime_year_to_month() floating");
-  
+
   is($db->format_timestamp(parse_date('12/31/2002 12:34:56.12345', 'floating')), '2002-12-31 12:34:56.12345', "format_timestamp() floating");
   #is($db->format_time(parse_date('12/31/2002 12:34:56', 'floating')), '12:34:56', "format_datetime() floating");
 

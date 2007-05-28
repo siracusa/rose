@@ -476,7 +476,8 @@ sub html_table
 
   return  unless(ref $items && @$items);
 
-  my $format_item = $args{'format_item'} || 'html';
+  my $xhtml = delete $args{'_xhtml'} || 0;
+  my $format_item = $args{'format_item'} || ($xhtml ? \&_xhtml_item : \&_html_item);
 
   my $total = @$items;
   my $rows  = $args{'rows'}    || $self->rows    || 1;
@@ -504,7 +505,7 @@ sub html_table
     }
   }
 
-  my $sep = ($self->linebreak) ? $self->html_linebreak : ' ';
+  my $sep = ($self->linebreak) ? $xhtml ? $self->xhtml_linebreak : $self->html_linebreak : ' ';
 
   my $html = '<table' . Rose::HTML::Util::html_attrs_string($args{'table'}) . ">\n";
 
