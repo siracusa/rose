@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.764';
+our $VERSION = '0.765';
 
 our $Debug = 0;
 
@@ -1463,6 +1463,8 @@ sub set
 
   my $formatted_key = column_value_formatted_key($key);
 
+  my $type = $args->{'value_type'} || 'scalar';
+
   my %methods;
 
   if($interface eq 'get_set')
@@ -1487,7 +1489,7 @@ sub set
           }
           else
           {
-            my $set = $db->parse_set(@_);
+            my $set = $db->parse_set(@_, { type => $type });
 
             if($choices)
             {
@@ -1513,8 +1515,9 @@ sub set
         }
         elsif(!defined $self->{$key})
         {
-          my $set = $db->parse_set(defined $self->{$formatted_key,$driver} ? 
-                                   $self->{$formatted_key,$driver} : $default);
+          my $set = $db->parse_set((defined $self->{$formatted_key,$driver} ? 
+                                    $self->{$formatted_key,$driver} : $default),
+                                   { type => $type });
 
           if($choices)
           {
@@ -1543,7 +1546,7 @@ sub set
         # Pull default through if necessary
         unless(defined $self->{$key} || defined $self->{$formatted_key,$driver})
         {
-          $self->{$key} = $db->parse_set($default);
+          $self->{$key} = $db->parse_set($default, { type => $type });
 
           if(!defined $default || defined $self->{$key})
           {
@@ -1585,7 +1588,7 @@ sub set
           }
           else
           {
-            my $set = $db->parse_set(@_);
+            my $set = $db->parse_set(@_, { type => $type });
 
             if($choices)
             {
@@ -1630,7 +1633,7 @@ sub set
 
         if(defined $self->{$formatted_key,$driver})
         {
-          $self->{$key} = $db->parse_set($self->{$formatted_key,$driver});
+          $self->{$key} = $db->parse_set($self->{$formatted_key,$driver}, { type => $type });
           $self->{$formatted_key,$driver} = undef;
 
           return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;
@@ -1655,7 +1658,7 @@ sub set
 
         if(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key,$driver}))
         {
-          my $set = $db->parse_set($default);
+          my $set = $db->parse_set($default, { type => $type });
 
           if($choices)
           {
@@ -1697,7 +1700,7 @@ sub set
 
         if(defined $self->{$formatted_key,$driver})
         {
-          $self->{$key} = $db->parse_set($self->{$formatted_key,$driver});
+          $self->{$key} = $db->parse_set($self->{$formatted_key,$driver}, { type => $type });
           $self->{$formatted_key,$driver} = undef;
 
           return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;
@@ -1735,7 +1738,7 @@ sub set
 
         if(defined $self->{$formatted_key,$driver})
         {
-          $self->{$key} = $db->parse_set($self->{$formatted_key,$driver});
+          $self->{$key} = $db->parse_set($self->{$formatted_key,$driver}, { type => $type });
           $self->{$formatted_key,$driver} = undef;
 
           return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;
@@ -1763,7 +1766,7 @@ sub set
       }
       else
       {
-        my $set = $db->parse_set(@_);
+        my $set = $db->parse_set(@_, { type => $type });
 
         if($choices)
         {
@@ -1805,7 +1808,7 @@ sub set
 
       if(defined $self->{$formatted_key,$driver})
       {
-        $self->{$key} = $db->parse_set($self->{$formatted_key,$driver});
+        $self->{$key} = $db->parse_set($self->{$formatted_key,$driver}, { type => $type });
         $self->{$formatted_key,$driver} = undef;
 
         return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;

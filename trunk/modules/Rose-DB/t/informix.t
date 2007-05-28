@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 133);
+    Test::More->import(tests => 135);
   }
 }
 
@@ -178,6 +178,12 @@ ok($@ =~ /undefined/i, 'format_set() 4');
 my $s = $db->parse_set(q(SET{'a','b'}));
 
 ok(@$s == 2 && $s->[0] eq 'a' && $s->[1] eq 'b', 'parse_set() 1');
+
+$s = $db->parse_set(q(SET{'4     '}));
+ok(@$s == 1 && $s->[0] eq '4     ', 'parse_set() 2');
+
+$s = $db->parse_set(q(SET{'4     '}), { value_type => 'integer' });
+ok(@$s == 1 && $s->[0] eq '4', 'parse_set() 3');
 
 SKIP:
 {

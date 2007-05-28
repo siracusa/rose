@@ -259,12 +259,12 @@ is($field->html_table(table => { cellpadding => 1, cellspacing => 2, border => 1
 $table =<<"EOF";
 <table border="1" cellpadding="1" cellspacing="2" class="yyy checkbox-group">
 <tr>
-<td><input name="fruits" type="checkbox" value="apple" /> <label>Apple</label><br>
-<input name="fruits" type="checkbox" value="orange" /> <label>Orange</label><br>
-<input name="fruits" type="checkbox" value="grape" /> <label>Grape</label><br>
-<input name="fruits" type="checkbox" value="pear" /> <label>Pear</label><br>
-<input name="fruits" type="checkbox" value="berry" /> <label>Berry</label><br>
-<input name="fruits" type="checkbox" value="squash" /> <label>Squash</label><br>
+<td><input name="fruits" type="checkbox" value="apple" /> <label>Apple</label><br />
+<input name="fruits" type="checkbox" value="orange" /> <label>Orange</label><br />
+<input name="fruits" type="checkbox" value="grape" /> <label>Grape</label><br />
+<input name="fruits" type="checkbox" value="pear" /> <label>Pear</label><br />
+<input name="fruits" type="checkbox" value="berry" /> <label>Berry</label><br />
+<input name="fruits" type="checkbox" value="squash" /> <label>Squash</label><br />
 <input name="fruits" type="checkbox" value="cherry" /> <label>Cherry</label></td>
 </tr>
 </table>

@@ -359,9 +359,13 @@ sub parse_set
   my($self) = shift;
 
   return $_[0]  if(ref $_[0] eq 'ARRAY');
-  return [ @_ ] if(@_ > 1);
+  return [ @_ ] if(@_ > 1 && !ref $_[-1]);
 
   my $val = $_[0];
+  my $options = ref $_[-1] eq 'HASH' ? $_[-1] : {};
+
+  my $numeric = 
+    ($options->{'type'} =~ /^(?:(?:big)?(?:float|int(?:eger)?|num(?:eric)?)|decimal)$/) ? 1 : 0;
 
   return undef  unless(defined $val);
 
@@ -372,6 +376,11 @@ sub parse_set
   while($val =~ s/(?:'((?:[^'\\]+|\\.)*)'|([^',]+))(?:,|$)//)
   {
     push(@set, (defined $1) ? $1 : $2);
+    
+    if($numeric)
+    {
+      $set[-1] =~ s/\s+//g;
+    }
   }
 
   return \@set;

@@ -61,7 +61,7 @@ sub html_table
   #  unless((exists $args{'table'} && !defined $args{'table'}) ||
   #         exists $args{'table'}{'cellspacing'});
 
-  if(delete $args{'_xhtml'})
+  if($args{'_xhtml'})
   {
     return
       $self->SUPER::html_table(items       => scalar $self->radio_buttons,
