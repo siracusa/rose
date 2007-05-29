@@ -3742,23 +3742,23 @@ Valid parameters are:
 
 =over 4
 
-=item C<all BOOL>
+=item B<all BOOL>
 
 If set to a true value, this parameter indicates an explicit request to delete all rows from the table.  If both the C<all> and the C<where> parameters are passed, a fatal error will occur.
 
-=item C<db DB>
+=item B<db DB>
 
 A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> method of the C<object_class>. 
 
-=item C<prepare_cached BOOL>
+=item B<prepare_cached BOOL>
 
 If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will delete the objects.  If omitted, the default value is determined by the L<dbi_prepare_cached|/dbi_prepare_cached> class method.
 
-=item C<object_class CLASS>
+=item B<object_class CLASS>
 
 The name of the L<Rose::DB::Object>-derived class that fronts the table from which rows are to be deleted.  This parameter is required; a fatal error will occur if it is omitted.  Defaults to the value returned by the L<object_class|/object_class> class method.
 
-=item C<where ARRAYREF>
+=item B<where ARRAYREF>
 
 The query parameters, passed as a reference to an array of name/value pairs.  These pairs are used to formulate the "where" clause of the SQL query that is used to delete the rows from the table.  Arbitrarily nested boolean logic is supported.
 
@@ -3863,7 +3863,7 @@ Valid parameters to L<get_objects|/get_objects> are:
 
 =over 4
 
-=item C<allow_empty_lists BOOL>
+=item B<allow_empty_lists BOOL>
 
 If set to true, C<query> parameters with empty lists as values are allowed.  For example:
 
@@ -3878,11 +3878,11 @@ If set to true, C<query> parameters with empty lists as values are allowed.  For
 
 By default, passing an empty list as a value will cause a fatal error.
 
-=item C<db DB>
+=item B<db DB>
 
 A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> method of the C<object_class>.
 
-=item C<distinct [ BOOL | ARRAYREF ]>
+=item B<distinct [ BOOL | ARRAYREF ]>
 
 If set to any kind of true value, then the "DISTINCT" SQL keyword will be added to the "SELECT" statement.  Specific values trigger the behaviors described below.
 
@@ -3892,13 +3892,13 @@ If set to a reference to an array of table names, "tN" table aliases, or relatio
 
 This parameter conflicts with the C<fetch_only> parameter in the case where both provide a list of table names or aliases.  In this case, if the value of the C<distinct> parameter is also reference to an array table names or aliases, then a fatal error will occur.
 
-=item C<fetch_only ARRAYREF>
+=item B<fetch_only ARRAYREF>
 
 ARRAYREF should be a reference to an array of table names or "tN" table aliases. Only the columns from the corresponding tables will be fetched.  In the case of relationships that involve more than one table, only the "most distant" table is considered.  (e.g., The map table is ignored in a "many to many" relationship.)  Columns from the primary table ("t1") are always selected, regardless of whether or not it appears in the list.
 
 This parameter conflicts with the C<distinct> parameter in the case where both provide a list of table names or aliases.  In this case, then a fatal error will occur.
 
-=item C<inject_results BOOL>
+=item B<inject_results BOOL>
 
 If true, then the data returned from the database will be directly "injected" into the objects returned by this method, bypassing the constructor and column mutator methods for each object class.  The default is false.  This parameter is ignored (i.e., treated as if it were false) if the C<select> parameter is passed.
 
@@ -3906,27 +3906,27 @@ This parameter is useful for situations where the performance of L<get_objects|/
 
 The default L<Rose::DB::Object> L<constructor|Rose::DB::Object/new> and the column mutator methods created by the column classes included in the L<Rose::DB::Object> module distribution do not have any side-effects and should therefore be safe to use with this parameter.
 
-=item C<limit NUM>
+=item B<limit NUM>
 
 Return a maximum of NUM objects.
 
-=item C<limit_with_subselect BOOL>
+=item B<limit_with_subselect BOOL>
 
 This parameter controls whether or not this method will consider using a sub-query to express  C<limit>/C<offset> constraints when fetching sub-objects related through one of the "...-to-many" relationship types.  Not all databases support this syntax, and not all queries can use it even in supported databases.  If this parameter is true, the feature will be used when possible.
 
 The default value is determined by the L<default_limit_with_subselect|/default_limit_with_subselect> class method.
 
-=item C<nested_joins BOOL>
+=item B<nested_joins BOOL>
 
 This parameter controls whether or not this method will consider using nested JOIN syntax when fetching related objects.  Not all databases support this syntax, and not all queries will use it even in supported databases.  If this parameter is true, the feature will be used when possible.
 
 The default value is determined by the L<default_nested_joins|/default_nested_joins> class method.
 
-=item C<multi_many_ok BOOL>
+=item B<multi_many_ok BOOL>
 
 If true, do not print a warning when attempting to do multiple LEFT OUTER JOINs against tables related by "... to many" relationships.  See the documentation for the C<with_objects> parameter for more information.
 
-=item C<nonlazy [ BOOL | ARRAYREF ]>
+=item B<nonlazy [ BOOL | ARRAYREF ]>
 
 By default, L<get_objects|/get_objects> will honor all L<load-on-demand columns|Rose::DB::Object::Metadata::Column/load_on_demand> when fetching objects.  Use this parameter to override that behavior and select all columns instead.
 
@@ -3934,21 +3934,21 @@ If the value is a true boolean value (typically "1"), then all columns will be f
 
 The value can also be a reference to an array of relationship names.  The sub-objects corresponding to each relationship name will have all their columns selected.  To refer to the main class (the "t1" table), use the special name "self".
 
-=item C<object_args HASHREF>
+=item B<object_args HASHREF>
 
 A reference to a hash of name/value pairs to be passed to the constructor of each C<object_class> object fetched, in addition to the values from the database.
 
-=item C<object_class CLASS>
+=item B<object_class CLASS>
 
 The name of the L<Rose::DB::Object>-derived objects to be fetched.  This parameter is required; a fatal error will occur if it is omitted.  Defaults to the value returned by the L<object_class|/object_class> class method.
 
-=item C<offset NUM>
+=item B<offset NUM>
 
 Skip the first NUM rows.  If the database supports some sort of "limit with offset" syntax (e.g., "LIMIT 10 OFFSET 20") then it will be used.  Otherwise, the first NUM rows will be fetched and then discarded.
 
 This parameter can only be used along with the C<limit> parameter, otherwise a fatal error will occur.
 
-=item C<page NUM>
+=item B<page NUM>
 
 Show page number NUM of objects.  Pages are numbered starting from 1.  A page number less than or equal to zero causes the page number to default to 1.
 
@@ -3956,17 +3956,17 @@ The number of objects per page can be set by the C<per_page> parameter.  If the 
 
 If this parameter is included along with either of the C<limit> or <offset> parameters, a fatal error will occur.
 
-=item C<per_page NUM>
+=item B<per_page NUM>
 
 The number of objects per C<page>.   Defaults to the value returned by the L<default_objects_per_page|/default_objects_per_page> class method (20, by default).
 
 If this parameter is included along with either of the C<limit> or <offset> parameters, a fatal error will occur.
 
-=item C<prepare_cached BOOL>
+=item B<prepare_cached BOOL>
 
 If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will fetch the objects.  If omitted, the default value is determined by the L<dbi_prepare_cached|/dbi_prepare_cached> class method.
 
-=item C<query ARRAYREF>
+=item B<query ARRAYREF>
 
 The query parameters, passed as a reference to an array of name/value pairs.  These pairs are used to formulate the "where" clause of the SQL query that, in turn, is used to fetch the objects from the database.  Arbitrarily nested boolean logic is supported.
 
@@ -3982,7 +3982,7 @@ To select only products whose vendors are in the United States, use a query argu
 
 This assumes that the C<Product> class has a relationship or foreign key named "vendor" that points to the product's C<Vendor>, and that the C<Vendor> class has a foreign key or relationship named "region" that points to the vendor's C<Region>, and that 'vendor.region' (or any foreign key or relationship name chain that begins with 'vendor.region.') is an argument to the C<with_objects> or C<require_objects> parameters.
 
-=item C<require_objects ARRAYREF>
+=item B<require_objects ARRAYREF>
 
 Only fetch rows from the primary table that have all of the associated sub-objects listed in ARRAYREF, a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>," "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>," and  "L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany>".
 
@@ -4002,7 +4002,7 @@ B<Warning:> there may be a geometric explosion of redundant data returned by the
 
 B<Note:> the C<require_objects> list currently cannot be used to simultaneously fetch two objects that both front the same database table, I<but are of different classes>.  One workaround is to make one class use a synonym or alias for one of the tables.  Another option is to make one table a trivial view of the other.  The objective is to get the table names to be different for each different class (even if it's just a matter of letter case, if your database is not case-sensitive when it comes to table names).
 
-=item C<select [ LIST | ARRAYREF ]>
+=item B<select [ LIST | ARRAYREF ]>
 
 Select only the columns specified in either a comma-separated string of column names or a reference to an array of column names.  Strings are naively split between each comma.  If you need more complex parsing, please use the array-reference argument format instead.
 
@@ -4018,11 +4018,11 @@ This parameter conflicts with the C<fetch_only> parameter.  A fatal error will o
 
 If this parameter is omitted, then all columns from all participating tables are selected (optionally modified by the C<nonlazy> parameter).
 
-=item C<share_db BOOL>
+=item B<share_db BOOL>
 
 If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it is constructed.  Defaults to true.
 
-=item C<sort_by [ CLAUSE | ARRAYREF ]>
+=item B<sort_by [ CLAUSE | ARRAYREF ]>
 
 A fully formed SQL "ORDER BY ..." clause, sans the words "ORDER BY", or a reference to an array of strings to be joined with a comma and appended to the "ORDER BY" clause.
 
@@ -4030,7 +4030,7 @@ Within each string, any instance of "NAME." will be replaced with the appropriat
 
 If selecting sub-objects (via C<require_objects> or C<with_objects>) that are related through "one to many" or "many to many" relationships, the first condition in the sort order clause must be a column in the primary table (t1).  If this condition is not met, the list of primary key columns will be added to the beginning of the sort order clause automatically.
 
-=item C<unique_aliases BOOL>
+=item B<unique_aliases BOOL>
 
 If true, and if there is no explicit value for the C<select> parameter and more than one table is participating in the query, then each selected column will be given a unique alias by prefixing it with its table alias and an underscore.  The default value is false.  Example:
 
@@ -4047,7 +4047,7 @@ If true, and if there is no explicit value for the C<select> parameter and more 
 
 These unique aliases provide a technique of last resort for unambiguously addressing a column in a query clause.
 
-=item C<with_map_records [ BOOL | METHOD | HASHREF ]>
+=item B<with_map_records [ BOOL | METHOD | HASHREF ]>
 
 When fetching related objects through a "L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany>" relationship, objects of the L<map class|Rose::DB::Object::Metadata::Relationship::ManyToMany/map_class> are not retrieved by default.  Use this parameter to override the default behavior.
 
@@ -4057,7 +4057,7 @@ If a method name is provided instead, then each object fetched through a mapping
 
 If the value is a reference to a hash, then the keys of the hash should be "many to many" relationship names, and the values should be the method names through which the maps records will be available for each relationship.
 
-=item C<with_objects ARRAYREF>
+=item B<with_objects ARRAYREF>
 
 Also fetch sub-objects (if any) associated with rows in the primary table based on a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>," "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>," and  "L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany>".
 
@@ -4091,27 +4091,27 @@ Fetch objects using a custom SQL query.  Pass either a single SQL query string o
 
 =over 4
 
-=item C<args ARRAYREF>
+=item B<args ARRAYREF>
 
 A reference to an array of arguments to be passed to L<DBI>'s L<execute|DBI/execute> method when the query is run.  The number of items in this array must exactly match the number of placeholders in the SQL query.
 
-=item C<db DB>
+=item B<db DB>
 
 A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> method of the C<object_class>.
 
-=item C<object_class CLASS>
+=item B<object_class CLASS>
 
 The class name of the L<Rose::DB::Object>-derived objects to be fetched.  Defaults to the value returned by the L<object_class|/object_class> class method.
 
-=item C<prepare_cached BOOL>
+=item B<prepare_cached BOOL>
 
 If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will fetch the objects.  If omitted, the default value is determined by the L<dbi_prepare_cached|/dbi_prepare_cached> class method.
 
-=item C<share_db BOOL>
+=item B<share_db BOOL>
 
 If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it is constructed.  Defaults to true.
 
-=item C<sql SQL>
+=item B<sql SQL>
 
 The SQL query string.  This parameter is required.
 
@@ -4395,31 +4395,31 @@ Pass either a method name and an SQL query string or name/value parameters as ar
 
 =over 4
 
-=item C<iterator BOOL>
+=item B<iterator BOOL>
 
 If true, the method created will return a L<Rose::DB::Object::Iterator> object.
 
-=item C<object_class CLASS>
+=item B<object_class CLASS>
 
 The class name of the L<Rose::DB::Object>-derived objects to be fetched.  Defaults to the value returned by the L<object_class|/object_class> class method.
 
-=item C<params ARRAYREF>
+=item B<params ARRAYREF>
 
 To allow the method that will be created to accept named parameters (name/value pairs) instead of positional parameters, provide a reference to an array of parameter names in the order that they should be passed to the call to L<DBI>'s L<execute|DBI/execute> method.
 
-=item C<method NAME>
+=item B<method NAME>
 
 The name of the method to be created.  This parameter is required.
 
-=item C<prepare_cached BOOL>
+=item B<prepare_cached BOOL>
 
 If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will fetch the objects.  If omitted, the default value is determined by the L<dbi_prepare_cached|/dbi_prepare_cached> class method.
 
-=item C<share_db BOOL>
+=item B<share_db BOOL>
 
 If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it is constructed.  Defaults to true.
 
-=item C<sql SQL>
+=item B<sql SQL>
 
 The SQL query string.  This parameter is required.
 
@@ -4519,19 +4519,19 @@ Valid parameters are:
 
 =over 4
 
-=item C<all BOOL>
+=item B<all BOOL>
 
 If set to a true value, this parameter indicates an explicit request to update all rows in the table.  If both the C<all> and the C<where> parameters are passed, a fatal error will occur.
 
-=item C<db DB>
+=item B<db DB>
 
 A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> method of the C<object_class>.
 
-=item C<object_class CLASS>
+=item B<object_class CLASS>
 
 The class name of the L<Rose::DB::Object>-derived class that fronts the table whose rows will to be updated.  This parameter is required; a fatal error will occur if it is omitted.  Defaults to the value returned by the L<object_class|/object_class> class method.
 
-=item C<set PARAMS>
+=item B<set PARAMS>
 
 The names and values of the columns to be updated.  PARAMS should be a reference to a hash.  Each key of the hash should be a column name or column get/set method name.  If a value is a simple scalar, then it is passed through the get/set method that services the column before being incorporated into the SQL query.
 
@@ -4570,7 +4570,7 @@ would produce the an SQL statement something like this (depending on the databas
         end_date   > '2005-09-20'
       )
 
-=item C<where PARAMS>
+=item B<where PARAMS>
 
 The query parameters, passed as a reference to an array of name/value pairs.  These PARAMS are used to formulate the "where" clause of the SQL query that is used to update the rows in the table.  Arbitrarily nested boolean logic is supported.
 

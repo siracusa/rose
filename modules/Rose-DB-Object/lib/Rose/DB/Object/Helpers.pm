@@ -671,7 +671,7 @@ This method prepares an object for serialization by stripping out internal struc
 
 =over 4
 
-=item C<leave [NAME|ARRAYREF]>
+=item B<leave [ NAME  | ARRAYREF ]>
 
 This parameter specifies which items to leave un-stripped.  The value may be an item name or a reference to an array of item names.  Valid names are:
 
