@@ -72,7 +72,7 @@ is($meta->class_for(table => 'mytable'), 'MyDBObject',
 is(Rose::DB::Object::Metadata->class_for(table => 'mytable'), 'MyDBObject', 
   'class_for() as class method');
 
-is(join(',', $meta->column_names), 'bar,baz,bits,date_created,flag,flag2,foo,id,last_modified,name,nums,password,save,start,status', 'column_names');
+is(join(',', sort $meta->column_names), 'bar,baz,bits,date_created,flag,flag2,foo,id,last_modified,name,nums,password,save,start,status', 'column_names');
 
 $aliases = $meta->column_aliases;
 
@@ -81,7 +81,7 @@ is($aliases->{'save'}, 'save_col', 'column_aliases() 4');
 
 my $methods = $meta->column_rw_method_names;
 
-is(join(',', @$methods), 'bar,baz,bits,date_created,flag,flag2,foo,id,last_modified,name,nums,password,save_col,start,status', 'column_rw_method_names()');
+is(join(',', sort @$methods), 'bar,baz,bits,date_created,flag,flag2,foo,id,last_modified,name,nums,password,save_col,start,status', 'column_rw_method_names()');
 
 eval { $meta->convention_manager('nonesuch') };
 ok($@, 'convention_manager nonesuch');
