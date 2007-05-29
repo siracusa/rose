@@ -364,6 +364,7 @@ sub parse_set
   my $val = $_[0];
   my $options = ref $_[-1] eq 'HASH' ? $_[-1] : {};
 
+  no warnings 'uninitialized';
   my $numeric = 
     ($options->{'type'} =~ /^(?:(?:big)?(?:float|int(?:eger)?|num(?:eric)?)|decimal)$/) ? 1 : 0;
 
