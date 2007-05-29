@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.764';
+our $VERSION = '0.765';
 
 our $Debug = 0;
 
@@ -4483,7 +4483,7 @@ Call L<prime_caches|/prime_caches> on all L<registered_classes|/registered_class
 
 =over 4
 
-=item C<db DB>
+=item B<db DB>
 
 A L<Rose::DB>-derived object used to determine which data source the cached metadata will be generated on behalf of.  (Each data source has its own set of cached metadata.)  This parameter is optional.  If it is not passed, then the L<Rose::DB>-derived object returned by the L<init_db|Rose::DB::Object/init_db> method for each L<class|/class> will be used instead.
 
@@ -5204,7 +5204,7 @@ PARAMS are name/value pairs.  Valid parameters are:
 
 =over 4
 
-=item C<db DB>
+=item B<db DB>
 
 A L<Rose::DB>-derived object used to determine which data source the cached metadata will be generated on behalf of.  (Each data source has its own set of cached metadata.)  This parameter is optional.  If it is not passed, then the L<Rose::DB>-derived object returned by the L<init_db|Rose::DB::Object/init_db> method for this L<class|/class> will be used instead.
 
@@ -5521,19 +5521,19 @@ By default, if a class is a L<map class|Rose::DB::Object::Metadata::Relationship
 
 B<Note:> If some classes that are not actually map classes are being skipped, you should not use this parameter to force them to be included.  It's more appropriate to make your own custom L<convention manager|Rose::DB::Object::ConventionManager> subclass and then override the L<is_map_class|Rose::DB::Object::ConventionManager/is_map_class> method to make the correct determination.
 
-=item C<replace_existing BOOL> 
+=item B<replace_existing BOOL> 
 
 If true, then the auto-generated relationships replace any existing relationships.  Otherwise, any existing relationships are left as-is.
 
-=item C<relationship_types ARRAYREF>
+=item B<relationship_types ARRAYREF>
 
 A reference to an array of relationship L<type|Rose::DB::Object::Metadata::Relationship/type> names.  Only relationships of these types will be created.  If omitted, relationships of L<all types|/relationship_type_classes> will be created.  If passed a reference to an emoty array, no relationships will be created.
 
-=item C<types ARRAYREF>
+=item B<types ARRAYREF>
 
 This is an alias for the C<relationship_types> parameter.
 
-=item C<with_relationships [ BOOL | ARRAYREF ]>
+=item B<with_relationships [ BOOL | ARRAYREF ]>
 
 This is the same as the C<relationship_types> parameter except that it also accepts a boolean value.  If true, then relationships of L<all types|/relationship_type_classes> will be created.  If false, then none will be created.
 
@@ -5603,19 +5603,19 @@ Auto-initialize the columns, primary key, foreign keys, and unique keys, then re
 
 =over 4
 
-=item * braces STYLE
+=item B<braces STYLE>
 
 The brace style to use in the generated Perl code.  STYLE must be either "k&r" or "bsd".  The default value is determined by the return value of the L<default_perl_braces|/default_perl_braces> class method.
 
-=item * indent INT
+=item B<indent INT>
 
 The integer number of spaces to use for each level of indenting in the generated Perl code.  The default value is determined by the return value of the L<default_perl_indent|/default_perl_indent> class method.
 
-=item * isa CLASSES
+=item B<isa CLASSES>
 
 The list of base classes to use in the generated class definition.  CLASSES should be a single class name, or a reference to an array of class names.  The default base class is L<Rose::DB::Object>.
 
-=item * use_setup BOOL
+=item B<use_setup BOOL>
 
 If true, then the generated class definition will include a call to the L<setup|/setup> method.  Otherwise, the generated code will contain individual methods calls.  The default value for this parameter is B<true>; the L<setup|/setup> method is the recommended way to initialize a class.
 
@@ -5832,15 +5832,15 @@ Auto-initialize the columns (if necessary), then return the Perl source code tha
 
 =over 4
 
-=item * braces STYLE
+=item B<braces STYLE>
 
 The brace style to use in the generated Perl code.  STYLE must be either "k&r" or "bsd".  The default value is determined by the return value of the L<default_perl_braces|/default_perl_braces> class method.
 
-=item * for_setup BOOL
+=item B<for_setup BOOL>
 
 If true, then the generated Perl code will be a method/arguments pair suitable for use as a parameter to L<setup|/setup> method.  The default is false.
 
-=item * indent INT
+=item B<indent INT>
 
 The integer number of spaces to use for each level of indenting in the generated Perl code.  The default value is determined by the return value of the L<default_perl_indent|/default_perl_indent> class method.
 
@@ -5854,15 +5854,15 @@ Auto-initialize the foreign keys (if necessary), then return the Perl source cod
 
 =over 4
 
-=item * braces STYLE
+=item B<braces STYLE>
 
 The brace style to use in the generated Perl code.  STYLE must be either "k&r" or "bsd".  The default value is determined by the return value of the L<default_perl_braces|/default_perl_braces> class method.
 
-=item * for_setup BOOL
+=item B<for_setup BOOL>
 
 If true, then the generated Perl code will be a method/arguments pair suitable for use as a parameter to L<setup|/setup> method.  The default is false.
 
-=item * indent INT
+=item B<indent INT>
 
 The integer number of spaces to use for each level of indenting in the generated Perl code.  The default value is determined by the return value of the L<default_perl_indent|/default_perl_indent> class method.
 
@@ -5876,15 +5876,15 @@ Returns a Perl class definition for a L<Rose::DB::Object::Manager>-derived class
 
 =over 4
 
-=item * base_name NAME
+=item B<base_name NAME>
 
 The value of the L<base_name|Rose::DB::Object::Manager/base_name> parameter that will be passed to the call to L<Rose::DB::Object::Manager>'s L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.  Defaults to the return value of the L<convention manager|/convention_manager>'s L<class_to_table_plural|Rose::DB::Object::ConventionManager/class_to_table_plural> method.
 
-=item * class CLASS
+=item B<class CLASS>
 
 The name of the manager class.  Defaults to the L<object class|/class> with "::Manager" appended.
 
-=item * isa CLASSES
+=item B<isa CLASSES>
 
 The name of a single class or a reference to an array of class names to be included in the C<@ISA> array for the manager class.  One of these classes must inherit from L<Rose::DB::Object::Manager>.  Defaults to L<Rose::DB::Object::Manager>.
 
@@ -5927,15 +5927,15 @@ Auto-initialize the relationships (if necessary), then return the Perl source co
 
 =over 4
 
-=item * braces STYLE
+=item B<braces STYLE>
 
 The brace style to use in the generated Perl code.  STYLE must be either "k&r" or "bsd".  The default value is determined by the return value of the L<default_perl_braces|/default_perl_braces> class method.
 
-=item * for_setup BOOL
+=item B<for_setup BOOL>
 
 If true, then the generated Perl code will be a method/arguments pair suitable for use as a parameter to L<setup|/setup> method.  The default is false.
 
-=item * indent INT
+=item B<indent INT>
 
 The integer number of spaces to use for each level of indenting in the generated Perl code.  The default value is determined by the return value of the L<default_perl_indent|/default_perl_indent> class method.
 
@@ -5949,15 +5949,15 @@ Auto-initialize the table name (if necessary), then return the Perl source code 
 
 =over 4
 
-=item * braces STYLE
+=item B<braces STYLE>
 
 The brace style to use in the generated Perl code.  STYLE must be either "k&r" or "bsd".  The default value is determined by the return value of the L<default_perl_braces|/default_perl_braces> class method.
 
-=item * for_setup BOOL
+=item B<for_setup BOOL>
 
 If true, then the generated Perl code will be a method/arguments pair suitable for use as a parameter to L<setup|/setup> method.  The default is false.
 
-=item * indent INT
+=item B<indent INT>
 
 The integer number of spaces to use for each level of indenting in the generated Perl code.  The default value is determined by the return value of the L<default_perl_indent|/default_perl_indent> class method.
 
@@ -5971,19 +5971,19 @@ Auto-initialize the unique keys, then return the Perl source code that is equiva
 
 =over 4
 
-=item * braces STYLE
+=item B<braces STYLE>
 
 The brace style to use in the generated Perl code.  STYLE must be either "k&r" or "bsd".  The default value is determined by the return value of the L<default_perl_braces|/default_perl_braces> class method.
 
-=item * for_setup BOOL
+=item B<for_setup BOOL>
 
 If true, then the generated Perl code will be a method/arguments pair suitable for use as a parameter to L<setup|/setup> method.  The default is false.
 
-=item * indent INT
+=item B<indent INT>
 
 The integer number of spaces to use for each level of indenting in the generated Perl code.  The default value is determined by the return value of the L<default_perl_indent|/default_perl_indent> class method.
 
-=item * style STYLE
+=item B<style STYLE>
 
 Determines the style the initialization used in the generated Perl code.  STYLE must be "array" or "object".  The default is determined by the return value of the class method L<default_perl_unique_key_style|/default_perl_unique_key_style>.
 
