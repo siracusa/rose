@@ -68,7 +68,7 @@ use Rose::Object::MakeMethods::Generic
     default_smart_modification  => { default => 0 },
   ],
 
-  array =>
+  'array --get_set_inited' =>
   [
     'columns_ordered',
   ]
@@ -775,7 +775,7 @@ sub delete_column
   delete $self->{'columns'}{$name};
 
   # Remove from ordered list too  
-  my $columns = $self->columns_ordered || [];
+  my $columns = $self->columns_ordered;
 
   for(my $i = 0; $i < @$columns; $i++)
   {
@@ -797,7 +797,7 @@ sub delete_columns
   return;
 }
 
-sub first_column { my $c = shift->columns_ordered || [];  return $c->[0] }
+sub first_column { shift->columns_ordered->[0] }
 
 sub sync_keys_to_columns
 {
@@ -805,7 +805,7 @@ sub sync_keys_to_columns
 
   $self->_clear_column_generated_values;
 
-  my %columns = map { $_->name => 1 } $self->columns;
+  my %columns = map { $_->name => 1 } $self->columns_ordered;
 
   foreach my $col_name ($self->primary_key_column_names)
   {
@@ -870,15 +870,13 @@ sub columns
     $self->add_columns(@_);
   }
 
-  return wantarray ?
-    (sort { $a->name cmp $b->name } values %{$self->{'columns'} ||= {}}) :
-    [ sort { $a->name cmp $b->name } values %{$self->{'columns'} ||= {}} ];
+  return $self->columns_ordered;
 }
 
 sub num_columns
 {
   my($self) = shift;
-  return $self->{'num_columns'} ||= scalar(@{$self->columns});
+  return $self->{'num_columns'} ||= scalar(@{$self->columns_ordered});
 }
 
 sub nonlazy_columns
@@ -886,8 +884,8 @@ sub nonlazy_columns
   my($self) = shift;
 
   return wantarray ?
-    (sort { $a->name cmp $b->name } grep { !$_->lazy } values %{$self->{'columns'} ||= {}}) :
-    [ sort { $a->name cmp $b->name } grep { !$_->lazy } values %{$self->{'columns'} ||= {}} ];
+    (grep { !$_->lazy } $self->columns_ordered) :
+    [ grep { !$_->lazy } $self->columns_ordered ];
 }
 
 sub lazy_columns
@@ -895,8 +893,8 @@ sub lazy_columns
   my($self) = shift;
 
   return wantarray ?
-    (sort { $a->name cmp $b->name } grep { $_->lazy } values %{$self->{'columns'} ||= {}}) :
-    [ sort { $a->name cmp $b->name } grep { $_->lazy } values %{$self->{'columns'} ||= {}} ];
+    (grep { $_->lazy } $self->columns_ordered) :
+    [ grep { $_->lazy } $self->columns_ordered ];
 }
 
 sub add_columns
@@ -1672,7 +1670,7 @@ sub make_column_methods
     $self->column($column_name)->alias($alias);
   }
 
-  foreach my $column ($self->columns)
+  foreach my $column ($self->columns_ordered)
   {
     my $name = $column->name;
     my $method;
@@ -1736,7 +1734,7 @@ sub make_column_methods
 
   # This rule is relaxed for now...
   # Must have an rw accessor for every column
-  #my $columns = $self->columns;
+  #my $columns = $self->columns_ordered;
   #
   #unless(keys %methods == @$columns)
   #{
@@ -2586,7 +2584,7 @@ sub _sequence_name
 sub column_names
 {
   my($self) = shift;
-  $self->{'column_names'} ||= [ sort { $a cmp $b } keys %{$self->{'columns'} ||= {}} ];
+  $self->{'column_names'} ||= [ map { $_->name } $self->columns_ordered ];
   return wantarray ? @{$self->{'column_names'}} : $self->{'column_names'};
 }
 
@@ -2617,7 +2615,7 @@ sub column_names_string_sql
   my($self, $db) = @_;
 
   return $self->{'column_names_string_sql'}{$db->{'id'}} ||= 
-    join(', ', map { $_->name_sql($db) } sort { $a->name cmp $b->name } $self->columns);
+    join(', ', map { $_->name_sql($db) } $self->columns_ordered);
 }
 
 sub column_names_sql
@@ -2625,7 +2623,7 @@ sub column_names_sql
   my($self, $db) = @_;
 
   my $list = $self->{'column_names_sql'}{$db->{'id'}} ||= 
-    [ map { $_->name_sql($db) } $self->columns ];
+    [ map { $_->name_sql($db) } $self->columns_ordered ];
 
   return wantarray ? @$list : $list;
 }
@@ -2643,7 +2641,7 @@ sub select_columns_string_sql
   my($self, $db) = @_;
 
   return $self->{'select_columns_string_sql'}{$db->{'id'}} ||= 
-    join(', ', map { $_->select_sql($db) } sort { $a->name cmp $b->name } $self->columns);
+    join(', ', map { $_->select_sql($db) } $self->columns_ordered);
 }
 
 sub select_columns_sql
@@ -2651,7 +2649,7 @@ sub select_columns_sql
   my($self, $db) = @_;
 
   my $list = $self->{'select_columns_sql'}{$db->{'id'}} ||= 
-    [ map { $_->select_sql($db) } sort { $a->name cmp $b->name } $self->columns ];
+    [ map { $_->select_sql($db) } $self->columns_ordered ];
 
   return wantarray ? @$list : $list;
 }
@@ -2662,7 +2660,7 @@ sub method_column
 
   unless(defined $self->{'method_columns'})
   {
-    foreach my $column ($self->columns)
+    foreach my $column ($self->columns_ordered)
     {
       foreach my $type ($column->defined_method_types)
       {
@@ -2737,7 +2735,7 @@ sub column_db_value_hash_keys
   my($self) = shift;
 
   $self->{'column_db_value_hash_keys'} ||= 
-    { map { $_->mutator_method_name => $_->db_value_hash_key } $self->columns };
+    { map { $_->mutator_method_name => $_->db_value_hash_key } $self->columns_ordered };
 
   return wantarray ? %{$self->{'column_db_value_hash_keys'}} :
                      $self->{'column_db_value_hash_keys'};
@@ -2950,7 +2948,7 @@ sub update_all_sql
     {
       '    ' . $_->name_sql($db) . ' = ' . $_->update_placeholder_sql($db)
     } 
-    grep { !$key{$_->name} } $self->columns) .
+    grep { !$key{$_->name} } $self->columns_ordered) .
     "\nWHERE " . 
     join(' AND ', map 
     {
@@ -2979,7 +2977,7 @@ sub update_sql
     } 
     grep { !$key{$_->name} && (!$_->lazy || 
            $obj->{LAZY_LOADED_KEY()}{$_->name}) } 
-    $self->columns) .
+    $self->columns_ordered) .
     "\nWHERE " . 
     join(' AND ', map 
     {
@@ -3062,7 +3060,7 @@ sub update_changes_only_sql
 #   my @bind;
 #   my @updates;
 # 
-#   foreach my $column (grep { !$key{$_} } $self->columns)
+#   foreach my $column (grep { !$key{$_} } $self->columns_ordered)
 #   {
 #     my $method = $self->column_method($column->name);
 #     my $value  = $obj->$method();
@@ -3108,7 +3106,7 @@ sub update_sql_with_inlining
 
   foreach my $column (grep { !$key{$_} && (!$_->{'lazy'} || 
                              $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
-                      $self->columns)
+                      $self->columns_ordered)
   {
     my $method = $self->column_accessor_method_name($column->name);
     my $value  = $obj->$method();
@@ -3172,7 +3170,7 @@ sub update_changes_only_sql_with_inlining
 
   my $do_bind_params = $self->dbi_requires_bind_param($db);
 
-  foreach my $column (grep { !$key{$_->{'name'}} && $modified->{$_->{'name'}} } $self->columns)
+  foreach my $column (grep { !$key{$_->{'name'}} && $modified->{$_->{'name'}} } $self->columns_ordered)
   {
     my $method = $self->column_accessor_method_name($column->name);
     my $value  = $obj->$method();
@@ -3232,7 +3230,7 @@ sub insert_changes_only_sql
   my($self, $obj, $db) = @_;
 
   my $modified = $obj->{MODIFIED_COLUMNS()} || {};
-  my @modified = grep { $modified->{$_->{'name'}} || $_->default_exists } $self->columns;
+  my @modified = grep { $modified->{$_->{'name'}} || $_->default_exists } $self->columns_ordered;
 
   unless(@modified)
   {
@@ -3243,7 +3241,7 @@ sub insert_changes_only_sql
     {
       return 
         'INSERT INTO ' . $self->fq_table_sql($db) . ' (' .
-        ($self->columns)[-1]->name_sql($db) . ') VALUES (DEFAULT)',
+        ($self->columns_ordered)[-1]->name_sql($db) . ') VALUES (DEFAULT)',
         [];
     }
     else
@@ -3275,7 +3273,7 @@ sub insert_columns_placeholders_sql
 {
   my($self, $db) = @_;
   return $self->{'insert_columns_placeholders_sql'}{$db->{'id'}} ||= 
-    join(",\n", map { '  ' . $_->insert_placeholder_sql($db) } $self->columns)
+    join(",\n", map { '  ' . $_->insert_placeholder_sql($db) } $self->columns_ordered)
 }
 
 sub insert_and_on_duplicate_key_update_sql
@@ -3293,7 +3291,7 @@ sub insert_and_on_duplicate_key_update_sql
        ($self->primary_key_column_names, 
         keys %{$obj->{MODIFIED_COLUMNS()} || {}})) :
       (grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
-       $self->columns);
+       $self->columns_ordered);
 
     @names = map { $_->name_sql($db) } @columns;
 
@@ -3331,7 +3329,7 @@ sub insert_and_on_duplicate_key_update_sql
     @columns = $changes_only ?
       (map { $self->column($_) } grep { !$skip{"$_"} } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
       (grep { !$skip{"$_"} && (!$_->{'lazy'} || 
-              $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns);
+              $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns_ordered);
 
     @names = map { $_->name_sql($db) } @columns;
 
@@ -3368,7 +3366,7 @@ sub insert_sql_with_inlining
 
   my $do_bind_params = $self->dbi_requires_bind_param($db);
 
-  foreach my $column ($self->columns)
+  foreach my $column ($self->columns_ordered)
   {
     my $method = $self->column_accessor_method_name($column->name);
     my $value  = $obj->$method();
@@ -3425,7 +3423,7 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
        ($self->primary_key_column_names, 
         keys %{$obj->{MODIFIED_COLUMNS()} || {}})) :
       (grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
-       $self->columns);
+       $self->columns_ordered);
 
     @names = map { $_->name_sql($db) } @columns;
   }
@@ -3457,7 +3455,7 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
     @columns = $changes_only ?
       (map { $self->column($_) } grep { !$skip{"$_"} } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
       (grep { !$skip{"$_"} && (!$_->{'lazy'} || 
-              $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns);
+              $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns_ordered);
 
     @names = map { $_->name_sql($db) } @columns;
   }
@@ -3504,7 +3502,7 @@ sub insert_changes_only_sql_with_inlining
   my $db = $obj->db or Carp::croak "Missing db";
 
   my $modified = $obj->{MODIFIED_COLUMNS()} || {};
-  my @modified = grep { $modified->{$_->{'name'}} || $_->default_exists } $self->columns;
+  my @modified = grep { $modified->{$_->{'name'}} || $_->default_exists } $self->columns_ordered;
 
   unless(@modified)
   {
@@ -3515,7 +3513,7 @@ sub insert_changes_only_sql_with_inlining
     {
       return 
         'INSERT INTO ' . $self->fq_table_sql($db) . ' (' .
-        ($self->columns)[-1]->name_sql($db) . ') VALUES (DEFAULT)',
+        ($self->columns_ordered)[-1]->name_sql($db) . ') VALUES (DEFAULT)',
         [];
     }
     else
@@ -3635,14 +3633,14 @@ sub refresh_lazy_column_tracking
   $self->column_mutator_method_names;
   $self->column_rw_method_names;
 
-  return $self->{'has_lazy_columns'} = grep { $_->lazy } $self->columns;
+  return $self->{'has_lazy_columns'} = grep { $_->lazy } $self->columns_ordered;
 }
 
 sub has_lazy_columns
 {
   my($self) = shift;
   return $self->{'has_lazy_columns'}  if(defined $self->{'has_lazy_columns'});
-  return $self->{'has_lazy_columns'} = grep { $_->lazy } $self->columns;
+  return $self->{'has_lazy_columns'} = grep { $_->lazy } $self->columns_ordered;
 }
 
 sub prime_all_caches
@@ -3837,7 +3835,7 @@ sub dbi_requires_bind_param
   return $self->{'dbi_requires_bind_param'}{$db->{'id'}}  
     if(defined $self->{'dbi_requires_bind_param'}{$db->{'id'}});
 
-  foreach my $column ($self->columns)
+  foreach my $column ($self->columns_ordered)
   {
     if($column->dbi_requires_bind_param($db))
     {

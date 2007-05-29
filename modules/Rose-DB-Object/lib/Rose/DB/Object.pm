@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.764_06';
+our $VERSION = '0.764_07';
 
 our $Debug = 0;
 
@@ -830,7 +830,7 @@ sub update
 
         my @exec;
 
-        foreach my $column (grep { !$key{$_->{'name'}} } $meta->columns)
+        foreach my $column (grep { !$key{$_->{'name'}} } $meta->columns_ordered)
         {
           no warnings;
           next if($column->{'lazy'} && !$self->{LAZY_LOADED_KEY()}{$column->{'name'}});
@@ -871,7 +871,7 @@ sub update
         {
           my $i = 1;
 
-          foreach my $column (grep { !$key{$_->name} } $meta->columns)
+          foreach my $column (grep { !$key{$_->name} } $meta->columns_ordered)
           {
             my $method = $column->accessor_method_name;
             $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
@@ -1098,7 +1098,7 @@ sub insert
         {
           my $i = 1;
 
-          foreach my $column ($meta->columns)
+          foreach my $column ($meta->columns_ordered)
           {
             my $method = $column->accessor_method_name;
             $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
