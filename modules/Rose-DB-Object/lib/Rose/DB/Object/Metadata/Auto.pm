@@ -16,7 +16,7 @@ our $Debug;
 
 our $Sort_Columns_Alphabetically = 0; # hack for test suite
 
-our $VERSION = '0.764';
+our $VERSION = '0.765';
 
 our $Missing_PK_OK = 0;
 
@@ -389,6 +389,8 @@ sub auto_generate_foreign_keys
 
     FK_INFO: foreach my $fk_info (@fk_info)
     {
+      my $fk_id = $fk_info->{'RDBO_FK_ID'} = $fk_info->{'FK_NAME'} || $fk_info->{'UK_NAME'};
+
       my $foreign_class = 
         $self->class_for(catalog => $fk_info->{'UK_TABLE_CAT'},
                          schema  => $fk_info->{'UK_TABLE_SCHEM'},
@@ -421,7 +423,7 @@ sub auto_generate_foreign_keys
           method => 'auto_init_foreign_keys',
           args   => \%args,
 
-          code   => sub
+          code => sub
           {
             $self->auto_init_foreign_keys(%args);
             $self->make_foreign_key_methods(%args, preserve_existing => 1);
@@ -450,20 +452,20 @@ sub auto_generate_foreign_keys
 
       my $local_column   = $fk_info->{'FK_COLUMN_NAME'};
       my $foreign_column = $fk_info->{'UK_COLUMN_NAME'};
-
-      $fk{$fk_info->{'UK_NAME'}}{'class'} = $foreign_class;
-      $fk{$fk_info->{'UK_NAME'}}{'key_columns'}{$local_column} = $foreign_column;
+      
+      $fk{$fk_id}{'class'} = $foreign_class;
+      $fk{$fk_id}{'key_columns'}{$local_column} = $foreign_column;
 
       my $key_name =
-        $cm->auto_foreign_key_name($foreign_class, $fk_info->{'UK_NAME'}, 
-                                   $fk{$fk_info->{'UK_NAME'}}{'key_columns'},
+        $cm->auto_foreign_key_name($foreign_class, $fk_id, 
+                                   $fk{$fk_id}{'key_columns'},
                                    \%used_names);
 
       $used_names{$key_name}++  if(defined $key_name);
 
       if(defined $key_name && length $key_name)
       {
-        $fk{$fk_info->{'UK_NAME'}}{'name'} = $key_name;
+        $fk{$fk_id}{'name'} = $key_name;
       }
 
       $total_fks++;
@@ -473,8 +475,8 @@ sub auto_generate_foreign_keys
 
     foreach my $fk_info (@fk_info)
     {
-      next  if($seen{$fk_info->{'UK_NAME'}}++);
-      my $info = $fk{$fk_info->{'UK_NAME'}};
+      next  if($seen{$fk_info->{'RDBO_FK_ID'}}++);
+      my $info = $fk{$fk_info->{'RDBO_FK_ID'}};
       my $fk   = Rose::DB::Object::Metadata::ForeignKey->new(%$info);
 
       next  unless(defined $fk->class);
