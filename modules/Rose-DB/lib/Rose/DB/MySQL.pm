@@ -9,7 +9,7 @@ use SQL::ReservedWords::MySQL();
 
 use Rose::DB;
 
-our $VERSION = '0.732';
+our $VERSION = '0.734';
 
 our $Debug = 0;
 
@@ -238,7 +238,12 @@ sub parse_set
   my($self) = shift;
 
   return $_[0]  if(ref $_[0] eq 'ARRAY');
-  return [ @_ ] if(@_ > 1);
+
+  if(@_ > 1 && !ref $_[1])
+  {
+    pop(@_);
+    return [ @_ ];
+  }
 
   my $val = $_[0];
 
