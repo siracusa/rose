@@ -374,7 +374,7 @@ sub parse_set
 
   no warnings 'uninitialized';
   my $numeric = 
-    ($options->{'type'} =~ /^(?:(?:big)?(?:float|int(?:eger)?|num(?:eric)?)|decimal)$/) ? 1 : 0;
+    ($options->{'value_type'} =~ /^(?:(?:big)?(?:float|int(?:eger)?|num(?:eric)?)|decimal)$/) ? 1 : 0;
 
   return undef  unless(defined $val);
 
