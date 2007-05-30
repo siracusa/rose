@@ -493,6 +493,7 @@ SKIP: foreach my $db_type ('mysql')
   
   ok($@ =~ /Invalid value/, "set invalid value - $db_type");
 
+
   $o->items('a', 'b');
   $o->nums([ 4, 5, 6 ]);
 

@@ -359,9 +359,17 @@ sub parse_set
   my($self) = shift;
 
   return $_[0]  if(ref $_[0] eq 'ARRAY');
-  return [ @_ ] if(@_ > 1 && !ref $_[-1]);
+
+  if(@_ > 1 && !ref $_[1])
+  {
+    pop(@_);
+    return [ @_ ];
+  }
 
   my $val = $_[0];
+
+  return undef  unless(defined $val);
+
   my $options = ref $_[-1] eq 'HASH' ? $_[-1] : {};
 
   no warnings 'uninitialized';
