@@ -4726,7 +4726,7 @@ sub objects_by_map
             # Create or retrieve map record, connected to self
             if($map_record_method)
             {
-              $map_record = $object->$map_record_method();
+              $map_record = $object->$map_record_method() || $map_class->new;
               $map_record->init(%method_map_to_self, db => $db);
             }
             else
@@ -4979,7 +4979,7 @@ sub objects_by_map
             # Create or retrieve map record, connected to self
             if($map_record_method)
             {
-              $map_record = $object->$map_record_method();
+              $map_record = $object->$map_record_method() || $map_class->new;
               $map_record->init(%method_map_to_self, db => $db);
             }
             else
