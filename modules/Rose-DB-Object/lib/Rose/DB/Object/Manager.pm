@@ -2854,7 +2854,9 @@ sub delete_objects
 
   $args{'query'} = delete $args{'where'};
 
-  unless(($args{'query'} && @{$args{'query'}}) || delete $args{'all'})
+  unless(($args{'query'} && @{$args{'query'}}) || 
+         ($args{'clauses'} && @{$args{'clauses'}}) ||
+         delete $args{'all'})
   {
     Carp::croak "$class - Refusing to delete all rows from the table '",
                 $meta->fq_table($db), "' without an explict ",
