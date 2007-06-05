@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.764';
+our $VERSION = '0.765';
 
 our $Debug = 0;
 
@@ -962,8 +962,9 @@ sub _build_clause
       }
       else
       {
-
-        Carp::croak "Don't know how to handle comparison values: $vals->{$raw_op}";
+        Carp::croak "Don't know how to handle comparison operator '$raw_op' " .
+                    ($col_meta ? ' for column ' . $col_meta->name : '') . 
+                    ": $vals->{$raw_op}";
       }
     }
 
@@ -995,7 +996,9 @@ sub _build_clause
     }
   }
 
-  Carp::croak "Don't know how to handle comparison values $vals";
+  Carp::croak "Don't know how to handle comparison" .
+              ($col_meta ? ' for column ' . $col_meta->name : '') . 
+              ": $vals";
 }
 
 sub _build_nested_join
