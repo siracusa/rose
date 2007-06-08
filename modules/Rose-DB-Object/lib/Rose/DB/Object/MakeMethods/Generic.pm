@@ -1463,7 +1463,7 @@ sub set
 
   my $formatted_key = column_value_formatted_key($key);
 
-  my $type = $args->{'value_type'} || 'scalar';
+  my $value_type = $args->{'value_type'} || 'scalar';
 
   my %methods;
 
@@ -1489,7 +1489,7 @@ sub set
           }
           else
           {
-            my $set = $db->parse_set(@_, { type => $type });
+            my $set = $db->parse_set(@_, { value_type => $value_type });
 
             if($choices)
             {
@@ -1517,7 +1517,7 @@ sub set
         {
           my $set = $db->parse_set((defined $self->{$formatted_key,$driver} ? 
                                     $self->{$formatted_key,$driver} : $default),
-                                   { type => $type });
+                                   { value_type => $value_type });
 
           if($choices)
           {
@@ -1546,7 +1546,7 @@ sub set
         # Pull default through if necessary
         unless(defined $self->{$key} || defined $self->{$formatted_key,$driver})
         {
-          $self->{$key} = $db->parse_set($default, { type => $type });
+          $self->{$key} = $db->parse_set($default, { value_type => $value_type });
 
           if(!defined $default || defined $self->{$key})
           {
@@ -1588,7 +1588,7 @@ sub set
           }
           else
           {
-            my $set = $db->parse_set(@_, { type => $type });
+            my $set = $db->parse_set(@_, { value_type => $value_type });
 
             if($choices)
             {
@@ -1633,7 +1633,7 @@ sub set
 
         if(defined $self->{$formatted_key,$driver})
         {
-          $self->{$key} = $db->parse_set($self->{$formatted_key,$driver}, { type => $type });
+          $self->{$key} = $db->parse_set($self->{$formatted_key,$driver}, { value_type => $value_type });
           $self->{$formatted_key,$driver} = undef;
 
           return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;
@@ -1658,7 +1658,7 @@ sub set
 
         if(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key,$driver}))
         {
-          my $set = $db->parse_set($default, { type => $type });
+          my $set = $db->parse_set($default, { value_type => $value_type });
 
           if($choices)
           {
@@ -1700,7 +1700,7 @@ sub set
 
         if(defined $self->{$formatted_key,$driver})
         {
-          $self->{$key} = $db->parse_set($self->{$formatted_key,$driver}, { type => $type });
+          $self->{$key} = $db->parse_set($self->{$formatted_key,$driver}, { value_type => $value_type });
           $self->{$formatted_key,$driver} = undef;
 
           return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;
@@ -1738,7 +1738,7 @@ sub set
 
         if(defined $self->{$formatted_key,$driver})
         {
-          $self->{$key} = $db->parse_set($self->{$formatted_key,$driver}, { type => $type });
+          $self->{$key} = $db->parse_set($self->{$formatted_key,$driver}, { value_type => $value_type });
           $self->{$formatted_key,$driver} = undef;
 
           return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;
@@ -1766,7 +1766,7 @@ sub set
       }
       else
       {
-        my $set = $db->parse_set(@_, { type => $type });
+        my $set = $db->parse_set(@_, { value_type => $value_type });
 
         if($choices)
         {
@@ -1808,7 +1808,7 @@ sub set
 
       if(defined $self->{$formatted_key,$driver})
       {
-        $self->{$key} = $db->parse_set($self->{$formatted_key,$driver}, { type => $type });
+        $self->{$key} = $db->parse_set($self->{$formatted_key,$driver}, { value_type => $value_type });
         $self->{$formatted_key,$driver} = undef;
 
         return defined $self->{$key} ? wantarray ? @{$self->{$key}} : $self->{$key} : undef;
