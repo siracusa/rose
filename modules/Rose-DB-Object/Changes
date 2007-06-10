@@ -11,6 +11,8 @@
     * Fixed a Manager bug that caused count queries to use incorrect
       table aliases when passed empty with_objects or require_objects
       array reference values.  (Reported by Denis Moskowitz)
+    * The "find" method for many-to-many relationships now propogates custom
+      Manager arguments correctly.  (Patch by Michael Reece)
     * The use_key parameter to load() now dies if an invalid key is passed.
       (Reported by Jonathan Vanasco)
 

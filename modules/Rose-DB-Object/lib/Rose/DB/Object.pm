@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.764_10';
+our $VERSION = '0.764_11';
 
 our $Debug = 0;
 
@@ -2292,7 +2292,7 @@ L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB-Object>
 
 =head1 CONTRIBUTORS
 
-Graham Barr, David Christensen, Lucian Dragus, Perrin Harkins, Cees Hek, Teodor Zlatanov
+Graham Barr, David Christensen, Lucian Dragus, Perrin Harkins, Cees Hek, Michael Reece, Teodor Zlatanov
 
 =head1 AUTHOR
 
