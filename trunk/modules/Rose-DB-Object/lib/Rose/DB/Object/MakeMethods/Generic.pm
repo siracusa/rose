@@ -4302,7 +4302,7 @@ sub objects_by_map
           $objs =
             $map_manager->$map_method(query => \@query,
                                       require_objects => $require_objects,
-                                      %$mgr_args, db => $self->db);
+                                      %args, db => $self->db);
         }
         else
         {
@@ -4310,7 +4310,7 @@ sub objects_by_map
             $map_manager->$map_method(query => \@query,
                                       require_objects => $require_objects,
                                       db => $self->db, share_db => 0,
-                                      %$mgr_args);
+                                      %args);
         }
       };
 
