@@ -2342,6 +2342,7 @@ sub object_by_key
     }
 
     my $fk_name = $fk->name;
+    my $is_fk = $fk->type eq 'foreign key' ? 1 : 0;
 
     $methods{$name} = sub
     {
@@ -2473,6 +2474,7 @@ sub object_by_key
     }
 
     my $fk_name = $fk->name;
+    my $is_fk = $fk->type eq 'foreign key' ? 1 : 0;
 
     $methods{$name} = sub
     {
@@ -2582,7 +2584,7 @@ sub object_by_key
 
       # Add the on save code to the list
       push(@{$self->{ON_SAVE_ATTR_NAME()}{'post'}{'fk'}{$fk_name}{'delete'}}, 
-           { code => $delete_code, object => $object });
+           { code => $delete_code, object => $object, is_fk => $is_fk });
 
       return 1;
     };
