@@ -1,4 +1,4 @@
-0.764_08 (05.30.2007) - John Siracusa <siracusa@mindspring.com>
+0.764_12 (06.13.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added a value_type attribute to SET columns.
     * Added a normalize_get_object_args() utility method to make
@@ -11,6 +11,8 @@
     * Fixed a Manager bug that caused count queries to use incorrect
       table aliases when passed empty with_objects or require_objects
       array reference values.  (Reported by Denis Moskowitz)
+    * Deleting one-to-one related objects on save now works correctly.
+      (Reported by Ovid)
     * The "find" method for many-to-many relationships now propogates custom
       Manager arguments correctly.  (Patch by Michael Reece)
     * The use_key parameter to load() now dies if an invalid key is passed.
