@@ -491,16 +491,6 @@ sub save
 
       foreach my $fk_name (keys %{$todo->{'fk'}})
       {
-        # No real need to check for this, I suppose.  Still, the 'fk' name
-        # for the hash key above could be a bit better...
-        #my $fk = $meta->foreign_key($fk_name) || $meta->relationship($fk_name);
-        #
-        #unless(UNIVERSAL::isa($fk, 'Rose::DB::Object::Metadata::ForeignKey') ||
-        #       $fk->type =~ /^(?:one|many) to one$/)
-        #{
-        #  Carp::confess "No foreign key or '... to one' relationship named '$fk_name'";
-        #}
-
         my $code   = $todo->{'fk'}{$fk_name}{'set'} or next;
         my $object = $code->($self, \%code_args);
 
@@ -537,9 +527,6 @@ sub save
       # Foreign keys (and some fk-like relationships)
       foreach my $fk_name (keys %{$todo->{'fk'}})
       {
-        # This is pretty pointless
-        #my($fk, $rel);
-
         foreach my $item (@{$todo->{'fk'}{$fk_name}{'delete'} || []})
         {
           my $code   = $item->{'code'};
@@ -547,18 +534,6 @@ sub save
 
           # Don't run the code to delete this object if we just set it above
           next  if($did_set{'fk'}{$fk_name}{Rose::DB::Object::Util::row_id($object)});
-
-          # This is pretty pointless
-          #if($item->{'is_fk'} && !$fk)
-          #{
-          #  $fk = $meta->foreign_key($fk_name)
-          #    or Carp::confess "No foreign key named '$fk_name' found in ", $meta->class;
-          #}
-          #elsif(!$rel)
-          #{
-          #  $rel = $meta->relationship($fk_name)
-          #    or Carp::confess "No relationship named '$fk_name' found in ", $meta->class;          
-          #}
 
           $code->($self, \%code_args) or die $self->error;
         }
@@ -586,10 +561,6 @@ sub save
       # Relationships
       foreach my $rel_name (keys %{$todo->{'rel'}})
       {
-        # This is pretty pointless
-        #my $rel = $meta->relationship($rel_name) 
-        #  or Carp::confess "No relationship named '$rel_name' found in ", $meta->class;
-
         my $code;
 
         # Set value(s)
