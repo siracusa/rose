@@ -2745,6 +2745,8 @@ sub objects_by_key
         $args{$k} = $v  unless(exists $args{$k});
       }
 
+      $args{'multi_many_ok'} = 1;
+
       # Make query for object count
       eval
       {
@@ -4461,6 +4463,8 @@ sub objects_by_map
       {
         $args{$k} = $v  unless(exists $args{$k});
       }
+
+      $args{'multi_many_ok'} = 1;
 
       my $count;
 
