@@ -17,7 +17,7 @@ sub validate
   return $ok  unless($ok);
 
   my $value = $self->internal_value;
-  return 1  unless(defined $value && length $value)
+  return 1  unless(defined $value && length $value);
 
   my $name = sub { $self->error_label || $self->name };
 
