@@ -6,7 +6,7 @@ use Rose::HTML::Object::Errors qw(:number);
 
 BEGIN
 {
-  use Test::More tests => 41;
+  use Test::More tests => 42;
   use_ok('Rose::HTML::Form::Field::Integer');
 }
 
@@ -17,6 +17,8 @@ my $field = Rose::HTML::Form::Field::Integer->new(
   value       => 123,
   default     => 456,
   maxlength   => 7);
+
+ok($field->validate, 'validate() 0');
 
 ok(ref $field eq 'Rose::HTML::Form::Field::Integer', 'new()');
 

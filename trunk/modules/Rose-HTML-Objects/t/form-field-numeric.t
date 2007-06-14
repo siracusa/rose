@@ -6,7 +6,7 @@ use Rose::HTML::Object::Errors qw(:number);
 
 BEGIN
 {
-  use Test::More tests => 45;
+  use Test::More tests => 46;
   use_ok('Rose::HTML::Form::Field::Numeric');
 }
 
@@ -19,6 +19,8 @@ my $field = Rose::HTML::Form::Field::Numeric->new(
   maxlength   => 20);
 
 ok(ref $field eq 'Rose::HTML::Form::Field::Numeric', 'new()');
+
+ok($field->validate, 'validate() 0');
 
 is($field->html_field, '<input maxlength="20" name="num" size="6" type="text" value="123">', 'html_field() 1');
 is($field->xhtml_field, '<input maxlength="20" name="num" size="6" type="text" value="123" />', 'xhtml_field() 1');
