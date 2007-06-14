@@ -103,7 +103,7 @@ sub validate
     }
     else
     {
-      $self->add_error_id(NUM_BELOW_MIN, { label => $name, value => ($min - 1) });
+      $self->add_error_id(NUM_BELOW_MIN, { label => $name, value => $min });
     }
     return 0;
   }
@@ -131,7 +131,7 @@ __DATA__
 NUM_INVALID_NUMBER          = "[label] must be a number."
 NUM_INVALID_NUMBER_POSITIVE = "[label] must be a positive number."
 NUM_NOT_POSITIVE_NUMBER     = "[label] must be a positive number."
-NUM_BELOW_MIN               = "[label] must be greater than [value]."
+NUM_BELOW_MIN               = "[label] must be greater than or equal to [value]."
 NUM_ABOVE_MAX               = "[label] must be less than or equal to [value]."
 
 [% LOCALE de %]
@@ -139,7 +139,7 @@ NUM_ABOVE_MAX               = "[label] must be less than or equal to [value]."
 NUM_INVALID_NUMBER          = "[label] muß eine Zahl sein."
 NUM_INVALID_NUMBER_POSITIVE = "[label] muß eine positive Zahl sein."
 NUM_NOT_POSITIVE_NUMBER     = "[label] muß eine positive Zahl sein."
-NUM_BELOW_MIN               = "[label] muß größer als [value] sein."
+NUM_BELOW_MIN               = "[label] muß größer als oder gleich [value] sein."
 NUM_ABOVE_MAX               = "[label] muß kleiner oder gleich [value] sein."
 
 [% LOCALE fr %]
@@ -147,7 +147,7 @@ NUM_ABOVE_MAX               = "[label] muß kleiner oder gleich [value] sein."
 NUM_INVALID_NUMBER          = "[label] doit être un nombre."
 NUM_INVALID_NUMBER_POSITIVE = "[label] doit être un nombre positif."
 NUM_NOT_POSITIVE_NUMBER     = "[label] doit être un nombre positif."
-NUM_BELOW_MIN               = "[label] doit être plus grand que [value]."
+NUM_BELOW_MIN               = "[label] doit être plus grand ou égal à [value]."
 NUM_ABOVE_MAX               = "[label] doit être plus petit ou égal à [value]."
 
 __END__

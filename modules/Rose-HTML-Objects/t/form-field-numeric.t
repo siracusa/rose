@@ -80,7 +80,7 @@ is($field->error_id, NUM_NOT_POSITIVE_NUMBER, 'error_id() 2');
 
 $field->min(1);
 ok(!$field->validate, 'validate() 7');
-is($field->error, 'Num must be greater than 0.', 'error() 4');
+is($field->error, 'Num must be greater than or equal to 1.', 'error() 4');
 is($field->error_id, NUM_BELOW_MIN, 'error_id() 3');
 
 $field->max(100);
