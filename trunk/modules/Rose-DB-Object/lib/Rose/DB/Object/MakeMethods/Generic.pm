@@ -2754,16 +2754,14 @@ sub objects_by_key
         if($share_db)
         {
           $count = 
-            $ft_manager->$ft_count_method(query => \@query, db => $self->db, %args)
-              or die $ft_manager->error;
+            $ft_manager->$ft_count_method(query => \@query, db => $self->db, %args);
         }
         else
         {
           $count = 
             $ft_manager->$ft_count_method(query    => \@query, 
                                           db       => $self->db,
-                                          share_db => 0, %args)
-              or die $ft_manager->error;
+                                          share_db => 0, %args);
         }
       };
 
