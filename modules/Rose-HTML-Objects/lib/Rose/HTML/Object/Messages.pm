@@ -211,6 +211,9 @@ use constant NUM_INVALID_INTEGER_POSITIVE => 1301;
 use constant NUM_NOT_POSITIVE_INTEGER     => 1302;
 use constant NUM_BELOW_MIN                => 1303;
 use constant NUM_ABOVE_MAX                => 1304;
+use constant NUM_INVALID_NUMBER           => 1305;
+use constant NUM_INVALID_NUMBER_POSITIVE  => 1306;
+use constant NUM_NOT_POSITIVE_NUMBER      => 1307;
 
 # String messages
 use constant STRING_OVERFLOW => 1400;

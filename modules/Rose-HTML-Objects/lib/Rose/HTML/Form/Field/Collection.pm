@@ -81,6 +81,10 @@ __PACKAGE__->field_type_classes
 
   'hidden'             => 'Rose::HTML::Form::Field::Hidden',
 
+  'num'                => 'Rose::HTML::Form::Field::Numeric',
+  'number'             => 'Rose::HTML::Form::Field::Numeric',
+  'numeric'            => 'Rose::HTML::Form::Field::Numeric',
+
   'int'                => 'Rose::HTML::Form::Field::Integer',
   'integer'            => 'Rose::HTML::Form::Field::Integer',
 
