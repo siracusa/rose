@@ -71,7 +71,7 @@ sub validate
   return $ok  unless($ok);
 
   my $value = $self->internal_value;
-  return 1  unless(length $value);
+  return 1  unless(defined $value && length $value)
 
   my $min = $self->min;
   my $max = $self->max;
