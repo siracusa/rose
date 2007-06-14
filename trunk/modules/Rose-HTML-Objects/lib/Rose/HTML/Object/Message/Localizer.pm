@@ -726,7 +726,7 @@ sub load_messages_from_fh
     elsif(!/$Comment_Or_Blank/)
     {
       chomp;
-      warn "WARNING: Localized message line not understood: $_";
+      carp "WARNING: Localized message line not understood: $_";
     }
   }
 

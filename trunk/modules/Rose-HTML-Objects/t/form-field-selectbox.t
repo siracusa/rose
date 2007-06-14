@@ -391,6 +391,8 @@ is($field->html_field,
   qq(</select>),
   'option group html_field() 1');
 
+$field->xhtml_hidden_fields;
+
 $field->add_value('peach');
 
 is(join(',', $field->input_value), 'apple,peach', 'input_value() 3');
@@ -455,6 +457,8 @@ is($field->html_field,
   qq(</optgroup>\n) .
   qq(</select>),
   'option group html_field() 3');
+
+$field->xhtml_hidden_fields;
 
 $field->add_value('apple');
 
