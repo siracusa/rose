@@ -772,6 +772,8 @@ ok(!$form->param_exists_for_field('when.date'), 'param_exists_for_field() nested
 ok(!$form->param_exists_for_field('when.date.month'), 'param_exists_for_field() nested 2.11');
 ok(!$form->param_exists_for_field('when.time.hour'), 'param_exists_for_field() nested 2.12');
 
+$form = Rose::HTML::Form->new(onsubmit => 'foo()');
+
 BEGIN
 {
   our $Have_RDBO;

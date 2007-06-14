@@ -1451,9 +1451,10 @@ sub AUTOLOAD
       last;
     }
   }
-
+$DB::single = 1;
   unless($to_form)
   {
+    $Rose::HTML::Object::AUTOLOAD = $AUTOLOAD;
     goto &Rose::HTML::Object::AUTOLOAD;
   }
 
@@ -1471,6 +1472,7 @@ sub AUTOLOAD
     $to_form->$method(@_);
   }
 
+  $Rose::HTML::Object::AUTOLOAD = $AUTOLOAD;
   goto &Rose::HTML::Object::AUTOLOAD;
 }
 
