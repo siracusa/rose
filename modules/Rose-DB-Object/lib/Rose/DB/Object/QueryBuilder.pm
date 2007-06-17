@@ -134,6 +134,7 @@ sub build_select
                          where_only => 1,
                          query => $query,
                          logic => uc $query_arg->[$i],
+                         table_map => $table_map,
                          set => $set);
 
           push(@bind, @$bind);
@@ -145,6 +146,7 @@ sub build_select
                          where_only => 1,
                          query => $query,
                          logic => uc $query_arg->[$i],
+                         table_map => $table_map,
                          set => $set);
         }
 
