@@ -42,7 +42,9 @@ sub inflate_value
 {
   my($self, $date) = @_;
   return undef  unless(ref $date || (defined $date && length $date));
-  return $self->date_parser->parse_datetime($date);
+  my $dt;
+  eval { $dt = $self->date_parser->parse_datetime($date) };
+  return $dt;
 }
 
 sub init_output_format { '%Y-%m-%d %I:%M:%S %p' }
@@ -58,8 +60,12 @@ sub validate
 {
   my($self) = shift;
 
-  my $ok = $self->SUPER::validate(@_);
-  return $ok  unless($ok);
+  no warnings 'uninitialized';
+  if($self->input_value !~ /\S/)
+  {
+    my $ok = $self->SUPER::validate(@_);
+    return $ok  unless($ok);
+  }
 
   my $date = $self->internal_value;
   return 1  if(UNIVERSAL::isa($date, 'DateTime'));
@@ -79,15 +85,16 @@ sub validate
   unless(defined $date)
   {
     # XXX: Parser errors ar English-only right now...
-    if($self->locale eq 'en')
-    {
-      $self->add_error($self->date_parser->error)
-        if($self->date_parser->can('error'));
-    }
-    else
-    {
+    # XXX: ...but it produces some horribly ugly errors.
+    #if($self->locale eq 'en')
+    #{
+    #  $self->add_error($self->date_parser->error)
+    #    if($self->date_parser->can('error'));
+    #}
+    #else
+    #{
       $self->add_error_id(DATE_INVALID);
-    }
+    #}
 
     return 0;
   }
