@@ -5,6 +5,8 @@
       custom Manager methods less cumbersome to impelement. XXX: Needs Docs
     * Setting a BigInt column to undef no longer sets it to zero.
       (Reported by Jeffrey Horn)
+    * Corrected error propagation in many-to-many "find" methods when bad
+      arguments are passed.  (Reported by Michael Reece)
     * Fixed a bug that caused the auto-init system to fold multiple foreign
       keys that reference the same remote key into a single multi-column
       foreign key.  (Reported by Marlon Bailey)

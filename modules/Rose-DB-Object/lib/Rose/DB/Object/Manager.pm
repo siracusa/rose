@@ -5,7 +5,7 @@ use strict;
 use Carp();
 
 use List::Util qw(first);
-use List::MoreUtils qw(uniq);
+#use List::MoreUtils qw(uniq);
 use Scalar::Util qw(weaken refaddr);
 
 use Rose::DB::Object::Iterator;
@@ -450,7 +450,7 @@ sub get_objects
 
     if(ref $with_objects) # copy argument (shallow copy)
     {
-      $with_objects = [ uniq @$with_objects ];
+      $with_objects = [ @$with_objects ]; #[ uniq @$with_objects ];
     }
     else
     {
@@ -497,7 +497,7 @@ sub get_objects
   {
     if(ref $require_objects) # copy argument (shallow copy)
     {
-      $require_objects = [ uniq @$require_objects ];
+      $require_objects = [ @$require_objects ]; #[ uniq @$require_objects ];
     }
     else
     {
