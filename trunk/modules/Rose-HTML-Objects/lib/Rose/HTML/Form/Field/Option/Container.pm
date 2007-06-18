@@ -19,7 +19,7 @@ Rose::HTML::Form::Field::WithContents->import_methods(
   xhtml_tag => '_xhtml_tag',
 });
 
-our $VERSION = '0.547';
+our $VERSION = '0.549';
 
 sub _item_class       { 'Rose::HTML::Form::Field::Option' }
 sub _item_group_class { 'Rose::HTML::Form::Field::OptionGroup' }
@@ -91,8 +91,10 @@ sub hidden_fields
   {
     if(defined $item->internal_value)
     {
-      push(@hidden, $item->hidden_field);
-      $hidden[-1]->name($self->name);
+      # Derek Watson suggests this conditional modifier, but
+      # I've yet to see the error is works around...
+      $hidden[-1]->name($self->name)
+        if(push(@hidden, $item->hidden_field));
     }
   }
 
