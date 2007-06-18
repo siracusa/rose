@@ -4318,7 +4318,7 @@ sub objects_by_map
 
       if($@ || !$objs)
       {
-        $self->error("Could not find $foreign_class objects - " . $map_manager->error);
+        $self->error("Could not find $foreign_class objects - " . ($@ || $map_manager->error));
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
