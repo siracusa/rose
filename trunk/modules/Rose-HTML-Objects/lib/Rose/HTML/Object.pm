@@ -324,7 +324,7 @@ sub html_errors
     return $code->($self);
   }
 
-  my $error = join(', ', $self->errors);
+  my $error = join(', ', grep { /\S/ } $self->errors);
 
   if($error)
   {

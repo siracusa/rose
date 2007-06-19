@@ -3916,6 +3916,8 @@ sub perl_manager_class
   return<<"EOF";
 package $args{'class'};
 
+use strict;
+
 $isa
 
 sub object_class { '$object_class' }
