@@ -1,4 +1,4 @@
-0.764_14 (06.18.2007) - John Siracusa <siracusa@mindspring.com>
+0.764_15 (06.19.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added a value_type attribute to SET columns.
     * Added a normalize_get_object_args() utility method to make
@@ -7,6 +7,7 @@
       (Reported by Jeffrey Horn)
     * Corrected error propagation in many-to-many "find" methods when bad
       arguments are passed.  (Reported by Michael Reece)
+    * Added "use strict" the output of perl_manager_class().
     * Fixed a bug that caused the auto-init system to fold multiple foreign
       keys that reference the same remote key into a single multi-column
       foreign key.  (Reported by Marlon Bailey)
