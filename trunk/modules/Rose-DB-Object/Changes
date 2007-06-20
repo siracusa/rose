@@ -1,13 +1,15 @@
-0.764_15 (06.19.2007) - John Siracusa <siracusa@mindspring.com>
+0.764_16 (06.20.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added a value_type attribute to SET columns.
     * Added a normalize_get_object_args() utility method to make
-      custom Manager methods less cumbersome to impelement. XXX: Needs Docs
+      custom Manager methods less cumbersome to implement. XXX: Needs Docs
     * Setting a BigInt column to undef no longer sets it to zero.
       (Reported by Jeffrey Horn)
     * Corrected error propagation in many-to-many "find" methods when bad
       arguments are passed.  (Reported by Michael Reece)
     * Added "use strict" the output of perl_manager_class().
+    * Existing map records are now correctly checked for when adding items
+      through a many-to-many relationship.  (Reported by Drew Taylor)
     * Fixed a bug that caused the auto-init system to fold multiple foreign
       keys that reference the same remote key into a single multi-column
       foreign key.  (Reported by Marlon Bailey)
