@@ -4744,8 +4744,23 @@ sub objects_by_map
               $map_record->$map_method($object->$remote_method);
             }
 
-            # Save the map record
-            $map_record->save or die $map_record->error;
+            $in_db = $map_record->{STATE_IN_DB()};
+
+            # Try to load the map record if doesn't appear to exist already
+            unless($in_db)
+            {
+              my $dbh = $map_record->dbh;
+  
+              # It's okay if this fails (e.g., if the primary key is undefined)
+              local $dbh->{'PrintError'} = 0;
+              eval { $in_db = $map_record->load(speculative => 1) };
+            }
+  
+            # Save the map record, if necessary
+            unless($in_db)
+            {
+              $map_record->save or die $map_record->error;
+            }
           }
 
           # Assign to attribute or blank the attribute, causing the objects
@@ -4997,8 +5012,23 @@ sub objects_by_map
               $map_record->$map_method($object->$remote_method);
             }
 
-            # Save the map record
-            $map_record->save(%$args) or die $map_record->error;
+            $in_db = $map_record->{STATE_IN_DB()};
+  
+            # Try to load the map record if doesn't appear to exist already
+            unless($in_db)
+            {
+              my $dbh = $map_record->dbh;
+  
+              # It's okay if this fails (e.g., if the primary key is undefined)
+              local $dbh->{'PrintError'} = 0;
+              eval { $in_db = $map_record->load(speculative => 1) };
+            }
+  
+            # Save the map record, if necessary
+            unless($in_db)
+            {
+              $map_record->save or die $map_record->error;
+            }
           }
 
           # Forget about any adds if we just set the list
@@ -5224,8 +5254,23 @@ sub objects_by_map
             $map_record->$map_method($object->$remote_method);
           }
 
-          # Save the map record
-          $map_record->save or die $map_record->error;
+          $in_db = $map_record->{STATE_IN_DB()};
+
+          # Try to load the map record if doesn't appear to exist already
+          unless($in_db)
+          {
+            my $dbh = $map_record->dbh;
+
+            # It's okay if this fails (e.g., if the primary key is undefined)
+            local $dbh->{'PrintError'} = 0;
+            eval { $in_db = $map_record->load(speculative => 1) };
+          }
+
+          # Save the map record, if necessary
+          unless($in_db)
+          {
+            $map_record->save or die $map_record->error;
+          }
         }
 
         # Clear the existing list, forcing it to be reloaded next time
@@ -5339,8 +5384,23 @@ sub objects_by_map
             $map_record->$map_method($object->$remote_method);
           }
 
-          # Save the map record
-          $map_record->save or die $map_record->error;
+          $in_db = $map_record->{STATE_IN_DB()};
+
+          # Try to load the map record if doesn't appear to exist already
+          unless($in_db)
+          {
+            my $dbh = $map_record->dbh;
+
+            # It's okay if this fails (e.g., if the primary key is undefined)
+            local $dbh->{'PrintError'} = 0;
+            eval { $in_db = $map_record->load(speculative => 1) };
+          }
+
+          # Save the map record, if necessary
+          unless($in_db)
+          {
+            $map_record->save or die $map_record->error;
+          }
         }
 
         # Blank the attribute, causing the objects to be fetched from
