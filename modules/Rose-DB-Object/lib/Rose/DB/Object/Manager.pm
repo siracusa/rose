@@ -4490,6 +4490,44 @@ Examples:
       $iterator->finish  if(...); # finish early?
     }
 
+=item B<normalize_get_object_args [ARGS]>
+
+This method takes ARGS in the forms accepted by L<get_objects|/get_objects> (and other similar methods) and normalizes them into name/value pairs.  Since L<get_objects|/get_objects> can take arguments in many forms, this method is useful when overriding L<get_objects|/get_objects> in a custom L<Rose::DB::Object::Manager> subclass.  Example:
+
+
+    package Product::Manager;
+
+    use base 'Rose::DB::Object::Manager'; 
+
+    use Product;
+
+    sub object_class { 'Product' }
+    ...
+    
+    sub get_products
+    {
+      my($class, %args) = shift->normalize_get_object_args(@_);
+      
+      # Detect, extract, and handle custom argument
+      if(delete $args{'active_only'})
+      {
+        push(@{$args{'query'}}, status => 'active');
+      }
+      
+      return $class->get_objects(%args); # call through to normal method
+    }
+
+Now all of the following calls will work:
+
+    $products =
+      Product::Manager->get_products([ type => 'boat' ], sort_by => 'name');
+
+    $products =
+      Product::Manager->get_products({ name => { like => '%Dog%' } });
+
+    $products =
+      Product::Manager->get_products([ id => { gt => 123 } ], active_only => 1);
+
 =item B<object_class>
 
 Returns the class name of the L<Rose::DB::Object>-derived objects to be managed by this class.  Override this method in your subclass.  The default implementation returns undef.
