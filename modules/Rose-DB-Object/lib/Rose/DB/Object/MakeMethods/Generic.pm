@@ -412,9 +412,9 @@ sub enum
       {
         my($self) = shift;
 
-        if(@_ && defined $_[0])
+        if(@_)
         {
-          Carp::croak "Invalid $name: '$_[0]'"  unless(exists $values{$_[0]});
+          Carp::croak "Invalid $name: '$_[0]'"  unless(!defined $_[0] || exists $values{$_[0]});
           $self->{MODIFIED_COLUMNS()}{$column_name} = 1  unless($self->{STATE_LOADING()});
           return $self->{$key} = $_[0];
         }
@@ -431,9 +431,9 @@ sub enum
       {
         my($self) = shift;
 
-        if(@_ && defined $_[0])
+        if(@_)
         {
-          Carp::croak "Invalid $name: '$_[0]'"  unless(exists $values{$_[0]});
+          Carp::croak "Invalid $name: '$_[0]'"  unless(!defined $_[0] || exists $values{$_[0]});
           $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
           return $self->{$key} = $_[0];
         }
@@ -449,9 +449,9 @@ sub enum
       {
         my($self) = shift;
 
-        if(@_ && defined $_[0])
+        if(@_)
         {
-          Carp::croak "Invalid $name: '$_[0]'"  unless(exists $values{$_[0]});
+          Carp::croak "Invalid $name: '$_[0]'"  unless(!defined $_[0] || exists $values{$_[0]});
           $self->{MODIFIED_COLUMNS()}{$column_name} = 1  unless($self->{STATE_LOADING()});
           return $self->{$key} = $_[0];
         }
@@ -467,7 +467,7 @@ sub enum
       my($self) = shift;
 
       Carp::croak "Missing argument in call to $name"  unless(@_);
-      Carp::croak "Invalid $name: '$_[0]'"  unless(exists $values{$_[0]});
+      Carp::croak "Invalid $name: '$_[0]'"  unless(!defined $_[0] || exists $values{$_[0]});
       $self->{MODIFIED_COLUMNS()}{$column_name} = 1   unless($self->{STATE_LOADING()});
       return $self->{$key} = $_[0];
     };

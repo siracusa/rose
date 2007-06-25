@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 270;
+use Test::More tests => 272;
 
 BEGIN 
 {
@@ -323,7 +323,7 @@ EOF
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 62)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 64)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -490,6 +490,15 @@ SKIP: foreach my $db_type ('mysql')
 
   is($o->k1, 3, "save() verify 3 multi-value primary key with generated values - $db_type");
   is($o->k2, 4, "save() verify 4 multi-value primary key with generated values - $db_type");
+
+  $o = MyMySQLObject->new;
+  is($o->enums, 'foo', "enum undef 1 - $db_type");
+
+  $o->meta->column('enums')->default(undef);  
+  $o->meta->make_column_methods(replace_existing => 1);
+
+  $o->enums(undef);
+  is($o->enums, undef, "enum undef 2 - $db_type");
 }
 
 #
