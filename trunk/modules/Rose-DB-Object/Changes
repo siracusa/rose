@@ -1,4 +1,4 @@
-0.764_16 (06.20.2007) - John Siracusa <siracusa@mindspring.com>
+0.764_17 (06.20.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added a value_type attribute to SET columns.
     * Added a normalize_get_object_args() utility method to make
@@ -20,6 +20,7 @@
       being resolved when used in nested query parameters.
     * Relationship count methods no longer die when the count is zero.
       (Reported by Derek Watson)
+    * Setting enum fields to undef not works correctly.  (Reported by Ovid)
     * Deleting one-to-one related objects on save now works correctly.
       (Reported by Ovid)
     * The "find" method for many-to-many relationships now propogates custom
