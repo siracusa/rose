@@ -2,7 +2,7 @@
 
     * Added a value_type attribute to SET columns.
     * Added a normalize_get_object_args() utility method to make
-      custom Manager methods less cumbersome to implement. XXX: Needs Docs
+      custom Manager methods less cumbersome to implement.
     * Setting a BigInt column to undef no longer sets it to zero.
       (Reported by Jeffrey Horn)
     * Corrected error propagation in many-to-many "find" methods when bad
