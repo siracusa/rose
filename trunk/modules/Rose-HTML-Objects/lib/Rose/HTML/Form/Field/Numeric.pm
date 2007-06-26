@@ -63,6 +63,9 @@ sub internal_value
   return $value;
 }
 
+# This is $RE{num}{dec} from Regexp::Common::number
+my $Match = qr{^(?:(?i)(?:[+-]?)(?:(?=[0123456789]|[.])(?:[0123456789]*)(?:(?:[.])(?:[0123456789]{0,}))?)(?:(?:[E])(?:(?:[+-]?)(?:[0123456789]+))|))$};
+
 sub validate
 {
   my($self) = shift;
@@ -78,10 +81,7 @@ sub validate
 
   my $name = sub { $self->error_label || $self->name };
 
-  # this regexp could probably be improved.
-  my $numeric = ($value =~ /^[+-]?\d+(\.\d*)?$/);
-
-  unless($numeric)
+  unless($value =~ $Match)
   {
     if(defined $min && $min >= 0)
     {
