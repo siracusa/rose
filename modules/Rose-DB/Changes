@@ -1,6 +1,7 @@
-0.735 (05.28.2007) - John Siracusa <siracusa@mindspring.com>
+0.735 (06.27.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Improved parsing of SET values.
+    * Fixed the test suite's detection of the broken DBD::SQLite 1.13.
 
 0.734 (05.04.2007) - John Siracusa <siracusa@mindspring.com>
 
