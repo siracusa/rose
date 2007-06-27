@@ -14,6 +14,10 @@ BEGIN
     Test::More->import(skip_all =>  $ENV{'RDBO_NO_SQLITE'} ? 
       'SQLite tests disabled' : 'Missing DBD::SQLite 1.08+');
   }
+  elsif($DBD::SQLite::VERSION == 1.13)
+  {
+    Test::More->import(skip_all =>  'DBD::SQLite 1.13 is broken');  
+  }
   else
   {
     Test::More->import(tests => 44);
