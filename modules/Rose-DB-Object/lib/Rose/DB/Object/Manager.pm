@@ -718,6 +718,15 @@ sub get_objects
     # more than one object.
     foreach my $name (@$with_objects)
     {
+      my $tn_name = $name;
+
+      if(index($tn_name, '.') > 0) # dot at start is invalid, so "> 0" is correct
+      {
+        $tn_name =~ /^(.+)\.([^.]+)$/;
+      }
+
+      $rel_tn{$tn_name} = $i + 1; # note the tN table number of this relationship
+
       my $key;
 
       # Chase down multi-level keys: e.g., colors.name.types
@@ -845,7 +854,7 @@ sub get_objects
         $belongs_to[$i] = 0;
       }
 
-      $rel_tn{$arg} = $i + 1; # note the tN table number of this relationship
+      #$rel_tn{$arg} = $i + 1; # note the tN table number of this relationship
 
       my $rel = $parent_meta->foreign_key($name) || 
                 $parent_meta->relationship($name) ||
@@ -876,7 +885,7 @@ sub get_objects
           {
             my $param = $query_args->[$i];
 
-            unless($param =~ s/^t2\./$rel_tn{$arg}./)
+            unless($param =~ s/^t2\./t$rel_tn{$arg}./)
             {
               $param = "t$rel_tn{$arg}.$param"  unless($param =~ /^t\d+\./);
             }
@@ -922,8 +931,8 @@ sub get_objects
           $rel->method_name('get_set_now') ||
           $rel->method_name('get_set_on_save') ||
           Carp::confess "No 'get_set', 'get_set_now', or 'get_set_on_save' ",
-                        "method found for relationship '$name' in class ",
-                        "$class";
+                        "method found for $rel_type '$name' in class ",
+                        $rel->parent->class;
 
         #$subobject_keys[$i - 1] = $rel->hash_key;
 

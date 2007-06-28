@@ -1,4 +1,4 @@
-0.764_18 (06.28.2007) - John Siracusa <siracusa@mindspring.com>
+0.764_19 (06.28.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added a value_type attribute to SET columns.
     * Added a normalize_get_objects_args() utility method to make
