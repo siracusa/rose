@@ -81,7 +81,7 @@ sub handle_error
   return 1;
 }
 
-sub normalize_get_object_args
+sub normalize_get_objects_args
 {
   # Handle all these arg forms:
   #
@@ -4490,7 +4490,7 @@ Examples:
       $iterator->finish  if(...); # finish early?
     }
 
-=item B<normalize_get_object_args [ARGS]>
+=item B<normalize_get_objects_args [ARGS]>
 
 This method takes ARGS in the forms accepted by L<get_objects|/get_objects> (and other similar methods) and normalizes them into name/value pairs.  Since L<get_objects|/get_objects> can take arguments in many forms, this method is useful when overriding L<get_objects|/get_objects> in a custom L<Rose::DB::Object::Manager> subclass.  Example:
 
@@ -4506,7 +4506,7 @@ This method takes ARGS in the forms accepted by L<get_objects|/get_objects> (and
     
     sub get_products
     {
-      my($class, %args) = shift->normalize_get_object_args(@_);
+      my($class, %args) = shift->normalize_get_objects_args(@_);
       
       # Detect, extract, and handle custom argument
       if(delete $args{'active_only'})
