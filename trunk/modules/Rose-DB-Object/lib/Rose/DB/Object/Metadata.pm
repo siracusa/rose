@@ -1540,7 +1540,7 @@ sub register_class
     or Carp::croak "Missing class for metadata object $self";
 
   my $db = $self->db;
-$DB::single = 1;
+
   my $catalog = $self->select_catalog($db);
   my $schema  = $db ? ($db->registration_schema || $self->select_schema($db)) :
                 $self->select_schema($db);;
@@ -1562,24 +1562,18 @@ $DB::single = 1;
   # won't show up in a catalog, schema, or table name, so I'm guarding
   # against someone changing it to "-" (or whatever) elsewhere in the code.
   local $; = "\034";
-#print STDERR "REGISTER $class AS $catalog,$schema,$table\n";
+
   # Register with all available information.
   # Ug, have to store lowercase versions too because MySQL sometimes returns
   # lowercase names for tables that are actually mixed case.  Grrr...
   $reg->{'catalog-schema-table',$catalog,$schema,$table} =
-#    $reg->{'schema-table',$schema,$table}  =
-#    $reg->{'catalog-table',$catalog,$table} =
     $reg->{'table',$table} =
     $reg->{'lc-catalog-schema-table',$catalog,$schema,lc $table} =
-#    $reg->{'lc-schema-table',$schema,lc $table}  =
-#    $reg->{'lc-catalog-table',$catalog,lc $table} =
     $reg->{'lc-table',lc $table} = $class;
 
   $reg->{'catalog-schema-table',$catalog,$default_schema,$table} = $class
     if(defined $default_schema);
 
-#print STDERR "REGISTER $class AS $catalog,$default_schema,$table\n"
-#    if(defined $default_schema);
   push(@{$reg->{'classes'}}, $class);
 
   return;
@@ -1636,15 +1630,6 @@ sub class_for
     $reg->{'catalog-schema-table',$catalog,$schema,$table} ||
     $reg->{'catalog-schema-table',$catalog,$default_schema,$table} ||
     ($schema eq NULL_SCHEMA && $default_schema eq NULL_SCHEMA ? $reg->{'lc-table',$table} : undef);
-$DB::single = 1;
-#no warnings 'uninitialized';
-#print STDERR "RETURN $catalog,$schema,$table = $f_class\n";
-#   $f_class =
-#     $reg->{'catalog-schema-table',$catalog,$schema,$table} ||
-#     $reg->{'catalog-schema-table',$catalog,$default_schema,$table} ||
-#     $reg->{'schema-table',$schema,$table}  ||
-#     $reg->{'catalog-table',$catalog,$table} ||
-#     $reg->{'table',$table};
 
   # Ug, have to check lowercase versions too because MySQL sometimes returns
   # lowercase names for tables that are actually mixed case.  Grrr...
@@ -1656,13 +1641,6 @@ $DB::single = 1;
       $reg->{'lc-catalog-schema-table',$catalog,$schema,$table} ||
       $reg->{'lc-catalog-schema-table',$catalog,$default_schema,$table} ||
       ($schema eq NULL_SCHEMA && $default_schema eq NULL_SCHEMA ? $reg->{'lc-table',$table} : undef);
-
-#     return
-#       $reg->{'lc-catalog-schema-table',$catalog,$schema,$table} ||
-#       $reg->{'lc-catalog-schema-table',$catalog,$default_schema,$table} ||
-#       $reg->{'lc-schema-table',$schema,$table}  ||
-#       $reg->{'lc-catalog-table',$catalog,$table} ||
-#       $reg->{'lc-table',$table};  
   }
 
   return $f_class;

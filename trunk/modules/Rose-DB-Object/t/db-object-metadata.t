@@ -68,7 +68,7 @@ $meta->initialize(preserve_existing => 1);
 
 is($meta->class_for(table => 'mytable'), 'MyDBObject', 
   'class_for() as object method');
-$DB::single = 1;
+
 is(Rose::DB::Object::Metadata->class_for(table => 'mytable'), 'MyDBObject', 
   'class_for() as class method');
 

@@ -150,8 +150,7 @@ EOF
                 "information_schema for table '", $self->table, "' ",
                 " in database '$db_name'";
           }
-$DB::single = 1;
-#print STDERR $self->class, " LOOKUP FK CLASS FOR T $foreign_table S $db_name\n";
+
           my $foreign_class = $self->class_for(table => $foreign_table, schema => $db_name);
 
           unless($foreign_class)

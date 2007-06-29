@@ -9,7 +9,7 @@ use SQL::ReservedWords::MySQL();
 
 use Rose::DB;
 
-our $VERSION = '0.734';
+our $VERSION = '0.735';
 
 our $Debug = 0;
 
@@ -23,6 +23,8 @@ __PACKAGE__->supports_schema(1);
 #
 # Object methods
 #
+
+sub registration_schema { shift->database }
 
 sub build_dsn
 {
@@ -83,6 +85,41 @@ sub quote_table_name
   my $name = $_[1];
   $name =~ s/`/``/g;
   return qq(`$name`);
+}
+
+sub list_tables
+{
+  my($self, %args) = @_;
+
+  my $types = $args{'include_views'} ? "'TABLE','VIEW'" : 'TABLE';
+  my @tables;
+
+  my $schema = $self->schema;
+  $schema = $self->database  unless(defined $schema);
+
+  eval
+  {
+    my $dbh = $self->dbh or die $self->error;
+
+    local $dbh->{'RaiseError'} = 1;
+    local $dbh->{'FetchHashKeyName'} = 'NAME';
+
+    my $sth = $dbh->table_info($self->catalog, $schema, '%', $types);
+
+    $sth->execute;
+
+    while(my $table_info = $sth->fetchrow_hashref)
+    {
+      push(@tables, $self->unquote_table_name($table_info->{'TABLE_NAME'}));
+    }
+  };
+
+  if($@)
+  {
+    Carp::croak "Could not list tables from ", $self->dsn, " - $@";
+  }
+
+  return wantarray ? @tables : \@tables;
 }
 
 sub init_date_handler { DateTime::Format::MySQL->new }
