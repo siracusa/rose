@@ -19,7 +19,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.734_04';
+our $VERSION = '0.734_05';
 
 our $Debug = 0;
 
@@ -197,6 +197,7 @@ sub setup_dynamic_class_for_driver
 sub unregister_db { shift->registry->delete_entry(@_) }
 
 sub default_implicit_schema { undef }
+sub registration_schema     { undef }
 
 sub use_private_registry { $_[0]->registry(Rose::DB::Registry->new(parent => $_[0])) }
 
