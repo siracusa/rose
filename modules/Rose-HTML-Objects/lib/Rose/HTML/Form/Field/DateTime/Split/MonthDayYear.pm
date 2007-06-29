@@ -9,7 +9,7 @@ use Rose::HTML::Object::Messages qw(:date);
 use Rose::HTML::Form::Field::DateTime::Split;
 our @ISA = qw(Rose::HTML::Form::Field::DateTime::Split);
 
-our $VERSION = '0.547';
+our $VERSION = '0.549';
 
 sub build_field
 {
@@ -142,6 +142,36 @@ FIELD_LABEL_YEAR  = "Year"
 FIELD_ERROR_LABEL_MONTH = "month"
 FIELD_ERROR_LABEL_DAY   = "day"
 FIELD_ERROR_LABEL_YEAR  = "year"
+
+[% LOCALE de %]
+
+FIELD_LABEL_MONTH = "Monat"
+FIELD_LABEL_DAY   = "Tag"
+FIELD_LABEL_YEAR  = "Jahr"
+
+FIELD_ERROR_LABEL_MONTH = "Monat"
+FIELD_ERROR_LABEL_DAY   = "Tag"
+FIELD_ERROR_LABEL_YEAR  = "Jahr"
+
+[% LOCALE fr %]
+
+FIELD_LABEL_MONTH = "Mois"
+FIELD_LABEL_DAY   = "Jour"
+FIELD_LABEL_YEAR  = "Année"
+
+FIELD_ERROR_LABEL_MONTH = "mois"
+FIELD_ERROR_LABEL_DAY   = "jour"
+FIELD_ERROR_LABEL_YEAR  = "année"
+
+[% LOCALE bg %]
+
+FIELD_LABEL_MONTH = "Месец"
+FIELD_LABEL_DAY   = "Ден"
+FIELD_LABEL_YEAR  = "Година"
+
+FIELD_ERROR_LABEL_MONTH = "месец"
+FIELD_ERROR_LABEL_DAY   = "ден"
+FIELD_ERROR_LABEL_YEAR  = "година"
 
 __END__
 

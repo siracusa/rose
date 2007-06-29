@@ -90,6 +90,12 @@ NUM_INVALID_INTEGER          = "[label] doit être un entier."
 NUM_INVALID_INTEGER_POSITIVE = "[label] doit être un entier positif."
 NUM_NOT_POSITIVE_INTEGER     = "[label] doit être un entier positif."
 
+[% LOCALE bg %]
+
+NUM_INVALID_INTEGER          = "Полето '[label]' трябва да бъде цяло число."
+NUM_INVALID_INTEGER_POSITIVE = "Полето '[label]' трябва да бъде цяло положително число."
+NUM_NOT_POSITIVE_INTEGER     = "Полето '[label]' трябва да бъде цяло положително число."
+
 __END__
 
 =head1 NAME

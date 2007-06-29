@@ -70,6 +70,10 @@ __DATA__
 
 STRING_OVERFLOW = "[label] must not exceed [maxlength] characters."
 
+[% LOCALE bg %]
+
+STRING_OVERFLOW = "Полето '[label]' не трябва да надхвърля [maxlength] символа."
+
 __END__
 
 =head1 NAME

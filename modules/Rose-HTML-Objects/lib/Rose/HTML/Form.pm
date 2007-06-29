@@ -1497,6 +1497,10 @@ FORM_HAS_ERRORS = "Ein oder mehrere Felder sind fehlerhaft."
 
 FORM_HAS_ERRORS = "Erreurs dans un ou plusieurs champs."
 
+[% LOCALE bg %]
+
+FORM_HAS_ERRORS = "Има грешка в поне едно поле."
+
 __END__
 
 =head1 NAME

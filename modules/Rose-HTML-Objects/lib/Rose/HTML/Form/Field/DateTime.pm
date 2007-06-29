@@ -123,6 +123,10 @@ DATE_INVALID = "Ungültiges Datum."
 
 DATE_INVALID = "Date invalide."
 
+[% LOCALE bg %]
+
+DATE_INVALID = "Невалидна дата."
+
 __END__
 
 =head1 NAME

@@ -9,7 +9,7 @@ use Rose::HTML::Object::Errors qw(:email);
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.541';
+our $VERSION = '0.549';
 
 sub validate
 {
@@ -53,6 +53,10 @@ EMAIL_INVALID = "Ungültige Email-Adresse."
 [% LOCALE fr %]
 
 EMAIL_INVALID = "Adresse e-mail invalide."
+
+[% LOCALE bg %]
+
+EMAIL_INVALID = "Невалиден email адрес."
 
 __END__
 
