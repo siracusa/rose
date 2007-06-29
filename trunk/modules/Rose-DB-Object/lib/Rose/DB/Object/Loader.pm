@@ -934,7 +934,7 @@ sub make_classes
 
     $meta->table($table);
     $meta->convention_manager($cm->clone);
-
+    $meta->db($db);
     $meta->auto_initialize(%args);
 
     push(@classes, $obj_class);

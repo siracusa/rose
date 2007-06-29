@@ -1540,12 +1540,15 @@ sub register_class
     or Carp::croak "Missing class for metadata object $self";
 
   my $db = $self->db;
-
+$DB::single = 1;
   my $catalog = $self->select_catalog($db);
-  my $schema  = $self->select_schema($db);
+  my $schema  = $db ? ($db->registration_schema || $self->select_schema($db)) :
+                $self->select_schema($db);;
 
   $catalog  = NULL_CATALOG  unless(defined $catalog);
   $schema   = NULL_SCHEMA   unless(defined $schema);
+
+  my $default_schema = $db ? $db->default_implicit_schema : undef;
 
   my $table = $self->table 
     or Carp::croak "Missing table for metadata object $self";
@@ -1559,19 +1562,24 @@ sub register_class
   # won't show up in a catalog, schema, or table name, so I'm guarding
   # against someone changing it to "-" (or whatever) elsewhere in the code.
   local $; = "\034";
-
+#print STDERR "REGISTER $class AS $catalog,$schema,$table\n";
   # Register with all available information.
   # Ug, have to store lowercase versions too because MySQL sometimes returns
   # lowercase names for tables that are actually mixed case.  Grrr...
   $reg->{'catalog-schema-table',$catalog,$schema,$table} =
-    $reg->{'schema-table',$schema,$table}  =
-    $reg->{'catalog-table',$catalog,$table} =
+#    $reg->{'schema-table',$schema,$table}  =
+#    $reg->{'catalog-table',$catalog,$table} =
     $reg->{'table',$table} =
     $reg->{'lc-catalog-schema-table',$catalog,$schema,lc $table} =
-    $reg->{'lc-schema-table',$schema,lc $table}  =
-    $reg->{'lc-catalog-table',$catalog,lc $table} =
+#    $reg->{'lc-schema-table',$schema,lc $table}  =
+#    $reg->{'lc-catalog-table',$catalog,lc $table} =
     $reg->{'lc-table',lc $table} = $class;
 
+  $reg->{'catalog-schema-table',$catalog,$default_schema,$table} = $class
+    if(defined $default_schema);
+
+#print STDERR "REGISTER $class AS $catalog,$default_schema,$table\n"
+#    if(defined $default_schema);
   push(@{$reg->{'classes'}}, $class);
 
   return;
@@ -1623,29 +1631,41 @@ sub class_for
   # wont' show up in a catalog, schema, or table name, so I'm guarding
   # against someone changing it to "-" elsewhere in the code or whatever.
   local $; = "\034";
-
-  my $f_table =
+                        
+  my $f_class =
     $reg->{'catalog-schema-table',$catalog,$schema,$table} ||
     $reg->{'catalog-schema-table',$catalog,$default_schema,$table} ||
-    $reg->{'schema-table',$schema,$table}  ||
-    $reg->{'catalog-table',$catalog,$table} ||
-    $reg->{'table',$table};
+    ($schema eq NULL_SCHEMA && $default_schema eq NULL_SCHEMA ? $reg->{'lc-table',$table} : undef);
+$DB::single = 1;
+#no warnings 'uninitialized';
+#print STDERR "RETURN $catalog,$schema,$table = $f_class\n";
+#   $f_class =
+#     $reg->{'catalog-schema-table',$catalog,$schema,$table} ||
+#     $reg->{'catalog-schema-table',$catalog,$default_schema,$table} ||
+#     $reg->{'schema-table',$schema,$table}  ||
+#     $reg->{'catalog-table',$catalog,$table} ||
+#     $reg->{'table',$table};
 
   # Ug, have to check lowercase versions too because MySQL sometimes returns
   # lowercase names for tables that are actually mixed case.  Grrr...
-  unless($f_table)
+  unless($f_class)
   {
     $table = lc $table;
 
     return
       $reg->{'lc-catalog-schema-table',$catalog,$schema,$table} ||
       $reg->{'lc-catalog-schema-table',$catalog,$default_schema,$table} ||
-      $reg->{'lc-schema-table',$schema,$table}  ||
-      $reg->{'lc-catalog-table',$catalog,$table} ||
-      $reg->{'lc-table',$table};  
+      ($schema eq NULL_SCHEMA && $default_schema eq NULL_SCHEMA ? $reg->{'lc-table',$table} : undef);
+
+#     return
+#       $reg->{'lc-catalog-schema-table',$catalog,$schema,$table} ||
+#       $reg->{'lc-catalog-schema-table',$catalog,$default_schema,$table} ||
+#       $reg->{'lc-schema-table',$schema,$table}  ||
+#       $reg->{'lc-catalog-table',$catalog,$table} ||
+#       $reg->{'lc-table',$table};  
   }
 
-  return $f_table;
+  return $f_class;
 }
 
 #sub made_method_for_column 
