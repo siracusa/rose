@@ -14642,6 +14642,8 @@ EOF
                   <<"EOF", 'perl_manager_class - pg');
 package MyPgObjectMgr;
 
+use strict;
+
 use Rose::DB::Object::Manager;
 our \@ISA = qw(Rose::DB::Object::Manager);
 
