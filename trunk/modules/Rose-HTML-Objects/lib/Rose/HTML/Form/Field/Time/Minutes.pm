@@ -8,7 +8,7 @@ use Rose::HTML::Object::Messages qw(:time);
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.547';
+our $VERSION = '0.549';
 
 __PACKAGE__->add_required_html_attrs(
 {
@@ -51,17 +51,28 @@ __DATA__
 
 [% LOCALE en %]
 
+TIME_INVALID_MINUTE      = "Invalid minute."
 FIELD_LABEL_MINUTE       = "Minute"
 FIELD_ERROR_LABEL_MINUTE = "minute"
-TIME_INVALID_MINUTE      = "Invalid minute."
 
 [% LOCALE de %]
 
-TIME_INVALID_MINUTE = "Ungültige Minuten."
+TIME_INVALID_MINUTE      = "Ungültige Minuten."
+FIELD_LABEL_MINUTE       = "Minuten"
+FIELD_ERROR_LABEL_MINUTE = "Minuten"
 
 [% LOCALE fr %]
 
-TIME_INVALID_MINUTE = "Minute invalide."
+TIME_INVALID_MINUTE      = "Minute invalide."
+FIELD_LABEL_MINUTE       = "Minute"
+FIELD_ERROR_LABEL_MINUTE = "minute"
+
+[% LOCALE bg %]
+
+TIME_INVALID_MINUTE      = "Невалидна минута."
+FIELD_LABEL_MINUTE       = "Минута"
+FIELD_ERROR_LABEL_MINUTE = "минута"
+
 
 __END__
 

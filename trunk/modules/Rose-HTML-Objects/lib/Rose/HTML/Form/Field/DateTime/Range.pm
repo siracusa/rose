@@ -21,7 +21,7 @@ use Rose::Object::MakeMethods::Generic
   ]
 );
 
-our $VERSION = '0.548';
+our $VERSION = '0.549';
 
 sub build_field
 {
@@ -266,6 +266,10 @@ DATE_MIN_GREATER_THAN_MAX = "Das Von-Datum darf nicht größer sein, als das Bis
 [% LOCALE fr %]
 
 DATE_MIN_GREATER_THAN_MAX = "La date min ne peut pas être postérieure à la date max."
+
+[% LOCALE bg %]
+
+DATE_MIN_GREATER_THAN_MAX = "Началната дата трябва да бъде преди крайната."
 
 __END__
 

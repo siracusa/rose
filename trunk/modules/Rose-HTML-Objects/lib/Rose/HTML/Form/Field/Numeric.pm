@@ -150,6 +150,14 @@ NUM_NOT_POSITIVE_NUMBER     = "[label] doit être un nombre positif."
 NUM_BELOW_MIN               = "[label] doit être plus grand ou égal à [value]."
 NUM_ABOVE_MAX               = "[label] doit être plus petit ou égal à [value]."
 
+[% LOCALE bg %]
+
+NUM_INVALID_NUMBER          = "Полето '[label]' трябва да бъде цяло число."
+NUM_INVALID_NUMBER_POSITIVE = "Полето '[label]' трябва да бъде цяло положително число."
+NUM_NOT_POSITIVE_NUMBER     = "Полето '[label]' трябва да бъде цяло положително число."
+NUM_BELOW_MIN               = "Стойността в '[label]' трябва да бъде по-голяма от [value]."
+NUM_ABOVE_MAX               = "Стойността в '[label]' трябва да бъде по-малка или равна на [value]."
+
 __END__
 
 =head1 NAME

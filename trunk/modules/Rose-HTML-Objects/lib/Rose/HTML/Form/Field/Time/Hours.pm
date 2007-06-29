@@ -8,7 +8,7 @@ use Rose::HTML::Object::Messages qw(:time);
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.547';
+our $VERSION = '0.549';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -69,17 +69,27 @@ __DATA__
 
 [% LOCALE en %]
 
+TIME_INVALID_HOUR      = "Invalid hour."
 FIELD_LABEL_HOUR       = "Hour"
 FIELD_ERROR_LABEL_HOUR = "hour"
-TIME_INVALID_HOUR      = "Invalid hour."
 
 [% LOCALE de %]
 
 TIME_INVALID_HOUR = "Ungültige Stunde."
+FIELD_LABEL_HOUR       = "Stunde"
+FIELD_ERROR_LABEL_HOUR = "Stunde"
 
 [% LOCALE fr %]
 
-TIME_INVALID_HOUR = "Heure invalide."
+TIME_INVALID_HOUR      = "Heure invalide."
+FIELD_LABEL_HOUR       = "Heure"
+FIELD_ERROR_LABEL_HOUR = "heure"
+
+[% LOCALE bg %]
+
+TIME_INVALID_HOUR      = "Невалиден час."
+FIELD_LABEL_HOUR       = "Час"
+FIELD_ERROR_LABEL_HOUR = "час"
 
 __END__
 

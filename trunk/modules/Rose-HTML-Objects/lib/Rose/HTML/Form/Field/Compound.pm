@@ -13,7 +13,7 @@ our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.548';
+our $VERSION = '0.549';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -355,6 +355,11 @@ FIELD_REQUIRED_SUBFIELDS = "[@missing] fehlen."
 
 FIELD_REQUIRED_SUBFIELD  = "Le champ [@missing] manque."
 FIELD_REQUIRED_SUBFIELDS = "Les champs [@missing] manquent."
+
+[% LOCALE bg %]
+
+FIELD_REQUIRED_SUBFIELD  = "Непопълнени поле [@missing]."
+FIELD_REQUIRED_SUBFIELDS = "Непопълнени полета [@missing]."
 
 __END__
 

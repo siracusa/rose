@@ -978,6 +978,15 @@ FIELD_PARTIAL_VALUE     = "Valeur incomplète."
 FIELD_INVALID_GENERIC   = "Valeur invalide."
 FIELD_INVALID_LABELLED  = "[label] est invalide."
 
+[% LOCALE bg %]
+
+FIELD_REQUIRED_GENERIC  = "Това поле е задължително."
+FIELD_REQUIRED_LABELLED = "Полето '[1]' е задължително."
+
+FIELD_PARTIAL_VALUE     = "Непълна стойност."
+FIELD_INVALID_GENERIC   = "Стойността е невалидна."
+FIELD_INVALID_LABELLED  = "Полето '[label]' е невалидно."
+
 __END__
 
 =head1 NAME
