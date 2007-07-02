@@ -39,12 +39,12 @@ SKIP:
 SELECT 
 COUNT(*)
 FROM
-  articles
+  articles t1
 WHERE
-  id IN (id, '1') AND
-  category IN ('sports', 'science') AND
-  type = 'news' AND
-  (title LIKE '%million%' OR title LIKE '%resident%')
+  t1.id IN (id, '1') AND
+  t1.category IN ('sports', 'science') AND
+  t1.type = 'news' AND
+  (t1.title LIKE '%million%' OR t1.title LIKE '%resident%')
 EOF
 
   # XXX: Need more tests here...
