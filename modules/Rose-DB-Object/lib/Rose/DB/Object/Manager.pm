@@ -364,6 +364,9 @@ sub get_objects
   my $hints            = delete $args{'hints'} || {};
   my $select           = $args{'select'};
 
+  my $table_aliases    = exists $args{'table_aliases'} ? 
+    $args{'table_aliases'} : ($args{'table_aliases'} = 1);
+
   $with_objects    = undef  if(ref $with_objects && !@$with_objects);
   $require_objects = undef  if(ref $require_objects && !@$require_objects);
 
@@ -1732,7 +1735,16 @@ sub get_objects
           ($sub_args{'with_objects'} && (!ref $sub_args{'with_objects'} || @{$sub_args{'with_objects'}})) ||
           ($sub_args{'require_objects'} && (!ref $sub_args{'require_objects'} || @{$sub_args{'require_objects'}}));
 
-        $columns = $multi_table ?
+        if($multi_table)
+        {
+          $table_aliases = 1;
+        }
+        else
+        {
+          $table_aliases = $multi_table  unless(defined $table_aliases);
+        }
+
+        $columns = $table_aliases ?
           join(', ', map { "t1.$_" } @{$columns{$tables[0]}}) :
           join(', ', map { $_ } @{$columns{$tables[0]}});
       }
@@ -2883,8 +2895,9 @@ sub delete_objects
   my @bind_params;
   $args{'bind_params'} = \@bind_params;
 
+  # Avert your eyes...
   my($where, $bind) = 
-    $class->get_objects(%args, return_sql => 1, where_only => 1);
+    $class->get_objects(%args, return_sql => 1, where_only => 1, table_aliases => undef);
 
   my $sql = 'DELETE FROM ' . $meta->fq_table_sql($db) .
             ($where ? " WHERE\n$where" : '');
@@ -2988,8 +3001,14 @@ sub update_objects
 
   $args{'query'} = $set;
 
+  # Avert your eyes...
   my($set_sql, $set_bind) = 
-    $class->get_objects(%args, return_sql => 1, where_only => 1, logic => ',', set => 1);
+    $class->get_objects(%args,
+                        return_sql    => 1,
+                        where_only    => 1,
+                        logic         => ',', 
+                        set           => 1, 
+                        table_aliases => 0);
 
   my $sql;
 
@@ -3000,7 +3019,10 @@ sub update_objects
     my $where_sql;
 
     ($where_sql, $where_bind) = 
-      $class->get_objects(%args, return_sql => 1, where_only => 1);
+      $class->get_objects(%args, 
+                          return_sql    => 1,
+                          where_only    => 1,
+                          table_aliases => 0);
 
     $sql = 'UPDATE ' . $meta->fq_table_sql($db) . 
            "\nSET\n$set_sql\nWHERE\n$where_sql";
@@ -4040,6 +4062,10 @@ A fully formed SQL "ORDER BY ..." clause, sans the words "ORDER BY", or a refere
 Within each string, any instance of "NAME." will be replaced with the appropriate "tN." table alias, where NAME is a table, foreign key, or relationship name.  All unprefixed simple column names are assumed to belong to the primary table ("t1").
 
 If selecting sub-objects (via C<require_objects> or C<with_objects>) that are related through "one to many" or "many to many" relationships, the first condition in the sort order clause must be a column in the primary table (t1).  If this condition is not met, the list of primary key columns will be added to the beginning of the sort order clause automatically.
+
+=item B<table_aliases BOOL>
+
+When only a single table is used in q auery, this parameter controls whether or not the "tN" aliases are used.  If the parameter is not passed, then tables are aliased.  If it is passed with a false value, then tables are not aliased.  When more than one table participates in a query, the "tN" table aliases are always used and this option is ignored.
 
 =item B<unique_aliases BOOL>
 

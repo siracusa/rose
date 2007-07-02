@@ -83,6 +83,8 @@ sub build_select
   my $from_and_where_only = delete $args{'from_and_where_only'};
   my $allow_empty_lists   = $args{'allow_empty_lists'};
   my $unique_aliases = $args{'unique_aliases'};
+  my $table_aliases  = exists $args{'table_aliases'} ? 
+    $args{'table_aliases'} : ($args{'table_aliases'} = 1);
 
   if($args{'limit'})
   {
@@ -227,6 +229,15 @@ sub build_select
   my $multi_table = @$tables > 1 ? 1 : 0;
   my $table_num = 1;
 
+  if($multi_table)
+  {
+    $table_aliases = 1;
+  }
+  else
+  {
+    $table_aliases = $multi_table  unless(defined $table_aliases);
+  }
+
   my($db, %proto, $do_bind_params); # db object and prototype objects used for formatting values
 
   foreach my $table (@$tables)
@@ -317,7 +328,7 @@ sub build_select
 
       unless($query_only_columns || !$select_columns{$column})
       {
-        if($multi_table)
+        if($table_aliases)
         {
           push(@select_columns, 
             $obj_meta ? 
@@ -394,7 +405,7 @@ sub build_select
           }
 
           my $placeholder = $col_meta ? $col_meta->query_placeholder_sql($db) : '?';
-          my $sql_column = $multi_table ? $short_column :
+          my $sql_column = $table_aliases ? $short_column :
                            $db ? $db->auto_quote_column_name($column) : $column;
 
           if(ref($val))
@@ -639,11 +650,11 @@ sub build_select
 
       if($db)
       {
-        $from_tables_sql = $multi_table ?
+        $from_tables_sql = $table_aliases ?
           join(",\n", map 
           {
             $i++;
-            '  ' . $db->format_table_with_alias($_, "t$i", $hints->{"t$i"})
+            '  ' . $db->format_table_with_alias($_, "t$i", $hints->{"t$i"} || ($i == 1 ? $hints : undef))
           } @$tables_sql) :
           '  ' . (($oracle_hack || keys %$hints) ? 
             $db->format_table_with_alias($tables_sql->[0], "t1", $hints->{'t1'} || $hints) :
@@ -651,7 +662,7 @@ sub build_select
       }
       else
       {
-        $from_tables_sql = $multi_table ?
+        $from_tables_sql = $table_aliases ?
           join(",\n", map { $i++; "  $_ t$i" } @$tables_sql) :
           "  $tables_sql->[0]";
       }
