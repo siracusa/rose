@@ -1530,7 +1530,7 @@ sub get_objects
     eval
     {
       local $dbh->{'RaiseError'} = 1;
-      $Debug && warn "$sql\n";
+      $Debug && warn "$sql (", join(', ', @$bind), ")\n";
       my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
                                   $dbh->prepare($sql);
 
@@ -3037,7 +3037,7 @@ sub update_objects
   eval
   {
     local $dbh->{'RaiseError'} = 1;  
-    $Debug && warn "$sql\n";
+    $Debug && warn "$sql (", join(', ', @$set_bind, @$where_bind), ")\n";
 
     # $meta->prepare_bulk_update_options (defunct)
     my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
@@ -3176,7 +3176,7 @@ sub get_objects_from_sql
   {
     local $dbh->{'RaiseError'} = 1;
 
-    $Debug && warn "$sql\n";
+    $Debug && warn "$sql (", join(', ', @$exec_args), ")\n";
     my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
                                 $dbh->prepare($sql) or die $dbh->errstr;
 
@@ -3296,7 +3296,7 @@ sub get_objects_iterator_from_sql
   {
     local $dbh->{'RaiseError'} = 1;
 
-    $Debug && warn "$sql\n";
+    $Debug && warn "$sql (", join(', ', @$exec_args), ")\n";
     $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
                              $dbh->prepare($sql) or die $dbh->errstr;
 
