@@ -2304,6 +2304,7 @@ EOF
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       db           => $db,
+      debug => 1,
       object_class => 'MyPgObject',
       require_objects => [ 'nicks.type', 'nicks.type', 'nicks' ],
       with_objects    => [ 'nicks.type.t2', 'nicks.alts' ],
@@ -8634,7 +8635,7 @@ SKIP: foreach my $db_type (qw(sqlite))
       ],
       clauses => [ "LOWER(status) LIKE 'ac%'" ],
       limit   => 5,
-      sort_by => 'id');
+      sort_by => [ 'id', \q(LOWER(name)) ]);
 
   is(ref $objs, 'ARRAY', "get_objects() 1 - $db_type");
   $objs ||= [];

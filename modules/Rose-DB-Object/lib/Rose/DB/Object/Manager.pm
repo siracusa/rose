@@ -678,18 +678,17 @@ sub get_objects
   # Pre-process sort_by args
   if(my $sort_by = $args{'sort_by'})
   {
-    if($num_subtables > 0)
+    $sort_by = [ $sort_by ]  unless(ref $sort_by eq 'ARRAY');
+
+    if($num_subtables == 0 && defined $table_aliases && $table_aliases == 0)
     {
-      $sort_by = [ $sort_by ]  unless(ref $sort_by);
-    }
-    else # trim t1. or primary table prefixes
-    {
+      # trim t1. or primary table prefixes
       my $prefix_re = '\b(?:t1|' . $meta->table . ')\.';
       $prefix_re = qr($prefix_re);
 
-      foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
+      foreach my $sort (@$sort_by)
       {
-        $sort =~ s/$prefix_re//g;
+        $sort =~ s/$prefix_re//g  unless(ref $sort);
       }
     }
 
@@ -1053,21 +1052,16 @@ sub get_objects
           if($mgr_args->{'sort_by'} && (!%fetch || 
              ($fetch{$tables[-1]} && !$fetch{$rel_names[-1]})))
           {
-            my $sort_by = $mgr_args->{'sort_by'};
+            my $sort_by = ref $mgr_args->{'sort_by'} eq 'ARRAY' ?
+              [ @{$mgr_args->{'sort_by'}} ] : [ $mgr_args->{'sort_by'} ];
 
-            foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
+            foreach my $sort (@$sort_by)
             {
-              $sort =~ s/^(['"`]?)\w+\1(?:\s+(?:ASC|DESC))?$/t$i.$sort/;
+              $sort =~ s/^(['"`]?)(\w+)\1(\s+(?:ASC|DESC))?$/t$i.$1$2$1$3/i
+                unless(ref $sort);
             }
 
-            if($args{'sort_by'})
-            {
-              push(@{$args{'sort_by'}}, $sort_by);
-            }
-            else
-            {
-              $args{'sort_by'} = ref $sort_by ? [ @$sort_by ] : [ $sort_by ]
-            }
+            push(@{$args{'sort_by'}}, @$sort_by);
           }
         }
       }
@@ -1328,22 +1322,17 @@ sub get_objects
           if($mgr_args->{'sort_by'} && (!%fetch || 
              ($fetch{$tables[-1]} && !$fetch{$rel_names[-1]})))
           {
-            my $sort_by = $mgr_args->{'sort_by'};
+            my $sort_by = ref $mgr_args->{'sort_by'} eq 'ARRAY' ?
+              [ @{$mgr_args->{'sort_by'}} ] : [ $mgr_args->{'sort_by'} ];
 
             # translate un-prefixed simple columns
-            foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
+            foreach my $sort (@$sort_by)
             {
-              $sort =~ s/^(['"`]?)\w+\1(?:\s+(?:ASC|DESC))?$/t$i.$sort/;
+              $sort =~ s/^(['"`]?)(\w+)\1(\s+(?:ASC|DESC))?$/t$i.$1$2$1$3/i
+                unless(ref $sort);
             }
 
-            if($args{'sort_by'})
-            {
-              push(@{$args{'sort_by'}}, $sort_by);
-            }
-            else
-            {
-              $args{'sort_by'} = ref $sort_by ? [ @$sort_by ] : [ $sort_by ]
-            }
+            push(@{$args{'sort_by'}}, @$sort_by);
           }
         }
       }
@@ -1573,7 +1562,7 @@ sub get_objects
     # Alter sort_by SQL, replacing table and relationship names with aliases.
     # This is to prevent databases like Postgres from "adding missing FROM
     # clause"s.  See: http://sql-info.de/postgresql/postgres-gotchas.html#1_5
-    if($num_subtables > 0)
+    if(1 || $num_subtables > 0)
     {
       my $i = 0;
 
@@ -1586,9 +1575,10 @@ sub get_objects
         # Conditionalize schema part, if necessary
         $table_unquoted =~ s/^([^.]+\.)/(?:\Q$1\E)?/;
 
-        foreach my $sort (@$sort_by)
+        foreach my $sort (grep { !ref } @$sort_by)
         {
-          unless($sort =~ s/^(['"`]?)\w+\1(?:\s+(?:ASC|DESC))?$/t1.$sort/ ||
+          no warnings 'uninitialized';
+          unless($sort =~ s/^(['"`]?)(\w+)\1(\s+(?:ASC|DESC))?$/t1.$1$2$1$3/i ||
                  $sort =~ s/\b$table_unquoted\./t$i./g)
           {
             if(my $rel_name = $rel_name{"t$i"})
@@ -1611,7 +1601,7 @@ sub get_objects
 
         foreach my $sort (@$sort_by)
         {
-          if($sort =~ /^t1\./)
+          if(!ref $sort && $sort =~ /^t1\./)
           {
             $do_prefix = 0;
             last;
@@ -1626,14 +1616,16 @@ sub get_objects
     }
     else # otherwise, trim t1. prefixes
     {
-      foreach my $sort (ref $sort_by ? @$sort_by : $sort_by)
+      my $prefix_re = '\b(?:t1|' . $meta->table . ')\.';
+      $prefix_re = qr($prefix_re);
+
+      foreach my $sort (@$sort_by)
       {
-        $sort =~ s/\bt1\.//g;
+        $sort =~ s/$prefix_re//g  unless(ref $sort);
       }
     }
 
     # TODO: remove duplicate/redundant sort conditions
-
     $args{'sort_by'} = $sort_by;
   }
   elsif($num_to_many_rels > 0 && (!%fetch || (keys %fetch || 0) > 2))
@@ -1710,7 +1702,7 @@ sub get_objects
 
         foreach my $arg (@{$args{'sort_by'}})
         {
-          push(@sort_by, $arg)  if(index($arg, 't1.') == 0);
+          push(@sort_by, $arg)  if(index((ref $arg ? $$arg : $arg), 't1.') == 0);
         }
 
         $sub_args{'sort_by'} = \@sort_by;
@@ -4057,9 +4049,11 @@ If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it
 
 =item B<sort_by [ CLAUSE | ARRAYREF ]>
 
-A fully formed SQL "ORDER BY ..." clause, sans the words "ORDER BY", or a reference to an array of strings to be joined with a comma and appended to the "ORDER BY" clause.
+A fully formed SQL "ORDER BY ..." clause, sans the words "ORDER BY", or a reference to an array of strings or scalar references to be de-refrenced as needed, joined with a comma, and appended to the "ORDER BY" clause.
 
-Within each string, any instance of "NAME." will be replaced with the appropriate "tN." table alias, where NAME is a table, foreign key, or relationship name.  All unprefixed simple column names are assumed to belong to the primary table ("t1").
+If an argument is a reference to a scalar, then it is passed through to the ORDER BY clause unmodified.
+
+Otherwise, within each string, any instance of "NAME." will be replaced with the appropriate "tN." table alias, where NAME is a table, foreign key, or relationship name.  All unprefixed simple column names are assumed to belong to the primary table ("t1").
 
 If selecting sub-objects (via C<require_objects> or C<with_objects>) that are related through "one to many" or "many to many" relationships, the first condition in the sort order clause must be a column in the primary table (t1).  If this condition is not met, the list of primary key columns will be added to the beginning of the sort order clause automatically.
 

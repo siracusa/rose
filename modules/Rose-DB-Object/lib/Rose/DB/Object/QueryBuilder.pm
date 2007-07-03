@@ -211,7 +211,7 @@ sub build_select
   my $query_is_sql = $args{'query_is_sql'};
 
   $select   = join(', ', @$select)    if(ref $select);
-  $sort_by  = join(', ', @$sort_by)   if(ref $sort_by);
+  $sort_by  = join(', ', map { ref $_ ? $$_ : $_ } @$sort_by)   if(ref $sort_by);
   $group_by = join(', ', @$group_by)  if(ref $group_by);
 
   my($not, $op, @select_columns, %column_count);
@@ -1703,7 +1703,7 @@ Usually, this overhead is dwarfed by the time required for the database to servi
 
 The names of the columns to select from the table.  COLUMNS may be a string of comma-separated column names, or a reference to an array of column names.  If this parameter is omitted, it defaults to all of the columns in all of the tables participating in the query (according to the value of the C<columns> argument).
 
-=item B<sort_by CLAUSE>
+=item B<sort_by [ CLAUSE | ARRAYREF ]>
 
 A fully formed SQL "ORDER BY ..." clause, sans the words "ORDER BY", or a reference to an array of strings to be joined with a comma and appended to the "ORDER BY" clause.
 
