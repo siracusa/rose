@@ -2610,7 +2610,8 @@ sub objects_by_key
   weaken(my $meta = $target_class->meta);
   my $ft_pk;
 
-  unless(exists $args->{'key_columns'} || exists $args->{'query_args'})
+  unless(exists $args->{'key_columns'} || exists $args->{'query_args'} || 
+         exists $args->{'join_args'})
   {
     # The key_columns attr is aliased to column_map when used 
     # through the OneToMany relationship.
@@ -2625,6 +2626,8 @@ sub objects_by_key
   my $query_args = $args->{'query_args'} || [];
   my $single     = $args->{'single'} || 0;
 
+  push(@$query_args, @{$args->{'join_args'} || []});
+
   my $ft_count_method = $args->{'manager_count_method'} || 'get_objects_count';
 
   if($mgr_args->{'query'})
@@ -2633,10 +2636,10 @@ sub objects_by_key
                 "hash.  Use the separate query_args parameter instead";
   }
 
-  if(@$query_args % 2 != 0)
-  {
-    Carp::croak "Odd number of arguments passed in query_args parameter";
-  }
+  #if(@$query_args % 2 != 0)
+  #{
+  #  Carp::croak "Odd number of arguments passed in query_args parameter";
+  #}
 
   unless($ft_manager)
   {
@@ -3951,6 +3954,8 @@ sub objects_by_map
   my $mgr_args     = $args->{'manager_args'} || {};
   my $query_args   = $args->{'query_args'} || [];
 
+  push(@$query_args, @{$args->{'join_args'} || []});
+
   my $count_method = $args->{'manager_count_method'} || 'get_objects_count';
 
   if($mgr_args->{'query'})
@@ -3963,10 +3968,10 @@ sub objects_by_map
 
   my $map_delete_method = $args->{'map_delete_method'} || 'delete_objects';
 
-  if(@$query_args % 2 != 0)
-  {
-    Carp::croak "Odd number of arguments passed in query_args parameter";
-  }
+  #if(@$query_args % 2 != 0)
+  #{
+  #  Carp::croak "Odd number of arguments passed in query_args parameter";
+  #}
 
   unless($map_manager)
   {

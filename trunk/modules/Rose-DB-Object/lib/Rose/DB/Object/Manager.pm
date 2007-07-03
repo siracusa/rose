@@ -736,8 +736,7 @@ sub get_objects
       {
         #$deep_joins = 1;
 
-        my $chase_meta  = $meta;
-        my $chase_class = $meta->class;
+        my $chase_meta = $meta;
 
         while($name =~ /\G([^.]+)(?:\.|$)/g)
         {
@@ -745,7 +744,7 @@ sub get_objects
 
           $key = $chase_meta->foreign_key($sub_name) ||
                  $chase_meta->relationship($sub_name) ||
-                 Carp::confess "$chase_class - no foreign key or ",
+                 Carp::confess $chase_meta->class, " - no foreign key or ",
                                "relationship named '$sub_name'";
 
           $chase_meta = $key->can('foreign_class') ? 
@@ -886,6 +885,13 @@ sub get_objects
           for(my $i = 0; $i < @$query_args; $i += 2)
           {
             my $param = $query_args->[$i];
+
+            if(ref $param)
+            {
+              push(@{$args{'query'}}, $param);
+              $i--;
+              next;
+            }
 
             unless($param =~ s/^t2\./t$rel_tn{$arg}./)
             {

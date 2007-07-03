@@ -2304,7 +2304,7 @@ EOF
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       db           => $db,
-      debug => 1,
+      #debug => 1,
       object_class => 'MyPgObject',
       require_objects => [ 'nicks.type', 'nicks.type', 'nicks' ],
       with_objects    => [ 'nicks.type.t2', 'nicks.alts' ],
