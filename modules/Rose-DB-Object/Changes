@@ -1,4 +1,4 @@
-0.764_20 (07.02.2007) - John Siracusa <siracusa@mindspring.com>
+0.764_22 (07.03.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added a value_type attribute to SET columns.
     * Added a normalize_get_objects_args() utility method to make
@@ -10,6 +10,7 @@
     * Added "use strict" the output of perl_manager_class().
     * Restored default use of table aliases in Manager queries.  The new
       table_aliases parameter can be used to alter the behavior.
+    * Added support for literal sort_by parameters using scalar references.
     * Existing map records are now correctly checked for when adding items
       through a many-to-many relationship.  (Reported by Drew Taylor)
     * Fixed a bug that caused the auto-init system to fold multiple foreign
