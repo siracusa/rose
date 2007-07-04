@@ -112,7 +112,7 @@ sub build_select
   my(@bind, @clauses);
 
   my %query;
-
+$DB::single = 1;
   if($query_arg)
   {
     for(my $i = 0; $i <= $#$query_arg; $i++)
@@ -363,7 +363,10 @@ sub build_select
         {
           my $col_meta;
 
-          unless($query_is_sql)
+          my $val_ref    = ref $val;
+          my $scalar_ref = $val_ref eq 'SCALAR';
+
+          unless($query_is_sql || $scalar_ref)
           {      
             my $obj;
 
@@ -408,11 +411,13 @@ sub build_select
           my $sql_column = $table_aliases ? $short_column :
                            $db ? $db->auto_quote_column_name($column) : $column;
 
-          if(ref($val))
+          if($val_ref)
           {
+            $val = $$val  if($scalar_ref);
+
             push(@clauses, _build_clause($dbh, $sql_column, $op, $val, $not, 
                                          undef, ($do_bind ? \@bind : undef),
-                                         $db, $col_meta, undef, $set, 
+                                         $db, $col_meta, $scalar_ref, $set, 
                                          $placeholder, $bind_params, 
                                          $allow_empty_lists));
           }
@@ -1084,7 +1089,9 @@ sub _format_value
 
   $depth ||= 1;
 
-  if(!ref $value || $asis)
+  my $val_ref = ref $value;
+
+  if(!$val_ref || $asis)
   {
     unless(ref $store eq 'HASH' && $Op_Arg_PassThru{$param})
     {
@@ -1109,7 +1116,7 @@ sub _format_value
       }
     }
   }
-  elsif(ref $value eq 'ARRAY')
+  elsif($val_ref eq 'ARRAY')
   {
     Carp::croak "Empty list not allowed for $param query parameter"
       unless(@$value || $allow_empty_lists);
@@ -1131,7 +1138,7 @@ sub _format_value
       $value = \@vals;
     }
   }
-  elsif(ref $value eq 'HASH')
+  elsif($val_ref eq 'HASH')
   {
     foreach my $key (keys %$value)
     {

@@ -4610,7 +4610,11 @@ The class name of the L<Rose::DB::Object>-derived class that fronts the table wh
 
 The names and values of the columns to be updated.  PARAMS should be a reference to a hash.  Each key of the hash should be a column name or column get/set method name.  If a value is a simple scalar, then it is passed through the get/set method that services the column before being incorporated into the SQL query.
 
-If a value is a reference to a hash, then it must contain a single key named "sql" and a corresponding value that will be incorporated into the SQL query as-is.  For example, this method call:
+If a value is a reference to a scalar, then it is dereferenced and incorporated into the SQL query as-is.
+
+If a value is a reference to a hash, then it must contain a single key named "sql" and a corresponding value that will be incorporated into the SQL query as-is.
+
+Example:
 
   $num_rows_updated =
     Product::Manager->update_products(
@@ -4618,6 +4622,7 @@ If a value is a reference to a hash, then it must contain a single key named "sq
       {
         end_date   => DateTime->now,
         region_num => { sql => 'region_num * -1' }
+        count      => \q(count + 1),
         status     => 'defunct',
       },
       where =>
@@ -4631,11 +4636,12 @@ If a value is a reference to a hash, then it must contain a single key named "sq
         ],
       ]);
 
-would produce the an SQL statement something like this (depending on the database vendor, and assuming the current date was September 20th, 2005):
+The call above would execute an SQL statement something like the one shown below (depending on the database vendor, and assuming the current date was September 20th, 2005):
 
     UPDATE products SET
       end_date   = '2005-09-20',
       region_num = region_num * -1,
+      count      = count + 1, 
       status     = 'defunct'
     WHERE
       status IN ('stale', 'old') AND
