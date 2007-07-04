@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.764_22';
+our $VERSION = '0.764_23';
 
 our $Debug = 0;
 
@@ -802,34 +802,42 @@ sub update
       }
       elsif($meta->has_lazy_columns)
       {
-        my $sql = $meta->update_sql($self, \@key_columns, $db);
+        my($sql, $bind, $columns) = $meta->update_sql($self, \@key_columns, $db);
 
         # $meta->prepare_update_options (defunct)
         my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
                                     $dbh->prepare($sql);
 
-        my %key = map { ($_ => 1) } @key_methods;
-
-        my $method_name = $meta->column_accessor_method_names_hash;
-
-        my @exec;
-
-        foreach my $column (grep { !$key{$_->{'name'}} } $meta->columns_ordered)
-        {
-          no warnings;
-          next if($column->{'lazy'} && !$self->{LAZY_LOADED_KEY()}{$column->{'name'}});
-          my $method = $method_name->{$column->{'name'}};
-          push(@exec, $self->$method());
-        }
-
         if($Debug)
         {
           no warnings;
-          warn "$sql - bind params: ", 
-            join(', ', @exec, grep { defined } @key_values), "\n";
+          warn "$sql - bind params: ", join(', ', @$bind, @key_values), "\n";
         }
 
-        $sth->execute(@exec, @key_values);
+        if($meta->dbi_requires_bind_param($db))
+        {
+          my $i = 1;
+
+          foreach my $column (@$columns)
+          {
+            my $method = $column->accessor_method_name;
+            $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
+          }
+
+          my $kv_idx = 0;
+
+          foreach my $column_name (@key_columns)
+          {
+            my $column = $meta->column($column_name);
+            $sth->bind_param($i++, $key_values[$kv_idx++], $column->dbi_bind_param_attrs($db));
+          }
+
+          $sth->execute;
+        }
+        else
+        {
+          $sth->execute(@$bind, @key_values);
+        }
       }
       else
       {

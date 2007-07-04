@@ -1,4 +1,4 @@
-0.764_22 (07.03.2007) - John Siracusa <siracusa@mindspring.com>
+0.764_23 (07.04.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added a value_type attribute to SET columns.
     * Added a normalize_get_objects_args() utility method to make
@@ -24,6 +24,8 @@
     * Relationship count methods no longer die when the count is zero.
       (Reported by Derek Watson)
     * Setting enum fields to undef not works correctly.  (Reported by Ovid)
+    * Columns with custom DBI bind attributes are now updated correctly.
+      (Reported by Derek Watson)
     * Changed the way classes are registered in order to fix a Loader bug
       that caused cross-database foreign keys to be erroneously created
       when tables with the same names exists in two different databases.

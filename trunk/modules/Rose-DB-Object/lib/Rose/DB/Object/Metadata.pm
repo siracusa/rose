@@ -2966,23 +2966,41 @@ sub update_sql
 
   my %key = map { ($_ => 1) } @$key_columns;
 
-  no warnings;
-  return ($self->{'update_sql_prefix'}{$db->{'id'}} ||
+  no warnings 'uninitialized';
+
+  my @columns = 
+    grep { !$key{$_->name} && (!$_->lazy || $obj->{LAZY_LOADED_KEY()}{$_->name}) } 
+    $self->columns_ordered;
+
+  my @exec;
+
+  unless($self->dbi_requires_bind_param($db))
+  {
+    my $method_name = $self->column_accessor_method_names_hash;
+  
+    foreach my $column (@columns)
+    {
+      my $method = $method_name->{$column->{'name'}};
+      push(@exec, $obj->$method());
+    }
+  }
+
+  return (($self->{'update_sql_prefix'}{$db->{'id'}} ||
           $self->init_update_sql_prefix($db)) .
     join(",\n", map 
     {
       '    ' . $_->name_sql($db) . ' = ' . $_->update_placeholder_sql($db)
     } 
-    grep { !$key{$_->name} && (!$_->lazy || 
-           $obj->{LAZY_LOADED_KEY()}{$_->name}) } 
-    $self->columns_ordered) .
+    @columns) .
     "\nWHERE " . 
     join(' AND ', map 
     {
       my $c = $self->column($_);
       $c->name_sql($db) . ' = ' . $c->query_placeholder_sql($db)
     }
-    @$key_columns);
+    @$key_columns),
+    \@exec,
+    \@columns);
 }
 
 sub init_update_sql_prefix
