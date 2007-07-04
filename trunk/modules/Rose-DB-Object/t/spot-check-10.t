@@ -54,7 +54,17 @@ foreach my $db_type (qw(pg))
 
   $employer_class->meta->column('data')->lazy(1);
   $employer_class->meta->column('data')->make_methods(replace_existing => 1);
-  
+
+  Rose::DB::Object::Manager->update_objects(
+    set   => { name => { sql => 'upper(name)' } }, 
+    where => [ name => 'Default Employer' ],
+    object_class => $employer_class);
+
+  Rose::DB::Object::Manager->update_objects(
+    set   => { name => \q(name || 'x') }, 
+    where => [ name => 'DEFAULT EMPLOYER' ],
+    object_class => $employer_class);
+
   my $employer = $employer_class->new(company_code => 'TEST', data => "\0\1x\2\3");
 
   my @offerings =
@@ -161,7 +171,7 @@ foreach my $db_type (qw(pg))
       'data' => "\0\4x\3\1",
     },
     {
-      'name' => 'Default Employer',
+      'name' => 'DEFAULT EMPLOYERx',
       'company_code' => '',
       'data' => undef,
     }

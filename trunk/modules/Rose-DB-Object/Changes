@@ -26,6 +26,8 @@
     * Setting enum fields to undef not works correctly.  (Reported by Ovid)
     * Columns with custom DBI bind attributes are now updated correctly.
       (Reported by Derek Watson)
+    * Epoch columns with zero (0) default values now work correctly.
+      (Reported by Peter Karman)
     * Changed the way classes are registered in order to fix a Loader bug
       that caused cross-database foreign keys to be erroneously created
       when tables with the same names exists in two different databases.

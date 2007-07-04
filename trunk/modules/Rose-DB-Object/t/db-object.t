@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 549;
+use Test::More tests => 550;
 
 BEGIN 
 {
@@ -363,7 +363,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 116)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 117)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -391,6 +391,8 @@ SKIP: foreach my $db_type ('mysql')
   }
 
   ok($o->load, "load() 1 - $db_type");
+
+  is($o->zepoch->ymd, '1970-01-01', "zero epoch default - $db_type");
 
   is_deeply([ sort $o->items ], [ qw(a c) ], "set default - $db_type");
 
@@ -1563,6 +1565,7 @@ CREATE TABLE rose_db_object_test
   dur            VARCHAR(255) DEFAULT '2 months 5 days 3 seconds',
   epoch          INT DEFAULT 943997400,
   hiepoch        DECIMAL(16,6),
+  zepoch         INT NOT NULL DEFAULT 0,
   tee_time       VARCHAR(32),
   tee_time0      VARCHAR(32),
   tee_time5      VARCHAR(32) DEFAULT '12:34:56.123456789',
@@ -1625,6 +1628,7 @@ EOF
       dur      => { type => 'interval', scale => 6, default => '2 months 5 days 3 seconds' },
       epoch    => { type => 'epoch', default => '11/30/1999 9:30pm' },
       hiepoch  => { type => 'epoch hires', default => '1144004926.123456' },
+      zepoch   => { type => 'epoch', default => 0, not_null => 1, time_zone => 'UTC' },
       tee_time  => { type => 'time' },
       tee_time0 => { type => 'time', scale => 0 },
       tee_time5 => { type => 'time', scale => 5, default => '12:34:56.123456789' },

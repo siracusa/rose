@@ -1209,13 +1209,15 @@ sub epoch
 
       if($self->{STATE_SAVING()})
       {
-        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
-          ($self->{$formatted_key,$driver} ||= $self->{$key}->$epoch_method()) : undef;
+        return ($self->{$key} || defined $self->{$formatted_key,$driver}) ? 
+          (defined $self->{$formatted_key,$driver} ? 
+           $self->{$formatted_key,$driver} :
+           ($self->{$formatted_key,$driver} = $self->{$key}->$epoch_method())) : undef;
       }
 
       return $self->{$key}   if($self->{$key});
 
-      if(my $value = $self->{$formatted_key,$driver})
+      if(defined(my $value = $self->{$formatted_key,$driver}))
       {
         my $dt = $db->parse_date($value);
 
@@ -1307,13 +1309,15 @@ sub epoch
 
       if($self->{STATE_SAVING()})
       {
-        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
-          ($self->{$formatted_key,$driver} ||= $self->{$key}->$epoch_method()) : undef;
+        return ($self->{$key} || defined $self->{$formatted_key,$driver}) ? 
+          (defined $self->{$formatted_key,$driver} ? 
+           $self->{$formatted_key,$driver} : 
+           ($self->{$formatted_key,$driver} = $self->{$key}->$epoch_method())) : undef;
       }
 
       return $self->{$key}   if($self->{$key});
 
-      if(my $value = $self->{$formatted_key,$driver})
+      if(defined(my $value = $self->{$formatted_key,$driver}))
       {
         my $dt = $db->parse_date($value);
 
@@ -1410,13 +1414,15 @@ sub epoch
 
       if($self->{STATE_SAVING()})
       {
-        return ($self->{$key} || $self->{$formatted_key,$driver}) ? 
-          ($self->{$formatted_key,$driver} ||= $self->{$key}->$epoch_method()) : undef;
+        return ($self->{$key} || defined $self->{$formatted_key,$driver}) ? 
+          (defined $self->{$formatted_key,$driver} ?
+           $self->{$formatted_key,$driver} :
+           ($self->{$formatted_key,$driver} = $self->{$key}->$epoch_method())) : undef;
       }
 
       return $self->{$key}   if($self->{$key});
 
-      if(my $value = $self->{$formatted_key,$driver})
+      if(defined(my $value = $self->{$formatted_key,$driver}))
       {
         my $dt = $db->parse_date($value);
 
