@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 2 + (4 * 1);
+use Test::More tests => 2 + (6 * 1);
 
 BEGIN 
 {
@@ -23,7 +23,7 @@ foreach my $db_type (qw(pg))
 {
   SKIP:
   {
-    skip("$db_type tests", 4)  unless($Have{$db_type});
+    skip("$db_type tests", 6)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -52,7 +52,10 @@ foreach my $db_type (qw(pg))
   my $offering_sequence_class = $class_prefix . '::OfferingSequence';
   my $offering_level_class    = $class_prefix . '::OfferingLevel';
 
-  my $employer = $employer_class->new(company_code => 'TEST');
+  $employer_class->meta->column('data')->lazy(1);
+  $employer_class->meta->column('data')->make_methods(replace_existing => 1);
+  
+  my $employer = $employer_class->new(company_code => 'TEST', data => "\0\1x\2\3");
 
   my @offerings =
   (
@@ -137,6 +140,14 @@ foreach my $db_type (qw(pg))
   $employer->add_offerings(\@offerings);
   $employer->save;
 
+  $employer = $employer_class->new(company_code => 'TEST')->load;
+
+  is($employer->{'data'}, undef, "lazy bytea 1 - $db_type");
+  is($employer->data, "\0\1x\2\3", "lazy bytea 2 - $db_type");
+  $employer->data("\0\4x\3\1");
+
+  $employer->save;
+
   my $employers = 
     Rose::DB::Object::Manager->get_objects(
       object_class => $employer_class,
@@ -146,11 +157,13 @@ foreach my $db_type (qw(pg))
   [
     {
       'name' => '',
-      'company_code' => 'TEST'
+      'company_code' => 'TEST',
+      'data' => "\0\4x\3\1",
     },
     {
       'name' => 'Default Employer',
-      'company_code' => ''
+      'company_code' => '',
+      'data' => undef,
     }
   ],
   "employer check - $db_type");
@@ -383,7 +396,8 @@ EOF
 CREATE TABLE employer
 (
   company_code  VARCHAR(6) DEFAULT '' NOT NULL PRIMARY KEY,
-  name          VARCHAR(128) DEFAULT '' NOT NULL
+  name          VARCHAR(128) DEFAULT '' NOT NULL,
+  data          BYTEA
 )
 EOF
 
