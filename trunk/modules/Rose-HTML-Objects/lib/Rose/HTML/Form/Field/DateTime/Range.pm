@@ -4,6 +4,9 @@ use strict;
 
 use Rose::HTML::Object::Errors qw(:date);
 
+use Rose::HTML::Object::Messages 
+  qw(FIELD_ERROR_LABEL_MINIMUM_DATE FIELD_ERROR_LABEL_MAXIMUM_DATE);
+
 use Rose::HTML::Form::Field::DateTime::StartDate;
 use Rose::HTML::Form::Field::DateTime::EndDate;
 
@@ -31,18 +34,18 @@ sub build_field
   (
     min => 
     {
-      type        => 'datetime start',
-      error_label => 'minimum date',
-      size        => 21,
-      maxlength   => 25,
+      type           => 'datetime start',
+      error_label_id => FIELD_ERROR_LABEL_MINIMUM_DATE,
+      size           => 21,
+      maxlength      => 25,
     },
 
     max =>
     {
-      type        => 'datetime end',
-      error_label => 'maximum date',
-      size        => 21,
-      maxlength   => 25,
+      type           => 'datetime end',
+      error_label_id => FIELD_ERROR_LABEL_MAXIMUM_DATE,
+      size           => 21,
+      maxlength      => 25,
     },
   );
 }
@@ -257,6 +260,9 @@ __DATA__
 [% LOCALE en %]
 
 DATE_MIN_GREATER_THAN_MAX = "The min date cannot be later than the max date."
+
+FIELD_ERROR_LABEL_MINIMUM_DATE = "minimum date"
+FIELD_ERROR_LABEL_MAXIMUM_DATE = "maximum date"
 
 [% LOCALE de %]
 

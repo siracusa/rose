@@ -202,6 +202,9 @@ use constant FIELD_ERROR_LABEL_HOUR   => 11_003;
 use constant FIELD_ERROR_LABEL_MINUTE => 11_004;
 use constant FIELD_ERROR_LABEL_SECOND => 11_005;
 
+use constant FIELD_ERROR_LABEL_MINIMUM_DATE => 11_006;
+use constant FIELD_ERROR_LABEL_MAXIMUM_DATE => 11_007;
+
 # Forms
 use constant FORM_HAS_ERRORS => 100;
 
