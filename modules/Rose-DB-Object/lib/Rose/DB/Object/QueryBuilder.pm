@@ -191,11 +191,11 @@ $DB::single = 1;
                         "bind arguments";
           }
 
-          push(@clauses, ${shift(@$list)});
+          push(@clauses, ${$list->[0]});
 
           if($do_bind)
           {
-            push(@bind, @$list);
+            push(@bind, @$list[1 .. $#$list]);
             push(@$bind_params, undef); # need to offset this list with empty items
           }
         }
