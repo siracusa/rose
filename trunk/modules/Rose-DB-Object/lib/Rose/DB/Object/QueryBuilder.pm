@@ -112,7 +112,7 @@ sub build_select
   my(@bind, @clauses);
 
   my %query;
-$DB::single = 1;
+
   if($query_arg)
   {
     for(my $i = 0; $i <= $#$query_arg; $i++)
