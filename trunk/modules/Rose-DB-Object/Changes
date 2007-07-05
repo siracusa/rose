@@ -1,4 +1,4 @@
-0.764_24 (07.05.2007) - John Siracusa <siracusa@mindspring.com>
+0.764_25 (07.05.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added a value_type attribute to SET columns.
     * Added a normalize_get_objects_args() utility method to make
@@ -30,6 +30,8 @@
       (Reported by Peter Karman)
     * Setting boolean columns to null (undef) now works correctly.
       (Reported by Derek Watson)
+    * Fixed a bug that caused literal query parameters with bind arguments
+      to become corrupted after their first use.
     * Changed the way classes are registered in order to fix a Loader bug
       that caused cross-database foreign keys to be erroneously created
       when tables with the same names exists in two different databases.
