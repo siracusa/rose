@@ -1,4 +1,4 @@
-0.764_25 (07.05.2007) - John Siracusa <siracusa@mindspring.com>
+0.764_26 (07.06.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added a value_type attribute to SET columns.
     * Added a normalize_get_objects_args() utility method to make
@@ -13,6 +13,8 @@
     * Added support for literal sort_by parameters using scalar references.
     * Existing map records are now correctly checked for when adding items
       through a many-to-many relationship.  (Reported by Drew Taylor)
+    * Fixed a bug that caused inner joins to be used inappropriately when
+      nested joins are disabled.
     * Fixed a bug that caused the auto-init system to fold multiple foreign
       keys that reference the same remote key into a single multi-column
       foreign key.  (Reported by Marlon Bailey)
