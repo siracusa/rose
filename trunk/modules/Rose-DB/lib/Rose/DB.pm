@@ -1868,8 +1868,9 @@ sub next_value_in_sequence
 
 sub auto_sequence_name { undef }
 
-sub supports_nested_joins { 1 }
-sub supports_limit_with_offset { 1 }
+sub supports_multi_column_count_distinct  { 1 }
+sub supports_nested_joins                 { 1 }
+sub supports_limit_with_offset            { 1 }
 sub supports_arbitrary_defaults_on_insert { 0 }
 sub supports_select_from_subselect        { 0 }
 sub format_select_from_subselect { "(\n$_[1]\n  )" }
