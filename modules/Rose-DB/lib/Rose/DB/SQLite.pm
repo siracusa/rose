@@ -47,6 +47,8 @@ sub init_dbh
 
 sub last_insertid_from_sth { shift->dbh->func('last_insert_rowid') }
 
+sub supports_multi_column_count_distinct { 0 }
+
 sub validate_date_keyword
 {
   no warnings;
