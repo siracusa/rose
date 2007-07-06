@@ -811,8 +811,10 @@ sub sync_keys_to_columns
   {
     unless($columns{$col_name})
     {
-      $self->primary_key(undef);
-      last;
+      Carp::croak "Primary key column '$col_name' is not in the column list for ",
+                  $self->class;
+      #$self->primary_key(undef);
+      #last;
     }
   }
 
@@ -822,7 +824,12 @@ sub sync_keys_to_columns
   {
     foreach my $col_name ($uk->column_names)
     {
-      next UK  unless($columns{$col_name});
+      unless($columns{$col_name})
+      {
+        Carp::croak "Column '$col_name' found in unique key is not in the column list for ",
+                    $self->class;
+        #next UK;
+      }
     }
 
     push(@valid_uks, $uk);
