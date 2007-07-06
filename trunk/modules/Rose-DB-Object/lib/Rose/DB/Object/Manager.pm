@@ -1492,9 +1492,23 @@ sub get_objects
 
     BUILD_SQL:
     {
-      my $select = $use_distinct ? 'COUNT(DISTINCT ' .
-        join(', ', map { "t1.$_" } $meta->primary_key_column_names) . ')' :
-        'COUNT(*)';
+      my($select, $wrap);
+
+      my $pk_columns = $meta->primary_key_column_names;
+
+      if(!$use_distinct || @$pk_columns == 1 || 
+         $db->supports_multi_column_count_distinct)
+      {
+        $select = $use_distinct ? 
+          'COUNT(DISTINCT ' . join(', ', map { "t1.$_" } @$pk_columns) . ')' :
+          'COUNT(*)';
+      }
+      else
+      {
+        $select = $use_distinct ? 
+          'DISTINCT ' . join(', ', map { "t1.$_" } @$pk_columns) : 'COUNT(*)';
+        $wrap = 1;
+      }
 
       local $Carp::CarpLevel = $Carp::CarpLevel + 1;
 
@@ -1512,6 +1526,11 @@ sub get_objects
                      pretty      => $Debug,
                      bind_params => \@bind_params,
                      %args);
+
+      if($wrap)
+      {
+        $sql = "SELECT COUNT(*) FROM ($sql) sq";
+      }
     }
 
     if($return_sql)
