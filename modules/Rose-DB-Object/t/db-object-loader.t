@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 24) + 9;
+use Test::More tests => 1 + (5 * 25) + 9;
 
 BEGIN 
 {
@@ -42,7 +42,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     unless($Have{$db_type})
     {
-      skip("$db_type tests", 24 + scalar @{$Reserved_Words{$db_type} ||= []});
+      skip("$db_type tests", 25 + scalar @{$Reserved_Words{$db_type} ||= []});
     }
   }
 
@@ -111,11 +111,15 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     }
   }
 
-  my $product_class = $class_prefix . '::Product';
-
+  my $product_class     = $class_prefix . '::Product';
+  my $map_manager_class = $class_prefix . '::ProductsColor::Manager';
+  
   ##
   ## Run tests
   ##
+
+  my $count = $map_manager_class->get_objects_count(require_objects => [ 'color' ]);
+  is($count, 0, "count distinct multi-pk - $db_type");
 
   my $p = $product_class->new(name => "Sled $i");
 
