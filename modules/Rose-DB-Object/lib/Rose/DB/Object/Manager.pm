@@ -1395,13 +1395,13 @@ sub get_objects
       {
         $expand_dotstar = 1  if($item eq '*');
         $column = $item;
-        $item = "t1.$item"  if($num_subtables > 0);
+        $item = "t1.$item"  if($table_aliases > 0);
         $tn = 1;
       }
       elsif($item =~ /^t(\d+)\.(.+)$/)
       {
         $tn     = $1;
-        $item   = $2 if($num_subtables == 0);
+        $item   = $2 unless($table_aliases);
         $column = $2;
         $expand_dotstar = 1  if($item =~ /^t\d+\.\*$/);
       }
@@ -1440,7 +1440,7 @@ sub get_objects
 
         my $tn = $1 || 1;
         my $meta = $meta{$classes{$tables[$tn - 1]}};
-        my $prefix = $num_subtables ? "t$tn." : '';
+        my $prefix = $table_aliases ? "t$tn." : '';
 
         foreach my $column ($meta->columns)
         {
@@ -1587,7 +1587,7 @@ sub get_objects
     # Alter sort_by SQL, replacing table and relationship names with aliases.
     # This is to prevent databases like Postgres from "adding missing FROM
     # clause"s.  See: http://sql-info.de/postgresql/postgres-gotchas.html#1_5
-    if(1 || $num_subtables > 0)
+    if($table_aliases)
     {
       my $i = 0;
 
