@@ -953,10 +953,10 @@ sub get_objects
         while(my($local_column, $foreign_column) = each(%$ft_columns))
         {
           # Use outer joins to handle duplicate or optional information.
-          # Foreign keys that have all non-null columns are never outer-
-          # joined, however.
+          # Foreign keys that have all non-null columns are not outer-
+          # joined when nested joins are enabled, however.
           if(!($rel_type eq 'foreign key' && $rel->is_required &&
-               $rel->referential_integrity && !$nested_joins) &&
+               $rel->referential_integrity && $nested_joins) &&
              ($outer_joins_only || $with_objects{$arg}))
           {
             # Aliased table names
