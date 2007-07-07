@@ -1,4 +1,4 @@
-0.764_27 (07.06.2007) - John Siracusa <siracusa@mindspring.com>
+0.764_28 (07.07.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added a value_type attribute to SET columns.
     * Added a normalize_get_objects_args() utility method to make
@@ -11,6 +11,8 @@
     * Restored default use of table aliases in Manager queries.  The new
       table_aliases parameter can be used to alter the behavior.
     * Added support for literal sort_by parameters using scalar references.
+    * Scalar references appearing in the select => ... list in Manager calls
+      are now passed through unmodified.
     * Existing map records are now correctly checked for when adding items
       through a many-to-many relationship.  (Reported by Drew Taylor)
     * Using a nonexistent column name in a primary or unique key is now a
