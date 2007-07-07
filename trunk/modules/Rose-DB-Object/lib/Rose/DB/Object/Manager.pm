@@ -1391,6 +1391,8 @@ sub get_objects
     {
       my($column, $tn);
 
+      next  if(ref $item eq 'SCALAR');
+
       if(index($item, '.') < 0 && $item !~ /\s+ AS \s+ \w+ \s* \Z/xi)
       {
         $expand_dotstar = 1  if($item eq '*');
@@ -1432,6 +1434,8 @@ sub get_objects
 
       foreach my $item (@$select)
       {
+        next  if(ref $item eq 'SCALAR');
+
         unless($item =~ /^(?: t(\d+)\. )? \* $/x)
         {
           push(@select, $item);
@@ -1828,7 +1832,7 @@ sub get_objects
       {
         my($class, $table_num, $column);
 
-        my $item = $orig_item;
+        my $item = (ref $orig_item eq 'SCALAR') ? $$orig_item : $orig_item;
 
         if($item =~ s/\s+AS\s+(\w.+)$//i)
         {
@@ -4052,7 +4056,7 @@ B<Warning:> there may be a geometric explosion of redundant data returned by the
 
 B<Note:> the C<require_objects> list currently cannot be used to simultaneously fetch two objects that both front the same database table, I<but are of different classes>.  One workaround is to make one class use a synonym or alias for one of the tables.  Another option is to make one table a trivial view of the other.  The objective is to get the table names to be different for each different class (even if it's just a matter of letter case, if your database is not case-sensitive when it comes to table names).
 
-=item B<select [ LIST | ARRAYREF ]>
+=item B<select [ CLAUSE | ARRAYREF ]>
 
 Select only the columns specified in either a comma-separated string of column names or a reference to an array of column names.  Strings are naively split between each comma.  If you need more complex parsing, please use the array-reference argument format instead.
 
@@ -4062,7 +4066,11 @@ Unprefixed columns are assumed to belong to the primary table ("t1") and are exp
 
 If the column name is "*" (e.g., C<t1.*>) then all columns from that table are selected.
 
+If an item in the referenced array is itself a reference to a scalar, then that item will be dereferenced and passed through unmodified.
+
 If selecting sub-objects via the C<with_objects> or C<require_objects> parameters, you must select the primary key columns from each sub-object table.  Failure to do so will cause those sub-objects I<not> to be created.
+
+Be warned that you should provide some way to determine which column or method and which class an item belongs to: a tN prefix, a column name, or at the very least an "... AS ..." alias clause.
 
 This parameter conflicts with the C<fetch_only> parameter.  A fatal error will occur if both are used in the same call.
 
