@@ -25,6 +25,8 @@ our %OP_MAP =
   like         => 'LIKE',
   ilike        => 'ILIKE',
   rlike        => 'RLIKE',
+  is           => 'IS',
+  is_not       => 'IS NOT',
   lt           => '<',
   le           => '<=',
   ge           => '>=',
@@ -423,9 +425,22 @@ sub build_select
           }
           elsif(!defined $val)
           {
-            no warnings 'uninitialized';
-            push(@clauses, $set ? "$sql_column = NULL" : 
-                                  ("$sql_column IS " . (($not || $op eq '<>') ? "NOT " : '') . 'NULL'));
+            no warnings 'uninitialized';            
+
+            if($set)
+            {
+              push(@clauses, "$sql_column = NULL");
+            }
+            elsif($op eq 'IS' || $op eq 'IS NOT')
+            {
+              push(@clauses, ($not ? 'NOT(' : '') . "$sql_column IS " .
+                             ($op eq 'IS NOT' ? 'NOT ' : '') . 'NULL' .
+                             ($not ? ')' : ''));
+            }
+            else
+            {
+              push(@clauses, ("$sql_column IS " . (($not || $op eq '<>') ? "NOT " : '') . 'NULL'));
+            }
           }
           else
           {
@@ -824,8 +839,19 @@ sub _build_clause
     }
 
     no warnings 'uninitialized';
-    return $set ? ("$field = NULL") :
-                  ("$field IS " . (($not || $op eq '<>') ? "NOT " : '') . 'NULL');
+    if($set)
+    {
+      return "$field = NULL";
+    }
+    elsif($op eq 'IS' || $op eq 'IS NOT')
+    {
+      return ($not ? 'NOT(' : '') . "$field IS " .
+             ($op eq 'IS NOT' ? 'NOT ' : '') . 'NULL' . ($not ? ')' : '');
+    }
+    else
+    {
+      return "$field IS " . (($not || $op eq '<>') ? 'NOT ' : '') . 'NULL';
+    }
   }
 
   if($ref eq 'ARRAY')
@@ -1365,6 +1391,8 @@ Undefined values are translated to the keyword NULL when included in a multi-val
     like                LIKE
     ilike               ILIKE
     rlike               RLIKE
+    is                  IS
+    is_not              IS NOT
     ne                  <>
     eq                  =
     lt                  <
