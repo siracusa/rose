@@ -744,8 +744,9 @@ sub get_objects
 
           $key = $chase_meta->foreign_key($sub_name) ||
                  $chase_meta->relationship($sub_name) ||
-                 Carp::confess $chase_meta->class, " - no foreign key or ",
-                               "relationship named '$sub_name'";
+                 Carp::confess "Invalid with_objects or require_objects argument: ",
+                               "no foreign key or relationship named '$sub_name' ",
+                               'found in ', $chase_meta->class;
 
           $chase_meta = $key->can('foreign_class') ? 
             $key->foreign_class->meta : $key->class->meta;
@@ -754,7 +755,9 @@ sub get_objects
       else
       {
         $key = $meta->foreign_key($name) || $meta->relationship($name) ||
-          Carp::confess "$class - no foreign key or relationship named '$name'";
+          Carp::confess "Invalid with_objects or require_objects argument: ",
+                        "no foreign key or relationship named '$name' ",
+                        "found in $class";
       }
 
       my $rel_type = $key->type;
