@@ -22,6 +22,8 @@
     * Multi-columns "select count(distinct ...)" queries now fall back to 
       count(*) on a subselect in databases that do not support calling count
       on multi-argument distinct clauses.  (Reported by Derek Watson)
+    * The auto-init system will now skip Postgres functional indexes when 
+      extracting unique keys.  (Reported by Jonathan Vanasco)
     * Fixed a bug that caused inner joins to be used inappropriately when
       nested joins are disabled.
     * Fixed a bug that caused the auto-init system to fold multiple foreign

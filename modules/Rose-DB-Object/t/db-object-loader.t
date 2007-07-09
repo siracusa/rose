@@ -335,6 +335,10 @@ CREATE TABLE products
 EOF
 
     $dbh->do(<<"EOF");
+CREATE UNIQUE INDEX products_uk1 ON products (LOWER(name))
+EOF
+
+    $dbh->do(<<"EOF");
 CREATE TABLE prices
 (
   id          SERIAL NOT NULL PRIMARY KEY,
