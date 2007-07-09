@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 552;
+use Test::More tests => 558;
 
 BEGIN 
 {
@@ -25,7 +25,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE,
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 214)  unless($HAVE_PG);
+  skip("Postgres tests", 220)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -333,12 +333,17 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   is($o->bint1, '9223372036854775800', "bigint 1 - $db_type");
   is($o->bint2, '-9223372036854775800', "bigint 2 - $db_type");
   is($o->bint3, '9223372036854775000', "bigint 3 - $db_type");
+  is($o->bint4, undef, "bigint null 1 - $db_type");
 
+  $o->bint4(555);
   $o->bint1($o->bint1 + 1);
   $o->save;
 
   $o = MyPgObject->new(id => $o->id)->load;
   is($o->bint1, '9223372036854775801', "bigint 4 - $db_type");
+  is($o->bint4, 555, "bigint null 2 - $db_type");
+
+  $o->bint4(undef);
 
   $o->bint3(5);
   eval { $o->bint3(7) };
@@ -354,7 +359,8 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $o =  MyPgObject->new(id => $o->id)->load;
   is($o->tee_time->as_string, '00:00:00', "time allballs - $db_type");
   ok($o->tee_time9->as_string =~ /^\d\d:\d\d:\d\d\.\d{1,6}$/, "time now - $db_type");
-
+  is($o->bint4, undef, "bigint null 3 - $db_type");
+  
   $o->tee_time(Time::Clock->new->parse('6:30 PM'));
   $o->save;
 
@@ -1386,6 +1392,7 @@ CREATE TABLE rose_db_object_test
   bint1          BIGINT DEFAULT 9223372036854775800,
   bint2          BIGINT DEFAULT -9223372036854775800,
   bint3          BIGINT,
+  bint4          BIGINT,
   tee_time       TIME,
   tee_time0      TIME(0),
   tee_time5      TIME(5),
@@ -1421,6 +1428,7 @@ CREATE TABLE rose_db_object_private.rose_db_object_test
   bint1          BIGINT DEFAULT 9223372036854775800,
   bint2          BIGINT DEFAULT -9223372036854775800,
   bint3          BIGINT,
+  bint4          BIGINT,
   tee_time       TIME,
   tee_time0      TIME(0),
   tee_time5      TIME(5),
@@ -1469,6 +1477,7 @@ EOF
       bint1    => { type => 'bigint', default => '9223372036854775800' },
       bint2    => { type => 'bigint', default => '-9223372036854775800' },
       bint3    => { type => 'bigint', with_init => 1, check_in => [ '9223372036854775000', 5 ] },
+      bint4    => { type => 'bigint' },
       tee_time  => { type => 'time' },
       tee_time0 => { type => 'time', scale => 0 },
       tee_time5 => { type => 'time', scale => 5, default => '12:34:56.123456789' },
