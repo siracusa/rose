@@ -58,6 +58,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       db           => $db,
       share_db     => 1,
       query_is_sql => 1,
+      #debug => 1,
       query        =>
       [
         id         => { ge => 1 },
@@ -65,6 +66,10 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
         name       => 'John',  
         flag       => 't',
         flag2      => 'f',
+        flag2      => { is => \q(false) },
+        flag2      => { is_not => \q(true) },
+        flag2      => { is_not => undef },
+        '!flag2'   => { is => undef },
         status     => 'active',
         bits       => '00001',
         fixed      => { like => 'nee%' },
