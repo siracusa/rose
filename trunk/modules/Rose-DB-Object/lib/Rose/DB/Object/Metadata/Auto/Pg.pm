@@ -87,6 +87,9 @@ sub auto_generate_unique_keys
       my $uk = Rose::DB::Object::Metadata::UniqueKey->new(name   => $key_name,
                                                           parent => $self);
 
+      # Functional indexes show up this way, e.g. "... ON (LOWER(name))"
+      next  if($column_nums eq '0'); 
+
       # column_nums is a space-separated list of numbers.  It's really an
       # "in2vector" data type, which seems sketchy to me, but whatever. 
       # We can fall back to the pg_get_indexdef() function and try to
