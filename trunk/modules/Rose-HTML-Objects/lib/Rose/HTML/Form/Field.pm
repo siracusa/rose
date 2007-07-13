@@ -952,6 +952,8 @@ __DATA__
 
 [% LOCALE en %]
 
+FIELD_LABEL = ""
+FIELD_DESCRIPTION = ""
 FIELD_REQUIRED_GENERIC  = "This is a required field."
 FIELD_REQUIRED_LABELLED = "[1] is a required field."
 

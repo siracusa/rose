@@ -1412,14 +1412,14 @@ sub form
 sub app
 {
   my($self) = shift; 
-  return Scalar::Util::weaken($self->{'app'} = shift)  if(@_);
+  Scalar::Util::weaken($self->{'app'} = shift)  if(@_);
   return $self->{'app'};
 }
 
 sub app_form
 {
   my($self) = shift; 
-  return Scalar::Util::weaken($self->{'app_form'} = shift)  if(@_);
+  Scalar::Util::weaken($self->{'app_form'} = shift)  if(@_);
   return $self->{'app_form'};
 }
 
@@ -1942,6 +1942,10 @@ Add VALUE to the parameter named NAME.  Example:
     $form->add_param_value(a => 2);
 
     print join(',', $form->param('a')); # 1,2
+
+=item B<app [OBJECT]>
+
+Get or set a L<weakened|Scalar::Util/weaken> reference to the application object that "owns" this form.
 
 =item B<build_on_init [BOOL]>
 

@@ -94,6 +94,16 @@ sub get_message_id
   return undef;
 }
 
+sub message_ids
+{
+  my($class) = shift;
+  my $map = $class->message_id_to_name_map;
+
+  return wantarray ? 
+    (sort { $a <=> $b } keys %$map) : 
+    [ sort { $a <=> $b } keys %$map ];
+}
+
 sub get_message_name { $_[0]->message_id_to_name_map->{$_[1]} }
 
 sub add_message
