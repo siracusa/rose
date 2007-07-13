@@ -261,6 +261,18 @@ sub localized_message_exists
   return 0;
 }
 
+sub locales_for_message_name
+{
+  my($self, $name) = @_;
+
+  my $msgs = $self->localized_messages_hash;
+
+  return wantarray ? () : []  unless(ref $msgs->{$name});
+
+  return wantarray ? (sort keys %{$msgs->{$name}}) :
+                     [ sort keys %{$msgs->{$name}} ];
+}
+
 sub add_localized_message_text
 {
   my($self, %args) = @_;
