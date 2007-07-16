@@ -66,7 +66,7 @@ if($^V lt v5.8.7)
 else
 {
   # XXX: This works fine for me in 5.8.8...
-  # XXX: Now (6/16/07) set to empty string.  Dunno if bug remains.
+  # XXX: Now (7/16/07) set to empty string.  Dunno if bug remains.
   is($o->description, '', 'localized description 1 (5.8.8+)');
 }
 
