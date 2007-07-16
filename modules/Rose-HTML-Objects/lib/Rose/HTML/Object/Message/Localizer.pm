@@ -12,7 +12,7 @@ use Rose::HTML::Object::Messages();
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.542';
+our $VERSION = '0.549';
 
 our $Debug = 0;
 
@@ -695,7 +695,6 @@ sub load_messages_from_fh
           s/\A(\s*\n)+//;
           s/(\s*\n)+\z//;
         }
-
         $self->add_localized_message_text(name   => $in_msg,
                                           locale => $in_locale,
                                           text   => $text);
@@ -722,7 +721,7 @@ sub load_messages_from_fh
         for($text)
         {
           s/\\n/\n/g;
-          s/\\(.)/$1/g;
+          s/\\([^\[])/$1/g;
         }
 
         $self->add_localized_message_text(name   => $name,
