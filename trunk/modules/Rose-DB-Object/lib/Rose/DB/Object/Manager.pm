@@ -1295,7 +1295,7 @@ sub get_objects
             # Fully-qualified table names
             #push(@{$joins[$i]{'conditions'}}, "$tables[-2].$local_column = $tables[-1].$foreign_column");
 
-            $joins[$i]{'type'} = 'LEFT JOIN';
+            $joins[$i]{'type'} = 'LEFT OUTER JOIN';
             $joins[$i]{'hints'} = $hints->{"t$i"} || $hints->{$name};
           }
           else

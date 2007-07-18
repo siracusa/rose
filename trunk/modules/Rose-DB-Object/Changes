@@ -1,4 +1,4 @@
-0.764_29 (07.09.2007) - John Siracusa <siracusa@mindspring.com>
+0.764_30 (07.18.2007) - John Siracusa <siracusa@mindspring.com>
 
     * Added a value_type attribute to SET columns.
     * Added a normalize_get_objects_args() utility method to make
@@ -24,8 +24,9 @@
       on multi-argument distinct clauses.  (Reported by Derek Watson)
     * The auto-init system will now skip Postgres functional indexes when 
       extracting unique keys.  (Reported by Jonathan Vanasco)
-    * Fixed a bug that caused inner joins to be used inappropriately when
-      nested joins are disabled.
+    * Fixed a bug that caused inner joins to be used inappropriately in 
+      certain cases with many-to-many relationships or when nested joins 
+      are disabled.
     * Fixed a bug that caused the auto-init system to fold multiple foreign
       keys that reference the same remote key into a single multi-column
       foreign key.  (Reported by Marlon Bailey)
