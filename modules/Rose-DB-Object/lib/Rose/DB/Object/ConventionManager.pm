@@ -1537,7 +1537,7 @@ Anyway, I don't recommend this kind of extreme approach, but it is an effective 
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

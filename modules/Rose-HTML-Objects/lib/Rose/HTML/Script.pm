@@ -250,7 +250,7 @@ See L<http://hixie.ch/advocacy/xhtml> for more information on this topic.
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

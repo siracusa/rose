@@ -569,7 +569,7 @@ Any string that looks like a function call (matches /^\w+\(.*\)$/) is also consi
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

@@ -173,7 +173,7 @@ Returns the label of the first selected value (according to the order that they 
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

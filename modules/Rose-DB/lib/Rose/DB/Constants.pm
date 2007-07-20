@@ -37,7 +37,7 @@ This module inherits from C<Exporter>.  No symbols are exported by default.
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

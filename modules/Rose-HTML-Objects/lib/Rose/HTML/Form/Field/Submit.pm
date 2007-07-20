@@ -220,7 +220,7 @@ Gets or sets the value of the "value" HTML attribute.
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

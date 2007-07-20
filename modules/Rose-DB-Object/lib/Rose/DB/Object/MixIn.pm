@@ -24,7 +24,7 @@ This class is a trivial subclass of L<Rose::Object::MixIn>.  It exists for backw
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

@@ -1789,7 +1789,7 @@ This works the same as the C<build_select()> function, except that it only retur
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

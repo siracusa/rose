@@ -133,7 +133,7 @@ Get or set the boolean flag that indicates whether or not the field will accept 
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

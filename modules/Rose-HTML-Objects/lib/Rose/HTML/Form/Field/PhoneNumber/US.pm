@@ -108,7 +108,7 @@ This is a good example of a custom field class that constrains the kinds of inpu
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

@@ -161,7 +161,7 @@ Returns the XHTML serialization of the checkbox field only (i.e., without any la
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

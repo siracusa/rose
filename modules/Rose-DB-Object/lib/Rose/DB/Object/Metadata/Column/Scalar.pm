@@ -142,7 +142,7 @@ Get or set the flag that determines whether or not the method created by C<make_
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

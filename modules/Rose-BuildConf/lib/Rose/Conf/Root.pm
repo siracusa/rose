@@ -82,7 +82,7 @@ the PATH argument should not end with a path separator character (e.g., "/")
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

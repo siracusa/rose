@@ -116,7 +116,7 @@ Get or set the name of the data type contained in this set.  Valid values for TY
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

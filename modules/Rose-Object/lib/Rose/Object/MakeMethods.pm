@@ -711,7 +711,7 @@ This is actually a subset of the code in the actual L<Rose::Object::MakeMethods:
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

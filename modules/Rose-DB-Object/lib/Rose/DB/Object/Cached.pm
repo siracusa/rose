@@ -343,7 +343,7 @@ If you have a column with one of these names, you must alias it.  See the L<Rose
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

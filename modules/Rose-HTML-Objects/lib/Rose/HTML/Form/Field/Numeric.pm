@@ -224,7 +224,7 @@ If BOOL is true or omitted, sets L<min|/min> to C<0>.  If BOOL is false, sets L<
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

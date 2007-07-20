@@ -165,7 +165,7 @@ This method passes its arguments to L<HTML::Entities::encode_entities()|HTML::En
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

@@ -63,7 +63,7 @@ L<Rose::HTML::Form::Field::DateTime::EndDate> is a subclass of L<Rose::HTML::For
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

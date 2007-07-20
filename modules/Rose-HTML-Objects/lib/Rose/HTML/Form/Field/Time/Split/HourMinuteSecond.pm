@@ -175,7 +175,7 @@ It is important that this class (indirectly) inherits from L<Rose::HTML::Form::F
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

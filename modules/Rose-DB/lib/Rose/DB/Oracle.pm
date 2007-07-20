@@ -310,7 +310,7 @@ Only the methods that are new or have different behaviors than those in L<Rose::
 
 B<Oracle 9 or later is required.>
 
-B<Note:> This class is a work in progress.  Support for Oracle databases is not yet complete.  If you would like to help, please contact John Siracusa at siracusa@mindspring.com or post to the L<mailing list|Rose::DB/SUPPORT>.
+B<Note:> This class is a work in progress.  Support for Oracle databases is not yet complete.  If you would like to help, please contact John Siracusa at siracusa@gmail.com or post to the L<mailing list|Rose::DB/SUPPORT>.
 
 =head1 CLASS METHODS
 
@@ -353,7 +353,7 @@ Get or set the database schema name.  In Oracle, every user has a corresponding 
 
 =head1 AUTHORS
 
-John C. Siracusa (siracusa@mindspring.com), Ron Savage (ron@savage.net.au)
+John C. Siracusa (siracusa@gmail.com), Ron Savage (ron@savage.net.au)
 
 =head1 COPYRIGHT
 

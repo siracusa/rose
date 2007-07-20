@@ -668,7 +668,7 @@ Returns the method maker method type for the foreign key method type TYPE.
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 
