@@ -118,8 +118,15 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   ## Run tests
   ##
 
-  my $count = $map_manager_class->get_objects_count(require_objects => [ 'color' ]);
-  is($count, 0, "count distinct multi-pk - $db_type");
+  if($db_type eq 'informix')
+  {
+    SKIP: { skip("count distinct multi-pk doesn't work in Informix yet", 1) }
+  }
+  else
+  {
+    my $count = $map_manager_class->get_objects_count(require_objects => [ 'color' ]);
+    is($count, 0, "count distinct multi-pk - $db_type");
+  }
 
   my $p = $product_class->new(name => "Sled $i");
 
