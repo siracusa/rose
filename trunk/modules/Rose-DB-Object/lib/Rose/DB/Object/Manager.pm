@@ -4568,17 +4568,17 @@ This method takes ARGS in the forms accepted by L<get_objects|/get_objects> (and
 
     sub object_class { 'Product' }
     ...
-    
+
     sub get_products
     {
       my($class, %args) = shift->normalize_get_objects_args(@_);
-      
+
       # Detect, extract, and handle custom argument
       if(delete $args{'active_only'})
       {
         push(@{$args{'query'}}, status => 'active');
       }
-      
+
       return $class->get_objects(%args); # call through to normal method
     }
 
