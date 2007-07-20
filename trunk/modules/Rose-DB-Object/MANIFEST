@@ -187,6 +187,14 @@ t/sandbox/convention/lib/My/Price.pm
 t/sandbox/convention/lib/My/Product.pm
 t/sandbox/convention/lib/My/ProductColors.pm
 t/sandbox/convention/lib/My/Vendor.pm
+t/sandbox/schema-clash/lib/Alpha.pm
+t/sandbox/schema-clash/lib/Beta.pm
+t/sandbox/schema-clash/sql/alpha.sql
+t/sandbox/schema-clash/sql/beta.sql
+t/sandbox/schema-clash/sql/databases.sql
+t/sandbox/schema-clash/t/one.t
+t/sandbox/schema-clash/t/two.t
+t/sandbox/schema-clash/test.pl
 t/schema-override.t
 t/spot-check-01.t
 t/spot-check-02.t
