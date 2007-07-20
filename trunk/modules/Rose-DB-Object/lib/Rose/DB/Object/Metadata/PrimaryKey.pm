@@ -188,7 +188,7 @@ Get or set the list of database sequence names (if any) used to generate values 
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

@@ -143,7 +143,7 @@ Get or set the time zone string passed to L<Rose::DateTime::Util>'s L<parse_date
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

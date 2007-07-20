@@ -6037,7 +6037,7 @@ The "object" style sets unique keys using calls to the L<Rose::DB::Object::Metad
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

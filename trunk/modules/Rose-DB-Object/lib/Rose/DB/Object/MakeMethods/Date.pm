@@ -1925,7 +1925,7 @@ This is identical to the L<timestamp|/timestamp> method described above, but wit
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

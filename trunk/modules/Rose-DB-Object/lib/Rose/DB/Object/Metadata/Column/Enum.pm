@@ -88,7 +88,7 @@ Get or set a reference to an array of valid column values.  This attribute is re
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

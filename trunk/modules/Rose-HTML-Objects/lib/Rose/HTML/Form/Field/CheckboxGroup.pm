@@ -342,7 +342,7 @@ Equivalent to L<html_table()|/html_table> but using XHTML markup for each checkb
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

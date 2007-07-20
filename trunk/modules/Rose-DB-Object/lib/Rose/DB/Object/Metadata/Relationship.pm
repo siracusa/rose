@@ -433,7 +433,7 @@ Returns the method maker method type for the relationship method type TYPE.
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

@@ -141,7 +141,7 @@ Strings with spaces, double quotes, backslashes, or commas must be double-quoted
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

@@ -71,7 +71,7 @@ This class inherits from L<Rose::DB>.  See the L<Rose::DB> documentation for inf
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

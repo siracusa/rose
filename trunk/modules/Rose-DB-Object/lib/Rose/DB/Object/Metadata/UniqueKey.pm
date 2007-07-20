@@ -93,7 +93,7 @@ Get or set the L<Rose::DB::Object::Metadata>-derived object that this unique key
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

@@ -133,7 +133,7 @@ Always returns the column name "id" (in list context) or a reference to an array
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

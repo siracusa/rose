@@ -701,7 +701,7 @@ Do not remove any sub-objects (L<foreign keys|Rose::DB::Object::Metadata/foreign
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

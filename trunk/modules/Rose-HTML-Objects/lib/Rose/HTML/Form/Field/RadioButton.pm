@@ -161,7 +161,7 @@ Returns the XHTML serialization of the radio button field only (i.e., without an
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

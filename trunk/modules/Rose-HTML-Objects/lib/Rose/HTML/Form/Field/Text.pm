@@ -163,7 +163,7 @@ Constructs a new L<Rose::HTML::Form::Field::Text> object based on PARAMS, where 
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 

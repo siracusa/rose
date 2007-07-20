@@ -66,7 +66,7 @@ C<Rose::DB::Object::Std::Cached> is a subclass of both L<Rose::DB::Object::Std> 
 
 =head1 AUTHOR
 
-John C. Siracusa (siracusa@mindspring.com)
+John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 
