@@ -173,7 +173,7 @@ sub add_messages
       next  unless(defined prototype($code) && !length(prototype($code)));
 
       # Should not need this check?
-      next  if($thing =~ /^(BEGIN|DESTROY|AUTOLOAD|TIE.*)$/);
+      next  if($thing =~ /^(?:BEGIN|DESTROY|AUTOLOAD|TIE.*)$/);
 
       $Debug && warn "$class ADD $name = ", &$fq_sub, "\n";
       $class->add_message($name, &$fq_sub);
