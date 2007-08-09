@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.765';
+our $VERSION = '0.765_01';
 
 our $Debug = 0;
 
@@ -388,7 +388,7 @@ sub load
 
     $sth->finish;
 
-    if($rows > 0)
+    if($rows > 0 || $rows == -1)
     {
       my $methods = $meta->column_mutator_method_names_hash;
 
