@@ -1,3 +1,7 @@
+0.765_01 (08.08.2007) - John Siracusa <siracusa@gmail.com>
+
+    * Fiddled with not_found() detection.
+
 0.765 (07.21.2007) - John Siracusa <siracusa@gmail.com>
 
     * Added a value_type attribute to SET columns.
