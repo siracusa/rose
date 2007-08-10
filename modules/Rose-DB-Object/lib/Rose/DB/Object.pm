@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.765_01';
+our $VERSION = '0.765_02';
 
 our $Debug = 0;
 
@@ -337,7 +337,7 @@ sub load
   # Handle normal load
   #
 
-  my $rows = 0;
+  my $loaded_ok;
 
   $self->{'not_found'} = 0;
 
@@ -382,13 +382,12 @@ sub load
 
     $sth->bind_columns(undef, \@row{@$column_names});
 
-    $sth->fetch;
+    $loaded_ok = defined $sth->fetch;
 
-    $rows = $sth->rows;
+    # The load() query shouldn't find mor ethan one row anyway
+    #$sth->finish;
 
-    $sth->finish;
-
-    if($rows > 0 || $rows == -1)
+    if($loaded_ok)
     {
       my $methods = $meta->column_mutator_method_names_hash;
 
@@ -429,7 +428,7 @@ sub load
     return undef;
   }
 
-  unless($rows > 0)
+  unless($loaded_ok)
   {
     my $speculative = 
       exists $args{'speculative'} ? $args{'speculative'} :     

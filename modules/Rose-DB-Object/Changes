@@ -1,6 +1,6 @@
-0.765_01 (08.08.2007) - John Siracusa <siracusa@gmail.com>
+0.765_02 (08.10.2007) - John Siracusa <siracusa@gmail.com>
 
-    * Fiddled with not_found() detection.
+    * Fiddled with not_found() detection.  (Changes suggested by Philip Dye)
 
 0.765 (07.21.2007) - John Siracusa <siracusa@gmail.com>
 
