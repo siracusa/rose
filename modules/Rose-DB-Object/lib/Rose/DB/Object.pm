@@ -2101,8 +2101,6 @@ If true, then all columns will be fetched from the database, even L<lazy|Rose::D
 
 If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL query that will load the object.  If omitted, the default value is determined by the L<metadata object|/meta>'s L<dbi_prepare_cached|Rose::DB::Object::Metadata/dbi_prepare_cached> class method.
 
-all columns will be fetched from the database, even L<lazy|Rose::DB::Object::Metadata::Column/load_on_demand> columns.  If omitted, the default is false.
-
 =item B<speculative BOOL>
 
 If this parameter is passed with a true value, and if the load failed because the row was L<not found|/not_found>, then the L<error_mode|Rose::DB::Object::Metadata/error_mode> setting is ignored and zero (0) is returned.  In the absence of an explicitly set value, this parameter defaults to the value returned my the L<metadata object|/meta>'s L<default_load_speculative|Rose::DB::Object::Metadata/default_load_speculative> method.
