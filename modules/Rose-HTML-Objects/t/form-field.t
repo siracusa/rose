@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 83;
+use Test::More tests => 87;
 
 BEGIN 
 {
@@ -142,6 +142,15 @@ is($hidden->html_field, '<input name="name" type="hidden" value="John &gt;">', '
 is($hidden->xhtml_field, '<input name="name" type="hidden" value="John &gt;" />', 'hidden_field() xml');
 is($field->html_hidden_field, '<input name="name" type="hidden" value="John &gt;">', 'html_hidden_field()');
 is($field->xhtml_hidden_field, '<input name="name" type="hidden" value="John &gt;" />', 'xhtml_hidden_field()');
+
+$field->id('myid');
+$field->class('myclass');
+$hidden = $field->hidden_field;
+
+is($hidden->html_field, '<input class="myclass" id="myid" name="name" type="hidden" value="John &gt;">', 'hidden_field() html extra');
+is($hidden->xhtml_field, '<input class="myclass" id="myid" name="name" type="hidden" value="John &gt;" />', 'hidden_field() xml extra');
+is($field->html_hidden_field, '<input class="myclass" id="myid" name="name" type="hidden" value="John &gt;">', 'html_hidden_field() extra');
+is($field->xhtml_hidden_field, '<input class="myclass" id="myid" name="name" type="hidden" value="John &gt;" />', 'xhtml_hidden_field() extra');
 
 $field->class('foo');
 is($field->class, 'foo', 'class()');
