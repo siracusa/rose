@@ -223,17 +223,17 @@ is_deeply(scalar $form->field_monikers, [ 'age', 'bday', 'name' ], 'field_monike
 
 is($form->html_hidden_fields, 
    qq(<input name="age" type="hidden" value="">\n) .
-   qq(<input name="bday.day" type="hidden" value="">\n) .
-   qq(<input name="bday.month" type="hidden" value="">\n) .
-   qq(<input name="bday.year" type="hidden" value="">\n) .
+   qq(<input class="day" name="bday.day" type="hidden" value="">\n) .
+   qq(<input class="month" name="bday.month" type="hidden" value="">\n) .
+   qq(<input class="year" name="bday.year" type="hidden" value="">\n) .
    qq(<input name="name" type="hidden" value="">),
    'html_hidden_fields() 1');
 
 is($form->xhtml_hidden_fields, 
    qq(<input name="age" type="hidden" value="" />\n) .
-   qq(<input name="bday.day" type="hidden" value="" />\n) .
-   qq(<input name="bday.month" type="hidden" value="" />\n) .
-   qq(<input name="bday.year" type="hidden" value="" />\n) .
+   qq(<input class="day" name="bday.day" type="hidden" value="" />\n) .
+   qq(<input class="month" name="bday.month" type="hidden" value="" />\n) .
+   qq(<input class="year" name="bday.year" type="hidden" value="" />\n) .
    qq(<input name="name" type="hidden" value="" />),
    'xhtml_hidden_fields() 1');
 

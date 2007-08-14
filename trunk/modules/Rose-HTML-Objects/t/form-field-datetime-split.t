@@ -79,15 +79,15 @@ is($field->html_field,
   'mdy html_field() 4');
 
 is($field->html_hidden_fields,
-   qq(<input name="date.day" type="hidden" value="01">\n) .
-   qq(<input name="date.month" type="hidden" value="01">\n) .
-   qq(<input name="date.year" type="hidden" value="2000">),
+   qq(<input class="dd" name="date.day" type="hidden" value="01">\n) .
+   qq(<input class="mm" name="date.month" type="hidden" value="01">\n) .
+   qq(<input class="yyyy" name="date.year" type="hidden" value="2000">),
    'mdy html_hidden_fields()');
 
 is($field->xhtml_hidden_fields,
-   qq(<input name="date.day" type="hidden" value="01" />\n) .
-   qq(<input name="date.month" type="hidden" value="01" />\n) .
-   qq(<input name="date.year" type="hidden" value="2000" />),
+   qq(<input class="dd" name="date.day" type="hidden" value="01" />\n) .
+   qq(<input class="mm" name="date.month" type="hidden" value="01" />\n) .
+   qq(<input class="yyyy" name="date.year" type="hidden" value="2000" />),
    'mdy xhtml_hidden_fields()');
 
 is($field->html_hidden_field,
@@ -269,23 +269,23 @@ is($field->html_field,
   'mdyhms html_field() 3');
 
 is($field->html_hidden_fields,
-   qq(<input name="datetime.date.day" type="hidden" value="02">\n) .
-   qq(<input name="datetime.date.month" type="hidden" value="01">\n) .
-   qq(<input name="datetime.date.year" type="hidden" value="2000">\n) .
+   qq(<input class="dd" name="datetime.date.day" type="hidden" value="02">\n) .
+   qq(<input class="mm" name="datetime.date.month" type="hidden" value="01">\n) .
+   qq(<input class="yyyy" name="datetime.date.year" type="hidden" value="2000">\n) .
    qq(<input name="datetime.time.ampm" type="hidden" value="AM">\n) .
-   qq(<input name="datetime.time.hour" type="hidden" value="08">\n) .
-   qq(<input name="datetime.time.minute" type="hidden" value="00">\n) .
-   qq(<input name="datetime.time.second" type="hidden" value="00">),
+   qq(<input class="hour" name="datetime.time.hour" type="hidden" value="08">\n) .
+   qq(<input class="minute" name="datetime.time.minute" type="hidden" value="00">\n) .
+   qq(<input class="second" name="datetime.time.second" type="hidden" value="00">),
    'mdyhms html_hidden_fields()');
 
 is($field->xhtml_hidden_fields,
-   qq(<input name="datetime.date.day" type="hidden" value="02" />\n) .
-   qq(<input name="datetime.date.month" type="hidden" value="01" />\n) .
-   qq(<input name="datetime.date.year" type="hidden" value="2000" />\n) .
+   qq(<input class="dd" name="datetime.date.day" type="hidden" value="02" />\n) .
+   qq(<input class="mm" name="datetime.date.month" type="hidden" value="01" />\n) .
+   qq(<input class="yyyy" name="datetime.date.year" type="hidden" value="2000" />\n) .
    qq(<input name="datetime.time.ampm" type="hidden" value="AM" />\n) .
-   qq(<input name="datetime.time.hour" type="hidden" value="08" />\n) .
-   qq(<input name="datetime.time.minute" type="hidden" value="00" />\n) .
-   qq(<input name="datetime.time.second" type="hidden" value="00" />),
+   qq(<input class="hour" name="datetime.time.hour" type="hidden" value="08" />\n) .
+   qq(<input class="minute" name="datetime.time.minute" type="hidden" value="00" />\n) .
+   qq(<input class="second" name="datetime.time.second" type="hidden" value="00" />),
    'mdyhms xhtml_hidden_fields()');
 
 is($field->html_hidden_field,
