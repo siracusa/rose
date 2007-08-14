@@ -19,7 +19,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.549';
+our $VERSION = '0.550';
 
 #our $Debug = 0;
 
@@ -553,8 +553,11 @@ sub hidden_fields
 
   require Rose::HTML::Form::Field::Hidden; # Circular dependency... :-/
 
-  return Rose::HTML::Form::Field::Hidden->new(
+  return 
+    Rose::HTML::Form::Field::Hidden->new(
       name  => $self->html_attr('name'),
+      id    => $self->html_attr('id'),
+      class => $self->html_attr('class'),
       value => $self->output_value);
 }
 
