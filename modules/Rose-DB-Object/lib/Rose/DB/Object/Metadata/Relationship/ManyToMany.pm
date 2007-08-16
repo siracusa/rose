@@ -14,7 +14,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 use Rose::DB::Object::Constants qw(PRIVATE_PREFIX);
 
-our $VERSION = '0.759';
+our $VERSION = '0.766';
 
 our $Debug = 0;
 
@@ -655,6 +655,8 @@ Return a method name for the relationship method type TYPE.
 For the method types "get_set", "get_set_now", and "get_set_on_save", the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> is returned.
 
 For the method types "add_now" and "add_on_save", the relationship's  L<name|Rose::DB::Object::Metadata::Relationship/name> prefixed with "add_" is returned.
+
+For the method type "count", the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> suffixed with "_count" is returned.
 
 Otherwise, undef is returned.
 
