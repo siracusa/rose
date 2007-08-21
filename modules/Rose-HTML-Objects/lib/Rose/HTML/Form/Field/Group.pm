@@ -3,13 +3,14 @@ package Rose::HTML::Form::Field::Group;
 use strict;
 
 use Carp();
+use Scalar::Defer();
 
 use Rose::HTML::Util();
 
 use Rose::HTML::Form::Field;
 our @ISA = qw(Rose::HTML::Form::Field);
 
-our $VERSION = '0.547';
+our $VERSION = '0.550';
 
 our $Debug = undef;
 
@@ -198,7 +199,9 @@ sub _args_to_items
   {
     foreach my $item (@$items)
     {
-      $item->localizer($self->localizer);
+      # Deferred in case the grandparent is being constructed
+      # in the process of adding it to a form or other parent.
+      $item->localizer(Scalar::Defer::lazy { $self->localizer });
     }
   }
 
