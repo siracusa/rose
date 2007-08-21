@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.765';
+our $VERSION = '0.766';
 
 our $Debug = 0;
 
@@ -1826,7 +1826,7 @@ sub object_by_key
 {
   my($class, $name, $args, $options) = @_;
 
-  # Delegate to plural with coercion to single indicted in args
+  # Delegate to plural with coercion to single as indictated by args
   if($args->{'manager_class'} || $args->{'manager_method'} ||
      $args->{'manager_args'} || $args->{'query_args'} ||
      $args->{'join_args'})
@@ -1834,7 +1834,7 @@ sub object_by_key
     $args->{'single'} = 1;
     return $class->objects_by_key($name, $args, $options);
   }
-
+  
   my %methods;
 
   my $key = $args->{'hash_key'} || $name;
@@ -1864,6 +1864,32 @@ sub object_by_key
 
   my $fk_columns = $args->{'key_columns'} or die "Missing key columns hash";
   my $share_db   = $args->{'share_db'};
+
+  # Delegate to plural with coercion to single as indictated by column map
+  my(%unique, $key_ok);
+
+  foreach my $uk_cols (scalar($fk_meta->primary_key_column_names),
+                       $fk_meta->unique_keys_column_names)
+  {
+    $unique{join($;, sort @$uk_cols)} = 1;
+  }
+
+  my @f_columns = sort values %$fk_columns;
+
+  for my $i (0 .. $#f_columns)
+  {
+    if($unique{join($;, @f_columns[0 .. $i])})
+    {
+      $key_ok = 1;
+      last;
+    }
+  }
+
+  unless($key_ok)
+  {
+    $args->{'single'} = 1;
+    return $class->objects_by_key($name, $args, $options);
+  }
 
   if($interface eq 'get_set')
   {
