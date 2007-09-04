@@ -120,16 +120,54 @@ sub invalidate_output_value
 sub parent_field
 {
   my($self) = shift; 
-  return Scalar::Util::weaken($self->{'parent_field'} = shift)  if(@_);
+
+  if(@_)
+  {
+    if(ref $_[0])
+    {
+      return Scalar::Util::weaken($self->{'parent_field'} = shift)
+    }
+    else
+    {
+      return $self->{'parent_field'} = shift;
+    }
+  }
+
   return $self->{'parent_field'};
 }
 
 sub parent_form
 {
   my($self) = shift; 
-  return Scalar::Util::weaken($self->{'parent_form'} = shift)  if(@_);
+
+  if(@_)
+  {
+    if(ref $_[0])
+    {
+      return Scalar::Util::weaken($self->{'parent_form'} = shift)
+    }
+    else
+    {
+      return $self->{'parent_form'} = shift;
+    }
+  }
+
   return $self->{'parent_form'};
 }
+
+# sub parent_field
+# {
+#   my($self) = shift; 
+#   return Scalar::Util::weaken($self->{'parent_field'} = shift)  if(@_);
+#   return $self->{'parent_field'};
+# }
+# 
+# sub parent_form
+# {
+#   my($self) = shift; 
+#   return Scalar::Util::weaken($self->{'parent_form'} = shift)  if(@_);
+#   return $self->{'parent_form'};
+# }
 
 sub fq_name
 {
