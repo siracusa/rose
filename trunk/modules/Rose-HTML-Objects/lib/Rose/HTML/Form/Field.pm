@@ -125,7 +125,8 @@ sub parent_field
   {
     if(ref $_[0])
     {
-      return Scalar::Util::weaken($self->{'parent_field'} = shift)
+      Scalar::Util::weaken($self->{'parent_field'} = shift);
+      return $self->{'parent_field'};
     }
     else
     {
@@ -144,7 +145,8 @@ sub parent_form
   {
     if(ref $_[0])
     {
-      return Scalar::Util::weaken($self->{'parent_form'} = shift)
+      Scalar::Util::weaken($self->{'parent_form'} = shift);
+      return $self->{'parent_form'};
     }
     else
     {

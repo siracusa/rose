@@ -65,7 +65,7 @@ sub items
     $self->init_items;
   }
 
-  return (wantarray) ? @{$self->{'items'}} : $self->{'items'};
+  return (wantarray) ? @{$self->{'items'} || []} : $self->{'items'};
 }
 
 sub items_localized
@@ -195,20 +195,14 @@ sub _args_to_items
       $item->parent_field($parent);
     }
   }
-  elsif($parent = $self->parent_form)
+  else # At least set the localizer
   {
     foreach my $item (@$items)
     {
-      $item->parent_form($parent);
-    }
-  }
-  else # Maybe we'll have a parent later...
-  {
-    foreach my $item (@$items)
-    {
-      #$item->localizer(Scalar::Defer::lazy { $self->localizer });
-      $item->parent_field(Scalar::Defer::lazy { $self->parent_field });
-      $item->parent_form(Scalar::Defer::lazy { $self->parent_form });
+      $item->localizer(Scalar::Defer::lazy { $self->localizer });
+      # Maybe we'll have a parent later?
+      #$item->parent_field(Scalar::Defer::lazy { $self->parent_field });
+      #$item->parent_form(Scalar::Defer::lazy { $self->parent_form });
     }
   }
 
@@ -225,7 +219,7 @@ sub parent_field
     {
       foreach my $item ($self->items)
       {
-        $item->parent_field($parent);
+        $item->parent_field($parent)  unless($item->parent_field);
       }
     }    
   }
@@ -239,13 +233,11 @@ sub parent_form
 
   if(@_)
   {
-    $self->SUPER::parent_form(@_);
-
     if(my $parent = $self->SUPER::parent_form(@_))
     {
       foreach my $item ($self->items)
       {
-        $item->parent_form($parent);
+        $item->locale(Scalar::Defer::defer { $parent->locale });
       }
     }
   }
