@@ -10,7 +10,7 @@ use Rose::HTML::Form::Field::PopUpMenu;
 use Rose::HTML::Form::Field::Time::Split;
 our @ISA = qw(Rose::HTML::Form::Field::Time::Split);
 
-our $VERSION = '0.50';
+our $VERSION = '0.550';
 
 sub build_field
 {
@@ -73,8 +73,8 @@ sub decompose_value
     return
     {
       hour   => substr($value, 0, 2) || '',
-      minute => substr($value, 2, 2) || '',
-      second => substr($value, 4, 2) || '',
+      minute => substr($value, 3, 2) || '',
+      second => substr($value, 6, 2) || '',
       ampm   => '',
     }
   }

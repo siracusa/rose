@@ -9,7 +9,7 @@ use Rose::HTML::Object::Messages qw(:date);
 use Rose::HTML::Form::Field::DateTime::Split;
 our @ISA = qw(Rose::HTML::Form::Field::DateTime::Split);
 
-our $VERSION = '0.549';
+our $VERSION = '0.550';
 
 sub build_field
 {
@@ -60,11 +60,13 @@ sub decompose_value
   unless($date)
   {
     no warnings;
+    my($month, $day, $year) = split('/', $value);
+
     return
     {
-      month => substr($value, 0, 2) || '',
-      day   => substr($value, 2, 2) || '',
-      year  => substr($value, 4, 4) || '',
+      month => $month || '',
+      day   => $day   || '',
+      year  => $year  || '',
     }
   }
 

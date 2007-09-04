@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 70;
+use Test::More tests => 73;
 
 BEGIN 
 {
@@ -339,6 +339,27 @@ $field->internal_value;
 is($field->internal_value->strftime('%Y-%m-%d %I:%M:%S %p'), 
    '2001-12-31 12:00:00 PM', 'mdyhms month, day, year, hour am/pm');
 
+$field->field('time.hour')->input_value(99);
+$field->field('time.minute')->input_value(88);
+$field->field('time.second')->input_value(77);
+
+is($field->html_field, 
+  '<span class="datetime">' .
+  '<span class="date">' .
+  '<input class="mm" maxlength="2" name="datetime.date.month" size="2" type="text" value="12">/' .
+  '<input class="dd" maxlength="2" name="datetime.date.day" size="2" type="text" value="31">/' .
+  '<input class="yyyy" maxlength="4" name="datetime.date.year" size="4" type="text" value="2001"></span> ' .
+  '<span class="time">' .
+  '<input class="hour" maxlength="2" name="datetime.time.hour" size="2" type="text" value="99">:' .
+  '<input class="minute" maxlength="2" name="datetime.time.minute" size="2" type="text" value="88">:' .
+  '<input class="second" maxlength="2" name="datetime.time.second" size="2" type="text" value="77">' .
+  qq(<select class="ampm" name="datetime.time.ampm" size="1">\n) .
+  qq(<option value=""></option>\n) .
+  qq(<option value="AM">AM</option>\n) .
+  qq(<option selected value="PM">PM</option>\n) .
+  '</select></span></span>',
+  'mdyhms html_field() 4');
+
 $field = Rose::HTML::Form::Field::DateTime::Split::MDYHMS->new(name => 'dt');
 
 $field->field('date.month')->input_value('');
@@ -382,3 +403,19 @@ ok(defined $ok, 'empty compound validate 5');
 ok($ok == 0, 'empty compound validate 6');
 
 is($field->error, 'Missing month, year.', 'empty compound error unlabeled');
+
+$field->input_value('31/31/2007');
+
+is($field->html_field, 
+  '<span class="date">' .
+  '<input class="month" maxlength="2" name="start.month" size="2" type="text" value="31">/' .
+  '<input class="day" maxlength="2" name="start.day" size="2" type="text" value="31">/' .
+  '<input class="year" maxlength="4" name="start.year" size="4" type="text" value="2007"></span>',
+  'mdy html_field() 1');
+
+is($field->xhtml_field, 
+  '<span class="date">' .
+  '<input class="month" maxlength="2" name="start.month" size="2" type="text" value="31" />/' .
+  '<input class="day" maxlength="2" name="start.day" size="2" type="text" value="31" />/' .
+  '<input class="year" maxlength="4" name="start.year" size="4" type="text" value="2007" /></span>',
+  'mdy xhtml_field() 1');
