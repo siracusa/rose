@@ -10,7 +10,7 @@ use Rose::HTML::Object::Message::Localizer;
 use Rose::HTML::Object::Localized;
 our @ISA = qw(Rose::HTML::Object::Localized);
 
-our $VERSION = '0.549';
+our $VERSION = '0.550';
 
 our $Debug = undef;
 
@@ -36,6 +36,7 @@ use Rose::Class::MakeMethods::Generic
     'html_element',  # may be read-only in subclasses
     'xhtml_element', # may be read-only in subclasses
     'autoload_html_attr_methods',
+    'force_utf8',
   ],
 );
 

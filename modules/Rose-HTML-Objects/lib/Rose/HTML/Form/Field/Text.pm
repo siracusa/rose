@@ -2,12 +2,13 @@ package Rose::HTML::Form::Field::Text;
 
 use strict;
 
+use Encode;
 use Rose::HTML::Object::Errors qw(:string);
 
 use Rose::HTML::Form::Field::Input;
 our @ISA = qw(Rose::HTML::Form::Field::Input);
 
-our $VERSION = '0.549';
+our $VERSION = '0.550';
 
 __PACKAGE__->delete_valid_html_attrs(qw(ismap usemap alt src));
 
@@ -47,6 +48,11 @@ sub validate
   my $maxlength = $self->maxlength;
 
   my $name = sub { $self->error_label || $self->name };
+
+  if(ref($self)->force_utf8 && !Encode::is_utf8($value))
+  {
+    Encode::_utf8_on($value);
+  }
 
   if(defined $maxlength && length($value) > $maxlength)
   {

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 31;
+use Test::More tests => 33;
 
 BEGIN 
 {
@@ -108,6 +108,15 @@ ok($field->validate, 'validate() 3');
 
 $field->value('');
 ok($field->validate, 'validate() 4');
+
+$field->maxlength(1);
+$field->input_value('語'); # UTF-8
+
+ok(!$field->validate, 'validate UTF-8 maxlength 1');
+
+Rose::HTML::Form::Field::Text->force_utf8(1);
+
+ok($field->validate, 'validate UTF-8 maxlength 2');
 
 BEGIN
 {

@@ -195,17 +195,62 @@ sub _args_to_items
       $item->parent_field($parent);
     }
   }
-  else # If there is no grandparent, at least set the localizer
+  elsif($parent = $self->parent_form)
   {
     foreach my $item (@$items)
     {
-      # Deferred in case the grandparent is being constructed
-      # in the process of adding it to a form or other parent.
-      $item->localizer(Scalar::Defer::lazy { $self->localizer });
+      $item->parent_form($parent);
+    }
+  }
+  else # Maybe we'll have a parent later...
+  {
+    foreach my $item (@$items)
+    {
+      #$item->localizer(Scalar::Defer::lazy { $self->localizer });
+      $item->parent_field(Scalar::Defer::lazy { $self->parent_field });
+      $item->parent_form(Scalar::Defer::lazy { $self->parent_form });
     }
   }
 
   return (wantarray) ? @$items : $items;
+}
+
+sub parent_field
+{
+  my($self) = shift; 
+
+  if(@_)
+  {
+    if(my $parent = $self->SUPER::parent_field(@_))
+    {
+      foreach my $item ($self->items)
+      {
+        $item->parent_field($parent);
+      }
+    }    
+  }
+
+  return $self->SUPER::parent_field;
+}
+
+sub parent_form
+{
+  my($self) = shift; 
+
+  if(@_)
+  {
+    $self->SUPER::parent_form(@_);
+
+    if(my $parent = $self->SUPER::parent_form(@_))
+    {
+      foreach my $item ($self->items)
+      {
+        $item->parent_form($parent);
+      }
+    }
+  }
+
+  return $self->SUPER::parent_form;
 }
 
 sub add_items
