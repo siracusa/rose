@@ -517,12 +517,13 @@ This is exactly the determination that many overridden L<inflate_value()|Rose::H
       # Garbage input: try to do something sensible
       unless($date) 
       {
-        no warnings;
+        my($month, $day, $year) = split('/', $value);
+    
         return
         {
-          month => substr($value, 0, 2) || '',
-          day   => substr($value, 2, 2) || '',
-          year  => substr($value, 4, 4) || '',
+          month => $month || '',
+          day   => $day   || '',
+          year  => $year  || '',
         }
       }
 

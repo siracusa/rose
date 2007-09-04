@@ -10,7 +10,7 @@ use Rose::HTML::Form::Field::Time::Split::HourMinuteSecond;
 use Rose::HTML::Form::Field::DateTime::Split;
 our @ISA = qw(Rose::HTML::Form::Field::DateTime::Split);
 
-our $VERSION = '0.50';
+our $VERSION = '0.550';
 
 sub build_field
 {
@@ -36,8 +36,8 @@ sub decompose_value
     no warnings;
     return
     {
-      date  => substr($value, 0, 8) || '',
-      time  => substr($value, 8) || '',
+      date  => substr($value, 0, 10) || '',
+      time  => substr($value, 10) || '',
     }
   }
 
