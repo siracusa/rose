@@ -45,7 +45,7 @@ use Rose::Object::MakeMethods::Generic
 
   hash =>
   [
-    _key_column  => { hash_key  => 'key_columns' },
+    _key_column  => { hash_key  => '_key_columns' },
     _key_columns => { interface => 'get_set_all' },
   ],
 );

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 197;
+use Test::More tests => 199;
 
 BEGIN 
 {
@@ -442,9 +442,12 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 51)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 53)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
+
+  is(MySQLiteObject->meta->foreign_key('other_obj')->key_column('fk1'), 'k1', "key_column 1 - $db_type");
+  is(MySQLiteObject->meta->foreign_key('other_obj')->key_column('fk2'), 'k2', "key_column 2 - $db_type");
 
   my $o = MySQLiteObject->new(name => 'John', id => 1);
 
