@@ -1,8 +1,10 @@
-0.765_03 (08.21.2007) - John Siracusa <siracusa@gmail.com>
+0.765_04 (09.03.2007) - John Siracusa <siracusa@gmail.com>
 
     * Fiddled with not_found() detection.  (Changes suggested by Philip Dye)
     * Made one-to-one relationships (attempt to) work even when uniqueness is 
       not apparent in the metadata.
+    * The key_column() method in the ForeignKey class now works correctly.
+      (Patch by Christopher Masto)
 
 0.765 (07.21.2007) - John Siracusa <siracusa@gmail.com>
 
