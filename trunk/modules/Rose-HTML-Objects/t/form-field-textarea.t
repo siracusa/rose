@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 25;
+use Test::More tests => 27;
 
 BEGIN 
 {
@@ -117,3 +117,13 @@ $field->input_value('12345678901');
 
 ok(!$field->validate, 'maxlength 1');
 is($field->error_id, STRING_OVERFLOW, 'maxlength 2');
+
+$field = Rose::HTML::Form::Field::TextArea->new(name => 'foo', label => 'Foo', required => 1);
+
+$field->validate;
+
+is($field->error, 'Foo is a required field.', 'error en');
+
+$field->locale('de');
+
+is($field->error, 'Foo ist ein Pflichtfeld.', 'error de');
