@@ -186,6 +186,7 @@ t/sandbox/convention/lib/My/Object.pm
 t/sandbox/convention/lib/My/Price.pm
 t/sandbox/convention/lib/My/Product.pm
 t/sandbox/convention/lib/My/ProductColors.pm
+t/sandbox/convention/lib/My/Region.pm
 t/sandbox/convention/lib/My/Vendor.pm
 t/sandbox/schema-clash/lib/Alpha.pm
 t/sandbox/schema-clash/lib/Beta.pm
