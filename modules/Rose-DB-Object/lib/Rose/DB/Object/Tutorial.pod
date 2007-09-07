@@ -2313,12 +2313,11 @@ The resulting SQL is what you'd expect.
        t3.name
      FROM
        products t1
-       LEFT OUTER JOIN prices t2 ON(t1.id = t2.product_id),
-       vendors t3
+       JOIN vendors t3 ON (t1.vendor_id = t3.id)
+       LEFT OUTER JOIN prices t2 ON(t1.id = t2.product_id)
      WHERE
        t1.id > 15 AND
-       t1.name LIKE 'Kite%' AND
-       t1.vendor_id = t3.id
+       t1.name LIKE 'Kite%'      
      ORDER BY t1.name
 
 Each C<Product> also has zero or more C<Color>s which are related to it through a mapping table (fronted by the C<ProductColorMap> class, but we don't need to know that).  The C<with_objects> parameter can handle that as well.
@@ -2347,7 +2346,7 @@ The resulting SQL is a bit more complex.
     FROM
       products t1
       LEFT OUTER JOIN product_color_map t2 ON(t2.product_id = t1.id)
-      LEFT JOIN colors t3 ON(t2.color_id = t3.id)
+      LEFT OUTER JOIN colors t3 ON(t2.color_id = t3.id)
     WHERE
       t1.id > 15 AND
       t1.name LIKE 'Kite%'
@@ -2368,25 +2367,22 @@ Again, combinations are straightforward.  Let's fetch products with their vendor
 Now the SQL is starting to get a bit hairy.
 
     SELECT 
-      t1.date_created,
       t1.id,
       t1.name,
-      t1.release_date,
-      t1.status,
       t1.vendor_id,
-      t3.id,
+      t3.code,
       t3.name,
       t4.id,
-      t4.name
+      t4.name,
+      t4.region_id
     FROM
       products t1
-      LEFT OUTER JOIN product_color_map t2 ON(t2.product_id = t1.id)
-      LEFT JOIN colors t3 ON(t2.color_id = t3.id),
-      vendors t4
+      JOIN vendors t4 ON (t1.vendor_id = t4.id)
+      LEFT OUTER JOIN product_colors t2 ON (t2.product_id = t1.id)
+      LEFT OUTER JOIN colors t3 ON (t2.color_code = t3.code)
     WHERE
       t1.id > 15 AND
-      t1.name LIKE 'Kite%' AND
-      t1.vendor_id = t4.id
+      t1.name LIKE 'Kite%'
 
 Anyone who knows SQL well will recognize that there is a danger lurking when combining JOINs.  Multiple joins that each fetch multiple rows can result in a  geometric explosion of rows returned by the database.  For example, the number of rows returned when fetching products with their associated prices and colors would be:
 
@@ -2415,30 +2411,27 @@ As an example, let's try fetching products with their associated prices, colors,
 Here's the SQL.
 
     SELECT 
-      t1.date_created,
       t1.id,
       t1.name,
-      t1.release_date,
-      t1.status,
       t1.vendor_id,
-      t3.id,
+      t3.code,
       t3.name,
-      t4.id,
-      t4.price,
+      t4.price_id,
       t4.product_id,
       t4.region,
+      t4.price,
       t5.id,
-      t5.name
+      t5.name,
+      t5.region_id
     FROM
       products t1
-      LEFT OUTER JOIN product_color_map t2 ON(t2.product_id = t1.id)
-      LEFT JOIN colors t3 ON(t2.color_id = t3.id)
-      LEFT OUTER JOIN prices t4 ON(t1.id = t4.product_id),
-      vendors t5
+      JOIN vendors t5 ON (t1.vendor_id = t5.id)
+      LEFT OUTER JOIN product_colors t2 ON (t2.product_id = t1.id)
+      LEFT OUTER JOIN colors t3 ON (t2.color_code = t3.code)
+      LEFT OUTER JOIN prices t4 ON (t1.id = t4.product_id)
     WHERE
       t1.id > 15 AND
-      t1.name LIKE 'Kite%' AND
-      t1.vendor_id = t5.id
+      t1.name LIKE 'Kite%'
     ORDER BY t1.name
 
 It's questionable whether this five-way join will be faster than doing a four- or three-way join and then fetching the other information after the fact, with separate queries.  It all depends on the number of rows expected to match.  Only you know your data.  You must choose the most efficient query that suits your needs.
@@ -2461,32 +2454,30 @@ Moving beyond even the example above, it's possible to chain foreign key or rela
 The SQL would now look something like this.
 
     SELECT 
-      t1.date_created,
       t1.id,
       t1.name,
-      t1.release_date,
-      t1.status,
       t1.vendor_id,
-      t3.id,
+      t3.code,
       t3.name,
-      t4.id,
-      t4.price,
+      t4.price_id,
       t4.product_id,
       t4.region,
+      t4.price,
       t5.id,
-      t5.name
+      t5.name,
+      t5.region_id,
+      t6.id,
+      t6.name
     FROM
       products t1
-      LEFT OUTER JOIN product_color_map t2 ON(t2.product_id = t1.id)
-      LEFT JOIN colors t3 ON(t2.color_id = t3.id)
-      LEFT OUTER JOIN prices t4 ON(t1.id = t4.product_id),
-      vendors t5,
-      regions t6
+      JOIN (vendors t5 JOIN regions t6 ON (t5.region_id = t6.id))
+        ON (t1.vendor_id = t5.id)
+      LEFT OUTER JOIN product_colors t2 ON (t2.product_id = t1.id)
+      LEFT OUTER JOIN colors t3 ON (t2.color_code = t3.code)
+      LEFT OUTER JOIN prices t4 ON (t1.id = t4.product_id)
     WHERE
       t1.id > 15 AND
       t1.name LIKE 'Kite%' AND
-      t1.vendor_id = t5.id AND
-      t5.region_id = t6.id AND
       t6.name = 'UK'
     ORDER BY t1.name
 
