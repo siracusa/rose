@@ -16,7 +16,7 @@ use Rose::DB::Object::Constants
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.765';
+our $VERSION = '0.766';
 
 our $Debug = 0;
 
@@ -3434,6 +3434,8 @@ sub perl_class_definition
 
   return<<"EOF";
 package $class;
+
+use strict;
 
 $use_bases
 
