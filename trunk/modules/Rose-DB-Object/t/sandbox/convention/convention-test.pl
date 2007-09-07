@@ -24,6 +24,84 @@ print $p->vendor->name, "\n";
 print join(', ', map { $_->region . ': ' . $_->price } $p->prices), "\n";
 print join(', ', map { $_->name } $p->colors), "\n";
 
+# Rose::DB::Object::Manager->get_objects(
+#   object_class => 'My::Product',
+#   debug => 1,
+#   query =>
+#   [
+#     name => { like => 'Kite%' },
+#     id   => { gt => 15 },
+#   ],
+#   require_objects => [ 'vendor' ],
+#   with_objects    => [ 'colors', 'prices' ],
+#   multi_many_ok   => 1,
+#   sort_by => 'name');
+# 
+# 
+# Rose::DB::Object::Manager->get_objects(
+#   object_class => 'My::Product',
+#   debug => 1,
+#   query =>
+#   [
+#     name => { like => 'Kite%' },
+#     id   => { gt => 15 },
+#   ],
+#   require_objects => [ 'vendor' ],
+#   with_objects    => [ 'colors' ],
+#   sort_by => 'name');
+# 
+# 
+# Rose::DB::Object::Manager->get_objects(
+#   object_class => 'My::Product',
+#   debug => 1,
+#   query =>
+#   [
+#     name => { like => 'Kite%' },
+#     id   => { gt => 15 },
+#   ],
+#   with_objects => [ 'colors' ],
+#   sort_by => 'name');
+# 
+# 
+# Rose::DB::Object::Manager->get_objects(
+#   object_class => 'My::Product',
+#   debug => 1,
+#   query =>
+#   [
+#     name => { like => 'Kite%' },
+#     id   => { gt => 15 },
+#   ],
+#   require_objects => [ 'vendor' ],
+#   with_objects    => [ 'prices' ],
+#   sort_by => 'name');
+# 
+# 
+# Rose::DB::Object::Manager->get_objects(
+#   object_class => 'My::Product',
+#   debug => 1,
+#   query =>
+#   [
+#     name => { like => 'Kite%' },
+#     id   => { gt => 15 },
+#   ],
+#   with_objects => [ 'prices' ],
+#   sort_by => 'name');
+# 
+# 
+# Rose::DB::Object::Manager->get_objects(
+#   object_class => 'My::Product',
+#   debug => 1,
+#   query =>
+#   [
+#     'vendor.region.name' => 'UK',
+#     'name' => { like => 'Kite%' },
+#     'id'   => { gt => 15 },
+#   ],
+#   require_objects => [ 'vendor.region' ],
+#   with_objects    => [ 'colors', 'prices' ],
+#   multi_many_ok   => 1,
+#   sort_by => 'name');
+
 __END__
 
 DROP TABLE product_colors CASCADE;
@@ -31,11 +109,19 @@ DROP TABLE prices CASCADE;
 DROP TABLE products CASCADE;
 DROP TABLE colors CASCADE;
 DROP TABLE vendors CASCADE;
+DROP TABLE regions CASCADE;
+
+CREATE TABLE regions
+(
+  id    SERIAL NOT NULL PRIMARY KEY,
+  name  VARCHAR(255)
+);
 
 CREATE TABLE vendors
 (
   id    SERIAL NOT NULL PRIMARY KEY,
-  name  VARCHAR(255)
+  name  VARCHAR(255),
+  region_id INT REFERENCES regions (id)
 );
 
 CREATE TABLE colors
