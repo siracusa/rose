@@ -165,6 +165,8 @@ EOF
 # My Preamble
 package ${class_prefix}::Product::Manager;
 
+use strict;
+
 use base qw(Rose::DB::Object::Manager);
 
 use ${class_prefix}::Product;
