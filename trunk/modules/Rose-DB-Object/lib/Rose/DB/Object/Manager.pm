@@ -952,6 +952,18 @@ sub get_objects
 
         my(@redundant, @redundant_null);
 
+        unless(%$ft_columns)
+        {
+          if($with_objects{$arg})
+          {
+            $joins[$i]{'type'} = 'LEFT OUTER JOIN';
+          }
+          elsif($use_explicit_joins)
+          {
+            $joins[$i]{'type'} = 'JOIN';
+          }
+        }
+
         # Add join condition(s)
         while(my($local_column, $foreign_column) = each(%$ft_columns))
         {
@@ -1053,6 +1065,8 @@ sub get_objects
           push(@$clauses, '((' . join(' AND ', @redundant) . ') OR (' .
                           join(' OR ', @redundant_null) . '))');
         }
+
+        $joins[$i]{'conditions'} ||= [ '1 = 1' ];
 
         # Add sub-object sort conditions
         if($rel->can('manager_args') && (my $mgr_args = $rel->manager_args))
