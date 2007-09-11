@@ -137,7 +137,7 @@ sub format_table_with_alias
   if($hints && $version >= 3_023_012)
   {
     my $sql = "$table $alias ";
-$DB::single = 1;
+
     # "ignore index()" and "use index()" were added in 3.23.12 (07 March 2000)
     # "force index()" was added in 4.0.9 (09 January 2003)
     my @types = (($version >= 4_000_009 ? 'force' : ()), qw(use ignore));
