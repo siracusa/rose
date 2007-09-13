@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.765';
+our $VERSION = '0.766';
 
 our $Debug = 0;
 
@@ -212,8 +212,8 @@ sub build_select
 
   my $query_is_sql = $args{'query_is_sql'};
 
-  $select   = join(', ', map { ref $_ ? $$_ : $_ } @$select)    if(ref $select);
-  $sort_by  = join(', ', map { ref $_ ? $$_ : $_ } @$sort_by)   if(ref $sort_by);
+  $select   = join(', ', map { ref $_ eq 'SCALAR' ? $$_ : $_ } @$select)    if(ref $select);
+  $sort_by  = join(', ', map { ref $_ eq 'SCALAR' ? $$_ : $_ } @$sort_by)   if(ref $sort_by);
   $group_by = join(', ', @$group_by)  if(ref $group_by);
 
   my($not, $op, @select_columns, %column_count);
