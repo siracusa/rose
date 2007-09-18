@@ -200,6 +200,12 @@ sub _args_to_items
     foreach my $item (@$items)
     {
       $item->localizer(Scalar::Defer::lazy { $self->localizer });
+
+      if(my $parent = $self->parent_form)
+      {
+        $item->locale(Scalar::Defer::defer { $parent->locale });
+      }
+
       # Maybe we'll have a parent later?
       #$item->parent_field(Scalar::Defer::lazy { $self->parent_field });
       #$item->parent_form(Scalar::Defer::lazy { $self->parent_form });
