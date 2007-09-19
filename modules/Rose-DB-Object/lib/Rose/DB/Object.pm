@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.765_05';
+our $VERSION = '0.765_06';
 
 our $Debug = 0;
 
@@ -670,6 +670,8 @@ sub update
                  join(', ', @key_columns) . ') with ' .
                  (@key_columns > 1 ? 'non-null values in all columns' : 
                                      'a non-null value'));
+    $self->meta->handle_error($self);
+    return undef;
   }
 
   #my $ret = $db->begin_work;
