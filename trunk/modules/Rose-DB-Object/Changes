@@ -1,8 +1,9 @@
-0.765_05 (09.10.2007) - John Siracusa <siracusa@gmail.com>
+0.765_06 (09.19.2007) - John Siracusa <siracusa@gmail.com>
 
     * Fiddled with not_found() detection.  (Changes suggested by Philip Dye)
     * Made one-to-one relationships (attempt to) work even when uniqueness is 
       not apparent in the metadata.
+    * Added the unique_key_by_name() metadata method.
     * Added the ability to do unrestricted joins in some circumstances.
     * The key_column() method in the ForeignKey class now works correctly.
       (Patch by Christopher Masto)

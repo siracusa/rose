@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.765';
+our $VERSION = '0.766';
 
 our $Debug = 0;
 
@@ -736,6 +736,8 @@ sub add_unique_keys
     {
       UNIVERSAL::isa($_, 'Rose::DB::Object::Metadata::UniqueKey') ?
       ($_->parent($self), $_) : 
+      ref $_ eq 'HASH' ?
+      Rose::DB::Object::Metadata::UniqueKey->new(parent => $self, %$_) :
       Rose::DB::Object::Metadata::UniqueKey->new(parent => $self, columns => $_)
     }
     @_;
@@ -744,6 +746,17 @@ sub add_unique_keys
   return;
 }
 
+sub unique_key_by_name
+{
+  my($self, $name) = @_;
+  
+  foreach my $uk ($self->unique_keys)
+  {
+    return $uk  if($uk->name eq $name);
+  }
+  
+  return undef;
+}
 
 sub add_unique_key { shift->add_unique_keys(@_)  }
 sub unique_key     { \shift->add_unique_keys(@_) }
@@ -5380,6 +5393,10 @@ This method is an alias for L<add_unique_keys|/add_unique_keys>.
 Get or set the list of unique keys for this table.  If KEYS is passed, any existing keys will be deleted and KEYS will be passed to the L<add_unique_keys|/add_unique_keys> method.
 
 Returns the list (in list context) or reference to an array (in scalar context) of L<Rose::DB::Object::Metadata::UniqueKey> objects.
+
+=item B<unique_key_by_name NAME>
+
+Return the unique key L<named|Rose::DB::Object::Metadata::UniqueKey/name> NAME, or undef if no such key exists.
 
 =item B<unique_keys_column_names>
 
