@@ -59,14 +59,14 @@ if(!$@ && $DBD::SQLite::VERSION == 1.13)
 print STDERR<<"EOF";
 
 ***
-*** WARNING: DBD::SQLite version 1.13 detected.  This version has some
-*** serious bugs that prevent the test suite from working correctly.
+*** WARNING: DBD::SQLite version 1.13 or 1.14 detected.  These versions have
+*** some serious bugs that prevent the test suite from working correctly.
 *** In particular:
 ***
 ***     http://rt.cpan.org/Public/Bug/Display.html?id=21472
 ***
 *** The SQLite tests will be skipped.  Please install DBD::SQLite 1.12
-*** or a version that fixes the bugs in 1.13.
+*** or a version that fixes the bugs in 1.13 and 1.14.
 ***
 *** Press return to continue (or wait 60 seconds)
 EOF

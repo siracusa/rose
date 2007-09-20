@@ -7,6 +7,8 @@
     * Added the ability to do unrestricted joins in some circumstances.
     * The key_column() method in the ForeignKey class now works correctly.
       (Patch by Christopher Masto)
+    * Added a test suite exclusion for DBD::SQLite 1.14, which still suffers 
+      from this bug: http://rt.cpan.org/Public/Bug/Display.html?id=21472
 
 0.765 (07.21.2007) - John Siracusa <siracusa@gmail.com>
 
