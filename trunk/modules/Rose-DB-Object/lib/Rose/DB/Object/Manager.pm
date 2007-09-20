@@ -952,7 +952,7 @@ sub get_objects
 
         my(@redundant, @redundant_null);
 
-        unless(%$ft_columns)
+        unless($ft_columns && %$ft_columns)
         {
           if($with_objects{$arg})
           {
@@ -1066,7 +1066,7 @@ sub get_objects
                           join(' OR ', @redundant_null) . '))');
         }
 
-        $joins[$i]{'conditions'} ||= [ '1 = 1' ];
+        $joins[$i]{'conditions'} ||= [ '1 = 1' ]  if($joins[$i]);
 
         # Add sub-object sort conditions
         if($rel->can('manager_args') && (my $mgr_args = $rel->manager_args))
