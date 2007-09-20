@@ -384,8 +384,9 @@ sub load
 
     $loaded_ok = defined $sth->fetch;
 
-    # The load() query shouldn't find mor ethan one row anyway
-    #$sth->finish;
+    # The load() query shouldn't find more than one row anyway, 
+    # but DBD::SQLite demands this :-/
+    $sth->finish;
 
     if($loaded_ok)
     {
