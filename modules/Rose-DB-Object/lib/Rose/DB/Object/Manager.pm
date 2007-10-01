@@ -2894,7 +2894,7 @@ sub delete_objects
     exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
     $class->dbi_prepare_cached;
 
-  my $db  = delete $args{'db'} || $object_class->init_db;
+  my $db  = $args{'db'} ||= $object_class->init_db;
   my $dbh = $args{'dbh'};
   my $dbh_retained = 0;
 
@@ -2996,7 +2996,7 @@ sub update_objects
     exists $args{'prepare_cached'} ? $args{'prepare_cached'} :
     $class->dbi_prepare_cached;
 
-  my $db  = delete $args{'db'} || $object_class->init_db;
+  my $db  = $args{'db'} ||= $object_class->init_db;
   my $dbh = $args{'dbh'};
   my $dbh_retained = 0;
 
