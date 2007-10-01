@@ -1,4 +1,4 @@
-0.765_07 (09.20.2007) - John Siracusa <siracusa@gmail.com>
+0.765_08 (10.01.2007) - John Siracusa <siracusa@gmail.com>
 
     * Fiddled with not_found() detection.  (Changes suggested by Philip Dye)
     * Made one-to-one relationships (attempt to) work even when uniqueness is 
@@ -9,6 +9,7 @@
       (Patch by Christopher Masto)
     * Added a test suite exclusion for DBD::SQLite 1.14, which still suffers 
       from this bug: http://rt.cpan.org/Public/Bug/Display.html?id=21472
+    * Fixed propagation of db objects in update and delete Manager methods.
 
 0.765 (07.21.2007) - John Siracusa <siracusa@gmail.com>
 
