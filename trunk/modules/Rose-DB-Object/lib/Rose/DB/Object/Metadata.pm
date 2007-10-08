@@ -3767,6 +3767,7 @@ sub _clear_column_generated_values
   $self->{'num_columns'}            = undef;
   $self->{'nonlazy_column_names'}   = undef;
   $self->{'lazy_column_names'}      = undef;
+  $self->{'column_names_sql'}       = undef;
   $self->{'get_column_sql_tmpl'}    = undef;
   $self->{'column_names_string_sql'} = undef;
   $self->{'nonlazy_column_names_string_sql'}      = undef;
