@@ -6,7 +6,7 @@ use Carp;
 
 use base 'Rose::HTML::Object::Exporter';
 
-our $VERSION = '0.547';
+our $VERSION = '0.550';
 
 our $Debug = 0;
 
@@ -159,24 +159,20 @@ sub add_messages
   {
     while(my($name, $thing) = each(%{"${class}::"}))
     {
-      my $fq_sub = $thing;
-      my $sub    = $thing;
+      my $fq_name = "${class}::$name";
 
-      $sub =~ s/.*:://;
-      $fq_sub =~ s/^\*//;
+      next  unless(defined *{$fq_name}{'CODE'} && $name =~ /^[A-Z0-9_]+$/);
 
-      next  unless(defined *{$fq_sub}{'CODE'} && $name =~ /^[A-Z0-9_]+$/);
-
-      my $code = $class->can($sub);
+      my $code = $class->can($name);
 
       # Skip it if it's not a constant
       next  unless(defined prototype($code) && !length(prototype($code)));
 
       # Should not need this check?
-      next  if($thing =~ /^(?:BEGIN|DESTROY|AUTOLOAD|TIE.*)$/);
+      next  if($name =~ /^(BEGIN|DESTROY|AUTOLOAD|TIE.*)$/);
 
-      $Debug && warn "$class ADD $name = ", &$fq_sub, "\n";
-      $class->add_message($name, &$fq_sub);
+      $Debug && warn "$class ADD $name = ", $code->(), "\n";
+      $class->add_message($name, $code->());
     }
   }
 }
