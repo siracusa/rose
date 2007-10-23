@@ -15,7 +15,7 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.549';
+our $VERSION = '0.551';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -2587,9 +2587,19 @@ A fatal error occurs unless both NAME and VALUE arguments are passed.
 
 Get or set the parent form, if any.  The reference to the parent form is "weakened" using L<Scalar::Util::weaken()|Scalar::Util/weaken> in order to avoid memory leaks caused by circular references.
 
-=item B<prepare>
+=item B<prepare [PARAMS]>
 
-Calls L<prepare|Rose::HTML::Form::Field/prepare> on each L<field|/fields>, passing all arguments.
+Prepare the form by calling the L<prepare|Rose::HTML::Form::Field/prepare> method on each L<field|/fields>, passing all arguments.  This same method is also called for each L<sub-form|/forms>, passing all arguments plus the C<form_only> parameter with a true value.
+
+PARAMS are name/value pairs.  Valid parameters are:
+
+=over 4
+
+=item B<form_only BOOL>
+
+If true, the L<prepare|Rose::HTML::Form::Field/prepare> method is not called for each  L<field|/fields>.
+
+=back
 
 =item B<query_string>
 

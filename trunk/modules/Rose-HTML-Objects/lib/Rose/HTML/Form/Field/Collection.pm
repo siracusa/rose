@@ -15,7 +15,7 @@ use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 # Variables for use in regexes
 our $FF_SEPARATOR_RE = quotemeta FF_SEPARATOR;
 
-our $VERSION = '0.548';
+our $VERSION = '0.551';
 
 #
 # Class data
@@ -136,11 +136,21 @@ use Rose::Object::MakeMethods::Generic
 
 sub prepare
 {
-  my($self) = shift;
+  my($self)  = shift;
 
-  foreach my $field ($self->fields)
+  my %args = @_;
+
+  unless($args{'form_only'})
   {
-    $field->prepare(@_);
+    foreach my $field ($self->fields)
+    {
+      $field->prepare(@_);
+    }
+  }
+
+  foreach my $form ($self->forms)
+  {
+    $form->prepare(form_only => 1, @_);
   }
 }
 
