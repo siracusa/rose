@@ -1,9 +1,123 @@
 #!/usr/bin/perl
 
+use strict;
+
 use lib '../../../lib';
 use lib 'lib';
 
 use My::Product;
+
+package My::Product;
+
+sub average_price
+{
+  my($self) = shift;
+  
+  my %args;
+  
+  if(my $ref = ref $_[0])
+  {
+    if($ref eq 'HASH')
+    {
+      %args = (query => [ %{shift(@_)} ], @_);
+    }
+    elsif(ref $_[0] eq 'ARRAY')
+    {
+      %args = (query => shift, @_);
+    }
+  }
+  else { %args = @_ }
+
+  my $meta         = $self->meta;
+  my $relationship = $self->meta->relationship('prices');
+  my $ft_columns   = $relationship->key_columns;
+  my $query_args   = $relationship->query_args || [];
+  my $mgr_args     = $relationship->manager_args || {};
+
+  my $average;
+  
+  # Get query key
+  my %key;
+
+  while(my($local_column, $foreign_column) = each(%$ft_columns))
+  {
+    my $local_method = $meta->column_accessor_method_name($local_column);
+  
+    $key{$foreign_column} = $self->$local_method();
+  
+    # Comment this out to allow null keys
+    unless(defined $key{$foreign_column})
+    {
+      keys(%$ft_columns); # reset iterator
+      $self->error("Could not get average via average_price() - the " .
+                   "$local_method attribute is undefined");
+      return;
+    }
+  }
+  
+  # Merge query args
+  my @query = (%key, @$query_args, @{delete $args{'query'} || []});      
+  
+  # Merge the rest of the arguments
+  foreach my $param (keys %args)
+  {
+    if(exists $mgr_args->{$param})
+    {
+      my $ref = ref $args{$param};
+  
+      if($ref eq 'ARRAY')
+      {
+        unshift(@{$args{$param}}, ref $mgr_args->{$param} ? 
+                @{$mgr_args->{$param}} :  $mgr_args->{$param});
+      }
+      elsif($ref eq 'HASH')
+      {
+        while(my($k, $v) = each(%{$mgr_args->{$param}}))
+        {
+          $args{$param}{$k} = $v  unless(exists $args{$param}{$k});
+        }
+      }
+    }
+  }
+  
+  while(my($k, $v) = each(%$mgr_args))
+  {
+    $args{$k} = $v  unless(exists $args{$k});
+  }
+  
+  $args{'object_class'} = $relationship->class;
+
+  my $debug = $Rose::DB::Object::Manager::Debug || $args{'debug'};
+
+  # Make query for average
+  eval
+  {
+    my($sql, $bind) = 
+      Rose::DB::Object::Manager->get_objects_sql(
+        select => [ \q(AVG(price)) ],
+        query => \@query, db => $self->db, %args);
+
+    $debug && warn "$sql (", join(', ', @$bind), ")\n";
+    
+    my $sth = $self->db->dbh->prepare($sql);
+    $sth->execute(@$bind);
+
+    $average = $sth->fetchrow_array;
+  };
+
+  if($@)
+  {
+    $self->error("Could not average $args{'object_class'} objects - " . 
+                 Rose::DB::Object::Manager->error);
+    $meta->handle_error($self);
+    return wantarray ? () : $average;
+  }
+
+  return $average;
+}
+
+
+package main;
 
 # use My::Price;
 # use My::Color;
@@ -18,7 +132,9 @@ use My::Product;
 # $p->vendor(My::Vendor->new(id => 1, name => 'V1'));
 # $p->save;
 
-$p = My::Product->new(id => 1)->load;
+my $p = My::Product->new(id => 1)->load;
+
+print "AVG(price) = ", $p->average_price, "\n";
 print $p->vendor->name, "\n";
 
 print join(', ', map { $_->region . ': ' . $_->price } $p->prices), "\n";
