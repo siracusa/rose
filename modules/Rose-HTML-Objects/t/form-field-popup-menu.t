@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 52;
+use Test::More tests => 54;
 
 BEGIN 
 {
@@ -374,7 +374,35 @@ is($field->xhtml_field,
   qq(</optgroup>\n) .
   qq(</select>),
   'hidden 4');
-  
+
+$group->option('juji')->hide;
+
+is($field->xhtml_field, 
+  qq(<select name="fruits" size="1">\n) .
+  qq(<option value="apple">Apple</option>\n) .
+  qq(<option value="orange">Orange</option>\n) .
+  qq(<option value="grape">Grape</option>\n) .
+  qq(<optgroup label="Others">\n) .
+  qq(<option value="peach">Peach</option>\n) .
+  qq(</optgroup>\n) .
+  qq(</select>),
+  'hidden 4.1');
+
+$group->option('juji')->show;
+$field->option('peach')->hide;
+
+is($field->xhtml_field, 
+  qq(<select name="fruits" size="1">\n) .
+  qq(<option value="apple">Apple</option>\n) .
+  qq(<option value="orange">Orange</option>\n) .
+  qq(<option value="grape">Grape</option>\n) .
+  qq(<optgroup label="Others">\n) .
+  qq(<option value="juji">Juji</option>\n) .
+  qq(</optgroup>\n) .
+  qq(</select>),
+  'hidden 4.2');
+
+$group->option('peach')->show;
 $group->hidden(1);
 
 is($field->html_field, 

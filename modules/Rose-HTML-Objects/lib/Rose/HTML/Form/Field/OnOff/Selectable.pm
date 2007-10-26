@@ -5,7 +5,7 @@ use strict;
 use Rose::HTML::Form::Field::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::OnOff);
 
-our $VERSION = '0.543';
+our $VERSION = '0.551';
 
 __PACKAGE__->required_html_attr_value
 (

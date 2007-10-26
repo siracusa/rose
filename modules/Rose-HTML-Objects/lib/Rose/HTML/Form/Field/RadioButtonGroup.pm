@@ -300,7 +300,7 @@ To set an ordered list of radio buttons along with labels in the constructor, us
 
 Remember that methods are called in the order that they appear in the constructor arguments (see the L<Rose::Object> documentation), so L<radio_buttons()|/radio_buttons> will be called before L<labels()|/labels> in the example above. This is important; it will not work in the opposite order.
 
-Returns a list of the radio button group's L<Rose::HTML::Form::Field::RadioButton> objects in list context, or a reference to an array of the same in scalar context. These are the actual objects used in the field. Modifying them will modify the field itself.
+Returns a list of the radio button group's L<Rose::HTML::Form::Field::RadioButton> objects in list context, or a reference to an array of the same in scalar context.  L<Hidden|Rose::HTML::Form::Field::RadioButton/hidden> radio buttons I<will> be included in this list.  These are the actual objects used in the field. Modifying them will modify the field itself.
 
 =item B<rows [ROWS]>
 
