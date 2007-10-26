@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 80;
+use Test::More tests => 85;
 
 BEGIN 
 {
@@ -559,3 +559,58 @@ my $field2 =
     ]);
 
 is($field->xhtml, $field2->xhtml, 'nested option group 1');
+
+$field->option('grape')->hide;
+
+is($field->html_field, 
+  qq(<select name="fruits" size="5">\n) .
+  qq(<option value="apple">Apple</option>\n) .
+  qq(<option value="orange">Orange</option>\n) .
+  qq(<optgroup label="Others">\n) .
+  qq(<option value="juji">Juji</option>\n) .
+  qq(<option value="peach">Peach</option>\n) .
+  qq(</optgroup>\n) .
+  qq(</select>),
+  'hidden 1');
+
+is($field->xhtml_field, 
+  qq(<select name="fruits" size="5">\n) .
+  qq(<option value="apple">Apple</option>\n) .
+  qq(<option value="orange">Orange</option>\n) .
+  qq(<optgroup label="Others">\n) .
+  qq(<option value="juji">Juji</option>\n) .
+  qq(<option value="peach">Peach</option>\n) .
+  qq(</optgroup>\n) .
+  qq(</select>),
+  'hidden 2');
+
+$group->hide;
+
+is($field->html_field, 
+  qq(<select name="fruits" size="5">\n) .
+  qq(<option value="apple">Apple</option>\n) .
+  qq(<option value="orange">Orange</option>\n) .
+  qq(</select>),
+  'hidden 3');
+
+is($field->xhtml_field, 
+  qq(<select name="fruits" size="5">\n) .
+  qq(<option value="apple">Apple</option>\n) .
+  qq(<option value="orange">Orange</option>\n) .
+  qq(</select>),
+  'hidden 4');
+
+$field->option('grape')->show;
+$group->show;
+
+is($field->html_field, 
+  qq(<select name="fruits" size="5">\n) .
+  qq(<option value="apple">Apple</option>\n) .
+  qq(<option value="orange">Orange</option>\n) .
+  qq(<option value="grape">Grape</option>\n) .
+  qq(<optgroup label="Others">\n) .
+  qq(<option value="juji">Juji</option>\n) .
+  qq(<option value="peach">Peach</option>\n) .
+  qq(</optgroup>\n) .
+  qq(</select>),
+  'hidden 5');

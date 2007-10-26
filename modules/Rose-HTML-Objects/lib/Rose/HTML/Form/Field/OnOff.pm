@@ -5,7 +5,12 @@ use strict;
 use Rose::HTML::Form::Field::Input;
 our @ISA = qw(Rose::HTML::Form::Field::Input);
 
-our $VERSION = '0.011';
+our $VERSION = '0.551';
+
+use Rose::Object::MakeMethods::Generic
+(
+  boolean => 'hidden',
+);
 
 __PACKAGE__->add_required_html_attrs(
 {
@@ -18,5 +23,8 @@ sub value_label { $_[0]->is_on ? $_[0]->label : undef }
 
 sub internal_value { $_[0]->is_on ? $_[0]->html_attr('value') : undef }
 sub output_value   { $_[0]->is_on ? $_[0]->html_attr('value') : undef }
+
+sub hide { shift->hidden(1) }
+sub show { shift->hidden(0) }
 
 1;

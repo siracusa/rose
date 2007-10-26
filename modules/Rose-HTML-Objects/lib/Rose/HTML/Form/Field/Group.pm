@@ -68,6 +68,12 @@ sub items
   return (wantarray) ? @{$self->{'items'} || []} : $self->{'items'};
 }
 
+sub visible_items
+{
+  my $items = shift->items or return;
+  return wantarray ? (grep { !$_->hidden } @$items) : [ grep { !$_->hidden } @$items ];
+}
+
 sub items_localized
 {
   my($self) = shift;
@@ -470,7 +476,7 @@ sub html_field
 {
   my($self) = shift;
   my $sep = ($self->linebreak) ? $self->html_linebreak : ' ';
-  return join($sep, map { $_->html_field } $self->items);
+  return join($sep, map { $_->html_field } $self->visible_items);
 }
 
 *html_fields = \&html_field;
@@ -479,7 +485,7 @@ sub xhtml_field
 {
   my($self) = shift;
   my $sep = ($self->linebreak) ? $self->xhtml_linebreak : ' ';
-  return join($sep, map { $_->xhtml_field } $self->items);
+  return join($sep, map { $_->xhtml_field } $self->visible_items);
 }
 
 *xhtml_fields = \&xhtml_field;

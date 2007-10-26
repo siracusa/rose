@@ -53,4 +53,19 @@ sub reset
   return 1;
 }
 
+sub hidden
+{
+  my($self) = shift;
+
+  if(@_)
+  {
+    if($self->{'_hidden'} = shift(@_) ? 1 : 0)
+    {
+      $self->selected(undef);
+    }
+  }
+
+  return $self->{'_hidden'};
+}
+
 1;

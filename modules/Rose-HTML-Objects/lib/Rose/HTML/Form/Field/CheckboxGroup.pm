@@ -10,13 +10,14 @@ use Rose::HTML::Form::Field::Group;
 use Rose::HTML::Form::Field::Group::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
 
-our $VERSION = '0.549';
+our $VERSION = '0.551';
 
 sub _item_class       { 'Rose::HTML::Form::Field::Checkbox' }
 sub _item_name        { 'checkbox' }
 sub _item_name_plural { 'checkboxes' }
 
-*checkboxes = \&Rose::HTML::Form::Field::Group::items;
+*checkboxes         = \&Rose::HTML::Form::Field::Group::items;
+*visible_checkboxes = \&Rose::HTML::Form::Field::Group::visible_items;
 
 *checkbox       = \&Rose::HTML::Form::Field::Group::OnOff::item;
 *add_checkboxes = \&Rose::HTML::Form::Field::Group::add_items;
@@ -53,14 +54,14 @@ sub html_table
   if($args{'_xhtml'})
   {
     return
-      $self->SUPER::html_table(items       => scalar $self->checkboxes,
+      $self->SUPER::html_table(items       => scalar $self->visible_checkboxes,
                                format_item => \&Rose::HTML::Form::Field::Group::_xhtml_item,
                                %args);
   }
   else
   {
     return
-      $self->SUPER::html_table(items       => scalar $self->checkboxes,
+      $self->SUPER::html_table(items       => scalar $self->visible_checkboxes,
                                format_item => \&Rose::HTML::Form::Field::Group::_html_item,
                                %args);
   }

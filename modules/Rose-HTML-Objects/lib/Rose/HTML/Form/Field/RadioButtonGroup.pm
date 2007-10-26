@@ -10,7 +10,7 @@ use Rose::HTML::Form::Field::Group;
 use Rose::HTML::Form::Field::Group::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
 
-our $VERSION = '0.549';
+our $VERSION = '0.551';
 
 sub _item_class       { 'Rose::HTML::Form::Field::RadioButton' }
 sub _item_name        { 'radio button' }
@@ -19,6 +19,7 @@ sub _item_name_plural { 'radio buttons' }
 *radio_buttons               = \&Rose::HTML::Form::Field::Group::items;
 *radio_buttons_localized     = \&Rose::HTML::Form::Field::Group::items_localized;
 *radio_button                = \&Rose::HTML::Form::Field::Group::OnOff::item;
+*visible_radio_buttons       = \&Rose::HTML::Form::Field::Group::visible_items;
 
 *add_radio_buttons           = \&Rose::HTML::Form::Field::Group::add_items;
 *add_radio_button            = \&add_radio_buttons;
@@ -64,7 +65,7 @@ sub html_table
   if($args{'_xhtml'})
   {
     return
-      $self->SUPER::html_table(items       => scalar $self->radio_buttons,
+      $self->SUPER::html_table(items       => scalar $self->visible_radio_buttons,
                                format_item => \&Rose::HTML::Form::Field::Group::_xhtml_item,
                                %args);
   }
