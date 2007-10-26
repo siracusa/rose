@@ -155,6 +155,18 @@ Constructs a new L<Rose::HTML::Form::Field::Option> object based on PARAMS, wher
 
 =over 4
 
+=item B<hidden [BOOL]>
+
+Get or set a boolean value that indicates whether or not this radio button will be shown in its parent L<select box|Rose::HTML::Form::Field::SelectBox>, L<pop-up menu|Rose::HTML::Form::Field::PopUpMenu>, or L<option group|Rose::HTML::Form::Field::OptionGroup>.  Setting it to true also sets L<selected|/selected> to false.
+
+=item B<hide>
+
+Class L<hidden|/hidden>, passing a true value.
+
+=item B<selected [BOOL]>
+
+Select or unselect the option by passing a boolean value.  If BOOL is true, the option will be selected.  If it's false, it will be unselected.  Returns true if the option is selected, false otherwise.
+
 =item B<short_label [TEXT]>
 
 Get or set the value of the "label" HTML attribute.  When present, user agents are supposed to use this value instead of the contents of the option tag as the label for the option.  Example:
@@ -182,6 +194,10 @@ Get or set the value of the "label" HTML attribute.  When present, user agents a
     # Label shown in web browser: "Apple"
 
 (Hey, don't look at me, I didn't write the HTML specs...)
+
+=item B<show>
+
+Class L<hidden|/hidden>, passing a false value.
 
 =back
 

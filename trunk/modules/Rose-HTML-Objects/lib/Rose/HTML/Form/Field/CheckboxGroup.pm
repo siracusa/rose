@@ -231,7 +231,7 @@ To set an ordered list of checkboxes along with labels in the constructor, use b
 
 Remember that methods are called in the order that they appear in the constructor arguments (see the L<Rose::Object> documentation), so L<checkboxes()|/checkboxes> will be called before L<labels()|/labels> in the example above.  This is important; it will not work in the opposite order.
 
-Returns a list of the checkbox group's L<Rose::HTML::Form::Field::Checkbox> objects in list context, or a reference to an array of the same in scalar context. These are the actual objects used in the field. Modifying them will modify the field itself.
+Returns a list of the checkbox group's L<Rose::HTML::Form::Field::Checkbox> objects in list context, or a reference to an array of the same in scalar context.  L<Hidden|Rose::HTML::Form::Field::Checkbox/hidden> checkboxes I<will> be included in this list.  These are the actual objects used in the field. Modifying them will modify the field itself.
 
 =item B<choices [CHECKBOXES]>
 

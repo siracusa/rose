@@ -5,7 +5,7 @@ use strict;
 use Rose::HTML::Form::Field::OnOff::Checkable;
 our @ISA = qw(Rose::HTML::Form::Field::OnOff::Checkable);
 
-our $VERSION = '0.50';
+our $VERSION = '0.551';
 
 __PACKAGE__->delete_valid_html_attrs(qw(ismap usemap alt src));
 __PACKAGE__->required_html_attr_value(type => 'checkbox');
@@ -137,6 +137,14 @@ Constructs a new L<Rose::HTML::Form::Field::Checkbox> object based on PARAMS, wh
 
 Check or uncheck the checkbox by passing a boolean value.  If BOOL is true, the checkbox will be checked. If it is false, it will be unchecked. Returns true if the checkbox is checked, false otherwise.
 
+=item B<hidden [BOOL]>
+
+Get or set a boolean value that indicates whether or not this checkbox will be shown in its parent L<checkbox group|Rose::HTML::Form::Field::CheckboxGroup>.  Setting it to true also sets L<checked|/checked> to false.
+
+=item B<hide>
+
+Class L<hidden|/hidden>, passing a true value.
+
 =item B<html_checkbox>
 
 Returns the HTML serialization of the checkbox field only (i.e., without any label or error message)
@@ -148,6 +156,10 @@ Returns true if the checkbox is checked, false otherwise.
 =item B<is_on>
 
 Simply calls L<is_checked|/is_checked>.  This method exists for API uniformity between radio buttons and checkboxes.
+
+=item B<show>
+
+Class L<hidden|/hidden>, passing a false value.
 
 =item B<value [VALUE]>
 

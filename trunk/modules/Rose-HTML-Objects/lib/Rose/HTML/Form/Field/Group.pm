@@ -10,7 +10,7 @@ use Rose::HTML::Util();
 use Rose::HTML::Form::Field;
 our @ISA = qw(Rose::HTML::Form::Field);
 
-our $VERSION = '0.550';
+our $VERSION = '0.551';
 
 our $Debug = undef;
 

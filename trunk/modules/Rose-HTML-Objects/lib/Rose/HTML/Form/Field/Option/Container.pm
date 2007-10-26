@@ -19,7 +19,7 @@ Rose::HTML::Form::Field::WithContents->import_methods(
   xhtml_tag => '_xhtml_tag',
 });
 
-our $VERSION = '0.549';
+our $VERSION = '0.551';
 
 sub _item_class       { 'Rose::HTML::Form::Field::Option' }
 sub _item_group_class { 'Rose::HTML::Form::Field::OptionGroup' }
