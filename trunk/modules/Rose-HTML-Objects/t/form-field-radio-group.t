@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 47;
+use Test::More tests => 52;
 
 BEGIN 
 {
@@ -339,3 +339,48 @@ is($field->xhtml_field,
   qq(<input name="fruits" type="radio" value="squash" /> <label>Squash</label><br />\n) .
   qq(<input name="fruits" type="radio" value="cherry" /> <label>Cherry</label>),
   'reset() xhtml 1');
+
+$field->input_value('grape');
+$field->radio_button('grape')->hide;
+
+is($field->internal_value, undef, 'hidden 0');
+
+is($field->html_field, 
+  qq(<input name="fruits" type="radio" value="apple"> <label>Apple</label><br>\n) .
+  qq(<input name="fruits" type="radio" value="orange"> <label>Le Orange</label><br>\n) .
+  qq(<input name="fruits" type="radio" value="pear"> <label>Pear</label><br>\n) .
+  qq(<input name="fruits" type="radio" value="berry"> <label>Berry</label><br>\n) .
+  qq(<input name="fruits" type="radio" value="squash"> <label>Squash</label><br>\n) .
+  qq(<input name="fruits" type="radio" value="cherry"> <label>Cherry</label>),
+  'hidden 1');
+  
+is($field->xhtml_field, 
+  qq(<input name="fruits" type="radio" value="apple" /> <label>Apple</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="orange" /> <label>Le Orange</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="pear" /> <label>Pear</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="berry" /> <label>Berry</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="squash" /> <label>Squash</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="cherry" /> <label>Cherry</label>),
+  'hidden 2');
+
+$field->radio_button('grape')->show;
+
+is($field->html_field, 
+  qq(<input name="fruits" type="radio" value="apple"> <label>Apple</label><br>\n) .
+  qq(<input name="fruits" type="radio" value="orange"> <label>Le Orange</label><br>\n) .
+  qq(<input name="fruits" type="radio" value="grape"> <label>Grape</label><br>\n) .
+  qq(<input name="fruits" type="radio" value="pear"> <label>Pear</label><br>\n) .
+  qq(<input name="fruits" type="radio" value="berry"> <label>Berry</label><br>\n) .
+  qq(<input name="fruits" type="radio" value="squash"> <label>Squash</label><br>\n) .
+  qq(<input name="fruits" type="radio" value="cherry"> <label>Cherry</label>),
+  'hidden 3');
+
+is($field->xhtml_field, 
+  qq(<input name="fruits" type="radio" value="apple" /> <label>Apple</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="orange" /> <label>Le Orange</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="grape" /> <label>Grape</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="pear" /> <label>Pear</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="berry" /> <label>Berry</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="squash" /> <label>Squash</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="cherry" /> <label>Cherry</label>),
+  'hidden 4');

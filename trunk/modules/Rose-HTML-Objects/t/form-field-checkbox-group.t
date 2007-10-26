@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 51;
+use Test::More tests => 56;
 
 BEGIN 
 {
@@ -350,3 +350,48 @@ is($field->html_field,
   qq(<input name="fruits" type="checkbox" value="squash"> <label>Squash</label><br>\n) .
   qq(<input name="fruits" type="checkbox" value="cherry"> <label>Cherry</label>),
   'localized label 4');
+
+$field->input_value('grape');
+$field->checkbox('grape')->hide;
+
+is($field->internal_value->[0], undef, 'hidden 0');
+
+is($field->html_field, 
+  qq(<input name="fruits" type="checkbox" value="apple"> <label>Apple</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="orange"> <label>Le Orange</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="pear"> <label>Pear</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="berry"> <label>Berry</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="squash"> <label>Squash</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="cherry"> <label>Cherry</label>),
+  'hidden 1');
+
+is($field->xhtml_field, 
+  qq(<input name="fruits" type="checkbox" value="apple" /> <label>Apple</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="orange" /> <label>Le Orange</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="pear" /> <label>Pear</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="berry" /> <label>Berry</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="squash" /> <label>Squash</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="cherry" /> <label>Cherry</label>),
+  'hidden 2');
+
+$field->checkbox('grape')->show;
+
+is($field->html_field, 
+  qq(<input name="fruits" type="checkbox" value="apple"> <label>Apple</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="orange"> <label>Le Orange</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="grape"> <label>Grape</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="pear"> <label>Pear</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="berry"> <label>Berry</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="squash"> <label>Squash</label><br>\n) .
+  qq(<input name="fruits" type="checkbox" value="cherry"> <label>Cherry</label>),
+  'hidden 3');
+
+is($field->xhtml_field, 
+  qq(<input name="fruits" type="checkbox" value="apple" /> <label>Apple</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="orange" /> <label>Le Orange</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="grape" /> <label>Grape</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="pear" /> <label>Pear</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="berry" /> <label>Berry</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="squash" /> <label>Squash</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="cherry" /> <label>Cherry</label>),
+  'hidden 4');

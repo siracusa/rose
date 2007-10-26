@@ -5,7 +5,7 @@ use strict;
 use Rose::HTML::Form::Field::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::OnOff);
 
-our $VERSION = '0.011';
+our $VERSION = '0.551';
 
 __PACKAGE__->add_required_html_attrs(
 {
@@ -52,6 +52,21 @@ sub reset
   $self->error(undef);
   $self->is_cleared(0);
   return 1;
+}
+
+sub hidden
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    if($self->{'_hidden'} = shift(@_) ? 1 : 0)
+    {
+      $self->checked(undef);
+    }
+  }
+  
+  return $self->{'_hidden'};
 }
 
 1;

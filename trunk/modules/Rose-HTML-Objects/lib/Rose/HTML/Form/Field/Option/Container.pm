@@ -30,6 +30,7 @@ sub _item_name_plural { 'options' }
 *options_localized     = \&Rose::HTML::Form::Field::Group::items_localized;
 *option                = \&Rose::HTML::Form::Field::Group::OnOff::item;
 *option_group          = \&Rose::HTML::Form::Field::Group::OnOff::item_group;
+*visible_options       = \&Rose::HTML::Form::Field::Group::visible_items;
 
 *add_options           = \&Rose::HTML::Form::Field::Group::add_items;
 *add_option            = \&add_options;
@@ -53,14 +54,14 @@ sub xhtml_element { 'select' }
 sub html_field
 {
   my($self) = shift;
-  $self->contents("\n" . join("\n", map { $_->html_field } $self->options) . "\n");
+  $self->contents("\n" . join("\n", map { $_->html_field } $self->visible_options) . "\n");
   return $self->_html_tag(@_);
 }
 
 sub xhtml_field
 {
   my($self) = shift; 
-  $self->contents("\n" . join("\n", map { $_->xhtml_field } $self->options) . "\n");
+  $self->contents("\n" . join("\n", map { $_->xhtml_field } $self->visible_options) . "\n");
   return $self->_xhtml_tag(@_);
 }
 
@@ -100,6 +101,27 @@ sub hidden_fields
 
   return (wantarray) ? @hidden : \@hidden;
 }
+
+sub hidden
+{
+  my($self) = shift;
+
+  if(@_)
+  {
+    if($self->{'_hidden'} = shift(@_) ? 1 : 0)
+    {
+      foreach my $option ($self->options)
+      {
+        $option->selected(undef);
+      }
+    }
+  }
+
+  return $self->{'_hidden'};
+}
+
+sub hide { shift->hidden(1) }
+sub show { shift->hidden(0) }
 
 1;
 
