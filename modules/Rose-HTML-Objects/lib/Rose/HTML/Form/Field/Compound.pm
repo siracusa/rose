@@ -518,7 +518,7 @@ This is exactly the determination that many overridden L<inflate_value()|Rose::H
       unless($date) 
       {
         my($month, $day, $year) = split('/', $value);
-    
+
         return
         {
           month => $month || '',
