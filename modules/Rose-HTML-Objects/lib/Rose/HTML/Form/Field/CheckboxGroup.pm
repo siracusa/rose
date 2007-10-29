@@ -25,6 +25,15 @@ sub _item_name_plural { 'checkboxes' }
 
 *choices = \&checkboxes;
 
+*show_all_checkboxes = \&Rose::HTML::Form::Field::Group::show_all_items;
+*hide_all_checkboxes = \&Rose::HTML::Form::Field::Group::hide_all_items;
+
+*delete_checkbox   = \&Rose::HTML::Form::Field::Group::delete_item;
+*delete_checkboxes = \&Rose::HTML::Form::Field::Group::delete_items;
+
+*delete_checkbox_group    = \&Rose::HTML::Form::Field::Group::delete_item_group;
+*delete_checkboxes_groups = \&Rose::HTML::Form::Field::Group::delete_item_groups;
+
 sub html_table
 {
   my($self, %args) = @_;
@@ -241,9 +250,23 @@ This is an alias for the L<checkboxes|/checkboxes> method.
 
 Get or set the default number of columns to use in the output of the L<html_table()|/html_table> and L<xhtml_table()|/xhtml_table> methods.
 
+=item B<delete_checkbox VALUE>
+
+Deletes the first checkbox (according to the order that they are returned from L<checkboxes()|/checkboxes>) whose "value" HTML attribute is VALUE.  Returns the deleted checkbox or undef if no such checkbox exists.
+
+=item B<delete_checkboxes LIST>
+
+Repeatedly calls L<delete_checkbox|/delete_checkbox>, passing each value in LIST.
+
+Deletes the first checkbox (according to the order that they are returned from L<checkboxes()|/checkboxes>) whose "value" HTML attribute is VALUE, or undef if no such checkbox exists.
+
 =item B<has_value VALUE>
 
 Returns true if the checkbox whose value is VALUE is checked, false otherwise.
+
+=item B<hide_all_checkboxes>
+
+Set L<hidden|Rose::HTML::Form::Field::Checkbox/hidden> to true for all L<checkboxes|/checkboxes>.
 
 =item B<html>
 
@@ -308,6 +331,10 @@ Get or set the flag that determines whether or not the string stored in L<html_l
 =item B<rows [ROWS]>
 
 Get or set the default number of rows to use in the output of the L<html_table()|/html_table> and L<xhtml_table()|/xhtml_table> methods.
+
+=item B<show_all_checkboxes>
+
+Set L<hidden|Rose::HTML::Form::Field::Checkbox/hidden> to false for all L<checkboxes|/checkboxes>.
 
 =item B<value [VALUE]>
 

@@ -221,6 +221,26 @@ is equivalent to this:
 
 This is an alias for the L<options|/options> method.
 
+=item B<delete_option VALUE>
+
+Deletes the first option (according to the order that they are returned from L<optiones()|/optiones>) whose "value" HTML attribute is VALUE.  Returns the deleted option or undef if no such option exists.
+
+=item B<delete_options LIST>
+
+Repeatedly calls L<delete_option|/delete_option>, passing each value in LIST as an arugment.
+
+=item B<delete_option_group LABEL>
+
+Deletes the first option group (according to the order that they are returned from L<optiones()|/options>) whose "label" HTML attribute is LABEL.  Returns the deleted option group or undef if no such option exists.
+
+=item B<delete_option_groups LIST>
+
+Repeatedly calls L<delete_option_group|/delete_option_group>, passing each value in LIST.
+
+=item B<hide_all_options>
+
+Set L<hidden|Rose::HTML::Form::Field::Option/hidden> to true for all L<options|/options>.
+
 =item B<has_value VALUE>
 
 Returns true if VALUE is selected in the pop-up menu, false otherwise.
@@ -250,6 +270,14 @@ To set an ordered list of option values along with labels in the constructor, us
 Remember that methods are called in the order that they appear in the constructor arguments (see the L<Rose::Object> documentation), so L<options()|/options> will be called before L<labels()|/labels> in the example above.  This is important; it will not work in the opposite order.
 
 Returns a list of the pop-up menu's L<Rose::HTML::Form::Field::Option> and/or L<Rose::HTML::Form::Field::OptionGroup> objects in list context, or a reference to an array of the same in scalar context.  L<Hidden|Rose::HTML::Form::Field::Option/hidden> options I<will> be included in this list.  These are the actual objects used in the field.  Modifying them will modify the field itself.
+
+=item B<option_group LABEL>
+
+Returns the L<Rose::HTML::Form::Field::OptionGroup> object whose "label" HTML attribute is LABEL, or undef if no such option group exists.
+
+=item B<show_all_options>
+
+Set L<hidden|Rose::HTML::Form::Field::Option/hidden> to false for all L<options|/options>.
 
 =item B<value [VALUE]>
 

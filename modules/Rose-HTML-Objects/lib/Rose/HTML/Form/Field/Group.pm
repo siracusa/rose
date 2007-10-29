@@ -74,6 +74,103 @@ sub visible_items
   return wantarray ? (grep { !$_->hidden } @$items) : [ grep { !$_->hidden } @$items ];
 }
 
+sub show_all_items
+{
+  my($self) = shift;
+
+  foreach my $item ($self->items)
+  {
+    $item->hidden(0);
+  }
+}
+
+sub hide_all_items
+{
+  my($self) = shift;
+
+  foreach my $item ($self->items)
+  {
+    $item->hidden(1);
+  }
+}
+
+sub delete_item
+{
+  my($self, $value) = @_;
+  
+  my $delete_item = $self->item($value) or return;
+  my $group_class = $self->_item_group_class;
+
+  my $items = $self->items || [];
+  
+  my $i = 0;
+
+  foreach my $item (@$items)
+  {
+    if($item->isa($group_class))
+    {
+      if(my $deleted = $item->delete_item($value))
+      {
+        return $deleted;
+      }
+    }
+    
+    last  if($item eq $delete_item);
+    $i++;
+  }
+
+  return splice(@$items, $i, 1);
+}
+
+sub delete_items
+{
+  my($self) = shift;
+  
+  foreach my $arg (@_)
+  {
+    $self->delete_item($arg);
+  }
+}
+
+sub delete_item_group
+{
+  my($self, $value) = @_;
+
+  my $group_class = $self->_item_group_class;
+  my $delete_item = UNIVERSAL::isa($value, $group_class) ? $value : ($self->item_group($value) or return);
+
+  my $items = $self->items || [];
+  
+  my $i = 0;
+
+  foreach my $item (@$items)
+  {
+    last  if($item eq $delete_item);
+
+    if($item->isa($group_class))
+    {
+      if(my $deleted = $item->delete_item($value))
+      {
+        return $deleted;
+      }
+    }
+
+    $i++;
+  }
+
+  return splice(@$items, $i, 1);
+}
+
+sub delete_item_groups
+{
+  my($self) = shift;
+  
+  foreach my $arg (@_)
+  {
+    $self->delete_item_group($arg);
+  }
+}
+
 sub items_localized
 {
   my($self) = shift;

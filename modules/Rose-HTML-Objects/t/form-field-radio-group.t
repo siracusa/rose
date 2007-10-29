@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 52;
+use Test::More tests => 56;
 
 BEGIN 
 {
@@ -384,3 +384,39 @@ is($field->xhtml_field,
   qq(<input name="fruits" type="radio" value="squash" /> <label>Squash</label><br />\n) .
   qq(<input name="fruits" type="radio" value="cherry" /> <label>Cherry</label>),
   'hidden 4');
+
+$field->hide_all_radio_buttons;
+
+is($field->xhtml_field, '', 'hidden 5');
+
+$field->show_all_radio_buttons;
+
+is($field->xhtml_field, 
+  qq(<input name="fruits" type="radio" value="apple" /> <label>Apple</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="orange" /> <label>Le Orange</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="grape" /> <label>Grape</label><br />\n) .
+  qq(<input checked="checked" name="fruits" type="radio" value="pear" /> <label>Pear</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="berry" /> <label>Berry</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="squash" /> <label>Squash</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="cherry" /> <label>Cherry</label>),
+  'hidden 6');
+
+$field->delete_radio_button('cherry');
+
+is($field->xhtml_field, 
+  qq(<input name="fruits" type="radio" value="apple" /> <label>Apple</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="orange" /> <label>Le Orange</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="grape" /> <label>Grape</label><br />\n) .
+  qq(<input checked="checked" name="fruits" type="radio" value="pear" /> <label>Pear</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="berry" /> <label>Berry</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="squash" /> <label>Squash</label>),
+  'delete 1');
+
+$field->delete_radio_buttons('cherry', 'pear', 'berry');
+
+is($field->xhtml_field, 
+  qq(<input name="fruits" type="radio" value="apple" /> <label>Apple</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="orange" /> <label>Le Orange</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="grape" /> <label>Grape</label><br />\n) .
+  qq(<input name="fruits" type="radio" value="squash" /> <label>Squash</label>),
+  'delete 2');
