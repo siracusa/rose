@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 56;
+use Test::More tests => 60;
 
 BEGIN 
 {
@@ -395,3 +395,39 @@ is($field->xhtml_field,
   qq(<input name="fruits" type="checkbox" value="squash" /> <label>Squash</label><br />\n) .
   qq(<input name="fruits" type="checkbox" value="cherry" /> <label>Cherry</label>),
   'hidden 4');
+
+$field->hide_all_checkboxes;
+
+is($field->xhtml_field, '', 'hidden 5');
+
+$field->show_all_checkboxes;
+
+is($field->xhtml_field, 
+  qq(<input name="fruits" type="checkbox" value="apple" /> <label>Apple</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="orange" /> <label>Le Orange</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="grape" /> <label>Grape</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="pear" /> <label>Pear</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="berry" /> <label>Berry</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="squash" /> <label>Squash</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="cherry" /> <label>Cherry</label>),
+  'hidden 6');
+
+$field->delete_checkbox('squash');
+
+is($field->xhtml_field, 
+  qq(<input name="fruits" type="checkbox" value="apple" /> <label>Apple</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="orange" /> <label>Le Orange</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="grape" /> <label>Grape</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="pear" /> <label>Pear</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="berry" /> <label>Berry</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="cherry" /> <label>Cherry</label>),
+  'delete 1');
+
+$field->delete_checkboxes('squash', 'pear', 'grape');
+
+is($field->xhtml_field, 
+  qq(<input name="fruits" type="checkbox" value="apple" /> <label>Apple</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="orange" /> <label>Le Orange</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="berry" /> <label>Berry</label><br />\n) .
+  qq(<input name="fruits" type="checkbox" value="cherry" /> <label>Cherry</label>),
+  'delete 2');

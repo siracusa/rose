@@ -40,11 +40,19 @@ sub _item_name_plural { 'options' }
 *add_options_localized = \&Rose::HTML::Form::Field::Group::add_items_localized;
 *add_option_localized  = \&Rose::HTML::Form::Field::Group::add_item_localized;
 
-
 *choices           = \&options;
 *choices_localized = \&options_localized;
 
 *_args_to_items = \&Rose::HTML::Form::Field::Group::_args_to_items;
+
+*show_all_options = \&Rose::HTML::Form::Field::Group::show_all_items;
+*hide_all_options = \&Rose::HTML::Form::Field::Group::hide_all_items;
+
+*delete_option  = \&Rose::HTML::Form::Field::Group::delete_item;
+*delete_options = \&Rose::HTML::Form::Field::Group::delete_items;
+
+*delete_option_group  = \&Rose::HTML::Form::Field::Group::delete_item_group;
+*delete_option_groups = \&Rose::HTML::Form::Field::Group::delete_item_groups;
 
 sub html_element  { 'select' }
 sub xhtml_element { 'select' }

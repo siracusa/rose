@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 54;
+use Test::More tests => 57;
 
 BEGIN 
 {
@@ -420,3 +420,36 @@ is($field->xhtml_field,
   qq(<option value="grape">Grape</option>\n) .
   qq(</select>),
   'hidden 6');
+ 
+$field->show_all_options;
+$field->delete_option('grape');
+
+is($field->html_field, 
+  qq(<select name="fruits" size="1">\n) .
+  qq(<option value="apple">Apple</option>\n) .
+  qq(<option value="orange">Orange</option>\n) .
+  qq(<optgroup label="Others">\n) .
+  qq(<option value="juji">Juji</option>\n) .
+  qq(<option value="peach">Peach</option>\n) .
+  qq(</optgroup>\n) .
+  qq(</select>),
+  'delete 1');
+
+$field->delete_options('grape', 'peach', 'orange');
+
+is($field->html_field, 
+  qq(<select name="fruits" size="1">\n) .
+  qq(<option value="apple">Apple</option>\n) .
+  qq(<optgroup label="Others">\n) .
+  qq(<option value="juji">Juji</option>\n) .
+  qq(</optgroup>\n) .
+  qq(</select>),
+  'delete 2');
+
+$field->delete_option_group('Others', 'nonesuch');
+
+is($field->html_field, 
+  qq(<select name="fruits" size="1">\n) .
+  qq(<option value="apple">Apple</option>\n) .
+  qq(</select>),
+  'delete 3');

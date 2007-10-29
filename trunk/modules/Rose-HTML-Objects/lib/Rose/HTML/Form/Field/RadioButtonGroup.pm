@@ -29,6 +29,15 @@ sub _item_name_plural { 'radio buttons' }
 *choices           = \&radio_buttons;
 *choices_localized = \&radio_buttons_localized;
 
+*show_all_radio_buttons = \&Rose::HTML::Form::Field::Group::show_all_items;
+*hide_all_radio_buttons = \&Rose::HTML::Form::Field::Group::hide_all_items;
+
+*delete_radio_button  = \&Rose::HTML::Form::Field::Group::delete_item;
+*delete_radio_buttons = \&Rose::HTML::Form::Field::Group::delete_items;
+
+*delete_radio_button_group  = \&Rose::HTML::Form::Field::Group::delete_item_group;
+*delete_radio_button_groups = \&Rose::HTML::Form::Field::Group::delete_item_groups;
+
 sub internal_value
 {
   my($self) = shift;
@@ -218,9 +227,21 @@ This is an alias for the L<radio_buttons|/radio_buttons> method.
 
 Get or set the default number of columns to use in the output of the L<html_table()|/html_table> and L<xhtml_table()|/xhtml_table> methods.
 
+=item B<delete_radio_button VALUE>
+
+Deletes the first radio button (according to the order that they are returned from L<radio_buttons()|/radio_buttons>) whose "value" HTML attribute is VALUE.  Returns the deleted radio button or undef if no such radio button exists.
+
+=item B<delete_radio_buttons LIST>
+
+Repeatedly calls L<delete_radio_button|/delete_radio_button>, passing each value in LIST.
+
 =item B<has_value VALUE>
 
 Returns true if the radio button whose value is VALUE is selected, false otherwise.
+
+=item B<hide_all_radio_buttons>
+
+Set L<hidden|Rose::HTML::Form::Field::RadioButton/hidden> to true for all L<radio_buttons|/radio_buttons>.
 
 =item B<html>
 
@@ -305,6 +326,10 @@ Returns a list of the radio button group's L<Rose::HTML::Form::Field::RadioButto
 =item B<rows [ROWS]>
 
 Get or set the default number of rows to use in the output of the L<html_table()|/html_table> and L<xhtml_table()|/xhtml_table> methods.
+
+=item B<show_all_radio_buttons>
+
+Set L<hidden|Rose::HTML::Form::Field::RadioButton/hidden> to false for all L<radio_buttons|/radio_buttons>.
 
 =item B<value [VALUE]>
 
