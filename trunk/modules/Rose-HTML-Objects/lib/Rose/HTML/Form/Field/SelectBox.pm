@@ -265,7 +265,7 @@ This is an alias for the L<options|/options> method.
 
 =item B<delete_option VALUE>
 
-Deletes the first option (according to the order that they are returned from L<optiones()|/optiones>) whose "value" HTML attribute is VALUE.  Returns the deleted option or undef if no such option exists.
+Deletes the first option (according to the order that they are returned from L<options()|/options>) whose "value" HTML attribute is VALUE.  Returns the deleted option or undef if no such option exists.
 
 =item B<delete_options LIST>
 
@@ -273,7 +273,7 @@ Repeatedly calls L<delete_option|/delete_option>, passing each value in LIST as 
 
 =item B<delete_option_group LABEL>
 
-Deletes the first option group (according to the order that they are returned from L<optiones()|/options>) whose "label" HTML attribute is LABEL.  Returns the deleted option group or undef if no such option exists.
+Deletes the first option group (according to the order that they are returned from L<options()|/options>) whose "label" HTML attribute is LABEL.  Returns the deleted option group or undef if no such option exists.
 
 =item B<delete_option_groups LIST>
 
