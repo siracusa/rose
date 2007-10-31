@@ -15,7 +15,7 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.765_09';
+our $VERSION = '0.765_10';
 
 our $Debug = 0;
 

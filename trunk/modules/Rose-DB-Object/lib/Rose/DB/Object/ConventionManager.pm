@@ -1531,7 +1531,7 @@ Not a single table, column, foreign key, or relationship is specified, yet every
   # "red, green"
   print join(', ', map { $_->name } $p->colors), "\n";
 
-More precisely, everything still works I<provided> that you load all the of the related modules.  For example, if you don't load C<My::Auto::Product> but don't load C<My::Auto::Price> (either from within the C<My::Auto::Product> class or in your program itself), then the C<My::Auto::Product> will not have a C<prices()> method (since your program will have no knowledge of the C<My::Auto::Price> class).  Use the L<loader|Rose::DB::Object::Loader> if you want to set up a bunch of related classes automatically without worrying about this kind of thing.
+More precisely, everything still works I<provided> that you load all the of the related modules.  For example, if you load C<My::Auto::Product> but don't load C<My::Auto::Price> (either from within the C<My::Auto::Product> class or in your program itself), then the C<My::Auto::Product> will not have a C<prices()> method (since your program will have no knowledge of the C<My::Auto::Price> class).  Use the L<loader|Rose::DB::Object::Loader> if you want to set up a bunch of related classes automatically without worrying about this kind of thing.
 
 Anyway, I don't recommend this kind of extreme approach, but it is an effective demonstration of the power of the convention manager.
 

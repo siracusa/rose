@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 486;
+use Test::More tests => 489;
 
 BEGIN 
 {
@@ -870,14 +870,28 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 80)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 83)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
-  my $o = MySQLiteObject->new(name => 'John',
-                              k1   => 1,
-                              k2   => undef,
-                              k3   => 3);
+  my $o = MySQLiteObject->new;
+  
+  $o->k1(0);
+
+  ok(has_modified_columns($o), "has_modified_columns() zero - $db_type");
+
+  $o->k1(undef);
+
+  ok(has_modified_columns($o), "has_modified_columns() undef - $db_type");
+  
+  $o = MySQLiteObject->new(name => 'John',
+                           k1   => 0,
+                           k2   => undef,
+                           k3   => 3);
+
+  ok(get_column_value_modified($o, 'k1'), "zero modification - $db_type");
+
+  $o->k1(1);
 
   ok(ref $o && $o->isa('MySQLiteObject'), "new() 1 - $db_type");
 
