@@ -55,11 +55,6 @@ sub scalar
   my $qname = $name;
   $qname =~ s/"/\\"/g;
 
-  #
-  # equivalence op
-  #
-
-  my $eq = ($type eq 'integer') ? '==' : 'eq';
 
   #
   # check_in code
@@ -244,13 +239,31 @@ EOF
   my $was_set_code = $smart ?
     qq(\$self->{SET_COLUMNS()}{'$col_name_escaped'} = 1;) : '';
 
-  my $mod_cond_code =  $smart ? 
-    qq(unless(\$self->{STATE_LOADING()} || (!defined \$old_val && !defined \$self->{'$qkey'}) || \$old_val $eq \$self->{'$qkey'});) :
-    qq(unless(\$self->{STATE_LOADING()}););
+  my $mod_cond_code;
+  
+  if($smart)
+  {
+    $mod_cond_code = ($type eq 'integer') ?
+      qq(unless(\$self->{STATE_LOADING()} || (!defined \$old_val && !defined \$self->{'$qkey'}) || (\$old_val == \$self->{'$qkey'} && !defined \$old_val));) :
+      qq(unless(\$self->{STATE_LOADING()} || (!defined \$old_val && !defined \$self->{'$qkey'}) || \$old_val eq \$self->{'$qkey'}););
+  }
+  else
+  {
+    $mod_cond_code = qq(unless(\$self->{STATE_LOADING()}););
+  }
 
-  my $mod_cond_pre_set_code = $smart ?
-    qq(unless(\$self->{STATE_LOADING()} || (!defined \$value && !defined \$self->{'$qkey'}) || \$value $eq \$self->{'$qkey'});) :
-    qq(unless(\$self->{STATE_LOADING()}););
+  my $mod_cond_pre_set_code;
+
+  if($smart)
+  {
+    $mod_cond_pre_set_code = ($type eq 'integer') ?
+      qq(unless(\$self->{STATE_LOADING()} || (!defined \$value && !defined \$self->{'$qkey'}) || (\$value == \$self->{'$qkey'} && !defined \$value));) :
+      qq(unless(\$self->{STATE_LOADING()} || (!defined \$value && !defined \$self->{'$qkey'}) || \$value eq \$self->{'$qkey'}););
+  }
+  else
+  {
+    $mod_cond_pre_set_code = qq(unless(\$self->{STATE_LOADING()}););
+  }
 
   my %methods;
 
@@ -270,6 +283,7 @@ sub
   {
     my \$value = shift;
 
+    no warnings;
     $check_in_code
     $length_check_code
     $save_old_val_code
@@ -293,7 +307,7 @@ sub
     my \$self  = shift;
     my \$value = shift;
 
-    no warnings 'uninitialized';
+    no warnings;
     $check_in_code
     $length_check_code
     $column_modified_code  $mod_cond_pre_set_code
@@ -350,6 +364,7 @@ sub
   my \$self = shift;
   my \$value = shift;
 
+  no warnings;
   $check_in_code
   $length_check_code
   $save_old_val_code
