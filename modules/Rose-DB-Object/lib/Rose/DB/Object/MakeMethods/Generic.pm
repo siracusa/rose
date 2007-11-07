@@ -244,7 +244,7 @@ EOF
   if($smart)
   {
     $mod_cond_code = ($type eq 'integer') ?
-      qq(unless(\$self->{STATE_LOADING()} || (!defined \$old_val && !defined \$self->{'$qkey'}) || (\$old_val == \$self->{'$qkey'} && !defined \$old_val));) :
+      qq(unless(\$self->{STATE_LOADING()} || (!defined \$old_val && !defined \$self->{'$qkey'}) || (\$old_val == \$self->{'$qkey'} && length \$old_val && length \$self->{'$qkey'}));) :
       qq(unless(\$self->{STATE_LOADING()} || (!defined \$old_val && !defined \$self->{'$qkey'}) || \$old_val eq \$self->{'$qkey'}););
   }
   else
@@ -257,7 +257,7 @@ EOF
   if($smart)
   {
     $mod_cond_pre_set_code = ($type eq 'integer') ?
-      qq(unless(\$self->{STATE_LOADING()} || (!defined \$value && !defined \$self->{'$qkey'}) || (\$value == \$self->{'$qkey'} && !defined \$value));) :
+      qq(unless(\$self->{STATE_LOADING()} || (!defined \$value && !defined \$self->{'$qkey'}) || (\$value == \$self->{'$qkey'} && length \$value && length \$self->{'$qkey'}));) :
       qq(unless(\$self->{STATE_LOADING()} || (!defined \$value && !defined \$self->{'$qkey'}) || \$value eq \$self->{'$qkey'}););
   }
   else
