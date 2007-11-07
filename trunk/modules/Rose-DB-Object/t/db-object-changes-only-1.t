@@ -1088,7 +1088,7 @@ SKIP: foreach my $db_type ('sqlite')
 
   is($o->num, 123, "insert changes only 1 - $db_type");
   is($o->flag, 7, "insert changes only 2 - $db_type");
-
+$DB::single = 1;
   $o->num(123);
 
   QUIET:
