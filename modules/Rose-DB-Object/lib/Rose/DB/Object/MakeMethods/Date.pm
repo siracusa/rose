@@ -13,7 +13,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.73';
+our $VERSION = '0.766';
 
 sub date
 {
@@ -449,6 +449,10 @@ sub datetime
             return $db->$format_method($dt)  unless(ref $dt);
             return $dt->clone->truncate(to => $_[1]);
           }
+          else
+          {
+            Carp::croak "Invalid argument(s) to $name: @_";
+          }
         }
 
         if(defined $_[0])
@@ -549,6 +553,40 @@ sub datetime
 
       my $db = $self->db or die "Missing Rose::DB object attribute";
       my $driver = $db->driver || 'unknown';
+
+      if(@_ == 2)
+      {
+        my $dt = $self->{$key} || $self->{$formatted_key,$driver};
+
+        if(defined $dt && !ref $dt)
+        {
+          my $dt2 = $db->parse_timestamp($dt);
+
+          unless($dt2)
+          {
+            $dt2 = Rose::DateTime::Util::parse_date($dt, $tz || $db->server_time_zone, 1) or
+              Carp::croak "Could not parse datetime '$dt'";
+          }
+
+          $dt = $dt2;
+        }
+
+        if($_[0] eq 'format')
+        {
+          return $dt  unless(ref $dt);
+          return Rose::DateTime::Util::format_date($dt, (ref $_[1] ? @{$_[1]} : $_[1]), 1);
+        }
+        elsif($_[0] eq 'truncate')
+        {
+          return undef  unless($self->{$key});
+          return $db->format_timestamp($dt)  unless(ref $dt);
+          return $dt->clone->truncate(to => $_[1]);
+        }
+        else
+        {
+          Carp::croak "Invalid argument(s) to $name: @_";
+        }
+      }
 
       if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
       {
@@ -1003,15 +1041,17 @@ sub timestamp
           $dt->set_time_zone($tz || $db->server_time_zone)  if(ref $dt);
           $self->{$key} = $dt;
           $self->{$formatted_key,$driver} = undef;
+
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
         }
       }
       else
       {
         $self->{$key} = undef;
         $self->{$formatted_key,$driver} = undef;
+        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+          unless($self->{STATE_LOADING()});
       }
-
-      $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
 
       return  unless(defined wantarray);
 

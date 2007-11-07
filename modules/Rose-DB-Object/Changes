@@ -1,4 +1,4 @@
-0.765_10 (10.19.2007) - John Siracusa <siracusa@gmail.com>
+0.765_11 (11.07.2007) - John Siracusa <siracusa@gmail.com>
 
     * Fiddled with not_found() detection.  (Changes suggested by Philip Dye)
     * Made one-to-one relationships (attempt to) work even when uniqueness is 
@@ -7,6 +7,7 @@
     * Added the ability to do unrestricted joins in some circumstances.
     * The key_column() method in the ForeignKey class now works correctly.
       (Patch by Christopher Masto)
+    * Further synced datetime and timestamp method maker code.
     * Added a test suite exclusion for DBD::SQLite 1.14, which still suffers 
       from this bug: http://rt.cpan.org/Public/Bug/Display.html?id=21472
     * Fixed propagation of db objects in update and delete Manager methods.
