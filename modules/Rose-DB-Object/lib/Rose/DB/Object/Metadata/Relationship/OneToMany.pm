@@ -142,15 +142,19 @@ sub is_ready_to_make_methods
 
   if($Debug || $Rose::DB::Object::Metadata::Debug)
   {
-    my $err;
-    if(!$self->class) { $err = "does not belong to a class" }
+    my $error;
+
+    if(!$self->class)
+    {
+      $error = "does not belong to a class";
+    }
     elsif(!$self->key_columns && !$self->query_args)
     {
-      $err = "has no key columns or query args";
+      $error = "has no key columns or query args";
     }
 
-    warn $self->parent->class, ': one-to-many relationship ', $self->name, " NOT READY - $err"
-      if($err);
+    warn $self->parent->class, ': one-to-many relationship ', $self->name, " NOT READY - $error"
+      if($error);
   }
 
   return $self->class && ($self->key_columns || $self->query_args) ? 1 : 0;

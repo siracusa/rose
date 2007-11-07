@@ -219,13 +219,19 @@ sub is_ready_to_make_methods
   eval
   {
     my $map_class = $self->map_class or die "Missing map class";
-    my $map_meta  = $map_class->meta or die "Missing map class meta";
+
+    my $map_meta  = $map_class->meta or die
+      Rose::DB::Object::Exception::ClassNotReady->new(
+        "Missing meta object for $map_class");
+
     my $map_from  = $self->map_from;
     my $map_to    = $self->map_to;
     my $relationship = $self;
 
     my $target_class = $self->parent->class;
-    my $meta         = $target_class->meta;
+    my $meta         = $target_class->meta or die
+      Rose::DB::Object::Exception::ClassNotReady->new(
+        "Missing meta object for $target_class");
 
     my($map_to_class, $map_to_meta, $map_to_method);
 
@@ -307,7 +313,9 @@ sub is_ready_to_make_methods
         }
 
         $map_to_class = $item->class;
-        $map_to_meta  = $map_to_class->meta;
+        $map_to_meta  = $map_to_class->meta or die
+          Rose::DB::Object::Exception::ClassNotReady->new(
+            "Missing meta object for $map_to_class");
 
         my $map_columns = 
           $item->can('column_map') ? $item->column_map : $item->key_columns;
@@ -406,11 +414,16 @@ sub is_ready_to_make_methods
     }
   };
 
-  if($@ && ($Debug || $Rose::DB::Object::Metadata::Debug))
+  if(my $error = $@)
   {
-    my $err = "$@";
-    $err =~ s/ at .*//;
-    warn $self->parent->class, ': many-to-many relationship ', $self->name, " NOT READY - $err";
+    if($Debug || $Rose::DB::Object::Metadata::Debug)
+    {
+      my $err = $error;
+      $err =~ s/ at .*//;
+      warn $self->parent->class, ': many-to-many relationship ', $self->name, " NOT READY - $err";
+    }
+
+    die $error  unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception::ClassNotReady'));
   }
 
   return $@ ? 0 : 1;
