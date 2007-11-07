@@ -1812,7 +1812,7 @@ sub make_foreign_key_methods
         # XXX: Need to distinguish recoverable errors from unrecoverable errors
         if($@ !~ /\.pm in \@INC/ && !UNIVERSAL::isa($@, 'Rose::DB::Object::Exception::ClassNotReady'))
         {
-          Carp::confess "Could not load $fclass - $@";
+          Carp::confess "Could not load $fclass - $@"; 
         }
       }
     }
@@ -2126,7 +2126,8 @@ sub make_relationship_methods
         if($@)
         {
           # XXX: Need to distinguish recoverable errors from unrecoverable errors
-          if($@ =~ /syntax error at |requires explicit package name|not allowed while "strict|already has a relationship named|Can't modify constant item/)
+          if($@ !~ /\.pm in \@INC/ && !UNIVERSAL::isa($@, 'Rose::DB::Object::Exception::ClassNotReady'))
+          #if($@ =~ /syntax error at |requires explicit package name|not allowed while "strict|already has a relationship named|Can't modify constant item/)
           {
             Carp::confess "Could not load $fclass - $@";
           }
@@ -2824,7 +2825,7 @@ sub column_aliases
 sub column_accessor_method_name
 {
   $_[0]->{'column_accessor_method'}{$_[1]} ||= 
-    $_[0]->column($_[1])->accessor_method_name;
+    ($_[0]->column($_[1]) ? $_[0]->column($_[1])->accessor_method_name : undef);
 }
 
 sub column_accessor_method_names_hash { shift->{'column_accessor_method'} }
@@ -2832,7 +2833,7 @@ sub column_accessor_method_names_hash { shift->{'column_accessor_method'} }
 sub column_mutator_method_name
 {
   $_[0]->{'column_mutator_method'}{$_[1]} ||= 
-    $_[0]->column($_[1])->mutator_method_name;
+    ($_[0]->column($_[1]) ? $_[0]->column($_[1])->mutator_method_name : undef);
 }
 
 sub column_mutator_method_names_hash { shift->{'column_mutator_method'} }
