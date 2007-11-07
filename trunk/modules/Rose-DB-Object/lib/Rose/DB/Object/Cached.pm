@@ -9,7 +9,7 @@ our @ISA = qw(Rose::DB::Object);
 
 use Rose::DB::Object::Constants qw(STATE_IN_DB);
 
-our $VERSION = '0.723';
+our $VERSION = '0.766';
 
 our $Debug = 0;
 
@@ -212,6 +212,28 @@ sub remember
   ${"${class}::Objects_By_Id"}{$pk} = $self;
 }
 
+sub remember_all
+{
+  my($class) = shift;
+
+  require Rose::DB::Object::Manager;
+
+  my(undef, %args) = Rose::DB::Object::Manager->normalize_get_objects_args(@_);
+
+  my $objects = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => $class,
+      share_db     => 0,
+      %args);
+
+  foreach my $object (@$objects)
+  {
+    $object->remember;
+  }
+
+  return @$objects  if(defined wantarray);
+}
+
 1;
 
 __END__
@@ -326,6 +348,10 @@ Returns true if the object was loaded successfully, false if the row could not b
 
 Save the current object to the memory cache I<without> saving it to the database as well.
 
+=item B<remember_all [PARAMS]>
+
+Load and L<remember|/remember> all objects from this table, optionally filtered by PARAMS which can be any valid L<Rose::DB::Object::Manager->get_objects()|Rose::DB::Object::Manager/get_objects> parameters.  Remembered objects will replace any previously cached objects with the same keys.
+
 =item B<save [PARAMS]>
 
 This method does the same thing as the L<Rose::DB::Object> method of the same name, except that it also saves the object to the memory cache if the save succeeds.  If it fails, the memory cache is not modified.
@@ -338,6 +364,7 @@ In addition to the reserved methods listed in the L<Rose::DB::Object> documentat
 
     forget
     remember
+    remember_all
 
 If you have a column with one of these names, you must alias it.  See the L<Rose::DB::Object> documentation for more information on column aliasing and reserved methods.
 

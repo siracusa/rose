@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 415;
+use Test::More tests => 416;
 
 BEGIN 
 {
@@ -622,7 +622,7 @@ SKIP: foreach my $db_type (qw(informix))
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 70)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 71)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -799,6 +799,12 @@ SKIP: foreach my $db_type (qw(sqlite))
   sleep(5);
   $o->load or die $o->error;
   ok($MySQLiteObject::Objects_By_Key_Loaded{'name'}{'John'} != $loaded, "cache_expires_in uk 3 - $db_type");
+
+  MySQLiteObject->remember_all;
+  
+  $loaded = $MySQLiteObject::Objects_By_Key_Loaded{'name'}{'John'};
+  
+  ok($loaded && $loaded ne $o, "remember_all - $db_type");
 }
 
 BEGIN
