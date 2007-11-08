@@ -1,5 +1,7 @@
 Changes
 lib/Rose/DB.pm
+lib/Rose/DB/Cache.pm
+lib/Rose/DB/Cache/Entry.pm
 lib/Rose/DB/Constants.pm
 lib/Rose/DB/Generic.pm
 lib/Rose/DB/Informix.pm
