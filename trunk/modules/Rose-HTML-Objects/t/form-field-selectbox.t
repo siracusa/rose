@@ -542,7 +542,7 @@ $group->options(juji  => 'Juji',
                 peach => 'Peach');
 
 $field->add_options($group);
-    
+
 my $field2 = 
   Rose::HTML::Form::Field::SelectBox->new(
     name    => 'fruits',
@@ -626,7 +626,7 @@ is($field->html_field,
   qq(</optgroup>\n) .
   qq(</select>),
   'hidden 7');
-  
+
 $field->hide_all_options;
 
 is($field->html_field, 

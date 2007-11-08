@@ -316,15 +316,16 @@ sub new_or_cached
 
   if(my $db = $class->db_cache->get_db(%args))
   {
-    warn "$$ $class Returning cached db (", $db->domain, ', ', $db->type, ") $db from ",
-         $class->db_cache, "\n";
+    $Debug && warn "$$ $class Returning cached db (", $db->domain, ', ', $db->type,
+      ") $db from ", $class->db_cache, "\n";
     return $db;
   }
 
   if(1)
   {
     my $db = $class->new(@_);
-    warn "$$ $class Setting cached db $db (", join(', ', map { $args{$_} } qw(domain type)), 
+    $Debug && warn "$$ $class Setting cached db $db (", 
+       join(', ', map { $args{$_} } qw(domain type)), 
        ") in ", $class->db_cache, "\n";
     return $class->db_cache->set_db($class->new(@_));
   }

@@ -97,12 +97,12 @@ sub hide_all_items
 sub delete_item
 {
   my($self, $value) = @_;
-  
+
   my $delete_item = $self->item($value) or return;
   my $group_class = $self->_item_group_class;
 
   my $items = $self->items || [];
-  
+
   my $i = 0;
 
   foreach my $item (@$items)
@@ -114,7 +114,7 @@ sub delete_item
         return $deleted;
       }
     }
-    
+
     last  if($item eq $delete_item);
     $i++;
   }
@@ -125,7 +125,7 @@ sub delete_item
 sub delete_items
 {
   my($self) = shift;
-  
+
   foreach my $arg (@_)
   {
     $self->delete_item($arg);
@@ -140,7 +140,7 @@ sub delete_item_group
   my $delete_item = UNIVERSAL::isa($value, $group_class) ? $value : ($self->item_group($value) or return);
 
   my $items = $self->items || [];
-  
+
   my $i = 0;
 
   foreach my $item (@$items)
@@ -164,7 +164,7 @@ sub delete_item_group
 sub delete_item_groups
 {
   my($self) = shift;
-  
+
   foreach my $arg (@_)
   {
     $self->delete_item_group($arg);
