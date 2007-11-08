@@ -1,6 +1,7 @@
 0.735_02 (11.08.2007) - John Siracusa <siracusa@gmail.com>
 
     * Added new_or_cached() method and associated caching framework.
+      XXX: needs docs and tests
     * Removed mistakenly checked in breakpoint.
 
 0.735 (07.21.2007) - John Siracusa <siracusa@gmail.com>

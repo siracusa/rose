@@ -9,7 +9,7 @@ our @ISA = qw(Rose::Object);
 
 our $VERSION = '0.736';
 
-our $Debug = 0;
+our $Debug = 1;
 
 use Rose::Class::MakeMethods::Generic
 (
