@@ -353,7 +353,7 @@ is($field->html_field,
   qq(<input name="fruits" type="radio" value="squash"> <label>Squash</label><br>\n) .
   qq(<input name="fruits" type="radio" value="cherry"> <label>Cherry</label>),
   'hidden 1');
-  
+
 is($field->xhtml_field, 
   qq(<input name="fruits" type="radio" value="apple" /> <label>Apple</label><br />\n) .
   qq(<input name="fruits" type="radio" value="orange" /> <label>Le Orange</label><br />\n) .

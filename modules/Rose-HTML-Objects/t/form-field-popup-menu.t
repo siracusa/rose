@@ -333,7 +333,7 @@ $group->options(juji  => 'Juji',
                 peach => 'Peach');
 
 $field->add_options($group);
-    
+
 my $field2 = 
   Rose::HTML::Form::Field::PopUpMenu->new(
     name    => 'fruits',
@@ -420,7 +420,7 @@ is($field->xhtml_field,
   qq(<option value="grape">Grape</option>\n) .
   qq(</select>),
   'hidden 6');
- 
+
 $field->show_all_options;
 $field->delete_option('grape');
 
