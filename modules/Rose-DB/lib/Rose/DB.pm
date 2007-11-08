@@ -10,6 +10,7 @@ use SQL::ReservedWords();
 use Time::Clock;
 use Rose::DateTime::Util();
 
+use Rose::DB::Cache;
 use Rose::DB::Registry;
 use Rose::DB::Registry::Entry;
 use Rose::DB::Constants qw(IN_TRANSACTION);
@@ -19,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.735_01';
+our $VERSION = '0.735_02';
 
 our $Debug = 0;
 
@@ -36,6 +37,8 @@ use Rose::Class::MakeMethods::Generic
     'registry',
     'max_array_characters',
     'max_interval_characters',
+    '_db_cache',
+    'db_cache_class',
   ]
 );
 
@@ -53,6 +56,7 @@ use Rose::Class::MakeMethods::Generic
   ],
 );
 
+__PACKAGE__->db_cache_class('Rose::DB::Cache');
 __PACKAGE__->default_domain('default');
 __PACKAGE__->default_type('default');
 
@@ -274,6 +278,60 @@ sub driver_class
   }
 
   return $class->_driver_class($driver);
+}
+
+sub db_cache
+{
+  my($class) = shift;
+  
+  if(@_)
+  {
+    return $class->_db_cache(@_);
+  }
+  
+  if(my $cache = $class->_db_cache)
+  {
+    return $cache;
+  }
+  
+  my $cache_class = $class->db_cache_class;
+  eval "use $cache_class";
+  die "Could not load db cache class '$cache_class' - $@"  if($@);
+  
+  return $class->_db_cache($cache_class->new);
+}
+
+sub new_or_cached
+{
+  my($class) = shift;
+
+  @_ = (type => $_[0])  if(@_ == 1);
+
+  my %args = @_;
+
+  $args{'domain'} = $class->default_domain unless(exists $args{'domain'});
+  $args{'type'}   = $class->default_type   unless(exists $args{'type'});
+
+  #$Debug && warn "New or cached db type: $args{'type'}, domain: $args{'domain'}\n";
+
+  if(my $db = $class->db_cache->get_db(%args))
+  {
+    warn "$$ $class Returning cached db (", $db->domain, ', ', $db->type, ") $db from ",
+         $class->db_cache, "\n";
+    return $db;
+  }
+
+  if(1)
+  {
+    my $db = $class->new(@_);
+    warn "$$ $class Setting cached db $db (", join(', ', map { $args{$_} } qw(domain type)), 
+       ") in ", $class->db_cache, "\n";
+    return $class->db_cache->set_db($class->new(@_));
+  }
+  else
+  {
+    return $class->db_cache->set_db($class->new(@_));
+  }
 }
 
 #
