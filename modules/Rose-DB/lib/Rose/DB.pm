@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.735_02';
+our $VERSION = '0.735_03';
 
 our $Debug = 0;
 
@@ -334,6 +334,8 @@ sub new_or_cached
     return $class->db_cache->set_db($class->new(@_));
   }
 }
+
+sub clear_db_cache { shift->db_cache->clear(@_) }
 
 #
 # Object methods
@@ -870,6 +872,13 @@ sub has_dbh { defined shift->{'dbh'} }
 
 sub dbh_attributes { () }
 
+sub dbi_connect
+{
+  shift;
+  $Debug && warn "DBI->connect('$_[1]', '$_[2]', ...)\n";
+  DBI->connect(@_);
+}
+
 use constant DID_PCSQL_KEY => 'private_rose_db_did_post_connect_sql';
 
 sub init_dbh
@@ -880,12 +889,10 @@ sub init_dbh
 
   my $dsn = $self->dsn;
 
-  $Debug && warn "DBI->connect('$dsn', '", $self->username, "', ...)\n";
-
   $self->{'error'} = undef;
   $self->{'database_version'} = undef;
 
-  my $dbh = DBI->connect($dsn, $self->username, $self->password, $options);
+  my $dbh = $self->dbi_connect($dsn, $self->username, $self->password, $options);
 
   unless($dbh)
   {
@@ -3291,9 +3298,7 @@ L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB>
 
 =head1 CONTRIBUTORS
 
-Ron Savage
-
-Lucian Dragus
+Peter Karman, Lucian Dragus, Ron Savage
 
 =head1 AUTHOR
 
