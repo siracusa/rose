@@ -321,7 +321,7 @@ sub new_or_cached
     return $db;
   }
 
-  if(1)
+  if($Debug)
   {
     my $db = $class->new(@_);
     $Debug && warn "$$ $class Setting cached db $db (", 
@@ -2591,6 +2591,14 @@ This makes the "dev/aux" data source point to the same registry entry as the "de
 
 Attempt to load both the YAML-based L<ROSEDBRC|/ROSEDBRC> and Perl-based L<ROSEDB_DEVINIT|/ROSEDB_DEVINIT> fix-up files, if any exist, in that order.  The L<ROSEDBRC|/ROSEDBRC> file will modify the data source L<registry|/registry> of the calling class.  See the L<ENVIRONMENT|/ENVIRONMENT> section above for more information.
 
+=item B<db_cache [CACHE]>
+
+Get or set the L<Rose::DB::Cache>-derived object used to cache L<Rose::DB> objects on behalf of this class.  If no such object exists, a new cache object of L<db_cache_class|/db_cache_class> class will be created, stored, and returned.
+
+=item B<db_cache_class [CLASS]>
+
+Get or set the name of the L<Rose::DB::Cache>-derived class used to cache L<Rose::DB> objects on behalf of this class.  The default value is L<Rose::DB::Cache>.
+
 =item B<db_exists PARAMS>
 
 Returns true of the data source specified by PARAMS is registered, false otherwise.  PARAMS are name/value pairs for C<domain> and C<type>.  If they are omitted, they default to L<default_domain|/default_domain> and L<default_type|/default_type>, respectively.  If default values do not exist, a fatal error will occur.  If a single value is passed instead of name/value pairs, it is taken as the value of the C<type> parameter.
@@ -2786,7 +2794,7 @@ is roughly equivalent to this:
 
 =back
 
-=head1 CONSTRUCTOR
+=head1 CONSTRUCTORS
 
 =over 4
 
@@ -2824,6 +2832,12 @@ The default driver-to-class mapping is as follows:
     sqlite   -> Rose::DB::SQLite
 
 You can change this mapping with the L<driver_class|/driver_class> class method.
+
+=item B<new_or_cached PARAMS>
+
+Constructs or returns a L<Rose::DB> object based on PARAMS, where PARAMS are any name/value pairs that can be passed to the L<new|/new> method.  If the L<db_cache|/db_cache>'s L<get_db|Rose::DB::Cache/get_db> method returns an existing L<Rose::DB> object that matches PARAMS, then it is returned.  Otherwise, a L<new|/new>  L<Rose::DB> object is created, L<stored|Rose::DB::Cache/set_db> in the L<db_cache|/db_cache>, then returned.
+
+See the L<Rose::DB::Cache> documentation to learn about the cache API and the default implementation.
 
 =back
 
