@@ -2847,7 +2847,7 @@ If the "AutoCommit" database handle attribute is true, the handle is assumed to 
 
 =item B<connect>
 
-Constructs and connects the L<DBI> database handle for the current data source.  If there is no registered data source for the current L<type|/type> and L<domain|/domain>, a fatal error will occur.
+Constructs and connects the L<DBI> database handle for the current data source, calling L<dbi_connect|/dbi_connect> to create a new L<DBI> database handle if none exists.  If there is no registered data source for the current L<type|/type> and L<domain|/domain>, a fatal error will occur.
 
 If any L<post_connect_sql|/post_connect_sql> statement failed to execute, the database handle is disconnected and then discarded.
 
@@ -2870,11 +2870,17 @@ Returns a reference to the connect options has in scalar context, or a list of n
 
 =item B<dbh [DBH]>
 
-Get or set the L<DBI> database handle connected to the current data source.  If the database handle does not exist or is not already connected, this method will do everything necessary to do so.
+Get or set the L<DBI> database handle connected to the current data source.  If the database handle does not exist or is not already connected, this method will do everything necessary to do so, including calling L<dbi_connect|/dbi_connect> to create a new L<DBI> database handle if none exists.
 
 Returns undef if the database handle could not be constructed and connected.  If there is no registered data source for the current C<type> and C<domain>, a fatal error will occur.
 
 Note: when setting this attribute, you I<must> pass in a L<DBI> database handle that has the same L<driver|/driver> as the object.  For example, if the L<driver|/driver> is C<mysql> then the L<DBI> database handle must be connected to a MySQL database.  Passing in a mismatched database handle will cause a fatal error.
+
+=item B<dbi_connect [ARGS]>
+
+This method calls L<DBI-E<gt>connect(...)|DBI/connect>, passing all ARGS and returning all values.  This method has no affect on the internal state of the object.  Use the L<connect|/connect> method to create and store a new L<database handle|/dbh> in the object.
+
+Override this method in your L<Rose::DB> subclass if you want to use a different method (e.g. L<DBI-E<gt>connect_cached()|DBI/connect_cached>) to create database handles.
 
 =item B<disconnect>
 
