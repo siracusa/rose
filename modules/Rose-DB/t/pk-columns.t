@@ -20,6 +20,8 @@ foreach my $db_type (qw(mysql pg informix sqlite oracle))
     }
   }
 
+  next  unless(have_db($db_type));
+
   Rose::DB->default_type($db_type);
 
   my $db = Rose::DB->new;
