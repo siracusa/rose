@@ -1,7 +1,6 @@
-0.735_03 (11.12.2007) - John Siracusa <siracusa@gmail.com>
+0.735_03 (11.13.2007) - John Siracusa <siracusa@gmail.com>
 
     * Added new_or_cached() method and associated caching framework.
-      XXX: needs docs and tests
     * Added dbi_connect() method.  (Patch by Peter Karman)
     * Removed mistakenly checked in breakpoint.
 
