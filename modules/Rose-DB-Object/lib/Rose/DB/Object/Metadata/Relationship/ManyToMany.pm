@@ -220,6 +220,12 @@ sub is_ready_to_make_methods
   {
     my $map_class = $self->map_class or die "Missing map class";
 
+    unless(UNIVERSAL::isa($map_class, 'Rose::DB::Object'))
+    {
+      die Rose::DB::Object::Exception::ClassNotReady->new(
+        "Map class $map_class not yet ready");
+    }
+
     my $map_meta  = $map_class->meta or die
       Rose::DB::Object::Exception::ClassNotReady->new(
         "Missing meta object for $map_class");
@@ -311,8 +317,15 @@ sub is_ready_to_make_methods
             "class other than $target_class.  Please specify one " .
             "by name with a 'foreign' parameter in the 'map' hash");
         }
-
+    
         $map_to_class = $item->class;
+
+        unless(UNIVERSAL::isa($map_to_class, 'Rose::DB::Object'))
+        {
+          die Rose::DB::Object::Exception::ClassNotReady->new(
+            "Map-to-class $map_to_class not yet ready");
+        }
+
         $map_to_meta  = $map_to_class->meta or die
           Rose::DB::Object::Exception::ClassNotReady->new(
             "Missing meta object for $map_to_class");
