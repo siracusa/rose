@@ -2,10 +2,9 @@ package Rose::DB::Cache;
 
 use strict;
 
-use Rose::DB::Cache::Entry;
+use base 'Rose::Object';
 
-use Rose::Object;
-our @ISA = qw(Rose::Object);
+use Rose::DB::Cache::Entry;
 
 our $VERSION = '0.736';
 
@@ -32,7 +31,7 @@ sub get_db
   my($self) = shift;
 
   my $key = $self->build_cache_key(@_);
-  
+
   if(my $entry = $self->{'cache'}{$key})
   {
     if(my $db = $entry->db)
@@ -48,7 +47,7 @@ sub get_db
 sub set_db
 {
   my($self, $db) = @_;
-  
+
   my $key = 
     $self->build_cache_key(domain => $db->domain, 
                            type   => $db->type,
@@ -153,14 +152,13 @@ Rose::DB::Cache - A cache for Rose::DB objects.
   # Usage
   package My::DB;
 
-  use Rose::DB;
-  our @ISA = qw(Rose::DB);
+  use base 'Rose::DB';
   ...
 
   $cache = My::DB->db_cache;
 
   $db = $cache->get_db(...);
-  
+
   $cache->set_db($db);
 
   $cache->clear;
@@ -168,10 +166,10 @@ Rose::DB::Cache - A cache for Rose::DB objects.
 
   # Subclassing
   package My::DB::Cache;
-  
+
   use Rose::DB::Cache;
   our @ISA = qw(Rose::DB::Cache);
-  
+
   # Override methods as desired
   sub get_db          { ... }
   sub set_db          { ... }
@@ -194,6 +192,10 @@ Subclasses can override any and all methods described below in order to implemen
 =item B<build_cache_key PARAMS>
 
 Given the name/value pairs PARAMS, return a string representing the corresponding cache key.  Calls to this method from within L<Rose::DB::Cache> will include at least C<type> and C<domain> parameters, but you may pass any parameters if you override all methods that call this method in your subclass.
+
+=item B<entry_class [CLASS]>
+
+Get or set the name of the L<Rose::DB::Cache::Entry>-derived class used to store cached L<Rose::DB> objects on behalf of this class.  The default value is L<Rose::DB::Cache::Entry>.
 
 =back
 
@@ -234,18 +236,18 @@ When running under L<Apache::DBI>, using either mod_perl 1.x or 2.x, this method
 
 =over 4
 
-* Any L<DBI> database handle created inside a L<Rose::DB> object during apache server startup will be discarded and replaced the first time it is used after server startup has completed.
+=item * Any L<DBI> database handle created inside a L<Rose::DB> object during apache server startup will be discarded and replaced the first time it is used after server startup has completed.
 
-* All L<DBI> database handles contained in cached L<Rose::DB> objects will be cleared at the end of each request using a C<PerlCleanupHandler>.  This will cause L<DBI-E<gt>connect|DBI/connect> to be called the next time a L<dbh|Rose::DB/dbh> is requested from a cached L<Rose::DB> object, which in turn will trigger L<Apache::DBI>'s ping mechanism to ensure that the database handle is fresh.
+=item * All L<DBI> database handles contained in cached L<Rose::DB> objects will be cleared at the end of each request using a C<PerlCleanupHandler>.  This will cause L<DBI-E<gt>connect|DBI/connect> to be called the next time a L<dbh|Rose::DB/dbh> is requested from a cached L<Rose::DB> object, which in turn will trigger L<Apache::DBI>'s ping mechanism to ensure that the database handle is fresh.
 
 =back
 
 Putting all the pieces together, the following implementation of the L<init_db|Rose::DB::Object/init_db> method in your L<Rose::DB::Object>-derived common base class will ensure that database connections are shared and fresh under L<mod_perl> and L<Apache::DBI>, but unshared elsewhere:
 
   package My::DB::Object;
-  
+
   use base 'Rose::DB::Object';
-  
+
   use My::DB; # isa Rose::DB
   ...
 
@@ -263,7 +265,7 @@ Putting all the pieces together, the following implementation of the L<init_db|R
 
 =item B<set_db DB>
 
-Add the L<Rose::DB>-derived object DB to the cache.  The DB's L<domain|Rose::DB/domain>, L<type|Rose::DB/type>, and the object itself (under the param name C<db>) are all are passed to the L<build_cache_key|/build_cache_key> method, and the DB object is stored under the key returned.
+Add the L<Rose::DB>-derived object DB to the cache.  The DB's L<domain|Rose::DB/domain>, L<type|Rose::DB/type>, and the db object itself (under the param name C<db>) are all are passed to the L<build_cache_key|/build_cache_key> method and the DB object is stored under the key returned.
 
 =back
 
