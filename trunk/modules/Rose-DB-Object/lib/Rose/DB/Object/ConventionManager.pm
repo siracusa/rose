@@ -266,15 +266,15 @@ sub auto_foreign_key_name
       {
         return $name . $s;
       }
-
-      my $i = 1;
-
-      # Give up and go with numbers...
-      $i++  while($self->method_name_conflicts($name . $i) ||
-                  $used_names->{$name . $i});
-
-      return $name . $i;
     }
+
+    my $i = 1;
+
+    # Give up and go with numbers...
+    $i++  while($self->method_name_conflicts($name . $i) ||
+                $used_names->{$name . $i});
+
+    return $name . $i;
   }
 
   return $name;
@@ -314,14 +314,14 @@ sub auto_relationship_name_one_to_many
       {
         return $name . $s;
       }
-
-      my $i = 1;
-
-      # Give up and go with numbers...
-      $i++  while($self->method_name_conflicts($name . $i));
-
-      return $name . $i;
     }
+
+    my $i = 1;
+
+    # Give up and go with numbers...
+    $i++  while($self->method_name_conflicts($name . $i));
+
+    return $name . $i;
   }
 
   return $name;
@@ -342,14 +342,14 @@ sub auto_relationship_name_many_to_many
       {
         return $name . $s;
       }
-
-      my $i = 1;
-
-      # Give up and go with numbers...
-      $i++  while($self->method_name_conflicts($name . $i));
-
-      return $name . $i;
     }
+
+    my $i = 1;
+
+    # Give up and go with numbers...
+    $i++  while($self->method_name_conflicts($name . $i));
+
+    return $name . $i;
   }
 
   return $name;
@@ -370,14 +370,14 @@ sub auto_relationship_name_one_to_one
       {
         return $name . $s;
       }
-
-      my $i = 1;
-
-      # Give up and go with numbers...
-      $i++  while($self->method_name_conflicts($name . $i));
-
-      return $name . $i;
     }
+
+    my $i = 1;
+
+    # Give up and go with numbers...
+    $i++  while($self->method_name_conflicts($name . $i));
+
+    return $name . $i;
   }
 
   return $name;
