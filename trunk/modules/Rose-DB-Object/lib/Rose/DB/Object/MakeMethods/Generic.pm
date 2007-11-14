@@ -46,6 +46,8 @@ sub scalar
     $init_method = $args->{'init_method'} || "init_$name";
   }
 
+  my $undef_sets_null = $args->{'undef_sets_null'};
+
   ##
   ## Build code snippets
   ##
@@ -55,6 +57,13 @@ sub scalar
   my $qname = $name;
   $qname =~ s/"/\\"/g;
 
+  my $col_name_escaped = $column_name;
+  $col_name_escaped =~ s/'/\\'/g;
+
+  my $dont_use_default_code = !$undef_sets_null ? qq(defined \$self->{'$qkey'}) :
+    qq(defined \$self->{'$qkey'} || ) .
+    qq(\$self->{SET_COLUMNS()}{'$col_name_escaped'} || ) .
+    qq(\$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'});
 
   #
   # check_in code
@@ -152,9 +161,6 @@ EOF
   # column modified code
   #
 
-  my $col_name_escaped = $column_name;
-  $col_name_escaped =~ s/'/\\'/g;
-
   my $column_modified_code = 
     qq(\$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'} = 1);
 
@@ -171,12 +177,12 @@ EOF
     if($type eq 'character')
     {
       $return_code_get=<<"EOF";
-return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
+return ($dont_use_default_code) ? \$self->{'$qkey'} : 
   (\$self->{'$qkey'} = sprintf("%-${length}s", \$default));
 EOF
 
       $return_code=<<"EOF";
-return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
+return ($dont_use_default_code) ? \$self->{'$qkey'} : 
   (scalar($column_modified_code, 
           \$self->{'$qkey'} = sprintf("%-${length}s", \$default)));
 EOF
@@ -184,12 +190,12 @@ EOF
     else
     {
       $return_code_get=<<"EOF";
-return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
+return ($dont_use_default_code) ? \$self->{'$qkey'} : 
   (\$self->{'$qkey'} = \$default);
 EOF
 
       $return_code=<<"EOF";
-return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
+return ($dont_use_default_code) ? \$self->{'$qkey'} : 
   (scalar($column_modified_code, 
           \$self->{'$qkey'} = \$default));
 EOF
@@ -606,7 +612,7 @@ sub boolean
 
           $self->{$formatted_key,$driver} = undef;
           $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-          return $self->{$key} = 0;
+          return $self->{$key} = defined $_[0] ? 0 : undef;
         }
 
         # Pull default through if necessary
@@ -807,6 +813,7 @@ sub boolean
       }
 
       $self->{$formatted_key,$driver} = undef;
+      $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
       return $self->{$key} = defined $_[0] ? 0 : undef;
     }
   }

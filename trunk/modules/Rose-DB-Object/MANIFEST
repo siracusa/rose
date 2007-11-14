@@ -212,4 +212,5 @@ t/spot-check-12.t
 t/spot-check-13.t
 t/spot-check-14.t
 t/test-lib.pl
+t/undef-sets-null.t
 t/unique-key-prefs.t

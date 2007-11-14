@@ -80,7 +80,11 @@ use Rose::Object::MakeMethods::Generic
 
 use Rose::Class::MakeMethods::Generic
 (
-  inheritable_scalar => 'dbi_prepare_cached',
+  inheritable_scalar => 
+  [
+    'dbi_prepare_cached',
+    'default_column_undef_sets_null',
+  ],
 
   inheritable_hash =>
   [
@@ -4113,6 +4117,21 @@ sub map_record_method_key
   }
 
   return $self->{'map_record_method_key'}{$method};
+}
+
+sub column_undef_sets_null
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    return $self->{'column_undef_sets_null'} = $_[0] ? 1 : 0;
+  }
+
+  return $self->{'column_undef_sets_null'}
+    if(defined $self->{'column_undef_sets_null'});
+
+  return $self->{'column_undef_sets_null'} = ref($self)->default_column_undef_sets_null;
 }
 
 1;

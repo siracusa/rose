@@ -1,4 +1,4 @@
-0.765_13 (11.07.2007) - John Siracusa <siracusa@gmail.com>
+0.765_14 (11.14.2007) - John Siracusa <siracusa@gmail.com>
 
     * Fiddled with not_found() detection.  (Changes suggested by Philip Dye)
     * Made one-to-one relationships (attempt to) work even when uniqueness is 
@@ -6,6 +6,8 @@
     * Added the unique_key_by_name() metadata method.
     * Added the ability to do unrestricted joins in some circumstances.
     * Added the remember_all() class method to Rose::DB::Object::Cached.
+    * Added undef_sets_null column attribute. 
+      XXX: Needs docs and support for more column types
     * The key_column() method in the ForeignKey class now works correctly.
       (Patch by Christopher Masto)
     * Further synced datetime and timestamp method maker code.
