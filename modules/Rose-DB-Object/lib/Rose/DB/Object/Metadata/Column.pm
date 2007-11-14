@@ -32,10 +32,15 @@ use overload
 
 __PACKAGE__->add_default_auto_method_types('get_set');
 
-__PACKAGE__->add_common_method_maker_argument_names(qw(column default type hash_key smart_modification));
+__PACKAGE__->add_common_method_maker_argument_names(qw(column default type hash_key smart_modification undef_sets_null));
 
 use Rose::Class::MakeMethods::Generic
 (
+  inheritable_scalar =>
+  [
+    'default_undef_sets_null'
+  ],
+
   inheritable_hash =>
   [
     event_method_type  => { hash_key => 'event_method_types' },
@@ -98,6 +103,23 @@ __PACKAGE__->method_maker_info
     type  => 'scalar',
   },
 );
+
+sub undef_sets_null
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    return $self->{'undef_sets_null'} = $_[0] ? 1 : 0;
+  }
+
+  return $self->{'undef_sets_null'}
+    if(defined $self->{'undef_sets_null'});
+
+  return $self->{'undef_sets_null'} = 
+    $self->parent ? $self->parent->column_undef_sets_null : 
+                    ref($self)->default_undef_sets_null;
+}
 
 use constant ANY_DB => "\0ANY_DB\0";
 
