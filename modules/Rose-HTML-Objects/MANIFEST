@@ -97,6 +97,7 @@ t/form-field-textarea.t
 t/form-field-time-split.t
 t/form-field-time.t
 t/form-field.t
+t/form-l10n.t
 t/form-nested.t
 t/form.t
 t/image.t

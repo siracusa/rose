@@ -62,6 +62,7 @@ sub items
   if(@_)
   {
     $self->{'items'} = $self->_args_to_items({ localized => 0 }, @_);
+    $self->label_items;
     $self->init_items;
   }
 
@@ -286,22 +287,16 @@ sub _args_to_items
 
   foreach my $item (@$items)
   {
+    # Connect item to group
     $item->parent_group($self)  if($item->can('parent_group'));
-  }
 
-  # Speculatively hook up localizer and locale
-  foreach my $item (@$items)
-  {
+    # Speculatively hook up localizer and locale    
     $item->localizer(Scalar::Defer::defer { $self->localizer });
 
     if(my $parent = $self->parent_form)
     {
       $item->locale(Scalar::Defer::defer { $parent->locale });
     }
-
-    # Maybe we'll have a parent later?
-    #$item->parent_field(Scalar::Defer::defer { $self->parent_field });
-    #$item->parent_form(Scalar::Defer::defer { $self->parent_form });
   }
 
   return (wantarray) ? @$items : $items;
@@ -372,15 +367,21 @@ sub label_items
   my $labels    = $self->{'labels'} || {};
   my $label_ids = $self->{'label_ids'} || {};
 
+  return  unless(%$labels || %$label_ids);
+
   foreach my $item ($self->items)
   {
-    if(exists $label_ids->{$item->html_attr('value')})
+    my $value = $item->html_attr('value');
+    
+    next  unless(defined $value);
+
+    if(exists $label_ids->{$value})
     {
-      $item->label_id($label_ids->{$item->html_attr('value')});
+      $item->label_id($label_ids->{$value});
     }
-    elsif(exists $labels->{$item->html_attr('value')})
+    elsif(exists $labels->{$value})
     {
-      $item->label($labels->{$item->html_attr('value')});
+      $item->label($labels->{$value});
     }
   }
 }
