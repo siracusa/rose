@@ -284,35 +284,24 @@ sub _args_to_items
     }
   }
 
-  # Hrm, this is kind of ugly.  Set parent of the items to the parent of
-  # the group field itself, in order to get the correct naming for the
-  # items.  For example, a checkbox group named "food.fruits" needs
-  # checkboxes that are also named "food.fruits", differing in their
-  # value="..." attributes only.  Setting the parent of the items to the
-  # group field itself would cause all the checkboxes to be named
-  # "food.fruits.fruits", which is wrong.
-  if(my $parent = $self->parent_field)
+  foreach my $item (@$items)
   {
-    foreach my $item (@$items)
-    {
-      $item->parent_field($parent);
-    }
+    $item->parent_group($self)  if($item->can('parent_group'));
   }
-  else # At least set the localizer
+
+  # Speculatively hook up localizer and locale
+  foreach my $item (@$items)
   {
-    foreach my $item (@$items)
+    $item->localizer(Scalar::Defer::defer { $self->localizer });
+
+    if(my $parent = $self->parent_form)
     {
-      $item->localizer(Scalar::Defer::lazy { $self->localizer });
-
-      if(my $parent = $self->parent_form)
-      {
-        $item->locale(Scalar::Defer::defer { $parent->locale });
-      }
-
-      # Maybe we'll have a parent later?
-      #$item->parent_field(Scalar::Defer::lazy { $self->parent_field });
-      #$item->parent_form(Scalar::Defer::lazy { $self->parent_form });
+      $item->locale(Scalar::Defer::defer { $parent->locale });
     }
+
+    # Maybe we'll have a parent later?
+    #$item->parent_field(Scalar::Defer::defer { $self->parent_field });
+    #$item->parent_form(Scalar::Defer::defer { $self->parent_form });
   }
 
   return (wantarray) ? @$items : $items;
@@ -358,7 +347,7 @@ sub add_items
 {
   my($self) = shift;
 
-  push(@{$self->{'items'}},  $self->_args_to_items({ localized => 0 }, @_));
+  push(@{$self->{'items'}}, $self->_args_to_items({ localized => 0 }, @_));
 
   $self->init_items;
 }

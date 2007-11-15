@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 168;
+use Test::More tests => 169;
 
 BEGIN 
 {
@@ -520,6 +520,25 @@ $form->add_field(x => { type => 'text' });
 $form->validate();
 
 is($form->field('address.street')->error, 'Blah', 'nested validate');
+
+$f1 = Rose::HTML::Form->new;
+$f2 = Rose::HTML::Form->new;
+
+$f2->add_fields
+(
+  bar =>
+  {
+    type    => 'radio group',
+    choices => [ 'Yes', 'No' ],
+  },
+);
+
+$f1->add_form(subform => $f2);
+
+is(join("\n", map { $_->html } $f1->fields),
+   qq(<input name="subform.bar" type="radio" value="Yes"> <label>Yes</label><br>\n) .
+   qq(<input name="subform.bar" type="radio" value="No"> <label>No</label>),
+   'nested grouped fields 1');
 
 BEGIN
 {
