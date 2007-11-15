@@ -57,13 +57,15 @@ my %extra =
 
 my $i = 0;
 
-foreach my $type (qw(scalar integer varchar character)) #(sort keys (%$classes))
+foreach my $type (qw(scalar integer varchar character array)) #(sort keys (%$classes)) (qw(array)) #
 {
   $i++;
 
   my $default = default_for_column_type($type);
 
   my %e = $extra{$type} ? %{$extra{$type}} : ();
+
+  $e{'add_method_types'} = [ qw(get get_set) ];
 
   $meta->add_column("c$i" => { type => $type, default => $default, %e });
   $meta_usn->add_column("c$i" => { type => $type, default => $default, undef_sets_null => 1, %e });
@@ -74,45 +76,68 @@ $meta->initialize;
 $meta_usn->initialize;
 $meta_usnd->initialize;
 
-my $o      = My::DB::Object->new;
-my $o_usn  = My::DB::Object::USN->new;
-my $o_usnd = My::DB::Object::USN::Default->new;
-
 foreach my $n (1 .. $i)
 {
   my $col     = "c$n";
   my $type    = $meta->column($col)->type;
   my $default = $meta->column($col)->default;
-  my $method  = method_for_column_type($type, $n);
+
+  my $method_base = method_for_column_type($type, $n);
 
   my $db = db_for_column_type($meta->column($col)->type);
 
-  $o->db($db);
-  $o_usn->db($db);
-  $o_usnd->db($db);
+  foreach my $method ($method_base, "get_$method_base")
+  {
+    my $o      = My::DB::Object->new;
+    my $o_usn  = My::DB::Object::USN->new;
+    my $o_usnd = My::DB::Object::USN::Default->new;
 
-  is($o->$method() . '', "$default", "$type default $n");
-  is($o_usn->$method() . '', "$default", "$type USN explicit $n");
-  is($o_usnd->$method() . '', "$default", "$type USN default $n");
-
-  $o->$method(undef);
-
-  $o_usn->$method(undef);
-  $o_usnd->$method(undef);
-
-  is($o->$method() . '', "$default", "$type undef default $n");
-  is($o_usn->$method(), undef, "$type undef USN explicit $n");
-  is($o_usnd->$method(), undef, "$type undef USN default $n");
+    $o->db($db);
+    $o_usn->db($db);
+    $o_usnd->db($db);
   
-  my $value = value_for_column_type($type);  
+    is(massage_value(scalar $o->$method()), massage_value($default), "$method $type default $n");
+    is(massage_value(scalar $o_usn->$method()), massage_value($default), "$method $type USN explicit $n");
+    is(massage_value(scalar $o_usnd->$method()), massage_value($default), "$method type USN default $n");
 
-  $o->$method($value);
-  $o_usn->$method($value);
-  $o_usnd->$method($value);
+    $o->$method_base(undef);
+    $o_usn->$method_base(undef);
+    $o_usnd->$method_base(undef);
+  
+    is(massage_value(scalar $o->$method()), massage_value($default), "$method $type undef default $n");
+    is(massage_value(scalar $o_usn->$method()), undef, "$method $type undef USN explicit $n");
+    is(massage_value(scalar $o_usnd->$method()), undef, "$method $type undef USN default $n");
+    
+    my $value = value_for_column_type($type);  
+  
+    $o->$method_base($value);
+    $o_usn->$method_base($value);
+    $o_usnd->$method_base($value);
+ 
+    is(massage_value(scalar $o->$method()), massage_value($value), "$method $type value default $n");
+    is(massage_value(scalar $o_usn->$method()), massage_value($value), "$method $type value USN explicit $n");
+    is(massage_value(scalar $o_usnd->$method()), massage_value($value), "$method $type value USN default $n");
 
-  is($o->$method() . '', "$value", "$type value default $n");
-  is($o_usn->$method() . '', "$value", "$type value USN explicit $n");
-  is($o_usnd->$method() . '', "$value", "$type value USN default $n");
+    $o->$method_base(undef);
+    $o_usn->$method_base(undef);
+    $o_usnd->$method_base(undef);
+  
+    is(massage_value(scalar $o->$method()), massage_value($default), "$method $type undef default $n");
+    is(massage_value(scalar $o_usn->$method()), undef, "$method $type undef USN explicit $n");
+    is(massage_value(scalar $o_usnd->$method()), undef, "$method $type undef USN default $n");
+  }
+}
+
+sub massage_value
+{
+  my($value) = shift;
+  
+  if(ref $value eq 'ARRAY')
+  {
+    return "@$value";
+  }
+  
+  return defined $value ? "$value" : undef;
 }
 
 my %DB;

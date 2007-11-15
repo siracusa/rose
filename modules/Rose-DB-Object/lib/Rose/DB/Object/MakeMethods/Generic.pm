@@ -1171,6 +1171,8 @@ sub array
 
   my $formatted_key = column_value_formatted_key($key);
 
+  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
+
   my %methods;
 
   if($interface eq 'get_set')
@@ -1210,24 +1212,29 @@ sub array
         }
         elsif(!defined $self->{$key})
         {
-          $self->{$key} = $db->parse_array(defined $self->{$formatted_key,$driver} ? 
-                                           $self->{$formatted_key,$driver} : $default);
-
-          if(!defined $default || defined $self->{$key})
+          unless(!defined $self->{$formatted_key,$driver} && 
+                 $undef_sets_null && $self->{MODIFIED_COLUMNS()}{$column_name})
           {
-            $self->{$formatted_key,$driver} = undef;
-            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-          }
-          else
-          {
-            Carp::croak $self->error($db->error);
+            $self->{$key} = $db->parse_array(defined $self->{$formatted_key,$driver} ? 
+                                             $self->{$formatted_key,$driver} : $default);
+  
+            if(!defined $default || defined $self->{$key})
+            {
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+            }
+            else
+            {
+              Carp::croak $self->error($db->error);
+            }
           }
         }
 
         return unless(defined wantarray);
 
         # Pull default through if necessary
-        unless(defined $self->{$key} || defined $self->{$formatted_key,$driver})
+        unless(defined $self->{$key} || defined $self->{$formatted_key,$driver} || 
+               ($undef_sets_null && $self->{MODIFIED_COLUMNS()}{$column_name}))
         {
           $self->{$key} = $db->parse_array($default);
 
@@ -1330,16 +1337,19 @@ sub array
 
         if(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key,$driver}))
         {
-          $self->{$key} = $db->parse_array($default);
-
-          if(!defined $default || defined $self->{$key})
+          unless(!defined $default || ($undef_sets_null && $self->{MODIFIED_COLUMNS()}{$column_name}))
           {
-            $self->{$formatted_key,$driver} = undef;
-            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-          }
-          else
-          {
-            Carp::croak $self->error($db->error);
+            $self->{$key} = $db->parse_array($default);
+  
+            if(!defined $default || defined $self->{$key})
+            {
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+            }
+            else
+            {
+              Carp::croak $self->error($db->error);
+            }
           }
         }
 
