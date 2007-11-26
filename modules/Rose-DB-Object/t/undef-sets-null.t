@@ -39,6 +39,8 @@ My::DB::Object::USN::Default->meta->column_undef_sets_null(1);
 
 package main;
 
+use Rose::DB::Object::Util qw(is_in_db set_state_in_db unset_state_in_db);
+
 my $classes = My::DB::Object->meta->column_type_classes;
 
 my $meta      = My::DB::Object->meta;
@@ -74,7 +76,7 @@ foreach my $type (qw(scalar integer varchar character array)) #(sort keys (%$cla
 
   my %e = $extra{$type} ? %{$extra{$type}} : ();
 
-  $e{'add_method_types'} = [ qw(get get_set) ];
+  $e{'add_method_types'} = [ qw(get) ];
 
   $meta->add_column("c$i" => { type => $type, default => $default, %e });
   $meta_usn->add_column("c$i" => { type => $type, default => $default, undef_sets_null => 1, %e });
@@ -84,6 +86,10 @@ foreach my $type (qw(scalar integer varchar character array)) #(sort keys (%$cla
 $meta->initialize;
 $meta_usn->initialize;
 $meta_usnd->initialize;
+
+##
+## XXX: TODO: Handle load() or object with undef columns - reference IN_DB()
+##
 
 foreach my $n (1 .. $i)
 {
@@ -99,7 +105,7 @@ foreach my $n (1 .. $i)
   {
     SKIP:
     {
-      skip("unavailable db tests", 12);
+      skip("unavailable db tests", 15);
     }
 
     next;
@@ -115,6 +121,18 @@ foreach my $n (1 .. $i)
     $o_usn->db($db);
     $o_usnd->db($db);
   
+    set_state_in_db($o);
+    set_state_in_db($o_usn);  
+    set_state_in_db($o_usnd);
+
+    is(massage_value(scalar $o->$method()), massage_value($default), "$method $type in db default $n");
+    is(massage_value(scalar $o_usn->$method()), undef, "$method $type in db undef USN explicit $n");
+    is(massage_value(scalar $o_usnd->$method()), undef, "$method $type in db undef USN default $n");
+    
+    unset_state_in_db($o);
+    unset_state_in_db($o_usn);  
+    unset_state_in_db($o_usnd);
+    
     is(massage_value(scalar $o->$method()), massage_value($default), "$method $type default $n");
     is(massage_value(scalar $o_usn->$method()), massage_value($default), "$method $type USN explicit $n");
     is(massage_value(scalar $o_usnd->$method()), massage_value($default), "$method type USN default $n");
