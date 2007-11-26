@@ -2,9 +2,18 @@
 
 use strict;
 
-use Test::More 'no_plan'; # tests => 287;
+require Test::More;
 
 require 't/test-lib.pl';
+
+if(have_db('sqlite_admin'))
+{
+  Test::More->import('no_plan'); # tests => 287;
+}
+else
+{
+  Test::More->import(skip_all => 'No SQLite');
+}
 
 use_ok('DateTime');
 use_ok('DateTime::Duration');
@@ -86,6 +95,16 @@ foreach my $n (1 .. $i)
 
   my $db = db_for_column_type($meta->column($col)->type);
 
+  unless($db)
+  {
+    SKIP:
+    {
+      skip("unavailable db tests", 12);
+    }
+
+    next;
+  }
+  
   foreach my $method ($method_base, "get_$method_base")
   {
     my $o      = My::DB::Object->new;
