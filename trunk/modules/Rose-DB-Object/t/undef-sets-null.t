@@ -68,7 +68,7 @@ my %extra =
 
 my $i = 0;
 
-foreach my $type (qw(scalar integer varchar character array)) #(sort keys (%$classes)) (qw(array)) #
+foreach my $type (qw(scalar integer varchar character array bitfield boolean enum)) #(sort keys (%$classes)) (qw(array)) #
 {
   $i++;
 
