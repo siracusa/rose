@@ -62,6 +62,7 @@ sub scalar
 
   my $dont_use_default_code = !$undef_sets_null ? qq(defined \$self->{'$qkey'}) :
     qq(defined \$self->{'$qkey'} || ) .
+    qq((\$self->{STATE_IN_DB()} && !(\$self->{SET_COLUMNS()}{'$col_name_escaped'} || \$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'})) || ) .
     qq(\$self->{SET_COLUMNS()}{'$col_name_escaped'} || ) .
     qq(\$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'});
 
@@ -1213,7 +1214,8 @@ sub array
         elsif(!defined $self->{$key})
         {
           unless(!defined $self->{$formatted_key,$driver} && 
-                 $undef_sets_null && $self->{MODIFIED_COLUMNS()}{$column_name})
+                 $undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+                 ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name}))))
           {
             $self->{$key} = $db->parse_array(defined $self->{$formatted_key,$driver} ? 
                                              $self->{$formatted_key,$driver} : $default);
@@ -1234,7 +1236,8 @@ sub array
 
         # Pull default through if necessary
         unless(defined $self->{$key} || defined $self->{$formatted_key,$driver} || 
-               ($undef_sets_null && $self->{MODIFIED_COLUMNS()}{$column_name}))
+               ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+                ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
         {
           $self->{$key} = $db->parse_array($default);
 
@@ -1337,7 +1340,9 @@ sub array
 
         if(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key,$driver}))
         {
-          unless(!defined $default || ($undef_sets_null && $self->{MODIFIED_COLUMNS()}{$column_name}))
+          unless(!defined $default || ($undef_sets_null && 
+                 ($self->{MODIFIED_COLUMNS()}{$column_name} || ($self->{STATE_IN_DB()} && 
+                 !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
           {
             $self->{$key} = $db->parse_array($default);
   
