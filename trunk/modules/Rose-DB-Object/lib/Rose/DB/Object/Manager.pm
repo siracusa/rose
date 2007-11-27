@@ -1674,13 +1674,13 @@ sub get_objects
     # TODO: remove duplicate/redundant sort conditions
     $args{'sort_by'} = $sort_by;
   }
-  elsif($num_to_many_rels > 0 && (!%fetch || (keys %fetch || 0) > 2))
+  elsif($num_to_many_rels > 0 && (!%fetch || (keys %fetch || 0) > 3))
   {
     # When selecting sub-objects via a "... to many" relationship, force a
     # sort by t1's primarky key to ensure that all result rows from each
     # row in t1 are grouped together.  But don't do it when we're selecting
-    # columns from just one table. (Compare to 2 because the primary table
-    # name and the "t1" alias are both always in the fetch list.)
+    # columns from just one table. (Compare to 3 because the primary table
+    # name, fully-qualified name, and the "t1" alias are always in the list.)
     $args{'sort_by'} = [ join(', ', map { "t1.$_" } $meta->primary_key_column_names) ];
   }
 

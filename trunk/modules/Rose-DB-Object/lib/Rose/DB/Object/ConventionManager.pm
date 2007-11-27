@@ -1300,7 +1300,7 @@ But that's a bit of a pain to do in every single class.  An easier way to do it 
     # The big pay-off: smart plurals!
     print __PACKAGE__->meta->table; # "people"
 
-You might wonder why I don't use L<Lingua::EN::Inflect> in L<Rose::DB::Object::ConventionManager> to save you this effort.  The answer is that the L<Rose::DB::Object::ConventionManager> module adds almost a megabyte of memory overhead on my system.  I'd rather not incur that overhead just for the sake of being more clever about naming conventions.  Furthermore, as primitive as the default plural-forming is, at least it's deterministic.  Guessing what L<Lingua::EN::Inflect> will return is not always easy, and the results can change depending on which version L<Lingua::EN::Inflect> you have installed.
+You might wonder why I don't use L<Lingua::EN::Inflect> in L<Rose::DB::Object::ConventionManager> to save you this effort.  The answer is that the L<Lingua::EN::Inflect> module adds almost a megabyte of memory overhead on my system.  I'd rather not incur that overhead just for the sake of being more clever about naming conventions.  Furthermore, as primitive as the default plural-forming is, at least it's deterministic.  Guessing what L<Lingua::EN::Inflect> will return is not always easy, and the results can change depending on which version L<Lingua::EN::Inflect> you have installed.
 
 =head1 EXAMPLE
 
@@ -1478,6 +1478,8 @@ Let's add some data:
 
   INSERT INTO product_colors (product_id, color_code) VALUES (3, 'CC2');
   INSERT INTO product_colors (product_id, color_code) VALUES (3, 'CC3');
+
+(Be aware that not all databases are smart enough to track explicitly setting serial column values as shown in the INSERT statements above.  Subsequent auto-generated serial values may conflict with the explicitly set serial column values already in the table.  Values are set explicitly here to make the examples easier to follow.  In "real" code, you should let the serial columns populate automatically.) 
 
 Finally, the classes in action:
 
