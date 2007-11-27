@@ -1554,6 +1554,8 @@ sub set
 
   my $value_type = $args->{'value_type'} || 'scalar';
 
+  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
+
   my %methods;
 
   if($interface eq 'get_set')
@@ -1604,36 +1606,43 @@ sub set
         }
         elsif(!defined $self->{$key})
         {
-          my $set = $db->parse_set((defined $self->{$formatted_key,$driver} ? 
-                                    $self->{$formatted_key,$driver} : $default),
-                                   { value_type => $value_type });
-
-          if($choices)
+          unless(!defined $self->{$formatted_key,$driver} && 
+                 $undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+                 ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name}))))
           {
-            foreach my $val (@$set)
+            my $set = $db->parse_set((defined $self->{$formatted_key,$driver} ? 
+                                      $self->{$formatted_key,$driver} : $default),
+                                     { value_type => $value_type });
+  
+            if($choices)
             {
-              Carp::croak "Invalid default value for set $key - '$val'"
-                unless(exists $choices{$val});
+              foreach my $val (@$set)
+              {
+                Carp::croak "Invalid default value for set $key - '$val'"
+                  unless(exists $choices{$val});
+              }
+            }
+  
+            $self->{$key} = $set;
+  
+            if(!defined $default || defined $self->{$key})
+            {
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+            }
+            else
+            {
+              Carp::croak $self->error($db->error);
             }
           }
-
-          $self->{$key} = $set;
-
-          if(!defined $default || defined $self->{$key})
-          {
-            $self->{$formatted_key,$driver} = undef;
-            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-          }
-          else
-          {
-            Carp::croak $self->error($db->error);
-          } 
         }
 
         return unless(defined wantarray);
 
         # Pull default through if necessary
-        unless(defined $self->{$key} || defined $self->{$formatted_key,$driver})
+        unless(defined $self->{$key} || defined $self->{$formatted_key,$driver} || 
+               ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+                ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
         {
           $self->{$key} = $db->parse_set($default, { value_type => $value_type });
 
@@ -1747,27 +1756,32 @@ sub set
 
         if(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key,$driver}))
         {
-          my $set = $db->parse_set($default, { value_type => $value_type });
-
-          if($choices)
+          unless(!defined $default || ($undef_sets_null && 
+                 ($self->{MODIFIED_COLUMNS()}{$column_name} || ($self->{STATE_IN_DB()} && 
+                 !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
           {
-            foreach my $val (@$set)
+            my $set = $db->parse_set($default, { value_type => $value_type });
+  
+            if($choices)
             {
-              Carp::croak "Invalid default value for set $key - '$val'"
-                unless(exists $choices{$val});
+              foreach my $val (@$set)
+              {
+                Carp::croak "Invalid default value for set $key - '$val'"
+                  unless(exists $choices{$val});
+              }
             }
-          }
-
-          $self->{$key} = $set;
-
-          if(!defined $default || defined $self->{$key})
-          {
-            $self->{$formatted_key,$driver} = undef;
-            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-          }
-          else
-          {
-            Carp::croak $self->error($db->error);
+  
+            $self->{$key} = $set;
+  
+            if(!defined $default || defined $self->{$key})
+            {
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+            }
+            else
+            {
+              Carp::croak $self->error($db->error);
+            }
           }
         }
 

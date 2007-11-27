@@ -68,7 +68,7 @@ my %extra =
 
 my $i = 0;
 
-foreach my $type (qw(scalar integer varchar character array bitfield boolean enum)) #(sort keys (%$classes)) (qw(array)) #
+foreach my $type (qw(scalar integer varchar character array bitfield boolean enum set)) #(sort keys (%$classes)) (qw(array)) #
 {
   $i++;
 
@@ -86,10 +86,6 @@ foreach my $type (qw(scalar integer varchar character array bitfield boolean enu
 $meta->initialize;
 $meta_usn->initialize;
 $meta_usnd->initialize;
-
-##
-## XXX: TODO: Handle load() or object with undef columns - reference IN_DB()
-##
 
 foreach my $n (1 .. $i)
 {
