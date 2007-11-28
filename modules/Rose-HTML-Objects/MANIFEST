@@ -68,6 +68,7 @@ lib/Rose/HTML/Script.pm
 lib/Rose/HTML/Util.pm
 Makefile.PL
 MANIFEST
+t/00-warning.t
 t/anchor.t
 t/attachments.t
 t/form-field-checkbox-group.t
