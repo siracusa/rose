@@ -161,6 +161,34 @@ foreach my $n (1 .. $i)
   }
 }
 
+# Default true or nonexistent undef_sets_null attribute does 
+# not conflict with true not_null attribute
+My::DB::Object->meta->add_column('nn' => { type => 'scalar', not_null => 1 });
+My::DB::Object->meta->initialize(replace_existing => 1);
+
+My::DB::Object::USN->meta->add_column('nn' => { type => 'scalar', not_null => 1 });
+My::DB::Object::USN->meta->initialize(replace_existing => 1);
+
+My::DB::Object::USN::Default->meta->add_column('nn' => { type => 'scalar', not_null => 1 });
+My::DB::Object::USN::Default->meta->initialize(replace_existing => 1);
+
+# Explicit true undef_sets_null attribute conflicts with true not_null attribute
+
+My::DB::Object->meta->add_column('nn' => { type => 'scalar', not_null => 1, undef_sets_null => 1 });
+eval { My::DB::Object->meta->initialize(replace_existing => 1) };
+
+ok($@, 'not_null undef_sets_null conflict 1');
+
+My::DB::Object::USN->meta->add_column('nn' => { type => 'scalar', not_null => 1, undef_sets_null => 1 });
+eval { My::DB::Object::USN->meta->initialize(replace_existing => 1) };
+
+ok($@, 'not_null undef_sets_null conflict 2');
+
+My::DB::Object::USN::Default->meta->add_column('nn' => { type => 'scalar', not_null => 1, undef_sets_null => 1});
+eval { My::DB::Object::USN::Default->meta->initialize(replace_existing => 1) };
+
+ok($@, 'not_null undef_sets_null conflict 3');
+
 sub massage_value
 {
   my($value) = shift;

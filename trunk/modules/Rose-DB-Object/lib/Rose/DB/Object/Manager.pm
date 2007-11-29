@@ -364,6 +364,8 @@ sub get_objects
   my $hints            = delete $args{'hints'} || {};
   my $select           = $args{'select'};
 
+  my $no_forced_sort = delete $args{'no_forced_sort'};
+
   my $table_aliases    = exists $args{'table_aliases'} ? 
     $args{'table_aliases'} : ($args{'table_aliases'} = 1);
 
@@ -1639,9 +1641,9 @@ sub get_objects
       # a sort by t1's primarky key unless sorting by some other column in
       # t1.  This is required to ensure that all result rows from each row
       # in t1 are grouped together.  But don't do it when we're selecting
-      # columns from just one table.  (Compare to 2 because the primary 
-      # table name and the "t1" alias are both always in the fetch list.)
-      if($num_to_many_rels > 0 && (!%fetch || (keys %fetch || 0) > 2))
+      # columns from just one table.  (Compare to 3 because the primary table
+      # name, fully-qualified name, and the "t1" alias are always in the list.)
+      if($num_to_many_rels > 0 && (!%fetch || (keys %fetch || 0) > 3) && !$no_forced_sort)
       {
         my $do_prefix = 1;
 
@@ -1674,7 +1676,7 @@ sub get_objects
     # TODO: remove duplicate/redundant sort conditions
     $args{'sort_by'} = $sort_by;
   }
-  elsif($num_to_many_rels > 0 && (!%fetch || (keys %fetch || 0) > 3))
+  elsif($num_to_many_rels > 0 && (!%fetch || (keys %fetch || 0) > 3) && !$no_forced_sort)
   {
     # When selecting sub-objects via a "... to many" relationship, force a
     # sort by t1's primarky key to ensure that all result rows from each

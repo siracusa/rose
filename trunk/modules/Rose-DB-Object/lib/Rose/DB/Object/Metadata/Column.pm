@@ -74,6 +74,7 @@ Rose::Object::MakeMethods::Generic->make_methods
   scalar => 
   [
     'alias',
+    'error',
     'ordinal_position',
     'parse_error',
     __PACKAGE__->common_method_maker_argument_names,
@@ -116,9 +117,22 @@ sub undef_sets_null
   return $self->{'undef_sets_null'}
     if(defined $self->{'undef_sets_null'});
 
-  return $self->{'undef_sets_null'} = 
+  return 
     $self->parent ? $self->parent->column_undef_sets_null : 
                     ref($self)->default_undef_sets_null;
+}
+
+sub validate_specification
+{
+  my($self) = shift;
+
+  if($self->not_null && $self->{'undef_sets_null'})
+  {
+    $self->error('True value for not_null attribute conflicts with true value for undef_sets_null attribute.');
+    return 0;
+  }
+
+  return 1;
 }
 
 use constant ANY_DB => "\0ANY_DB\0";
