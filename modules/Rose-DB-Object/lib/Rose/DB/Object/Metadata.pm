@@ -1694,6 +1694,13 @@ sub make_column_methods
 
   foreach my $column ($self->columns_ordered)
   {
+    unless($column->validate_specification)
+    {
+      Carp::croak "Column specification for column '", $column->name, 
+                  "' in class ", $self->class, " is invalid: ",
+                  $column->error;
+    }
+
     my $name = $column->name;
     my $method;
 
