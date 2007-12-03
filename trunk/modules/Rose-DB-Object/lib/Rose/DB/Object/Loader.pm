@@ -79,8 +79,9 @@ sub generate_object_base_class_name
 {
   my($self) = shift;
 
-  return ((($self->class_prefix || ''). 'DB::Object::AutoBase') || 
-          "Rose::DB::Object::LoaderGenerated::AutoBase") . 
+  return ($self->class_prefix ?
+          ($self->class_prefix . 'DB::Object::AutoBase') : 
+          'Rose::DB::Object::LoaderGenerated::AutoBase') .
          $Base_Class_Counter++;
 }
 
@@ -88,8 +89,9 @@ sub generate_db_base_class_name
 {
   my($self) = shift;
 
-  return ((($self->class_prefix || '') . 'DB::AutoBase') || 
-          "Rose::DB::LoaderGenerated::AutoBase") . 
+  return ($self->class_prefix ?
+          ($self->class_prefix . 'DB::AutoBase') : 
+          'Rose::DB::LoaderGenerated::AutoBase') .
          $Base_Class_Counter++;
 }
 
