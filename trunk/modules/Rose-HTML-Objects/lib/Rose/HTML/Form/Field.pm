@@ -893,6 +893,8 @@ sub message_for_error_id
 sub localize_label       { shift->label_message_id(FIELD_LABEL) }
 sub localize_description { shift->description_message_id(FIELD_DESCRIPTION) }
 
+# XXX: Ths sub contains a lame hack to work around an incompatibility with
+# XXX: Scalar::Defer 0.11 - it manually detects and evaluates code refs.
 sub localizer
 {
   my($invocant) = shift;
@@ -902,7 +904,16 @@ sub localizer
   {
     if(@_)
     {
-      return $invocant->{'localizer'} = shift;
+      $invocant->{'localizer'} = shift;
+      
+      if(ref $invocant->{'localizer'} eq 'CODE')
+      {
+        return $invocant->{'localizer'}->();
+      }
+      else
+      {
+        return $invocant->{'localizer'};
+      }
     }
 
     my $localizer = $invocant->{'localizer'};
@@ -913,17 +924,22 @@ sub localizer
       {
         if(my $localizer = $parent_field->localizer)
         {
-          return $localizer;
+          return (ref $localizer eq 'CODE') ? $localizer->() : $localizer;
         }
       }
       elsif(my $parent_form = $invocant->parent_form)
       {
         if(my $localizer = $parent_form->localizer)
         {
-          return $localizer;
+          return (ref $localizer eq 'CODE') ? $localizer->() : $localizer;
         }      
       }
       else { return $class->default_localizer }
+    }
+
+    if(ref $localizer eq 'CODE')
+    {
+      return $localizer->();
     }
 
     return $localizer || $class->default_localizer;
@@ -939,6 +955,8 @@ sub localizer
   }
 }
 
+# XXX: Ths sub contains a lame hack to work around an incompatibility with
+# XXX: Scalar::Defer 0.11 - it manually detects and evaluates code refs.
 sub locale
 {
   my($invocant) = shift;
@@ -948,28 +966,50 @@ sub locale
   {
     if(@_)
     {
-      return $invocant->{'locale'} = shift;
+      $invocant->{'locale'} = shift;
+      
+      if(ref $invocant->{'locale'} eq 'CODE')
+      {
+        return $invocant->{'locale'}->();
+      }
+      else
+      {
+        return $invocant->{'locale'};
+      }
     }
 
     my $locale = $invocant->{'locale'};
 
-    return $locale  if($locale);
+    if($locale)
+    {
+      return (ref $locale eq 'CODE') ? $locale->() : $locale;
+    }
 
     if(my $parent_field = $invocant->parent_field)
     {
       if(my $locale = $parent_field->locale)
       {
-        return $locale;
+        return (ref $locale eq 'CODE') ? $locale->() : $locale;
       }
     }
     elsif(my $parent_form = $invocant->parent_form)
     {
       if(my $locale = $parent_form->locale)
       {
-        return $locale;
+        return (ref $locale eq 'CODE') ? $locale->() : $locale;
       }      
     }
-    else { return $invocant->localizer->locale || $class->default_locale }
+    else 
+    {
+      my $locale = $invocant->localizer->locale;
+
+      if(ref $locale eq 'CODE')
+      {
+        return $locale->();
+      }
+    
+      return $locale || $class->default_locale;
+    }
   }
   else # Called as class method
   {
