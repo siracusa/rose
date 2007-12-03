@@ -3,7 +3,10 @@ package Rose::HTML::Form::Field::Group;
 use strict;
 
 use Carp();
-use Scalar::Defer();
+
+# XXX: Can't use Scalar::Defer 0.11 (or possibly later) until some things
+# XXX: are sorted out.  See: http://rt.cpan.org/Ticket/Display.html?id=31039
+#use Scalar::Defer();
 
 use Rose::HTML::Util();
 
@@ -290,12 +293,19 @@ sub _args_to_items
     # Connect item to group
     $item->parent_group($self)  if($item->can('parent_group'));
 
-    # Speculatively hook up localizer and locale    
-    $item->localizer(Scalar::Defer::defer { $self->localizer });
+    # Speculatively hook up localizer and locale
+    # XXX: Scalar::Defer 0.11 breaks this (http://rt.cpan.org/Ticket/Display.html?id=31039)
+    #$item->localizer(Scalar::Defer::defer { $self->localizer });
+
+    # XXX: Use lame workaround instead.
+    $item->localizer(sub { $self->localizer });
 
     if(my $parent = $self->parent_form)
     {
-      $item->locale(Scalar::Defer::defer { $parent->locale });
+      # XXX: Scalar::Defer 0.11 breaks this (http://rt.cpan.org/Ticket/Display.html?id=31039)
+      #$item->locale(Scalar::Defer::defer { $parent->locale });
+      # XXX: Use lame workaround instead.      
+      $item->locale(sub { $parent->locale });
     }
   }
 
@@ -330,7 +340,10 @@ sub parent_form
     {
       foreach my $item ($self->items)
       {
-        $item->locale(Scalar::Defer::defer { $parent->locale });
+        # XXX: Scalar::Defer 0.11 breaks this (http://rt.cpan.org/Ticket/Display.html?id=31039)
+        #$item->locale(Scalar::Defer::defer { $parent->locale });
+        # XXX: Use lame workaround instead.      
+        $item->locale(sub { $parent->locale });        
       }
     }
   }

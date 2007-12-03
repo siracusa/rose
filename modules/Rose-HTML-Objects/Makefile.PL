@@ -31,6 +31,7 @@ WriteMakefile(NAME         => 'Rose::HTML::Objects',
                (dist => { DIST_CP => 'cp' }) : ()), # Avoid Mac OS X ._* files
               PREREQ_PM =>
               {
+                'DateTime'       => 0.20,
                 'Carp'           => 0,
                 'Clone::PP'      => 0,
                 'Email::Valid'   => 0,
@@ -38,7 +39,9 @@ WriteMakefile(NAME         => 'Rose::HTML::Objects',
                 'Image::Size'    => 0,
                 'URI::Escape'    => 0,
                 'Scalar::Util'   => 0,
-                'Scalar::Defer'  => 0,
+                # XXX: Can't use Scalar::Defer 0.11 (or possibly later) until some things
+                # XXX: are sorted out.  See: http://rt.cpan.org/Ticket/Display.html?id=31039
+                #'Scalar::Defer'  => 0,
                 'Rose::Object'   => 0.82,
                 'Rose::DateTime' => 0.532,
                 'Rose::URI'      => 0.021,
