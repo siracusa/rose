@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 282;
+use Test::More tests => 283;
 
 BEGIN 
 {
@@ -773,6 +773,14 @@ ok(!$form->param_exists_for_field('when.date.month'), 'param_exists_for_field() 
 ok(!$form->param_exists_for_field('when.time.hour'), 'param_exists_for_field() nested 2.12');
 
 $form = Rose::HTML::Form->new(onsubmit => 'foo()');
+
+$form->add_fields(n => { type => 'numeric', required => 1 });
+
+$form->params({ n => '' });
+
+$form->init_fields;
+
+is($form->field_value('n'), undef, 'empty string numeric value'); # RT #30249
 
 BEGIN
 {
