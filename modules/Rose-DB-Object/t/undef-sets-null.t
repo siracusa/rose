@@ -6,9 +6,10 @@ require Test::More;
 
 require 't/test-lib.pl';
 
-if(have_db('sqlite_admin'))
+if(have_db('sqlite'))
 {
-  Test::More->import('no_plan'); # tests => 287;
+  Test::More->import(tests => 1403);
+  #Test::More->import('no_plan');
 }
 else
 {
@@ -68,7 +69,7 @@ my %extra =
 
 my $i = 0;
 
-foreach my $type (qw(scalar integer varchar character array bitfield boolean enum set)) #(sort keys (%$classes)) (qw(array)) #
+foreach my $type (sort keys (%$classes))
 {
   $i++;
 
@@ -107,7 +108,7 @@ foreach my $n (1 .. $i)
     next;
   }
   
-  foreach my $method ($method_base, "get_$method_base")
+  foreach my $method ($method_base, ($type eq 'chkpass' ? () : "get_$method_base"))
   {
     my $o      = My::DB::Object->new;
     my $o_usn  = My::DB::Object::USN->new;
