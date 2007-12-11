@@ -173,7 +173,7 @@ sub localize_message
   return undef;
 }
 
-# All this to avoid making Scalar::Defer a prerequisite....sight.
+# All this to avoid making Scalar::Defer a prerequisite....sigh.
 sub _evaluate
 {  
   no warnings 'uninitialized';
