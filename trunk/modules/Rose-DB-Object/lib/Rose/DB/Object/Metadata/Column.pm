@@ -108,7 +108,7 @@ __PACKAGE__->method_maker_info
 sub undef_sets_null
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     return $self->{'undef_sets_null'} = $_[0] ? 1 : 0;
@@ -117,9 +117,9 @@ sub undef_sets_null
   return $self->{'undef_sets_null'}
     if(defined $self->{'undef_sets_null'});
 
-  return 
-    $self->parent ? $self->parent->column_undef_sets_null : 
-                    ref($self)->default_undef_sets_null;
+  my $parent_default = $self->parent ? $self->parent->column_undef_sets_null : undef;
+
+  return defined $parent_default ? $parent_default :  ref($self)->default_undef_sets_null;
 }
 
 sub validate_specification
@@ -1594,6 +1594,12 @@ For performance reasons, none of the column classes bundled with L<Rose::DB::Obj
 
 Get or set the default list of L<auto_method_types|/auto_method_types>.  TYPES should be a list of column method types.  Returns the list of default column method types (in list context) or a reference to an array of the default column method types (in scalar context).  The default list contains only the "get_set" column method type.
 
+=item B<default_undef_sets_null [BOOL]>
+
+Get or set the default value of the L<undef_sets_null|/undef_sets_null> attribute.  The default value is undef.
+
+This default only applies when the column does not have a parent metadata object or if the metadata object's L<column_undef_sets_null|Rose::DB::Object::Metadata/column_undef_sets_null> method returns undef.
+
 =back
 
 =head1 CONSTRUCTOR
@@ -1889,6 +1895,53 @@ Returns true if L<triggers|/TRIGGERS> are disabled for this column, false otherw
 =item B<type>
 
 Returns the (possibly abstract) data type of the column.  The default implementation returns "scalar".
+
+=item B<undef_sets_null [BOOL]>
+
+Get or set a boolean value that indicates whether or not setting the column to an undef value causes the L<default|/default> value to be returned when the column's value is fetched through the accessor method.
+
+The default value of this attribute is determined by the parent L<metadata|Rose::DB::Object::Metadata> object's L<column_undef_sets_null|Rose::DB::Object::Metadata/column_undef_sets_null> method, or the column's L<default_undef_sets_null|/default_undef_sets_null> class method id the metadata object's L<column_undef_sets_null|Rose::DB::Object::Metadata/column_undef_sets_null> method returns undef, or if the column has no parent metadata object.
+
+Example: consider a L<Rose::DB::Object>-derived C<Person> class with a C<name> column set up like this:
+
+    package Person;
+    ...
+       columns =>
+       [
+         name => { type => 'varchar', default => 'John Doe' },
+         ...
+       ],
+    ...
+
+The following behavior is the same regardless of the setting of the L<undef_sets_null|/undef_sets_null> attribute for the C<name> column:
+
+    $p = Person->new;
+    print $p->name; # John Doe
+
+    $p->name('Larry Wall');
+    print $p->name; # Larry Wall
+
+If L<undef_sets_null|/undef_sets_null> is B<false> for the C<name> column, then this is the behavior of explicitly setting the column to undef:
+
+    $p->name(undef);
+    print $p->name; # John Doe
+
+If L<undef_sets_null|/undef_sets_null> is B<true> for the C<name> column, then this is the behavior of explicitly setting the column to undef:
+
+    $p->name(undef);
+    print $p->name; # undef
+
+The L<undef_sets_null|/undef_sets_null> attribute can be set directly on the column:
+
+    name => { type => 'varchar', default => 'John Doe', undef_sets_null => 1 },
+
+or it can be set class-wide using the L<meta|Rose::DB::Object/meta> object's L<column_undef_sets_null|Rose::DB::Object::Metadata/column_undef_sets_null> attribute:
+
+    Person->meta->column_undef_sets_null(1);
+
+or it can be set for all classes that use a given L<Rose::DB::Object::Metadata>-derived class using the L<default_column_undef_sets_null|Rose::DB::Object::Metadata/default_column_undef_sets_null> class method:
+
+    My::DB::Object::Metadata->default_column_undef_sets_null(1);
 
 =back
 

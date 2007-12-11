@@ -4531,6 +4531,10 @@ The default mapping of names to classes is:
 
 Get or set a boolean value that indicates whether or not the L<Rose::DB::Object>-derived L<class|/class> will use L<DBI>'s L<prepare_cached|DBI/prepare_cached> method by default (instead of the L<prepare|DBI/prepare> method) when L<loading|Rose::DB::Object/load>, L<saving|Rose::DB::Object/save>, and L<deleting|Rose::DB::Object/delete> objects.  The default value is true.
 
+=item B<default_column_undef_sets_null [BOOL]>
+
+Get or set the default value of the L<column_undef_sets_null|/column_undef_sets_null> attribute.  Defaults to undef.
+
 =item B<for_class CLASS>
 
 Returns (or creates, if needed) the single L<Rose::DB::Object::Metadata> object associated with CLASS, where CLASS is the name of a L<Rose::DB::Object>-derived class.
@@ -4957,6 +4961,12 @@ Returns the name of the "get_set" method for the column named NAME.  This is jus
 =item B<column_rw_method_names>
 
 Returns a list (in list context) or a reference to the array (in scalar context) of the names of the "get_set" methods for all the columns, in the order that the columns are returned by L<column_names|/column_names>.
+
+=item B<column_undef_sets_null [BOOL]>
+
+Get or set a boolean value that influences the default value of the L<undef_sets_null|Rose::DB::Object::Metadata::Column/undef_sets_null> attribute for each L<column|/columns> in this L<class|/class>.  See the documentation for L<Rose::DB::Object::Metadata::Column>'s L<undef_sets_null|Rose::DB::Object::Metadata::Column/undef_sets_null> attribute for more information.
+
+Defaults to the value returned by the L<default_column_undef_sets_null|/default_column_undef_sets_null> class method.
 
 =item B<convention_manager [ OBJECT | CLASS | NAME ]>
 
