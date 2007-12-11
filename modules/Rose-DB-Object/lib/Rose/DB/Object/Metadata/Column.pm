@@ -393,7 +393,7 @@ sub perl_column_definition_attributes
     if($attr =~ /^(?: name(?:_sql)? | is_primary_key_member | 
                   primary_key_position | method_name | method_code |
                   made_method_types | ordinal_position | select_sql |
-                  (?:builtin_)?triggers | 
+                  undef_sets_null | (?:builtin_)?triggers | 
                   (?:builtin_)?trigger_index )$/x)
     {
       next ATTR;
@@ -419,6 +419,12 @@ sub perl_column_definition_attributes
     elsif($attr eq 'smart_modification' && 
           (($self->smart_modification == ref($self)->new->smart_modification) ||
            ($self->parent && $self->smart_modification == $self->parent->default_smart_modification)))
+    {
+      next ATTR;
+    }
+    elsif($attr eq 'undef_sets_null' && 
+          (($self->undef_sets_null == ref($self)->new->undef_sets_null) ||
+           ($self->parent && $self->undef_sets_null == $self->parent->column_undef_sets_null)))
     {
       next ATTR;
     }
