@@ -7,7 +7,7 @@ use Rose::HTML::Object::Errors qw(:number);
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.549';
+our $VERSION = '0.552';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -60,7 +60,7 @@ sub internal_value
     }
   }
 
-  return $value;
+  return ($value =~ /\S/) ? $value : undef;
 }
 
 # This is $RE{num}{dec} from Regexp::Common::number
