@@ -9,7 +9,7 @@ our @ISA = qw(Rose::Object::MakeMethods);
 
 use Rose::DB::Object::Constants
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
-     STATE_SAVING MODIFIED_COLUMNS);
+     STATE_SAVING MODIFIED_COLUMNS SET_COLUMNS);
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
@@ -24,6 +24,8 @@ sub date
   my $tz = $args->{'time_zone'} || 0;
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
+
+  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
 
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
@@ -118,7 +120,9 @@ sub date
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt = $db->parse_date($default);
 
@@ -216,7 +220,9 @@ sub date
         }
       }
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt = $db->parse_date($default);
 
@@ -324,7 +330,9 @@ sub date
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt = $db->parse_date($default);
 
@@ -394,6 +402,8 @@ sub datetime
   my $tz = $args->{'time_zone'} || 0;
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
+
+  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
 
   for($type)
   {
@@ -490,7 +500,9 @@ sub datetime
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt = $db->$parse_method($default);
 
@@ -588,7 +600,9 @@ sub datetime
         }
       }
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt = $db->$parse_method($default);
 
@@ -688,7 +702,9 @@ sub datetime
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt = $db->$parse_method($default);
 
@@ -771,6 +787,8 @@ sub timestamp
   my $tz = $args->{'time_zone'} || 0;
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
+
+  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
 
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
@@ -857,7 +875,9 @@ sub timestamp
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt = $db->parse_timestamp($default);
 
@@ -955,7 +975,11 @@ sub timestamp
         }
       }
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      return  unless(defined wantarray);
+
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt = $db->parse_timestamp($default);
 
@@ -1055,7 +1079,9 @@ sub timestamp
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt = $db->parse_timestamp($default);
 
@@ -1127,6 +1153,8 @@ sub epoch
   my $epoch_method = $args->{'hires'} ? 'hires_epoch' : 'epoch';
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
+
+  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
 
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
@@ -1221,7 +1249,9 @@ sub epoch
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt = $db->parse_date($default);
 
@@ -1321,7 +1351,11 @@ sub epoch
         }
       }
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      return  unless(defined wantarray);
+
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt = $db->parse_date($default);
 
@@ -1429,7 +1463,9 @@ sub epoch
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt = $db->parse_date($default);
 

@@ -9,11 +9,11 @@ our @ISA = qw(Rose::Object::MakeMethods);
 
 use Rose::DB::Object::Constants
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
-     STATE_SAVING MODIFIED_COLUMNS);
+     STATE_SAVING MODIFIED_COLUMNS SET_COLUMNS);
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.752';
+our $VERSION = '0.766';
 
 sub interval
 {
@@ -23,6 +23,8 @@ sub interval
   my $interface = $args->{'interface'} || 'get_set';
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
+
+  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
 
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
@@ -79,7 +81,9 @@ sub interval
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt_duration = $db->parse_interval($default, $eomm);
         Carp::croak $db->error  unless(defined $dt_duration);
@@ -119,7 +123,9 @@ sub interval
       my $db = $self->db or die "Missing Rose::DB object attribute";
       my $driver = $db->driver || 'unknown';
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt_duration = $db->parse_interval($default, $eomm);
         Carp::croak $db->error  unless(defined $dt_duration);
@@ -194,7 +200,9 @@ sub interval
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt_duration = $db->parse_interval($default, $eomm);
         Carp::croak $db->error  unless(defined $dt_duration);
@@ -235,6 +243,8 @@ sub time
   my $interface = $args->{'interface'} || 'get_set';
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
+
+  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
 
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
@@ -290,7 +300,9 @@ sub time
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $time = $db->parse_time($default);
         Carp::croak $db->error  unless(defined $time);
@@ -330,7 +342,9 @@ sub time
       my $db = $self->db or die "Missing Rose::DB object attribute";
       my $driver = $db->driver || 'unknown';
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $time = $db->parse_time($default);
         Carp::croak $db->error  unless(defined $time);
@@ -405,7 +419,9 @@ sub time
 
       return  unless(defined wantarray);
 
-      if(defined $default && !$self->{$key} && !defined $self->{$formatted_key,$driver})
+      unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $time = $db->parse_time($default);
         Carp::croak $db->error  unless(defined $time);

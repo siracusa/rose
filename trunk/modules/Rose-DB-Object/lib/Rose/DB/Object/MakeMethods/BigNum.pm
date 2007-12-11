@@ -4,7 +4,7 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.765'; # move up to make CPAN happy
+our $VERSION = '0.766'; # move up in the file to make CPAN happy
 
 require Math::BigInt;
 
@@ -16,7 +16,8 @@ if($Math::BigInt::VERSION >= 1.78)
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
-use Rose::DB::Object::Constants qw(STATE_LOADING MODIFIED_COLUMNS);
+use Rose::DB::Object::Constants 
+  qw(STATE_LOADING MODIFIED_COLUMNS SET_COLUMNS STATE_IN_DB);
 
 our $Debug = 0;
 
@@ -33,6 +34,8 @@ sub bigint
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
+  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
+
   my $init_method;
 
   if(exists $args->{'with_init'} || exists $args->{'init_method'})
@@ -48,6 +51,15 @@ sub bigint
   $qkey =~ s/'/\\'/g;
   my $qname = $name;
   $qname =~ s/"/\\"/g;
+
+  my $col_name_escaped = $column_name;
+  $col_name_escaped =~ s/'/\\'/g;
+
+  my $dont_use_default_code = !$undef_sets_null ? qq(defined \$self->{'$qkey'}) :
+    qq(defined \$self->{'$qkey'} || ) .
+    qq((\$self->{STATE_IN_DB()} && !(\$self->{SET_COLUMNS()}{'$col_name_escaped'} || \$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'})) || ) .
+    qq(\$self->{SET_COLUMNS()}{'$col_name_escaped'} || ) .
+    qq(\$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'});
 
   #
   # check_in code
@@ -129,9 +141,6 @@ EOF
   # column modified code
   #
 
-  my $col_name_escaped = $column_name;
-  $col_name_escaped =~ s/'/\\'/g;
-
   my $column_modified_code = 
     qq(\$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'} = 1);
 
@@ -145,11 +154,12 @@ EOF
   {
     $default = defined $default ? Math::BigInt->new($default) : undef;
 
-    $return_code=<<"EOF";
-return (defined \$self->{'$qkey'}) ? \$self->{'$qkey'} : 
+      $return_code=<<"EOF";
+return ($dont_use_default_code) ? \$self->{'$qkey'} : 
   (scalar($column_modified_code, 
           \$self->{'$qkey'} = \$default));
 EOF
+
   }
   elsif(defined $init_method)
   {

@@ -2,12 +2,13 @@ package Rose::DB::Object::MakeMethods::Pg;
 
 use strict;
 
-our $VERSION = '0.73';
+our $VERSION = '0.766';
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
-use Rose::DB::Object::Constants qw(STATE_LOADING STATE_SAVING MODIFIED_COLUMNS);
+use Rose::DB::Object::Constants 
+  qw(STATE_LOADING STATE_SAVING MODIFIED_COLUMNS SET_COLUMNS STATE_IN_DB);
 
 use constant SALT_CHARS => './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
@@ -19,6 +20,8 @@ sub chkpass
   my $interface = $args->{'interface'} || 'get_set';
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
+
+  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
 
   my $encrypted = $name . ($args->{'encrypted_suffix'} || '_encrypted');
   my $cmp       = $name . ($args->{'cmp_suffix'} || '_is');
@@ -59,7 +62,12 @@ sub chkpass
 
       if($self->{STATE_SAVING()})
       {
-        if(!defined $self->{$encrypted} && defined $default)
+
+
+        unless(!defined $default || defined $self->{$encrypted} ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
+        #if(!defined $self->{$encrypted} && defined $default)
         {
           if(index($default, ':') == 0)
           {
@@ -101,7 +109,10 @@ sub chkpass
         }
       }
 
-      if(!defined $self->{$encrypted} && defined $default)
+      unless(!defined $default || defined $self->{$encrypted} ||
+           ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+            ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
+      #if(!defined $self->{$encrypted} && defined $default)
       {
         if(index($default, ':') == 0)
         {
@@ -131,7 +142,10 @@ sub chkpass
 
       my $crypted = $self->{$encrypted};
 
-      if(!defined $crypted && defined $default)
+      unless(!defined $default || defined $crypted ||
+             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
+      #if(!defined $crypted && defined $default)
       {
         if(index($default, ':') == 0)
         {
@@ -169,7 +183,11 @@ sub chkpass
 
       if($self->{STATE_SAVING()})
       {
-        if(!defined $self->{$encrypted} && defined $default)
+
+        unless(!defined $default || defined $self->{$encrypted} ||
+               ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+                ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
+        #if(!defined $self->{$encrypted} && defined $default)
         {
           if(index($default, ':') == 0)
           {
