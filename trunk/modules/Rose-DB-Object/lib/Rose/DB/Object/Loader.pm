@@ -1141,6 +1141,31 @@ Once the loader object is configured, the L<make_classes|/make_classes> method d
 
 L<Rose::DB::Object::Loader> inherits from, and follows the conventions of, L<Rose::Object>.  See the L<Rose::Object> documentation for more information.
 
+=head1 GOTCHAS
+
+Database schema information is extracted using L<DBI>'s schema interrogation methods, which dutifully report exactly how the database describes itself.  In some cases, what the database reports about a particular table may not exactly match what you specified in your table definition.
+
+The most egregious offender is (surprise!) MySQL, which, to give just one example, tends to offer up empty string default values for non-null character columns.  That is, if you write a table definition like this:
+
+    CREATE TABLE widgets
+    (
+      id   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(64) NOT NULL
+    );
+
+and then interrogate it using L<DBI>, you will find that the "name" column has a default value (as reflected in the C<COLUMN_DEF> column returned by L<DBI>'s L<column_info()|DBI/column_info> method) of '' (i.e., an empty string).  In other words, it's as if your table definition was this instead:
+
+    CREATE TABLE widgets
+    (
+      id   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(64) NOT NULL DEFAULT ''
+    );
+
+MySQL is full of such surprises, and it's not the only database to do such things.  Consult the documentation for your database (or do a Google search for "E<lt>mydbnameE<gt> gotchas") for the gory details.
+
+To work around these kinds of problems, try the L<pre_init_hook|/pre_init_hook> feature.  For example, in your  L<pre_init_hook|/pre_init_hook> subroutine you could walk over the list of L<columns|Rose::DB::Object::Metadata/columns> for each class, eliminating all the empty string default values (i.e., changing them to undef instead).
+
+
 =head1 CONSTRUCTOR
 
 =over 4
