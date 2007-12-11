@@ -1,4 +1,4 @@
-0.765_15 (11.28.2007) - John Siracusa <siracusa@gmail.com>
+0.765_15 (12.11.2007) - John Siracusa <siracusa@gmail.com>
 
     * Fiddled with not_found() detection.  (Changes suggested by Philip Dye)
     * Made one-to-one relationships (attempt to) work even when uniqueness is 
@@ -14,6 +14,7 @@
     * Added a test suite exclusion for DBD::SQLite 1.14, which still suffers 
       from this bug: http://rt.cpan.org/Public/Bug/Display.html?id=21472
     * Improved detection of fatal errors during class setup.
+    * Added a "gotchas" section to the Loader documentation.
     * Fixed propagation of db objects in update and delete Manager methods.
     * Fixed a bug that caused some caches SQL to persist incorrectly after
       inheritance.  (Patch by Daniel Koch)
