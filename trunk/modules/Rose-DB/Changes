@@ -3,8 +3,8 @@
     * Altered the behavior of connect() and disconnect() to account
       for the possibility that dbi_connect() may return a DBI $dbh
       that is already connected and has already been initialized.
-    * Added optional (on by default) coercion from (big)int auto-increment
-      columns to (big)serial columns for MySQL and SQLite.
+    * Added optional (on by default) coercion of column type metadata
+      from (big)int auto-increment to (big)serial for MySQL and SQLite.
     * Added support for the current_timestamp keyword to SQLite.
     * Added a dozen or so new MySQL connection attributes that must be
       inlined into the DSN rather than passed as connect() options.
