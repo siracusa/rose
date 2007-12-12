@@ -167,7 +167,7 @@ foreach my $db_type (qw(pg mysql informix sqlite))
         $value .= '        '; # MySQL < 5 seems to mess up CHAR fields
       }
 
-      is($value, $Default{$n}, "check default $def 1 - $db_type");
+      ok($value =~ /^\+?$Default{$n}$/, "check default $def 1 - $db_type");
     }
 
     if($n == 14 && $db_type eq 'pg')

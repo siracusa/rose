@@ -241,6 +241,8 @@ sub _info_from_sql
 
   my($new_sql, $pos);
 
+  my $class = ref($self) || $self;
+
   # Remove comments
   while($sql =~ /\G((.*?)$Comment)/sgix)
   {
@@ -312,7 +314,7 @@ sub _info_from_sql
       {
         push(@pk_columns, $col_name);
 
-        if($1 && ref($self)->coerce_autoincrement_to_serial)
+        if($1 && $class->coerce_autoincrement_to_serial)
         {
           $col_info{'TYPE_NAME'} = 'serial';
         }

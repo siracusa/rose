@@ -154,7 +154,7 @@ sub perl_relationship_definition_attributes
   ATTR: foreach my $attr ('type', sort keys %$self)
   {
     if($attr =~ /^(?: id | name | method_name | method_code | auto_method_types |
-                  deferred_make_method_args | parent )$/x)
+                      deferred_make_method_args | parent )$/x)
     {
       next ATTR;
     }

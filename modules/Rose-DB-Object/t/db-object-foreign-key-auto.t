@@ -1253,6 +1253,15 @@ SKIP: foreach my $db_type ('sqlite')
 
   Rose::DB->default_type($db_type);
 
+  my $i = 1;
+
+  foreach my $name (qw(id name flag flag2 status bits start save 
+                       fk1 fk2 fk3 fother_id2 fother_id3 fother_id4
+                       last_modified date_created nums))
+  {
+    MySQLiteObject->meta->column($name)->ordinal_position($i++);
+  }
+
   my $o = MySQLiteObject->new(name => 'John', id => 1);
 
   ok(ref $o && $o->isa('MySQLiteObject'), "new() 1 - $db_type");
@@ -2419,11 +2428,13 @@ EOF
       return ($_ eq 'fk1') ? 'fkone' : $_
     });
 
-    # No native support for array types in SQLite
-    MySQLiteObject->meta->column(nums => { type => 'array' });
-
     MySQLiteObject->meta->auto_initialize;
 
+    # No native support for array types in SQLite
+    MySQLiteObject->meta->delete_column('nums');
+    MySQLiteObject->meta->add_column(nums => { type => 'array' });
+    MySQLiteObject->meta->make_column_methods(replace_existing => 1);
+    
     Test::More::ok(MySQLiteObject->can('fother'),  'fother() check - sqlite');
     Test::More::ok(MySQLiteObject->can('fother2'), 'fother2() check - sqlite');
     Test::More::ok(MySQLiteObject->can('fother3'), 'fother3() check - sqlite');

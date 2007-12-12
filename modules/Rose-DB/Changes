@@ -1,5 +1,8 @@
 0.737 (12.12.2007) - John Siracusa <siracusa@gmail.com>
 
+    * Altered the behavior of connect() and disconnect() to account
+      for the possibility that dbi_connect() may return a DBI $dbh
+      that is already connected and has already been initialized.
     * Added optional (on by default) coercion from (big)int auto-increment
       columns to (big)serial columns for MySQL and SQLite.
 

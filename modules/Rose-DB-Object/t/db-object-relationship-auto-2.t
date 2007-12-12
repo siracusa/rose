@@ -138,12 +138,10 @@ foreach my $i (1 .. $Iterations)
        <<"EOF", "perl_relationships_definition $i.1 - $db_type");
 __PACKAGE__->meta->relationships(
     colors => {
-        column_map    => { product_id => 'id' },
-        foreign_class => '${class_prefix}Color',
-        map_class     => '${class_prefix}ProductColorMap',
-        map_from      => 'product',
-        map_to        => 'color',
-        type          => 'many to many',
+        map_class => '${class_prefix}ProductColorMap',
+        map_from  => 'product',
+        map_to    => 'color',
+        type      => 'many to many',
     },
 
     prices => {
@@ -160,12 +158,10 @@ __PACKAGE__->meta->relationships
 (
   colors => 
   {
-    column_map    => { product_id => 'id' },
-    foreign_class => '${class_prefix}Color',
-    map_class     => '${class_prefix}ProductColorMap',
-    map_from      => 'product',
-    map_to        => 'color',
-    type          => 'many to many',
+    map_class => '${class_prefix}ProductColorMap',
+    map_from  => 'product',
+    map_to    => 'color',
+    type      => 'many to many',
   },
 
   prices => 

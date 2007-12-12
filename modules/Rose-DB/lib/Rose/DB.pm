@@ -808,7 +808,7 @@ sub release_dbh
   #$Debug && warn "$self->{'_dbh_refcount'} -> ", ($self->{'_dbh_refcount'} - 1), " $dbh\n";
   $self->{'_dbh_refcount'}--;
 
-  unless($self->{'_dbh_refcount'})
+  unless($self->{'_dbh_refcount'} || $self->{'_dbh_has_foreign_owner'})
   {
     if(my $sqls = $self->pre_disconnect_sql)
     {
@@ -901,34 +901,43 @@ sub init_dbh
   }
 
   $self->{'_dbh_refcount'}++;
-  #$Debug && warn "CONNECT $dbh ", join(':', (caller(3))[0,2]), "\n";
-
-  foreach my $attr ($self->dbh_attributes)
+  
+  if($dbh->{'private_rose_db_inited'})
   {
-    my $val = $self->dbh_attribute($attr);
-    next  unless(defined $val);
-    $dbh->{$attr} = $val;
+    # Someone else owns this dbh
+    $self->{'_dbh_has_foreign_owner'}++;
   }
-
-  if((my $sqls = $self->post_connect_sql) && !$dbh->{DID_PCSQL_KEY()})
+  else # Only initialize if this is really a new connection
   {
-    eval
-    {
-      foreach my $sql (@$sqls)
-      {
-        #$Debug && warn "$dbh DO: $sql\n";
-        $dbh->do($sql) or die "$sql - " . $dbh->errstr;
-      }
-    };
+    $dbh->{'private_rose_db_inited'} = 1;
 
-    if($@)
+    foreach my $attr ($self->dbh_attributes)
     {
-      $self->error("Could not do post-connect SQL: $@");
-      $dbh->disconnect;
-      return undef;
+      my $val = $self->dbh_attribute($attr);
+      next  unless(defined $val);
+      $dbh->{$attr} = $val;
     }
-
-    $dbh->{DID_PCSQL_KEY()} = 1;
+  
+    if((my $sqls = $self->post_connect_sql) && !$dbh->{DID_PCSQL_KEY()})
+    {
+      eval
+      {
+        foreach my $sql (@$sqls)
+        {
+          #$Debug && warn "$dbh DO: $sql\n";
+          $dbh->do($sql) or die "$sql - " . $dbh->errstr;
+        }
+      };
+  
+      if($@)
+      {
+        $self->error("Could not do post-connect SQL: $@");
+        $dbh->disconnect;
+        return undef;
+      }
+  
+      $dbh->{DID_PCSQL_KEY()} = 1;
+    }
   }
 
   return $self->{'dbh'} = $dbh;
@@ -2865,6 +2874,8 @@ Constructs and connects the L<DBI> database handle for the current data source, 
 
 If any L<post_connect_sql|/post_connect_sql> statement failed to execute, the database handle is disconnected and then discarded.
 
+If the database handle returned by L<dbi_connect|/dbi_connect> was originally connected by another L<Rose::DB>-derived object (e.g., if a subclass's custom implementation of L<dbi_connect|/dbi_connect> calls L<DBI>'s L<connect_cached|DBI/connect_cached> method) then the L<post_connect_sql|/post_connect_sql> statements will not be run, nor will any custom L<DBI> attributes be applied (e.g., L<Rose::DB::MySQL>'s L<mysql_enable_utf8|Rose::DB::MySQL/mysql_enable_utf8> attribute).
+
 Returns true if the database handle was connected successfully and all L<post_connect_sql|/post_connect_sql> statements (if any) were run successfully, false otherwise.  
 
 =item B<connect_option NAME [, VALUE]>
@@ -2898,7 +2909,7 @@ Override this method in your L<Rose::DB> subclass if you want to use a different
 
 =item B<disconnect>
 
-Decrements the reference count for the database handle and disconnects it if the reference count is zero.  Regardless of the reference count, it sets the L<dbh|/dbh> attribute to undef.
+Decrements the reference count for the database handle and disconnects it if the reference count is zero and if the database handle was originally connected by this object.  (This may not be the case if, say, a subclass's custom implementation of L<dbi_connect|/dbi_connect> calls L<DBI>'s L<connect_cached|DBI/connect_cached> method.)  Regardless of the reference count, it sets the L<dbh|/dbh> attribute to undef.
 
 Returns true if all L<pre_disconnect_sql|/pre_disconnect_sql> statements (if any) were run successfully and the database handle was disconnected successfully (or if it was simply set to undef), false otherwise.
 

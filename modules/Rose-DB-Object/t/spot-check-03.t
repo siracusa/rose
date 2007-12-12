@@ -21,7 +21,7 @@ my $sql =<<"EOF";
  )
 EOF
 
-my @r = Rose::DB::SQLite::_info_from_sql($sql);
+my @r = Rose::DB::SQLite->_info_from_sql($sql);
 #print Dumper(\@r);
 
 is_deeply(\@r, 
@@ -64,7 +64,7 @@ $sql =<<"EOF";
  )
 EOF
 
-@r = Rose::DB::SQLite::_info_from_sql($sql);
+@r = Rose::DB::SQLite->_info_from_sql($sql);
 #print Dumper(\@r);
 
 is_deeply(\@r, 
@@ -127,7 +127,7 @@ blah
 
 EOF
 
-@r = Rose::DB::SQLite::_info_from_sql($sql);
+@r = Rose::DB::SQLite->_info_from_sql($sql);
 #print Dumper(\@r);
 
 is_deeply(\@r, 
@@ -159,7 +159,7 @@ is_deeply(\@r,
       'NULLABLE' => 0,
       'COLUMN_DEF' => '123',
       'ORDINAL_POSITION' => 4,
-      'TYPE_NAME' => 'int',
+      'TYPE_NAME' => 'serial',
       'COLUMN_NAME' => 'id'
     },
     {
