@@ -9,16 +9,21 @@ use SQL::ReservedWords::MySQL();
 
 use Rose::DB;
 
-our $VERSION = '0.735';
+our $VERSION = '0.737';
 
 our $Debug = 0;
 
 use Rose::Class::MakeMethods::Generic
 (
-  inheritable_scalar => 'supports_schema',
+  inheritable_scalar => 
+  [
+    'supports_schema',
+    'coerce_autoincrement_to_serial',
+  ]
 );
 
 __PACKAGE__->supports_schema(1);
+__PACKAGE__->coerce_autoincrement_to_serial(1);
 
 #
 # Object methods
@@ -349,6 +354,19 @@ sub refine_dbi_column_info
     $col_info->{'RDBO_ENUM_VALUES'} = $col_info->{'mysql_values'};
   }
 
+  # Consider (big)int autoincrement to be (big)serial
+  if($col_info->{'mysql_is_auto_increment'} &&
+     ref($self)->coerce_autoincrement_to_serial)
+  {
+    if($col_info->{'TYPE_NAME'} eq 'int')
+    {
+      $col_info->{'TYPE_NAME'} = 'serial';
+    }
+    elsif($col_info->{'TYPE_NAME'} eq 'bigint')
+    {
+      $col_info->{'TYPE_NAME'} = 'bigserial';
+    }
+  }
 
   return;
 }
@@ -453,6 +471,12 @@ Only the methods that are new or have different behaviors than those in L<Rose::
 =head1 CLASS METHODS
 
 =over 4
+
+=item B<coerce_autoincrement_to_serial [BOOL]>
+
+Get or set a boolean value that indicates whether or not "auto-increment" columns will be considered to have the column type  "serial."  If true, "integer" columns are coerced to the "serial" column type, and "bigint" columns use the "bigserial" column type.  The default value is true.
+
+This setting comes into play when L<Rose::DB::Object::Loader> is used to auto-create column metadata based on an existing database schema.
 
 =item B<max_array_characters [INT]>
 

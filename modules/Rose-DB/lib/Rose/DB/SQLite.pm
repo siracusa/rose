@@ -7,9 +7,16 @@ use Carp();
 use Rose::DB;
 use SQL::ReservedWords::SQLite();
 
-our $VERSION = '0.70';
+our $VERSION = '0.737';
 
 #our $Debug = 0;
+
+use Rose::Class::MakeMethods::Generic
+(
+  inheritable_scalar => 'coerce_autoincrement_to_serial',
+);
+
+__PACKAGE__->coerce_autoincrement_to_serial(1);
 
 #
 # Object methods
@@ -167,7 +174,7 @@ sub _table_info
   $sth->fetch;
   $sth->finish;
 
-  return _info_from_sql($sql);
+  return $self->_info_from_sql($sql);
 }
 
 ## Yay!  A Giant Wad o' Regexes "parser"!  Yeah, this is lame, but I really
@@ -228,7 +235,7 @@ use constant SQL_NULLABLE => 1;
 
 sub _info_from_sql
 {
-  my $sql = shift;
+  my($self, $sql) = @_;
 
   my(@col_info, @pk_columns, @uk_info);
 
@@ -301,9 +308,14 @@ sub _info_from_sql
       {
         $col_info{'COLUMN_DEF'} = _unquote_name($1);
       }
-      elsif(/^PRIMARY (?: \s+ KEY )? \b/six)
+      elsif(/^PRIMARY (?: \s+ KEY )? \b (?: .*? (AUTOINCREMENT) )?/six)
       {
-        push(@pk_columns, $col_name)
+        push(@pk_columns, $col_name);
+
+        if($1 && ref($self)->coerce_autoincrement_to_serial)
+        {
+          $col_info{'TYPE_NAME'} = 'serial';
+        }
       }
       elsif(/^\s* UNIQUE (?: \s+ KEY)? \b/six)
       {
@@ -425,6 +437,12 @@ SQLite doesn't care what value you pass for a given column, regardless of that c
 =head1 CLASS METHODS
 
 =over 4
+
+=item B<coerce_autoincrement_to_serial [BOOL]>
+
+Get or set a boolean value that indicates whether or not "auto-increment" columns will be considered to have the column type  "serial."  The default value is true.
+
+This setting comes into play when L<Rose::DB::Object::Loader> is used to auto-create column metadata based on an existing database schema.
 
 =item B<max_array_characters [INT]>
 
