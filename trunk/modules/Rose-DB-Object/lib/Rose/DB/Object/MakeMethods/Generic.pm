@@ -46,7 +46,7 @@ sub scalar
     $init_method = $args->{'init_method'} || "init_$name";
   }
 
-  my $undef_sets_null = $args->{'undef_sets_null'};
+  my $undef_overrides_default = $args->{'undef_overrides_default'};
 
   ##
   ## Build code snippets
@@ -60,7 +60,7 @@ sub scalar
   my $col_name_escaped = $column_name;
   $col_name_escaped =~ s/'/\\'/g;
 
-  my $dont_use_default_code = !$undef_sets_null ? qq(defined \$self->{'$qkey'}) :
+  my $dont_use_default_code = !$undef_overrides_default ? qq(defined \$self->{'$qkey'}) :
     qq(defined \$self->{'$qkey'} || ) .
     qq((\$self->{STATE_IN_DB()} && !(\$self->{SET_COLUMNS()}{'$col_name_escaped'} || \$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'})) || ) .
     qq(\$self->{SET_COLUMNS()}{'$col_name_escaped'} || ) .
@@ -405,7 +405,7 @@ sub enum
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
-  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
+  my $undef_overrides_default = $args->{'undef_overrides_default'} || 0;
 
   my $values = $args->{'values'} || $args->{'check_in'};
 
@@ -443,7 +443,7 @@ sub enum
           return $self->{$key} = $_[0];
         }
 
-        if(defined $self->{$key} || ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+        if(defined $self->{$key} || ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
            ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
         {
           return $self->{$key};
@@ -470,7 +470,7 @@ sub enum
           return $self->{$key} = $_[0];
         }
 
-        if(defined $self->{$key} || ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+        if(defined $self->{$key} || ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
            ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
         {
           return $self->{$key};
@@ -519,7 +519,7 @@ sub enum
       {
         my($self) = shift;
 
-        if(defined $self->{$key} || ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+        if(defined $self->{$key} || ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
            ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
         {
           return $self->{$key};
@@ -585,7 +585,7 @@ sub boolean
 
   my $formatted_key = column_value_formatted_key($key);
 
-  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
+  my $undef_overrides_default = $args->{'undef_overrides_default'} || 0;
 
   my %methods;
 
@@ -645,7 +645,7 @@ sub boolean
 
         # Pull default through if necessary
         unless(defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
-               ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+               ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
                 ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
         {
           $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
@@ -665,7 +665,7 @@ sub boolean
           return $self->{$key} = $db->parse_boolean($self->{$formatted_key,$driver});
         }
 
-        if(defined $self->{$key} || ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+        if(defined $self->{$key} || ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
            ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
         {
           return $self->{$key};
@@ -761,7 +761,7 @@ sub boolean
 
         # Pull default through if necessary
         unless(defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
-               ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+               ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
                 ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
         {
           $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
@@ -781,7 +781,7 @@ sub boolean
           return $self->{$key} = $db->parse_boolean($self->{$formatted_key,$driver});
         }
 
-        if(defined $self->{$key} || ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+        if(defined $self->{$key} || ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
            ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
         {
           return $self->{$key};
@@ -879,7 +879,7 @@ sub bitfield
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
-  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
+  my $undef_overrides_default = $args->{'undef_overrides_default'} || 0;
 
   my %methods;
 
@@ -926,7 +926,7 @@ sub bitfield
 
         # Pull default through if necessary
         unless(defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
-               ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+               ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
                 ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
         {
           $self->{$key} = $db->parse_bitfield($default, $size);
@@ -1068,7 +1068,7 @@ sub bitfield
         my $driver = $db->driver || 'unknown';
 
         unless(defined $self->{$key} || defined $self->{$formatted_key,$driver} || 
-               ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+               ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
                 ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
         {
           $self->{$key} = $db->parse_bitfield($default, $size);
@@ -1224,7 +1224,7 @@ sub array
 
   my $formatted_key = column_value_formatted_key($key);
 
-  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
+  my $undef_overrides_default = $args->{'undef_overrides_default'} || 0;
 
   my %methods;
 
@@ -1266,7 +1266,7 @@ sub array
         elsif(!defined $self->{$key})
         {
           unless(!defined $self->{$formatted_key,$driver} && 
-                 $undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+                 $undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
                  ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name}))))
           {
             $self->{$key} = $db->parse_array(defined $self->{$formatted_key,$driver} ? 
@@ -1288,7 +1288,7 @@ sub array
 
         # Pull default through if necessary
         unless(defined $self->{$key} || defined $self->{$formatted_key,$driver} || 
-               ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+               ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
                 ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
         {
           $self->{$key} = $db->parse_array($default);
@@ -1392,7 +1392,7 @@ sub array
 
         if(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key,$driver}))
         {
-          unless(!defined $default || ($undef_sets_null && 
+          unless(!defined $default || ($undef_overrides_default && 
                  ($self->{MODIFIED_COLUMNS()}{$column_name} || ($self->{STATE_IN_DB()} && 
                  !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
           {
@@ -1554,7 +1554,7 @@ sub set
 
   my $value_type = $args->{'value_type'} || 'scalar';
 
-  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
+  my $undef_overrides_default = $args->{'undef_overrides_default'} || 0;
 
   my %methods;
 
@@ -1607,7 +1607,7 @@ sub set
         elsif(!defined $self->{$key})
         {
           unless(!defined $self->{$formatted_key,$driver} && 
-                 $undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+                 $undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
                  ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name}))))
           {
             my $set = $db->parse_set((defined $self->{$formatted_key,$driver} ? 
@@ -1641,7 +1641,7 @@ sub set
 
         # Pull default through if necessary
         unless(defined $self->{$key} || defined $self->{$formatted_key,$driver} || 
-               ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+               ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
                 ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
         {
           $self->{$key} = $db->parse_set($default, { value_type => $value_type });
@@ -1756,7 +1756,7 @@ sub set
 
         if(!defined $self->{$key} && (!$self->{STATE_SAVING()} || !defined $self->{$formatted_key,$driver}))
         {
-          unless(!defined $default || ($undef_sets_null && 
+          unless(!defined $default || ($undef_overrides_default && 
                  ($self->{MODIFIED_COLUMNS()}{$column_name} || ($self->{STATE_IN_DB()} && 
                  !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
           {

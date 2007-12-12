@@ -24,7 +24,7 @@ sub interval
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
-  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
+  my $undef_overrides_default = $args->{'undef_overrides_default'} || 0;
 
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
@@ -82,7 +82,7 @@ sub interval
       return  unless(defined wantarray);
 
       unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
-             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+             ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
               ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt_duration = $db->parse_interval($default, $eomm);
@@ -124,7 +124,7 @@ sub interval
       my $driver = $db->driver || 'unknown';
 
       unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
-             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+             ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
               ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt_duration = $db->parse_interval($default, $eomm);
@@ -201,7 +201,7 @@ sub interval
       return  unless(defined wantarray);
 
       unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
-             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+             ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
               ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $dt_duration = $db->parse_interval($default, $eomm);
@@ -244,7 +244,7 @@ sub time
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
-  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
+  my $undef_overrides_default = $args->{'undef_overrides_default'} || 0;
 
   my $formatted_key = column_value_formatted_key($key);
   my $default = $args->{'default'};
@@ -301,7 +301,7 @@ sub time
       return  unless(defined wantarray);
 
       unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
-             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+             ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
               ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $time = $db->parse_time($default);
@@ -343,7 +343,7 @@ sub time
       my $driver = $db->driver || 'unknown';
 
       unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
-             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+             ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
               ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $time = $db->parse_time($default);
@@ -420,7 +420,7 @@ sub time
       return  unless(defined wantarray);
 
       unless(!defined $default || defined $self->{$key} || defined $self->{$formatted_key,$driver} ||
-             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+             ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
               ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       {
         my $time = $db->parse_time($default);
