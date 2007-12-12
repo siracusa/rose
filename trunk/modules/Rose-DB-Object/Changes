@@ -1,4 +1,4 @@
-0.765_18 (12.12.2007) - John Siracusa <siracusa@gmail.com>
+0.766 (12.12.2007) - John Siracusa <siracusa@gmail.com>
 
     * Fiddled with not_found() detection.  (Changes suggested by Philip Dye)
     * Made one-to-one relationships (attempt to) work even when uniqueness is 
