@@ -1,8 +1,5 @@
 0.766 (12.12.2007) - John Siracusa <siracusa@gmail.com>
 
-    * Fiddled with not_found() detection.  (Changes suggested by Philip Dye)
-    * Made one-to-one relationships (attempt to) work even when uniqueness is 
-      not apparent in the metadata.
     * Added the unique_key_by_name() metadata method.
     * Added the ability to do unrestricted joins in some circumstances.
     * Added the remember_all() class method to Rose::DB::Object::Cached.
@@ -17,6 +14,9 @@
     * Fixed propagation of db objects in update and delete Manager methods.
     * Fixed a bug that caused some caches SQL to persist incorrectly after
       inheritance.  (Patch by Daniel Koch)
+    * Fiddled with not_found() detection.  (Changes suggested by Philip Dye)
+    * Made one-to-one relationships (attempt to) work even when uniqueness is 
+      not apparent in the metadata.
     * The Loader no longer chokes on SQLite columns that use the 
       current_timestamp keyword.  (Reported by George Hartzell)
     * Setting undef integer attributes to zero is now correctly detected 
