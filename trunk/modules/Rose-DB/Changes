@@ -1,3 +1,8 @@
+0.737 (12.12.2007) - John Siracusa <siracusa@gmail.com>
+
+    * Added optional (on by default) coercion from (big)int auto-increment
+      columns to (big)serial columns for MySQL and SQLite.
+
 0.736 (11.13.2007) - John Siracusa <siracusa@gmail.com>
 
     * Added new_or_cached() method and associated caching framework.

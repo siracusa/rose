@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 25) + 9;
+use Test::More tests => 1 + (5 * 27) + 9;
 
 BEGIN 
 {
@@ -42,7 +42,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     unless($Have{$db_type})
     {
-      skip("$db_type tests", 25 + scalar @{$Reserved_Words{$db_type} ||= []});
+      skip("$db_type tests", 27 + scalar @{$Reserved_Words{$db_type} ||= []});
     }
   }
 
@@ -112,11 +112,30 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   }
 
   my $product_class     = $class_prefix . '::Product';
+  my $price_class       = $class_prefix . '::Price';
   my $map_manager_class = $class_prefix . '::ProductsColor::Manager';
   
   ##
   ## Run tests
   ##
+
+  if($db_type =~ /^(?:mysql|pg|sqlite)$/)
+  {
+    is($product_class->meta->column('id')->type, 'serial', "serial column - $db_type");
+  }
+  else
+  {
+    SKIP: { skip("serial coercion test for $db_type", 1) }
+  }
+
+  if($db_type eq 'mysql')
+  {
+    is($price_class->meta->column('id')->type, 'bigserial', "bigserial column - $db_type");
+  }
+  else
+  {
+    SKIP: { skip("bigserial test for $db_type", 1) }
+  }
 
   if($db_type eq 'informix')
   {
@@ -559,7 +578,7 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE prices
 (
-  id          INT AUTO_INCREMENT PRIMARY KEY,
+  id          BIGINT AUTO_INCREMENT PRIMARY KEY,
   product_id  INT NOT NULL,
   region      CHAR(2) NOT NULL DEFAULT 'US',
   price       DECIMAL(10,2) NOT NULL DEFAULT 0.00,
