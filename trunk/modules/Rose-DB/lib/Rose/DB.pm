@@ -844,11 +844,11 @@ sub dbh_attribute
   {
     if(my $dbh = $self->{'dbh'})
     {
-      return $self->{'dbh'}{$name} = $self->{"__dbh_attr_$name"} = shift;
+      return $self->{'dbh'}{$name} = $self->{'__dbh_attributes'}{$name} = shift;
     }
     else
     {
-      return $self->{"__dbh_attr_$name"} = shift;
+      return $self->{'__dbh_attributes'}{$name} = shift;
     }
   }
 
@@ -858,7 +858,7 @@ sub dbh_attribute
   }
   else
   {
-    return $self->{"__dbh_attr_$name"};
+    return $self->{'__dbh_attributes'}{$name};
   }
 }
 
@@ -869,8 +869,6 @@ sub dbh_attribute_boolean
 }
 
 sub has_dbh { defined shift->{'dbh'} }
-
-sub dbh_attributes { () }
 
 sub dbi_connect
 {
@@ -911,13 +909,16 @@ sub init_dbh
   {
     $dbh->{'private_rose_db_inited'} = 1;
 
-    foreach my $attr ($self->dbh_attributes)
+    if($self->{'__dbh_attributes'})
     {
-      my $val = $self->dbh_attribute($attr);
-      next  unless(defined $val);
-      $dbh->{$attr} = $val;
-    }
-  
+      foreach my $attr (keys %{$self->{'__dbh_attributes'}})
+      {
+        my $val = $self->dbh_attribute($attr);
+        next  unless(defined $val);
+        $dbh->{$attr} = $val;
+      }
+    }  
+
     if((my $sqls = $self->post_connect_sql) && !$dbh->{DID_PCSQL_KEY()})
     {
       eval
