@@ -394,7 +394,7 @@ EOF
 
   $chkpass = $PG_HAS_CHKPASS ? "  password      => { type => 'chkpass' },\n" : '';
 
-  MyPgObject->meta->auto_load_related_classes(0);
+  MyPgObject->meta->auto_load_related_classes(1);
 
   is(MyPgObject->meta->perl_class_definition(braces => 'bsd', indent => 2, use_setup => 0),
      <<"EOF", "perl_class_definition (trad) 2 - $db_type");
@@ -403,11 +403,6 @@ package MyPgObject;
 use strict;
 
 use base qw(Rose::DB::Object);
-
-use MyPgOtherObject;
-use MyPgOtherObject2;
-use MyPgOtherObject3;
-use MyPgOtherObject4;
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
@@ -472,6 +467,8 @@ __PACKAGE__->meta->initialize;
 EOF
 
   $chkpass = $PG_HAS_CHKPASS ? "        password      => { type => 'chkpass' },\n" : '';
+
+  MyPgObject->meta->auto_load_related_classes(0);
 
   is(MyPgObject->meta->perl_class_definition,
      <<"EOF", "perl_class_definition 2 - $db_type");
@@ -768,7 +765,7 @@ __PACKAGE__->meta->columns(
     fother_id2    => { type => 'integer' },
     fother_id3    => { type => 'integer' },
     fother_id4    => { type => 'integer' },
-    id            => { type => 'integer', not_null => 1 },
+    id            => { type => 'serial', not_null => 1 },
     $set_col
     last_modified => { type => 'datetime' },
     name          => { type => 'varchar', default => '', length => 32, not_null => 1 },
@@ -810,7 +807,7 @@ __PACKAGE__->meta->initialize;
 1;
 EOF
 
-  MyMySQLObject->meta->auto_load_related_classes(0);
+  MyMySQLObject->meta->auto_load_related_classes(1);
 
   is(MyMySQLObject->meta->perl_class_definition(braces => 'bsd', indent => 2, use_setup => 0),
      <<"EOF", "perl_class_definition (trad) 2 - $db_type");
@@ -819,11 +816,6 @@ package MyMySQLObject;
 use strict;
 
 use base qw(Rose::DB::Object);
-
-use MyMySQLOtherObject;
-use MyMySQLOtherObject2;
-use MyMySQLOtherObject3;
-use MyMySQLOtherObject4;
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
@@ -839,7 +831,7 @@ __PACKAGE__->meta->columns
   fother_id2    => { type => 'integer' },
   fother_id3    => { type => 'integer' },
   fother_id4    => { type => 'integer' },
-  id            => { type => 'integer', not_null => 1 },
+  id            => { type => 'serial', not_null => 1 },
   $set_col
   last_modified => { type => 'datetime' },
   name          => { type => 'varchar', default => '', length => 32, not_null => 1 },
@@ -1165,7 +1157,7 @@ __PACKAGE__->meta->initialize;
 1;
 EOF
 
-  MyInformixObject->meta->auto_load_related_classes(0);
+  MyInformixObject->meta->auto_load_related_classes(1);
 
   is(MyInformixObject->meta->perl_class_definition(braces => 'bsd', indent => 2, use_setup => 0),
      <<'EOF', "perl_class_definition (trad) 2 - $db_type");
@@ -1174,11 +1166,6 @@ package MyInformixObject;
 use strict;
 
 use base qw(Rose::DB::Object);
-
-use MyInformixOtherObject;
-use MyInformixOtherObject2;
-use MyInformixOtherObject3;
-use MyInformixOtherObject4;
 
 __PACKAGE__->meta->table('Rose_db_object_test');
 
@@ -1669,6 +1656,8 @@ __PACKAGE__->meta->initialize;
 1;
 EOF
 
+  MySQLiteObject->meta->auto_load_related_classes(1);
+
   is(MySQLiteObject->meta->perl_class_definition,
      <<'EOF', "perl_class_definition 2 - $db_type");
 package MySQLiteObject;
@@ -1676,11 +1665,6 @@ package MySQLiteObject;
 use strict;
 
 use base qw(Rose::DB::Object);
-
-use MySQLiteOtherObject;
-use MySQLiteOtherObject2;
-use MySQLiteOtherObject3;
-use MySQLiteOtherObject4;
 
 __PACKAGE__->meta->setup(
     table   => 'Rose_db_object_test',

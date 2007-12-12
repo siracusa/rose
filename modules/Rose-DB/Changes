@@ -6,6 +6,8 @@
     * Added optional (on by default) coercion from (big)int auto-increment
       columns to (big)serial columns for MySQL and SQLite.
     * Added support for the current_timestamp keyword to SQLite.
+    * Added a dozen or so new MySQL connection attributes that must be
+      inlined into the DSN rather than passed as connect() options.
 
 0.736 (11.13.2007) - John Siracusa <siracusa@gmail.com>
 

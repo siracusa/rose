@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 65);
+    Test::More->import(tests => 113);
   }
 }
 
@@ -189,13 +189,13 @@ SKIP:
 
   $db->disconnect;
 
-  foreach my $attr (qw(mysql_auto_reconnect mysql_enable_utf8 mysql_use_result))
+  foreach my $attr (qw(mysql_auto_reconnect mysql_client_found_rows mysql_compression mysql_connect_timeout mysql_embedded_groups mysql_embedded_options mysql_enable_utf8 mysql_local_infile mysql_multi_statements mysql_read_default_file mysql_read_default_group mysql_socket mysql_ssl mysql_ssl_ca_file mysql_ssl_ca_path mysql_ssl_cipher mysql_ssl_client_cert mysql_ssl_client_key mysql_use_result))
   {
-    $db = Rose::DB->new($attr => (1, 2)[int(rand(2))]);
+    $db = Rose::DB->new($attr => 1);
     is($db->$attr(), 1, "$attr 1");
     $db->connect;
 
-    if($attr eq 'mysql_auto_reconnect') # can't read back the other two
+    if($attr eq 'mysql_auto_reconnect') # can't read back the others?
     {
       is($db->$attr(), 1, "$attr 2");
       is($db->dbh->{$attr}, 1, "$attr 3");
