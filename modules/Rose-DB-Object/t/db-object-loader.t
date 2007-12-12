@@ -792,7 +792,7 @@ CREATE TABLE products
   status  VARCHAR(128) DEFAULT 'inactive' NOT NULL
             CHECK(status IN ('inactive', 'active', 'defunct')),
 
-  date_created  DATETIME,
+  date_created  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   release_date  DATETIME,
 
   UNIQUE(name)
