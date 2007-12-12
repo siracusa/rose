@@ -6,7 +6,7 @@
     * Added the unique_key_by_name() metadata method.
     * Added the ability to do unrestricted joins in some circumstances.
     * Added the remember_all() class method to Rose::DB::Object::Cached.
-    * Added undef_sets_null column attribute.
+    * Added undef_overrides_default column attribute.
     * The key_column() method in the ForeignKey class now works correctly.
       (Patch by Christopher Masto)
     * Further synced datetime and timestamp method maker code.

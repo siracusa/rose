@@ -34,7 +34,7 @@ sub bigint
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
-  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
+  my $undef_overrides_default = $args->{'undef_overrides_default'} || 0;
 
   my $init_method;
 
@@ -55,7 +55,7 @@ sub bigint
   my $col_name_escaped = $column_name;
   $col_name_escaped =~ s/'/\\'/g;
 
-  my $dont_use_default_code = !$undef_sets_null ? qq(defined \$self->{'$qkey'}) :
+  my $dont_use_default_code = !$undef_overrides_default ? qq(defined \$self->{'$qkey'}) :
     qq(defined \$self->{'$qkey'} || ) .
     qq((\$self->{STATE_IN_DB()} && !(\$self->{SET_COLUMNS()}{'$col_name_escaped'} || \$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'})) || ) .
     qq(\$self->{SET_COLUMNS()}{'$col_name_escaped'} || ) .

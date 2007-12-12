@@ -21,7 +21,7 @@ sub chkpass
 
   my $column_name = $args->{'column'} ? $args->{'column'}->name : $name;
 
-  my $undef_sets_null = $args->{'undef_sets_null'} || 0;
+  my $undef_overrides_default = $args->{'undef_overrides_default'} || 0;
 
   my $encrypted = $name . ($args->{'encrypted_suffix'} || '_encrypted');
   my $cmp       = $name . ($args->{'cmp_suffix'} || '_is');
@@ -65,7 +65,7 @@ sub chkpass
 
 
         unless(!defined $default || defined $self->{$encrypted} ||
-             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+             ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
               ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
         #if(!defined $self->{$encrypted} && defined $default)
         {
@@ -110,7 +110,7 @@ sub chkpass
       }
 
       unless(!defined $default || defined $self->{$encrypted} ||
-           ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+           ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
             ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       #if(!defined $self->{$encrypted} && defined $default)
       {
@@ -143,7 +143,7 @@ sub chkpass
       my $crypted = $self->{$encrypted};
 
       unless(!defined $default || defined $crypted ||
-             ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+             ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
               ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
       #if(!defined $crypted && defined $default)
       {
@@ -185,7 +185,7 @@ sub chkpass
       {
 
         unless(!defined $default || defined $self->{$encrypted} ||
-               ($undef_sets_null && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
+               ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
                 ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
         #if(!defined $self->{$encrypted} && defined $default)
         {

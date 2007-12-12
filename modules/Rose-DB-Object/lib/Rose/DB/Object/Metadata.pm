@@ -83,7 +83,7 @@ use Rose::Class::MakeMethods::Generic
   inheritable_scalar => 
   [
     'dbi_prepare_cached',
-    'default_column_undef_sets_null',
+    'default_column_undef_overrides_default',
   ],
 
   inheritable_hash =>
@@ -4126,19 +4126,19 @@ sub map_record_method_key
   return $self->{'map_record_method_key'}{$method};
 }
 
-sub column_undef_sets_null
+sub column_undef_overrides_default
 {
   my($self) = shift;
   
   if(@_)
   {
-    return $self->{'column_undef_sets_null'} = $_[0] ? 1 : 0;
+    return $self->{'column_undef_overrides_default'} = $_[0] ? 1 : 0;
   }
 
-  return $self->{'column_undef_sets_null'}
-    if(defined $self->{'column_undef_sets_null'});
+  return $self->{'column_undef_overrides_default'}
+    if(defined $self->{'column_undef_overrides_default'});
 
-  return $self->{'column_undef_sets_null'} = ref($self)->default_column_undef_sets_null;
+  return $self->{'column_undef_overrides_default'} = ref($self)->default_column_undef_overrides_default;
 }
 
 1;
@@ -4531,9 +4531,9 @@ The default mapping of names to classes is:
 
 Get or set a boolean value that indicates whether or not the L<Rose::DB::Object>-derived L<class|/class> will use L<DBI>'s L<prepare_cached|DBI/prepare_cached> method by default (instead of the L<prepare|DBI/prepare> method) when L<loading|Rose::DB::Object/load>, L<saving|Rose::DB::Object/save>, and L<deleting|Rose::DB::Object/delete> objects.  The default value is true.
 
-=item B<default_column_undef_sets_null [BOOL]>
+=item B<default_column_undef_overrides_default [BOOL]>
 
-Get or set the default value of the L<column_undef_sets_null|/column_undef_sets_null> attribute.  Defaults to undef.
+Get or set the default value of the L<column_undef_overrides_default|/column_undef_overrides_default> attribute.  Defaults to undef.
 
 =item B<for_class CLASS>
 
@@ -4962,11 +4962,11 @@ Returns the name of the "get_set" method for the column named NAME.  This is jus
 
 Returns a list (in list context) or a reference to the array (in scalar context) of the names of the "get_set" methods for all the columns, in the order that the columns are returned by L<column_names|/column_names>.
 
-=item B<column_undef_sets_null [BOOL]>
+=item B<column_undef_overrides_default [BOOL]>
 
-Get or set a boolean value that influences the default value of the L<undef_sets_null|Rose::DB::Object::Metadata::Column/undef_sets_null> attribute for each L<column|/columns> in this L<class|/class>.  See the documentation for L<Rose::DB::Object::Metadata::Column>'s L<undef_sets_null|Rose::DB::Object::Metadata::Column/undef_sets_null> attribute for more information.
+Get or set a boolean value that influences the default value of the L<undef_overrides_default|Rose::DB::Object::Metadata::Column/undef_overrides_default> attribute for each L<column|/columns> in this L<class|/class>.  See the documentation for L<Rose::DB::Object::Metadata::Column>'s L<undef_overrides_default|Rose::DB::Object::Metadata::Column/undef_overrides_default> attribute for more information.
 
-Defaults to the value returned by the L<default_column_undef_sets_null|/default_column_undef_sets_null> class method.
+Defaults to the value returned by the L<default_column_undef_overrides_default|/default_column_undef_overrides_default> class method.
 
 =item B<convention_manager [ OBJECT | CLASS | NAME ]>
 
