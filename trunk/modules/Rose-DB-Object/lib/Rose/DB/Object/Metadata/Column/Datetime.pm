@@ -30,8 +30,9 @@ sub type { 'datetime' }
 sub should_inline_value
 {
   #my($self, $db, $value) = @_;
+  my $driver = $_[1]->driver;
   return ($_[1]->validate_datetime_keyword($_[2]) && 
-          ($_[1]->driver eq 'informix' || $_[2] =~ /^\w+\(.*\)$/)) ? 1 : 0;
+          (($driver eq 'informix' || $driver eq 'sqlite') || $_[2] =~ /^\w+\(.*\)$/)) ? 1 : 0;
 }
 
 sub parse_value

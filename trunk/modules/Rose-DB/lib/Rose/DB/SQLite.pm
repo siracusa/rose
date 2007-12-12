@@ -59,19 +59,85 @@ sub supports_multi_column_count_distinct { 0 }
 sub validate_date_keyword
 {
   no warnings;
-  !ref $_[1] && $_[1] =~ /^\w+\(.*\)$/;
+  !ref $_[1] && $_[1] =~ /^(?:current_timestamp|\w+\(.*\))$/i;
 }
 
 sub validate_datetime_keyword
 {
   no warnings;
-  !ref $_[1] && $_[1] =~ /^\w+\(.*\)$/;
+  !ref $_[1] && $_[1] =~ /^(?:current_timestamp|\w+\(.*\))$/i;
 }
 
 sub validate_timestamp_keyword
 {
   no warnings;
-  !ref $_[1] && $_[1] =~ /^\w+\(.*\)$/;
+  !ref $_[1] && $_[1] =~ /^(?:current_timestamp|\w+\(.*\))$/i;
+}
+
+sub parse_date
+{
+  my($self, $value) = @_;
+
+  if(UNIVERSAL::isa($value, 'DateTime') || 
+    $self->validate_date_keyword($value))
+  {
+    return $value;
+  }
+
+  my $dt;
+  eval { $dt = Rose::DateTime::Util::parse_date($value) };
+
+  if($@)
+  {
+    $self->error("Could not parse date '$value' - $@");
+    return undef;
+  }
+
+  return $dt;
+}
+
+sub parse_datetime
+{
+  my($self, $value) = @_;
+
+  if(UNIVERSAL::isa($value, 'DateTime') || 
+    $self->validate_datetime_keyword($value))
+  {
+    return $value;
+  }
+
+  my $dt;
+  eval { $dt = Rose::DateTime::Util::parse_date($value) };
+
+  if($@)
+  {
+    $self->error("Could not parse datetime '$value' - $@");
+    return undef;
+  }
+
+  return $dt;
+}
+
+sub parse_timestamp
+{
+  my($self, $value) = @_;
+
+  if(UNIVERSAL::isa($value, 'DateTime') || 
+    $self->validate_timestamp_keyword($value))
+  {
+    return $value;
+  }
+
+  my $dt;
+  eval { $dt = Rose::DateTime::Util::parse_date($value) };
+
+  if($@)
+  {
+    $self->error("Could not parse timestamp '$value' - $@");
+    return undef;
+  }
+
+  return $dt;
 }
 
 sub format_bitfield 
@@ -90,6 +156,19 @@ sub refine_dbi_column_info
   if($col_info->{'TYPE_NAME'} eq 'bit')
   {
     $col_info->{'TYPE_NAME'} = 'bits';
+  }
+
+  elsif($col_info->{'TYPE_NAME'} eq 'datetime' && defined $col_info->{'COLUMN_DEF'})
+  {
+    if(lc $col_info->{'COLUMN_DEF'} eq 'current_timestamp')
+    {
+      # Translate "current time" value into something that our date parser
+      # will understand.
+      $col_info->{'COLUMN_DEF'} = 'now';
+
+      # ...or let the database handle this?
+      #$col_info->{'COLUMN_DEF'} = undef;
+    }
   }
 
   return;
@@ -484,17 +563,47 @@ If a LIST of more than one item is passed, a reference to an array containing th
 
 If a an ARRAYREF is passed, it is returned as-is.
 
+=item B<parse_date STRING>
+
+Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the Informix "DATE" data type.
+
+If STRING is a valid date keyword (according to L<validate_date_keyword|/validate_date_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATE" value.
+
+=item B<parse_datetime STRING>
+
+Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the Informix "DATETIME" data type.
+
+If STRING is a valid datetime keyword (according to L<validate_datetime_keyword|/validate_datetime_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME" value.
+
+=item B<parse_timestamp STRING>
+
+Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the Informix "DATETIME" data type.
+
+If STRING is a valid timestamp keyword (according to L<validate_timestamp_keyword|/validate_timestamp_keyword>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "DATETIME" value.
+
 =item B<validate_date_keyword STRING>
 
-Returns true if STRING is a valid keyword for the "date" data type.  Any strings that looks like a function call (matches /^\w+\(.*\)$/) is considered a valid date keyword.
+Returns true if STRING is a valid keyword for the "date" data type.  Valid date keywords are:
+
+    current_timestamp
+
+The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid date keyword.
 
 =item B<validate_datetime_keyword STRING>
 
-Returns true if STRING is a valid keyword for the "datetime" data type, false otherwise.   Any strings that looks like a function call (matches /^\w+\(.*\)$/) is considered a valid datetime keyword.
+Returns true if STRING is a valid keyword for the "datetime" data type, false otherwise.  Valid datetime keywords are:
+
+    current_timestamp
+
+The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid datetime keyword.
 
 =item B<validate_timestamp_keyword STRING>
 
-Returns true if STRING is a valid keyword for the "timestamp" data type, false otherwise.  Any strings that looks like a function call (matches /^\w+\(.*\)$/) is considered a valid timestamp keyword.
+Returns true if STRING is a valid keyword for the "timestamp" data type, false otherwise.  Valid timestamp keywords are:
+
+    current_timestamp
+
+The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid timestamp keyword.
 
 =back
 
