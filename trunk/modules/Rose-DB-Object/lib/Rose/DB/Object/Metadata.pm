@@ -1756,6 +1756,8 @@ sub make_column_methods
     #}
   }
 
+  $self->_clear_column_generated_values;
+
   # Initialize method name hashes
   $self->column_accessor_method_names;
   $self->column_mutator_method_names;

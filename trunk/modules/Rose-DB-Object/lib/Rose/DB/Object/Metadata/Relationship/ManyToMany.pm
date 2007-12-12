@@ -442,6 +442,12 @@ sub is_ready_to_make_methods
   return $@ ? 0 : 1;
 }
 
+sub perl_relationship_definition_attributes
+{
+  grep { $_ !~ /^(?:column_map|foreign_class)$/ }
+    shift->SUPER::perl_relationship_definition_attributes(@_);
+}
+
 1;
 
 __END__

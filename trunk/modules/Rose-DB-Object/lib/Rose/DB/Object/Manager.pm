@@ -223,6 +223,10 @@ sub make_manager_methods
           my $method = "${class}::get_$name";
           Carp::croak "A $method method already exists"
             if(defined &{$method});
+
+          Carp::croak "The $method method is inherited from Rose::DB::Object::Manager ",
+                      "and cannot be overriden in $target_class"
+            if(Rose::DB::Object::Manager->can($method));
         }
 
         *{$method_name} = sub

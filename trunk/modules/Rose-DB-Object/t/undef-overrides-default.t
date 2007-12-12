@@ -198,8 +198,13 @@ sub massage_value
   {
     return "@$value";
   }
-  
-  return defined $value ? "$value" : undef;
+
+  return undef  unless(defined $value);
+
+  # XXX: Trim off leading + sign that some versions of Math::BigInt seem to add
+  $value =~ s/^\+//; 
+
+  return "$value";
 }
 
 my %DB;

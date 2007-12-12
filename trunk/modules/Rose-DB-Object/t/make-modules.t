@@ -38,13 +38,13 @@ my %Column_Defs =
 
   mysql => 
   {
-    id        => q(id        => { type => 'integer', not_null => 1 },),
+    id        => q(id        => { type => 'serial', not_null => 1 },),
     vendor_id => q(vendor_id => { type => 'integer', default => '', not_null => 1 },),
   },
 
   sqlite => 
   {
-    id        => q(id        => { type => 'integer' },),
+    id        => q(id        => { type => 'serial' },),
     vendor_id => q(vendor_id => { type => 'integer', not_null => 1 },),
   },
 
@@ -139,12 +139,10 @@ __PACKAGE__->meta->setup
   [
     colors => 
     {
-      column_map    => { product_id => 'id' },
-      foreign_class => '${class_prefix}::Color',
-      map_class     => '${class_prefix}::ProductColor',
-      map_from      => 'product',
-      map_to        => 'color',
-      type          => 'many to many',
+      map_class => '${class_prefix}::ProductColor',
+      map_from  => 'product',
+      map_to    => 'color',
+      type      => 'many to many',
     },
 
     prices => 
@@ -206,12 +204,10 @@ __PACKAGE__->meta->setup
   [
     products => 
     {
-      column_map    => { color_code => 'code' },
-      foreign_class => '${class_prefix}::Product',
-      map_class     => '${class_prefix}::ProductColor',
-      map_from      => 'color',
-      map_to        => 'product',
-      type          => 'many to many',
+      map_class => '${class_prefix}::ProductColor',
+      map_from  => 'color',
+      map_to    => 'product',
+      type      => 'many to many',
     },
   ],
 );
