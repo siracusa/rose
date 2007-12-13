@@ -1,4 +1,4 @@
-0.766 (12.12.2007) - John Siracusa <siracusa@gmail.com>
+0.766 (12.13.2007) - John Siracusa <siracusa@gmail.com>
 
     * Added the unique_key_by_name() metadata method.
     * Added the ability to do unrestricted joins in some circumstances.
