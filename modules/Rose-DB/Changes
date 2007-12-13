@@ -1,4 +1,4 @@
-0.737 (12.12.2007) - John Siracusa <siracusa@gmail.com>
+0.737 (12.13.2007) - John Siracusa <siracusa@gmail.com>
 
     * Altered the behavior of connect() and disconnect() to account
       for the possibility that dbi_connect() may return a DBI $dbh
