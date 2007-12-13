@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.737';
+our $VERSION = '0.737_01';
 
 our $Debug = 0;
 
@@ -1607,9 +1607,9 @@ sub format_array
 {
   my($self) = shift;
 
-  my @array = (ref $_[0]) ? @{$_[0]} : @_;
+  return undef  unless(ref $_[0] || defined $_[0]);
 
-  return undef  unless(@array && defined $array[0]);
+  my @array = (ref $_[0]) ? @{$_[0]} : @_;
 
   my $str = '{' . join(',', map 
   {

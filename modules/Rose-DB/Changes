@@ -1,3 +1,9 @@
+0.737_01 (12.13.2007) - John Siracusa <siracusa@gmail.com>
+
+    * Fixed a bug that prevented format_array() from correctly handling
+      arrays with undef as the first element.  (Reported by Derek Watson)
+      XXX: Needs tests
+
 0.737 (12.13.2007) - John Siracusa <siracusa@gmail.com>
 
     * Altered the behavior of connect() and disconnect() to account
