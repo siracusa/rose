@@ -143,7 +143,7 @@ Get or set a boolean value that indicates whether or not this checkbox will be s
 
 =item B<hide>
 
-Class L<hidden|/hidden>, passing a true value.
+Calls L<hidden|/hidden>, passing a true value.
 
 =item B<html_checkbox>
 
@@ -159,7 +159,7 @@ Simply calls L<is_checked|/is_checked>.  This method exists for API uniformity b
 
 =item B<show>
 
-Class L<hidden|/hidden>, passing a false value.
+Calls L<hidden|/hidden>, passing a false value.
 
 =item B<value [VALUE]>
 

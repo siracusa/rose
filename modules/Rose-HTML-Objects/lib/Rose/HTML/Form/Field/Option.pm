@@ -161,7 +161,7 @@ Get or set a boolean value that indicates whether or not this radio button will 
 
 =item B<hide>
 
-Class L<hidden|/hidden>, passing a true value.
+Calls L<hidden|/hidden>, passing a true value.
 
 =item B<selected [BOOL]>
 
@@ -197,7 +197,7 @@ Get or set the value of the "label" HTML attribute.  When present, user agents a
 
 =item B<show>
 
-Class L<hidden|/hidden>, passing a false value.
+Calls L<hidden|/hidden>, passing a false value.
 
 =back
 
