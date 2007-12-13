@@ -60,7 +60,7 @@ sub internal_value
     }
   }
 
-  return ($value =~ /\S/) ? $value : undef;
+  return (defined $value && $value =~ /\S/) ? $value : undef;
 }
 
 # This is $RE{num}{dec} from Regexp::Common::number
