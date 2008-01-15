@@ -1,3 +1,8 @@
+0.85 (01.15.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Fixed a bug that prevented "--opt=0" options from being honored
+      (Reported by Bill Moseley)
+
 0.84 (05.17.2007) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug in Rose::Object::MixIn that caused Rose::DB::Object's
