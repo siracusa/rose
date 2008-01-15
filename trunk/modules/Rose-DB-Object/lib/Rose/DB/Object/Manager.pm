@@ -16,7 +16,7 @@ use Rose::DB::Object::Constants
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.766';
+our $VERSION = '0.767';
 
 our $Debug = 0;
 
@@ -221,12 +221,13 @@ sub make_manager_methods
         foreach my $class ($target_class, $class_invocant)
         {
           my $method = "${class}::get_$name";
+          my $short_method = "get_$name";
           Carp::croak "A $method method already exists"
             if(defined &{$method});
 
-          Carp::croak "The $method method is inherited from Rose::DB::Object::Manager ",
+          Carp::croak "The $short_method method is inherited from Rose::DB::Object::Manager ",
                       "and cannot be overriden in $target_class"
-            if(Rose::DB::Object::Manager->can($method));
+            if(Rose::DB::Object::Manager->can($short_method));
         }
 
         *{$method_name} = sub
