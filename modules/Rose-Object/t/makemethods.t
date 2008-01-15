@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 311;
+use Test::More tests => 312;
 
 BEGIN
 {
@@ -50,6 +50,8 @@ $p->is_foo(0);
 is($p->is_foo, 0, 'Set named attribute (boolean) 3');
 
 is($p->is_valid, 1, 'Default value (boolean)');
+
+is($p->def0, 0, 'Default value (0) (boolean)');
 
 #
 # boolean --get_set_init
@@ -758,6 +760,8 @@ BEGIN
       is_valid => { default => 1 },
     ],
 
+    'boolean --default=0' => 'def0',
+    
     'scalar' => 'bar',
 
     'scalar --get_set_init' => 
