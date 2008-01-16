@@ -177,6 +177,14 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     $t =~ s/0+$//;
     is($t, '12:34:56.12345', "time default 2 - $db_type");
   }
+  elsif($db_type eq 'informix')
+  {
+    ok(!$p->can('tee_time') && !$p->can('tee_time5'), "time methods - $db_type");
+    ok(!$p->meta->column('tee_time5'), "time precision check 1 - $db_type");
+    ok(!$p->meta->column('tee_time'), "time precision check 2 - $db_type");
+    is($p->meta->column('bint1')->type, 'bigint', "bigint 1 - $db_type");
+    is($p->bint1, '9223372036854775800', "bigint 2 - $db_type");
+  }
   else
   {
     ok(!$p->can('tee_time') && !$p->can('tee_time5'), "time methods - $db_type");
@@ -689,6 +697,9 @@ CREATE TABLE products
 
   status  VARCHAR(128) DEFAULT 'inactive' NOT NULL
             CHECK(status IN ('inactive', 'active', 'defunct')),
+
+  rint1         INT,
+  bint1         INT8 DEFAULT 9223372036854775800,
 
   date_created  DATETIME YEAR TO SECOND,
   release_date  DATETIME YEAR TO SECOND,
