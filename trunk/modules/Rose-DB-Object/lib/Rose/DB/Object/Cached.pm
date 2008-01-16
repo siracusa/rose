@@ -350,7 +350,7 @@ Save the current object to the memory cache I<without> saving it to the database
 
 =item B<remember_all [PARAMS]>
 
-Load and L<remember|/remember> all objects from this table, optionally filtered by PARAMS which can be any valid L<Rose::DB::Object::Manager->get_objects()|Rose::DB::Object::Manager/get_objects> parameters.  Remembered objects will replace any previously cached objects with the same keys.
+Load and L<remember|/remember> all objects from this table, optionally filtered by PARAMS which can be any valid L<Rose::DB::Object::Manager-E<gt>get_objects()|Rose::DB::Object::Manager/get_objects> parameters.  Remembered objects will replace any previously cached objects with the same keys.
 
 =item B<save [PARAMS]>
 
