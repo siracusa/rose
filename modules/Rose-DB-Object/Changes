@@ -1,3 +1,7 @@
+0.767 (01.29.2008) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: $column->parse_value() with Manager integration
+
 0.7661 (01.29.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed method clash detection in Rose::DB::Object::Manager.
