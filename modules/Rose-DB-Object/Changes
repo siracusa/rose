@@ -1,7 +1,7 @@
-0.766_02 (01.15.2008) - John Siracusa <siracusa@gmail.com>
+0.7661 (01.29.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed method clash detection in Rose::DB::Object::Manager.
-    * TODO: $column->parse_value() with Manager integration
+    * Streamlined caching implementation in Rose::DB::Object::Cached.
 
 0.766 (12.13.2007) - John Siracusa <siracusa@gmail.com>
 
