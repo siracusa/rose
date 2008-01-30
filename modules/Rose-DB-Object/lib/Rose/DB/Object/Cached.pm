@@ -161,10 +161,6 @@ sub save
   my $ret = $self->SUPER::save(@_);
   return $ret  unless($ret);
 
-  my $class = ref $self;
-
-  my $pk = join(PK_SEP, grep { defined } map { $self->$_() } $self->meta->primary_key_column_names);
-
   $self->remember;
 
   return $ret;
