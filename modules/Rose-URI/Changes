@@ -1,3 +1,7 @@
+0.022 (01.30.2005) - John Siracusa <siracusa@gmail.com>
+
+    * Improved handling or "keyword"-style query string (e.g., "/bar?foo")
+
 0.021 (10.06.2005) - John Siracusa <siracusa@gmail.com>
 
     * Simplified cloning.
