@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 24;
+use Test::More tests => 29;
 
 BEGIN
 {
@@ -33,11 +33,19 @@ is($uri->query, 'a=1&a=2&b=3', 'switch separator');
 # query()
 #
 
+$uri->query('foo+bar');
+is($uri->as_string, '/baz?foo%20bar', 'get/set string (keywords) 0');
+is($uri->query, 'foo%20bar', 'get/set string (keywords) 1');
+ok($uri->query_param_exists('foo bar'), 'get/set string (keywords) 2');
+$uri->query('foo');
+is($uri->query, 'foo', 'get/set string (keywords) 3');
+ok($uri->query_param_exists('foo'), 'get/set string (keywords) 4');
+
 $uri->query("a=1&a=2&b=3");
 is($uri->query, 'a=1&a=2&b=3', 'get/set string (&)');
 
-$uri->query("a=1;a=2;b=3");
-is($uri->query, 'a=1&a=2&b=3', 'get/set string (;)');
+$uri->query("a=1;a=2;b=3+4+5");
+is($uri->query, 'a=1&a=2&b=3%204%205', 'get/set string (;)');
 
 $uri->query({ a => [ 1, 2 ], b => 3 });
 is($uri->query, 'a=1&a=2&b=3', 'get/set hash');

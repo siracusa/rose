@@ -19,7 +19,7 @@ our $Make_URI;
 
 our $SCHEME_RE = '[a-zA-Z][a-zA-Z0-9.+\-]*';
 
-our $VERSION = '0.021';
+our $VERSION = '0.022';
 
 # Class data
 use Rose::Class::MakeMethods::Generic
@@ -101,6 +101,8 @@ sub parse_query
 {
   my($self, $query) = @_;
 
+  $self->{'query_string'} = undef;
+
   unless(defined $query && $query =~ /\S/)
   {
     $self->{'query'} = { };
@@ -119,8 +121,8 @@ sub parse_query
   }
   elsif(index($query, '=') < 0)
   {
-    # XXX: Should be "keywords"?
-    $self->{'query'} = { $query => undef };
+    $self->{'query_string'} = __unescape_uri($query);
+    $self->{'query'} = { $self->{'query_string'} => undef };
     return 1;
   }
 
@@ -174,6 +176,8 @@ sub query_param
   }
   elsif(@_ == 2)
   {
+    $self->{'query_string'} = undef;
+
     if(ref $_[1])
     {
       return $self->{'query'}{$_[0]} = [ @{$_[1]} ];
@@ -274,7 +278,14 @@ sub query
     $self->{'query'} = _deep_copy({ @_ });
   }
 
-  return  unless(defined(wantarray));
+  my $want = wantarray;
+
+  return  unless(defined wantarray);
+
+  if(defined $self->{'query_string'})
+  {
+    return __escape_uri($self->{'query_string'});
+  }
 
   my @query;
 
@@ -295,6 +306,7 @@ sub query_form
 
   if(@_)
   {
+    $self->{'query_string'} = undef;
     $self->{'query'} = { };
 
     for(my $i = 0; $i < $#_; $i += 2)
@@ -637,7 +649,7 @@ Get or set the port number portion of the URI.
 
 =item B<query [QUERY]>
 
-Get or sets the URI's query.  QUERY may be a query string (e.g. "a=1&b=2"), a reference to a hash, or a list of name/value pairs.
+Get or sets the URI's query.  QUERY may be an appropriately escaped query string (e.g. "a=1&b=2&c=a+long+string"), a reference to a hash, or a list of name/value pairs.
 
 Query strings may use either "&" or ";" as their query separator. If a "&" character exists anywhere in the query string, it is assumed to be the separator.
 
