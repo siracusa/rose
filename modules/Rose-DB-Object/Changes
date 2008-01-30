@@ -1,3 +1,7 @@
+0.767 (01.30.2008) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: $column->parse_value() with Manager integration.
+
 0.7662 (01.30.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed copy-and-paste-o in Rose::DB::Object::Cached code.
