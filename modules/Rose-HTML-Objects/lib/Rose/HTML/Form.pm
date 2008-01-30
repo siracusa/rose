@@ -15,7 +15,7 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.551';
+our $VERSION = '0.553';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -1650,7 +1650,7 @@ Here's a simple example of a nested form made up of a C<PersonForm> and an C<Add
     use PersonForm;
     use AddressForm;
 
-    sub build_field
+    sub build_form
     {
       my($self) = shift;
 
@@ -1685,7 +1685,7 @@ Nested forms may have their own fields as well, and the nesting may continue to 
 
     use PersonAddressForm;
 
-    sub build_field
+    sub build_form
     {
       my($self) = shift;
 
