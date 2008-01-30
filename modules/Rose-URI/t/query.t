@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 29;
+use Test::More tests => 31;
 
 BEGIN
 {
@@ -37,6 +37,11 @@ $uri->query('foo+bar');
 is($uri->as_string, '/baz?foo%20bar', 'get/set string (keywords) 0');
 is($uri->query, 'foo%20bar', 'get/set string (keywords) 1');
 ok($uri->query_param_exists('foo bar'), 'get/set string (keywords) 2');
+$uri->query_param_delete('xxx');
+ok($uri->query_param_exists('foo bar'), 'get/set string (keywords) 2.1');
+$uri->query_param_delete('foo bar');
+ok(!$uri->query_param_exists('foo bar'), 'get/set string (keywords) 2.2');
+
 $uri->query('foo');
 is($uri->query, 'foo', 'get/set string (keywords) 3');
 ok($uri->query_param_exists('foo'), 'get/set string (keywords) 4');

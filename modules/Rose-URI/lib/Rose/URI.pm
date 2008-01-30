@@ -235,6 +235,11 @@ sub query_param_delete
 
   foreach my $param (@_)
   {
+    if(defined $self->{'query_string'} && $param eq $self->{'query_string'})
+    {
+      $self->{'query_string'} = undef;
+    }
+
     delete $self->{'query'}{$param};
   }
 }
