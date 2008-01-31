@@ -413,7 +413,7 @@ sub perl_column_definition_attributes
       else
       {
         $val = perl_arrayref(array => $val, inline => 1);
-        $attr = 'values';
+        $attr = 'check_in';
       }
     }
     elsif($attr eq 'smart_modification' && 
