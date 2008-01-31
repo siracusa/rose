@@ -1,5 +1,8 @@
 0.767 (01.31.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Fixed a bug that prevented Perl code from being emitted for 
+      non-set scalar columns with check_in attributes.  
+      (Reported by Sam Tregar)
     * The clear_object_cache() Metadata method now correctly clears
       load timestamps as well.  (Patch by Justin Ellison)
     * TODO: uncouple Metadata cache* methods and ::Cached internals

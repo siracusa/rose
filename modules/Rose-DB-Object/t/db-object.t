@@ -383,6 +383,11 @@ SKIP: foreach my $db_type ('mysql')
                              k2   => undef,
                              k3   => 3);
 
+  # Checking to see that Perl code generation methods don't die (See: 0.767 changes)
+  $o->meta->column('name')->check_in([ qw(a b c) ]);
+  $o->meta->perl_class_definition;
+  $o->meta->column('name')->check_in(undef);
+
   ok(ref $o && $o->isa('MyMySQLObject'), "new() 1 - $db_type");
 
   $o->flag2('true');
