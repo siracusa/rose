@@ -1,5 +1,8 @@
-0.767 (01.30.2008) - John Siracusa <siracusa@gmail.com>
+0.767 (01.31.2008) - John Siracusa <siracusa@gmail.com>
 
+    * The clear_object_cache() Metadata method now correctly clears
+      load timestamps as well.  (Patch by Justin Ellison)
+    * TODO: uncouple Metadata cache* methods and ::Cached internals
     * TODO: $column->parse_value() with Manager integration.
 
 0.7662 (01.30.2008) - John Siracusa <siracusa@gmail.com>

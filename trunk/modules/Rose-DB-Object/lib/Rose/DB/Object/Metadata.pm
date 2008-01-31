@@ -587,6 +587,12 @@ sub clear_object_cache
   %{"${class}::Objects_By_Key"} = ();
   %{"${class}::Objects_Keys"}   = ();
 
+  if($self->cached_objects_expire_in)
+  {
+    %{"${class}::Objects_By_Key_Loaded"} = ();
+    %{"${class}::Objects_By_Id_Loaded"}  = ();
+  }
+
   return 1;
 }
 
