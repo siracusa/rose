@@ -1,5 +1,7 @@
 0.7663 (02.01.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Fixed a bug that caused delete_on_save method creation for foreign
+      keys to fail in some circumstances.  (Reported by Justin Ellison)
     * Fixed a bug that prevented Perl code from being emitted for 
       non-set scalar columns with check_in attributes.  
       (Reported by Sam Tregar)
