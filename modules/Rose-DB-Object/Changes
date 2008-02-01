@@ -1,4 +1,4 @@
-0.767 (01.31.2008) - John Siracusa <siracusa@gmail.com>
+0.7663 (02.01.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug that prevented Perl code from being emitted for 
       non-set scalar columns with check_in attributes.  
