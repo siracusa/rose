@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.766';
+our $VERSION = '0.7663';
 
 our $Debug = 0;
 
@@ -1991,6 +1991,7 @@ sub object_by_key
   unless($key_ok)
   {
     $args->{'single'} = 1;
+    $args->{'relationship'} ||= $fk;
     return $class->objects_by_key($name, $args, $options);
   }
 

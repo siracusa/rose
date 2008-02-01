@@ -72,7 +72,7 @@ sub auto_generate_foreign_keys
   my $no_warnings = $args{'no_warnings'};
 
   my($class, @foreign_keys, $total_fks);
-
+$DB::single = 1;
   eval
   {
     $class = $self->class or die "Missing class!";
