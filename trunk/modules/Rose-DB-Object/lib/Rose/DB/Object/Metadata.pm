@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.766';
+our $VERSION = '0.7663';
 
 our $Debug = 0;
 
@@ -527,74 +527,8 @@ sub convention_manager
   return $self->{'convention_manager'} = $mgr;
 }
 
-# Code borrowed from Cache::Cache
-my %Expiration_Units =
-(
-  map(($_,            1), qw(s sec secs second seconds)),
-  map(($_,           60), qw(m min mins minute minutes)),
-  map(($_,        60*60), qw(h hr hrs hour hours)),
-  map(($_,     60*60*24), qw(d day days)),
-  map(($_,   60*60*24*7), qw(w wk wks week weeks)),
-  map(($_, 60*60*24*365), qw(y yr yrs year years))
-);
-
-sub cached_objects_expire_in
-{
-  my($self) = shift;
-
-  my $class = $self->class;
-
-  no strict 'refs';
-  return ${"${class}::Cache_Expires"} ||= 0  unless(@_);
-
-  my $arg = shift;
-
-  my $secs;
-
-  if($arg =~ /^now$/i)
-  {
-    $class->forget_all;
-    $secs = 0;
-  }
-  elsif($arg =~ /^never$/)
-  {
-    $secs = 0;
-  }
-  elsif($arg =~ /^\s*([+-]?(?:\d+|\d*\.\d*))\s*$/)
-  {
-    $secs = $arg;
-  }
-  elsif($arg =~ /^\s*([+-]?(?:\d+|\d*\.\d*))\s*(\w*)\s*$/ && exists $Expiration_Units{$2})
-  {
-    $secs = $Expiration_Units{$2} * $1;
-  }
-  else
-  {
-    Carp::croak("Invalid cache expiration time: '$arg'");
-  }
-
-  return ${"${class}::Cache_Expires"} = $secs;
-}
-
-sub clear_object_cache
-{
-  my($self) = shift;
-
-  my $class = $self->class;
-
-  no strict 'refs';
-  %{"${class}::Objects_By_Id"}  = ();
-  %{"${class}::Objects_By_Key"} = ();
-  %{"${class}::Objects_Keys"}   = ();
-
-  if($self->cached_objects_expire_in)
-  {
-    %{"${class}::Objects_By_Key_Loaded"} = ();
-    %{"${class}::Objects_By_Id_Loaded"}  = ();
-  }
-
-  return 1;
-}
+sub cached_objects_expire_in { shift->class->cached_objects_expire_in(@_) }
+sub clear_object_cache       { shift->class->clear_object_cache(@_) }
 
 sub prepare_select_options 
 {
@@ -4880,24 +4814,7 @@ Get or set a flag that indicates whether or not classes related to this L<class|
 
 =item B<cached_objects_expire_in [DURATION]>
 
-This method is only applicable if this metadata object is associated with a L<Rose::DB::Object::Cached>-derived class.  It controls the expiration cached objects.
-
-If called with no arguments, the cache expiration limit in seconds is returned.  
-
-If passed a DURATION, the cache expiration is set.  Valid formats for DURATION are in the form "NUMBER UNIT" where NUMBER is a positive number and UNIT is one of the following:
-
-    s sec secs second seconds
-    m min mins minute minutes
-    h hr hrs hour hours
-    d day days
-    w wk wks week weeks
-    y yr yrs year years
-
-All formats of the DURATION argument are converted to seconds.  Days are exactly 24 hours, weeks are 7 days, and years are 365 days.
-
-If an object was read from the database the specified number of seconds ago or earlier, it is purged from the cache and reloaded from the database the next time it is loaded.
-
-A L<cached_objects_expire_in|/cached_objects_expire_in> value of undef or zero means that nothing will ever expire from the object cache for the L<Rose::DB::Object::Cached>-derived class associated with this metadata object.  This is the default.
+This method is only applicable if this metadata object is associated with a L<Rose::DB::Object::Cached>-derived class.  It simply calls the class method of the same name that belongs to the L<Rose::DB::Object::Cached>-derived L<class|/class> associated with this metadata object.
 
 =item B<catalog [CATALOG]>
 
@@ -4915,7 +4832,7 @@ Note: This method may also be called as a class method, but may require explicit
 
 =item B<clear_object_cache>
 
-Clear the memory cache for all objects of the L<Rose::DB::Object::Cached>-derived class associated with this metadata object.
+This method is only applicable if this metadata object is associated with a L<Rose::DB::Object::Cached>-derived class.  It simply calls the class method of the same name that belongs to the L<Rose::DB::Object::Cached>-derived L<class|/class> associated with this metadata object.
 
 =item B<column NAME [, COLUMN | HASHREF]>
 
@@ -6105,6 +6022,6 @@ John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2007 by John C. Siracusa.  All rights reserved.  This program is
+Copyright (c) 2008 by John C. Siracusa.  All rights reserved.  This program is
 free software; you can redistribute it and/or modify it under the same terms
 as Perl itself.
