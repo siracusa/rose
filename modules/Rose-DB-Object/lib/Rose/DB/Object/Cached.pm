@@ -283,7 +283,7 @@ sub cached_objects_expire_in
   {
     $secs = $arg;
   }
-  elsif($arg =~ /^\s*([+-]?(?:\d+|\d*\.\d*))\s*(\w*)\s*$/ && exists $Expiration_Units{$2})
+  elsif($arg =~ /^\s*([+-]?(?:\d+(?:\.\d*)?|\d*\.\d+))\s*(\w*)\s*$/ && exists $Expiration_Units{$2})
   {
     $secs = $Expiration_Units{$2} * $1;
   }
@@ -344,7 +344,7 @@ Rose::DB::Object::Cached - Memory cached object representation of a single row i
   print $cat2->name; # prints "Blah"
 
   # The object cache supports time-based expiration
-  Category->meta->cached_objects_expire_in('15 minutes');
+  Category->cached_objects_expire_in('15 minutes');
 
   $cat1 = Category->new(id => 123);
   $cat1->save or $cat1->die;
@@ -369,7 +369,7 @@ This means that I<modifications to an object will also modify all other objects 
 
 This class is most useful for encapsulating "read-only" rows, or other data that is updated very infrequently.  In the C<Category> example above, it would be inefficient to repeatedly load category information in a long-running process (such as a mod_perl Apache web server) if that information changes infrequently.
 
-The memory cache can be cleared for an individual object or all objects of the same class.  There is also support for simple time-based cache expiration.  See the L<clear_object_cache|Rose::DB::Object::Metadata/clear_object_cache> and L<cached_objects_expire_in|Rose::DB::Object::Metadata/cached_objects_expire_in> methods in the L<Rose::DB::Object::Metadata> documentation for more information.
+The memory cache can be cleared for an individual object or all objects of the same class.  There is also support for simple time-based cache expiration.  See the L<clear_object_cache|/clear_object_cache> and L<cached_objects_expire_in|/cached_objects_expire_in> methods for more information.
 
 Only the methods that are overridden are documented here.  See the L<Rose::DB::Object> documentation for the rest.
 
