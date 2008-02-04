@@ -2251,7 +2251,6 @@ sub make_methods
   my($self) = shift;
 
   $self->make_column_methods(@_);
-$DB::single = 1;
   $self->make_foreign_key_methods(@_);
   $self->make_relationship_methods(@_);
 }

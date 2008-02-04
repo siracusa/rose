@@ -606,41 +606,42 @@ sub boolean
 
         if(@_)
         {
-          if(my $value = $_[0])
+          my $value = $_[0];
+
+          if($self->{STATE_LOADING()})
           {
-            if($self->{STATE_LOADING()})
+            $self->{$key} = undef;
+            return $self->{$formatted_key,$driver} = $value;
+          }
+          else
+          {
+            if($value =~ /^(?:1(?:\.0*)?|t(?:rue)?|y(?:es)?)$/i)
             {
-              $self->{$key} = undef;
-              return $self->{$formatted_key,$driver} = $value;
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+              return $self->{$key} = 1;
+            }
+            elsif($value =~ /^(?:0(?:\.0*)?|f(?:alse)?|no?)$/i)
+            {
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+              return $self->{$key} = 0;
+            }
+            elsif($value)
+            {
+              my $value = $db->parse_boolean($value);
+              Carp::croak($db->error)  unless(defined $value);
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+              return $self->{$key} = $value;
             }
             else
             {
-              if($value =~ /^(?:1(?:\.0*)?|t(?:rue)?|y(?:es)?)$/i)
-              {
-                $self->{$formatted_key,$driver} = undef;
-                $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-                return $self->{$key} = 1;
-              }
-              elsif($value =~ /^(?:0(?:\.0*)?|f(?:alse)?|no?)$/i)
-              {
-                $self->{$formatted_key,$driver} = undef;
-                $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-                return $self->{$key} = 0;
-              }
-              else
-              {
-                my $value = $db->parse_boolean($value);
-                Carp::croak($db->error)  unless(defined $value);
-                $self->{$formatted_key,$driver} = undef;
-                $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-                return $self->{$key} = $value;
-              }
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+              return $self->{$key} = 0;
             }
           }
-
-          $self->{$formatted_key,$driver} = undef;
-          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-          return $self->{$key} = defined $_[0] ? 0 : undef;
         }
 
         # Pull default through if necessary
@@ -687,38 +688,40 @@ sub boolean
 
         if(@_)
         {
-          my $db = $self->db or die "Missing Rose::DB object attribute";
-          my $driver = $db->driver || 'unknown';
+          my $value = $_[0];
 
-          if(my $value = $_[0])
+          if($self->{STATE_LOADING()})
           {
-            if($self->{STATE_LOADING()})
+            $self->{$key} = undef;
+            return $self->{$formatted_key,$driver} = $value;
+          }
+          else
+          {
+            if($value =~ /^(?:1(?:\.0*)?|t(?:rue)?|y(?:es)?)$/i)
             {
-              $self->{$key} = undef;
-              return $self->{$formatted_key,$driver} = $value;
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+              return $self->{$key} = 1;
+            }
+            elsif($value =~ /^(?:0(?:\.0*)?|f(?:alse)?|no?)$/i)
+            {
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+              return $self->{$key} = 0;
+            }
+            elsif($value)
+            {
+              my $value = $db->parse_boolean($value);
+              Carp::croak($db->error)  unless(defined $value);
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+              return $self->{$key} = $value;
             }
             else
             {
-              if($value =~ /^(?:1(?:\.0*)?|t(?:rue)?|y(?:es)?)$/i)
-              {
-                $self->{$formatted_key,$driver} = undef;
-                $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-                return $self->{$key} = 1;
-              }
-              elsif($value =~ /^(?:0(?:\.0*)?|f(?:alse)?|no?)$/i)
-              {
-                $self->{$formatted_key,$driver} = undef;
-                $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-                return $self->{$key} = 0;
-              }
-              else
-              {
-                my $value = $db->parse_boolean($value);
-                Carp::croak($db->error)  unless(defined $value);
-                $self->{$formatted_key,$driver} = undef;
-                $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-                return $self->{$key} = $value;
-              }
+              $self->{$formatted_key,$driver} = undef;
+              $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+              return $self->{$key} = 0;
             }
           }
 
