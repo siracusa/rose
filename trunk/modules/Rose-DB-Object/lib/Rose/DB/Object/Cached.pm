@@ -375,6 +375,8 @@ Only the methods that are overridden are documented here.  See the L<Rose::DB::O
 
 =head1 CLASS METHODS
 
+=over 4
+
 =item B<cached_objects_expire_in [DURATION]>
 
 This method controls the expiration of cached objects.
@@ -397,6 +399,8 @@ A L<cached_objects_expire_in|/cached_objects_expire_in> value of undef or zero m
 =item B<clear_object_cache>
 
 Clear the memory cache for all objects of this class.
+
+=back
 
 =head1 OBJECT METHODS
 
