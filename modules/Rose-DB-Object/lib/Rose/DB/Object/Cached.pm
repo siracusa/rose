@@ -9,7 +9,7 @@ our @ISA = qw(Rose::DB::Object);
 
 use Rose::DB::Object::Constants qw(STATE_IN_DB);
 
-our $VERSION = '0.7661';
+our $VERSION = '0.7663';
 
 our $Debug = 0;
 
@@ -197,7 +197,7 @@ sub forget
   return 1;
 }
 
-sub remember_by_pk_only
+sub remember_by_primary_key
 {
   my($self) = shift;
 
@@ -228,6 +228,71 @@ sub remember_all
   }
 
   return @$objects  if(defined wantarray);
+}
+
+# Code borrowed from Cache::Cache
+my %Expiration_Units =
+(
+  map(($_,            1), qw(s sec secs second seconds)),
+  map(($_,           60), qw(m min mins minute minutes)),
+  map(($_,        60*60), qw(h hr hrs hour hours)),
+  map(($_,     60*60*24), qw(d day days)),
+  map(($_,   60*60*24*7), qw(w wk wks week weeks)),
+  map(($_, 60*60*24*365), qw(y yr yrs year years))
+);
+
+sub clear_object_cache
+{
+  my($class) = shift;
+
+  no strict 'refs';
+  %{"${class}::Objects_By_Id"}  = ();
+  %{"${class}::Objects_By_Key"} = ();
+  %{"${class}::Objects_Keys"}   = ();
+
+  if($class->cached_objects_expire_in)
+  {
+    %{"${class}::Objects_By_Key_Loaded"} = ();
+    %{"${class}::Objects_By_Id_Loaded"}  = ();
+  }
+
+  return 1;
+}
+
+sub cached_objects_expire_in
+{
+  my($class) = shift;
+
+  no strict 'refs';
+  return ${"${class}::Cache_Expires"} ||= 0  unless(@_);
+
+  my $arg = shift;
+
+  my $secs;
+
+  if($arg =~ /^now$/i)
+  {
+    $class->forget_all;
+    $secs = 0;
+  }
+  elsif($arg =~ /^never$/)
+  {
+    $secs = 0;
+  }
+  elsif($arg =~ /^\s*([+-]?(?:\d+|\d*\.\d*))\s*$/)
+  {
+    $secs = $arg;
+  }
+  elsif($arg =~ /^\s*([+-]?(?:\d+|\d*\.\d*))\s*(\w*)\s*$/ && exists $Expiration_Units{$2})
+  {
+    $secs = $Expiration_Units{$2} * $1;
+  }
+  else
+  {
+    Carp::croak("Invalid cache expiration time: '$arg'");
+  }
+
+  return ${"${class}::Cache_Expires"} = $secs;
 }
 
 1;
@@ -308,6 +373,31 @@ The memory cache can be cleared for an individual object or all objects of the s
 
 Only the methods that are overridden are documented here.  See the L<Rose::DB::Object> documentation for the rest.
 
+=head1 CLASS METHODS
+
+=item B<cached_objects_expire_in [DURATION]>
+
+This method controls the expiration of cached objects.
+
+If called with no arguments, the cache expiration limit in seconds is returned.  If passed a DURATION, the cache expiration is set.  Valid formats for DURATION are in the form "NUMBER UNIT" where NUMBER is a positive number and UNIT is one of the following:
+
+    s sec secs second seconds
+    m min mins minute minutes
+    h hr hrs hour hours
+    d day days
+    w wk wks week weeks
+    y yr yrs year years
+
+All formats of the DURATION argument are converted to seconds.  Days are exactly 24 hours, weeks are 7 days, and years are 365 days.
+
+If an object was read from the database the specified number of seconds ago or earlier, it is purged from the cache and reloaded from the database the next time it is loaded.
+
+A L<cached_objects_expire_in|/cached_objects_expire_in> value of undef or zero means that nothing will ever expire from the object cache.  This is the default.
+
+=item B<clear_object_cache>
+
+Clear the memory cache for all objects of this class.
+
 =head1 OBJECT METHODS
 
 =over 4
@@ -342,11 +432,15 @@ Returns true if the object was loaded successfully, false if the row could not b
 
 =item B<remember>
 
-Save the current object to the memory cache I<without> saving it to the database as well.
+Save the current object to the memory cache I<without> saving it to the database as well.  Objects are cached based on their primary key values and all their unique key values.
 
 =item B<remember_all [PARAMS]>
 
 Load and L<remember|/remember> all objects from this table, optionally filtered by PARAMS which can be any valid L<Rose::DB::Object::Manager-E<gt>get_objects()|Rose::DB::Object::Manager/get_objects> parameters.  Remembered objects will replace any previously cached objects with the same keys.
+
+=item B<remember_by_primary_key [PARAMS]>
+
+Save the current object to the memory cache I<without> saving it to the database as well.  The object will be cached based on its primary key value I<only>.  This is unlike the L<remeber|/remember> method which caches objects based on their primary key values and all their unique key values.
 
 =item B<save [PARAMS]>
 
@@ -358,9 +452,12 @@ This method does the same thing as the L<Rose::DB::Object> method of the same na
 
 In addition to the reserved methods listed in the L<Rose::DB::Object> documentation, the following method names are also reserved for objects that inherit from this class:
 
+    cached_objects_expire_in
+    clear_object_cache
     forget
     remember
     remember_all
+    remember_by_primary_key
 
 If you have a column with one of these names, you must alias it.  See the L<Rose::DB::Object> documentation for more information on column aliasing and reserved methods.
 
@@ -370,6 +467,6 @@ John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2007 by John C. Siracusa.  All rights reserved.  This program is
+Copyright (c) 2008 by John C. Siracusa.  All rights reserved.  This program is
 free software; you can redistribute it and/or modify it under the same terms
 as Perl itself.

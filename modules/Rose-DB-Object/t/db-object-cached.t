@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 416;
+use Test::More tests => 420;
 
 BEGIN 
 {
@@ -271,9 +271,21 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 59)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 61)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
+
+  my $opk = MyMySQLObject->new(name => 'John', id => 199);
+  
+  $opk->remember_by_primary_key;
+  
+  $opk = MyMySQLObject->new(name => 'John');
+  ok(!$opk->load(speculative => 1), "remember_by_primary_key() 1 - $db_type");
+
+  $opk = MyMySQLObject->new(id => 199);
+  ok($opk->load(speculative => 1), "remember_by_primary_key() 2 - $db_type");
+
+  $opk->forget;
 
   my $of = MyMySQLObject->new(name => 'John');
 
@@ -622,9 +634,21 @@ SKIP: foreach my $db_type (qw(informix))
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 71)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 73)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
+
+  my $opk = MySQLiteObject->new(name => 'John', id => 199);
+  
+  $opk->remember_by_primary_key;
+  
+  $opk = MySQLiteObject->new(name => 'John');
+  ok(!$opk->load(speculative => 1), "remember_by_primary_key() 1 - $db_type");
+
+  $opk = MySQLiteObject->new(id => 199);
+  ok($opk->load(speculative => 1), "remember_by_primary_key() 2 - $db_type");
+
+  $opk->forget;
 
   my $of = MySQLiteObject->new(name => 'John', id => 99);
 

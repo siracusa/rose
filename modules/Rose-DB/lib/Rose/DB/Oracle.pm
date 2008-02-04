@@ -357,4 +357,4 @@ John C. Siracusa (siracusa@gmail.com), Ron Savage (ron@savage.net.au)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2007 by John Siracusa and Ron Savage.  All rights reserved. This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+Copyright (c) 2008 by John Siracusa and Ron Savage.  All rights reserved. This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
