@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.7663';
+our $VERSION = '0.7664';
 
 our $Debug = 0;
 
@@ -831,41 +831,42 @@ sub boolean
       my $db = $self->db or die "Missing Rose::DB object attribute";
       my $driver = $db->driver || 'unknown';
 
-      if(my $value = $_[0])
+      my $value = shift;
+
+      if($self->{STATE_LOADING()})
       {
-        if($self->{STATE_LOADING()})
+        $self->{$key} = undef;
+        return $self->{$formatted_key,$driver} = $value;
+      }
+      else
+      {
+        if($value =~ /^(?:1(?:\.0*)?|t(?:rue)?|y(?:es)?)$/i)
         {
-          $self->{$key} = undef;
-          return $self->{$formatted_key,$driver} = $value;
+          $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          return $self->{$key} = 1;
+        }
+        elsif($value =~ /^(?:0(?:\.0*)?|f(?:alse)?|no?)$/i)
+        {
+          $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          return $self->{$key} = 0;
+        }
+        elsif($value)
+        {
+          my $value = $db->parse_boolean($value);
+          Carp::croak($db->error)  unless(defined $value);
+          $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          return $self->{$key} = $value;
         }
         else
         {
-          if($value =~ /^(?:0*1(?:\.0*)?|t(?:rue)?|y(?:es)?)$/i)
-          {
-            $self->{$formatted_key,$driver} = undef;
-            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-            return $self->{$key} = 1;
-          }
-          elsif($value =~ /^(?:0+(?:\.0*)?|f(?:alse)?|no?)$/i)
-          {
-            $self->{$formatted_key,$driver} = undef;
-            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-            return $self->{$key} = 0;
-          }
-          else
-          {
-            my $value = $db->parse_boolean($value);
-            Carp::croak($db->error)  unless(defined $value);
-            $self->{$formatted_key,$driver} = undef;
-            $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-            return $self->{$key} = $value;
-          }
+          $self->{$formatted_key,$driver} = undef;
+          $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
+          return $self->{$key} = 0;
         }
       }
-
-      $self->{$formatted_key,$driver} = undef;
-      $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-      return $self->{$key} = defined $_[0] ? 0 : undef;
     }
   }
   else { Carp::croak "Unknown interface: $interface" }

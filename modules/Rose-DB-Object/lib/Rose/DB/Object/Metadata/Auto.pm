@@ -1560,7 +1560,7 @@ sub auto_initialize
   $self->auto_init_unique_keys(@_);
   $self->auto_init_foreign_keys(@_);
   $self->auto_init_relationships(@_);
-$DB::single = 1;
+
   $self->initialize(@_);
 
   # Don't seem to need this anymore...
