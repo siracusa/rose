@@ -45,7 +45,7 @@ foreach my $db_type (qw(mysql))
   if($db_type eq 'mysql')
   {
     is($o->meta->column('canmeet')->perl_hash_definition,
-       q(canmeet => { type => 'enum', default => 'YES', not_null => 1, values => [ 'YES', 'NO' ] }),
+       q(canmeet => { type => 'enum', check_in => [ 'YES', 'NO' ], default => 'YES', not_null => 1 }),
        "enum column defintion - $db_type");
   }
   else { ok(1, "non-mysql - $db_type") }
