@@ -1,3 +1,7 @@
+0.7663_01 (02.04.2008) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: $column->parse_value() with Manager integration.
+
 0.7663 (02.04.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug that caused delete_on_save method creation for foreign
