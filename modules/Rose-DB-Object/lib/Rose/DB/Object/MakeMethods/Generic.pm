@@ -606,6 +606,7 @@ sub boolean
 
         if(@_)
         {
+          no warnings 'uninitialized';
           my $value = $_[0];
 
           if($self->{STATE_LOADING()})
@@ -639,7 +640,7 @@ sub boolean
             {
               $self->{$formatted_key,$driver} = undef;
               $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-              return $self->{$key} = 0;
+              return $self->{$key} = defined($value) ? 0 : undef;
             }
           }
         }
@@ -688,6 +689,7 @@ sub boolean
 
         if(@_)
         {
+          no warnings 'uninitialized';
           my $value = $_[0];
 
           if($self->{STATE_LOADING()})
@@ -721,7 +723,7 @@ sub boolean
             {
               $self->{$formatted_key,$driver} = undef;
               $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-              return $self->{$key} = 0;
+              return $self->{$key} = defined($value) ? 0 : undef;
             }
           }
 
@@ -864,7 +866,7 @@ sub boolean
         {
           $self->{$formatted_key,$driver} = undef;
           $self->{MODIFIED_COLUMNS()}{$column_name} = 1;
-          return $self->{$key} = 0;
+          return $self->{$key} = defined($value) ? 0 : undef;
         }
       }
     }

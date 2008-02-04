@@ -6,6 +6,7 @@
 
     * Fixed a bug that caused boolean columns to be incorrectly marked as
       modified.  (Reported by Grzegorz Nosek)
+    * TODO: meta->always_qualify_column_names(1)
 
 0.7663 (02.04.2008) - John Siracusa <siracusa@gmail.com>
 
