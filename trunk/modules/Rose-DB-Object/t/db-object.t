@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 558;
+use Test::More tests => 566;
 
 BEGIN 
 {
@@ -25,7 +25,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE,
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 220)  unless($HAVE_PG);
+  skip("Postgres tests", 224)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -55,6 +55,28 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   {
     ok($o->insert, "insert() 1 - $db_type");
   }
+
+  MyPgObject->meta->sql_qualify_column_names_on_load(1);
+  
+  my $schema = $db_type eq 'pg_with_schema' ? 'rose_db_object_private.' : '';
+
+  is(MyPgObject->meta->load_all_sql(undef, $o->db), 
+     qq(SELECT rose_db_object_test.name, rose_db_object_test.code, rose_db_object_test.id, rose_db_object_test.k1, rose_db_object_test.k2, rose_db_object_test.k3, rose_db_object_test.passwd, rose_db_object_test.flag, rose_db_object_test.flag2, rose_db_object_test.status, rose_db_object_test.start, rose_db_object_test.save, rose_db_object_test.nums, rose_db_object_test.bitz, rose_db_object_test.decs, rose_db_object_test.dur, rose_db_object_test.epoch, rose_db_object_test.hiepoch, rose_db_object_test.bint1, rose_db_object_test.bint2, rose_db_object_test.bint3, rose_db_object_test.bint4, rose_db_object_test.tee_time, rose_db_object_test.tee_time0, rose_db_object_test.tee_time5, rose_db_object_test.tee_time9, rose_db_object_test.date_created, rose_db_object_test.last_modified FROM ${schema}rose_db_object_test WHERE rose_db_object_test.id = ?),
+     "sql_qualify_column_names_on_load() 1 - $db_type");
+
+  is(MyPgObject->meta->load_sql(undef, $o->db), 
+     qq(SELECT rose_db_object_test.name, rose_db_object_test.code, rose_db_object_test.id, rose_db_object_test.k1, rose_db_object_test.k3, rose_db_object_test.passwd, rose_db_object_test.flag, rose_db_object_test.flag2, rose_db_object_test.status, rose_db_object_test.save, rose_db_object_test.nums, rose_db_object_test.bitz, rose_db_object_test.decs, rose_db_object_test.dur, rose_db_object_test.epoch, rose_db_object_test.hiepoch, rose_db_object_test.bint1, rose_db_object_test.bint2, rose_db_object_test.bint3, rose_db_object_test.bint4, rose_db_object_test.tee_time, rose_db_object_test.tee_time0, rose_db_object_test.tee_time5, rose_db_object_test.tee_time9, rose_db_object_test.date_created, rose_db_object_test.last_modified FROM ${schema}rose_db_object_test WHERE rose_db_object_test.id = ?),
+     "sql_qualify_column_names_on_load() 2 - $db_type");
+
+  is(MyPgObject->meta->load_all_sql_with_null_key([ qw(k1 k2 k3) ], [ 1, undef, 3 ], $o->db), 
+     qq(SELECT rose_db_object_test.name, rose_db_object_test.code, rose_db_object_test.id, rose_db_object_test.k1, rose_db_object_test.k2, rose_db_object_test.k3, rose_db_object_test.passwd, rose_db_object_test.flag, rose_db_object_test.flag2, rose_db_object_test.status, rose_db_object_test.start, rose_db_object_test.save, rose_db_object_test.nums, rose_db_object_test.bitz, rose_db_object_test.decs, rose_db_object_test.dur, rose_db_object_test.epoch, rose_db_object_test.hiepoch, rose_db_object_test.bint1, rose_db_object_test.bint2, rose_db_object_test.bint3, rose_db_object_test.bint4, rose_db_object_test.tee_time, rose_db_object_test.tee_time0, rose_db_object_test.tee_time5, rose_db_object_test.tee_time9, rose_db_object_test.date_created, rose_db_object_test.last_modified FROM ${schema}rose_db_object_test WHERE rose_db_object_test.k1 = ? AND rose_db_object_test.k2 IS NULL AND rose_db_object_test.k3 = ?),
+     "sql_qualify_column_names_on_load() 3 - $db_type");
+
+  is(MyPgObject->meta->load_sql_with_null_key([ qw(k1 k2 k3) ], [ 1, undef, 3 ], $o->db), 
+     qq(SELECT rose_db_object_test.name, rose_db_object_test.code, rose_db_object_test.id, rose_db_object_test.k1, rose_db_object_test.k3, rose_db_object_test.passwd, rose_db_object_test.flag, rose_db_object_test.flag2, rose_db_object_test.status, rose_db_object_test.save, rose_db_object_test.nums, rose_db_object_test.bitz, rose_db_object_test.decs, rose_db_object_test.dur, rose_db_object_test.epoch, rose_db_object_test.hiepoch, rose_db_object_test.bint1, rose_db_object_test.bint2, rose_db_object_test.bint3, rose_db_object_test.bint4, rose_db_object_test.tee_time, rose_db_object_test.tee_time0, rose_db_object_test.tee_time5, rose_db_object_test.tee_time9, rose_db_object_test.date_created, rose_db_object_test.last_modified FROM ${schema}rose_db_object_test WHERE rose_db_object_test.k1 = ? AND rose_db_object_test.k2 IS NULL AND rose_db_object_test.k3 = ?),
+     "sql_qualify_column_names_on_load() 4 - $db_type");
+
+  MyPgObject->meta->sql_qualify_column_names_on_load(rand > 0.6 ? 0 : 1); # excitement! :)
 
   is($o->meta->primary_key->sequence_names->[0], 'rose_db_object_test_id_seq', 
      "pk sequence name - $db_type");

@@ -620,6 +620,20 @@ sub select_schema
   return $self->{'schema'} || ($db ? $db->schema : undef);
 }
 
+sub sql_qualify_column_names_on_load
+{
+  my($self) = shift;
+
+  if(@_)
+  {
+    $self->_clear_column_generated_values;
+    $self->{'sql_qualify_column_names_on_load'} = $_[1] ? 1 : 0;
+    $self->prime_caches  if($self->is_initialized);
+  }
+
+  return $self->{'sql_qualify_column_names_on_load'} || 1;
+}
+
 sub init_primary_key
 {
   Rose::DB::Object::Metadata::PrimaryKey->new(parent => shift);
@@ -2605,7 +2619,7 @@ sub select_nonlazy_columns_string_sql
   my($self, $db) = @_;
 
   return $self->{'select_nonlazy_columns_string_sql'}{$db->{'id'}} ||= 
-    join(', ', map { $_->select_sql($db) } $self->nonlazy_columns);
+    join(', ', @{ scalar $self->select_nonlazy_columns_sql($db) });
 }
 
 sub select_columns_string_sql
@@ -2613,15 +2627,55 @@ sub select_columns_string_sql
   my($self, $db) = @_;
 
   return $self->{'select_columns_string_sql'}{$db->{'id'}} ||= 
-    join(', ', map { $_->select_sql($db) } $self->columns_ordered);
+    join(', ', @{ scalar $self->select_columns_sql($db) });
 }
 
 sub select_columns_sql
 {
   my($self, $db) = @_;
 
-  my $list = $self->{'select_columns_sql'}{$db->{'id'}} ||= 
-    [ map { $_->select_sql($db) } $self->columns_ordered ];
+  my $list = $self->{'select_columns_sql'}{$db->{'id'}};
+  
+  unless($list)
+  {
+    my $table = $self->table;
+    
+    if($self->sql_qualify_column_names_on_load)
+    {
+      $list = [ map { $_->select_sql($db, $table) } $self->columns_ordered ];
+    }
+    else
+    {
+      $list = [ map { $_->select_sql($db) } $self->columns_ordered ];
+    }
+
+    $self->{'select_columns_sql'}{$db->{'id'}} = $list;
+  }
+
+  return wantarray ? @$list : $list;
+}
+
+sub select_nonlazy_columns_sql
+{
+  my($self, $db) = @_;
+
+  my $list = $self->{'select_nonlazy_columns_sql'}{$db->{'id'}};
+  
+  unless($list)
+  {
+    my $table = $self->table;
+    
+    if($self->sql_qualify_column_names_on_load)
+    {
+      $list = [ map { $_->select_sql($db, $table) } $self->nonlazy_columns ];
+    }
+    else
+    {
+      $list = [ map { $_->select_sql($db) } $self->nonlazy_columns ];
+    }
+    
+    $self->{'select_nonlazy_columns_sql'}{$db->{'id'}} = $list;
+  }
 
   return wantarray ? @$list : $list;
 }
@@ -2839,7 +2893,10 @@ sub load_all_sql
     join(' AND ',  map 
     {
       my $c = $self->column($_);
-      $c->name_sql . ' = ' . $c->query_placeholder_sql($db)
+      
+      ($self->sql_qualify_column_names_on_load ? 
+        $db->auto_quote_column_with_table($c->name_sql, $self->table) : $c->name_sql) .
+      ' = ' . $c->query_placeholder_sql($db)
     }
     @$key_columns);
 }
@@ -2857,7 +2914,9 @@ sub load_sql
     join(' AND ', map
     {
       my $c = $self->column($_);
-      $c->name_sql . ' = ' . $c->query_placeholder_sql($db)
+      ($self->sql_qualify_column_names_on_load ? 
+        $db->auto_quote_column_with_table($c->name_sql, $self->table) : $c->name_sql) .
+      ' = ' . $c->query_placeholder_sql($db)
     }
     @$key_columns);
 }
@@ -2868,6 +2927,9 @@ sub load_all_sql_with_null_key
 
   my $i = 0;
 
+  my $fq    = $self->sql_qualify_column_names_on_load;
+  my $table = $self->table;
+
   no warnings;
   return 
     'SELECT ' . $self->select_columns_string_sql($db) . ' FROM ' .
@@ -2875,7 +2937,7 @@ sub load_all_sql_with_null_key
     join(' AND ', map 
     {
       my $c = $self->column($_);
-      $c->name_sql . 
+      ($fq ? $db->auto_quote_column_with_table($c->name_sql, $table) : $c->name_sql) . 
       (defined $key_values->[$i++] ? ' = ' . $c->query_placeholder_sql : ' IS NULL')
     }
     @$key_columns);
@@ -2887,6 +2949,9 @@ sub load_sql_with_null_key
 
   my $i = 0;
 
+  my $fq    = $self->sql_qualify_column_names_on_load;
+  my $table = $self->table;
+
   no warnings;
   return 
     'SELECT ' . $self->select_nonlazy_columns_string_sql($db) . ' FROM ' .
@@ -2894,7 +2959,7 @@ sub load_sql_with_null_key
     join(' AND ', map 
     {
       my $c = $self->column($_);
-      $c->name_sql . 
+      ($fq ? $db->auto_quote_column_with_table($c->name_sql, $table) : $c->name_sql) .
       (defined $key_values->[$i++] ? ' = ' . $c->query_placeholder_sql : ' IS NULL')
     }
     @$key_columns);
@@ -3673,7 +3738,7 @@ sub prime_caches
        init_insert_changes_only_sql_prefix init_update_sql_prefix
        init_update_sql_with_inlining_start column_names_string_sql
        nonlazy_column_names_string_sql select_nonlazy_columns_string_sql
-       select_columns_string_sql select_columns_sql);
+       select_columns_string_sql select_columns_sql select_nonlazy_columns_sql);
 
   foreach my $method (@methods)
   {
@@ -3736,6 +3801,7 @@ sub _clear_column_generated_values
   $self->{'select_nonlazy_columns_string_sql'}    = undef;
   $self->{'select_columns_string_sql'}            = undef;
   $self->{'select_columns_sql'}                   = undef;
+  $self->{'select_nonlazy_columns_sql'}           = undef;
   $self->{'method_columns'}         = undef;
   $self->{'column_accessor_method'} = undef;
   $self->{'column_mutator_method'}  = undef;
@@ -5342,6 +5408,18 @@ The L<setup()|/setup> method call above is equivalent to the following code:
 
       $meta->initialize;
     }
+
+=item B<sql_qualify_column_names_on_load [BOOL]>
+
+Get or set a boolean value that indicates whether or not to prefix the columns with the table name in the SQL used to L<load()|/load> an object.  The default value is false.
+
+For example, here is some SQL that might be used to L<load|/load> an object, as generated with L<sql_qualify_column_names_on_load|/sql_qualify_column_names_on_load> set to false:
+
+    SELECT id, name FROM dogs WHERE id = 5;
+
+Now here's how it would look with L<sql_qualify_column_names_on_load|/sql_qualify_column_names_on_load> set to true:
+
+    SELECT dogs.id, dogs.name FROM dogs WHERE dogs.id = 5;
 
 =item B<table [TABLE]>
 
