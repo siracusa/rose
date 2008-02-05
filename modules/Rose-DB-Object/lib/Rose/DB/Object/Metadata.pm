@@ -626,9 +626,15 @@ sub sql_qualify_column_names_on_load
 
   if(@_)
   {
-    $self->_clear_column_generated_values;
-    $self->{'sql_qualify_column_names_on_load'} = $_[1] ? 1 : 0;
-    $self->prime_caches  if($self->is_initialized);
+    my $value = $_[0] ? 1 : 0;
+    
+    no warnings 'uninitialized';
+    if($value != $self->{'sql_qualify_column_names_on_load'})
+    {
+      $self->{'sql_qualify_column_names_on_load'} = $value;
+      $self->_clear_column_generated_values;
+      $self->prime_caches  if($self->is_initialized);
+    }
   }
 
   return $self->{'sql_qualify_column_names_on_load'};
@@ -3751,7 +3757,7 @@ sub prime_caches
   {
     foreach my $method (qw(update_all_sql load_sql load_all_sql))
     {
-      $self->update_all_sql(scalar $key->columns, $db);
+      $self->$method(scalar $key->columns, $db);
     }
   }
 }
