@@ -183,7 +183,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     ok(!$p->meta->column('tee_time5'), "time precision check 1 - $db_type");
     ok(!$p->meta->column('tee_time'), "time precision check 2 - $db_type");
     is($p->meta->column('bint1')->type, 'bigint', "bigint 1 - $db_type");
-    is($p->bint1, '9223372036854775800', "bigint 2 - $db_type");
+    ok($p->bint1 =~ /^\+?9223372036854775800$/, "bigint 2 - $db_type");
   }
   else
   {
