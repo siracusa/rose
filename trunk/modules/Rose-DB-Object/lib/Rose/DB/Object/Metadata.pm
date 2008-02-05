@@ -631,7 +631,7 @@ sub sql_qualify_column_names_on_load
     $self->prime_caches  if($self->is_initialized);
   }
 
-  return $self->{'sql_qualify_column_names_on_load'} || 1;
+  return $self->{'sql_qualify_column_names_on_load'};
 }
 
 sub init_primary_key
