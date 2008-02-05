@@ -2,11 +2,13 @@
 
     * TODO: $column->parse_value() with Manager integration.
 
-0.7664 (02.04.2008) - John Siracusa <siracusa@gmail.com>
+0.7664 (02.05.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug that caused boolean columns to be incorrectly marked as
       modified.  (Reported by Grzegorz Nosek)
-    * TODO: meta->always_qualify_column_names(1)
+    * Added sql_qualify_column_names_on_load() Metadata method to help
+      support Postgres functions that can masquerade as columns if they're
+      prefixed by the table name.  (Suggested by Grzegorz Nosek)
 
 0.7663 (02.04.2008) - John Siracusa <siracusa@gmail.com>
 
