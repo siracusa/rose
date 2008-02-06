@@ -114,7 +114,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   my $product_class     = $class_prefix . '::Product';
   my $price_class       = $class_prefix . '::Price';
   my $map_manager_class = $class_prefix . '::ProductsColor::Manager';
-  
+
   ##
   ## Run tests
   ##

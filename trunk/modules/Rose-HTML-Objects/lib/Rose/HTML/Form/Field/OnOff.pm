@@ -85,7 +85,7 @@ sub fq_moniker
     $name =~ s/(?:^|\Q$sep\E)[^$sep]+$/$moniker/o;
   }
   else { $name = $self->local_moniker }
-  
+
   return join(FF_SEPARATOR, grep { defined } $self->form_context_name,
                                              $self->field_context_name, 
                                              $name);

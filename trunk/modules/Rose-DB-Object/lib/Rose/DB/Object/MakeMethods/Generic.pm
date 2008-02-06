@@ -247,7 +247,7 @@ EOF
     qq(\$self->{SET_COLUMNS()}{'$col_name_escaped'} = 1;) : '';
 
   my $mod_cond_code;
-  
+
   if($smart)
   {
     $mod_cond_code = ($type eq 'integer') ?
@@ -1277,7 +1277,7 @@ sub array
           {
             $self->{$key} = $db->parse_array(defined $self->{$formatted_key,$driver} ? 
                                              $self->{$formatted_key,$driver} : $default);
-  
+
             if(!defined $default || defined $self->{$key})
             {
               $self->{$formatted_key,$driver} = undef;
@@ -1403,7 +1403,7 @@ sub array
                  !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
           {
             $self->{$key} = $db->parse_array($default);
-  
+
             if(!defined $default || defined $self->{$key})
             {
               $self->{$formatted_key,$driver} = undef;
@@ -1619,7 +1619,7 @@ sub set
             my $set = $db->parse_set((defined $self->{$formatted_key,$driver} ? 
                                       $self->{$formatted_key,$driver} : $default),
                                      { value_type => $value_type });
-  
+
             if($choices)
             {
               foreach my $val (@$set)
@@ -1628,9 +1628,9 @@ sub set
                   unless(exists $choices{$val});
               }
             }
-  
+
             $self->{$key} = $set;
-  
+
             if(!defined $default || defined $self->{$key})
             {
               $self->{$formatted_key,$driver} = undef;
@@ -1767,7 +1767,7 @@ sub set
                  !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
           {
             my $set = $db->parse_set($default, { value_type => $value_type });
-  
+
             if($choices)
             {
               foreach my $val (@$set)
@@ -1776,9 +1776,9 @@ sub set
                   unless(exists $choices{$val});
               }
             }
-  
+
             $self->{$key} = $set;
-  
+
             if(!defined $default || defined $self->{$key})
             {
               $self->{$formatted_key,$driver} = undef;
@@ -1943,7 +1943,7 @@ sub object_by_key
     $args->{'single'} = 1;
     return $class->objects_by_key($name, $args, $options);
   }
-  
+
   my %methods;
 
   my $key = $args->{'hash_key'} || $name;
@@ -4891,12 +4891,12 @@ sub objects_by_map
             unless($in_db)
             {
               my $dbh = $map_record->dbh;
-  
+
               # It's okay if this fails (e.g., if the primary key is undefined)
               local $dbh->{'PrintError'} = 0;
               eval { $in_db = $map_record->load(speculative => 1) };
             }
-  
+
             # Save the map record, if necessary
             unless($in_db)
             {
@@ -5154,17 +5154,17 @@ sub objects_by_map
             }
 
             $in_db = $map_record->{STATE_IN_DB()};
-  
+
             # Try to load the map record if doesn't appear to exist already
             unless($in_db)
             {
               my $dbh = $map_record->dbh;
-  
+
               # It's okay if this fails (e.g., if the primary key is undefined)
               local $dbh->{'PrintError'} = 0;
               eval { $in_db = $map_record->load(speculative => 1) };
             }
-  
+
             # Save the map record, if necessary
             unless($in_db)
             {

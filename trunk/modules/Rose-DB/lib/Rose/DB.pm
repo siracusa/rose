@@ -283,21 +283,21 @@ sub driver_class
 sub db_cache
 {
   my($class) = shift;
-  
+
   if(@_)
   {
     return $class->_db_cache(@_);
   }
-  
+
   if(my $cache = $class->_db_cache)
   {
     return $cache;
   }
-  
+
   my $cache_class = $class->db_cache_class;
   eval "use $cache_class";
   die "Could not load db cache class '$cache_class' - $@"  if($@);
-  
+
   return $class->_db_cache($cache_class->new);
 }
 
@@ -899,7 +899,7 @@ sub init_dbh
   }
 
   $self->{'_dbh_refcount'}++;
-  
+
   if($dbh->{'private_rose_db_inited'})
   {
     # Someone else owns this dbh
@@ -929,14 +929,14 @@ sub init_dbh
           $dbh->do($sql) or die "$sql - " . $dbh->errstr;
         }
       };
-  
+
       if($@)
       {
         $self->error("Could not do post-connect SQL: $@");
         $dbh->disconnect;
         return undef;
       }
-  
+
       $dbh->{DID_PCSQL_KEY()} = 1;
     }
   }

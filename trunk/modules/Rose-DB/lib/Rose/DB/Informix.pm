@@ -402,7 +402,7 @@ sub parse_set
   while($val =~ s/(?:'((?:[^'\\]+|\\.)*)'|([^',]+))(?:,|$)//)
   {
     push(@set, (defined $1) ? $1 : $2);
-    
+
     if($numeric)
     {
       $set[-1] =~ s/\s+//g;

@@ -12,9 +12,9 @@ package My::Product;
 sub average_price
 {
   my($self) = shift;
-  
+
   my %args;
-  
+
   if(my $ref = ref $_[0])
   {
     if($ref eq 'HASH')
@@ -35,16 +35,16 @@ sub average_price
   my $mgr_args     = $relationship->manager_args || {};
 
   my $average;
-  
+
   # Get query key
   my %key;
 
   while(my($local_column, $foreign_column) = each(%$ft_columns))
   {
     my $local_method = $meta->column_accessor_method_name($local_column);
-  
+
     $key{$foreign_column} = $self->$local_method();
-  
+
     # Comment this out to allow null keys
     unless(defined $key{$foreign_column})
     {
@@ -54,17 +54,17 @@ sub average_price
       return;
     }
   }
-  
+
   # Merge query args
   my @query = (%key, @$query_args, @{delete $args{'query'} || []});      
-  
+
   # Merge the rest of the arguments
   foreach my $param (keys %args)
   {
     if(exists $mgr_args->{$param})
     {
       my $ref = ref $args{$param};
-  
+
       if($ref eq 'ARRAY')
       {
         unshift(@{$args{$param}}, ref $mgr_args->{$param} ? 
@@ -79,12 +79,12 @@ sub average_price
       }
     }
   }
-  
+
   while(my($k, $v) = each(%$mgr_args))
   {
     $args{$k} = $v  unless(exists $args{$k});
   }
-  
+
   $args{'object_class'} = $relationship->class;
 
   my $debug = $Rose::DB::Object::Manager::Debug || $args{'debug'};
@@ -98,7 +98,7 @@ sub average_price
         query => \@query, db => $self->db, %args);
 
     $debug && warn "$sql (", join(', ', @$bind), ")\n";
-    
+
     my $sth = $self->db->dbh->prepare($sql);
     $sth->execute(@$bind);
 

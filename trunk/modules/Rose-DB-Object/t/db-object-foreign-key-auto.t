@@ -2418,7 +2418,7 @@ EOF
     MySQLiteObject->meta->delete_column('nums');
     MySQLiteObject->meta->add_column(nums => { type => 'array' });
     MySQLiteObject->meta->make_column_methods(replace_existing => 1);
-    
+
     Test::More::ok(MySQLiteObject->can('fother'),  'fother() check - sqlite');
     Test::More::ok(MySQLiteObject->can('fother2'), 'fother2() check - sqlite');
     Test::More::ok(MySQLiteObject->can('fother3'), 'fother3() check - sqlite');
