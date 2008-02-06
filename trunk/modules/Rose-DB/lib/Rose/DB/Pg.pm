@@ -8,7 +8,7 @@ use SQL::ReservedWords::PostgreSQL();
 
 use Rose::DB;
 
-our $VERSION = '0.734';
+our $VERSION = '0.738';
 
 our $Debug = 0;
 
@@ -148,7 +148,7 @@ sub parse_array
 
   while($val =~ s/(?:"((?:[^"\\]+|\\.)*)"|([^",]+))(?:,|$)//)
   {
-    push(@array, (defined $1) ? $1 : $2);
+    push(@array, map { $_ eq 'NULL' ? undef : $_ } (defined $1 ? $1 : $2));
   }
 
   return \@array;
@@ -158,16 +158,15 @@ sub format_array
 {
   my($self) = shift;
 
-  my @array = (ref $_[0]) ? @{$_[0]} : @_;
+  return undef  unless(ref $_[0] || defined $_[0]);
 
-  return undef  unless(@array && defined $array[0]);
+  my @array = (ref $_[0]) ? @{$_[0]} : @_;
 
   return '{' . join(',', map 
   {
     if(!defined $_)
     {
-      Carp::croak 'Undefined value found in array or list passed to ',
-                  __PACKAGE__, '::format_array()';
+      'NULL'
     }
     elsif(/^[-+]?\d+(?:\.\d*)?$/)
     {
@@ -582,7 +581,7 @@ See the L<DateTime::TimeZone> documentation for acceptable values of TZ.
 
 =item B<format_array ARRAYREF | LIST>
 
-Given a reference to an array or a list of values, return a string formatted according to the rules of PostgreSQL's "ARRAY" column type.  Undef is returned if ARRAYREF points to an empty array or if LIST is not passed.  If the array or list contains undefined values, a fatal error will occur.
+Given a reference to an array or a list of values, return a string formatted according to the rules of PostgreSQL's "ARRAY" column type.  Undef is returned if ARRAYREF points to an empty array or if LIST is not passed.
 
 =item B<format_interval DURATION>
 

@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 231);
+    Test::More->import(tests => 232);
   }
 }
 
@@ -323,11 +323,11 @@ SKIP:
 {
   unless(lookup_ip($db->host))
   {
-    skip("Host '@{[$db->host]}' not found", 42);
+    skip("Host '@{[$db->host]}' not found", 43);
   }
 
   eval { $db->connect };
-  skip("Could not connect to db 'test', 'pg' - $@", 42)  if($@);
+  skip("Could not connect to db 'test', 'pg' - $@", 43)  if($@);
   $dbh = $db->dbh;
 
   is($db->domain, 'test', "domain()");
@@ -376,22 +376,27 @@ SKIP:
   is($db->format_bitfield($db->parse_bitfield('0xA'), 4),
      q(1010), "format_bitfield() 4");
 
-  my $str = $db->format_array([ 'a' .. 'c' ]);
-  is($str, '{"a","b","c"}', 'format_array() 1');
+  my $str = $db->format_array([ undef, 'a' .. 'c' ]);
+  is($str, '{NULL,"a","b","c"}', 'format_array() 1.0');
 
-  eval { $db->format_array('a', undef) };
-  ok($@ =~ /undefined/i, 'format_array() 2');
-
-  eval { $db->format_array([ 'a', undef ]) };
-  ok($@ =~ /undefined/i, 'format_array() 3');
+  $str = $db->format_array([ 'a' .. 'c' ]);
+  is($str, '{"a","b","c"}', 'format_array() 2');
 
   my $ar = $db->parse_array('[-3:3]={1,2,3}');
   ok(ref $ar eq 'ARRAY' && @$ar == 3 && $ar->[0] eq '1' && $ar->[1] eq '2' && $ar->[2] eq '3',
+     'parse_array() 1');
+
+  $ar = $db->parse_array('{NULL,"a","b"}');
+  ok(ref $ar eq 'ARRAY' && !defined $ar->[0] && $ar->[1] eq 'a' && $ar->[2] eq 'b',
      'parse_array() 2');
+
+  $ar = $db->parse_array('{"a",NULL}');
+  ok(ref $ar eq 'ARRAY' && $ar->[0] eq 'a' && !defined $ar->[1],
+     'parse_array() 3');
 
   $ar = $db->parse_array($str);
   ok(ref $ar eq 'ARRAY' && $ar->[0] eq 'a' && $ar->[1] eq 'b' && $ar->[2] eq 'c',
-     'parse_array() 1');
+     'parse_array() 4');
 
   $str = $db->format_array($ar);
   is($str, '{"a","b","c"}', 'format_array() 2');

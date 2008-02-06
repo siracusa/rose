@@ -1,10 +1,10 @@
-0.737_02 (01.16.2007) - John Siracusa <siracusa@gmail.com>
+0.738 (02.06.2008) - John Siracusa <siracusa@gmail.com>
 
     * The INT8 column type is now detected and mapped to "bigint" on
       behalf of Rose::DB::Object.
-    * Fixed a bug that prevented format_array() from correctly handling
-      arrays with undef as the first element.  (Reported by Derek Watson)
-      XXX: Needs tests
+    * Fixed a bug that prevented format_array() and parse_array() from
+      correctly handling arrays containing undef or NULL, respectively.
+      (Reported by Derek Watson)
 
 0.737 (12.13.2007) - John Siracusa <siracusa@gmail.com>
 

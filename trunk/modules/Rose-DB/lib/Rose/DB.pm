@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.737_02';
+our $VERSION = '0.738';
 
 our $Debug = 0;
 
@@ -1597,7 +1597,7 @@ sub parse_array
 
   while($val =~ s/(?:"((?:[^"\\]+|\\.)*)"|([^",]+))(?:,|$)//)
   {
-    push(@array, (defined $1) ? $1 : $2);
+    push(@array, map { $_ eq 'NULL' ? undef : $_ } (defined $1 ? $1 : $2));
   }
 
   return \@array;
@@ -1613,7 +1613,11 @@ sub format_array
 
   my $str = '{' . join(',', map 
   {
-    if(/^[-+]?\d+(?:\.\d*)?$/)
+    if(!defined $_)
+    {
+      'NULL'
+    }
+    elsif(/^[-+]?\d+(?:\.\d*)?$/)
     {
       $_
     }
