@@ -1,3 +1,7 @@
+0.7664_01 (02.06.2008) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: $column->parse_value() with Manager integration.
+
 0.7664 (02.06.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug that caused boolean columns to be incorrectly marked as
