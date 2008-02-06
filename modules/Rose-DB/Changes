@@ -1,7 +1,7 @@
 0.738 (02.06.2008) - John Siracusa <siracusa@gmail.com>
 
-    * The INT8 column type is now detected and mapped to "bigint" on
-      behalf of Rose::DB::Object.
+    * The Informix INT8 column type is now detected and mapped to "bigint"
+      on behalf of Rose::DB::Object.
     * Fixed a bug that prevented format_array() and parse_array() from
       correctly handling arrays containing undef or NULL, respectively.
       (Reported by Derek Watson)
