@@ -57,7 +57,7 @@ sub reset
 sub hidden
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     if($self->{'_hidden'} = shift(@_) ? 1 : 0)
@@ -65,7 +65,7 @@ sub hidden
       $self->checked(undef);
     }
   }
-  
+
   return $self->{'_hidden'};
 }
 

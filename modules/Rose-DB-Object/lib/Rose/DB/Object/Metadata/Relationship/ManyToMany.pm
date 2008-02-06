@@ -317,7 +317,7 @@ sub is_ready_to_make_methods
             "class other than $target_class.  Please specify one " .
             "by name with a 'foreign' parameter in the 'map' hash");
         }
-    
+
         $map_to_class = $item->class;
 
         unless(UNIVERSAL::isa($map_to_class, 'Rose::DB::Object'))

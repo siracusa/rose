@@ -905,7 +905,7 @@ sub localizer
     if(@_)
     {
       $invocant->{'localizer'} = shift;
-      
+
       if(ref $invocant->{'localizer'} eq 'CODE')
       {
         return $invocant->{'localizer'}->();
@@ -967,7 +967,7 @@ sub locale
     if(@_)
     {
       $invocant->{'locale'} = shift;
-      
+
       if(ref $invocant->{'locale'} eq 'CODE')
       {
         return $invocant->{'locale'}->();
@@ -1007,7 +1007,7 @@ sub locale
       {
         return $locale->();
       }
-    
+
       return $locale || $class->default_locale;
     }
   }

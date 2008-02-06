@@ -224,7 +224,7 @@ sub new
 sub init
 {
   my($self) = shift;
-  
+
   # This attribute will be accessed many times, and a default 
   # of 0 is usually a "faster false" than undef.
   $self->sql_qualify_column_names_on_load(0);
@@ -638,7 +638,7 @@ sub sql_qualify_column_names_on_load
   if(@_)
   {
     my $value = $_[0] ? 1 : 0;
-    
+
     no warnings 'uninitialized';
     if($value != $self->{'sql_qualify_column_names_on_load'})
     {
@@ -724,12 +724,12 @@ sub add_unique_keys
 sub unique_key_by_name
 {
   my($self, $name) = @_;
-  
+
   foreach my $uk ($self->unique_keys)
   {
     return $uk  if($uk->name eq $name);
   }
-  
+
   return undef;
 }
 
@@ -1620,7 +1620,7 @@ sub class_for
   # wont' show up in a catalog, schema, or table name, so I'm guarding
   # against someone changing it to "-" elsewhere in the code or whatever.
   local $; = "\034";
-                        
+
   my $f_class =
     $reg->{'catalog-schema-table',$catalog,$schema,$table} ||
     $reg->{'catalog-schema-table',$catalog,$default_schema,$table} ||
@@ -2652,11 +2652,11 @@ sub select_columns_sql
   my($self, $db) = @_;
 
   my $list = $self->{'select_columns_sql'}{$db->{'id'}};
-  
+
   unless($list)
   {
     my $table = $self->table;
-    
+
     if($self->sql_qualify_column_names_on_load)
     {
       $list = [ map { $_->select_sql($db, $table) } $self->columns_ordered ];
@@ -2677,11 +2677,11 @@ sub select_nonlazy_columns_sql
   my($self, $db) = @_;
 
   my $list = $self->{'select_nonlazy_columns_sql'}{$db->{'id'}};
-  
+
   unless($list)
   {
     my $table = $self->table;
-    
+
     if($self->sql_qualify_column_names_on_load)
     {
       $list = [ map { $_->select_sql($db, $table) } $self->nonlazy_columns ];
@@ -2690,7 +2690,7 @@ sub select_nonlazy_columns_sql
     {
       $list = [ map { $_->select_sql($db) } $self->nonlazy_columns ];
     }
-    
+
     $self->{'select_nonlazy_columns_sql'}{$db->{'id'}} = $list;
   }
 
@@ -2910,7 +2910,7 @@ sub load_all_sql
     join(' AND ',  map 
     {
       my $c = $self->column($_);
-      
+
       ($self->sql_qualify_column_names_on_load ? 
         $db->auto_quote_column_with_table($c->name_sql, $self->table) : $c->name_sql) .
       ' = ' . $c->query_placeholder_sql($db)
@@ -3033,7 +3033,7 @@ sub update_sql
   unless($self->dbi_requires_bind_param($db))
   {
     my $method_name = $self->column_accessor_method_names_hash;
-  
+
     foreach my $column (@columns)
     {
       my $method = $method_name->{$column->{'name'}};
@@ -4154,7 +4154,7 @@ sub map_record_method_key
 sub column_undef_overrides_default
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     return $self->{'column_undef_overrides_default'} = $_[0] ? 1 : 0;
@@ -5428,9 +5428,9 @@ The L<setup()|/setup> method call above is equivalent to the following code:
 
 =item B<sql_qualify_column_names_on_load [BOOL]>
 
-Get or set a boolean value that indicates whether or not to prefix the columns with the table name in the SQL used to L<load()|/load> an object.  The default value is false.
+Get or set a boolean value that indicates whether or not to prefix the columns with the table name in the SQL used to L<load()|Rose::DB::Object/load> an object.  The default value is false.
 
-For example, here is some SQL that might be used to L<load|/load> an object, as generated with L<sql_qualify_column_names_on_load|/sql_qualify_column_names_on_load> set to false:
+For example, here is some SQL that might be used to L<load|Rose::DB::Object/load> an object, as generated with L<sql_qualify_column_names_on_load|/sql_qualify_column_names_on_load> set to false:
 
     SELECT id, name FROM dogs WHERE id = 5;
 

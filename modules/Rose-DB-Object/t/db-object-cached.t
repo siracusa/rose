@@ -276,9 +276,9 @@ SKIP: foreach my $db_type ('mysql')
   Rose::DB->default_type($db_type);
 
   my $opk = MyMySQLObject->new(name => 'John', id => 199);
-  
+
   $opk->remember_by_primary_key;
-  
+
   $opk = MyMySQLObject->new(name => 'John');
   ok(!$opk->load(speculative => 1), "remember_by_primary_key() 1 - $db_type");
 
@@ -639,9 +639,9 @@ SKIP: foreach my $db_type (qw(sqlite))
   Rose::DB->default_type($db_type);
 
   my $opk = MySQLiteObject->new(name => 'John', id => 199);
-  
+
   $opk->remember_by_primary_key;
-  
+
   $opk = MySQLiteObject->new(name => 'John');
   ok(!$opk->load(speculative => 1), "remember_by_primary_key() 1 - $db_type");
 
@@ -825,9 +825,9 @@ SKIP: foreach my $db_type (qw(sqlite))
   ok($MySQLiteObject::Objects_By_Key_Loaded{'name'}{'John'} != $loaded, "cache_expires_in uk 3 - $db_type");
 
   MySQLiteObject->remember_all;
-  
+
   $loaded = $MySQLiteObject::Objects_By_Key_Loaded{'name'}{'John'};
-  
+
   ok($loaded && $loaded ne $o, "remember_all - $db_type");
 }
 

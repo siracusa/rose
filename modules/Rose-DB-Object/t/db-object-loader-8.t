@@ -39,7 +39,7 @@ foreach my $db_type (qw(mysql))
   #$Rose::DB::Object::Metadata::Debug = 1;
 
   my $db = Rose::DB->new($db_type);
-       
+
   my $loader = 
     Rose::DB::Object::Loader->new(
       db           => $db,

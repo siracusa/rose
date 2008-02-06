@@ -385,7 +385,7 @@ sub label_items
   foreach my $item ($self->items)
   {
     my $value = $item->html_attr('value');
-    
+
     next  unless(defined $value);
 
     if(exists $label_ids->{$value})

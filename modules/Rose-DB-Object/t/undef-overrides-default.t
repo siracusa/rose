@@ -107,7 +107,7 @@ foreach my $n (1 .. $i)
 
     next;
   }
-  
+
   foreach my $method ($method_base, ($type eq 'chkpass' ? () : "get_$method_base"))
   {
     my $o      = My::DB::Object->new;
@@ -117,7 +117,7 @@ foreach my $n (1 .. $i)
     $o->db($db);
     $o_usn->db($db);
     $o_usnd->db($db);
-  
+
     set_state_in_db($o);
     set_state_in_db($o_usn);  
     set_state_in_db($o_usnd);
@@ -125,11 +125,11 @@ foreach my $n (1 .. $i)
     is(massage_value(scalar $o->$method()), massage_value($default), "$method $type in db default $n");
     is(massage_value(scalar $o_usn->$method()), undef, "$method $type in db undef USN explicit $n");
     is(massage_value(scalar $o_usnd->$method()), undef, "$method $type in db undef USN default $n");
-    
+
     unset_state_in_db($o);
     unset_state_in_db($o_usn);  
     unset_state_in_db($o_usnd);
-    
+
     is(massage_value(scalar $o->$method()), massage_value($default), "$method $type default $n");
     is(massage_value(scalar $o_usn->$method()), massage_value($default), "$method $type USN explicit $n");
     is(massage_value(scalar $o_usnd->$method()), massage_value($default), "$method type USN default $n");
@@ -137,17 +137,17 @@ foreach my $n (1 .. $i)
     $o->$method_base(undef);
     $o_usn->$method_base(undef);
     $o_usnd->$method_base(undef);
-  
+
     is(massage_value(scalar $o->$method()), massage_value($default), "$method $type undef default $n");
     is(massage_value(scalar $o_usn->$method()), undef, "$method $type undef USN explicit $n");
     is(massage_value(scalar $o_usnd->$method()), undef, "$method $type undef USN default $n");
-    
+
     my $value = value_for_column_type($type);  
-  
+
     $o->$method_base($value);
     $o_usn->$method_base($value);
     $o_usnd->$method_base($value);
- 
+
     is(massage_value(scalar $o->$method()), massage_value($value), "$method $type value default $n");
     is(massage_value(scalar $o_usn->$method()), massage_value($value), "$method $type value USN explicit $n");
     is(massage_value(scalar $o_usnd->$method()), massage_value($value), "$method $type value USN default $n");
@@ -155,7 +155,7 @@ foreach my $n (1 .. $i)
     $o->$method_base(undef);
     $o_usn->$method_base(undef);
     $o_usnd->$method_base(undef);
-  
+
     is(massage_value(scalar $o->$method()), massage_value($default), "$method $type undef default $n");
     is(massage_value(scalar $o_usn->$method()), undef, "$method $type undef USN explicit $n");
     is(massage_value(scalar $o_usnd->$method()), undef, "$method $type undef USN default $n");
@@ -193,7 +193,7 @@ ok($@, 'not_null undef_overrides_default conflict 3');
 sub massage_value
 {
   my($value) = shift;
-  
+
   if(ref $value eq 'ARRAY')
   {
     return "@$value";
@@ -212,7 +212,7 @@ my %DB;
 sub db_for_column_type
 {
   my($type) = shift;
-  
+
   if($type =~ / year to |^set$/)
   {
     return $DB{'informix'} ||= Rose::DB->new('informix');
@@ -230,12 +230,12 @@ sub db_for_column_type
 sub method_for_column_type
 {
   my($type, $i) = @_;
-  
+
   if($type eq 'chkpass')
   {
     return "c${i}_encrypted";
   }
-  
+
   return "c$i";
 }
 

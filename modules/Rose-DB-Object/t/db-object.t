@@ -57,7 +57,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   }
 
   MyPgObject->meta->sql_qualify_column_names_on_load(1);
-  
+
   my $schema = $db_type eq 'pg_with_schema' ? 'rose_db_object_private.' : '';
 
   is(MyPgObject->meta->load_all_sql(undef, $o->db), 
@@ -130,7 +130,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
   $o2->flag2(undef);
   $o2->save;
-  
+
   is($o2->flag2, undef, "boolean null - $db_type");
 
   $o2->set_status('foo');
@@ -382,7 +382,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   is($o->tee_time->as_string, '00:00:00', "time allballs - $db_type");
   ok($o->tee_time9->as_string =~ /^\d\d:\d\d:\d\d\.\d{1,6}$/, "time now - $db_type");
   is($o->bint4, undef, "bigint null 3 - $db_type");
-  
+
   $o->tee_time(Time::Clock->new->parse('6:30 PM'));
   $o->save;
 
@@ -530,7 +530,7 @@ SKIP: foreach my $db_type ('mysql')
   ok($o4->not_found, "not_found() 2 - $db_type");
 
   eval { $o->items('z') };
-  
+
   ok($@ =~ /Invalid value/, "set invalid value - $db_type");
 
 
@@ -1182,15 +1182,15 @@ SKIP: foreach my $db_type (qw(oracle))
   else
   {
     ok($o->load, "load() 1 - $db_type");
-  
+
     $o->name('C' x 50);
     is($o->name, 'C' x 32, "varchar truncation - $db_type");
-  
+
     $o->name('John');
-  
+
     $o->code('A');
     is($o->code, 'A     ', "character padding - $db_type");
-  
+
     $o->code('C' x 50);
     is($o->code, 'C' x 6, "character truncation - $db_type");
   }
@@ -1221,7 +1221,7 @@ SKIP: foreach my $db_type (qw(oracle))
   {
     ok($o2->load, "load() 2 - $db_type");
     ok(!$o2->not_found, "not_found() 1 - $db_type");
-  
+
     is($o2->name, $o->name, "load() verify 1 - $db_type");
     is($o2->date_created, $o->date_created, "load() verify 2 - $db_type");
     is($o2->last_modified, $o->last_modified, "load() verify 3 - $db_type");
@@ -1230,47 +1230,47 @@ SKIP: foreach my $db_type (qw(oracle))
     is($o2->flag2, 1, "load() verify 6 (boolean value) - $db_type");
     is($o2->save_col, 7, "load() verify 7 (aliased column) - $db_type");
     is($o2->start_date->ymd, '1980-12-24', "load() verify 8 (date value) - $db_type");
-  
+
     $o2->set_status('foo');
     is($o2->get_status, 'foo', "get_status() - $db_type");
     $o2->set_status('active');
     eval { $o2->set_status };
     ok($@, "set_status() - $db_type");
-  
+
     is($o2->bits->to_Bin, '00101', "load() verify 9 (bitfield value) - $db_type");
-  
+
     my $clone = $o2->clone;
     ok($o2->start_date eq $clone->start_date, "clone() 1 - $db_type");
     $clone->start_date->set(year => '1960');
     ok($o2->start_date ne $clone->start_date, "clone() 2 - $db_type");
-  
+
     $o2->start_date('5/24/2001');
-  
+
     sleep(1); # keep the last modified dates from being the same
-  
+
     $o2->last_modified('now');
     ok($o2->save, "save() 2 - $db_type");
     ok($o2->load, "load() 3 - $db_type");
-  
+
     ok(!has_modified_columns($o2), "no modified columns after load() - $db_type");
-  
+
     $o2->name('John 2');
     $o2->save(changes_only => 1);
-  
+
     is($o2->date_created, $o->date_created, "save() verify 1 - $db_type");
     ok($o2->last_modified ne $o->last_modified, "save() verify 2 - $db_type");
     is($o2->start_date->ymd, '2001-05-24', "save() verify 3 (date value) - $db_type");
-  
+
     my $bo = MyOracleObject->new(id => $o->id);
     $bo->load;
     $bo->flag(0);
     $bo->save;
-  
+
     $bo = MyOracleObject->new(id => $o->id);
     $bo->load;
-  
+
     ok(!$bo->flag, "boolean check - $db_type");
-  
+
     $bo->flag(0);
     $bo->save;
   }

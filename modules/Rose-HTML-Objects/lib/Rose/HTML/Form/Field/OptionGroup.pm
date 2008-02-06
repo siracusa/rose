@@ -41,19 +41,19 @@ sub init_apply_error_class { 0 }
 sub hidden
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     my $bool = shift;
 
     $self->SUPER::hidden($bool);
-    
+
     foreach my $option ($self->options)
     {
       $option->hidden($bool);
     }
   }
-  
+
   return $self->SUPER::hidden(@_);
 }
 
