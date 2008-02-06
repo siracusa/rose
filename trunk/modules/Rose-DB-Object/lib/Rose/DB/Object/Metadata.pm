@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.7663';
+our $VERSION = '0.7664';
 
 our $Debug = 0;
 
@@ -219,6 +219,17 @@ sub new
   my($this_class, %args) = @_;
   my $class = $args{'class'} or Carp::croak "Missing required 'class' parameter";
   return $Objects{$class} ||= shift->SUPER::new(@_);
+}
+
+sub init
+{
+  my($self) = shift;
+  
+  # This attribute will be accessed many times, and a default 
+  # of 0 is usually a "faster false" than undef.
+  $self->sql_qualify_column_names_on_load(0);
+
+  $self->SUPER::init(@_);
 }
 
 sub init_original_class { ref shift }
