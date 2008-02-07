@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 159;
+use Test::More tests => 161;
 
 BEGIN 
 {
@@ -121,6 +121,21 @@ My::OtherObject->meta->columns
 My::OtherObject->meta->primary_key_columns([ qw(k1 k2 k3) ]);
 
 My::OtherObject->meta->initialize;
+
+#
+# auto_table_name
+#
+
+AUTO_TABLE:
+{
+  package My::AutoTable;
+  @My::AutoTable::ISA = ('Rose::DB::Object');
+  My::AutoTable->meta->convention_manager->tables_are_singular(1);
+  Test::More::is(My::AutoTable->meta->table, 'auto_table', 'auto_table_name() singular');
+  My::AutoTable->meta->convention_manager->tables_are_singular(0);
+  My::AutoTable->meta->table(undef);
+  Test::More::is(My::AutoTable->meta->table, 'auto_tables', 'auto_table_name() plural');
+}
 
 #
 # auto_primary_key_columns

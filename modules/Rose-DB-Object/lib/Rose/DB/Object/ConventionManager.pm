@@ -123,7 +123,19 @@ sub table_plural
   return $table;
 }
 
-sub auto_table_name { shift->class_to_table_plural }
+sub auto_table_name 
+{
+  my($self) = shift;
+  
+  if($self->tables_are_singular)
+  {
+    return $self->class_to_table_singular;
+  }
+  else
+  {
+    return $self->class_to_table_plural;
+  }
+}
 
 sub auto_primary_key_column_names
 {
