@@ -1,5 +1,8 @@
-0.7664_01 (02.06.2008) - John Siracusa <siracusa@gmail.com>
+0.7664_02 (02.07.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Fixed a bug that prevented the convention manager's auto_table_name()
+      method from honoring the tables_are_singular() attribute value.
+      (Reproted by Ben Tilly)
     * TODO: $column->parse_value() with Manager integration.
 
 0.7664 (02.06.2008) - John Siracusa <siracusa@gmail.com>
