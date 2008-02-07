@@ -2165,6 +2165,8 @@ Actions associated with sub-objects that were added or deleted using one of the 
     $product = Product->new(name => 'Sled');
     $vendor  = Vendor->new(name => 'Acme');  
 
+    $product->vendor($vendor);
+
     # Product and vendor records created and linked together,
     # all within a single transaction.
     $product->save;
