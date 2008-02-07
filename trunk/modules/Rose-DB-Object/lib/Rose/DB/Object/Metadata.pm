@@ -596,7 +596,6 @@ sub table
 {
   unless(@_ > 1)
   {
-$DB::single = 1;
     return $_[0]->{'table'} ||= $_[0]->convention_manager->auto_table_name;
   }
 
