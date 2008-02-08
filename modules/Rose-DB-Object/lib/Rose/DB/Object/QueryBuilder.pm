@@ -389,8 +389,20 @@ sub build_select
 
             my %tmp = ($column_arg => $val);
 
+            if(ref $val eq 'HASH' && ($val->{'any_in_array'} || $val->{'all_in_array'}) &&
+                !@{$val->{'any_in_array'} || $val->{'all_in_array'} || []})
+            {
+              Carp::croak "Empty list not allowed for $column_arg query parameter"
+                unless($allow_empty_lists);
+
+              # "empty set in array" -> "array column is not null"
+              %tmp = ($column_arg => $val = undef);
+              $not = 'NOT';
+            }
+
             _format_value($db, \%tmp, $column_arg, $obj, $col_meta, $get_method, $set_method, $val, 
                           undef, undef, $allow_empty_lists);
+
             $val = $tmp{$column_arg};
           }
 
