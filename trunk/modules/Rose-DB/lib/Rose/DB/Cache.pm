@@ -4,11 +4,12 @@ use strict;
 
 use base 'Rose::Object';
 
+use Scalar::Util qw(refaddr);
 use Rose::DB::Cache::Entry;
 
 our $VERSION = '0.739';
 
-our $Debug = 1;
+our $Debug = 0;
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -34,15 +35,21 @@ sub dbs_created_during_apache_startup
 {
   my($class) = shift;
   my $dbs = $class->_dbs_created_during_apache_startup;
-  $dbs ||= $class->_dbs_created_during_apache_startup([]);
-  return wantarray ? @$dbs : $dbs;
+  $dbs ||= $class->_dbs_created_during_apache_startup({});
+  return values %$dbs;
 }
 
 sub add_dbs_created_during_apache_startup
 {
   my($class) = shift;
-  my $dbs = $class->dbs_created_during_apache_startup;
-  push(@$dbs, @_);
+
+  my $dbs = $class->_dbs_created_during_apache_startup;
+  $dbs ||= $class->_dbs_created_during_apache_startup({});
+
+  foreach my $db (@_)
+  {
+    $dbs->{refaddr($db)} ||= $db;
+  }
 }
 
 *add_db_created_during_apache_startup = \&add_dbs_created_during_apache_startup;
@@ -51,15 +58,19 @@ sub prepare_for_apache_fork
 {
   my($class) = shift;
 
-  my $dbs = $class->dbs_created_during_apache_startup;
+  my $dbs = $class->_dbs_created_during_apache_startup;
 
-  foreach my $db (@$dbs)
+  foreach my $db (values %$dbs)
   {
     $Debug && warn "$$ Disconnecting and undef-ing ", $db->dbh, " contained in $db";
     $db->dbh->disconnect;
     $db->dbh(undef);
     $db = undef;
   }
+
+  $class->_dbs_created_during_apache_startup({});
+
+  return;
 }
 
 sub build_cache_key

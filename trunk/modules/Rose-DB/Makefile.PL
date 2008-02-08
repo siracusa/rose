@@ -21,5 +21,6 @@ WriteMakefile(NAME         => 'Rose::DB',
                 'Time::Clock'             => 0,
                 'SQL::ReservedWords'      => 0,
                 'YAML::Syck'              => 0,
+                'Scalar::Util'            => 0,
               },
               clean => { FILES => "t/*.db" });
