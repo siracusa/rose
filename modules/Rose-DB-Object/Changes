@@ -3,7 +3,7 @@
     * Fixed a bug that prevented the convention manager's auto_table_name()
       method from honoring the tables_are_singular() attribute value.
       (Reported by Ben Tilly)
-    * The new (and correct) behavior of Rose::DB 0.739's array columns
+    * The new, more correct behavior of Rose::DB 0.739's array column
       value parsing and formatting revealed a bug in QueryBuilder's 
       handling of "(any|all)_in_array" conditions involving empty list
       arguments.  This is now fixed.
