@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.738';
+our $VERSION = '0.738_01';
 
 our $Debug = 0;
 
@@ -299,6 +299,16 @@ sub db_cache
   die "Could not load db cache class '$cache_class' - $@"  if($@);
 
   return $class->_db_cache($cache_class->new);
+}
+
+sub use_cache_during_apache_startup
+{
+  shift->db_cache_class->use_cache_during_apache_startup(@_);
+}
+
+sub prepare_cache_for_apache_fork
+{
+  shift->db_cache_class->prepare_for_apache_fork(@_);
 }
 
 sub new_or_cached
