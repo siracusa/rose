@@ -1,3 +1,9 @@
+0.738_01 (02.07.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Caching of db objects during mod_perl server start-up when running
+      under Apache::DBI is now turned off.  A public API to turn this
+      caching back on will arrive in a future release.
+
 0.738 (02.06.2008) - John Siracusa <siracusa@gmail.com>
 
     * The Informix INT8 column type is now detected and mapped to "bigint"

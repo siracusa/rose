@@ -6,24 +6,74 @@ use base 'Rose::Object';
 
 use Rose::DB::Cache::Entry;
 
-our $VERSION = '0.736';
+our $VERSION = '0.739';
 
-our $Debug = 0;
+our $Debug = 1;
 
 use Rose::Class::MakeMethods::Generic
 (
   inheritable_scalar =>
   [
     'entry_class',
-  ]
+    '_use_cache_during_apache_startup',
+    '_dbs_created_during_apache_startup',
+  ],
 );
 
 __PACKAGE__->entry_class('Rose::DB::Cache::Entry');
+__PACKAGE__->use_cache_during_apache_startup(0);
+
+sub use_cache_during_apache_startup
+{
+  my($class) = shift;
+  return $class->_use_cache_during_apache_startup($_[0] ? 1 : 0)  if(@_);
+  return  $class->_use_cache_during_apache_startup;
+}
+
+sub dbs_created_during_apache_startup
+{
+  my($class) = shift;
+  my $dbs = $class->_dbs_created_during_apache_startup;
+  $dbs ||= $class->_dbs_created_during_apache_startup([]);
+  return wantarray ? @$dbs : $dbs;
+}
+
+sub add_dbs_created_during_apache_startup
+{
+  my($class) = shift;
+  my $dbs = $class->dbs_created_during_apache_startup;
+  push(@$dbs, @_);
+}
+
+*add_db_created_during_apache_startup = \&add_dbs_created_during_apache_startup;
+
+sub prepare_for_apache_fork
+{
+  my($class) = shift;
+
+  my $dbs = $class->dbs_created_during_apache_startup;
+
+  foreach my $db (@$dbs)
+  {
+    $Debug && warn "$$ Disconnecting and undef-ing ", $db->dbh, " contained in $db";
+    $db->dbh->disconnect;
+    $db->dbh(undef);
+    $db = undef;
+  }
+}
 
 sub build_cache_key
 {
   my($class, %args) = @_;
   return join("\0", $args{'domain'}, $args{'type'});
+}
+
+QUIET:
+{
+  no warnings 'uninitialized';
+  use constant APACHE_DBI     => ($INC{'Apache/DBI.pm'} || $Apache::DBI::VERSION)    ? 1 : 0;
+  use constant APACHE_DBI_MP2 => (APACHE_DBI && $ENV{'MOD_PERL_API_VERSION'} == 2)   ? 1 : 0;
+  use constant APACHE_DBI_MP1 => (APACHE_DBI && $ENV{'MOD_PERL'} && !APACHE_DBI_MP2) ? 1 : 0;
 }
 
 sub get_db
@@ -48,6 +98,28 @@ sub set_db
 {
   my($self, $db) = @_;
 
+  # Don't cache anythign during apache startup if use_cache_during_apache_startup
+  # is false.  Weird conditional structure is meant to encourage code elimination
+  # thanks to the lone constants in the if/elsif conditions.
+  if(APACHE_DBI_MP1)
+  {
+    if($Apache::Server::Starting && !$self->use_cache_during_apache_startup)
+    {
+      $Debug && warn "Refusing to cache $db during apache server start-up ",
+                     "because use_cache_during_apache_startup is false";
+      return $db;
+    }
+  }
+  elsif(APACHE_DBI_MP2)
+  {
+    if(Apache2::ServerUtil::restart_count() == 1 && !$self->use_cache_during_apache_startup)
+    {
+      $Debug && warn "Refusing to cache $db during apache server start-up ",
+                     "because use_cache_during_apache_startup is false";
+      return $db;
+    }
+  }
+
   my $key = 
     $self->build_cache_key(domain => $db->domain, 
                            type   => $db->type,
@@ -62,14 +134,6 @@ sub set_db
 
 sub clear { shift->{'cache'} = {} }
 
-QUIET:
-{
-  no warnings 'uninitialized';
-  use constant APACHE_DBI     => ($INC{'Apache/DBI.pm'} || $Apache::DBI::VERSION)    ? 1 : 0;
-  use constant APACHE_DBI_MP2 => (APACHE_DBI && $ENV{'MOD_PERL_API_VERSION'} == 2)   ? 1 : 0;
-  use constant APACHE_DBI_MP1 => (APACHE_DBI && $ENV{'MOD_PERL'} && !APACHE_DBI_MP2) ? 1 : 0;
-}
-
 if(APACHE_DBI_MP2)
 {
   require Apache2::ServerUtil;
@@ -83,16 +147,24 @@ sub prepare_db
   {
     if($Apache::Server::Starting)
     {
+      ref($self)->add_db_created_during_apache_startup($db);
       $entry->created_during_apache_startup(1);
       $entry->prepared(0);
     }
     elsif(!$entry->is_prepared)
     {
       if($entry->created_during_apache_startup)
-      {
-        $Debug && $db->has_dbh && warn "$$ Wiping dbh ", $db->dbh, 
-          " created during apache startup from $db\n";
-        $db->dbh(undef);
+      {  
+        if($db->has_dbh)
+        {
+          $Debug && warn "$$ Disconnecting and undef-ing dbh ", $db->dbh, 
+                         " created during apache startup from $db\n";
+          eval { $db->dbh->disconnect }; # will probably fail!
+          warn "$$ Could not disconnect dbh created during apache startup: ", 
+               $db->dbh, " - $@"  if($@);
+          $db->dbh(undef);
+        }
+
         $entry->created_during_apache_startup(0);
         return;
       }
@@ -113,6 +185,7 @@ sub prepare_db
   {
     if(Apache2::ServerUtil::restart_count() == 1) # server starting
     {
+      ref($self)->add_db_created_during_apache_startup($db);
       $entry->created_during_apache_startup(1);
       $entry->prepared(0);
     }
@@ -120,9 +193,16 @@ sub prepare_db
     {
       if($entry->created_during_apache_startup)
       {
-        $Debug && $db->has_dbh && warn "$$ Wiping dbh ", $db->dbh, 
-          " created during apache startup from $db\n";
-        $db->dbh(undef);
+        if($db->has_dbh)
+        {
+          $Debug && warn "$$ Disconnecting and undef-ing dbh ", $db->dbh, 
+                         " created during apache startup from $db\n";
+          eval { $db->dbh->disconnect }; # will probably fail!
+          warn "$$ Could not disconnect dbh created during apache startup: ", 
+               $db->dbh, " - $@"  if($@);
+          $db->dbh(undef);
+        }
+
         $entry->created_during_apache_startup(0);
         return;
       }
