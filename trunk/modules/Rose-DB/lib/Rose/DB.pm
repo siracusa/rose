@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.738_01';
+our $VERSION = '0.739';
 
 our $Debug = 0;
 
@@ -303,12 +303,12 @@ sub db_cache
 
 sub use_cache_during_apache_startup
 {
-  shift->db_cache_class->use_cache_during_apache_startup(@_);
+  shift->db_cache->use_cache_during_apache_startup(@_);
 }
 
 sub prepare_cache_for_apache_fork
 {
-  shift->db_cache_class->prepare_for_apache_fork(@_);
+  shift->db_cache->prepare_for_apache_fork(@_);
 }
 
 sub new_or_cached
@@ -2681,6 +2681,16 @@ PARAMS are name/value pairs.  Any L<Rose::DB> object method that sets a L<data s
 
 PARAMS should include values for both the C<type> and C<domain> parameters since these two attributes are used to identify the data source.  If they are omitted, they default to L<default_domain|/default_domain> and L<default_type|/default_type>, respectively.  If default values do not exist, a fatal error will occur.  If there is no data source defined for the specified C<type> and C<domain>, a fatal error will occur.
 
+=item B<prepare_cache_for_apache_fork>
+
+This is a convenience method that is equivalent to the following call:
+
+    Rose::DB->db_cache->prepare_for_apache_fork()
+
+Any arguments passed to this method are passed on to the call to the L<db_cache|/db_cache>'s L<prepare_for_apache_fork|Rose::DB::Cache/prepare_for_apache_fork> method.
+
+Please read the L<Rose::DB::Cache> documentation, particularly the documentation for the L<use_cache_during_apache_startup|Rose::DB::Cache/use_cache_during_apache_startup> method for more information.
+
 =item B<register_db PARAMS>
 
 Registers a new data source with the attributes specified in PARAMS, where
@@ -2804,6 +2814,16 @@ Unregisters an entire domain.  Returns true if the domain was unregistered succe
     Rose::DB->unregister_domain('test');
 
 Unregistering a domain removes all knowledge of all of the data sources that existed under it.  This may be harmful to any existing L<Rose::DB> objects that are associated with any of those data sources.
+
+=item B<use_cache_during_apache_startup [BOOL]>
+
+This is a convenience method that is equivalent to the following call:
+
+    Rose::DB->db_cache->use_cache_during_apache_startup(...)
+
+The boolean argument passed to this method is passed on to the call to the L<db_cache|/db_cache>'s L<use_cache_during_apache_startup|Rose::DB::Cache/use_cache_during_apache_startup> method.
+
+Please read the L<Rose::DB::Cache>'s L<use_cache_during_apache_startup|Rose::DB::Cache/use_cache_during_apache_startup> documentation for more information.
 
 =item B<use_private_registry>
 
