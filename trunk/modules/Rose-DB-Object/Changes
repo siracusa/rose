@@ -1,9 +1,12 @@
-0.7664_02 (02.07.2008) - John Siracusa <siracusa@gmail.com>
+0.7665 (02.08.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug that prevented the convention manager's auto_table_name()
       method from honoring the tables_are_singular() attribute value.
-      (Reproted by Ben Tilly)
-    * TODO: $column->parse_value() with Manager integration.
+      (Reported by Ben Tilly)
+    * The new (and correct) behavior of Rose::DB 0.739's array columns
+      value parsing and formatting revealed a bug in QueryBuilder's 
+      handling of "(any|all)_in_array" conditions involving empty list
+      arguments.  This is now fixed.
 
 0.7664 (02.06.2008) - John Siracusa <siracusa@gmail.com>
 
