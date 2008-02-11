@@ -1519,7 +1519,7 @@ __END__
 
 =head1 NAME
 
-Rose::DB::Object - Extensible, high performance RDBMS-OO mapper.
+Rose::DB::Object - Extensible, high performance object-relational mapper (ORM).
 
 =head1 SYNOPSIS
 
