@@ -160,7 +160,7 @@ An ordered list of value/label pairs:
       ...
     );
 
-(Option values and labels passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.)
+(Option values and labels passed as a hash reference are sorted by the keys of the hash according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.)
 
 A reference to an array of containing B<only> plain scalar values:
 

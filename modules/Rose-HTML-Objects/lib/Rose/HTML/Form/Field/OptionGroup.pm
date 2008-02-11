@@ -144,7 +144,7 @@ Convenience alias for L<add_options()|/add_options>.
 
 =item B<add_options OPTIONS>
 
-Adds options to the option group.  OPTIONS may be a reference to a hash of value/label pairs, a reference to an array of values, or a list of L<Rose::HTML::Form::Field::Option> objects. Passing an odd number of items in the value/label argument list causes a fatal error. Options passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.  Options are added to the end of the existing list of options.
+Adds options to the option group.  OPTIONS may be a reference to a hash of value/label pairs, a reference to an array of values, or a list of L<Rose::HTML::Form::Field::Option> objects. Passing an odd number of items in the value/label argument list causes a fatal error.  Options passed as a hash reference are sorted by the keys of the hash according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.  Options are added to the end of the existing list of options.
 
 =item B<choices [OPTIONS]>
 
@@ -170,7 +170,7 @@ Returns the first option (according to the order that they are returned from L<o
 
 =item B<options OPTIONS>
 
-Get or set the full list of options in the pop-up menu.  OPTIONS may be a reference to a hash of value/label pairs, a reference to an array of values, or a list of L<Rose::HTML::Form::Field::Option> objects. Passing an odd number of items in the value/label argument list causes a fatal error. Options passed as a hash reference are sorted by value according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.
+Get or set the full list of options in the pop-up menu.  OPTIONS may be a reference to a hash of value/label pairs, a reference to an array of values, or a list of L<Rose::HTML::Form::Field::Option> objects. Passing an odd number of items in the value/label argument list causes a fatal error. Options passed as a hash reference are sorted by the keys of the hash according to the default behavior of Perl's built-in L<sort()|perlfunc/sort> function.
 
 To set an ordered list of option values along with labels in the constructor, use both the L<options()|/options> and L<labels()|/labels> methods in the correct order. Example:
 
