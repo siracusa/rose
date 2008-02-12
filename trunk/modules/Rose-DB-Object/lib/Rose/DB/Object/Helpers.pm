@@ -667,7 +667,9 @@ Example:
 
 =item B<strip [PARAMS]>
 
-This method prepares an object for serialization by stripping out internal structures known to contain code references or other values that do not survive serialization.  By default, the L<db|Rose::DB::Object/db> object and all sub-objects (foreign keys or relationships) are removed.  PARAMS are optional name/value pairs.  Valid PARAMS are:
+This method prepares an object for serialization by stripping out internal structures known to contain code references or other values that do not survive serialization.  The object itself is returned, now stripped.
+
+By default, the L<db|Rose::DB::Object/db> object and all sub-objects (foreign keys or relationships) are removed.  PARAMS are optional name/value pairs.  Valid PARAMS are:
 
 =over 4
 
