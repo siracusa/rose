@@ -413,6 +413,10 @@ sub get_objects
     $dbh_retained = 1;
   }
 
+  # Work-around for http://rt.cpan.org//Ticket/Display.html?id=33193
+  local $dbh->{'pg_expand_array'} = 0
+    if($dbh->{'Driver'}{'Name'} eq 'Pg' && index($dbh->{'Driver'}{'Version'}, '2.') == 0);
+
   my $nested_joins = $args{'nested_joins'} = $db->supports_nested_joins ?
     (defined $args{'nested_joins'} ? $args{'nested_joins'} : $class->default_nested_joins) : 0;
 

@@ -1251,8 +1251,16 @@ sub array
         {
           if($self->{STATE_LOADING()})
           {
-            $self->{$key} = undef;
-            $self->{$formatted_key,$driver} = $_[0];
+            if(ref $_[0] eq 'ARRAY')
+            {
+              $self->{$key} = $_[0];
+              $self->{$formatted_key,$driver} = undef;
+            }
+            else
+            {
+              $self->{$key} = undef;
+              $self->{$formatted_key,$driver} = $_[0];
+            }
           }
           else
           {
@@ -1334,8 +1342,16 @@ sub array
         {
           if($self->{STATE_LOADING()})
           {
-            $self->{$key} = undef;
-            $self->{$formatted_key,$driver} = $_[0];
+            if(ref $_[0] eq 'ARRAY')
+            {
+              $self->{$key} = $_[0];
+              $self->{$formatted_key,$driver} = undef;
+            }
+            else
+            {
+              $self->{$key} = undef;
+              $self->{$formatted_key,$driver} = $_[0];
+            }
           }
           else
           {
@@ -1495,8 +1511,16 @@ sub array
 
       if($self->{STATE_LOADING()})
       {
-        $self->{$key} = undef;
-        $self->{$formatted_key,$driver} = $_[0];
+        if(ref $_[0] eq 'ARRAY')
+        {
+          $self->{$key} = $_[0];
+          $self->{$formatted_key,$driver} = undef;
+        }
+        else
+        {
+          $self->{$key} = undef;
+          $self->{$formatted_key,$driver} = $_[0];
+        }
       }
       else
       {
