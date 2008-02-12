@@ -691,7 +691,7 @@ Do not removed sub-objects that have L<already been loaded|/has_loaded_related> 
 
 =item C<related_objects>
 
-Do not remove any sub-objects (L<foreign keys|Rose::DB::Object::Metadata/foreign_keys> or L<relationships|Rose::DB::Object::Metadata/relationships>) that have L<already been loaded|/has_loaded_related> by this object.  This option is the same as specifying both the C<foreign_keys> and <relationships> names.
+Do not remove any sub-objects (L<foreign keys|Rose::DB::Object::Metadata/foreign_keys> or L<relationships|Rose::DB::Object::Metadata/relationships>) that have L<already been loaded|/has_loaded_related> by this object.  This option is the same as specifying both the C<foreign_keys> and C<relationships> names.
 
 =back
 
