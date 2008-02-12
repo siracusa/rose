@@ -1,5 +1,9 @@
 0.7665_02 (02.12.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Added a work-around for a DBD:Pg 2.0.0 array/bind_col() bug:
+      http://rt.cpan.org//Ticket/Display.html?id=33193
+    * Improved the column method handling for DBD::Pg 2.0.0's array 
+      reference values fetched from array columns.
     * Fixed a bug in the test suite that caused some Postgres tests
       to fail if the "chkpass" column type was not installed.
       (Reported by Randal Schwartz)
