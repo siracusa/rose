@@ -534,7 +534,16 @@ EOF
 
     foreach my $sql (@sql)
     {
-      $dbh->do($sql);
+      local $dbh->{'PrintError'} = 0;
+      eval { $dbh->do($sql) };
+      
+      if($@)
+      {
+        warn $@  unless($@ =~ /language "plpgsql" does not exist/);
+        $Have{'pg'} = 0;
+        $Have{'pg_with_schema'} = 0;
+        last;
+      }
     }
 
     $dbh->disconnect;
