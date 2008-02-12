@@ -286,17 +286,10 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   {
     $o = $class->new(id => 1)->load_or_save;
 
-    #eval { $o->nonesuch };
-    #print STDERR "Pre-freeze: $@\n";
-
     my $frozen = Storable::freeze($o->strip);
-
     my $thawed = Storable::thaw($frozen);
 
     is_deeply($thawed, $o, "strip 1 - $db_type");
-
-    #eval { $thawed->nonesuch };
-    #print STDERR "Post-freeze: $@\n";
   }
   else { SKIP: { skip("tests that require Storable - $db_type", 1) } }
 }
