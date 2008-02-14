@@ -708,7 +708,7 @@ sub build_select
     }
     else
     {
-      my $select_start = $db->format_select_start_sql($hints->{'t1'} || $hints);
+      my $select_start = $db ? $db->format_select_start_sql($hints->{'t1'} || $hints) : 'SELECT';
 
       if($limit_prefix !~ /^SELECT /)
       {
