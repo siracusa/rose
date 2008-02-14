@@ -9,7 +9,7 @@ use SQL::ReservedWords::MySQL();
 
 use Rose::DB;
 
-our $VERSION = '0.737';
+our $VERSION = '0.740';
 
 our $Debug = 0;
 
@@ -188,6 +188,17 @@ sub format_table_with_alias
   return "$table $alias";
 }
 
+sub format_select_start_sql
+{
+  my($self, $hints) = @_;
+
+  return 'SELECT'  unless($hints);
+
+  return 'SELECT ' . 
+    join(' ', (map { $hints->{$_} ? uc("sql_$_") : () }
+      qw(small_result big_result buffer_result cache no_cache calc_found_rows)),
+      (map { $hints->{$_} ? uc($_) : () } qw(high_priority straight_join)));
+}
 
 sub validate_date_keyword
 {

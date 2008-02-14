@@ -279,6 +279,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   unset_state_loading($c);
 
   # has_loaded_related() tested in db-object-relationship.t
+  # forget_related() tested in db-object-relationship.t
 
   eval { require Storable };
 

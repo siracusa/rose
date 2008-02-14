@@ -1,3 +1,7 @@
+0.739_01 (02.14.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Added support for MySQL's SQL_CALC_FOUND_ROWS feature and other hints.
+
 0.739 (02.08.2008) - John Siracusa <siracusa@gmail.com>
 
     * Caching of db objects during mod_perl server start-up is now turned

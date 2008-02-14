@@ -238,6 +238,18 @@ sub object_has_related_objects
   return $ref ? [ $related_objects ] : 0;
 }
 
+sub hash_keys_used { shift->hash_key }
+
+sub forget_related_objects
+{
+  my($self, $object) = @_;
+  
+  foreach my $key ($self->hash_keys_used)
+  {
+    $object->{$key} = undef;
+  }
+}
+
 sub requires_preexisting_parent_object { } # override in subclass
 
 1;

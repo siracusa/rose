@@ -3966,6 +3966,10 @@ By default, passing an empty list as a value will cause a fatal error.
 
 A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> method of the C<object_class>.
 
+=item B<debug BOOL>
+
+If true, print the generated SQL to STDERR.
+
 =item B<distinct [ BOOL | ARRAYREF ]>
 
 If set to any kind of true value, then the "DISTINCT" SQL keyword will be added to the "SELECT" statement.  Specific values trigger the behaviors described below.
@@ -3981,6 +3985,64 @@ This parameter conflicts with the C<fetch_only> parameter in the case where both
 ARRAYREF should be a reference to an array of table names or "tN" table aliases. Only the columns from the corresponding tables will be fetched.  In the case of relationships that involve more than one table, only the "most distant" table is considered.  (e.g., The map table is ignored in a "many to many" relationship.)  Columns from the primary table ("t1") are always selected, regardless of whether or not it appears in the list.
 
 This parameter conflicts with the C<distinct> parameter in the case where both provide a list of table names or aliases.  In this case, then a fatal error will occur.
+
+=item B<hints HASHREF>
+
+A reference to a hash of hints that influence the SQL generated to fetch the objects.  Hints are just "suggestions" and may be ignored, depending on the actual features of the database being queried.  Use the L<debug|/debug> parameter to see the generated SQL.  Most of the current hints apply to MySQL only.  See the relevant documentation for more details:
+
+L<http://dev.mysql.com/doc/refman/5.0/en/select.html>
+
+The hints hash is keyed by tN table aliases or relationship names.  The value of each key is a reference to a hash of hint directives.  In the absence of any key for "t1" or the name of the primary table, the entire hints hash is considered applicable to the primary table.
+
+Valid hint directives are:
+
+=over 4
+
+=item B<big_result BOOL>
+
+If true, indicate to the database that the result set is expected to be big.
+
+=item B<buffer_result BOOL>
+
+If true, force the result to be put into a temporary table.
+
+=item B<cache BOOL>
+
+If true, ask the database to store the result in its query cache.
+
+=item B<no_cache BOOL>
+
+If true, ask the database not to store the result in its query cache.
+
+=item B<calc_found_rows BOOL>
+
+If true, ask the database to internally calculate the number of rows found, ignoring any L<limit|/limit> or L<offset|/offset> arguments.
+
+=item B<force_index [ INDEX | ARRAYREF ]>
+
+Force the use of the named indexes, specified by an index name or a reference to an array of index names.
+
+=item B<high_priority BOOL>
+
+If true, give this query higher priority.
+
+=item B<ignore_index [ INDEX | ARRAYREF ]>
+
+Ignore the named indexes, specified by an index name or a reference to an array of index names.
+
+=item B<small_result BOOL>
+
+If true, indicate to the database that the result set is expected to be small.
+
+=item B<straight_join BOOL>
+
+If true, ask the database to join the tables in the order that they are listed in the "FROM" clause of the SQL statement.
+
+=item B<use_index [ INDEX | ARRAYREF ]>
+
+Prefer to use the named indexes, specified by an index name or a reference to an array of index names.
+
+=back
 
 =item B<inject_results BOOL>
 

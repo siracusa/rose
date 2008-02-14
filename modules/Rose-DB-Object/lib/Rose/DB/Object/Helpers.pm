@@ -9,7 +9,7 @@ our @ISA = qw(Rose::Object::MixIn);
 
 use Carp;
 
-our $VERSION = '0.764';
+our $VERSION = '0.767';
 
 __PACKAGE__->export_tags
 (
@@ -359,6 +359,58 @@ sub has_loaded_related
   }
 }
 
+sub forget_related
+{
+  my($self) = shift;
+
+  my $rel; # really a relationship or fk
+
+  my $meta = $self->meta;
+
+  if(@_ == 1)
+  {
+    my $name = shift;
+
+    if($rel = $meta->foreign_key($name))
+    {
+      return $rel->forget_foreign_object($self);
+    }
+    elsif($rel = $meta->relationship($name))
+    {
+      return $rel->forget_related_objects($self);
+    }
+    else
+    {
+      croak "No foreign key or relationship named '$name' found in ",
+            $meta->class;
+    }
+  }
+  else
+  {
+    my %args = @_;
+    my $name;
+
+    if($name = $args{'foreign_key'})
+    {
+      $rel = $meta->foreign_key($name) 
+        or croak "No foreign key named '$name' found in ", $meta->class;
+
+      return $rel->forget_foreign_object($self);
+    }
+    elsif($name = $args{'relationship'})
+    {
+      $rel = $meta->relationship($name) 
+        or croak "No relationship named '$name' found in ", $meta->class;
+
+      return $rel->forget_related_objects($self);
+    }
+    else
+    {
+      croak "Missing foreign key or relationship name argument";
+    }
+  }
+}
+
 sub strip
 {
   my($self) = shift;
@@ -450,13 +502,11 @@ Rose::DB::Object::Helpers - A mix-in class containing convenience methods for Ro
 
 L<Rose::DB::Object::Helpers> provides convenience methods from use with L<Rose::DB::Object>-derived classes.  These methods do not exist in L<Rose::DB::Object> in order to keep the method namespace clean.  (Each method added to L<Rose::DB::Object> is another potential naming conflict with a column accessor.)
 
-This class inherits from L<Rose::DB::Object::MixIn>.  See the L<Rose::DB::Object::MixIn> documentation for a full explanation of how to import methods from this class.  The helper methods themselves are described below.
+This class inherits from L<Rose::Object::MixIn>.  See the L<Rose::Object::MixIn> documentation for a full explanation of how to import methods from this class.  The helper methods themselves are described below.
 
 =head1 OBJECT METHODS
 
-=over 4
-
-=item B<clone>
+=head2 clone
 
 Returns a new object initialized with the column values of the existing object.  For example, imagine a C<Person> class with three columns, C<id>, C<name>, and C<age>.
 
@@ -470,7 +520,7 @@ is equivalent to this:
 
     $b = Person->new(id => $a->id, name => $a->name, age => $a->age);
 
-=item B<clone_and_reset>
+=head2 clone_and_reset
 
 This is the same as the L<clone|/clone> method described above, except that it also sets all of the L<primary|Rose::DB::Object::Metadata/primary_key_columns> and L<unique key columns|Rose::DB::Object::Metadata/unique_keys> to undef.  If the cloned object has a L<db|Rose::DB::Object/db> attribute, then it is copied to the clone object as well.
 
@@ -489,27 +539,40 @@ is equivalent to this:
     $b->name(undef); # reset unique key
     $b->db($a->db);  # copy db
 
-=item B<column_values_as_json>
+=head2 column_values_as_json
 
 Returns a string containing a JSON representation of the object's column values.  You must have the L<JSON::Syck> module installed in order to use this helper method.
 
-=item B<column_values_as_yaml>
+=head2 column_values_as_yaml
 
 Returns a string containing a YAML representation of the object's column values.  You must have the L<YAML::Syck> module installed in order to use this helper method.
 
-=item B<column_accessor_value_pairs>
+=head2 column_accessor_value_pairs
 
 Returns a hash (in list context) or reference to a hash (in scalar context) of column accessor method names and column values.  The keys of the hash are the L<accessor method names|Rose::DB::Object::Metadata::Column/accessor_method_name> for the columns.  The values are retrieved by calling the L<accessor method|Rose::DB::Object::Metadata::Column/accessor_method_name> for each column.
 
-=item B<column_mutator_value_pairs>
+=head2 column_mutator_value_pairs
 
 Returns a hash (in list context) or reference to a hash (in scalar context) of column mutator method names and column values.  The keys of the hash are the L<mutator method names|Rose::DB::Object::Metadata::Column/mutator_method_name> for the columns.  The values are retrieved by calling the L<accessor method|Rose::DB::Object::Metadata::Column/accessor_method_name> for each column.
 
-=item B<column_value_pairs>
+=head2 column_value_pairs
 
 Returns a hash (in list context) or reference to a hash (in scalar context) of column name and value pairs.  The keys of the hash are the L<names|Rose::DB::Object::Metadata::Column/name> of the columns.  The values are retrieved by calling the L<accessor method|Rose::DB::Object::Metadata::Column/accessor_method_name> for each column.
 
-=item B<has_loaded_related [ NAME | PARAMS ]>
+=head2 forget_related [ NAME | PARAMS ]
+
+Given a foreign key or relationship name, forget any L<previously loaded|/has_loaded_related> objects related by the specified foreign key or relationship.  Normally, any objects loaded by the default accessor methods for relationships and foreign keys are fetched from the database only the first time they are asked for, and simply returned thereafter.  Asking them to be "forgotten" causes them to be fetched anew from the database the next time they are asked for.
+
+If the related object name is passed as a plain string NAME, then a foreign key with that name is looked up.  If no such foreign key exists, then a relationship with that name is looked up.  If no such relationship or foreign key exists, a fatal error will occur.  Example:
+
+    $foo->forget_related('bar');
+
+It's generally not a good idea to add a foreign key and a relationship with the same name, but it is technically possible.  To specify the domain of the name, pass the name as the value of a C<foreign_key> or C<relationship> parameter.  Example:
+
+    $foo->forget_related(foreign_key => 'bar');
+    $foo->forget_related(relationship => 'bar');
+
+=head2 has_loaded_related [ NAME | PARAMS ]
 
 Given a foreign key or relationship name, return true if one or more related objects have been loaded into the current object, false otherwise.
 
@@ -522,7 +585,7 @@ It's generally not a good idea to add a foreign key and a relationship with the 
     $foo->has_loaded_related(foreign_key => 'bar');
     $foo->has_loaded_related(relationship => 'bar');
 
-=item B<init_with_column_value_pairs [ HASH | HASHREF ]>
+=head2 init_with_column_value_pairs [ HASH | HASHREF ]
 
 Initialize an object with a hash or reference to a hash of column/value pairs.  This differs from the inherited L<init|Rose::Object/init> method in that it accepts column names rather than method names.  A column name may not be the same as its mutator method name if the column is L<aliased|Rose::DB::Object::Metadata/alias_column>, for example.
 
@@ -537,7 +600,7 @@ Initialize an object with a hash or reference to a hash of column/value pairs.  
     # ...or a hash of column/value pairs
     $p->init_with_column_value_pairs(type => 'cool', age => 30);
 
-=item B<init_with_json JSON>
+=head2 init_with_json JSON
 
 Initialize the object with a JSON-formatted string.  The JSON string must be in the format returned by the L<column_values_as_json|/column_values_as_json> method.  Example:
 
@@ -550,7 +613,7 @@ Initialize the object with a JSON-formatted string.  The JSON string must be in 
     print $p2->name; # John
     print $p2->age;  # 30
 
-=item B<init_with_yaml YAML>
+=head2 init_with_yaml YAML
 
 Initialize the object with a YAML-formatted string.  The YAML string must be in the format returned by the L<column_values_as_yaml|/column_values_as_yaml> method.  Example:
 
@@ -563,7 +626,7 @@ Initialize the object with a YAML-formatted string.  The YAML string must be in 
     print $p2->name; # John
     print $p2->age;  # 30
 
-=item B<insert_or_update [PARAMS]>
+=head2 insert_or_update [PARAMS]
 
 If the object already exists in the database, then L<update|Rose::DB::Object/update> it.  Otherwise, L<insert|Rose::DB::Object/insert> it.  Any PARAMS are passed on to the calls to L<insert|Rose::DB::Object/insert> or L<update|Rose::DB::Object/update>.
 
@@ -571,7 +634,7 @@ This method differs from the standard L<save|Rose::DB::Object/save> method in th
 
 The return value of the L<insert|Rose::DB::Object/insert> or L<update|Rose::DB::Object/update> method (whichever is called) is returned.
 
-=item B<insert_or_update_on_duplicate_key [PARAMS]>
+=head2 insert_or_update_on_duplicate_key [PARAMS]
 
 Update or insert a row with a single SQL statement, depending on whether or not a row with the same primary or unique key already exists.  Any PARAMS are passed on to the call to L<insert|Rose::DB::Object/insert> or L<update|Rose::DB::Object/update>.
 
@@ -624,7 +687,7 @@ Yes, this method name is very long.  Remember that you can rename methods on imp
     use Rose::DB::Object::Helpers 
       { insert_or_update_on_duplicate_key => 'insert_or_update' };
 
-=item B<load_or_insert [PARAMS]>
+=head2 load_or_insert [PARAMS]
 
 Try to L<load|Rose::DB::Object/load> the object, passing PARAMS to the call to the L<load()|Rose::DB::Object/load> method.  The parameter "speculative => 1" is automatically added to PARAMS.  If no such object is found, then the object is L<insert|Rose::DB::Object/insert>ed.
 
@@ -633,7 +696,7 @@ Example:
     # Get object id 123 if it exists, otherwise create it now.
     $obj = MyDBObject->new(id => 123)->load_or_insert;
 
-=item B<load_or_save [PARAMS]>
+=head2 load_or_save [PARAMS]
 
 Try to L<load|Rose::DB::Object/load> the object, passing PARAMS to the call to the L<load()|Rose::DB::Object/load> method.  The parameter "speculative => 1" is automatically added to PARAMS.  If no such object is found, then the object is L<save|Rose::DB::Object/save>d.
 
@@ -648,7 +711,7 @@ Example:
     $person = Person->new(id    => 123, 
                           perms => \@perms)->load_or_insert;
 
-=item B<load_speculative [PARAMS]>
+=head2 load_speculative [PARAMS]
 
 Try to L<load|Rose::DB::Object/load> the object, passing PARAMS to the call to the L<load()|Rose::DB::Object/load> method along with the "speculative => 1" parameter.  See the documentation for L<Rose::DB::Object>'s L<load|Rose::DB::Object/load> method for more information.
 
@@ -665,7 +728,7 @@ Example:
       print "Object id 123 not found\n";
     }
 
-=item B<strip [PARAMS]>
+=head2 strip [PARAMS]
 
 This method prepares an object for serialization by stripping out internal structures known to contain code references or other values that do not survive serialization.  The object itself is returned, now stripped.
 
@@ -694,8 +757,6 @@ Do not removed sub-objects that have L<already been loaded|/has_loaded_related> 
 =item C<related_objects>
 
 Do not remove any sub-objects (L<foreign keys|Rose::DB::Object::Metadata/foreign_keys> or L<relationships|Rose::DB::Object::Metadata/relationships>) that have L<already been loaded|/has_loaded_related> by this object.  This option is the same as specifying both the C<foreign_keys> and C<relationships> names.
-
-=back
 
 =back
 

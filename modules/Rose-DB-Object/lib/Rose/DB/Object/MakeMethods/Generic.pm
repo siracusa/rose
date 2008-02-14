@@ -7016,6 +7016,8 @@ The latter two formats will be used to construct an object of type C<class>.  A 
 
 The list of object is assigned to C<hash_key>.  Note that these objects are B<not> added to the database.  Use the C<get_set_now> or C<get_set_on_save> interface to do that.
 
+If called with no arguments and the hash key used to store the list of objects is defined, the list (in list context) or a reference to that array (in scalar context) of objects is returned.  Otherwise, the objects are fetched.
+
 When fetching objects from the database, if the call to C<manager_class>'s C<manager_method> method returns false, that false value (in scalar context) or an empty list (in list context) is returned.
 
 If the fetch succeeds, a list (in list context) or a reference to the array of objects (in scalar context) is returned.  (If the fetch finds zero objects, the list or array reference will simply be empty.  This is still considered success.)
