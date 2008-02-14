@@ -710,7 +710,7 @@ sub build_select
     {
       my $select_start = $db ? $db->format_select_start_sql($hints->{'t1'} || $hints) : 'SELECT';
 
-      if($limit_prefix !~ /^SELECT /)
+      if(index($limit_prefix, 'SELECT ') != 0)
       {
         $qs = "$select_start $limit_prefix$distinct\n$select\nFROM\n$from_tables_sql\n";
       }
