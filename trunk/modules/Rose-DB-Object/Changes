@@ -1,5 +1,7 @@
-0.7665_03 (02.12.2008) - John Siracusa <siracusa@gmail.com>
+0.7665_05 (02.14.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Enhanced and documented the long-dormant "hints" Manager parameters.
+    * Added the forget_related() helper method.
     * Added a work-around for a DBD::Pg 2.0.0 array/bind_col() bug:
       http://rt.cpan.org//Ticket/Display.html?id=33193
     * Improved the column method handling for array-reference values

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1551;
+use Test::More tests => 1555;
 
 BEGIN 
 {
@@ -27,7 +27,7 @@ ok($@ =~ /^\QAlready made a map record method named map_record in class JCS::B o
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 386)  unless($HAVE_PG);
+  skip("Postgres tests", 390)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -184,6 +184,19 @@ SKIP: foreach my $db_type ('pg')
   $obj = $o->other_obj or warn "# ", $o->error, "\n";
 
   ok($o->has_loaded_related('other_obj'), "has_loaded_related() 2 - $db_type");
+
+  $o->forget_related('other_obj');
+  ok(!$o->has_loaded_related('other_obj'), "forget_related() 1 - $db_type");
+
+  $obj = $o->other_obj or warn "# ", $o->error, "\n";
+  ok($o->has_loaded_related('other_obj'), "forget_related() 2 - $db_type");
+
+  eval { $o->forget_related(foreign_key => 'other_obj_nonesuch') };
+  ok($@, "forget_related() 3 - $db_type");
+  $o->forget_related(relationship => 'other_obj');
+  ok(!$o->has_loaded_related('other_obj'), "forget_related() 4 - $db_type");
+
+  $obj = $o->other_obj or warn "# ", $o->error, "\n";
 
   is(ref $obj, 'MyPgOtherObject', "other_obj() 4 - $db_type");
   is($obj->name, 'two', "other_obj() 5 - $db_type");
@@ -6135,7 +6148,7 @@ EOF
 
     package MyPgObject;
 
-    use Rose::DB::Object::Helpers qw(has_loaded_related);
+    use Rose::DB::Object::Helpers qw(has_loaded_related forget_related);
     our @ISA = qw(Rose::DB::Object);
 
     our $DB;

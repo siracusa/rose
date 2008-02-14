@@ -708,13 +708,15 @@ sub build_select
     }
     else
     {
+      my $select_start = $db->format_select_start_sql($hints->{'t1'} || $hints);
+
       if($limit_prefix !~ /^SELECT /)
       {
-        $qs = "SELECT $limit_prefix$distinct\n$select\nFROM\n$from_tables_sql\n";
+        $qs = "$select_start $limit_prefix$distinct\n$select\nFROM\n$from_tables_sql\n";
       }
       else
       {
-        $qs = "${limit_prefix}SELECT$distinct\n$select\nFROM\n$from_tables_sql\n";
+        $qs = "${limit_prefix}$select_start$distinct\n$select\nFROM\n$from_tables_sql\n";
       }
     }
   }

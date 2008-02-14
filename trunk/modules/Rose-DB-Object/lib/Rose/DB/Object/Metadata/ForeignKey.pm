@@ -432,6 +432,18 @@ sub object_has_foreign_object
   return $object->{$self->hash_key} || 0;
 }
 
+sub hash_keys_used { shift->hash_key }
+
+sub forget_foreign_object
+{
+  my($self, $object) = @_;
+  
+  foreach my $key ($self->hash_keys_used)
+  {
+    $object->{$key} = undef;
+  }
+}
+
 sub requires_preexisting_parent_object { 0 }
 
 1;
