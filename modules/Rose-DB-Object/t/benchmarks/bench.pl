@@ -3208,6 +3208,8 @@ EOF
   {
     my $i = 1;
 
+    sub reset_insert_complex_product_rdbo { $i = 1 }
+
     sub insert_complex_product_rdbo
     {
       my $p = MyTest::RDBO::Complex::Product->new;
@@ -3258,6 +3260,8 @@ EOF
   INSERT_COMPLEX_PRODUCT_DBIC:
   {
     my $i = 1;
+
+    sub reset_insert_complex_product_dbic { $i = 1 }
 
     sub insert_complex_product_dbic
     {
@@ -5079,7 +5083,7 @@ sub Bench
   if(($name =~ /^Simple:/ &&  !($Opt{'simple'} || $Opt{'simple-and-complex'})) ||
      ($name =~ /^Complex:/ && !($Opt{'complex'} || $Opt{'simple-and-complex'})))
   {
-    return;
+    return 0;
   }
 
   while(my($test_name, $code) = each(%$tests))
@@ -5088,7 +5092,20 @@ sub Bench
     $filtered_tests{$test_name} = $code;
   }
 
-  return  unless(%filtered_tests && (!$Bench_Match || $name =~ /$Bench_Match/));
+  return 0  unless(%filtered_tests && (!$Bench_Match || $name =~ /$Bench_Match/));
+
+  my($save_stdout, $silent);
+
+  no strict 'refs';
+
+  if($name =~ s/^SILENT:\s*//)
+  {
+    open($save_stdout, '>&', select()) or warn "Could not dup STDOUT - $!";
+    open(select(), '>/dev/null') or warn "Could not redirect STDOUT to /dev/null - $!";
+
+    $silent = 1;
+  }
+
   print "\n"  unless($no_newline);
   print "# $name\n";
 
@@ -5101,6 +5118,13 @@ sub Bench
   {
     cmpthese($iterations, \%filtered_tests);
   }
+
+  if($silent)
+  {
+    open(select(), '>&', $save_stdout) or warn "Could not restore STDOUT - $!";
+  }
+  
+  return 1;
 }
 
 sub Run_Tests
@@ -5484,14 +5508,15 @@ sub Run_Tests
     'DBIC' => \&delete_simple_category_dbic,
   });
 
-  Bench('Complex: delete', $Iterations,
-  {
-    'DBI ' => \&delete_complex_product_dbi,
-    'RDBO' => \&delete_complex_product_rdbo,
-    'CDBI' => \&delete_complex_product_cdbi,
-    'CDBS' => \&delete_complex_product_cdbs,
-    'DBIC' => \&delete_complex_product_dbic,
-  });
+  my $did_complex_delete =
+    Bench('Complex: delete', $Iterations,
+    {
+      'DBI ' => \&delete_complex_product_dbi,
+      'RDBO' => \&delete_complex_product_rdbo,
+      'CDBI' => \&delete_complex_product_cdbi,
+      'CDBS' => \&delete_complex_product_cdbs,
+      'DBIC' => \&delete_complex_product_dbic,
+    });
 
   Bench('Simple: insert or update', $Iterations,
   {
@@ -5503,6 +5528,19 @@ sub Run_Tests
     'CDBS' => \&insert_or_update_simple_category_cdbs,
     'DBIC' => \&insert_or_update_simple_category_dbic,
   });
+
+  if($did_complex_delete)
+  {
+    # Must re-insert to provide referential integrity targets for the next test
+    reset_insert_complex_product_dbic();
+    reset_insert_complex_product_rdbo();
+
+    Bench('SILENT: Complex: insert 2', $Iterations,
+    {
+      'RDBO' => \&insert_complex_product_rdbo,
+      'DBIC' => \&insert_complex_product_dbic,
+    });
+  }
 
   Bench('Complex: insert or update', $Iterations,
   {

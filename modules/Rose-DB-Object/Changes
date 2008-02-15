@@ -1,4 +1,4 @@
-0.7665_05 (02.14.2008) - John Siracusa <siracusa@gmail.com>
+0.767 (02.15.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added the forget_related() helper method.
     * Enhanced and documented the long-dormant "hints" Manager parameter.
@@ -9,7 +9,6 @@
     * Fixed a bug in the test suite that caused some Postgres tests
       to fail if the "chkpass" column type was not installed.
       (Reported by Randal Schwartz)
-    * TODO: $column->parse_value() with Manager integration.
 
 0.7665 (02.08.2008) - John Siracusa <siracusa@gmail.com>
 
