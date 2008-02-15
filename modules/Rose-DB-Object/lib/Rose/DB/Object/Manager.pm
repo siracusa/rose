@@ -3998,6 +3998,10 @@ Valid hint directives are:
 
 =over 4
 
+=item B<all_rows BOOL>
+
+If true, direct the database to choose the query plan that returns all the records as quickly as possible.
+
 =item B<big_result BOOL>
 
 If true, indicate to the database that the result set is expected to be big.
@@ -4010,13 +4014,17 @@ If true, force the result to be put into a temporary table.
 
 If true, ask the database to store the result in its query cache.
 
-=item B<no_cache BOOL>
-
-If true, ask the database not to store the result in its query cache.
-
 =item B<calc_found_rows BOOL>
 
 If true, ask the database to internally calculate the number of rows found, ignoring any L<limit|/limit> or L<offset|/offset> arguments.
+
+=item B<comment TEXT>
+
+Add a comment after the "SELECT" keyword in the query.  TEXT should B<not> be surrounded by any comment delimiters.  The appropriate delimiters will be added automatically.
+
+=item B<first_rows BOOL>
+
+If true, direct the database to choose the query plan that returns the first result record as soon as possible.
 
 =item B<force_index [ INDEX | ARRAYREF ]>
 
@@ -4029,6 +4037,10 @@ If true, give this query higher priority.
 =item B<ignore_index [ INDEX | ARRAYREF ]>
 
 Ignore the named indexes, specified by an index name or a reference to an array of index names.
+
+=item B<no_cache BOOL>
+
+If true, ask the database not to store the result in its query cache.
 
 =item B<small_result BOOL>
 

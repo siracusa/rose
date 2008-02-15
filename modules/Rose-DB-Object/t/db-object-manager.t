@@ -5803,7 +5803,12 @@ SKIP: foreach my $db_type (qw(informix))
 
   my $objs = 
     MyInformixObject->get_objectz(
+      #debug => 1,
       share_db     => 1,
+      #hints  => { comment => '+FIRST_ROWS' },
+      #hints => { first_rows => 1 },
+      #hints => { rose_db_object_test => { first_rows => 1 } },
+      #hints => { t1 => { first_rows => 1 } },
       query        =>
       [
         id         => { ge => 1 },
