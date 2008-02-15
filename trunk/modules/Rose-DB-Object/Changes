@@ -1,3 +1,7 @@
+0.767_01 (02.15.2008) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: $column->parse_value() with Manager integration.
+
 0.767 (02.15.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added the forget_related() helper method.
