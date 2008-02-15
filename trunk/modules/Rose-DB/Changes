@@ -1,4 +1,4 @@
-0.739_02 (02.15.2008) - John Siracusa <siracusa@gmail.com>
+0.740 (02.15.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added support for Rose::DB::Object 0.767's new hints features.
 
