@@ -194,7 +194,7 @@ sub format_select_start_sql
 
   return 'SELECT'  unless($hints);
 
-  return 'SELECT ' . 
+  return 'SELECT ' . ($hints->{'comment'} ? "/* $hints->{'comment'} */" : '') .
     join(' ', (map { $hints->{$_} ? uc("sql_$_") : () }
       qw(small_result big_result buffer_result cache no_cache calc_found_rows)),
       (map { $hints->{$_} ? uc($_) : () } qw(high_priority straight_join)));

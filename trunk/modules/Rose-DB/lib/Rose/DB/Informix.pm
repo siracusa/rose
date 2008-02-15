@@ -581,6 +581,19 @@ sub format_limit_with_offset
 sub supports_select_from_subselect { 0 } # can't handle serial columns in multiset
 sub format_select_from_subselect { "\nTABLE(MULTISET(($_[1])))\n  " }
 
+sub format_select_start_sql
+{
+  my($self, $hints) = @_;
+
+  return 'SELECT'  unless($hints);
+
+  my $comment = 
+    join(' ', ($hints->{'comment'} ? $hints->{'comment'} : ()),
+      (map { $hints->{$_} ? uc("+$_") : () } qw(first_rows all_rows)));
+
+  return "SELECT {$comment}";
+}
+
 #
 # Introspection
 #

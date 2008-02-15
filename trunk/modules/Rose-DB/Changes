@@ -1,6 +1,6 @@
-0.739_01 (02.14.2008) - John Siracusa <siracusa@gmail.com>
+0.739_02 (02.15.2008) - John Siracusa <siracusa@gmail.com>
 
-    * Added support for MySQL's SQL_CALC_FOUND_ROWS feature and other hints.
+    * Added support for Rose::DB::Object 0.767's new hints features.
 
 0.739 (02.08.2008) - John Siracusa <siracusa@gmail.com>
 
