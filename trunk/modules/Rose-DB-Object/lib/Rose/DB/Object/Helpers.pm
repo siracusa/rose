@@ -9,7 +9,7 @@ our @ISA = qw(Rose::Object::MixIn);
 
 use Carp;
 
-our $VERSION = '0.767';
+our $VERSION = '0.7671';
 
 __PACKAGE__->export_tags
 (
@@ -21,7 +21,7 @@ __PACKAGE__->export_tags
        column_mutator_value_pairs 
        column_values_as_yaml column_values_as_json
        init_with_yaml init_with_json init_with_column_value_pairs
-       has_loaded_related strip) 
+       has_loaded_related strip forget_related) 
   ],
 
   # This exists for the benefit of the test suite
@@ -31,7 +31,7 @@ __PACKAGE__->export_tags
        insert_or_update_on_duplicate_key load_speculative
        column_value_pairs column_accessor_value_pairs 
        column_mutator_value_pairs init_with_column_value_pairs
-       has_loaded_related strip)
+       has_loaded_related strip forget_related)
   ],
 );
 
