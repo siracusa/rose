@@ -1,5 +1,6 @@
-0.767_01 (02.15.2008) - John Siracusa <siracusa@gmail.com>
+0.767_02 (02.17.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Added the forget_related() helper method to the "all" export tag.
     * TODO: $column->parse_value() with Manager integration.
 
 0.767 (02.15.2008) - John Siracusa <siracusa@gmail.com>
