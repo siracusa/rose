@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.7664';
+our $VERSION = '0.7671';
 
 our $Debug = 0;
 
@@ -120,7 +120,7 @@ EOF
 no warnings 'uninitialized';
 if(length(\$value) > $length)
     {
-      Carp::croak ref(\$self), ": WARNING: Value for $qname() is too long.  ",
+      Carp::carp ref(\$self), ": WARNING: Value for $qname() is too long.  ",
                   "Maximum length is $length character@{[ $length == 1 ? '' : 's' ]}.  ",
                   "Value is ", length(\$value), " characters: \$value";
     }
