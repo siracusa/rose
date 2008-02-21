@@ -16,7 +16,7 @@ use Rose::DB::Object::Constants
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.767';
+our $VERSION = '0.7671';
 
 our $Debug = 0;
 
@@ -415,7 +415,7 @@ sub get_objects
 
   # Work-around for http://rt.cpan.org//Ticket/Display.html?id=33193
   local $dbh->{'pg_expand_array'} = 0
-    if($dbh->{'Driver'}{'Name'} eq 'Pg' && index($dbh->{'Driver'}{'Version'}, '2.') == 0);
+    if($dbh->{'Driver'}{'Name'} eq 'Pg' && index($dbh->{'Driver'}{'Version'}, '2.0.') == 0);
 
   my $nested_joins = $args{'nested_joins'} = $db->supports_nested_joins ?
     (defined $args{'nested_joins'} ? $args{'nested_joins'} : $class->default_nested_joins) : 0;
