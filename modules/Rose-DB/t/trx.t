@@ -69,7 +69,7 @@ SKIP: foreach my $db_type ('pg')
   SKIP:
   {
     my $version = $DBD::Pg::VERSION;
-    $version =~ s/^(\d+)\.(\d+)\.(\d+)$/sprintf("$1.$2$3")/e; # lame conversion of three-part version number
+    $version =~ s/^(\d+)\.(\d+)\.(\d+)$/sprintf("$1.%03d%03d", $2, $3)/e; # lame conversion of three-part version number
     # This broke in DBD::Pg 1.47, and 1.44-6 are broken in other ways
     # so only run these tests with 1.43 or earlier, or 1.48 or later.
     skip('DBD::Pg 1.43-7 bug?', 5)  if($version > 1.43 && $version < 1.48);
