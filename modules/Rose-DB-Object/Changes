@@ -1,5 +1,7 @@
-0.767_02 (02.17.2008) - John Siracusa <siracusa@gmail.com>
+0.767_03 (02.21.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Refined workaround for http://rt.cpan.org//Ticket/Display.html?id=33193
+      to apply only to versions that exhibited this bug.
     * Added the forget_related() helper method to the "all" export tag.
     * TODO: $column->parse_value() with Manager integration.
 
