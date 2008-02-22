@@ -353,3 +353,6 @@ $field->field('time.ampm')->input_value('');
 ok($field->validate, 'mdyhms empty validate 1');
 ok($field->is_empty, 'mdyhms empty is_empty 1');
 ok(!$field->is_full, 'mdyhms empty is_full 1');
+
+$field = Rose::HTML::Form::Field::DateTime::Split::MonthDayYear->new(name => 'd', required => 1);
+$field->validate;

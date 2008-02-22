@@ -60,21 +60,35 @@ sub items
 
   if(@_)
   {
-    $self->{'items'} = $self->_args_to_items(@_);
+    $self->{'items'} = $self->_args_to_items({ localized => 0 }, @_);
     $self->init_items;
   }
 
   return (wantarray) ? @{$self->{'items'}} : $self->{'items'};
 }
 
-*fields = \&items;
+sub items_localized
+{
+  my($self) = shift;
+
+  if(@_)
+  {
+    $self->{'items'} = $self->_args_to_items({ localized => 1 }, @_);
+    $self->init_items;
+  }
+
+  return (wantarray) ? @{$self->{'items'}} : $self->{'items'};
+}
+
+*fields           = \&items;
+*fields_localized = \&items_localized;
 
 sub _html_item { $_[1]->html_field }
 sub _xhtml_item { $_[1]->xhtml_field }
 
 sub _args_to_items
 {
-  my($self) = shift;
+  my($self, $options) = (shift, shift);
 
   my(%labels, @choices, $items);
 
@@ -121,10 +135,11 @@ sub _args_to_items
 
     my $class = $self->_item_class;
 
+    my $label_method = $options->{'localized'} ? 'label_id' : 'label';
     foreach my $value (@choices)
     {
-      push(@$items, $class->new(value => $value, 
-                                label => $labels{$value}));
+      push(@$items, $class->new(value         => $value, 
+                                $label_method => $labels{$value}));
     }
   }
 
@@ -157,22 +172,38 @@ sub add_items
 {
   my($self) = shift;
 
-  push(@{$self->{'items'}},  $self->_args_to_items(@_));
+  push(@{$self->{'items'}},  $self->_args_to_items({ localized => 0 }, @_));
 
   $self->init_items;
 }
 
 *add_item = \&add_items;
 
+sub add_items_localized
+{
+  my($self) = shift;
+
+  push(@{$self->{'items'}},  $self->_args_to_items({ localized => 1 }, @_));
+
+  $self->init_items;
+}
+
+*add_item_localized = \&add_items_localized;
+
 sub label_items
 {
   my($self) = shift;
 
-  my $labels = $self->{'labels'};
+  my $labels    = $self->{'labels'} || {};
+  my $label_ids = $self->{'label_ids'} || {};
 
   foreach my $item ($self->items)
   {
-    if(exists $labels->{$item->html_attr('value')})
+    if(exists $label_ids->{$item->html_attr('value')})
+    {
+      $item->label_id($label_ids->{$item->html_attr('value')});
+    }
+    elsif(exists $labels->{$item->html_attr('value')})
     {
       $item->label($labels->{$item->html_attr('value')});
     }
@@ -195,6 +226,38 @@ sub clear
   $self->init_items;
 }
 
+sub clear_labels
+{
+  my($self) = shift;
+
+  delete $self->{'labels'};
+  delete $self->{'label_ids'};
+
+  foreach my $item ($self->items)
+  {
+    $item->label_id(undef);
+    $item->label('');
+  }
+  
+  return;
+}
+
+sub reset_labels
+{
+  my($self) = shift;
+
+  delete $self->{'labels'};
+  delete $self->{'label_ids'};
+
+  foreach my $item ($self->items)
+  {
+    $item->label_id(undef);
+    $item->label($item->value);
+  }
+  
+  return;
+}
+
 sub reset
 {
   my($self) = shift;
@@ -211,9 +274,14 @@ sub reset
   $self->init_items;
 }
 
-sub labels
+sub labels    { shift->_labels(0, @_) }
+sub label_ids { shift->_labels(1, @_) }
+
+sub _labels
 {
-  my($self) = shift;
+  my($self, $localized) = (shift, shift);
+
+  my $key = $localized ? 'label_ids' : 'labels';
 
   if(@_)
   {
@@ -221,14 +289,14 @@ sub labels
 
     if(@_ == 1 && ref $_[0] eq 'HASH')
     {
-      $self->{'labels'} = $_[0];
+      $self->{$key} = $_[0];
     }
     else
     {
-      Carp::croak "Odd number of items found in labels() hash argument"
+      Carp::croak "Odd number of items found in $key() hash argument"
         unless(@_ % 2 == 0);
 
-      $self->{'labels'} = { @_ };
+      $self->{$key} = { @_ };
     }
 
     $self->label_items;
@@ -260,6 +328,56 @@ sub labels
 
   return $want ? %labels : \%labels;
 }
+
+# sub labels
+# {
+#   my($self) = shift;
+# 
+#   if(@_)
+#   {
+#     my %labels;
+# 
+#     if(@_ == 1 && ref $_[0] eq 'HASH')
+#     {
+#       $self->{'labels'} = $_[0];
+#     }
+#     else
+#     {
+#       Carp::croak "Odd number of items found in labels() hash argument"
+#         unless(@_ % 2 == 0);
+# 
+#       $self->{'labels'} = { @_ };
+#     }
+# 
+#     $self->label_items;
+#   }
+# 
+#   my $want = wantarray;
+# 
+#   return  unless(defined $want);
+# 
+#   my $group_class = $self->_item_group_class;
+# 
+#   my %labels;
+# 
+#   # Dumb linear search for now
+#   foreach my $item ($self->items)
+#   {
+#     if($item->isa($group_class))
+#     {
+#       foreach my $subitem ($item->items)
+#       {
+#         $labels{$subitem->html_attr('value')} = $subitem->label;
+#       }
+#     }
+#     else
+#     {
+#       $labels{$item->html_attr('value')} = $item->label;
+#     }
+#   }
+# 
+#   return $want ? %labels : \%labels;
+# }
 
 sub html_field
 {

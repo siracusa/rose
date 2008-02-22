@@ -10,19 +10,23 @@ use Rose::HTML::Form::Field::Group;
 use Rose::HTML::Form::Field::Group::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
 
-our $VERSION = '0.50';
+our $VERSION = '0.545';
 
 sub _item_class       { 'Rose::HTML::Form::Field::RadioButton' }
 sub _item_name        { 'radio button' }
 sub _item_name_plural { 'radio buttons' }
 
-*radio_buttons = \&Rose::HTML::Form::Field::Group::items;
+*radio_buttons               = \&Rose::HTML::Form::Field::Group::items;
+*radio_buttons_localized     = \&Rose::HTML::Form::Field::Group::items_localized;
+*radio_button                = \&Rose::HTML::Form::Field::Group::OnOff::item;
 
-*radio_button      = \&Rose::HTML::Form::Field::Group::OnOff::item;
-*add_radio_buttons = \&Rose::HTML::Form::Field::Group::add_items;
-*add_radio_button  = \&add_radio_buttons;
+*add_radio_buttons           = \&Rose::HTML::Form::Field::Group::add_items;
+*add_radio_button            = \&add_radio_buttons;
+*add_radio_buttons_localized = \&Rose::HTML::Form::Field::Group::add_items_localized;
+*add_radio_button_localized  = \&add_radio_buttons_localized;
 
-*choices = \&radio_buttons;
+*choices           = \&radio_buttons;
+*choices_localized = \&radio_buttons_localized;
 
 sub html_table
 {

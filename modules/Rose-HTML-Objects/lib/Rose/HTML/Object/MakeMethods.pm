@@ -80,6 +80,7 @@ sub localized_message
       if(@_)
       {
         my($id, @args) = @_;
+        return $self->$name(undef)  unless(defined $id);
         return $self->$name($msg_class->new(id => $id, args => \@args, parent => $self));
       }
 

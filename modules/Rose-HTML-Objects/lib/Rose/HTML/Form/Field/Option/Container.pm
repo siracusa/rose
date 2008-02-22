@@ -19,21 +19,29 @@ Rose::HTML::Form::Field::WithContents->import_methods(
   xhtml_tag => '_xhtml_tag',
 });
 
-our $VERSION = '0.011';
+our $VERSION = '0.545';
 
 sub _item_class       { 'Rose::HTML::Form::Field::Option' }
 sub _item_group_class { 'Rose::HTML::Form::Field::OptionGroup' }
 sub _item_name        { 'option' }
 sub _item_name_plural { 'options' }
 
-*options = \&Rose::HTML::Form::Field::Group::items;
-*option  = \&Rose::HTML::Form::Field::Group::OnOff::item;
-*option_group = \&Rose::HTML::Form::Field::Group::OnOff::item_group;
+*options               = \&Rose::HTML::Form::Field::Group::items;
+*options_localized     = \&Rose::HTML::Form::Field::Group::items_localized;
+*option                = \&Rose::HTML::Form::Field::Group::OnOff::item;
+*option_group          = \&Rose::HTML::Form::Field::Group::OnOff::item_group;
 
-*add_options = \&Rose::HTML::Form::Field::Group::add_items;
-*add_option  = \&Rose::HTML::Form::Field::Group::add_item;
+*add_options           = \&Rose::HTML::Form::Field::Group::add_items;
+*add_option            = \&add_options;
+*add_options_localized = \&Rose::HTML::Form::Field::Group::add_items_localized;
+*add_option_localized  = \&add_options_localized;
 
-*choices = \&options;
+*add_options_localized = \&Rose::HTML::Form::Field::Group::add_items_localized;
+*add_option_localized  = \&Rose::HTML::Form::Field::Group::add_item_localized;
+
+
+*choices           = \&options;
+*choices_localized = \&options_localized;
 
 *_args_to_items = \&Rose::HTML::Form::Field::Group::_args_to_items;
 

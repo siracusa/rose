@@ -1142,9 +1142,15 @@ sub fields
   [
     grep { defined } 
     map 
-    { 
-      /$FF_SEPARATOR_RE([^$FF_SEPARATOR_RE]+)/ || /(.*)/;
-      $fields->{$1} || $fields_by_name->{$1} || $self->field($_)
+    {       
+      if(/$FF_SEPARATOR_RE([^$FF_SEPARATOR_RE]+)/o)
+      {
+        $self->field($_) || $fields->{$1} || $fields_by_name->{$1};
+      }
+      else
+      {
+        $fields->{$_} || $fields_by_name->{$_} || $self->field($_);
+      }
     } 
     $self->field_monikers 
   ];
@@ -1990,6 +1996,9 @@ The default mapping of type names to class names is:
   'password'           => Rose::HTML::Form::Field::Password
 
   'hidden'             => Rose::HTML::Form::Field::Hidden
+
+  'int'                => Rose::HTML::Form::Field::Integer,
+  'integer'            => Rose::HTML::Form::Field::Integer,
 
   'email'              => Rose::HTML::Form::Field::Email
 
