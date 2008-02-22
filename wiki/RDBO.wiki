@@ -1,0 +1,68 @@
+#summary A brief overview of Rose::DB::Object.
+
+= Rose::DB::Object =
+
+(This page is a mirror of the [http://www.perlfoundation.org/perl5/index.cgi?rose_db_object Rose::DB::Object page on the Perl Foundation wiki].)
+
+== Overview ==
+
+[http://search.cpan.org/dist/Rose-DB-Object/ Rose::DB::Object] is an extensible, high-performance object-relational mapper (ORM). Its distinguishing characteristics are:
+
+  * A particular focus on [RDBOBenchmarks performance], aiming to be useful in situations where one might otherwise rejected the use of an ORM due to the expected performance overhead.
+  * An extensive collection of bundled column classes, providing uniform access to all those similar-but-different column types in the various supported databases (dates, timestamps, intervals, arrays, sets, booleans, bitfields, big integers, serial/auto-increment columns, etc.) using convenient Perl objects as the interchange format (e.g., [http://search.cpan.org/dist/DateTime/ DateTime], [http://search.cpan.org/dist/Bit-Vector/ Bit::Vector], [http://search.cpan.org/dist/Math-BigInt/ Math::BigInt], etc.)
+  * A system for fetching and saving arbitrarily deep trees of related objects without any specific knowledge of SQL join syntax.
+  * A desire to avoid all instances of database-specific data formats in end-user code. For example, the abstract query syntax accepts the aforementioned "rich" column value objects as arguments.
+  * Table, column, key, and relationship metadata is maintained in a set of dedicated objects for each entity.
+  * A customizable [http://search.cpan.org/dist/Rose-DB-Object/lib/Rose/DB/Object/ConventionManager.pm convention manager] class encapsulates all naming and other class construction conventions.
+  * An extremely thorough [http://search.cpan.org/dist/Rose-DB-Object/lib/Rose/DB/Object/Loader.pm loader] class that can read and understand all relevant metadata in an existing database schema (tables, columns types, default values, primary keys, unique keys, foreign keys) and can also automatically intuit all supported relationship types based on a configurable set of naming conventions.
+
+== Database Support ==
+
+The companion [http://search.cpan.org/dist/Rose-DB/ Rose::DB] module (a separate distribution) maintains a registry of data sources and encapsulates most database-specific functionality on behalf of Rose::DB::Object. Rose::DB::Object supports any database that Rose::DB supports. The current list includes:
+
+  * PostgreSQL
+  * MySQL
+  * SQLite
+  * Informix
+  * Oracle
+
+== Features ==
+
+The [http://search.cpan.org/dist/Rose-DB-Object/ Rose::DB::Object] class itself is the base class for objects that correspond to a single, uniquely identified row in a database table. The [http://search.cpan.org/dist/Rose-DB-Object/lib/Rose/DB/Object/Manager.pm Rose::DB::Object::Manager] class is used to manipulate multiple database rows.
+
+Rose::DB::Object can:
+
+  * Create a row in the database by saving a newly constructed object.
+  * Initialize an object by loading a row from the database (based on either a primary key or a unique key).
+  * Update a row by saving a modified object back to the database.
+  * Delete a row from the database.
+  * Fetch an object referred to by a foreign key in the current object. (i.e., "one to one" and "many to one" relationships.)
+  * Fetch multiple objects that refer to the current object, either directly through foreign keys or indirectly through a mapping table. (i.e., "one to many" and "many to many" relationships.)
+  * Load an object along with "foreign objects" that are related through any of the supported relationship types.
+
+Rose::DB::Object::Manager can:
+
+  * Fetch multiple objects from the database using arbitrary query conditions, limits, and offsets.
+  * Iterate over a list of objects, fetching from the database in response to each step of the iterator.
+  * Fetch objects along with "foreign objects" (related through any of the supported relationship types) in a single query by automatically generating the appropriate SQL join(s).
+  * Count the number of objects that match a complex query.
+  * Update objects that match a complex query.
+  * Delete objects that match a complex query.
+
+Rose::DB::Object can parse, coerce, inflate, and deflate column values on your behalf, providing the most convenient possible data representations on the Perl side of the fence, while allowing the programmer to ignore the ugly details of the data formats required by the database. Default implementations are included for most common column types.
+
+Multi-column primary keys, unique keys, foreign keys, and all other relationship types are supported.
+
+[http://search.cpan.org/dist/Rose-DB-Object/lib/Rose/DB/Object/Loader.pm Rose::DB::Object::Loader] can be used to automatically create a suite of Rose::DB::Object and Rose::DB::Object::Manager classes based on the schema of an existing database. These classes may be dynamically created in memory or written out to disk as a set of ".pm" files.
+
+Though Rose::DB::Object has not yet reached version 1.0, every possible effort is made not to break backwards compatibility between versions.
+
+== Resources ==
+
+  * [http://search.cpan.org/dist/Rose-DB-Object/ Download]
+  * [http://search.cpan.org/dist/Rose-DB-Object/lib/Rose/DB/Object/Tutorial.pod Tutorial]
+  * [RDBOBenchmarks Benchmarks]
+  * [https://lists.sourceforge.net/lists/listinfo/rose-db-object Mailing list]
+  * [http://www.mail-archive.com/rose-db-object@lists.sourceforge.net/ Alternate mailing list archive]
+  * [https://rose.svn.sourceforge.net/svnroot/rose/trunk/modules/Rose-DB-Object/ SVN repository]
+  * IRC: irc.perl.org#rdbo
