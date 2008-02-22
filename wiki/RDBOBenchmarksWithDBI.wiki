@@ -1,4 +1,4 @@
-#summary Rose::DB::Object benchmarks including DBI.
+#summary Benchmark results for Rose::DB::Object, including DBI.
 
 = Rose::DB::Object Benchmarks (with DBI) =
 
