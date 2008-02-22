@@ -1,0 +1,39 @@
+#summary The Rose wiki home page.
+
+= Welcome to Rose =
+
+== Download ==
+
+  * [http://search.cpan.org/dist/Rose-DB/ Rose::DB on CPAN]
+  * [http://search.cpan.org/dist/Rose-DB-Object/ Rose::DB::Object on CPAN]
+  * [http://search.cpan.org/dist/Rose-HTML-Objects/ Rose::HTML::Objects on CPAN]
+  * [https://rose.googlecode.com/svn/trunk Subversion repository] ([http://code.google.com/p/rose/source/browse web interface])
+
+== Overview ==
+
+  * [RDBO Rose::DB::Object]
+  * [RHTMLO Rose::HTML::Objects]
+
+== Support ==
+
+  * [https://lists.sourceforge.net/lists/listinfo/rose-db-object Rose::DB::Object mailing list]
+  * [https://lists.sourceforge.net/lists/listinfo/rose-html-objects Rose::HTML::Objects mailing list]
+  * [http://www.mail-archive.com/rose-db-object@lists.sourceforge.net Alternate mailing list archive]
+  * IRC on 'irc.perl.org channel #rdbo
+
+== Tutorials ==
+
+  * [http://search.cpan.org/dist/Rose-DB-Object/lib/Rose/DB/Object/Tutorial.pod Rose::DB::Object Tutorial on CPAN]
+  * [http://search.cpan.org/dist/Rose-DB/lib/Rose/DB/Tutorial.pod Rose::DB Tutorial on CPAN]
+
+== Benchmarks ==
+
+  * Rose-DB-Object is fast. See [RDBOBenchmarks].
+
+== Miscellaneous ==
+
+  * [RDBOExtending Extending Rose::DB::Object] - a brief overview from the mailing list.
+  * Some simple [RDBOTips tips] copied from the mailing list.
+  * [SuccessStories Success stories]
+  * [SchemaGraphs Generating Schema Graphs]
+  
