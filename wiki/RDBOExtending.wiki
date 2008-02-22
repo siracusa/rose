@@ -1,0 +1,95 @@
+#summary An overview of the various ways to extend Rose::DB::Object.
+
+= Extending Rose::DB::Object =
+
+The [http://search.cpan.org/search?query=Rose%3A%3ADBx&mode=all Rose::DBx::] namespace has been chosen for third-party CPAN modules that build on [RDBO Rose::DB::Object].  This document describes how your own customizations to Rose::DB::Object, whether they are published to CPAN under the Rose::DBx:: namespace or are kept internal to your project or company and placed under the namespace chosen for your Rose::DB::Object-derived classes.
+
+The following explanation is from a [http://lists.sourceforge.net/mailman/listinfo/rose-db-object Rose::DB::Object mailing list] post in 2005.  Though it pre-dates the selection of the Rose::DBx:: namespace, it is still a good overview of the possibilities for extending Rose::DB::Object.
+
+On 10/25/05 6:54 AM, Sean Davis wrote:
+
+ I've used RDBO for less than 24 hours and I really like it so far.  I was
+ just curious what thoughts folks have about designing reusable "plugins" for
+ RDBO.  I'll admit that I haven't done my homework on this yet except to
+ glance over CPAN and quickly browse the archives.  Such capability is
+ getting projects like CDBI and Catalyst a long way by allowing development
+ by folks not in the core group.  Being new to this group, I was just curious
+ what the philosophy and practice on extending functionality and more
+ specialized development might be.
+
+There are many different ways to extend and build on RDBO:
+
+  * Column types
+  * Method makers
+  * Metadata objects
+  * Relationship objects
+  * Convention managers
+  * Object managers
+  * Subclasses
+
+I'll start at the bottom, with subclasses.  If you follow the recommended
+(well, soon-to-be recommended, once I actually finish the tutorial) "best
+practices" you'll end up making subclasses whenever you use RDBO.  This is
+what RDBO is designed to do: it's a base class.  Where you go from there is
+up to you.
+
+I've included two really simple subclasses in the RDBO distribution:
+RDBO::Cached and RDBO::Std.  RDBO::Cached implements simple in-memory
+caching based on primary key and unique keys.  RDBO::Std enforces a
+convention: all tables have a single primary key column named "id."  (This
+class was created before the convention manager existed.  If I wrote it
+today, I'd use a convention manager to help with the implementation.)
+
+As the list above suggests, there are many "pluggable" pieces of RDBO.  You
+should think of subclasses as "containers" for, or aggregations of all these
+other kinds of extensions.
+
+One "extension aggregation" subclass example I've been toying with is the
+idea of an RDBO class that provides separate get_foo() and set_foo()
+accessor and mutator methods for columns instead of the current combined
+get/set foo() method for each column.  The framework is there, it's just a
+question of plugging the right bits in.
+
+Column classes are ripe for extension.  Again, I've included some examples
+in the RDBO distribution.  Take a look at the Chkpass and Array column types
+(based on Postgres's CHKPASS and array data types) or the Set column type
+(based on Informix's SET data type).  If there's some new data type you want
+to support with RDBO, just make a column class and (optionally) a method
+maker to go with it.
+
+Even "normal" column types are fair game.  For example, although the Decimal
+column type stores precision and scale metadata, the associated method maker
+does nothing with that information.  Let's say that, instead, you want it to
+throw a fatal error when passed a value that does not conform to the
+precision and scale.  You' make a new method maker that implements this
+behavior, and then map it to the Decimal column class.
+
+But you don't want to hose other RDBO-derived classes that expect the old
+Decimal column behavior, right?  So you make a Metadata object subclass and
+put your custom mappings in there.  Then you make your RDBO subclass use
+your Metadata object subclass by default.
+
+You could distribute these in pieces: your method maker subclass as one
+module, your Metadata object as another module (that requires your method
+maker subclass), and your RDBO sublcass as yet another modules (that
+requires both of the other modules).  Or you could distribute all of this as
+a single module.  Or any combination thereof--whatever's makes the most
+sense to you, and is the most useful to others.
+
+(And if it's purely an additive that has few or no prerequisites, you can
+always send it to me and I'll consider adding it to RDBO proper.)
+
+Finally, there's the object manager (RDBO::Manager).  Let's say you don't
+like the default manager and want to create a new one that accepts XML
+queries, or is built using SQL::Abstract or SQL::Builder or whatever.
+There's nothing stopping you from writing one.  RDBO::Manager, like all of
+the other bits and pieces of the RDBO system, can be replaced without using
+anything beyond the public APIs for each component.
+
+That's an important design goal of RDBO: it should be extensible using
+public APIs.  For example, if there's something that RDBO::Manager can do,
+but that your own manager class cannot do without using a non-public API,
+then I consider that a bug.
+
+That's it in a nutshell, I guess :)
+
