@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 158;
+use Test::More tests => 159;
 
 BEGIN 
 {
@@ -431,6 +431,26 @@ is(scalar(() = $w_form->children), 0, 'children list 2');
 $w_form->add_form('x.y.z' => $z_form);
 
 is($z_form, $w_form->form('x')->form('y')->form('z'), 'nested set 1');
+
+# Test a nested field with the same name as a field in the parent
+
+my $f1 = Rose::HTML::Form->new();
+  
+$f1->add_fields
+(
+  id => { type => 'int' },
+);
+
+my $f2 = Rose::HTML::Form->new();
+  
+$f2->add_fields
+(
+  id => { type => 'text' },
+);
+
+$f1->add_form(f2 => $f2);
+
+is(join(',', sort map { $_->name } $f1->fields), 'f2.id,id', 'nested same-name fields');
 
 BEGIN
 {

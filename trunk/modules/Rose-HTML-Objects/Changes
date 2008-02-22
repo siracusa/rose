@@ -1,5 +1,8 @@
-0.545 (11.30.2006) - John Siracusa <siracusa@mindspring.com>
+0.545 (12.04.2006) - John Siracusa <siracusa@mindspring.com>
 
+    * Fixed a bug that caused a field in nested form with the same
+      name as a field in its parent form to become invisible.
+    * Added class mapping for the "int" and "integer" field types.
     * Corrected the string overflow error message construction.
     * Improved importing of message constants.
 

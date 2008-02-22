@@ -1,7 +1,8 @@
-0.759 (12.03.2006) - John Siracusa <siracusa@mindspring.com>
+0.759 (12.04.2006) - John Siracusa <siracusa@mindspring.com>
 
-    * Fixed a bug that cuased the unique_keys Manager parameter to be
-      ignored when a custom select parameter is passed.
+    * Added a "state" export tag to Rose::DB::Object::Util.
+    * Fixed a bug that caused the Manager to unconditionally alias
+      selected columns in some situations.
 
 0.758 (11.29.2006) - John Siracusa <siracusa@mindspring.com>
 

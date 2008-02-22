@@ -15,7 +15,7 @@ use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 # Variables for use in regexes
 our $FF_SEPARATOR_RE = quotemeta FF_SEPARATOR;
 
-our $VERSION = '0.54';
+our $VERSION = '0.545';
 
 #
 # Class data
@@ -80,6 +80,9 @@ __PACKAGE__->field_type_classes
   'password'           => 'Rose::HTML::Form::Field::Password',
 
   'hidden'             => 'Rose::HTML::Form::Field::Hidden',
+
+  'int'                => 'Rose::HTML::Form::Field::Integer',
+  'integer'            => 'Rose::HTML::Form::Field::Integer',
 
   'email'              => 'Rose::HTML::Form::Field::Email',
 

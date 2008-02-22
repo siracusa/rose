@@ -3,7 +3,7 @@
 use strict;
 
 #use Test::LongString;
-use Test::More tests => (80 * 4) + 2;
+use Test::More tests => (81 * 4) + 2;
 
 BEGIN 
 {
@@ -18,13 +18,15 @@ our(%Have, $Have_YAML, $Have_JSON);
 # Tests
 #
 
+use Rose::DB::Object::Util qw(:state);
+
 my $i = 0;
 
 foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 80)  unless($Have{$db_type});
+    skip("$db_type tests", 81)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -271,7 +273,12 @@ foreach my $db_type (qw(mysql pg informix sqlite))
     ok(1, "skip init_with_json() - $db_type");
   }
 
-  # has_loaded_related() tesed in db-object-relationship.t
+  $c = $class->new(age => 456);
+  set_state_loading($c);
+  ok(is_loading($c), "state utils - $db_type");
+  unset_state_loading($c);
+
+  # has_loaded_related() tested in db-object-relationship.t
 }
 
 BEGIN

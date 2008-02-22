@@ -1313,13 +1313,13 @@ sub get_objects
         $expand_dotstar = 1  if($item =~ /^t\d+\.\*$/);
       }
 
-      if($args{'unique_aliases'} && defined $tn)
+      if(defined $tn)
       {
         my $meta = $meta{$classes{$tables[$tn - 1]}};
 
         if($meta->column($column) && (my $alias = $meta->column($column)->alias))
         {
-          $item .= ' AS ' . $alias;
+          $item .= ' AS ' . $alias  unless($alias eq $column);
         }
       }
     }

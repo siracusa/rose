@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 39;
+use Test::More tests => 43;
 
 BEGIN 
 {
@@ -239,5 +239,50 @@ is($field->html_field,
   qq(<option value="cherry">Cherry</option>\n) .
   qq(</select>),
   'localized label 4');
+
+$field->labels({ cherry => 'CHERRY', squash => 'SQUASH' });
+
+$field->label_ids(grape => $id);
+
+is($field->option('grape')->label->as_string, 'Le Orange', 'localized label 4');
+is($field->html_field, 
+  qq(<select name="fruits" size="1">\n) .
+  qq(<option selected value="apple">Apple</option>\n) .
+  qq(<option value="orange">Le Orange</option>\n) .
+  qq(<option value="grape">Le Orange</option>\n) .
+  qq(<option value="pear">Pear</option>\n) .
+  qq(<option value="berry">Berry</option>\n) .
+  qq(<option value="squash">SQUASH</option>\n) .
+  qq(<option value="cherry">CHERRY</option>\n) .
+  qq(</select>),
+  'localized label 5');
+
+$field->clear_labels;
+
+is($field->html_field, 
+  qq(<select name="fruits" size="1">\n) .
+  qq(<option selected value="apple"></option>\n) .
+  qq(<option value="orange"></option>\n) .
+  qq(<option value="grape"></option>\n) .
+  qq(<option value="pear"></option>\n) .
+  qq(<option value="berry"></option>\n) .
+  qq(<option value="squash"></option>\n) .
+  qq(<option value="cherry"></option>\n) .
+  qq(</select>),
+  'clear labels 1');
+
+$field->reset_labels;
+
+is($field->html_field, 
+  qq(<select name="fruits" size="1">\n) .
+  qq(<option selected value="apple">apple</option>\n) .
+  qq(<option value="orange">orange</option>\n) .
+  qq(<option value="grape">grape</option>\n) .
+  qq(<option value="pear">pear</option>\n) .
+  qq(<option value="berry">berry</option>\n) .
+  qq(<option value="squash">squash</option>\n) .
+  qq(<option value="cherry">cherry</option>\n) .
+  qq(</select>),
+  'reset labels 1');
 
 $field->disabled(1);

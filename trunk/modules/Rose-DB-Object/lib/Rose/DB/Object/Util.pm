@@ -33,7 +33,9 @@ our %EXPORT_TAGS =
   children    => [ qw(has_modified_children has_loaded_related) ],
 );
 
-our $VERSION = '0.756';
+$EXPORT_TAGS{'state'} = [ map { @$_ } @EXPORT_TAGS{qw(get_state set_state unset_state)} ];
+
+our $VERSION = '0.759';
 
 sub is_in_db   { shift->{STATE_IN_DB()}   }
 sub is_loading { shift->{STATE_LOADING()} }
@@ -228,6 +230,22 @@ The 'unset_state' tag:
 
 will cause the following function names to be imported:
 
+    unset_state_in_db()
+    unset_state_loading()
+    unset_state_saving()
+
+the 'state' tag:
+
+    use Rose::DB::Object::Util qw(:unset_state);
+
+will cause the following function names to be imported:
+
+    is_in_db()
+    is_loading()
+    is_saving()
+    set_state_in_db()
+    set_state_loading()
+    set_state_saving()
     unset_state_in_db()
     unset_state_loading()
     unset_state_saving()
