@@ -1,4 +1,4 @@
-#summary An overview of Rose::HTML::Objects
+#summary A brief overview of Rose::HTML::Objects.
 
 (This page is a mirror of the Rose::HTML::Objects section of the [http://www.perlfoundation.org/perl5/index.cgi?form_processing Form Processing page on the Perl Foundation wiki].)
 
@@ -27,6 +27,6 @@ See the following POD for more information on a few prominent features:
 == Resources ==
   
   * [http://search.cpan.org/dist/Rose-HTML-Objects/ Download]
-  * [https://lists.sourceforge.net/lists/listinfo/rose-html-objects Mailing list]
-  * [https://rose.svn.sourceforge.net/svnroot/rose/trunk/modules/Rose-HTML-Objects/ SVN repository]
+  * [http://groups.google.com/group/rose-html-objects/about Mailing list]
+  * [http://rose.googlecode.com/svn/trunk/modules/Rose-HTML-Objects/ SVN repository]
   * IRC: irc.perl.org#rdbo
