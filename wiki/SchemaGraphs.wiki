@@ -2,7 +2,7 @@
 
 = Generating Schema Graphs =
 
-I made a simple set of functions to generate dot files for rendering into graphs of database schemas and their relationships.  You can get a hold of me at groditi at gmail dot com
+I made a simple set of functions to generate dot files for rendering into graphs of database schemas and their relationships.  You can get a hold of me at groditi at gmail dot com.
 
 ===dotmaker.pl===
 
