@@ -2,9 +2,7 @@
 
 = Success Stories =
 
-= Success Stories =
-
-== TripsAndGetaways ==
+== Trips and Getaways ==
 
 I was given an opportunity to build a site from the ground up.  In the past I had written all my own SQL, putting common queries in my own modules.  I was looking to try and build an entire application using ORM.  At my full time job I had started using [http://search.cpan.org/dist/Rose-DB Rose::DB] to model a Oracle database.  While this project is still on-going, I could see the benefits of using the framework.
 
