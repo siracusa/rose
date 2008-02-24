@@ -1,0 +1,31 @@
+#summary Stories from people who have used Rose to help them succeed.
+
+= Success Stories =
+
+= Success Stories =
+
+== TripsAndGetaways ==
+
+I was given an opportunity to build a site from the ground up.  In the past I had written all my own SQL, putting common queries in my own modules.  I was looking to try and build an entire application using ORM.  At my full time job I had started using [http://search.cpan.org/dist/Rose-DB Rose::DB] to model a Oracle database.  While this project is still on-going, I could see the benefits of using the framework.
+
+The final product is a site that uses [http://search.cpan.org/dist/Rose-DB Rose::DB] for all DB transactions.  I haven't written one line of SQL, but I like the fact that it's easy to do if I happen to run into a situation I need to.  The process has gone so well that I have begun to implement [http://search.cpan.org/dist/Rose-HTML-From/lib/Rose/HTML/Form.pm Rose::HTML::Form] into the application also.  The Rose framework is put together intelligently and is extremely easy to extend, allowing the developer to choose exactly how they will implement Rose.
+
+I was able to use [http://search.cpan.org/dist/Rose-DB Rose::DB] with [http://search.cpan.org/dist/CGI-Application CGI::Application] to backbone the site, which is currently launched with a FastCGI script due to current environmental constraints.  
+
+The TripsAndGetaways site: [http://www.tripsandgetaways.com TripsAndGetaways]
+
+--Kevin McGrath 09:54, 18 Aug 2007 (EST)
+
+== ARA Pneumatik ==
+
+Some time ago my client asked me to make some changes on the CMS page I've built for him in [http://apache-asp.org/ Apache::ASP]. During our discussions we both decided that the page needed a general overhaul. I suggested migrating to tableless layout based on CSS. Moreover, my client wanted to make the CMS engine more flexible. It was clear that I would need some ORM tool.
+
+Due to my interest in [http://catalyst.perl.org/ Catalyst] I wanted to use some ORM that would work within Catalyst. I tried [http://search.cpan.org/dist/Class-DBI/ Class::DBI], but it was missing many features I needed.  Next I tried [http://search.cpan.org/dist/DBIx-Class/ DBIx::Class], but I had some troubles with hierarchical structures stored in one table. Moreover, both engines were rather slow. There was a talk on #dbix-class, where John Siracusa (author and maintainer of RDBO) gave me few pieces of advice - and encouraged to use Rose::DB::Object.
+
+Thanks to the flexibility and efficiency of RDBO I completed my task; having more fun than troubles. I have to mention that I had a lot of help from John!  He was very eager to help solve any problem or feature request - not only in regard of RDBO ;-)
+
+To be honest, this is not the story of some webpage success - I gained a lot more than a just changing my client's page :-).  I learned a lot, and also learned just how much there is left to learn.  I also noticed that sharing experiences between developers is the key to building good software. You can often meet John on #dbix-class, or Matt S. Trout (active developer of DBIx::Class) on #rdbo.
+
+If you want, see the [http://www.arapneumatik.pl mentioned page] (it is in Polish).
+
+--Maciej "Bruno" Kopias-Czekay 02:43, 11 Feb 2006 (PST)
