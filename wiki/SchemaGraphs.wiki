@@ -1,0 +1,89 @@
+#summary Generating schema graphs from Rose::DB::Object class hierarchies.
+
+= Generating Schema Graphs =
+
+I made a simple set of functions to generate dot files for rendering into graphs of database schemas and their relationships.  You can get a hold of me at groditi at gmail dot com
+
+===dotmaker.pl===
+
+{{{
+use Rose::DB::Object;
+                                                                                                                                                                      
+sub export_tree{
+    my $tree;
+    foreach my $class (Rose::DB::Object::Metadata->registered_classes){
+        my $meta = $class->meta;
+        my $tmp ={
+                  'name'    => $meta->table,
+                  'primary' => scalar $meta->primary_key_column_names,
+                  'fields'  => { map { $_->name => $_->type .
+                                           ($_->can('length') ? " ".$_->length : "") .
+                                               ($_->not_null ? " NOT NULL" : " NULL ")
+                                     }  $meta->columns },
+                  'relations' => {},
+                 };
+
+        foreach my $r ($meta->relationships){
+            while(my($l,$f) = each %{$r->{'_key_columns'}}){
+                $tmp->{'relations'}{$l} = {t => eval($r->{class}."->meta->table"), f=>$f};
+            }
+        }
+        push(@$tree,$tmp);
+    }
+    return $tree;
+}
+
+sub make_dot{
+    my $tables= shift;
+    print "digraph structs {\n\tnode [shape=record];\n";
+    foreach my $t (@$tables){
+        my @n_col;
+        my @d_col;
+        my @pn_col;
+        my @pd_col;
+
+        foreach my $f (@{$t->{primary}}){
+            push(@pn_col, $f);
+            push(@pd_col, $t->{fields}->{$f});
+            delete($t->{fields}{$f});
+        }
+        if(scalar(keys %{$t->{fields}})){
+            while(my ($k, $v) = each %{$t->{fields}}){
+                push(@n_col, $k);
+                push(@d_col, $v);
+            }
+        }
+        $_ = "<$_>".$_ foreach(@n_col);
+        $_ = "<$_>*".$_ foreach(@pn_col);
+        print "\t".$t->{name}." [label=\"{".$t->{name}."|{";
+        print "{".join("|",@pn_col,@n_col)."}|";
+        print "{".join("|",@pd_col,@d_col)."}";
+        print "}}\"];\n";
+
+        if(defined($t->{relations})){
+            while(my ($k, $v) = each %{$t->{relations}}){
+                print "\t".$t->{name}.":$k -> ".$v->{t}.":".$v->{f}.";\n";
+            }
+        }
+    }
+
+    print "}";
+}
+}}}
+
+==Usage==
+
+===my_app_dot_gen.pl===
+
+{{{
+#! /usr/bin/perl -w
+use strict;
+use My::RoseDB; # 'use' all the classes for all the tables you want in the graph 
+require 'dotmaker.pl';
+make_dot export_tree;
+</pre>
+<pre>
+> ./my_app_dot_gen.pl >> my_database.dot
+}}}
+
+Then just use your favorite dot processor to process the file.  I like graphviz.
