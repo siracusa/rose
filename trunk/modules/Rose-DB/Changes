@@ -1,3 +1,7 @@
+0.741 (02.25.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Changed mailing list URLs.
+
 0.740 (02.15.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added support for Rose::DB::Object 0.767's new hints features.
