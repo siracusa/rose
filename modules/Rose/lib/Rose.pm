@@ -2,7 +2,7 @@ package Rose;
 
 use strict;
 
-our $VERSION = '0.05';
+our $VERSION = '0.10';
 
 sub version { $VERSION }
 
@@ -22,14 +22,9 @@ Rose - A complete web application construction kit.
 
 =head1 DESCRIPTION
 
-Rose is a work in progress, but it will eventually be a suite of modules
-used to build web applications in the mod_perl environment.  Support for Apache
-1 and 2 is planned.
+Rose is a work in progress.  It is a suite of modules used to build web applications in the mod_perl environment.  Support for Apache 1 and 2 is planned.
 
-The Rose suite is broken up into several components.  This module (Rose.pm)
-lists all the other Rose components as prerequisites, including their minimum 
-version numbers.  L<Bundle::Rose> is another way to install the entire
-suite.
+The Rose suite is broken up into several components.  This module (Rose.pm) lists all the other Rose components as prerequisites.  L<Bundle::Rose> is another way to install the entire suite.
 
 =head1 CLASS METHODS
 
@@ -37,10 +32,7 @@ suite.
 
 =item B<version>
 
-Returns the version number of the Rose suite.  This version number will not be
-meaningful until I decide on a policy for suite versioning.  Until then,
-ignore it and simply download the latest version of each C<Rose::*> component.
-The easiest way to do this is to install L<Bundle::Rose>.
+Returns the version number of the Rose suite.  This version number will not be meaningful until I decide on a policy for suite versioning.  Until then, ignore it and simply download the latest version of each C<Rose::*> component. The easiest way to do this is to install L<Bundle::Rose>.
 
 =back
 
@@ -89,10 +81,7 @@ Web application framework.  (Unreleased)
 
 =back
 
-As you can see, a lot of these components have not yet been released. I've
-decided to release what I have so far because I think L<Rose::HTML::Objects>
-may be useful immediately, even without any of the unreleased web application
-code.
+As you can see, a lot of these components have not yet been released. I've decided to release what I have so far because I think L<Rose::HTML::Objects> may be useful immediately, even without any of the unreleased web application code.
 
 =head1 DEVELOPMENT POLICY
 
@@ -100,20 +89,11 @@ Here are the ground rules for the Rose suite:
 
 =over 4
 
-=item * B<All APIs are subject to change until version 1.0.>  I will try to
-avoid breaking things unnecessarily before then, but I make no promises.
+=item * B<All APIs are subject to change until version 1.0.>  I will try to avoid breaking things unnecessarily before then, but I make no promises.
 
-=item * B<If it is not documented, it doesn't exist.>  The Rose suite is
-filled with classes that exist solely to factor out common functionality in
-the public Rose modules.  Although these modules may look useful, I reserve
-the right to change or eliminate them at any time in any version I<unless>
-they have POD documentation.  If a module has no POD, do not try to use it.
+=item * B<If it is not documented, it doesn't exist.>  The Rose suite is filled with classes that exist solely to factor out common functionality in the public Rose modules.  Although these modules may look useful, I reserve the right to change or eliminate them at any time in any version I<unless> they have POD documentation.  If a module has no POD, do not try to use it.
 
-Similarly, if a function or method is in a public module but is I<not>
-documented in the POD for that module, don't just assume that I forgot to add
-it.  Undocumented methods are undocumented for a reason, and are subject to
-change or removal at any time, in any version.  If you feel like you need to
-use the method, email me and I'll consider making it part of the public API.
+Similarly, if a function or method is in a public module but is I<not> documented in the POD for that module, don't just assume that I forgot to add it.  Undocumented methods are undocumented for a reason, and are subject to change or removal at any time, in any version.  If you feel like you need to use the method, email me and I'll consider making it part of the public API.
 
 =back
 
@@ -123,9 +103,9 @@ To report a bug, email the L<author|/AUTHOR> or use CPAN's bug tracker.
 
 =head1 SUPPORT
 
-There are several mailing lists and a wiki available at the Rose SourceForge web site.
+Source code, mailing lists, and a wiki are available at the Rose project web site:
 
-L<http://rose.sourceforge.net/wiki/>
+L<http://rose.googlecode.com>
 
 =head1 AUTHOR
 
@@ -133,6 +113,6 @@ John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2006 by John C. Siracusa.  All rights reserved.  This program is
+Copyright (c) 2008 by John C. Siracusa.  All rights reserved.  This program is
 free software; you can redistribute it and/or modify it under the same terms
 as Perl itself.

@@ -2715,11 +2715,15 @@ Returns the XHTML serialization of the fields returned by L<hidden_fields()|/hid
 
 Any L<Rose::HTML::Objects> questions or problems can be posted to the L<Rose::HTML::Objects> mailing list.  To subscribe to the list or view the archives, go here:
 
-L<http://lists.sourceforge.net/lists/listinfo/rose-html-objects>
+L<http://groups.google.com/group/rose-html-objects>
 
 Although the mailing list is the preferred support mechanism, you can also email the author (see below) or file bugs using the CPAN bug tracking system:
 
 L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-HTML-Objects>
+
+There's also a wiki and other resources linked from the Rose project home page:
+
+L<http://rose.googlecode.com>
 
 =head1 AUTHOR
 
