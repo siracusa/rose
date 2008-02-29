@@ -8592,6 +8592,18 @@ SKIP: foreach my $db_type (qw(sqlite))
 
   Rose::DB->default_type($db_type);
 
+  # Return ignored, just chaging arg validity
+  my $xcount =
+    MySQLiteObjectManager->object_count(
+      share_db     => 1,
+      #debug => 1,
+      require_objects => [ 'bb1' ],
+      query        =>
+      [
+         foo   => { ne => 'xxx' },
+        't2.x' => { like => 'o%' },
+      ]);
+
   my $o = MySQLiteObject->new(id         => 1,
                           name       => 'John',  
                           flag       => 't',
@@ -8776,11 +8788,11 @@ SKIP: foreach my $db_type (qw(sqlite))
 
   $objs->[0]->b1(1);
   $objs->[0]->save;
-
+$DB::single =1 ;
   $count =
     MySQLiteObjectManager->object_count(
       share_db     => 1,
-      query_is_sql => 1,
+      #query_is_sql => 1,
       require_objects => [ 'bb1' ],
       query        =>
       [
@@ -15807,7 +15819,8 @@ EOF
 CREATE TABLE rose_db_object_bb
 (
   id    INT NOT NULL PRIMARY KEY,
-  name  VARCHAR(32)
+  name  VARCHAR(32),
+  z varchar(32)
 )
 EOF
 
@@ -15840,7 +15853,8 @@ EOF
     MySQLiteBB->meta->columns
     (
       id   => { type => 'int', primary_key => 1 },
-      name => { type => 'varchar'},
+      name => { type => 'varchar' },
+      z => { type => 'varchar', alias => 'x' },
     );
 
     MySQLiteBB->meta->initialize;
@@ -15849,6 +15863,7 @@ EOF
 CREATE TABLE rose_db_object_test
 (
   id             INT NOT NULL PRIMARY KEY,
+  f              VARCHAR(10),
   name           VARCHAR(32) NOT NULL,
   flag           BOOLEAN NOT NULL,
   flag2          BOOLEAN,
@@ -16172,6 +16187,7 @@ EOF
     MySQLiteObject->meta->columns
     (
       'name',
+      'f'      => { type => 'varchar', length => 10, alias => 'foo' },
       id       => { primary_key => 1 },
       flag     => { type => 'boolean', default => 1 },
       flag2    => { type => 'boolean' },

@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.767';
+our $VERSION = '0.769';
 
 our $Debug = 0;
 
@@ -315,7 +315,7 @@ sub build_select
       my $rel_column    =  $table_map->{$table_tn} ?
         "$table_map->{$table_tn}.$column" : '';
 
-      my $fq_column_trimmed;
+      my(@method_columns, $fq_column_trimmed);
 
       TRIM:
       {
@@ -326,7 +326,19 @@ sub build_select
       # Avoid duplicate clauses if the table name matches the relationship name
       $rel_column = ''  if($rel_column eq $fq_column);
 
-      my $method = $obj_meta ? $obj_meta->column_rw_method_name($column) : undef;
+      if($obj_meta)
+      {
+        my $method = $obj_meta->column_rw_method_name($column);
+        
+        unless($method eq $column)
+        {
+          push(@method_columns,
+            $method,
+            "$table.$method",
+            "$table_alias.$method",
+            $table_map->{$table_tn} ? "$table_map->{$table_tn}.$method" : ());
+        }
+      }
 
       unless($query_only_columns || !$select_columns{$column})
       {
@@ -355,8 +367,7 @@ sub build_select
 
       foreach my $column_arg (grep { exists $query{$_} } map { ($_, "!$_") } 
                               ($column, $fq_column, $fq_column_trimmed, $short_column,
-                               $rel_column, $unique_column, 
-                              (defined $method && $method ne $column ? $method : ())))
+                               $rel_column, $unique_column, @method_columns))
       {
         $not = (index($column_arg, '!') == 0) ? 'NOT' : '';
 
