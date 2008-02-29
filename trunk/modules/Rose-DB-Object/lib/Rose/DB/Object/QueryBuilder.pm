@@ -1547,7 +1547,7 @@ If C<query_is_sql> is false or omitted, then NAME can also take on these additio
 
 =item C<method>
 
-A L<Rose::DB::Object> method name for an object fronting one of the tables being queried.  There may also be ambiguity here if the same method name is defined on more than one of the the objects that front the tables.  In such a case, the method will be mapped to the first L<Rose::DB::Object>-derived object that contains a method by that name, considered in the order that the tables are provided in the C<tables> parameter.
+A L<get_set|Rose::DB::Object::Metadata::Column/MAKING_METHODS> column method name from a L<Rose::DB::Object>-derived class fronting one of the tables being queried.  There may be ambiguity here if the same method name is defined on more than one of the the classes involved in the query.  In such a case, the method will be mapped to the first L<Rose::DB::Object>-derived class that contains a method by that name, considered in the order that the tables are provided in the C<tables> parameter.
 
 =item C<!method>
 

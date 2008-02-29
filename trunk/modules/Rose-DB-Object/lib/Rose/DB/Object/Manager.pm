@@ -4130,7 +4130,7 @@ The query parameters, passed as a reference to an array of name/value pairs.  Th
 
 For the complete list of valid parameter names and values, see the documentation for the C<query> parameter of the L<build_select|Rose::DB::Object::QueryBuilder/build_select> function in the L<Rose::DB::Object::QueryBuilder> module.
 
-This class also supports an extension to the query syntax supported by L<Rose::DB::Object::QueryBuilder>.  In addition to table names and aliases, column names may be prefixed with foreign key or relationship names.  These names may be chained, with dots (".") separating the components.
+This class also supports an extension to the query syntax supported by L<Rose::DB::Object::QueryBuilder>.  In addition to table names and aliases, column (or column method) names may be prefixed with foreign key or relationship names.  These names may be chained, with dots (".") separating the components.
 
 For example, imagine three tables, C<products>, C<vendors>, and C<regions>, fronted by three L<Rose::DB::Object>-derived classes, C<Product>, C<Vendor>, and C<Region>, respectively.  Each C<Product> has a C<Vendor>, and each C<Vendor> has a C<Region>.
 
