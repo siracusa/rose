@@ -1,7 +1,8 @@
-0.768_01 (02.28.2008) - John Siracusa <siracusa@gmail.com>
+0.768_01 (02.29.2008) - John Siracusa <siracusa@gmail.com>
 
     * Column method names are now allowed at the end of compound Manager
       query parameters (e.g., "a.b.method")
+    * Clarified column/method query parameter documentation.
 
 0.768 (02.25.2008) - John Siracusa <siracusa@gmail.com>
 
