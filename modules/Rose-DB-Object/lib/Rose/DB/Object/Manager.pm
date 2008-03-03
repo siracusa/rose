@@ -446,15 +446,53 @@ sub get_objects
 
   my $outer_joins_only = ($with_objects && !$require_objects) ? 1 : 0;
 
-  my($num_required_objects, %required_object, 
-     $num_with_objects, %with_objects,
-     @belongs_to, %seen_rel, %rel_tn);
+  my($num_required_objects, %required_object, $num_with_objects,
+     %with_objects, @belongs_to, %seen_rel, %rel_tn, %join_type);
 
   # Putting join conditions inthe WHERE clause can change the meaning of
   # the query when outer joins are used, so disable them in that case.
   my $use_redundant_join_conditions = 
     $outer_joins_only ? 0 : delete $args{'redundant_join_conditions'};
 
+  # TODO: Pull out join modifiers
+#   foreach my $arg (($with_objects ? @$with_objects : ()),
+#                    ($require_objects ? @$require_objects : ()))
+#   {
+#     if(index($arg, '!') > 0 || index($arg, '?') > 0)
+#     {
+#       my $save_arg = $arg;
+#       $arg =~ tr/!?//d;
+# 
+#       if(index($arg, '.') < 0)
+#       {
+#         if($save_arg =~ s/([!?])$//)
+#         {
+#           $join_type{$arg} = $1 eq '!' ? 'JOIN' : 'LEFT OUTER JOIN';
+#         }
+#       }
+#       else
+#       {
+#         my @expanded = ($arg);
+# 
+#         if($save_arg =~ s/([!?])$//)
+#         {
+#           $join_type{$arg} = $1 eq '!' ? 'JOIN' : 'LEFT OUTER JOIN';
+#         }
+# 
+#         while($save_arg =~ s/\.[^.]+$//)
+#         {
+#           if($arg =~ s/([!?])$//)
+#           {
+#             (my $clean_arg = $arg) =~ tr/!?//d;
+#             $join_type{$clean_arg} = $1 eq '!' ? 'JOIN' : 'LEFT OUTER JOIN';
+#           }
+#         }
+#       }
+#     }
+#   }
+# 
+# use Data::Dumper;
+# print STDERR 'JOIN TYPES: ', Dumper(\%join_type);
   if($with_objects)
   {
     unless(defined $use_redundant_join_conditions)
