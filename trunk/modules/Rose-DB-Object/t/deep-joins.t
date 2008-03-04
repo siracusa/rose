@@ -152,6 +152,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 
   #local $Rose::DB::Object::Manager::Debug = 1;
 
+ my $products;
 #   my $products = 
 #     $manager_class->get_products(
 #       require_objects => [ 'vendor.vendor', 'vendor.region' ]);
@@ -167,10 +168,77 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 #   is($products->[1]{'vendor'}{'region'}{'name'}, 'England', "p3 - require vendors 3 - $db_type");
 $DB::single = 1;
   # Same test, now with join type overrides
-  my $products = 
-    $manager_class->get_products(
-      #require_objects => [ 'vendor.vendor', 'vendor.region' ]);
-      require_objects => [ 'vendor!.vendor', 'vendor.region!' ]);
+
+#                      [ [ 'vendor.vendor' ], [ 'vendor.region' ] ],
+
+#   $manager_class->get_products(
+#     debug => 1,
+#     require_objects => [ 'vendor.region' ],
+#     with_objects => [ 'vendor!.vendor' ]);
+# exit;
+
+  my $last_sql;
+  my $i = 1;
+
+  foreach my $pair ([ [], [ 'vendor.vendor', 'vendor.region' ] ], 
+                    [ [], [ 'vendor!.vendor', 'vendor.region' ] ], 
+                    [ [], [ 'vendor.vendor!', 'vendor.region' ] ], 
+                    [ [], [ 'vendor.vendor!', 'vendor!.region' ] ], 
+                    [ [], [ 'vendor.vendor!', 'vendor.region!' ] ], 
+                    [ [], [ 'vendor!.vendor', 'vendor.region!' ] ], 
+                    [ [], [ 'vendor.vendor!', 'vendor!.region' ] ], 
+                    [ [], [ 'vendor!.vendor!', 'vendor!.region!' ] ],
+                    [ [ 'vendor!.vendor!' ], [ 'vendor.region' ] ])
+  {
+    my $sql = 
+      $manager_class->get_objects_sql(
+        debug => 1,  
+        (@{$pair->[0]} ? (with_objects => $pair->[0]) : ()),
+        (@{$pair->[1]} ? (require_objects => $pair->[1]) : ()));
+
+    if($last_sql)
+    {
+      is($sql, $last_sql, "join override $i");
+    }
+    else
+    {
+      ok($sql, "join override $i");
+    }
+
+    $last_sql = $sql;
+    $i++;
+  }
+
+  # Conflict tests
+
+  $i = 1;
+
+  foreach my $pair ([ [], [ 'vendor.vendor', 'vendor?.region' ] ], 
+                    [ [], [ 'vendor?.vendor', 'vendor.region' ] ], 
+                    [ [], [ 'vendor?.vendor!', 'vendor!.region' ] ], 
+                    [ [ 'vendor.vendor' ], [ 'vendor!.region' ] ])
+  {
+    eval 
+    {
+      $manager_class->get_objects_sql(
+        debug => 1,  
+        (@{$pair->[0]} ? (with_objects => $pair->[0]) : ()),
+        (@{$pair->[1]} ? (require_objects => $pair->[1]) : ()));
+    };
+
+    ok($@, "join override conflict $i");
+
+    $i++;
+  }
+  
+#   my $sql = 
+#     $manager_class->get_products(
+#     debug => 1,
+#       #require_objects => [ 'vendor.vendor', 'vendor.region' ]);
+#       #require_objects => [ 'vendor!.vendor!', 'vendor!.region!' ]);
+#       #with_objects => [ 'vendor!.region' ],
+#       require_objects => [ 'vendor.region?' ],
+#       );
 exit;
   is(scalar @$products, 2, "require vendors 1 - $db_type");
 

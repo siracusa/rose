@@ -487,57 +487,95 @@ sub get_objects
   my($num_required_objects, %required_object, $num_with_objects,
      %with_objects, @belongs_to, %seen_rel, %rel_tn, %join_type);
 
+print STDERR 'WITH: ', Dumper($with_objects);
+print STDERR 'REQUIRE: ', Dumper($require_objects);
+
+  # XXX: Currently, the most robust join-type conflict checking only
+  # XXX: happens if a least one join-type override is present.  In
+  # XXX: other cases, the "with" wins.  This is "safe" but not 
+  # XXX: necessarily efficient.
+
+  # If there are any join-type overrides
+  if(first { index($_, '!') > 0 || index($_, '?') > 0 }
+     (($with_objects ? @$with_objects : ()),
+      ($require_objects ? @$require_objects : ())))
+  {
+    my $i = 0;
+    my $requires_start = $with_objects ? @$with_objects : 0;
+    my $in_require = 0;
+    my $join_type;
+
+    # Pull out the join modifiers
+    foreach my $arg (($with_objects ? @$with_objects : ()),
+                     ($require_objects ? @$require_objects : ()))
+    {
+      $in_require = 1  if(!$in_require && $i++ == $requires_start);
+$DB::single = 1;
+      my $save_arg = $arg;
+      $arg =~ tr/!?//d;
+
+      if(index($arg, '.') < 0)
+      {
+        $save_arg =~ s/([!?])$//;
+
+        no warnings 'uninitialized';
+        $join_type = ($1 eq '!' || (!$1 && $in_require)) ? 'JOIN' : 'LEFT OUTER JOIN';
+
+        Carp::croak "Conflicting suffix for '$arg' - please choose either ! or ?"
+          if($join_type{$arg} && $join_type{$arg} ne $join_type);
+
+        $join_type{$arg} = $join_type;
+      }
+      else
+      {
+        $save_arg =~ s/([!?])$//;
+
+        no warnings 'uninitialized';
+        $join_type = ($1 eq '!' || (!$1 && $in_require)) ? 'JOIN' : 'LEFT OUTER JOIN';
+
+        Carp::croak "Conflicting suffix for '$arg' - please choose either ! or ?"
+          if($join_type{$arg} && $join_type{$arg} ne $join_type);
+
+        $join_type{$arg} = $join_type;
+
+        while($save_arg =~ s/\.[^.]+$//)
+        {
+          $save_arg =~ s/([!?])$//;
+
+          $join_type = ($1 eq '!' || (!$1 && $in_require)) ? 'JOIN' : 'LEFT OUTER JOIN';
+
+          (my $clean_arg = $save_arg) =~ tr/!?//d;
+
+          Carp::croak "Conflicting suffix for '$clean_arg' - please choose either ! or ?"
+            if($join_type{$clean_arg} && $join_type{$clean_arg} ne $join_type);
+
+          $join_type{$clean_arg} = $join_type;
+        }
+      }
+    }
+
+    if(grep { $_ eq 'JOIN' } values %join_type)
+    {
+      $outer_joins_only = 0;
+    }
+  }
+
   # Putting join conditions inthe WHERE clause can change the meaning of
   # the query when outer joins are used, so disable them in that case.
-  my $use_redundant_join_conditions = 
+  my $use_redundant_join_conditions =
     $outer_joins_only ? 0 : delete $args{'redundant_join_conditions'};
 
-  # TODO: Pull out join modifiers
-#   foreach my $arg (($with_objects ? @$with_objects : ()),
-#                    ($require_objects ? @$require_objects : ()))
-#   {
-#     if(index($arg, '!') > 0 || index($arg, '?') > 0)
-#     {
-#       my $save_arg = $arg;
-#       $arg =~ tr/!?//d;
-# 
-#       if(index($arg, '.') < 0)
-#       {
-#         if($save_arg =~ s/([!?])$//)
-#         {
-#           $join_type{$arg} = $1 eq '!' ? 'JOIN' : 'LEFT OUTER JOIN';
-#         }
-#       }
-#       else
-#       {
-#         my @expanded = ($arg);
-# 
-#         if($save_arg =~ s/([!?])$//)
-#         {
-#           $join_type{$arg} = $1 eq '!' ? 'JOIN' : 'LEFT OUTER JOIN';
-#         }
-# 
-#         while($save_arg =~ s/\.[^.]+$//)
-#         {
-#           if($arg =~ s/([!?])$//)
-#           {
-#             (my $clean_arg = $arg) =~ tr/!?//d;
-#             $join_type{$clean_arg} = $1 eq '!' ? 'JOIN' : 'LEFT OUTER JOIN';
-#           }
-#         }
-#       }
-#     }
-#   }
-# 
-# use Data::Dumper;
-# print STDERR 'JOIN TYPES: ', Dumper(\%join_type);
+use Data::Dumper;
+print STDERR 'JOIN TYPES: ', Dumper(\%join_type);
+print STDERR 'POST WITH: ', Dumper($with_objects);
+print STDERR 'POST REQUIRE: ', Dumper($require_objects);
   if($with_objects)
   {
     unless(defined $use_redundant_join_conditions)
     {
       $use_redundant_join_conditions = $db->likes_redundant_join_conditions;
     }
-
+print STDERR "use_redundant_join_conditions = $use_redundant_join_conditions\n";
     if(ref $with_objects) # copy argument (shallow copy)
     {
       $with_objects = [ @$with_objects ]; #[ uniq @$with_objects ];
@@ -577,6 +615,10 @@ sub get_objects
       }
 
       $with_objects = \@with_objects;
+    }
+    else
+    {
+      $seen_rel{$_} = 'with'  for(@$with_objects);
     }
 
     $num_with_objects = @$with_objects;
@@ -1043,11 +1085,11 @@ sub get_objects
         {
           if($with_objects{$arg})
           {
-            $joins[$i]{'type'} = 'LEFT OUTER JOIN';
+            $joins[$i]{'type'} = $join_type{$arg} || 'LEFT OUTER JOIN';
           }
           elsif($use_explicit_joins)
           {
-            $joins[$i]{'type'} = 'JOIN';
+            $joins[$i]{'type'} = $join_type{$arg} || 'JOIN';
           }
         }
 
@@ -1067,13 +1109,14 @@ sub get_objects
             # Fully-qualified table names
             #push(@{$joins[$i]{'conditions'}}, "$tables[0].$local_column = $tables[-1].$foreign_column");
 
-            $joins[$i]{'type'} = 'LEFT OUTER JOIN';
+            $joins[$i]{'type'} = $join_type{$arg} || 'LEFT OUTER JOIN';
             $joins[$i]{'hints'} = $hints->{"t$i"} || $hints->{$name};
 
             # MySQL is stupid about using its indexes when "JOIN ... ON (...)"
             # conditions are the only ones given, so the code below adds some
-            # redundant WHERE conditions.  They should not change the meaning
-            # of the query, but should nudge MySQL into using its indexes. 
+            # redundant WHERE conditions.  They should only be added when they
+            # do not change the meaning of the query, in which case they
+            # should nudge MySQL into using its indexes.  
             # The clauses: "((<ON conditions>) OR (<any columns are null>))"
             # We build the two clauses separately in the loop below, then
             # combine it all after the loop is done.
@@ -1102,7 +1145,7 @@ sub get_objects
               # Fully-qualified table names
               #push(@{$joins[$i]{'conditions'}}, "$tables[$parent_tn - 1].$local_column = $tables[-1].$foreign_column");
 
-              $joins[$i]{'type'} = 'JOIN';  
+              $joins[$i]{'type'} = $join_type{$arg} || 'JOIN';  
               $joins[$i]{'hints'} = $hints->{"t$i"} || $hints->{$name};
             }
             else # implicit join with no ON clause
@@ -1289,7 +1332,7 @@ sub get_objects
             # Fully-qualified table names
             #push(@{$joins[$i]{'conditions'}}, "$tables[-1].$local_column = $tables[$parent_tn - 1].$foreign_column");
 
-            $joins[$i]{'type'} = 'LEFT OUTER JOIN';
+            $joins[$i]{'type'} = $join_type{$arg} || 'LEFT OUTER JOIN';
             $joins[$i]{'hints'} = $hints->{"t$i"} || $hints->{$name};
           }
           else
@@ -1302,7 +1345,7 @@ sub get_objects
               # Fully-qualified table names
               #push(@{$joins[$i]{'conditions'}}, "$tables[-1].$local_column = $tables[$parent_tn - 1].$foreign_column");
 
-              $joins[$i]{'type'} = 'JOIN';
+              $joins[$i]{'type'} = $join_type{$arg} || 'JOIN';
               $joins[$i]{'hints'} = $hints->{"t$i"} || $hints->{$name};
             }
             else # implicit join with no ON clause
@@ -1396,7 +1439,7 @@ sub get_objects
             # Fully-qualified table names
             #push(@{$joins[$i]{'conditions'}}, "$tables[-2].$local_column = $tables[-1].$foreign_column");
 
-            $joins[$i]{'type'} = 'LEFT OUTER JOIN';
+            $joins[$i]{'type'} = $join_type{$arg} || 'LEFT OUTER JOIN';
             $joins[$i]{'hints'} = $hints->{"t$i"} || $hints->{$name};
           }
           else
@@ -1409,7 +1452,7 @@ sub get_objects
               # Fully-qualified table names
               #push(@{$joins[$i]{'conditions'}}, "$tables[-2].$local_column = $tables[-1].$foreign_column");
 
-              $joins[$i]{'type'} = 'JOIN';
+              $joins[$i]{'type'} = $join_type{$arg} || 'JOIN';
               $joins[$i]{'hints'} = $hints->{"t$i"} || $hints->{$name};
             }
             else # implicit join with no ON clause
