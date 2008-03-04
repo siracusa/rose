@@ -33,6 +33,7 @@ use Rose::Class::MakeMethods::Generic
     'error_mode',
     '_object_class',
     '_base_name',
+    '_default_manager_method_types',
     'default_objects_per_page',
     'default_limit_with_subselect',
     'default_nested_joins',
@@ -45,6 +46,7 @@ __PACKAGE__->default_objects_per_page(20);
 __PACKAGE__->default_limit_with_subselect(1);
 __PACKAGE__->default_nested_joins(1);
 __PACKAGE__->dbi_prepare_cached(0);
+__PACKAGE__->default_manager_method_types(qw(objects iterator count delete update));
 
 sub handle_error
 {
@@ -115,7 +117,25 @@ use constant DEFAULT_REL_KEY   => PRIVATE_PREFIX . '_default_rel_key';
 
 sub object_class { }
 
-sub default_manager_method_types { qw(objects iterator count delete update) }
+sub default_manager_method_types
+{
+  my($class) = shift;
+  
+  if(@_)
+  {
+    if(@_ == 1 && ref $_[0] eq 'ARRAY')
+    {
+      $class->_default_manager_method_types(@_);
+    }
+    else
+    {
+      $class->_default_manager_method_types([ @_ ]);
+    }
+  }
+  
+  return wantarray ? 
+    @{$class->_default_manager_method_types} : $class->_default_manager_method_types;
+}
 
 sub make_manager_methods
 {
@@ -170,12 +190,18 @@ sub make_manager_methods
     }
   }
 
+  my $meta = $object_class->meta;
+  my $cm   = $meta->convention_manager;
+
+  my $base_name = $args{'base_name'} || $cm->auto_manager_base_name($meta->table, $object_class);
+
   if(!$args{'methods'})
   {
-    unless($args{'base_name'})
+    unless($base_name)
     {
-      Carp::croak "Missing methods parameter and base_name parameter. ",
-                  "You must supply one or the other";
+      Carp::croak "Missing methods parameter and base_name parameter, and the ",
+                  "convention manager's auto_manager_base_name() method did not ",
+                  "return a true value"
     }
 
     $args{'methods'} = 
@@ -191,12 +217,12 @@ sub make_manager_methods
   Carp::croak "Invalid 'methods' parameter - should be a hash ref"
     unless(ref $args{'methods'} eq 'HASH');
 
-  $class->_base_name($args{'base_name'});
+  $class->_base_name($base_name);
   $class->_object_class($object_class);
 
   while(my($name, $types) = each %{$args{'methods'}})
   {
-    $class->_base_name($name)  unless($args{'base_name'});
+    $class->_base_name($name)  unless($base_name);
 
     my $have_full_name = ($name =~ s/\(\)$//) ? 1 : 0;
 
@@ -216,12 +242,13 @@ sub make_manager_methods
       if($type eq 'objects')
       {
         my $method_name = 
-          $have_full_name ? "${target_class}::$name" : "${target_class}::get_$name";
+          $have_full_name ? $name : 
+            ($cm->auto_manager_method_name($type, $base_name) || "get_$name");
 
         foreach my $class ($target_class, $class_invocant)
         {
-          my $method = "${class}::get_$name";
-          my $short_method = "get_$name";
+          my $method = "${class}::$method_name";
+          my $short_method = $method_name;
           Carp::croak "A $method method already exists"
             if(defined &{$method});
 
@@ -230,7 +257,7 @@ sub make_manager_methods
             if(Rose::DB::Object::Manager->can($short_method));
         }
 
-        *{$method_name} = sub
+        *{"${target_class}::$method_name"} = sub
         {
           shift;
           $class_invocant->get_objects(@_, object_class => $object_class);
@@ -238,17 +265,18 @@ sub make_manager_methods
       }
       elsif($type eq 'count')
       {
-        my $method_name =
-          $have_full_name ? "${target_class}::$name" : "${target_class}::get_${name}_count";
+        my $method_name = 
+          $have_full_name ? $name : 
+            ($cm->auto_manager_method_name($type, $base_name) || "get_${name}_count");
 
         foreach my $class ($target_class, $class_invocant)
         {
-          my $method = "${class}::get_${name}_count";
+          my $method = "${class}::$method_name";
           Carp::croak "A $method method already exists"
             if(defined &{$method});
         }
 
-        *{$method_name} = sub
+        *{"${target_class}::$method_name"} = sub
         {
           shift;
           $class_invocant->get_objects(
@@ -257,17 +285,18 @@ sub make_manager_methods
       }
       elsif($type eq 'iterator')
       {
-        my $method_name =
-          $have_full_name ? "${target_class}::$name" : "${target_class}::get_${name}_iterator";
+        my $method_name = 
+          $have_full_name ? $name : 
+            ($cm->auto_manager_method_name($type, $base_name) || "get_${name}_iterator");
 
         foreach my $class ($target_class, $class_invocant)
         {
-          my $method = "${class}::get_${name}_iterator";
+          my $method = "${class}::$method_name";
           Carp::croak "A $method method already exists"
             if(defined &{$method});
         }
 
-        *{$method_name} = sub
+        *{"${target_class}::$method_name"} = sub
         {
           shift;
           $class_invocant->get_objects(
@@ -277,16 +306,17 @@ sub make_manager_methods
       elsif($type eq 'delete')
       {
         my $method_name = 
-          $have_full_name ? "${target_class}::$name" : "${target_class}::delete_$name";
+          $have_full_name ? $name : 
+            ($cm->auto_manager_method_name($type, $base_name) || "delete_$name");
 
         foreach my $class ($target_class, $class_invocant)
         {
-          my $method = "${class}::delete_$name";
+          my $method = "${class}::$method_name";
           Carp::croak "A $method method already exists"
             if(defined &{$method});
         }
 
-        *{$method_name} = sub
+        *{"${target_class}::$method_name"} = sub
         {
           shift;
           $class_invocant->delete_objects(@_, object_class => $object_class);
@@ -295,16 +325,17 @@ sub make_manager_methods
       elsif($type eq 'update')
       {
         my $method_name = 
-          $have_full_name ? "${target_class}::$name" : "${target_class}::update_$name";
+          $have_full_name ? $name : 
+            ($cm->auto_manager_method_name($type, $base_name) || "update_$name");
 
         foreach my $class ($target_class, $class_invocant)
         {
-          my $method = "${class}::update_$name";
+          my $method = "${class}::$method_name";
           Carp::croak "A $method method already exists"
             if(defined &{$method});
         }
 
-        *{$method_name} = sub
+        *{"${target_class}::$method_name"} = sub
         {
           shift;
           $class_invocant->update_objects(@_, object_class => $object_class);
@@ -3846,6 +3877,10 @@ Get or set a boolean value that indicates whether or not this class will use L<D
 
 Get or set a boolean value that determines whether or not this class will consider using a sub-query to express C<limit>/C<offset> constraints when fetching sub-objects related through one of the "...-to-many" relationship types.  Not all databases support this syntax, and not all queries can use it even in supported databases.  If this parameter is true, the feature will be used when possible, by default.  The default value is true.
 
+=item B<default_manager_method_types [ LIST | ARRAYREF ]>
+
+Get or set the default list of method types used by the L<make_manager_methods|/make_manager_methods> method.  The default list is C<objects>, C<iterator>, C<count>, C<delete>, and C<update>.
+
 =item B<default_nested_joins [BOOL]>
 
 Get or set a boolean value that determines whether or not this class will consider using nested JOIN syntax when fetching related objects.  Not all databases support this syntax, and not all queries can use it even in supported databases.  If this parameter is true, the feature will be used when possible, by default.  The default value is true.
@@ -3870,7 +3905,7 @@ If set to a true value, this parameter indicates an explicit request to delete a
 
 =item B<db DB>
 
-A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> method of the C<object_class>. 
+A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> method of the L<object_class|/object_class>. 
 
 =item B<prepare_cached BOOL>
 
@@ -4376,7 +4411,7 @@ In the absence of a base name, an explicit method name may be provided instead. 
 
 =item * B<method types>
 
-The types of methods that should be generated.  Each method type is a wrapper for a L<Rose::DB::Object::Manager> class method.  The mapping of method type names to actual L<Rose::DB::Object::Manager> class methods is as follows:
+The types of methods that should be generated.  Each method type is a wrapper for a L<Rose::DB::Object::Manager> class method.  The mapping of method type names to actual L<Rose::DB::Object::Manager> class methods defaults to the following:
 
     Type        Method
     --------    ----------------------
@@ -4385,6 +4420,8 @@ The types of methods that should be generated.  Each method type is a wrapper fo
     count       get_objects_count()
     delete      delete_objects()
     update      update_objects()
+
+You may override the L<auto_manager_method_name|Rose::DB::Object::ConventionManager/auto_manager_method_name> method in the L<object_class|/object_class>'s L<convention manager|Rose::DB::Object::Metadata/convention_manager> class to customize these method names.
 
 =item * B<target class>
 
@@ -4436,16 +4473,20 @@ If a C<methods> parameter is passed with a hash ref value, then each key of the 
 
 If a key of the C<methods> hash ends in "()", then it is taken as the method name and is used as is.  For example, the key "foo" will be used as a base name, but the key "foo()" will be used as a method name.
 
-If the base name cannot be determined in one of the ways described above, then a fatal error will occur.
+If the base name cannot be determined in one of the ways described above, then the L<auto_manager_base_name|Rose::DB::Object::ConventionManager/auto_manager_base_name> method in the L<object_class|/object_class>'s L<convention manager|Rose::DB::Object::Metadata/convention_manager> is called on to supply a base name.
 
 =item * B<method types>
 
-If a B<base name> is passed to the method, either as the value of the C<base_name> parameter or as the sole argument to the method call, then all of the method types are created: C<objects>, C<iterator>, and C<count>.  Example:
+If an explicit list of mehod types is not passed to the method, then all of the L<default_manager_method_types|/default_manager_method_types> are created.  Example:
 
-    # Base name is "products", all method types created
+    # Base name is determined by convention manager auto_manager_base_name()
+    # method, all default method types created
+    $class->make_manager_methods();
+
+    # Base name is "products", all default method types created
     $class->make_manager_methods('products');
 
-    # Base name is "products", all method types created
+    # Base name is "products", all default method types created
     $class->make_manager_methods(base_name => products', ...);
 
 (Again, note that the B<object class> must be derived somehow.)
@@ -4476,7 +4517,7 @@ Example:
         'product_count()' => 'count'
       });
 
-If the value of the C<methods> parameter is not a reference to a hash, or if both (or neither of) the C<methods> and C<base_name> parameters are passed, then a fatal error will occur.
+If the value of the C<methods> parameter is not a reference to a hash, or if both the C<methods> and C<base_name> parameters are passed, then a fatal error will occur.
 
 =item * B<target class>
 
