@@ -487,8 +487,8 @@ sub get_objects
   my($num_required_objects, %required_object, $num_with_objects,
      %with_objects, @belongs_to, %seen_rel, %rel_tn, %join_type);
 
-print STDERR 'WITH: ', Dumper($with_objects);
-print STDERR 'REQUIRE: ', Dumper($require_objects);
+#print STDERR 'WITH: ', Dumper($with_objects);
+#print STDERR 'REQUIRE: ', Dumper($require_objects);
 
   # XXX: Currently, the most robust join-type conflict checking only
   # XXX: happens if a least one join-type override is present.  In
@@ -510,7 +510,7 @@ print STDERR 'REQUIRE: ', Dumper($require_objects);
                      ($require_objects ? @$require_objects : ()))
     {
       $in_require = 1  if(!$in_require && $i++ == $requires_start);
-$DB::single = 1;
+#$DB::single = 1;
       my $save_arg = $arg;
       $arg =~ tr/!?//d;
 
@@ -565,17 +565,17 @@ $DB::single = 1;
   my $use_redundant_join_conditions =
     $outer_joins_only ? 0 : delete $args{'redundant_join_conditions'};
 
-use Data::Dumper;
-print STDERR 'JOIN TYPES: ', Dumper(\%join_type);
-print STDERR 'POST WITH: ', Dumper($with_objects);
-print STDERR 'POST REQUIRE: ', Dumper($require_objects);
+#use Data::Dumper;
+#print STDERR 'JOIN TYPES: ', Dumper(\%join_type);
+#print STDERR 'POST WITH: ', Dumper($with_objects);
+#print STDERR 'POST REQUIRE: ', Dumper($require_objects);
   if($with_objects)
   {
     unless(defined $use_redundant_join_conditions)
     {
       $use_redundant_join_conditions = $db->likes_redundant_join_conditions;
     }
-print STDERR "use_redundant_join_conditions = $use_redundant_join_conditions\n";
+#print STDERR "use_redundant_join_conditions = $use_redundant_join_conditions\n";
     if(ref $with_objects) # copy argument (shallow copy)
     {
       $with_objects = [ @$with_objects ]; #[ uniq @$with_objects ];
