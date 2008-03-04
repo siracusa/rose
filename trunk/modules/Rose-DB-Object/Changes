@@ -1,8 +1,13 @@
-0.768_01 (02.29.2008) - John Siracusa <siracusa@gmail.com>
+0.768_02 (03.04.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Added Manager naming conventions to the Convention Manager and
+      exposed more Manager-related defaults in the Metadata and Manager
+      class.  (Patch by Bradley C Bailey, modified by John Siracusa)
     * Column method names are now allowed at the end of compound Manager
       query parameters (e.g., "a.b.method")
     * Clarified column/method query parameter documentation.
+    * TODO: delegate to CM for Manager method naming
+    * TODO: auto_column_method_name(method_type => 'get_set', column => $column
 
 0.768 (02.25.2008) - John Siracusa <siracusa@gmail.com>
 

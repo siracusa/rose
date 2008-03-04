@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 170;
+use Test::More tests => 168;
 
 BEGIN 
 {
@@ -48,23 +48,22 @@ is($cm1, $cm2, 'null singleton');
 is($cm->auto_manager_base_class, 'Rose::DB::Object::Manager', 'auto_manager_base_class');
 is($cm->auto_manager_class_name('My::Object'), 'My::Object::Manager', 'auto_manager_class_name');
 
+AUTO_MANAGER_CLASS_TEST:
 {
-    package My::Dog;
-    @My::Dog::ISA = 'Rose::DB::Object';
+  package My::Dog;
+  @My::Dog::ISA = 'Rose::DB::Object';
 
-    my $dog_cm = My::Dog->meta->convention_manager;
+  my $dog_cm = My::Dog->meta->convention_manager;
 
-    package main;
-    is($dog_cm->auto_manager_class_name, 'My::Dog::Manager', 'auto_manager_base_class no args');
-    is($dog_cm->auto_manager_base_name, 'dogs', 'auto_manager_base_name with no args');
-    is($dog_cm->auto_manager_base_name('products'), 'products', 'auto_manager_base_name with table');
-    is($dog_cm->auto_manager_base_name('dogs', 'My::Dog'), 'dogs', 'auto_manager_base_name with table and class');
+  package main;
+  is($dog_cm->auto_manager_class_name, 'My::Dog::Manager', 'auto_manager_base_class no args');
+  is($dog_cm->auto_manager_base_name, 'dogs', 'auto_manager_base_name with no args');
+  is($dog_cm->auto_manager_base_name('products'), 'products', 'auto_manager_base_name with table');
+  is($dog_cm->auto_manager_base_name('dogs', 'My::Dog'), 'dogs', 'auto_manager_base_name with table and class');
 }
 
-my $manager_methods = $cm->auto_manager_method_names('products');
-is(ref $manager_methods, 'HASH', 'auto_manager_method_names returns HASH');
-ok(exists $manager_methods->{'products'}, '  has products as key');
-is(ref $manager_methods->{'products'}, 'ARRAY', '  has arrayref value');
+
+is($cm->auto_manager_method_name('doesntmatter'), undef, 'auto_manager_method_name');
 
 #
 # auto_table

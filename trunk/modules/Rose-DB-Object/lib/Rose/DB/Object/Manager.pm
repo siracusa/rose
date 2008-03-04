@@ -153,6 +153,8 @@ sub make_manager_methods
 
   my %args = @_;
 
+  local $Debug = $args{'debug'}  if(exists $args{'debug'});
+
   my $calling_class  = ($class eq __PACKAGE__) ? (caller)[0] : $class;
   my $target_class   = $args{'target_class'} || $calling_class;
   my $object_class   = $args{'object_class'};
@@ -243,7 +245,7 @@ sub make_manager_methods
       {
         my $method_name = 
           $have_full_name ? $name : 
-            ($cm->auto_manager_method_name($type, $base_name) || "get_$name");
+            ($cm->auto_manager_method_name($type, $base_name, $object_class) || "get_$name");
 
         foreach my $class ($target_class, $class_invocant)
         {
@@ -257,6 +259,7 @@ sub make_manager_methods
             if(Rose::DB::Object::Manager->can($short_method));
         }
 
+        $Debug && warn "Making method: $target_class->$method_name()\n";
         *{"${target_class}::$method_name"} = sub
         {
           shift;
@@ -267,7 +270,7 @@ sub make_manager_methods
       {
         my $method_name = 
           $have_full_name ? $name : 
-            ($cm->auto_manager_method_name($type, $base_name) || "get_${name}_count");
+            ($cm->auto_manager_method_name($type, $base_name, $object_class) || "get_${name}_count");
 
         foreach my $class ($target_class, $class_invocant)
         {
@@ -276,6 +279,7 @@ sub make_manager_methods
             if(defined &{$method});
         }
 
+        $Debug && warn "Making method: $target_class->$method_name()\n";
         *{"${target_class}::$method_name"} = sub
         {
           shift;
@@ -287,7 +291,7 @@ sub make_manager_methods
       {
         my $method_name = 
           $have_full_name ? $name : 
-            ($cm->auto_manager_method_name($type, $base_name) || "get_${name}_iterator");
+            ($cm->auto_manager_method_name($type, $base_name, $object_class) || "get_${name}_iterator");
 
         foreach my $class ($target_class, $class_invocant)
         {
@@ -296,6 +300,7 @@ sub make_manager_methods
             if(defined &{$method});
         }
 
+        $Debug && warn "Making method: $target_class->$method_name()\n";
         *{"${target_class}::$method_name"} = sub
         {
           shift;
@@ -307,7 +312,7 @@ sub make_manager_methods
       {
         my $method_name = 
           $have_full_name ? $name : 
-            ($cm->auto_manager_method_name($type, $base_name) || "delete_$name");
+            ($cm->auto_manager_method_name($type, $base_name, $object_class) || "delete_$name");
 
         foreach my $class ($target_class, $class_invocant)
         {
@@ -316,6 +321,7 @@ sub make_manager_methods
             if(defined &{$method});
         }
 
+        $Debug && warn "Making method: $target_class->$method_name()\n";
         *{"${target_class}::$method_name"} = sub
         {
           shift;
@@ -326,7 +332,7 @@ sub make_manager_methods
       {
         my $method_name = 
           $have_full_name ? $name : 
-            ($cm->auto_manager_method_name($type, $base_name) || "update_$name");
+            ($cm->auto_manager_method_name($type, $base_name, $object_class) || "update_$name");
 
         foreach my $class ($target_class, $class_invocant)
         {
@@ -335,6 +341,7 @@ sub make_manager_methods
             if(defined &{$method});
         }
 
+        $Debug && warn "Making method: $target_class->$method_name()\n";
         *{"${target_class}::$method_name"} = sub
         {
           shift;
@@ -4405,7 +4412,7 @@ The class of the L<Rose::DB::Object>-derived objects to be fetched or counted.
 
 =item * B<base name> or B<method name>
 
-The base name is a string used as the basis of the method names.  For example, the base name "products" would be used to create methods named "get_B<products>", "get_B<products>_count", "get_B<products>_iterator", "delete_B<products>", and "update_B<products>".
+The base name is a string used as the basis of the method names.  For example, the base name "products" might be used to create methods named "get_B<products>", "get_B<products>_count", "get_B<products>_iterator", "delete_B<products>", and "update_B<products>".
 
 In the absence of a base name, an explicit method name may be provided instead.  The method name will be used as is.
 
@@ -4421,7 +4428,7 @@ The types of methods that should be generated.  Each method type is a wrapper fo
     delete      delete_objects()
     update      update_objects()
 
-You may override the L<auto_manager_method_name|Rose::DB::Object::ConventionManager/auto_manager_method_name> method in the L<object_class|/object_class>'s L<convention manager|Rose::DB::Object::Metadata/convention_manager> class to customize these method names.
+You may override the L<auto_manager_method_name|Rose::DB::Object::ConventionManager/auto_manager_method_name> method in the L<object_class|/object_class>'s L<convention manager|Rose::DB::Object::Metadata/convention_manager> class to customize one or more of these names.
 
 =item * B<target class>
 
