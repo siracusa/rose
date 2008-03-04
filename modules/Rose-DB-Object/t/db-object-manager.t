@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3884;
+use Test::More tests => 3888;
 
 BEGIN 
 {
@@ -10,6 +10,68 @@ BEGIN
   use_ok('DateTime');
   use_ok('Rose::DB::Object');
   use_ok('Rose::DB::Object::Manager');
+}
+
+CONVENTION_AND_DEFAULTS_TESTS:
+{
+  package My::RDBO::CM;
+  our @ISA = qw(Rose::DB::Object::ConventionManager);
+
+  sub auto_manager_method_name
+  {
+    my($self, $type, $base_name, $object_class) = @_;
+
+    if($type eq 'iterator')
+    {
+      return "get_${base_name}z_iter";
+    }
+    elsif($type eq 'delete')
+    {
+      return "del_${base_name}zz";
+    }
+
+    return undef; # rely on hard-coded defaults in Manager
+  }
+  
+  sub auto_manager_class_name
+  {
+    my($self, $object_class) = @_;
+  
+    $object_class ||= $self->meta->class;
+    
+    return "${object_class}::Mgr";
+  }
+
+  package My::RDBO::Meta;
+  our @ISA = qw(Rose::DB::Object::Metadata);
+
+  sub init_convention_manager { My::RDBO::CM->new }
+
+  package My::RDBO::Manager;
+  our @ISA = qw(Rose::DB::Object::Manager);
+
+  __PACKAGE__->default_manager_method_types(qw(iterator count delete));
+
+  package My::RDBO::Test1;
+  our @ISA = qw(Rose::DB::Object);
+  __PACKAGE__->meta->table('test1s');
+  sub meta_class { 'My::RDBO::Meta' }
+  
+  __PACKAGE__->meta->default_manager_base_class('My::RDBO::Managerxx');
+
+  eval { local $SIG{'__DIE__'}; __PACKAGE__->meta->make_manager_class };
+  
+  main::ok($@, 'make_manager_class exception 1');
+
+  __PACKAGE__->meta->default_manager_base_class('My::RDBO::Manager');
+
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  __PACKAGE__->meta->make_manager_class;
+
+  package main;
+  ok(My::RDBO::Test1::Mgr->can('get_test1sz_iter'), 'make_manager_class conventions 1');
+  ok(My::RDBO::Test1::Mgr->can('get_test1s_count'), 'make_manager_class conventions 2');
+  ok(My::RDBO::Test1::Mgr->can('del_test1szz'), 'make_manager_class conventions 3');
 }
 
 our($HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE, $HAVE_ORACLE);

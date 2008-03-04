@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 28;
+use Test::More tests => 36;
 
 BEGIN 
 {
@@ -112,6 +112,27 @@ $meta = MyDBOBjectCustom->meta;
 $meta->init_auto_helper;
 eval { $meta->make_column_methods() };
 ok($@ =~ /^Yay!/, 'custom meta override');
+
+# default_manager_base_class
+
+is($meta->default_manager_base_class, 'Rose::DB::Object::Manager', 'default_manager_base_class object 1');
+is(ref($meta)->default_manager_base_class, 'Rose::DB::Object::Manager', 'default_manager_base_class class 1');
+
+$meta->default_manager_base_class('Foo');
+
+is($meta->default_manager_base_class, 'Foo', 'default_manager_base_class object 2');
+is(ref($meta)->default_manager_base_class, 'Rose::DB::Object::Manager', 'default_manager_base_class class 2');
+
+$meta->default_manager_base_class(undef);
+ref($meta)->default_manager_base_class('Bar');
+
+is($meta->default_manager_base_class, 'Bar', 'default_manager_base_class object 3');
+is(ref($meta)->default_manager_base_class, 'Bar', 'default_manager_base_class class 3');
+
+$meta->default_manager_base_class('Blee');
+
+is($meta->default_manager_base_class, 'Blee', 'default_manager_base_class object 4');
+is(ref($meta)->default_manager_base_class, 'Bar', 'default_manager_base_class class 4');
 
 BEGIN
 {

@@ -59,103 +59,119 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   my $product_class = $class_prefix  . '::Product';
   my $manager_class = $product_class . '::Manager';
 
-  my $p1 = 
-    $product_class->new(
-      id     => 1,
-      name   => 'Kite',
-      vendor => { id => 1, name => 'V1', region => { id => 'DE', name => 'Germany' } },
-      prices => 
-      [
-        { price => 1.23, region => { id => 'US', name => 'America' } }, 
-        { price => 4.56, region => { id => 'DE', name => 'Germany' } },
-      ],
-      colors => 
-      [
-        {
-          name => 'red',
-          description => 
-          {
-            text => 'desc 1',
-            authors => 
-            [
-              {
-                name => 'john',
-                nicknames => [ { nick => 'jack' }, { nick => 'sir' } ],
-              },
-              {
-                name => 'sue',
-                nicknames => [ { nick => 'sioux' } ],
-              },
-            ],
-          },
-        }, 
-        {
-          name => 'blue',
-          description => 
-          {
-            text => 'desc 2',
-            authors => 
-            [
-              { name => 'john' },
-              {
-                name => 'jane',
-                nicknames => [ { nick => 'blub' } ],
-              },
-            ],
-          }
-        }
-      ]);
-
-  $p1->save;
-
-  my $p2 = 
-    $product_class->new(
-      id     => 2,
-      name   => 'Sled',
-      vendor => { id => 2, name => 'V2', region_id => 'US', vendor_id => 1 },
-      prices => [ { price => 9.99 } ],
-      colors => 
-      [
-        { name => 'red' }, 
-        {
-          name => 'green',
-          description => 
-          {
-            text => 'desc 3',
-            authors => [ { name => 'tim' } ],
-          }
-        }
-      ]);
-
-  $p2->save;
-
-  my $p3 = 
-    $product_class->new(
-      id     => 3,
-      name   => 'Barn',
-      vendor => { id => 3, name => 'V3', region => { id => 'UK', name => 'England' }, vendor_id => 2 },
-      prices => [ { price => 100 } ],
-      colors => 
-      [
-        { name => 'green' }, 
-        {
-          name => 'pink',
-          description => 
-          {
-            text => 'desc 4',
-            authors => [ { name => 'joe', nicknames => [ { nick => 'joey' } ] } ],
-          }
-        }
-      ]);
-
-  $p3->save;
+#   my $p1 = 
+#     $product_class->new(
+#       id     => 1,
+#       name   => 'Kite',
+#       vendor => { id => 1, name => 'V1', region => { id => 'DE', name => 'Germany' } },
+#       prices => 
+#       [
+#         { price => 1.23, region => { id => 'US', name => 'America' } }, 
+#         { price => 4.56, region => { id => 'DE', name => 'Germany' } },
+#       ],
+#       colors => 
+#       [
+#         {
+#           name => 'red',
+#           description => 
+#           {
+#             text => 'desc 1',
+#             authors => 
+#             [
+#               {
+#                 name => 'john',
+#                 nicknames => [ { nick => 'jack' }, { nick => 'sir' } ],
+#               },
+#               {
+#                 name => 'sue',
+#                 nicknames => [ { nick => 'sioux' } ],
+#               },
+#             ],
+#           },
+#         }, 
+#         {
+#           name => 'blue',
+#           description => 
+#           {
+#             text => 'desc 2',
+#             authors => 
+#             [
+#               { name => 'john' },
+#               {
+#                 name => 'jane',
+#                 nicknames => [ { nick => 'blub' } ],
+#               },
+#             ],
+#           }
+#         }
+#       ]);
+# 
+#   $p1->save;
+# 
+#   my $p2 = 
+#     $product_class->new(
+#       id     => 2,
+#       name   => 'Sled',
+#       vendor => { id => 2, name => 'V2', region_id => 'US', vendor_id => 1 },
+#       prices => [ { price => 9.99 } ],
+#       colors => 
+#       [
+#         { name => 'red' }, 
+#         {
+#           name => 'green',
+#           description => 
+#           {
+#             text => 'desc 3',
+#             authors => [ { name => 'tim' } ],
+#           }
+#         }
+#       ]);
+# 
+#   $p2->save;
+# 
+#   my $p3 = 
+#     $product_class->new(
+#       id     => 3,
+#       name   => 'Barn',
+#       vendor => { id => 3, name => 'V3', region => { id => 'UK', name => 'England' }, vendor_id => 2 },
+#       prices => [ { price => 100 } ],
+#       colors => 
+#       [
+#         { name => 'green' }, 
+#         {
+#           name => 'pink',
+#           description => 
+#           {
+#             text => 'desc 4',
+#             authors => [ { name => 'joe', nicknames => [ { nick => 'joey' } ] } ],
+#           }
+#         }
+#       ]);
+# 
+#   $p3->save;
 
   #local $Rose::DB::Object::Manager::Debug = 1;
 
+#   my $products = 
+#     $manager_class->get_products(
+#       require_objects => [ 'vendor.vendor', 'vendor.region' ]);
+# 
+#   is(scalar @$products, 2, "require vendors 1 - $db_type");
+# 
+#   is($products->[0]{'vendor'}{'id'}, 2, "p2 - require vendors 1 - $db_type");
+#   is($products->[0]{'vendor'}{'vendor'}{'id'}, 1, "p2 - require vendors 2 - $db_type");
+#   is($products->[0]{'vendor'}{'region'}{'name'}, 'America', "p2 - require vendors 3 - $db_type");
+# 
+#   is($products->[1]{'vendor'}{'id'}, 3, "p3 - require vendors 1 - $db_type");
+#   is($products->[1]{'vendor'}{'vendor'}{'id'}, 2, "p3 - require vendors 2 - $db_type");
+#   is($products->[1]{'vendor'}{'region'}{'name'}, 'England', "p3 - require vendors 3 - $db_type");
+$DB::single = 1;
+  # Same test, now with join type overrides
   my $products = 
     $manager_class->get_products(
-      require_objects => [ 'vendor.vendor', 'vendor.region' ]);
-
+      #require_objects => [ 'vendor.vendor', 'vendor.region' ]);
+      require_objects => [ 'vendor!.vendor', 'vendor.region!' ]);
+exit;
   is(scalar @$products, 2, "require vendors 1 - $db_type");
 
   is($products->[0]{'vendor'}{'id'}, 2, "p2 - require vendors 1 - $db_type");
@@ -1069,7 +1085,7 @@ EOF
   {
     my $db = Rose::DB->new('mysql_admin');
     $dbh = $db->retain_dbh or die Rose::DB->error;
-
+return;
     die "MySQL version too old"  unless($db->database_version >= 4_000_000);
 
     # Drop existing tables, ignoring errors
@@ -1116,7 +1132,8 @@ EOF
   if(!$@ && $dbh)
   {
     $Have{'mysql'} = 1;
-
+}
+if(0){
     $dbh->do(<<"EOF");
 CREATE TABLE vendors
 (
@@ -1584,7 +1601,7 @@ END
     $dbh->disconnect;
   }
 
-  if($Have{'mysql'})
+  if($Have{'mysql'} && 0)
   {
     my $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
       or die Rose::DB->error;

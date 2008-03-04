@@ -41,6 +41,7 @@ use Rose::Object::MakeMethods::Generic
     'error',
     'pre_init_hook',
     'post_init_hook',
+    '_object_default_manager_base_class',
   ],
 
   'scalar --get_set_init' =>
@@ -84,6 +85,7 @@ use Rose::Class::MakeMethods::Generic
   [
     'dbi_prepare_cached',
     'default_column_undef_overrides_default',
+    '_class_default_manager_base_class',
   ],
 
   inheritable_hash =>
@@ -107,6 +109,7 @@ use Rose::Class::MakeMethods::Generic
   ],
 );
 
+__PACKAGE__->default_manager_base_class('Rose::DB::Object::Manager');
 __PACKAGE__->dbi_prepare_cached(1);
 
 __PACKAGE__->class_registry({});
@@ -235,6 +238,19 @@ sub init
 sub init_original_class { ref shift }
 
 sub init_auto_prime_caches { $ENV{'MOD_PERL'} ? 1 : 0 }
+
+sub default_manager_base_class
+{
+  my($self_or_class) = shift;
+  
+  if(ref($self_or_class))
+  {
+    return $self_or_class->_object_default_manager_base_class(@_) ||
+      ref($self_or_class)->_class_default_manager_base_class;
+  }
+
+  return $self_or_class->_class_default_manager_base_class(@_);
+}
 
 sub reset
 {
@@ -3922,7 +3938,15 @@ sub dbi_requires_bind_param
 
 sub make_manager_class
 {
-  eval shift->perl_manager_class(@_);
+  my($self) = shift;
+
+  eval $self->perl_manager_class(@_);
+
+  if($@)
+  {
+    Carp::croak "Could not make manager class - $@\nThe Perl code used was:\n\n", 
+                $self->perl_manager_class(@_);
+  }
 }
 
 sub perl_manager_class
@@ -3950,7 +3974,12 @@ sub perl_manager_class
                 (length $args{'class'} ? ": '$args{'class'}'" : '');
   }
 
-  $args{'isa'} ||= [ $self->convention_manager->auto_manager_base_class ];
+  unless($args{'isa'})
+  {
+    my @def = $self->default_manager_base_class; # may return multiple classes
+    $args{'isa'} = (@def == 1 && ref $def[0]) ? $def[0] : \@def;
+  }
+
   $args{'isa'} = [ $args{'isa'} ]  unless(ref $args{'isa'});
 
   my($isa, $ok);
@@ -3963,7 +3992,8 @@ sub perl_manager_class
       Carp::croak "Invalid isa class: '$class'";
     }
 
-    $isa .= "use $class;\n";
+    no strict 'refs';
+    $isa .= "use $class;\n"  unless(%{"${class}::"});
 
     $ok = 1  if(UNIVERSAL::isa($class, 'Rose::DB::Object::Manager'));
   }
@@ -4558,6 +4588,10 @@ Get or set a boolean value that indicates whether or not the L<Rose::DB::Object>
 =item B<default_column_undef_overrides_default [BOOL]>
 
 Get or set the default value of the L<column_undef_overrides_default|/column_undef_overrides_default> attribute.  Defaults to undef.
+
+=item B<default_manager_base_class [CLASS]>
+
+Get or set the default name of the base class used by this metadata class when generating a L<manager|Rose::DB::Object::Manager> classes.  The default value is C<Rose::DB::Object::Manager>.  See the C<default_manager_base_class()> L<object method|OBJECT METHODS> to override this value for a specific metadata object.
 
 =item B<for_class CLASS>
 
@@ -5208,6 +5242,10 @@ For each L<auto_method_type|Rose::DB::Object::Metadata::Relationship/auto_method
 Foreign keys and relationships with the L<type|Rose::DB::Object::Metadata::Relationship/type> "one to one" or "many to one" both encapsulate essentially the same information.  They are kept in sync when this method is called by setting the L<foreign_key|Rose::DB::Object::Metadata::Relationship::ManyToOne/foreign_key> attribute of each "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>" or "L<many to one|Rose::DB::Object::Metadata::Relationship::ManyToOne>" relationship object to be the corresponding foreign key object.
 
 If a relationship corresponds exactly to a foreign key, and that foreign key already made an object method, then the relationship is not asked to make its own method.
+
+=item B<default_manager_base_class [CLASS]>
+
+Get or set the default name of the base class used by this specific metadata object when generating a L<manager|Rose::DB::Object::Manager> class, using either the L<perl_manager_class|/perl_manager_class> or L<make_manager_class|/make_manager_class> methods.  The default value is determined by the C<default_manager_base_class|/default_manager_base_class()> L<class method|CLASS METHODS>.
 
 =item B<method_column METHOD>
 
@@ -5975,15 +6013,15 @@ Returns a Perl class definition for a L<Rose::DB::Object::Manager>-derived class
 
 =item B<base_name NAME>
 
-The value of the L<base_name|Rose::DB::Object::Manager/base_name> parameter that will be passed to the call to L<Rose::DB::Object::Manager>'s L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.  Defaults to the return value of the L<convention manager|/convention_manager>'s L<class_to_table_plural|Rose::DB::Object::ConventionManager/class_to_table_plural> method.
+The value of the L<base_name|Rose::DB::Object::Manager/base_name> parameter that will be passed to the call to L<Rose::DB::Object::Manager>'s L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.  Defaults to the return value of the L<convention manager|/convention_manager>'s L<auto_manager_base_name|Rose::DB::Object::ConventionManager/auto_manager_base_name> method.
 
 =item B<class CLASS>
 
-The name of the manager class.  Defaults to the L<object class|/class> with "::Manager" appended.
+The name of the manager class.  Defaults to the return value of the L<convention manager|/convention_manager>'s L<auto_manager_class_name|Rose::DB::Object::ConventionManager/auto_manager_class_name> method.
 
-=item B<isa CLASSES>
+=item B<isa [ LIST | ARRAYREF ]>
 
-The name of a single class or a reference to an array of class names to be included in the C<@ISA> array for the manager class.  One of these classes must inherit from L<Rose::DB::Object::Manager>.  Defaults to L<Rose::DB::Object::Manager>.
+The name of a single class or a reference to an array of class names to be included in the C<@ISA> array for the manager class.  One of these classes must inherit from L<Rose::DB::Object::Manager>.  Defaults to the return value of the C<default_manager_base_class()> L<object method|OBJECT METHODS>.
 
 =back
 
