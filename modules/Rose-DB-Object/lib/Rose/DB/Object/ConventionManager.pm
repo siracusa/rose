@@ -73,13 +73,27 @@ sub table_to_class
 sub auto_manager_base_name
 {
   my($self, $table, $object_class) = @_;
+
+  $table ||= $self->class_to_table_plural;
+
   return $self->tables_are_singular ? $self->singular_to_plural($table) : $table;
 }
+
+sub auto_manager_base_class { 'Rose::DB::Object::Manager' }
 
 sub auto_manager_class_name
 {
   my($self, $object_class) = @_;
+
+  $object_class ||= $self->meta->class;
+  
   return "${object_class}::Manager";
+}
+
+sub auto_manager_method_name
+{
+  my($self, $type, $base_name) = @_;
+  return undef; # rely on hard-coded defaults in Manager
 }
 
 sub class_prefix
@@ -950,11 +964,24 @@ If the name selected using the above techniques is in the USED_NAMES hash, or is
 
 Given a table name and the name of the L<Rose::DB::Object>-derived class that fronts it, return a base name suitable for use as the value of the C<base_name> parameter to L<Rose::DB::Object::Manager>'s L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.  
 
+If no table is specified then the table name is derived from the current class
+name by calling L<class_to_table_plural>.
+
 If L<tables_are_singular|/tables_are_singular> is true, then TABLE is passed to the L<singular_to_plural|/singular_to_plural> method and the result is returned.  Otherwise, TABLE is returned as-is.
+
+=item B<auto_manager_base_class>
+
+Return the class that all manager classes will default to inheriting from.  By
+default this will be L<Rose::DB::Object::Manager>.
 
 =item B<auto_manager_class_name CLASS>
 
 Given the name of a L<Rose::DB::Object>-derived class, returns a class name for a L<Rose::DB::Object::Manager>-derived class to manage such objects.  The default implementation simply appends "::Manager" to the L<Rose::DB::Object>-derived class name.
+
+=item B<auto_manager_method_name TYPE, BASE_NAME>
+
+Given the specified L<Rose::DB::Object::Manager> L<method type|Rose::DB::Object::Manager/make_manager_methods> and
+L<base name|Rose::DB::Object::Manager/make_manager_methods>, return an appropriate method name.  The default implementation simply returns undef, relying on the hard-coded default method-type-to-name mapping implemented in L<Rose::DB::Object::Manager>'s  L<make_manager_methods|Rose::DB::Object::Manager/make_manager_methods> method.
 
 =item B<auto_relationship_name_many_to_many FK, MAPCLASS>
 

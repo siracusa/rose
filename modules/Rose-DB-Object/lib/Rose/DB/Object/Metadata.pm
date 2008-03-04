@@ -3940,9 +3940,8 @@ sub perl_manager_class
     %args = @_;
   }
 
-  $args{'base_name'} ||= $self->convention_manager->class_to_table_plural;
-
-  $args{'class'} ||= $self->class . '::Manager';
+  $args{'base_name'} ||= $self->convention_manager->auto_manager_base_name;
+  $args{'class'}     ||= $self->convention_manager->auto_manager_class_name;
 
   unless($args{'class'} =~ /^\w+(?:::\w+)*$/)
   {
@@ -3951,7 +3950,7 @@ sub perl_manager_class
                 (length $args{'class'} ? ": '$args{'class'}'" : '');
   }
 
-  $args{'isa'} ||= [ 'Rose::DB::Object::Manager' ];
+  $args{'isa'} ||= [ $self->convention_manager->auto_manager_base_class ];
   $args{'isa'} = [ $args{'isa'} ]  unless(ref $args{'isa'});
 
   my($isa, $ok);
