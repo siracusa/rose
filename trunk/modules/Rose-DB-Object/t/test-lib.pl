@@ -18,6 +18,8 @@ BEGIN
   
   $ENV{'PGDATESTYLE'} = 'MDY';
 
+  no warnings 'uninitialized';
+
   # Many tests don't work with DBD::Pg version 2.1.x and 2.2.0
   unless($DBD::Pg::VERSION =~ /^2\.(?:1\.|2\.0)/)
   {
