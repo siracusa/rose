@@ -14,56 +14,62 @@ BEGIN
   # Postgres
   #
 
+  eval { require DBD::Pg };
+  
   $ENV{'PGDATESTYLE'} = 'MDY';
 
-  # Main
-  Rose::DB->register_db(
-    domain   => 'test',
-    type     => 'pg',
-    driver   => 'Pg',
-    database => 'test',
-    host     => 'localhost',
-    username => 'postgres',
-    password => '',
-    connect_options => { AutoCommit => 1 },
-    post_connect_sql =>
-    [
-      'SET default_transaction_isolation TO "read committed"',
-    ],
-  );
-
-  # Private schema
-  Rose::DB->register_db(
-    domain   => 'test',
-    type     => 'pg_with_schema',
-    schema   => 'rose_db_object_private',
-    driver   => 'Pg',
-    database => 'test',
-    host     => 'localhost',
-    username => 'postgres',
-    password => '',
-    connect_options => { AutoCommit => 1 },
-    post_connect_sql =>
-    [
-      'SET default_transaction_isolation TO "read committed"',
-    ],
-  );
-
-  # Admin
-  Rose::DB->register_db(
-    domain   => 'test',
-    type     => 'pg_admin',
-    driver   => 'Pg',
-    database => 'test',
-    host     => 'localhost',
-    username => 'postgres',
-    password => '',
-    connect_options => { AutoCommit => 1 },
-    post_connect_sql =>
-    [
-      'SET default_transaction_isolation TO "read committed"',
-    ],
-  );
+  # Many tests don't work with DBD::Pg version 2.1.x and 2.2.0
+  unless($DBD::Pg::VERSION =~ /^2\.(?:1\.|2\.0)/)
+  {
+    # Main
+    Rose::DB->register_db(
+      domain   => 'test',
+      type     => 'pg',
+      driver   => 'Pg',
+      database => 'test',
+      host     => 'localhost',
+      username => 'postgres',
+      password => '',
+      connect_options => { AutoCommit => 1 },
+      post_connect_sql =>
+      [
+        'SET default_transaction_isolation TO "read committed"',
+      ],
+    );
+  
+    # Private schema
+    Rose::DB->register_db(
+      domain   => 'test',
+      type     => 'pg_with_schema',
+      schema   => 'rose_db_object_private',
+      driver   => 'Pg',
+      database => 'test',
+      host     => 'localhost',
+      username => 'postgres',
+      password => '',
+      connect_options => { AutoCommit => 1 },
+      post_connect_sql =>
+      [
+        'SET default_transaction_isolation TO "read committed"',
+      ],
+    );
+  
+    # Admin
+    Rose::DB->register_db(
+      domain   => 'test',
+      type     => 'pg_admin',
+      driver   => 'Pg',
+      database => 'test',
+      host     => 'localhost',
+      username => 'postgres',
+      password => '',
+      connect_options => { AutoCommit => 1 },
+      post_connect_sql =>
+      [
+        'SET default_transaction_isolation TO "read committed"',
+      ],
+    );
+  }
 
   #
   # MySQL

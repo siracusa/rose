@@ -1150,7 +1150,7 @@ BEGIN
     $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
     
-    die "This test chokes DBD::Pg version 2.1.1"  if($DBD::Pg::VERSION eq '2.2.1');
+    #die "This test chokes DBD::Pg version 2.1.x and 2.2.0"  if($DBD::Pg::VERSION =~ /^2\.(?:1\.|2\.0)/);
   };
 
   if(!$@ && $dbh)
