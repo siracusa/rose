@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1497;
+use Test::More tests => 1627;
 
 BEGIN 
 {
@@ -34,7 +34,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 {
   SKIP:
   {
-    skip("$db_type tests", 299)  unless($Have{$db_type});
+    skip("$db_type tests", 325)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -46,12 +46,14 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   # Test of the subselect limit code
   #Rose::DB::Object::Manager->default_limit_with_subselect(1)  if($db_type =~ /^pg/);
 
+  my $db = Rose::DB->new;
+
   my $class_prefix = 
     ucfirst($db_type eq 'pg_with_schema' ? 'pgws' : $db_type);
 
   my $loader = 
     Rose::DB::Object::Loader->new(
-      db           => Rose::DB->new,
+      db           => $db,
       class_prefix => $class_prefix);
 
   my @classes = $loader->make_classes(include_tables => $Include);
@@ -59,123 +61,115 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   my $product_class = $class_prefix  . '::Product';
   my $manager_class = $product_class . '::Manager';
 
-#   my $p1 = 
-#     $product_class->new(
-#       id     => 1,
-#       name   => 'Kite',
-#       vendor => { id => 1, name => 'V1', region => { id => 'DE', name => 'Germany' } },
-#       prices => 
-#       [
-#         { price => 1.23, region => { id => 'US', name => 'America' } }, 
-#         { price => 4.56, region => { id => 'DE', name => 'Germany' } },
-#       ],
-#       colors => 
-#       [
-#         {
-#           name => 'red',
-#           description => 
-#           {
-#             text => 'desc 1',
-#             authors => 
-#             [
-#               {
-#                 name => 'john',
-#                 nicknames => [ { nick => 'jack' }, { nick => 'sir' } ],
-#               },
-#               {
-#                 name => 'sue',
-#                 nicknames => [ { nick => 'sioux' } ],
-#               },
-#             ],
-#           },
-#         }, 
-#         {
-#           name => 'blue',
-#           description => 
-#           {
-#             text => 'desc 2',
-#             authors => 
-#             [
-#               { name => 'john' },
-#               {
-#                 name => 'jane',
-#                 nicknames => [ { nick => 'blub' } ],
-#               },
-#             ],
-#           }
-#         }
-#       ]);
-# 
-#   $p1->save;
-# 
-#   my $p2 = 
-#     $product_class->new(
-#       id     => 2,
-#       name   => 'Sled',
-#       vendor => { id => 2, name => 'V2', region_id => 'US', vendor_id => 1 },
-#       prices => [ { price => 9.99 } ],
-#       colors => 
-#       [
-#         { name => 'red' }, 
-#         {
-#           name => 'green',
-#           description => 
-#           {
-#             text => 'desc 3',
-#             authors => [ { name => 'tim' } ],
-#           }
-#         }
-#       ]);
-# 
-#   $p2->save;
-# 
-#   my $p3 = 
-#     $product_class->new(
-#       id     => 3,
-#       name   => 'Barn',
-#       vendor => { id => 3, name => 'V3', region => { id => 'UK', name => 'England' }, vendor_id => 2 },
-#       prices => [ { price => 100 } ],
-#       colors => 
-#       [
-#         { name => 'green' }, 
-#         {
-#           name => 'pink',
-#           description => 
-#           {
-#             text => 'desc 4',
-#             authors => [ { name => 'joe', nicknames => [ { nick => 'joey' } ] } ],
-#           }
-#         }
-#       ]);
-# 
-#   $p3->save;
+  my $p1 = 
+    $product_class->new(
+      id     => 1,
+      name   => 'Kite',
+      vendor => { id => 1, name => 'V1', region => { id => 'DE', name => 'Germany' } },
+      prices => 
+      [
+        { price => 1.23, region => { id => 'US', name => 'America' } }, 
+        { price => 4.56, region => { id => 'DE', name => 'Germany' } },
+      ],
+      colors => 
+      [
+        {
+          name => 'red',
+          description => 
+          {
+            text => 'desc 1',
+            authors => 
+            [
+              {
+                name => 'john',
+                nicknames => [ { nick => 'jack' }, { nick => 'sir' } ],
+              },
+              {
+                name => 'sue',
+                nicknames => [ { nick => 'sioux' } ],
+              },
+            ],
+          },
+        }, 
+        {
+          name => 'blue',
+          description => 
+          {
+            text => 'desc 2',
+            authors => 
+            [
+              { name => 'john' },
+              {
+                name => 'jane',
+                nicknames => [ { nick => 'blub' } ],
+              },
+            ],
+          }
+        }
+      ]);
+
+  $p1->save;
+
+  my $p2 = 
+    $product_class->new(
+      id     => 2,
+      name   => 'Sled',
+      vendor => { id => 2, name => 'V2', region_id => 'US', vendor_id => 1 },
+      prices => [ { price => 9.99 } ],
+      colors => 
+      [
+        { name => 'red' }, 
+        {
+          name => 'green',
+          description => 
+          {
+            text => 'desc 3',
+            authors => [ { name => 'tim' } ],
+          }
+        }
+      ]);
+
+  $p2->save;
+
+  my $p3 = 
+    $product_class->new(
+      id     => 3,
+      name   => 'Barn',
+      vendor => { id => 3, name => 'V3', region => { id => 'UK', name => 'England' }, vendor_id => 2 },
+      prices => [ { price => 100 } ],
+      colors => 
+      [
+        { name => 'green' }, 
+        {
+          name => 'pink',
+          description => 
+          {
+            text => 'desc 4',
+            authors => [ { name => 'joe', nicknames => [ { nick => 'joey' } ] } ],
+          }
+        }
+      ]);
+
+  $p3->save;
 
   #local $Rose::DB::Object::Manager::Debug = 1;
 
- my $products;
-#   my $products = 
-#     $manager_class->get_products(
-#       require_objects => [ 'vendor.vendor', 'vendor.region' ]);
-# 
-#   is(scalar @$products, 2, "require vendors 1 - $db_type");
-# 
-#   is($products->[0]{'vendor'}{'id'}, 2, "p2 - require vendors 1 - $db_type");
-#   is($products->[0]{'vendor'}{'vendor'}{'id'}, 1, "p2 - require vendors 2 - $db_type");
-#   is($products->[0]{'vendor'}{'region'}{'name'}, 'America', "p2 - require vendors 3 - $db_type");
-# 
-#   is($products->[1]{'vendor'}{'id'}, 3, "p3 - require vendors 1 - $db_type");
-#   is($products->[1]{'vendor'}{'vendor'}{'id'}, 2, "p3 - require vendors 2 - $db_type");
-#   is($products->[1]{'vendor'}{'region'}{'name'}, 'England', "p3 - require vendors 3 - $db_type");
-$DB::single = 1;
-  # Same test, now with join type overrides
+  my $products = 
+    $manager_class->get_products(
+      db => $db,
+      require_objects => [ 'vendor.vendor', 'vendor.region' ]);
 
-#                      [ [ 'vendor.vendor' ], [ 'vendor.region' ] ],
+  is(scalar @$products, 2, "require vendors 1 - $db_type");
 
-#   $manager_class->get_products(
-#     debug => 1,
-#     require_objects => [ 'vendor.region' ],
-#     with_objects => [ 'vendor!.vendor' ]);
-# exit;
+  is($products->[0]{'vendor'}{'id'}, 2, "p2 - require vendors 1 - $db_type");
+  is($products->[0]{'vendor'}{'vendor'}{'id'}, 1, "p2 - require vendors 2 - $db_type");
+  is($products->[0]{'vendor'}{'region'}{'name'}, 'America', "p2 - require vendors 3 - $db_type");
+
+  is($products->[1]{'vendor'}{'id'}, 3, "p3 - require vendors 1 - $db_type");
+  is($products->[1]{'vendor'}{'vendor'}{'id'}, 2, "p3 - require vendors 2 - $db_type");
+  is($products->[1]{'vendor'}{'region'}{'name'}, 'England', "p3 - require vendors 3 - $db_type");
+
+  # No-op join override tests
 
   my $last_sql;
   my $i = 1;
@@ -187,27 +181,288 @@ $DB::single = 1;
                     [ [], [ 'vendor.vendor!', 'vendor.region!' ] ], 
                     [ [], [ 'vendor!.vendor', 'vendor.region!' ] ], 
                     [ [], [ 'vendor.vendor!', 'vendor!.region' ] ], 
-                    [ [], [ 'vendor!.vendor!', 'vendor!.region!' ] ],
-                    [ [ 'vendor!.vendor!' ], [ 'vendor.region' ] ])
+                    [ [], [ 'vendor!.vendor!', 'vendor!.region!' ] ])
   {
     my $sql = 
       $manager_class->get_objects_sql(
-        debug => 1,  
+        db => $db,
+        debug => 1,
         (@{$pair->[0]} ? (with_objects => $pair->[0]) : ()),
         (@{$pair->[1]} ? (require_objects => $pair->[1]) : ()));
 
+    $sql =~ s/\s+/ /g;
+
     if($last_sql)
     {
-      is($sql, $last_sql, "join override $i");
+      is($sql, $last_sql, "join override no-op $i - $db_type");
     }
     else
     {
-      ok($sql, "join override $i");
+      ok($sql, "join override $i - $db_type");
     }
 
     $last_sql = $sql;
     $i++;
   }
+
+  $i = 1;
+
+  # Override tests
+
+  my $sql = 
+    $manager_class->get_objects_sql(
+      db => $db,
+      with_objects => [ 'vendor.region!' ]);
+ 
+  cmp_sql($sql, <<"EOF", "join override $i - $db_type");
+SELECT 
+  t1.vendor_id,
+  t1.name,
+  t1.id,
+  t2.region_id,
+  t2.vendor_id,
+  t2.name,
+  t2.id,
+  t3.name,
+  t3.id
+FROM
+  products t1 
+  LEFT OUTER JOIN (vendors t2  JOIN regions t3 ON (t2.region_id = t3.id)) ON (t1.vendor_id = t2.id)
+EOF
+
+  $i++;
+
+  $sql = 
+    $manager_class->get_objects_sql(
+      db => $db,
+      with_objects => [ 'vendor.region' ]);
+
+  cmp_sql($sql, <<"EOF", "join override $i - $db_type");
+SELECT 
+  t1.vendor_id,
+  t1.name,
+  t1.id,
+  t2.region_id,
+  t2.vendor_id,
+  t2.name,
+  t2.id,
+  t3.name,
+  t3.id
+FROM
+  products t1 
+  LEFT OUTER JOIN vendors t2 ON (t1.vendor_id = t2.id)
+  LEFT OUTER JOIN regions t3 ON (t2.region_id = t3.id)
+EOF
+
+  $i++;
+
+  $sql = 
+    $manager_class->get_objects_sql(
+      db => $db,
+      multi_many_ok => 1,
+      with_objects  => [ 'colors.description.authors.nicknames' ]);
+
+  cmp_sql("$sql\n", <<"EOF", "join override $i - $db_type");
+SELECT 
+  t1.vendor_id,
+  t1.name,
+  t1.id,
+  t3.description_id,
+  t3.name,
+  t3.id,
+  t4.text,
+  t4.id,
+  t6.name,
+  t6.id,
+  t7.author_id,
+  t7.id,
+  t7.nick
+FROM
+  products t1 
+  LEFT OUTER JOIN product_color_map t2 ON (t2.product_id = t1.id)
+  LEFT OUTER JOIN colors t3 ON (t2.color_id = t3.id)
+  LEFT OUTER JOIN descriptions t4 ON (t3.description_id = t4.id)
+  LEFT OUTER JOIN description_author_map t5 ON (t5.description_id = t4.id)
+  LEFT OUTER JOIN authors t6 ON (t5.author_id = t6.id)
+  LEFT OUTER JOIN nicknames t7 ON (t6.id = t7.author_id)
+
+ORDER BY t1.id
+EOF
+  #print STDERR "$sql\n";
+
+  $i++;
+
+  $sql = 
+    $manager_class->get_objects_sql(
+      db => $db,
+      multi_many_ok => 1,
+      with_objects  => [ 'colors.description!.authors.nicknames!' ]);
+
+  cmp_sql("$sql\n", <<"EOF", "join override $i - $db_type");
+SELECT 
+  t1.vendor_id,
+  t1.name,
+  t1.id,
+  t3.description_id,
+  t3.name,
+  t3.id,
+  t4.text,
+  t4.id,
+  t6.name,
+  t6.id,
+  t7.author_id,
+  t7.id,
+  t7.nick
+FROM
+  products t1 
+  LEFT OUTER JOIN product_color_map t2 ON (t2.product_id = t1.id)
+  LEFT OUTER JOIN (colors t3  JOIN descriptions t4 ON (t3.description_id = t4.id)) ON (t2.color_id = t3.id)
+  LEFT OUTER JOIN description_author_map t5 ON (t5.description_id = t4.id)
+  LEFT OUTER JOIN (authors t6  JOIN nicknames t7 ON (t6.id = t7.author_id)) ON (t5.author_id = t6.id)
+
+ORDER BY t1.id
+EOF
+  #print STDERR "$sql\n";
+
+  $i++;
+
+  $sql = 
+    $manager_class->get_objects_sql(
+      db => $db,
+      multi_many_ok => 1,
+      require_objects  => [ 'colors.description.authors.nicknames' ]);
+
+  if($db->likes_implicit_joins)
+  {
+    cmp_sql("$sql\n", <<"EOF", "join override $i - $db_type");
+SELECT 
+  t1.vendor_id,
+  t1.name,
+  t1.id,
+  t3.description_id,
+  t3.name,
+  t3.id,
+  t4.text,
+  t4.id,
+  t6.name,
+  t6.id,
+  t7.author_id,
+  t7.nick,
+  t7.id
+FROM
+  products t1,
+  product_color_map t2,
+  colors t3,
+  descriptions t4,
+  description_author_map t5,
+  authors t6,
+  nicknames t7
+WHERE
+  t2.product_id = t1.id AND
+  t2.color_id = t3.id AND
+  t3.description_id = t4.id AND
+  t5.description_id = t4.id AND
+  t5.author_id = t6.id AND
+  t6.id = t7.author_id
+ORDER BY t1.id
+EOF
+  }
+  else
+  {
+
+    cmp_sql("$sql\n", <<"EOF", "join override $i - $db_type");
+SELECT 
+  t1.vendor_id,
+  t1.name,
+  t1.id,
+  t3.description_id,
+  t3.name,
+  t3.id,
+  t4.text,
+  t4.id,
+  t6.name,
+  t6.id,
+  t7.author_id,
+  t7.id,
+  t7.nick
+FROM
+  products t1 
+  JOIN (product_color_map t2  JOIN (colors t3  JOIN (descriptions t4  JOIN (description_author_map t5  JOIN (authors t6  JOIN nicknames t7 ON (t6.id = t7.author_id)) ON (t5.author_id = t6.id)) ON (t5.description_id = t4.id)) ON (t3.description_id = t4.id)) ON (t2.color_id = t3.id)) ON (t2.product_id = t1.id)
+ORDER BY t1.id
+EOF
+  }
+  #print STDERR "$sql\n";
+
+  $i++;
+
+  $sql = 
+    $manager_class->get_objects_sql(
+      db => $db,
+      multi_many_ok => 1,
+      require_objects  => [ 'colors.description?.authors.nicknames?' ]);
+
+  if($db->likes_implicit_joins)
+  {
+    cmp_sql("$sql\n", <<"EOF", "join override $i - $db_type");
+SELECT 
+  t1.vendor_id,
+  t1.name,
+  t1.id,
+  t3.description_id,
+  t3.name,
+  t3.id,
+  t4.text,
+  t4.id,
+  t6.name,
+  t6.id,
+  t7.author_id,
+  t7.nick,
+  t7.id
+FROM
+  products t1,
+  product_color_map t2,
+  colors t3,
+  descriptions t4,
+  description_author_map t5,
+  authors t6,
+  nicknames t7
+WHERE
+  t2.product_id = t1.id AND
+  t2.color_id = t3.id AND
+  t3.description_id = t4.id AND
+  t5.description_id = t4.id AND
+  t5.author_id = t6.id AND
+  t6.id = t7.author_id
+ORDER BY t1.id
+EOF
+  }
+  else
+  {
+    cmp_sql("$sql\n", <<"EOF", "join override $i - $db_type");
+SELECT 
+  t1.vendor_id,
+  t1.name,
+  t1.id,
+  t3.description_id,
+  t3.name,
+  t3.id,
+  t4.text,
+  t4.id,
+  t6.name,
+  t6.id,
+  t7.author_id,
+  t7.id,
+  t7.nick
+FROM
+  products t1 
+  JOIN (product_color_map t2  JOIN colors t3 ON (t2.color_id = t3.id)) ON (t2.product_id = t1.id)
+  LEFT OUTER JOIN (descriptions t4  JOIN (description_author_map t5  JOIN authors t6 ON (t5.author_id = t6.id)) ON (t5.description_id = t4.id)) ON (t3.description_id = t4.id)
+  LEFT OUTER JOIN nicknames t7 ON (t6.id = t7.author_id)
+
+ORDER BY t1.id
+EOF
+  }
+  #print STDERR "$sql\n";
 
   # Conflict tests
 
@@ -216,30 +471,23 @@ $DB::single = 1;
   foreach my $pair ([ [], [ 'vendor.vendor', 'vendor?.region' ] ], 
                     [ [], [ 'vendor?.vendor', 'vendor.region' ] ], 
                     [ [], [ 'vendor?.vendor!', 'vendor!.region' ] ], 
+                    [ [ 'vendor?.vendor' ], [ 'vendor.region' ] ],
                     [ [ 'vendor.vendor' ], [ 'vendor!.region' ] ])
   {
     eval 
     {
       $manager_class->get_objects_sql(
+        db => $db,
         debug => 1,  
         (@{$pair->[0]} ? (with_objects => $pair->[0]) : ()),
         (@{$pair->[1]} ? (require_objects => $pair->[1]) : ()));
     };
 
-    ok($@, "join override conflict $i");
+    ok($@, "join override conflict $i - $db_type");
 
     $i++;
   }
-  
-#   my $sql = 
-#     $manager_class->get_products(
-#     debug => 1,
-#       #require_objects => [ 'vendor.vendor', 'vendor.region' ]);
-#       #require_objects => [ 'vendor!.vendor!', 'vendor!.region!' ]);
-#       #with_objects => [ 'vendor!.region' ],
-#       require_objects => [ 'vendor.region?' ],
-#       );
-exit;
+
   is(scalar @$products, 2, "require vendors 1 - $db_type");
 
   is($products->[0]{'vendor'}{'id'}, 2, "p2 - require vendors 1 - $db_type");
@@ -252,6 +500,7 @@ exit;
 
   $products = 
     $manager_class->get_products(
+      db => $db,
       require_objects => [ 'vendor.vendor', 'vendor.region' ],
       limit  => 10,
       offset => 1);
@@ -264,6 +513,7 @@ exit;
 
   my $iterator = 
     $manager_class->get_products_iterator(
+      db => $db,
       require_objects => [ 'vendor.vendor', 'vendor.region' ]);
 
   my $p = $iterator->next;
@@ -281,6 +531,7 @@ exit;
 
   $iterator = 
     $manager_class->get_products_iterator(
+      db => $db,
       require_objects => [ 'vendor.vendor', 'vendor.region' ],
       limit  => 10,
       offset => 1);
@@ -297,6 +548,7 @@ exit;
 
   $products = 
     $manager_class->get_products(
+      db => $db,
       with_objects    => [ 'colors.description.authors.nicknames' ],
       multi_many_ok   => 1,
       limit           => 2,
@@ -374,6 +626,7 @@ exit;
 
   $products = 
     $manager_class->get_products(
+      db => $db,
       with_objects    => [ 'colors.description.authors.nicknames' ],
       multi_many_ok   => 1,
       limit           => 1,
@@ -407,6 +660,7 @@ exit;
 
   $products = 
     $manager_class->get_products(
+      db => $db,
       with_objects    => [ 'colors.description.authors.nicknames' ],
       multi_many_ok   => 1,
       limit           => 1,
@@ -420,6 +674,7 @@ exit;
 
   $iterator = 
     $manager_class->get_products_iterator(
+      db => $db,
       with_objects    => [ 'colors.description.authors.nicknames' ],
       multi_many_ok   => 1,
       limit           => 2,
@@ -496,6 +751,7 @@ exit;
 
   $iterator = 
     $manager_class->get_products_iterator(
+      db => $db,
       with_objects    => [ 'colors.description.authors.nicknames' ],
       multi_many_ok   => 1,
       limit           => 1,
@@ -535,6 +791,7 @@ exit;
 
   $products = 
     $manager_class->get_products(
+      db => $db,
       require_objects => [ 'vendor.region', 'prices.region' ],
       with_objects    => [ 'colors.description.authors.nicknames' ],
       multi_many_ok   => 1,
@@ -635,6 +892,7 @@ exit;
 
   $products = 
     $manager_class->get_products(
+      db => $db,
       require_objects => [ 'vendor.region', 'prices.region' ],
       with_objects    => [ 'colors.description.authors.nicknames' ],
       multi_many_ok   => 1,
@@ -679,6 +937,7 @@ exit;
 
   $iterator = 
     $manager_class->get_products_iterator(
+      db => $db,
       require_objects => [ 'vendor.region', 'prices.region' ],
       with_objects    => [ 'colors.description.authors.nicknames' ],
       multi_many_ok   => 1,
@@ -777,6 +1036,7 @@ exit;
 
   $iterator = 
     $manager_class->get_products_iterator(
+      db => $db,
       require_objects => [ 'vendor.region', 'prices.region' ],
       with_objects    => [ 'colors.description.authors.nicknames' ],
       multi_many_ok   => 1,
@@ -826,6 +1086,7 @@ exit;
 
   $iterator = 
     $manager_class->get_products_iterator(
+      db => $db,
       require_objects => [ 'vendor.region', 'prices.region' ],
       with_objects    => [ 'colors.description.authors.nicknames' ],
       multi_many_ok   => 1,
@@ -888,6 +1149,8 @@ BEGIN
   {
     $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
+    
+    die "This test chokes DBD::Pg version 2.1.1"  if($DBD::Pg::VERSION eq '2.2.1');
   };
 
   if(!$@ && $dbh)
@@ -1153,7 +1416,7 @@ EOF
   {
     my $db = Rose::DB->new('mysql_admin');
     $dbh = $db->retain_dbh or die Rose::DB->error;
-return;
+
     die "MySQL version too old"  unless($db->database_version >= 4_000_000);
 
     # Drop existing tables, ignoring errors
@@ -1200,8 +1463,7 @@ EOF
   if(!$@ && $dbh)
   {
     $Have{'mysql'} = 1;
-}
-if(0){
+
     $dbh->do(<<"EOF");
 CREATE TABLE vendors
 (
@@ -1669,7 +1931,7 @@ END
     $dbh->disconnect;
   }
 
-  if($Have{'mysql'} && 0)
+  if($Have{'mysql'})
   {
     my $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
       or die Rose::DB->error;
@@ -1737,4 +1999,22 @@ sub has_broken_order_by
   }
 
   return 0;
+}
+
+sub cmp_sql
+{
+  my($a, $b, $msg) = @_;
+  
+  for($a, $b)
+  {
+    s/\s+/ /g;
+    s/^\s+//;
+    s/\s+$//;
+    s/^SELECT.*?FROM/SELECT * FROM/;
+    s/\brose_db_object_private\.//g;
+  }
+  
+  @_ = ($a, $b, $msg);
+  
+  goto &is;
 }
