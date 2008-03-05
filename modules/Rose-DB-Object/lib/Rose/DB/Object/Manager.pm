@@ -16,7 +16,7 @@ use Rose::DB::Object::Constants
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.7671';
+our $VERSION = '0.769';
 
 our $Debug = 0;
 
@@ -365,6 +365,8 @@ sub get_objects_count
 sub get_objects_iterator { shift->get_objects(@_, return_iterator => 1) }
 sub get_objects_sql      { shift->get_objects(@_, return_sql => 1) }
 
+use constant WITH => 555; # arbitrary
+
 sub get_objects
 {
   my($class, %args);
@@ -482,7 +484,7 @@ sub get_objects
     }
   }
 
-  my $outer_joins_only = ($with_objects && !$require_objects) ? 1 : 0;
+  my $outer_joins = ($with_objects && !$require_objects) ? 1 : 0;
 
   my($num_required_objects, %required_object, $num_with_objects,
      %with_objects, @belongs_to, %seen_rel, %rel_tn, %join_type);
@@ -513,7 +515,7 @@ sub get_objects
                      ($require_objects ? @$require_objects : ()))
     {
       $in_require = 1  if(!$in_require && $i++ == $requires_start);
-#$DB::single = 1;
+
       my $save_arg = $arg;
       $arg =~ tr/!?//d;
 
@@ -557,16 +559,16 @@ sub get_objects
       }
     }
 
-    if(grep { $_ eq 'JOIN' } values %join_type)
+    if(grep { $_ eq 'LEFT OUTER JOIN' } values %join_type)
     {
-      $outer_joins_only = 0;
+      $outer_joins = 1;
     }
   }
 
-  # Putting join conditions inthe WHERE clause can change the meaning of
+  # Putting join conditions in the WHERE clause can change the meaning of
   # the query when outer joins are used, so disable them in that case.
   my $use_redundant_join_conditions =
-    $outer_joins_only ? 0 : delete $args{'redundant_join_conditions'};
+    $outer_joins ? 0 : delete $args{'redundant_join_conditions'};
 
 #use Data::Dumper;
 #print STDERR 'JOIN TYPES: ', Dumper(\%join_type);
@@ -594,13 +596,13 @@ sub get_objects
 
         if(index($arg, '.') < 0)
         {
-          $seen_rel{$arg} = 'with';
+          $seen_rel{$arg} = WITH;
           push(@with_objects, $arg);
         }
         else
         {
           my @expanded = ($arg);
-          $seen_rel{$arg} = 'with';
+          $seen_rel{$arg} = WITH;
 
           while($arg =~ s/\.([^.]+)$//)
           {
@@ -616,7 +618,7 @@ sub get_objects
     }
     else
     {
-      $seen_rel{$_} = 'with'  for(@$with_objects);
+      $seen_rel{$_} = WITH  for(@$with_objects);
     }
 
     $num_with_objects = @$with_objects;
@@ -639,7 +641,7 @@ sub get_objects
         {
           if(my $seen = $seen_rel{$arg})
           {
-            if($seen eq 'with')
+            if($seen == WITH)
             {
               Carp::croak "require_objects argument '$arg' conflicts with ",
                           "with_objects argument of the same name";
@@ -656,7 +658,7 @@ sub get_objects
 
           if(my $seen = $seen_rel{$arg})
           {
-            if($seen eq 'with')
+            if($seen == WITH)
             {
               Carp::croak "require_objects argument '$arg' conflicts with ",
                           "with_objects argument of the same name";
@@ -1093,7 +1095,7 @@ sub get_objects
           # joined when nested joins are enabled, however.
           if(!($rel_type eq 'foreign key' && $rel->is_required &&
                $rel->referential_integrity && $nested_joins) &&
-             ($outer_joins_only || $with_objects{$arg}))
+             ($outer_joins || $with_objects{$arg}))
           {
             # Aliased table names
             push(@{$joins[$i]{'conditions'}}, "t${parent_tn}.$local_column = t$i.$foreign_column");
@@ -1316,7 +1318,7 @@ sub get_objects
         while(my($local_column, $foreign_column) = each(%$column_map))
         {
           # Use outer joins to handle duplicate or optional information.
-          if($outer_joins_only || $with_objects{$arg})
+          if($outer_joins || $with_objects{$arg})
           {
             # Aliased table names
             push(@{$joins[$i]{'conditions'}}, "t$i.$local_column = t${parent_tn}.$foreign_column");
@@ -1423,7 +1425,7 @@ sub get_objects
         while(my($local_column, $foreign_column) = each(%$ft_columns))
         {
           # Use left joins if the map table used an outer join above
-          if($outer_joins_only || $with_objects{$arg})
+          if($outer_joins || $with_objects{$arg})
           {
             # Aliased table names
             push(@{$joins[$i]{'conditions'}}, 't' . ($i - 1) . ".$local_column = t$i.$foreign_column");
