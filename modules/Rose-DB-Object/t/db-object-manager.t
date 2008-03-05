@@ -8850,7 +8850,7 @@ SKIP: foreach my $db_type (qw(sqlite))
 
   $objs->[0]->b1(1);
   $objs->[0]->save;
-$DB::single =1 ;
+
   $count =
     MySQLiteObjectManager->object_count(
       share_db     => 1,

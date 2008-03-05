@@ -3993,7 +3993,7 @@ sub perl_manager_class
     }
 
     no strict 'refs';
-    $isa .= "use $class;\n"  unless(%{"${class}::"});
+    $isa .= "use $class;\n"  unless($class !~ /^Rose::DB::/ && %{"${class}::"});
 
     $ok = 1  if(UNIVERSAL::isa($class, 'Rose::DB::Object::Manager'));
   }

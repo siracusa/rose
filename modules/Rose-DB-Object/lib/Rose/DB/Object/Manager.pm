@@ -487,6 +487,9 @@ sub get_objects
   my($num_required_objects, %required_object, $num_with_objects,
      %with_objects, @belongs_to, %seen_rel, %rel_tn, %join_type);
 
+  $with_objects    = [ $with_objects ]     if($with_objects && !ref $with_objects);
+  $require_objects = [ $require_objects ]  if($require_objects && !ref $require_objects);
+
 #print STDERR 'WITH: ', Dumper($with_objects);
 #print STDERR 'REQUIRE: ', Dumper($require_objects);
 
@@ -571,19 +574,14 @@ sub get_objects
 #print STDERR 'POST REQUIRE: ', Dumper($require_objects);
   if($with_objects)
   {
-    unless(defined $use_redundant_join_conditions)
-    {
-      $use_redundant_join_conditions = $db->likes_redundant_join_conditions;
-    }
+    #unless(defined $use_redundant_join_conditions)
+    #{
+    #  $use_redundant_join_conditions = $db->likes_redundant_join_conditions;
+    #}
 #print STDERR "use_redundant_join_conditions = $use_redundant_join_conditions\n";
-    if(ref $with_objects) # copy argument (shallow copy)
-    {
-      $with_objects = [ @$with_objects ]; #[ uniq @$with_objects ];
-    }
-    else
-    {
-      $with_objects = [ $with_objects ];
-    }
+
+    # Copy argument (shallow copy)
+    $with_objects = [ @$with_objects ]; #[ uniq @$with_objects ];
 
     # Expand multi-level arguments
     if(first { index($_, '.') >= 0 } @$with_objects)
@@ -627,14 +625,8 @@ sub get_objects
 
   if($require_objects)
   {
-    if(ref $require_objects) # copy argument (shallow copy)
-    {
-      $require_objects = [ @$require_objects ]; #[ uniq @$require_objects ];
-    }
-    else
-    {
-      $require_objects = [ $require_objects ];
-    }
+    # Copy argument (shallow copy)
+    $require_objects = [ @$require_objects ]; #[ uniq @$require_objects ];
 
     # Expand multi-level arguments
     if(first { index($_, '.') >= 0 } @$require_objects)
