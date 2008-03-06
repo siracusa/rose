@@ -492,8 +492,8 @@ sub get_objects
   $with_objects    = [ $with_objects ]     if($with_objects && !ref $with_objects);
   $require_objects = [ $require_objects ]  if($require_objects && !ref $require_objects);
 
-#print STDERR 'WITH: ', Dumper($with_objects);
-#print STDERR 'REQUIRE: ', Dumper($require_objects);
+  #print STDERR 'WITH: ', Dumper($with_objects);
+  #print STDERR 'REQUIRE: ', Dumper($require_objects);
 
   # XXX: Currently, the most robust join-type conflict checking only
   # XXX: happens if a least one join-type override is present.  In
@@ -570,17 +570,18 @@ sub get_objects
   my $use_redundant_join_conditions =
     $outer_joins ? 0 : delete $args{'redundant_join_conditions'};
 
-#use Data::Dumper;
-#print STDERR 'JOIN TYPES: ', Dumper(\%join_type);
-#print STDERR 'POST WITH: ', Dumper($with_objects);
-#print STDERR 'POST REQUIRE: ', Dumper($require_objects);
+  #use Data::Dumper;
+  #print STDERR 'JOIN TYPES: ', Dumper(\%join_type);
+  #print STDERR 'POST WITH: ', Dumper($with_objects);
+  #print STDERR 'POST REQUIRE: ', Dumper($require_objects);
+
   if($with_objects)
   {
+    # Doing this implicitly is never a good idea
     #unless(defined $use_redundant_join_conditions)
     #{
     #  $use_redundant_join_conditions = $db->likes_redundant_join_conditions;
     #}
-#print STDERR "use_redundant_join_conditions = $use_redundant_join_conditions\n";
 
     # Copy argument (shallow copy)
     $with_objects = [ @$with_objects ]; #[ uniq @$with_objects ];

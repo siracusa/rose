@@ -401,44 +401,7 @@ EOF
       multi_many_ok => 1,
       require_objects  => [ 'colors.description?.authors.nicknames?' ]);
 
-  if($db->likes_implicit_joins)
-  {
-    cmp_sql("$sql\n", <<"EOF", "join override $i - $db_type");
-SELECT 
-  t1.vendor_id,
-  t1.name,
-  t1.id,
-  t3.description_id,
-  t3.name,
-  t3.id,
-  t4.text,
-  t4.id,
-  t6.name,
-  t6.id,
-  t7.author_id,
-  t7.nick,
-  t7.id
-FROM
-  products t1,
-  product_color_map t2,
-  colors t3,
-  descriptions t4,
-  description_author_map t5,
-  authors t6,
-  nicknames t7
-WHERE
-  t2.product_id = t1.id AND
-  t2.color_id = t3.id AND
-  t3.description_id = t4.id AND
-  t5.description_id = t4.id AND
-  t5.author_id = t6.id AND
-  t6.id = t7.author_id
-ORDER BY t1.id
-EOF
-  }
-  else
-  {
-    cmp_sql("$sql\n", <<"EOF", "join override $i - $db_type");
+  cmp_sql("$sql\n", <<"EOF", "join override $i - $db_type");
 SELECT 
   t1.vendor_id,
   t1.name,
@@ -458,10 +421,9 @@ FROM
   JOIN (product_color_map t2  JOIN colors t3 ON (t2.color_id = t3.id)) ON (t2.product_id = t1.id)
   LEFT OUTER JOIN (descriptions t4  JOIN (description_author_map t5  JOIN authors t6 ON (t5.author_id = t6.id)) ON (t5.description_id = t4.id)) ON (t3.description_id = t4.id)
   LEFT OUTER JOIN nicknames t7 ON (t6.id = t7.author_id)
-
 ORDER BY t1.id
 EOF
-  }
+
   #print STDERR "$sql\n";
 
   # Conflict tests
