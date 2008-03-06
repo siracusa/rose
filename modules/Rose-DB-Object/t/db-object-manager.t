@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3888;
+use Test::More tests => 3890;
 
 BEGIN 
 {
@@ -8650,9 +8650,17 @@ EOF
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 782)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 784)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
+
+  my($sql, $bind) = 
+    Rose::DB::Object::Manager->get_objects_sql(
+      object_class => 'MySQLiteObject',
+      query => [ name => { like => \q('%foo%') } ]);
+
+  ok($sql =~ /name LIKE '%foo%'/, "scalar ref bind 1 - $db_type");
+  is(@$bind, 0, "scalar ref bind 2 - $db_type");
 
   # Return ignored, just chaging arg validity
   my $xcount =
