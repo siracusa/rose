@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3890;
+use Test::More tests => 3892;
 
 BEGIN 
 {
@@ -5844,9 +5844,17 @@ EOF
 
 SKIP: foreach my $db_type (qw(informix))
 {
-  skip("Informix tests", 746)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 748)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
+
+  my($sql, $bind) = 
+    Rose::DB::Object::Manager->get_objects_sql(
+      object_class => 'MyInformixObject',
+      query => [ name => { like => \q('%foo%') } ]);
+
+  ok($sql =~ /name LIKE '%foo%'/, "scalar ref bind 1 - $db_type");
+  is(@$bind, 0, "scalar ref bind 2 - $db_type");
 
   my $o = MyInformixObject->new(id         => 1,
                                 name       => 'John',  
