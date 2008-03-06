@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3896;
+use Test::More tests => 3900;
 
 BEGIN 
 {
@@ -5844,7 +5844,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(informix))
 {
-  skip("Informix tests", 750)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 752)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -5864,6 +5864,22 @@ SKIP: foreach my $db_type (qw(informix))
 
   ok($sql =~ /name LIKE '%foo%'/, "scalar ref bind 3 - $db_type");
   is(@$bind, 0, "scalar ref bind 4 - $db_type");
+
+  ($sql, $bind) = 
+    Rose::DB::Object::Manager->get_objects_sql(
+      object_class => 'MySQLiteObject',
+      require_objects => [ 'bb1' ],
+      query => 
+      [
+        or =>
+        [
+          name => 'bar',
+          'bb1.name' => { like => \q('%foo%') },
+        ],
+      ]);
+
+  ok($sql =~ /t2\.name LIKE '%foo%'/, "scalar ref bind 5 - $db_type");
+  is(@$bind, 1, "scalar ref bind 6 - $db_type");
 
   my $o = MyInformixObject->new(id         => 1,
                                 name       => 'John',  
@@ -8667,7 +8683,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 786)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 788)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -8687,6 +8703,22 @@ SKIP: foreach my $db_type (qw(sqlite))
 
   ok($sql =~ /name LIKE '%foo%'/, "scalar ref bind 3 - $db_type");
   is(@$bind, 0, "scalar ref bind 4 - $db_type");
+
+  ($sql, $bind) = 
+    Rose::DB::Object::Manager->get_objects_sql(
+      object_class => 'MySQLiteObject',
+      require_objects => [ 'bb1' ],
+      query => 
+      [
+        or =>
+        [
+          name => 'bar',
+          'bb1.name' => { like => \q('%foo%') },
+        ],
+      ]);
+
+  ok($sql =~ /t2\.name LIKE '%foo%'/, "scalar ref bind 5 - $db_type");
+  is(@$bind, 1, "scalar ref bind 6 - $db_type");
 
   # Return ignored, just chaging arg validity
   my $xcount =
