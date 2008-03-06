@@ -122,7 +122,7 @@ sub build_select
       if($query_arg->[$i] =~ /^(?:and|or)$/i)
       {
         my $query = $query_arg->[$i + 1];
-
+$DB::single = 1;
         unless(ref $query && @$query)
         {
           $i++;
@@ -1004,7 +1004,7 @@ sub _build_clause
   elsif($ref eq 'HASH')
   {
     my($sub_op, $field_mod, @clauses);
-
+$DB::single = 1;
     $field_mod = delete $vals->{'field'}  if(exists $vals->{'field'});
 
     my $all_in = ($op eq 'ALL IN SET' || $op eq 'ALL IN ARRAY') ? 1 : 0;
