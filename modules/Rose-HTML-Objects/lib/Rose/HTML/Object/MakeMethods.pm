@@ -142,7 +142,9 @@ sub localized_error
           unless($id =~ /^\d+$/)
           {
             $id = $self->localizer->get_error_id($id) || 
-              Carp::croak "Unknown error id: '$id'";
+              Carp::croak "Attempt to call $name() with more than one ",
+                          "argument, and the first argument is not a numeric ",
+                          "error id: '$id'";
           }
 
           unshift(@args, error_id => $id, msg_class => $msg_class);
@@ -319,7 +321,9 @@ sub localized_errors
           unless($id =~ /^\d+$/)
           {
             $id = $self->localizer->get_error_id($id) || 
-              Carp::croak "Unknown error id: '$id'";
+              Carp::croak "Attempt to call $singular_name() with more than one ",
+                          "argument, and the first argument is not a numeric ",
+                          "error id: '$id'";
           }
 
           unshift(@args, error_id => $id, msg_class => $msg_class);
