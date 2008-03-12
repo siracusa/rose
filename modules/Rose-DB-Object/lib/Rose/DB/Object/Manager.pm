@@ -4274,6 +4274,31 @@ This assumes that the C<Product> class has a relationship or foreign key named "
 
 This chaining syntax can be used to traverse relationships of any kind, including "one to many" and "many to many" relationships, to an arbitrary depth.
 
+The following optional suffixes may be added after any name in the chain in order to override the join type used:
+
+    Suffix    Join Type
+    ------    ----------
+    !         Inner join
+    ?         Left outer join
+
+Each link in a C<require_objects> chain uses an inner join by default.  In other words, the following C<require_objects> parameters are all equivalent:
+
+    # These all mean the same thing
+    require_objects => [ 'vendor.region'   ]
+    require_objects => [ 'vendor!.region!' ]
+    require_objects => [ 'vendor.region!'  ]
+    require_objects => [ 'vendor!.region'  ]
+
+Thus, it is only really useful to use the C<?> suffix in C<require_objects> parameters (though the C<!> suffixes don't do any harm).  Here's a useful example of a call with hybrid join chain:
+
+    $products =
+      Product::Manager->get_products(
+        require_objects => [ 'vendor.region?' ]);
+
+All product objects returned would have associated vendor objects, but those vendor objects may or may not have associated region objects.
+
+Note that inner joins may be implicit and L<nested_joins|/nested_joins> may or may not be used.  When in doubt, use the L<debug|/debug> parameter to see the generated SQL.
+
 B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include more than one "... to many" relationship in ARRAYREF.  Sometimes this may still be more efficient than making additional queries to fetch these sub-objects, but that all depends on the actual data.  A warning will be emitted (via L<Carp::cluck|Carp/cluck>) if you you include more than one "... to many" relationship in ARRAYREF.  If you're sure you know what you're doing, you can silence this warning by passing the C<multi_many_ok> parameter with a true value.
 
 B<Note:> the C<require_objects> list currently cannot be used to simultaneously fetch two objects that both front the same database table, I<but are of different classes>.  One workaround is to make one class use a synonym or alias for one of the tables.  Another option is to make one table a trivial view of the other.  The objective is to get the table names to be different for each different class (even if it's just a matter of letter case, if your database is not case-sensitive when it comes to table names).
@@ -4359,7 +4384,32 @@ To fetch C<Product>s along with their C<Vendor>s, and their vendors' C<Region>s,
 
 This assumes that the C<Product> class has a relationship or foreign key named "vendor" that points to the product's C<Vendor>, and that the C<Vendor> class has a foreign key or relationship named "region" that points to the vendor's C<Region>.
 
-This chaining syntax can be used to traverse relationships of any kind, including "one to many" and "many to many" relationships, to an arbitrary depth.
+This chaining syntax can be used to traverse relationships of any kind, including "one to many" and "many to many" relationships, to an arbitrary depth.  
+
+The following optional suffixes may be added after any name in the chain in order to override the join type used:
+
+    Suffix    Join Type
+    ------    ----------
+    !         Inner join
+    ?         Left outer join
+
+Each link in a C<with_objects> chain uses a left outer join by default.  In other words, the following C<with_objects> parameters are all equivalent:
+
+    # These all mean the same thing
+    with_objects => [ 'vendor.region'   ]
+    with_objects => [ 'vendor?.region?' ]
+    with_objects => [ 'vendor.region?'  ]
+    with_objects => [ 'vendor?.region'  ]
+
+Thus, it is only really useful to use the C<!> suffix in C<with_objects> parameters (though the C<?> suffixes don't do any harm).  Here's a useful example of a call with hybrid join chain:
+
+    $products =
+      Product::Manager->get_products(
+        with_objects => [ 'vendor!.region' ]);
+
+All product objects returned would have associated vendor objects, but those vendor object may or may not have associated region objects.
+
+Note that inner joins may be implicit and L<nested_joins|/nested_joins> may or may not be used.  When in doubt, use the L<debug|/debug> parameter to see the generated SQL.
 
 B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include more than one "... to many" relationship in ARRAYREF.  Sometimes this may still be more efficient than making additional queries to fetch these sub-objects, but that all depends on the actual data.  A warning will be emitted (via L<Carp::cluck|Carp/cluck>) if you you include more than one "... to many" relationship in ARRAYREF.  If you're sure you know what you're doing, you can silence this warning by passing the C<multi_many_ok> parameter with a true value.
 
