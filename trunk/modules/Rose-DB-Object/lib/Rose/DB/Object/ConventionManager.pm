@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Object;
 our @ISA = qw(Rose::DB::Object::Metadata::Object);
 
-our $VERSION = '0.753';
+our $VERSION = '0.769';
 
 our $Debug = 0;
 
@@ -177,6 +177,12 @@ sub auto_primary_key_column_names
   }
 
   return;
+}
+
+sub auto_column_method_name
+{
+  my($self, $type, $column, $name, $object_class) = @_;
+  return undef; # rely on hard-coded defaults in Manager
 }
 
 sub init_singular_to_plural_function { }
@@ -910,6 +916,10 @@ name/value pairs.  Any object attribute is a valid parameter name.
 =head1 OBJECT METHODS
 
 =over 4
+
+=item B<auto_column_method_name TYPE, COLUMN, NAME, OBJECT_CLASS>
+
+Given a L<Rose::DB::Object::Metadata::Column> column L<type|Rose::DB::Object::Metadata::Column/type>, a L<Rose::DB::Object::Metadata::Column> object or column name, a default method name, and a L<Rose::DB::Object>-derived class name, return an appropriate method name.  The default implementation simply returns undef, relying on the hard-coded default method-type-to-name mapping implemented in L<Rose::DB::Object::Metadata>'s  L<method_name_from_column|Rose::DB::Object::Metadata/method_name_from_column> method.
 
 =item B<auto_foreign_key NAME [, SPEC]>
 

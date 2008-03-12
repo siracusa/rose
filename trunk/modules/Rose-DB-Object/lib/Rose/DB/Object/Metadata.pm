@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.7664';
+our $VERSION = '0.769';
 
 our $Debug = 0;
 
@@ -3898,9 +3898,12 @@ sub method_name_from_column
 {
   my($self, $column, $method_type) = @_;
 
+  my $default_name = $column->build_method_name_for_type($method_type);
+
   my $method_name = 
     $column->method_name($method_type) ||
-    $column->build_method_name_for_type($method_type);
+    $self->convention_manager->auto_column_method_name($method_type, $column, $default_name, $self->class) ||
+    $default_name;
 
   if(my $code = $self->column_name_to_method_name_mapper)
   {
@@ -4591,7 +4594,7 @@ Get or set the default value of the L<column_undef_overrides_default|/column_und
 
 =item B<default_manager_base_class [CLASS]>
 
-Get or set the default name of the base class used by this metadata class when generating a L<manager|Rose::DB::Object::Manager> classes.  The default value is C<Rose::DB::Object::Manager>.  See the C<default_manager_base_class()> L<object method|OBJECT METHODS> to override this value for a specific metadata object.
+Get or set the default name of the base class used by this metadata class when generating a L<manager|Rose::DB::Object::Manager> classes.  The default value is C<Rose::DB::Object::Manager>.  See the C<default_manager_base_class()> L<object method|/OBJECT METHODS> to override this value for a specific metadata object.
 
 =item B<for_class CLASS>
 
@@ -5245,7 +5248,7 @@ If a relationship corresponds exactly to a foreign key, and that foreign key alr
 
 =item B<default_manager_base_class [CLASS]>
 
-Get or set the default name of the base class used by this specific metadata object when generating a L<manager|Rose::DB::Object::Manager> class, using either the L<perl_manager_class|/perl_manager_class> or L<make_manager_class|/make_manager_class> methods.  The default value is determined by the C<default_manager_base_class|/default_manager_base_class()> L<class method|CLASS METHODS>.
+Get or set the default name of the base class used by this specific metadata object when generating a L<manager|Rose::DB::Object::Manager> class, using either the L<perl_manager_class|/perl_manager_class> or L<make_manager_class|/make_manager_class> methods.  The default value is determined by the C<default_manager_base_class|/default_manager_base_class()> L<class method|/CLASS METHODS>.
 
 =item B<method_column METHOD>
 
@@ -5257,7 +5260,19 @@ Looks up the column named NAME and calls L<method_name_from_column|/method_name_
 
 =item B<method_name_from_column COLUMN, TYPE>
 
-Given the column object COLUMN and the method type TYPE, returns the corresponding method name that would be generated for it, either via the default rules or through a custom-defined L<column_name_to_method_name_mapper|/column_name_to_method_name_mapper>.
+Given a L<Rose::DB::Object::Metadata::Column>-derived column object and a column L<type|Rose::DB::Object::Metadata::Column/type> name, return the corresponding method name that should be used for it.  Several entities are given an opportunity to determine the name.  They are consulted in the following order.
+
+=over 4
+
+=item 1. If a custom-defined L<column_name_to_method_name_mapper|/column_name_to_method_name_mapper> exists, then it is used to generate the method name and this name is returned.
+
+=item 2. If a method name has been L<explicitly set|Rose::DB::Object::Metadata::Column/method_name>, for this type in the column object itself, then this name is returned.
+
+=item 3. If the L<convention manager|/convention_manager>'s L<auto_column_method_name|Rose::DB::Object::ConventionManager/auto_column_method_name> method returns a defined value, then this name is returned.
+
+=item 4. Otherwise, the default naming rules as defined in the column class itself are used.
+
+=back
 
 =item B<method_name_is_reserved NAME, CLASS>
 
@@ -6021,7 +6036,7 @@ The name of the manager class.  Defaults to the return value of the L<convention
 
 =item B<isa [ LIST | ARRAYREF ]>
 
-The name of a single class or a reference to an array of class names to be included in the C<@ISA> array for the manager class.  One of these classes must inherit from L<Rose::DB::Object::Manager>.  Defaults to the return value of the C<default_manager_base_class()> L<object method|OBJECT METHODS>.
+The name of a single class or a reference to an array of class names to be included in the C<@ISA> array for the manager class.  One of these classes must inherit from L<Rose::DB::Object::Manager>.  Defaults to the return value of the C<default_manager_base_class()> L<object method|/OBJECT METHODS>.
 
 =back
 

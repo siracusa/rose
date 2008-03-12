@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 168;
+use Test::More tests => 173;
 
 BEGIN 
 {
@@ -61,7 +61,6 @@ AUTO_MANAGER_CLASS_TEST:
   is($dog_cm->auto_manager_base_name('products'), 'products', 'auto_manager_base_name with table');
   is($dog_cm->auto_manager_base_name('dogs', 'My::Dog'), 'dogs', 'auto_manager_base_name with table and class');
 }
-
 
 is($cm->auto_manager_method_name('doesntmatter'), undef, 'auto_manager_method_name');
 
@@ -213,6 +212,38 @@ PK_SERIAL_ID:
 
   my @columns = __PACKAGE__->meta->primary_key_column_names;
   Test::More::ok(@columns == 1 && $columns[0] eq 'pk', 'auto_primary_key_column_names pk');
+}
+
+#
+# auto_column_method_name
+#
+
+COLUMN_METHOD:
+{
+  package MyColumnCM;
+
+  our @ISA = qw(Rose::DB::Object::ConventionManager);
+
+  sub auto_column_method_name
+  {
+    my($self, $type, $column, $name, $object_class) = @_;
+    return $column->is_primary_key_member ? $name : "x_${type}_$name";
+  }
+  
+  package MyColumnObject;
+  our @ISA = qw(Rose::DB::Object);
+  sub init_db { Rose::DB->new('pg') }
+  MyColumnObject->meta->convention_manager('MyColumnCM');
+  __PACKAGE__->meta->columns(qw(id a b));  
+  __PACKAGE__->meta->initialize;
+
+  package main;
+  my $o = MyColumnObject->new;
+  ok($o->can('id'), 'auto_column_method_name 1');
+  ok($o->can('x_get_set_a'), 'auto_column_method_name 2');
+  ok($o->can('x_get_set_b'), 'auto_column_method_name 3');
+  ok(!$o->can('a'), 'auto_column_method_name 4');
+  ok(!$o->can('b'), 'auto_column_method_name 5');
 }
 
 #

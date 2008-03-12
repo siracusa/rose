@@ -10,7 +10,7 @@ use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::Metadata::Object;
 our @ISA = qw(Rose::DB::Object::Metadata::Object);
 
-our $VERSION = '0.75';
+our $VERSION = '0.769';
 
 #
 # Class data
@@ -325,8 +325,6 @@ sub method_name
   {
     return $self->{'method_name'}{$type} = shift;
   }
-
-  my $class = ref $self;
 
   return $self->{'method_name'}{$type};
 }
