@@ -1,7 +1,7 @@
-0.768_04 (03.06.2008) - John Siracusa <siracusa@gmail.com>
+0.768_05 (03.12.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added new join type override syntax for the Manager's with_objects
-      and require_objects parameters. XXX: Needs docs
+      and require_objects parameters.
     * Added Manager naming conventions to the Convention Manager and
       exposed more Manager-related defaults in the Metadata and Manager
       class.  (Patch by Bradley C Bailey, modified by John Siracusa)
