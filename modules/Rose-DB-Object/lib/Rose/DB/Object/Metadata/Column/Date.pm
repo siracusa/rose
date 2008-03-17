@@ -2,7 +2,7 @@ package Rose::DB::Object::Metadata::Column::Date;
 
 use strict;
 
-use Rose::DateTime::Util;
+use Rose::DateTime::Util();
 
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Date;

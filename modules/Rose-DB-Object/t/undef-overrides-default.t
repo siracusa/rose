@@ -102,7 +102,7 @@ foreach my $n (1 .. $i)
   {
     SKIP:
     {
-      skip("unavailable db tests", 15);
+      skip("db unavailable for $type tests", 15);
     }
 
     next;

@@ -9,7 +9,7 @@ our $VERSION = '0.01';
 
 sub type { 'datetime year to fraction(1)' }
 
-sub format_value { shift; shift->format_datetime_year_to_fraction_5(@_) }
+sub format_value { shift; shift->format_datetime_year_to_fraction_1(@_) }
 
 1;
 
