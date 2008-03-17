@@ -125,6 +125,7 @@ t/benchmarks/lib/MyTest/RDBO/Simple/Product.pm
 t/benchmarks/lib/MyTest/RDBO/Simple/Product/Manager.pm
 t/bind-param.t
 t/column-triggers.t
+t/column-values.t
 t/db-migration.t
 t/db-object-auto.t
 t/db-object-cached.t
