@@ -122,7 +122,7 @@ sub build_select
       if($query_arg->[$i] =~ /^(?:and|or)$/i)
       {
         my $query = $query_arg->[$i + 1];
-$DB::single = 1;
+
         unless(ref $query && @$query)
         {
           $i++;
@@ -380,23 +380,26 @@ $DB::single = 1;
           my $scalar_ref = $val_ref eq 'SCALAR';
 
           unless($query_is_sql || $scalar_ref)
-          {      
-            my $obj;
+          {
+            my($obj, $get_method, $set_method);
 
             $col_meta = $obj_meta->column($column) || $obj_meta->method_column($column)
               or Carp::confess "Could not get column metadata object for '$column'";
 
-            unless($obj = $proto{$obj_class})
+            if($get_method || $set_method) # $col_meta->manager_uses_method
             {
-              $obj = $proto{$obj_class} = $obj_class->new(db => $db);
-              $obj->{STATE_SAVING()} = 1;
+              unless($obj = $proto{$obj_class})
+              {
+                $obj = $proto{$obj_class} = $obj_class->new(db => $db);
+                $obj->{STATE_SAVING()} = 1;
+              }
+  
+              $get_method = $obj_meta->column_accessor_method_name($column)
+                or Carp::confess "Missing accessor method for column '$column'";
+  
+              $set_method = $obj_meta->column_mutator_method_name($column)
+                or Carp::confess "Missing mutator method for column '$column'";
             }
-
-            my $get_method = $obj_meta->column_accessor_method_name($column)
-              or Carp::confess "Missing accessor method for column '$column'";
-
-            my $set_method = $obj_meta->column_mutator_method_name($column)
-              or Carp::confess "Missing mutator method for column '$column'";
 
             my %tmp = ($column_arg => $val);
 
@@ -1004,7 +1007,7 @@ sub _build_clause
   elsif($ref eq 'HASH')
   {
     my($sub_op, $field_mod, @clauses);
-$DB::single = 1;
+
     $field_mod = delete $vals->{'field'}  if(exists $vals->{'field'});
 
     my $all_in = ($op eq 'ALL IN SET' || $op eq 'ALL IN ARRAY') ? 1 : 0;
