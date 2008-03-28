@@ -29,7 +29,7 @@ sub build_dsn
   return "dbi:Informix:" . ($args{'db'} || $args{'database'});
 }
 
-sub last_insertid_from_sth { $_[1]->{'ix_sqlerrd'}[1] }
+sub last_insertid_from_sth { $_[1]->{'ix_sqlerrd'}[1] || $_[1]->{'ix_serial8'} }
 
 sub likes_lowercase_table_names { 1 }
 sub generate_primary_key_values { return; } # old perls seem to like this...
