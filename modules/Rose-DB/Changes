@@ -1,3 +1,7 @@
+0.741_01 (03.28.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Added warning for ancient DBD::mysql versions.
+
 0.741 (02.25.2008) - John Siracusa <siracusa@gmail.com>
 
     * Changed mailing list URLs.
