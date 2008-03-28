@@ -7,9 +7,17 @@ use Carp();
 use DateTime::Format::MySQL;
 use SQL::ReservedWords::MySQL();
 
+eval { require DBD::mysql }; # Ignore errors
+
+if($DBD::mysql::VERSION <= 2.9)
+{
+  warn "WARNING: Rose::DB may not work correctly with DBD::mysql ",
+       "version 2.9 or earlier.  You have version $DBD::mysql::VERSION";
+}
+
 use Rose::DB;
 
-our $VERSION = '0.740';
+our $VERSION = '0.742';
 
 our $Debug = 0;
 
