@@ -27,7 +27,7 @@ use_ok('Rose::DB::Object::Loader');
 my $Include_Tables = '^(?:' . join('|', 
   qw(product_colors prices products colors vendors)) . ')$';
 $Include_Tables = qr($Include_Tables);
-
+  
 my %Column_Defs =
 (
   pg => 
@@ -98,6 +98,13 @@ foreach my $db_type (qw(pg mysql informix sqlite))
                         {
                           "# My Postamble for " . $_[0]->class . "\n";
                         });
+
+  my $mylsq_5_51 = ($db_type eq 'mysql' && Rose::DB->new->database_version >= 5_000_051) ? 1 : 0; 
+
+  if($mylsq_5_51)
+  {
+    $Column_Defs{$db_type}{'vendor_id'} =~ s/default => '', //;
+  }
 
   is(slurp("$Lib_Dir/$class_prefix/Product.pm"), <<"EOF", "Product 1 - $db_type");
 # My Preamble
