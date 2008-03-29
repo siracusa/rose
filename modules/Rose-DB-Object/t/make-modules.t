@@ -101,7 +101,8 @@ foreach my $db_type (qw(pg mysql informix sqlite))
 
   my $mylsq_5_51 = ($db_type eq 'mysql' && Rose::DB->new->database_version >= 5_000_051) ? 1 : 0; 
 
-  if($mylsq_5_51)
+  # XXX: Lame
+  if(slurp("$Lib_Dir/$class_prefix/Product.pm") !~ /default => '', /) # $mylsq_5_51
   {
     $Column_Defs{$db_type}{'vendor_id'} =~ s/default => '', //;
   }

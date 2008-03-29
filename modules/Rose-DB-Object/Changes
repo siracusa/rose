@@ -1,4 +1,4 @@
-0.768_07 (03.18.2008) - John Siracusa <siracusa@gmail.com>
+0.768_08 (03.29.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added new join type override syntax for the Manager's with_objects
       and require_objects parameters.
