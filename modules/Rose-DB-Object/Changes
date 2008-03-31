@@ -1,5 +1,7 @@
-0.768_08 (03.29.2008) - John Siracusa <siracusa@gmail.com>
+0.768_09 (03.31.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Improved the default singular/plural conversion rules in the
+      Convention Manager.  (Suggested by David Brownlee)
     * Added new join type override syntax for the Manager's with_objects
       and require_objects parameters.
     * Added column method naming conventions to the Convention Manager.
