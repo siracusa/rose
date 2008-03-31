@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 173;
+use Test::More tests => 183;
 
 BEGIN 
 {
@@ -24,13 +24,33 @@ is($cm->related_table_to_class('big_hats', 'A::B::FooBar'), 'A::B::BigHat', 'rel
 is($cm->related_table_to_class('a1_steaks', 'Meat'), 'A1Steak', 'related_table_to_class 3');
 
 #
-# related_table_to_class
+# table_to_class
 #
 
 is($cm->table_to_class('products', 'My::'), 'My::Product', 'table_to_class 1');
 is($cm->table_to_class('products'), 'Product', 'table_to_class 2');
 is($cm->table_to_class('big_hats', 'My::'), 'My::BigHat', 'table_to_class 3');
 is($cm->table_to_class('my5_hat_pig'), 'My5HatPig', 'table_to_class 4');
+
+#
+# singular_to_plural
+#
+
+is($cm->singular_to_plural('box'), 'boxes', 'singular_to_plural 1');
+is($cm->singular_to_plural('dress'), 'dresses', 'singular_to_plural 2');
+is($cm->singular_to_plural('ceres'), 'cereses', 'singular_to_plural 3');
+is($cm->singular_to_plural('daisy'), 'daisies', 'singular_to_plural 4');
+is($cm->singular_to_plural('dogs'), 'dogs', 'singular_to_plural 5');
+is($cm->singular_to_plural('product'), 'products', 'singular_to_plural 6');
+
+#
+# plural_to_singular
+#
+
+is($cm->plural_to_singular('daisies'), 'daisy', 'plural_to_singular 1');
+is($cm->plural_to_singular('dresses'), 'dress', 'plural_to_singular 2');
+is($cm->plural_to_singular('dress'), 'dress', 'plural_to_singular 3');
+is($cm->plural_to_singular('products'), 'product', 'plural_to_singular 4');
 
 #
 # is_singleton

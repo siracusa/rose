@@ -197,12 +197,16 @@ sub singular_to_plural
     return $code->($word);
   }
 
-  if($word =~ /(?:x|[se]s)$/)
+  if($word =~ /(?:x|[se]s)$/i)
   {
     return $word . 'es';
   }
+  else
+  {
+    $word =~ s/y$/ies/i;
+  }
 
-  return $word =~ /s$/ ? $word : ($word . 's');
+  return $word =~ /s$/i ? $word : ($word . 's');
 }
 
 sub plural_to_singular
@@ -214,9 +218,13 @@ sub plural_to_singular
     return $code->($word);
   }
 
+  $word =~ s/ies$/y/i;
+  
+  return $word  if($word =~ s/ses$/s/);
   return $word  if($word =~ /[aeiouy]ss$/i);
 
-  $word =~ s/s$//;
+  $word =~ s/s$//i;
+
   return $word;
 }
 
@@ -1207,7 +1215,15 @@ Get or set the L<Rose::DB::Object::Metadata> object associated with the class th
 
 Returns the singular version of STRING.  If a L<plural_to_singular_function|/plural_to_singular_function> is defined, then this method simply passes STRING to that function.
 
-Otherwise, the following rules are applied.  If STRING matches C</[aeiouy]ss$/i>, it is returned unmodified.  For all other cases, the letter "s" is removed from the end of STRING and the result is returned.
+Otherwise, the following rules are applied, case-insensitively.  
+
+* If STRING ends in "ies", then the "ies" is replaced with "y".
+
+* If STRING ends in "ses" then the "ses" is replaced with "s".
+
+* If STRING matches C</[aeiouy]ss$/i>, it is returned unmodified.
+
+For all other cases, the letter "s" is removed from the end of STRING and the result is returned.
 
 =item B<plural_to_singular_function [CODEREF]>
 
@@ -1229,9 +1245,11 @@ Examples:
 
 =item B<singular_to_plural STRING>
 
-Returns the plural version of STRING.  If a L<singular_to_plural_function|/singular_to_plural_function> is defined, then this method simply passes STRING to that function.  Otherwise, the following rules are used to form the plural.
+Returns the plural version of STRING.  If a L<singular_to_plural_function|/singular_to_plural_function> is defined, then this method simply passes STRING to that function.  Otherwise, the following rules are applied, case-insensitively, to form the plural.
 
 * If STRING ends in "x", "ss", or "es", then "es" is appended.
+
+* If STRING ends in "y" then the "y" is replaced with "ies".
 
 * If STRING ends in "s" then it is returned as-is.
 
