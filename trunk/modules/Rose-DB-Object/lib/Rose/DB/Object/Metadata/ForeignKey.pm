@@ -437,7 +437,7 @@ sub hash_keys_used { shift->hash_key }
 sub forget_foreign_object
 {
   my($self, $object) = @_;
-  
+
   foreach my $key ($self->hash_keys_used)
   {
     $object->{$key} = undef;

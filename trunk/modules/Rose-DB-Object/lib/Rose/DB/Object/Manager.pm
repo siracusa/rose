@@ -120,7 +120,7 @@ sub object_class { }
 sub default_manager_method_types
 {
   my($class) = shift;
-  
+
   if(@_)
   {
     if(@_ == 1 && ref $_[0] eq 'ARRAY')
@@ -132,7 +132,7 @@ sub default_manager_method_types
       $class->_default_manager_method_types([ @_ ]);
     }
   }
-  
+
   return wantarray ? 
     @{$class->_default_manager_method_types} : $class->_default_manager_method_types;
 }

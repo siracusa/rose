@@ -329,7 +329,7 @@ sub build_select
       if($obj_meta)
       {
         my $method = $obj_meta->column_rw_method_name($column);
-        
+
         unless($method eq $column)
         {
           push(@method_columns,
@@ -393,10 +393,10 @@ sub build_select
                 $obj = $proto{$obj_class} = $obj_class->new(db => $db);
                 $obj->{STATE_SAVING()} = 1;
               }
-  
+
               $get_method = $obj_meta->column_accessor_method_name($column)
                 or Carp::confess "Missing accessor method for column '$column'";
-  
+
               $set_method = $obj_meta->column_mutator_method_name($column)
                 or Carp::confess "Missing mutator method for column '$column'";
             }

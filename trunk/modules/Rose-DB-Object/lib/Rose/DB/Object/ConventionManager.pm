@@ -86,7 +86,7 @@ sub auto_manager_class_name
   my($self, $object_class) = @_;
 
   $object_class ||= $self->meta->class;
-  
+
   return "${object_class}::Manager";
 }
 
@@ -140,7 +140,7 @@ sub table_plural
 sub auto_table_name 
 {
   my($self) = shift;
-  
+
   if($self->tables_are_singular)
   {
     return $self->class_to_table_singular;
@@ -219,7 +219,7 @@ sub plural_to_singular
   }
 
   $word =~ s/ies$/y/i;
-  
+
   return $word  if($word =~ s/ses$/s/);
   return $word  if($word =~ /[aeiouy]ss$/i);
 

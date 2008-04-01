@@ -5123,7 +5123,7 @@ sub Bench
   {
     open(select(), '>&', $save_stdout) or warn "Could not restore STDOUT - $!";
   }
-  
+
   return 1;
 }
 

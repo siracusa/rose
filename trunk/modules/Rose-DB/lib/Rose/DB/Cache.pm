@@ -35,7 +35,7 @@ sub use_cache_during_apache_startup
   my($self) = shift;
 
   return $self->{'use_cache_during_apache_startup'} = $_[0] ? 1 : 0  if(@_);
-  
+
   if(defined $self->{'use_cache_during_apache_startup'})
   {
     return $self->{'use_cache_during_apache_startup'};

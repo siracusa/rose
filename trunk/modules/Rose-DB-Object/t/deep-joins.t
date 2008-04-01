@@ -213,7 +213,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     $manager_class->get_objects_sql(
       db => $db,
       with_objects => [ 'vendor.region!' ]);
- 
+
   cmp_sql($sql, <<"EOF", "join override $i - $db_type");
 SELECT 
   t1.vendor_id,
@@ -1111,7 +1111,7 @@ BEGIN
   {
     $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
-    
+
     #die "This test chokes DBD::Pg version 2.1.x and 2.2.0"  if($DBD::Pg::VERSION =~ /^2\.(?:1\.|2\.0)/);
   };
 
@@ -1966,7 +1966,7 @@ sub has_broken_order_by
 sub cmp_sql
 {
   my($a, $b, $msg) = @_;
-  
+
   for($a, $b)
   {
     s/\s+/ /g;
@@ -1975,8 +1975,8 @@ sub cmp_sql
     s/^SELECT.*?FROM/SELECT * FROM/;
     s/\brose_db_object_private\.//g;
   }
-  
+
   @_ = ($a, $b, $msg);
-  
+
   goto &is;
 }
