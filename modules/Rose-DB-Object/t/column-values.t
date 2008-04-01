@@ -69,7 +69,7 @@ foreach my $n (1 .. $i)
   my $type     = $column->type;
 
   my $method = method_for_column_type($type, $n);
-  
+
   my $db = db_for_column_type($column->type);
 
   unless($db)

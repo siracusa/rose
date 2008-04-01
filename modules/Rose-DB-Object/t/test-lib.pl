@@ -15,7 +15,7 @@ BEGIN
   #
 
   eval { require DBD::Pg };
-  
+
   $ENV{'PGDATESTYLE'} = 'MDY';
 
   no warnings 'uninitialized';
@@ -38,7 +38,7 @@ BEGIN
         'SET default_transaction_isolation TO "read committed"',
       ],
     );
-  
+
     # Private schema
     Rose::DB->register_db(
       domain   => 'test',
@@ -55,7 +55,7 @@ BEGIN
         'SET default_transaction_isolation TO "read committed"',
       ],
     );
-  
+
     # Admin
     Rose::DB->register_db(
       domain   => 'test',

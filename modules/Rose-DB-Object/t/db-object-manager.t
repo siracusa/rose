@@ -32,13 +32,13 @@ CONVENTION_AND_DEFAULTS_TESTS:
 
     return undef; # rely on hard-coded defaults in Manager
   }
-  
+
   sub auto_manager_class_name
   {
     my($self, $object_class) = @_;
-  
+
     $object_class ||= $self->meta->class;
-    
+
     return "${object_class}::Mgr";
   }
 
@@ -56,11 +56,11 @@ CONVENTION_AND_DEFAULTS_TESTS:
   our @ISA = qw(Rose::DB::Object);
   __PACKAGE__->meta->table('test1s');
   sub meta_class { 'My::RDBO::Meta' }
-  
+
   __PACKAGE__->meta->default_manager_base_class('My::RDBO::Managerxx');
 
   eval { local $SIG{'__DIE__'}; __PACKAGE__->meta->make_manager_class };
-  
+
   main::ok($@, 'make_manager_class exception 1');
 
   __PACKAGE__->meta->default_manager_base_class('My::RDBO::Manager');

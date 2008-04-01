@@ -242,7 +242,7 @@ sub init_auto_prime_caches { $ENV{'MOD_PERL'} ? 1 : 0 }
 sub default_manager_base_class
 {
   my($self_or_class) = shift;
-  
+
   if(ref($self_or_class))
   {
     return $self_or_class->_object_default_manager_base_class(@_) ||

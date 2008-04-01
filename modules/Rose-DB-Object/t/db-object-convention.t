@@ -249,7 +249,7 @@ COLUMN_METHOD:
     my($self, $type, $column, $name, $object_class) = @_;
     return $column->is_primary_key_member ? $name : "x_${type}_$name";
   }
-  
+
   package MyColumnObject;
   our @ISA = qw(Rose::DB::Object);
   sub init_db { Rose::DB->new('pg') }
