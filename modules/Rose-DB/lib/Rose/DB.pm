@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.742';
+our $VERSION = '0.743';
 
 our $Debug = 0;
 

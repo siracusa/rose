@@ -9,15 +9,9 @@ use SQL::ReservedWords::MySQL();
 
 eval { require DBD::mysql }; # Ignore errors
 
-if($DBD::mysql::VERSION <= 2.9)
-{
-  warn "WARNING: Rose::DB may not work correctly with DBD::mysql ",
-       "version 2.9 or earlier.  You have version $DBD::mysql::VERSION";
-}
-
 use Rose::DB;
 
-our $VERSION = '0.742';
+our $VERSION = '0.743';
 
 our $Debug = 0;
 
@@ -459,6 +453,12 @@ sub _get_primary_key_column_names
   return \@columns;
 }
 
+# Bury warning down here to make nice with version extractors
+if(defined $DBD::mysql::VERSION && $DBD::mysql::VERSION <= 2.9)
+{
+  warn "WARNING: Rose::DB may not work correctly with DBD::mysql ",
+       "version 2.9 or earlier.  You have version $DBD::mysql::VERSION";
+}
 
 1;
 

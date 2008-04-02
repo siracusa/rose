@@ -1,3 +1,7 @@
+0.743 (04.03.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Fixed some warnings and made nice with the CPAN version extractor.
+
 0.742 (04.01.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added warning for ancient DBD::mysql versions.
