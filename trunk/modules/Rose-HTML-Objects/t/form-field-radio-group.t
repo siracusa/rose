@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 56;
+use Test::More tests => 62;
 
 BEGIN 
 {
@@ -420,3 +420,32 @@ is($field->xhtml_field,
   qq(<input name="fruits" type="radio" value="grape" /> <label>Grape</label><br />\n) .
   qq(<input name="fruits" type="radio" value="squash" /> <label>Squash</label>),
   'delete 2');
+
+my $i = 1;
+
+foreach my $name (qw(items radio_buttons))
+{
+  my $method = "${name}_html_attr";
+
+  $field->$method(class => 'bar');
+  
+  is($field->xhtml_field, 
+    qq(<input class="bar" name="fruits" type="radio" value="apple" /> <label>Apple</label><br />\n) .
+    qq(<input class="bar" name="fruits" type="radio" value="orange" /> <label>Le Orange</label><br />\n) .
+    qq(<input class="bar" name="fruits" type="radio" value="grape" /> <label>Grape</label><br />\n) .
+    qq(<input class="bar" name="fruits" type="radio" value="squash" /> <label>Squash</label>),
+    "$method " . $i++);
+
+  is($field->$method('class'), 'bar', "$method " . $i++);
+
+  $method = "delete_${name}_html_attr";
+
+  $field->$method('class');
+
+  is($field->xhtml_field, 
+    qq(<input name="fruits" type="radio" value="apple" /> <label>Apple</label><br />\n) .
+    qq(<input name="fruits" type="radio" value="orange" /> <label>Le Orange</label><br />\n) .
+    qq(<input name="fruits" type="radio" value="grape" /> <label>Grape</label><br />\n) .
+    qq(<input name="fruits" type="radio" value="squash" /> <label>Squash</label>),
+    "$method " . $i++);    
+}

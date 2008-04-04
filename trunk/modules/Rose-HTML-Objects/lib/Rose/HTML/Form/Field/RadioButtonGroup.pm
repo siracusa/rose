@@ -10,7 +10,7 @@ use Rose::HTML::Form::Field::Group;
 use Rose::HTML::Form::Field::Group::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
 
-our $VERSION = '0.551';
+our $VERSION = '0.554';
 
 sub _item_class       { 'Rose::HTML::Form::Field::RadioButton' }
 sub _item_name        { 'radio button' }
@@ -37,6 +37,9 @@ sub _item_name_plural { 'radio buttons' }
 
 *delete_radio_button_group  = \&Rose::HTML::Form::Field::Group::delete_item_group;
 *delete_radio_button_groups = \&Rose::HTML::Form::Field::Group::delete_item_groups;
+
+*radio_buttons_html_attr        = \&Rose::HTML::Form::Field::Group::items_html_attr;
+*delete_radio_buttons_html_attr = \&Rose::HTML::Form::Field::Group::delete_items_html_attr;
 
 sub internal_value
 {
@@ -227,6 +230,10 @@ This is an alias for the L<radio_buttons|/radio_buttons> method.
 
 Get or set the default number of columns to use in the output of the L<html_table()|/html_table> and L<xhtml_table()|/xhtml_table> methods.
 
+=item B<delete_items_html_attr NAME>
+
+This is an alias for the L<delete_radio_buttons_html_attr|/delete_radio_buttons_html_attr> method.
+
 =item B<delete_radio_button VALUE>
 
 Deletes the first radio button (according to the order that they are returned from L<radio_buttons()|/radio_buttons>) whose "value" HTML attribute is VALUE.  Returns the deleted radio button or undef if no such radio button exists.
@@ -234,6 +241,10 @@ Deletes the first radio button (according to the order that they are returned fr
 =item B<delete_radio_buttons LIST>
 
 Repeatedly calls L<delete_radio_button|/delete_radio_button>, passing each value in LIST.
+
+=item B<delete_radio_buttons_html_attr NAME>
+
+Delete the HTML attribute named NAME from each L<radio button|/radio_buttons>.
 
 =item B<has_value VALUE>
 
@@ -293,6 +304,10 @@ Specifying "rows" and "columns" values (either as ARGS or via L<rows()|/rows> an
 
 The selected value is returned (or undef if no value is selected).
 
+=item B<items_html_attr NAME [, VALUE]>
+
+This is an alias for the L<radio_buttons_html_attr|/radio_buttons_html_attr> method.
+
 =item B<labels [LABELS]>
 
 Get or set the labels for all radio buttons.  If LABELS is a reference to a hash or a list of value/label pairs, then LABELS replaces all existing labels. Passing an odd number of items in the list version of LABELS causes a fatal error.
@@ -322,6 +337,10 @@ To set an ordered list of radio buttons along with labels in the constructor, us
 Remember that methods are called in the order that they appear in the constructor arguments (see the L<Rose::Object> documentation), so L<radio_buttons()|/radio_buttons> will be called before L<labels()|/labels> in the example above. This is important; it will not work in the opposite order.
 
 Returns a list of the radio button group's L<Rose::HTML::Form::Field::RadioButton> objects in list context, or a reference to an array of the same in scalar context.  L<Hidden|Rose::HTML::Form::Field::RadioButton/hidden> radio buttons I<will> be included in this list.  These are the actual objects used in the field. Modifying them will modify the field itself.
+
+=item B<radio_buttons_html_attr NAME [, VALUE]>
+
+If VALUE is passed, set the L<HTML attribute|Rose::HTML::Object/html_attr> named NAME on all L<radio buttons|/radio_buttons>.  Otherwise, return the value of the  L<HTML attribute|Rose::HTML::Object/html_attr> named NAME on the first radio button encountered in the list of all L<radio buttons|/radio_buttons>.
 
 =item B<rows [ROWS]>
 
