@@ -13,7 +13,7 @@ use Rose::HTML::Util();
 use Rose::HTML::Form::Field;
 our @ISA = qw(Rose::HTML::Form::Field);
 
-our $VERSION = '0.551';
+our $VERSION = '0.554';
 
 our $Debug = undef;
 
@@ -186,6 +186,38 @@ sub items_localized
   }
 
   return (wantarray) ? @{$self->{'items'}} : $self->{'items'};
+}
+
+sub items_html_attr
+{
+  my($self, $name) = (shift, shift);
+  
+  if(@_)
+  {
+    foreach my $item ($self->items)
+    {
+      $item->html_attr($name, @_);
+    }
+    
+    return @_;
+  }
+  
+  foreach my $item (@{[ $self->items ]})
+  {
+    return $item->html_attr($name);
+  }
+  
+  return undef;
+}
+
+sub delete_items_html_attr
+{
+  my($self) = shift;
+
+  foreach my $item ($self->items)
+  {
+    $item->delete_html_attr(@_);
+  }
 }
 
 *fields           = \&items;
