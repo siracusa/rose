@@ -10,7 +10,7 @@ use Rose::HTML::Object::Message::Localizer;
 use Rose::HTML::Object::Localized;
 our @ISA = qw(Rose::HTML::Object::Localized);
 
-our $VERSION = '0.550';
+our $VERSION = '0.554';
 
 our $Debug = undef;
 
@@ -22,7 +22,7 @@ use Rose::Object::MakeMethods::Generic
     'validate_html_attrs' => { default => 1 }
   ],
 
-  'scalar' =>
+  'scalar --get_set_init' =>
   [
     'html_error_formatter',
     'xhtml_error_formatter',
@@ -126,6 +126,9 @@ sub init
 
   $self->SUPER::init(@_);
 }
+
+sub init_html_error_formatter  { }
+sub init_xhtml_error_formatter { }
 
 sub children 
 {
