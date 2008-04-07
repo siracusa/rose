@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 60;
+use Test::More tests => 66;
 
 BEGIN 
 {
@@ -431,3 +431,32 @@ is($field->xhtml_field,
   qq(<input name="fruits" type="checkbox" value="berry" /> <label>Berry</label><br />\n) .
   qq(<input name="fruits" type="checkbox" value="cherry" /> <label>Cherry</label>),
   'delete 2');
+
+my $i = 1;
+
+foreach my $name (qw(items checkboxes))
+{
+  my $method = "${name}_html_attr";
+
+  $field->$method(class => 'bar');
+  
+  is($field->xhtml_field, 
+    qq(<input class="bar" name="fruits" type="checkbox" value="apple" /> <label>Apple</label><br />\n) .
+    qq(<input class="bar" name="fruits" type="checkbox" value="orange" /> <label>Le Orange</label><br />\n) .
+    qq(<input class="bar" name="fruits" type="checkbox" value="berry" /> <label>Berry</label><br />\n) .
+    qq(<input class="bar" name="fruits" type="checkbox" value="cherry" /> <label>Cherry</label>),
+    "$method " . $i++);
+
+  is($field->$method('class'), 'bar', "$method " . $i++);
+
+  $method = "delete_${name}_html_attr";
+
+  $field->$method('class');
+
+  is($field->xhtml_field, 
+    qq(<input name="fruits" type="checkbox" value="apple" /> <label>Apple</label><br />\n) .
+    qq(<input name="fruits" type="checkbox" value="orange" /> <label>Le Orange</label><br />\n) .
+    qq(<input name="fruits" type="checkbox" value="berry" /> <label>Berry</label><br />\n) .
+    qq(<input name="fruits" type="checkbox" value="cherry" /> <label>Cherry</label>),
+    "$method " . $i++);    
+}
