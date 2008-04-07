@@ -10,7 +10,7 @@ use Rose::HTML::Form::Field::Group;
 use Rose::HTML::Form::Field::Group::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
 
-our $VERSION = '0.551';
+our $VERSION = '0.554';
 
 sub _item_class       { 'Rose::HTML::Form::Field::Checkbox' }
 sub _item_name        { 'checkbox' }
@@ -33,6 +33,9 @@ sub _item_name_plural { 'checkboxes' }
 
 *delete_checkbox_group    = \&Rose::HTML::Form::Field::Group::delete_item_group;
 *delete_checkboxes_groups = \&Rose::HTML::Form::Field::Group::delete_item_groups;
+
+*checkboxes_html_attr        = \&Rose::HTML::Form::Field::Group::items_html_attr;
+*delete_checkboxes_html_attr = \&Rose::HTML::Form::Field::Group::delete_items_html_attr;
 
 sub html_table
 {
@@ -250,6 +253,10 @@ This is an alias for the L<checkboxes|/checkboxes> method.
 
 Get or set the default number of columns to use in the output of the L<html_table()|/html_table> and L<xhtml_table()|/xhtml_table> methods.
 
+=item B<checkboxes_html_attr NAME [, VALUE]>
+
+If VALUE is passed, set the L<HTML attribute|Rose::HTML::Object/html_attr> named NAME on all L<checkboxes|/checkboxes>.  Otherwise, return the value of the  L<HTML attribute|Rose::HTML::Object/html_attr> named NAME on the first checkbox encountered in the list of all L<checkboxes|/checkboxes>.
+
 =item B<delete_checkbox VALUE>
 
 Deletes the first checkbox (according to the order that they are returned from L<checkboxes()|/checkboxes>) whose "value" HTML attribute is VALUE.  Returns the deleted checkbox or undef if no such checkbox exists.
@@ -259,6 +266,14 @@ Deletes the first checkbox (according to the order that they are returned from L
 Repeatedly calls L<delete_checkbox|/delete_checkbox>, passing each value in LIST.
 
 Deletes the first checkbox (according to the order that they are returned from L<checkboxes()|/checkboxes>) whose "value" HTML attribute is VALUE, or undef if no such checkbox exists.
+
+=item B<delete_checkboxes_html_attr NAME>
+
+Delete the L<HTML attribute|Rose::HTML::Object/html_attr> named NAME from each L<checkbox|/checkboxes>.
+
+=item B<delete_items_html_attr NAME>
+
+This is an alias for the L<delete_checkboxes_html_attr|/delete_checkboxes_html_attr> method.
 
 =item B<has_value VALUE>
 
@@ -313,6 +328,10 @@ A reference to a hash of HTML attribute/value pairs to be used in the "tr" tag, 
 =back
 
 Specifying "rows" and "columns" values (either as ARGS or via L<rows()|/rows> and L<columns()|/columns>) that are both greater than 1 leads to undefined behavior if there are not exactly "rows x columns" checkboxes.  For predictable behavior, set either rows or columns to a value greater than 1, but not both.
+
+=item B<items_html_attr NAME [, VALUE]>
+
+This is an alias for the L<checkboxes_html_attr|/checkboxes_html_attr> method.
 
 =item B<label VALUE [, LABEL]>
 

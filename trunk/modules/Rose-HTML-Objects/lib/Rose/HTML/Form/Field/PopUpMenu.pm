@@ -5,7 +5,7 @@ use strict;
 use Rose::HTML::Form::Field::SelectBox;
 our @ISA = qw(Rose::HTML::Form::Field::SelectBox);
 
-our $VERSION = '0.548';
+our $VERSION = '0.554';
 
 __PACKAGE__->required_html_attr_value(size => 1);
 __PACKAGE__->delete_valid_html_attr('multiple');
@@ -221,6 +221,10 @@ is equivalent to this:
 
 This is an alias for the L<options|/options> method.
 
+=item B<delete_items_html_attr NAME>
+
+This is an alias for the L<delete_options_html_attr|/delete_options_html_attr> method.
+
 =item B<delete_option VALUE>
 
 Deletes the first option (according to the order that they are returned from L<options()|/options>) whose "value" HTML attribute is VALUE.  Returns the deleted option or undef if no such option exists.
@@ -237,6 +241,10 @@ Deletes the first option group (according to the order that they are returned fr
 
 Repeatedly calls L<delete_option_group|/delete_option_group>, passing each value in LIST.
 
+=item B<delete_options_html_attr NAME>
+
+Delete the L<HTML attribute|Rose::HTML::Object/html_attr> named NAME from each L<option|/options>.
+
 =item B<hide_all_options>
 
 Set L<hidden|Rose::HTML::Form::Field::Option/hidden> to true for all L<options|/options>.
@@ -244,6 +252,10 @@ Set L<hidden|Rose::HTML::Form::Field::Option/hidden> to true for all L<options|/
 =item B<has_value VALUE>
 
 Returns true if VALUE is selected in the pop-up menu, false otherwise.
+
+=item B<items_html_attr NAME [, VALUE]>
+
+This is an alias for the L<options_html_attr|/options_html_attr> method.
 
 =item B<labels [LABELS]>
 
@@ -274,6 +286,10 @@ Returns a list of the pop-up menu's L<Rose::HTML::Form::Field::Option> and/or L<
 =item B<option_group LABEL>
 
 Returns the L<Rose::HTML::Form::Field::OptionGroup> object whose "label" HTML attribute is LABEL, or undef if no such option group exists.
+
+=item B<options_html_attr NAME [, VALUE]>
+
+If VALUE is passed, set the L<HTML attribute|Rose::HTML::Object/html_attr> named NAME on all L<options|/options>.  Otherwise, return the value of the  L<HTML attribute|Rose::HTML::Object/html_attr> named NAME on the first option encountered in the list of all L<options|/options>.
 
 =item B<show_all_options>
 
