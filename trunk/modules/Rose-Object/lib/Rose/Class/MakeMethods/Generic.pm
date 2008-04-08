@@ -424,6 +424,430 @@ sub inheritable_hash
   return \%methods;
 }
 
+
+
+
+
+
+
+
+
+use constant CLASS_VALUE     => 1;
+use constant INHERITED_VALUE => 2;
+use constant DELETED_VALUE   => 3;
+
+our %Inherited_Hash;
+# (
+#   some_name =>
+#   {
+#     class1 => 
+#     {
+#       meta  => { ... },
+#       cache => 
+#       {
+#         attrs =>
+#         {
+#           attr1 => value1,
+#           attr2 => value2,
+#           ...
+#         },
+#         meta =>
+#         {
+#           attr1 => CLASS_VALUE,
+#           attr2 => DELETED_VALUE,
+#           ...
+#         },
+#       },
+#     },
+#     class2 => ...,
+#     ...
+#   },
+#   ...
+# );
+
+sub inherited_hash
+{
+  my($class, $name, $args) = @_;
+
+  my %methods;
+
+  # Interface example:
+  # name:               object_type_class
+  # plural_name:        object_type_classes
+  #
+  # get_set:            object_type_class
+  # get_set_all_method: object_type_classes
+  # keys_method:        object_type_class_keys
+  # cache_method:       object_type_classes_cache
+  # exists_method:      object_type_class_exists
+  # add_method:         add_object_type_class
+  # adds_method:        add_object_type_classes
+  # delete_method:      delete_object_type_class
+  # deletes_method:     delete_object_type_classes
+  # clear_method        clear_object_type_classes
+  # inherit_method:     inherit_object_type_class
+  # inherits_method:    inherit_object_type_classes
+
+  my $plural_name = $args->{'plural_name'} || $name . 's';
+
+  my $get_set_method     = $name;
+  my $get_set_all_method = $args->{'get_set_all_method'} || $plural_name;
+  my $keys_method        = $args->{'keys_method'}     || $name . '_keys';
+  my $cache_method       = $args->{'cache_method'}    || $plural_name . '_cache';
+  my $exists_method      = $args->{'exists_method'}   || $args->{'exists_method'} || $name . '_exists';
+  my $add_method         = $args->{'add_method'}      || 'add_' . $name;
+  my $adds_method        = $args->{'adds_method'}     || $add_method . 's';
+  my $delete_method      = $args->{'delete_method'}   || 'delete_' . $name;
+  my $deletes_method     = $args->{'deletes_method'}  || 'delete_' . $plural_name;
+  my $clear_method       = $args->{'clear_method'}    || 'clear_' . $plural_name;
+  my $inherit_method     = $args->{'inherit_method'}  || 'inherit_' . $name;
+  my $inherits_method    = $args->{'inherits_method'} || $inherit_method . 's';
+
+  my $interface       = $args->{'interface'} || 'all';
+
+  my $add_implies     = $args->{'add_implies'};
+  my $delete_implies  = $args->{'delete_implies'};
+  my $inherit_implies = $args->{'inherit_implies'};
+
+  $add_implies = [ $add_implies ]
+    if(defined $add_implies && !ref $add_implies);
+
+  $delete_implies = [ $delete_implies ]
+    if(defined $delete_implies && !ref $delete_implies);
+
+  $inherit_implies = [ $inherit_implies ]
+    if(defined $inherit_implies && !ref $inherit_implies);
+
+  $methods{$cache_method} = sub
+  {
+    my($class) = ref($_[0]) || $_[0];
+
+    if($Inherited_Hash{$name}{$class}{'meta'}{'cache_is_valid'})
+    {
+      return   
+        wantarray ? (%{$Inherited_Hash{$name}{$class}{'cache'} ||= {}}) : 
+                    ($Inherited_Hash{$name}{$class}{'cache'} ||= {});
+    }
+
+    my $cache = $Inherited_Hash{$name}{$class}{'cache'} ||= {};
+
+    my @parents = ($class);
+
+    while(my $parent = shift(@parents))
+    {
+      no strict 'refs';
+      foreach my $superclass (@{$parent . '::ISA'})
+      {
+        push(@parents, $superclass);
+
+        if($superclass->can($cache_method))
+        {
+          my $supercache = $superclass->$cache_method();
+
+          while(my($attr, $state) = each %{$supercache->{'meta'} || {}})
+          {
+            next  if($state == DELETED_VALUE);
+
+            no warnings 'uninitialized';
+            unless(exists $cache->{'attrs'}{$attr})
+            {
+              $cache->{'attrs'}{$attr} = $supercache->{'attrs'}{$attr};
+              $cache->{'meta'}{$attr} = INHERITED_VALUE;
+            }
+          }
+        }
+        # Slower method for superclasses that don't want to implement the
+        # cache method (which is not strictly part of the public API)
+        elsif($superclass->can($keys_method))
+        {
+          foreach my $attr ($superclass->$keys_method())
+          {
+            unless(exists $Inherited_Hash{$name}{$class}{'cache'}{'attrs'}{$attr})
+            {
+              $Inherited_Hash{$name}{$class}{'cache'}{'meta'}{$attr} = INHERITED_VALUE;
+              $Inherited_Hash{$name}{$class}{'cache'}{'attrs'}{$attr} = 
+                $Inherited_Hash{$name}{$superclass}{'cache'}{'attrs'}{$attr};
+            }
+          }
+        }
+      } 
+    }
+
+    $Inherited_Hash{$name}{$class}{'meta'}{'cache_is_valid'} = 1;  
+
+    my $want = wantarray;
+
+    return  unless(defined $want);
+    $want ? (%{$Inherited_Hash{$name}{$class}{'cache'} ||= {}}) : 
+            ($Inherited_Hash{$name}{$class}{'cache'} ||= {});
+  };
+
+  $methods{$get_set_method} = sub
+  {
+    my($class) = ref($_[0]) ? ref(shift) : shift;
+    return 0  unless(defined $_[0]);
+
+    my $key = shift;
+
+    if(@_)
+    {
+      Carp::croak "More than one value passed to $get_set_method()"  if(@_ > 1);
+      $class->$adds_method($key, @_);
+    }
+    else
+    {
+      if($Inherited_Hash{$name}{$class}{'meta'}{'cache_is_valid'})
+      {
+        no warnings 'uninitialized';
+        return $Inherited_Hash{$name}{$class}{'cache'}{'attrs'}{$key}
+          unless($Inherited_Hash{$name}{$class}{'cache'}{'meta'}{$key} == DELETED_VALUE);
+  
+        return undef;
+      }
+  
+      my $cache = $class->$cache_method();
+  
+      no warnings 'uninitialized';
+      return $cache->{'attrs'}{$key}  unless($cache->{'meta'}{$key} == DELETED_VALUE);
+      return undef;
+    }
+  };
+
+  $methods{$keys_method} = sub
+  {
+    my($class) = shift;
+    $class = ref $class  if(ref $class);
+    return wantarray ? sort keys %{$class->$get_set_all_method()} : 
+                       [ sort keys %{$class->$get_set_all_method()} ];
+  };
+  
+  $methods{$get_set_all_method} = sub
+  {
+    my($class) = shift;
+
+    $class = ref $class  if(ref $class);
+
+    if(@_)
+    {      
+      $class->$clear_method();
+      return $class->$adds_method(@_);
+    }
+
+    my $cache = $class->$cache_method();
+    my %hash  = %{$cache->{'attrs'} || {}};
+
+    foreach my $k (keys %hash)
+    {
+      delete $hash{$k}  if($Inherited_Hash{$name}{$class}{'cache'}{'meta'}{$k} == DELETED_VALUE);
+    }
+
+    return wantarray ? %hash : \%hash;
+  };
+
+  $methods{$exists_method} = sub
+  {
+    my($class) = ref($_[0]) ? ref(shift) : shift;
+
+    my $key = shift;
+
+    return 0  unless(defined $key);
+
+    if($Inherited_Hash{$name}{$class}{'meta'}{'cache_is_valid'})
+    {
+      return (exists $Inherited_Hash{$name}{$class}{'cache'}{'attrs'}{$key} &&
+                     $Inherited_Hash{$name}{$class}{'cache'}{'meta'}{$key} != DELETED_VALUE) ? 1 : 0;
+    }
+
+    my $cache = $class->$cache_method();
+
+    return (exists $cache->{'attrs'}{$key} && $cache->{'meta'}{$key} != DELETED_VALUE) ? 1 : 0;
+  };
+
+  $methods{$add_method} = sub { shift->$adds_method(@_) };
+
+  $methods{$adds_method} = sub
+  {
+    my($class) = ref($_[0]) ? ref(shift) : shift;
+    Carp::croak("Missing name/value pair(s) to add")  unless(@_);
+
+    my @attrs;
+    my $count = 0;
+
+    my $cache = $Inherited_Hash{$name}{$class}{'cache'} ||= {};
+
+    # XXX: Lame duplication to avoid copying the hash
+    if(@_ == 1 && ref $_[0] eq 'HASH')
+    {
+      while(my($attr, $value) = each(%{$_[0]}))
+      {  
+        next  unless(defined $attr);
+
+        push(@attrs, $attr);
+
+        $cache->{'attrs'}{$attr} = $value;
+        $cache->{'meta'}{$attr}  = CLASS_VALUE;
+  
+        if($add_implies)
+        {
+          foreach my $method (@$add_implies)
+          {
+            $class->$method($attr => $value);
+          }
+        }
+  
+        $count++;
+      }
+    }
+    else
+    {
+      Carp::croak("Odd number of arguments passed to $adds_method")  if(@_ % 2);
+
+      while(@_)
+      {
+        my($attr, $value) = (shift, shift);
+  
+        push(@attrs, $attr);
+
+        no strict 'refs';
+        next  unless(defined $attr);
+        $cache->{'attrs'}{$attr} = $value;
+        $cache->{'meta'}{$attr}  = CLASS_VALUE;
+  
+        if($add_implies)
+        {
+          foreach my $method (@$add_implies)
+          {
+            $class->$method($attr => $value);
+          }
+        }
+  
+        $count++;
+      }
+    }
+
+    if($count)
+    {
+      foreach my $test_class (keys %{$Inherited_Hash{$name}})
+      {
+        if($test_class->isa($class) && $test_class ne $class)
+        {
+          $Inherited_Hash{$name}{$test_class}{'meta'}{'cache_is_valid'} = 0;
+          
+          foreach my $attr (@attrs)
+          {
+            delete $Inherited_Hash{$name}{$test_class}{'cache'}{'attrs'}{$attr};
+          }
+        }
+      }
+    }
+
+    return $count;
+  };
+
+  $methods{$clear_method} = sub
+  {
+    my($class) = ref($_[0]) ? ref(shift) : shift;
+    my @keys = $class->$keys_method();
+    return  unless(@keys);
+    $class->$deletes_method(@keys);
+  };
+
+  $methods{$delete_method} = sub { shift->$deletes_method(@_) };
+
+  $methods{$deletes_method} = sub 
+  {
+    my($class) = ref($_[0]) ? ref(shift) : shift;
+    Carp::croak("Missing value(s) to delete")  unless(@_);
+
+    # Init set if it doesn't exist
+    unless(exists $Inherited_Hash{$name}{$class})
+    {
+      $class->$cache_method();
+    }
+
+    my $count = 0;
+
+    foreach my $attr (@_)
+    {
+      no strict 'refs';
+      next  unless(defined $attr);
+
+      if(exists $Inherited_Hash{$name}{$class}{'cache'}{'attrs'}{$attr} && 
+                $Inherited_Hash{$name}{$class}{'cache'}{'meta'}{$attr} != DELETED_VALUE)
+      {
+        $Inherited_Hash{$name}{$class}{'cache'}{'meta'}{$attr} = DELETED_VALUE;
+        $count++;
+
+        if($delete_implies)
+        {
+          foreach my $method (@$delete_implies)
+          {
+            $class->$method($attr);
+          }
+        }
+
+        foreach my $test_class (keys %{$Inherited_Hash{$name}})
+        {
+          next  if($class eq $test_class);
+
+          if($test_class->isa($class) && exists $Inherited_Hash{$name}{$test_class}{'cache'}{'attrs'}{$attr} &&
+             $Inherited_Hash{$name}{$test_class}{'cache'}{'meta'}{$attr} == INHERITED_VALUE)
+          {
+            delete $Inherited_Hash{$name}{$test_class}{'cache'}{'attrs'}{$attr};
+            delete $Inherited_Hash{$name}{$test_class}{'cache'}{'meta'}{$attr};
+            $Inherited_Hash{$name}{$test_class}{'meta'}{'cache_is_valid'} = 0;
+          }
+        }
+      }
+    }
+
+    # Not required
+    #_invalidate_inherited_set_caches($class, $name)  if($count);
+
+    return $count;
+  };
+
+  $methods{$inherit_method} = sub { shift->$inherits_method(@_) };
+
+  $methods{$inherits_method} = sub
+  {
+    my($class) = ref($_[0]) ? ref(shift) : shift;
+    Carp::croak("Missing value(s) to inherit")  unless(@_);
+
+    my $count = 0;
+
+    foreach my $attr (@_)
+    {
+      if(exists $Inherited_Hash{$name}{$class}{'cache'}{'attrs'}{$attr} &&
+         $Inherited_Hash{$name}{$class}{'cache'}{'meta'}{$attr} == DELETED_VALUE)
+      {
+        delete $Inherited_Hash{$name}{$class}{'cache'}{'attrs'}{$attr};
+        delete $Inherited_Hash{$name}{$class}{'cache'}{'meta'}{$attr};
+        $Inherited_Hash{$name}{$class}{'meta'}{'cache_is_valid'} = 0;
+        $count++;
+      }
+
+      if($inherit_implies)
+      {
+        foreach my $method (@$inherit_implies)
+        {
+          $class->$method($attr);
+        }
+      }
+    }
+
+    return $count;
+  };
+
+  if($interface ne 'all')
+  {
+    Carp::croak "Unknown interface: $interface";
+  }
+
+  return \%methods;
+}
+
+
 1;
 
 __END__
