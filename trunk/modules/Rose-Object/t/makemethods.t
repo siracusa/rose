@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More 'no_plan'; #tests => 312;
+use Test::More tests => 552;
 
 BEGIN
 {
@@ -736,10 +736,6 @@ is(MySubObject2->name_is_happy('iip'), 1, 'name_is_happy() inherited iip 10');
 is(MySubObject3->name_is_happy('iip'), 1, 'name_is_happy() inherited iip 11');
 is(MyObject->name_is_happy('iip'), 1, 'name_is_happy() inherited iip 12');
 
-
-
-###########
-
 #
 # inherited_hash
 #
@@ -884,138 +880,194 @@ ok(@names == 0, 'clear_val_names()');
 # Inherited set with add_implies
 #
 
-# MyObject->add_happy_names(qw(whee splurt foop));
-# 
-# foreach my $attr (MyObject->happy_names)
-# {
-#   is(MySubObject->name_is_happy($attr), 1, "name_is_happy() inherited $attr");
-#   is(MySubObject->name_is_valid($attr), 1, "name_is_valid() inherited implied $attr");
-# }
-# 
-# MyObject->add_happy_name('whee');
-# is(MySubObject->name_is_happy('whee'), 1, 'name_is_happy() inherited whee 1');
-# is(MySubObject2->name_is_happy('whee'), 1, 'name_is_happy() inherited whee 2');
-# 
-# MyObject->delete_happy_name('whee');
-# is(MySubObject->name_is_happy('whee'), 0, 'name_is_happy() inherited whee 3');
-# is(MySubObject2->name_is_happy('whee'), 0, 'name_is_happy() inherited whee 4');
-# 
-# MySubObject->add_happy_name('whee');
-# is(MyObject->name_is_happy('whee'), 0, 'name_is_happy() inherited whee 5');
-# is(MySubObject2->name_is_happy('whee'), 0, 'name_is_happy() inherited whee 6');
-# 
-# MySubObject->delete_happy_name('whee');
-# is(MySubObject->name_is_happy('whee'), 0, 'name_is_happy() inherited whee 7');
-# is(MySubObject2->name_is_happy('whee'), 0, 'name_is_happy() inherited whee 8');
-# is(MyObject->name_is_happy('whee'), 0, 'name_is_happy() inherited whee 9');
-# 
-# MyObject->add_happy_name('splurt');
-# is(MySubObject->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 1');
-# is(MySubObject2->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 2');
-# is(MySubObject3->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 3');
-# is(MyObject->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 4');
-# 
-# MySubObject->add_happy_name('splurt');
-# is(MySubObject->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 5');
-# is(MySubObject2->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 6');
-# is(MySubObject3->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 7');
-# is(MyObject->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 8');
-# 
-# MySubObject2->add_happy_name('splurt');
-# is(MySubObject->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 9');
-# is(MySubObject2->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 10');
-# is(MySubObject3->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 11');
-# is(MyObject->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 12');
-# 
-# MySubObject3->add_happy_name('splurt');
-# is(MySubObject->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 13');
-# is(MySubObject2->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 14');
-# is(MySubObject3->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 15');
-# is(MyObject->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 16');
-# 
-# MySubObject->delete_happy_name('splurt');
-# is(MySubObject->name_is_happy('splurt'), 0, 'name_is_happy() inherited splurt 17');
-# is(MySubObject2->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 18');
-# is(MySubObject3->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 19');
-# is(MyObject->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 20');
-# 
-# MySubObject2->delete_happy_name('splurt');
-# is(MySubObject->name_is_happy('splurt'), 0, 'name_is_happy() inherited splurt 21');
-# is(MySubObject2->name_is_happy('splurt'), 0, 'name_is_happy() inherited splurt 22');
-# is(MySubObject3->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 23');
-# is(MyObject->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 24');
-# 
-# MyObject->delete_happy_name('splurt');
-# is(MySubObject->name_is_happy('splurt'), 0, 'name_is_happy() inherited splurt 25');
-# is(MySubObject2->name_is_happy('splurt'), 0, 'name_is_happy() inherited splurt 26');
-# is(MySubObject3->name_is_happy('splurt'), 1, 'name_is_happy() inherited splurt 27');
-# is(MyObject->name_is_happy('splurt'), 0, 'name_is_happy() inherited splurt 28');
-# 
-# MyObject->add_happy_name('foop');
-# is(MySubObject->name_is_happy('foop'), 1, 'name_is_happy() inherited foop 1');
-# is(MySubObject2->name_is_happy('foop'), 1, 'name_is_happy() inherited foop 2');
-# is(MySubObject3->name_is_happy('foop'), 1, 'name_is_happy() inherited foop 3');
-# is(MyObject->name_is_happy('foop'), 1, 'name_is_happy() inherited foop 4');
-# 
-# MySubObject2->delete_happy_name('foop');
-# is(MySubObject->name_is_happy('foop'), 1, 'name_is_happy() inherited foop 5');
-# is(MySubObject2->name_is_happy('foop'), 0, 'name_is_happy() inherited foop 6');
-# is(MySubObject3->name_is_happy('foop'), 1, 'name_is_happy() inherited foop 7');
-# is(MyObject->name_is_happy('foop'), 1, 'name_is_happy() inherited foop 8');
-# 
-# MySubObject->delete_happy_name('foop');
-# is(MySubObject->name_is_happy('foop'), 0, 'name_is_happy() inherited foop 9');
-# is(MySubObject2->name_is_happy('foop'), 0, 'name_is_happy() inherited foop 10');
-# is(MySubObject3->name_is_happy('foop'), 1, 'name_is_happy() inherited foop 11');
-# is(MyObject->name_is_happy('foop'), 1, 'name_is_happy() inherited foop 12');
-# 
-# MySubObject2->inherit_happy_name('foop');
-# is(MySubObject->name_is_happy('foop'), 0, 'name_is_happy() inherited foop 13');
-# is(MySubObject2->name_is_happy('foop'), 1, 'name_is_happy() inherited foop 14');
-# is(MySubObject3->name_is_happy('foop'), 1, 'name_is_happy() inherited foop 15');
-# is(MyObject->name_is_happy('foop'), 1, 'name_is_happy() inherited foop 16');
-# 
-# MyObject->delete_valid_name('foop');
-# is(MyObject->name_is_happy('foop'), 0, 'delete_implies 1');
+%v = (whee => 1, splurt => 2, foop => 3);
+
+MyObject->hval_names(%v);
+
+foreach my $attr (MyObject->hval_name_keys)
+{
+  is(MySubObject->hval_name_exists($attr), 1, "hval_name_exists() inherited $attr");
+  is(MySubObject->val_name_exists($attr), 1, "val_name_exists() inherited implied $attr");
+}
+
+MyObject->add_hval_name(whee => 1);
+is(MySubObject->hval_name_exists('whee'), 1, 'hval_name_exists() inherited whee 1');
+is(MySubObject2->hval_name_exists('whee'), 1, 'hval_name_exists() inherited whee 2');
+
+MyObject->delete_hval_name('whee');
+is(MySubObject->hval_name_exists('whee'), 0, 'hval_name_exists() inherited whee 3');
+is(MySubObject->hval_name('whee'), undef, 'hval_name() inherited whee 3');
+is(MySubObject2->hval_name_exists('whee'), 0, 'hval_name_exists() inherited whee 4');
+is(MySubObject2->hval_name('whee'), undef, 'hval_name() inherited whee 4');
+
+MySubObject->hval_name(whee => 11);
+is(MyObject->hval_name_exists('whee'), 0, 'hval_name_exists() inherited whee 5');
+is(MyObject->hval_name('whee'), undef, 'hval_name() inherited whee 5');
+is(MySubObject2->hval_name_exists('whee'), 0, 'hval_name_exists() inherited whee 6');
+is(MySubObject2->hval_name('whee'), undef, 'hval_name() inherited whee 6');
+
+MySubObject->delete_hval_name('whee');
+is(MySubObject->hval_name_exists('whee'), 0, 'hval_name_exists() inherited whee 7');
+is(MySubObject2->hval_name_exists('whee'), 0, 'hval_name_exists() inherited whee 8');
+is(MyObject->hval_name_exists('whee'), 0, 'hval_name_exists() inherited whee 9');
+
+MyObject->hval_name(splurt => 2);
+is(MySubObject->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 1');
+is(MySubObject->hval_name('splurt'), 2, 'hval_name() inherited splurt 1');
+is(MySubObject2->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 2');
+is(MySubObject2->hval_name('splurt'), 2, 'hval_name() inherited splurt 2');
+is(MySubObject3->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 3');
+is(MySubObject3->hval_name('splurt'), 2, 'hval_name() inherited splurt 3');
+is(MyObject->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 4');
+is(MyObject->hval_name('splurt'), 2, 'hval_name() inherited splurt 4');
+
+MySubObject->add_hval_name(splurt => 2);
+is(MySubObject->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 5');
+is(MySubObject->hval_name('splurt'), 2, 'hval_name() inherited splurt 5');
+is(MySubObject2->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 6');
+is(MySubObject2->hval_name('splurt'), 2, 'hval_name() inherited splurt 6');
+is(MySubObject3->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 7');
+is(MySubObject3->hval_name('splurt'), 2, 'hval_name() inherited splurt 7');
+is(MyObject->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 8');
+is(MyObject->hval_name('splurt'), 2, 'hval_name() inherited splurt 8');
+
+MySubObject2->add_hval_name(splurt => 2);
+is(MySubObject->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 9');
+is(MySubObject2->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 10');
+is(MySubObject3->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 11');
+is(MyObject->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 12');
+
+MySubObject3->add_hval_name(splurt => 2);
+is(MySubObject->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 13');
+is(MySubObject2->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 14');
+is(MySubObject3->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 15');
+is(MyObject->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 16');
+
+MySubObject->delete_hval_name('splurt');
+is(MySubObject->hval_name_exists('splurt'), 0, 'hval_name_exists() inherited splurt 17');
+is(MySubObject->hval_name('splurt'), undef, 'hval_name() inherited splurt 17');
+is(MySubObject2->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 18');
+is(MySubObject2->hval_name('splurt'), 2, 'hval_name() inherited splurt 18');
+is(MySubObject3->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 19');
+is(MySubObject3->hval_name('splurt'), 2, 'hval_name() inherited splurt 19');
+is(MyObject->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 20');
+is(MyObject->hval_name('splurt'), 2, 'hval_name() inherited splurt 20');
+
+MySubObject2->delete_hval_name('splurt');
+is(MySubObject->hval_name_exists('splurt'), 0, 'hval_name_exists() inherited splurt 21');
+is(MySubObject2->hval_name_exists('splurt'), 0, 'hval_name_exists() inherited splurt 22');
+is(MySubObject3->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 23');
+is(MyObject->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 24');
+
+MyObject->delete_hval_name('splurt');
+is(MySubObject->hval_name_exists('splurt'), 0, 'hval_name_exists() inherited splurt 25');
+is(MySubObject2->hval_name_exists('splurt'), 0, 'hval_name_exists() inherited splurt 26');
+is(MySubObject3->hval_name_exists('splurt'), 1, 'hval_name_exists() inherited splurt 27');
+is(MyObject->hval_name_exists('splurt'), 0, 'hval_name_exists() inherited splurt 28');
+
+MyObject->add_hval_name(foop => 3);
+is(MySubObject->hval_name_exists('foop'), 1, 'hval_name_exists() inherited foop 1');
+is(MySubObject->hval_name('foop'), 3, 'hval_name() inherited foop 1');
+is(MySubObject2->hval_name_exists('foop'), 1, 'hval_name_exists() inherited foop 2');
+is(MySubObject2->hval_name('foop'), 3, 'hval_name() inherited foop 2');
+is(MySubObject3->hval_name_exists('foop'), 1, 'hval_name_exists() inherited foop 3');
+is(MySubObject3->hval_name('foop'), 3, 'hval_name() inherited foop 3');
+is(MyObject->hval_name_exists('foop'), 1, 'hval_name_exists() inherited foop 4');
+is(MyObject->hval_name('foop'), 3, 'hval_name() inherited foop 4');
+
+MySubObject2->delete_hval_name('foop');
+is(MySubObject->hval_name_exists('foop'), 1, 'hval_name_exists() inherited foop 5');
+is(MySubObject->hval_name('foop'), 3, 'hval_name() inherited foop 5');
+is(MySubObject2->hval_name_exists('foop'), 0, 'hval_name_exists() inherited foop 6');
+is(MySubObject2->hval_name('foop'), undef, 'hval_name() inherited foop 6');
+is(MySubObject3->hval_name_exists('foop'), 1, 'hval_name_exists() inherited foop 7');
+is(MySubObject3->hval_name('foop'), 3, 'hval_name() inherited foop 7');
+is(MyObject->hval_name_exists('foop'), 1, 'hval_name_exists() inherited foop 8');
+is(MyObject->hval_name('foop'), 3, 'hval_name() inherited foop 8');
+
+MySubObject->delete_hval_name('foop');
+is(MySubObject->hval_name_exists('foop'), 0, 'hval_name_exists() inherited foop 9');
+is(MySubObject->hval_name('foop'), undef, 'hval_name() inherited foop 9');
+is(MySubObject2->hval_name_exists('foop'), 0, 'hval_name_exists() inherited foop 10');
+is(MySubObject2->hval_name('foop'), undef, 'hval_name() inherited foop 10');
+is(MySubObject3->hval_name_exists('foop'), 1, 'hval_name_exists() inherited foop 11');
+is(MySubObject3->hval_name('foop'), 3, 'hval_name() inherited foop 11');
+is(MyObject->hval_name_exists('foop'), 1, 'hval_name_exists() inherited foop 12');
+is(MyObject->hval_name('foop'), 3, 'hval_name() inherited foop 12');
+
+MySubObject2->inherit_hval_name('foop');
+is(MySubObject->hval_name_exists('foop'), 0, 'hval_name_exists() inherited foop 13');
+is(MySubObject->hval_name('foop'), undef, 'hval_name() inherited foop 13');
+is(MySubObject2->hval_name_exists('foop'), 1, 'hval_name_exists() inherited foop 14');
+is(MySubObject2->hval_name('foop'), 3, 'hval_name() inherited foop 14');
+is(MySubObject3->hval_name_exists('foop'), 1, 'hval_name_exists() inherited foop 15');
+is(MySubObject3->hval_name('foop'), 3, 'hval_name() inherited foop 15');
+is(MyObject->hval_name_exists('foop'), 1, 'hval_name_exists() inherited foop 16');
+is(MyObject->hval_name('foop'), 3, 'hval_name() inherited foop 16');
+
+MyObject->delete_hval_name('foop');
+is(MyObject->hval_name_exists('foop'), 0, 'delete_implies 1');
 
 #
 # Inherited set with inherit_implies
 #
 
-# MyObject->add_happy_name('iip');
-# is(MySubObject->name_is_valid('iip'), 1, 'name_is_valid() inherited iip 1');
-# is(MySubObject2->name_is_valid('iip'), 1, 'name_is_valid() inherited iip 2');
-# is(MySubObject3->name_is_valid('iip'), 1, 'name_is_valid() inherited iip 3');
-# is(MyObject->name_is_valid('iip'), 1, 'name_is_valid() inherited iip 4');
-# 
-# is(MySubObject->name_is_happy('iip'), 1, 'name_is_happy() inherited iip 1');
-# is(MySubObject2->name_is_happy('iip'), 1, 'name_is_happy() inherited iip 2');
-# is(MySubObject3->name_is_happy('iip'), 1, 'name_is_happy() inherited iip 3');
-# is(MyObject->name_is_happy('iip'), 1, 'name_is_happy() inherited iip 4');
-# 
-# MySubObject->delete_valid_name('iip');
-# is(MySubObject->name_is_valid('iip'), 0, 'name_is_valid() inherited iip 5');
-# is(MySubObject2->name_is_valid('iip'), 1, 'name_is_valid() inherited iip 6');
-# is(MySubObject3->name_is_valid('iip'), 1, 'name_is_valid() inherited iip 7');
-# is(MyObject->name_is_valid('iip'), 1, 'name_is_valid() inherited iip 8');
-# 
-# is(MySubObject->name_is_happy('iip'), 0, 'name_is_happy() inherited iip 5');
-# is(MySubObject2->name_is_happy('iip'), 1, 'name_is_happy() inherited iip 6');
-# is(MySubObject3->name_is_happy('iip'), 1, 'name_is_happy() inherited iip 7');
-# is(MyObject->name_is_happy('iip'), 1, 'name_is_happy() inherited iip 8');
-# 
-# MySubObject->inherit_valid_name('iip');
-# is(MySubObject->name_is_valid('iip'), 1, 'name_is_valid() inherited iip 9');
-# is(MySubObject2->name_is_valid('iip'), 1, 'name_is_valid() inherited iip 10');
-# is(MySubObject3->name_is_valid('iip'), 1, 'name_is_valid() inherited iip 11');
-# is(MyObject->name_is_valid('iip'), 1, 'name_is_valid() inherited iip 12');
-# 
-# is(MySubObject->name_is_happy('iip'), 1, 'name_is_happy() inherited iip 9');
-# is(MySubObject2->name_is_happy('iip'), 1, 'name_is_happy() inherited iip 10');
-# is(MySubObject3->name_is_happy('iip'), 1, 'name_is_happy() inherited iip 11');
-# is(MyObject->name_is_happy('iip'), 1, 'name_is_happy() inherited iip 12');
+MyObject->add_hval_name(iip => 227);
+is(MySubObject->val_name_exists('iip'), 1, 'val_name_exists() inherited iip 3');
+is(MySubObject->val_name('iip'), 227, 'val_name() inherited iip 1');
+is(MySubObject2->val_name_exists('iip'), 1, 'val_name_exists() inherited iip 3');
+is(MySubObject2->val_name('iip'), 227, 'val_name() inherited iip 2');
+is(MySubObject3->val_name_exists('iip'), 1, 'val_name_exists() inherited iip 3');
+is(MySubObject3->val_name('iip'), 227, 'val_name() inherited iip 3');
+is(MyObject->val_name_exists('iip'), 1, 'val_name_exists() inherited iip 3');
+is(MyObject->val_name('iip'), 227, 'val_name() inherited iip 4');
 
-############
+is(MySubObject->hval_name_exists('iip'), 1, 'hval_name_exists() inherited iip 1');
+is(MySubObject->hval_name('iip'), 227, 'hval_name() inherited iip 1');
+is(MySubObject2->hval_name_exists('iip'), 1, 'hval_name_exists() inherited iip 2');
+is(MySubObject2->hval_name('iip'), 227, 'hval_name() inherited iip 2');
+is(MySubObject3->hval_name_exists('iip'), 1, 'hval_name_exists() inherited iip 3');
+is(MySubObject3->hval_name('iip'), 227, 'hval_name() inherited iip 3');
+is(MyObject->hval_name_exists('iip'), 1, 'hval_name_exists() inherited iip 4');
+is(MyObject->hval_name('iip'), 227, 'hval_name() inherited iip 4');
+
+MySubObject->delete_val_name('iip');
+is(MySubObject->val_name_exists('iip'), 0, 'val_name_exists() inherited iip 3');
+is(MySubObject->val_name('iip'), undef, 'val_name() inherited iip 5');
+is(MySubObject2->val_name_exists('iip'), 1, 'val_name_exists() inherited iip 3');
+is(MySubObject2->val_name('iip'), 227, 'val_name() inherited iip 6');
+is(MySubObject3->val_name_exists('iip'), 1, 'val_name_exists() inherited iip 3');
+is(MySubObject3->val_name('iip'), 227, 'val_name() inherited iip 7');
+is(MyObject->val_name_exists('iip'), 1, 'val_name_exists() inherited iip 3');
+is(MyObject->val_name('iip'), 227, 'val_name() inherited iip 8');
+
+is(MySubObject->hval_name_exists('iip'), 0, 'hval_name_exists() inherited iip 3');
+is(MySubObject->hval_name('iip'), undef, 'hval_name() inherited iip 5');
+is(MySubObject2->hval_name_exists('iip'), 1, 'hval_name_exists() inherited iip 3');
+is(MySubObject2->hval_name('iip'), 227, 'hval_name() inherited iip 6');
+is(MySubObject3->hval_name_exists('iip'), 1, 'hval_name_exists() inherited iip 3');
+is(MySubObject3->hval_name('iip'), 227, 'hval_name() inherited iip 7');
+is(MyObject->hval_name_exists('iip'), 1, 'hval_name_exists() inherited iip 3');
+is(MyObject->hval_name('iip'), 227, 'hval_name() inherited iip 8');
+
+MySubObject->inherit_val_name('iip');
+is(MySubObject->val_name_exists('iip'), 1, 'val_name_exists() inherited iip 3');
+is(MySubObject->val_name('iip'), 227, 'val_name() inherited iip 9');
+is(MySubObject2->val_name_exists('iip'), 1, 'val_name_exists() inherited iip 3');
+is(MySubObject2->val_name('iip'), 227, 'val_name() inherited iip 10');
+is(MySubObject3->val_name_exists('iip'), 1, 'val_name_exists() inherited iip 3');
+is(MySubObject3->val_name('iip'), 227, 'val_name() inherited iip 11');
+is(MyObject->val_name_exists('iip'), 1, 'val_name_exists() inherited iip 3');
+is(MyObject->val_name('iip'), 227, 'val_name() inherited iip 12');
+
+is(MySubObject->hval_name_exists('iip'), 1, 'hval_name_exists() inherited iip 3');
+is(MySubObject->hval_name('iip'), 227, 'hval_name() inherited iip 9');
+is(MySubObject2->hval_name_exists('iip'), 1, 'hval_name_exists() inherited iip 3');
+is(MySubObject2->hval_name('iip'), 227, 'hval_name() inherited iip 10');
+is(MySubObject3->hval_name_exists('iip'), 1, 'hval_name_exists() inherited iip 3');
+is(MySubObject3->hval_name('iip'), 227, 'hval_name() inherited iip 11');
+is(MyObject->hval_name_exists('iip'), 1, 'hval_name_exists() inherited iip 3');
+is(MyObject->hval_name('iip'), 227, 'hval_name() inherited iip 12');
 
 BEGIN
 {
