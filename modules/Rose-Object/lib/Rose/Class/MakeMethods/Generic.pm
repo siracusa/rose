@@ -491,7 +491,7 @@ sub inherited_hash
   my $plural_name = $args->{'plural_name'} || $name . 's';
 
   my $get_set_method     = $name;
-  my $get_set_all_method = $args->{'get_set_all_method'} || $plural_name;
+  my $get_set_all_method = $args->{'get_set_all_method'} || $args->{'hash_method'} || $plural_name;
   my $keys_method        = $args->{'keys_method'}     || $name . '_keys';
   my $cache_method       = $args->{'cache_method'}    || $plural_name . '_cache';
   my $exists_method      = $args->{'exists_method'}   || $args->{'exists_method'} || $name . '_exists';
