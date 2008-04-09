@@ -2117,7 +2117,7 @@ The default mapping of type names to class names is:
   'checkbox group'     => Rose::HTML::Form::Field::CheckboxGroup
   'check group'        => Rose::HTML::Form::Field::CheckboxGroup
 
-  'radio buttons'      => Rose::HTML::Form::Field::RadioButton
+  'radio buttons'      => Rose::HTML::Form::Field::RadioButtonGroup
   'radios'             => Rose::HTML::Form::Field::RadioButtonGroup
   'radio button group' => Rose::HTML::Form::Field::RadioButtonGroup
   'radio group'        => Rose::HTML::Form::Field::RadioButtonGroup

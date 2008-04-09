@@ -12,7 +12,7 @@ our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
 
 our $VERSION = '0.554';
 
-sub _item_class       { 'Rose::HTML::Form::Field::Checkbox' }
+sub _item_class       { shift->object_type_class('checkbox') }
 sub _item_name        { 'checkbox' }
 sub _item_name_plural { 'checkboxes' }
 
