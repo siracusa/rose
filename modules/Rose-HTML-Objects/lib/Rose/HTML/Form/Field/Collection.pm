@@ -15,106 +15,7 @@ use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 # Variables for use in regexes
 our $FF_SEPARATOR_RE = quotemeta FF_SEPARATOR;
 
-our $VERSION = '0.551';
-
-#
-# Class data
-#
-
-use Rose::Class::MakeMethods::Generic
-(
-  inheritable_hash =>
-  [
-    field_type_classes => { interface => 'get_set_all' },
-    _field_type_class  => { interface => 'get_set', hash_key => 'field_type_classes' },
-    _delete_field_type_class => { interface => 'delete', hash_key => 'field_type_classes' },
-  ],
-);
-
-__PACKAGE__->field_type_classes
-(
-  'text'               => 'Rose::HTML::Form::Field::Text',
-  'scalar'             => 'Rose::HTML::Form::Field::Text',
-  'char'               => 'Rose::HTML::Form::Field::Text',
-  'character'          => 'Rose::HTML::Form::Field::Text',
-  'varchar'            => 'Rose::HTML::Form::Field::Text',
-  'string'             => 'Rose::HTML::Form::Field::Text',
-
-  'text area'          => 'Rose::HTML::Form::Field::TextArea',
-  'textarea'           => 'Rose::HTML::Form::Field::TextArea',
-  'blob'               => 'Rose::HTML::Form::Field::TextArea',
-
-  'checkbox'           => 'Rose::HTML::Form::Field::Checkbox',
-  'check'              => 'Rose::HTML::Form::Field::Checkbox',
-
-  'radio button'       => 'Rose::HTML::Form::Field::RadioButton',
-  'radio'              => 'Rose::HTML::Form::Field::RadioButton',
-
-  'checkboxes'         => 'Rose::HTML::Form::Field::CheckboxGroup',
-  'checks'             => 'Rose::HTML::Form::Field::CheckboxGroup',
-  'checkbox group'     => 'Rose::HTML::Form::Field::CheckboxGroup',
-  'check group'        => 'Rose::HTML::Form::Field::CheckboxGroup',
-
-  'radio buttons'      => 'Rose::HTML::Form::Field::RadioButton',
-  'radios'             => 'Rose::HTML::Form::Field::RadioButtonGroup',
-  'radio button group' => 'Rose::HTML::Form::Field::RadioButtonGroup',
-  'radio group'        => 'Rose::HTML::Form::Field::RadioButtonGroup',
-
-  'pop-up menu'        => 'Rose::HTML::Form::Field::PopUpMenu',
-  'popup menu'         => 'Rose::HTML::Form::Field::PopUpMenu',
-  'menu'               => 'Rose::HTML::Form::Field::PopUpMenu',
-
-  'select box'         => 'Rose::HTML::Form::Field::SelectBox',
-  'selectbox'          => 'Rose::HTML::Form::Field::SelectBox',
-  'select'             => 'Rose::HTML::Form::Field::SelectBox',
-
-  'submit'             => 'Rose::HTML::Form::Field::Submit',
-  'submit button'      => 'Rose::HTML::Form::Field::Submit',
-
-  'reset'              => 'Rose::HTML::Form::Field::Reset',
-  'reset button'       => 'Rose::HTML::Form::Field::Reset',
-
-  'file'               => 'Rose::HTML::Form::Field::File',
-  'upload'             => 'Rose::HTML::Form::Field::File',
-
-  'password'           => 'Rose::HTML::Form::Field::Password',
-
-  'hidden'             => 'Rose::HTML::Form::Field::Hidden',
-
-  'num'                => 'Rose::HTML::Form::Field::Numeric',
-  'number'             => 'Rose::HTML::Form::Field::Numeric',
-  'numeric'            => 'Rose::HTML::Form::Field::Numeric',
-
-  'int'                => 'Rose::HTML::Form::Field::Integer',
-  'integer'            => 'Rose::HTML::Form::Field::Integer',
-
-  'email'              => 'Rose::HTML::Form::Field::Email',
-
-  'phone'              => 'Rose::HTML::Form::Field::PhoneNumber::US',
-  'phone us'           => 'Rose::HTML::Form::Field::PhoneNumber::US',
-
-  'phone us split'     => 'Rose::HTML::Form::Field::PhoneNumber::US::Split',
-
-  'set'                => 'Rose::HTML::Form::Field::Set',
-
-  'time'               => 'Rose::HTML::Form::Field::Time',
-  'time split hms'     => 'Rose::HTML::Form::Field::Time::Split::HourMinuteSecond',
-
-  'time hours'         => 'Rose::HTML::Form::Field::Time::Hours',
-  'time minutes'       => 'Rose::HTML::Form::Field::Time::Minutes',
-  'time seconds'       => 'Rose::HTML::Form::Field::Time::Seconds',
-
-  'date'               => 'Rose::HTML::Form::Field::Date',
-  'datetime'           => 'Rose::HTML::Form::Field::DateTime',
-
-  'datetime range'     => 'Rose::HTML::Form::Field::DateTime::Range',
-
-  'datetime start'     => 'Rose::HTML::Form::Field::DateTime::StartDate',
-  'datetime end'       => 'Rose::HTML::Form::Field::DateTime::EndDate',
-
-  'datetime split mdy'    => 'Rose::HTML::Form::Field::DateTime::Split::MonthDayYear',
-  'datetime split mdyhms' => 'Rose::HTML::Form::Field::DateTime::Split::MDYHMS',
-);
+our $VERSION = '0.554';
 
 #
 # Object data
@@ -154,16 +55,11 @@ sub prepare
   }
 }
 
-sub field_type_class 
+BEGIN
 {
-  my($class, $type) = (shift, shift);
-  return $class->_field_type_class(lc $type, @_) 
-}
-
-sub delete_field_type_class 
-{
-  my($class, $type) = (shift, shift);
-  return $class->_delete_field_type_class(lc $type, @_) 
+  *field_type_classes      = \&Rose::HTML::Object::object_type_classes;
+  *field_type_class        = \&Rose::HTML::Object::object_type_class;
+  *delete_field_type_class = \&Rose::HTML::Object::delete_object_type_class;
 }
 
 #

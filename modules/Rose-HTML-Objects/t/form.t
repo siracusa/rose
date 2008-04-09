@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 283;
+use Test::More tests => 287;
 
 BEGIN 
 {
