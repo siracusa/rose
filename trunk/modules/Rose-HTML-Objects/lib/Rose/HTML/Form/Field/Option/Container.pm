@@ -21,8 +21,8 @@ Rose::HTML::Form::Field::WithContents->import_methods(
 
 our $VERSION = '0.551';
 
-sub _item_class       { 'Rose::HTML::Form::Field::Option' }
-sub _item_group_class { 'Rose::HTML::Form::Field::OptionGroup' }
+sub _item_class       { shift->object_type_class('option') }
+sub _item_group_class { shift->object_type_class('option group')  }
 sub _item_name        { 'option' }
 sub _item_name_plural { 'options' }
 

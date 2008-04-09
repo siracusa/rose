@@ -1,9 +1,6 @@
-0.85_01 (04.09.2008) - John Siracusa <siracusa@gmail.com>
+0.85 (04.09.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added "inherited_hash" class method type.
-
-0.85 (01.15.2008) - John Siracusa <siracusa@gmail.com>
-
     * Fixed a bug that prevented "--opt=0" options from being honored
       (Reported by Bill Moseley)
 

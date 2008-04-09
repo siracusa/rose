@@ -14,6 +14,110 @@ our $VERSION = '0.554';
 
 our $Debug = undef;
 
+#
+# Class data
+#
+
+use Rose::Class::MakeMethods::Generic
+(
+  inherited_hash =>
+  [
+    'object_type_class' => { plural_name => 'object_type_classes' },
+  ],
+);
+
+__PACKAGE__->object_type_classes
+(
+  'text'               => 'Rose::HTML::Form::Field::Text',
+  'scalar'             => 'Rose::HTML::Form::Field::Text',
+  'char'               => 'Rose::HTML::Form::Field::Text',
+  'character'          => 'Rose::HTML::Form::Field::Text',
+  'varchar'            => 'Rose::HTML::Form::Field::Text',
+  'string'             => 'Rose::HTML::Form::Field::Text',
+
+  'text area'          => 'Rose::HTML::Form::Field::TextArea',
+  'textarea'           => 'Rose::HTML::Form::Field::TextArea',
+  'blob'               => 'Rose::HTML::Form::Field::TextArea',
+
+  'option'             => 'Rose::HTML::Form::Field::Option',
+  'option group'       => 'Rose::HTML::Form::Field::OptionGroup',
+
+  'checkbox'           => 'Rose::HTML::Form::Field::Checkbox',
+  'check'              => 'Rose::HTML::Form::Field::Checkbox',
+
+  'radio button'       => 'Rose::HTML::Form::Field::RadioButton',
+  'radio'              => 'Rose::HTML::Form::Field::RadioButton',
+
+  'checkboxes'         => 'Rose::HTML::Form::Field::CheckboxGroup',
+  'checks'             => 'Rose::HTML::Form::Field::CheckboxGroup',
+  'checkbox group'     => 'Rose::HTML::Form::Field::CheckboxGroup',
+  'check group'        => 'Rose::HTML::Form::Field::CheckboxGroup',
+
+  'radio buttons'      => 'Rose::HTML::Form::Field::RadioButton',
+  'radios'             => 'Rose::HTML::Form::Field::RadioButtonGroup',
+  'radio button group' => 'Rose::HTML::Form::Field::RadioButtonGroup',
+  'radio group'        => 'Rose::HTML::Form::Field::RadioButtonGroup',
+
+  'pop-up menu'        => 'Rose::HTML::Form::Field::PopUpMenu',
+  'popup menu'         => 'Rose::HTML::Form::Field::PopUpMenu',
+  'menu'               => 'Rose::HTML::Form::Field::PopUpMenu',
+
+  'select box'         => 'Rose::HTML::Form::Field::SelectBox',
+  'selectbox'          => 'Rose::HTML::Form::Field::SelectBox',
+  'select'             => 'Rose::HTML::Form::Field::SelectBox',
+
+  'submit'             => 'Rose::HTML::Form::Field::Submit',
+  'submit button'      => 'Rose::HTML::Form::Field::Submit',
+
+  'reset'              => 'Rose::HTML::Form::Field::Reset',
+  'reset button'       => 'Rose::HTML::Form::Field::Reset',
+
+  'file'               => 'Rose::HTML::Form::Field::File',
+  'upload'             => 'Rose::HTML::Form::Field::File',
+
+  'password'           => 'Rose::HTML::Form::Field::Password',
+
+  'hidden'             => 'Rose::HTML::Form::Field::Hidden',
+
+  'num'                => 'Rose::HTML::Form::Field::Numeric',
+  'number'             => 'Rose::HTML::Form::Field::Numeric',
+  'numeric'            => 'Rose::HTML::Form::Field::Numeric',
+
+  'int'                => 'Rose::HTML::Form::Field::Integer',
+  'integer'            => 'Rose::HTML::Form::Field::Integer',
+
+  'email'              => 'Rose::HTML::Form::Field::Email',
+
+  'phone'              => 'Rose::HTML::Form::Field::PhoneNumber::US',
+  'phone us'           => 'Rose::HTML::Form::Field::PhoneNumber::US',
+
+  'phone us split'     => 'Rose::HTML::Form::Field::PhoneNumber::US::Split',
+
+  'set'                => 'Rose::HTML::Form::Field::Set',
+
+  'time'               => 'Rose::HTML::Form::Field::Time',
+  'time split hms'     => 'Rose::HTML::Form::Field::Time::Split::HourMinuteSecond',
+
+  'time hours'         => 'Rose::HTML::Form::Field::Time::Hours',
+  'time minutes'       => 'Rose::HTML::Form::Field::Time::Minutes',
+  'time seconds'       => 'Rose::HTML::Form::Field::Time::Seconds',
+
+  'date'               => 'Rose::HTML::Form::Field::Date',
+  'datetime'           => 'Rose::HTML::Form::Field::DateTime',
+
+  'datetime range'     => 'Rose::HTML::Form::Field::DateTime::Range',
+
+  'datetime start'     => 'Rose::HTML::Form::Field::DateTime::StartDate',
+  'datetime end'       => 'Rose::HTML::Form::Field::DateTime::EndDate',
+
+  'datetime split mdy'    => 'Rose::HTML::Form::Field::DateTime::Split::MonthDayYear',
+  'datetime split mdyhms' => 'Rose::HTML::Form::Field::DateTime::Split::MDYHMS',
+);
+
+#
+# Object data
+#
+
 use Rose::Object::MakeMethods::Generic
 (
   boolean =>
@@ -68,6 +172,10 @@ use Rose::Class::MakeMethods::Set
   ]
 );
 
+#
+# Class data
+#
+
 __PACKAGE__->localizer(Rose::HTML::Object::Message::Localizer->new);
 
 __PACKAGE__->autoload_html_attr_methods(1);
@@ -93,6 +201,10 @@ __PACKAGE__->add_valid_html_attrs
   'onkeyup'
 );
 
+#
+# Constructor
+#
+
 sub new
 {
   my($class) = shift;
@@ -111,6 +223,10 @@ sub new
 
   return $self;
 }
+
+#
+# Object methods
+#
 
 sub init
 {
@@ -651,24 +767,32 @@ sub AUTOLOAD
 {
   my($self) = $_[0];
 
-  my $class = ref($self) or croak "$self is not an object";
-
-  my $name = $AUTOLOAD;
-  $name =~ s/.*://;
-
-  if($class->html_attr_is_valid($name) && $class->autoload_html_attr_methods)
+  if(my $class = ref($self))
   {
-    no strict 'refs';
-    *$AUTOLOAD = sub { shift->html_attr($name, @_) };
-    ${$class . '::__AUTOLOADED'}{$name} = 1;
-    goto &$AUTOLOAD;
+    my $name = $AUTOLOAD;
+    $name =~ s/.*://;
+  
+    if($class->html_attr_is_valid($name) && $class->autoload_html_attr_methods)
+    {
+      no strict 'refs';
+      *$AUTOLOAD = sub { shift->html_attr($name, @_) };
+      ${$class . '::__AUTOLOADED'}{$name} = 1;
+      goto &$AUTOLOAD;
+    }
+  
+    confess
+      qq(Can't locate object method "$name" via package "$class" - ) .
+      ($class->html_attr_is_valid($name) ? 
+      "did not auto-create method because $class->autoload_html_attr_methods is not set" :
+      "no such method, and none auto-created because it is not a valid HTML attribute for this class");
   }
+  else
+  {
+    my $name = $AUTOLOAD;
+    $name =~ s/.*://;
 
-  confess
-    qq(Can't locate object method "$name" via package "$class" - ) .
-    ($class->html_attr_is_valid($name) ? 
-    "did not auto-create method because $class->autoload_html_attr_methods is not set" :
-    "no such method, and none auto-created because it is not a valid HTML attribute for this class");
+    confess qq(Can't locate class method "$name" via package "$self");
+  }
 }
 
 1;

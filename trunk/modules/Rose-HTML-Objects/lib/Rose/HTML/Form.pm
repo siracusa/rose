@@ -1539,8 +1539,8 @@ Rose::HTML::Form - HTML form base class.
     return $ok  unless($ok);
 
     # Inter-field validation goes here
-    if($self->field('name')->internal_value ne 'John Doe' &&
-       $self->field('phone')->internal_value =~ /^555/)
+    if($self->field_value('name') ne 'John Doe' &&
+       $self->field_value('phone') =~ /^555/)
     {
       $self->error('Only John Doe can have a 555 phone number.');
       return 0;
@@ -1564,7 +1564,7 @@ Rose::HTML::Form - HTML form base class.
 
     # Now fill in the non-obvious details...
     # e.g., set alt phone to be the same as the regular phone
-    $person->alt_phone($self->field('phone')->internal_value);
+    $person->alt_phone($self->field_value('phone'));
 
     return $person;
   }
