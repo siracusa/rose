@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 552;
+use Test::More tests => 572;
 
 BEGIN
 {
@@ -1068,6 +1068,84 @@ is(MySubObject3->hval_name_exists('iip'), 1, 'hval_name_exists() inherited iip 3
 is(MySubObject3->hval_name('iip'), 227, 'hval_name() inherited iip 11');
 is(MyObject->hval_name_exists('iip'), 1, 'hval_name_exists() inherited iip 3');
 is(MyObject->hval_name('iip'), 227, 'hval_name() inherited iip 12');
+
+INHERITED_HASH_POD_CHECK:
+{
+  package MyClass;
+
+  use Rose::Class::MakeMethods::Generic
+  (
+    inherited_hash =>
+    [
+      pet_color =>
+      {
+        keys_method     => 'pets',
+        delete_implies  => 'delete_special_pet_color',
+        inherit_implies => 'inherit_special_pet_color',
+      },
+
+      special_pet_color =>
+      {
+        keys_method     => 'special_pets',
+        add_implies => 'add_pet_color',
+      },
+    ],
+  );
+
+
+  package MySubClass;
+  our @ISA = qw(MyClass);
+
+  package main;
+
+  my $i = 1;
+
+  MyClass->pet_colors(Fido => 'white',
+                      Max  => 'black',
+                      Spot => 'yellow');
+
+  MyClass->special_pet_color(Toby => 'tan');
+
+  is(join(', ', sort MyClass->pets), 'Fido, Max, Spot, Toby', 'inherited_hash pod ' . $i++);
+  is(join(', ', sort MyClass->special_pets), 'Toby', 'inherited_hash pod ' . $i++);
+
+  is(join(', ', sort MySubClass->pets), 'Fido, Max, Spot, Toby', 'inherited_hash pod ' . $i++);
+  is(join(', ', sort MyClass->pet_color('Toby')), 'tan', 'inherited_hash pod ' . $i++);
+
+  MySubClass->special_pet_color(Toby => 'gold');
+
+  is(join(', ', sort MyClass->pet_color('Toby')), 'tan', 'inherited_hash pod ' . $i++);
+  is(join(', ', sort MyClass->special_pet_color('Toby')), 'tan', 'inherited_hash pod ' . $i++);
+
+  is(join(', ', sort MySubClass->pet_color('Toby')), 'gold', 'inherited_hash pod ' . $i++);
+  is(join(', ', sort MySubClass->special_pet_color('Toby')), 'gold', 'inherited_hash pod ' . $i++);
+
+  MySubClass->inherit_pet_color('Toby');
+
+  is(join(', ', sort MySubClass->pet_color('Toby')), 'tan', 'inherited_hash pod ' . $i++);
+  is(join(', ', sort MySubClass->special_pet_color('Toby')), 'tan', 'inherited_hash pod ' . $i++);
+  
+  MyClass->delete_pet_color('Max');
+
+  is(join(', ', sort MyClass->pets), 'Fido, Spot, Toby', 'inherited_hash pod ' . $i++);
+  is(join(', ', sort MySubClass->pets), 'Fido, Spot, Toby', 'inherited_hash pod ' . $i++);
+
+  MyClass->special_pet_color(Max => 'mauve');
+
+  is(join(', ', sort MyClass->pets), 'Fido, Max, Spot, Toby', 'inherited_hash pod ' . $i++);
+  is(join(', ', sort MySubClass->pets), 'Fido, Max, Spot, Toby', 'inherited_hash pod ' . $i++);
+
+  is(join(', ', sort MyClass->special_pets), 'Max, Toby', 'inherited_hash pod ' . $i++);
+  is(join(', ', sort MySubClass->special_pets), 'Max, Toby', 'inherited_hash pod ' . $i++);
+
+  MySubClass->delete_special_pet_color('Max');
+
+  is(join(', ', sort MyClass->pets), 'Fido, Max, Spot, Toby', 'inherited_hash pod ' . $i++);
+  is(join(', ', sort MySubClass->pets), 'Fido, Max, Spot, Toby', 'inherited_hash pod ' . $i++);
+
+  is(join(', ', sort MyClass->special_pets), 'Max, Toby', 'inherited_hash pod ' . $i++);
+  is(join(', ', sort MySubClass->special_pets), 'Toby', 'inherited_hash pod ' . $i++);
+}
 
 BEGIN
 {
