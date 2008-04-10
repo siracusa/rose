@@ -17,7 +17,7 @@ use Rose::DB::Object::Metadata::Auto;
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.764';
+our $VERSION = '0.770';
 
 our $Debug = 0;
 
@@ -1348,7 +1348,13 @@ This method returns a list (in list context) or a reference to an array (in scal
 
 Automatically create L<Rose::DB::Object> and (optionally) L<Rose::DB::Object::Manager> subclasses for some or all of the tables in a database, then create Perl module (*.pm) files for each class.
 
-This method calls L<make_classes|/make_classes> to make the actual classes, and therefore takes all of the same parameters, with several additions.
+This method calls L<make_classes|/make_classes> to make the actual classes.
+
+B<Note:> If you are trying to regenerate a set of module files that already exist in the target C<module_dir>, please make sure that this C<module_dir> is I<not> in your C<@INC> path.  (That is, make sure it is not in the set of paths that perl will search when looking for module files in response to a C<use> or C<require> statement.)  More generally, you must make sure that existing versions of the modules you are attempting to generate are not in your C<@INC> path.
+
+(If you do not do this, when L<make_classes|/make_classes> makes a class and looks for a related class, it will find and load the previously generated C<.pm> file, which will then cause L<make_classes|/make_classes> to skip that class later when it sees that it already exists in memory.  And if L<make_classes|/make_classes> skips it, L<make_modules|/make_modules> will never see it and therefore will never regenerate the C<.pm> file.)
+
+This method takes all of the same parameters as L<make_classes|/make_classes>, with several additions:
 
 =over 4
 
