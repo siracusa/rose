@@ -5,7 +5,7 @@ use strict;
 use Rose::HTML::Form::Field::OnOff;
 our @ISA = qw(Rose::HTML::Form::Field::OnOff);
 
-our $VERSION = '0.551';
+our $VERSION = '0.554';
 
 __PACKAGE__->add_required_html_attrs(
 {
@@ -19,8 +19,16 @@ sub checked
   if(@_)
   {
     $self->is_cleared(0);
-    return $self->{'checked'} = 
+
+    $self->{'checked'} = 
       $self->html_attr(checked => $_[0] ? 1 : (defined $_[0] ? 0 : undef));
+
+    if((my $parent = $self->parent_field) && $self->auto_invalidate_parent)
+    {
+      $parent->invalidate_value;
+    }
+
+    return $self->{'checked'};
   }
 
   return 0  if($self->is_cleared);

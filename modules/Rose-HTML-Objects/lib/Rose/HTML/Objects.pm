@@ -3,7 +3,7 @@ package Rose::HTML::Objects;
 use strict;
 
 # The sole purpose of this module is to provide a version number
-our $VERSION = '0.553_02';
+our $VERSION = '0.553_03';
 
 1;
 
