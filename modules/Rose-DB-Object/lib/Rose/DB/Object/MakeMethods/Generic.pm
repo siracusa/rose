@@ -18,7 +18,7 @@ use Rose::DB::Object::Constants
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.7671';
+our $VERSION = '0.770';
 
 our $Debug = 0;
 
@@ -2940,9 +2940,14 @@ sub objects_by_key
       return $count;
     };
   }
-  elsif($interface eq 'find')
+  elsif($interface eq 'find' || $interface eq 'iterator')
   {
     my $cache_key = PRIVATE_PREFIX . '_' . $name;
+    my $is_iterator = $interface eq 'iterator' ? 1 : 0;
+    if ($is_iterator && $ft_method eq 'get_objects')
+    {
+      $ft_method = 'get_objects_iterator';
+    }
 
     $methods{$name} = sub
     {
@@ -2980,7 +2985,7 @@ sub objects_by_key
       my $objs;
 
       # Get query key
-      my %key;
+      my %key;      
 
       while(my($local_column, $foreign_column) = each(%$ft_columns))
       {
@@ -3056,6 +3061,8 @@ sub objects_by_key
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
+      
+      return $objs if $is_iterator;
 
       $self->{$cache_key} = $objs  if($cache);
 
@@ -4375,9 +4382,15 @@ sub objects_by_map
     }
   }
 
-  if($interface eq 'find')
+  if($interface eq 'find' || $interface eq 'iterator')
   {
     my $cache_key = PRIVATE_PREFIX . '_' . $name;
+    my $is_iterator = $interface eq 'iterator' ? 1 : 0;
+    if ($is_iterator && $map_method eq 'get_objects')
+    {
+      $map_method = 'get_objects_iterator';
+      
+    }
 
     $methods{$name} = sub
     {
@@ -4510,6 +4523,26 @@ sub objects_by_map
           }
           @$objs
         ];
+      }
+      elsif ($is_iterator)
+      {
+        my $next_code = $objs->_next_code;
+        my $post_proc = sub
+        {
+          my ($self, $map_object) = @_;
+          return $map_object->$map_to;
+        };
+        $objs->_next_code(
+          sub
+          {
+            my $self = shift;
+            my $object = $next_code->($self, @_);
+            return $object unless $object;
+            return $post_proc->($self, $object);
+          }
+        );
+        return $objs;
+      
       }
       else
       {
@@ -6500,6 +6533,10 @@ If the first argument is a reference to a hash or array, it is converted to a re
 The fetch may fail for several reasons.  The fetch will not even be attempted if any of the key attributes in the current object are undefined.  Instead, undef (in scalar context) or an empty list (in list context) will be returned.  If the call to C<manager_class>'s C<manager_method> method returns false, the behavior is determined by the L<metadata object|Rose::DB::Object/meta>'s L<error_mode|Rose::DB::Object::Metadata/error_mode>.  If the mode is C<return>, that false value (in scalar context) or an empty list (in list context) is returned.
 
 If the fetch succeeds, a list (in list context) or a reference to the array of objects (in scalar context) is returned.  (If the fetch finds zero objects, the list or array reference will simply be empty.  This is still considered success.)
+
+=item B<iterator>
+
+Behaves just like B<find> but returns an iterator rather than an array or arrayref.
 
 =item B<get_set>
 
