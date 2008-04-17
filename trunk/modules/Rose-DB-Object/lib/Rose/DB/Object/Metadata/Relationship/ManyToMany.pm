@@ -14,7 +14,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 use Rose::DB::Object::Constants qw(PRIVATE_PREFIX);
 
-our $VERSION = '0.766';
+our $VERSION = '0.770';
 
 our $Debug = 0;
 
@@ -70,6 +70,13 @@ __PACKAGE__->method_maker_info
     class     => 'Rose::DB::Object::MakeMethods::Generic',
     type      => 'objects_by_map',
     interface => 'find',
+  },
+  
+  iterator =>
+  {
+    class     => 'Rose::DB::Object::MakeMethods::Generic',
+    type      => 'objects_by_map',
+    interface => 'iterator',
   },
 
   get_set =>
@@ -187,6 +194,10 @@ sub build_method_name_for_type
   elsif($type eq 'find')
   {
     return 'find_' . $self->name;
+  }
+  elsif($type eq 'iterator')
+  {
+    return $self->name . '_iterator';
   }
   elsif($type eq 'count')
   {
@@ -640,6 +651,10 @@ L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::Ma
 =item C<find>
 
 L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_map>, C<interface =E<gt> 'find'> ...
+
+=item C<iterator>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_map>, C<interface =E<gt> 'iterator'> ...
 
 =item C<get_set>
 

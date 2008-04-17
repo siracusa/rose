@@ -12,7 +12,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 our $Debug = 0;
 
-our $VERSION = '0.764';
+our $VERSION = '0.770';
 
 __PACKAGE__->default_auto_method_types(qw(find get_set_on_save add_on_save));
 
@@ -58,6 +58,13 @@ __PACKAGE__->method_maker_info
     class     => 'Rose::DB::Object::MakeMethods::Generic',
     type      => 'objects_by_key',
     interface => 'find',
+  },
+
+  iterator =>
+  {
+    class     => 'Rose::DB::Object::MakeMethods::Generic',
+    type      => 'objects_by_key',
+    interface => 'iterator',
   },
 
   get_set =>
@@ -128,6 +135,10 @@ sub build_method_name_for_type
   {
     return 'find_' . $self->name;
   }
+  elsif($type eq 'iterator')
+  {
+    return $self->name . '_iterator';
+  }
   elsif($type eq 'count')
   {
     return $self->name . '_count';
@@ -193,6 +204,10 @@ L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::Ma
 =item C<find>
 
 L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'find'> ...
+
+=item C<find>
+
+L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'iterator'> ...
 
 =item C<get_set>
 
