@@ -308,7 +308,7 @@ SKIP: foreach my $db_type ('pg')
      ref $colors2 eq 'ARRAY' && @$colors2 == 1 && $colors2->[0]->name eq 'red' &&
      $colors->[0] eq $colors2->[0],
      "find colors from cache - $db_type");
-     
+
   my $count = $o->colors_count;
 
   is($count, 2, "count colors 1 - $db_type");
@@ -4602,13 +4602,15 @@ SKIP: foreach my $db_type ('sqlite')
      $colors->[0] eq $colors2->[0],
      "find colors from cache - $db_type");
 
-  ok( my $iterator = $o->colors_iterator, "get colors_iterator - $db_type");
-  ok($iterator->isa('Rose::DB::Object::Iterator'),  
-        "colors iterator isa Iterator - $db_type");
+  ok(my $iterator = $o->colors_iterator, "get colors_iterator - $db_type");
+
+  ok($iterator->isa('Rose::DB::Object::Iterator'),  "colors iterator isa Iterator - $db_type");
+
   while(my $color = $iterator->next)
   {
-    ok($color->name,    "color has a name");
+    ok($color->name, "color has a name (" . $color->name . ") - $db_type");
   }
+
   is($iterator->total, 2, "iterator total - $db_type");
 
   my $count = $o->colors_count;
@@ -5098,18 +5100,15 @@ SKIP: foreach my $db_type ('sqlite')
   ok($fos2[0] eq $fos[0], "find one to many from_cache 1 - $db_type");
   ok($fos2[1] eq $fos[1], "find one to many from_cache 2 - $db_type");
   
-  ok(my $o2objects_iterator = $o->other2_objs_iterator, 
-    "other2_objs_iterator - $db_type");
-  ok($o2objects_iterator->isa('Rose::DB::Object::Iterator'),
-    "isa Iterator - $db_type");
-  while (my $o2i = $o2objects_iterator->next)
+  ok(my $o2objects_iterator = $o->other2_objs_iterator, "other2_objs_iterator - $db_type");
+  ok($o2objects_iterator->isa('Rose::DB::Object::Iterator'), "isa Iterator - $db_type");
+
+  while(my $o2i = $o2objects_iterator->next)
   {
-    ok($o2i->isa('MySQLiteOtherObject2'), 
-        "isa MySQLiteOtherObject2 - $db_type");
+    ok($o2i->isa('MySQLiteOtherObject2'), "isa MySQLiteOtherObject2 - $db_type");
   }
-  is($o2objects_iterator->total, 3, 
-    "MySQLiteOtherObject2 iterator total - $db_type");
-  
+
+  is($o2objects_iterator->total, 3, "MySQLiteOtherObject2 iterator total - $db_type");
 
   $o2 = MySQLiteOtherObject2->new(id => 1)->load(speculative => 1);
   ok($o2 && $o2->pid == $o->id, "set one to many now 7 - $db_type");
