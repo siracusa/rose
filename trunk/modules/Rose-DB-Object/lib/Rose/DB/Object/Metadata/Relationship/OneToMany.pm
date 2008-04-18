@@ -205,7 +205,7 @@ L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::Ma
 
 L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'find'> ...
 
-=item C<find>
+=item C<iterator>
 
 L<Rose::DB::Object::MakeMethods::Generic>, L<objects_by_key|Rose::DB::Object::MakeMethods::Generic/objects_by_key>, C<interface =E<gt> 'iterator'> ...
 

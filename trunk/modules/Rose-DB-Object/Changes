@@ -1,8 +1,7 @@
-0.769_02 (04.17.2008) - Peter Karman (peknet@gmail.com)
-    * added 'iterator' method type, similar to 'find', to OneToMany and ManyToMany.
+0.769_03 (04.17.2008) - John Siracusa <siracusa@gmail.com>
 
-0.769_01 (04.10.2008) - John Siracusa <siracusa@gmail.com>
-
+    * Added "iterator" method type, similar to "find", to OneToMany
+      and ManyToMany.  (Patch by Peter Karman - peknet@gmail.com)
     * Updated the Loader documentation to describe an important 
       consideration when regenerating modules with make_modules().
 
