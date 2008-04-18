@@ -14,7 +14,8 @@ use Rose::DB::Object::Manager;
 use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Constants 
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
-     STATE_SAVING ON_SAVE_ATTR_NAME MODIFIED_COLUMNS SET_COLUMNS);
+     STATE_SAVING ON_SAVE_ATTR_NAME MODIFIED_COLUMNS SET_COLUMNS
+     EXCEPTION_CODE_NO_KEY);
 
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
@@ -2198,6 +2199,16 @@ sub object_by_key
             local $dbh->{'PrintError'} = 0;
             eval { $ret = $object->load(speculative => 1) };
 
+            if(my $error = $@)
+            {
+              # ...but re-throw all other errors
+              unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                     $error->code == EXCEPTION_CODE_NO_KEY)
+              {
+                die $error;
+              }
+            }
+
             unless($ret)
             {
               $object->save or die $object->error;
@@ -2396,6 +2407,16 @@ sub object_by_key
               # Ignore any errors due to missing primary keys
               local $dbh->{'PrintError'} = 0;
               eval { $ret = $object->load(speculative => 1) };
+
+              if(my $error = $@)
+              {
+                # ...but re-throw all other errors
+                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                       $error->code == EXCEPTION_CODE_NO_KEY)
+                {
+                  die $error;
+                }
+              }
 
               unless($ret)
               {
@@ -3300,7 +3321,7 @@ sub objects_by_key
             {
               my $dbh = $object->dbh;
 
-              # It's okay if this fails (e.g., if the primary key is undefined)
+              # It's okay if this fails because the key(s) is/are undefined
               local $dbh->{'PrintError'} = 0;
               eval
               {
@@ -3310,6 +3331,16 @@ sub objects_by_key
                   $object->init(%map);
                 }
               };
+
+              if(my $error = $@)
+              {
+                # ...but re-throw all other errors
+                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                       $error->code == EXCEPTION_CODE_NO_KEY)
+                {
+                  die $error;
+                }
+              }
             }
 
             # Save the object
@@ -3572,7 +3603,7 @@ sub objects_by_key
             {
               my $dbh = $object->dbh;
 
-              # It's okay if this fails (e.g., if the primary key is undefined)
+              # It's okay if this fails because the key(s) is/are undefined
               local $dbh->{'PrintError'} = 0;
               eval
               {
@@ -3582,6 +3613,16 @@ sub objects_by_key
                   $object->init(%map);
                 }
               };
+
+              if(my $error = $@)
+              {
+                # ...but re-throw all other errors
+                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                       $error->code == EXCEPTION_CODE_NO_KEY)
+                {
+                  die $error;
+                }
+              }
             }
 
             # Save the object
@@ -3953,6 +3994,16 @@ sub objects_by_key
           local $dbh->{'PrintError'} = 0;
           eval { $ret = $object->load(speculative => 1) };
 
+          if(my $error = $@)
+          {
+            # ...but re-throw all other errors
+            unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                   $error->code == EXCEPTION_CODE_NO_KEY)
+            {
+              die $error;
+            }
+          }
+
           unless($ret)
           {
             $object->save or die $object->error;
@@ -4072,6 +4123,16 @@ sub objects_by_key
           # Ignore any errors due to missing primary keys
           local $dbh->{'PrintError'} = 0;
           eval { $ret = $object->load(speculative => 1) };
+
+          if(my $error = $@)
+          {
+            # ...but re-throw all other errors
+            unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                   $error->code == EXCEPTION_CODE_NO_KEY)
+            {
+              die $error;
+            }
+          }
 
           unless($ret)
           {
@@ -4916,9 +4977,19 @@ sub objects_by_map
             {
               my $dbh = $object->dbh;
 
-              # It's okay if this fails (e.g., if the primary key is undefined)
+              # It's okay if this fails because the key(s) is/are undefined
               local $dbh->{'PrintError'} = 0;
               eval { $in_db = $object->load(speculative => 1) };
+
+              if(my $error = $@)
+              {
+                # ...but re-throw all other errors
+                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                       $error->code == EXCEPTION_CODE_NO_KEY)
+                {
+                  die $error;
+                }
+              }
             }
 
             # Save the object, if necessary
@@ -4956,9 +5027,19 @@ sub objects_by_map
             {
               my $dbh = $map_record->dbh;
 
-              # It's okay if this fails (e.g., if the primary key is undefined)
+              # It's okay if this fails because the key(s) is/are undefined
               local $dbh->{'PrintError'} = 0;
               eval { $in_db = $map_record->load(speculative => 1) };
+
+              if(my $error = $@)
+              {
+                # ...but re-throw all other errors
+                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                       $error->code == EXCEPTION_CODE_NO_KEY)
+                {
+                  die $error;
+                }
+              }
             }
 
             # Save the map record, if necessary
@@ -5176,9 +5257,19 @@ sub objects_by_map
             {
               my $dbh = $object->dbh;
 
-              # It's okay if this fails (e.g., if the primary key is undefined)
+              # It's okay if this fails because the key(s) is/are undefined
               local $dbh->{'PrintError'} = 0;
               eval { $in_db = $object->load(speculative => 1) };
+
+              if(my $error = $@)
+              {
+                # ...but re-throw all other errors
+                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                       $error->code == EXCEPTION_CODE_NO_KEY)
+                {
+                  die $error;
+                }
+              }
             }
 
             # Save the object, if necessary
@@ -5224,9 +5315,19 @@ sub objects_by_map
             {
               my $dbh = $map_record->dbh;
 
-              # It's okay if this fails (e.g., if the primary key is undefined)
+              # It's okay if this fails because the key(s) is/are undefined
               local $dbh->{'PrintError'} = 0;
               eval { $in_db = $map_record->load(speculative => 1) };
+
+              if(my $error = $@)
+              {
+                # ...but re-throw all other errors
+                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                       $error->code == EXCEPTION_CODE_NO_KEY)
+                {
+                  die $error;
+                }
+              }
             }
 
             # Save the map record, if necessary
@@ -5436,9 +5537,19 @@ sub objects_by_map
           {
             my $dbh = $object->dbh;
 
-            # It's okay if this fails (e.g., if the primary key is undefined)
+            # It's okay if this fails because the key(s) is/are undefined
             local $dbh->{'PrintError'} = 0;
             eval { $in_db = $object->load(speculative => 1) };
+
+            if(my $error = $@)
+            {
+              # ...but re-throw all other errors
+              unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                     $error->code == EXCEPTION_CODE_NO_KEY)
+              {
+                die $error;
+              }
+            }
           }
 
           # Save the object, if necessary
@@ -5466,9 +5577,19 @@ sub objects_by_map
           {
             my $dbh = $map_record->dbh;
 
-            # It's okay if this fails (e.g., if the primary key is undefined)
+            # It's okay if this fails because the key(s) is/are undefined
             local $dbh->{'PrintError'} = 0;
             eval { $in_db = $map_record->load(speculative => 1) };
+
+            if(my $error = $@)
+            {
+              # ...but re-throw all other errors
+              unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                     $error->code == EXCEPTION_CODE_NO_KEY)
+              {
+                die $error;
+              }
+            }
           }
 
           # Save the map record, if necessary
@@ -5566,9 +5687,19 @@ sub objects_by_map
           {
             my $dbh = $object->dbh;
 
-            # It's okay if this fails (e.g., if the primary key is undefined)
+            # It's okay if this fails because the key(s) is/are undefined
             local $dbh->{'PrintError'} = 0;
             eval { $in_db = $object->load(speculative => 1) };
+
+            if(my $error = $@)
+            {
+              # ...but re-throw all other errors
+              unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                     $error->code == EXCEPTION_CODE_NO_KEY)
+              {
+                die $error;
+              }
+            }
           }
 
           # Save the object, if necessary
@@ -5596,9 +5727,19 @@ sub objects_by_map
           {
             my $dbh = $map_record->dbh;
 
-            # It's okay if this fails (e.g., if the primary key is undefined)
+            # It's okay if this fails because the key(s) is/are undefined
             local $dbh->{'PrintError'} = 0;
             eval { $in_db = $map_record->load(speculative => 1) };
+
+            if(my $error = $@)
+            {
+              # ...but re-throw all other errors
+              unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                     $error->code == EXCEPTION_CODE_NO_KEY)
+              {
+                die $error;
+              }
+            }
           }
 
           # Save the map record, if necessary
