@@ -15,7 +15,7 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.5521';
+our $VERSION = '0.554';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -1167,6 +1167,12 @@ sub local_field
   }
 
   return $self->{'fields'}{$name} || $self->{'fields_by_name'}{$name};
+}
+
+sub local_fields
+{
+  my($self) = shift;
+  return values %{ $self->{'fields'} || {} };
 }
 
 sub delete_fields 
@@ -2417,6 +2423,10 @@ The field names may not match up exactly with the object method names. In such c
 Get or set a field that is an immediate child of the current form.  That is, it does not belong to a L<nested form|/"NESTED FORMS">.  If the field specified by NAME does not meet these criteria, then undef is returned.  In all other respects, this method behaves like the L<field|/field> method.
 
 Note that NAME should be the name as seen from the perspective of the form object upon which this method is called.  So a nested form can always address its local fields using their "short" (unqualified) names even if the form is actually nested within another form.
+
+=item B<local_fields>
+
+Returns a list of fields that are immediate children of the current form (i.e., fields that do not belong to a L<nested form|/"NESTED FORMS">).
 
 =item B<local_form NAME [, OBJECT]>
 

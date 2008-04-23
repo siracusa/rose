@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 169;
+use Test::More tests => 174;
 
 BEGIN 
 {
@@ -539,6 +539,21 @@ is(join("\n", map { $_->html } $f1->fields),
    qq(<input name="subform.bar" type="radio" value="Yes"> <label>Yes</label><br>\n) .
    qq(<input name="subform.bar" type="radio" value="No"> <label>No</label>),
    'nested grouped fields 1');
+
+#
+# local_fields()
+#
+
+$form = MyPersonAddressDogForm->new;
+
+is(join(' ', map { $_->name } sort { $a->name cmp $b->name } $form->local_fields), 'dog', 'local fields 1');
+
+$form->add_field(bar => { type => 'text' });
+
+is(join(' ', map { $_->name } sort { $a->name cmp $b->name } $form->local_fields), 'bar dog', 'local fields 2');
+is(join(' ', map { $_->name } sort { $a->name cmp $b->name } $form->form('person_address')->local_fields), '', 'local fields 3');
+is(join(' ', map { $_->name } sort { $a->name cmp $b->name } $form->form('person_address.person')->local_fields), 'person_address.person.age person_address.person.bday person_address.person.gender person_address.person.name person_address.person.start', 'local fields 4');
+is(join(' ', map { $_->local_name } sort { $a->local_name cmp $b->local_name } $form->form('person_address.person')->local_fields), 'age bday gender name start', 'local fields 5');
 
 BEGIN
 {
