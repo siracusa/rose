@@ -405,49 +405,49 @@ sub parse_dbi_column_info_default
 {
   my($self, $string, $col_info) = @_;
 
-  UNDEF_OK: # Avoid undef string warnings
+  no warnings 'uninitialized';
+  local $_ = $string;
+
+  my $pg_vers = $self->dbh->{'pg_server_version'};
+
+  # Example: q(B'00101'::"bit")
+  if(/^B'([01]+)'::(?:bit|"bit")$/ && $col_info->{'TYPE_NAME'} eq 'bit')
   {
-    no warnings;
-    local $_ = $string;
+    return $1;
+  }
+  # Example: 922337203685::bigint
+  elsif(/^(.+)::"?bigint"?$/i && $col_info->{'TYPE_NAME'} eq 'bigint')
+  {
+    return $1;
+  }
+  # TODO: http://rt.cpan.org/Ticket/Display.html?id=35462
+  # Example: '{foo,"\\"bar,",baz}'::text[]
+  # ...
+  # Example: 'value'::character varying
+  # Example: ('now'::text)::timestamp(0)
+  elsif(/^\(*'(.*)'::.+$/)
+  {
+    my $default = $1;
 
-    my $pg_vers = $self->dbh->{'pg_server_version'};
+    # Single quotes are backslash-escaped, but Postgres 8.1 and
+    # later uses doubled quotes '' instead.  Strangely, I see
+    # doubled quotes in 8.0.x as well...
+    if($pg_vers >= 80000 && index($default, q('')) > 0)
+    {
+      $default =~ s/''/'/g;
+    }
+    elsif($pg_vers < 80100 && index($default, q(\')) > 0)
+    {
+      $default = $1;
+      $default =~ s/\\'/'/g;
+    }
 
-    # Example: q(B'00101'::"bit")
-    if(/^B'([01]+)'::(?:bit|"bit")$/ && $col_info->{'TYPE_NAME'} eq 'bit')
-    {
-      return $1;
-    }
-    # Example: 922337203685::bigint
-    elsif(/^(.+)::"?bigint"?$/i && $col_info->{'TYPE_NAME'} eq 'bigint')
-    {
-      return $1;
-    }
-    # Example: 'value'::character varying
-    # Example: ('now'::text)::timestamp(0)
-    elsif(/^\(*'(.*)'::.+$/)
-    {
-      my $default = $1;
-
-      # Single quotes are backslash-escaped, but Postgres 8.1 and
-      # later uses doubled quotes '' instead.  Strangely, I see
-      # doubled quotes in 8.0.x as well...
-      if($pg_vers >= 80000 && index($default, q('')) > 0)
-      {
-        $default =~ s/''/'/g;
-      }
-      elsif($pg_vers < 80100 && index($default, q(\')) > 0)
-      {
-        $default = $1;
-        $default =~ s/\\'/'/g;
-      }
-
-      return $default;
-    }
-    # Handle sequence-based defaults elsewhere
-    elsif(/^nextval\(/)
-    {
-      return undef;
-    }
+    return $default;
+  }
+  # Handle sequence-based defaults elsewhere
+  elsif(/^nextval\(/)
+  {
+    return undef;
   }
 
   return $string;
