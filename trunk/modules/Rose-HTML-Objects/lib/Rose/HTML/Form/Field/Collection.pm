@@ -6,6 +6,7 @@ use Carp();
 use Scalar::Util qw(refaddr);
 
 use Rose::HTML::Form::Field::Hidden;
+use Rose::HTML::Form::Field::Repeatable;
 
 use Rose::HTML::Form::Field;
 our @ISA = qw(Rose::HTML::Form::Field);
@@ -29,7 +30,24 @@ use Rose::Object::MakeMethods::Generic
   [
     'field_rank_counter',
   ],
+  
+  array =>
+  [
+    'local_repeatable_fields'     => { interface => 'get_set_inited' },
+    'add_local_repeatable_fields' => { interface => 'push', hash_key => 'local_repeatable_fields' },
+
+    'before_prepare_hooks'     => {},
+    'add_before_prepare_hooks' => { interface => 'push', hash_key => 'before_prepare_hooks' },
+
+    'after_prepare_hooks'     => {},
+    'add_after_prepare_hooks' => { interface => 'push', hash_key => 'after_prepare_hooks' },
+    'clear_prepare_hooks'     => { interface => 'clear', hash_key => 'after_prepare_hooks' },
+  ],
 );
+
+*add_local_repeatable_field = \&add_local_repeatable_fields;
+*add_before_prepare_hook    = \&add_before_prepare_hooks;
+*add_after_prepare_hook     = \&add_after_prepare_hooks;
 
 #
 # Class methods
@@ -53,6 +71,39 @@ sub prepare
   {
     $form->prepare(form_only => 1, @_);
   }
+}
+
+sub add_prepare_hook
+{
+  my($self) = shift;
+  
+  if(@_ == 1)
+  {
+    $self->add_before_prepare_hook(@_);
+  }
+  elsif(@_ == 2)
+  {
+    my $where = shift;
+    
+    unless($where eq 'before' || $where eq 'after')
+    {
+      Carp::croak "Illegal prepare hook position: $where";
+    }
+
+    my $method = "add_${where}_prepare_hook";
+
+    no strict 'refs';
+    $self->$method(@_);
+  }
+  else
+  {
+    Carp::croak "Incorrect number of arguments to add_prepare_hook()";
+  }
+}
+
+sub prepare_hook
+{
+
 }
 
 BEGIN
@@ -217,6 +268,22 @@ sub add_fields
   {
     my $arg = shift;
 
+    my $repeat;
+
+    if($arg eq 'repeatable')
+    {
+      my $repeat_spec = shift;
+
+      my $field_spec = delete $repeat_spec->{'field'} or
+        Carp::confess "Missing 'field' parameter in repeatable field spec";
+
+      $repeat = Rose::HTML::Form::Field::Repeatable->new(%$repeat_spec, field_spec => $field_spec);
+
+      $self->add_local_repeatable_field($repeat);
+
+      next;
+    }
+
     if(UNIVERSAL::isa($arg, 'Rose::HTML::Form::Field'))
     {
       my $field = $arg;
@@ -278,11 +345,17 @@ sub add_fields
   $self->_clear_field_generated_values;
   $self->resync_field_names;
 
+  # XXX: This is super-incestuous
+  if(my $parent_form = $self->parent_form)
+  {
+    $parent_form->_clear_form_generated_values;
+  }
+
   return  unless(defined wantarray);
   return wantarray ? @added_fields : $added_fields[0];
 }
 
-*add_field = \&add_fields;
+sub add_field { shift->add_fields(@_) }
 
 sub compare_fields { $_[1]->name cmp $_[2]->name }
 
