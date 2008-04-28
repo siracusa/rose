@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 174;
+use Test::More tests => 176;
 
 BEGIN 
 {
@@ -539,6 +539,20 @@ is(join("\n", map { $_->html } $f1->fields),
    qq(<input name="subform.bar" type="radio" value="Yes"> <label>Yes</label><br>\n) .
    qq(<input name="subform.bar" type="radio" value="No"> <label>No</label>),
    'nested grouped fields 1');
+
+#
+# Modifying nested fields
+#
+
+my $f = MyPersonForm->new;
+
+$f->add_form(n => MyPersonForm->new);
+
+is(join(', ', map { $_->name } $f->fields), 'age, bday, gender, name, start, n.age, n.bday, n.gender, n.name, n.start', 'nested modification 1');
+
+$f->form('n')->add_field('new' => { type => 'text' });
+
+is(join(', ', map { $_->name } $f->fields), 'age, bday, gender, name, start, n.age, n.bday, n.gender, n.name, n.new, n.start', 'nested modification 1');
 
 #
 # local_fields()
