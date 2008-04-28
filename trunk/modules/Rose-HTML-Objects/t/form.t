@@ -17,6 +17,9 @@ BEGIN
   use_ok('Rose::HTML::Form::Field::DateTime::Split::MDYHMS');
 }
 
+# Mmm, fuzzy...
+Rose::HTML::Form->default_recursive_init_fields(rand > 0.5 ? 1 : 0);
+
 our $Have_RDBO;
 
 my $form = Rose::HTML::Form->new;

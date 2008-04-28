@@ -15,6 +15,9 @@ BEGIN
   use_ok('Rose::HTML::Form::Field::DateTime::Split::MDYHMS');
 }
 
+# Mmm, fuzzy...
+Rose::HTML::Form->default_recursive_init_fields(rand > 0.5 ? 1 : 0);
+
 my $person_form = MyPersonForm->new;
 
 my @fields = qw(age bday gender your_name start);
@@ -552,7 +555,7 @@ is(join(', ', map { $_->name } $f->fields), 'age, bday, gender, name, start, n.a
 
 $f->form('n')->add_field('new' => { type => 'text' });
 
-is(join(', ', map { $_->name } $f->fields), 'age, bday, gender, name, start, n.age, n.bday, n.gender, n.name, n.new, n.start', 'nested modification 1');
+is(join(', ', map { $_->name } $f->fields), 'age, bday, gender, name, start, n.age, n.bday, n.gender, n.name, n.new, n.start', 'nested modification 2');
 
 #
 # local_fields()

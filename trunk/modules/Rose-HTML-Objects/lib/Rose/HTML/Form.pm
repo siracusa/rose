@@ -71,6 +71,7 @@ use Rose::Object::MakeMethods::Generic
   [
     'uri_separator',
     'form_rank_counter',
+    'recursive_init_fields',
   ],
 
   boolean => 
@@ -86,10 +87,15 @@ use Rose::Object::MakeMethods::Generic
 
 use Rose::Class::MakeMethods::Generic
 (
-  inheritable_scalar => '_delegate_to_subforms', 
+  inheritable_scalar => 
+  [
+    '_delegate_to_subforms',
+    '_default_recursive_init_fields',
+  ],
 );
 
 __PACKAGE__->delegate_to_subforms('compile');
+__PACKAGE__->default_recursive_init_fields(0);
 
 #
 # Class methods
@@ -111,6 +117,18 @@ sub new
   $self->init(@_);
 
   return $self;
+}
+
+sub init_recursive_init_fields { shift->default_recursive_init_fields }
+
+sub default_recursive_init_fields
+{
+  my($class) = shift;
+
+  $class = ref $class  if(ref $class);
+
+  return $class->_default_recursive_init_fields($_[0] ? 1 : 0)  if(@_);
+  return $class->_default_recursive_init_fields;
 }
 
 sub delegate_to_subforms
@@ -657,9 +675,24 @@ sub init_fields
 
   $self->clear()  unless($args{'no_clear'});
 
-  foreach my $field ($self->fields)
+  if(exists $args{'recursive'} ? $args{'recursive'} : $self->recursive_init_fields)
   {
-    $self->_init_field($field);
+    foreach my $field ($self->local_fields)
+    {
+      $self->_init_field($field);
+    }
+    
+    foreach my $form ($self->forms)
+    {
+      $form->init_fields;
+    }
+  }
+  else
+  {
+    foreach my $field ($self->fields)
+    {
+      $self->_init_field($field);
+    }
   }
 }
 
@@ -1771,6 +1804,10 @@ Required attributes (default values in parentheses):
 
 =over 4
 
+=item B<default_recursive_init_fields [BOOL]>
+
+Get or set a boolean value that determines the default value of the L<recursive_init_fields|/recursive_init_fields> object attribute.  The default value is false.
+
 =item B<delegate_to_subforms [SETTING]>
 
 Get or set the value that determines how (or if) forms of this class delegate unresolved method calls to L<sub-forms|/"NESTED FORMS">.  If a method is called on a form of this class, and that method does not exist in this class or any other class in its inheritance hierarchy, then the method may optionally be delegated to a L<sub-forms|/"NESTED FORMS">.  Valid values for SETTING are:
@@ -2245,7 +2282,7 @@ If L<coalesce_hidden_fields()|/coalesce_hidden_fields> is true, then each compou
 
 Returns the HTML serialization of the fields returned by L<hidden_fields()|/hidden_fields>, joined by newlines.
 
-=item B<init_fields [ARGS]>
+=item B<init_fields [PARAMS]>
 
 Initialize the fields based on L<params()|/params>.  In general, this works as you'd expect, but the details are a bit complicated.
 
@@ -2253,13 +2290,29 @@ The intention of L<init_fields()|/init_fields> is to set field values based sole
 
 In general, default values for fields exist for the purpose of displaying the HTML form with certain items pre-selected or filled in.  In a typical usage scenario, those default values will end up in the web browser form submission and, eventually, as as an explicit part of part L<params()|/params>, so they are not really ignored.
 
-But to preserve the intended functionality of L<init_fields()|/init_fields>, the first thing this method does is L<clear()|/clear> the form. If a C<no_clear> parameter with a true value is passed as part of ARGS, then this step is skipped.
+But to preserve the intended functionality of L<init_fields()|/init_fields>, the first thing this method does is L<clear()|/clear> the form.  (This is the default.  See the C<no_clear> parameter below.)
 
 If a parameter name exactly matches a field's name (note: the field's L<name|Rose::HTML::Form::Field/name>, which is not necessarily the the same as the name that the field is stored under in the form), then the (list context) value of that parameter is passed as the L<input_value()|Rose::HTML::Form::Field/input_value> for that field.
 
 If a field "isa" L<Rose::HTML::Form::Field::Compound>, and if no parameter exactly matches the L<name|Rose::HTML::Form::Field/name> of the compound field, then each subfield may be initialized by a parameter name that matches the subfield's L<name|Rose::HTML::Form::Field/name>.
 
 If a field is an "on/off" type of field (e.g., a radio button or checkbox), then the field is turned "on" only if the value of the parameter that matches the field's L<name|Rose::HTML::Form::Field/name> exactly matches (string comparison) the "value" HTML attribute of the field.  If not, and if L<params_exist()|/params_exist>, then the field is set to "off".  Otherwise, the field is not modified at all.
+
+PARAMS are name/value pairs.  Valid parameters are:
+
+=over 4
+
+=item B<no_clear BOOL>
+
+If true, the form is not L<clear()ed|/clear> before it is initialized.
+
+=item B<recursive BOOL>
+
+If true, this method is called recursively on any L<nested sub-forms|/"NESTED FORMS">.  If false, the fields in all nested sub-forms are still initialized as expected, but this is done by iterating over the "flattened" L<fields|/fields> list rather than through recursion.
+
+If this parameter is not passed, its value defaults to the value of the L<recursive_init_fields|/recursive_init_fields> object attribute.
+
+=back
 
 Examples:
 
@@ -2618,6 +2671,10 @@ Returns a URI-escaped (but I<not> HTML-escaped) query string that corresponds to
 =item B<rank [INT]>
 
 Get or set the form's rank.  This value can be used for any purpose that suits you, but by default it's used by the L<compare_forms|/compare_forms> method to sort sub-forms.
+
+=item B<recursive_init_fields [BOOL]>
+
+Get or set a boolean value indicating the default value of the <recursive> parameter to the L<init_fields|/init_fields> method.  This attribute, in turn, defaults to the value returned by the L<default_recursive_init_fields|/default_recursive_init_fields> class method.
 
 =item B<reset>
 
