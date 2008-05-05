@@ -15,6 +15,8 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
+require Rose::HTML::Form::Repeatable;
+
 our $VERSION = '0.554';
 
 # Multiple inheritence never quite works out the way I want it to...
@@ -220,6 +222,10 @@ sub _is_full  { 0 }
 sub _set_input_value { }
 sub is_full  { 0 }
 sub is_empty { 0 }
+
+sub is_repeatable { $_[0]->is_repeatable_form || $_[0]->is_repeatable_field ? 1 : 0 }
+sub is_repeatable_field { 0 }
+sub is_repeatable_form  { 0 }
 
 # Empty contents instead of replacing ref
 sub delete_params { %{shift->{'params'}} = () }
@@ -954,6 +960,90 @@ sub increment_form_rank_counter
   return $rank;
 }
 
+sub repeatable_forms
+{
+  my($self) = shift;
+
+  if(@_)
+  {
+    $self->delete_repeatable_forms;
+    $self->add_repeatable_form(@_);
+    return unless(defined wantarray);
+  }
+
+  return wantarray ?
+    (grep { $_->is_repeatable_form } $self->forms(@_)) :
+    [ grep { $_->is_repeatable_form } $self->forms(@_) ];
+}
+
+sub add_repeatable_forms
+{
+  my($self) = shift;
+  
+  my @form_args;
+
+  while(@_)
+  {
+    my $arg = shift;
+
+    if(UNIVERSAL::isa($arg, 'Rose::HTML::Form'))
+    {
+      push(@form_args,
+        $arg->form_name =>
+        {
+          form       => $arg,
+          repeatable => 1,
+        });
+    }
+    elsif(!ref $arg)
+    {
+      if(UNIVERSAL::isa($_[0], 'Rose::HTML::Form'))
+      {
+        push(@form_args,
+          $arg->form_name =>
+          {
+            form       => shift(@_),
+            repeatable => 1,
+          });
+      }
+      elsif(ref $_[0] eq 'HASH')
+      {
+        my $spec = shift;
+        $spec->{'repeatable'} = 1  unless(exists $spec->{'repeatable'});
+        push(@form_args, $arg => $spec);
+      }
+      else
+      {
+        croak "Invalid argument pair passed to add_repeatable_forms() - $arg, $_[0]";
+      }
+    }
+    else
+    {
+      croak "Invalid argument passed to add_repeatable_forms() - $arg";
+    }
+  }
+
+  return $self->add_forms(@form_args);
+}
+
+sub form_depth
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    return $self->{'form_depth'} = shift;
+  }
+
+  return $self->{'form_depth'}  if(defined $self->{'form_depth'});
+
+  my $depth = 0;
+  my $form = $self;
+  $depth++ while($form = $form->parent_form);
+
+  return $self->{'form_depth'} = $depth;
+}
+
 sub add_forms
 {
   my($self) = shift;
@@ -1000,6 +1090,27 @@ sub add_forms
           croak "Cannot nest a form within itself";
         }
       }
+      elsif(ref $form eq 'HASH' && exists $form->{'repeatable'})
+      {
+        my $repeat_spec = $form;
+        
+        if(ref $form->{'repeatable'})
+        {
+          @$repeat_spec{keys %{$form->{'repeatable'}}} = values %{$form->{'repeatable'}};
+        }
+        else
+        {
+          $repeat_spec->{'default_count'} = $form->{'repeatable'}
+            unless(exists $repeat_spec->{'default_count'});
+        }
+
+        delete $form->{'repeatable'};
+
+        $repeat_spec->{'prototype'} = delete $repeat_spec->{'form'}
+          if($repeat_spec->{'form'});
+
+        $form = Rose::HTML::Form::Repeatable->new(%$repeat_spec);
+      }
       else
       {
         Carp::croak "Not a Rose::HTML::Form object: $form";
@@ -1029,13 +1140,27 @@ sub add_forms
     push(@added_forms, $form);
   }
 
+  my $depth = $self->form_depth + 1;
+
   foreach my $form (@added_forms)
   {
+    if($form->isa('Rose::HTML::Form::Repeatable'))
+    {
+      $self->recursive_init_fields(1);
+    }
+
+    $form->form_depth($depth);
     $form->resync_field_names;
   }
 
   $self->_clear_form_generated_values;
   $self->resync_fields_by_name;
+
+  # XXX: This is super-incestuous
+  if(my $parent_form = $self->parent_form)
+  {
+    $parent_form->_clear_form_generated_values;
+  }
 
   return  unless(defined wantarray);
   return @added_forms;
@@ -1070,7 +1195,12 @@ sub resync_fields_by_name
   }
 }
 
-sub compare_forms { no warnings 'uninitialized'; $_[1]->rank <=> $_[2]->rank }
+sub compare_forms
+{
+  my($self, $one, $two) = @_;
+  no warnings 'uninitialized';
+  return $one->form_depth <=> $two->form_depth || $one->rank <=> $two->rank;
+}
 
 sub forms
 {
@@ -1110,10 +1240,74 @@ sub form_names
   return wantarray ? @{$self->{'form_names'}} : $self->{'form_names'};
 }
 
+sub delete_repeatable_forms 
+{
+  my($self) = shift;
+  
+  foreach my $form (grep { $_->is_repeatable_form } $self->forms)
+  {
+    delete $self->{'forms'}{$form->form_name};
+  }
+
+  $self->_clear_form_generated_values;
+
+  return;
+}
+
+sub delete_repeatable_form
+{
+  my($self, $name) = @_;
+
+  $name = $name->form_name  if(UNIVERSAL::isa($name, 'Rose::HTML::Form'));
+
+  if(exists $self->{'forms'}{$name} && $self->{'forms'}{$name}->is_repeatable_form)
+  {
+    $self->_clear_form_generated_values;
+    return delete $self->{'forms'}{$name};
+  }
+
+  return undef;
+}
+
+sub delete_repeatable_fields 
+{
+  my($self) = shift;
+  
+  foreach my $form (grep { $_->is_repeatable_field } $self->forms)
+  {
+    delete $self->{'forms'}{$form->form_name};
+  }
+
+  $self->_clear_form_generated_values;
+
+  return;
+}
+
+sub delete_repeatable_field
+{
+  my($self, $name) = @_;
+
+  $name = $name->form_name  if(UNIVERSAL::isa($name, 'Rose::HTML::Form'));
+
+  if(exists $self->{'forms'}{$name} && $self->{'forms'}{$name}->is_repeatable_field)
+  {
+    $self->_clear_form_generated_values;
+    return delete $self->{'forms'}{$name};
+  }
+
+  return undef;
+}
+
 sub delete_forms 
 {
   my($self) = shift;
-  $self->{'forms'} = {};
+
+  # Leave the repeatable fields which are implemented as a special case of repeatable forms
+  foreach my $form (grep { !$_->is_repeatable_field } $self->forms)
+  {
+    delete $self->{'forms'}{$form->form_name};
+  }
+
   $self->form_rank_counter(undef);
   $self->_clear_form_generated_values;
   return;
@@ -1214,6 +1408,7 @@ sub delete_fields
   $self->_clear_field_generated_values;
   $self->{'fields'} = {};
   $self->{'fields_by_name'} = {};
+  $self->delete_repeatable_fields;
   $self->field_rank_counter(undef);
   return;
 }
