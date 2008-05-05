@@ -35,6 +35,7 @@ lib/Rose/HTML/Form/Field/PhoneNumber/US/Split.pm
 lib/Rose/HTML/Form/Field/PopUpMenu.pm
 lib/Rose/HTML/Form/Field/RadioButton.pm
 lib/Rose/HTML/Form/Field/RadioButtonGroup.pm
+lib/Rose/HTML/Form/Field/Repeatable.pm
 lib/Rose/HTML/Form/Field/Reset.pm
 lib/Rose/HTML/Form/Field/SelectBox.pm
 lib/Rose/HTML/Form/Field/Set.pm
@@ -48,6 +49,7 @@ lib/Rose/HTML/Form/Field/Time/Seconds.pm
 lib/Rose/HTML/Form/Field/Time/Split.pm
 lib/Rose/HTML/Form/Field/Time/Split/HourMinuteSecond.pm
 lib/Rose/HTML/Form/Field/WithContents.pm
+lib/Rose/HTML/Form/Repeatable.pm
 lib/Rose/HTML/Image.pm
 lib/Rose/HTML/Label.pm
 lib/Rose/HTML/Link.pm
@@ -62,6 +64,7 @@ lib/Rose/HTML/Object/Message.pm
 lib/Rose/HTML/Object/Message/Localized.pm
 lib/Rose/HTML/Object/Message/Localizer.pm
 lib/Rose/HTML/Object/Messages.pm
+lib/Rose/HTML/Object/Repeatable.pm
 lib/Rose/HTML/Object/WithContents.pm
 lib/Rose/HTML/Objects.pm
 lib/Rose/HTML/Script.pm
@@ -99,6 +102,7 @@ t/form-field-time.t
 t/form-field.t
 t/form-l10n.t
 t/form-nested.t
+t/form-repeatable.t
 t/form.t
 t/image.t
 t/label.t

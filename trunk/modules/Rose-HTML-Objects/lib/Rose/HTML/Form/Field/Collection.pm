@@ -6,10 +6,11 @@ use Carp();
 use Scalar::Util qw(refaddr);
 
 use Rose::HTML::Form::Field::Hidden;
-use Rose::HTML::Form::Field::Repeatable;
 
 use Rose::HTML::Form::Field;
 our @ISA = qw(Rose::HTML::Form::Field);
+
+require Rose::HTML::Form::Field::Repeatable;
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
@@ -33,9 +34,6 @@ use Rose::Object::MakeMethods::Generic
   
   array =>
   [
-    'local_repeatable_fields'     => { interface => 'get_set_inited' },
-    'add_local_repeatable_fields' => { interface => 'push', hash_key => 'local_repeatable_fields' },
-
     'before_prepare_hooks'     => {},
     'add_before_prepare_hooks' => { interface => 'push', hash_key => 'before_prepare_hooks' },
 
@@ -45,7 +43,6 @@ use Rose::Object::MakeMethods::Generic
   ],
 );
 
-*add_local_repeatable_field = \&add_local_repeatable_fields;
 *add_before_prepare_hook    = \&add_before_prepare_hooks;
 *add_after_prepare_hook     = \&add_after_prepare_hooks;
 
@@ -56,6 +53,11 @@ use Rose::Object::MakeMethods::Generic
 sub prepare
 {
   my($self)  = shift;
+
+  foreach my $hook ($self->before_prepare_hooks)
+  {
+    $hook->($self, @_);
+  }
 
   my %args = @_;
 
@@ -70,6 +72,11 @@ sub prepare
   foreach my $form ($self->forms)
   {
     $form->prepare(form_only => 1, @_);
+  }
+
+  foreach my $hook ($self->after_prepare_hooks)
+  {
+    $hook->($self, @_);
   }
 }
 
@@ -103,7 +110,9 @@ sub add_prepare_hook
 
 sub prepare_hook
 {
-
+  my($self) = shift;
+  $self->clear_prepare_hooks;
+  $self->add_prepare_hook(@_);
 }
 
 BEGIN
