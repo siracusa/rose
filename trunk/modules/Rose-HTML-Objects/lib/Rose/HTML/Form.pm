@@ -9,6 +9,7 @@ use Rose::URI;
 use Scalar::Util();
 use URI::Escape qw(uri_escape);
 
+use Rose::HTML::Util();
 use Rose::HTML::Object::Errors qw(:form);
 
 use Rose::HTML::Form::Field;
@@ -687,7 +688,7 @@ sub init_fields
     {
       $self->_init_field($field);
     }
-    
+
     foreach my $form ($self->forms)
     {
       $form->init_fields;
@@ -979,7 +980,7 @@ sub repeatable_forms
 sub add_repeatable_forms
 {
   my($self) = shift;
-  
+
   my @form_args;
 
   while(@_)
@@ -1029,7 +1030,7 @@ sub add_repeatable_forms
 sub form_depth
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     return $self->{'form_depth'} = shift;
@@ -1093,7 +1094,7 @@ sub add_forms
       elsif(ref $form eq 'HASH' && exists $form->{'repeatable'})
       {
         my $repeat_spec = $form;
-        
+
         if(ref $form->{'repeatable'})
         {
           @$repeat_spec{keys %{$form->{'repeatable'}}} = values %{$form->{'repeatable'}};
@@ -1237,7 +1238,7 @@ sub form_names
 sub delete_repeatable_forms 
 {
   my($self) = shift;
-  
+
   foreach my $form (grep { $_->is_repeatable_form } $self->forms)
   {
     delete $self->{'forms'}{$form->form_name};
@@ -1269,7 +1270,7 @@ sub delete_repeatable_form
 sub delete_repeatable_fields 
 {
   my($self) = shift;
-  
+
   foreach my $form (grep { $_->is_repeatable_field } $self->forms)
   {
     delete $self->{'forms'}{$form->form_name};
@@ -1642,6 +1643,92 @@ sub form
   return undef  unless(defined $parent_form);
   return $parent_form->form($local_name);
 }
+
+sub _html_table
+{
+  my($self, %args) = @_;
+
+  my $xhtml       = delete $args{'_xhtml'} ? 'xhtml' : 'html';
+  my $xhtml_field = "${xhtml}_field";
+  my $xhtml_label = "${xhtml}_label";
+
+  $args{'class'} = defined $args{'class'} ? 
+    "$args{'class'} form" : 'form';
+
+  $args{'tr'} ||= {};
+  $args{'td'} ||= {};
+
+  $args{'table'}{'class'} = defined $args{'table'}{'class'} ? 
+    "$args{'table'}{'class'} form" : 
+    defined $args{'class'} ? $args{'class'} : undef;
+
+  $args{'tr'}{'class'} = defined $args{'tr'}{'class'} ? 
+    "$args{'tr'}{'class'} field" : 'field';    
+
+  my $html = join("\n", map { $_->$xhtml_field() } 
+                        grep { $_->isa('Rose::HTML::Form::Field::Hidden') } $self->fields);
+
+  $html .= "\n\n"  if($html);
+
+  $html .= '<table' . Rose::HTML::Util::html_attrs_string($args{'table'}) . ">\n";
+
+  my $form_start = "start_$xhtml";
+  my $form_end   = "end_$xhtml";
+
+  my $i = 1;
+
+  foreach my $field ($self->fields)
+  {
+    if($field->isa('Rose::HTML::Form::Field::File'))
+    {
+      $form_start = "start_multipart_$xhtml";
+    }
+
+    my $odd_even = $i++ % 2 ? 'odd' : 'even';
+
+    local $args{'tr'}{'class'} = "field-$odd_even";
+    local $args{'td'}{'class'} = $args{'td'}{'class'} ? "$args{'td'}{'class'} label" : 'label';
+
+    my $label = $field->$xhtml_label();
+
+    unless($label)
+    {
+      my $name = $field->name;
+
+      for($name)
+      {
+        tr[_.][  ];
+        s/\b(\w)/\u$1/g;
+      }
+
+      $label = Rose::HTML::Label->new(contents => Rose::HTML::Util::escape_html($name));
+
+      if($field->html_attr_exists('id'))
+      {
+        $label->for($field->html_attr('id'));
+      }
+
+      $label = $label->$xhtml();
+    }
+
+    $html .= '<tr' . Rose::HTML::Util::html_attrs_string($args{'tr'}) . ">\n" .
+             '<td' . Rose::HTML::Util::html_attrs_string($args{'td'}) . ">$label</td>\n";
+
+    $args{'td'}{'class'} =~ s/(?:^| )label$//;
+    $args{'td'}{'class'} = $args{'td'}{'class'} ? "$args{'td'}{'class'} field" : 'field';
+
+    $html .= '<td' . Rose::HTML::Util::html_attrs_string($args{'td'}) . '>' .
+             $field->$xhtml() .
+             "</td>\n</tr>\n";
+  }
+
+  $html .= '</table>';
+
+  return $self->$form_start() . "\n\n$html\n\n" . $self->$form_end();
+}
+
+sub html_table  { shift->_html_table(@_) }
+sub xhtml_table { shift->_html_table(@_, _xhtml => 1) }
 
 sub app
 {

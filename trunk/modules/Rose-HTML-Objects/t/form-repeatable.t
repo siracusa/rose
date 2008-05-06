@@ -68,7 +68,7 @@ $form->init_fields;
 $form->params({ 'person.age' => 10 });
 
 $form->form('address')->default_count(0);
-$DB::single = 1;
+
 $form->init_fields;
 
 @fields = qw(person.age person.bday person.gender person.name person.start);
@@ -86,6 +86,8 @@ $form->init_fields;
      address.3.city address.3.state address.3.street address.3.zip);
 
 is_deeply([ $form->field_names ], \@fields, 'person address field names 6');
+
+#print $form->xhtml_table;
 
 exit;
 
