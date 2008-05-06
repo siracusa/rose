@@ -72,23 +72,26 @@ print STDERR<<"EOF";
 EOF
 }
 
-my %old;
-
-$old{'ALRM'} = $SIG{'ALRM'} || 'DEFAULT';
-
-eval
+unless($ENV{'AUTOMATED_TESTING'})
 {
-  # Localize so I only have to restore in my catch block
-  local $SIG{'ALRM'} = sub { die 'alarm' };
-  alarm(60);
-  my $res = <STDIN>;
-  alarm(0);
-};
-
-if($@ =~ /alarm/)
-{
-  $SIG{'ALRM'} = $old{'ALRM'};
-}    
+  my %old;
+  
+  $old{'ALRM'} = $SIG{'ALRM'} || 'DEFAULT';
+  
+  eval
+  {
+    # Localize so I only have to restore in my catch block
+    local $SIG{'ALRM'} = sub { die 'alarm' };
+    alarm(60);
+    my $res = <STDIN>;
+    alarm(0);
+  };
+  
+  if($@ =~ /alarm/)
+  {
+    $SIG{'ALRM'} = $old{'ALRM'};
+  }
+}
 
 print "1..1\n",
       "ok 1\n";
