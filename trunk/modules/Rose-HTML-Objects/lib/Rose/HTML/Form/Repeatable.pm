@@ -47,11 +47,19 @@ sub prepare
     }
   }
 
-  unless(%have_num || !$self->default_count)
+  unless(%have_num)
   {
-    foreach my $num (1 .. $self->default_count)
+    if($self->default_count)
     {
-      $self->form($num) || $self->make_form($num);
+      foreach my $num (1 .. $self->default_count)
+      {
+        $self->form($num) || $self->make_form($num);
+        $have_num{$num}++;
+      }
+    }
+    else
+    {
+      $self->delete_forms;
     }
   }
 
@@ -59,9 +67,9 @@ sub prepare
   {
     foreach my $form ($self->forms)
     {
-      unless($have_num{$form->name})
+      unless($have_num{$form->form_name})
       {
-        $self->delete_form($form->name);
+        $self->delete_form($form->form_name);
       }
     }
   }
@@ -81,7 +89,9 @@ sub make_form
   my($self, $num) = @_;
 
   my $form = $self->prototype_form_clone;
-$DB::single = 1;
+
+  $form->rank($num);
+
   $self->add_form($num => $form);
   
   return $form;

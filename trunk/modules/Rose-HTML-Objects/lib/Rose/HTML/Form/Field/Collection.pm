@@ -354,12 +354,6 @@ sub add_fields
   $self->_clear_field_generated_values;
   $self->resync_field_names;
 
-  # XXX: This is super-incestuous
-  if(my $parent_form = $self->parent_form)
-  {
-    $parent_form->_clear_form_generated_values;
-  }
-
   return  unless(defined wantarray);
   return wantarray ? @added_fields : $added_fields[0];
 }
@@ -509,6 +503,12 @@ sub _clear_field_generated_values
   $self->{'field_list'}  = undef;
   $self->{'field_monikers'} = undef;
   $self->invalidate_field_caches;
+
+  # XXX: This is super-incestuous
+  if(my $parent_form = $self->parent_form)
+  {
+    $parent_form->_clear_field_generated_values;
+  }
 }
 
 sub hidden_field

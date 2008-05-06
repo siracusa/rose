@@ -22,11 +22,70 @@ $form->init_fields;
 
 my @fields = 
   qw(person.age person.bday person.gender person.name person.start 
-    address.1.city address.1.state address.1.street address.1.zip
-    address.2.city address.2.state address.2.street address.2.zip);
-is_deeply([ $form->field_names ], \@fields, 'person address field names');
+     address.1.city address.1.state address.1.street address.1.zip
+     address.2.city address.2.state address.2.street address.2.zip);
+is_deeply([ $form->field_names ], \@fields, 'person address field names 1');
 
 is_deeply(scalar $form->form_names, [ 'person', 'address' ], 'person addresses form names 1');
+
+$form->params({ 'person.age' => 10, 'address.1.state' => undef, 'address.2.street' => '1 Main St.', 'address.3.zip' => 12345 });
+
+$form->init_fields;
+
+@fields = 
+  qw(person.age person.bday person.gender person.name person.start 
+     address.1.city address.1.state address.1.street address.1.zip
+     address.2.city address.2.state address.2.street address.2.zip
+     address.3.city address.3.state address.3.street address.3.zip);
+
+is_deeply([ $form->field_names ], \@fields, 'person address field names 2');
+
+$form->params({ 'person.age' => 10 });
+
+$form->init_fields;
+
+@fields = 
+  qw(person.age person.bday person.gender person.name person.start 
+     address.1.city address.1.state address.1.street address.1.zip
+     address.2.city address.2.state address.2.street address.2.zip);
+
+is_deeply([ $form->field_names ], \@fields, 'person address field names 3');
+
+$form->form('address')->default_count(1);
+
+$form->init_fields;
+
+@fields = 
+  qw(person.age person.bday person.gender person.name person.start 
+     address.1.city address.1.state address.1.street address.1.zip);
+
+is_deeply([ $form->field_names ], \@fields, 'person address field names 4');
+
+$form->params({ 'person.age' => 10, 'address.1.state' => undef, 'address.2.street' => '1 Main St.', 'address.3.zip' => 12345 });
+
+$form->init_fields;
+
+$form->params({ 'person.age' => 10 });
+
+$form->form('address')->default_count(0);
+$DB::single = 1;
+$form->init_fields;
+
+@fields = qw(person.age person.bday person.gender person.name person.start);
+
+is_deeply([ $form->field_names ], \@fields, 'person address field names 5');
+
+$form->params({ 'person.age' => 10, 'address.1.state' => undef, 'address.2.street' => '1 Main St.', 'address.3.zip' => 12345 });
+
+$form->init_fields;
+
+@fields = 
+  qw(person.age person.bday person.gender person.name person.start 
+     address.1.city address.1.state address.1.street address.1.zip
+     address.2.city address.2.state address.2.street address.2.zip
+     address.3.city address.3.state address.3.street address.3.zip);
+
+is_deeply([ $form->field_names ], \@fields, 'person address field names 6');
 
 exit;
 

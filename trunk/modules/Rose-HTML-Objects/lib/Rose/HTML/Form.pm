@@ -1156,12 +1156,6 @@ sub add_forms
   $self->_clear_form_generated_values;
   $self->resync_fields_by_name;
 
-  # XXX: This is super-incestuous
-  if(my $parent_form = $self->parent_form)
-  {
-    $parent_form->_clear_form_generated_values;
-  }
-
   return  unless(defined wantarray);
   return @added_forms;
 }
@@ -1262,8 +1256,11 @@ sub delete_repeatable_form
 
   if(exists $self->{'forms'}{$name} && $self->{'forms'}{$name}->is_repeatable_form)
   {
+    my $form = delete $self->{'forms'}{$name};
+
     $self->_clear_form_generated_values;
-    return delete $self->{'forms'}{$name};
+
+    return $form;
   }
 
   return undef;
@@ -1321,8 +1318,11 @@ sub delete_form
 
   if(exists $self->{'forms'}{$name})
   {
+    my $form = delete $self->{'forms'}{$name};
+
     $self->_clear_form_generated_values;
-    return delete $self->{'forms'}{$name};
+
+    return $form;
   }
 
   return undef;
