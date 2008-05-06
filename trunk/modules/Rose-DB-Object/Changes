@@ -1,4 +1,4 @@
-0.769_04 (04.17.2008) - John Siracusa <siracusa@gmail.com>
+0.769_05 (05.06.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added "iterator" method type, similar to "find", to OneToMany
       and ManyToMany.  (Patch by Peter Karman - peknet@gmail.com)
@@ -6,6 +6,8 @@
       consideration when regenerating modules with make_modules().
     * Improved error propagation in relationship methods.  (Suggested
       by Wiggins d'Anconia)
+    * Skip the interactive part of the test suite when the
+      AUTOMATED_TESTING environment variable is set.
 
 0.769 (04.01.2008) - John Siracusa <siracusa@gmail.com>
 
