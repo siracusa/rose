@@ -42,7 +42,7 @@ sub array
       unless(@_)
       {
         $self->{$key} = $self->$init_method()  unless(defined $self->{$key});
-        return wantarray ? @{$self->{$key}} : $self->{$key};
+        return wantarray ? @{$self->{$key} ||= []} : $self->{$key};
       }
 
       # If called with a array ref, set new value
@@ -127,7 +127,7 @@ sub array
     {
       my($self) = shift;
       Carp::croak "Missing value(s) to add"  unless(@_);
-      unshift(@{$self->{$key}}, map { _coerce_html_object($self, $_) } (@_ == 1 && ref $_[0] eq 'ARRAY') ? @{$_[0]} : @_);
+      unshift(@{$self->{$key} ||= []}, map { _coerce_html_object($self, $_) } (@_ == 1 && ref $_[0] eq 'ARRAY') ? @{$_[0]} : @_);
     }
   }
   elsif($interface eq 'shift')
@@ -135,8 +135,8 @@ sub array
     $methods{$name} = sub
     {
       my($self) = shift;
-      return splice(@{$self->{$key}}, 0, $_[0])  if(@_);
-      return shift(@{$self->{$key}})
+      return splice(@{$self->{$key} ||= []}, 0, $_[0])  if(@_);
+      return shift(@{$self->{$key} ||= []})
     }
   }
   elsif($interface eq 'clear')
@@ -159,7 +159,7 @@ sub array
     {
       my($self) = shift;
       Carp::croak "Missing value(s) to add"  unless(@_);
-      push(@{$self->{$key}}, map { _coerce_html_object($self, $_) } (@_ == 1 && ref $_[0] && ref $_[0] eq 'ARRAY') ? @{$_[0]} : @_);
+      push(@{$self->{$key} ||= []}, map { _coerce_html_object($self, $_) } (@_ == 1 && ref $_[0] && ref $_[0] eq 'ARRAY') ? @{$_[0]} : @_);
     }
   }
   elsif($interface eq 'pop')
@@ -167,8 +167,15 @@ sub array
     $methods{$name} = sub
     {
       my($self) = shift;
-      return splice(@{$self->{$key}}, -$_[0])  if(@_);
-      return pop(@{$self->{$key}})
+
+      if(@_)
+      {
+        my $a = $self->{$key} ||= [];
+        my $offset = $#$a - $_[0];
+        return splice(@$a, $offset < 0 ? 0 : $offset)  
+      }
+
+      return pop(@{$self->{$key} ||= []})
     }
   }
   elsif($interface eq 'get_set')

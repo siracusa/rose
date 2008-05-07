@@ -263,6 +263,7 @@ sub init
 sub add_children  { shift->push_children(@_) }
 sub add_child     { shift->push_children(@_) }
 sub push_child    { shift->push_children(@_) }
+sub pop_child     { shift->pop_children(@_) }
 sub shift_child   { shift->shift_children(@_) }
 sub unshift_child { shift->unshift_children(@_) }
 

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 288;
+use Test::More tests => 292;
 
 BEGIN 
 {
@@ -16,6 +16,10 @@ BEGIN
   use_ok('Rose::HTML::Form::Field::DateTime::Split::MonthDayYear');
   use_ok('Rose::HTML::Form::Field::DateTime::Split::MDYHMS');
 }
+
+#
+# Form children
+#
 
 my $form = Rose::HTML::Form->new;
 
@@ -58,6 +62,45 @@ qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">
 
 </form>), 'children 1');
 
+is($form->pop_child->html, '<div class="bottom">end</div>', 'pop_child 1');
+
+is($form->xhtml_table,
+qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">
+
+<p class="top">start</p>
+
+<table class="form">
+<tr class="field-odd">
+<td class="label"><label>City</label></td>
+<td class="field"><input name="city" size="25" type="text" value="" /></td>
+</tr>
+<tr class="field-even">
+<td class="label"><label>Street</label></td>
+<td class="field"><input name="street" size="25" type="text" value="" /></td>
+</tr>
+</table>
+
+</form>), 'pop_child 2');
+
+is($form->pop_child->html, '<p class="top">start</p>', 'pop_child 3');
+
+is($form->xhtml_table,
+qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">
+
+<table class="form">
+<tr class="field-odd">
+<td class="label"><label>City</label></td>
+<td class="field"><input name="city" size="25" type="text" value="" /></td>
+</tr>
+<tr class="field-even">
+<td class="label"><label>Street</label></td>
+<td class="field"><input name="street" size="25" type="text" value="" /></td>
+</tr>
+</table>
+
+</form>), 'pop_child 4');
+
+####################################
 #print $form->xhtml_table;
 #exit;
 
@@ -66,7 +109,6 @@ Rose::HTML::Form->default_recursive_init_fields(rand > 0.5 ? 1 : 0);
 
 our $Have_RDBO;
 
-#my 
 $form = Rose::HTML::Form->new;
 ok(ref $form && $form->isa('Rose::HTML::Form'), 'new()');
 
