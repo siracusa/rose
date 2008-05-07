@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 572;
+use Test::More tests => 585;
 
 BEGIN
 {
@@ -203,6 +203,35 @@ $p->jobs([ 'butcher', 'baker' ]);
 is(join(',', $p->jobs), 'butcher,baker', 'Set list - array ref (array)');
 
 is(join(',', @{$p->jobs}), 'butcher,baker', 'Get list - array ref (array)');
+
+$p->push_jobs('x');
+is(join(',', $p->jobs), 'butcher,baker,x', 'push 1(array)');
+
+$p->push_jobs('y', 'z');
+is(join(',', $p->jobs), 'butcher,baker,x,y,z', 'push 2 (array)');
+
+is($p->pop_jobs, 'z', 'pop 1 (array)');
+is(join(',', $p->jobs), 'butcher,baker,x,y', 'pop 2 (array)');
+
+is(join(',', $p->pop_jobs(2)), 'x,y', 'pop 3 (array)');
+is(join(',', $p->jobs), 'butcher,baker', 'pop 4 (array)');
+
+$p->push_jobs([ 1, 2 ]);
+is(join(',', $p->jobs), 'butcher,baker,1,2', 'pop 5 (array)');
+
+is(join(',', $p->pop_jobs(2)), '1,2', 'pop 6 (array)');
+
+$p->unshift_jobs('a');
+is(join(',', $p->jobs), 'a,butcher,baker', 'unshift 1 (array)');
+
+$p->unshift_jobs('b', 'c');
+is(join(',', $p->jobs), 'b,c,a,butcher,baker', 'unshift 2 (array)');
+
+$p->unshift_jobs([ 'd', 'e' ]);
+is(join(',', $p->jobs), 'd,e,b,c,a,butcher,baker', 'unshift 3 (array)');
+
+is($p->shift_jobs, 'd', 'shift 1 (array)');
+is(join(',', $p->shift_jobs(4)), 'e,b,c,a', 'shift 2 (array)');
 
 #
 # array --get_set_item
@@ -1207,8 +1236,12 @@ BEGIN
 
     array =>
     [
-      job        => { interface => 'get_set_item', hash_key => 'jobs' },
-      clear_jobs => { interface => 'clear', hash_key => 'jobs' },
+      job          => { interface => 'get_set_item', hash_key => 'jobs' },
+      clear_jobs   => { interface => 'clear', hash_key => 'jobs' },
+      push_jobs    => { interface => 'push', hash_key => 'jobs' },
+      pop_jobs     => { interface => 'pop', hash_key => 'jobs' },
+      unshift_jobs => { interface => 'unshift', hash_key => 'jobs' },
+      shift_jobs   => { interface => 'shift', hash_key => 'jobs' },
     ],
 
     array =>
