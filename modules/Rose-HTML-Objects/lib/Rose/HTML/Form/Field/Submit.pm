@@ -7,7 +7,7 @@ use Carp();
 use Rose::HTML::Form::Field::Input;
 our @ISA = qw(Rose::HTML::Form::Field::Input);
 
-use Rose::HTML::Object::MakeMethods
+use Rose::HTML::Object::MakeMethods::Localization
 (
   localized_message =>
   [

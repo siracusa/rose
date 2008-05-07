@@ -23,7 +23,7 @@ use overload
    fallback => 1,
 );
 
-use Rose::HTML::Object::MakeMethods
+use Rose::HTML::Object::MakeMethods::Localization
 (
   localized_message =>
   [

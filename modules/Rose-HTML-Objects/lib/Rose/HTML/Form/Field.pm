@@ -23,7 +23,7 @@ our $VERSION = '0.550';
 
 #our $Debug = 0;
 
-use Rose::HTML::Object::MakeMethods
+use Rose::HTML::Object::MakeMethods::Localization
 (
   localized_message =>
   [
