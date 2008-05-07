@@ -1530,8 +1530,8 @@ sub pop_children
   {
     push(@children, $self->pop_pre_children($num - @children));
   }
-  
-  return @children;
+
+  return @children == 1 ? $children[0] : @children;
 }
 
 sub shift_children 
@@ -1546,7 +1546,7 @@ sub shift_children
     push(@children, $self->shift_post_children($num - @children));
   }
   
-  return @children;
+  return @children == 1 ? $children[0] : @children;
 }
 
 sub unshift_children { shift->unshift_pre_children(@_) }
