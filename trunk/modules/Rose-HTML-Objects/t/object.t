@@ -195,8 +195,8 @@ $o->tall(' ');
 is($o->html_attrs_string, ' age="" name="" smart tall', 'html_attrs_string() 4');
 is($o->xhtml_attrs_string, ' age="" name="" smart="smart" tall="tall"', 'xhtml_attrs_string() 1');
 
-is(Rose::HTML::Object->html_element('foo'), 'foo', 'html_element()');
-is(Rose::HTML::Object->xhtml_element('xfoo'), 'xfoo', 'xhtml_element()');
+is($o->html_element('foo'), 'foo', 'html_element()');
+is($o->xhtml_element('xfoo'), 'xfoo', 'xhtml_element()');
 
 is($o->html_tag, '<foo age="" name="" smart tall>', 'html_tag()');
 is($o->xhtml_tag, '<xfoo age="" name="" smart="smart" tall="tall" />', 'xhtml_tag()');

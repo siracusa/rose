@@ -49,7 +49,7 @@ sub html_tag
   my($self) = shift;
   my(%args) = @_;
 
-  my $element = ref($self)->html_element;
+  my $element = $self->html_element;
 
   my $contents = exists $args{'contents'} ?  $args{'contents'} : $self->contents;
   $contents = ''  unless(defined $contents);
@@ -80,7 +80,7 @@ sub xhtml_tag
   my($self) = shift;
   my(%args) = @_;
 
-  my $element = ref($self)->xhtml_element;
+  my $element = $self->xhtml_element;
 
   my $contents = exists $args{'contents'} ?  $args{'contents'} : $self->contents;
   $contents = ''  unless(defined $contents);

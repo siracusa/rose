@@ -54,7 +54,7 @@ sub _item_name_plural { 'items' }
 
 sub children 
 {
-  Carp::croak "children() does not take any arguments"  if(@_ > 1);
+  Carp::croak "Cannot set children() for a pseudo-group ($_[0])"  if(@_ > 1);
   return shift->items();
 }
 

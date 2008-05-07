@@ -26,6 +26,31 @@ use Rose::Class::MakeMethods::Generic
   ],
 );
 
+__PACKAGE__->localizer(Rose::HTML::Object::Message::Localizer->new);
+
+__PACKAGE__->autoload_html_attr_methods(1);
+
+__PACKAGE__->add_valid_html_attrs
+(
+  'id',
+  'class',
+  'style',
+  'title',
+  'lang',
+  'xml:lang',
+  'dir',
+  'onclick',
+  'ondblclick',
+  'onmousedown',
+  'onmouseup',
+  'onmouseover',
+  'onmousemove',
+  'onmouseout',
+  'onkeypress',
+  'onkeydown',
+  'onkeyup'
+);
+
 __PACKAGE__->object_type_classes
 (
   'text'               => 'Rose::HTML::Form::Field::Text',
@@ -120,6 +145,12 @@ __PACKAGE__->object_type_classes
 
 use Rose::Object::MakeMethods::Generic
 (
+  scalar =>
+  [
+    'html_element',  # may be read-only in subclasses
+    'xhtml_element', # may be read-only in subclasses
+  ],
+
   boolean =>
   [
     'escape_html'         => { default => 1 },
@@ -131,14 +162,34 @@ use Rose::Object::MakeMethods::Generic
     'html_error_formatter',
     'xhtml_error_formatter',
   ],
+
+  array =>
+  [
+    'children'         => { interface => 'get_set_inited' },
+    'push_children'    => { interface => 'push', hash_key => 'children' },
+    'pop_children'     => { interface => 'pop', hash_key => 'children' },
+    'shift_children'   => { interface => 'shift', hash_key => 'children' },
+    'unshift_children' => { interface => 'unshift', hash_key => 'children' },
+    'delete_children'  => { interface => 'clear', hash_key => 'children' },
+  ],  
 );
+
+sub add_children  { shift->push_children(@_) }
+sub add_child     { shift->push_children(@_) }
+sub push_child    { shift->push_children(@_) }
+sub shift_child   { shift->shift_children(@_) }
+sub unshift_child { shift->unshift_children(@_) }
+
+sub has_children
+{
+  my $children = shift->children; 
+  return $children && @$children ? 1 : 0;
+}
 
 use Rose::Class::MakeMethods::Generic
 (
   inheritable_scalar =>
   [
-    'html_element',  # may be read-only in subclasses
-    'xhtml_element', # may be read-only in subclasses
     'autoload_html_attr_methods',
     'force_utf8',
   ],
@@ -170,35 +221,6 @@ use Rose::Class::MakeMethods::Set
       test_method => 'html_attr_is_boolean', 
     },
   ]
-);
-
-#
-# Class data
-#
-
-__PACKAGE__->localizer(Rose::HTML::Object::Message::Localizer->new);
-
-__PACKAGE__->autoload_html_attr_methods(1);
-
-__PACKAGE__->add_valid_html_attrs
-(
-  'id',
-  'class',
-  'style',
-  'title',
-  'lang',
-  'xml:lang',
-  'dir',
-  'onclick',
-  'ondblclick',
-  'onmousedown',
-  'onmouseup',
-  'onmouseover',
-  'onmousemove',
-  'onmouseout',
-  'onkeypress',
-  'onkeydown',
-  'onkeyup'
 );
 
 #
@@ -245,12 +267,6 @@ sub init
 
 sub init_html_error_formatter  { }
 sub init_xhtml_error_formatter { }
-
-sub children 
-{
-  croak "children() does not take any arguments"  if(@_ > 1);
-  return wantarray ? () : [];
-}
 
 sub html_attr_exists
 {
@@ -562,15 +578,33 @@ sub xhtml { shift->xhtml_tag(@_) }
 sub html_tag
 {
   my($self) = shift;
-  no warnings;
-  return '<' . ref($self)->html_element . $self->html_attrs_string . '>';
+
+  no warnings 'uninitialized';
+
+  if($self->has_children)
+  {
+    return '<' . $self->html_element . $self->html_attrs_string . '>' . 
+           join('', map { $_->html_tag } $self->children) . 
+           '</' . $self->html_element . '>';
+  }
+
+  return '<' . $self->html_element . $self->html_attrs_string . '>';
 }
 
 sub xhtml_tag
 {
   my($self) = shift;
-  no warnings;
-  return '<' . ref($self)->xhtml_element . $self->xhtml_attrs_string . ' />';
+
+  no warnings 'uninitialized';
+
+  if($self->has_children)
+  {
+    return '<' . $self->xhtml_element . $self->xhtml_attrs_string . '>' . 
+           join('', map { $_->xhtml_tag } $self->children) . 
+           '</' . $self->xhtml_element . '>';
+  }
+
+  return '<' . $self->xhtml_element . $self->xhtml_attrs_string . ' />';
 }
 
 #
@@ -580,33 +614,45 @@ sub xhtml_tag
 sub start_html
 {
   my($self) = shift;
-  my $html = $self->html;
-  $html =~ s{</\w+>\z}{};
-  return $html;
+
+  return '<' . $self->html_element . $self->html_attrs_string . '>';
+  
+  #my $html = $self->html;
+  #$html =~ s{</\w+>\z}{};
+  #return $html;
 }
 
 sub end_html
 {
   my($self) = shift;
-  my $html = $self->html;
-  $html =~ m{</\w+>\z};
-  return $1 || '';
+
+  return '</' . $self->html_element . '>';
+  
+  #my $html = $self->html;
+  #$html =~ m{</\w+>\z};
+  #return $1 || '';
 }
 
 sub start_xhtml
 {
   my($self) = shift;
-  my $xhtml = $self->xhtml;
-  $xhtml =~ s{</\w+>\z}{};
-  return $xhtml;
+  
+  return '<' . $self->xhtml_element . $self->xhtml_attrs_string . '>';
+
+  #my $xhtml = $self->xhtml;
+  #$xhtml =~ s{</\w+>\z}{};
+  #return $xhtml;
 }
 
 sub end_xhtml
 {
   my($self) = shift;
-  my $xhtml = $self->xhtml;
-  $xhtml =~ m{</\w+>\z};
-  return $1 || '';
+
+  return '</' . $self->xhtml_element . '>';
+
+  #my $xhtml = $self->xhtml;
+  #$xhtml =~ m{</\w+>\z};
+  #return $1 || '';
 }
 
 sub default_html_attr_value 
@@ -980,12 +1026,6 @@ Returns a boolean value indicating whether or not the attribute NAME is a requir
 
 Returns a boolean value indicating whether or not the attribute NAME is a valid HTML attribute.
 
-=item B<html_element [NAME]>
-
-Get or set the name of the HTML element.  The HTML element is the name of the tag, e.g. "img", "p", "a", "select", "textarea", etc.
-
-This attribute may be read-only in subclasses, but is read/write here for increased flexibility.  The value is inherited by subclasses.
-
 =item B<required_html_attrs>
 
 Returns a reference to a sorted list of required HTML attributes in scalar context, or a sorted list of required HTML attributes in list context. The default set of required HTML attributes is empty.
@@ -1170,6 +1210,12 @@ Examples:
     $o->html_attr(color => 'red');   # color set to 'RED'
     $color = $o->html_attr('color'); # $color = 'RED'
 
+=item B<html_element [NAME]>
+
+Get or set the name of the HTML element.  The HTML element is the name of the tag, e.g. "img", "p", "a", "select", "textarea", etc.
+
+This attribute may be read-only in subclasses.
+
 =item B<html_error>
 
 Returns the error text, if any, as a snippet of HTML that looks like this:
@@ -1197,6 +1243,12 @@ If set to true, HTML attribute arguments to C<html_attr> and C<html_attr_hook> w
 =item B<xhtml>
 
 A synonym for L<xhtml_tag()|/xhtml_tag>.
+
+=item B<xhtml_element [NAME]>
+
+Get or set the name of the XHTML element.  The XHTML element is the name of the tag, e.g. "img", "p", "a", "select", "textarea", etc.
+
+This attribute may be read-only in subclasses.
 
 =item B<xhtml_error>
 

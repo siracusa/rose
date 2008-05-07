@@ -24,7 +24,6 @@ our $VERSION = '0.554';
 Rose::HTML::Form::Field::Collection->import_methods
 (
   'prepare',
-  'children',
   'hidden_field',
   'hidden_fields',
   'html_hidden_field',
@@ -81,6 +80,21 @@ use Rose::Object::MakeMethods::Generic
   [
     'coalesce_query_string_params' => { default => 1 },
     'build_on_init'                => { default => 1 },
+  ],
+
+  array =>
+  [
+    'pre_children'          => {},
+    'pop_pre_children'      => { interface => 'pop', hash_key => 'pre_children' },
+    'shift_pre_children'    => { interface => 'unshift', hash_key => 'pre_children' },
+    'unshift_pre_children'  => { interface => 'unshift', hash_key => 'pre_children' },
+    'delete_pre_children'   => { interface => 'clear', hash_key => 'pre_children' },
+
+    'post_children'         => {},
+    'shift_post_children'   => { interface => 'shift', hash_key => 'post_children' },
+    'push_post_children'    => { interface => 'push', hash_key => 'post_children' },
+    'pop_post_children'     => { interface => 'pop', hash_key => 'post_children' },
+    'delete_post_children'  => { interface => 'clear', hash_key => 'post_children' },
   ],
 );
 
@@ -1490,6 +1504,48 @@ sub fields
 
   return wantarray ? @{$self->{'field_list'}} : $self->{'field_list'};
 }
+
+sub children 
+{
+  my($self) = shift;
+  Carp::croak "Cannot directly set children() for a form.  Use fields(), push_children(), pop_children(), etc."  if(@_ > 1);
+  return wantarray ? ($self->pre_children, $self->fields(), $self->post_children) : 
+                     [ $self->pre_children, $self->fields(), $self->post_children ];
+}
+
+sub push_children { shift->push_post_children(@_) }
+
+sub pop_children 
+{
+  my($self) = shift;
+  
+  my $num = @_ ? shift : 1;
+  my @children = $self->pop_post_children($num);
+
+  if(@children < $num)
+  {
+    push(@children, $self->pop_pre_children($num - @children));
+  }
+  
+  return @children;
+}
+
+sub shift_children 
+{
+  my($self) = shift;
+
+  my $num = @_ ? shift : 1;
+  my @children = $self->shift_pre_children($num);
+
+  if(@children < $num)
+  {
+    push(@children, $self->shift_post_children($num - @children));
+  }
+  
+  return @children;
+}
+
+sub unshift_children { shift->unshift_pre_children(@_) }
 
 sub field_monikers
 {
