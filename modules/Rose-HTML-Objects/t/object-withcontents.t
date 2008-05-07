@@ -9,8 +9,8 @@ BEGIN { use_ok('Rose::HTML::Object::WithContents') }
 my $o = Rose::HTML::Object::WithContents->new;
 ok(ref $o eq 'Rose::HTML::Object::WithContents', 'new()');
 
-is(Rose::HTML::Object::WithContents->html_element('foo'), 'foo', 'html_element()');
-is(Rose::HTML::Object::WithContents->xhtml_element('xfoo'), 'xfoo', 'xhtml_element()');
+is($o->html_element('foo'), 'foo', 'html_element()');
+is($o->xhtml_element('xfoo'), 'xfoo', 'xhtml_element()');
 
 is($o->html_tag, '<foo></foo>', 'html_tag() 1');
 is($o->xhtml_tag, '<xfoo></xfoo>', 'xhtml_tag() 1');
