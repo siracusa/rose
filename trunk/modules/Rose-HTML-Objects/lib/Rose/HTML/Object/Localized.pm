@@ -5,14 +5,13 @@ use strict;
 use Carp;
 use Rose::HTML::Object::Message::Localizer;
 
-use Rose::Object;
-our @ISA = qw(Rose::Object);
+use base 'Rose::Object';
 
 our $VERSION = '0.54';
 
 #our $Debug = 0;
 
-use Rose::HTML::Object::MakeMethods
+use Rose::HTML::Object::MakeMethods::Localization
 (
   localized_errors =>
   [

@@ -2,13 +2,13 @@ package Rose::HTML::Object;
 
 use strict;
 
+use base 'Rose::HTML::Object::Localized';
+
 use Carp;
+use Scalar::Util();
 
 use Rose::HTML::Util();
 use Rose::HTML::Object::Message::Localizer;
-
-use Rose::HTML::Object::Localized;
-our @ISA = qw(Rose::HTML::Object::Localized);
 
 our $VERSION = '0.554';
 
@@ -162,29 +162,7 @@ use Rose::Object::MakeMethods::Generic
     'html_error_formatter',
     'xhtml_error_formatter',
   ],
-
-  array =>
-  [
-    'children'         => { interface => 'get_set_inited' },
-    'push_children'    => { interface => 'push', hash_key => 'children' },
-    'pop_children'     => { interface => 'pop', hash_key => 'children' },
-    'shift_children'   => { interface => 'shift', hash_key => 'children' },
-    'unshift_children' => { interface => 'unshift', hash_key => 'children' },
-    'delete_children'  => { interface => 'clear', hash_key => 'children' },
-  ],  
 );
-
-sub add_children  { shift->push_children(@_) }
-sub add_child     { shift->push_children(@_) }
-sub push_child    { shift->push_children(@_) }
-sub shift_child   { shift->shift_children(@_) }
-sub unshift_child { shift->unshift_children(@_) }
-
-sub has_children
-{
-  my $children = shift->children; 
-  return $children && @$children ? 1 : 0;
-}
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -223,6 +201,21 @@ use Rose::Class::MakeMethods::Set
   ]
 );
 
+use Rose::HTML::Object::MakeMethods::Generic
+(
+  array =>
+  [
+    'children'         => { interface => 'get_set_inited' },
+    'child'            => { interface => 'get_item', hash_key => 'children' },
+    'push_children'    => { interface => 'push', hash_key => 'children' },
+    'pop_children'     => { interface => 'pop', hash_key => 'children' },
+    'shift_children'   => { interface => 'shift', hash_key => 'children' },
+    'unshift_children' => { interface => 'unshift', hash_key => 'children' },
+    'delete_children'  => { interface => 'clear', hash_key => 'children' },
+    'delete_child_at_index'  => { interface => 'delete_item', hash_key => 'children' },
+  ],
+);
+
 #
 # Constructor
 #
@@ -236,7 +229,7 @@ sub new
     html_attrs  => {},
     escape_html => 1,
     error       => undef,
-    validate_html_attrs => 1,
+    validate_html_attrs => $class eq __PACKAGE__ ? 0 : 1,
   };
 
   bless $self, $class;
@@ -254,6 +247,8 @@ sub init
 {
   my($self) = shift;
 
+  @_ = (element => @_)  if(@_ % 2);
+
   my $class = ref $self;
 
   no strict 'refs';
@@ -265,8 +260,99 @@ sub init
   $self->SUPER::init(@_);
 }
 
+sub add_children  { shift->push_children(@_) }
+sub add_child     { shift->push_children(@_) }
+sub push_child    { shift->push_children(@_) }
+sub shift_child   { shift->shift_children(@_) }
+sub unshift_child { shift->unshift_children(@_) }
+
+sub has_children
+{
+  my $children = shift->children; 
+  return $children && @$children ? 1 : 0;
+}
+
+sub has_parent { shift->parent ? 1 : 0 }
+
+sub parent
+{
+  my($self) = shift; 
+  
+  if(@_)
+  {
+    my $old_parent = $self->parent;
+
+    Scalar::Util::weaken($self->{'parent'} = shift);
+
+    my $new_parent = $self->{'parent'};
+
+    if($old_parent && Scalar::Util::refaddr($old_parent) != Scalar::Util::refaddr($new_parent))
+    {
+      $old_parent->delete_child($self);
+      $new_parent->push_child($self)  unless($new_parent->has_child($self));
+    }
+  }
+
+  return $self->{'parent'};
+}
+
+sub descendants { map { $_, $_->descendants } shift->children }
+
+sub delete_child
+{
+  my($self) = shift;
+  
+  if($_[0] =~ /^[+-]?\d+$/)
+  {
+    return $self->delete_child_at_index(@_);
+  }
+  
+  my $refaddr = Scalar::Util::refaddr($_[0]);
+
+  my $i = 0;
+
+  foreach my $child ($self->children)
+  {
+    if(Scalar::Util::refaddr($child) == $refaddr)
+    {
+      return $self->delete_child_at_index($i);
+    }
+
+    $i++;
+  }
+
+  return undef;
+}
+
+sub has_child
+{
+  my($self) = shift;
+
+  my $refaddr = Scalar::Util::refaddr($_[0]);
+
+  foreach my $child ($self->children)
+  {
+    if(Scalar::Util::refaddr($child) == $refaddr)
+    {
+      return 1;
+    }
+  }
+  
+  return 0;
+}
+
 sub init_html_error_formatter  { }
 sub init_xhtml_error_formatter { }
+
+sub element
+{
+  my($self) = shift;
+  
+  return $self->html_element  unless(@_);
+
+  $self->xhtml_element(@_);
+  return $self->html_element(@_);
+}
 
 sub html_attr_exists
 {
@@ -1074,15 +1160,27 @@ This attribute may be read-only in subclasses, but is read/write here for increa
 
 =over 4
 
-=item B<new PARAMS>
+=item B<new [ PARAMS | ELEMENT, PARAMS ]>
 
-Constructs a new L<Rose::HTML::Object> object based on PARAMS, where PARAMS are name/value pairs.  Any object method is a valid parameter name.
+Constructs a new L<Rose::HTML::Object> object.  If an odd number of arguments is passed, the first argument is taken as the value for the L<element|/element> parameter.  Otherwise an even number of PARAMS name/value pairs are expected.  Any object method is a valid parameter name.
 
 =back
 
 =head1 OBJECT METHODS
 
 =over 4
+
+=item B<add_child OBJECT>
+
+This is an alias for the L<push_child|/push_child> method.
+
+=item B<add_children OBJECTS>
+
+This is an alias for the L<push_children|/push_children> method.
+
+=item B<child [INT]>
+
+Returns the L<child|/children> at the index specified by INT.  The first child is at index zero (0).
 
 =item B<children>
 
@@ -1106,6 +1204,14 @@ Clears the HTML attributes specified by NAME1, NAME2, etc. by settings their val
 
 Deletes all the HTML attributes.
 
+=item B<delete_child [ INDEX | OBJECT ]>
+
+Delete the L<child|/children> at INDEX (starting from zero) or the exact child OBJECT.
+
+=item B<delete_children>
+
+Deletes all L<children|/children>.
+
 =item B<delete_html_attr NAME>
 
 Deletes the HTML attribute NAME.
@@ -1114,6 +1220,14 @@ Deletes the HTML attribute NAME.
 
 Deletes the HTML attributes specified by NAME1, NAME2, etc.
 
+=item B<descendants>
+
+Returns a list of the L<children|/children> of this object, plus all their children, and so on.
+
+=item B<element [NAME]>
+
+If passed a NAME, sets both L<html_element|/html_element> and L<xhtml_element|/xhtml_element> to NAME.  Returns L<html_element|/html_element>.
+
 =item B<error [TEXT]>
 
 Get or set an error string.
@@ -1121,6 +1235,18 @@ Get or set an error string.
 =item B<escape_html [BOOL]>
 
 This flag may be used by other methods to decide whether or not to escape HTML.  It is set to true by default.  The only method in L<Rose::HTML::Object> that references it is L<html_error|/html_error>.  All other HTML is escaped as appropriate regardless of the L<escape_html|/escape_html> setting (e.g. the text returned by C<html_attrs_string> always has its attribute values escaped).  Subclasses may consult this flag for similar purposes (which they must document, of course).
+
+=item B<has_child OBJECT>
+
+Returns true if OBJECT is a L<child|/children> of this object, false otherwise.
+
+=item B<has_children>
+
+Returns true if there are any L<children|/children>, false otherwise.
+
+=item B<has_parent>
+
+Returns true if this object is the L<child|/children> of another object, false otherwise.
 
 =item B<has_error>
 
@@ -1228,9 +1354,45 @@ If the L<escape_html|/escape_html> flag is set to true (the default), then the e
 
 Serializes the object as an HTML tag.  In other words, it is the concatenation of the strings returned by L<html_element()|/html_element> and L<html_attrs_string()|/html_attrs_string>, wrapped with the appropriate angled brackets.
 
+=item B<parent [OBJECT]>
+
+Get or set the parent object.
+
+=item B<pop_child [INT]>
+
+Remove an object from the end of the list of L<children|/children> and return it.
+
+=item B<pop_children [INT]>
+
+Remove INT objects from the end of the list of L<children|/children> and return them.  If INT is ommitted, it defaults to 1.
+
+=item B<push_child OBJECT>
+
+Add OBJECT to the end of the list of L<children|/children>.  The object must be of or derived from the L<Rose::HTML::Object> class, or a plain scalar.  If it's a plain scalar, it will be converted to a L<Rose::HTML::Text> object, with the scalar used as the value of the L<text|Rose::HTML::Text/text> attribute.
+
+=item B<push_children OBJECTS>
+
+Add OBJECTS to the end of the list of L<children|/children>.  Each object must be of or derived from the L<Rose::HTML::Object> class, or a plain scalar.  All plain scalars will be converted to L<Rose::HTML::Text> objects, with the scalar used as the value of the L<text|Rose::HTML::Text/text> attribute.
+
 =item B<set_error>
 
 Set the L<error|/error> to a defined but "invisible" (zero-length) value.  This value will not be displayed by the L<html_error|/html_error> or L<xhtml_error|/xhtml_error>.  Use this method when you want to flag a field as having an error, but don't want a visible error message.
+
+=item B<shift_child [INT]>
+
+Remove an object from the start of the list of L<children|/children> and return it.
+
+=item B<shift_children [INT]>
+
+Remove INT objects from the start of the list of L<children|/children> and return them.  If INT is ommitted, it defaults to 1.
+
+=item B<unshift_child OBJECT>
+
+Add OBJECT to the start of the list of L<children|/children>.  The object must be of or derived from the L<Rose::HTML::Object> class, or a plain scalar.  If it's a plain scalar, it will be converted to a L<Rose::HTML::Text> object, with the scalar used as the value of the L<text|Rose::HTML::Text/text> attribute.
+
+=item B<unshift_children OBJECTS>
+
+Add OBJECTS to the start of the list of L<children|/children>.  Each object must be of or derived from the L<Rose::HTML::Object> class, or a plain scalar.  All plain scalars will be converted to L<Rose::HTML::Text> objects, with the scalar used as the value of the L<text|Rose::HTML::Text/text> attribute.
 
 =item B<unset_error>
 
@@ -1238,7 +1400,7 @@ Set the L<error|/error> to a undef.
 
 =item B<validate_html_attrs BOOL>
 
-If set to true, HTML attribute arguments to C<html_attr> and C<html_attr_hook> will be validated by calling C<html_attr_is_valid(ATTR)>, where ATTR is the name of the attribute being set or read.  The default value is true.
+If set to true, HTML attribute arguments to C<html_attr> and C<html_attr_hook> will be validated by calling C<html_attr_is_valid(ATTR)>, where ATTR is the name of the attribute being set or read.  The default value is true for any class derived from L<Rose::HTML::Object>, but false for objects whose class is L<Rose::HTML::Object>.
 
 =item B<xhtml>
 

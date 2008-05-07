@@ -53,13 +53,14 @@ lib/Rose/HTML/Form/Repeatable.pm
 lib/Rose/HTML/Image.pm
 lib/Rose/HTML/Label.pm
 lib/Rose/HTML/Link.pm
+lib/Rose/HTML/Object/MakeMethods/Generic.pm
+lib/Rose/HTML/Object/MakeMethods/Localization.pm
 lib/Rose/HTML/Object.pm
 lib/Rose/HTML/Object/Error.pm
 lib/Rose/HTML/Object/Error/Localized.pm
 lib/Rose/HTML/Object/Errors.pm
 lib/Rose/HTML/Object/Exporter.pm
 lib/Rose/HTML/Object/Localized.pm
-lib/Rose/HTML/Object/MakeMethods.pm
 lib/Rose/HTML/Object/Message.pm
 lib/Rose/HTML/Object/Message/Localized.pm
 lib/Rose/HTML/Object/Message/Localizer.pm
@@ -68,6 +69,7 @@ lib/Rose/HTML/Object/Repeatable.pm
 lib/Rose/HTML/Object/WithContents.pm
 lib/Rose/HTML/Objects.pm
 lib/Rose/HTML/Script.pm
+lib/Rose/HTML/Text.pm
 lib/Rose/HTML/Util.pm
 Makefile.PL
 MANIFEST
@@ -126,3 +128,4 @@ t/object-withcontents.t
 t/object.t
 t/pod.t
 t/script.t
+t/text.t

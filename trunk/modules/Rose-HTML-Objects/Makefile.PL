@@ -31,6 +31,7 @@ WriteMakefile(NAME         => 'Rose::HTML::Objects',
                (dist => { DIST_CP => 'cp' }) : ()), # Avoid Mac OS X ._* files
               PREREQ_PM =>
               {
+                'Scalar::Util'   => 0,
                 'DateTime'       => '0.20',
                 'Carp'           => 0,
                 'Clone::PP'      => 0,

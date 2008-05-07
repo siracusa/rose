@@ -81,7 +81,11 @@ use Rose::Object::MakeMethods::Generic
     'coalesce_query_string_params' => { default => 1 },
     'build_on_init'                => { default => 1 },
   ],
+);
 
+
+use Rose::HTML::Object::MakeMethods::Generic
+(
   array =>
   [
     'pre_children'          => {},
@@ -1721,8 +1725,10 @@ sub _html_table
   $args{'tr'}{'class'} = defined $args{'tr'}{'class'} ? 
     "$args{'tr'}{'class'} field" : 'field';    
 
-  my $html = join("\n", map { $_->$xhtml_field() } 
-                        grep { $_->isa('Rose::HTML::Form::Field::Hidden') } $self->fields);
+  my $html = join('', map { $_->$xhtml() } $self->pre_children);
+  
+  $html .= join("\n", map { $_->$xhtml_field() } 
+                      grep { $_->isa('Rose::HTML::Form::Field::Hidden') } $self->fields);
 
   $html .= "\n\n"  if($html);
 
@@ -1778,9 +1784,11 @@ sub _html_table
              "</td>\n</tr>\n";
   }
 
-  $html .= '</table>';
+  $html .= "</table>\n\n" . join('', map { $_->$xhtml() } $self->post_children);
 
-  return $self->$form_start() . "\n\n$html\n\n" . $self->$form_end();
+  $html .= "\n\n"  unless($html =~ /\n\n\z/);
+
+  return $self->$form_start() . "\n\n$html" . $self->$form_end();
 }
 
 sub html_table  { shift->_html_table(@_) }
