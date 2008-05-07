@@ -4,7 +4,7 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.81';
+our $VERSION = '0.85';
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
@@ -438,9 +438,7 @@ sub array
     $methods{$name} = sub
     {
       my($self) = shift;
-
       Carp::croak "Missing value(s) to add"  unless(@_);
-
       unshift(@{$self->{$key}}, (@_ == 1 && ref $_[0] eq 'ARRAY') ? @{$_[0]} : @_);
     }
   }
@@ -448,7 +446,9 @@ sub array
   {
     $methods{$name} = sub
     {
-      shift(@{$_[0]->{$key}})
+      my($self) = shift;
+      return splice(@{$self->{$key}}, 0, $_[0])  if(@_);
+      return shift(@{$self->{$key}})
     }
   }
   elsif($interface eq 'clear')
@@ -467,35 +467,20 @@ sub array
   }
   elsif($interface =~ /^(?:push|add)$/)
   {
-    if(my $init_method = $args->{'init_method'})
+    $methods{$name} = sub
     {
-      $methods{$name} = sub
-      {
-        my($self) = shift;
-
-        Carp::croak "Missing value(s) to add"  unless(@_);
-
-        $self->{$key} = $self->$init_method()  unless(defined $self->{$key});
-        push(@{$self->{$key}}, (@_ == 1 && ref $_[0] && ref $_[0] eq 'ARRAY') ? @{$_[0]} : @_);
-      }    
-    }
-    else
-    {
-      $methods{$name} = sub
-      {
-        my($self) = shift;
-
-        Carp::croak "Missing value(s) to add"  unless(@_);
-
-        push(@{$self->{$key}}, (@_ == 1 && ref $_[0] && ref $_[0] eq 'ARRAY') ? @{$_[0]} : @_);
-      }
+      my($self) = shift;
+      Carp::croak "Missing value(s) to add"  unless(@_);
+      push(@{$self->{$key}}, (@_ == 1 && ref $_[0] && ref $_[0] eq 'ARRAY') ? @{$_[0]} : @_);
     }
   }
   elsif($interface eq 'pop')
   {
     $methods{$name} = sub
     {
-      pop(@{$_[0]->{$key}})
+      my($self) = shift;
+      return splice(@{$self->{$key}}, -$_[0])  if(@_);
+      return pop(@{$self->{$key}})
     }
   }
   elsif($interface eq 'get_set')
@@ -1031,15 +1016,33 @@ Returns true of the argument exists in the hash, false otherwise.
 Failure to pass an argument or passing more than one argument causes a
 fatal error.
 
+=item C<add>
+
+An alias for the C<push> interface.
+
 =item C<push>
 
 If called with a list or a reference to an array, the contents of the list or
 referenced array are added to the end of the array.  If called with no
 arguments, a fatal error will occur.
 
-=item C<add>
+=item C<pop>
 
-An alias for the C<push> interface.
+Remove an item from the end of the array and returns it.  If an integer
+argument is passed, then that number of items is removed and returned. 
+Otherwise, just one is removed and returned.
+
+=item C<shift>
+
+Remove an item from the start of the array and returns it.  If an integer
+argument is passed, then that number of items is removed and returned. 
+Otherwise, just one is removed and returned.
+
+=item C<unshift>
+
+If called with a list or a reference to an array, the contents of the list or
+referenced array are added to the start of the array.  If called with no
+arguments, a fatal error will occur.
 
 =item C<clear> 
 
