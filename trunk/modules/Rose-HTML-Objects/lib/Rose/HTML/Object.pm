@@ -154,7 +154,8 @@ use Rose::Object::MakeMethods::Generic
   boolean =>
   [
     'escape_html'         => { default => 1 },
-    'validate_html_attrs' => { default => 1 }
+    'validate_html_attrs' => { default => 1 },
+    'is_self_closing'     => { default => 0 },
   ],
 
   'scalar --get_set_init' =>
@@ -668,7 +669,7 @@ sub html_tag
 
   no warnings 'uninitialized';
 
-  if($self->has_children)
+  if($self->has_children || !$self->is_self_closing)
   {
     return '<' . $self->html_element . $self->html_attrs_string . '>' . 
            join('', map { $_->html_tag } $self->children) . 
@@ -684,7 +685,7 @@ sub xhtml_tag
 
   no warnings 'uninitialized';
 
-  if($self->has_children)
+  if($self->has_children || !$self->is_self_closing)
   {
     return '<' . $self->xhtml_element . $self->xhtml_attrs_string . '>' . 
            join('', map { $_->xhtml_tag } $self->children) . 

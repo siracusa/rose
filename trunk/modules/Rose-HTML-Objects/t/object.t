@@ -2,10 +2,9 @@
 
 use strict;
 
-use Test::More tests => 225;
+use Test::More tests => 227;
 
 BEGIN { use_ok('Rose::HTML::Object') }
-
 
 #
 # Generic object stuff
@@ -236,8 +235,14 @@ is($o->xhtml_attrs_string, ' age="" name="" smart="smart" tall="tall"', 'xhtml_a
 is($o->html_element('foo'), 'foo', 'html_element()');
 is($o->xhtml_element('xfoo'), 'xfoo', 'xhtml_element()');
 
-is($o->html_tag, '<foo age="" name="" smart tall>', 'html_tag()');
+$o->is_self_closing(1);
+is($o->html_tag, '<foo age="" name="" smart tall>', 'html_tag() 1');
+$o->is_self_closing(0);
+is($o->html_tag, '<foo age="" name="" smart tall></foo>', 'html_tag() 2');
+$o->is_self_closing(1);
 is($o->xhtml_tag, '<xfoo age="" name="" smart="smart" tall="tall" />', 'xhtml_tag()');
+$o->is_self_closing(0);
+is($o->xhtml_tag, '<xfoo age="" name="" smart="smart" tall="tall"></xfoo>', 'xhtml_tag()');
 
 foreach my $attr (Rose::HTML::Object->valid_html_attrs)
 {

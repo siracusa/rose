@@ -6,18 +6,10 @@ use Carp();
 
 use Rose::HTML::Form::Field::Group;
 use Rose::HTML::Form::Field::Group::OnOff;
-use Rose::HTML::Form::Field::WithContents;
-our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff Rose::HTML::Form::Field::WithContents);
+our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
 
 require Rose::HTML::Form::Field::Option;
 require Rose::HTML::Form::Field::OptionGroup;
-
-# Multiple inheritence never quite works out the way I want it to...
-Rose::HTML::Form::Field::WithContents->import_methods(
-{
-  html_tag  => '_html_tag',
-  xhtml_tag => '_xhtml_tag',
-});
 
 our $VERSION = '0.551';
 
@@ -59,19 +51,104 @@ sub xhtml_element { 'select' }
 
 #sub name { shift->html_attr('name', @_) }
 
+sub is_flat_group { 0 }
+
+sub children
+{
+  my($self) = shift;
+  Carp::croak "Cannot set children() for an option container ($_[0]).  Use options() instead."  if(@_);  
+  return $self->options;
+}
+
+sub push_children    { shift->add_items(@_) }
+sub push_child       { shift->add_item(@_) }
+
+sub pop_children     { shift->pop_items(@_) }
+sub pop_child        { shift->pop_item(@_) }
+
+sub shift_children   { shift->add_items(@_) }
+sub shift_child      { shift->add_item(@_) }
+
+sub unshift_children { shift->unshift_items(@_) }
+sub unshift_child    { shift->unshift_item(@_) }
+
+sub child
+{
+  my($self, $index) = @_;
+  my $items = $self->items || [];
+  return $items->[$index];
+}
+
+sub delete_child_at_index
+{
+  my($self) = shift;
+  Carp::croak "Missing array index"  unless(@_);
+  my $items = $self->items || [];
+  no warnings;
+  splice(@$items, $_[0], 1);
+}
+
 sub html_field
 {
   my($self) = shift;
-  $self->contents("\n" . join("\n", map { $_->html_field } $self->visible_options) . "\n");
-  return $self->_html_tag(@_);
+
+  my $html;
+
+  if($self->apply_error_class && defined $self->error)
+  {
+    my $class = $self->html_attr('class');
+    $self->html_attr(class => $class ? "$class error" : 'error');
+    $html = $self->start_html . "\n" . 
+            join("\n", map { $_->html_field } $self->visible_items) . "\n" .
+            $self->end_html;
+    $self->html_attr(class => $class);
+    return $html;
+  }
+  else
+  {
+    return $self->start_html . "\n" . 
+           join("\n", map { $_->html_field } $self->visible_items) . "\n" .
+           $self->end_html;
+  }
 }
 
 sub xhtml_field
 {
-  my($self) = shift; 
-  $self->contents("\n" . join("\n", map { $_->xhtml_field } $self->visible_options) . "\n");
-  return $self->_xhtml_tag(@_);
+  my($self) = shift;
+
+  my $xhtml;
+
+  if($self->apply_error_class && defined $self->error)
+  {
+    my $class = $self->html_attr('class');
+    $self->html_attr(class => $class ? "$class error" : 'error');
+    $xhtml = $self->start_xhtml . "\n" . 
+             join("\n", map { $_->xhtml_field } $self->visible_items) . "\n" .
+             $self->end_xhtml;
+    $self->html_attr(class => $class);
+    return $xhtml;
+  }
+  else
+  {
+    return $self->start_xhtml . "\n" . 
+           join("\n", map { $_->xhtml_field } $self->visible_items) . "\n" .
+           $self->end_xhtml;
+  }
 }
+
+# sub html_field
+# {
+#   my($self) = shift;
+#   $self->contents("\n" . join("\n", map { $_->html_field } $self->visible_options) . "\n");
+#   return $self->_html_tag(@_);
+# }
+# 
+# sub xhtml_field
+# {
+#   my($self) = shift; 
+#   $self->contents("\n" . join("\n", map { $_->xhtml_field } $self->visible_options) . "\n");
+#   return $self->_xhtml_tag(@_);
+# }
 
 sub input_value
 {

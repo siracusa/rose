@@ -24,8 +24,8 @@ $field->choices(apple  => 'Apple',
                 },
                 Rose::HTML::Form::Field::RadioButton->new(value => 'grape', label => 'Grape'));
 
-is(scalar @{ $field->children }, 3, 'children scalar 2');
-is(scalar(() = $field->children), 3, 'children list 2');
+is(scalar @{ $field->children }, 0, 'children scalar 2');
+is(scalar(() = $field->children), 0, 'children list 2');
 
 is(join(',', sort $field->labels), 'Apple,Grape,Orange,apple,grape,orange', 'labels()');
 
@@ -51,6 +51,7 @@ $field =
 is($field->value_label('apple'), 'Apple', 'value_label()');
 
 $field->radio_button('apple')->label('<b>Apple</b>');
+
 $field->escape_html(0);
 
 is($field->html_field, 

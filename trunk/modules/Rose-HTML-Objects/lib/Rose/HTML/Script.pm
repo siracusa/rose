@@ -2,10 +2,10 @@ package Rose::HTML::Script;
 
 use strict;
 
-use Rose::HTML::Object::WithContents;
-our @ISA = qw(Rose::HTML::Object::WithContents);
+use Rose::HTML::Object;
+our @ISA = qw(Rose::HTML::Object);
 
-our $VERSION = '0.53';
+our $VERSION = '0.554';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -53,7 +53,14 @@ sub support_older_browsers
 sub html_element  { 'script' }
 sub xhtml_element { 'script' }
 
-*script = __PACKAGE__->can('contents');
+sub script
+{
+  my($self) = shift; 
+  $self->children(@_)  if(@_);
+  return join('', map { $_->html } $self->children)
+}
+
+*contents = \&script;
 
 sub xhtml_contents_escaped
 {

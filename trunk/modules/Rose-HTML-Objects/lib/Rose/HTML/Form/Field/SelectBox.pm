@@ -29,6 +29,10 @@ __PACKAGE__->add_valid_html_attrs
 *options_html_attr        = \&Rose::HTML::Form::Field::Group::items_html_attr;
 *delete_options_html_attr = \&Rose::HTML::Form::Field::Group::delete_items_html_attr;
 
+sub element       { 'select' }
+sub html_element  { 'select' }
+sub xhtml_element { 'select' }
+
 sub multiple { shift->html_attr('multiple', @_) }
 
 sub internal_value

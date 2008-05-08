@@ -171,7 +171,7 @@ sub array
       if(@_)
       {
         my $a = $self->{$key} ||= [];
-        my $offset = $#$a - $_[0];
+        my $offset = @$a - $_[0];
         return splice(@$a, $offset < 0 ? 0 : $offset)  
       }
 
@@ -218,7 +218,7 @@ sub _coerce_html_object
   }
   elsif(!$arg->isa('Rose::HTML::Object'))
   {
-    return Rose::HTML::Text->new(text => "$arg", parent => $self);
+    return Rose::HTML::Text->new(text => $arg, parent => $self);
   }
   
   $arg->parent($self);

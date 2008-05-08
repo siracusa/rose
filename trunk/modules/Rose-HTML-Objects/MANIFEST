@@ -48,7 +48,6 @@ lib/Rose/HTML/Form/Field/Time/Minutes.pm
 lib/Rose/HTML/Form/Field/Time/Seconds.pm
 lib/Rose/HTML/Form/Field/Time/Split.pm
 lib/Rose/HTML/Form/Field/Time/Split/HourMinuteSecond.pm
-lib/Rose/HTML/Form/Field/WithContents.pm
 lib/Rose/HTML/Form/Repeatable.pm
 lib/Rose/HTML/Image.pm
 lib/Rose/HTML/Label.pm
@@ -66,7 +65,7 @@ lib/Rose/HTML/Object/Message/Localized.pm
 lib/Rose/HTML/Object/Message/Localizer.pm
 lib/Rose/HTML/Object/Messages.pm
 lib/Rose/HTML/Object/Repeatable.pm
-lib/Rose/HTML/Object/WithContents.pm
+lib/Rose/HTML/Object/WithWrapAroundChildren.pm
 lib/Rose/HTML/Objects.pm
 lib/Rose/HTML/Script.pm
 lib/Rose/HTML/Text.pm
@@ -124,7 +123,6 @@ t/localizer-auto-load-messages.t
 t/logo.png
 t/msgs.txt
 t/object-l10n.t
-t/object-withcontents.t
 t/object.t
 t/pod.t
 t/script.t

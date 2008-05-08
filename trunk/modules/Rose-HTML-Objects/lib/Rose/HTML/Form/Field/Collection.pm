@@ -428,6 +428,32 @@ sub fields
   return wantarray ? @{$self->{'field_list'}} : $self->{'field_list'};
 }
 
+sub fields_as_children
+{
+  my($self) = shift;
+
+  Carp::croak "Cannot directly set children() for a ", ref($self), 
+              ".  Use fields(), push_children(), pop_children(), etc."  if(@_);
+
+  my @children;
+
+  foreach my $field ($self->fields)
+  {
+    if($field->is_flat_group)
+    {
+      push(@children, $field->items);
+    }
+    else
+    {
+      push(@children, $field);
+    }
+  }
+
+  return wantarray ? @children : \@children;
+}
+
+*immutable_children = \&fields_as_children;
+
 sub num_fields
 {
   my $fields = shift->fields;
