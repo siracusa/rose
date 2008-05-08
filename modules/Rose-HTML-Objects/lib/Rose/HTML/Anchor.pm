@@ -2,10 +2,10 @@ package Rose::HTML::Anchor;
 
 use strict;
 
-use Rose::HTML::Object::WithContents;
-our @ISA = qw(Rose::HTML::Object::WithContents);
+use Rose::HTML::Object;
+our @ISA = qw(Rose::HTML::Object);
 
-our $VERSION = '0.53';
+our $VERSION = '0.554';
 
 __PACKAGE__->add_valid_html_attrs
 (
@@ -28,84 +28,12 @@ sub href  { shift->html_attr('href', @_) }
 sub name  { shift->html_attr('name', @_) }
 sub title { shift->html_attr('title', @_) }
 
+sub element       { 'a' }
 sub html_element  { 'a' }
 sub xhtml_element { 'a' }
 
-sub contents
-{
-  my($self) = shift;
-
-  if(@_)
-  {
-    $self->{'contents'} = (@_ == 1 && ref $_[0] eq 'ARRAY') ? $_[0] : [ @_ ];
-  }
-
-  return wantarray ? @{$self->{'contents'} || []} : ${$self->{'contents'} || []}[0];
-}
-
-sub link { shift->contents(@_) }
-
-sub xhtml_contents
-{
-  my($self) = shift;
-
-  my $xhtml = '';
-
-  foreach my $item ($self->contents)
-  {
-    if(UNIVERSAL::isa($item, 'Rose::HTML::Object'))
-    {
-      $xhtml .= $item->xhtml;
-    }
-    else
-    {
-      $xhtml .= $item;
-    }
-  }
-
-  return $xhtml;
-}
-
-sub html_contents
-{
-  my($self) = shift;
-
-  my $html = '';
-
-  foreach my $item ($self->contents)
-  {
-    if(UNIVERSAL::isa($item, 'Rose::HTML::Object'))
-    {
-      $html .= $item->html;
-    }
-    else
-    {
-      $html .= $item;
-    }
-  }
-
-  return $html;
-}
-
-sub html_tag
-{
-  my($self) = shift;
-
-  no warnings;
-  return '<a' . $self->html_attrs_string . '>' .
-         $self->html_contents .
-         '</a>';
-}
-
-sub xhtml_tag
-{
-  my($self) = shift;
-
-  no warnings;
-  return '<a' . $self->xhtml_attrs_string . '>' .
-         $self->xhtml_contents .
-         '</a>';
-}
+sub link     { shift->children(@_) }
+sub contents { shift->children(@_) }
 
 1;
 
@@ -121,7 +49,7 @@ Rose::HTML::Anchor - Object representation of an HTML anchor.
 
     print $a->html;
 
-    $a->contents(Rose::HTML::Image->new(src => 'a.gif'));
+    $a->link(Rose::HTML::Image->new(src => 'a.gif'));
 
     print $a->html;
 
@@ -182,15 +110,9 @@ Constructs a new L<Rose::HTML::Anchor> object based on PARAMS, where PARAMS are 
 
 =over 4
 
-=item B<contents [ARGS]>
-
-Get or set the contents of the anchor tag.  This is usually the text that appears as the link, but may also be an image or other arbitrary HTML.  ARGS may be any combination of one or more strings or L<Rose::HTML::Object>-derived objects, or a reference to an array of the same.
-
-Returns the list of contents in list context, or the first item in the list of contents in scalar context.
-
 =item B<link [ARGS]>
 
-This is an alias for the L<contents|/contents> method.
+This is an alias for the L<children|Rose::HTML::Object/children> method.
 
 =back
 

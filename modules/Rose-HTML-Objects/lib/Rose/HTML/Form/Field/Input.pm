@@ -5,7 +5,7 @@ use strict;
 use Rose::HTML::Form::Field;
 our @ISA = qw(Rose::HTML::Form::Field);
 
-our $VERSION = '0.011';
+our $VERSION = '0.554';
 
 __PACKAGE__->add_valid_html_attrs
 (
@@ -43,7 +43,10 @@ __PACKAGE__->add_boolean_html_attrs
   'checked',
 );
 
+sub element       { 'input' }
 sub html_element  { 'input' }
 sub xhtml_element { 'input' }
+
+sub is_self_closing { 1 }
 
 1;

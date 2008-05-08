@@ -14,7 +14,9 @@ use Rose::HTML::Object::Errors qw(:form);
 
 use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
-our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
+use Rose::HTML::Object::WithWrapAroundChildren;
+our @ISA = qw(Rose::HTML::Object::WithWrapAroundChildren
+              Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
 require Rose::HTML::Form::Repeatable;
 
@@ -80,25 +82,6 @@ use Rose::Object::MakeMethods::Generic
   [
     'coalesce_query_string_params' => { default => 1 },
     'build_on_init'                => { default => 1 },
-  ],
-);
-
-
-use Rose::HTML::Object::MakeMethods::Generic
-(
-  array =>
-  [
-    'pre_children'          => {},
-    'pop_pre_children'      => { interface => 'pop', hash_key => 'pre_children' },
-    'shift_pre_children'    => { interface => 'unshift', hash_key => 'pre_children' },
-    'unshift_pre_children'  => { interface => 'unshift', hash_key => 'pre_children' },
-    'delete_pre_children'   => { interface => 'clear', hash_key => 'pre_children' },
-
-    'post_children'         => {},
-    'shift_post_children'   => { interface => 'shift', hash_key => 'post_children' },
-    'push_post_children'    => { interface => 'push', hash_key => 'post_children' },
-    'pop_post_children'     => { interface => 'pop', hash_key => 'post_children' },
-    'delete_post_children'  => { interface => 'clear', hash_key => 'post_children' },
   ],
 );
 
@@ -1508,48 +1491,6 @@ sub fields
 
   return wantarray ? @{$self->{'field_list'}} : $self->{'field_list'};
 }
-
-sub children 
-{
-  my($self) = shift;
-  Carp::croak "Cannot directly set children() for a form.  Use fields(), push_children(), pop_children(), etc."  if(@_ > 1);
-  return wantarray ? ($self->pre_children, $self->fields(), $self->post_children) : 
-                     [ $self->pre_children, $self->fields(), $self->post_children ];
-}
-
-sub push_children { shift->push_post_children(@_) }
-
-sub pop_children 
-{
-  my($self) = shift;
-  
-  my $num = @_ ? shift : 1;
-  my @children = $self->pop_post_children($num);
-
-  if(@children < $num)
-  {
-    push(@children, $self->pop_pre_children($num - @children));
-  }
-
-  return @children == 1 ? $children[0] : @children;
-}
-
-sub shift_children 
-{
-  my($self) = shift;
-
-  my $num = @_ ? shift : 1;
-  my @children = $self->shift_pre_children($num);
-
-  if(@children < $num)
-  {
-    push(@children, $self->shift_post_children($num - @children));
-  }
-  
-  return @children == 1 ? $children[0] : @children;
-}
-
-sub unshift_children { shift->unshift_pre_children(@_) }
 
 sub field_monikers
 {
@@ -3068,7 +3009,7 @@ Get or set the character used to separate parameter name/value pairs in the retu
 
 Validate the form by calling L<validate()|Rose::HTML::Form::Field/validate> on each field and L<validate()|/validate> on each each L<sub-form|/"NESTED FORMS">.  If any field or form returns false from its C<validate()> method call, then this method returns false.  Otherwise, it returns true.
 
-If this method returns false and an L<error|Rose::HTML::Object/error> is not defined on any invalid field or form, then the L<error|Rose::HTML::Object/error> attribute of this form is set to a generic error message.  Otherwise, this form's error attribute is set to the error attribute of the last invalid field or form.
+If this method is about to return false and the L<error|Rose::HTML::Object/error> attribute of this form is not set, then it is set to a generic error message.
 
 PARAMS are name/value pairs.  Valid parameters are:
 

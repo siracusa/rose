@@ -40,6 +40,9 @@ __PACKAGE__->add_boolean_html_attrs
   'ismap',
 );
 
+sub is_self_closing { 1 }
+
+sub element       { 'img' }
 sub html_element  { 'img' }
 sub xhtml_element { 'img' }
 

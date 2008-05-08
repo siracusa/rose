@@ -21,8 +21,11 @@ __PACKAGE__->add_valid_html_attrs
 sub rel  { shift->html_attr('rel', @_) }
 sub href { shift->html_attr('href', @_) }
 
+sub element       { 'link' }
 sub html_element  { 'link' }
 sub xhtml_element { 'link' }
+
+sub is_self_closing { 1 }
 
 1;
 

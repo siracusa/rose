@@ -55,8 +55,10 @@ sub _item_name_plural { 'items' }
 sub children 
 {
   Carp::croak "Cannot set children() for a pseudo-group ($_[0])"  if(@_ > 1);
-  return shift->items();
+  return wantarray ? () : [];
 }
+
+sub is_flat_group { 1 }
 
 sub items
 {
@@ -125,6 +127,52 @@ sub delete_item
 
   return splice(@$items, $i, 1);
 }
+
+sub push_items { shift->add_items(@_) }
+sub push_item  { shift->add_item(@_) }
+
+sub pop_items
+{
+  my($self) = shift;
+
+  my $items = $self->items || [];
+
+  if(@_)
+  {
+    my $offset = $#$items - $_[0];
+    return splice(@$items, $offset < 0 ? 0 : $offset)  
+  }
+
+  my @items = pop(@$items);
+  $self->init_items  if(@items);
+  return @items;
+}
+
+sub pop_item { shift->pop_items(@_) }
+
+sub shift_items
+{
+  my($self) = shift;
+
+  my $items = $self->items || [];
+
+  my @items = @_ ? splice(@$items, 0, $_[0]) : shift(@$items);
+  $self->init_items  if(@items);
+  return @items;
+}
+
+sub shift_item { shift->shift_items(@_) }
+
+sub unshift_items
+{
+  my($self) = shift;
+
+  unshift(@{$self->{'items'}}, $self->_args_to_items({ localized => 0 }, @_));
+
+  $self->init_items;
+}
+
+sub unshift_item { shift->unshift_items(@_) }
 
 sub delete_items
 {
@@ -622,6 +670,25 @@ sub xhtml_field
 
 *xhtml_fields = \&xhtml_field;
 
+sub escape_html
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    my $val = $self->SUPER::escape_html(@_);
+    
+    foreach my $item ($self->items)
+    {
+      $item->escape_html($val);
+    }
+    
+    return $val;
+  }
+
+  return $self->SUPER::escape_html(@_);
+}
+
 sub hidden_fields
 {
   my($self) = shift;
@@ -634,20 +701,6 @@ sub hidden_fields
   }
 
   return (wantarray) ? @hidden : \@hidden;
-}
-
-sub escape_html
-{
-  my($self) = shift;
-
-  return $self->{'escape_html'}  unless(@_);
-
-  foreach my $field ($self->fields)
-  {
-    $field->escape_html(@_);
-  }
-
-  return $self->{'escape_html'} = shift;
 }
 
 # XXX: Could someday use Rose::HTML::Table::*

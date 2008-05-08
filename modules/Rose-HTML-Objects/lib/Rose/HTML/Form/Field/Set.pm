@@ -13,6 +13,8 @@ sub deflate_value
 {
   my($self, $list) = @_;
 
+  my @list = @$list; # shallow copy
+
   return $self->input_value_filtered  unless(ref $list eq 'ARRAY');
 
   return join(', ', map
@@ -25,7 +27,7 @@ sub deflate_value
     }
     else { $_ }
   }
-  @$list);
+  @list);
 }
 
 sub inflate_value
@@ -72,6 +74,17 @@ sub inflate_value
   }
 
   return \@strings;
+}
+
+sub validate
+{
+  my($self) = shift;
+
+  my $ok = $self->SUPER::validate(@_);
+  return $ok  unless($ok);
+
+  return 0  if($self->has_errors);
+  return 1;
 }
 
 if(__PACKAGE__->localizer->auto_load_messages)

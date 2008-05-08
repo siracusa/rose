@@ -157,20 +157,6 @@ sub parent_form
   return $self->{'parent_form'};
 }
 
-# sub parent_field
-# {
-#   my($self) = shift; 
-#   return Scalar::Util::weaken($self->{'parent_field'} = shift)  if(@_);
-#   return $self->{'parent_field'};
-# }
-# 
-# sub parent_form
-# {
-#   my($self) = shift; 
-#   return Scalar::Util::weaken($self->{'parent_form'} = shift)  if(@_);
-#   return $self->{'parent_form'};
-# }
-
 sub fq_name
 {
   my($self) = shift;
@@ -203,6 +189,8 @@ sub field_context_name
   my $parent_field = $self->parent_field or return;
   return $parent_field->fq_name or return;
 }
+
+sub is_flat_group { 0 }
 
 sub init_html_prefix { '' }
 sub init_html_suffix { '' }
@@ -635,6 +623,13 @@ sub xhtml_hidden_fields
 
 sub xhtml_hidden_field { shift->xhtml_hidden_fields(@_) }
 
+sub element
+{
+  my($self) = shift;
+  Carp::croak "Cannot set element for ", ref($self)  if(@_);
+  return $self->html_element;
+}
+
 sub html_tag
 {
   my($self) = shift;
@@ -718,7 +713,7 @@ sub xhtml
 sub label_object
 {
   my($self) = shift;
-  my $label = Rose::HTML::Label->new();
+  my $label = $self->{'label_object'} ||= Rose::HTML::Label->new();
 
   $label->contents($self->escape_html ? __escape_html($self->label) : 
                                         $self->label);

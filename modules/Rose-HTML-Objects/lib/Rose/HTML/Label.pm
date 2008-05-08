@@ -2,10 +2,12 @@ package Rose::HTML::Label;
 
 use strict;
 
-use Rose::HTML::Object::WithContents;
-our @ISA = qw(Rose::HTML::Object::WithContents);
+use Rose::HTML::Text;
 
-our $VERSION = '0.011';
+use Rose::HTML::Object;
+our @ISA = qw(Rose::HTML::Object);
+
+our $VERSION = '0.554';
 
 __PACKAGE__->add_valid_html_attrs
 (
@@ -15,8 +17,17 @@ __PACKAGE__->add_valid_html_attrs
   'onblur',      # %Script;       #IMPLIED  -- the element lost the focus --
 );
 
+sub element       { 'label' }
 sub html_element  { 'label' }
 sub xhtml_element { 'label' }
+
+sub contents
+{
+  my($self) = shift; 
+  $self->children(map { UNIVERSAL::isa($_, 'Rose::HTML::Object') ? $_ : 
+                        Rose::HTML::Text->new(html => $_) } @_)  if(@_);
+  return join('', map { $_->html } $self->children)
+}
 
 1;
 

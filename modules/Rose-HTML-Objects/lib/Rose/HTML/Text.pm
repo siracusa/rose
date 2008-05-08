@@ -42,7 +42,8 @@ sub init
 sub text
 {
   my($self) = shift;
-  $self->html(Rose::HTML::Util::escape_html(@_))  if(@_);
+  $self->html(defined $_[0] ? Rose::HTML::Util::escape_html(@_) : undef)  if(@_);
+  no warnings 'uninitialized';
   return Rose::HTML::Util::unescape_html($self->html);
 }
 

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 292;
+use Test::More tests => 297;
 
 BEGIN 
 {
@@ -100,9 +100,74 @@ qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">
 
 </form>), 'pop_child 4');
 
-####################################
-#print $form->xhtml_table;
-#exit;
+$form->unshift_child(Rose::HTML::Object->new('p', class => 'top2', children => [ 'start' ]));
+
+$form->push_child(Rose::HTML::Object->new('div', class => 'bottom2', children => [ 'end' ]));
+
+is($form->shift_child->html, '<p class="top2">start</p>', 'shift_child 1');
+
+is($form->xhtml_table,
+qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">
+
+<table class="form">
+<tr class="field-odd">
+<td class="label"><label>City</label></td>
+<td class="field"><input name="city" size="25" type="text" value="" /></td>
+</tr>
+<tr class="field-even">
+<td class="label"><label>Street</label></td>
+<td class="field"><input name="street" size="25" type="text" value="" /></td>
+</tr>
+</table>
+
+<div class="bottom2">end</div>
+
+</form>), 'shift_child 2');
+
+is($form->shift_child->html, '<div class="bottom2">end</div>', 'shift_child 3');
+
+is($form->xhtml_table,
+qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">
+
+<table class="form">
+<tr class="field-odd">
+<td class="label"><label>City</label></td>
+<td class="field"><input name="city" size="25" type="text" value="" /></td>
+</tr>
+<tr class="field-even">
+<td class="label"><label>Street</label></td>
+<td class="field"><input name="street" size="25" type="text" value="" /></td>
+</tr>
+</table>
+
+</form>), 'shift_child 4');
+
+$form = Rose::HTML::Form->new;
+
+$form->add_fields
+(
+  name =>
+  {
+    type => 'text',
+    size => 25,
+  },
+  
+  type => 
+  {
+    type    => 'checkbox group',
+    choices => [ qw(a b c) ],
+  },
+);
+
+my $c1 = Rose::HTML::Object->new('p', class => 'top', children => [ 'start' ]);
+my $c2 = Rose::HTML::Object->new('div', class => 'bottom', children => [ 'end' ]);
+$form->unshift_child($c1);
+$form->push_child($c2);
+
+is(join(',', $form->children), join(',', $c1, $form->field('name'), $form->field('type')->checkboxes, $c2),
+   'children 2');
+
+#print join(',', $form->children);
 
 # Mmm, fuzzy...
 Rose::HTML::Form->default_recursive_init_fields(rand > 0.5 ? 1 : 0);

@@ -6,8 +6,8 @@ use Carp();
 
 use Rose::HTML::Object::Errors qw(:string);
 
-use Rose::HTML::Form::Field::WithContents;
-our @ISA = qw(Rose::HTML::Form::Field::WithContents);
+use Rose::HTML::Form::Field;
+our @ISA = qw(Rose::HTML::Form::Field);
 
 our $VERSION = '0.548';
 
@@ -38,18 +38,46 @@ __PACKAGE__->add_boolean_html_attrs
   'readonly',
 );
 
+sub element       { 'textarea' }
 sub html_element  { 'textarea' }
 sub xhtml_element { 'textarea' }
 
 sub value { shift->input_value(@_) }
-
-sub escape_html_contents { 1 }
 
 sub contents
 {
   my($self) = shift;
   return $self->input_value(@_)  if(@_);
   return $self->output_value;
+}
+
+sub input_value
+{
+  my($self) = shift;
+
+  if(@_)
+  {
+    $self->SUPER::input_value(@_);
+    $self->children(defined $_[0] ? $self->output_value : '');
+  }
+
+  # XXX: Intentional double set in order to maintain error()
+  # XXX: produced by a possible call to inflate_value()
+  return $self->SUPER::input_value(@_);
+}
+
+sub clear
+{
+  my($self) = shift;
+  $self->delete_children;
+  return $self->SUPER::clear(@_);
+}
+
+sub reset
+{
+  my($self) = shift;
+  $self->SUPER::reset(@_);
+  $self->children($self->output_value);
 }
 
 sub size
@@ -187,7 +215,7 @@ Constructs a new L<Rose::HTML::Form::Field::TextArea> object based on PARAMS, wh
 
 =item B<contents [TEXT]>
 
-Get or set the contents of the text area.  If a TEXT argument is present, it is passed to L<input_value()|Rose::HTML::Form::Field/input_value> and the return value of that method call is then returned. Otherwise, L<output_value()|Rose::HTML::Form::Field/output_value> is called with no arguments.
+Get or set the contents of the text area.  If a TEXT argument is present, it is passed to L<input_value()|Rose::HTML::Form::Field/input_value> and the return value of that method call is then returned.  Otherwise, L<output_value()|Rose::HTML::Form::Field/output_value> is called with no arguments.
 
 =item B<maxlength [INT]>
 
@@ -199,7 +227,7 @@ Get or set the number of columns and rows (C<cols> and C<rows>) in the text area
 
 =item B<value [TEXT]>
 
-Simply calls L<contents()|/contents>, passing all arguments.
+Simply calls L<input_value|/input_value>, passing all arguments.
 
 =back
 

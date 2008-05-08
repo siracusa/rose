@@ -3,19 +3,14 @@ package Rose::HTML::Form::Field::Option;
 use strict;
 
 use Rose::HTML::Util();
+use Rose::HTML::Text;
 
-use Rose::HTML::Form::Field::WithContents;
 use Rose::HTML::Form::Field::OnOff::Selectable;
-our @ISA = qw(Rose::HTML::Form::Field::OnOff::Selectable Rose::HTML::Form::Field::WithContents);
+use Rose::HTML::Object::WithWrapAroundChildren;
+our @ISA = qw(Rose::HTML::Object::WithWrapAroundChildren
+              Rose::HTML::Form::Field::OnOff::Selectable);
 
-# Multiple inheritence never quite works out the way I want it to...
-Rose::HTML::Form::Field::WithContents->import_methods
-(
-  'html_tag',
-  'xhtml_tag',  
-);
-
-our $VERSION = '0.549';
+our $VERSION = '0.554';
 
 __PACKAGE__->add_valid_html_attrs
 (
@@ -37,7 +32,6 @@ sub xhtml_element { 'option' }
 sub html_field
 {
   my($self) = shift;
-  $self->contents(Rose::HTML::Util::escape_html($self->label));
   $self->html_attr(selected => $self->selected);
   return $self->html_tag(@_);
 }
@@ -45,9 +39,23 @@ sub html_field
 sub xhtml_field
 {
   my($self) = shift; 
-  $self->contents(Rose::HTML::Util::escape_html($self->label));
   $self->html_attr(selected => $self->selected);
   return $self->xhtml_tag(@_);
+}
+
+sub immutable_children { shift->label_text_object }
+
+sub label
+{
+  my($self) = shift;
+  $self->label_text_object->text(@_)  if(@_);
+  return $self->SUPER::label(@_);
+}
+
+sub label_text_object
+{
+  my($self) = shift;
+  return $self->{'label_text_object'} ||= Rose::HTML::Text->new(text => $self->label);
 }
 
 sub short_label { shift->html_attr('label', @_) }

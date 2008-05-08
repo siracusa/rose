@@ -2,10 +2,11 @@
 
 use strict;
 
-use Test::More tests => 18;
+use Test::More tests => 29;
 
 BEGIN 
 {
+  use_ok('Rose::HTML::Object');
   use_ok('Rose::HTML::Form::Field::Option');
 }
 
@@ -52,3 +53,23 @@ $field->selected(1);
 
 is($field->html_field, '<option label="1.0" selected value="john">John</option>', 'html_field() 6');
 is($field->xhtml_field, '<option label="1.0" selected="selected" value="john">John</option>', 'xhtml_field() 6');
+
+$field->push_children(' ', Rose::HTML::Object->new('b', children => [ 'test' ]));
+
+is($field->html_field, '<option label="1.0" selected value="john">John <b>test</b></option>', 'html_field() 7');
+is($field->xhtml_field, '<option label="1.0" selected="selected" value="john">John <b>test</b></option>', 'xhtml_field() 7');
+
+is($field->pop_child->html, '<b>test</b>', 'pop_child 1');
+
+is($field->html_field, '<option label="1.0" selected value="john">John </option>', 'html_field() 8');
+is($field->xhtml_field, '<option label="1.0" selected="selected" value="john">John </option>', 'xhtml_field() 8');
+
+is($field->pop_child->html, ' ', 'pop_child 2');
+
+is($field->html_field, '<option label="1.0" selected value="john">John</option>', 'html_field() 9');
+is($field->xhtml_field, '<option label="1.0" selected="selected" value="john">John</option>', 'xhtml_field() 9');
+
+$field->label('<John>');
+
+is($field->html_field, '<option label="1.0" selected value="john">&lt;John&gt;</option>', 'html_field() 10');
+is($field->xhtml_field, '<option label="1.0" selected="selected" value="john">&lt;John&gt;</option>', 'xhtml_field() 10');
