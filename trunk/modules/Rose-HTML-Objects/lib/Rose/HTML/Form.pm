@@ -1965,7 +1965,11 @@ Each form has a list of field objects.  Each field object is stored under a name
 
 Forms are validated by calling L<validate()|Rose::HTML::Form::Field/validate> on each field object.  If any individual field does not validate, then the form is invalid.  Inter-field validation is the responsibility of the form object.
 
-=head1 NESTED FORMS
+=head1 HIERARCHY
+
+Though L<Rose::HTML::Form> objects may have L<children|Rose::HTML::Object/children> just like any other L<Rose::HTML::Object>-derived object, the L<fields|/fields> that make up the form are treated like "immutable children" in that they can never be removed using the standard child-related APIs.  Instead, the fields exist in the middle of any other children.  L<Pushing|Rose::HTML::Object/push_children> a child adds it after the list of fields. L<Unshifting|Rose::HTML::Object/unshift_children> a child adds it before the list of fields.  L<Popping|Rose::HTML::Object/pop_children> or L<shifting|Rose::HTML::Object/shift_children> children will pull children through, past the fields, to exit the list of children at either end.  In other words, children manipulated using the child object APIs will "flow around" the list of fields.
+
+=head2 NESTED FORMS
 
 Each form can have zero or more fields as well as zero or more sub-forms.  Since E<lt>formE<gt> HTML tags cannot be nested, this nesting of form objects appears "flattened" in the external interfaces such as HTML generation or field addressing.
 

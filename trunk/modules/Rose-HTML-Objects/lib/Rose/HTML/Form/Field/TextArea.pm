@@ -227,7 +227,7 @@ Get or set the number of columns and rows (C<cols> and C<rows>) in the text area
 
 =item B<value [TEXT]>
 
-Simply calls L<input_value|/input_value>, passing all arguments.
+Simply calls L<input_value|Rose::HTML::Form::Field/input_value>, passing all arguments.
 
 =back
 
