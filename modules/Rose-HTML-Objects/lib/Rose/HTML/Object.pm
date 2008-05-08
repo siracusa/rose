@@ -279,7 +279,7 @@ sub has_parent { shift->parent ? 1 : 0 }
 sub parent
 {
   my($self) = shift; 
-  
+
   if(@_)
   {
     my $old_parent = $self->parent;
@@ -303,12 +303,12 @@ sub descendants { map { $_, $_->descendants } shift->children }
 sub delete_child
 {
   my($self) = shift;
-  
+
   if($_[0] =~ /^[+-]?\d+$/)
   {
     return $self->delete_child_at_index(@_);
   }
-  
+
   my $refaddr = Scalar::Util::refaddr($_[0]);
 
   my $i = 0;
@@ -339,7 +339,7 @@ sub has_child
       return 1;
     }
   }
-  
+
   return 0;
 }
 
@@ -349,7 +349,7 @@ sub init_xhtml_error_formatter { }
 sub element
 {
   my($self) = shift;
-  
+
   return $self->html_element  unless(@_);
 
   $self->xhtml_element(@_);
@@ -704,7 +704,7 @@ sub start_html
   my($self) = shift;
 
   return '<' . $self->html_element . $self->html_attrs_string . '>';
-  
+
   #my $html = $self->html;
   #$html =~ s{</\w+>\z}{};
   #return $html;
@@ -715,7 +715,7 @@ sub end_html
   my($self) = shift;
 
   return '</' . $self->html_element . '>';
-  
+
   #my $html = $self->html;
   #$html =~ m{</\w+>\z};
   #return $1 || '';
@@ -724,7 +724,7 @@ sub end_html
 sub start_xhtml
 {
   my($self) = shift;
-  
+
   return '<' . $self->xhtml_element . $self->xhtml_attrs_string . '>';
 
   #my $xhtml = $self->xhtml;
@@ -905,7 +905,7 @@ sub AUTOLOAD
   {
     my $name = $AUTOLOAD;
     $name =~ s/.*://;
-  
+
     if($class->html_attr_is_valid($name) && $class->autoload_html_attr_methods)
     {
       no strict 'refs';
@@ -913,7 +913,7 @@ sub AUTOLOAD
       ${$class . '::__AUTOLOADED'}{$name} = 1;
       goto &$AUTOLOAD;
     }
-  
+
     confess
       qq(Can't locate object method "$name" via package "$class" - ) .
       ($class->html_attr_is_valid($name) ? 
@@ -938,6 +938,48 @@ __END__
 Rose::HTML::Object - HTML object base class.
 
 =head1 SYNOPSIS
+
+  #
+  # Generic HTML construction
+  #
+
+  $o = Rose::HTML::Object->new('p');
+  $o->push_child('Hi');
+
+  print $o->html; # <p>hi</p>
+
+  $br = Rose::HTML::Object->new(element => 'br', is_self_closing => 1);
+
+  print $br->html;  # <br>
+  print $br->xhtml; # <br />
+
+  $o->unshift_children($br, ' ');
+
+  print $o->html; # <p><br> Hi</p>
+
+  $b = Rose::HTML::Object->new(body => children => $o);
+
+  print $b->html; # <body><p><br> Hi</p></body>
+
+  foreach my $object ($b->descendants)
+  {
+    ...
+  }
+
+  $d = Rose::HTML::Object->new('div', class => 'x');
+
+  $b->child(0)->parent($d); # re-parent
+
+  print $b->html; # <body></body>
+  print $d->html; # <div class="x"><p><br> Hi</p></div>
+
+
+
+
+
+  #
+  # Subclass to add strictures
+  #
 
   package MyTag;
 
@@ -989,6 +1031,10 @@ Rose::HTML::Object - HTML object base class.
 L<Rose::HTML::Object> is the base class for HTML objects.  It defines the HTML element name, provides methods for specifying, manipulating, and validating HTML attributes, and can serialize itself as either HTML or XHTML.
 
 This class inherits from, and follows the conventions of, L<Rose::Object>. See the L<Rose::Object> documentation for more information.
+
+=head1 HIERARCHY
+
+Each L<Rose::HTML::Object> may have zero or more L<children|/children>, each of which is another L<Rose::HTML::Object> (or L<Rose::HTML::Object>-derived) object.  The L<html|/html> produced for an object will include the HTML for all of its L<descendants|/descendants>.
 
 =head1 VALIDATION
 
@@ -1184,11 +1230,11 @@ This is an alias for the L<push_children|/push_children> method.
 
 Returns the L<child|/children> at the index specified by INT.  The first child is at index zero (0).
 
-=item B<children>
+=item B<children [LIST]>
 
-Returns a list (in list context) or a reference to an array (in scalar context) of L<Rose::HTML::Object>-derived objects that are contained within, or otherwise "children of" this object.
+Get or set the list of L<Rose::HTML::Object>-derived objects that are contained within, or otherwise "children of" this object.  Any plain scalar in LIST is converted to a L<Rose::HTML::Text> object, with the scalar used as the value of the L<text|Rose::HTML::Text/text> attribute.
 
-The array reference return value should be treated as read-only.  The individual items may be treated as read/write provided that you understand that you're modifying the actual children, not copies.
+Returns a list (in list context) or a reference to an array (in scalar context) of L<Rose::HTML::Object>-derived objects.  The array reference return value should be treated as read-only.  The individual items may be treated as read/write provided that you understand that you're modifying the actual children, not copies.
 
 =item B<clear_all_html_attrs>
 
@@ -1355,6 +1401,20 @@ If the L<escape_html|/escape_html> flag is set to true (the default), then the e
 =item B<html_tag>
 
 Serializes the object as an HTML tag.  In other words, it is the concatenation of the strings returned by L<html_element()|/html_element> and L<html_attrs_string()|/html_attrs_string>, wrapped with the appropriate angled brackets.
+
+=item B<is_self_closing [BOOL]>
+
+Get or set a boolean attribute that determines whether or not the HTML for this object requires a separate closing tag.  If set to true, then an empty "foo" tag would looke like this:
+
+     HTML: <foo>
+    XHTML: <foo />
+
+If false, then the tags above would look like this instead:
+
+     HTML: <foo></foo>
+    XHTML: <foo></foo>
+
+The default value is false.  This attribute may be read-only in subclasses.
 
 =item B<parent [OBJECT]>
 

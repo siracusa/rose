@@ -40,7 +40,7 @@ sub push_children { shift->push_post_children(@_) }
 sub pop_children 
 {
   my($self) = shift;
-  
+
   my $num = @_ ? shift : 1;
   my @children = $self->pop_post_children($num);
 
@@ -63,7 +63,7 @@ sub shift_children
   {
     push(@children, $self->shift_post_children($num - @children));
   }
-  
+
   return @children == 1 ? $children[0] : @children;
 }
 
