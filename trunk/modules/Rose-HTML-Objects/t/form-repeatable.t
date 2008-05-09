@@ -107,8 +107,33 @@ $form->init_fields;
 @fields = qw(a b.b b.c.1.c b.c.2.c);
 is_deeply([ $form->field_names ], \@fields, 'two-level repeate 1');
 
+$form->params({ a => 'a', 'b.b' => 'bb', 'b.c.3.c' => 'bc3' });
+$form->init_fields;
+@fields = qw(a b.b b.c.3.c);
+is_deeply([ $form->field_names ], \@fields, 'two-level repeate 2');
+
+$form->params({ 'b.c.3.c' => 'bc3', 'b.c.1.c' => 'bc1' });
+$form->init_fields;
+@fields = qw(a b.b b.c.1.c b.c.3.c);
+is_deeply([ $form->field_names ], \@fields, 'two-level repeate 3');
+
+$form->params({ 'b.c.3.c' => 'bc3', 'b.c.2.c' => undef, 'b.c.1.c' => 'bc1' });
+$form->init_fields;
+@fields = qw(a b.b b.c.1.c b.c.2.c b.c.3.c);
+is_deeply([ $form->field_names ], \@fields, 'two-level repeate 4');
+
+
+my $form_x = Rose::HTML::Form->new;
+$form_x->add_field(x => { type => 'text' });
+
+$form_x->add_repeatable_form(f => $form);
+$form_x->repeatable_form('f')->default_count(2);
+
+$form_x->init_fields;
+#print join(' ', $form_x->field_names), "\n";
+
+#print $form_x->xhtml_table;
 exit;
-print $form->xhtml_table;
 
 BEGIN
 {

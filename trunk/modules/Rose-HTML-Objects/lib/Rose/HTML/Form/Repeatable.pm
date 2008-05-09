@@ -31,9 +31,9 @@ sub prepare
   my($self) = shift;
   my(%args) = @_;
 
-  my $form_name = $self->name;
+  my $fq_form_name = quotemeta $self->fq_form_name;
   
-  my $re = qr(^$form_name\.(\d+)\.);
+  my $re = qr(^$fq_form_name\.(\d+)\.);
 
   my %have_num;
 
