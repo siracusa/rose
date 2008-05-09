@@ -19,7 +19,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.550';
+our $VERSION = '0.554';
 
 #our $Debug = 0;
 
@@ -1196,6 +1196,18 @@ The prefilter exists to handle common filtering tasks without hogging the lone i
 In addition to the various kinds of field values, each field also has a name, which may or may not be the same as the value of the "name" HTML attribute.
 
 Fields also have associated labels, error strings, default values, and various methods for testing, clearing, and reseting the field value.  See the list of object methods below for the details.
+
+=head1 HIERARCHY
+
+Though L<Rose::HTML::Form::Field> objects inherit from L<Rose::HTML::Object>, there are some semantic differences when it comes to the L<hierarchy|Rose::HTML::Object/HIERARCHY> of parent/child objects.  
+
+A field is an abstraction for a collection of one or more HTML tags, including the field itself, the field's L<label|/html_label>, and any L<error messages|/html_error>.  Each of these things may be made up of multiple HTML elements, and they usually exist alongside each other rather than nested within each other.  As such, the field itself cannot rightly be considered the "parent" of these elements.  This is why the child-related methods inherited from L<Rose::HTML::Object> (L<children|Rose::HTML::Object/children>, L<descendants|Rose::HTML::Object/descendants>, etc.) will usually return empty lists.  Furthermore, any children L<added|Rose::HTML::Object/add_children> to the list will generally be ignored by the field's HTML output methods.
+
+Effectively, once we move away from the L<Rose::HTML::Object>-derived classes that represent a single HTML element (with zero or more children nested within it) to a class that presents a higher-level abstraction, such as a L<form|Rose::HTML::Form> or field, the exact population of and relationship between the constituent HTML elements may be opaque.
+
+If a field is a group of sibling HTML elements with no real parent HTML element (e.g., a L<radio button group|Rose::HTML::Form::Field::RadioButtonGroup>), then the individual sibling items will be available through a dedicated method (e.g., L<radio_buttons|Rose::HTML::Form::Field::RadioButtonGroup/radio_buttons>).
+
+In cases where there really is a clear parent/child relationship among the HTML elements that make up a field, such as a L<select box|Rose::HTML::Form::Field::SelectBox> which contains zero or more L<options|Rose::HTML::Form::Field::Option> or L<option groups|Rose::HTML::Form::Field::OptionGroup>, the L<children|Rose::HTML::Object/children> method will return the expected list of objects.  In such cases, the list of child objects is usually restricted to be of the expected type (e.g., L<radio buttons|Rose::HTML::Form::Field::RadioButton> for a L<radio button group|Rose::HTML::Form::Field::RadioButtonGroup>), with all child-related methods acting as aliases for the existing item methods.  For example, the L<add_options|Rose::HTML::Form::Field::SelectBox/add_options> method in L<Rose::HTML::Form::Field::SelectBox> does the same thing as L<add_children|Rose::HTML::Object/add_children>.  See the documentation for each specific L<Rose::HTML::Form::Field>-derived class for more details.
 
 =head1 CUSTOM FIELDS
 

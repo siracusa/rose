@@ -13,12 +13,11 @@ our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.549';
+our $VERSION = '0.554';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
 (
-  'children',
   'hidden_field',
   'hidden_fields',
   'html_hidden_field',
@@ -49,6 +48,14 @@ sub init
 
   local $self->{'in_init'} = 1;
   $self->SUPER::init(@_);
+}
+
+sub is_flat_group { 1 }
+
+sub children 
+{
+  Carp::croak "Cannot set children() for a pseudo-group ($_[0])"  if(@_ > 1);
+  return wantarray ? () : [];
 }
 
 sub value { shift->input_value(@_) }
@@ -458,6 +465,12 @@ L<Rose::HTML::Form::Field::Compound> is a base class for compound fields. A comp
 Externally, a compound field must field look and behave as if it is a single, simple field.  Although this can be done in many ways, it is important for all compound fields to actually inherit from L<Rose::HTML::Form::Field::Compound>. L<Rose::HTML::Form> uses this relationship in order to identify compound fields and handle them correctly.  Any compound field that does not inherit from L<Rose::HTML::Form::Field::Compound> will not work correctly with L<Rose::HTML::Form>.
 
 This class inherits from, and follows the conventions of, L<Rose::HTML::Form::Field>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::HTML::Form::Field> documentation for more information.
+
+=head1 HIERARCHY
+
+A L<Rose::HTML::Form::Field::Compound>-derived object behaves as if it is a single L<field|Rose::HTML::Form::Field> made up of a group of sibling elements.  These siblings are available through the L<fields|/fields> method.
+
+See the "hierarchy" sections of the L<Rose::HTML::Form::Field/HIERARCHY> and L<Rose::HTML::Form/HIERARCHY> documentation for more information about how field objects that are really "groups of siblings" behave with respect to the the child-related methods inherited from L<Rose::HTML::Object>.
 
 =head1 SUBCLASSING
 
