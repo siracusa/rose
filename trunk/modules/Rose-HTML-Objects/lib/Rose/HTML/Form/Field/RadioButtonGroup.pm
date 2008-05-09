@@ -124,6 +124,12 @@ L<Rose::HTML::Form::Field::RadioButtonGroup> is an object wrapper for a group of
 
 This class inherits from, and follows the conventions of, L<Rose::HTML::Form::Field>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::HTML::Form::Field> documentation for more information.
 
+=head1 HIERARCHY
+
+A radio button group is an abstraction with no corresponding parent HTML element; the individual L<radio button|Rose::HTML::Form::Field::RadioButton> objects in the group exist as siblings.  As such, the list of L<child|Rose::HTML::Object/HIERARCHY> objects will always be empty and cannot be modified.  To get the list of siblings, use the L<radio_buttons|/radio_buttons> method.
+
+See the "hierarchy" sections of the L<Rose::HTML::Form::Field/HIERARCHY> and L<Rose::HTML::Form/HIERARCHY> documentation for an overview of the relationship between field and form objects and the child-related methods inherited from L<Rose::HTML::Object>.
+
 =head1 HTML ATTRIBUTES
 
 None.  This class is simply an aggregator of L<Rose::HTML::Form::Field::RadioButton> objects.

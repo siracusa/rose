@@ -83,6 +83,10 @@ L<Rose::HTML::Form::Field::SelectBox> is an object representation of a select bo
 
 This class inherits from, and follows the conventions of, L<Rose::HTML::Form::Field>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::HTML::Form::Field> documentation for more information.
 
+=head1 HIERARCHY
+
+All L<child-related|Rose::HTML::Object/HIERARCHY> methods are effectively aliases for the option manipulation methods described below.  See the "hierarchy" sections of the L<Rose::HTML::Form::Field/HIERARCHY> and L<Rose::HTML::Form/HIERARCHY> documentation for an overview of the relationship between field and form objects and the child-related methods inherited from L<Rose::HTML::Object>.
+
 =head1 HTML ATTRIBUTES
 
 Valid attributes:

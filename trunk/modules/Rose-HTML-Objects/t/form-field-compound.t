@@ -37,8 +37,8 @@ my %fields =
 
 ok($field->add_fields(%fields), 'add_fields()');
 
-is(scalar @{ $field->children }, 3, 'children scalar 2');
-is(scalar(() = $field->children), 3, 'children list 2');
+is(scalar @{ $field->children }, 0, 'children scalar 2');
+is(scalar(() = $field->children), 0, 'children list 2');
 
 is($field->field('month'), $fields{'month'}, 'field() set with field hash');
 

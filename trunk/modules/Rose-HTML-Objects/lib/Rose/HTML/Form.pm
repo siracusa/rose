@@ -962,6 +962,14 @@ sub increment_form_rank_counter
   return $rank;
 }
 
+sub repeatable_form
+{
+  my($self) = shift;
+  my $form = $self->form(@_) or return undef;
+  return undef  unless($form->is_repeatable);
+  return $form;
+}
+
 sub repeatable_forms
 {
   my($self) = shift;
@@ -969,7 +977,7 @@ sub repeatable_forms
   if(@_)
   {
     $self->delete_repeatable_forms;
-    $self->add_repeatable_form(@_);
+    $self->add_repeatable_forms(@_);
     return unless(defined wantarray);
   }
 
@@ -1001,10 +1009,12 @@ sub add_repeatable_forms
     {
       if(UNIVERSAL::isa($_[0], 'Rose::HTML::Form'))
       {
+        my $form = shift;
+
         push(@form_args,
-          $arg->form_name =>
+          $arg =>
           {
-            form       => shift(@_),
+            form       => $form,
             repeatable => 1,
           });
       }
@@ -1027,6 +1037,8 @@ sub add_repeatable_forms
 
   return $self->add_forms(@form_args);
 }
+
+sub add_repeatable_form { shift->add_repeatable_forms(@_) }
 
 sub form_depth
 {
@@ -1069,6 +1081,7 @@ sub add_forms
 
       $name = $form->form_name;
 
+      croak "Cannot add form $form without a name"  unless(defined $name);
       croak "Cannot add form with the same name as an existing field: $name"
         if($self->field($name));
 
@@ -1146,7 +1159,7 @@ sub add_forms
 
   foreach my $form (@added_forms)
   {
-    if($form->isa('Rose::HTML::Form::Repeatable'))
+    if($form->recursive_init_fields || $form->isa('Rose::HTML::Form::Repeatable'))
     {
       $self->recursive_init_fields(1);
     }
@@ -1967,9 +1980,21 @@ Forms are validated by calling L<validate()|Rose::HTML::Form::Field/validate> on
 
 =head1 HIERARCHY
 
-Though L<Rose::HTML::Form> objects may have L<children|Rose::HTML::Object/children> just like any other L<Rose::HTML::Object>-derived object, the L<fields|/fields> that make up the form are treated like "immutable children" in that they can never be removed using the standard child-related APIs.  Instead, the fields exist in the middle of any other children.  L<Pushing|Rose::HTML::Object/push_children> a child adds it after the list of fields. L<Unshifting|Rose::HTML::Object/unshift_children> a child adds it before the list of fields.  L<Popping|Rose::HTML::Object/pop_children> or L<shifting|Rose::HTML::Object/shift_children> children will pull children through, past the fields, to exit the list of children at either end.  In other words, children manipulated using the child object APIs will "flow around" the list of fields.
+Though L<Rose::HTML::Form> objects may have L<children|Rose::HTML::Object/children> just like any other L<Rose::HTML::Object>-derived object, the L<fields|/fields> that make up the form are treated like "immutable children" in that they can never be removed using the standard child-related APIs.  Instead, the fields exist in the middle of any other children.
 
-=head2 NESTED FORMS
+L<Pushing|Rose::HTML::Object/push_children> a child adds it after the list of fields. L<Unshifting|Rose::HTML::Object/unshift_children> a child adds it before the list of fields.  L<Popping|Rose::HTML::Object/pop_children> or L<shifting|Rose::HTML::Object/shift_children> children will pull children through, past the fields, to exit the list of children at either end.  In other words, children manipulated using the child object APIs will "flow around" the list of fields.
+
+If a particular field is a group of sibling HTML elements with no real parent HTML element (e.g., a L<radio button group|Rose::HTML::Form::Field::RadioButtonGroup>), then the individual sibling items will be flattened out into the list returned by the L<children|Rose::HTML::Object/children> method.  
+
+If, on the other hand, a field has a true parent/child relationship (e.g., a L<select box|Rose::HTML::Form::Field::SelectBox> which contains zero or more L<options|Rose::HTML::Form::Field::Option>) then the items it contains are not flattened by the L<children|Rose::HTML::Object/children> method.
+
+For example, if a form has three fields, a text field, a checkbox group with three checkboxes, and a select box with three options, then the L<children|Rose::HTML::Object/children> method will return five objects: the L<text field|Rose::HTML::Form::Field::Text> object, the three L<checkboxes|Rose::HTML::Form::Field::Checkbox> objects, and a L<select box|Rose::HTML::Form::Field::SelectBox> object.
+
+See the L<hierarchy section|Rose::HTML::Form::Field/HIERARCHY> of the L<Rose::HTML::Form::Field> documentation for more information about how fields made up of multiple HTML tags are treated with respect to parent/child relationships.
+
+Finally, note that L<nested forms|/"NESTED FORMS"> do not affect the parent/child hierarchy presented by the child-related methods inherited from L<Rose::HTML::Object> since the fields contained in nested forms are flattened out into the field list of parent form, as described in the next section.
+
+=head1 NESTED FORMS
 
 Each form can have zero or more fields as well as zero or more sub-forms.  Since E<lt>formE<gt> HTML tags cannot be nested, this nesting of form objects appears "flattened" in the external interfaces such as HTML generation or field addressing.
 

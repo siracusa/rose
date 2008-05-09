@@ -11,7 +11,7 @@ use Rose::Object::MakeMethods::Generic
   boolean => 'multiple',
 );
 
-our $VERSION = '0.549';
+our $VERSION = '0.554';
 
 __PACKAGE__->add_required_html_attrs(
 {
@@ -28,6 +28,7 @@ __PACKAGE__->delete_valid_html_attrs(qw(
   accesskey
   tabindex));
 
+sub element       { 'optgroup' }
 sub html_element  { 'optgroup' }
 sub xhtml_element { 'optgroup' }
 
