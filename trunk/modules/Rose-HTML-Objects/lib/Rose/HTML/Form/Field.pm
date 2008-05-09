@@ -1480,7 +1480,7 @@ Validate the field and return a true value if it is valid, false otherwise. If t
 
 If false is returned due to one of the conditions above, then L<error()|Rose::HTML::Object/error> is set to the string:
 
-    $label is a required field
+    $label is a required field.
 
 where C<$label> is either the field's L<label()|/label> or, if L<label()|/label> is not defined, the string "This".
 
@@ -1488,7 +1488,7 @@ If a custom L<validator()|/validator> is set, then C<$_> is localized and set to
 
 If the validator subroutine returns false and did not set L<error()|Rose::HTML::Object/error> to a defined value, then L<error()|Rose::HTML::Object/error> is set to the string:
 
-    $label is invalid
+    $label is invalid.
 
 where C<$label> is is either the field's L<label()|/label> or, if L<label()|/label> is not defined, the string "Value".
 
