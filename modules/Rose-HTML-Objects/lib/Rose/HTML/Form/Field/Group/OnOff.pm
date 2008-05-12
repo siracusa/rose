@@ -98,7 +98,8 @@ sub _args_to_items
   # All items in the group must have the same name
   foreach my $item (@$items)
   {
-    $item->name($self->name);
+    $item->name($self->local_name);
+    #$item->name($self->name);
   }
 
   return (wantarray) ? @$items : $items;

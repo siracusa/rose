@@ -1368,6 +1368,7 @@ sub _clear_form_generated_values
   my($self) = shift;
   $self->{'form_list'}   = undef;
   $self->{'form_names'}  = undef;
+  $self->{'form_depth'}  = undef;
   $self->_clear_field_generated_values;
 }
 

@@ -105,22 +105,22 @@ $form->add_form(b => $form_b);
 $form->init_fields;
 
 @fields = qw(a b.b b.c.1.c b.c.2.c);
-is_deeply([ $form->field_names ], \@fields, 'two-level repeate 1');
+is_deeply([ $form->field_names ], \@fields, 'two-level repeat 1');
 
 $form->params({ a => 'a', 'b.b' => 'bb', 'b.c.3.c' => 'bc3' });
 $form->init_fields;
 @fields = qw(a b.b b.c.3.c);
-is_deeply([ $form->field_names ], \@fields, 'two-level repeate 2');
+is_deeply([ $form->field_names ], \@fields, 'two-level repeat 2');
 
 $form->params({ 'b.c.3.c' => 'bc3', 'b.c.1.c' => 'bc1' });
 $form->init_fields;
 @fields = qw(a b.b b.c.1.c b.c.3.c);
-is_deeply([ $form->field_names ], \@fields, 'two-level repeate 3');
+is_deeply([ $form->field_names ], \@fields, 'two-level repeat 3');
 
 $form->params({ 'b.c.3.c' => 'bc3', 'b.c.2.c' => undef, 'b.c.1.c' => 'bc1' });
 $form->init_fields;
 @fields = qw(a b.b b.c.1.c b.c.2.c b.c.3.c);
-is_deeply([ $form->field_names ], \@fields, 'two-level repeate 4');
+is_deeply([ $form->field_names ], \@fields, 'two-level repeat 4');
 
 
 my $form_x = Rose::HTML::Form->new;
@@ -130,6 +130,9 @@ $form_x->add_repeatable_form(f => $form);
 $form_x->repeatable_form('f')->default_count(2);
 
 $form_x->init_fields;
+#@fields = qw(x f.1.b.b f.2.b.b f.1.a f.1.b.c.1.c f.2.b.c.1.c f.1.b.c.2.c f.2.a f.2.b.c.2.c);
+#is_deeply([ $form->field_names ], \@fields, 'three-level repeat 1');
+#$DB::single = 1;
 #print join(' ', $form_x->field_names), "\n";
 
 #print $form_x->xhtml_table;

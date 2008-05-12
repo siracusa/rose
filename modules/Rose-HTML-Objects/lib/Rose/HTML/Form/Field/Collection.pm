@@ -360,7 +360,11 @@ sub add_fields
 
 sub add_field { shift->add_fields(@_) }
 
-sub compare_fields { $_[1]->name cmp $_[2]->name }
+sub compare_fields 
+{
+  my($self, $one, $two) = @_;
+  $_[1]->name cmp $_[2]->name 
+}
 
 sub resync_field_names
 {

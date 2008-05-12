@@ -142,7 +142,7 @@ qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">
 
 </form>), 'shift_child 4');
 
-$form = Rose::HTML::Form->new;
+$form = Rose::HTML::Form->new(form_name => 'myform');
 
 $form->add_fields
 (
@@ -168,6 +168,9 @@ is(join(',', $form->children), join(',', $c1, $form->field('name'), $form->field
    'children 2');
 
 #print join(',', $form->children);
+
+# Pre-0.554 this caused an exception
+$form->field('type')->add_checkbox(d => 'D');
 
 # Mmm, fuzzy...
 Rose::HTML::Form->default_recursive_init_fields(rand > 0.5 ? 1 : 0);
