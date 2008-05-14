@@ -1506,6 +1506,20 @@ sub fields
   return wantarray ? @{$self->{'field_list'}} : $self->{'field_list'};
 }
 
+sub fields_depth_first
+{
+  my($self) = shift;
+
+  my @fields = sort { $a->rank <=> $b->rank } $self->local_fields;
+  
+  foreach my $form ($self->forms)
+  {
+    push(@fields, $form->fields_depth_first);
+  }
+  
+  return wantarray ? @fields : \@fields;
+}
+
 sub field_monikers
 {
   my($self) = shift;
@@ -1667,6 +1681,9 @@ sub _html_table
   my $xhtml_field = "${xhtml}_field";
   my $xhtml_label = "${xhtml}_label";
 
+  my $max_button_depth = 
+    exists $args{'max_button_depth'} ? $args{'max_button_depth'} : 1;
+
   $args{'class'} = defined $args{'class'} ? 
     "$args{'class'} form" : 'form';
 
@@ -1694,8 +1711,21 @@ sub _html_table
 
   my $i = 1;
 
-  foreach my $field ($self->fields)
+  my @buttons;
+
+  foreach my $field ($self->fields_depth_first)
   {
+    if($field->is_button)
+    {
+      next  if($field->field_depth > $max_button_depth);
+      
+      if($field->field_depth == 1)
+      {
+        push(@buttons, $field);
+        next;
+      }
+    }
+
     if($field->isa('Rose::HTML::Form::Field::File'))
     {
       $form_start = "start_multipart_$xhtml";
@@ -1728,14 +1758,39 @@ sub _html_table
       $label = $label->$xhtml();
     }
 
+    if($field->is_button)
+    {
+      local $args{'td'}{'colspan'} = 2;
+      $html .= '<tr' . Rose::HTML::Util::html_attrs_string($args{'tr'}) . ">\n" .
+               '<td' . Rose::HTML::Util::html_attrs_string($args{'td'}) . '>' .
+               $field->$xhtml_field . "</td>\n</tr>\n";
+    }
+    else
+    {
+      $html .= '<tr' . Rose::HTML::Util::html_attrs_string($args{'tr'}) . ">\n" .
+               '<td' . Rose::HTML::Util::html_attrs_string($args{'td'}) . ">$label</td>\n";
+  
+      $args{'td'}{'class'} =~ s/(?:^| )label$//;
+      $args{'td'}{'class'} = $args{'td'}{'class'} ? "$args{'td'}{'class'} field" : 'field';
+  
+      $html .= '<td' . Rose::HTML::Util::html_attrs_string($args{'td'}) . '>' .
+               $field->$xhtml() .
+               "</td>\n</tr>\n";
+    }
+  }
+  
+  if(@buttons)
+  {
+    my $odd_even = $i++ % 2 ? 'odd' : 'even';
+
+    local $args{'tr'}{'class'} = "field-$odd_even buttons";
+    local $args{'td'}{'class'} = $args{'td'}{'class'} ? "$args{'td'}{'class'} label" : 'label';
+
+    local $args{'td'}{'colspan'} = 2;
+
     $html .= '<tr' . Rose::HTML::Util::html_attrs_string($args{'tr'}) . ">\n" .
-             '<td' . Rose::HTML::Util::html_attrs_string($args{'td'}) . ">$label</td>\n";
-
-    $args{'td'}{'class'} =~ s/(?:^| )label$//;
-    $args{'td'}{'class'} = $args{'td'}{'class'} ? "$args{'td'}{'class'} field" : 'field';
-
-    $html .= '<td' . Rose::HTML::Util::html_attrs_string($args{'td'}) . '>' .
-             $field->$xhtml() .
+             '<td' . Rose::HTML::Util::html_attrs_string($args{'td'}) . '>' .
+             join(' ', map { $_->$xhtml_field() } @buttons) .
              "</td>\n</tr>\n";
   }
 
@@ -2426,6 +2481,10 @@ If both NAME and VALUE arguments are passed, then the VALUE must be a L<Rose::HT
 =item B<fields>
 
 Returns an ordered list of this form's field objects in list context, or a reference to this list in scalar context.  The order of the fields matches the order of the field names returned by the L<field_monikers|/field_monikers> method.
+
+=item B<fields_depth_first>
+
+Returns a list (in list context) or reference to an array (in scalar context) of this form's field objects ordered according to a depth-first traversal of all L<sub-forms|/"NESTED FORMS">.  Fields within a given form are ordered by L<rank|Rose::HTML::Form::Field/rank>, and all fields at a given level precede any sub-forms nested under that level.
 
 =item B<field_monikers>
 

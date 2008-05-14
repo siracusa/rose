@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More 'no_plan'; #tests => 176;
+use Test::More 'no_plan'; #tests => 22;
 
 BEGIN 
 {
@@ -94,8 +94,8 @@ $form_b->add_field(b => { type => 'text' });
 my $form_c = Rose::HTML::Form->new;
 $form_c->add_field(c => { type => 'text' });
 
-$form_b->add_repeatable_form(c => $form_c);
-$form_b->repeatable_form('c')->default_count(2);
+$form_b->add_repeatable_form(c => { form => $form_c, default_count => 2 });
+#$form_b->repeatable_form('c')->default_count(2);
 
 $form = Rose::HTML::Form->new;
 $form->add_field(a => { type => 'text' });
@@ -124,19 +124,195 @@ is_deeply([ $form->field_names ], \@fields, 'two-level repeat 4');
 
 
 my $form_x = Rose::HTML::Form->new;
-$form_x->add_field(x => { type => 'text' });
+$form_x->add_fields
+(
+  'x' => { type => 'text' },
+  'y' => { type => 'text' },
+  'z' => { type => 'text' },
+);
 
 $form_x->add_repeatable_form(f => $form);
 $form_x->repeatable_form('f')->default_count(2);
 
 $form_x->init_fields;
-#@fields = qw(x f.1.b.b f.2.b.b f.1.a f.1.b.c.1.c f.2.b.c.1.c f.1.b.c.2.c f.2.a f.2.b.c.2.c);
-#is_deeply([ $form->field_names ], \@fields, 'three-level repeat 1');
-#$DB::single = 1;
-#print join(' ', $form_x->field_names), "\n";
+@fields = qw(x y z f.1.a f.1.b.b f.1.b.c.1.c f.1.b.c.2.c f.2.a f.2.b.b f.2.b.c.1.c f.2.b.c.2.c);
+is_deeply([ map { $_->name } $form_x->fields_depth_first ], \@fields, 'three-level repeat 1');
 
+my $new_form = $form_x->form('f')->make_form(1);
+@fields = qw(f.1.a f.1.b.b f.1.b.c.1.c f.1.b.c.2.c f.1.b.c.3.c);
+is_deeply([ map { $_->name } $new_form->fields_depth_first ], \@fields, 'make_form 1');
+
+$new_form = $form_x->form('f')->make_form(7);
+@fields = qw(f.7.a f.7.b.b f.7.b.c.1.c f.7.b.c.2.c f.7.b.c.3.c);
+is_deeply([ map { $_->name } $new_form->fields_depth_first ], \@fields, 'make_form 2');
+
+#print join(' ', map { $_->name } $form_x->fields_depth_first), "\n";
+
+@fields = qw(x y z f.1.a f.1.b.b f.1.b.c.1.c f.1.b.c.2.c f.1.b.c.3.c f.2.a f.2.b.b f.2.b.c.1.c 
+             f.2.b.c.2.c f.7.a f.7.b.b f.7.b.c.1.c f.7.b.c.2.c f.7.b.c.3.c);
+is_deeply([ map { $_->name } $form_x->fields_depth_first ], \@fields, 'make_form 3');
+
+#print join(' ', map { $_->name } $new_form->fields_depth_first), "\n";
+
+#$DB::single = 1;
+#print join(' ', map { $_->name } $form_x->fields_depth_first), "\n";
 #print $form_x->xhtml_table;
-exit;
+#exit;
+
+# $form = Rose::HTML::Form->new;
+# 
+# $form->add_form
+# (
+# 
+# );
+
+#
+# POD example
+#
+
+POD_EXAMPLE:
+{
+  package Person;
+  
+  use base 'Rose::Object';
+  
+  use Rose::Object::MakeMethods::Generic
+  (
+    scalar => [ 'name', 'age' ],
+    array  => 'emails',
+  );
+
+  #...  
+
+  package Email;
+  
+  use base 'Rose::Object';
+  
+  use Rose::Object::MakeMethods::Generic
+  (
+    scalar => 
+    [
+      'address',
+      'type' => { check_in => [ 'home', 'work' ] },
+    ],
+  );
+  
+  #...
+  
+  package EmailForm;
+
+  use base 'Rose::HTML::Form';
+
+  sub build_form 
+  {
+    my($self) = shift;
+
+    $self->add_fields
+    (
+      address     => { type => 'email', size => 50, required => 1 },
+      type        => { type => 'pop-up menu', choices => [ 'home', 'work' ],
+                       required => 1, default => 'home' },
+      save_button => { type => 'submit', value => 'Save Email' },
+    );
+  }
+
+  sub email_from_form { shift->object_from_form('Email') }
+  sub init_with_email { shift->init_with_object(@_) }
+
+  #...
+
+  package PersonEmailsForm;
+
+  use base 'Rose::HTML::Form';
+
+  sub build_form 
+  {
+    my($self) = shift;
+
+    $self->add_fields
+    (
+      name        => { type => 'text',  size => 25, required => 1 },
+      age         => { type => 'integer', min => 0 },
+      save_button => { type => 'submit', value => 'Save Person' },
+    );
+
+    # A person can have several emails
+    $self->add_repeatable_form(emails => EmailForm->new);
+  }
+
+  sub init_with_person # give a friendlier name to a base-class method
+  {
+    my($self, $person) = @_;
+
+    $self->init_with_object($person);
+
+    my $email_form = $self->form('emails');
+
+    $email_form->delete_forms;
+
+    my $i = 1;
+
+    foreach my $email ($person->emails)
+    {
+      $email_form->make_form($i++)->init_with_email($email);
+    }
+  }
+
+  sub person_from_form
+  {
+    my($self) = shift;
+
+    my $person = $self->object_from_form(class => 'Person');
+
+    my @emails;
+
+    foreach my $form ($self->form('emails')->forms)
+    {
+      push(@emails, $form->email_from_form);
+    }
+    
+    $person->emails(@emails);
+    
+    return $person;
+  }
+  
+  package main;
+  
+  my $form = PersonEmailsForm->new;
+  
+  my $person = Person->new(name   => 'Cate', 
+                           age    => 1, 
+                           emails => 
+                           [
+                             'cate@cakes.com',
+                             'cate@wubbler.com',
+                           ]);
+
+  $form->init_with_person($person);
+
+  @fields = qw(name age save_button emails.1.address emails.1.type emails.1.save_button emails.2.address emails.2.type emails.2.save_button);
+  is_deeply([ map { $_->name } $form->fields_depth_first ], \@fields, 'make_form 3');
+
+  $form->params({ name => 'Joe', age => 44, 'emails.5.address' => 'x@x.com', 'emails.5.type' => 'work' });
+  $form->init_fields;
+  
+  ok($form->validate, 'validate 1');
+
+  $person = $form->person_from_form;
+  
+  is($person->name, 'Joe', 'person_from_form 1');
+  is($person->age, 44, 'person_from_form 2');
+  is($person->emails->[0]->address, 'x@x.com', 'person_from_form 3');
+  is($person->emails->[0]->type, 'work', 'person_from_form 3');
+  is(@{ $person->emails }, 1, 'person_from_form 4');
+  #print join(' ', map { $_->name } $form->fields_depth_first), "\n";
+
+  #$DB::single = 1;
+  #print join(' ', map { $_->name } $form_x->fields_depth_first), "\n";
+  #print $form_x->xhtml_table;
+
+  #print $form->xhtml_table;
+}
 
 BEGIN
 {

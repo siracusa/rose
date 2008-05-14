@@ -21,7 +21,9 @@ __PACKAGE__->add_required_html_attrs(
   name  => '',
 });
 
-our $VERSION = '0.011';
+our $VERSION = '0.554';
+
+sub is_button { 1 }
 
 sub hidden_fields      { (wantarray) ? () : [] }
 sub html_hidden_fields { (wantarray) ? () : [] }

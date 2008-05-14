@@ -30,11 +30,12 @@ use Rose::Object::MakeMethods::Generic
 (
   scalar =>
   [
-    'count',
-    'default_count',
+    'default_count' => { interface => 'get_set_init' },
     'prototype',
   ],
 );
+
+sub init_default_count { 0 }
 
 sub is_repeatable { 1 }
 

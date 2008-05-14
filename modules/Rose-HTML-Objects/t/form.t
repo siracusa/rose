@@ -42,6 +42,7 @@ $form->unshift_child(Rose::HTML::Object->new('p', class => 'top', children => [ 
 
 $form->push_child(Rose::HTML::Object->new('div', class => 'bottom', children => [ 'end' ]));
 
+
 is($form->xhtml_table,
 qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">
 
@@ -49,12 +50,12 @@ qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">
 
 <table class="form">
 <tr class="field-odd">
-<td class="label"><label>City</label></td>
-<td class="field"><input name="city" size="25" type="text" value="" /></td>
-</tr>
-<tr class="field-even">
 <td class="label"><label>Street</label></td>
 <td class="field"><input name="street" size="25" type="text" value="" /></td>
+</tr>
+<tr class="field-even">
+<td class="label"><label>City</label></td>
+<td class="field"><input name="city" size="25" type="text" value="" /></td>
 </tr>
 </table>
 
@@ -71,12 +72,12 @@ qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">
 
 <table class="form">
 <tr class="field-odd">
-<td class="label"><label>City</label></td>
-<td class="field"><input name="city" size="25" type="text" value="" /></td>
-</tr>
-<tr class="field-even">
 <td class="label"><label>Street</label></td>
 <td class="field"><input name="street" size="25" type="text" value="" /></td>
+</tr>
+<tr class="field-even">
+<td class="label"><label>City</label></td>
+<td class="field"><input name="city" size="25" type="text" value="" /></td>
 </tr>
 </table>
 
@@ -89,12 +90,12 @@ qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">
 
 <table class="form">
 <tr class="field-odd">
-<td class="label"><label>City</label></td>
-<td class="field"><input name="city" size="25" type="text" value="" /></td>
-</tr>
-<tr class="field-even">
 <td class="label"><label>Street</label></td>
 <td class="field"><input name="street" size="25" type="text" value="" /></td>
+</tr>
+<tr class="field-even">
+<td class="label"><label>City</label></td>
+<td class="field"><input name="city" size="25" type="text" value="" /></td>
 </tr>
 </table>
 
@@ -111,12 +112,12 @@ qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">
 
 <table class="form">
 <tr class="field-odd">
-<td class="label"><label>City</label></td>
-<td class="field"><input name="city" size="25" type="text" value="" /></td>
-</tr>
-<tr class="field-even">
 <td class="label"><label>Street</label></td>
 <td class="field"><input name="street" size="25" type="text" value="" /></td>
+</tr>
+<tr class="field-even">
+<td class="label"><label>City</label></td>
+<td class="field"><input name="city" size="25" type="text" value="" /></td>
 </tr>
 </table>
 
@@ -131,12 +132,12 @@ qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">
 
 <table class="form">
 <tr class="field-odd">
-<td class="label"><label>City</label></td>
-<td class="field"><input name="city" size="25" type="text" value="" /></td>
-</tr>
-<tr class="field-even">
 <td class="label"><label>Street</label></td>
 <td class="field"><input name="street" size="25" type="text" value="" /></td>
+</tr>
+<tr class="field-even">
+<td class="label"><label>City</label></td>
+<td class="field"><input name="city" size="25" type="text" value="" /></td>
 </tr>
 </table>
 

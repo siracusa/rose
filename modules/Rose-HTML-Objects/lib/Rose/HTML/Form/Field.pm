@@ -57,6 +57,8 @@ __PACKAGE__->add_valid_html_attrs(qw(
   tabindex
 ));
 
+sub is_button { 0 }
+
 *label_id = \&label_message_id;
 
 sub error_label
@@ -155,6 +157,20 @@ sub parent_form
   }
 
   return $self->{'parent_form'};
+}
+
+sub field_depth
+{
+  my($self) = shift;
+
+  my $parent = $self->parent_field || $self->parent_form;
+
+  return 0  unless($parent);
+
+  my $depth = 1;
+  $depth++ while($parent = $parent->parent_field || $parent->parent_form);
+
+  return $depth;
 }
 
 sub fq_name
