@@ -163,6 +163,18 @@ sub is_selected
 
 *is_checked = \&is_selected;
 
+sub is_empty
+{
+  my($self) = shift;
+  
+  foreach my $item ($self->items)
+  {
+    return 0  if($item->is_on);
+  }
+  
+  return 1;
+}
+
 sub add_values
 {
   my($self) = shift;
@@ -192,7 +204,7 @@ sub input_value
       %values = map { $_ => 1 } @_;
     }
 
-    unless(keys %values)
+    unless(%values)
     {
       $self->clear();
       $self->is_cleared(0);
@@ -336,9 +348,9 @@ sub init_items
 {
   my($self) = shift;
 
-  my $values = $self->input_values_hash;
+  my $values = $self->input_values_hash || {};
 
-  if(keys %$values)
+  if(%$values)
   {
     my $group_class = $self->_item_group_class;
 

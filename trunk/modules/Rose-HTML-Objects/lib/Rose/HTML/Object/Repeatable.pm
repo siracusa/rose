@@ -97,4 +97,26 @@ sub prototype_clone
   }
 }
 
+sub empty_is_ok
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    foreach my $form ($self->forms)
+    {
+      $form->empty_is_ok(@_);
+    }
+    
+    return $_[0] ? 1 : 0;
+  }
+
+  foreach my $form ($self->forms)
+  {
+    return 0  unless($form->empty_is_ok);
+  }
+  
+  return 1;
+}
+
 1;

@@ -223,11 +223,52 @@ sub validate_field_html_attrs
 sub _is_full  { 0 }
 sub _set_input_value { }
 sub is_full  { 0 }
-sub is_empty { 0 }
 
 sub is_repeatable { $_[0]->is_repeatable_form || $_[0]->is_repeatable_field ? 1 : 0 }
 sub is_repeatable_field { 0 }
 sub is_repeatable_form  { 0 }
+
+sub is_empty
+{
+  my($self) = shift;
+
+  foreach my $field ($self->fields)
+  {
+    return 0  unless($field->is_empty);
+  }
+
+  foreach my $form ($self->forms)
+  {
+    return 0  unless($form->is_empty);
+  }
+
+  return 1;
+}
+
+sub empty_is_ok
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    foreach my $form ($self->forms)
+    {
+      $form->empty_is_ok(@_);
+    }
+    
+    return $self->SUPER::empty_is_ok(@_);
+  }
+
+  my $ok = $self->SUPER::empty_is_ok(@_);
+  return $ok  unless($ok);
+
+  foreach my $form ($self->forms)
+  {
+    return 0  unless($form->empty_is_ok);
+  }
+
+  return $ok;
+}
 
 # Empty contents instead of replacing ref
 sub delete_params { %{shift->{'params'}} = () }
@@ -622,6 +663,8 @@ sub validate
   {
     foreach my $form ($self->forms)
     {
+      next  if($form->is_empty && $form->empty_is_ok);
+
       $Debug && warn "Validating sub-form ", $form->form_name, "\n";
 
       unless($form->validate(%args))
@@ -634,6 +677,8 @@ sub validate
 
   unless($args{'form_only'})
   {
+    return 1  if($self->is_empty && $self->empty_is_ok);
+
     foreach my $field ($self->fields)
     {
       if($cascade && $field->parent_form ne $self)
@@ -2456,6 +2501,10 @@ If VALUES are also passed, then VALUES are deleted from the set of values held b
 
 Delete all parameters.
 
+=item B<empty_is_ok [BOOL]>
+
+Get or set a boolean value that indicates whether or not L<validate|/validate> will be allowed to return true if every L<field|/fields> in the form is empty, even if some of them are L<required|Rose::HTML::Form::Field/required>.  The default value is false.
+
 =item B<end_html>
 
 Returns the HTML required to end the form.
@@ -2846,6 +2895,10 @@ The field names may not match up exactly with the object method names. In such c
       $self->field('is_new')->input_value(1);
       ...
     }
+
+=item B<is_empty>
+
+Returns true if each L<field|/fields> and L<nested form|/forms> in this form L<is_empty()|/is_empty>, false otherwise.
 
 =item B<local_field NAME [, VALUE]>
 

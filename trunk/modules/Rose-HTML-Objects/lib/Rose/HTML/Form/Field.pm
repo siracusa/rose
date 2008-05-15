@@ -39,6 +39,7 @@ use Rose::Object::MakeMethods::Generic
   boolean => 
   [
     trim_spaces => { default => 1 },
+    empty_is_ok => { default => 0 },
   ],
 
   'scalar --get_set_init' => 
@@ -791,20 +792,23 @@ sub validate
      ((!ref $value && (!defined $value || ($self->trim_spaces && $value !~ /\S/))) ||
       (ref $value eq 'ARRAY' && !@$value)))
   {
-    my $label = $self->error_label;
-
-    if(defined $label)
+    unless($self->is_empty && $self->empty_is_ok)
     {
-      #$self->add_error_id(FIELD_REQUIRED, $label);
-      #$self->add_error_id(FIELD_REQUIRED, [ $label ]);
-      $self->add_error_id(FIELD_REQUIRED, { label => $label });
+      my $label = $self->error_label;
+  
+      if(defined $label)
+      {
+        #$self->add_error_id(FIELD_REQUIRED, $label);
+        #$self->add_error_id(FIELD_REQUIRED, [ $label ]);
+        $self->add_error_id(FIELD_REQUIRED, { label => $label });
+      }
+      else
+      {
+        $self->add_error_id(FIELD_REQUIRED);
+      }
+  
+      return 0;
     }
-    else
-    {
-      $self->add_error_id(FIELD_REQUIRED);
-    }
-
-    return 0;
   }
 
   my $code = $self->validator;

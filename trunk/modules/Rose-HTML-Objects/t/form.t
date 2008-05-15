@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 297;
+use Test::More tests => 302;
 
 BEGIN 
 {
@@ -41,7 +41,6 @@ $form->add_fields
 $form->unshift_child(Rose::HTML::Object->new('p', class => 'top', children => [ 'start' ]));
 
 $form->push_child(Rose::HTML::Object->new('div', class => 'bottom', children => [ 'end' ]));
-
 
 is($form->xhtml_table,
 qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">
@@ -181,10 +180,19 @@ our $Have_RDBO;
 $form = Rose::HTML::Form->new;
 ok(ref $form && $form->isa('Rose::HTML::Form'), 'new()');
 
+$form->add_fields(a => { type => 'text' });
+
 my %p = (a => 'foo', b => [ 2, 3 ]);
+
+is($form->is_empty, 1, 'is_empty 1');
 
 # Store reference
 $form->params(\%p);
+
+$form->init_fields;
+is($form->is_empty, 0, 'is_empty 2');
+
+$form->delete_field('a');
 
 is($form->param('a'), 'foo', 'params store ref 1');
 is($form->param('b')->[0], 2, 'params store ref 2');
@@ -940,6 +948,16 @@ $form->params({ n => '' });
 $form->init_fields;
 
 is($form->field_value('n'), undef, 'empty string numeric value'); # RT #30249
+
+$form->params({});
+$form->init_fields;
+
+is($form->empty_is_ok, 0, 'empty_is_ok 1');
+ok(!$form->validate, 'empty_is_ok 2');
+
+$form->empty_is_ok(1);
+
+ok($form->validate, 'empty_is_ok 3');
 
 BEGIN
 {
