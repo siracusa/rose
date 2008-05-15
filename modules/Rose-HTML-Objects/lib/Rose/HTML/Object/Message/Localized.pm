@@ -50,7 +50,7 @@ sub args
 
       my $i = 1;
 
-      foreach my $key (keys %args)
+      foreach my $key (sort keys %args)
       {
         $args{$i} = $args{$key}  unless(exists $args{$i});
         $i++;
