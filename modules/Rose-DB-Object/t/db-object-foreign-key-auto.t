@@ -747,6 +747,8 @@ EOF
   no warnings 'once';
   local $Rose::DB::Object::Metadata::Auto::Sort_Columns_Alphabetically = 1;
 
+  my $serial = $o->db->dbh->{'Driver'}{'Version'} >= 4.002 ? 'serial' : 'integer';
+
   is(MyMySQLObject->meta->perl_class_definition(use_setup => 0),
      <<"EOF", "perl_class_definition (trad) 1 - $db_type");
 package MyMySQLObject;
@@ -768,7 +770,7 @@ __PACKAGE__->meta->columns(
     fother_id2    => { type => 'integer' },
     fother_id3    => { type => 'integer' },
     fother_id4    => { type => 'integer' },
-    id            => { type => 'serial', not_null => 1 },
+    id            => { type => '$serial', not_null => 1 },
     $set_col
     last_modified => { type => 'datetime' },
     name          => { type => 'varchar', @{[ $no_empty_def ? '' : "default => '', " ]}length => 32, not_null => 1 },
@@ -834,7 +836,7 @@ __PACKAGE__->meta->columns
   fother_id2    => { type => 'integer' },
   fother_id3    => { type => 'integer' },
   fother_id4    => { type => 'integer' },
-  id            => { type => 'serial', not_null => 1 },
+  id            => { type => '$serial', not_null => 1 },
   $set_col
   last_modified => { type => 'datetime' },
   name          => { type => 'varchar', @{[ $no_empty_def ? '' : "default => '', " ]}length => 32, not_null => 1 },

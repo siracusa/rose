@@ -80,6 +80,12 @@ foreach my $db_type (qw(pg mysql informix sqlite))
 
   Rose::DB->default_type($db_type);
 
+  if($db_type eq 'mysql')
+  {
+    my $serial = Rose::DB->new->dbh->{'Driver'}{'Version'} >= 4.002 ? 'serial' : 'integer';
+    $Column_Defs{'mysql'}{'id'} = qq(id        => { type => '$serial', not_null => 1 },);
+  }
+
   my $class_prefix = 'My' . ucfirst($db_type);
 
   my $loader = 

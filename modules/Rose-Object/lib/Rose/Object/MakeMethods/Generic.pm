@@ -467,11 +467,28 @@ sub array
   }
   elsif($interface =~ /^(?:push|add)$/)
   {
-    $methods{$name} = sub
+    if(my $init_method = $args->{'init_method'})
     {
-      my($self) = shift;
-      Carp::croak "Missing value(s) to add"  unless(@_);
-      push(@{$self->{$key}}, (@_ == 1 && ref $_[0] && ref $_[0] eq 'ARRAY') ? @{$_[0]} : @_);
+      $methods{$name} = sub
+      {
+        my($self) = shift;
+
+        Carp::croak "Missing value(s) to add"  unless(@_);
+
+        $self->{$key} = $self->$init_method()  unless(defined $self->{$key});
+        push(@{$self->{$key}}, (@_ == 1 && ref $_[0] && ref $_[0] eq 'ARRAY') ? @{$_[0]} : @_);
+      }    
+    }
+    else
+    {
+      $methods{$name} = sub
+      {
+        my($self) = shift;
+
+        Carp::croak "Missing value(s) to add"  unless(@_);
+
+        push(@{$self->{$key}}, (@_ == 1 && ref $_[0] && ref $_[0] eq 'ARRAY') ? @{$_[0]} : @_);
+      }
     }
   }
   elsif($interface eq 'pop')

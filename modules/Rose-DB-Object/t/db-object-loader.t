@@ -61,9 +61,10 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 
   my $pre_init_hook = 0;
 
+  my $db = Rose::DB->new;
   my $loader = 
     Rose::DB::Object::Loader->new(
-      db            => Rose::DB->new,
+      db            => $db,
       class_prefix  => $class_prefix,
       ($db_type eq 'mysql' ? (require_primary_key => 0) : ()),
       pre_init_hook => sub { $pre_init_hook++ });
@@ -121,14 +122,18 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
 
   if($db_type =~ /^(?:mysql|pg|sqlite)$/)
   {
-    is($product_class->meta->column('id')->type, 'serial', "serial column - $db_type");
+    my $serial =
+      ($db_type ne 'mysql' || $db->dbh->{'Driver'}{'Version'} >= 4.002) ? 
+      'serial' : 'integer';
+
+    is($product_class->meta->column('id')->type, $serial, "serial column - $db_type");
   }
   else
   {
     SKIP: { skip("serial coercion test for $db_type", 1) }
   }
 
-  if($db_type eq 'mysql')
+  if($db_type eq 'mysql' && $db->dbh->{'Driver'}{'Version'} >= 4.002)
   {
     is($price_class->meta->column('id')->type, 'bigserial', "bigserial column - $db_type");
   }

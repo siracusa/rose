@@ -1,4 +1,4 @@
-0.769_05 (05.06.2008) - John Siracusa <siracusa@gmail.com>
+0.769_06 (05.15.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added "iterator" method type, similar to "find", to OneToMany
       and ManyToMany.  (Patch by Peter Karman - peknet@gmail.com)
@@ -8,6 +8,8 @@
       by Wiggins d'Anconia)
     * Skip the interactive part of the test suite when the
       AUTOMATED_TESTING environment variable is set.
+    * Test suite now accounts for versions of DBD::mysql that predate
+      the mysql_is_auto_increment column attribute.
 
 0.769 (04.01.2008) - John Siracusa <siracusa@gmail.com>
 
