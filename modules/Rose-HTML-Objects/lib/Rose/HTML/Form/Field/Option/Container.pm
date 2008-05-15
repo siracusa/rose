@@ -53,6 +53,12 @@ sub xhtml_element { 'select' }
 
 sub is_flat_group { 0 }
 
+sub is_empty 
+{
+  no warnings 'uninitialized';
+  return (grep { /\S/ } shift->internal_value) ? 0 : 1;
+}
+
 sub children
 {
   my($self) = shift;

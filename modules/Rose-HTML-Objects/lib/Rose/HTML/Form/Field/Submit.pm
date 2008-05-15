@@ -24,6 +24,7 @@ __PACKAGE__->add_required_html_attrs(
 our $VERSION = '0.554';
 
 sub is_button { 1 }
+sub is_empty { 1 }
 
 sub hidden_fields      { (wantarray) ? () : [] }
 sub html_hidden_fields { (wantarray) ? () : [] }
@@ -213,6 +214,10 @@ The "src" HTML attribute must be set (either in ARGS or from an existing value f
 =item B<image_xhtml [ARGS]>
 
 Like L<image_html()|/image_html>, but serialized to XHTML instead.
+
+=item B<is_empty>
+
+Returns true.
 
 =item B<value [VALUE]>
 

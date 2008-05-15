@@ -210,8 +210,8 @@ POD_EXAMPLE:
     $self->add_fields
     (
       address     => { type => 'email', size => 50, required => 1 },
-      type        => { type => 'pop-up menu', choices => [ 'home', 'work' ],
-                       required => 1, default => 'home' },
+      type        => { type => 'pop-up menu', choices => [ '', 'home', 'work' ],
+                       required => 1, default => '' },
       save_button => { type => 'submit', value => 'Save Email' },
     );
   }
@@ -238,9 +238,64 @@ POD_EXAMPLE:
 
     # A person can have several emails
     $self->add_repeatable_form(emails => EmailForm->new);
+
+    $self->repeatable_form('emails')->default_count(2);
+
+    Test::More::ok($self->form('emails')->prototype_form->isa('EmailForm'), 'add_repeatable_form (name/object) 1');
+    Test::More::is($self->form('emails')->default_count, 2, 'add_repeatable_form (name/object) 2');
+    Test::More::is($self->repeatable_form('emails')->default_count, 2, 'add_repeatable_form (name/object) 3');
+
+    $self->delete_repeatable_form('emails');
+
+    $self->add_repeatable_form
+    (
+      emails => 
+      {
+        form_class    => 'EmailForm',
+        default_count => 2,
+      },
+    );
+
+    Test::More::ok($self->form('emails')->prototype_clone->isa('EmailForm'), 'add_repeatable_form (name/hash) 1');
+    Test::More::is($self->form('emails')->default_count, 2, 'add_repeatable_form (name/hash) 2');
+    Test::More::is($self->repeatable_form('emails')->default_count, 2, 'add_repeatable_form (name/hash) 3');
+
+    $self->delete_form('emails');
+
+    $self->add_forms
+    (
+      emails => 
+      {
+        form_class => 'EmailForm',
+        repeatable => 2,
+      },
+    );
+
+    Test::More::ok($self->repeatable_form('emails')->prototype_clone->isa('EmailForm'), 'add_form (name/hash) 1');
+    Test::More::is($self->form('emails')->default_count, 2, 'add_form (name/hash) 2');
+    Test::More::is($self->repeatable_form('emails')->default_count, 2, 'add_form (name/hash) 3');
+
+    $self->delete_repeatable_form('emails');
+
+    $self->add_forms
+    (
+      emails => 
+      {
+        form_class => 'EmailForm',
+        repeatable => { default_count => 2 },
+      },
+    );
+
+    Test::More::ok($self->form('emails')->prototype_form_clone->isa('EmailForm'), 'add_form (name/hash) 4');
+    Test::More::is($self->form('emails')->default_count, 2, 'add_form (name/hash) 5');
+    Test::More::is($self->repeatable_form('emails')->default_count, 2, 'add_form (name/hash) 6');
+
+    $self->delete_repeatable_form('emails');
+
+    $self->add_repeatable_form(emails => EmailForm->new);
   }
 
-  sub init_with_person # give a friendlier name to a base-class method
+  sub init_with_person
   {
     my($self, $person) = @_;
 
@@ -305,6 +360,44 @@ POD_EXAMPLE:
   is($person->emails->[0]->address, 'x@x.com', 'person_from_form 3');
   is($person->emails->[0]->type, 'work', 'person_from_form 3');
   is(@{ $person->emails }, 1, 'person_from_form 4');
+
+  $form->params({ name => 'Joe2', age => 44, 'emails.1.address' => 'x2@x.com', 'emails.1.type' => 'work',
+                  'emails.2.address' => undef, 'emails.2.type' => 'work'});
+  $form->init_fields;
+  
+  ok(!$form->validate, 'validate 2');
+
+  $form->params({ name => 'Joe3', age => 44, 'emails.1.address' => 'x3@x.com', 'emails.1.type' => 'work',
+                  'emails.2.address' => 'y3@y.com', 'emails.2.type' => 'home'});
+  $form->init_fields;
+
+  ok($form->validate, 'validate 3');
+  
+  $person = $form->person_from_form;
+  
+  is($person->name, 'Joe3', 'person_from_form 5');
+  is($person->age, 44, 'person_from_form 6');
+  is($person->emails->[0]->address, 'x3@x.com', 'person_from_form 7');
+  is($person->emails->[0]->type, 'work', 'person_from_form 8');
+  is($person->emails->[1]->address, 'y3@y.com', 'person_from_form 9');
+  is($person->emails->[1]->type, 'home', 'person_from_form 10');
+  is(@{ $person->emails }, 2, 'person_from_form 11');
+
+
+  $form->form('emails')->default_count(1);
+  $form->params({});
+  $form->init_fields;
+
+  $form->empty_is_ok(1);
+  is($form->empty_is_ok, 1, 'empty_is_ok 1');
+
+  ok($form->validate, 'empty_is_ok 2');
+  
+  $form->empty_is_ok(0);
+  is($form->empty_is_ok, 0, 'empty_is_ok 3');
+
+  ok(!$form->validate, 'empty_is_ok 4');
+
   #print join(' ', map { $_->name } $form->fields_depth_first), "\n";
 
   #$DB::single = 1;

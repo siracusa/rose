@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 66;
+use Test::More tests => 68;
 
 BEGIN 
 {
@@ -460,3 +460,10 @@ foreach my $name (qw(items checkboxes))
     qq(<input name="fruits" type="checkbox" value="cherry" /> <label>Cherry</label>),
     "$method " . $i++);    
 }
+
+$field->input_value('apple');
+
+is($field->is_empty, 0, 'is_empty 3');
+
+$field->input_value('');
+is($field->is_empty, 1, 'is_empty 4');

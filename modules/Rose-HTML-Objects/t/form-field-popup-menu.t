@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 63;
+use Test::More tests => 67;
 
 BEGIN 
 {
@@ -23,6 +23,8 @@ $field->options(apple  => 'Apple',
 
 is(scalar @{ $field->children }, 3, 'children scalar 2');
 is(scalar(() = $field->children), 3, 'children list 2');
+
+is($field->is_empty, 1, 'is_empty 1');
 
 is(join(',', sort $field->labels), 'Apple,Grape,Orange,apple,grape,orange', 'labels()');
 
@@ -90,6 +92,8 @@ is($field->html_field,
   qq(<option value="grape">Grape</option>\n) .
   qq(</select>),
   'value() 1');
+
+is($field->is_empty, 0, 'is_empty 2');
 
 $field->error("Do not pick orange!");
 
@@ -490,3 +494,13 @@ foreach my $name (qw(items options))
     qq(</select>),
     "$method " . $i++);    
 }
+
+$field->add_option('');
+
+$field->input_value('apple');
+
+is($field->is_empty, 0, 'is_empty 3');
+
+$field->input_value('');
+
+is($field->is_empty, 1, 'is_empty 4');
