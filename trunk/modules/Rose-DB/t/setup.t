@@ -20,4 +20,12 @@ is($entry->database, 'somevalue', 'ROSEDBRC 1');
 $entry = My::DB->registry->entry(domain => 'otherdomain', type => 'othertype');
 
 is($entry->host, 'othervalue', 'ROSEDBRC 2');
-is($entry->port, '456', 'ROSEDB_DEVINIT 1');
+
+if($ENV{'ROSEDB_DEVINIT'} eq 'My::FixUp')
+{
+  is($entry->port, '456', 'ROSEDB_DEVINIT 1');
+}
+else
+{
+  is($entry->port, '789', 'ROSEDB_DEVINIT 1');
+}
