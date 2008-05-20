@@ -1,5 +1,7 @@
-0.743_01 (06.06.2008) - John Siracusa <siracusa@gmail.com>
+0.743_02 (05.20.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Added fixup() class method call to auto_load_fixups().
+      (Suggested by Justin Ellison)
     * Skip the interactive part of the test suite when the
       AUTOMATED_TESTING environment variable is set.
 

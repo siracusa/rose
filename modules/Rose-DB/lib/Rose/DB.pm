@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.743_01';
+our $VERSION = '0.743_02';
 
 our $Debug = 0;
 
@@ -2113,7 +2113,7 @@ sub auto_load_fixups
   # Load a file or package full of arbitrary perl used to alter the data
   # source registry.  This is intended for use in development only.
   my $rosedb_devinit = $ENV{'ROSEDB_DEVINIT'};
-
+$DB::single = 1;
   if(defined $rosedb_devinit)
   {
     if(-e $rosedb_devinit)
@@ -2123,6 +2123,11 @@ sub auto_load_fixups
     else
     {
       eval qq(require $rosedb_devinit);
+
+      if($rosedb_devinit->can('fixup'))
+      {
+        $rosedb_devinit->fixup($class);
+      }
     }
   }
 
@@ -2131,7 +2136,18 @@ sub auto_load_fixups
     my $username = lc getpwuid($<);
     $rosedb_devinit = "Rose::DB::Devel::Init::$username";
     eval qq(require $rosedb_devinit);
-    eval { do $rosedb_devinit }  if($@);
+    
+    if($@)
+    {
+      eval { do $rosedb_devinit };
+    }
+    else
+    {
+      if($rosedb_devinit->can('fixup'))
+      {
+        $rosedb_devinit->fixup($class);
+      }
+    }
   }
 }
 
@@ -2541,7 +2557,7 @@ There are two ways to alter the initial L<Rose::DB> data source registry.
 
 =head2 ROSEDB_DEVINIT
 
-The C<ROSEDB_DEVINIT> file or module is used during development, usually to set up data sources for a particular developer's database or project.  If the C<ROSEDB_DEVINIT> environment variable is set, it should be the name of a Perl module or file.
+The C<ROSEDB_DEVINIT> file or module is used during development, usually to set up data sources for a particular developer's database or project.  If the C<ROSEDB_DEVINIT> environment variable is set, it should be the name of a Perl module or file.  If it is a Perl module and that module has a C<fixup()> subroutine, it will be called as a class method after the module is loaded.
 
 If the C<ROSEDB_DEVINIT> environment variable is not set, or if the specified file does not exist or has errors, then it defaults to the package name C<Rose::DB::Devel::Init::username>, where "username" is the account name of the current user.
 
