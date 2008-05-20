@@ -135,7 +135,11 @@ BEGIN
   # SQLite
   #
 
-  eval { require DBD::SQLite };
+  eval
+  {
+    local $^W = 0;
+    require DBD::SQLite;
+  };
 
   my $version = $DBD::SQLite::VERSION || 0;
 
