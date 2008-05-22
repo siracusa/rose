@@ -273,6 +273,8 @@ sub add_fields
 
   my @added_fields;
 
+  @_ = @{$_[0]}  if(@_ == 1 && ref $_[0] eq 'ARRAY');
+
   while(@_)
   {
     my $arg = shift;

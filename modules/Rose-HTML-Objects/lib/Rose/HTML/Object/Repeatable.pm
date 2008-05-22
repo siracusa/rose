@@ -93,7 +93,7 @@ sub prototype_clone
   {
     my $args = $self->prototype_spec || [];
     $args = [ %$args ]  if(ref $args eq 'HASH');
-    return $self->prototype_class(@$args);
+    return $self->prototype_class->new(@$args);
   }
 }
 

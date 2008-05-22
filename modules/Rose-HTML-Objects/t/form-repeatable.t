@@ -159,12 +159,43 @@ is_deeply([ map { $_->name } $form_x->fields_depth_first ], \@fields, 'make_form
 #print $form_x->xhtml_table;
 #exit;
 
-# $form = Rose::HTML::Form->new;
-# 
-# $form->add_form
-# (
-# 
-# );
+$form = Rose::HTML::Form->new;
+
+$form->add_forms
+(
+  a =>
+  {
+    form_spec  => { fields =>  [ x => { type => 'text' } ] },
+    repeatable => 0,
+  },
+);
+
+$form->trim_xy_params(0);
+$form->params({ 'a.1.x' => 'foo' });
+
+$form->init_fields;
+
+ok($form->form('a.1')->field('x'), 'form spec 1');
+
+$form = Rose::HTML::Form->new;
+
+$form->add_forms
+(
+  a =>
+  {
+    form_class => 'EmailForm',
+    form_spec  => { add_fields => [ x => { type => 'text' } ] },
+    repeatable => 0,
+  },
+);
+
+$form->trim_xy_params(0);
+$form->params({ 'a.1.x' => 'foo' });
+
+$form->init_fields;
+
+ok($form->form('a.1')->field('x'), 'form spec 2');
+ok($form->form('a.1')->isa('EmailForm'), 'form spec 3');
 
 #
 # POD example

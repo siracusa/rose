@@ -24,7 +24,7 @@ BEGIN
 my $form = Rose::HTML::Form->new;
 
 $form->add_fields
-(
+([
   street =>
   {
     type => 'text',
@@ -36,7 +36,7 @@ $form->add_fields
     type => 'text',
     size => 25,
   },
-);
+]);
 
 $form->unshift_child(Rose::HTML::Object->new('p', class => 'top', children => [ 'start' ]));
 
