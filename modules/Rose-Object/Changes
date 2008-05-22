@@ -1,6 +1,6 @@
-0.85 (05.07.2008) - John Siracusa <siracusa@gmail.com>
+0.85 (05.22.2008) - John Siracusa <siracusa@gmail.com>
 
-    * Added "inherited_hash" class method type.
+    * Added "inherited_hash" and "inheritable_boolean" class method types.
     * Documented shift, unshift, and pop array method maker method type.
     * Fixed a bug that prevented "--opt=0" options from being honored
       (Reported by Bill Moseley)

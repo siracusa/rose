@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 585;
+use Test::More tests => 626;
 
 BEGIN
 {
@@ -378,6 +378,81 @@ is(MySubObject->name(), 'Craig',  'Get named inheritable class attribute (inheri
 is(MySubObject2->name(), 'Anne',  'Get named inheritable class attribute (not inherited) 1');
 is(MySubObject3->name(), 'Anne',  'Get named inheritable class attribute (inherited) 9');
 is(MySubObject4->name, 'Anne', 'Get named inheritable class attribute (inherited) 10');
+
+#
+# inheritable_boolean
+#
+
+is(MyObject->bool('xxx'), 1,  'Set named inheritable class attribute 1');
+is(MyObject->bool(), 1,  'Get named inheritable class attribute 1');
+is(MySubObject4->bool, 1, 'Get named inheritable class attribute (inherited) 1');
+
+is(MySubObject->bool(), 1,  'Get named inheritable class attribute (inherited) 2');
+is(MySubObject2->bool(), 1,  'Get named inheritable class attribute (inherited) 3');
+is(MySubObject3->bool(), 1,  'Get named inheritable class attribute (inherited) 4');
+
+is(MySubObject->bool(''), 0,  'Set named inheritable class attribute 2');
+is(MyObject->bool(), 1,  'Get named inheritable class attribute 2');
+is(MySubObject->bool(), 0,  'Get named inheritable class attribute (inherited) 5');
+is(MySubObject2->bool(), 1,  'Get named inheritable class attribute (inherited) 6');
+is(MySubObject3->bool(), 1,  'Get named inheritable class attribute (inherited) 7');
+
+is(MySubObject2->bool(1), 1,  'Set named inheritable class attribute 3');
+is(MyObject->bool(), 1,  'Get named inheritable class attribute 3');
+is(MySubObject->bool(), 0,  'Get named inheritable class attribute (inherited) 8');
+is(MySubObject2->bool(), 1,  'Get named inheritable class attribute (not inherited) 1');
+is(MySubObject3->bool(), 1,  'Get named inheritable class attribute (inherited) 9');
+is(MySubObject4->bool, 1, 'Get named inheritable class attribute (inherited) 10');
+
+#
+# POD tests for inheritable_boolean
+#
+
+package MyClass;
+
+use Rose::Class::MakeMethods::Generic
+(
+  inheritable_boolean => 'enabled',
+);
+
+package MySubClass;
+our @ISA = qw(MyClass);
+
+
+package MySubSubClass;
+our @ISA = qw(MySubClass);
+
+package main;
+
+is(MyClass->enabled,   undef, 'x');
+is(MySubClass->enabled, undef, 'x');
+is(MySubSubClass->enabled, undef, 'x');
+
+is(MyClass->enabled(1), 1, 'x');
+is(MyClass->enabled, 1, 'x');
+is(MySubClass->enabled, 1, 'x');
+is(MySubSubClass->enabled, 1, 'x');
+
+is(MyClass->enabled(undef), 0, 'x');
+is(MyClass->enabled, 0, 'x');
+is(MySubClass->enabled, 0, 'x');
+is(MySubSubClass->enabled, 0, 'x');
+
+is(MySubClass->enabled(1), 1, 'x');
+is(MyClass->enabled, 0, 'x');
+is(MySubClass->enabled, 1, 'x');
+is(MySubSubClass->enabled, 1, 'x');
+
+is(MyClass->enabled('foo'), 1, 'x');
+is(MySubClass->enabled(undef), 0, 'x');
+is(MyClass->enabled, 1, 'x');
+is(MySubClass->enabled, 0, 'x');
+is(MySubSubClass->enabled, 0, 'x');
+
+is(MySubSubClass->enabled(1), 1 , 'x');
+is(MyClass->enabled, 1, 'x');
+is(MySubClass->enabled, 0, 'x');
+is(MySubSubClass->enabled, 1, 'x');
 
 #
 # hash
@@ -1295,6 +1370,8 @@ BEGIN
   use Rose::Class::MakeMethods::Generic
   (
     'inheritable_scalar' => 'name',
+
+    'inheritable_boolean' => 'bool',
 
     scalar => 
     [
