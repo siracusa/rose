@@ -94,12 +94,18 @@ use Rose::Class::MakeMethods::Generic
   inheritable_scalar => 
   [
     '_delegate_to_subforms',
-    '_default_recursive_init_fields',
+  ],
+
+  inheritable_boolean => 
+  [
+    'default_recursive_init_fields',
+    'default_trim_xy_params',
   ],
 );
 
 __PACKAGE__->delegate_to_subforms('compile');
 __PACKAGE__->default_recursive_init_fields(0);
+__PACKAGE__->default_trim_xy_params(1);
 
 #
 # Class methods
@@ -125,14 +131,24 @@ sub new
 
 sub init_recursive_init_fields { shift->default_recursive_init_fields }
 
-sub default_recursive_init_fields
+sub trim_xy_params
 {
-  my($class) = shift;
+  my($self) = shift;
 
-  $class = ref $class  if(ref $class);
+  if(@_)
+  {
+    my $val = $self->{'trim_xy_params'} = $_[0] ? 1 : 0;
+    
+    foreach my $form ($self->forms)
+    {
+      $form->trim_xy_params($val);
+    }
+    
+    return $val;
+  }
 
-  return $class->_default_recursive_init_fields($_[0] ? 1 : 0)  if(@_);
-  return $class->_default_recursive_init_fields;
+  return defined $self->{'trim_xy_params'} ?
+    $self->{'trim_xy_params'} : ref($self)->default_trim_xy_params;
 }
 
 sub delegate_to_subforms
@@ -394,12 +410,15 @@ sub params
       croak(ref($self), '::params() - got odd number of arguments: ');
     }
 
-    foreach my $param (keys %{$self->{'params'}})
+    if($self->trim_xy_params)
     {
-      if($param =~ /^(.+)\.[xy]$/)
+      foreach my $param (keys %{$self->{'params'}})
       {
-        delete $self->{'params'}{$param};
-        $self->{'params'}{$1} = 1;
+        if($param =~ /^(.+)\.[xy]$/)
+        {
+          delete $self->{'params'}{$param};
+          $self->{'params'}{$1} = 1;
+        }
       }
     }
 
@@ -1166,6 +1185,18 @@ sub add_forms
 
         delete $form->{'repeatable'};
 
+        $repeat_spec->{'prototype_spec'} = delete $repeat_spec->{'spec'}
+          if($repeat_spec->{'spec'});
+
+        $repeat_spec->{'prototype_spec'} = delete $repeat_spec->{'form_spec'}
+          if($repeat_spec->{'form_spec'});
+
+        $repeat_spec->{'prototype_class'} = delete $repeat_spec->{'class'}
+          if($repeat_spec->{'class'});
+
+        $repeat_spec->{'prototype_class'} = delete $repeat_spec->{'form_class'}
+          if($repeat_spec->{'form_class'});
+
         $repeat_spec->{'prototype'} = delete $repeat_spec->{'form'}
           if($repeat_spec->{'form'});
 
@@ -1522,6 +1553,12 @@ sub field
 sub fields
 {
   my($self) = shift;
+
+  if(@_)
+  {
+    $self->delete_fields;
+    $self->add_fields(@_);
+  }
 
   if(my $fields = $self->{'field_list'})
   {
@@ -2259,6 +2296,10 @@ If no sub-form can handle the method, then a fatal "unknown method" error occurs
 
 The default value for SETTING is B<compile>.  See the  L<nested forms|/"NESTED FORMS"> section for some examples of sub-form delegation.
 
+=item B<default_trim_xy_params [BOOL]>
+
+Get or set a boolean value that is used as the default value of the L<trim_xy_params|/trim_xy_params> object attribute.  The default value is true.
+
 =back
 
 =head1 CONSTRUCTOR
@@ -2281,7 +2322,7 @@ Convenience alias for L<add_fields()|/add_fields>.
 
 =item B<add_fields ARGS>
 
-Add the fields specified by ARGS to the list of fields contained in this form.  Valid formats for elements of ARGS are:
+Add the fields specified by ARGS to the list of fields contained in this form.  ARGS may be a list or a reference to an array.  Valid formats for elements of ARGS are:
 
 =over 4 
 
@@ -3132,6 +3173,12 @@ Sets the "enctype" HTML attribute to "multipart/form-data", then returns the HTM
 =item B<start_multipart_xhtml>
 
 Sets the "enctype" HTML attribute to "multipart/form-data", then returns the XHTML that will begin the form tag.
+
+=item B<trim_xy_params [BOOL]>
+
+Get or set a boolean value that determines whether or not L<params|/params> that end in ".x" or ".y" have that suffix trimmed off.  This is useful for handling query parameters created by some web browsers in response to clicks on image buttons and other image-based elements.  Setting this attribute will propagate the value down to all L<sub-forms|/"NESTED FORMS">.
+
+The default value is the value returned by the L<default_trim_xy_params|/default_trim_xy_params> class method.
 
 =item B<uri_base [STRING]>
 

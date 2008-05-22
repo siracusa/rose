@@ -209,6 +209,10 @@ Rose::HTML::Form::Repeatable - HTML form base class.
       save_button => { type => 'submit', value => 'Save Person' },
     );
 
+    ##
+    ## The important part happens here: add a repeated form
+    ##
+
     # A person can have zero or more emails
     $self->add_repeatable_form(emails => EmailForm->new);
   }
@@ -279,13 +283,29 @@ Constructs a new L<Rose::HTML::Form::Repeatable> object based on PARAMS, where P
 
 =back
 
+=head1 CLASS METHODS
+
+=over 4
+
+=item B<default_form_class [CLASS]>
+
+Get or set the name of the default L<Rose::HTML::Form>-derived class of the repeated form.  The default value is L<Rose::HTML::Form>.
+
+=back
+
 =head1 OBJECT METHODS
 
 =over 4
 
-=item B<xxx ARGS>
+=item B<prototype_form [FORM]>
 
-XXX
+Get or set the L<Rose::HTML::Form>-derived object used as the prototype for each repeated form.
+
+=item B<prototype_form_spec [SPEC]>
+
+Get or set the specification for the L<Rose::HTML::Form>-derived object used as the prototype for each repeated form.  The SPEC can be a reference to an array, a reference to a hash, or a list that will be coerced into a reference to an array.  The SPEC is dereferenced and passed to the C<new()> method called on the L<prototype_form_class|/prototype_form_class> in order to create each L<prototype_form_clone|/prototype_form_clone>.
+
+#############
 
 =back
 
