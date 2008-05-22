@@ -108,6 +108,54 @@ sub inheritable_scalar
   return \%methods;
 }
 
+our %Inheritable_Boolean;
+
+sub inheritable_boolean
+{
+  my($class, $name, $args, $options) = @_;
+
+  my %methods;
+
+  my $interface = $args->{'interface'} || 'get_set';
+
+  if($interface eq 'get_set')
+  {
+    $methods{$name} = sub 
+    {
+      my($class) = ref($_[0]) ? ref(shift) : shift;
+
+      if(@_)
+      {
+        return $Inheritable_Boolean{$class}{$name} = $_[0] ? 1 : 0;
+      }
+
+      return $Inheritable_Boolean{$class}{$name}
+        if(exists $Inheritable_Boolean{$class}{$name});
+
+      my @parents = ($class);
+
+      while(my $parent = shift(@parents))
+      {
+        no strict 'refs';
+        foreach my $subclass (@{$parent . '::ISA'})
+        {
+          push(@parents, $subclass);
+
+          if(exists $Inheritable_Boolean{$subclass}{$name})
+          {
+            return $Inheritable_Boolean{$subclass}{$name}
+          }
+        }
+      }
+
+      return undef;
+    };
+  }
+  else { Carp::croak "Unknown interface: $interface" }
+
+  return \%methods;
+}
+
 our %Hash;
 # (
 #   class_name =>
@@ -952,6 +1000,84 @@ Example:
     MyClass->power(99);    # returns 99
     MyClass->name;         # returns "Fred"
     MyClass->name('Bill'); # returns "Bill"
+
+=item B<inheritable_boolean>
+
+Create get/set methods for boolean class attributes that are inherited by subclasses until/unless their values are changed.
+
+=over 4
+
+=item Options
+
+=over 4
+
+=item C<interface>
+
+Choose the interface.  This is kind of pointless since there is only one interface right now.  Defaults to C<get_set>, obviously.
+
+=back
+
+=item Interfaces
+
+=over 4
+
+=item C<get_set>
+
+Creates a get/set accessor method for a class attribute.  When called with an argument, the value of the attribute is set to 1 if that argument is true or 0 if it is false.  The value of the attribute is then returned.
+
+If called with no arguments, and if the attribute was never set for this class, then a left-most, breadth-first search of the parent classes is initiated.  The value returned is taken from first parent class encountered that has ever had this attribute set.
+
+=back
+
+=back
+
+Example:
+
+    package MyClass;
+
+    use Rose::Class::MakeMethods::Generic
+    (
+      inheritable_boolean => 'enabled',
+    );
+    ...
+
+    package MySubClass;
+    our @ISA = qw(MyClass);
+    ...
+
+    package MySubSubClass;
+    our @ISA = qw(MySubClass);
+    ...
+
+    $x = MyClass->enabled;       # undef
+    $y = MySubClass->enabled;    # undef
+    $z = MySubSubClass->enabled; # undef
+
+    MyClass->enabled(1);
+    $x = MyClass->enabled;       # 1
+    $y = MySubClass->enabled;    # 1
+    $z = MySubSubClass->enabled; # 1
+
+    MyClass->enabled(0);
+    $x = MyClass->enabled;       # 0
+    $y = MySubClass->enabled;    # 0
+    $z = MySubSubClass->enabled; # 0
+
+    MySubClass->enabled(1);
+    $x = MyClass->enabled;       # 0
+    $y = MySubClass->enabled;    # 1
+    $z = MySubSubClass->enabled; # 1
+
+    MyClass->enabled(1);
+    MySubClass->enabled(undef);
+    $x = MyClass->enabled;       # 1
+    $y = MySubClass->enabled;    # 0
+    $z = MySubSubClass->enabled; # 0
+
+    MySubSubClass->enabled(1);
+    $x = MyClass->enabled;       # 1
+    $y = MySubClass->enabled;    # 0
+    $z = MySubSubClass->enabled; # 0
 
 =item B<inheritable_scalar>
 
