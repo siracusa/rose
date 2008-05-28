@@ -56,6 +56,8 @@ __PACKAGE__->object_type_classes
   'form'               => 'Rose::HTML::Form',
   'repeatable form'    => 'Rose::HTML::Form::Repeatable',
 
+  #'repeatable field'   => 'Rose::HTML::Form::Field::Repeatable',
+
   'text'               => 'Rose::HTML::Form::Field::Text',
   'scalar'             => 'Rose::HTML::Form::Field::Text',
   'char'               => 'Rose::HTML::Form::Field::Text',

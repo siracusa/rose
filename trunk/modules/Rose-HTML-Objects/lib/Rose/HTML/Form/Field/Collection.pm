@@ -279,22 +279,6 @@ sub add_fields
   {
     my $arg = shift;
 
-    my $repeat;
-
-    if($arg eq 'repeatable')
-    {
-      my $repeat_spec = shift;
-
-      my $field_spec = delete $repeat_spec->{'field'} or
-        Carp::confess "Missing 'field' parameter in repeatable field spec";
-
-      $repeat = Rose::HTML::Form::Field::Repeatable->new(%$repeat_spec, field_spec => $field_spec);
-
-      $self->add_local_repeatable_field($repeat);
-
-      next;
-    }
-
     if(UNIVERSAL::isa($arg, 'Rose::HTML::Form::Field'))
     {
       my $field = $arg;
@@ -320,6 +304,10 @@ sub add_fields
       $self->field($field->local_name => $field);
       push(@added_fields, $field);
     }
+    #elsif(UNIVERSAL::isa($arg, 'Rose::HTML::Form::Field::Repeatable'))
+    #{
+    #  ...
+    #}
     else
     {
       my $field = shift;
