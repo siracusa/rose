@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.743_02';
+our $VERSION = '0.744';
 
 our $Debug = 0;
 
@@ -2113,7 +2113,7 @@ sub auto_load_fixups
   # Load a file or package full of arbitrary perl used to alter the data
   # source registry.  This is intended for use in development only.
   my $rosedb_devinit = $ENV{'ROSEDB_DEVINIT'};
-$DB::single = 1;
+
   if(defined $rosedb_devinit)
   {
     if(-e $rosedb_devinit)
