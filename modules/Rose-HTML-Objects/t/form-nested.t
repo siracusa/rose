@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 176;
+use Test::More tests => 177;
 
 BEGIN 
 {
@@ -571,6 +571,15 @@ is(join(' ', map { $_->name } sort { $a->name cmp $b->name } $form->local_fields
 is(join(' ', map { $_->name } sort { $a->name cmp $b->name } $form->form('person_address')->local_fields), '', 'local fields 3');
 is(join(' ', map { $_->name } sort { $a->name cmp $b->name } $form->form('person_address.person')->local_fields), 'person_address.person.age person_address.person.bday person_address.person.gender person_address.person.name person_address.person.start', 'local fields 4');
 is(join(' ', map { $_->local_name } sort { $a->local_name cmp $b->local_name } $form->form('person_address.person')->local_fields), 'age bday gender name start', 'local fields 5');
+
+#
+# Nested add
+#
+
+$form->add_form('person_address.person.person2' => MyPersonForm->new);
+
+is(join(', ', $form->field_names), qq(bar, dog, person_address.address.city, person_address.address.your_state, person_address.address.street, person_address.address.zip, person_address.person.person2.age, person_address.person.person2.bday, person_address.person.person2.gender, person_address.person.person2.your_name, person_address.person.person2.start, person_address.person.age, person_address.person.bday, person_address.person.gender, person_address.person.your_name, person_address.person.start),
+   'nested add 1');
 
 BEGIN
 {

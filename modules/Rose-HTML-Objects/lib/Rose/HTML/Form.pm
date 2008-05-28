@@ -1066,7 +1066,7 @@ sub add_repeatable_forms
         $arg->form_name =>
         {
           form       => $arg,
-          repeatable => 1,
+          repeatable => undef,
         });
     }
     elsif(!ref $arg)
@@ -1079,13 +1079,13 @@ sub add_repeatable_forms
           $arg =>
           {
             form       => $form,
-            repeatable => 1,
+            repeatable => undef,
           });
       }
       elsif(ref $_[0] eq 'HASH')
       {
         my $spec = shift;
-        $spec->{'repeatable'} = 1  unless(exists $spec->{'repeatable'});
+        $spec->{'repeatable'} = undef  unless(exists $spec->{'repeatable'});
         push(@form_args, $arg => $spec);
       }
       else
@@ -1169,8 +1169,13 @@ sub add_forms
           croak "Cannot nest a form within itself";
         }
       }
-      elsif(ref $form eq 'HASH' && exists $form->{'repeatable'})
+      elsif(ref $form eq 'HASH')
       {
+        unless(exists $form->{'repeatable'})
+        {
+          croak "Missing key 'repeatable' in hash reference specification for form named '$name'";
+        }
+
         my $repeat_spec = $form;
 
         if(ref $form->{'repeatable'})
@@ -1185,22 +1190,22 @@ sub add_forms
 
         delete $form->{'repeatable'};
 
-        $repeat_spec->{'prototype_spec'} = delete $repeat_spec->{'spec'}
+        $repeat_spec->{'prototype_form_spec'} = delete $repeat_spec->{'spec'}
           if($repeat_spec->{'spec'});
 
-        $repeat_spec->{'prototype_spec'} = delete $repeat_spec->{'form_spec'}
+        $repeat_spec->{'prototype_form_spec'} = delete $repeat_spec->{'form_spec'}
           if($repeat_spec->{'form_spec'});
 
-        $repeat_spec->{'prototype_class'} = delete $repeat_spec->{'class'}
+        $repeat_spec->{'prototype_form_class'} = delete $repeat_spec->{'class'}
           if($repeat_spec->{'class'});
 
-        $repeat_spec->{'prototype_class'} = delete $repeat_spec->{'form_class'}
+        $repeat_spec->{'prototype_form_class'} = delete $repeat_spec->{'form_class'}
           if($repeat_spec->{'form_class'});
 
-        $repeat_spec->{'prototype'} = delete $repeat_spec->{'form'}
+        $repeat_spec->{'prototype_form'} = delete $repeat_spec->{'form'}
           if($repeat_spec->{'form'});
 
-        $form = Rose::HTML::Form::Repeatable->new(%$repeat_spec);
+        $form = ref($self)->object_type_class('repeatable form')->new(%$repeat_spec);
       }
       else
       {
@@ -2393,27 +2398,24 @@ Valid formats for elements of ARGS are:
 
 =item B<Form objects>
 
-If an argument is "isa" L<Rose::HTML::Form>, then it is added to the list of forms, stored under the name returned by the form's L<form_name|/form_name> method.
-
-=item B<Form name/object pairs>
-
-A simple scalar followed by an object that "isa" L<Rose::HTML::Form> has its L<form_name|/form_name> set to the specified name and then is stored under that name.
-
-If the name contains any dots (".") it will be taken as a hierarchical name and the form will be added to the specified sub-form under an unqualified name consisting of the final part of the name.  (See examples below.)
-
-=back
-
-Each form's L<parent_form|/parent_form> is set to the form object it was added to.  If the form's L<rank|/rank> is undefined, it's set to the value of the form's L<form_rank_counter|/field_rank_counter> attribute and the rank counter is incremented.
-
-Adding a form with the same name as an existing field will cause a fatal error.
-
-Examples:
+If an argument is "isa" L<Rose::HTML::Form>, then it is added to the list of forms, stored under the name returned by the form's L<form_name|/form_name> method.  Example:
 
     $a_form = Rose::HTML::Form->new(...);
     $b_form = Rose::HTML::Form->new(...);
 
     # Object arguments
     $form->add_forms($a_form, $b_form);
+
+=item B<Form name/object pairs>
+
+A simple scalar followed by an object that "isa" L<Rose::HTML::Form> has its L<form_name|/form_name> set to the specified name and then is stored under that name.
+
+If the name contains any dots (".") it will be taken as a hierarchical name and the form will be added to the specified sub-form under an unqualified name consisting of the final part of the name.  
+
+Examples:
+
+    $a_form = Rose::HTML::Form->new(...);
+    $b_form = Rose::HTML::Form->new(...);
 
     # Name/object pairs
     $form->add_forms(a => $a_form, b => $b_form);
@@ -2433,6 +2435,61 @@ Examples:
     # Add $z_form to $w_form->form('x')->form('y') under the name 'z'
     $w_form->add_form('x.y.z' => $z_form);
 
+=item B<Form name/hashref pairs>
+
+A simple scalar followed by a reference to a hash containing a specification for a form.  Currently, the only kind of form that can be specified this way is a L<repeatable form|Rose::HTML::Form::Repeatable>, and the hash reference is known as a "repeat spec".  In order to be correctly detected as a repeat spec, the hash I<must> contain a key named C<repeatable>.
+
+The repeat spec is coerced into a set of name/value pairs that are passed to the L<Rose::HTML::Form::Repeatable> constructor call.  The coercion exists to allow shorter, more friendly names to be used in the context of a repeat spec.  These names are converted into the names of valid L<Rose::HTML::Form::Repeatable> object methods.  The following coercion rules are applied to the repeat spec hash reference:
+
+If the value of the C<repeatable> key is reference to a hash, the keys and values of that hash are folded into the repeat spec.  Otherwise, the value is used as the value of the L<default_count|Rose::HTML::Form::Repeatable/default_count> parameter.
+
+The C<spec> and C<form_spec> parameters are aliases for the L<prototype_form_spec|Rose::HTML::Form::Repeatable/prototype_form_spec> parameter.  (C<form_spec> overrides C<spec> if both are present.)
+
+The C<class> and C<form_class> parameters are aliases for the L<prototype_form_class|Rose::HTML::Form::Repeatable/prototype_form_class> parameter.  (C<form_class> overrides C<class> if both are present.)
+
+The C<form> parameter is an aliase for the L<prototype_form|Rose::HTML::Form::Repeatable/prototype_form> parameter.
+
+Here are some example name/hashref pairs suitable for passing as arguments to the L<add_forms|/add_forms> method:
+
+    # Using a form class name
+    emails =>
+    {
+      form_class => 'EmailForm',
+      repeatable => 3, # Default count is 3.
+    }
+
+    # Using a form class name and form spec
+    emails =>
+    {
+      form_class => 'EmailForm',
+      form_spec  => { empty_is_ok => 1 },
+      repeatable => 3, # Default count is 3.
+    }
+
+    # Using a generic form class and form spec to specify the contents
+    # of a repeated form "inline" in the repeat spec.
+    nicknames =>
+    {
+      form_class => 'My::HTML::Form',
+      form_spec  => { fields => [ nick => { type => 'text' } ] },
+      repeatable => 3, # Default count is 3.
+    }
+    
+    # Using a prototype object
+    nicknames =>
+    {
+      form          => NickNameForm->new,
+      default_count => 0, # Explicitly set default count to 0.
+      repeatable    => 1, # This key must be present even though
+                          # the default count is set above.
+    }
+
+=back
+
+Each form's L<parent_form|/parent_form> is set to the form object it was added to.  If the form's L<rank|/rank> is undefined, it's set to the value of the form's L<form_rank_counter|/field_rank_counter> attribute and the rank counter is incremented.
+
+Adding a form with the same name as an existing field will cause a fatal error.
+
 =item B<add_param_value NAME, VALUE>
 
 Add VALUE to the parameter named NAME.  Example:
@@ -2447,6 +2504,32 @@ Add VALUE to the parameter named NAME.  Example:
 =item B<app [OBJECT]>
 
 Get or set a L<weakened|Scalar::Util/weaken> reference to the application object that "owns" this form.
+
+=item B<add_repeatable_form ARGS>
+
+This method is an alias for the L<add_repeatable_forms()|/add_repeatable_forms> method.
+
+=item B<add_repeatable_forms ARGS>
+
+Add the repeatable forms specified by ARGS to the list of sub-forms contained in this form.  This method takes arguments in the same format as the L<add_forms|/add_forms> method, except that all argument types are coerced into a form that will cause L<add_forms|/add_forms> to recognize it as a L<repeatable form|Rose::HTML::Form::Repeatable>.  This is a convenient way to add repeatable forms without having to include the C<repeatable> key in your repeat spec.  (See the documentation for the L<add_forms|/add_forms> method for more information.)
+
+Examples
+
+    $form->add_repeatable_forms
+    (
+      # Object argument
+      EmailForm->new(...), 
+
+      # Name/object pair
+      colors => ColorForm->new(...),
+
+      # Name/hashref pair. (Note: no "repeatable" key needed)
+      nicknames => 
+      {
+        form          => NickNameForm->new,
+        default_count => 2,
+      },
+    );
 
 =item B<build_on_init [BOOL]>
 
