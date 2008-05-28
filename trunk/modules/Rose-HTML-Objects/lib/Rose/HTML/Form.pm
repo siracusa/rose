@@ -138,12 +138,12 @@ sub trim_xy_params
   if(@_)
   {
     my $val = $self->{'trim_xy_params'} = $_[0] ? 1 : 0;
-    
+
     foreach my $form ($self->forms)
     {
       $form->trim_xy_params($val);
     }
-    
+
     return $val;
   }
 
@@ -264,14 +264,14 @@ sub is_empty
 sub empty_is_ok
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     foreach my $form ($self->forms)
     {
       $form->empty_is_ok(@_);
     }
-    
+
     return $self->SUPER::empty_is_ok(@_);
   }
 
@@ -1598,12 +1598,12 @@ sub fields_depth_first
   my($self) = shift;
 
   my @fields = sort { $a->rank <=> $b->rank } $self->local_fields;
-  
+
   foreach my $form ($self->forms)
   {
     push(@fields, $form->fields_depth_first);
   }
-  
+
   return wantarray ? @fields : \@fields;
 }
 
@@ -1785,7 +1785,7 @@ sub _html_table
     "$args{'tr'}{'class'} field" : 'field';    
 
   my $html = join('', map { $_->$xhtml() } $self->pre_children);
-  
+
   $html .= join("\n", map { $_->$xhtml_field() } 
                       grep { $_->isa('Rose::HTML::Form::Field::Hidden') } $self->fields);
 
@@ -1805,7 +1805,7 @@ sub _html_table
     if($field->is_button)
     {
       next  if($field->field_depth > $max_button_depth);
-      
+
       if($field->field_depth == 1)
       {
         push(@buttons, $field);
@@ -1856,16 +1856,16 @@ sub _html_table
     {
       $html .= '<tr' . Rose::HTML::Util::html_attrs_string($args{'tr'}) . ">\n" .
                '<td' . Rose::HTML::Util::html_attrs_string($args{'td'}) . ">$label</td>\n";
-  
+
       $args{'td'}{'class'} =~ s/(?:^| )label$//;
       $args{'td'}{'class'} = $args{'td'}{'class'} ? "$args{'td'}{'class'} field" : 'field';
-  
+
       $html .= '<td' . Rose::HTML::Util::html_attrs_string($args{'td'}) . '>' .
                $field->$xhtml() .
                "</td>\n</tr>\n";
     }
   }
-  
+
   if(@buttons)
   {
     my $odd_even = $i++ % 2 ? 'odd' : 'even';
@@ -2437,17 +2437,21 @@ Examples:
 
 =item B<Form name/hashref pairs>
 
-A simple scalar followed by a reference to a hash containing a specification for a form.  Currently, the only kind of form that can be specified this way is a L<repeatable form|Rose::HTML::Form::Repeatable>, and the hash reference is known as a "repeat spec".  In order to be correctly detected as a repeat spec, the hash I<must> contain a key named C<repeatable>.
+A simple scalar followed by a reference to a hash containing a specification for a form.  Currently, the only kind of form that can be specified this way is a L<repeatable form|Rose::HTML::Form::Repeatable>, in which case the hash reference is known as a "repeat spec".  In order to be correctly detected as a repeat spec, the hash I<must> contain a key named C<repeatable>.
 
 The repeat spec is coerced into a set of name/value pairs that are passed to the L<Rose::HTML::Form::Repeatable> constructor call.  The coercion exists to allow shorter, more friendly names to be used in the context of a repeat spec.  These names are converted into the names of valid L<Rose::HTML::Form::Repeatable> object methods.  The following coercion rules are applied to the repeat spec hash reference:
 
-If the value of the C<repeatable> key is reference to a hash, the keys and values of that hash are folded into the repeat spec.  Otherwise, the value is used as the value of the L<default_count|Rose::HTML::Form::Repeatable/default_count> parameter.
+=over 4
 
-The C<spec> and C<form_spec> parameters are aliases for the L<prototype_form_spec|Rose::HTML::Form::Repeatable/prototype_form_spec> parameter.  (C<form_spec> overrides C<spec> if both are present.)
+=item * If the value of the C<repeatable> key is reference to a hash, the keys and values of that hash are folded into the repeat spec.  Otherwise, if a key named C<default_count> does not exist in the repeat spec, then the value of the C<repeatable> key is used as the value of the L<default_count|Rose::HTML::Form::Repeatable/default_count> parameter.
 
-The C<class> and C<form_class> parameters are aliases for the L<prototype_form_class|Rose::HTML::Form::Repeatable/prototype_form_class> parameter.  (C<form_class> overrides C<class> if both are present.)
+=item * The C<spec> and C<form_spec> parameters are aliases for the L<prototype_form_spec|Rose::HTML::Form::Repeatable/prototype_form_spec> parameter.
 
-The C<form> parameter is an aliase for the L<prototype_form|Rose::HTML::Form::Repeatable/prototype_form> parameter.
+=item * The C<class> and C<form_class> parameters are aliases for the L<prototype_form_class|Rose::HTML::Form::Repeatable/prototype_form_class> parameter.
+
+=item * The C<form> parameter is an alias for the L<prototype_form|Rose::HTML::Form::Repeatable/prototype_form> parameter.
+
+=back
 
 Here are some example name/hashref pairs suitable for passing as arguments to the L<add_forms|/add_forms> method:
 
@@ -2466,15 +2470,15 @@ Here are some example name/hashref pairs suitable for passing as arguments to th
       repeatable => 3, # Default count is 3.
     }
 
-    # Using a generic form class and form spec to specify the contents
-    # of a repeated form "inline" in the repeat spec.
+    # Using a generic form class and form spec to specify the 
+    # contents of a repeated form "inline" in the repeat spec
     nicknames =>
     {
       form_class => 'My::HTML::Form',
       form_spec  => { fields => [ nick => { type => 'text' } ] },
       repeatable => 3, # Default count is 3.
     }
-    
+
     # Using a prototype object
     nicknames =>
     {
@@ -2651,9 +2655,11 @@ Get or set the field specified by NAME.  If only a NAME argument is passed, then
 
 If both NAME and VALUE arguments are passed, then the VALUE must be a L<Rose::HTML::Form::Field> or a reference to a hash whose contents are as described in the documentation for the L<add_fields|/add_fields> method. 
 
-=item B<fields>
+=item B<fields [FIELDS]>
 
-Returns an ordered list of this form's field objects in list context, or a reference to this list in scalar context.  The order of the fields matches the order of the field names returned by the L<field_monikers|/field_monikers> method.
+If FIELDS are passed, this method L<deletes all existing fields|/delete_fields> and then calls L<add_fields|/add_fields>, passing all arguments.
+
+The return value is an ordered list of this form's field objects in list context, or a reference to this list in scalar context.  The order of the fields matches the order of the field names returned by the L<field_monikers|/field_monikers> method.
 
 =item B<fields_depth_first>
 
