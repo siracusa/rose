@@ -41,7 +41,6 @@ SETUP:
 
   foreach my $column (MyObject->meta->columns)
   {
-$DB::single = 1;
     $column->add_auto_method_types(qw(get set));
     $column->method_name('get' => 'xget_' . $column->name);
     $column->method_name('set' => 'xset_' . $column->name);
@@ -251,7 +250,6 @@ foreach my $db_type (@dbs)
 
   unless($Did_Setup++)
   {
-$DB::single = 1;
     MyObject->meta->initialize;
   }
 

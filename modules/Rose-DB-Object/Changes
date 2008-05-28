@@ -1,4 +1,4 @@
-0.769_06 (05.15.2008) - John Siracusa <siracusa@gmail.com>
+0.770 (05.28.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added "iterator" method type, similar to "find", to OneToMany
       and ManyToMany.  (Patch by Peter Karman - peknet@gmail.com)
