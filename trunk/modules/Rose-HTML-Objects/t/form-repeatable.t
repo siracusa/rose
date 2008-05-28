@@ -165,8 +165,9 @@ $form->add_forms
 (
   a =>
   {
-    form_spec  => { fields =>  [ x => { type => 'text' } ] },
-    repeatable => 0,
+    form_spec     => { fields =>  [ x => { type => 'text' } ] },
+    default_count => 0,
+    repeatable    => 999,
   },
 );
 
@@ -297,8 +298,9 @@ POD_EXAMPLE:
     (
       emails => 
       {
-        form_class => 'EmailForm',
-        repeatable => 2,
+        form_class    => 'EmailForm',
+        default_count => 2,
+        repeatable    => undef,
       },
     );
 
