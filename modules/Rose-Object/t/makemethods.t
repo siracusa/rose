@@ -418,7 +418,6 @@ use Rose::Class::MakeMethods::Generic
 package MySubClass;
 our @ISA = qw(MyClass);
 
-
 package MySubSubClass;
 our @ISA = qw(MySubClass);
 
@@ -1195,10 +1194,6 @@ INHERITED_HASH_POD_CHECK:
       },
     ],
   );
-
-
-  package MySubClass;
-  our @ISA = qw(MyClass);
 
   package main;
 
