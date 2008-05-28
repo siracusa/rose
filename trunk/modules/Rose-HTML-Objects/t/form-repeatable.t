@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More 'no_plan'; #tests => 22;
+use Test::More tests => 57;
 
 BEGIN 
 {
@@ -270,6 +270,7 @@ POD_EXAMPLE:
 
     # A person can have several emails
     $self->add_repeatable_form(emails => EmailForm->new);
+    $self->repeatable_form(emails => EmailForm->new);
 
     $self->repeatable_form('emails')->default_count(2);
 

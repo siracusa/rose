@@ -1029,6 +1029,15 @@ sub increment_form_rank_counter
 sub repeatable_form
 {
   my($self) = shift;
+
+  # Set form
+  if(@_ > 1)
+  {
+    my($name, $form) = (shift, shift);
+    $self->delete_repeatable_form($name);
+    return $self->add_repeatable_form($name => $form);
+  }
+
   my $form = $self->form(@_) or return undef;
   return undef  unless($form->is_repeatable);
   return $form;
@@ -1295,6 +1304,13 @@ sub compare_forms
 sub forms
 {
   my($self) = shift;
+
+  if(@_)
+  {
+    $self->delete_forms;
+    $self->add_forms(@_);
+    return unless(defined wantarray);
+  }
 
   if(my $forms = $self->{'form_list'})
   {
@@ -2629,6 +2645,14 @@ If VALUES are also passed, then VALUES are deleted from the set of values held b
 
 Delete all parameters.
 
+=item B<delete_repeatable_form NAME>
+
+Delete the repeatable form stored under the name NAME.  If NAME "isa" L<Rose::HTML::Form>, then the L<form_name|/form_name> method is called on it and the return value is used as NAME.
+
+=item B<delete_repeatable_forms>
+
+Delete all repeatable sub-forms.
+
 =item B<empty_is_ok [BOOL]>
 
 Get or set a boolean value that indicates whether or not L<validate|/validate> will be allowed to return true if every L<field|/fields> in the form is empty, even if some of them are L<required|Rose::HTML::Form::Field/required>.  The default value is false.
@@ -2809,9 +2833,11 @@ If both NAME and OBJECT are passed, a new sub-form is added under NAME.
 
 NAME is a fully-qualified sub-form name.  Components of the hierarchy are separated by dots (".").  OBJECT must be an object that inherits from L<Rose::HTML::Form>.
 
-=item B<forms>
+=item B<forms [FORMS]>
 
-Returns an ordered list of this form's sub-form objects (if any) in list context, or a reference to this list in scalar context.  The order of the form matches the order of the form names returned by the L<form_names|/form_names> method.
+If FORMS are passed, this method L<deletes all existing forms|/delete_forms> and then calls L<add_forms|/add_forms>, passing all arguments.
+
+The return value is an ordered list of this form's sub-form objects (if any) in list context, or a reference to this list in scalar context.  The order of the forms matches the order of the form names returned by the L<form_names|/form_names> method.
 
 See the L<nested forms|/"NESTED FORMS"> section to learn more about nested forms.
 
@@ -3030,6 +3056,10 @@ The field names may not match up exactly with the object method names. In such c
 
 Returns true if each L<field|/fields> and L<nested form|/forms> in this form L<is_empty()|/is_empty>, false otherwise.
 
+=item B<is_repeatable>
+
+Returns true if this form is a L<repeatable form|Rose::HTML::Form::Repeatable>, false otherwise.
+
 =item B<local_field NAME [, VALUE]>
 
 Get or set a field that is an immediate child of the current form.  That is, it does not belong to a L<nested form|/"NESTED FORMS">.  If the field specified by NAME does not meet these criteria, then undef is returned.  In all other respects, this method behaves like the L<field|/field> method.
@@ -3234,6 +3264,22 @@ Get or set the form's rank.  This value can be used for any purpose that suits y
 =item B<recursive_init_fields [BOOL]>
 
 Get or set a boolean value indicating the default value of the <recursive> parameter to the L<init_fields|/init_fields> method.  This attribute, in turn, defaults to the value returned by the L<default_recursive_init_fields|/default_recursive_init_fields> class method.
+
+=item B<repeatable_form NAME [, OBJECT]>
+
+Get or set the repeatable sub-form named NAME.  If just NAME is passed, the specified repeatable sub-form object is returned.  If no such repeatable sub-form exists, undef is returnend.
+
+If both NAME and OBJECT are passed, a new repeatable sub-form is added under NAME.
+
+NAME is a fully-qualified sub-form name.  Components of the hierarchy are separated by dots (".").  OBJECT must be an object that inherits from L<Rose::HTML::Form::Repeatable>.
+
+=item B<repeatable_forms [FORMS]>
+
+If FORMS are passed, this method L<deletes all existing repeatable forms|/delete_repeatable_forms> and then calls L<add_repeatable_forms|/add_repeatable_forms>, passing all arguments.
+
+The return value is an ordered list of this form's repeatable sub-form objects (if any) in list context, or a reference to this list in scalar context.  The order of the forms matches the order of the form names returned by the L<form_names|/form_names> method.
+
+See the L<nested forms|/"NESTED FORMS"> section to learn more about nested forms, and the L<Rose::HTML::Form::Repeatable> documentation to learn more about repeatable forms.
 
 =item B<reset>
 

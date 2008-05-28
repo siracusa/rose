@@ -10,7 +10,7 @@ use Rose::HTML::Form::Field::Hidden;
 use Rose::HTML::Form::Field;
 our @ISA = qw(Rose::HTML::Form::Field);
 
-require Rose::HTML::Form::Field::Repeatable;
+#require Rose::HTML::Form::Field::Repeatable;
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
@@ -365,7 +365,8 @@ sub add_field { shift->add_fields(@_) }
 sub compare_fields 
 {
   my($self, $one, $two) = @_;
-  $_[1]->name cmp $_[2]->name 
+  no warnings 'uninitialized';
+  $one->name cmp $two->name;
 }
 
 sub resync_field_names
