@@ -30,7 +30,7 @@ $form->add_fields
     type => 'text',
     size => 25,
   },
-  
+
   city => 
   {
     type => 'text',
@@ -151,7 +151,7 @@ $form->add_fields
     type => 'text',
     size => 25,
   },
-  
+
   type => 
   {
     type    => 'checkbox group',

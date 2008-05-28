@@ -27,7 +27,7 @@ use_ok('Rose::DB::Object::Loader');
 my $Include_Tables = '^(?:' . join('|', 
   qw(product_colors prices products colors vendors)) . ')$';
 $Include_Tables = qr($Include_Tables);
-  
+
 my %Column_Defs =
 (
   pg => 

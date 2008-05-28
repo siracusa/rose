@@ -176,9 +176,9 @@ Rose::DB->register_db(
 if((! -e '/tmp/rdbo_does_not_exist.db') || unlink('/tmp/rdbo_does_not_exist.db'))
 {
   $db = Rose::DB->new('nonesuch');
-  
+
   eval { $db->connect };
-  
+
   ok($@ =~ /^Refus/, 'nonesuch database');
 }
 else

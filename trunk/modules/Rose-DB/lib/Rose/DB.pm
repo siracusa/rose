@@ -2136,7 +2136,7 @@ $DB::single = 1;
     my $username = lc getpwuid($<);
     $rosedb_devinit = "Rose::DB::Devel::Init::$username";
     eval qq(require $rosedb_devinit);
-    
+
     if($@)
     {
       eval { do $rosedb_devinit };

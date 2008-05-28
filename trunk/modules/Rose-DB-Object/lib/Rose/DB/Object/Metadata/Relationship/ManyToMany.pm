@@ -71,7 +71,7 @@ __PACKAGE__->method_maker_info
     type      => 'objects_by_map',
     interface => 'find',
   },
-  
+
   iterator =>
   {
     class     => 'Rose::DB::Object::MakeMethods::Generic',

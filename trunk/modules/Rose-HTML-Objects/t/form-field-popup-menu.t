@@ -471,7 +471,7 @@ foreach my $name (qw(items options))
   my $method = "${name}_html_attr";
 
   $field->$method(class => 'bar');
-  
+
   is($field->xhtml_field, 
     qq(<select name="fruits" size="1">\n) .
     qq(<option class="bar" value="apple">Apple</option>\n) .

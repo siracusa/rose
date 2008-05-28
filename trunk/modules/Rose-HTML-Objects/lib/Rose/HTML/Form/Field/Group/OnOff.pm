@@ -166,12 +166,12 @@ sub is_selected
 sub is_empty
 {
   my($self) = shift;
-  
+
   foreach my $item ($self->items)
   {
     return 0  if($item->is_on);
   }
-  
+
   return 1;
 }
 

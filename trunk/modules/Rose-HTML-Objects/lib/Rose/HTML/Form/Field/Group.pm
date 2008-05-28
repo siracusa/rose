@@ -239,22 +239,22 @@ sub items_localized
 sub items_html_attr
 {
   my($self, $name) = (shift, shift);
-  
+
   if(@_)
   {
     foreach my $item ($self->items)
     {
       $item->html_attr($name, @_);
     }
-    
+
     return @_;
   }
-  
+
   foreach my $item (@{[ $self->items ]})
   {
     return $item->html_attr($name);
   }
-  
+
   return undef;
 }
 
@@ -673,16 +673,16 @@ sub xhtml_field
 sub escape_html
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     my $val = $self->SUPER::escape_html(@_);
-    
+
     foreach my $item ($self->items)
     {
       $item->escape_html($val);
     }
-    
+
     return $val;
   }
 

@@ -205,9 +205,9 @@ ok($form->form('a.1')->isa('EmailForm'), 'form spec 3');
 POD_EXAMPLE:
 {
   package Person;
-  
+
   use base 'Rose::Object';
-  
+
   use Rose::Object::MakeMethods::Generic
   (
     scalar => [ 'name', 'age' ],
@@ -217,9 +217,9 @@ POD_EXAMPLE:
   #...  
 
   package Email;
-  
+
   use base 'Rose::Object';
-  
+
   use Rose::Object::MakeMethods::Generic
   (
     scalar => 
@@ -228,9 +228,9 @@ POD_EXAMPLE:
       'type' => { check_in => [ 'home', 'work' ] },
     ],
   );
-  
+
   #...
-  
+
   package EmailForm;
 
   use base 'Rose::HTML::Form';
@@ -359,16 +359,16 @@ POD_EXAMPLE:
     {
       push(@emails, $form->email_from_form);
     }
-    
+
     $person->emails(@emails);
-    
+
     return $person;
   }
-  
+
   package main;
-  
+
   my $form = PersonEmailsForm->new;
-  
+
   my $person = Person->new(name   => 'Cate', 
                            age    => 1, 
                            emails => 
@@ -384,11 +384,11 @@ POD_EXAMPLE:
 
   $form->params({ name => 'Joe', age => 44, 'emails.5.address' => 'x@x.com', 'emails.5.type' => 'work' });
   $form->init_fields;
-  
+
   ok($form->validate, 'validate 1');
 
   $person = $form->person_from_form;
-  
+
   is($person->name, 'Joe', 'person_from_form 1');
   is($person->age, 44, 'person_from_form 2');
   is($person->emails->[0]->address, 'x@x.com', 'person_from_form 3');
@@ -398,7 +398,7 @@ POD_EXAMPLE:
   $form->params({ name => 'Joe2', age => 44, 'emails.1.address' => 'x2@x.com', 'emails.1.type' => 'work',
                   'emails.2.address' => undef, 'emails.2.type' => 'work'});
   $form->init_fields;
-  
+
   ok(!$form->validate, 'validate 2');
 
   $form->params({ name => 'Joe3', age => 44, 'emails.1.address' => 'x3@x.com', 'emails.1.type' => 'work',
@@ -406,9 +406,9 @@ POD_EXAMPLE:
   $form->init_fields;
 
   ok($form->validate, 'validate 3');
-  
+
   $person = $form->person_from_form;
-  
+
   is($person->name, 'Joe3', 'person_from_form 5');
   is($person->age, 44, 'person_from_form 6');
   is($person->emails->[0]->address, 'x3@x.com', 'person_from_form 7');
@@ -426,7 +426,7 @@ POD_EXAMPLE:
   is($form->empty_is_ok, 1, 'empty_is_ok 1');
 
   ok($form->validate, 'empty_is_ok 2');
-  
+
   $form->empty_is_ok(0);
   is($form->empty_is_ok, 0, 'empty_is_ok 3');
 
@@ -474,25 +474,25 @@ BEGIN
         type => 'text',
         size => 25,
       },
-      
+
       age =>
       {
         type     => 'integer',
         positive => 1,
       },
-      
+
       gender =>
       {
         type     => 'radio group',
         choices  => { 'm' => 'Male', 'f' => 'Female' },
         default  => 'm',
       },
-      
+
       bday =>
       {
         type => 'datetime split mdy', 
       },
-      
+
       start =>
       {
         type => 'datetime split mdyhms',
@@ -517,19 +517,19 @@ BEGIN
         type => 'text',
         size => 25,
       },
-  
+
       city => 
       {
         type => 'text',
         size => 25,
       },
-  
+
       state => 
       {
         type => 'text',
         size => 2,
       },
-  
+
       zip => 
       {
         type => 'text',

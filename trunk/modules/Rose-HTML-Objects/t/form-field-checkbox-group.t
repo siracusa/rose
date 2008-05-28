@@ -439,7 +439,7 @@ foreach my $name (qw(items checkboxes))
   my $method = "${name}_html_attr";
 
   $field->$method(class => 'bar');
-  
+
   is($field->xhtml_field, 
     qq(<input class="bar" name="fruits" type="checkbox" value="apple" /> <label>Apple</label><br />\n) .
     qq(<input class="bar" name="fruits" type="checkbox" value="orange" /> <label>Le Orange</label><br />\n) .

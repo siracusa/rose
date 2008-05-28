@@ -75,9 +75,9 @@ EOF
 unless($ENV{'AUTOMATED_TESTING'})
 {
   my %old;
-  
+
   $old{'ALRM'} = $SIG{'ALRM'} || 'DEFAULT';
-  
+
   eval
   {
     # Localize so I only have to restore in my catch block
@@ -86,7 +86,7 @@ unless($ENV{'AUTOMATED_TESTING'})
     my $res = <STDIN>;
     alarm(0);
   };
-  
+
   if($@ =~ /alarm/)
   {
     $SIG{'ALRM'} = $old{'ALRM'};
