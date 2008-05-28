@@ -1223,7 +1223,7 @@ INHERITED_HASH_POD_CHECK:
 
   is(join(', ', sort MySubClass->pet_color('Toby')), 'tan', 'inherited_hash pod ' . $i++);
   is(join(', ', sort MySubClass->special_pet_color('Toby')), 'tan', 'inherited_hash pod ' . $i++);
-  
+
   MyClass->delete_pet_color('Max');
 
   is(join(', ', sort MyClass->pets), 'Fido, Spot, Toby', 'inherited_hash pod ' . $i++);
@@ -1271,7 +1271,7 @@ BEGIN
     ],
 
     'boolean --default=0' => 'def0',
-    
+
     'scalar' => 'bar',
 
     'scalar --get_set_init' => 

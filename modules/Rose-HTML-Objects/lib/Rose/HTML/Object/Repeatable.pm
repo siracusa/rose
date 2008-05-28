@@ -54,7 +54,7 @@ sub prototype_class
 sub prototype_spec
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     if(@_ == 1)
@@ -77,14 +77,14 @@ sub prototype_spec
       $self->{'prototype_spec'} = [ @_ ];
     }
   }
-  
+
   return $self->{'prototype_spec'};
 }
 
 sub prototype_clone
 {
   my($self) = shift;
-  
+
   if(my $obj = $self->prototype)
   {
     return Clone::PP::clone($obj);
@@ -100,14 +100,14 @@ sub prototype_clone
 sub empty_is_ok
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     foreach my $form ($self->forms)
     {
       $form->empty_is_ok(@_);
     }
-    
+
     return $_[0] ? 1 : 0;
   }
 
@@ -115,7 +115,7 @@ sub empty_is_ok
   {
     return 0  unless($form->empty_is_ok);
   }
-  
+
   return 1;
 }
 

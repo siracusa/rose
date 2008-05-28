@@ -211,7 +211,7 @@ sub array
 sub _coerce_html_object
 {
   my($self, $arg) = (shift, shift);
-  
+
   if(!ref $arg)
   {
     return Rose::HTML::Text->new(text => $arg, parent => $self);
@@ -220,7 +220,7 @@ sub _coerce_html_object
   {
     return Rose::HTML::Text->new(text => $arg, parent => $self);
   }
-  
+
   $arg->parent($self);
 
   return $arg;

@@ -29,7 +29,7 @@ sub is_repeatable_field { 1 }
 sub prototype_field
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     $self->_clear_field_generated_values;
@@ -42,7 +42,7 @@ sub prototype_field
 sub prototype_field_name
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     $self->_clear_field_generated_values;
@@ -68,7 +68,7 @@ sub prototype_field_class
 sub prototype_field_spec
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     $self->_clear_field_generated_values;
@@ -93,14 +93,14 @@ sub prototype_field_spec
       $self->{'prototype_field_spec'} = [ @_ ];
     }
   }
-  
+
   return $self->{'prototype_field_spec'};
 }
 
 sub prototype_field_clone
 {
   my($self) = shift;
-  
+
   if(my $obj = $self->prototype_field)
   {
     return Clone::PP::clone($obj);

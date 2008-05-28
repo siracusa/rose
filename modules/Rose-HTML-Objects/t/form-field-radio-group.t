@@ -429,7 +429,7 @@ foreach my $name (qw(items radio_buttons))
   my $method = "${name}_html_attr";
 
   $field->$method(class => 'bar');
-  
+
   is($field->xhtml_field, 
     qq(<input class="bar" name="fruits" type="radio" value="apple" /> <label>Apple</label><br />\n) .
     qq(<input class="bar" name="fruits" type="radio" value="orange" /> <label>Le Orange</label><br />\n) .

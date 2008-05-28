@@ -795,7 +795,7 @@ sub validate
     unless($self->is_empty && $self->empty_is_ok)
     {
       my $label = $self->error_label;
-  
+
       if(defined $label)
       {
         #$self->add_error_id(FIELD_REQUIRED, $label);
@@ -806,7 +806,7 @@ sub validate
       {
         $self->add_error_id(FIELD_REQUIRED);
       }
-  
+
       return 0;
     }
   }

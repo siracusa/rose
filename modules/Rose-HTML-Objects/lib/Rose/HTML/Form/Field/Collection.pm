@@ -31,7 +31,7 @@ use Rose::Object::MakeMethods::Generic
   [
     'field_rank_counter',
   ],
-  
+
   array =>
   [
     'before_prepare_hooks'     => {},
@@ -83,7 +83,7 @@ sub prepare
 sub add_prepare_hook
 {
   my($self) = shift;
-  
+
   if(@_ == 1)
   {
     $self->add_before_prepare_hook(@_);
@@ -91,7 +91,7 @@ sub add_prepare_hook
   elsif(@_ == 2)
   {
     my $where = shift;
-    
+
     unless($where eq 'before' || $where eq 'after')
     {
       Carp::croak "Illegal prepare hook position: $where";

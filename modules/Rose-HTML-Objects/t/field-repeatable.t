@@ -59,30 +59,30 @@ BEGIN
         type => 'text',
         size => 25,
       },
-      
+
       age =>
       {
         type     => 'integer',
         positive => 1,
       },
-      
+
       gender =>
       {
         type     => 'radio group',
         choices  => { 'm' => 'Male', 'f' => 'Female' },
         default  => 'm',
       },
-      
+
       bday =>
       {
         type => 'datetime split mdy', 
       },
-      
+
       start =>
       {
         type => 'datetime split mdyhms',
       },
-      
+
       #repeatable =>
       #{
       #  field =>
