@@ -2196,6 +2196,7 @@ sub object_by_key
             my $ret;
 
             # Ignore any errors due to missing primary keys
+            # XXX: TODO: only eat the missing pk error?
             local $dbh->{'PrintError'} = 0;
             eval { $ret = $object->load(speculative => 1) };
 

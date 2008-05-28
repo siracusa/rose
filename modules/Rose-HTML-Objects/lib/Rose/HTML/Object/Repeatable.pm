@@ -3,7 +3,7 @@ package Rose::HTML::Object::Repeatable;
 use strict;
 
 use Carp;
-use Clone::PP qw(clone);
+use Clone::PP();
 
 require Rose::HTML::Form  unless(@Rose::HTML::Form::ISA);
 our @ISA = qw(Rose::HTML::Form);
@@ -87,7 +87,7 @@ sub prototype_clone
   
   if(my $obj = $self->prototype)
   {
-    return clone($obj);
+    return Clone::PP::clone($obj);
   }
   else
   {

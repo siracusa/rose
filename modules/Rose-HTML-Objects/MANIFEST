@@ -35,7 +35,6 @@ lib/Rose/HTML/Form/Field/PhoneNumber/US/Split.pm
 lib/Rose/HTML/Form/Field/PopUpMenu.pm
 lib/Rose/HTML/Form/Field/RadioButton.pm
 lib/Rose/HTML/Form/Field/RadioButtonGroup.pm
-lib/Rose/HTML/Form/Field/Repeatable.pm
 lib/Rose/HTML/Form/Field/Reset.pm
 lib/Rose/HTML/Form/Field/SelectBox.pm
 lib/Rose/HTML/Form/Field/Set.pm

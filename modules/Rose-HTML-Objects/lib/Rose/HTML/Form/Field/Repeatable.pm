@@ -2,6 +2,8 @@ package Rose::HTML::Form::Field::Repeatable;
 
 use strict;
 
+use Clone::PP();
+
 use Rose::HTML::Form::Field;
 
 use base 'Rose::HTML::Object::Repeatable::Form';
@@ -16,19 +18,6 @@ use Rose::Class::MakeMethods::Generic
   ],
 );
 
-#
-# Object data
-#
-
-use Rose::Object::MakeMethods::Generic
-(
-  scalar =>
-  [
-    'prototype_field',
-  ],
-);
-
-
 __PACKAGE__->default_field_class('Rose::HTML::Form::Field');
 
 #
@@ -37,12 +26,39 @@ __PACKAGE__->default_field_class('Rose::HTML::Form::Field');
 
 sub is_repeatable_field { 1 }
 
+sub prototype_field
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    $self->_clear_field_generated_values;
+    return $self->{'prototype_field'} = shift;
+  }
+
+  return $self->{'prototype_field'};
+}
+
+sub prototype_field_name
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    $self->_clear_field_generated_values;
+    $self->{'prototype_field_name'} = shift;
+  }
+
+  return defined $self->{'prototype_field_name'} ? $self->{'prototype_field_name'} : $self->form_name;
+}
+
 sub prototype_field_class
 {
   my($self) = shift;
 
   if(@_)
   {
+    $self->_clear_field_generated_values;
     return $self->{'prototype_field_class'} = shift;
   }
 
@@ -55,6 +71,8 @@ sub prototype_field_spec
   
   if(@_)
   {
+    $self->_clear_field_generated_values;
+
     if(@_ == 1)
     {
       if(ref($_[0]) eq 'ARRAY')
@@ -85,7 +103,7 @@ sub prototype_field_clone
   
   if(my $obj = $self->prototype_field)
   {
-    return clone($obj);
+    return Clone::PP::clone($obj);
   }
   else
   {
@@ -95,14 +113,32 @@ sub prototype_field_clone
   }
 }
 
+sub _clear_field_generated_values
+{
+  my($self) = shift;
+  $self->{'prototype_form'} = undef;
+}
+
 sub prototype_form
 {
-  my
+  my($self) = shift;
+
+  unless($self->{'prototype_form'})
+  {
+    my $form = $self->SUPER::prototye_form;
+    my $field = $self->prototype_field_clone;
+    $field->local_name($self->prototype_field_name)  unless($field->name);
+    $form->add_field($field);
+    $self->{'prototype_form'} = $form;
+  }
+
+  return $self->{'prototype_form'};
 }
 
 sub prototype_form_clone
 {
-  my
+  my($self) = shift;
+  return Clone::PP:clone($self->prototype_form);
 }
 
 1;
