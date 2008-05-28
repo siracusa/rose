@@ -1,4 +1,4 @@
-0.743_02 (05.20.2008) - John Siracusa <siracusa@gmail.com>
+0.744 (05.28.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added fixup() class method call to auto_load_fixups().
       (Suggested by Justin Ellison)

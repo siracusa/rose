@@ -176,9 +176,9 @@ My::DB2->register_db(
 if((! -e '/tmp/rdbo_does_not_exist.db') || unlink('/tmp/rdbo_does_not_exist.db'))
 {
   $db = My::DB2->new('nonesuch');
-  
+
   eval { $db->connect };
-  
+
   ok($@ =~ /^Refus/, 'nonesuch database');
 }
 else
