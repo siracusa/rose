@@ -4,7 +4,7 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.81';
+our $VERSION = '0.851';
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
@@ -1500,7 +1500,7 @@ Choose the interface.  This is kind of pointless since there is only one interfa
 
 =item C<keys_method>
 
-The name of the class method that returns a reference to a list of keys in scalar context, or a list of keys in list context.   Defaults to to C<plural_name>.
+The name of the class method that returns a reference to a list of keys in scalar context, or a list of keys in list context.   Defaults to to C<plural_name> with "_keys" added to the end.
 
 =item C<plural_name>
 

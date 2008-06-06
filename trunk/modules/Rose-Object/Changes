@@ -1,3 +1,7 @@
+0.851 (06.06.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Corrected mistakes in the Rose::Class::MakeMethods::Generic POD.
+
 0.85 (05.28.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added "inherited_hash" and "inheritable_boolean" class method types.
