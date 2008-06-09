@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.769';
+our $VERSION = '0.771';
 
 our $Debug = 0;
 
@@ -67,7 +67,7 @@ sub build_select
   my $logic        = delete $args{'logic'} || 'AND';
   my $columns      = $args{'columns'};  
   my $all_columns  = $args{'all_columns'} || {};
-  my $query_arg    = delete $args{'query'};
+  my $query_arg    = delete $args{'query'} || delete $args{'where'};
   my $sort_by      = delete $args{'sort_by'};
   my $group_by     = delete $args{'group_by'};
   my $limit_suffix = delete $args{'limit_suffix'};
