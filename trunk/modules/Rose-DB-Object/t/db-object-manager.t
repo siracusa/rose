@@ -121,7 +121,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       share_db     => 1,
       query_is_sql => 1,
       #debug => 1,
-      query        =>
+      where        =>
       [
         id         => { ge => 1 },
         id         => [ \'1', \'id' ], #'
@@ -177,7 +177,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
   {
     $objs = 
       MyPgObjectManager->get_objectz(
-        query  =>
+        where  =>
         [
           date_created => '205-1-2', # invalid date
         ]);
@@ -5867,7 +5867,7 @@ SKIP: foreach my $db_type (qw(informix))
 
   ($sql, $bind) = 
     Rose::DB::Object::Manager->get_objects_sql(
-      object_class => 'MySQLiteObject',
+      object_class => 'MyInformixObject',
       require_objects => [ 'bb1' ],
       query => 
       [
@@ -8690,7 +8690,7 @@ SKIP: foreach my $db_type (qw(sqlite))
   my($sql, $bind) = 
     Rose::DB::Object::Manager->get_objects_sql(
       object_class => 'MySQLiteObject',
-      query => [ name => { like => \q('%foo%') } ]);
+      where => [ name => { like => \q('%foo%') } ]);
 
   ok($sql =~ /name LIKE '%foo%'/, "scalar ref bind 1 - $db_type");
   is(@$bind, 0, "scalar ref bind 2 - $db_type");
@@ -8816,7 +8816,7 @@ SKIP: foreach my $db_type (qw(sqlite))
   {
     $objs = 
       MySQLiteObject->get_objectz(
-        query  =>
+        where  =>
         [
           date_created => '205-1-2', # invalid date
         ]);
@@ -8828,7 +8828,7 @@ SKIP: foreach my $db_type (qw(sqlite))
   {
     $objs = 
       MySQLiteObject->get_objectz(
-        query => [ flag => [] ]);
+        where => [ flag => [] ]);
   };
 
   ok($@, "Empty list 1 - $db_type");

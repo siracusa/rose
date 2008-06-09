@@ -16,7 +16,7 @@ use Rose::DB::Object::Constants
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.769';
+our $VERSION = '0.771';
 
 our $Debug = 0;
 
@@ -408,6 +408,10 @@ sub get_objects
   my $fetch            = delete $args{'fetch_only'};
   my $hints            = delete $args{'hints'} || {};
   my $select           = $args{'select'};
+
+  # Alias by popular demand...
+  $args{'query'} = delete $args{'where'}
+    if($args{'where'} && !exists $args{'query'});
 
   my $no_forced_sort = delete $args{'no_forced_sort'};
 
@@ -4357,6 +4361,10 @@ If true, and if there is no explicit value for the C<select> parameter and more 
       ...
 
 These unique aliases provide a technique of last resort for unambiguously addressing a column in a query clause.
+
+=item B<where ARRAYREF>
+
+This is an alias for the C<query> parameter (see above).
 
 =item B<with_map_records [ BOOL | METHOD | HASHREF ]>
 
