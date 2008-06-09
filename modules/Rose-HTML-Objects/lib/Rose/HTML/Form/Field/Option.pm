@@ -55,7 +55,8 @@ sub label
 sub label_text_object
 {
   my($self) = shift;
-  return $self->{'label_text_object'} ||= Rose::HTML::Text->new(text => $self->label);
+  return $self->{'label_text_object'} ||= 
+    ref($self)->object_type_class_loaded('literal text')->new(text => $self->label);
 }
 
 sub short_label { shift->html_attr('label', @_) }

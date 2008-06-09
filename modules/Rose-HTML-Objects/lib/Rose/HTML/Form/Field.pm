@@ -596,10 +596,17 @@ sub hidden_fields
 {
   my($self) = shift;
 
-  require Rose::HTML::Form::Field::Hidden; # Circular dependency... :-/
+  my $hidden_field_class = ref($self)->object_type_class_loaded('hidden');
+  
+  no strict 'refs';
+  unless(@{$hidden_field_class . '::ISA'})
+  {
+    eval "use $hidden_field_class";
+    Carp::croak "Could not load hidden field class '$hidden_field_class' - $@"  if($@);
+  }
 
   return 
-    Rose::HTML::Form::Field::Hidden->new(
+    $hidden_field_class->new(
       name  => $self->html_attr('name'),
       id    => $self->html_attr('id'),
       class => $self->html_attr('class'),
@@ -730,7 +737,7 @@ sub xhtml
 sub label_object
 {
   my($self) = shift;
-  my $label = $self->{'label_object'} ||= Rose::HTML::Label->new();
+  my $label = $self->{'label_object'} ||= ref($self)->object_type_class_loaded('label')->new();
 
   $label->contents($self->escape_html ? __escape_html($self->label) : 
                                         $self->label);

@@ -1214,7 +1214,7 @@ sub add_forms
         $repeat_spec->{'prototype_form'} = delete $repeat_spec->{'form'}
           if($repeat_spec->{'form'});
 
-        $form = ref($self)->object_type_class('repeatable form')->new(%$repeat_spec);
+        $form = ref($self)->object_type_class_loaded('repeatable form')->new(%$repeat_spec);
       }
       else
       {

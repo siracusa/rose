@@ -13,8 +13,8 @@ require Rose::HTML::Form::Field::OptionGroup;
 
 our $VERSION = '0.551';
 
-sub _item_class       { shift->object_type_class('option') }
-sub _item_group_class { shift->object_type_class('option group') }
+sub _item_class       { shift->object_type_class_loaded('option') }
+sub _item_group_class { shift->object_type_class_loaded('option group') }
 sub _item_name        { 'option' }
 sub _item_name_plural { 'options' }
 
