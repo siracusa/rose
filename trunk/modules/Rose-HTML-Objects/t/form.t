@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 306;
+use Test::More tests => 258;
 
 BEGIN 
 {
@@ -798,6 +798,7 @@ $form = MyForm->new;
 
 while(my($name, $class) = each(%$map))
 {
+  next  unless($class->isa('Rose::HTML::Form::Field'));
   my $method = ('field', 'add_fields')[$i % 2];
   ok(UNIVERSAL::isa($form->$method("test_$i" => { type => $name }), $class), 
      "$method by hash ref - $name");
@@ -808,6 +809,7 @@ $form->delete_fields;
 
 while(my($name, $class) = each(%$map))
 {
+  next  unless($class->isa('Rose::HTML::Form::Field'));
   my $method = ('field', 'add_fields')[$i % 2];
   ok(UNIVERSAL::isa($form->$method("test_$i" => $name), $class),
      "$method by type name - $name");

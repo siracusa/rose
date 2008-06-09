@@ -540,7 +540,7 @@ sub hidden_field
   my $name = $self->fq_name;
 
   return 
-    Rose::HTML::Form::Field::Hidden->new(
+    ref($self)->object_type_class_loaded('hidden')->new(
       name  => $name,
       value => $self->output_value);
 }

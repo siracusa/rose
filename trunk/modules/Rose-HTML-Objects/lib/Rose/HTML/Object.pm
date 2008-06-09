@@ -53,6 +53,13 @@ __PACKAGE__->add_valid_html_attrs
 
 __PACKAGE__->object_type_classes
 (
+  'anchor'             => 'Rose::HTML::Anchor',
+  'image'              => 'Rose::HTML::Image',
+  'label'              => 'Rose::HTML::Label',
+  'link'               => 'Rose::HTML::Link',
+  'script'             => 'Rose::HTML::Script',
+  'literal text'       => 'Rose::HTML::Text',
+
   'form'               => 'Rose::HTML::Form',
   'repeatable form'    => 'Rose::HTML::Form::Repeatable',
 
@@ -346,6 +353,24 @@ sub has_child
   }
 
   return 0;
+}
+
+my %Loaded; # Lame, but trying to be fast here
+
+sub object_type_class_loaded
+{
+  my($class) = shift;
+
+  my $type_class = $class->object_type_class(@_);
+
+  unless($Loaded{$type_class})
+  {
+    eval "use $type_class";
+    Carp::croak "Could not load class '$type_class' - $@"  if($@);
+    $Loaded{$type_class}++;
+  }
+  
+  return $type_class;
 }
 
 sub init_html_error_formatter  { }
