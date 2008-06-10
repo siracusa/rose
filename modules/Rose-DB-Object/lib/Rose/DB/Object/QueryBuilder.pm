@@ -1536,7 +1536,7 @@ A column name and a table name joined by a dot.  This is the "fully qualified" c
 
 =item C<tN.column>
 
-A column name and a table alias joined by a dot.  The table alias is in the form "tN", where "N" is a number starting from 1.  See the documentation for C<tables> parameter above to learn how table aliases are assigned to tables.
+A column name and a table alias joined by a dot.  The table alias is in the form "tN", where "N" is a number starting from 1.  See the documentation for C<tables> parameter below to learn how table aliases are assigned to tables.
 
 =item Any of the above prefixed with "!"
 
