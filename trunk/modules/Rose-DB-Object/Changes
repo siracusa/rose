@@ -1,10 +1,11 @@
-0.770_02 (06.09.2008) - John Siracusa <siracusa@gmail.com>
+0.770_03 (06.16.2008) - John Siracusa <siracusa@gmail.com>
 
     * Made "where" an alias for the Manager's "query" parameter.
       (Requested by Ask Bjørn Hansen)
+    * Documented restrictions on the Manager's "select" parameter.
     * TODO: propagate all errors other than a missing pk value error when
       speculatively loading a related object.
-    
+
 0.770 (05.28.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added "iterator" method type, similar to "find", to OneToMany

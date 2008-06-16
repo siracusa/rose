@@ -4323,6 +4323,8 @@ If selecting sub-objects via the C<with_objects> or C<require_objects> parameter
 
 Be warned that you should provide some way to determine which column or method and which class an item belongs to: a tN prefix, a column name, or at the very least an "... AS ..." alias clause.
 
+If any C<with_objects> or C<require_objects> arguments are included in this call, the C<select> list must include at least the primary key column(s) from each table that contributes to the named relationships.
+
 This parameter conflicts with the C<fetch_only> parameter.  A fatal error will occur if both are used in the same call.
 
 If this parameter is omitted, then all columns from all participating tables are selected (optionally modified by the C<nonlazy> parameter).
