@@ -60,10 +60,10 @@ is($error->id, CUSTOM_ERROR, 'errors 4');
 #
 
 my $id = $o->localizer->add_localized_message(name => 'MY_MSG', text => 'my message');
-is($id, 16_000, 'add_localized_message 1');
+is($id, 100_002, 'add_localized_message 1');
 
 $id = $o->localizer->add_localized_error(name => 'MY_ERROR');
-is($id, 16_000, 'add_localized_error 1');
+is($id, 100_003, 'add_localized_error 1');
 
 $id = $o->localizer->add_localized_message(name => 'BUMMER', text => 'a bummer');
 $o->localizer->add_localized_error(name => 'BUMMER', id => $id);

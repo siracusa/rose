@@ -75,7 +75,7 @@ sub locale
       return $invocant->default_locale(shift);
     }
 
-    return $invocant->localizer->locale || $invocant->localizer->default_locale;
+    return $invocant->localizer->locale || $invocant->localizer->default_locale || $invocant->default_locale;
   }
 }
 
