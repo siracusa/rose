@@ -4,77 +4,7 @@ use strict;
 
 use Carp;
 
-our $VERSION = '0.554_02';
-
-use Rose::Class::MakeMethods::Generic
-(
-  inherited_hash =>
-  [
-    'class' =>
-    {
-      plural_name => 'classes',
-      keys_method => 'class_names',
-    },
-  ],
-  
-);
-
-#Rose::HTML::Objects->class_info
-#(
-#   'Rose::HTML::Anchor' => { },
-#   'Rose::HTML::Form::Field::Checkbox' => { },
-#   'Rose::HTML::Form::Field::CheckboxGroup' => { },
-#   'Rose::HTML::Form::Field::Compound' => { },
-#   'Rose::HTML::Form::Field::Date' => { },
-#   'Rose::HTML::Form::Field::DateTime::EndDate' => { },
-#   'Rose::HTML::Form::Field::DateTime::Range' => { },
-#   'Rose::HTML::Form::Field::DateTime::Split::MDYHMS' => { },
-#   'Rose::HTML::Form::Field::DateTime::Split::MonthDayYear' => { },
-#   'Rose::HTML::Form::Field::DateTime::Split' => { },
-#   'Rose::HTML::Form::Field::DateTime::StartDate' => { },
-#   'Rose::HTML::Form::Field::DateTime' => { },
-#   'Rose::HTML::Form::Field::Email' => { },
-#   'Rose::HTML::Form::Field::File' => { },
-#   'Rose::HTML::Form::Field::Group::OnOff' => { },
-#   'Rose::HTML::Form::Field::Group' => { },
-#   'Rose::HTML::Form::Field::Hidden' => { },
-#   'Rose::HTML::Form::Field::Input' => { },
-#   'Rose::HTML::Form::Field::Integer' => { },
-#   'Rose::HTML::Form::Field::Numeric' => { },
-#   'Rose::HTML::Form::Field::Option' => { },
-#   'Rose::HTML::Form::Field::OptionGroup' => { },
-#   'Rose::HTML::Form::Field::Password' => { },
-#   'Rose::HTML::Form::Field::PhoneNumber::US::Split' => { },
-#   'Rose::HTML::Form::Field::PhoneNumber::US' => { },
-#   'Rose::HTML::Form::Field::PopUpMenu' => { },
-#   'Rose::HTML::Form::Field::RadioButton' => { },
-#   'Rose::HTML::Form::Field::RadioButtonGroup' => { },
-#   'Rose::HTML::Form::Field::Reset' => { },
-#   'Rose::HTML::Form::Field::SelectBox' => { },
-#   'Rose::HTML::Form::Field::Set' => { },
-#   'Rose::HTML::Form::Field::Submit' => { },
-#   'Rose::HTML::Form::Field::Text' => { },
-#   'Rose::HTML::Form::Field::TextArea' => { },
-#   'Rose::HTML::Form::Field::Time::Hours' => { },
-#   'Rose::HTML::Form::Field::Time::Minutes' => { },
-#   'Rose::HTML::Form::Field::Time::Seconds' => { },
-#   'Rose::HTML::Form::Field::Time::Split::HourMinuteSecond' => { },
-#   'Rose::HTML::Form::Field::Time::Split' => { },
-#   'Rose::HTML::Form::Field::Time' => { },
-#   'Rose::HTML::Form::Field' => { },
-#   'Rose::HTML::Form::Repeatable' => { },
-#   'Rose::HTML::Form' => { },
-#   'Rose::HTML::Image' => { },
-#   'Rose::HTML::Label' => { },
-#   'Rose::HTML::Link' => { },
-#   'Rose::HTML::Object::Errors' => { },
-#   'Rose::HTML::Object::Message::Localizer' => { },
-#   'Rose::HTML::Object::Messages' => { },
-#  'Rose::HTML::Object' => { },
-#   'Rose::HTML::Objects' => { },
-#   'Rose::HTML::Script' => { },
-#   'Rose::HTML::Text' => { },
-#);
+our $VERSION = '0.554_03';
 
 sub private_library_perl
 {
@@ -82,6 +12,7 @@ sub private_library_perl
 
   my $prefix = $args{'prefix'} or croak "Missing 'prefix' parameter";
   my $trim_prefix = $args{'trim_prefix'} || 'Rose::';
+  my $in_memory = $args{'in_memory'} || 0;
 
   my $prefix_regex = qr(^$trim_prefix);
 
@@ -94,29 +25,14 @@ sub private_library_perl
 
   my $class_filter = $args{'class_filter'};
 
-  #
-  # Rose::HTML::Object::Localized subclass
-  #
-
-  require Rose::HTML::Object::Localized;
-
-  my $package = $rename->('Rose::HTML::Object::Localized');
-
-  my(%perl, %isa);
-
-  $isa{$package} = 'Rose::HTML::Object::Localized';
-
-  $perl{$package} = $class->subclass_perl(package => $package, isa => $isa{$package});
-
-  #
-  # Rose::HTML::Object subclass
-  #
+  my(%perl, %isa, @packages);
 
   require Rose::HTML::Object;
 
-  my %object_type;
-
   my $base_object_type = Rose::HTML::Object->object_type_classes;
+  my %base_type_object = reverse %$base_object_type;
+
+  my %object_type;
 
   my $max_type_len = 0;
 
@@ -126,55 +42,297 @@ sub private_library_perl
     $max_type_len = length($type)  if(length($type) > $max_type_len);
   }
 
-  $package = $rename->('Rose::HTML::Object');
-
-  $perl{$package} =<<"EOF";
-package $package;
-
-use strict;
-
-use base 'Rose::HTML::Object';
-
+  my $object_map_perl =<<"EOF";
 __PACKAGE__->object_type_classes
 (
 EOF
 
-  while(my($type, $class) = each(%object_type))
+  foreach my $type (sort keys %object_type)
   {
-    $perl{$package} .= sprintf("  %-*s => '$class',\n", $max_type_len + 2, qq('$type'));
+    my $class = $object_type{$type};
+    $object_map_perl .= sprintf("  %-*s => '$class',\n", $max_type_len + 2, qq('$type'));
   }
-  
-  $perl{$package} .=<<"EOF";
-);
 
-1;
+  $object_map_perl .=<<"EOF";
+);
+EOF
+  
+  my $messages_package  = $rename->('Rose::HTML::Object::Messages');
+  my $errors_package    = $rename->('Rose::HTML::Object::Errors');
+  my $localizer_package = $rename->('Rose::HTML::Object::Message::Localizer');
+  my $custom_package    = $rename->('Rose::HTML::Object::Custom');
+
+  my $load_message_and_errors_perl = '';
+  
+  unless($in_memory)
+  {
+    $load_message_and_errors_perl=<<"EOF";
+use $errors_package();
+use $messages_package();
+EOF
+  }
+
+  my %code =
+  (
+    $messages_package =>
+    {
+      filter => sub
+      {
+        s/^(use base.+)/use Rose::HTML::Object::Messages qw(:all);\n$1/m;
+      },
+
+      code =><<"EOF",
+##
+## Define your new message ids below
+##
+
+# Field labels
+
+#use constant FIELD_LABEL_LOGIN_NAME         => 100_000;
+#use constant FIELD_LABEL_PASSWORD           => 100_001;
+#...
+
+# Field error messages
+
+#use constant FIELD_ERROR_PASSWORD_TOO_SHORT => 101_000;
+#use constant FIELD_ERROR_USERNAME_INVALID   => 101_001;
+#...
+
+# Generic messages
+
+#use constant LOGIN_NO_SUCH_USER             => 200_000;
+#use constant LOGIN_USER_EXISTS_ERROR        => 200_001;
+#...
+
+BEGIN { __PACKAGE__->add_messages }
+EOF
+    },
+
+    $errors_package =>
+    {
+      filter => sub
+      {
+        s/^(use base.+)/use Rose::HTML::Object::Errors qw(:all);\n$1/m;
+      },
+
+      code =><<"EOF",
+##
+## Define your new error ids below
+##
+
+# Field errors
+
+#use constant FIELD_ERROR_PASSWORD_TOO_SHORT => 101_000;
+#use constant FIELD_ERROR_USERNAME_INVALID   => 101_001;
+#...
+
+# Generic errors
+
+#use constant LOGIN_NO_SUCH_USER             => 200_000;
+#use constant LOGIN_USER_EXISTS_ERROR        => 200_001;
+#...
+
+BEGIN { __PACKAGE__->add_errors }
+EOF
+    },
+
+    $localizer_package =><<"EOF",
+$load_message_and_errors_perl
+sub init_messages_class { '$messages_package' }
+sub init_errors_class   { '$errors_package' }
 EOF
 
-  while(my($pkg, $perl) = each(%perl))
+    $custom_package =><<"EOF",
+use Rose::HTML::Object qw(:customize);
+@{[ $in_memory ? '' : "\nuse $localizer_package;\n" ]}
+__PACKAGE__->localizer($localizer_package->new);
+
+$object_map_perl
+EOF
+
+#     $rename->('Rose::HTML::Object') =>=<<"EOF",
+# use $errors_package;
+# use $messages_package;
+# EOF
+  );
+
+  #
+  # Rose::HTML::Object::Errors
+  # Rose::HTML::Object::Messages
+  # Rose::HTML::Object::Message::Localizer
+  #
+
+  require Rose::HTML::Object::Errors;
+  require Rose::HTML::Object::Messages;
+  require Rose::HTML::Object::Message::Localizer;
+  
+  foreach my $base_class (qw(Rose::HTML::Object::Errors
+                             Rose::HTML::Object::Messages
+                             Rose::HTML::Object::Message::Localizer))
   {
-    print $perl, "\n\n";
+    eval "require $base_class";
+    croak "Could not load '$base_class' - $@"  if($@);
+
+    my $package = $rename->($base_class);
+  
+    push(@packages, $package);
+  
+    $isa{$package} = $base_class;
+
+    $perl{$package} = $class->subclass_perl(package      => $package, 
+                                            isa          => $isa{$package},
+                                            in_memory    => 0,
+                                            default_code => \%code,
+                                            code         => $args{'code'});
   }
 
-  # Now make all the other classes
+  #
+  # Rose::HTML::Object::Customized
+  #
+
+  $perl{$custom_package} =
+    $class->subclass_perl(package      => $custom_package, 
+                          in_memory    => $in_memory,
+                          default_code => \%code,
+                          code         => $args{'code'});
+                                            
+  push(@packages, $custom_package);
+
+  #
+  # All other classes
+  #
+
+  foreach my $base_class (sort values %$base_object_type)
+  {
+    next  if($class_filter && !$class_filter->($base_class));
+
+    if($in_memory)
+    {
+      eval "require $base_class";
+      croak "Could not load '$base_class' - $@"  if($@);
+    }
+
+    my $package = $rename->($base_class);
+
+    push(@packages, $package);
+
+    unless($isa{$package})
+    {
+      $isa{$package} = 
+      [
+        $custom_package,
+        $base_type_object{$package} ? $rename->($base_class) : $base_class,
+      ];
+    }
+
+    $perl{$package} = $class->subclass_perl(package   => $package, 
+                                            isa       => $isa{$package},
+                                            in_memory => $in_memory);
+  }
+
+  return wantarray ? (\@packages, \%perl) : \%perl;
 }
+
+sub isa_perl
+{
+  my($class, %args) = @_;
+  
+  my $isa  = $args{'isa'} or Carp::confess "Missing 'isa' parameter";
+  $isa = [ $isa ]  unless(ref $isa eq 'ARRAY');
+
+  if(0 && $args{'in_memory'}) # XXX: disabled for now
+  {
+    return 'our @ISA = qw(' . join(' ', @$isa) . ");";
+  }
+  else
+  {
+    return 'use base qw(' . join(' ', @$isa) . ");";
+  }
+}
+
+our $Perl;
 
 sub subclass_perl
 {
   my($class, %args) = @_;
-
+ 
   my $package = $args{'package'} or Carp::confess "Missing 'package' parameter";
-  my $isa     = $args{'isa'} or Carp::confess "Missing 'package' parameter";
+  my $isa     = $args{'isa'};
   $isa = [ $isa ]  unless(ref $isa eq 'ARRAY');
 
-  return<<"EOF";
+  my($filter, $code, @code);
+
+  foreach my $param (qw(default_code code))
+  {
+    my $arg = $args{$param} || '';
+
+    if(ref $arg eq 'HASH')
+    {
+      $arg = $arg->{$package};
+    }
+    
+    no warnings 'uninitialized';
+    if(ref $arg eq 'HASH')
+    {
+      if(my $existing_filter = $filter)
+      {
+        my $new_filter = $arg->{'filter'};
+        $filter = sub 
+        {
+          $existing_filter->(@_); 
+          $new_filter->(@_);
+        };
+      }
+      else
+      {
+        $filter = $arg->{'filter'};
+      }
+
+      $arg = $arg->{'code'};
+    }
+
+    if(ref $arg eq 'CODE')
+    {
+      $code = $arg->($package, $isa);
+    }
+    else
+    {
+      $code = $arg;
+    }
+
+    if($code)
+    {
+      for($code)
+      {
+        s/^\n*/\n/;
+        s/\n*\z/\n/;
+      }
+    }
+    else
+    {
+      $code = '';
+    }
+    
+    push(@code, $code)  if($code);
+  }
+
+  local $Perl;
+
+  $Perl=<<"EOF";
 package $package;
 
 use strict;
-
-use base qw(@{[ join(' ', @$isa) ]});
-
+@{[ $args{'isa'} ? "\n" . $class->isa_perl(%args) . "\n" : '' ]}@{[ join('', @code) ]}
 1;
 EOF
+
+  if($filter)
+  {
+    local *_ = *Perl;
+    $filter->(\$Perl);
+  }
+  
+  return $Perl;
 }
 
 1;

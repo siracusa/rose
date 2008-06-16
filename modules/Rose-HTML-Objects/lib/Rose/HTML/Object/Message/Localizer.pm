@@ -39,9 +39,9 @@ use Rose::Object::MakeMethods::Generic
 # Class data
 #
 
-use Rose::Class::MakeMethods::Set
+use Rose::Class::MakeMethods::Generic
 (
-  inheritable_set => [ 'default_locale_cascade' ],
+  inheritable_hash => 'default_locale_cascade',
 );
 
 use Rose::Class::MakeMethods::Generic
@@ -55,13 +55,7 @@ use Rose::Class::MakeMethods::Generic
 );
 
 __PACKAGE__->default_locale('en');
-__PACKAGE__->default_locale_cascades({ 'default' => [ 'en' ] });
-
-#
-# Class methods
-#
-
-sub default_locale_cascade { shift->default_locale_cascade_value(@_) }
+__PACKAGE__->default_locale_cascade('default' => [ 'en' ]);
 
 #
 # Object methods
@@ -73,7 +67,7 @@ sub init_locale_cascade
 {
   my($self) = shift;
   my $class = ref($self) || $self;
-  return $class->default_locale_cascades_hash;
+  return $class->default_locale_cascade;
 }
 
 sub locale_cascade
@@ -148,14 +142,14 @@ sub localize_message
 
   my $id = $msg->id;
 
-  my $text = $self->get_localized_message($id, $locale, $calling_class);
+  my $text = $self->get_localized_message_text(id => $id, locale => $locale, from_class => $calling_class);
 
   # Look for messages in parent fields
   while(!defined $text && $child && $child->can('parent_field'))
   {
     if($child = $child->parent_field)
     {
-      $text = $self->get_localized_message($id, $locale, ref($child));
+      $text = $self->get_localized_message_text(id => $id, locale => $locale, from_class => ref($child));
     }
   }
 
@@ -166,7 +160,7 @@ sub localize_message
 
   foreach my $other_locale (@$cascade)
   {
-    $text = $self->get_localized_message($id, $other_locale, $calling_class);
+    $text = $self->get_localized_message_text(id => $id, locale => $other_locale, from_class => $calling_class);
     return $self->process_placeholders($text, $args) if(defined $text);  
   }
 
@@ -273,7 +267,9 @@ sub locales_for_message_name
                      [ sort keys %{$msgs->{$name}} ];
 }
 
-sub add_localized_message_text
+sub add_localized_message_text { shift->set_localized_message_text(@_) }
+
+sub set_localized_message_text
 {
   my($self, %args) = @_;
 
@@ -325,8 +321,6 @@ sub add_localized_message_text
 
   return $id;
 }
-
-*set_localized_message_text = \&add_localized_message_text;
 
 sub import_message_ids
 {
@@ -406,32 +400,36 @@ sub add_localized_message
   return $id;
 }
 
-use constant NEW_MESSAGE_ID_OFFSET => 16_000;
+use constant NEW_ID_OFFSET => 100_000;
+
+our $Last_Generated_Id = NEW_ID_OFFSET;
 
 sub generate_message_id
 {
   my($self) = shift;
 
   my $messages_class = $self->messages_class;
+  my $errors_class = $self->errors_class;
 
-  my $new_id = NEW_MESSAGE_ID_OFFSET;
-  $new_id++  while($messages_class->message_id_exists($new_id));
+  my $new_id = $Last_Generated_Id;
+  $new_id++  while($messages_class->message_id_exists($new_id) ||
+                   $errors_class->error_id_exists($new_id));
 
-  return $new_id;
+  return $Last_Generated_Id = $new_id;
 }
-
-use constant NEW_ERROR_ID_OFFSET => 16_000;
 
 sub generate_error_id
 {
   my($self) = shift;
 
   my $errors_class = $self->errors_class;
+  my $messages_class = $self->messages_class;
 
-  my $new_id = NEW_ERROR_ID_OFFSET;
-  $new_id++  while($errors_class->error_id_exists($new_id));
+  my $new_id = $Last_Generated_Id;
+  $new_id++  while($errors_class->error_id_exists($new_id) || 
+                   $messages_class->message_id_exists($new_id));
 
-  return $new_id;
+  return $Last_Generated_Id = $new_id;
 }
 
 sub add_localized_error
@@ -467,15 +465,18 @@ sub dump_messages
   return Data::Dumper::Dumper($msgs);
 }
 
-sub get_localized_message
+sub get_localized_message_text
 {
-  my($self, $id_or_name, $locale, $load_from_class) = @_;
+  my($self, %args) = @_;
 
-  $load_from_class ||= (caller)[0];
+  my $id         = $args{'id'};
+  my $name       = $args{'name'};
+  my $locale     = $args{'locale'};
+  my $from_class = $args{'from_class'}; 
 
-  my $name = $self->get_message_name($id_or_name) || $id_or_name;
+  $from_class ||= (caller)[0];
 
-  $locale = lc $locale;
+  $name ||= $self->get_message_name($id);
 
   my $msgs = $self->localized_messages_hash;
 
@@ -484,8 +485,12 @@ sub get_localized_message
     return $msgs->{$name}{$locale};
   }
 
-  my $msg = $self->_get_localized_message($name, $locale, $load_from_class);
-  return $msg  if(defined $msg);
+  $self->load_localized_message($name, $locale, $from_class);
+
+  if(exists $msgs->{$name} && exists $msgs->{$name}{$locale})
+  {
+    return $msgs->{$name}{$locale};
+  }
 
   return undef;
 }
@@ -499,32 +504,32 @@ my $End_Messages = qr(^=\w|^\s*__END__);
 
 my %Data_Pos;
 
-sub _get_localized_message
+sub load_localized_message
 {
-  my($self, $name, $locale, $load_from_class) = @_;
+  my($self, $name, $locale, $from_class) = @_;
 
-  $load_from_class ||= $self->messages_class;
+  $from_class ||= $self->messages_class;
 
   if($self->localized_message_exists($name, $locale))
   {
-    return $self->get_localized_message($name, $locale);
+    return $self->get_localized_message_text(name => $name, locale => $locale);
   }
 
   no strict 'refs';
-  my $fh = \*{"${load_from_class}::DATA"};
+  my $fh = \*{"${from_class}::DATA"};
 
   if(fileno($fh))
   {
     local $/ = "\n";
 
-    if($Data_Pos{$load_from_class})
+    if($Data_Pos{$from_class})
     {
       # Rewind to the start of the __DATA__ section
-      seek($fh, $Data_Pos{$load_from_class}, 0);
+      seek($fh, $Data_Pos{$from_class}, 0);
     }
     else
     {
-      $Data_Pos{$load_from_class} = tell($fh);
+      $Data_Pos{$from_class} = tell($fh);
     }
 
     my $text = $self->load_messages_from_fh(fh      => $fh, 
@@ -535,7 +540,7 @@ sub _get_localized_message
 
   no strict 'refs';
 
-  my @classes = @{"${load_from_class}::ISA"};
+  my @classes = @{"${from_class}::ISA"};
   my %seen;
 
   while(@classes)
@@ -543,7 +548,7 @@ sub _get_localized_message
     my $class = pop(@classes);
     next  if($seen{$class}++);
     #$Debug && warn "$self SEARCHING $class FOR $name ($locale)\n";
-    my $msg = $self->_get_localized_message($name, $locale, $class);
+    my $msg = $self->load_localized_message($name, $locale, $class);
     return $msg  if(defined $msg);
     push(@classes, grep { !$seen{$_} } @{"${class}::ISA"});
   }
@@ -603,28 +608,28 @@ sub load_all_messages
 {
   my($class) = shift;
 
-  my $load_from_class = @_ ? $_[0] : (caller)[0];
+  my $from_class = @_ ? $_[0] : (caller)[0];
 
   no strict 'refs';
-  my $fh = \*{"${load_from_class}::DATA"};
+  my $fh = \*{"${from_class}::DATA"};
 
   if(fileno($fh))
   {
     local $/ = "\n";
 
-    if($Data_Pos{$load_from_class})
+    if($Data_Pos{$from_class})
     {
       # Rewind to the start of the __DATA__ section
-      seek($fh, $Data_Pos{$load_from_class}, 0);
+      seek($fh, $Data_Pos{$from_class}, 0);
     }
     else
     {
-      $Data_Pos{$load_from_class} = tell($fh);
+      $Data_Pos{$from_class} = tell($fh);
     }
 
     my $locales = $class->auto_load_locales;
 
-    $Debug && warn "$class - Loading messages from DATA section of $load_from_class\n";
+    $Debug && warn "$class - Loading messages from DATA section of $from_class\n";
     $class->load_messages_from_fh(fh => $fh, locales => $locales);
   }
 }
@@ -695,7 +700,7 @@ sub load_messages_from_fh
           s/\A(\s*\n)+//;
           s/(\s*\n)+\z//;
         }
-        $self->add_localized_message_text(name   => $in_msg,
+        $self->set_localized_message_text(name   => $in_msg,
                                           locale => $in_locale,
                                           text   => $text);
       }
@@ -724,7 +729,7 @@ sub load_messages_from_fh
           s/\\([^\[])/$1/g;
         }
 
-        $self->add_localized_message_text(name   => $name,
+        $self->set_localized_message_text(name   => $name,
                                           locale => $in_locale,
                                           text   => $text);
         push(@text, $text)  if($msg_names);

@@ -26,7 +26,7 @@ use Rose::Class::MakeMethods::Generic
   ],
 );
 
-__PACKAGE__->localizer(Rose::HTML::Object::Message::Localizer->new);
+__PACKAGE__->default_localizer(Rose::HTML::Object::Message::Localizer->new);
 
 __PACKAGE__->autoload_html_attr_methods(1);
 
@@ -365,8 +365,13 @@ sub object_type_class_loaded
 
   unless($Loaded{$type_class})
   {
-    eval "use $type_class";
-    Carp::croak "Could not load class '$type_class' - $@"  if($@);
+    no strict 'refs';
+    unless(@{$type_class . '::ISA'})
+    {
+      eval "use $type_class";
+      Carp::croak "Could not load class '$type_class' - $@"  if($@);
+    }
+
     $Loaded{$type_class}++;
   }
   
@@ -839,6 +844,27 @@ sub create_html_attr_methods
   return $count;
 }
 
+sub import
+{
+  my($class) = shift;
+  
+  foreach my $arg (@_)
+  {
+    if($arg eq ':customize')
+    {
+      $class->import_methods(
+        { target_class => (caller)[0] },
+        qw(object_type_class_exists object_type_class_keys 
+           delete_object_type_class object_type_classes 
+           clear_object_type_classes object_type_class 
+           inherit_object_type_classs object_type_classes_cache 
+           inherit_object_type_class add_object_type_classs 
+           delete_object_type_classes add_object_type_class
+           localizer locale default_localizer default_locale));
+    }
+  }
+}
+
 # XXX: This is undocumented for now...
 #
 # =item B<import_methods NAME1 [, NAME2, ...]>
@@ -877,7 +903,9 @@ sub import_methods
 {
   my($this_class) = shift;
 
-  my $target_class = (caller)[0];
+  my $options = ref $_[0] && ref $_[0] eq 'HASH' ? shift : {};
+
+  my $target_class = $options->{'target_class'} || (caller)[0];
 
   my(@search_classes, @parents);
 
