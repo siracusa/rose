@@ -1,10 +1,9 @@
-0.770_03 (06.16.2008) - John Siracusa <siracusa@gmail.com>
+0.770_04 (06.23.2008) - John Siracusa <siracusa@gmail.com>
 
     * Made "where" an alias for the Manager's "query" parameter.
       (Requested by Ask Bjørn Hansen)
     * Documented restrictions on the Manager's "select" parameter.
-    * TODO: propagate all errors other than a missing pk value error when
-      speculatively loading a related object.
+    * TODO: traversal helper.
 
 0.770 (05.28.2008) - John Siracusa <siracusa@gmail.com>
 

@@ -9,6 +9,7 @@ WriteMakefile(NAME         => 'Rose::DB::Object',
               PREREQ_PM =>
               {
                 'Cwd'                   => 0,
+                'Data::Dumper'          => '2.121', 
                 'File::Path'            => 0,
                 'File::Spec'            => 0,
                 'DBI'                   => '1.40',
@@ -22,7 +23,7 @@ WriteMakefile(NAME         => 'Rose::DB::Object',
                 'Clone'                 => '0.20',
                 #'Scalar::Util::Clone'  => '0.04',
                 'Rose::DateTime::Util'  => '0.532',
-                'Rose::Object'          => '0.84',
+                'Rose::Object'          => '0.852',
                 'Rose::DB'              => '0.742',
               },
               clean => { FILES => "t/*.db" });

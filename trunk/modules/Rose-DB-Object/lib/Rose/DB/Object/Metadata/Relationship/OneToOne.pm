@@ -5,9 +5,11 @@ use strict;
 use Rose::DB::Object::Metadata::Relationship::ManyToOne;
 our @ISA = qw(Rose::DB::Object::Metadata::Relationship::ManyToOne);
 
-our $VERSION = '0.761';
+our $VERSION = '0.771';
 
 sub type { 'one to one' }
+
+sub is_singular { 1 }
 
 sub requires_preexisting_parent_object
 {

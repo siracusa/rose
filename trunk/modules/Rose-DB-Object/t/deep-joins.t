@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1627;
+use Test::More tests => 1637;
 
 BEGIN 
 {
@@ -11,11 +11,16 @@ BEGIN
   use_ok('Rose::DB::Object::Helpers');
 }
 
+use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
+
 our %Have;
 
 #
 # Tests
 #
+
+use Rose::DB::Object::Constants qw(STATE_SAVING);
 
 #$Rose::DB::Object::Manager::Debug = 1;
 
@@ -34,7 +39,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 {
   SKIP:
   {
-    skip("$db_type tests", 325)  unless($Have{$db_type});
+    skip("$db_type tests", 327)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -60,6 +65,8 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 
   my $product_class = $class_prefix  . '::Product';
   my $manager_class = $product_class . '::Manager';
+
+  Rose::DB::Object::Helpers->import(-target_class => $product_class, qw(as_tree new_from_tree init_with_tree));
 
   my $p1 = 
     $product_class->new(
@@ -130,6 +137,23 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
       ]);
 
   $p2->save;
+
+  my $tree      = $p2->as_tree;
+  my $tree_dump = Dumper($tree);
+  my $from_tree = $product_class->new_from_tree($tree);
+
+  is($tree_dump, Dumper($from_tree->as_tree), 'as_tree -> new_from_tree -> as_tree 1');
+  is(Dumper($tree), Dumper($from_tree->as_tree), 'as_tree -> new_from_tree -> as_tree 2');
+
+  #require YAML::Syck;
+  #print YAML::Syck::Dump($tree);
+  #
+  #print Dumper($tree);
+  #print "########################\n";
+  #$DB::single = 1;
+  #print Dumper($from_tree->as_tree);
+  #print YAML::Syck::Dump($from_tree->as_tree);
+  #exit;
 
   my $p3 = 
     $product_class->new(

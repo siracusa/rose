@@ -10,7 +10,7 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.764';
+our $VERSION = '0.771';
 
 __PACKAGE__->default_auto_method_types(qw(get_set_on_save delete_on_save));
 
@@ -85,6 +85,8 @@ __PACKAGE__->method_maker_info
 );
 
 sub type { 'many to one' }
+
+sub is_singular { 1 }
 
 sub share_db    { shift->_fk_or_self(share_db => @_)     }
 sub key_column  { shift->_fk_or_self(key_column => @_)   }
