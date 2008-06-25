@@ -12,7 +12,7 @@ our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
 use Rose::DB::Object::Exception;
 
-our $VERSION = '0.764';
+our $VERSION = '0.771';
 
 our $Debug = 0;
 
@@ -49,6 +49,8 @@ use Rose::Object::MakeMethods::Generic
     _key_columns => { interface => 'get_set_all' },
   ],
 );
+
+sub is_singular { 1 }
 
 sub key_column
 {

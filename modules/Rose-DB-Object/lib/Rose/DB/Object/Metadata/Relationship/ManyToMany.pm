@@ -14,7 +14,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 use Rose::DB::Object::Constants qw(PRIVATE_PREFIX);
 
-our $VERSION = '0.770';
+our $VERSION = '0.771';
 
 our $Debug = 0;
 
@@ -116,6 +116,8 @@ __PACKAGE__->method_maker_info
 );
 
 sub type { 'many to many' }
+
+sub is_singular { 0 }
 
 use constant MAP_RECORD_ATTR   => PRIVATE_PREFIX . '_map_record';
 use constant MAP_RECORD_METHOD => 'map_record';

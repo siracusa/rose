@@ -12,7 +12,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 our $Debug = 0;
 
-our $VERSION = '0.770';
+our $VERSION = '0.771';
 
 __PACKAGE__->default_auto_method_types(qw(find get_set_on_save add_on_save));
 
@@ -104,6 +104,8 @@ __PACKAGE__->method_maker_info
 );
 
 sub type { 'one to many' }
+
+sub is_singular { 0 }
 
 *map_column = \&key_column;
 *column_map = \&key_columns;

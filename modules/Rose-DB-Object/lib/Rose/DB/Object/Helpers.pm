@@ -9,7 +9,7 @@ our @ISA = qw(Rose::Object::MixIn);
 
 use Carp;
 
-our $VERSION = '0.7671';
+our $VERSION = '0.771';
 
 __PACKAGE__->export_tags
 (
@@ -20,6 +20,7 @@ __PACKAGE__->export_tags
        column_value_pairs column_accessor_value_pairs 
        column_mutator_value_pairs 
        column_values_as_yaml column_values_as_json
+       as_tree init_with_tree new_from_tree
        init_with_yaml init_with_json init_with_column_value_pairs
        has_loaded_related strip forget_related) 
   ],
@@ -31,6 +32,7 @@ __PACKAGE__->export_tags
        insert_or_update_on_duplicate_key load_speculative
        column_value_pairs column_accessor_value_pairs 
        column_mutator_value_pairs init_with_column_value_pairs
+       as_tree init_with_tree new_from_tree
        has_loaded_related strip forget_related)
   ],
 );
@@ -194,10 +196,10 @@ sub init_with_column_value_pairs
 
   local $self->{STATE_LOADING()} = 1;
 
-  while(my($column, $value) = each(%$hash))
+  while(my($name, $value) = each(%$hash))
   {
-    next  unless(length $column);
-    my $method = $meta->column($column)->mutator_method_name;
+    next  unless(length $name);
+    my $method = $meta->column($name)->mutator_method_name;
     $self->$method($value);
   }
 
@@ -473,6 +475,291 @@ sub strip
 
   return $self;
 }
+
+# XXX: A value that is unlikely to exist in a primary key column value
+use constant PK_JOIN => "\0\2,\3\0";
+
+sub primary_key_as_string
+{
+  my($self, $joiner) = @_;
+  return join($joiner || PK_JOIN, grep { defined } map { $self->$_() } $self->meta->primary_key_column_accessor_names);
+}
+
+sub traverse_depth_first
+{
+  my($self) = shift;
+  
+  my($context, %process, $filter, $prune);
+
+  my $visited    = {};
+  my $force_load = 0;
+
+  if(@_ == 1)
+  {
+    $process{'object'} = shift;
+  }
+  else
+  {
+    my %args = @_;
+    $process{'object'}       = $args{'process'}{'object'};
+    $process{'relationship'} = $args{'process'}{'relationship'};
+    $force_load = $args{'force_load'} || 0;
+    $context    = $args{'context'};
+    $filter     = $args{'filter'};
+    $prune      = $args{'prune'};
+    $visited = undef  if($args{'allow_loops'});
+  }
+
+  _traverse_depth_first($self, $context ||= {}, \%process, $filter, $prune, 0, undef, undef, undef, $visited, $force_load);
+  
+  return $context;
+}
+
+sub _traverse_depth_first
+{
+  my($self, $context, $process, $filter, $prune, $depth, $max_depth, $parent, $rel_meta, $visited, $force_load) = @_;
+
+  if($visited && $visited->{ref($self),Rose::DB::Object::Helpers::primary_key_as_string($self)}++)
+  {
+    return;
+  }
+
+  if($process->{'object'})
+  {
+    unless($filter && !$filter->($self, $rel_meta, $parent))
+    {
+      $context = $process->{'object'}->($self, $context, $parent, $rel_meta, $depth);
+    }
+  }
+
+  return  if(($max_depth && $depth + 1 > $max_depth) || ($prune && $prune->($self, $rel_meta, $parent)));
+
+  REL: foreach my $rel ($self->meta->relationships)
+  {
+    if($force_load || (my $objs = $rel->object_has_related_objects($self)))
+    {
+      unless($objs)
+      {
+        my $method = $rel->method_name('get_set_on_save') || 
+                     $rel->method_name('get_set_now') ||
+                     $rel->method_name('get_set') ||
+                     next REL;
+
+        $objs = $self->$method() || next REL;
+      }
+     
+      my $c = $process->{'relationship'}->($self, $context, $rel)  if($process->{'relationship'});
+
+      foreach my $obj (@$objs)
+      {
+        _traverse_depth_first($obj, $c, $process, $filter, $prune, $depth + 1, $max_depth, $self, $rel, $visited, $force_load);
+      }
+    }
+  }
+}
+
+sub as_tree
+{
+  my($self) = shift;
+  
+  my %args = @_;
+
+  my $deflate = $args{'deflate'};
+
+  my %tree;
+
+  Rose::DB::Object::Helpers::traverse_depth_first($self, 
+    context => \%tree,
+    process => 
+    {
+      object => sub
+      {
+        my($self, $context, $parent, $relationship, $depth) = @_;
+    
+        local $self->{STATE_SAVING()} = 1  if($deflate);
+      
+        my $cols = Rose::DB::Object::Helpers::column_value_pairs($self);
+    
+        if(ref $context eq 'ARRAY')
+        {
+          push(@$context, $cols);
+          return $cols;
+        }
+        else
+        {
+          @$context{keys %$cols} = values %$cols;
+          return $context;
+        }
+      },
+      
+      relationship => sub
+      {
+        my($self, $context, $relationship) = @_;
+
+        my $name = $relationship->name;
+
+        # Croak on name conflicts with columns
+        if($self->meta->column($name))
+        {
+          croak "$self: relationship '", $relationship->name, 
+                "' conflicts with column of the same name";
+        }
+
+        if($relationship->is_singular)
+        {
+          return $context->{$name} = {};
+        }
+    
+        return $context->{$name} = [];
+      },
+    },
+    @_);
+
+  return \%tree;
+}
+
+# XXX: This version requires all relationship and column mutators to have 
+# XXX: the same names as the relationships and columnsthemselves.
+# sub init_with_tree { shift->init(@_) }
+
+# XXX: This version requires all relationship mutators to have the same 
+# XXX: names as the relationships themselves.
+# sub init_with_tree
+# {
+#   my($self) = shift;
+# 
+#   my $meta = $self->meta;
+# 
+#   while(my($name, $value) = each(%{@_ == 1 ? $_[0] : {@_}}))
+#   {
+#     next  unless(length $name);
+#     my $method;
+# 
+#     if(my $column = $meta->column($name))
+#     {
+#       $method = $column->mutator_method_name;
+#       $self->$method($value);
+#     }
+#     elsif($meta->relationship($name))
+#     {
+#       $self->$name($value);
+#     }
+#   }
+# 
+#   return $self;
+# }
+
+our $Deflated = 0;
+
+sub init_with_tree_deflated
+{
+  local $Deflated = 1;
+  Rose::DB::Object::Helpers::init_with_tree(@_);
+}
+
+sub init_with_tree
+{
+  my($self) = shift;
+
+  my %args = @_;
+
+  my $meta = $self->meta;
+
+  while(my($name, $value) = each(%{@_ == 1 ? $_[0] : {@_}}))
+  {
+    next  unless(length $name);
+    my $method;
+
+    if(my $column = $meta->column($name))
+    {
+      local $self->{STATE_LOADING()} = 1  if($Deflated);
+      $method = $column->mutator_method_name;
+      $self->$method($value);
+    }
+    else
+    {
+      if(my $rel = $meta->relationship($name))
+      {
+        $method = $rel->method_name('get_set_on_save') || 
+                  $rel->method_name('get_set') ||
+                  next;
+  
+        my $ref = ref $value;
+
+        if($ref eq 'HASH')
+        {
+          # Split hash into relationship values and everything else
+          my %rel_vals;
+  
+          my %is_rel = map { $_->name => 1 } $meta->relationships;
+
+          foreach my $k (keys %$value)  
+          {
+            $rel_vals{$k} = delete $value->{$k}  if($is_rel{$k});
+          }
+  
+          # %$value now has non-relationship keys only
+          my $object = $self->$method(%$value);
+  
+          # Recurse on relationship key
+          Rose::DB::Object::Helpers::init_with_tree($object, \%rel_vals)  if(%rel_vals);
+  
+          # Repair original hash
+          @$value{keys %rel_vals} = values %rel_vals;
+        }
+        elsif($ref eq 'ARRAY')
+        {
+          my(@objects, @sub_objects);
+  
+          foreach my $item (@$value)
+          {
+            # Split hash into relationship values and everything else
+            my %rel_vals;
+    
+            my %is_rel = map { $_->name => 1 } $meta->relationships;
+    
+            foreach my $k (keys %$item)
+            {
+              $rel_vals{$k} = delete $item->{$k}  if($is_rel{$k});
+            }
+    
+            # %$item now has non-relationship keys only
+            push(@objects, { %$item }); # shallow copy is sufficient
+            
+            push(@sub_objects, \%rel_vals);
+  
+            # Repair original hash
+            @$item{keys %rel_vals} = values %rel_vals;
+          }
+          
+          # Add the related objects
+          $self->$method(\@objects);
+          
+          # Recurse on the sub-objects
+          foreach my $object (@objects)
+          {
+            my $sub_objects = shift(@sub_objects);
+            Rose::DB::Object::Helpers::init_with_tree($object, $sub_objects)  if(%$sub_objects);
+          }
+        }
+        else
+        {
+          Carp::cluck "Unknown reference encountered in $self tree: $name => $value";
+        }
+      }
+      elsif($self->can($name))
+      {
+        $self->$name($value);
+      }
+
+      # XXX: Silently ignore all other values
+    }
+  }
+
+  return $self;
+}
+
+sub new_from_tree { shift->new->Rose::DB::Object::Helpers::init_with_tree(@_) }
 
 1;
 
