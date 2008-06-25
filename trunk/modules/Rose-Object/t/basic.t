@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 21;
+use Test::More tests => 22;
 
 BEGIN
 {
@@ -42,6 +42,10 @@ is($p->yippee, 'yip', 'mixin yip');
 is($p->bark, 'bark', 'mixin bark');
 is($p->roar, 'rawr', 'mixin rawr');
 is($p->hiss, 'hiss', 'mixin hiss');
+
+DogLike->import(qw(-target_class Nonesuch yip));
+
+ok(Nonesuch->can('yip'), 'mixin -target_class yip');
 
 BEGIN
 {

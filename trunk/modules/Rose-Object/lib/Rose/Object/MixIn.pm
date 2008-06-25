@@ -6,7 +6,7 @@ use Carp;
 
 our $Debug = 0;
 
-our $VERSION = '0.84';
+our $VERSION = '0.852';
 
 use Rose::Class::MakeMethods::Set
 (
@@ -52,7 +52,7 @@ sub import
     {
       $force = 1;
     }
-    elsif($arg =~ /^-?-target-class$/)
+    elsif($arg =~ /^-?-target[-_]class$/)
     {
       $target_class = undef; # set on next iteration...lame
       next;
@@ -274,7 +274,11 @@ Each key/value pair in this hash contains a method name and the name that it wil
 
 =item * C<-force>
 
-The special literal argument "-force" will cause the specified methods to be imported even if the calling class L<can|perlfunc/can> already perform one or more of those methods.
+The special literal argument C<-force> will cause the specified methods to be imported even if the calling class L<can|perlfunc/can> already perform one or more of those methods.
+
+=item C<-target_class CLASS>
+
+The special literal argument C<-target-class> followed by a class name will cause the specified methods to be imported into CLASS rather than into the calling class.
 
 =back
 
