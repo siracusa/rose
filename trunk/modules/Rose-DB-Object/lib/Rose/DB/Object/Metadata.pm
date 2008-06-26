@@ -58,6 +58,7 @@ use Rose::Object::MakeMethods::Generic
   [
     allow_inline_column_values  => { default => 0 },
     is_initialized              => { default => 0 },
+    is_auto_initializating      => { default => 0 },
     allow_auto_initialization   => { default => 0 },
     was_auto_initialized        => { default => 0 },
     initialized_foreign_keys    => { default => 0 },
@@ -2087,7 +2088,11 @@ sub make_relationship_methods
       $relationship->method_name($type => $method);
 
       # Initialize/reset preserve_existing flag
-      $args{'preserve_existing'} = $preserve_existing_arg || $self->allow_auto_initialization;
+      if($self->is_auto_initializating)
+      {
+        $args{'preserve_existing'} = $preserve_existing_arg || $self->allow_auto_initialization;
+      }
+
       delete $args{'replace_existing'}  if($args{'preserve_existing'});
 
       # If a corresponding foreign key exists, the preserve any existing

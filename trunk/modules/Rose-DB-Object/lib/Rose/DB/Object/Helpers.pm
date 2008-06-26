@@ -489,54 +489,64 @@ sub traverse_depth_first
 {
   my($self) = shift;
   
-  my($context, %process, $filter, $prune);
+  my($context, %handlers, $filter, $prune, $max_depth);
 
   my $visited    = {};
   my $force_load = 0;
 
   if(@_ == 1)
   {
-    $process{'object'} = shift;
+    $handlers{'object'} = shift;
   }
   else
   {
     my %args = @_;
-    $process{'object'}       = $args{'process'}{'object'};
-    $process{'relationship'} = $args{'process'}{'relationship'};
+    $handlers{'object'}       = $args{'handlers'}{'object'};
+    $handlers{'relationship'} = $args{'handlers'}{'relationship'};
     $force_load = $args{'force_load'} || 0;
     $context    = $args{'context'};
     $filter     = $args{'filter'};
     $prune      = $args{'prune'};
+    $max_depth  = $args{'max_depth'};
     $visited = undef  if($args{'allow_loops'});
   }
 
-  _traverse_depth_first($self, $context ||= {}, \%process, $filter, $prune, 0, undef, undef, undef, $visited, $force_load);
+  _traverse_depth_first($self, $context ||= {}, \%handlers, $filter, $prune, 0, $max_depth, undef, undef, $visited, $force_load);
   
   return $context;
 }
 
+require Rose::DB::Object::Util;
+
 sub _traverse_depth_first
 {
-  my($self, $context, $process, $filter, $prune, $depth, $max_depth, $parent, $rel_meta, $visited, $force_load) = @_;
+  my($self, $context, $handlers, $filter, $prune, $depth, $max_depth, $parent, $rel_meta, $visited, $force_load) = @_;
 
   if($visited && $visited->{ref($self),Rose::DB::Object::Helpers::primary_key_as_string($self)}++)
   {
     return;
   }
 
-  if($process->{'object'})
+  if($handlers->{'object'})
   {
     unless($filter && !$filter->($self, $rel_meta, $parent))
     {
-      $context = $process->{'object'}->($self, $context, $parent, $rel_meta, $depth);
+      if($force_load && !Rose::DB::Object::Util::is_in_db($self))
+      {
+        $self->load(speculative => 1);
+      }
+
+      $context = $handlers->{'object'}->($self, $context, $parent, $rel_meta, $depth);
     }
   }
 
-  return  if(($max_depth && $depth + 1 > $max_depth) || ($prune && $prune->($self, $rel_meta, $parent)));
+  return  if((defined $max_depth && $depth > $max_depth) || ($prune && $prune->($self, $rel_meta, $parent)));
 
   REL: foreach my $rel ($self->meta->relationships)
   {
-    if($force_load || (my $objs = $rel->object_has_related_objects($self)))
+    my $objs = $rel->object_has_related_objects($self);
+
+    if($force_load || $objs)
     {
       unless($objs)
       {
@@ -546,13 +556,14 @@ sub _traverse_depth_first
                      next REL;
 
         $objs = $self->$method() || next REL;
+        $objs = [ $objs ]  unless(ref $objs eq 'ARRAY');
       }
-     
-      my $c = $process->{'relationship'}->($self, $context, $rel)  if($process->{'relationship'});
+
+      my $c = $handlers->{'relationship'}->($self, $context, $rel)  if($handlers->{'relationship'});
 
       foreach my $obj (@$objs)
       {
-        _traverse_depth_first($obj, $c, $process, $filter, $prune, $depth + 1, $max_depth, $self, $rel, $visited, $force_load);
+        _traverse_depth_first($obj, $c, $handlers, $filter, $prune, $depth + 1, $max_depth, $self, $rel, $visited, $force_load);
       }
     }
   }
@@ -569,8 +580,8 @@ sub as_tree
   my %tree;
 
   Rose::DB::Object::Helpers::traverse_depth_first($self, 
-    context => \%tree,
-    process => 
+    context  => \%tree,
+    handlers => 
     {
       object => sub
       {
@@ -579,7 +590,7 @@ sub as_tree
         local $self->{STATE_SAVING()} = 1  if($deflate);
       
         my $cols = Rose::DB::Object::Helpers::column_value_pairs($self);
-    
+        
         if(ref $context eq 'ARRAY')
         {
           push(@$context, $cols);
@@ -660,8 +671,6 @@ sub init_with_tree_deflated
 sub init_with_tree
 {
   my($self) = shift;
-
-  my %args = @_;
 
   my $meta = $self->meta;
 

@@ -1554,6 +1554,7 @@ sub auto_initialize
   $self->auto_init_args({ %args });
 
   $self->allow_auto_initialization(1);
+  $self->is_auto_initializating(1);
 
   $self->auto_init_columns(@_);
   $self->auto_init_primary_key_columns;
@@ -1580,6 +1581,7 @@ sub auto_initialize
     $meta_class->clear_all_dbs;
   }
 
+  $self->is_auto_initializating(0);
   $self->was_auto_initialized(1);
 
   return;

@@ -1209,6 +1209,7 @@ sub get_objects
 
             foreach my $sort (@$sort_by)
             {
+              no warnings 'uninitialized';
               $sort =~ s/^(['"`]?)(\w+)\1(\s+(?:ASC|DESC))?$/t$i.$1$2$1$3/i
                 unless(ref $sort);
             }
@@ -1480,6 +1481,7 @@ sub get_objects
             # translate un-prefixed simple columns
             foreach my $sort (@$sort_by)
             {
+              no warnings 'uninitialized';
               $sort =~ s/^(['"`]?)(\w+)\1(\s+(?:ASC|DESC))?$/t$i.$1$2$1$3/i
                 unless(ref $sort);
             }

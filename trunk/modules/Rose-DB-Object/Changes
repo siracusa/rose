@@ -1,9 +1,9 @@
-0.770_04 (06.23.2008) - John Siracusa <siracusa@gmail.com>
+0.770_05 (06.26.2008) - John Siracusa <siracusa@gmail.com>
 
     * Made "where" an alias for the Manager's "query" parameter.
       (Requested by Ask Bjørn Hansen)
     * Documented restrictions on the Manager's "select" parameter.
-    * TODO: traversal helper.
+    * TODO: traversal and recursive serialization helpers.
 
 0.770 (05.28.2008) - John Siracusa <siracusa@gmail.com>
 

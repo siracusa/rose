@@ -373,6 +373,12 @@ Return a method name for the relationship method type TYPE.  Subclasses must ove
 
 Get or set the name of the L<Rose::DB::Object>-derived class that fronts the foreign table referenced by this relationship.
 
+=item B<is_singular>
+
+Returns true of the relationship may refer to more than one related object, false otherwise.  For example, this method returns true for L<Rose::DB::Object::Metadata::Relationship::OneToMany/is_singular> objects, but false for L<Rose::DB::Object::Metadata::Relationship::ManyToOne/is_singular> objects.
+
+Relationship subclasses must override this method and return an appropriate value.
+
 =item B<make_methods PARAMS>
 
 Create object method used to manipulate objects in related tables.  Any applicable column triggers are also added.  PARAMS are name/value pairs.  Valid PARAMS are:

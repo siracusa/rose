@@ -52,6 +52,8 @@ use Rose::Object::MakeMethods::Generic
 
 sub is_singular { 1 }
 
+sub foreign_class { shift->class(@_) }
+
 sub key_column
 {
   my($self) = shift;
