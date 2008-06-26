@@ -709,6 +709,10 @@ For the method type "count", the relationship's L<name|Rose::DB::Object::Metadat
 
 Otherwise, undef is returned.
 
+=item B<is_singular>
+
+Returns false.
+
 =item B<manager_class [CLASS]>
 
 Get or set the name of the L<Rose::DB::Object::Manager>-derived class that the L<map_class|/map_class> will use to fetch records.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<Rose::DB::Object::Manager> if this value is left undefined.

@@ -111,6 +111,10 @@ For the method types "delete_now" and "delete_on_save", the relationship's  L<na
 
 Otherwise, undef is returned.
 
+=item B<is_singular>
+
+Returns true.
+
 =item B<foreign_key [FK]>
 
 Get or set the L<Rose::DB::Object::Metadata::ForeignKey> object to which this object delegates all responsibility.

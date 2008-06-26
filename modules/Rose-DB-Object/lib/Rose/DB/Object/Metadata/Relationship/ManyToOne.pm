@@ -88,6 +88,8 @@ sub type { 'many to one' }
 
 sub is_singular { 1 }
 
+sub foreign_class { shift->class(@_) }
+
 sub share_db    { shift->_fk_or_self(share_db => @_)     }
 sub key_column  { shift->_fk_or_self(key_column => @_)   }
 sub key_columns { shift->_fk_or_self(key_columns => @_)  }
@@ -358,6 +360,10 @@ Otherwise, undef is returned.
 Get or set the L<Rose::DB::Object::Metadata::ForeignKey> object to which this object delegates all responsibility.
 
 Many to one relationships encapsulate essentially the same information as foreign keys.  If a foreign key object is stored in this relationship object, then I<all compatible operations are passed through to the foreign key object.>  This includes making object method(s) and adding or modifying the local-to-foreign column map.  In other words, if a L<foreign_key|/foreign_key> is set, the relationship object simply acts as a proxy for the foreign key object.
+
+=item B<is_singular>
+
+Returns true.
 
 =item B<manager_class [CLASS]>
 

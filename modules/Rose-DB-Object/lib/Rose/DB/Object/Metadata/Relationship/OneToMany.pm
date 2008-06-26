@@ -107,6 +107,8 @@ sub type { 'one to many' }
 
 sub is_singular { 0 }
 
+sub foreign_class { shift->class(@_) }
+
 *map_column = \&key_column;
 *column_map = \&key_columns;
 
@@ -263,6 +265,10 @@ For the method type "find", the relationship's L<name|Rose::DB::Object::Metadata
 For the method type "count", the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> suffixed with "_count" is returned.
 
 Otherwise, undef is returned.
+
+=item B<is_singular>
+
+Returns false.
 
 =item B<manager_class [CLASS]>
 

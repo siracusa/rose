@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1637;
+use Test::More tests => 1627;
 
 BEGIN 
 {
@@ -39,7 +39,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 {
   SKIP:
   {
-    skip("$db_type tests", 327)  unless($Have{$db_type});
+    skip("$db_type tests", 325)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -137,23 +137,6 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
       ]);
 
   $p2->save;
-
-  my $tree      = $p2->as_tree;
-  my $tree_dump = Dumper($tree);
-  my $from_tree = $product_class->new_from_tree($tree);
-
-  is($tree_dump, Dumper($from_tree->as_tree), 'as_tree -> new_from_tree -> as_tree 1');
-  is(Dumper($tree), Dumper($from_tree->as_tree), 'as_tree -> new_from_tree -> as_tree 2');
-
-  #require YAML::Syck;
-  #print YAML::Syck::Dump($tree);
-  #
-  #print Dumper($tree);
-  #print "########################\n";
-  #$DB::single = 1;
-  #print Dumper($from_tree->as_tree);
-  #print YAML::Syck::Dump($from_tree->as_tree);
-  #exit;
 
   my $p3 = 
     $product_class->new(
