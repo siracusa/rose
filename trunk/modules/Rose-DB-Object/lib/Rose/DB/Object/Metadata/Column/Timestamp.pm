@@ -8,7 +8,7 @@ use Rose::DB::Object::MakeMethods::Date;
 use Rose::DB::Object::Metadata::Column::Date;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Date);
 
-our $VERSION = '0.70';
+our $VERSION = '0.771';
 
 foreach my $type (__PACKAGE__->available_method_types)
 {
@@ -20,8 +20,9 @@ sub type { 'timestamp' }
 sub should_inline_value
 {
   #my($self, $db, $value) = @_;
+  my $driver = $_[1]->driver;
   return ($_[1]->validate_timestamp_keyword($_[2]) && 
-          ($_[1]->driver eq 'informix' || $_[2] =~ /^\w+\(.*\)$/)) ? 1 : 0;
+          (($driver eq 'informix' || $driver eq 'sqlite') || $_[2] =~ /^\w+\(.*\)$/)) ? 1 : 0;
 }
 
 sub parse_value
