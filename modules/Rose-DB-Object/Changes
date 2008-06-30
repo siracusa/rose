@@ -1,11 +1,13 @@
-0.770_05 (06.26.2008) - John Siracusa <siracusa@gmail.com>
+0.770_06 (06.30.2008) - John Siracusa <siracusa@gmail.com>
 
     * Made "where" an alias for the Manager's "query" parameter.
       (Requested by Ask Bjørn Hansen)
     * Documented restrictions on the Manager's "select" parameter.
+    * Fixed bug that prevented CURRENT_TIMESTAMP from being properly
+      inlined in queries sent to SQLite.  (RT 37224)
     * TODO: traversal and recursive serialization helpers.
     * TODO: nonpersistent_columns
-    
+
 0.770 (05.28.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added "iterator" method type, similar to "find", to OneToMany
