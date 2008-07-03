@@ -7,6 +7,8 @@
       inlined in queries sent to SQLite.  (RT 37224)
     * TODO: traversal and recursive serialization helpers.
     * TODO: nonpersistent_columns
+    * TODO: move should_inline* to Rose::DB
+    * TODO: Clarify Manager docs - why tN.rel.rel.col is bad
 
 0.770 (05.28.2008) - John Siracusa <siracusa@gmail.com>
 
