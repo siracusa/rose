@@ -3,6 +3,7 @@ package Rose::DB::Object::Metadata::Column;
 use strict;
 
 use Carp();
+use Scalar::Util();
 
 use Rose::DB::Object::Metadata::Util qw(:all);
 
@@ -1423,7 +1424,7 @@ sub method_code
 
   if(@_)
   {
-    return $self->{'method_code'}{$type} = shift;
+    Scalar::Util::weaken($self->{'method_code'}{$type} = shift);
   }
 
   return $self->{'method_code'}{$type};

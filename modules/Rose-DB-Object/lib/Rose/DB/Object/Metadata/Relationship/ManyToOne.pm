@@ -3,6 +3,7 @@ package Rose::DB::Object::Metadata::Relationship::ManyToOne;
 use strict;
 
 use Carp();
+use Scalar::Util();
 
 use Rose::DB::Object::Metadata::Relationship;
 our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
@@ -172,6 +173,8 @@ sub make_methods
 
         unless(defined $column->builtin_trigger_index('on_set', $trigger_name))
         {
+          my $wolumn = Scalar::Util::weaken($column);
+
           $column->add_builtin_trigger(
             event => 'on_set',
             name  => $trigger_name,
@@ -179,7 +182,7 @@ sub make_methods
             {
               my($obj) = shift;
               return  if($self->{'disable_column_triggers'});
-              local $column->{'triggers_disabled'} = 1;
+              local $wolumn->{'triggers_disabled'} = 1;
               $obj->$method(undef)  unless(defined $obj->$accessor());
             });
         }
