@@ -1,3 +1,8 @@
+0.853 (07.30.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Fixed a bug in the hash get_set_init method interface.  (Reported
+      by Bill Moseley)
+
 0.852 (06.25.2008) - John Siracusa <siracusa@gmail.com>
 
     * Documented Rose::Object::MixIn->import()'s -target_class parameter.

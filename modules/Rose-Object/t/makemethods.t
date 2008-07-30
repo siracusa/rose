@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 626;
+use Test::More tests => 627;
 
 BEGIN
 {
@@ -154,6 +154,10 @@ $ip = $p->iparams;
 
 ok(ref $ip eq 'HASH' && $ip->{'c'} == 3 && $ip->{'d'} == 4,
    'Set  hash - hash (hash --get_set_inited)');
+
+my $p2 = Person->new();
+
+is($p2->iparams('b'), 2, 'Init on key request (hash --get_set_inited)');
 
 #
 # hash --get_set_inited
