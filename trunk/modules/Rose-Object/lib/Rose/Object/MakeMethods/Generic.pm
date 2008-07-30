@@ -4,7 +4,7 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.85';
+our $VERSION = '0.853';
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
@@ -133,6 +133,9 @@ sub hash
         # If called with an index, get that value, or a slice for array refs
         if(@_ == 1)
         {
+          # Initialize hash if undefined
+          $self->{$key} = $self->$init_method()  unless(defined $self->{$key});
+
           return ref $_[0] eq 'ARRAY' ? @{$self->{$key}}{@{$_[0]}} : 
                                         $self->{$key}{$_[0]};
         }
