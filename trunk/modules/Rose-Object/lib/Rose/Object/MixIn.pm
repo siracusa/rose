@@ -276,7 +276,7 @@ Each key/value pair in this hash contains a method name and the name that it wil
 
 The special literal argument C<-force> will cause the specified methods to be imported even if the calling class L<can|perlfunc/can> already perform one or more of those methods.
 
-=item C<-target_class CLASS>
+=item * C<-target_class CLASS>
 
 The special literal argument C<-target-class> followed by a class name will cause the specified methods to be imported into CLASS rather than into the calling class.
 
