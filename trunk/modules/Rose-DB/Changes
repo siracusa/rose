@@ -1,3 +1,7 @@
+0.745 (08.10.2008) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: Interate over cached db entries.
+
 0.744 (05.28.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added fixup() class method call to auto_load_fixups().
