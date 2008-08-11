@@ -1948,6 +1948,12 @@ sub validate_time_keyword      { 0 }
 sub validate_timestamp_keyword { 0 }
 sub validate_interval_keyword  { 0 }
 
+sub should_inline_date_keywords      { 0 }
+sub should_inline_datetime_keywords  { 0 }
+sub should_inline_time_keywords      { 0 }
+sub should_inline_timestamp_keywords { 0 }
+sub should_inline_interval_keywords  { 0 }
+
 sub next_value_in_sequence
 {
   my($self, $seq) = @_;
