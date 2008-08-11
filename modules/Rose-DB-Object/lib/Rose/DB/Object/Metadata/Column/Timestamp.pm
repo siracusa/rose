@@ -20,9 +20,9 @@ sub type { 'timestamp' }
 sub should_inline_value
 {
   #my($self, $db, $value) = @_;
-  my $driver = $_[1]->driver;
-  return ($_[1]->validate_timestamp_keyword($_[2]) && 
-          (($driver eq 'informix' || $driver eq 'sqlite') || $_[2] =~ /^\w+\(.*\)$/)) ? 1 : 0;
+  no warnings 'uninitialized';
+  return (($_[1]->validate_timestamp_keyword($_[2]) && $_[1]->should_inline_timestamp_keywords) || 
+          $_[2] =~ /^\w+\(.*\)$/) ? 1 : 0;
 }
 
 sub parse_value

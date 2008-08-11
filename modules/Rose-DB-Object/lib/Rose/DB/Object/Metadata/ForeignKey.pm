@@ -198,7 +198,7 @@ sub make_methods
 
       foreach my $column_name (keys %$key_columns)
       {
-        Scalar::Util::weaken(my $column = $meta->column($column_name));
+        my $column       = $meta->column($column_name);
         my $accessor     = $column->accessor_method_name;
         my $trigger_name = 'clear_fk' . $self->name;
 
