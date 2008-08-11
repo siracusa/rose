@@ -1,4 +1,4 @@
-0.770_07 (07.24.2008) - John Siracusa <siracusa@gmail.com>
+0.770_07 (08.10.2008) - John Siracusa <siracusa@gmail.com>
 
     * Made "where" an alias for the Manager's "query" parameter.
       (Requested by Ask Bjørn Hansen)
@@ -6,10 +6,11 @@
     * Fixed bug that prevented CURRENT_TIMESTAMP from being properly
       inlined in queries sent to SQLite.  (RT 37224)
     * Fixed more memory cycles.  (Reported by Christopher Laco)
+    * TODO: SYSTIMESTAMP inlining for Oracle.
     * TODO: traversal and recursive serialization helpers.
     * TODO: nonpersistent_columns
     * TODO: move should_inline* to Rose::DB
-    * TODO: Clarify Manager docs - why tN.rel.rel.col is bad
+    * TODO: Clarify Manager docs - why tN.rel.rel.col is bad.
 
 0.770 (05.28.2008) - John Siracusa <siracusa@gmail.com>
 
