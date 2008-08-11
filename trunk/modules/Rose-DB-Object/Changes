@@ -8,7 +8,7 @@
     * Fixed more memory cycles.  (Reported by Christopher Laco)
     * The "cluck" error mode now correctly calls cluck() rather than 
       croak().  (Reported by Kevin McGrath)
-    * TODO: SYSTIMESTAMP inlining for Oracle.
+    * Added support for Oracle date/time column keywords.
     * TODO: traversal and recursive serialization helpers.
     * TODO: nonpersistent_columns
     * TODO: move should_inline* to Rose::DB
