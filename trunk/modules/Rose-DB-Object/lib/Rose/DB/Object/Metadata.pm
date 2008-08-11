@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.769';
+our $VERSION = '0.771';
 
 our $Debug = 0;
 
@@ -381,7 +381,7 @@ sub handle_error
   }
   elsif($mode eq 'cluck')
   {
-    Carp::croak $object->error;
+    Carp::cluck $object->error;
   }
   elsif($mode eq 'confess')
   {
