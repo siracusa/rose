@@ -371,6 +371,11 @@ sub validate_datetime_year_to_month_keyword
   $_[1] =~ /^(?:current(?: +year +to +(?:second|minute|hour|day|month))?|today|\w+\(.*\))$/i;
 }
 
+sub should_inline_date_keywords      { 1 }
+sub should_inline_datetime_keywords  { 1 }
+sub should_inline_time_keywords      { 1 }
+sub should_inline_timestamp_keywords { 1 }
+
 sub parse_set
 {
   my($self) = shift;

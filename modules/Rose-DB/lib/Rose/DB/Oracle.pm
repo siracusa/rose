@@ -8,7 +8,7 @@ use Rose::DB;
 
 our $Debug = 0;
 
-our $VERSION  = '0.732'; 
+our $VERSION  = '0.745'; 
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -269,6 +269,27 @@ sub format_limit_with_offset
 }
 
 sub format_boolean { $_[1] ? 't' : 'f' }
+
+#
+# Date/time keywords and inlining
+#
+
+# XXX: Guesswork!  Oracle users, patches welcome!
+
+sub validate_date_keyword
+{
+  no warnings;
+  $_[1] =~ /^(?:(?:CURRENT_|SYS)(?:TIMESTAMP|DATE)|\w+\(.*\))$/i;
+}
+
+*validate_time_keyword      = \&validate_date_keyword;
+*validate_timestamp_keyword = \&validate_date_keyword;
+*validate_datetime_keyword  = \&validate_date_keyword;
+
+sub should_inline_date_keywords      { 1 }
+sub should_inline_datetime_keywords  { 1 }
+sub should_inline_time_keywords      { 1 }
+sub should_inline_timestamp_keywords { 1 }
 
 1;
 

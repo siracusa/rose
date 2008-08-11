@@ -7,7 +7,7 @@ use Carp();
 use Rose::DB;
 use SQL::ReservedWords::SQLite();
 
-our $VERSION = '0.737';
+our $VERSION = '0.745';
 
 #our $Debug = 0;
 
@@ -73,6 +73,11 @@ sub validate_timestamp_keyword
   no warnings;
   !ref $_[1] && $_[1] =~ /^(?:current_timestamp|\w+\(.*\))$/i;
 }
+
+sub should_inline_date_keywords      { 1 }
+sub should_inline_datetime_keywords  { 1 }
+sub should_inline_time_keywords      { 1 }
+sub should_inline_timestamp_keywords { 1 }
 
 sub parse_date
 {
