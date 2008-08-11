@@ -1,6 +1,7 @@
 0.745 (08.10.2008) - John Siracusa <siracusa@gmail.com>
 
     * TODO: Interate over cached db entries.
+    * TODO: SYSTIMESTAMP inlining for Oracle.
 
 0.744 (05.28.2008) - John Siracusa <siracusa@gmail.com>
 
