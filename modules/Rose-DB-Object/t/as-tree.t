@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 2 + (5 * 6);
+use Test::More 'no_plan'; # tests => 2 + (5 * 6);
 
 BEGIN 
 {
@@ -14,7 +14,7 @@ BEGIN
 use Data::Dumper;
 $Data::Dumper::Sortkeys = 1;
 
-our %Have;
+our(%Have, $Have_YAML, $Have_JSON);
 
 #
 # Tests
@@ -35,7 +35,7 @@ my $Include =
                         prices products vendors regions)) . ')$';
 $Include = qr($Include);
 
-foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
+foreach my $db_type (qw(mysql))#(qw(sqlite mysql pg pg_with_schema informix))
 {
   SKIP:
   {
@@ -89,6 +89,16 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   my $manager_class = $product_class . '::Manager';
 
   Rose::DB::Object::Helpers->import(-target_class => $product_class, qw(as_tree new_from_tree init_with_tree));
+
+  if($Have_JSON)
+  {
+    Rose::DB::Object::Helpers->import(-target_class => $product_class, qw(as_json new_from_json init_with_json));
+  }
+
+  if($Have_YAML)
+  {
+    Rose::DB::Object::Helpers->import(-target_class => $product_class, qw(as_yaml new_from_yaml init_with_yaml));
+  }  
 
   my $p1 = 
     $product_class->new(
@@ -216,6 +226,23 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 
   is_deeply($tree, $check_tree, "as_tree force_load => 1, max_depth => 0 - $db_type");
 
+  my $new_from_tree = $product_class->new_from_tree($tree);  
+  is_deeply($check_tree, $new_from_tree->as_tree, "new_from_tree 1 - $db_type");
+
+  if($Have_JSON)
+  {
+    my $json = $product_class->new(id => 2)->as_json(force_load => 1, max_depth => 0);
+    my $new_from_json = $product_class->new_from_json($json);
+    is_deeply($check_tree, $new_from_json->as_tree, "new_from_json 1 - $db_type");
+  }
+
+  if($Have_YAML)
+  {
+    my $yaml = $product_class->new(id => 2)->as_yaml(force_load => 1, max_depth => 0);
+    my $new_from_yaml = $product_class->new_from_yaml($yaml);
+    is_deeply($check_tree, $new_from_yaml->as_tree, "new_from_yaml 1 - $db_type");
+  }
+
   $tree = $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 1);
 
   $check_tree =
@@ -290,6 +317,26 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   };
 
   is_deeply($tree, $check_tree, "as_tree force_load => 1, max_depth => 1 - $db_type");
+exit;
+  $new_from_tree = $product_class->new_from_tree($tree);  
+use Data::Dumper;
+print Dumper($new_from_tree->as_tree);
+$DB::single = 1;
+  is_deeply($check_tree, $new_from_tree->as_tree, "new_from_tree 2 - $db_type");
+
+  if($Have_JSON)
+  {
+    my $json = $product_class->new(id => 2)->as_json(force_load => 1, max_depth => 1);
+    my $new_from_json = $product_class->new_from_json($json);
+#    is_deeply($check_tree, $new_from_json->as_tree, "new_from_json 2 - $db_type");
+  }
+
+#   if($Have_YAML)
+#   {
+#     my $yaml = $product_class->new(id => 2)->as_yaml(force_load => 1, max_depth => 1);
+#     my $new_from_yaml = $product_class->new_from_yaml($yaml);
+#     is_deeply($check_tree, $new_from_yaml->as_tree, "new_from_yaml 2 - $db_type");
+#   }
 
   $tree = $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 1, allow_loops => 1);
 
@@ -540,6 +587,17 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   $p3->save;
 
   #local $Rose::DB::Object::Manager::Debug = 1;
+}
+
+BEGIN
+{
+  our($Have_YAML, $Have_JSON);
+
+  eval { require YAML::Syck };
+  $Have_YAML = @$ ? 0 : 1;
+
+  eval { require JSON };
+  $Have_JSON = @$ ? 0 : 1;
 }
 
 BEGIN

@@ -1,4 +1,4 @@
-0.770_08 (08.11.2008) - John Siracusa <siracusa@gmail.com>
+0.770_09 (08.18.2008) - John Siracusa <siracusa@gmail.com>
 
     * Made "where" an alias for the Manager's "query" parameter.
       (Requested by Ask Bjørn Hansen)
@@ -9,6 +9,8 @@
     * The "cluck" error mode now correctly calls cluck() rather than 
       croak().  (Reported by Kevin McGrath)
     * Added support for Oracle date/time column keywords.
+    * Cascaded delete now properly cascades to one-to-one related objects.
+      (Reported by kittens)
     * TODO: traversal and recursive serialization helpers.
     * TODO: nonpersistent_columns
     * TODO: move should_inline* to Rose::DB
