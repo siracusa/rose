@@ -21,7 +21,9 @@ __PACKAGE__->export_tags
        column_mutator_value_pairs 
        column_values_as_yaml column_values_as_json
        as_tree init_with_tree new_from_tree
-       init_with_yaml init_with_json init_with_column_value_pairs
+       as_yaml new_from_yaml init_with_yaml
+       as_json new_from_json init_with_json
+       init_with_column_value_pairs
        has_loaded_related strip forget_related) 
   ],
 
@@ -36,6 +38,48 @@ __PACKAGE__->export_tags
        has_loaded_related strip forget_related)
   ],
 );
+
+#
+# Clas data
+#
+
+use Rose::Class::MakeMethods::Generic
+(
+  inheritable_scalar =>
+  [
+    '_json_object'
+  ],
+);
+
+#
+# Class methods
+#
+
+sub json_encoder
+{
+  my($class) = shift;
+  
+  my $json = $class->_json_object;
+  
+  unless(defined $json)
+  {
+    $json = $class->init_json_encoder;
+  }
+  
+  return $json;
+}
+
+sub init_json_encoder
+{
+  require JSON;
+  return JSON->new->utf8->space_after;
+}
+
+*json_decoder = \&json_encoder;
+
+#
+# Object methods
+#
 
 sub load_speculative { shift->load(@_, speculative => 1) }
 
@@ -137,12 +181,12 @@ sub column_values_as_yaml
   YAML::Syck::Dump(scalar Rose::DB::Object::Helpers::column_value_pairs(shift))
 }
 
-__PACKAGE__->pre_import_hook(column_values_as_json => sub { require JSON::Syck });
+__PACKAGE__->pre_import_hook(column_values_as_json => sub { require JSON });
 
 sub column_values_as_json
 {
   local $_[0]->{STATE_SAVING()} = 1;
-  JSON::Syck::Dump(scalar Rose::DB::Object::Helpers::column_value_pairs(shift))
+  __PACKAGE__->json_encoder->encode(scalar Rose::DB::Object::Helpers::column_value_pairs(shift))
 }
 
 __PACKAGE__->pre_import_hook(init_with_json => sub { require YAML::Syck });
@@ -172,7 +216,7 @@ sub init_with_json
 {
   my($self, $json) = @_;
 
-  my $hash = JSON::Syck::Load($json);
+  my $hash = __PACKAGE__->json_encoder->decode($json);
   my $meta = $self->meta;
 
   local $self->{STATE_LOADING()} = 1;
@@ -770,6 +814,12 @@ sub init_with_tree
 
 sub new_from_tree { shift->new->Rose::DB::Object::Helpers::init_with_tree(@_) }
 
+sub new_from_json { new_from_tree(shift, __PACKAGE__->json_decoder->decode(@_)) }
+sub new_from_yaml { new_from_tree(shift, YAML::Syck::Load(@_)) }
+
+sub as_json { __PACKAGE__->json_encoder->encode(scalar as_tree(@_, deflate => 1)) }
+sub as_yaml { YAML::Syck::Dump(scalar as_tree(@_, deflate => 1)) }  
+
 1;
 
 __END__
@@ -837,7 +887,7 @@ is equivalent to this:
 
 =head2 column_values_as_json
 
-Returns a string containing a JSON representation of the object's column values.  You must have the L<JSON::Syck> module installed in order to use this helper method.
+Returns a string containing a JSON representation of the object's column values.  You must have the L<JSON> module installed in order to use this helper method.  If you have the L<JSON::XS> module installed, this method will work a lot faster.
 
 =head2 column_values_as_yaml
 

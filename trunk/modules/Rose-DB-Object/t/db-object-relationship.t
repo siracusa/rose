@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1566;
+use Test::More tests => 1568;
 
 BEGIN 
 {
@@ -1534,7 +1534,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 353)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 355)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -2901,6 +2901,63 @@ SKIP: foreach my $db_type ('mysql')
   is($count, 5, "add 2 many to many on save 34 - $db_type");
 
   # End "many to many" tests
+
+  # Start "one to one" cascaded delete tests
+
+  #local $Rose::DB::Object::Debug = 1;
+  #local $Rose::DB::Object::Manager::Debug = 1;
+  $o = MyMySQLObject->new(name => '1to1bug',
+                          fk1 => 10,
+                          fk2 => 20,
+                          fk3 => 30,
+                          other_obj_otoo =>
+                          {
+                            name => '1to1bugfo',
+                            k1 => 10,
+                            k2 => 20,
+                            k3 => 30,
+                          });
+
+  $o->save;
+
+  $o = MyMySQLObject->new(id => $o->id)->load;
+
+  ok(defined $o->other_obj_otoo, "delete(cascade => 1) one to one prep - $db_type");
+
+  $o = MyMySQLObject->new(id => $o->id);
+  $o->delete(cascade => 1);
+
+  ok(!MyMySQLOtherObject->new(k1 => 10, k2 => 20, k3 => 30)->load(speculative => 1),
+     "delete(cascade => 1) one to one delete - $db_type");
+
+  # XXX: This relies on MySQL's creepy behavior of setting not-null
+  # XXX: columns to 0 when they are set to NULL by a query.
+  #
+  # $o = MyMySQLObject->new(name => '1to1bug2',
+  #                         fk1 => 10,
+  #                         fk2 => 20,
+  #                         fk3 => 30,
+  #                         other_obj_otoo =>
+  #                         {
+  #                           name => '1to1bugfo2',
+  #                           k1 => 10,
+  #                           k2 => 20,
+  #                           k3 => 30,
+  #                         });
+  # 
+  # $o->save;
+  # 
+  # $o = MyMySQLObject->new(id => $o->id)->load;
+  # 
+  # ok(defined $o->other_obj_otoo, "delete(cascade => 1) one to one prep - $db_type");
+  # 
+  # $o = MyMySQLObject->new(id => $o->id);
+  # $o->delete(cascade => 'null');
+  # 
+  # ok(MyMySQLOtherObject->new(k1 => 0, k2 => 0, k3 => 0)->load(speculative => 1),
+  #    "delete(cascade => 1) one to one null - $db_type");
+
+  # End "one to one" cascaded delete tests
 }
 
 #
@@ -6587,6 +6644,18 @@ EOF
 
     MyMySQLObject->meta->add_relationships
     (
+      other_obj_otoo =>
+      {
+        type => 'one to one',
+        class => 'MyMySQLOtherObject',
+        column_map =>
+        {
+          fk1 => 'k1',
+          fk2 => 'k2',
+          fk3 => 'k3',
+        },
+      },
+
       other_obj_osoft =>
       {
         type => 'one to one',

@@ -259,15 +259,15 @@ foreach my $db_type (qw(mysql pg informix sqlite))
     # I don't know if I can rely on this key order...
     # {"laz":"Z2","name":"Alex3","id":2,"age":6}
     my $json = $o->column_values_as_json;
-    ok($json =~ /^\{/ && $json =~ /"laz":"Z2"/ &&
-       $json =~ /"name":"Alex3"/ && $json =~ /"id":(?:2|"2")/ &&
-       $json =~ /"age":(?:6|"6")/ && $json =~ /\}\z/, "column_values_as_json() - $db_type");
+    ok($json =~ /^\{/ && $json =~ /"laz": "Z2"/ &&
+       $json =~ /"name": "Alex3"/ && $json =~ /"id": (?:2|"2")/ &&
+       $json =~ /"age": (?:6|"6")/ && $json =~ /\}\z/, "column_values_as_json() - $db_type");
 
     my $c = $class->new(age => 456);
     $c->init_with_json($json);
-    ok($json =~ /^\{/ && $json =~ /"laz":"Z2"/ &&
-       $json =~ /"name":"Alex3"/ && $json =~ /"id":(?:2|"2")/ &&
-       $json =~ /"age":(?:6|"6")/ && $json =~ /\}\z/, "init_with_json() - $db_type");
+    ok($json =~ /^\{/ && $json =~ /"laz": "Z2"/ &&
+       $json =~ /"name": "Alex3"/ && $json =~ /"id": (?:2|"2")/ &&
+       $json =~ /"age": (?:6|"6")/ && $json =~ /\}\z/, "init_with_json() - $db_type");
   }
   else 
   {
@@ -301,7 +301,8 @@ BEGIN
 {
   our(%Have, $Have_YAML, $Have_JSON, $All);
 
-  eval { require YAML::Syck; require JSON::Syck; };
+  # All or nothing
+  eval { require YAML::Syck; require JSON; };
 
   $All = $@ ? ':all_noprereq' : ':all';
 
