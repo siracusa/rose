@@ -1261,7 +1261,7 @@ sub delete
       {
         my $rel_type = $relationship->type;
 
-        if($rel_type eq 'one to many')
+        if($rel_type eq 'one to many' || $rel_type eq 'one to one')
         {
           my $column_map = $relationship->column_map;
           my @query;
@@ -1272,7 +1272,7 @@ sub delete
             my $value =  $self->$method();
 
             # XXX: Comment this out to allow null keys
-            next FK  unless(defined $value);
+            next REL  unless(defined $value);
 
             push(@query, $foreign_column => $value);
           }
@@ -1336,41 +1336,6 @@ sub delete
             Rose::DB::Object::Manager->update_objects(
               db           => $db,
               object_class => $map_class,
-              set          => \%set,
-              where        => \@query);        
-          }
-          else { Carp::confess "Illegal cascade value '$cascade' snuck through" }
-        }
-        elsif($rel_type eq 'one to one')
-        {
-          my $column_map = $relationship->column_map;
-          my @query;
-  
-          while(my($local_column, $foreign_column) = each(%$column_map))
-          {
-            my $method = $meta->column_accessor_method_name($local_column);
-            my $value =  $self->$method();
-  
-            # XXX: Comment this out to allow null keys
-            next REL  unless(defined $value);
-  
-            push(@query, $foreign_column => $value);
-          }
-  
-          if($cascade eq 'delete')
-          {
-            Rose::DB::Object::Manager->delete_objects(
-              db           => $db,
-              object_class => $relationship->class,
-              where        => \@query);
-          }
-          elsif($cascade eq 'null')
-          {
-            my %set = map { $_ => undef } values(%$column_map);
-  
-            Rose::DB::Object::Manager->update_objects(
-              db           => $db,
-              object_class => $relationship->class,
               set          => \%set,
               where        => \@query);        
           }
