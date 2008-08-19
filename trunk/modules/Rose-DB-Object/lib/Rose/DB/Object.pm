@@ -1256,12 +1256,14 @@ sub delete
 
       Rose::DB::Object::Manager->error_mode('fatal');
 
+      my @one_to_one_rels;
+
       # Process all the rows for each "... to many" relationship
       REL: foreach my $relationship ($meta->relationships)
       {
         my $rel_type = $relationship->type;
 
-        if($rel_type eq 'one to many' || $rel_type eq 'one to one')
+        if($rel_type eq 'one to many')
         {
           my $column_map = $relationship->column_map;
           my @query;
@@ -1341,6 +1343,10 @@ sub delete
           }
           else { Carp::confess "Illegal cascade value '$cascade' snuck through" }
         }
+        elsif($rel_type eq 'one to one')
+        {
+          push(@one_to_one_rels, $relationship);
+        }
       }
 
       # Delete the object itself
@@ -1394,6 +1400,43 @@ sub delete
           Rose::DB::Object::Manager->update_objects(
             db           => $db,
             object_class => $fk->class,
+            set          => \%set,
+            where        => \@query);        
+        }
+        else { Carp::confess "Illegal cascade value '$cascade' snuck through" }
+      }
+
+      # Process all the rows for each "one to one" relationship
+      REL: foreach my $relationship (@one_to_one_rels)
+      {
+        my $column_map = $relationship->column_map;
+        my @query;
+
+        while(my($local_column, $foreign_column) = each(%$column_map))
+        {
+          my $method = $meta->column_accessor_method_name($local_column);
+          my $value =  $self->$method();
+
+          # XXX: Comment this out to allow null keys
+          next REL  unless(defined $value);
+
+          push(@query, $foreign_column => $value);
+        }
+
+        if($cascade eq 'delete')
+        {
+          Rose::DB::Object::Manager->delete_objects(
+            db           => $db,
+            object_class => $relationship->class,
+            where        => \@query);
+        }
+        elsif($cascade eq 'null')
+        {
+          my %set = map { $_ => undef } values(%$column_map);
+
+          Rose::DB::Object::Manager->update_objects(
+            db           => $db,
+            object_class => $relationship->class,
             set          => \%set,
             where        => \@query);        
         }
