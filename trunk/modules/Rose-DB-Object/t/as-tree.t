@@ -4,6 +4,14 @@ use strict;
 
 use Test::More 'no_plan'; # tests => 2 + (5 * 6);
 
+eval { require Test::Differences };
+
+unless($@)
+{
+  no warnings;
+  *is_deeply = \&Test::Differences::eq_or_diff;
+}
+
 BEGIN 
 {
   require 't/test-lib.pl';
@@ -35,7 +43,7 @@ my $Include =
                         prices products vendors regions)) . ')$';
 $Include = qr($Include);
 
-foreach my $db_type (qw(mysql))#(qw(sqlite mysql pg pg_with_schema informix))
+foreach my $db_type (qw(pg))#(qw(sqlite mysql pg pg_with_schema informix))
 {
   SKIP:
   {
@@ -176,58 +184,19 @@ foreach my $db_type (qw(mysql))#(qw(sqlite mysql pg pg_with_schema informix))
   is_deeply($tree, $from_tree->as_tree, "as_tree -> new_from_tree -> as_tree 1 - $db_type");
   is_deeply($tree, $from_tree->as_tree, "as_tree -> new_from_tree -> as_tree 2 - $db_type");
 
-  #require YAML::Syck;
-  #print YAML::Syck::Dump($tree);
-  #
-  #print Dumper($tree);
-  #print "########################\n";
-  #$DB::single = 1;
-  #print Dumper($from_tree->as_tree);
-  #print YAML::Syck::Dump($from_tree->as_tree);
-  #exit;
-
   $tree = $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 0);
 
   my $check_tree = 
   {
-    'colors' => 
-    [
-      {
-        'description_id' => '1',
-        'id' => '1',
-        'name' => 'red'
-      },
-      {
-        'description_id' => '3',
-        'id' => '3',
-        'name' => 'green'
-      }
-    ],
-    'id' => '2',
-    'name' => 'Sled',
-    'prices' =>
-    [
-      {
-        'id' => '3',
-        'price' => '9.99',
-        'product_id' => '2',
-        'region_id' => 'US'
-      }
-    ],
-    'vendor' =>
-    {
-      'id' => '2',
-      'name' => 'V2',
-      'region_id' => 'US',
-      'vendor_id' => '1'
-    },
+    'id'        => '2',
+    'name'      => 'Sled',
     'vendor_id' => '2'
   };
 
   is_deeply($tree, $check_tree, "as_tree force_load => 1, max_depth => 0 - $db_type");
 
   my $new_from_tree = $product_class->new_from_tree($tree);  
-  is_deeply($check_tree, $new_from_tree->as_tree, "new_from_tree 1 - $db_type");
+  is_deeply($new_from_tree->as_tree, $check_tree, "new_from_tree 1 - $db_type");
 
   if($Have_JSON)
   {
@@ -245,6 +214,63 @@ foreach my $db_type (qw(mysql))#(qw(sqlite mysql pg pg_with_schema informix))
 
   $tree = $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 1);
 
+  $check_tree = 
+  {
+    'colors' => 
+    [
+      {
+        'description_id' => '1',
+        'id'             => '1',
+        'name'           => 'red'
+      },
+      {
+        'description_id' => '3',
+        'id'             => '3',
+        'name'           => 'green'
+      }
+    ],
+    'id'     => '2',
+    'name'   => 'Sled',
+    'prices' => 
+    [
+      {
+        'id'         => '3',
+        'price'      => '9.99',
+        'product_id' => '2',
+        'region_id'  => 'US'
+      }
+    ],
+    'vendor' => 
+    {
+      'id'        => '2',
+      'name'      => 'V2',
+      'region_id' => 'US',
+      'vendor_id' => '1'
+    },
+    'vendor_id' => '2'
+  };
+
+  is_deeply($tree, $check_tree, "as_tree force_load => 1, max_depth => 1 - $db_type");
+
+  $new_from_tree = $product_class->new_from_tree($tree);  
+  is_deeply($new_from_tree->as_tree, $check_tree, "new_from_tree 2 - $db_type");
+
+  if($Have_JSON)
+  {
+    my $json = $product_class->new(id => 2)->as_json(force_load => 1, max_depth => 1);
+    my $new_from_json = $product_class->new_from_json($json);
+    is_deeply($check_tree, $new_from_json->as_tree, "new_from_json 2 - $db_type");
+  }
+
+  if($Have_YAML)
+  {
+    my $yaml = $product_class->new(id => 2)->as_yaml(force_load => 1, max_depth => 1);
+    my $new_from_yaml = $product_class->new_from_yaml($yaml);
+    is_deeply($check_tree, $new_from_yaml->as_tree, "new_from_yaml 2 - $db_type");
+  }
+
+  $tree = $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 2);
+
   $check_tree =
   {
     'colors' => 
@@ -257,15 +283,7 @@ foreach my $db_type (qw(mysql))#(qw(sqlite mysql pg pg_with_schema informix))
         },
         'description_id' => '1',
         'id'             => '1',
-        'name'           => 'red',
-        'products'       => 
-        [
-          {
-            'id'        => '1',
-            'name'      => 'Kite',
-            'vendor_id' => '1'
-          }
-        ]
+        'name'           => 'red'
       },
       {
         'description' => 
@@ -275,8 +293,7 @@ foreach my $db_type (qw(mysql))#(qw(sqlite mysql pg pg_with_schema informix))
         },
         'description_id' => '3',
         'id'             => '3',
-        'name'           => 'green',
-        'products'       => []
+        'name'           => 'green'
       }
     ],
     'id'     => '2',
@@ -286,7 +303,6 @@ foreach my $db_type (qw(mysql))#(qw(sqlite mysql pg pg_with_schema informix))
       {
         'id'         => '3',
         'price'      => '9.99',
-        'product'    => {},
         'product_id' => '2',
         'region'     => 
         {
@@ -300,8 +316,6 @@ foreach my $db_type (qw(mysql))#(qw(sqlite mysql pg pg_with_schema informix))
     {
       'id'        => '2',
       'name'      => 'V2',
-      'products'  => [],
-      'region'    => {},
       'region_id' => 'US',
       'vendor'    => 
       {
@@ -316,29 +330,26 @@ foreach my $db_type (qw(mysql))#(qw(sqlite mysql pg pg_with_schema informix))
     'vendor_id' => '2'
   };
 
-  is_deeply($tree, $check_tree, "as_tree force_load => 1, max_depth => 1 - $db_type");
-exit;
+  is_deeply($tree, $check_tree, "as_tree force_load => 1, max_depth => 2 - $db_type");
+
   $new_from_tree = $product_class->new_from_tree($tree);  
-use Data::Dumper;
-print Dumper($new_from_tree->as_tree);
-$DB::single = 1;
-  is_deeply($check_tree, $new_from_tree->as_tree, "new_from_tree 2 - $db_type");
+  is_deeply($new_from_tree->as_tree, $check_tree, "new_from_tree 3 - $db_type");
 
   if($Have_JSON)
   {
-    my $json = $product_class->new(id => 2)->as_json(force_load => 1, max_depth => 1);
+    my $json = $product_class->new(id => 2)->as_json(force_load => 1, max_depth => 2);
     my $new_from_json = $product_class->new_from_json($json);
-#    is_deeply($check_tree, $new_from_json->as_tree, "new_from_json 2 - $db_type");
+    is_deeply($check_tree, $new_from_json->as_tree, "new_from_json 3 - $db_type");
   }
 
-#   if($Have_YAML)
-#   {
-#     my $yaml = $product_class->new(id => 2)->as_yaml(force_load => 1, max_depth => 1);
-#     my $new_from_yaml = $product_class->new_from_yaml($yaml);
-#     is_deeply($check_tree, $new_from_yaml->as_tree, "new_from_yaml 2 - $db_type");
-#   }
-
-  $tree = $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 1, allow_loops => 1);
+  if($Have_YAML)
+  {
+    my $yaml = $product_class->new(id => 2)->as_yaml(force_load => 1, max_depth => 2);
+    my $new_from_yaml = $product_class->new_from_yaml($yaml);
+    is_deeply($check_tree, $new_from_yaml->as_tree, "new_from_yaml 4 - $db_type");
+  }
+exit;
+  $tree = $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 2, allow_loops => 1);
 
   $check_tree =
   {
