@@ -237,7 +237,7 @@ sub object_has_related_objects
     return @{$related_objects} ? $related_objects : 0;
   }
 
-  return $ref ? [ $related_objects ] : 0;
+  return $ref ? [ $related_objects ] : undef;
 }
 
 sub hash_keys_used { shift->hash_key }

@@ -58,14 +58,14 @@ use Rose::Class::MakeMethods::Generic
 sub json_encoder
 {
   my($class) = shift;
-  
+
   my $json = $class->_json_object;
-  
+
   unless(defined $json)
   {
     $json = $class->init_json_encoder;
   }
-  
+
   return $json;
 }
 
@@ -532,21 +532,20 @@ sub primary_key_as_string
 sub traverse_depth_first
 {
   my($self) = shift;
-  
-  my($context, %handlers, $filter, $prune, $max_depth);
+
+  my($context, $handlers, $filter, $prune, $max_depth);
 
   my $visited    = {};
   my $force_load = 0;
 
   if(@_ == 1)
   {
-    $handlers{'object'} = shift;
+    $handlers->{'object'} = shift;
   }
   else
   {
     my %args = @_;
-    $handlers{'object'}       = $args{'handlers'}{'object'};
-    $handlers{'relationship'} = $args{'handlers'}{'relationship'};
+    $handlers   = $args{'handlers'} || {};
     $force_load = $args{'force_load'} || 0;
     $context    = $args{'context'};
     $filter     = $args{'filter'};
@@ -555,12 +554,16 @@ sub traverse_depth_first
     $visited = undef  if($args{'allow_loops'});
   }
 
-  _traverse_depth_first($self, $context ||= {}, \%handlers, $filter, $prune, 0, $max_depth, undef, undef, $visited, $force_load);
-  
+  _traverse_depth_first($self, $context ||= {}, $handlers, $filter, $prune, 0, $max_depth, undef, undef, $visited, $force_load);
+
   return $context;
 }
 
 require Rose::DB::Object::Util;
+
+use constant OK            => 1;
+use constant LOOP_AVOIDED  => -1;
+use constant HIT_MAX_DEPTH => -2;
 
 sub _traverse_depth_first
 {
@@ -568,7 +571,7 @@ sub _traverse_depth_first
 
   if($visited && $visited->{ref($self),Rose::DB::Object::Helpers::primary_key_as_string($self)}++)
   {
-    return;
+    return LOOP_AVOIDED;
   }
 
   if($handlers->{'object'})
@@ -584,11 +587,22 @@ sub _traverse_depth_first
     }
   }
 
-  return  if((defined $max_depth && $depth > $max_depth) || ($prune && $prune->($self, $rel_meta, $parent)));
+  if((defined $max_depth && $depth == $max_depth) || ($prune && $prune->($self, $rel_meta, $parent)))
+  {
+    return HIT_MAX_DEPTH;
+  }
 
   REL: foreach my $rel ($self->meta->relationships)
   {
     my $objs = $rel->object_has_related_objects($self);
+    # XXX: Call above returns 0 if the collection is an empty array ref
+    # XXX: and undef if it's not even a reference (e.g., undef).  This
+    # XXX: distinguishes between a collection that has been loaded and
+    # XXX: found to have zero items, and one that has never been loaded.
+    # XXX: To "un-hack" this, we'd need true tracking of load/store
+    # XXX: actions to related collections.  Or we could just omit the
+    # XXX: empty collections from the traversal.
+    $objs = []  if(defined $objs && !ref $objs);
 
     if($force_load || $objs)
     {
@@ -605,18 +619,25 @@ sub _traverse_depth_first
 
       my $c = $handlers->{'relationship'}->($self, $context, $rel)  if($handlers->{'relationship'});
 
-      foreach my $obj (@$objs)
+      OBJ: foreach my $obj (@$objs)
       {
-        _traverse_depth_first($obj, $c, $handlers, $filter, $prune, $depth + 1, $max_depth, $self, $rel, $visited, $force_load);
+        my $ret = _traverse_depth_first($obj, $c, $handlers, $filter, $prune, $depth + 1, $max_depth, $self, $rel, $visited, $force_load);
+
+        if($ret == LOOP_AVOIDED && $handlers->{'loop_avoided'})
+        {
+          $handlers->{'loop_avoided'}->($obj, $c, $self, $context, $rel) && last OBJ;
+        }
       }
     }
   }
+  
+  return OK;
 }
 
 sub as_tree
 {
   my($self) = shift;
-  
+
   my %args = @_;
 
   my $deflate = $args{'deflate'};
@@ -630,11 +651,11 @@ sub as_tree
       object => sub
       {
         my($self, $context, $parent, $relationship, $depth) = @_;
-    
+
         local $self->{STATE_SAVING()} = 1  if($deflate);
-      
+
         my $cols = Rose::DB::Object::Helpers::column_value_pairs($self);
-        
+
         if(ref $context eq 'ARRAY')
         {
           push(@$context, $cols);
@@ -646,7 +667,7 @@ sub as_tree
           return $context;
         }
       },
-      
+
       relationship => sub
       {
         my($self, $context, $relationship) = @_;
@@ -664,8 +685,16 @@ sub as_tree
         {
           return $context->{$name} = {};
         }
-    
+
         return $context->{$name} = [];
+      },
+
+      loop_avoided => sub
+      {
+        my($object, $context, $parent_object, $parent_context, $relationship) = @_;
+        # If any item can't be included due to loops, wipe entire collection and bail
+        delete $parent_context->{$relationship->name};
+        return 1; # true return means stop processing items in this collection
       },
     },
     @_);
@@ -736,60 +765,62 @@ sub init_with_tree
         $method = $rel->method_name('get_set_on_save') || 
                   $rel->method_name('get_set') ||
                   next;
-  
+
         my $ref = ref $value;
 
         if($ref eq 'HASH')
         {
           # Split hash into relationship values and everything else
           my %rel_vals;
-  
-          my %is_rel = map { $_->name => 1 } $meta->relationships;
+
+          my %is_rel = map { $_->name => 1 } $rel->can('foreign_class') ? 
+            $rel->foreign_class->meta->relationships : $rel->class->meta->relationships;
 
           foreach my $k (keys %$value)  
           {
             $rel_vals{$k} = delete $value->{$k}  if($is_rel{$k});
           }
-  
+
           # %$value now has non-relationship keys only
           my $object = $self->$method(%$value);
-  
+
           # Recurse on relationship key
           Rose::DB::Object::Helpers::init_with_tree($object, \%rel_vals)  if(%rel_vals);
-  
+
           # Repair original hash
           @$value{keys %rel_vals} = values %rel_vals;
         }
         elsif($ref eq 'ARRAY')
         {
           my(@objects, @sub_objects);
-  
+
           foreach my $item (@$value)
           {
             # Split hash into relationship values and everything else
             my %rel_vals;
-    
-            my %is_rel = map { $_->name => 1 } $meta->relationships;
-    
+
+            my %is_rel = map { $_->name => 1 } $rel->can('foreign_class') ? 
+              $rel->foreign_class->meta->relationships : $rel->class->meta->relationships;
+
             foreach my $k (keys %$item)
             {
               $rel_vals{$k} = delete $item->{$k}  if($is_rel{$k});
             }
-    
+
             # %$item now has non-relationship keys only
             push(@objects, { %$item }); # shallow copy is sufficient
-            
+
             push(@sub_objects, \%rel_vals);
-  
+
             # Repair original hash
             @$item{keys %rel_vals} = values %rel_vals;
           }
-          
+
           # Add the related objects
           $self->$method(\@objects);
-          
+
           # Recurse on the sub-objects
-          foreach my $object (@objects)
+          foreach my $object (@{ $self->$method() })
           {
             my $sub_objects = shift(@sub_objects);
             Rose::DB::Object::Helpers::init_with_tree($object, $sub_objects)  if(%$sub_objects);
@@ -812,7 +843,11 @@ sub init_with_tree
   return $self;
 }
 
-sub new_from_tree { shift->new->Rose::DB::Object::Helpers::init_with_tree(@_) }
+sub new_from_tree
+{
+  my $self = shift->new;
+  $self->Rose::DB::Object::Helpers::init_with_tree(@_);
+}
 
 sub new_from_json { new_from_tree(shift, __PACKAGE__->json_decoder->decode(@_)) }
 sub new_from_yaml { new_from_tree(shift, YAML::Syck::Load(@_)) }
