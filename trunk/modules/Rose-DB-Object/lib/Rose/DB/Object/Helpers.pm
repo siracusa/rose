@@ -21,7 +21,7 @@ __PACKAGE__->export_tags
        column_mutator_value_pairs 
        column_values_as_yaml column_values_as_json
        traverse_depth_first as_tree init_with_tree new_from_tree
-       new_from_deflated_tree
+       init_with_deflated_tree new_from_deflated_tree
        as_yaml new_from_yaml init_with_yaml
        as_json new_from_json init_with_json
        init_with_column_value_pairs
@@ -34,9 +34,11 @@ __PACKAGE__->export_tags
     qw(clone clone_and_reset load_or_insert load_or_save insert_or_update 
        insert_or_update_on_duplicate_key load_speculative
        column_value_pairs column_accessor_value_pairs 
-       column_mutator_value_pairs init_with_column_value_pairs
-       traverse_depth_first as_tree init_with_tree new_from_tree 
-       new_from_deflated_tree
+       column_mutator_value_pairs 
+       column_values_as_yaml column_values_as_json
+       traverse_depth_first as_tree init_with_tree new_from_tree
+       init_with_deflated_tree new_from_deflated_tree
+       init_with_column_value_pairs
        has_loaded_related strip forget_related)
   ],
 );
@@ -716,7 +718,7 @@ sub as_tree
 
 our $Deflated = 0;
 
-sub init_with_tree_deflated
+sub init_with_deflated_tree
 {
   local $Deflated = 1;
   Rose::DB::Object::Helpers::init_with_tree(@_);
@@ -833,7 +835,7 @@ sub new_from_tree
 sub new_from_deflated_tree
 {
   my $self = shift->new;
-  $self->Rose::DB::Object::Helpers::init_with_tree_deflated(@_);
+  $self->Rose::DB::Object::Helpers::init_with_deflated_tree(@_);
 }
 
 __PACKAGE__->pre_import_hook(new_from_json => sub { require JSON });
