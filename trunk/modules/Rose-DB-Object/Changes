@@ -1,4 +1,4 @@
-0.770_09 (08.18.2008) - John Siracusa <siracusa@gmail.com>
+0.770_10 (08.20.2008) - John Siracusa <siracusa@gmail.com>
 
     * Made "where" an alias for the Manager's "query" parameter.
       (Requested by Ask Bjørn Hansen)
@@ -11,8 +11,8 @@
     * Added support for Oracle date/time column keywords.
     * Cascaded delete now properly cascades to one-to-one related objects.
       (Reported by kittens)
-    * TODO: traversal and recursive serialization helpers.
-    * TODO: nonpersistent_columns
+    * TODO: traversal and recursive serialization helpers (needs docs)
+    * TODO: nonpersistent_columns (needs docs)
     * TODO: move should_inline* to Rose::DB
     * TODO: Clarify Manager docs - why tN.rel.rel.col is bad.
 

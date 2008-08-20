@@ -73,6 +73,7 @@ use Rose::Object::MakeMethods::Generic
   'array --get_set_inited' =>
   [
     'columns_ordered',
+    'nonpersistent_columns_ordered',
   ]
 );
 
@@ -802,6 +803,14 @@ sub delete_columns
   return;
 }
 
+sub delete_nonpersistent_columns
+{
+  my($self, $name) = @_;
+  $self->{'nonpersistent_columns'} = {};
+  $self->{'nonpersistent_columns_ordered'} = [];
+  return;
+}
+
 sub first_column { shift->columns_ordered->[0] }
 
 sub sync_keys_to_columns
@@ -872,6 +881,21 @@ sub column
   return undef;
 }
 
+sub nonpersistent_column
+{
+  my($self, $name) = (shift, shift);
+
+  if(@_)
+  {
+    $self->delete_nonpersistent_column($name);
+    $self->add_nonpersistent_column($name => @_);
+  }
+
+  return $self->{'nonpersistent_columns'}{$name}  if($self->{'nonpersistent_columns'}{$name});
+  return undef;
+}
+
+
 sub columns
 {
   my($self) = shift;
@@ -883,6 +907,19 @@ sub columns
   }
 
   return $self->columns_ordered;
+}
+
+sub nonpersistent_columns
+{
+  my($self) = shift;
+
+  if(@_)
+  {
+    $self->delete_nonpersistent_columns;
+    $self->add_nonpersistent_columns(@_);
+  }
+
+  return $self->nonpersistent_columns_ordered;
 }
 
 sub num_columns
@@ -909,15 +946,32 @@ sub lazy_columns
     [ grep { $_->lazy } $self->columns_ordered ];
 }
 
+# XXX: Super-lame code sharing via dynamically-scoped flag var
+our $Nonpersistent;
+
+sub add_nonpersistent_columns
+{
+  local $Nonpersistent = 1;
+  shift->_add_columns(@_);
+}
+
+sub add_nonpersistent_column { shift->add_nonpersistent_columns(@_) }
+
 sub add_columns
+{
+  local $Nonpersistent = 0;
+  shift->_add_columns(@_);
+}
+
+sub add_column { shift->add_columns(@_) }
+
+sub _add_columns
 {
   my($self) = shift;
 
   my $class = ref $self;
 
-  $self->_clear_column_generated_values;
-
-  my @columns;
+  my(@columns, @nonpersistent_columns);
 
   ARG: while(@_)
   {
@@ -931,12 +985,23 @@ sub add_columns
         unless($column->name =~ /\S/);
 
       $column->parent($self);
-      $self->{'columns'}{$column->name} = $column;
-      push(@columns, $column);
+      $column->nonpersistent(1)  if($Nonpersistent);
+
+      if($column->nonpersistent)
+      {
+        $self->{'nonpersistent_columns'}{$column->name} = $column;
+        push(@nonpersistent_columns, $column);      
+      }
+      else
+      {
+        $self->{'columns'}{$column->name} = $column;
+        push(@columns, $column);      
+      }
+
       next;
     }
 
-    unless(ref $_[0])
+    unless(ref $_[0]) # bare column name, persistent only
     {
       my $column_class = $self->original_class->column_type_class('scalar')
         or Carp::croak "No column class set for column type 'scalar'";
@@ -952,8 +1017,19 @@ sub add_columns
       my $column = $_[0];
       $column->name($name);
       $column->parent($self);
-      $self->{'columns'}{$name} = $column;
-      push(@columns, $column);
+
+      $column->nonpersistent(1)  if($Nonpersistent);
+
+      if($column->nonpersistent)
+      {
+        $self->{'nonpersistent_columns'}{$column->name} = $column;
+        push(@nonpersistent_columns, $column);      
+      }
+      else
+      {
+        $self->{'columns'}{$column->name} = $column;
+        push(@columns, $column);      
+      }
     }
     elsif(ref $_[0] eq 'HASH')
     {
@@ -993,13 +1069,29 @@ sub add_columns
         $triggers{$event} = delete $info->{$event}  if(exists $info->{$event});
       }
 
+      if(delete $info->{'temp'}) # coerce temp to nonpersistent
+      {
+        $info->{'nonpersistent'} = 1;
+      }
+
       #$Debug && warn $self->class, " - adding $name $column_class\n";
       # XXX: Order of args is important here!  Parent must be set first
       # because some params rely on it being present when they're set.
-      my $column = $self->{'columns'}{$name} = 
+      my $column = 
         $column_class->new(parent => $self, %$info, name => $name);
 
-      push(@columns, $column);
+      $column->nonpersistent(1)  if($Nonpersistent);
+
+      if($column->nonpersistent)
+      {
+        $self->{'nonpersistent_columns'}{$column->name} = $column;
+        push(@nonpersistent_columns, $column);      
+      }
+      else
+      {
+        $self->{'columns'}{$column->name} = $column;
+        push(@columns, $column);      
+      }
 
       # Set or add auto-created method names
       if($methods || $add_methods)
@@ -1054,7 +1146,8 @@ sub add_columns
     }
   }
 
-  # Handle as-yet undocumented smart modification defaults
+  # Handle as-yet undocumented smart modification defaults.
+  # Smart modification is only relevant
   foreach my $column (@columns)
   {
     if($column->can('smart_modification') && !defined $column->{'smart_modification'})
@@ -1063,12 +1156,20 @@ sub add_columns
     }
   }
 
-  push(@{$self->{'columns_ordered'}}, @columns);
+  if(@columns)
+  {
+    push(@{$self->{'columns_ordered'}}, @columns);
+    $self->_clear_column_generated_values;
+  }
+  
+  if(@nonpersistent_columns)
+  {
+    push(@{$self->{'nonpersistent_columns_ordered'}}, @nonpersistent_columns);
+    $self->_clear_nonpersistent_column_generated_values;
+  }
 
-  return wantarray ? @columns : \@columns;
+  return wantarray ? (@columns, @nonpersistent_columns) :  [ @columns, @nonpersistent_columns ];
 }
-
-sub add_column { shift->add_columns(@_) }
 
 sub relationship
 {
@@ -1767,6 +1868,55 @@ sub make_column_methods
   return;
 }
 
+sub make_nonpersistent_column_methods
+{
+  my($self) = shift;
+  my(%args) = @_;
+
+  my $class = $self->class;
+
+  $args{'target_class'} = $class;
+
+  foreach my $column ($self->nonpersistent_columns_ordered)
+  {
+    unless($column->validate_specification)
+    {
+      Carp::croak "Column specification for column '", $column->name, 
+                  "' in class ", $self->class, " is invalid: ",
+                  $column->error;
+    }
+
+    my $name = $column->name;
+    my $method;
+
+    foreach my $type ($column->auto_method_types)
+    {
+      $method = $self->method_name_from_column_name($name, $type)
+        or Carp::croak "No method name defined for column '$name' ",
+                       "method type '$type'";
+
+      if(my $reason = $self->method_name_is_reserved($method, $class))
+      {
+        Carp::croak "Cannot create method '$method' - $reason  ",
+                    "Use alias_column() to map it to another name."
+      }
+
+      $column->method_name($type => $method);
+    }
+
+    #$Debug && warn $self->class, " - make methods for column $name\n";
+
+    $column->make_methods(%args);
+  }
+
+  $self->_clear_nonpersistent_column_generated_values;
+
+  # Initialize method name hashes
+  $self->nonpersistent_column_accessor_method_names;
+
+  return;
+}
+
 sub make_foreign_key_methods
 {
   my($self) = shift;
@@ -2303,6 +2453,7 @@ sub make_methods
   my($self) = shift;
 
   $self->make_column_methods(@_);
+  $self->make_nonpersistent_column_methods(@_);
   $self->make_foreign_key_methods(@_);
   $self->make_relationship_methods(@_);
 }
@@ -2612,6 +2763,13 @@ sub column_names
   return wantarray ? @{$self->{'column_names'}} : $self->{'column_names'};
 }
 
+sub nonpersistent_column_names
+{
+  my($self) = shift;
+  $self->{'nonpersistent_column_names'} ||= [ map { $_->name } $self->nonpersistent_columns_ordered ];
+  return wantarray ? @{$self->{'nonpersistent_column_names'}} : $self->{'nonpersistent_column_names'};
+}
+
 sub nonlazy_column_names
 {
   my($self) = shift;
@@ -2761,6 +2919,17 @@ sub column_accessor_method_names
                      $self->{'column_accessor_method_names'};
 }
 
+sub nonpersistent_column_accessor_method_names
+{
+  my($self) = shift;
+
+  $self->{'nonpersistent_column_accessor_method_names'} ||= 
+    [ map { $self->nonpersistent_column_accessor_method_name($_) } $self->nonpersistent_column_names ];
+
+  return wantarray ? @{$self->{'nonpersistent_column_accessor_method_names'}} :
+                     $self->{'nonpersistent_column_accessor_method_names'};
+}
+
 sub nonlazy_column_accessor_method_names
 {
   my($self) = shift;
@@ -2873,7 +3042,15 @@ sub column_accessor_method_name
     ($_[0]->column($_[1]) ? $_[0]->column($_[1])->accessor_method_name : undef);
 }
 
+sub nonpersistent_column_accessor_method_name
+{
+  $_[0]->{'nonpersistent_column_accessor_method'}{$_[1]} ||= 
+    ($_[0]->nonpersistent_column($_[1]) ? $_[0]->nonpersistent_column($_[1])->accessor_method_name : undef);
+}
+
 sub column_accessor_method_names_hash { shift->{'column_accessor_method'} }
+
+sub nonpersistent_column_accessor_method_names_hash { shift->{'nonpersistent_column_accessor_method'} }
 
 sub column_mutator_method_name
 {
@@ -3095,7 +3272,7 @@ sub update_changes_only_sql
 
   my %key = map { ($_ => 1) } @$key_columns;
 
-  my @modified = map { $self->column($_) } grep { !$key{$_} } keys %{$obj->{MODIFIED_COLUMNS()} || {}};
+  my @modified = grep { defined } map { $self->column($_) } grep { !$key{$_} } keys %{$obj->{MODIFIED_COLUMNS()} || {}};
 
   return  unless(@modified);
 
@@ -3380,7 +3557,7 @@ sub insert_and_on_duplicate_key_update_sql
     my %seen;
 
     @columns = $changes_only ?
-      (map { $self->column($_) } grep { !$seen{$_}++ }  
+      (grep { defined } map { $self->column($_) } grep { !$seen{$_}++ }  
        ($self->primary_key_column_names, 
         keys %{$obj->{MODIFIED_COLUMNS()} || {}})) :
       (grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
@@ -3420,7 +3597,7 @@ sub insert_and_on_duplicate_key_update_sql
     }
 
     @columns = $changes_only ?
-      (map { $self->column($_) } grep { !$skip{"$_"} } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
+      (grep { defined } map { $self->column($_) } grep { !$skip{"$_"} } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
       (grep { !$skip{"$_"} && (!$_->{'lazy'} || 
               $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns_ordered);
 
@@ -3512,7 +3689,7 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
     my %seen;
 
     @columns = $changes_only ?
-      (map { $self->column($_) } grep { !$seen{$_}++ }  
+      (grep { defined } map { $self->column($_) } grep { !$seen{$_}++ }  
        ($self->primary_key_column_names, 
         keys %{$obj->{MODIFIED_COLUMNS()} || {}})) :
       (grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
@@ -3546,7 +3723,7 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
     }
 
     @columns = $changes_only ?
-      (map { $self->column($_) } grep { !$skip{"$_"} } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
+      (grep { defined } map { $self->column($_) } grep { !$skip{"$_"} } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
       (grep { !$skip{"$_"} && (!$_->{'lazy'} || 
               $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns_ordered);
 
@@ -3857,6 +4034,15 @@ sub _clear_column_generated_values
   $self->{'dbi_requires_bind_param'} = undef;
 }
 
+sub _clear_nonpersistent_column_generated_values
+{
+  my($self) = shift;
+
+  $self->{'nonpersistent_column_names'}           = undef;
+  $self->{'nonpersistent_column_accessor_method_names'} = undef;
+  $self->{'nonpersistent_column_accessor_method'} = undef;
+}
+
 sub _clear_primary_key_column_generated_values
 {
   my($self) = shift;
@@ -3893,7 +4079,7 @@ sub method_name_from_column_name
 {
   my($self, $column_name, $method_type) = @_;
 
-  my $column = $self->column($column_name)
+  my $column = $self->column($column_name) || $self->nonpersistent_column($column_name)
     or Carp::confess "No such column: $column_name";
 
   return $self->method_name_from_column($column, $method_type);

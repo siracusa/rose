@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 2 + (5 * 26);
+use Test::More tests => 2 + (5 * 28);
 
 eval { require Test::Differences };
 
@@ -15,8 +15,8 @@ BEGIN
   use_ok('Rose::DB::Object::Helpers');
 }
 
-#use Data::Dumper;
-#$Data::Dumper::Sortkeys = 1;
+use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
 
 our(%Have, $Have_YAML, $Have_JSON);
 
@@ -43,7 +43,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 {
   SKIP:
   {
-    skip("$db_type tests", 26)  unless($Have{$db_type});
+    skip("$db_type tests", 28)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -220,6 +220,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     my $new_from_json = $product_class->new_from_json($json);
     is_deeply($check_tree, $new_from_json->as_tree, "new_from_json 1 - $db_type");
   }
+  else { SKIP: { skip('JSON tests', 1) } }
 
   if($Have_YAML)
   {
@@ -227,6 +228,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     my $new_from_yaml = $product_class->new_from_yaml($yaml);
     is_deeply($check_tree, $new_from_yaml->as_tree, "new_from_yaml 1 - $db_type");
   }
+  else { SKIP: { skip('YAML tests', 1) } }
 
   $tree = $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 1);
 
@@ -278,6 +280,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     my $new_from_json = $product_class->new_from_json($json);
     is_deeply($check_tree, $new_from_json->as_tree, "new_from_json 2 - $db_type");
   }
+  else { SKIP: { skip('JSON tests', 1) } }
 
   if($Have_YAML)
   {
@@ -285,6 +288,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     my $new_from_yaml = $product_class->new_from_yaml($yaml);
     is_deeply($check_tree, $new_from_yaml->as_tree, "new_from_yaml 2 - $db_type");
   }
+  else { SKIP: { skip('YAML tests', 1) } }
 
   $tree = $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 2);
 
@@ -359,6 +363,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     my $new_from_json = $product_class->new_from_json($json);
     is_deeply($check_tree, $new_from_json->as_tree, "new_from_json 3 - $db_type");
   }
+  else { SKIP: { skip('JSON tests', 1) } }
 
   if($Have_YAML)
   {
@@ -366,6 +371,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     my $new_from_yaml = $product_class->new_from_yaml($yaml);
     is_deeply($check_tree, $new_from_yaml->as_tree, "new_from_yaml 3 - $db_type");
   }
+  else { SKIP: { skip('YAML tests', 1) } }
 
   $tree = $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 2, allow_loops => 1);
 
@@ -491,6 +497,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     my $new_from_json = $product_class->new_from_json($json);
     is_deeply($check_tree, $new_from_json->as_tree(allow_loops => 1), "new_from_json 4 - $db_type");
   }
+  else { SKIP: { skip('JSON tests', 1) } }
 
   if($Have_YAML)
   {
@@ -498,6 +505,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     my $new_from_yaml = $product_class->new_from_yaml($yaml);
     is_deeply($check_tree, $new_from_yaml->as_tree(allow_loops => 1), "new_from_yaml 4 - $db_type");
   }
+  else { SKIP: { skip('YAML tests', 1) } }
 
   $tree = 
     $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 2, allow_loops => 1,
@@ -565,6 +573,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     my $new_from_json = $product_class->new_from_json($json);
     is_deeply($check_tree, $new_from_json->as_tree(allow_loops => 1, prune => sub { shift->name =~ /^p/ }), "new_from_json 5 - $db_type");
   }
+  else { SKIP: { skip('JSON tests', 1) } }
 
   if($Have_YAML)
   {
@@ -572,6 +581,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     my $new_from_yaml = $product_class->new_from_yaml($yaml);
     is_deeply($check_tree, $new_from_yaml->as_tree(allow_loops => 1, prune => sub { shift->name =~ /^p/ }), "new_from_yaml 5 - $db_type");
   }
+  else { SKIP: { skip('YAML tests', 1) } }
 
   $tree = 
     $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 2, allow_loops => 1,
@@ -629,6 +639,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     my $new_from_json = $product_class->new_from_json($json);
     is_deeply($check_tree, $new_from_json->as_tree(allow_loops => 1, prune => sub { shift->name =~ /^p/ }, exclude => sub { no warnings; shift->id > 2 }), "new_from_json 6 - $db_type");
   }
+  else { SKIP: { skip('JSON tests', 1) } }
 
   if($Have_YAML)
   {
@@ -636,7 +647,43 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     my $new_from_yaml = $product_class->new_from_yaml($yaml);
     is_deeply($check_tree, $new_from_yaml->as_tree(allow_loops => 1, prune => sub { shift->name =~ /^p/ }, exclude => sub { no warnings; shift->id > 2 }), "new_from_yaml 6 - $db_type");
   }
+  else { SKIP: { skip('YAML tests', 1) } }
 
+  # Test round-trip of non-column attributes
+  
+  $product_class->meta->add_nonpersistent_column(
+    other_date => { type => 'datetime', default => DateTime->new(year => 2008, month => 12, day => 31) });
+
+  $product_class->meta->make_nonpersistent_column_methods;
+
+  my $p3 = 
+    $product_class->new(
+      id         => 3,
+      name       => 'Barn',
+      other_date => '12/31/2007');
+
+  $check_tree =
+  {
+    'id' => 3,
+    'name' => 'Barn',
+    'other_date' => '2007-12-31 00:00:00',
+    'sale_date' => undef,
+    'vendor_id' => undef
+  };
+
+  is_deeply($p3->as_tree, $check_tree, "nonpersistent columns 1 - $db_type");
+
+  $check_tree =
+  {
+    'id' => 3,
+    'name' => 'Barn',
+    'sale_date' => undef,
+    'vendor_id' => undef
+  };
+
+  is_deeply($p3->as_tree(persistent_columns_only => 1), $check_tree, "nonpersistent columns 2 - $db_type");
+
+  #$tree = $p3->as_tree
   # my $p3 = 
   #   $product_class->new(
   #     id     => 3,
@@ -666,10 +713,10 @@ BEGIN
   our($Have_YAML, $Have_JSON);
 
   eval { require YAML::Syck };
-  $Have_YAML = @$ ? 0 : 1;
+  $Have_YAML = $@ ? 0 : 1;
 
   eval { require JSON };
-  $Have_JSON = @$ ? 0 : 1;
+  $Have_JSON = $@ ? 0 : 1;
 }
 
 BEGIN
