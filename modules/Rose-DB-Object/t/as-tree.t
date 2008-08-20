@@ -2,15 +2,11 @@
 
 use strict;
 
-use Test::More 'no_plan'; # tests => 2 + (5 * 6);
+use Test::More tests => 2 + (5 * 26);
 
 eval { require Test::Differences };
 
-unless($@)
-{
-  no warnings;
-  *is_deeply = \&Test::Differences::eq_or_diff;
-}
+my $Have_Test_Differences = $@ ? 0 : 1;
 
 BEGIN 
 {
@@ -19,8 +15,8 @@ BEGIN
   use_ok('Rose::DB::Object::Helpers');
 }
 
-use Data::Dumper;
-$Data::Dumper::Sortkeys = 1;
+#use Data::Dumper;
+#$Data::Dumper::Sortkeys = 1;
 
 our(%Have, $Have_YAML, $Have_JSON);
 
@@ -43,14 +39,30 @@ my $Include =
                         prices products vendors regions)) . ')$';
 $Include = qr($Include);
 
-foreach my $db_type (qw(pg))#(qw(sqlite mysql pg pg_with_schema informix))
+foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 {
   SKIP:
   {
-    skip("$db_type tests", 6)  unless($Have{$db_type});
+    skip("$db_type tests", 26)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
+
+  if($Have_Test_Differences)
+  {
+    # Test::Differences is sensitive to string/number distinctions that 
+    # SQLite exhibits and that I don't care about.
+    if($db_type eq 'sqlite')
+    {
+      no warnings;
+      *is_deeply = \&Test::More::is_deeply;
+    }
+    else
+    {
+      no warnings;
+      *is_deeply = \&Test::Differences::eq_or_diff;
+    }
+  }
 
   Rose::DB->default_type($db_type);
 
@@ -96,7 +108,8 @@ foreach my $db_type (qw(pg))#(qw(sqlite mysql pg pg_with_schema informix))
   my $product_class = $class_prefix  . '::Product';
   my $manager_class = $product_class . '::Manager';
 
-  Rose::DB::Object::Helpers->import(-target_class => $product_class, qw(as_tree new_from_tree init_with_tree));
+  Rose::DB::Object::Helpers->import(-target_class => $product_class, 
+    qw(as_tree new_from_tree new_from_deflated_tree init_with_tree traverse_depth_first));
 
   if($Have_JSON)
   {
@@ -112,6 +125,7 @@ foreach my $db_type (qw(pg))#(qw(sqlite mysql pg pg_with_schema informix))
     $product_class->new(
       id     => 1,
       name   => 'Kite',
+      sale_date => '1/2/2005',
       vendor => { id => 1, name => 'V1', region => { id => 'DE', name => 'Germany' } },
       prices => 
       [
@@ -161,6 +175,7 @@ foreach my $db_type (qw(pg))#(qw(sqlite mysql pg pg_with_schema informix))
     $product_class->new(
       id     => 2,
       name   => 'Sled',
+      sale_date => '2/2/2005',
       vendor => { id => 2, name => 'V2', region_id => 'US', vendor_id => 1 },
       prices => [ { price => 9.99 } ],
       colors => 
@@ -179,10 +194,10 @@ foreach my $db_type (qw(pg))#(qw(sqlite mysql pg pg_with_schema informix))
   $p2->save;
 
   my $tree      = $p2->as_tree;
-  my $from_tree = $product_class->new_from_tree($tree);
+  my $from_tree = $product_class->new_from_deflated_tree($tree);
 
-  is_deeply($tree, $from_tree->as_tree, "as_tree -> new_from_tree -> as_tree 1 - $db_type");
-  is_deeply($tree, $from_tree->as_tree, "as_tree -> new_from_tree -> as_tree 2 - $db_type");
+  is_deeply($tree, $from_tree->as_tree, "as_tree -> new_from_deflated_tree -> as_tree 1 - $db_type");
+  is_deeply($tree, $from_tree->as_tree, "as_tree -> new_from_deflated_tree -> as_tree 2 - $db_type");
 
   $tree = $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 0);
 
@@ -190,13 +205,14 @@ foreach my $db_type (qw(pg))#(qw(sqlite mysql pg pg_with_schema informix))
   {
     'id'        => '2',
     'name'      => 'Sled',
-    'vendor_id' => '2'
+    'vendor_id' => '2',
+    'sale_date' => '2005-02-02 00:00:00',
   };
 
-  is_deeply($tree, $check_tree, "as_tree force_load => 1, max_depth => 0 - $db_type");
+  is_deeply($tree, $check_tree, "as_tree force, depth 0 - $db_type");
 
-  my $new_from_tree = $product_class->new_from_tree($tree);  
-  is_deeply($new_from_tree->as_tree, $check_tree, "new_from_tree 1 - $db_type");
+  my $new_from_deflated_tree = $product_class->new_from_deflated_tree($tree);  
+  is_deeply($new_from_deflated_tree->as_tree, $check_tree, "new_from_deflated_tree 1 - $db_type");
 
   if($Have_JSON)
   {
@@ -240,6 +256,7 @@ foreach my $db_type (qw(pg))#(qw(sqlite mysql pg pg_with_schema informix))
         'region_id'  => 'US'
       }
     ],
+    'sale_date' => '2005-02-02 00:00:00',
     'vendor' => 
     {
       'id'        => '2',
@@ -250,10 +267,10 @@ foreach my $db_type (qw(pg))#(qw(sqlite mysql pg pg_with_schema informix))
     'vendor_id' => '2'
   };
 
-  is_deeply($tree, $check_tree, "as_tree force_load => 1, max_depth => 1 - $db_type");
+  is_deeply($tree, $check_tree, "as_tree force, depth 1 - $db_type");
 
-  $new_from_tree = $product_class->new_from_tree($tree);  
-  is_deeply($new_from_tree->as_tree, $check_tree, "new_from_tree 2 - $db_type");
+  $new_from_deflated_tree = $product_class->new_from_deflated_tree($tree);  
+  is_deeply($new_from_deflated_tree->as_tree, $check_tree, "new_from_deflated_tree 2 - $db_type");
 
   if($Have_JSON)
   {
@@ -312,6 +329,7 @@ foreach my $db_type (qw(pg))#(qw(sqlite mysql pg pg_with_schema informix))
         'region_id' => 'US'
       }
     ],
+    'sale_date' => '2005-02-02 00:00:00',
     'vendor' => 
     {
       'id'        => '2',
@@ -330,9 +348,9 @@ foreach my $db_type (qw(pg))#(qw(sqlite mysql pg pg_with_schema informix))
     'vendor_id' => '2'
   };
 
-  is_deeply($tree, $check_tree, "as_tree force_load => 1, max_depth => 2 - $db_type");
+  is_deeply($tree, $check_tree, "as_tree force, depth 2 - $db_type");
 
-  $new_from_tree = $product_class->new_from_tree($tree);  
+  my $new_from_tree = $product_class->new_from_deflated_tree($tree);  
   is_deeply($new_from_tree->as_tree, $check_tree, "new_from_tree 3 - $db_type");
 
   if($Have_JSON)
@@ -346,10 +364,16 @@ foreach my $db_type (qw(pg))#(qw(sqlite mysql pg pg_with_schema informix))
   {
     my $yaml = $product_class->new(id => 2)->as_yaml(force_load => 1, max_depth => 2);
     my $new_from_yaml = $product_class->new_from_yaml($yaml);
-    is_deeply($check_tree, $new_from_yaml->as_tree, "new_from_yaml 4 - $db_type");
+    is_deeply($check_tree, $new_from_yaml->as_tree, "new_from_yaml 3 - $db_type");
   }
-exit;
+
   $tree = $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 2, allow_loops => 1);
+
+  #$product_class->new(id => 2)->traverse_depth_first(
+  #  force_load => 1, handlers => 
+  #  {
+  #    object => sub { print '  ' x $_[4], ref($_[0]), ': ' . $_[0]->id, "\n" } 
+  #  });
 
   $check_tree =
   {
@@ -369,11 +393,13 @@ exit;
           {
             'id'        => '1',
             'name'      => 'Kite',
+            'sale_date' => '2005-01-02 00:00:00',
             'vendor_id' => '1'
           },
           {
             'id'        => '2',
             'name'      => 'Sled',
+            'sale_date' => '2005-02-02 00:00:00',
             'vendor_id' => '2'
           }
         ]
@@ -392,6 +418,7 @@ exit;
           {
             'id'        => '2',
             'name'      => 'Sled',
+            'sale_date' => '2005-02-02 00:00:00',
             'vendor_id' => '2'
           }
         ]
@@ -408,6 +435,7 @@ exit;
         {
           'id'        => '2',
           'name'      => 'Sled',
+          'sale_date' => '2005-02-02 00:00:00',
           'vendor_id' => '2'
         },
         'product_id' => '2',
@@ -419,6 +447,7 @@ exit;
         'region_id' => 'US'
       }
     ],
+    'sale_date' => '2005-02-02 00:00:00',
     'vendor' => 
     {
       'id'       => '2',
@@ -428,6 +457,7 @@ exit;
         {
           'id'        => '2',
           'name'      => 'Sled',
+          'sale_date' => '2005-02-02 00:00:00',
           'vendor_id' => '2'
         }
       ],
@@ -450,10 +480,29 @@ exit;
     'vendor_id' => '2'
   };
 
-  is_deeply($tree, $check_tree, "as_tree force_load => 1, max_depth => 1, allow_loops => 1 - $db_type");
-#$Rose::DB::Object::Manager::Debug = 1;
-  $tree = $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 2);
-#$Rose::DB::Object::Manager::Debug = 0;
+  is_deeply($tree, $check_tree, "as_tree force, depth 2, allow_loops => 1 - $db_type");
+
+  $new_from_tree = $product_class->new_from_tree($tree);  
+  is_deeply($new_from_tree->as_tree(allow_loops => 1), $check_tree, "new_from_tree 4 - $db_type");
+
+  if($Have_JSON)
+  {
+    my $json = $product_class->new(id => 2)->as_json(force_load => 1, max_depth => 2, allow_loops => 1);
+    my $new_from_json = $product_class->new_from_json($json);
+    is_deeply($check_tree, $new_from_json->as_tree(allow_loops => 1), "new_from_json 4 - $db_type");
+  }
+
+  if($Have_YAML)
+  {
+    my $yaml = $product_class->new(id => 2)->as_yaml(force_load => 1, max_depth => 2, allow_loops => 1);
+    my $new_from_yaml = $product_class->new_from_yaml($yaml);
+    is_deeply($check_tree, $new_from_yaml->as_tree(allow_loops => 1), "new_from_yaml 4 - $db_type");
+  }
+
+  $tree = 
+    $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 2, allow_loops => 1,
+      prune => sub { shift->name =~ /^p/ });
+
   $check_tree =
   {
     'colors' => 
@@ -461,141 +510,153 @@ exit;
       {
         'description' => 
         {
-          'authors' => 
-          [
-            {
-              'id'   => '1',
-              'name' => 'john'
-            },
-            {
-              'id'   => '2',
-              'name' => 'sue'
-            }
-          ],
-          'colors' => [],
-          'id'     => '1',
-          'text'   => 'desc 1'
+          'id'   => '1',
+          'text' => 'desc 1'
         },
         'description_id' => '1',
         'id'             => '1',
         'name'           => 'red',
-        'products'       => 
-        [
-          {
-            'colors' => 
-            [
-              {
-                'description_id' => '2',
-                'id'             => '2',
-                'name'           => 'blue'
-              }
-            ],
-            'id'     => '1',
-            'name'   => 'Kite',
-            'prices' => 
-            [
-              {
-                'id'         => '1',
-                'price'      => '1.23',
-                'product_id' => '1',
-                'region_id'  => 'US'
-              },
-              {
-                'id'         => '2',
-                'price'      => '4.56',
-                'product_id' => '1',
-                'region_id'  => 'DE'
-              }
-            ],
-            'vendor' => 
-            {
-              'id'        => '1',
-              'name'      => 'V1',
-              'region_id' => 'DE',
-              'vendor_id' => undef
-            },
-            'vendor_id' => '1'
-          }
-        ]
       },
       {
         'description' => 
         {
-          'authors' => 
-          [
-            {
-              'id'   => '4',
-              'name' => 'tim'
-            }
-          ],
-          'colors' => [],
-          'id'     => '3',
-          'text'   => 'desc 3'
+          'id'   => '3',
+          'text' => 'desc 3'
         },
         'description_id' => '3',
         'id'             => '3',
         'name'           => 'green',
-        'products'       => []
       }
     ],
     'id'     => '2',
     'name'   => 'Sled',
-    'prices' => 
-    [
+    'sale_date' => '2005-02-02 00:00:00',
+    'vendor' => 
+    {
+      'id'       => '2',
+      'name'     => 'V2',
+      'region' => 
       {
-        'id'         => '3',
-        'price'      => '9.99',
-        'product'    => {},
-        'product_id' => '2',
-        'region'     => 
-        {
-          'id'      => 'US',
-          'name'    => 'America',
-          'prices'  => [],
-          'vendors' => 
-          [
-            {
-              'id'        => '2',
-              'name'      => 'V2',
-              'region_id' => 'US',
-              'vendor_id' => '1'
-            }
-          ]
-        },
-        'region_id' => 'US'
-      }
-    ],
-    'vendor'    => {},
+        'id'   => 'US',
+        'name' => 'America'
+      },
+      'region_id' => 'US',
+      'vendor'    => 
+      {
+        'id'        => '1',
+        'name'      => 'V1',
+        'region_id' => 'DE',
+        'vendor_id' => undef
+      },
+      'vendor_id' => '1',
+      'vendors'   => []
+    },
     'vendor_id' => '2'
   };
 
-  is_deeply($tree, $check_tree, "as_tree force_load => 1, max_depth => 2 - $db_type");
-  #is(Dumper($tree), Dumper($check_tree), "as_tree force_load => 1, max_depth => 2 - $db_type");
+  is_deeply($tree, $check_tree, "as_tree force, depth 2, allow_loops => 1, /^p/ - $db_type");
 
-#print Dumper($tree);
-#$DB::single = 1;
-#exit;
+  $new_from_tree = $product_class->new_from_tree($tree);  
+  is_deeply($new_from_tree->as_tree(allow_loops => 1, prune => sub { shift->name =~ /^p/ }), $check_tree, "new_from_tree 5 - $db_type");
 
-  my $p3 = 
-    $product_class->new(
-      id     => 3,
-      name   => 'Barn',
-      vendor => { id => 3, name => 'V3', region => { id => 'UK', name => 'England' }, vendor_id => 2 },
-      prices => [ { price => 100 } ],
-      colors => 
-      [
-        { name => 'green' }, 
+  if($Have_JSON)
+  {
+    my $json = $product_class->new(id => 2)->as_json(force_load => 1, max_depth => 2, allow_loops => 1);
+    my $new_from_json = $product_class->new_from_json($json);
+    is_deeply($check_tree, $new_from_json->as_tree(allow_loops => 1, prune => sub { shift->name =~ /^p/ }), "new_from_json 5 - $db_type");
+  }
+
+  if($Have_YAML)
+  {
+    my $yaml = $product_class->new(id => 2)->as_yaml(force_load => 1, max_depth => 2, allow_loops => 1);
+    my $new_from_yaml = $product_class->new_from_yaml($yaml);
+    is_deeply($check_tree, $new_from_yaml->as_tree(allow_loops => 1, prune => sub { shift->name =~ /^p/ }), "new_from_yaml 5 - $db_type");
+  }
+
+  $tree = 
+    $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 2, allow_loops => 1,
+      prune => sub { shift->name =~ /^p/ }, exclude => sub { no warnings; shift->id > 2 });
+
+  $check_tree =
+  {
+    'colors' => 
+    [
+      {
+        'description' => 
         {
-          name => 'pink',
-          description => 
-          {
-            text => 'desc 4',
-            authors => [ { name => 'joe', nicknames => [ { nick => 'joey' } ] } ],
-          }
-        }
-      ]);
+          'id'   => '1',
+          'text' => 'desc 1'
+        },
+        'description_id' => '1',
+        'id'             => '1',
+        'name'           => 'red',
+      },
+    ],
+    'id'     => '2',
+    'name'   => 'Sled',
+    'sale_date' => '2005-02-02 00:00:00',
+    'vendor' => 
+    {
+      'id'       => '2',
+      'name'     => 'V2',
+      'region' => 
+      {
+        'id'   => 'US',
+        'name' => 'America'
+      },
+      'region_id' => 'US',
+      'vendor'    => 
+      {
+        'id'        => '1',
+        'name'      => 'V1',
+        'region_id' => 'DE',
+        'vendor_id' => undef
+      },
+      'vendor_id' => '1',
+      'vendors'   => []
+    },
+    'vendor_id' => '2'
+  };
 
-  $p3->save;
+  is_deeply($tree, $check_tree, "as_tree force, depth 2, allow_loops => 1, /^p/,id > 2 - $db_type");
+
+  $new_from_tree = $product_class->new_from_tree($tree);
+  is_deeply($new_from_tree->as_tree(allow_loops => 1, prune => sub { shift->name =~ /^p/ }, exclude => sub { no warnings; shift->id > 2 }), $check_tree, "new_from_tree 6 - $db_type");
+
+  if($Have_JSON)
+  {
+    my $json = $product_class->new(id => 2)->as_json(force_load => 1, max_depth => 2, allow_loops => 1);
+    my $new_from_json = $product_class->new_from_json($json);
+    is_deeply($check_tree, $new_from_json->as_tree(allow_loops => 1, prune => sub { shift->name =~ /^p/ }, exclude => sub { no warnings; shift->id > 2 }), "new_from_json 6 - $db_type");
+  }
+
+  if($Have_YAML)
+  {
+    my $yaml = $product_class->new(id => 2)->as_yaml(force_load => 1, max_depth => 2, allow_loops => 1);
+    my $new_from_yaml = $product_class->new_from_yaml($yaml);
+    is_deeply($check_tree, $new_from_yaml->as_tree(allow_loops => 1, prune => sub { shift->name =~ /^p/ }, exclude => sub { no warnings; shift->id > 2 }), "new_from_yaml 6 - $db_type");
+  }
+
+  # my $p3 = 
+  #   $product_class->new(
+  #     id     => 3,
+  #     name   => 'Barn',
+  #     vendor => { id => 3, name => 'V3', region => { id => 'UK', name => 'England' }, vendor_id => 2 },
+  #     prices => [ { price => 100 } ],
+  #     colors => 
+  #     [
+  #       { name => 'green' }, 
+  #       {
+  #         name => 'pink',
+  #         description => 
+  #         {
+  #           text => 'desc 4',
+  #           authors => [ { name => 'joe', nicknames => [ { nick => 'joey' } ] } ],
+  #         }
+  #       }
+  #     ]);
+  # 
+  # $p3->save;
 
   #local $Rose::DB::Object::Manager::Debug = 1;
 }
@@ -689,10 +750,10 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE products
 (
-  id      SERIAL NOT NULL PRIMARY KEY,
-  name    VARCHAR(255) NOT NULL,
-
+  id         SERIAL NOT NULL PRIMARY KEY,
+  name       VARCHAR(255) NOT NULL,
   vendor_id  INT REFERENCES vendors (id),
+  sale_date  TIMESTAMP,
 
   UNIQUE(name)
 )
@@ -798,10 +859,10 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE Rose_db_object_private.products
 (
-  id      SERIAL NOT NULL PRIMARY KEY,
-  name    VARCHAR(255) NOT NULL,
-
+  id         SERIAL NOT NULL PRIMARY KEY,
+  name       VARCHAR(255) NOT NULL,
   vendor_id  INT REFERENCES Rose_db_object_private.vendors (id),
+  sale_date  TIMESTAMP,
 
   UNIQUE(name)
 )
@@ -963,10 +1024,10 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE products
 (
-  id      INT AUTO_INCREMENT PRIMARY KEY,
-  name    VARCHAR(255) NOT NULL,
-
+  id         INT AUTO_INCREMENT PRIMARY KEY,
+  name       VARCHAR(255) NOT NULL,
   vendor_id  INT,
+  sale_date  DATETIME,
 
   INDEX(vendor_id),
 
@@ -1147,6 +1208,7 @@ CREATE TABLE products
   name    VARCHAR(255) NOT NULL,
 
   vendor_id  INT REFERENCES vendors (id),
+  sale_date  DATETIME YEAR TO SECOND,
 
   UNIQUE(name)
 )
@@ -1286,10 +1348,10 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE products
 (
-  id      INTEGER PRIMARY KEY AUTOINCREMENT,
-  name    VARCHAR(255) NOT NULL,
-
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  name       VARCHAR(255) NOT NULL,
   vendor_id  INT REFERENCES vendors (id),
+  sale_date  DATETIME,
 
   UNIQUE(name)
 )
@@ -1463,34 +1525,4 @@ END
 
     $dbh->disconnect;
   }
-}
-
-sub has_broken_order_by
-{
-  my($db_type) = shift;
-
-  if($db_type eq 'sqlite' && $DBD::SQLite::VERSION < 1.11)
-  {
-    return 1;
-  }
-
-  return 0;
-}
-
-sub cmp_sql
-{
-  my($a, $b, $msg) = @_;
-
-  for($a, $b)
-  {
-    s/\s+/ /g;
-    s/^\s+//;
-    s/\s+$//;
-    s/^SELECT.*?FROM/SELECT * FROM/;
-    s/\brose_db_object_private\.//g;
-  }
-
-  @_ = ($a, $b, $msg);
-
-  goto &is;
 }

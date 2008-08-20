@@ -20,7 +20,8 @@ __PACKAGE__->export_tags
        column_value_pairs column_accessor_value_pairs 
        column_mutator_value_pairs 
        column_values_as_yaml column_values_as_json
-       as_tree init_with_tree new_from_tree
+       traverse_depth_first as_tree init_with_tree new_from_tree
+       new_from_deflated_tree
        as_yaml new_from_yaml init_with_yaml
        as_json new_from_json init_with_json
        init_with_column_value_pairs
@@ -34,7 +35,8 @@ __PACKAGE__->export_tags
        insert_or_update_on_duplicate_key load_speculative
        column_value_pairs column_accessor_value_pairs 
        column_mutator_value_pairs init_with_column_value_pairs
-       as_tree init_with_tree new_from_tree
+       traverse_depth_first as_tree init_with_tree new_from_tree 
+       new_from_deflated_tree
        has_loaded_related strip forget_related)
   ],
 );
@@ -529,11 +531,13 @@ sub primary_key_as_string
   return join($joiner || PK_JOIN, grep { defined } map { $self->$_() } $self->meta->primary_key_column_accessor_names);
 }
 
+use constant DEFAULT_MAX_DEPTH => 10;
+
 sub traverse_depth_first
 {
   my($self) = shift;
 
-  my($context, $handlers, $filter, $prune, $max_depth);
+  my($context, $handlers, $exclude, $prune, $max_depth);
 
   my $visited    = {};
   my $force_load = 0;
@@ -548,13 +552,13 @@ sub traverse_depth_first
     $handlers   = $args{'handlers'} || {};
     $force_load = $args{'force_load'} || 0;
     $context    = $args{'context'};
-    $filter     = $args{'filter'};
+    $exclude    = $args{'exclude'} || 0;
     $prune      = $args{'prune'};
-    $max_depth  = $args{'max_depth'};
+    $max_depth  = exists $args{'max_depth'} ? $args{'max_depth'} : DEFAULT_MAX_DEPTH;
     $visited = undef  if($args{'allow_loops'});
   }
 
-  _traverse_depth_first($self, $context ||= {}, $handlers, $filter, $prune, 0, $max_depth, undef, undef, $visited, $force_load);
+  _traverse_depth_first($self, $context ||= {}, $handlers, $exclude, $prune, 0, $max_depth, undef, undef, $visited, $force_load);
 
   return $context;
 }
@@ -564,10 +568,11 @@ require Rose::DB::Object::Util;
 use constant OK            => 1;
 use constant LOOP_AVOIDED  => -1;
 use constant HIT_MAX_DEPTH => -2;
+use constant FILTERED_OUT  => -3;
 
 sub _traverse_depth_first
 {
-  my($self, $context, $handlers, $filter, $prune, $depth, $max_depth, $parent, $rel_meta, $visited, $force_load) = @_;
+  my($self, $context, $handlers, $exclude, $prune, $depth, $max_depth, $parent, $rel_meta, $visited, $force_load) = @_;
 
   if($visited && $visited->{ref($self),Rose::DB::Object::Helpers::primary_key_as_string($self)}++)
   {
@@ -576,24 +581,28 @@ sub _traverse_depth_first
 
   if($handlers->{'object'})
   {
-    unless($filter && !$filter->($self, $rel_meta, $parent))
+    if($exclude && $exclude->($self, $parent, $rel_meta))
     {
-      if($force_load && !Rose::DB::Object::Util::is_in_db($self))
-      {
-        $self->load(speculative => 1);
-      }
-
-      $context = $handlers->{'object'}->($self, $context, $parent, $rel_meta, $depth);
+      return FILTERED_OUT;
     }
+
+    if($force_load && !Rose::DB::Object::Util::is_in_db($self))
+    {
+      $self->load(speculative => 1);
+    }
+
+    $context = $handlers->{'object'}->($self, $context, $parent, $rel_meta, $depth);
   }
 
-  if((defined $max_depth && $depth == $max_depth) || ($prune && $prune->($self, $rel_meta, $parent)))
+  if(defined $max_depth && $depth == $max_depth)
   {
     return HIT_MAX_DEPTH;
   }
 
   REL: foreach my $rel ($self->meta->relationships)
   {
+    next  if($prune && $prune->($rel, $self, $depth));
+
     my $objs = $rel->object_has_related_objects($self);
     # XXX: Call above returns 0 if the collection is an empty array ref
     # XXX: and undef if it's not even a reference (e.g., undef).  This
@@ -621,7 +630,9 @@ sub _traverse_depth_first
 
       OBJ: foreach my $obj (@$objs)
       {
-        my $ret = _traverse_depth_first($obj, $c, $handlers, $filter, $prune, $depth + 1, $max_depth, $self, $rel, $visited, $force_load);
+        next OBJ  if($exclude && $exclude->($obj, $self, $rel));
+
+        my $ret = _traverse_depth_first($obj, $c, $handlers, $exclude, $prune, $depth + 1, $max_depth, $self, $rel, $visited, $force_load);
 
         if($ret == LOOP_AVOIDED && $handlers->{'loop_avoided'})
         {
@@ -640,7 +651,7 @@ sub as_tree
 
   my %args = @_;
 
-  my $deflate = $args{'deflate'};
+  my $deflate = exists $args{'deflate'} ? $args{'deflate'} : 1;
 
   my %tree;
 
@@ -847,6 +858,12 @@ sub new_from_tree
 {
   my $self = shift->new;
   $self->Rose::DB::Object::Helpers::init_with_tree(@_);
+}
+
+sub new_from_deflated_tree
+{
+  my $self = shift->new;
+  $self->Rose::DB::Object::Helpers::init_with_tree_deflated(@_);
 }
 
 sub new_from_json { new_from_tree(shift, __PACKAGE__->json_decoder->decode(@_)) }
