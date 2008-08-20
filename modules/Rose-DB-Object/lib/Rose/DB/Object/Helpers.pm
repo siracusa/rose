@@ -191,48 +191,6 @@ sub column_values_as_json
   __PACKAGE__->json_encoder->encode(scalar Rose::DB::Object::Helpers::column_value_pairs(shift))
 }
 
-__PACKAGE__->pre_import_hook(init_with_json => sub { require YAML::Syck });
-
-sub init_with_yaml
-{
-  my($self, $yaml) = @_;
-
-  my $hash = YAML::Syck::Load($yaml);
-  my $meta = $self->meta;
-
-  local $self->{STATE_LOADING()} = 1;
-
-  while(my($column, $value) = each(%$hash))
-  {
-    next  unless(length $column);
-    my $method = $meta->column($column)->mutator_method_name;
-    $self->$method($value);
-  }
-
-  return $self;
-}
-
-__PACKAGE__->pre_import_hook(init_with_json => sub { require JSON::Syck });
-
-sub init_with_json
-{
-  my($self, $json) = @_;
-
-  my $hash = __PACKAGE__->json_encoder->decode($json);
-  my $meta = $self->meta;
-
-  local $self->{STATE_LOADING()} = 1;
-
-  while(my($column, $value) = each(%$hash))
-  {
-    next  unless(length $column);
-    my $method = $meta->column($column)->mutator_method_name;
-    $self->$method($value);
-  }
-
-  return $self;
-}
-
 sub init_with_column_value_pairs
 {
   my($self) = shift;
@@ -651,7 +609,8 @@ sub as_tree
 
   my %args = @_;
 
-  my $deflate = exists $args{'deflate'} ? $args{'deflate'} : 1;
+  my $deflate    = exists $args{'deflate'} ? $args{'deflate'} : 1;
+  my $persistent_columns_only = exists $args{'persistent_columns_only'} ? $args{'persistent_columns_only'} : 0;
 
   my %tree;
 
@@ -666,6 +625,17 @@ sub as_tree
         local $self->{STATE_SAVING()} = 1  if($deflate);
 
         my $cols = Rose::DB::Object::Helpers::column_value_pairs($self);
+
+        unless($persistent_columns_only)
+        {
+          # XXX: Inlined version of what would be nonpersistent_column_value_pairs()
+          my $methods = $self->meta->nonpersistent_column_accessor_method_names_hash;
+  
+          while(my($column, $method) = each(%$methods))
+          {
+            $cols->{$column} = $self->$method();
+          }
+        }
 
         if(ref $context eq 'ARRAY')
         {
@@ -866,8 +836,20 @@ sub new_from_deflated_tree
   $self->Rose::DB::Object::Helpers::init_with_tree_deflated(@_);
 }
 
+__PACKAGE__->pre_import_hook(new_from_json => sub { require JSON });
+__PACKAGE__->pre_import_hook(new_from_yaml => sub { require YAML::Syck });
+
 sub new_from_json { new_from_tree(shift, __PACKAGE__->json_decoder->decode(@_)) }
 sub new_from_yaml { new_from_tree(shift, YAML::Syck::Load(@_)) }
+
+__PACKAGE__->pre_import_hook(init_with_json => sub { require JSON });
+__PACKAGE__->pre_import_hook(init_with_yaml => sub { require YAML::Syck });
+
+sub init_with_json { init_with_tree(shift, __PACKAGE__->json_decoder->decode(@_)) }
+sub init_with_yaml { init_with_tree(shift, YAML::Syck::Load(@_)) }
+
+__PACKAGE__->pre_import_hook(as_json => sub { require JSON });
+__PACKAGE__->pre_import_hook(as_yaml => sub { require YAML::Syck });
 
 sub as_json { __PACKAGE__->json_encoder->encode(scalar as_tree(@_, deflate => 1)) }
 sub as_yaml { YAML::Syck::Dump(scalar as_tree(@_, deflate => 1)) }  

@@ -70,6 +70,7 @@ Rose::Object::MakeMethods::Generic->make_methods
     'not_null',
     'triggers_disabled',
     'smart_modification',
+    'nonpersistent',
   ],
 
   scalar => 

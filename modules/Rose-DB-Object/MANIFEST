@@ -82,6 +82,7 @@ lib/Rose/DB/Object/Util.pm
 Makefile.PL
 MANIFEST
 t/00-warning.t
+t/as-tree.t
 t/auto-setup.t
 t/benchmarks/bench.pl
 t/benchmarks/lib/MyTest/CDBI/Base.pm
