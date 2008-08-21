@@ -93,7 +93,8 @@ use Rose::Class::MakeMethods::Generic
   inheritable_hash =>
   [
     column_type_classes => { interface => 'get_set_all' },
-    _column_type_class   => { interface => 'get_set', hash_key => 'column_type_classes' },
+    column_type_names   => { interface => 'keys', hash_key => 'column_type_classes' },
+    _column_type_class  => { interface => 'get_set', hash_key => 'column_type_classes' },
     _delete_column_type_class => { interface => 'delete', hash_key => 'column_type_classes' },
 
     auto_helper_classes      => { interface => 'get_set_all' },
@@ -1073,7 +1074,7 @@ sub _add_columns
       {
         $info->{'nonpersistent'} = 1;
       }
-
+$DB::single = 1;
       #$Debug && warn $self->class, " - adding $name $column_class\n";
       # XXX: Order of args is important here!  Parent must be set first
       # because some params rely on it being present when they're set.
@@ -3272,7 +3273,7 @@ sub update_changes_only_sql
 
   my %key = map { ($_ => 1) } @$key_columns;
 
-  my @modified = grep { defined } map { $self->column($_) } grep { !$key{$_} } keys %{$obj->{MODIFIED_COLUMNS()} || {}};
+  my @modified = map { $self->column($_) } grep { !$key{$_} } keys %{$obj->{MODIFIED_COLUMNS()} || {}};
 
   return  unless(@modified);
 
@@ -3557,7 +3558,7 @@ sub insert_and_on_duplicate_key_update_sql
     my %seen;
 
     @columns = $changes_only ?
-      (grep { defined } map { $self->column($_) } grep { !$seen{$_}++ }  
+      (map { $self->column($_) } grep { !$seen{$_}++ }  
        ($self->primary_key_column_names, 
         keys %{$obj->{MODIFIED_COLUMNS()} || {}})) :
       (grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
@@ -3597,7 +3598,7 @@ sub insert_and_on_duplicate_key_update_sql
     }
 
     @columns = $changes_only ?
-      (grep { defined } map { $self->column($_) } grep { !$skip{"$_"} } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
+      (map { $self->column($_) } grep { !$skip{"$_"} } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
       (grep { !$skip{"$_"} && (!$_->{'lazy'} || 
               $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns_ordered);
 
@@ -3689,7 +3690,7 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
     my %seen;
 
     @columns = $changes_only ?
-      (grep { defined } map { $self->column($_) } grep { !$seen{$_}++ }  
+      (map { $self->column($_) } grep { !$seen{$_}++ }  
        ($self->primary_key_column_names, 
         keys %{$obj->{MODIFIED_COLUMNS()} || {}})) :
       (grep { (!$_->{'lazy'} || $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } 
@@ -3723,7 +3724,7 @@ sub insert_and_on_duplicate_key_update_with_inlining_sql
     }
 
     @columns = $changes_only ?
-      (grep { defined } map { $self->column($_) } grep { !$skip{"$_"} } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
+      (map { $self->column($_) } grep { !$skip{"$_"} } keys %{$obj->{MODIFIED_COLUMNS()} || {}}) :
       (grep { !$skip{"$_"} && (!$_->{'lazy'} || 
               $obj->{LAZY_LOADED_KEY()}{$_->{'name'}}) } $self->columns_ordered);
 
@@ -4755,6 +4756,10 @@ The default mapping of type names to class names is:
   set       => Rose::DB::Object::Metadata::Column::Set
 
   chkpass   => Rose::DB::Object::Metadata::Column::Pg::Chkpass
+
+=item B<column_type_names>
+
+Returns the list (in list context) or reference to an array (in scalar context) of registered column type names.
 
 =item B<convention_manager_class NAME [, CLASS]>
 

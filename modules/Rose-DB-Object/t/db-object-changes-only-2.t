@@ -92,6 +92,8 @@ foreach my $db_type (qw(pg mysql informix sqlite))
   $class->meta->initialize(replace_existing => 1);
   #print $class->meta->perl_class_definition;
 
+  #add_nonpersistent_columns_and_methods($class);
+
   my $num_cols = 14;
 
   foreach my $n (1 .. $num_cols)

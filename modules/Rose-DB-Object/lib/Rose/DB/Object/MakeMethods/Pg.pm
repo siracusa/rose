@@ -2,7 +2,7 @@ package Rose::DB::Object::MakeMethods::Pg;
 
 use strict;
 
-our $VERSION = '0.766';
+our $VERSION = '0.771';
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
@@ -28,6 +28,9 @@ sub chkpass
 
   my $default = $args->{'default'};
 
+  my $mod_columns_key = ($args->{'column'} ? $args->{'column'}->nonpersistent : 0) ? 
+    MODIFIED_NP_COLUMNS : MODIFIED_COLUMNS;
+
   my %methods;
 
   if($interface eq 'get_set')
@@ -38,7 +41,7 @@ sub chkpass
 
       if(@_)
       {
-        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+        $self->{$mod_columns_key}{$column_name} = 1
           unless($self->{STATE_LOADING()});
 
         if(defined $_[0])
@@ -65,8 +68,8 @@ sub chkpass
 
 
         unless(!defined $default || defined $self->{$encrypted} ||
-             ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
-              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
+             ($undef_overrides_default && ($self->{$mod_columns_key}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{$mod_columns_key}{$column_name})))))
         #if(!defined $self->{$encrypted} && defined $default)
         {
           if(index($default, ':') == 0)
@@ -93,7 +96,7 @@ sub chkpass
 
       if(@_)
       {
-        $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+        $self->{$mod_columns_key}{$column_name} = 1
           unless($self->{STATE_LOADING()});
 
         if(!defined $_[0] || index($_[0], ':') == 0)
@@ -110,8 +113,8 @@ sub chkpass
       }
 
       unless(!defined $default || defined $self->{$encrypted} ||
-           ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
-            ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
+           ($undef_overrides_default && ($self->{$mod_columns_key}{$column_name} || 
+            ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{$mod_columns_key}{$column_name})))))
       #if(!defined $self->{$encrypted} && defined $default)
       {
         if(index($default, ':') == 0)
@@ -143,8 +146,8 @@ sub chkpass
       my $crypted = $self->{$encrypted};
 
       unless(!defined $default || defined $crypted ||
-             ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
-              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
+             ($undef_overrides_default && ($self->{$mod_columns_key}{$column_name} || 
+              ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{$mod_columns_key}{$column_name})))))
       #if(!defined $crypted && defined $default)
       {
         if(index($default, ':') == 0)
@@ -185,8 +188,8 @@ sub chkpass
       {
 
         unless(!defined $default || defined $self->{$encrypted} ||
-               ($undef_overrides_default && ($self->{MODIFIED_COLUMNS()}{$column_name} || 
-                ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{MODIFIED_COLUMNS()}{$column_name})))))
+               ($undef_overrides_default && ($self->{$mod_columns_key}{$column_name} || 
+                ($self->{STATE_IN_DB()} && !($self->{SET_COLUMNS()}{$column_name} || $self->{$mod_columns_key}{$column_name})))))
         #if(!defined $self->{$encrypted} && defined $default)
         {
           if(index($default, ':') == 0)
@@ -217,7 +220,7 @@ sub chkpass
 
       Carp::croak "Missing argument in call to $name"  unless(@_);
 
-      $self->{MODIFIED_COLUMNS()}{$column_name} = 1
+      $self->{$mod_columns_key}{$column_name} = 1
         unless($self->{STATE_LOADING()});
 
       if(defined $_[0])

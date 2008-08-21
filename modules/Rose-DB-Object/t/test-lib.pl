@@ -396,4 +396,27 @@ sub test_memory_cycle_ok
     Test::More::ok(1, "$msg (skipped)");
 }
 
+sub nonpersistent_column_definitions
+{
+  my @columns;
+  my $i = 1;
+
+  foreach my $type (MyPgObject->meta->column_type_names)
+  {
+    next  if($type =~ /(?:chkpass| to |serial)/);
+    push(@columns, 'np' . $i++ => { type => $type, temp => 1 });
+  }
+
+  return @columns;
+}
+
+sub add_nonpersistent_columns_and_methods
+{
+  my($class) = shift;
+  my $meta = $class->meta;
+  
+  $meta->add_columns(nonpersistent_column_definitions());
+  $meta->make_nonpersistent_column_methods();
+}
+
 1;

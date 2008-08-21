@@ -1510,7 +1510,8 @@ EOF
       tee_time5 => { type => 'time', scale => 5, default => '12:34:56.123456789' },
       tee_time9 => { type => 'time', scale => 9 },
       #last_modified => { type => 'timestamp' },
-      date_created  => { type => 'timestamp' },
+      date_created => { type => 'timestamp' },
+      main::nonpersistent_column_definitions(),
     );
 
     MyPgObject->meta->add_unique_key('save');
@@ -1676,6 +1677,7 @@ EOF
       tee_time9 => { type => 'time', scale => 9 },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
+      main::nonpersistent_column_definitions(),
     );
 
     eval { MyMySQLObject->meta->initialize };
@@ -1812,6 +1814,7 @@ EOF
       names    => { type => 'set' },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'datetime year to fraction(5)' },
+      main::nonpersistent_column_definitions(),
     );
 
     eval { MyInformixObject->meta->initialize };
@@ -1925,6 +1928,7 @@ EOF
       decs     => { type => 'decimal', precision => 10, scale => 2 },
       #last_modified => { type => 'timestamp' },
       date_created  => { type => 'scalar' },
+      main::nonpersistent_column_definitions(),
     );
 
     MySQLiteObject->meta->replace_column(date_created => { type => 'timestamp' });
@@ -2085,6 +2089,7 @@ EOF
       decs     => { type => 'decimal', precision => 10, scale => 2 },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
+      main::nonpersistent_column_definitions(),
     );
 
     eval { MyOracleObject->meta->initialize };
