@@ -4,7 +4,7 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.766'; # move up in the file to make CPAN happy
+our $VERSION = '0.771'; # move up in the file to make CPAN happy
 
 require Math::BigInt;
 
@@ -17,7 +17,7 @@ use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
 use Rose::DB::Object::Constants 
-  qw(STATE_LOADING MODIFIED_COLUMNS SET_COLUMNS STATE_IN_DB);
+  qw(STATE_LOADING MODIFIED_COLUMNS MODIFIED_NP_COLUMNS SET_COLUMNS STATE_IN_DB);
 
 our $Debug = 0;
 
@@ -55,11 +55,14 @@ sub bigint
   my $col_name_escaped = $column_name;
   $col_name_escaped =~ s/'/\\'/g;
 
+  my $mod_columns_key = ($args->{'column'} ? $args->{'column'}->nonpersistent : 0) ? 
+    MODIFIED_NP_COLUMNS : MODIFIED_COLUMNS;
+
   my $dont_use_default_code = !$undef_overrides_default ? qq(defined \$self->{'$qkey'}) :
     qq(defined \$self->{'$qkey'} || ) .
-    qq((\$self->{STATE_IN_DB()} && !(\$self->{SET_COLUMNS()}{'$col_name_escaped'} || \$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'})) || ) .
+    qq((\$self->{STATE_IN_DB()} && !(\$self->{SET_COLUMNS()}{'$col_name_escaped'} || \$self->{'$mod_columns_key'}{'$col_name_escaped'})) || ) .
     qq(\$self->{SET_COLUMNS()}{'$col_name_escaped'} || ) .
-    qq(\$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'});
+    qq(\$self->{'$mod_columns_key'}{'$col_name_escaped'});
 
   #
   # check_in code
@@ -142,7 +145,7 @@ EOF
   #
 
   my $column_modified_code = 
-    qq(\$self->{MODIFIED_COLUMNS()}{'$col_name_escaped'} = 1);
+    qq(\$self->{'$mod_columns_key'}{'$col_name_escaped'} = 1);
 
   #
   # return code
