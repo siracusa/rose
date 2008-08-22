@@ -7,7 +7,7 @@ use base 'Rose::Object';
 use Scalar::Util qw(refaddr);
 use Rose::DB::Cache::Entry;
 
-our $VERSION = '0.739';
+our $VERSION = '0.745';
 
 our $Debug = 0;
 
@@ -87,6 +87,13 @@ sub db_cache_entries
   my($self) = shift;
   return wantarray ? values %{$self->{'cache'} || {}} : 
                      [ values %{$self->{'cache'} || {}} ];
+}
+
+sub db_cache_keys
+{
+  my($self) = shift;
+  return wantarray ? keys %{$self->{'cache'} || {}} : 
+                     [ keys %{$self->{'cache'} || {}} ];
 }
 
 sub get_db
@@ -313,6 +320,14 @@ name/value pairs.  Any object method is a valid parameter name.
 =item B<clear>
 
 Clear the cache entirely.
+
+=item B<db_cache_entries>
+
+Returns a list (in list context) or reference to an array (in scalar context) of L<cache entries|Rose::DB::Cache::Entry> for each cached db object.
+
+=item B<db_cache_keys>
+
+Returns a list (in list context) or reference to an array (in scalar context) of L<keys|Rose::DB::Cache::Entry/key> for each L <cache entries|Rose::DB::Cache::Entry>.
 
 =item B<get_db [PARAMS]>
 
