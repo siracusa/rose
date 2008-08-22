@@ -1074,7 +1074,7 @@ sub _add_columns
       {
         $info->{'nonpersistent'} = 1;
       }
-$DB::single = 1;
+
       #$Debug && warn $self->class, " - adding $name $column_class\n";
       # XXX: Order of args is important here!  Parent must be set first
       # because some params rely on it being present when they're set.

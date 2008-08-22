@@ -4,7 +4,7 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 3 + (4 * 5) + (4 * 5);
+use Test::More tests => 3 + (5 * 5) + (5 * 5);
 
 BEGIN
 {
@@ -21,7 +21,7 @@ foreach my $db_type (map { "${_}_admin" } qw(mysql pg informix sqlite oracle))
   {
     unless(have_db($db_type))
     {
-      skip("$db_type tests", 4);
+      skip("$db_type tests", 5);
     }
   }
 
@@ -37,7 +37,11 @@ foreach my $db_type (map { "${_}_admin" } qw(mysql pg informix sqlite oracle))
 
   ok($db2 = Rose::DB->new_or_cached(), "new_or_cached 3 - $db_type");
 
-  is($db->dbh, $db2->dbh, "new_or_cached dbh check - $db_type");   
+  is($db->dbh, $db2->dbh, "new_or_cached dbh check - $db_type");
+  
+  is_deeply([ sort Rose::DB->db_cache->db_cache_keys ],
+            [ sort map { $_->key } Rose::DB->db_cache->db_cache_entries ],
+            "db_cache_entries, db_cache_keys - $db_type");
 }
 
 no warnings 'redefine';
@@ -49,7 +53,7 @@ foreach my $db_type (map { "${_}_admin" } qw(mysql pg informix sqlite oracle))
   {
     unless(have_db($db_type))
     {
-      skip("$db_type tests", 4);
+      skip("$db_type tests", 5);
     }
   }
 
@@ -66,4 +70,8 @@ foreach my $db_type (map { "${_}_admin" } qw(mysql pg informix sqlite oracle))
   ok($db2 = Rose::DB->new(), "dbi_connect override 3 - $db_type");
 
   is($db->dbh, $db2->dbh, "dbi_connect override dbh check - $db_type");   
+
+  is_deeply([ sort Rose::DB->db_cache->db_cache_keys ],
+            [ sort map { $_->key } Rose::DB->db_cache->db_cache_entries ],
+            "dbi_connect override db_cache_entries, db_cache_keys - $db_type");
 }
