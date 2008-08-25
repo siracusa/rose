@@ -429,8 +429,14 @@ The first thing to understand is where the database object comes from.  If the L
     ...
     sub init_db { My::DB->new }
 
-This means that each C<Product> object will have its own C<My::DB> object, and therefore (in the absence of modules like L<Apache::DBI>) its own connection to the database.  If this not what you want, you can make C<init_db()> return the same C<My::DB> object to every C<Product> object.  I don't recommend this approach since it's harder to ensure that the database handle will be closed when all C<Product> objects go out of scope, but that may not be important for your application.
+This means that each C<Product> object will have its own C<My::DB> object, and therefore (in the absence of modules like L<Apache::DBI>) its own connection to the database.
 
+If this not what you want, you can make C<init_db()> return the same C<My::DB> object to every C<Product> object.  This will make it harder to ensure that the database handle will be closed when all C<Product> objects go out of scope, but that may not be important for your application.  The easiest way to do this is to call L<new_or_cached|Rose::DB/new_or_cached> instead of L<new|Rose::DB/new>.
+
+    package Product;
+    ...
+    sub init_db { My::DB->new_or_cached }
+    
 Since C<init_db()> is only called if a C<Product> object does not already have a L<db|Rose::DB::Object/db> object, another way to share a single C<My::DB> object with several C<Product> objects is to do so explicitly, either by pre-creating the C<My::DB> object:
 
     $db = My::DB->new; # will share this db with the Products below
@@ -445,7 +451,7 @@ or by letting one of the C<Product> objects provide the L<db|Rose::DB::Object/db
     $p2 = Product->new(db => $p1->db, ...); # use $p1's db
     $p3 = Product->new(db => $p1->db, ...); # use $p1's db
 
-A note for L<mod_perl> users: when using L<Apache::DBI>, even if each C<Product> has its own C<My::DB> object, remember that they will all share a single underlying L<DBI> database handle.  That is, each L<Rose::DB>-derived object of a given L<type|Rose::DB/type> and L<domain|Rose::DB/domain> will eventually call L<DBI>'s L<connect()|DBI/connect> method with the same arguments, and therefore return the same, cached database handle when running under L<Apache::DBI>.
+A note for L<mod_perl> users: when using L<Apache::DBI>, even if each C<Product> has its own C<My::DB> object, remember that they will all share a single underlying L<DBI> database handle.  That is, each L<Rose::DB>-derived object of a given L<type|Rose::DB/type> and L<domain|Rose::DB/domain> will eventually call L<DBI>'s L<connect()|DBI/connect> method with the same arguments, and therefore return the same, cached database handle when running under L<Apache::DBI>.  The L<default cache implementation||Rose::DB::Cache> underlying the L<new_or_cached|Rose::DB/new_or_cached> method is also L<mod_perl-aware|Rose::DB::Cache/prepare_db> and will cooperate with L<Apache::DBI>.
 
 Here's an example where sharing a database object is important: creating several C<Product> objects in a single transaction.
 
@@ -1831,7 +1837,9 @@ If you want to see what the loader did for you, catch the return value of the L<
       }
     }
 
-The output is shown below.  Compare it to the manually created Perl code L<shown above|/"Relationship code summary"> and you'll see that it's nearly identical.  Again, careful table name choices really help here.  Do what the L<convention manager|Rose::DB::Object::ConventionManager> expects (or write your own convention manager subclass that does what I<you> expect) and automation like this can work very well.
+You can also ask the loader to make actual Perl modules (that is, a set of actual *.pm files in the file system) by calling the aptly named L<make_modules|Rose::DB::Object::Loader/make_modules> method.
+
+The code created by the loader is shown below.  Compare it to the manually created Perl code L<shown above|/"Relationship code summary"> and you'll see that it's nearly identical.  Again, careful table name choices really help here.  Do what the L<convention manager|Rose::DB::Object::ConventionManager> expects (or write your own convention manager subclass that does what I<you> expect) and automation like this can work very well.
 
   package My::Color;
 
