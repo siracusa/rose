@@ -1021,6 +1021,13 @@ sub locale
         return (ref $locale eq 'CODE') ? $locale->() : $locale;
       }      
     }
+    elsif($invocant->can('parent_group') && (my $parent_group = $invocant->parent_group))
+    {
+      if(my $locale = $parent_group->locale)
+      {
+        return (ref $locale eq 'CODE') ? $locale->() : $locale;
+      }
+    }
     else 
     {
       my $locale = $invocant->localizer->locale;
