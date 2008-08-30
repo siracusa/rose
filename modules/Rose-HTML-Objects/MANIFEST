@@ -106,6 +106,7 @@ t/form-repeatable.t
 t/form.t
 t/image.t
 t/label.t
+t/leaks.t
 t/localized-messages
 t/lib/MyField.pm
 t/lib/MyObject.pm

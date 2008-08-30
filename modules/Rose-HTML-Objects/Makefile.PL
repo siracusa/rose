@@ -43,7 +43,8 @@ WriteMakefile(NAME         => 'Rose::HTML::Objects',
                 'Scalar::Util'   => 0,
                 # XXX: Can't use Scalar::Defer 0.11 (or possibly later) until some things
                 # XXX: are sorted out.  See: http://rt.cpan.org/Ticket/Display.html?id=31039
-                #'Scalar::Defer'  => 0,
+                # XXX: Scalar::Defer 0.18 seems to work again, but I'm still not using it.
+                #'Scalar::Defer'  => 0.18,
                 'Rose::Object'   => '0.85',
                 'Rose::DateTime' => '0.532',
                 'Rose::URI'      => '0.021',

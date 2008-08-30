@@ -6,8 +6,11 @@ use Carp();
 
 # XXX: Can't use Scalar::Defer 0.11 (or possibly later) until some things
 # XXX: are sorted out.  See: http://rt.cpan.org/Ticket/Display.html?id=31039
+# XXX: Scalar::Defer 0.18 seems to work again.  Yay!
+# XXX: ...but this whole approach is a bt too clever.
 #use Scalar::Defer();
 
+use Scalar::Util();
 use Rose::HTML::Util();
 
 use Rose::HTML::Form::Field;
@@ -373,20 +376,28 @@ sub _args_to_items
     # Connect item to group
     $item->parent_group($self)  if($item->can('parent_group'));
 
-    # Speculatively hook up localizer and locale
-    # XXX: Scalar::Defer 0.11 breaks this (http://rt.cpan.org/Ticket/Display.html?id=31039)
-    #$item->localizer(Scalar::Defer::defer { $self->localizer });
+    # XXX: This whole approach is a bit too clever and leak-prone.
 
-    # XXX: Use lame workaround instead.
-    $item->localizer(sub { $self->localizer });
-
-    if(my $parent = $self->parent_form)
-    {
-      # XXX: Scalar::Defer 0.11 breaks this (http://rt.cpan.org/Ticket/Display.html?id=31039)
-      #$item->locale(Scalar::Defer::defer { $parent->locale });
-      # XXX: Use lame workaround instead.      
-      $item->locale(sub { $parent->locale });
-    }
+    # # Speculatively hook up localizer and locale
+    # # XXX: Scalar::Defer 0.11 breaks this (http://rt.cpan.org/Ticket/Display.html?id=31039)
+    # # XXX: Scalar::Defer 0.18 seems to work again.  Yay!
+    # Scalar::Util::weaken(my $welf = $self);
+    # $item->localizer(Scalar::Defer::defer { $welf->localizer });
+    # #$item->localizer(sub { $welf->localizer });
+    # 
+    # # XXX: Use lame workaround instead.
+    # #Scalar::Util::weaken(my $welf = $self);
+    # #$item->localizer(sub { $welf->localizer });
+    # 
+    # if(my $parent = $self->parent_form)
+    # {
+    #   # XXX: Scalar::Defer 0.11 breaks this (http://rt.cpan.org/Ticket/Display.html?id=31039)
+    #   # XXX: Scalar::Defer 0.18 seems to work again.  Yay!
+    #   Scalar::Util::weaken(my $warent = $parent);
+    #   $item->locale(Scalar::Defer::defer { $warent->locale });
+    #   # XXX: Use lame workaround instead.
+    #   #$item->locale(sub { $parent->locale });
+    # }
   }
 
   return (wantarray) ? @$items : $items;
@@ -410,26 +421,29 @@ sub parent_field
   return $self->SUPER::parent_field;
 }
 
-sub parent_form
-{
-  my($self) = shift; 
-
-  if(@_)
-  {
-    if(my $parent = $self->SUPER::parent_form(@_))
-    {
-      foreach my $item ($self->items)
-      {
-        # XXX: Scalar::Defer 0.11 breaks this (http://rt.cpan.org/Ticket/Display.html?id=31039)
-        #$item->locale(Scalar::Defer::defer { $parent->locale });
-        # XXX: Use lame workaround instead.      
-        $item->locale(sub { $parent->locale });        
-      }
-    }
-  }
-
-  return $self->SUPER::parent_form;
-}
+# XXX: This whole approach is a bit too clever and leak-prone.
+# sub parent_form
+# {
+#   my($self) = shift; 
+# 
+#   if(@_)
+#   {
+#     if(my $parent = $self->SUPER::parent_form(@_))
+#     {
+#       foreach my $item ($self->items)
+#       {
+#         # XXX: Scalar::Defer 0.11 breaks this (http://rt.cpan.org/Ticket/Display.html?id=31039)
+#         # XXX: Scalar::Defer 0.18 seems to work again.  Yay!
+#         Scalar::Util::weaken(my $warent = $parent);
+#         $item->locale(Scalar::Defer::defer { $warent->locale });
+#         # XXX: Use lame workaround instead.          
+#         #$item->locale(sub { $parent->locale });
+#       }
+#     }
+#   }
+# 
+#   return $self->SUPER::parent_form;
+# }
 
 sub add_items
 {
