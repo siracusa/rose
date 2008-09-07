@@ -62,7 +62,7 @@ Though Rose::DB::Object has not yet reached version 1.0, every possible effort i
   * [http://search.cpan.org/dist/Rose-DB-Object/ Download]
   * [http://search.cpan.org/dist/Rose-DB-Object/lib/Rose/DB/Object/Tutorial.pod Tutorial]
   * [RDBOBenchmarks Benchmarks]
-  * [http://groups.google.com/group/rose-db-object/about]
+  * [http://groups.google.com/group/rose-db-object/about Mailing list]
   * [http://www.mail-archive.com/rose-db-object@lists.sourceforge.net/ Archive of the old SourceForge.net mailing list]
   * [https://rose.googlecode.com/svn/trunk/modules/Rose-DB-Object/ SVN repository]
   * IRC: irc.perl.org#rdbo
