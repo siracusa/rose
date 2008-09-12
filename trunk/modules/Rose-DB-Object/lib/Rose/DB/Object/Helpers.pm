@@ -44,7 +44,7 @@ __PACKAGE__->export_tags
 );
 
 #
-# Clas data
+# Class data
 #
 
 use Rose::Class::MakeMethods::Generic
@@ -491,7 +491,7 @@ sub primary_key_as_string
   return join($joiner || PK_JOIN, grep { defined } map { $self->$_() } $self->meta->primary_key_column_accessor_names);
 }
 
-use constant DEFAULT_MAX_DEPTH => 10;
+use constant DEFAULT_MAX_DEPTH => 100;
 
 sub traverse_depth_first
 {
@@ -601,7 +601,7 @@ sub _traverse_depth_first
       }
     }
   }
-  
+
   return OK;
 }
 
@@ -632,7 +632,7 @@ sub as_tree
         {
           # XXX: Inlined version of what would be nonpersistent_column_value_pairs()
           my $methods = $self->meta->nonpersistent_column_accessor_method_names_hash;
-  
+
           while(my($column, $method) = each(%$methods))
           {
             $cols->{$column} = $self->$method();
@@ -886,7 +886,89 @@ L<Rose::DB::Object::Helpers> provides convenience methods from use with L<Rose::
 
 This class inherits from L<Rose::Object::MixIn>.  See the L<Rose::Object::MixIn> documentation for a full explanation of how to import methods from this class.  The helper methods themselves are described below.
 
+=head1 FUNCTIONS VS. METHODS
+
+Due to the wonders of Perl 5's object system (such as it is), any helper method described here can also be used as a L<Rose::DB::Object::Util>-style utility I<function> that takes a L<Rose::DB::Object>-derived object as its first argument.  Example:
+
+    # Import two helpers
+    use Rose::DB::Object::Helpers qw(clone_and_reset traverse_depth_first);
+
+    $o = My::DB::Object->new(...);
+
+    clone_and_reset($o); # Imported helper "method" called as function
+
+    # Imported helper "method" with arguments called as function
+    traverse_depth_first($o, handlers => { ... }, max_depth => 2);
+
+Why, then, the distinction between L<Rose::DB::Object::Helpers> "methods" and L<Rose::DB::Object::Util> functions?  It's simply a matter of context.  The functions in L<Rose::DB::Object::Util> are most useful in the context of the internals (e.g., writing your own L<column method-maker|Rose::DB::Object::Metadata::Column/"MAKING METHODS">) whereas L<Rose::DB::Object::Helpers> methods are most often added to a common L<Rose::DB::Object>-derived base class and then called as object methods by all classes that inherit from it.
+
+The point is, these are just conventions.  Use any of these subroutines as functions or as methods as you see fit.  Just don't forget to pass a L<Rose::DB::Object>-derived object as the first argument when calling as a function.
+
 =head1 OBJECT METHODS
+
+=head2 as_json [PARAMS]>
+
+Returns a JSON-formatted string created from the object tree returned by the L<as_tree|/as_tree> method.  PARAMS are the same as for the L<as_tree|/as_tree> method, except that the C<deflate> parameter is ignored (it is always set to true).
+
+You must have the L<JSON> module installed in order to use this helper method.  If you have the L<JSON::XS> module installed, this method will work a lot faster.
+
+=head2 as_tree [PARAMS]
+
+Returns a reference to a hash of name/value pairs representing the column values of this object as well as any nested objects.  PARAMS name/value pairs dictate the details of the sub-object traversal.  Valid parameters are:
+
+=over 4
+
+=item B<allow_loops BOOL>
+
+If true, allow loops during the traversal (e.g., A -E<gt> B -E<gt> C -E<gt> A).  The default value is false.
+
+=item B<deflate BOOL>
+
+If true, the values in the tree will be simple scalars suitable for storage in the database (e.g., a date string like "2005-12-31" instead of a L<DateTime> object).  The default is true.
+
+=item B<exclude CODEREF>
+
+A reference to a subroutine that is called on each L<Rose::DB::Object>-derived object encountered during the traversal.  It is passed the object, the parent object (undef, if none), and the  L<Rose::DB::Object::Metadata::Relationship>-derived object (undef, if none) that led to this object.  If the subroutine returns true, then this object is not processed.  Example:
+
+    exclude => sub
+    {
+      my($object, $parent, $rel_meta) = @_;
+      ...
+      return 1  if($should_exclude);
+      return 0;
+    },
+
+=item B<force_load BOOL>
+
+If true, related sub-objects will be loaded from the database.  If false, then only the sub-objects that have already been loaded from the database will be traversed.  The default is false.
+
+=item B<max_depth DEPTH>
+
+Do not descend past DEPTH levels.  Depth is an integer starting from 0 for the object that the L<as_tree|/as_tree> method was called on and increasing with each level of related objects.  The default value is 100.
+
+=item B<persistent_columns_only BOOL>
+
+If true, L<non-persistent columns|Rose::DB::Object::Metadata/nonpersistent_columns> will not be included in the tree.  The default is false.
+
+=item B<prune CODEREF>
+
+A reference to a subroutine that is called on each L<Rose::DB::Object::Metadata::Relationship>-derived object encountered during traversal.  It is passed the relationship object, the parent object, and the depth.  If the subroutine returns true, then the entire sub-tree below this relationship will not be traversed.  Example:
+
+    prune => sub
+    {
+      my($rel_meta, $object, $depth) = @_;
+      ...
+      return 1  if($should_prune);
+      return 0;
+    },
+
+=back
+
+=head2 as_yaml [PARAMS]>
+
+Returns a YAML-formatted string created from the object tree returned by the L<as_tree|/as_tree> method.  PARAMS are the same as for the L<as_tree|/as_tree> method, except that the C<deflate> parameter is ignored (it is always set to true).
+
+You must have the L<YAML::Syck> module installed in order to use this helper method.
 
 =head2 clone
 
@@ -984,10 +1066,10 @@ Initialize an object with a hash or reference to a hash of column/value pairs.  
 
 =head2 init_with_json JSON
 
-Initialize the object with a JSON-formatted string.  The JSON string must be in the format returned by the L<column_values_as_json|/column_values_as_json> method.  Example:
+Initialize the object with a JSON-formatted string.  The JSON string must be in the format returned by the L<as_json|/as_json> (or L<column_values_as_json|/column_values_as_json>) method.  Example:
 
     $p1 = Person->new(name => 'John', age => 30);
-    $json = $p1->column_values_as_json;
+    $json = $p1->as_json;
 
     $p2 = Person->new;
     $p2->init_with_json($json);
@@ -995,12 +1077,29 @@ Initialize the object with a JSON-formatted string.  The JSON string must be in 
     print $p2->name; # John
     print $p2->age;  # 30
 
-=head2 init_with_yaml YAML
+=head2 init_with_deflated_tree TREE
 
-Initialize the object with a YAML-formatted string.  The YAML string must be in the format returned by the L<column_values_as_yaml|/column_values_as_yaml> method.  Example:
+This is the same as the L<init_with_tree|/init_with_tree> method, except that it expects all the values to be simple scalars suitable for storage in the database (e.g., a date string like "2005-12-31" instead of a L<DateTime> object).  (In other words, the TREE should be in the format generated by the L<as_tree|/as_tree> method called with the C<deflate> parameter set to true.)  Initializing objects in this way is slightly more efficient.
+
+=head2 init_with_tree TREE
+
+Initialize the object with a Perl data structure in the form returned from the L<as_tree|/as_tree> method.  Example:
 
     $p1 = Person->new(name => 'John', age => 30);
-    $yaml = $p1->column_values_as_yaml;
+    $tree = $p1->as_tree;
+
+    $p2 = Person->new;
+    $p2->init_with_tree($tree);
+
+    print $p2->name; # John
+    print $p2->age;  # 30
+
+=head2 init_with_yaml YAML
+
+Initialize the object with a YAML-formatted string.  The YAML string must be in the format returned by the L<as_yaml|/as_yaml> (or L<column_values_as_yaml|/column_values_as_yaml>) method.  Example:
+
+    $p1 = Person->new(name => 'John', age => 30);
+    $yaml = $p1->as_yaml;
 
     $p2 = Person->new;
     $p2->init_with_yaml($yaml);
@@ -1110,6 +1209,22 @@ Example:
       print "Object id 123 not found\n";
     }
 
+=head2 new_from_json JSON
+
+The method is the equivalent of creating a new object and then calling the L<init_with_json|/init_with_json> method on it, passing JSON as an argument.  See the L<init_with_json|/init_with_json> method for more information.
+
+=head2 new_from_deflated_tree TREE
+
+The method is the equivalent of creating a new object and then calling the L<init_with_deflated_tree|/init_with_deflated_tree> method on it, passing TREE as an argument.  See the L<init_with_deflated_tree|/init_with_deflated_tree> method for more information.
+
+=head2 new_from_tree TREE
+
+The method is the equivalent of creating a new object and then calling the L<init_with_tree|/init_with_tree> method on it, passing TREE as an argument.  See the L<init_with_tree|/init_with_tree> method for more information.
+
+=head2 new_from_yaml YAML
+
+The method is the equivalent of creating a new object and then calling the L<init_with_yaml|/init_with_yaml> method on it, passing YAML as an argument.  See the L<init_with_yaml|/init_with_yaml> method for more information.
+
 =head2 strip [PARAMS]
 
 This method prepares an object for serialization by stripping out internal structures known to contain code references or other values that do not survive serialization.  The object itself is returned, now stripped.
@@ -1124,21 +1239,121 @@ This parameter specifies which items to leave un-stripped.  The value may be an 
 
 =over 4
 
-=item C<db>
+=item B<db>
 
 Do not remove the L<db|Rose::DB::Object/db> object.  The L<db|Rose::DB::Object/db> object will have its DBI database handle (L<dbh|Rose::DB/dbh>) removed, however.
 
-=item C<foreign_keys>
+=item B<foreign_keys>
 
 Do not removed sub-objects that have L<already been loaded|/has_loaded_related> by this object through L<foreign keys|Rose::DB::Object::Metadata/foreign_keys>.
 
-=item C<relationships>
+=item B<relationships>
 
 Do not removed sub-objects that have L<already been loaded|/has_loaded_related> by this object through L<relationships|Rose::DB::Object::Metadata/relationships>.
 
-=item C<related_objects>
+=item B<related_objects>
 
 Do not remove any sub-objects (L<foreign keys|Rose::DB::Object::Metadata/foreign_keys> or L<relationships|Rose::DB::Object::Metadata/relationships>) that have L<already been loaded|/has_loaded_related> by this object.  This option is the same as specifying both the C<foreign_keys> and C<relationships> names.
+
+=back
+
+=item B<traverse_depth_first CODEREF | PARAMS>
+
+Do a depth-first traversal of the L<Rose::DB::Object>-derived object that this method is called on, descending into related objects. If a reference to a subroutine is passed as the sole argument, it is taken as the value of the C<object> key to the C<handlers> parameter hash (see below).  Otherwise, PARAMS name/value pairs are expected.  Valid parameters are:
+
+=over 4
+
+=item B<allow_loops BOOL>
+
+If true, allow loops during the traversal (e.g., A -E<gt> B -E<gt> C -E<gt> A).  The default value is false.
+
+=item B<context SCALAR>
+
+An arbitrary context variable to be passed along to (and possibly modified by) each handler routine (see C<handlers> parameter below).  The context may be any scalar value (e.g., an object, a reference to a hash, etc.)
+
+=item B<exclude CODEREF>
+
+A reference to a subroutine that is called on each L<Rose::DB::Object>-derived object encountered during the traversal.  It is passed the object, the parent object (undef, if none), and the  L<Rose::DB::Object::Metadata::Relationship>-derived object (undef, if none) that led to this object.  If the subroutine returns true, then this object is not processed.  Example:
+
+    exclude => sub
+    {
+      my($object, $parent, $rel_meta) = @_;
+      ...
+      return 1  if($should_exclude);
+      return 0;
+    },
+
+=item B<force_load BOOL>
+
+If true, related sub-objects will be loaded from the database.  If false, then only the sub-objects that have already been loaded from the database will be traversed.  The default is false.
+
+=item B<handlers HASHREF>
+
+A reference to a hash of handler subroutines.  Valid keys, calling context, and the arguments passed to the referenced subroutines are as follows.
+
+=over 4
+
+=item B<object>
+
+This handler is called whenever a L<Rose::DB::Object>-derived object is encountered.  This includes the object that L<traverse_depth_first|/traverse_depth_first> was called on as well as any sub-objects.  The handler is passed the object, the C<context>, the parent object (undef, if none), the L<Rose::DB::Object::Metadata::Relationship>-derived object through which this object was arrived at (undef if none), and the depth.  Example:
+
+    handlers =>
+    {
+      object => sub
+      {
+        my($object, $context, $parent, $rel_meta, $depth) = @_;
+        ...
+      }
+      ...
+    }
+
+=item B<relationship>
+
+This handler is called just before a L<Rose::DB::Object::Metadata::Relationship>-derived object is descended into  (i.e., just before the sub-objectes related through this relationship are processed). The handler is passed the object that contains the relationship, the C<context>, the C<context>, and the L<Rose::DB::Object::Metadata::Relationship>-derived object itself, and I<must return the value to be used as the C<context> during the traversal of the objects related through this relationship>.  The context returned may be different than the context passed in.  Example:
+
+    handlers =>
+    {
+      relationship => sub
+      {
+        my($object, $context, $rel_meta) = @_;
+        ...
+
+        return $context; # Important!
+      }
+      ...
+    }
+
+=item B<loop_avoided>
+
+This handler is called after the traversal refuses to process a sub-object in order to avoid a loop.  (This only happens if the C<allow_loops> is parameter is false, obviously.)  The handler is passed the object that was not processed, the C<context>, the parent object, the I<previous> C<context>, and the L<Rose::DB::Object::Metadata::Relationship>-derived object through which the sub-object was related.  Example:
+
+    handlers =>
+    {
+      loop_avoided => sub
+      {
+        my($object, $context, $parent, $prev_context, $rel_meta) = @_;
+        ...
+      }
+      ...
+    }
+
+=back
+
+=item B<max_depth DEPTH>
+
+Do not descend past DEPTH levels.  Depth is an integer starting from 0 for the object that the L<traverse_depth_first|/traverse_depth_first> method was called on and increasing with each level of related objects.  The default value is 100.
+
+=item B<prune CODEREF>
+
+A reference to a subroutine that is called on each L<Rose::DB::Object::Metadata::Relationship>-derived object encountered during traversal.  It is passed the relationship object, the parent object, and the depth.  If the subroutine returns true, then the entire sub-tree below this relationship will not be traversed.  Example:
+
+    prune => sub
+    {
+      my($rel_meta, $object, $depth) = @_;
+      ...
+      return 1  if($should_prune);
+      return 0;
+    },
 
 =back
 

@@ -5,15 +5,16 @@ use strict;
 use Rose::DB::Object::Metadata::Column::Datetime;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Datetime);
 
-our $VERSION = '0.70';
+our $VERSION = '0.771';
 
 sub type { 'datetime year to second' }
 
 sub should_inline_value
 {
   #my($self, $db, $value) = @_;
-  return ($_[1]->validate_datetime_year_to_second_keyword($_[2]) && 
-          ($_[1]->driver eq 'informix' || $_[2] =~ /^\w+\(.*\)$/)) ? 1 : 0;
+  no warnings 'uninitialized';
+  return (($_[1]->validate_datetime_year_to_second_keyword($_[2]) && $_[1]->should_inline_datetime_keywords) || 
+          $_[2] =~ /^\w+\(.*\)$/) ? 1 : 0;
 }
 
 sub parse_value

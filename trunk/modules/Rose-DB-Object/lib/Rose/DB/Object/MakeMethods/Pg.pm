@@ -8,7 +8,7 @@ use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
 use Rose::DB::Object::Constants 
-  qw(STATE_LOADING STATE_SAVING MODIFIED_COLUMNS SET_COLUMNS STATE_IN_DB);
+  qw(STATE_LOADING STATE_SAVING MODIFIED_COLUMNS MODIFIED_NP_COLUMNS SET_COLUMNS STATE_IN_DB);
 
 use constant SALT_CHARS => './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 

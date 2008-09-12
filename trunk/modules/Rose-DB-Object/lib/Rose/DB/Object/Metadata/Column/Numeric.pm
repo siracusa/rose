@@ -7,7 +7,7 @@ use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::Metadata::Column::Scalar;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Scalar);
 
-our $VERSION = '0.761';
+our $VERSION = '0.771';
 
 __PACKAGE__->delete_common_method_maker_argument_names('length');
 
@@ -23,6 +23,14 @@ Rose::Object::MakeMethods::Generic->make_methods
 );
 
 sub type { 'numeric' }
+
+sub should_inline_value
+{
+  #my($self, $db, $value) = @_;
+  no warnings 'uninitialized';
+  return (($_[1]->validate_numeric_keyword($_[2]) && $_[1]->should_inline_numeric_keywords) || 
+          $_[2] =~ /^\w+\(.*\)$/) ? 1 : 0;
+}
 
 sub init_with_dbi_column_info
 {

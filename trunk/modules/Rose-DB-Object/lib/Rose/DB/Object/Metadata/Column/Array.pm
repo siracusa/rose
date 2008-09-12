@@ -8,7 +8,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.711';
+our $VERSION = '0.771';
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -26,6 +26,14 @@ sub type { 'array' }
 foreach my $type (__PACKAGE__->available_method_types)
 {
   __PACKAGE__->method_maker_type($type => 'array')
+}
+
+sub should_inline_value
+{
+  #my($self, $db, $value) = @_;
+  no warnings 'uninitialized';
+  return (($_[1]->validate_array_keyword($_[2]) && $_[1]->should_inline_array_keywords) || 
+          $_[2] =~ /^\w+\(.*\)$/) ? 1 : 0;
 }
 
 sub parse_value  { shift; shift->parse_array(@_)  }

@@ -436,7 +436,7 @@ If this not what you want, you can make C<init_db()> return the same C<My::DB> o
     package Product;
     ...
     sub init_db { My::DB->new_or_cached }
-    
+
 Since C<init_db()> is only called if a C<Product> object does not already have a L<db|Rose::DB::Object/db> object, another way to share a single C<My::DB> object with several C<Product> objects is to do so explicitly, either by pre-creating the C<My::DB> object:
 
     $db = My::DB->new; # will share this db with the Products below
@@ -451,7 +451,7 @@ or by letting one of the C<Product> objects provide the L<db|Rose::DB::Object/db
     $p2 = Product->new(db => $p1->db, ...); # use $p1's db
     $p3 = Product->new(db => $p1->db, ...); # use $p1's db
 
-A note for L<mod_perl> users: when using L<Apache::DBI>, even if each C<Product> has its own C<My::DB> object, remember that they will all share a single underlying L<DBI> database handle.  That is, each L<Rose::DB>-derived object of a given L<type|Rose::DB/type> and L<domain|Rose::DB/domain> will eventually call L<DBI>'s L<connect()|DBI/connect> method with the same arguments, and therefore return the same, cached database handle when running under L<Apache::DBI>.  The L<default cache implementation||Rose::DB::Cache> underlying the L<new_or_cached|Rose::DB/new_or_cached> method is also L<mod_perl-aware|Rose::DB::Cache/prepare_db> and will cooperate with L<Apache::DBI>.
+A note for L<mod_perl> users: when using L<Apache::DBI>, even if each C<Product> has its own C<My::DB> object, remember that they will all share a single underlying L<DBI> database handle.  That is, each L<Rose::DB>-derived object of a given L<type|Rose::DB/type> and L<domain|Rose::DB/domain> will eventually call L<DBI>'s L<connect()|DBI/connect> method with the same arguments, and therefore return the same, cached database handle when running under L<Apache::DBI>.  The L<default cache implementation|Rose::DB::Cache> underlying the L<new_or_cached|Rose::DB/new_or_cached> method is also L<mod_perl-aware|Rose::DB::Cache/prepare_db> and will cooperate with L<Apache::DBI>.
 
 Here's an example where sharing a database object is important: creating several C<Product> objects in a single transaction.
 
