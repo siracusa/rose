@@ -1,4 +1,4 @@
-0.770_10 (08.25.2008) - John Siracusa <siracusa@gmail.com>
+0.770_11 (08.26.2008) - John Siracusa <siracusa@gmail.com>
 
     * Made "where" an alias for the Manager's "query" parameter.
       (Requested by Ask Bjørn Hansen)
@@ -13,8 +13,6 @@
       (Reported by kittens)
     * TODO: traversal and recursive serialization helpers (needs docs)
     * TODO: nonpersistent_columns (needs docs)
-    * TODO: move should_inline* to Rose::DB
-    * TODO: Clarify Manager docs - why tN.rel.rel.col is bad.
 
 0.770 (05.28.2008) - John Siracusa <siracusa@gmail.com>
 

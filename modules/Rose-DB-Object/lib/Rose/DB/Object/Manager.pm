@@ -4264,6 +4264,8 @@ To select only products whose vendors are in the United States, use a query argu
 
 This assumes that the C<Product> class has a relationship or foreign key named "vendor" that points to the product's C<Vendor>, and that the C<Vendor> class has a foreign key or relationship named "region" that points to the vendor's C<Region>, and that 'vendor.region' (or any foreign key or relationship name chain that begins with 'vendor.region.') is an argument to the C<with_objects> or C<require_objects> parameters.
 
+Please note that the "L<tN|Rose::DB::Object::QueryBuilder/tables>" table aliases are not allowed in front of these kinds of chained relationship parameters.  (The chain of relationship names specifies the target table, so any "tN" alias would be redundant at best, or present a conflict at worst.)
+
 =item B<require_objects ARRAYREF>
 
 Only fetch rows from the primary table that have all of the associated sub-objects listed in ARRAYREF, a reference to an array of L<foreign key|Rose::DB::Object::Metadata/foreign_keys> or L<relationship|Rose::DB::Object::Metadata/relationships> names defined for C<object_class>.  The supported relationship types are "L<one to one|Rose::DB::Object::Metadata::Relationship::OneToOne>," "L<one to many|Rose::DB::Object::Metadata::Relationship::OneToMany>," and  "L<many to many|Rose::DB::Object::Metadata::Relationship::ManyToMany>".

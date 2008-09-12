@@ -5,7 +5,7 @@ use strict;
 use Rose::DB::Object::Metadata::Column::Scalar;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Scalar);
 
-our $VERSION = '0.70';
+our $VERSION = '0.771';
 
 __PACKAGE__->add_common_method_maker_argument_names(qw(min max));
 __PACKAGE__->delete_common_method_maker_argument_names(qw(length));
@@ -22,6 +22,14 @@ foreach my $type (__PACKAGE__->available_method_types)
 }
 
 sub type { 'integer' }
+
+sub should_inline_value
+{
+  #my($self, $db, $value) = @_;
+  no warnings 'uninitialized';
+  return (($_[1]->validate_integer_keyword($_[2]) && $_[1]->should_inline_integer_keywords) || 
+          $_[2] =~ /^\w+\(.*\)$/) ? 1 : 0;
+}
 
 sub perl_column_definition_attributes
 {

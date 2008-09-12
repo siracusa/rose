@@ -17,6 +17,14 @@ sub type { 'boolean' }
 sub parse_value  { shift; shift->parse_boolean(@_)  }
 sub format_value { shift; shift->format_boolean(@_) }
 
+sub should_inline_value
+{
+  #my($self, $db, $value) = @_;
+  no warnings 'uninitialized';
+  return (($_[1]->validate_boolean_keyword($_[2]) && $_[1]->should_inline_boolean_keywords) || 
+          $_[2] =~ /^\w+\(.*\)$/) ? 1 : 0;
+}
+
 sub perl_column_definition_attributes
 {
   grep { $_ ne 'length' } shift->SUPER::perl_column_definition_attributes;

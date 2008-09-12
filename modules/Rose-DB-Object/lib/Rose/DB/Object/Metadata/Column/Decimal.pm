@@ -5,9 +5,17 @@ use strict;
 use Rose::DB::Object::Metadata::Column::Numeric;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Numeric);
 
-our $VERSION = '0.01';
+our $VERSION = '0.771';
 
 sub type { 'decimal' }
+
+sub should_inline_value
+{
+  #my($self, $db, $value) = @_;
+  no warnings 'uninitialized';
+  return (($_[1]->validate_numeric_keyword($_[2]) && $_[1]->should_inline_numeric_keywords) || 
+          $_[2] =~ /^\w+\(.*\)$/) ? 1 : 0;
+}
 
 1;
 
