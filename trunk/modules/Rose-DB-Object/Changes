@@ -1,18 +1,18 @@
-0.770_11 (08.26.2008) - John Siracusa <siracusa@gmail.com>
+0.770_20 (09.12.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Traversal and recursive serialization helper method added.
+    * Non-persistent columns feature added.
     * Made "where" an alias for the Manager's "query" parameter.
       (Requested by Ask Bjørn Hansen)
     * Documented restrictions on the Manager's "select" parameter.
     * Fixed bug that prevented CURRENT_TIMESTAMP from being properly
       inlined in queries sent to SQLite.  (RT 37224)
-    * Fixed more memory cycles.  (Reported by Christopher Laco)
+    * Fixed a memory leak.  (Reported by Christopher Laco)
     * The "cluck" error mode now correctly calls cluck() rather than 
       croak().  (Reported by Kevin McGrath)
     * Added support for Oracle date/time column keywords.
     * Cascaded delete now properly cascades to one-to-one related objects.
       (Reported by kittens)
-    * TODO: traversal and recursive serialization helpers (needs docs)
-    * TODO: nonpersistent_columns (needs docs)
 
 0.770 (05.28.2008) - John Siracusa <siracusa@gmail.com>
 
