@@ -135,7 +135,7 @@ foreach my $db_type (qw(pg mysql informix sqlite))
     #local $Rose::DB::Object::Debug = 0;
 
     modify_nonpersistent_column_values($o);
-$DB::single = 1;
+
     ok(!has_modified_columns($o), "has_modified_columns $col 2 - $db_type");
 
     $o = $class->new(id => $o->id)->load;

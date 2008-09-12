@@ -900,13 +900,13 @@ sub _build_clause
           my $should_inline = 
             ($db && $col_meta && $col_meta->should_inline_value($db, $val));
 
-          if($should_inline || $force_inline)
-          {
-            push(@new_vals, $val);
-          }
-          elsif(ref $val eq 'SCALAR')
+          if(ref $val eq 'SCALAR')
           {
             push(@new_vals, $$val);
+          }
+          elsif($should_inline || $force_inline)
+          {
+            push(@new_vals, $val);
           }
           else
           {
