@@ -35,7 +35,6 @@ __PACKAGE__->export_tags
        insert_or_update_on_duplicate_key load_speculative
        column_value_pairs column_accessor_value_pairs 
        column_mutator_value_pairs 
-       column_values_as_yaml column_values_as_json
        traverse_depth_first as_tree init_with_tree new_from_tree
        init_with_deflated_tree new_from_deflated_tree
        init_with_column_value_pairs
@@ -888,27 +887,27 @@ This class inherits from L<Rose::Object::MixIn>.  See the L<Rose::Object::MixIn>
 
 =head1 FUNCTIONS VS. METHODS
 
-Due to the wonders of Perl 5's object system (such as it is), any helper method described here can also be used as a L<Rose::DB::Object::Util>-style utility I<function> that takes a L<Rose::DB::Object>-derived object as its first argument.  Example:
+Due to the "wonders" of Perl 5's object system, any helper method described here can also be used as a L<Rose::DB::Object::Util>-style utility I<function> that takes a L<Rose::DB::Object>-derived object as its first argument.  Example:
 
-    # Import two helpers
-    use Rose::DB::Object::Helpers qw(clone_and_reset traverse_depth_first);
+  # Import two helpers
+  use Rose::DB::Object::Helpers qw(clone_and_reset traverse_depth_first);
 
-    $o = My::DB::Object->new(...);
+  $o = My::DB::Object->new(...);
 
-    clone_and_reset($o); # Imported helper "method" called as function
+  clone_and_reset($o); # Imported helper "method" called as function
 
-    # Imported helper "method" with arguments called as function
-    traverse_depth_first($o, handlers => { ... }, max_depth => 2);
+  # Imported helper "method" with arguments called as function
+  traverse_depth_first($o, handlers => { ... }, max_depth => 2);
 
-Why, then, the distinction between L<Rose::DB::Object::Helpers> "methods" and L<Rose::DB::Object::Util> functions?  It's simply a matter of context.  The functions in L<Rose::DB::Object::Util> are most useful in the context of the internals (e.g., writing your own L<column method-maker|Rose::DB::Object::Metadata::Column/"MAKING METHODS">) whereas L<Rose::DB::Object::Helpers> methods are most often added to a common L<Rose::DB::Object>-derived base class and then called as object methods by all classes that inherit from it.
+Why, then, the distinction between L<Rose::DB::Object::Helpers> methods and L<Rose::DB::Object::Util> functions?  It's simply a matter of context.  The functions in L<Rose::DB::Object::Util> are most useful in the context of the internals (e.g., writing your own L<column method-maker|Rose::DB::Object::Metadata::Column/"MAKING METHODS">) whereas L<Rose::DB::Object::Helpers> methods are most often added to a common L<Rose::DB::Object>-derived base class and then called as object methods by all classes that inherit from it.
 
 The point is, these are just conventions.  Use any of these subroutines as functions or as methods as you see fit.  Just don't forget to pass a L<Rose::DB::Object>-derived object as the first argument when calling as a function.
 
 =head1 OBJECT METHODS
 
-=head2 as_json [PARAMS]>
+=head2 as_json [PARAMS]
 
-Returns a JSON-formatted string created from the object tree returned by the L<as_tree|/as_tree> method.  PARAMS are the same as for the L<as_tree|/as_tree> method, except that the C<deflate> parameter is ignored (it is always set to true).
+Returns a JSON-formatted string created from the object tree as created by the L<as_tree|/as_tree> method.  PARAMS are the same as for the L<as_tree|/as_tree> method, except that the C<deflate> parameter is ignored (it is always set to true).
 
 You must have the L<JSON> module installed in order to use this helper method.  If you have the L<JSON::XS> module installed, this method will work a lot faster.
 
@@ -962,11 +961,15 @@ A reference to a subroutine that is called on each L<Rose::DB::Object::Metadata:
       return 0;
     },
 
+B<Caveats>: Currently, you cannot have a relationship and a column in the same class with the same name.  This does not happen without explicit action on the part of the class creator, but it is technically possible.  The result of serializing such an object tree is undefined.  This limitation may be removed in the future.
+
+The exact format of the "tree" data structure is not public and may change in the future (e.g., to overcome the limitation described above).
+
 =back
 
 =head2 as_yaml [PARAMS]>
 
-Returns a YAML-formatted string created from the object tree returned by the L<as_tree|/as_tree> method.  PARAMS are the same as for the L<as_tree|/as_tree> method, except that the C<deflate> parameter is ignored (it is always set to true).
+Returns a YAML-formatted string created from the object tree as created by the L<as_tree|/as_tree> method.  PARAMS are the same as for the L<as_tree|/as_tree> method, except that the C<deflate> parameter is ignored (it is always set to true).
 
 You must have the L<YAML::Syck> module installed in order to use this helper method.
 

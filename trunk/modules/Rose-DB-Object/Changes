@@ -1,4 +1,4 @@
-0.770_20 (09.12.2008) - John Siracusa <siracusa@gmail.com>
+0.771 (09.12.2008) - John Siracusa <siracusa@gmail.com>
 
     * Traversal and recursive serialization helper method added.
     * Non-persistent columns feature added.
