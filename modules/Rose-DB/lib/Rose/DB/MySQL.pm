@@ -279,6 +279,8 @@ sub format_bitfield
   return hex($vec->to_Hex);
 }
 
+sub validate_bitfield_keyword { defined $_[1] ? 1 : 0 }
+
 sub should_inline_bitfield_values
 {
   # MySQL 5.0.3 or later requires this crap...

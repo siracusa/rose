@@ -1,4 +1,4 @@
-0.744_02 (08.22.2008) - John Siracusa <siracusa@gmail.com>
+0.745 (09.12.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added support for Oracle date/time column keywords.
     * Added methods to list cached db entries and keys.
