@@ -1834,6 +1834,11 @@ Returns the name of the method used to set the column value.  This is a convenie
 
 Get or set the name of the column, not including the table name, username, schema, or any other qualifier.
 
+=item B<nonpersistent [BOOL]>
+
+Get or set a boolean flag that indicates whether or not the column 
+is L<non-persistent|Rose::DB::Object::Metadata/nonpersistent_columns>.
+
 =item B<not_null [BOOL]>
 
 Get or set a boolean flag that indicates whether or not the column 
