@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.744_02';
+our $VERSION = '0.745';
 
 our $Debug = 0;
 
@@ -1055,7 +1055,8 @@ sub commit
 
     if($@)
     {
-      $self->error('commit() - ' . $dbh->errstr);
+      no warnings 'uninitialized';
+      $self->error("commit() $@ - " . $dbh->errstr);
       return undef;
     }
 
@@ -1588,8 +1589,6 @@ sub format_bitfield
 
 sub select_bitfield_column_sql { shift->auto_quote_column_with_table(@_) }
 
-sub should_inline_bitfield_values { 0 }
-
 sub parse_array
 {
   my($self) = shift;
@@ -1936,23 +1935,42 @@ sub format_interval
 
 sub build_dsn { 'override in subclass' }
 
+sub validate_integer_keyword          { 0 }
+sub validate_float_keyword            { 0 }
+sub validate_numeric_keyword          { 0 }
+sub validate_decimal_keyword          { 0 }
+sub validate_double_precision_keyword { 0 }
+sub validate_bigint_keyword           { 0 }
+sub validate_date_keyword             { 0 }
+sub validate_datetime_keyword         { 0 }
+sub validate_time_keyword             { 0 }
+sub validate_timestamp_keyword        { 0 }
+sub validate_interval_keyword         { 0 }
+sub validate_set_keyword              { 0 }
+sub validate_array_keyword            { 0 }
+sub validate_bitfield_keyword         { 0 }
+
 sub validate_boolean_keyword
 {
   no warnings;
   $_[1] =~ /^(?:TRUE|FALSE)$/;
 }
 
-sub validate_date_keyword      { 0 }
-sub validate_datetime_keyword  { 0 }
-sub validate_time_keyword      { 0 }
-sub validate_timestamp_keyword { 0 }
-sub validate_interval_keyword  { 0 }
-
-sub should_inline_date_keywords      { 0 }
-sub should_inline_datetime_keywords  { 0 }
-sub should_inline_time_keywords      { 0 }
-sub should_inline_timestamp_keywords { 0 }
-sub should_inline_interval_keywords  { 0 }
+sub should_inline_integer_keywords          { 0 }
+sub should_inline_float_keywords            { 0 }
+sub should_inline_decimal_keywords          { 0 }
+sub should_inline_numeric_keywords          { 0 }
+sub should_inline_double_precision_keywords { 0 }
+sub should_inline_bigint_keywords           { 0 }
+sub should_inline_date_keywords             { 0 }
+sub should_inline_datetime_keywords         { 0 }
+sub should_inline_time_keywords             { 0 }
+sub should_inline_timestamp_keywords        { 0 }
+sub should_inline_interval_keywords         { 0 }
+sub should_inline_set_keywords              { 0 }
+sub should_inline_array_keywords            { 0 }
+sub should_inline_boolean_keywords          { 0 }
+sub should_inline_bitfield_values           { 0 }
 
 sub next_value_in_sequence
 {
