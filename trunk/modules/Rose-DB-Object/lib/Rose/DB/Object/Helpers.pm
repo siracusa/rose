@@ -9,7 +9,7 @@ our @ISA = qw(Rose::Object::MixIn);
 
 use Carp;
 
-our $VERSION = '0.771';
+our $VERSION = '0.7711';
 
 __PACKAGE__->export_tags
 (
@@ -967,7 +967,7 @@ B<Caveats>: Currently, you cannot have a relationship and a column with the same
 
 The exact format of the "tree" data structure returned by this method is not public and may change in the future (e.g., to overcome the limitation described above).
 
-=head2 as_yaml [PARAMS]>
+=head2 as_yaml [PARAMS]
 
 Returns a YAML-formatted string created from the object tree as created by the L<as_tree|/as_tree> method.  PARAMS are the same as for the L<as_tree|/as_tree> method, except that the C<deflate> parameter is ignored (it is always set to true).
 
