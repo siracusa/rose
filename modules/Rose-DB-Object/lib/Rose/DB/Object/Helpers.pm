@@ -1262,7 +1262,7 @@ Do not remove any sub-objects (L<foreign keys|Rose::DB::Object::Metadata/foreign
 
 =back
 
-=head2 B<traverse_depth_first CODEREF | PARAMS>
+=head2 B<traverse_depth_first [ CODEREF | PARAMS ]>
 
 Do a depth-first traversal of the L<Rose::DB::Object>-derived object that this method is called on, descending into related objects. If a reference to a subroutine is passed as the sole argument, it is taken as the value of the C<object> key to the C<handlers> parameter hash (see below).  Otherwise, PARAMS name/value pairs are expected.  Valid parameters are:
 
