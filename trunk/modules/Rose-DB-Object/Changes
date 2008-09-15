@@ -1,6 +1,8 @@
-0.7711 (09.12.2008) - John Siracusa <siracusa@gmail.com>
+0.7711 (09.15.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed typos in POD.
+    * Improved test skipping conditions and clarified JSON module
+      version requirements.
 
 0.771 (09.12.2008) - John Siracusa <siracusa@gmail.com>
 

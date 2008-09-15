@@ -4,8 +4,25 @@ use strict;
 
 sub nvl { defined $ENV{$_[0]} ? $ENV{$_[0]} : $_[1] }
 
-print STDERR<<"EOF";
+eval { require DBI };
+eval { require DBD::Pg };
+eval { require DBD::mysql };
+eval { require DBD::SQLite };
+eval { require DBD::Informix };
+eval { require DBD::Oracle };
 
+print STDERR "\n##\n";
+
+foreach my $pkg (qw(DBI DBD::Pg DBD::mysql DBD::SQLite DBD::Informix DBD::Oracle ))
+{
+  no strict 'refs';
+  if(defined(my $version = ${$pkg . '::VERSION'}))
+  {
+    print STDERR sprintf("## %-15s %s\n", $pkg, $version);
+  }
+}
+
+print STDERR<<"EOF";
 ##
 ## WARNING: Almost all the tests in this module distribution need to connect
 ## to a database in order to run.  The tests need full privileges on this
@@ -54,13 +71,13 @@ EOF
 
 eval { require DBD::SQLite };
 
-if(!$@ && $DBD::SQLite::VERSION == 1.13)
+if(!$@ && ($DBD::SQLite::VERSION == 1.13 || $DBD::SQLite::VERSION == 1.14))
 {
 print STDERR<<"EOF";
 
 ***
-*** WARNING: DBD::SQLite version 1.13 or 1.14 detected.  These versions have
-*** some serious bugs that prevent the test suite from working correctly.
+*** WARNING: DBD::SQLite version $DBD::SQLite::VERSION detected.  This version has some
+*** serious bugs that prevent the test suite from working correctly.
 *** In particular:
 ***
 ***     http://rt.cpan.org/Public/Bug/Display.html?id=21472
