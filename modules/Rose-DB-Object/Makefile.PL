@@ -26,4 +26,16 @@ WriteMakefile(NAME         => 'Rose::DB::Object',
                 'Rose::Object'          => '0.852',
                 'Rose::DB'              => '0.745',
               },
-              clean => { FILES => "t/*.db" });
+              clean => { FILES => "t/*.db" },
+              #META_MERGE => 
+              #{
+              #  resources =>
+              #  {
+              #    license     =>      'http://dev.perl.org/licenses/',
+              #    homepage    =>      'http://rosecode.org',
+              #    bugtracker  =>      'http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB-Object',
+              #    repository  =>      'https://rose.googlecode.com/svn/trunk/modules/Rose-DB-Object',
+              #    'MailingList' =>    'http://groups.google.com/group/rose-db-object',
+              #  },
+              #}
+              );
