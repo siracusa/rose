@@ -909,7 +909,7 @@ The point is, these are just conventions.  Use any of these subroutines as funct
 
 Returns a JSON-formatted string created from the object tree as created by the L<as_tree|/as_tree> method.  PARAMS are the same as for the L<as_tree|/as_tree> method, except that the C<deflate> parameter is ignored (it is always set to true).
 
-You must have the L<JSON> module installed in order to use this helper method.  If you have the L<JSON::XS> module installed, this method will work a lot faster.
+You must have the L<JSON> module version 2.12 or later installed in order to use this helper method.  If you have the L<JSON::XS> module version 2.2222 or later installed, this method will work a lot faster.
 
 =head2 as_tree [PARAMS]
 
@@ -1008,7 +1008,7 @@ is equivalent to this:
 
 =head2 column_values_as_json
 
-Returns a string containing a JSON representation of the object's column values.  You must have the L<JSON> module installed in order to use this helper method.  If you have the L<JSON::XS> module installed, this method will work a lot faster.
+Returns a string containing a JSON representation of the object's column values.  You must have the L<JSON> module version 2.12 or later installed in order to use this helper method.  If you have the L<JSON::XS> module version 2.2222 or later installed, this method will work a lot faster.
 
 =head2 column_values_as_yaml
 
