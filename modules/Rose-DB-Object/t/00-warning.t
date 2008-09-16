@@ -71,14 +71,14 @@ EOF
 
 eval { require DBD::SQLite };
 
-if(!$@ && ($DBD::SQLite::VERSION == 1.13 || $DBD::SQLite::VERSION == 1.14))
+if(!$@ && $DBD::SQLite::VERSION >= 1.13)
 {
 print STDERR<<"EOF";
 
 ***
-*** WARNING: DBD::SQLite version $DBD::SQLite::VERSION detected.  This version has some
-*** serious bugs that prevent the test suite from working correctly.
-*** In particular:
+*** WARNING: DBD::SQLite version $DBD::SQLite::VERSION detected.  Versions 1.13 and 1.14
+*** are known to have serious bugs that prevent the test suite from working
+*** correctly.  In particular:
 ***
 ***     http://rt.cpan.org/Public/Bug/Display.html?id=21472
 ***
