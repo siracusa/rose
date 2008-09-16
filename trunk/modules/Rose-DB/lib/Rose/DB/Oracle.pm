@@ -8,7 +8,7 @@ use Rose::DB;
 
 our $Debug = 0;
 
-our $VERSION  = '0.745'; 
+our $VERSION  = '0.746'; 
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -19,7 +19,8 @@ __PACKAGE__->_default_post_connect_sql
 (
   [
     q(ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS'),
-    q(ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SSxFF') 
+    q(ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SSxFF'),
+    q(ALTER SESSION SET NLS_TIMESTAMP_TZ_FORMAT='YYYY-MM-DD HH24:MI:SSxFF')
   ]
 );
 
