@@ -1,3 +1,7 @@
+0.7712 (09.15.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Improved detection of broken DBD::SQLite versions.
+
 0.7711 (09.15.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed typos in POD.
