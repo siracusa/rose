@@ -316,16 +316,18 @@ BEGIN
     no warnings 'uninitialized';
     unless($JSON::VERSION >= 2.12)
     {
-      $Have_JSON = 0;
+      $Have_YAML = $Have_JSON = 0;
     }
 
     eval { require JSON::XS };
 
     if(defined $JSON::XS::VERSION && $JSON::XS::VERSION < 2.2222)
     {
-      $Have_JSON = 0;
+      $Have_YAML = $Have_JSON = 0;
     }
   }
+
+  $All = ':all_noprereq'  unless($Have_YAML && $Have_YAML);
 }
 
 BEGIN
