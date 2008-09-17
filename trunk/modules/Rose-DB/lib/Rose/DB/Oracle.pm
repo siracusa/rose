@@ -346,6 +346,7 @@ The L<default_post_connect_sql|/default_post_connect_sql> statements will be run
 
     ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS'
     ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SSxFF'
+    ALTER SESSION SET NLS_TIMESTAMP_TZ_FORMAT='YYYY-MM-DD HH24:MI:SSxFF'
 
 These statements enable date/time column value parsing and formatting to work correctly.
 
