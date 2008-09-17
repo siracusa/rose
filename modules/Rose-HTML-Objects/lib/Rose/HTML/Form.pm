@@ -1816,7 +1816,7 @@ sub _html_table
 
   my @buttons;
 
-  foreach my $field ($self->fields_depth_first)
+  foreach my $field (grep { !$_->isa('Rose::HTML::Form::Field::Hidden') } $self->fields_depth_first)
   {
     if($field->is_button)
     {
