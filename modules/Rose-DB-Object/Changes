@@ -1,3 +1,7 @@
+0.7713 (09.16.2008) - John Siracusa <siracusa@gmail.com>
+
+    * More test skipping fixes.
+    
 0.7712 (09.15.2008) - John Siracusa <siracusa@gmail.com>
 
     * Improved detection of broken DBD::SQLite versions.
