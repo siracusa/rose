@@ -18,6 +18,7 @@ our @EXPORT_OK =
      set_state_in_db set_state_loading set_state_saving
      unset_state_in_db unset_state_loading unset_state_saving
      row_id column_value_formatted_key column_value_is_inflated_key
+     column_value_formatted_key_for_db 
      lazy_column_values_loaded_key modified_column_names has_modified_columns
      has_modified_children has_loaded_related set_column_value_modified
      unset_column_value_modified get_column_value_modified
@@ -41,7 +42,7 @@ our %EXPORT_TAGS =
 
 $EXPORT_TAGS{'state'} = [ map { @$_ } @EXPORT_TAGS{qw(get_state set_state unset_state)} ];
 
-our $VERSION = '0.759';
+our $VERSION = '0.772';
 
 sub is_in_db   { shift->{STATE_IN_DB()}   }
 sub is_loading { shift->{STATE_LOADING()} }
@@ -64,6 +65,8 @@ sub get_column_value_modified
 sub set_column_value_modified
 {
   my($object, $name) = (shift, shift);
+  my $key = column_value_formatted_key_for_db($object->meta->column($name)->hash_key, $object->db);
+  delete $object->{$key};
   return $object->{MODIFIED_COLUMNS()}{$name} = 1;
 }
 
@@ -155,6 +158,12 @@ sub column_value_formatted_key
 {
   my($key) = shift;
   return PRIVATE_PREFIX . "_${key}_formatted";
+}
+
+sub column_value_formatted_key_for_db
+{
+  my($key, $db) = @_;
+  return join($;, column_value_formatted_key($key),  $db->driver || 'unknown');
 }
 
 sub column_value_is_inflated_key

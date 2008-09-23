@@ -1,3 +1,8 @@
+0.772 (09.23.2008) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: ::Cached changes
+    * TODO: dirty_columns() Helper?
+    
 0.7713 (09.16.2008) - John Siracusa <siracusa@gmail.com>
 
     * More test skipping fixes.
