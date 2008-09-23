@@ -7,6 +7,8 @@ use Rose::DB::Object::Constants qw(:all);
 use Rose::Object::MixIn;
 our @ISA = qw(Rose::Object::MixIn);
 
+require Rose::DB::Object::Util;
+
 use Carp;
 
 our $VERSION = '0.7711';
@@ -25,7 +27,8 @@ __PACKAGE__->export_tags
        as_yaml new_from_yaml init_with_yaml
        as_json new_from_json init_with_json
        init_with_column_value_pairs
-       has_loaded_related strip forget_related) 
+       has_loaded_related strip forget_related
+       dirty_columns) 
   ],
 
   # This exists for the benefit of the test suite
@@ -38,7 +41,8 @@ __PACKAGE__->export_tags
        traverse_depth_first as_tree init_with_tree new_from_tree
        init_with_deflated_tree new_from_deflated_tree
        init_with_column_value_pairs
-       has_loaded_related strip forget_related)
+       has_loaded_related strip forget_related
+       dirty_columns)
   ],
 );
 
@@ -158,10 +162,10 @@ sub insert_or_update
     #my @pk_keys = $meta->primary_key_column_db_value_hash_keys;
     #@$self{@pk_keys} = @$clone{@pk_keys};
 
-    return $self->update(@_);
+    return $self->save(@_, update => 1);
   }
 
-  return $self->insert(@_);
+  return $self->save(@_, insert => 1)
 }
 
 sub insert_or_update_on_duplicate_key
@@ -173,7 +177,7 @@ sub insert_or_update_on_duplicate_key
     return insert_or_update($self, @_);
   }
 
-  return $self->insert(@_, on_duplicate_key_update => 1);
+  return $self->save(@_, insert => 1, on_duplicate_key_update => 1);
 }
 
 __PACKAGE__->pre_import_hook(column_values_as_yaml => sub { require YAML::Syck });
@@ -855,6 +859,27 @@ __PACKAGE__->pre_import_hook(as_yaml => sub { require YAML::Syck });
 sub as_json { __PACKAGE__->json_encoder->encode(scalar as_tree(@_, deflate => 1)) }
 sub as_yaml { YAML::Syck::Dump(scalar as_tree(@_, deflate => 1)) }  
 
+sub dirty_columns
+{
+  my($self) = shift;
+
+  if(@_)
+  {
+    foreach my $column (@_)
+    {
+      my $name = 
+        UNIVERSAL::isa($column, 'Rose::DB::Object::Metadata::Column') ? 
+          $column->name : $column;
+      Rose::DB::Object::Util::set_column_value_modified($self, $name);
+    }
+  
+    return;
+  }
+
+  return wantarray ? keys %{$self->{MODIFIED_COLUMNS()}} :
+                     scalar keys %{$self->{MODIFIED_COLUMNS()}};
+}
+
 1;
 
 __END__
@@ -1026,6 +1051,12 @@ Returns a hash (in list context) or reference to a hash (in scalar context) of c
 
 Returns a hash (in list context) or reference to a hash (in scalar context) of column name and value pairs.  The keys of the hash are the L<names|Rose::DB::Object::Metadata::Column/name> of the columns.  The values are retrieved by calling the L<accessor method|Rose::DB::Object::Metadata::Column/accessor_method_name> for each column.
 
+=head2 dirty_columns [ NAMES | COLUMNS ]
+
+Given a list of column names or L<Rose::DB::Object::Metadata::Column>-derived objects, mark each column as L<modifed|Rose::DB::Object::Util/set_column_value_modified>.
+
+If passed no arguments, returns a list of all modified columns in list context or the number of modified columns in scalar context.
+
 =head2 forget_related [ NAME | PARAMS ]
 
 Given a foreign key or relationship name, forget any L<previously loaded|/has_loaded_related> objects related by the specified foreign key or relationship.  Normally, any objects loaded by the default accessor methods for relationships and foreign keys are fetched from the database only the first time they are asked for, and simply returned thereafter.  Asking them to be "forgotten" causes them to be fetched anew from the database the next time they are asked for.
@@ -1112,17 +1143,17 @@ Initialize the object with a YAML-formatted string.  The YAML string must be in 
 
 =head2 insert_or_update [PARAMS]
 
-If the object already exists in the database, then L<update|Rose::DB::Object/update> it.  Otherwise, L<insert|Rose::DB::Object/insert> it.  Any PARAMS are passed on to the calls to L<insert|Rose::DB::Object/insert> or L<update|Rose::DB::Object/update>.
+If the object already exists in the database, then update it.  Otherwise, insert it.  Any PARAMS are passed on to the call to L<save|Rose::DB::Object/save> (which is supplied with the appropriate C<insert> or C<update> boolean parameter).
 
 This method differs from the standard L<save|Rose::DB::Object/save> method in that L<save|Rose::DB::Object/save> decides to L<insert|Rose::DB::Object/insert> or L<update|Rose::DB::Object/update> based solely on whether or not the object was previously L<load|Rose::DB::Object/load>ed.  This method will take the extra step of actually attempting to L<load|Rose::DB::Object/load> the object to see whether or not it's in the database.
 
-The return value of the L<insert|Rose::DB::Object/insert> or L<update|Rose::DB::Object/update> method (whichever is called) is returned.
+The return value of the L<save|Rose::DB::Object/save> method is returned.
 
 =head2 insert_or_update_on_duplicate_key [PARAMS]
 
-Update or insert a row with a single SQL statement, depending on whether or not a row with the same primary or unique key already exists.  Any PARAMS are passed on to the call to L<insert|Rose::DB::Object/insert> or L<update|Rose::DB::Object/update>.
+Update or insert a row with a single SQL statement, depending on whether or not a row with the same primary or unique key already exists.  Any PARAMS are passed on to the call to L<save|Rose::DB::Object/save> (which is supplied with the appropriate C<insert> or C<update> boolean parameter).
 
-If the current database does not support the "ON DUPLICATE KEY UPDATE" SQL extension, then this method simply call the L<insert_or_update|/insert_or_update> method, pasing all PARAMS.
+If the current database does not support the "ON DUPLICATE KEY UPDATE" SQL extension, then this method simply calls the L<insert_or_update|/insert_or_update> method, pasing all PARAMS.
 
 Currently, the only database that supports "ON DUPLICATE KEY UPDATE" is MySQL, and only in version 4.1.0 or later.  You can read more about the feature here:
 
