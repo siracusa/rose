@@ -1,8 +1,19 @@
 0.772 (09.23.2008) - John Siracusa <siracusa@gmail.com>
 
-    * TODO: ::Cached changes
-    * TODO: dirty_columns() Helper?
-    
+    * Altered Rose::DB::Object::Cached to override insert() and
+      update methods.  (Suggested by Kevin McGrath)
+    * The update() method now marks updated objects as being in the
+      database (see is_in_db() in Rose::DB::Object::Util)  (Suggested
+      by Kevin McGrath)
+    * The insert_or_update() and insert_or_update_on_duplicate_key()
+      helper methods now call save() instead of insert() or update()
+      (passing the appropriate flags to cause an insert or update) in
+      order also save child objects.  (Suggested by Kevin McGrath)
+    * The set_column_value_modified() function in Rose::DB::Object::Util
+      now also clears any "db-ready" column value the object may be
+      holding for that column.
+    * Added a dirty_columns() helper method (Suggested by jdv79)
+
 0.7713 (09.16.2008) - John Siracusa <siracusa@gmail.com>
 
     * More test skipping fixes.

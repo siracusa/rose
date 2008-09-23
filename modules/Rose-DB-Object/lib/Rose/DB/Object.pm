@@ -16,7 +16,7 @@ use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Exception;
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.7713';
+our $VERSION = '0.7719_01';
 
 our $Debug = 0;
 
@@ -908,6 +908,7 @@ sub update
     return 0;
   }
 
+  $self->{STATE_IN_DB()} = 1;
   $self->{MODIFIED_COLUMNS()} = {};
 
   return $self || 1;

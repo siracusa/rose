@@ -3,7 +3,7 @@
 use strict;
 
 #use Test::LongString;
-use Test::More tests => (82 * 4) + 2;
+use Test::More tests => (87 * 4) + 2;
 
 BEGIN 
 {
@@ -18,7 +18,7 @@ our(%Have, $Have_YAML, $Have_JSON);
 # Tests
 #
 
-use Rose::DB::Object::Util qw(:state);
+use Rose::DB::Object::Util qw(:state get_column_value_modified);
 
 my $i = 0;
 
@@ -26,7 +26,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 82)  unless($Have{$db_type});
+    skip("$db_type tests", 87)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -295,6 +295,18 @@ foreach my $db_type (qw(mysql pg informix sqlite))
     is_deeply($thawed, $o, "strip 1 - $db_type");
   }
   else { SKIP: { skip("tests that require Storable - $db_type", 1) } }
+
+  $o = $class->new(id => 1, name => 'John', age => 30)->load_or_save;
+  
+  is(scalar $o->dirty_columns, 0, "dirty_columns 1 - $db_type");
+
+  $o->dirty_columns(qw(name age));
+
+  is(scalar $o->dirty_columns, 2, "dirty_columns 2 - $db_type");
+  is(join(',',  sort $o->dirty_columns), 'age,name', "dirty_columns 3 - $db_type");
+
+  ok(get_column_value_modified($o, 'age'), "dirty_columns 4 - $db_type");
+  ok(get_column_value_modified($o, 'name'), "dirty_columns 5 - $db_type");
 }
 
 BEGIN

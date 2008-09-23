@@ -154,11 +154,23 @@ sub load
   return $ret;
 }
 
-sub save
+sub insert
 {
   my($self) = shift;
 
-  my $ret = $self->SUPER::save(@_);
+  my $ret = $self->SUPER::insert(@_);
+  return $ret  unless($ret);
+
+  $self->remember;
+
+  return $ret;
+}
+
+sub update
+{
+  my($self) = shift;
+
+  my $ret = $self->SUPER::update(@_);
   return $ret  unless($ret);
 
   $self->remember;
@@ -371,7 +383,7 @@ This class is most useful for encapsulating "read-only" rows, or other data that
 
 The memory cache can be cleared for an individual object or all objects of the same class.  There is also support for simple time-based cache expiration.  See the L<clear_object_cache|/clear_object_cache> and L<cached_objects_expire_in|/cached_objects_expire_in> methods for more information.
 
-Only the methods that are overridden are documented here.  See the L<Rose::DB::Object> documentation for the rest.
+Only the methods that are overridden or otherwise behaviorally modified are documented here.  See the L<Rose::DB::Object> documentation for the rest.
 
 =head1 CLASS METHODS
 
@@ -426,13 +438,17 @@ PARAMS are name/value pairs, and are optional.  Valid parameters are:
 
 =over 4
 
-=item * C<refresh>
+=item B<refresh>
 
 If set to a true value, then the data is always loaded from the database rather than from the memory cache.  If the load succeeds, the object replaces whatever was in the cache.  If it fails, the cache is not modified.
 
 =back
 
 Returns true if the object was loaded successfully, false if the row could not be loaded or did not exist in the database.  The true value returned on success will be the object itself.  If the object L<overload>s its boolean value such that it is not true, then a true value will be returned instead of the object itself.
+
+=item B<insert [PARAMS]>
+
+This method does the same thing as the L<Rose::DB::Object> L<method of the same name|Rose::DB::Object/insert>, except that it also saves the object to the memory cache if the insert succeeds.  If it fails, the memory cache is not modified.
 
 =item B<remember>
 
@@ -448,7 +464,11 @@ Save the current object to the memory cache I<without> saving it to the database
 
 =item B<save [PARAMS]>
 
-This method does the same thing as the L<Rose::DB::Object> method of the same name, except that it also saves the object to the memory cache if the save succeeds.  If it fails, the memory cache is not modified.
+This method does the same thing as the L<Rose::DB::Object> L<method of the same name|Rose::DB::Object/save>, except that it also saves the object to the memory cache if the save succeeds.  If it fails, the memory cache is not modified.
+
+=item B<update [PARAMS]>
+
+This method does the same thing as the L<Rose::DB::Object> L<method of the same name|Rose::DB::Object/update>, except that it also saves the object to the memory cache if the update succeeds.  If it fails, the memory cache is not modified.
 
 =back
 
