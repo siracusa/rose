@@ -138,7 +138,7 @@ sub insert_or_update
   # Initially trust the metadata
   if($self->{STATE_IN_DB()})
   {
-    eval { $self->update };
+    eval { $self->save(@_, update => 1) };
     return $self || 1  unless($@); 
   }
 
