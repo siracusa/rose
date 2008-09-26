@@ -1,4 +1,4 @@
-0.772 (09.23.2008) - John Siracusa <siracusa@gmail.com>
+0.772 (09.26.2008) - John Siracusa <siracusa@gmail.com>
 
     * Altered Rose::DB::Object::Cached to override insert() and
       update methods.  (Suggested by Kevin McGrath)
