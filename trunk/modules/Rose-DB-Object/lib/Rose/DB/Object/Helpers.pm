@@ -11,7 +11,7 @@ require Rose::DB::Object::Util;
 
 use Carp;
 
-our $VERSION = '0.7711';
+our $VERSION = '0.772';
 
 __PACKAGE__->export_tags
 (
@@ -1053,7 +1053,7 @@ Returns a hash (in list context) or reference to a hash (in scalar context) of c
 
 =head2 dirty_columns [ NAMES | COLUMNS ]
 
-Given a list of column names or L<Rose::DB::Object::Metadata::Column>-derived objects, mark each column as L<modifed|Rose::DB::Object::Util/set_column_value_modified>.
+Given a list of column names or L<Rose::DB::Object::Metadata::Column>-derived objects, mark each column in the invoking object as L<modifed|Rose::DB::Object::Util/set_column_value_modified>.
 
 If passed no arguments, returns a list of all modified columns in list context or the number of modified columns in scalar context.
 
