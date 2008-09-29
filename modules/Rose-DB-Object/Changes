@@ -2,7 +2,7 @@
 
     * Updated distribution metadata for ExtUtils::MakeMaker 6.44.
     * Added a column type mapping for MySQL's MEDIUMINT type.
-      (Reported by AndreasDewes@gmx.de)
+      (Reported by Andreas Dewes)
 
 0.772 (09.26.2008) - John Siracusa <siracusa@gmail.com>
 
