@@ -1,3 +1,7 @@
+0.7722 (09.29.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Fixed compatibility with older versions of ExtUtils::MakeMaker.
+
 0.7721 (09.29.2008) - John Siracusa <siracusa@gmail.com>
 
     * Updated distribution metadata for ExtUtils::MakeMaker 6.44.
