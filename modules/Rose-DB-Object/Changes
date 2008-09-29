@@ -1,3 +1,9 @@
+0.7721 (09.29.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Updated distribution metadata for ExtUtils::MakeMaker 6.44.
+    * Added a column type mapping for MySQL's MEDIUMINT type.
+      (Reported by AndreasDewes@gmx.de)
+
 0.772 (09.26.2008) - John Siracusa <siracusa@gmail.com>
 
     * Altered Rose::DB::Object::Cached to override insert() and

@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.771';
+our $VERSION = '0.7721';
 
 our $Debug = 0;
 
@@ -157,6 +157,7 @@ __PACKAGE__->column_type_classes
 
   'tinyint'   => 'Rose::DB::Object::Metadata::Column::Integer',
   'smallint'  => 'Rose::DB::Object::Metadata::Column::Integer',
+  'mediumint' => 'Rose::DB::Object::Metadata::Column::Integer',
 
   'bigint'    => 'Rose::DB::Object::Metadata::Column::BigInt',
 
@@ -4733,6 +4734,7 @@ The default mapping of type names to class names is:
 
   tinyint   => Rose::DB::Object::Metadata::Column::Integer
   smallint  => Rose::DB::Object::Metadata::Column::Integer
+  mediumint => Rose::DB::Object::Metadata::Column::Integer
 
   serial    => Rose::DB::Object::Metadata::Column::Serial
   bigserial => Rose::DB::Object::Metadata::Column::BigSerial

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 17);
+use Test::More tests => 1 + (5 * 19);
 
 BEGIN 
 {
@@ -53,7 +53,7 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 17)  unless($Have{$db_type});
+    skip("$db_type tests", 19)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -153,6 +153,14 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
   {
     # Check for float bug fixed in 0.761
     $prods->[0]->num(37.3053); # dies with "value too long" in <0.761
+  }
+
+  SKIP:
+  {
+    skip('MySQL tests', 2)  if($db_type ne 'mysql');
+
+    is($product_class->meta->column('smint')->type, 'integer', "small int - $db_type");
+    is($product_class->meta->column('medint')->type, 'integer', "medium int - $db_type");
   }
 
   #$DB::single = 1;
@@ -388,6 +396,9 @@ CREATE TABLE product
   id      INT AUTO_INCREMENT PRIMARY KEY,
   name    VARCHAR(255) NOT NULL,
   price   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+
+  smint   SMALLINT,
+  medint  MEDIUMINT,
 
   vendor_id  INT,
 

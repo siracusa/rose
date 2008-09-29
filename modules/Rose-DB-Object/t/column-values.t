@@ -8,7 +8,7 @@ require 't/test-lib.pl';
 
 if(have_db('sqlite_admin'))
 {
-  Test::More->import(tests => 201);
+  Test::More->import(tests => 203);
   #Test::More->import('no_plan');
 }
 else
