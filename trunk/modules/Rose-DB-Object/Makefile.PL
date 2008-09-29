@@ -2,6 +2,14 @@ require 5.006;
 
 use ExtUtils::MakeMaker;
 
+my $MM_Version = $ExtUtils::MakeMaker::VERSION;
+
+if($MM_Version =~ /_/) # dev version
+{
+  $MM_Version = eval $MM_Version;
+  die $@  if($@);
+}
+
 WriteMakefile(NAME         => 'Rose::DB::Object',
               VERSION_FROM => 'lib/Rose/DB/Object.pm',
               ($^O =~ /darwin/i ?
@@ -27,15 +35,16 @@ WriteMakefile(NAME         => 'Rose::DB::Object',
                 'Rose::DB'              => '0.745',
               },
               clean => { FILES => "t/*.db" },
-              #META_MERGE => 
-              #{
-              #  resources =>
-              #  {
-              #    license     =>      'http://dev.perl.org/licenses/',
-              #    homepage    =>      'http://rosecode.org',
-              #    bugtracker  =>      'http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB-Object',
-              #    repository  =>      'https://rose.googlecode.com/svn/trunk/modules/Rose-DB-Object',
-              #    'MailingList' =>    'http://groups.google.com/group/rose-db-object',
-              #  },
-              #}
-              );
+              ($MM_Version <= 6.44 ? () : 
+              META_MERGE => 
+              {
+                resources =>
+                {
+                  license     => 'http://dev.perl.org/licenses/',
+                  homepage    => 'http://rose.googlecode.com/',
+                  bugtracker  => 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB-Object',
+                  repository  => 'https://rose.googlecode.com/svn/trunk/modules/Rose-DB-Object',
+                  MailingList => 'http://groups.google.com/group/rose-db-object',
+                },
+              }));
+
