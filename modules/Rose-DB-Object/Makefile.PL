@@ -36,7 +36,7 @@ WriteMakefile(NAME         => 'Rose::DB::Object',
               },
               clean => { FILES => "t/*.db" },
               ($MM_Version <= 6.44 ? () : 
-              META_MERGE => 
+              (META_MERGE => 
               {
                 resources =>
                 {
@@ -46,5 +46,5 @@ WriteMakefile(NAME         => 'Rose::DB::Object',
                   repository  => 'https://rose.googlecode.com/svn/trunk/modules/Rose-DB-Object',
                   MailingList => 'http://groups.google.com/group/rose-db-object',
                 },
-              }));
+              })));
 
