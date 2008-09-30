@@ -1,3 +1,10 @@
+0.7723 (09.30.2008) - John Siracusa <siracusa@gmail.com>
+
+    * ...-to-many related object lists will now be re-fetched on
+      demand after an add_on_save and a subsequent save().
+      (Reported by George Hartzell)
+    * TODO: multiple add_on_save calls
+
 0.7722 (09.29.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed compatibility with older versions of ExtUtils::MakeMaker.
