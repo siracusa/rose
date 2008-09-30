@@ -3669,8 +3669,10 @@ sub objects_by_key
           }
 
           # Blank the attribute, causing the objects to be fetched from
-          # the db next time, if there's a custom sort order
-          $self->{$key} = undef  if(defined $mgr_args->{'sort_by'});
+          # the db next time, if there's a custom sort order or if
+          # the list is defined but empty
+          $self->{$key} = undef  if(defined $mgr_args->{'sort_by'} ||
+                                    (defined $self->{$key} && !@{$self->{$key}}));
 
           return 1;
         };
@@ -4169,8 +4171,10 @@ sub objects_by_key
         }
 
         # Blank the attribute, causing the objects to be fetched from
-        # the db next time, if there's a custom sort order
-        $self->{$key} = undef  if(defined $mgr_args->{'sort_by'});
+        # the db next time, if there's a custom sort order or if
+        # the list is defined but empty
+        $self->{$key} = undef  if(defined $mgr_args->{'sort_by'} ||
+                                  (defined $self->{$key} && !@{$self->{$key}}));
 
         return 1;
       };
@@ -5377,8 +5381,10 @@ sub objects_by_map
           }
 
           # Blank the attribute, causing the objects to be fetched from
-          # the db next time, if there's a custom sort order
-          $self->{$key} = undef  if(defined $mgr_args->{'sort_by'});
+          # the db next time, if there's a custom sort order or if
+          # the list is defined but empty
+          $self->{$key} = undef  if(defined $mgr_args->{'sort_by'} ||
+                                    (defined $self->{$key} && !@{$self->{$key}}));
 
           return 1;
         };
@@ -5781,8 +5787,10 @@ sub objects_by_map
         }
 
         # Blank the attribute, causing the objects to be fetched from
-        # the db next time, if there's a custom sort order
-        $self->{$key} = undef  if(defined $mgr_args->{'sort_by'});
+        # the db next time, if there's a custom sort order or if
+        # the list is defined but empty
+        $self->{$key} = undef  if(defined $mgr_args->{'sort_by'} ||
+                                  (defined $self->{$key} && !@{$self->{$key}}));
 
         return 1;
       };
