@@ -12,7 +12,6 @@ if($MM_Version =~ /_/) # dev version
 
 WriteMakefile(NAME         => 'Rose::DB::Object',
               VERSION_FROM => 'lib/Rose/DB/Object.pm',
-              LICENSE => 'perl',
               ($^O =~ /darwin/i ? (dist => { DIST_CP => 'cp' }) : ()), # Avoid Mac OS X ._* files
               PREREQ_PM =>
               {
@@ -35,6 +34,7 @@ WriteMakefile(NAME         => 'Rose::DB::Object',
                 'Rose::DB'              => '0.745',
               },
               clean => { FILES => "t/*.db" },
+              ($MM_Version >= 6.31 ? (LICENSE => 'perl') : ()),
               ($MM_Version <= 6.44 ? () : 
               (META_MERGE => 
               {
