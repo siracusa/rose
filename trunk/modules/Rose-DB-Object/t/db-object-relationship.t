@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1568;
+use Test::More tests => 1578;
 
 BEGIN 
 {
@@ -1534,7 +1534,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 355)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 357)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -2958,6 +2958,24 @@ SKIP: foreach my $db_type ('mysql')
   #    "delete(cascade => 1) one to one null - $db_type");
 
   # End "one to one" cascaded delete tests
+
+  # Start fk hook-up tests
+
+  $o2 = MyMySQLOtherObject2->new(name => 'B', pid => 11);
+  $o2->save;
+
+  $o = MyMySQLObject->new(name => 'John', id => 12);
+
+  $o->add_other2_objs2($o2);
+  $o2->name('John2');
+  $o->save;
+  
+  $o2 = MyMySQLOtherObject2->new(id => $o2->id)->load;
+
+  is($o2->pid, $o->id, "fk hook-up 1 - $db_type");
+  is($o2->name, 'John2', "fk hook-up 2 - $db_type");
+
+  # End fk hook-up tests
 }
 
 #
@@ -4408,7 +4426,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 444)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 452)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -6099,6 +6117,68 @@ SKIP: foreach my $db_type ('sqlite')
   is($o->arb_attr, 'Whee', "save with map_rec 2 - $db_type");
 
   # End create with map records tests
+
+  # Start multiple add_on_save tests
+
+  $o = MySQLiteObject->new(name => 'John', id => 10);
+
+  $o->add_other2_objs2({ name => 'xa' }, { name => 'xb' });
+  $o->add_other2_objs2({ name => 'xc' });
+  $o->save;
+
+  is(join(',', sort map { $_->name } $o->other2_objs2), 'xa,xb,xc', "Multiple add_on_save one-to-many 1 - $db_type");
+
+  $o = MySQLiteObject->new(id => 10)->load;
+
+  $o->add_colors({ name => 'za' }, { name => 'zb' });
+  $o->add_colors({ name => 'zc' });
+  $o->save;
+
+  is(join(',', sort map { $_->name } $o->colors), 'za,zb,zc', "Multiple add_on_save many-to-many 1 - $db_type");
+
+  $o = MySQLiteObject->new(name => 'John', id => 11);
+
+  $o->other2_objs2;
+  $o->add_other2_objs2({ name => 'xa2' }, { name => 'xb2' });
+  $o->add_other2_objs2({ name => 'xc2' });
+
+  is(join(',', sort map { $_->name } $o->other2_objs2), 'xa2,xb2,xc2', "Multiple add_on_save one-to-many 2 - $db_type");
+
+  $o->save;
+
+  is(join(',', sort map { $_->name } $o->other2_objs2), 'xa2,xb2,xc2', "Multiple add_on_save one-to-many 3 - $db_type");
+
+  $o = MySQLiteObject->new(id => 11)->load;
+
+  $o->colors;
+  $o->add_colors({ name => 'za2' }, { name => 'zb2' });
+  $o->add_colors({ name => 'zc2' });
+
+  is(join(',', sort map { $_->name } $o->colors), 'za2,zb2,zc2', "Multiple add_on_save many-to-many 2 - $db_type");
+
+  $o->save;
+
+  is(join(',', sort map { $_->name } $o->colors), 'za2,zb2,zc2', "Multiple add_on_save many-to-many 3 - $db_type");
+
+  # End multiple add_on_save tests
+  
+  # Start fk hook-up tests
+
+  $o2 = MySQLiteOtherObject2->new(name => 'B', pid => 11);
+  $o2->save;
+
+  $o = MySQLiteObject->new(name => 'John', id => 12);
+
+  $o->add_other2_objs2($o2);
+  $o2->name('John2');
+  $o->save;
+  
+  $o2 = MySQLiteOtherObject2->new(id => $o2->id)->load;
+
+  is($o2->pid, $o->id, "fk hook-up 1 - $db_type");
+  is($o2->name, 'John2', "fk hook-up 2 - $db_type");
+
+  # End fk hook-up tests
 }
 
 BEGIN
@@ -6706,6 +6786,13 @@ EOF
         column_map => { id => 'pid' },
         query_args => [ name => { like => 'a%' } ],
         manager_args => { sort_by => 'name' },
+      },
+
+      other2_objs2 =>
+      {
+        type  => 'one to many',
+        class => 'MyMySQLOtherObject2',
+        column_map => { id => 'pid' },
       },
     );
 
@@ -7441,6 +7528,13 @@ EOF
         column_map => { id => 'pid' },
         query_args => [ name => 'one' ],
         with_column_triggers => 1,
+      },
+
+      other2_objs2 =>
+      {
+        type  => 'one to many',
+        class => 'MySQLiteOtherObject2',
+        column_map => { id => 'pid' },
       },
 
       # Hrm.  Experimental...

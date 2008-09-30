@@ -1,9 +1,15 @@
-0.7723 (09.30.2008) - John Siracusa <siracusa@gmail.com>
+0.773 (09.30.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Added support for multiple add_on_save calls prior to save(),
+      which is how everyone expected to behave anyway, and how the
+      documentation always seemed to imply that it did work.  Well
+      now it does.
+    * Pre-saved objects now get their foreign key clumns hooked up
+      correctly when passed as arguments to add_on_save methods.
+      (Reported by George Hartzell)
     * ...-to-many related object lists will now be re-fetched on
       demand after an add_on_save and a subsequent save().
       (Reported by George Hartzell)
-    * TODO: multiple add_on_save calls
 
 0.7722 (09.29.2008) - John Siracusa <siracusa@gmail.com>
 

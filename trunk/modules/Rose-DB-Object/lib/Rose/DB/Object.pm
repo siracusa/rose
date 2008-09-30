@@ -582,7 +582,7 @@ sub save
         }
 
         # Add value(s)
-        if($code  = $todo->{'rel'}{$rel_name}{'add'})
+        if($code  = $todo->{'rel'}{$rel_name}{'add'}{'code'})
         {
           $code->($self, \%code_args) or die $self->error;
         }
