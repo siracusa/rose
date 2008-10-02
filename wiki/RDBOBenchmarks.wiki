@@ -29,7 +29,7 @@ Module             Version
 Class::DBI         3.0.17
 Class::DBI::Sweet  0.09
 DBIx::Class        0.08010
-Rose::DB::Object   0.7722_01
+Rose::DB::Object   0.7722
 
 # Simple: insert 1
        Rate CDBS CDBI DBIC RDBO
