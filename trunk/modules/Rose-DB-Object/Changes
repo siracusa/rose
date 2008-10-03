@@ -1,3 +1,7 @@
+0.773_01 (10.03.2008) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: Update examples in synopsis
+
 0.773 (10.02.2008) - John Siracusa <siracusa@gmail.com>
 
     * Added support for multiple add_on_save calls prior to save(),
