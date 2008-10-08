@@ -450,7 +450,7 @@ EOF
 CREATE TABLE rose_db_object_test
 (
   id    INT AUTO_INCREMENT PRIMARY KEY,
-  name  VARCHAR(255) NOT NULL,
+  name  VARCHAR(255),
   age   INT,
   laz   VARCHAR(255),
 
