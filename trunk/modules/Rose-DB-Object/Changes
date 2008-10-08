@@ -1,5 +1,9 @@
-0.773_01 (10.03.2008) - John Siracusa <siracusa@gmail.com>
+0.773_01 (10.08.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Fixed an ON DUPLICATE KEY UPDATE test to work around a MySQL 
+      "strict mode" quirk (or, IMO, "bug") which causes it to complain
+      about a situation that is only a concern if it decided to do an
+      INSERT rather than an UPDATE.  (Reported by Richard Jones)
     * TODO: Update examples in synopsis
 
 0.773 (10.02.2008) - John Siracusa <siracusa@gmail.com>
