@@ -6,7 +6,7 @@ use Rose::HTML::Form;
 
 use base 'Rose::HTML::Object::Repeatable';
 
-our $VERSION = '0.554';
+our $VERSION = '0.555';
 
 __PACKAGE__->default_form_class('Rose::HTML::Form');
 
@@ -126,15 +126,23 @@ sub init_with_objects
 
   my $method = 'init_with_object';
 
+  my $objects;
+
   if(@_ > 1)
   {
     my %args = @_;
     $method = $args{'method'}  if($args{'method'});
+    $objects = $args{'objects'};
+  }
+  
+  unless($objects)
+  {
+    $objects = \@_;
   }
 
   foreach my $form ($self->forms)
   {
-    $form->$method(shift(@_));
+    $form->$method(shift(@$objects));
   }
 }
 
@@ -327,13 +335,17 @@ Get or set the default number of repeated forms to create in the absence of any 
 
 In addition to doing all the usual things that the L<base class implementation|Rose::HTML::Form/init_fields> does, this method creates or deletes repeated sub-forms as necessary to make sure they match the query L<parameters|Rose::HTML::Form/params>, if present, or the L<default_count|/default_count> if there are no L<parameters|Rose::HTML::Form/params> that apply to any of the sub-forms.
 
-=item B<init_with_objects OBJECTS>
+=item B<init_with_objects [ OBJECTS | PARAMS ]>
 
-Given a list of OBJECTS, initialize each sub-form, taking one object from the list and passing it to a method called on each sub-form.  The first object is passed to the first form, the second object to the second form, and so on.  (Form order is determined by the the order forms are returned from the L<forms|Rose::HTML::Form/forms> method.)
+Given a list of OBJECTS or name/value pairs PARAMS, initialize each sub-form, taking one object from the list and passing it to a method called on each sub-form.  The first object is passed to the first form, the second object to the second form, and so on.  (Form order is determined by the the order forms are returned from the L<forms|Rose::HTML::Form/forms> method.)
 
-Name/value parameters may be passed.  Valid parameters are:
+Valid parameters are:
 
 =over 4
+
+=item B<objects ARRAYREF>
+
+A reference to an array of objects with which to initialize the form(s).  This parameter is required if PARAMS are passed.
 
 =item B<method NAME>
 
