@@ -4,7 +4,7 @@ use strict;
 
 use Carp;
 
-our $VERSION = '0.554_05';
+our $VERSION = '0.554_06';
 
 sub private_library_perl
 {
