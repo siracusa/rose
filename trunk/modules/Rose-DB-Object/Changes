@@ -1,5 +1,8 @@
-0.773_01 (10.08.2008) - John Siracusa <siracusa@gmail.com>
+0.773_02 (10.20.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Setting objects related through a one-to-many relationship
+      now does more work to ensure success.  (Reported by vti and 
+      David Bourget)
     * Fixed an ON DUPLICATE KEY UPDATE test to work around a MySQL 
       "strict mode" quirk (or, IMO, "bug") which causes it to complain
       about a situation that is only a concern if it decided to do an
