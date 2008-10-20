@@ -168,6 +168,7 @@ t/make-modules.t
 t/map-record-name-conflict.pl
 t/multi-pk-sequences.t
 t/nested-joins.t
+t/one-to-many-reset.t
 t/pk-fk-columns.t
 t/pod.t
 t/query-builder.t

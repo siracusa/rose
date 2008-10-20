@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (8 * 4);
+use Test::More tests => 1 + (12 * 4);
 
 BEGIN 
 {
@@ -22,7 +22,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 8)  unless($Have{$db_type});
+    skip("$db_type tests", 12)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -67,9 +67,19 @@ foreach my $db_type (qw(mysql pg informix sqlite))
     ok($artist, "$cascade re-saved artist albums = $db_type");
     
     $artist = $artist_class->new(id => $artist->id)->load;
-    is(scalar @{$artist->$albums_method ||[]}, 1, "$cascade Check artist albums count - $db_type");
-    is($artist->$albums_method->[0]->id, $album->id, "$cascade Check artist album ids - $db_type");
+    is(scalar @{$artist->$albums_method() ||[]}, 1, "$cascade Check artist albums count - $db_type");
+    is($artist->$albums_method()->[0]->id, $album->id, "$cascade Check artist album ids - $db_type");
   
+    my @albums = $artist->$albums_method();
+    $artist->$albums_method(@albums);
+    $artist->save;
+    $artist->$albums_method(@albums);
+    $artist->save;
+
+    $artist = $artist_class->new(id => $artist->id)->load;
+    is(scalar @{$artist->$albums_method() ||[]}, 1, "$cascade Check artist albums count 2 - $db_type");
+    is($artist->$albums_method()->[0]->id, $album->id, "$cascade Check artist album ids 2 - $db_type");
+
     $artist->delete(cascade => 1);
   }
 }
