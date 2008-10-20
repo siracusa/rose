@@ -3322,16 +3322,17 @@ sub objects_by_key
 
           $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
 
-          # Delete any existing objects
-          my $deleted = 
-            $ft_manager->$ft_delete_method(object_class => $ft_class,
+          # Count any existing objects
+          my $existing = 
+            $ft_manager->get_objects_count(object_class => $ft_class,
                                            where => [ %key, @$query_args ], 
                                            db => $db);
-          die $ft_manager->error  unless(defined $deleted);
+          die $ft_manager->error  unless(defined $existing);
 
-          # Save all the new objects
+          # Get the list of new objects
           my $objects = __args_to_objects($self, $key, $ft_class, \$ft_pk, \@_);
 
+          # Prepare objects for saving.
           foreach my $object (@$objects)
           {
             # It's essential to share the db so that the load()
@@ -3343,9 +3344,49 @@ sub objects_by_key
             $object->init(%map);
 
             # Try to load the object if doesn't appear to exist already.
-            # If anything was delete above, we have to try loading no
+            # If anything exists already, we have to try loading no
             # matter what.
-            unless(!$deleted && $object->{STATE_IN_DB()})
+            unless(!$existing && $object->{STATE_IN_DB()})
+            {
+              my $dbh = $object->dbh;
+
+              # It's okay if this fails because the key(s) is/are undefined
+              local $dbh->{'PrintError'} = 0;
+              eval
+              {
+                if($object->load(speculative => 1))
+                {
+                  # Re-map object to parent
+                  $object->init(%map);
+                }
+              };
+
+              if(my $error = $@)
+              {
+                # ...but re-throw all other errors
+                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                       $error->code == EXCEPTION_CODE_NO_KEY)
+                {
+                  die $error;
+                }
+              }
+            }
+          }
+
+          # Delete any existing objects
+          my $deleted = 
+            $ft_manager->$ft_delete_method(object_class => $ft_class,
+                                           where => [ %key, @$query_args ], 
+                                           db => $db);
+          die $ft_manager->error  unless(defined $deleted);
+
+          # Save all the new objects
+          foreach my $object (@$objects)
+          {
+            # Try to load the object if doesn't appear to exist already.
+            # If anything exists already, we have to try loading no
+            # matter what.
+            unless(!$existing && $object->{STATE_IN_DB()})
             {
               my $dbh = $object->dbh;
 
@@ -3597,14 +3638,14 @@ sub objects_by_key
 
           my $db = $self->db;
 
-          # Delete any existing objects
-          my $deleted = 
-            $ft_manager->$ft_delete_method(object_class => $ft_class,
+          # Count any existing objects
+          my $existing = 
+            $ft_manager->get_objects_count(object_class => $ft_class,
                                            where => [ %key, @$query_args ], 
                                            db => $db);
-          die $ft_manager->error  unless(defined $deleted);
-
-          # Save all the objects.  Use the current list, even if it's
+          die $ft_manager->error  unless(defined $existing);
+          
+          # Prepare objects for saving.  Use the current list, even if it's
           # different than it was when the "set on save" was called.
           foreach my $object (@{$self->{$key} || []})
           {
@@ -3625,7 +3666,49 @@ sub objects_by_key
             }
 
             # Try to load the object if doesn't appear to exist already.
-            # If anything was delete above, we have to try loading no
+            # If anything exists already, we have to try loading no
+            # matter what.
+            unless(!$existing && $object->{STATE_IN_DB()})
+            {
+              my $dbh = $object->dbh;
+
+              # It's okay if this fails because the key(s) is/are undefined
+              local $dbh->{'PrintError'} = 0;
+              eval
+              {
+                if($object->load(speculative => 1))
+                {
+                  # Re-map object to parent
+                  $object->init(%map);
+                }
+              };
+
+              if(my $error = $@)
+              {
+                # ...but re-throw all other errors
+                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                       $error->code == EXCEPTION_CODE_NO_KEY)
+                {
+                  die $error;
+                }
+              }
+            }
+          }
+
+          # Delete any existing objects
+          my $deleted = 
+            $ft_manager->$ft_delete_method(object_class => $ft_class,
+                                           where => [ %key, @$query_args ], 
+                                           db => $db);
+          die $ft_manager->error  unless(defined $deleted);
+
+          # Save all the objects.  Use the current list, even if it's
+          # different than it was when the "set on save" was called.
+          foreach my $object (@{$self->{$key} || []})
+          {
+
+            # Try to load the object if doesn't appear to exist already.
+            # If anything was deleted above, we have to try loading no
             # matter what.
             unless(!$deleted && $object->{STATE_IN_DB()})
             {
