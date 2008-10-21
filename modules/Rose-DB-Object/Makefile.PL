@@ -34,6 +34,7 @@ WriteMakefile(NAME         => 'Rose::DB::Object',
                 'Rose::DB'              => '0.745',
               },
               clean => { FILES => "t/*.db" },
+              ($MM_Version >= 6.48 ? (MIN_PERL_VERSION => '5.6.0') : ()),
               ($MM_Version >= 6.31 ? (LICENSE => 'perl') : ()),
               ($MM_Version <= 6.44 ? () : 
               (META_MERGE => 
@@ -43,7 +44,7 @@ WriteMakefile(NAME         => 'Rose::DB::Object',
                   license     => 'http://dev.perl.org/licenses/',
                   homepage    => 'http://rose.googlecode.com/',
                   bugtracker  => 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB-Object',
-                  repository  => 'https://rose.googlecode.com/svn/trunk/modules/Rose-DB-Object',
+                  repository  => 'http://rose.googlecode.com/svn/trunk/modules/Rose-DB-Object',
                   MailingList => 'http://groups.google.com/group/rose-db-object',
                 },
               })));
