@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 31;
+use Test::More tests => 37;
 
 BEGIN
 {
@@ -143,3 +143,26 @@ ok(!$uri->query_param_exists('b'), 'delete');
 
 $uri->query_param('c' => 5);
 is($uri->query, 'a=1&a=2&c=5', 'Final check');
+
+#
+# omit_empty_query_params()
+#
+
+$uri = Rose::URI->new('/baz?aye=1&aye=2&b=&cee=3&dee=&eee=4');
+
+is(ref($uri)->default_omit_empty_query_params, 0, 'default_omit_empty_query_params');
+is($uri->omit_empty_query_params, 0, 'omit_empty_query_params default');
+
+is($uri->query, 'aye=1&aye=2&b=&cee=3&dee=&eee=4', 'query omit_empty_query_params(0) 1');
+
+Rose::URI->default_omit_empty_query_params(1);
+
+is($uri->query, 'aye=1&aye=2&cee=3&eee=4', 'query default_omit_empty_query_params(1)');
+
+Rose::URI->default_omit_empty_query_params(0);
+
+is($uri->query, 'aye=1&aye=2&b=&cee=3&dee=&eee=4', 'query omit_empty_query_params(0) 2');
+
+$uri->omit_empty_query_params(1);
+
+is($uri->query, 'aye=1&aye=2&cee=3&eee=4', 'query omit_empty_query_params(1)');

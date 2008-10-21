@@ -1,3 +1,10 @@
+0.50 (10.21.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Fixed a bug that caused empty query parameters to be omitted 
+      from the query string.
+    * Added the omit_empty_query_params object attribute (with class-
+      wide default override) to preserve the old behavior.
+
 0.022 (02.06.2008) - John Siracusa <siracusa@gmail.com>
 
     * Improved handling or "keyword"-style query string (e.g., "/bar?foo")
