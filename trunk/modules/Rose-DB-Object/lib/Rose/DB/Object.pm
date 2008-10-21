@@ -1591,24 +1591,32 @@ Rose::DB::Object - Extensible, high performance object-relational mapper (ORM).
   #
 
   package Category;
-
   use base qw(Rose::DB::Object);
-  __PACKAGE__->meta->table('categories');
-  __PACKAGE__->meta->auto_initialize;
+  __PACKAGE__->meta->setup
+  (
+    table => 'categories',
+    auto  => 1,
+  );
 
   ...
 
   package Price;
   use base qw(Rose::DB::Object);
-  __PACKAGE__->meta->table('prices');
-  __PACKAGE__->meta->auto_initialize;
+  __PACKAGE__->meta->setup
+  (
+    table => 'prices',
+    auto  => 1,
+  );
 
   ...
 
   package Product;
   use base qw(Rose::DB::Object);
-  __PACKAGE__->meta->table('products');
-  __PACKAGE__->meta->auto_initialize;
+  __PACKAGE__->meta->setup
+  (
+    table => 'products',
+    auto  => 1,
+  );
 
   #
   # 2. Manual configuration
