@@ -19,12 +19,16 @@ our $Make_URI;
 
 our $SCHEME_RE = '[a-zA-Z][a-zA-Z0-9.+\-]*';
 
-our $VERSION = '0.022';
+our $VERSION = '0.50';
 
 # Class data
 use Rose::Class::MakeMethods::Generic
 (
-  inheritable_scalar => 'default_query_param_separator',
+  inheritable_scalar => 
+  [
+    'default_query_param_separator',
+    'default_omit_empty_query_params',
+  ],
 );
 
 # Object data
@@ -40,10 +44,11 @@ use Rose::Object::MakeMethods::Generic
     'path',
     'fragment',
     'query_param_separator' => { interface => 'get_set_init' },
-  ]
+  ],
 );
 
 __PACKAGE__->default_query_param_separator('&');
+__PACKAGE__->default_omit_empty_query_params(0);
 
 sub init_query_param_separator { ref(shift)->default_query_param_separator }
 
@@ -163,6 +168,19 @@ sub query_hash
   my($self) = shift;
 
   return (wantarray) ? %{$self->{'query'}} : { %{$self->{'query'}} };
+}
+
+sub omit_empty_query_params
+{
+  my($self) = shift;
+
+  if(@_)
+  {
+    return $self->{'omit_empty_query_params'} = $_[0] ? 1 : 0;
+  }
+
+  return defined $self->{'omit_empty_query_params'} ?
+    $self->{'omit_empty_query_params'} : ref($self)->default_omit_empty_query_params;
 }
 
 sub query_param
@@ -292,11 +310,20 @@ sub query
     return __escape_uri($self->{'query_string'});
   }
 
-  my @query;
+  my(@query, $omit_empty);
 
   foreach my $param (sort keys %{$self->{'query'}})
   {
-    foreach my $value ($self->query_params($param))
+    my @values = $self->query_params($param);
+
+    # Contortions to avoid calling this method in the common(?) case where
+    # every query parameter has at least one value.
+    if(!@values && !(defined $omit_empty ? $omit_empty : ($omit_empty = $self->omit_empty_query_params)))
+    {
+      @values = ('');
+    }
+
+    foreach my $value (@values)
     {
       push(@query, __escape_uri($param) . '=' . __escape_uri($value));
     }
@@ -612,6 +639,10 @@ All the above parameters accept strings.  See below for more information about t
 
 =over 4
 
+=item B<default_omit_empty_query_params [BOOL]>
+
+Get or set a boolean value that determines whether or not query parameters with "empty" (that is, undef or zero-length) values will be omitted from the L<query|/query> string by default.  The default value is false.
+
 =item B<default_query_param_separator [CHARACTER]>
 
 Get or set the character used to separate query parameters in the stringified version of L<Rose::URI> objects.  Defaults to "&".
@@ -639,6 +670,10 @@ Returns a copy of the L<Rose::URI> object.
 =item B<fragment [FRAGMENT]>
 
 Get or set the fragment portion of the URI.
+
+=item B<omit_empty_query_params [BOOL]>
+
+Get or set a boolean value that determines whether or not query parameters with "empty" (that is, undef or zero-length) values will be omitted from the L<query|/query> string.  The default value is determined by the L<default_query_param_separator|/default_query_param_separator> class method.
 
 =item B<password [PASSWORD]>
 
@@ -769,4 +804,4 @@ John C. Siracusa (siracusa@gmail.com)
 
 =head1 COPYRIGHT
 
-Copyright (c) 2006 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+Copyright (c) 2008 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
