@@ -6,7 +6,18 @@ use FindBin qw($Bin);
 
 use lib "$Bin/lib";
 
-use Test::More tests => 4;
+use Test::More;
+
+eval { require YAML::Syck };
+
+if($@)
+{
+  eval { require YAML };
+  
+  plan(skip_all => 'YAML or YAML::Syck required for setup tests')  if($@); 
+}
+
+Test::More->import(tests => 4);
 
 $ENV{'ROSEDBRC'}       = "$Bin/rosedbrc";
 $ENV{'ROSEDB_DEVINIT'} = rand > 0.5 ? 'My::FixUp' : "$Bin/lib/My/FixUp.pm";

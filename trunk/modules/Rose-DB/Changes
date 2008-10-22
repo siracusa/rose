@@ -1,6 +1,11 @@
+0.747 (10.22.2008) - Justin Ellison <justin@techadvise.com>
+
+    * Changed to require YAML instead of YAML::Syck, though YAML::Syck
+      will be used in preference to YAML if it's present.  (RT 31535)
+
 0.746 (09.16.2008) - Justin Ellison <justin@techadvise.com>
 
-    * Fixed support for TIMESTAMP WITH TIME ZONE column in Oracle
+    * Fixed support for TIMESTAMP WITH TIME ZONE column in Oracle.
 
 0.745 (09.12.2008) - John Siracusa <siracusa@gmail.com>
 
