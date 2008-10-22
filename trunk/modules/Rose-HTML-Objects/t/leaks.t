@@ -33,7 +33,7 @@ my $form = LeakForm->new;
 
 Test::More->import(tests => 2);
 
-Test::Memory::Cycle::memory_cycle_ok($form);
+Test::Memory::Cycle::memory_cycle_ok($form, 'no memory cycles');
 
 # XXX: Confine lame memory tests to a known OS.
 # XXX: Should use a real rusage-ish module.
@@ -46,26 +46,37 @@ if($^O eq 'darwin' && $Config{'osvers'} =~ /^9\./ && !$ENV{'AUTOMATED_TESTING'})
 
   use constant ITERATIONS => 1_000;
 
-  for(0 .. ITERATIONS) 
+  my @leaked;
+
+  foreach my $iterations (ITERATIONS, ITERATIONS * 2)
   {
-    #my $foo = Rose::HTML::Form::Field::SelectBox->new(options =>  [ 'm' => { label => 'aLabel' } ]);
-    my $form = LeakForm->new();
-
-    next;
-
-    my $size = `/bin/ps -orss= -p $$`;
-
-    if($size > $last_size)
+    for(0 .. $iterations) 
     {
-      print "$size (+" . ($size - $last_size) . ")\n";
-      $last_size = $size;
+      # XXX: For debugging
+      #my $foo = Rose::HTML::Form::Field::SelectBox->new(options => [ 'm' => { label => 'aLabel' } ]);
+
+      my $form = LeakForm->new();
+  
+      next;
+  
+      my $size = `/bin/ps -orss= -p $$`;
+  
+      if($size > $last_size)
+      {
+        print "$size (+" . ($size - $last_size) . ")\n";
+        $last_size = $size;
+      }
     }
+  
+    $last_size ||= `/bin/ps -orss= -p $$`;
+    my $leaked = $last_size - $first_size;
+    #$leaked && print "# Leaked ", ($leaked * 1024), ' bytes (', (($leaked * 1024) / $iterations), " bytes per iteration)\n";
+    push(@leaked, $leaked);
   }
 
-  $last_size ||= `/bin/ps -orss= -p $$`;
-  my $leaked = $last_size - $first_size;
-  $leaked && print "# Leaked ", $leaked, ' (', (($leaked / ITERATIONS) * 1024), " bytes per iteration)\n";
-  is($leaked, 0, 'leak test');
+  # There is a constant memory loss due to God-knows-what inside perl.
+  # The thing to check is that it does not grow as iterations increase.
+  is($leaked[0], $leaked[1], 'no per-iteration leaks');
 }
 else
 {
