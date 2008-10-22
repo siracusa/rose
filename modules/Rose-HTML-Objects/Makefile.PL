@@ -2,6 +2,14 @@ require 5.006;
 
 use ExtUtils::MakeMaker;
 
+my $MM_Version = $ExtUtils::MakeMaker::VERSION;
+
+if($MM_Version =~ /_/) # dev version
+{
+  $MM_Version = eval $MM_Version;
+  die $@  if($@);
+}
+
 eval { require DateTime };
 
 unless($@)
@@ -48,4 +56,18 @@ WriteMakefile(NAME         => 'Rose::HTML::Objects',
                 'Rose::Object'   => '0.85',
                 'Rose::DateTime' => '0.532',
                 'Rose::URI'      => '0.021',
-              });
+              },
+              ($MM_Version >= 6.48 ? (MIN_PERL_VERSION => '5.6.0') : ()),
+              ($MM_Version >= 6.31 ? (LICENSE => 'perl') : ()),
+              ($MM_Version <= 6.44 ? () : 
+              (META_MERGE => 
+              {
+                resources =>
+                {
+                  license     => 'http://dev.perl.org/licenses/',
+                  homepage    => 'http://rose.googlecode.com/',
+                  bugtracker  => 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-HTML-Objects',
+                  repository  => 'http://rose.googlecode.com/svn/trunk/modules/Rose-HTML-Objects',
+                  MailingList => 'http://groups.google.com/group/rose-html-objects',
+                },
+              })));
