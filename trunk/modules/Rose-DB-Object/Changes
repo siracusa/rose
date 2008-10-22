@@ -1,4 +1,4 @@
-0.773_02 (10.20.2008) - John Siracusa <siracusa@gmail.com>
+0.773_02 (10.22.2008) - John Siracusa <siracusa@gmail.com>
 
     * Setting objects related through a one-to-many relationship
       now does more work to ensure success.  (Reported by vti and 
@@ -7,7 +7,7 @@
       "strict mode" quirk (or, IMO, "bug") which causes it to complain
       about a situation that is only a concern if it decided to do an
       INSERT rather than an UPDATE.  (Reported by Richard Jones)
-    * TODO: Update examples in synopsis
+    * Updated auto-initialization examples in the synopsis.
 
 0.773 (10.02.2008) - John Siracusa <siracusa@gmail.com>
 
