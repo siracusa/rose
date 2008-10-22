@@ -8,7 +8,7 @@ use Test::More;
 
 eval { require Test::Memory::Cycle };
 
-plan(skip_all => 'Test::Memory::Cycle required leak tests')  if($@); 
+plan(skip_all => 'Test::Memory::Cycle required for leak tests')  if($@); 
 
 package LeakForm;
 
