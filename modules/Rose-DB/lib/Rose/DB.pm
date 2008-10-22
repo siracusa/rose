@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.746';
+our $VERSION = '0.747';
 
 our $Debug = 0;
 
@@ -2186,16 +2186,34 @@ sub auto_load_fixups
 #  g3db:
 #   password: myothersecret
 
+our $YAML_Class;
+
 sub load_yaml_fixup_file
 {
   my($class, $file) = @_;
 
   my $registry = $class->registry;
 
-  require YAML::Syck;
+  unless($YAML_Class)
+  {
+    eval { require YAML::Syck };
+    
+    if($@)
+    {
+      require YAML;
+      #warn "# Using YAML\n";
+      $YAML_Class = 'YAML';
+    }
+    else
+    {
+      #warn "# Using YAML::Syck\n";
+      $YAML_Class = 'YAML::Syck';
+    }
+  }
 
   $Debug && warn "$class - Loading fixups from $file...\n";
-  my @data = YAML::Syck::LoadFile($file);
+  no strict 'refs';
+  my @data = &{"${YAML_Class}::LoadFile"}($file);
 
   foreach my $data (@data)
   {
@@ -2607,7 +2625,9 @@ The C<ROSEDBRC> file contains configuration "fix-up" information.  This file is 
 
 The path to the fix-up file is determined by the C<ROSEDBRC> environment variable.  If this variable is not set, or if the file it points to does not exist, then it defaults to C</etc/rosedbrc>.
 
-This file should be in YAML format with the following structure:
+This file should be in YAML format.  To read this file, you must have either L<YAML::Syck> or some reasonably modern version of L<YAML> installed (0.66 or later recommended).  L<YAML::Syck> will be preferred if both are installed.
+
+The C<ROSEDBRC> file's contents have the following structure:
 
     ---
     somedomain:
