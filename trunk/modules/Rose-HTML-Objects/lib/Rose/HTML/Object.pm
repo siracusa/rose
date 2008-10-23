@@ -63,8 +63,6 @@ __PACKAGE__->object_type_classes
   'form'               => 'Rose::HTML::Form',
   'repeatable form'    => 'Rose::HTML::Form::Repeatable',
 
-  #'repeatable field'   => 'Rose::HTML::Form::Field::Repeatable',
-
   'text'               => 'Rose::HTML::Form::Field::Text',
   'scalar'             => 'Rose::HTML::Form::Field::Text',
   'char'               => 'Rose::HTML::Form::Field::Text',
@@ -230,6 +228,14 @@ use Rose::HTML::Object::MakeMethods::Generic
 );
 
 #
+# Class methods
+#
+
+sub generic_object_class { __PACKAGE__ }
+
+*object_type_names = \&object_type_class_keys;
+
+#
 # Constructor
 #
 
@@ -242,7 +248,7 @@ sub new
     html_attrs  => {},
     escape_html => 1,
     error       => undef,
-    validate_html_attrs => $class eq __PACKAGE__ ? 0 : 1,
+    validate_html_attrs => $class eq $class->generic_object_class ? 0 : 1,
   };
 
   bless $self, $class;
@@ -861,6 +867,10 @@ sub import
            inherit_object_type_class add_object_type_classs 
            delete_object_type_classes add_object_type_class
            localizer locale default_localizer default_locale));
+    }
+    else
+    {
+      carp "$class: Unknown import argument '$arg'";
     }
   }
 }

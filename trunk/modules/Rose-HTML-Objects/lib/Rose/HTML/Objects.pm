@@ -3,8 +3,62 @@ package Rose::HTML::Objects;
 use strict;
 
 use Carp;
+use File::Spec();
+use File::Path();
+use File::Basename();
 
 our $VERSION = '0.555_01';
+
+our $Debug = 0;
+
+sub make_private_library
+{
+  my($class) = shift;
+
+  my %args = @_;
+
+  my($packages, $perl) = 
+    Rose::HTML::Objects->private_library_perl(@_);
+
+  my $debug = exists $args{'debug'} ? $args{'debug'} : $Debug;
+
+  if($args{'in_memory'})
+  {
+    foreach my $pkg (@$packages)
+    {
+      my $code = $perl->{$pkg};
+      $debug > 2 && warn $code, "\n";
+      eval $code;
+      die "Could not eval $pkg - $@"  if($@);
+    }
+  }
+  else
+  {
+    my $dir = $args{'modules_dir'} or croak "Missing modules_dir parameter";    
+    mkdir($dir)  unless(-d $dir);
+    croak "Could not create modules_dir '$dir' - $!"  unless(-d $dir);
+
+    foreach my $pkg (@$packages)
+    {
+      my @file_parts = split('::', $pkg);
+      $file_parts[-1] .= '.pm';
+      my $file = File::Spec->catfile($dir, @file_parts);
+      
+      my $file_dir = File::Basename::dirname($file);
+
+      File::Path::mkpath($file_dir); # spews errors to STDERR
+      croak "Could not make directory '$file_dir'"  unless(-d $file_dir);
+
+      open(my $fh, '>', $file) or croak "Could not create '$file' - $!";
+      print $fh $perl->{$pkg};
+      close($fh) or croak "Could not write '$file' - $!";
+
+      $debug > 2 && warn $perl->{$pkg}, "\n";
+    }
+  }
+
+  return wantarray ? @$packages : $packages;
+}
 
 sub private_library_perl
 {
@@ -56,7 +110,8 @@ EOF
   $object_map_perl .=<<"EOF";
 );
 EOF
-  
+
+  my $object_package    = $rename->('Rose::HTML::Object');
   my $messages_package  = $rename->('Rose::HTML::Object::Messages');
   my $errors_package    = $rename->('Rose::HTML::Object::Errors');
   my $localizer_package = $rename->('Rose::HTML::Object::Message::Localizer');
@@ -72,19 +127,34 @@ use $messages_package();
 EOF
   }
 
+  my $std_messages=<<"EOF";
+# Import the standard set of message ids
+use Rose::HTML::Object::Messages qw(:all);
+EOF
+
+  my $std_errors=<<"EOF";
+# Import the standard set of error ids
+use Rose::HTML::Object::Errors qw(:all);
+EOF
+
   my %code =
   (
     $messages_package =>
     {
       filter => sub
       {
-        s/^(use base.+)/use Rose::HTML::Object::Messages qw(:all);\n$1/m;
+        s/^(use base.+)/$std_messages$1/m;
       },
 
       code =><<"EOF",
 ##
 ## Define your new message ids below
 ##
+
+# Message ids from 0 to 29,999 are reserved for built-in messages.  Negative
+# message ids are reserved for internal use.  Please use message ids 30,000
+# or higher for your messages.  Suggested message id ranges and naming
+# conventions for various message types are shown below.
 
 # Field labels
 
@@ -112,13 +182,18 @@ EOF
     {
       filter => sub
       {
-        s/^(use base.+)/use Rose::HTML::Object::Errors qw(:all);\n$1/m;
+        s/^(use base.+)/$std_errors$1/m;
       },
 
       code =><<"EOF",
 ##
 ## Define your new error ids below
 ##
+
+# Error ids from 0 to 29,999 are reserved for built-in errors.  Negative
+# error ids are reserved for internal use.  Please use error ids 30,000
+# or higher for your errors.  Suggested error id ranges and naming
+# conventions for various error types are shown below.
 
 # Field errors
 
@@ -143,18 +218,49 @@ sub init_errors_class   { '$errors_package' }
 EOF
 
     $custom_package =><<"EOF",
-use Rose::HTML::Object qw(:customize);
+@{[ $in_memory ? "Rose::HTML::Object->import(':customize');" : "use Rose::HTML::Object qw(:customize);" ]}
 @{[ $in_memory ? '' : "\nuse $localizer_package;\n" ]}
 __PACKAGE__->localizer($localizer_package->new);
 
 $object_map_perl
 EOF
 
-#     $rename->('Rose::HTML::Object') =>=<<"EOF",
-# use $errors_package;
-# use $messages_package;
-# EOF
+    $object_package =><<"EOF",
+sub generic_object_class { '$object_package' }
+EOF
   );
+
+  #
+  # Rose::HTML::Object
+  #
+
+  require Rose::HTML::Object;
+
+  foreach my $base_class (qw(Rose::HTML::Object))
+  {
+    my $package = $rename->($base_class);
+  
+    push(@packages, $package);
+
+    if($args{'in_memory'})
+    {
+      # Prevent "Base class package "..." is empty" errors from base.pm
+      no strict 'refs';
+      ${"${custom_package}::VERSION"} = $Rose::HTML::Object::VERSION;
+
+      # XXX" Don't need to do this
+      #(my $path = $custom_package) =~ s{::}{/}g;
+      #$INC{"$path.pm"} = 123;
+    }
+
+    $isa{$package} = [ $custom_package, $base_class ];
+
+    $perl{$package} = $class->subclass_perl(package      => $package, 
+                                            isa          => $isa{$package},
+                                            in_memory    => 0,
+                                            default_code => \%code,
+                                            code         => $args{'code'});
+  }
 
   #
   # Rose::HTML::Object::Errors
@@ -170,9 +276,6 @@ EOF
                              Rose::HTML::Object::Messages
                              Rose::HTML::Object::Message::Localizer))
   {
-    eval "require $base_class";
-    croak "Could not load '$base_class' - $@"  if($@);
-
     my $package = $rename->($base_class);
   
     push(@packages, $package);
@@ -240,7 +343,7 @@ sub isa_perl
   my $isa  = $args{'isa'} or Carp::confess "Missing 'isa' parameter";
   $isa = [ $isa ]  unless(ref $isa eq 'ARRAY');
 
-  if(0 && $args{'in_memory'}) # XXX: disabled for now
+  if($args{'in_memory'})
   {
     return 'our @ISA = qw(' . join(' ', @$isa) . ");";
   }
