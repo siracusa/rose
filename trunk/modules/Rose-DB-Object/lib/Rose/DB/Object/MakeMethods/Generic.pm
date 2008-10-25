@@ -3412,6 +3412,14 @@ sub objects_by_key
               }
             }
 
+            # Mark all previously set-but-not-modified columns as modified
+            # if saving changes since this object may have been deleted by 
+            # the manager call above.
+            if($args->{'changes_only'})
+            {
+              $object->{$mod_columns_key}{$_} = 1  for(keys %{$object->{SET_COLUMNS()}});
+            }
+
             # Save the object
             $object->save or die $object->error;
 
@@ -3657,14 +3665,6 @@ sub objects_by_key
             # Map object to parent
             $object->init(%map);
 
-            # Mark all previously set-but-not-modified columns as modified
-            # if saving changes since this object may have been deleted by 
-            # the manager call above.
-            if($args->{'changes_only'})
-            {
-              $object->{$mod_columns_key}{$_} = 1  for(keys %{$object->{SET_COLUMNS()}});
-            }
-
             # Try to load the object if doesn't appear to exist already.
             # If anything exists already, we have to try loading no
             # matter what.
@@ -3706,7 +3706,6 @@ sub objects_by_key
           # different than it was when the "set on save" was called.
           foreach my $object (@{$self->{$key} || []})
           {
-
             # Try to load the object if doesn't appear to exist already.
             # If anything was deleted above, we have to try loading no
             # matter what.
@@ -3734,6 +3733,14 @@ sub objects_by_key
                   die $error;
                 }
               }
+            }
+
+            # Mark all previously set-but-not-modified columns as modified
+            # if saving changes since this object may have been deleted by 
+            # the manager call above.
+            if($args->{'changes_only'})
+            {
+              $object->{$mod_columns_key}{$_} = 1  for(keys %{$object->{SET_COLUMNS()}});
             }
 
             # Save the object
@@ -4194,6 +4201,7 @@ sub objects_by_key
         # Add the objects
         push(@{$self->{$key}}, @$objects);
       }
+
       my $add_code = sub
       {
         my($self, $args) = @_;
@@ -4225,6 +4233,9 @@ sub objects_by_key
         # Add all the objects.
         foreach my $object (@{$self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'}{'objects'}})
         {
+          # Map object to parent
+          $object->init(%map, db => $db);
+
           # Attempt to load the object if necessary
           unless($object->{STATE_IN_DB()})
           {
@@ -4245,9 +4256,6 @@ sub objects_by_key
               }
             }
           }
-
-          # Map object to parent
-          $object->init(%map, db => $db);
 
           # Save changes to the object
           $object->save(%$args, changes_only => 1) or die $object->error;

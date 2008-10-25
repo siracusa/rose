@@ -148,6 +148,11 @@ foreach my $db_type (qw(pg))
   );
 
   $employer->add_offerings(\@offerings);
+
+  #$Rose::DB::Object::Debug = 1;
+  #$Rose::DB::Object::Manager::Debug = 1;
+  #$DB::single = 1;
+
   $employer->save;
 
   $employer = $employer_class->new(company_code => 'TEST')->load;
