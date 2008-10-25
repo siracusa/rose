@@ -7,8 +7,8 @@
       "strict mode" quirk (or, IMO, "bug") which causes it to complain
       about a situation that is only a concern if it decided to do an
       INSERT rather than an UPDATE.  (Reported by Richard Jones)
-    * Fixed a regression ( t/spot-check-10.t) that caused adding objects
-      to one-to-many-related lists to fail under some circumstances.
+    * Fixed a regression in t/spot-check-10.t: adding objects to 
+      one-to-many-related lists failed in some circumstances.
     * Updated auto-initialization examples in the synopsis.
 
 0.773 (10.02.2008) - John Siracusa <siracusa@gmail.com>
