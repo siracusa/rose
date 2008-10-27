@@ -4,7 +4,8 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More 'no_plan'; #tests => 258;
+use Test::More tests => 151;
+#use Test::More 'no_plan';
 
 use_ok('Rose::HTML::Objects');
 
@@ -26,7 +27,7 @@ sub get_localized_message_text
 }
 EOF
 );
-
+#$Rose::HTML::Objects::Debug = 3;
 my($packages, $perl) = 
   Rose::HTML::Objects->make_private_library(in_memory => 1, 
                                             prefix    => 'My::',
@@ -73,18 +74,41 @@ die "Could not mkdir($lib_dir) - $!"  unless(-d $lib_dir);
 %code =
 (
   'My2::HTML::Object::Message::Localizer' =><<'EOF',
+our $TwiddleCase = 1;
+
 sub get_localized_message_text
 {
   my($self) = shift;
-  no warnings 'uninitialized';
-  return rand > 0.5 ? uc $self->SUPER::get_localized_message_text(@_) :
-                      lc $self->SUPER::get_localized_message_text(@_);
+  
+  if($TwiddleCase)
+  {
+    no warnings 'uninitialized';
+    return rand > 0.5 ? uc $self->SUPER::get_localized_message_text(@_) :
+                        lc $self->SUPER::get_localized_message_text(@_);
+  }
+  else
+  {
+    return $self->SUPER::get_localized_message_text(@_);
+  }
 }
+EOF
+
+  'My2::HTML::Object::Messages' =><<'EOF',
+use constant FIELD_ERROR_BAD_NICKNAME    => 100_000;
+use constant FIELD_ERROR_BAD_NICKNAME_AR => 100_001;
+
+use constant FIELD_LABEL_NICKNAME        => 200_000;
+EOF
+
+  'My2::HTML::Object::Errors' =><<'EOF',
+use constant FIELD_ERROR_BAD_NICKNAME    => 100_000;
+use constant FIELD_ERROR_BAD_NICKNAME_AR => 100_001;
 EOF
 );
 
 $packages =
   Rose::HTML::Objects->make_private_library(modules_dir => $lib_dir, 
+                                            overwrite   => 1,
                                             prefix      => 'My2::',
                                             code        => \%code);
 
@@ -115,7 +139,7 @@ $field = My2::HTML::Form::Field::PopUpMenu->new(name => 'x');
 $field->options(a => 'Apple', b => 'Pear');
 
 is(ref $field->option('a'), 'My2::HTML::Form::Field::Option', 'option 1');
-exit;
+
 require My2::HTML::Object;
 
 $object = My2::HTML::Object->new('xyz');
@@ -132,6 +156,119 @@ foreach my $type (My2::HTML::Object->object_type_names)
   
   is(My2::HTML::Object->object_type_class($type), $new_class, "object type class: $type");
 }
+
+my @parts = split('::', 'My2::HTML::Form::Field::Nickname');
+$parts[-1] .= '.pm';
+
+my $nick_pm = File::Spec->catfile($lib_dir, @parts);
+#warn "# WRITE: $nick_pm\n";
+
+open(my $fh, '>', $nick_pm) or die "Could not create '$nick_pm' - $!";
+
+my $code=<<'EOF';
+package My2::HTML::Form::Field::Nickname;
+
+use My2::HTML::Object::Errors qw(FIELD_ERROR_BAD_NICKNAME);
+use My2::HTML::Object::Messages qw(FIELD_LABEL_NICKNAME);
+
+use base qw(My2::HTML::Form::Field::Text);
+
+sub init
+{
+  my($self) = shift;
+  $self->label_id(FIELD_LABEL_NICKNAME);
+  $self->SUPER::init(@_);
+}
+
+sub validate
+{
+  my($self) = shift;
+  
+  my $ret = $self->SUPER::validate(@_);
+  return $ret  unless($ret);
+  
+  my $nick  = $self->internal_value;
+  my $class = $self->html_attr('class') || 'default';
+
+  if($nick =~ /bob/)
+  {
+    $self->error_id(FIELD_ERROR_BAD_NICKNAME, { nickname => $nick, class => $class, list => [ 'a' .. 'e' ] });
+    return 0;
+  }
+  elsif($nick =~ /lob/)
+  {
+    $self->error_id(FIELD_ERROR_BAD_NICKNAME_AR, [ $class, [ 'a' .. 'e' ], $nick ]);
+    return 0;
+  }
+
+  return 1;
+}
+
+if(__PACKAGE__->localizer->auto_load_messages)
+{
+  __PACKAGE__->localizer->load_all_messages;
+}
+
+1;
+
+__DATA__
+
+[% LOCALE en %]
+
+FIELD_ERROR_BAD_NICKNAME = "[class] - \\\[\]Invalid nickname: [@list]:[nickname]"
+FIELD_ERROR_BAD_NICKNAME_AR = "[1] - \\\[\]Invalid nickname: [@2]:[3]"
+
+FIELD_LABEL_NICKNAME = "Nickname"
+
+[% LOCALE fr %]
+
+FIELD_ERROR_BAD_NICKNAME = "[class] - \\\[\]Le nickname est mal: [@list]:[nickname]"
+
+FIELD_LABEL_NICKNAME = "Le Nickname"
+
+EOF
+
+print $fh $code;
+close($fh) or die "Could not write '$nick_pm' - $!";
+
+require My2::HTML::Form::Field::Nickname;
+
+$field = My2::HTML::Form::Field::Nickname->new;
+
+is(ref($field->localizer), 'My2::HTML::Object::Message::Localizer', 'custom field localizer');
+
+my $label = $field->label . '';
+
+ok($label eq 'nickname' || $label eq 'NICKNAME', 'custom field label (en)');
+
+$field->locale('fr');
+
+$label = $field->label . '';
+
+ok($label eq 'le nickname' || $label eq 'LE NICKNAME', 'custom field label (fr)');
+
+BLAH:
+{
+  no warnings;
+  $My2::HTML::Object::Message::Localizer::TwiddleCase = 0;
+}
+
+$field->input_value('lob');
+$field->validate;
+is($field->error . '', 'default - \[]Invalid nickname: a, b, c, d, e:lob', 'placeholders (arrayref, fallback) 1');
+
+$field->html_attr(class => 'c');
+$field->validate;
+is($field->error. '', 'c - \[]Invalid nickname: a, b, c, d, e:lob', 'placeholders (arrayref, fallback) 2');
+
+$field->input_value('bob');
+$field->locale('en');
+$field->validate;
+is($field->error. '', 'c - \[]Invalid nickname: a, b, c, d, e:bob', 'placeholders (hashref) 1');
+
+$field->locale('fr');
+$field->validate;
+is($field->error. '', 'c - \[]Le nickname est mal: a, b, c, d, e:bob', 'placeholders (hashref) 2');
 
 END
 {
