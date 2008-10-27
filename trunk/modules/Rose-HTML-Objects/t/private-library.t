@@ -4,7 +4,7 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 151;
+use Test::More tests => 153;
 #use Test::More 'no_plan';
 
 use_ok('Rose::HTML::Objects');
@@ -18,20 +18,39 @@ use File::Path;
 
 my %code =
 (
-  'My::HTML::Object::Message::Localizer' =><<'EOF',
-sub get_localized_message_text
+  'My::HTML::Object::Message::Localizer' =>
+  {
+    filter => sub { s/__FOO__//g },
+    code   =><<'EOF',
+sub get_localized_message_text__FOO____BAR__
 {
   my($self) = shift;
   no warnings 'uninitialized';
   return uc $self->SUPER::get_localized_message_text(@_);
 }
 EOF
+  },
+  
+  'My::HTML::Form::Field::File' =><<'EOF',
+our $JCS = 123;
+EOF
 );
+
 #$Rose::HTML::Objects::Debug = 3;
 my($packages, $perl) = 
-  Rose::HTML::Objects->make_private_library(in_memory => 1, 
-                                            prefix    => 'My::',
-                                            code      => \%code);
+  Rose::HTML::Objects->make_private_library(in_memory    => 1, 
+                                            prefix       => 'My::',
+                                            class_filter => sub { !/Email/ },
+                                            code_filter  => sub {  s/__BAR__//g },
+                                            code         => \%code);
+
+is(scalar @My::HTML::Form::Field::Email::ISA, 0, 'class_filter');
+
+QUIET:
+{
+  no warnings;
+  is($My::HTML::Form::Field::File::JCS, 123, 'code additions');
+}
 
 my $field     = My::HTML::Form::Field::Text->new(name => 'x', required => 1);
 my $std_field = Rose::HTML::Form::Field::Text->new(name => 'x', required => 1);

@@ -7,7 +7,7 @@ use File::Spec();
 use File::Path();
 use File::Basename();
 
-our $VERSION = '0.555_01';
+our $VERSION = '0.555_02';
 
 our $Debug = 0;
 
@@ -271,7 +271,8 @@ EOF
                                             isa          => $isa{$package},
                                             in_memory    => 0,
                                             default_code => \%code,
-                                            code         => $args{'code'});
+                                            code         => $args{'code'},
+                                            code_filter  => $args{'code_filter'});
   }
 
   #
@@ -298,7 +299,8 @@ EOF
                                             isa          => $isa{$package},
                                             in_memory    => 0,
                                             default_code => \%code,
-                                            code         => $args{'code'});
+                                            code         => $args{'code'},
+                                            code_filter  => $args{'code_filter'});
   }
 
   #
@@ -309,8 +311,9 @@ EOF
     $class->subclass_perl(package      => $custom_package, 
                           in_memory    => $in_memory,
                           default_code => \%code,
-                          code         => $args{'code'});
-                                            
+                          code         => $args{'code'},
+                          code_filter  => $args{'code_filter'});
+
   push(@packages, $custom_package);
 
   #
@@ -319,7 +322,11 @@ EOF
 
   foreach my $base_class (sort values %$base_object_type)
   {
-    next  if($class_filter && !$class_filter->($base_class));
+    if($class_filter)
+    {
+      local $_ = $base_class;
+      next  unless($class_filter->($base_class));
+    }
 
     if($in_memory)
     {
@@ -340,9 +347,11 @@ EOF
       ];
     }
 
-    $perl{$package} = $class->subclass_perl(package   => $package, 
-                                            isa       => $isa{$package},
-                                            in_memory => $in_memory);
+    $perl{$package} = $class->subclass_perl(package     => $package, 
+                                            isa         => $isa{$package},
+                                            in_memory   => $in_memory,
+                                            code        => $args{'code'},
+                                            code_filter => $args{'code_filter'});
   }
 
   return wantarray ? (\@packages, \%perl) : \%perl;
@@ -374,8 +383,13 @@ sub subclass_perl
   my $package = $args{'package'} or Carp::confess "Missing 'package' parameter";
   my $isa     = $args{'isa'};
   $isa = [ $isa ]  unless(ref $isa eq 'ARRAY');
+if($package eq 'My::HTML::Form::Field::File')
+{
+$DB::single = 1;
+}
+  my $filter = $args{'code_filter'};
 
-  my($filter, $code, @code, @default_code);
+  my($code, @code, @default_code);
 
   foreach my $param (qw(default_code code))
   {
