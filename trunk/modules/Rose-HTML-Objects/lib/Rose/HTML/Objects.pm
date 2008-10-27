@@ -49,6 +49,12 @@ sub make_private_library
       File::Path::mkpath($file_dir); # spews errors to STDERR
       croak "Could not make directory '$file_dir'"  unless(-d $file_dir);
 
+      if(-e $file && !$args{'overwrite'})
+      {
+        $debug && warn "Refusing to overwrite '$file'";
+        next;
+      }
+
       open(my $fh, '>', $file) or croak "Could not create '$file' - $!";
       print $fh $perl->{$pkg};
       close($fh) or croak "Could not write '$file' - $!";
@@ -174,6 +180,9 @@ EOF
 #use constant LOGIN_USER_EXISTS_ERROR        => 200_001;
 #...
 
+### %CODE% ###
+
+# This line must be below all the "use constant ..." declarations
 BEGIN { __PACKAGE__->add_messages }
 EOF
     },
@@ -207,6 +216,9 @@ EOF
 #use constant LOGIN_USER_EXISTS_ERROR        => 200_001;
 #...
 
+### %CODE% ###
+
+# This line must be below all the "use constant ..." declarations
 BEGIN { __PACKAGE__->add_errors }
 EOF
     },
@@ -363,7 +375,7 @@ sub subclass_perl
   my $isa     = $args{'isa'};
   $isa = [ $isa ]  unless(ref $isa eq 'ARRAY');
 
-  my($filter, $code, @code);
+  my($filter, $code, @code, @default_code);
 
   foreach my $param (qw(default_code code))
   {
@@ -415,8 +427,28 @@ sub subclass_perl
     {
       $code = '';
     }
-    
-    push(@code, $code)  if($code);
+
+    if($code)
+    {
+      if($param eq 'code')
+      {
+        push(@code, $code);      
+      }
+      else
+      {
+        push(@default_code, $code);
+      }
+    }
+  }
+
+  foreach my $default_code (@default_code)
+  {
+    if($default_code =~ /\n### %CODE% ###\n/)
+    {
+      $default_code =~ s/\n### %CODE% ###\n/join('', @code)/me;
+      undef @code; # Attempt to reclaim memory
+      undef $code; # Attempt to reclaim memory
+    }
   }
 
   local $Perl;
@@ -425,7 +457,7 @@ sub subclass_perl
 package $package;
 
 use strict;
-@{[ $args{'isa'} ? "\n" . $class->isa_perl(%args) . "\n" : '' ]}@{[ join('', @code) ]}
+@{[ $args{'isa'} ? "\n" . $class->isa_perl(%args) . "\n" : '' ]}@{[ join('', @default_code, @code) ]}
 1;
 EOF
 

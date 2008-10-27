@@ -55,7 +55,7 @@ WriteMakefile(NAME         => 'Rose::HTML::Objects',
                 # XXX: are sorted out.  See: http://rt.cpan.org/Ticket/Display.html?id=31039
                 # XXX: Scalar::Defer 0.18 seems to work again, but I'm still not using it.
                 #'Scalar::Defer'  => 0.18,
-                'Rose::Object'   => '0.85',
+                'Rose::Object'   => '0.853',
                 'Rose::DateTime' => '0.532',
                 'Rose::URI'      => '0.021',
               },

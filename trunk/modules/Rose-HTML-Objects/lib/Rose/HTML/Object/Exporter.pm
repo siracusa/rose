@@ -8,27 +8,19 @@ our $VERSION = 0.544_01;
 
 our $Debug = 0;
 
-use Rose::Class::MakeMethods::Set
+use Rose::Class::MakeMethods::Generic
 (
-  inheritable_set => 
+  inheritable_hash => 
   [
-    '_export_tag' =>
-    {
-      list_method    => '_export_tags',
-      clear_method   => 'clear_export_tags',
-      add_method     => '_add_export_tag',
-      delete_method  => 'delete_export_tag',
-      deletes_method => 'delete_export_tags',
-    },
+    export_tags        => { interface => 'get_set_all', hash_key => 'export_tags' },
+    _export_tag        => { interface => 'get_set', hash_key => 'export_tags' },
+    clear_export_tags  => { interface => 'clear', hash_key => 'export_tags' },
+    delete_export_tags => { interface => 'delete', hash_key => 'export_tags' },
 
-    '_pre_import_hook',
-    {
-      clear_method   => 'clear_pre_import_hooks',
-      add_method     => 'add_pre_import_hook',
-      adds_method    => 'add_pre_import_hooks',
-      delete_method  => 'delete_pre_import_hook',
-      deletes_method => 'delete_pre_import_hooks',    
-    },
+    _pre_import_hooks       => { interface => 'get_set_all', hash_key => 'pre_import_hooks' },
+    _pre_import_hook        => { interface => 'get_set', hash_key => 'pre_import_hooks' },
+    clear_pre_import_hooks  => { interface => 'clear', hash_key => 'pre_import_hooks' },
+    delete_pre_import_hooks => { interface => 'delete', hash_key => 'pre_import_hooks' },
   ],
 );
 
@@ -149,30 +141,17 @@ sub export_tag
     croak 'Tag name arguments to export_tag() should not begin with ":"';
   }
 
-  if(@_ && !$class->_export_tag_value($tag))
-  {
-    $class->_add_export_tag($tag);
-  }
-
   if(@_ && (@_ > 1 || (ref $_[0] || '') ne 'ARRAY'))
   {
     croak 'export_tag() expects either a single tag name argument, ',
           'or a tag name and a reference to an array of symbol names';
   }
 
-  my $ret = $class->_export_tag_value($tag, @_);
+  my $ret = $class->_export_tag($tag, @_);
 
   croak "No such tag: $tag"  unless($ret);
 
   return wantarray ? @$ret : $ret;
-}
-
-sub export_tags
-{
-  my($class) = shift;
-  return $class->_export_tags  unless(@_);
-  $class->clear_export_tags;
-  $class->add_export_tags(@_);
 }
 
 sub add_export_tags
@@ -193,14 +172,11 @@ sub add_to_export_tag
   push(@$list, @_);
 }
 
+*delete_export_tag = \&delete_export_tags;
+ 
 sub pre_import_hook
 {
   my($class, $symbol) = (shift, shift);
-
-  if(@_ && !$class->_pre_import_hook_value($symbol))
-  {
-    $class->add_pre_import_hook($symbol);
-  }
 
   if(@_ && (@_ > 1 || (ref $_[0] && (ref $_[0] || '') !~ /\A(?:ARRAY|CODE)\z/)))
   {
@@ -217,11 +193,13 @@ sub pre_import_hook
     }
   }
 
-  my $ret = $class->_pre_import_hook_value($symbol, @_) || [];
+  my $ret = $class->_pre_import_hook($symbol, @_) || [];
 
   return wantarray ? @$ret : $ret;
 }
 
 sub pre_import_hooks { shift->pre_import_hook(shift) }
+
+*delete_pre_import_hook = \&delete_pre_import_hooks;
 
 1;

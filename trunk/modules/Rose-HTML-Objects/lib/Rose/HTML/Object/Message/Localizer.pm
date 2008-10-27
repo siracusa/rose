@@ -247,6 +247,7 @@ sub localized_message_exists
 
   my $msgs = $self->localized_messages_hash;
 
+  no warnings 'uninitialized';
   if(exists $msgs->{$name} && exists $msgs->{$name}{$locale})
   {
     return 1;
@@ -687,11 +688,11 @@ sub load_messages_from_fh
 
   while(<$fh>)
   {
-    last  if(/$End_Messages/);
+    last  if(/$End_Messages/o);
 
     #$Debug && warn "PROC: $_";
 
-    if(/$End_Message/ && (!$2 || $2 eq $in_msg))
+    if(/$End_Message/o && (!$2 || $2 eq $in_msg))
     {
       if(!$msg_names || $msg_names->{$in_msg})
       {
@@ -712,11 +713,11 @@ sub load_messages_from_fh
     {
       $text .= $_;
     }
-    elsif(/$Locale_Declaration/)
+    elsif(/$Locale_Declaration/o)
     {
       $in_locale = $1;
     }
-    elsif(/$Message_Spec/)
+    elsif(/$Message_Spec/o)
     {
       if((!$locales || $locales->{$in_locale}) && (!$msg_names || $msg_names->{$1}))
       {
@@ -735,11 +736,11 @@ sub load_messages_from_fh
         push(@text, $text)  if($msg_names);
       }
     }
-    elsif(/$Start_Message/)
+    elsif(/$Start_Message/o)
     {
       $in_msg = $1;
     }
-    elsif(!/$Comment_Or_Blank/)
+    elsif(!/$Comment_Or_Blank/o)
     {
       chomp;
       carp "WARNING: Localized message line not understood: $_";

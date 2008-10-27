@@ -72,8 +72,10 @@ sub use_private_messages
 {
   my($class) = shift;
 
-  unless($Private{$class}++)
+  unless($Private{$class})
   {
+    $Private{$class} = 1;
+
     # Make private copies of inherited data structures 
     # (shallow copy is sufficient)
     $class->message_names_list([ @{$class->message_names_list} ]);
