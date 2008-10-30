@@ -11,7 +11,7 @@ require Rose::DB::Object::Util;
 
 use Carp;
 
-our $VERSION = '0.772';
+our $VERSION = '0.775';
 
 __PACKAGE__->export_tags
 (
@@ -96,16 +96,35 @@ sub load_or_insert
 
   my($ret, @ret);
 
-  if(wantarray)
+  # Ignore any errors due to missing primary/unique keys
+  my $loaded = eval
+  {  
+    if(wantarray)
+    {
+      @ret = $self->load(@_, speculative => 1);
+      return $ret[0]  if($ret[0]); # return from eval
+    }
+    else
+    {
+      $ret = $self->load(@_, speculative => 1);
+      return $ret  if($ret); # return from eval
+    }
+    
+    return 0; # return from eval
+  };
+
+  if(my $error = $@)
   {
-    @ret = $self->load(@_, speculative => 1);
-    return @ret  if($ret[0]);
+    # ...but re-throw all other errors
+    unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+           $error->code == EXCEPTION_CODE_NO_KEY)
+    {
+      $self->meta->handle_error($self);
+      return 0;
+    }
   }
-  else
-  {
-    $ret = $self->load(@_, speculative => 1);
-    return $ret  if($ret);
-  }
+
+  return wantarray ? @ret : $ret  if($loaded);
 
   return $self->insert;
 }
@@ -116,16 +135,35 @@ sub load_or_save
 
   my($ret, @ret);
 
-  if(wantarray)
+  # Ignore any errors due to missing primary/unique keys
+  my $loaded = eval
+  {  
+    if(wantarray)
+    {
+      @ret = $self->load(@_, speculative => 1);
+      return $ret[0]  if($ret[0]); # return from eval
+    }
+    else
+    {
+      $ret = $self->load(@_, speculative => 1);
+      return $ret  if($ret); # return from eval
+    }
+    
+    return 0; # return from eval
+  };
+
+  if(my $error = $@)
   {
-    @ret = $self->load(@_, speculative => 1);
-    return @ret  if($ret[0]);
+    # ...but re-throw all other errors
+    unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+           $error->code == EXCEPTION_CODE_NO_KEY)
+    {
+      $self->meta->handle_error($self);
+      return 0;
+    }
   }
-  else
-  {
-    $ret = $self->load(@_, speculative => 1);
-    return $ret  if($ret);
-  }
+
+  return wantarray ? @ret : $ret  if($loaded);
 
   return $self->save;
 }
@@ -150,7 +188,23 @@ sub insert_or_update
   # ...but this is a lot faster
   my $clone = bless { %$self }, ref($self);
 
-  if($clone->load(speculative => 1))
+  my $loaded;
+  
+  # Ignore any errors due to missing primary/unique keys
+  eval { $loaded = $clone->load(speculative => 1) };
+
+  if(my $error = $@)
+  {
+    # ...but re-throw all other errors
+    unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+           $error->code == EXCEPTION_CODE_NO_KEY)
+    {
+      $meta->handle_error($self);
+      return 0;
+    }
+  }
+
+  if($loaded)
   {
     # The long way...
     my %pk;

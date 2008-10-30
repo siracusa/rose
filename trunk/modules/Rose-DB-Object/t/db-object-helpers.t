@@ -3,12 +3,13 @@
 use strict;
 
 #use Test::LongString;
-use Test::More tests => (87 * 4) + 2;
+use Test::More tests => (90 * 4) + 3;
 
 BEGIN 
 {
   require 't/test-lib.pl';
   use_ok('Rose::DB::Object');
+  use_ok('Rose::DB::Object::Manager');
   use_ok('Rose::DB::Object::Helpers');
 }
 
@@ -26,7 +27,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 87)  unless($Have{$db_type});
+    skip("$db_type tests", 90)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -307,6 +308,29 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
   ok(get_column_value_modified($o, 'age'), "dirty_columns 4 - $db_type");
   ok(get_column_value_modified($o, 'name'), "dirty_columns 5 - $db_type");
+
+  # insert_or_update with no key
+
+  Rose::DB::Object::Manager->delete_objects(all => 1, object_class => $other_class);
+  Rose::DB::Object::Manager->delete_objects(all => 1, object_class => $class);
+
+  my $unknown = $class->new(age => 99);
+
+  eval { $unknown->insert_or_update };
+
+  ok(!$@ && $unknown->id =~ /^\d+$/, "insert_or_update() with no key - $db_type");
+
+  # load_or_insert with no key
+
+  $unknown = $class->new(age => 100);
+  eval { $unknown->load_or_insert };
+  ok(!$@ && $unknown->id =~ /^\d+$/, "load_or_insert() with no key - $db_type");
+
+  # load_or_save with no key
+
+  $unknown = $class->new(age => 101);
+  eval { $unknown->load_or_save };
+  ok(!$@ && $unknown->id =~ /^\d+$/, "load_or_save() with no key - $db_type");
 }
 
 BEGIN
@@ -376,7 +400,7 @@ BEGIN
 CREATE TABLE rose_db_object_test
 (
   id    SERIAL NOT NULL PRIMARY KEY,
-  name  VARCHAR(255) NOT NULL,
+  name  VARCHAR(255),
   age   INT,
   laz   VARCHAR(255),
 
@@ -388,7 +412,7 @@ EOF
 CREATE TABLE rose_db_object_test_other
 (
   id    SERIAL NOT NULL PRIMARY KEY,
-  name  VARCHAR(255) NOT NULL,
+  name  VARCHAR(255),
   rose_db_object_test_id INT REFERENCES rose_db_object_test (id)
 )
 EOF
@@ -462,7 +486,7 @@ EOF
 CREATE TABLE rose_db_object_test_other
 (
   id    INT AUTO_INCREMENT PRIMARY KEY,
-  name  VARCHAR(255) NOT NULL,
+  name  VARCHAR(255),
   rose_db_object_test_id INT REFERENCES rose_db_object_test (id)
 )
 EOF
@@ -533,7 +557,7 @@ EOF
 CREATE TABLE rose_db_object_test
 (
   id    SERIAL NOT NULL PRIMARY KEY,
-  name  VARCHAR(255) NOT NULL,
+  name  VARCHAR(255),
   age   INT,
   laz   VARCHAR(255),
 
@@ -545,7 +569,7 @@ EOF
 CREATE TABLE rose_db_object_test_other
 (
   id    SERIAL NOT NULL PRIMARY KEY,
-  name  VARCHAR(255) NOT NULL,
+  name  VARCHAR(255),
   rose_db_object_test_id INT REFERENCES rose_db_object_test (id)
 )
 EOF
@@ -605,7 +629,7 @@ EOF
 CREATE TABLE rose_db_object_test
 (
   id    INTEGER PRIMARY KEY AUTOINCREMENT,
-  name  VARCHAR(255) NOT NULL,
+  name  VARCHAR(255),
   age   INT,
   laz   VARCHAR(255),
 
@@ -617,7 +641,7 @@ EOF
 CREATE TABLE rose_db_object_test_other
 (
   id    INTEGER PRIMARY KEY AUTOINCREMENT,
-  name  VARCHAR(255) NOT NULL,
+  name  VARCHAR(255),
   rose_db_object_test_id INT REFERENCES rose_db_object_test (id)
 )
 EOF

@@ -1,3 +1,9 @@
+0.775 (10.30.2008) - John Siracusa <siracusa@gmail.com>
+
+    * The insert_or_update(), load_or_insert(), and load_or_save() helper
+      methods no longer throw an exception when called on an object with 
+      no uniquely identifying column(s).  (Suggested by Richard Jones)
+
 0.774 (10.25.2008) - John Siracusa <siracusa@gmail.com>
 
     * Setting objects related through a one-to-many relationship
