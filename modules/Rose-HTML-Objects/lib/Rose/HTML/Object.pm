@@ -1041,10 +1041,6 @@ Rose::HTML::Object - HTML object base class.
   print $b->html; # <body></body>
   print $d->html; # <div class="x"><p><br> Hi</p></div>
 
-
-
-
-
   #
   # Subclass to add strictures
   #
