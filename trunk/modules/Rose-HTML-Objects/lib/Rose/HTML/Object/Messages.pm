@@ -253,3 +253,207 @@ use constant SET_PARSE_ERROR           => 1701;
 BEGIN { __PACKAGE__->add_messages }
 
 1;
+
+__END__
+
+=head1 NAME
+
+Rose::HTML::Object::Messages - Message ids and names of localized messages for use with HTML objects.
+
+=head1 SYNOPSIS
+
+  package My::HTML::Object::Messages;
+
+  use strict;
+
+  # Import the standard set of message ids
+  use Rose::HTML::Object::Messages qw(:all);
+  use base qw(Rose::HTML::Object::Messages);
+
+  ##
+  ## Define your new message ids below
+  ##
+
+  # Message ids from 0 to 29,999 are reserved for built-in messages.  Negative
+  # message ids are reserved for internal use.  Please use message ids 30,000
+  # or higher for your messages.  Suggested message id ranges and naming
+  # conventions for various message types are shown below.
+
+  # Field labels
+
+  use constant FIELD_LABEL_LOGIN_NAME         => 100_000;
+  use constant FIELD_LABEL_PASSWORD           => 100_001;
+  ...
+
+  # Field error messages
+
+  use constant FIELD_ERROR_PASSWORD_TOO_SHORT => 101_000;
+  use constant FIELD_ERROR_USERNAME_INVALID   => 101_001;
+  ...
+
+  # Generic messages
+
+  use constant LOGIN_NO_SUCH_USER             => 200_000;
+  use constant LOGIN_USER_EXISTS_ERROR        => 200_001;
+  ...
+
+  # This line must be below all the "use constant ..." declarations
+  BEGIN { __PACKAGE__->add_messages }
+
+  1;
+
+=head1 DESCRIPTION
+
+L<Rose::HTML::Object::Messages> stores message ids and names.  The message ids are defined as Perl L<constant|constant> with integer values.  The constants themselves as well as the the mapping between the symbolic constant names and their values are stored as class data.
+
+If you merely want to import one of the standard message ids, you mayuse this module as-is (see the L<EXPORTS|/EXPORTS> section for details).  If you want to define your own constants, you must subclass this module exactly as shown in the synopsis.  The order of the statements is important!
+
+When adding your own messages, you are free to choose any integer message id values, subject to the following constraints.
+
+=over 4
+
+=item * Message ids from 0 to 29,999 are reserved for built-in messages.
+
+=item * Negative message ids are reserved for internal use.
+
+=back
+
+Please use message ids 30,000 or higher for your messages.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique.
+
+=head1 EXPORTS
+
+L<Rose::HTML::Object::Messages> does not export any function names by default.
+
+The 'all' tag:
+
+    use Rose::HTML::Object::Messages qw(:all);
+
+will cause all message name constant to be imported.
+
+The following tags will cause all messages whose names match the regular expression to the right of the tag name to be imported.
+
+    TAG                 NAME REGEX
+    -----               -----------------
+    field               ^FIELD_
+    form                ^FORM_
+    date                ^DATE_|_(?:YEAR|MONTH|DAY)$
+    time                ^TIME_|_(?:HOUR|MINUTE|SECOND)$
+    email               ^EMAIL_
+    phone               ^PHONE_
+    number              ^NUM_
+    set                 ^SET_
+    string              ^STRING_
+
+For example, this will import all the message constants whose names begin with "FIELD_"
+
+    use Rose::HTML::Object::Messages qw(:field);
+
+FInally, you can provide import individual message names as well:
+
+    use Rose::HTML::Object::Messages qw(FIELD_LABEL_YEAR TIME_INVALID);
+
+A complete listing of the default set of message ids appears in the next section.
+
+=head1 MESSAGES
+
+The default list of symbolic message id names appears below.  You should not rely on the actual numeric values of these constants.  Import and refer to them only by their message names.
+
+    FIELD_LABEL
+    FIELD_DESCRIPTION
+    FIELD_REQUIRED_GENERIC
+    FIELD_REQUIRED_LABELLED
+    FIELD_REQUIRED_SUBFIELD
+    FIELD_REQUIRED_SUBFIELDS
+    FIELD_PARTIAL_VALUE
+    FIELD_INVALID_GENERIC
+    FIELD_INVALID_LABELLED
+
+    FIELD_LABEL_YEAR
+    FIELD_LABEL_MONTH
+    FIELD_LABEL_DAY
+    FIELD_LABEL_HOUR
+    FIELD_LABEL_MINUTE
+    FIELD_LABEL_SECOND
+
+    FIELD_ERROR_LABEL_YEAR
+    FIELD_ERROR_LABEL_MONTH
+    FIELD_ERROR_LABEL_DAY
+    FIELD_ERROR_LABEL_HOUR
+    FIELD_ERROR_LABEL_MINUTE
+    FIELD_ERROR_LABEL_SECOND
+
+    FIELD_ERROR_LABEL_MINIMUM_DATE
+    FIELD_ERROR_LABEL_MAXIMUM_DATE
+
+    FORM_HAS_ERRORS
+
+    NUM_INVALID_INTEGER
+    NUM_INVALID_INTEGER_POSITIVE
+    NUM_NOT_POSITIVE_INTEGER
+    NUM_BELOW_MIN
+    NUM_ABOVE_MAX
+    NUM_INVALID_NUMBER
+    NUM_INVALID_NUMBER_POSITIVE
+    NUM_NOT_POSITIVE_NUMBER
+
+    STRING_OVERFLOW
+
+    DATE_INVALID
+    DATE_MIN_GREATER_THAN_MAX
+
+    TIME_INVALID
+    TIME_INVALID_HOUR
+    TIME_INVALID_MINUTE
+    TIME_INVALID_SECONDS
+    TIME_INVALID_AMPM
+
+    EMAIL_INVALID
+
+    PHONE_INVALID
+
+    SET_INVALID_QUOTED_STRING
+    SET_PARSE_ERROR
+
+=head1 CLASS METHODS
+
+=over 4
+
+=item B<add_message NAME, ID>
+
+Add a new message constant with NAME and an integer ID value.  Message ids from 0 to 29,999 are reserved for built-in messages.  Negative message ids are reserved for internal use.  Please use message ids 30,000 or higher for your messages.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique.
+
+=item B<add_messages [NAME1, ID1 [, NAME2, ID2, ...]]>
+
+If called with no arguments, this method L<adds|/add_message> all valid message constants defined in this calling class.
+
+If called with a series of NAME and ID pairs, the L<add_message|/add_message> class method is called on each pair.
+
+=item B<get_message_id NAME>
+
+Returns the integer message id corresponding to the symbolic constant NAME, or undef if no such name exists.
+
+=item B<get_message_name ID>
+
+Returns the symbolic message constant name corresponding to the integer message ID, or undef if no such message ID exists.
+
+=item B<message_id_exists ID>
+
+Return true of the integer message ID exists, false otherwise.
+
+=item B<message_name_exists NAME>
+
+Return true of the symbolic message constant NAME exists, false otherwise.
+
+=item B<message_ids>
+
+Returns a list (in list context) or reference to an array (in scalar context) of integer message ids.
+
+=back
+
+=head1 AUTHOR
+
+John C. Siracusa (siracusa@gmail.com)
+
+=head1 COPYRIGHT
+
+Copyright (c) 2008 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
