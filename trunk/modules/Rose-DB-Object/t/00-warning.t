@@ -10,15 +10,16 @@ eval { require DBD::mysql };
 eval { require DBD::SQLite };
 eval { require DBD::Informix };
 eval { require DBD::Oracle };
+eval { require JSON };
 
 print STDERR "\n##\n";
 
-foreach my $pkg (qw(DBI DBD::Pg DBD::mysql DBD::SQLite DBD::Informix DBD::Oracle ))
+foreach my $pkg (qw(DBI DBD::Pg DBD::mysql DBD::SQLite DBD::Informix DBD::Oracle JSON))
 {
   no strict 'refs';
   if(defined(my $version = ${$pkg . '::VERSION'}))
   {
-    print STDERR sprintf("## %-15s %s\n", $pkg, $version);
+    print STDERR sprintf("## %-15s $version\n", $pkg);
   }
 }
 

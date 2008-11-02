@@ -79,6 +79,10 @@ sub json_encoder
 sub init_json_encoder
 {
   require JSON;
+
+  croak "JSON version 2.00 or later is required.  You have $JSON::VERSION"
+    unless($JSON::VERSION >= 2.00);
+
   return JSON->new->utf8->space_after;
 }
 
