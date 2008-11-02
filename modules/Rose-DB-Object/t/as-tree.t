@@ -715,7 +715,12 @@ BEGIN
   eval { require YAML::Syck };
   $Have_YAML = $@ ? 0 : 1;
 
-  eval { require JSON };
+  eval
+  {
+    require JSON;
+    die "JSON $JSON::VERSION too old"  unless($JSON::VERSION >= 2.00);
+  };
+
   $Have_JSON = $@ ? 0 : 1;
 }
 

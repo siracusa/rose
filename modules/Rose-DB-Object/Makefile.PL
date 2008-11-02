@@ -10,8 +10,9 @@ if($MM_Version =~ /_/) # dev version
   die $@  if($@);
 }
 
-WriteMakefile(NAME         => 'Rose::DB::Object',
-              VERSION_FROM => 'lib/Rose/DB/Object.pm',
+WriteMakefile(NAME          => 'Rose::DB::Object',
+              ABSTRACT_FROM => 'lib/Rose/DB/Object.pm',
+              VERSION_FROM  => 'lib/Rose/DB/Object.pm',
               ($^O =~ /darwin/i ? (dist => { DIST_CP => 'cp' }) : ()), # Avoid Mac OS X ._* files
               PREREQ_PM =>
               {
@@ -34,6 +35,7 @@ WriteMakefile(NAME         => 'Rose::DB::Object',
                 'Rose::DB'              => '0.745',
               },
               clean => { FILES => "t/*.db" },
+              AUTHOR => 'John Siracusa <siracusa@gmail.com>',
               ($MM_Version >= 6.48 ? (MIN_PERL_VERSION => '5.6.0') : ()),
               ($MM_Version >= 6.31 ? (LICENSE => 'perl') : ()),
               ($MM_Version <= 6.44 ? () : 
