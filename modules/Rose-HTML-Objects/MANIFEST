@@ -107,6 +107,7 @@ t/form.t
 t/image.t
 t/label.t
 t/leaks.t
+t/l10n-errors-01.t
 t/localized-messages
 t/lib/MyField.pm
 t/lib/MyObject.pm

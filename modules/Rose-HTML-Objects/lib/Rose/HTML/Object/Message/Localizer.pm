@@ -389,9 +389,6 @@ sub add_localized_message
 
   $msgs_class->add_message($name, $id);
 
-  eval "package $msgs_class; use constant $name => $id;";
-  croak "Could not eval new constant message - $@"  if($@);
-
   while(my($l, $t) = each(%$text))
   {
     $Debug && warn qq($self - Adding message $name ($l) = "$t"\n);
@@ -450,9 +447,6 @@ sub add_localized_error
   }
 
   $errors_class->add_error($name, $id);
-
-  eval "package $errors_class; use constant $name => $id;";
-  croak "Could not eval new error constant - $@"  if($@);
 
   return $id;
 }
