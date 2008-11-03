@@ -59,6 +59,7 @@ WriteMakefile(NAME         => 'Rose::HTML::Objects',
                 'Rose::DateTime' => '0.532',
                 'Rose::URI'      => '0.021',
               },
+              clean => { FILES => 't/tmplib/* t/tmplib' },
               ($MM_Version >= 6.48 ? (MIN_PERL_VERSION => '5.6.0') : ()),
               ($MM_Version >= 6.31 ? (LICENSE => 'perl') : ()),
               ($MM_Version <= 6.44 ? () : 

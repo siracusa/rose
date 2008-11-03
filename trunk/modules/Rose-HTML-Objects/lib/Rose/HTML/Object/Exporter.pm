@@ -78,7 +78,7 @@ sub import
   foreach my $symbol (@symbols)
   {
     my $code = $class->can($symbol) or 
-      croak "Could not import symbol '$symbol' from $class - no such symbol";
+      croak "Could not import symbol '$symbol' from $class into $target_class - no such symbol";
 
     my $is_constant = (defined prototype($code) && !length(prototype($code))) ? 1 : 0;
 

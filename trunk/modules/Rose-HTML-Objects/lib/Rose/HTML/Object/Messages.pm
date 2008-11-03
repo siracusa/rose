@@ -14,7 +14,7 @@ use Rose::Class::MakeMethods::Generic
 (
   inheritable_scalar =>
   [
-    'message_names_list',
+    '_message_names',
     'message_id_to_name_map',
     'message_name_to_id_map',
   ],
@@ -22,7 +22,7 @@ use Rose::Class::MakeMethods::Generic
 
 BEGIN
 {
-  __PACKAGE__->message_names_list([]);
+  __PACKAGE__->_message_names([]);
   __PACKAGE__->message_id_to_name_map({});
   __PACKAGE__->message_name_to_id_map({});
 }
@@ -31,20 +31,20 @@ sub init_export_tags
 {
   my($class) = shift;
 
+  my $list = $class->message_names;
+
   $class->export_tags
   (
-    all    => $class->message_names_list,
-    field  => [ grep { /^FIELD_/ } @{$class->message_names_list} ],
-    form   => [ grep { /^FORM_/ } @{$class->message_names_list} ],
-    date   => [ grep { /^DATE_|_(?:YEAR|MONTH|DAY)$/ }
-                @{$class->message_names_list} ],
-    time   => [ grep { /^TIME_|_(?:HOUR|MINUTE|SECOND)$/ } 
-                @{$class->message_names_list} ],
-    email  => [ grep { /^EMAIL_/ } @{$class->message_names_list} ],
-    phone  => [ grep { /^PHONE_/ } @{$class->message_names_list} ],
-    number => [ grep { /^NUM_/ } @{$class->message_names_list} ],
-    set    => [ grep { /^SET_/ } @{$class->message_names_list} ],
-    string => [ grep { /^STRING_/ } @{$class->message_names_list} ],
+    all    => $list,
+    field  => [ grep { /^FIELD_/ } @$list ],
+    form   => [ grep { /^FORM_/ } @$list ],
+    date   => [ grep { /^DATE_|_(?:YEAR|MONTH|DAY)$/ } @$list ],
+    time   => [ grep { /^TIME_|_(?:HOUR|MINUTE|SECOND)$/ } @$list ],
+    email  => [ grep { /^EMAIL_/ } @$list ],
+    phone  => [ grep { /^PHONE_/ } @$list ],
+    number => [ grep { /^NUM_/ } @$list ],
+    set    => [ grep { /^SET_/ } @$list ],
+    string => [ grep { /^STRING_/ } @$list ],
   );
 }
 
@@ -78,7 +78,7 @@ sub use_private_messages
 
     # Make private copies of inherited data structures 
     # (shallow copy is sufficient)
-    $class->message_names_list([ @{$class->message_names_list} ]);
+    $class->message_names([ $class->message_names ]);
     $class->message_id_to_name_map({ %{$class->message_id_to_name_map} });
     $class->message_name_to_id_map({ %{$class->message_name_to_id_map} });
   }
@@ -86,6 +86,16 @@ sub use_private_messages
 
 sub message_id_exists   { defined $_[0]->message_id_to_name_map->{$_[1]} }
 sub message_name_exists { defined $_[0]->message_name_to_id_map->{$_[1]} }
+
+sub message_names
+{
+  my($class) = shift;
+
+  $class->_message_names(@_)  if(@_);
+
+  wantarray ? @{$class->_message_names} :
+              $class->_message_names;
+}
 
 sub get_message_id
 {
@@ -131,9 +141,21 @@ sub add_message
     }
   }
 
+  MAKE_CONSTANT:
+  {
+    no strict 'refs';
+    my $const = "${class}::$name";
+    unless($class->can($name) || defined &$const)
+    {
+      *{"${class}::$name"} = sub() { $id };
+      #eval "package $class; use constant $name => $id;";
+      #croak "Could not create constant '$name' in $class - $@"  if($@);
+    }
+  }
+
   unless(exists $class->message_name_to_id_map->{$name})
   {
-    push(@{$class->message_names_list}, $name);
+    push(@{$class->_message_names}, $name);
   }
 
   $class->message_id_to_name_map->{$id}   = $name;
@@ -304,9 +326,9 @@ Rose::HTML::Object::Messages - Message ids and names of localized messages for u
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Object::Messages> stores message ids and names.  The message ids are defined as Perl L<constant|constant> with integer values.  The constants themselves as well as the the mapping between the symbolic constant names and their values are stored as class data.
+L<Rose::HTML::Object::Messages> stores message ids and names.  The message ids are defined as Perl L<constants|constant> with integer values.  The constants themselves as well as the the mapping between the symbolic constant names and their values are stored as class data.
 
-If you merely want to import one of the standard message ids, you mayuse this module as-is (see the L<EXPORTS|/EXPORTS> section for details).  If you want to define your own constants, you must subclass this module exactly as shown in the synopsis.  The order of the statements is important!
+If you merely want to import one of the standard message id constants, you may use this module as-is (see the L<EXPORTS|/EXPORTS> section for details).  If you want to define your own messages, you must subclass this module exactly as shown in the synopsis.  The order of the statements is important!
 
 When adding your own messages, you are free to choose any integer message id values, subject to the following constraints.
 
@@ -318,11 +340,11 @@ When adding your own messages, you are free to choose any integer message id val
 
 =back
 
-Please use message ids 30,000 or higher for your messages.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique.
+Please use ids 30,000 or higher for your messages.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique.
 
 =head1 EXPORTS
 
-L<Rose::HTML::Object::Messages> does not export any function names by default.
+L<Rose::HTML::Object::Messages> does not export any symbols by default.
 
 The 'all' tag:
 
@@ -354,9 +376,9 @@ FInally, you can provide import individual message names as well:
 
 A complete listing of the default set of message ids appears in the next section.
 
-=head1 MESSAGES
+=head1 BUILT-IN MESSAGES
 
-The default list of symbolic message id names appears below.  You should not rely on the actual numeric values of these constants.  Import and refer to them only by their message names.
+The list of built-in messages appears below.  You should not rely on the actual numeric values of these constants.  Import and refer to them only by their symbolic names.
 
     FIELD_LABEL
     FIELD_DESCRIPTION
@@ -422,11 +444,11 @@ The default list of symbolic message id names appears below.  You should not rel
 
 Add a new message constant with NAME and an integer ID value.  Message ids from 0 to 29,999 are reserved for built-in messages.  Negative message ids are reserved for internal use.  Please use message ids 30,000 or higher for your messages.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique.
 
-=item B<add_messages [NAME1, ID1 [, NAME2, ID2, ...]]>
+=item B<add_messages [NAME1, NAME2, ...]>
 
-If called with no arguments, this method L<adds|/add_message> all valid message constants defined in this calling class.
+If called with no arguments, this method L<adds|/add_message> all message L<constants|/constant> defined in the calling class.
 
-If called with a series of NAME and ID pairs, the L<add_message|/add_message> class method is called on each pair.
+If called with a list of constant names, add each named constant to the list of messages.  These L<constants|/constant> must already exist in the calling class.
 
 =item B<get_message_id NAME>
 
@@ -447,6 +469,10 @@ Return true of the symbolic message constant NAME exists, false otherwise.
 =item B<message_ids>
 
 Returns a list (in list context) or reference to an array (in scalar context) of integer message ids.
+
+=item B<message_names>
+
+Returns a list (in list context) or reference to an array (in scalar context) of message names.
 
 =back
 
