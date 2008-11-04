@@ -249,9 +249,9 @@ Add a new error constant with NAME and an integer ID value.  Error ids from 0 to
 
 =item B<add_errors [NAME1, NAME2, ...]>
 
-If called with no arguments, this method L<adds|/add_error> all error L<constants|/constant> defined in the calling class.
+If called with no arguments, this method L<adds|/add_error> all error L<constants|constant> defined in the calling class.
 
-If called with a list of constant names, add each named constant to the list of errors.  These L<constants|/constant> must already exist in the calling class.
+If called with a list of constant names, add each named constant to the list of errors.  These L<constants|constant> must already exist in the calling class.
 
 =item B<get_error_id NAME>
 

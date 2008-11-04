@@ -17,14 +17,12 @@ sub localized_message
 
   my $interface = $args->{'interface'} || 'get_set';
   my $key       = $args->{'hash_key'} || $name;
-  my $msg_class = $args->{'msg_class'} || 'Rose::HTML::Object::Message::Localized';
   my $id_method = $args->{'msg_id_method'} || $key . '_message_id';
 
   my $accept_msg_class = $args->{'accept_msg_class'} || 'Rose::HTML::Object::Message';
 
-  eval "require $msg_class";
-  Carp::croak "Could not load msg_class '$msg_class' - $@"  if($@);
-
+  require Rose::HTML::Object::Message::Localized;
+  
   if($interface eq 'get_set')
   {
     $methods{$name} = sub
@@ -54,7 +52,7 @@ sub localized_message
               Carp::croak "Unknown message id: '$id'";
           }
 
-          return $self->$name($msg_class->new(id => $id, parent => $self, @args));
+          return $self->$name($self->localizer->message_class->new(id => $id, parent => $self, @args));
         }
 
         my $msg = shift;
@@ -66,7 +64,7 @@ sub localized_message
         }
         else
         {
-          return $self->{$key} = $msg_class->new(text => $msg, parent => $self);
+          return $self->{$key} = $self->localizer->message_class->new(text => $msg, parent => $self);
         }
       }
 
@@ -81,7 +79,7 @@ sub localized_message
       {
         my($id, @args) = @_;
         return $self->$name(undef)  unless(defined $id);
-        return $self->$name($msg_class->new(id => $id, args => \@args, parent => $self));
+        return $self->$name($self->localizer->message_class->new(id => $id, args => \@args, parent => $self));
       }
 
       my $error = $self->$name();
@@ -102,17 +100,14 @@ sub localized_error
 
   my $interface   = $args->{'interface'} || 'get_set';
   my $key         = $args->{'hash_key'} || $name;
-  my $error_class = $args->{'error_class'} || 'Rose::HTML::Object::Error';
-  my $msg_class   = $args->{'msg_class'} || 'Rose::HTML::Object::Message::Localized';
   my $id_method   = $args->{'error_id_method'} || $key . '_id';
+  my $msg_class   = $args->{'msg_class'};
+  my $error_class = $args->{'error_class'} || 'Rose::HTML::Object::Error';
 
   my $accept_error_class = $args->{'accept_error_class'} || 'Rose::HTML::Object::Error';
 
-  eval "require $error_class";
-  Carp::croak "Could not load error_class '$error_class' - $@"  if($@);
-
-  eval "require $msg_class";
-  Carp::croak "Could not load msg_class '$msg_class' - $@"  if($@);
+  require Rose::HTML::Object::Error;
+  eval "require $msg_class"  if($msg_class);
 
   if($interface eq 'get_set')
   {
@@ -147,7 +142,7 @@ sub localized_error
                           "error id: '$id'";
           }
 
-          unshift(@args, error_id => $id, msg_class => $msg_class);
+          unshift(@args, error_id => $id);
 
           my $message;
 
@@ -180,7 +175,7 @@ sub localized_error
         elsif(defined $error)
         {
           return $self->{$key} = 
-            $error_class->new(message => $msg_class->new($error), parent => $self);
+            $error_class->new(message => $self->localizer->messsage_class->new($error), parent => $self);
         }
       }
 
@@ -212,7 +207,7 @@ sub localized_error
             Carp::croak "Unknown error id: '$id'";
         }
 
-        unshift(@args, error_id => $id, msg_class => $msg_class);
+        unshift(@args, error_id => $id);
 
         my $message;
 
@@ -253,9 +248,9 @@ sub localized_errors
   my %methods;
 
   my $interface      = $args->{'interface'} || 'get_set';
-  my $error_class    = $args->{'error_class'} || 'Rose::HTML::Object::Error';
-  my $msg_class      = $args->{'msg_class'} || 'Rose::HTML::Object::Message::Localized';
   my $key            = $args->{'hash_key'} || $name;
+  my $msg_class      = $args->{'msg_class'};
+  my $error_class    = $args->{'error_class'} || 'Rose::HTML::Object::Error';
   my $plural_name    = $args->{'plural_name'} || $name;
   my $singular_name  = $args->{'singular_name'} || plural_to_singular($plural_name);
   my $has_method     = $args->{'has_error_method'} || 'has_' . $plural_name;
@@ -269,11 +264,8 @@ sub localized_errors
 
   my $accept_error_class = $args->{'accept_error_class'} || 'Rose::HTML::Object::Error';
 
-  eval "require $error_class";
-  Carp::croak "Could not load error_class '$error_class' - $@"  if($@);
-
-  eval "require $msg_class";
-  Carp::croak "Could not load msg_class '$msg_class' - $@"  if($@);
+  require Rose::HTML::Object::Error;
+  eval "require $msg_class"  if($msg_class);
 
   if($interface eq 'get_set')
   {
@@ -326,7 +318,7 @@ sub localized_errors
                           "error id: '$id'";
           }
 
-          unshift(@args, error_id => $id, msg_class => $msg_class);
+          unshift(@args, error_id => $id);
 
           my $message;
 
@@ -344,7 +336,6 @@ sub localized_errors
             $message = $self->localizer->message_for_error_id(@args);
           }
 
-
           $self->{$key} = 
             [ $error_class->new(id => $id, parent => $self, message => $message) ];
 
@@ -361,7 +352,7 @@ sub localized_errors
         elsif(defined $error)
         {
           $self->{$key} = 
-            [ $error_class->new(message => $msg_class->new($error), parent => $self) ];
+            [ $error_class->new(message => $self->localizer->message_class->new($error), parent => $self) ];
         }
       }
 
@@ -374,7 +365,7 @@ sub localized_errors
 
       return  unless(@_);
 
-      my $errors = __errors_from_args($self, \@_, $error_class, $msg_class, $accept_error_class, 0, 0);
+      my $errors = __errors_from_args($self, \@_, $error_class, $self->localizer->message_class, $accept_error_class, 0, 0);
 
       push(@{$self->{$key}}, @$errors);  
 
@@ -387,7 +378,7 @@ sub localized_errors
 
       return  unless(@_);
 
-      my $errors = __errors_from_args($self, \@_, $error_class, $msg_class, $accept_error_class, 0, 1);
+      my $errors = __errors_from_args($self, \@_, $error_class, $self->localizer->message_class, $accept_error_class, 0, 1);
 
       push(@{$self->{$key}}, @$errors);
 
@@ -400,7 +391,7 @@ sub localized_errors
 
       if(@_)
       {
-        my $errors = __errors_from_args($self, \@_, $error_class, $msg_class, $accept_error_class, 1, 1);
+        my $errors = __errors_from_args($self, \@_, $error_class, $self->localizer->message_class, $accept_error_class, 1, 1);
         $self->{$key} = $errors;
         return $errors->[-1]->id;
       }
@@ -414,7 +405,7 @@ sub localized_errors
 
       if(@_)
       {
-        my $errors = __errors_from_args($self, \@_, $error_class, $msg_class, $accept_error_class, 1, 0);
+        my $errors = __errors_from_args($self, \@_, $error_class, $self->localizer->message_class, $accept_error_class, 1, 0);
         $self->{$key} = $errors;
         return wantarray ? @$errors : $errors;
       }
@@ -434,7 +425,7 @@ sub localized_errors
 
       return  unless(@_);
 
-      my $errors = __errors_from_args($self, \@_, $error_class, $msg_class, $accept_error_class, 1, 1);
+      my $errors = __errors_from_args($self, \@_, $error_class, $self->localizer->message_class, $accept_error_class, 1, 1);
 
       push(@{$self->{$key}}, @$errors);  
 
@@ -453,7 +444,7 @@ sub localized_errors
 
       return  unless(@_);
 
-      my $errors = __errors_from_args($self, \@_, $error_class, $msg_class, $accept_error_class, 1, 0);
+      my $errors = __errors_from_args($self, \@_, $error_class, $self->localizer->message_class, $accept_error_class, 1, 0);
 
       push(@{$self->{$key}}, @$errors);  
 

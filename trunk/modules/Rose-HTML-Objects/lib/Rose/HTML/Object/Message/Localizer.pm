@@ -30,8 +30,10 @@ use Rose::Object::MakeMethods::Generic
   'scalar --get_set_init' => 
   [
     'locale',
+    'message_class',
     'messages_class',
     'errors_class',
+    'error_class',
   ],
 );
 
@@ -103,7 +105,9 @@ sub init_locale
 }
 
 sub init_messages_class { 'Rose::HTML::Object::Messages' }
+sub init_message_class  { 'Rose::HTML::Object::Message::Localized' }
 sub init_errors_class   { 'Rose::HTML::Object::Errors' }
+sub init_error_class    { 'Rose::HTML::Object::Error' }
 
 sub clone { Clone::PP::clone(shift) }
 
@@ -224,7 +228,7 @@ sub message_for_error_id
   my($self, %args) = @_;
 
   my $error_id  = $args{'error_id'};
-  my $msg_class = $args{'msg_class'};
+  my $msg_class = $args{'msg_class'} || $self->message_class;
   my $args      = $args{'args'} || [];
 
   my $messages_class = $self->messages_class;
@@ -667,7 +671,24 @@ sub load_messages_from_fh
     $locales = { $locales => 1 };
   }
 
-  $msg_names = { $msg_names => 1 }  if($msg_names && !ref $msg_names);
+  my $msg_re;
+
+  if($msg_names)
+  {
+    if(!ref $msg_names)
+    {
+      $msg_names = { $msg_names => 1 };
+    }
+    elsif(ref $msg_names eq 'ARRAY')
+    {
+      $msg_names = { map { $_ => 1 } @$msg_names };
+    }
+    elsif(ref $msg_names eq 'Regexp')
+    {
+      $msg_re = $msg_names;
+      $msg_names = undef;
+    }
+  }
 
   my @text;
   my $in_locale = '';
@@ -688,13 +709,14 @@ sub load_messages_from_fh
 
     if(/$End_Message/o && (!$2 || $2 eq $in_msg))
     {
-      if(!$msg_names || $msg_names->{$in_msg})
+      if(!$msg_names || $msg_names->{$in_msg} || ($msg_re && $in_msg =~ /$msg_re/))
       {
         for($text)
         {
           s/\A(\s*\n)+//;
           s/(\s*\n)+\z//;
         }
+
         $self->set_localized_message_text(name   => $in_msg,
                                           locale => $in_locale,
                                           text   => $text);
@@ -749,3 +771,333 @@ sub load_messages_from_fh
 }
 
 1;
+
+__END__
+
+=encoding utf-8
+
+=head1 NAME
+
+Rose::HTML::Object::Message::Localizer - Message localizer class.
+
+=head1 SYNOPSIS
+
+
+
+=head1 DESCRIPTION
+
+L<Rose::HTML::Object::Message::Localizer> objects are responsible for managing localized L<messages|Rose::HTML::Object::Messages> and L<error|Rose::HTML::Object::Errors> which are identified by integer ids and symbolic constant names.  See the L<Rose::HTML::Object::Messages> and L<Rose::HTML::Object::Errors> documentation for more infomation on messages and errors.
+
+In addition to collecting and providing access to messages and errors, L<Rose::HTML::Object::Message::Localizer> objects also provide appropriately localized text for each message and error.
+
+This class inherits from, and follows the conventions of, L<Rose::Object>. See the L<Rose::Object> documentation for more information.
+
+=head2 MESSAGES AND ERRORS
+
+L<Messages|Rose::HTML::Object::Messages> and L<error|Rose::HTML::Object::Errors> are stored and tracked separatey, but are intimately related.  Both entities have integer ids which may be imported as symbolic constants, but only messages have associated localized text.
+
+The integer message and error ids are convenient, compact, and easily comparable.  Using these constants in your code allows you to refer to messages and errors in a way that is divorced from any actual message text.  For example, if you wanted to subclass L<Rose::HTML::Form::Field::Integer> and do something special in response to "invalid integer" errors, you could do this:
+
+    package My::HTML::Form::Field::Integer;
+
+    use base 'Rose::HTML::Form::Field::Integer';
+
+    # Import the symbol for the "invalid integer" error
+    use Rose::HTML::Object::Errors qw(NUM_INVALID_INTEGER);
+
+    sub validate
+    {
+      my($self) = shift;
+
+      my $ret = $self->SUPER::validate(@_);
+
+      unless($ret)
+      {
+        if($self->error_id == NUM_INVALID_INTEGER)
+        {
+          ... # do something here
+        }
+      }
+
+      return $ret;
+    }
+
+Note how detecting the exact error did not reqire regex-matching against error message text or anything similarly unmaintainable.
+
+When it comes time to display appropriate localized message text for the L<NUM_INVALID_INTEGER> error, the aptly named L<message_for_error_id|/message_for_error_id> method is called.  The mapping between error ids and message ids is usually direct (error id 123 maps to message id 123, and so on) but is entirely aribtrary.  Overload 
+
+=head2 LOCALIZED TEXT
+
+Localized text can come from anywhere.  The default implementation reads localized text from the C<__DATA__> section of Perl source code files.  Such text is read in en masse when the L<load_all_messages|/load_all_messages> method is called, or on demand in response to requests for localized text.  The L<auto_load_messages|/auto_load_messages> flag may be used to distinguish between the two policies.  Here's an example C<__DATA__> section and L<load_all_messages|/load_all_messages> call (from the L<Rose::HTML::Form::Field::Integer> source code):
+
+    if(__PACKAGE__->localizer->auto_load_messages)
+    {
+      __PACKAGE__->localizer->load_all_messages;
+    }
+
+    1;
+
+    __DATA__
+
+    [% LOCALE en %]
+
+    NUM_INVALID_INTEGER          = "[label] must be an integer."
+    NUM_INVALID_INTEGER_POSITIVE = "[label] must be a positive integer."
+    NUM_NOT_POSITIVE_INTEGER     = "[label] must be a positive integer."
+
+    [% LOCALE de %]
+
+    NUM_INVALID_INTEGER          = "[label] muß eine Ganzzahl sein."
+    NUM_INVALID_INTEGER_POSITIVE = "[label] muß eine positive Ganzzahl sein."
+    NUM_NOT_POSITIVE_INTEGER     = "[label] muß eine positive Ganzzahl sein."
+
+    [% LOCALE fr %]
+
+    NUM_INVALID_INTEGER          = "[label] doit être un entier."
+    NUM_INVALID_INTEGER_POSITIVE = "[label] doit être un entier positif."
+    NUM_NOT_POSITIVE_INTEGER     = "[label] doit être un entier positif."
+
+The messages for each locale are set off by C<LOCALE> directives set surrounded by C<[%> and C<%]>.  All messages until the next such declaration are stored under the specified locale.
+
+Localized text is provided in double-quoted strings to the right of symbolic L<messages|Rose::HTML::Object::Messages> or L<error|Rose::HTML::Object::Errors> constant names.  
+
+Placeholders are replaced with text provided at runtime.  Placeholder names are surrounded by square brackets.  They must start with C<[a-zA-Z]> and may contain only characters that match C<\w>.  For and example, see the C<[label]> placeolders in the example above.  A C<@> prefix is allowd to specify that the placeholder value is expected to be a refrence to an array of values.
+
+    SOME_MESSAGE = "A list of values: [@values]"
+
+In such a case, the values are joined with ", " to form the text that replaces the placeholder.
+
+Embedded double quotes in message text must be escaped with a backslash.  Embedded newlines may be included using a C<\n> sequence.  Literal opening sequare brackets must be backslash-escaped: C<\[>.  Literal backslashes must be doubled: C<\\>.  Example:
+
+    SOME_MESSAGE = "Here\[]:\nA backslash \\ and some \"embedded\" double quotes"
+
+The resulting text:
+
+    Here[]:
+    A backslash \ and some "embedded" double quotes
+
+There's also a multi-line format for longer messages:
+
+    [% START SOME_MESSAGE %]
+    This message has multiple lines.
+    Here's another one.
+    [% END SOME_MESSAGE %]
+
+Leading and trailing spaces and newlines are removed from text provided in the multi-line format.
+
+=head3 CUSTOMIZATION
+
+This implementation of localized message storage exists primarily because it's the most convenient way to store and distribute the localized messages that ship with the L<Rose::HTML::Objects> module distribution.  For a real application, it may be preferable to store localized text elsewhere.
+
+The easiest way to do this is to create your own L<Rose::HTML::Object::Message::Localizer> subclass and override the L<get_localized_message_text|/get_localized_message_text> method (or any other method(s) you desire) and provide your own implementation of localized message storage and retrieval.  You must then ensure that yoru new localizer subclass is actually used by all of your HTML objects.  You can of course set the L<localizer|Rose::HTML::Object/localizer> attribute directly, but a much more comprehensive way to customize your HTML objects is by creating your own, private family tree of L<Rose::HTML::Object>-derived classes.  Please see the L<private libraries|Rose::HTML::Objects/"PRIVATE LIBRARIES"> section of the L<Rose::HTML::Objects> documentation for more information.
+
+=head2 LOCALES
+
+Localization is done based on a "locale", which is an arbitrary string.  The default set of locales used by the L<Rose::HTML::Objects> modules are lowercase two-letter language codes:
+
+    LOCALE      LANGUAGE
+    ------      --------
+    en          English
+    de          German
+    fr          French
+    bg          Bulgarian
+
+Localized versions of all built-in messages and errors are provided for all of these locales.
+
+=head1 CLASS METHODS
+
+=over 4
+
+=item B<auto_load_messages [BOOL]>
+
+Get or set a boolean value indicating whether or not localized message text should be automatically loaded from classes that call their localizer's L<load_all_messages|/load_all_messages> method.  The default value is true if either of the C<MOD_PERL> or C<RHTMLO_PRIME_CACHES> environment variables are set to a true value, false otherwise.
+
+=item B<default_locale [LOCALE]>
+
+Get or set the default L<locale|/locale> used by objects of this class.  Defaults to "en".
+
+=item B<default_locale_cascade [PARAMS]>
+
+Get or set the default locale cascade.  PARAMS are L<locale|/"LOCALES">/arrayref pairs.  Each referenced array contains a list of locales to check, in the order specified, when message text is not available in the desired locale.  There is one special locale name, C<default>, that's used if no locale cascade exists for a particular locale.  The default locale cascade is:
+
+    default => [ 'en' ]
+
+That is, if message text is not available in the desired locale, C<en> text will be returned instead (assuming it exists).
+
+This method returns the default locale cascade as a reference to a hash of locale/arrayref pairs (in scalar context) or a list of locale/arrayref pairs (in list context).
+
+=back
+
+=head1 CONSTRUCTOR
+
+=over 4
+
+=item B<new [PARAMS]>
+
+Constructs a new L<Rose::HTML::Object::Message::Localizer> object based on PARAMS, where PARAMS are
+name/value pairs.  Any object method is a valid parameter name.
+
+=back
+
+=head1 OBJECT METHODS
+
+=over 4
+
+=item B<add_localized_error PARAMS>
+
+Add a new localized error message.  PARAMS are name/value pairs.  Valid PARAMS are:
+
+=over 4
+
+=item B<id ID>
+
+An integer L<error|Rose::HTML::Object::Errors> id.  Error ids from 0 to 29,999 are reserved for built-in errors.  Negative error ids are reserved for internal use.  Please use error ids 30,000 or higher for your errors.  If omitted, the L<generate_error_id|/generate_error_id> method will be called to generate a value.
+
+=item B<name NAME>
+
+An L<error|Rose::HTML::Object::Errors> name.  This parameter is required.  Error names may contain only the characters C<[A-Z0-9_]> and must be unique.
+
+=back
+
+=item B<add_localized_message PARAMS>
+
+Add a new localizer message.  PARAMS are name/value pairs.  Valid PARAMS are:
+
+=over 4
+
+=item B<id ID>
+
+An integer L<message|Rose::HTML::Object::Messages> id.  Message ids from 0 to 29,999 are reserved for built-in messages.  Negative message ids are reserved for internal use.  Please use message ids 30,000 or higher for your messages.  If omitted, the L<generate_message_id|/generate_message_id> method will be called to generate a value.
+
+=item B<name NAME>
+
+A L<message|Rose::HTML::Object::Messages> name.  This parameter is required.  Message names may contain only the characters C<[A-Z0-9_]> and must be unique.
+
+=back
+
+=item B<error_class [CLASS]>
+
+Get or set the name of the L<Rose::HTML::Object::Error>-derived class used to store each error.  The default value is L<Rose::HTML::Object::Error>.  To change the default, override the C<init_error_class> method in your subclass and return a different class name.
+
+=item B<errors_class [CLASS]>
+
+Get or set the name of the L<Rose::HTML::Object::Errors>-derived class used to store and track error ids and symbolic constant names.  The default value is L<Rose::HTML::Object::Errors>.  To change the default, override the C<init_errors_class> method in your subclass and return a different class name.
+
+=item B<locale [CLASS]>
+
+Get or set the locale assumed by the localizer in the absence of an explicit locale argument.  Defaults to the value returned by the L<default_locale|/default_locale> class method.
+
+=item B<message_class [CLASS]>
+
+Get or set the name of the L<Rose::HTML::Object::Message>-derived class used to store each message.  The default value is L<Rose::HTML::Object::Message::Localized>.  To change the default, override the C<init_message_class> method in your subclass and return a different class name.
+
+=item B<messages_class [CLASS]>
+
+Get or set the name of the L<Rose::HTML::Object::Messages>-derived class used to store and track message ids and symbolic constant names.  The default value is L<Rose::HTML::Object::Messages>.  To change the default, override the C<init_messages_class> method in your subclass and return a different class name.
+
+=item B<generate_error_id>
+
+Returns a new integer L<error|Rose::HTML::Object::Errors> id.  This method will not return the same value more than once.
+
+=item B<generate_message_id>
+
+Returns a new integer L<message|Rose::HTML::Object::Messages> id.  This method will not return the same value more than once.
+
+=item B<get_error_id NAME>
+
+This method is a proxy for the L<errors_class|/errors_class>'s L<get_error_id|Rose::HTML::Object::Errors/get_error_id> method.
+
+=item B<get_error_name ID>
+
+This method is a proxy for the L<errors_class|/errors_class>'s L<get_error_id|Rose::HTML::Object::Errors/get_error_name> method.
+
+=item B<get_localized_message_text PARAMS>
+
+Returns localized message text based on PARAMS name/value pairs.  Valid PARAMS are:
+
+=over 4
+
+=item B<id ID>
+
+An integer L<message|Rose::HTML::Object::Messages> id.  If a C<name> is not passed, then the name corresponding to this message id will be looked up using the L<get_message_name|/get_message_name> method.
+
+=item B<name NAME>
+
+The L<message|Rose::HTML::Object::Messages> name.  If this parameter is not passed, then the C<id> parameter must be passed.
+
+=item B<locale LOCALE>
+
+The L<locale|/LOCALES> of the localized message text.  This parameter is required.
+
+=item B<from_class CLASS>
+
+The name of the class from which to attempt to L<load the localized message text|/"LOCALIZED TEXT">.  If omitted, it defaults to the name of the package form which this method was called.
+
+=back
+
+=item B<get_message_id NAME>
+
+This method is a proxy for the L<messages_class|/messages_class>'s L<get_message_id|Rose::HTML::Object::Messages/get_message_id> method.
+
+=item B<get_message_name ID>
+
+This method is a proxy for the L<messages_class|/messages_class>'s L<get_message_name|Rose::HTML::Object::Messages/get_message_name> method.
+
+=item B<load_messages_from_file [ FILE | PARAMS ]>
+
+Load localized message text, in the format described in the L<LOCALIZED TEXT|/"LOCALIZED TEXT"> section above, from a file on disk.  Note that this method only loads message I<text>.  The message ids must already exist in the L<messages_class|/messages_class>.
+
+If a single FILE argument is passed, it is taken as the value for the L<file|/file> parameter.  Otherwise, PARAMS name/value pairs are expected.  Valid PARAMS are:
+
+=over 4
+
+=item B<file PATH>
+
+The path to the file.  This parameter is required.
+
+=item B<locales [LOCALE|ARRAYREF]>
+
+A L<locale|/"LOCALES"> or a reference to an array of locales.  If provided, only message text for the specified locales will be loaded.  If omitted, all locales will be loaded.
+
+=item B<names [ NAME | ARRAYREF | REGEX ]>
+
+Only load text for the specified messages.  Pass either a single message NAME, a reference to an array of names, or a regular expression that matches the names of the messages you want to load.
+
+=back
+
+=item B<locale [LOCALE]>
+
+Get or set the L<locale|/"LOCALES"> of this localizer.  This locale is used by several methods when a locale is not explicitly provided.  The default value is determined by the L<default_locale|/default_locale> class method.
+
+=item B<locale_cascade [PARAMS]>
+
+Get or set the locale cascade.  PARAMS are L<locale|/"LOCALES">/arrayref pairs.  Each referenced array contains a list of locales to check, in the order specified, when message text is not available in the desired locale.  There is one special locale name, C<default>, that's used if no locale cascade exists for a particular locale.  The default locale cascade is determined by the L<default_locale_cascade|/default_locale_cascade> class method.
+
+This method returns the locale cascade as a reference to a hash of locale/arrayref pairs (in scalar context) or a list of locale/arrayref pairs (in list context).
+
+=item B<message_for_error_id [PARAMS]>
+
+Given an L<error|Rose::HTML::Object::Errors> id, return the corresponding L<message_class|/message_class> object.  The default implementation simply looks for a message with the same integer id as the error.  Valid PARAMS name/value pairs are:
+
+=over 4
+
+=item B<error_id ID>
+
+The integer error id.  This parameter is required.
+
+=item B<args HASHREF>
+
+A reference to a hash of name/value pairs to be used as the L<message arguments|Rose::HTML::Object::Message/args> ##################
+
+=back
+
+
+=back
+
+=head1 AUTHOR
+
+John C. Siracusa (siracusa@gmail.com)
+
+=head1 COPYRIGHT
+
+Copyright (c) 2008 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
