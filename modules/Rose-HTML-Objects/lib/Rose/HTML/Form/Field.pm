@@ -874,7 +874,7 @@ sub message_for_error_id
   my($self, %args) = @_;
 
   my $error_id  = $args{'error_id'};
-  my $msg_class = $args{'msg_class'};
+  my $msg_class = $args{'msg_class'} || $self->localizer->message_class;
   my $args      = $args{'args'} || [];
 
   no warnings 'uninitialized';
@@ -1443,6 +1443,18 @@ Returns a L<Rose::HTML::Label> object with its C<for> HTML attribute set to the 
 =item B<local_name [NAME]>
 
 Get or set the name of this field from the perspective of the L<parent_form|/parent_form> or L<parent_field|/parent_field>, depending on which type of thing is the direct parent of this field.  The local name should not change, regardless of how deeply this field is nested within other forms or fields.
+
+=item B<message_for_error_id PARAMS>
+
+Return the appropriate L<message|Rose::HTML::Object::Message> object associated with the L<error|Rose::HTML::Object::Errors> id.  The error id, message class, and message placeholder values are specified by PARAMS name/value pairs.  Valid PARAMS are:
+
+=over 4
+
+=item B<msg_class CLASS>
+
+The name of the L<Rose::HTML::Object::Message>-derived class used to store each message.  If omitted, it defaylts to the L<localizer|/localizer>'s L<message_class|Rose::HTML::Object::Message::Localizer/message_class>.
+
+=back
 
 =item B<name [NAME]>
 

@@ -31,45 +31,6 @@ use Rose::Class::MakeMethods::Generic
 
 __PACKAGE__->default_localizer(Rose::HTML::Object::Message::Localizer->new);
 
-sub args
-{
-  my($self) = shift;
-
-  if(@_)
-  {
-    my %args;
-
-    if(@_ == 1 && ref $_[0] eq 'ARRAY')
-    {
-      my $i = 1;
-      %args = (map { $i++ => $_ } @{$_[0]});
-    }
-    elsif(@_ == 1 && ref $_[0] eq 'HASH')
-    {
-      %args = %{$_[0]};
-
-      my $i = 1;
-
-      foreach my $key (sort keys %args)
-      {
-        $args{$i} = $args{$key}  unless(exists $args{$i});
-        $i++;
-      }
-    }
-    else
-    {
-      my $i = 1;
-      %args = map { $i++ => $_ } @_;
-    }
-
-    $self->{'args'} = \%args;
-
-    return wantarray ? %{$self->{'args'}} : $self->{'args'};
-  }
-
-  return wantarray ? %{$self->{'args'} || {}} : ($self->{'args'} ||= {});
-}
-
 sub localized_text
 {
   my($self) = shift;
