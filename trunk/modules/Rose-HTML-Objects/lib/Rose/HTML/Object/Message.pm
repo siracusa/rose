@@ -118,7 +118,7 @@ __END__
 
 =head1 NAME
 
-Rose::HTML::Object::Message - HTML object message class.
+Rose::HTML::Object::Message - Text message object.
 
 =head1 SYNOPSIS
 
@@ -148,12 +148,6 @@ Constructs a new L<Rose::HTML::Object::Message> object.  If a single argument is
 =head1 OBJECT METHODS
 
 =over 4
-
-=item B<args [ PARAMS | HASHREF ]>
-
-Get or set the name/value pairs to be used to fill in any placeholders in the message text.  To set, pass a list of name/value pairs or a reference to a hash of name/value pairs.  Values must be strings, code references, or references to arrays of strings or code references.  Code references are evaluated each time a message ##############
-
-See the L<LOCALIZED TEXT|Rose::HTML::Object::Message::Localizer/"LOCALIZED TEXT"> section of the L<Rose::HTML::Object::Message::Localizer> documentation for more information on message text placehodlers.
 
 =item B<id [INT]>
 

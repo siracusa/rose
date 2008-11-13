@@ -118,7 +118,9 @@ EOF
 EOF
 
   my $object_package    = $rename->('Rose::HTML::Object');
+  my $message_package   = $rename->('Rose::HTML::Object::Message::Localized');
   my $messages_package  = $rename->('Rose::HTML::Object::Messages');
+  my $error_package     = $rename->('Rose::HTML::Object::Error');
   my $errors_package    = $rename->('Rose::HTML::Object::Errors');
   my $localizer_package = $rename->('Rose::HTML::Object::Message::Localizer');
   my $custom_package    = $rename->('Rose::HTML::Object::Custom');
@@ -128,7 +130,9 @@ EOF
   unless($in_memory)
   {
     $load_message_and_errors_perl=<<"EOF";
+use $error_package;
 use $errors_package();
+use $message_package;
 use $messages_package();
 EOF
   }
@@ -145,6 +149,10 @@ EOF
 
   my %code =
   (
+    $message_package =><<"EOF",
+sub generic_object_class { '$object_package' }
+EOF
+
     $messages_package =>
     {
       filter => sub
@@ -225,14 +233,16 @@ EOF
 
     $localizer_package =><<"EOF",
 $load_message_and_errors_perl
+sub init_message_class  { '$message_package' }
 sub init_messages_class { '$messages_package' }
+sub init_error_class    { '$error_package' }
 sub init_errors_class   { '$errors_package' }
 EOF
 
     $custom_package =><<"EOF",
 @{[ $in_memory ? "Rose::HTML::Object->import(':customize');" : "use Rose::HTML::Object qw(:customize);" ]}
 @{[ $in_memory ? '' : "\nuse $localizer_package;\n" ]}
-__PACKAGE__->localizer($localizer_package->new);
+__PACKAGE__->default_localizer($localizer_package->new);
 
 $object_map_perl
 EOF
@@ -285,8 +295,10 @@ EOF
   require Rose::HTML::Object::Messages;
   require Rose::HTML::Object::Message::Localizer;
   
-  foreach my $base_class (qw(Rose::HTML::Object::Errors
+  foreach my $base_class (qw(Rose::HTML::Object::Error
+                             Rose::HTML::Object::Errors
                              Rose::HTML::Object::Messages
+                             Rose::HTML::Object::Message::Localized
                              Rose::HTML::Object::Message::Localizer))
   {
     my $package = $rename->($base_class);
@@ -383,10 +395,7 @@ sub subclass_perl
   my $package = $args{'package'} or Carp::confess "Missing 'package' parameter";
   my $isa     = $args{'isa'};
   $isa = [ $isa ]  unless(ref $isa eq 'ARRAY');
-if($package eq 'My::HTML::Form::Field::File')
-{
-$DB::single = 1;
-}
+
   my $filter = $args{'code_filter'};
 
   my($code, @code, @default_code);

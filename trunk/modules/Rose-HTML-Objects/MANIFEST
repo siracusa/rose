@@ -108,8 +108,11 @@ t/image.t
 t/label.t
 t/leaks.t
 t/l10n-errors-01.t
+t/l10n-message.t
 t/l10n-messages-01.t
 t/localized-messages
+t/object-localizer.t
+t/object-message.t
 t/lib/MyField.pm
 t/lib/MyObject.pm
 t/lib/MyObject/BadErrors.pm

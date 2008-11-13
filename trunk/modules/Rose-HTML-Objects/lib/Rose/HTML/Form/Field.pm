@@ -19,7 +19,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.554';
+our $VERSION = '0.556';
 
 #our $Debug = 0;
 
@@ -1053,6 +1053,15 @@ sub locale
 
 sub prepare { }
 
+sub load_all_messages
+{
+  my($self_or_class) = shift;
+  
+  my $class = ref($self_or_class) || $self_or_class;
+  
+  $class->localizer->load_all_messages(from_class => $class);
+}
+
 if(__PACKAGE__->localizer->auto_load_messages)
 {
   __PACKAGE__->localizer->load_all_messages;
@@ -1326,6 +1335,20 @@ Going too far off into the realm of generic help text is not a good idea since t
 
 It may also be useful for debugging.
 
+=item B<description_id [ID]>
+
+Get or set an integer L<message|Rose::HTML::Object::Messages> id for the description.
+
+=item B<error_label [STRING]>
+
+Get or set the field label used when constructing error messages.  For example, an error message might say "Value for [label] is too large."  The error label will go in the place of the C<[label]> placeholder.
+
+If no error label is set, this method simply returns the L<label|/label>.
+
+=item B<error_label_id [ID]>
+
+Get or set an integer L<message|Rose::HTML::Object::Messages> id for the error label.
+
 =item B<filter [CODE]>
 
 Sets both the input filter and output filter to CODE.
@@ -1434,7 +1457,11 @@ Returns true if the internal value contains any non-whitespace characters, false
 
 =item B<label [STRING]>
 
-Get or set the field label.  This label is used by the various label printing methods as well as in some default error messages.  Even if you don't plan to use any of the former, it might be a good idea to set it to a sensible value for use in the latter.
+Get or set the field label.  This label is used by the various label printing methods as well as in some error messages (assuming there is no explicitly defined L<error_label|/error_label>.  Even if you don't plan to use any of the former, it might be a good idea to set it to a sensible value for use in the latter.
+
+=item B<label_id [ID]>
+
+Get or set an integer L<message|Rose::HTML::Object::Messages> id for the field label.
 
 =item B<label_object [ARGS]>
 
@@ -1452,7 +1479,7 @@ Return the appropriate L<message|Rose::HTML::Object::Message> object associated 
 
 =item B<msg_class CLASS>
 
-The name of the L<Rose::HTML::Object::Message>-derived class used to store each message.  If omitted, it defaylts to the L<localizer|/localizer>'s L<message_class|Rose::HTML::Object::Message::Localizer/message_class>.
+The name of the L<Rose::HTML::Object::Message>-derived class used to store each message.  If omitted, it defaults to the L<localizer|/localizer>'s L<message_class|Rose::HTML::Object::Message::Localizer/message_class>.
 
 =back
 

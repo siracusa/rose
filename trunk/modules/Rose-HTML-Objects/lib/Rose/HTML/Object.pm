@@ -10,7 +10,7 @@ use Scalar::Util();
 use Rose::HTML::Util();
 use Rose::HTML::Object::Message::Localizer;
 
-our $VERSION = '0.554';
+our $VERSION = '0.556';
 
 our $Debug = undef;
 
@@ -27,6 +27,7 @@ use Rose::Class::MakeMethods::Generic
 );
 
 __PACKAGE__->default_localizer(Rose::HTML::Object::Message::Localizer->new);
+__PACKAGE__->default_locale('en');
 
 __PACKAGE__->autoload_html_attr_methods(1);
 
@@ -1200,6 +1201,14 @@ Returns the default value for the HTML attribute NAME.
 
 If passed both an attribute NAME and a VALUE, it adds NAME to the set of required HTML attributes and sets its default value to VALUE.
 
+=item B<default_locale [LOCALE]>
+
+Get or set the default L<locale|Rose::HTML::Object::Message::Localizer/LOCALES> for this class.  The default value C<en>.
+
+=item B<default_localizer [LOCALIZER]>
+
+Get or set the default L<Rose::HTML::Object::Message::Localizer>-derived localizer object.  Defaults to a new L<Rose::HTML::Object::Message::Localizer>-derived object.
+
 =item B<delete_boolean_html_attr NAME>
 
 Removes the HTML attribute NAME from the set of boolean HTML attributes.
@@ -1223,6 +1232,14 @@ Returns a boolean value indicating whether or not the attribute NAME is a requir
 =item B<html_attr_is_valid NAME>
 
 Returns a boolean value indicating whether or not the attribute NAME is a valid HTML attribute.
+
+=item B<locale [LOCALE]>
+
+This method may be called as a class method or an object method.
+
+When called as a class method and a L<LOCALE|Rose::HTML::Object::Message::Localizer/LOCALES> is passed, then the L<default_locale|/default_locale> is set.  When called as an object method and a L<LOCALE|Rose::HTML::Object::Message::Localizer/LOCALES> is passed, then the L<locale|Rose::HTML::Object::Message::Localizer/LOCALES> of this object is set.
+
+If no locale is set for this class (when called as a class method) or object (when called as an object methid), then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
 
 =item B<required_html_attrs>
 
@@ -1343,6 +1360,10 @@ If passed a NAME, sets both L<html_element|/html_element> and L<xhtml_element|/x
 =item B<error [TEXT]>
 
 Get or set an error string.
+
+=item B<error_id [ID]>
+
+Get or set an integer  L<error|Rose::HTML::Object::Errors> id.
 
 =item B<escape_html [BOOL]>
 
@@ -1479,6 +1500,18 @@ If false, then the tags above would look like this instead:
     XHTML: <foo></foo>
 
 The default value is false.  This attribute may be read-only in subclasses.
+
+=item B<locale [LOCALE]>
+
+This method may be called as a class method or an object method.
+
+When called as an object method and a L<LOCALE|Rose::HTML::Object::Message::Localizer/LOCALES> is passed, then the L<locale|Rose::HTML::Object::Message::Localizer/LOCALES> of this object is set.  When called as a class method and a L<LOCALE|Rose::HTML::Object::Message::Localizer/LOCALES> is passed, then the L<default_locale|/default_locale> is set.
+
+If no locale is set for this object (when called as an object methid) or class (when called as a class method), then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
+
+=item B<localizer [LOCALIZER]>
+
+Get or set the L<Rose::HTML::Object::Message::Localizer>-derived object used to localize message text on behalf of this object.  If no localizer is set then the L<default_localizer|/default_localizer> is returned.
 
 =item B<parent [OBJECT]>
 
