@@ -607,7 +607,18 @@ sub load_all_messages
 {
   my($class) = shift;
 
-  my $from_class = @_ ? $_[0] : (caller)[0];
+  my %args;
+
+  if(@_ > 1)
+  {
+    %args = @_;
+  }
+  else
+  {
+    $args{'from_class'} = $_[0];
+  }
+
+  my $from_class = $args{'from_class'} || (caller)[0];
 
   no strict 'refs';
   my $fh = \*{"${from_class}::DATA"};
@@ -1087,10 +1098,13 @@ The integer error id.  This parameter is required.
 
 =item B<args HASHREF>
 
-A reference to a hash of name/value pairs to be used as the L<message arguments|Rose::HTML::Object::Message/args> ##################
+A reference to a hash of name/value pairs to be used as the L<message arguments|Rose::HTML::Object::Message/args>.
 
 =back
 
+=item B<parent [OBJECT]>
+
+Get or set a weakened reference to the localizer's parent object.
 
 =back
 

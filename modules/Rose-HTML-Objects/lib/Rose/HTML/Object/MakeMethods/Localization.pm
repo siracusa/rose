@@ -11,7 +11,7 @@ our $VERSION = '0.54';
 
 sub localized_message
 {
-  my($class, $name, $args) = @_;
+  my($class, $name, $args, $opts) = @_;
 
   my %methods;
 
@@ -101,13 +101,10 @@ sub localized_error
   my $interface   = $args->{'interface'} || 'get_set';
   my $key         = $args->{'hash_key'} || $name;
   my $id_method   = $args->{'error_id_method'} || $key . '_id';
-  my $msg_class   = $args->{'msg_class'};
-  my $error_class = $args->{'error_class'} || 'Rose::HTML::Object::Error';
 
   my $accept_error_class = $args->{'accept_error_class'} || 'Rose::HTML::Object::Error';
 
   require Rose::HTML::Object::Error;
-  eval "require $msg_class"  if($msg_class);
 
   if($interface eq 'get_set')
   {
@@ -118,6 +115,8 @@ sub localized_error
       if(@_)
       {
         return $self->{$key} = undef  unless(defined $_[0]);
+
+        my $localizer = $self->localizer;
 
         if(@_ > 1)
         {
@@ -152,17 +151,18 @@ sub localized_error
 
             unless(defined $message)
             {
-              $message = $self->localizer->message_for_error_id(@args);
+              $message = $localizer->message_for_error_id(@args);
             }
           }
           else
           {
-            $message = $self->localizer->message_for_error_id(@args);
+            $message = $localizer->message_for_error_id(@args);
           }
 
 
-          return $self->$name($error_class->new(id => $id, parent => $self,
-                              message => $message));
+          return $self->$name($localizer->error_class->new(id      => $id, 
+                                                           parent  => $self,
+                                                           message => $message));
         }
 
         my $error = shift;
@@ -175,7 +175,8 @@ sub localized_error
         elsif(defined $error)
         {
           return $self->{$key} = 
-            $error_class->new(message => $self->localizer->messsage_class->new($error), parent => $self);
+            $localizer->error_class->new(message => $localizer->messsage_class->new($error), 
+                                         parent  => $self);
         }
       }
 
@@ -185,6 +186,8 @@ sub localized_error
     $methods{$id_method} = sub
     {
       my($self) = shift;
+
+      my $localizer = $self->localizer;
 
       if(@_)
       {
@@ -203,7 +206,7 @@ sub localized_error
 
         unless($id =~ /^\d+$/)
         {
-          $id = $self->localizer->get_error_id($id) || 
+          $id = $localizer->get_error_id($id) || 
             Carp::croak "Unknown error id: '$id'";
         }
 
@@ -217,17 +220,18 @@ sub localized_error
 
           unless(defined $message)
           {
-            $message = $self->localizer->message_for_error_id(@args);
+            $message = $localizer->message_for_error_id(@args);
           }
         }
         else
         {
-          $message = $self->localizer->message_for_error_id(@args);
+          $message = $localizer->message_for_error_id(@args);
         }
 
 
-        return $self->$name($error_class->new(id => $id, parent => $self,
-                            message => $message));
+        return $self->$name($localizer->error_class->new(id      => $id, 
+                                                         parent  => $self,
+                                                         message => $message));
       }
 
       my $error = $self->$name();
@@ -249,8 +253,6 @@ sub localized_errors
 
   my $interface      = $args->{'interface'} || 'get_set';
   my $key            = $args->{'hash_key'} || $name;
-  my $msg_class      = $args->{'msg_class'};
-  my $error_class    = $args->{'error_class'} || 'Rose::HTML::Object::Error';
   my $plural_name    = $args->{'plural_name'} || $name;
   my $singular_name  = $args->{'singular_name'} || plural_to_singular($plural_name);
   my $has_method     = $args->{'has_error_method'} || 'has_' . $plural_name;
@@ -265,7 +267,6 @@ sub localized_errors
   my $accept_error_class = $args->{'accept_error_class'} || 'Rose::HTML::Object::Error';
 
   require Rose::HTML::Object::Error;
-  eval "require $msg_class"  if($msg_class);
 
   if($interface eq 'get_set')
   {
@@ -291,6 +292,8 @@ sub localized_errors
     {
       my($self) = shift;
 
+      my $localizer = $self->localizer;
+
       if(@_)
       {
         return $self->{$key} = undef  unless(defined $_[0]);
@@ -312,7 +315,7 @@ sub localized_errors
 
           unless($id =~ /^\d+$/)
           {
-            $id = $self->localizer->get_error_id($id) || 
+            $id = $localizer->get_error_id($id) || 
               Carp::croak "Attempt to call $singular_name() with more than one ",
                           "argument, and the first argument is not a numeric ",
                           "error id: '$id'";
@@ -328,16 +331,16 @@ sub localized_errors
 
             unless(defined $message)
             {
-              $message = $self->localizer->message_for_error_id(@args);
+              $message = $localizer->message_for_error_id(@args);
             }
           }
           else
           {
-            $message = $self->localizer->message_for_error_id(@args);
+            $message = $localizer->message_for_error_id(@args);
           }
 
           $self->{$key} = 
-            [ $error_class->new(id => $id, parent => $self, message => $message) ];
+            [ $localizer->error_class->new(id => $id, parent => $self, message => $message) ];
 
           return $self->{$key}[-1];
         }
@@ -352,7 +355,7 @@ sub localized_errors
         elsif(defined $error)
         {
           $self->{$key} = 
-            [ $error_class->new(message => $self->localizer->message_class->new($error), parent => $self) ];
+            [ $localizer->error_class->new(message => $localizer->message_class->new($error), parent => $self) ];
         }
       }
 
@@ -365,7 +368,8 @@ sub localized_errors
 
       return  unless(@_);
 
-      my $errors = __errors_from_args($self, \@_, $error_class, $self->localizer->message_class, $accept_error_class, 0, 0);
+      my $localizer = $self->localizer;
+      my $errors = __errors_from_args($self, \@_, $localizer->error_class, $localizer->message_class, $accept_error_class, 0, 0);
 
       push(@{$self->{$key}}, @$errors);  
 
@@ -378,7 +382,8 @@ sub localized_errors
 
       return  unless(@_);
 
-      my $errors = __errors_from_args($self, \@_, $error_class, $self->localizer->message_class, $accept_error_class, 0, 1);
+      my $localizer = $self->localizer;
+      my $errors = __errors_from_args($self, \@_, $localizer->error_class, $localizer->message_class, $accept_error_class, 0, 1);
 
       push(@{$self->{$key}}, @$errors);
 
@@ -391,7 +396,8 @@ sub localized_errors
 
       if(@_)
       {
-        my $errors = __errors_from_args($self, \@_, $error_class, $self->localizer->message_class, $accept_error_class, 1, 1);
+        my $localizer = $self->localizer;
+        my $errors = __errors_from_args($self, \@_, $localizer->error_class, $localizer->message_class, $accept_error_class, 1, 1);
         $self->{$key} = $errors;
         return $errors->[-1]->id;
       }
@@ -405,7 +411,8 @@ sub localized_errors
 
       if(@_)
       {
-        my $errors = __errors_from_args($self, \@_, $error_class, $self->localizer->message_class, $accept_error_class, 1, 0);
+        my $localizer = $self->localizer;
+        my $errors = __errors_from_args($self, \@_, $localizer->error_class, $localizer->message_class, $accept_error_class, 1, 0);
         $self->{$key} = $errors;
         return wantarray ? @$errors : $errors;
       }
@@ -425,7 +432,8 @@ sub localized_errors
 
       return  unless(@_);
 
-      my $errors = __errors_from_args($self, \@_, $error_class, $self->localizer->message_class, $accept_error_class, 1, 1);
+      my $localizer = $self->localizer;
+      my $errors = __errors_from_args($self, \@_, $localizer->error_class, $localizer->message_class, $accept_error_class, 1, 1);
 
       push(@{$self->{$key}}, @$errors);  
 
@@ -444,7 +452,8 @@ sub localized_errors
 
       return  unless(@_);
 
-      my $errors = __errors_from_args($self, \@_, $error_class, $self->localizer->message_class, $accept_error_class, 1, 0);
+      my $localizer = $self->localizer;
+      my $errors = __errors_from_args($self, \@_, $localizer->error_class, $localizer->message_class, $accept_error_class, 1, 0);
 
       push(@{$self->{$key}}, @$errors);  
 
@@ -491,6 +500,8 @@ sub __errors_from_args
 
   my @errors;
 
+  my $localizer = $self->localizer;
+
   for(my $i = 0; $i <= $#$args; $i++)
   {
     my $arg = $args->[$i];
@@ -506,7 +517,7 @@ sub __errors_from_args
 
     if($id_method && $id !~ /^\d+$/)
     {
-      $id = $self->localizer->get_error_id($id) || 
+      $id = $localizer->get_error_id($id) || 
         Carp::croak "Unknown error id: '$id'";
     }
 
@@ -534,12 +545,12 @@ sub __errors_from_args
 
         unless(defined $message)
         {
-          $message = $self->localizer->message_for_error_id(@msg_args);
+          $message = $localizer->message_for_error_id(@msg_args);
         }
       }
       else
       {
-        $message = $self->localizer->message_for_error_id(@msg_args);
+        $message = $localizer->message_for_error_id(@msg_args);
       }
 
       push(@errors, $error_class->new(id       => $id,
