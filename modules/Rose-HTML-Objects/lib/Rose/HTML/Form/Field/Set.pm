@@ -7,13 +7,13 @@ use Rose::HTML::Object::Errors qw(:set);
 use Rose::HTML::Form::Field::TextArea;
 our @ISA = qw(Rose::HTML::Form::Field::TextArea);
 
-our $VERSION = '0.549';
+our $VERSION = '0.556';
 
 sub deflate_value
 {
   my($self, $list) = @_;
 
-  my @list = @$list; # shallow copy
+  my @list = $list ? @$list : (); # shallow copy
 
   return $self->input_value_filtered  unless(ref $list eq 'ARRAY');
 

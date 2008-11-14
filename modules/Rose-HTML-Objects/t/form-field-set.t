@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 19;
+use Test::More tests => 20;
 
 BEGIN
 {
@@ -132,3 +132,15 @@ $field->input_value(qq("""));
 
 ok(!$field->validate, 'validate 1');
 is($field->error, 'Could not parse input: parse error at [..."]', 'error 1');
+
+SET_FIELD_BUG:
+{
+  package TestForm;
+  use base 'Rose::HTML::Form';
+  sub build_form { shift->add_fields(testfld => { type  => 'set' }); }
+  
+  package main;
+  my $f = TestForm->new;
+  eval { $f->field('testfld')->xhtml_hidden_field };
+  ok(!$@, 'empty set');
+}
