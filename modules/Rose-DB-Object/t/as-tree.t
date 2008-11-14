@@ -731,8 +731,8 @@ INIT_WITH_TREE_BUG:
       first_name                 => { type => 'varchar', length => 255 },
       last_name                  => { type => 'varchar', length => 255 },
       reseller_id                => { type => 'integer', default => 0, not_null => 1 },
-      created_at                 => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
-      updated_at                 => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
+      created_at                 => { type => 'datetime', not_null => 1 },
+      updated_at                 => { type => 'datetime', not_null => 1 },
       parent_user_id             => { type => 'bigint' },
       user_company_id            => { type => 'bigint' },
       company_name               => { type => 'varchar', length => 255 },
@@ -815,8 +815,8 @@ INIT_WITH_TREE_BUG:
       geo_region_id        => { type => 'integer' },
       postal_code1         => { type => 'varchar', length => 5 },
       postal_code2         => { type => 'varchar', length => 5 },
-      created_at           => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
-      updated_at           => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
+      created_at           => { type => 'datetime', not_null => 1 },
+      updated_at           => { type => 'datetime', not_null => 1 },
     ],
 
 
@@ -847,8 +847,8 @@ INIT_WITH_TREE_BUG:
       email              => { type => 'varchar', length => 255, not_null => 1 },
       user_id            => { type => 'bigint', not_null => 1 },
       user_email_type_id => { type => 'integer', not_null => 1 },
-      created_at         => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
-      updated_at         => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
+      created_at         => { type => 'datetime', not_null => 1 },
+      updated_at         => { type => 'datetime', not_null => 1 },
     ],
 
     primary_key_columns => [ 'id' ],
@@ -883,8 +883,8 @@ INIT_WITH_TREE_BUG:
       number2            => { type => 'varchar', length => 10 },
       extension          => { type => 'varchar', length => 50 },
       user_phone_type_id => { type => 'integer', not_null => 1 },
-      created_at         => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
-      updated_at         => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
+      created_at         => { type => 'datetime', not_null => 1 },
+      updated_at         => { type => 'datetime', not_null => 1 },
     ],
 
     primary_key_columns => ['id'],
@@ -947,7 +947,6 @@ INIT_WITH_TREE_BUG:
         'extension'          => '',
         'created_at'         => '2008-07-10 00:31:58',
         'number1'            => '8888',
-        'updated_at'         => '0000-00-00 00:00:00',
         'geo_country_id'     => '4',
         'user_phone_type_id' => '1',
         'number2'            => '8888',
@@ -965,10 +964,9 @@ INIT_WITH_TREE_BUG:
     'user_emails'                             => 
     [
       {
-        'email'              => 'bsego@ivenue.com',
+        'email'              => 'test@test.com',
         'created_at'         => '2008-07-10 00:31:58',
         'user_email_type_id' => '1',
-        'updated_at'         => '0000-00-00 00:00:00',
         'id'                 => '8061',
         'user_id'            => '11647'
       }
