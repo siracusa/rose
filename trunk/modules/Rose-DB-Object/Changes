@@ -1,3 +1,9 @@
+0.775_01 (11.13.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Fixed a bug that caused the init_with_tree() helper method to
+      overwrite columns involved in relationship mapping in some 
+      circumstances.  (Reported by Todd Lyons)
+
 0.775 (11.02.2008) - John Siracusa <siracusa@gmail.com>
 
     * The insert_or_update(), load_or_insert(), and load_or_save() helper

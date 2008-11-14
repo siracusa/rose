@@ -11,7 +11,7 @@ require Rose::DB::Object::Util;
 
 use Carp;
 
-our $VERSION = '0.775';
+our $VERSION = '0.776';
 
 __PACKAGE__->export_tags
 (
@@ -791,28 +791,63 @@ sub init_with_tree
 
   my $meta = $self->meta;
 
+  my %non_column;
+
+  # Process all columns first
   while(my($name, $value) = each(%{@_ == 1 ? $_[0] : {@_}}))
   {
     next  unless(length $name);
-    my $method;
 
     if(my $column = $meta->column($name))
     {
       local $self->{STATE_LOADING()} = 1  if($Deflated);
-      $method = $column->mutator_method_name;
+      my $method = $column->mutator_method_name;
       $self->$method($value);
     }
     else
     {
-      if(my $rel = $meta->relationship($name))
+      $non_column{$name} = $value;
+    }
+  }
+
+  # Process relationships and non-column attributes next
+  while(my($name, $value) = each(%non_column))
+  {
+    if(my $rel = $meta->relationship($name))
+    {
+      my $method = $rel->method_name('get_set_on_save') || 
+                $rel->method_name('get_set') ||
+                next;
+
+      my $ref = ref $value;
+
+      if($ref eq 'HASH')
       {
-        $method = $rel->method_name('get_set_on_save') || 
-                  $rel->method_name('get_set') ||
-                  next;
+        # Split hash into relationship values and everything else
+        my %rel_vals;
 
-        my $ref = ref $value;
+        my %is_rel = map { $_->name => 1 } $rel->can('foreign_class') ? 
+          $rel->foreign_class->meta->relationships : $rel->class->meta->relationships;
 
-        if($ref eq 'HASH')
+        foreach my $k (keys %$value)  
+        {
+          $rel_vals{$k} = delete $value->{$k}  if($is_rel{$k});
+        }
+
+        # %$value now has non-relationship keys only
+        my $object = $self->$method(%$value);
+
+        # Recurse on relationship key
+        Rose::DB::Object::Helpers::init_with_tree($object, \%rel_vals)  if(%rel_vals);
+
+        # Repair original hash
+        @$value{keys %rel_vals} = values %rel_vals;
+      }
+      elsif($ref eq 'ARRAY')
+      {
+        my(@objects, @sub_objects);
+
+        foreach my $item (@$value)
         {
           # Split hash into relationship values and everything else
           my %rel_vals;
@@ -820,68 +855,41 @@ sub init_with_tree
           my %is_rel = map { $_->name => 1 } $rel->can('foreign_class') ? 
             $rel->foreign_class->meta->relationships : $rel->class->meta->relationships;
 
-          foreach my $k (keys %$value)  
+          foreach my $k (keys %$item)
           {
-            $rel_vals{$k} = delete $value->{$k}  if($is_rel{$k});
+            $rel_vals{$k} = delete $item->{$k}  if($is_rel{$k});
           }
 
-          # %$value now has non-relationship keys only
-          my $object = $self->$method(%$value);
+          # %$item now has non-relationship keys only
+          push(@objects, { %$item }); # shallow copy is sufficient
 
-          # Recurse on relationship key
-          Rose::DB::Object::Helpers::init_with_tree($object, \%rel_vals)  if(%rel_vals);
+          push(@sub_objects, \%rel_vals);
 
           # Repair original hash
-          @$value{keys %rel_vals} = values %rel_vals;
+          @$item{keys %rel_vals} = values %rel_vals;
         }
-        elsif($ref eq 'ARRAY')
+
+        # Add the related objects
+        $self->$method(\@objects);
+
+        # Recurse on the sub-objects
+        foreach my $object (@{ $self->$method() })
         {
-          my(@objects, @sub_objects);
-
-          foreach my $item (@$value)
-          {
-            # Split hash into relationship values and everything else
-            my %rel_vals;
-
-            my %is_rel = map { $_->name => 1 } $rel->can('foreign_class') ? 
-              $rel->foreign_class->meta->relationships : $rel->class->meta->relationships;
-
-            foreach my $k (keys %$item)
-            {
-              $rel_vals{$k} = delete $item->{$k}  if($is_rel{$k});
-            }
-
-            # %$item now has non-relationship keys only
-            push(@objects, { %$item }); # shallow copy is sufficient
-
-            push(@sub_objects, \%rel_vals);
-
-            # Repair original hash
-            @$item{keys %rel_vals} = values %rel_vals;
-          }
-
-          # Add the related objects
-          $self->$method(\@objects);
-
-          # Recurse on the sub-objects
-          foreach my $object (@{ $self->$method() })
-          {
-            my $sub_objects = shift(@sub_objects);
-            Rose::DB::Object::Helpers::init_with_tree($object, $sub_objects)  if(%$sub_objects);
-          }
-        }
-        else
-        {
-          Carp::cluck "Unknown reference encountered in $self tree: $name => $value";
+          my $sub_objects = shift(@sub_objects);
+          Rose::DB::Object::Helpers::init_with_tree($object, $sub_objects)  if(%$sub_objects);
         }
       }
-      elsif($self->can($name))
+      else
       {
-        $self->$name($value);
+        Carp::cluck "Unknown reference encountered in $self tree: $name => $value";
       }
-
-      # XXX: Silently ignore all other values
     }
+    elsif($self->can($name))
+    {
+      $self->$name($value);
+    }
+
+    # XXX: Silently ignore all other name/value pairs
   }
 
   return $self;
