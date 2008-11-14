@@ -3563,7 +3563,6 @@ sub objects_by_key
 
       if(@_)
       {
-$DB::single = 1;
         # If loading, just assign
         if($self->{STATE_LOADING()})
         {
