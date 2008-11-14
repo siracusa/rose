@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 2 + (5 * 28);
+use Test::More tests => 2 + (5 * 28) + 3;
 
 eval { require Test::Differences };
 
@@ -650,7 +650,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   else { SKIP: { skip('YAML tests', 1) } }
 
   # Test round-trip of non-column attributes
-  
+
   $product_class->meta->add_nonpersistent_column(
     other_date => { type => 'datetime', default => DateTime->new(year => 2008, month => 12, day => 31) });
 
@@ -706,6 +706,304 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   # $p3->save;
 
   #local $Rose::DB::Object::Manager::Debug = 1;
+}
+
+#
+# init_with_tree() bug
+#
+
+INIT_WITH_TREE_BUG:
+{
+  package Project::Model::User;
+
+  use base qw(Rose::DB::Object);
+
+  __PACKAGE__->meta->setup
+  (
+    table => 'user',
+
+    columns => 
+    [
+      id                         => { type => 'bigserial', not_null => 1 },
+      name                       => { type => 'varchar', length => 100, not_null => 1 },
+      password                   => { type => 'varchar', length => 100, not_null => 1 },
+      name_prefix                => { type => 'varchar', length => 20 },
+      first_name                 => { type => 'varchar', length => 255 },
+      last_name                  => { type => 'varchar', length => 255 },
+      reseller_id                => { type => 'integer', default => 0, not_null => 1 },
+      created_at                 => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
+      updated_at                 => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
+      parent_user_id             => { type => 'bigint' },
+      user_company_id            => { type => 'bigint' },
+      company_name               => { type => 'varchar', length => 255 },
+      owner_user_id              => { type => 'bigint' },
+      user_title_id              => { type => 'bigint' },
+      job_title                  => { type => 'varchar', length => 255 },
+      primary_user_company_id    => { type => 'bigint' },
+      primary_user_title_id      => { type => 'bigint' },
+      primary_user_phone_id      => { type => 'bigint' },
+      primary_user_email_id      => { type => 'bigint' },
+      primary_user_address_id    => { type => 'bigint' },
+      commission_user_address_id => { type => 'bigint' },
+      user_source_id             => { type => 'integer' },
+      updated_by_user_id         => { type => 'bigint' },
+      locale_id                  => { type => 'integer', not_null => 1 },
+      spoken_lang                => { type => 'enum', check_in => [ 'English', 'Mandarin', 'Cantonese' ], default => 'English', not_null => 1 },
+      encryption_key             => { type => 'character', length => 32 },
+      timezone_id                => { type => 'integer', default => 513, not_null => 1 },
+      user_type_id               => { type => 'integer', default => 0, not_null => 1 },
+      primary_billing_method_id  => { type => 'bigint' },
+      autodetect_timezone        => { type => 'integer', default => 0, not_null => 1 },
+      is_login_disabled          => { type => 'integer', default => 0 },
+      security_question_id       => { type => 'integer', default => 1, not_null => 1 },
+      security_question_custom   => { type => 'varchar', length => 255 },
+      security_answer            => { type => 'varchar', length => 255 },
+      has_temporary_password     => { type => 'integer', default => 0 },
+      email_id                   => { type => 'bigint' },
+      payment_failure_status     => { type => 'integer', default => 0, not_null => 1 },
+      notes                      => { type => 'text', length => 65535 },
+    ],
+
+    primary_key_columns => ['id'],
+
+    unique_keys => [['email_id'], ['name'],],
+
+    relationships => 
+    [
+      user_addresses => 
+      {
+        class      => 'Project::Model::UserAddress',
+        column_map => { id => 'user_id' },
+        type       => 'one to many',
+      },
+
+      user_emails => 
+      {
+        class      => 'Project::Model::UserEmail',
+        column_map => { id => 'user_id' },
+        type       => 'one to many',
+      },
+
+      user_phones => 
+      {
+        class      => 'Project::Model::UserPhone',
+        column_map => { id => 'user_id' },
+        type       => 'one to many',
+      },
+    ],
+  );
+
+
+  package Project::Model::UserAddress;
+
+  use base qw(Rose::DB::Object);
+
+  __PACKAGE__->meta->setup
+  (
+    table   => 'user_address',
+
+    columns => 
+    [
+      id                   => { type => 'bigserial', not_null => 1 },
+      user_id              => { type => 'bigint', not_null => 1 },
+      user_address_type_id => { type => 'integer', not_null => 1 },
+      geo_country_id       => { type => 'integer', not_null => 1 },
+      address1             => { type => 'varchar', length => 255 },
+      address2             => { type => 'varchar', length => 255 },
+      address3             => { type => 'varchar', length => 255 },
+      geo_subregion        => { type => 'varchar', length => 255 },
+      geo_region_id        => { type => 'integer' },
+      postal_code1         => { type => 'varchar', length => 5 },
+      postal_code2         => { type => 'varchar', length => 5 },
+      created_at           => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
+      updated_at           => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
+    ],
+
+
+    primary_key_columns => [ 'id' ],
+
+    relationships => 
+    [
+      users => 
+      {
+        class      => 'IV::Model::User',
+        column_map => { id => 'commission_user_address_id' },
+        type       => 'one to many',
+      },
+    ],
+  );
+
+  package Project::Model::UserEmail;
+
+  use base qw(Rose::DB::Object);
+
+  __PACKAGE__->meta->setup
+  (
+    table   => 'user_email',
+
+    columns => 
+    [
+      id                 => { type => 'bigserial', not_null => 1 },
+      email              => { type => 'varchar', length => 255, not_null => 1 },
+      user_id            => { type => 'bigint', not_null => 1 },
+      user_email_type_id => { type => 'integer', not_null => 1 },
+      created_at         => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
+      updated_at         => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
+    ],
+
+    primary_key_columns => [ 'id' ],
+
+    unique_key => [ 'user_id', 'email' ],
+
+    foreign_keys => 
+    [
+      user => 
+      {
+        class       => 'Project::Model::User',
+        key_columns => { user_id => 'id' },
+      },
+    ],
+  );
+
+  package Project::Model::UserPhone;
+
+  use base qw(Rose::DB::Object);
+
+  __PACKAGE__->meta->setup
+  (
+    table => 'user_phone',
+
+    columns => 
+    [
+      id                 => { type => 'bigserial', not_null => 1 },
+      user_id            => { type => 'bigint', not_null => 1 },
+      geo_country_id     => { type => 'integer', not_null => 1 },
+      area_code          => { type => 'varchar', length => 4 },
+      number1            => { type => 'varchar', length => 10 },
+      number2            => { type => 'varchar', length => 10 },
+      extension          => { type => 'varchar', length => 50 },
+      user_phone_type_id => { type => 'integer', not_null => 1 },
+      created_at         => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
+      updated_at         => { type => 'datetime', default => '0000-00-00 00:00:00', not_null => 1 },
+    ],
+
+    primary_key_columns => ['id'],
+
+    foreign_keys => 
+    [
+      user => 
+      {
+        class       => 'Project::Model::User',
+        key_columns => { user_id => 'id' },
+      },
+    ],
+  );
+
+
+  package main;
+
+  use Rose::DB::Object::Helpers qw/as_tree init_with_tree/;
+
+  my $tree = 
+  {
+    'user_titles'                     => [],
+    'billing_invoices'                => [],
+    'incident_external_departments'   => [],
+    'salescalendar_user_calendars'    => [],
+    'salescalendar_appointment_notes' => [],
+    'password'                        => '$1$068F9leP$8jfRI43HMUS2/jxUsQTme.',
+    'incident_internal_departments'   => [],
+    'user_title_id'                   => undef,
+    'reseller_id'                     => '4',
+    'incidents_external_owned_by'     => [],
+    'primary_billing_method_id'       => undef,
+    'name'                            => 'sego03',
+    'timezone_id'                     => '513',
+    'user_login_logs'                 => [],
+    'primary_user_email_id'           => '8061',
+    'updated_at'                      => '2008-08-27 22:39:40',
+    'encryption_key'                  => '37dcd1d8fc4555fd46f063fbb8e4f55b',
+    'security_answer'                 => undef,
+    'commission_user_address_id'      => undef,
+    'job_title'                       => '',
+    'updated_by_user_id'              => undef,
+    'salescalendar_appointments'      => [],
+    'notes_entered_by'                => [],
+    'created_at'                      => '2008-07-10 00:31:58',
+    'owner_user_id'                   => '5343',
+    'billing_methods'                 => [],
+    'autodetect_timezone'             => 0,
+    'domains'                         => [],
+    'notes'                           => undef,
+    'user_company_id'                 => undef,
+    'user_source_id'                  => '1',
+    'website'                         => {},
+    'primary_user_company_id'         => undef,
+    'company_name'                    => 'myCompany',
+    'user_phones'                     => 
+    [
+      {
+        'area_code'          => '888',
+        'extension'          => '',
+        'created_at'         => '2008-07-10 00:31:58',
+        'number1'            => '8888',
+        'updated_at'         => '0000-00-00 00:00:00',
+        'geo_country_id'     => '4',
+        'user_phone_type_id' => '1',
+        'number2'            => '8888',
+        'id'                 => '8399',
+        'user_id'            => '11647'
+      }
+    ],
+    'primary_user_address_id'                 => undef,
+    'salescalendar_appointments_cancelled_by' => [],
+    'user_type_id'                            => '6',
+    'id'                                      => '11647',
+    'password_confirm'                        => '$1$068F9leP$8jfRI43HMUS2/jxUsQTme.',
+    'salescalendar_appointments_salesrep'     => [],
+    'roles'                                   => [],
+    'user_emails'                             => 
+    [
+      {
+        'email'              => 'bsego@ivenue.com',
+        'created_at'         => '2008-07-10 00:31:58',
+        'user_email_type_id' => '1',
+        'updated_at'         => '0000-00-00 00:00:00',
+        'id'                 => '8061',
+        'user_id'            => '11647'
+      }
+    ],
+    'salescalendar_lockouts'      => [],
+    'name_prefix'                 => '',
+    'user_companies'              => [],
+    'payment_failure_status'      => 0,
+    'locale_id'                   => '8',
+    'parent_user_id'              => 1,
+    'has_temporary_password'      => 0,
+    'email_id'                    => undef,
+    'incidents_entered_by'        => [],
+    'contact_website'             => {},
+    'last_name'                   => 'sego03',
+    'is_login_disabled'           => 0,
+    'security_question_id'        => '1',
+    'billing_schedules'           => [],
+    'primary_user_title_id'       => undef,
+    'updated_users'               => [],
+    'primary_user_phone_id'       => '8399',
+    'spoken_lang'                 => 'English',
+    'incidents'                   => [],
+    'security_question_custom'    => undef,
+    'incidents_internal_owned_by' => [],
+    'user_addresses'              => [],
+    'child_users'                 => [],
+    'first_name'                  => ''
+  };
+
+  my $user_archive = init_with_tree(Project::Model::User->new, $tree);
+
+  is($user_archive->id, 11647, 'init_with_tree() columns first bug 1');
+  is($user_archive->user_emails->[0]->user_id, 11647, 'init_with_tree() columns first bug 2');
+  is($user_archive->user_phones->[0]->user_id, 11647, 'init_with_tree() columns first bug 3');
 }
 
 BEGIN
