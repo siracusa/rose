@@ -545,7 +545,39 @@ Users are encouraged to L<create their own library|/"PRIVATE LIBRARIES"> of reus
 
 =head1 PRIVATE LIBRARIES
 
+The classes that make up the L<Rose::HTML::Objects> distribution can be used as-is to build forms, fields, and other HTML objects.  The provided classes may also be subclassed to change their behavior.  The interconnected nature of these classes may present some surprises, however.  For example, consider the case of subclassing the L<Rose::HTML::Form::Field::Option> class that represents a single option in a L<select box|Rose::HTML::Form::Field::SelectBox> or L<pop-up menu|Rose::HTML::Form::Field::PopUpMenu>.
 
+    package My::HTML::Form::Field::Option;
+    
+    use base 'Rose::HTML::Form::Field::Option';
+
+    sub bark
+    {
+      print "woof!\n";
+    }
+
+Now all your options can bark like a dog.
+
+    $option = My::HTML::Form::Field::Option->new;
+    $option->bark; # woof!
+
+This seems great until you make your first select box or pop-up menu, pull ut an option object, and ask it to bark.
+
+    $color = 
+      Rose::HTML::Form::Field::PopUpMenu->new(
+        name    => 'color',
+        options => [ 'red', 'green', 'blue' ]);
+
+    $option = $color->option('ref');
+
+    $option->bark; # BOOM: fatal error, no such method!
+
+What you'll get is an error message like this: "Can't locate object method 'bark' via package 'Rose::HTML::Form::Field::Option' - ..."  That's because C<$option> is a plain old L<Rose::HTML::Form::Field::Option> object and not one of your new C<My::HTML::Form::Field::Option> objects that can C<bark()>.
+
+This is an example of the aforementioned interconnected nature of HTML objects: L<pop-up menus|Rose::HTML::Form::Field::PopUpMenu> and L<select boxes|Rose::HTML::Form::Field::SelectBox> contain L<options|Rose::HTML::Form::Field::Option>; L<radio button groups|Rose::HTML::Form::Field::RadioButtonGroup> contain L<radio buttons|Rose::HTML::Form::Field::RadioButton>; L<checkbox groups|Rose::HTML::Form::Field::CheckboxGroup> contain L<checkboxes|Rose::HTML::Form::Field::CheckBox>; L<forms|Rose::HTML::Form> contain all of the above; and so on.
+
+
+####################
 
 =head1 LOCALIZATION
 
