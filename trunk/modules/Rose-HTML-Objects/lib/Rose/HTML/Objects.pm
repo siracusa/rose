@@ -7,7 +7,7 @@ use File::Spec();
 use File::Path();
 use File::Basename();
 
-our $VERSION = '0.555_02';
+our $VERSION = '0.555_05';
 
 our $Debug = 0;
 
@@ -527,13 +527,29 @@ Rose::HTML::Objects - Object-oriented interfaces for HTML.
 
 =head1 DESCRIPTION
 
-The C<Rose::HTML::Object::*> family of classes represent HTML tags, or groups of tags.  These objects  allow HTML to be arbitrarily manipulated, then serialized to actual HTML (or XHTML). Currently, the process only works in one direction.  Objects cannot be constructed from their serialized representations.  In practice, given the purpose of these modules, this is not an important limitation.
+L<Rose::HTML::Objects> is a framework for creating a resuable set of HTML widgets as mutable Perl objects that can be serialized to HTML or XHTML for display purposes.  
 
-Any HTML tag can theoretically be represented by a L<Rose::HTML::Object>-derived class, but this family of modules was originally motivated by a desire to simplify the use of HTML forms.
+The L<Rose::HTML::Object> class may be used directly to represent a generic tag with an explicitly set L<element|Rose::HTML::Object/element> name and arbitrary L<attributes|<Rose::HTML::Object/html_attr>.  There are also methods for L<parent/child manipulations|Rose::HTML::Object/HIERARCHY>.
 
-The form/field object interfaces have been heavily abstracted to allow for input and output filtering, inflation/deflation of values, and compound fields (fields that contain other fields).  The classes are also designed to be subclassed. The creation of custom form and field subclasses is really the "big win" for these modules.
+Though such generic usage is possible, this family of modules is primarily intended as a framework for creating a resuable set of L<form|Rose::HTML::Form> and L<field|Rose::HTML::Form::Field> widgets as mutable Perl objects that can be serialized to HTML or XHTML for display purposes.  On the Perl side, these objects are treated as abstract entities that can be fed input and will produce output in the form that is most convenient for the programmer (e.g., pass a L<DateTime> object to a date picker field to initialize it, and get a L<DateTime> object back from the field when asking for its value).
 
-There is also a simple image tag class which is useful for auto-populating the C<width> and C<height> attributes of C<img> tags. Future releases may include object representations of other HTML tags. Contributions are welcome.
+Fields may be simple (one standard HTML form field to one Perl field object) or L<compound|Rose::HTML::Form::Field::Compound> (a field object that serializes to an arbitrary number of HTML tags, but can be addressed as a single logical field internally).  Likewise, forms themselves can be L<nested|Rose::HTML::Form/"NESTED FORMS">.
+
+Each L<field|Rose::HTML::Form::Field> has its own customizable validation, input filter, output filter, internal value (a plain value or a Perl object, whatever is most convenient), output value (the value shown when the field is redisplayed), label, associated error, and any other metadata deemed necessary.  Each field can also be serialized to the L<equivalent|Rose::HTML::Form::Field/html_hidden_fields> set of (X)HTML "hidden" fields.
+
+L<Forms|Rose::HTML::Form> are expected to be initialized with, and return an object or list of objects that the form represents.  For example, a registration form could be initialized with and return a C<UserAccount> object.
+
+All labels, errors, and messages used in the bundled form and field widgets are localized in several languages, and you may add your own localized messages and errors using the provided L<localization framework|/LOCALIZATION>.
+
+Users are encouraged to L<create their own library|/"PRIVATE LIBRARIES"> of reusable form and field widgets for use on their site.  The expectation is that the same kind of field appears in multiple places in any large web application (e.g., username fields, password fields, address forms, etc.)  Each field encapsulates a set of values (e.g., options in a pop-up menu), labels, validation constraints, filters, and error messages.  Similarly, each form encapsulates a set of fields along with any inter-field validation, error messages, and init-with/object-from methods.  Nesting forms and fields preserves this delegation of responsibility, with each higher level having access to its children to perform inter-form/field tasks.
+
+=head1 PRIVATE LIBRARIES
+
+
+
+=head1 LOCALIZATION
+
+
 
 =head1 DEVELOPMENT POLICY
 

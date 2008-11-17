@@ -793,7 +793,42 @@ Rose::HTML::Object::Message::Localizer - Message localizer class.
 
 =head1 SYNOPSIS
 
+    # The localizer for a given class or object is usually accessibly
+    # via the "localizer" class or object method.
 
+    $localizer = Rose::HTML::Object->localizer;    
+    $localizer = $object->localizer;
+
+    ...
+
+    # The localizer is rarely used directly.  More often, it is subclassed
+    # so you can provide your own alternate source for localized messages.
+    # See the LOCALIZATION section of the Rose::HTML::Objects documentation
+    # for more information.
+
+    package My::HTML::Object::Message::Localizer;
+    
+    use strict;
+    
+    use base qw(Rose::HTML::Object::Message::Localizer);
+    ...
+    sub get_localized_message_text
+    {
+      my($self) = shift;
+      
+      # Get localized message text from the built-in sources
+      my $text = $self->SUPER::get_localized_message_text(@_);
+
+      unless(defined $text)
+      {
+        my %args = @_;
+        
+        # Get message text from some other source
+        ...
+      }
+      
+      return $text;
+    }
 
 =head1 DESCRIPTION
 
@@ -936,6 +971,18 @@ Get or set the default locale cascade.  PARAMS are L<locale|/"LOCALES">/arrayref
 That is, if message text is not available in the desired locale, C<en> text will be returned instead (assuming it exists).
 
 This method returns the default locale cascade as a reference to a hash of locale/arrayref pairs (in scalar context) or a list of locale/arrayref pairs (in list context).
+
+=item B<load_all_messages [PARAMS]>
+
+Load all localized message text from the C<__DATA__> section of the class specified by PARAMS name/value pairs.  Valid PARAMS are:
+
+=over 4
+
+=item B<from_class CLASS>
+
+The name of the class from which to load localized message text.  Defaults to the name of the class from which this method was called.
+
+=back
 
 =back
 
