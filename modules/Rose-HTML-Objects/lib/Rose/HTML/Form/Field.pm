@@ -1053,15 +1053,6 @@ sub locale
 
 sub prepare { }
 
-sub load_all_messages
-{
-  my($self_or_class) = shift;
-  
-  my $class = ref($self_or_class) || $self_or_class;
-  
-  $class->localizer->load_all_messages(from_class => $class);
-}
-
 if(__PACKAGE__->localizer->auto_load_messages)
 {
   __PACKAGE__->localizer->load_all_messages;
@@ -1335,20 +1326,22 @@ Going too far off into the realm of generic help text is not a good idea since t
 
 It may also be useful for debugging.
 
-=item B<description_id [ID]>
+=item B<description_id [ID [, ARGS]]>
 
 Get or set an integer L<message|Rose::HTML::Object::Messages> id for the description.
 
+Get or set an integer L<message|Rose::HTML::Object::Messages> id for the description.  When setting the message id, an optional ARGS hash reference should be passed if the L<localized text|Rose::HTML::Object::Message::Localizer/"LOCALIZED TEXT"> for the L<corresponding|/message_for_error_id> message contains any L<placeholders|Rose::HTML::Object::Message::Localizer/"LOCALIZED TEXT">.
+    
 =item B<error_label [STRING]>
 
 Get or set the field label used when constructing error messages.  For example, an error message might say "Value for [label] is too large."  The error label will go in the place of the C<[label]> placeholder.
 
 If no error label is set, this method simply returns the L<label|/label>.
 
-=item B<error_label_id [ID]>
+=item B<error_label_id [ID [, ARGS]]>
 
-Get or set an integer L<message|Rose::HTML::Object::Messages> id for the error label.
-
+Get or set an integer L<message|Rose::HTML::Object::Messages> id for the error label.  When setting the message id, an optional ARGS hash reference should be passed if the L<localized text|Rose::HTML::Object::Message::Localizer/"LOCALIZED TEXT"> for the L<corresponding|/message_for_error_id> message contains any L<placeholders|Rose::HTML::Object::Message::Localizer/"LOCALIZED TEXT">.
+    
 =item B<filter [CODE]>
 
 Sets both the input filter and output filter to CODE.

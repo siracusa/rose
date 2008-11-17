@@ -385,6 +385,18 @@ sub object_type_class_loaded
   return $type_class;
 }
 
+sub message_for_error_id
+{
+  my($self, %args) = @_;
+
+  my $error_id  = $args{'error_id'};
+  my $msg_class = $args{'msg_class'} || $self->localizer->message_class;
+  my $args      = $args{'args'} || [];
+
+  return $msg_class->new(id => $error_id, args => $args);
+}
+
+
 sub init_html_error_formatter  { }
 sub init_xhtml_error_formatter { }
 
@@ -797,6 +809,15 @@ sub default_html_attr_value
   }
 
   return $class->required_html_attr_value($attr);
+}
+
+sub load_all_messages
+{
+  my($self_or_class) = shift;
+  
+  my $class = ref($self_or_class) || $self_or_class;
+  
+  $class->localizer->load_all_messages(from_class => $class);
 }
 
 our $AUTOLOAD;
@@ -1233,6 +1254,10 @@ Returns a boolean value indicating whether or not the attribute NAME is a requir
 
 Returns a boolean value indicating whether or not the attribute NAME is a valid HTML attribute.
 
+=item B<load_all_messages>
+
+Ask the L<localizer|/localizer> to L<load_all_messages|Rose::HTML::Object::Message::Localizer/load_all_messages> from this class.
+
 =item B<locale [LOCALE]>
 
 This method may be called as a class method or an object method.
@@ -1361,9 +1386,12 @@ If passed a NAME, sets both L<html_element|/html_element> and L<xhtml_element|/x
 
 Get or set an error string.
 
-=item B<error_id [ID]>
+=item B<error_id [ID [, ARGS]]>
 
-Get or set an integer  L<error|Rose::HTML::Object::Errors> id.
+Get or set an integer L<error|Rose::HTML::Object::Errors> id.  When setting the error id, an optional ARGS hash reference should be passed if the L<localized text|Rose::HTML::Object::Message::Localizer/"LOCALIZED TEXT"> for the L<corresponding|/message_for_error_id> message contains any L<placeholders|Rose::HTML::Object::Message::Localizer/"LOCALIZED TEXT">.  Example:
+
+    # Set error id, passing args for the "label" and "value" placeholders
+    $obj->error_id(NUM_ABOVE_MAX, { label => $l, => value => $v });
 
 =item B<escape_html [BOOL]>
 
@@ -1512,6 +1540,22 @@ If no locale is set for this object (when called as an object methid) or class (
 =item B<localizer [LOCALIZER]>
 
 Get or set the L<Rose::HTML::Object::Message::Localizer>-derived object used to localize message text on behalf of this object.  If no localizer is set then the L<default_localizer|/default_localizer> is returned.
+
+=item B<message_for_error_id [PARAMS]>
+
+Given an L<error|Rose::HTML::Object::Errors> id, return the corresponding L<message|Rose::HTML::Object::Message::Localizer/message_class> object.  The default implementation simply looks for a message with the same integer id as the error.  Valid PARAMS name/value pairs are:
+
+=over 4
+
+=item B<error_id ID>
+
+The integer error id.  This parameter is required.
+
+=item B<args HASHREF>
+
+A reference to a hash of name/value pairs to be used as the L<message arguments|Rose::HTML::Object::Message/args>.
+
+=back
 
 =item B<parent [OBJECT]>
 
