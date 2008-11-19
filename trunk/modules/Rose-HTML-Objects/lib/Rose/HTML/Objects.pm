@@ -568,16 +568,81 @@ This seems great until you make your first select box or pop-up menu, pull ut an
         name    => 'color',
         options => [ 'red', 'green', 'blue' ]);
 
-    $option = $color->option('ref');
+    $option = $color->option('red');
 
     $option->bark; # BOOM: fatal error, no such method!
 
 What you'll get is an error message like this: "Can't locate object method 'bark' via package 'Rose::HTML::Form::Field::Option' - ..."  That's because C<$option> is a plain old L<Rose::HTML::Form::Field::Option> object and not one of your new C<My::HTML::Form::Field::Option> objects that can C<bark()>.
 
-This is an example of the aforementioned interconnected nature of HTML objects: L<pop-up menus|Rose::HTML::Form::Field::PopUpMenu> and L<select boxes|Rose::HTML::Form::Field::SelectBox> contain L<options|Rose::HTML::Form::Field::Option>; L<radio button groups|Rose::HTML::Form::Field::RadioButtonGroup> contain L<radio buttons|Rose::HTML::Form::Field::RadioButton>; L<checkbox groups|Rose::HTML::Form::Field::CheckboxGroup> contain L<checkboxes|Rose::HTML::Form::Field::CheckBox>; L<forms|Rose::HTML::Form> contain all of the above; and so on.
+This is an example of the aforementioned interconnected nature of HTML objects: L<pop-up menus|Rose::HTML::Form::Field::PopUpMenu> and L<select boxes|Rose::HTML::Form::Field::SelectBox> contain L<options|Rose::HTML::Form::Field::Option>; L<radio button groups|Rose::HTML::Form::Field::RadioButtonGroup> contain L<radio buttons|Rose::HTML::Form::Field::RadioButton>; L<checkbox groups|Rose::HTML::Form::Field::CheckboxGroup> contain L<checkboxes|Rose::HTML::Form::Field::CheckBox>; L<forms|Rose::HTML::Form> contain all of the above; and so on.  What to do?
 
+Well, one solution is to convince all the C<Rose::HTML::*> classes that might contain option objects to use your new C<My::HTML::Form::Field::Option> subclass instead of the standard L<Rose::HTML::Form::Field::Option> class.  But globally altering the behavior of the standard C<Rose::HTML::*> classes is an extremely bad idea.  To understand why, imagine that you did so and then tried to incorporate some other code that also uses C<Rose::HTML::*> classes.  That other code certainly doesn't expect the changes you've made.  It expects (and rightfully so) the documented behavior for all the classes it's using.
 
-####################
+That's the problem with making class-wide alterations: every piece of code using those classes will see your changes.  It's "anti-social behavior" in the context of code sharing and reuse.
+
+The solution is to subclass not just the single class whose behavior is to be altered, but rather to create an entirely separate namespace for a full hierarchy of classes within which you can make your changes in isolation.  This is called a "private library," and the L<Rose::HTML::Objects> class contains methods for creating one, either dynamically in memory on on disk in the form of actial C<*.pm> Perl module files.
+
+Let's try the example above again, but this time using a private library.  We will use the the L<make_private_library|/make_private_library> class method to do this.  The reference documentation for this method appears below, but you should get a good idea of its functionality by reading the usage examples here.
+
+First, let's create an in-memory private library to contain our changes.  The L<make_private_library|/make_private_library> method accepts a hash of class name/code pairs containing customizations to be incorporated into one or more of the classes in the newly created private library.  Let's use the C<My::> prefix for our private library.  Here's a hash containing just our custom code:
+
+  %code = 
+  (
+    'My::HTML::Form::Field::Option' => <<'EOF',
+  sub bark
+  {
+    print "woof!\n";
+  }
+  EOF
+  );
+
+Note that the code is provided as a string, not a code reference.  Be sure to use the appropriate quoting mechanism (a single-quoted "here document" in this case) to protect your code from unintended variable interpolation.
+
+Next, we'll create the private library in memory:
+
+  Rose::HTML::Objects->make_private_library(in_memory => 1, 
+                                            prefix    => 'My::',
+                                            code      => \%code);
+
+Now we have a full hierarchy of C<My::>-prefixed classes, one for each public C<Rose::> class in the L<Rose::HTML::Objects> distribution.  Let's try the problematic code from earlier, this time using one of our new classes.
+
+    $color = 
+      My::HTML::Form::Field::PopUpMenu->new(
+        name    => 'color',
+        options => [ 'red', 'green', 'blue' ]);
+
+    $option = $color->option('red');
+
+    $option->bark; # woof!
+
+Success!  Of course, this dynamic in-memory class creation is relatively heavyweight.  It necessarily has to have all the classes in memory.  Creating a private library on disk allows you to load only the classes you need.  It also provides an easier means of making your customizations persistent.  Editing the actual C<*.pm> files on disk means that your changes can be tracked on a per-file basis by your version control system, and so on.  We can still use the C<%code> hash from the in-memory example; the L<make_private_library|/make_private_library> method will insert our custom code into the C<*.pm> files it generates.
+
+To create a private library on disk, we need to provide a path to the directory where the generated files will be placed.  The appropriate directory hierarchy will be created below it (e.g., the path to the C<My::HTML::Form> Perl module file will be C<My/HTML/Form.pm>, starting beneath the specified C<modules_dir>).  Let's do it:
+
+  Rose::HTML::Objects->make_private_library(modules_dir => '/home/john/lib',
+                                            prefix      => 'My::',
+                                            code        => \%code);
+
+To actually use the generated modules, we must, well, C<use> (or C<require>) them.  We must also make sure the specified C<modules_dir> is in our L<@INC|perlvar/@INC> path.  Example:
+
+    use lib '/home/john/lib';
+    
+    use My::HTML::Form::Field::PopUpMenu;
+
+    $color = 
+      My::HTML::Form::Field::PopUpMenu->new(
+        name    => 'color',
+        options => [ 'red', 'green', 'blue' ]);
+
+    $option = $color->option('red');
+
+    $option->bark; # woof!
+
+And it works.  Note that if the call to L<make_private_library|/make_private_library> that creates the Perl module files on disk was in the same file as the code above, the C<My::HTML::Form::Field::PopUpMenu> class would have to be C<require>d rather than C<use>d.  (All C<use> statements are evaluated at compile time, but the C<My::HTML::Form::Field::PopUpMenu> is not created until the L<make_private_library|/make_private_library> call is executed, which runtime in this example.)
+
+I hope this demonstrates the motivation for and utility of private libraries.  Please see the L<make_private_library|/make_private_library> documentation for a more information on this method.
+
+Private libraries have another important function which is described in the next section.
 
 =head1 LOCALIZATION
 
