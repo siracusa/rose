@@ -646,7 +646,17 @@ Private libraries have another important function which is described in the next
 
 =head1 LOCALIZATION
 
+There are several components to L<Rose::HTML::Object>'s localization system: the L<message|Rose::HTML::Object::Message::Localized> and L<error|Rose::HTML::Object::Error> objects, the classes that L<manage|Rose::HTML::Object::Messages> L<them|Rose::HTML::Object::Errors>, and of course the L<localizer|Rose::HTML::Object::Message::Localizer> itself.  Using a L<private library|/"PRIVATE LIBRARY">, you get your own private subclasses of all of these.  This is extremely important for several reasons, and you should definitely read the L<PRIVATE LIBRARY|/"PRIVATE LIBRARY"> section above before continuing.
 
+The most important actor in the localization process is, predictably, the L<localizer|Rose::HTML::Object::Message::Localizer>, and the most important aspect of the localizer is the way in which it's accessed.
+
+The general approach is that each object that is or contains something that needs to be localized has a C<localizer()> method through which it accesses its L<localizer|Rose::HTML::Object::Message::Localizer> object.  These methods check for a local localizer object attribute, and if one is not found, the method looks "up the chain" until it finds one.  The chain may include parent objects or class hierarchies.  Eventually, the assumptions is that a localizer will be found and returned.
+
+In the most extreme case, this allows each localized object to have its own individual localizer.  In the more common (and default) case, there is a single localizer camped out at some higher point in the chain of lookups, and this localizer serves all objects.
+
+The default localizer class, L<Rose::HTML::Object::Message::Localizer>, reads localized message text frem the C<__DATA__> sections of the Perl module files that make up the Rose::HTML::Objects> distribution.  This is done mostly because it's the most convenient way to include the "built-in" localized message text in this CPAN module distribution.  (See the L<Rose::HTML::Object::Message::Localizer> documentation for more information.)
+
+#################
 
 =head1 DEVELOPMENT POLICY
 
