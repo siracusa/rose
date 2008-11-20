@@ -65,8 +65,18 @@ sub locale
       return $invocant->{'locale'} = shift;
     }
 
-    return $invocant->{'locale'} || $invocant->localizer->locale || 
-           $invocant->localizer->default_locale;
+    return $invocant->{'locale'}  if($invocant->{'locale'});
+
+    foreach my $parent_name (qw(parent_field parent_form parent))
+    {
+      if($invocant->can($parent_name) && (my $parent = $invocant->$parent_name()))
+      {
+        my $locale = $parent->locale;
+        return $locale  if(defined $locale);
+      }
+    }
+
+    return $invocant->localizer->locale ||  $invocant->localizer->default_locale;
   }
   else # Called as a class method
   {

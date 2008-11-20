@@ -1,3 +1,8 @@
+0.854 (11.20.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Altered the default name for the adds_method and inherits_method
+      method types in the inherited_hash class method maker.
+
 0.853 (07.30.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug in the hash get_set_init method interface.  (Reported

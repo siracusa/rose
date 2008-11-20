@@ -117,6 +117,7 @@ sub prepare_hook
 
 BEGIN
 {
+  *add_field_type_classes  = \&Rose::HTML::Object::add_object_type_classes;
   *field_type_classes      = \&Rose::HTML::Object::object_type_classes;
   *field_type_class        = \&Rose::HTML::Object::object_type_class;
   *delete_field_type_class = \&Rose::HTML::Object::delete_object_type_class;

@@ -885,8 +885,8 @@ sub import
         qw(object_type_class_exists object_type_class_keys 
            delete_object_type_class object_type_classes 
            clear_object_type_classes object_type_class 
-           inherit_object_type_classs object_type_classes_cache 
-           inherit_object_type_class add_object_type_classs 
+           inherit_object_type_classes object_type_classes_cache 
+           inherit_object_type_class add_object_type_classes 
            delete_object_type_classes add_object_type_class
            localizer locale default_localizer default_locale));
     }
@@ -1234,6 +1234,10 @@ Get or set the default L<Rose::HTML::Object::Message::Localizer>-derived localiz
 
 Removes the HTML attribute NAME from the set of boolean HTML attributes.
 
+=item B<delete_object_type_class TYPE>
+
+Delete the type/class L<mapping|/object_type_classes> entry for the object type TYPE.
+
 =item B<delete_required_html_attr NAME>
 
 Removes the HTML attribute NAME from the set of required HTML attributes.
@@ -1264,7 +1268,125 @@ This method may be called as a class method or an object method.
 
 When called as a class method and a L<LOCALE|Rose::HTML::Object::Message::Localizer/LOCALES> is passed, then the L<default_locale|/default_locale> is set.  When called as an object method and a L<LOCALE|Rose::HTML::Object::Message::Localizer/LOCALES> is passed, then the L<locale|Rose::HTML::Object::Message::Localizer/LOCALES> of this object is set.
 
-If no locale is set for this class (when called as a class method) or object (when called as an object methid), then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
+If no locale is set for this class (when called as a class method) then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
+
+If no locale is set for this object (when called as an object method), then the the first defined locale from the object's L<parent_field|Rose::HTML::Form::Field/parent_field>, L<parent_field|Rose::HTML::Form::Field/parent_form>, or generic L<parent|/parent> is returned.  If none of those locales are defined, then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
+
+=item B<object_type_class TYPE [, CLASS]>
+
+Given the object type string TYPE, return the name of the L<Rose::HTML::Object>-derived class mapped to that name.  If a CLASS is passed, the object type TYPE is mapped to CLASS.
+
+This map of type names to classes is an L<inherited hash|Rose::Class::MakeMethods::Generic/inherited_hash> representing the union of the hashes of all superclasses, minus any keys that are explicitly L<deleted|/delete_object_type_class> in the current class.
+
+=item B<object_type_classes [MAP]>
+
+Get or set the hash that maps object type strings to the names of the L<Rose::HTML::Object>-derived classes.
+
+If passed MAP (a list of type/class pairs or a reference to a hash of the same) then MAP replaces the current object type mapping.  Returns a list of type/class pairs (in list context) or a reference to a hash of type/class mappings (in scalar context).
+
+This map of type names to classes is an L<inherited hash|Rose::Class::MakeMethods::Generic/inherited_hash> representing the union of the hashes of all superclasses, minus any keys that are explicitly L<deleted|/delete_object_type_class> in the current class.
+
+The default mapping of type names to class names is:
+
+  'image'              => Rose::HTML::Image
+  'label'              => Rose::HTML::Label
+  'link'               => Rose::HTML::Link
+  'script'             => Rose::HTML::Script
+  'literal text'       => Rose::HTML::Text
+
+  'form'               => Rose::HTML::Form
+  'repeatable form'    => Rose::HTML::Form::Repeatable
+
+  'text'               => Rose::HTML::Form::Field::Text
+  'scalar'             => Rose::HTML::Form::Field::Text
+  'char'               => Rose::HTML::Form::Field::Text
+  'character'          => Rose::HTML::Form::Field::Text
+  'varchar'            => Rose::HTML::Form::Field::Text
+  'string'             => Rose::HTML::Form::Field::Text
+
+  'text area'          => Rose::HTML::Form::Field::TextArea
+  'textarea'           => Rose::HTML::Form::Field::TextArea
+  'blob'               => Rose::HTML::Form::Field::TextArea
+
+  'option'             => Rose::HTML::Form::Field::Option
+  'option group'       => Rose::HTML::Form::Field::OptionGroup
+
+  'checkbox'           => Rose::HTML::Form::Field::Checkbox
+  'check'              => Rose::HTML::Form::Field::Checkbox
+
+  'radio button'       => Rose::HTML::Form::Field::RadioButton
+  'radio'              => Rose::HTML::Form::Field::RadioButton
+
+  'checkboxes'         => Rose::HTML::Form::Field::CheckboxGroup
+  'checks'             => Rose::HTML::Form::Field::CheckboxGroup
+  'checkbox group'     => Rose::HTML::Form::Field::CheckboxGroup
+  'check group'        => Rose::HTML::Form::Field::CheckboxGroup
+
+  'radio buttons'      => Rose::HTML::Form::Field::RadioButtonGroup
+  'radios'             => Rose::HTML::Form::Field::RadioButtonGroup
+  'radio button group' => Rose::HTML::Form::Field::RadioButtonGroup
+  'radio group'        => Rose::HTML::Form::Field::RadioButtonGroup
+
+  'pop-up menu'        => Rose::HTML::Form::Field::PopUpMenu
+  'popup menu'         => Rose::HTML::Form::Field::PopUpMenu
+  'menu'               => Rose::HTML::Form::Field::PopUpMenu
+
+  'select box'         => Rose::HTML::Form::Field::SelectBox
+  'selectbox'          => Rose::HTML::Form::Field::SelectBox
+  'select'             => Rose::HTML::Form::Field::SelectBox
+
+  'submit'             => Rose::HTML::Form::Field::Submit
+  'submit button'      => Rose::HTML::Form::Field::Submit
+
+  'reset'              => Rose::HTML::Form::Field::Reset
+  'reset button'       => Rose::HTML::Form::Field::Reset
+
+  'file'               => Rose::HTML::Form::Field::File
+  'upload'             => Rose::HTML::Form::Field::File
+
+  'password'           => Rose::HTML::Form::Field::Password
+
+  'hidden'             => Rose::HTML::Form::Field::Hidden
+
+  'num'                => Rose::HTML::Form::Field::Numeric
+  'number'             => Rose::HTML::Form::Field::Numeric
+  'numeric'            => Rose::HTML::Form::Field::Numeric
+
+  'int'                => Rose::HTML::Form::Field::Integer
+  'integer'            => Rose::HTML::Form::Field::Integer
+
+  'email'              => Rose::HTML::Form::Field::Email
+
+  'phone'              => Rose::HTML::Form::Field::PhoneNumber::US
+  'phone us'           => Rose::HTML::Form::Field::PhoneNumber::US
+
+  'phone us split' =>
+    Rose::HTML::Form::Field::PhoneNumber::US::Split
+
+  'set'  => Rose::HTML::Form::Field::Set
+
+  'time' => Rose::HTML::Form::Field::Time
+
+  'time split hms' => 
+    Rose::HTML::Form::Field::Time::Split::HourMinuteSecond
+
+  'time hours'       => Rose::HTML::Form::Field::Time::Hours
+  'time minutes'     => Rose::HTML::Form::Field::Time::Minutes
+  'time seconds'     => Rose::HTML::Form::Field::Time::Seconds
+
+  'date'             => Rose::HTML::Form::Field::Date
+  'datetime'         => Rose::HTML::Form::Field::DateTime
+
+  'datetime range'   => Rose::HTML::Form::Field::DateTime::Range
+
+  'datetime start'   => Rose::HTML::Form::Field::DateTime::StartDate
+  'datetime end'     => Rose::HTML::Form::Field::DateTime::EndDate
+
+  'datetime split mdy' => 
+    Rose::HTML::Form::Field::DateTime::Split::MonthDayYear
+
+  'datetime split mdyhms' => 
+    Rose::HTML::Form::Field::DateTime::Split::MDYHMS
 
 =item B<required_html_attrs>
 
@@ -1535,7 +1657,9 @@ This method may be called as a class method or an object method.
 
 When called as an object method and a L<LOCALE|Rose::HTML::Object::Message::Localizer/LOCALES> is passed, then the L<locale|Rose::HTML::Object::Message::Localizer/LOCALES> of this object is set.  When called as a class method and a L<LOCALE|Rose::HTML::Object::Message::Localizer/LOCALES> is passed, then the L<default_locale|/default_locale> is set.
 
-If no locale is set for this object (when called as an object methid) or class (when called as a class method), then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
+If no locale is set for this object (when called as an object method), then the the first defined locale from the object's L<parent_field|Rose::HTML::Form::Field/parent_field>, L<parent_field|Rose::HTML::Form::Field/parent_form>, or generic L<parent|/parent> is returned.  If none of those locales are defined, then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
+
+If no locale is set for this class (when called as a class method) then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
 
 =item B<localizer [LOCALIZER]>
 
