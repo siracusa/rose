@@ -4,7 +4,7 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 153;
+use Test::More tests => 157;
 #use Test::More 'no_plan';
 
 use_ok('Rose::HTML::Objects');
@@ -281,13 +281,51 @@ $field->validate;
 is($field->error. '', 'c - \[]Invalid nickname: a, b, c, d, e:lob', 'placeholders (arrayref, fallback) 2');
 
 $field->input_value('bob');
-$field->locale('en');
 $field->validate;
+
+$field->locale('en');
 is($field->error. '', 'c - \[]Invalid nickname: a, b, c, d, e:bob', 'placeholders (hashref) 1');
 
 $field->locale('fr');
-$field->validate;
 is($field->error. '', 'c - \[]Le nickname est mal: a, b, c, d, e:bob', 'placeholders (hashref) 2');
+
+require My2::HTML::Form;
+
+My2::HTML::Form->add_field_type_classes
+(
+  nick     => 'My2::HTML::Form::Field::Nickname',
+  nickname => 'My2::HTML::Form::Field::Nickname',
+);
+
+my $form = My2::HTML::Form->new;
+$field = My2::HTML::Form::Field::Nickname->new;
+$field->html_attr(class => 'c');
+
+$form->add_field(nick => $field);
+
+$form->params(nick => 'bob');
+$form->init_fields;
+$form->validate;
+
+is($form->field('nick')->error. '', 'c - \[]Invalid nickname: a, b, c, d, e:bob', 'form locale 1');
+
+$form->locale('fr');
+
+is($form->field('nick')->error. '', 'c - \[]Le nickname est mal: a, b, c, d, e:bob', 'form locale 2');
+
+$form = My2::HTML::Form->new;
+
+$form->add_field(nick => { type => 'nick', class => 'c' });
+
+$form->params({nick => 'bob'});
+$form->init_fields;
+$form->validate;
+
+is($form->field('nick')->error. '', 'c - \[]Invalid nickname: a, b, c, d, e:bob', 'localizer locale 1');
+
+My2::HTML::Object->localizer->locale('fr');
+
+is($form->field('nick')->error. '', 'c - \[]Le nickname est mal: a, b, c, d, e:bob', 'localizer locale 2');
 
 END
 {

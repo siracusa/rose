@@ -4,7 +4,7 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.851';
+our $VERSION = '0.854';
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
@@ -542,12 +542,12 @@ sub inherited_hash
   my $cache_method       = $args->{'cache_method'}    || $plural_name . '_cache';
   my $exists_method      = $args->{'exists_method'}   || $args->{'exists_method'} || $name . '_exists';
   my $add_method         = $args->{'add_method'}      || 'add_' . $name;
-  my $adds_method        = $args->{'adds_method'}     || $add_method . 's';
+  my $adds_method        = $args->{'adds_method'}     || 'add_' . $plural_name;
   my $delete_method      = $args->{'delete_method'}   || 'delete_' . $name;
   my $deletes_method     = $args->{'deletes_method'}  || 'delete_' . $plural_name;
   my $clear_method       = $args->{'clear_method'}    || 'clear_' . $plural_name;
   my $inherit_method     = $args->{'inherit_method'}  || 'inherit_' . $name;
-  my $inherits_method    = $args->{'inherits_method'} || $inherit_method . 's';
+  my $inherits_method    = $args->{'inherits_method'} || 'inherit_' . $plural_name;
 
   my $interface       = $args->{'interface'} || 'all';
 
@@ -1452,7 +1452,7 @@ The name of the class method used to add a single name/value pair to the hash. D
 
 =item C<adds_method>
 
-The name of the class method used to add one or more name/value pairs to the hash.  Defaults to C<add_method> with C<s> added to the end.
+The name of the class method used to add one or more name/value pairs to the hash.  Defaults to C<plural_name> with the prefix C<add_> added.
 
 =item C<cache_method>
 
@@ -1492,7 +1492,7 @@ The name of the class method used to indicate that an inherited key that was pre
 
 =item C<inherits_method>
 
-The name of the class method used to indicate that one or more inherited keys that were previously deleted from the hash should return to being inherited.  Defaults to the C<inherit_method> name with C<s> added to the end.
+The name of the class method used to indicate that one or more inherited keys that were previously deleted from the hash should return to being inherited.  Defaults to the C<plural_name> with the prefix C<inherit_> added.
 
 =item C<interface>
 

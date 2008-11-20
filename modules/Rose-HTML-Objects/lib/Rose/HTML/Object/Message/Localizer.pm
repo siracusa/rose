@@ -12,7 +12,7 @@ use Rose::HTML::Object::Messages();
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.549';
+our $VERSION = '0.556';
 
 our $Debug = 0;
 
@@ -874,7 +874,9 @@ When it comes time to display appropriate localized message text for the L<NUM_I
 
 =head2 LOCALIZED TEXT
 
-Localized text can come from anywhere.  The default implementation reads localized text from the C<__DATA__> section of Perl source code files.  Such text is read in en masse when the L<load_all_messages|/load_all_messages> method is called, or on demand in response to requests for localized text.  The L<auto_load_messages|/auto_load_messages> flag may be used to distinguish between the two policies.  Here's an example C<__DATA__> section and L<load_all_messages|/load_all_messages> call (from the L<Rose::HTML::Form::Field::Integer> source code):
+Broadly speaking, localized text can come from anywhere.  See the L<localization|Rose::HTML::Objects/LOCALIZATION> section of the L<Rose::HTML::Objects> documentaton for a description of how to create your own localizer subclass that loads localized message text from  the source of your choosing.
+
+The base L<Rose::HTML::Object::Message::Localizer> class reads localized text from the C<__DATA__> sections of Perl source code files and stores it in memory within the localizer object itself.  Such text is read in en masse when the L<load_all_messages|/load_all_messages> method is called, or on demand in response to requests for localized text.  The L<auto_load_messages|/auto_load_messages> flag may be used to distinguish between the two policies.  Here's an example C<__DATA__> section and L<load_all_messages|/load_all_messages> call (from the L<Rose::HTML::Form::Field::Integer> source code):
 
     if(__PACKAGE__->localizer->auto_load_messages)
     {
