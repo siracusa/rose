@@ -289,6 +289,22 @@ sub column_value_pairs
   return wantarray ? %pairs : \%pairs;
 }
 
+sub key_column_value_pairs
+{
+  my($self) = shift;
+
+  my %pairs;
+
+  my $methods = $self->meta->key_column_accessor_method_names_hash;
+
+  while(my($column, $method) = each(%$methods))
+  {
+    $pairs{$column} = $self->$method();
+  }
+
+  return wantarray ? %pairs : \%pairs;
+}
+
 sub column_accessor_value_pairs
 {
   my($self) = shift;

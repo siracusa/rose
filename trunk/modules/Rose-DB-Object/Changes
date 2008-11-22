@@ -1,5 +1,7 @@
-0.775_01 (11.13.2008) - John Siracusa <siracusa@gmail.com>
+0.775_02 (11.22.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Overhauled related object mutator methods to better match the
+      documentation and reduce unnecessary queries.
     * Fixed a bug that caused the init_with_tree() helper method to
       overwrite columns involved in relationship mapping in some 
       circumstances.  (Reported by Todd Lyons)

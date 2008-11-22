@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.7721';
+our $VERSION = '0.776';
 
 our $Debug = 0;
 
@@ -1659,6 +1659,10 @@ sub initialize
     }
   }
 
+  # Regardless of cache priming, call this to ensure it's initialized, 
+  # since it is very likely to be used.
+  $self->key_column_accessor_method_names_hash;
+
   $self->prime_caches  if($self->auto_prime_caches);
 
   return;
@@ -3085,6 +3089,28 @@ sub column_accessor_method_names_hash { shift->{'column_accessor_method'} }
 
 sub nonpersistent_column_accessor_method_names_hash { shift->{'nonpersistent_column_accessor_method'} }
 
+sub key_column_accessor_method_names_hash
+{
+  my($self) = shift;
+  
+  return $self->{'key_column_accessor_method'}  if($self->{'key_column_accessor_method'});
+
+  foreach my $column (grep { ref } $self->primary_key_columns)
+  {
+    $self->{'key_column_accessor_method'}{$column->name} = $column->accessor_method_name;
+  }
+
+  foreach my $uk ($self->unique_keys)
+  {
+    foreach my $column (grep { ref } $uk->columns)
+    {
+      $self->{'key_column_accessor_method'}{$column->name} = $column->accessor_method_name;
+    }
+  }
+ 
+  return $self->{'key_column_accessor_method'};
+}
+
 sub column_mutator_method_name
 {
   $_[0]->{'column_mutator_method'}{$_[1]} ||= 
@@ -3973,7 +3999,7 @@ sub prime_caches
        nonlazy_column_mutator_method_names nonlazy_column_db_value_hash_keys
        primary_key_column_db_value_hash_keys column_db_value_hash_keys
        column_accessor_method_names column_mutator_method_names
-       column_rw_method_names);
+       column_rw_method_names key_column_accessor_method_names_hash);
 
   foreach my $method (@methods)
   {
@@ -3999,7 +4025,7 @@ sub prime_caches
     $self->$method($db);
   }
 
-  @methods = undef; # reclaim memory?
+  undef @methods; # reclaim memory?
 
   foreach my $key ($self->primary_key, $self->unique_keys)
   {
@@ -4058,7 +4084,7 @@ sub _clear_column_generated_values
   $self->{'select_nonlazy_columns_sql'}           = undef;
   $self->{'method_columns'}                       = undef;
   $self->{'column_accessor_method'}               = undef;
-  $self->{'column_mutator_method'}                = undef;
+  $self->{'key_column_accessor_method'}           = undef;
   $self->{'column_rw_method'}                     = undef;
   $self->{'load_sql'}                             = undef;
   $self->{'load_all_sql'}                         = undef;
@@ -4089,6 +4115,7 @@ sub _clear_primary_key_column_generated_values
   my($self) = shift;
   $self->{'primary_key_column_accessor_names'} = undef;
   $self->{'primary_key_column_mutator_names'} = undef;
+  $self->{'key_column_accessor_method'} = undef;
 }
 
 sub method_name_is_reserved
