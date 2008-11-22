@@ -17,9 +17,10 @@ use Rose::DB::Object::Constants
      STATE_SAVING ON_SAVE_ATTR_NAME MODIFIED_COLUMNS MODIFIED_NP_COLUMNS
      SET_COLUMNS EXCEPTION_CODE_NO_KEY);
 
+use Rose::DB::Object::Helpers();
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.773';
+our $VERSION = '0.776';
 
 our $Debug = 0;
 
@@ -2209,35 +2210,18 @@ sub object_by_key
 
           $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
 
-          if($object->{STATE_IN_DB()})
+          # If the object is not marked as already existing in the database,
+          # see if it represents an existing row.  If it does, merge the
+          # existing row's column values into the object, allowing any
+          # modified columns in the object to take precedence. Returns true
+          # if the object represents an existing row.
+          if(__check_and_merge($object))
           {
-            $object->save or die $object->error;
+            $object->save(changes_only => 1) or die $object->error;
           }
           else
           {
-            my $dbh = $object->dbh;
-
-            my $ret;
-
-            # Ignore any errors due to missing primary keys
-            # XXX: TODO: only eat the missing pk error?
-            local $dbh->{'PrintError'} = 0;
-            eval { $ret = $object->load(speculative => 1) };
-
-            if(my $error = $@)
-            {
-              # ...but re-throw all other errors
-              unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
-                     $error->code == EXCEPTION_CODE_NO_KEY)
-              {
-                die $error;
-              }
-            }
-
-            unless($ret)
-            {
-              $object->save or die $object->error;
-            }
+            $object->save or die $object->error;
           }
 
           local $fk->{'disable_column_triggers'} = 1;
@@ -2250,7 +2234,7 @@ sub object_by_key
             $self->$local_method($object->$foreign_method);
           }
 
-          $self->save or die $self->error;
+          $self->save(changes_only => 1) or die $self->error;
 
           $self->{$key} = $object;
 
@@ -2418,35 +2402,18 @@ sub object_by_key
             $db = $self->db;
             $object->db($db)  if($share_db);
 
-            # Save the object, load or create if necessary
-            if($object->{STATE_IN_DB()})
+            # If the object is not marked as already existing in the database,
+            # see if it represents an existing row.  If it does, merge the
+            # existing row's column values into the object, allowing any
+            # modified columns in the object to take precedence. Returns true
+            # if the object represents an existing row.
+            if(__check_and_merge($object))
             {
-              $object->save(%$args) or die $object->error;
+              $object->save(%$args, changes_only => 1) or die $object->error;
             }
             else
             {
-              my $dbh = $object->dbh;
-
-              my $ret;
-
-              # Ignore any errors due to missing primary keys
-              local $dbh->{'PrintError'} = 0;
-              eval { $ret = $object->load(speculative => 1) };
-
-              if(my $error = $@)
-              {
-                # ...but re-throw all other errors
-                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
-                       $error->code == EXCEPTION_CODE_NO_KEY)
-                {
-                  die $error;
-                }
-              }
-
-              unless($ret)
-              {
-                $object->save(%$args) or die $object->error;
-              }
+              $object->save(%$args) or die $object->error;
             }
 
             local $fk->{'disable_column_triggers'} = 1;
@@ -3322,55 +3289,20 @@ sub objects_by_key
 
           $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
 
-          # Count any existing objects
-          my $existing = 
-            $ft_manager->get_objects_count(object_class => $ft_class,
-                                           where => [ %key, @$query_args ], 
-                                           db => $db);
-          die $ft_manager->error  unless(defined $existing);
-
           # Get the list of new objects
           my $objects = __args_to_objects($self, $key, $ft_class, \$ft_pk, \@_);
 
-          # Prepare objects for saving.
+          # Prep objects for saving.
           foreach my $object (@$objects)
           {
-            # It's essential to share the db so that the load()
-            # below can see the delete (above) which happened in
-            # the current transaction
-            $object->db($db); 
-
             # Map object to parent
-            $object->init(%map);
+            $object->init(%map, db => $db);
 
-            # Try to load the object if doesn't appear to exist already.
-            # If anything exists already, we have to try loading no
-            # matter what.
-            unless(!$existing && $object->{STATE_IN_DB()})
-            {
-              my $dbh = $object->dbh;
-
-              # It's okay if this fails because the key(s) is/are undefined
-              local $dbh->{'PrintError'} = 0;
-              eval
-              {
-                if($object->load(speculative => 1))
-                {
-                  # Re-map object to parent
-                  $object->init(%map);
-                }
-              };
-
-              if(my $error = $@)
-              {
-                # ...but re-throw all other errors
-                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
-                       $error->code == EXCEPTION_CODE_NO_KEY)
-                {
-                  die $error;
-                }
-              }
-            }
+            # If the object is not marked as already existing in the database,
+            # see if it represents an existing row.  If it does, merge the
+            # existing row's column values into the object, allowing any
+            # modified columns in the object to take precedence.
+            __check_and_merge($object);
           }
 
           # Delete any existing objects
@@ -3383,45 +3315,21 @@ sub objects_by_key
           # Save all the new objects
           foreach my $object (@$objects)
           {
-            # Try to load the object if doesn't appear to exist already.
-            # If anything exists already, we have to try loading no
-            # matter what.
-            unless(!$existing && $object->{STATE_IN_DB()})
+            $object->{STATE_IN_DB()} = 0  if($deleted);
+
+            # If the object is not marked as already existing in the database,
+            # see if it represents an existing row.  If it does, merge the
+            # existing row's column values into the object, allowing any
+            # modified columns in the object to take precedence. Returns true
+            # if the object represents an existing row.
+            if(__check_and_merge($object))
             {
-              my $dbh = $object->dbh;
-
-              # It's okay if this fails because the key(s) is/are undefined
-              local $dbh->{'PrintError'} = 0;
-              eval
-              {
-                if($object->load(speculative => 1))
-                {
-                  # Re-map object to parent
-                  $object->init(%map);
-                }
-              };
-
-              if(my $error = $@)
-              {
-                # ...but re-throw all other errors
-                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
-                       $error->code == EXCEPTION_CODE_NO_KEY)
-                {
-                  die $error;
-                }
-              }
+              $object->save(changes_only => 1) or die $object->error;
             }
-
-            # Mark all previously set-but-not-modified columns as modified
-            # if saving changes since this object may have been deleted by 
-            # the manager call above.
-            if($args->{'changes_only'})
+            else
             {
-              $object->{$mod_columns_key}{$_} = 1  for(keys %{$object->{SET_COLUMNS()}});
+              $object->save or die $object->error;
             }
-
-            # Save the object
-            $object->save or die $object->error;
 
             # Not sharing?  Aw.
             $object->db(undef)  unless($share_db);
@@ -3646,53 +3554,18 @@ sub objects_by_key
 
           my $db = $self->db;
 
-          # Count any existing objects
-          my $existing = 
-            $ft_manager->get_objects_count(object_class => $ft_class,
-                                           where => [ %key, @$query_args ], 
-                                           db => $db);
-          die $ft_manager->error  unless(defined $existing);
-          
-          # Prepare objects for saving.  Use the current list, even if it's
+          # Prep objects for saving.  Use the current list, even if it's
           # different than it was when the "set on save" was called.
           foreach my $object (@{$self->{$key} || []})
           {
-            # It's essential to share the db so that the load()
-            # below can see the delete (above) which happened in
-            # the current transaction
-            $object->db($db); 
-
             # Map object to parent
-            $object->init(%map);
+            $object->init(%map, db => $db);
 
-            # Try to load the object if doesn't appear to exist already.
-            # If anything exists already, we have to try loading no
-            # matter what.
-            unless(!$existing && $object->{STATE_IN_DB()})
-            {
-              my $dbh = $object->dbh;
-
-              # It's okay if this fails because the key(s) is/are undefined
-              local $dbh->{'PrintError'} = 0;
-              eval
-              {
-                if($object->load(speculative => 1))
-                {
-                  # Re-map object to parent
-                  $object->init(%map);
-                }
-              };
-
-              if(my $error = $@)
-              {
-                # ...but re-throw all other errors
-                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
-                       $error->code == EXCEPTION_CODE_NO_KEY)
-                {
-                  die $error;
-                }
-              }
-            }
+            # If the object is not marked as already existing in the database,
+            # see if it represents an existing row.  If it does, merge the
+            # existing row's column values into the object, allowing any
+            # modified columns in the object to take precedence.
+            __check_and_merge($object);
           }
 
           # Delete any existing objects
@@ -3706,45 +3579,21 @@ sub objects_by_key
           # different than it was when the "set on save" was called.
           foreach my $object (@{$self->{$key} || []})
           {
-            # Try to load the object if doesn't appear to exist already.
-            # If anything was deleted above, we have to try loading no
-            # matter what.
-            unless(!$deleted && $object->{STATE_IN_DB()})
+            $object->{STATE_IN_DB()} = 0  if($deleted);
+
+            # If the object is not marked as already existing in the database,
+            # see if it represents an existing row.  If it does, merge the
+            # existing row's column values into the object, allowing any
+            # modified columns in the object to take precedence. Returns true
+            # if the object represents an existing row.
+            if(__check_and_merge($object))
             {
-              my $dbh = $object->dbh;
-
-              # It's okay if this fails because the key(s) is/are undefined
-              local $dbh->{'PrintError'} = 0;
-              eval
-              {
-                if($object->load(speculative => 1))
-                {
-                  # Re-map object to parent
-                  $object->init(%map);
-                }
-              };
-
-              if(my $error = $@)
-              {
-                # ...but re-throw all other errors
-                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
-                       $error->code == EXCEPTION_CODE_NO_KEY)
-                {
-                  die $error;
-                }
-              }
+              $object->save(changes_only => 1) or die $object->error;
             }
-
-            # Mark all previously set-but-not-modified columns as modified
-            # if saving changes since this object may have been deleted by 
-            # the manager call above.
-            if($args->{'changes_only'})
+            else
             {
-              $object->{$mod_columns_key}{$_} = 1  for(keys %{$object->{SET_COLUMNS()}});
+              $object->save or die $object->error;
             }
-
-            # Save the object
-            $object->save(%$args) or die $object->error;
 
             # Not sharing?  Aw.
             $object->db(undef)  unless($share_db);
@@ -4106,25 +3955,16 @@ sub objects_by_key
           # Map object to parent
           $object->init(%map, db => $db);
 
-          my $dbh = $object->dbh;
-
-          my $ret;
-
-          # Ignore any errors due to missing primary keys
-          local $dbh->{'PrintError'} = 0;
-          eval { $ret = $object->load(speculative => 1) };
-
-          if(my $error = $@)
+          # If the object is not marked as already existing in the database,
+          # see if it represents an existing row.  If it does, merge the
+          # existing row's column values into the object, allowing any
+          # modified columns in the object to take precedence. Returns true
+          # if the object represents an existing row.
+          if(__check_and_merge($object))
           {
-            # ...but re-throw all other errors
-            unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
-                   $error->code == EXCEPTION_CODE_NO_KEY)
-            {
-              die $error;
-            }
+            $object->save(changes_only => 1) or die $object->error;
           }
-
-          unless($ret)
+          else
           {
             $object->save or die $object->error;
           }
@@ -4236,29 +4076,19 @@ sub objects_by_key
           # Map object to parent
           $object->init(%map, db => $db);
 
-          # Attempt to load the object if necessary
-          unless($object->{STATE_IN_DB()})
+          # If the object is not marked as already existing in the database,
+          # see if it represents an existing row.  If it does, merge the
+          # existing row's column values into the object, allowing any
+          # modified columns in the object to take precedence. Returns true
+          # if the object represents an existing row.
+          if(__check_and_merge($object))
           {
-            my $dbh = $object->dbh;
-            my $ret;
-
-            # Ignore any errors due to missing primary keys
-            local $dbh->{'PrintError'} = 0;
-            eval { $ret = $object->load(speculative => 1) };
-
-            if(my $error = $@)
-            {
-              # ...but re-throw all other errors
-              unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
-                     $error->code == EXCEPTION_CODE_NO_KEY)
-              {
-                die $error;
-              }
-            }
+            $object->save(%$args, changes_only => 1) or die $object->error;
           }
-
-          # Save changes to the object
-          $object->save(%$args, changes_only => 1) or die $object->error;
+          else
+          {
+            $object->save(%$args) or die $object->error;
+          }
         }
 
         # Blank the attribute, causing the objects to be fetched from
@@ -5095,35 +4925,23 @@ sub objects_by_map
 
           foreach my $object (@$objects)
           {
-            # It's essential to share the db so that the load()
+            # It's essential to share the db so that the code
             # below can see the delete (above) which happened in
             # the current transaction
             $object->db($db); 
 
-            my $in_db = $object->{STATE_IN_DB()};
+            $object->{STATE_IN_DB()} = 0  if($deleted);
 
-            # Try to load the object if doesn't appear to exist already
-            unless($in_db)
+            # If the object is not marked as already existing in the database,
+            # see if it represents an existing row.  If it does, merge the
+            # existing row's column values into the object, allowing any
+            # modified columns in the object to take precedence. Returns true
+            # if the object represents an existing row.
+            if(__check_and_merge($object))
             {
-              my $dbh = $object->dbh;
-
-              # It's okay if this fails because the key(s) is/are undefined
-              local $dbh->{'PrintError'} = 0;
-              eval { $in_db = $object->load(speculative => 1) };
-
-              if(my $error = $@)
-              {
-                # ...but re-throw all other errors
-                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
-                       $error->code == EXCEPTION_CODE_NO_KEY)
-                {
-                  die $error;
-                }
-              }
+              $object->save or die $object->error;
             }
-
-            # Save the object, if necessary
-            unless($in_db)
+            else
             {
               $object->save or die $object->error;
             }
@@ -5150,7 +4968,7 @@ sub objects_by_map
               $map_record->$map_method($object->$remote_method);
             }
 
-            $in_db = $map_record->{STATE_IN_DB()};
+            my $in_db = $map_record->{STATE_IN_DB()};
 
             # Try to load the map record if doesn't appear to exist already
             unless($in_db)
@@ -5375,44 +5193,24 @@ sub objects_by_map
           # different than it was when the "set on save" was called.
           foreach my $object (@{$self->{$key} || []})
           {
-            # It's essential to share the db so that the load()
+            # It's essential to share the db so that the code
             # below can see the delete (above) which happened in
             # the current transaction
             $object->db($db); 
 
-            my $in_db = $object->{STATE_IN_DB()};
+            $object->{STATE_IN_DB()} = 0  if($deleted);
 
-            # Try to load the object if doesn't appear to exist already
-            unless($in_db)
+            # If the object is not marked as already existing in the database,
+            # see if it represents an existing row.  If it does, merge the
+            # existing row's column values into the object, allowing any
+            # modified columns in the object to take precedence. Returns true
+            # if the object represents an existing row.
+            if(__check_and_merge($object))
             {
-              my $dbh = $object->dbh;
-
-              # It's okay if this fails because the key(s) is/are undefined
-              local $dbh->{'PrintError'} = 0;
-              eval { $in_db = $object->load(speculative => 1) };
-
-              if(my $error = $@)
-              {
-                # ...but re-throw all other errors
-                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
-                       $error->code == EXCEPTION_CODE_NO_KEY)
-                {
-                  die $error;
-                }
-              }
+              $object->save(%$args, changes_only => 1) or die $object->error;
             }
-
-            # Save the object, if necessary
-            unless($in_db)
+            else
             {
-              # Mark all previously set-but-not-modified columns as modified
-              # if saving changes since this object may have been deleted by 
-              # the manager call above.
-              if($args->{'changes_only'})
-              {
-                $object->{$mod_columns_key}{$_} = 1  for(keys %{$object->{SET_COLUMNS()}});
-              }
-
               $object->save(%$args) or die $object->error;
             }
 
@@ -5438,7 +5236,7 @@ sub objects_by_map
               $map_record->$map_method($object->$remote_method);
             }
 
-            $in_db = $map_record->{STATE_IN_DB()};
+            my $in_db = $map_record->{STATE_IN_DB()};
 
             # Try to load the map record if doesn't appear to exist already
             unless($in_db)
@@ -5657,35 +5455,21 @@ sub objects_by_map
         # Add all the new objects
         foreach my $object (@$objects)
         {
-          # It's essential to share the db so that the load()
+          # It's essential to share the db so that the code
           # below can see the delete (above) which happened in
           # the current transaction
           $object->db($db); 
 
-          my $in_db = $object->{STATE_IN_DB()};
-
-          # Try to load the object if doesn't appear to exist already
-          unless($in_db)
+          # If the object is not marked as already existing in the database,
+          # see if it represents an existing row.  If it does, merge the
+          # existing row's column values into the object, allowing any
+          # modified columns in the object to take precedence. Returns true
+          # if the object represents an existing row.
+          if(__check_and_merge($object))
           {
-            my $dbh = $object->dbh;
-
-            # It's okay if this fails because the key(s) is/are undefined
-            local $dbh->{'PrintError'} = 0;
-            eval { $in_db = $object->load(speculative => 1) };
-
-            if(my $error = $@)
-            {
-              # ...but re-throw all other errors
-              unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
-                     $error->code == EXCEPTION_CODE_NO_KEY)
-              {
-                die $error;
-              }
-            }
+            $object->save(changes_only => 1) or die $object->error;
           }
-
-          # Save the object, if necessary
-          unless($in_db)
+          else
           {
             $object->save or die $object->error;
           }
@@ -5702,7 +5486,7 @@ sub objects_by_map
             $map_record->$map_method($object->$remote_method);
           }
 
-          $in_db = $map_record->{STATE_IN_DB()};
+          my $in_db = $map_record->{STATE_IN_DB()};
 
           # Try to load the map record if doesn't appear to exist already
           unless($in_db)
@@ -5807,35 +5591,24 @@ sub objects_by_map
         # Add all the objects.
         foreach my $object (@{$self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'}{'objects'}})
         {
-          # It's essential to share the db so that the load()
+          # It's essential to share the db so that the code
           # below can see the delete (above) which happened in
           # the current transaction
           $object->db($db); 
 
-          my $in_db = $object->{STATE_IN_DB()};
-
-          # Try to load the object if doesn't appear to exist already
-          unless($in_db)
+          # If the object is not marked as already existing in the database,
+          # see if it represents an existing row.  If it does, merge the
+          # existing row's column values into the object, allowing any
+          # modified columns in the object to take precedence. Returns true
+          # if the object represents an existing row.
+          if(__check_and_merge($object))
           {
-            my $dbh = $object->dbh;
-
-            # It's okay if this fails because the key(s) is/are undefined
-            local $dbh->{'PrintError'} = 0;
-            eval { $in_db = $object->load(speculative => 1) };
-
-            if(my $error = $@)
-            {
-              # ...but re-throw all other errors
-              unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
-                     $error->code == EXCEPTION_CODE_NO_KEY)
-              {
-                die $error;
-              }
-            }
+            $object->save(%$args, changes_only => 1) or die $object->error;
           }
-
-          # Save changes to the object
-          $object->save(%$args, changes_only => 1) or die $object->error;
+          else
+          {
+            $object->save(%$args) or die $object->error;
+          }
 
           # Not sharing?  Aw.
           $object->db(undef)  unless($share_db);
@@ -5849,7 +5622,7 @@ sub objects_by_map
             $map_record->$map_method($object->$remote_method);
           }
 
-          $in_db = $map_record->{STATE_IN_DB()};
+          my $in_db = $map_record->{STATE_IN_DB()};
 
           # Try to load the map record if doesn't appear to exist already
           unless($in_db)
@@ -5861,7 +5634,7 @@ sub objects_by_map
 
             eval
             {
-              if($in_db = $map_record->load(speculative => 1))
+              if($map_record->load(speculative => 1))
               {
                 # (Re)connect map record to self
                 $map_record->init(%method_map_to_self);
@@ -6011,6 +5784,74 @@ sub __args_to_object
   }
 
   Carp::croak "Invalid $name argument: @$args";
+}
+
+# If an object is not marked as already existing in the database, see if it
+# represents an existing row.  If it does, merge the existing row's column
+# values into the object, allowing any modified columns in the object to
+# take precedence.  Returns true if the object represents an existing row.
+sub __check_and_merge
+{
+  my($object) = shift;
+
+  # Attempt to load the object if necessary
+  unless($object->{STATE_IN_DB()})
+  {
+    my $db = $object->db;
+
+    # Make a key-column-only clone of object to test whether
+    # it represents and existing row, and if it does, to pull
+    # in any missing column values.
+
+    my $clone = ref($object)->new(db => $db);
+
+    Rose::DB::Object::Helpers::init_with_column_value_pairs($clone, 
+      Rose::DB::Object::Helpers::key_column_value_pairs($object));
+  
+    my $ret;
+  
+    # Ignore any errors due to missing primary keys
+    eval 
+    {
+      local $db->dbh->{'PrintError'} = 0;
+      $ret = $clone->load(speculative => 1);
+    };
+
+    if(my $error = $@)
+    {
+      # ...but re-throw all other errors
+      unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+             $error->code == EXCEPTION_CODE_NO_KEY)
+      {
+        die $error;
+      }
+    }
+    
+    # $object represents and existing row
+    if($ret)
+    {
+      # Merge the column values from the db into the new $object.
+      my %modified = map { $_ => 1 } Rose::DB::Object::Helpers::dirty_columns($object);
+  
+      # XXX: Performance cheat
+      foreach my $column (@{ $object->meta->columns_ordered })
+      {
+        # Values from the db only overwrite unmodified columns.
+        next  if($modified{$column->{'name'}}); # XXX: Performance cheat
+  
+        my $mutator_method  = $column->mutator_method_name;
+        my $accessor_method = $column->accessor_method_name;
+  
+        $object->$mutator_method($clone->$accessor_method());
+      }
+  
+      $object->{STATE_IN_DB()} = 1;
+    }
+
+    return $ret;
+  }
+
+  return 1;
 }
 
 1;

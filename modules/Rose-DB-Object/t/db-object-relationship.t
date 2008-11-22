@@ -421,7 +421,12 @@ SKIP: foreach my $db_type ('pg')
 
   $o->save;
 
-  eval { $o->other_obj(k1 => 1, k2 => 2) };
+  eval
+  {
+    local $o->db->dbh->{'PrintError'} = 0;
+    $o->other_obj(k1 => 1, k2 => 2);
+  };
+
   ok($@, "set foreign key object: too few keys - $db_type");
 
   ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "set foreign key object 1 - $db_type");
@@ -931,11 +936,13 @@ SKIP: foreach my $db_type ('pg')
   @o2s = $o->other2_objs_on_save;
 
   push(@o2s, MyPgOtherObject2->new(name => 'added'));
+
   $o->other2_objs_on_save(\@o2s);
 
   $o->save;
 
   my $to = MyPgObject->new(id => $o->id)->load;
+
   @o2s = $o->other2_objs_on_save;
 
   is_deeply([ 'seven', 'one', 'added' ], [ map { $_->name } @o2s ], "add one to many on save 1 - $db_type");
@@ -1814,7 +1821,12 @@ SKIP: foreach my $db_type ('mysql')
 
   $o->save;
 
-  eval { $o->other_obj(k1 => 1, k2 => 2) };
+  eval
+  {
+    local $o->db->dbh->{'PrintError'} = 0;
+    $o->other_obj(k1 => 1, k2 => 2);
+  };
+
   ok($@, "set foreign key object: too few keys - $db_type");
 
   ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "set foreign key object 1 - $db_type");
@@ -3329,7 +3341,12 @@ SKIP: foreach my $db_type ('informix')
 
   $o->save;
 
-  eval { $o->other_obj(k1 => 1, k2 => 2) };
+  eval
+  {
+    local $o->db->dbh->{'PrintError'} = 0;
+    $o->other_obj(k1 => 1, k2 => 2);
+  };
+
   ok($@, "set foreign key object: too few keys - $db_type");
 
   ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "set foreign key object 1 - $db_type");
@@ -4800,7 +4817,12 @@ SKIP: foreach my $db_type ('sqlite')
 
   $o->save;
 
-  eval { $o->other_obj(k1 => 1, k2 => 2) };
+  eval
+  {
+    local $o->db->dbh->{'PrintError'} = 0;
+    $o->other_obj(k1 => 1, k2 => 2);
+  };
+
   ok($@, "set foreign key object: too few keys - $db_type");
 
   ok($o->other_obj(k1 => 1, k2 => 2, k3 => 3), "set foreign key object 1 - $db_type");
