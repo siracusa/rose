@@ -43,6 +43,7 @@ sub localized_text
            message => $self, 
            parent  => $self->parent,
            locale  => $self->locale, 
+           variant => $self->variant,
            args    => scalar $self->args);
 }
 
