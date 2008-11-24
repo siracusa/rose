@@ -16,6 +16,8 @@ our $VERSION = '0.556';
 
 our $Debug = 0;
 
+use constant DEFAULT_VARIANT => 'default';
+
 #
 # Object data
 #
@@ -122,50 +124,84 @@ sub localize_message
 {
   my($self, %args) = @_;
 
-  my $msg = $args{'message'};
+  my $message = $args{'message'};
 
-  return $msg  unless($msg->can('text') && $msg->can('id'));  
-  return $msg->text  if($msg->is_custom);
+  return $message  unless($message->can('text') && $message->can('id'));  
+  return $message->text  if($message->is_custom);
 
-  my $child = $msg;
+  my $parent = $message;
 
-  if($child->can('parent'))
+  if($parent->can('parent'))
   {
-    $child = $child->parent;
+    $parent = $parent->parent;
   }
 
-  if($child && $child->isa('Rose::HTML::Object::Error'))
+  if($parent && $parent->isa('Rose::HTML::Object::Error'))
   {
-    $child = $child->parent;
+    $parent = $parent->parent;
   }
 
-  my $calling_class = $child ? ref($child) : $args{'caller'} || (caller)[0];
+  my $calling_class = $parent ? ref($parent) : $args{'caller'} || (caller)[0];
 
-  my $args   = $args{'args'}   || $msg->args;
-  my $locale = $args{'locale'} || $msg->locale || $self->locale;
+  my $first_parent = $parent;
 
-  my $id = $msg->id;
+  my $args   = $args{'args'}   || $message->args;
+  my $locale = $args{'locale'} || $message->locale || $self->locale;
 
-  my $text = $self->get_localized_message_text(id => $id, locale => $locale, from_class => $calling_class);
+  my $id = $message->id;
 
-  # Look for messages in parent fields
-  while(!defined $text && $child && $child->can('parent_field'))
+  my $variant = $args{'variant'} ||=
+    $self->select_variant_for_message(id     => $id,
+                                      args   => $args,
+                                      locale => $locale);
+
+  my $locale_cascade = $self->locale_cascade($locale) ||
+                       $self->locale_cascade('default') || [];
+
+  foreach my $try_locale ($locale, @$locale_cascade)
   {
-    if($child = $child->parent_field)
+    my $variant_cascade = 
+      $self->variant_cascade(locale  => $try_locale,
+                             variant => $variant,
+                             message => $message,
+                             args    => $args) || [];
+
+    # Alwasy fall back to the default variant
+    push(@$variant_cascade, DEFAULT_VARIANT)
+      unless($variant eq DEFAULT_VARIANT);
+
+    foreach my $try_variant ($variant, @$variant_cascade)
     {
-      $text = $self->get_localized_message_text(id => $id, locale => $locale, from_class => ref($child));
+      my $text =
+        $self->get_localized_message_text(
+          id         => $id, 
+          locale     => $try_locale,
+          variant    => $try_variant,
+          from_class => $calling_class);
+
+      $parent = $first_parent;
+
+      # Look for messages in parents
+      while(!defined $text && $parent)
+      {
+        $parent = $parent->can('parent_field') ? $parent->parent_field :
+                  $parent->can('parent_form')  ? $parent->parent_form  :
+                  $parent->can('parent')       ? $parent->parent       : 
+                  undef;
+
+        if($parent)
+        {
+          $text = 
+            $self->get_localized_message_text(
+              id         => $id,
+              locale     => $try_locale,
+              variant    => $try_variant,
+              from_class => ref($parent));
+        }
+      }
+    
+      return $self->process_placeholders($text, $args)  if(defined $text);
     }
-  }
-
-  return $self->process_placeholders($text, $args)  if(defined $text);  
-
-  my $cascade = $self->locale_cascade($locale) ||
-                $self->locale_cascade('default') || return undef;
-
-  foreach my $other_locale (@$cascade)
-  {
-    $text = $self->get_localized_message_text(id => $id, locale => $other_locale, from_class => $calling_class);
-    return $self->process_placeholders($text, $args) if(defined $text);  
   }
 
   return undef;
@@ -245,15 +281,95 @@ sub message_for_error_id
   return $msg_class->new(args => $args);
 }
 
+sub select_variant_for_message
+{
+  my($self, %args) = @_;
+
+  my $args = $args{'args'};
+
+  return $args->{'variant'}  if($args->{'variant'});  
+
+  if(my $count = $args->{'count'})
+  {
+    return $self->select_variant_for_count(%args);
+  }
+  
+  return DEFAULT_VARIANT;
+}
+
+sub select_variant_for_count
+{
+  my($self, %args) = @_;
+
+  my $locale = $args{'locale'};
+  my $count  = abs($args{'count'});
+
+  # zero
+  # one (singular)
+  # two (dual)
+  # few (paucal)
+  # many
+  # plural
+   
+  # I only know pluralization rules for English...
+  if($locale eq 'en')
+  {
+    return $count == 0 ? 'zero' : 
+           $count == 1 ? 'one'  :
+           'plural';
+  }
+
+  # Everything else gets this
+  return $count == 0 ? 'zero' : 
+         $count == 1 ? 'one'  :
+         $count == 2 ? 'two'  :
+         'plural';
+}
+
+my %Variant_Cascade =
+(
+  en =>
+  {
+    'zero' => [ 'plural' ],
+    'two'  => [ 'plural' ],
+    'few'  => [ 'plural' ],
+    'many' => [ 'plural' ],
+  },
+  default =>
+  {
+    'zero' => [ 'plural' ],
+    'two'  => [ 'plural' ],
+    'few'  => [ 'plural' ],
+    'many' => [ 'plural' ],
+  }
+);
+
+my @None;
+
+sub variant_cascade
+{
+  my($self, %args) = @_;
+  return $Variant_Cascade{$args{'locale'}}{$args{'variant'}} ||
+         $Variant_Cascade{'default'}{$args{'variant'}} || 
+         \@None;
+}
+
 sub localized_message_exists
 {
-  my($self, $name, $locale) = @_;
+  my($self, $name, $locale, $variant) = @_;
 
   my $msgs = $self->localized_messages_hash;
+
+  $variant ||= DEFAULT_VARIANT;
 
   no warnings 'uninitialized';
   if(exists $msgs->{$name} && exists $msgs->{$name}{$locale})
   {
+    if(ref $msgs->{$name}{$locale})
+    {
+      return $msgs->{$name}{$locale}{$variant} ? 1 : 0;
+    }
+
     return 1;
   }
 
@@ -278,10 +394,11 @@ sub set_localized_message_text
 {
   my($self, %args) = @_;
 
-  my $id     = $args{'id'};
-  my $name   = $args{'name'};
-  my $locale = $args{'locale'} || $self->locale;
-  my $text   = $args{'text'};
+  my $id      = $args{'id'};
+  my $name    = $args{'name'};
+  my $locale  = $args{'locale'} || $self->locale;
+  my $text    = $args{'text'};
+  my $variant = $args{'variant'};
 
   croak "Missing new localized message text"  unless(defined $text);
 
@@ -320,8 +437,29 @@ sub set_localized_message_text
 
   while(my($l, $t) = each(%$text))
   {
-    $Debug && warn qq($self - Adding text $name ($l) - "$t"\n);
-    $msgs->{$name}{$l} = "$t"; # force stringification
+    $Debug && warn qq($self - Adding text $name), 
+                   ($variant ? "($variant)" : ''), 
+                   qq( ($l) - "$t"\n);
+
+    if($variant)
+    {
+      unless(ref $msgs->{$name}{$l})
+      {
+        $msgs->{$name}{$l}{DEFAULT_VARIANT()} = $msgs->{$name}{$l};
+        $msgs->{$name}{$l}{$variant} = "$t"; # force stringification
+      }
+    }
+    else
+    {
+      if(ref ref $msgs->{$name}{$l})
+      {
+        $msgs->{$name}{$l}{DEFAULT_VARIANT()} = "$t"; # force stringification
+      }
+      else
+      {
+        $msgs->{$name}{$l} = "$t"; # force stringification
+      }
+    }
   }
 
   return $id;
@@ -471,6 +609,7 @@ sub get_localized_message_text
   my $id         = $args{'id'};
   my $name       = $args{'name'};
   my $locale     = $args{'locale'};
+  my $variant    = $args{'variant'} || DEFAULT_VARIANT;
   my $from_class = $args{'from_class'}; 
 
   $from_class ||= (caller)[0];
@@ -479,27 +618,33 @@ sub get_localized_message_text
 
   my $msgs = $self->localized_messages_hash;
 
-  if(exists $msgs->{$name} && exists $msgs->{$name}{$locale})
+  # Try this twice: before and after loading messages
+  for(1, 2)
   {
-    return $msgs->{$name}{$locale};
-  }
-
-  $self->load_localized_message($name, $locale, $from_class);
-
-  if(exists $msgs->{$name} && exists $msgs->{$name}{$locale})
-  {
-    return $msgs->{$name}{$locale};
+    if(exists $msgs->{$name} && exists $msgs->{$name}{$locale})
+    {
+      if(ref $msgs->{$name}{$locale})
+      {
+        return $msgs->{$name}{$locale}{$variant};
+      }
+  
+      return $msgs->{$name}{$locale};
+    }
+  
+    $self->load_localized_message($name, $locale, $from_class);
   }
 
   return undef;
 }
 
-my $Locale_Declaration = qr(^\s* \[% \s* LOCALE \s* (\S+) \s* %\] \s* (?: \#.*)?$)x;
-my $Start_Message = qr(^\s* \[% \s* START \s+ ([A-Z0-9_]+) \s* %\] \s* (?: \#.*)?$)x;
-my $End_Message = qr(^\s* \[% \s* END \s+ ([A-Z0-9_]+)? \s* %\] \s* (?: \#.*)?$)x;
-my $Message_Spec = qr(^ \s* ([A-Z0-9_]+) \s* = \s* "((?:[^"\\]+|\\.)*)" \s* (?: \#.*)? $)x;
-my $Comment_Or_Blank = qr(^ \s* \# | ^ \s* $)x;
-my $End_Messages = qr(^=\w|^\s*__END__);
+# ([A-Z0-9_]+) -> ([A-Z0-9_]+) (?: \( \s* (\w[-\w]*) \s* \) )?
+# ([A-Z0-9_]+) -> ([A-Z0-9_]+)(?:\(\s*([-\w]+)\s*\))?
+my $Locale_Declaration = qr{^\s* \[% \s* LOCALE \s* (\S+) \s* %\] \s* (?: \#.*)?$}x;
+my $Start_Message = qr{^\s* \[% \s* START \s+ ([A-Z0-9_]+)(?:\(\s*([-\w]+)\s*\))? \s* %\] \s* (?: \#.*)?$}x;
+my $End_Message = qr{^\s* \[% \s* END \s+ ([A-Z0-9_]+)(?:\(\s*([-\w]+)\s*\))?? \s* %\] \s* (?: \#.*)?$}x;
+my $Message_Spec = qr{^ \s* ([A-Z0-9_]+)(?:\(\s*([-\w]+)\s*\))? \s* = \s* "((?:[^"\\]+|\\.)*)" \s* (?: \#.*)? $}x;
+my $Comment_Or_Blank = qr{^ \s* \# | ^ \s* $}x;
+my $End_Messages = qr{^=\w|^\s*__END__};
 
 my %Data_Pos;
 
@@ -704,6 +849,7 @@ sub load_messages_from_fh
   my @text;
   my $in_locale = '';
   my $in_msg    = '';
+  my $variant   = '';
   my $text      = '';
 
   my $pos = tell($fh);;
@@ -728,13 +874,15 @@ sub load_messages_from_fh
           s/(\s*\n)+\z//;
         }
 
-        $self->set_localized_message_text(name   => $in_msg,
-                                          locale => $in_locale,
-                                          text   => $text);
+        $self->set_localized_message_text(name    => $in_msg,
+                                          locale  => $in_locale,
+                                          text    => $text,
+                                          variant => $variant);
       }
 
-      $text = '';
-      $in_msg = '';
+      $text    = '';
+      $in_msg  = '';
+      $variant = '';
     }
     elsif($in_msg)
     {
@@ -749,7 +897,8 @@ sub load_messages_from_fh
       if((!$locales || $locales->{$in_locale}) && (!$msg_names || $msg_names->{$1}))
       {
         my $name = $1;
-        my $text = $2;
+        $variant = $2;
+        my $text = $3;
 
         for($text)
         {
@@ -757,15 +906,17 @@ sub load_messages_from_fh
           s/\\([^\[])/$1/g;
         }
 
-        $self->set_localized_message_text(name   => $name,
-                                          locale => $in_locale,
-                                          text   => $text);
+        $self->set_localized_message_text(name    => $name,
+                                          locale  => $in_locale,
+                                          text    => $text,
+                                          variant => $variant);
         push(@text, $text)  if($msg_names);
       }
     }
     elsif(/$Start_Message/o)
     {
-      $in_msg = $1;
+      $in_msg  = $1;
+      $variant = $2;
     }
     elsif(!/$Comment_Or_Blank/o)
     {
@@ -907,7 +1058,7 @@ The base L<Rose::HTML::Object::Message::Localizer> class reads localized text fr
 
 The messages for each locale are set off by C<LOCALE> directives set surrounded by C<[%> and C<%]>.  All messages until the next such declaration are stored under the specified locale.
 
-Localized text is provided in double-quoted strings to the right of symbolic L<messages|Rose::HTML::Object::Messages> or L<error|Rose::HTML::Object::Errors> constant names.  
+Localized text is provided in double-quoted strings to the right of symbolic L<messages|Rose::HTML::Object::Messages> constant names.  
 
 Placeholders are replaced with text provided at runtime.  Placeholder names are surrounded by square brackets.  They must start with C<[a-zA-Z]> and may contain only characters that match C<\w>.  For and example, see the C<[label]> placeolders in the example above.  A C<@> prefix is allowd to specify that the placeholder value is expected to be a refrence to an array of values.
 
@@ -932,6 +1083,18 @@ There's also a multi-line format for longer messages:
     [% END SOME_MESSAGE %]
 
 Leading and trailing spaces and newlines are removed from text provided in the multi-line format.
+
+Blank lines and any lines beginning with a C<#> character are skipped.
+
+Any L<message|Rose::HTML::Object::Messages> constant name may be followed immediately by a variant string within parentheses.  Variant names may contain only the characters C<[A-Za-z0-9_-]>.  If no variant is provided, the variant is assumed to be C<default>.  In other words, this:
+
+    SOME_MESSAGE(default) = "..."
+
+is equivalent to this:
+
+    SOME_MESSAGE = "..."
+
+########################
 
 =head3 CUSTOMIZATION
 
@@ -1043,7 +1206,7 @@ Get or set the name of the L<Rose::HTML::Object::Error>-derived class used to st
 
 Get or set the name of the L<Rose::HTML::Object::Errors>-derived class used to store and track error ids and symbolic constant names.  The default value is L<Rose::HTML::Object::Errors>.  To change the default, override the C<init_errors_class> method in your subclass and return a different class name.
 
-=item B<locale [CLASS]>
+=item B<locale [LOCALE]>
 
 Get or set the locale assumed by the localizer in the absence of an explicit locale argument.  Defaults to the value returned by the L<default_locale|/default_locale> class method.
 
@@ -1154,6 +1317,34 @@ A reference to a hash of name/value pairs to be used as the L<message arguments|
 =item B<parent [OBJECT]>
 
 Get or set a weakened reference to the localizer's parent object.
+
+=item B<set_localized_message_text PARAMS>
+
+Set the localized text for a message.  Valid PARAMS name/value pairs are:
+
+=over 4
+
+=item B<id ID>
+
+An integer L<message|Rose::HTML::Object::Messages> id.  If a C<name> is not passed, then the name corresponding to this message id will be looked up using the L<get_message_name|/get_message_name> method.
+
+=item B<name NAME>
+
+The L<message|Rose::HTML::Object::Messages> name.  If this parameter is not passed, then the C<id> parameter must be passed.
+
+=item B<locale LOCALE>
+
+The L<locale|/LOCALES> of the localized message text.  Defaults to the localizer's L<locale|/locale>.
+
+=item B<text TEXT>
+
+The localized message text.
+
+=item B<variant VARIANT>
+
+The message variant, if any.  See the L<LOCALIZED TEXT|/"LOCALIZED TEXT"> section above for more information on variants.
+
+=back
 
 =back
 

@@ -25,7 +25,11 @@ use overload
 
 use Rose::Object::MakeMethods::Generic
 (
-  scalar => 'id',
+  scalar => 
+  [
+    'id',
+    'variant',
+  ],
 );
 
 sub as_string { no warnings 'uninitialized'; "$_[0]" }
