@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3900;
+use Test::More tests => 3903;
 
 BEGIN 
 {
@@ -8683,11 +8683,43 @@ EOF
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 788)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 791)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
   my($sql, $bind) = 
+    Rose::DB::Object::Manager->get_objects_sql(
+      object_class => 'MySQLiteObject',
+      where => [ name => { '@' => \q(xxx) } ]);
+
+  ok($sql =~ /\bname @ xxx\b/, "strict_ops 1 - $db_type");
+
+  eval
+  {
+    ($sql, $bind) = 
+      Rose::DB::Object::Manager->get_objects_sql(
+        object_class => 'MySQLiteObject',
+        strict_ops => 1,
+        where => [ name => { '@' => \q(xxx) } ]);
+  };
+
+  ok($@, "strict_ops 2 - $db_type");
+
+  Rose::DB::Object::Manager->strict_ops(1);
+
+  eval
+  {
+    ($sql, $bind) = 
+      Rose::DB::Object::Manager->get_objects_sql(
+        object_class => 'MySQLiteObject',
+        where => [ name => { '@' => \q(xxx) } ]);
+  };
+
+  ok($@, "strict_ops 3 - $db_type");
+
+  Rose::DB::Object::Manager->strict_ops(0);
+
+  ($sql, $bind) = 
     Rose::DB::Object::Manager->get_objects_sql(
       object_class => 'MySQLiteObject',
       where => [ name => { like => \q('%foo%') } ]);

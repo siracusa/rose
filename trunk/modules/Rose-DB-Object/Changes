@@ -1,5 +1,9 @@
-0.775_03 (11.25.2008) - John Siracusa <siracusa@gmail.com>
+0.775_03 (11.26.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Fixed a bug that was preventing the use of new comparison
+      operators with QueryBuilder.  (Reported by Derek Wueppelmann)
+    * Added a strict_ops parameter and class method to the Manager
+      to allow the policy to b changed per-call or per-class.
     * Auto-initialization under Oracle should no longer be confused
       by tables with the same names in different schemas. (Patch by 
       Benjamin Hitz)
