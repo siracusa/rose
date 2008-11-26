@@ -46,8 +46,8 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   my $artist_class = $class_prefix . '::RoseDbObjectArtist';
   my $album_class = $class_prefix . '::RoseDbObjectAlbum';
 
-  $artist_class->meta->dbi_prepare_cached(0);
-  $album_class->meta->dbi_prepare_cached(0);
+  # DBD::Informix chokes badly when prepare_cached() is used.
+  Rose::DB::Object::Metadata->dbi_prepare_cached($db_type eq 'informix' ? 0 : 1);
 
   my $albums_method = 'rose_db_object_albums';
 
@@ -65,16 +65,8 @@ foreach my $db_type (qw(mysql pg informix sqlite))
     ok($artist, "$cascade saved artist with albums - $db_type");
     
     $artist->$albums_method($album->id);
-#local $Rose::DB::Object::Debug = 1;
-#local $Rose::DB::Object::Manager::Debug = 1;
-#$DB::single = 1;
-#print STDERR "AC: ", $artist->db->dbh->{'AutoCommit'}, "\n";
-#print ">";
-#my $r = <STDIN>;
-#print "\n\n###############################\n";
-#DBI->trace(1);
     $artist->save(@cascade);
-#exit;
+
     ok($artist, "$cascade re-saved artist albums = $db_type");
     
     $artist = $artist_class->new(id => $artist->id)->load;

@@ -3572,27 +3572,27 @@ sub objects_by_key
           {
             # Map object to parent
             $object->init(%map, db => $db);
-#print STDERR "PREP $object\n";
+
             # If the object is not marked as already existing in the database,
             # see if it represents an existing row.  If it does, merge the
             # existing row's column values into the object, allowing any
             # modified columns in the object to take precedence.
             __check_and_merge($object);
           }
-#print STDERR "DELETE\n";
+
           # Delete any existing objects
           my $deleted = 
             $ft_manager->$ft_delete_method(object_class => $ft_class,
                                            where => [ %key, @$query_args ], 
                                            db => $db);
           die $ft_manager->error  unless(defined $deleted);
-#print STDERR "DELETED $deleted\n";
+
           # Save all the objects.  Use the current list, even if it's
           # different than it was when the "set on save" was called.
           foreach my $object (@{$self->{$key} || []})
           {
             $object->{STATE_IN_DB()} = 0  if($deleted);
-#print STDERR "CM $object\n";
+
             # If the object is not marked as already existing in the database,
             # see if it represents an existing row.  If it does, merge the
             # existing row's column values into the object, allowing any
@@ -3600,12 +3600,10 @@ sub objects_by_key
             # if the object represents an existing row.
             if(__check_and_merge($object))
             {
-#print STDERR "SAVE CHANGES ONLY $object\n";
               $object->save(changes_only => 1) or die $object->error;
             }
             else
             {
-#print STDERR "SAVE $object\n";
               $object->save or die $object->error;
             }
 
