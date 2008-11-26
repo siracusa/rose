@@ -53,7 +53,7 @@ sub error_id
   {
     my $error_id = shift;
     my $new_error_id = $Error_Map{$error_id} || $error_id;
-    return $self->SUPER::error_id($new_error_id);
+    return $self->SUPER::error_id($new_error_id, @_);
   }
   else
   {
