@@ -43,7 +43,7 @@ sub make_methods
   return 1;
 }
 
-# Can't use the clas method maker easily here due to a chicken/egg
+# Can't use the class method maker easily here due to a chicken/egg
 # situation, so this code is manually inlined.
 my %Inheritable_Scalar;
 
