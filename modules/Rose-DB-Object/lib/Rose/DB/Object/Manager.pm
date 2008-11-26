@@ -38,6 +38,7 @@ use Rose::Class::MakeMethods::Generic
     'default_limit_with_subselect',
     'default_nested_joins',
     'dbi_prepare_cached',
+    'strict_ops',
   ],
 );
 
@@ -46,6 +47,7 @@ __PACKAGE__->default_objects_per_page(20);
 __PACKAGE__->default_limit_with_subselect(1);
 __PACKAGE__->default_nested_joins(1);
 __PACKAGE__->dbi_prepare_cached(0);
+__PACKAGE__->strict_ops(0);
 __PACKAGE__->default_manager_method_types(qw(objects iterator count delete update));
 
 sub handle_error
@@ -412,6 +414,8 @@ sub get_objects
   # Alias by popular demand...
   $args{'query'} = delete $args{'where'}
     if($args{'where'} && !exists $args{'query'});
+
+  $args{'strict_ops'} = $class->strict_ops  unless(exists $args{'strict_ops'});
 
   my $no_forced_sort = delete $args{'no_forced_sort'};
 
@@ -4178,6 +4182,10 @@ If true, indicate to the database that the result set is expected to be small.
 
 If true, ask the database to join the tables in the order that they are listed in the "FROM" clause of the SQL statement.
 
+=item B<strict_ops BOOL>
+
+If true, any comparison operator used in the C<query> that is not listed in the L<Rose::DB::Object::QueryBuilder> documentation will cause a fatal error.  The default value is determined by the L<strict_ops|/strict_ops> class method.
+
 =item B<use_index [ INDEX | ARRAYREF ]>
 
 Prefer to use the named indexes, specified by an index name or a reference to an array of index names.
@@ -4983,6 +4991,10 @@ For the complete list of valid parameter names and values, see the documentation
 If this parameter is omitted, this method will refuse to update all rows in the table and a fatal error will occur.  To update all rows in a table, you must pass the C<all> parameter with a true value.  If both the C<all> and the C<where> parameters are passed, a fatal error will occur.
 
 =back
+
+=item B<strict_ops [BOOL]>
+
+Get or set a boolean value that indicates whether using a comparison operator in the C<query> that is not listed in the L<Rose::DB::Object::QueryBuilder> documentation will cause a fatal error.  The default value is false.
 
 =back
 

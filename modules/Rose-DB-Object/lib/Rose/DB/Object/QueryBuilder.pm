@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.771';
+our $VERSION = '0.776';
 
 our $Debug = 0;
 
@@ -45,8 +45,6 @@ our %OP_MAP =
 );
 
 @OP_MAP{map { $_ . '_sql' } keys %OP_MAP} = values(%OP_MAP);
-
-our $Strict_Ops = 0;
 
 our %Op_Arg_PassThru = map { $_ => 1 } 
   qw(similar match imatch regex regexp like ilike rlike in_set any_in_set all_in_set
@@ -84,6 +82,8 @@ sub build_select
   my $bind_params  = $args{'bind_params'};
   my $from_and_where_only = delete $args{'from_and_where_only'};
   my $allow_empty_lists   = $args{'allow_empty_lists'};
+  my $strict_ops          = $args{'strict_ops'};
+
   my $unique_aliases = $args{'unique_aliases'};
   my $table_aliases  = exists $args{'table_aliases'} ? 
     $args{'table_aliases'} : ($args{'table_aliases'} = 1);
@@ -447,7 +447,7 @@ sub build_select
                                          undef, ($do_bind ? \@bind : undef),
                                          $db, $col_meta, $scalar_ref, $set, 
                                          $placeholder, $bind_params, 
-                                         $allow_empty_lists));
+                                         $allow_empty_lists, $strict_ops));
           }
           elsif(!defined $val)
           {
@@ -759,7 +759,8 @@ sub build_select
 sub _build_clause
 {
   my($dbh, $field, $op, $vals, $not, $field_mod, $bind, $db, $col_meta,
-     $force_inline, $set, $placeholder, $bind_params, $allow_empty_lists) = @_;
+     $force_inline, $set, $placeholder, $bind_params, $allow_empty_lists,
+     $strict_ops) = @_;
 
   #if(ref $vals eq 'ARRAY' && @$vals == 1)
   #{
@@ -783,7 +784,7 @@ sub _build_clause
 
     unless($op = $OP_MAP{$op_arg})
     {
-      if($Strict_Ops)
+      if($strict_ops)
       {
         Carp::croak "Unknown comparison operator: $op_arg";
       }
@@ -1015,7 +1016,11 @@ sub _build_clause
 
     foreach my $raw_op (keys(%$vals))
     {
-      $sub_op = $OP_MAP{$raw_op} || Carp::croak "Unknown comparison operator: $raw_op";
+      unless($sub_op = $OP_MAP{$raw_op})
+      {
+        Carp::croak "Unknown comparison operator: $raw_op"  if($strict_ops);
+        $sub_op = $raw_op;
+      }
 
       my $ref_type = ref($vals->{$raw_op});
 
