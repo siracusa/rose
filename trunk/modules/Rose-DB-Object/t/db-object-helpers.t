@@ -320,11 +320,19 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
   ok(!$@ && $unknown->id =~ /^\d+$/, "insert_or_update() with no key - $db_type");
 
+  # Must remove all data to prevent a UK conflict where name is NULL
+  Rose::DB::Object::Manager->delete_objects(all => 1, object_class => $other_class);
+  Rose::DB::Object::Manager->delete_objects(all => 1, object_class => $class);
+
   # load_or_insert with no key
 
   $unknown = $class->new(age => 100);
   eval { $unknown->load_or_insert };
   ok(!$@ && $unknown->id =~ /^\d+$/, "load_or_insert() with no key - $db_type");
+
+  # Must remove all data to prevent a UK conflict where name is NULL
+  Rose::DB::Object::Manager->delete_objects(all => 1, object_class => $other_class);
+  Rose::DB::Object::Manager->delete_objects(all => 1, object_class => $class);
 
   # load_or_save with no key
 
