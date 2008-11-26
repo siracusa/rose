@@ -2198,7 +2198,7 @@ sub object_by_key
         eval
         {
           $db = $self->db;
-          $object->db($db)  if($share_db);
+          $object->db($db);
 
           my $ret = $db->begin_work;
 
@@ -2237,6 +2237,9 @@ sub object_by_key
           $self->save(changes_only => 1) or die $self->error;
 
           $self->{$key} = $object;
+
+          # Not sharing?  Aw.
+          $object->db(undef)  unless($share_db);
 
           if($started_new_tx)
           {
@@ -2400,7 +2403,7 @@ sub object_by_key
           eval
           {
             $db = $self->db;
-            $object->db($db)  if($share_db);
+            $object->db($db);
 
             # If the object is not marked as already existing in the database,
             # see if it represents an existing row.  If it does, merge the
@@ -2426,6 +2429,9 @@ sub object_by_key
 
               $self->$local_method($object->$foreign_method);
             }
+
+            # Not sharing?  Aw.
+            $object->db(undef)  unless($share_db);
 
             return $self->{$key} = $object;
           };
@@ -2571,7 +2577,7 @@ sub object_by_key
       eval
       {
         $db = $self->db;
-        $object->db($db)  if($share_db);
+        $object->db($db);
 
         my $ret = $db->begin_work;
 
@@ -2612,6 +2618,9 @@ sub object_by_key
         }
 
         $self->{$key} = undef;
+
+        # Not sharing?  Aw.
+        $object->db(undef)  unless($share_db);
       };
 
       if($@)
@@ -2734,7 +2743,7 @@ sub object_by_key
         eval
         {
           $db = $self->db;
-          $object->db($db)  if($share_db);
+          $object->db($db);
           $object->delete(@delete_args) or die $object->error;
         };
 
@@ -2751,6 +2760,9 @@ sub object_by_key
           $meta->handle_error($self);
           return undef;
         }
+
+        # Not sharing?  Aw.
+        $object->db(undef)  unless($share_db);
 
         return 1;
       };
@@ -3560,27 +3572,27 @@ sub objects_by_key
           {
             # Map object to parent
             $object->init(%map, db => $db);
-
+#print STDERR "PREP $object\n";
             # If the object is not marked as already existing in the database,
             # see if it represents an existing row.  If it does, merge the
             # existing row's column values into the object, allowing any
             # modified columns in the object to take precedence.
             __check_and_merge($object);
           }
-
+#print STDERR "DELETE\n";
           # Delete any existing objects
           my $deleted = 
             $ft_manager->$ft_delete_method(object_class => $ft_class,
                                            where => [ %key, @$query_args ], 
                                            db => $db);
           die $ft_manager->error  unless(defined $deleted);
-
+#print STDERR "DELETED $deleted\n";
           # Save all the objects.  Use the current list, even if it's
           # different than it was when the "set on save" was called.
           foreach my $object (@{$self->{$key} || []})
           {
             $object->{STATE_IN_DB()} = 0  if($deleted);
-
+#print STDERR "CM $object\n";
             # If the object is not marked as already existing in the database,
             # see if it represents an existing row.  If it does, merge the
             # existing row's column values into the object, allowing any
@@ -3588,10 +3600,12 @@ sub objects_by_key
             # if the object represents an existing row.
             if(__check_and_merge($object))
             {
+#print STDERR "SAVE CHANGES ONLY $object\n";
               $object->save(changes_only => 1) or die $object->error;
             }
             else
             {
+#print STDERR "SAVE $object\n";
               $object->save or die $object->error;
             }
 

@@ -46,6 +46,9 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   my $artist_class = $class_prefix . '::RoseDbObjectArtist';
   my $album_class = $class_prefix . '::RoseDbObjectAlbum';
 
+  $artist_class->meta->dbi_prepare_cached(0);
+  $album_class->meta->dbi_prepare_cached(0);
+
   my $albums_method = 'rose_db_object_albums';
 
   foreach my $cascade (0, 1)
@@ -62,8 +65,16 @@ foreach my $db_type (qw(mysql pg informix sqlite))
     ok($artist, "$cascade saved artist with albums - $db_type");
     
     $artist->$albums_method($album->id);
+#local $Rose::DB::Object::Debug = 1;
+#local $Rose::DB::Object::Manager::Debug = 1;
+#$DB::single = 1;
+#print STDERR "AC: ", $artist->db->dbh->{'AutoCommit'}, "\n";
+#print ">";
+#my $r = <STDIN>;
+#print "\n\n###############################\n";
+#DBI->trace(1);
     $artist->save(@cascade);
-    
+#exit;
     ok($artist, "$cascade re-saved artist albums = $db_type");
     
     $artist = $artist_class->new(id => $artist->id)->load;
@@ -211,7 +222,7 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_artists
 (
-  id     INT PRIMARY KEY NOT NULL,
+  id     INT PRIMARY KEY,
   name   VARCHAR(255) NOT NULL,
 
   UNIQUE(name)
@@ -221,8 +232,8 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_albums
 (
-  id         INT PRIMARY KEY NOT NULL,
-  artist_id  INTEGER REFERENCES rose_db_object_artists (id),
+  id         INT PRIMARY KEY,
+  artist_id  INT REFERENCES rose_db_object_artists (id),
   title      VARCHAR(255) NOT NULL
 )
 EOF
@@ -307,7 +318,8 @@ END
     my $dbh = Rose::DB->new('informix_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE rose_db_object_test');
+    $dbh->do('DROP TABLE rose_db_object_albums CASCADE');
+    $dbh->do('DROP TABLE rose_db_object_artists CASCADE');
     $dbh->disconnect;
   }
 
