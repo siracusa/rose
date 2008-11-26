@@ -9,13 +9,14 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.764';
+our $VERSION = '0.776';
 
 use constant UNIQUE_INDEX_SQL => <<'EOF';
 select ai.index_name FROM ALL_INDEXES ai, ALL_CONSTRAINTS ac 
 WHERE ai.index_name = ac.constraint_name AND 
       ac.constraint_type <> 'P' AND 
-      ai.uniqueness = 'UNIQUE' AND ai.table_name = ?
+      ai.uniqueness = 'UNIQUE' AND ai.table_name = ? AND 
+      ai.table_owner = ?
 EOF
 
 use constant UNIQUE_INDEX_COLUMNS_SQL_STUB => <<'EOF';
@@ -52,7 +53,7 @@ sub auto_generate_unique_keys
 
     my $sth = $dbh->prepare(UNIQUE_INDEX_SQL);
 
-    $sth->execute($table);
+    $sth->execute($table, $schema);
     $sth->bind_columns(\$key_name);
 
     while($sth->fetch)

@@ -1,5 +1,12 @@
-0.775_02 (11.22.2008) - John Siracusa <siracusa@gmail.com>
+0.775_03 (11.25.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Auto-initialization under Oracle should no longer be confused
+      by tables with the same names in different schemas. (Patch by 
+      Benjamin Hitz)
+    * Removed the on-again, off-again restriction on aliasing primary 
+      key columns.  I think it's off for good this time.
+    * Refined column alias policy to keep from appearing to override
+      more granular column method name customization.
     * Overhauled related object mutator methods to better match the
       documentation and reduce unnecessary queries.
     * Fixed a bug that caused the init_with_tree() helper method to

@@ -139,7 +139,7 @@ sub auto_alias_columns
 {
   my($self) = shift;
 
-  foreach my $column (@_ == 1 && ref $_[0] eq 'ARRAY' ? @{$_[0]} : @_)
+  foreach my $column (@_) #(@_ == 1 && ref $_[0] eq 'ARRAY' ? @{$_[0]} : @_)
   {
     # Auto-alias the column if there will be any conflicts
     foreach my $type ($column->auto_method_types)

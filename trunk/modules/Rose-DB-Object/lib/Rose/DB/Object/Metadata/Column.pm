@@ -23,7 +23,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 our $Triggers_Key      = 'triggers';
 our $Trigger_Index_Key = 'trigger_index';
 
-our $VERSION = '0.766';
+our $VERSION = '0.776';
 
 use overload
 (
@@ -241,7 +241,6 @@ sub made_method_type
     $self->{'accessor_method_name'} = $name;  
     $self->{'mutator_method_name'}  = $name;
     $self->{'rw_method_name'}       = $name;
-    $self->{'alias'} = $name;
   }  
   elsif($type eq 'get')
   {
@@ -435,7 +434,7 @@ sub perl_column_definition_attributes
       next ATTR;
     }
 
-    if($attr eq 'alias' && $val eq $self->name)
+    if($attr eq 'alias' && (!defined $val || $val eq $self->name))
     {
       next ATTR;
     }
@@ -485,14 +484,14 @@ sub perl_column_definition_attributes
     {
       my $method = $self->$attr();
 
-      my $ok = 0;
+      my $skip = 1;
 
       foreach my $type ($self->auto_method_types)
       {
-        $ok = 1  if($method eq $self->build_method_name_for_type($type));
+        $skip = 0  if($method ne $self->build_method_name_for_type($type));
       }
 
-      next ATTR  if($ok);
+      next ATTR  if($skip);
     }
 
     push(@attrs, $attr);
@@ -1436,6 +1435,19 @@ sub make_methods
   my($self) = shift;
 
   $self->SUPER::make_methods(@_);
+
+  # Check if we can fold all method type name attributes
+  # into an alias attribute.  We can do this if the accessor,
+  # mutator, and rw method names are all the same and are not
+  # the same as the column name.
+  no warnings 'uninitialized';
+  if(($self->accessor_method_name eq $self->mutator_method_name &&
+      $self->mutator_method_name eq $self->rw_method_name &&
+      $self->rw_method_name ne $self->name))
+  {
+    $self->alias($self->rw_method_name);
+  }
+
   $self->apply_triggers;
 }
 

@@ -681,6 +681,19 @@ sub primary_key_columns      { shift->primary_key->columns(@_)      }
 sub primary_key_column_names { shift->primary_key->column_names(@_) }
 sub pk_columns               { shift->primary_key_columns(@_)       }
 
+sub primary_key_column_names_or_aliases 
+{
+  my($self) = shift;
+
+  if($self->{'primary_key_column_names_or_aliases'})
+  {
+    return $self->{'primary_key_column_names_or_aliases'};
+  }
+
+  return $self->{'primary_key_column_names_or_aliases'} =
+    [ map { $_->alias || $_->name } $self->primary_key_columns ];
+}
+
 sub init_primary_key_column_info
 {
   my($self) = shift;
@@ -1838,14 +1851,12 @@ sub make_column_methods
 
     $column->make_methods(%args);
 
-    # Primary key columns cannot be aliased
-    if($column->is_primary_key_member && $column->alias && $column->alias ne $column->name)
-    {
-      Carp::croak "Primary key columns cannot be aliased (the culprit: '$name')";
-    }
-
-    # Allow primary keys to be aliased
-    # XXX: Disabled because the Manager is not happy with this.
+    # XXX: Re-enabling the ability to alias primary keys
+    #if($column->is_primary_key_member && $column->alias && $column->alias ne $column->name)
+    #{
+    #  Carp::croak "Primary key columns cannot be aliased (the culprit: '$name')";
+    #}
+    #
     #if($method ne $name)
     #{
     #  # Primary key columns can be aliased, but we make a column-named 
@@ -3046,16 +3057,15 @@ sub alias_column
   Carp::cluck "Pointless alias for '$name' to '$new_name' for table ", $self->table
     unless($name ne $new_name);
 
-  # XXX: We now allow this, but create a duplicate method using the real
-  # XXX: column name anyway in make_column_methods().
-  # XXX: Not really.  Disregard the above.
-  foreach my $column ($self->primary_key_column_names)
-  {
-    if($name eq $column)
-    {
-      Carp::croak "Primary key columns cannot be aliased (the culprit: '$name')";
-    }
-  }
+  # XXX: Allow primary keys to be aliased
+  # XXX: Was disabled because the Manager was not happy with this.
+  #foreach my $column ($self->primary_key_column_names)
+  #{
+  #  if($name eq $column)
+  #  {
+  #    Carp::croak "Primary key columns cannot be aliased (the culprit: '$name')";
+  #  }
+  #}
 
   $self->_clear_column_generated_values;
 
@@ -4113,9 +4123,10 @@ sub _clear_nonpersistent_column_generated_values
 sub _clear_primary_key_column_generated_values
 {
   my($self) = shift;
-  $self->{'primary_key_column_accessor_names'} = undef;
-  $self->{'primary_key_column_mutator_names'} = undef;
-  $self->{'key_column_accessor_method'} = undef;
+  $self->{'primary_key_column_accessor_names'}   = undef;
+  $self->{'primary_key_column_mutator_names'}    = undef;
+  $self->{'key_column_accessor_method'}          = undef;
+  $self->{'primary_key_column_names_or_aliases'} = undef;
 }
 
 sub method_name_is_reserved
@@ -4353,7 +4364,7 @@ sub init_auto_helper
     my $auto_helper_class = $self->auto_helper_class;
 
     no strict 'refs';
-    unless(${"${auto_helper_class}::VERSION"})
+    unless(@{"${auto_helper_class}::ISA"})
     {
       eval "use $auto_helper_class";
       Carp::croak "Could not load '$auto_helper_class' - $@"  if($@);
