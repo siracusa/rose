@@ -4,14 +4,14 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 157;
-#use Test::More 'no_plan';
+#use Test::More tests => 157;
+use Test::More 'no_plan';
 
 use_ok('Rose::HTML::Objects');
 
 use File::Spec;
 use File::Path;
-
+$JCS::FOO = 0;
 #
 # In-memory
 #
@@ -115,6 +115,7 @@ EOF
   'My2::HTML::Object::Messages' =><<'EOF',
 use constant FIELD_ERROR_BAD_NICKNAME    => 100_000;
 use constant FIELD_ERROR_BAD_NICKNAME_AR => 100_001;
+use constant FIELD_ERROR_TOO_MANY_DAYS   => 100_002;
 
 use constant FIELD_LABEL_NICKNAME        => 200_000;
 EOF
@@ -122,6 +123,7 @@ EOF
   'My2::HTML::Object::Errors' =><<'EOF',
 use constant FIELD_ERROR_BAD_NICKNAME    => 100_000;
 use constant FIELD_ERROR_BAD_NICKNAME_AR => 100_001;
+use constant FIELD_ERROR_TOO_MANY_DAYS   => 100_002;
 EOF
 );
 
@@ -326,6 +328,84 @@ is($form->field('nick')->error. '', 'c - \[]Invalid nickname: a, b, c, d, e:bob'
 My2::HTML::Object->localizer->locale('fr');
 
 is($form->field('nick')->error. '', 'c - \[]Le nickname est mal: a, b, c, d, e:bob', 'localizer locale 2');
+
+My2::HTML::Object->localizer->locale('en');
+
+#
+# Days field
+#
+
+@parts = split('::', 'My2::HTML::Form::Field::Days');
+$parts[-1] .= '.pm';
+
+my $days_pm = File::Spec->catfile($lib_dir, @parts);
+#warn "# WRITE: $days_pm\n";
+
+open($fh, '>', $days_pm) or die "Could not create '$days_pm' - $!";
+
+$code=<<'EOF';
+package My2::HTML::Form::Field::Days;
+
+use My2::HTML::Object::Errors qw(FIELD_ERROR_TOO_MANY_DAYS);
+
+use base qw(My2::HTML::Form::Field::Integer);
+
+
+if(__PACKAGE__->localizer->auto_load_messages)
+{
+  __PACKAGE__->localizer->load_all_messages;
+}
+
+1;
+
+__DATA__
+
+[% LOCALE en %]
+
+FIELD_ERROR_TOO_MANY_DAYS = "Too many days."
+FIELD_ERROR_TOO_MANY_DAYS(one) = "One day is too many."
+FIELD_ERROR_TOO_MANY_DAYS(two) = "Two days is too many."
+FIELD_ERROR_TOO_MANY_DAYS(few) = "[count] days is too many (few)."
+FIELD_ERROR_TOO_MANY_DAYS(many) = "[count] days is too many (many)."
+FIELD_ERROR_TOO_MANY_DAYS(plural) = "[count] days is too many."
+
+[% LOCALE fr %]
+
+FIELD_ERROR_TOO_MANY_DAYS = "Trop de jours."
+FIELD_ERROR_TOO_MANY_DAYS(one) = "Un jour est un trop grand nombre."
+FIELD_ERROR_TOO_MANY_DAYS(plural) = "[count] jours est un trop grand nombre.."
+
+EOF
+
+print $fh $code;
+close($fh) or die "Could not write '$days_pm' - $!";
+
+require My2::HTML::Form::Field::Days;
+
+require My2::HTML::Object::Errors;
+
+$field = My2::HTML::Form::Field::Days->new(name => 'days');
+
+my $error_id = My2::HTML::Object::Errors::FIELD_ERROR_TOO_MANY_DAYS();
+
+$field->error_id($error_id, { count => 0 });
+is($field->error, '0 days is too many.', 'zero variant (en)');
+
+$field->error_id($error_id, { count => 1 });
+
+is($field->error, 'One day is too many.', 'one variant (en)');
+
+$field->error_id($error_id, { count => 2 });
+#################
+#$DB::single = 1;
+$JCS::FOO = 1;
+# is($field->error, 'Two days is too many.', 'two variant (en)');
+# 
+# $field->error_id($error_id, { count => 3 });
+# is($field->error, '3 days is too many.', 'plural fallback variant (en)');
+# 
+# $field->error_id($error_id, { count => 3, variant => 'few' });
+# is($field->error, '3 days is too many (few).', 'few explicit variant (en)');
 
 END
 {

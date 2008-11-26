@@ -147,7 +147,7 @@ sub localize_message
 
   my $args   = $args{'args'}   || $message->args;
   my $locale = $args{'locale'} || $message->locale || $self->locale;
-
+$DB::single = $JCS::FOO;
   my $id = $message->id;
 
   my $variant = $args{'variant'} ||=
@@ -289,9 +289,9 @@ sub select_variant_for_message
 
   return $args->{'variant'}  if($args->{'variant'});  
 
-  if(my $count = $args->{'count'})
+  if(defined(my $count = $args->{'count'}))
   {
-    return $self->select_variant_for_count(%args);
+    return $self->select_variant_for_count(%args, count => $count);
   }
   
   return DEFAULT_VARIANT;
@@ -439,13 +439,24 @@ sub set_localized_message_text
   {
     $Debug && warn qq($self - Adding text $name), 
                    ($variant ? "($variant)" : ''), 
-                   qq( ($l) - "$t"\n);
-
+                   qq( [$l] - "$t"\n);
+$DB::single = $JCS::FOO;
     if($variant)
     {
-      unless(ref $msgs->{$name}{$l})
+      if(ref $msgs->{$name}{$l})
       {
-        $msgs->{$name}{$l}{DEFAULT_VARIANT()} = $msgs->{$name}{$l};
+        $msgs->{$name}{$l}{$variant} = "$t"; # force stringification
+      }
+      else
+      {
+        my $existing = $msgs->{$name}{$l};
+
+        if(defined $existing)
+        {
+          $msgs->{$name}{$l} = {};
+          $msgs->{$name}{$l}{DEFAULT_VARIANT()} = $existing;
+        }
+        
         $msgs->{$name}{$l}{$variant} = "$t"; # force stringification
       }
     }
@@ -617,21 +628,21 @@ sub get_localized_message_text
   $name ||= $self->get_message_name($id);
 
   my $msgs = $self->localized_messages_hash;
-
+$DB::single = $JCS::FOO;
   # Try this twice: before and after loading messages
   for(1, 2)
   {
     if(exists $msgs->{$name} && exists $msgs->{$name}{$locale})
     {
-      if(ref $msgs->{$name}{$locale})
+      if(ref $msgs->{$name}{$locale} && exists $msgs->{$name}{$locale}{$variant})
       {
         return $msgs->{$name}{$locale}{$variant};
       }
   
-      return $msgs->{$name}{$locale};
+      return $msgs->{$name}{$locale}  if($variant eq DEFAULT_VARIANT);
     }
   
-    $self->load_localized_message($name, $locale, $from_class);
+    $self->load_localized_message($name, $locale, $variant, $from_class);
   }
 
   return undef;
@@ -650,13 +661,15 @@ my %Data_Pos;
 
 sub load_localized_message
 {
-  my($self, $name, $locale, $from_class) = @_;
+  my($self, $name, $locale, $variant, $from_class) = @_;
 
   $from_class ||= $self->messages_class;
 
-  if($self->localized_message_exists($name, $locale))
+  if($self->localized_message_exists($name, $locale, $variant))
   {
-    return $self->get_localized_message_text(name => $name, locale => $locale);
+    return $self->get_localized_message_text(name   => $name, 
+                                            locale  => $locale, 
+                                            variant => $variant);
   }
 
   no strict 'refs';
@@ -676,9 +689,10 @@ sub load_localized_message
       $Data_Pos{$from_class} = tell($fh);
     }
 
-    my $text = $self->load_messages_from_fh(fh      => $fh, 
-                                            locales => $locale,
-                                            names   => $name);
+    my $text = $self->load_messages_from_fh(fh       => $fh, 
+                                            locales  => $locale,
+                                            variants => $variant,
+                                            names    => $name);
     return $text  if(defined $text);
   }
 
@@ -692,7 +706,7 @@ sub load_localized_message
     my $class = pop(@classes);
     next  if($seen{$class}++);
     #$Debug && warn "$self SEARCHING $class FOR $name ($locale)\n";
-    my $msg = $self->load_localized_message($name, $locale, $class);
+    my $msg = $self->load_localized_message($name, $locale, $variant, $class);
     return $msg  if(defined $msg);
     push(@classes, grep { !$seen{$_} } @{"${class}::ISA"});
   }
@@ -816,7 +830,7 @@ sub load_messages_from_fh
 {
   my($self, %args) = @_;
 
-  my($fh, $locales, $msg_names) = @args{qw(fh locales names)};
+  my($fh, $locales, $variants, $msg_names) = @args{qw(fh locales variants names)};
 
   if(ref $locales eq 'ARRAY')
   {
@@ -825,6 +839,17 @@ sub load_messages_from_fh
   elsif($locales && !ref $locales)
   {
     $locales = { $locales => 1 };
+  }
+
+  $variants ||= DEFAULT_VARIANT;
+
+  if(ref $variants eq 'ARRAY')
+  {
+    $variants = @$variants ? { map { $_ => 1} @$variants } : undef;
+  }
+  elsif($variants && !ref $variants)
+  {
+    $variants = { $variants => 1 };
   }
 
   my $msg_re;
@@ -876,8 +901,8 @@ sub load_messages_from_fh
 
         $self->set_localized_message_text(name    => $in_msg,
                                           locale  => $in_locale,
-                                          text    => $text,
-                                          variant => $variant);
+                                          variant => $variant,
+                                          text    => $text);
       }
 
       $text    = '';
@@ -894,7 +919,9 @@ sub load_messages_from_fh
     }
     elsif(/$Message_Spec/o)
     {
-      if((!$locales || $locales->{$in_locale}) && (!$msg_names || $msg_names->{$1}))
+      if((!$locales || $locales->{$in_locale}) && 
+         $variants->{$2 || DEFAULT_VARIANT} && 
+         (!$msg_names || $msg_names->{$1}))
       {
         my $name = $1;
         $variant = $2;
