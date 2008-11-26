@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 315;
+use Test::More tests => 321;
 
 BEGIN 
 {
@@ -18,7 +18,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 130)  unless($HAVE_PG);
+  skip("Postgres tests", 132)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -33,7 +33,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
                           K2   => undef,
                           K3   => 3);
 
-  ok($o->can('id'), "no primary key alias - $db_type");
+  #ok($o->can('id'), "no primary key alias - $db_type");
 
   ok(ref $o && $o->isa('MyPgObject'), "new() 1 - $db_type");
 
@@ -58,6 +58,28 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
   $o->CODE('C' x 50);
   is($o->CODE, 'C' x 6, "character truncation - $db_type");
+
+  my $os = 
+    Rose::DB::Object::Manager->get_objects(
+      #debug => 1,
+      object_class => ref($o),
+      query =>
+      [
+        id => $o->ID,
+      ]);
+
+  is($os->[0]->ID, $o->ID, "Manager query with pk alias 1 - $db_type");
+
+  $os = 
+    Rose::DB::Object::Manager->get_objects(
+      #debug => 1,
+      object_class => ref($o),
+      query =>
+      [
+        ID => $o->ID,
+      ]);
+
+  is($os->[0]->ID, $o->ID, "Manager query with pk alias 2 - $db_type");
 
   my $ouk = MyPgObject->new(K1 => 1,
                             K2 => undef,
@@ -221,7 +243,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 63)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 64)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -232,7 +254,7 @@ SKIP: foreach my $db_type ('mysql')
 
   ok(ref $o && $o->isa('MyMySQLObject'), "new() 1 - $db_type");
 
-  ok($o->can('id'), "no primary key alias - $db_type");
+  #ok($o->can('id'), "no primary key alias - $db_type");
 
   $o->FLAG2('true');
   $o->DATE_CREATED('now');
@@ -253,6 +275,28 @@ SKIP: foreach my $db_type ('mysql')
 
   $o->CODE('C' x 50);
   is($o->CODE, 'C' x 6, "character truncation - $db_type");
+
+  my $os = 
+    Rose::DB::Object::Manager->get_objects(
+      #debug => 1,
+      object_class => ref($o),
+      query =>
+      [
+        id => $o->ID,
+      ]);
+
+  is($os->[0]->ID, $o->ID, "Manager query with pk alias 1 - $db_type");
+
+  $os = 
+    Rose::DB::Object::Manager->get_objects(
+      #debug => 1,
+      object_class => ref($o),
+      query =>
+      [
+        ID => $o->ID,
+      ]);
+
+  is($os->[0]->ID, $o->ID, "Manager query with pk alias 2 - $db_type");
 
   my $ouk = MyMySQLObject->new(K1 => 1,
                                K2 => undef,
@@ -392,7 +436,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 64)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 65)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -404,7 +448,7 @@ SKIP: foreach my $db_type ('informix')
 
   ok(ref $o && $o->isa('MyInformixObject'), "new() 1 - $db_type");
 
-  ok($o->can('id'), "no primary key alias - $db_type");
+  #ok($o->can('id'), "no primary key alias - $db_type");
 
   $o->meta->allow_inline_column_values(1);
 
@@ -426,6 +470,28 @@ SKIP: foreach my $db_type ('informix')
 
   $o->CODE('C' x 50);
   is($o->CODE, 'C' x 6, "character truncation - $db_type");
+
+  my $os = 
+    Rose::DB::Object::Manager->get_objects(
+      #debug => 1,
+      object_class => ref($o),
+      query =>
+      [
+        id => $o->ID,
+      ]);
+
+  is($os->[0]->ID, $o->ID, "Manager query with pk alias 1 - $db_type");
+
+  $os = 
+    Rose::DB::Object::Manager->get_objects(
+      #debug => 1,
+      object_class => ref($o),
+      query =>
+      [
+        ID => $o->ID,
+      ]);
+
+  is($os->[0]->ID, $o->ID, "Manager query with pk alias 2 - $db_type");
 
   my $ouk = MyInformixObject->new(K1 => 1,
                                   K2 => undef,
@@ -571,19 +637,19 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 57)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 59)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
-  my $o = MySQLiteObject->new(NAME => 'John', 
-                                ID   => 1,
-                                K1   => 1,
-                                K2   => undef,
-                                K3   => 3);
+  my $o = MySQLiteObject->new(NAME   => 'John', 
+                              EYEDEE => 1,
+                              K1     => 1,
+                              K2     => undef,
+                              K3     => 3);
 
   ok(ref $o && $o->isa('MySQLiteObject'), "new() 1 - $db_type");
 
-  ok($o->can('id'), "no primary key alias - $db_type");
+  #ok($o->can('id'), "no primary key alias - $db_type");
 
   $o->meta->allow_inline_column_values(1);
 
@@ -606,6 +672,28 @@ SKIP: foreach my $db_type ('sqlite')
   $o->CODE('C' x 50);
   is($o->CODE, 'C' x 6, "character truncation - $db_type");
 
+  my $os = 
+    Rose::DB::Object::Manager->get_objects(
+      #debug => 1,
+      object_class => ref($o),
+      query =>
+      [
+        id => $o->EYEDEE,
+      ]);
+
+  is($os->[0]->EYEDEE, $o->EYEDEE, "Manager query with pk alias 1 - $db_type");
+
+  $os = 
+    Rose::DB::Object::Manager->get_objects(
+      #debug => 1,
+      object_class => ref($o),
+      query =>
+      [
+        EYEDEE => $o->EYEDEE,
+      ]);
+
+  is($os->[0]->EYEDEE, $o->EYEDEE, "Manager query with pk alias 2 - $db_type");
+
   my $ouk = MySQLiteObject->new(K1 => 1,
                                   K2 => undef,
                                   K3 => 3);
@@ -613,12 +701,12 @@ SKIP: foreach my $db_type ('sqlite')
   ok($ouk->load, "load() uk 1 - $db_type");
   ok(!$ouk->not_found, "not_found() uk 1 - $db_type");
 
-  is($ouk->ID, 1, "load() uk 2 - $db_type");
+  is($ouk->EYEDEE, 1, "load() uk 2 - $db_type");
   is($ouk->NAME, 'John', "load() uk 3 - $db_type");
 
   ok($ouk->save, "save() uk 1 - $db_type");
 
-  my $o2 = MySQLiteObject->new(ID => $o->ID);
+  my $o2 = MySQLiteObject->new(EYEDEE => $o->EYEDEE);
 
   ok(ref $o2 && $o2->isa('MySQLiteObject'), "new() 2 - $db_type");
 
@@ -664,7 +752,7 @@ SKIP: foreach my $db_type ('sqlite')
 
   is($db->dbh, $o3->dbh, "dbh() - $db_type");
 
-  my $o4 = MySQLiteObject->new(ID => 999);
+  my $o4 = MySQLiteObject->new(EYEDEE => 999);
   ok(!$o4->load(speculative => 1), "load() nonexistent - $db_type");
   ok($o4->not_found, "not_found() 2 - $db_type");
 
@@ -688,7 +776,7 @@ SKIP: foreach my $db_type ('sqlite')
 
   ok($o->delete, "delete() - $db_type");
 
-  $o = MySQLiteObject->new(NAME => 'John', ID => 9);
+  $o = MySQLiteObject->new(NAME => 'John', EYEDEE => 9);
 
   $o->FLAG2('true');
   $o->DATE_CREATED('now');
@@ -706,11 +794,7 @@ SKIP: foreach my $db_type ('sqlite')
   eval { $o->meta->alias_column(nonesuch => 'foo') };
   ok($@, "alias_column() nonesuch - $db_type");
 
-  # This is okay now
-  #eval { $o->meta->alias_column(ID => 'foo') };
-  #ok($@, "alias_column() primary key - $db_type");
-
-  $o = MySQLiteObject->new(ID => 777);
+  $o = MySQLiteObject->new(EYEDEE => 777);
 
   $o->meta->error_mode('fatal');
 
@@ -719,7 +803,7 @@ SKIP: foreach my $db_type ('sqlite')
   eval { $o->load };
   ok($@ && $o->not_found, "load() not found fatal - $db_type");
 
-  $o->ID('abc');
+  $o->EYEDEE('abc');
 
   eval { $o->load }; # SQLite doesn't care about data types
   ok($@ && $o->not_found, "load() fatal - $db_type");
@@ -728,6 +812,10 @@ SKIP: foreach my $db_type ('sqlite')
   ok($@, "save() fatal - $db_type");
 
   $o->meta->error_mode('return');
+
+  # This is okay now
+  eval { $o->meta->alias_column(id => 'foo') };
+  ok(!$@, "alias_column() primary key - $db_type");
 }
 
 BEGIN
@@ -850,8 +938,6 @@ EOF
       date_created  => { type => 'timestamp' },
     );
 
-    sub MyPgObject::ID { shift->id(@_) }
-
     MyPgObject->meta->add_unique_key('save');
 
     MyPgObject->meta->add_unique_key([ qw(k1 k2 k3) ]);
@@ -863,7 +949,7 @@ EOF
     MyPgObject->meta->column_name_to_method_name_mapper(sub 
     {
       my($meta,  $column_name, $method_type, $method_name) = @_;
-      return $method_name eq 'id' ? 'id' : uc $method_name;
+      return uc $method_name;
     });
 
     MyPgObject->meta->alias_column(save => 'save_col');
@@ -979,12 +1065,10 @@ EOF
       date_created  => { type => 'timestamp' },
     );
 
-    sub MyMySQLObject::ID { shift->id(@_) }
-
     MyMySQLObject->meta->column_name_to_method_name_mapper(sub 
     {
       my($meta,  $column_name, $method_type, $method_name) = @_;
-      return $method_name eq 'id' ? 'id' : uc $method_name;
+      return uc $method_name;
     });
 
     MyMySQLObject->meta->alias_column(save => 'save_col');
@@ -1121,12 +1205,10 @@ EOF
       date_created  => { type => 'datetime year to fraction(5)' },
     );
 
-    sub MyInformixObject::ID { shift->id(@_) }
-
     MyInformixObject->meta->column_name_to_method_name_mapper(sub 
     {
       my($meta,  $column_name, $method_type, $method_name) = @_;
-      return $method_name eq 'id' ? 'id' : uc $method_name;
+      return uc $method_name;
     });
 
     MyInformixObject->meta->prepare_options({ix_CursorWithHold => 1});    
@@ -1205,7 +1287,7 @@ EOF
     (
       name     => { type => 'varchar', length => 32, overflow => 'truncate' },
       code     => { type => 'char', length => 6, overflow => 'truncate' },
-      id       => { type => 'serial', primary_key => 1, not_null => 1 },
+      id       => { type => 'serial', alias => 'eyedee', primary_key => 1, not_null => 1 },
       k1       => { type => 'int' },
       k2       => { type => 'int' },
       k3       => { type => 'int' },
@@ -1220,12 +1302,10 @@ EOF
       date_created  => { type => 'datetime' },
     );
 
-    sub MySQLiteObject::ID { shift->id(@_) }
-
     MySQLiteObject->meta->column_name_to_method_name_mapper(sub 
     {
       my($meta,  $column_name, $method_type, $method_name) = @_;
-      return $method_name eq 'id' ? 'id' : uc $method_name;
+      return uc $method_name;
     });
 
     MySQLiteObject->meta->prepare_options({ix_CursorWithHold => 1});    

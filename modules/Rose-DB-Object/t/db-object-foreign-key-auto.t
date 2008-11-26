@@ -1254,7 +1254,7 @@ SKIP: foreach my $db_type ('sqlite')
     MySQLiteObject->meta->column($name)->ordinal_position($i++);
   }
 
-  my $o = MySQLiteObject->new(name => 'John', id => 1);
+  my $o = MySQLiteObject->new(name => 'John', eyedee => 1);
 
   ok(ref $o && $o->isa('MySQLiteObject'), "new() 1 - $db_type");
 
@@ -1266,7 +1266,7 @@ SKIP: foreach my $db_type ('sqlite')
   ok($o->save, "save() 1 - $db_type");
   ok($o->load, "load() 1 - $db_type");
 
-  my $o2 = MySQLiteObject->new(id => $o->id);
+  my $o2 = MySQLiteObject->new(eyedee => $o->eyedee);
 
   ok(ref $o2 && $o2->isa('MySQLiteObject'), "new() 2 - $db_type");
 
@@ -1307,13 +1307,13 @@ SKIP: foreach my $db_type ('sqlite')
 
   is($db->dbh, $o3->dbh, "dbh() - $db_type");
 
-  my $o4 = MySQLiteObject->new(id => 999);
+  my $o4 = MySQLiteObject->new(eyedee => 999);
   ok(!$o4->load(speculative => 1), "load() nonexistent - $db_type");
   ok($o4->not_found, "not_found() 2 - $db_type");
 
   ok($o->load, "load() 4 - $db_type");
 
-  my $o5 = MySQLiteObject->new(id => $o->id);
+  my $o5 = MySQLiteObject->new(eyedee => $o->eyedee);
 
   ok($o5->load, "load() 5 - $db_type");
 
@@ -1469,7 +1469,7 @@ use base qw(Rose::DB::Object);
 __PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns(
-    id            => { type => 'integer', not_null => 1 },
+    id            => { type => 'integer', alias => 'eyedee', not_null => 1 },
     name          => { type => 'varchar', length => 32, not_null => 1 },
     flag          => { type => 'boolean', default => 't', not_null => 1 },
     flag2         => { type => 'boolean' },
@@ -1533,7 +1533,7 @@ __PACKAGE__->meta->setup(
     table   => 'Rose_db_object_test',
 
     columns => [
-        id            => { type => 'integer', not_null => 1 },
+        id            => { type => 'integer', alias => 'eyedee', not_null => 1 },
         name          => { type => 'varchar', length => 32, not_null => 1 },
         flag          => { type => 'boolean', default => 't', not_null => 1 },
         flag2         => { type => 'boolean' },
@@ -1603,7 +1603,7 @@ __PACKAGE__->meta->table('Rose_db_object_test');
 
 __PACKAGE__->meta->columns
 (
-  id            => { type => 'integer', not_null => 1 },
+  id            => { type => 'integer', alias => 'eyedee', not_null => 1 },
   name          => { type => 'varchar', length => 32, not_null => 1 },
   flag          => { type => 'boolean', default => 't', not_null => 1 },
   flag2         => { type => 'boolean' },
@@ -1675,7 +1675,7 @@ __PACKAGE__->meta->setup(
     table   => 'Rose_db_object_test',
 
     columns => [
-        id            => { type => 'integer', not_null => 1 },
+        id            => { type => 'integer', alias => 'eyedee', not_null => 1 },
         name          => { type => 'varchar', length => 32, not_null => 1 },
         flag          => { type => 'boolean', default => 't', not_null => 1 },
         flag2         => { type => 'boolean' },
@@ -2403,6 +2403,24 @@ EOF
 
     # Create test subclass
 
+    package MyAutoSQLite;
+
+    use base 'Rose::DB::Object::Metadata::Auto::SQLite';
+
+    sub auto_alias_columns
+    {
+      my($self) = shift;
+    
+      foreach my $column (@_)
+      {
+        if($column->name eq 'fk1')     { $column->alias('fkone') }
+        elsif($column->name eq 'save') { $column->alias('save_col') }
+        elsif($column->name eq 'id')   { $column->alias('eyedee') }
+      }
+    }
+
+    Rose::DB::Object::Metadata->auto_helper_class(sqlite => 'MyAutoSQLite');
+
     package MySQLiteObject;
 
     our @ISA = qw(Rose::DB::Object);
@@ -2412,10 +2430,10 @@ EOF
     MySQLiteObject->meta->table('Rose_db_object_test');
     MySQLiteObject->meta->convention_manager(undef);
 
-    MySQLiteObject->meta->column_name_to_method_name_mapper(sub
-    {
-      return ($_ eq 'fk1') ? 'fkone' : $_
-    });
+    #MySQLiteObject->meta->column_name_to_method_name_mapper(sub
+    #{
+    #  return ($_ eq 'fk1') ? 'fkone' : $_
+    #});
 
     MySQLiteObject->meta->auto_initialize;
 

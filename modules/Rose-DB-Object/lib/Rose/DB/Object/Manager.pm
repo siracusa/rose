@@ -16,7 +16,7 @@ use Rose::DB::Object::Constants
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.771';
+our $VERSION = '0.776';
 
 our $Debug = 0;
 
@@ -1602,7 +1602,7 @@ sub get_objects
           }
           else
           {
-            push(@select, "$prefix$_");
+            push(@select, "$prefix$column");
           }
         }
       }
@@ -2076,14 +2076,16 @@ sub get_objects
         {
           my(@seen, %seen, @sub_objects);
 
-          my @pk_columns = $meta->primary_key_column_names;
+          #my @pk_columns = $meta->primary_key_column_names;
+          my $pk_columns = $meta->primary_key_column_names_or_aliases;
 
           # Get list of primary key columns for each sub-table
           my @sub_pk_columns;
 
           foreach my $i (1 .. $num_subtables)
           {
-            $sub_pk_columns[$i + 1] = [ $classes[$i]->meta->primary_key_column_names ];
+            #$sub_pk_columns[$i + 1] = [ $classes[$i]->meta->primary_key_column_names ];
+            $sub_pk_columns[$i + 1] = $classes[$i]->meta->primary_key_column_names_or_aliases;
           }
 
           my($last_object, %subobjects, %parent_objects);
@@ -2104,7 +2106,7 @@ sub get_objects
 
                 while($sth->fetch)
                 {
-                  my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @pk_columns);
+                  my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @$pk_columns);
 
                   # If this is a new main (t1) table row that we haven't seen before
                   unless($seen[0]{$pk}++)
@@ -2576,21 +2578,23 @@ sub get_objects
       {
         my(@seen, %seen, @sub_objects);
 
-        my @pk_columns = $meta->primary_key_column_names;
+        #my @pk_columns = $meta->primary_key_column_names;
+        my $pk_columns = $meta->primary_key_column_names_or_aliases;
 
         # Get list of primary key columns for each sub-table
         my @sub_pk_columns;
 
         foreach my $i (1 .. $num_subtables)
         {
-          $sub_pk_columns[$i + 1] = [ $classes[$i]->meta->primary_key_column_names ];
+          #$sub_pk_columns[$i + 1] = [ $classes[$i]->meta->primary_key_column_names ];
+          $sub_pk_columns[$i + 1] = $classes[$i]->meta->primary_key_column_names_or_aliases;
         }
 
         my($last_object, %subobjects, %parent_objects);
 
         ROW: while($sth->fetch)
         {
-          my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @pk_columns);
+          my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @$pk_columns);
 
           my $object;
 
