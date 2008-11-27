@@ -274,6 +274,9 @@ sub is_ready_to_make_methods
 
   eval
   {
+    # http://stackoverflow.com/questions/322173
+    local $SIG{'__DIE__'};
+
     $self->class->isa('Rose::DB::Object') or die
       Rose::DB::Object::Exception::ClassNotReady->new(
         "Missing or invalid foreign class");
@@ -310,9 +313,6 @@ sub is_ready_to_make_methods
       warn $self->parent->class, ': Foreign key ', $self->name, " NOT READY - $err";
     }
 
-    # XXX: Comment-out the line below to allow the use of the debugger in the
-    # XXX: test suite.  The issue is that the exeption object thrown above does
-    # XXX: not show up as an object here. This seems like a perl bug to me.
     die $error  unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception::ClassNotReady'));
   }
 

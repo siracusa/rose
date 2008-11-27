@@ -231,6 +231,9 @@ sub is_ready_to_make_methods
   # the info it needs, then we're not yet ready to make these methods.
   eval
   {
+    # http://stackoverflow.com/questions/322173
+    local $SIG{'__DIE__'};
+
     my $map_class = $self->map_class or die "Missing map class";
 
     unless(UNIVERSAL::isa($map_class, 'Rose::DB::Object'))
@@ -449,9 +452,6 @@ sub is_ready_to_make_methods
       warn $self->parent->class, ': many-to-many relationship ', $self->name, " NOT READY - $err";
     }
 
-    # XXX: Comment-out the line below to allow the use of the debugger in the
-    # XXX: test suite.  The issue is that the exeption object thrown above does
-    # XXX: not show up as an object here. This seems like a perl bug to me.
     die $error  unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception::ClassNotReady'));
   }
 
