@@ -126,7 +126,7 @@ Get or set the name of the data type contained in this set.  Valid values for TY
 
 John C. Siracusa (siracusa@gmail.com)
 
-=head1 COPYRIGHT
+=head1 LICENSE
 
 Copyright (c) 2008 by John C. Siracusa.  All rights reserved.  This program is
 free software; you can redistribute it and/or modify it under the same terms

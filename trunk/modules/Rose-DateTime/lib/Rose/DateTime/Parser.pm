@@ -145,6 +145,6 @@ Get or set the time zone string passed to L<Rose::DateTime::Util>'s L<parse_date
 
 John C. Siracusa (siracusa@gmail.com)
 
-=head1 COPYRIGHT
+=head1 LICENSE
 
 Copyright (c) 2004-2006 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

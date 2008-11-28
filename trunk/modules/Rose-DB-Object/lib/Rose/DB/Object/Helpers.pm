@@ -1481,7 +1481,7 @@ A reference to a subroutine that is called on each L<Rose::DB::Object::Metadata:
 
 John C. Siracusa (siracusa@gmail.com)
 
-=head1 COPYRIGHT
+=head1 LICENSE
 
 Copyright (c) 2008 by John C. Siracusa.  All rights reserved.  This program is
 free software; you can redistribute it and/or modify it under the same terms

@@ -395,6 +395,6 @@ Returns a clone of the L<prototype_form|/prototype_form>, if one was set.  Other
 
 John C. Siracusa (siracusa@gmail.com)
 
-=head1 COPYRIGHT
+=head1 LICENSE
 
 Copyright (c) 2008 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

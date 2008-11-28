@@ -1824,7 +1824,7 @@ This works the same as the C<build_select()> function, except that it only retur
 
 John C. Siracusa (siracusa@gmail.com)
 
-=head1 COPYRIGHT
+=head1 LICENSE
 
 Copyright (c) 2008 by John C. Siracusa.  All rights reserved.  This program is
 free software; you can redistribute it and/or modify it under the same terms
