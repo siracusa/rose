@@ -231,7 +231,7 @@ sub is_ready_to_make_methods
   # the info it needs, then we're not yet ready to make these methods.
   eval
   {
-    # http://stackoverflow.com/questions/322173
+    # Workaround for http://rt.perl.org/rt3/Ticket/Display.html?id=60890
     local $SIG{'__DIE__'};
 
     my $map_class = $self->map_class or die "Missing map class";
