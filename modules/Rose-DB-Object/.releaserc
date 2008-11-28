@@ -1,3 +1,4 @@
 cpan_user JSIRACUSA
 automated_testing 1
 skip_kwalitee 1
+skip_prereqs 1
