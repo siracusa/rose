@@ -1,4 +1,4 @@
-0.775_03 (11.26.2008) - John Siracusa <siracusa@gmail.com>
+0.775_03 (11.27.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug that was preventing the use of new comparison
       operators with QueryBuilder.  (Reported by Derek Wueppelmann)
