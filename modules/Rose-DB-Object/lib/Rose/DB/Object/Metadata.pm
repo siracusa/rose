@@ -6500,7 +6500,7 @@ The "object" style sets unique keys using calls to the L<Rose::DB::Object::Metad
 
 John C. Siracusa (siracusa@gmail.com)
 
-=head1 COPYRIGHT
+=head1 LICENSE
 
 Copyright (c) 2008 by John C. Siracusa.  All rights reserved.  This program is
 free software; you can redistribute it and/or modify it under the same terms
