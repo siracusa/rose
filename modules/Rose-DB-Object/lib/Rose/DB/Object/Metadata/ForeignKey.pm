@@ -274,7 +274,7 @@ sub is_ready_to_make_methods
 
   eval
   {
-    # http://stackoverflow.com/questions/322173
+    # Workaround for http://rt.perl.org/rt3/Ticket/Display.html?id=60890
     local $SIG{'__DIE__'};
 
     $self->class->isa('Rose::DB::Object') or die
