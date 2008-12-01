@@ -1,3 +1,7 @@
+0.747_01 (12.01.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Resolved ambiguous driver_class link in POD.
+
 0.747 (10.22.2008) - Justin Ellison <justin@techadvise.com>
 
     * Changed to require YAML instead of YAML::Syck, though YAML::Syck
