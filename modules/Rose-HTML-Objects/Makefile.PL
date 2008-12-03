@@ -51,6 +51,7 @@ WriteMakefile(NAME         => 'Rose::HTML::Objects',
                 'File::Spec'     => 0,
                 'File::Path'     => 0,
                 'File::Basename' => 0,
+                'IO::String'     => '1.08',
                 # XXX: Can't use Scalar::Defer 0.11 (or possibly later) until some things
                 # XXX: are sorted out.  See: http://rt.cpan.org/Ticket/Display.html?id=31039
                 # XXX: Scalar::Defer 0.18 seems to work again, but I'm still not using it.

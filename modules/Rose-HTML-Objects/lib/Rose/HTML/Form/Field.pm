@@ -597,7 +597,7 @@ sub hidden_fields
   my($self) = shift;
 
   my $hidden_field_class = ref($self)->object_type_class_loaded('hidden');
-  
+
   no strict 'refs';
   unless(@{$hidden_field_class . '::ISA'})
   {
@@ -1331,7 +1331,7 @@ It may also be useful for debugging.
 Get or set an integer L<message|Rose::HTML::Object::Messages> id for the description.
 
 Get or set an integer L<message|Rose::HTML::Object::Messages> id for the description.  When setting the message id, an optional ARGS hash reference should be passed if the L<localized text|Rose::HTML::Object::Message::Localizer/"LOCALIZED TEXT"> for the L<corresponding|/message_for_error_id> message contains any L<placeholders|Rose::HTML::Object::Message::Localizer/"LOCALIZED TEXT">.
-    
+
 =item B<error_label [STRING]>
 
 Get or set the field label used when constructing error messages.  For example, an error message might say "Value for [label] is too large."  The error label will go in the place of the C<[label]> placeholder.
@@ -1341,7 +1341,7 @@ If no error label is set, this method simply returns the L<label|/label>.
 =item B<error_label_id [ID [, ARGS]]>
 
 Get or set an integer L<message|Rose::HTML::Object::Messages> id for the error label.  When setting the message id, an optional ARGS hash reference should be passed if the L<localized text|Rose::HTML::Object::Message::Localizer/"LOCALIZED TEXT"> for the L<corresponding|/message_for_error_id> message contains any L<placeholders|Rose::HTML::Object::Message::Localizer/"LOCALIZED TEXT">.
-    
+
 =item B<filter [CODE]>
 
 Sets both the input filter and output filter to CODE.
@@ -1472,7 +1472,7 @@ Return the appropriate L<message|Rose::HTML::Object::Message> object associated 
 
 =item B<msg_class CLASS>
 
-The name of the L<Rose::HTML::Object::Message>-derived class used to store each message.  If omitted, it defaults to the L<localizer|/localizer>'s L<message_class|Rose::HTML::Object::Message::Localizer/message_class>.
+The name of the L<Rose::HTML::Object::Message>-derived class used to store each message.  If omitted, it defaults to the L<localizer|Rose::HTML::Object/localizer>'s L<message_class|Rose::HTML::Object::Message::Localizer/message_class>.
 
 =back
 

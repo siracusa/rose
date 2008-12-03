@@ -62,6 +62,12 @@ __PACKAGE__->default_locale('en');
 __PACKAGE__->default_locale_cascade('default' => [ 'en' ]);
 
 #
+# Class methods
+#
+
+sub default_variant { DEFAULT_VARIANT }
+
+#
 # Object methods
 #
 
@@ -147,7 +153,7 @@ sub localize_message
 
   my $args   = $args{'args'}   || $message->args;
   my $locale = $args{'locale'} || $message->locale || $self->locale;
-$DB::single = $JCS::FOO;
+
   my $id = $message->id;
 
   my $variant = $args{'variant'} ||=
@@ -165,10 +171,6 @@ $DB::single = $JCS::FOO;
                              variant => $variant,
                              message => $message,
                              args    => $args) || [];
-
-    # Alwasy fall back to the default variant
-    push(@$variant_cascade, DEFAULT_VARIANT)
-      unless($variant eq DEFAULT_VARIANT);
 
     foreach my $try_variant ($variant, @$variant_cascade)
     {
@@ -199,7 +201,7 @@ $DB::single = $JCS::FOO;
               from_class => ref($parent));
         }
       }
-    
+
       return $self->process_placeholders($text, $args)  if(defined $text);
     }
   }
@@ -236,6 +238,8 @@ sub process_placeholders
       }
     }
   }
+
+  no warnings 'uninitialized';
 
   for($text)
   {
@@ -293,7 +297,7 @@ sub select_variant_for_message
   {
     return $self->select_variant_for_count(%args, count => $count);
   }
-  
+
   return DEFAULT_VARIANT;
 }
 
@@ -304,22 +308,16 @@ sub select_variant_for_count
   my $locale = $args{'locale'};
   my $count  = abs($args{'count'});
 
+  # Possibilities:
+  #
   # zero
   # one (singular)
   # two (dual)
   # few (paucal)
   # many
   # plural
-   
-  # I only know pluralization rules for English...
-  if($locale eq 'en')
-  {
-    return $count == 0 ? 'zero' : 
-           $count == 1 ? 'one'  :
-           'plural';
-  }
 
-  # Everything else gets this
+  # No default judgements on "few" and "many"
   return $count == 0 ? 'zero' : 
          $count == 1 ? 'one'  :
          $count == 2 ? 'two'  :
@@ -328,29 +326,22 @@ sub select_variant_for_count
 
 my %Variant_Cascade =
 (
-  en =>
-  {
-    'zero' => [ 'plural' ],
-    'two'  => [ 'plural' ],
-    'few'  => [ 'plural' ],
-    'many' => [ 'plural' ],
-  },
-  default =>
-  {
-    'zero' => [ 'plural' ],
-    'two'  => [ 'plural' ],
-    'few'  => [ 'plural' ],
-    'many' => [ 'plural' ],
-  }
+  'zero'   => [ 'plural', DEFAULT_VARIANT ],
+  'one'    => [ DEFAULT_VARIANT ],
+  'two'    => [ 'plural', DEFAULT_VARIANT ],
+  'few'    => [ 'plural', DEFAULT_VARIANT ],
+  'many'   => [ 'plural', DEFAULT_VARIANT ],
+  'plural' => [ DEFAULT_VARIANT ],
 );
 
+# Trying to avoid repeated anonymous array generation that
+# might(?) result from using literal [] below
 my @None;
 
 sub variant_cascade
 {
   my($self, %args) = @_;
-  return $Variant_Cascade{$args{'locale'}}{$args{'variant'}} ||
-         $Variant_Cascade{'default'}{$args{'variant'}} || 
+  return $Variant_Cascade{$args{'variant'}} ||
          \@None;
 }
 
@@ -369,8 +360,10 @@ sub localized_message_exists
     {
       return $msgs->{$name}{$locale}{$variant} ? 1 : 0;
     }
-
-    return 1;
+    elsif($variant eq DEFAULT_VARIANT)
+    {
+      return 1;
+    }
   }
 
   return 0;
@@ -440,7 +433,7 @@ sub set_localized_message_text
     $Debug && warn qq($self - Adding text $name), 
                    ($variant ? "($variant)" : ''), 
                    qq( [$l] - "$t"\n);
-$DB::single = $JCS::FOO;
+
     if($variant)
     {
       if(ref $msgs->{$name}{$l})
@@ -456,7 +449,7 @@ $DB::single = $JCS::FOO;
           $msgs->{$name}{$l} = {};
           $msgs->{$name}{$l}{DEFAULT_VARIANT()} = $existing;
         }
-        
+
         $msgs->{$name}{$l}{$variant} = "$t"; # force stringification
       }
     }
@@ -628,9 +621,9 @@ sub get_localized_message_text
   $name ||= $self->get_message_name($id);
 
   my $msgs = $self->localized_messages_hash;
-$DB::single = $JCS::FOO;
+
   # Try this twice: before and after loading messages
-  for(1, 2)
+  foreach my $try (1, 2)
   {
     if(exists $msgs->{$name} && exists $msgs->{$name}{$locale})
     {
@@ -638,10 +631,12 @@ $DB::single = $JCS::FOO;
       {
         return $msgs->{$name}{$locale}{$variant};
       }
-  
+
       return $msgs->{$name}{$locale}  if($variant eq DEFAULT_VARIANT);
     }
-  
+
+    last  if($try == 2);
+
     $self->load_localized_message($name, $locale, $variant, $from_class);
   }
 
@@ -841,8 +836,6 @@ sub load_messages_from_fh
     $locales = { $locales => 1 };
   }
 
-  $variants ||= DEFAULT_VARIANT;
-
   if(ref $variants eq 'ARRAY')
   {
     $variants = @$variants ? { map { $_ => 1} @$variants } : undef;
@@ -920,7 +913,7 @@ sub load_messages_from_fh
     elsif(/$Message_Spec/o)
     {
       if((!$locales || $locales->{$in_locale}) && 
-         $variants->{$2 || DEFAULT_VARIANT} && 
+         (!$variants || $variants->{$2 || DEFAULT_VARIANT}) && 
          (!$msg_names || $msg_names->{$1}))
       {
         my $name = $1;
@@ -959,6 +952,19 @@ sub load_messages_from_fh
   return;
 }
 
+sub load_messages_from_string
+{
+  my($self) = shift;
+
+  my %args = @_ == 1 ? (string => shift) : @_;
+
+  require IO::String;
+
+  $args{'fh'} = IO::String->new(delete $args{'string'});
+
+  return $self->load_messages_from_fh(%args);
+}
+
 1;
 
 __END__
@@ -985,26 +991,26 @@ Rose::HTML::Object::Message::Localizer - Message localizer class.
     # for more information.
 
     package My::HTML::Object::Message::Localizer;
-    
+
     use strict;
-    
+
     use base qw(Rose::HTML::Object::Message::Localizer);
     ...
     sub get_localized_message_text
     {
       my($self) = shift;
-      
+
       # Get localized message text from the built-in sources
       my $text = $self->SUPER::get_localized_message_text(@_);
 
       unless(defined $text)
       {
         my %args = @_;
-        
+
         # Get message text from some other source
         ...
       }
-      
+
       return $text;
     }
 
@@ -1113,6 +1119,8 @@ Leading and trailing spaces and newlines are removed from text provided in the m
 
 Blank lines and any lines beginning with a C<#> character are skipped.
 
+=head3 VARIANTS
+
 Any L<message|Rose::HTML::Object::Messages> constant name may be followed immediately by a variant string within parentheses.  Variant names may contain only the characters C<[A-Za-z0-9_-]>.  If no variant is provided, the variant is assumed to be C<default>.  In other words, this:
 
     SOME_MESSAGE(default) = "..."
@@ -1121,11 +1129,106 @@ is equivalent to this:
 
     SOME_MESSAGE = "..."
 
-########################
+Before going any further, the key thing to remember about variants is that you can ignore them entirely, if you wish.  Don't use any variants in your message text and don't specify any variants when ask for localized message text and you can pretend that they do not exist.
+
+With that out of the way, there are some good reasons why you might want to use variants.  But first, let's examine how they work.  We've already seen the syntax for specifying variants using the built-in localized message text format.  Thenext piece of the puzzle is the ability to specify a particular variant for a message.  That can be done either explicitly or indirectly.  First, the explicit approach.
+
+Requesting a variant explicitly is done using the special C<variant> L<message argument|Rose::HTML::Object::Message::Localized/args>.  Example:
+
+    $field->error_id($id, { variant => 'foo' });
+
+Aside from indicating the message variant, the C<variant> argument is treated just like any other.  That is, if you happen to have a placeholder named C<variant>, then the value will be subtituted for it.  (This being the case, it's usually a good idea to avoid using C<variant> as a placeholder name.)
+
+If no explicit C<variant> is specified, the L<select_variant_for_message|/select_variant_for_message> method is called to select an appropriate variant.  As expected, the default implementation of this method returns the L<default variant|/default_variant> most of the time.  But if there is a L<message argument|Rose::HTML::Object::Message::Localized/args> named C<count>, then the L<select_variant_for_count|/select_variant_for_count> method is called in order to select the variant.
+
+This leads to the primary intended use of variants: pluralization.  English has relatively simple pluralization rules, but other languages have special grammar for not just singular and plural, but also "dual," and sometimes even "many" and "few."  The pluralization variant names expected by the default implementation of L<select_variant_for_count|/select_variant_for_count> roughly follow the CLDR guidelines:
+
+L<http://www.unicode.org/cldr/data/charts/supplemental/language_plural_ruleshtml>
+
+with the exception that C<plural> is used in place of C<other>.  (Variants are a general purpose mechanism, whereas the context of pluralization is implied in the case of the CLDR terms.  A variant named C<other> has no apparent connection to pluralization.) 
+
+The default implementation of L<select_variant_for_count|/select_variant_for_count> (sanely) makes no judgements about "few" or "many," but does return C<zero> for a C<count> of C<0>, C<one> for C<1>, C<two> for C<2>, and C<plural> for all other values of C<count>.
+
+But since English has no special pluralization grammar for two items, how is this expected to work in the general case?  The missing piece is the so-called "L<variant cascade|/variant_cascade>."  If the desired variant is not available for the specified message in the requested locale, then the L<variant_cascade|/variant_cascade> method is called.  It is passed the locale, the desired variant, the message itself, and the message arguments.  It returns a list of other variants to try based on the arguments it was passed.
+
+The default implementation of L<variant_cascade|/variant_cascade> follows simple English-centric rules, cascading directly yo C<plural> except in the case of the C<one> variant, and appending the L<default variant|/default_variant> to the end of all cascades.
+
+(Incidentally, there is also a L<locale cascade|/locale_cascade>.  The L<localize_message|/localize_message> method uses a nested loop: for each locale, for each variant, look for message text.  See the L<localize_message|/localize_message> documentation for more information.)
+
+So, here's an example using variants.  (Please forgive the poor translations.  I don't speak French.)  First, the message text:
+
+  [% LOCALE en %]
+
+  FIELD_ERROR_TOO_MANY_DAYS = "Too many days."
+  FIELD_ERROR_TOO_MANY_DAYS(one) = "One day is too many."
+  FIELD_ERROR_TOO_MANY_DAYS(two) = "Two days is too many."
+  FIELD_ERROR_TOO_MANY_DAYS(few) = "[count] days is too many (few)."
+  FIELD_ERROR_TOO_MANY_DAYS(many) = "[count] days is too many (many)."
+  FIELD_ERROR_TOO_MANY_DAYS(plural) = "[count] days is too many."
+
+  [% LOCALE fr %]
+
+  FIELD_ERROR_TOO_MANY_DAYS = "Trop de jours."
+  FIELD_ERROR_TOO_MANY_DAYS(one) = "Un jour est un trop grand nombre."
+  FIELD_ERROR_TOO_MANY_DAYS(plural) = "[count] jours est un trop grand nombre."
+
+Now some examples of variant selection:
+
+  use My::HTML::Object::Errors qw(FIELD_ERROR_TOO_MANY_DAYS)l
+  ...
+
+  $id = FIELD_ERROR_TOO_MANY_DAYS; # to make for shorter lines below
+
+  $field->locale('en');
+
+  $field->error_id($id, { count => 0 });
+
+  # No explicit variant given.  The select_variant_for_count() called and 
+  # returns variant "zero".  No "zero" variant found for this message in 
+  # locale "en", so the variant_cascade() containing ('plural', 'default')
+  # is considered, in that order.  A "plural" variant is found.
+  #  This prints: 0 days is too many.
+  print $field->error;
+
+  $field->error_id($id, { count => 2 });
+
+  # No explicit variant given.  The select_variant_for_count() called and 
+  # returns variant "two".  That message variant is found in locale "en"
+  #  This prints: Two days is too many.
+  print $field->error;
+
+  $field->error_id($id, { count => 3, variant => 'few'  });
+
+  # Explicit variant given.  That message variant is found in locale "en"
+  # This prints: 3 days is too many (few).
+  print $field->error;
+
+  $field->locale('fr');
+
+  $field->error_id($id, { count => 0 });
+
+  # No explicit variant given.  The select_variant_for_count() called and 
+  # returns variant "zero".  No "zero" variant found for this message in 
+  # locale "fr", so the variant_cascade() containing ('plural', 'default')
+  # is considered, in that order.  A "plural" variant is found.
+  # This prints: 0 jours est un trop grand nombre.
+  print $field->error;
+
+  $field->error_id($id, { count => 3, variant => 'few' });
+
+  # Explicit variant given.  No "few" variant found for this message in 
+  # locale "fr", so the variant_cascade() containing ('plural', 'default')
+  # is considered, in that order.  A "plural" variant is found.
+  # This prints: 3 jours est un trop grand nombre.
+  print $field->error;
+
+I hope you get the idea.  Remember that what's described above is merely the default implementation.  You are fully expected to override any and all public methods in the localizer in you L<private library|Rose::HTML::Objects/"PRIVATE LIBRARIES"> to alter their behavior.  An obvious choice is the L<variant_cascade|/variant_cascade> method, which you might want to override to provide more sensible per-locale cascades, replacing the default English-centric rules.
+
+And even if you don't plan to use the variant system at all, you might want to override L<select_variant_for_message|/select_variant_for_message> to unconditionally return the L<default variant|/default_variant>, which will eliminate the special treatment of message arguments named C<count> and C<variant>.
 
 =head3 CUSTOMIZATION
 
-This implementation of localized message storage exists primarily because it's the most convenient way to store and distribute the localized messages that ship with the L<Rose::HTML::Objects> module distribution.  For a real application, it may be preferable to store localized text elsewhere.
+The implementation of localized message storage described above primarily because it's the most convenient way to store and distribute the localized messages that ship with the L<Rose::HTML::Objects> module distribution.  For a real application, it may be preferable to store localized text elsewhere.
 
 The easiest way to do this is to create your own L<Rose::HTML::Object::Message::Localizer> subclass and override the L<get_localized_message_text|/get_localized_message_text> method (or any other method(s) you desire) and provide your own implementation of localized message storage and retrieval.  You must then ensure that yoru new localizer subclass is actually used by all of your HTML objects.  You can of course set the L<localizer|Rose::HTML::Object/localizer> attribute directly, but a much more comprehensive way to customize your HTML objects is by creating your own, private family tree of L<Rose::HTML::Object>-derived classes.  Please see the L<private libraries|Rose::HTML::Objects/"PRIVATE LIBRARIES"> section of the L<Rose::HTML::Objects> documentation for more information.
 
@@ -1224,6 +1327,10 @@ An integer L<message|Rose::HTML::Object::Messages> id.  Message ids from 0 to 29
 A L<message|Rose::HTML::Object::Messages> name.  This parameter is required.  Message names may contain only the characters C<[A-Z0-9_]> and must be unique.
 
 =back
+
+=item B<default_variant>
+
+Returns the name of the default variant: C<default>.  See the L<variants|/VARIANTS> subsection of the L<localized text|/"LOCALIZED TEXT"> section above for more information on variants.
 
 =item B<error_class [CLASS]>
 
@@ -1325,7 +1432,33 @@ Get or set the locale cascade.  PARAMS are L<locale|/"LOCALES">/arrayref pairs. 
 
 This method returns the locale cascade as a reference to a hash of locale/arrayref pairs (in scalar context) or a list of locale/arrayref pairs (in list context).
 
-=item B<message_for_error_id [PARAMS]>
+=item B<localize_message PARAMS>
+
+Localize a message, returning the appropriately localized and processed message text.  Valid PARAMS name/value pairs are:
+
+=over 4
+
+=item B<args HASHREF>
+
+A reference to a hash of L<message arguments|Rose::HTML::Object::Message::Localized/args>.  If omitted, the C<message>'s L<arguments|Rose::HTML::Object::Message::Localized/args> are used.
+
+=item B<locale LOCALE>
+
+The locale.  If omitted, the C<message>'s L<locale|Rose::HTML::Object::Message::Localized/locale> is used.
+
+=item B<message MESSAGE>
+
+The L<Rose::HTML::Object::Message>-derived message object.  This parameter is required.
+
+=item B<variant VARIANT>
+
+The message L<variant|/"VARIANTS">.  If omitted, the L<select_variant_for_message|/select_variant_for_message> method is called, passing the C<message> L<id|Rose::HTML::Object::Message/id>, C<args>, and C<locale>.
+
+=back
+
+This method performs a nested loop to search for localized message text: for each locale (including any L<locale_cascade|/locale_cascade>), for each variant (including any L<variant_cascade|/variant_cascade>), for each parent L<field|Rose::HTML::Form::Field/parent_field>, L<form|Rose::HTML::Form::Field/parent_form>, or generic parent L<object|Rose::HTML::Object/parent> (considered in that order), look for message text by calling the L<get_localized_message_text|/get_localized_message_text> method.
+
+=item B<message_for_error_id PARAMS>
 
 Given an L<error|Rose::HTML::Object::Errors> id, return the corresponding L<message_class|/message_class> object.  The default implementation simply looks for a message with the same integer id as the error.  Valid PARAMS name/value pairs are:
 
@@ -1344,6 +1477,63 @@ A reference to a hash of name/value pairs to be used as the L<message arguments|
 =item B<parent [OBJECT]>
 
 Get or set a weakened reference to the localizer's parent object.
+
+=item B<select_variant_for_count PARAMS>
+
+Select and return a L<variant|/"VARIANTS"> name based on PARAMS name/value pairs.  Valid PARAMS are:
+
+=over 4
+
+=item B<args HASHREF>
+
+A reference to a hash of L<message arguments|Rose::HTML::Object::Message::Localized/args>.
+
+=item B<count INTEGER>
+
+The count for which to select a variant.  This parameter is required.
+
+=item B<locale LOCALE>
+
+The L<locale|/LOCALES> of the localized message text.  This parameter is required.
+
+=back
+
+The default implementation looks only at the C<count> parameter and returns the following values based on it (the C<*> below means "any other value"):
+
+    count   variant
+    -----   -------
+        0      zero
+        1       one
+        2       two
+        *    plural
+
+See the L<variants|/VARIANTS> section for more information on this and other variant-related methods
+
+=item B<select_variant_for_message PARAMS>
+
+Select and return a L<variant|/"VARIANTS"> name based on PARAMS name/value pairs.  Valid PARAMS are:
+
+=over 4
+
+=item B<args HASHREF>
+
+A reference to a hash of L<message arguments|Rose::HTML::Object::Message::Localized/args>.
+
+=item B<id MESSAGEID>
+
+The L<message id|Rose::HTML::Object::Messages>.
+
+=item B<locale LOCALE>
+
+The L<locale|/LOCALES> of the localized message text.  This parameter is required.
+
+=back
+
+If C<args> contains a C<count> parameter, then the L<select_variant_for_count|/select_variant_for_count> method is called, passing all arguments plus C<count> the value as its own parameter, and the variant it returns is returned from this method.
+
+If C<args> contains a C<variant> parameter, then the value of that parameter is returned.
+
+Otherwise, the L<default_variant|/default_variant> is returned.
 
 =item B<set_localized_message_text PARAMS>
 
@@ -1372,6 +1562,43 @@ The localized message text.
 The message variant, if any.  See the L<LOCALIZED TEXT|/"LOCALIZED TEXT"> section above for more information on variants.
 
 =back
+
+=item B<variant_cascade [PARAMS]>
+
+Return a reference to an array of L<variants|/VARIANTS> names to try, assuming the requested variant is not available in the context specified in PARAMS name/value pairs.  Valid params are:
+
+=over 4
+
+=item B<args HASHREF>
+
+A reference to a hash of L<message arguments|Rose::HTML::Object::Message::Localized/args>.
+
+=item B<locale LOCALE>
+
+The L<locale|/LOCALES> of the desired localized message text.
+
+=item B<message MESSAGE>
+
+The L<Rose::HTML::Object::Message>-derived message object.
+
+=item B<variant VARIANT>
+
+The originally requested message L<variant|/"VARIANTS">.
+
+=back
+
+The default implementation looks only at the C<variant> parameter and returns references to arrays containing the following variant lists based on it:
+
+    variant   variant cascade
+    -------   ---------------
+    zero      plural, default
+    one       default
+    two       plural, default
+    few       plural, default
+    many      plural, default
+    plural    default
+
+The array references returned should be treated as read-only.
 
 =back
 

@@ -4,14 +4,14 @@ use strict;
 
 use FindBin qw($Bin);
 
-#use Test::More tests => 157;
-use Test::More 'no_plan';
+use Test::More tests => 176;
+#use Test::More 'no_plan';
 
 use_ok('Rose::HTML::Objects');
 
 use File::Spec;
 use File::Path;
-$JCS::FOO = 0;
+
 #
 # In-memory
 #
@@ -366,14 +366,10 @@ FIELD_ERROR_TOO_MANY_DAYS = "Too many days."
 FIELD_ERROR_TOO_MANY_DAYS(one) = "One day is too many."
 FIELD_ERROR_TOO_MANY_DAYS(two) = "Two days is too many."
 FIELD_ERROR_TOO_MANY_DAYS(few) = "[count] days is too many (few)."
-FIELD_ERROR_TOO_MANY_DAYS(many) = "[count] days is too many (many)."
-FIELD_ERROR_TOO_MANY_DAYS(plural) = "[count] days is too many."
 
 [% LOCALE fr %]
 
 FIELD_ERROR_TOO_MANY_DAYS = "Trop de jours."
-FIELD_ERROR_TOO_MANY_DAYS(one) = "Un jour est un trop grand nombre."
-FIELD_ERROR_TOO_MANY_DAYS(plural) = "[count] jours est un trop grand nombre.."
 
 EOF
 
@@ -383,6 +379,24 @@ close($fh) or die "Could not write '$days_pm' - $!";
 require My2::HTML::Form::Field::Days;
 
 require My2::HTML::Object::Errors;
+
+My2::HTML::Form::Field::Days->localizer->load_messages_from_string(<<"EOF");
+[% LOCALE en %]
+
+FIELD_ERROR_TOO_MANY_DAYS(few) = "[count] days is too many (few)."
+FIELD_ERROR_TOO_MANY_DAYS(many) = "[count] days is too many (many)."
+FIELD_ERROR_TOO_MANY_DAYS(plural) = "[count] days is too many."
+
+[% LOCALE fr %]
+
+FIELD_ERROR_TOO_MANY_DAYS(one) = "Un jour est un trop grand nombre."
+FIELD_ERROR_TOO_MANY_DAYS(plural) = "[count] jours est un trop grand nombre."
+
+[% LOCALE xx %]
+
+FIELD_ERROR_TOO_MANY_DAYS = "[count] [variant] xx too many days."
+
+EOF
 
 $field = My2::HTML::Form::Field::Days->new(name => 'days');
 
@@ -396,16 +410,64 @@ $field->error_id($error_id, { count => 1 });
 is($field->error, 'One day is too many.', 'one variant (en)');
 
 $field->error_id($error_id, { count => 2 });
-#################
-#$DB::single = 1;
-$JCS::FOO = 1;
-# is($field->error, 'Two days is too many.', 'two variant (en)');
-# 
-# $field->error_id($error_id, { count => 3 });
-# is($field->error, '3 days is too many.', 'plural fallback variant (en)');
-# 
-# $field->error_id($error_id, { count => 3, variant => 'few' });
-# is($field->error, '3 days is too many (few).', 'few explicit variant (en)');
+
+is($field->error, 'Two days is too many.', 'two variant (en)');
+
+$field->error_id($error_id, { count => 3 });
+is($field->error, '3 days is too many.', 'plural fallback variant (en)');
+
+$field->error_id($error_id, { count => 3, variant => 'few' });
+is($field->error, '3 days is too many (few).', 'few explicit variant (en)');
+
+$field->error_id($error_id, { count => 3, variant => 'many' });
+is($field->error, '3 days is too many (many).', 'many explicit variant (en)');
+
+$field->locale('fr');
+
+$field->error_id($error_id, { count => 0 });
+is($field->error, '0 jours est un trop grand nombre.', 'zero variant (fr)');
+
+$field->error_id($error_id, { count => 1 });
+
+is($field->error, 'Un jour est un trop grand nombre.', 'one variant (fr)');
+
+$field->error_id($error_id, { count => 2 });
+
+is($field->error, '2 jours est un trop grand nombre.', 'two variant (fr)');
+
+$field->error_id($error_id, { count => 3 });
+is($field->error, '3 jours est un trop grand nombre.', 'plural fallback variant (fr)');
+
+$field->error_id($error_id, { count => 3, variant => 'few' });
+is($field->error, '3 jours est un trop grand nombre.', 'few explicit variant (fr)');
+
+$field->error_id($error_id, { count => 3, variant => 'many' });
+is($field->error, '3 jours est un trop grand nombre.', 'many explicit variant (fr)');
+
+$field->locale('xx');
+
+ok(!$field->localizer->localized_message_exists('FIELD_ERROR_TOO_MANY_DAYS', 'xx', 'zero'), 'localized_message_exists 1');
+
+$field->error_id($error_id, { count => 0 });
+
+is($field->error, '0  xx too many days.', 'zero variant (xx)');
+
+$field->error_id($error_id, { count => 1 });
+
+is($field->error, '1  xx too many days.', 'one variant (xx)');
+
+$field->error_id($error_id, { count => 2 });
+
+is($field->error, '2  xx too many days.', 'two variant (xx)');
+
+$field->error_id($error_id, { count => 3 });
+is($field->error, '3  xx too many days.', 'plural fallback variant (xx)');
+
+$field->error_id($error_id, { count => 3, variant => 'few' });
+is($field->error, '3 few xx too many days.', 'few explicit variant (xx)');
+
+$field->error_id($error_id, { count => 3, variant => 'many' });
+is($field->error, '3 many xx too many days.', 'many explicit variant (xx)');
 
 END
 {
