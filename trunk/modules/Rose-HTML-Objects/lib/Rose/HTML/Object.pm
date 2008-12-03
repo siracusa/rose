@@ -381,7 +381,7 @@ sub object_type_class_loaded
 
     $Loaded{$type_class}++;
   }
-  
+
   return $type_class;
 }
 
@@ -814,9 +814,9 @@ sub default_html_attr_value
 sub load_all_messages
 {
   my($self_or_class) = shift;
-  
+
   my $class = ref($self_or_class) || $self_or_class;
-  
+
   $class->localizer->load_all_messages(from_class => $class);
 }
 
@@ -875,7 +875,7 @@ sub create_html_attr_methods
 sub import
 {
   my($class) = shift;
-  
+
   foreach my $arg (@_)
   {
     if($arg eq ':customize')

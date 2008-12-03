@@ -173,7 +173,7 @@ sub add_to_export_tag
 }
 
 *delete_export_tag = \&delete_export_tags;
- 
+
 sub pre_import_hook
 {
   my($class, $symbol) = (shift, shift);

@@ -134,7 +134,7 @@ sub init_with_objects
     $method = $args{'method'}  if($args{'method'});
     $objects = $args{'objects'};
   }
-  
+
   unless($objects)
   {
     $objects = \@_;

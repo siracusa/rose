@@ -128,7 +128,7 @@ Rose::HTML::Object::Message - Text message object.
 
   $msg = Rose::HTML::Object::Message->new('Hello world');
   print $msg->text; # Hello world
-  
+
 =head1 DESCRIPTION
 
 L<Rose::HTML::Object::Message> objects encapsulate a text message with an optional integer L<id|/id>.

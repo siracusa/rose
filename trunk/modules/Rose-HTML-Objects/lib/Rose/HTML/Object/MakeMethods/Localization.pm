@@ -22,7 +22,7 @@ sub localized_message
   my $accept_msg_class = $args->{'accept_msg_class'} || 'Rose::HTML::Object::Message';
 
   require Rose::HTML::Object::Message::Localized;
-  
+
   if($interface eq 'get_set')
   {
     $methods{$name} = sub

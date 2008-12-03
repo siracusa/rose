@@ -43,7 +43,7 @@ sub make_private_library
       my @file_parts = split('::', $pkg);
       $file_parts[-1] .= '.pm';
       my $file = File::Spec->catfile($dir, @file_parts);
-      
+
       my $file_dir = File::Basename::dirname($file);
 
       File::Path::mkpath($file_dir); # spews errors to STDERR
@@ -126,7 +126,7 @@ EOF
   my $custom_package    = $rename->('Rose::HTML::Object::Custom');
 
   my $load_message_and_errors_perl = '';
-  
+
   unless($in_memory)
   {
     $load_message_and_errors_perl=<<"EOF";
@@ -261,7 +261,7 @@ EOF
   foreach my $base_class (qw(Rose::HTML::Object))
   {
     my $package = $rename->($base_class);
-  
+
     push(@packages, $package);
 
     if($args{'in_memory'})
@@ -294,7 +294,7 @@ EOF
   require Rose::HTML::Object::Errors;
   require Rose::HTML::Object::Messages;
   require Rose::HTML::Object::Message::Localizer;
-  
+
   foreach my $base_class (qw(Rose::HTML::Object::Error
                              Rose::HTML::Object::Errors
                              Rose::HTML::Object::Messages
@@ -302,9 +302,9 @@ EOF
                              Rose::HTML::Object::Message::Localizer))
   {
     my $package = $rename->($base_class);
-  
+
     push(@packages, $package);
-  
+
     $isa{$package} = $base_class;
 
     $perl{$package} = $class->subclass_perl(package      => $package, 
@@ -372,7 +372,7 @@ EOF
 sub isa_perl
 {
   my($class, %args) = @_;
-  
+
   my $isa  = $args{'isa'} or Carp::confess "Missing 'isa' parameter";
   $isa = [ $isa ]  unless(ref $isa eq 'ARRAY');
 
@@ -391,7 +391,7 @@ our $Perl;
 sub subclass_perl
 {
   my($class, %args) = @_;
- 
+
   my $package = $args{'package'} or Carp::confess "Missing 'package' parameter";
   my $isa     = $args{'isa'};
   $isa = [ $isa ]  unless(ref $isa eq 'ARRAY');
@@ -408,7 +408,7 @@ sub subclass_perl
     {
       $arg = $arg->{$package};
     }
-    
+
     no warnings 'uninitialized';
     if(ref $arg eq 'HASH')
     {
@@ -489,7 +489,7 @@ EOF
     local *_ = *Perl;
     $filter->(\$Perl);
   }
-  
+
   return $Perl;
 }
 
@@ -529,7 +529,7 @@ Rose::HTML::Objects - Object-oriented interfaces for HTML.
 
 L<Rose::HTML::Objects> is a framework for creating a resuable set of HTML widgets as mutable Perl objects that can be serialized to HTML or XHTML for display purposes.  
 
-The L<Rose::HTML::Object> class may be used directly to represent a generic tag with an explicitly set L<element|Rose::HTML::Object/element> name and arbitrary L<attributes|<Rose::HTML::Object/html_attr>.  There are also methods for L<parent/child manipulations|Rose::HTML::Object/HIERARCHY>.
+The L<Rose::HTML::Object> class may be used directly to represent a generic tag with an explicitly set L<element|Rose::HTML::Object/element> name and arbitrary L<attributes|Rose::HTML::Object/html_attr>.  There are also methods for L<parentE<sol>child manipulations|Rose::HTML::Object/HIERARCHY>.
 
 Though such generic usage is possible, this family of modules is primarily intended as a framework for creating a resuable set of L<form|Rose::HTML::Form> and L<field|Rose::HTML::Form::Field> widgets as mutable Perl objects that can be serialized to HTML or XHTML for display purposes.  On the Perl side, these objects are treated as abstract entities that can be fed input and will produce output in the form that is most convenient for the programmer (e.g., pass a L<DateTime> object to a date picker field to initialize it, and get a L<DateTime> object back from the field when asking for its value).
 
@@ -548,7 +548,7 @@ Users are encouraged to L<create their own library|/"PRIVATE LIBRARIES"> of reus
 The classes that make up the L<Rose::HTML::Objects> distribution can be used as-is to build forms, fields, and other HTML objects.  The provided classes may also be subclassed to change their behavior.  The interconnected nature of these classes may present some surprises, however.  For example, consider the case of subclassing the L<Rose::HTML::Form::Field::Option> class that represents a single option in a L<select box|Rose::HTML::Form::Field::SelectBox> or L<pop-up menu|Rose::HTML::Form::Field::PopUpMenu>.
 
     package My::HTML::Form::Field::Option;
-    
+
     use base 'Rose::HTML::Form::Field::Option';
 
     sub bark
@@ -626,7 +626,7 @@ To create a private library on disk, we need to provide a path to the directory 
 To actually use the generated modules, we must, well, C<use> (or C<require>) them.  We must also make sure the specified C<modules_dir> is in our L<@INC|perlvar/@INC> path.  Example:
 
     use lib '/home/john/lib';
-    
+
     use My::HTML::Form::Field::PopUpMenu;
 
     $color = 
@@ -661,7 +661,7 @@ I hope this demonstrates the motivation for and utility of private libraries.  P
 
 =head1 LOCALIZATION
 
-There are several components to L<Rose::HTML::Object>'s localization system: the L<message|Rose::HTML::Object::Message::Localized> and L<error|Rose::HTML::Object::Error> objects, the classes that L<manage|Rose::HTML::Object::Messages> L<them|Rose::HTML::Object::Errors>, and of course the L<localizer|Rose::HTML::Object::Message::Localizer> itself.  Using a L<private library|/"PRIVATE LIBRARY">, you get your own private subclasses of all of these.  This is extremely important for several reasons, and you should definitely read the L<PRIVATE LIBRARY|/"PRIVATE LIBRARY"> section above before continuing.
+There are several components to L<Rose::HTML::Object>'s localization system: the L<message|Rose::HTML::Object::Message::Localized> and L<error|Rose::HTML::Object::Error> objects, the classes that L<manage|Rose::HTML::Object::Messages> L<them|Rose::HTML::Object::Errors>, and of course the L<localizer|Rose::HTML::Object::Message::Localizer> itself.  Using a L<private library|/"PRIVATE LIBRARIES">, you get your own private subclasses of all of these.  This is extremely important for several reasons, and you should definitely read the L<PRIVATE LIBRARIES|/"PRIVATE LIBRARIES"> section above before continuing.
 
 The most important actor in the localization process is, predictably, the L<localizer|Rose::HTML::Object::Message::Localizer>, and the most important aspect of the localizer is the way in which it's accessed.
 
@@ -671,19 +671,19 @@ In the most extreme case, this allows each localized object to have its own indi
 
 The default localizer class, L<Rose::HTML::Object::Message::Localizer>, reads localized message text from the C<__DATA__> sections of the Perl module files that make up the Rose::HTML::Objects> distribution.  This is done mostly because it's the most convenient way to include the "built-in" localized message text in this CPAN module distribution.  (See the L<Rose::HTML::Object::Message::Localizer> documentation for more information.)  Localized message text is stored in memory within the localizer object itself.
 
-You can change both the source and storage of localized message text by creating your own localizer subclass.  The key, of course, is to ensure that your localizer subclass is used instead the default localizer class by all objects.  Thankfully, the creation of a L<private library|/"PRIVATE LIBRARY"> takes care of that, both creating a localizer subclass and ensuring that it is accessible everywhere.
+You can change both the source and storage of localized message text by creating your own localizer subclass.  The key, of course, is to ensure that your localizer subclass is used instead the default localizer class by all objects.  Thankfully, the creation of a L<private library|/"PRIVATE LIBRARIES"> takes care of that, both creating a localizer subclass and ensuring that it is accessible everywhere.
 
 Here's a simple example of a customized localizer that overrides just one method, L<get_localized_message_text|Rose::HTML::Object::Message::Localizer/get_localized_message_text>, to add three stars C<***> around each of the built-in messages.
 
     sub get_localized_message_text
     {
       my($self) = shift;
-      
+
       # Get message text using the default mechanism
       my $text = $self->SUPER::get_localized_message_text(@_);
-    
+
       return $text  unless(defined $text); # bail early if no text is defined
-      
+
       # Surround the text with stars and return it
       return "*** $text ***";
     }
@@ -693,9 +693,9 @@ This is kind of a silly example, obviously, but it does demonstrate how easy it 
     sub get_localized_message_text
     {
       my($self) = shift;
-      
+
       my %args = @_;
-      
+
       my $id     = $args{'id'};
       my $name   = $args{'name'};
       my $locale = $args{'locale'};
@@ -703,7 +703,7 @@ This is kind of a silly example, obviously, but it does demonstrate how easy it 
       # Look elsewhere for this localized text: in a database, pull
       # from a server, an XML file, whatever.
       $text = ...
-      
+
       return $text  if($defined $text); #
 
       # Fall back to the default mechanism
@@ -733,11 +733,11 @@ Now the error ids.  Note that the error and message id numbers for each error me
     # Field errors
     use constant FIELD_ERROR_BAD_NICKNAME    => 101_000;
     ...
-    
+
 Finally, the nickname field class itself.  Note that it inherits from and uses  classes from our private library, not from C<Rose::>.
 
     package My::HTML::Form::Field::Nickname;
-    
+
     # Import message and error ids.  Note that just the error id for
     # FIELD_LABEL_NICKNAME is imported, not the message id. That's
     # because we're using it as an error id below, passing it as an
@@ -747,7 +747,7 @@ Finally, the nickname field class itself.  Note that it inherits from and uses  
 
     # Inherit from out private library version of a text field
     use base qw(My::HTML::Form::Field::Text);
-    
+
     sub init
     {
       my($self) = shift;
@@ -757,15 +757,15 @@ Finally, the nickname field class itself.  Note that it inherits from and uses  
 
       $self->SUPER::init(@_);
     }
-    
+
     sub validate
     {
       my($self) = shift;
-      
+
       # Do the default validation first: required field, value too long, etc.
       my $ret = $self->SUPER::validate(@_);
       return $ret  unless($ret);
-      
+
       # Do our custom validatione
       my $nick = $self->internal_value;
 
@@ -782,7 +782,7 @@ Finally, the nickname field class itself.  Note that it inherits from and uses  
         $self->error_id(FIELD_ERROR_BAD_NICKNAME, { label => $label });
         return 0;
       }
-    
+
       return 1;
     }
 
@@ -792,16 +792,16 @@ Finally, the nickname field class itself.  Note that it inherits from and uses  
     {
       __PACKAGE__->localizer->load_all_messages;
     }
-    
+
     1;
-    
+
     __DATA__
-    
+
     [% LOCALE en %]
 
     FIELD_LABEL_NICKNAME     = "Nickname"    
     FIELD_ERROR_BAD_NICKNAME = "[label] may not contain space characters."
-    
+
     [% LOCALE fr %]
 
     FIELD_LABEL_NICKNAME     = "Surnom"    
@@ -827,7 +827,7 @@ Here it is in action:
     $field->validate;
 
     print $field->error; # "Nickname may not contain space characters."
-    
+
     $field->locale('fr');
 
     print $field->error; # "Surnom mai de ne pas contenir des espaces."
@@ -842,7 +842,7 @@ Of course, you'll rarely instantiate a field in isolation.  It will usually be p
 
     # "Nickname may not contain space characters."
     print $form->field('nick')->error; 
-    
+
     $form->locale('fr');
 
     # "Surnom mai de ne pas contenir des espaces."
@@ -851,6 +851,16 @@ Of course, you'll rarely instantiate a field in isolation.  It will usually be p
 Or you could set the locale on the localizer itself for a similar effect.
 
 Also note the use of the label within the "bad nickname" error message.  In general, incorporating (independently set, remember) labels into messages like this tends to lead to translation issues.  (Is the label masculine?  Feminine? Singular?  Dual?  Plural?  Etc.)  I've done so here to demonstrate that one localized message can be incorporated into another localized message, with both dynamically matching their locales based on the locale set higher up in the object hierarchy.
+
+=head1 CLASS METHODS
+
+=over 4
+
+=item B<make_private_library PARAMS>
+
+########################
+
+=back
 
 =head1 DEVELOPMENT POLICY
 
