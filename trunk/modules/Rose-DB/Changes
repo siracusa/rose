@@ -1,5 +1,7 @@
-0.747_01 (12.01.2008) - John Siracusa <siracusa@gmail.com>
+0.747_02 (12.05.2008) - John Siracusa <siracusa@gmail.com>
 
+    * Corrected mod_perl 2.x cleanup handler registration in 
+      Rose::DB::Cache.  (Reported by Kostas Chatzikokolakis)
     * Resolved ambiguous driver_class link in POD.
 
 0.747 (10.22.2008) - Justin Ellison <justin@techadvise.com>
