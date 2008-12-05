@@ -7,7 +7,7 @@ use base 'Rose::Object';
 use Scalar::Util qw(refaddr);
 use Rose::DB::Cache::Entry;
 
-our $VERSION = '0.745';
+our $VERSION = '0.748';
 
 our $Debug = 0;
 
@@ -157,6 +157,7 @@ sub clear { shift->{'cache'} = {} }
 if(MOD_PERL_2)
 {
   require Apache2::ServerUtil;
+  require Apache2::RequestUtil;
 }
 
 sub prepare_db
@@ -225,7 +226,7 @@ sub prepare_db
         return;
       }
 
-      Apache2::ServerUtil->server->push_handlers(PerlCleanupHandler => sub
+      Apache2::RequestUtil->request->push_handlers(PerlCleanupHandler => sub
       {
         $Debug && warn "$$ Clear dbh and prepared flag for $db, $entry\n";
         $db->dbh(undef)      if($db);
