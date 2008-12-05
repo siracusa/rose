@@ -12,6 +12,13 @@ __PACKAGE__->delete_valid_html_attr('multiple');
 
 sub multiple { 0 }
 
+sub internal_value
+{
+  my($self) = shift;
+  my($value) =  $self->SUPER::internal_value(@_);
+  return $value;
+}
+
 1;
 
 __END__

@@ -4,7 +4,7 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 176;
+use Test::More tests => 177;
 #use Test::More 'no_plan';
 
 use_ok('Rose::HTML::Objects');
@@ -468,6 +468,12 @@ is($field->error, '3 few xx too many days.', 'few explicit variant (xx)');
 
 $field->error_id($error_id, { count => 3, variant => 'many' });
 is($field->error, '3 many xx too many days.', 'many explicit variant (xx)');
+
+($packages, $perl) = 
+  Rose::HTML::Objects->make_private_library(in_memory => 1, 
+                                            rename    => sub { s/Rose::H/MyH/ });
+
+ok(MyHTML::Object->isa('Rose::HTML::Object'), 'rename sub 1');
 
 END
 {
