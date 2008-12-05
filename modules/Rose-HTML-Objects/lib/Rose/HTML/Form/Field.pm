@@ -461,6 +461,8 @@ sub internal_value
   return $final_value;
 }
 
+sub internal_value_singular { shift->internal_value(@_) }
+
 sub output_value
 {
   my($self) = shift;

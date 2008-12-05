@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 67;
+use Test::More tests => 68;
 
 BEGIN 
 {
@@ -82,7 +82,8 @@ is($field->html_field,
 $field->value('orange');
 
 is(($field->input_value)[0], 'orange', 'input_value()');
-is(($field->internal_value)[0], 'orange', 'internal_value()');
+is(($field->internal_value)[0], 'orange', 'internal_value() 1');
+is($field->internal_value, 'orange', 'internal_value() 2');
 is(($field->output_value)[0], 'orange', 'output_value()');
 
 is($field->html_field, 

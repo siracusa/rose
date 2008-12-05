@@ -7,7 +7,7 @@ use File::Spec();
 use File::Path();
 use File::Basename();
 
-our $VERSION = '0.555_05';
+our $VERSION = '0.599_01';
 
 our $Debug = 0;
 
@@ -70,17 +70,34 @@ sub private_library_perl
 {
   my($class, %args) = @_;
 
-  my $prefix = $args{'prefix'} or croak "Missing 'prefix' parameter";
+  my $rename = $args{'rename'};
+  my $prefix = $args{'prefix'};
   my $trim_prefix = $args{'trim_prefix'} || 'Rose::';
   my $in_memory = $args{'in_memory'} || 0;
 
   my $prefix_regex = qr(^$trim_prefix);
 
-  my $rename = sub 
+  $rename ||= sub 
   {
     my($name) = shift;
     $name =~ s/$prefix_regex/$prefix/;
     return $name;
+  };
+
+  my $save_rename = $rename;
+
+  $rename = sub
+  {
+    my $name = shift;
+    local $_ = $name;
+    my $new_name = $save_rename->($name);
+
+    if($_ ne $name && (!$new_name || $new_name == 1))
+    {
+      return $_;
+    }
+    
+    return $new_name;
   };
 
   my $class_filter = $args{'class_filter'};
@@ -858,7 +875,81 @@ Also note the use of the label within the "bad nickname" error message.  In gene
 
 =item B<make_private_library PARAMS>
 
-########################
+Create a comprehensive collection o C<Rose::HTML::*> subclasses, either in memory or as C<*.pm> files on disk, in order to provide a convenient and islated location for your customizations.  Please read the L<private library|/"PRIVATE LIBRARIES"> section above for more information.
+
+Valid PARAMS name/value pairs are:
+
+=over 4
+
+=item B<class_filter CODEREF>
+
+A reference to a subroutine that takes a C<Rose::HTML::*> class name as its argument and returns true if a subclass should be created for this class, false otherwise.  If this parameter is omitted, all classes are subclassed.
+
+=item B<code HASHREF>
+
+A reference to a hash containing code to be added to subclasses.  The keys of teh has are the subclass class names (i.e., the names I<after> the application of the C<rename> code or the C<trim_prefix>/C<prefix> processing).  The value for each key may be either a string containing Perl code or a reference to a hash containing a C<code> key whose value is a string containing Perl code and a C<filter> key whose value is a reference to a subroutine used to filter the code.  The C<filter> subroutine will be passed a reference to a scalar containing the full Perl code for a subclass and is expected to modify it directly.  The Perl code will also be available in C<$_>.  Example:
+
+    code => 
+    {
+      'My::HTML::Object' => <<'EOF', # code string argument
+  sub my_method
+  {
+    # ...
+  }
+  EOF
+      'My::HTML::Form' =>
+      {
+        filter => sub { s/__FOO__//g },
+        code   => <<'EOF',
+  sub my_other_method__FOO__
+  {
+    # ...
+  }
+  EOF
+      },
+    },
+
+With the C<__FOO__> removed, C<my_other_method()> will be created in the C<My::HTML::Form> class.
+
+Note that there is no need to add your own code to the subclasses using this parameter.  You can always add your code to the Perl module files after they've been generated, or add your code directly into memory after the classes have been created C<in_memory>.
+
+=item B<code_filter CODEREF>
+
+A reference to a subroutine used to filter the Perl code for all generated subclasses.  This filter will run before any subclass-specific C<filter> (see the C<code> parameter above for an explanation).  This subroutine will be passed a reference to a scalar containing the Perl code and is expected to modify it directly.  The Perl code will also be available in C<$_>.
+
+=item B<debug INT>
+
+Print debugging output to STDERR if INT is creater than 0.  Higher numbers produce more output.  The maximum useful value is 3.
+
+=item B<in_memory BOOL>
+
+If true, the classes that make up the private library will be compiled in memory.  If false (the default), then a C<modules_dir> must be provided.
+
+=item B<modules_dir PATH>
+
+The path to the directory under which all C<*.pm> Perl module files will be created.  The modules will be created in the expected tree structure.  For example, the C<My::HTML::Object> class will be in the file C<My/HTML/Object.pm> beneath the C<modules_dir> PATH.  This parameter is ignored if the C<in_memory> parameter is passed.
+
+=item B<overwrite BOOL>
+
+If true, overwrite any existing files that are located at the same paths as files created by this method call.  This option is not applicable if the C<in_memory> parameter is passed.
+
+=item B<prefix STRING>
+
+The class name prefix with which to replace the C<trim_prefix> in all subclass class names.  For example, a C<prefix> value of C<My::> combined with the (default) C<trim_prefix> of C<Rose::> would take a class named C<Rose::HTML::Whatever> and produce a subclass named C<My::HTML::Whatever>.  You must pass this parameter or the C<rename> parameter.
+
+=item B<rename CODEREF>
+
+A reference to a subroutine that takes a C<Rose::HTML::*> class name as its argument and returns an appropriate subclass name.  The name agument is also available in the C<$_> variable, enabling code like this:
+
+    rename => sub { s/^Rose::/Foo::/ },
+
+You must pass this parameter or the C<prefix> parameter.
+
+=item B<trim_prefix STRING>
+
+The prefix string to be removed from each C<Rose::HTML::*> class name.  This parameter is only relevant when the C<prefix> parameter is passed (and the C<rename> parameter is not).  Defaults to C<Rose::> if this parameter is not passed.
+
+=back
 
 =back
 
