@@ -203,7 +203,7 @@ Get or set the default L<Rose::HTML::Object::Message::Localizer>-derived localiz
 
 =item B<new [ PARAMS | TEXT ]>
 
-Constructs a new L<Rose::HTML::Object::Message::Localized> object.  If a single argument is passed, it is taken as the value for the L<text|/text> parameter.  Otherwise, PARAMS name/value pairs are expected.  Any object method is a valid parameter name.
+Constructs a new L<Rose::HTML::Object::Message::Localized> object.  If a single argument is passed, it is taken as the value for the L<text|Rose::HTML::Object::Message/text> parameter.  Otherwise, PARAMS name/value pairs are expected.  Any object method is a valid parameter name.
 
 =back
 
