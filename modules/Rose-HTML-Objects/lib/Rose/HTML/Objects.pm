@@ -212,6 +212,10 @@ BEGIN { __PACKAGE__->add_messages }
 EOF
     },
 
+    $error_package =><<"EOF",
+sub generic_object_class { '$object_package' }
+EOF
+
     $errors_package =>
     {
       filter => sub
@@ -520,6 +524,10 @@ Rose::HTML::Objects - Object-oriented interfaces for HTML.
 
 =head1 SYNOPSIS
 
+    #
+    # HTML form/field abstraction
+    #
+
     use Rose::HTML::Form;
 
     $form = Rose::HTML::Form->new(action => '/foo',
@@ -542,13 +550,30 @@ Rose::HTML::Objects - Object-oriented interfaces for HTML.
 
     print $form->field('bday')->html;
 
+    #
+    # Generic HTML objects
+    #
+
+    $obj = Rose::HTML::Object->new('p');
+
+    $obj->push_child('hello'); # text node
+    $obj->add_child(' ');      # text node
+
+    # Add two children: HTML object with text node child
+    $obj->add_children(
+      Rose::HTML::Object->new(element  => 'b',
+                              children => [ 'world' ]));
+
+    # Serialize to HTML
+    print $obj->html; # prints: <p>hello <b>world</b></p>
+
 =head1 DESCRIPTION
 
 L<Rose::HTML::Objects> is a framework for creating a resuable set of HTML widgets as mutable Perl objects that can be serialized to HTML or XHTML for display purposes.  
 
 The L<Rose::HTML::Object> class may be used directly to represent a generic tag with an explicitly set L<element|Rose::HTML::Object/element> name and arbitrary L<attributes|Rose::HTML::Object/html_attr>.  There are also methods for L<parentE<sol>child manipulations|Rose::HTML::Object/HIERARCHY>.
 
-Though such generic usage is possible, this family of modules is primarily intended as a framework for creating a resuable set of L<form|Rose::HTML::Form> and L<field|Rose::HTML::Form::Field> widgets as mutable Perl objects that can be serialized to HTML or XHTML for display purposes.  On the Perl side, these objects are treated as abstract entities that can be fed input and will produce output in the form that is most convenient for the programmer (e.g., pass a L<DateTime> object to a date picker field to initialize it, and get a L<DateTime> object back from the field when asking for its value).
+Though such generic usage is possible, this family of modules is primarily intended as a framework for creating a resuable set of L<form|Rose::HTML::Form> and L<field|Rose::HTML::Form::Field> widgets.  On the Perl side, these objects are treated as abstract entities that can be fed input and will produce output in the form that is most convenient for the programmer (e.g., pass a L<DateTime> object to a date picker field to initialize it, and get a L<DateTime> object back from the field when asking for its value).
 
 Fields may be simple (one standard HTML form field to one Perl field object) or L<compound|Rose::HTML::Form::Field::Compound> (a field object that serializes to an arbitrary number of HTML tags, but can be addressed as a single logical field internally).  Likewise, forms themselves can be L<nested|Rose::HTML::Form/"NESTED FORMS">.
 
@@ -562,7 +587,7 @@ Users are encouraged to L<create their own library|/"PRIVATE LIBRARIES"> of reus
 
 =head1 PRIVATE LIBRARIES
 
-The classes that make up the L<Rose::HTML::Objects> distribution can be used as-is to build forms, fields, and other HTML objects.  The provided classes may also be subclassed to change their behavior.  The interconnected nature of these classes may present some surprises, however.  For example, consider the case of subclassing the L<Rose::HTML::Form::Field::Option> class that represents a single option in a L<select box|Rose::HTML::Form::Field::SelectBox> or L<pop-up menu|Rose::HTML::Form::Field::PopUpMenu>.
+The classes that make up the L<Rose::HTML::Objects> distribution can be used as-is to build forms, fields, and other HTML objects.  The provided classes may also be subclassed to change their behavior.  When subclassing, however, the interconnected nature of these classes may present some surprises.  For example, consider the case of subclassing the L<Rose::HTML::Form::Field::Option> class that represents a single option in a L<select box|Rose::HTML::Form::Field::SelectBox> or L<pop-up menu|Rose::HTML::Form::Field::PopUpMenu>.
 
     package My::HTML::Form::Field::Option;
 
@@ -578,7 +603,7 @@ Now all your options can bark like a dog.
     $option = My::HTML::Form::Field::Option->new;
     $option->bark; # woof!
 
-This seems great until you make your first select box or pop-up menu, pull ut an option object, and ask it to bark.
+This seems great until you make your first select box or pop-up menu, pull out an option object, and ask it to bark.
 
     $color = 
       Rose::HTML::Form::Field::PopUpMenu->new(

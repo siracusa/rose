@@ -446,9 +446,9 @@ Add a new message constant with NAME and an integer ID value.  Message ids from 
 
 =item B<add_messages [NAME1, NAME2, ...]>
 
-If called with no arguments, this method L<adds|/add_message> all message L<constants|/constant> defined in the calling class.
+If called with no arguments, this method L<adds|/add_message> all message L<constants|constant> defined in the calling class.
 
-If called with a list of constant names, add each named constant to the list of messages.  These L<constants|/constant> must already exist in the calling class.
+If called with a list of constant names, add each named constant to the list of messages.  These L<constants|constant> must already exist in the calling class.
 
 =item B<get_message_id NAME>
 
