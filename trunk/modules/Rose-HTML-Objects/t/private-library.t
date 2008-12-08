@@ -293,9 +293,19 @@ is($field->error. '', 'c - \[]Le nickname est mal: a, b, c, d, e:bob', 'placehol
 
 require My2::HTML::Form;
 
+My2::HTML::Form->field_type_class
+(
+  nick => 'My2::HTML::Form::Field::Nickname',
+);
+
+# My2::HTML::Form->field_type_class
+# (
+#   nickname => 'My2::HTML::Form::Field::Nickname',
+# );
+
 My2::HTML::Form->add_field_type_classes
 (
-  nick     => 'My2::HTML::Form::Field::Nickname',
+  #nick     => 'My2::HTML::Form::Field::Nickname',
   nickname => 'My2::HTML::Form::Field::Nickname',
 );
 

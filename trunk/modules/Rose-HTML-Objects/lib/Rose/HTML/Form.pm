@@ -2400,6 +2400,19 @@ Examples:
                       nick  => { type => 'text', size => 15 },
                       age   => 'text');
 
+=item B<add_field_type_classes [MAP]>
+
+Add entries to the L<field_type_classes|/field_type_classes> hash that maps field type strings to the names of the L<Rose::HTML::Form::Field>-derived classes.  Example:
+
+    My::HTML::Form->add_field_type_classes
+    (
+      nick => 'My::HTML::Form::Field::Nickname',
+      age  => 'My::HTML::Form::Field::Age',
+      ...
+    );
+
+This method is an alias for the L<add_object_type_classes|Rose::HTML::Object/add_object_type_classes> method inherited from L<Rose::HTML::Object>.  It is an L<inherited hash|Rose::Class::MakeMethods::Generic/inherited_hash> representing the union of the hashes of all superclasses, minus any keys that are explicitly L<deleted|/delete_field_type_class> in the current class.
+
 =item B<add_form ARGS>
 
 This is an alias for the L<add_forms()|/add_forms> method.

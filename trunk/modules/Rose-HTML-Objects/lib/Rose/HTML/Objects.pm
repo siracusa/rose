@@ -569,21 +569,21 @@ Rose::HTML::Objects - Object-oriented interfaces for HTML.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Objects> is a framework for creating a resuable set of HTML widgets as mutable Perl objects that can be serialized to HTML or XHTML for display purposes.  
+L<Rose::HTML::Objects> is a framework for creating a reusable set of HTML widgets as mutable Perl objects that can be serialized to HTML or XHTML for display purposes.  
 
-The L<Rose::HTML::Object> class may be used directly to represent a generic tag with an explicitly set L<element|Rose::HTML::Object/element> name and arbitrary L<attributes|Rose::HTML::Object/html_attr>.  There are also methods for L<parentE<sol>child manipulations|Rose::HTML::Object/HIERARCHY>.
+The L<Rose::HTML::Object> class may be used directly to represent a generic tag with an explicitly set L<element|Rose::HTML::Object/element> name and arbitrary L<attributes|Rose::HTML::Object/html_attr>.  There are also methods for L<parentE<sol>child manipulation|Rose::HTML::Object/HIERARCHY>.
 
 Though such generic usage is possible, this family of modules is primarily intended as a framework for creating a resuable set of L<form|Rose::HTML::Form> and L<field|Rose::HTML::Form::Field> widgets.  On the Perl side, these objects are treated as abstract entities that can be fed input and will produce output in the form that is most convenient for the programmer (e.g., pass a L<DateTime> object to a date picker field to initialize it, and get a L<DateTime> object back from the field when asking for its value).
 
-Fields may be simple (one standard HTML form field to one Perl field object) or L<compound|Rose::HTML::Form::Field::Compound> (a field object that serializes to an arbitrary number of HTML tags, but can be addressed as a single logical field internally).  Likewise, forms themselves can be L<nested|Rose::HTML::Form/"NESTED FORMS">.
+Fields may be simple (one standard HTML form field per Perl field object) or L<compound|Rose::HTML::Form::Field::Compound> (a field object that serializes to an arbitrary number of HTML tags, but can be addressed as a single logical field internally).  Likewise, forms themselves can be L<nested|Rose::HTML::Form/"NESTED FORMS">.
 
-Each L<field|Rose::HTML::Form::Field> has its own customizable validation, input filter, output filter, internal value (a plain value or a Perl object, whatever is most convenient), output value (the value shown when the field is redisplayed), label, associated error, and any other metadata deemed necessary.  Each field can also be serialized to the L<equivalent|Rose::HTML::Form::Field/html_hidden_fields> set of (X)HTML "hidden" fields.
+Each L<field|Rose::HTML::Form::Field> has its own customizable validation, input filter, output filter, internal value (a plain value or a Perl object, whichever is most convenient), output value (the value shown when the field is redisplayed), label, associated error, and any other metadata deemed necessary.  Each field can also be serialized to the L<equivalent|Rose::HTML::Form::Field/html_hidden_fields> set of (X)HTML "hidden" fields.
 
-L<Forms|Rose::HTML::Form> are expected to be initialized with, and return an object or list of objects that the form represents.  For example, a registration form could be initialized with and return a C<UserAccount> object.
+L<Forms|Rose::HTML::Form> are expected to be initialized with and return an object or list of objects that the form represents.  For example, a registration form could be initialized with and return a C<UserAccount> object.
 
 All labels, errors, and messages used in the bundled form and field widgets are localized in several languages, and you may add your own localized messages and errors using the provided L<localization framework|/LOCALIZATION>.
 
-Users are encouraged to L<create their own library|/"PRIVATE LIBRARIES"> of reusable form and field widgets for use on their site.  The expectation is that the same kind of field appears in multiple places in any large web application (e.g., username fields, password fields, address forms, etc.)  Each field encapsulates a set of values (e.g., options in a pop-up menu), labels, validation constraints, filters, and error messages.  Similarly, each form encapsulates a set of fields along with any inter-field validation, error messages, and init-with/object-from methods.  Nesting forms and fields preserves this delegation of responsibility, with each higher level having access to its children to perform inter-form/field tasks.
+Users are encouraged to L<create their own libraries|/"PRIVATE LIBRARIES"> of reusable form and field widgets for use on their site.  The expectation is that the same kind of field appears in multiple places in any large web application (e.g., username fields, password fields, address forms, etc.)  Each field encapsulates a set of values (e.g., options in a pop-up menu), labels, validation constraints, filters, and error messages.  Similarly, each form encapsulates a set of fields along with any inter-field validation, error messages, and init-with/object-from methods.  Nesting forms and fields preserves this delegation of responsibility, with each higher level having access to its children to perform inter-form/field tasks.
 
 =head1 PRIVATE LIBRARIES
 
@@ -616,13 +616,13 @@ This seems great until you make your first select box or pop-up menu, pull out a
 
 What you'll get is an error message like this: "Can't locate object method 'bark' via package 'Rose::HTML::Form::Field::Option' - ..."  That's because C<$option> is a plain old L<Rose::HTML::Form::Field::Option> object and not one of your new C<My::HTML::Form::Field::Option> objects that can C<bark()>.
 
-This is an example of the aforementioned interconnected nature of HTML objects: L<pop-up menus|Rose::HTML::Form::Field::PopUpMenu> and L<select boxes|Rose::HTML::Form::Field::SelectBox> contain L<options|Rose::HTML::Form::Field::Option>; L<radio button groups|Rose::HTML::Form::Field::RadioButtonGroup> contain L<radio buttons|Rose::HTML::Form::Field::RadioButton>; L<checkbox groups|Rose::HTML::Form::Field::CheckboxGroup> contain L<checkboxes|Rose::HTML::Form::Field::CheckBox>; L<forms|Rose::HTML::Form> contain all of the above; and so on.  What to do?
+This is an example of the aforementioned interconnected nature of HTML objects: L<pop-up menus|Rose::HTML::Form::Field::PopUpMenu> and L<select boxes|Rose::HTML::Form::Field::SelectBox> contain L<options|Rose::HTML::Form::Field::Option>; L<radio button groups|Rose::HTML::Form::Field::RadioButtonGroup> contain L<radio buttons|Rose::HTML::Form::Field::RadioButton>; L<checkbox groups|Rose::HTML::Form::Field::CheckboxGroup> contain L<checkboxes|Rose::HTML::Form::Field::Checkbox>; L<forms|Rose::HTML::Form> contain all of the above; and so on.  What to do?
 
-Well, one solution is to convince all the C<Rose::HTML::*> classes that might contain option objects to use your new C<My::HTML::Form::Field::Option> subclass instead of the standard L<Rose::HTML::Form::Field::Option> class.  But globally altering the behavior of the standard C<Rose::HTML::*> classes is an extremely bad idea.  To understand why, imagine that you did so and then tried to incorporate some other code that also uses C<Rose::HTML::*> classes.  That other code certainly doesn't expect the changes you've made.  It expects (and rightfully so) the documented behavior for all the classes it's using.
+Well, one solution is to convince all the C<Rose::HTML::*> classes that might contain option objects to use your new C<My::HTML::Form::Field::Option> subclass instead of the standard L<Rose::HTML::Form::Field::Option> class.  But globally altering the behavior of the standard C<Rose::HTML::*> classes is an extremely bad idea.  To understand why, imagine that you did so and then tried to incorporate some other code that also uses C<Rose::HTML::*> classes.  That other code certainly doesn't expect the changes you've made.  It expects the documented behavior for all the classes it's using, and rightfully so.
 
 That's the problem with making class-wide alterations: every piece of code using those classes will see your changes.  It's "anti-social behavior" in the context of code sharing and reuse.
 
-The solution is to subclass not just the single class whose behavior is to be altered, but rather to create an entirely separate namespace for a full hierarchy of classes within which you can make your changes in isolation.  This is called a "private library," and the L<Rose::HTML::Objects> class contains methods for creating one, either dynamically in memory on on disk in the form of actial C<*.pm> Perl module files.
+The solution is to subclass not just the single class whose behavior is to be altered, but rather to create an entirely separate namespace for a full hierarchy of classes within which you can make your changes in isolation.  This is called a "private library," and the L<Rose::HTML::Objects> class contains methods for creating one, either dynamically in memory, or on disk in the form of actial C<*.pm> Perl module files.
 
 Let's try the example above again, but this time using a private library.  We will use the the L<make_private_library|/make_private_library> class method to do this.  The reference documentation for this method appears below, but you should get a good idea of its functionality by reading the usage examples here.
 
@@ -657,7 +657,7 @@ Now we have a full hierarchy of C<My::>-prefixed classes, one for each public C<
 
     $option->bark; # woof!
 
-Success!  Of course, this dynamic in-memory class creation is relatively heavyweight.  It necessarily has to have all the classes in memory.  Creating a private library on disk allows you to load only the classes you need.  It also provides an easier means of making your customizations persistent.  Editing the actual C<*.pm> files on disk means that your changes can be tracked on a per-file basis by your version control system, and so on.  We can still use the C<%code> hash from the in-memory example; the L<make_private_library|/make_private_library> method will insert our custom code into the C<*.pm> files it generates.
+Success!  Of course, this dynamic in-memory class creation is relatively heavyweight.  It necessarily has to have all the classes in memory.  Creating a private library on disk allows you to load only the classes you need.  It also provides an easier means of making your customizations persistent.  Editing the actual C<*.pm> files on disk means that your changes can be tracked on a per-file basis by your version control system, and so on.  We can still use the C<%code> hash from the in-memory example to "seed" the classes; the L<make_private_library|/make_private_library> method will insert our custom code into the initial C<*.pm> files it generates.
 
 To create a private library on disk, we need to provide a path to the directory where the generated files will be placed.  The appropriate directory hierarchy will be created below it (e.g., the path to the C<My::HTML::Form> Perl module file will be C<My/HTML/Form.pm>, starting beneath the specified C<modules_dir>).  Let's do it:
 
@@ -680,9 +680,9 @@ To actually use the generated modules, we must, well, C<use> (or C<require>) the
 
     $option->bark; # woof!
 
-And it works.  Note that if the call to L<make_private_library|/make_private_library> that creates the Perl module files on disk was in the same file as the code above, the C<My::HTML::Form::Field::PopUpMenu> class would have to be C<require>d rather than C<use>d.  (All C<use> statements are evaluated at compile time, but the C<My::HTML::Form::Field::PopUpMenu> is not created until the L<make_private_library|/make_private_library> call is executed, which runtime in this example.)
+And it works.  Note that if the call to L<make_private_library|/make_private_library> that creates the Perl module files on disk was in the same file as the code above, the C<My::HTML::Form::Field::PopUpMenu> class would have to be C<require>d rather than C<use>d.  (All C<use> statements are evaluated at compile time, but the C<My::HTML::Form::Field::PopUpMenu> class is not created until the L<make_private_library|/make_private_library> call is executed, which happens at runtime in this example.)
 
-One final example.  Suppose you want to add or override a method in I<all> HTML object classes within your private library?  To facilitate this, the L<make_private_library|/make_private_library> method will create a mix-in class which will be placed at the front of the inheritence chain (i.e., the first item in the C<@ISA> array) of all generated subclasses.  Given a prefix of C<My::> as in the example above, this custom class will be called L<My::HTML::Object::Custom>.  It comes pre-populated with an initial set of private-library-wide information such as the L<object_type_class mapping|Rose::HTML::Object/object_type_classes> and the L<default_localizer|My::HTML::Object/default_localizer> (all of which will be populated with your C<My::*> subclasses, naturally).  Simply add your own methods to this module:
+One final example.  Suppose you want to add or override a method in I<all> HTML object classes within your private library.  To facilitate this, the L<make_private_library|/make_private_library> method will create a mix-in class which will be placed at the front of the inheritence chain (i.e., the first item in the C<@ISA> array) of all generated subclasses.  Given a prefix of C<My::> as in the example above, this custom class will be called C<My::HTML::Object::Custom>.  It comes pre-populated with an initial set of private-library-wide information such as the L<object_type_class mapping|Rose::HTML::Object/object_type_classes> and the L<default_localizer|Rose::HTML::Object/default_localizer> (all of which will be populated with your C<My::*> subclasses, naturally).  Simply add your own methods to this module:
 
     package My::HTML::Object::Custom; # generated by make_private_library()
     ...
@@ -703,19 +703,19 @@ I hope this demonstrates the motivation for and utility of private libraries.  P
 
 =head1 LOCALIZATION
 
-There are several components to L<Rose::HTML::Object>'s localization system: the L<message|Rose::HTML::Object::Message::Localized> and L<error|Rose::HTML::Object::Error> objects, the classes that L<manage|Rose::HTML::Object::Messages> L<them|Rose::HTML::Object::Errors>, and of course the L<localizer|Rose::HTML::Object::Message::Localizer> itself.  Using a L<private library|/"PRIVATE LIBRARIES">, you get your own private subclasses of all of these.  This is extremely important for several reasons, and you should definitely read the L<PRIVATE LIBRARIES|/"PRIVATE LIBRARIES"> section above before continuing.
+There are several components of L<Rose::HTML::Object>'s localization system: the L<message|Rose::HTML::Object::Message::Localized> and L<error|Rose::HTML::Object::Error> objects, the classes that L<manage|Rose::HTML::Object::Messages> L<them|Rose::HTML::Object::Errors>, and of course the L<localizer|Rose::HTML::Object::Message::Localizer> itself.  Using a L<private library|/"PRIVATE LIBRARIES">, you get your own private subclasses of all of these.  This is extremely important for several reasons, and you should definitely read the L<PRIVATE LIBRARIES|/"PRIVATE LIBRARIES"> section above before continuing.
 
 The most important actor in the localization process is, predictably, the L<localizer|Rose::HTML::Object::Message::Localizer>, and the most important aspect of the localizer is the way in which it's accessed.
 
-The general approach is that each object that is or contains something that needs to be localized has a C<localizer()> method through which it accesses its L<localizer|Rose::HTML::Object::Message::Localizer> object.  These methods check for a local localizer object attribute, and if one is not found, the method looks "up the chain" until it finds one.  The chain may include parent objects or class hierarchies.  Eventually, the assumptions is that a localizer will be found and returned.
+The general approach is that each object that is or contains something that needs to be localized has a C<localizer()> method through which it accesses its L<localizer|Rose::HTML::Object::Message::Localizer> object.  These methods check for a local localizer object attribute, and if one is not found, the method looks "up the chain" until it finds one.  The chain may include parent objects or class hierarchies.  Eventually, the assumption is that a localizer will be found and returned.
 
-In the most extreme case, this allows each localized object to have its own individual localizer.  In the more common (and default) case, there is a single localizer object camped out at some higher point in the chain of lookups, and this localizer serves all objects.
+In the most granular case, this allows each localized object to have its own individual localizer.  In the more common (and default) case, there is a single localizer object camped out at some higher point in the chain of lookups, and this localizer serves all objects.
 
-The default localizer class, L<Rose::HTML::Object::Message::Localizer>, reads localized message text from the C<__DATA__> sections of the Perl module files that make up the Rose::HTML::Objects> distribution.  This is done mostly because it's the most convenient way to include the "built-in" localized message text in this CPAN module distribution.  (See the L<Rose::HTML::Object::Message::Localizer> documentation for more information.)  Localized message text is stored in memory within the localizer object itself.
+The default localizer class, L<Rose::HTML::Object::Message::Localizer>, reads localized message text from the C<__DATA__> sections of the Perl module files that make up the L<Rose::HTML::Objects> distribution.  This is done mostly because it's the most convenient way to include the "built-in" localized message text in this CPAN module distribution.  (See the L<Rose::HTML::Object::Message::Localizer> documentation for more information.)  Localized message text is stored in memory within the localizer object itself.
 
 You can change both the source and storage of localized message text by creating your own localizer subclass.  The key, of course, is to ensure that your localizer subclass is used instead the default localizer class by all objects.  Thankfully, the creation of a L<private library|/"PRIVATE LIBRARIES"> takes care of that, both creating a localizer subclass and ensuring that it is accessible everywhere.
 
-Here's a simple example of a customized localizer that overrides just one method, L<get_localized_message_text|Rose::HTML::Object::Message::Localizer/get_localized_message_text>, to add three stars C<***> around each of the built-in messages.
+Here's a simple example of a customized localizer that overrides just one method, L<get_localized_message_text|Rose::HTML::Object::Message::Localizer/get_localized_message_text>, to add three stars C<***> around the built-in message text.
 
     sub get_localized_message_text
     {
@@ -724,13 +724,14 @@ Here's a simple example of a customized localizer that overrides just one method
       # Get message text using the default mechanism
       my $text = $self->SUPER::get_localized_message_text(@_);
 
-      return $text  unless(defined $text); # bail early if no text is defined
+      # Bail out early if no text is defined
+      return $text  unless(defined $text);
 
       # Surround the text with stars and return it
       return "*** $text ***";
     }
 
-This is kind of a silly example, obviously, but it does demonstrate how easy it is to alter the default behavior.  A more useful example might be to look elsewhere for a message first, then fall back to the default mechanism:
+This is a silly example, obviously, but it does demonstrate how easy it is to alter the default behavior.  A more useful example might be to look elsewhere for a message first, then fall back to the default mechanism.  This requires actually unpacking the method arguments (as opposed to simply passing them on to the superclass call in the example above), but is otherwise not much more complex:
 
     sub get_localized_message_text
     {
@@ -738,9 +739,10 @@ This is kind of a silly example, obviously, but it does demonstrate how easy it 
 
       my %args = @_;
 
-      my $id     = $args{'id'};
-      my $name   = $args{'name'};
-      my $locale = $args{'locale'};
+      my $id      = $args{'id'};
+      my $name    = $args{'name'};
+      my $locale  = $args{'locale'};
+      my $variant = $args{'variant'};
 
       # Look elsewhere for this localized text: in a database, pull
       # from a server, an XML file, whatever.
@@ -752,20 +754,20 @@ This is kind of a silly example, obviously, but it does demonstrate how easy it 
       return $self->SUPER::get_localized_message_text(@_);
     }
 
-By overriding this and othr methods in the L<Rose::HTML::Object::Message::Localizer> class, your localizer subclass can choose to entirely ignore the default mechanism for localized text storage and retrieval.
+By overriding this and othr methods in the L<Rose::HTML::Object::Message::Localizer> class, your localizer subclass could choose to entirely ignore the default mechanism for localized text storage and retrieval.
 
-Finally, here's an example of a new L<field|Rose::HTML::Form::Field> subclass that uses localized messages and errors.  It will use teh default localized text mechanism to the sake of simplicity (i.e., text stored in C<__DATA__> sections of Perl modules).  It's a "nickname" field intended to be used as part of a localized form that asks for user information.  For the sake of demonstrating validation, let's say we've decided that nicknames may not contain space characters.
+Here's an example of a new L<field|Rose::HTML::Form::Field> subclass that uses localized messages and errors.  It will use the default localized text mechanism to the sake of simplicity (i.e., text stored in C<__DATA__> sections of Perl modules).  It's a "nickname" field intended to be used as part of a localized form that asks for user information.  For the sake of demonstrating validation, let's say we've decided that nicknames may not contain space characters.
 
-The first step is to define our L<message|Rose::HTML::Object::Messages> and L<error|Rose::HTML::Object::Errors> ids.  These get added to the generated C<My::HTML::Object::Messages> and C<My::HTML::Object::Errors> classes, respectively.  You can do this during private library generation by adding to the C<code> hash passed to the L<make_private_library|/make_private_library> call, or by editing the generated files on disk.  (The relevant sections are indicated with comments that  L<make_private_library|/make_private_library> will place in the generated C<*.pm> files.)  First, the message ids:
+The first step is to define our L<message|Rose::HTML::Object::Messages> and L<error|Rose::HTML::Object::Errors> ids.  These should be added to the generated C<My::HTML::Object::Messages> and C<My::HTML::Object::Errors> classes, respectively.  You can do this during private library generation by adding to the C<code> hash passed to the L<make_private_library|/make_private_library> call, or by editing the generated files on disk.  (The relevant sections are indicated with comments that  L<make_private_library|/make_private_library> will place in the generated C<*.pm> files.)  First, the message ids:
 
     package My::HTML::Object::Messages;
     ...
     # Field labels
-    use constant FIELD_LABEL_NICKNAME        => 100_000;
+    use constant FIELD_LABEL_NICKNAME => 100_000;
     ...
 
     # Field errors
-    use constant FIELD_ERROR_BAD_NICKNAME    => 101_000;
+    use constant FIELD_ERROR_BAD_NICKNAME => 101_000;
     ...
 
 Now the error ids.  Note that the error and message id numbers for each error message (just C<FIELD_ERROR_BAD_NICKNAME> in this case) should be the same in order to take advantage of the default behavior of the L<message_for_error_id|Rose::HTML::Object/message_for_error_id> method.
@@ -773,7 +775,7 @@ Now the error ids.  Note that the error and message id numbers for each error me
     package My::HTML::Object::Errors;
     ...
     # Field errors
-    use constant FIELD_ERROR_BAD_NICKNAME    => 101_000;
+    use constant FIELD_ERROR_BAD_NICKNAME => 101_000;
     ...
 
 Finally, the nickname field class itself.  Note that it inherits from and uses  classes from our private library, not from C<Rose::>.
@@ -787,7 +789,7 @@ Finally, the nickname field class itself.  Note that it inherits from and uses  
     use My::HTML::Object::Messages qw(FIELD_LABEL_NICKNAME);
     use My::HTML::Object::Errors qw(FIELD_ERROR_BAD_NICKNAME);
 
-    # Inherit from out private library version of a text field
+    # Inherit from our private library version of a text field
     use base qw(My::HTML::Form::Field::Text);
 
     sub init
@@ -808,19 +810,22 @@ Finally, the nickname field class itself.  Note that it inherits from and uses  
       my $ret = $self->SUPER::validate(@_);
       return $ret  unless($ret);
 
-      # Do our custom validatione
+      #
+      # Do our custom validation
+      #
+
       my $nick = $self->internal_value;
 
       # Nicknames may not contain space characters
       if($nick =~ /\s/)
       {
-        # Remember, the error_label falls back to the label if not
-        # explicit error_label is set.  (And we set a default label_id
-        # in init() above.)
+        # Remember, the error_label falls back to the label if no
+        # explicit error_label is set.  (And we set a default 
+        # label_id in init() above.)
         my $label = $self->error_label;
 
         # Pass the (also localized!) label as a parameter to this error.
-        # See the actual localized in the __DATA__ section text below.
+        # See the actual localized text in the __DATA__ section below.
         $self->error_id(FIELD_ERROR_BAD_NICKNAME, { label => $label });
         return 0;
       }
@@ -828,8 +833,10 @@ Finally, the nickname field class itself.  Note that it inherits from and uses  
       return 1;
     }
 
-    # Standard technique for conditionally loading all localized message text
-    # from the __DATA__ section below using the default localizer
+    # Standard technique for conditionally loading all localized message
+    # text from the __DATA__ section below using the default localizer.
+    # (Alternately, you could remove the conditional and always load all 
+    # the localized message text when this module is loaded.)
     if(__PACKAGE__->localizer->auto_load_messages)
     {
       __PACKAGE__->localizer->load_all_messages;
@@ -858,7 +865,7 @@ Finally, let's map the new nickname field class to its own field type name:
     # Add new field type class mappings
     __PACKAGE__->add_field_type_classes
     (
-      nickname => 'My2::HTML::Form::Field::Nickname',
+      nickname => 'My::HTML::Form::Field::Nickname',
       ...
     );
 
@@ -900,7 +907,7 @@ Also note the use of the label within the "bad nickname" error message.  In gene
 
 =item B<make_private_library PARAMS>
 
-Create a comprehensive collection o C<Rose::HTML::*> subclasses, either in memory or as C<*.pm> files on disk, in order to provide a convenient and islated location for your customizations.  Please read the L<private library|/"PRIVATE LIBRARIES"> section above for more information.
+Create a comprehensive collection of C<Rose::HTML::*> subclasses, either in memory or as C<*.pm> files on disk, in order to provide a convenient and isolated location for your customizations.  Please read the L<private libraries|/"PRIVATE LIBRARIES"> section above for more information.
 
 Valid PARAMS name/value pairs are:
 
@@ -908,11 +915,15 @@ Valid PARAMS name/value pairs are:
 
 =item B<class_filter CODEREF>
 
-A reference to a subroutine that takes a C<Rose::HTML::*> class name as its argument and returns true if a subclass should be created for this class, false otherwise.  If this parameter is omitted, all classes are subclassed.
+A reference to a subroutine that takes a C<Rose::HTML::*> class name as its argument and returns true if a subclass should be created for this class, false otherwise.  The class name will also be available in C<$_>.  If this parameter is omitted, all classes are subclassed.
 
 =item B<code HASHREF>
 
-A reference to a hash containing code to be added to subclasses.  The keys of teh has are the subclass class names (i.e., the names I<after> the application of the C<rename> code or the C<trim_prefix>/C<prefix> processing).  The value for each key may be either a string containing Perl code or a reference to a hash containing a C<code> key whose value is a string containing Perl code and a C<filter> key whose value is a reference to a subroutine used to filter the code.  The C<filter> subroutine will be passed a reference to a scalar containing the full Perl code for a subclass and is expected to modify it directly.  The Perl code will also be available in C<$_>.  Example:
+A reference to a hash containing code to be added to subclasses.  The keys of the hash are the subclass class names (i.e., the names I<after> the application of the C<rename> code or the C<trim_prefix>/C<prefix> processing).
+
+The value for each key may be either a string containing Perl code or a reference to a hash containing a C<code> key whose value is a string containing Perl code and a C<filter> key whose value is a reference to a subroutine used to filter the code.
+
+The C<filter> subroutine will be passed a reference to a scalar containing the full Perl code for a subclass and is expected to modify it directly.  The Perl code will also be available in C<$_>.  Example:
 
     code => 
     {
@@ -964,7 +975,7 @@ The class name prefix with which to replace the C<trim_prefix> in all subclass c
 
 =item B<rename CODEREF>
 
-A reference to a subroutine that takes a C<Rose::HTML::*> class name as its argument and returns an appropriate subclass name.  The name agument is also available in the C<$_> variable, enabling code like this:
+A reference to a subroutine that takes a C<Rose::HTML::*> class name as its argument and returns an appropriate subclass name.  The name argument is also available in the C<$_> variable, enabling code like this:
 
     rename => sub { s/^Rose::/Foo::/ },
 
