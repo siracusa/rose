@@ -1160,6 +1160,17 @@ Adds a value to the list of boolean HTML attributes for this class. Boolean HTML
 
 Adds one or more values to the list of boolean HTML attributes for this class. Boolean HTML attributes appear without values in HTML tags, (e.g., <dl compact>) or with fixed values in XHTML tags (e.g., <dl compact="compact">)
 
+=item B<add_object_type_classes [MAP]>
+
+Add entries to the L<object_type_classes|/object_type_classes> hash that maps object type strings to the names of the L<Rose::HTML::Object>-derived classes.  Example:
+
+    My::HTML::Form->add_object_type_classes
+    (
+      blockquote => 'My::HTML::Blockquote',
+      abbr       => 'My::HTML::Abbr',
+      ...
+    );
+
 =item B<add_required_html_attr NAME [, DEFAULT]>
 
 Adds a value to the list of required HTML attributes for this class. Required HTML attributes will always appear in the HTML tag, with or without a non-empty value. You can set the default value for a required HTML attribute using the L<required_html_attr_value()|/required_html_attr_value> method or by passing the DEFAULT parameter to this method.
