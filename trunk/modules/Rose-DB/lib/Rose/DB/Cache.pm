@@ -23,7 +23,7 @@ use Rose::Class::MakeMethods::Generic
 __PACKAGE__->entry_class('Rose::DB::Cache::Entry');
 __PACKAGE__->default_use_cache_during_apache_startup(0);
 
-our(%MP2_First_IP_For_RC, $MP2_Is_Child);
+our($MP2_Is_Child);
 
 sub default_use_cache_during_apache_startup
 {
@@ -103,17 +103,16 @@ sub get_db
   my($self) = shift;
 
   my $key = $self->build_cache_key(@_);
-#print STDERR "GET $key RC: ", Apache2::ServerUtil::restart_count(), "\n";
+
   if(my $entry = $self->{'cache'}{$key})
   {
     if(my $db = $entry->db)
     {
       $self->prepare_db($db, $entry);
-#print STDERR "RETURN $db\n";
       return $db;
     }
   }
-#print STDERR "RETURN undef\n";
+
   return undef;
 }
 
@@ -141,13 +140,6 @@ sub set_db
                      "because use_cache_during_apache_startup is false";
       return $db;
     }
-
-#     if(is_first_pid_at_current_restart_count() && !$self->use_cache_during_apache_startup)
-#     {
-#       $Debug && warn "Refusing to cache $db during apache server start-up ",
-#                      "because use_cache_during_apache_startup is false";
-#       return $db;
-#     }
   }
 
   my $key = 
@@ -174,23 +166,8 @@ if(MOD_PERL_2)
   Apache2::ServerUtil->server->push_handlers(PerlChildInitHandler => sub
   {
     $Debug && warn "$$ is MP2 child\n";
-    $MP2_Is_Child = $$;
+    $MP2_Is_Child = 1;
   });
-}
-
-sub is_first_pid_at_current_restart_count
-{
-  # http://perl.apache.org/docs/2.0/api/Apache2/ServerUtil.html#C_restart_count_
-  my $rc = Apache2::ServerUtil::restart_count();
-  
-  unless($MP2_First_IP_For_RC{$rc})
-  {
-    $Debug && warn "$$ is first pid at restart count $rc\n";
-    $MP2_First_IP_For_RC{$rc} = $$;
-    return 1;
-  }
-  
-  return 0;
 }
 
 sub prepare_db
