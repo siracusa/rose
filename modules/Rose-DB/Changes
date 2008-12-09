@@ -1,6 +1,6 @@
-0.747_03 (12.07.2008) - John Siracusa <siracusa@gmail.com>
+0.748 (12.09.2008) - John Siracusa <siracusa@gmail.com>
 
-    * Fixed mod_perl 2.x support in Rose::DB::Cache.  (Reported by 
+    * Fixed mod_perl 2.x support in Rose::DB::Cache. (Reported by 
       Kostas Chatzikokolakis)
     * Resolved ambiguous driver_class link in POD.
 
