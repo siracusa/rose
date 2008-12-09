@@ -8,7 +8,7 @@ use Rose::HTML::Object::Message::Localizer;
 use Rose::HTML::Object::Message;
 our @ISA = qw(Rose::HTML::Object::Message);
 
-our $VERSION = '0.556';
+our $VERSION = '0.600';
 
 #our $Debug = 0;
 
@@ -175,7 +175,7 @@ Rose::HTML::Object::Message::Localized - Localized message object.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Object::Message::Localized> objects encapsulate a localized text message with an  integer L<id|/id> and an optional set of name/value pairs to be used to fill in any placeholders in the message text.
+L<Rose::HTML::Object::Message::Localized> objects encapsulate a localized text message with an integer L<id|/id> and an optional set of name/value pairs to be used to fill in any placeholders in the message text.
 
 This class inherits from L<Rose::HTML::Object::Message>.  See the L<Rose::HTML::Object::Message> documentation for more information.
 

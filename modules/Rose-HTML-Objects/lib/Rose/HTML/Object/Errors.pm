@@ -6,7 +6,7 @@ use Carp;
 
 use base 'Rose::HTML::Object::Messages';
 
-our $VERSION = '0.544';
+our $VERSION = '0.600';
 
 BEGIN
 {
@@ -112,7 +112,7 @@ __END__
 
 =head1 NAME
 
-Rose::HTML::Object::Errors - Message ids and names of localized messages for use with HTML objects.
+Rose::HTML::Object::Errors - Error ids and named constants for use with HTML objects.
 
 =head1 SYNOPSIS
 
@@ -128,10 +128,10 @@ Rose::HTML::Object::Errors - Message ids and names of localized messages for use
   ## Define your new error ids below
   ##
 
-  # Error ids from 0 to 29,999 are reserved for built-in errors.  Negative
-  # error ids are reserved for internal use.  Please use error ids 30,000
-  # or higher for your errors.  Suggested error id ranges and naming
-  # conventions for various error types are shown below.
+  # Error ids from 0 to 29,999 are reserved for built-in errors. 
+  # Negative error ids are reserved for internal use.  Please use error
+  # ids 30,000 or higher for your errors.  Suggested error id ranges
+  # and naming conventions for various error types are shown below.
 
   # Field errors
 
@@ -166,7 +166,7 @@ When adding your own errors, you are free to choose any integer error id values,
 
 =back
 
-Please use ids 30,000 or higher for your errors.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique.
+Please use ids 30,000 or higher for your errors.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique among all error names.
 
 =head1 EXPORTS
 
@@ -180,27 +180,27 @@ will cause all error name constant to be imported.
 
 The following tags will cause all errors whose names match the regular expression to the right of the tag name to be imported.
 
-    TAG                 NAME REGEX
-    -----               -----------------
-    field               ^FIELD_
-    form                ^FORM_
-    date                ^DATE_
-    time                ^TIME_
-    email               ^EMAIL_
-    phone               ^PHONE_
-    number              ^NUM_
-    set                 ^SET_
-    string              ^STRING_
+    TAG       NAME REGEX
+    -----     ----------
+    field     ^FIELD_
+    form      ^FORM_
+    date      ^DATE_
+    time      ^TIME_
+    email     ^EMAIL_
+    phone     ^PHONE_
+    number    ^NUM_
+    set       ^SET_
+    string    ^STRING_
 
 For example, this will import all the error constants whose names begin with "FIELD_"
 
     use Rose::HTML::Object::Errors qw(:field);
 
-FInally, you can provide import individual error names as well:
+FInally, you can provide import individual error constant names as well:
 
     use Rose::HTML::Object::Errors qw(FIELD_REQUIRED NUM_INVALID_INTEGER);
 
-A complete listing of the default set of error ids appears in the next section.
+A complete listing of the default set of error constant names appears in the next section.
 
 =head1 BUILT-IN ERRORS
 
@@ -245,13 +245,20 @@ The list of built-in errors appears below.  You should not rely on the actual nu
 
 =item B<add_error NAME, ID>
 
-Add a new error constant with NAME and an integer ID value.  Error ids from 0 to 29,999 are reserved for built-in errors.  Negative error ids are reserved for internal use.  Please use error ids 30,000 or higher for your errors.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique.
+Add a new error constant with NAME and an integer ID value.  Error ids from 0 to 29,999 are reserved for built-in errors.  Negative error ids are reserved for internal use.  Please use error ids 30,000 or higher for your errors.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique among all error names.
 
 =item B<add_errors [NAME1, NAME2, ...]>
 
-If called with no arguments, this method L<adds|/add_error> all error L<constants|constant> defined in the calling class.
+If called with no arguments, this method L<adds|/add_error> all error L<constants|constant> defined in the calling class.  Example:
 
-If called with a list of constant names, add each named constant to the list of errors.  These L<constants|constant> must already exist in the calling class.
+    __PACKAGE__->add_errors;
+
+If called with a list of constant names, add each named constant to the list of errors.  These L<constants|constant> must already exist in the calling class.  Example:
+
+    use constant MY_ERROR1 => 123456;
+    use constant MY_ERROR2 => 123457;
+    ...
+    __PACKAGE__->add_errors('MY_ERROR1', 'MY_ERROR2');
 
 =item B<get_error_id NAME>
 

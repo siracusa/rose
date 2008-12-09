@@ -6,7 +6,7 @@ use Carp;
 
 use base 'Rose::HTML::Object::Exporter';
 
-our $VERSION = '0.550';
+our $VERSION = '0.600';
 
 our $Debug = 0;
 
@@ -280,7 +280,7 @@ __END__
 
 =head1 NAME
 
-Rose::HTML::Object::Messages - Message ids and names of localized messages for use with HTML objects.
+Rose::HTML::Object::Messages - Message ids and named constants for use with HTML objects.
 
 =head1 SYNOPSIS
 
@@ -296,10 +296,11 @@ Rose::HTML::Object::Messages - Message ids and names of localized messages for u
   ## Define your new message ids below
   ##
 
-  # Message ids from 0 to 29,999 are reserved for built-in messages.  Negative
-  # message ids are reserved for internal use.  Please use message ids 30,000
-  # or higher for your messages.  Suggested message id ranges and naming
-  # conventions for various message types are shown below.
+  # Message ids from 0 to 29,999 are reserved for built-in messages.
+  # Negative message ids are reserved for internal use.  Please use
+  # message ids 30,000 or higher for your messages.  Suggested message
+  # id ranges and naming conventions for various message types are
+  # shown below.
 
   # Field labels
 
@@ -340,7 +341,7 @@ When adding your own messages, you are free to choose any integer message id val
 
 =back
 
-Please use ids 30,000 or higher for your messages.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique.
+Please use ids 30,000 or higher for your messages.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique among all message names.
 
 =head1 EXPORTS
 
@@ -354,31 +355,31 @@ will cause all message name constant to be imported.
 
 The following tags will cause all messages whose names match the regular expression to the right of the tag name to be imported.
 
-    TAG                 NAME REGEX
-    -----               -----------------
-    field               ^FIELD_
-    form                ^FORM_
-    date                ^DATE_|_(?:YEAR|MONTH|DAY)$
-    time                ^TIME_|_(?:HOUR|MINUTE|SECOND)$
-    email               ^EMAIL_
-    phone               ^PHONE_
-    number              ^NUM_
-    set                 ^SET_
-    string              ^STRING_
+    TAG       NAME REGEX
+    -----     -----------------
+    field     ^FIELD_
+    form      ^FORM_
+    date      ^DATE_|_(?:YEAR|MONTH|DAY)$
+    time      ^TIME_|_(?:HOUR|MINUTE|SECOND)$
+    email     ^EMAIL_
+    phone     ^PHONE_
+    number    ^NUM_
+    set       ^SET_
+    string    ^STRING_
 
 For example, this will import all the message constants whose names begin with "FIELD_"
 
     use Rose::HTML::Object::Messages qw(:field);
 
-FInally, you can provide import individual message names as well:
+FInally, you can provide import individual message constant names as well:
 
     use Rose::HTML::Object::Messages qw(FIELD_LABEL_YEAR TIME_INVALID);
 
-A complete listing of the default set of message ids appears in the next section.
+A complete listing of the default set of message constant names appears in the next section.
 
 =head1 BUILT-IN MESSAGES
 
-The list of built-in messages appears below.  You should not rely on the actual numeric values of these constants.  Import and refer to them only by their symbolic names.
+The list of built-in messages constant names appears below.  You should not rely on the actual numeric values of these constants.  Import and refer to them only by their symbolic names.
 
     FIELD_LABEL
     FIELD_DESCRIPTION
@@ -442,13 +443,20 @@ The list of built-in messages appears below.  You should not rely on the actual 
 
 =item B<add_message NAME, ID>
 
-Add a new message constant with NAME and an integer ID value.  Message ids from 0 to 29,999 are reserved for built-in messages.  Negative message ids are reserved for internal use.  Please use message ids 30,000 or higher for your messages.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique.
+Add a new message constant with NAME and an integer ID value.  Message ids from 0 to 29,999 are reserved for built-in messages.  Negative message ids are reserved for internal use.  Please use message ids 30,000 or higher for your messages.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique among all message names.
 
 =item B<add_messages [NAME1, NAME2, ...]>
 
-If called with no arguments, this method L<adds|/add_message> all message L<constants|constant> defined in the calling class.
+If called with no arguments, this method L<adds|/add_message> all message L<constants|constant> defined in the calling class.  Example:
 
-If called with a list of constant names, add each named constant to the list of messages.  These L<constants|constant> must already exist in the calling class.
+    __PACKAGE__->add_messages;
+
+If called with a list of constant names, add each named constant to the list of messages.  These L<constants|constant> must already exist in the calling class.  Example:
+
+    use constant MY_MESSAGE1 => 123456;
+    use constant MY_MESSAGE2 => 123457;
+    ...
+    __PACKAGE__->add_messages('MY_MESSAGE1', 'MY_MESSAGE2');
 
 =item B<get_message_id NAME>
 

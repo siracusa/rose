@@ -19,7 +19,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.556';
+our $VERSION = '0.600';
 
 #our $Debug = 0;
 
@@ -1614,7 +1614,7 @@ This method is part of the L<Rose::HTML::Object> API.  In this case, it simply c
 
 =head1 SUPPORT
 
-Any L<Rose::HTML::Objects> questions or problems can be posted to the L<Rose::HTML::Objects> mailing list.  To subscribe to the list or view the archives, go here:
+Any L<Rose::HTML::Objects> questions or problems can be posted to the L<Rose::HTML::Objects> mailing list.  To subscribe to the list or search the archives, go here:
 
 L<http://groups.google.com/group/rose-html-objects>
 
