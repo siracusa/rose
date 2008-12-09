@@ -7,7 +7,7 @@ use Rose::HTML::Object::Message::Localizer;
 
 use base 'Rose::Object';
 
-our $VERSION = '0.556';
+our $VERSION = '0.600';
 
 #our $Debug = 0;
 

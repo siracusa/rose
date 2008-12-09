@@ -11,7 +11,7 @@ our @ISA = qw(Rose::Object);
 
 use Rose::HTML::Object::Errors qw(CUSTOM_ERROR);
 
-our $VERSION = '0.54';
+our $VERSION = '0.600';
 
 #our $Debug = 0;
 
@@ -197,7 +197,7 @@ __END__
 
 =head1 NAME
 
-Rose::HTML::Object::Error - Text message object.
+Rose::HTML::Object::Error - Error object.
 
 =head1 SYNOPSIS
 

@@ -7,7 +7,7 @@ use Rose::HTML::Object::Errors qw(:set);
 use Rose::HTML::Form::Field::TextArea;
 our @ISA = qw(Rose::HTML::Form::Field::TextArea);
 
-our $VERSION = '0.556';
+our $VERSION = '0.600';
 
 sub deflate_value
 {

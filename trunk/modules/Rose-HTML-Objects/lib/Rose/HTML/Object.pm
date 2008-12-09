@@ -10,7 +10,7 @@ use Scalar::Util();
 use Rose::HTML::Util();
 use Rose::HTML::Object::Message::Localizer;
 
-our $VERSION = '0.556';
+our $VERSION = '0.600';
 
 our $Debug = undef;
 
@@ -1047,7 +1047,7 @@ Rose::HTML::Object - HTML object base class.
 
   print $o->html; # <p><br> Hi</p>
 
-  $b = Rose::HTML::Object->new(body => children => $o);
+  $b = Rose::HTML::Object->new('body', children => $o);
 
   print $b->html; # <body><p><br> Hi</p></body>
 
@@ -1093,6 +1093,7 @@ Rose::HTML::Object - HTML object base class.
 
   sub html_element  { 'mytag' }
   sub xhtml_element { 'mytag' }
+
   ...
 
   my $o = MyTag->new(bar => 'hello', selected => 1);
@@ -1101,15 +1102,17 @@ Rose::HTML::Object - HTML object base class.
   print $o->html_attrs_string;  
 
   # prints: bar="hello" foo="5" goo="" selected="selected"
-  print $o->xhtml_attrs_string; 
+  print $o->xhtml_attrs_string;
 
   $o->html_attr(selected => 0);
 
-  print "Has bar"  if($o->html_attr_exists('bar'));
+  print "Has bar\n"  if($o->html_attr_exists('bar'));
   $o->delete_html_attr('bar');
 
-  print $o->html_tag;  # <mytag foo="5" goo="" selected>
-  print $o->xhtml_tag; # <mytag foo="5" goo="" selected="selected" />
+  $o->is_self_closing(1);
+
+  print $o->html_tag;  # <mytag foo="5" goo="">
+  print $o->xhtml_tag; # <mytag foo="5" goo="" />
   ...
 
 =head1 DESCRIPTION
@@ -1126,15 +1129,15 @@ Each L<Rose::HTML::Object> may have zero or more L<children|/children>, each of 
 
 Although several methods, data structures, and policies exist to aid the creation of valid HTML, they are in no way a replacement for real markup validation.
 
-This class and those that inherit from it try to support a superset of the elements and attributes specified in the HTML 4.01 and XHTML 1.x specifications.  As a result, these classes will tend to be more permissive than actual validation.  The support of these standards is not exhaustive, and will inevitably expand.  Also remember that there are several variant DTDs that make up XHTML 1.x.  By trying to support a superset of these standards, this class simply can't correctly enforce the rules of any individual standard.
+This class and those that inherit from it try to support a superset of the elements and attributes specified in the HTML 4.01 and XHTML 1.x specifications.  As a result, these classes will tend to be more permissive than actual validation.  The support of these standards is not exhaustive, and will inevitably expand.  Also remember that there are several variant DTDs that make up XHTML 1.x.  By trying to support a superset of these standards, this class can't correctly enforce the rules of any individual standard.
 
-So I say again: these classes are not a replacement for real markup validation! Use an external validator!
+So I say again: these classes are not a replacement for real markup validation. Use an external validator.
 
 Going forward, the compatibility policy of these classes is that attribute specifications may be added in the future, but existing attribute specifications will never be removed (unless they originally existed in error, i.e., were never part of any HTML 4.01 or XHTML 1.x standard).
 
 This support policy is pragmatic rather than ideological.  There is enough default validation to catch most typos or other unintentional errors, but not so much that the entire class hierarchy is weighed down by language lawyering and bookkeeping.
 
-If the runtime overhead of validating every HTML attribute is deemed too onerous, it can be turned off on a per-object basis with the L<validate_html_attrs()|/validate_html_attrs> method.   Subclasses can set this attribute during object construction to make the effect class-wide.  (You will also want to look at the L<autoload_html_attr_methods()|/autoload_html_attr_methods> class attribute.)
+If the runtime overhead of validating every HTML attribute is deemed too onerous, it can be turned off on a per-object basis with the L<validate_html_attrs|/validate_html_attrs> method.   Subclasses can set this attribute during object construction to make the effect class-wide.  (You will also want to look at the L<autoload_html_attr_methods|/autoload_html_attr_methods> class attribute.)
 
 There are also methods for adding and removing valid, required, and boolean HTML attributes for a class.
 
@@ -1144,9 +1147,9 @@ Finally, all element and attribute names are case-sensitive and lowercase in ord
 
 These class methods can be called with a class name or an object as the invocant.  Either way, remember that the data structures and attributes affected are part of the class as a whole, not any individual object.  For example, adding a valid HTML attribute makes it valid for all objects of the class, including any objects that already exist.
 
-Many of the class methods manipulate "inheritable sets" or "inherited sets." See the L<Rose::Class::MakeMethods::Set> documentation for an explanation off these method types.
+Many of the class methods manipulate "inheritable sets," "inherited sets," or "inherited hashes."  See the L<Rose::Class::MakeMethods::Set> and L<Rose::Class::MakeMethods::Generic|Rose::Class::MakeMethods::Generic/inherited_hash> documentation for an explanation off these method types.
 
-The sets of valid and boolean HTML attributes are "inherited sets."  The set of required HTML attributes is an "inheritable set."
+The sets of valid and boolean HTML attributes are "inherited sets."  The set of required HTML attributes is an "inheritable set."  The L<object_type_classes|/object_type_classes> map is an "inherited hash."
 
 The inheritance behavior of these sets is noted here in order to facilitate subclassing.  But it is an implementation detail, not a part of the public API.  The requirements of the APIs themselves do not include any particular inheritance behavior.
 
@@ -1173,11 +1176,11 @@ Add entries to the L<object_type_classes|/object_type_classes> hash that maps ob
 
 =item B<add_required_html_attr NAME [, DEFAULT]>
 
-Adds a value to the list of required HTML attributes for this class. Required HTML attributes will always appear in the HTML tag, with or without a non-empty value. You can set the default value for a required HTML attribute using the L<required_html_attr_value()|/required_html_attr_value> method or by passing the DEFAULT parameter to this method.
+Adds a value to the list of required HTML attributes for this class. Required HTML attributes will always appear in the HTML tag, with or without a non-empty value. You can set the default value for a required HTML attribute using the L<required_html_attr_value|/required_html_attr_value> method or by passing the DEFAULT parameter to this method.
 
 =item B<add_required_html_attrs NAME1, NAME2, ... | HASHREF>
 
-Adds one or more values to the list of required HTML attributes for this class. Required HTML attributes will always appear in the HTML tag, with or without a non-empty value.  You can set the default value for a required HTML attribute using the L<required_html_attr_value()|/required_html_attr_value> method or by passing a reference to a hash containing name/default pairs.
+Adds one or more values to the list of required HTML attributes for this class. Required HTML attributes will always appear in the HTML tag, with or without a non-empty value.  You can set the default value for a required HTML attribute using the L<required_html_attr_value|/required_html_attr_value> method or by passing a reference to a hash containing name/default pairs.
 
 =item B<add_valid_html_attr NAME>
 
@@ -1219,7 +1222,7 @@ Examples:
 
 Yes, the existence of this capability means that adding a method to a future version of a L<Rose::HTML::Object>-derived class that has the same name as a valid HTML attribute may cause older code that calls the auto-created method of the same name to break.
 
-You have a few options.  You can simply choose not to use any auto-created methods, opting instead to use L<html_attr()|/html_attr> everywhere (and you can set C<autoload_html_attr_methods> to false to make sure that you don't accidentally use such a method).  Or you can simply trust that I will not add new methods with the same names as existing valid HTML attributes.  Since I use auto-created methods extensively, you can have some faith that I will do everything I can to avoid breaking my own code.
+To avoid this, you can choose not to use any auto-created methods, opting instead to use the L<html_attr|/html_attr> method everywhere (and you can set C<autoload_html_attr_methods> to false to make sure that you don't accidentally use such a method).
 
 =item B<boolean_html_attrs>
 
@@ -1281,7 +1284,7 @@ When called as a class method and a L<LOCALE|Rose::HTML::Object::Message::Locali
 
 If no locale is set for this class (when called as a class method) then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
 
-If no locale is set for this object (when called as an object method), then the the first defined locale from the object's L<parent_field|Rose::HTML::Form::Field/parent_field>, L<parent_field|Rose::HTML::Form::Field/parent_form>, or generic L<parent|/parent> is returned.  If none of those locales are defined, then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
+If no locale is set for this object (when called as an object method), then the the first defined locale from the object's L<parent_field|Rose::HTML::Form::Field/parent_field>, L<parent_form|Rose::HTML::Form::Field/parent_form>, or generic L<parent|/parent> is returned.  If none of those locales are defined, then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
 
 =item B<object_type_class TYPE [, CLASS]>
 
@@ -1403,7 +1406,7 @@ The default mapping of type names to class names is:
 
 Returns a reference to a sorted list of required HTML attributes in scalar context, or a sorted list of required HTML attributes in list context. The default set of required HTML attributes is empty.
 
-Required HTML attributes are included in the strings generated by L<html_attrs_string()|/html_attrs_string> and L<xhtml_attrs_string()|/xhtml_attrs_string> even if they have been deleted by L<delete_html_attr()|/delete_html_attr> or one of its variants.  If a required HTML attribute does not have a default value, its value defaults to an empty string or, if the attribute is also boolean, the name of the attribute.
+Required HTML attributes are included in the strings generated by the L<html_attrs_string|/html_attrs_string> and L<xhtml_attrs_string|/xhtml_attrs_string> methods, even if they have been deleted using the L<delete_html_attr|/delete_html_attr> method or one of its variants.  If a required HTML attribute does not have a default value, its value defaults to an empty string or, if the attribute is also boolean, the name of the attribute.
 
 See the introduction to the L<"CLASS METHODS"> section for more information about the "inheritable set" implementation used by the set of boolean HTML attributes.
 
@@ -1465,7 +1468,7 @@ This is an alias for the L<push_child|/push_child> method.
 
 This is an alias for the L<push_children|/push_children> method.
 
-=item B<child [INT]>
+=item B<child INT>
 
 Returns the L<child|/children> at the index specified by INT.  The first child is at index zero (0).
 
@@ -1523,8 +1526,8 @@ Get or set an error string.
 
 Get or set an integer L<error|Rose::HTML::Object::Errors> id.  When setting the error id, an optional ARGS hash reference should be passed if the L<localized text|Rose::HTML::Object::Message::Localizer/"LOCALIZED TEXT"> for the L<corresponding|/message_for_error_id> message contains any L<placeholders|Rose::HTML::Object::Message::Localizer/"LOCALIZED TEXT">.  Example:
 
-    # Set error id, passing args for the "label" and "value" placeholders
-    $obj->error_id(NUM_ABOVE_MAX, { label => $l, => value => $v });
+  # Set error id, passing args for the label and value placeholders
+  $obj->error_id(NUM_ABOVE_MAX, { label => $l, => value => $v });
 
 =item B<escape_html [BOOL]>
 
@@ -1548,7 +1551,7 @@ Returns true if an L<error|/error> is set, false otherwise.
 
 =item B<html>
 
-A synonym for L<html_tag()|/html_tag>.
+A synonym for the L<html_tag|/html_tag> method.
 
 =item B<html_attr NAME [, VALUE]>
 
@@ -1646,11 +1649,11 @@ If the L<escape_html|/escape_html> flag is set to true (the default), then the e
 
 =item B<html_tag>
 
-Serializes the object as an HTML tag.  In other words, it is the concatenation of the strings returned by L<html_element()|/html_element> and L<html_attrs_string()|/html_attrs_string>, wrapped with the appropriate angled brackets.
+Serializes the object as an HTML tag.  In other words, it is the concatenation of the strings returned by the L<html_element|/html_element> and L<html_attrs_string|/html_attrs_string> methods, wrapped with the appropriate angled brackets.
 
 =item B<is_self_closing [BOOL]>
 
-Get or set a boolean attribute that determines whether or not the HTML for this object requires a separate closing tag.  If set to true, then an empty "foo" tag would looke like this:
+Get or set a boolean attribute that determines whether or not the HTML for this object requires a separate closing tag.  If set to true, then an empty "foo" tag would look like this:
 
      HTML: <foo>
     XHTML: <foo />
@@ -1708,13 +1711,13 @@ Remove INT objects from the end of the list of L<children|/children> and return 
 
 Add OBJECT to the end of the list of L<children|/children>.  The object must be of or derived from the L<Rose::HTML::Object> class, or a plain scalar.  If it's a plain scalar, it will be converted to a L<Rose::HTML::Text> object, with the scalar used as the value of the L<text|Rose::HTML::Text/text> attribute.
 
-=item B<push_children OBJECTS>
+=item B<push_children OBJECT1 [, OBJECT2, ...]>
 
-Add OBJECTS to the end of the list of L<children|/children>.  Each object must be of or derived from the L<Rose::HTML::Object> class, or a plain scalar.  All plain scalars will be converted to L<Rose::HTML::Text> objects, with the scalar used as the value of the L<text|Rose::HTML::Text/text> attribute.
+Add objects on to the end of the list of L<children|/children>.  Each object must be of or derived from the L<Rose::HTML::Object> class, or a plain scalar.  All plain scalars will be converted to L<Rose::HTML::Text> objects, with the scalar used as the value of the L<text|Rose::HTML::Text/text> attribute.
 
 =item B<set_error>
 
-Set the L<error|/error> to a defined but "invisible" (zero-length) value.  This value will not be displayed by the L<html_error|/html_error> or L<xhtml_error|/xhtml_error>.  Use this method when you want to flag a field as having an error, but don't want a visible error message.
+Set the L<error|/error> to a defined but "invisible" (zero-length) value.  This value will not be displayed by the L<html_error|/html_error> or L<xhtml_error|/xhtml_error> methods.  Use this method when you want to flag a field as having an error, but don't want a visible error message.
 
 =item B<shift_child [INT]>
 
@@ -1728,9 +1731,9 @@ Remove INT objects from the start of the list of L<children|/children> and retur
 
 Add OBJECT to the start of the list of L<children|/children>.  The object must be of or derived from the L<Rose::HTML::Object> class, or a plain scalar.  If it's a plain scalar, it will be converted to a L<Rose::HTML::Text> object, with the scalar used as the value of the L<text|Rose::HTML::Text/text> attribute.
 
-=item B<unshift_children OBJECTS>
+=item B<unshift_children OBJECT1 [, OBJECT2, ...]>
 
-Add OBJECTS to the start of the list of L<children|/children>.  Each object must be of or derived from the L<Rose::HTML::Object> class, or a plain scalar.  All plain scalars will be converted to L<Rose::HTML::Text> objects, with the scalar used as the value of the L<text|Rose::HTML::Text/text> attribute.
+Add objects to the start of the list of L<children|/children>.  Each object must be of or derived from the L<Rose::HTML::Object> class, or a plain scalar.  All plain scalars will be converted to L<Rose::HTML::Text> objects, with the scalar used as the value of the L<text|Rose::HTML::Text/text> attribute.
 
 =item B<unset_error>
 
@@ -1742,7 +1745,7 @@ If set to true, HTML attribute arguments to C<html_attr> and C<html_attr_hook> w
 
 =item B<xhtml>
 
-A synonym for L<xhtml_tag()|/xhtml_tag>.
+A synonym for the L<xhtml_tag|/xhtml_tag> method.
 
 =item B<xhtml_element [NAME]>
 
@@ -1760,7 +1763,7 @@ If the L<escape_html|/escape_html> flag is set to true (the default), then the e
 
 =item B<xhtml_tag>
 
-Serializes the object as an XHTML tag.  In other words, it is the concatenation of the strings returned by L<xhtml_element()|/xhtml_element> and L<xhtml_attrs_string()|/xhtml_attrs_string>, wrapped with the appropriate angled brackets and forward slash character.
+Serializes the object as an XHTML tag.  In other words, it is the concatenation of the strings returned by the L<xhtml_element|/xhtml_element> and L<xhtml_attrs_string|/xhtml_attrs_string> methods, wrapped with the appropriate angled brackets and forward slash character.
 
 =item B<xhtml_attrs_string>
 
@@ -1784,7 +1787,7 @@ Examples:
 
 =head1 SUPPORT
 
-Any L<Rose::HTML::Objects> questions or problems can be posted to the L<Rose::HTML::Objects> mailing list.  To subscribe to the list or view the archives, go here:
+Any L<Rose::HTML::Objects> questions or problems can be posted to the L<Rose::HTML::Objects> mailing list.  To subscribe to the list or search the archives, go here:
 
 L<http://groups.google.com/group/rose-html-objects>
 

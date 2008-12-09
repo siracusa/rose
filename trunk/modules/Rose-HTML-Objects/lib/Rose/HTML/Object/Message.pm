@@ -11,7 +11,7 @@ use Rose::HTML::Object::Messages qw(CUSTOM_MESSAGE);
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.54';
+our $VERSION = '0.600';
 
 #our $Debug = 0;
 
