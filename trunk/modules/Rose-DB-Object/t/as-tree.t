@@ -714,6 +714,13 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 
 INIT_WITH_TREE_BUG:
 {
+  SKIP:
+  {
+    skip("init_with_tree() bug tests", 3)  unless(%Have);
+  }
+
+  next  unless(%Have);
+
   package Project::Model::User;
 
   use base qw(Rose::DB::Object);
