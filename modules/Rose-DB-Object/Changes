@@ -1,3 +1,9 @@
+0.776_01 (12.10.2008) - John Siracusa <siracusa@gmail.com>
+
+    * Fixed a bug that caused foreign key proxy relationships to
+      be clobbered if relationships were set after foreign_keys.
+      (Reported by Peter Karman)
+
 0.776 (12.09.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug that was preventing the use of new comparison

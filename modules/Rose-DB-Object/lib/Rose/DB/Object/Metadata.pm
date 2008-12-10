@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.776';
+our $VERSION = '0.777';
 
 our $Debug = 0;
 
@@ -1244,8 +1244,15 @@ sub relationships
 
 sub delete_relationships
 {
-  my($self, $name) = @_;
-  $self->{'relationships'} = {};
+  my($self) = shift;
+  
+  # Delete everything except fk proxy relationships
+  foreach my $name (keys %{$self->{'relationships'} || {}})
+  {
+    delete $self->{'relationships'}{$name}  
+      unless($self->{'relationships'}{$name}->foreign_key);
+  }
+
   return;
 }
 
@@ -1581,13 +1588,36 @@ sub delete_foreign_key
   return;
 }
 
+sub delete_foreign_keys
+{
+  my($self) = shift;
+
+  # Delete fk proxy relationship
+  foreach my $fk (values %{$self->{'foreign_keys'}})
+  {
+    foreach my $rel ($self->relationships)
+    {
+      no warnings 'uninitialized';
+      if($rel->foreign_key eq $fk)
+      {
+        $self->delete_relationship($rel->name);
+      }
+    }
+  }
+  
+  # Delete fks
+  $self->{'foreign_keys'} = {};
+
+  return;
+}
+
 sub foreign_keys
 {
   my($self) = shift;
 
   if(@_)
   {
-    $self->{'foreign_keys'} = {};
+    $self->delete_foreign_keys;
     $self->add_foreign_keys(@_);
   }
 
