@@ -353,7 +353,7 @@ EOF
   # All other classes
   #
 
-  foreach my $base_class (sort values %$base_object_type)
+  foreach my $base_class (sort values %$base_object_type, 'Rose::HTML::Form::Field')
   {
     if($class_filter)
     {

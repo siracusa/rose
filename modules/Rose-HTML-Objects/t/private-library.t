@@ -4,7 +4,7 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 177;
+use Test::More tests => 179;
 #use Test::More 'no_plan';
 
 use_ok('Rose::HTML::Objects');
@@ -81,6 +81,16 @@ foreach my $type (My::HTML::Object->object_type_names)
   is(My::HTML::Object->object_type_class($type), $new_class, "object type class: $type");
 }
 
+GENERIC_FIELD:
+{
+  package My::Field;
+  our @ISA = ('My::HTML::Form::Field');
+  
+  package main;
+  $field = My::Field->new;
+  ok($field->isa('Rose::HTML::Form::Field'), 'generic field 1');
+}
+
 #
 # Module files
 #
@@ -134,6 +144,17 @@ $packages =
                                             code        => \%code);
 
 unshift(@INC, $lib_dir);
+
+GENERIC_FIELD:
+{
+  package My2::Field;
+  require My2::HTML::Form::Field;
+  our @ISA = ('My2::HTML::Form::Field');
+  
+  package main;
+  $field = My2::Field->new;
+  ok($field->isa('Rose::HTML::Form::Field'), 'generic field 2');
+}
 
 require My2::HTML::Form::Field::Text;
 
