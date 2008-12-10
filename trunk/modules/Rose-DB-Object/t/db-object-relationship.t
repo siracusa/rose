@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1578;
+use Test::More tests => 1590;
 
 BEGIN 
 {
@@ -27,7 +27,7 @@ ok($@ =~ /^\QAlready made a map record method named map_record in class JCS::B o
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 390)  unless($HAVE_PG);
+  skip("Postgres tests", 396)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -1533,6 +1533,8 @@ SKIP: foreach my $db_type ('pg')
   is($count, 5, "add 2 many to many on save 34 - $db_type");
 
   # End "many to many" tests
+
+  test_meta(MyPgOtherObject2->meta, 'MyPg', $db_type);
 }
 
 #
@@ -4443,7 +4445,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 452)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 458)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -6201,6 +6203,8 @@ SKIP: foreach my $db_type ('sqlite')
   is($o2->name, 'John2', "fk hook-up 2 - $db_type");
 
   # End fk hook-up tests
+
+  test_meta(MySQLiteOtherObject2->meta, 'MySQLite', $db_type);
 }
 
 BEGIN
@@ -6380,7 +6384,7 @@ EOF
 
     MyPgObject->meta->relationships
     (
-      other_obj =>
+      other_objx =>
       {
         type  => 'one to one',
         class => 'MyPgOtherObject',
@@ -7709,6 +7713,68 @@ EOF
 
     MySQLiteColorMap->meta->initialize;
   }
+}
+
+sub test_meta
+{
+  my($meta, $prefix, $db_type) = @_;
+
+  $meta->delete_relationships;  
+
+  $meta->delete_foreign_keys;
+
+  $meta->foreign_keys
+  (
+    other_obj =>
+    {
+      class => "${prefix}Object",
+      key_columns => { pid => 'id' },
+    },
+  );
+
+  $meta->relationships
+  (
+    other_objx =>
+    {
+      type  => 'many to one',
+      class => "${prefix}Object",
+      column_map => { pid => 'id' },
+      required => 1,
+      with_column_triggers => 1,
+    },
+  );
+  
+  is(scalar @{$meta->foreign_keys}, 1, "proxy relationships 1 - $db_type");
+  is(scalar @{$meta->relationships}, 2, "proxy relationships 2 - $db_type");
+
+  $meta->delete_foreign_keys;
+
+  is(scalar @{$meta->foreign_keys}, 0, "proxy relationships 3 - $db_type");
+  is(scalar @{$meta->relationships}, 1, "proxy relationships 4 - $db_type");
+
+  $meta->relationships
+  (
+    other_objx =>
+    {
+      type  => 'many to one',
+      class => "${prefix}Object",
+      column_map => { pid => 'id' },
+      required => 1,
+      with_column_triggers => 1,
+    },
+  );
+
+  $meta->foreign_keys
+  (
+    other_obj =>
+    {
+      class => "${prefix}Object",
+      key_columns => { pid => 'id' },
+    },
+  );
+
+  is(scalar @{$meta->foreign_keys}, 1, "proxy relationships 5 - $db_type");
+  is(scalar @{$meta->relationships}, 2, "proxy relationships 6 - $db_type");
 }
 
 END
