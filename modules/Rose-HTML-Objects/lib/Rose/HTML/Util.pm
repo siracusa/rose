@@ -27,7 +27,7 @@ if(exists $ENV{'MOD_PERL'} && require mod_perl && $mod_perl::VERSION < 1.99)
 
   #*escape_html   = \&HTML::Entities::encode;
   *escape_html   = \&encode_entities;
-  *unescape_html = \&Apache::Util::unescape_html;
+  *unescape_html = \&HTML::Entities::decode;
   *escape_uri_component = \&Apache::Util::escape_uri;
 }
 else
@@ -132,7 +132,7 @@ This method passes its arguments to L<HTML::Entities::encode_entities()|HTML::En
 
 =item B<unescape_html STRING>
 
-When running under mod_perl 1.x, this is an alias for C<Apache::Util::unescape_html()>. Otherwise, it's an alias for L<HTML::Entities::decode()|HTML::Entities/decode>.
+This method is an alias for L<HTML::Entities::decode()|HTML::Entities/decode>.
 
 =item B<escape_uri STRING>
 

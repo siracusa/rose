@@ -41,7 +41,36 @@ sub element       { 'img' }
 sub html_element  { 'img' }
 sub xhtml_element { 'img' }
 
-sub init_document_root { ($ENV{'MOD_PERL'}) ? Apache->request->document_root : $DOC_ROOT || '' }
+QUIET:
+{
+  no warnings 'uninitialized';
+  use constant MOD_PERL_1 => ($ENV{'MOD_PERL'} && !$ENV{'MOD_PERL_API_VERSION'})     ? 1 : 0;
+  use constant MOD_PERL_2 => ($ENV{'MOD_PERL'} && $ENV{'MOD_PERL_API_VERSION'} == 2) ? 1 : 0;
+
+  use constant TRY_MOD_PERL_2 => eval { require Apache2::RequestUtil } && !$@ ? 1 : 0;
+}
+
+sub init_document_root 
+{
+  if(MOD_PERL_1)
+  {
+    return Apache->request->document_root;
+  }
+
+  if(TRY_MOD_PERL_2)
+  {
+    my $r;
+
+    eval { $r = Apache2::RequestUtil->request };
+
+    if($r)
+    {
+      return $r->document_root;
+    }
+  }
+
+  return $DOC_ROOT || '';
+}
 
 sub src
 {
@@ -96,7 +125,7 @@ sub _new_path
 {
   my($self, $path) = @_;
 
-  unless(defined $self->{'document_root'})
+  unless($self->{'document_root'})
   {
     $self->init_size;
     return;
@@ -209,11 +238,19 @@ Constructs a new L<Rose::HTML::Image> object based on PARAMS, where PARAMS are n
 
 =item B<document_root [PATH]>
 
-Get or set the web site document root.  This is combined with the value of the "src" HTML attribute to build the path to the actual image file on disk. If running in a mod_perl environment, the document root defaults to the value returned by:
+Get or set the web site document root.  This is combined with the value of the "src" HTML attribute to build the path to the actual image file on disk.
+
+If running in a mod_perl 1.x environment, the document root defaults to the value returned by:
 
     Apache->request->document_root
 
-This call is made once for each L<Rose::HTML::Image> object that needs to use the document root.
+If running in a mod_perl 2.x environment, the document root defaults to the value returned by:
+
+    Apache2::RequestUtil->request->document_root
+
+Note that you must have the C<GlobalRequest> option set for this to work.  If you do not, the document root defaults to undef.
+
+These calls are made once for each L<Rose::HTML::Image> object that needs to use the document root.
 
 =item B<init_size [PATH]>
 
