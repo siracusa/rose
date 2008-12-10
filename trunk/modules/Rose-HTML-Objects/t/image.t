@@ -4,7 +4,7 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 6;
+use Test::More tests => 10;
 
 SKIP:
 {
@@ -33,4 +33,17 @@ SKIP:
 
   is($image->html, '<img alt="logo" class="foo" height="48" id="bar" src="/logo.png" style="baz" width="72">', 'html() 2');
   is($image->xhtml, '<img alt="logo" class="foo" height="48" id="bar" src="/logo.png" style="baz" width="72" />', 'xhtml() 2');
+
+  $image = Rose::HTML::Image->new(
+    src           => '/logo.png',
+    document_root => $Bin);
+
+  is($image->html, '<img alt="" height="48" src="/logo.png" width="72">', 'html() 3');
+  is($image->xhtml, '<img alt="" height="48" src="/logo.png" width="72" />', 'xhtml_field() 3');
+
+  $image = Rose::HTML::Image->new(src => '/logo.png');
+  $image->document_root($Bin);
+
+  is($image->html, '<img alt="" height="48" src="/logo.png" width="72">', 'html() 4');
+  is($image->xhtml, '<img alt="" height="48" src="/logo.png" width="72" />', 'xhtml_field() 4');
 }

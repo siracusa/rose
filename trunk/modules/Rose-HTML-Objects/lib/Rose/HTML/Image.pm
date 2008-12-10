@@ -9,12 +9,7 @@ our @ISA = qw(Rose::HTML::Object);
 
 our $DOC_ROOT;
 
-our $VERSION = '0.011';
-
-use Rose::Object::MakeMethods::Generic
-(
-  'scalar --get_set_init' => 'document_root',
-);
+our $VERSION = '0.600';
 
 __PACKAGE__->add_required_html_attrs(
 {
@@ -52,7 +47,7 @@ sub src
 {
   my($self) = shift;
   my $src = $self->html_attr('src', @_);
-  $self->_new_src($src)  if(@_);
+  $self->_new_src_or_document_root($src)  if(@_);
   return $src;
 }
 
@@ -64,7 +59,24 @@ sub path
   return $self->{'path'};
 }
 
-sub _new_src
+sub document_root
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    $self->{'document_root'} = shift;
+    $self->_new_src_or_document_root($self->src);
+    return $self->{'document_root'};
+  }
+  
+  $self->{'document_root'} = $self->init_document_root
+    unless(defined  $self->{'document_root'});
+
+  return $self->{'document_root'};
+}
+
+sub _new_src_or_document_root
 {
   my($self, $src) = @_;
 
@@ -124,15 +136,15 @@ Rose::HTML::Image - Object representation of the "img" HTML tag.
     $img = Rose::HTML::Image->new(src => '/logo.png',
                                   alt => 'Logo');
 
-    $i->document_root('/var/web/htdocs');
+    $img->document_root('/var/web/htdocs');
 
     # <img alt="Logo" height="48" src="/logo.png" width="72">
-    print $i->html;
+    print $img->html;
 
-    $i->alt(undef);
+    $img->alt(undef);
 
     # <img alt="" height="48" src="/logo.png" width="72" />
-    print $i->xhtml;
+    print $img->xhtml;
 
     ...
 
