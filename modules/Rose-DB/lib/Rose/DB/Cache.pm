@@ -179,6 +179,7 @@ if(MOD_PERL_2)
   require Apache2::ServerUtil;
   require Apache2::RequestUtil;
   require Apache2::Const;
+  Apache2::Const->import(-compile => qw(OK));
 
   $MP2_Is_Child = 0;
 
@@ -194,7 +195,7 @@ if(MOD_PERL_2)
 sub prepare_db
 {
   my($self, $db, $entry) = @_;
-print STDERR "PREP $db $entry\n";
+
   if(MOD_PERL_1)
   {
     if($Apache::Server::Starting)
