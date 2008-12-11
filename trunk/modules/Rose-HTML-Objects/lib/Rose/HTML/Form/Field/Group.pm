@@ -370,7 +370,7 @@ sub _args_to_items
                                 $label_method => $labels{$value}));
     }
   }
-
+$DB::single = 1;
   foreach my $item (@$items)
   {
     # Connect item to group

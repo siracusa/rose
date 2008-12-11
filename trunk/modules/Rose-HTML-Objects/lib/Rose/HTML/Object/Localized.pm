@@ -67,7 +67,7 @@ sub locale
 
     return $invocant->{'locale'}  if($invocant->{'locale'});
 
-    foreach my $parent_name (qw(parent_field parent_form parent))
+    foreach my $parent_name (qw(parent_group parent_field parent_form parent))
     {
       if($invocant->can($parent_name) && (my $parent = $invocant->$parent_name()))
       {
