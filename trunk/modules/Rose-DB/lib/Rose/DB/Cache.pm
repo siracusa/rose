@@ -23,7 +23,7 @@ use Rose::Class::MakeMethods::Generic
 __PACKAGE__->entry_class('Rose::DB::Cache::Entry');
 __PACKAGE__->default_use_cache_during_apache_startup(0);
 
-our($MP2_Is_Child);
+our($MP2_Is_Child, $Apache_Has_Started);
 
 sub default_use_cache_during_apache_startup
 {
@@ -183,13 +183,45 @@ if(MOD_PERL_2)
 
   $MP2_Is_Child = 0;
 
-  Apache2::ServerUtil->server->push_handlers(PerlChildInitHandler => sub
+  if(__PACKAGE__->apache_has_started)
   {
-    $Debug && warn "$$ is MP2 child\n";
+    $Debug && warn "$$ is already MP2 child (not registering child init handler)\n";
     $MP2_Is_Child = 1;
+  }
+  else
+  {
+    Apache2::ServerUtil->server->push_handlers(PerlChildInitHandler => sub
+    {
+      $Debug && warn "$$ is MP2 child\n";
+      $MP2_Is_Child = 1;
+  
+      return Apache2::Const::OK();
+    });
+  }
+}
 
-    return Apache2::Const::OK();
-  });
+sub apache_has_started
+{
+  my($class) = shift;
+  
+  if(@_)
+  {
+    return $Apache_Has_Started = $_[0] ? 1 : 0;
+  }
+
+  return $Apache_Has_Started  if(defined $Apache_Has_Started);
+
+  if(MOD_PERL_2)
+  {
+    return $Apache_Has_Started = $MP2_Is_Child;
+  }
+  
+  if(MOD_PERL_1)
+  {
+    return $Apache_Has_Started = $Apache::Server::Starting;
+  }
+
+  return undef;
 }
 
 sub prepare_db
@@ -337,13 +369,17 @@ When running under L<Apache::DBI>, the behavior described above will ensure that
 
 When running under mod_perl I<without> L<Apache::DBI>, the behavior described above will use a single L<DBI> database connection per cached L<Rose::DB> object per request, but will discard these connections at the end of each request.
 
-Both mod_perl 1.x and 2.x are supported.  Under mod_perl 2.x, you I<must> load L<Rose::DB> on server startup (e.g., in your C<startup.pl> file).
+Both mod_perl 1.x and 2.x are supported.  Under mod_perl 2.x, you should load L<Rose::DB> on server startup (e.g., in your C<startup.pl> file).  If this is not possible, then you must explicitly tell L<Rose::DB::Cache> that apache has started up already by setting L<apache_has_started|/apache_has_started> to a true value.
 
 Subclasses can override any and all methods described below in order to implement their own caching strategy.
 
 =head1 CLASS METHODS
 
 =over 4
+
+=item B<apache_has_started [BOOL]>
+
+Get or set a boolean value indicating whether or not apache has completed its startup process.  If this value is not set explicitly, a best guess as to the answer will be returned.
 
 =item B<build_cache_key PARAMS>
 
