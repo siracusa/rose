@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.748';
+our $VERSION = '0.748_01';
 
 our $Debug = 0;
 
@@ -324,10 +324,12 @@ sub new_or_cached
 
   #$Debug && warn "New or cached db type: $args{'type'}, domain: $args{'domain'}\n";
 
-  if(my $db = $class->db_cache->get_db(%args))
+  my $cache = $class->db_cache;
+
+  if(my $db = $cache->get_db(%args))
   {
     $Debug && warn "$$ $class Returning cached db (", $db->domain, ', ', $db->type,
-      ") $db from ", $class->db_cache, "\n";
+      ") $db from ", $cache, "\n";
     return $db;
   }
 
@@ -336,12 +338,21 @@ sub new_or_cached
     my $db = $class->new(@_);
     $Debug && warn "$$ $class Setting cached db $db (", 
        join(', ', map { $args{$_} } qw(domain type)), 
-       ") in ", $class->db_cache, "\n";
-    return $class->db_cache->set_db($class->new(@_));
+       ") in ", $cache, "\n";
+
+    # The set_db() call may refuse to set, so call get_db() to properly
+    # register clean-up handlers, etc., but fall back to the db returned 
+    # by set_db() in the case where the db was never cached.
+    $db = $cache->set_db($class->new(@_));
+    return $cache->get_db(%args) || $db;
   }
   else
   {
-    return $class->db_cache->set_db($class->new(@_));
+    # The set_db() call may refuse to set, so call get_db() to properly
+    # register clean-up handlers, etc., but fall back to the db returned 
+    # by set_db() in the case where the db was never cached.
+    my $db = $cache->set_db($class->new(@_));
+    return $cache->get_db(%args) || $db;
   }
 }
 

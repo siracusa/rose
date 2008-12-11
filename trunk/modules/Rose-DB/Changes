@@ -1,3 +1,8 @@
+0.748_01 (12.11.2008) - John Siracusa <siracusa@gmail.com>
+
+    * More mod_perl 2.x fixes for Rose::DB::Cache. (Reported by 
+      Kostas Chatzikokolakis)
+
 0.748 (12.09.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed mod_perl 2.x support in Rose::DB::Cache. (Reported by 

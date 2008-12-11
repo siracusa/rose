@@ -7,7 +7,7 @@ use base 'Rose::Object';
 use Scalar::Util qw(refaddr);
 use Rose::DB::Cache::Entry;
 
-our $VERSION = '0.748';
+our $VERSION = '0.749';
 
 our $Debug = 0;
 
@@ -120,34 +120,52 @@ sub set_db
 {
   my($self, $db) = @_;
 
-  # Don't cache anything during apache startup if use_cache_during_apache_startup
-  # is false.  Weird conditional structure is meant to encourage code elimination
-  # thanks to the lone constants in the if/elsif conditions.
-  if(MOD_PERL_1)
-  {
-    if($Apache::Server::Starting && !$self->use_cache_during_apache_startup)
-    {
-      $Debug && warn "Refusing to cache $db during apache server start-up ",
-                     "because use_cache_during_apache_startup is false";
-      return $db;
-    }
-  }
-  elsif(MOD_PERL_2)
-  {
-    unless($MP2_Is_Child && !$self->use_cache_during_apache_startup)
-    {
-      $Debug && warn "Refusing to cache $db in pre-fork apache process ",
-                     "because use_cache_during_apache_startup is false";
-      return $db;
-    }
-  }
-
   my $key = 
     $self->build_cache_key(domain => $db->domain, 
                            type   => $db->type,
                            db     => $db);
 
   my $entry = ref($self)->entry_class->new(db => $db, key => $key);
+
+  # Don't cache anything during apache startup if use_cache_during_apache_startup
+  # is false.  Weird conditional structure is meant to encourage code elimination
+  # thanks to the lone constants in the if/elsif conditions.
+  if(MOD_PERL_1)
+  {
+    if($Apache::Server::Starting)
+    {
+      if($self->use_cache_during_apache_startup)
+      {
+        $entry->created_during_apache_startup(1);
+        $entry->prepared(0);
+      }
+      else
+      {
+        $Debug && warn "Refusing to cache $db during apache server start-up ",
+                       "because use_cache_during_apache_startup is false";
+  
+        return $db;
+      }
+    }
+  }
+
+  if(MOD_PERL_2)
+  {
+    if(!$MP2_Is_Child)
+    {
+      if($self->use_cache_during_apache_startup)
+      {
+        $entry->created_during_apache_startup(1);
+        $entry->prepared(0);
+      }
+      else
+      {
+        $Debug && warn "Refusing to cache $db in pre-fork apache process ",
+                       "because use_cache_during_apache_startup is false";
+        return $db;
+      }
+    }
+  }
 
   $self->{'cache'}{$key} = $entry;
 
@@ -160,6 +178,7 @@ if(MOD_PERL_2)
 {
   require Apache2::ServerUtil;
   require Apache2::RequestUtil;
+  require Apache2::Const;
 
   $MP2_Is_Child = 0;
 
@@ -167,13 +186,15 @@ if(MOD_PERL_2)
   {
     $Debug && warn "$$ is MP2 child\n";
     $MP2_Is_Child = 1;
+
+    return Apache2::Const::OK();
   });
 }
 
 sub prepare_db
 {
   my($self, $db, $entry) = @_;
-
+print STDERR "PREP $db $entry\n";
   if(MOD_PERL_1)
   {
     if($Apache::Server::Starting)
@@ -196,7 +217,6 @@ sub prepare_db
         }
 
         $entry->created_during_apache_startup(0);
-        return;
       }
 
       Apache->push_handlers(PerlCleanupHandler => sub
@@ -213,7 +233,6 @@ sub prepare_db
   # Not a chained elsif to help Perl eliminate the unused code (maybe unnecessary?)
   if(MOD_PERL_2)
   {
-    #if(is_first_pid_at_current_restart_count)
     if(!$MP2_Is_Child)
     {
       $entry->created_during_apache_startup(1);
@@ -234,7 +253,6 @@ sub prepare_db
         }
 
         $entry->created_during_apache_startup(0);
-        return;
       }
 
       my $r;
@@ -258,6 +276,7 @@ sub prepare_db
           $Debug && warn "$$ Clear dbh and prepared flag for $db, $entry\n";
           $db->dbh(undef)      if($db);
           $entry->prepared(0)  if($entry);
+          return Apache2::Const::OK();
         });
       }
 
