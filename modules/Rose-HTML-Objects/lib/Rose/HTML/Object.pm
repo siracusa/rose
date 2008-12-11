@@ -1043,7 +1043,7 @@ Rose::HTML::Object - HTML object base class.
   print $br->html;  # <br>
   print $br->xhtml; # <br />
 
-  $o->unshift_children($br, ' ');
+  $o->unshift_children($br, ' '); # add two children
 
   print $o->html; # <p><br> Hi</p>
 
@@ -1058,7 +1058,7 @@ Rose::HTML::Object - HTML object base class.
 
   $d = Rose::HTML::Object->new('div', class => 'x');
 
-  $b->child(0)->parent($d); # re-parent
+  $b->child(0)->parent($d); # re-parent: $o now belongs to $d
 
   print $b->html; # <body></body>
   print $d->html; # <div class="x"><p><br> Hi</p></div>
@@ -1147,7 +1147,7 @@ Finally, all element and attribute names are case-sensitive and lowercase in ord
 
 These class methods can be called with a class name or an object as the invocant.  Either way, remember that the data structures and attributes affected are part of the class as a whole, not any individual object.  For example, adding a valid HTML attribute makes it valid for all objects of the class, including any objects that already exist.
 
-Many of the class methods manipulate "inheritable sets," "inherited sets," or "inherited hashes."  See the L<Rose::Class::MakeMethods::Set> and L<Rose::Class::MakeMethods::Generic|Rose::Class::MakeMethods::Generic/inherited_hash> documentation for an explanation off these method types.
+Many of the class methods manipulate "inheritable sets," "inherited sets," or "inherited hashes."  See the L<Rose::Class::MakeMethods::Set> and L<Rose::Class::MakeMethods::Generic|Rose::Class::MakeMethods::Generic/inherited_hash> documentation for an explanation of these method types.
 
 The sets of valid and boolean HTML attributes are "inherited sets."  The set of required HTML attributes is an "inheritable set."  The L<object_type_classes|/object_type_classes> map is an "inherited hash."
 
@@ -1198,7 +1198,7 @@ In the case of a name conflict, the existing method is called and a new method i
 
 Examples:
 
-    MyTag->add_valid_httml_attrs('foo', 'bar', 'error');
+    MyTag->add_valid_html_attrs('foo', 'bar', 'error');
 
     $o = MyTag->new;
 
@@ -1284,7 +1284,7 @@ When called as a class method and a L<LOCALE|Rose::HTML::Object::Message::Locali
 
 If no locale is set for this class (when called as a class method) then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
 
-If no locale is set for this object (when called as an object method), then the the first defined locale from the object's L<parent_field|Rose::HTML::Form::Field/parent_field>, L<parent_form|Rose::HTML::Form::Field/parent_form>, or generic L<parent|/parent> is returned.  If none of those locales are defined, then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
+If no locale is set for this object (when called as an object method), then the the first defined locale from the object's L<parent_group|Rose::HTML::Form::Field/parent_group>, L<parent_field|Rose::HTML::Form::Field/parent_field>, L<parent_form|Rose::HTML::Form::Field/parent_form>, or generic L<parent|/parent> is returned.  If none of those locales are defined, then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
 
 =item B<object_type_class TYPE [, CLASS]>
 
@@ -1496,7 +1496,7 @@ Deletes all the HTML attributes.
 
 =item B<delete_child [ INDEX | OBJECT ]>
 
-Delete the L<child|/children> at INDEX (starting from zero) or the exact child OBJECT.
+Delete the L<child|/child> at INDEX (starting from zero) or the exact child OBJECT.
 
 =item B<delete_children>
 
@@ -1535,15 +1535,15 @@ This flag may be used by other methods to decide whether or not to escape HTML. 
 
 =item B<has_child OBJECT>
 
-Returns true if OBJECT is a L<child|/children> of this object, false otherwise.
+Returns true if OBJECT is a L<child|/child> of this object, false otherwise.
 
 =item B<has_children>
 
-Returns true if there are any L<children|/children>, false otherwise.
+Returns true if there are any L<children|/child>, false otherwise.
 
 =item B<has_parent>
 
-Returns true if this object is the L<child|/children> of another object, false otherwise.
+Returns true if this object is the L<child|/child> of another object, false otherwise.
 
 =item B<has_error>
 
@@ -1781,7 +1781,7 @@ Examples:
     $o->html_attrs(color => 'red<', age => 5, happy => 12345);
 
     # ' age="5" color="red&lt;" happy="happy"'
-    $s = $o->html_attrs_string;
+    $s = $o->xhtml_attrs_string;
 
 =back
 
