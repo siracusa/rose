@@ -1671,7 +1671,7 @@ This method may be called as a class method or an object method.
 
 When called as an object method and a L<LOCALE|Rose::HTML::Object::Message::Localizer/LOCALES> is passed, then the L<locale|Rose::HTML::Object::Message::Localizer/LOCALES> of this object is set.  When called as a class method and a L<LOCALE|Rose::HTML::Object::Message::Localizer/LOCALES> is passed, then the L<default_locale|/default_locale> is set.
 
-If no locale is set for this object (when called as an object method), then the the first defined locale from the object's L<parent_field|Rose::HTML::Form::Field/parent_field>, L<parent_field|Rose::HTML::Form::Field/parent_form>, or generic L<parent|/parent> is returned.  If none of those locales are defined, then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
+If no locale is set for this object (when called as an object method), then the the first defined locale from the object's L<parent_group|Rose::HTML::Form::Field/parent_group>, L<parent_field|Rose::HTML::Form::Field/parent_field>, L<parent_form|Rose::HTML::Form::Field/parent_form>, or generic L<parent|/parent> is returned.  If none of those locales are defined, then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
 
 If no locale is set for this class (when called as a class method) then the L<localizer|/localizer>'s L<locale|Rose::HTML::Object::Message::Localizer/locale> is returned, if it is set.  Otherwise, the L<default_locale|/default_locale> is returned.
 

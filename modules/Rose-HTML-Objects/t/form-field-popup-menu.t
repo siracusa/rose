@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 68;
+use Test::More tests => 70;
 
 BEGIN 
 {
@@ -252,6 +252,25 @@ is($field->html_field,
   qq(<option value="cherry">Cherry</option>\n) .
   qq(</select>),
   'localized label 4');
+
+$field->localizer->locale('en');
+$field->locale('xx');
+
+is($field->option('orange')->label->as_string, 'Le Orange', 'localized label 3.1');
+is($field->html_field, 
+  qq(<select name="fruits" size="1">\n) .
+  qq(<option selected value="apple">Apple</option>\n) .
+  qq(<option value="orange">Le Orange</option>\n) .
+  qq(<option value="grape">Grape</option>\n) .
+  qq(<option value="pear">Pear</option>\n) .
+  qq(<option value="berry">Berry</option>\n) .
+  qq(<option value="squash">Squash</option>\n) .
+  qq(<option value="cherry">Cherry</option>\n) .
+  qq(</select>),
+  'localized label 4.1');
+
+$field->localizer->locale('xx');
+$field->locale(undef);
 
 $field->labels({ cherry => 'CHERRY', squash => 'SQUASH' });
 

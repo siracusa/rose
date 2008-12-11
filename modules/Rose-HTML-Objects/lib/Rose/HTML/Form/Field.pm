@@ -120,6 +120,26 @@ sub invalidate_output_value
   $_[0]->{'output_value'} = undef;
 }
 
+sub parent_group
+{
+  my($self) = shift; 
+
+  if(@_)
+  {
+    if(ref $_[0])
+    {
+      Scalar::Util::weaken($self->{'parent_group'} = shift);
+      return $self->{'parent_group'};
+    }
+    else
+    {
+      return $self->{'parent_group'} = shift;
+    }
+  }
+
+  return $self->{'parent_group'};
+}
+
 sub parent_field
 {
   my($self) = shift; 
@@ -1501,6 +1521,12 @@ Get or set the parent field.  The parent field should only be set if the direct 
 =item B<parent_form [FORM]>
 
 Get or set the parent L<form|Rose::HTML::Form>.  The parent form should only be set if the direct parent of this field is a form.  The reference to the parent form is "weakened" using L<Scalar::Util::weaken()|Scalar::Util/weaken> in order to avoid memory leaks caused by circular references.
+
+=item B<parent_group [GROUP]>
+
+Get or set the parent group.  Group objects are things like L<Rose::HTML::Form::Field::RadioButtonGroup> and L<Rose::HTML::Form::Field::CheckboxGroup>: conceptual groupings that have no concrete incarnation in HTML.  (That is, there is no parent HTML tag wrapping checkbox or radio button groups.)
+
+The parent group should only be set if the direct parent of this field is a group object.  The reference to the parent group is "weakened" using L<Scalar::Util::weaken()|Scalar::Util/weaken> in order to avoid memory leaks caused by circular references.
 
 =item B<prepare>
 

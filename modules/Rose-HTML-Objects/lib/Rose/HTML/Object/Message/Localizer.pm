@@ -626,6 +626,7 @@ sub get_localized_message_text
   # Try this twice: before and after loading messages
   foreach my $try (1, 2)
   {
+    no warnings 'uninitialized';
     if(exists $msgs->{$name} && exists $msgs->{$name}{$locale})
     {
       if(ref $msgs->{$name}{$locale} && exists $msgs->{$name}{$locale}{$variant})

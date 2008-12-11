@@ -116,7 +116,11 @@ sub message_ids
     [ sort { $a <=> $b } keys %$map ];
 }
 
-sub get_message_name { $_[0]->message_id_to_name_map->{$_[1]} }
+sub get_message_name 
+{
+  no warnings 'uninitialized';
+  return $_[0]->message_id_to_name_map->{$_[1]};
+}
 
 sub add_message
 {

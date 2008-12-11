@@ -2,14 +2,12 @@ package Rose::HTML::Form::Field::OnOff;
 
 use strict;
 
-use Scalar::Util();
-
 use Rose::HTML::Form::Field::Input;
 our @ISA = qw(Rose::HTML::Form::Field::Input);
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.551';
+our $VERSION = '0.600';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -30,27 +28,6 @@ sub output_value   { $_[0]->is_on ? $_[0]->html_attr('value') : undef }
 
 sub hide { shift->hidden(1) }
 sub show { shift->hidden(0) }
-
-sub parent_group
-{
-  my($self) = shift; 
-
-  if(@_)
-  {
-    if(ref $_[0])
-    {
-      Scalar::Util::weaken($self->{'parent_group'} = shift);
-      return $self->{'parent_group'};
-    }
-    else
-    {
-      return $self->{'parent_group'} = shift;
-    }
-  }
-
-  return $self->{'parent_group'};
-}
-
 
 sub group_context_name
 {
