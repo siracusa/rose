@@ -32,12 +32,11 @@ my $db = My::DB2->new();
 
 ok(ref $db && $db->isa('Rose::DB'), 'new()');
 
-my $dbh;
-eval { $dbh = $db->dbh };
-
 SKIP:
 {
-  skip("Could not connect to db - $@", 9)  if($@);
+  skip("Could not connect to db - $@", 9)  unless(have_db('pg'));
+
+  my $dbh = $db->dbh;
 
   ok($dbh, 'dbh() 1');
 
@@ -321,14 +320,14 @@ ok(!defined $db->parse_time('24:01'), 'parse time fail 24:01');
 
 SKIP:
 {
-  unless(lookup_ip($db->host))
+  unless(have_db('pg'))
   {
-    skip("Host '@{[$db->host]}' not found", 43);
+    skip('pg tests', 43);
   }
 
   eval { $db->connect };
   skip("Could not connect to db 'test', 'pg' - $@", 43)  if($@);
-  $dbh = $db->dbh;
+  my $dbh = $db->dbh;
 
   is($db->domain, 'test', "domain()");
   is($db->type, 'pg', "type()");

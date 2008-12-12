@@ -4,7 +4,7 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 178;
+use Test::More tests => 198;
 
 BEGIN
 {
@@ -493,4 +493,62 @@ else
 {
   ok(1, 'skipping - dsn preservation requires sqlite 1');
   ok(1, 'skipping - dsn preservation requires sqlite 2');
+}
+
+#
+# Registry entry tests
+#
+
+my @entry;
+
+$i = 1;
+
+foreach my $attr (sort(Rose::DB::Registry::Entry::_attrs(type => 'scalar')))
+{
+  push(@entry, $attr => ($attr eq 'driver' || $attr eq 'dbi_driver' ? 'sqlite' :  $i++));
+}
+
+foreach my $attr (sort(Rose::DB::Registry::Entry::_attrs(type => 'boolean')))
+{
+  push(@entry, $attr => $i++ % 2);
+}
+                       
+foreach my $attr (sort(Rose::DB::Registry::Entry::_attrs(type => 'hash')))
+{
+  push(@entry, $attr => { $i++ => $i++ });
+}
+
+foreach my $attr (sort(Rose::DB::Registry::Entry::_attrs(type => 'array')))
+{
+  push(@entry, $attr => [ $i++ ]);
+}
+
+$entry = Rose::DB::Registry::Entry->new(@entry);
+
+$dump = $entry->dump;
+
+is_deeply($dump, { @entry }, 'dump entry');
+
+if(have_db('mysql'))
+{
+  my %mysql_entry = map { $_ => $dump->{$_} } grep { /^mysql_/ } keys %$dump;
+  
+  Rose::DB->register_db(
+    domain   => 'abc',
+    type     => 'def',
+    driver   => 'mysql',
+    database => 'test',
+    %mysql_entry);
+
+  my $db = Rose::DB->new(domain => 'abc', type => 'def');
+
+  foreach my $attr (grep { /^mysql_/ } keys %$dump)
+  {
+    is($db->$attr(), $dump->{$attr}, "entry attr - $attr");
+  }
+}
+else
+{
+  my $count = grep { /^mysql_/ } keys %$dump;
+  SKIP: { skip('mysql entry tests', $count) }
 }

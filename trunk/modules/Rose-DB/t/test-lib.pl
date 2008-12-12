@@ -18,7 +18,7 @@ BEGIN
   Rose::DB->register_db(
     domain   => 'test',
     type     => 'pg',
-    driver   => 'Pg',
+    driver   => 'pg',
     database => 'test',
     host     => 'localhost',
     username => 'postgres',
@@ -34,7 +34,7 @@ BEGIN
     domain   => 'test',
     type     => 'pg_with_schema',
     schema   => 'rose_db_object_private',
-    driver   => 'Pg',
+    driver   => 'pg',
     database => 'test',
     host     => 'localhost',
     username => 'postgres',
@@ -49,7 +49,7 @@ BEGIN
   Rose::DB->register_db(
     domain   => 'test',
     type     => 'pg_admin',
-    driver   => 'Pg',
+    driver   => 'pg',
     database => 'test',
     host     => 'localhost',
     username => 'postgres',
@@ -164,7 +164,7 @@ BEGIN
   Rose::DB->register_db(
     domain   => 'catalog_test',
     type     => 'catalog_test',
-    driver   => 'Pg',
+    driver   => 'pg',
     database => 'test',
     catalog  => 'somecatalog',
     schema   => 'someschema',
@@ -335,8 +335,10 @@ sub get_dbh
 
   eval 
   {
-    $dbh = Rose::DB->new($type)->retain_dbh()
-      or die Rose::DB->error;
+    my $db = Rose::DB->new($type);
+    $db->print_error(0);
+    $dbh = $db->retain_dbh or die Rose::DB->error;
+    $dbh->print_error(1);
   };
 
   if(!$@ && $dbh)
