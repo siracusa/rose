@@ -1016,7 +1016,7 @@ Rose::HTML::Object::Message::Localizer - Message localizer class.
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Object::Message::Localizer> objects are responsible for managing localized L<messages|Rose::HTML::Object::Messages> and L<error|Rose::HTML::Object::Errors> which are identified by integer ids and symbolic constant names.  See the L<Rose::HTML::Object::Messages> and L<Rose::HTML::Object::Errors> documentation for more infomation on messages and errors.
+L<Rose::HTML::Object::Message::Localizer> objects are responsible for managing localized L<messages|Rose::HTML::Object::Messages> and L<errors|Rose::HTML::Object::Errors> which are identified by integer ids and symbolic constant names.  See the L<Rose::HTML::Object::Messages> and L<Rose::HTML::Object::Errors> documentation for more infomation on messages and errors.
 
 In addition to collecting and providing access to messages and errors, L<Rose::HTML::Object::Message::Localizer> objects also provide appropriately localized text for each message and error.
 
@@ -1024,7 +1024,7 @@ This class inherits from, and follows the conventions of, L<Rose::Object>. See t
 
 =head2 MESSAGES AND ERRORS
 
-L<Messages|Rose::HTML::Object::Messages> and L<error|Rose::HTML::Object::Errors> are stored and tracked separatey, but are intimately related.  Both entities have integer ids which may be imported as symbolic constants, but only messages have associated localized text.
+L<Messages|Rose::HTML::Object::Messages> and L<errors|Rose::HTML::Object::Errors> are stored and tracked separately, but are intimately related.  Both entities have integer ids which may be imported as symbolic constants, but only messages have associated localized text.
 
 The integer message and error ids are convenient, compact, and easily comparable.  Using these constants in your code allows you to refer to messages and errors in a way that is divorced from any actual message text.  For example, if you wanted to subclass L<Rose::HTML::Form::Field::Integer> and do something special in response to "invalid integer" errors, you could do this:
 
@@ -1052,9 +1052,9 @@ The integer message and error ids are convenient, compact, and easily comparable
       return $ret;
     }
 
-Note how detecting the exact error did not reqire regex-matching against error message text or anything similarly unmaintainable.
+Note how detecting the exact error did not require regex-matching against error message text or anything similarly unmaintainable.
 
-When it comes time to display appropriate localized message text for the L<NUM_INVALID_INTEGER> error, the aptly named L<message_for_error_id|/message_for_error_id> method is called.  This method exists in the localizer, and also in L<Rose::HTML::Object|Rose::HTML::Object/message_for_error_id> and L<Rose::HTML::Form::Field|Rose::HTML::Form::Field/message_for_error_id>.  The localizer's incarnation of the method is usually only called if the other two are not available (e.g., in the absence of any HTML object or field).  The mapping between error ids and message ids is direct by default (i.e., error id 123 maps to message id 123) but can be entirely aribtrary. 
+When it comes time to display appropriate localized message text for the C<NUM_INVALID_INTEGER> error, the aptly named L<message_for_error_id|/message_for_error_id> method is called.  This method exists in the localizer, and also in L<Rose::HTML::Object|Rose::HTML::Object/message_for_error_id> and L<Rose::HTML::Form::Field|Rose::HTML::Form::Field/message_for_error_id>.  The localizer's incarnation of the method is usually only called if the other two are not available (e.g., in the absence of any HTML object or field).  The mapping between error ids and message ids is direct by default (i.e., error id 123 maps to message id 123) but can be entirely aribtrary. 
 
 =head2 LOCALIZED TEXT
 
@@ -1093,7 +1093,7 @@ The messages for each locale are set off by C<LOCALE> directives surrounded by C
 
 Localized text is provided in double-quoted strings to the right of symbolic L<messages|Rose::HTML::Object::Messages> constant names.  
 
-Placeholders are replaced with text provided at runtime.  Placeholder names are surrounded by square brackets.  They must start with C<[a-zA-Z]> and may contain only characters that match C<\w>.  For an example, see the C<[label]> placeolders in the mssage text above.  A C<@> prefix is allowd to specify that the placeholder value is expected to be a refrence to an array of values.
+Placeholders are replaced with text provided at runtime.  Placeholder names are surrounded by square brackets.  They must start with C<[a-zA-Z]> and may contain only characters that match C<\w>.  For an example, see the C<[label]> placeholders in the mssage text above.  A C<@> prefix is allowed to specify that the placeholder value is expected to be a reference to an array of values.
 
     SOME_MESSAGE = "A list of values: [@values]"
 
@@ -1143,11 +1143,11 @@ If no explicit C<variant> is specified, the L<select_variant_for_message|/select
 
 This leads to the primary intended use of variants: pluralization.  English has relatively simple pluralization rules, but other languages have special grammar for not just singular and plural, but also "dual," and sometimes even "many" and "few."  The pluralization variant names expected by the default implementation of L<select_variant_for_count|/select_variant_for_count> roughly follow the CLDR guidelines:
 
-L<http://www.unicode.org/cldr/data/charts/supplemental/language_plural_ruleshtml>
+L<http://www.unicode.org/cldr/data/charts/supplemental/language_plural_rules.html>
 
 with the exception that C<plural> is used in place of C<other>.  (Variants are a general purpose mechanism, whereas the context of pluralization is implied in the case of the CLDR terms.  A variant named C<other> has no apparent connection to pluralization.) 
 
-The default implementation of L<select_variant_for_count|/select_variant_for_count> (sanely) makes no judgements about "few" or "many," but does return C<zero> for a C<count> of C<0>, C<one> for C<1>, C<two> for C<2>, and C<plural> for all other values of C<count>.
+The default implementation of L<select_variant_for_count|/select_variant_for_count> (sanely) makes no judgements about "few" or "many," but does return C<zero> for a C<count> of 0, C<one> for 1, C<two> for 2, and C<plural> for all other values of C<count>.
 
 But since English has no special pluralization grammar for two items, how is this expected to work in the general case?  The answer is the so-called "L<variant cascade|/variant_cascade>."  If the desired variant is not available for the specified message in the requested locale, then the L<variant_cascade|/variant_cascade> method is called.  It is passed the locale, the desired variant, the message itself, and the message arguments.  It returns a list of other variants to try based on the arguments it was passed.
 
@@ -1234,7 +1234,7 @@ You must then ensure that your new localizer subclass is actually used by all of
 
 =head2 LOCALES
 
-Localization is done based on a "locale", which is an arbitrary string containing one or more non-space chcarcters.  The locale string must evaluate to a true value (i.e., the string "0" is not allowed as a locale).  The default set of locales used by the L<Rose::HTML::Objects> modules are lowercase two-letter language codes:
+Localization is done based on a "locale", which is an arbitrary string containing one or more non-space characters.  The locale string must evaluate to a true value (i.e., the string "0" is not allowed as a locale).  The default set of locales used by the L<Rose::HTML::Objects> modules are lowercase two-letter language codes:
 
     LOCALE      LANGUAGE
     ------      --------
@@ -1404,7 +1404,7 @@ This method is a proxy for the L<messages_class|/messages_class>'s L<get_message
 
 Load localized message text, in the format described in the L<LOCALIZED TEXT|/"LOCALIZED TEXT"> section above, from a file on disk.  Note that this method only loads message I<text>.  The message ids must already exist in the L<messages_class|/messages_class>.
 
-If a single FILE argument is passed, it is taken as the value for the L<file|/file> parameter.  Otherwise, PARAMS name/value pairs are expected.  Valid PARAMS are:
+If a single FILE argument is passed, it is taken as the value for the C<file> parameter.  Otherwise, PARAMS name/value pairs are expected.  Valid PARAMS are:
 
 =over 4
 
