@@ -1969,7 +1969,7 @@ See the L<Rose::DB::Object::Metadata> documentation for more information on cust
 
 =head2 Inheritance
 
-Simple inheritance between L<Rose::DB::Object>-derived classes is supported.  The first time the L<metadata object|/meta> for a given class is accessed, it is created by making a one-time "deep copy" of the base class's metadata object (as long that the base class has one or more L<columns|Rose::DB::Object::Metadata/columns> set).  This includes all columns, relationships, foreign keys, and other metadata from the base class.  From that point on, the subclass may add to or modify its metadata without affecting any other class.
+Simple, single inheritance between L<Rose::DB::Object>-derived classes is supported.  (Multiple inheritance is I<not> supported.)  The first time the L<metadata object|/meta> for a given class is accessed, it is created by making a one-time "deep copy" of the base class's metadata object (as long that the base class has one or more L<columns|Rose::DB::Object::Metadata/columns> set).  This includes all columns, relationships, foreign keys, and other metadata from the base class.  From that point on, the subclass may add to or modify its metadata without affecting any other class.
 
 B<Tip:> When using perl 5.8.0 or later, the L<Scalar::Util::Clone> module is highly recommended.  If it's installed, it will be used to more efficiently clone base-class metadata objects.
 
