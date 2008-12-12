@@ -7,7 +7,7 @@ use Clone::PP();
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.729';
+our $VERSION = '0.749';
 
 our $Debug = 0;
 
@@ -15,31 +15,138 @@ our $Debug = 0;
 # Object data
 #
 
+our %Attrs;
+
+BEGIN
+{
+  our %Attrs =
+  (
+    # Generic
+    catalog            => { type => 'scalar' },
+    database           => { type => 'scalar' },
+    dbi_driver         => { type => 'scalar' },
+    description        => { type => 'scalar' },
+    domain             => { type => 'scalar' },
+    driver             => { type => 'scalar', make_method => 0 },
+    dsn                => { type => 'scalar' },
+    host               => { type => 'scalar' },
+    password           => { type => 'scalar' },
+    port               => { type => 'scalar' },
+    schema             => { type => 'scalar' },
+    server_time_zone   => { type => 'scalar' },
+    type               => { type => 'scalar' },
+    username           => { type => 'scalar' },
+
+    connect_options    => { type => 'hash', method_spec => { interface => 'get_set_init' } },
+
+    pre_disconnect_sql => { type => 'array' },
+    post_connect_sql   => { type => 'array' },
+
+    # Pg
+    european_dates     => { type => 'boolean', method_spec => { default => 0 } },
+
+    # SQLite
+    auto_create => { type => 'boolean', method_spec => { default => 1 } },
+
+    # MySQL
+    mysql_auto_reconnect     => { type => 'boolean' },
+    mysql_client_found_rows  => { type => 'boolean' },
+    mysql_compression        => { type => 'boolean' },
+    mysql_connect_timeout    => { type => 'boolean' },
+    mysql_embedded_groups    => { type => 'scalar' },
+    mysql_embedded_options   => { type => 'scalar' },
+    mysql_enable_utf8        => { type => 'boolean' },
+    mysql_local_infile       => { type => 'scalar' },
+    mysql_multi_statements   => { type => 'boolean' },
+    mysql_read_default_file  => { type => 'scalar' },
+    mysql_read_default_group => { type => 'scalar' },
+    mysql_socket             => { type => 'scalar' },
+    mysql_ssl                => { type => 'boolean' },
+    mysql_ssl_ca_file        => { type => 'scalar' },
+    mysql_ssl_ca_path        => { type => 'scalar' },
+    mysql_ssl_cipher         => { type => 'scalar' },
+    mysql_ssl_client_cert    => { type => 'scalar' },
+    mysql_ssl_client_key     => { type => 'scalar' },
+    mysql_use_result         => { type => 'boolean' },
+  );
+}
+
+sub _attrs
+{
+  my(%args) = @_;
+  
+  my $type = $args{'type'};
+
+  # Type filter first
+  my @attrs = 
+    $type ? (grep { $Attrs{$_}{'type'} eq $type } keys(%Attrs)) : keys(%Attrs);
+
+  if($args{'with_defaults'})
+  {
+    @attrs = grep 
+    {
+      $Attrs{$_}{'method_spec'} && 
+      defined $Attrs{$_}{'method_spec'}{'default'} 
+    }
+    @attrs;
+  }
+  elsif($args{'no_defaults'})
+  {
+    @attrs = grep 
+    {
+      !$Attrs{$_}{'method_spec'} ||
+      !defined $Attrs{$_}{'method_spec'}{'default'} 
+    }
+    @attrs;
+  }
+
+  return wantarray ? @attrs : \@attrs;
+}
+
+sub _attr_method_specs
+{  
+  my $attrs = _attrs(@_);
+ 
+  my @specs;
+  
+  foreach my $attr (@$attrs)
+  {
+    next if(exists $Attrs{$attr}{'make_method'} && !$Attrs{$attr}{'make_method'});
+
+    if(my $spec = $Attrs{$attr}{'method_spec'})
+    {
+      push(@specs, $attr => $spec);
+    }
+    else
+    {
+      push(@specs, $attr);
+    }
+  }
+  
+  return wantarray ? @specs : \@specs;
+}
+
 use Rose::Object::MakeMethods::Generic
 (
   'scalar' =>
   [
-    qw(database domain dsn dbi_driver host password port
-       server_time_zone schema catalog type username
-       description)
+    _attr_method_specs(type => 'scalar'),
   ],
 
   'boolean' =>
   [
-    'auto_create'    => { default => 1 },
-    'european_dates' => { default => 0 },
+    _attr_method_specs(type => 'boolean'),
   ],
 
   'hash' =>
   [
-    'connect_options' => { interface => 'get_set_init' },
+    _attr_method_specs(type => 'hash'),
     'connect_option'  => { hash_key => 'connect_options' },
   ],
 
   'array' =>
   [
-    'pre_disconnect_sql',
-    'post_connect_sql',
+    _attr_method_specs(type => 'array'),
   ]
 );
 
@@ -63,19 +170,25 @@ sub dump
 
   my %dump;
 
-  foreach my $attr (qw(database dsn driver host password port
-                       description server_time_zone schema catalog 
-                       type username connect_options pre_disconnect_sql 
-                       post_connect_sql))
+  foreach my $attr (_attrs(type => 'scalar'), 
+                    _attrs(type => 'boolean', no_defaults => 1))
+  {
+    my $value = $self->$attr();
+    next  unless(defined $value);
+    $dump{$attr} = $value;
+  }
+  
+  foreach my $attr (_attrs(type => 'hash'), _attrs(type => 'array'))
   {
     my $value = $self->$attr();
     next  unless(defined $value);
     $dump{$attr} = Clone::PP::clone($value);
   }
 
-  # These booleans have default, but we only want the ones 
+
+  # These booleans have defaults, but we only want the ones 
   # where the values were explicitly set.  Ugly...
-  foreach my $attr (qw(auto_create european_dates))
+  foreach my $attr (_attrs(type => 'boolean', with_defaults => 1))
   {
     my $value = $self->{$attr};
     next  unless(defined $value);
@@ -134,6 +247,8 @@ Constructs a C<Rose::DB::Registry::Entry> object based on PARAMS, where PARAMS a
 =back
 
 =head1 OBJECT METHODS
+
+=head2 GENERAL
 
 =over 4
 
@@ -228,6 +343,196 @@ Get or set the  data source type.  Note that changing the C<type> after a regist
 =item B<username [NAME]>
 
 Get or set the database username.
+
+=back
+
+=head2 DRIVER-SPECIFIC ATTRIBUTES
+
+=head3 MySQL
+
+These attributes should only be used with registry entries where the L<driver|/driver> is C<mysql>.
+
+=over 4
+
+=item B<mysql_auto_reconnect [BOOL]>
+
+Get or set the L<mysql_auto_reconnect|DBD::mysql/mysql_auto_reconnect> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_auto_reconnect> documentation to learn more about this attribute.
+
+=item B<mysql_client_found_rows [BOOL]>
+
+Get or set the L<mysql_client_found_rows|DBD::mysql/mysql_client_found_rows> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_client_found_rows> documentation to learn more about this attribute.
+
+=item B<mysql_compression [BOOL]>
+
+Get or set the L<mysql_compression|DBD::mysql/mysql_compression> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_compression> documentation to learn more about this attribute.
+
+=item B<mysql_connect_timeout [BOOL]>
+
+Get or set the L<mysql_connect_timeout|DBD::mysql/mysql_connect_timeout> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_connect_timeout> documentation to learn more about this attribute.
+
+=item B<mysql_embedded_groups [STRING]>
+
+Get or set the L<mysql_embedded_groups|DBD::mysql/mysql_embedded_groups> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_embedded_groups> documentation to learn more about this attribute.
+
+=item B<mysql_embedded_options [STRING]>
+
+Get or set the L<mysql_embedded_options|DBD::mysql/mysql_embedded_options> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_embedded_options> documentation to learn more about this attribute.
+
+=item B<mysql_enable_utf8 [BOOL]>
+
+Get or set the L<mysql_enable_utf8|DBD::mysql/mysql_enable_utf8> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_enable_utf8> documentation to learn more about this attribute.
+
+=item B<mysql_local_infile [STRING]>
+
+Get or set the L<mysql_local_infile|DBD::mysql/mysql_local_infile> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_local_infile> documentation to learn more about this attribute.
+
+=item B<mysql_multi_statements [BOOL]>
+
+Get or set the L<mysql_multi_statements|DBD::mysql/mysql_multi_statements> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_multi_statements> documentation to learn more about this attribute.
+
+=item B<mysql_read_default_file [STRING]>
+
+Get or set the L<mysql_read_default_file|DBD::mysql/mysql_read_default_file> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_read_default_file> documentation to learn more about this attribute.
+
+=item B<mysql_read_default_group [STRING]>
+
+Get or set the L<mysql_read_default_group|DBD::mysql/mysql_read_default_group> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_read_default_group> documentation to learn more about this attribute.
+
+=item B<mysql_socket [STRING]>
+
+Get or set the L<mysql_socket|DBD::mysql/mysql_socket> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_socket> documentation to learn more about this attribute.
+
+=item B<mysql_ssl [BOOL]>
+
+Get or set the L<mysql_ssl|DBD::mysql/mysql_ssl> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_ssl> documentation to learn more about this attribute.
+
+=item B<mysql_ssl_ca_file [STRING]>
+
+Get or set the L<mysql_ssl_ca_file|DBD::mysql/mysql_ssl_ca_file> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_ssl_ca_file> documentation to learn more about this attribute.
+
+=item B<mysql_ssl_ca_path [STRING]>
+
+Get or set the L<mysql_ssl_ca_path|DBD::mysql/mysql_ssl_ca_path> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_ssl_ca_path> documentation to learn more about this attribute.
+
+=item B<mysql_ssl_cipher [STRING]>
+
+Get or set the L<mysql_ssl_cipher|DBD::mysql/mysql_ssl_cipher> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_ssl_cipher> documentation to learn more about this attribute.
+
+=item B<mysql_ssl_client_cert [STRING]>
+
+Get or set the L<mysql_ssl_client_cert|DBD::mysql/mysql_ssl_client_cert> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_ssl_client_cert> documentation to learn more about this attribute.
+
+=item B<mysql_ssl_client_key [STRING]>
+
+Get or set the L<mysql_ssl_client_key|DBD::mysql/mysql_ssl_client_key> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_ssl_client_key> documentation to learn more about this attribute.
+
+=item B<mysql_use_result [BOOL]>
+
+Get or set the L<mysql_use_result|DBD::mysql/mysql_use_result> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_use_result> documentation to learn more about this attribute.
+
+=back
+
+=head3 PostgreSQL
+
+These attributes should only be used with registry entries where the L<driver|/driver> is C<pg>.
+
+=over 4
+
+=item B<european_dates [BOOL]>
+
+Get or set the boolean value that determines whether or not dates are assumed to be in european dd/mm/yyyy format.  The default is to assume US mm/dd/yyyy format (because this is the default for PostgreSQL).
+
+This value will be passed to L<DateTime::Format::Pg> as the value of the C<european> parameter in the call to the constructor C<new()>.  This L<DateTime::Format::Pg> object is used by L<Rose::DB::Pg> to parse and format date-related column values in methods like L<parse_date|Rose::DB/parse_date>, L<format_date|Rose::DB/format_date>, etc.
+
+=back
+
+=head3 SQLite
+
+These attributes should only be used with registry entries where the L<driver|/driver> is C<sqlite>.
+
+=over 4
+
+=item B<auto_create [BOOL]>
+
+Get or set a boolean value indicating whether or not a new SQLite L<database|Rose::DB/database> should be created if it does not already exist.  Defaults to true.
+
+If false, and if the specified L<database|Rose::DB/database> does not exist, then a fatal error will occur when an attempt is made to L<connect|Rose::DB/connect> to the database.
 
 =back
 
