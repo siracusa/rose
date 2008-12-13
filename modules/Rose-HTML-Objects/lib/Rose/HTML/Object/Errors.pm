@@ -152,7 +152,7 @@ Rose::HTML::Object::Errors - Error ids and named constants for use with HTML obj
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Object::Errors> stores error ids and names.  The error ids are defined as Perl L<constants|constant> with integer values.  The constants themselves as well as the the mapping between the symbolic constant names and their values are stored as class data.
+L<Rose::HTML::Object::Errors> stores error ids and names.  The error ids are defined as Perl L<constants|constant> with integer values.  The constants themselves as well as the mapping between the symbolic constant names and their values are stored as class data.
 
 If you merely want to import one of the standard error id constants, you may use this module as-is (see the L<EXPORTS|/EXPORTS> section for details).  If you want to define your own errors, you must subclass this module exactly as shown in the synopsis.  The order of the statements is important!
 
@@ -166,7 +166,7 @@ When adding your own errors, you are free to choose any integer error id values,
 
 =back
 
-Please use ids 30,000 or higher for your errors.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique among all error names.
+Please use ids 30,000 or higher for your errors.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique among all error constant names.
 
 =head1 EXPORTS
 
@@ -196,7 +196,7 @@ For example, this will import all the error constants whose names begin with "FI
 
     use Rose::HTML::Object::Errors qw(:field);
 
-FInally, you can provide import individual error constant names as well:
+Finally, you can import individual error constant names as well:
 
     use Rose::HTML::Object::Errors qw(FIELD_REQUIRED NUM_INVALID_INTEGER);
 

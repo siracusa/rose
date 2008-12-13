@@ -331,11 +331,11 @@ Rose::HTML::Object::Messages - Message ids and named constants for use with HTML
 
 =head1 DESCRIPTION
 
-L<Rose::HTML::Object::Messages> stores message ids and names.  The message ids are defined as Perl L<constants|constant> with integer values.  The constants themselves as well as the the mapping between the symbolic constant names and their values are stored as class data.
+L<Rose::HTML::Object::Messages> stores message ids and names.  The message ids are defined as Perl L<constants|constant> with integer values.  The constants themselves as well as the mapping between the symbolic constant names and their values are stored as class data.
 
 If you merely want to import one of the standard message id constants, you may use this module as-is (see the L<EXPORTS|/EXPORTS> section for details).  If you want to define your own messages, you must subclass this module exactly as shown in the synopsis.  The order of the statements is important!
 
-When adding your own messages, you are free to choose any integer message id values, subject to the following constraints.
+When adding your own messages, you are free to choose any integer message id values, subject to the following constraints:
 
 =over 4
 
@@ -345,7 +345,7 @@ When adding your own messages, you are free to choose any integer message id val
 
 =back
 
-Please use ids 30,000 or higher for your messages.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique among all message names.
+Please use ids 30,000 or higher for your messages.  Constant names may contain only the characters C<[A-Z0-9_]> and must be unique among all message constant names.
 
 =head1 EXPORTS
 
@@ -375,7 +375,7 @@ For example, this will import all the message constants whose names begin with "
 
     use Rose::HTML::Object::Messages qw(:field);
 
-FInally, you can provide import individual message constant names as well:
+Finally, you can import individual message constant names as well:
 
     use Rose::HTML::Object::Messages qw(FIELD_LABEL_YEAR TIME_INVALID);
 
@@ -472,11 +472,11 @@ Returns the symbolic message constant name corresponding to the integer message 
 
 =item B<message_id_exists ID>
 
-Return true of the integer message ID exists, false otherwise.
+Return true if the integer message ID exists, false otherwise.
 
 =item B<message_name_exists NAME>
 
-Return true of the symbolic message constant NAME exists, false otherwise.
+Return true if the symbolic message constant NAME exists, false otherwise.
 
 =item B<message_ids>
 
