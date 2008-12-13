@@ -237,10 +237,6 @@ Asks the L<localizer|/localizer> to produce the localized version of the message
 
 Get or set a L<weakened|Scalar::Util/weaken> reference to a parent object.  This parent must have a C<localizer()> method that returns a L<Rose::HTML::Object::Message::Localizer>-derived object and a C<locale()> method that returns a L<locale string|Rose::HTML::Object::Message::Localizer/LOCALES>.
 
-=item B<localized_text>
-
-Returns the message's localized text.
-
 =back
 
 =head1 AUTHOR

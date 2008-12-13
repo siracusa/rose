@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 70;
+use Test::More tests => 72;
 
 BEGIN 
 {
@@ -523,4 +523,12 @@ is($field->is_empty, 0, 'is_empty 3');
 
 $field->input_value('');
 
+$field->clear;
+
 is($field->is_empty, 1, 'is_empty 4');
+
+is(scalar $field->internal_value, undef, 'undef internal value');
+
+$field->input_value('orange');
+
+is(scalar $field->internal_value, 'orange', 'orange internal value');
