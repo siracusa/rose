@@ -29,6 +29,6 @@ See the following POD for more information on the most prominent features:
 == Resources ==
   
   * [http://search.cpan.org/dist/Rose-HTML-Objects/ Download]
-  * [http://groups.google.com/group/rose-html-objects/about Mailing list]
+  * [http://groups.google.com/group/rose-html-objects/ Mailing list]
   * [http://rose.googlecode.com/svn/trunk/modules/Rose-HTML-Objects/ SVN repository]
   * IRC: irc.perl.org#rdbo
