@@ -10,20 +10,22 @@
 
 Each field has its own customizable validation, input filter, output filter, internal value (a plain value or a Perl object, whatever is most convenient), output value (the value shown when the field is redisplayed), label, associated error, and any other metadata deemed necessary. Each field can also be serialized to the equivalent set of (X)HTML "hidden" fields. All HTML attributes are customizable.
 
-(All labels, errors, and messages used in the bundled form and field widgets are localized in several languages, but the localization framework itself is still under development and is not yet a public API.)
+All labels, errors, and messages used in the bundled form and field widgets are localized in several languages.  An extensible localization framework is provided, allowing new languages to be added and new HTML widgets to have their own localized labels, errors, and messages.
 
 Forms are expected to be initialized with, and return an object or list of objects that the form represents. For example, a registration form could be initialized with and return a UserAccount object.
 
-Users are encouraged to create their own library of reusable form and field widgets for use on their site. The expectation is that the same kind of field appears in multiple places in any large web application (e.g., username fields, password fields, address forms, etc.) Each field encapsulates a set of values (e.g., options in a pop-up menu), labels, validation constraints, filters, and error messages. Similarly, each form encapsulates a set of fields along with any inter-field validation, error messages, and init-with/object-from methods. Nesting forms and fields preserves this delegation of responsibility, with each higher level having access to its children to perform inter-form/field tasks.
+Users are encouraged to create their own library of reusable form and field widgets for use on their site.  A [http://search.cpan.org/dist/Rose-HTML-Objects/lib/Rose/HTML/Objects.pm#PRIVATE_LIBRARIES private library creation API] is provided to make this as easy as possible.  The expectation is that the same kind of field appears in multiple places in any large web application (e.g., username fields, password fields, address forms, etc.) Each field encapsulates a set of values (e.g., options in a pop-up menu), labels, validation constraints, filters, and error messages. Similarly, each form encapsulates a set of fields along with any inter-field validation, error messages, and init-with/object-from methods. Nesting forms and fields preserves this delegation of responsibility, with each higher level having access to its children to perform inter-form/field tasks.
 
 A base set of field objects representing the standard HTML form tags as well as a several [http://search.cpan.org/dist/Rose-HTML-Objects/lib/Rose/HTML/Form/Field/DateTime/Split/MonthDayYear.pm#SEE_ALSO examples] of compound and other custom fields are included in the distribution. There are also basic [http://search.cpan.org/dist/Rose-HTML-Objects/lib/Rose/HTML/Form.pm#init_with_object init-with]/[http://search.cpan.org/dist/Rose-HTML-Objects/lib/Rose/HTML/Form.pm#object_from_form object-from] methods for forms.
 
-See the following POD for more information on a few prominent features:
+See the following POD for more information on the most prominent features:
 
+  * [http://search.cpan.org/dist/Rose-HTML-Objects/lib/Rose/HTML/Objects.pm Rose::HTML::Objects]
   * [http://search.cpan.org/dist/Rose-HTML-Objects/lib/Rose/HTML/Form/Field.pm Rose::HTML::Form::Field]
   * [http://search.cpan.org/dist/Rose-HTML-Objects/lib/Rose/HTML/Form/Field/Compound.pm Rose::HTML::Form::Field::Compound]
   * [http://search.cpan.org/dist/Rose-HTML-Objects/lib/Rose/HTML/Form.pm Rose::HTML::Form]
-  
+  * [http://search.cpan.org/dist/Rose-HTML-Objects/lib/Rose/HTML/Object/Message/Localizer.pm Rose::HTML::Object::Message::Localizer]
+
 == Resources ==
   
   * [http://search.cpan.org/dist/Rose-HTML-Objects/ Download]
