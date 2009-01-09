@@ -42,7 +42,7 @@ sub init
 sub text
 {
   my($self) = shift;
-  local $^W = 0; # XXX: Using sledgehammer here due to possible stringification overloading on $_[0]
+  local $^W = 0; # XXX: Using a sledgehammer here due to possible stringification overloading on $_[0]
   $self->html(defined $_[0] ? Rose::HTML::Util::escape_html(@_) : undef)  if(@_);
   return Rose::HTML::Util::unescape_html($self->html);
 }
