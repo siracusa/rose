@@ -47,39 +47,6 @@ sub text
   return Rose::HTML::Util::unescape_html($self->html);
 }
 
-# sub text
-# {
-#   my($self) = shift;
-# 
-#   no warnings 'uninitialized';
-#   
-#   if(@_)
-#   {
-#     if(ref $_[0])# && overload::Overloaded($_[0]) && defined overload::Method($_[0], '""')->($_[0]))
-#     {
-#       $self->html(Rose::HTML::Util::escape_html("$_[0]"));
-#     }
-#     else
-#     {
-#       $self->html(defined $_[0] ? Rose::HTML::Util::escape_html($_[0]) : undef);
-#     }
-#   }
-# 
-#   #$self->html(defined $_[0] ? Rose::HTML::Util::escape_html($_[0]) : undef)  if(@_);
-#   return Rose::HTML::Util::unescape_html($self->html);
-# }
-
-# sub text
-# {
-#   my($self) = shift;
-#   no warnings 'uninitialized';
-#   # Apache 1.x's C implementation of escape_html() doesn't like to be fed
-#   # undef, and we can't test $_[0] for defined()ness because it may be an
-#   # object (always defined) that string-overloads to undef.
-#   $self->html(Rose::HTML::Util::escape_html($_[0] . ''))  if(@_);
-#   return Rose::HTML::Util::unescape_html($self->html);
-# }
-
 sub children
 {
   my($self) = shift;
