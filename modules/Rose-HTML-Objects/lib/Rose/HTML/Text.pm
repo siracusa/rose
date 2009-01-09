@@ -6,7 +6,7 @@ use base 'Rose::HTML::Object';
 
 use Rose::HTML::Util();
 
-our $VERSION = '0.554';
+our $VERSION = '0.601';
 
 __PACKAGE__->valid_html_attrs([]);
 
@@ -42,10 +42,43 @@ sub init
 sub text
 {
   my($self) = shift;
+  local $^W = 0; # XXX: Using sledgehammer here due to possible stringification overloading on $_[0]
   $self->html(defined $_[0] ? Rose::HTML::Util::escape_html(@_) : undef)  if(@_);
-  no warnings 'uninitialized';
   return Rose::HTML::Util::unescape_html($self->html);
 }
+
+# sub text
+# {
+#   my($self) = shift;
+# 
+#   no warnings 'uninitialized';
+#   
+#   if(@_)
+#   {
+#     if(ref $_[0])# && overload::Overloaded($_[0]) && defined overload::Method($_[0], '""')->($_[0]))
+#     {
+#       $self->html(Rose::HTML::Util::escape_html("$_[0]"));
+#     }
+#     else
+#     {
+#       $self->html(defined $_[0] ? Rose::HTML::Util::escape_html($_[0]) : undef);
+#     }
+#   }
+# 
+#   #$self->html(defined $_[0] ? Rose::HTML::Util::escape_html($_[0]) : undef)  if(@_);
+#   return Rose::HTML::Util::unescape_html($self->html);
+# }
+
+# sub text
+# {
+#   my($self) = shift;
+#   no warnings 'uninitialized';
+#   # Apache 1.x's C implementation of escape_html() doesn't like to be fed
+#   # undef, and we can't test $_[0] for defined()ness because it may be an
+#   # object (always defined) that string-overloads to undef.
+#   $self->html(Rose::HTML::Util::escape_html($_[0] . ''))  if(@_);
+#   return Rose::HTML::Util::unescape_html($self->html);
+# }
 
 sub children
 {
@@ -120,4 +153,4 @@ John C. Siracusa (siracusa@gmail.com)
 
 =head1 LICENSE
 
-Copyright (c) 2008 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+Copyright (c) 2009 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.

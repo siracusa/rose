@@ -7,7 +7,7 @@ use File::Spec();
 use File::Path();
 use File::Basename();
 
-our $VERSION = '0.600';
+our $VERSION = '0.601';
 
 our $Debug = 0;
 
@@ -1018,4 +1018,4 @@ John C. Siracusa (siracusa@gmail.com)
 
 =head1 LICENSE
 
-Copyright (c) 2008 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+Copyright (c) 2009 by John C. Siracusa.  All rights reserved.  This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
