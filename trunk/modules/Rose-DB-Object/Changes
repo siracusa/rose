@@ -1,3 +1,8 @@
+0.777_01 (01.12.2009) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: add delete_now and delete_on_save method types to ManyToMany
+    * TODO: make save() fail if IN_DB and modified PK columns?
+
 0.777 (12.12.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug that caused foreign key proxy relationships to
