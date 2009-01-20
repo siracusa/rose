@@ -56,6 +56,8 @@ sub supports_multi_column_count_distinct  { 0 }
 sub supports_arbitrary_defaults_on_insert { 1 }
 sub supports_select_from_subselect        { 1 }
 
+sub pg_enable_utf8 { shift->dbh_attribute_boolean('pg_enable_utf8', @_) }
+
 sub supports_schema { 1 }
 
 sub last_insertid_from_sth
@@ -572,6 +574,14 @@ Get or set the time zone used by the database server software.  TZ should be a t
 This value will be passed to L<DateTime::Format::Pg> as the value of the C<server_tz> parameter in the call to the constructor C<new()>.  This L<DateTime::Format::Pg> object is used by L<Rose::DB::Pg> to parse and format date-related column values in methods like L<parse_date|Rose::DB/parse_date>, L<format_date|Rose::DB/format_date>, etc.
 
 See the L<DateTime::TimeZone> documentation for acceptable values of TZ.
+
+=item B<pg_enable_utf8 [BOOL]>
+
+Get or set the L<pg_enable_utf8|DBD::Pg/pg_enable_utf8> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::Pg> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::Pg|DBD::Pg/pg_enable_utf8> documentation to learn more about this attribute.
 
 =back
 
