@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 233);
+    Test::More->import(tests => 234);
   }
 }
 
@@ -34,7 +34,7 @@ ok(ref $db && $db->isa('Rose::DB'), 'new()');
 
 SKIP:
 {
-  skip("Could not connect to db - $@", 9)  unless(have_db('pg'));
+  skip("Could not connect to db - $@", 11)  unless(have_db('pg'));
 
   my $dbh = $db->dbh;
 
@@ -51,6 +51,12 @@ SKIP:
     is($db2->$field(), $db->$field(), "$field()");
   }
 
+  ok(!$db->pg_enable_utf8, 'pg_enable_utf8 false');
+  
+  $db->pg_enable_utf8(1);
+  
+  ok($db->pg_enable_utf8 && $db->dbh->{'pg_enable_utf8'}, 'pg_enable_utf8 true');
+
   $db->disconnect;
   $db2->disconnect;
 }
@@ -62,8 +68,6 @@ ok(ref $db && $db->isa('Rose::DB'), "new()");
 $db->init_db_info;
 
 ok($db->supports_limit_with_offset, 'supports_limit_with_offset');
-
-ok(!$db->pg_enable_utf8, 'pg_enable_utf8');
 
 ok($db->validate_timestamp_keyword('now'), 'validate_timestamp_keyword (now)');
 ok($db->validate_timestamp_keyword('infinity'), 'validate_timestamp_keyword (infinity)');
