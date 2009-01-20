@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 232);
+    Test::More->import(tests => 233);
   }
 }
 
@@ -62,6 +62,8 @@ ok(ref $db && $db->isa('Rose::DB'), "new()");
 $db->init_db_info;
 
 ok($db->supports_limit_with_offset, 'supports_limit_with_offset');
+
+ok(!$db->pg_enable_utf8, 'pg_enable_utf8');
 
 ok($db->validate_timestamp_keyword('now'), 'validate_timestamp_keyword (now)');
 ok($db->validate_timestamp_keyword('infinity'), 'validate_timestamp_keyword (infinity)');
