@@ -6,6 +6,7 @@ use Test::More tests => 627;
 
 BEGIN
 {
+  $ENV{'ROSE_OBJECT_NO_CLASS_XSACCESOR'} = 1;
   use_ok('Rose::Object');
   use_ok('Rose::Object::MakeMethods::Generic');
   use_ok('Rose::Class');

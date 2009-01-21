@@ -2,7 +2,7 @@ package Rose::Object;
 
 use strict;
 
-our $VERSION = '0.854';
+our $VERSION = '0.854_01';
 
 sub new
 {
