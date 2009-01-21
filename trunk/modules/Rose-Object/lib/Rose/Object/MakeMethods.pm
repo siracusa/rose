@@ -117,7 +117,7 @@ sub __make_methods
     METHOD: while(my($name, $code) = each(%$make))
     {
       Carp::croak "${class}::method_type(...) - key for $name is not a code ref!"
-        unless(ref $code eq 'CODE');
+        unless(ref $code eq 'CODE' || (ref $code eq 'HASH' && $code->{'make_method'}));
 
       if(my $code = $target_class->can($name))
       {
@@ -138,7 +138,15 @@ sub __make_methods
       }
 
       no warnings;
-      *{"${target_class}::$name"} = $code;
+
+      if(ref $code eq 'CODE')
+      {
+        *{"${target_class}::$name"} = $code;
+      }
+      else
+      {
+        $code->{'make_method'}($name, $target_class, $options);
+      }
     }
   }
 
@@ -156,7 +164,7 @@ sub apparently_made_method
 # Code from Sub::Identify
 sub sub_identity
 {
-  my($clas, $code) = @_;
+  my($class, $code) = @_;
 
   my @id;
 

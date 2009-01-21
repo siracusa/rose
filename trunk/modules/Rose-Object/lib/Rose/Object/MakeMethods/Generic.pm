@@ -9,6 +9,9 @@ our $VERSION = '0.853';
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
+eval { require Class::XSAccessor };
+our $Have_CXSA = $@ && !$ENV{'ROSE_OBJECT_NO_CLASS_XSACCESOR'} ? 0 : 1;
+
 sub scalar
 {
   my($class, $name, $args) = @_;
@@ -32,10 +35,28 @@ sub scalar
   }
   elsif($interface eq 'get_set')
   {
-    $methods{$name} = sub
+    if($Have_CXSA)
     {
-      return $_[0]->{$key} = $_[1]  if(@_ > 1);
-      return $_[0]->{$key};
+      $methods{$name} = 
+      {
+        make_method => sub
+        {
+          my($name, $target_class, $options) = @_;
+
+          Class::XSAccessor->import(
+            accessors => { $name => '$key' }, 
+            class     => $target_class,
+            replace   => $options->{'override_existing'} ? 1 : 0);
+        },
+      };
+    }
+    else
+    {
+      $methods{$name} = sub
+      {
+        return $_[0]->{$key} = $_[1]  if(@_ > 1);
+        return $_[0]->{$key};
+      }
     }
   }
   else { Carp::croak "Unknown interface: $interface" }
