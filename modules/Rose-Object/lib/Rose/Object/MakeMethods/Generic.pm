@@ -9,8 +9,19 @@ our $VERSION = '0.855';
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
-eval { require Class::XSAccessor };
+eval
+{
+  require Class::XSAccessor;
+
+  unless($Class::XSAccessor::VERSION >= 0.14)
+  {
+    die "Class::XSAccessor $Class::XSAccessor::VERSION is too old";
+  }
+};
+
 our $Have_CXSA = $@ ? 0 : 1;
+
+our $Debug = 0;
 
 sub scalar
 {
@@ -42,6 +53,8 @@ sub scalar
         make_method => sub
         {
           my($name, $target_class, $options) = @_;
+
+          $Debug && warn "Class::XSAccessor make method ($name => $key) in $target_class\n";
 
           Class::XSAccessor->import(
             accessors => { $name => $key }, 
@@ -736,7 +749,7 @@ Choose one of the two possible interfaces.  Defaults to C<get_set>.
 
 Creates a simple get/set accessor method for a boolean object attribute. When called with an argument, the value of the attribute is set to true if the argument evaluates to true, false (but defined) otherwise.  The current value of the attribute is returned.
 
-If L<Class::XSAccessor> is installed and the C<ROSE_OBJECT_NO_CLASS_XSACCESOR> environment variable is not set to a true value, then L<Class::XSAccessor> will be used to generated the method.
+If L<Class::XSAccessor> version 0.14 or later is installed and the C<ROSE_OBJECT_NO_CLASS_XSACCESOR> environment variable is not set to a true value, then L<Class::XSAccessor> will be used to generated the method.
 
 =item C<get_set_init>
 
