@@ -10,7 +10,7 @@ use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
 eval { require Class::XSAccessor };
-our $Have_CXSA = $@ || $ENV{'ROSE_OBJECT_NO_CLASS_XSACCESOR'} ? 0 : 1;
+our $Have_CXSA = $@ ? 0 : 1;
 
 sub scalar
 {
@@ -35,7 +35,7 @@ sub scalar
   }
   elsif($interface eq 'get_set')
   {
-    if($Have_CXSA)
+    if($Have_CXSA && !$ENV{'ROSE_OBJECT_NO_CLASS_XSACCESOR'})
     {
       $methods{$name} = 
       {
