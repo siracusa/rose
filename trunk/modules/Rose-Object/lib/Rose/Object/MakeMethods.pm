@@ -8,6 +8,8 @@ our $VERSION = '0.85';
 
 __PACKAGE__->allow_apparent_reload(1);
 
+our %Made_Method_Custom;
+
 sub import
 {
   my($class) = shift;
@@ -145,6 +147,9 @@ sub __make_methods
       }
       else
       {
+        # XXX: Must track these separately because they do not show up as
+        # XXX: being named __ANON__ when fetching the sub_identity()
+        $Made_Method_Custom{$target_class}{$name}++;
         $code->{'make_method'}($name, $target_class, $options);
       }
     }
@@ -158,7 +163,8 @@ sub apparently_made_method
   my($class, $code) = @_;
   my($mm_class, $name) = $class->sub_identity($code);
   return 0  unless($class && $name);
-  return ($mm_class eq $class && $name eq '__ANON__') ? 1 : 0;
+  return (($mm_class eq $class && $name eq '__ANON__') ||
+          $Made_Method_Custom{$mm_class}{$name}) ? 1 : 0;
 }
 
 # Code from Sub::Identify

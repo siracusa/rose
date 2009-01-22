@@ -13,5 +13,6 @@ t/basic.t
 t/lib/Person1.pm
 t/lib/Person2.pm
 t/makemethods.t
+t/makemethods-xs.t
 t/pod.t
 t/redefine.t

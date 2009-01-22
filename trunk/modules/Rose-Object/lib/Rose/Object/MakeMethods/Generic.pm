@@ -4,13 +4,13 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.853';
+our $VERSION = '0.855';
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
 eval { require Class::XSAccessor };
-our $Have_CXSA = $@ && !$ENV{'ROSE_OBJECT_NO_CLASS_XSACCESOR'} ? 0 : 1;
+our $Have_CXSA = $@ || $ENV{'ROSE_OBJECT_NO_CLASS_XSACCESOR'} ? 0 : 1;
 
 sub scalar
 {
@@ -44,7 +44,7 @@ sub scalar
           my($name, $target_class, $options) = @_;
 
           Class::XSAccessor->import(
-            accessors => { $name => '$key' }, 
+            accessors => { $name => $key }, 
             class     => $target_class,
             replace   => $options->{'override_existing'} ? 1 : 0);
         },
@@ -637,11 +637,7 @@ Rose::Object::MakeMethods::Generic - Create simple object methods.
 
 =head1 DESCRIPTION
 
-L<Rose::Object::MakeMethods::Generic> is a method maker that inherits
-from L<Rose::Object::MakeMethods>.  See the L<Rose::Object::MakeMethods>
-documentation to learn about the interface.  The method types provided
-by this module are described below.  All methods work only with
-hash-based objects.
+L<Rose::Object::MakeMethods::Generic> is a method maker that inherits from L<Rose::Object::MakeMethods>.  See the L<Rose::Object::MakeMethods> documentation to learn about the interface.  The method types provided by this module are described below.  All methods work only with hash-based objects.
 
 =head1 METHODS TYPES
 
@@ -659,15 +655,11 @@ Create get/set methods for scalar attributes.
 
 =item C<hash_key>
 
-The key inside the hash-based object to use for the storage of this
-attribute. Defaults to the name of the method.
+The key inside the hash-based object to use for the storage of this attribute. Defaults to the name of the method.
 
 =item C<init_method>
 
-The name of the method to call when initializing the value of an
-undefined attribute.  This option is only applicable when using the
-C<get_set_init> interface.  Defaults to the method name with the prefix
-C<init_> added.
+The name of the method to call when initializing the value of an undefined attribute.  This option is only applicable when using the C<get_set_init> interface.  Defaults to the method name with the prefix C<init_> added.
 
 =item C<interface>
 
@@ -681,16 +673,11 @@ Choose one of the two possible interfaces.  Defaults to C<get_set>.
 
 =item C<get_set>
 
-Creates a simple get/set accessor method for an object attribute.  When
-called with an argument, the value of the attribute is set.  The current
-value of the attribute is returned.
+Creates a simple get/set accessor method for an object attribute.  When called with an argument, the value of the attribute is set.  The current value of the attribute is returned.
 
-=item C<get_set_init> 
+=item C<get_set_init>
 
-Behaves like the C<get_set> interface unless the value of the attribute
-is undefined.  In that case, the method specified by the C<init_method>
-option is called and the attribute is set to the return value of that
-method.
+Behaves like the C<get_set> interface unless the value of the attribute is undefined.  In that case, the method specified by the C<init_method> option is called and the attribute is set to the return value of that method.
 
 =back
 
@@ -715,10 +702,7 @@ Example:
 
 =item B<boolean>
 
-Create get/set methods for boolean attributes.  For each argument to
-these methods, the only thing that matters is whether it evaluates to
-true or false.  The return value is either, true, false (but defined),
-or undef if the value has never been set.
+Create get/set methods for boolean attributes.  For each argument to these methods, the only thing that matters is whether it evaluates to true or false.  The return value is either, true, false (but defined), or undef if the value has never been set.
 
 =over 4
 
@@ -728,21 +712,15 @@ or undef if the value has never been set.
 
 =item C<default>
 
-Determines the default value of the attribute.  This option is only
-applicable when using the C<get_set> interface.
+Determines the default value of the attribute.  This option is only applicable when using the C<get_set> interface.
 
 =item C<hash_key>
 
-The key inside the hash-based object to use for the storage of this
-attribute. Defaults to the name of the method.
+The key inside the hash-based object to use for the storage of this attribute. Defaults to the name of the method.
 
 =item C<init_method>
 
-The name of the method to call when initializing the value of an
-undefined attribute.  Again, the only thing that matters about the
-return value of this method is whether or not is is true or false.  This
-option is only applicable when using the C<get_set_init> interface. 
-Defaults to the method name with the prefix C<init_> added.
+The name of the method to call when initializing the value of an undefined attribute.  Again, the only thing that matters about the return value of this method is whether or not is is true or false.  This option is only applicable when using the C<get_set_init> interface. Defaults to the method name with the prefix C<init_> added.
 
 =item C<interface>
 
@@ -756,17 +734,13 @@ Choose one of the two possible interfaces.  Defaults to C<get_set>.
 
 =item C<get_set>
 
-Creates a simple get/set accessor method for a boolean object attribute.
-When called with an argument, the value of the attribute is set to true
-if the argument evaluates to true, false (but defined) otherwise.  The 
-current value of the attribute is returned.
+Creates a simple get/set accessor method for a boolean object attribute. When called with an argument, the value of the attribute is set to true if the argument evaluates to true, false (but defined) otherwise.  The current value of the attribute is returned.
 
-=item C<get_set_init> 
+If L<Class::XSAccessor> is installed and the C<ROSE_OBJECT_NO_CLASS_XSACCESOR> environment variable is not set to a true value, then L<Class::XSAccessor> will be used to generated the method.
 
-Behaves like the C<get_set> interface unless the value of the attribute
-is undefined.  In that case, the method specified by the C<init_method>
-option is called and the attribute is set based on the boolean value of
-the return value of that method.
+=item C<get_set_init>
+
+Behaves like the C<get_set> interface unless the value of the attribute is undefined.  In that case, the method specified by the C<init_method> option is called and the attribute is set based on the boolean value of the return value of that method.
 
 =back
 
@@ -813,15 +787,11 @@ Create methods to manipulate hash attributes.
 
 =item C<hash_key>
 
-The key inside the hash-based object to use for the storage of this
-attribute.  Defaults to the name of the method.
+The key inside the hash-based object to use for the storage of this attribute.  Defaults to the name of the method.
 
 =item C<init_method>
 
-The name of the method to call when initializing the value of an
-undefined hash attribute.    This method should return a reference to a
-hash, and is only applicable when using the C<get_set_init> interface.
-Defaults to the method name with the prefix C<init_> added.
+The name of the method to call when initializing the value of an undefined hash attribute.    This method should return a reference to a hash, and is only applicable when using the C<get_set_init> interface. Defaults to the method name with the prefix C<init_> added.
 
 =item C<interface>
 
@@ -835,96 +805,65 @@ Choose which interface to use.  Defaults to C<get_set>.
 
 =item C<get_set>
 
-If called with no arguments, returns a list of key/value pairs in
-list context or a reference to the actual hash stored by the object
-in scalar context.
+If called with no arguments, returns a list of key/value pairs in list context or a reference to the actual hash stored by the object in scalar context.
 
-If called with one argument, and that argument is a reference to a hash,
-that hash reference is used as the new value for the attribute.  Returns
-a list of key/value pairs in list context or a reference to the actual
-hash stored by the object in scalar context.
+If called with one argument, and that argument is a reference to a hash, that hash reference is used as the new value for the attribute.  Returns a list of key/value pairs in list context or a reference to the actual hash stored by the object in scalar context.
 
-If called with one argument, and that argument is a reference to an array,
-then a list of the hash values for each key in the array is returned.
+If called with one argument, and that argument is a reference to an array, then a list of the hash values for each key in the array is returned.
 
-If called with one argument, and it is not a reference to a hash or an array,
-then the hash value for that key is returned.
+If called with one argument, and it is not a reference to a hash or an array, then the hash value for that key is returned.
 
-If called with an even number of arguments, they are taken as name/value
-pairs and are added to the hash.  It then returns a list of key/value
-pairs in list context or a reference to the actual hash stored by the
-object in scalar context.
+If called with an even number of arguments, they are taken as name/value pairs and are added to the hash.  It then returns a list of key/value pairs in list context or a reference to the actual hash stored by the object in scalar context.
 
 Passing an odd number of arguments greater than 1 causes a fatal error.
 
-=item C<get_set_init> 
+=item C<get_set_init>
 
-Behaves like the C<get_set> interface unless the attribute is undefined.
-In that case, the method specified by the C<init_method> option is
-called and the attribute is set to the return value of that method,
-which should be a reference to a hash.
+Behaves like the C<get_set> interface unless the attribute is undefined. In that case, the method specified by the C<init_method> option is called and the attribute is set to the return value of that method, which should be a reference to a hash.
 
-=item C<get_set_inited> 
+=item C<get_set_inited>
 
-Behaves like the C<get_set> interface unless the attribute is undefined.
-In that case, it is initialized to an empty hash before proceeding as
-usual.
+Behaves like the C<get_set> interface unless the attribute is undefined. In that case, it is initialized to an empty hash before proceeding as usual.
 
-=item C<get_set_all> 
+=item C<get_set_all>
 
-If called with no arguments, returns a list of key/value pairs in
-list context or a reference to the actual hash stored by the object
-in scalar context.
+If called with no arguments, returns a list of key/value pairs in list context or a reference to the actual hash stored by the object in scalar context.
 
-If called with one argument, and that argument is a reference to a hash,
-that hash reference is used as the new value for the attribute.  Returns
-a list of key/value pairs in list context or a reference to the actual
-hash stored by the object in scalar context.
+If called with one argument, and that argument is a reference to a hash, that hash reference is used as the new value for the attribute.  Returns a list of key/value pairs in list context or a reference to the actual hash stored by the object in scalar context.
 
-Otherwise, the hash is emptied and the arguments are taken as name/value
-pairs that are then added to the hash.  It then returns a list of
-key/value pairs in list context or a reference to the actual hash stored
-by the object in scalar context.
+Otherwise, the hash is emptied and the arguments are taken as name/value pairs that are then added to the hash.  It then returns a list of key/value pairs in list context or a reference to the actual hash stored by the object in scalar context.
 
-=item C<get_set_init_all> 
+=item C<get_set_init_all>
 
-Behaves like the C<get_set_all> interface unless the attribute is undefined.
-In that case, the method specified by the C<init_method> option is
-called and the attribute is set to the return value of that method,
-which should be a reference to a hash.
+Behaves like the C<get_set_all> interface unless the attribute is undefined. In that case, the method specified by the C<init_method> option is called and the attribute is set to the return value of that method, which should be a reference to a hash.
 
-=item C<clear> 
+=item C<clear>
 
 Sets the attribute to an empty hash.
 
-=item C<reset> 
+=item C<reset>
 
 Sets the attribute to undef.
 
-=item C<delete> 
+=item C<delete>
 
-Deletes the key(s) passed as arguments.  Failure to pass any arguments
-causes a fatal error.
+Deletes the key(s) passed as arguments.  Failure to pass any arguments causes a fatal error.
 
-=item C<exists> 
+=item C<exists>
 
-Returns true of the argument exists in the hash, false otherwise.
-Failure to pass an argument or passing more than one argument causes a
-fatal error.
+Returns true of the argument exists in the hash, false otherwise. Failure to pass an argument or passing more than one argument causes a fatal error.
 
-=item C<keys> 
+=item C<keys>
 
-Returns the keys of the hash in list context, or a reference to an array
-of the keys of the hash in scalar context.  The keys are not sorted.
+Returns the keys of the hash in list context, or a reference to an array of the keys of the hash in scalar context.  The keys are not sorted.
 
-=item C<names> 
+=item C<names>
 
 An alias for the C<keys> interface.
 
-=item C<values> 
+=item C<values>
 
-Returns the values of the hash in list context, or a reference to an array
-of the values of the hash in scalar context.  The values are not sorted.
+Returns the values of the hash in list context, or a reference to an array of the values of the hash in scalar context.  The values are not sorted.
 
 =back
 
@@ -991,16 +930,11 @@ Create methods to manipulate array attributes.
 
 =item C<hash_key>
 
-The key inside the hash-based object to use for the storage of this
-attribute.  Defaults to the name of the method.
+The key inside the hash-based object to use for the storage of this attribute.  Defaults to the name of the method.
 
 =item C<init_method>
 
-The name of the method to call when initializing the value of an undefined
-array attribute.    This method should return a reference to an array.  This
-option is only applicable when using the C<get_set_init>, C<push>, and C<add>
-interfaces.  When using the C<get_set_init> interface, C<init_method> defaults
-to the method name with the prefix C<init_> added.
+The name of the method to call when initializing the value of an undefined array attribute.    This method should return a reference to an array.  This option is only applicable when using the C<get_set_init>, C<push>, and C<add> interfaces.  When using the C<get_set_init> interface, C<init_method> defaults to the method name with the prefix C<init_> added.
 
 =item C<interface>
 
@@ -1014,48 +948,31 @@ Choose which interface to use.  Defaults to C<get_set>.
 
 =item C<get_set>
 
-If called with no arguments, returns the array contents in list context
-or a reference to the actual array stored by the object in scalar
-context.
+If called with no arguments, returns the array contents in list context or a reference to the actual array stored by the object in scalar context.
 
-If called with one argument, and that argument is a reference to an
-array, that array reference is used as the new value for the attribute. 
-Returns the array contents in list context or a reference to the actual
-array stored by the object in scalar context.
+If called with one argument, and that argument is a reference to an array, that array reference is used as the new value for the attribute. Returns the array contents in list context or a reference to the actual array stored by the object in scalar context.
 
-If called with one argument, and that argument is not a reference to an
-array, or if called with more than one argument, then the array contents
-are replaced by the arguments.  Returns the array contents in list
-context or a reference to the actual array stored by the object in
-scalar context.
+If called with one argument, and that argument is not a reference to an array, or if called with more than one argument, then the array contents are replaced by the arguments.  Returns the array contents in list context or a reference to the actual array stored by the object in scalar context.
 
-=item C<get_set_init> 
+=item C<get_set_init>
 
-Behaves like the C<get_set> interface unless the attribute is undefined.
-In that case, the method specified by the C<init_method> option is
-called and the attribute is set to the return value of that method,
-which should be a reference to an array.
+Behaves like the C<get_set> interface unless the attribute is undefined. In that case, the method specified by the C<init_method> option is called and the attribute is set to the return value of that method, which should be a reference to an array.
 
-=item C<get_set_inited> 
+=item C<get_set_inited>
 
-Behaves like the C<get_set> interface unless the attribute is undefined.
-In that case, it is initialized to an empty array before proceeding as
-usual.
+Behaves like the C<get_set> interface unless the attribute is undefined. In that case, it is initialized to an empty array before proceeding as usual.
 
-=item C<get_set_item> 
+=item C<get_set_item>
 
 If called with one argument, returns the item at that array index.
 
-If called with two arguments, sets the item at the array index specified
-by the first argument to the value specified by the second argument.
+If called with two arguments, sets the item at the array index specified by the first argument to the value specified by the second argument.
 
 Failure to pass any arguments causes a fatal error.
 
 =item C<exists>
 
-Returns true of the argument exists in the hash, false otherwise.
-Failure to pass an argument or passing more than one argument causes a
-fatal error.
+Returns true of the argument exists in the hash, false otherwise. Failure to pass an argument or passing more than one argument causes a fatal error.
 
 =item C<add>
 
@@ -1063,33 +980,25 @@ An alias for the C<push> interface.
 
 =item C<push>
 
-If called with a list or a reference to an array, the contents of the list or
-referenced array are added to the end of the array.  If called with no
-arguments, a fatal error will occur.
+If called with a list or a reference to an array, the contents of the list or referenced array are added to the end of the array.  If called with no arguments, a fatal error will occur.
 
 =item C<pop>
 
-Remove an item from the end of the array and returns it.  If an integer
-argument is passed, then that number of items is removed and returned. 
-Otherwise, just one is removed and returned.
+Remove an item from the end of the array and returns it.  If an integer argument is passed, then that number of items is removed and returned. Otherwise, just one is removed and returned.
 
 =item C<shift>
 
-Remove an item from the start of the array and returns it.  If an integer
-argument is passed, then that number of items is removed and returned. 
-Otherwise, just one is removed and returned.
+Remove an item from the start of the array and returns it.  If an integer argument is passed, then that number of items is removed and returned. Otherwise, just one is removed and returned.
 
 =item C<unshift>
 
-If called with a list or a reference to an array, the contents of the list or
-referenced array are added to the start of the array.  If called with no
-arguments, a fatal error will occur.
+If called with a list or a reference to an array, the contents of the list or referenced array are added to the start of the array.  If called with no arguments, a fatal error will occur.
 
-=item C<clear> 
+=item C<clear>
 
 Sets the attribute to an empty array.
 
-=item C<reset> 
+=item C<reset>
 
 Sets the attribute to undef.
 
