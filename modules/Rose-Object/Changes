@@ -1,6 +1,6 @@
-0.855 (01.21.2009) - John Siracusa <siracusa@gmail.com>
+0.855 (01.22.2009) - John Siracusa <siracusa@gmail.com>
 
-    * Added Class::XSAccessor support (XXX: Needs docs).
+    * Added Class::XSAccessor support.
 
 0.854 (12.09.2008) - John Siracusa <siracusa@gmail.com>
 
