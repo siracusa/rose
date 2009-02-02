@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.776';
+our $VERSION = '0.778';
 
 our $Debug = 0;
 
@@ -42,6 +42,33 @@ our %OP_MAP =
   in_array     => 'ANY IN ARRAY',
   any_in_array => 'ANY IN ARRAY',
   all_in_array => 'ALL IN ARRAY',
+
+  # ltree operators - added by Rick Apichairuk 2009.02.02
+  #
+  # <,>,<=,>=,=, <>
+  #     - have their usual meanings. Comparison is doing in the order
+  #       of direct tree traversing, children of a node are sorted 
+  #       lexicographic.
+  # ltree @> ltree
+  #     - returns TRUE if left argument is an ancestor of right 
+  #       argument (or equal).
+  # ltree <@ ltree
+  #     - returns TRUE if left argument is a descendant of right 
+  #       argument (or equal).
+  # ltree ~ lquery, lquery ~ ltree
+  #     - returns TRUE if node represented by ltree satisfies lquery.
+  # ltree ? lquery[], lquery ? ltree[]
+  #     - returns TRUE if node represented by ltree satisfies at least 
+  #       one lquery from array.
+  # ltree @ ltxtquery, ltxtquery @ ltree
+  #     - return TRUE if node represented by ltree satisfies ltxtquery.
+  # ltree || ltree, ltree || text, text || ltree
+  #     - return concatenated ltree.
+  ltree_ancestor   => '@>',
+  ltree_descendant => '<@',
+  ltree_query      => '~',
+  ltree_ltxtquery  => '@',
+  ltree_concat     => '||',
 );
 
 @OP_MAP{map { $_ . '_sql' } keys %OP_MAP} = values(%OP_MAP);
