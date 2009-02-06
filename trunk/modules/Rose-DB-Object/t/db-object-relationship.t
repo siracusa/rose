@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1590;
+use Test::More tests => 1598;
 
 BEGIN 
 {
@@ -27,7 +27,7 @@ ok($@ =~ /^\QAlready made a map record method named map_record in class JCS::B o
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 396)  unless($HAVE_PG);
+  skip("Postgres tests", 398)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -284,15 +284,6 @@ SKIP: foreach my $db_type ('pg')
   ok($map3->save, "save color map record 3 - $db_type");
 
   my $colors = $o->colors;
- 
-  # Tests for SQL efficiency of __check_and_merge
-  # $DB::single = 1;
-  #   $o->save(changes_only => 1);
-  #   $o->colors_on_save({ id => 2 });
-  # $Rose::DB::Object::Manager::Debug = 1;
-  # $Rose::DB::Object::Debug = 1;
-  #   $o->save(changes_only => 1);
-  # exit;
 
   ok(ref $colors eq 'ARRAY' && @$colors == 2 && 
      $colors->[0]->name eq 'blue' && $colors->[1]->name eq 'red',
@@ -1311,6 +1302,38 @@ SKIP: foreach my $db_type ('pg')
   $count = $sth->fetchrow_array;
   is($count, 3, "set 2 many to many on save 11 - $db_type");
 
+  # Tests for SQL efficiency of __check_and_merge
+  # $DB::single = 1;
+  #   $o->save(changes_only => 1);
+  #   $o->colors_on_save({ id => 2 });
+  # $Rose::DB::Object::Manager::Debug = 1;
+  # $Rose::DB::Object::Debug = 1;
+  #   $o->save(changes_only => 1);
+  # exit;
+
+  $o->colors([]);
+  $o->save(changes_only => 1);
+
+  $o->colors_on_save({ id => 1, name => 'redx' }, { id => 3 });
+  $o->save(changes_only => 1);
+
+  $o->colors_on_save(undef);
+  $colors = $o->colors_on_save;
+
+  ok(ref $colors eq 'ARRAY' && @$colors == 2 && 
+     $colors->[0]->name eq 'blue' && $colors->[1]->name eq 'redx',
+     "colors merge 1 - $db_type");
+
+  $o->colors_on_save({ id => 2 }, { id => 3, name => 'bluex' });
+  $o->save(changes_only => 1);
+
+  $o->colors_on_save(undef);
+  $colors = $o->colors_on_save;
+
+  ok(ref $colors eq 'ARRAY' && @$colors == 2 && 
+     $colors->[0]->name eq 'bluex' && $colors->[1]->name eq 'green',
+     "colors merge 2 - $db_type");
+
   #
   # "many to many" add_now
   #
@@ -1552,7 +1575,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 357)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 359)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -2694,6 +2717,29 @@ SKIP: foreach my $db_type ('mysql')
   $count = $sth->fetchrow_array;
   is($count, 3, "set 2 many to many on save 11 - $db_type");
 
+  $o->colors([]);
+  $o->save(changes_only => 1);
+
+  $o->colors_on_save({ id => 1, name => 'redx' }, { id => 3 });
+  $o->save(changes_only => 1);
+
+  $o->colors_on_save(undef);
+  $colors = $o->colors_on_save;
+
+  ok(ref $colors eq 'ARRAY' && @$colors == 2 && 
+     $colors->[0]->name eq 'blue' && $colors->[1]->name eq 'redx',
+     "colors merge 1 - $db_type");
+
+  $o->colors_on_save({ id => 2 }, { id => 3, name => 'bluex' });
+  $o->save(changes_only => 1);
+
+  $o->colors_on_save(undef);
+  $colors = $o->colors_on_save;
+
+  ok(ref $colors eq 'ARRAY' && @$colors == 2 && 
+     $colors->[0]->name eq 'bluex' && $colors->[1]->name eq 'green',
+     "colors merge 2 - $db_type");
+
   #
   # "many to many" add_now
   #
@@ -3007,7 +3053,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 376)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 378)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -4215,6 +4261,29 @@ SKIP: foreach my $db_type ('informix')
   $count = $sth->fetchrow_array;
   is($count, 3, "set 2 many to many on save 11 - $db_type");
 
+  $o->colors([]);
+  $o->save(changes_only => 1);
+
+  $o->colors_on_save({ id => 1, name => 'redx' }, { id => 3 });
+  $o->save(changes_only => 1);
+
+  $o->colors_on_save(undef);
+  $colors = $o->colors_on_save;
+
+  ok(ref $colors eq 'ARRAY' && @$colors == 2 && 
+     $colors->[0]->name eq 'blue' && $colors->[1]->name eq 'redx',
+     "colors merge 1 - $db_type");
+
+  $o->colors_on_save({ id => 2 }, { id => 3, name => 'bluex' });
+  $o->save(changes_only => 1);
+
+  $o->colors_on_save(undef);
+  $colors = $o->colors_on_save;
+
+  ok(ref $colors eq 'ARRAY' && @$colors == 2 && 
+     $colors->[0]->name eq 'bluex' && $colors->[1]->name eq 'green',
+     "colors merge 2 - $db_type");
+
   #
   # "many to many" add_now
   #
@@ -4454,7 +4523,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 458)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 460)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -5775,6 +5844,29 @@ SKIP: foreach my $db_type ('sqlite')
   $sth->finish;
   is($count, 3, "set 2 many to many on save 11 - $db_type");
 
+  $o->colors([]);
+  $o->save(changes_only => 1);
+
+  $o->colors_on_save({ id => 1, name => 'redx' }, { id => 3 });
+  $o->save(changes_only => 1);
+
+  $o->colors_on_save(undef);
+  $colors = $o->colors_on_save;
+
+  ok(ref $colors eq 'ARRAY' && @$colors == 2 && 
+     $colors->[0]->name eq 'blue' && $colors->[1]->name eq 'redx',
+     "colors merge 1 - $db_type");
+
+  $o->colors_on_save({ id => 2 }, { id => 3, name => 'bluex' });
+  $o->save(changes_only => 1);
+
+  $o->colors_on_save(undef);
+  $colors = $o->colors_on_save;
+
+  ok(ref $colors eq 'ARRAY' && @$colors == 2 && 
+     $colors->[0]->name eq 'bluex' && $colors->[1]->name eq 'green',
+     "colors merge 2 - $db_type");
+
   #
   # "many to many" add_now
   #
@@ -6549,6 +6641,8 @@ EOF
       id   => { type => 'serial', primary_key => 1 },
       name => { type => 'varchar', not_null => 1 },
     );
+
+    MyPgColor->meta->unique_key('name');
 
     MyPgColor->meta->initialize;
 
