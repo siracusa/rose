@@ -20,7 +20,7 @@ use Rose::DB::Object::Constants
 use Rose::DB::Object::Helpers();
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.776';
+our $VERSION = '0.778';
 
 our $Debug = 0;
 
@@ -5210,7 +5210,7 @@ sub objects_by_map
             # the current transaction
             $object->db($db); 
 
-            $object->{STATE_IN_DB()} = 0  if($deleted);
+            #$object->{STATE_IN_DB()} = 0  if($deleted);
 
             # If the object is not marked as already existing in the database,
             # see if it represents an existing row.  If it does, merge the
@@ -5842,9 +5842,39 @@ sub __check_and_merge
     # $object represents and existing row
     if($ret)
     {
+      my $meta = $object->meta;
+
+      my $pk_present = 0;
+
+      if(%{$object->{MODIFIED_COLUMNS()} || {}})
+      {
+        my $pk_columns = $meta->primary_key_column_names;
+
+        # If any primary key columns are set, presume it was used to load()
+        # and mark all pk columns as not modified
+        foreach my $name (@$pk_columns)
+        {
+          if($object->{MODIFIED_COLUMNS()}{$name})
+          {
+            $pk_present = 1;
+            delete @{$object->{MODIFIED_COLUMNS()}}{@$pk_columns};
+            last;
+          }
+        }
+      }
+
+      # Otherwise, mark all key columns as not modified
+      unless($pk_present)
+      {
+        delete @{$object->{MODIFIED_COLUMNS()}}{$meta->key_column_names};
+      }
+
       # Merge the column values from the db into the new $object.
       my %modified = map { $_ => 1 } Rose::DB::Object::Helpers::dirty_columns($object);
   
+      # Simulate loading
+      local $object->{STATE_LOADING()}  = 1;    
+
       # XXX: Performance cheat
       foreach my $column (@{ $object->meta->columns_ordered })
       {

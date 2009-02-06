@@ -671,6 +671,16 @@ sub sql_qualify_column_names_on_load
   return $self->{'sql_qualify_column_names_on_load'};
 }
 
+sub key_column_names
+{
+  my($self) = shift;
+
+  $self->{'key_column_names'} ||=
+    [ $self->primary_key_columns, $self->unique_keys_column_names ];
+
+  return wantarray ? @{$self->{'key_column_names'}} : $self->{'key_column_names'};
+}
+
 sub init_primary_key
 {
   Rose::DB::Object::Metadata::PrimaryKey->new(parent => shift);
@@ -4138,6 +4148,7 @@ sub _clear_column_generated_values
   $self->{'delete_sql'}                           = undef;
   $self->{'insert_columns_placeholders_sql'}      = undef;
   $self->{'dbi_requires_bind_param'}              = undef;
+  $self->{'key_column_names'}                     = undef;
 }
 
 sub _clear_nonpersistent_column_generated_values
@@ -4158,6 +4169,7 @@ sub _clear_primary_key_column_generated_values
   $self->{'primary_key_column_mutator_names'}    = undef;
   $self->{'key_column_accessor_method'}          = undef;
   $self->{'primary_key_column_names_or_aliases'} = undef;
+  $self->{'key_column_names'} = undef;
 }
 
 sub method_name_is_reserved
