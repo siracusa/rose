@@ -284,6 +284,15 @@ SKIP: foreach my $db_type ('pg')
   ok($map3->save, "save color map record 3 - $db_type");
 
   my $colors = $o->colors;
+ 
+  # Tests for SQL efficiency of __check_and_merge
+  # $DB::single = 1;
+  #   $o->save(changes_only => 1);
+  #   $o->colors_on_save({ id => 2 });
+  # $Rose::DB::Object::Manager::Debug = 1;
+  # $Rose::DB::Object::Debug = 1;
+  #   $o->save(changes_only => 1);
+  # exit;
 
   ok(ref $colors eq 'ARRAY' && @$colors == 2 && 
      $colors->[0]->name eq 'blue' && $colors->[1]->name eq 'red',
