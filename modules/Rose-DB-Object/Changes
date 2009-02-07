@@ -1,12 +1,9 @@
-0.777_04 (02.05.2009) - John Siracusa <siracusa@gmail.com>
+0.778 (02.06.2009) - John Siracusa <siracusa@gmail.com>
 
     * Added PostgreSQL's "ltree" query extensions to QueryBuilder.  
-      (Patch by Rick Apichairuk) XXX: Needs docs
+      (Patch by Rick Apichairuk)
     * Improved the efficiency of the check-and-merge function used
       when related objects are added.  (Reported by Bryan Opfer)
-    * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
-    * TODO: add delete_now and delete_on_save method types to ManyToMany
-    * TODO: make save() fail if IN_DB and modified PK columns?
 
 0.777 (12.12.2008) - John Siracusa <siracusa@gmail.com>
 

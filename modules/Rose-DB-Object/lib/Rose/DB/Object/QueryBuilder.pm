@@ -1528,6 +1528,16 @@ Array operations:
     # NOT(A = ANY(COLUMN) AND B = ANY(COLUMN))
     '!NAME' => { all_in_array => [ 'A', 'B'] } 
 
+PostgreSQL ltree operations:
+
+    OP                  SQL operator
+    -------------       ------------
+    ltree_ancestor      @>
+    ltree_descendant    <@
+    ltree_query         ~
+    ltree_ltxtquery     @
+    ltree_concat        ||
+
 Any of these operations described above can have "_sql" appended to indicate that the corresponding values are to be "inlined" (i.e., included in the SQL query as-is, with no quoting of any kind).  This is useful for comparing two columns.  For example, this query:
 
     query => [ legs => { gt_sql => 'eyes' } ]
