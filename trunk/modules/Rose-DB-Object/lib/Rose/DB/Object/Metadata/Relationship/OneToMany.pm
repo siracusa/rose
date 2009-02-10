@@ -12,7 +12,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 our $Debug = 0;
 
-our $VERSION = '0.771';
+our $VERSION = '0.779';
 
 __PACKAGE__->default_auto_method_types(qw(find get_set_on_save add_on_save));
 
@@ -263,6 +263,8 @@ For the method types "add_now" and "add_on_save", the relationship's L<name|Rose
 For the method type "find", the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> prefixed with "find_" is returned.
 
 For the method type "count", the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> suffixed with "_count" is returned.
+
+For the method type "iterator", the relationship's L<name|Rose::DB::Object::Metadata::Relationship/name> suffixed with "_iterator" is returned.
 
 Otherwise, undef is returned.
 
