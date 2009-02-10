@@ -14,7 +14,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 use Rose::DB::Object::Constants qw(PRIVATE_PREFIX);
 
-our $VERSION = '0.771';
+our $VERSION = '0.779';
 
 our $Debug = 0;
 
