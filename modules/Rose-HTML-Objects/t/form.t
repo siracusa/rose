@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 258;
+use Test::More tests => 260;
 
 BEGIN 
 {
@@ -61,6 +61,32 @@ qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">
 <div class="bottom">end</div>
 
 </form>), 'children 1');
+
+$form->params(street => 'Main', city => 'Anytown');
+$form->field('street')->label('Street');
+$form->field('city')->label('City');
+$form->init_fields();
+
+is($form->xhtml,
+qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">) .
+qq(<p class="top">start</p>) .
+qq(<div class="field-with-label"><label>City</label><div class="field"><input name="city" size="25" type="text" value="Anytown" /></div></div>) .
+qq(<div class="field-with-label"><label>Street</label><div class="field"><input name="street" size="25" type="text" value="Main" /></div></div>) .
+qq(<div class="bottom">end</div>) .
+qq(</form>), 'xhtml 1');
+
+is($form->html,
+qq(<form action="" enctype="application/x-www-form-urlencoded" method="get">) .
+qq(<p class="top">start</p>) .
+qq(<div class="field-with-label"><label>City</label><div class="field"><input name="city" size="25" type="text" value="Anytown"></div></div>) .
+qq(<div class="field-with-label"><label>Street</label><div class="field"><input name="street" size="25" type="text" value="Main"></div></div>) .
+qq(<div class="bottom">end</div>) .
+qq(</form>), 'html 1');
+
+$form->field('street')->label(undef);
+$form->field('city')->label(undef);
+
+$form->clear;
 
 is($form->pop_child->html, '<div class="bottom">end</div>', 'pop_child 1');
 

@@ -20,11 +20,13 @@ our @ISA = qw(Rose::HTML::Object::WithWrapAroundChildren
 
 require Rose::HTML::Form::Repeatable;
 
-our $VERSION = '0.554';
+our $VERSION = '0.602';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
 (
+  'xhtml',
+  'html',
   'prepare',
   'hidden_field',
   'hidden_fields',
