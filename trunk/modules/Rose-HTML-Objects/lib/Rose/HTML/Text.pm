@@ -6,7 +6,7 @@ use base 'Rose::HTML::Object';
 
 use Rose::HTML::Util();
 
-our $VERSION = '0.601';
+our $VERSION = '0.602';
 
 __PACKAGE__->valid_html_attrs([]);
 
@@ -18,14 +18,26 @@ use overload
    fallback => 1,
 );
 
-use Rose::Object::MakeMethods::Generic
-(
-  { override_existing => 1 },
-  scalar =>
-  [
-    'html',
-  ],
-);
+# XXX: When Class::XSAccessor is installed, the (apparent) combination of
+# XXX: overload and Rose::Object::MakeMethods::Generic's method creation
+# XXX: for plain scalar attributes causes things to go awry and tests to 
+# XXX" fail (e.g., t/text.t)
+# use Rose::Object::MakeMethods::Generic
+# (
+#   { override_existing => 1 },
+#   scalar =>
+#   [
+#     'html',
+#   ],
+# );
+
+# XXX: Do it the old-fashioned way (see comments above)
+sub html
+{
+  my($self) = shift;
+  return $self->{'html'} = shift  if(@_);
+  return $self->{'html'};
+}
 
 sub html_tag  { shift->html(@_) }
 sub xhtml_tag { shift->xhtml(@_) }

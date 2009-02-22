@@ -17,7 +17,7 @@ use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 # Variables for use in regexes
 our $FF_SEPARATOR_RE = quotemeta FF_SEPARATOR;
 
-our $VERSION = '0.554';
+our $VERSION = '0.602';
 
 #
 # Object data
@@ -126,6 +126,52 @@ BEGIN
 #
 # Object methods
 #
+
+sub html
+{
+  my($self) = shift;
+
+  no warnings 'uninitialized';
+
+  if($self->has_children || !$self->is_self_closing)
+  {
+    return '<' . $self->html_element . $self->html_attrs_string . '>' . 
+           join('', map 
+           {
+             $_->isa('Rose::HTML::Form::Field') ?
+               '<div class="field-with-label">' . $_->html_label . 
+               '<div class="field">' . $_->html . '</div></div>' :
+               $_->html
+           }
+           $self->children) . 
+           '</' . $self->html_element . '>';
+  }
+
+  return '<' . $self->html_element . $self->html_attrs_string . '>';
+}
+
+sub xhtml
+{
+  my($self) = shift;
+
+  no warnings 'uninitialized';
+
+  if($self->has_children || !$self->is_self_closing)
+  {
+    return '<' . $self->xhtml_element . $self->xhtml_attrs_string . '>' . 
+           join('', map 
+           {
+             $_->isa('Rose::HTML::Form::Field') ?
+               '<div class="field-with-label">' . $_->xhtml_label . 
+               '<div class="field">' . $_->xhtml . '</div></div>' :
+               $_->xhtml
+           }
+           $self->children) . 
+           '</' . $self->xhtml_element . '>';
+  }
+
+  return '<' . $self->xhtml_element . $self->xhtml_attrs_string . ' />';
+}
 
 sub init_field_rank_counter { 1 }
 
