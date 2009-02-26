@@ -20,7 +20,7 @@ use Rose::DB::Object::Constants
 use Rose::DB::Object::Helpers();
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.778';
+our $VERSION = '0.779';
 
 our $Debug = 0;
 
@@ -3087,7 +3087,7 @@ sub objects_by_key
 
       if($@ || !$objs)
       {
-        $self->error("Could not ", ($is_iterator ? 'get iterator for' : 'find'),
+        $self->error("Could not " . ($is_iterator ? 'get iterator for' : 'find') .
                      " $ft_class objects - " . $ft_manager->error);
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
