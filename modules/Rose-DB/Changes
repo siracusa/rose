@@ -1,4 +1,4 @@
-0.749_01 (01.20.2008) - Peter Karman <perl@peknet.com>
+0.750 (02.26.2009) - Peter Karman <perl@peknet.com>
 
     * Added pg_enable_utf8 attribute.
 
