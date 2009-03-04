@@ -20,7 +20,7 @@ use Rose::DB::Object::Constants
 use Rose::DB::Object::Helpers();
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.779';
+our $VERSION = '0.780';
 
 our $Debug = 0;
 
@@ -3270,10 +3270,11 @@ sub objects_by_key
 
         while(my($local_column, $foreign_column) = each(%$ft_columns))
         {
-          my $local_method   = $meta->column_accessor_method_name($local_column);
-          my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
+          my $local_method     = $meta->column_accessor_method_name($local_column);
+          my $foreign_accessor = $ft_meta->column_accessor_method_name($foreign_column);
+          my $foreign_mutator  = $ft_meta->column_mutator_method_name($foreign_column);
 
-          $key{$foreign_column} = $map{$foreign_method} = $self->$local_method();
+          $key{$foreign_column} = $map{$foreign_mutator} = $self->$local_method();
 
           # Comment this out to allow null keys
           unless(defined $key{$foreign_column})
@@ -3523,7 +3524,7 @@ sub objects_by_key
         while(my($local_column, $foreign_column) = each(%$ft_columns))
         {
           my $local_method   = $meta->column_accessor_method_name($local_column);
-          my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
+          my $foreign_method = $ft_meta->column_mutator_method_name($foreign_column);
 
           $map{$foreign_method} = $self->$local_method();
         }
@@ -3549,10 +3550,11 @@ sub objects_by_key
 
           while(my($local_column, $foreign_column) = each(%$ft_columns))
           {
-            my $local_method   = $meta->column_accessor_method_name($local_column);
-            my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
+            my $local_method     = $meta->column_accessor_method_name($local_column);
+            my $foreign_accessor = $ft_meta->column_accessor_method_name($foreign_column);
+            my $foreign_mutator  = $ft_meta->column_mutator_method_name($foreign_column);
 
-            $key{$foreign_column} = $map{$foreign_method} = $self->$local_method();
+            $key{$foreign_column} = $map{$foreign_mutator} = $self->$local_method();
 
             # Comment this out to allow null keys
             unless(defined $key{$foreign_column})
@@ -3753,10 +3755,11 @@ sub objects_by_key
 
       while(my($local_column, $foreign_column) = each(%$ft_columns))
       {
-        my $local_method   = $meta->column_accessor_method_name($local_column);
-        my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
+        my $local_method     = $meta->column_accessor_method_name($local_column);
+        my $foreign_accessor = $ft_meta->column_accessor_method_name($foreign_column);
+        my $foreign_mutator  = $ft_meta->column_mutator_method_name($foreign_column);
 
-        $key{$foreign_column} = $map{$foreign_method} = $self->$local_method();
+        $key{$foreign_column} = $map{$foreign_mutator} = $self->$local_method();
 
         # Comment this out to allow null keys
         unless(defined $key{$foreign_column})
@@ -3850,10 +3853,11 @@ sub objects_by_key
 
         while(my($local_column, $foreign_column) = each(%$ft_columns))
         {
-          my $local_method   = $meta->column_accessor_method_name($local_column);
-          my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
+          my $local_method     = $meta->column_accessor_method_name($local_column);
+          my $foreign_accessor = $ft_meta->column_accessor_method_name($foreign_column);
+          my $foreign_mutator  = $ft_meta->column_mutator_method_name($foreign_column);
 
-          $key{$foreign_column} = $map{$foreign_method} = $self->$local_method();
+          $key{$foreign_column} = $map{$foreign_mutator} = $self->$local_method();
 
           # Comment this out to allow null keys
           unless(defined $key{$foreign_column})
@@ -3929,7 +3933,7 @@ sub objects_by_key
       while(my($local_column, $foreign_column) = each(%$ft_columns))
       {
         my $local_method   = $meta->column_accessor_method_name($local_column);
-        my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
+        my $foreign_method = $ft_meta->column_mutator_method_name($foreign_column);
 
         $map{$foreign_method} = $self->$local_method();
 
@@ -4039,7 +4043,7 @@ sub objects_by_key
         while(my($local_column, $foreign_column) = each(%$ft_columns))
         {
           my $local_method   = $meta->column_accessor_method_name($local_column);
-          my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
+          my $foreign_method = $ft_meta->column_mutator_method_name($foreign_column);
 
           $map{$foreign_method} = $self->$local_method();
         }
@@ -4067,7 +4071,7 @@ sub objects_by_key
         while(my($local_column, $foreign_column) = each(%$ft_columns))
         {
           my $local_method   = $meta->column_accessor_method_name($local_column);
-          my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
+          my $foreign_method = $ft_meta->column_mutator_method_name($foreign_column);
 
           $map{$foreign_method} = $self->$local_method();
 
