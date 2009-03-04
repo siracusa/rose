@@ -11,7 +11,7 @@ our @ISA = qw(Rose::DB::Object::Metadata::Relationship);
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
-our $VERSION = '0.771';
+our $VERSION = '0.780';
 
 __PACKAGE__->default_auto_method_types(qw(get_set_on_save delete_on_save));
 
@@ -43,7 +43,6 @@ Rose::Object::MakeMethods::Generic->make_methods
   { preserve_existing => 1 },
   scalar => 
   [
-    'foreign_key',
     __PACKAGE__->common_method_maker_argument_names
   ],
 );
