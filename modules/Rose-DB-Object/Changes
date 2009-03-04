@@ -1,3 +1,9 @@
+0.780_01 (03.04.2009) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
+    * TODO: add delete_now and delete_on_save method types to ManyToMany
+    * TODO: make save() fail if IN_DB and modified PK columns?
+
 0.780 (03.04.2009) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug that caused the delete_relationships() Metadata method
