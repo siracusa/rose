@@ -7674,8 +7674,132 @@ EOF
         #column_map => { id => 'pid' },
         query_args => [ id => { ne_sql => 'pid' } ],
       },
+    );    
+    
+    MySQLiteObject->meta->alias_column(fk1 => 'fkone');
+
+    MySQLiteObject->meta->add_relationship
+    (
+      colors =>
+      {
+        type      => 'many to many',
+        map_class => 'MySQLiteColorMap',
+        #map_from  => 'object',
+        #map_to    => 'color',
+        manager_args => { sort_by => 'name' },
+        methods =>
+        {
+          get_set         => undef,
+          get_set_now     => 'colors_now',
+          get_set_on_save => 'colors_on_save',
+          add_now         => undef,
+          add_on_save     => 'add_colors_on_save',
+          find            => undef,
+          count           => undef,
+          iterator        => undef,
+        },
+      },
+
+      colors2 =>
+      {
+        type      => 'many to many',
+        map_class => 'MySQLiteColorMap',
+        manager_args => { sort_by => 'name', with_map_records => 1 },
+      },
+
+      colors3 =>
+      {
+        type      => 'many to many',
+        map_class => 'MySQLiteColorMap',
+        manager_args => { sort_by => 'rose_db_object_colors_map.color_id DESC', with_map_records => 'map_rec' },
+      },
     );
 
+    # Test to confirm a 0.780 fix for a bug in delete_relationships()
+    MySQLiteObject->meta->delete_relationships;
+
+    MySQLiteObject->meta->add_relationships
+    (
+      other_obj_osoft =>
+      {
+        type => 'one to one',
+        class => 'MySQLiteOtherObject',
+        column_map =>
+        {
+          fk1 => 'k1',
+          fk2 => 'k2',
+          fk3 => 'k3',
+        },
+        soft => 1,
+      },
+
+      other_obj_msoft =>
+      {
+        type => 'many to one',
+        class => 'MySQLiteOtherObject',
+        column_map =>
+        {
+          fk1 => 'k1',
+          fk2 => 'k2',
+          fk3 => 'k3',
+        },
+        referential_integrity => 0,
+        with_column_triggers => 1,
+      },
+
+      other2_objs =>
+      {
+        type  => 'one to many',
+        class => 'MySQLiteOtherObject2',
+        column_map => { id => 'pid' },
+        manager_args => { sort_by => 'rose_db_object_other2.name DESC' },
+        methods =>
+        {
+          find            => undef,
+          iterator        => undef,
+          get_set         => undef,
+          get_set_now     => 'other2_objs_now',
+          get_set_on_save => 'other2_objs_on_save',
+          add_now         => 'add_other2_objs_now',
+          add_on_save     => undef,
+        },
+      },
+
+      other2_a_objs =>
+      {
+        type  => 'one to many',
+        class => 'MySQLiteOtherObject2',
+        column_map => { id => 'pid' },
+        query_args => [ name => { like => 'a%' } ],
+        manager_args => { sort_by => 'name' },
+      },
+
+      other2_one_obj =>
+      {
+        type  => 'one to one',
+        class => 'MySQLiteOtherObject2',
+        column_map => { id => 'pid' },
+        query_args => [ name => 'one' ],
+        with_column_triggers => 1,
+      },
+
+      other2_objs2 =>
+      {
+        type  => 'one to many',
+        class => 'MySQLiteOtherObject2',
+        column_map => { id => 'pid' },
+      },
+
+      # Hrm.  Experimental...
+      not_other2_objs =>
+      {
+        type  => 'one to many',
+        class => 'MySQLiteOtherObject2',
+        #column_map => { id => 'pid' },
+        query_args => [ id => { ne_sql => 'pid' } ],
+      },
+    );    
+    
     MySQLiteObject->meta->alias_column(fk1 => 'fkone');
 
     MySQLiteObject->meta->add_relationship
