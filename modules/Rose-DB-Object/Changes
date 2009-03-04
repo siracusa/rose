@@ -1,5 +1,7 @@
-0.779_01 (02.26.2009) - John Siracusa <siracusa@gmail.com>
+0.779_02 (03.03.2009) - John Siracusa <siracusa@gmail.com>
 
+    * Fixed a few accessor/mutator mismatches in relationship methods.
+      (Reported by Bharanee)
     * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
     * TODO: add delete_now and delete_on_save method types to ManyToMany
     * TODO: make save() fail if IN_DB and modified PK columns?
