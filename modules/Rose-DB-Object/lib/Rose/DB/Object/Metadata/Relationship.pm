@@ -9,7 +9,7 @@ use Rose::DB::Object::Metadata::Util qw(:all);
 use Rose::DB::Object::Metadata::MethodMaker;
 our @ISA = qw(Rose::DB::Object::Metadata::MethodMaker);
 
-our $VERSION = '0.771';
+our $VERSION = '0.780';
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -21,6 +21,7 @@ Rose::Object::MakeMethods::Generic->make_methods
   { preserve_existing => 1 },
   scalar => 
   [
+    'foreign_key',
     'deferred_make_method_args',
     id => { interface => 'get_set_init' },
     __PACKAGE__->common_method_maker_argument_names,

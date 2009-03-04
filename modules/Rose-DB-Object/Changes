@@ -1,5 +1,7 @@
-0.779_02 (03.03.2009) - John Siracusa <siracusa@gmail.com>
+0.779_02 (03.04.2009) - John Siracusa <siracusa@gmail.com>
 
+    * Fixed a bug that caused the delete_relationships() Metadata method
+      to fail in some circumstances.  (Reported by vti)
     * Fixed a few accessor/mutator mismatches in relationship methods.
       (Reported by Bharanee)
     * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
