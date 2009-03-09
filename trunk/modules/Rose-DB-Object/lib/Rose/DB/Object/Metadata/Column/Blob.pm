@@ -5,9 +5,23 @@ use strict;
 use Rose::DB::Object::Metadata::Column::Text;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Text);
 
-our $VERSION = '0.01';
+use DBI qw(:sql_types);
+
+our $VERSION = '0.781';
 
 sub type { 'blob' }
+
+sub dbi_requires_bind_param 
+{
+  my($self, $db) = @_;
+  return $db->driver eq 'sqlite' ? 1 : 0;
+}
+
+sub dbi_bind_param_attrs 
+{
+  my($self, $db) = @_;
+  return $db->driver eq 'sqlite' ? SQL_BLOB : undef;
+}
 
 1;
 
