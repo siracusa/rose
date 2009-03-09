@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 566;
+use Test::More tests => 567;
 
 BEGIN 
 {
@@ -942,7 +942,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 73)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 74)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -1133,6 +1133,17 @@ SKIP: foreach my $db_type ('sqlite')
   ok(!$o->load(speculative => 1), "load() speculative explicit 2 - $db_type");
   eval { $o->load(speculative => 0) };
   ok($@, "load() non-speculative explicit 2 - $db_type");
+  
+  #
+  # Test SQLite BLOB support
+  #
+
+  my $blob = "abc\0def";
+  $o = MySQLiteObject->new(id => 888, name => 'Blob', data => $blob);
+  $o->save;
+
+  $o = MySQLiteObject->new(id => $o->id)->load;
+  is($o->data, $blob, "blob check - $db_type");
 }
 
 SKIP: foreach my $db_type (qw(oracle))
@@ -1878,6 +1889,7 @@ CREATE TABLE rose_db_object_test
   start          DATE,
   save           INT,
   nums           VARCHAR(255),
+  data           BLOB,
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1926,6 +1938,7 @@ EOF
       nums     => { type => 'array' },
       bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },
       decs     => { type => 'decimal', precision => 10, scale => 2 },
+      data     => { type => 'blob' },
       #last_modified => { type => 'timestamp' },
       date_created  => { type => 'scalar' },
       main::nonpersistent_column_definitions(),
@@ -1942,7 +1955,7 @@ EOF
         name => 'last_modified'));
 
     MySQLiteObject->meta->column('id')->add_trigger(inflate => sub { defined $_[1] ? [ $_[1] ] : undef });
-    MySQLiteObject->meta->column('id')->add_trigger(deflate => sub { ref $_[1] ? @{$_[1]}  : $_[1] });
+    MySQLiteObject->meta->column('id')->add_trigger(deflate => sub { ref $_[1] ? (wantarray ? @{$_[1]} : $_[1]->[0]) : $_[1] });
 
     my $pre_inited = 0;
     MySQLiteObject->meta->pre_init_hook(sub { $pre_inited++ });
