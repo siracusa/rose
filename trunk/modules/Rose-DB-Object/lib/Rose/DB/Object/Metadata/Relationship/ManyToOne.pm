@@ -384,10 +384,6 @@ Get or set the name of the L<manager_class|/manager_class> class method to call 
 
 Get or set the name of the L<manager_class|/manager_class> class method to call when creating an iterator.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<get_objects_iterator|Rose::DB::Object::Manager/get_objects_iterator> if this value is left undefined.
 
-=item B<manager_find_method [METHOD]>
-
-Get or set the name of the L<manager_class|/manager_class> class method to call when fetching object within a L<find|/"METHOD MAP"> method type.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<get_objects|Rose::DB::Object::Manager/get_objects> if this value is left undefined.
-
 =item B<manager_delete_method [METHOD]>
 
 Get or set the name of the L<manager_class|/manager_class> class method to call when deleting objects.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<delete_objects|Rose::DB::Object::Manager/delete_objects> if this value is left undefined.
