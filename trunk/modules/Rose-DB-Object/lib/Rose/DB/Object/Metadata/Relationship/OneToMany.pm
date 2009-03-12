@@ -18,8 +18,8 @@ __PACKAGE__->default_auto_method_types(qw(find get_set_on_save add_on_save));
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
-  qw(class share_db key_columns manager_class 
-     manager_method manager_count_method manager_iterator_method manager_find_method
+  qw(class share_db key_columns manager_class manager_method 
+     manager_count_method manager_iterator_method manager_find_method
      manager_args query_args join_args)
 );
 
@@ -288,11 +288,11 @@ Get or set the name of the L<manager_class|/manager_class> class method to call 
 
 =item B<manager_iterator_method [METHOD]>
 
-Get or set the name of the L<manager_class|/manager_class> class method to call when iterating objects.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<get_objects_iterator|Rose::DB::Object::Manager/get_objects_iterator> if this value is left undefined.
+Get or set the name of the L<manager_class|/manager_class> class method to call when creating an iterator.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<get_objects_iterator|Rose::DB::Object::Manager/get_objects_iterator> if this value is left undefined.
 
 =item B<manager_find_method [METHOD]>
 
-Get or set the name of the L<manager_class|/manager_class> class method to call when finding objects.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<get_objects|Rose::DB::Object::Manager/get_objects> if this value is left undefined.
+Get or set the name of the L<manager_class|/manager_class> class method to call when fetching object within a L<find|/"METHOD MAP"> method type.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<get_objects|Rose::DB::Object::Manager/get_objects> if this value is left undefined.
 
 =item B<manager_args [HASHREF]>
 

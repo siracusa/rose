@@ -4672,19 +4672,25 @@ SKIP: foreach my $db_type ('sqlite')
 
   MySQLiteObject->meta->delete_relationship('not_other2_objs');
   # End experiment
-  
-  # start manager_*_method tests
+
+  # Begin manager_*_method tests
   my $manager_method_obj = MySQLiteObject->new(id => $o->id)->load;
-  is( $manager_method_obj->custom_manager_method_other2_objs, 'ima-get-objects', 
-    "custom manager method ima-get-objects - sqlite");
-  is( $manager_method_obj->meta->relationship('custom_manager_method_other_obj_msoft')->manager_delete_method, 
-    'other_obj_delete', "custom manager method ima-delete - sqlite");
-  is( $manager_method_obj->find_custom_manager_method_other2_objs, 'ima-find', 
-    "custom manager method ima-find - sqlite");
-  is( $manager_method_obj->custom_manager_method_other2_objs_iterator, 'ima-iterator', 
-    "custom manager method ima-iterator - sqlite");
-  is( $manager_method_obj->custom_manager_method_other2_objs_count, 'ima-count', 
-    "custom manager method ima-count - sqlite");
+
+  is($manager_method_obj->custom_manager_method_other2_objs, 'ima-get-objects', 
+    "custom manager method ima-get-objects - $db_type");
+
+  is($manager_method_obj->meta->relationship('custom_manager_method_other_obj_msoft')->manager_delete_method, 
+     'other_obj_delete', "custom manager method ima-delete - $db_type");
+
+  is($manager_method_obj->find_custom_manager_method_other2_objs, 'ima-find', 
+     "custom manager method ima-find - $db_type");
+
+  is($manager_method_obj->custom_manager_method_other2_objs_iterator, 'ima-iterator', 
+     "custom manager method ima-iterator - $db_type");
+
+  is($manager_method_obj->custom_manager_method_other2_objs_count, 'ima-count', 
+     "custom manager method ima-count - $db_type");
+  # End manager_*_method tests
 
   # Begin filtered collection tests
 
@@ -7944,28 +7950,14 @@ EOF
     # Manager used only for custom manager_*_methods
     package MySQLiteOtherObject2::Manager;
     
-    sub other2_objs {
-        return 'ima-get-objects';
-    }
-    
-    sub other2_objs_count {
-        return 'ima-count';
-    }
-        
-    sub other2_objs_iterator {
-        return 'ima-iterator';
-    }
-    
-    sub other2_objs_find {
-        return 'ima-find';
-    }
+    sub other2_objs          { 'ima-get-objects' }
+    sub other2_objs_count    { 'ima-count' }
+    sub other2_objs_iterator { 'ima-iterator' }
+    sub other2_objs_find     { 'ima-find' }
     
     package MySQLiteOtherObject::Manager;
     
-    sub other_obj_delete {
-        return 'ima-delete';   # TODO this not yet exercised
-    }
-
+    sub other_obj_delete { 'ima-delete' } # TODO this not yet exercised
 
     package MySQLiteColor;
 
