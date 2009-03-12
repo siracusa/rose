@@ -20,7 +20,7 @@ use Rose::DB::Object::Constants
 use Rose::DB::Object::Helpers();
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.780';
+our $VERSION = '0.781';
 
 our $Debug = 0;
 
@@ -2937,7 +2937,7 @@ sub objects_by_key
       }
 
       $args{'multi_many_ok'} = 1;
-
+      
       # Make query for object count
       eval
       {
@@ -2974,9 +2974,13 @@ sub objects_by_key
 
     my $is_iterator = $interface eq 'iterator' ? 1 : 0;
 
-    if($is_iterator && $ft_method eq 'get_objects')
+    if($is_iterator)
     {
-      $ft_method = 'get_objects_iterator';
+      $ft_method = $args->{'manager_iterator_method'} || 'get_objects_iterator';
+    }
+    else
+    {
+      $ft_method = $args->{'manager_find_method'} || 'get_objects';
     }
 
     $methods{$name} = sub
@@ -3064,7 +3068,7 @@ sub objects_by_key
       {
         $args{$k} = $v  unless(exists $args{$k});
       }
-
+      
       # Make query for object list
       eval
       {
@@ -3159,7 +3163,8 @@ sub objects_by_key
         {
           $objs = 
             $ft_manager->$ft_method(query => [ %key, @$query_args ], 
-                                   %$mgr_args, db => $self->db)
+                                   %$mgr_args, 
+                                   db => $self->db)
               or die $ft_manager->error;
         }
         else

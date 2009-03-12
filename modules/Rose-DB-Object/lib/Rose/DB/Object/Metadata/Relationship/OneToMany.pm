@@ -12,13 +12,15 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 our $Debug = 0;
 
-our $VERSION = '0.779';
+our $VERSION = '0.781';
 
 __PACKAGE__->default_auto_method_types(qw(find get_set_on_save add_on_save));
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
-  qw(class share_db key_columns manager_class manager_method manager_args query_args join_args)
+  qw(class share_db key_columns manager_class 
+     manager_method manager_count_method manager_iterator_method manager_find_method
+     manager_args query_args join_args)
 );
 
 use Rose::Object::MakeMethods::Generic
@@ -279,6 +281,18 @@ Get or set the name of the L<Rose::DB::Object::Manager>-derived class used to fe
 =item B<manager_method [METHOD]>
 
 Get or set the name of the L<manager_class|/manager_class> class method to call when fetching objects.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<get_objects|Rose::DB::Object::Manager/get_objects> if this value is left undefined.
+
+=item B<manager_count_method [METHOD]>
+
+Get or set the name of the L<manager_class|/manager_class> class method to call when counting objects.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<get_objects_count|Rose::DB::Object::Manager/get_objects_count> if this value is left undefined.
+
+=item B<manager_iterator_method [METHOD]>
+
+Get or set the name of the L<manager_class|/manager_class> class method to call when iterating objects.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<get_objects_iterator|Rose::DB::Object::Manager/get_objects_iterator> if this value is left undefined.
+
+=item B<manager_find_method [METHOD]>
+
+Get or set the name of the L<manager_class|/manager_class> class method to call when finding objects.  The L<make_methods|Rose::DB::Object::Metadata::Relationship/make_methods> method will use L<get_objects|Rose::DB::Object::Manager/get_objects> if this value is left undefined.
 
 =item B<manager_args [HASHREF]>
 

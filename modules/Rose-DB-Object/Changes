@@ -1,3 +1,8 @@
+0.780_03 (03.12.2009) - Peter Karman <peknet@gmail.com>
+    * add manager_iterator_method, manager_find_method and support for
+      manager_count_method and manager_delete_method to relevant Relationship
+      classes.
+
 0.780_02 (03.09.2009) - John Siracusa <siracusa@gmail.com>
 
     * Added an explicit SQL_BLOB bind_param() argument for blob columns
