@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1598;
+use Test::More tests => 1603;
 
 BEGIN 
 {
@@ -4523,7 +4523,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 460)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 465)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -4672,6 +4672,19 @@ SKIP: foreach my $db_type ('sqlite')
 
   MySQLiteObject->meta->delete_relationship('not_other2_objs');
   # End experiment
+  
+  # start manager_*_method tests
+  my $manager_method_obj = MySQLiteObject->new(id => $o->id)->load;
+  is( $manager_method_obj->custom_manager_method_other2_objs, 'ima-get-objects', 
+    "custom manager method ima-get-objects - sqlite");
+  is( $manager_method_obj->meta->relationship('custom_manager_method_other_obj_msoft')->manager_delete_method, 
+    'other_obj_delete', "custom manager method ima-delete - sqlite");
+  is( $manager_method_obj->find_custom_manager_method_other2_objs, 'ima-find', 
+    "custom manager method ima-find - sqlite");
+  is( $manager_method_obj->custom_manager_method_other2_objs_iterator, 'ima-iterator', 
+    "custom manager method ima-iterator - sqlite");
+  is( $manager_method_obj->custom_manager_method_other2_objs_count, 'ima-count', 
+    "custom manager method ima-count - sqlite");
 
   # Begin filtered collection tests
 
@@ -7798,6 +7811,45 @@ EOF
         #column_map => { id => 'pid' },
         query_args => [ id => { ne_sql => 'pid' } ],
       },
+      
+      # manager_*_methods
+      custom_manager_method_other2_objs =>
+      {
+        type  => 'one to many',
+        class => 'MySQLiteOtherObject2',
+        manager_class => 'MySQLiteOtherObject2::Manager',
+        manager_method => 'other2_objs',
+        manager_count_method => 'other2_objs_count',
+        manager_iterator_method => 'other2_objs_iterator',
+        manager_find_method => 'other2_objs_find',
+        column_map => { id => 'pid' },
+        methods =>
+        {
+          count           => undef,
+          find            => undef,
+          iterator        => undef,
+          get_set         => undef,
+          get_set_now     => undef,
+          get_set_on_save => undef,
+        },
+      },
+      
+      custom_manager_method_other_obj_msoft =>
+      {
+        type => 'many to one',
+        class => 'MySQLiteOtherObject',
+        column_map =>
+        {
+          fk1 => 'k1',
+          fk2 => 'k2',
+          fk3 => 'k3',
+        },
+        referential_integrity => 0,
+        with_column_triggers => 1,
+        manager_class => 'MySQLiteOtherObject::Manager',
+        manager_delete_method => 'other_obj_delete',    # TODO this not yet exercised
+      },
+
     );    
     
     MySQLiteObject->meta->alias_column(fk1 => 'fkone');
@@ -7888,6 +7940,32 @@ EOF
     );
 
     MySQLiteOtherObject2->meta->initialize;
+    
+    # Manager used only for custom manager_*_methods
+    package MySQLiteOtherObject2::Manager;
+    
+    sub other2_objs {
+        return 'ima-get-objects';
+    }
+    
+    sub other2_objs_count {
+        return 'ima-count';
+    }
+        
+    sub other2_objs_iterator {
+        return 'ima-iterator';
+    }
+    
+    sub other2_objs_find {
+        return 'ima-find';
+    }
+    
+    package MySQLiteOtherObject::Manager;
+    
+    sub other_obj_delete {
+        return 'ima-delete';   # TODO this not yet exercised
+    }
+
 
     package MySQLiteColor;
 
