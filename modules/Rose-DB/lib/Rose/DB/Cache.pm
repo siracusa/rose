@@ -188,7 +188,7 @@ if(MOD_PERL_2)
     $Debug && warn "$$ is already MP2 child (not registering child init handler)\n";
     $MP2_Is_Child = 1;
   }
-  else
+  elsif(!$ENV{'ROSE_DB_NO_CHILD_INIT_HANDLER'})
   {
     Apache2::ServerUtil->server->push_handlers(
       PerlChildInitHandler => \&__mod_perl_2_rose_db_child_init_handler);
