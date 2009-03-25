@@ -5,7 +5,7 @@
 
 This is a scratchpad of sorts of various common questions or use cases and how they're tackled in the rdbo mindset.
 
-= Details =
+= Recipes or FAQs =
 
 == How do I get the maximum value of a table? ==
 _Answered by Jason Purdy_
