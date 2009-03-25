@@ -1,0 +1,50 @@
+#summary Some common use cases / questions
+#labels faq,howto
+
+= Introduction =
+
+This is a scratchpad of sorts of various common questions or use cases and how they're tackled in the rdbo mindset.
+
+= Details =
+
+== How do I get the maximum value of a table? ==
+_Answered by Jason Purdy_
+
+Rose::DB::Object::Manager has functions for getting a count of objects, but what if you wanted to just get the maximum value out of all of the tables. In Ye Ol' Days of doing things, it'd be a simple matter of:
+
+{{{
+my $dbh = DBI->connect( ... );
+my $sth = $dbh->prepare( 'SELECT MAX(last_sync) FROM contact' );
+$sth->execute;
+my ( $max_time ) = $sth->fetchrow_array;
+$sth->finish;
+$dbh->disconnect;
+# roll your own parse_timestamp to convert $max_time to a DateTime obj (if you need it)
+}}}
+
+But as a mindful RDBO citizen, you want to know how to do this in the Rose way. _(NOTE: This is my approach and I definitely welcome improvements/suggestions)_ You could put this code in your Rose::DB::Object or Rose::DB::Object::Manager subclass.
+
+{{{
+sub get_maximum_timestamp {
+    my $db = QSR::RDB->new; # QSR::RDB is a Rose::DB subclass example
+    my $dbh = $db->dbh;
+    my $sth = $dbh->prepare( 'SELECT MAX(last_sync) FROM contact' );
+    $sth->execute;
+    my ( $t ) = $sth->fetchrow_array;
+    my $max = $db->parse_timestamp( $t );
+    $sth->finish;
+    $dbh->disconnect;
+    return $max;
+}
+}}}
+
+Then in your application, you would have something like this:
+
+{{{
+# ...
+my $max = QSR::RDB::Contact->get_maximum_timestamp;
+# now you can do whatever you want w/ $max
+# $max is a DateTime object
+}}}
+
+This recipe is specific to MySQL's SQL specification, so if you're using another database flavor, you'll have to modify the SQL code above. This code can also be tweaked to use other aggregate operations, such as MIN(), AVERAGE(), etc.
