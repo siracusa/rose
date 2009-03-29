@@ -7,32 +7,19 @@ use Rose::DateTime::Util qw(parse_date);
 BEGIN
 {
   require Test::More;
-  eval
-  {
-    local $^W = 0;
-    require DBD::SQLite;
-  };
+  require 't/test-lib.pl';
 
-  if($@ || $DBD::SQLite::VERSION < 1.08 || $ENV{'RDBO_NO_SQLITE'})
-  {
-    Test::More->import(skip_all =>  $ENV{'RDBO_NO_SQLITE'} ? 
-      'SQLite tests disabled' : 'Missing DBD::SQLite 1.08+');
-  }
-  elsif($DBD::SQLite::VERSION == 1.13)
-  {
-    Test::More->import(skip_all =>  'DBD::SQLite 1.13 is broken');  
-  }
-  else
+  if(have_db('sqlite_admin'))
   {
     Test::More->import(tests => 44);
   }
+  else
+  {
+    Test::More->import(skip_all =>  'DBD::SQLite unavailable or broken');    
+  }
 }
 
-BEGIN 
-{
-  require 't/test-lib.pl';
-  use_ok('Rose::DB');
-}
+use_ok('Rose::DB');
 
 My::DB2->default_domain('test');
 My::DB2->default_type('sqlite_admin');

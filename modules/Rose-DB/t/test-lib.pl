@@ -183,9 +183,9 @@ BEGIN
     require DBD::SQLite;
   };
 
-  my $version = $DBD::SQLite::VERSION || 0;
+  (my $version = $DBD::SQLite::VERSION || 0) =~ s/_//g;
 
-  unless($ENV{'RDBO_NO_SQLITE'} || $version < 1.08 || $version == 1.13)
+  unless($ENV{'RDBO_NO_SQLITE'} || $version < 1.11 || ($version >= 1.13 && $version < 1.19))
   {
     # Main
     Rose::DB->register_db(
@@ -338,7 +338,7 @@ sub get_dbh
     my $db = Rose::DB->new($type);
     $db->print_error(0);
     $dbh = $db->retain_dbh or die Rose::DB->error;
-    $dbh->print_error(1);
+    $db->print_error(1);
   };
 
   if(!$@ && $dbh)

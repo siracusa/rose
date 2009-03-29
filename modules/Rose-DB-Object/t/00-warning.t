@@ -72,7 +72,9 @@ EOF
 
 eval { require DBD::SQLite };
 
-if(!$@ && $DBD::SQLite::VERSION >= 1.13)
+(my $version = $DBD::SQLite::VERSION || 0) =~ s/_//g;
+
+if(!$@ && ($version < 1.11 || ($version >= 1.13 && $version < 1.19)))
 {
 print STDERR<<"EOF";
 
@@ -84,7 +86,7 @@ print STDERR<<"EOF";
 ***     http://rt.cpan.org/Public/Bug/Display.html?id=21472
 ***
 *** The SQLite tests will be skipped.  Please install DBD::SQLite 1.12
-*** or a version that fixes the bugs in 1.13 and 1.14.
+*** or version 1.19_02 or later.
 ***
 *** Press return to continue (or wait 60 seconds)
 EOF
