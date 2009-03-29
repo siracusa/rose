@@ -185,7 +185,7 @@ BEGIN
 
   (my $version = $DBD::SQLite::VERSION || 0) =~ s/_//g;
 
-  unless($ENV{'RDBO_NO_SQLITE'} || $version < 1.11 || ($version >= 1.13 && $version < 1.19))
+  unless($ENV{'RDBO_NO_SQLITE'} || $version < 1.11 || ($version >= 1.13 && $version < 1.1902))
   {
     # Main
     Rose::DB->register_db(
