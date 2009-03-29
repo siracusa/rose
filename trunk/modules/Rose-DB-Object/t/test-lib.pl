@@ -141,9 +141,9 @@ BEGIN
     require DBD::SQLite;
   };
 
-  my $version = $DBD::SQLite::VERSION || 0;
+  (my $version = $DBD::SQLite::VERSION || 0) =~ s/_//g;
 
-  unless($ENV{'RDBO_NO_SQLITE'} || $version < 1.11 || $version >= 1.13)
+  unless($ENV{'RDBO_NO_SQLITE'} || $version < 1.11 || ($version >= 1.13 && $version < 1.19))
   {
     #unlink("$Bin/sqlite.db");
 

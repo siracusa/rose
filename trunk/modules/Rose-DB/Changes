@@ -1,7 +1,8 @@
-0.750_01 (03.14.2009) - John Siracusa <siracusa@gmail.com>
+0.750_01 (03.29.2009) - John Siracusa <siracusa@gmail.com>
 
     * Worked around a mod_perl 2 issue related to PerlOptions +Parent
       http://bit.ly/160jLN (Reported by Anton)
+    * Updated test suite to consider DBD::SQLite 1.19+ non-broken.
 
 0.750 (02.26.2009) - Peter Karman <perl@peknet.com>
 

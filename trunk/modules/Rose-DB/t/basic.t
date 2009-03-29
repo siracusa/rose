@@ -71,9 +71,7 @@ BEGIN
   sub format_date { die "boo!" }
 }
 
-eval { require DBD::SQLite };
-my $version = $DBD::SQLite::VERSION || 0;
-my $sqlite_ok = ($ENV{'RDBO_NO_SQLITE'} || $version < 1.08 || $version == 1.13) ? 0 : 1;
+my $sqlite_ok = have_db('sqlite_admin');
 
 is_deeply(scalar Rose::DB->registry->registered_domains, 
           [ qw(atest catalog_test default test) ], 'registered_domains()');
