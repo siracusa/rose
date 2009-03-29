@@ -56,7 +56,7 @@ eval { require DBD::SQLite };
 
 (my $version = $DBD::SQLite::VERSION || 0) =~ s/_//g;
 
-if(!$@ && ($version < 1.11 || ($version >= 1.13 && $version < 1.19)))
+if(!$@ && ($version < 1.11 || ($version >= 1.13 && $version < 1.1902)))
 {
 print STDERR<<"EOF";
 
