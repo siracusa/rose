@@ -1,4 +1,4 @@
-0.750_01 (03.29.2009) - John Siracusa <siracusa@gmail.com>
+0.751 (04.19.2009) - John Siracusa <siracusa@gmail.com>
 
     * Worked around a mod_perl 2 issue related to PerlOptions +Parent
       http://bit.ly/160jLN (Reported by Anton)
