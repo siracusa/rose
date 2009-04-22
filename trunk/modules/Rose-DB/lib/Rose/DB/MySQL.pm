@@ -11,7 +11,7 @@ eval { require DBD::mysql }; # Ignore errors
 
 use Rose::DB;
 
-our $VERSION = '0.745';
+our $VERSION = '0.752';
 
 our $Debug = 0;
 
@@ -419,6 +419,23 @@ sub supports_on_duplicate_key_update
   }
 
   return $self->{'supports_on_duplicate_key_update'} = 0;
+}
+
+sub supports_select_from_subselect
+{
+  my($self) = shift;
+
+  if(defined $self->{'supports_select_from_subselect'})
+  {
+    return $self->{'supports_select_from_subselect'};
+  }
+
+  if($self->database_version >= 5_000_045)
+  {
+    return $self->{'supports_select_from_subselect'} = 1;
+  }
+
+  return $self->{'supports_select_from_subselect'} = 0;
 }
 
 #our %Reserved_Words = map { $_ => 1 } qw(read for case);
