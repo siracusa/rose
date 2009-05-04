@@ -4094,6 +4094,33 @@ If set to true, C<query> parameters with empty lists as values are allowed.  For
 
 By default, passing an empty list as a value will cause a fatal error.
 
+=item B<clauses CLAUSES>
+
+A reference to an array of extra SQL clauses to add to the "WHERE" portion of the query as literal text.
+
+It is recommended to use this parameter only for clauses that are not supported by arguments to the C<query> parameter.  If you simply want to put some literal text on the right side of a column comparison, you can use a scalar reference in the C<query>:
+
+    # SQL: "... WHERE quantity > on_order ..."
+    Product::Manager->get_products(
+      query =>
+      [
+        quantity => { gt => \q(on_order) },
+        ...
+      ]);
+
+If you want literal SQL, but with placeholders and bound values, use this syntax:
+
+    # SQL: "... WHERE name SUPERDUPERMATCH(?) "
+    # Bind value: foo
+    Product::Manager->get_products(
+      query =>
+      [
+        name => [ \q(SUPERDUPERMATCH(?)), 'foo' ],
+        ...
+      ]);
+
+See the documentation for the C<query> parameter of the L<build_select|Rose::DB::Object::QueryBuilder/build_select> function in the L<Rose::DB::Object::QueryBuilder> module for more information.
+
 =item B<db DB>
 
 A L<Rose::DB>-derived object used to access the database.  If omitted, one will be created by calling the L<init_db|Rose::DB::Object/init_db> method of the C<object_class>.
