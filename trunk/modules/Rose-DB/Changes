@@ -1,5 +1,6 @@
-0.751_01 (04.22.2009) - John Siracusa <siracusa@gmail.com>
+0.751_01 (05.06.2009) - John Siracusa <siracusa@gmail.com>
 
+    * TODO: No getpwuid() on Windows...
     * Indicate that MySQL 5.0.45 and later supports selecting from
       a subselect.
 
