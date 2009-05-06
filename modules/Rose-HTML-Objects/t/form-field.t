@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 87;
+use Test::More tests => 88;
 
 BEGIN 
 {
@@ -247,6 +247,13 @@ is($field->error, 'foo', 'error() 1');
 $field->input_value('bar');
 
 ok(!$field->error, 'error() 2');
+
+# 0.603: HTML label class="..." bug fix
+$field = Rose::HTML::Form::Field->new(label => 'Test');
+$field->error('foo');
+$field->label_object;
+$field->reset;
+ok($field->xhtml_label !~ /error/, 'label class cleared correctly');
 
 BEGIN
 {
