@@ -1197,7 +1197,7 @@
 
     * Well that was quick.  Fixed copy and paste error that caused
       a failure to load using an aliased unique key column.  Deleted
-      version 0.10.
+      version 0.01.
 
 0.01 (03.09.2005) - John Siracusa <siracusa@gmail.com>
 
