@@ -1,6 +1,8 @@
-0.751_01 (05.06.2009) - John Siracusa <siracusa@gmail.com>
+0.752 (05.08.2009) - John Siracusa <siracusa@gmail.com>
 
-    * TODO: No getpwuid() on Windows...
+    * Added workaround for the lack of getpwuid() on Windows.
+    * SQLite column and table names are not properly unquoted when
+      necessary.  (RT 45836)
     * Indicate that MySQL 5.0.45 and later supports selecting from
       a subselect.
 
