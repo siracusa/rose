@@ -777,7 +777,7 @@ EOF
     }
 
     $dbh->do(<<"EOF");
-CREATE TABLE no_pk_test
+CREATE TABLE 'no_pk_test'
 (
   id    INT NOT NULL,
   name  VARCHAR(255) NOT NULL,
@@ -787,12 +787,12 @@ CREATE TABLE no_pk_test
 EOF
 
     $dbh->do(<<"EOF");
-CREATE TABLE vendors
+CREATE TABLE "vendors"
 (
-  id    INTEGER PRIMARY KEY AUTOINCREMENT,
+  "id"    INTEGER PRIMARY KEY AUTOINCREMENT,
   name  VARCHAR(255) NOT NULL,
 
-  UNIQUE(name)
+  UNIQUE("name")
 )
 EOF
 
@@ -811,7 +811,7 @@ CREATE TABLE products
   date_created  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   release_date  DATETIME,
 
-  UNIQUE(name)
+  UNIQUE('name')
 )
 EOF
 
