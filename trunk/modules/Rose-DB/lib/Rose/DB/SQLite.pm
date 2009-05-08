@@ -7,7 +7,7 @@ use Carp();
 use Rose::DB;
 use SQL::ReservedWords::SQLite();
 
-our $VERSION = '0.745';
+our $VERSION = '0.752';
 
 #our $Debug = 0;
 
@@ -357,7 +357,7 @@ sub _info_from_sql
   # Column definitions
   while($sql =~ s/^$Column_Def (?:\s*,\s*|\s*$)//six)
   {
-    my $col_name    = $1;
+    my $col_name    = _unquote_name($1);
     my $col_type    = $2 || 'scalar';
     my $constraints = $3;
 
@@ -405,7 +405,7 @@ sub _info_from_sql
       }
       elsif(/^\s* UNIQUE (?: \s+ KEY)? \b/six)
       {
-        push(@uk_info, [ _unquote_name($col_name) ]);
+        push(@uk_info, [ $col_name ]);
       }
       elsif(/^NOT \s+ NULL \b/six)
       {

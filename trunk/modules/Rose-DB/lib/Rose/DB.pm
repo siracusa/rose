@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.751_01';
+our $VERSION = '0.752';
 
 our $Debug = 0;
 
@@ -2168,19 +2168,26 @@ sub auto_load_fixups
 
   if($@ || !defined $rosedb_devinit)
   {
-    my $username = lc getpwuid($<);
-    $rosedb_devinit = "Rose::DB::Devel::Init::$username";
-    eval qq(require $rosedb_devinit);
+    my $username;
 
-    if($@)
+    # The getpwuid() function is often(?) unimplemented in perl on Windows.
+    eval { $username = lc getpwuid($<) };
+    
+    unless($@)
     {
-      eval { do $rosedb_devinit };
-    }
-    else
-    {
-      if($rosedb_devinit->can('fixup'))
+      $rosedb_devinit = "Rose::DB::Devel::Init::$username";
+      eval qq(require $rosedb_devinit);
+  
+      if($@)
       {
-        $rosedb_devinit->fixup($class);
+        eval { do $rosedb_devinit };
+      }
+      else
+      {
+        if($rosedb_devinit->can('fixup'))
+        {
+          $rosedb_devinit->fixup($class);
+        }
       }
     }
   }
@@ -2613,6 +2620,8 @@ There are two ways to alter the initial L<Rose::DB> data source registry.
 The C<ROSEDB_DEVINIT> file or module is used during development, usually to set up data sources for a particular developer's database or project.  If the C<ROSEDB_DEVINIT> environment variable is set, it should be the name of a Perl module or file.  If it is a Perl module and that module has a C<fixup()> subroutine, it will be called as a class method after the module is loaded.
 
 If the C<ROSEDB_DEVINIT> environment variable is not set, or if the specified file does not exist or has errors, then it defaults to the package name C<Rose::DB::Devel::Init::username>, where "username" is the account name of the current user.
+
+B<Note:> if the L<getpwuid()|perlfunc/getpwuid> function is unavailable (as is often the case on Windows versions of perl) then this default does not apply and the loading of the module named C<Rose::DB::Devel::Init::username> is not attempted.
 
 The C<ROSEDB_DEVINIT> file or module may contain arbitrary Perl code which will be loaded and evaluated in the context of L<Rose::DB>.  Example:
 
