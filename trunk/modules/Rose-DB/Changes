@@ -1,3 +1,8 @@
+0.752_01 (05.14.2009) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: Flesh-out do_transaction() docs: return values and
+      error handling.
+
 0.752 (05.08.2009) - John Siracusa <siracusa@gmail.com>
 
     * Added workaround for the lack of getpwuid() on Windows.
