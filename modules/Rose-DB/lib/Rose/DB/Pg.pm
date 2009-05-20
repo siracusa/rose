@@ -8,7 +8,7 @@ use SQL::ReservedWords::PostgreSQL();
 
 use Rose::DB;
 
-our $VERSION = '0.738';
+our $VERSION = '0.753';
 
 our $Debug = 0;
 
@@ -369,7 +369,6 @@ sub refine_dbi_column_info
     $col_info->{'COLUMN_SIZE'} = undef;
   }
 
-
   # Pg does not populate COLUMN_SIZE correctly for bit fields, so
   # we have to extract the number of bits from pg_type.
   if($col_info->{'pg_type'} =~ /^bit\((\d+)\)$/)
@@ -390,6 +389,14 @@ sub refine_dbi_column_info
       $col_info->{'COLUMN_SIZE'}    = $2;
       $col_info->{'DECIMAL_DIGITS'} = $1;
     }
+  }
+
+  # Treat custom types that look like enums as enums
+  if(ref $col_info->{'pg_enum_values'} && @{$col_info->{'pg_enum_values'}})
+  {
+    $col_info->{'TYPE_NAME'} = 'enum';
+    $col_info->{'RDBO_ENUM_VALUES'} = $col_info->{'pg_enum_values'};
+    $col_info->{'RDBO_DB_TYPE'} = $col_info->{'pg_type'};
   }
 
   # We currently treat all arrays the same, regardless of what they are 

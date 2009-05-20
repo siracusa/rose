@@ -1,5 +1,6 @@
-0.752_01 (05.14.2009) - John Siracusa <siracusa@gmail.com>
+0.752_02 (05.19.2009) - John Siracusa <siracusa@gmail.com>
 
+    * Detect enum-like columns in Postgres.  (RT 46214)
     * TODO: Flesh-out do_transaction() docs: return values and
       error handling.
 
