@@ -23,7 +23,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 our $Triggers_Key      = 'triggers';
 our $Trigger_Index_Key = 'trigger_index';
 
-our $VERSION = '0.776';
+our $VERSION = '0.782';
 
 use overload
 (
@@ -33,7 +33,7 @@ use overload
 
 __PACKAGE__->add_default_auto_method_types('get_set');
 
-__PACKAGE__->add_common_method_maker_argument_names(qw(column default type hash_key smart_modification undef_overrides_default));
+__PACKAGE__->add_common_method_maker_argument_names(qw(column default type db_type hash_key smart_modification undef_overrides_default));
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -374,6 +374,12 @@ sub init_with_dbi_column_info
   elsif($col_info->{'NULLABLE'} == SQL_NULLABLE)
   {
     $self->not_null(0);
+  }
+
+  # DB-native type, if applicable
+  if(my $db_type = $col_info->{'RDBO_DB_TYPE'})
+  {
+    $self->db_type($db_type);
   }
 
   $self->ordinal_position($col_info->{'ORDINAL_POSITION'} || 0);

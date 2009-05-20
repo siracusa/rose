@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 2 + 4;
+use Test::More tests => 2 + 6;
 
 BEGIN 
 {
@@ -17,7 +17,7 @@ foreach my $db_type (qw(pg))
 {
   SKIP:
   {
-    skip("$db_type tests", 4)  unless($Have{$db_type});
+    skip("$db_type tests", 6)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -47,6 +47,9 @@ foreach my $db_type (qw(pg))
 
   ok($comment_class->meta->foreign_key('user1'), "user1 fk - $db_type");
   ok($comment_class->meta->foreign_key('user2'), "user2 fk - $db_type");
+
+  is($comment_class->meta->column('type')->type, 'enum', "enum - $db_type");
+  is($comment_class->meta->column('type')->db_type, 'my_type', "custom type - $db_type");
 }
 
 BEGIN
@@ -70,6 +73,7 @@ BEGIN
       local $dbh->{'PrintError'} = 0;
       $dbh->do('DROP TABLE rdbo_comments');
       $dbh->do('DROP TABLE rdbo_users');
+      $dbh->do('DROP TYPE my_type');
     }
   };
 
@@ -85,11 +89,16 @@ CREATE TABLE rdbo_users
 EOF
 
     $dbh->do(<<"EOF");
+CREATE TYPE my_type AS ENUM ('foo', 'bar')
+EOF
+
+    $dbh->do(<<"EOF");
 CREATE TABLE rdbo_comments
 (
   id        SERIAL NOT NULL PRIMARY KEY,
   user1_id  INTEGER NOT NULL REFERENCES rdbo_users (id),
-  user2_id  INTEGER NOT NULL REFERENCES rdbo_users (id)
+  user2_id  INTEGER NOT NULL REFERENCES rdbo_users (id),
+  type      MY_TYPE
 )
 EOF
 
@@ -108,7 +117,8 @@ END
 
     $dbh->do('DROP TABLE rdbo_comments');
     $dbh->do('DROP TABLE rdbo_users');
-
+    $dbh->do('DROP TYPE my_type');
+    
     $dbh->disconnect;
   }
 }
