@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 234);
+    Test::More->import(tests => 237);
   }
 }
 
@@ -60,6 +60,17 @@ SKIP:
   $db->disconnect;
   $db2->disconnect;
 }
+
+$db = Rose::DB->new();
+
+$db->sslmode('allow');
+is($db->dsn, 'dbi:Pg:dbname=test;host=localhost;sslmode=allow', 'sslmode()');
+
+$db->options('opts');
+is($db->dsn, 'dbi:Pg:dbname=test;host=localhost;options=opts;sslmode=allow', 'options()');
+
+$db->service('srv');
+is($db->dsn, 'dbi:Pg:dbname=test;host=localhost;options=opts;service=srv;sslmode=allow', 'service()');
 
 $db = Rose::DB->new();
 
