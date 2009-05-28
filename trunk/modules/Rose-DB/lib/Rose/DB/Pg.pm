@@ -13,6 +13,18 @@ our $VERSION = '0.753';
 our $Debug = 0;
 
 #
+# Object data
+#
+
+use Rose::Object::MakeMethods::Generic
+(
+  'scalar' =>
+  [
+    qw(sslmode service options)
+  ],
+);
+
+#
 # Object methods
 #
 
@@ -23,13 +35,14 @@ sub build_dsn
   my %info;
 
   $info{'dbname'} = $args{'db'} || $args{'database'};
-  $info{'host'}   = $args{'host'};
-  $info{'port'}   = $args{'port'};
+
+  @info{qw(host port options service sslmode)} =
+    @args{qw(host port options service sslmode)};
 
   return
     "dbi:Pg:" . 
     join(';', map { "$_=$info{$_}" } grep { defined $info{$_} }
-              qw(dbname host port));
+              qw(dbname host port options service sslmode));
 }
 
 sub dbi_driver { 'Pg' }
@@ -589,6 +602,10 @@ Get or set the L<pg_enable_utf8|DBD::Pg/pg_enable_utf8> database handle attribut
 Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
 
 See the L<DBD::Pg|DBD::Pg/pg_enable_utf8> documentation to learn more about this attribute.
+
+=item B<sslmode [MODE]>
+
+Get or set the SSL mode of the connection.  Valid values for MODE are C<disable>, C<allow>, C<prefer>, and C<require>.  This attribute is used to build the L<DBI> L<dsn|Rose::DB/dsn>.  Setting it has no effect until the next L<connect|Rose::DB/connect>ion.  See the L<DBD::Pg|DBD::Pg/connect> documentation to learn more about this attribute.
 
 =back
 

@@ -7,7 +7,7 @@ use Clone::PP();
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.749';
+our $VERSION = '0.753';
 
 our $Debug = 0;
 
@@ -16,7 +16,7 @@ our $Debug = 0;
 #
 
 our %Attrs;
-
+  
 BEGIN
 {
   our %Attrs =
@@ -45,7 +45,10 @@ BEGIN
     # Pg
     european_dates     => { type => 'boolean', method_spec => { default => 0 } },
     pg_enable_utf8     => { type => 'boolean' },
-    
+    options			   => { type => 'scalar' },
+    service			   => { type => 'scalar' },
+    sslmode			   => { type => 'scalar' },
+
     # SQLite
     auto_create => { type => 'boolean', method_spec => { default => 1 } },
 
@@ -528,6 +531,10 @@ Get or set the L<pg_enable_utf8|DBD::Pg/pg_enable_utf8> database handle attribut
 Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
 
 See the L<DBD::Pg|DBD::Pg/pg_enable_utf8> documentation to learn more about this attribute.
+
+=item B<sslmode [MODE]>
+
+Get or set the SSL mode of the connection.  Valid values for MODE are C<disable>, C<allow>, C<prefer>, and C<require>.  See the L<DBD::Pg|DBD::Pg/connect> documentation to learn more about this attribute.
 
 =back
 

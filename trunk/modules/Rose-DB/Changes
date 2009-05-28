@@ -1,9 +1,10 @@
-0.752_02 (05.28.2009) - John Siracusa <siracusa@gmail.com>
+0.752_03 (05.28.2009) - John Siracusa <siracusa@gmail.com>
 
-    * Detect enum-like columns in Postgres.  (RT 46214)
+    * Detect enum-like columns in PostgreSQL.  (RT 46214)
+    * Added support for the "sslmode" DSN option for PostgreSQL.
+      (Reported by foudfou)
     * TODO: Flesh-out do_transaction() docs: return values and
       error handling.
-    * TODO: sslmode parameter (not a connect_option) for Pg
 
 0.752 (05.08.2009) - John Siracusa <siracusa@gmail.com>
 
@@ -123,13 +124,13 @@
       object was given a $dbh that was generated elsewhere.
     * Improved detection of SKIP ... FIRST ... support in Informix.
     * Fixed a bug that prevented certain reserved words from being detected 
-      as primary key columns in Postgres.  (Reported by Fred Cox)
+      as primary key columns in PostgreSQL.  (Reported by Fred Cox)
 
 0.733 (02.23.2007) - John Siracusa <siracusa@gmail.com>
 
     * Schema support enabled for MySQL.
     * Added support for Informix's "datetime year to month" column type.
-    * Tweaked handling of doubled quotes in Postgres default column values.
+    * Tweaked handling of doubled quotes in PostgreSQL default column values.
 
 0.732 (01.15.2007) - John Siracusa <siracusa@gmail.com>
 
@@ -190,7 +191,7 @@
     * Corrected the number of tests in oracle.t and subclass-oracle.t.
       (Reported by Michael Lackhoff)
     * Failure to load a driver class is now a fatal error.
-    * Fixed parsing of empty string default values in Postgres.
+    * Fixed parsing of empty string default values in PostgreSQL.
 
 0.723 (08.10.2006) - John Siracusa <siracusa@gmail.com>
 
@@ -204,7 +205,7 @@
 0.721 (07.14.2006) - John Siracusa <siracusa@gmail.com>
 
     * Added end-of-month mode parameter to parse_interval()
-    * Added to the list of reserved words for Postgres and MySQL.
+    * Added to the list of reserved words for PostgreSQL and MySQL.
 
 0.72 (06.30.2006) - John Siracusa <siracusa@gmail.com>
 
@@ -221,7 +222,7 @@
     * Added Storable hooks.
     * Driver classes no longer inherit from Rose::DB.
     * Improved Oracle DSN generation and quoting.  (Suggested by Todd Lorenz)
-    * Improved parsing of default column values in Postgres databases.
+    * Improved parsing of default column values in PostgreSQL databases.
 
 0.673 (05.12.2006) - John Siracusa <siracusa@gmail.com>
 
@@ -231,7 +232,7 @@
 
 0.672 (04.14.2006) - John Siracusa <siracusa@gmail.com>
 
-    * Translate Postgres's "real" type to the standard "float" type.
+    * Translate PostgreSQL's "real" type to the standard "float" type.
       (Patch from Lucian Dragus)
 
 0.671 (04.04.2006) - John Siracusa <siracusa@gmail.com>
@@ -290,7 +291,7 @@
 
 0.58 (01.05.2006) - John Siracusa <siracusa@gmail.com>
 
-    * Improved parsing of default column values in Postgres.
+    * Improved parsing of default column values in PostgreSQL.
 
 0.57 (12.31.2005) - John Siracusa <siracusa@gmail.com>
 
@@ -298,7 +299,7 @@
 
 0.56 (12.19.2005) - John Siracusa <siracusa@gmail.com>
 
-    * Added support for prepended Postgres arrays (e.g., "[0:3]={3,4,5,6}")
+    * Added support for prepended PostgreSQL arrays (e.g., "[0:3]={3,4,5,6}")
 
 0.55 (12.15.2005) - John Siracusa <siracusa@gmail.com>
 
@@ -333,7 +334,7 @@
     * Driver names are now case-insensitive.
     * Added generic fallback class for unsupported databases.
     * Added the use_private_registry() convenience method.
-    * Added some tweaks to support Postgres 8.1.
+    * Added some tweaks to support PostgreSQL 8.1.
 
 0.031 (10.25.2005) - John Siracusa <siracusa@gmail.com>
 
@@ -371,7 +372,7 @@
 
 0.024 (08.12.2005) - John Siracusa <siracusa@gmail.com>
 
-    * Case-sensitivity fixes for Postgres.
+    * Case-sensitivity fixes for PostgreSQL.
     * Added tentative support for Informix 10's "limit with offset" feature.
 
 0.023 (08.09.2005) - John Siracusa <siracusa@gmail.com>
@@ -380,7 +381,7 @@
 
 0.022 (08.09.2005) - John Siracusa <siracusa@gmail.com>
 
-    * Fixed Postgres column default value parsing.
+    * Fixed PostgreSQL column default value parsing.
 
 0.021 (08.05.2005) - John Siracusa <siracusa@gmail.com>
 
