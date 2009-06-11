@@ -562,7 +562,7 @@ sub make_classes
   my $warn_on_missing_primary_key;
 
   # If not requiring PKs and no explicit decision, either in args or 
-  # in the object, has been made about whether to warn on missking PKs,
+  # in the object, has been made about whether to warn on missing PKs,
   # then don't warn (because not requiring PKs is a strong indication
   # that their absence is not worth a warning)
   if(!$require_primary_key &&
@@ -1458,6 +1458,14 @@ Get or set a reference to a subroutine to be called just before each L<Rose::DB:
 Get or set a boolean value that determines whether or not the L<make_classes|/make_classes> method will skip any table that does not have a primary key will be skipped.  Defaults to true.
 
 Note that a L<Rose::DB::Object>-derived class based on a table with no primary key will not function correctly in all circumstances.  Use this feature at your own risk.
+
+=item B<warn_on_missing_pk BOOL>
+
+This is an alias for the L<warn_on_missing_primary_key|/warn_on_missing_primary_key> method.
+
+=item B<warn_on_missing_primary_key BOOL>
+
+Get or set a boolean value that determines whether or not the L<make_classes|/make_classes> method will emit a warning when it encounters a table that does not have a primary key.  Defaults to undefined.
 
 =item B<with_foreign_keys BOOL>
 
