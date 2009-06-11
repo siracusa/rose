@@ -54,9 +54,12 @@ use Rose::Object::MakeMethods::Generic
     'with_managers'       => { default => 1 },
     'with_foreign_keys'   => { default => 1 },
     'with_unique_keys'    => { default => 1 },
-    'convention_manager_was_set' => { default => 0 },
+    'convention_manager_was_set'  => { default => 0 },
+    'warn_on_missing_primary_key',
   ],
 );
+
+sub warn_on_missing_pk { shift->warn_on_missing_primary_key(@_) }
 
 # Get the best available clone method
 eval 
@@ -542,6 +545,40 @@ sub make_classes
   my $require_primary_key = exists $args{'require_primary_key'} ? 
     delete $args{'require_primary_key'} : $self->require_primary_key;
 
+  # Check for parameter alias conflicts
+  if(exists $args{'warn_on_missing_pk'})
+  {
+    if(exists $args{'warn_on_missing_primary_key'} &&
+       (($args{'warn_on_missing_pk'} ? 1 : 0) != ($args{'warn_on_missing_primary_key'} ? 1 : 0)))
+    {
+      croak "The warn_on_missing_primary_key and warn_on_missing_pk parameters ",
+            "were both passed, and they conflict.  Since these two parameters are ",
+            "aliases for each other, try passing just one.";
+    }
+
+    $args{'warn_on_missing_primary_key'} = delete $args{'warn_on_missing_pk'}; 
+  }
+
+  my $warn_on_missing_primary_key;
+
+  # If not requiring PKs and no explicit decision, either in args or 
+  # in the object, has been made about whether to warn on missking PKs,
+  # then don't warn (because not requiring PKs is a strong indication
+  # that their absence is not worth a warning)
+  if(!$require_primary_key &&
+     ((!exists $args{'warn_on_missing_primary_key'} && !defined $self->warn_on_missing_primary_key) ||
+      exists $args{'warn_on_missing_primary_key'} && !defined $args{'warn_on_missing_primary_key'}))
+  {
+    $warn_on_missing_primary_key = 0;
+  }
+  else
+  {
+    $warn_on_missing_primary_key = exists $args{'warn_on_missing_primary_key'} ? 
+      delete $args{'warn_on_missing_primary_key'} : $self->warn_on_missing_primary_key;
+  }
+
+  $warn_on_missing_primary_key = 0  if(!$require_primary_key);
+
   my $include_views = exists $args{'include_views'} ? 
     delete $args{'include_views'} : $self->include_views;
 
@@ -874,8 +911,18 @@ sub make_classes
     local $_ = $table;
     next  unless(!$filter || $filter->($table));
 
-    # Skip tables with no primary keys
-    next  if($require_primary_key && !$db->has_primary_key($table));
+    unless($db->has_primary_key($table))
+    {
+      if($warn_on_missing_primary_key)
+      {
+        # Warn about tables with no primary keys
+        warn "Warning: table '$table' has no primary key defined.", 
+              ($require_primary_key ? "  Skipping.\n" : "\n");
+      }
+
+      # Skip table if primary keys are required
+      next  if($require_primary_key);
+    }
 
     my $obj_class = $class_prefix . $cm->table_to_class($table);
 
@@ -1311,6 +1358,18 @@ A reference to a subroutine or a reference to an array of code references that w
 =item B<require_primary_key BOOL>
 
 If true, then any table that does not have a primary key will be skipped.  Defaults to the value of the loader object's L<require_primary_key|/require_primary_key> attribute.  Note that a L<Rose::DB::Object>-derived class based on a table with no primary key will not function correctly in all circumstances.  Use this feature at your own risk.
+
+=item B<warn_on_missing_pk BOOL>
+
+This is an alias for the C<warn_on_missing_primary_key> parameter.
+
+=item B<warn_on_missing_primary_key BOOL>
+
+If true, then any table that does not have a primary key will trigger a warning.
+
+If C<require_primary_key> is false and the loader object's L<warn_on_missing_primary_key|/warn_on_missing_primary_key> attribute is undefined, or if the C<warn_on_missing_primary_key> parameter is set to an undefined valur or is not passed to the L<make_classes|/make_classes> call at all, then C<warn_on_missing_primary_key> is set to false.  Otherwise, it defaults to the value of the loader object's L<warn_on_missing_primary_key|/warn_on_missing_primary_key> attribute.  Note that a L<Rose::DB::Object>-derived class based on a table with no primary key will not function correctly in all circumstances.
+
+These complicated defaults are intended to honor the intentions of the C<require_primary_key> attribute/parameter.  If not requiring primary keys and no explicit decision has been made about whether to warn about missing primary keys, either in the parameters to the  L<make_classes|/make_classes> call or in the loader object itself, then we don't warn about missing primary keys.  The idea is that not requiring primary keys is a strong indication that their absence is not worth a warning.
 
 =item B<with_foreign_keys BOOL>
 

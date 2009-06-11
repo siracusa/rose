@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 27) + 9;
+use Test::More tests => 1 + (5 * 32) + 9;
 
 BEGIN 
 {
@@ -42,7 +42,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     unless($Have{$db_type})
     {
-      skip("$db_type tests", 27 + scalar @{$Reserved_Words{$db_type} ||= []});
+      skip("$db_type tests", 32 + scalar @{$Reserved_Words{$db_type} ||= []});
     }
   }
 
@@ -69,10 +69,65 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
       ($db_type eq 'mysql' ? (require_primary_key => 0) : ()),
       pre_init_hook => sub { $pre_init_hook++ });
 
+  my %extra_loader_args;
+
+  if($db_type eq 'sqlite')
+  {
+    $loader->warn_on_missing_primary_key(0);
+    $loader->warn_on_missing_pk(1);
+  }
+  elsif($db_type eq 'mysql')
+  {
+    $loader->warn_on_missing_pk(0);
+    $loader->warn_on_missing_primary_key(1);
+    $extra_loader_args{'warn_on_missing_pk'} = undef;
+    $extra_loader_args{'warn_on_missing_primary_key'} = undef;
+  }
+
   $loader->convention_manager($i % 2 ? 'MyCM' : MyCM->new);
 
-  my @classes = $loader->make_classes(include_tables => $Include_Tables . 
-                                      ($db_type eq 'mysql' ? '|read' : ''));
+  my @classes;
+
+  my $i = 0;
+
+  # Test aliased parameter conflicts
+  foreach my $a (0, 1, undef)
+  {
+    foreach my $b (0, 1, undef)
+    {
+      if(($a || 0) != ($b || 0))
+      {
+        $i++;
+
+        eval
+        {
+          $loader->make_classes(warn_on_missing_pk => $a,
+                                warn_on_missing_primary_key => $b);
+        };
+
+        ok($@, "warn_on_missing_pk conflict $i - $db_type");
+      }      
+    }
+  }
+
+  CATCH_WARNINGS:
+  {
+    my $warnings;
+    local $SIG{'__WARN__'} = sub { $warnings .= "@_\n" };
+    @classes = $loader->make_classes(include_tables => $Include_Tables . 
+                                     ($db_type eq 'mysql' ? '|read' : ''),
+                                     %extra_loader_args);
+
+    if($db_type eq 'sqlite')
+    {
+      ok($warnings =~ /\QWarning: table 'no_pk_test' has no primary key defined.  Skipping./,
+         "warn_on_missing_primary_key - $db_type");
+    }
+    else
+    {
+      is($warnings, undef, "warn_on_missing_primary_key - $db_type");
+    }
+  }
 
   ok(scalar keys %JCS::Called_Custom_CM >= 3, "custom convention manager - $db_type");
   ok($pre_init_hook > 0, "pre_init_hook - $db_type");
