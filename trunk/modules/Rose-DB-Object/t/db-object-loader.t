@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 32) + 9;
+use Test::More tests => 1 + (5 * 33) + 9;
 
 BEGIN 
 {
@@ -42,7 +42,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     unless($Have{$db_type})
     {
-      skip("$db_type tests", 32 + scalar @{$Reserved_Words{$db_type} ||= []});
+      skip("$db_type tests", 33 + scalar @{$Reserved_Words{$db_type} ||= []});
     }
   }
 
@@ -186,6 +186,16 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   else
   {
     SKIP: { skip("serial coercion test for $db_type", 1) }
+  }
+
+  if($db_type =~ /^pg(?:_with_schema)?$/)
+  {
+    my $uk = $product_class->meta->unique_key_by_name('products_uk_test');
+    ok($uk && $uk->has_predicate, "unique index with predicate - $db_type");
+  }
+  else
+  {
+    SKIP: { skip("unique index with predicate for $db_type", 1) }
   }
 
   if($db_type eq 'mysql' && $db->dbh->{'Driver'}{'Version'} >= 4.002)
@@ -429,6 +439,10 @@ CREATE TABLE products
 EOF
 
     $dbh->do(<<"EOF");
+CREATE UNIQUE INDEX products_uk_test ON products (date_created) WHERE status = 'inactive';
+EOF
+
+    $dbh->do(<<"EOF");
 CREATE UNIQUE INDEX products_uk1 ON products (LOWER(name))
 EOF
 
@@ -516,6 +530,10 @@ CREATE TABLE Rose_db_object_private.products
 
   UNIQUE(name)
 )
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE UNIQUE INDEX products_uk_test ON Rose_db_object_private.products (date_created) WHERE status = 'inactive';
 EOF
 
     $dbh->do(<<"EOF");
