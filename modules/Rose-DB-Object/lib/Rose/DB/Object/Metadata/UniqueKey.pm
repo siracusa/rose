@@ -7,14 +7,16 @@ use Rose::DB::Object::Metadata::Util qw(perl_quote_value);
 use Rose::DB::Object::Metadata::ColumnList;
 our @ISA = qw(Rose::DB::Object::Metadata::ColumnList);
 
-our $VERSION = '0.631';
+our $VERSION = '0.782';
 
 use Rose::Object::MakeMethods::Generic
 (
   'scalar --get_set_init' =>
   [
     'name'
-  ]
+  ],
+
+  boolean => 'has_predicate',
 );
 
 sub init_name { join('_', shift->column_names) || undef }
