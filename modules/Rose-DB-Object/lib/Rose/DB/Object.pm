@@ -16,7 +16,7 @@ use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Exception;
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.781_03';
+our $VERSION = '0.781_04';
 
 our $Debug = 0;
 
@@ -1545,8 +1545,16 @@ EOF
     }
   };
 
-  $AUTOLOAD =~ /^(.+)::(\w+)$/;
-  Carp::confess qq(Can't locate object method "$2" via package "$1"$msg);
+  my $method_type = ref $self ? 'object' : 'class';
+
+  if($AUTOLOAD =~ /^(.+)::(.+)$/)
+  {
+    Carp::confess qq(Can't locate $method_type method "$2" via package "$1"$msg);
+  }
+  else # notreached?
+  {
+    Carp::confess qq(Can't locate $method_type method $AUTOLOAD$msg);
+  }
 }
 
 sub DESTROY { }

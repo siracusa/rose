@@ -1,9 +1,10 @@
-0.781_03 (06.16.2009) - John Siracusa <siracusa@gmail.com>
+0.781_04 (06.18.2009) - John Siracusa <siracusa@gmail.com>
 
     * Altered tests to confirm the fix for RT 45836.
     * Detect enum-like columns in Postgres.  (RT 46214)
     * Added optional warning to the Loader for missing primary keys.
       (Patch by rheoled)
+    * Improved unknown method error messages.  (Suggested by Brian Miller)
 	* TODO: Figure out which UK to use when load()ing via a ForeignKey
     * TODO: SQL injection via foo() keywords?
     * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
