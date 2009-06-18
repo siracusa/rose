@@ -577,8 +577,6 @@ sub make_classes
       delete $args{'warn_on_missing_primary_key'} : $self->warn_on_missing_primary_key;
   }
 
-  $warn_on_missing_primary_key = 0  if(!$require_primary_key);
-
   my $include_views = exists $args{'include_views'} ? 
     delete $args{'include_views'} : $self->include_views;
 
