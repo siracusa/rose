@@ -25,7 +25,7 @@ eval { require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.777';
+our $VERSION = '0.782';
 
 our $Debug = 0;
 
@@ -68,6 +68,7 @@ use Rose::Object::MakeMethods::Generic
     default_insert_changes_only => { default => 0 },
     default_cascade_save        => { default => 0 },
     default_smart_modification  => { default => 0 },
+    include_predicated_unique_indexes => { default => 0 },
   ],
 
   'array --get_set_inited' =>
@@ -5477,6 +5478,18 @@ Given the L<Rose::DB>-derived object DB, generate and return a list of new prima
 If a L<primary_key_generator|/primary_key_generator> is defined, it will be called (passed this metadata object and the DB) and its value returned.
 
 If no L<primary_key_generator|/primary_key_generator> is defined, new primary key values will be generated, if possible, using the native facilities of the current database.  Note that this may not be possible for databases that auto-generate such values only after an insertion.  In that case, undef will be returned.
+
+=item B<include_predicated_unique_indexes [BOOL]>
+
+Get or set a boolean value that indicates whether or not the L<auto_init_unique_keys|/auto_init_unique_keys> method will create L<unique keys|/add_unique_keys> for unique indexes that have predicates.  The default value is false.  This feature is currently only suppported for PostgreSQL.
+
+Here's an example of a unique index that has a predicate:
+
+    CREATE UNIQUE INDEX my_idx ON mytable (mycolumn) WHERE mycolumn > 123;
+
+The predicate in this case is C<WHERE mycolumn E<gt> 123>.
+
+Predicated unique indexes differ semantically from unpredicated unique indexes in that predicates generally cause the index to only  apply to part of a table.  L<Rose::DB::Object> expects L<unique indexes|Rose::DB::Object::Metadata::UniqueKey> to uniquely identify a row within a table.  Predicated indexes that fail to do so due to their predicates should therefore not have L<Rose::DB::Object::Metadata::UniqueKey> objects created for them, thus the false default for this attribute.
 
 =item B<init_convention_manager>
 

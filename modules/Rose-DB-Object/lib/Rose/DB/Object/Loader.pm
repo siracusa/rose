@@ -17,7 +17,7 @@ use Rose::DB::Object::Metadata::Auto;
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.770';
+our $VERSION = '0.782';
 
 our $Debug = 0;
 
@@ -56,6 +56,7 @@ use Rose::Object::MakeMethods::Generic
     'with_unique_keys'    => { default => 1 },
     'convention_manager_was_set'  => { default => 0 },
     'warn_on_missing_primary_key',
+    'include_predicated_unique_indexes' => { default => 0 },
   ],
 );
 
@@ -983,6 +984,13 @@ sub make_classes
     $meta->convention_manager($cm->clone);
     $meta->db($db);
 
+    my $include_predicated_unique_indexes = 
+      exists $args{'include_predicated_unique_indexes'} 
+        ? delete $args{'include_predicated_unique_indexes'} 
+        : $self->include_predicated_unique_indexes;
+
+    $meta->include_predicated_unique_indexes($include_predicated_unique_indexes);
+
     $meta->auto_initialize(%args);
 
     push(@classes, $obj_class);
@@ -1305,6 +1313,10 @@ Get or set a regular expression or reference to an array of table names to inclu
 
 Table names are compared to REGEX and the names in ARRAYREF in a case-insensitive manner.  To override this in the case of the REGEX, add C<(?-i)> to the front of the REGEX.  Otherwise, use the L<filter_tables|/filter_tables> method instead.
 
+=item B<include_predicated_unique_indexes BOOL>
+
+Get or set a boolean value that will be assigned to the L<include_predicated_unique_indexes|Rose::DB::Object::Metadata/include_predicated_unique_indexes> attribute of the L<Rose::DB::Object::Metadata> object for each class created by the L<make_classes|/make_classes> method.  The default value is false.
+
 =item B<include_views BOOL>
 
 If true, database views will also be processed by default during calls to the L<make_classes|/make_classes> method.  Defaults to false.
@@ -1340,6 +1352,10 @@ Table names are compared to REGEX and the names in ARRAYREF in a case-insensitiv
 A reference to a subroutine that takes a single table name argument and returns true if the table should be processed, false if it should be skipped.  The C<$_> variable will also be set to the table name before the call.  This parameter cannot be combined with the C<exclude_tables> or C<include_tables> options.
 
 Defaults to the value of the loader object's L<filter_tables|/filter_tables> attribute, provided that both the C<exclude_tables> and C<include_tables> values are undefined.  Tables without primary keys are automatically skipped.
+
+=item B<include_predicated_unique_indexes BOOL>
+
+This value will be assigned to the L<include_predicated_unique_indexes|Rose::DB::Object::Metadata/include_predicated_unique_indexes> attribute of the L<Rose::DB::Object::Metadata> object for each class created by this method.  Defaults to the value of the loader object's L<include_predicated_unique_indexes|/include_predicated_unique_indexes> attribute.
 
 =item B<include_views BOOL>
 

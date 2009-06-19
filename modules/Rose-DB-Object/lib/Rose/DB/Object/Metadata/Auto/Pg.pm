@@ -9,6 +9,8 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
+our $Debug;
+
 our $VERSION = '0.782';
 
 # Other useful columns, not selected for now
@@ -85,14 +87,28 @@ sub auto_generate_unique_keys
 
     while($sth->fetch)
     {
+      # See if we need to ignore predicated unique indices.  The semantics 
+      # of predicated indexes, e.g.,
+      #
+      #    CREATE UNIQUE INDEX ... WHERE column = 'value'
+      #
+      # are different from RDBO's unique key semantics in that predicates
+      # (may) cause the index to apply only partially to the table.
+      if($has_predicate && !$self->include_predicated_unique_indexes)
+      {
+        $Debug && warn "$class - Skipping predicated unique index $key_name\n";
+        next;
+      }
+
+      # Skip functional indexes (e.g., "... ON (LOWER(name))") which show up
+      # as having a pg_index.indkey ($column_nums) value of 0.
+      next  if($column_nums eq '0'); 
+
       my $uk = 
         Rose::DB::Object::Metadata::UniqueKey->new(
           name          => $key_name,
           parent        => $self,
           has_predicate => $has_predicate);
-
-      # Functional indexes show up this way, e.g. "... ON (LOWER(name))"
-      next  if($column_nums eq '0'); 
 
       # column_nums is a space-separated list of numbers.  It's really an
       # "in2vector" data type, which seems sketchy to me, but whatever. 
