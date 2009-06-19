@@ -76,6 +76,10 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     $loader->warn_on_missing_primary_key(0);
     $loader->warn_on_missing_pk(1);
   }
+  elsif($db_type eq 'pg')
+  {
+    $loader->include_predicated_unique_indexes(1);
+  }
   elsif($db_type eq 'mysql')
   {
     $loader->warn_on_missing_pk(0);
@@ -188,10 +192,15 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     SKIP: { skip("serial coercion test for $db_type", 1) }
   }
 
-  if($db_type =~ /^pg(?:_with_schema)?$/)
+  if($db_type eq 'pg')
   {
     my $uk = $product_class->meta->unique_key_by_name('products_uk_test');
-    ok($uk && $uk->has_predicate, "unique index with predicate - $db_type");
+    ok($uk && $uk->has_predicate, "include unique index with predicate - $db_type");
+  }
+  elsif($db_type eq 'pg_with_schema')
+  {
+    my $uk = $product_class->meta->unique_key_by_name('products_uk_test');
+    ok(!$uk, "skip unique index with predicate - $db_type");
   }
   else
   {

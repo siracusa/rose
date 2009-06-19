@@ -1,8 +1,13 @@
-0.781_04 (06.18.2009) - John Siracusa <siracusa@gmail.com>
+0.781_05 (06.19.2009) - John Siracusa <siracusa@gmail.com>
 
     * Altered tests to confirm the fix for RT 45836.
-    * Detect enum-like columns in Postgres.  (RT 46214)
+    * Detect enum-like columns in PostgreSQL.  (RT 46214)
     * Added optional warning to the Loader for missing primary keys.
+      (Patch by rheoled)
+    * Unique indexes that have predicates are now skipped by the auto-
+      initialization process.  Use the include_predicated_unique_indexes
+      Metadata attribute and/or Loader attribute to override the default.
+      This feature is currently only supported in PostgreSQL.
       (Patch by rheoled)
     * Improved unknown method error messages.  (Suggested by Brian Miller)
 	* TODO: Figure out which UK to use when load()ing via a ForeignKey
