@@ -392,6 +392,8 @@ sub load
 
     # The load() query shouldn't find more than one row anyway, 
     # but DBD::SQLite demands this :-/
+    # XXX: Recent versions of DBD::SQLite seem to have cured this.
+    # XXX: Safe to remove?
     $sth->finish;
 
     if($loaded_ok)
