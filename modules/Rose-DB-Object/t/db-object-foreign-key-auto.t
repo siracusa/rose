@@ -2410,7 +2410,7 @@ EOF
     sub auto_alias_columns
     {
       my($self) = shift;
-    
+
       foreach my $column (@_)
       {
         if($column->name eq 'fk1')     { $column->alias('fkone') }

@@ -541,7 +541,7 @@ EOF
     {
       local $dbh->{'PrintError'} = 0;
       eval { $dbh->do($sql) };
-      
+
       if($@)
       {
         warn $@  unless($@ =~ /language "plpgsql" does not exist/);

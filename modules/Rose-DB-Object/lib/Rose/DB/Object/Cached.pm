@@ -319,21 +319,21 @@ Rose::DB::Object::Cached - Memory cached object representation of a single row i
 
   package Category;
 
-  use Rose::DB::Object::Cached;
-  our @ISA = qw(Rose::DB::Object::Cached);
+  use base 'Rose::DB::Object::Cached';
 
-  __PACKAGE__->meta->table('categories');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id          => { type => 'int', primary_key => 1 },
-    name        => { type => 'varchar', length => 255 },
-    description => { type => 'text' },
+    table => 'categories',
+
+    columns =>
+    [
+      id          => { type => 'int', primary_key => 1 },
+      name        => { type => 'varchar', length => 255 },
+      description => { type => 'text' },
+    ],
+
+    unique_key => 'name',
   );
-
-  __PACKAGE__->meta->add_unique_key('name');
-
-  __PACKAGE__->meta->initialize;
 
   ...
 

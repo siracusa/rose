@@ -65,67 +65,64 @@ Rose::DB::Object::Std - Standardized object representation of a single row in a 
 
   package Category;
 
-  use Rose::DB::Object::Std;
-  our @ISA = qw(Rose::DB::Object::Std);
+  use base 'Rose::DB::Object::Std';
 
-  __PACKAGE__->meta->table('categories');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id          => { type => 'int', primary_key => 1 },
-    name        => { type => 'varchar', length => 255 },
-    description => { type => 'text' },
+    table => 'categories',
+
+    columns =>
+    [
+      id          => { type => 'int', primary_key => 1 },
+      name        => { type => 'varchar', length => 255 },
+      description => { type => 'text' },
+    ],
+
+    unique_key => 'name',
   );
-
-  __PACKAGE__->meta->add_unique_key('name');
-
-  __PACKAGE__->meta->initialize;
 
   ...
 
   package Product;
 
-  use Rose::DB::Object::Std;
-  our @ISA = qw(Rose::DB::Object::Std);
+  use base 'Rose::DB::Object::Std';
 
-  __PACKAGE__->meta->table('products');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id          => { type => 'int', primary_key => 1 },
-    name        => { type => 'varchar', length => 255 },
-    description => { type => 'text' },
-    category_id => { type => 'int' },
+    table => 'products',
 
-    status => 
-    {
-      type      => 'varchar', 
-      check_in  => [ 'active', 'inactive' ],
-      default   => 'inactive',
-    },
+    columns =>
+    [
+      id          => { type => 'int', primary_key => 1 },
+      name        => { type => 'varchar', length => 255 },
+      description => { type => 'text' },
+      category_id => { type => 'int' },
 
-    start_date  => { type => 'datetime' },
-    end_date    => { type => 'datetime' },
-
-    date_created     => { type => 'timestamp', default => 'now' },  
-    last_modified    => { type => 'timestamp', default => 'now' },
-  );
-
-  __PACKAGE__->meta->add_unique_key('name');
-
-  __PACKAGE__->meta->foreign_keys
-  (
-    category =>
-    {
-      class       => 'Category',
-      key_columns =>
+      status => 
       {
-        category_id => 'id',
-      }
-    },
-  );
+        type      => 'varchar', 
+        check_in  => [ 'active', 'inactive' ],
+        default   => 'inactive',
+      },
 
-  __PACKAGE__->meta->initialize;
+      start_date  => { type => 'datetime' },
+      end_date    => { type => 'datetime' },
+
+      date_created     => { type => 'timestamp', default => 'now' },  
+      last_modified    => { type => 'timestamp', default => 'now' },
+    ],
+
+    unique_key => 'name',
+
+    foreign_keys =>
+    [
+      category =>
+      {
+        class       => 'Category',
+        key_columns => { category_id => 'id' },
+      },
+    ],
+  );
 
   ...
 

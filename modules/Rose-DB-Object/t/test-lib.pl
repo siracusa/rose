@@ -419,7 +419,7 @@ sub nonpersistent_column_definitions
 sub modify_nonpersistent_column_values
 {
   my($object) = shift;
-  
+
   foreach my $column ($object->meta->nonpersistent_columns)
   {
     my $method = $column->mutator_method_name;
@@ -431,7 +431,7 @@ sub add_nonpersistent_columns_and_methods
 {
   my($class) = shift;
   my $meta = $class->meta;
-  
+
   $meta->add_columns(nonpersistent_column_definitions());
   $meta->make_nonpersistent_column_methods();
 }

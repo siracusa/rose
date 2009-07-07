@@ -838,11 +838,9 @@ Rose::DB::Object::ConventionManager - Provide missing metadata by convention.
 
   package My::Product;
 
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
+  use base 'Rose::DB::Object';
 
-  __PACKAGE__->meta->columns(...);
-  __PACKAGE__->meta->initialize;
+  __PACKAGE__->meta->setup(columns => [ ... ]);
 
   # No table is set above, but look at this: the
   # convention manager provided one for us.
@@ -1412,8 +1410,7 @@ Now the classes:
   # Rose::DB subclass to handle the db connection
   package My::DB;
 
-  use Rose::DB;
-  our @ISA = qw(Rose::DB);
+  use base 'Rose::DB';
 
   My::DB->register_db
   (
@@ -1431,8 +1428,7 @@ Now the classes:
 
   use My::DB;
 
-  use Rose::DB::Object;
-  our @ISA = qw(Rose::DB::Object);
+  use base 'Rose::DB::Object';
 
   sub init_db { My::DB->new }
 
@@ -1440,83 +1436,86 @@ Now the classes:
 
   package My::Price;
 
-  use My::Object;
-  our @ISA = qw(My::Object);
+  use base 'My::Object';
 
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    price_id   => { type => 'serial', not_null => 1 },
-    product_id => { type => 'int' },
-    region     => { type => 'char', length => 2, default => 'US' },
-    price      => { type => 'decimal', precision => 10, scale => 2 },
-  );
+    columns =>
+    [
+      price_id   => { type => 'serial', not_null => 1 },
+      product_id => { type => 'int' },
+      region     => { type => 'char', length => 2, default => 'US' },
+      price      => { type => 'decimal', precision => 10, scale => 2 },
+    ],
 
-  __PACKAGE__->meta->foreign_keys(qw(product));
-  __PACKAGE__->meta->initialize;
+    foreign_keys => [ 'product' ],
+  );
 
   ...
 
   package My::Vendor;
 
-  use My::Object;
-  our @ISA = qw(My::Object);
+  use base 'My::Object';
 
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id    => { type => 'serial', not_null => 1 },
-    name  => { type => 'varchar', length => 255 },
+    columns =>
+    [
+      id    => { type => 'serial', not_null => 1 },
+      name  => { type => 'varchar', length => 255 },
+    ],
   );
-  __PACKAGE__->meta->initialize;
 
   ...
 
   package My::Color;
 
-  use My::Object;
-  our @ISA = qw(My::Object);
+  use base 'My::Object';
 
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    code => { type => 'char', length => 3, not_null => 1 },
-    name => { type => 'varchar', length => 255 },
+    columns =>
+    [
+      code => { type => 'char', length => 3, not_null => 1 },
+      name => { type => 'varchar', length => 255 },
+    ],
   );
-
-  __PACKAGE__->meta->initialize;
 
   ...
 
   package My::Product;
 
-  use My::Object;
-  our @ISA = qw(My::Object);
+  use base 'My::Object';
 
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id        => { type => 'serial', not_null => 1 },
-    name      => { type => 'varchar', length => 255 },
-    vendor_id => { type => 'int' },
+    columns =>
+    [
+      id        => { type => 'serial', not_null => 1 },
+      name      => { type => 'varchar', length => 255 },
+      vendor_id => { type => 'int' },
+    ],
+
+    foreign_keys => [ 'vendor' ],
+
+    relationships =>
+    [
+      prices => { type => 'one to many' },
+      colors => { type => 'many to many' },
+    ],
   );
-
-  __PACKAGE__->meta->foreign_keys(qw(vendor));
-
-  __PACKAGE__->meta->relationships
-  (
-    prices => { type => 'one to many' },
-    colors => { type => 'many to many' },
-  );
-
-  __PACKAGE__->meta->initialize;
 
   ...
 
   package My::ProductColors;
 
-  use My::Object;
-  our @ISA = qw(My::Object);
+  use base 'My::Object';
 
-  __PACKAGE__->meta->columns(qw(id product_id color_code));
-  __PACKAGE__->meta->foreign_keys(qw(product color));
-  __PACKAGE__->meta->initialize;
+  __PACKAGE__->meta->setup
+  (
+    columns      => [ qw(id product_id color_code) ],
+    foreign_keys => [ 'product', 'color' ],
+  );
 
 Let's add some data:
 

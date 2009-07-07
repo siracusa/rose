@@ -1,4 +1,4 @@
-0.781_03 (06.23.2009) - John Siracusa <siracusa@gmail.com>
+0.781_07 (07.07.2009) - John Siracusa <siracusa@gmail.com>
 
     * Altered tests to confirm the fix for RT 45836.
     * Detect enum-like columns in PostgreSQL.  (RT 46214)
@@ -12,6 +12,7 @@
       This feature is currently only supported in PostgreSQL.
       (Patch by rheoled)
     * Improved unknown method error messages.  (Suggested by Brian Miller)
+    * Updated some example code in the documentation.
     * TODO: Figure out which UK to use when load()ing via a ForeignKey
     * TODO: SQL injection via foo() keywords?
     * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
@@ -136,7 +137,7 @@
 0.7713 (09.16.2008) - John Siracusa <siracusa@gmail.com>
 
     * More test skipping fixes.
-    
+
 0.7712 (09.15.2008) - John Siracusa <siracusa@gmail.com>
 
     * Improved detection of broken DBD::SQLite versions.
