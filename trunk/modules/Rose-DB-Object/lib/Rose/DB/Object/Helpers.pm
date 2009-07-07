@@ -113,7 +113,7 @@ sub load_or_insert
       $ret = $self->load(@_, speculative => 1);
       return $ret  if($ret); # return from eval
     }
-    
+
     return 0; # return from eval
   };
 
@@ -152,7 +152,7 @@ sub load_or_save
       $ret = $self->load(@_, speculative => 1);
       return $ret  if($ret); # return from eval
     }
-    
+
     return 0; # return from eval
   };
 
@@ -193,7 +193,7 @@ sub insert_or_update
   my $clone = bless { %$self }, ref($self);
 
   my $loaded;
-  
+
   # Ignore any errors due to missing primary/unique keys
   eval { $loaded = $clone->load(speculative => 1) };
 
@@ -954,7 +954,7 @@ sub dirty_columns
           $column->name : $column;
       Rose::DB::Object::Util::set_column_value_modified($self, $name);
     }
-  
+
     return;
   }
 

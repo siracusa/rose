@@ -1133,7 +1133,7 @@ SKIP: foreach my $db_type ('sqlite')
   ok(!$o->load(speculative => 1), "load() speculative explicit 2 - $db_type");
   eval { $o->load(speculative => 0) };
   ok($@, "load() non-speculative explicit 2 - $db_type");
-  
+
   #
   # Test SQLite BLOB support
   #

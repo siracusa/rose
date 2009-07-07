@@ -22,21 +22,21 @@ Rose::DB::Object::Std::Cached - Memory cached standardized object representation
 
   package Category;
 
-  use Rose::DB::Object::Std::Cached;
-  our @ISA = qw(Rose::DB::Object::Std::Cached);
+  use base 'Rose::DB::Object::Std::Cached';
 
-  __PACKAGE__->meta->table('categories');
-
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id          => { type => 'int', primary_key => 1 },
-    name        => { type => 'varchar', length => 255 },
-    description => { type => 'text' },
+    table => 'categories',
+
+    columns =>
+    [
+      id          => { type => 'int', primary_key => 1 },
+      name        => { type => 'varchar', length => 255 },
+      description => { type => 'text' },
+    ],
+
+    unique_key => 'name',
   );
-
-  __PACKAGE__->meta->add_unique_key('name');
-
-  __PACKAGE__->meta->initialize;
 
   ...
 

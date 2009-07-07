@@ -1009,7 +1009,7 @@ INIT_WITH_TREE_BUG:
   is($user_archive->id, 11647, 'init_with_tree() columns first bug 1');
   is($user_archive->user_emails->[0]->user_id, 11647, 'init_with_tree() columns first bug 2');
   is($user_archive->user_phones->[0]->user_id, 11647, 'init_with_tree() columns first bug 3');
-  
+
   $tree = as_tree($user_archive);
 
   is($tree->{'user_phones'}[0]{'user_id'}, 11647, 'as_tree() traverse fks');

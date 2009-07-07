@@ -2937,7 +2937,7 @@ sub objects_by_key
       }
 
       $args{'multi_many_ok'} = 1;
-      
+
       # Make query for object count
       eval
       {
@@ -3068,7 +3068,7 @@ sub objects_by_key
       {
         $args{$k} = $v  unless(exists $args{$k});
       }
-      
+
       # Make query for object list
       eval
       {
@@ -5659,7 +5659,7 @@ sub objects_by_map
               {
                 # (Re)connect map record to self
                 $map_record->init(%method_map_to_self);
-      
+
                 # (Re)connect map record to remote object
                 while(my($map_method, $remote_method) = each(%map_method_to_remote_method))
                 {
@@ -5828,9 +5828,9 @@ sub __check_and_merge
 
     Rose::DB::Object::Helpers::init_with_column_value_pairs($clone, 
       Rose::DB::Object::Helpers::key_column_value_pairs($object));
-  
+
     my $ret;
-  
+
     # Ignore any errors due to missing primary keys
     eval 
     {
@@ -5847,7 +5847,7 @@ sub __check_and_merge
         die $error;
       }
     }
-    
+
     # $object represents and existing row
     if($ret)
     {
@@ -5880,7 +5880,7 @@ sub __check_and_merge
 
       # Merge the column values from the db into the new $object.
       my %modified = map { $_ => 1 } Rose::DB::Object::Helpers::dirty_columns($object);
-  
+
       # Simulate loading
       local $object->{STATE_LOADING()}  = 1;    
 
@@ -5889,13 +5889,13 @@ sub __check_and_merge
       {
         # Values from the db only overwrite unmodified columns.
         next  if($modified{$column->{'name'}}); # XXX: Performance cheat
-  
+
         my $mutator_method  = $column->mutator_method_name;
         my $accessor_method = $column->accessor_method_name;
-  
+
         $object->$mutator_method($clone->$accessor_method());
       }
-  
+
       $object->{STATE_IN_DB()} = 1;
     }
 

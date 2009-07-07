@@ -3038,7 +3038,7 @@ SKIP: foreach my $db_type ('mysql')
   $o->add_other2_objs2($o2);
   $o2->name('John2');
   $o->save;
-  
+
   $o2 = MyMySQLOtherObject2->new(id => $o2->id)->load;
 
   is($o2->pid, $o->id, "fk hook-up 1 - $db_type");
@@ -5295,7 +5295,7 @@ SKIP: foreach my $db_type ('sqlite')
 
   ok($fos2[0] eq $fos[0], "find one to many from_cache 1 - $db_type");
   ok($fos2[1] eq $fos[1], "find one to many from_cache 2 - $db_type");
-  
+
   ok(my $o2objects_iterator = $o->other2_objs_iterator, "other2_objs_iterator - $db_type");
   ok($o2objects_iterator->isa('Rose::DB::Object::Iterator'), "isa Iterator - $db_type");
 
@@ -6305,7 +6305,7 @@ SKIP: foreach my $db_type ('sqlite')
   is(join(',', sort map { $_->name } $o->colors), 'za2,zb2,zc2', "Multiple add_on_save many-to-many 3 - $db_type");
 
   # End multiple add_on_save tests
-  
+
   # Start fk hook-up tests
 
   $o2 = MySQLiteOtherObject2->new(name => 'B', pid => 11);
@@ -6316,7 +6316,7 @@ SKIP: foreach my $db_type ('sqlite')
   $o->add_other2_objs2($o2);
   $o2->name('John2');
   $o->save;
-  
+
   $o2 = MySQLiteOtherObject2->new(id => $o2->id)->load;
 
   is($o2->pid, $o->id, "fk hook-up 1 - $db_type");
@@ -7694,7 +7694,7 @@ EOF
         query_args => [ id => { ne_sql => 'pid' } ],
       },
     );    
-    
+
     MySQLiteObject->meta->alias_column(fk1 => 'fkone');
 
     MySQLiteObject->meta->add_relationship
@@ -7817,7 +7817,7 @@ EOF
         #column_map => { id => 'pid' },
         query_args => [ id => { ne_sql => 'pid' } ],
       },
-      
+
       # manager_*_methods
       custom_manager_method_other2_objs =>
       {
@@ -7839,7 +7839,7 @@ EOF
           get_set_on_save => undef,
         },
       },
-      
+
       custom_manager_method_other_obj_msoft =>
       {
         type => 'many to one',
@@ -7857,7 +7857,7 @@ EOF
       },
 
     );    
-    
+
     MySQLiteObject->meta->alias_column(fk1 => 'fkone');
 
     MySQLiteObject->meta->add_relationship
@@ -7946,17 +7946,17 @@ EOF
     );
 
     MySQLiteOtherObject2->meta->initialize;
-    
+
     # Manager used only for custom manager_*_methods
     package MySQLiteOtherObject2::Manager;
-    
+
     sub other2_objs          { 'ima-get-objects' }
     sub other2_objs_count    { 'ima-count' }
     sub other2_objs_iterator { 'ima-iterator' }
     sub other2_objs_find     { 'ima-find' }
-    
+
     package MySQLiteOtherObject::Manager;
-    
+
     sub other_obj_delete { 'ima-delete' } # TODO this not yet exercised
 
     package MySQLiteColor;
@@ -8040,7 +8040,7 @@ sub test_meta
       with_column_triggers => 1,
     },
   );
-  
+
   is(scalar @{$meta->foreign_keys}, 1, "proxy relationships 1 - $db_type");
   is(scalar @{$meta->relationships}, 2, "proxy relationships 2 - $db_type");
 

@@ -1207,7 +1207,7 @@ sub _add_columns
     push(@{$self->{'columns_ordered'}}, @columns);
     $self->_clear_column_generated_values;
   }
-  
+
   if(@nonpersistent_columns)
   {
     push(@{$self->{'nonpersistent_columns_ordered'}}, @nonpersistent_columns);
@@ -1256,7 +1256,7 @@ sub relationships
 sub delete_relationships
 {
   my($self) = shift;
-  
+
   # Delete everything except fk proxy relationships
   foreach my $name (keys %{$self->{'relationships'} || {}})
   {
@@ -1615,7 +1615,7 @@ sub delete_foreign_keys
       }
     }
   }
-  
+
   # Delete fks
   $self->{'foreign_keys'} = {};
 
@@ -3143,7 +3143,7 @@ sub nonpersistent_column_accessor_method_names_hash { shift->{'nonpersistent_col
 sub key_column_accessor_method_names_hash
 {
   my($self) = shift;
-  
+
   return $self->{'key_column_accessor_method'}  if($self->{'key_column_accessor_method'});
 
   foreach my $column (grep { ref } $self->primary_key_columns)
@@ -3158,7 +3158,7 @@ sub key_column_accessor_method_names_hash
       $self->{'key_column_accessor_method'}{$column->name} = $column->accessor_method_name;
     }
   }
- 
+
   return $self->{'key_column_accessor_method'};
 }
 

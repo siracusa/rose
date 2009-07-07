@@ -54,25 +54,25 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   foreach my $cascade (0, 1)
   {
     my @cascade = $cascade ? (cascade => 1) : ();
-  
+
     my $album = $album_class->new(id => 1, title => 'album1');
     $album->save();
-    
+
     my $artist = $artist_class->new(id => 1, name => 'Rage');
     $artist->$albums_method($album->id);
     $artist->save(@cascade);
-    
+
     ok($artist, "$cascade saved artist with albums - $db_type");
-    
+
     $artist->$albums_method($album->id);
     $artist->save(@cascade);
 
     ok($artist, "$cascade re-saved artist albums = $db_type");
-    
+
     $artist = $artist_class->new(id => $artist->id)->load;
     is(scalar @{$artist->$albums_method() ||[]}, 1, "$cascade Check artist albums count - $db_type");
     is($artist->$albums_method()->[0]->id, $album->id, "$cascade Check artist album ids - $db_type");
-  
+
     my @albums = $artist->$albums_method();
     $artist->$albums_method(@albums);
     $artist->save;
@@ -179,7 +179,7 @@ CREATE TABLE rose_db_object_albums
   id         INT PRIMARY KEY NOT NULL,
   artist_id  INTEGER REFERENCES rose_db_object_artists (id),
   title      VARCHAR(255) NOT NULL,
-  
+
   INDEX(artist_id),
   FOREIGN KEY (artist_id) REFERENCES rose_db_object_artists (id)  
 )
