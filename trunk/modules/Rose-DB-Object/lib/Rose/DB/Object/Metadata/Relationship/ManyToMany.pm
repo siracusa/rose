@@ -14,7 +14,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 use Rose::DB::Object::Constants qw(PRIVATE_PREFIX);
 
-our $VERSION = '0.781';
+our $VERSION = '0.782';
 
 our $Debug = 0;
 
@@ -527,28 +527,30 @@ Here's a complete example using the C<Widget>, C<Color>, and C<WidgetColorMap> c
 
   use base 'Rose::DB::Object';
 
-  __PACKAGE__->meta->table('widgets');
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id   => { type => 'int', primary_key => 1 },
-    name => { type => 'varchar', length => 255 },
+    table => 'widgets',
+
+    columns =>
+    [
+      id   => { type => 'int', primary_key => 1 },
+      name => { type => 'varchar', length => 255 },
+    ],
+
+    relationships =>
+    [
+      # Define "many to many" relationship to get colors
+      colors =>
+      {
+        type      => 'many to many',
+        map_class => 'WidgetColorMap',
+
+        # These are only necessary if the relationship is ambiguous
+        #map_from  => 'widget',
+        #map_to    => 'color',
+      },
+    ],
   );
-
-  # Define "many to many" relationship to get colors
-  __PACKAGE__->meta->add_relationship
-  (
-    colors =>
-    {
-      type      => 'many to many',
-      map_class => 'WidgetColorMap',
-
-      # These are only necessary if the relationship is ambiguous
-      #map_from  => 'widget',
-      #map_to    => 'color',
-    },
-  );
-
-  __PACKAGE__->meta->initialize;
 
   1;
 
@@ -558,28 +560,30 @@ Next, the C<Color> class which has a "many to many" relationship through which i
 
   use base 'Rose::DB::Object';
 
-  __PACKAGE__->meta->table('colors');
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id   => { type => 'int', primary_key => 1 },
-    name => { type => 'varchar', length => 255 },
+    table => 'colors',
+
+    columns =>
+    [
+      id   => { type => 'int', primary_key => 1 },
+      name => { type => 'varchar', length => 255 },
+    ],
+
+    relationships =>
+    [
+      # Define "many to many" relationship to get widgets
+      widgets =>
+      {
+        type      => 'many to many',
+        map_class => 'WidgetColorMap',
+
+        # These are only necessary if the relationship is ambiguous
+        #map_from  => 'color',
+        #map_to    => 'widget',
+      },
+    ],
   );
-
-  # Define "many to many" relationship to get widgets
-  __PACKAGE__->meta->add_relationship
-  (
-    widgets =>
-    {
-      type      => 'many to many',
-      map_class => 'WidgetColorMap',
-
-      # These are only necessary if the relationship is ambiguous
-      #map_from  => 'color',
-      #map_to    => 'widget',
-    },
-  );
-
-  __PACKAGE__->meta->initialize;
 
   1;
 
@@ -589,32 +593,34 @@ Finally, the C<WidgetColorMap> class must have a foreign key or "many to one" re
 
   use base 'Rose::DB::Object';
 
-  __PACKAGE__->meta->table('widget_color_map');
-  __PACKAGE__->meta->columns
+  __PACKAGE__->meta->setup
   (
-    id        => { type => 'int', primary_key => 1 },
-    widget_id => { type => 'int' },
-    color_id  => { type => 'int' },
+    table => 'widget_color_map',
+
+    columns =>
+    [
+      id        => { type => 'int', primary_key => 1 },
+      widget_id => { type => 'int' },
+      color_id  => { type => 'int' },
+    ],
+
+    foreign_keys =>
+    [
+      # Define foreign keys that point to each of the two classes 
+      # that this class maps between.
+      color => 
+      {
+        class => 'Color',
+        key_columns => { color_id => 'id' },
+      },
+
+      widget => 
+      {
+        class => 'Widget',
+        key_columns => { widget_id => 'id' },
+      },
+    ],
   );
-
-  # Define foreign keys that point to each of the two classes 
-  # that this class maps between.
-  __PACKAGE__->meta->foreign_keys
-  (
-    color => 
-    {
-      class => 'Color',
-      key_columns => { color_id => 'id' },
-    },
-
-    widget => 
-    {
-      class => 'Widget',
-      key_columns => { widget_id => 'id' },
-    },  
-  );
-
-  __PACKAGE__->meta->initialize;
 
   1;
 
