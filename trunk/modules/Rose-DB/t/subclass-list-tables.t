@@ -86,7 +86,7 @@ BEGIN
   our %Have;
 
   #
-  # Postgres
+  # PostgreSQL
   #
 
   my $dbh;
@@ -686,7 +686,7 @@ END
 
   if($Have{'pg'})
   {
-    # Postgres
+    # PostgreSQL
     my $dbh = My::DB2->new('pg_admin')->retain_dbh()
       or die My::DB2->error;
 

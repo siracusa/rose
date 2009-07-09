@@ -126,7 +126,7 @@ foreach my $db_type (qw(mysql pg informix sqlite oracle))
 BEGIN
 {
   #
-  # Postgres
+  # PostgreSQL
   #
 
   if(my $dbh = get_dbh('pg_admin'))
