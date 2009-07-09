@@ -13,12 +13,12 @@ BEGIN
 our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE);
 
 #
-# Postgres
+# PostgreSQL
 #
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 117)  unless($HAVE_PG);
+  skip("PostgreSQL tests", 117)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -498,7 +498,7 @@ SKIP: foreach my $db_type ('sqlite')
 BEGIN
 {
   #
-  # Postgres
+  # PostgreSQL
   #
 
   my $dbh;
@@ -825,7 +825,7 @@ END
 
   if($HAVE_PG)
   {
-    # Postgres
+    # PostgreSQL
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
 

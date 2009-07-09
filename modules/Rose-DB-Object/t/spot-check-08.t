@@ -14,7 +14,7 @@ our $HAVE_PG;
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 6)  unless($HAVE_PG);
+  skip("PostgreSQL tests", 6)  unless($HAVE_PG);
 
   OVERRIDE_OK:
   {
@@ -42,7 +42,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 BEGIN
 {
   #
-  # Postgres
+  # PostgreSQL
   #
 
   my $dbh;
@@ -158,7 +158,7 @@ END
 
   if($HAVE_PG)
   {
-    # Postgres
+    # PostgreSQL
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
 

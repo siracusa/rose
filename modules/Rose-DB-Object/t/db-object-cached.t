@@ -34,12 +34,12 @@ foreach my $pair ((map { [ "2 $_", 2 ] } qw(s sec secs second seconds)),
 }
 
 #
-# Postgres
+# PostgreSQL
 #
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("Postgres tests", 159)  unless($HAVE_PG);
+  skip("PostgreSQL tests", 159)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -844,7 +844,7 @@ BEGIN
   }
 
   #
-  # Postgres
+  # PostgreSQL
   #
 
   my $dbh;
@@ -1205,7 +1205,7 @@ END
 
   if($HAVE_PG)
   {
-    # Postgres
+    # PostgreSQL
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
 

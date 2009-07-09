@@ -379,7 +379,7 @@ BEGIN
   our(%Have, $Have_YAML, $Have_JSON, $All);
 
   #
-  # Postgres
+  # PostgreSQL
   #
 
   my $dbh;
@@ -692,7 +692,7 @@ END
   # Delete test tables
   if($Have{'pg'})
   {
-    # Postgres
+    # PostgreSQL
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
 

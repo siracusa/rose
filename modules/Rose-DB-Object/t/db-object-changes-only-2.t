@@ -201,7 +201,7 @@ BEGIN
   require 't/test-lib.pl';
 
   #
-  # Postgres
+  # PostgreSQL
   #
 
   if(have_db('pg_admin'))

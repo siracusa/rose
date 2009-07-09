@@ -1,23 +1,18 @@
-0.781_07 (07.07.2009) - John Siracusa <siracusa@gmail.com>
+0.782 (07.09.2009) - John Siracusa <siracusa@gmail.com>
 
     * Altered tests to confirm the fix for RT 45836.
     * Detect enum-like columns in PostgreSQL.  (RT 46214)
     * Added optional warning to the Loader for missing primary keys.
-      (Patch by rheoled)
+      (Patch by Ed Loehr)
     * Fixed a memory leak in the Iterator class.  (RT 47294)
-      (Patch by twhaples)
+      (Patch by Thomas Whaples)
     * Unique indexes that have predicates are now skipped by the auto-
       initialization process.  Use the include_predicated_unique_indexes
       Metadata attribute and/or Loader attribute to override the default.
       This feature is currently only supported in PostgreSQL.
-      (Patch by rheoled)
+      (Patch by Ed Loehr)
     * Improved unknown method error messages.  (Suggested by Brian Miller)
     * Updated some example code in the documentation.
-    * TODO: Figure out which UK to use when load()ing via a ForeignKey
-    * TODO: SQL injection via foo() keywords?
-    * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
-    * TODO: add delete_now and delete_on_save method types to ManyToMany
-    * TODO: make save() fail if IN_DB and modified PK columns?
 
 0.781 (04.19.2009) - John Siracusa <siracusa@gmail.com>
 
@@ -190,7 +185,7 @@
     * Column method names are now allowed at the end of compound Manager
       query parameters (e.g., "a.b.method")
     * Clarified column/method query parameter documentation.
-    * Postgres tests are not skipped when DBD::Pg version 2.1.x or 2.2.0
+    * PostgreSQL tests are not skipped when DBD::Pg version 2.1.x or 2.2.0
       is installed.  (Bus error for me in t/deep-joins.t)
 
 0.768 (02.25.2008) - John Siracusa <siracusa@gmail.com>
@@ -210,7 +205,7 @@
       http://rt.cpan.org//Ticket/Display.html?id=33193
     * Improved the column method handling for array-reference values
       that may be fetched from array columns by DBD::Pg 2.0.0.
-    * Fixed a bug in the test suite that caused some Postgres tests
+    * Fixed a bug in the test suite that caused some PostgreSQL tests
       to fail if the "chkpass" column type was not installed.
       (Reported by Randal Schwartz)
 
@@ -229,7 +224,7 @@
     * Fixed a bug that caused boolean columns to be incorrectly marked as
       modified.  (Reported by Grzegorz Nosek)
     * Added sql_qualify_column_names_on_load() Metadata method to help
-      support Postgres functions that can masquerade as columns if they're
+      support PostgreSQL functions that can masquerade as columns if they're
       prefixed by the table name.  (Suggested by Grzegorz Nosek)
 
 0.7663 (02.04.2008) - John Siracusa <siracusa@gmail.com>
@@ -300,7 +295,7 @@
     * Multi-columns "select count(distinct ...)" queries now fall back to 
       count(*) on a subselect in databases that do not support calling count
       on multi-argument distinct clauses.  (Reported by Derek Watson)
-    * The auto-init system will now skip Postgres functional indexes when 
+    * The auto-init system will now skip PostgreSQL functional indexes when 
       extracting unique keys.  (Reported by Jonathan Vanasco)
     * Fixed a bug that caused inner joins to be used inappropriately in 
       certain cases with many-to-many relationships or when nested joins 
@@ -360,7 +355,7 @@
       also apply to *_on_save collections.
     * Added test and prerequisite version for a Rose::DB bug that
       prevented certain reserved words from being detected as primary
-      key columns in Postgres.  (Reported by Fred Cox)
+      key columns in PostgreSQL.  (Reported by Fred Cox)
     * Baseline Oracle support added to the Loader.  (Patch by Teodor Zlatanov)
     * The clone() and clone_and_reset() methods now handle missing or
       differently named accessor/mutator methods.
@@ -402,14 +397,14 @@
       "query" parameter.
     * Eliminated warning in the BigNum column type when the GMP math library
       is not installed.
-    * Added a double precision column type and class for Postgres.
+    * Added a double precision column type and class for PostgreSQL.
     * Fixed a bug that caused cascaded save() to fail to cascade beyond
       a set-on-save related object.
     * Improved reporting of errors in auto-loaded related modules.
     * Fixed a bug that caused numeric columns to have invalid length
       restrictions.  (Reported by Fred Cox)
     * Fixed many incorrect skip counts in the test suite when running against
-      Postgres without CHKPASS support.
+      PostgreSQL without CHKPASS support.
 
 0.760 (01.16.2007) - John Siracusa <siracusa@gmail.com>
 
@@ -497,7 +492,7 @@
     * Improved and documented the way that unique keys are selected by
       the load() method.  (Patch by Graham Barr)
     * Fixed a bug that caused foreign key column lookups to fail in
-      Postgres when using the unicode database encoding.
+      PostgreSQL when using the unicode database encoding.
     * Invalid dates are now detected in the query portion of Manager calls.
     * The test suite now refuses to run SQLite tests if the buggy 
       DBD::SQLite version 1.13 is installed.
@@ -588,7 +583,7 @@
     * Added a column class for PostgreSQL's BYTEA column type.
     * Added support for DBI bind_param() attributes for all column types.
     * Fixed a bug in the test suite that could cause the TIME(9)
-      column type test to fail in Postgres.
+      column type test to fail in PostgreSQL.
     * Fixed some POD formatting errors.
 
 0.741 (07.14.2006) - John Siracusa <siracusa@gmail.com>
@@ -831,8 +826,8 @@
 0.601 (01.01.2006) - John Siracusa <siracusa@gmail.com>
 
     * Fixed some incorrect deep join tests.
-    * Reduced the number of Postgres database connections used in the test
-      suite in order to avoid hitting Postgres's default connection limit.
+    * Reduced the number of PostgreSQL database connections used in the test
+      suite in order to avoid hitting PostgreSQL's default connection limit.
     * Fixed the DBI benchmark tests broken by the last release.
     * Uncommented some sections of the benchmark script that were
       accidentally left commented-out in the last release.
@@ -853,9 +848,9 @@
       by the perl_hash_definition() method.  (Reported by Juan Camacho)      
     * Fixed a bug that caused the loader to trip over mixed-case unique 
       keys in MySQL databases. (Reported by Juan Camacho)
-    * Force MDY dates in Postgres in the test suite, just in case the user
+    * Force MDY dates in PostgreSQL in the test suite, just in case the user
       has European dates configured.  (Reported by Cees Hek)
-    * Fixed numerous Postgres 7.x bugs.  (Reported by Cees Hek)
+    * Fixed numerous PostgreSQL 7.x bugs.  (Reported by Cees Hek)
     * Modified the benchmark suite to further confine each module to its
       own private set of database rows in order to eliminate the influence
       of run order during the tests.
@@ -865,7 +860,7 @@
 0.59 (12.19.2005) - John Siracusa <siracusa@gmail.com>
 
     * Added in_array, any_in_array, and all_in_array query operators
-      for filtering on Postgres array columns.
+      for filtering on PostgreSQL array columns.
     * Fixed a bug that caused certain method overrides to fail when
       using a custom metadata class with the auto-initialize feature.
       (Reported by Svilen Ivanov)
@@ -1082,7 +1077,7 @@
     * Fixed more MySQL case sensitivity bugs.  (Thanks Uwe!)
     * Changed objects_by_key query_args parameter to be an array ref
       instead of a hash ref to match the manager change from long ago.
-    * Updated makemethods.t to use MySQL if Postgres is not available.
+    * Updated makemethods.t to use MySQL if PostgreSQL is not available.
 
 0.067 (08.14.2005) - John Siracusa <siracusa@gmail.com>
 
@@ -1092,7 +1087,7 @@
 0.066 (08.12.2005) - John Siracusa <siracusa@gmail.com>
 
     * Fixed MySQL case-sensitivity bug.
-    * Added case-sensitivity tests for Postgres and MySQL.
+    * Added case-sensitivity tests for PostgreSQL and MySQL.
     * Added accessor, delete, and search with limit and offset benchmarks.
 
 0.0651 (08.11.2005) - John Siracusa <siracusa@gmail.com>

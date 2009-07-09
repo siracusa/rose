@@ -84,12 +84,12 @@ if(defined $ENV{'RDBO_NESTED_JOINS'} && Rose::DB::Object::Manager->can('default_
 }
 
 #
-# Postgres
+# PostgreSQL
 #
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("Postgres tests", 783)  unless($HAVE_PG);
+  skip("PostgreSQL tests", 783)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -14319,7 +14319,7 @@ EOF
 BEGIN
 {
   #
-  # Postgres
+  # PostgreSQL
   #
 
   my $dbh;
