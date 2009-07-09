@@ -15,12 +15,12 @@ our($HAVE_PG, $HAVE_ORACLE, $HAVE_MYSQL, $HAVE_INFORMIX);
 My::DB2->default_domain('test');
 
 #
-# Postgres
+# PostgreSQL
 #
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 21)  unless($HAVE_PG);
+  skip("PostgreSQL tests", 21)  unless($HAVE_PG);
 
   My::DB2->default_type($db_type);
 
@@ -293,7 +293,7 @@ SKIP: foreach my $db_type ('informix')
 BEGIN
 {
   #
-  # Postgres
+  # PostgreSQL
   #
 
   my $dbh;
@@ -449,7 +449,7 @@ END
 
   if($HAVE_PG)
   {
-    # Postgres
+    # PostgreSQL
     my $dbh = My::DB2->new('pg_admin')->retain_dbh()
       or die My::DB2->error;
 

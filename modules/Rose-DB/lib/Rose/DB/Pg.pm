@@ -77,7 +77,7 @@ sub last_insertid_from_sth
 {
   #my($self, $sth, $obj) = @_;
 
-  # Postgres demands that the primary key column not be in the insert
+  # PostgreSQL demands that the primary key column not be in the insert
   # statement at all in order for it to auto-generate a value.  The
   # insert SQL will need to be modified to make this work for
   # Rose::DB::Object...
@@ -451,7 +451,7 @@ sub parse_dbi_column_info_default
   {
     my $default = $1;
 
-    # Single quotes are backslash-escaped, but Postgres 8.1 and
+    # Single quotes are backslash-escaped, but PostgreSQL 8.1 and
     # later uses doubled quotes '' instead.  Strangely, I see
     # doubled quotes in 8.0.x as well...
     if($pg_vers >= 80000 && index($default, q('')) > 0)

@@ -21,7 +21,7 @@ print STDERR<<"EOF";
 ## these values, set the following environment variables before running tests.
 ## (The current values are shown in parentheses.)
 ##
-## Postgres:
+## PostgreSQL:
 ##
 ##     RDBO_PG_DSN        (@{[ nvl('RDBO_PG_DSN', 'dbi:Pg:dbname=test;host=localhost') ]})
 ##     RDBO_PG_USER       (@{[ nvl('RDBO_PG_USER', 'postgres') ]})
