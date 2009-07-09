@@ -1,11 +1,8 @@
-0.752_03 (05.28.2009) - John Siracusa <siracusa@gmail.com>
+0.753 (07.09.2009) - John Siracusa <siracusa@gmail.com>
 
     * Detect enum-like columns in PostgreSQL.  (RT 46214)
     * Added support for the "sslmode" DSN option for PostgreSQL.
       (Reported by foudfou)
-    * TODO: SQL injection via foo() keywords?
-    * TODO: Flesh-out do_transaction() docs: return values and
-      error handling.
 
 0.752 (05.08.2009) - John Siracusa <siracusa@gmail.com>
 
