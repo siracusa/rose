@@ -414,7 +414,7 @@ sub Init
 ## override these values, set the following environment variables before
 ## running tests. (The current values are shown in parentheses.)
 ## 
-## Postgres:
+## PostgreSQL:
 ## 
 ##     RDBO_PG_DSN      (@{[ NVL('RDBO_PG_DSN', 'dbi:Pg:dbname=test;host=localhost') ]})
 ##     RDBO_PG_USER     (@{[ NVL('RDBO_PG_USER', 'postgres') ]})
@@ -5557,7 +5557,7 @@ sub Check_DB
 {
   my $dbh;
 
-  # Postgres
+  # PostgreSQL
 
   eval 
   {
@@ -5626,7 +5626,7 @@ sub Init_DB
   }
 
   #
-  # Postgres
+  # PostgreSQL
   #
 
   if($init{'pg'})

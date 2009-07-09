@@ -1741,7 +1741,7 @@ sub get_objects
   if(my $sort_by = $args{'sort_by'})
   {
     # Alter sort_by SQL, replacing table and relationship names with aliases.
-    # This is to prevent databases like Postgres from "adding missing FROM
+    # This is to prevent databases like PostgreSQL from "adding missing FROM
     # clause"s.  See: http://sql-info.de/postgresql/postgres-gotchas.html#1_5
     if($table_aliases)
     {

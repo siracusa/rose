@@ -71,7 +71,7 @@ BEGIN
   our %HAVE;
 
   #
-  # Postgres
+  # PostgreSQL
   #
 
   my $dbh;
@@ -423,7 +423,7 @@ END
 
   if($HAVE{'pg'})
   {
-    # Postgres
+    # PostgreSQL
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
 

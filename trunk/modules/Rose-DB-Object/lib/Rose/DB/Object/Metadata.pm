@@ -2796,7 +2796,7 @@ sub _sequence_name
 {
   my($self, $db, $catalog, $schema, $table, $column) = @_;
 
-  # XXX: This is only beneficial in Postgres right now
+  # XXX: This is only beneficial in PostgreSQL right now
   return  unless($db->driver eq 'pg');
 
   $table = lc $table  if($db->likes_lowercase_table_names);
@@ -3622,7 +3622,7 @@ sub insert_changes_only_sql
   {
     # Make a last-ditch attempt to insert with no modified columns
     # using the DEFAULT keyword on an arbitrary column.  This works 
-    # in MySQL and Postgres.
+    # in MySQL and PostgreSQL.
     if($db->supports_arbitrary_defaults_on_insert)
     {
       return 
@@ -3894,7 +3894,7 @@ sub insert_changes_only_sql_with_inlining
   {
     # Make a last-ditch attempt to insert with no modified columns
     # using the DEFAULT keyword on an arbitrary column.  This works 
-    # in MySQL and Postgres.
+    # in MySQL and PostgreSQL.
     if($db->supports_arbitrary_defaults_on_insert)
     {
       return 

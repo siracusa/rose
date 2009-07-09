@@ -1109,7 +1109,7 @@ BEGIN
   our %Have;
 
   #
-  # Postgres
+  # PostgreSQL
   #
 
   my $dbh;

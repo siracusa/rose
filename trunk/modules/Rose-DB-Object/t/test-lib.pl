@@ -11,7 +11,7 @@ BEGIN
   Rose::DB->default_domain('test');
 
   #
-  # Postgres
+  # PostgreSQL
   #
 
   eval { require DBD::Pg };

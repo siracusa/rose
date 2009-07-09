@@ -209,7 +209,7 @@ BEGIN
   our %HAVE;
 
   #
-  # Postgres
+  # PostgreSQL
   #
 
   my $dbh;

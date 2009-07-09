@@ -22,12 +22,12 @@ ok($@ =~ /^\QAlready made a map record method named map_record in class JCS::B o
    'many-to-many map record name conflict');
 
 #
-# Postgres
+# PostgreSQL
 #
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("Postgres tests", 398)  unless($HAVE_PG);
+  skip("PostgreSQL tests", 398)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -6330,7 +6330,7 @@ SKIP: foreach my $db_type ('sqlite')
 BEGIN
 {
   #
-  # Postgres
+  # PostgreSQL
   #
 
   my $dbh;
@@ -8080,7 +8080,7 @@ END
 
   if($HAVE_PG)
   {
-    # Postgres
+    # PostgreSQL
     my $dbh = Rose::DB->new('pg_admin')->retain_dbh()
       or die Rose::DB->error;
 
