@@ -2126,7 +2126,6 @@ EOF
     MyOracleObject->meta->column('k1')->primary_key_position(7);
     Test::More::ok(!defined MyOracleObject->meta->column('k1')->primary_key_position, 'primary_key_position 3 - oracle');
   }
-
 }
 
 END

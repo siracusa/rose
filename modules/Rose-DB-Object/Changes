@@ -1,9 +1,10 @@
 0.782_01 (07.09.2009) - John Siracusa <siracusa@gmail.com>
 
+    * TODO: Add support for REGEXP_LIKE(column, '^abc')
     * TODO: Figure out which UK to use when load()ing via a ForeignKey
     * TODO: SQL injection via foo() keywords?
     * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
-    * TODO: add delete_now and delete_on_save method types to ManyToMany
+    * TODO: add delete_now and delete_on_save method types to ManyToMany?
     * TODO: make save() fail if IN_DB and modified PK columns?
 
 0.782 (07.09.2009) - John Siracusa <siracusa@gmail.com>
