@@ -3,7 +3,7 @@
 use strict;
 
 #use Test::LongString;
-use Test::More tests => (90 * 4) + 3;
+use Test::More tests => (91 * 4) + 3;
 
 BEGIN 
 {
@@ -27,7 +27,7 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 90)  unless($Have{$db_type});
+    skip("$db_type tests", 91)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -290,12 +290,18 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   {
     $o = $class->new(id => 1)->load_or_save;
 
-    my $frozen = Storable::freeze($o->strip);
+	# Confirm stripping of "on-save" code references
+	$o->rose_db_object_test_other({ name => 'test' });
+
+	eval { $o->strip };
+	like($@, qr/Refusing to strip "on-save" actions from \w+ object without strip_on_save_ok parameter/, "strip 1 - $db_type");
+
+    my $frozen = Storable::freeze($o->strip(strip_on_save_ok => 1));
     my $thawed = Storable::thaw($frozen);
 
-    is_deeply($thawed, $o, "strip 1 - $db_type");
+    is_deeply($thawed, $o, "strip 2 - $db_type");
   }
-  else { SKIP: { skip("tests that require Storable - $db_type", 1) } }
+  else { SKIP: { skip("tests that require Storable - $db_type", 2) } }
 
   $o = $class->new(id => 1, name => 'John', age => 30)->load_or_save;
 
