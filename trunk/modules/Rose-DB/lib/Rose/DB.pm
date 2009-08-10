@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.753';
+our $VERSION = '0.753_01';
 
 our $Debug = 0;
 
@@ -2427,8 +2427,7 @@ L<Rose::DB> currently supports the following L<DBI> database drivers:
     DBD::mysql    (MySQL)
     DBD::SQLite   (SQLite)
     DBD::Informix (Informix)
-
-Oracle (L<DBD::Oracle>) is mostly supported, but some features may not yet work correctly.
+    DBD::Oracle   (Oracle)
 
 L<Rose::DB> will attempt to service an unsupported database using a L<generic|Rose::DB::Generic> implementation that may or may not work.  Support for more drivers may be added in the future.  Patches are welcome.
 
