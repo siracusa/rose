@@ -13,7 +13,7 @@ our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.554';
+our $VERSION = '0.604';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -50,7 +50,7 @@ sub init
   $self->SUPER::init(@_);
 }
 
-sub is_flat_group { 1 }
+sub is_flat_group { 0 }
 
 sub children 
 {
