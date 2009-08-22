@@ -4,6 +4,7 @@
       attempting to strip() an object.  (Reported by Kevin McGrath)
     * Added strip_on_save_ok parameter to strip() to override the 
       default behavior.
+    * TODO: Add support for BETWEEN ? AND ? (col = { between => [ 1, 2] })
     * TODO: Add support for REGEXP_LIKE(column, '^abc')
     * TODO: Figure out which UK to use when load()ing via a ForeignKey
     * TODO: SQL injection via foo() keywords?
