@@ -20,7 +20,7 @@ use Rose::DB::Object::Constants
 use Rose::DB::Object::Helpers();
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.781';
+our $VERSION = '0.783';
 
 our $Debug = 0;
 
@@ -422,6 +422,10 @@ sub enum
   my %values = map { $_ => 1 } @$values;
 
   my $default = $args->{'default'};
+
+  # Good-old MySQL and its empty-string defaults for NOT NULL columns...
+  no warnings 'uninitialized';
+  delete $args->{'default'}  if($default eq '' && !$values{$default});
 
   if(exists $args->{'default'})
   {

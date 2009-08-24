@@ -1,9 +1,11 @@
-0.782_02 (08.05.2009) - John Siracusa <siracusa@gmail.com>
+0.782_03 (08.24.2009) - John Siracusa <siracusa@gmail.com>
 
     * Throw an exception when there are pending "on-save" actions when
       attempting to strip() an object.  (Reported by Kevin McGrath)
     * Added strip_on_save_ok parameter to strip() to override the 
       default behavior.
+    * Worked around yet another MySQL empty-string-default "feature."
+      (Reported by Terrence Brannon)
     * TODO: Add support for BETWEEN ? AND ? (col = { between => [ 1, 2] })
     * TODO: Add support for REGEXP_LIKE(column, '^abc')
     * TODO: Figure out which UK to use when load()ing via a ForeignKey
