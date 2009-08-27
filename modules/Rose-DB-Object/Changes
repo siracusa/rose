@@ -10,7 +10,7 @@
       "object" handler in the traverse_depth_first() helper method.
       (Reported by David Christensen)
     * The traverse_depth_first() helper now preserves the existing context
-      object if a "relationship" handler is not defines.  (Reported by
+      object if a "relationship" handler is not defined.  (Reported by
       David Christensen)
     * TODO: Add support for BETWEEN ? AND ? (col = { between => [ 1, 2] })
     * TODO: Add support for REGEXP_LIKE(column, '^abc')
