@@ -11,7 +11,7 @@ require Rose::DB::Object::Util;
 
 use Carp;
 
-our $VERSION = '0.782_02';
+our $VERSION = '0.783';
 
 __PACKAGE__->export_tags
 (
@@ -795,7 +795,7 @@ sub as_tree
 }
 
 # XXX: This version requires all relationship and column mutators to have 
-# XXX: the same names as the relationships and columnsthemselves.
+# XXX: the same names as the relationships and columns themselves.
 # sub init_with_tree { shift->init(@_) }
 
 # XXX: This version requires all relationship mutators to have the same 
@@ -1453,7 +1453,9 @@ A reference to a hash of handler subroutines.  Valid keys, calling context, and 
 
 =item B<object>
 
-This handler is called whenever a L<Rose::DB::Object>-derived object is encountered.  This includes the object that L<traverse_depth_first|/traverse_depth_first> was called on as well as any sub-objects.  The handler is passed the object, the C<context>, the parent object (undef, if none), the L<Rose::DB::Object::Metadata::Relationship>-derived object through which this object was arrived at (undef if none), and the depth.  Example:
+This handler is called whenever a L<Rose::DB::Object>-derived object is encountered.  This includes the object that L<traverse_depth_first|/traverse_depth_first> was called on as well as any sub-objects.  The handler is passed the object, the C<context>, the parent object (undef, if none), the L<Rose::DB::Object::Metadata::Relationship>-derived object through which this object was arrived at (undef if none), and the depth.
+
+The handler I<must> return the value to be used as the C<context> during the traversal of any related sub-objects.  The context returned may be different than the context passed in.  Example:
 
     handlers =>
     {
@@ -1461,6 +1463,8 @@ This handler is called whenever a L<Rose::DB::Object>-derived object is encounte
       {
         my($object, $context, $parent, $rel_meta, $depth) = @_;
         ...
+
+        return $context; # Important!
       }
       ...
     }
