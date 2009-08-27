@@ -695,7 +695,8 @@ sub _traverse_depth_first
         $objs = [ $objs ]  unless(ref $objs eq 'ARRAY');
       }
 
-      my $c = $handlers->{'relationship'}->($self, $context, $rel)  if($handlers->{'relationship'});
+      my $c = $handlers->{'relationship'} ? 
+        $handlers->{'relationship'}->($self, $context, $rel) : $context;
 
       OBJ: foreach my $obj (@$objs)
       {
@@ -1473,7 +1474,7 @@ The handler I<must> return the value to be used as the C<context> during the tra
 
 This handler is called just before a L<Rose::DB::Object::Metadata::Relationship>-derived object is descended into  (i.e., just before the sub-objectes related through this relationship are processed). The handler is passed the object that contains the relationship, the C<context>, the C<context>, and the L<relationship|Rose::DB::Object::Metadata::Relationship> object itself.
 
-The handler I<must> return the value to be used as the C<context> during the traversal of the objects related through this relationship.  The context returned may be different than the context passed in.  Example:
+The handler I<must> return the value to be used as the C<context> during the traversal of the objects related through this relationship.  (If you do not define this handler, then the current context object will be used.)  The context returned may be different than the context passed in.  Example:
 
     handlers =>
     {
