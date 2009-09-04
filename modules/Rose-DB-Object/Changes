@@ -1,4 +1,4 @@
-0.782_05 (08.27.2009) - John Siracusa <siracusa@gmail.com>
+0.782_06 (09.03.2009) - John Siracusa <siracusa@gmail.com>
 
     * Throw an exception when there are pending "on-save" actions when
       attempting to strip() an object.  (Reported by Kevin McGrath)
@@ -12,6 +12,9 @@
     * The traverse_depth_first() helper now preserves the existing context
       object if a "relationship" handler is not defined.  (Reported by
       David Christensen)
+    * Fixed multi-many Manager bug that caused duplicate sub-objects to be
+      linked to the wrong parent object.  (Reported by Anton Shevchenko)
+      XXX: Needs tests.
     * TODO: Add support for BETWEEN ? AND ? (col = { between => [ 1, 2] })
     * TODO: Add support for REGEXP_LIKE(column, '^abc')
     * TODO: Figure out which UK to use when load()ing via a ForeignKey
