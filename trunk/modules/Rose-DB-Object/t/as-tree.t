@@ -51,8 +51,8 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
   if($Have_Test_Differences)
   {
     # Test::Differences is sensitive to string/number distinctions that 
-    # SQLite exhibits and that I don't care about.
-    if($db_type eq 'sqlite')
+    # SQLite and Pg exhibit and that I don't care about.
+    if($db_type eq 'sqlite' || $db_type =~ /^pg/)
     {
       no warnings;
       *is_deeply = \&Test::More::is_deeply;
@@ -201,7 +201,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
 
   $tree = $product_class->new(id => 2)->as_tree(force_load => 1, max_depth => 0);
 
-  my $check_tree = 
+  my $check_tree =
   {
     'id'        => '2',
     'name'      => 'Sled',
@@ -1049,7 +1049,7 @@ BEGIN
     #die "This test chokes DBD::Pg version 2.1.x and 2.2.0"  if($DBD::Pg::VERSION =~ /^2\.(?:1\.|2\.0)/);
   };
 
-  if(!$@ && $dbh)
+  if(!$@ && $dbh && $DBD::Pg::VERSION ge '2.15.1')
   {
     $Have{'pg'} = 1;
     $Have{'pg_with_schema'} = 1;

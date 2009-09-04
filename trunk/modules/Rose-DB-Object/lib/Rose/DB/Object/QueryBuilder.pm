@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.778';
+our $VERSION = '0.783';
 
 our $Debug = 0;
 
@@ -1239,7 +1239,7 @@ sub _format_value
       $object->$set_method($value);
       $value = $object->$get_method();
     }
-    elsif(defined $value)
+    elsif(defined $value && $val_ref ne 'SCALAR')
     {
       my $parsed_value = $col_meta->parse_value($db, $value);
 
