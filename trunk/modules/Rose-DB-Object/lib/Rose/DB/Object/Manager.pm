@@ -832,6 +832,8 @@ sub get_objects
   # not count towards the multi_many_ok warning.
   my $num_to_many_rels_adjustment = 0;
 
+  my($multi_many, @subobject_method_map);
+
   if($with_objects)
   {
     # XXX: Hack to avoid suprious ORA-00918 errors
@@ -946,11 +948,13 @@ sub get_objects
 
     $num_to_many_rels = grep { defined $_ } @has_dups;
 
+    # Adjust for explicitly included map_record tables, which should
+    # not count towards the multi_many_ok warning.
+    $multi_many = (($num_to_many_rels - $num_to_many_rels_adjustment)  > 1) ? 1 : 0;
+
     unless($args{'multi_many_ok'})
     {
-      # Adjust for explicitly included map_record tables, which should
-      # not count towards the multi_many_ok warning.
-      if(($num_to_many_rels - $num_to_many_rels_adjustment)  > 1)
+      if($multi_many)
       {
         Carp::carp
           qq(WARNING: Fetching sub-objects via more than one ),
@@ -1108,6 +1112,13 @@ sub get_objects
           {
             # Aliased table names
             push(@{$joins[$i]{'conditions'}}, "t${parent_tn}.$local_column = t$i.$foreign_column");
+
+            if($multi_many)
+            {
+              my $local_method   = $parent_meta->column_mutator_method_name($local_column);
+              my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
+              push(@{$subobject_method_map[$belongs_to[$i - 1]]}, [ $local_method, $foreign_method ]);
+            }
 
             # Fully-qualified table names
             #push(@{$joins[$i]{'conditions'}}, "$tables[0].$local_column = $tables[-1].$foreign_column");
@@ -2248,6 +2259,32 @@ sub get_objects
                           #$subobjects_belong_to[$i] = $#{$sub_objects[$bt]};
 
                           my $parent_object = $sub_objects[$bt];
+
+                          # XXX: Special heavyweight subobject pairing in multi-many queries
+                          if($multi_many && ref $parent_object eq 'ARRAY' && @$parent_object > 1)
+                          {
+                            my $maps = $subobject_method_map[$bt];
+                            my %check;
+        
+                            foreach my $map (@$maps)
+                            {
+                              my $subobject_method = $map->[1];
+                              $check{$subobject_method} = $subobject->$subobject_method();
+                            }
+        
+                            PARENT: foreach my $check_parent (reverse @$parent_object)
+                            {
+                              foreach my $map (@$maps)
+                              {
+                                my $parent_method = $map->[0];
+                                next PARENT  unless($check_parent->$parent_method() eq $check{$map->[1]});
+                              }
+                              
+                              $parent_object = $check_parent;
+                              last PARENT;
+                            }
+                          }
+
                           # XXX: This relies on parent objects coming before child
                           # objects in the list of tables in the FROM clause.
                           $parent_object = $parent_object->[-1] #$parent_object->[$subobjects_belong_to[$i]]
@@ -2737,6 +2774,32 @@ sub get_objects
                   #$subobjects_belong_to[$i] = $#{$sub_objects[$bt]};
 
                   my $parent_object = $sub_objects[$bt];
+
+                  # XXX: Special heavyweight subobject pairing in multi-many queries
+                  if($multi_many && ref $parent_object eq 'ARRAY' && @$parent_object > 1)
+                  {
+                    my $maps = $subobject_method_map[$bt];
+                    my %check;
+
+                    foreach my $map (@$maps)
+                    {
+                      my $subobject_method = $map->[1];
+                      $check{$subobject_method} = $subobject->$subobject_method();
+                    }
+
+                    PARENT: foreach my $check_parent (reverse @$parent_object)
+                    {
+                      foreach my $map (@$maps)
+                      {
+                        my $parent_method = $map->[0];
+                        next PARENT  unless($check_parent->$parent_method() eq $check{$map->[1]});
+                      }
+                      
+                      $parent_object = $check_parent;
+                      last PARENT;
+                    }
+                  }
+
                   # XXX: This relies on parent objects coming before child
                   # objects in the list of tables in the FROM clause.
                   $parent_object = $parent_object->[-1] #$parent_object->[$subobjects_belong_to[$i]]
