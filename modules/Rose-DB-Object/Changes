@@ -1,4 +1,4 @@
-0.782_06 (09.03.2009) - John Siracusa <siracusa@gmail.com>
+0.782_07 (09.04.2009) - John Siracusa <siracusa@gmail.com>
 
     * Throw an exception when there are pending "on-save" actions when
       attempting to strip() an object.  (Reported by Kevin McGrath)
@@ -12,6 +12,8 @@
     * The traverse_depth_first() helper now preserves the existing context
       object if a "relationship" handler is not defined.  (Reported by
       David Christensen)
+    * Fixed a bug that prevented scalar reference filter arguments from working
+      correctly with date columns in Manager queries.  (Reported by Todd Lyons)
     * Fixed multi-many Manager bug that caused duplicate sub-objects to be
       linked to the wrong parent object.  (Reported by Anton Shevchenko)
       XXX: Needs tests.

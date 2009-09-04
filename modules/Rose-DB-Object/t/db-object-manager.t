@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3903;
+use Test::More tests => 3904;
 
 BEGIN 
 {
@@ -138,6 +138,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
         or         => [ and => [ '!bits' => '00001', bits => { ne => '11111' } ],
                         and => [ bits => { lt => '10101' }, '!bits' => '10000' ] ],
         start      => '2001-01-02',
+        start      => { lt => \q('now'::date + interval '30 days') },
         save       => [ 1, 5 ],
         nums       => '{1,2,3}',
         fk1        => 2,
@@ -8683,16 +8684,21 @@ EOF
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 791)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 792)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
   my($sql, $bind) = 
     Rose::DB::Object::Manager->get_objects_sql(
       object_class => 'MySQLiteObject',
-      where => [ name => { '@' => \q(xxx) } ]);
+      where => 
+      [
+        name  => { '@' => \q(xxx) },
+        start => { lt => \q(CURRENT_TIMESTAMP) },
+      ]);
 
-  ok($sql =~ /\bname @ xxx\b/, "strict_ops 1 - $db_type");
+  like($sql, qr/\bname @ xxx\b/, "strict_ops 1.0 - $db_type");
+  like($sql, qr/\bstart < CURRENT_TIMESTAMP\b/, "strict_ops 1.1 - $db_type");
 
   eval
   {
@@ -8795,6 +8801,7 @@ SKIP: foreach my $db_type (qw(sqlite))
         flag2      => 0,
         \q((1 = 1 and 5 > 2)),
         [ \q(fk1 > ?), 1 ],
+        start      => { lt => \q(CURRENT_TIMESTAMP) },
         or =>
         [
           bits => '00001',
