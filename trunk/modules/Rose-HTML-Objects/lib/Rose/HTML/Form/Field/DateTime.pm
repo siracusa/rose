@@ -10,7 +10,7 @@ use Rose::DateTime::Parser;
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.549';
+our $VERSION = '0.604';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -68,7 +68,12 @@ sub validate
   }
 
   my $date = $self->internal_value;
-  return 1  if(UNIVERSAL::isa($date, 'DateTime'));
+
+  if(UNIVERSAL::isa($date, 'DateTime'))
+  {
+    return $self->validate_with_validator($date)  if($self->validator);
+    return 1;
+  }
 
   if($self->has_partial_value)
   {
