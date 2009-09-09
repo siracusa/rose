@@ -19,7 +19,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.603';
+our $VERSION = '0.604';
 
 #our $Debug = 0;
 
@@ -844,32 +844,36 @@ sub validate
     }
   }
 
-  my $code = $self->validator;
-
-  if($code)
-  {
-    local $_ = $value;
-    #$Debug && warn "running $code->($self)\n";
-    my $ok = $code->($self);
-
-    if(!$ok && !$self->has_errors)
-    {
-      my $label = $self->label;
-
-      if(defined $label)
-      {
-        $self->add_error_id(FIELD_INVALID, { label => $label })
-      }
-      else
-      {
-        $self->add_error_id(FIELD_INVALID);
-      }
-    }
-
-    return $ok;
-  }
+  return $self->validate_with_validator($value)  if($self->validator);
 
   return 1;
+}
+
+sub validate_with_validator
+{
+  my($self, $value) = @_;
+
+  my $code = $self->validator or return 1;
+
+  local $_ = $value;
+  #$Debug && warn "running $code->($self)\n";
+  my $ok = $code->($self);
+
+  if(!$ok && !$self->has_errors)
+  {
+    my $label = $self->label;
+
+    if(defined $label)
+    {
+      $self->add_error_id(FIELD_INVALID, { label => $label })
+    }
+    else
+    {
+      $self->add_error_id(FIELD_INVALID);
+    }
+  }
+
+  return $ok;
 }
 
 sub validator
