@@ -575,11 +575,11 @@ sub strip
 sub __contains_code_ref
 {
   my($hash_ref) = shift;
-  
+
   foreach my $key (keys %$hash_ref)
   {
     return 1  if(ref $hash_ref->{$key} eq 'CODE');
-    
+
     if(ref $hash_ref->{$key} eq 'HASH')
     {
       return 1  if(__contains_code_ref($hash_ref->{$key}));

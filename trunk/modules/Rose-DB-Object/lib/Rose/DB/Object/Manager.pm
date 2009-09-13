@@ -2265,13 +2265,13 @@ sub get_objects
                           {
                             my $maps = $subobject_method_map[$bt];
                             my %check;
-        
+
                             foreach my $map (@$maps)
                             {
                               my $subobject_method = $map->[1];
                               $check{$subobject_method} = $subobject->$subobject_method();
                             }
-        
+
                             PARENT: foreach my $check_parent (reverse @$parent_object)
                             {
                               foreach my $map (@$maps)
@@ -2279,7 +2279,7 @@ sub get_objects
                                 my $parent_method = $map->[0];
                                 next PARENT  unless($check_parent->$parent_method() eq $check{$map->[1]});
                               }
-                              
+
                               $parent_object = $check_parent;
                               last PARENT;
                             }
@@ -2794,7 +2794,7 @@ sub get_objects
                         my $parent_method = $map->[0];
                         next PARENT  unless($check_parent->$parent_method() eq $check{$map->[1]});
                       }
-                      
+
                       $parent_object = $check_parent;
                       last PARENT;
                     }

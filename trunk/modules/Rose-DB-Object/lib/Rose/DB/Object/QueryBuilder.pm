@@ -15,7 +15,7 @@ our $VERSION = '0.783';
 
 our $Debug = 0;
 
-our %OP_MAP = 
+our %Op_Map = 
 (  
   similar      => 'SIMILAR TO',
   match        => '~',
@@ -25,6 +25,11 @@ our %OP_MAP =
   like         => 'LIKE',
   ilike        => 'ILIKE',
   rlike        => 'RLIKE',
+  between      => '%COLUMN% BETWEEN ? AND ?',
+  gt_lt        => '(%COLUMN% > ? AND %COLUMN% < ?)',
+  gt_le        => '(%COLUMN% > ? AND %COLUMN% <= ?)',
+  ge_lt        => '(%COLUMN% >= ? AND %COLUMN% < ?)',
+  ge_le        => '(%COLUMN% >= ? AND %COLUMN% <= ?)',
   is           => 'IS',
   is_not       => 'IS NOT',
   lt           => '<',
@@ -71,11 +76,15 @@ our %OP_MAP =
   ltree_concat     => '||',
 );
 
-@OP_MAP{map { $_ . '_sql' } keys %OP_MAP} = values(%OP_MAP);
+our %Template_Op = map { $Op_Map{$_} => 1 } qw(between gt_lt gt_le ge_lt ge_le);
+
+@Op_Map{map { $_ . '_sql' } keys %Op_Map} = values(%Op_Map);
+
+our %Op_Wantarray = map { $_ => 2 } map { $_, "${_}_sql" } qw(between gt_lt gt_le ge_lt ge_le);
 
 our %Op_Arg_PassThru = map { $_ => 1 } 
-  qw(similar match imatch regex regexp like ilike rlike in_set any_in_set all_in_set
-     in_array any_in_array all_in_array);
+  qw(similar match imatch regex regexp regexp_like like ilike rlike 
+     in_set any_in_set all_in_set in_array any_in_array all_in_array);
 
 BEGIN { eval { require DBI::Const::GetInfoType }; }
 use constant SQL_DBMS_VER => $DBI::Const::GetInfoType::GetInfoType{'SQL_DBMS_VER'} || 18;
@@ -804,12 +813,12 @@ sub _build_clause
   {
     my $op_arg = (keys(%$vals))[0];
 
-    if($op_arg =~ s/_?sql$//)
+    if($op_arg =~ s/(?:_|^)sql$//)
     {
       $force_inline = 1;
     }
 
-    unless($op = $OP_MAP{$op_arg})
+    unless($op = $Op_Map{$op_arg})
     {
       if($strict_ops)
       {
@@ -998,6 +1007,13 @@ sub _build_clause
 
         foreach my $val (@$vals)
         {
+          no warnings 'uninitialized';
+          if(ref $val eq 'SCALAR')
+          {
+            push(@new_vals, $$val);
+            next;
+          }
+
           my $should_inline = 
             ($db && $col_meta && $col_meta->should_inline_value($db, $val));
 
@@ -1015,6 +1031,17 @@ sub _build_clause
               push(@$bind_params, $col_meta->dbi_bind_param_attrs($db));
             }
           }
+        }
+
+        if($Template_Op{$op})
+        {
+          for($op)
+          {
+            s/%COLUMN%/$field/g;
+            s/\?/shift(@new_vals)/ge;
+          }
+
+          return $not ? "NOT ($op)" : $op;
         }
 
         return '(' . join(' OR ', map { ($not ? "$not(" : '') . "$field $op $_" .
@@ -1043,7 +1070,7 @@ sub _build_clause
 
     foreach my $raw_op (keys(%$vals))
     {
-      unless($sub_op = $OP_MAP{$raw_op})
+      unless($sub_op = $Op_Map{$raw_op})
       {
         Carp::croak "Unknown comparison operator: $raw_op"  if($strict_ops);
         $sub_op = $raw_op;
@@ -1059,9 +1086,21 @@ sub _build_clause
       {
         my $tmp_not = $all_in ? 0 : $not;
 
-        foreach my $val (@{$vals->{$raw_op}})
+        if (my $wanted = $Op_Wantarray{$raw_op})
         {
-          push(@clauses, _build_clause($dbh, $field, $sub_op, $val, $tmp_not, $field_mod, $bind, $db, $col_meta, $force_inline, $set, $placeholder, $bind_params));
+          if($wanted > 1 && @{$vals->{$raw_op}} > $wanted)
+          {
+            Carp::croak "The '$raw_op' operator expects $wanted arguments, but got ", scalar(@{$vals->{$raw_op}});
+          }
+
+          push(@clauses, _build_clause($dbh, $field, $sub_op, $vals->{$raw_op}, $tmp_not, $field_mod, $bind, $db, $col_meta, $force_inline, $set, $placeholder, $bind_params));
+        }
+        else
+        {
+          foreach my $val (@{$vals->{$raw_op}})
+          {
+            push(@clauses, _build_clause($dbh, $field, $sub_op, $val, $tmp_not, $field_mod, $bind, $db, $col_meta, $force_inline, $set, $placeholder, $bind_params));
+          }
         }
       }
       else
@@ -1228,7 +1267,7 @@ sub _format_value
   {
     foreach my $key (keys %$value)
     {
-      next  if($key =~ /_?sql$/); # skip inline values
+      next  if($key =~ /(?:_|^)sql$/); # skip inline values
       _format_value($db, $value, $key, $object, $col_meta, $get_method, $set_method, $value->{$key}, 0, $depth + 1, $allow_empty_lists);
     }
   }
@@ -1401,7 +1440,6 @@ A string indicating the logic that will be used to join the statements in the WH
 
 If true, the SQL returned will have slightly nicer formatting.
 
-
 =item B<query PARAMS>
 
 The query parameters, passed as a reference to an array of name/value pairs, scalar references, or array references.  PARAMS may include an arbitrary list of selection parameters used to modify the "WHERE" clause of the SQL select statement.  Any query parameter that is not in one of the forms described below will cause a fatal error.
@@ -1431,15 +1469,6 @@ Comparisons:
     # (COLUMN OP 'foo' OR COLUMN OP 'goo')
     NAME => { OP => [ "foo", "goo" ] }
 
-If a value is a reference to a scalar, that scalar is "inlined" without any quoting.
-
-    'NAME' => \"foo"        # COLUMN = foo
-    'NAME' => [ "a", \"b" ] # COLUMN IN ('a', b)
-
-Undefined values are translated to the keyword NULL when included in a multi-value comparison.
-
-    'NAME' => [ "a", undef ] # COLUMN IN ('a', NULL)
-
 "OP" can be any of the following:
 
     OP                  SQL operator
@@ -1459,6 +1488,24 @@ Undefined values are translated to the keyword NULL when included in a multi-val
     gt                  >
     le                  <=
     ge                  >=
+
+Ranges:
+
+    NAME => { between => [ 1, 99 ] } # COLUMN BETWEEN 1 AND 99
+
+    NAME => { gt_lt => [ 1, 99 ] } # (COLUMN > 1 AND < 99)
+    NAME => { gt_le => [ 1, 99 ] } # (COLUMN > 1 AND <= 99)
+    NAME => { ge_lt => [ 1, 99 ] } # (COLUMN >= 1 AND < 99)
+    NAME => { ge_le => [ 1, 99 ] } # (COLUMN >= 1 AND <= 99)
+
+If a value is a reference to a scalar, that scalar is "inlined" without any quoting.
+
+    'NAME' => \"foo"        # COLUMN = foo
+    'NAME' => [ "a", \"b" ] # COLUMN IN ('a', b)
+
+Undefined values are translated to the keyword NULL when included in a multi-value comparison.
+
+    'NAME' => [ "a", undef ] # COLUMN IN ('a', NULL)
 
 Set operations:
 
@@ -1538,7 +1585,7 @@ PostgreSQL ltree operations:
     ltree_ltxtquery     @
     ltree_concat        ||
 
-Any of these operations described above can have "_sql" appended to indicate that the corresponding values are to be "inlined" (i.e., included in the SQL query as-is, with no quoting of any kind).  This is useful for comparing two columns.  For example, this query:
+Any of the operations described above can have "_sql" appended to indicate that the corresponding values are to be "inlined" (i.e., included in the SQL query as-is, with no quoting of any kind).  This is useful for comparing two columns.  For example, this query:
 
     query => [ legs => { gt_sql => 'eyes' } ]
 
