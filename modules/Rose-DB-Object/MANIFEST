@@ -167,6 +167,7 @@ t/makemethods.t
 t/make-modules.ext
 t/make-modules.t
 t/map-record-name-conflict.pl
+t/multi-many-the-hard-way.t
 t/multi-pk-sequences.t
 t/nested-joins.t
 t/one-to-many-reset.t

@@ -1,4 +1,4 @@
-0.782_07 (09.04.2009) - John Siracusa <siracusa@gmail.com>
+0.782_08 (09.13.2009) - John Siracusa <siracusa@gmail.com>
 
     * Throw an exception when there are pending "on-save" actions when
       attempting to strip() an object.  (Reported by Kevin McGrath)
@@ -16,8 +16,7 @@
       correctly with date columns in Manager queries.  (Reported by Todd Lyons)
     * Fixed multi-many Manager bug that caused duplicate sub-objects to be
       linked to the wrong parent object.  (Reported by Anton Shevchenko)
-      XXX: Needs tests.
-    * TODO: Add support for BETWEEN ? AND ? (col = { between => [ 1, 2] })
+    * Added support for new range operators: between, gt_lt, gt_le, ge_lt, ge_le
     * TODO: Add support for REGEXP_LIKE(column, '^abc')
     * TODO: Figure out which UK to use when load()ing via a ForeignKey
     * TODO: SQL injection via foo() keywords?

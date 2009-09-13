@@ -16,7 +16,7 @@ use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Exception;
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.782_07';
+our $VERSION = '0.782_08';
 
 our $Debug = 0;
 
