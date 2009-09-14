@@ -143,7 +143,7 @@ sub set_db
       {
         $Debug && warn "Refusing to cache $db during apache server start-up ",
                        "because use_cache_during_apache_startup is false";
-  
+
         return $db;
       }
     }
@@ -207,7 +207,7 @@ sub __mod_perl_2_rose_db_child_init_handler
 sub apache_has_started
 {
   my($class) = shift;
-  
+
   if(@_)
   {
     return $Apache_Has_Started = $_[0] ? 1 : 0;
@@ -219,7 +219,7 @@ sub apache_has_started
   {
     return $Apache_Has_Started = $MP2_Is_Child;
   }
-  
+
   if(MOD_PERL_1)
   {
     return $Apache_Has_Started = $Apache::Server::Starting;
@@ -293,7 +293,7 @@ sub prepare_db
       }
 
       my $r;
-      
+
       eval { $r = Apache2::RequestUtil->request };
 
       if($@)

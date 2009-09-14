@@ -91,14 +91,14 @@ sub path
 sub document_root
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     $self->{'document_root'} = shift;
     $self->_new_src_or_document_root($self->src);
     return $self->{'document_root'};
   }
-  
+
   $self->{'document_root'} = $self->init_document_root
     unless(defined  $self->{'document_root'});
 

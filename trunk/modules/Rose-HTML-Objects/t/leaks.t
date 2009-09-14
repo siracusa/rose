@@ -56,18 +56,18 @@ if($^O eq 'darwin' && $Config{'osvers'} =~ /^9\./ && !$ENV{'AUTOMATED_TESTING'})
       #my $foo = Rose::HTML::Form::Field::SelectBox->new(options => [ 'm' => { label => 'aLabel' } ]);
 
       my $form = LeakForm->new();
-  
+
       next;
-  
+
       my $size = `/bin/ps -orss= -p $$`;
-  
+
       if($size > $last_size)
       {
         print "$size (+" . ($size - $last_size) . ")\n";
         $last_size = $size;
       }
     }
-  
+
     $last_size ||= `/bin/ps -orss= -p $$`;
     my $leaked = $last_size - $first_size;
     #$leaked && print "# Leaked ", ($leaked * 1024), ' bytes (', (($leaked * 1024) / $iterations), " bytes per iteration)\n";

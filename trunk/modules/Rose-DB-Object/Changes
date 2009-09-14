@@ -1,9 +1,19 @@
-0.782_08 (09.13.2009) - John Siracusa <siracusa@gmail.com>
+0.783_01 (09.14.2009) - John Siracusa <siracusa@gmail.com>
 
-    * Throw an exception when there are pending "on-save" actions when
-      attempting to strip() an object.  (Reported by Kevin McGrath)
-    * Added strip_on_save_ok parameter to strip() to override the 
-      default behavior.
+    * TODO: Add support for REGEXP_LIKE(column, '^abc')
+    * TODO: Figure out which UK to use when load()ing via a ForeignKey
+    * TODO: SQL injection via foo() keywords?
+    * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
+    * TODO: add delete_now and delete_on_save method types to ManyToMany?
+    * TODO: make save() fail if IN_DB and modified PK columns?
+
+0.783 (09.14.2009) - John Siracusa <siracusa@gmail.com>
+
+    * Added new range operators: between, gt_lt, gt_le, ge_lt, and ge_le.
+    * The strip() helper method will now throw an exception when there are
+      pending "on-save" actions.  (Reported by Kevin McGrath)
+    * Added strip_on_save_ok parameter to strip() to override the default
+      behavior.
     * Worked around yet another MySQL empty-string-default "feature."
       (Reported by Terrence Brannon)
     * Added missing documentation about the required return value of the
@@ -14,15 +24,8 @@
       David Christensen)
     * Fixed a bug that prevented scalar reference filter arguments from working
       correctly with date columns in Manager queries.  (Reported by Todd Lyons)
-    * Fixed multi-many Manager bug that caused duplicate sub-objects to be
+    * Fixed a multi-many Manager bug that caused duplicate sub-objects to be
       linked to the wrong parent object.  (Reported by Anton Shevchenko)
-    * Added support for new range operators: between, gt_lt, gt_le, ge_lt, ge_le
-    * TODO: Add support for REGEXP_LIKE(column, '^abc')
-    * TODO: Figure out which UK to use when load()ing via a ForeignKey
-    * TODO: SQL injection via foo() keywords?
-    * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
-    * TODO: add delete_now and delete_on_save method types to ManyToMany?
-    * TODO: make save() fail if IN_DB and modified PK columns?
 
 0.782 (07.09.2009) - John Siracusa <siracusa@gmail.com>
 

@@ -1,9 +1,11 @@
-0.753_01 (08.09.2009) - John Siracusa <siracusa@gmail.com>
+0.754_01 (08.09.2009) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: SQL injection via foo() keywords?
+
+0.754 (09.14.2009) - John Siracusa <siracusa@gmail.com>
 
     * Removed outdated warning about Oracle support.
-    * TODO: SQL injection via foo() keywords?
-    * TODO: Flesh-out do_transaction() docs: return values and
-      error handling.
+	* Clarified the return value and error handling for do_transaction().
 
 0.753 (07.09.2009) - John Siracusa <siracusa@gmail.com>
 

@@ -7,7 +7,7 @@ use File::Spec();
 use File::Path();
 use File::Basename();
 
-our $VERSION = '0.603_03';
+our $VERSION = '0.604';
 
 our $Debug = 0;
 
@@ -96,7 +96,7 @@ sub private_library_perl
     {
       return $_;
     }
-    
+
     return $new_name;
   };
 
