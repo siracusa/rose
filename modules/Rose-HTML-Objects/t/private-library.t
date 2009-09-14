@@ -30,7 +30,7 @@ sub get_localized_message_text__FOO____BAR__
 }
 EOF
   },
-  
+
   'My::HTML::Form::Field::File' =><<'EOF',
 our $JCS = 123;
 EOF
@@ -77,7 +77,7 @@ foreach my $type (My::HTML::Object->object_type_names)
 {
   my $std_class = Rose::HTML::Object->object_type_class($type);
   (my $new_class = $std_class) =~ s/^Rose::/My::/;
-  
+
   is(My::HTML::Object->object_type_class($type), $new_class, "object type class: $type");
 }
 
@@ -85,7 +85,7 @@ GENERIC_FIELD:
 {
   package My::Field;
   our @ISA = ('My::HTML::Form::Field');
-  
+
   package main;
   $field = My::Field->new;
   ok($field->isa('Rose::HTML::Form::Field'), 'generic field 1');
@@ -108,7 +108,7 @@ our $TwiddleCase = 1;
 sub get_localized_message_text
 {
   my($self) = shift;
-  
+
   if($TwiddleCase)
   {
     no warnings 'uninitialized';
@@ -150,7 +150,7 @@ GENERIC_FIELD:
   package My2::Field;
   require My2::HTML::Form::Field;
   our @ISA = ('My2::HTML::Form::Field');
-  
+
   package main;
   $field = My2::Field->new;
   ok($field->isa('Rose::HTML::Form::Field'), 'generic field 2');
@@ -195,7 +195,7 @@ foreach my $type (My2::HTML::Object->object_type_names)
 {
   my $std_class = Rose::HTML::Object->object_type_class($type);
   (my $new_class = $std_class) =~ s/^Rose::/My2::/;
-  
+
   is(My2::HTML::Object->object_type_class($type), $new_class, "object type class: $type");
 }
 
@@ -225,10 +225,10 @@ sub init
 sub validate
 {
   my($self) = shift;
-  
+
   my $ret = $self->SUPER::validate(@_);
   return $ret  unless($ret);
-  
+
   my $nick  = $self->internal_value;
   my $class = $self->html_attr('class') || 'default';
 

@@ -16,7 +16,7 @@ our $Debug = 0;
 #
 
 our %Attrs;
-  
+
 BEGIN
 {
   our %Attrs =
@@ -78,7 +78,7 @@ BEGIN
 sub _attrs
 {
   my(%args) = @_;
-  
+
   my $type = $args{'type'};
 
   # Type filter first
@@ -110,9 +110,9 @@ sub _attrs
 sub _attr_method_specs
 {  
   my $attrs = _attrs(@_);
- 
+
   my @specs;
-  
+
   foreach my $attr (@$attrs)
   {
     next if(exists $Attrs{$attr}{'make_method'} && !$Attrs{$attr}{'make_method'});
@@ -126,7 +126,7 @@ sub _attr_method_specs
       push(@specs, $attr);
     }
   }
-  
+
   return wantarray ? @specs : \@specs;
 }
 
@@ -181,7 +181,7 @@ sub dump
     next  unless(defined $value);
     $dump{$attr} = $value;
   }
-  
+
   foreach my $attr (_attrs(type => 'hash'), _attrs(type => 'array'))
   {
     my $value = $self->$attr();

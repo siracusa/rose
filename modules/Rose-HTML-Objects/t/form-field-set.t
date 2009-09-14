@@ -138,7 +138,7 @@ SET_FIELD_BUG:
   package TestForm;
   use base 'Rose::HTML::Form';
   sub build_form { shift->add_fields(testfld => { type  => 'set' }); }
-  
+
   package main;
   my $f = TestForm->new;
   eval { $f->field('testfld')->xhtml_hidden_field };

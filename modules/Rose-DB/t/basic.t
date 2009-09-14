@@ -470,7 +470,7 @@ if(have_db('sqlite'))
   );
 
   my $dbh = $db->dbh;
-  
+
   is($db->dsn, "dbi:SQLite:dbname=$Bin/sqlite.db", 'dsn preservation 1');
 
   $db = Rose::DB->new
@@ -481,7 +481,7 @@ if(have_db('sqlite'))
   );
 
   $dbh = $db->dbh;
-  
+
   is($db->dsn, "dbi:SQLite:dbname=$Bin/sqlitex.db", 'dsn preservation 2');
 
   unlink("$Bin/sqlite.db");
@@ -510,7 +510,7 @@ foreach my $attr (sort(Rose::DB::Registry::Entry::_attrs(type => 'boolean')))
 {
   push(@entry, $attr => $i++ % 2);
 }
-                       
+
 foreach my $attr (sort(Rose::DB::Registry::Entry::_attrs(type => 'hash')))
 {
   push(@entry, $attr => { $i++ => $i++ });
@@ -530,7 +530,7 @@ is_deeply($dump, { @entry }, 'dump entry');
 if(have_db('mysql'))
 {
   my %mysql_entry = map { $_ => $dump->{$_} } grep { /^mysql_/ } keys %$dump;
-  
+
   Rose::DB->register_db(
     domain   => 'abc',
     type     => 'def',

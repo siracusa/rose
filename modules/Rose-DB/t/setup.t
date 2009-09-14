@@ -13,7 +13,7 @@ eval { require YAML::Syck };
 if($@)
 {
   eval { require YAML };
-  
+
   plan(skip_all => 'YAML or YAML::Syck required for setup tests')  if($@); 
 }
 
