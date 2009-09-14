@@ -45,9 +45,9 @@ BEGIN
     # Pg
     european_dates     => { type => 'boolean', method_spec => { default => 0 } },
     pg_enable_utf8     => { type => 'boolean' },
-    options			   => { type => 'scalar' },
-    service			   => { type => 'scalar' },
-    sslmode			   => { type => 'scalar' },
+    options            => { type => 'scalar' },
+    service            => { type => 'scalar' },
+    sslmode            => { type => 'scalar' },
 
     # SQLite
     auto_create => { type => 'boolean', method_spec => { default => 1 } },
