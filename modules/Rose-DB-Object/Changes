@@ -1,5 +1,8 @@
-0.783_01 (09.14.2009) - John Siracusa <siracusa@gmail.com>
+0.783_01 (09.16.2009) - John Siracusa <siracusa@gmail.com>
 
+    * TODO: Update docs for has_loaded_related() and/or make a better
+      solution to avoid re-fetching nonexistent objects after Manager
+      queries.
     * TODO: Add support for REGEXP_LIKE(column, '^abc')
     * TODO: Figure out which UK to use when load()ing via a ForeignKey
     * TODO: SQL injection via foo() keywords?
