@@ -20,7 +20,7 @@ use Rose::DB::Object::Constants
 use Rose::DB::Object::Helpers();
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.783';
+our $VERSION = '0.783_02';
 
 our $Debug = 0;
 
@@ -2962,7 +2962,7 @@ sub objects_by_key
 
       if($@ || !defined $count)
       {
-        $self->error("Could not count $ft_class objects - " . $ft_manager->error);
+        $self->error("Could not count $ft_class objects - " . ($@ || $ft_manager->error));
         $self->meta->handle_error($self);
         return wantarray ? () : $count;
       }
@@ -3096,7 +3096,7 @@ sub objects_by_key
       if($@ || !$objs)
       {
         $self->error("Could not " . ($is_iterator ? 'get iterator for' : 'find') .
-                     " $ft_class objects - " . $ft_manager->error);
+                     " $ft_class objects - " . ($@ || $ft_manager->error));
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
@@ -3185,7 +3185,7 @@ sub objects_by_key
       {
         $self->error("Could not load $ft_class objects with key " .
                      join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                     " - " . $ft_manager->error);
+                     " - " . ($@ || $ft_manager->error));
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
@@ -3450,7 +3450,7 @@ sub objects_by_key
       {
         $self->error("Could not load $ft_class objects with key " .
                      join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                     " - " . $ft_manager->error);
+                     " - " . ($@ || $ft_manager->error));
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
@@ -3715,7 +3715,7 @@ sub objects_by_key
       {
         $self->error("Could not load $ft_class objects with key " .
                      join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                     " - " . $ft_manager->error);
+                     " - " . ($@ || $ft_manager->error));
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
@@ -4738,7 +4738,7 @@ sub objects_by_map
 
       if($@ || !defined $count)
       {
-        $self->error("Could not count $foreign_class objects - " . $map_manager->error);
+        $self->error("Could not count $foreign_class objects - " . ($@ || $map_manager->error));
         $self->meta->handle_error($self);
         return $count;
       }
