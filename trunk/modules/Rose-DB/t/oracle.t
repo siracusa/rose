@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 55);
+    Test::More->import(tests => 59);
   }
 }
 
@@ -103,7 +103,7 @@ $db = Rose::DB->new
   type   => 'default',
   dsn    => "dbi:Oracle:mydb",
 );
-  
+
 is($db->database, 'mydb', 'parse_dsn() 1');
 
 SKIP:
@@ -141,6 +141,46 @@ SKIP:
 
   $db->disconnect;
 }
+
+Rose::DB->register_db
+(
+  type     => 'dsn1',
+  driver   => 'oracle',
+  database => 'somedb',
+);
+
+is(Rose::DB->new('dsn1')->dsn, 'dbi:Oracle:somedb', 'dsn 1');
+
+Rose::DB->register_db
+(
+  type     => 'dsn2',
+  driver   => 'oracle',
+  database => 'somedb',
+  host     => 'somehost',
+);
+
+is(Rose::DB->new('dsn2')->dsn, 'dbi:Oracle:sid=somedb;host=somehost', 'dsn 2');
+
+Rose::DB->register_db
+(
+  type     => 'dsn3',
+  driver   => 'oracle',
+  database => 'somedb',
+  port     => 'someport',
+);
+
+is(Rose::DB->new('dsn3')->dsn, 'dbi:Oracle:sid=somedb;port=someport', 'dsn 3');
+
+Rose::DB->register_db
+(
+  type     => 'dsn4',
+  driver   => 'oracle',
+  database => 'somedb',
+  host     => 'somehost',
+  port     => 'someport',
+);
+
+is(Rose::DB->new('dsn4')->dsn, 'dbi:Oracle:sid=somedb;host=somehost;port=someport', 'dsn 4');
 
 sub lookup_ip
 {
