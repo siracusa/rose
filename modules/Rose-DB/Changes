@@ -1,5 +1,7 @@
-0.754_01 (08.09.2009) - John Siracusa <siracusa@gmail.com>
+0.754_02 (09.30.2009) - John Siracusa <siracusa@gmail.com>
 
+    * Fixed a bug in Rose::DB::Oracle that caused the port to be omitted
+      from the DSN.  (Reported by llama)
     * TODO: SQL injection via foo() keywords?
 
 0.754 (09.14.2009) - John Siracusa <siracusa@gmail.com>

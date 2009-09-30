@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 55);
+    Test::More->import(tests => 59);
   }
 }
 
@@ -103,7 +103,7 @@ $db = My::DB2->new
   type   => 'default',
   dsn    => "dbi:Oracle:mydb",
 );
-  
+
 is($db->database, 'mydb', 'parse_dsn() 1');
 
 SKIP:
@@ -141,6 +141,46 @@ SKIP:
 
   $db->disconnect;
 }
+
+My::DB2->register_db
+(
+  type     => 'dsn1',
+  driver   => 'oracle',
+  database => 'somedb',
+);
+
+is(My::DB2->new('dsn1')->dsn, 'dbi:Oracle:somedb', 'dsn 1');
+
+My::DB2->register_db
+(
+  type     => 'dsn2',
+  driver   => 'oracle',
+  database => 'somedb',
+  host     => 'somehost',
+);
+
+is(My::DB2->new('dsn2')->dsn, 'dbi:Oracle:sid=somedb;host=somehost', 'dsn 2');
+
+My::DB2->register_db
+(
+  type     => 'dsn3',
+  driver   => 'oracle',
+  database => 'somedb',
+  port     => 'someport',
+);
+
+is(My::DB2->new('dsn3')->dsn, 'dbi:Oracle:sid=somedb;port=someport', 'dsn 3');
+
+My::DB2->register_db
+(
+  type     => 'dsn4',
+  driver   => 'oracle',
+  database => 'somedb',
+  host     => 'somehost',
+  port     => 'someport',
+);
+
+is(My::DB2->new('dsn4')->dsn, 'dbi:Oracle:sid=somedb;host=somehost;port=someport', 'dsn 4');
 
 sub lookup_ip
 {

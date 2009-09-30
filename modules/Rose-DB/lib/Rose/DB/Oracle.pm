@@ -8,7 +8,7 @@ use Rose::DB;
 
 our $Debug = 0;
 
-our $VERSION  = '0.746'; 
+our $VERSION  = '0.755'; 
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -96,10 +96,13 @@ sub build_dsn
   my($self_or_class, %args) = @_;
 
   my $database = $args{'db'} || $args{'database'};
-
-  if(my $host = $args{'host'})
+  
+  if($args{'host'} || $args{'port'})
   {
-    return "dbi:Oracle:sid=$database;host=$host";
+    $args{'sid'} = $database;
+
+    return 'dbi:Oracle:' . 
+      join(';', map { "$_=$args{$_}" } grep { $args{$_} } qw(sid host port));
   }
 
   return "dbi:Oracle:$database";
