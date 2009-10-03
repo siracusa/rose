@@ -2,6 +2,7 @@
 
     * Fixed a bug in Rose::DB::Oracle that caused the port to be omitted
       from the DSN.  (Reported by llama)
+    * TODO: Savepoints?
     * TODO: SQL injection via foo() keywords?
 
 0.754 (09.14.2009) - John Siracusa <siracusa@gmail.com>
