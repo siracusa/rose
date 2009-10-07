@@ -1,6 +1,7 @@
-0.783_02 (09.25.2009) - John Siracusa <siracusa@gmail.com>
+0.783_02 (10.07.2009) - John Siracusa <siracusa@gmail.com>
 
     * Added missing exception error explanations to relationship methods.
+    * TODO: local()ize $@ to avoid eating errors
     * TODO: Update docs for has_loaded_related() and/or make a better
       solution to avoid re-fetching nonexistent objects after Manager
       queries.
