@@ -3123,7 +3123,8 @@ sub delete_objects
   {
     Carp::croak "$class - Refusing to delete all rows from the table '",
                 $meta->fq_table($db), "' without an explict ",
-                "'all => 1' parameter";
+                "'all => 1' parameter. (No 'where' or 'clauses' parameters ",
+                "were passed to limit the scope of the delete operation.)";
   }
 
   if($args{'query'} && @{$args{'query'}} && $args{'all'})
