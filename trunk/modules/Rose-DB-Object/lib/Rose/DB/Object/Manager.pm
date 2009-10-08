@@ -16,7 +16,7 @@ use Rose::DB::Object::Constants
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.782';
+our $VERSION = '0.784';
 
 our $Debug = 0;
 
@@ -1117,7 +1117,7 @@ sub get_objects
             {
               my $local_method   = $parent_meta->column_mutator_method_name($local_column);
               my $foreign_method = $ft_meta->column_accessor_method_name($foreign_column);
-              push(@{$subobject_method_map[$belongs_to[$i - 1]]}, [ $local_method, $foreign_method ]);
+              push(@{$subobject_method_map[$i][$belongs_to[$i - 1]]}, [ $local_method, $foreign_method ]);
             }
 
             # Fully-qualified table names
@@ -2263,7 +2263,7 @@ sub get_objects
                           # XXX: Special heavyweight subobject pairing in multi-many queries
                           if($multi_many && ref $parent_object eq 'ARRAY' && @$parent_object > 1)
                           {
-                            my $maps = $subobject_method_map[$bt];
+                            my $maps = $subobject_method_map[$i + 1][$bt];
                             my %check;
 
                             foreach my $map (@$maps)
@@ -2778,7 +2778,7 @@ sub get_objects
                   # XXX: Special heavyweight subobject pairing in multi-many queries
                   if($multi_many && ref $parent_object eq 'ARRAY' && @$parent_object > 1)
                   {
-                    my $maps = $subobject_method_map[$bt];
+                    my $maps = $subobject_method_map[$i + 1][$bt];
                     my %check;
 
                     foreach my $map (@$maps)
