@@ -16,7 +16,7 @@ foreach my $db_type (qw(mysql))
 {
   SKIP:
   {
-    skip("$db_type tests", 24)  unless($Have{$db_type});
+    skip("$db_type tests", 25)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -45,58 +45,57 @@ foreach my $db_type (qw(mysql))
 
   test_accounts($accounts);
 
-}
-
-COUNTER:
-{
-  my $i;
-
-  sub test_accounts 
+  COUNTER:
   {
-    my($accounts) = shift;
-
-    foreach my $account (@$accounts) 
-    {
-      $Debug && print 'Account ID ', $account->accountId. " has the following channels:\n";
-
-      foreach my $channel ($account->channels) 
-      {
-        $Debug && print '  Channel ID ', $channel->channelId, " has the following items:\n";
-
-        foreach my $itemMap ($channel->itemMaps) 
-        {
-          if($Debug)
-          {
-            print '    Item ID ', $itemMap->itemId, ' is at position ', $itemMap->position;
-            print "  <-- incorrect because map's channelId = ", $itemMap->channelId
-              if($channel->channelId != $itemMap->channelId);
-            print "\n";
-          }
-
-          $i ||= 0;
-          is($channel->channelId, $itemMap->channelId, "id match $i");
-          $i++;
-        }
-      }
-    }
+	my $i;
+  
+	sub test_accounts 
+	{
+	  my($accounts) = shift;
+  
+	  foreach my $account (@$accounts) 
+	  {
+		$Debug && print 'Account ID ', $account->accountId. " has the following channels:\n";
+  
+		foreach my $channel ($account->channels) 
+		{
+		  $Debug && print '  Channel ID ', $channel->channelId, " has the following items:\n";
+  
+		  foreach my $itemMap ($channel->itemMaps) 
+		  {
+			if($Debug)
+			{
+			  print '    Item ID ', $itemMap->itemId, ' is at position ', $itemMap->position;
+			  print "  <-- incorrect because map's channelId = ", $itemMap->channelId
+				if($channel->channelId != $itemMap->channelId);
+			  print "\n";
+			}
+  
+			$i ||= 0;
+			is($channel->channelId, $itemMap->channelId, "id match $i");
+			$i++;
+		  }
+		}
+	  }
+	}
   }
+  
+  eval
+  {
+	my $documents =
+	  Rose::DB::Object::Manager->get_objects(
+		object_class => 'My2::DB::Object::Document',
+		with_objects => [ 'versions.bs', 'versions.secs' ], 
+		query =>
+		[
+		  c_id => 34639,
+		  deleted  => 0,
+		],
+		multi_many_ok => 1);
+  };
+  
+  ok(!$@, 'Multi-many 2');
 }
-
-eval
-{
-  my $documents =
-    Rose::DB::Object::Manager->get_objects(
-      object_class => 'My2::DB::Object::Document',
-      with_objects => [ 'versions.bs', 'versions.secs' ], 
-      query =>
-      [
-        c_id => 34639,
-        deleted  => 0,
-      ],
-      multi_many_ok => 1);
-};
-
-ok(!$@, 'Multi-many 2');
 
 #warn $@ if $@;
 
@@ -517,9 +516,8 @@ EOF
         },
       ],
     );
-  }
 
-  $dbh->do($_) for(grep { /\S/ } split(/;/, <<"EOF"));
+    $dbh->do($_) for(grep { /\S/ } split(/;/, <<"EOF"));
 CREATE TABLE ab
 (
   id               BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -617,174 +615,175 @@ INSERT INTO dv VALUES
   (306668,132156),
   (306670,132156);
 EOF
-
-  $dbh->disconnect;
-
-  package My2::DB::Object;
-
-  our @ISA = qw(Rose::DB::Object);
-
-  sub init_db { Rose::DB->new }
-
-  package My2::DB::Object::DocumentVersion;
-
-  our @ISA = qw(My2::DB::Object);
-
-  __PACKAGE__->meta->setup
-  (
-    table   => 'dv',
-
-    columns => 
-    [
-      id          => { type => 'bigserial', not_null => 1 },
-      document_id => { type => 'bigint', not_null => 1 },
-    ],
-
-    primary_key_columns => [ 'id' ],
-
-    foreign_keys => 
-    [
-      d => 
-      {
-        class       => 'My2::DB::Object::Document',
-        key_columns => { 'document_id' => 'id' },
-      },
-    ],
-
-    relationships =>
-    [
-      bs => 
-      {
-        class      => 'My2::DB::Object::AB',
-        column_map => { id => 'dv_id' },
-        type       => 'one to many',
-      },
-
-      secs => 
-      {
-        class      => 'My2::DB::Object::DocumentSecurity',
-        column_map => { id => 'document_id' },
-        type       => 'one to many',
-      },
-    ],
-
-  );
-
-  package My2::DB::Object::DocumentSecurity;
-
-  our @ISA = qw(My2::DB::Object);
-
-  __PACKAGE__->meta->setup
-  (
-    table => 'ds',
-
-    columns => 
-    [
-      document_id => { type => 'bigint', not_null => 1 },
-      s_id        => { type => 'bigint', not_null => 1 },
-    ],
-
-    primary_key_columns => [ 'document_id', 's_id' ],
-
-    foreign_keys => 
-    [
-      flag => 
-      {
-        class       => 'My2::DB::Object::SecurityFlag',
-        key_columns => { 's_id' => 'id' },
-      },
-    ],
-  );
-
-  package My2::DB::Object::AB;
-
-  our @ISA = qw(My2::DB::Object);
-
-  __PACKAGE__->meta->setup(
-    table => 'ab',
-
-    columns => 
-    [
-      id         => { type => 'bigserial', not_null => 1 },
-      battery_id => { type => 'bigint', not_null => 1 },
-      dv_id      => { type => 'bigint', not_null => 1 },
-    ],
-
-    primary_key_columns => [ 'id' ],
-
-    foreign_key => 
-    [
-      dv => 
-      {
-        class       => 'My2::DB::Object::DocumentVersion',
-        key_columns => { 'dv_id' => 'id' },
-      },
-    ],
-  );
-
-  package My2::DB::Object::Document;
-
-  our @ISA = qw(My2::DB::Object);
-
-  __PACKAGE__->meta->setup
-  (
-    table => 'd',
-
-    columns => 
-    [
-      id       => { type => 'bigserial', not_null => 1 },
-      c_id     => { type => 'bigint',    not_null => 1 },
-      pq       => { type => 'varchar',   length   => 255 },
-      accid    => { type => 'varchar',   length   => 255 },
-      deleted  => { type => 'int',       length   => 1 },
-    ],
-
-    primary_key_columns => ['id'],
-
-    unique_key => [ 'c_id', 'pq' ],
-
-    foreign_keys => 
-    [
-      chart => 
-      {
-        class       => 'My2::DB::Object::Chart',
-        key_columns => { 'c_id' => 'id' },
-      },
-    ],
-
-    relationships => 
-    [
-      versions => 
-      {
-        class        => 'My2::DB::Object::DocumentVersion',
-        column_map   => { id => 'document_id' },
-        type         => 'one to many',
-        manager_args => 
-        {
-          sort_by => My2::DB::Object::DocumentVersion->meta->table . '.id DESC',
-        },
-      },
-
-      version => 
-      {
-        class        => 'My2::DB::Object::DocumentVersion',
-        column_map   => { id => 'document_id' },
-        type         => 'one to one',
-        manager_args => 
-        {
-          sort_by => My2::DB::Object::DocumentVersion->meta->table . '.id DESC',
-          limit   => 1,
-        },
-      },
-
-      read_status => 
-      {
-        class      => 'My2::DB::Object::ResultReadStatus',
-        column_map => { id => 'document_id' },
-        type       => 'one to many',
-      }
-    ],
-  );
+  
+	$dbh->disconnect;
+  
+	package My2::DB::Object;
+  
+	our @ISA = qw(Rose::DB::Object);
+  
+	sub init_db { Rose::DB->new }
+  
+	package My2::DB::Object::DocumentVersion;
+  
+	our @ISA = qw(My2::DB::Object);
+  
+	__PACKAGE__->meta->setup
+	(
+	  table   => 'dv',
+  
+	  columns => 
+	  [
+		id          => { type => 'bigserial', not_null => 1 },
+		document_id => { type => 'bigint', not_null => 1 },
+	  ],
+  
+	  primary_key_columns => [ 'id' ],
+  
+	  foreign_keys => 
+	  [
+		d => 
+		{
+		  class       => 'My2::DB::Object::Document',
+		  key_columns => { 'document_id' => 'id' },
+		},
+	  ],
+  
+	  relationships =>
+	  [
+		bs => 
+		{
+		  class      => 'My2::DB::Object::AB',
+		  column_map => { id => 'dv_id' },
+		  type       => 'one to many',
+		},
+  
+		secs => 
+		{
+		  class      => 'My2::DB::Object::DocumentSecurity',
+		  column_map => { id => 'document_id' },
+		  type       => 'one to many',
+		},
+	  ],
+  
+	);
+  
+	package My2::DB::Object::DocumentSecurity;
+  
+	our @ISA = qw(My2::DB::Object);
+  
+	__PACKAGE__->meta->setup
+	(
+	  table => 'ds',
+  
+	  columns => 
+	  [
+		document_id => { type => 'bigint', not_null => 1 },
+		s_id        => { type => 'bigint', not_null => 1 },
+	  ],
+  
+	  primary_key_columns => [ 'document_id', 's_id' ],
+  
+	  foreign_keys => 
+	  [
+		flag => 
+		{
+		  class       => 'My2::DB::Object::SecurityFlag',
+		  key_columns => { 's_id' => 'id' },
+		},
+	  ],
+	);
+  
+	package My2::DB::Object::AB;
+  
+	our @ISA = qw(My2::DB::Object);
+  
+	__PACKAGE__->meta->setup(
+	  table => 'ab',
+  
+	  columns => 
+	  [
+		id         => { type => 'bigserial', not_null => 1 },
+		battery_id => { type => 'bigint', not_null => 1 },
+		dv_id      => { type => 'bigint', not_null => 1 },
+	  ],
+  
+	  primary_key_columns => [ 'id' ],
+  
+	  foreign_key => 
+	  [
+		dv => 
+		{
+		  class       => 'My2::DB::Object::DocumentVersion',
+		  key_columns => { 'dv_id' => 'id' },
+		},
+	  ],
+	);
+  
+	package My2::DB::Object::Document;
+  
+	our @ISA = qw(My2::DB::Object);
+  
+	__PACKAGE__->meta->setup
+	(
+	  table => 'd',
+  
+	  columns => 
+	  [
+		id       => { type => 'bigserial', not_null => 1 },
+		c_id     => { type => 'bigint',    not_null => 1 },
+		pq       => { type => 'varchar',   length   => 255 },
+		accid    => { type => 'varchar',   length   => 255 },
+		deleted  => { type => 'int',       length   => 1 },
+	  ],
+  
+	  primary_key_columns => ['id'],
+  
+	  unique_key => [ 'c_id', 'pq' ],
+  
+	  foreign_keys => 
+	  [
+		chart => 
+		{
+		  class       => 'My2::DB::Object::Chart',
+		  key_columns => { 'c_id' => 'id' },
+		},
+	  ],
+  
+	  relationships => 
+	  [
+		versions => 
+		{
+		  class        => 'My2::DB::Object::DocumentVersion',
+		  column_map   => { id => 'document_id' },
+		  type         => 'one to many',
+		  manager_args => 
+		  {
+			sort_by => My2::DB::Object::DocumentVersion->meta->table . '.id DESC',
+		  },
+		},
+  
+		version => 
+		{
+		  class        => 'My2::DB::Object::DocumentVersion',
+		  column_map   => { id => 'document_id' },
+		  type         => 'one to one',
+		  manager_args => 
+		  {
+			sort_by => My2::DB::Object::DocumentVersion->meta->table . '.id DESC',
+			limit   => 1,
+		  },
+		},
+  
+		read_status => 
+		{
+		  class      => 'My2::DB::Object::ResultReadStatus',
+		  column_map => { id => 'document_id' },
+		  type       => 'one to many',
+		}
+	  ],
+	);
+  }
 }
 
 END
