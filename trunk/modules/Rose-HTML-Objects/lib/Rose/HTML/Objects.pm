@@ -7,7 +7,7 @@ use File::Spec();
 use File::Path();
 use File::Basename();
 
-our $VERSION = '0.604_01';
+our $VERSION = '0.604_02';
 
 our $Debug = 0;
 
@@ -28,8 +28,17 @@ sub make_private_library
     {
       my $code = $perl->{$pkg};
       $debug > 2 && warn $code, "\n";
-      eval $code;
-      die "Could not eval $pkg - $@"  if($@);
+
+      my $error;
+
+      TRY:
+      {
+        local $@;
+        eval $code;
+        $error = $@;
+      }
+
+      die "Could not eval $pkg - $error"  if($error);
     }
   }
   else
@@ -363,8 +372,16 @@ EOF
 
     if($in_memory)
     {
-      eval "require $base_class";
-      croak "Could not load '$base_class' - $@"  if($@);
+      my $error;
+
+      TRY:
+      {
+        local $@;
+        eval "require $base_class";
+        $error = $@;
+      }
+
+      croak "Could not load '$base_class' - $error"  if($error);
     }
 
     my $package = $rename->($base_class);

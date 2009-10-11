@@ -51,9 +51,17 @@ sub inflate_value
       my $string = $1;
       # Interpolate backslash escapes
       my $interpolated = $string;
-      $interpolated =~ s/\\(.)/eval qq("\\$1")/ge;
 
-      if($@)
+      my $error;
+
+      TRY:
+      {
+        local $@;
+        $interpolated =~ s/\\(.)/eval qq("\\$1")/ge;
+        $error = $@;
+      }
+
+      if($error)
       {
         $self->add_error_id(SET_INVALID_QUOTED_STRING, { string => $string });
         next;

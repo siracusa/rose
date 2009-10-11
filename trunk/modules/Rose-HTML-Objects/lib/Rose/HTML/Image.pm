@@ -9,7 +9,7 @@ our @ISA = qw(Rose::HTML::Object);
 
 our $DOC_ROOT;
 
-our $VERSION = '0.600';
+our $VERSION = '0.605';
 
 __PACKAGE__->add_required_html_attrs(
 {
@@ -61,7 +61,11 @@ sub init_document_root
   {
     my $r;
 
-    eval { $r = Apache2::RequestUtil->request };
+    TRY:
+    {
+      local $@;
+      eval { $r = Apache2::RequestUtil->request };
+    }
 
     if($r)
     {

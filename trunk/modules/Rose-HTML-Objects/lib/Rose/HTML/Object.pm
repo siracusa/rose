@@ -10,7 +10,7 @@ use Scalar::Util();
 use Rose::HTML::Util();
 use Rose::HTML::Object::Message::Localizer;
 
-our $VERSION = '0.600';
+our $VERSION = '0.605';
 
 our $Debug = undef;
 
@@ -375,8 +375,16 @@ sub object_type_class_loaded
     no strict 'refs';
     unless(@{$type_class . '::ISA'})
     {
-      eval "use $type_class";
-      Carp::croak "Could not load class '$type_class' - $@"  if($@);
+      my $error;
+
+      TRY:
+      {
+        local $@;
+        eval "use $type_class";
+        $error = $@;
+      }
+
+      Carp::croak "Could not load class '$type_class' - $error"  if($error);
     }
 
     $Loaded{$type_class}++;

@@ -17,7 +17,7 @@ use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 # Variables for use in regexes
 our $FF_SEPARATOR_RE = quotemeta FF_SEPARATOR;
 
-our $VERSION = '0.602';
+our $VERSION = '0.605';
 
 #
 # Object data
@@ -213,8 +213,16 @@ sub make_field
 
   unless($field_class->can('new'))
   {
-    eval "require $field_class";
-    Carp::croak "Failed to load field class $field_class - $@"  if($@);
+    my $error;
+
+    TRY:
+    {
+      local $@;
+      eval "require $field_class";
+      $error = $@;
+    }
+
+    Carp::croak "Failed to load field class $field_class - $error"  if($error);
   }
 
   # Compound fields require a name
