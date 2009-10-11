@@ -10,7 +10,7 @@ use Rose::DateTime::Parser;
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.604';
+our $VERSION = '0.605';
 
 use Rose::Object::MakeMethods::Generic
 (
@@ -41,9 +41,14 @@ sub time_zone
 sub inflate_value
 {
   my($self, $date) = @_;
+
   return undef  unless(ref $date || (defined $date && length $date));
+
   my $dt;
+
+  local $@;
   eval { $dt = $self->date_parser->parse_datetime($date) };
+
   return $dt;
 }
 

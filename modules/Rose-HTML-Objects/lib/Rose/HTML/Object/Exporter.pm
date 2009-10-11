@@ -4,7 +4,7 @@ use strict;
 
 use Carp;
 
-our $VERSION = 0.544_01;
+our $VERSION = '0.605';
 
 our $Debug = 0;
 
@@ -105,12 +105,19 @@ sub import
     {
       foreach my $code (@$hooks)
       {
-        eval { $code->($class, $symbol, $target_class, $import_as) };
+        my $error;
 
-        if($@)
+        TRY:
+        {
+          local $@;
+          eval { $code->($class, $symbol, $target_class, $import_as) };
+          $error = $@;
+        }
+
+        if($error)
         {
           croak "Could not import symbol '$import_as' from $class into ",
-                "$target_class - $@";
+                "$target_class - $error";
         }
       }
     }

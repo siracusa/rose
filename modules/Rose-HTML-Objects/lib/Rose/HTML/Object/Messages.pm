@@ -6,7 +6,7 @@ use Carp;
 
 use base 'Rose::HTML::Object::Exporter';
 
-our $VERSION = '0.600';
+our $VERSION = '0.605';
 
 our $Debug = 0;
 
@@ -152,8 +152,17 @@ sub add_message
     unless($class->can($name) || defined &$const)
     {
       *{"${class}::$name"} = sub() { $id };
-      #eval "package $class; use constant $name => $id;";
-      #croak "Could not create constant '$name' in $class - $@"  if($@);
+
+      #my $error;
+      #
+      #TRY:
+      #{
+      #  local $@:
+      #  eval "package $class; use constant $name => $id;";
+      #  $error = $@;
+      #}
+      #
+      #croak "Could not create constant '$name' in $class - $error"  if($error);
     }
   }
 

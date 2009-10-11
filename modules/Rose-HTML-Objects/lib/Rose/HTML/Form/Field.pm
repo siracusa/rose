@@ -19,7 +19,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.604';
+our $VERSION = '0.605';
 
 #our $Debug = 0;
 
@@ -623,8 +623,17 @@ sub hidden_fields
   no strict 'refs';
   unless(@{$hidden_field_class . '::ISA'})
   {
-    eval "use $hidden_field_class";
-    Carp::croak "Could not load hidden field class '$hidden_field_class' - $@"  if($@);
+    my $error;
+
+    TRY:
+    {
+      local $@;
+      eval "use $hidden_field_class";
+      $error = $@;
+    }
+
+    Carp::croak "Could not load hidden field class '$hidden_field_class' - $error"
+      if($error);
   }
 
   return 
