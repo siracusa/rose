@@ -147,12 +147,18 @@ sub parse_date
     return $value;
   }
 
-  my $dt;
-  eval { $dt = Rose::DateTime::Util::parse_date($value) };
+  my($error, $dt);
 
-  if($@)
+  TRY:
   {
-    $self->error("Could not parse date '$value' - $@");
+    local $@;
+    eval { $dt = Rose::DateTime::Util::parse_date($value) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse date '$value' - $error");
     return undef;
   }
 
@@ -169,12 +175,18 @@ sub parse_datetime
     return $value;
   }
 
-  my $dt;
-  eval { $dt = Rose::DateTime::Util::parse_date($value) };
+  my($error, $dt);
 
-  if($@)
+  TRY:
   {
-    $self->error("Could not parse datetime '$value' - $@");
+    local $@;
+    eval { $dt = Rose::DateTime::Util::parse_date($value) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse datetime '$value' - $error");
     return undef;
   }
 
@@ -191,16 +203,23 @@ sub parse_datetime_year_to_second
     return $value;
   }
 
-  my $dt;
-  eval { $dt = Rose::DateTime::Util::parse_date($value) };
+  my($error, $dt);
 
-  if($@)
+  TRY:
   {
-    $self->error("Could not parse datetime year to second '$value' - $@");
+    local $@;
+    eval { $dt = Rose::DateTime::Util::parse_date($value) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse datetime year to second '$value' - $error");
     return undef;
   }
 
   $dt->truncate(to => 'second')  if(ref $dt);
+
   return $dt;
 }
 
@@ -212,12 +231,18 @@ sub parse_datetime_year_to_fraction
 
   $fraction ||= 3;
 
-  my $dt;
-  eval { $dt = Rose::DateTime::Util::parse_date($arg) };
+  my($error, $dt);
 
-  if($@)
+  TRY:
   {
-    $self->error("Could not parse datetime year to fraction '$arg' - $@");
+    local $@;
+    eval { $dt = Rose::DateTime::Util::parse_date($arg) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse datetime year to fraction '$arg' - $error");
     return undef;
   }
 
@@ -254,16 +279,23 @@ sub parse_datetime_year_to_minute
     return $value;
   }
 
-  my $dt;  
-  eval { $dt = Rose::DateTime::Util::parse_date($value) };
+  my($error, $dt);
 
-  if($@)
+  TRY:
   {
-    $self->error("Could not parse datetime year to minute '$value' - $@");
+    local $@;
+    eval { $dt = Rose::DateTime::Util::parse_date($value) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse datetime year to minute '$value' - $error");
     return undef;
   }
 
   $dt->truncate(to => 'minute')  if(ref $dt);
+
   return $dt;
 }
 
@@ -288,16 +320,23 @@ sub parse_datetime_year_to_month
     $value .= '-01';
   }
 
-  my $dt;  
-  eval { $dt = Rose::DateTime::Util::parse_date($value) };
+  my($error, $dt);
 
-  if($@)
+  TRY:
   {
-    $self->error("Could not parse datetime year to month '$value' - $@");
+    local $@;
+    eval { $dt = Rose::DateTime::Util::parse_date($value) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse datetime year to month '$value' - $error");
     return undef;
   }
 
   $dt->truncate(to => 'month')  if(ref $dt);
+
   return $dt;
 }
 
@@ -311,12 +350,18 @@ sub parse_timestamp
     return $value;
   }
 
-  my $dt;  
-  eval { $dt = Rose::DateTime::Util::parse_date($value) };
+  my($error, $dt);
 
-  if($@)
+  TRY:
   {
-    $self->error("Could not parse timestamp '$value' - $@");
+    local $@;
+    eval { $dt = Rose::DateTime::Util::parse_date($value) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse timestamp '$value' - $error");
     return undef;
   }
 
@@ -511,18 +556,25 @@ sub next_value_in_sequence
 
   my $dbh = $self->dbh or return undef;
 
-  my $id;
+  my($error, $id);
 
-  eval
+  TRY:
   {
-    my $sth = $dbh->prepare(qq(SELECT nextval('$seq')));
-    $sth->execute;
-    $id = ${$sth->fetchrow_arrayref}[0];
-  };
+    local $@;
 
-  if($@)
+    eval
+    {
+      my $sth = $dbh->prepare(qq(SELECT nextval('$seq')));
+      $sth->execute;
+      $id = ${$sth->fetchrow_arrayref}[0];
+    };
+
+    $error = $@;
+  }
+
+  if($error)
   {
-    $self->error("Could not get the next value in the sequence '$seq' - $@");
+    $self->error("Could not get the next value in the sequence '$seq' - $error");
     return undef;
   }
 
@@ -549,13 +601,20 @@ sub supports_limit_with_offset
   {
     my $version;
 
-    eval
+    TRY:
     {
-      $Debug && warn VERSION_SQL, "\n";
-      my $sth = $dbh->prepare(VERSION_SQL);
-      $sth->execute;
-      ($version) = $sth->fetchrow_array;
-    };
+      local $@;
+
+      eval
+      {
+        $Debug && warn VERSION_SQL, "\n";
+        my $sth = $dbh->prepare(VERSION_SQL);
+        $sth->execute;
+        ($version) = $sth->fetchrow_array;
+      };
+
+      # Intentionally ignore any errors
+    }
 
     %Major_Version_Cache = ()  if(keys %Major_Version_Cache > MAX_TO_CACHE);
     $Major_Version_Cache{$dbh} = $version || 0;
@@ -607,67 +666,74 @@ sub list_tables
 {
   my($self, %args) = @_;
 
-  my @tables;
+  my(@tables, $error);
 
-  eval
+  TRY:
   {
-    my $dbh = $self->dbh or die $self->error;
+    local $@;
 
-    local $dbh->{'RaiseError'} = 1;
-
-    my @table_info = $dbh->func('user', '_tables');
-
-    my $schema = $self->schema;
-
-    #if($args{'include_views'})
-    #{
-    #  my @view_info = $dbh->func('view', '_tables');
-    #  push(@table_info, @view_info);
-    #}
-
-    my %seen;
-
-    foreach my $item (@table_info)
+    eval
     {
-      # From DBD::Informix::Metadata:
-      #
-      # The owner name will be enclosed in double quotes; if it contains
-      # double quotes, those will be doubled up as required by SQL.  The
-      # table name will only be enclosed in double quotes if it is not a
-      # valid C identifier (meaning, it starts with an alphabetic
-      # character or underscore, and continues with alphanumeric
-      # characters or underscores).  If it is enclosed in double quotes,
-      # any embedded double quotes are doubled up.
-      #
-      # "jsiracusa                       ".test
+      my $dbh = $self->dbh or die $self->error;
 
-      if($item =~ /^(?: "((?:""|[^"]+)+)" | ([^"]+) ) \. (?: "((?:""|[^"]+)+)" | ([^"]+) )$/x)
+      local $dbh->{'RaiseError'} = 1;
+
+      my @table_info = $dbh->func('user', '_tables');
+
+      my $schema = $self->schema;
+
+      #if($args{'include_views'})
+      #{
+      #  my @view_info = $dbh->func('view', '_tables');
+      #  push(@table_info, @view_info);
+      #}
+
+      my %seen;
+
+      foreach my $item (@table_info)
       {
-        my $user  = defined $1 ? $1 : $2;
-        my $table = defined $3 ? $3 : $4;
+        # From DBD::Informix::Metadata:
+        #
+        # The owner name will be enclosed in double quotes; if it contains
+        # double quotes, those will be doubled up as required by SQL.  The
+        # table name will only be enclosed in double quotes if it is not a
+        # valid C identifier (meaning, it starts with an alphabetic
+        # character or underscore, and continues with alphanumeric
+        # characters or underscores).  If it is enclosed in double quotes,
+        # any embedded double quotes are doubled up.
+        #
+        # "jsiracusa                       ".test
 
-        for($user, $table)
+        if($item =~ /^(?: "((?:""|[^"]+)+)" | ([^"]+) ) \. (?: "((?:""|[^"]+)+)" | ([^"]+) )$/x)
         {
-          s/""/"/g;
+          my $user  = defined $1 ? $1 : $2;
+          my $table = defined $3 ? $3 : $4;
+
+          for($user, $table)
+          {
+            s/""/"/g;
+          }
+
+          next  if($seen{$table}++);
+
+          if(!defined $schema || $schema eq $user)
+          {
+            push(@tables, $table);
+          }
         }
-
-        next  if($seen{$table}++);
-
-        if(!defined $schema || $schema eq $user)
+        else
         {
-          push(@tables, $table);
+          Carp::carp "Could not parse table information: $item";
         }
       }
-      else
-      {
-        Carp::carp "Could not parse table information: $item";
-      }
-    }
-  };
+    };
 
-  if($@)
+    $error = $@;
+  }
+
+  if($error)
   {
-    Carp::croak "Could not list tables from ", $self->dsn, " - $@";
+    Carp::croak "Could not list tables from ", $self->dsn, " - $error";
   }
 
   return wantarray ? @tables : \@tables;

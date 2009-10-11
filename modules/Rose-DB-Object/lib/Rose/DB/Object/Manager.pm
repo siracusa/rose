@@ -186,11 +186,18 @@ sub make_manager_methods
 
   unless(UNIVERSAL::isa($object_class, 'Rose::DB::Object'))
   {
-    eval "require $object_class";
+    my $error;
 
-    if($@)
+    TRY:
     {
-      Carp::croak "Could not load object class $object_class - $@";
+      local $@;
+      eval "require $object_class";
+      $error = $@;
+    }
+
+    if($error)
+    {
+      Carp::croak "Could not load object class $object_class - $error";
     }
   }
 
@@ -1708,38 +1715,47 @@ sub get_objects
 
     my $count = 0;
 
-    eval
+    my $error;
+
+    TRY:
     {
-      local $dbh->{'RaiseError'} = 1;
-      $Debug && warn "$sql (", join(', ', @$bind), ")\n";
-      my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
-                                  $dbh->prepare($sql);
+      local $@;
 
-      if(@bind_params)
+      eval
       {
-        my $i = 1;
+        local $dbh->{'RaiseError'} = 1;
+        $Debug && warn "$sql (", join(', ', @$bind), ")\n";
+        my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                    $dbh->prepare($sql);
 
-        foreach my $value (@$bind)
+        if(@bind_params)
         {
-          $sth->bind_param($i, $value, $bind_params[$i - 1]);
-          $i++;
+          my $i = 1;
+
+          foreach my $value (@$bind)
+          {
+            $sth->bind_param($i, $value, $bind_params[$i - 1]);
+            $i++;
+          }
+
+          $sth->execute;
+        }
+        else
+        {
+          $sth->execute(@$bind);
         }
 
-        $sth->execute;
-      }
-      else
-      {
-        $sth->execute(@$bind);
-      }
+        ($count) = $sth->fetchrow_array;
+        $sth->finish;
+      };
 
-      ($count) = $sth->fetchrow_array;
-      $sth->finish;
-    };
+      $error = $@;
+    }
 
-    if($@)
+    if($error)
     {
       $class->total(undef);
-      $class->error("get_objects() - $@");
+      $class->error("get_objects() - $error");
       $class->handle_error($class);
       return undef;
     }
@@ -1956,137 +1972,699 @@ sub get_objects
     return wantarray ? ($sql, $bind) : $sql;
   }
 
-  eval
+  my $error;
+
+  TRY:
   {
-    local $dbh->{'RaiseError'} = 1;
+    local $@;
 
-    $Debug && warn "$sql (", join(', ', @$bind), ")\n";
-    # $meta->prepare_select_options (defunct)
-    my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
-                                $dbh->prepare($sql) or die $dbh->errstr;
-
-    $sth->{'RaiseError'} = 1;
-
-    if(@bind_params)
+    eval
     {
-      my $i = 1;
+      local $dbh->{'RaiseError'} = 1;
 
-      foreach my $value (@$bind)
+      $Debug && warn "$sql (", join(', ', @$bind), ")\n";
+      # $meta->prepare_select_options (defunct)
+      my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                  $dbh->prepare($sql) or die $dbh->errstr;
+
+      $sth->{'RaiseError'} = 1;
+
+      if(@bind_params)
       {
-        $sth->bind_param($i, $value, $bind_params[$i - 1]);
-        $i++;
+        my $i = 1;
+
+        foreach my $value (@$bind)
+        {
+          $sth->bind_param($i, $value, $bind_params[$i - 1]);
+          $i++;
+        }
+
+        $sth->execute;
+      }
+      else
+      {
+        $sth->execute(@$bind);
       }
 
-      $sth->execute;
-    }
-    else
-    {
-      $sth->execute(@$bind);
-    }
+      my %row;
 
-    my %row;
+      my $col_num   = 1;
+      my $table_num = 0;
 
-    my $col_num   = 1;
-    my $table_num = 0;
-
-    if($select)
-    {      
-      foreach my $orig_item (@$select)
-      {
-        my($class, $table_num, $column);
-
-        my $item = (ref $orig_item eq 'SCALAR') ? $$orig_item : $orig_item;
-
-        if($item =~ s/\s+AS\s+(\w.+)$//i)
+      if($select)
+      {      
+        foreach my $orig_item (@$select)
         {
-          $column = $1;
-        }
+          my($class, $table_num, $column);
 
-        if(index($item, '.') < 0)
-        {
-          $table_num = 0;
-          $class = $classes[$table_num];
-          $column ||= $item;
-        }
-        elsif($item =~ /^t(\d+)\.(.+)$/)
-        {
-          $table_num = $1 - 1;
-          $class = $classes[$table_num];
-          $column ||= $2;
-        }
-        elsif($item =~ /^(['"]?)([^.(]+)\1\.(['"]?)(.+)\3$/)
-        {
-          my $table = $2;
-          $class = $classes{$table};
-          $column ||= $4;
-          my $table_num = $tn{$table} || $rel_tn{$table};
-        }
-        else
-        {
-          $table_num = 0;
-          $class = $classes[$table_num];
-          $column ||= $item;
-        }
+          my $item = (ref $orig_item eq 'SCALAR') ? $$orig_item : $orig_item;
 
-        $sth->bind_col($col_num++, \$row{$class,$table_num}{$column});
-      }
-    }
-    else
-    {
-      if($direct_inject)
-      {
-        my $driver = $db->driver || 'unknown';
-
-        foreach my $table (@tables)
-        {
-          my $class   = $classes{$table};
-          my $key_map = $di_keys{$class};
-
-          foreach my $column (@{$methods{$table}})
+          if($item =~ s/\s+AS\s+(\w.+)$//i)
           {
-            if($key_map->{$column} eq $column)
-            {
-              $sth->bind_col($col_num++, \$row{$class,$table_num}{$column});
-            }
-            else # attribute uses a db-formatted key
-            {
-              $sth->bind_col($col_num++, \$row{$class,$table_num}{$key_map->{$column},$driver});
-            }
+            $column = $1;
           }
 
-          $table_num++;
+          if(index($item, '.') < 0)
+          {
+            $table_num = 0;
+            $class = $classes[$table_num];
+            $column ||= $item;
+          }
+          elsif($item =~ /^t(\d+)\.(.+)$/)
+          {
+            $table_num = $1 - 1;
+            $class = $classes[$table_num];
+            $column ||= $2;
+          }
+          elsif($item =~ /^(['"]?)([^.(]+)\1\.(['"]?)(.+)\3$/)
+          {
+            my $table = $2;
+            $class = $classes{$table};
+            $column ||= $4;
+            my $table_num = $tn{$table} || $rel_tn{$table};
+          }
+          else
+          {
+            $table_num = 0;
+            $class = $classes[$table_num];
+            $column ||= $item;
+          }
+
+          $sth->bind_col($col_num++, \$row{$class,$table_num}{$column});
         }
       }
       else
       {
-        foreach my $table (@tables)
+        if($direct_inject)
         {
-          my $class = $classes{$table};
+          my $driver = $db->driver || 'unknown';
 
-          foreach my $column (@{$methods{$table}})
+          foreach my $table (@tables)
           {
-            $sth->bind_col($col_num++, \$row{$class,$table_num}{$column});
-          }
+            my $class   = $classes{$table};
+            my $key_map = $di_keys{$class};
 
-          $table_num++;
+            foreach my $column (@{$methods{$table}})
+            {
+              if($key_map->{$column} eq $column)
+              {
+                $sth->bind_col($col_num++, \$row{$class,$table_num}{$column});
+              }
+              else # attribute uses a db-formatted key
+              {
+                $sth->bind_col($col_num++, \$row{$class,$table_num}{$key_map->{$column},$driver});
+              }
+            }
+
+            $table_num++;
+          }
+        }
+        else
+        {
+          foreach my $table (@tables)
+          {
+            my $class = $classes{$table};
+
+            foreach my $column (@{$methods{$table}})
+            {
+              $sth->bind_col($col_num++, \$row{$class,$table_num}{$column});
+            }
+
+            $table_num++;
+          }
         }
       }
-    }
 
-    if($return_iterator)
-    {
-      $iterator = Rose::DB::Object::Iterator->new(active => 1);
+      if($return_iterator)
+      {
+        $iterator = Rose::DB::Object::Iterator->new(active => 1);
 
-      my $count = 0;
+        my $count = 0;
 
-      # More trading of code duplication for performance: build custom
-      # subroutines depending on how much work needs to be done for
-      # each iteration.
+        # More trading of code duplication for performance: build custom
+        # subroutines depending on how much work needs to be done for
+        # each iteration.
+
+        if($with_objects)
+        {
+          # Ug, we have to handle duplicate data due to "...to many" relationships
+          # fetched via outer joins.
+          if($handle_dups)# || $deep_joins)
+          {
+            my(@seen, %seen, @sub_objects);
+
+            #my @pk_columns = $meta->primary_key_column_names;
+            my $pk_columns = $meta->primary_key_column_names_or_aliases;
+
+            # Get list of primary key columns for each sub-table
+            my @sub_pk_columns;
+
+            foreach my $i (1 .. $num_subtables)
+            {
+              #$sub_pk_columns[$i + 1] = [ $classes[$i]->meta->primary_key_column_names ];
+              $sub_pk_columns[$i + 1] = $classes[$i]->meta->primary_key_column_names_or_aliases;
+            }
+
+            my($last_object, %subobjects, %parent_objects);
+
+            weaken(my $witerator = $iterator);
+
+            $iterator->_next_code(sub
+            {
+              my($self) = shift;
+
+              my $object = 0;
+              my $object_is_ready = 0;
+
+              my(@objects, $error);
+
+              TRY:
+              {
+                local $@;
+
+                eval
+                {
+                  ROW: for(;;)
+                  {
+                    last ROW  unless($sth);
+
+                    while($sth->fetch)
+                    {
+                      my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @$pk_columns);
+
+                      # If this is a new main (t1) table row that we haven't seen before
+                      unless($seen[0]{$pk}++)
+                      {
+                        # First, finish building the last object, if it exists
+                        if($last_object)
+                        {
+                          #$Debug && warn "Finish $object_class $last_object->{'id'}\n";
+
+                          if($direct_inject)
+                          {
+                            while(my($ident, $parent) = each(%parent_objects))
+                            {
+                              while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                              {
+                                $parent->{$method} = $subobjects;
+                              }
+                            }                      
+                          }
+                          else
+                          {
+                            while(my($ident, $parent) = each(%parent_objects))
+                            {
+                              local $parent->{STATE_LOADING()} = 1;
+
+                              while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                              {
+                                $parent->$method($subobjects);
+                              }
+                            }
+                          }
+
+                          %subobjects = ();
+                          %parent_objects = ();
+
+                          # Add the object to the final list of objects that we'll return
+                          push(@objects, $last_object);
+
+                          $object_is_ready = 1;
+                        }
+
+                        #$Debug && warn "Make $object_class $pk\n";
+
+                        # Now, create the object from this new main table row
+                        if($direct_inject)
+                        {
+                          $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
+                        }
+                        else
+                        {
+                          $object = $object_class->new(%object_args);
+
+                          local $object->{STATE_LOADING()} = 1;
+                          $object->init(%{$row{$object_class,0}});
+                          $object->{STATE_IN_DB()} = 1;
+                        }
+
+                        $last_object = $object; # This is the "last object" from now on
+                        @sub_objects = ();      # The list of sub-objects is per-object
+                        splice(@seen, 1);       # Sub-objects seen is also per-object,
+                                                # so trim it, but leave the t1 table info
+                        %seen = ();             # Wipe sub-object parent tracking.
+                      }
+
+                      $object ||= $last_object or die "Missing object for primary key '$pk'";
+
+                      my $map_record;
+
+                      foreach my $i (1 .. $num_subtables)
+                      {
+                        my $mapped_object_method = $mapped_object_methods[$i];
+                        next  if(defined $mapped_object_method && !$mapped_object_method);
+
+                        my $class  = $classes[$i];
+                        my $tn = $i + 1;
+
+                        # Null primary key columns are not allowed
+                        my $sub_pk = join(PK_JOIN, grep { defined } map { $row{$class,$i}{$_} } @{$sub_pk_columns[$tn]});
+                        next  unless(length $sub_pk);
+
+                        my $subobject = $seen[$i]{$sub_pk};
+
+                        unless($subobject)
+                        {
+                          # Make sub-object
+                          if($direct_inject)
+                          {
+                            $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args }, $class;
+                          }
+                          else
+                          {    
+                            $subobject = $class->new(%subobject_args);
+                            local $subobject->{STATE_LOADING()} = 1;
+                            $subobject->init(%{$row{$class,$i}});
+                            $subobject->{STATE_IN_DB()} = 1;
+                          }
+
+                          $seen[$i]{$sub_pk} = $subobject;
+                        }
+
+                        # If this object belongs to an attribute that can have more
+                        # than one object then just save it for later in the
+                        # per-object sub-objects list.
+                        if($has_dups[$i])
+                        {
+                          if($mapped_object_methods[$i])
+                          {
+                            $map_record = $subobject;
+                          }
+                          else
+                          {
+                            if($map_record)
+                            {
+                              my $method = $mapped_object_methods[$i - 1] or next;
+
+                              if($direct_inject)
+                              {
+                                $subobject->{$method} = $map_record;
+                              }
+                              else
+                              {
+                                local $subobject->{STATE_LOADING()} = 1;
+                                $subobject->$method($map_record);
+                              }
+
+                              $map_record = 0;
+                            }
+
+                            next  if(defined $mapped_object_methods[$i]);
+
+                            if($has_dups[$i] && (my $bt = $belongs_to[$i]))
+                            {
+                              #$subobjects_belong_to[$i] = $#{$sub_objects[$bt]};
+
+                              my $parent_object = $sub_objects[$bt];
+
+                              # XXX: Special heavyweight subobject pairing in multi-many queries
+                              if($multi_many && ref $parent_object eq 'ARRAY' && @$parent_object > 1)
+                              {
+                                my $maps = $subobject_method_map[$i + 1][$bt];
+                                my %check;
+
+                                foreach my $map (@$maps)
+                                {
+                                  my $subobject_method = $map->[1];
+                                  $check{$subobject_method} = $subobject->$subobject_method();
+                                }
+
+                                PARENT: foreach my $check_parent (reverse @$parent_object)
+                                {
+                                  foreach my $map (@$maps)
+                                  {
+                                    my $parent_method = $map->[0];
+                                    next PARENT  unless($check_parent->$parent_method() eq $check{$map->[1]});
+                                  }
+
+                                  $parent_object = $check_parent;
+                                  last PARENT;
+                                }
+                              }
+
+                              # XXX: This relies on parent objects coming before child
+                              # objects in the list of tables in the FROM clause.
+                              $parent_object = $parent_object->[-1] #$parent_object->[$subobjects_belong_to[$i]]
+                                if(ref $parent_object eq 'ARRAY');
+
+                              my $method = $subobject_methods[$i];
+
+                              my $ident = refaddr $parent_object;
+                              next  if($seen{$ident,$method}{$sub_pk}++);
+                              $parent_objects{$ident} = $parent_object;
+                              push(@{$subobjects{$ident}{$method}}, $subobject);
+                            }
+                            else
+                            {
+                              my $ident = refaddr $object;
+                              my $method = $subobject_methods[$i];
+                              next  if($seen{$ident,$method}{$sub_pk}++);
+                              $parent_objects{$ident} = $object;
+                              push(@{$subobjects{$ident}{$method}}, $subobject);
+                            }
+
+                            push(@{$sub_objects[$i]}, $subobject);
+                          }
+                        }
+                        else # Otherwise, just assign it
+                        {
+                          $sub_objects[$i] = $subobject;
+                          my $parent_object;
+
+                          if(my $bt = $belongs_to[$i])
+                          {
+                            $parent_object = $sub_objects[$bt];
+                            # XXX: This relies on parent objects coming before
+                            # child objects in the list of tables in the FROM
+                            # clause.
+                            $parent_object = $parent_object->[-1]  if(ref $parent_object eq 'ARRAY');
+                          }
+                          else
+                          {
+                            $parent_object = $object;
+                          }
+
+                          my $method = $subobject_methods[$i];
+
+                          # Only assign "... to one" values once
+                          next  if($seen{refaddr $parent_object,$method}++);
+
+                          if($direct_inject)
+                          {
+                            $parent_object->{$method} = $subobject;
+                          }
+                          else
+                          {
+                            local $parent_object->{STATE_LOADING()} = 1;
+                            $parent_object->$method($subobject);
+                          }
+                        }
+                      }
+
+                      if($skip_first)
+                      {
+                        next ROW  if($seen[0]{$pk} > 1);
+                        ++$count  if($seen[0]{$pk} == 1);
+                        next ROW  if($count <= $skip_first);
+
+                        $skip_first = 0;
+                        @objects = ();        # Discard all skipped objects...
+                        $object_is_ready = 0; # ...so none are ready now
+                        next ROW;
+                      }
+
+                      if($object_is_ready)
+                      {
+                        $self->{'_count'}++;
+                        last ROW;
+                      }
+
+                      no warnings;
+                      if($manual_limit && $self->{'_count'} == $manual_limit)
+                      {
+                        $self->finish;
+                        last ROW;
+                      }
+                    }
+
+                    # Handle the left-over "last object" that needs to be finished and
+                    # added to the final list of objects to return.
+                    if($last_object && !$object_is_ready)
+                    {
+                      #$Debug && warn "Finish straggler $object_class $last_object->{'id'}\n";
+
+                      if($direct_inject)
+                      {
+                        while(my($ident, $parent) = each(%parent_objects))
+                        {
+                          while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                          {
+                            $parent->{$method} = $subobjects;
+                          }
+                        }
+                      }
+                      else
+                      {
+                        while(my($ident, $parent) = each(%parent_objects))
+                        {
+                          local $parent->{STATE_LOADING()} = 1;
+
+                          while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                          {
+                            $parent->$method($subobjects);
+                          }
+                        }
+                      }
+
+                      push(@objects, $last_object);
+
+                      # Set everything up to return this object, then be done
+                      $last_object = undef;
+                      $self->{'_count'}++;
+                      $sth = undef;
+                      last ROW;
+                    }
+
+                    last ROW;
+                  }
+                };
+
+                $error = $@;
+              }
+
+              if($error)
+              {
+                $self->error("next() - $error");
+                $class->handle_error($self);
+                return undef;
+              }
+
+              @objects = ()  if($skip_first);
+
+              if(@objects)
+              {
+                no warnings; # undef count okay
+                if($manual_limit && $self->{'_count'} == $manual_limit)
+                {
+                  $self->total($self->{'_count'});
+                  $self->finish;
+                }
+
+                #$Debug && warn "Return $object_class $objects[-1]{'id'}\n";
+                return shift(@objects);
+              }
+
+              #$Debug && warn "Return 0\n";
+              return 0;
+            });
+
+          }
+          else # no duplicate rows to handle
+          {
+            $iterator->_next_code(sub
+            {
+              my($self) = shift;
+
+              my $object = 0;
+
+              my $error;
+
+              TRY:
+              {
+                local $@;
+
+                eval
+                {
+                  ROW: for(;;)
+                  {
+                    unless($sth->fetch)
+                    {
+                      return 0;
+                    }
+
+                    next ROW  if($skip_first && ++$count <= $skip_first);
+
+                    if($direct_inject)
+                    {
+                      $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
+                    }
+                    else
+                    {
+                      $object = $object_class->new(%object_args);
+
+                      local $object->{STATE_LOADING()} = 1;
+                      $object->init(%{$row{$object_class,0}});
+                      $object->{STATE_IN_DB()} = 1;
+                    }
+
+                    my @sub_objects;
+
+                    if($with_objects)
+                    {
+                      foreach my $i (1 .. $num_subtables)
+                      {
+                        my $method = $subobject_methods[$i];
+                        my $class  = $classes[$i];
+
+                        # Skip undefined subobjects
+                        next  unless(grep { defined } values %{$row{$class,$i}});
+
+                        my $subobject;
+
+                        if($direct_inject)
+                        {
+                          $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args }, $class;
+                        }
+                        else
+                        {
+                          $subobject = $class->new(%subobject_args);
+                          local $subobject->{STATE_LOADING()} = 1;
+                          $subobject->init(%{$row{$class,$i}});
+                          $subobject->{STATE_IN_DB()} = 1;
+                        }
+
+                        $sub_objects[$i] = $subobject;
+
+                        if($direct_inject)
+                        {
+                          if(my $bt = $belongs_to[$i])
+                          {
+                            $sub_objects[$bt]->{$method} = $subobject;
+                          }
+                          else
+                          {
+                            $object->{$method} = $subobject;
+                          }
+                        }
+                        else
+                        {
+                          if(my $bt = $belongs_to[$i])
+                          {
+                            local $sub_objects[$bt]->{STATE_LOADING()} = 1;
+                            $sub_objects[$bt]->$method($subobject);
+                          }
+                          else
+                          {
+                            local $object->{STATE_LOADING()} = 1;
+                            $object->$method($subobject);
+                          }
+                        }
+                      }
+                    }
+
+                    $skip_first = 0;
+                    $self->{'_count'}++;
+                    last ROW;
+                  }
+                };
+
+                $error = $@;
+              }
+
+              if($error)
+              {
+                $self->error("next() - $error");
+                $class->handle_error($self);
+                return undef;
+              }
+
+              return $skip_first ? undef : $object;
+            });
+          }
+        }
+        else # no sub-objects at all
+        {
+          $iterator->_next_code(sub
+          {
+            my($self) = shift;
+
+            my $object = 0;
+
+            my $error;
+
+            TRY:
+            {
+              local $@;
+
+              eval
+              {
+                ROW: for(;;)
+                {
+                  unless($sth->fetch)
+                  {
+                    #$self->total($self->{'_count'});
+                    return 0;
+                  }
+
+                  next ROW  if($skip_first && ++$count <= $skip_first);
+
+                  if($direct_inject)
+                  {
+                    $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
+                  }
+                  else
+                  {
+                    $object = $object_class->new(%object_args);
+
+                    local $object->{STATE_LOADING()} = 1;
+                    $object->init(%{$row{$object_class,0}});
+                    $object->{STATE_IN_DB()} = 1;
+                  }
+
+                  $skip_first = 0;
+                  $self->{'_count'}++;
+                  last ROW;
+                }
+              };
+
+              $error = $@;
+            }
+
+            if($error)
+            {
+              $self->error("next() - $error");
+              $class->handle_error($self);
+              return undef;
+            }
+
+            return $object;
+          });
+        }
+
+        $iterator->_finish_code(sub
+        {
+          $sth->finish      if($sth);
+          $db->release_dbh  if($db && $dbh_retained);
+          $sth = undef;
+          $db = undef;
+        });
+
+        $iterator->_destroy_code(sub
+        {
+          $db->release_dbh  if($db && $dbh_retained);
+          $sth = undef;
+          $db = undef;
+        });
+
+        return $iterator;
+      }
+
+      $count = 0;
 
       if($with_objects)
       {
-        # Ug, we have to handle duplicate data due to "...to many" relationships
-        # fetched via outer joins.
+        # This "if" clause is a totally separate code path for handling
+        # duplicates rows.  I'm doing this for performance reasons.
         if($handle_dups)# || $deep_joins)
         {
           my(@seen, %seen, @sub_objects);
@@ -2105,464 +2683,54 @@ sub get_objects
 
           my($last_object, %subobjects, %parent_objects);
 
-          weaken(my $witerator = $iterator);
-
-          $iterator->_next_code(sub
+          ROW: while($sth->fetch)
           {
-            my($self) = shift;
+            my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @$pk_columns);
 
-            my $object = 0;
-            my $object_is_ready = 0;
-            my @objects;
+            my $object;
 
-            eval
+            # If this is a new main (t1) table row that we haven't seen before
+            unless($seen[0]{$pk}++)
             {
-              ROW: for(;;)
+              # First, finish building the last object, if it exists
+              if($last_object)
               {
-                last ROW  unless($sth);
-
-                while($sth->fetch)
-                {
-                  my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @$pk_columns);
-
-                  # If this is a new main (t1) table row that we haven't seen before
-                  unless($seen[0]{$pk}++)
-                  {
-                    # First, finish building the last object, if it exists
-                    if($last_object)
-                    {
-                      #$Debug && warn "Finish $object_class $last_object->{'id'}\n";
-
-                      if($direct_inject)
-                      {
-                        while(my($ident, $parent) = each(%parent_objects))
-                        {
-                          while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
-                          {
-                            $parent->{$method} = $subobjects;
-                          }
-                        }                      
-                      }
-                      else
-                      {
-                        while(my($ident, $parent) = each(%parent_objects))
-                        {
-                          local $parent->{STATE_LOADING()} = 1;
-
-                          while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
-                          {
-                            $parent->$method($subobjects);
-                          }
-                        }
-                      }
-
-                      %subobjects = ();
-                      %parent_objects = ();
-
-                      # Add the object to the final list of objects that we'll return
-                      push(@objects, $last_object);
-
-                      $object_is_ready = 1;
-                    }
-
-                    #$Debug && warn "Make $object_class $pk\n";
-
-                    # Now, create the object from this new main table row
-                    if($direct_inject)
-                    {
-                      $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
-                    }
-                    else
-                    {
-                      $object = $object_class->new(%object_args);
-
-                      local $object->{STATE_LOADING()} = 1;
-                      $object->init(%{$row{$object_class,0}});
-                      $object->{STATE_IN_DB()} = 1;
-                    }
-
-                    $last_object = $object; # This is the "last object" from now on
-                    @sub_objects = ();      # The list of sub-objects is per-object
-                    splice(@seen, 1);       # Sub-objects seen is also per-object,
-                                            # so trim it, but leave the t1 table info
-                    %seen = ();             # Wipe sub-object parent tracking.
-                  }
-
-                  $object ||= $last_object or die "Missing object for primary key '$pk'";
-
-                  my $map_record;
-
-                  foreach my $i (1 .. $num_subtables)
-                  {
-                    my $mapped_object_method = $mapped_object_methods[$i];
-                    next  if(defined $mapped_object_method && !$mapped_object_method);
-
-                    my $class  = $classes[$i];
-                    my $tn = $i + 1;
-
-                    # Null primary key columns are not allowed
-                    my $sub_pk = join(PK_JOIN, grep { defined } map { $row{$class,$i}{$_} } @{$sub_pk_columns[$tn]});
-                    next  unless(length $sub_pk);
-
-                    my $subobject = $seen[$i]{$sub_pk};
-
-                    unless($subobject)
-                    {
-                      # Make sub-object
-                      if($direct_inject)
-                      {
-                        $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args }, $class;
-                      }
-                      else
-                      {    
-                        $subobject = $class->new(%subobject_args);
-                        local $subobject->{STATE_LOADING()} = 1;
-                        $subobject->init(%{$row{$class,$i}});
-                        $subobject->{STATE_IN_DB()} = 1;
-                      }
-
-                      $seen[$i]{$sub_pk} = $subobject;
-                    }
-
-                    # If this object belongs to an attribute that can have more
-                    # than one object then just save it for later in the
-                    # per-object sub-objects list.
-                    if($has_dups[$i])
-                    {
-                      if($mapped_object_methods[$i])
-                      {
-                        $map_record = $subobject;
-                      }
-                      else
-                      {
-                        if($map_record)
-                        {
-                          my $method = $mapped_object_methods[$i - 1] or next;
-
-                          if($direct_inject)
-                          {
-                            $subobject->{$method} = $map_record;
-                          }
-                          else
-                          {
-                            local $subobject->{STATE_LOADING()} = 1;
-                            $subobject->$method($map_record);
-                          }
-
-                          $map_record = 0;
-                        }
-
-                        next  if(defined $mapped_object_methods[$i]);
-
-                        if($has_dups[$i] && (my $bt = $belongs_to[$i]))
-                        {
-                          #$subobjects_belong_to[$i] = $#{$sub_objects[$bt]};
-
-                          my $parent_object = $sub_objects[$bt];
-
-                          # XXX: Special heavyweight subobject pairing in multi-many queries
-                          if($multi_many && ref $parent_object eq 'ARRAY' && @$parent_object > 1)
-                          {
-                            my $maps = $subobject_method_map[$i + 1][$bt];
-                            my %check;
-
-                            foreach my $map (@$maps)
-                            {
-                              my $subobject_method = $map->[1];
-                              $check{$subobject_method} = $subobject->$subobject_method();
-                            }
-
-                            PARENT: foreach my $check_parent (reverse @$parent_object)
-                            {
-                              foreach my $map (@$maps)
-                              {
-                                my $parent_method = $map->[0];
-                                next PARENT  unless($check_parent->$parent_method() eq $check{$map->[1]});
-                              }
-
-                              $parent_object = $check_parent;
-                              last PARENT;
-                            }
-                          }
-
-                          # XXX: This relies on parent objects coming before child
-                          # objects in the list of tables in the FROM clause.
-                          $parent_object = $parent_object->[-1] #$parent_object->[$subobjects_belong_to[$i]]
-                            if(ref $parent_object eq 'ARRAY');
-
-                          my $method = $subobject_methods[$i];
-
-                          my $ident = refaddr $parent_object;
-                          next  if($seen{$ident,$method}{$sub_pk}++);
-                          $parent_objects{$ident} = $parent_object;
-                          push(@{$subobjects{$ident}{$method}}, $subobject);
-                        }
-                        else
-                        {
-                          my $ident = refaddr $object;
-                          my $method = $subobject_methods[$i];
-                          next  if($seen{$ident,$method}{$sub_pk}++);
-                          $parent_objects{$ident} = $object;
-                          push(@{$subobjects{$ident}{$method}}, $subobject);
-                        }
-
-                        push(@{$sub_objects[$i]}, $subobject);
-                      }
-                    }
-                    else # Otherwise, just assign it
-                    {
-                      $sub_objects[$i] = $subobject;
-                      my $parent_object;
-
-                      if(my $bt = $belongs_to[$i])
-                      {
-                        $parent_object = $sub_objects[$bt];
-                        # XXX: This relies on parent objects coming before
-                        # child objects in the list of tables in the FROM
-                        # clause.
-                        $parent_object = $parent_object->[-1]  if(ref $parent_object eq 'ARRAY');
-                      }
-                      else
-                      {
-                        $parent_object = $object;
-                      }
-
-                      my $method = $subobject_methods[$i];
-
-                      # Only assign "... to one" values once
-                      next  if($seen{refaddr $parent_object,$method}++);
-
-                      if($direct_inject)
-                      {
-                        $parent_object->{$method} = $subobject;
-                      }
-                      else
-                      {
-                        local $parent_object->{STATE_LOADING()} = 1;
-                        $parent_object->$method($subobject);
-                      }
-                    }
-                  }
-
-                  if($skip_first)
-                  {
-                    next ROW  if($seen[0]{$pk} > 1);
-                    ++$count  if($seen[0]{$pk} == 1);
-                    next ROW  if($count <= $skip_first);
-
-                    $skip_first = 0;
-                    @objects = ();        # Discard all skipped objects...
-                    $object_is_ready = 0; # ...so none are ready now
-                    next ROW;
-                  }
-
-                  if($object_is_ready)
-                  {
-                    $self->{'_count'}++;
-                    last ROW;
-                  }
-
-                  no warnings;
-                  if($manual_limit && $self->{'_count'} == $manual_limit)
-                  {
-                    $self->finish;
-                    last ROW;
-                  }
-                }
-
-                # Handle the left-over "last object" that needs to be finished and
-                # added to the final list of objects to return.
-                if($last_object && !$object_is_ready)
-                {
-                  #$Debug && warn "Finish straggler $object_class $last_object->{'id'}\n";
-
-                  if($direct_inject)
-                  {
-                    while(my($ident, $parent) = each(%parent_objects))
-                    {
-                      while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
-                      {
-                        $parent->{$method} = $subobjects;
-                      }
-                    }
-                  }
-                  else
-                  {
-                    while(my($ident, $parent) = each(%parent_objects))
-                    {
-                      local $parent->{STATE_LOADING()} = 1;
-
-                      while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
-                      {
-                        $parent->$method($subobjects);
-                      }
-                    }
-                  }
-
-                  push(@objects, $last_object);
-
-                  # Set everything up to return this object, then be done
-                  $last_object = undef;
-                  $self->{'_count'}++;
-                  $sth = undef;
-                  last ROW;
-                }
-
-                last ROW;
-              }
-            };
-
-            if($@)
-            {
-              $self->error("next() - $@");
-              $class->handle_error($self);
-              return undef;
-            }
-
-            @objects = ()  if($skip_first);
-
-            if(@objects)
-            {
-              no warnings; # undef count okay
-              if($manual_limit && $self->{'_count'} == $manual_limit)
-              {
-                $self->total($self->{'_count'});
-                $self->finish;
-              }
-
-              #$Debug && warn "Return $object_class $objects[-1]{'id'}\n";
-              return shift(@objects);
-            }
-
-            #$Debug && warn "Return 0\n";
-            return 0;
-          });
-
-        }
-        else # no duplicate rows to handle
-        {
-          $iterator->_next_code(sub
-          {
-            my($self) = shift;
-
-            my $object = 0;
-
-            eval
-            {
-              ROW: for(;;)
-              {
-                unless($sth->fetch)
-                {
-                  return 0;
-                }
-
-                next ROW  if($skip_first && ++$count <= $skip_first);
-
                 if($direct_inject)
                 {
-                  $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
+                  while(my($ident, $parent) = each(%parent_objects))
+                  {
+                    while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                    {
+                      $parent->{$method} = $subobjects; # XXX
+                    }
+                  }              
                 }
                 else
                 {
-                  $object = $object_class->new(%object_args);
-
-                  local $object->{STATE_LOADING()} = 1;
-                  $object->init(%{$row{$object_class,0}});
-                  $object->{STATE_IN_DB()} = 1;
-                }
-
-                my @sub_objects;
-
-                if($with_objects)
-                {
-                  foreach my $i (1 .. $num_subtables)
+                  while(my($ident, $parent) = each(%parent_objects))
                   {
-                    my $method = $subobject_methods[$i];
-                    my $class  = $classes[$i];
+                    local $parent->{STATE_LOADING()} = 1;
 
-                    # Skip undefined subobjects
-                    next  unless(grep { defined } values %{$row{$class,$i}});
-
-                    my $subobject;
-
-                    if($direct_inject)
+                    while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                     {
-                      $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args }, $class;
-                    }
-                    else
-                    {
-                      $subobject = $class->new(%subobject_args);
-                      local $subobject->{STATE_LOADING()} = 1;
-                      $subobject->init(%{$row{$class,$i}});
-                      $subobject->{STATE_IN_DB()} = 1;
-                    }
-
-                    $sub_objects[$i] = $subobject;
-
-                    if($direct_inject)
-                    {
-                      if(my $bt = $belongs_to[$i])
-                      {
-                        $sub_objects[$bt]->{$method} = $subobject;
-                      }
-                      else
-                      {
-                        $object->{$method} = $subobject;
-                      }
-                    }
-                    else
-                    {
-                      if(my $bt = $belongs_to[$i])
-                      {
-                        local $sub_objects[$bt]->{STATE_LOADING()} = 1;
-                        $sub_objects[$bt]->$method($subobject);
-                      }
-                      else
-                      {
-                        local $object->{STATE_LOADING()} = 1;
-                        $object->$method($subobject);
-                      }
+                      $parent->$method($subobjects);
                     }
                   }
                 }
 
-                $skip_first = 0;
-                $self->{'_count'}++;
-                last ROW;
-              }
-            };
+                %subobjects = ();
+                %parent_objects = ();
 
-            if($@)
-            {
-              $self->error("next() - $@");
-              $class->handle_error($self);
-              return undef;
-            }
+                # Add the object to the final list of objects that we'll return
+                push(@objects, $last_object);
 
-            return $skip_first ? undef : $object;
-          });
-        }
-      }
-      else # no sub-objects at all
-      {
-        $iterator->_next_code(sub
-        {
-          my($self) = shift;
-
-          my $object = 0;
-
-          eval
-          {
-            ROW: for(;;)
-            {
-              unless($sth->fetch)
-              {
-                #$self->total($self->{'_count'});
-                return 0;
+                if(!$skip_first && $manual_limit && @objects == $manual_limit)
+                {
+                  last ROW;
+                }
               }
 
-              next ROW  if($skip_first && ++$count <= $skip_first);
-
+              # Now, create the object from this new main table row
               if($direct_inject)
               {
                 $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
@@ -2576,113 +2744,230 @@ sub get_objects
                 $object->{STATE_IN_DB()} = 1;
               }
 
-              $skip_first = 0;
-              $self->{'_count'}++;
-              last ROW;
+              $last_object = $object; # This is the "last object" from now on.
+              @sub_objects = ();      # The list of sub-objects is per-object.
+              splice(@seen, 1);       # Sub-objects seen is also per-object,
+                                      # so trim it, but leave the t1 table info.
+              %seen = ();             # Wipe sub-object parent tracking.
             }
-          };
 
-          if($@)
-          {
-            $self->error("next() - $@");
-            $class->handle_error($self);
-            return undef;
-          }
+            $object ||= $last_object or die "Missing object for primary key '$pk'";
 
-          return $object;
-        });
-      }
+            my $map_record;
 
-      $iterator->_finish_code(sub
-      {
-        $sth->finish      if($sth);
-        $db->release_dbh  if($db && $dbh_retained);
-        $sth = undef;
-        $db = undef;
-      });
-
-      $iterator->_destroy_code(sub
-      {
-        $db->release_dbh  if($db && $dbh_retained);
-        $sth = undef;
-        $db = undef;
-      });
-
-      return $iterator;
-    }
-
-    $count = 0;
-
-    if($with_objects)
-    {
-      # This "if" clause is a totally separate code path for handling
-      # duplicates rows.  I'm doing this for performance reasons.
-      if($handle_dups)# || $deep_joins)
-      {
-        my(@seen, %seen, @sub_objects);
-
-        #my @pk_columns = $meta->primary_key_column_names;
-        my $pk_columns = $meta->primary_key_column_names_or_aliases;
-
-        # Get list of primary key columns for each sub-table
-        my @sub_pk_columns;
-
-        foreach my $i (1 .. $num_subtables)
-        {
-          #$sub_pk_columns[$i + 1] = [ $classes[$i]->meta->primary_key_column_names ];
-          $sub_pk_columns[$i + 1] = $classes[$i]->meta->primary_key_column_names_or_aliases;
-        }
-
-        my($last_object, %subobjects, %parent_objects);
-
-        ROW: while($sth->fetch)
-        {
-          my $pk = join(PK_JOIN, map { $row{$object_class,0}{$_} } @$pk_columns);
-
-          my $object;
-
-          # If this is a new main (t1) table row that we haven't seen before
-          unless($seen[0]{$pk}++)
-          {
-            # First, finish building the last object, if it exists
-            if($last_object)
+            foreach my $i (1 .. $num_subtables)
             {
-              if($direct_inject)
-              {
-                while(my($ident, $parent) = each(%parent_objects))
-                {
-                  while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
-                  {
-                    $parent->{$method} = $subobjects; # XXX
-                  }
-                }              
-              }
-              else
-              {
-                while(my($ident, $parent) = each(%parent_objects))
-                {
-                  local $parent->{STATE_LOADING()} = 1;
+              my $mapped_object_method = $mapped_object_methods[$i];
+              next  if(defined $mapped_object_method && !$mapped_object_method);
 
-                  while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+              my $class  = $classes[$i];
+              my $tn = $i + 1;
+
+              # Null primary key columns are not allowed
+              my $sub_pk = join(PK_JOIN, grep { defined } map { $row{$class,$i}{$_} } @{$sub_pk_columns[$tn]});
+              next  unless(length $sub_pk);
+
+              my $subobject = $seen[$i]{$sub_pk};
+
+              unless($subobject)
+              {
+                # Make sub-object
+                if($direct_inject)
+                {
+                  $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args },  $class;
+                }
+                else
+                {    
+                  $subobject = $class->new(%subobject_args);
+                  local $subobject->{STATE_LOADING()} = 1;
+                  $subobject->init(%{$row{$class,$i}});
+                  $subobject->{STATE_IN_DB()} = 1;
+                }
+
+                $seen[$i]{$sub_pk} = $subobject;
+              }
+
+              # If this object belongs to an attribute that can have more
+              # than one object then just save it for later in the
+              # per-object sub-objects list.
+              if($has_dups[$i])
+              {
+                if($mapped_object_method)
+                {
+                  $map_record = $subobject;
+                }
+                else
+                {
+                  if($map_record)
                   {
-                    $parent->$method($subobjects);
+                    my $method = $mapped_object_methods[$i - 1] or next;
+
+                    if($direct_inject)
+                    {
+                      $subobject->{$method} = $map_record;
+                    }
+                    else
+                    {
+                      local $subobject->{STATE_LOADING()} = 1;
+                      $subobject->$method($map_record);
+                    }
+
+                    $map_record = 0;
                   }
+
+                  next  if(defined $mapped_object_methods[$i]);
+
+                  if($has_dups[$i] && (my $bt = $belongs_to[$i]))
+                  {
+                    #$subobjects_belong_to[$i] = $#{$sub_objects[$bt]};
+
+                    my $parent_object = $sub_objects[$bt];
+
+                    # XXX: Special heavyweight subobject pairing in multi-many queries
+                    if($multi_many && ref $parent_object eq 'ARRAY' && @$parent_object > 1)
+                    {
+                      my $maps = $subobject_method_map[$i + 1][$bt];
+                      my %check;
+
+                      foreach my $map (@$maps)
+                      {
+                        my $subobject_method = $map->[1];
+                        $check{$subobject_method} = $subobject->$subobject_method();
+                      }
+
+                      PARENT: foreach my $check_parent (reverse @$parent_object)
+                      {
+                        foreach my $map (@$maps)
+                        {
+                          my $parent_method = $map->[0];
+                          next PARENT  unless($check_parent->$parent_method() eq $check{$map->[1]});
+                        }
+
+                        $parent_object = $check_parent;
+                        last PARENT;
+                      }
+                    }
+
+                    # XXX: This relies on parent objects coming before child
+                    # objects in the list of tables in the FROM clause.
+                    $parent_object = $parent_object->[-1] #$parent_object->[$subobjects_belong_to[$i]]
+                      if(ref $parent_object eq 'ARRAY');
+
+                    my $method = $subobject_methods[$i];
+
+                    my $ident = refaddr $parent_object;
+                    next  if($seen{$ident,$method}{$sub_pk}++);
+                    $parent_objects{$ident} = $parent_object;
+                    push(@{$subobjects{$ident}{$method}}, $subobject);
+                  }
+                  else
+                  {
+                    my $ident = refaddr $object;
+                    my $method = $subobject_methods[$i];
+                    next  if($seen{$ident,$method}{$sub_pk}++);
+                    $parent_objects{$ident} = $object;
+                    push(@{$subobjects{$ident}{$method}}, $subobject);
+                  }
+
+                  push(@{$sub_objects[$i]}, $subobject);
                 }
               }
-
-              %subobjects = ();
-              %parent_objects = ();
-
-              # Add the object to the final list of objects that we'll return
-              push(@objects, $last_object);
-
-              if(!$skip_first && $manual_limit && @objects == $manual_limit)
+              else # Otherwise, just assign it
               {
-                last ROW;
+                push(@{$sub_objects[$i]}, $subobject);
+
+                my $parent_object;
+
+                if(my $bt = $belongs_to[$i])
+                {
+                  $parent_object = $sub_objects[$bt];
+                  # XXX: This relies on parent objects coming before child
+                  # objects in the list of tables in the FROM clause.
+                  $parent_object = $parent_object->[-1]  if(ref $parent_object eq 'ARRAY');
+                }
+                else
+                {
+                  $parent_object = $object;
+                }
+
+                my $method = $subobject_methods[$i];
+
+                # Only assign "... to one" values once
+                next  if($seen{refaddr $parent_object,$method}++);
+
+                if($direct_inject)
+                {
+                  $parent_object->{$method} = $subobject;
+                }
+                else
+                {
+                  local $parent_object->{STATE_LOADING()} = 1;
+                  $parent_object->$method($subobject);
+                }
               }
             }
 
-            # Now, create the object from this new main table row
+            if($skip_first)
+            {
+              next ROW  if($seen[0]{$pk} > 1);
+              next ROW  if(@objects < $skip_first);
+
+              $skip_first = 0;
+              @objects = (); # Discard all skipped objects
+              next ROW;
+            }
+          }
+
+          # Handle the left-over "last object" that needs to be finished and
+          # added to the final list of objects to return.
+          if($last_object && !$skip_first)
+          {
+            if($direct_inject)
+            {
+              while(my($ident, $parent) = each(%parent_objects))
+              {
+                while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                {
+                  $parent->{$method} = $subobjects; # XXX
+                }
+              }
+            }
+            else
+            {
+              while(my($ident, $parent) = each(%parent_objects))
+              {
+                local $parent->{STATE_LOADING()} = 1;
+
+                while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
+                {
+                  $parent->$method($subobjects);
+                }
+              }
+            }
+
+            unless($manual_limit && @objects >= $manual_limit)
+            {
+              push(@objects, $last_object);
+            }
+          }
+
+          @objects = ()  if($skip_first);
+        }
+        else # simple sub-objects case: nothing worse than one-to-one relationships
+        {
+          if($skip_first)
+          {
+            while($sth->fetch)
+            {
+              next  if(++$count < $skip_first);
+              last;
+            }
+          }
+
+          while($sth->fetch)
+          {
+            my $object;
+
             if($direct_inject)
             {
               $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
@@ -2696,216 +2981,63 @@ sub get_objects
               $object->{STATE_IN_DB()} = 1;
             }
 
-            $last_object = $object; # This is the "last object" from now on.
-            @sub_objects = ();      # The list of sub-objects is per-object.
-            splice(@seen, 1);       # Sub-objects seen is also per-object,
-                                    # so trim it, but leave the t1 table info.
-            %seen = ();             # Wipe sub-object parent tracking.
-          }
+            my @sub_objects;
 
-          $object ||= $last_object or die "Missing object for primary key '$pk'";
-
-          my $map_record;
-
-          foreach my $i (1 .. $num_subtables)
-          {
-            my $mapped_object_method = $mapped_object_methods[$i];
-            next  if(defined $mapped_object_method && !$mapped_object_method);
-
-            my $class  = $classes[$i];
-            my $tn = $i + 1;
-
-            # Null primary key columns are not allowed
-            my $sub_pk = join(PK_JOIN, grep { defined } map { $row{$class,$i}{$_} } @{$sub_pk_columns[$tn]});
-            next  unless(length $sub_pk);
-
-            my $subobject = $seen[$i]{$sub_pk};
-
-            unless($subobject)
+            foreach my $i (1 .. $num_subtables)
             {
-              # Make sub-object
+              my $method = $subobject_methods[$i];
+              my $class  = $classes[$i];
+
+              # Skip undefined subobjects
+              next  unless(grep { defined } values %{$row{$class,$i}});
+
+              my $subobject;
+
               if($direct_inject)
               {
-                $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args },  $class;
+                $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args }, $class;
               }
               else
-              {    
+              {
                 $subobject = $class->new(%subobject_args);
                 local $subobject->{STATE_LOADING()} = 1;
                 $subobject->init(%{$row{$class,$i}});
                 $subobject->{STATE_IN_DB()} = 1;
               }
 
-              $seen[$i]{$sub_pk} = $subobject;
-            }
-
-            # If this object belongs to an attribute that can have more
-            # than one object then just save it for later in the
-            # per-object sub-objects list.
-            if($has_dups[$i])
-            {
-              if($mapped_object_method)
-              {
-                $map_record = $subobject;
-              }
-              else
-              {
-                if($map_record)
-                {
-                  my $method = $mapped_object_methods[$i - 1] or next;
-
-                  if($direct_inject)
-                  {
-                    $subobject->{$method} = $map_record;
-                  }
-                  else
-                  {
-                    local $subobject->{STATE_LOADING()} = 1;
-                    $subobject->$method($map_record);
-                  }
-
-                  $map_record = 0;
-                }
-
-                next  if(defined $mapped_object_methods[$i]);
-
-                if($has_dups[$i] && (my $bt = $belongs_to[$i]))
-                {
-                  #$subobjects_belong_to[$i] = $#{$sub_objects[$bt]};
-
-                  my $parent_object = $sub_objects[$bt];
-
-                  # XXX: Special heavyweight subobject pairing in multi-many queries
-                  if($multi_many && ref $parent_object eq 'ARRAY' && @$parent_object > 1)
-                  {
-                    my $maps = $subobject_method_map[$i + 1][$bt];
-                    my %check;
-
-                    foreach my $map (@$maps)
-                    {
-                      my $subobject_method = $map->[1];
-                      $check{$subobject_method} = $subobject->$subobject_method();
-                    }
-
-                    PARENT: foreach my $check_parent (reverse @$parent_object)
-                    {
-                      foreach my $map (@$maps)
-                      {
-                        my $parent_method = $map->[0];
-                        next PARENT  unless($check_parent->$parent_method() eq $check{$map->[1]});
-                      }
-
-                      $parent_object = $check_parent;
-                      last PARENT;
-                    }
-                  }
-
-                  # XXX: This relies on parent objects coming before child
-                  # objects in the list of tables in the FROM clause.
-                  $parent_object = $parent_object->[-1] #$parent_object->[$subobjects_belong_to[$i]]
-                    if(ref $parent_object eq 'ARRAY');
-
-                  my $method = $subobject_methods[$i];
-
-                  my $ident = refaddr $parent_object;
-                  next  if($seen{$ident,$method}{$sub_pk}++);
-                  $parent_objects{$ident} = $parent_object;
-                  push(@{$subobjects{$ident}{$method}}, $subobject);
-                }
-                else
-                {
-                  my $ident = refaddr $object;
-                  my $method = $subobject_methods[$i];
-                  next  if($seen{$ident,$method}{$sub_pk}++);
-                  $parent_objects{$ident} = $object;
-                  push(@{$subobjects{$ident}{$method}}, $subobject);
-                }
-
-                push(@{$sub_objects[$i]}, $subobject);
-              }
-            }
-            else # Otherwise, just assign it
-            {
-              push(@{$sub_objects[$i]}, $subobject);
-
-              my $parent_object;
-
-              if(my $bt = $belongs_to[$i])
-              {
-                $parent_object = $sub_objects[$bt];
-                # XXX: This relies on parent objects coming before child
-                # objects in the list of tables in the FROM clause.
-                $parent_object = $parent_object->[-1]  if(ref $parent_object eq 'ARRAY');
-              }
-              else
-              {
-                $parent_object = $object;
-              }
-
-              my $method = $subobject_methods[$i];
-
-              # Only assign "... to one" values once
-              next  if($seen{refaddr $parent_object,$method}++);
+              $sub_objects[$i] = $subobject;
 
               if($direct_inject)
               {
-                $parent_object->{$method} = $subobject;
+                if(my $bt = $belongs_to[$i])
+                {
+                  $sub_objects[$bt]->{$method} = $subobject;
+                }
+                else
+                {
+                  $object->{$method} = $subobject;
+                }
               }
               else
               {
-                local $parent_object->{STATE_LOADING()} = 1;
-                $parent_object->$method($subobject);
+                if(my $bt = $belongs_to[$i])
+                {
+                  local $sub_objects[$bt]->{STATE_LOADING()} = 1;
+                  $sub_objects[$bt]->$method($subobject);
+                }
+                else
+                {
+                  local $object->{STATE_LOADING()} = 1;
+                  $object->$method($subobject);
+                }
               }
             }
-          }
 
-          if($skip_first)
-          {
-            next ROW  if($seen[0]{$pk} > 1);
-            next ROW  if(@objects < $skip_first);
-
-            $skip_first = 0;
-            @objects = (); # Discard all skipped objects
-            next ROW;
+            push(@objects, $object);
           }
         }
-
-        # Handle the left-over "last object" that needs to be finished and
-        # added to the final list of objects to return.
-        if($last_object && !$skip_first)
-        {
-          if($direct_inject)
-          {
-            while(my($ident, $parent) = each(%parent_objects))
-            {
-              while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
-              {
-                $parent->{$method} = $subobjects; # XXX
-              }
-            }
-          }
-          else
-          {
-            while(my($ident, $parent) = each(%parent_objects))
-            {
-              local $parent->{STATE_LOADING()} = 1;
-
-              while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
-              {
-                $parent->$method($subobjects);
-              }
-            }
-          }
-
-          unless($manual_limit && @objects >= $manual_limit)
-          {
-            push(@objects, $last_object);
-          }
-        }
-
-        @objects = ()  if($skip_first);
       }
-      else # simple sub-objects case: nothing worse than one-to-one relationships
+      else # even simpler: no sub-objects at all
       {
         if($skip_first)
         {
@@ -2916,124 +3048,43 @@ sub get_objects
           }
         }
 
-        while($sth->fetch)
+        if($direct_inject)
         {
-          my $object;
+          my $key_map = $di_keys{$object_class};
 
-          if($direct_inject)
+          while($sth->fetch)
           {
-            $object = bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class;
+            push(@objects, bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class);
           }
-          else
+        }
+        else
+        {
+          while($sth->fetch)
           {
-            $object = $object_class->new(%object_args);
+            my $object = $object_class->new(%object_args);
 
             local $object->{STATE_LOADING()} = 1;
             $object->init(%{$row{$object_class,0}});
             $object->{STATE_IN_DB()} = 1;
+
+            push(@objects, $object);
           }
-
-          my @sub_objects;
-
-          foreach my $i (1 .. $num_subtables)
-          {
-            my $method = $subobject_methods[$i];
-            my $class  = $classes[$i];
-
-            # Skip undefined subobjects
-            next  unless(grep { defined } values %{$row{$class,$i}});
-
-            my $subobject;
-
-            if($direct_inject)
-            {
-              $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args }, $class;
-            }
-            else
-            {
-              $subobject = $class->new(%subobject_args);
-              local $subobject->{STATE_LOADING()} = 1;
-              $subobject->init(%{$row{$class,$i}});
-              $subobject->{STATE_IN_DB()} = 1;
-            }
-
-            $sub_objects[$i] = $subobject;
-
-            if($direct_inject)
-            {
-              if(my $bt = $belongs_to[$i])
-              {
-                $sub_objects[$bt]->{$method} = $subobject;
-              }
-              else
-              {
-                $object->{$method} = $subobject;
-              }
-            }
-            else
-            {
-              if(my $bt = $belongs_to[$i])
-              {
-                local $sub_objects[$bt]->{STATE_LOADING()} = 1;
-                $sub_objects[$bt]->$method($subobject);
-              }
-              else
-              {
-                local $object->{STATE_LOADING()} = 1;
-                $object->$method($subobject);
-              }
-            }
-          }
-
-          push(@objects, $object);
-        }
-      }
-    }
-    else # even simpler: no sub-objects at all
-    {
-      if($skip_first)
-      {
-        while($sth->fetch)
-        {
-          next  if(++$count < $skip_first);
-          last;
         }
       }
 
-      if($direct_inject)
-      {
-        my $key_map = $di_keys{$object_class};
+      $sth->finish;
+    };
 
-        while($sth->fetch)
-        {
-          push(@objects, bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class);
-        }
-      }
-      else
-      {
-        while($sth->fetch)
-        {
-          my $object = $object_class->new(%object_args);
-
-          local $object->{STATE_LOADING()} = 1;
-          $object->init(%{$row{$object_class,0}});
-          $object->{STATE_IN_DB()} = 1;
-
-          push(@objects, $object);
-        }
-      }
-    }
-
-    $sth->finish;
-  };
+    $error = $@;
+  }
 
   return $iterator  if($iterator);
 
   $db->release_dbh  if($dbh_retained);
 
-  if($@)
+  if($error)
   {
-    $class->error("get_objects() - $@");
+    $class->error("get_objects() - $error");
     $class->handle_error($class);
     return undef;
   }
@@ -3145,40 +3196,47 @@ sub delete_objects
   my $sql = 'DELETE FROM ' . $meta->fq_table_sql($db) .
             ($where ? " WHERE\n$where" : '');
 
-  my $count;
+  my($count, $error);
 
-  eval
+  TRY:
   {
-    local $dbh->{'RaiseError'} = 1;  
-    $Debug && warn "$sql - bind params: ", join(', ', @$bind), "\n";
+    local $@;
 
-    # $meta->prepare_bulk_delete_options (defunct)
-    my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
-                                $dbh->prepare($sql) or die $dbh->errstr;
-
-    if(@bind_params)
+    eval
     {
-      my $i = 1;
+      local $dbh->{'RaiseError'} = 1;  
+      $Debug && warn "$sql - bind params: ", join(', ', @$bind), "\n";
 
-      foreach my $value (@$bind)
+      # $meta->prepare_bulk_delete_options (defunct)
+      my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                  $dbh->prepare($sql) or die $dbh->errstr;
+
+      if(@bind_params)
       {
-        $sth->bind_param($i, $value, $bind_params[$i - 1]);
-        $i++;
+        my $i = 1;
+
+        foreach my $value (@$bind)
+        {
+          $sth->bind_param($i, $value, $bind_params[$i - 1]);
+          $i++;
+        }
+
+        $sth->execute;
+      }
+      else
+      {
+        $sth->execute(@$bind);
       }
 
-      $sth->execute;
-    }
-    else
-    {
-      $sth->execute(@$bind);
-    }
+      $count = $sth->rows || 0;
+    };
 
-    $count = $sth->rows || 0;
-  };
+    $error = $@;
+  }
 
-  if($@)
+  if($error)
   {
-    $class->error("delete_objects() - $@");
+    $class->error("delete_objects() - $error");
     $class->handle_error($class);
     return undef;
   }
@@ -3275,40 +3333,47 @@ sub update_objects
     $sql = 'UPDATE ' . $meta->fq_table_sql($db) . "\nSET\n$set_sql";
   }
 
-  my $count;
+  my($count, $error);
 
-  eval
+  TRY:
   {
-    local $dbh->{'RaiseError'} = 1;  
-    $Debug && warn "$sql (", join(', ', @$set_bind, @$where_bind), ")\n";
+    local $@;
 
-    # $meta->prepare_bulk_update_options (defunct)
-    my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
-                                $dbh->prepare($sql) or die $dbh->errstr;
-
-    if(@bind_params)
+    eval
     {
-      my $i = 1;
+      local $dbh->{'RaiseError'} = 1;  
+      $Debug && warn "$sql (", join(', ', @$set_bind, @$where_bind), ")\n";
 
-      foreach my $value (@$set_bind, @$where_bind)
+      # $meta->prepare_bulk_update_options (defunct)
+      my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                  $dbh->prepare($sql) or die $dbh->errstr;
+
+      if(@bind_params)
       {
-        $sth->bind_param($i, $value, $bind_params[$i - 1]);
-        $i++;
+        my $i = 1;
+
+        foreach my $value (@$set_bind, @$where_bind)
+        {
+          $sth->bind_param($i, $value, $bind_params[$i - 1]);
+          $i++;
+        }
+
+        $sth->execute;
+      }
+      else
+      {
+        $sth->execute(@$set_bind, @$where_bind);
       }
 
-      $sth->execute;
-    }
-    else
-    {
-      $sth->execute(@$set_bind, @$where_bind);
-    }
+      $count = $sth->rows || 0;
+    };
 
-    $count = $sth->rows || 0;
-  };
+    $error = $@;
+  }
 
-  if($@)
+  if($error)
   {
-    $class->error("update_objects() - $@");
+    $class->error("update_objects() - $error");
     $class->handle_error($class);
     return undef;
   }
@@ -3413,68 +3478,75 @@ sub get_objects_from_sql
     (exists $args{'share_db'} ? $args{'share_db'} : 1) ? (db => $db) : ()
   );
 
-  my @objects;
+  my(@objects, $error);
 
-  eval
+  TRY:
   {
-    local $dbh->{'RaiseError'} = 1;
+    local $@;
 
-    $Debug && warn "$sql (", join(', ', @$exec_args), ")\n";
-    my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
-                                $dbh->prepare($sql) or die $dbh->errstr;
-
-    $sth->execute(@$exec_args);
-
-    while(my $row = $sth->fetchrow_hashref)
+    eval
     {
-      unless($have_methods)
+      local $dbh->{'RaiseError'} = 1;
+
+      $Debug && warn "$sql (", join(', ', @$exec_args), ")\n";
+      my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                  $dbh->prepare($sql) or die $dbh->errstr;
+
+      $sth->execute(@$exec_args);
+
+      while(my $row = $sth->fetchrow_hashref)
       {
-        foreach my $col (keys %$row)
+        unless($have_methods)
         {
-          if($meta->column($col))
+          foreach my $col (keys %$row)
           {
-            $methods->{$col} = $meta->column_mutator_method_name($col);
+            if($meta->column($col))
+            {
+              $methods->{$col} = $meta->column_mutator_method_name($col);
+            }
+            elsif($object_class->can($col))
+            {
+              $methods->{$col} = $col;
+            }
+            elsif($meta->column(lc $col))
+            {
+              $methods->{$col} = $meta->column_mutator_method_name(lc $col);
+            }
+            elsif($object_class->can(lc $col))
+            {
+              $methods->{$col} = lc $col;
+            }
           }
-          elsif($object_class->can($col))
-          {
-            $methods->{$col} = $col;
-          }
-          elsif($meta->column(lc $col))
-          {
-            $methods->{$col} = $meta->column_mutator_method_name(lc $col);
-          }
-          elsif($object_class->can(lc $col))
-          {
-            $methods->{$col} = lc $col;
-          }
+
+          $have_methods = 1;
         }
 
-        $have_methods = 1;
+        my $object = $object_class->new(%object_args);
+
+        local $object->{STATE_LOADING()} = 1;
+        $object->{STATE_IN_DB()} = 1;
+
+        while(my($col, $val) = each(%$row))
+        {
+          my $method = $methods->{$col};
+          $object->$method($val);
+        }
+
+        $object->{MODIFIED_COLUMNS()} = {};
+
+        push(@objects, $object);
       }
+    };
 
-      my $object = $object_class->new(%object_args);
-
-      local $object->{STATE_LOADING()} = 1;
-      $object->{STATE_IN_DB()} = 1;
-
-      while(my($col, $val) = each(%$row))
-      {
-        my $method = $methods->{$col};
-        $object->$method($val);
-      }
-
-      $object->{MODIFIED_COLUMNS()} = {};
-
-      push(@objects, $object);
-    }
-  };
+    $error = $@;
+  }
 
   $db->release_dbh  if($dbh_retained);
 
-  if($@)
+  if($error)
   {
     $class->total(undef);
-    $class->error("get_objects_from_sql() - $@");
+    $class->error("get_objects_from_sql() - $error");
     $class->handle_error($class);
     return undef;
   }
@@ -3533,24 +3605,31 @@ sub get_objects_iterator_from_sql
     (exists $args{'share_db'} ? $args{'share_db'} : 1) ? (db => $db) : ()
   );
 
-  my $sth;
+  my($sth, $error);
 
-  eval
+  TRY:
   {
-    local $dbh->{'RaiseError'} = 1;
+    local $@;
 
-    $Debug && warn "$sql (", join(', ', @$exec_args), ")\n";
-    $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
-                             $dbh->prepare($sql) or die $dbh->errstr;
+    eval
+    {
+      local $dbh->{'RaiseError'} = 1;
 
-    $sth->execute(@$exec_args);
-  };
+      $Debug && warn "$sql (", join(', ', @$exec_args), ")\n";
+      $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                               $dbh->prepare($sql) or die $dbh->errstr;
 
-  if($@)
+      $sth->execute(@$exec_args);
+    };
+
+    $error = $@;
+  }
+
+  if($error)
   {
     $db->release_dbh  if($dbh_retained);
     $class->total(undef);
-    $class->error("get_objects_iterator_from_sql() - $@");
+    $class->error("get_objects_iterator_from_sql() - $error");
     $class->handle_error($class);
     return undef;
   }
@@ -3563,63 +3642,72 @@ sub get_objects_iterator_from_sql
 
     my $object = 0;
 
-    eval
-    {
-      ROW: for(;;)
-      {
-        my $row = $sth->fetchrow_hashref or return 0;
+    my $error;
 
-        unless($have_methods)
+    TRY:
+    {
+      local $@;
+
+      eval
+      {
+        ROW: for(;;)
         {
-          foreach my $col (keys %$row)
+          my $row = $sth->fetchrow_hashref or return 0;
+
+          unless($have_methods)
           {
-            if($meta->column($col))
+            foreach my $col (keys %$row)
             {
-              $methods->{$col} = $meta->column_mutator_method_name($col);
+              if($meta->column($col))
+              {
+                $methods->{$col} = $meta->column_mutator_method_name($col);
+              }
+              elsif($object_class->can($col))
+              {
+                $methods->{$col} = $col;
+              }
+              elsif($meta->column(lc $col))
+              {
+                $methods->{$col} = $meta->column_mutator_method_name(lc $col);
+              }
+              elsif($object_class->can(lc $col))
+              {
+                $methods->{$col} = lc $col;
+              }
             }
-            elsif($object_class->can($col))
-            {
-              $methods->{$col} = $col;
-            }
-            elsif($meta->column(lc $col))
-            {
-              $methods->{$col} = $meta->column_mutator_method_name(lc $col);
-            }
-            elsif($object_class->can(lc $col))
-            {
-              $methods->{$col} = lc $col;
-            }
+
+            $have_methods = 1;
           }
 
-          $have_methods = 1;
+          $object = $object_class->new(%object_args);
+
+          local $object->{STATE_LOADING()} = 1;
+          $object->{STATE_IN_DB()} = 1;
+
+          while(my($col, $val) = each(%$row))
+          {
+            my $method = $methods->{$col};
+            $object->$method($val);
+          }
+
+          $object->{MODIFIED_COLUMNS()} = {};
+
+          $self->{'_count'}++;
+          last ROW;
         }
+      };
 
-        $object = $object_class->new(%object_args);
+      $error = $@;
+    }
 
-        local $object->{STATE_LOADING()} = 1;
-        $object->{STATE_IN_DB()} = 1;
+    if($error)
+    {
+      $self->error("next() - $error");
+      $class->handle_error($self);
+      return undef;
+    }
 
-        while(my($col, $val) = each(%$row))
-        {
-          my $method = $methods->{$col};
-          $object->$method($val);
-        }
-
-        $object->{MODIFIED_COLUMNS()} = {};
-
-        $self->{'_count'}++;
-        last ROW;
-      }
-
-      if($@)
-      {
-        $self->error("next() - $@");
-        $class->handle_error($self);
-        return undef;
-      }
-
-      return $object;
-    };
+    return $object;
   });
 
   $iterator->_finish_code(sub

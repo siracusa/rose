@@ -8,7 +8,7 @@ use SQL::ReservedWords::PostgreSQL();
 
 use Rose::DB;
 
-our $VERSION = '0.753';
+our $VERSION = '0.755';
 
 our $Debug = 0;
 
@@ -206,10 +206,16 @@ sub parse_interval
     return $value;
   }
 
-  my $dt_duration;
-  eval { $dt_duration = $self->date_handler->parse_interval($value) };
+  my($dt_duration, $error);
 
-  return $self->Rose::DB::parse_interval($value, $end_of_month_mode)  if($@);
+  TRY:
+  {
+    local $@;
+    eval { $dt_duration = $self->date_handler->parse_interval($value) };
+    $error = $@;
+  }
+
+  return $self->Rose::DB::parse_interval($value, $end_of_month_mode)  if($error);
 
   if(defined $end_of_month_mode && $dt_duration)
   {
@@ -256,18 +262,25 @@ sub next_value_in_sequence
 
   my $dbh = $self->dbh or return undef;
 
-  my $id;
+  my($id, $error);
 
-  eval
+  TRY:
   {
-    my $sth = $dbh->prepare(qq(SELECT nextval(?)));
-    $sth->execute($seq);
-    $id = ${$sth->fetchrow_arrayref}[0];
-  };
+    local $@;
 
-  if($@)
+    eval
+    {
+      my $sth = $dbh->prepare(qq(SELECT nextval(?)));
+      $sth->execute($seq);
+      $id = ${$sth->fetchrow_arrayref}[0];
+    };
+
+    $error = $@;
+  }
+
+  if($error)
   {
-    $self->error("Could not get the next value in the sequence '$seq' - $@");
+    $self->error("Could not get the next value in the sequence '$seq' - $error");
     return undef;
   }
 
@@ -485,27 +498,36 @@ sub list_tables
   my $schema = $self->schema;
   $schema = $self->default_implicit_schema  unless(defined $schema);
 
-  eval
+  my $error;
+
+  TRY:
   {
-    my $dbh = $self->dbh or die $self->error;
+    local $@;
 
-    local $dbh->{'RaiseError'} = 1;
-    local $dbh->{'FetchHashKeyName'} = 'NAME';
-
-    my $sth = $dbh->table_info($self->catalog, $schema, '', $types,
-                               { noprefix => 1, pg_noprefix => 1 });
-
-    $sth->execute;
-
-    while(my $table_info = $sth->fetchrow_hashref)
+    eval
     {
-      push(@tables, $self->unquote_table_name($table_info->{'TABLE_NAME'}));
-    }
-  };
+      my $dbh = $self->dbh or die $self->error;
 
-  if($@)
+      local $dbh->{'RaiseError'} = 1;
+      local $dbh->{'FetchHashKeyName'} = 'NAME';
+
+      my $sth = $dbh->table_info($self->catalog, $schema, '', $types,
+                                 { noprefix => 1, pg_noprefix => 1 });
+
+      $sth->execute;
+
+      while(my $table_info = $sth->fetchrow_hashref)
+      {
+        push(@tables, $self->unquote_table_name($table_info->{'TABLE_NAME'}));
+      }
+    };
+
+    $error = $@;
+  }
+
+  if($error)
   {
-    Carp::croak "Could not list tables from ", $self->dsn, " - $@";
+    Carp::croak "Could not list tables from ", $self->dsn, " - $error";
   }
 
   return wantarray ? @tables : \@tables;

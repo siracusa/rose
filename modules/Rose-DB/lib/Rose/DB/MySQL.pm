@@ -7,11 +7,15 @@ use Carp();
 use DateTime::Format::MySQL;
 use SQL::ReservedWords::MySQL();
 
-eval { require DBD::mysql }; # Ignore errors
+TRY:
+{
+  local $@;
+  eval { require DBD::mysql }; # Ignore errors
+}
 
 use Rose::DB;
 
-our $VERSION = '0.752';
+our $VERSION = '0.755';
 
 our $Debug = 0;
 
@@ -116,28 +120,38 @@ sub list_tables
   my @tables;
 
   my $schema = $self->schema;
+
   $schema = $self->database  unless(defined $schema);
 
-  eval
+  my $error;
+
+  TRY:
   {
-    my $dbh = $self->dbh or die $self->error;
+    local $@;
 
-    local $dbh->{'RaiseError'} = 1;
-    local $dbh->{'FetchHashKeyName'} = 'NAME';
-
-    my $sth = $dbh->table_info($self->catalog, $schema, '%', $types);
-
-    $sth->execute;
-
-    while(my $table_info = $sth->fetchrow_hashref)
+    eval
     {
-      push(@tables, $self->unquote_table_name($table_info->{'TABLE_NAME'}));
-    }
-  };
+      my $dbh = $self->dbh or die $self->error;
 
-  if($@)
+      local $dbh->{'RaiseError'} = 1;
+      local $dbh->{'FetchHashKeyName'} = 'NAME';
+
+      my $sth = $dbh->table_info($self->catalog, $schema, '%', $types);
+
+      $sth->execute;
+
+      while(my $table_info = $sth->fetchrow_hashref)
+      {
+        push(@tables, $self->unquote_table_name($table_info->{'TABLE_NAME'}));
+      }
+    };
+
+    $error = $@;
+  }
+
+  if($error)
   {
-    Carp::croak "Could not list tables from ", $self->dsn, " - $@";
+    Carp::croak "Could not list tables from ", $self->dsn, " - $error";
   }
 
   return wantarray ? @tables : \@tables;

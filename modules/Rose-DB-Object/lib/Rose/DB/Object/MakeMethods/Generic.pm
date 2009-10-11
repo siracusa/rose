@@ -20,7 +20,7 @@ use Rose::DB::Object::Constants
 use Rose::DB::Object::Helpers();
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.783_02';
+our $VERSION = '0.784';
 
 our $Debug = 0;
 
@@ -332,12 +332,19 @@ sub
 EOF
     }
 
-    $Debug && warn "sub $name = ", $code;
-    $methods{$name} = eval $code;
+    my $error;
 
-    if($@)
+    TRY:
     {
-      Carp::croak "Error in generated code for method $name - $@\n",
+      local $@;
+      $Debug && warn "sub $name = ", $code;
+      $methods{$name} = eval $code;
+      $error = $@;
+    }
+
+    if($error)
+    {
+      Carp::croak "Error in generated code for method $name - $error\n",
                   "Code was: $code";
     }
   }
@@ -355,12 +362,19 @@ EOF
       $code = qq(sub { shift->{'$qkey'} });
     }
 
-    $Debug && warn "sub $name = ", $code;
-    $methods{$name} = eval $code;
+    my $error;
 
-    if($@)
+    TRY:
     {
-      Carp::croak "Error in generated code for method $name - $@\n",
+      local $@;
+      $Debug && warn "sub $name = ", $code;
+      $methods{$name} = eval $code;
+      $error = $@;
+    }
+
+    if($error)
+    {
+      Carp::croak "Error in generated code for method $name - $error\n",
                   "Code was: $code";
     }
   }
@@ -387,12 +401,19 @@ sub
 };
 EOF
 
-    $Debug && warn "sub $name = ", $code;
-    $methods{$name} = eval $code;
+    my $error;
 
-    if($@)
+    TRY:
     {
-      Carp::croak "Error in generated code for method $name - $@\n",
+      local $@;
+      $Debug && warn "sub $name = ", $code;
+      $methods{$name} = eval $code;
+      $error = $@;
+    }
+
+    if($error)
+    {
+      Carp::croak "Error in generated code for method $name - $error\n",
                   "Code was: $code";
     }
   }
@@ -2138,13 +2159,20 @@ sub object_by_key
 
       if($required)
       {
-        eval { $ret = $obj->load };
+        my $error;
 
-        if($@ || !$ret)
+        TRY:
+        {
+          local $@;
+          eval { $ret = $obj->load };
+          $error = $@;
+        }
+
+        if($error || !$ret)
         {
           $self->error("Could not load $fk_class object with key " .
                        join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                       " - " . $obj->error);
+                       " - " . ($obj->error || $error));
           $self->meta->handle_error($self);
           return $ret;
         }
@@ -2197,63 +2225,70 @@ sub object_by_key
 
         my $object = __args_to_object($self, $key, $fk_class, \$fk_pk, \@_);
 
-        my($db, $started_new_tx);
+        my($db, $started_new_tx, $error);
 
-        eval
+        TRY:
         {
-          $db = $self->db;
-          $object->db($db);
+          local $@;
 
-          my $ret = $db->begin_work;
-
-          unless(defined $ret)
+          eval
           {
-            die 'Could not begin transaction during call to $name() - ',
-                $db->error;
-          }
+            $db = $self->db;
+            $object->db($db);
 
-          $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+            my $ret = $db->begin_work;
 
-          # If the object is not marked as already existing in the database,
-          # see if it represents an existing row.  If it does, merge the
-          # existing row's column values into the object, allowing any
-          # modified columns in the object to take precedence. Returns true
-          # if the object represents an existing row.
-          if(__check_and_merge($object))
-          {
-            $object->save(changes_only => 1) or die $object->error;
-          }
-          else
-          {
-            $object->save or die $object->error;
-          }
+            unless(defined $ret)
+            {
+              die 'Could not begin transaction during call to $name() - ',
+                  $db->error;
+            }
 
-          local $fk->{'disable_column_triggers'} = 1;
+            $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
 
-          while(my($local_column, $foreign_column) = each(%$fk_columns))
-          {
-            my $local_method   = $meta->column_mutator_method_name($local_column);
-            my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
+            # If the object is not marked as already existing in the database,
+            # see if it represents an existing row.  If it does, merge the
+            # existing row's column values into the object, allowing any
+            # modified columns in the object to take precedence. Returns true
+            # if the object represents an existing row.
+            if(__check_and_merge($object))
+            {
+              $object->save(changes_only => 1) or die $object->error;
+            }
+            else
+            {
+              $object->save or die $object->error;
+            }
 
-            $self->$local_method($object->$foreign_method);
-          }
+            local $fk->{'disable_column_triggers'} = 1;
 
-          $self->save(changes_only => 1) or die $self->error;
+            while(my($local_column, $foreign_column) = each(%$fk_columns))
+            {
+              my $local_method   = $meta->column_mutator_method_name($local_column);
+              my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
 
-          $self->{$key} = $object;
+              $self->$local_method($object->$foreign_method);
+            }
 
-          # Not sharing?  Aw.
-          $object->db(undef)  unless($share_db);
+            $self->save(changes_only => 1) or die $self->error;
 
-          if($started_new_tx)
-          {
-            $db->commit or die $db->error;
-          }
-        };
+            $self->{$key} = $object;
 
-        if($@)
+            # Not sharing?  Aw.
+            $object->db(undef)  unless($share_db);
+
+            if($started_new_tx)
+            {
+              $db->commit or die $db->error;
+            }
+          };
+
+          $error = $@;
+        }
+
+        if($error)
         {
-          $self->error("Could not add $name object - $@");
+          $self->error("Could not add $name object - $error");
           $db->rollback  if($db && $started_new_tx);
           $meta->handle_error($self);
           return undef;
@@ -2298,13 +2333,20 @@ sub object_by_key
 
       if($required)
       {
-        eval { $ret = $obj->load };
+        my $error;
 
-        if($@ || !$ret)
+        TRY:
+        {
+          local $@;
+          eval { $ret = $obj->load };
+          $error = $@;
+        }
+
+        if($error || !$ret)
         {
           $self->error("Could not load $fk_class with key " .
                        join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                       " - " . $obj->error);
+                       " - " . ($obj->error || $error));
           $self->meta->handle_error($self);
           return $ret;
         }
@@ -2404,45 +2446,54 @@ sub object_by_key
             }
           }
 
-          eval
+          my $error;
+
+          TRY:
           {
-            $db = $self->db;
-            $object->db($db);
+            local $@;
 
-            # If the object is not marked as already existing in the database,
-            # see if it represents an existing row.  If it does, merge the
-            # existing row's column values into the object, allowing any
-            # modified columns in the object to take precedence. Returns true
-            # if the object represents an existing row.
-            if(__check_and_merge($object))
+            eval
             {
-              $object->save(%$args, changes_only => 1) or die $object->error;
-            }
-            else
-            {
-              $object->save(%$args) or die $object->error;
-            }
+              $db = $self->db;
+              $object->db($db);
 
-            local $fk->{'disable_column_triggers'} = 1;
+              # If the object is not marked as already existing in the database,
+              # see if it represents an existing row.  If it does, merge the
+              # existing row's column values into the object, allowing any
+              # modified columns in the object to take precedence. Returns true
+              # if the object represents an existing row.
+              if(__check_and_merge($object))
+              {
+                $object->save(%$args, changes_only => 1) or die $object->error;
+              }
+              else
+              {
+                $object->save(%$args) or die $object->error;
+              }
 
-            # Set the foreign key columns
-            while(my($local_column, $foreign_column) = each(%$fk_columns))
-            {
-              my $local_method   = $meta->column_mutator_method_name($local_column);
-              my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
+              local $fk->{'disable_column_triggers'} = 1;
 
-              $self->$local_method($object->$foreign_method);
-            }
+              # Set the foreign key columns
+              while(my($local_column, $foreign_column) = each(%$fk_columns))
+              {
+                my $local_method   = $meta->column_mutator_method_name($local_column);
+                my $foreign_method = $fk_meta->column_accessor_method_name($foreign_column);
 
-            # Not sharing?  Aw.
-            $object->db(undef)  unless($share_db);
+                $self->$local_method($object->$foreign_method);
+              }
 
-            return $self->{$key} = $object;
-          };
+              # Not sharing?  Aw.
+              $object->db(undef)  unless($share_db);
 
-          if($@)
+              return $self->{$key} = $object;
+            };
+
+            $error = $@;
+          }
+
+          if($error)
           {
-            $self->error("Could not add $name object - $@");
+            $self->error("Could not add $name object - $error");
             $meta->handle_error($self);
             return undef;
           }
@@ -2498,13 +2549,20 @@ sub object_by_key
 
       if($required)
       {
-        eval { $ret = $obj->load };
+        my $error;
 
-        if($@ || !$ret)
+        TRY:
+        {
+          local $@;
+          eval { $ret = $obj->load };
+          $error = $@;
+        }
+
+        if($error || !$ret)
         {
           $self->error("Could not load $fk_class with key " .
                        join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                       " - " . $obj->error);
+                       " - " . ($obj->error || $error));
           $self->meta->handle_error($self);
           return $ret;
         }
@@ -2576,60 +2634,67 @@ sub object_by_key
 
       $object->init(%key);
 
-      my($db, $started_new_tx, $deleted, %save_fk, $to_save_pre, $to_save_post);
+      my($db, $started_new_tx, $deleted, %save_fk, $to_save_pre, $to_save_post, $error);
 
-      eval
+      TRY:
       {
-        $db = $self->db;
-        $object->db($db);
+        local $@;
 
-        my $ret = $db->begin_work;
-
-        unless(defined $ret)
+        eval
         {
-          die 'Could not begin transaction during call to $name() - ',
-              $db->error;
-        }
+          $db = $self->db;
+          $object->db($db);
 
-        $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+          my $ret = $db->begin_work;
 
-        if($ref_integrity || $required)
-        {
-          local $fk->{'disable_column_triggers'} = 1;
-
-          # Clear columns that reference the foreign key
-          foreach my $local_column (keys %$fk_columns)
+          unless(defined $ret)
           {
-            next  if($meta->column($local_column)->is_primary_key_member);
-            my $local_method = $meta->column_accessor_method_name($local_column);
-            $save_fk{$local_method} = $self->$local_method();
-            $self->$local_method(undef);
+            die 'Could not begin transaction during call to $name() - ',
+                $db->error;
           }
-        }
 
-        # Forget about any value we were going to set on save
-        $to_save_pre  = delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
-        $to_save_post = delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$fk_name}{'set'};
+          $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
 
-        $self->save or die $self->error;
+          if($ref_integrity || $required)
+          {
+            local $fk->{'disable_column_triggers'} = 1;
 
-        # Propogate cascade arg, if any
-        $deleted = $object->delete(@_) or die $object->error;
+            # Clear columns that reference the foreign key
+            foreach my $local_column (keys %$fk_columns)
+            {
+              next  if($meta->column($local_column)->is_primary_key_member);
+              my $local_method = $meta->column_accessor_method_name($local_column);
+              $save_fk{$local_method} = $self->$local_method();
+              $self->$local_method(undef);
+            }
+          }
 
-        if($started_new_tx)
-        {
-          $db->commit or die $db->error;
-        }
+          # Forget about any value we were going to set on save
+          $to_save_pre  = delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
+          $to_save_post = delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$fk_name}{'set'};
 
-        $self->{$key} = undef;
+          $self->save or die $self->error;
 
-        # Not sharing?  Aw.
-        $object->db(undef)  unless($share_db);
-      };
+          # Propogate cascade arg, if any
+          $deleted = $object->delete(@_) or die $object->error;
 
-      if($@)
+          if($started_new_tx)
+          {
+            $db->commit or die $db->error;
+          }
+
+          $self->{$key} = undef;
+
+          # Not sharing?  Aw.
+          $object->db(undef)  unless($share_db);
+        };
+
+        $error = $@;
+      }
+
+      if($error)
       {
-        $self->error("Could not delete $name object - $@");
+        $self->error("Could not delete $name object - $error");
         $db->rollback  if($db && $started_new_tx);
 
         # Restore foreign key column values
@@ -2742,18 +2807,25 @@ sub object_by_key
         my @delete_args = 
           map { ($_ => $args->{$_}) } grep { exists $args->{$_} } qw(prepare_cached);
 
-        my $db;
+        my($db, $error);
 
-        eval
+        TRY:
         {
-          $db = $self->db;
-          $object->db($db);
-          $object->delete(@delete_args) or die $object->error;
-        };
+          local $@;
 
-        if($@)
+          eval
+          {
+            $db = $self->db;
+            $object->db($db);
+            $object->delete(@delete_args) or die $object->error;
+          };
+
+          $error = $@;
+        }
+
+        if($error)
         {
-          $self->error("Could not delete $name object - $@");
+          $self->error("Could not delete $name object - $error");
 
           # Restore old foreign key column values if prudent
           while(my($method, $value) = each(%save_fk))
@@ -2942,27 +3014,36 @@ sub objects_by_key
 
       $args{'multi_many_ok'} = 1;
 
-      # Make query for object count
-      eval
-      {
-        #local $Rose::DB::Object::Manager::Debug = 1;
-        if($share_db)
-        {
-          $count = 
-            $ft_manager->$ft_count_method(query => \@query, db => $self->db, %args);
-        }
-        else
-        {
-          $count = 
-            $ft_manager->$ft_count_method(query    => \@query, 
-                                          db       => $self->db,
-                                          share_db => 0, %args);
-        }
-      };
+      my $error;
 
-      if($@ || !defined $count)
+      TRY:
       {
-        $self->error("Could not count $ft_class objects - " . ($@ || $ft_manager->error));
+        local $@;
+
+        # Make query for object count
+        eval
+        {
+          #local $Rose::DB::Object::Manager::Debug = 1;
+          if($share_db)
+          {
+            $count = 
+              $ft_manager->$ft_count_method(query => \@query, db => $self->db, %args);
+          }
+          else
+          {
+            $count = 
+              $ft_manager->$ft_count_method(query    => \@query, 
+                                            db       => $self->db,
+                                            share_db => 0, %args);
+          }
+        };
+
+        $error = $@;
+      }
+
+      if($error || !defined $count)
+      {
+        $self->error("Could not count $ft_class objects - " . ($error || $ft_manager->error));
         $self->meta->handle_error($self);
         return wantarray ? () : $count;
       }
@@ -3073,30 +3154,39 @@ sub objects_by_key
         $args{$k} = $v  unless(exists $args{$k});
       }
 
-      # Make query for object list
-      eval
-      {
-        #local $Rose::DB::Object::Manager::Debug = 1;
-        if($share_db)
-        {
-          $objs = 
-            $ft_manager->$ft_method(query => \@query, db => $self->db, %args)
-              or die $ft_manager->error;
-        }
-        else
-        {
-          $objs = 
-            $ft_manager->$ft_method(query    => \@query, 
-                                    db       => $self->db,
-                                    share_db => 0, %args)
-              or die $ft_manager->error;
-        }
-      };
+      my $error;
 
-      if($@ || !$objs)
+      TRY:
+      {
+        local $@;
+
+        # Make query for object list
+        eval
+        {
+          #local $Rose::DB::Object::Manager::Debug = 1;
+          if($share_db)
+          {
+            $objs = 
+              $ft_manager->$ft_method(query => \@query, db => $self->db, %args)
+                or die $ft_manager->error;
+          }
+          else
+          {
+            $objs = 
+              $ft_manager->$ft_method(query    => \@query, 
+                                      db       => $self->db,
+                                      share_db => 0, %args)
+                or die $ft_manager->error;
+          }
+        };
+
+        $error = $@;
+      }
+
+      if($error || !$objs)
       {
         $self->error("Could not " . ($is_iterator ? 'get iterator for' : 'find') .
-                     " $ft_class objects - " . ($@ || $ft_manager->error));
+                     " $ft_class objects - " . ($error || $ft_manager->error));
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
@@ -3159,33 +3249,40 @@ sub objects_by_key
         }
       }
 
-      my $objs;
+      my($objs, $error);
 
-      eval
+      TRY:
       {
-        if($share_db)
-        {
-          $objs = 
-            $ft_manager->$ft_method(query => [ %key, @$query_args ], 
-                                   %$mgr_args, 
-                                   db => $self->db)
-              or die $ft_manager->error;
-        }
-        else
-        {
-          $objs = 
-            $ft_manager->$ft_method(query    => [ %key, @$query_args ],
-                                    db       => $self->db, 
-                                    share_db => 0, %$mgr_args)
-              or die $ft_manager->error;
-        }
-      };
+        local $@;
 
-      if($@ || !$objs)
+        eval
+        {
+          if($share_db)
+          {
+            $objs = 
+              $ft_manager->$ft_method(query => [ %key, @$query_args ], 
+                                     %$mgr_args, 
+                                     db => $self->db)
+                or die $ft_manager->error;
+          }
+          else
+          {
+            $objs = 
+              $ft_manager->$ft_method(query    => [ %key, @$query_args ],
+                                      db       => $self->db, 
+                                      share_db => 0, %$mgr_args)
+                or die $ft_manager->error;
+          }
+        };
+
+        $error = $@;
+      }
+
+      if($error || !$objs)
       {
         $self->error("Could not load $ft_class objects with key " .
                      join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                     " - " . ($@ || $ft_manager->error));
+                     " - " . ($error || $ft_manager->error));
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
@@ -3295,86 +3392,93 @@ sub objects_by_key
           }
         }
 
-        my($db, $started_new_tx);
+        my($db, $started_new_tx, $error);
 
-        eval
+        TRY:
         {
-          $db = $self->db;
+          local $@;
 
-          my $ret = $db->begin_work;
-
-          unless(defined $ret)
+          eval
           {
-            die 'Could not begin transaction during call to $name() - ',
-                $db->error;
-          }
+            $db = $self->db;
 
-          $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+            my $ret = $db->begin_work;
 
-          # Get the list of new objects
-          my $objects = __args_to_objects($self, $key, $ft_class, \$ft_pk, \@_);
-
-          # Prep objects for saving.
-          foreach my $object (@$objects)
-          {
-            # Map object to parent
-            $object->init(%map, db => $db);
-
-            # If the object is not marked as already existing in the database,
-            # see if it represents an existing row.  If it does, merge the
-            # existing row's column values into the object, allowing any
-            # modified columns in the object to take precedence.
-            __check_and_merge($object);
-          }
-
-          # Delete any existing objects
-          my $deleted = 
-            $ft_manager->$ft_delete_method(object_class => $ft_class,
-                                           where => [ %key, @$query_args ], 
-                                           db => $db);
-          die $ft_manager->error  unless(defined $deleted);
-
-          # Save all the new objects
-          foreach my $object (@$objects)
-          {
-            $object->{STATE_IN_DB()} = 0  if($deleted);
-
-            # If the object is not marked as already existing in the database,
-            # see if it represents an existing row.  If it does, merge the
-            # existing row's column values into the object, allowing any
-            # modified columns in the object to take precedence. Returns true
-            # if the object represents an existing row.
-            if(__check_and_merge($object))
+            unless(defined $ret)
             {
-              $object->save(changes_only => 1) or die $object->error;
-            }
-            else
-            {
-              $object->save or die $object->error;
+              die 'Could not begin transaction during call to $name() - ',
+                  $db->error;
             }
 
-            # Not sharing?  Aw.
-            $object->db(undef)  unless($share_db);
-          }
+            $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
 
-          # Assign to attribute or blank the attribute, causing the objects
-          # to be fetched from the db next time, depending on whether or not
-          # there's a custom sort order
-          $self->{$key} = defined $mgr_args->{'sort_by'} ? undef : $objects;
+            # Get the list of new objects
+            my $objects = __args_to_objects($self, $key, $ft_class, \$ft_pk, \@_);
 
-          if($started_new_tx)
-          {
-            $db->commit or die $db->error;
-          }
+            # Prep objects for saving.
+            foreach my $object (@$objects)
+            {
+              # Map object to parent
+              $object->init(%map, db => $db);
 
-          # Delete any pending set or add actions
-          delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'set'};
-          delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'};
-        };
+              # If the object is not marked as already existing in the database,
+              # see if it represents an existing row.  If it does, merge the
+              # existing row's column values into the object, allowing any
+              # modified columns in the object to take precedence.
+              __check_and_merge($object);
+            }
 
-        if($@)
+            # Delete any existing objects
+            my $deleted = 
+              $ft_manager->$ft_delete_method(object_class => $ft_class,
+                                             where => [ %key, @$query_args ], 
+                                             db => $db);
+            die $ft_manager->error  unless(defined $deleted);
+
+            # Save all the new objects
+            foreach my $object (@$objects)
+            {
+              $object->{STATE_IN_DB()} = 0  if($deleted);
+
+              # If the object is not marked as already existing in the database,
+              # see if it represents an existing row.  If it does, merge the
+              # existing row's column values into the object, allowing any
+              # modified columns in the object to take precedence. Returns true
+              # if the object represents an existing row.
+              if(__check_and_merge($object))
+              {
+                $object->save(changes_only => 1) or die $object->error;
+              }
+              else
+              {
+                $object->save or die $object->error;
+              }
+
+              # Not sharing?  Aw.
+              $object->db(undef)  unless($share_db);
+            }
+
+            # Assign to attribute or blank the attribute, causing the objects
+            # to be fetched from the db next time, depending on whether or not
+            # there's a custom sort order
+            $self->{$key} = defined $mgr_args->{'sort_by'} ? undef : $objects;
+
+            if($started_new_tx)
+            {
+              $db->commit or die $db->error;
+            }
+
+            # Delete any pending set or add actions
+            delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'set'};
+            delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'};
+          };
+
+          $error = $@;
+        }
+
+        if($error)
         {
-          $self->error("Could not set $name objects - $@");
+          $self->error("Could not set $name objects - $error");
           $db->rollback  if($db && $started_new_tx);
           $meta->handle_error($self);
           return undef;
@@ -3426,31 +3530,40 @@ sub objects_by_key
         }
       }
 
-      # Make query for object list
-      eval
-      {
-        if($share_db)
-        {
-          $objs = 
-            $ft_manager->$ft_method(query => [ %key, @$query_args ], 
-                                   %$mgr_args, db => $self->db)
-              or die $ft_manager->error;
-        }
-        else
-        {
-          $objs = 
-            $ft_manager->$ft_method(query    => [ %key, @$query_args ],
-                                    db       => $self->db,
-                                    share_db => 0, %$mgr_args)
-              or die $ft_manager->error;
-        }
-      };
+      my $error;
 
-      if($@ || !$objs)
+      TRY:
+      {
+        local $@;
+
+        # Make query for object list
+        eval
+        {
+          if($share_db)
+          {
+            $objs = 
+              $ft_manager->$ft_method(query => [ %key, @$query_args ], 
+                                     %$mgr_args, db => $self->db)
+                or die $ft_manager->error;
+          }
+          else
+          {
+            $objs = 
+              $ft_manager->$ft_method(query    => [ %key, @$query_args ],
+                                      db       => $self->db,
+                                      share_db => 0, %$mgr_args)
+                or die $ft_manager->error;
+          }
+        };
+
+        $error = $@;
+      }
+
+      if($error || !$objs)
       {
         $self->error("Could not load $ft_class objects with key " .
                      join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                     " - " . ($@ || $ft_manager->error));
+                     " - " . ($error || $ft_manager->error));
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
@@ -3690,32 +3803,41 @@ sub objects_by_key
         }
       }
 
-      # Make query for object list
-      eval
-      {
-        if($share_db)
-        {
-          $objs = 
-            $ft_manager->$ft_method(query => [ %key, @$query_args ], 
-                                   %$mgr_args, db => $self->db)
-              or die $ft_manager->error;
-        }
-        else
-        {
-          $objs = 
-            $ft_manager->$ft_method(query    => [ %key, @$query_args ],
-                                    db       => $self->db, 
-                                    share_db => 0,
-                                    %$mgr_args)
-              or die $ft_manager->error;
-        }
-      };
+      my $error;
 
-      if($@ || !$objs)
+      TRY:
+      {
+        local $@;
+
+        # Make query for object list
+        eval
+        {
+          if($share_db)
+          {
+            $objs = 
+              $ft_manager->$ft_method(query => [ %key, @$query_args ], 
+                                     %$mgr_args, db => $self->db)
+                or die $ft_manager->error;
+          }
+          else
+          {
+            $objs = 
+              $ft_manager->$ft_method(query    => [ %key, @$query_args ],
+                                      db       => $self->db, 
+                                      share_db => 0,
+                                      %$mgr_args)
+                or die $ft_manager->error;
+          }
+        };
+
+        $error = $@;
+      }
+
+      if($error || !$objs)
       {
         $self->error("Could not load $ft_class objects with key " .
                      join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                     " - " . ($@ || $ft_manager->error));
+                     " - " . ($error || $ft_manager->error));
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
@@ -3780,42 +3902,49 @@ sub objects_by_key
         }
       }
 
-      my($db, $started_new_tx);
+      my($db, $started_new_tx, $error);
 
-      eval
+      TRY:
       {
-        $db = $self->db;
+        local $@;
 
-        my $ret = $db->begin_work;
-
-        unless(defined $ret)
+        eval
         {
-          die 'Could not begin transaction during call to $name() - ',
-              $db->error;
-        }
+          $db = $self->db;
 
-        $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+          my $ret = $db->begin_work;
 
-        # Delete existing objects
-        my $deleted = 
-          $ft_manager->$ft_delete_method(object_class => $ft_class,
-                                         where => [ %key, @$query_args ], 
-                                         db => $db);
-        die $ft_manager->error  unless(defined $deleted);
+          unless(defined $ret)
+          {
+            die 'Could not begin transaction during call to $name() - ',
+                $db->error;
+          }
 
-        # Delete any pending set or add actions
-        delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'set'};
-        delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'};
+          $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
 
-        if($started_new_tx)
-        {
-          $db->commit or die $db->error;
-        }
-      };
+          # Delete existing objects
+          my $deleted = 
+            $ft_manager->$ft_delete_method(object_class => $ft_class,
+                                           where => [ %key, @$query_args ], 
+                                           db => $db);
+          die $ft_manager->error  unless(defined $deleted);
 
-      if($@)
+          # Delete any pending set or add actions
+          delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'set'};
+          delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'};
+
+          if($started_new_tx)
+          {
+            $db->commit or die $db->error;
+          }
+        };
+
+        $error = $@;
+      }
+
+      if($error)
       {
-        $self->error("Could not delete $name objects - $@");
+        $self->error("Could not delete $name objects - $error");
         $db->rollback  if($db && $started_new_tx);
         $meta->handle_error($self);
         return undef;
@@ -3958,56 +4087,63 @@ sub objects_by_key
 
       my $objects = __args_to_objects($self, $key, $ft_class, \$ft_pk, \@_);
 
-      my($db, $started_new_tx);
+      my($db, $started_new_tx, $error);
 
-      eval
+      TRY:
       {
-        $db = $self->db;
+        local $@;
 
-        my $ret = $db->begin_work;
-
-        unless(defined $ret)
+        eval
         {
-          die 'Could not begin transaction during call to $name() - ',
-              $db->error;
-        }
+          $db = $self->db;
 
-        $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+          my $ret = $db->begin_work;
 
-        # Add all the new objects
-        foreach my $object (@$objects)
-        {
-          # Map object to parent
-          $object->init(%map, db => $db);
-
-          # If the object is not marked as already existing in the database,
-          # see if it represents an existing row.  If it does, merge the
-          # existing row's column values into the object, allowing any
-          # modified columns in the object to take precedence. Returns true
-          # if the object represents an existing row.
-          if(__check_and_merge($object))
+          unless(defined $ret)
           {
-            $object->save(changes_only => 1) or die $object->error;
+            die 'Could not begin transaction during call to $name() - ',
+                $db->error;
           }
-          else
+
+          $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+
+          # Add all the new objects
+          foreach my $object (@$objects)
           {
-            $object->save or die $object->error;
+            # Map object to parent
+            $object->init(%map, db => $db);
+
+            # If the object is not marked as already existing in the database,
+            # see if it represents an existing row.  If it does, merge the
+            # existing row's column values into the object, allowing any
+            # modified columns in the object to take precedence. Returns true
+            # if the object represents an existing row.
+            if(__check_and_merge($object))
+            {
+              $object->save(changes_only => 1) or die $object->error;
+            }
+            else
+            {
+              $object->save or die $object->error;
+            }
           }
-        }
 
-        # Clear the existing list, forcing it to be reloaded next time
-        # it's asked for
-        $self->{$key} = undef;
+          # Clear the existing list, forcing it to be reloaded next time
+          # it's asked for
+          $self->{$key} = undef;
 
-        if($started_new_tx)
-        {
-          $db->commit or die $db->error;
-        }
-      };
+          if($started_new_tx)
+          {
+            $db->commit or die $db->error;
+          }
+        };
 
-      if($@)
+        $error = $@;
+      }
+
+      if($error)
       {
-        $self->error("Could not add $name - $@");
+        $self->error("Could not add $name - $error");
         $db->rollback  if($db && $started_new_tx);
         $meta->handle_error($self);
         return;
@@ -4525,28 +4661,37 @@ sub objects_by_map
         $args{$k} = $v  unless(exists $args{$k});
       }
 
-      eval
-      {
-        if($share_db)
-        {
-          $objs =
-            $map_manager->$map_method(query => \@query,
-                                      require_objects => $require_objects,
-                                      %args, db => $self->db);
-        }
-        else
-        {
-          $objs = 
-            $map_manager->$map_method(query => \@query,
-                                      require_objects => $require_objects,
-                                      db => $self->db, share_db => 0,
-                                      %args);
-        }
-      };
+      my $error;
 
-      if($@ || !$objs)
+      TRY:
       {
-        $self->error("Could not find $foreign_class objects - " . ($@ || $map_manager->error));
+        local $@;
+
+        eval
+        {
+          if($share_db)
+          {
+            $objs =
+              $map_manager->$map_method(query => \@query,
+                                        require_objects => $require_objects,
+                                        %args, db => $self->db);
+          }
+          else
+          {
+            $objs = 
+              $map_manager->$map_method(query => \@query,
+                                        require_objects => $require_objects,
+                                        db => $self->db, share_db => 0,
+                                        %args);
+          }
+        };
+
+        $error = $@;
+      }
+
+      if($error || !$objs)
+      {
+        $self->error("Could not find $foreign_class objects - " . ($error || $map_manager->error));
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
@@ -4715,30 +4860,37 @@ sub objects_by_map
 
       $args{'multi_many_ok'} = 1;
 
-      my $count;
+      my($count, $error);
 
-      eval
+      TRY:
       {
-        if($share_db)
-        {
-          $count =
-            $map_manager->$count_method(query => \@query,
-                                        require_objects => $require_objects,
-                                        %$mgr_args, db => $self->db);
-        }
-        else
-        {
-          $count = 
-            $map_manager->$count_method(query => \@query,
-                                        require_objects => $require_objects,
-                                        db => $self->db, share_db => 0,
-                                        %$mgr_args);
-        }
-      };
+        local $@;
 
-      if($@ || !defined $count)
+        eval
+        {
+          if($share_db)
+          {
+            $count =
+              $map_manager->$count_method(query => \@query,
+                                          require_objects => $require_objects,
+                                          %$mgr_args, db => $self->db);
+          }
+          else
+          {
+            $count = 
+              $map_manager->$count_method(query => \@query,
+                                          require_objects => $require_objects,
+                                          db => $self->db, share_db => 0,
+                                          %$mgr_args);
+          }
+        };
+
+        $error = $@;
+      }
+
+      if($error || !defined $count)
       {
-        $self->error("Could not count $foreign_class objects - " . ($@ || $map_manager->error));
+        $self->error("Could not count $foreign_class objects - " . ($error || $map_manager->error));
         $self->meta->handle_error($self);
         return $count;
       }
@@ -4922,124 +5074,131 @@ sub objects_by_map
           }
         }
 
-        my($db, $started_new_tx);
+        my($db, $started_new_tx, $error);
 
-        eval
+        TRY:
         {
-          $db = $self->db;
+          local $@;
 
-          my $ret = $db->begin_work;
-
-          unless(defined $ret)
+          eval
           {
-            die 'Could not begin transaction during call to $name() - ',
-                $db->error;
-          }
+            $db = $self->db;
 
-          $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+            my $ret = $db->begin_work;
 
-          # Delete any existing objects
-          my $deleted = 
-            $map_manager->$map_delete_method(object_class => $map_class,
-                                             where => [ %join_map_to_self ],
-                                             db    => $db);
-          die $map_manager->error  unless(defined $deleted);
-
-          # Save all the new objects
-          my $objects = __args_to_objects($self, $key, $foreign_class, \$ft_pk, \@_);
-
-          foreach my $object (@$objects)
-          {
-            # It's essential to share the db so that the code
-            # below can see the delete (above) which happened in
-            # the current transaction
-            $object->db($db); 
-
-            $object->{STATE_IN_DB()} = 0  if($deleted);
-
-            # If the object is not marked as already existing in the database,
-            # see if it represents an existing row.  If it does, merge the
-            # existing row's column values into the object, allowing any
-            # modified columns in the object to take precedence. Returns true
-            # if the object represents an existing row.
-            if(__check_and_merge($object))
+            unless(defined $ret)
             {
-              $object->save or die $object->error;
-            }
-            else
-            {
-              $object->save or die $object->error;
+              die 'Could not begin transaction during call to $name() - ',
+                  $db->error;
             }
 
-            # Not sharing?  Aw.
-            $object->db(undef)  unless($share_db);
+            $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
 
-            my $map_record;
+            # Delete any existing objects
+            my $deleted = 
+              $map_manager->$map_delete_method(object_class => $map_class,
+                                               where => [ %join_map_to_self ],
+                                               db    => $db);
+            die $map_manager->error  unless(defined $deleted);
 
-            # Create or retrieve map record, connected to self
-            if($map_record_method)
+            # Save all the new objects
+            my $objects = __args_to_objects($self, $key, $foreign_class, \$ft_pk, \@_);
+
+            foreach my $object (@$objects)
             {
-              $map_record = $object->$map_record_method() || $map_class->new;
-              $map_record->init(%method_map_to_self, db => $db);
-            }
-            else
-            {
-              $map_record = $map_class->new(%method_map_to_self, db => $db);
-            }
+              # It's essential to share the db so that the code
+              # below can see the delete (above) which happened in
+              # the current transaction
+              $object->db($db); 
 
-            # Connect map record to remote object
-            while(my($map_method, $remote_method) = each(%map_method_to_remote_method))
-            {
-              $map_record->$map_method($object->$remote_method);
-            }
+              $object->{STATE_IN_DB()} = 0  if($deleted);
 
-            my $in_db = $map_record->{STATE_IN_DB()};
-
-            # Try to load the map record if doesn't appear to exist already
-            unless($in_db)
-            {
-              my $dbh = $map_record->dbh;
-
-              # It's okay if this fails because the key(s) is/are undefined
-              local $dbh->{'PrintError'} = 0;
-              eval { $in_db = $map_record->load(speculative => 1) };
-
-              if(my $error = $@)
+              # If the object is not marked as already existing in the database,
+              # see if it represents an existing row.  If it does, merge the
+              # existing row's column values into the object, allowing any
+              # modified columns in the object to take precedence. Returns true
+              # if the object represents an existing row.
+              if(__check_and_merge($object))
               {
-                # ...but re-throw all other errors
-                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
-                       $error->code == EXCEPTION_CODE_NO_KEY)
+                $object->save or die $object->error;
+              }
+              else
+              {
+                $object->save or die $object->error;
+              }
+
+              # Not sharing?  Aw.
+              $object->db(undef)  unless($share_db);
+
+              my $map_record;
+
+              # Create or retrieve map record, connected to self
+              if($map_record_method)
+              {
+                $map_record = $object->$map_record_method() || $map_class->new;
+                $map_record->init(%method_map_to_self, db => $db);
+              }
+              else
+              {
+                $map_record = $map_class->new(%method_map_to_self, db => $db);
+              }
+
+              # Connect map record to remote object
+              while(my($map_method, $remote_method) = each(%map_method_to_remote_method))
+              {
+                $map_record->$map_method($object->$remote_method);
+              }
+
+              my $in_db = $map_record->{STATE_IN_DB()};
+
+              # Try to load the map record if doesn't appear to exist already
+              unless($in_db)
+              {
+                my $dbh = $map_record->dbh;
+
+                # It's okay if this fails because the key(s) is/are undefined
+                local $dbh->{'PrintError'} = 0;
+                eval { $in_db = $map_record->load(speculative => 1) };
+
+                if(my $error = $@)
                 {
-                  die $error;
+                  # ...but re-throw all other errors
+                  unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                         $error->code == EXCEPTION_CODE_NO_KEY)
+                  {
+                    die $error;
+                  }
                 }
+              }
+
+              # Save the map record, if necessary
+              unless($in_db)
+              {
+                $map_record->save or die $map_record->error;
               }
             }
 
-            # Save the map record, if necessary
-            unless($in_db)
+            # Assign to attribute or blank the attribute, causing the objects
+            # to be fetched from the db next time, depending on whether or not
+            # there's a custom sort order
+            $self->{$key} = defined $mgr_args->{'sort_by'} ? undef : $objects;
+
+            if($started_new_tx)
             {
-              $map_record->save or die $map_record->error;
+              $db->commit or die $db->error;
             }
-          }
 
-          # Assign to attribute or blank the attribute, causing the objects
-          # to be fetched from the db next time, depending on whether or not
-          # there's a custom sort order
-          $self->{$key} = defined $mgr_args->{'sort_by'} ? undef : $objects;
+            # Delete any pending set or add actions
+            delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'set'};
+            delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'};
+          };
 
-          if($started_new_tx)
-          {
-            $db->commit or die $db->error;
-          }
+          $error = $@;
+        }
 
-          # Delete any pending set or add actions
-          delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'set'};
-          delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'};
-        };
-
-        if($@)
+        if($error)
         {
-          $self->error("Could not set $name objects - $@");
+          $self->error("Could not set $name objects - $error");
           $db->rollback  if($db && $started_new_tx);
           $meta->handle_error($self);
           return undef;
@@ -5268,11 +5427,18 @@ sub objects_by_map
             {
               my $dbh = $map_record->dbh;
 
-              # It's okay if this fails because the key(s) is/are undefined
-              local $dbh->{'PrintError'} = 0;
-              eval { $in_db = $map_record->load(speculative => 1) };
+              my $error;
 
-              if(my $error = $@)
+              TRY:
+              {
+                local $@;
+                # It's okay if this fails because the key(s) is/are undefined
+                local $dbh->{'PrintError'} = 0;
+                eval { $in_db = $map_record->load(speculative => 1) };
+                $error = $@;
+              }
+
+              if($error)
               {
                 # ...but re-throw all other errors
                 unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
@@ -5461,102 +5627,109 @@ sub objects_by_map
 
       my $objects = __args_to_objects($self, $key, $foreign_class, \$ft_pk, \@_);
 
-      my($db, $started_new_tx);
+      my($db, $started_new_tx, $error);
 
-      eval
+      TRY:
       {
-        $db = $self->db;
+        local $@;
 
-        my $ret = $db->begin_work;
-
-        unless(defined $ret)
+        eval
         {
-          die 'Could not begin transaction during call to $name() - ',
-              $db->error;
-        }
+          $db = $self->db;
 
-        $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+          my $ret = $db->begin_work;
 
-        # Add all the new objects
-        foreach my $object (@$objects)
-        {
-          # It's essential to share the db so that the code
-          # below can see the delete (above) which happened in
-          # the current transaction
-          $object->db($db); 
-
-          # If the object is not marked as already existing in the database,
-          # see if it represents an existing row.  If it does, merge the
-          # existing row's column values into the object, allowing any
-          # modified columns in the object to take precedence. Returns true
-          # if the object represents an existing row.
-          if(__check_and_merge($object))
+          unless(defined $ret)
           {
-            $object->save(changes_only => 1) or die $object->error;
-          }
-          else
-          {
-            $object->save or die $object->error;
+            die 'Could not begin transaction during call to $name() - ',
+                $db->error;
           }
 
-          # Not sharing?  Aw.
-          $object->db(undef)  unless($share_db);
+          $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
 
-          # Create map record, connected to self
-          my $map_record = $map_class->new(%method_map_to_self, db => $db);
-
-          # Connect map record to remote object
-          while(my($map_method, $remote_method) = each(%map_method_to_remote_method))
+          # Add all the new objects
+          foreach my $object (@$objects)
           {
-            $map_record->$map_method($object->$remote_method);
-          }
+            # It's essential to share the db so that the code
+            # below can see the delete (above) which happened in
+            # the current transaction
+            $object->db($db); 
 
-          my $in_db = $map_record->{STATE_IN_DB()};
-
-          # Try to load the map record if doesn't appear to exist already
-          unless($in_db)
-          {
-            my $dbh = $map_record->dbh;
-
-            # It's okay if this fails because the key(s) is/are undefined
-            local $dbh->{'PrintError'} = 0;
-            eval { $in_db = $map_record->load(speculative => 1) };
-
-            if(my $error = $@)
+            # If the object is not marked as already existing in the database,
+            # see if it represents an existing row.  If it does, merge the
+            # existing row's column values into the object, allowing any
+            # modified columns in the object to take precedence. Returns true
+            # if the object represents an existing row.
+            if(__check_and_merge($object))
             {
-              # ...but re-throw all other errors
-              unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
-                     $error->code == EXCEPTION_CODE_NO_KEY)
+              $object->save(changes_only => 1) or die $object->error;
+            }
+            else
+            {
+              $object->save or die $object->error;
+            }
+
+            # Not sharing?  Aw.
+            $object->db(undef)  unless($share_db);
+
+            # Create map record, connected to self
+            my $map_record = $map_class->new(%method_map_to_self, db => $db);
+
+            # Connect map record to remote object
+            while(my($map_method, $remote_method) = each(%map_method_to_remote_method))
+            {
+              $map_record->$map_method($object->$remote_method);
+            }
+
+            my $in_db = $map_record->{STATE_IN_DB()};
+
+            # Try to load the map record if doesn't appear to exist already
+            unless($in_db)
+            {
+              my $dbh = $map_record->dbh;
+
+              # It's okay if this fails because the key(s) is/are undefined
+              local $dbh->{'PrintError'} = 0;
+              eval { $in_db = $map_record->load(speculative => 1) };
+
+              if(my $error = $@)
               {
-                die $error;
+                # ...but re-throw all other errors
+                unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
+                       $error->code == EXCEPTION_CODE_NO_KEY)
+                {
+                  die $error;
+                }
               }
+            }
+
+            # Save the map record, if necessary
+            unless($in_db)
+            {
+              $map_record->save or die $map_record->error;
             }
           }
 
-          # Save the map record, if necessary
-          unless($in_db)
+          # Clear the existing list, forcing it to be reloaded next time
+          # it's asked for
+          $self->{$key} = undef;
+
+          if($started_new_tx)
           {
-            $map_record->save or die $map_record->error;
+            $db->commit or die $db->error;
           }
-        }
 
-        # Clear the existing list, forcing it to be reloaded next time
-        # it's asked for
-        $self->{$key} = undef;
+          # Delete any pending set or add actions
+          delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'set'};
+          delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'};
+        };
 
-        if($started_new_tx)
-        {
-          $db->commit or die $db->error;
-        }
+        $error = $@;
+      }
 
-        # Delete any pending set or add actions
-        delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'set'};
-        delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$rel_name}{'add'};
-      };
-
-      if($@)
+      if($error)
       {
-        $self->error("Could not add $name objects - $@");
+        $self->error("Could not add $name objects - $error");
         $db->rollback  if($db && $started_new_tx);
         $meta->handle_error($self);
         return;
@@ -5654,25 +5827,35 @@ sub objects_by_map
           {
             my $dbh = $map_record->dbh;
 
-            # It's okay if this fails because the key(s) is/are undefined...
-            local $dbh->{'PrintError'} = 0;
 
-            eval
+            my $error;
+
+            TRY:
             {
-              if($map_record->load(speculative => 1))
+              local $@;
+
+              # It's okay if this fails because the key(s) is/are undefined...
+              local $dbh->{'PrintError'} = 0;
+
+              eval
               {
-                # (Re)connect map record to self
-                $map_record->init(%method_map_to_self);
-
-                # (Re)connect map record to remote object
-                while(my($map_method, $remote_method) = each(%map_method_to_remote_method))
+                if($map_record->load(speculative => 1))
                 {
-                  $map_record->$map_method($object->$remote_method);
-                }
-              }
-            };
+                  # (Re)connect map record to self
+                  $map_record->init(%method_map_to_self);
 
-            if(my $error = $@)
+                  # (Re)connect map record to remote object
+                  while(my($map_method, $remote_method) = each(%map_method_to_remote_method))
+                  {
+                    $map_record->$map_method($object->$remote_method);
+                  }
+                }
+              };
+
+              $error = $@;
+            }
+
+            if($error)
             {
               # ...but re-throw all other errors
               unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&
@@ -5833,16 +6016,23 @@ sub __check_and_merge
     Rose::DB::Object::Helpers::init_with_column_value_pairs($clone, 
       Rose::DB::Object::Helpers::key_column_value_pairs($object));
 
-    my $ret;
+    my($ret, $error);
 
     # Ignore any errors due to missing primary keys
-    eval 
+    TRY:
     {
-      local $db->dbh->{'PrintError'} = 0;
-      $ret = $clone->load(speculative => 1);
-    };
+      local $@;
 
-    if(my $error = $@)
+      eval 
+      {
+        local $db->dbh->{'PrintError'} = 0;
+        $ret = $clone->load(speculative => 1);
+      };
+
+      $error = $@;
+    }
+
+    if($error)
     {
       # ...but re-throw all other errors
       unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception') &&

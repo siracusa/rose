@@ -16,7 +16,7 @@ use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Exception;
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.783_03';
+our $VERSION = '0.783_04';
 
 our $Debug = 0;
 
@@ -97,17 +97,22 @@ sub _init_db
 {
   my($self) = shift;
 
-  my $db;
+  my($db, $error);
 
-  eval { $db = $self->init_db };
+  TRY:
+  {
+    local $@;
+    eval { $db = $self->init_db };
+    $error = $@;
+  }
 
-  unless($@)
+  unless($error)
   {
     #$self->{FLAG_DB_IS_PRIVATE()} = 1;
     return $db;
   }
 
-  $self->error("Could not init_db() - $@ - " . ($db ? $db->error : ''));
+  $self->error("Could not init_db() - $error - " . ($db ? $db->error : ''));
   $self->meta->handle_error($self);
   return undef;
 }
@@ -265,32 +270,39 @@ sub load
 
     @query{map { "t1.$_" } @key_columns} = @key_values;
 
-    my $objects;
+    my($objects, $error);
 
-    eval
+    TRY:
     {
-      $objects = 
-        $mgr_class->get_objects(object_class   => ref $self,
-                                db             => $db,
-                                query          => [ %query ],
-                                with_objects   => $with,
-                                multi_many_ok  => 1,
-                                nonlazy        => $args{'nonlazy'},
-                                inject_results => $args{'inject_results'},
-                                (exists $args{'prepare_cached'} ?
-                                (prepare_cached =>  $args{'prepare_cached'}) : 
-                                ()))
-          or Carp::confess $mgr_class->error;
+      local $@;
 
-      if(@$objects > 1)
+      eval
       {
-        die "Found ", @$objects, " objects instead of one";
-      }
-    };
+        $objects = 
+          $mgr_class->get_objects(object_class   => ref $self,
+                                  db             => $db,
+                                  query          => [ %query ],
+                                  with_objects   => $with,
+                                  multi_many_ok  => 1,
+                                  nonlazy        => $args{'nonlazy'},
+                                  inject_results => $args{'inject_results'},
+                                  (exists $args{'prepare_cached'} ?
+                                  (prepare_cached =>  $args{'prepare_cached'}) : 
+                                  ()))
+            or Carp::confess $mgr_class->error;
 
-    if($@)
+        if(@$objects > 1)
+        {
+          die "Found ", @$objects, " objects instead of one";
+        }
+      };
+
+      $error = $@;
+    }
+
+    if($error)
     {
-      $self->error("load(with => ...) - $@");
+      $self->error("load(with => ...) - $error");
       $meta->handle_error($self);
       return undef;
     }
@@ -343,96 +355,103 @@ sub load
   # Handle normal load
   #
 
-  my $loaded_ok;
+  my($loaded_ok, $error);
 
   $self->{'not_found'} = 0;
 
-  eval
+  TRY:
   {
-    local $self->{STATE_LOADING()} = 1;
-    local $dbh->{'RaiseError'} = 1;
+    local $@;
 
-    my($sql, $sth);
-
-    if($null_key)
+    eval
     {
-      if($has_lazy_columns)
+      local $self->{STATE_LOADING()} = 1;
+      local $dbh->{'RaiseError'} = 1;
+
+      my($sql, $sth);
+
+      if($null_key)
       {
-        $sql = $meta->load_sql_with_null_key(\@key_columns, \@key_values, $db);
+        if($has_lazy_columns)
+        {
+          $sql = $meta->load_sql_with_null_key(\@key_columns, \@key_values, $db);
+        }
+        else
+        {
+          $sql = $meta->load_all_sql_with_null_key(\@key_columns, \@key_values, $db);
+        }
       }
       else
       {
-        $sql = $meta->load_all_sql_with_null_key(\@key_columns, \@key_values, $db);
+        if($has_lazy_columns)
+        {
+          $sql = $meta->load_sql(\@key_columns, $db);
+        }
+        else
+        {
+          $sql = $meta->load_all_sql(\@key_columns, $db);
+        }
       }
-    }
-    else
-    {
-      if($has_lazy_columns)
+
+      # $meta->prepare_select_options (defunct)
+      $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                               $dbh->prepare($sql);
+
+      $Debug && warn "$sql - bind params: ", join(', ', grep { defined } @key_values), "\n";
+      $sth->execute(grep { defined } @key_values);
+
+      my %row;
+
+      $sth->bind_columns(undef, \@row{@$column_names});
+
+      $loaded_ok = defined $sth->fetch;
+
+      # The load() query shouldn't find more than one row anyway, 
+      # but DBD::SQLite demands this :-/
+      # XXX: Recent versions of DBD::SQLite seem to have cured this.
+      # XXX: Safe to remove?
+      $sth->finish;
+
+      if($loaded_ok)
       {
-        $sql = $meta->load_sql(\@key_columns, $db);
+        my $methods = $meta->column_mutator_method_names_hash;
+
+        # Empty existing object?
+        #%$self = (db => $self->db, meta => $meta, STATE_LOADING() => 1);
+
+        foreach my $name (@$column_names)
+        {
+          my $method = $methods->{$name};
+          $self->$method($row{$name});
+        }
+
+        # Sneaky init by object replacement
+        #my $object = (ref $self)->new(db => $self->db);
+        #
+        #foreach my $name (@$column_names)
+        #{
+        #  my $method = $methods->{$name};
+        #  $object->$method($row{$name});
+        #}
+        #
+        #$self = $_[0] = $object;
       }
       else
       {
-        $sql = $meta->load_all_sql(\@key_columns, $db);
+        no warnings;
+        $self->error("No such " . ref($self) . ' where ' . 
+                     join(', ', @key_columns) . ' = ' . join(', ', @key_values));
+        $self->{'not_found'} = 1;
+        $self->{STATE_IN_DB()} = 0;
       }
-    }
+    };
 
-    # $meta->prepare_select_options (defunct)
-    $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
-                             $dbh->prepare($sql);
+    $error = $@;
+  }
 
-    $Debug && warn "$sql - bind params: ", join(', ', grep { defined } @key_values), "\n";
-    $sth->execute(grep { defined } @key_values);
-
-    my %row;
-
-    $sth->bind_columns(undef, \@row{@$column_names});
-
-    $loaded_ok = defined $sth->fetch;
-
-    # The load() query shouldn't find more than one row anyway, 
-    # but DBD::SQLite demands this :-/
-    # XXX: Recent versions of DBD::SQLite seem to have cured this.
-    # XXX: Safe to remove?
-    $sth->finish;
-
-    if($loaded_ok)
-    {
-      my $methods = $meta->column_mutator_method_names_hash;
-
-      # Empty existing object?
-      #%$self = (db => $self->db, meta => $meta, STATE_LOADING() => 1);
-
-      foreach my $name (@$column_names)
-      {
-        my $method = $methods->{$name};
-        $self->$method($row{$name});
-      }
-
-      # Sneaky init by object replacement
-      #my $object = (ref $self)->new(db => $self->db);
-      #
-      #foreach my $name (@$column_names)
-      #{
-      #  my $method = $methods->{$name};
-      #  $object->$method($row{$name});
-      #}
-      #
-      #$self = $_[0] = $object;
-    }
-    else
-    {
-      no warnings;
-      $self->error("No such " . ref($self) . ' where ' . 
-                   join(', ', @key_columns) . ' = ' . join(', ', @key_values));
-      $self->{'not_found'} = 1;
-      $self->{STATE_IN_DB()} = 0;
-    }
-  };
-
-  if($@)
+  if($error)
   {
-    $self->error("load() - $@");
+    $self->error("load() - $error");
     $meta->handle_error($self);
     return undef;
   }
@@ -483,146 +502,155 @@ sub save
 
     my $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
 
-    eval
+    my $error;
+
+    TRY:
     {
-      my %did_set;
+      local $@;
 
-      my %code_args = 
-        map { ($_ => $args{$_}) } grep { exists $args{$_} } 
-        qw(changes_only prepare_cached cascade);
-
-      #
-      # Do pre-save stuff
-      #
-
-      my $todo = $self->{ON_SAVE_ATTR_NAME()}{'pre'};
-
-      foreach my $fk_name (keys %{$todo->{'fk'}})
+      eval
       {
-        my $code   = $todo->{'fk'}{$fk_name}{'set'} or next;
-        my $object = $code->($self, \%code_args);
+        my %did_set;
 
-        # Account for objects that evaluate to false to due overloading
-        unless($object || ref $object)
+        my %code_args = 
+          map { ($_ => $args{$_}) } grep { exists $args{$_} } 
+          qw(changes_only prepare_cached cascade);
+
+        #
+        # Do pre-save stuff
+        #
+
+        my $todo = $self->{ON_SAVE_ATTR_NAME()}{'pre'};
+
+        foreach my $fk_name (keys %{$todo->{'fk'}})
         {
-          die $self->error;
-        }
+          my $code   = $todo->{'fk'}{$fk_name}{'set'} or next;
+          my $object = $code->($self, \%code_args);
 
-        # Track which rows were set so we can avoid deleting
-        # them later in the "delete on save" code
-        $did_set{'fk'}{$fk_name}{Rose::DB::Object::Util::row_id($object)} = 1;
-      }
-
-      #
-      # Do the actual save
-      #
-
-      if(!$args{'insert'} && ($args{'update'} || $self->{STATE_IN_DB()}))
-      {
-        $ret = shift->update(@_);
-      }
-      else
-      {
-        $ret = shift->insert(@_);
-      }
-
-      #
-      # Do post-save stuff
-      #
-
-      $todo = $self->{ON_SAVE_ATTR_NAME()}{'post'};
-
-      # Foreign keys (and some fk-like relationships)
-      foreach my $fk_name (keys %{$todo->{'fk'}})
-      {
-        foreach my $item (@{$todo->{'fk'}{$fk_name}{'delete'} || []})
-        {
-          my $code   = $item->{'code'};
-          my $object = $item->{'object'};
-
-          # Don't run the code to delete this object if we just set it above
-          next  if($did_set{'fk'}{$fk_name}{Rose::DB::Object::Util::row_id($object)});
-
-          $code->($self, \%code_args) or die $self->error;
-        }
-      }
-
-      if($cascade)
-      {
-        foreach my $fk ($meta->foreign_keys)
-        {
-          # If this object was just set above, just save changes (there 
-          # should be none) as a way to continue the cascade
-          local $args{'changes_only'} = 1  if($todo->{'fk'}{$fk->name}{'set'});
-
-          my $foreign_object = $fk->object_has_foreign_object($self) || next;
-
-          if(Rose::DB::Object::Util::has_modified_columns($foreign_object) ||
-             Rose::DB::Object::Util::has_modified_children($foreign_object))
+          # Account for objects that evaluate to false to due overloading
+          unless($object || ref $object)
           {
-            $Debug && warn "$self - save foreign ", $fk->name, " - $foreign_object\n";
-            $foreign_object->save(%args);
+            die $self->error;
+          }
+
+          # Track which rows were set so we can avoid deleting
+          # them later in the "delete on save" code
+          $did_set{'fk'}{$fk_name}{Rose::DB::Object::Util::row_id($object)} = 1;
+        }
+
+        #
+        # Do the actual save
+        #
+
+        if(!$args{'insert'} && ($args{'update'} || $self->{STATE_IN_DB()}))
+        {
+          $ret = shift->update(@_);
+        }
+        else
+        {
+          $ret = shift->insert(@_);
+        }
+
+        #
+        # Do post-save stuff
+        #
+
+        $todo = $self->{ON_SAVE_ATTR_NAME()}{'post'};
+
+        # Foreign keys (and some fk-like relationships)
+        foreach my $fk_name (keys %{$todo->{'fk'}})
+        {
+          foreach my $item (@{$todo->{'fk'}{$fk_name}{'delete'} || []})
+          {
+            my $code   = $item->{'code'};
+            my $object = $item->{'object'};
+
+            # Don't run the code to delete this object if we just set it above
+            next  if($did_set{'fk'}{$fk_name}{Rose::DB::Object::Util::row_id($object)});
+
+            $code->($self, \%code_args) or die $self->error;
           }
         }
-      }
 
-      # Relationships
-      foreach my $rel_name (keys %{$todo->{'rel'}})
-      {
-        my $code;
-
-        # Set value(s)
-        if($code  = $todo->{'rel'}{$rel_name}{'set'})
+        if($cascade)
         {
-          $code->($self, \%code_args) or die $self->error;
-        }
-
-        # Delete value(s)
-        if($code  = $todo->{'rel'}{$rel_name}{'delete'})
-        {
-          $code->($self, \%code_args) or die $self->error;
-        }
-
-        # Add value(s)
-        if($code  = $todo->{'rel'}{$rel_name}{'add'}{'code'})
-        {
-          $code->($self, \%code_args) or die $self->error;
-        }
-      }
-
-      if($cascade)
-      {
-        foreach my $rel ($meta->relationships)
-        {
-          # If this object was just set above, just save changes (there 
-          # should be none) as a way to continue the cascade
-          local $args{'changes_only'} = 1  if($todo->{'rel'}{$rel->name}{'set'});
-
-          my $related_objects = $rel->object_has_related_objects($self) || next;
-
-          foreach my $related_object (@$related_objects)
+          foreach my $fk ($meta->foreign_keys)
           {
-            if(Rose::DB::Object::Util::has_modified_columns($related_object) ||
-               Rose::DB::Object::Util::has_modified_children($related_object))
+            # If this object was just set above, just save changes (there 
+            # should be none) as a way to continue the cascade
+            local $args{'changes_only'} = 1  if($todo->{'fk'}{$fk->name}{'set'});
+
+            my $foreign_object = $fk->object_has_foreign_object($self) || next;
+
+            if(Rose::DB::Object::Util::has_modified_columns($foreign_object) ||
+               Rose::DB::Object::Util::has_modified_children($foreign_object))
             {
-              $Debug && warn "$self - save related ", $rel->name, " - $related_object\n";
-              $related_object->save(%args);
+              $Debug && warn "$self - save foreign ", $fk->name, " - $foreign_object\n";
+              $foreign_object->save(%args);
             }
           }
         }
-      }
 
-      if($started_new_tx)
-      {
-        $db->commit or die $db->error;
-      }
-    };
+        # Relationships
+        foreach my $rel_name (keys %{$todo->{'rel'}})
+        {
+          my $code;
+
+          # Set value(s)
+          if($code  = $todo->{'rel'}{$rel_name}{'set'})
+          {
+            $code->($self, \%code_args) or die $self->error;
+          }
+
+          # Delete value(s)
+          if($code  = $todo->{'rel'}{$rel_name}{'delete'})
+          {
+            $code->($self, \%code_args) or die $self->error;
+          }
+
+          # Add value(s)
+          if($code  = $todo->{'rel'}{$rel_name}{'add'}{'code'})
+          {
+            $code->($self, \%code_args) or die $self->error;
+          }
+        }
+
+        if($cascade)
+        {
+          foreach my $rel ($meta->relationships)
+          {
+            # If this object was just set above, just save changes (there 
+            # should be none) as a way to continue the cascade
+            local $args{'changes_only'} = 1  if($todo->{'rel'}{$rel->name}{'set'});
+
+            my $related_objects = $rel->object_has_related_objects($self) || next;
+
+            foreach my $related_object (@$related_objects)
+            {
+              if(Rose::DB::Object::Util::has_modified_columns($related_object) ||
+                 Rose::DB::Object::Util::has_modified_children($related_object))
+              {
+                $Debug && warn "$self - save related ", $rel->name, " - $related_object\n";
+                $related_object->save(%args);
+              }
+            }
+          }
+        }
+
+        if($started_new_tx)
+        {
+          $db->commit or die $db->error;
+        }
+      };
+
+      $error = $@;
+    }
 
     delete $self->{ON_SAVE_ATTR_NAME()};
 
-    if($@)
+    if($error)
     {
-      $self->error($@);
+      $self->error($error);
       $db->rollback or warn $db->error  if($started_new_tx);
       $self->meta->handle_error($self);
       return 0;
@@ -693,130 +721,45 @@ sub update
   #
   #my $started_new_tx = ($ret == Rose::DB::Constants::IN_TRANSACTION) ? 0 : 1;
 
-  eval
+  my $error;
+
+  TRY:
   {
-    #local $self->{STATE_SAVING()} = 1;
-    local $dbh->{'RaiseError'} = 1;
+    local $@;
 
-    my $sth;
-
-    if($meta->allow_inline_column_values)
+    eval
     {
-      # This versions of update_sql_with_inlining is not needed (see comments
-      # in Rose/DB/Object/Metadata.pm for more information)
-      #my($sql, $bind) = 
-      #  $meta->update_sql_with_inlining($self, \@key_columns, \@key_values);
+      #local $self->{STATE_SAVING()} = 1;
+      local $dbh->{'RaiseError'} = 1;
 
-      my($sql, $bind, $bind_params);
+      my $sth;
 
-      if($changes_only)
+      if($meta->allow_inline_column_values)
       {
-        # No changes to save...
-        return $self || 1  unless(%{$self->{MODIFIED_COLUMNS()} || {}});
-        ($sql, $bind, $bind_params) =
-          $meta->update_changes_only_sql_with_inlining($self, \@key_columns);
+        # This versions of update_sql_with_inlining is not needed (see comments
+        # in Rose/DB/Object/Metadata.pm for more information)
+        #my($sql, $bind) = 
+        #  $meta->update_sql_with_inlining($self, \@key_columns, \@key_values);
 
-        unless($sql) # skip key-only updates
+        my($sql, $bind, $bind_params);
+
+        if($changes_only)
         {
-          $self->{MODIFIED_COLUMNS()} = {};
-          return $self || 1;
-        }
-      }
-      else
-      {
-        ($sql, $bind, $bind_params) = $meta->update_sql_with_inlining($self, \@key_columns);
-      }
+          # No changes to save...
+          return $self || 1  unless(%{$self->{MODIFIED_COLUMNS()} || {}});
+          ($sql, $bind, $bind_params) =
+            $meta->update_changes_only_sql_with_inlining($self, \@key_columns);
 
-      if($Debug)
-      {
-        no warnings;
-        warn "$sql - bind params: ", join(', ', @$bind, @key_values), "\n";
-      }
-
-      $sth = $dbh->prepare($sql); #, $meta->prepare_update_options);
-
-      if($bind_params)
-      {
-        my $i = 1;
-
-        foreach my $value (@$bind)
-        {
-          $sth->bind_param($i, $value, $bind_params->[$i - 1]);
-          $i++;
-        }
-
-        my $kv_idx = 0;
-
-        foreach my $column_name (@key_columns)
-        {
-          my $column = $meta->column($column_name);
-          $sth->bind_param($i++, $key_values[$kv_idx++], $column->dbi_bind_param_attrs($db));
-        }
-
-        $sth->execute;
-      }
-      else
-      {
-        $sth->execute(@$bind, @key_values);
-      }
-    }
-    else
-    {
-      if($changes_only)
-      {
-        # No changes to save...
-        return $self || 1  unless(%{$self->{MODIFIED_COLUMNS()} || {}});
-
-        my($sql, $bind, $columns) = $meta->update_changes_only_sql($self, \@key_columns, $db);
-
-        unless($sql) # skip key-only updates
-        {
-          $self->{MODIFIED_COLUMNS()} = {};
-          return $self || 1;
-        }
-
-        # $meta->prepare_update_options (defunct)
-        my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
-                                    $dbh->prepare($sql);
-
-        if($Debug)
-        {
-          no warnings;
-          warn "$sql - bind params: ", join(', ', @$bind, @key_values), "\n";
-        }
-
-        if($meta->dbi_requires_bind_param($db))
-        {
-          my $i = 1;
-
-          foreach my $column (@$columns)
+          unless($sql) # skip key-only updates
           {
-            my $method = $column->accessor_method_name;
-            $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
+            $self->{MODIFIED_COLUMNS()} = {};
+            return $self || 1;
           }
-
-          my $kv_idx = 0;
-
-          foreach my $column_name (@key_columns)
-          {
-            my $column = $meta->column($column_name);
-            $sth->bind_param($i++, $key_values[$kv_idx++], $column->dbi_bind_param_attrs($db));
-          }
-
-          $sth->execute;
         }
         else
         {
-          $sth->execute(@$bind, @key_values);
+          ($sql, $bind, $bind_params) = $meta->update_sql_with_inlining($self, \@key_columns);
         }
-      }
-      elsif($meta->has_lazy_columns)
-      {
-        my($sql, $bind, $columns) = $meta->update_sql($self, \@key_columns, $db);
-
-        # $meta->prepare_update_options (defunct)
-        my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
-                                    $dbh->prepare($sql);
 
         if($Debug)
         {
@@ -824,14 +767,16 @@ sub update
           warn "$sql - bind params: ", join(', ', @$bind, @key_values), "\n";
         }
 
-        if($meta->dbi_requires_bind_param($db))
+        $sth = $dbh->prepare($sql); #, $meta->prepare_update_options);
+
+        if($bind_params)
         {
           my $i = 1;
 
-          foreach my $column (@$columns)
+          foreach my $value (@$bind)
           {
-            my $method = $column->accessor_method_name;
-            $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
+            $sth->bind_param($i, $value, $bind_params->[$i - 1]);
+            $i++;
           }
 
           my $kv_idx = 0;
@@ -851,60 +796,152 @@ sub update
       }
       else
       {
-        my $sql = $meta->update_all_sql(\@key_columns, $db);
-
-        # $meta->prepare_update_options (defunct)
-        my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
-                                    $dbh->prepare($sql);
-
-        my %key = map { ($_ => 1) } @key_methods;
-
-        my $method_names = $meta->column_accessor_method_names;
-
-        if($Debug)
+        if($changes_only)
         {
-          no warnings;
-          warn "$sql - bind params: ", 
-            join(', ', (map { $self->$_() } grep { !$key{$_} } @$method_names), 
-                        grep { defined } @key_values), "\n";
+          # No changes to save...
+          return $self || 1  unless(%{$self->{MODIFIED_COLUMNS()} || {}});
+
+          my($sql, $bind, $columns) = $meta->update_changes_only_sql($self, \@key_columns, $db);
+
+          unless($sql) # skip key-only updates
+          {
+            $self->{MODIFIED_COLUMNS()} = {};
+            return $self || 1;
+          }
+
+          # $meta->prepare_update_options (defunct)
+          my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                      $dbh->prepare($sql);
+
+          if($Debug)
+          {
+            no warnings;
+            warn "$sql - bind params: ", join(', ', @$bind, @key_values), "\n";
+          }
+
+          if($meta->dbi_requires_bind_param($db))
+          {
+            my $i = 1;
+
+            foreach my $column (@$columns)
+            {
+              my $method = $column->accessor_method_name;
+              $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
+            }
+
+            my $kv_idx = 0;
+
+            foreach my $column_name (@key_columns)
+            {
+              my $column = $meta->column($column_name);
+              $sth->bind_param($i++, $key_values[$kv_idx++], $column->dbi_bind_param_attrs($db));
+            }
+
+            $sth->execute;
+          }
+          else
+          {
+            $sth->execute(@$bind, @key_values);
+          }
         }
-
-        if($meta->dbi_requires_bind_param($db))
+        elsif($meta->has_lazy_columns)
         {
-          my $i = 1;
+          my($sql, $bind, $columns) = $meta->update_sql($self, \@key_columns, $db);
 
-          foreach my $column (grep { !$key{$_->name} } $meta->columns_ordered)
+          # $meta->prepare_update_options (defunct)
+          my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                      $dbh->prepare($sql);
+
+          if($Debug)
           {
-            my $method = $column->accessor_method_name;
-            $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
+            no warnings;
+            warn "$sql - bind params: ", join(', ', @$bind, @key_values), "\n";
           }
 
-          foreach my $column_name (@key_columns)
+          if($meta->dbi_requires_bind_param($db))
           {
-            my $column = $meta->column($column_name);
-            my $method = $column->accessor_method_name;
-            $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
-          }
+            my $i = 1;
 
-          $sth->execute;
+            foreach my $column (@$columns)
+            {
+              my $method = $column->accessor_method_name;
+              $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
+            }
+
+            my $kv_idx = 0;
+
+            foreach my $column_name (@key_columns)
+            {
+              my $column = $meta->column($column_name);
+              $sth->bind_param($i++, $key_values[$kv_idx++], $column->dbi_bind_param_attrs($db));
+            }
+
+            $sth->execute;
+          }
+          else
+          {
+            $sth->execute(@$bind, @key_values);
+          }
         }
         else
         {
-          $sth->execute(
-            (map { $self->$_() } grep { !$key{$_} } @$method_names), 
-            @key_values);
+          my $sql = $meta->update_all_sql(\@key_columns, $db);
+
+          # $meta->prepare_update_options (defunct)
+          my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
+                                      $dbh->prepare($sql);
+
+          my %key = map { ($_ => 1) } @key_methods;
+
+          my $method_names = $meta->column_accessor_method_names;
+
+          if($Debug)
+          {
+            no warnings;
+            warn "$sql - bind params: ", 
+              join(', ', (map { $self->$_() } grep { !$key{$_} } @$method_names), 
+                          grep { defined } @key_values), "\n";
+          }
+
+          if($meta->dbi_requires_bind_param($db))
+          {
+            my $i = 1;
+
+            foreach my $column (grep { !$key{$_->name} } $meta->columns_ordered)
+            {
+              my $method = $column->accessor_method_name;
+              $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
+            }
+
+            foreach my $column_name (@key_columns)
+            {
+              my $column = $meta->column($column_name);
+              my $method = $column->accessor_method_name;
+              $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
+            }
+
+            $sth->execute;
+          }
+          else
+          {
+            $sth->execute(
+              (map { $self->$_() } grep { !$key{$_} } @$method_names), 
+              @key_values);
+          }
         }
       }
-    }
-    #if($started_new_tx)
-    #{
-    #  $db->commit or die $db->error;
-    #}
-  };
+      #if($started_new_tx)
+      #{
+      #  $db->commit or die $db->error;
+      #}
+    };
 
-  if($@)
+    $error = $@;
+  }
+
+  if($error)
   {
-    $self->error("update() - $@");
+    $self->error("update() - $error");
     #$db->rollback or warn $db->error  if($started_new_tx);
     $self->meta->handle_error($self);
     return 0;
@@ -982,96 +1019,56 @@ sub insert
     }
   }
 
-  eval
+  my $error;
+
+  TRY:
   {
-    #local $self->{STATE_SAVING()} = 1;
-    local $dbh->{'RaiseError'} = 1;
+    local $@;
 
-    #my $options = $meta->prepare_insert_options;
-
-    my $sth;
-
-    if($meta->allow_inline_column_values)
+    eval
     {
-      my($sql, $bind, $bind_params);
+      #local $self->{STATE_SAVING()} = 1;
+      local $dbh->{'RaiseError'} = 1;
 
-      if($args{'on_duplicate_key_update'})
-      {
-        ($sql, $bind, $bind_params) = 
-          $meta->insert_and_on_duplicate_key_update_with_inlining_sql(
-            $self, $db, $changes_only);
-      }
-      elsif($changes_only)
-      {
-        ($sql, $bind, $bind_params) = $meta->insert_changes_only_sql_with_inlining($self);
-      }
-      else
-      {
-        ($sql, $bind, $bind_params) = $meta->insert_sql_with_inlining($self);
-      }
+      #my $options = $meta->prepare_insert_options;
 
-      if($Debug)
+      my $sth;
+
+      if($meta->allow_inline_column_values)
       {
-        no warnings;
-        warn "$sql - bind params: ", join(', ', @$bind), "\n";
-      }
-
-      $sth = $dbh->prepare($sql); #, $options);
-
-      if($bind_params)
-      {
-        my $i = 1;
-
-        foreach my $value (@$bind)
-        {
-          $sth->bind_param($i, $value, $bind_params->[$i - 1]);
-          $i++;
-        }
-
-        $sth->execute;
-      }
-      else
-      {
-        $sth->execute(@$bind);
-      }
-    }
-    else
-    {
-      my $column_names = $meta->column_names;
-
-      if($args{'on_duplicate_key_update'} || $changes_only)
-      {
-        my($sql, $bind, $columns);
+        my($sql, $bind, $bind_params);
 
         if($args{'on_duplicate_key_update'})
         {
-          ($sql, $bind, $columns) = 
-            $meta->insert_and_on_duplicate_key_update_sql(
+          ($sql, $bind, $bind_params) = 
+            $meta->insert_and_on_duplicate_key_update_with_inlining_sql(
               $self, $db, $changes_only);
+        }
+        elsif($changes_only)
+        {
+          ($sql, $bind, $bind_params) = $meta->insert_changes_only_sql_with_inlining($self);
         }
         else
         {
-          ($sql, $bind, $columns) = $meta->insert_changes_only_sql($self, $db);
+          ($sql, $bind, $bind_params) = $meta->insert_sql_with_inlining($self);
         }
 
         if($Debug)
         {
           no warnings;
-          warn $sql, " - bind params: @$bind\n";
+          warn "$sql - bind params: ", join(', ', @$bind), "\n";
         }
 
-        $sth = $prepare_cached ? 
-          $dbh->prepare_cached($sql, undef, 3) : 
-          $dbh->prepare($sql);
+        $sth = $dbh->prepare($sql); #, $options);
 
-        if($meta->dbi_requires_bind_param($db))
+        if($bind_params)
         {
           my $i = 1;
 
-          foreach my $column (@$columns)
+          foreach my $value (@$bind)
           {
-            my $method = $column->accessor_method_name;
-            $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
+            $sth->bind_param($i, $value, $bind_params->[$i - 1]);
+            $i++;
           }
 
           $sth->execute;
@@ -1083,109 +1080,158 @@ sub insert
       }
       else
       {
-        $sth = $prepare_cached ? 
-          $dbh->prepare_cached($meta->insert_sql($db), undef, 3) : 
-          $dbh->prepare($meta->insert_sql($db));
+        my $column_names = $meta->column_names;
 
-        if($Debug)
+        if($args{'on_duplicate_key_update'} || $changes_only)
         {
-          no warnings;
-          warn $meta->insert_sql($db), " - bind params: ", 
-            join(', ', (map {$self->$_()} $meta->column_accessor_method_names)), 
-            "\n";
-        }
+          my($sql, $bind, $columns);
 
-        #$sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
-
-        if($meta->dbi_requires_bind_param($db))
-        {
-          my $i = 1;
-
-          foreach my $column ($meta->columns_ordered)
+          if($args{'on_duplicate_key_update'})
           {
-            my $method = $column->accessor_method_name;
-            $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
+            ($sql, $bind, $columns) = 
+              $meta->insert_and_on_duplicate_key_update_sql(
+                $self, $db, $changes_only);
+          }
+          else
+          {
+            ($sql, $bind, $columns) = $meta->insert_changes_only_sql($self, $db);
           }
 
-          $sth->execute;
+          if($Debug)
+          {
+            no warnings;
+            warn $sql, " - bind params: @$bind\n";
+          }
+
+          $sth = $prepare_cached ? 
+            $dbh->prepare_cached($sql, undef, 3) : 
+            $dbh->prepare($sql);
+
+          if($meta->dbi_requires_bind_param($db))
+          {
+            my $i = 1;
+
+            foreach my $column (@$columns)
+            {
+              my $method = $column->accessor_method_name;
+              $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
+            }
+
+            $sth->execute;
+          }
+          else
+          {
+            $sth->execute(@$bind);
+          }
         }
         else
         {
-          $sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
+          $sth = $prepare_cached ? 
+            $dbh->prepare_cached($meta->insert_sql($db), undef, 3) : 
+            $dbh->prepare($meta->insert_sql($db));
+
+          if($Debug)
+          {
+            no warnings;
+            warn $meta->insert_sql($db), " - bind params: ", 
+              join(', ', (map {$self->$_()} $meta->column_accessor_method_names)), 
+              "\n";
+          }
+
+          #$sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
+
+          if($meta->dbi_requires_bind_param($db))
+          {
+            my $i = 1;
+
+            foreach my $column ($meta->columns_ordered)
+            {
+              my $method = $column->accessor_method_name;
+              $sth->bind_param($i++,  $self->$method(), $column->dbi_bind_param_attrs($db));
+            }
+
+            $sth->execute;
+          }
+          else
+          {
+            $sth->execute(map { $self->$_() } $meta->column_accessor_method_names);
+          }
         }
       }
-    }
 
-    if(@pk_methods == 1)
-    {
-      my $get_pk = $pk_methods[0];
-
-      if($using_pk_placeholders || !defined $self->$get_pk())
+      if(@pk_methods == 1)
       {
-        local $self->{STATE_LOADING()} = 1;
-        my $set_pk = $meta->column_mutator_method_name($meta->primary_key_column_names);
-        #$self->$set_pk($db->last_insertid_from_sth($sth, $self));
-        $self->$set_pk($db->last_insertid_from_sth($sth));
-        $self->{STATE_IN_DB()} = 1;
-      }
-      elsif(!$using_pk_placeholders && defined $self->$get_pk())
-      {
-        $self->{STATE_IN_DB()} = 1;
-      }
-    }
-    elsif(@pk_values == @pk_methods)
-    {
-      $self->{STATE_IN_DB()} = 1;
-    }
-    elsif(!$using_pk_placeholders)
-    {
-      my $have_pk = 1;
+        my $get_pk = $pk_methods[0];
 
-      my @pk_set_methods = $meta->primary_key_column_mutator_names;
-
-      my $i = 0;
-      my $got_last_insert_id = 0;
-
-      foreach my $pk (@pk_methods)
-      {
-        unless(defined $self->$pk())
+        if($using_pk_placeholders || !defined $self->$get_pk())
         {
-          # XXX: This clause assumes that any db that uses last_insert_id
-          # XXX: can only have one such id per table.  This is currently
-          # XXX: true for the supported dbs: MySQL, Pg, SQLite, Informix.
-          if($got_last_insert_id)
+          local $self->{STATE_LOADING()} = 1;
+          my $set_pk = $meta->column_mutator_method_name($meta->primary_key_column_names);
+          #$self->$set_pk($db->last_insertid_from_sth($sth, $self));
+          $self->$set_pk($db->last_insertid_from_sth($sth));
+          $self->{STATE_IN_DB()} = 1;
+        }
+        elsif(!$using_pk_placeholders && defined $self->$get_pk())
+        {
+          $self->{STATE_IN_DB()} = 1;
+        }
+      }
+      elsif(@pk_values == @pk_methods)
+      {
+        $self->{STATE_IN_DB()} = 1;
+      }
+      elsif(!$using_pk_placeholders)
+      {
+        my $have_pk = 1;
+
+        my @pk_set_methods = $meta->primary_key_column_mutator_names;
+
+        my $i = 0;
+        my $got_last_insert_id = 0;
+
+        foreach my $pk (@pk_methods)
+        {
+          unless(defined $self->$pk())
           {
-            $have_pk = 0;
-            last;
+            # XXX: This clause assumes that any db that uses last_insert_id
+            # XXX: can only have one such id per table.  This is currently
+            # XXX: true for the supported dbs: MySQL, Pg, SQLite, Informix.
+            if($got_last_insert_id)
+            {
+              $have_pk = 0;
+              last;
+            }
+            elsif(my $pk_val = $db->last_insertid_from_sth($sth))
+            {
+              my $set_pk = $pk_set_methods[$i];
+              $self->$set_pk($pk_val);
+              $got_last_insert_id = 1;
+            }
+            else 
+            {
+              $have_pk = 0;
+              last;
+            }
           }
-          elsif(my $pk_val = $db->last_insertid_from_sth($sth))
-          {
-            my $set_pk = $pk_set_methods[$i];
-            $self->$set_pk($pk_val);
-            $got_last_insert_id = 1;
-          }
-          else 
-          {
-            $have_pk = 0;
-            last;
-          }
+
+          $i++;
         }
 
-        $i++;
+        $self->{STATE_IN_DB()} = $have_pk;
       }
 
-      $self->{STATE_IN_DB()} = $have_pk;
-    }
+      #if($started_new_tx)
+      #{
+      #  $db->commit or die $db->error;
+      #}
+    };
 
-    #if($started_new_tx)
-    #{
-    #  $db->commit or die $db->error;
-    #}
-  };
+    $error = $@;
+  }
 
-  if($@)
+  if($error)
   {
-    $self->error("insert() - $@");
+    $self->error("insert() - $error");
     #$db->rollback or warn $db->error  if($started_new_tx);
     $self->meta->handle_error($self);
     return 0;
@@ -1233,40 +1279,189 @@ sub delete
     $cascade = $CASCADE_VALUES{$cascade};
 
     my $mgr_error_mode = Rose::DB::Object::Manager->error_mode;
-    my($db, $started_new_tx);
 
-    eval
+    my($db, $started_new_tx, $error);
+
+    TRY:
     {
-      $db = $self->db;
-      my $meta  = $self->meta;
+      local $@;
 
-      my $ret = $db->begin_work;
-
-      unless(defined $ret)
+      eval
       {
-        die 'Could not begin transaction before deleting with cascade - ',
-            $db->error;
-      }
+        $db = $self->db;
+        my $meta  = $self->meta;
 
-      $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
+        my $ret = $db->begin_work;
 
-      unless($self->{STATE_IN_DB()})
-      {
-        $self->load 
-          or die "Could not load in preparation for cascading delete: ", 
-                 $self->error;
-      }
+        unless(defined $ret)
+        {
+          die 'Could not begin transaction before deleting with cascade - ',
+              $db->error;
+        }
 
-      Rose::DB::Object::Manager->error_mode('fatal');
+        $started_new_tx = ($ret == IN_TRANSACTION) ? 0 : 1;
 
-      my @one_to_one_rels;
+        unless($self->{STATE_IN_DB()})
+        {
+          $self->load 
+            or die "Could not load in preparation for cascading delete: ", 
+                   $self->error;
+        }
 
-      # Process all the rows for each "... to many" relationship
-      REL: foreach my $relationship ($meta->relationships)
-      {
-        my $rel_type = $relationship->type;
+        Rose::DB::Object::Manager->error_mode('fatal');
 
-        if($rel_type eq 'one to many')
+        my @one_to_one_rels;
+
+        # Process all the rows for each "... to many" relationship
+        REL: foreach my $relationship ($meta->relationships)
+        {
+          my $rel_type = $relationship->type;
+
+          if($rel_type eq 'one to many')
+          {
+            my $column_map = $relationship->column_map;
+            my @query;
+
+            while(my($local_column, $foreign_column) = each(%$column_map))
+            {
+              my $method = $meta->column_accessor_method_name($local_column);
+              my $value =  $self->$method();
+
+              # XXX: Comment this out to allow null keys
+              next REL  unless(defined $value);
+
+              push(@query, $foreign_column => $value);
+            }
+
+            if($cascade eq 'delete')
+            {
+              Rose::DB::Object::Manager->delete_objects(
+                db           => $db,
+                object_class => $relationship->class,
+                where        => \@query);
+            }
+            elsif($cascade eq 'null')
+            {
+              my %set = map { $_ => undef } values(%$column_map);
+
+              Rose::DB::Object::Manager->update_objects(
+                db           => $db,
+                object_class => $relationship->class,
+                set          => \%set,
+                where        => \@query);        
+            }
+            else { Carp::confess "Illegal cascade value '$cascade' snuck through" }
+          }
+          elsif($rel_type eq 'many to many')
+          {
+            my $map_class  = $relationship->map_class;
+            my $map_from   = $relationship->map_from;
+
+            my $map_from_relationship = 
+              $map_class->meta->foreign_key($map_from)  ||
+              $map_class->meta->relationship($map_from) ||
+              Carp::confess "No foreign key or 'many to one' relationship ",
+                            "named '$map_from' in class $map_class";
+
+            my $key_columns = $map_from_relationship->key_columns;
+            my @query;
+
+            # "Local" here means "local to the mapping table"
+            while(my($local_column, $foreign_column) = each(%$key_columns))
+            {
+              my $method = $meta->column_accessor_method_name($foreign_column);
+              my $value  = $self->$method();
+
+              # XXX: Comment this out to allow null keys
+              next REL  unless(defined $value);
+
+              push(@query, $local_column => $value);
+            }
+
+            if($cascade eq 'delete')
+            {
+              Rose::DB::Object::Manager->delete_objects(
+                db           => $db,
+                object_class => $map_class,
+                where        => \@query);
+            }
+            elsif($cascade eq 'null')
+            {
+              my %set = map { $_ => undef } keys(%$key_columns);
+
+              Rose::DB::Object::Manager->update_objects(
+                db           => $db,
+                object_class => $map_class,
+                set          => \%set,
+                where        => \@query);        
+            }
+            else { Carp::confess "Illegal cascade value '$cascade' snuck through" }
+          }
+          elsif($rel_type eq 'one to one')
+          {
+            push(@one_to_one_rels, $relationship);
+          }
+        }
+
+        # Delete the object itself
+        my $dbh = $db->dbh or die "Could not get dbh: ", $self->error;
+        #local $self->{STATE_SAVING()} = 1;
+        local $dbh->{'RaiseError'} = 1;
+
+        # $meta->prepare_delete_options (defunct)
+        my $sth = $prepare_cached ? $dbh->prepare_cached($meta->delete_sql($db), undef, 3) : 
+                                    $dbh->prepare($meta->delete_sql($db));
+
+        $Debug && warn $meta->delete_sql($db), " - bind params: ", join(', ', @pk_values), "\n";
+        $sth->execute(@pk_values);
+
+        unless($sth->rows > 0)
+        {
+          $self->error("Did not delete " . ref($self) . ' where ' . 
+                       join(', ', @pk_methods) . ' = ' . join(', ', @pk_values));
+        }
+
+        # Process all rows referred to by "one to one" foreign keys
+        FK: foreach my $fk ($meta->foreign_keys)
+        {
+          next  unless($fk->relationship_type eq 'one to one');
+
+          my $key_columns = $fk->key_columns;
+          my @query;
+
+          while(my($local_column, $foreign_column) = each(%$key_columns))
+          {
+            my $method = $meta->column_accessor_method_name($local_column);
+            my $value =  $self->$method();
+
+            # XXX: Comment this out to allow null keys
+            next FK  unless(defined $value);
+
+            push(@query, $foreign_column => $value);
+          }
+
+          if($cascade eq 'delete')
+          {
+            Rose::DB::Object::Manager->delete_objects(
+              db           => $db,
+              object_class => $fk->class,
+              where        => \@query);
+          }
+          elsif($cascade eq 'null')
+          {
+            my %set = map { $_ => undef } values(%$key_columns);
+
+            Rose::DB::Object::Manager->update_objects(
+              db           => $db,
+              object_class => $fk->class,
+              set          => \%set,
+              where        => \@query);        
+          }
+          else { Carp::confess "Illegal cascade value '$cascade' snuck through" }
+        }
+
+        # Process all the rows for each "one to one" relationship
+        REL: foreach my $relationship (@one_to_one_rels)
         {
           my $column_map = $relationship->column_map;
           my @query;
@@ -1301,161 +1496,20 @@ sub delete
           }
           else { Carp::confess "Illegal cascade value '$cascade' snuck through" }
         }
-        elsif($rel_type eq 'many to many')
+
+        if($started_new_tx)
         {
-          my $map_class  = $relationship->map_class;
-          my $map_from   = $relationship->map_from;
-
-          my $map_from_relationship = 
-            $map_class->meta->foreign_key($map_from)  ||
-            $map_class->meta->relationship($map_from) ||
-            Carp::confess "No foreign key or 'many to one' relationship ",
-                          "named '$map_from' in class $map_class";
-
-          my $key_columns = $map_from_relationship->key_columns;
-          my @query;
-
-          # "Local" here means "local to the mapping table"
-          while(my($local_column, $foreign_column) = each(%$key_columns))
-          {
-            my $method = $meta->column_accessor_method_name($foreign_column);
-            my $value  = $self->$method();
-
-            # XXX: Comment this out to allow null keys
-            next REL  unless(defined $value);
-
-            push(@query, $local_column => $value);
-          }
-
-          if($cascade eq 'delete')
-          {
-            Rose::DB::Object::Manager->delete_objects(
-              db           => $db,
-              object_class => $map_class,
-              where        => \@query);
-          }
-          elsif($cascade eq 'null')
-          {
-            my %set = map { $_ => undef } keys(%$key_columns);
-
-            Rose::DB::Object::Manager->update_objects(
-              db           => $db,
-              object_class => $map_class,
-              set          => \%set,
-              where        => \@query);        
-          }
-          else { Carp::confess "Illegal cascade value '$cascade' snuck through" }
+          $db->commit or die $db->error;
         }
-        elsif($rel_type eq 'one to one')
-        {
-          push(@one_to_one_rels, $relationship);
-        }
-      }
+      };
 
-      # Delete the object itself
-      my $dbh = $db->dbh or die "Could not get dbh: ", $self->error;
-      #local $self->{STATE_SAVING()} = 1;
-      local $dbh->{'RaiseError'} = 1;
+      $error = $@;
+    }
 
-      # $meta->prepare_delete_options (defunct)
-      my $sth = $prepare_cached ? $dbh->prepare_cached($meta->delete_sql($db), undef, 3) : 
-                                  $dbh->prepare($meta->delete_sql($db));
-
-      $Debug && warn $meta->delete_sql($db), " - bind params: ", join(', ', @pk_values), "\n";
-      $sth->execute(@pk_values);
-
-      unless($sth->rows > 0)
-      {
-        $self->error("Did not delete " . ref($self) . ' where ' . 
-                     join(', ', @pk_methods) . ' = ' . join(', ', @pk_values));
-      }
-
-      # Process all rows referred to by "one to one" foreign keys
-      FK: foreach my $fk ($meta->foreign_keys)
-      {
-        next  unless($fk->relationship_type eq 'one to one');
-
-        my $key_columns = $fk->key_columns;
-        my @query;
-
-        while(my($local_column, $foreign_column) = each(%$key_columns))
-        {
-          my $method = $meta->column_accessor_method_name($local_column);
-          my $value =  $self->$method();
-
-          # XXX: Comment this out to allow null keys
-          next FK  unless(defined $value);
-
-          push(@query, $foreign_column => $value);
-        }
-
-        if($cascade eq 'delete')
-        {
-          Rose::DB::Object::Manager->delete_objects(
-            db           => $db,
-            object_class => $fk->class,
-            where        => \@query);
-        }
-        elsif($cascade eq 'null')
-        {
-          my %set = map { $_ => undef } values(%$key_columns);
-
-          Rose::DB::Object::Manager->update_objects(
-            db           => $db,
-            object_class => $fk->class,
-            set          => \%set,
-            where        => \@query);        
-        }
-        else { Carp::confess "Illegal cascade value '$cascade' snuck through" }
-      }
-
-      # Process all the rows for each "one to one" relationship
-      REL: foreach my $relationship (@one_to_one_rels)
-      {
-        my $column_map = $relationship->column_map;
-        my @query;
-
-        while(my($local_column, $foreign_column) = each(%$column_map))
-        {
-          my $method = $meta->column_accessor_method_name($local_column);
-          my $value =  $self->$method();
-
-          # XXX: Comment this out to allow null keys
-          next REL  unless(defined $value);
-
-          push(@query, $foreign_column => $value);
-        }
-
-        if($cascade eq 'delete')
-        {
-          Rose::DB::Object::Manager->delete_objects(
-            db           => $db,
-            object_class => $relationship->class,
-            where        => \@query);
-        }
-        elsif($cascade eq 'null')
-        {
-          my %set = map { $_ => undef } values(%$column_map);
-
-          Rose::DB::Object::Manager->update_objects(
-            db           => $db,
-            object_class => $relationship->class,
-            set          => \%set,
-            where        => \@query);        
-        }
-        else { Carp::confess "Illegal cascade value '$cascade' snuck through" }
-      }
-
-      if($started_new_tx)
-      {
-        $db->commit or die $db->error;
-      }
-    };
-
-    if($@)
+    if($error)
     {
       Rose::DB::Object::Manager->error_mode($mgr_error_mode);
-      $self->error("delete() with cascade - $@");
+      $self->error("delete() with cascade - $error");
       $db->rollback  if($db && $started_new_tx);
       $self->meta->handle_error($self);
       return 0;
@@ -1470,28 +1524,37 @@ sub delete
     my $db  = $self->db or return 0;
     my $dbh = $db->dbh or return 0;
 
-    eval
+    my $error;
+
+    TRY:
     {
-      #local $self->{STATE_SAVING()} = 1;
-      local $dbh->{'RaiseError'} = 1;
+      local $@;
 
-      # $meta->prepare_delete_options (defunct)
-      my $sth = $prepare_cached ? $dbh->prepare_cached($meta->delete_sql($db), undef, 3) : 
-                                  $dbh->prepare($meta->delete_sql($db));
-
-      $Debug && warn $meta->delete_sql($db), " - bind params: ", join(', ', @pk_values), "\n";
-      $sth->execute(@pk_values);
-
-      unless($sth->rows > 0)
+      eval
       {
-        $self->error("Did not delete " . ref($self) . ' where ' . 
-                     join(', ', @pk_methods) . ' = ' . join(', ', @pk_values));
-      }
-    };
+        #local $self->{STATE_SAVING()} = 1;
+        local $dbh->{'RaiseError'} = 1;
 
-    if($@)
+        # $meta->prepare_delete_options (defunct)
+        my $sth = $prepare_cached ? $dbh->prepare_cached($meta->delete_sql($db), undef, 3) : 
+                                    $dbh->prepare($meta->delete_sql($db));
+
+        $Debug && warn $meta->delete_sql($db), " - bind params: ", join(', ', @pk_values), "\n";
+        $sth->execute(@pk_values);
+
+        unless($sth->rows > 0)
+        {
+          $self->error("Did not delete " . ref($self) . ' where ' . 
+                       join(', ', @pk_methods) . ' = ' . join(', ', @pk_values));
+        }
+      };
+
+      $error = $@;
+    }
+
+    if($error)
     {
-      $self->error("delete() - $@");
+      $self->error("delete() - $error");
       $self->meta->handle_error($self);
       return 0;
     }
@@ -1509,17 +1572,21 @@ sub AUTOLOAD
 
   my $msg = '';
 
-  # Not sure if this will ever be used, but just in case...
-  eval
+  TRY:
   {
-    my @fks  = $self->meta->deferred_foreign_keys;
-    my @rels = $self->meta->deferred_relationships;
+    local $@;
 
-    if(@fks || @rels)
+    # Not sure if this will ever be used, but just in case...
+    eval
     {
-      my $class = ref $self;
+      my @fks  = $self->meta->deferred_foreign_keys;
+      my @rels = $self->meta->deferred_relationships;
 
-      my $tmp_msg =<<"EOF";
+      if(@fks || @rels)
+      {
+        my $class = ref $self;
+
+        my $tmp_msg =<<"EOF";
 Methods for the following relationships and foreign keys were deferred and
 then never actually created in the class $class.
 
@@ -1527,25 +1594,28 @@ TYPE            NAME
 ----            ----
 EOF
 
-      my $found = 0;
+        my $found = 0;
 
-      foreach my $thing (@fks, @rels)
-      {
-        next  unless($thing->parent->class eq $class);
+        foreach my $thing (@fks, @rels)
+        {
+          next  unless($thing->parent->class eq $class);
 
-        $found++;
+          $found++;
 
-        my $type = 
-          $thing->isa('Rose::DB::Object::Metadata::Relationship') ? 'Relationship' :
-          $thing->isa('Rose::DB::Object::Metadata::ForeignKey') ? 'Foreign Key' :
-          '???';
+          my $type = 
+            $thing->isa('Rose::DB::Object::Metadata::Relationship') ? 'Relationship' :
+            $thing->isa('Rose::DB::Object::Metadata::ForeignKey') ? 'Foreign Key' :
+            '???';
 
-        $tmp_msg .= sprintf("%-15s %s\n", $type, $thing->name);
+          $tmp_msg .= sprintf("%-15s %s\n", $type, $thing->name);
+        }
+
+        $msg = "\n\n$tmp_msg\n"  if($tmp_msg && $found);
       }
+    };
 
-      $msg = "\n\n$tmp_msg\n"  if($tmp_msg && $found);
-    }
-  };
+    # XXX: Ignoring errors
+  }
 
   my $method_type = ref $self ? 'object' : 'class';
 

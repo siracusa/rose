@@ -21,11 +21,11 @@ use Rose::DB::Object::Metadata::Relationship::OneToOne;
 
 # Attempt to load Scalar::Util::Clone at runtime and ignore any errors
 # to keep it from being a "hard" requirement.
-eval { require Scalar::Util::Clone };
+eval { local $@; require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.782';
+our $VERSION = '0.784';
 
 our $Debug = 0;
 
@@ -1416,10 +1416,17 @@ sub load_column_class
 
   unless(UNIVERSAL::isa($column_class, 'Rose::DB::Object::Metadata::Column'))
   {
-    eval "require $column_class";
+    my $error;
 
-    Carp::croak "Could not load column class '$column_class' - $@"
-      if($@);
+    TRY:
+    {
+      local $@;
+      eval "require $column_class";
+      $error = $@;
+    }
+
+    Carp::croak "Could not load column class '$column_class' - $error"
+      if($error);
   }
 
   $Class_Loaded{$column_class}++;
@@ -1443,10 +1450,17 @@ sub load_relationship_class
 {
   my($self, $relationship_class) = @_;
 
-  eval "require $relationship_class";
+  my $error;
 
-  Carp::croak "Could not load relationship class '$relationship_class' - $@"
-    if($@);
+  TRY:
+  {
+    local $@;
+    eval "require $relationship_class";
+    $error = $@;
+  }
+
+  Carp::croak "Could not load relationship class '$relationship_class' - $error"
+    if($error);
 
   $Class_Loaded{$relationship_class}++;
 }
@@ -2031,17 +2045,25 @@ sub make_foreign_key_methods
     if($self->auto_load_related_classes && (my $fclass = $foreign_key->class))
     {
       unless($fclass->isa('Rose::DB::Object'))
-      {
-        eval "require $fclass";
-        $Debug && print STDERR "FK REQUIRES $fclass - $@\n";
-      }
+      {        
+        my $error;
 
-      if($@)
-      {
-        # XXX: Need to distinguish recoverable errors from unrecoverable errors
-        if($@ !~ /\.pm in \@INC/ && !UNIVERSAL::isa($@, 'Rose::DB::Object::Exception::ClassNotReady'))
+        TRY:
         {
-          Carp::confess "Could not load $fclass - $@"; 
+          local $@;
+          eval "require $fclass";
+          $error = $@;
+        }
+
+        $Debug && print STDERR "FK REQUIRES $fclass - $error\n";
+
+        if($error)
+        {
+          # XXX: Need to distinguish recoverable errors from unrecoverable errors
+          if($error !~ /\.pm in \@INC/ && !UNIVERSAL::isa($error, 'Rose::DB::Object::Exception::ClassNotReady'))
+          {
+            Carp::confess "Could not load $fclass - $error"; 
+          }
         }
       }
     }
@@ -2351,18 +2373,26 @@ sub make_relationship_methods
 
         unless($fclass->isa('Rose::DB::Object') && $fclass->meta->is_initialized)
         {
-          eval "require $fclass";
-          $Debug && print STDERR "REL ",  $relationship->name, 
-                                 " REQUIRES $fclass - $@\n";
-        }
+          my $error;
 
-        if($@)
-        {
-          # XXX: Need to distinguish recoverable errors from unrecoverable errors
-          if($@ !~ /\.pm in \@INC/ && !UNIVERSAL::isa($@, 'Rose::DB::Object::Exception::ClassNotReady'))
-          #if($@ =~ /syntax error at |requires explicit package name|not allowed while "strict|already has a relationship named|Can't modify constant item/)
+          TRY:
           {
-            Carp::confess "Could not load $fclass - $@";
+            local $@;
+            eval "require $fclass";
+            $error = $@;
+          }
+
+          $Debug && print STDERR "REL ",  $relationship->name, 
+                                 " REQUIRES $fclass - $error\n";
+
+          if($error)
+          {
+            # XXX: Need to distinguish recoverable errors from unrecoverable errors
+            if($error !~ /\.pm in \@INC/ && !UNIVERSAL::isa($error, 'Rose::DB::Object::Exception::ClassNotReady'))
+            #if($error =~ /syntax error at |requires explicit package name|not allowed while "strict|already has a relationship named|Can't modify constant item/)
+            {
+              Carp::confess "Could not load $fclass - $error";
+            }
           }
         }
       }
@@ -2373,14 +2403,27 @@ sub make_relationship_methods
 
         unless($map_class->isa('Rose::DB::Object') && $map_class->meta->is_initialized)
         {
-          eval "require $map_class";
-          $Debug && print STDERR "REL ",  $relationship->name, 
-                                 " REQUIRES $map_class - $@\n";
-        }
+          my $error;
 
-        if($@ && $@ =~ /^syntax error /)
-        {
-          Carp::confess "Could not load $map_class - $@";
+          TRY:
+          {
+            local $@;
+            eval "require $map_class";
+            $error = $@;
+          }
+
+          $Debug && print STDERR "REL ",  $relationship->name, 
+                                 " REQUIRES $map_class - $error\n";
+
+          if($error)
+          {
+            # XXX: Need to distinguish recoverable errors from unrecoverable errors
+            if($error !~ /\.pm in \@INC/ && !UNIVERSAL::isa($error, 'Rose::DB::Object::Exception::ClassNotReady'))
+            #if($error =~ /syntax error at |requires explicit package name|not allowed while "strict|already has a relationship named|Can't modify constant item/)
+            {
+              Carp::confess "Could not load $map_class - $error";
+            }
+          }
         }
       }
     }
@@ -2801,23 +2844,30 @@ sub _sequence_name
 
   $table = lc $table  if($db->likes_lowercase_table_names);
 
-  my $col_info;
+  my($col_info, $error);
 
-  eval # Ignore failure
+  TRY:
   {
-    my $dbh = $db->dbh;
+    local $@;
 
-    local $dbh->{'RaiseError'} = 0;
-    local $dbh->{'PrintError'} = 0;
+    eval
+    {
+      my $dbh = $db->dbh;
 
-    my $sth = $dbh->column_info($catalog, $schema, $table, $column) or return;
+      local $dbh->{'RaiseError'} = 0;
+      local $dbh->{'PrintError'} = 0;
 
-    $sth->execute;
-    $col_info = $sth->fetchrow_hashref;
-    $sth->finish;
-  };
+      my $sth = $dbh->column_info($catalog, $schema, $table, $column) or return;
 
-  return  if($@ || !$col_info);
+      $sth->execute;
+      $col_info = $sth->fetchrow_hashref;
+      $sth->finish;
+    };
+
+    $error = $@;
+  }
+
+  return  if($error || !$col_info);
 
   $db->refine_dbi_column_info($col_info, $self);
 
@@ -3971,21 +4021,28 @@ sub get_column_value
     map { $self->column_accessor_method_name($_) } 
     $self->primary_key_column_names;
 
-  my $value;
+  my($value, $error);
 
-  eval
+  TRY:
   {
-    ($Debug || $Rose::DB::Object::Debug) && warn "$sql (@key_values)\n";
-    my $sth = $dbh->prepare($sql);
-    $sth->execute(@key_values);
-    $sth->bind_columns(\$value);
-    $sth->fetch;
-  };
+    local $@;
 
-  if($@)
+    eval
+    {
+      ($Debug || $Rose::DB::Object::Debug) && warn "$sql (@key_values)\n";
+      my $sth = $dbh->prepare($sql);
+      $sth->execute(@key_values);
+      $sth->bind_columns(\$value);
+      $sth->fetch;
+    };
+
+    $error = $@;
+  }
+
+  if($error)
   {
     Carp::croak "Could not lazily-load column value for column '",
-                $column->name, "' - $@";
+                $column->name, "' - $error";
   }
 
   return $value;
@@ -4257,11 +4314,18 @@ sub make_manager_class
 {
   my($self) = shift;
 
-  eval $self->perl_manager_class(@_);
+  my $error;
 
-  if($@)
+  TRY:
   {
-    Carp::croak "Could not make manager class - $@\nThe Perl code used was:\n\n", 
+    local $@;
+    eval { eval $self->perl_manager_class(@_) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    Carp::croak "Could not make manager class - $error\nThe Perl code used was:\n\n", 
                 $self->perl_manager_class(@_);
   }
 }
@@ -4410,8 +4474,16 @@ sub init_auto_helper
     no strict 'refs';
     unless(@{"${auto_helper_class}::ISA"})
     {
-      eval "use $auto_helper_class";
-      Carp::croak "Could not load '$auto_helper_class' - $@"  if($@);
+      my $error;
+
+      TRY:
+      {
+        local $@;
+        eval "use $auto_helper_class";
+        $error = $@;
+      }
+
+      Carp::croak "Could not load '$auto_helper_class' - $error"  if($error);
     }
 
     $self->original_class($class);

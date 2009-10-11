@@ -9,7 +9,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.776';
+our $VERSION = '0.784';
 
 use constant UNIQUE_INDEX_SQL => <<'EOF';
 select ai.index_name FROM ALL_INDEXES ai, ALL_CONSTRAINTS ac 
@@ -32,61 +32,68 @@ sub auto_generate_unique_keys
     Carp::croak "Useless call to auto_generate_unique_keys() in void context";
   }
 
-  my($class, @unique_keys);
+  my($class, @unique_keys, $error);
 
-  eval
+  TRY:
   {
-    $class = $self->class or die "Missing class!";
+    local $@;
 
-    my $db  = $self->db;
-    my $dbh = $db->dbh or die $db->error;
-
-    local $dbh->{'FetchHashKeyName'} = 'NAME';
-
-    my $schema = $self->select_schema($db);
-    $schema = $db->default_implicit_schema  unless(defined $schema);
-    $schema = uc $schema  if(defined $schema);
-
-    my $table = uc $self->table;
-
-    my $key_name;
-
-    my $sth = $dbh->prepare(UNIQUE_INDEX_SQL);
-
-    $sth->execute($table, $schema);
-    $sth->bind_columns(\$key_name);
-
-    while($sth->fetch)
+    eval
     {
-      my $uk = Rose::DB::Object::Metadata::UniqueKey->new(name   => $key_name,
-                                                          parent => $self);
+      $class = $self->class or die "Missing class!";
 
-      my $col_sth = $dbh->prepare(UNIQUE_INDEX_COLUMNS_SQL_STUB);
+      my $db  = $self->db;
+      my $dbh = $db->dbh or die $db->error;
 
-      my($column, @columns);
+      local $dbh->{'FetchHashKeyName'} = 'NAME';
 
-      $col_sth->execute($key_name);
-      $col_sth->bind_columns(\$column);
+      my $schema = $self->select_schema($db);
+      $schema = $db->default_implicit_schema  unless(defined $schema);
+      $schema = uc $schema  if(defined $schema);
 
-      while($col_sth->fetch)
+      my $table = uc $self->table;
+
+      my $key_name;
+
+      my $sth = $dbh->prepare(UNIQUE_INDEX_SQL);
+
+      $sth->execute($table, $schema);
+      $sth->bind_columns(\$key_name);
+
+      while($sth->fetch)
       {
-        push(@columns, $column);
+        my $uk = Rose::DB::Object::Metadata::UniqueKey->new(name   => $key_name,
+                                                            parent => $self);
+
+        my $col_sth = $dbh->prepare(UNIQUE_INDEX_COLUMNS_SQL_STUB);
+
+        my($column, @columns);
+
+        $col_sth->execute($key_name);
+        $col_sth->bind_columns(\$column);
+
+        while($col_sth->fetch)
+        {
+          push(@columns, $column);
+        }
+
+        unless(@columns)
+        {
+          die "No columns found for key $key_name";
+        }
+
+        $uk->columns(\@columns);
+
+        push(@unique_keys, $uk);
       }
+    };
 
-      unless(@columns)
-      {
-        die "No columns found for key $key_name";
-      }
+    $error = $@;
+  }
 
-      $uk->columns(\@columns);
-
-      push(@unique_keys, $uk);
-    }
-  };
-
-  if($@)
+  if($error)
   {
-    Carp::croak "Could not auto-retrieve unique keys for class $class - $@";
+    Carp::croak "Could not auto-retrieve unique keys for class $class - $error";
   }
 
   # This sort order is part of the API, and is essential to make the

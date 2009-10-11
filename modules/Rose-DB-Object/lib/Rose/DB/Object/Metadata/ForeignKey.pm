@@ -12,7 +12,7 @@ our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
 use Rose::DB::Object::Exception;
 
-our $VERSION = '0.771';
+our $VERSION = '0.784';
 
 our $Debug = 0;
 
@@ -272,39 +272,48 @@ sub is_ready_to_make_methods
 
   return 0  unless($self->sanity_check);
 
-  eval
+  my $error;
+
+  TRY:
   {
-    # Workaround for http://rt.perl.org/rt3/Ticket/Display.html?id=60890
-    local $SIG{'__DIE__'};
+    local $@;
 
-    $self->class->isa('Rose::DB::Object') or die
-      Rose::DB::Object::Exception::ClassNotReady->new(
-        "Missing or invalid foreign class");
-
-    my $fk_meta = $self->class->meta or die
-      Rose::DB::Object::Exception::ClassNotReady->new(
-        "Missing meta object for " . $self->class);
-
-    my $key_columns = $self->key_columns || {};
-
-    foreach my $column_name (values %$key_columns)
+    eval
     {
-      unless($fk_meta->column($column_name))
-      {
-        die Rose::DB::Object::Exception::ClassNotReady->new(
-              "No column '$column_name' in class " . $fk_meta->class);
-      }
+      # Workaround for http://rt.perl.org/rt3/Ticket/Display.html?id=60890
+      local $SIG{'__DIE__'};
 
-      unless($fk_meta->column_accessor_method_name($column_name) && 
-             $fk_meta->column_mutator_method_name($column_name))
-      {
-        die Rose::DB::Object::Exception::ClassNotReady->new(
-              "Foreign class not initialized");
-      }
-    }
-  };
+      $self->class->isa('Rose::DB::Object') or die
+        Rose::DB::Object::Exception::ClassNotReady->new(
+          "Missing or invalid foreign class");
 
-  if(my $error = $@)
+      my $fk_meta = $self->class->meta or die
+        Rose::DB::Object::Exception::ClassNotReady->new(
+          "Missing meta object for " . $self->class);
+
+      my $key_columns = $self->key_columns || {};
+
+      foreach my $column_name (values %$key_columns)
+      {
+        unless($fk_meta->column($column_name))
+        {
+          die Rose::DB::Object::Exception::ClassNotReady->new(
+                "No column '$column_name' in class " . $fk_meta->class);
+        }
+
+        unless($fk_meta->column_accessor_method_name($column_name) && 
+               $fk_meta->column_mutator_method_name($column_name))
+        {
+          die Rose::DB::Object::Exception::ClassNotReady->new(
+                "Foreign class not initialized");
+        }
+      }
+    };
+
+    $error = $@;
+  }
+
+  if($error)
   {
     if($Debug || $Rose::DB::Object::Metadata::Debug)
     {
@@ -316,7 +325,7 @@ sub is_ready_to_make_methods
     die $error  unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception::ClassNotReady'));
   }
 
-  return $@ ? 0 : 1;
+  return $error ? 0 : 1;
 }
 
 our $DEFAULT_INLINE_LIMIT = 80;

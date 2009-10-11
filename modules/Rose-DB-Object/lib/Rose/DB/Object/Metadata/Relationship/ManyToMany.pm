@@ -14,7 +14,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 
 use Rose::DB::Object::Constants qw(PRIVATE_PREFIX);
 
-our $VERSION = '0.782';
+our $VERSION = '0.784';
 
 our $Debug = 0;
 
@@ -227,77 +227,131 @@ sub is_ready_to_make_methods
 {
   my($self) = shift;
 
-  # This code is (ug) duplicated from the method-maker itself, and
-  # slightly modified to run here.  If the method-maker can't get all
-  # the info it needs, then we're not yet ready to make these methods.
-  eval
+  my $error;
+
+  TRY:
   {
-    # Workaround for http://rt.perl.org/rt3/Ticket/Display.html?id=60890
-    local $SIG{'__DIE__'};
+    local $@;
 
-    my $map_class = $self->map_class or die "Missing map class";
-
-    unless(UNIVERSAL::isa($map_class, 'Rose::DB::Object'))
+    # This code is (ug) duplicated from the method-maker itself, and
+    # slightly modified to run here.  If the method-maker can't get all
+    # the info it needs, then we're not yet ready to make these methods.
+    eval
     {
-      die Rose::DB::Object::Exception::ClassNotReady->new(
-        "Map class $map_class not yet ready");
-    }
+      # Workaround for http://rt.perl.org/rt3/Ticket/Display.html?id=60890
+      local $SIG{'__DIE__'};
 
-    my $map_meta  = $map_class->meta or die
-      Rose::DB::Object::Exception::ClassNotReady->new(
-        "Missing meta object for $map_class");
+      my $map_class = $self->map_class or die "Missing map class";
 
-    my $map_from  = $self->map_from;
-    my $map_to    = $self->map_to;
-    my $relationship = $self;
-
-    my $target_class = $self->parent->class;
-    my $meta         = $target_class->meta or die
-      Rose::DB::Object::Exception::ClassNotReady->new(
-        "Missing meta object for $target_class");
-
-    my($map_to_class, $map_to_meta, $map_to_method);
-
-    # "map" is the map table, "self" is the $target_class, and "remote"
-    # is the foreign object class
-    my(%map_column_to_self_method,
-       %map_column_to_self_column,
-       %map_method_to_remote_method);
-
-    # Also grab the foreign object class that the mapper points to,
-    # the relationship name that points back to us, and the class 
-    # name of the objects we really want to fetch.
-    my($require_objects, $local_rel, $foreign_class, %seen_fk);
-
-    foreach my $item ($map_meta->foreign_keys, $map_meta->relationships)
-    {
-      # Track which foreign keys we've seen
-      if($item->isa('Rose::DB::Object::Metadata::ForeignKey'))
+      unless(UNIVERSAL::isa($map_class, 'Rose::DB::Object'))
       {
-        $seen_fk{$item->id}++;
-      }
-      elsif($item->isa('Rose::DB::Object::Metadata::Relationship'))
-      {
-        # Skip a relationship if we've already seen the equivalent foreign key
-        next  if($seen_fk{$item->id});
+        die Rose::DB::Object::Exception::ClassNotReady->new(
+          "Map class $map_class not yet ready");
       }
 
-      if($item->can('class') && $item->class eq $target_class)
+      my $map_meta  = $map_class->meta or die
+        Rose::DB::Object::Exception::ClassNotReady->new(
+          "Missing meta object for $map_class");
+
+      my $map_from  = $self->map_from;
+      my $map_to    = $self->map_to;
+      my $relationship = $self;
+
+      my $target_class = $self->parent->class;
+      my $meta         = $target_class->meta or die
+        Rose::DB::Object::Exception::ClassNotReady->new(
+          "Missing meta object for $target_class");
+
+      my($map_to_class, $map_to_meta, $map_to_method);
+
+      # "map" is the map table, "self" is the $target_class, and "remote"
+      # is the foreign object class
+      my(%map_column_to_self_method,
+         %map_column_to_self_column,
+         %map_method_to_remote_method);
+
+      # Also grab the foreign object class that the mapper points to,
+      # the relationship name that points back to us, and the class 
+      # name of the objects we really want to fetch.
+      my($require_objects, $local_rel, $foreign_class, %seen_fk);
+
+      foreach my $item ($map_meta->foreign_keys, $map_meta->relationships)
       {
-        # Skip if there was an explicit local relationship name and
-        # this is not that name.
-        unless($map_from && $item->name ne $map_from)
+        # Track which foreign keys we've seen
+        if($item->isa('Rose::DB::Object::Metadata::ForeignKey'))
         {
-          if(%map_column_to_self_method)
+          $seen_fk{$item->id}++;
+        }
+        elsif($item->isa('Rose::DB::Object::Metadata::Relationship'))
+        {
+          # Skip a relationship if we've already seen the equivalent foreign key
+          next  if($seen_fk{$item->id});
+        }
+
+        if($item->can('class') && $item->class eq $target_class)
+        {
+          # Skip if there was an explicit local relationship name and
+          # this is not that name.
+          unless($map_from && $item->name ne $map_from)
+          {
+            if(%map_column_to_self_method)
+            {
+              die Rose::DB::Object::Exception::ClassNotReady->new(
+                "Map class $map_class has more than one foreign key " .
+                "and/or 'many to one' relationship that points to the " .
+                "class $target_class.  Please specify one by name " .
+                "with a 'local' parameter in the 'map' hash");
+            }
+
+            $map_from = $local_rel = $item->name;
+
+            my $map_columns = 
+              $item->can('column_map') ? $item->column_map : $item->key_columns;
+
+            # "local" and "foreign" here are relative to the *mapper* class
+            while(my($local_column, $foreign_column) = each(%$map_columns))
+            {
+              my $foreign_method = $meta->column_accessor_method_name($foreign_column)
+                or die Rose::DB::Object::Exception::ClassNotReady->new(
+                     "Missing accessor method for column '$foreign_column'" .
+                     " in class " . $meta->class);
+              $map_column_to_self_method{$local_column} = $foreign_method;
+              $map_column_to_self_column{$local_column} = $foreign_column;
+            }
+
+            next;
+          }
+        }
+
+        if($item->isa('Rose::DB::Object::Metadata::ForeignKey') ||
+              $item->type eq 'many to one')
+        {
+          # Skip if there was an explicit foreign relationship name and
+          # this is not that name.
+          next  if($map_to && $item->name ne $map_to);
+
+          $map_to = $item->name;
+
+          if($require_objects)
           {
             die Rose::DB::Object::Exception::ClassNotReady->new(
               "Map class $map_class has more than one foreign key " .
-              "and/or 'many to one' relationship that points to the " .
-              "class $target_class.  Please specify one by name " .
-              "with a 'local' parameter in the 'map' hash");
+              "and/or 'many to one' relationship that points to a " .
+              "class other than $target_class.  Please specify one " .
+              "by name with a 'foreign' parameter in the 'map' hash");
           }
 
-          $map_from = $local_rel = $item->name;
+          $map_to_class = $item->class;
+
+          unless(UNIVERSAL::isa($map_to_class, 'Rose::DB::Object'))
+          {
+            die Rose::DB::Object::Exception::ClassNotReady->new(
+              "Map-to-class $map_to_class not yet ready");
+          }
+
+          $map_to_meta  = $map_to_class->meta or die
+            Rose::DB::Object::Exception::ClassNotReady->new(
+              "Missing meta object for $map_to_class");
 
           my $map_columns = 
             $item->can('column_map') ? $item->column_map : $item->key_columns;
@@ -305,146 +359,101 @@ sub is_ready_to_make_methods
           # "local" and "foreign" here are relative to the *mapper* class
           while(my($local_column, $foreign_column) = each(%$map_columns))
           {
-            my $foreign_method = $meta->column_accessor_method_name($foreign_column)
+            my $local_method = $map_meta->column_accessor_method_name($local_column)
               or die Rose::DB::Object::Exception::ClassNotReady->new(
-                   "Missing accessor method for column '$foreign_column'" .
-                   " in class " . $meta->class);
-            $map_column_to_self_method{$local_column} = $foreign_method;
-            $map_column_to_self_column{$local_column} = $foreign_column;
-          }
+                "Missing accessor method for column '$local_column'" .
+                " in class " . $map_meta->class);
 
-          next;
-        }
-      }
+            my $foreign_method = $map_to_meta->column_accessor_method_name($foreign_column)
+              or die Rose::DB::Object::Exception::ClassNotReady->new(
+                "Missing accessor method for column '$foreign_column'" .
+                " in class " . $map_to_meta->class);
 
-      if($item->isa('Rose::DB::Object::Metadata::ForeignKey') ||
-            $item->type eq 'many to one')
-      {
-        # Skip if there was an explicit foreign relationship name and
-        # this is not that name.
-        next  if($map_to && $item->name ne $map_to);
-
-        $map_to = $item->name;
-
-        if($require_objects)
-        {
-          die Rose::DB::Object::Exception::ClassNotReady->new(
-            "Map class $map_class has more than one foreign key " .
-            "and/or 'many to one' relationship that points to a " .
-            "class other than $target_class.  Please specify one " .
-            "by name with a 'foreign' parameter in the 'map' hash");
-        }
-
-        $map_to_class = $item->class;
-
-        unless(UNIVERSAL::isa($map_to_class, 'Rose::DB::Object'))
-        {
-          die Rose::DB::Object::Exception::ClassNotReady->new(
-            "Map-to-class $map_to_class not yet ready");
-        }
-
-        $map_to_meta  = $map_to_class->meta or die
-          Rose::DB::Object::Exception::ClassNotReady->new(
-            "Missing meta object for $map_to_class");
-
-        my $map_columns = 
-          $item->can('column_map') ? $item->column_map : $item->key_columns;
-
-        # "local" and "foreign" here are relative to the *mapper* class
-        while(my($local_column, $foreign_column) = each(%$map_columns))
-        {
-          my $local_method = $map_meta->column_accessor_method_name($local_column)
-            or die Rose::DB::Object::Exception::ClassNotReady->new(
-              "Missing accessor method for column '$local_column'" .
-              " in class " . $map_meta->class);
-
-          my $foreign_method = $map_to_meta->column_accessor_method_name($foreign_column)
-            or die Rose::DB::Object::Exception::ClassNotReady->new(
-              "Missing accessor method for column '$foreign_column'" .
-              " in class " . $map_to_meta->class);
-
-          # local           foreign
-          # Map:color_id => Color:id
-          $map_method_to_remote_method{$local_method} = $foreign_method;
-        }
-
-        $require_objects = [ $item->name ];
-        $foreign_class = $item->class;
-
-        $map_to_method = $item->method_name('get_set') || 
-                         $item->method_name('get_set_now') ||
-                         $item->method_name('get_set_on_save') ||
-                         die Rose::DB::Object::Exception::ClassNotReady->new(
-                           "No 'get_*' method found for " . $item->name);
-      }
-    }
-
-    unless(%map_column_to_self_method)
-    {
-      die Rose::DB::Object::Exception::ClassNotReady->new(
-        "Could not find a foreign key or 'many to one' relationship "  .
-        "in $map_class that points to $target_class");
-    }
-
-    unless(%map_column_to_self_column)
-    {
-      die Rose::DB::Object::Exception::ClassNotReady->new(
-        "Could not find a foreign key or 'many to one' relationship " .
-        "in $map_class that points to " . ($map_to_class || $map_to));
-    }
-
-    unless($require_objects)
-    {
-      # Make a second attempt to find a a suitable foreign relationship in the
-      # map class, this time looking for links back to $target_class so long as
-      # it's a different relationship than the one used in the local link.
-      foreach my $item ($map_meta->foreign_keys, $map_meta->relationships)
-      {
-        # Skip a relationship if we've already seen the equivalent foreign key
-        if($item->isa('Rose::DB::Object::Metadata::Relationship'))
-        {
-          next  if($seen_fk{$item->id});
-        }
-
-        if(($item->isa('Rose::DB::Object::Metadata::ForeignKey') ||
-           $item->type eq 'many to one') &&
-           $item->class eq $target_class && $item->name ne $local_rel)
-        {  
-          if($require_objects)
-          {
-            die Rose::DB::Object::Exception::ClassNotReady->new(
-              "Map class $map_class has more than two foreign keys " .
-              "and/or 'many to one' relationships that points to a " .
-              "$target_class.  Please specify which ones to use " .
-              "by including 'local' and 'foreign' parameters in the " .
-              "'map' hash");
+            # local           foreign
+            # Map:color_id => Color:id
+            $map_method_to_remote_method{$local_method} = $foreign_method;
           }
 
           $require_objects = [ $item->name ];
           $foreign_class = $item->class;
-          $map_to_method = $item->method_name('get_set') ||
+
+          $map_to_method = $item->method_name('get_set') || 
                            $item->method_name('get_set_now') ||
                            $item->method_name('get_set_on_save') ||
                            die Rose::DB::Object::Exception::ClassNotReady->new(
                              "No 'get_*' method found for " . $item->name);
         }
       }
-    }
 
-    unless($require_objects)
-    {
-      die Rose::DB::Object::Exception::ClassNotReady->new(
-        "Could not find a foreign key or 'many to one' relationship " .
-        "in $map_class that points to a class other than $target_class");
-    }
+      unless(%map_column_to_self_method)
+      {
+        die Rose::DB::Object::Exception::ClassNotReady->new(
+          "Could not find a foreign key or 'many to one' relationship "  .
+          "in $map_class that points to $target_class");
+      }
 
-    unless($foreign_class)
-    {
-      die Rose::DB::Object::Exception::ClassNotReady->new("Missing foreign class");
-    }
-  };
+      unless(%map_column_to_self_column)
+      {
+        die Rose::DB::Object::Exception::ClassNotReady->new(
+          "Could not find a foreign key or 'many to one' relationship " .
+          "in $map_class that points to " . ($map_to_class || $map_to));
+      }
 
-  if(my $error = $@)
+      unless($require_objects)
+      {
+        # Make a second attempt to find a a suitable foreign relationship in the
+        # map class, this time looking for links back to $target_class so long as
+        # it's a different relationship than the one used in the local link.
+        foreach my $item ($map_meta->foreign_keys, $map_meta->relationships)
+        {
+          # Skip a relationship if we've already seen the equivalent foreign key
+          if($item->isa('Rose::DB::Object::Metadata::Relationship'))
+          {
+            next  if($seen_fk{$item->id});
+          }
+
+          if(($item->isa('Rose::DB::Object::Metadata::ForeignKey') ||
+             $item->type eq 'many to one') &&
+             $item->class eq $target_class && $item->name ne $local_rel)
+          {  
+            if($require_objects)
+            {
+              die Rose::DB::Object::Exception::ClassNotReady->new(
+                "Map class $map_class has more than two foreign keys " .
+                "and/or 'many to one' relationships that points to a " .
+                "$target_class.  Please specify which ones to use " .
+                "by including 'local' and 'foreign' parameters in the " .
+                "'map' hash");
+            }
+
+            $require_objects = [ $item->name ];
+            $foreign_class = $item->class;
+            $map_to_method = $item->method_name('get_set') ||
+                             $item->method_name('get_set_now') ||
+                             $item->method_name('get_set_on_save') ||
+                             die Rose::DB::Object::Exception::ClassNotReady->new(
+                               "No 'get_*' method found for " . $item->name);
+          }
+        }
+      }
+
+      unless($require_objects)
+      {
+        die Rose::DB::Object::Exception::ClassNotReady->new(
+          "Could not find a foreign key or 'many to one' relationship " .
+          "in $map_class that points to a class other than $target_class");
+      }
+
+      unless($foreign_class)
+      {
+        die Rose::DB::Object::Exception::ClassNotReady->new("Missing foreign class");
+      }
+    };
+
+    $error = $@;
+  }
+
+  if($error)
   {
     if($Debug || $Rose::DB::Object::Metadata::Debug)
     {
@@ -456,7 +465,7 @@ sub is_ready_to_make_methods
     die $error  unless(UNIVERSAL::isa($error, 'Rose::DB::Object::Exception::ClassNotReady'));
   }
 
-  return $@ ? 0 : 1;
+  return $error ? 0 : 1;
 }
 
 sub perl_relationship_definition_attributes
