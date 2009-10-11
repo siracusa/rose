@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.756';
+our $VERSION = '0.784';
 
 # syscolumns.coltype constants taken from:
 #
@@ -128,316 +128,323 @@ sub auto_generate_columns
 {
   my($self) = shift;
 
-  my($class, %columns, $table_id);
+  my($class, %columns, $table_id, $error);
 
-  eval
+  TRY:
   {
-    require DBD::Informix::Metadata;
+    local $@;
 
-    $class = $self->class or die "Missing class!";
+    eval
+    {
+      require DBD::Informix::Metadata;
 
-    my $db  = $self->db;  
-    my $dbh = $db->dbh or die $db->error;
+      $class = $self->class or die "Missing class!";
 
-    local $dbh->{'FetchHashKeyName'} = 'NAME';
+      my $db  = $self->db;  
+      my $dbh = $db->dbh or die $db->error;
 
-    # Informix does not support DBI's column_info() method so we have
-    # to get all that into "the hard way."
-    #
-    # Each item in @col_list is a reference to an array of values:
-    #
-    #   0     owner name
-    #   1     table name
-    #   2     column number
-    #   3     column name
-    #   4     data type (encoded)
-    #   5     data length (encoded)
-    #
-    # Lowercase table because Rose::DB::Informix->likes_lowercase_table_names
-    my @col_list = DBD::Informix::Metadata::ix_columns($dbh, lc $self->table);
+      local $dbh->{'FetchHashKeyName'} = 'NAME';
 
-    # We'll also need to query the syscolumns table directly to get the
-    # table id, which we need to query the sysdefaults table.  But to get
-    # the correct syscolumns record, we need to first query the systables
-    # table.
-    my $st_sth = $dbh->prepare(<<"EOF");
+      # Informix does not support DBI's column_info() method so we have
+      # to get all that into "the hard way."
+      #
+      # Each item in @col_list is a reference to an array of values:
+      #
+      #   0     owner name
+      #   1     table name
+      #   2     column number
+      #   3     column name
+      #   4     data type (encoded)
+      #   5     data length (encoded)
+      #
+      # Lowercase table because Rose::DB::Informix->likes_lowercase_table_names
+      my @col_list = DBD::Informix::Metadata::ix_columns($dbh, lc $self->table);
+
+      # We'll also need to query the syscolumns table directly to get the
+      # table id, which we need to query the sysdefaults table.  But to get
+      # the correct syscolumns record, we need to first query the systables
+      # table.
+      my $st_sth = $dbh->prepare(<<"EOF");
 SELECT tabid FROM informix.systables WHERE tabname = ? AND owner = ?
 EOF
 
-    my %col_info;
+      my %col_info;
 
-    foreach my $item (@col_list)
-    {
-      # We're going to build a standard DBI column_info() data structure
-      # to pass on to the rest of the code.
-      my $col_info;
-
-      # Add the "proprietary" values using the DBI convention of lowercase
-      # names prefixed with DBD name.
-      my @keys = map { "informix_$_" } 
-        qw(owner table column_number column_name column_type column_length);
-
-      @$col_info{@keys} = @$item;
-
-      # Copy the "easy" values into the standard DBI locations
-      $col_info->{'TABLE_NAME'}  = $col_info->{'informix_table'};
-      $col_info->{'COLUMN_NAME'} = $col_info->{'informix_column_name'};
-
-      # Query the systables table to get the table id based on the 
-      # table name and owner name.
-      $st_sth->execute(@$col_info{qw(informix_table informix_owner)});
-
-      $table_id = $st_sth->fetchrow_array;
-
-      unless(defined $table_id)
+      foreach my $item (@col_list)
       {
-        die "Could not find informix.systables record for table '",
-             $col_info->{'informix_table'}, "' with owner '",
-             $col_info->{'informix_owner'}, "'";
+        # We're going to build a standard DBI column_info() data structure
+        # to pass on to the rest of the code.
+        my $col_info;
+
+        # Add the "proprietary" values using the DBI convention of lowercase
+        # names prefixed with DBD name.
+        my @keys = map { "informix_$_" } 
+          qw(owner table column_number column_name column_type column_length);
+
+        @$col_info{@keys} = @$item;
+
+        # Copy the "easy" values into the standard DBI locations
+        $col_info->{'TABLE_NAME'}  = $col_info->{'informix_table'};
+        $col_info->{'COLUMN_NAME'} = $col_info->{'informix_column_name'};
+
+        # Query the systables table to get the table id based on the 
+        # table name and owner name.
+        $st_sth->execute(@$col_info{qw(informix_table informix_owner)});
+
+        $table_id = $st_sth->fetchrow_array;
+
+        unless(defined $table_id)
+        {
+          die "Could not find informix.systables record for table '",
+               $col_info->{'informix_table'}, "' with owner '",
+               $col_info->{'informix_owner'}, "'";
+        }
+
+        $col_info->{'informix_tabid'} = $table_id;
+
+        # Store the column info by column name
+        $col_info{$col_info->{'COLUMN_NAME'}} = $col_info;
       }
 
-      $col_info->{'informix_tabid'} = $table_id;
-
-      # Store the column info by column name
-      $col_info{$col_info->{'COLUMN_NAME'}} = $col_info;
-    }
-
-    # We need to query the syscolumns table directly to get the
-    # table id, which we need to query the sysdefaults table. 
-    my $sc_sth = $dbh->prepare(<<"EOF");
+      # We need to query the syscolumns table directly to get the
+      # table id, which we need to query the sysdefaults table. 
+      my $sc_sth = $dbh->prepare(<<"EOF");
 SELECT * FROM informix.syscolumns WHERE tabid = ?
 EOF
 
-    # We may need to query the sysxtdtypes table, so reserve a
-    # variable for that statement handle.  We'll also cache the
-    # results, so we'll set up that hash here too.  We'll also
-    # need a mapping from "colno" to column name.
-    my($sxt_sth, %extended_type, %colno_to_name);
+      # We may need to query the sysxtdtypes table, so reserve a
+      # variable for that statement handle.  We'll also cache the
+      # results, so we'll set up that hash here too.  We'll also
+      # need a mapping from "colno" to column name.
+      my($sxt_sth, %extended_type, %colno_to_name);
 
-    # Query the syscolumns table to get somemore column information
-    $sc_sth->execute($table_id);
+      # Query the syscolumns table to get somemore column information
+      $sc_sth->execute($table_id);
 
-    while(my $sc_row = $sc_sth->fetchrow_hashref)
-    {
-      my $col_info = $col_info{$sc_row->{'colname'}}
-        or die "No column info found for column name '$sc_sth->{'colname'}'";
-
-      # Copy all the row values into the DBI column info using the DBI 
-      # convention of lowercase names prefixed with DBD name.
-      @$col_info{map { "informix_$_" } keys %$sc_row} = values %$sc_row;
-
-      # Store mapping from "colno" to column name
-      $colno_to_name{$sc_row->{'colno'}} = $sc_row->{'colname'};
-
-      ##
-      ## Painfully derive the data type name (TYPE_NAME)
-      ##
-
-      # If the coltype is a value greater than or equal to 256, the the
-      # column does not allow null values.  To determine the data type for
-      # a coltype column that contains a value greater than 256, subtract
-      # 256 from the value and evaluate the remainder, based on the
-      # possible coltype values.  For example, if a column has a coltype
-      # value of 262, subtracting 256 from 262 leaves a remainder of 6,
-      # which indicates that this column uses a SERIAL data type.
-
-      my $type_num;
-
-      if($sc_row->{'coltype'} >= 256)
+      while(my $sc_row = $sc_sth->fetchrow_hashref)
       {
-        $col_info->{'informix_type_num'} = $type_num = 
-          $sc_row->{'coltype'} - 256;
+        my $col_info = $col_info{$sc_row->{'colname'}}
+          or die "No column info found for column name '$sc_sth->{'colname'}'";
 
-        # This situation also indicates that the column is NOT NULL,
-        # so set all the DBI-style attributes to indicate that.
-        $col_info->{'IS_NULLABLE'} = 'NO';
-        $col_info->{'NULLABLE'}    = SQL_NO_NULLS;
-      }
-      else
-      {
-        $col_info->{'informix_type_num'} = $type_num = $sc_row->{'coltype'};
+        # Copy all the row values into the DBI column info using the DBI 
+        # convention of lowercase names prefixed with DBD name.
+        @$col_info{map { "informix_$_" } keys %$sc_row} = values %$sc_row;
 
-        $col_info->{'IS_NULLABLE'} = 'YES';
-        $col_info->{'NULLABLE'}    = SQL_NULLABLE;      
-      }
+        # Store mapping from "colno" to column name
+        $colno_to_name{$sc_row->{'colno'}} = $sc_row->{'colname'};
 
-      #
-      # Now we need to turn $type_num into a type name.  Hold on to your hat.
-      #
+        ##
+        ## Painfully derive the data type name (TYPE_NAME)
+        ##
 
-      my $type_name;
+        # If the coltype is a value greater than or equal to 256, the the
+        # column does not allow null values.  To determine the data type for
+        # a coltype column that contains a value greater than 256, subtract
+        # 256 from the value and evaluate the remainder, based on the
+        # possible coltype values.  For example, if a column has a coltype
+        # value of 262, subtracting 256 from 262 leaves a remainder of 6,
+        # which indicates that this column uses a SERIAL data type.
 
-      # The following data types are implemented by the database server
-      # as built-in opaque types: BLOB, BOOLEAN, CLOB, and LVARCHAR
-      #
-      # A built-in opaque data type is one for which the database server
-      # provides the type definition.  Because these data types are built-in
-      # opaque types, they do not have a unique coltype value.  Instead, they
-      # have one of the coltype values for opaque types: 41 (fixed-length
-      # opaque type), or 40 (varying-length opaque type). The different
-      # fixed-length opaque types are distinguished by the extended_id column
-      # in the sysxtdtypes system catalog table.
-      #
-      # The following table summarizes the coltype values for the predefined
-      # data types.
-      #
-      # Type       coltype   symbolic constant
-      # --------   -------   -----------------
-      # BLOB          41     FIXED_LENGTH_OPAQUE
-      # CLOB          41     FIXED_LENGTH_OPAQUE
-      # BOOLEAN       41     FIXED_LENGTH_OPAQUE
-      # LVARCHAR      40     VARIABLE_LENGTH_OPAQUE
+        my $type_num;
 
-       # BLOB, CLOB, or BOOLEAN
-      if($type_num == FIXED_LENGTH_OPAQUE)
-      {
-        # Maybe we already looked this one up
-        if($extended_type{$sc_row->{'extended_id'}})
+        if($sc_row->{'coltype'} >= 256)
         {
-          $type_name = $extended_type{$col_info->{'informix_extended_id'}};
-        }
-        else # look it up and cache it
-        {
-          $sxt_sth ||= 
-            $dbh->prepare("SELECT name FROM informix.sysxtdtypes WHERE extended_id = ?");
+          $col_info->{'informix_type_num'} = $type_num = 
+            $sc_row->{'coltype'} - 256;
 
-          $sxt_sth->execute($sc_row->{'extended_id'});
-
-          my $name = $sxt_sth->fetchrow_array;
-
-          # We only handle BOOLEANS specially, and the name column for
-          # booleans is already in our type name format: "boolean"
-          # So just copy the name value into the cache.
-          $type_name = $extended_type{$sc_row->{'extended_id'}} = $name;
-        }
-      }
-      elsif($type_num == VARIABLE_LENGTH_OPAQUE) # LVARCHAR
-      {
-        $type_name = 'varchar';
-      }
-      elsif($type_num == DATETIME)
-      {
-        # Determine the full "datetime X to Y" type string
-        $type_name = _ix_datetime_specific_type($self, $type_num, $sc_row->{'collength'}, $col_info);
-      }
-      else
-      {
-        $type_name = $Column_Types{$type_num};
-      }
-
-      # Finally, set the type name
-      $col_info->{'TYPE_NAME'} = $type_name;
-
-      #
-      # Mine column length for information
-      #
-
-      # COLUMN_SIZE is the maximum length in characters for character data
-      # types, the number of digits or bits for numeric data types or the
-      # length in the representation of temporal types. See the relevant
-      # specifications for detailed information.
-
-      $col_info->{'COLUMN_SIZE'} = 
-        _ix_max_length($type_num, $sc_row->{'collength'});
-
-      if($type_num == SMALLINT || $type_num == INTEGER ||
-         $type_num == SERIAL   || $type_num == DECIMAL ||
-         $type_num == MONEY)
-      {
-        $col_info->{'DECIMAL_DIGITS'} = 
-          _ix_numeric_scale($type_num, $sc_row->{'collength'});
-
-        $col_info->{'COLUMN_SIZE'} =
-          _ix_numeric_precision($type_num, $sc_row->{'collength'});
-
-        $col_info->{'NUM_PREC_RADIX'} =
-          _ix_numeric_precision_radix($type_num, $sc_row->{'collength'});
-      }
-    }
-
-    #
-    # Get all the column default values from the sysdefaults table
-    #
-
-    # class 'T' means "table" (the other possible value us "t" for "row type")
-    # http://www-306.ibm.com/software/data/informix/pubs/library/datablade/dbdk/sqlr/01.fm16.html
-    my $sd_sth = $dbh->prepare(<<"EOF");
-SELECT * FROM informix.sysdefaults WHERE tabid = ? AND class = 'T'
-EOF
-
-    $sd_sth->execute($table_id);
-
-    while(my $sd_row = $sd_sth->fetchrow_hashref)
-    {
-      my $col_name = $colno_to_name{$sd_row->{'colno'}}
-        or die "While getting defaults: no column name found for colno '$sd_row->{'colno'}'";
-
-      my $col_info = $col_info{$col_name}
-        or die "While getting defaults: no column info found for column '$col_name'";
-
-      # The "type" column of the sysdefaults table looks like this:
-      #
-      # type  CHAR(1)
-      #
-      # 'L' = Literal default
-      # 'U' = User
-      # 'C' = Current
-      # 'N' = Null
-      # 'T' = Today
-      # 'S' = Dbservername 
-      #
-      # If a literal is specified for the default value, it is stored in
-      # the default column as text. If the literal value is not of type
-      # CHAR, the default column consists of two parts. The first part is
-      # the 6-bit representation of the binary value of the default-value
-      # structure. The second part is the default value in English text.
-      # The two parts are separated by a space.
-      #
-      # If the data type of the column is not CHAR or VARCHAR, a binary
-      # representation is encoded in the default column. 
-
-      if($sd_row->{'type'} eq 'T')
-      {
-        $col_info->{'COLUMN_DEF'} = 'today';
-      }
-      elsif($sd_row->{'type'} eq 'C')
-      {
-        $col_info->{'COLUMN_DEF'} = 'current';
-      }
-      elsif($sd_row->{'type'} eq 'L')
-      {
-        if($col_info->{'informix_type_num'} == CHAR)
-        {
-          $col_info->{'COLUMN_DEF'} = $sd_row->{'default'};
+          # This situation also indicates that the column is NOT NULL,
+          # so set all the DBI-style attributes to indicate that.
+          $col_info->{'IS_NULLABLE'} = 'NO';
+          $col_info->{'NULLABLE'}    = SQL_NO_NULLS;
         }
         else
         {
-          # The first part is the 6-bit representation of the binary value
-          # of the default-value structure. The second part is the default
-          # value in English text. The two parts are separated by a space.
-          my $default = $sd_row->{'default'};
-          $default =~ s/^.+ //; # cheat by just looking for the space
+          $col_info->{'informix_type_num'} = $type_num = $sc_row->{'coltype'};
 
-          $col_info->{'COLUMN_DEF'} = $default;
+          $col_info->{'IS_NULLABLE'} = 'YES';
+          $col_info->{'NULLABLE'}    = SQL_NULLABLE;      
+        }
+
+        #
+        # Now we need to turn $type_num into a type name.  Hold on to your hat.
+        #
+
+        my $type_name;
+
+        # The following data types are implemented by the database server
+        # as built-in opaque types: BLOB, BOOLEAN, CLOB, and LVARCHAR
+        #
+        # A built-in opaque data type is one for which the database server
+        # provides the type definition.  Because these data types are built-in
+        # opaque types, they do not have a unique coltype value.  Instead, they
+        # have one of the coltype values for opaque types: 41 (fixed-length
+        # opaque type), or 40 (varying-length opaque type). The different
+        # fixed-length opaque types are distinguished by the extended_id column
+        # in the sysxtdtypes system catalog table.
+        #
+        # The following table summarizes the coltype values for the predefined
+        # data types.
+        #
+        # Type       coltype   symbolic constant
+        # --------   -------   -----------------
+        # BLOB          41     FIXED_LENGTH_OPAQUE
+        # CLOB          41     FIXED_LENGTH_OPAQUE
+        # BOOLEAN       41     FIXED_LENGTH_OPAQUE
+        # LVARCHAR      40     VARIABLE_LENGTH_OPAQUE
+
+         # BLOB, CLOB, or BOOLEAN
+        if($type_num == FIXED_LENGTH_OPAQUE)
+        {
+          # Maybe we already looked this one up
+          if($extended_type{$sc_row->{'extended_id'}})
+          {
+            $type_name = $extended_type{$col_info->{'informix_extended_id'}};
+          }
+          else # look it up and cache it
+          {
+            $sxt_sth ||= 
+              $dbh->prepare("SELECT name FROM informix.sysxtdtypes WHERE extended_id = ?");
+
+            $sxt_sth->execute($sc_row->{'extended_id'});
+
+            my $name = $sxt_sth->fetchrow_array;
+
+            # We only handle BOOLEANS specially, and the name column for
+            # booleans is already in our type name format: "boolean"
+            # So just copy the name value into the cache.
+            $type_name = $extended_type{$sc_row->{'extended_id'}} = $name;
+          }
+        }
+        elsif($type_num == VARIABLE_LENGTH_OPAQUE) # LVARCHAR
+        {
+          $type_name = 'varchar';
+        }
+        elsif($type_num == DATETIME)
+        {
+          # Determine the full "datetime X to Y" type string
+          $type_name = _ix_datetime_specific_type($self, $type_num, $sc_row->{'collength'}, $col_info);
+        }
+        else
+        {
+          $type_name = $Column_Types{$type_num};
+        }
+
+        # Finally, set the type name
+        $col_info->{'TYPE_NAME'} = $type_name;
+
+        #
+        # Mine column length for information
+        #
+
+        # COLUMN_SIZE is the maximum length in characters for character data
+        # types, the number of digits or bits for numeric data types or the
+        # length in the representation of temporal types. See the relevant
+        # specifications for detailed information.
+
+        $col_info->{'COLUMN_SIZE'} = 
+          _ix_max_length($type_num, $sc_row->{'collength'});
+
+        if($type_num == SMALLINT || $type_num == INTEGER ||
+           $type_num == SERIAL   || $type_num == DECIMAL ||
+           $type_num == MONEY)
+        {
+          $col_info->{'DECIMAL_DIGITS'} = 
+            _ix_numeric_scale($type_num, $sc_row->{'collength'});
+
+          $col_info->{'COLUMN_SIZE'} =
+            _ix_numeric_precision($type_num, $sc_row->{'collength'});
+
+          $col_info->{'NUM_PREC_RADIX'} =
+            _ix_numeric_precision_radix($type_num, $sc_row->{'collength'});
         }
       }
-    }
 
-    # Finally, generate the columns based on the DBI-like $col_info
-    # that we built in the previous steps.
+      #
+      # Get all the column default values from the sysdefaults table
+      #
 
-    foreach my $col_info (values %col_info)
-    {
-      $db->refine_dbi_column_info($col_info);
+      # class 'T' means "table" (the other possible value us "t" for "row type")
+      # http://www-306.ibm.com/software/data/informix/pubs/library/datablade/dbdk/sqlr/01.fm16.html
+      my $sd_sth = $dbh->prepare(<<"EOF");
+SELECT * FROM informix.sysdefaults WHERE tabid = ? AND class = 'T'
+EOF
 
-      $columns{$col_info->{'COLUMN_NAME'}} = 
-        $self->auto_generate_column($col_info->{'COLUMN_NAME'}, $col_info);
-    }
-  };
+      $sd_sth->execute($table_id);
 
-  if($@ || !keys %columns)
+      while(my $sd_row = $sd_sth->fetchrow_hashref)
+      {
+        my $col_name = $colno_to_name{$sd_row->{'colno'}}
+          or die "While getting defaults: no column name found for colno '$sd_row->{'colno'}'";
+
+        my $col_info = $col_info{$col_name}
+          or die "While getting defaults: no column info found for column '$col_name'";
+
+        # The "type" column of the sysdefaults table looks like this:
+        #
+        # type  CHAR(1)
+        #
+        # 'L' = Literal default
+        # 'U' = User
+        # 'C' = Current
+        # 'N' = Null
+        # 'T' = Today
+        # 'S' = Dbservername 
+        #
+        # If a literal is specified for the default value, it is stored in
+        # the default column as text. If the literal value is not of type
+        # CHAR, the default column consists of two parts. The first part is
+        # the 6-bit representation of the binary value of the default-value
+        # structure. The second part is the default value in English text.
+        # The two parts are separated by a space.
+        #
+        # If the data type of the column is not CHAR or VARCHAR, a binary
+        # representation is encoded in the default column. 
+
+        if($sd_row->{'type'} eq 'T')
+        {
+          $col_info->{'COLUMN_DEF'} = 'today';
+        }
+        elsif($sd_row->{'type'} eq 'C')
+        {
+          $col_info->{'COLUMN_DEF'} = 'current';
+        }
+        elsif($sd_row->{'type'} eq 'L')
+        {
+          if($col_info->{'informix_type_num'} == CHAR)
+          {
+            $col_info->{'COLUMN_DEF'} = $sd_row->{'default'};
+          }
+          else
+          {
+            # The first part is the 6-bit representation of the binary value
+            # of the default-value structure. The second part is the default
+            # value in English text. The two parts are separated by a space.
+            my $default = $sd_row->{'default'};
+            $default =~ s/^.+ //; # cheat by just looking for the space
+
+            $col_info->{'COLUMN_DEF'} = $default;
+          }
+        }
+      }
+
+      # Finally, generate the columns based on the DBI-like $col_info
+      # that we built in the previous steps.
+
+      foreach my $col_info (values %col_info)
+      {
+        $db->refine_dbi_column_info($col_info);
+
+        $columns{$col_info->{'COLUMN_NAME'}} = 
+          $self->auto_generate_column($col_info->{'COLUMN_NAME'}, $col_info);
+      }
+    };
+
+    $error = $@;
+  }
+
+  if($error || !keys %columns)
   {
-    Carp::croak "Could not auto-generate columns for class $class - $@";
+    Carp::croak "Could not auto-generate columns for class $class - $error";
   }
 
   $self->auto_alias_columns(values %columns);
@@ -454,57 +461,61 @@ sub auto_generate_unique_keys
     Carp::croak "Useless call to auto_generate_unique_keys() in void context";
   }
 
-  my($class, %unique_keys);
+  my($class, %unique_keys, $error);
 
-  eval
+  TRY:
   {
-    require DBD::Informix::Metadata;
+    local $@;
 
-    $class = $self->class or die "Missing class!";
+    eval
+    {
+      require DBD::Informix::Metadata;
 
-    my $db  = $self->db;  
-    my $dbh = $db->dbh or die $db->error;
+      $class = $self->class or die "Missing class!";
 
-    local $dbh->{'FetchHashKeyName'} = 'NAME';
+      my $db  = $self->db;  
+      my $dbh = $db->dbh or die $db->error;
 
-    # We need the table id.  To get it, we need the "owner" name.  Asking
-    # for column information is the only way I know of to reliably get
-    # this information.
-    #
-    # Informix does not support DBI's column_info() method so we have
-    # to get all that into "the hard way."
-    #
-    # Each item in @col_list is a reference to an array of values:
-    #
-    #   0     owner name
-    #   1     table name
-    #   2     column number
-    #   3     column name
-    #   4     data type (encoded)
-    #   5     data length (encoded)
-    #
-    my @col_list = DBD::Informix::Metadata::ix_columns($dbh, lc $self->table);
+      local $dbh->{'FetchHashKeyName'} = 'NAME';
 
-    # Here's the query for the table id
-    my $st_sth = $dbh->prepare(<<"EOF");
+      # We need the table id.  To get it, we need the "owner" name.  Asking
+      # for column information is the only way I know of to reliably get
+      # this information.
+      #
+      # Informix does not support DBI's column_info() method so we have
+      # to get all that into "the hard way."
+      #
+      # Each item in @col_list is a reference to an array of values:
+      #
+      #   0     owner name
+      #   1     table name
+      #   2     column number
+      #   3     column name
+      #   4     data type (encoded)
+      #   5     data length (encoded)
+      #
+      my @col_list = DBD::Informix::Metadata::ix_columns($dbh, lc $self->table);
+
+      # Here's the query for the table id
+      my $st_sth = $dbh->prepare(<<"EOF");
 SELECT tabid FROM informix.systables WHERE tabname = ? AND owner = ?
 EOF
 
-    # Take the info from the first column (arbitrarily selected)
-    #                table name       owner name
-    $st_sth->execute($col_list[0][1], $col_list[0][0]);
-    my $table_id = $st_sth->fetchrow_array;
+      # Take the info from the first column (arbitrarily selected)
+      #                table name       owner name
+      $st_sth->execute($col_list[0][1], $col_list[0][0]);
+      my $table_id = $st_sth->fetchrow_array;
 
-    unless(defined $table_id)
-    {
-      die "Could not find informix.systables record for table ",
-          "'$col_list[0][1]' with owner '$col_list[0][0]'";
-    }
+      unless(defined $table_id)
+      {
+        die "Could not find informix.systables record for table ",
+            "'$col_list[0][1]' with owner '$col_list[0][0]'";
+      }
 
-    # Then comes this monster query to get the unique key column names.
-    # (The subquery fithers out any primary keys.) I'd love to know a
-    # better/easier way to do this...
-    my $uk_sth = $dbh->prepare(<<'EOF');
+      # Then comes this monster query to get the unique key column names.
+      # (The subquery fithers out any primary keys.) I'd love to know a
+      # better/easier way to do this...
+      my $uk_sth = $dbh->prepare(<<'EOF');
 SELECT
   col.colname,
   idx.idxname
@@ -545,24 +556,27 @@ WHERE
   );
 EOF
 
-    $uk_sth->execute($table_id, $table_id);
+      $uk_sth->execute($table_id, $table_id);
 
-    my($column, $key);
+      my($column, $key);
 
-    $uk_sth->bind_columns(\$column, \$key);
+      $uk_sth->bind_columns(\$column, \$key);
 
-    while($uk_sth->fetch)
-    {
-      my $uk = $unique_keys{$key} ||= 
-        Rose::DB::Object::Metadata::UniqueKey->new(name => $key, parent => $self);
+      while($uk_sth->fetch)
+      {
+        my $uk = $unique_keys{$key} ||= 
+          Rose::DB::Object::Metadata::UniqueKey->new(name => $key, parent => $self);
 
-      $uk->add_column($column);
-    }
-  };
+        $uk->add_column($column);
+      }
+    };
 
-  if($@)
+    $error = $@;
+  }
+
+  if($error)
   {
-    Carp::croak "Could not auto-retrieve unique keys for class $class - $@";
+    Carp::croak "Could not auto-retrieve unique keys for class $class - $error";
   }
 
   # This sort order is part of the API, and is essential to make the
@@ -692,167 +706,174 @@ sub auto_generate_foreign_keys
 
   my $no_warnings = $args{'no_warnings'};
 
-  my($class, @foreign_keys, $total_fks);
+  my($class, @foreign_keys, $total_fks, $error);
 
-  eval
+  TRY:
   {
-    $class = $self->class or die "Missing class!";
+    local $@;
 
-    my $db  = $self->db;
-    my $dbh = $db->dbh or die $db->error;
+    eval
+    {
+      $class = $self->class or die "Missing class!";
 
-    local $dbh->{'FetchHashKeyName'} = 'NAME';
+      my $db  = $self->db;
+      my $dbh = $db->dbh or die $db->error;
 
-    # I'm doing this to get the table id and owner.  Gotta be a better way...
-    my @col_list = DBD::Informix::Metadata::ix_columns($dbh, lc $self->table);
+      local $dbh->{'FetchHashKeyName'} = 'NAME';
 
-    my $st_sth = $dbh->prepare(<<"EOF");
+      # I'm doing this to get the table id and owner.  Gotta be a better way...
+      my @col_list = DBD::Informix::Metadata::ix_columns($dbh, lc $self->table);
+
+      my $st_sth = $dbh->prepare(<<"EOF");
 SELECT tabid FROM informix.systables WHERE tabname = ? AND owner = ?
 EOF
-    # Each item in @col_list is a reference to an array of values:
-    #
-    #   0     owner name
-    #   1     table name
-    #   2     column number
-    #   3     column name
-    #   4     data type (encoded)
-    #   5     data length (encoded)
-    #
-    my $table_name = $col_list[0][1];
-    my $owner_name = $col_list[0][0];
+      # Each item in @col_list is a reference to an array of values:
+      #
+      #   0     owner name
+      #   1     table name
+      #   2     column number
+      #   3     column name
+      #   4     data type (encoded)
+      #   5     data length (encoded)
+      #
+      my $table_name = $col_list[0][1];
+      my $owner_name = $col_list[0][0];
 
-    $st_sth->execute($table_name, $owner_name);
+      $st_sth->execute($table_name, $owner_name);
 
-    my $table_id = $st_sth->fetchrow_array;
+      my $table_id = $st_sth->fetchrow_array;
 
-    my $col_sth = $dbh->prepare(INDEX_COLUMNS_SQL);
+      my $col_sth = $dbh->prepare(INDEX_COLUMNS_SQL);
 
-    my $sth = $dbh->prepare(FK_INDEXES_SQL);    
-    $sth->execute($table_id);
+      my $sth = $dbh->prepare(FK_INDEXES_SQL);    
+      $sth->execute($table_id);
 
-    my %fk;
+      my %fk;
 
-    my $cm = $self->convention_manager;
+      my $cm = $self->convention_manager;
 
-    FK: while(my $index_info = $sth->fetchrow_hashref)
-    {
-      # Sanity check - should never happen
-      unless(lc $self->table eq lc $index_info->{'referring_table_name'} &&
-             lc $owner_name eq lc $index_info->{'referring_table_owner'})
+      FK: while(my $index_info = $sth->fetchrow_hashref)
       {
-        Carp::confess
-          "Fatal mismatch between table ('", lc $self->table, "' vs. '",
-          lc $index_info->{'referring_table_name'}, "' and/or owner ('",
-          lc $owner_name, "' vs. '", lc $index_info->{'referring_table_owner'},
-          "')";
-      }
-
-      my $key_name      = $index_info->{'referring_index_name'};
-      my $foreign_table = $index_info->{'referred_table_name'};
-
-      # Get local columns
-      $col_sth->execute(@$index_info{qw(referring_table_id referring_index_name)});
-
-      my $local_cols_info = $col_sth->fetchrow_hashref;
-      my @local_cols = grep { defined && /\S/ } @$local_cols_info{map { "col$_" } 1 .. 16};
-
-      # Get foreign columns
-      $col_sth->execute(@$index_info{qw(referred_table_id referred_index_name)});
-
-      my $foreign_cols_info = $col_sth->fetchrow_hashref;
-      my @foreign_cols = grep { defined && /\S/ } @$foreign_cols_info{map { "col$_" } 1 .. 16};
-
-      # Another sanity check - should never happen
-      unless(@local_cols > 0 && @local_cols == @foreign_cols)
-      {
-        Carp::confess "Failed to extract matching sets of foreign key ",
-                      "columns for table $table_name";
-      }
-
-      my $foreign_class = $self->class_for(table => $foreign_table);
-
-      unless($foreign_class)
-      {
-        # Add deferred task
-        $self->add_deferred_task(
+        # Sanity check - should never happen
+        unless(lc $self->table eq lc $index_info->{'referring_table_name'} &&
+               lc $owner_name eq lc $index_info->{'referring_table_owner'})
         {
-          class  => $self->class, 
-          method => 'auto_init_foreign_keys',
-          args   => \%args,
-
-          code   => sub
-          {
-            $self->auto_init_foreign_keys(%args);
-            $self->make_foreign_key_methods(%args, preserve_existing => 1);
-          },
-
-          check  => sub
-          {
-            my $fks = $self->foreign_keys;
-            return @$fks == $total_fks ? 1 : 0;
-          }
-        });
-
-        unless($no_warnings || $self->allow_auto_initialization)
-        {
-          no warnings; # Allow undef coercion to empty string
-          warn "No Rose::DB::Object-derived class found for table ",
-               "'$foreign_table'";
+          Carp::confess
+            "Fatal mismatch between table ('", lc $self->table, "' vs. '",
+            lc $index_info->{'referring_table_name'}, "' and/or owner ('",
+            lc $owner_name, "' vs. '", lc $index_info->{'referring_table_owner'},
+            "')";
         }
 
+        my $key_name      = $index_info->{'referring_index_name'};
+        my $foreign_table = $index_info->{'referred_table_name'};
+
+        # Get local columns
+        $col_sth->execute(@$index_info{qw(referring_table_id referring_index_name)});
+
+        my $local_cols_info = $col_sth->fetchrow_hashref;
+        my @local_cols = grep { defined && /\S/ } @$local_cols_info{map { "col$_" } 1 .. 16};
+
+        # Get foreign columns
+        $col_sth->execute(@$index_info{qw(referred_table_id referred_index_name)});
+
+        my $foreign_cols_info = $col_sth->fetchrow_hashref;
+        my @foreign_cols = grep { defined && /\S/ } @$foreign_cols_info{map { "col$_" } 1 .. 16};
+
+        # Another sanity check - should never happen
+        unless(@local_cols > 0 && @local_cols == @foreign_cols)
+        {
+          Carp::confess "Failed to extract matching sets of foreign key ",
+                        "columns for table $table_name";
+        }
+
+        my $foreign_class = $self->class_for(table => $foreign_table);
+
+        unless($foreign_class)
+        {
+          # Add deferred task
+          $self->add_deferred_task(
+          {
+            class  => $self->class, 
+            method => 'auto_init_foreign_keys',
+            args   => \%args,
+
+            code   => sub
+            {
+              $self->auto_init_foreign_keys(%args);
+              $self->make_foreign_key_methods(%args, preserve_existing => 1);
+            },
+
+            check  => sub
+            {
+              my $fks = $self->foreign_keys;
+              return @$fks == $total_fks ? 1 : 0;
+            }
+          });
+
+          unless($no_warnings || $self->allow_auto_initialization)
+          {
+            no warnings; # Allow undef coercion to empty string
+            warn "No Rose::DB::Object-derived class found for table ",
+                 "'$foreign_table'";
+          }
+
+          $total_fks++;
+          next FK;
+        }
+
+        my %key_columns;
+        @key_columns{@local_cols} = @foreign_cols;
+
+        my $fk = 
+          Rose::DB::Object::Metadata::ForeignKey->new(
+            name        => $key_name,
+            class       => $foreign_class,
+            key_columns => \%key_columns);
+
+        push(@foreign_keys, $fk);
         $total_fks++;
-        next FK;
       }
 
-      my %key_columns;
-      @key_columns{@local_cols} = @foreign_cols;
+      # This step is important!  It ensures that foreign keys will be created
+      # in a deterministic order, which in turn allows the "auto-naming" of
+      # foreign keys to work in a predictible manner.  This exact sort order
+      # (lowercase table name comparisons) is part of the API for foreign
+      # key auto generation.
+      @foreign_keys = 
+        sort { lc $a->class->meta->table cmp lc $b->class->meta->table } 
+        @foreign_keys;
 
-      my $fk = 
-        Rose::DB::Object::Metadata::ForeignKey->new(
-          name        => $key_name,
-          class       => $foreign_class,
-          key_columns => \%key_columns);
+      my %used_names;
 
-      push(@foreign_keys, $fk);
-      $total_fks++;
-    }
-
-    # This step is important!  It ensures that foreign keys will be created
-    # in a deterministic order, which in turn allows the "auto-naming" of
-    # foreign keys to work in a predictible manner.  This exact sort order
-    # (lowercase table name comparisons) is part of the API for foreign
-    # key auto generation.
-    @foreign_keys = 
-      sort { lc $a->class->meta->table cmp lc $b->class->meta->table } 
-      @foreign_keys;
-
-    my %used_names;
-
-    foreach my $fk (@foreign_keys)
-    {
-      my $name =
-        $cm->auto_foreign_key_name($fk->class, $fk->name, scalar $fk->key_columns, \%used_names);
-
-      unless(defined $name)
+      foreach my $fk (@foreign_keys)
       {
-        $fk->name($name = $self->foreign_key_name_generator->($self, $fk));
+        my $name =
+          $cm->auto_foreign_key_name($fk->class, $fk->name, scalar $fk->key_columns, \%used_names);
+
+        unless(defined $name)
+        {
+          $fk->name($name = $self->foreign_key_name_generator->($self, $fk));
+        }
+
+        unless(defined $name && $name =~ /^\w+$/)
+        {
+          die "Missing or invalid key name '$name' for foreign key ",
+              "generated in $class for ", $fk->class;
+        }
+
+        $used_names{$name}++;
+
+        $fk->name($name);
       }
+    };
 
-      unless(defined $name && $name =~ /^\w+$/)
-      {
-        die "Missing or invalid key name '$name' for foreign key ",
-            "generated in $class for ", $fk->class;
-      }
+    $error = $@;
+  }
 
-      $used_names{$name}++;
-
-      $fk->name($name);
-    }
-  };
-
-  if($@)
+  if($error)
   {
-    Carp::croak "Could not auto-generate foreign keys for class $class - $@";
+    Carp::croak "Could not auto-generate foreign keys for class $class - $error";
   }
 
   @foreign_keys = sort { lc $a->name cmp lc $b->name } @foreign_keys;

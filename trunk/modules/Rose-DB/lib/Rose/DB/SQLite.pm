@@ -7,7 +7,7 @@ use Carp();
 use Rose::DB;
 use SQL::ReservedWords::SQLite();
 
-our $VERSION = '0.752';
+our $VERSION = '0.755';
 
 #our $Debug = 0;
 
@@ -89,12 +89,18 @@ sub parse_date
     return $value;
   }
 
-  my $dt;
-  eval { $dt = Rose::DateTime::Util::parse_date($value) };
+  my($dt, $error);
 
-  if($@)
+  TRY:
   {
-    $self->error("Could not parse date '$value' - $@");
+    local $@;
+    eval { $dt = Rose::DateTime::Util::parse_date($value) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse date '$value' - $error");
     return undef;
   }
 
@@ -111,12 +117,18 @@ sub parse_datetime
     return $value;
   }
 
-  my $dt;
-  eval { $dt = Rose::DateTime::Util::parse_date($value) };
+  my($dt, $error);
 
-  if($@)
+  TRY:
   {
-    $self->error("Could not parse datetime '$value' - $@");
+    local $@;
+    eval { $dt = Rose::DateTime::Util::parse_date($value) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse datetime '$value' - $error");
     return undef;
   }
 
@@ -133,12 +145,18 @@ sub parse_timestamp
     return $value;
   }
 
-  my $dt;
-  eval { $dt = Rose::DateTime::Util::parse_date($value) };
+  my($dt, $error);
 
-  if($@)
+  TRY:
   {
-    $self->error("Could not parse timestamp '$value' - $@");
+    local $@;
+    eval { $dt = Rose::DateTime::Util::parse_date($value) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse timestamp '$value' - $error");
     return undef;
   }
 
@@ -207,29 +225,36 @@ sub list_tables
 
   my $types = $args{'include_views'} ? q('table', 'view') : q('table');
 
-  my @tables;
+  my(@tables, $error);
 
-  eval
+  TRY:
   {
-    my $dbh = $self->dbh or die $self->error;
+    local $@;
 
-    local $dbh->{'RaiseError'} = 1;
-
-    my $sth = $dbh->prepare("SELECT name FROM sqlite_master WHERE type IN($types)");
-    $sth->execute;
-
-    my $name;
-    $sth->bind_columns(\$name);
-
-    while($sth->fetch)
+    eval
     {
-      push(@tables, $name);
-    }
-  };
+      my $dbh = $self->dbh or die $self->error;
 
-  if($@)
+      local $dbh->{'RaiseError'} = 1;
+
+      my $sth = $dbh->prepare("SELECT name FROM sqlite_master WHERE type IN($types)");
+      $sth->execute;
+
+      my $name;
+      $sth->bind_columns(\$name);
+
+      while($sth->fetch)
+      {
+        push(@tables, $name);
+      }
+    };
+
+    $error = $@;
+  }
+
+  if($error)
   {
-    Carp::croak "Could not list tables from ", $self->dsn, " - $@";
+    Carp::croak "Could not list tables from ", $self->dsn, " - $error";
   }
 
   return wantarray ? @tables : \@tables;

@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.754_02';
+our $VERSION = '0.754_03';
 
 our $Debug = 0;
 
@@ -177,8 +177,16 @@ sub setup_dynamic_class_for_driver
     no strict 'refs';
     unless($Class_Loaded{$driver_class} || @{"${driver_class}::ISA"})
     {
-      eval "require $driver_class";
-      Carp::croak "Could not load driver class '$driver_class' - $@"  if($@);
+      my $error;
+
+      TRY:
+      {
+        local $@;
+        eval "require $driver_class";
+        $error = $@;
+      }
+
+      Carp::croak "Could not load driver class '$driver_class' - $error"  if($error);
     }
 
     $Class_Loaded{$driver_class}++;
@@ -295,8 +303,17 @@ sub db_cache
   }
 
   my $cache_class = $class->db_cache_class;
-  eval "use $cache_class";
-  die "Could not load db cache class '$cache_class' - $@"  if($@);
+
+  my $error;
+
+  TRY:
+  {
+    local $@;
+    eval "use $cache_class";
+    $error = $@;
+  }
+
+  die "Could not load db cache class '$cache_class' - $error"  if($error);
 
   return $class->_db_cache($cache_class->new);
 }
@@ -471,8 +488,16 @@ sub load_driver_class
   no strict 'refs';
   unless(defined ${"${driver_class}::VERSION"})
   {
-    eval "require $driver_class";
-    Carp::croak "Could not load driver class '$driver_class' - $@"  if($@);
+    my $error;
+
+    TRY:
+    {
+      local $@;
+      eval "require $driver_class";
+      $error = $@;
+    }
+
+    Carp::croak "Could not load driver class '$driver_class' - $error"  if($error);
   }
 
   $Class_Loaded{$driver_class}++;
@@ -833,18 +858,27 @@ sub release_dbh
   {
     if(my $sqls = $self->pre_disconnect_sql)
     {
-      eval
-      {
-        foreach my $sql (@$sqls)
-        {
-          $dbh->do($sql) or die "$sql - " . $dbh->errstr;
-          return undef;
-        }
-      };
+      my $error;
 
-      if($@)
+      TRY:
       {
-        $self->error("Could not do pre-disconnect SQL: $@");
+        local $@;
+
+        eval
+        {
+          foreach my $sql (@$sqls)
+          {
+            $dbh->do($sql) or die "$sql - " . $dbh->errstr;
+            return undef;
+          }
+        };
+
+        $error = $@;
+      }
+
+      if($error)
+      {
+        $self->error("Could not do pre-disconnect SQL: $error");
         return undef;
       }
     }
@@ -942,18 +976,27 @@ sub init_dbh
 
     if((my $sqls = $self->post_connect_sql) && !$dbh->{DID_PCSQL_KEY()})
     {
-      eval
-      {
-        foreach my $sql (@$sqls)
-        {
-          #$Debug && warn "$dbh DO: $sql\n";
-          $dbh->do($sql) or die "$sql - " . $dbh->errstr;
-        }
-      };
+      my $error;
 
-      if($@)
+      TRY:
       {
-        $self->error("Could not do post-connect SQL: $@");
+        local $@;
+
+        eval
+        {
+          foreach my $sql (@$sqls)
+          {
+            #$Debug && warn "$dbh DO: $sql\n";
+            $dbh->do($sql) or die "$sql - " . $dbh->errstr;
+          }
+        };
+
+        $error = $@;
+      }
+
+      if($error)
+      {
+        $self->error("Could not do post-connect SQL: $error");
         $dbh->disconnect;
         return undef;
       }
@@ -1014,15 +1057,25 @@ sub begin_work
 
     #$Debug && warn "BEGIN TRX\n";
 
-    eval
-    {
-      local $dbh->{'RaiseError'} = 1;
-      $ret = $dbh->begin_work
-    };
+    my $error;
 
-    if($@)
+    TRY:
     {
-      $self->error('begin_work() - ' . $dbh->errstr);
+      local $@;
+
+      eval
+      {
+        local $dbh->{'RaiseError'} = 1;
+        $ret = $dbh->begin_work
+      };
+
+      $error = $@;
+    }
+
+    if($error)
+    {
+      no warnings 'uninitialized';
+      $self->error("begin_work() - $error " . $dbh->errstr);
       return undef;
     }
 
@@ -1058,16 +1111,25 @@ sub commit
 
     #$Debug && warn "COMMIT TRX\n";    
 
-    eval
-    {
-      local $dbh->{'RaiseError'} = 1;
-      $ret = $dbh->commit;
-    };
+    my $error;
 
-    if($@)
+    TRY:
+    {
+      local $@;
+
+      eval
+      {
+        local $dbh->{'RaiseError'} = 1;
+        $ret = $dbh->commit;
+      };
+
+      $error = $@;
+    }
+
+    if($error)
     {
       no warnings 'uninitialized';
-      $self->error("commit() $@ - " . $dbh->errstr);
+      $self->error("commit() $error - " . $dbh->errstr);
       return undef;
     }
 
@@ -1100,15 +1162,25 @@ sub rollback
 
   #$Debug && warn "ROLLBACK TRX\n";
 
-  eval
-  {
-    local $dbh->{'RaiseError'} = 1;
-    $ret = $dbh->rollback;
-  };
+  my $error;
 
-  if($@)
+  TRY:
   {
-    $self->error('rollback() - ' . $dbh->errstr);
+    local $@;
+
+    eval
+    {
+      local $dbh->{'RaiseError'} = 1;
+      $ret = $dbh->rollback;
+    };
+
+    $error = $@;
+  }
+
+  if($error)
+  {
+    no warnings 'uninitialized';
+    $self->error("rollback() - $error " . $dbh->errstr);
     return undef;
   }
 
@@ -1130,19 +1202,26 @@ sub do_transaction
 
   my $dbh = $self->dbh or return undef;  
 
-  local $@;
+  my $error;
 
-  eval
+  TRY:
   {
-    local $dbh->{'RaiseError'} = 1;
-    $self->begin_work or die $self->error;
-    $code->(@_);
-    $self->commit or die $self->error;
-  };
+    local $@;
 
-  if($@)
+    eval
+    {
+      local $dbh->{'RaiseError'} = 1;
+      $self->begin_work or die $self->error;
+      $code->(@_);
+      $self->commit or die $self->error;
+    };
+
+    $error = $@;
+  }
+
+  if($error)
   {
-    my $error = ref $@ ? $@ : "do_transaction() failed - $@";
+    $error = ref $error ? $error : "do_transaction() failed - $error";
 
     if($self->rollback)
     {
@@ -1298,19 +1377,28 @@ sub primary_key_column_names
 
   my $columns;
 
-  eval 
-  {
-    $columns = 
-      $self->_get_primary_key_column_names($catalog, $schema, $table_unquoted);
-  };
+  my $error;
 
-  if($@ || !$columns)
+  TRY:
+  {
+    local $@;
+
+    eval 
+    {
+      $columns = 
+        $self->_get_primary_key_column_names($catalog, $schema, $table_unquoted);
+    };
+
+    $error = $@;
+  }
+
+  if($error || !$columns)
   {
     no warnings 'uninitialized'; # undef strings okay
-    $@ = 'no primary key columns found'  unless(defined $@);
+    $error = 'no primary key columns found'  unless(defined $error);
     Carp::croak "Could not get primary key columns for catalog '" . 
                 $catalog . "' schema '" . $schema . "' table '" . 
-                $table_unquoted . "' - " . $@;
+                $table_unquoted . "' - " . $error;
   }
 
   return wantarray ? @$columns : $columns;
@@ -1454,12 +1542,18 @@ sub parse_date
     return $value;
   }
 
-  my $dt;
-  eval { $dt = $self->date_handler->parse_date($value) };
+  my($dt, $error);
 
-  if($@)
+  TRY:
   {
-    $self->error("Could not parse date '$value' - $@");
+    local $@;
+    eval { $dt = $self->date_handler->parse_date($value) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse date '$value' - $error");
     return undef;
   }
 
@@ -1476,12 +1570,18 @@ sub parse_datetime
     return $value;
   }
 
-  my $dt;
-  eval { $dt = $self->date_handler->parse_datetime($value) };
+  my($dt, $error);
 
-  if($@)
+  TRY:
   {
-    $self->error("Could not parse datetime '$value' - $@");
+    local $@;
+    eval { $dt = $self->date_handler->parse_datetime($value) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse datetime '$value' - $error");
     return undef;
   }
 
@@ -1498,12 +1598,18 @@ sub parse_timestamp
     return $value;
   }
 
-  my $dt;
-  eval { $dt = $self->date_handler->parse_timestamp($value) };
+  my($dt, $error);
 
-  if($@)
+  TRY:
   {
-    $self->error("Could not parse timestamp '$value' - $@");
+    local $@;
+    eval { $dt = $self->date_handler->parse_timestamp($value) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse timestamp '$value' - $error");
     return undef;
   }
 
@@ -1520,26 +1626,38 @@ sub parse_time
     return $value;
   }
 
-  my $time;
+  my($time, $error);
 
-  eval 
+  TRY:
   {
-    $time = Time::Clock->new->parse($value);
-  };
+    local $@;
+    eval { $time = Time::Clock->new->parse($value) };
+    $error = $@;
+  }
 
-  if($@)
+  if($error)
   {
-    eval
-    {
-      my $dt = $self->date_handler->parse_time($value);
-      # Using parse()/strftime() is faster than using the 
-      # Time::Clock constructor and the DateTime accessors.
-      $time = Time::Clock->new->parse($dt->strftime('%H:%M:%S.%N'));
-    };
+    my $second_error;
 
-    if($@)
+    TRY:
     {
-      $self->error("Could not parse time '$value' - Time::Clock::parse() failed and $@");
+      local $@;
+
+      eval
+      {
+        my $dt = $self->date_handler->parse_time($value);
+        # Using parse()/strftime() is faster than using the 
+        # Time::Clock constructor and the DateTime accessors.
+        $time = Time::Clock->new->parse($dt->strftime('%H:%M:%S.%N'));
+      };
+
+      $second_error = $@;
+    }
+
+    if($second_error)
+    {
+      $self->error("Could not parse time '$value' - Time::Clock::parse() failed " .
+                   "($error) and $second_error");
       return undef;
     }
   }
@@ -2092,28 +2210,36 @@ sub list_tables
   my($self, %args) = @_;
 
   my $types = $args{'include_views'} ? "'TABLE','VIEW'" : 'TABLE';
-  my @tables;
 
-  eval
+  my(@tables, $error);
+
+  TRY:
   {
-    my $dbh = $self->dbh or die $self->error;
+    local $@;
 
-    local $dbh->{'RaiseError'} = 1;
-    local $dbh->{'FetchHashKeyName'} = 'NAME';
-
-    my $sth = $dbh->table_info($self->catalog, $self->schema, '%', $types);
-
-    $sth->execute;
-
-    while(my $table_info = $sth->fetchrow_hashref)
+    eval
     {
-      push(@tables, $table_info->{'TABLE_NAME'})
-    }
-  };
+      my $dbh = $self->dbh or die $self->error;
 
-  if($@)
+      local $dbh->{'RaiseError'} = 1;
+      local $dbh->{'FetchHashKeyName'} = 'NAME';
+
+      my $sth = $dbh->table_info($self->catalog, $self->schema, '%', $types);
+
+      $sth->execute;
+
+      while(my $table_info = $sth->fetchrow_hashref)
+      {
+        push(@tables, $table_info->{'TABLE_NAME'})
+      }
+    };
+
+    $error = $@;
+  }
+
+  if($error)
   {
-    Carp::croak "Could not list tables from ", $self->dsn, " - $@";
+    Carp::croak "Could not list tables from ", $self->dsn, " - $error";
   }
 
   return wantarray ? @tables : \@tables;
@@ -2147,19 +2273,31 @@ sub auto_load_fixups
     }
   }
 
-  # Load a file or package full of arbitrary perl used to alter the data
+  # Load a file or package full of arbitrary Perl used to alter the data
   # source registry.  This is intended for use in development only.
   my $rosedb_devinit = $ENV{'ROSEDB_DEVINIT'};
+
+  my $error;
 
   if(defined $rosedb_devinit)
   {
     if(-e $rosedb_devinit)
     {
-      do $rosedb_devinit;
+      TRY:
+      {
+        local $@;
+        do $rosedb_devinit;
+        $error = $@;
+      }
     }
     else
-    {
-      eval qq(require $rosedb_devinit);
+    { 
+      TRY:
+      {
+        local $@;
+        eval qq(require $rosedb_devinit);
+        $error = $@;
+      }
 
       if($rosedb_devinit->can('fixup'))
       {
@@ -2168,21 +2306,37 @@ sub auto_load_fixups
     }
   }
 
-  if($@ || !defined $rosedb_devinit)
+  if($error || !defined $rosedb_devinit)
   {
     my $username;
 
-    # The getpwuid() function is often(?) unimplemented in perl on Windows.
-    eval { $username = lc getpwuid($<) };
+    # The getpwuid() function is often(?) unimplemented in perl on Windows
+    TRY:
+    {
+      local $@;
+      eval { $username = lc getpwuid($<) };
+      $error = $@;
+    }
 
-    unless($@)
+    unless($error)
     {
       $rosedb_devinit = "Rose::DB::Devel::Init::$username";
-      eval qq(require $rosedb_devinit);
 
-      if($@)
+      TRY:
       {
-        eval { do $rosedb_devinit };
+        local $@;
+        eval qq(require $rosedb_devinit);
+        $error = $@;
+      }
+
+      if($error)
+      {
+        TRY:
+        {
+          local $@;
+          eval { do $rosedb_devinit };
+          $error = $@;
+        }
       }
       else
       {
@@ -2216,9 +2370,16 @@ sub load_yaml_fixup_file
 
   unless($YAML_Class)
   {
-    eval { require YAML::Syck };
+    my $error;
 
-    if($@)
+    TRY:
+    {
+      local $@;
+      eval { require YAML::Syck };
+      $error = $@;
+    }
+
+    if($error)
     {
       require YAML;
       #warn "# Using YAML\n";

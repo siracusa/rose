@@ -1,8 +1,9 @@
-0.783_03 (10.07.2009) - John Siracusa <siracusa@gmail.com>
+0.783_04 (10.10.2009) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug introduced by the multi-many Manager bug fix in the
       0.783 release.  (Reported by Mark Frost)
     * Added missing exception error explanations to relationship methods.
+    * Updated eval blocks to avoid stomping on $@ from an outer scope.
     * TODO: local()ize $@ to avoid eating errors
     * TODO: Update docs for has_loaded_related() and/or make a better
       solution to avoid re-fetching nonexistent objects after Manager

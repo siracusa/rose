@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.783';
+our $VERSION = '0.784';
 
 our $Debug = 0;
 
@@ -86,7 +86,7 @@ our %Op_Arg_PassThru = map { $_ => 1 }
   qw(similar match imatch regex regexp regexp_like like ilike rlike 
      in_set any_in_set all_in_set in_array any_in_array all_in_array);
 
-BEGIN { eval { require DBI::Const::GetInfoType }; }
+BEGIN { local $@; eval { require DBI::Const::GetInfoType }; }
 use constant SQL_DBMS_VER => $DBI::Const::GetInfoType::GetInfoType{'SQL_DBMS_VER'} || 18;
 
 sub build_where_clause { build_select(@_, where_only => 1) }

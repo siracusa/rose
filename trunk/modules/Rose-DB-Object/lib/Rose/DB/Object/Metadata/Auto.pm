@@ -16,7 +16,7 @@ our $Debug;
 
 our $Sort_Columns_Alphabetically = 0; # hack for test suite
 
-our $VERSION = '0.765';
+our $VERSION = '0.784';
 
 our $Missing_PK_OK = 0;
 
@@ -64,69 +64,76 @@ sub auto_generate_columns
 {
   my($self) = shift;
 
-  my($db, $class, %columns, $catalog, $schema, $table);
+  my($db, $class, %columns, $catalog, $schema, $table, $error);
 
-  eval
+  TRY:
   {
-    $class = $self->class or die "Missing class!";
+    local $@;
 
-    $db = $self->db;
-    my $dbh = $db->dbh or die $db->error;
-
-    local $dbh->{'FetchHashKeyName'} = 'NAME';
-
-    $table = $self->table;
-
-    $table = lc $table  if($db->likes_lowercase_table_names);
-
-    my $table_unquoted = $db->unquote_table_name($table);
-
-    $catalog = $self->select_catalog($db);
-    $schema  = $self->select_schema($db); 
-    $schema  = $db->default_implicit_schema  unless(defined $schema);
-
-    $schema  = lc $schema   if(defined $schema && $db->likes_lowercase_schema_names);
-    $catalog = lc $catalog  if(defined $catalog && $db->likes_lowercase_catalog_names);
-
-    my $sth = $dbh->column_info($catalog, $schema, $table_unquoted, '%');
-
-    unless(defined $sth)
+    eval
     {
-      no warnings; # undef strings okay
-      die "No column information found for catalog '", $catalog,
-          "' schema '", $schema, "' table '", $table_unquoted, "'";
-    }
+      $class = $self->class or die "Missing class!";
 
-    COLUMN: while(my $col_info = $sth->fetchrow_hashref)
-    {
-      CHECK_TABLE: # Make sure this column is from the right table
+      $db = $self->db;
+      my $dbh = $db->dbh or die $db->error;
+
+      local $dbh->{'FetchHashKeyName'} = 'NAME';
+
+      $table = $self->table;
+
+      $table = lc $table  if($db->likes_lowercase_table_names);
+
+      my $table_unquoted = $db->unquote_table_name($table);
+
+      $catalog = $self->select_catalog($db);
+      $schema  = $self->select_schema($db); 
+      $schema  = $db->default_implicit_schema  unless(defined $schema);
+
+      $schema  = lc $schema   if(defined $schema && $db->likes_lowercase_schema_names);
+      $catalog = lc $catalog  if(defined $catalog && $db->likes_lowercase_catalog_names);
+
+      my $sth = $dbh->column_info($catalog, $schema, $table_unquoted, '%');
+
+      unless(defined $sth)
       {
-        no warnings; # Allow undef coercion to empty string
-
-        $col_info->{'TABLE_NAME'} = $db->unquote_table_name($col_info->{'TABLE_NAME'});
-
-        next COLUMN unless($col_info->{'TABLE_CAT'}   eq $catalog &&
-                           $col_info->{'TABLE_SCHEM'} eq $schema &&
-                           $col_info->{'TABLE_NAME'}  eq $table_unquoted);
+        no warnings; # undef strings okay
+        die "No column information found for catalog '", $catalog,
+            "' schema '", $schema, "' table '", $table_unquoted, "'";
       }
 
-      unless(defined $col_info->{'COLUMN_NAME'})
+      COLUMN: while(my $col_info = $sth->fetchrow_hashref)
       {
-        Carp::croak "Could not extract column name from DBI column_info()";
+        CHECK_TABLE: # Make sure this column is from the right table
+        {
+          no warnings; # Allow undef coercion to empty string
+
+          $col_info->{'TABLE_NAME'} = $db->unquote_table_name($col_info->{'TABLE_NAME'});
+
+          next COLUMN unless($col_info->{'TABLE_CAT'}   eq $catalog &&
+                             $col_info->{'TABLE_SCHEM'} eq $schema &&
+                             $col_info->{'TABLE_NAME'}  eq $table_unquoted);
+        }
+
+        unless(defined $col_info->{'COLUMN_NAME'})
+        {
+          Carp::croak "Could not extract column name from DBI column_info()";
+        }
+
+        $db->refine_dbi_column_info($col_info, $self);
+
+        $columns{$col_info->{'COLUMN_NAME'}} = 
+          $self->auto_generate_column($col_info->{'COLUMN_NAME'}, $col_info);
       }
+    };
 
-      $db->refine_dbi_column_info($col_info, $self);
+    $error = $@;
+  }
 
-      $columns{$col_info->{'COLUMN_NAME'}} = 
-        $self->auto_generate_column($col_info->{'COLUMN_NAME'}, $col_info);
-    }
-  };
-
-  if($@ || !keys %columns)
+  if($error || !keys %columns)
   {
     no warnings; # undef strings okay
     Carp::croak "Could not auto-generate columns for class $class - ",
-                ($@ || "no column info found for catalog '" . $catalog .
+                ($error || "no column info found for catalog '" . $catalog .
                 "' schema '" . $schema . "' table '$table'");
   }
 
@@ -297,22 +304,30 @@ sub auto_retrieve_primary_key_column_names
   my $db      = $self->db;
   my $catalog = $self->select_catalog($db);
   my $schema  = $self->select_schema($db);
-  my $pk_columns;
 
-  eval
-  {
-    $pk_columns = 
-      $self->db->primary_key_column_names(table   => $self->table,
-                                          catalog => $catalog,
-                                          schema  => $schema);
-  };
+  my($pk_columns, $error);
 
-  if($@ || (!$Missing_PK_OK && !@$pk_columns))
+  TRY:
   {
-    $@ = 'no primary key columns found'  unless(defined $@);
+    local $@;
+
+    eval
+    {
+      $pk_columns = 
+        $self->db->primary_key_column_names(table   => $self->table,
+                                            catalog => $catalog,
+                                            schema  => $schema);
+    };
+
+    $error = $@;
+  }
+
+  if($error || (!$Missing_PK_OK && !@$pk_columns))
+  {
+    $error = 'no primary key columns found'  unless(defined $error);
     Carp::croak "Could not auto-retrieve primary key columns for class ",
                 $self->class, " - ",
-                ($@ || "no primary key info found for catalog '" . $catalog .
+                ($error || "no primary key info found for catalog '" . $catalog .
                 "' schema '" . $schema . "' table '" . $self->table, "'");
   }
 
@@ -334,165 +349,172 @@ sub auto_generate_foreign_keys
 
   my $no_warnings = $args{'no_warnings'};
 
-  my($class, @foreign_keys, $total_fks, %used_names);
+  my($class, @foreign_keys, $total_fks, %used_names, $error);
 
-  eval
+  TRY:
   {
-    $class = $self->class or die "Missing class!";
+    local $@;
 
-    my $db  = $self->db;
-    my $dbh = $db->dbh or die $db->error;
-
-    local $dbh->{'FetchHashKeyName'} = 'NAME';
-
-    my $catalog = $self->select_catalog($db);
-    my $schema  = $self->select_schema($db); 
-    $schema = $db->default_implicit_schema  unless(defined $schema);
-
-    $schema  = lc $schema   if(defined $schema && $db->likes_lowercase_schema_names);
-    $catalog = lc $catalog  if(defined $catalog && $db->likes_lowercase_catalog_names);
-
-    my $table = $db->likes_lowercase_table_names ? lc $self->table : $self->table;
-
-    my $sth = $dbh->foreign_key_info(undef, undef, undef,
-                                     $catalog, $schema, $table);
-
-    # This happens when the table has no foreign keys
-    return  unless(defined $sth);
-
-    my(%fk, @fk_info);
-
-    FK: while(my $fk_info = $sth->fetchrow_hashref)
+    eval
     {
-      $db->refine_dbi_foreign_key_info($fk_info, $self);
+      $class = $self->class or die "Missing class!";
 
-      CHECK_TABLE: # Make sure this column is from the right table
+      my $db  = $self->db;
+      my $dbh = $db->dbh or die $db->error;
+
+      local $dbh->{'FetchHashKeyName'} = 'NAME';
+
+      my $catalog = $self->select_catalog($db);
+      my $schema  = $self->select_schema($db); 
+      $schema = $db->default_implicit_schema  unless(defined $schema);
+
+      $schema  = lc $schema   if(defined $schema && $db->likes_lowercase_schema_names);
+      $catalog = lc $catalog  if(defined $catalog && $db->likes_lowercase_catalog_names);
+
+      my $table = $db->likes_lowercase_table_names ? lc $self->table : $self->table;
+
+      my $sth = $dbh->foreign_key_info(undef, undef, undef,
+                                       $catalog, $schema, $table);
+
+      # This happens when the table has no foreign keys
+      return  unless(defined $sth);
+
+      my(%fk, @fk_info);
+
+      FK: while(my $fk_info = $sth->fetchrow_hashref)
       {
-        no warnings; # Allow undef coercion to empty string
-        next FK  unless($fk_info->{'FK_TABLE_CAT'}   eq $catalog &&
-                        $fk_info->{'FK_TABLE_SCHEM'} eq $schema &&
-                        $fk_info->{'FK_TABLE_NAME'}  eq $table);
-      }
+        $db->refine_dbi_foreign_key_info($fk_info, $self);
 
-      push(@fk_info, $fk_info);
-    }
-
-    # This step is important!  It ensures that foreign keys will be created
-    # in a deterministic order, which in turn allows the "auto-naming" of
-    # foreign keys to work in a predictible manner.  This exact sort order
-    # (lowercase table name comparisons) is part of the API for foreign
-    # key auto generation.
-    @fk_info = 
-      sort { lc $a->{'UK_TABLE_NAME'} cmp lc $b->{'UK_TABLE_NAME'} } @fk_info;
-
-    my $cm = $self->convention_manager;
-
-    FK_INFO: foreach my $fk_info (@fk_info)
-    {
-      my $fk_id = $fk_info->{'RDBO_FK_ID'} = $fk_info->{'FK_NAME'} || $fk_info->{'UK_NAME'};
-
-      my $foreign_class = 
-        $self->class_for(catalog => $fk_info->{'UK_TABLE_CAT'},
-                         schema  => $fk_info->{'UK_TABLE_SCHEM'},
-                         table   => $fk_info->{'UK_TABLE_NAME'});
-
-      unless($foreign_class) # Give convention manager a chance
-      {
-        $foreign_class = 
-          $self->convention_manager->related_table_to_class(
-            $fk_info->{'UK_TABLE_NAME'}, $self->class);
-
-        unless(UNIVERSAL::isa($foreign_class, 'Rose::DB::Object'))
-        {
-          # Null convention manager may return undef
-          no warnings 'uninitialized'; 
-          eval "require $foreign_class";
-          $foreign_class = undef  if($@ || !UNIVERSAL::isa($foreign_class, 'Rose::DB::Object'));
-        }
-      }
-
-      unless($foreign_class)
-      {
-        my $key = join($;, map { defined($_) ? $_ : "\034" } $self->class,
-                       @$fk_info{qw(UK_TABLE_CAT UK_TABLE_SCHEM UK_TABLE_NAME)});
-
-        # Add deferred task
-        $self->add_deferred_task(
-        {
-          class  => $self->class, 
-          method => 'auto_init_foreign_keys',
-          args   => \%args,
-
-          code => sub
-          {
-            $self->auto_init_foreign_keys(%args);
-            $self->make_foreign_key_methods(%args, preserve_existing => 1);
-          },
-
-          check => sub
-          {
-            my $fks = $self->foreign_keys;
-            return @$fks == $total_fks ? 1 : 0;
-          },
-        });
-
-        unless($no_warnings || $Warned{$key}++ || $self->allow_auto_initialization)
+        CHECK_TABLE: # Make sure this column is from the right table
         {
           no warnings; # Allow undef coercion to empty string
-          Carp::carp
-            "No Rose::DB::Object-derived class found for catalog '",
-            $fk_info->{'UK_TABLE_CAT'}, "' schema '", 
-            $fk_info->{'UK_TABLE_SCHEM'}, "' table '", 
-            $fk_info->{'UK_TABLE_NAME'}, "'";
+          next FK  unless($fk_info->{'FK_TABLE_CAT'}   eq $catalog &&
+                          $fk_info->{'FK_TABLE_SCHEM'} eq $schema &&
+                          $fk_info->{'FK_TABLE_NAME'}  eq $table);
+        }
+
+        push(@fk_info, $fk_info);
+      }
+
+      # This step is important!  It ensures that foreign keys will be created
+      # in a deterministic order, which in turn allows the "auto-naming" of
+      # foreign keys to work in a predictible manner.  This exact sort order
+      # (lowercase table name comparisons) is part of the API for foreign
+      # key auto generation.
+      @fk_info = 
+        sort { lc $a->{'UK_TABLE_NAME'} cmp lc $b->{'UK_TABLE_NAME'} } @fk_info;
+
+      my $cm = $self->convention_manager;
+
+      FK_INFO: foreach my $fk_info (@fk_info)
+      {
+        my $fk_id = $fk_info->{'RDBO_FK_ID'} = $fk_info->{'FK_NAME'} || $fk_info->{'UK_NAME'};
+
+        my $foreign_class = 
+          $self->class_for(catalog => $fk_info->{'UK_TABLE_CAT'},
+                           schema  => $fk_info->{'UK_TABLE_SCHEM'},
+                           table   => $fk_info->{'UK_TABLE_NAME'});
+
+        unless($foreign_class) # Give convention manager a chance
+        {
+          $foreign_class = 
+            $self->convention_manager->related_table_to_class(
+              $fk_info->{'UK_TABLE_NAME'}, $self->class);
+
+          unless(UNIVERSAL::isa($foreign_class, 'Rose::DB::Object'))
+          {
+            # Null convention manager may return undef
+            no warnings 'uninitialized'; 
+            eval "require $foreign_class";
+            $foreign_class = undef  if($@ || !UNIVERSAL::isa($foreign_class, 'Rose::DB::Object'));
+          }
+        }
+
+        unless($foreign_class)
+        {
+          my $key = join($;, map { defined($_) ? $_ : "\034" } $self->class,
+                         @$fk_info{qw(UK_TABLE_CAT UK_TABLE_SCHEM UK_TABLE_NAME)});
+
+          # Add deferred task
+          $self->add_deferred_task(
+          {
+            class  => $self->class, 
+            method => 'auto_init_foreign_keys',
+            args   => \%args,
+
+            code => sub
+            {
+              $self->auto_init_foreign_keys(%args);
+              $self->make_foreign_key_methods(%args, preserve_existing => 1);
+            },
+
+            check => sub
+            {
+              my $fks = $self->foreign_keys;
+              return @$fks == $total_fks ? 1 : 0;
+            },
+          });
+
+          unless($no_warnings || $Warned{$key}++ || $self->allow_auto_initialization)
+          {
+            no warnings; # Allow undef coercion to empty string
+            Carp::carp
+              "No Rose::DB::Object-derived class found for catalog '",
+              $fk_info->{'UK_TABLE_CAT'}, "' schema '", 
+              $fk_info->{'UK_TABLE_SCHEM'}, "' table '", 
+              $fk_info->{'UK_TABLE_NAME'}, "'";
+          }
+
+          $total_fks++;
+          next FK_INFO;
+        }
+
+        my $local_column   = $fk_info->{'FK_COLUMN_NAME'};
+        my $foreign_column = $fk_info->{'UK_COLUMN_NAME'};
+
+        $fk{$fk_id}{'class'} = $foreign_class;
+        $fk{$fk_id}{'key_columns'}{$local_column} = $foreign_column;
+
+        my $key_name =
+          $cm->auto_foreign_key_name($foreign_class, $fk_id, 
+                                     $fk{$fk_id}{'key_columns'},
+                                     \%used_names);
+
+        $used_names{$key_name}++  if(defined $key_name);
+
+        if(defined $key_name && length $key_name)
+        {
+          $fk{$fk_id}{'name'} = $key_name;
         }
 
         $total_fks++;
-        next FK_INFO;
       }
 
-      my $local_column   = $fk_info->{'FK_COLUMN_NAME'};
-      my $foreign_column = $fk_info->{'UK_COLUMN_NAME'};
+      my(%seen, %seen_name);
 
-      $fk{$fk_id}{'class'} = $foreign_class;
-      $fk{$fk_id}{'key_columns'}{$local_column} = $foreign_column;
-
-      my $key_name =
-        $cm->auto_foreign_key_name($foreign_class, $fk_id, 
-                                   $fk{$fk_id}{'key_columns'},
-                                   \%used_names);
-
-      $used_names{$key_name}++  if(defined $key_name);
-
-      if(defined $key_name && length $key_name)
+      foreach my $fk_info (@fk_info)
       {
-        $fk{$fk_id}{'name'} = $key_name;
+        next  if($seen{$fk_info->{'RDBO_FK_ID'}}++);
+        my $info = $fk{$fk_info->{'RDBO_FK_ID'}};
+        my $fk   = Rose::DB::Object::Metadata::ForeignKey->new(%$info);
+
+        next  unless(defined $fk->class);
+
+        unless(defined $fk->name)
+        {
+          $fk->name($self->foreign_key_name_generator->($self, $fk));
+        }
+
+        push(@foreign_keys, $fk);
       }
+    };
 
-      $total_fks++;
-    }
+    $error = $@;
+  }
 
-    my(%seen, %seen_name);
-
-    foreach my $fk_info (@fk_info)
-    {
-      next  if($seen{$fk_info->{'RDBO_FK_ID'}}++);
-      my $info = $fk{$fk_info->{'RDBO_FK_ID'}};
-      my $fk   = Rose::DB::Object::Metadata::ForeignKey->new(%$info);
-
-      next  unless(defined $fk->class);
-
-      unless(defined $fk->name)
-      {
-        $fk->name($self->foreign_key_name_generator->($self, $fk));
-      }
-
-      push(@foreign_keys, $fk);
-    }
-  };
-
-  if($@)
+  if($error)
   {
-    Carp::croak "Could not auto-generate foreign keys for class $class - $@";
+    Carp::croak "Could not auto-generate foreign keys for class $class - $error";
   }
 
   @foreign_keys = sort { lc $a->name cmp lc $b->name } @foreign_keys;

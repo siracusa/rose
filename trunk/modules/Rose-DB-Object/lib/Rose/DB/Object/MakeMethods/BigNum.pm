@@ -4,7 +4,7 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.771'; # move up in the file to make CPAN happy
+our $VERSION = '0.784'; # move up in the file to make CPAN happy
 
 require Math::BigInt;
 
@@ -231,12 +231,19 @@ sub
 EOF
     }
 
-    $Debug && warn "sub $name = ", $code;
-    $methods{$name} = eval $code;
+    my $error;
 
-    if($@)
+    TRY:
     {
-      Carp::croak "Error in generated code for method $name - $@\n",
+      local $@;
+      $Debug && warn "sub $name = ", $code;
+      $methods{$name} = eval $code;
+      $error = $@;
+    }
+
+    if($error)
+    {
+      Carp::croak "Error in generated code for method $name - $error\n",
                   "Code was: $code";
     }
   }
@@ -254,12 +261,19 @@ EOF
       $code = qq(sub { shift->{'$qkey'} });
     }
 
-    $Debug && warn "sub $name = ", $code;
-    $methods{$name} = eval $code;
+    my $error;
 
-    if($@)
+    TRY:
     {
-      Carp::croak "Error in generated code for method $name - $@\n",
+      local $@;
+      $Debug && warn "sub $name = ", $code;
+      $methods{$name} = eval $code;
+      $error = $@;
+    }
+
+    if($error)
+    {
+      Carp::croak "Error in generated code for method $name - $error\n",
                   "Code was: $code";
     }
   }
@@ -283,12 +297,19 @@ sub
 };
 EOF
 
-    $Debug && warn "sub $name = ", $code;
-    $methods{$name} = eval $code;
+    my $error;
 
-    if($@)
+    TRY:
     {
-      Carp::croak "Error in generated code for method $name - $@\n",
+      local $@;
+      $Debug && warn "sub $name = ", $code;
+      $methods{$name} = eval $code;
+      $error = $@;
+    }
+
+    if($error)
+    {
+      Carp::croak "Error in generated code for method $name - $error\n",
                   "Code was: $code";
     }
   }

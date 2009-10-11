@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Object;
 our @ISA = qw(Rose::DB::Object::Metadata::Object);
 
-our $VERSION = '0.776';
+our $VERSION = '0.784';
 
 our $Debug = 0;
 
@@ -490,6 +490,7 @@ sub auto_foreign_key
       no strict 'refs';
       unless(UNIVERSAL::isa($fk_class, 'Rose::DB::Object'))
       {
+        local $@;
         eval "require $fk_class";
         return  if($@ || !UNIVERSAL::isa($fk_class, 'Rose::DB::Object'));
       }
@@ -600,6 +601,7 @@ sub auto_relationship
         no strict 'refs';
         unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'))
         {
+          local $@;
           eval "require $f_class";
           return  if($@ || !UNIVERSAL::isa($f_class, 'Rose::DB::Object'));
         }
@@ -622,6 +624,7 @@ sub auto_relationship
         no strict 'refs';
         unless(UNIVERSAL::isa($f_class, 'Rose::DB::Object'))
         {
+          local $@;
           eval "require $f_class";
           return  if($@ || !UNIVERSAL::isa($f_class, 'Rose::DB::Object'));
         }
@@ -807,6 +810,7 @@ sub auto_relationship_many_to_many
         }
         else
         {
+          local $@;
           eval "require $class";
 
           unless($@)

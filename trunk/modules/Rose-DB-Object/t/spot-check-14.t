@@ -38,7 +38,7 @@ foreach my $db_type (qw(pg))
   #{
   #  print $class->meta->perl_class_definition if($class->can('meta'));
   #}
-  
+
   my $user_class    = $class_prefix . '::RdboUser';
   my $comment_class = $class_prefix . '::RdboComment';
 
@@ -118,7 +118,7 @@ END
     $dbh->do('DROP TABLE rdbo_comments');
     $dbh->do('DROP TABLE rdbo_users');
     $dbh->do('DROP TYPE my_type');
-    
+
     $dbh->disconnect;
   }
 }

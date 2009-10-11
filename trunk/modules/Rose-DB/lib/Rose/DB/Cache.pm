@@ -7,7 +7,7 @@ use base 'Rose::Object';
 use Scalar::Util qw(refaddr);
 use Rose::DB::Cache::Entry;
 
-our $VERSION = '0.751';
+our $VERSION = '0.755';
 
 our $Debug = 0;
 
@@ -247,9 +247,19 @@ sub prepare_db
         {
           $Debug && warn "$$ Disconnecting and undef-ing dbh ", $db->dbh, 
                          " created during apache startup from $db\n";
-          eval { $db->dbh->disconnect }; # will probably fail!
+
+          my $error;
+
+          TRY:
+          {
+            local $@;
+            eval { $db->dbh->disconnect }; # will probably fail!
+            $error = $@;
+          }
+
           warn "$$ Could not disconnect dbh created during apache startup: ", 
-               $db->dbh, " - $@"  if($@);
+               $db->dbh, " - $error"  if($error);
+
           $db->dbh(undef);
         }
 
@@ -283,24 +293,38 @@ sub prepare_db
         {
           $Debug && warn "$$ Disconnecting and undef-ing dbh ", $db->dbh, 
                          " created during apache startup from $db\n";
-          eval { $db->dbh->disconnect }; # will probably fail!
+
+          my $error;
+
+          TRY:
+          {
+            local $@;
+            eval { $db->dbh->disconnect }; # will probably fail!
+            $error = $@;
+          }
+
           warn "$$ Could not disconnect dbh created during apache startup: ", 
-               $db->dbh, " - $@"  if($@);
+               $db->dbh, " - $error"  if($error);
+
           $db->dbh(undef);
         }
 
         $entry->created_during_apache_startup(0);
       }
 
-      my $r;
+      my($r, $error);
 
-      eval { $r = Apache2::RequestUtil->request };
+      TRY:
+      {
+        local $@;
+        eval { $r = Apache2::RequestUtil->request };
+        $error = $@;
+      }
 
-      if($@)
+      if($error)
       {
         $Debug && warn "Couldn't get apache request (restart count is ", 
-                       Apache2::ServerUtil::restart_count(), ")\n";
-
+                       Apache2::ServerUtil::restart_count(), ") - $error\n";
         $entry->created_during_apache_startup(1); # tag for cleanup
         $entry->prepared(0);
 

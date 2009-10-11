@@ -2,12 +2,12 @@ package Rose::DB::Object::Metadata::Column::Pg::Bytea;
 
 use strict;
 
-eval { require DBD::Pg }; # ignore errors
+TRY: { local $@; eval { require DBD::Pg } } # ignore errors
 
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.742';
+our $VERSION = '0.784';
 
 sub type { 'bytea' }
 

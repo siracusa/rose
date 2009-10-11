@@ -17,7 +17,7 @@ use Rose::DB::Object::Metadata::Auto;
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.782';
+our $VERSION = '0.784';
 
 our $Debug = 0;
 
@@ -62,17 +62,22 @@ use Rose::Object::MakeMethods::Generic
 
 sub warn_on_missing_pk { shift->warn_on_missing_primary_key(@_) }
 
-# Get the best available clone method
-eval 
+CHOOSE_CLONE:
 {
-  require Scalar::Util::Clone;
-  *clone = \&Scalar::Util::Clone::clone;
-};
+  local $@;
 
-if($@)
-{
-  require Clone;
-  *clone = \&Clone::clone;
+  # Get the best available clone method
+  eval 
+  {
+    require Scalar::Util::Clone;
+    *clone = \&Scalar::Util::Clone::clone;
+  };
+
+  if($@)
+  {
+    require Clone;
+    *clone = \&Clone::clone;
+  }
 }
 
 sub init_with_relationships { 1 }
@@ -317,10 +322,17 @@ sub db_class
 
   unless(UNIVERSAL::isa($db_class, 'Rose::DB'))
   {
-    eval "require $db_class";
+    my $error;
+
+    TRY:
+    {
+      local $@;
+      eval "require $db_class";
+      $error = $@;
+    }
 
     no strict 'refs';
-    if(!$@ && @{"${db_class}::ISA"} && !UNIVERSAL::isa($db_class, 'Rose::DB'))
+    if(!$error && @{"${db_class}::ISA"} && !UNIVERSAL::isa($db_class, 'Rose::DB'))
     {
       croak "Not a Rose::DB-derived class: $db_class";
     }
@@ -708,14 +720,21 @@ sub make_classes
     {
       unless(UNIVERSAL::isa($db_class, 'Rose::DB'))
       {
-        eval "require $db_class";
+        my $error;
 
-        if($@)
+        TRY:
+        {
+          local $@;
+          eval "require $db_class";
+          $error = $@;
+        }
+
+        if($error)
         {
           # Failed to load existing module
-          unless($@ =~ /^Can't locate $db_class\.pm/)
+          unless($error =~ /^Can't locate $db_class\.pm/)
           {
-            croak "Could not load db class '$db_class' - $@";
+            croak "Could not load db class '$db_class' - $error";
           }
 
           # Make the class
@@ -837,8 +856,16 @@ sub make_classes
     no strict 'refs';
     unless(UNIVERSAL::isa($class, 'Rose::DB::Object') || @{"${class}::ISA"})
     {
-      eval "require $class";      
-      croak $@  if($@);
+      my $error;
+
+      TRY:
+      {
+        local $@;
+        eval "require $class";
+        $error = $@;
+      }
+
+      croak $error  if($error);
     }
   }
 
