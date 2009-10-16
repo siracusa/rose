@@ -18,7 +18,7 @@ our %EXPORT_TAGS =
   all => \@EXPORT_OK
 );
 
-our $VERSION = '0.532';
+our $VERSION = '0.533';
 
 our $TZ = 'floating';
 our $Debug = 0;
@@ -88,11 +88,18 @@ sub parse_date
   {
     if(@_ > 1)
     {
-      eval { $arg->set_time_zone($time_zone) };
+      my $error;
 
-      if($@)
+      TRY:
       {
-        $Error = $@;
+        local $@;
+        eval { $arg->set_time_zone($time_zone) };
+        $error = $@;
+      }
+
+      if($error)
+      {
+        $Error = $error;
         return undef;
       }
     }
@@ -374,21 +381,30 @@ sub _timelocal
     }
   }
 
-  eval
-  {
-    $date = DateTime->new(year   => $year,
-                          month  => $month,
-                          day    => $mday,
-                          hour   => $hours,
-                          minute => $mins,
-                          second => $secs,
-                          nanosecond => $fsecs,
-                          time_zone => $tz);
-  };
+  my $error;
 
-  if($@)
+  TRY:
   {
-    $Error = $@;
+    local $@;  
+
+    eval
+    {
+      $date = DateTime->new(year   => $year,
+                            month  => $month,
+                            day    => $mday,
+                            hour   => $hours,
+                            minute => $mins,
+                            second => $secs,
+                            nanosecond => $fsecs,
+                            time_zone => $tz);
+    };
+
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $Error = $error;
     warn $Error  if($Debug); # $ENV{'MOD_PERL'}
     return;
   }
