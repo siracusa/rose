@@ -4,7 +4,7 @@ use strict;
 
 use Carp;
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 use overload
 (
@@ -12,8 +12,14 @@ use overload
    fallback => 1,
 );
 
-eval { require Time::HiRes };
-our $Have_HiRes_Time = $@ ? 0 : 1;
+our $Have_HiRes_Time;
+
+TRY:
+{
+  local $@;
+  eval { require Time::HiRes };
+  $Have_HiRes_Time = $@ ? 0 : 1;
+}
 
 # Allow an hour value of 24
 our $Allow_Hour_24 = 0;
