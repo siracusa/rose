@@ -1,3 +1,8 @@
+0.755_01 (10.16.2009) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: Savepoints?
+    * TODO: SQL injection via foo() keywords?
+
 0.755 (10.16.2009) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug in Rose::DB::Oracle that caused the port to be omitted
