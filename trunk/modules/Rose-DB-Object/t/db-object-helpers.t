@@ -290,11 +290,11 @@ foreach my $db_type (qw(mysql pg informix sqlite))
   {
     $o = $class->new(id => 1)->load_or_save;
 
-	# Confirm stripping of "on-save" code references
-	$o->rose_db_object_test_other({ name => 'test' });
+    # Confirm stripping of "on-save" code references
+    $o->rose_db_object_test_other({ name => 'test' });
 
-	eval { $o->strip };
-	like($@, qr/Refusing to strip "on-save" actions from \w+ object without strip_on_save_ok parameter/, "strip 1 - $db_type");
+    eval { $o->strip };
+    like($@, qr/Refusing to strip "on-save" actions from \w+ object without strip_on_save_ok parameter/, "strip 1 - $db_type");
 
     my $frozen = Storable::freeze($o->strip(strip_on_save_ok => 1));
     my $thawed = Storable::thaw($frozen);
