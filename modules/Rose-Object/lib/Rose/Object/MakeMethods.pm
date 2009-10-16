@@ -4,7 +4,7 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.85';
+our $VERSION = '0.856';
 
 __PACKAGE__->allow_apparent_reload(1);
 
@@ -174,13 +174,20 @@ sub sub_identity
 
   my @id;
 
-  eval # if this fails, the identity is undefined
+  TRY:
   {
-    require B;
-    my $cv = B::svref_2object($code);
-    return  unless($cv->isa('B::CV'));
-    @id = ($cv->GV->STASH->NAME, $cv->GV->NAME);
-  };
+    local $@;
+
+	eval # if this fails, the identity is undefined
+	{
+	  require B;
+	  my $cv = B::svref_2object($code);
+	  return  unless($cv->isa('B::CV'));
+	  @id = ($cv->GV->STASH->NAME, $cv->GV->NAME);
+	};
+	
+	# Ignore errors
+  }
 
   return @id;
 }

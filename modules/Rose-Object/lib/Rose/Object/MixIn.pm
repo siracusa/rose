@@ -6,7 +6,7 @@ use Carp;
 
 our $Debug = 0;
 
-our $VERSION = '0.852';
+our $VERSION = '0.856';
 
 use Rose::Class::MakeMethods::Set
 (
@@ -97,12 +97,19 @@ sub import
     {
       foreach my $code (@$hooks)
       {
-        eval { $code->($class, $method, $target_class, $import_as) };
+        my $error;
+        
+        TRY:
+        {
+          local $@;
+          eval { $code->($class, $method, $target_class, $import_as) };
+          $error = $@;
+        }
 
-        if($@)
+        if($error)
         {
           croak "Could not import method '$import_as' from $class into ",
-                "$target_class - $@";
+                "$target_class - $error";
         }
       }
     }
