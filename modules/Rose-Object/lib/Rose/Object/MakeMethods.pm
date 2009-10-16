@@ -185,7 +185,7 @@ sub sub_identity
 	  return  unless($cv->isa('B::CV'));
 	  @id = ($cv->GV->STASH->NAME, $cv->GV->NAME);
 	};
-	
+
 	# Ignore errors
   }
 

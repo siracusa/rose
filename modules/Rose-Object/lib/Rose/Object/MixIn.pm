@@ -98,7 +98,7 @@ sub import
       foreach my $code (@$hooks)
       {
         my $error;
-        
+
         TRY:
         {
           local $@;
