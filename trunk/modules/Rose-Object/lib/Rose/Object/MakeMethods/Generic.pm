@@ -18,7 +18,7 @@ TRY:
   eval
   {
     require Class::XSAccessor;
-  
+
     unless($Class::XSAccessor::VERSION >= 0.14)
     {
       die "Class::XSAccessor $Class::XSAccessor::VERSION is too old";
