@@ -4,22 +4,29 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.855';
+our $VERSION = '0.856';
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
 
-eval
+our $Have_CXSA;
+
+TRY:
 {
-  require Class::XSAccessor;
+  local $@;
 
-  unless($Class::XSAccessor::VERSION >= 0.14)
+  eval
   {
-    die "Class::XSAccessor $Class::XSAccessor::VERSION is too old";
-  }
-};
+    require Class::XSAccessor;
+  
+    unless($Class::XSAccessor::VERSION >= 0.14)
+    {
+      die "Class::XSAccessor $Class::XSAccessor::VERSION is too old";
+    }
+  };
 
-our $Have_CXSA = $@ ? 0 : 1;
+  $Have_CXSA = $@ ? 0 : 1;
+}
 
 our $Debug = 0;
 
