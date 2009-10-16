@@ -60,7 +60,7 @@ CONVENTION_AND_DEFAULTS_TESTS:
   __PACKAGE__->meta->default_manager_base_class('My::RDBO::Managerxx');
 
   eval { local $SIG{'__DIE__'}; 
-  $DB::single = 1;
+
   __PACKAGE__->meta->make_manager_class };
 
   main::ok($@, 'make_manager_class exception 1');

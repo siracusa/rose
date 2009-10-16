@@ -10,16 +10,16 @@ sub refresh
 {
   no strict;
   no warnings 'redefine';
-  *Ima::DBI::_mk_db_closure = sub
+  *Ima::DBI::_mk_db_closure = sub 
   {
-	my($class, @connection) = @_;
-	my $dbh;
-    return sub
+    my ( $class, @connection ) = @_;
+    my $dbh;
+    return sub 
     {
-      unless($dbh && $dbh->FETCH('Active') && $dbh->ping)
+      unless ( $dbh && $dbh->FETCH('Active') && $dbh->ping )
       {
         my $db = Rose::DB->new;
-        $db->connect_option(RootClass => 'DBIx::ContextualFetch');
+        $db->connect_option( RootClass => 'DBIx::ContextualFetch' );
         $dbh = $db->retain_dbh;
       }
       return $dbh;
