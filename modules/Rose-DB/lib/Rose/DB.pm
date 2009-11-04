@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.755';
+our $VERSION = '0.755_03';
 
 our $Debug = 0;
 
@@ -939,6 +939,8 @@ sub init_dbh
   my($self) = shift;
 
   my $options = $self->connect_options;
+
+  $options->{'private_pid'} = $$;
 
   my $dsn = $self->dsn;
 
