@@ -3179,7 +3179,7 @@ Returns a reference to the connect options has in scalar context, or a list of n
 
 =item B<dbh [DBH]>
 
-Get or set the L<DBI> database handle connected to the current data source.  If the database handle does not exist or is not already connected, this method will do everything necessary to do so, including calling L<dbi_connect|/dbi_connect> to create a new L<DBI> database handle if none exists.
+Get or set the L<DBI> database handle connected to the current data source.  If the database handle does not exist, this method will call L<dbi_connect|/dbi_connect> to create one.
 
 Returns undef if the database handle could not be constructed and connected.  If there is no registered data source for the current C<type> and C<domain>, a fatal error will occur.
 
