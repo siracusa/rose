@@ -1,5 +1,6 @@
-0.755_01 (10.16.2009) - John Siracusa <siracusa@gmail.com>
+0.755_02 (11.03.2009) - John Siracusa <siracusa@gmail.com>
 
+    * TODO: private_pid tests
     * TODO: Savepoints?
     * TODO: SQL injection via foo() keywords?
 
