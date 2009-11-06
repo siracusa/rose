@@ -8,7 +8,7 @@ use Rose::HTML::Object::Errors qw(:string);
 use Rose::HTML::Form::Field::Input;
 our @ISA = qw(Rose::HTML::Form::Field::Input);
 
-our $VERSION = '0.550';
+our $VERSION = '0.606';
 
 __PACKAGE__->delete_valid_html_attrs(qw(ismap usemap alt src));
 
@@ -67,6 +67,8 @@ if(__PACKAGE__->localizer->auto_load_messages)
 {
   __PACKAGE__->localizer->load_all_messages;
 }
+
+use utf8; # The __DATA__ section contains UTF-8 text
 
 1;
 

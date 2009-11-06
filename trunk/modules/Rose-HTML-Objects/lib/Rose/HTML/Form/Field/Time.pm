@@ -7,7 +7,7 @@ use Rose::HTML::Object::Errors qw(:time);
 use Rose::HTML::Form::Field::Text;
 our @ISA = qw(Rose::HTML::Form::Field::Text);
 
-our $VERSION = '0.549';
+our $VERSION = '0.606';
 
 __PACKAGE__->add_required_html_attr(
 {
@@ -87,6 +87,8 @@ if(__PACKAGE__->localizer->auto_load_messages)
 {
   __PACKAGE__->localizer->load_all_messages;
 }
+
+use utf8; # The __DATA__ section contains UTF-8 text
 
 1;
 
