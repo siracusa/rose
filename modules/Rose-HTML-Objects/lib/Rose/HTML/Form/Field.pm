@@ -19,7 +19,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.605';
+our $VERSION = '0.606';
 
 #our $Debug = 0;
 
@@ -1096,6 +1096,8 @@ if(__PACKAGE__->localizer->auto_load_messages)
 {
   __PACKAGE__->localizer->load_all_messages;
 }
+
+use utf8; # The __DATA__ section contains UTF-8 text
 
 1;
 

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 42;
+use Test::More tests => 43;
 
 use FindBin qw($Bin);
 
@@ -182,3 +182,10 @@ is($o->error, 'Foo is a required field.', 'error label 1');
 $o->error_label('');
 $o->validate;
 is($o->error, 'This is a required field.', 'error label 2');
+
+$o = Rose::HTML::Form::Field->new(name => 'test', required => 1);
+$o->locale('bg');
+$o->validate;
+
+$error = $o->error;
+is(length($error), 25, 'localized error length');

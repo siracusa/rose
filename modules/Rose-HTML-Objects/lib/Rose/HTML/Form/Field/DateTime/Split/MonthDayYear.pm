@@ -9,7 +9,7 @@ use Rose::HTML::Object::Messages qw(:date);
 use Rose::HTML::Form::Field::DateTime::Split;
 our @ISA = qw(Rose::HTML::Form::Field::DateTime::Split);
 
-our $VERSION = '0.550';
+our $VERSION = '0.606';
 
 sub build_field
 {
@@ -130,6 +130,8 @@ if(__PACKAGE__->localizer->auto_load_messages)
 {
   __PACKAGE__->localizer->load_all_messages;
 }
+
+use utf8; # The __DATA__ section contains UTF-8 text
 
 1;
 

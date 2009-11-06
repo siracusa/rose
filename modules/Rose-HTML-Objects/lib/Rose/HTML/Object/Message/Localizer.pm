@@ -12,7 +12,7 @@ use Rose::HTML::Object::Messages();
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.600';
+our $VERSION = '0.606';
 
 our $Debug = 0;
 
@@ -966,6 +966,8 @@ sub load_messages_from_string
 
   return $self->load_messages_from_fh(%args);
 }
+
+use utf8; # The __END__ section contains UTF-8 text
 
 1;
 
