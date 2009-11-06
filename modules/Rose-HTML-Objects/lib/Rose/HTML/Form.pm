@@ -16,7 +16,7 @@ use Rose::HTML::Form::Field;
 use Rose::HTML::Form::Field::Collection;
 use Rose::HTML::Object::WithWrapAroundChildren;
 our @ISA = qw(Rose::HTML::Object::WithWrapAroundChildren
-              Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
+              Rose::HTML::Form::Field::Collection);
 
 require Rose::HTML::Form::Repeatable;
 
