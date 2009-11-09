@@ -2,7 +2,7 @@ package Rose::HTML::Form::Constants;
 
 use strict;
 
-our $VERSION = '0.50';
+our $VERSION = '0.606';
 
 require Exporter;
 our @ISA = qw(Exporter);

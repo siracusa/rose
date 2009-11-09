@@ -2,10 +2,9 @@ package Rose::HTML::Form::Field::File;
 
 use strict;
 
-use Rose::HTML::Form::Field::Text;
-our @ISA = qw(Rose::HTML::Form::Field::Text);
+use base 'Rose::HTML::Form::Field::Text';
 
-our $VERSION = '0.011';
+our $VERSION = '0.606';
 
 __PACKAGE__->required_html_attr_value(type => 'file');
 __PACKAGE__->delete_valid_html_attrs(qw(ismap usemap alt src));

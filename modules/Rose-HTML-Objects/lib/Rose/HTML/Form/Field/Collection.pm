@@ -7,17 +7,14 @@ use Scalar::Util qw(refaddr);
 
 use Rose::HTML::Form::Field::Hidden;
 
-use Rose::HTML::Form::Field;
-our @ISA = qw(Rose::HTML::Form::Field);
-
-#require Rose::HTML::Form::Field::Repeatable;
+use base 'Rose::HTML::Object';
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
 # Variables for use in regexes
 our $FF_SEPARATOR_RE = quotemeta FF_SEPARATOR;
 
-our $VERSION = '0.605';
+our $VERSION = '0.606';
 
 #
 # Object data
@@ -359,10 +356,6 @@ sub add_fields
       $self->field($field->local_name => $field);
       push(@added_fields, $field);
     }
-    #elsif(UNIVERSAL::isa($arg, 'Rose::HTML::Form::Field::Repeatable'))
-    #{
-    #  ...
-    #}
     else
     {
       my $field = shift;

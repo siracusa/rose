@@ -2,10 +2,9 @@ package Rose::HTML::Form::Field::Hidden;
 
 use strict;
 
-use Rose::HTML::Form::Field::Input;
-our @ISA = qw(Rose::HTML::Form::Field::Input);
+use base 'Rose::HTML::Form::Field::Input';
 
-our $VERSION = '0.54';
+our $VERSION = '0.606';
 
 __PACKAGE__->delete_valid_html_attrs(qw(disabled ismap usemap alt src tabindex
 checked maxlength onblur onchange onclick ondblclick onfocus onkeydown

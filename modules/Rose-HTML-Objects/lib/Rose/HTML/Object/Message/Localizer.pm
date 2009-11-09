@@ -9,8 +9,7 @@ use Scalar::Util();
 use Rose::HTML::Object::Errors();
 use Rose::HTML::Object::Messages();
 
-use Rose::Object;
-our @ISA = qw(Rose::Object);
+use base 'Rose::Object';
 
 our $VERSION = '0.606';
 

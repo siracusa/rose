@@ -2,10 +2,9 @@ package Rose::HTML::Form::Field::Checkbox;
 
 use strict;
 
-use Rose::HTML::Form::Field::OnOff::Checkable;
-our @ISA = qw(Rose::HTML::Form::Field::OnOff::Checkable);
+use base 'Rose::HTML::Form::Field::OnOff::Checkable';
 
-our $VERSION = '0.551';
+our $VERSION = '0.606';
 
 __PACKAGE__->delete_valid_html_attrs(qw(ismap usemap alt src));
 __PACKAGE__->required_html_attr_value(type => 'checkbox');

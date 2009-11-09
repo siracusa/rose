@@ -4,13 +4,12 @@ use strict;
 
 use Carp;
 
-use Rose::HTML::Form::Field::Checkbox;
+use base 'Rose::HTML::Form::Field::Group::OnOff';
 
 use Rose::HTML::Form::Field::Group;
-use Rose::HTML::Form::Field::Group::OnOff;
-our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
+use Rose::HTML::Form::Field::Checkbox;
 
-our $VERSION = '0.554';
+our $VERSION = '0.606';
 
 sub _item_class       { shift->object_type_class_loaded('checkbox') }
 sub _item_name        { 'checkbox' }

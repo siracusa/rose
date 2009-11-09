@@ -4,10 +4,9 @@ use strict;
 
 use Carp();
 
-use Rose::Object::MakeMethods;
-our @ISA = qw(Rose::Object::MakeMethods);
+use base 'Rose::Object::MakeMethods';
 
-our $VERSION = '0.54';
+our $VERSION = '0.606';
 
 sub localized_message
 {

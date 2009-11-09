@@ -12,11 +12,8 @@ use URI::Escape qw(uri_escape);
 use Rose::HTML::Util();
 use Rose::HTML::Object::Errors qw(:form);
 
-use Rose::HTML::Form::Field;
-use Rose::HTML::Form::Field::Collection;
-use Rose::HTML::Object::WithWrapAroundChildren;
-our @ISA = qw(Rose::HTML::Object::WithWrapAroundChildren
-              Rose::HTML::Form::Field::Collection);
+use base qw(Rose::HTML::Object::WithWrapAroundChildren
+            Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
 require Rose::HTML::Form::Repeatable;
 
@@ -2013,8 +2010,7 @@ Rose::HTML::Form - HTML form base class.
 
   package PersonForm;
 
-  use Rose::HTML::Form;
-  our @ISA = qw(Rose::HTML::Form);
+  use base 'Rose::HTML::Form';
 
   use Person;
 

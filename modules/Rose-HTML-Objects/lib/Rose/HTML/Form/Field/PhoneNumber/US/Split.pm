@@ -6,10 +6,8 @@ use Carp();
 
 use Rose::HTML::Form::Field::Text;
 
-use Rose::HTML::Form::Field::Compound;
-use Rose::HTML::Form::Field::PhoneNumber::US;
-our @ISA = qw(Rose::HTML::Form::Field::Compound
-              Rose::HTML::Form::Field::PhoneNumber::US);
+use base qw(Rose::HTML::Form::Field::Compound
+            Rose::HTML::Form::Field::PhoneNumber::US);
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::PhoneNumber::US->import_methods
@@ -24,7 +22,7 @@ Rose::HTML::Form::Field::Compound->import_methods
   'name',
 );
 
-our $VERSION = '0.50';
+our $VERSION = '0.606';
 
 sub build_field
 {

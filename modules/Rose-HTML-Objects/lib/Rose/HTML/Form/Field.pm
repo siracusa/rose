@@ -11,8 +11,7 @@ use Rose::HTML::Label;
 use Rose::HTML::Object::Errors qw(:field);
 use Rose::HTML::Object::Messages qw(:field);
 
-use Rose::HTML::Object;
-our @ISA = qw(Rose::HTML::Object);
+use base 'Rose::HTML::Object';
 
 use constant HTML_ERROR_SEP  => "<br>\n";
 use constant XHTML_ERROR_SEP => "<br />\n";
@@ -1152,8 +1151,7 @@ Rose::HTML::Form::Field - HTML form field base class.
 
     package MyField;
 
-    use Rose::HTML::Form::Field;
-    our @ISA = qw(Rose::HTML::Form::Field);
+    use base 'Rose::HTML::Form::Field';
     ...
 
     my $f = MyField->new(name => 'test', label => 'Test');

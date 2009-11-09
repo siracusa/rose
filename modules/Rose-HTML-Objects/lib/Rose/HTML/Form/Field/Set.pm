@@ -4,8 +4,7 @@ use strict;
 
 use Rose::HTML::Object::Errors qw(:set);
 
-use Rose::HTML::Form::Field::TextArea;
-our @ISA = qw(Rose::HTML::Form::Field::TextArea);
+use base 'Rose::HTML::Form::Field::TextArea';
 
 our $VERSION = '0.606';
 

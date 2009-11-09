@@ -7,10 +7,9 @@ use Carp;
 use Rose::HTML::Form::Field::RadioButton;
 
 use Rose::HTML::Form::Field::Group;
-use Rose::HTML::Form::Field::Group::OnOff;
-our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
+use base 'Rose::HTML::Form::Field::Group::OnOff';
 
-our $VERSION = '0.554';
+our $VERSION = '0.606';
 
 sub _item_class       { shift->object_type_class_loaded('radio button') }
 sub _item_name        { 'radio button' }

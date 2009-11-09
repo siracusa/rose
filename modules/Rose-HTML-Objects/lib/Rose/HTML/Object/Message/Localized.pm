@@ -5,8 +5,7 @@ use strict;
 use Carp;
 use Rose::HTML::Object::Message::Localizer;
 
-use Rose::HTML::Object::Message;
-our @ISA = qw(Rose::HTML::Object::Message);
+use base 'Rose::HTML::Object::Message';
 
 our $VERSION = '0.600';
 

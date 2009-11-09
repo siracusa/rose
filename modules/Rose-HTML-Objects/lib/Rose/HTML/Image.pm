@@ -4,12 +4,11 @@ use strict;
 
 use Image::Size;
 
-use Rose::HTML::Object;
-our @ISA = qw(Rose::HTML::Object);
+use base 'Rose::HTML::Object';
 
 our $DOC_ROOT;
 
-our $VERSION = '0.605';
+our $VERSION = '0.606';
 
 __PACKAGE__->add_required_html_attrs(
 {

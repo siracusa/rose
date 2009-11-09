@@ -5,10 +5,9 @@ use strict;
 use Carp;
 use Clone::PP();
 
-require Rose::HTML::Form  unless(@Rose::HTML::Form::ISA);
-our @ISA = qw(Rose::HTML::Form);
+use base 'Rose::HTML::Form';
 
-our $VERSION = '0.554';
+our $VERSION = '0.606';
 
 #
 # Class data

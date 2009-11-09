@@ -13,10 +13,9 @@ use Carp();
 use Scalar::Util();
 use Rose::HTML::Util();
 
-use Rose::HTML::Form::Field;
-our @ISA = qw(Rose::HTML::Form::Field);
+use base 'Rose::HTML::Form::Field';
 
-our $VERSION = '0.554';
+our $VERSION = '0.606';
 
 our $Debug = undef;
 

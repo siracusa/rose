@@ -2,10 +2,9 @@ package Rose::HTML::Form::Field::OnOff::Checkable;
 
 use strict;
 
-use Rose::HTML::Form::Field::OnOff;
-our @ISA = qw(Rose::HTML::Form::Field::OnOff);
+use base 'Rose::HTML::Form::Field::OnOff';
 
-our $VERSION = '0.554';
+our $VERSION = '0.606';
 
 __PACKAGE__->add_required_html_attrs(
 {

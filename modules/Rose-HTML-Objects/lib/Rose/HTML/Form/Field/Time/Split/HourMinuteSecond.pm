@@ -7,10 +7,9 @@ use Rose::HTML::Form::Field::Time::Minutes;
 use Rose::HTML::Form::Field::Time::Seconds;
 use Rose::HTML::Form::Field::PopUpMenu;
 
-use Rose::HTML::Form::Field::Time::Split;
-our @ISA = qw(Rose::HTML::Form::Field::Time::Split);
+use base 'Rose::HTML::Form::Field::Time::Split';
 
-our $VERSION = '0.550';
+our $VERSION = '0.606';
 
 sub build_field
 {

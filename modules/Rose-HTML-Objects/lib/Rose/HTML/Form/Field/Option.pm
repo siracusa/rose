@@ -5,12 +5,10 @@ use strict;
 use Rose::HTML::Util();
 use Rose::HTML::Text;
 
-use Rose::HTML::Form::Field::OnOff::Selectable;
-use Rose::HTML::Object::WithWrapAroundChildren;
-our @ISA = qw(Rose::HTML::Object::WithWrapAroundChildren
-              Rose::HTML::Form::Field::OnOff::Selectable);
+use base qw(Rose::HTML::Object::WithWrapAroundChildren
+            Rose::HTML::Form::Field::OnOff::Selectable);
 
-our $VERSION = '0.554';
+our $VERSION = '0.606';
 
 __PACKAGE__->add_valid_html_attrs
 (

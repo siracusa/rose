@@ -5,8 +5,7 @@ use strict;
 use Encode;
 use Rose::HTML::Object::Errors qw(:string);
 
-use Rose::HTML::Form::Field::Input;
-our @ISA = qw(Rose::HTML::Form::Field::Input);
+use base 'Rose::HTML::Form::Field::Input';
 
 our $VERSION = '0.606';
 

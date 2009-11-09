@@ -2,10 +2,9 @@ package Rose::HTML::Script;
 
 use strict;
 
-use Rose::HTML::Object;
-our @ISA = qw(Rose::HTML::Object);
+use base 'Rose::HTML::Object';
 
-our $VERSION = '0.554';
+our $VERSION = '0.606';
 
 use Rose::Class::MakeMethods::Generic
 (

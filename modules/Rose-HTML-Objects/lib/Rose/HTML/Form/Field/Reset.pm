@@ -2,8 +2,7 @@ package Rose::HTML::Form::Field::Reset;
 
 use strict;
 
-use Rose::HTML::Form::Field::Submit;
-our @ISA = qw(Rose::HTML::Form::Field::Submit);
+use base 'Rose::HTML::Form::Field::Submit';
 
 __PACKAGE__->required_html_attr_value(type => 'reset');
 

@@ -6,10 +6,9 @@ use Carp();
 
 use Rose::HTML::Object::Errors qw(:string);
 
-use Rose::HTML::Form::Field;
-our @ISA = qw(Rose::HTML::Form::Field);
+use base 'Rose::HTML::Form::Field';
 
-our $VERSION = '0.548';
+our $VERSION = '0.606';
 
 use Rose::Object::MakeMethods::Generic
 (

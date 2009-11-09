@@ -4,14 +4,14 @@ use strict;
 
 use Carp();
 
+use base 'Rose::HTML::Form::Field::Group::OnOff';
+
 use Rose::HTML::Form::Field::Group;
-use Rose::HTML::Form::Field::Group::OnOff;
-our @ISA = qw(Rose::HTML::Form::Field::Group::OnOff);
 
 require Rose::HTML::Form::Field::Option;
 require Rose::HTML::Form::Field::OptionGroup;
 
-our $VERSION = '0.551';
+our $VERSION = '0.606';
 
 sub _item_class       { shift->object_type_class_loaded('option') }
 sub _item_group_class { shift->object_type_class_loaded('option group') }

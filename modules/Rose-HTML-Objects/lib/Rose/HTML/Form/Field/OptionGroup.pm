@@ -3,6 +3,7 @@ package Rose::HTML::Form::Field::OptionGroup;
 use strict;
 
 use Rose::HTML::Form::Field::Option::Container;
+# XXX: Use runtime inheritance here to avoid race in circular dependency
 our @ISA = qw(Rose::HTML::Form::Field::Option::Container);
 
 use Rose::Object::MakeMethods::Generic
@@ -11,7 +12,7 @@ use Rose::Object::MakeMethods::Generic
   boolean => 'multiple',
 );
 
-our $VERSION = '0.554';
+our $VERSION = '0.606';
 
 __PACKAGE__->add_required_html_attrs(
 {

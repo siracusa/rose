@@ -10,8 +10,7 @@ use Rose::HTML::Object::Messages
 use Rose::HTML::Form::Field::DateTime::StartDate;
 use Rose::HTML::Form::Field::DateTime::EndDate;
 
-use Rose::HTML::Form::Field::Compound;
-our @ISA = qw(Rose::HTML::Form::Field::Compound);
+use base 'Rose::HTML::Form::Field::Compound';
 
 use Rose::Object::MakeMethods::Generic
 (
