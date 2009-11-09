@@ -2,10 +2,9 @@ package Rose::HTML::Link;
 
 use strict;
 
-use Rose::HTML::Object;
-our @ISA = qw(Rose::HTML::Object);
+use base 'Rose::HTML::Object';
 
-our $VERSION = '0.53';
+our $VERSION = '0.606';
 
 __PACKAGE__->add_valid_html_attrs
 (

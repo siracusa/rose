@@ -2,10 +2,9 @@ package Rose::HTML::Form::Field::Password;
 
 use strict;
 
-use Rose::HTML::Form::Field::Text;
-our @ISA = qw(Rose::HTML::Form::Field::Text);
+use base 'Rose::HTML::Form::Field::Text';
 
-our $VERSION = '0.011';
+our $VERSION = '0.606';
 
 __PACKAGE__->add_required_html_attrs(
 {

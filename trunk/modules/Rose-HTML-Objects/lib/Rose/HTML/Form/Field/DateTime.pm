@@ -7,8 +7,7 @@ use Rose::HTML::Object::Errors qw(:field :date);
 use Rose::DateTime::Util();
 use Rose::DateTime::Parser;
 
-use Rose::HTML::Form::Field::Text;
-our @ISA = qw(Rose::HTML::Form::Field::Text);
+use base 'Rose::HTML::Form::Field::Text';
 
 our $VERSION = '0.606';
 

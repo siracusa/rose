@@ -7,8 +7,7 @@ use Rose::DateTime::Util();
 use Rose::HTML::Form::Field::DateTime::Split::MonthDayYear;
 use Rose::HTML::Form::Field::Time::Split::HourMinuteSecond;
 
-use Rose::HTML::Form::Field::DateTime::Split;
-our @ISA = qw(Rose::HTML::Form::Field::DateTime::Split);
+use base 'Rose::HTML::Form::Field::DateTime::Split';
 
 our $VERSION = '0.550';
 

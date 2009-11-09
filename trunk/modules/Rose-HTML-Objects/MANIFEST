@@ -127,6 +127,7 @@ t/link.t
 t/localizer-auto-load-messages.t
 t/logo.png
 t/msgs.txt
+t/mro-c3.t
 t/object-l10n.t
 t/object.t
 t/pod.t

@@ -4,8 +4,7 @@ use strict;
 
 use Carp();
 
-use Rose::HTML::Form::Field::Input;
-our @ISA = qw(Rose::HTML::Form::Field::Input);
+use base 'Rose::HTML::Form::Field::Input';
 
 use Rose::HTML::Object::MakeMethods::Localization
 (
@@ -21,7 +20,7 @@ __PACKAGE__->add_required_html_attrs(
   name  => '',
 });
 
-our $VERSION = '0.554';
+our $VERSION = '0.606';
 
 sub is_button { 1 }
 sub is_empty { 1 }

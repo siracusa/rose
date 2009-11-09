@@ -4,10 +4,9 @@ use strict;
 
 use Carp();
 
-use Rose::HTML::Form::Field::Option::Container;
-our @ISA = qw(Rose::HTML::Form::Field::Option::Container);
+use base 'Rose::HTML::Form::Field::Option::Container';
 
-our $VERSION = '0.554';
+our $VERSION = '0.606';
 
 __PACKAGE__->add_required_html_attrs(
 {

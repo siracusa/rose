@@ -7,9 +7,7 @@ use Carp();
 use Rose::HTML::Object::Errors qw(:field);
 use Rose::HTML::Object::Messages qw(:field);
 
-use Rose::HTML::Form::Field;
-use Rose::HTML::Form::Field::Collection;
-our @ISA = qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
+use base qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
@@ -380,11 +378,8 @@ Rose::HTML::Form::Field::Compound - Base class for field objects that contain ot
 
     package MyFullNameField;
 
-    use Rose::HTML::Form::Field::Text;    
-    use Rose::HTML::Form::Field::Compound;
-
-    our @ISA = qw(Rose::HTML::Form::Field::Compound
-                  Rose::HTML::Form::Field::Text);
+    use base qw(Rose::HTML::Form::Field::Compound
+                Rose::HTML::Form::Field::Text);
 
     sub build_field
     {

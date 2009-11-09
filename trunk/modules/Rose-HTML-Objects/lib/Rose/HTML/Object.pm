@@ -10,7 +10,7 @@ use Scalar::Util();
 use Rose::HTML::Util();
 use Rose::HTML::Object::Message::Localizer;
 
-our $VERSION = '0.605';
+our $VERSION = '0.606';
 
 our $Debug = undef;
 
@@ -928,8 +928,7 @@ sub import
 # 
 #     package MyTag;
 # 
-#     use SomeTag;
-#     our @ISA = qw(SomeTag);
+#     use base 'SomeTag';
 # 
 #     use MyOtherTag;
 # 
@@ -1077,8 +1076,7 @@ Rose::HTML::Object - HTML object base class.
 
   package MyTag;
 
-  use Rose::HTML::Object;
-  our @ISA = qw(Rose::HTML::Object);
+  use base 'Rose::HTML::Object';
 
   __PACKAGE__->add_valid_html_attrs
   (

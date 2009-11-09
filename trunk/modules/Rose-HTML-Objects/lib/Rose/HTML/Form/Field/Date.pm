@@ -2,10 +2,9 @@ package Rose::HTML::Form::Field::Date;
 
 use strict;
 
-use Rose::HTML::Form::Field::DateTime;
-our @ISA = qw(Rose::HTML::Form::Field::DateTime);
+use base 'Rose::HTML::Form::Field::DateTime';
 
-our $VERSION = '0.50';
+our $VERSION = '0.606';
 
 sub inflate_value
 {

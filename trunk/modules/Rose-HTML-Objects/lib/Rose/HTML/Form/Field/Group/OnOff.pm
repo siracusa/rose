@@ -6,10 +6,9 @@ use Carp();
 
 use Rose::HTML::Util();
 
-use Rose::HTML::Form::Field::Group;
-our @ISA = qw(Rose::HTML::Form::Field::Group);
+use base 'Rose::HTML::Form::Field::Group';
 
-our $VERSION = '0.547';
+our $VERSION = '0.606';
 
 our $Debug = undef;
 

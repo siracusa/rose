@@ -2,12 +2,11 @@ package Rose::HTML::Form::Field::OnOff;
 
 use strict;
 
-use Rose::HTML::Form::Field::Input;
-our @ISA = qw(Rose::HTML::Form::Field::Input);
+use base 'Rose::HTML::Form::Field::Input';
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.600';
+our $VERSION = '0.606';
 
 use Rose::Object::MakeMethods::Generic
 (

@@ -8,10 +8,9 @@ use Scalar::Util();
 
 use Rose::HTML::Object::Messages qw(CUSTOM_MESSAGE);
 
-use Rose::Object;
-our @ISA = qw(Rose::Object);
+use base 'Rose::Object';
 
-our $VERSION = '0.600';
+our $VERSION = '0.606';
 
 #our $Debug = 0;
 

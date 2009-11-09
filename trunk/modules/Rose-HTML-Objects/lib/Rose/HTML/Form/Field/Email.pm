@@ -6,8 +6,7 @@ use Email::Valid;
 
 use Rose::HTML::Object::Errors qw(:email);
 
-use Rose::HTML::Form::Field::Text;
-our @ISA = qw(Rose::HTML::Form::Field::Text);
+use base 'Rose::HTML::Form::Field::Text';
 
 our $VERSION = '0.606';
 

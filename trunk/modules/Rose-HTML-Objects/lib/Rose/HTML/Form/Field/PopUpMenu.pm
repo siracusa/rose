@@ -2,10 +2,9 @@ package Rose::HTML::Form::Field::PopUpMenu;
 
 use strict;
 
-use Rose::HTML::Form::Field::SelectBox;
-our @ISA = qw(Rose::HTML::Form::Field::SelectBox);
+use base 'Rose::HTML::Form::Field::SelectBox';
 
-our $VERSION = '0.554';
+our $VERSION = '0.606';
 
 __PACKAGE__->required_html_attr_value(size => 1);
 __PACKAGE__->delete_valid_html_attr('multiple');

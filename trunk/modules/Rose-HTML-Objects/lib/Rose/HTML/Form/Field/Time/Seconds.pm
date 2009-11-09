@@ -5,8 +5,7 @@ use strict;
 use Rose::HTML::Object::Errors qw(:time);
 use Rose::HTML::Object::Messages qw(:time);
 
-use Rose::HTML::Form::Field::Text;
-our @ISA = qw(Rose::HTML::Form::Field::Text);
+use base 'Rose::HTML::Form::Field::Text';
 
 our $VERSION = '0.606';
 

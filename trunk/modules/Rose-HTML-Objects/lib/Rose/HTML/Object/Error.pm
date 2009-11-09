@@ -6,12 +6,11 @@ use Carp;
 use Clone::PP();
 use Scalar::Util();
 
-use Rose::Object;
-our @ISA = qw(Rose::Object);
+use base 'Rose::Object';
 
 use Rose::HTML::Object::Errors qw(CUSTOM_ERROR);
 
-our $VERSION = '0.600';
+our $VERSION = '0.606';
 
 #our $Debug = 0;
 

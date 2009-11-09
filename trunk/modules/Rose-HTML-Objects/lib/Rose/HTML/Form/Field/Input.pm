@@ -2,10 +2,9 @@ package Rose::HTML::Form::Field::Input;
 
 use strict;
 
-use Rose::HTML::Form::Field;
-our @ISA = qw(Rose::HTML::Form::Field);
+use base 'Rose::HTML::Form::Field';
 
-our $VERSION = '0.554';
+our $VERSION = '0.606';
 
 __PACKAGE__->add_valid_html_attrs
 (
