@@ -815,18 +815,18 @@ SKIP: foreach my $db_type (qw(sqlite))
   $o = MySQLiteObject->new(name => 'John');
   $o->load or die $o->error;
 
-  $loaded = $MySQLiteObject::Objects_By_Key_Loaded{'name'}{'John'};
+  $loaded = $MySQLiteObject::Objects_By_Key_Loaded{'namex'}{'John'};
 
-  is($MySQLiteObject::Objects_By_Key_Loaded{'name'}{'John'}, $loaded, "cache_expires_in uk 1 - $db_type");
+  is($MySQLiteObject::Objects_By_Key_Loaded{'namex'}{'John'}, $loaded, "cache_expires_in uk 1 - $db_type");
   $o->load or die $o->error;
-  is($MySQLiteObject::Objects_By_Key_Loaded{'name'}{'John'}, $loaded, "cache_expires_in uk 2 - $db_type");
+  is($MySQLiteObject::Objects_By_Key_Loaded{'namex'}{'John'}, $loaded, "cache_expires_in uk 2 - $db_type");
   sleep(5);
   $o->load or die $o->error;
-  ok($MySQLiteObject::Objects_By_Key_Loaded{'name'}{'John'} != $loaded, "cache_expires_in uk 3 - $db_type");
+  ok($MySQLiteObject::Objects_By_Key_Loaded{'namex'}{'John'} != $loaded, "cache_expires_in uk 3 - $db_type");
 
   MySQLiteObject->remember_all;
 
-  $loaded = $MySQLiteObject::Objects_By_Key_Loaded{'name'}{'John'};
+  $loaded = $MySQLiteObject::Objects_By_Key_Loaded{'namex'}{'John'};
 
   ok($loaded && $loaded ne $o, "remember_all - $db_type");
 }
@@ -1144,18 +1144,18 @@ EOF
 CREATE TABLE rose_db_object_test
 (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,
-  name           VARCHAR(32) NOT NULL,
+  namex          VARCHAR(32) NOT NULL,
   flag           BOOLEAN NOT NULL,
   flag2          BOOLEAN,
   status         VARCHAR(32) DEFAULT 'active',
   bits           VARCHAR(5) DEFAULT '00101' NOT NULL,
   nums           VARCHAR(255),
-  start          DATE,
+  startx         DATE,
   save           INT,
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
-  UNIQUE(name)
+  UNIQUE(namex)
 )
 EOF
 
@@ -1173,13 +1173,13 @@ EOF
 
     MySQLiteObject->meta->columns
     (
-      'name',
+      namex    => { alias => 'name' },
       id       => { primary_key => 1 },
       flag     => { type => 'boolean', default => 1 },
       flag2    => { type => 'boolean' },
       status   => { default => 'active' },
-      start    => { type => 'date', default => '12/24/1980' },
-      save     => { type => 'scalar' },
+      startx   => { type => 'date', default => '12/24/1980', alias => 'start' },
+      'save',
       nums     => { type => 'array' },
       bits     => { type => 'bitfield', bits => 5, default => 101 },
       last_modified => { type => 'timestamp' },
@@ -1189,7 +1189,7 @@ EOF
     eval { MySQLiteObject->meta->initialize };
     Test::More::ok($@, 'meta->initialize() reserved method');
 
-    MySQLiteObject->meta->add_unique_key('name');
+    MySQLiteObject->meta->add_unique_key('namex');
 
     MySQLiteObject->meta->alias_column(save => 'save_col');
     MySQLiteObject->meta->initialize(preserve_existing => 1);

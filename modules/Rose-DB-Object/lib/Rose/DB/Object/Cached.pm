@@ -9,7 +9,7 @@ our @ISA = qw(Rose::DB::Object);
 
 use Rose::DB::Object::Constants qw(STATE_IN_DB);
 
-our $VERSION = '0.7663';
+our $VERSION = '0.785';
 
 our $Debug = 0;
 
@@ -26,7 +26,8 @@ sub remember
   my($self) = shift;
 
   my $class = ref $self;
-  my $pk = join(PK_SEP, grep { defined } map { $self->$_() } $self->meta->primary_key_column_names);
+  my $meta  = $self->meta;
+  my $pk = join(PK_SEP, grep { defined } map { $self->$_() } $meta->primary_key_column_accessor_names);
 
   no strict 'refs';
 
@@ -40,12 +41,14 @@ sub remember
     ${"${class}::Objects_By_Id_Loaded"}{$pk} = $loaded;
   }
 
+  my $accessor = $meta->column_accessor_method_names_hash;
+
   foreach my $cols ($self->meta->unique_keys_column_names)
   {
     no warnings;
     my $key_name  = join(UK_SEP, @$cols);
     my $key_value = join(UK_SEP, grep { defined($_) ? $_ : UNDEF } 
-                         map { $self->$_() } @$cols);
+                         map { my $m = $accessor->{$_}; $self->$m() } @$cols);
 
     ${"${class}::Objects_By_Key"}{$key_name}{$key_value} = $self;
     ${"${class}::Objects_Keys"}{$pk}{$key_name} = $key_value;
@@ -119,7 +122,7 @@ sub load
 
   unless(delete $args{'refresh'})
   {
-    my $pk = join(PK_SEP, grep { defined } map { $_[0]->$_() } $_[0]->meta->primary_key_column_names);
+    my $pk = join(PK_SEP, grep { defined } map { $_[0]->$_() } $_[0]->meta->primary_key_column_accessor_names);
 
     my $object = __xrdbopriv_get_object($_[0], $pk);
 
@@ -131,12 +134,15 @@ sub load
     }
     elsif(!(defined $object && $object == CACHE_EXPIRED))
     {
-      foreach my $cols ($_[0]->meta->unique_keys_column_names)
+      my $meta = $_[0]->meta;
+      my $accessor = $meta->column_accessor_method_names_hash;
+
+      foreach my $cols ($meta->unique_keys_column_names)
       {
         no warnings;
         my $key_name  = join(UK_SEP, @$cols);
         my $key_value = join(UK_SEP, grep { defined($_) ? $_ : UNDEF } 
-                             map { $_[0]->$_() } @$cols);
+                             map { my $m = $accessor->{$_}; $_[0]->$m() } @$cols);
 
         if(my $object = __xrdbopriv_get_object($_[0], $key_name, $key_value))
         {
@@ -191,7 +197,7 @@ sub forget
   my($self) = shift;
 
   my $class = ref $self;
-  my $pk = join(PK_SEP, grep { defined } map { $self->$_() } $self->meta->primary_key_column_names);
+  my $pk = join(PK_SEP, grep { defined } map { $self->$_() } $self->meta->primary_key_column_accessor_names);
 
   no strict 'refs';
   delete ${"${class}::Objects_By_Id"}{$pk};
@@ -214,7 +220,7 @@ sub remember_by_primary_key
   my($self) = shift;
 
   my $class = ref $self;
-  my $pk = join(PK_SEP, grep { defined } map { $self->$_() } $self->meta->primary_key_column_names);
+  my $pk = join(PK_SEP, grep { defined } map { $self->$_() } $self->meta->primary_key_column_accessor_names);
 
   no strict 'refs';
   ${"${class}::Objects_By_Id"}{$pk} = $self;
