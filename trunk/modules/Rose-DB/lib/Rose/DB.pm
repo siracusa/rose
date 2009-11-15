@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.755_03';
+our $VERSION = '0.755_04';
 
 our $Debug = 0;
 
@@ -1465,6 +1465,9 @@ sub max_timestamp  { '00000000000000' }
 sub last_insertid_from_sth { $_[1]->{$_[0]->insertid_param} }
 sub generate_primary_key_values       { (undef) x ($_[1] || 1) }
 sub generate_primary_key_placeholders { (undef) x ($_[1] || 1) }
+
+sub max_column_name_length { 255 }
+sub max_column_alias_length { 255 }
 
 # Boolean formatting and parsing
 

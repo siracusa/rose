@@ -98,6 +98,9 @@ sub init_dbh
   return $self->Rose::DB::init_dbh(@_);
 }
 
+sub max_column_name_length { 64 }
+sub max_column_alias_length { 255 }
+
 sub quote_column_name 
 {
   my $name = $_[1];
