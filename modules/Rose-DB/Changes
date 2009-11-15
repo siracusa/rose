@@ -1,5 +1,6 @@
-0.755_02 (11.03.2009) - John Siracusa <siracusa@gmail.com>
+0.755_03 (11.14.2009) - John Siracusa <siracusa@gmail.com>
 
+    * Support for Rose::DB::Object 0.785.
     * TODO: private_pid tests
     * TODO: Savepoints?
     * TODO: SQL injection via foo() keywords?

@@ -8,7 +8,7 @@ use SQL::ReservedWords::PostgreSQL();
 
 use Rose::DB;
 
-our $VERSION = '0.755';
+our $VERSION = '0.785';
 
 our $Debug = 0;
 
@@ -72,6 +72,9 @@ sub supports_select_from_subselect        { 1 }
 sub pg_enable_utf8 { shift->dbh_attribute_boolean('pg_enable_utf8', @_) }
 
 sub supports_schema { 1 }
+
+sub max_column_name_length { 63 }
+sub max_column_alias_length { 63 }
 
 sub last_insertid_from_sth
 {

@@ -8,7 +8,7 @@ use Rose::DB;
 
 our $Debug = 0;
 
-our $VERSION  = '0.755'; 
+our $VERSION  = '0.756'; 
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -211,6 +211,9 @@ sub quote_identifier_for_sequence
 }
 
 sub supports_schema { 1 }
+
+sub max_column_name_length { 30 }
+sub max_column_alias_length { 30 }
 
 sub primary_key_column_names
 {
