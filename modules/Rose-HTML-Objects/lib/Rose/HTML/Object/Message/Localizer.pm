@@ -685,10 +685,11 @@ sub load_localized_message
       $Data_Pos{$from_class} = tell($fh);
     }
 
-    my $text = $self->load_messages_from_fh(fh       => $fh, 
-                                            locales  => $locale,
-                                            variants => $variant,
-                                            names    => $name);
+    my $text = $self->load_messages_from_fh(fh         => $fh, 
+                                            locales    => $locale,
+                                            variants   => $variant,
+                                            names      => $name,
+                                            force_utf8 => 1);
     return $text  if(defined $text);
   }
 
@@ -795,7 +796,7 @@ sub load_all_messages
     my $locales = $class->auto_load_locales;
 
     $Debug && warn "$class - Loading messages from DATA section of $from_class\n";
-    $class->load_messages_from_fh(fh => $fh, locales => $locales);
+    $class->load_messages_from_fh(fh => $fh, locales => $locales, force_utf8 => 1);
   }
 }
 
@@ -827,6 +828,8 @@ sub load_messages_from_fh
   my($self, %args) = @_;
 
   my($fh, $locales, $variants, $msg_names) = @args{qw(fh locales variants names)};
+
+  binmode($fh, ':utf8')  if($args{'force_utf8'});
 
   if(ref $locales eq 'ARRAY')
   {
@@ -892,6 +895,12 @@ sub load_messages_from_fh
           s/\A(\s*\n)+//;
           s/(\s*\n)+\z//;
         }
+
+		#if($args{'force_utf8'} && !utf8::is_utf8($text))
+		#{
+		#  require Encode;
+		#  Encode::decode("UTF-8", $text);
+		#}
 
         $self->set_localized_message_text(name    => $in_msg,
                                           locale  => $in_locale,

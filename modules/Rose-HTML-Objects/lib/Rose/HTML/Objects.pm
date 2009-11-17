@@ -7,7 +7,7 @@ use File::Spec();
 use File::Path();
 use File::Basename();
 
-our $VERSION = '0.606';
+our $VERSION = '0.606_01';
 
 our $Debug = 0;
 
