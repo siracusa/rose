@@ -899,7 +899,7 @@ sub load_messages_from_fh
         #if($args{'force_utf8'} && !utf8::is_utf8($text))
         #{
         #  require Encode;
-        #  Encode::decode("UTF-8", $text);
+        #  $text = Encode::decode('UTF-8', $text);
         #}
 
         $self->set_localized_message_text(name    => $in_msg,
@@ -939,7 +939,7 @@ sub load_messages_from_fh
         #if($args{'force_utf8'} && !utf8::is_utf8($text))
         #{
         #  require Encode;
-        #  Encode::decode("UTF-8", $text);
+        #  $text = Encode::decode('UTF-8', $text);
         #}
 
         $self->set_localized_message_text(name    => $name,
