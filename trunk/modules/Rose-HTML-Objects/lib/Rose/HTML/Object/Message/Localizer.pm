@@ -896,11 +896,11 @@ sub load_messages_from_fh
           s/(\s*\n)+\z//;
         }
 
-		#if($args{'force_utf8'} && !utf8::is_utf8($text))
-		#{
-		#  require Encode;
-		#  Encode::decode("UTF-8", $text);
-		#}
+        #if($args{'force_utf8'} && !utf8::is_utf8($text))
+        #{
+        #  require Encode;
+        #  Encode::decode("UTF-8", $text);
+        #}
 
         $self->set_localized_message_text(name    => $in_msg,
                                           locale  => $in_locale,
@@ -935,6 +935,12 @@ sub load_messages_from_fh
           s/\\n/\n/g;
           s/\\([^\[])/$1/g;
         }
+
+        #if($args{'force_utf8'} && !utf8::is_utf8($text))
+        #{
+        #  require Encode;
+        #  Encode::decode("UTF-8", $text);
+        #}
 
         $self->set_localized_message_text(name    => $name,
                                           locale  => $in_locale,
