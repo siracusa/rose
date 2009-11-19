@@ -188,4 +188,9 @@ $o->locale('bg');
 $o->validate;
 
 $error = $o->error;
-is(length($error), 25, 'localized error length');
+# XXX: This fails for mysterious reasons in some installations of perl
+#is(length($error), 25, 'localized error length');
+
+is(length("$error"), 25, 'localized error length');
+
+#is(length($error->message->as_string), 25, 'localized error length');
