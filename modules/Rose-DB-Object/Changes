@@ -1,7 +1,11 @@
-0.784_01 (11.14.2009) - John Siracusa <siracusa@gmail.com>
+0.784_02 (11.20.2009) - John Siracusa <siracusa@gmail.com>
 
     * Fixed Rose::DB::Object::Cached to correctly honor alternate column
       accessor/mutator method names.  (Reported by Kevin McGrath)
+    * Stopped the default auto-init handler from asking the convention
+      manager to name foreign keys that have only partially populated
+      column lists, causing it to burn through the "good" foreign key
+      names.  (Patch by Douglas Wilson)
     * TODO: SELECT FOR UPDATE
     * TODO: Update docs for has_loaded_related() and/or make a better
       solution to avoid re-fetching nonexistent objects after Manager

@@ -393,6 +393,13 @@ sub auto_generate_foreign_keys
                           $fk_info->{'FK_TABLE_NAME'}  eq $table);
         }
 
+        my $local_column   = $fk_info->{'FK_COLUMN_NAME'};
+        my $foreign_column = $fk_info->{'UK_COLUMN_NAME'};
+
+        my $fk_id = $fk_info->{'RDBO_FK_ID'} = $fk_info->{'FK_NAME'} || $fk_info->{'UK_NAME'};
+
+        $fk{$fk_id}{'key_columns'}{$local_column} = $foreign_column;
+
         push(@fk_info, $fk_info);
       }
 
@@ -406,9 +413,13 @@ sub auto_generate_foreign_keys
 
       my $cm = $self->convention_manager;
 
+      my %seen_fk_id;
+
       FK_INFO: foreach my $fk_info (@fk_info)
       {
-        my $fk_id = $fk_info->{'RDBO_FK_ID'} = $fk_info->{'FK_NAME'} || $fk_info->{'UK_NAME'};
+        my $fk_id = $fk_info->{'RDBO_FK_ID'};
+
+        next  if($seen_fk_id{$fk_id}++);
 
         my $foreign_class = 
           $self->class_for(catalog => $fk_info->{'UK_TABLE_CAT'},
@@ -469,11 +480,7 @@ sub auto_generate_foreign_keys
           next FK_INFO;
         }
 
-        my $local_column   = $fk_info->{'FK_COLUMN_NAME'};
-        my $foreign_column = $fk_info->{'UK_COLUMN_NAME'};
-
         $fk{$fk_id}{'class'} = $foreign_class;
-        $fk{$fk_id}{'key_columns'}{$local_column} = $foreign_column;
 
         my $key_name =
           $cm->auto_foreign_key_name($foreign_class, $fk_id, 
