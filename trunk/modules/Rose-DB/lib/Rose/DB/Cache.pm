@@ -511,7 +511,7 @@ Get or set a boolean value that determines whether or not to cache database obje
 
 L<DBI> database handles created in the parent apache process cannot be used in child apache processes.  Furthermore, in the case of at least L<one|DBD::Informix> one L<DBI driver class|DBI::DBD>, you must I<also> ensure that any database handles created in the apache parent process during server startup are properly L<disconnect()ed|DBI/disconnect> I<before> you fork off the first apache child.  Failure to do so may cause segmentation faults(!) in child apache processes.
 
-The upshot is that if L<use_cache_during_apache_startup|/use_cache_during_apache_startup> is set to true, you B<MUST> be sure to call L<prepare_for_apache_fork|/prepare_for_apache_fork> at the I<very end> of the apache startup process (i.e., once all other Perl modules have been loaded and all other Perl code has run).  This is usually done by placing a call at the very bottom of the traditional C<startup.pl> file.  Assuming C<My::DB> is your L<Rose::DB|Rose::DB>-derived class:
+The upshot is that if L<use_cache_during_apache_startup|/use_cache_during_apache_startup> is set to true, you should call L<prepare_for_apache_fork|/prepare_for_apache_fork> at the very end of the apache startup process (i.e., once all other Perl modules have been loaded and all other Perl code has run).  This is usually done by placing a call at the bottom of the traditional C<startup.pl> file.  Assuming C<My::DB> is your L<Rose::DB|Rose::DB>-derived class:
 
     My::DB->db_cache->prepare_for_apache_fork();
 
