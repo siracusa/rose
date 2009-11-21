@@ -10,7 +10,7 @@ opendir(my $dir, '.') or die "Could not opendir(.) - $!";
 
 while(my $file = readdir($dir))
 {
-  next  if($file !~ /\.t$/ || $file =~ /subclass|warning|pod|storable|pk-columns|no-registry|setup|db_cache/);
+  next  if($file !~ /\.t$/ || $file =~ /fork-|subclass|warning|pod|storable|pk-columns|no-registry|setup|db_cache/);
 
   my $new_file = "subclass-$file";
 

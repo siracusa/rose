@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.755_04';
+our $VERSION = '0.755_05';
 
 our $Debug = 0;
 
@@ -789,7 +789,26 @@ sub dbh
 {
   my($self) = shift;
 
-  return $self->{'dbh'} || $self->init_dbh  unless(@_);
+  unless(@_)
+  {
+    if(my $dbh = $self->{'dbh'})
+    {
+      # If this db connection wasn't created in another process or thread, return it
+      if((!$INC{'threads.pm'} || $dbh->{'private_tid'} == threads->tid) &&
+         $dbh->{'private_pid'} == $$)
+      {
+        return $dbh;
+      }
+
+      # This $dbh wasn't created here, so disable destroy actions,
+      # undef it, and create a new one by falling through to the
+      # init_dbh() call below.
+      $dbh->{'InactiveDestroy'} = 1;
+      $self->{'dbh'} = undef;
+    }
+
+    return $self->init_dbh;
+  }
 
   unless(defined($_[0]))
   {
@@ -941,26 +960,27 @@ sub init_dbh
   my $options = $self->connect_options;
 
   $options->{'private_pid'} = $$;
+  $options->{'private_tid'} = threads->tid  if($INC{'threads.pm'});
 
   my $dsn = $self->dsn;
 
   $self->{'error'} = undef;
   $self->{'database_version'} = undef;
+  $self->{'_dbh_refcount'} = 0;
+  $self->{'_dbh_has_foreign_owner'} = undef;
 
   my $dbh = $self->dbi_connect($dsn, $self->username, $self->password, $options);
 
   unless($dbh)
   {
     $self->error("Could not connect to database: $DBI::errstr");
-    return 0;
+    return undef;
   }
-
-  $self->{'_dbh_refcount'}++;
 
   if($dbh->{'private_rose_db_inited'})
   {
     # Someone else owns this dbh
-    $self->{'_dbh_has_foreign_owner'}++;
+    $self->{'_dbh_has_foreign_owner'} = 1;
   }
   else # Only initialize if this is really a new connection
   {
@@ -1006,6 +1026,8 @@ sub init_dbh
       $dbh->{DID_PCSQL_KEY()} = 1;
     }
   }
+
+  $self->{'_dbh_refcount'} = 1;
 
   return $self->{'dbh'} = $dbh;
 }
@@ -3184,7 +3206,7 @@ Returns a reference to the connect options has in scalar context, or a list of n
 
 =item B<dbh [DBH]>
 
-Get or set the L<DBI> database handle connected to the current data source.  If the database handle does not exist, this method will call L<dbi_connect|/dbi_connect> to create one.
+Get or set the L<DBI> database handle connected to the current data source.  If the database handle does not exist or was created in another process or thread, this method will discard the old database handle (if any) and L<dbi_connect|/dbi_connect> will be called to create a new one.
 
 Returns undef if the database handle could not be constructed and connected.  If there is no registered data source for the current C<type> and C<domain>, a fatal error will occur.
 
