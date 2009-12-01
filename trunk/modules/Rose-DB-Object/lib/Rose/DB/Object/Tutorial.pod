@@ -1488,7 +1488,7 @@ In most cases, these two parameters (C<map_from> and C<map_to>) are unnecessary.
 In this case, there is no ambiguity, so the relationship definition can be shortened to this.
 
 
-    use ProductColorMap;
+    use Product;
     ...
     __PACKAGE__->meta->setup
     (
@@ -1505,7 +1505,7 @@ In this case, there is no ambiguity, so the relationship definition can be short
 
 In fact, since the map table is named according to the default L<conventions|Rose::DB::Object::ConventionManager>, it can be shortened even further.
 
-    use ProductColorMap;
+    use Product;
     ...
     __PACKAGE__->meta->setup
     (
@@ -1519,7 +1519,7 @@ In fact, since the map table is named according to the default L<conventions|Ros
 
 And further still:
 
-    use ProductColorMap;
+    use Product;
     ...
     __PACKAGE__->meta->setup
     (
