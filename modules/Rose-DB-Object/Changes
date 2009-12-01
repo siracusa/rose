@@ -1,4 +1,4 @@
-0.784_02 (11.20.2009) - John Siracusa <siracusa@gmail.com>
+0.784_02 (12.01.2009) - John Siracusa <siracusa@gmail.com>
 
     * Fixed Rose::DB::Object::Cached to correctly honor alternate column
       accessor/mutator method names.  (Reported by Kevin McGrath)
@@ -6,6 +6,8 @@
       manager to name foreign keys that have only partially populated
       column lists, causing it to burn through the "good" foreign key
       names.  (Patch by Douglas Wilson)
+    * Corrected some typos in the ManyToMany documentation and the tutorial.
+      (Thanks to Bart Dopheide)
     * TODO: SELECT FOR UPDATE
     * TODO: Update docs for has_loaded_related() and/or make a better
       solution to avoid re-fetching nonexistent objects after Manager

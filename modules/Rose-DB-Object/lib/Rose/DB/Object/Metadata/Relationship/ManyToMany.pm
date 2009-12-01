@@ -659,7 +659,7 @@ Now the code:
   $color = Color->new(id => 1);
   $color->load;
 
-  @widgets = map { $_->name } $c->widgets; # ('Sprocket')
+  @widgets = map { $_->name } $color->widgets; # ('Sprocket')
 
 =head1 METHOD MAP
 
