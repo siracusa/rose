@@ -2,6 +2,7 @@
 
     * Support for Rose::DB::Object 0.785.
     * Made fork- and thread-safe.
+    * TODO: "SET NAMES utf8" as runtime version of mysql_enable_utf8
     * TODO: Savepoints?
     * TODO: SQL injection via foo() keywords?
 
