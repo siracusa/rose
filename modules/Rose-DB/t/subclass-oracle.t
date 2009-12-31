@@ -48,7 +48,9 @@ is($db->parse_boolean('no'), 0, 'parse_boolean (no)');
 is($db->parse_boolean('0'), 0, 'parse_boolean (0)');
 is($db->parse_boolean('FALSE'), 'FALSE', 'parse_boolean (FALSE)');
 
+$db->keyword_function_calls(1);
 is($db->parse_boolean('Foo(Bar)'), 'Foo(Bar)', 'parse_boolean (Foo(Bar))');
+$db->keyword_function_calls(0);
 
 foreach my $val (qw(t 1 true True T y Y yes Yes))
 {
