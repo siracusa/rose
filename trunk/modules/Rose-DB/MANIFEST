@@ -19,7 +19,6 @@ t/basic.t
 t/db_cache.t
 t/fork-informix.t
 t/fork-mysql.t
-t/fork-oracle.t
 t/fork-pg.t
 t/informix.t
 t/lib/My/DB.pm
