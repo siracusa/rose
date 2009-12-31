@@ -5,7 +5,8 @@
 0.756 (12.31.2009) - John Siracusa <siracusa@gmail.com>
 
     * Support for Rose::DB::Object 0.785.
-    * Made fork- and thread-safe.
+    * Made fork- and thread-safe (though some databases, notably Oracle, 
+      don't support passing a database connection across a fork at all).
     * Updated mysql_enable_utf8() to run "SET NAMES utf8" id a database
       handle already exists.
     * Updated the various validate_*_keywords() methods to no longer accept
