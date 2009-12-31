@@ -15,7 +15,7 @@ TRY:
 
 use Rose::DB;
 
-our $VERSION = '0.755';
+our $VERSION = '0.756';
 
 our $Debug = 0;
 
@@ -61,7 +61,6 @@ sub mysql_compression        { shift->dbh_attribute_boolean('mysql_compression',
 sub mysql_connect_timeout    { shift->dbh_attribute_boolean('mysql_connect_timeout', @_) }
 sub mysql_embedded_groups    { shift->dbh_attribute('mysql_embedded_groups', @_) }
 sub mysql_embedded_options   { shift->dbh_attribute('mysql_embedded_options', @_) }
-sub mysql_enable_utf8        { shift->dbh_attribute_boolean('mysql_enable_utf8', @_) }
 sub mysql_local_infile       { shift->dbh_attribute('mysql_local_infile', @_) }
 sub mysql_multi_statements   { shift->dbh_attribute_boolean('mysql_multi_statements', @_) }
 sub mysql_read_default_file  { shift->dbh_attribute('mysql_read_default_file', @_) }
@@ -74,6 +73,13 @@ sub mysql_ssl_cipher         { shift->dbh_attribute('mysql_ssl_cipher', @_) }
 sub mysql_ssl_client_cert    { shift->dbh_attribute('mysql_ssl_client_cert', @_) }
 sub mysql_ssl_client_key     { shift->dbh_attribute('mysql_ssl_client_key', @_) }
 sub mysql_use_result         { shift->dbh_attribute_boolean('mysql_use_result', @_) }
+
+sub mysql_enable_utf8
+{
+  my($self) = shift;
+  $self->dbh->do('SET NAMES utf8')  if(@_ && $self->has_dbh);
+  $self->dbh_attribute_boolean('mysql_enable_utf8', @_)
+}
 
 sub database_version
 {
@@ -222,19 +228,25 @@ sub format_select_start_sql
 sub validate_date_keyword
 {
   no warnings;
-  !ref $_[1] && $_[1] =~ /^(?:0000-00-00|\w+\(.*\))$/;
+  !ref $_[1] && ($_[1] =~ /^(?:(?:now|cur(?:date|time)|sysdate)\(\)|
+    current_(?:time|date|timestamp)(?:\(\))?|0000-00-00)$/xi ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/));
 }
 
 sub validate_datetime_keyword
 {
   no warnings;
-  !ref $_[1] && $_[1] =~ /^(?:0000-00-00 00:00:00|\w+\(.*\))$/;
+  !ref $_[1] && ($_[1]  =~ /^(?:(?:now|cur(?:date|time)|sysdate)\(\)|
+    current_(?:time|date|timestamp)(?:\(\))?|0000-00-00[ ]00:00:00)$/xi ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/));
 }
 
 sub validate_timestamp_keyword
 {
   no warnings;
-  !ref $_[1] && $_[1] =~ /^(?:0000-00-00 00:00:00|00000000000000|\w+\(.*\))$/;
+  !ref $_[1] && ($_[1] =~ /^(?:(?:now|cur(?:date|time)|sysdate)\(\)|
+    current_(?:time|date|timestamp)(?:\(\))?|0000-00-00[ ]00:00:00|00000000000000)$/xi ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/));
 }
 
 *format_timestamp = \&Rose::DB::format_datetime;
@@ -616,7 +628,7 @@ See the L<DBD::mysql|DBD::mysql/mysql_embedded_options> documentation to learn m
 
 =item B<mysql_enable_utf8 [BOOL]>
 
-Get or set the L<mysql_enable_utf8|DBD::mysql/mysql_enable_utf8> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+Get or set the L<mysql_enable_utf8|DBD::mysql/mysql_enable_utf8> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists, by executing the SQL C<SET NAMES utf8>.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
 
 Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
 
@@ -732,7 +744,7 @@ If the resulting string is longer than L<max_array_characters|/max_array_charact
 
 =item B<format_interval DURATION>
 
-Given a L<DateTime::Duration> object, return a string formatted according to the rules of PostgreSQL's "INTERVAL" column type.  If DURATION is undefined, a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|Rose::DB/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.
+Given a L<DateTime::Duration> object, return a string formatted according to the rules of PostgreSQL's "INTERVAL" column type.  If DURATION is undefined, a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|Rose::DB/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) and L<keyword_function_calls|Rose::DB/keyword_function_calls> is true, then it is returned unmodified.
 
 If the resulting string is longer than L<max_interval_characters|/max_interval_characters>, a fatal error will occur.
 
@@ -752,7 +764,7 @@ If a an ARRAYREF is passed, it is returned as-is.
 
 Parse STRING and return a L<DateTime::Duration> object.  STRING should be formatted according to the PostgreSQL native "interval" (years, months, days, hours, minutes, seconds) data type.
 
-If STRING is a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|Rose::DB/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.  Otherwise, undef is returned if STRING could not be parsed as a valid "interval" value.
+If STRING is a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|Rose::DB/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) and L<keyword_function_calls|Rose::DB/keyword_function_calls> is true, then it is returned unmodified.  Otherwise, undef is returned if STRING could not be parsed as a valid "interval" value.
 
 =item B<parse_set STRING | LIST | ARRAYREF>
 
@@ -764,28 +776,53 @@ If a an ARRAYREF is passed, it is returned as-is.
 
 =item B<validate_date_keyword STRING>
 
-Returns true if STRING is a valid keyword for the MySQL "date" data type.  Valid date keywords are:
+Returns true if STRING is a valid keyword for the MySQL "date" data type.  Valid (case-insensitive) date keywords are:
 
+    curdate()
+    current_date
+    current_date()
+    now()
+    sysdate()
     00000-00-00
 
-Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid date keyword.
+Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid date keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =item B<validate_datetime_keyword STRING>
 
-Returns true if STRING is a valid keyword for the MySQL "datetime" data type, false otherwise.  Valid datetime keywords are:
+Returns true if STRING is a valid keyword for the MySQL "datetime" data type, false otherwise.  Valid (case-insensitive) datetime keywords are:
 
+    curdate()
+    current_date
+    current_date()
+    current_time 
+    current_time()
+    current_timestamp
+    current_timestamp()
+    curtime()
+    now()
+    sysdate()
     0000-00-00 00:00:00
 
-Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid datetime keyword.
+Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid datetime keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =item B<validate_timestamp_keyword STRING>
 
-Returns true if STRING is a valid keyword for the MySQL "timestamp" data type, false otherwise.  Valid timestamp keywords are:
+Returns true if STRING is a valid keyword for the MySQL "timestamp" data type, false otherwise.  Valid (case-insensitive) timestamp keywords are:
 
+    curdate()
+    current_date
+    current_date()
+    current_time 
+    current_time()
+    current_timestamp
+    current_timestamp()
+    curtime()
+    now()
+    sysdate()
     0000-00-00 00:00:00
     00000000000000
 
-Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid timestamp keyword.
+Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid timestamp keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =back
 

@@ -68,19 +68,27 @@ $rand = 'default'  unless(defined $rand); # got under here once!
 
 ok(!$db->validate_timestamp_keyword($rand), "validate_timestamp_keyword ($rand)");
 
+$db->keyword_function_calls(1);
 is($db->format_timestamp('Foo(Bar)'), 'Foo(Bar)', 'format_timestamp (Foo(Bar))');
+$db->keyword_function_calls(0);
 
 ok(!$db->validate_datetime_keyword($rand), "validate_datetime_keyword ($rand)");
 
+$db->keyword_function_calls(1);
 is($db->format_datetime('Foo(Bar)'), 'Foo(Bar)', 'format_datetime (Foo(Bar))');
+$db->keyword_function_calls(0);
 
 ok(!$db->validate_date_keyword($rand), "validate_date_keyword ($rand)");
 
+$db->keyword_function_calls(1);
 is($db->format_date('Foo(Bar)'), 'Foo(Bar)', 'format_date (Foo(Bar))');
+$db->keyword_function_calls(0);
 
 ok(!$db->validate_time_keyword($rand), "validate_time_keyword ($rand)");
 
+$db->keyword_function_calls(1);
 is($db->format_time('Foo(Bar)'), 'Foo(Bar)', 'format_time (Foo(Bar))');
+$db->keyword_function_calls(0);
 
 is($db->format_array([ 'a', 'b' ]), q({"a","b"}), 'format_array() 1');
 is($db->format_array('a', 'b'), q({"a","b"}), 'format_array() 2');

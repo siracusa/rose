@@ -8,7 +8,7 @@ use Rose::DB;
 
 our $Debug = 0;
 
-our $VERSION  = '0.756'; 
+our $VERSION  = '0.756';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -303,12 +303,11 @@ sub format_boolean { $_[1] ? 't' : 'f' }
 # Date/time keywords and inlining
 #
 
-# XXX: Guesswork!  Oracle users, patches welcome!
-
 sub validate_date_keyword
 {
   no warnings;
-  $_[1] =~ /^(?:(?:CURRENT_|SYS)(?:TIMESTAMP|DATE)|\w+\(.*\))$/i;
+  $_[1] =~ /^(?:CURRENT_|SYS|LOCAL)(?:TIMESTAMP|DATE)$/i ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/);
 }
 
 *validate_time_keyword      = \&validate_date_keyword;
@@ -399,6 +398,38 @@ Get or set the SQL statements that will be run immediately after connecting to t
 =item B<schema [SCHEMA]>
 
 Get or set the database schema name.  In Oracle, every user has a corresponding schema.  The schema is comprised of all objects that user owns, and has the same name as that user.  Therefore, this attribute defaults to the L<username|Rose::DB/username> if it is not set explicitly.
+
+=back
+
+=head2 Value Parsing and Formatting
+
+=over 4
+
+=item B<validate_date_keyword STRING>
+
+Returns true if STRING is a valid keyword for the PostgreSQL "date" data type.  Valid (case-insensitive) date keywords are:
+
+    current_date
+    current_timestamp
+    localtimestamp
+    months_between
+    sysdate
+    systimestamp
+
+The keywords are case sensitive.  Any string that looks like a function call (matches C</^\w+\(.*\)$/>) is also considered a valid date keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
+
+=item B<validate_timestamp_keyword STRING>
+
+Returns true if STRING is a valid keyword for the Oracle "timestamp" data type, false otherwise.  Valid timestamp keywords are:
+
+    current_date
+    current_timestamp
+    localtimestamp
+    months_between
+    sysdate
+    systimestamp
+
+The keywords are case sensitive.  Any string that looks like a function call (matches C</^\w+\(.*\)$/>) is also considered a valid timestamp keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =back
 

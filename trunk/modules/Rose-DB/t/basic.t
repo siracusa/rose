@@ -387,7 +387,9 @@ ok($@, 'max_interval_characters 1');
 
 ok(Rose::DB->max_interval_characters != MyTest::DB2->max_interval_characters, 'max_interval_characters 2');
 
+$db->keyword_function_calls(1);
 is($db->parse_interval('foo()'), 'foo()', 'parse_interval (foo())');
+$db->keyword_function_calls(0);
 
 MyTest::DB2->max_interval_characters(255);
 

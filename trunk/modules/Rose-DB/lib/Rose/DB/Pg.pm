@@ -8,7 +8,7 @@ use SQL::ReservedWords::PostgreSQL();
 
 use Rose::DB;
 
-our $VERSION = '0.785';
+our $VERSION = '0.786';
 
 our $Debug = 0;
 
@@ -120,19 +120,26 @@ sub parse_timestamp
 sub validate_date_keyword
 {
   no warnings;
-  $_[1] =~ /^(?:now|epoch|today|tomorrow|yesterday|\w+\(.*\))$/;
+  $_[1] =~ /^(?:(?:now|timeofday)(?:\(\))?|(?:current_(?:date|time(?:stamp)?)
+    |localtime(?:stamp)?)(?:\(\d*\))?|epoch|today|tomorrow|yesterday|)$/xi ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/);
 }
 
 sub validate_time_keyword
 {
   no warnings;
-  $_[1] =~ /^(?:now|allballs|\w+\(.*\))$/;
+  $_[1] =~ /^(?:(?:now|timeofday)(?:\(\))?|(?:current_(?:date|time(?:stamp)?)
+    |localtime(?:stamp)?)(?:\(\d*\))?|allballs)$/xi ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/);
 }
 
 sub validate_timestamp_keyword
 {
   no warnings;
-  $_[1] =~ /^(?:now|-?infinity|epoch|today|tomorrow|yesterday|allballs|\w+\(.*\))$/;
+  $_[1] =~ /^(?:(?:now|timeofday)(?:\(\))?|(?:current_(?:date|time(?:stamp)?)
+    |localtime(?:stamp)?)(?:\(\d*\))?|-?infinity|epoch|today|tomorrow|yesterday|allballs)$/xi ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/);
+
 }
 
 *validate_datetime_keyword = \&validate_timestamp_keyword;
@@ -204,7 +211,8 @@ sub parse_interval
   my($self, $value, $end_of_month_mode) = @_;
 
   if(!defined $value || UNIVERSAL::isa($value, 'DateTime::Duration') || 
-     $self->validate_interval_keyword($value) || $value =~ /^\w+\(.*\)$/)
+     $self->validate_interval_keyword($value) || 
+     ($self->keyword_function_calls && $value =~ /^\w+\(.*\)$/))
   {
     return $value;
   }
@@ -241,7 +249,8 @@ BEGIN
     *format_interval = sub
     {
       my($self, $dur) = @_;
-      return $dur  if(!defined $dur || $self->validate_interval_keyword($dur) || $dur =~ /^\w+\(.*\)$/);
+      return $dur  if(!defined $dur || $self->validate_interval_keyword($dur) ||
+        ($self->keyword_function_calls && $dur =~ /^\w+\(.*\)$/));
       my $val = $self->date_handler->format_interval($dur);
 
       $val =~ s/(\S+e\S+) seconds/sprintf('%f seconds', $1)/e;
@@ -253,7 +262,8 @@ BEGIN
     *format_interval = sub
     {
       my($self, $dur) = @_;
-      return $dur  if(!defined $dur || $self->validate_interval_keyword($dur) || $dur =~ /^\w+\(.*\)$/);
+      return $dur  if(!defined $dur || $self->validate_interval_keyword($dur) ||
+        ($self->keyword_function_calls && $dur =~ /^\w+\(.*\)$/));
       return $self->date_handler->format_interval($dur);
     };
   }
@@ -644,7 +654,7 @@ Given a reference to an array or a list of values, return a string formatted acc
 
 =item B<format_interval DURATION>
 
-Given a L<DateTime::Duration> object, return a string formatted according to the rules of PostgreSQL's "INTERVAL" column type.  If DURATION is undefined, a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|Rose::DB/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.
+Given a L<DateTime::Duration> object, return a string formatted according to the rules of PostgreSQL's "INTERVAL" column type.  If DURATION is undefined, a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|Rose::DB/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) and L<keyword_function_calls|Rose::DB/keyword_function_calls> is true, then it is returned unmodified.
 
 =item B<parse_array STRING>
 
@@ -654,58 +664,88 @@ Parse STRING and return a reference to an array.  STRING should be formatted acc
 
 Parse STRING and return a L<DateTime::Duration> object.  STRING should be formatted according to the PostgreSQL native "interval" (years, months, days, hours, minutes, seconds) data type.
 
-If STRING is a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|Rose::DB/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.  Otherwise, undef is returned if STRING could not be parsed as a valid "interval" value.
+If STRING is a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|Rose::DB/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) and L<keyword_function_calls|Rose::DB/keyword_function_calls> is true, then it is returned unmodified.  Otherwise, undef is returned if STRING could not be parsed as a valid "interval" value.
 
 =item B<validate_date_keyword STRING>
 
-Returns true if STRING is a valid keyword for the PostgreSQL "date" data type.  Valid date keywords are:
+Returns true if STRING is a valid keyword for the PostgreSQL "date" data type.  Valid (case-insensitive) date keywords are:
 
+    current_date
     epoch
     now
+    now()
     today
     tomorrow
     yesterday
 
-The keywords are case sensitive.  Any string that looks like a function call (matches C</^\w+\(.*\)$/>) is also considered a valid date keyword.
+The keywords are case sensitive.  Any string that looks like a function call (matches C</^\w+\(.*\)$/>) is also considered a valid date keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =item B<validate_datetime_keyword STRING>
 
-Returns true if STRING is a valid keyword for the PostgreSQL "datetime" data type, false otherwise.  Valid datetime keywords are:
+Returns true if STRING is a valid keyword for the PostgreSQL "datetime" data type, false otherwise.  Valid (case-insensitive) datetime keywords are:
 
+    -infinity
     allballs
+    current_date
+    current_time
+    current_time()
+    current_timestamp
+    current_timestamp()
     epoch
     infinity
-    -infinity
+    localtime
+    localtime()
+    localtimestamp
+    localtimestamp()
     now
+    now()
+    timeofday()
     today
     tomorrow
     yesterday
 
-The keywords are case sensitive.  Any string that looks like a function call (matches C</^\w+\(.*\)$/>) is also considered a valid datetime keyword.
+The keywords are case sensitive.  Any string that looks like a function call (matches C</^\w+\(.*\)$/>) is also considered a valid datetime keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =item B<validate_time_keyword STRING>
 
-Returns true if STRING is a valid keyword for the PostgreSQL "time" data type, false otherwise.  Valid timestamp keywords are:
+Returns true if STRING is a valid keyword for the PostgreSQL "time" data type, false otherwise.  Valid (case-insensitive) timestamp keywords are:
 
     allballs
+    current_time
+    current_time()
+    localtime
+    localtime()
     now
+    now()
+    timeofday()
 
-The keywords are case sensitive.  Any string that looks like a function call (matches C</^\w+\(.*\)$/>) is also considered a valid timestamp keyword.
+The keywords are case sensitive.  Any string that looks like a function call (matches C</^\w+\(.*\)$/>) is also considered a valid timestamp keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =item B<validate_timestamp_keyword STRING>
 
-Returns true if STRING is a valid keyword for the PostgreSQL "timestamp" data type, false otherwise.  Valid timestamp keywords are:
+Returns true if STRING is a valid keyword for the PostgreSQL "timestamp" data type, false otherwise.  Valid (case-insensitive) timestamp keywords are:
 
+    -infinity
     allballs
+    current_date
+    current_time
+    current_time()
+    current_timestamp
+    current_timestamp()
     epoch
     infinity
-    -infinity
+    localtime
+    localtime()
+    localtimestamp
+    localtimestamp()
     now
+    now()
+    timeofday()
     today
     tomorrow
     yesterday
 
-The keywords are case sensitive.  Any string that looks like a function call (matches C</^\w+\(.*\)$/>) is also considered a valid timestamp keyword.
+The keywords are case sensitive.  Any string that looks like a function call (matches C</^\w+\(.*\)$/>) is also considered a valid timestamp keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =back
 
