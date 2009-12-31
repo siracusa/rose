@@ -2,7 +2,16 @@
 
 use strict;
 
-use Test::More tests => 1;
+require Test::More;
+
+if($^O =~ /MSWin/)
+{
+  Test::More->import(skip_all => "Can't fork() on Win32");
+}
+else
+{
+  Test::More->import(tests => 1);
+}
 
 use POSIX ':sys_wait_h';
 
