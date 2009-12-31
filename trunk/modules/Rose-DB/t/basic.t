@@ -4,7 +4,7 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 198;
+use Test::More tests => 202;
 
 BEGIN
 {
@@ -88,7 +88,17 @@ is($dump->{'test'}{'aux'}{'username'}, 'postgres', 'dump() 1');
 
 is(IN_TRANSACTION, -1, 'IN_TRANSACTION');
 
+is(Rose::DB->default_keyword_function_calls, 0, 'default_keyword_function_calls 1');
+Rose::DB->default_keyword_function_calls(1);
+is(Rose::DB->default_keyword_function_calls, 1, 'default_keyword_function_calls 2');
+
 my $db = Rose::DB->new;
+
+is($db->keyword_function_calls, 1, 'keyword_function_calls 1');
+
+$db = Rose::DB->new;
+
+is($db->keyword_function_calls, 1, 'keyword_function_calls 2');
 
 is(Rose::DB->default_domain, 'test', 'default_domain() 1');
 is(Rose::DB->default_type, 'default', 'default_type() 1');
