@@ -36,9 +36,9 @@ if(have_db($db_type))
   $db->dbh->do('CREATE TABLE fork_test (i int)');
   $db->dbh->do('INSERT INTO fork_test (i) VALUES (1)');  
   $db->dbh->do('INSERT INTO fork_test (i) VALUES (2)');
-  
+
   $SIG{'CHLD'} = \&Reaper;
-  
+
   if(fork())
   {
     # Parent

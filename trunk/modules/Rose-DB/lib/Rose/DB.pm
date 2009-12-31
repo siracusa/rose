@@ -40,7 +40,7 @@ use Rose::Class::MakeMethods::Generic
     '_db_cache',
     'db_cache_class',
   ],
-  
+
   inheritable_boolean =>
   [
     'default_keyword_function_calls',
