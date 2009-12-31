@@ -162,7 +162,7 @@ foreach my $name (qw(date datetime time timestamp))
   ok($db->$method('Foo(Bar)'), "$method (Foo(Bar)) 2");
   $db->keyword_function_calls(0);
 
-                        
+
   foreach my $value (qw(current_date current_time current_time()
                         current_time(1) current_timestamp
                         current_timestamp() current_timestamp(2)
@@ -178,7 +178,7 @@ foreach my $name (qw(date datetime time timestamp))
 }
 
 
-    
+
 # Interval values
 
 isa_ok($db->parse_interval('00:00:00'), 'DateTime::Duration');

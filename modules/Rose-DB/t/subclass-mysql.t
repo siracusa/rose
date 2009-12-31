@@ -225,7 +225,7 @@ SKIP:
   $db->release_dbh;
 
   ok($db->{'dbh'}{'Active'}, 'retain stuffed dbh');
-  
+
   $db->connect;
   $db->mysql_enable_utf8(1);
   is($db->mysql_enable_utf8, 1, 'mysql_enable_utf8 2');
