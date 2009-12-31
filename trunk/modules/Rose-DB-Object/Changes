@@ -1,15 +1,3 @@
-0.785_01 (12.31.2009) - John Siracusa <siracusa@gmail.com>
-
-    * TODO: SELECT FOR UPDATE
-    * TODO: Update docs for has_loaded_related() and/or make a better
-      solution to avoid re-fetching nonexistent objects after Manager
-      queries.
-    * TODO: Add support for REGEXP_LIKE(column, '^abc')
-    * TODO: Figure out which UK to use when load()ing via a ForeignKey
-    * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
-    * TODO: add delete_now and delete_on_save method types to ManyToMany?
-    * TODO: make save() fail if IN_DB and modified PK columns?
-    
 0.785 (12.31.2009) - John Siracusa <siracusa@gmail.com>
 
     * Fixed Rose::DB::Object::Cached to correctly honor alternate column
