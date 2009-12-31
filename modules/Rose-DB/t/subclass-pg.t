@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 237);
+    Test::More->import(tests => 306);
   }
 }
 
@@ -97,7 +97,6 @@ is($db->format_timestamp('today'), 'today', 'format_timestamp (today)');
 is($db->format_timestamp('tomorrow'), 'tomorrow', 'format_timestamp (tomorrow)');
 is($db->format_timestamp('yesterday'), 'yesterday', 'format_timestamp (yesterday)');
 is($db->format_timestamp('allballs'), 'allballs', 'format_timestamp (allballs)');
-is($db->format_timestamp('Foo(Bar)'), 'Foo(Bar)', 'format_timestamp (Foo(Bar))');
 
 ok($db->validate_datetime_keyword('now'), 'validate_datetime_keyword (now)');
 ok($db->validate_datetime_keyword('infinity'), 'validate_datetime_keyword (infinity)');
@@ -116,7 +115,6 @@ is($db->format_datetime('today'), 'today', 'format_datetime (today)');
 is($db->format_datetime('tomorrow'), 'tomorrow', 'format_datetime (tomorrow)');
 is($db->format_datetime('yesterday'), 'yesterday', 'format_datetime (yesterday)');
 is($db->format_datetime('allballs'), 'allballs', 'format_datetime (allballs)');
-is($db->format_datetime('Foo(Bar)'), 'Foo(Bar)', 'format_datetime (Foo(Bar))');
 
 ok($db->validate_date_keyword('now'), 'validate_date_keyword (now)');
 ok($db->validate_date_keyword('epoch'), 'validate_date_keyword (epoch)');
@@ -129,14 +127,12 @@ is($db->format_date('epoch'), 'epoch', 'format_date (epoch)');
 is($db->format_date('today'), 'today', 'format_date (today)');
 is($db->format_date('tomorrow'), 'tomorrow', 'format_date (tomorrow)');
 is($db->format_date('yesterday'), 'yesterday', 'format_date (yesterday)');
-is($db->format_date('Foo(Bar)'), 'Foo(Bar)', 'format_date (Foo(Bar))');
 
 ok($db->validate_time_keyword('now'), 'validate_time_keyword (now)');
 ok($db->validate_time_keyword('allballs'), 'validate_time_keyword (allballs)');
 
 is($db->format_time('now'), 'now', 'format_time (now)');
 is($db->format_time('allballs'), 'allballs', 'format_time (allballs)');
-is($db->format_time('Foo(Bar)'), 'Foo(Bar)', 'format_time (Foo(Bar))');
 
 is($db->parse_boolean('t'), 1, 'parse_boolean (t)');
 is($db->parse_boolean('true'), 1, 'parse_boolean (true)');
@@ -152,8 +148,37 @@ is($db->parse_boolean('no'), 0, 'parse_boolean (no)');
 is($db->parse_boolean('0'), 0, 'parse_boolean (0)');
 is($db->parse_boolean('FALSE'), 'FALSE', 'parse_boolean (FALSE)');
 
+ok(!$db->validate_boolean_keyword('Foo(Bar)'), 'validate_boolean_keyword (Foo(Bar))');
+$db->keyword_function_calls(1);
 is($db->parse_boolean('Foo(Bar)'), 'Foo(Bar)', 'parse_boolean (Foo(Bar))');
+$db->keyword_function_calls(0);
 
+foreach my $name (qw(date datetime time timestamp))
+{
+  my $method = "validate_${name}_keyword";
+
+  ok(!$db->$method('Foo(Bar)'), "$method (Foo(Bar)) 1");
+  $db->keyword_function_calls(1);
+  ok($db->$method('Foo(Bar)'), "$method (Foo(Bar)) 2");
+  $db->keyword_function_calls(0);
+
+                        
+  foreach my $value (qw(current_date current_time current_time()
+                        current_time(1) current_timestamp
+                        current_timestamp() current_timestamp(2)
+                        localtime localtime() localtime(3)
+                        localtimestamp localtimestamp()
+                        localtimestamp(4) now now() timeofday()))
+  {
+    my $new_value = $value;
+    my $i = int(rand(length($new_value) - 3)); # 3 = 1 + 2 (for possible parens)
+    substr($new_value, $i, 1) = uc substr($new_value, $i, 1);
+    ok($db->$method($new_value), "$method ($new_value)");
+  }
+}
+
+
+    
 # Interval values
 
 isa_ok($db->parse_interval('00:00:00'), 'DateTime::Duration');
@@ -271,7 +296,9 @@ while($i < @Intervals)
   ok((!defined $d && !defined $alt_d) || DateTime::Duration->compare($d, $alt_d) == 0, "parse_interval alt check $i");
 }
 
+$db->keyword_function_calls(1);
 is($db->parse_interval('foo()'), 'foo()', 'parse_interval (foo())');
+$db->keyword_function_calls(0);
 
 my $d = $db->parse_interval('1 year 0.000003 seconds');
 

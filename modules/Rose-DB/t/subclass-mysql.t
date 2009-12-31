@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 113);
+    Test::More->import(tests => 146);
   }
 }
 
@@ -72,11 +72,7 @@ $rand = 'default'  unless(defined $rand); # got under here once!
 
 ok(!$db->validate_timestamp_keyword($rand), "validate_timestamp_keyword ($rand)");
 
-is($db->format_timestamp('Foo(Bar)'), 'Foo(Bar)', 'format_timestamp (Foo(Bar))');
-
 ok(!$db->validate_datetime_keyword($rand), "validate_datetime_keyword ($rand)");
-
-is($db->format_datetime('Foo(Bar)'), 'Foo(Bar)', 'format_datetime (Foo(Bar))');
 
 ok(!$db->validate_date_keyword($rand), "validate_date_keyword ($rand)");
 
@@ -88,11 +84,27 @@ ok($db->validate_datetime_keyword('0000-00-00 00:00:00'), "validate_datetime_key
 ok($db->validate_timestamp_keyword('0000-00-00 00:00:00'), "validate_timestamp_keyword (0000-00-00 00:00:00)");
 ok($db->validate_timestamp_keyword('00000000000000'), "validate_timestamp_keyword (00000000000000)");
 
-is($db->format_date('Foo(Bar)'), 'Foo(Bar)', 'format_date (Foo(Bar))');
-
 ok(!$db->validate_time_keyword($rand), "validate_time_keyword ($rand)");
 
-is($db->format_time($db->parse_time('Foo(Bar)')), 'Foo(Bar)', 'format_time (Foo(Bar))');
+foreach my $name (qw(date datetime timestamp))
+{
+  my $method = "validate_${name}_keyword";
+
+  ok(!$db->$method('Foo(Bar)'), "$method (Foo(Bar)) 1");
+  $db->keyword_function_calls(1);
+  ok($db->$method('Foo(Bar)'), "$method (Foo(Bar)) 2");
+  $db->keyword_function_calls(0);
+
+  foreach my $value (qw(now() curtime() curdate() sysdate() current_time 
+                        current_time() current_date current_date()
+                        current_timestamp current_timestamp()))
+  {
+    my $new_value = $value;
+    my $i = int(rand(length($new_value) - 3)); # 3 = 1 + 2 (for possible parens)
+    substr($new_value, $i, 1) = uc substr($new_value, $i, 1);
+    ok($db->$method($new_value), "$method ($new_value)");
+  }
+}
 
 is($db->format_array([ 'a', 'b' ]), q({"a","b"}), 'format_array() 1');
 is($db->format_array('a', 'b'), q({"a","b"}), 'format_array() 2');
@@ -121,7 +133,7 @@ SKIP:
 {
   unless(have_db('mysql'))
   {
-    skip("MySQL connection tests", 76);
+    skip("MySQL connection tests", 77);
   }
 
   eval { $db->connect };
@@ -213,6 +225,10 @@ SKIP:
   $db->release_dbh;
 
   ok($db->{'dbh'}{'Active'}, 'retain stuffed dbh');
+  
+  $db->connect;
+  $db->mysql_enable_utf8(1);
+  is($db->mysql_enable_utf8, 1, 'mysql_enable_utf8 2');
 }
 
 $db->dsn('dbi:mysql:dbname=dbfoo;host=hfoo;port=pfoo');

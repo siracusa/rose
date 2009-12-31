@@ -7,7 +7,7 @@ use Carp();
 use Rose::DB;
 use SQL::ReservedWords::SQLite();
 
-our $VERSION = '0.755';
+our $VERSION = '0.756';
 
 #our $Debug = 0;
 
@@ -59,19 +59,22 @@ sub supports_multi_column_count_distinct { 0 }
 sub validate_date_keyword
 {
   no warnings;
-  !ref $_[1] && $_[1] =~ /^(?:current_timestamp|\w+\(.*\))$/i;
+  !ref $_[1] && (lc $_[1] eq 'current_timestamp' ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/));
 }
 
 sub validate_datetime_keyword
 {
   no warnings;
-  !ref $_[1] && $_[1] =~ /^(?:current_timestamp|\w+\(.*\))$/i;
+  !ref $_[1] && (lc $_[1] eq 'current_timestamp' ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/));
 }
 
 sub validate_timestamp_keyword
 {
   no warnings;
-  !ref $_[1] && $_[1] =~ /^(?:current_timestamp|\w+\(.*\))$/i;
+  !ref $_[1] && (lc $_[1] eq 'current_timestamp' ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/));
 }
 
 sub should_inline_date_keywords      { 1 }
@@ -617,7 +620,7 @@ Returns true if STRING is a valid keyword for the "date" data type.  Valid date 
 
     current_timestamp
 
-The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid date keyword.
+The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid date keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =item B<validate_datetime_keyword STRING>
 
@@ -625,7 +628,7 @@ Returns true if STRING is a valid keyword for the "datetime" data type, false ot
 
     current_timestamp
 
-The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid datetime keyword.
+The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid datetime keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =item B<validate_timestamp_keyword STRING>
 
@@ -633,7 +636,7 @@ Returns true if STRING is a valid keyword for the "timestamp" data type, false o
 
     current_timestamp
 
-The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid timestamp keyword.
+The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid timestamp keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =back
 

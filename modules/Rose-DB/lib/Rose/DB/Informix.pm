@@ -67,7 +67,8 @@ sub format_boolean { $_[1] ? 't' : 'f' }
 sub parse_boolean
 {
   my($self, $value) = @_;
-  return $value  if($self->validate_boolean_keyword($_[1]) || $_[1] =~ /^\w+\(.*\)$/);
+  return $value  if($self->validate_boolean_keyword($_[1]) || 
+    ($self->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/));
   return 1  if($value =~ /^[t1]$/i);
   return 0  if($value =~ /^[f0]$/i);
 
@@ -371,49 +372,57 @@ sub parse_timestamp
 sub validate_date_keyword
 {
   no warnings;
-  $_[1] =~ /^(?:current|today|\w+\(.*\))$/i;
+  $_[1] =~ /^(?:current|today)$/i ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/);
 }
 
 sub validate_time_keyword
 {
   no warnings;
-  $_[1] =~ /^(?:current|\w+\(.*\))$/i;
+  lc $_[1] eq 'current' ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/);
 }
 
 sub validate_timestamp_keyword
 {
   no warnings;
-  $_[1] =~ /^(?:current(?: +year +to +(?:fraction(?:\([1-5]\))?|second|minute|hour|day|month))?|today|\w+\(.*\))$/i;
+  $_[1] =~ /^(?:current(?: +year +to +(?:fraction(?:\([1-5]\))?|second|minute|hour|day|month))?|today)$/i ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/);
 }
 
 sub validate_datetime_year_to_fraction_keyword
 {
   no warnings;
-  $_[1] =~ /^(?:current(?: +year +to +(?:fraction(?:\([1-5]\))?|second|minute|hour|day|month))?|today|\w+\(.*\))$/i;
+  $_[1] =~ /^(?:current(?: +year +to +(?:fraction(?:\([1-5]\))?|second|minute|hour|day|month))?|today)$/i ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/);
 }
 
 sub validate_datetime_keyword
 {
   no warnings;
-  $_[1] =~ /^(?:current(?: +year +to +(?:second|minute|hour|day|month))?|today|\w+\(.*\))$/i;
+  $_[1] =~ /^(?:current(?: +year +to +(?:second|minute|hour|day|month))?|today)$/i ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/);
 }
 
 sub validate_datetime_year_to_second_keyword
 {
   no warnings;
-  $_[1] =~ /^(?:current(?: +year +to +(?:second|minute|hour|day|month))?|today|\w+\(.*\))$/i;
+  $_[1] =~ /^(?:current(?: +year +to +(?:second|minute|hour|day|month))?|today)$/i ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/);
 }
 
 sub validate_datetime_year_to_minute_keyword
 {
   no warnings;
-  $_[1] =~ /^(?:current(?: +year +to +(?:second|minute|hour|day|month))?|today|\w+\(.*\))$/i;
+  $_[1] =~ /^(?:current(?: +year +to +(?:second|minute|hour|day|month))?|today)$/i ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/);
 }
 
 sub validate_datetime_year_to_month_keyword
 {
   no warnings;
-  $_[1] =~ /^(?:current(?: +year +to +(?:second|minute|hour|day|month))?|today|\w+\(.*\))$/i;
+  $_[1] =~ /^(?:current(?: +year +to +(?:second|minute|hour|day|month))?|today)$/i ||
+    ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/);
 }
 
 sub should_inline_date_keywords      { 1 }
@@ -441,7 +450,7 @@ sub parse_set
 
   no warnings 'uninitialized';
   my $numeric = 
-    ($options->{'value_type'} =~ /^(?:(?:big)?(?:float|int(?:eger)?|num(?:eric)?)|decimal)$/) ? 1 : 0;
+    ($options->{'value_type'} =~ /^(?:(?:big)?(?:float|int(?:eger)?|num(?:eric)?)|decimal)$/i) ? 1 : 0;
 
   return undef  unless(defined $val);
 
@@ -960,7 +969,7 @@ If a an ARRAYREF is passed, it is returned as-is.
 
 Parse STRING and return a boolean value of 1 or 0.  STRING should be formatted according to Informix's native "boolean" data type.  Acceptable values are 't', 'T', or '1' for true, and 'f', 'F', or '0' for false.
 
-If STRING is a valid boolean keyword (according to L<validate_boolean_keyword|/validate_boolean_keyword>) or if it looks like a function call (matches /^\w+\(.*\)$/) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "boolean" value.
+If STRING is a valid boolean keyword (according to L<validate_boolean_keyword|/validate_boolean_keyword>) or if it looks like a function call (matches /^\w+\(.*\)$/) and L<keyword_function_calls|Rose::DB/keyword_function_calls> is true, then it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "boolean" value.
 
 =item B<parse_date STRING>
 
@@ -1020,23 +1029,23 @@ If STRING is a valid timestamp keyword (according to L<validate_timestamp_keywor
 
 =item B<validate_boolean_keyword STRING>
 
-Returns true if STRING is a valid keyword for the "boolean" data type of the current data source, false otherwise.  Valid boolean keywords are:
+Returns true if STRING is a valid keyword for the "boolean" data type of the current data source, false otherwise.  Valid (case-insensitive) boolean keywords are:
 
     TRUE
     FALSE
 
 =item B<validate_date_keyword STRING>
 
-Returns true if STRING is a valid keyword for the Informix "date", false otherwise.   Valid date keywords are:
+Returns true if STRING is a valid keyword for the Informix "date", false otherwise.   Valid (case-insensitive) date keywords are:
 
     current
     today
 
-The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid date keyword.
+The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid date keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =item B<validate_datetime_keyword STRING>
 
-Returns true if STRING is a valid keyword for the Informix "datetime year to second" data type, false otherwise.  Valid datetime keywords are:
+Returns true if STRING is a valid keyword for the Informix "datetime year to second" data type, false otherwise.  Valid (case-insensitive) datetime keywords are:
 
     current
     current year to second
@@ -1046,11 +1055,11 @@ Returns true if STRING is a valid keyword for the Informix "datetime year to sec
     current year to month
     today
 
-The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid datetime keyword.
+The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid datetime keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =item B<validate_datetime_year_to_fraction_keyword STRING>
 
-Returns true if STRING is a valid keyword for the Informix "datetime year to fraction(n)" data type (where n is an integer from 1 to 5), false otherwise.  Valid "datetime year to fraction" keywords are:
+Returns true if STRING is a valid keyword for the Informix "datetime year to fraction(n)" data type (where n is an integer from 1 to 5), false otherwise.  Valid (case-insensitive) "datetime year to fraction" keywords are:
 
     current
     current year to fraction
@@ -1066,11 +1075,11 @@ Returns true if STRING is a valid keyword for the Informix "datetime year to fra
     current year to month
     today
 
-The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid "datetime year to fraction" keyword.
+The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid "datetime year to fraction" keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =item B<validate_datetime_year_to_minute_keyword STRING>
 
-Returns true if STRING is a valid keyword for the Informix "datetime year to minute" data type, false otherwise.  Valid "datetime year to minute" keywords are:
+Returns true if STRING is a valid keyword for the Informix "datetime year to minute" data type, false otherwise.  Valid (case-insensitive) "datetime year to minute" keywords are:
 
     current
     current year to second
@@ -1080,11 +1089,11 @@ Returns true if STRING is a valid keyword for the Informix "datetime year to min
     current year to month
     today
 
-The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid "datetime year to minute" keyword.
+The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid "datetime year to minute" keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =item B<validate_datetime_year_to_month_keyword STRING>
 
-Returns true if STRING is a valid keyword for the Informix "datetime year to month" data type, false otherwise.  Valid "datetime year to month" keywords are:
+Returns true if STRING is a valid keyword for the Informix "datetime year to month" data type, false otherwise.  Valid (case-insensitive) "datetime year to month" keywords are:
 
     current
     current year to second
@@ -1094,11 +1103,11 @@ Returns true if STRING is a valid keyword for the Informix "datetime year to mon
     current year to month
     today
 
-The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid "datetime year to month" keyword.
+The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid "datetime year to month" keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =item B<validate_datetime_year_to_second_keyword STRING>
 
-Returns true if STRING is a valid keyword for the Informix "datetime year to second" data type, false otherwise.  Valid datetime keywords are:
+Returns true if STRING is a valid keyword for the Informix "datetime year to second" data type, false otherwise.  Valid (case-insensitive) datetime keywords are:
 
     current
     current year to second
@@ -1108,11 +1117,11 @@ Returns true if STRING is a valid keyword for the Informix "datetime year to sec
     current year to month
     today
 
-The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid "datetime year to second" keyword.
+The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid "datetime year to second" keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =item B<validate_timestamp_keyword STRING>
 
-Returns true if STRING is a valid keyword for the Informix "timestamp" data type, false otherwise.  Valid timestamp keywords are:
+Returns true if STRING is a valid keyword for the Informix "timestamp" data type, false otherwise.  Valid (case-insensitive) timestamp keywords are:
 
     current
     current year to fraction
@@ -1128,7 +1137,7 @@ Returns true if STRING is a valid keyword for the Informix "timestamp" data type
     current year to month
     today
 
-The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid timestamp keyword.
+The keywords are not case sensitive.  Any string that looks like a function call (matches /^\w+\(.*\)$/) is also considered a valid timestamp keyword if L<keyword_function_calls|Rose::DB/keyword_function_calls> is true.
 
 =back
 

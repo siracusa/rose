@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.755_05';
+our $VERSION = '0.756';
 
 our $Debug = 0;
 
@@ -39,6 +39,11 @@ use Rose::Class::MakeMethods::Generic
     'max_interval_characters',
     '_db_cache',
     'db_cache_class',
+  ],
+  
+  inheritable_boolean =>
+  [
+    'default_keyword_function_calls',
   ]
 );
 
@@ -62,6 +67,9 @@ __PACKAGE__->default_type('default');
 
 __PACKAGE__->max_array_characters(255);    # Used for array type emulation
 __PACKAGE__->max_interval_characters(255); # Used for interval type emulation
+
+__PACKAGE__->default_keyword_function_calls(
+  defined $ENV{'ROSE_DB_KEYWORD_FUNCTION_CALLS'} ? $ENV{'ROSE_DB_KEYWORD_FUNCTION_CALLS'} : 0);
 
 __PACKAGE__->driver_classes
 (
@@ -123,7 +131,7 @@ use Rose::Object::MakeMethods::Generic
     'type',
     'date_handler',
     'server_time_zone',
-    #'class',
+    'keyword_function_calls',
   ],
 
   'array' => 
@@ -471,6 +479,8 @@ sub class
   return $self->{'_origin_class'} = shift  if(@_);
   return $self->{'_origin_class'} || ref $self;
 }
+
+sub init_keyword_function_calls { ref($_[0])->default_keyword_function_calls }
 
 # sub init
 # {
@@ -1498,7 +1508,9 @@ sub format_boolean { $_[1] ? 1 : 0 }
 sub parse_boolean
 {
   my($self, $value) = @_;
-  return $value  if($self->validate_boolean_keyword($_[1]) || $_[1] =~ /^\w+\(.*\)$/);
+
+  return $value  if($self->validate_boolean_keyword($_[1]) || 
+    ($self->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/));
   return 1  if($value =~ /^(?:t(?:rue)?|y(?:es)?|1)$/i);
   return 0  if($value =~ /^(?:f(?:alse)?|no?|0)$/i);
 
@@ -1511,14 +1523,17 @@ sub parse_boolean
 sub format_date
 {
   my($self, $date) = @_;
-  return $date  if($self->validate_date_keyword($date) || $date =~ /^\w+\(.*\)$/);
+  return $date
+    if($self->validate_date_keyword($date) || 
+       ($self->keyword_function_calls && $date =~ /^\w+\(.*\)$/));
   return $self->date_handler->format_date($date);
 }
 
 sub format_datetime
 {
   my($self, $date) = @_;
-  return $date  if($self->validate_datetime_keyword($date) || $date =~ /^\w+\(.*\)$/);
+  return $date  if($self->validate_datetime_keyword($date) ||
+    ($self->keyword_function_calls && $date =~ /^\w+\(.*\)$/));
   return $self->date_handler->format_datetime($date);
 }
 
@@ -1528,7 +1543,8 @@ use constant HHMM_PRECISION   => 4;
 sub format_time
 {
   my($self, $time, $precision) = @_;
-  return $time  if($self->validate_time_keyword($time) || $time =~ /^\w+\(.*\)$/);
+  return $time  if($self->validate_time_keyword($time) ||
+    ($self->keyword_function_calls && $time =~ /^\w+\(.*\)$/));
 
   if(defined $precision)
   {
@@ -1554,7 +1570,8 @@ sub format_time
 sub format_timestamp
 {  
   my($self, $date) = @_;
-  return $date  if($self->validate_timestamp_keyword($date) || $date =~ /^\w+\(.*\)$/);
+  return $date  if($self->validate_timestamp_keyword($date) ||
+    ($self->keyword_function_calls && $date =~ /^\w+\(.*\)$/));
   return $self->date_handler->format_timestamp($date);
 }
 
@@ -1648,7 +1665,8 @@ sub parse_time
   my($self, $value) = @_;
 
   if(!defined $value || UNIVERSAL::isa($value, 'Time::Clock') || 
-     $self->validate_time_keyword($value) || $value =~ /^\w+\(.*\)$/)
+     $self->validate_time_keyword($value) || 
+     ($self->keyword_function_calls && $value =~ /^\w+\(.*\)$/))
   {
     return $value;
   }
@@ -1835,7 +1853,8 @@ sub parse_interval
   my($self, $value, $end_of_month_mode) = @_;
 
   if(!defined $value || UNIVERSAL::isa($value, 'DateTime::Duration') || 
-     $self->validate_interval_keyword($value) || $value =~ /^\w+\(.*\)$/)
+     $self->validate_interval_keyword($value) ||
+     ($self->keyword_function_calls && $value =~ /^\w+\(.*\)$/))
   {
     return $value;
   }
@@ -2026,7 +2045,7 @@ sub format_interval
   my($self, $dur) = @_;
 
   if(!defined $dur || $self->validate_interval_keyword($dur) ||
-     $dur =~ /^\w+\(.*\)$/)
+     ($self->keyword_function_calls && $dur =~ /^\w+\(.*\)$/))
   {
     return $dur;
   }
@@ -2945,6 +2964,10 @@ The class mapped to the special driver name "generic" will be used for any drive
 
 See the documentation for the L<new|/new> method for more information on how the driver influences the class of objects returned by the constructor.
 
+=item B<default_keyword_function_calls [BOOL]>
+
+Get or set a boolean default value for the L<keyword_function_calls|/keyword_function_calls> object attribute.  Defaults to the value of the C<ROSE_DB_KEYWORD_FUNCTION_CALLS> environment variable, it set to a defined value, or false otherwise.
+
 =item B<modify_db PARAMS>
 
 Modify a data source, setting the attributes specified in PARAMS, where
@@ -3271,6 +3294,10 @@ Initialize data source configuration information based on the current values of 
 
 Returns the name of the L<DBI> statement handle attribute that contains the auto-generated unique key created during the last insert operation.  Returns undef if the current data source does not support this attribute.
 
+=item B<keyword_function_calls [BOOL]>
+
+Get or set a boolean value that indicates whether or not any string that looks like a function call (matches C</^\w+\(.*\)$/>) will be treated as a "keyword" by the various L<format_*|/"Vendor-Specific Column Value Parsing and Formatting"> methods.  Defaults to the value returned by the L<default_keyword_function_calls|/default_keyword_function_calls> class method.
+
 =item B<last_insertid_from_sth STH>
 
 Given a L<DBI> statement handle, returns the value of the auto-generated unique key created during the last insert operation.  This value may be undefined if this feature is not supported by the current data source.
@@ -3532,7 +3559,7 @@ Converts the L<DateTime> object DATETIME into the appropriate format for the "da
 
 =item B<format_interval DURATION>
 
-Converts the L<DateTime::Duration> object DURATION into the appropriate format for the interval (years, months, days, hours, minutes, seconds) data type of the current data source. If DURATION is undefined, a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.
+Converts the L<DateTime::Duration> object DURATION into the appropriate format for the interval (years, months, days, hours, minutes, seconds) data type of the current data source. If DURATION is undefined, a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) and L<keyword_function_calls|/keyword_function_calls> is true, then it is returned unmodified.
 
 =item B<format_time TIMECLOCK>
 
@@ -3564,25 +3591,25 @@ Otherwise, undef is returned.
 
 Parse STRING and return a boolean value of 1 or 0.  STRING should be formatted according to the data source's native "boolean" data type.  The default implementation accepts 't', 'true', 'y', 'yes', and '1' values for true, and 'f', 'false', 'n', 'no', and '0' values for false.
 
-If STRING is a valid boolean keyword (according to L<validate_boolean_keyword|/validate_boolean_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "boolean" value.
+If STRING is a valid boolean keyword (according to L<validate_boolean_keyword|/validate_boolean_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) and L<keyword_function_calls|/keyword_function_calls> is true, then it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "boolean" value.
 
 =item B<parse_date STRING>
 
 Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the data source's native "date" (month, day, year) data type.
 
-If STRING is a valid date keyword (according to L<validate_date_keyword|/validate_date_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "date" value.
+If STRING is a valid date keyword (according to L<validate_date_keyword|/validate_date_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) and L<keyword_function_calls|/keyword_function_calls> is true, then it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "date" value.
 
 =item B<parse_datetime STRING>
 
 Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the data source's native "datetime" (month, day, year, hour, minute, second) data type.
 
-If STRING is a valid datetime keyword (according to L<validate_datetime_keyword|/validate_datetime_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "datetime" value.
+If STRING is a valid datetime keyword (according to L<validate_datetime_keyword|/validate_datetime_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) and L<keyword_function_calls|/keyword_function_calls> is true, then it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "datetime" value.
 
 =item B<parse_interval STRING [, MODE]>
 
 Parse STRING and return a L<DateTime::Duration> object.  STRING should be formatted according to the data source's native "interval" (years, months, days, hours, minutes, seconds) data type.
 
-If STRING is a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) then it is returned unmodified.  Otherwise, undef is returned if STRING could not be parsed as a valid "interval" value.
+If STRING is a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) and L<keyword_function_calls|/keyword_function_calls> is true, then it is returned unmodified.  Otherwise, undef is returned if STRING could not be parsed as a valid "interval" value.
 
 This optional MODE argyment determines how math is done on duration objects.  If defined, the C<end_of_month> setting for each L<DateTime::Duration> object created by this column will have its mode set to MODE.  Otherwise, the C<end_of_month> parameter will not be passed to the L<DateTime::Duration> constructor.
 
@@ -3592,13 +3619,13 @@ Valid modes are C<wrap>, C<limit>, and C<preserve>.  See the documentation for L
 
 Parse STRING and return a L<Time::Clock> object.  STRING should be formatted according to the data source's native "time" (hour, minute, second, fractional seconds) data type.
 
-If STRING is a valid time keyword (according to L<validate_time_keyword|/validate_time_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "time" value.
+If STRING is a valid time keyword (according to L<validate_time_keyword|/validate_time_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) and L<keyword_function_calls|/keyword_function_calls> is true, then it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "time" value.
 
 =item B<parse_timestamp STRING>
 
 Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the data source's native "timestamp" (month, day, year, hour, minute, second, fractional seconds) data type.  Fractional seconds are optional, and the acceptable precision may vary depending on the data source.  
 
-If STRING is a valid timestamp keyword (according to L<validate_timestamp_keyword|/validate_timestamp_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "timestamp" value.
+If STRING is a valid timestamp keyword (according to L<validate_timestamp_keyword|/validate_timestamp_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) and L<keyword_function_calls|/keyword_function_calls> is true, then it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "timestamp" value.
 
 =item B<validate_boolean_keyword STRING>
 
