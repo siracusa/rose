@@ -4,7 +4,7 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 198;
+use Test::More tests => 202;
 
 BEGIN
 {
@@ -88,7 +88,17 @@ is($dump->{'test'}{'aux'}{'username'}, 'postgres', 'dump() 1');
 
 is(IN_TRANSACTION, -1, 'IN_TRANSACTION');
 
+is(My::DB2->default_keyword_function_calls, 0, 'default_keyword_function_calls 1');
+My::DB2->default_keyword_function_calls(1);
+is(My::DB2->default_keyword_function_calls, 1, 'default_keyword_function_calls 2');
+
 my $db = My::DB2->new;
+
+is($db->keyword_function_calls, 1, 'keyword_function_calls 1');
+
+$db = My::DB2->new;
+
+is($db->keyword_function_calls, 1, 'keyword_function_calls 2');
 
 is(My::DB2->default_domain, 'test', 'default_domain() 1');
 is(My::DB2->default_type, 'default', 'default_type() 1');
