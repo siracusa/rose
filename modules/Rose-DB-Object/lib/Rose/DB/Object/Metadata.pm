@@ -5553,7 +5553,7 @@ If no L<primary_key_generator|/primary_key_generator> is defined, new primary ke
 
 =item B<include_predicated_unique_indexes [BOOL]>
 
-Get or set a boolean value that indicates whether or not the L<auto_init_unique_keys|/auto_init_unique_keys> method will create L<unique keys|/add_unique_keys> for unique indexes that have predicates.  The default value is false.  This feature is currently only suppported for PostgreSQL.
+Get or set a boolean value that indicates whether or not the L<auto_init_unique_keys|/auto_init_unique_keys> method will create L<unique keys|/add_unique_keys> for unique indexes that have predicates.  The default value is false.  This feature is currently only supported for PostgreSQL.
 
 Here's an example of a unique index that has a predicate:
 
