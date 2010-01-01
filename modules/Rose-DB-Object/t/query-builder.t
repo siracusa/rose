@@ -13,7 +13,7 @@ BEGIN
 
 SKIP:
 {
-  skip("all tests", 1)  unless(have_db('sqlite'));
+  skip("all tests", 1)  unless(have_db('sqlite_admin'));
 
   my $dbh = get_dbh('sqlite');
 
@@ -30,7 +30,7 @@ SKIP:
         type     => 'news',
         title    => { like => [ '%million%', 
                                 '%resident%' ] },
-        id => [ \'id', 1 ],
+        id => [ \q(id), 1 ],
       ],
       query_is_sql => 1
     );
