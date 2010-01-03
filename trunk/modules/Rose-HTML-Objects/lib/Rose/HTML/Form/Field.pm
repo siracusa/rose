@@ -18,7 +18,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.606';
+our $VERSION = '0.607';
 
 #our $Debug = 0;
 
@@ -55,6 +55,7 @@ __PACKAGE__->add_valid_html_attrs(qw(
   onfocus
   accesskey
   tabindex
+  autofocus
 ));
 
 sub is_button { 0 }

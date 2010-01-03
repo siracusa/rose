@@ -4,7 +4,7 @@ use strict;
 
 use base 'Rose::HTML::Form::Field';
 
-our $VERSION = '0.606';
+our $VERSION = '0.607';
 
 __PACKAGE__->add_valid_html_attrs
 (
@@ -27,6 +27,12 @@ __PACKAGE__->add_valid_html_attrs
   'checked',   # (checked)      #IMPLIED
   'disabled',  # (disabled)     #IMPLIED
   'readonly',  # (readonly)     #IMPLIED
+  'placeholder',
+  'formaction',
+  'formenctype',
+  'formmethod',
+  'formnovalidate',
+  'formtarget',
 );
 
 __PACKAGE__->add_required_html_attrs(
