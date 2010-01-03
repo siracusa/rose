@@ -44,6 +44,7 @@ __PACKAGE__->add_valid_html_attrs
   'onreset',        # %Script;       #IMPLIED  -- the form was reset --
   'accept-charset', # %Charsets;     #IMPLIED  -- list of supported charsets --
   'target',         # http://www.w3.org/TR/xhtml-modularization/abstract_modules.html#s_targetmodule
+  'novalidate',
 );
 
 __PACKAGE__->add_required_html_attrs(
