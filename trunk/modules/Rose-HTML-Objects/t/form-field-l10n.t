@@ -185,6 +185,7 @@ is($o->error, 'This is a required field.', 'error label 2');
 
 $o = Rose::HTML::Form::Field->new(name => 'test', required => 1);
 $o->locale('bg');
+$DB::single = 1;
 $o->validate;
 
 $error = $o->error;

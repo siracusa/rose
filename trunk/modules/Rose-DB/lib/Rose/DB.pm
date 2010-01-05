@@ -2168,9 +2168,13 @@ sub format_select_from_subselect { "(\n$_[1]\n  )" }
 
 sub likes_redundant_join_conditions { 0 }
 sub likes_lowercase_table_names     { 0 }
+sub likes_uppercase_table_names     { 0 }
 sub likes_lowercase_schema_names    { 0 }
+sub likes_uppercase_schema_names    { 0 }
 sub likes_lowercase_catalog_names   { 0 }
+sub likes_uppercase_catalog_names   { 0 }
 sub likes_lowercase_sequence_names  { 0 }
+sub likes_uppercase_sequence_names  { 0 }
 sub likes_implicit_joins            { 0 }
 
 sub supports_schema  { 0 }

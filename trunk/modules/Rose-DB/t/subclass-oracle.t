@@ -62,9 +62,9 @@ foreach my $val (qw(f 0 false False F n N no No))
   is($db->format_boolean($db->parse_boolean($val)), 'f', "format_boolean ($val)");
 }
 
-is($db->auto_quote_column_name('foo_bar_123'), 'foo_bar_123', 'auto_quote_column_name 1')
-is($db->auto_quote_column_name('claim#'), 'claim#', 'auto_quote_column_name 2')
-is($db->auto_quote_column_name('foo-bar'), '"foo-bar"', 'auto_quote_column_name 3')
+is($db->auto_quote_column_name('foo_bar_123'), 'foo_bar_123', 'auto_quote_column_name 1');
+is($db->auto_quote_column_name('claim#'), 'claim#', 'auto_quote_column_name 2');
+is($db->auto_quote_column_name('foo-bar'), '"foo-bar"', 'auto_quote_column_name 3');
 
 my $dbh;
 eval { $dbh = $db->dbh };
