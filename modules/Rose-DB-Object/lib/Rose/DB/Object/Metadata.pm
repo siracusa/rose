@@ -2751,9 +2751,9 @@ sub primary_key_sequence_names
 
     my $ret = $self->{'primary_key_sequence_names'}{$db_id} = 
       (@_ == 1 && ref $_[0]) ? $_[0] : [ @_ ];
-
+$DB::single = 1;
     # Push down into pk metadata object too
-    $self->primary_key->sequence_names($db, @$ret);
+    $self->primary_key->sequence_names(($db ? $db : ()), @$ret);
 
     return wantarray ? @$ret : $ret;
   }

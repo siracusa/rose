@@ -30,51 +30,7 @@ FOO:
   sub auto_foreign_key_name 
   {
     $JCS::Called_Custom_CM{$_[0]->parent->class}++;
-    lc shift->SUPER::auto_foreign_key_name(@_);
-  }
-
-  sub table_to_class
-  {
-    my($self, $table, $prefix, $plural) = @_;
-    $table = lc $self->plural_to_singular($table)  unless($plural);
-    $table =~ s/_(.)/\U$1/g;
-    $table =~ s/[^\w:]/_/g;
-    return ($prefix || '') . ucfirst $table;
-  }
-
-  sub auto_column_method_name
-  {
-    my($self, $type, $column, $name, $object_class) = @_;
-    return lc $name;
-  }
-  
-  sub auto_relationship_name_one_to_one
-  {
-    my($self, $table, $class) = @_;
-    $self->SUPER::auto_relationship_name_one_to_one(lc $table, $class);
-  }
-
-  sub auto_table_to_relationship_name_plural
-  {
-    lc shift->SUPER::auto_table_to_relationship_name_plural(@_);
-  }
-  
-  sub auto_foreign_key_to_relationship_name_plural
-  {
-    lc shift->SUPER::auto_foreign_key_to_relationship_name_plural(@_);
-  }
-}
-
-sub oracle_pre_init
-{
-  my($self) = shift;
-  
-  my $table = $self->table;
-  my @pk_cols = $self->primary_key_column_names;
-
-  if(@pk_cols == 1)
-  {
-    $self->primary_key_sequence_names(uc join('_', $table, @pk_cols, 'seq'));
+	shift->SUPER::auto_foreign_key_name(@_);
   }
 }
 
@@ -108,10 +64,11 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
   my $db = Rose::DB->new;
   my $loader = 
     Rose::DB::Object::Loader->new(
-      db            => $db,
-      class_prefix  => $class_prefix,
+      db              => $db,
+      class_prefix    => $class_prefix,
+      force_lowercase => 1,
       ($db_type eq 'mysql' ? (require_primary_key => 0) : ()),
-      pre_init_hook => sub { $pre_init_hook++; &oracle_pre_init if($db_type eq 'oracle') });
+      pre_init_hook   => sub { $pre_init_hook++ });
 
   my %extra_loader_args;
 
@@ -1233,5 +1190,4 @@ END
 
     $dbh->disconnect;
   }
-
 }

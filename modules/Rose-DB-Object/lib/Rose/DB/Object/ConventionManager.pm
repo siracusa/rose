@@ -25,6 +25,8 @@ use Rose::Object::MakeMethods::Generic
   boolean => 
   [
     tables_are_singular => { default => 0 },
+    force_lowercase     => { default => 0 },
+    no_auto_sequences   => { default => 0 },
   ],
 );
 
@@ -64,6 +66,7 @@ sub table_to_class_plural
 sub table_to_class
 {
   my($self, $table, $prefix, $plural) = @_;
+  $table = lc $table if ($self->force_lowercase);
   $table = $self->plural_to_singular($table)  unless($plural);
   $table =~ s/_(.)/\U$1/g;
   $table =~ s/[^\w:]/_/g;
@@ -182,6 +185,7 @@ sub auto_primary_key_column_names
 sub auto_column_method_name
 {
   my($self, $type, $column, $name, $object_class) = @_;
+  return lc $name if ($self->force_lowercase);
   return undef; # rely on hard-coded defaults in Metadata
 }
 
@@ -273,9 +277,22 @@ sub method_name_conflicts
   return 0;
 }
 
+sub auto_primary_key_column_sequence_name
+{
+  my($self, $table, $column) = @_;
+  return join('_', $table, $column, 'seq');
+}
+
 sub auto_foreign_key_name
 {
   my($self, $f_class, $current_name, $key_columns, $used_names) = @_;
+
+  if($self->force_lowercase)
+  {
+    $current_name = lc $current_name;
+    $key_columns = { map { lc } %$key_columns };
+  }
+
   my $f_meta = $f_class->meta or return $current_name;
   my $name = $self->plural_to_singular($f_meta->table) || $current_name;
 
@@ -285,7 +302,7 @@ sub auto_foreign_key_name
 
     # Try to lop off foreign column name.  Example:
     # my_foreign_object_id -> my_foreign_object
-    if($local_column =~ s/_$foreign_column$//)
+    if($local_column =~ s/_$foreign_column$//i)
     {
       $name = $local_column;
     }
@@ -323,6 +340,7 @@ sub auto_foreign_key_name
 sub auto_table_to_relationship_name_plural
 {
   my($self, $table) = @_;
+  $table = lc $table if ($self->force_lowercase);
   return $self->tables_are_singular ? $self->singular_to_plural($table) : $table;
 }
 
@@ -335,7 +353,8 @@ sub auto_class_to_relationship_name_plural
 sub auto_foreign_key_to_relationship_name_plural
 {
   my($self, $fk) = @_;
-  return $self->singular_to_plural($fk->name);
+  my $name = $self->force_lowercase ? lc $fk->name : $fk->name;
+  return $self->singular_to_plural($name);
 }
 
 sub auto_relationship_name_one_to_many
@@ -398,6 +417,9 @@ sub auto_relationship_name_many_to_many
 sub auto_relationship_name_one_to_one
 {
   my($self, $table, $class) = @_;
+
+  $table = lc $table if ($self->force_lowercase);
+
   my $name = $self->plural_to_singular($table);
 
   # Avoid method name conflicts

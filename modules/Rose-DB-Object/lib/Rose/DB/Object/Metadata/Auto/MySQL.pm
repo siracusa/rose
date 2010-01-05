@@ -12,6 +12,22 @@ our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
 our $VERSION = '0.784';
 
+sub auto_init_primary_key_columns
+{
+  my($self) = shift;
+
+  $self->SUPER::auto_init_primary_key_columns(@_);
+
+  # Wipe pk defaults because stupid MySQL adds them implicitly
+  foreach my $name ($self->primary_key_columns)
+  {
+    my $column = $self->column($name) or next;
+    $column->default(undef);
+  }
+
+  return;
+}
+
 sub auto_generate_unique_keys
 {
   my($self) = shift;

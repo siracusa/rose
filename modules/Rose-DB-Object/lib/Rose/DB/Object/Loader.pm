@@ -54,9 +54,11 @@ use Rose::Object::MakeMethods::Generic
     'with_managers'       => { default => 1 },
     'with_foreign_keys'   => { default => 1 },
     'with_unique_keys'    => { default => 1 },
-    'convention_manager_was_set'  => { default => 0 },
-    'warn_on_missing_primary_key',
+    'force_lowercase'     => { default => 0 },
+    'convention_manager_was_set'        => { default => 0 },
     'include_predicated_unique_indexes' => { default => 0 },
+    'warn_on_missing_primary_key',
+    'no_auto_sequences' => { default => 0 },
   ],
 );
 
@@ -605,6 +607,12 @@ sub make_classes
   $args{'with_unique_keys'} = $self->with_unique_keys
     unless(exists $args{'with_unique_keys'});
 
+  my $force_lowercase = exists $args{'force_lowercase'} ? 
+    delete $args{'force_lowercase'} : $self->force_lowercase;
+
+  my $no_auto_sequences = exists $args{'no_auto_sequences'} ? 
+    delete $args{'no_auto_sequences'} : $self->no_auto_sequences;
+
   my $pre_init_hook = exists $args{'pre_init_hook'} ? 
     delete $args{'pre_init_hook'} : $self->pre_init_hook;
 
@@ -919,6 +927,10 @@ sub make_classes
   }
 
   die "Missing convention manager"  unless($cm);
+
+  # Propagate CM-relevant attributes
+  $cm->force_lowercase($force_lowercase);
+  $cm->no_auto_sequences($no_auto_sequences);
 
   $self->convention_manager($cm);
 
