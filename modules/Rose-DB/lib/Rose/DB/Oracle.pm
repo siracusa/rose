@@ -210,6 +210,18 @@ sub quote_identifier_for_sequence
   return join('.', grep { defined } ($schema, $table));
 }
 
+sub auto_quote_column_name
+{
+  my($self, $name) = @_;
+
+  if($name =~ /[^\w#]/ || $self->is_reserved_word($name))
+  {
+    return $self->quote_column_name($name, @_);
+  }
+
+  return $name;
+}
+
 sub supports_schema { 1 }
 
 sub max_column_name_length { 30 }

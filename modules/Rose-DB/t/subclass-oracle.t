@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 59);
+    Test::More->import(tests => 62);
   }
 }
 
@@ -61,6 +61,10 @@ foreach my $val (qw(f 0 false False F n N no No))
 {
   is($db->format_boolean($db->parse_boolean($val)), 'f', "format_boolean ($val)");
 }
+
+is($db->auto_quote_column_name('foo_bar_123'), 'foo_bar_123', 'auto_quote_column_name 1')
+is($db->auto_quote_column_name('claim#'), 'claim#', 'auto_quote_column_name 2')
+is($db->auto_quote_column_name('foo-bar'), '"foo-bar"', 'auto_quote_column_name 3')
 
 my $dbh;
 eval { $dbh = $db->dbh };
@@ -183,15 +187,3 @@ My::DB2->register_db
 );
 
 is(My::DB2->new('dsn4')->dsn, 'dbi:Oracle:sid=somedb;host=somehost;port=someport', 'dsn 4');
-
-sub lookup_ip
-{
-  my($name) = shift || return 0;
-
-  my $address = (gethostbyname($name))[4] or return 0;
-
-  my @octets = unpack("CCCC", $address);
-
-  return 0  unless($name && @octets);
-  return join('.', @octets), "\n";
-}
