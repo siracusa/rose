@@ -2050,6 +2050,7 @@ CREATE TABLE rose_db_object_test
   nums           VARCHAR(255),
   start_date     DATE,
   save           INT,
+  claim#         INT,
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP
 )
@@ -2097,6 +2098,7 @@ EOF
       status   => { default => 'active', add_methods => [ qw(get set) ] },
       start_date => { type => 'date', default => '12/24/1980', lazy => 1 },
       save     => { type => 'scalar' },
+      'claim#' => { type => 'int' },
       nums     => { type => 'array' },
       bitz     => { type => 'bitfield', bits => 5, default => 101, alias => 'bits' },
       decs     => { type => 'decimal', precision => 10, scale => 2 },

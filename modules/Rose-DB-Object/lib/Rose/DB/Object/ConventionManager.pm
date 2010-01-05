@@ -220,7 +220,7 @@ sub plural_to_singular
 
   $word =~ s/ies$/y/i;
 
-  return $word  if($word =~ s/ses$/s/);
+  return $word  if($word =~ s/ses$/s/i);
   return $word  if($word =~ /[aeiouy]ss$/i);
 
   $word =~ s/s$//i;
@@ -462,7 +462,7 @@ sub looks_like_map_table
                     (?:\w+_){2,}map             # foo_bar_map
                   | (?:\w+_)*\w+_(?:\w+_)*\w+s  # foo_bars
                   | (?:\w+_)*\w+s_(?:\w+_)*\w+s # foos_bars
-               )$}x)
+               )$}xi)
   {
     return 1;
   }

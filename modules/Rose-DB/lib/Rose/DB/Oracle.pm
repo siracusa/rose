@@ -128,6 +128,13 @@ sub database_version
 
 sub dbi_driver { 'Oracle' }
 
+sub likes_uppercase_table_names     { 1 }
+sub likes_uppercase_schema_names    { 1 }
+sub likes_uppercase_catalog_names   { 1 }
+sub likes_uppercase_sequence_names  { 1 }
+
+sub insertid_param { '' }
+
 sub list_tables
 {
   my($self, %args) = @_;

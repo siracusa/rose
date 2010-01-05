@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 33) + 9;
+use Test::More tests => 1 + (6 * 33) + 9;
 
 BEGIN 
 {
@@ -30,13 +30,57 @@ FOO:
   sub auto_foreign_key_name 
   {
     $JCS::Called_Custom_CM{$_[0]->parent->class}++;
-    shift->SUPER::auto_foreign_key_name(@_);
+    lc shift->SUPER::auto_foreign_key_name(@_);
+  }
+
+  sub table_to_class
+  {
+    my($self, $table, $prefix, $plural) = @_;
+    $table = lc $self->plural_to_singular($table)  unless($plural);
+    $table =~ s/_(.)/\U$1/g;
+    $table =~ s/[^\w:]/_/g;
+    return ($prefix || '') . ucfirst $table;
+  }
+
+  sub auto_column_method_name
+  {
+    my($self, $type, $column, $name, $object_class) = @_;
+    return lc $name;
+  }
+  
+  sub auto_relationship_name_one_to_one
+  {
+    my($self, $table, $class) = @_;
+    $self->SUPER::auto_relationship_name_one_to_one(lc $table, $class);
+  }
+
+  sub auto_table_to_relationship_name_plural
+  {
+    lc shift->SUPER::auto_table_to_relationship_name_plural(@_);
+  }
+  
+  sub auto_foreign_key_to_relationship_name_plural
+  {
+    lc shift->SUPER::auto_foreign_key_to_relationship_name_plural(@_);
+  }
+}
+
+sub oracle_pre_init
+{
+  my($self) = shift;
+  
+  my $table = $self->table;
+  my @pk_cols = $self->primary_key_column_names;
+
+  if(@pk_cols == 1)
+  {
+    $self->primary_key_sequence_names(uc join('_', $table, @pk_cols, 'seq'));
   }
 }
 
 my $i = 1;
 
-foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
+foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
 {
   SKIP:
   {
@@ -67,7 +111,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
       db            => $db,
       class_prefix  => $class_prefix,
       ($db_type eq 'mysql' ? (require_primary_key => 0) : ()),
-      pre_init_hook => sub { $pre_init_hook++ });
+      pre_init_hook => sub { $pre_init_hook++; &oracle_pre_init if($db_type eq 'oracle') });
 
   my %extra_loader_args;
 
@@ -121,6 +165,12 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     @classes = $loader->make_classes(include_tables => $Include_Tables . 
                                      ($db_type eq 'mysql' ? '|read' : ''),
                                      %extra_loader_args);
+
+    foreach my $class (@classes)
+    {
+      next unless($class->isa('Rose::DB::Object'));
+      print $class->meta->perl_class_definition, "\n";
+    }
 
     if($db_type eq 'sqlite')
     {
@@ -216,9 +266,9 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
     SKIP: { skip("bigserial test for $db_type", 1) }
   }
 
-  if($db_type eq 'informix')
+  if($db_type eq 'informix' || $db_type eq 'oracle')
   {
-    SKIP: { skip("count distinct multi-pk doesn't work in Informix yet", 1) }
+    SKIP: { skip("count distinct multi-pk doesn't work in \u$db_type yet", 1) }
   }
   else
   {
@@ -931,6 +981,157 @@ EOF
 
     $dbh->disconnect;
   }
+
+  #
+  # Oracle
+  #
+
+  eval
+  {
+    $dbh = Rose::DB->new('oracle_admin')->retain_dbh()
+      or die Rose::DB->error;
+  };
+
+  if(!$@ && $dbh)
+  {
+    $Have{'oracle'} = 1;
+
+    # Drop existing tables, ignoring errors
+    {
+      local $dbh->{'RaiseError'} = 0;
+      local $dbh->{'PrintError'} = 0;
+
+      $dbh->do('DROP TABLE no_pk_test');
+      $dbh->do('DROP TABLE products_colors');
+      $dbh->do('DROP TABLE colors');
+      $dbh->do('DROP TABLE prices');
+      $dbh->do('DROP TABLE products');
+      $dbh->do('DROP TABLE vendors');
+      $dbh->do('DROP SEQUENCE vendors_id_seq');
+      $dbh->do('DROP SEQUENCE products_id_seq');
+      $dbh->do('DROP SEQUENCE prices_id_seq');
+      $dbh->do('DROP SEQUENCE colors_id_seq');
+    }
+
+    $dbh->do(<<"EOF");
+CREATE TABLE no_pk_test
+(
+  id    INT NOT NULL,
+  name  VARCHAR(255) NOT NULL,
+  
+  CONSTRAINT no_pk_test_name UNIQUE (name)
+)
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE vendors
+(
+  id    INT NOT NULL PRIMARY KEY,
+  name  VARCHAR(255) NOT NULL,
+
+  CONSTRAINT vendors_name UNIQUE (name)
+)
+EOF
+    
+    $dbh->do('CREATE SEQUENCE vendors_id_seq');
+    $dbh->do(<<"EOF");
+CREATE OR REPLACE TRIGGER vendors_insert BEFORE INSERT ON vendors
+FOR EACH ROW
+BEGIN
+    SELECT NVL(:new.id, vendors_id_seq.nextval)
+      INTO :new.id FROM dual;
+END;
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE products
+(
+  id      INT NOT NULL PRIMARY KEY,
+  name    VARCHAR(255) NOT NULL,
+  price   DECIMAL(10,2) DEFAULT 0.00 NOT NULL,
+
+  vendor_id  INT,
+
+  status  VARCHAR(128) DEFAULT 'inactive' NOT NULL
+            CHECK(status IN ('inactive', 'active', 'defunct')),
+
+  rint1         INT,
+  bint1         NUMBER(20) DEFAULT 9223372036854775800,
+
+  date_created  TIMESTAMP,
+
+  CONSTRAINT products_name UNIQUE (name),
+  CONSTRAINT products_vendor_id_fk FOREIGN KEY (vendor_id) REFERENCES vendors (id)
+)
+EOF
+
+    $dbh->do('CREATE SEQUENCE products_id_seq');
+    $dbh->do(<<"EOF");
+CREATE OR REPLACE TRIGGER products_insert BEFORE INSERT ON products
+FOR EACH ROW
+BEGIN
+    SELECT NVL(:new.id, products_id_seq.nextval)
+      INTO :new.id FROM dual;
+END;
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE prices
+(
+  id          INT NOT NULL PRIMARY KEY,
+  product_id  INT NOT NULL,
+  region      CHAR(2) DEFAULT 'US' NOT NULL,
+  price       NUMBER(10,2) DEFAULT 0.00 NOT NULL,
+
+  CONSTRAINT prices_uk UNIQUE (product_id, region),
+  CONSTRAINT prices_product_id_fk FOREIGN KEY (product_id) REFERENCES products (id)
+)
+EOF
+    
+    $dbh->do('CREATE SEQUENCE prices_id_seq');
+    $dbh->do(<<"EOF");
+CREATE OR REPLACE TRIGGER prices_insert BEFORE INSERT ON prices
+FOR EACH ROW
+BEGIN
+    SELECT NVL(:new.id, prices_id_seq.nextval)
+      INTO :new.id FROM dual;
+END;
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE colors
+(
+  id    INT NOT NULL PRIMARY KEY,
+  name  VARCHAR(255) NOT NULL,
+
+  CONSTRAINT colors_name UNIQUE (name)
+)
+EOF
+
+    $dbh->do('CREATE SEQUENCE colors_id_seq');
+    $dbh->do(<<"EOF");
+CREATE OR REPLACE TRIGGER colors_insert BEFORE INSERT ON colors
+FOR EACH ROW
+BEGIN
+    SELECT NVL(:new.id, colors_id_seq.nextval)
+      INTO :new.id FROM dual;
+END;
+EOF
+
+    $dbh->do(<<"EOF");
+CREATE TABLE products_colors
+(
+  product_id  INT NOT NULL,
+  color_id    INT NOT NULL,
+
+  CONSTRAINT products_colors_pk PRIMARY KEY (product_id, color_id),
+  CONSTRAINT products_colors_product_id_fk FOREIGN KEY (product_id) REFERENCES products (id), 
+  CONSTRAINT products_colors_color_id_fk FOREIGN KEY (color_id) REFERENCES colors (id)
+)
+EOF
+
+    $dbh->disconnect;
+  }
 }
 
 END
@@ -1012,4 +1213,25 @@ END
 
     $dbh->disconnect;
   }
+
+  if($Have{'oracle'})
+  {
+    # Informix
+    my $dbh = Rose::DB->new('oracle_admin')->retain_dbh()
+      or die Rose::DB->error;
+
+    $dbh->do('DROP TABLE no_pk_test');
+    $dbh->do('DROP TABLE products_colors');
+    $dbh->do('DROP TABLE colors');
+    $dbh->do('DROP TABLE prices');
+    $dbh->do('DROP TABLE products');
+    $dbh->do('DROP TABLE vendors');
+    $dbh->do('DROP SEQUENCE vendors_id_seq');
+    $dbh->do('DROP SEQUENCE products_id_seq');
+    $dbh->do('DROP SEQUENCE prices_id_seq');
+    $dbh->do('DROP SEQUENCE colors_id_seq');
+
+    $dbh->disconnect;
+  }
+
 }

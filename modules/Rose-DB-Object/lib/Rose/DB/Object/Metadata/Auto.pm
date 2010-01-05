@@ -60,6 +60,54 @@ __PACKAGE__->default_perl_indent(4);
 __PACKAGE__->default_perl_braces('k&r');
 __PACKAGE__->default_perl_unique_key_style('array');
 
+sub auto_formatted_schema
+{
+  my($self, $db) = @_;
+
+  $db ||= $self->db;
+
+  my $schema = $self->select_schema($db);
+
+  $schema = $db->default_implicit_schema  unless(defined $schema);
+
+  if(defined $schema)
+  {
+    if($db->likes_lowercase_schema_names)
+    {
+      $schema = lc $schema;
+    }
+    elsif($db->likes_uppercase_schema_names)
+    {
+      $schema = uc $schema;
+    }
+  }
+  
+  return $schema;
+}
+
+sub auto_formatted_catalog
+{
+  my($self, $db) = @_;
+
+  $db ||= $self->db;
+
+  my $catalog = $self->select_catalog($db);
+
+  if(defined $catalog)
+  {
+    if($db->likes_lowercase_catalog_names)
+    {
+      $catalog = lc $catalog;
+    }
+    elsif($db->likes_uppercase_catalog_names)
+    {
+      $catalog = uc $catalog;
+    }
+  }
+  
+  return $catalog;
+}
+
 sub auto_generate_columns
 {
   my($self) = shift;
@@ -85,12 +133,8 @@ sub auto_generate_columns
 
       my $table_unquoted = $db->unquote_table_name($table);
 
-      $catalog = $self->select_catalog($db);
-      $schema  = $self->select_schema($db); 
-      $schema  = $db->default_implicit_schema  unless(defined $schema);
-
-      $schema  = lc $schema   if(defined $schema && $db->likes_lowercase_schema_names);
-      $catalog = lc $catalog  if(defined $catalog && $db->likes_lowercase_catalog_names);
+      $catalog = $self->auto_formatted_catalog($db);
+      $schema  = $self->auto_formatted_schema($db);
 
       my $sth = $dbh->column_info($catalog, $schema, $table_unquoted, '%');
 
@@ -302,8 +346,8 @@ sub auto_retrieve_primary_key_column_names
   }
 
   my $db      = $self->db;
-  my $catalog = $self->select_catalog($db);
-  my $schema  = $self->select_schema($db);
+  my $catalog = $self->auto_formatted_catalog($db);
+  my $schema  = $self->auto_formatted_schema($db);
 
   my($pk_columns, $error);
 
@@ -364,12 +408,8 @@ sub auto_generate_foreign_keys
 
       local $dbh->{'FetchHashKeyName'} = 'NAME';
 
-      my $catalog = $self->select_catalog($db);
-      my $schema  = $self->select_schema($db); 
-      $schema = $db->default_implicit_schema  unless(defined $schema);
-
-      $schema  = lc $schema   if(defined $schema && $db->likes_lowercase_schema_names);
-      $catalog = lc $catalog  if(defined $catalog && $db->likes_lowercase_catalog_names);
+      my $catalog = $self->auto_formatted_catalog($db);
+      my $schema  = $self->auto_formatted_schema($db);
 
       my $table = $db->likes_lowercase_table_names ? lc $self->table : $self->table;
 
