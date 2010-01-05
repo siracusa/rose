@@ -11,6 +11,38 @@ our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
 our $VERSION = '0.784';
 
+sub auto_init_primary_key_columns
+{
+  my($self) = shift;
+
+  $self->SUPER::auto_init_primary_key_columns(@_);
+
+  my $cm = $self->convention_manager;
+
+  return  unless($cm->no_auto_sequences);
+
+  my @sequences;
+  my $table = $self->table;
+
+  # Auto-add expected sequence for what look like single-column
+  # non-null "serial" columns.
+  my @pk_columns = $self->primary_key_columns;
+  
+  if(@pk_columns == 1)
+  {
+    foreach my $name (@pk_columns)
+    {
+      my $column = $self->column($name) or next;
+      next unless ($column->not_null);
+      push(@sequences, $cm->auto_primary_key_column_sequence_name($table, $name));
+    }
+
+    $self->primary_key_sequence_names(@sequences)  if(@sequences);
+  }
+
+  return;
+}
+
 use constant UNIQUE_INDEX_SQL => <<'EOF';
 select ai.index_name FROM ALL_INDEXES ai, ALL_CONSTRAINTS ac 
 WHERE ai.index_name = ac.constraint_name AND 
