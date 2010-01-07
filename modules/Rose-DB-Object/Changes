@@ -1,6 +1,7 @@
 0.785_01 (01.01.2010) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a POD typo (RT 53272)
+    * TODO: Parameterize DateTime class name in column method-makers?
     * TODO: SELECT FOR UPDATE
     * TODO: Update docs for has_loaded_related() and/or make a better
       solution to avoid re-fetching nonexistent objects after Manager
