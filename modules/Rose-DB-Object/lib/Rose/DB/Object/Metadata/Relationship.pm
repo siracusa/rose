@@ -193,7 +193,7 @@ sub perl_relationship_definition_attributes
       {
         my $def_types = $self->init_auto_method_types;
 
-        CHECK: foreach my $def_type (@$def_types)
+        TYPE: foreach my $def_type (@$def_types)
         {
           my $found = 0;
 
@@ -202,7 +202,7 @@ sub perl_relationship_definition_attributes
             if($type eq $def_type)
             {
               $found++;
-              next CHECK;
+              next TYPE;
             }
           }
 
