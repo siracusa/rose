@@ -1459,7 +1459,7 @@ Here's the map class.
       ],
     );
 
-It's important that the map class have either a foreign key or a "many to one" relationship pointing to each of the tables that it maps between.  In this case, there are two foreign keys.  Also note that both foreign classes, C<Product> and C<Color>, must be loaded by the map class.
+It's important that the map class have either a foreign key or a "many to one" relationship pointing to each of the tables that it maps between.  In this case, there are two foreign keys.
 
 Finally, here's the "many to many" relationship definition in the C<Product> class.
 
