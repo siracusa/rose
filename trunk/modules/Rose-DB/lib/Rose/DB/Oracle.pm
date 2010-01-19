@@ -2,13 +2,14 @@ package Rose::DB::Oracle;
 
 use strict;
 
+use Carp();
 use SQL::ReservedWords::Oracle();
 
 use Rose::DB;
 
 our $Debug = 0;
 
-our $VERSION  = '0.756';
+our $VERSION  = '0.757';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -80,15 +81,14 @@ sub use_auto_sequence_name { 1 }
 sub auto_sequence_name
 {
   my($self, %args) = @_;
-  my($table)       = $args{'table'};
 
+  my($table) = $args{'table'};
   Carp::croak 'Missing table argument' unless(defined $table);
 
   my($column) = $args{'column'};
-
   Carp::croak 'Missing column argument' unless(defined $column);
 
-  return lc "${table}_${column}_seq";
+  return uc "${table}_${column}_SEQ";
 }
 
 sub build_dsn
@@ -176,11 +176,11 @@ sub list_tables
 
 sub next_value_in_sequence
 {
-  my($self, $seq) = @_;
+  my($self, $sequence_name) = @_;
 
   my $dbh = $self->dbh or return undef;
 
-  my($error, $id);
+  my($error, $value);
 
   TRY:
   {
@@ -188,11 +188,51 @@ sub next_value_in_sequence
 
     eval
     {
-      my($sth) = $dbh->prepare("SELECT $seq.nextval FROM dual");
+      local $dbh->{'PrintError'} = 0;
+      local $dbh->{'RaiseError'} = 1;
+      my $sth = $dbh->prepare("SELECT $sequence_name.NEXTVAL FROM DUAL");
+      $sth->execute;
+      $value = ${$sth->fetch}[0];
+      $sth->finish;
+    };
+
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not get the next value in the sequence $sequence_name - $error");
+    return undef;
+  }
+
+  return $value;
+}
+
+# Tried to execute a CURRVAL command on a sequence before the 
+# NEXTVAL command was executed at least once.
+use constant ORA_08002 => 8002;
+
+sub current_value_in_sequence
+{
+  my($self, $sequence_name) = @_;
+
+  my $dbh = $self->dbh or return undef;
+
+  my($error, $value);
+
+  TRY:
+  {
+    local $@;
+
+    eval
+    {
+      local $dbh->{'PrintError'} = 0;
+      local $dbh->{'RaiseError'} = 1;
+      my $sth = $dbh->prepare("SELECT $sequence_name.CURRVAL FROM DUAL");
 
       $sth->execute;
 
-      $id = ${$sth->fetch}[0];
+      $value = ${$sth->fetch}[0];
 
       $sth->finish;
     };
@@ -202,11 +242,92 @@ sub next_value_in_sequence
 
   if($error)
   {
-    $self->error("Could not get the next value in the sequence '$seq' - $error");
+    if(DBI->err == ORA_08002)
+    {
+      if(defined $self->next_value_in_sequence($sequence_name))
+      {
+        return $self->current_value_in_sequence($sequence_name);
+      }
+    }
+
+    $self->error("Could not get the current value in the sequence $sequence_name - $error");
     return undef;
   }
 
-  return $id;
+  return $value;
+}
+
+# Sequence does not exist, or the user does not have the required
+# privilege to perform this operation.
+use constant ORA_02289 => 2289;
+
+sub sequence_exists
+{
+  my($self, $sequence_name) = @_;
+
+  my $dbh = $self->dbh or return undef;
+
+  my $error;
+
+  TRY:
+  {
+    local $@;
+
+    eval
+    {
+      local $dbh->{'PrintError'} = 0;
+      local $dbh->{'RaiseError'} = 1;
+      my $sth = $dbh->prepare("SELECT $sequence_name.CURRVAL FROM DUAL");
+      $sth->execute;
+      $sth->fetch;
+      $sth->finish;
+    };
+
+    $error = $@;
+  }
+
+  if($error)
+  {
+    my $dbi_error = DBI->err;
+
+    if($dbi_error == ORA_08002)
+    {
+      if(defined $self->next_value_in_sequence($sequence_name))
+      {
+        return $self->sequence_exists($sequence_name);
+      }
+    }
+    elsif($dbi_error == ORA_02289)
+    {
+      return 0;
+    }
+
+    $self->error("Could not check if sequence $sequence_name exists - $error");
+    return undef;
+  }
+
+  return 1;
+}
+
+sub parse_dbi_column_info_default
+{
+  my($self, $default, $col_info) = @_;
+  
+  # For some reason, given a default value like this:
+  #
+  #   MYCOLUMN VARCHAR(128) DEFAULT 'foo' NOT NULL
+  #
+  # DBD::Oracle hands back a COLUMN_DEF value of:
+  #
+  #   $col_info->{'COLUMN_DEF'} = "'foo' "; # WTF?
+  #
+  # I have no idea why.  Anyway, we just want the value beteen the quotes.
+
+  return undef unless (defined $default);
+
+  $default =~ s/^\s*'(.+)'\s*$/$1/;
+
+  return $default;
 }
 
 *is_reserved_word = \&SQL::ReservedWords::Oracle::is_reserved;
@@ -214,25 +335,41 @@ sub next_value_in_sequence
 sub quote_identifier_for_sequence
 {
   my($self, $catalog, $schema, $table) = @_;
-  return join('.', grep { defined } ($schema, $table));
+  return join('.', map { uc } grep { defined } ($schema, $table));
 }
 
-sub auto_quote_column_name
-{
-  my($self, $name) = @_;
-
-  if($name =~ /[^\w#]/ || $self->is_reserved_word($name))
-  {
-    return $self->quote_column_name($name, @_);
-  }
-
-  return $name;
-}
+# sub auto_quote_column_name
+# {
+#   my($self, $name) = @_;
+# 
+#   if($name =~ /[^\w#]/ || $self->is_reserved_word($name))
+#   {
+#     return $self->quote_column_name($name, @_);
+#   }
+# 
+#   return $name;
+# }
 
 sub supports_schema { 1 }
 
 sub max_column_name_length { 30 }
 sub max_column_alias_length { 30 }
+
+sub quote_column_name 
+{
+  my $name = uc $_[1];
+  $name =~ s/"/""/g;
+  return qq("$name");
+}
+
+sub quote_table_name
+{
+  my $name = uc $_[1];
+  $name =~ s/"/""/g;
+  return qq("$name");
+}
+
+sub quote_identifier { uc shift->Rose::DB::quote_identifier(@_) }
 
 sub primary_key_column_names
 {

@@ -25,7 +25,7 @@ eval { local $@; require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.784';
+our $VERSION = '0.786';
 
 our $Debug = 0;
 
@@ -2741,7 +2741,7 @@ sub primary_key_sequence_names
   my($db, $db_id);
 
   $db = shift  if(UNIVERSAL::isa($_[0], 'Rose::DB'));
-  $db_id = $db ? $db->{'id'} : (@_ == 2) ? shift : $self->init_db_id;
+  $db_id = $db ? $db->{'id'} : $self->init_db_id;
 
   # Set pk sequence names
   if(@_) 
@@ -2751,7 +2751,7 @@ sub primary_key_sequence_names
 
     my $ret = $self->{'primary_key_sequence_names'}{$db_id} = 
       (@_ == 1 && ref $_[0]) ? $_[0] : [ @_ ];
-$DB::single = 1;
+
     # Push down into pk metadata object too
     $self->primary_key->sequence_names(($db ? $db : ()), @$ret);
 
@@ -2791,6 +2791,8 @@ $DB::single = 1;
     die "Cannot generate primary key sequence name without db argument";
   }
 
+
+  my $cm = $self->convention_manager;
   my $table = $self->table or 
     Carp::croak "Cannot generate primary key sequence name without table name";
 
@@ -2812,10 +2814,10 @@ $DB::single = 1;
                                    $table, 
                                    $column);
     }
-    # Set auto-created serial column sequence names for Pg only
+    # Set auto-created serial column sequence names
     elsif($column->type =~ /^(?:big)?serial$/ && $db->use_auto_sequence_name)
     {
-      $seq = $db->auto_sequence_name(table => $table, column => $column);
+      $seq = $cm->auto_column_sequence_name($table, $column, $db);
     }
 
     unless(exists $seqs[$i] && defined $seqs[$i])

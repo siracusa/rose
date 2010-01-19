@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 135);
+    Test::More->import(tests => 134);
   }
 }
 
@@ -208,7 +208,7 @@ ok(@$s == 1 && $s->[0] eq '4', 'parse_set() 3');
 SKIP:
 {
   eval { $db->connect };
-  skip("Could not connect to db 'test', 'informix' - $@", 38)  if($@);
+  skip("Could not connect to db 'test', 'informix' - $@", 37)  if($@);
   $dbh = $db->dbh;
 
   is($db->domain, 'test', "domain()");
@@ -299,8 +299,6 @@ SKIP:
 
   is($db->autocommit + 0, 0, 'autocommit() 4');
   is($dbh->{'AutoCommit'} + 0, 0, 'autocommit() 5');
-
-  ok(!defined $db->auto_sequence_name(table => 'foo.goo', column => 'bar'), 'auto_sequence_name()');
 
   my $dbh_copy = $db->retain_dbh;
 

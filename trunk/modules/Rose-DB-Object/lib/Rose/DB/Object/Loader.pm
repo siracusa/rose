@@ -17,7 +17,7 @@ use Rose::DB::Object::Metadata::Auto;
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.784';
+our $VERSION = '0.786';
 
 our $Debug = 0;
 
@@ -54,7 +54,6 @@ use Rose::Object::MakeMethods::Generic
     'with_managers'       => { default => 1 },
     'with_foreign_keys'   => { default => 1 },
     'with_unique_keys'    => { default => 1 },
-    'force_lowercase'     => { default => 0 },
     'convention_manager_was_set'        => { default => 0 },
     'include_predicated_unique_indexes' => { default => 0 },
     'warn_on_missing_primary_key',
@@ -266,6 +265,22 @@ sub class_prefix
   }
 
   return $self->{'class_prefix'} = $class_prefix;
+}
+
+sub force_lowercase
+{
+  my($self) = shift;
+  
+  if(@_)
+  {
+    my $value = shift;
+    # Important: allow this attribute to be set to undef, unlike
+    # most "normal" boolean attributes.
+    return $self->{'force_lowercase'} = undef unless(defined $value);
+    return $self->{'force_lowercase'} = $value ? 1 : 0;
+  }
+
+  return $self->{'force_lowercase'};
 }
 
 sub db
@@ -607,9 +622,6 @@ sub make_classes
   $args{'with_unique_keys'} = $self->with_unique_keys
     unless(exists $args{'with_unique_keys'});
 
-  my $force_lowercase = exists $args{'force_lowercase'} ? 
-    delete $args{'force_lowercase'} : $self->force_lowercase;
-
   my $no_auto_sequences = exists $args{'no_auto_sequences'} ? 
     delete $args{'no_auto_sequences'} : $self->no_auto_sequences;
 
@@ -627,7 +639,7 @@ sub make_classes
 
   my $filter = exists $args{'filter_tables'} ? delete $args{'filter_tables'} : 
     (!defined $include && !defined $exclude) ? $self->filter_tables : undef;
-
+    
   if($include || $exclude)
   {
     if($filter)
@@ -912,6 +924,20 @@ sub make_classes
     }
   }
 
+  my $force_lowercase;
+  
+  if(exists $args{'force_lowercase'})
+  {
+    $force_lowercase = delete $args{'force_lowercase'};
+  }
+  else
+  {
+    unless(defined($force_lowercase = $self->force_lowercase))
+    {
+      $force_lowercase = $db->driver eq 'oracle' ? 1 : 0;
+    }
+  }
+
   my $cm;
 
   # XXX: Lame way to check if the convention_manager attribute has
@@ -1037,7 +1063,7 @@ sub make_classes
     # Make the manager class
     if($with_managers)
     {
-      my $mgr_class   = $self->generate_manager_class_name($obj_class, $cm);
+      my $mgr_class = $self->generate_manager_class_name($obj_class, $cm);
 
       $meta->make_manager_class(
         class     => $mgr_class,
@@ -1342,6 +1368,10 @@ Get or set a reference to a subroutine that takes a single table name argument a
 
 This attribute should not be combined with the L<exclude_tables|/exclude_tables> or L<include_tables|/include_tables> attributes.
 
+=item B<force_lowercase [BOOL]>
+
+Get or set a boolean value that indicates whether or not L<metadata|Rose::DB::Object::Metadata> entity names should be forced to lowercase even when the related entity (e.g., table or column name) is uppercase or mixed case.  ("Metadata entities" are thing like L<columns|Rose::DB::Object::Metadata/columns>, L<relationships|Rose::DB::Object::Metadata/relationships>, and L<foreign keys|Rose::DB::Object::Metadata/foreign_keys>.)  The default value undef.
+
 =item B<generate_manager_class_name CLASS [, CM]>
 
 Given the name of a L<Rose::DB::Object>-derived class, returns a class name for a L<Rose::DB::Object::Manager>-derived class to manage such objects.  The default implementation calls the L<auto_manager_class_name|Rose::DB::Object::ConventionManager/auto_manager_class_name> method on the convention manager object passed as the optional CM argument, or returned from the L<convention_manager|/convention_manager> method if a CM argument is not passed. 
@@ -1391,6 +1421,14 @@ Table names are compared to REGEX and the names in ARRAYREF in a case-insensitiv
 A reference to a subroutine that takes a single table name argument and returns true if the table should be processed, false if it should be skipped.  The C<$_> variable will also be set to the table name before the call.  This parameter cannot be combined with the C<exclude_tables> or C<include_tables> options.
 
 Defaults to the value of the loader object's L<filter_tables|/filter_tables> attribute, provided that both the C<exclude_tables> and C<include_tables> values are undefined.  Tables without primary keys are automatically skipped.
+
+=item B<force_lowercase BOOL>
+
+A boolean value that indicates whether or not L<metadata|Rose::DB::Object::Metadata> entity names should be forced to lowercase even when the related entity is uppercase or mixed case.  ("Metadata entities" are thing like L<columns|Rose::DB::Object::Metadata/columns>, L<relationships|Rose::DB::Object::Metadata/relationships>, and L<foreign keys|Rose::DB::Object::Metadata/foreign_keys>.)
+
+If this parameter is omitted and if the loader object's L<force_lowercase|/force_lowercase> attribute is not defined, then the value is chosen based on the database currently being examined.  If the database is Oracle, then it defaults to true.  Otherwise, it defaults to false.
+
+The final value is propagated to the L<convention manager|/convention_manager> L<attribute of the same name|Rose::DB::Object::ConventionManager/force_lowercase>.
 
 =item B<include_predicated_unique_indexes BOOL>
 

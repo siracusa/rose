@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 62);
+    Test::More->import(tests => 61);
   }
 }
 
@@ -63,8 +63,8 @@ foreach my $val (qw(f 0 false False F n N no No))
 }
 
 is($db->auto_quote_column_name('foo_bar_123'), 'foo_bar_123', 'auto_quote_column_name 1');
-is($db->auto_quote_column_name('claim#'), 'claim#', 'auto_quote_column_name 2');
-is($db->auto_quote_column_name('foo-bar'), '"foo-bar"', 'auto_quote_column_name 3');
+is($db->auto_quote_column_name('claim#'), '"CLAIM#"', 'auto_quote_column_name 2');
+is($db->auto_quote_column_name('foo-bar'), '"FOO-BAR"', 'auto_quote_column_name 3');
 
 my $dbh;
 eval { $dbh = $db->dbh };
@@ -117,7 +117,7 @@ SKIP:
   $db = Rose::DB->new;
 
   eval { $db->connect };
-  skip("Could not connect to db 'test', 'oracle' - $@", 11)  if($@);
+  skip("Could not connect to db 'test', 'oracle' - $@", 10)  if($@);
   $dbh = $db->dbh;
 
   is($db->domain, 'test', "domain()");
@@ -140,8 +140,6 @@ SKIP:
 
   is($db->autocommit + 0, 0, 'autocommit() 4');
   is($dbh->{'AutoCommit'} + 0, 0, 'autocommit() 5');
-
-  is($db->auto_sequence_name(table => 'foo', column => 'bar'), 'foo_bar_seq', 'auto_sequence_name()');
 
   my $dbh_copy = $db->retain_dbh;
 

@@ -1,6 +1,5 @@
-0.785_01 (01.01.2010) - John Siracusa <siracusa@gmail.com>
+0.786_01 (01.19.2010) - John Siracusa <siracusa@gmail.com>
 
-    * Fixed a POD typo (RT 53272)
     * TODO: Parameterize DateTime class name in column method-makers?
     * TODO: SELECT FOR UPDATE
     * TODO: Update docs for has_loaded_related() and/or make a better
@@ -11,6 +10,13 @@
     * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
     * TODO: add delete_now and delete_on_save method types to ManyToMany?
     * TODO: make save() fail if IN_DB and modified PK columns?
+
+0.785_02 (01.19.2010) - John Siracusa <siracusa@gmail.com>
+
+    * Renamed CHECK labels to avoid clash with reserved block name.
+    * Added force_lowercase attribute to the Loader and Convention Manager
+      as a means to get "normal" behavior out of Oracle schemas.
+    * Fixed a POD typo (RT 53272)
 
 0.785 (12.31.2009) - John Siracusa <siracusa@gmail.com>
 

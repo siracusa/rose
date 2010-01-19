@@ -8,7 +8,7 @@ use SQL::ReservedWords::PostgreSQL();
 
 use Rose::DB;
 
-our $VERSION = '0.786';
+our $VERSION = '0.786'; # overshot version number, freeze until caught up
 
 our $Debug = 0;
 
@@ -271,11 +271,11 @@ BEGIN
 
 sub next_value_in_sequence
 {
-  my($self, $seq) = @_;
+  my($self, $sequence_name) = @_;
 
   my $dbh = $self->dbh or return undef;
 
-  my($id, $error);
+  my($value, $error);
 
   TRY:
   {
@@ -284,8 +284,8 @@ sub next_value_in_sequence
     eval
     {
       my $sth = $dbh->prepare(qq(SELECT nextval(?)));
-      $sth->execute($seq);
-      $id = ${$sth->fetchrow_arrayref}[0];
+      $sth->execute($sequence_name);
+      $value = ${$sth->fetchrow_arrayref}[0];
     };
 
     $error = $@;
@@ -293,12 +293,46 @@ sub next_value_in_sequence
 
   if($error)
   {
-    $self->error("Could not get the next value in the sequence '$seq' - $error");
+    $self->error("Could not get the next value in the sequence '$sequence_name' - $error");
     return undef;
   }
 
-  return $id;
+  return $value;
 }
+
+sub current_value_in_sequence
+{
+  my($self, $sequence_name) = @_;
+
+  my $dbh = $self->dbh or return undef;
+
+  my($value, $error);
+
+  TRY:
+  {
+    local $@;
+
+    eval
+    {
+      my $name = $dbh->quote_identifier($sequence_name);
+      my $sth = $dbh->prepare(qq(SELECT last_value FROM $name));
+      $sth->execute;
+      $value = ${$sth->fetchrow_arrayref}[0];
+    };
+
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not get the current value in the sequence '$sequence_name' - $error");
+    return undef;
+  }
+
+  return $value;
+}
+
+sub sequence_exists { defined shift->current_value_in_sequence(@_) ? 1 : 0 }
 
 sub use_auto_sequence_name { 1 }
 
@@ -314,9 +348,6 @@ sub auto_sequence_name
 
   return lc "${table}_${column}_seq";
 }
-
-#our %Reserved_Words = map { $_ => 1 } qw(role cast user);
-#sub is_reserved_word { $Reserved_Words{lc $_[1]} }
 
 *is_reserved_word = \&SQL::ReservedWords::PostgreSQL::is_reserved;
 
@@ -371,7 +402,6 @@ sub refine_dbi_column_info
           $auto_seq = "$schema.$auto_seq"  if($schema);
         }
 
-        # If the sequence name
         no warnings 'uninitialized';
         if(lc $seq eq lc $auto_seq)
         {

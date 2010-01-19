@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.756_01';
+our $VERSION = '0.756_02';
 
 our $Debug = 0;
 
@@ -2153,6 +2153,22 @@ sub next_value_in_sequence
 {
   my($self, $seq) = @_;
   $self->error("Don't know how to select next value in sequence '$seq' " .
+               "for database driver " . $self->driver);
+  return undef;
+}
+
+sub current_value_in_sequence
+{
+  my($self, $seq) = @_;
+  $self->error("Don't know how to select current value in sequence '$seq' " .
+               "for database driver " . $self->driver);
+  return undef;
+}
+
+sub sequence_exists
+{
+  my($self, $seq) = @_;
+  $self->error("Don't know how to tell if sequence '$seq' exists " .
                "for database driver " . $self->driver);
   return undef;
 }

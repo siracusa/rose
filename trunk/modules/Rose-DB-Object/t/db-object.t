@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 567;
+use Test::More tests => 568;
 
 BEGIN 
 {
@@ -1148,7 +1148,7 @@ SKIP: foreach my $db_type ('sqlite')
 
 SKIP: foreach my $db_type (qw(oracle))
 {
-  skip("Oracle tests", 73)  unless($HAVE_ORACLE);
+  skip("Oracle tests", 74)  unless($HAVE_ORACLE);
 
   Rose::DB->default_type($db_type);
 
@@ -1179,7 +1179,7 @@ SKIP: foreach my $db_type (qw(oracle))
     ok($o->insert, "insert() 1 - $db_type");
   }
 
-  is($o->meta->primary_key->sequence_names->[0], 'rose_db_object_test_id_seq', 
+  is($o->meta->primary_key->sequence_names->[0], 'ROSE_DB_OBJECT_TEST_ID_SEQ', 
      "pk sequence name - $db_type");
 
   ok(is_in_db($o), "is_in_db - $db_type");
@@ -1370,6 +1370,15 @@ SKIP: foreach my $db_type (qw(oracle))
   ok(!$o->load(speculative => 1), "load() speculative explicit 2 - $db_type");
   eval { $o->load(speculative => 0) };
   ok($@, "load() non-speculative explicit 2 - $db_type");
+
+  $o = MyOracleObject->new(name => 'Sequence Test', 
+                              k1   => 4,
+                              k2   => 5,
+                              k3   => 6);
+
+  $o->save;
+  
+  like($o->id, qr/^\d+$/, "save() serial - $db_type");
 
   # Reset for next trip through loop (if any)
   $o->meta->default_load_speculative(0);

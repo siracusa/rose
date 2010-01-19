@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Object;
 our @ISA = qw(Rose::DB::Object::Metadata::Object);
 
-our $VERSION = '0.784';
+our $VERSION = '0.786';
 
 our $Debug = 0;
 
@@ -78,6 +78,8 @@ sub auto_manager_base_name
   my($self, $table, $object_class) = @_;
 
   $table ||= $self->class_to_table_plural;
+
+  $table = lc $table  if($self->force_lowercase);
 
   return $self->tables_are_singular ? $self->singular_to_plural($table) : $table;
 }
@@ -277,11 +279,16 @@ sub method_name_conflicts
   return 0;
 }
 
-sub auto_primary_key_column_sequence_name
+sub auto_column_sequence_name
 {
-  my($self, $table, $column) = @_;
-  return join('_', $table, $column, 'seq');
+  my($self, $table, $column, $db) = @_;
+  my $name = join('_', $table, $column, 'seq');
+  return uc $name  if($db && $db->likes_uppercase_sequence_names);
+  return lc $name  if($db && $db->likes_lowercase_sequence_names);
+  return $name;
 }
+
+sub auto_primary_key_column_sequence_name { shift->auto_column_sequence_name(@_) }
 
 sub auto_foreign_key_name
 {
@@ -1202,6 +1209,10 @@ Examples:
     Product       product
     My::Product   product
     My::Box       box
+
+=item B<force_lowercase [BOOL]>
+
+Get or set a boolean value that indicates whether or not L<metadata|Rose::DB::Object::Metadata> entity names should be forced to lowercase even when the related entity is uppercase or mixed case.  ("Metadata entities" are thing like L<columns|Rose::DB::Object::Metadata/columns>, L<relationships|Rose::DB::Object::Metadata/relationships>, and L<foreign keys|Rose::DB::Object::Metadata/foreign_keys>.)  The default value is false.
 
 =item B<is_map_class CLASS>
 
