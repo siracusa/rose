@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 61);
+    Test::More->import(tests => 65);
   }
 }
 
@@ -71,7 +71,7 @@ eval { $dbh = $db->dbh };
 
 SKIP:
 {
-  skip("Could not connect to db - $@", 9)  if($@);
+  skip("Could not connect to db - $@", 13)  if($@);
 
   ok($dbh, 'dbh() 1');
 
@@ -85,6 +85,23 @@ SKIP:
   {
     is($db2->$field(), $db->$field(), "$field()");
   }
+
+  SEQUENCE_PREP:
+  {
+    my $dbh = $db->dbh;
+    local $dbh->{'PrintError'} = 0;
+    local $dbh->{'RaiseError'} = 0;
+    $dbh->do('DROP SEQUENCE rose_db_sequence_test');
+  }
+
+  $dbh->do('CREATE SEQUENCE rose_db_sequence_test MINVALUE 5');
+
+  ok($db->sequence_exists('rose_db_sequence_test'), 'sequence_exists');
+  is($db->current_value_in_sequence('rose_db_sequence_test'), 5, 'current_value_in_sequence');
+  is($db->next_value_in_sequence('rose_db_sequence_test'), 6, 'next_value_in_sequence 1');
+  is($db->next_value_in_sequence('rose_db_sequence_test'), 7, 'next_value_in_sequence 2');
+
+  $dbh->do('DROP SEQUENCE rose_db_sequence_test');
 
   $db->disconnect;
   $db2->disconnect;
