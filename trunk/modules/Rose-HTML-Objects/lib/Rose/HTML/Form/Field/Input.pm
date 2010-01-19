@@ -33,6 +33,9 @@ __PACKAGE__->add_valid_html_attrs
   'formmethod',
   'formnovalidate',
   'formtarget',
+  'min',
+  'max',
+  'step',
 );
 
 __PACKAGE__->add_required_html_attrs(
