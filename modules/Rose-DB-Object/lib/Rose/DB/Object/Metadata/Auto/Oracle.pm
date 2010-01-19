@@ -9,7 +9,7 @@ use Rose::DB::Object::Metadata::UniqueKey;
 use Rose::DB::Object::Metadata::Auto;
 our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
-our $VERSION = '0.784';
+our $VERSION = '0.786';
 
 sub auto_init_primary_key_columns
 {
@@ -19,40 +19,36 @@ sub auto_init_primary_key_columns
 
   my $cm = $self->convention_manager;
 
-  return  unless($cm->no_auto_sequences);
+  return  if($cm->no_auto_sequences);
 
-  my @sequences;
+  my($db, @sequences);
   my $table = $self->table;
 
-  # Auto-add expected sequence for what look like single-column
-  # non-null "serial" columns.
-  my @pk_columns = $self->primary_key_columns;
-  
-  if(@pk_columns == 1)
+  # Check for sequence(s) for what look like non-null "serial" columns.
+  foreach my $name ($self->primary_key_columns)
   {
-    foreach my $name (@pk_columns)
-    {
-      my $column = $self->column($name) or next;
-      next unless ($column->not_null);
-      push(@sequences, $cm->auto_primary_key_column_sequence_name($table, $name));
-    }
-
-    $self->primary_key_sequence_names(@sequences)  if(@sequences);
+    my $column = $self->column($name) or next;
+    next unless ($column->not_null);
+    my $sequence_name = uc $cm->auto_primary_key_column_sequence_name($table, $name);
+    $db ||= $self->init_db;
+    push(@sequences, $db->sequence_exists($sequence_name) ? $sequence_name : undef);
   }
+
+  $self->primary_key_sequence_names($db, @sequences)  if(@sequences);
 
   return;
 }
 
 use constant UNIQUE_INDEX_SQL => <<'EOF';
-select ai.index_name FROM ALL_INDEXES ai, ALL_CONSTRAINTS ac 
-WHERE ai.index_name = ac.constraint_name AND 
-      ac.constraint_type <> 'P' AND 
-      ai.uniqueness = 'UNIQUE' AND ai.table_name = ? AND 
-      ai.table_owner = ?
+SELECT AI.INDEX_NAME FROM ALL_INDEXES AI, ALL_CONSTRAINTS AC 
+WHERE AI.INDEX_NAME = AC.CONSTRAINT_NAME AND 
+      AC.CONSTRAINT_TYPE <> 'P' AND 
+      AI.UNIQUENESS = 'UNIQUE' AND AI.TABLE_NAME = ? AND 
+      AI.TABLE_OWNER = ?
 EOF
 
 use constant UNIQUE_INDEX_COLUMNS_SQL_STUB => <<'EOF';
-select column_name FROM ALL_IND_COLUMNS WHERE index_name = ? ORDER BY column_position
+SELECT COLUMN_NAME FROM ALL_IND_COLUMNS WHERE INDEX_NAME = ? ORDER BY COLUMN_POSITION
 EOF
 
 sub auto_generate_unique_keys

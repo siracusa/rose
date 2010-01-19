@@ -66,7 +66,6 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
     Rose::DB::Object::Loader->new(
       db              => $db,
       class_prefix    => $class_prefix,
-      force_lowercase => 1,
       ($db_type eq 'mysql' ? (require_primary_key => 0) : ()),
       pre_init_hook   => sub { $pre_init_hook++ });
 

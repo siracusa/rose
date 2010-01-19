@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 146);
+    Test::More->import(tests => 145);
   }
 }
 
@@ -133,7 +133,7 @@ SKIP:
 {
   unless(have_db('mysql'))
   {
-    skip("MySQL connection tests", 77);
+    skip("MySQL connection tests", 76);
   }
 
   eval { $db->connect };
@@ -194,8 +194,6 @@ SKIP:
 
   is($db->autocommit + 0, 0, 'autocommit() 4');
   is($dbh->{'AutoCommit'} + 0, 0, 'autocommit() 5');
-
-  ok(!defined $db->auto_sequence_name(table => 'foo.goo', column => 'bar'), 'auto_sequence_name()');
 
   my $dbh_copy = $db->retain_dbh;
 

@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 306);
+    Test::More->import(tests => 310);
   }
 }
 
@@ -34,7 +34,7 @@ ok(ref $db && $db->isa('Rose::DB'), 'new()');
 
 SKIP:
 {
-  skip("Could not connect to db - $@", 11)  unless(have_db('pg'));
+  skip("Could not connect to db - $@", 12)  unless(have_db('pg'));
 
   my $dbh = $db->dbh;
 
@@ -57,6 +57,22 @@ SKIP:
 
   ok($db->pg_enable_utf8 && $db->dbh->{'pg_enable_utf8'}, 'pg_enable_utf8 true');
 
+  SEQUENCE_PREP:
+  {
+    my $dbh = $db->dbh;
+    local $dbh->{'PrintError'} = 0;
+    local $dbh->{'RaiseError'} = 0;
+    $dbh->do('DROP SEQUENCE rose_db_sequence_test');
+  }
+
+  $dbh->do('CREATE SEQUENCE rose_db_sequence_test MINVALUE 5');
+
+  ok($db->sequence_exists('rose_db_sequence_test'), 'sequence_exists');
+  is($db->current_value_in_sequence('rose_db_sequence_test'), 5, 'current_value_in_sequence');
+  is($db->next_value_in_sequence('rose_db_sequence_test'), 5, 'next_value_in_sequence 1');
+  is($db->next_value_in_sequence('rose_db_sequence_test'), 6, 'next_value_in_sequence 2');
+
+  $dbh->do('DROP SEQUENCE rose_db_sequence_test');
   $db->disconnect;
   $db2->disconnect;
 }
@@ -366,7 +382,7 @@ SKIP:
 {
   unless(have_db('pg'))
   {
-    skip('pg tests', 43);
+    skip('pg tests', 46);
   }
 
   eval { $db->connect };
