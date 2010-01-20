@@ -13,6 +13,7 @@
 
 0.785_02 (01.19.2010) - John Siracusa <siracusa@gmail.com>
 
+    * TODO: PostgreSQL MONEY type and COLUMN_SIZE workaround.
     * Renamed CHECK labels to avoid clash with reserved block name.
     * Added force_lowercase attribute to the Loader and Convention Manager
       as a means to get "normal" behavior out of Oracle schemas.
