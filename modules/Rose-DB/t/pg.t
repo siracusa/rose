@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 310);
+    Test::More->import(tests => 313);
   }
 }
 
@@ -34,7 +34,7 @@ ok(ref $db && $db->isa('Rose::DB'), 'new()');
 
 SKIP:
 {
-  skip("Could not connect to db - $@", 12)  unless(have_db('pg'));
+  skip("Could not connect to db - $@", 15)  unless(have_db('pg'));
 
   my $dbh = $db->dbh;
 
@@ -67,10 +67,13 @@ SKIP:
 
   $dbh->do('CREATE SEQUENCE rose_db_sequence_test MINVALUE 5');
 
-  ok($db->sequence_exists('rose_db_sequence_test'), 'sequence_exists');
-  is($db->current_value_in_sequence('rose_db_sequence_test'), 5, 'current_value_in_sequence');
+  ok($db->sequence_exists('rose_db_sequence_test'), 'sequence_exists 1');
+  ok(!$db->sequence_exists('rose_db_sequence_testx'), 'sequence_exists 2');
+  is($db->current_value_in_sequence('rose_db_sequence_test'), 5, 'current_value_in_sequence 1');
   is($db->next_value_in_sequence('rose_db_sequence_test'), 5, 'next_value_in_sequence 1');
+  is($db->current_value_in_sequence('rose_db_sequence_test'), 5, 'current_value_in_sequence 2');
   is($db->next_value_in_sequence('rose_db_sequence_test'), 6, 'next_value_in_sequence 2');
+  is($db->current_value_in_sequence('rose_db_sequence_test'), 6, 'current_value_in_sequence 3');
 
   $dbh->do('DROP SEQUENCE rose_db_sequence_test');
   $db->disconnect;
