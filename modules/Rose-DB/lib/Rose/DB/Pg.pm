@@ -283,6 +283,8 @@ sub next_value_in_sequence
 
     eval
     {
+      local $dbh->{'PrintError'} = 0;
+      local $dbh->{'RaiseError'} = 1;
       my $sth = $dbh->prepare(qq(SELECT nextval(?)));
       $sth->execute($sequence_name);
       $value = ${$sth->fetchrow_arrayref}[0];
@@ -314,6 +316,8 @@ sub current_value_in_sequence
 
     eval
     {
+      local $dbh->{'PrintError'} = 0;
+      local $dbh->{'RaiseError'} = 1;
       my $name = $dbh->quote_identifier($sequence_name);
       my $sth = $dbh->prepare(qq(SELECT last_value FROM $name));
       $sth->execute;
