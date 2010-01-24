@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (6 * 33) + 9;
+use Test::More tests => 1 + (6 * 34) + 9;
 
 BEGIN 
 {
@@ -30,7 +30,7 @@ FOO:
   sub auto_foreign_key_name 
   {
     $JCS::Called_Custom_CM{$_[0]->parent->class}++;
-	shift->SUPER::auto_foreign_key_name(@_);
+    shift->SUPER::auto_foreign_key_name(@_);
   }
 }
 
@@ -42,7 +42,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
   {
     unless($Have{$db_type})
     {
-      skip("$db_type tests", 33 + scalar @{$Reserved_Words{$db_type} ||= []});
+      skip("$db_type tests", 34 + scalar @{$Reserved_Words{$db_type} ||= []});
     }
   }
 
@@ -122,11 +122,11 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
                                      ($db_type eq 'mysql' ? '|read' : ''),
                                      %extra_loader_args);
 
-    foreach my $class (@classes)
-    {
-      next unless($class->isa('Rose::DB::Object'));
-      print $class->meta->perl_class_definition, "\n";
-    }
+    #foreach my $class (@classes)
+    #{
+    #  next unless($class->isa('Rose::DB::Object'));
+    #  print $class->meta->perl_class_definition, "\n";
+    #}
 
     if($db_type eq 'sqlite')
     {
@@ -261,6 +261,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
     $t = $p->meta->column('tee_time5')->default;
     $t =~ s/0+$//;
     is($t, '12:34:56.12345', "time default 2 - $db_type");
+    is($price_class->meta->column('mprice')->length, undef, "money 1 - $db_type");
   }
   elsif($db_type eq 'informix')
   {
@@ -269,6 +270,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
     ok(!$p->meta->column('tee_time'), "time precision check 2 - $db_type");
     is($p->meta->column('bint1')->type, 'bigint', "bigint 1 - $db_type");
     ok($p->bint1 =~ /^\+?9223372036854775800$/, "bigint 2 - $db_type");
+    SKIP: { skip("money tests - $db_type", 1) }
   }
   else
   {
@@ -277,6 +279,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
     ok(!$p->meta->column('tee_time'), "time precision check 2 - $db_type");
     ok(1, "time default 1 - $db_type");
     ok(1, "time default 2 - $db_type");
+    SKIP: { skip("money tests - $db_type", 1) }
   }
 
   OBJECT_CLASS:
@@ -468,6 +471,7 @@ CREATE TABLE prices
   product_id  INT NOT NULL REFERENCES products (id),
   region      CHAR(2) NOT NULL DEFAULT 'US',
   price       DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  mprice      MONEY,
 
   UNIQUE(product_id, region)
 )
@@ -558,6 +562,7 @@ CREATE TABLE Rose_db_object_private.prices
   product_id  INT NOT NULL REFERENCES products (id),
   region      CHAR(2) NOT NULL DEFAULT 'US',
   price       DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  mprice      MONEY,
 
   UNIQUE(product_id, region)
 )

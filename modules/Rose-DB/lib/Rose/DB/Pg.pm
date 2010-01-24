@@ -441,6 +441,10 @@ sub refine_dbi_column_info
   {
     $col_info->{'COLUMN_SIZE'} = undef;
   }
+  elsif($type_name eq 'money')
+  {
+    $col_info->{'COLUMN_SIZE'} = undef;
+  }
 
   # Pg does not populate COLUMN_SIZE correctly for bit fields, so
   # we have to extract the number of bits from pg_type.

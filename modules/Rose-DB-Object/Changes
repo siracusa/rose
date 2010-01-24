@@ -1,4 +1,4 @@
-0.786_01 (01.19.2010) - John Siracusa <siracusa@gmail.com>
+0.786_01 (01.23.2010) - John Siracusa <siracusa@gmail.com>
 
     * TODO: Parameterize DateTime class name in column method-makers?
     * TODO: SELECT FOR UPDATE
@@ -11,12 +11,13 @@
     * TODO: add delete_now and delete_on_save method types to ManyToMany?
     * TODO: make save() fail if IN_DB and modified PK columns?
 
-0.785_02 (01.19.2010) - John Siracusa <siracusa@gmail.com>
+0.786 (01.23.2010) - John Siracusa <siracusa@gmail.com>
 
-    * TODO: PostgreSQL MONEY type and COLUMN_SIZE workaround.
     * Renamed CHECK labels to avoid clash with reserved block name.
     * Added force_lowercase attribute to the Loader and Convention Manager
-      as a means to get "normal" behavior out of Oracle schemas.
+      as a means of getting "normal" behavior out of Oracle schemas.
+    * Fixed a bug that caused money columns in PostgreSQL to have
+      column lengths that were too short.
     * Fixed a POD typo (RT 53272)
 
 0.785 (12.31.2009) - John Siracusa <siracusa@gmail.com>
