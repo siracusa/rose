@@ -156,31 +156,31 @@ SKIP:
 
   if($db->database_version >= 5_000_003)
   {
-	is($db->format_bitfield($db->parse_bitfield('1010')),
-	   q(b'1010'), "format_bitfield() 1");
+    is($db->format_bitfield($db->parse_bitfield('1010')),
+       q(b'1010'), "format_bitfield() 1");
 
-	is($db->format_bitfield($db->parse_bitfield(q(B'1010'))),
-	   q(b'1010'), "format_bitfield() 2");
+    is($db->format_bitfield($db->parse_bitfield(q(B'1010'))),
+       q(b'1010'), "format_bitfield() 2");
 
-	is($db->format_bitfield($db->parse_bitfield(2), 4),
-	   q(b'0010'), "format_bitfield() 3");
+    is($db->format_bitfield($db->parse_bitfield(2), 4),
+       q(b'0010'), "format_bitfield() 3");
 
-	is($db->format_bitfield($db->parse_bitfield('0xA'), 4),
-	   q(b'1010'), "format_bitfield() 4");  
+    is($db->format_bitfield($db->parse_bitfield('0xA'), 4),
+       q(b'1010'), "format_bitfield() 4");  
   }
   else
   {
-	is($db->format_bitfield($db->parse_bitfield('1010')),
-	   q(10), "format_bitfield() 1");
+    is($db->format_bitfield($db->parse_bitfield('1010')),
+       q(10), "format_bitfield() 1");
 
-	is($db->format_bitfield($db->parse_bitfield(q(B'1010'))),
-	   q(10), "format_bitfield() 2");
+    is($db->format_bitfield($db->parse_bitfield(q(B'1010'))),
+       q(10), "format_bitfield() 2");
 
-	is($db->format_bitfield($db->parse_bitfield(2), 4),
-	   q(2), "format_bitfield() 3");
+    is($db->format_bitfield($db->parse_bitfield(2), 4),
+       q(2), "format_bitfield() 3");
 
-	is($db->format_bitfield($db->parse_bitfield('0xA'), 4),
-	   q(10), "format_bitfield() 4");
+    is($db->format_bitfield($db->parse_bitfield('0xA'), 4),
+       q(10), "format_bitfield() 4");
   }
 
   #is($db->autocommit + 0, $dbh->{'AutoCommit'} + 0, 'autocommit() 1');
