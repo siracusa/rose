@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.757';
+our $VERSION = '0.757_01';
 
 our $Debug = 0;
 
@@ -2036,6 +2036,13 @@ sub parse_interval
   $dt_duration = $is_ago ? 
     DateTime::Duration->new(%units)->inverse :
     DateTime::Duration->new(%units);
+
+  # XXX: Ugly hack workaround for DateTime::Duration bug (RT 53985)
+  if($is_ago && defined $end_of_month_mode && 
+     $dt_duration->end_of_month_mode ne $end_of_month_mode)
+  {
+    $dt_duration->{'end_of_month'} = $end_of_month_mode;
+  }
 
   return $dt_duration;
 }

@@ -305,13 +305,17 @@ my $i = 0;
 
 while($i < @Intervals)
 {
-  my($val, $formatted) = ($Intervals[$i++], $Intervals[$i++]);
+  my($val, $formatted) = ($Intervals[$i], $Intervals[$i + 1]);
+  $i += 2;
 
   my $d = $db->parse_interval($val, 'preserve');
 
   is($db->format_interval($d), $formatted, "parse_interval ($val)");  
   my $alt_d = $db->parse_interval($Alt_Intervals{$val}, 'preserve');
 
+unless ((!defined $d && !defined $alt_d) || DateTime::Duration->compare($d, $alt_d) == 0) {
+$DB::single = 1;
+}
   ok((!defined $d && !defined $alt_d) || DateTime::Duration->compare($d, $alt_d) == 0, "parse_interval alt check $i");
 }
 
