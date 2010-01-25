@@ -313,9 +313,6 @@ while($i < @Intervals)
   is($db->format_interval($d), $formatted, "parse_interval ($val)");  
   my $alt_d = $db->parse_interval($Alt_Intervals{$val}, 'preserve');
 
-unless ((!defined $d && !defined $alt_d) || DateTime::Duration->compare($d, $alt_d) == 0) {
-$DB::single = 1;
-}
   ok((!defined $d && !defined $alt_d) || DateTime::Duration->compare($d, $alt_d) == 0, "parse_interval alt check $i");
 }
 
