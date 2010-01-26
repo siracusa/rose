@@ -1,3 +1,7 @@
+0.758_01 (01.26.2010) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: Savepoints?
+
 0.758 (01.26.2010) - John Siracusa <siracusa@gmail.com>
 
     * Added workaround for DateTime::Duration bug (RT 53985) 
