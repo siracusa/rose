@@ -8,10 +8,10 @@ use base 'Rose::HTML::Form::Field::Text';
 
 our $VERSION = '0.606';
 
-use Rose::Object::MakeMethods::Generic
-(
-  scalar => [ qw(min max) ],
-);
+# use Rose::Object::MakeMethods::Generic
+# (
+#   scalar => [ qw(min max) ],
+# );
 
 __PACKAGE__->default_html_attr_value(size  => 6);
 
