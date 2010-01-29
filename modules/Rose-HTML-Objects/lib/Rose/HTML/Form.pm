@@ -15,8 +15,6 @@ use Rose::HTML::Object::Errors qw(:form);
 use base qw(Rose::HTML::Object::WithWrapAroundChildren
             Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-require Rose::HTML::Form::Repeatable;
-
 our $VERSION = '0.606';
 
 # Multiple inheritence never quite works out the way I want it to...
