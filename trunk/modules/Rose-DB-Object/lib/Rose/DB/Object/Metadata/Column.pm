@@ -23,7 +23,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 our $Triggers_Key      = 'triggers';
 our $Trigger_Index_Key = 'trigger_index';
 
-our $VERSION = '0.782';
+our $VERSION = '0.787';
 
 use overload
 (
@@ -79,6 +79,7 @@ Rose::Object::MakeMethods::Generic->make_methods
     'error',
     'ordinal_position',
     'parse_error',
+    'remarks',
     __PACKAGE__->common_method_maker_argument_names,
   ],
 );
@@ -380,6 +381,11 @@ sub init_with_dbi_column_info
   if(my $db_type = $col_info->{'RDBO_DB_TYPE'})
   {
     $self->db_type($db_type);
+  }
+
+  if($col_info->{'REMARKS'})
+  {
+    $self->remarks($col_info->{'REMARKS'});
   }
 
   $self->ordinal_position($col_info->{'ORDINAL_POSITION'} || 0);
@@ -1869,6 +1875,10 @@ Parse and return a convenient Perl representation of VALUE.  What form this valu
 =item B<primary_key_position [INT]>
 
 Get or set the column's ordinal position in the primary key.  Returns undef if the column is not part of the primary key.  Position numbering starts from 1.
+
+=item B<remarks [TEXT]>
+
+Get or set a text description of the column.
 
 =item B<rw_method_name>
 
