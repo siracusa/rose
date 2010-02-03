@@ -1,6 +1,7 @@
 0.786_02 (02.02.2010) - John Siracusa <siracusa@gmail.com>
 
     * Added remarks column attribute.  (Patch by Adam Mackler)
+    * TODO: remarks metadata attribute.
     * TODO: Parameterize DateTime class name in column method-makers?
     * TODO: SELECT FOR UPDATE
     * TODO: Update docs for has_loaded_related() and/or make a better
