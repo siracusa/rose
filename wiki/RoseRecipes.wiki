@@ -40,14 +40,13 @@ But as a mindful RDBO citizen, you want to know how to do this in the Rose way. 
 
 {{{
 sub get_maximum_timestamp {
-    my $db = QSR::RDB->new; # QSR::RDB is a Rose::DB subclass example
-    my $dbh = $db->dbh;
-    my $sth = $dbh->prepare( 'SELECT MAX(last_sync) FROM contact' );
+    my ($class, %args) = @_;
+    my $db = $args{'db'} || QSR::RDB->init_db; # QSR::RDB is a Rose::DB subclass example
+    my $sth = $db->dbh->prepare( 'SELECT MAX(last_sync) FROM contact' );
     $sth->execute;
     my ( $t ) = $sth->fetchrow_array;
     my $max = $db->parse_timestamp( $t );
     $sth->finish;
-    $dbh->disconnect;
     return $max;
 }
 }}}
