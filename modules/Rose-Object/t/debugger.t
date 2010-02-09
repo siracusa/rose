@@ -1,6 +1,6 @@
 #!/usr/bin/perl -d
 
-use Test::More;
+use Test::More tests => 1;
 
 # XXX: Code taken from namespace::clean's t/07--debugger.t
 BEGIN
@@ -40,3 +40,4 @@ eval { require Person1 };
 ok(!$@, 'double load');
 
 done_testing;
+
