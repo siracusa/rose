@@ -7,6 +7,20 @@ This is a scratchpad of sorts of various common questions or use cases and how t
 
 = Recipes or FAQs =
 
+== How can I backup Rose objects? ==
+_Answered by Jason Purdy_
+
+Sometimes you may find yourself writing code that deletes objects and perhaps you'd like to back up the objects before they evaporate.
+
+=== Simple Case ===
+Rose::DB has Storable hooks such that you can automatically freeze/thaw Rose::DB objects, with a caveat that before you thaw, you need to `use My::DB` in order to bring about awareness of your database before the objects are reinstated.
+
+=== More Complex Case ===
+Storable is great for one table with no relationships, but if you have one-to-many or many-to-many relationships with associated content, Storable will not be able to handle that. Instead, you can use the `as_json` and `new_from_json` helper methods from [http://search.cpan.org/dist/Rose-DB-Object/lib/Rose/DB/Object/Helpers.pm Rose::DB::Object::Helpers].
+
+=== Most Complex Case ===
+In [http://groups.google.com/group/rose-db-object/browse_thread/thread/9b5164f593e59345 one posting], it was pointed out that serializing objects with associated data in a many-to-many relationship will lead to redundant data and may cause problems when trying to restore the backup. In this case, it's recommended that you backup each table individually.
+
 == How do I get the maximum value of a table? ==
 _Answered by Jason Purdy_
 
