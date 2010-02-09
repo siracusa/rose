@@ -13,7 +13,7 @@ _Answered by Jason Purdy_
 Sometimes you may find yourself writing code that deletes objects and perhaps you'd like to back up the objects before they evaporate.
 
 === Simple Case ===
-Rose::DB has Storable hooks such that you can automatically freeze/thaw Rose::DB objects, with a caveat that before you thaw, you need to `use My::DB` in order to bring about awareness of your database before the objects are reinstated.
+Rose::DB has Storable hooks such that you can automatically freeze/thaw Rose::DB objects, with a caveat that before you thaw, you need to `use My::DB` in order to bring about awareness of your database before the objects are reinstated. More explanation is available in its [http://search.cpan.org/~jsiracusa/Rose-DB-0.758/lib/Rose/DB.pm#SERIALIZATION documentation].
 
 === More Complex Case ===
 Storable is great for one table with no relationships, but if you have one-to-many or many-to-many relationships with associated content, Storable will not be able to handle that. Instead, you can use the `as_json` and `new_from_json` helper methods from [http://search.cpan.org/dist/Rose-DB-Object/lib/Rose/DB/Object/Helpers.pm Rose::DB::Object::Helpers].
