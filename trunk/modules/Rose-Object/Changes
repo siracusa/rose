@@ -1,4 +1,4 @@
-0.856_01 (02.09.2010) - John Siracusa <siracusa@gmail.com>
+0.857 (02.09.2010) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug that caused methods to be created more than once,
       triggering a fatal error, when running under the debugger in
