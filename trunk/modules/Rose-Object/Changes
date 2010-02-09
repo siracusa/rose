@@ -1,3 +1,9 @@
+0.856_01 (02.09.2010) - John Siracusa <siracusa@gmail.com>
+
+    * Fixed a bug that caused methods to be created more than once,
+      triggering a fatal error, when running under the debugger in
+      perl 5.10.1 and up.  (RT 54444, patch by Christopher Masto)
+
 0.856 (10.16.2009) - John Siracusa <siracusa@gmail.com>
 
     * Updated eval blocks to avoid stomping on $@ from an outer scope.

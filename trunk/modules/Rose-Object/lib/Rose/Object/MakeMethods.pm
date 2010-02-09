@@ -161,9 +161,13 @@ sub __make_methods
 sub apparently_made_method
 {
   my($class, $code) = @_;
+
   my($mm_class, $name) = $class->sub_identity($code);
   return 0  unless($class && $name);
-  return (($mm_class eq $class && $name eq '__ANON__') ||
+  # XXX: RT 54444 - The formerly constant "__ANON__" sub name looks
+  # XXX: like this in newer versions of perl when running under the
+  # XXX: debugger: "__ANON__[/usr/lib/perl5/.../Some/Module.pm:123]"
+  return (($mm_class eq $class && $name =~ /^__ANON__/) ||
           $Made_Method_Custom{$mm_class}{$name}) ? 1 : 0;
 }
 
