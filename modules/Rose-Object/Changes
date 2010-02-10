@@ -1,3 +1,8 @@
+0.858 (02.10.2010) - John Siracusa <siracusa@gmail.com>
+
+    * The CPAN shell in 5.10.1 (on Mac OS X, anyway) chokes on the
+      t/debugger.t test.  I've moved it to the xt directory.
+
 0.857 (02.09.2010) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug that caused methods to be created more than once,
