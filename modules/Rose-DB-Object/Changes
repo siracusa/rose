@@ -2,6 +2,7 @@
 
     * Added remarks column attribute.  (Patch by Adam Mackler)
     * TODO: DEBUG environment variable and hooks.
+    * TODO: Multiple unique keys example.
     * TODO: remarks metadata attribute.
     * TODO: Parameterize DateTime class name in column method-makers?
     * TODO: SELECT FOR UPDATE
