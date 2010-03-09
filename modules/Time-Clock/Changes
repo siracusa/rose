@@ -1,3 +1,7 @@
+0.13 (03.08.2010) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: %i - doesn't remove leading 0s and when passed 12 AM it returns 00.
+
 0.12 (10.16.2009) - John Siracusa <siracusa@gmail.com>
 
     * Updated eval block to avoid stomping on $@ from an outer scope.
