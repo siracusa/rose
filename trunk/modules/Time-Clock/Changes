@@ -1,6 +1,8 @@
-0.13 (03.08.2010) - John Siracusa <siracusa@gmail.com>
+1.00 (03.09.2010) - John Siracusa <siracusa@gmail.com>
 
-    * TODO: %i - doesn't remove leading 0s and when passed 12 AM it returns 00.
+    * The %i format now correctly shows 12 for 12 AM.
+    * Removed leading zeros from the %i format.
+    * Bumped version number to reflect API stability.
 
 0.12 (10.16.2009) - John Siracusa <siracusa@gmail.com>
 

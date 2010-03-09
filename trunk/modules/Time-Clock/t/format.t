@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 26;
+use Test::More tests => 28;
 
 use Time::Clock;
 
@@ -50,3 +50,11 @@ $t->parse('12:34:56.123456789');
 
 $t->format('%H%%%M%%%2N');
 is($t->format('%H%%%M%%%2N'), '12%34%12', 'format %H%%%M%%%2N');
+
+$t->parse('12 AM');
+
+is($t->format('%i'), '12', 'format %i 12 AM');
+
+$t->parse('01:00:00');
+
+is($t->format('%i'), '1', 'format %i 01:00:00');
