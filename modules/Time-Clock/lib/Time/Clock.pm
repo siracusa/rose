@@ -4,7 +4,7 @@ use strict;
 
 use Carp;
 
-our $VERSION = '0.12';
+our $VERSION = '1.00';
 
 use overload
 (
@@ -198,8 +198,10 @@ sub format
   $format ||= ref($self)->default_format;
 
   my $hour  = $self->hour;
-  my $ihour = $hour > 12 ? ($hour - 12) : $hour;
+  my $ihour = $hour > 12 ? ($hour - 12) : $hour == 0 ? 12 : $hour;
   my $ns     = $self->nanosecond;
+
+  $ihour =~ s/^0//;
 
   my %formats =
   (
@@ -762,6 +764,6 @@ John C. Siracusa (siracusa@gmail.com)
 
 =head1 LICENSE
 
-Copyright (c) 2006 by John C. Siracusa.  All rights reserved.  This program is
+Copyright (c) 2010 by John C. Siracusa.  All rights reserved.  This program is
 free software; you can redistribute it and/or modify it under the same terms
 as Perl itself.
