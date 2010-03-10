@@ -182,7 +182,7 @@ __PACKAGE__->column_type_classes
   'datetime'  => 'Rose::DB::Object::Metadata::Column::Datetime',
   'timestamp' => 'Rose::DB::Object::Metadata::Column::Timestamp',
 
-  'timestamp with time zone'    => 'Rose::DB::Object::Metadata::Column::Timestamp',
+  'timestamp with time zone'    => 'Rose::DB::Object::Metadata::Column::TimestampWithTimeZone',
   'timestamp without time zone' => 'Rose::DB::Object::Metadata::Column::Timestamp',
 
   'datetime year to fraction'    => 'Rose::DB::Object::Metadata::Column::DatetimeYearToFraction',
@@ -4912,6 +4912,9 @@ The default mapping of type names to class names is:
   date      => Rose::DB::Object::Metadata::Column::Date
   datetime  => Rose::DB::Object::Metadata::Column::Datetime
   timestamp => Rose::DB::Object::Metadata::Column::Timestamp
+
+  'timestamp with time zone' =>
+    Rose::DB::Object::Metadata::Column::TimestampWithTimeZone
 
   'datetime year to fraction' => 
     Rose::DB::Object::Metadata::Column::DatetimeYearToFraction

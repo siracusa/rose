@@ -5,16 +5,16 @@ use strict;
 use Rose::DB::Object::Metadata::Column::Numeric;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Numeric);
 
-our $VERSION = '0.771';
+our $VERSION = '0.787';
 
 sub type { 'double precision' }
 
 sub should_inline_value
 {
-  #my($self, $db, $value) = @_;
+  my($self, $db, $value) = @_;
   no warnings 'uninitialized';
-  return (($_[1]->validate_double_precision_keyword($_[2]) && $_[1]->should_inline_double_precision_keywords) || 
-          $_[2] =~ /^\w+\(.*\)$/) ? 1 : 0;
+  return (($db->validate_double_precision_keyword($value) && $db->should_inline_double_precision_keywords) ||
+          ($db->keyword_function_calls && $value =~ /^\w+\(.*\)$/)) ? 1 : 0;
 }
 
 1;

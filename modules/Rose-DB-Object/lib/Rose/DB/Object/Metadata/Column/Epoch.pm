@@ -7,7 +7,7 @@ use Rose::DB::Object::MakeMethods::Date;
 use Rose::DB::Object::Metadata::Column::Date;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Date);
 
-our $VERSION = '0.702';
+our $VERSION = '0.787';
 
 foreach my $type (__PACKAGE__->available_method_types)
 {
@@ -17,11 +17,7 @@ foreach my $type (__PACKAGE__->available_method_types)
 
 sub type { 'epoch' }
 
-sub should_inline_value
-{
-  #my($self, $db, $value) = @_;
-  return ($_[2] =~ /^\w+\(.*\)$/) ? 1 : 0;
-}
+sub should_inline_value { 0 }
 
 sub format_value { $_[2]->epoch }
 

@@ -117,6 +117,41 @@ sub parse_timestamp
   shift->Rose::DB::parse_timestamp(@_);
 }
 
+sub parse_timestamp_with_time_zone
+{
+  my($self, $value) = @_;
+
+  unless(ref $value)
+  {
+    no warnings 'uninitialized';
+    return DateTime::Infinite::Past->new   if($value eq '-infinity');
+    return DateTime::Infinite::Future->new if($value eq 'infinity');
+  }
+
+  if(UNIVERSAL::isa($value, 'DateTime') || 
+    $self->validate_timestamp_keyword($value))
+  {
+    return $value;
+  }
+
+  my($dt, $error);
+
+  TRY:
+  {
+    local $@;
+    eval { $dt = $self->date_handler->parse_timestamp_with_time_zone($value) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse timestamp with time zone '$value' - $error");
+    return undef;
+  }
+
+  return $dt;
+}
+
 sub validate_date_keyword
 {
   no warnings;
