@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3904;
+use Test::More tests => 3905;
 
 BEGIN 
 {
@@ -8724,7 +8724,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 792)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 793)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -10756,6 +10756,19 @@ SKIP: foreach my $db_type (qw(sqlite))
   # End pager tests
 
   # Start get_objects_from_sql tests
+
+  eval
+  {
+    $objs = 
+      MySQLiteObjectManager->get_objects_from_sql(
+        db  => MySQLiteObject->init_db,
+        object_class => 'MySQLiteObject',
+      sql => <<"EOF");
+SELECT id, id as nonesuch FROM rose_db_object_test WHERE id != fk1 ORDER BY id DESC
+EOF
+  };
+$DB::single = 1;
+  like($@, qr/method "nonesuch"/, "get_objects_from_sql error message - $db_type");
 
   $objs = 
     MySQLiteObjectManager->get_objects_from_sql(
