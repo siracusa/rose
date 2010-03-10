@@ -5,7 +5,7 @@ use strict;
 use Rose::DB::Object::Metadata::Column::Scalar;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Scalar);
 
-our $VERSION = '0.711';
+our $VERSION = '0.787';
 
 foreach my $type (__PACKAGE__->available_method_types)
 {
@@ -19,10 +19,10 @@ sub format_value { shift; shift->format_boolean(@_) }
 
 sub should_inline_value
 {
-  #my($self, $db, $value) = @_;
+  my($self, $db, $value) = @_;
   no warnings 'uninitialized';
-  return (($_[1]->validate_boolean_keyword($_[2]) && $_[1]->should_inline_boolean_keywords) || 
-          $_[2] =~ /^\w+\(.*\)$/) ? 1 : 0;
+  return (($db->validate_boolean_keyword($value) && $db->should_inline_boolean_keywords) ||
+          ($db->keyword_function_calls && $value =~ /^\w+\(.*\)$/)) ? 1 : 0;
 }
 
 sub perl_column_definition_attributes

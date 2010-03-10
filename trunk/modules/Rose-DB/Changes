@@ -1,5 +1,6 @@
-0.758_01 (01.26.2010) - John Siracusa <siracusa@gmail.com>
+0.758_02 (01.26.2010) - John Siracusa <siracusa@gmail.com>
 
+	* Added timestamp with timezone parsing/formating methods.
     * TODO: Savepoints?
 
 0.758 (01.26.2010) - John Siracusa <siracusa@gmail.com>

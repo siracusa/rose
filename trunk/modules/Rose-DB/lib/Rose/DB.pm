@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.758';
+our $VERSION = '0.758_02';
 
 our $Debug = 0;
 
@@ -1575,6 +1575,14 @@ sub format_timestamp
   return $self->date_handler->format_timestamp($date);
 }
 
+sub format_timestamp_with_time_zone
+{  
+  my($self, $date) = @_;
+  return $date  if($self->validate_timestamp_keyword($date) ||
+    ($self->keyword_function_calls && $date =~ /^\w+\(.*\)$/));
+  return $self->date_handler->format_timestamp_with_time_zone($date);
+}
+
 # Date parsing
 
 sub parse_date
@@ -1659,6 +1667,8 @@ sub parse_timestamp
 
   return $dt;
 }
+
+sub parse_timestamp_with_time_zone { shift->parse_timestamp(@_) }
 
 sub parse_time
 {
@@ -2568,6 +2578,7 @@ BEGIN
   sub format_date      { shift; Rose::DateTime::Util::format_date($_[0], '%Y-%m-%d') }
   sub format_datetime  { shift; Rose::DateTime::Util::format_date($_[0], '%Y-%m-%d %T') }
   sub format_timestamp { shift; Rose::DateTime::Util::format_date($_[0], '%Y-%m-%d %H:%M:%S.%N') }
+  sub format_timestamp_with_time_zone { shift->format_timestamp(@_) }
 
   sub parse_date       { shift; Rose::DateTime::Util::parse_date($_[0]) }
   sub parse_datetime   { shift; Rose::DateTime::Util::parse_date($_[0]) }
@@ -3596,6 +3607,10 @@ Converts the L<Time::Clock> object TIMECLOCK into the appropriate format for the
 
 Converts the L<DateTime> object DATETIME into the appropriate format for the timestamp (month, day, year, hour, minute, second, fractional seconds) data type of the current data source.  Fractional seconds are optional, and the useful precision may vary depending on the data source.
 
+=item B<format_timestamp_with_time_zone DATETIME>
+
+Converts the L<DateTime> object DATETIME into the appropriate format for the timestamp with time zone (month, day, year, hour, minute, second, fractional seconds, time zone) data type of the current data source.  Fractional seconds are optional, and the useful precision may vary depending on the data source.
+
 =item B<parse_bitfield BITS [, SIZE]>
 
 Parse BITS and return a corresponding L<Bit::Vector> object.  If SIZE is not passed, then it defaults to the number of bits in the parsed bit string.
@@ -3653,6 +3668,12 @@ If STRING is a valid time keyword (according to L<validate_time_keyword|/validat
 Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the data source's native "timestamp" (month, day, year, hour, minute, second, fractional seconds) data type.  Fractional seconds are optional, and the acceptable precision may vary depending on the data source.  
 
 If STRING is a valid timestamp keyword (according to L<validate_timestamp_keyword|/validate_timestamp_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) and L<keyword_function_calls|/keyword_function_calls> is true, then it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "timestamp" value.
+
+=item B<parse_timestamp_with_time_zone STRING>
+
+Parse STRING and return a L<DateTime> object.  STRING should be formatted according to the data source's native "timestamp with time zone" (month, day, year, hour, minute, second, fractional seconds, time zone) data type.  Fractional seconds are optional, and the acceptable precision may vary depending on the data source.  
+
+If STRING is a valid timestamp keyword (according to L<validate_timestamp_keyword|/validate_timestamp_keyword>) or if it looks like a function call (matches C</^\w+\(.*\)$/>) and L<keyword_function_calls|/keyword_function_calls> is true, then it is returned unmodified.  Returns undef if STRING could not be parsed as a valid "timestamp with time zone" value.
 
 =item B<validate_boolean_keyword STRING>
 
