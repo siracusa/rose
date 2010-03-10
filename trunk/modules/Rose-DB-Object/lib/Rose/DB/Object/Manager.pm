@@ -3528,7 +3528,7 @@ sub get_objects_from_sql
 
         while(my($col, $val) = each(%$row))
         {
-          my $method = $methods->{$col};
+          my $method = $methods->{$col} || $col;
           $object->$method($val);
         }
 
