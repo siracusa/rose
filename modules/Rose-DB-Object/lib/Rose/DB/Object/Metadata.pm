@@ -4913,6 +4913,9 @@ The default mapping of type names to class names is:
   datetime  => Rose::DB::Object::Metadata::Column::Datetime
   timestamp => Rose::DB::Object::Metadata::Column::Timestamp
 
+  timestamptz =>
+    Rose::DB::Object::Metadata::Column::TimestampWithTimeZone
+
   'timestamp with time zone' =>
     Rose::DB::Object::Metadata::Column::TimestampWithTimeZone
 

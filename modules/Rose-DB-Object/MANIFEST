@@ -59,6 +59,7 @@ lib/Rose/DB/Object/Metadata/Column/Set.pm
 lib/Rose/DB/Object/Metadata/Column/Text.pm
 lib/Rose/DB/Object/Metadata/Column/Time.pm
 lib/Rose/DB/Object/Metadata/Column/Timestamp.pm
+lib/Rose/DB/Object/Metadata/Column/TimestampWithTimeZone.pm
 lib/Rose/DB/Object/Metadata/Column/Varchar.pm
 lib/Rose/DB/Object/Metadata/ColumnList.pm
 lib/Rose/DB/Object/Metadata/ForeignKey.pm

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 570;
+use Test::More tests => 578;
 
 BEGIN 
 {
@@ -25,7 +25,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE,
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("PostgreSQL tests", 230)  unless($HAVE_PG);
+  skip("PostgreSQL tests", 238)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -45,6 +45,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   $o->flag2('TRUE');
   $o->date_created('now');
   $o->date_created_tz('now');
+  $o->timestamp_tz2('now');
   $o->last_modified($o->date_created);
   $o->save_col(7);
 
@@ -62,19 +63,19 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   my $schema = $db_type eq 'pg_with_schema' ? 'rose_db_object_private.' : '';
 
   is(MyPgObject->meta->load_all_sql(undef, $o->db), 
-     qq(SELECT rose_db_object_test.name, rose_db_object_test.code, rose_db_object_test.id, rose_db_object_test.k1, rose_db_object_test.k2, rose_db_object_test.k3,@{[ $PG_HAS_CHKPASS ? ' rose_db_object_test.passwd,' : '' ]} rose_db_object_test.flag, rose_db_object_test.flag2, rose_db_object_test.status, rose_db_object_test.start, rose_db_object_test.save, rose_db_object_test.nums, rose_db_object_test.bitz, rose_db_object_test.decs, rose_db_object_test.dur, rose_db_object_test.epoch, rose_db_object_test.hiepoch, rose_db_object_test.bint1, rose_db_object_test.bint2, rose_db_object_test.bint3, rose_db_object_test.bint4, rose_db_object_test.tee_time, rose_db_object_test.tee_time0, rose_db_object_test.tee_time5, rose_db_object_test.tee_time9, rose_db_object_test.date_created, rose_db_object_test.date_created_tz, rose_db_object_test.last_modified FROM ${schema}rose_db_object_test WHERE rose_db_object_test.id = ?),
+     qq(SELECT rose_db_object_test.name, rose_db_object_test.code, rose_db_object_test.id, rose_db_object_test.k1, rose_db_object_test.k2, rose_db_object_test.k3,@{[ $PG_HAS_CHKPASS ? ' rose_db_object_test.passwd,' : '' ]} rose_db_object_test.flag, rose_db_object_test.flag2, rose_db_object_test.status, rose_db_object_test.start, rose_db_object_test.save, rose_db_object_test.nums, rose_db_object_test.bitz, rose_db_object_test.decs, rose_db_object_test.dur, rose_db_object_test.epoch, rose_db_object_test.hiepoch, rose_db_object_test.bint1, rose_db_object_test.bint2, rose_db_object_test.bint3, rose_db_object_test.bint4, rose_db_object_test.tee_time, rose_db_object_test.tee_time0, rose_db_object_test.tee_time5, rose_db_object_test.tee_time9, rose_db_object_test.date_created, rose_db_object_test.date_created_tz, rose_db_object_test.timestamp_tz2, rose_db_object_test.last_modified FROM ${schema}rose_db_object_test WHERE rose_db_object_test.id = ?),
      "sql_qualify_column_names_on_load() 1 - $db_type");
 
   is(MyPgObject->meta->load_sql(undef, $o->db), 
-     qq(SELECT rose_db_object_test.name, rose_db_object_test.code, rose_db_object_test.id, rose_db_object_test.k1, rose_db_object_test.k3,@{[ $PG_HAS_CHKPASS ? ' rose_db_object_test.passwd,' : '' ]} rose_db_object_test.flag, rose_db_object_test.flag2, rose_db_object_test.status, rose_db_object_test.save, rose_db_object_test.nums, rose_db_object_test.bitz, rose_db_object_test.decs, rose_db_object_test.dur, rose_db_object_test.epoch, rose_db_object_test.hiepoch, rose_db_object_test.bint1, rose_db_object_test.bint2, rose_db_object_test.bint3, rose_db_object_test.bint4, rose_db_object_test.tee_time, rose_db_object_test.tee_time0, rose_db_object_test.tee_time5, rose_db_object_test.tee_time9, rose_db_object_test.date_created, rose_db_object_test.date_created_tz, rose_db_object_test.last_modified FROM ${schema}rose_db_object_test WHERE rose_db_object_test.id = ?),
+     qq(SELECT rose_db_object_test.name, rose_db_object_test.code, rose_db_object_test.id, rose_db_object_test.k1, rose_db_object_test.k3,@{[ $PG_HAS_CHKPASS ? ' rose_db_object_test.passwd,' : '' ]} rose_db_object_test.flag, rose_db_object_test.flag2, rose_db_object_test.status, rose_db_object_test.save, rose_db_object_test.nums, rose_db_object_test.bitz, rose_db_object_test.decs, rose_db_object_test.dur, rose_db_object_test.epoch, rose_db_object_test.hiepoch, rose_db_object_test.bint1, rose_db_object_test.bint2, rose_db_object_test.bint3, rose_db_object_test.bint4, rose_db_object_test.tee_time, rose_db_object_test.tee_time0, rose_db_object_test.tee_time5, rose_db_object_test.tee_time9, rose_db_object_test.date_created, rose_db_object_test.date_created_tz, rose_db_object_test.timestamp_tz2, rose_db_object_test.last_modified FROM ${schema}rose_db_object_test WHERE rose_db_object_test.id = ?),
      "sql_qualify_column_names_on_load() 2 - $db_type");
 
   is(MyPgObject->meta->load_all_sql_with_null_key([ qw(k1 k2 k3) ], [ 1, undef, 3 ], $o->db), 
-     qq(SELECT rose_db_object_test.name, rose_db_object_test.code, rose_db_object_test.id, rose_db_object_test.k1, rose_db_object_test.k2, rose_db_object_test.k3,@{[ $PG_HAS_CHKPASS ? ' rose_db_object_test.passwd,' : '' ]} rose_db_object_test.flag, rose_db_object_test.flag2, rose_db_object_test.status, rose_db_object_test.start, rose_db_object_test.save, rose_db_object_test.nums, rose_db_object_test.bitz, rose_db_object_test.decs, rose_db_object_test.dur, rose_db_object_test.epoch, rose_db_object_test.hiepoch, rose_db_object_test.bint1, rose_db_object_test.bint2, rose_db_object_test.bint3, rose_db_object_test.bint4, rose_db_object_test.tee_time, rose_db_object_test.tee_time0, rose_db_object_test.tee_time5, rose_db_object_test.tee_time9, rose_db_object_test.date_created, rose_db_object_test.date_created_tz, rose_db_object_test.last_modified FROM ${schema}rose_db_object_test WHERE rose_db_object_test.k1 = ? AND rose_db_object_test.k2 IS NULL AND rose_db_object_test.k3 = ?),
+     qq(SELECT rose_db_object_test.name, rose_db_object_test.code, rose_db_object_test.id, rose_db_object_test.k1, rose_db_object_test.k2, rose_db_object_test.k3,@{[ $PG_HAS_CHKPASS ? ' rose_db_object_test.passwd,' : '' ]} rose_db_object_test.flag, rose_db_object_test.flag2, rose_db_object_test.status, rose_db_object_test.start, rose_db_object_test.save, rose_db_object_test.nums, rose_db_object_test.bitz, rose_db_object_test.decs, rose_db_object_test.dur, rose_db_object_test.epoch, rose_db_object_test.hiepoch, rose_db_object_test.bint1, rose_db_object_test.bint2, rose_db_object_test.bint3, rose_db_object_test.bint4, rose_db_object_test.tee_time, rose_db_object_test.tee_time0, rose_db_object_test.tee_time5, rose_db_object_test.tee_time9, rose_db_object_test.date_created, rose_db_object_test.date_created_tz, rose_db_object_test.timestamp_tz2, rose_db_object_test.last_modified FROM ${schema}rose_db_object_test WHERE rose_db_object_test.k1 = ? AND rose_db_object_test.k2 IS NULL AND rose_db_object_test.k3 = ?),
      "sql_qualify_column_names_on_load() 3 - $db_type");
 
   is(MyPgObject->meta->load_sql_with_null_key([ qw(k1 k2 k3) ], [ 1, undef, 3 ], $o->db), 
-     qq(SELECT rose_db_object_test.name, rose_db_object_test.code, rose_db_object_test.id, rose_db_object_test.k1, rose_db_object_test.k3,@{[ $PG_HAS_CHKPASS ? ' rose_db_object_test.passwd,' : '' ]} rose_db_object_test.flag, rose_db_object_test.flag2, rose_db_object_test.status, rose_db_object_test.save, rose_db_object_test.nums, rose_db_object_test.bitz, rose_db_object_test.decs, rose_db_object_test.dur, rose_db_object_test.epoch, rose_db_object_test.hiepoch, rose_db_object_test.bint1, rose_db_object_test.bint2, rose_db_object_test.bint3, rose_db_object_test.bint4, rose_db_object_test.tee_time, rose_db_object_test.tee_time0, rose_db_object_test.tee_time5, rose_db_object_test.tee_time9, rose_db_object_test.date_created, rose_db_object_test.date_created_tz, rose_db_object_test.last_modified FROM ${schema}rose_db_object_test WHERE rose_db_object_test.k1 = ? AND rose_db_object_test.k2 IS NULL AND rose_db_object_test.k3 = ?),
+     qq(SELECT rose_db_object_test.name, rose_db_object_test.code, rose_db_object_test.id, rose_db_object_test.k1, rose_db_object_test.k3,@{[ $PG_HAS_CHKPASS ? ' rose_db_object_test.passwd,' : '' ]} rose_db_object_test.flag, rose_db_object_test.flag2, rose_db_object_test.status, rose_db_object_test.save, rose_db_object_test.nums, rose_db_object_test.bitz, rose_db_object_test.decs, rose_db_object_test.dur, rose_db_object_test.epoch, rose_db_object_test.hiepoch, rose_db_object_test.bint1, rose_db_object_test.bint2, rose_db_object_test.bint3, rose_db_object_test.bint4, rose_db_object_test.tee_time, rose_db_object_test.tee_time0, rose_db_object_test.tee_time5, rose_db_object_test.tee_time9, rose_db_object_test.date_created, rose_db_object_test.date_created_tz, rose_db_object_test.timestamp_tz2, rose_db_object_test.last_modified FROM ${schema}rose_db_object_test WHERE rose_db_object_test.k1 = ? AND rose_db_object_test.k2 IS NULL AND rose_db_object_test.k3 = ?),
      "sql_qualify_column_names_on_load() 4 - $db_type");
 
   MyPgObject->meta->sql_qualify_column_names_on_load(rand > 0.6 ? 0 : 1); # excitement! :)
@@ -88,7 +89,45 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
   ok($o->load, "load() 1 - $db_type");
 
+  is($o->date_created->time_zone->name, 'floating', "timestamp without time zone - $db_type");
   isnt($o->date_created_tz->time_zone->name, 'floating', "timestamp with time zone - $db_type");
+  is($o->timestamp_tz2->time_zone->name, 'Antarctica/Vostok', "timestamp with time zone override - $db_type");  
+  
+  # Make sure we're not in the Antarctica/Vostok time zone or any other
+  # time zone with the same offset.
+  my $error;
+
+  TRY:
+  {
+    local $@;
+
+    eval
+    {
+      my $dt1 = DateTime->now(time_zone => 'local');
+      my $dt2 = $dt1->clone;
+      $dt2->set_time_zone('Antarctica/Vostok');
+      die "local is equivalent to Antarctica/Vostok"  if($dt1->iso8601 eq $dt2->iso8601);
+    };
+
+    $error = $@;
+  }
+
+  if($error)
+  {
+    SKIP: { skip("timestamp with time zone time change - $db_type", 2) }
+  }
+  else
+  {
+    isnt($o->date_created_tz->iso8601, $o->timestamp_tz2->iso8601, "timestamp with time zone time change - $db_type");
+
+    $o->save;
+    $o->load;
+
+	my $dt = $o->timestamp_tz2->clone;
+	$dt->set_time_zone($o->date_created_tz->time_zone);
+
+    is($o->date_created_tz->iso8601, $dt->iso8601, "timestamp with time zone time change 2 - $db_type");
+  }
 
   $o->name('C' x 50);
   is($o->name, 'C' x 32, "varchar truncation - $db_type");
@@ -1450,6 +1489,7 @@ CREATE TABLE rose_db_object_test
   last_modified   TIMESTAMP,
   date_created    TIMESTAMP,
   date_created_tz TIMESTAMP WITH TIME ZONE,
+  timestamp_tz2   TIMESTAMP WITH TIME ZONE,
 
   UNIQUE(k1, k2, k3)
 )
@@ -1487,6 +1527,7 @@ CREATE TABLE rose_db_object_private.rose_db_object_test
   last_modified   TIMESTAMP,
   date_created    TIMESTAMP,
   date_created_tz TIMESTAMP WITH TIME ZONE,
+  timestamp_tz2   TIMESTAMP WITH TIME ZONE,
 
   UNIQUE(k1, k2, k3)
 )
@@ -1537,6 +1578,7 @@ EOF
       #last_modified => { type => 'timestamp' },
       date_created => { type => 'timestamp' },
       date_created_tz => { type => 'timestamp with time zone' },
+      timestamp_tz2 => { type => 'timestamp with time zone', time_zone => 'Antarctica/Vostok' },
       main::nonpersistent_column_definitions(),
     );
 

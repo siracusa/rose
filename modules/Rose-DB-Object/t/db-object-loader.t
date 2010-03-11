@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (6 * 35) + 9;
+use Test::More tests => 1 + (6 * 36) + 9;
 
 BEGIN 
 {
@@ -42,7 +42,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
   {
     unless($Have{$db_type})
     {
-      skip("$db_type tests", 35 + scalar @{$Reserved_Words{$db_type} ||= []});
+      skip("$db_type tests", 36 + scalar @{$Reserved_Words{$db_type} ||= []});
     }
   }
 
@@ -215,12 +215,15 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
 
   if($db_type eq 'pg')
   {
+    is($product_class->meta->column('release_date')->type, 'timestamp',
+      "timestamp - $db_type");
+
     is($product_class->meta->column('release_date_tz')->type, 'timestamp with time zone',
       "timestamp with time zone - $db_type");
   }
   else
   {
-    SKIP: { skip("timestamp with time zone tests for $db_type", 1) }
+    SKIP: { skip("timestamp with time zone tests for $db_type", 2) }
   }
 
   if($db_type eq 'mysql' && $db->dbh->{'Driver'}{'Version'} >= 4.002)

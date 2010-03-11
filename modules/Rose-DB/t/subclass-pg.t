@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 313);
+    Test::More->import(tests => 314);
   }
 }
 
@@ -386,7 +386,7 @@ SKIP:
 {
   unless(have_db('pg'))
   {
-    skip('pg tests', 46);
+    skip('pg tests', 47);
   }
 
   eval { $db->connect };
@@ -419,6 +419,7 @@ SKIP:
   is($db->parse_date('12-31-2002'), parse_date('12/31/2002', 'UTC'),  "parse_date()");
   is($db->parse_datetime('2002-12-31 12:34:56'), parse_date('12/31/2002 12:34:56', 'UTC'),  "parse_datetime()");
   is($db->parse_timestamp('2002-12-31 12:34:56'), parse_date('12/31/2002 12:34:56', 'UTC'),  "parse_timestamp()");
+  like($db->parse_timestamp_with_time_zone('2002-12-31 12:34:56-05')->time_zone->name, qr/^-0*50*$/,  "parse_timestamp_with_time_zone()");
   #is($db->parse_time('12:34:56'), parse_date('12/31/2002 12:34:56', 'UTC')->strftime('%H:%M:%S'),  "parse_time()");
 
   $db->european_dates(1);
