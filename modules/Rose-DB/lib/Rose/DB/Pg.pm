@@ -128,28 +128,7 @@ sub parse_timestamp_with_time_zone
     return DateTime::Infinite::Future->new if($value eq 'infinity');
   }
 
-  if(UNIVERSAL::isa($value, 'DateTime') || 
-    $self->validate_timestamp_keyword($value))
-  {
-    return $value;
-  }
-
-  my($dt, $error);
-
-  TRY:
-  {
-    local $@;
-    eval { $dt = $self->date_handler->parse_timestamp_with_time_zone($value) };
-    $error = $@;
-  }
-
-  if($error)
-  {
-    $self->error("Could not parse timestamp with time zone '$value' - $error");
-    return undef;
-  }
-
-  return $dt;
+  shift->Rose::DB::parse_timestamp_with_time_zone(@_);
 }
 
 sub validate_date_keyword

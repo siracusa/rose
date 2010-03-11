@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.758_02';
+our $VERSION = '0.758_03';
 
 our $Debug = 0;
 
@@ -1668,7 +1668,33 @@ sub parse_timestamp
   return $dt;
 }
 
-sub parse_timestamp_with_time_zone { shift->parse_timestamp(@_) }
+sub parse_timestamp_with_time_zone
+{  
+  my($self, $value) = @_;
+
+  if(UNIVERSAL::isa($value, 'DateTime') || 
+    $self->validate_timestamp_keyword($value))
+  {
+    return $value;
+  }
+
+  my($dt, $error);
+
+  TRY:
+  {
+    local $@;
+    eval { $dt = $self->date_handler->parse_timestamp_with_time_zone($value) };
+    $error = $@;
+  }
+
+  if($error)
+  {
+    $self->error("Could not parse timestamp with time zone '$value' - $error");
+    return undef;
+  }
+
+  return $dt;
+}
 
 sub parse_time
 {
@@ -2580,9 +2606,10 @@ BEGIN
   sub format_timestamp { shift; Rose::DateTime::Util::format_date($_[0], '%Y-%m-%d %H:%M:%S.%N') }
   sub format_timestamp_with_time_zone { shift->format_timestamp(@_) }
 
-  sub parse_date       { shift; Rose::DateTime::Util::parse_date($_[0]) }
-  sub parse_datetime   { shift; Rose::DateTime::Util::parse_date($_[0]) }
-  sub parse_timestamp  { shift; Rose::DateTime::Util::parse_date($_[0]) }
+  sub parse_date       { shift; Rose::DateTime::Util::parse_date($_[0], $_[0]->server_tz) }
+  sub parse_datetime   { shift; Rose::DateTime::Util::parse_date($_[0], $_[0]->server_tz) }
+  sub parse_timestamp  { shift; Rose::DateTime::Util::parse_date($_[0], $_[0]->server_tz) }
+  sub parse_timestamp_with_time_zone { shift->parse_timestamp(@_) }
 }
 
 1;

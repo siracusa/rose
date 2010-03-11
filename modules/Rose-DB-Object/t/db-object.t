@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 578;
+use Test::More tests => 583;
 
 BEGIN 
 {
@@ -1190,7 +1190,7 @@ SKIP: foreach my $db_type ('sqlite')
 
 SKIP: foreach my $db_type (qw(oracle))
 {
-  skip("Oracle tests", 74)  unless($HAVE_ORACLE);
+  skip("Oracle tests", 79)  unless($HAVE_ORACLE);
 
   Rose::DB->default_type($db_type);
 
@@ -1209,6 +1209,8 @@ SKIP: foreach my $db_type (qw(oracle))
 
   $o->flag2('TRUE');
   $o->date_created('now');
+  $o->date_created_tz('now');
+  $o->timestamp_tz2('now');
   $o->last_modified($o->date_created);
   $o->save_col(7);
 
@@ -1235,6 +1237,46 @@ SKIP: foreach my $db_type (qw(oracle))
   else
   {
     ok($o->load, "load() 1 - $db_type");
+
+    is($o->date_created->time_zone->name, 'floating', "timestamp without time zone - $db_type");
+    isnt($o->date_created_tz->time_zone->name, 'floating', "timestamp with time zone - $db_type");
+    is($o->timestamp_tz2->time_zone->name, 'Antarctica/Vostok', "timestamp with time zone override - $db_type");  
+  
+    # Make sure we're not in the Antarctica/Vostok time zone or any other
+    # time zone with the same offset.
+    my $error;
+  
+    TRY:
+    {
+      local $@;
+  
+      eval
+      {
+        my $dt1 = DateTime->now(time_zone => 'local');
+        my $dt2 = $dt1->clone;
+        $dt2->set_time_zone('Antarctica/Vostok');
+        die "local is equivalent to Antarctica/Vostok"  if($dt1->iso8601 eq $dt2->iso8601);
+      };
+  
+      $error = $@;
+    }
+  
+    if($error)
+    {
+      SKIP: { skip("timestamp with time zone time change - $db_type", 2) }
+    }
+    else
+    {
+      isnt($o->date_created_tz->iso8601, $o->timestamp_tz2->iso8601, "timestamp with time zone time change - $db_type");
+  
+      $o->save;
+      $o->load;
+  
+      my $dt = $o->timestamp_tz2->clone;
+      $dt->set_time_zone($o->date_created_tz->time_zone);
+  
+      is($o->date_created_tz->iso8601, $dt->iso8601, "timestamp with time zone time change 2 - $db_type");
+    }
 
     $o->name('C' x 50);
     is($o->name, 'C' x 32, "varchar truncation - $db_type");
@@ -2093,23 +2135,25 @@ EOF
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test
 (
-  id             INT NOT NULL PRIMARY KEY,
-  k1             INT,
-  k2             INT,
-  k3             INT,
-  name           VARCHAR(32) NOT NULL,
-  code           CHAR(6),
-  flag           CHAR(1) NOT NULL CHECK(flag IN ('t', 'f')),
-  flag2          CHAR(1) CHECK(flag2 IN ('t', 'f')),
-  status         VARCHAR(32) DEFAULT 'active',
-  bitz           VARCHAR(5) DEFAULT '00101' NOT NULL,
-  decs           NUMBER(10,2),
-  nums           VARCHAR(255),
-  start_date     DATE,
-  save           INT,
-  claim#         INT,
-  last_modified  TIMESTAMP,
-  date_created   TIMESTAMP
+  id              INT NOT NULL PRIMARY KEY,
+  k1              INT,
+  k2              INT,
+  k3              INT,
+  name            VARCHAR(32) NOT NULL,
+  code            CHAR(6),
+  flag            CHAR(1) NOT NULL CHECK(flag IN ('t', 'f')),
+  flag2           CHAR(1) CHECK(flag2 IN ('t', 'f')),
+  status          VARCHAR(32) DEFAULT 'active',
+  bitz            VARCHAR(5) DEFAULT '00101' NOT NULL,
+  decs            NUMBER(10,2),
+  nums            VARCHAR(255),
+  start_date      DATE,
+  save            INT,
+  claim#          INT,
+  last_modified   TIMESTAMP,
+  date_created    TIMESTAMP,
+  date_created_tz TIMESTAMP WITH TIME ZONE,
+  timestamp_tz2   TIMESTAMP WITH TIME ZONE
 )
 EOF
 
@@ -2161,6 +2205,8 @@ EOF
       decs     => { type => 'decimal', precision => 10, scale => 2 },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
+      date_created_tz => { type => 'timestamp with time zone' },
+      timestamp_tz2 => { type => 'timestamp with time zone', time_zone => 'Antarctica/Vostok' },
       main::nonpersistent_column_definitions(),
     );
 
