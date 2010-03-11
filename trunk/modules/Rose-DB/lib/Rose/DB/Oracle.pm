@@ -9,7 +9,7 @@ use Rose::DB;
 
 our $Debug = 0;
 
-our $VERSION  = '0.757';
+our $VERSION  = '0.759';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -19,9 +19,9 @@ use Rose::Class::MakeMethods::Generic
 __PACKAGE__->_default_post_connect_sql
 (
   [
-    q(ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS'),
-    q(ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SSxFF'),
-    q(ALTER SESSION SET NLS_TIMESTAMP_TZ_FORMAT='YYYY-MM-DD HH24:MI:SSxFF')
+    q(ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'),
+    q(ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS.FF'),
+    q(ALTER SESSION SET NLS_TIMESTAMP_TZ_FORMAT = 'YYYY-MM-DD HH24:MI:SS.FF TZHTZM')
   ]
 );
 
@@ -107,6 +107,8 @@ sub build_dsn
 
   return "dbi:Oracle:$database";
 }
+
+sub init_date_handler { Rose::DB::Oracle::DateHandler->new }
 
 sub database_version
 {
@@ -475,6 +477,91 @@ sub should_inline_datetime_keywords  { 1 }
 sub should_inline_time_keywords      { 1 }
 sub should_inline_timestamp_keywords { 1 }
 
+package Rose::DB::Oracle::DateHandler;
+
+use Rose::Object;
+our @ISA = qw(Rose::Object);
+
+use DateTime::Format::Oracle;
+
+sub parse_date
+{
+  my($self, $value) = @_;
+
+  local $DateTime::Format::Oracle::nls_date_format = 'YYYY-MM-DD HH24:MI:SS';
+
+  # Add or extend the time to appease DateTime::Format::Oracle
+  if($value =~ /\d\d:/)
+  {
+    $value =~ s/( \d\d:\d\d)([^:]|$)/$1:00$2/;
+  }
+  else
+  {
+    $value .= ' 00:00:00';
+  }
+
+  return DateTime::Format::Oracle->parse_date($value);
+}
+
+*parse_datetime = \&parse_date;
+
+sub parse_timestamp
+{
+  my($self, $value) = @_;
+
+  local $DateTime::Format::Oracle::nls_timestamp_format = 'YYYY-MM-DD HH24:MI:SS.FF';
+
+  # Add, extend, or truncate fractional seconds to appease DateTime::Format::Oracle
+  for($value)
+  {
+    s/( \d\d:\d\d:\d\d)(?!\.)/$1.000000/ || 
+    s/( \d\d:\d\d:\d\d\.)(\d{1,5})(\D|$)/ "$1$2" . ('0' x (6 - length($2))) . $3/e ||
+    s/( \d\d:\d\d:\d\d\.\d{6})\d+/$1/;
+  }
+
+  return DateTime::Format::Oracle->parse_timestamp($value);
+}
+
+sub parse_timestamp_with_time_zone
+{
+  my($self, $value) = @_;
+
+  local $DateTime::Format::Oracle::nls_timestamp_tz_format = 'YYYY-MM-DD HH24:MI:SS.FF TZHTZM';
+
+  # Add, extend, or truncate fractional seconds to appease DateTime::Format::Oracle
+  for($value)
+  {
+    s/( \d\d:\d\d:\d\d)(?!\.)/$1.000000/ || 
+    s/( \d\d:\d\d:\d\d\.)(\d{1,5})(\D|$)/ "$1$2" . ('0' x (6 - length($2))) . $3/e ||
+    s/( \d\d:\d\d:\d\d\.\d{6})\d+/$1/;
+  }
+
+  return DateTime::Format::Oracle->parse_timestamp_with_time_zone($value);
+}
+
+sub format_date
+{
+  my($self) = shift;
+  local $DateTime::Format::Oracle::nls_date_format = 'YYYY-MM-DD HH24:MI:SS';
+  return DateTime::Format::Oracle->format_date(@_);
+}
+
+*format_datetime = \&format_date;
+
+sub format_timestamp
+{
+  my($self) = shift;
+  local $DateTime::Format::Oracle::nls_timestamp_format = 'YYYY-MM-DD HH24:MI:SS.FF';
+  return DateTime::Format::Oracle->format_timestamp(@_);
+}
+
+sub format_timestamp_with_time_zone
+{
+  my($self) = shift;
+  local $DateTime::Format::Oracle::nls_timestamp_tz_format = 'YYYY-MM-DD HH24:MI:SS.FF TZHTZM';
+  return DateTime::Format::Oracle->format_timestamp_with_time_zone(@_);
+}
+
 1;
 
 __END__
@@ -527,9 +614,9 @@ Get or set the default list of SQL statements that will be run immediately after
 
 The L<default_post_connect_sql|/default_post_connect_sql> statements will be run before any statements set using the L<post_connect_sql|/post_connect_sql> method.  The default list contains the following:
 
-    ALTER SESSION SET NLS_DATE_FORMAT='YYYY-MM-DD HH24:MI:SS'
-    ALTER SESSION SET NLS_TIMESTAMP_FORMAT='YYYY-MM-DD HH24:MI:SSxFF'
-    ALTER SESSION SET NLS_TIMESTAMP_TZ_FORMAT='YYYY-MM-DD HH24:MI:SSxFF'
+    ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'
+    ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS.FF'
+    ALTER SESSION SET NLS_TIMESTAMP_TZ_FORMAT = 'YYYY-MM-DD HH24:MI:SS.FF TZHTZM'
 
 These statements enable date/time column value parsing and formatting to work correctly.
 

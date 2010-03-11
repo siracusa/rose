@@ -12,6 +12,8 @@ BEGIN
   use_ok('Rose::DB::Object::Manager');
 }
 
+use Rose::DateTime::Util qw(parse_date);
+
 CONVENTION_AND_DEFAULTS_TESTS:
 {
   package My::RDBO::CM;
@@ -11638,7 +11640,7 @@ SKIP: foreach my $db_type (qw(oracle))
         start_date => '01/02/2001',
         save_col   => [ 1, 5 ],
         fk1        => 2,
-        last_modified => { le => $o->db->format_timestamp($o->db->parse_timestamp('now')) },
+        last_modified => { le => $o->last_modified },
         date_created  => '2004-03-30 12:34:56',
         date_created  => { le => 'now' },
         date_created  => [ 'now', '2004-03-30 12:34:56' ],
@@ -11726,7 +11728,7 @@ SKIP: foreach my $db_type (qw(oracle))
         bits       => '00001',
         start_date => '01/02/2001',
         save_col   => [ 1, 5 ],
-        last_modified => { le => $o->db->format_timestamp($o->db->parse_timestamp('now')) },
+        last_modified => { le => parse_date('now') },
         date_created  => '2004-03-30 12:34:56',
         status        => { like => 'AC%', field => 'UPPER(status)' },
       ],
@@ -11753,7 +11755,7 @@ SKIP: foreach my $db_type (qw(oracle))
         bits       => '00001',
         start_date => '01/02/2001',
         save_col   => [ 1, 5 ],
-        last_modified => { le => $o->db->format_timestamp($o->db->parse_timestamp('now')) },
+        last_modified => { le => parse_date('now') },
         date_created  => '2004-03-30 12:34:56',
         status        => { like => 'AC%', field => 'UPPER(status)' },
       ],
@@ -11809,7 +11811,7 @@ SKIP: foreach my $db_type (qw(oracle))
         bits       => '00001',
         start_date => '01/02/2001',
         save_col   => [ 1, 5 ],
-        last_modified => { le => $o->db->format_timestamp($o->db->parse_timestamp('now')) },
+        last_modified => { le => parse_date('now') },
         date_created  => '2004-03-30 12:34:56',
         status        => { like => 'AC%', field => 'UPPER(status)' },
       ],
@@ -11845,7 +11847,7 @@ SKIP: foreach my $db_type (qw(oracle))
         bits       => '00001',
         start_date => '01/02/2001',
         save_col   => [ 1, 5 ],
-        last_modified => { le => $save_o->db->format_timestamp($save_o->db->parse_timestamp('now')) },
+        last_modified => { le => parse_date('now') },
         date_created  => '2004-03-30 12:34:56',
         status        => { like => 'AC%', field => 'UPPER(status)' },
       ],

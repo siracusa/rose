@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 68);
+    Test::More->import(tests => 82);
   }
 }
 
@@ -65,6 +65,24 @@ foreach my $val (qw(f 0 false False F n N no No))
 is($db->auto_quote_column_name('foo_bar_123'), 'foo_bar_123', 'auto_quote_column_name 1');
 is($db->auto_quote_column_name('claim#'), '"CLAIM#"', 'auto_quote_column_name 2');
 is($db->auto_quote_column_name('foo-bar'), '"FOO-BAR"', 'auto_quote_column_name 3');
+
+is($db->parse_date('2002-12-31'), parse_date('12/31/2002'),  "parse_date() 1");
+is($db->parse_date('2002-12-31 12:34'), parse_date('12/31/2002 12:34'),  "parse_date() 2");
+
+is($db->parse_datetime('2002-12-31 12:34:56'), parse_date('12/31/2002 12:34:56'),  "parse_datetime() 1");
+is($db->parse_datetime('2002-12-31 12:34:56.0'), parse_date('12/31/2002 12:34:56'),  "parse_datetime() 2");
+is($db->parse_datetime('2002-12-31 12:34:56.123'), parse_date('12/31/2002 12:34:56.123'),  "parse_datetime() 3");
+is($db->parse_datetime('2002-12-31 12:34:56.123456789'), parse_date('12/31/2002 12:34:56.123456'),  "parse_datetime() 4");
+
+is($db->parse_timestamp('2002-12-31 12:34:56'), parse_date('12/31/2002 12:34:56'),  "parse_timestamp() 1");
+is($db->parse_timestamp('2002-12-31 12:34:56.0'), parse_date('12/31/2002 12:34:56'),  "parse_timestamp() 2");
+is($db->parse_timestamp('2002-12-31 12:34:56.123'), parse_date('12/31/2002 12:34:56.123'),  "parse_timestamp() 3");
+is($db->parse_timestamp('2002-12-31 12:34:56.123456789'), parse_date('12/31/2002 12:34:56.123456'),  "parse_timestamp() 4");
+
+like($db->parse_timestamp_with_time_zone('2002-12-31 12:34:56 -0500')->time_zone->name, qr/^-0*50*$/,  "parse_timestamp_with_time_zone() 1");
+like($db->parse_timestamp_with_time_zone('2002-12-31 12:34:56.0 -0500')->time_zone->name, qr/^-0*50*$/,  "parse_timestamp_with_time_zone() 2");
+like($db->parse_timestamp_with_time_zone('2002-12-31 12:34:56.123 -0500')->time_zone->name, qr/^-0*50*$/,  "parse_timestamp_with_time_zone() 3");
+like($db->parse_timestamp_with_time_zone('2002-12-31 12:34:56.123456789 -0500')->time_zone->name, qr/^-0*50*$/,  "parse_timestamp_with_time_zone() 4");
 
 my $dbh;
 eval { $dbh = $db->dbh };
