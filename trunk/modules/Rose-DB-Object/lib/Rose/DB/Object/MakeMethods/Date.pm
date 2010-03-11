@@ -871,7 +871,18 @@ sub timestamp
                 Carp::croak "Invalid timestamp: '$_[0]'";
             }
 
-            $dt->set_time_zone($tz || $db->server_time_zone)  if(ref $dt && !$with_time_zone);
+			if(ref $dt)
+			{
+			  if($with_time_zone)
+			  {
+                $dt->set_time_zone($tz)  if($tz);
+			  }
+			  else
+			  {
+                $dt->set_time_zone($tz || $db->server_time_zone);
+              }
+            }
+
             $self->{$key} = $dt;
             $self->{$formatted_key,$driver} = undef;
 
@@ -903,7 +914,15 @@ sub timestamp
 
         if(ref $dt)
         {
-          $dt->set_time_zone($tz || $db->server_time_zone)  unless($with_time_zone);
+          if($with_time_zone)
+          {
+            $dt->set_time_zone($tz)  if($tz);
+          }
+          else
+          {
+            $dt->set_time_zone($tz || $db->server_time_zone);
+          }
+
           $self->{$key} = $dt;
           $self->{$formatted_key,$driver} = undef;
         }
@@ -935,9 +954,16 @@ sub timestamp
             Carp::croak "Invalid timestamp: '$value'";
         }
 
-        if(ref $dt && !$with_time_zone)
+        if(ref $dt)
         {
-          $dt->set_time_zone($tz || $db->server_time_zone);
+          if($with_time_zone)
+          {
+            $dt->set_time_zone($tz)  if($tz);
+          }
+          else
+          {
+            $dt->set_time_zone($tz || $db->server_time_zone);
+          }
         }
 
         return $self->{$key} = $dt;
@@ -1005,7 +1031,15 @@ sub timestamp
 
         if(ref $dt)
         {
-          $dt->set_time_zone($tz || $db->server_time_zone)  unless($with_time_zone);
+          if($with_time_zone)
+          {
+            $dt->set_time_zone($tz)  if($tz);
+          }
+          else
+          {
+            $dt->set_time_zone($tz || $db->server_time_zone);
+          }
+
           $self->{$key} = $dt;
           $self->{$formatted_key,$driver} = undef;
         }
@@ -1037,9 +1071,16 @@ sub timestamp
             Carp::croak "Invalid timestamp: '$value'";
         }
 
-        if(ref $dt && !$with_time_zone)
+        if(ref $dt)
         {
-          $dt->set_time_zone($tz || $db->server_time_zone);
+          if($with_time_zone)
+          {
+            $dt->set_time_zone($tz)  if($tz);
+          }
+          else
+          {
+            $dt->set_time_zone($tz || $db->server_time_zone);
+          }
         }
 
         return $self->{$key} = $dt;
@@ -1076,7 +1117,18 @@ sub timestamp
               Carp::croak "Invalid timestamp: '$_[0]'";
           }
 
-          $dt->set_time_zone($tz || $db->server_time_zone)  if(ref $dt && !$with_time_zone);
+          if(ref $dt)
+          {
+            if($with_time_zone)
+            {
+              $dt->set_time_zone($tz)  if($tz);
+            }
+            else
+            {
+              $dt->set_time_zone($tz || $db->server_time_zone);
+            }
+          }
+
           $self->{$key} = $dt;
           $self->{$formatted_key,$driver} = undef;
 
@@ -1107,7 +1159,15 @@ sub timestamp
 
         if(ref $dt)
         {
-          $dt->set_time_zone($tz || $db->server_time_zone)  unless($with_time_zone);
+          if($with_time_zone)
+          {
+            $dt->set_time_zone($tz)  if($tz);
+          }
+          else
+          {
+            $dt->set_time_zone($tz || $db->server_time_zone);
+          }
+
           $self->{$key} = $dt;
           $self->{$formatted_key,$driver} = undef;
         }
@@ -1139,9 +1199,16 @@ sub timestamp
             Carp::croak "Invalid timestamp: '$value'";
         }
 
-        if(ref $dt && !$with_time_zone)
+        if(ref $dt)
         {
-          $dt->set_time_zone($tz || $db->server_time_zone);
+          if($with_time_zone)
+          {
+            $dt->set_time_zone($tz)  if($tz);
+          }
+          else
+          {
+            $dt->set_time_zone($tz || $db->server_time_zone);
+          }
         }
 
         return $self->{$key} = $dt;
@@ -1941,7 +2008,7 @@ Choose the interface.  The default interface is C<get_set>.
 
 =item C<time_zone>
 
-The time zone name, which must be in a format that is understood by L<DateTime::TimeZone>.
+A time zone name, which must be in a format that is understood by L<DateTime::TimeZone>.
 
 =back
 
@@ -2040,7 +2107,7 @@ Choose the interface.  The default interface is C<get_set>.
 
 =item C<time_zone>
 
-The time zone name, which must be in a format that is understood by L<DateTime::TimeZone>.
+A time zone name, which must be in a format that is understood by L<DateTime::TimeZone>.
 
 =back
 
@@ -2052,7 +2119,7 @@ The time zone name, which must be in a format that is understood by L<DateTime::
 
 Creates a get/set method for a "timestamp with time zone" (year, month, day, hour, minute, second, fractional seconds, time zone) attribute.  When setting the attribute, the value is passed through the C<parse_timestamp_with_timezone()> method of the object's L<db|Rose::DB::Object/db> attribute.  If that fails, the value is passed to L<Rose::DateTime::Util>'s L<parse_date()|Rose::DateTime::Util/parse_date> function.  If that fails, a fatal error will occur.
 
-The time zone of the L<DateTime> object that results from a successful parse is set to the value of the C<time_zone> option, if defined.
+The time zone of the L<DateTime> object will be set according to the successful parse of the "timestamp with time zone" value.  If the C<time_zone> option is set, then the time zone of the L<DateTime> object is set to this value.  Note that this happens I<after> the successful parse, which means that this operation may change the time and/or date according to the difference between the time zone of the value as originally parsed and the new time zone set according to the C<time_zone> option.
 
 When saving to the database, the method will pass the attribute value through the L<format_timestamp_with_timezone|Rose::DB/format_timestamp_with_timezone> method of the object's L<db|Rose::DB::Object/db> attribute before returning it.  Otherwise, the value is returned as-is.
 

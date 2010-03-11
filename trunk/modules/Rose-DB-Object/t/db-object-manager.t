@@ -10767,7 +10767,7 @@ SKIP: foreach my $db_type (qw(sqlite))
 SELECT id, id as nonesuch FROM rose_db_object_test WHERE id != fk1 ORDER BY id DESC
 EOF
   };
-$DB::single = 1;
+
   like($@, qr/method "nonesuch"/, "get_objects_from_sql error message - $db_type");
 
   $objs = 
