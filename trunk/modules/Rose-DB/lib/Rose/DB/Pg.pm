@@ -470,6 +470,8 @@ sub refine_dbi_column_info
   # Extract precision and scale from numeric types
   if($col_info->{'pg_type'} =~ /^numeric/i)
   {
+    no warnings 'uninitialized';
+
     if($col_info->{'COLUMN_SIZE'} =~ /^(\d+),(\d+)$/)
     {
       $col_info->{'COLUMN_SIZE'}    = $1;
