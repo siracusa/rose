@@ -64,7 +64,9 @@ $uri->path('/Foo Bar/Baz');
 $uri->username('u/n&');
 $uri->query_param(c => '?5/1 + 1-3 = 2_()');
 
-is($uri, 'http://u%2Fn%26:pw@ob.com:81/Foo%20Bar/Baz?a=1&a=2&b=3&c=%3F5%2F1%20%2B%201-3%20%3D%202_()#blah', 'escape 2');
+# URI::Escape 3.30 escapes () but older versions do not
+ok($uri eq 'http://u%2Fn%26:pw@ob.com:81/Foo%20Bar/Baz?a=1&a=2&b=3&c=%3F5%2F1%20%2B%201-3%20%3D%202_()#blah' ||
+   $uri eq 'http://u%2Fn%26:pw@ob.com:81/Foo%20Bar/Baz?a=1&a=2&b=3&c=%3F5%2F1%20%2B%201-3%20%3D%202_%28%29#blah', 'escape 2');
 
 my @values = (1, 2);
 my %query = (a => \@values, b => 3);
