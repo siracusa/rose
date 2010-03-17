@@ -33,7 +33,7 @@ SETUP:
   (
     id       => { primary_key => 1, not_null => 1 },
     name     => { type => 'varchar', length => 32 },
-    code     => { type => 'varchar', length => 32, load_on_demand => 1 },
+    code     => { type => 'varchar', length => 32, load_on_demand => 1, inflate => sub { uc $_[1] } },
     start    => { type => 'date', default => '12/24/1980', lazy => 1 },
     ended    => { type => 'date', default => '11/22/2003' },
     date_created => { type => 'timestamp' },
@@ -51,7 +51,7 @@ eval { require List::Util };
 # Good test orders:
 #@dbs = qw(pg mysql sqlite pg_with_schema informix);
 
-print "# db type order: @dbs\n";
+#print "# db type order: @dbs\n";
 
 foreach my $db_type (@dbs)
 {
@@ -102,7 +102,7 @@ foreach my $db_type (@dbs)
   ok(!defined $o->{'code'}, "lazy check 1 - $db_type");
   ok(!defined $o->{'start'}, "lazy check 2 - $db_type");
 
-  is($o->code, 'abc', "lazy load 1 - $db_type");
+  is($o->code, 'ABC', "lazy load 1 - $db_type");
   is($o->start->ymd, '2002-10-20', "lazy load 2 - $db_type");
   is($o->ended->ymd, '2004-05-06', "load 1 - $db_type");
 
@@ -122,7 +122,7 @@ foreach my $db_type (@dbs)
 
   is($o->name, 'Foo', "load 2 - $db_type");
 
-  is($o->code, 'abc', "lazy load 4 - $db_type");
+  is($o->code, 'ABC', "lazy load 4 - $db_type");
   is($o->start->ymd, '2002-10-20', "lazy load 5 - $db_type");
 
   $o = MyObject->new(id => $o->id);
