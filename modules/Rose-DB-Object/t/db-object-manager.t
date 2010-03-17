@@ -3024,6 +3024,8 @@ SKIP: foreach my $db_type ('mysql')
 
   Rose::DB->default_type($db_type);
 
+  Rose::DB->default_keyword_function_calls(1);
+
   my $o = MyMySQLObject->new(id         => 1,
                              name       => 'John',  
                              flag       => 1,

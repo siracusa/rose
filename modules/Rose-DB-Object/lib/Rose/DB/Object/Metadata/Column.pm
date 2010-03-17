@@ -52,12 +52,13 @@ use Rose::Class::MakeMethods::Generic
 
 __PACKAGE__->event_method_types
 (
-  inflate => [ qw(get_set get) ],
-  deflate => [ qw(get_set get) ],
-  on_load => [ qw(get_set set) ],
-  on_save => [ qw(get_set get) ],
-  on_set  => [ qw(get_set set) ],
-  on_get  => [ qw(get_set get) ],
+  inflate   => [ qw(get_set get) ],
+  deflate   => [ qw(get_set get) ],
+  on_load   => [ qw(get_set set) ],
+  on_save   => [ qw(get_set get) ],
+  on_set    => [ qw(get_set set) ],
+  on_get    => [ qw(get_set get) ],
+  lazy_load => [ qw(get_set get) ],
 );
 
 Rose::Object::MakeMethods::Generic->make_methods
@@ -579,7 +580,7 @@ sub lazy
     }
 
     $self->{'lazy'} = 1;
-    $self->add_builtin_trigger(event => 'on_get',
+    $self->add_builtin_trigger(event => 'lazy_load',
                                name  => 'load_on_demand',
                                code  => $self->load_on_demand_on_get_code);
 
@@ -653,12 +654,13 @@ sub load_on_demand_on_set_code
 
 our %Trigger_Events =
 (
-  inflate => 1,
-  deflate => 1,
-  on_load => 1,
-  on_save => 1,
-  on_set  => 1,
-  on_get  => 1,
+  inflate   => 1,
+  deflate   => 1,
+  on_load   => 1,
+  on_save   => 1,
+  on_set    => 1,
+  on_get    => 1,
+  lazy_load => 1,
 );
 
 sub trigger_events { keys %Trigger_Events }
@@ -977,6 +979,8 @@ sub apply_method_triggers
   unshift(@{$on_get_code ||= []}, @$builtins)
     if($builtins = $self->builtin_triggers('on_get'));  
 
+  my $lazy_load_code = $self->builtin_triggers('lazy_load');
+
   my $key             = $self->hash_key;
   my $formatted_key   = column_value_formatted_key($key);
   my $is_inflated_key = column_value_is_inflated_key($key);
@@ -987,7 +991,8 @@ sub apply_method_triggers
   {
     if($inflate_code || $deflate_code || 
        $on_load_code || $on_save_code ||
-       $on_set_code  || $on_get_code)
+       $on_set_code  || $on_get_code  ||
+       $lazy_load_code)
     {
       my $method = sub
       {
@@ -1124,6 +1129,14 @@ sub apply_method_triggers
             {
               local $self->{'triggers_disabled'} = 1;
 
+              if($lazy_load_code)
+              {
+                foreach my $code (@$lazy_load_code)
+                {
+                  $code->($self);
+                }
+              }
+
               if($inflate_code)
               {
                 my $value;
@@ -1202,7 +1215,7 @@ sub apply_method_triggers
   }
   elsif($type eq 'get')
   {
-    if($inflate_code || $deflate_code || $on_save_code || $on_get_code)
+    if($inflate_code || $deflate_code || $on_save_code || $on_get_code || $lazy_load_code)
     {
       my $method = sub
       {
@@ -1269,6 +1282,14 @@ sub apply_method_triggers
           unless($self->{'triggers_disabled'})
           {
             local $self->{'triggers_disabled'} = 1;
+
+            if($lazy_load_code)
+            {
+              foreach my $code (@$lazy_load_code)
+              {
+                $code->($self);
+              }
+            }
 
             if($inflate_code)
             {
