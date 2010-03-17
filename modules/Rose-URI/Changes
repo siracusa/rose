@@ -1,3 +1,9 @@
+1.00 (03.17.2010) - John Siracusa <siracusa@gmail.com>
+
+    * Updated tests to accomodate new default escaping rules in
+      URI::Escape 3.30 (and, presumably, later versions).
+    * Bumped version number to reflect API stability.
+
 0.50 (10.21.2008) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug that caused empty query parameters to be omitted 
