@@ -148,7 +148,18 @@ sub default_value_sequence_name
   my $db;
   $db = shift  if(UNIVERSAL::isa($_[0], 'Rose::DB'));
   my $parent = $self->parent;
-  my $db_id = $db ? $db->id : $parent ? $parent->init_db_id : ANY_DB;
+  my ($db_id, $error);
+
+  # Sometimes data source are not set up yet when this method
+  # is called.  Allow for failure, falling back to ANY_DB
+  TRY:
+  {
+    local $@;
+    eval { $db_id = $db ? $db->id : $parent ? $parent->init_db_id : ANY_DB };
+    $error = $@;
+  }
+
+  $db_id = ANY_DB if ($error);
 
   return $self->{'default_value_sequence_name'}{$db_id}  unless(@_);
 
