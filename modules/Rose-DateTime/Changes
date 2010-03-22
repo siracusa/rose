@@ -1,3 +1,8 @@
+0.534 (03.22.2010) - John Siracusa <siracusa@gmail.com>
+
+    * Updated to avoid calling methods that were deprecated in
+      DateTime::Locale version 0.44 and later.
+
 0.533 (10.16.2009) - John Siracusa <siracusa@gmail.com>
 
     * Updated eval blocks to avoid stomping on $@ from an outer scope.

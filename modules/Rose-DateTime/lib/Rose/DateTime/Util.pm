@@ -57,7 +57,14 @@ sub init_european_dates
 
   my $locale_class = DateTime::Locale->load(DateTime->DefaultLocale);
 
-  if($locale_class->date_parts_order eq 'dmy')
+  my $short = $locale_class->date_format_short;
+  
+  $short =~ tr{dmyDMY}{}cd;
+  $short =~ tr{dmyDMY}{dmydmy}s;
+
+  # date_parts_order() is deprecated in DateTime::Locale 0.44+
+  #if($locale_class->date_parts_order eq 'dmy')
+  if($short eq 'dmy')
   {
     return 1;
   }
