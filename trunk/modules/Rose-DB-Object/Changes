@@ -13,6 +13,7 @@
     * TODO: DEBUG environment variable and hooks.
     * TODO: Multiple unique keys example.
     * TODO: remarks metadata attribute.
+    * TODO: Generic is_auto_increment column attribute support.
     * TODO: Parameterize DateTime class name in column method-makers?
     * TODO: SELECT FOR UPDATE
     * TODO: Update docs for has_loaded_related() and/or make a better
