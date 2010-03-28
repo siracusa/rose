@@ -575,7 +575,7 @@ Let's solve all of these problems.  If we more accurately describe the columns, 
         release_date => { type => 'timestamp' },
       ],
 
-      unique_key => 'name';
+      unique_key => 'name',
     );
 
 Before examining what new functionality this new class gives us, there are a few things to note about the definition.  First, the primary key is no longer specified with the L<primary_key_columns()|Rose::DB::Object::Metadata/primary_key_columns> method.  Instead, the C<id> column has its C<primary_key> attribute set to a true value in its description.
