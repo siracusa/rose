@@ -112,9 +112,9 @@ is($db->format_array('a', 'b'), q({"a","b"}), 'format_array() 2');
 eval { $db->format_array('x' x 300) };
 ok($@, 'format_array() 3');
 
-my $a = $db->parse_array(q({"a","b"}));
+my $a = $db->parse_array(q({"a","b","\\""}));
 
-ok(@$a == 2 && $a->[0] eq 'a' && $a->[1] eq 'b', 'parse_array() 1');
+ok(@$a == 3 && $a->[0] eq 'a' && $a->[1] eq 'b' &&  $a->[2] eq '"', 'parse_array() 1');
 
 is($db->format_set([ 'a', 'b' ]), 'a,b', 'format_set() 1');
 is($db->format_set('a', 'b'), 'a,b', 'format_set() 2');

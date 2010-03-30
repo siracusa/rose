@@ -187,7 +187,9 @@ sub parse_array
 
   while($val =~ s/(?:"((?:[^"\\]+|\\.)*)"|([^",]+))(?:,|$)//)
   {
-    push(@array, map { $_ eq 'NULL' ? undef : $_ } (defined $1 ? $1 : $2));
+    my($item) = map { $_ eq 'NULL' ? undef : $_ } (defined $1 ? $1 : $2);
+    $item =~ s{\\(.)}{$1}g  if(defined $item);
+    push(@array, $item);
   }
 
   return \@array;
