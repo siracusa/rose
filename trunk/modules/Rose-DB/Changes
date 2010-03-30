@@ -1,5 +1,6 @@
-0.758_03 (10.11.2010) - John Siracusa <siracusa@gmail.com>
+0.758_04 (03.30.2010) - John Siracusa <siracusa@gmail.com>
 
+    * Corrected parse_array()'s value unescaping (RT 56112)
     * Added timestamp with time zone parsing/formating methods.
     * Improved Oracle date/time parsing and formatting.
     * DateTime::Format::Oracle is now a prerequisite (see above).
