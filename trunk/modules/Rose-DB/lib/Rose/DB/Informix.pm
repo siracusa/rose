@@ -4,7 +4,7 @@ use strict;
 
 use Rose::DateTime::Util();
 
-our $VERSION = '0.759'; # overshot version number, freeze until caught up
+our $VERSION = '0.759';
 
 our $Debug = 0;
 
@@ -47,7 +47,10 @@ sub refine_dbi_column_info
 {
   my($self, $col_info, $meta) = @_;
 
-  $self->Rose::DB::refine_dbi_column_info($col_info);
+  my $method = ref($self)->parent_class . '::refine_dbi_column_info';
+
+  no strict 'refs';
+  $self->$method($col_info);
 
   my $type_name = $col_info->{'TYPE_NAME'};
 

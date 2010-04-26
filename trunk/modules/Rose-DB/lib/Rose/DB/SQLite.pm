@@ -7,7 +7,7 @@ use Carp();
 use Rose::DB;
 use SQL::ReservedWords::SQLite();
 
-our $VERSION = '0.756';
+our $VERSION = '0.759';
 
 #our $Debug = 0;
 
@@ -49,7 +49,10 @@ sub init_dbh
                 "file: '$database'";
   }
 
-  $self->Rose::DB::init_dbh(@_);
+  my $method = ref($self)->parent_class . '::init_dbh';
+
+  no strict 'refs';
+  return $self->$method(@_);
 }
 
 sub last_insertid_from_sth { shift->dbh->func('last_insert_rowid') }
@@ -177,7 +180,10 @@ sub refine_dbi_column_info
 {
   my($self, $col_info) = @_;
 
-  $self->Rose::DB::refine_dbi_column_info($col_info);
+  my $method = ref($self)->parent_class . '::refine_dbi_column_info';
+
+  no strict 'refs';
+  $self->$method($col_info);
 
   if($col_info->{'TYPE_NAME'} eq 'bit')
   {
