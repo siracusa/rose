@@ -13,7 +13,7 @@ BEGIN
 
   if(have_db('sqlite_admin'))
   {
-    Test::More->import(tests => 46);
+    Test::More->import(tests => 47);
   }
   else
   {
@@ -156,6 +156,18 @@ SKIP:
   my $dbh_copy = $db->retain_dbh;
 
   $db->disconnect;
+
+  if($db->isa('My::DB2'))
+  {
+    $My::DB2::Called{'init_dbh'} = 0;
+    $db = My::DB2->new('sqlite');
+    $db->dbh;
+    is($My::DB2::Called{'init_dbh'}, 1, 'SUPER:: from driver');
+  }
+  else
+  {
+    SKIP: { skip('SUPER:: from driver tests', 1) }
+  }
 }
 
 $db->dsn('dbi:SQLite:dbname=dbfoo');

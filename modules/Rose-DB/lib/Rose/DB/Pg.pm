@@ -50,11 +50,17 @@ sub dbi_driver { 'Pg' }
 sub init_date_handler
 {
   my($self) = shift;
+
+  my $parent_class = ref($self)->parent_class;
+  my $european_dates   = "${parent_class}::european_dates";
+  my $server_time_zone = "${parent_class}::server_time_zone";
+
+  no strict 'refs';
   my $parser = 
     DateTime::Format::Pg->new(
-      ($self->Rose::DB::european_dates ? (european => 1) : ()),
-      ($self->Rose::DB::server_time_zone ? 
-        (server_tz => $self->Rose::DB::server_time_zone) : ()));
+      ($self->$european_dates() ? (european => 1) : ()),
+      ($self->$server_time_zone() ? 
+        (server_tz => $self->$server_time_zone()) : ()));
 
   return $parser;
 }
@@ -95,26 +101,36 @@ sub last_insertid_from_sth
 
 sub parse_datetime
 {
-  unless(ref $_[1])
+  my($self) = shift;
+
+  unless(ref $_[0])
   {
     no warnings 'uninitialized';
-    return DateTime::Infinite::Past->new   if($_[1] eq '-infinity');
-    return DateTime::Infinite::Future->new if($_[1] eq 'infinity');
+    return DateTime::Infinite::Past->new   if($_[0] eq '-infinity');
+    return DateTime::Infinite::Future->new if($_[0] eq 'infinity');
   }
 
-  shift->Rose::DB::parse_datetime(@_);
+  my $method = ref($self)->parent_class . '::parse_datetime';
+
+  no strict 'refs';
+  $self->$method(@_);
 }
 
 sub parse_timestamp
 {
-  unless(ref $_[1])
+  my($self) = shift;
+
+  unless(ref $_[0])
   {
     no warnings 'uninitialized';
-    return DateTime::Infinite::Past->new   if($_[1] eq '-infinity');
-    return DateTime::Infinite::Future->new if($_[1] eq 'infinity');
+    return DateTime::Infinite::Past->new   if($_[0] eq '-infinity');
+    return DateTime::Infinite::Future->new if($_[0] eq 'infinity');
   }
 
-  shift->Rose::DB::parse_timestamp(@_);
+  my $method = ref($self)->parent_class . '::parse_timestamp';
+
+  no strict 'refs';
+  $self->$method(@_);
 }
 
 sub parse_timestamp_with_time_zone
@@ -128,7 +144,10 @@ sub parse_timestamp_with_time_zone
     return DateTime::Infinite::Future->new if($value eq 'infinity');
   }
 
-  shift->Rose::DB::parse_timestamp_with_time_zone(@_);
+  my $method = ref($self)->parent_class . '::parse_timestamp_with_time_zone';
+
+  no strict 'refs';
+  shift->$method(@_);
 }
 
 sub validate_date_keyword
@@ -160,14 +179,26 @@ sub validate_timestamp_keyword
 
 sub server_time_zone
 {
-  $_[0]->{'date_handler'} = undef  if(@_ > 1);
-  shift->Rose::DB::server_time_zone(@_)
+  my($self) = shift;
+
+  $self->{'date_handler'} = undef  if(@_);
+
+  my $method = ref($self)->parent_class . '::server_time_zone';
+
+  no strict 'refs';
+  $self->$method(@_);
 }
 
 sub european_dates
 {
-  $_[0]->{'date_handler'} = undef  if(@_ > 1);
-  shift->Rose::DB::european_dates(@_)
+  my($self) = shift;
+
+  $self->{'date_handler'} = undef  if(@_);
+
+  my $method = ref($self)->parent_class . '::european_dates';
+
+  no strict 'refs';
+  $self->$method(@_);
 }
 
 sub parse_array
@@ -242,7 +273,10 @@ sub parse_interval
     $error = $@;
   }
 
-  return $self->Rose::DB::parse_interval($value, $end_of_month_mode)  if($error);
+  my $method = ref($self)->parent_class . '::parse_interval';
+
+  no strict 'refs';
+  return $self->$method($value, $end_of_month_mode)  if($error);
 
   if(defined $end_of_month_mode && $dt_duration)
   {
@@ -382,7 +416,10 @@ sub refine_dbi_column_info
   # Save default value
   my $default = $col_info->{'COLUMN_DEF'};
 
-  $self->Rose::DB::refine_dbi_column_info($col_info);
+  my $method = ref($self)->parent_class . '::refine_dbi_column_info';
+
+  no strict 'refs';
+  $self->$method($col_info);
 
   # Set sequence name key, if present
   if(defined $default && $default =~ /^nextval\(\(?'((?:''|[^']+))'::\w+/)

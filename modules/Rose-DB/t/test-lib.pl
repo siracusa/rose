@@ -268,6 +268,13 @@ package My::DB;
 package My::DB2;
 @My::DB2::ISA = qw(My::DB);
 
+sub init_dbh
+{
+  my($self) = shift;
+  $My::DB2::Called{'init_dbh'}++;
+  $self->SUPER::init_dbh(@_);
+}
+
 package My::DB2::Oracle;
 @My::DB2::Oracle::ISA = qw(Rose::DB::Oracle);
 

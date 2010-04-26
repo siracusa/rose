@@ -15,7 +15,7 @@ TRY:
 
 use Rose::DB;
 
-our $VERSION = '0.756';
+our $VERSION = '0.759';
 
 our $Debug = 0;
 
@@ -100,8 +100,13 @@ sub database_version
 sub init_dbh
 {
   my($self) = shift;
+
   $self->{'supports_on_duplicate_key_update'} = undef;
-  return $self->Rose::DB::init_dbh(@_);
+
+  my $method = ref($self)->parent_class . '::init_dbh';
+
+  no strict 'refs';
+  return $self->$method(@_);
 }
 
 sub max_column_name_length { 64 }
@@ -379,7 +384,10 @@ sub refine_dbi_column_info
 {
   my($self, $col_info) = @_;
 
-  $self->Rose::DB::refine_dbi_column_info($col_info);
+  my $method = ref($self)->parent_class . '::refine_dbi_column_info';
+
+  no strict 'refs';
+  $self->$method($col_info);
 
   if($col_info->{'TYPE_NAME'} eq 'timestamp' && defined $col_info->{'COLUMN_DEF'})
   {

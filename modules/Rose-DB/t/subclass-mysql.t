@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 145);
+    Test::More->import(tests => 146);
   }
 }
 
@@ -227,6 +227,18 @@ SKIP:
   $db->connect;
   $db->mysql_enable_utf8(1);
   is($db->mysql_enable_utf8, 1, 'mysql_enable_utf8 2');
+
+  if($db->isa('My::DB2'))
+  {
+    $My::DB2::Called{'init_dbh'} = 0;
+    $db = My::DB2->new('mysql');
+    $db->dbh;
+    is($My::DB2::Called{'init_dbh'}, 1, 'SUPER:: from driver');
+  }
+  else
+  {
+    SKIP: { skip('SUPER:: from driver tests', 1) }
+  }
 }
 
 $db->dsn('dbi:mysql:dbname=dbfoo;host=hfoo;port=pfoo');

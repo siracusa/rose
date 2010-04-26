@@ -314,7 +314,7 @@ sub sequence_exists
 sub parse_dbi_column_info_default
 {
   my($self, $default, $col_info) = @_;
-  
+
   # For some reason, given a default value like this:
   #
   #   MYCOLUMN VARCHAR(128) DEFAULT 'foo' NOT NULL
@@ -371,7 +371,12 @@ sub quote_table_name
   return qq("$name");
 }
 
-sub quote_identifier { uc shift->Rose::DB::quote_identifier(@_) }
+sub quote_identifier {
+  my($self) = shift;
+  my $method = ref($self)->parent_class . '::quote_identifier';
+  no strict 'refs';
+  return uc $self->$method(@_);
+}
 
 sub primary_key_column_names
 {
