@@ -39,7 +39,7 @@ use Rose::Class::MakeMethods::Generic
     'max_interval_characters',
     '_db_cache',
     'db_cache_class',
-    'parent_class'
+    'parent_class',
   ],
 
   inheritable_boolean =>
@@ -208,7 +208,7 @@ sub setup_dynamic_class_for_driver
     *{"${new_class}::STORABLE_thaw"}   = \&STORABLE_thaw;
     *{"${new_class}::STORABLE_freeze"} = \&STORABLE_freeze;
 
-	$new_class->parent_class($class);
+    $new_class->parent_class($class);
 
     # Cache result
     $Rebless{$class,$driver_class} = $new_class;
