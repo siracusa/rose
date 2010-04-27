@@ -1,3 +1,7 @@
+0.759_01 (04.27.2010) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: Savepoints?
+
 0.759 (04.27.2010) - John Siracusa <siracusa@gmail.com>
 
     * Fixed some inheritance dead ends (Reported by Matt S. Trout)
