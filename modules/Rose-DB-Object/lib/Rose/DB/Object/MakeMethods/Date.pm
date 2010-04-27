@@ -871,14 +871,14 @@ sub timestamp
                 Carp::croak "Invalid timestamp: '$_[0]'";
             }
 
-			if(ref $dt)
-			{
-			  if($with_time_zone)
-			  {
+            if(ref $dt)
+            {
+              if($with_time_zone)
+              {
                 $dt->set_time_zone($tz)  if($tz);
-			  }
-			  else
-			  {
+              }
+              else
+              {
                 $dt->set_time_zone($tz || $db->server_time_zone);
               }
             }
