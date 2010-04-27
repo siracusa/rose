@@ -1,6 +1,6 @@
-0.759_01 (04.27.2010) - John Siracusa <siracusa@gmail.com>
+0.7591 (04.27.2010) - John Siracusa <siracusa@gmail.com>
 
-    * TODO: Savepoints?
+    * Corrected skip counts in MySQL tests.
 
 0.759 (04.27.2010) - John Siracusa <siracusa@gmail.com>
 

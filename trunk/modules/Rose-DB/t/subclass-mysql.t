@@ -133,7 +133,7 @@ SKIP:
 {
   unless(have_db('mysql'))
   {
-    skip("MySQL connection tests", 76);
+    skip("MySQL connection tests", 77);
   }
 
   eval { $db->connect };
