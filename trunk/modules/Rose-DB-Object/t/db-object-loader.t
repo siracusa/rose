@@ -561,7 +561,7 @@ CREATE TABLE Rose_db_object_private.products
   date_created    TIMESTAMP NOT NULL DEFAULT NOW(),
   release_date    TIMESTAMP,
   release_date_tz TIMESTAMP WITH TIME ZONE,
-  
+
   UNIQUE(name)
 )
 EOF
@@ -994,7 +994,7 @@ CREATE TABLE no_pk_test
 (
   id    INT NOT NULL,
   name  VARCHAR(255) NOT NULL,
-  
+
   CONSTRAINT no_pk_test_name UNIQUE (name)
 )
 EOF
@@ -1008,7 +1008,7 @@ CREATE TABLE vendors
   CONSTRAINT vendors_name UNIQUE (name)
 )
 EOF
-    
+
     $dbh->do('CREATE SEQUENCE vendors_id_seq');
     $dbh->do(<<"EOF");
 CREATE OR REPLACE TRIGGER vendors_insert BEFORE INSERT ON vendors
@@ -1063,7 +1063,7 @@ CREATE TABLE prices
   CONSTRAINT prices_product_id_fk FOREIGN KEY (product_id) REFERENCES products (id)
 )
 EOF
-    
+
     $dbh->do('CREATE SEQUENCE prices_id_seq');
     $dbh->do(<<"EOF");
 CREATE OR REPLACE TRIGGER prices_insert BEFORE INSERT ON prices

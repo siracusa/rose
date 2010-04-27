@@ -92,7 +92,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
   is($o->date_created->time_zone->name, 'floating', "timestamp without time zone - $db_type");
   isnt($o->date_created_tz->time_zone->name, 'floating', "timestamp with time zone - $db_type");
   is($o->timestamp_tz2->time_zone->name, 'Antarctica/Vostok', "timestamp with time zone override - $db_type");  
-  
+
   # Make sure we're not in the Antarctica/Vostok time zone or any other
   # time zone with the same offset.
   my $error;
@@ -123,8 +123,8 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
     $o->save;
     $o->load;
 
-	my $dt = $o->timestamp_tz2->clone;
-	$dt->set_time_zone($o->date_created_tz->time_zone);
+    my $dt = $o->timestamp_tz2->clone;
+    $dt->set_time_zone($o->date_created_tz->time_zone);
 
     is($o->date_created_tz->iso8601, $dt->iso8601, "timestamp with time zone time change 2 - $db_type");
   }
@@ -1241,15 +1241,15 @@ SKIP: foreach my $db_type (qw(oracle))
     is($o->date_created->time_zone->name, 'floating', "timestamp without time zone - $db_type");
     isnt($o->date_created_tz->time_zone->name, 'floating', "timestamp with time zone - $db_type");
     is($o->timestamp_tz2->time_zone->name, 'Antarctica/Vostok', "timestamp with time zone override - $db_type");  
-  
+
     # Make sure we're not in the Antarctica/Vostok time zone or any other
     # time zone with the same offset.
     my $error;
-  
+
     TRY:
     {
       local $@;
-  
+
       eval
       {
         my $dt1 = DateTime->now(time_zone => 'local');
@@ -1257,10 +1257,10 @@ SKIP: foreach my $db_type (qw(oracle))
         $dt2->set_time_zone('Antarctica/Vostok');
         die "local is equivalent to Antarctica/Vostok"  if($dt1->iso8601 eq $dt2->iso8601);
       };
-  
+
       $error = $@;
     }
-  
+
     if($error)
     {
       SKIP: { skip("timestamp with time zone time change - $db_type", 2) }
@@ -1268,13 +1268,13 @@ SKIP: foreach my $db_type (qw(oracle))
     else
     {
       isnt($o->date_created_tz->iso8601, $o->timestamp_tz2->iso8601, "timestamp with time zone time change - $db_type");
-  
+
       $o->save;
       $o->load;
-  
+
       my $dt = $o->timestamp_tz2->clone;
       $dt->set_time_zone($o->date_created_tz->time_zone);
-  
+
       is($o->date_created_tz->iso8601, $dt->iso8601, "timestamp with time zone time change 2 - $db_type");
     }
 
@@ -1461,7 +1461,7 @@ SKIP: foreach my $db_type (qw(oracle))
                               k3   => 6);
 
   $o->save;
-  
+
   like($o->id, qr/^\d+$/, "save() serial - $db_type");
 
   # Reset for next trip through loop (if any)

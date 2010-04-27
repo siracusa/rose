@@ -270,7 +270,7 @@ sub class_prefix
 sub force_lowercase
 {
   my($self) = shift;
-  
+
   if(@_)
   {
     my $value = shift;
@@ -639,7 +639,7 @@ sub make_classes
 
   my $filter = exists $args{'filter_tables'} ? delete $args{'filter_tables'} : 
     (!defined $include && !defined $exclude) ? $self->filter_tables : undef;
-    
+
   if($include || $exclude)
   {
     if($filter)
@@ -925,7 +925,7 @@ sub make_classes
   }
 
   my $force_lowercase;
-  
+
   if(exists $args{'force_lowercase'})
   {
     $force_lowercase = delete $args{'force_lowercase'};

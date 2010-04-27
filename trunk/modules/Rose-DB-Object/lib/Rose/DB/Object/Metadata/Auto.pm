@@ -81,7 +81,7 @@ sub auto_formatted_schema
       $schema = uc $schema;
     }
   }
-  
+
   return $schema;
 }
 
@@ -104,7 +104,7 @@ sub auto_formatted_catalog
       $catalog = uc $catalog;
     }
   }
-  
+
   return $catalog;
 }
 
