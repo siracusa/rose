@@ -1,5 +1,7 @@
-0.787_01 (04.27.2010) - John Siracusa <siracusa@gmail.com>
+0.787_02 (05.04.2010) - John Siracusa <siracusa@gmail.com>
 
+    * Fixed SQL reserved word quoting bug.  (Reported by Taric Mirza)
+      XXX: Needs tests!
     * TODO: DEBUG environment variable and hooks.
     * TODO: Multiple unique keys example.
     * TODO: remarks metadata attribute.
