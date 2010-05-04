@@ -3278,7 +3278,7 @@ sub load_all_sql
       my $c = $self->column($_);
 
       ($self->sql_qualify_column_names_on_load ? 
-        $db->auto_quote_column_with_table($c->name_sql, $self->table) : $c->name_sql) .
+        $db->auto_quote_column_with_table($c->name_sql, $self->table) : $c->name_sql($db)) .
       ' = ' . $c->query_placeholder_sql($db)
     }
     @$key_columns);
@@ -3298,7 +3298,7 @@ sub load_sql
     {
       my $c = $self->column($_);
       ($self->sql_qualify_column_names_on_load ? 
-        $db->auto_quote_column_with_table($c->name_sql, $self->table) : $c->name_sql) .
+        $db->auto_quote_column_with_table($c->name_sql, $self->table) : $c->name_sql($db)) .
       ' = ' . $c->query_placeholder_sql($db)
     }
     @$key_columns);
@@ -3320,7 +3320,7 @@ sub load_all_sql_with_null_key
     join(' AND ', map 
     {
       my $c = $self->column($_);
-      ($fq ? $db->auto_quote_column_with_table($c->name_sql, $table) : $c->name_sql) . 
+      ($fq ? $db->auto_quote_column_with_table($c->name_sql, $table) : $c->name_sql($db)) . 
       (defined $key_values->[$i++] ? ' = ' . $c->query_placeholder_sql : ' IS NULL')
     }
     @$key_columns);
@@ -3342,7 +3342,7 @@ sub load_sql_with_null_key
     join(' AND ', map 
     {
       my $c = $self->column($_);
-      ($fq ? $db->auto_quote_column_with_table($c->name_sql, $table) : $c->name_sql) .
+      ($fq ? $db->auto_quote_column_with_table($c->name_sql, $table) : $c->name_sql($db)) .
       (defined $key_values->[$i++] ? ' = ' . $c->query_placeholder_sql : ' IS NULL')
     }
     @$key_columns);
@@ -3373,7 +3373,7 @@ sub update_all_sql
     join(' AND ', map 
     {
       my $c = $self->column($_);
-      $c->name_sql . ' = ' . $c->query_placeholder_sql
+      $c->name_sql($db) . ' = ' . $c->query_placeholder_sql
     }
     @$key_columns);
 }
@@ -4016,7 +4016,7 @@ sub get_column_value
   my $sql = $self->{'get_column_sql_tmpl'}{$db->{'id'}} || 
             $self->init_get_column_sql_tmpl($db);
 
-  $sql =~ s/__COLUMN__/$column->name_sql/e;
+  $sql =~ s/__COLUMN__/$column->name_sql($db)/e;
 
   my @key_values = 
     map { $object->$_() }
