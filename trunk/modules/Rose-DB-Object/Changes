@@ -1,5 +1,6 @@
 0.787_02 (05.04.2010) - John Siracusa <siracusa@gmail.com>
 
+	* BUG: now() as datetime default value in MySQL
     * Fixed SQL reserved word quoting bug.  (Reported by Taric Mirza)
       XXX: Needs tests!
     * TODO: DEBUG environment variable and hooks.
