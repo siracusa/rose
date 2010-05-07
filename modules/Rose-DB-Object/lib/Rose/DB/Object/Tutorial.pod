@@ -576,13 +576,15 @@ Let's solve all of these problems.  If we more accurately describe the columns, 
       ],
 
       unique_key => 'name',
+      
+      allow_inline_column_values => 1,
     );
 
 Before examining what new functionality this new class gives us, there are a few things to note about the definition.  First, the primary key is no longer specified with the L<primary_key_columns()|Rose::DB::Object::Metadata/primary_key_columns> method.  Instead, the C<id> column has its C<primary_key> attribute set to a true value in its description.
 
-Second, note the default value for the C<date_created> column.  It's a string containing a call to the PL/SQL function C<now()>, which can actually only be run within the database.  That's okay, because L<Rose::DB::Object> will pass that value through to the database rather than trying to execute it itself.
+Second, note the default value for the C<date_created> column.  It's a string containing a call to the PL/SQL function C<now()>, which can actually only be run within the database.  But thanks to the L<allow_inline_column_values|Rose::DB::Object::Metadata/allow_inline_column_values> attribute being set to a true value, L<Rose::DB::Object> will pass the string "now()" through to the database as-is.
 
-In the case of "creation date" columns like this, it's usually better to let the database provide the value as close as possible to the very moment the row is created.  On the other hand, this will mean that any newly created C<Product> object will have a "strange" value for that column (the string "now()") until/unless it is loaded from the database.  It's a trade-off.
+In the case of "creation date" columns like this, it's often better to let the database provide the value as close as possible to the very moment the row is created.  On the other hand, this will mean that any newly created C<Product> object will have a "strange" value for that column (the string "now()") until/unless it is re-L<load|Rose::DB::Object/load>ed from the database.  It's a trade-off.
 
 Let's see the new C<Product> class in action. The defaults work as expected.
 
@@ -724,6 +726,8 @@ Here's the output of that print statement.  A few long lines were manually wrapp
     primary_key_columns => [ 'id' ],
 
     unique_keys => [ 'name' ],
+
+    allow_inline_column_values => 1,
   );
 
   1;
@@ -813,6 +817,8 @@ Finally, here's how the foreign key definition looks in the Perl class.
       primary_key_columns => [ 'id' ],
 
       unique_keys => [ 'name' ],
+
+      allow_inline_column_values => 1,
 
       foreign_keys =>
       [
@@ -978,6 +984,8 @@ Here's the output.
     primary_key_columns => [ 'id' ],
 
     unique_keys => [ 'name' ],
+
+    allow_inline_column_values => 1,
 
     foreign_keys =>
     [
@@ -1731,6 +1739,8 @@ Now the Perl classes.  Remember that these must each be in their own ".pm" files
 
     unique_key => 'name',
 
+    allow_inline_column_values => 1,
+
     relationships =>
     [
       prices => 'one to many',
@@ -2055,6 +2065,8 @@ The code created by the loader is shown below.  Compare it to the manually creat
     primary_key_columns => [ 'id' ],
 
     unique_keys => [ 'name' ],
+
+    allow_inline_column_values => 1,
 
     foreign_keys =>
     [

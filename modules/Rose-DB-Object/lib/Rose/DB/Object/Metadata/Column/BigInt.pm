@@ -7,7 +7,7 @@ use Rose::DB::Object::MakeMethods::BigNum;
 use Rose::DB::Object::Metadata::Column::Integer;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Integer);
 
-our $VERSION = '0.787';
+our $VERSION = '0.788';
 
 INIT_METHOD_MAKER_INFO:
 {
@@ -54,7 +54,7 @@ sub should_inline_value
 {
   my($self, $db, $value) = @_;
   no warnings 'uninitialized';
-  return (($db->validate_bigint_keyword($value) && $db->should_inline_bigint_keywords) ||
+  return (($db->validate_bigint_keyword($value) && $db->should_inline_bigint_keyword($value)) ||
           ($db->keyword_function_calls && $value =~ /^\w+\(.*\)$/)) ? 1 : 0;
 }
 

@@ -10,7 +10,7 @@ use Rose::DB::Object::MakeMethods::Time;
 use Rose::DB::Object::Metadata::Column;
 our @ISA = qw(Rose::DB::Object::Metadata::Column);
 
-our $VERSION = '0.787';
+our $VERSION = '0.788';
 
 __PACKAGE__->add_common_method_maker_argument_names('default', 'precision', 'scale');
 
@@ -47,7 +47,7 @@ sub should_inline_value
 {
   my($self, $db, $value) = @_;
   no warnings 'uninitialized';
-  return (($db->validate_time_keyword($value) && $db->should_inline_time_keywords) ||
+  return (($db->validate_time_keyword($value) && $db->should_inline_time_keyword($value)) ||
           ($db->keyword_function_calls && $value =~ /^\w+\(.*\)$/)) ? 1 : 0;
 }
 

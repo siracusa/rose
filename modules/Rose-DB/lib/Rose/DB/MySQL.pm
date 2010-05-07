@@ -315,10 +315,10 @@ sub format_bitfield
 
 sub validate_bitfield_keyword { defined $_[1] ? 1 : 0 }
 
-sub should_inline_bitfield_values
+sub should_inline_bitfield_value
 {
   # MySQL 5.0.3 or later requires this crap...
-  return $_[0]->{'should_inline_bitfield_values'} ||= 
+  return $_[0]->{'should_inline_bitfield_value'} ||= 
     (shift->database_version >= 5_000_003) ? 1 : 0;
 }
 

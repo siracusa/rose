@@ -7,7 +7,7 @@ use Rose::DB::Object::MakeMethods::Date;
 use Rose::DB::Object::Metadata::Column::Date;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Date);
 
-our $VERSION = '0.787';
+our $VERSION = '0.788';
 
 __PACKAGE__->add_common_method_maker_argument_names
 (
@@ -31,7 +31,7 @@ sub should_inline_value
 {
   my($self, $db, $value) = @_;
   no warnings 'uninitialized';
-  return (($db->validate_datetime_keyword($value) && $db->should_inline_datetime_keywords) ||
+  return (($db->validate_datetime_keyword($value) && $db->should_inline_datetime_keyword($value)) ||
           ($db->keyword_function_calls && $value =~ /^\w+\(.*\)$/)) ? 1 : 0;
 }
 
