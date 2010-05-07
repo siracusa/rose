@@ -5,7 +5,7 @@ use strict;
 use Rose::DB::Object::Metadata::Column::Datetime;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Datetime);
 
-our $VERSION = '0.787';
+our $VERSION = '0.788';
 
 sub type { 'datetime year to minute' }
 
@@ -13,7 +13,7 @@ sub should_inline_value
 {
   my($self, $db, $value) = @_;
   no warnings 'uninitialized';
-  return (($db->validate_datetime_year_to_minute_keyword($value) && $db->should_inline_datetime_keywords) ||
+  return (($db->validate_datetime_year_to_minute_keyword($value) && $db->should_inline_datetime_keyword($value)) ||
           ($db->keyword_function_calls && $value =~ /^\w+\(.*\)$/)) ? 1 : 0;
 }
 

@@ -7,7 +7,7 @@ use Rose::DB::Object::MakeMethods::Date;
 use Rose::DB::Object::Metadata::Column::Date;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Date);
 
-our $VERSION = '0.787';
+our $VERSION = '0.788';
 
 foreach my $type (__PACKAGE__->available_method_types)
 {

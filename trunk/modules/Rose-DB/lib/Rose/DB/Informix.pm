@@ -428,10 +428,10 @@ sub validate_datetime_year_to_month_keyword
     ($_[0]->keyword_function_calls && $_[1] =~ /^\w+\(.*\)$/);
 }
 
-sub should_inline_date_keywords      { 1 }
-sub should_inline_datetime_keywords  { 1 }
-sub should_inline_time_keywords      { 1 }
-sub should_inline_timestamp_keywords { 1 }
+sub should_inline_date_keyword      { 1 }
+sub should_inline_datetime_keyword  { 1 }
+sub should_inline_time_keyword      { 1 }
+sub should_inline_timestamp_keyword { 1 }
 
 sub parse_set
 {

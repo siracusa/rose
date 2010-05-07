@@ -941,6 +941,50 @@ sub perl_unique_keys_definition
   }
 }
 
+sub perl_metadata_attributes
+{
+  my($self, %args) = @_;
+
+  my $for_setup = $args{'for_setup'};
+  my $indent = defined $args{'indent'} ? $args{'indent'} : $self->default_perl_indent;
+
+  $indent = $for_setup ? (' ' x $indent) : '';
+
+  my @attrs;
+
+  foreach my $attr (qw(allow_inline_column_values))
+  {
+    no strict 'refs';
+    if(my $value = $self->$attr())
+    {
+      if($for_setup)
+      {
+        push(@attrs, "$attr => " . $self->perl_quote_value($value) . ',');
+      }
+      else
+      {
+        push(@attrs, "__PACKAGE__->meta->$attr(" . $self->perl_quote_value($value) . ');');
+      }
+    }
+  }
+
+  return @attrs ? (join("\n", map { "$indent$_" } @attrs) . ($for_setup ? '' : "\n")) : '';
+}
+
+sub perl_quote_value
+{
+  my($self, $value) = @_;
+
+  return $value  if($value =~ /^\d+$/);
+  
+  for($value)
+  {
+    s/\\/\\\\/g;
+    s/'/\\'/g;
+  }
+
+  return qq('$value');
+}
 sub perl_table_definition
 {
   my($self, %args) = @_;
@@ -1037,6 +1081,7 @@ use base qw(@$isa);$foreign_modules
 @{[join("\n", grep { /\S/ } $self->perl_columns_definition(%args),
                             $self->perl_primary_key_columns_definition(%args),
                             $self->perl_unique_keys_definition(%args),
+                            $self->perl_metadata_attributes(%args),
                             $self->perl_foreign_keys_definition(%args),
                             $self->perl_relationships_definition(%args))]}
 __PACKAGE__->meta->initialize;
@@ -1077,6 +1122,7 @@ $setup_start
                               $self->perl_columns_definition(%args),
                               $self->perl_primary_key_columns_definition(%args),
                               $self->perl_unique_keys_definition(%args),
+                              $self->perl_metadata_attributes(%args),
                               $self->perl_foreign_keys_definition(%args),
                               $self->perl_relationships_definition(%args))]}
 );
@@ -1605,6 +1651,21 @@ sub auto_init_many_to_many_relationships
   return;
 }
 
+sub auto_init_metadata_attributes
+{
+  my($self, %args) = @_;
+
+  foreach my $column ($self->columns)
+  {
+    no warnings 'uninitialized';
+    if($column->default =~ /^\w+\(.*\)$/)
+    {
+      $self->allow_inline_column_values(1);
+      last;
+    }
+  }
+}
+
 sub auto_initialize
 {
   my($self) = shift;
@@ -1620,6 +1681,7 @@ sub auto_initialize
   $self->auto_init_unique_keys(@_);
   $self->auto_init_foreign_keys(@_);
   $self->auto_init_relationships(@_);
+  $self->auto_init_metadata_attributes(@_);
 
   $self->initialize(@_);
 

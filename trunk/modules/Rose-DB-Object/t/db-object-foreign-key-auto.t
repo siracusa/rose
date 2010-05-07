@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 261;
+use Test::More tests => 262;
 
 BEGIN 
 {
@@ -545,7 +545,7 @@ EOF
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 54)  unless($HAVE_MYSQL_WITH_INNODB);
+  skip("MySQL tests", 55)  unless($HAVE_MYSQL_WITH_INNODB);
 
   Rose::DB->default_type($db_type);
 
@@ -781,6 +781,8 @@ __PACKAGE__->meta->columns(
 
 __PACKAGE__->meta->primary_key_columns([ 'id' ]);
 
+__PACKAGE__->meta->allow_inline_column_values(1);
+
 __PACKAGE__->meta->foreign_keys(
     fother => {
         class       => 'MyMySQLOtherObject2',
@@ -808,6 +810,71 @@ __PACKAGE__->meta->foreign_keys(
 );
 
 __PACKAGE__->meta->initialize;
+
+1;
+EOF
+
+  is(MyMySQLObject->meta->perl_class_definition,
+     <<"EOF", "perl_class_definition (trad) 1 - $db_type");
+package MyMySQLObject;
+
+use strict;
+
+use base qw(Rose::DB::Object);
+
+__PACKAGE__->meta->setup(
+    table   => 'Rose_db_object_test',
+
+    columns => [
+        bits          => { type => 'bitfield', bits => 5, default => 101 },
+        date_created  => { type => 'datetime' },
+        fk1           => { type => 'integer', alias => 'fkone' },
+        fk2           => { type => 'integer' },
+        fk3           => { type => 'integer' },
+        flag          => { type => 'boolean', default => 1 },
+        flag2         => { type => 'boolean' },
+        fother_id2    => { type => 'integer' },
+        fother_id3    => { type => 'integer' },
+        fother_id4    => { type => 'integer' },
+        id            => { type => '$serial', not_null => 1 },
+        $set_col
+        last_modified => { type => 'datetime' },
+        name          => { type => 'varchar', @{[ $no_empty_def ? '' : "default => '', " ]}length => 32, not_null => 1 },
+        save          => { type => 'integer', alias => 'save_col' },
+        start         => { type => 'date', default => '1980-12-24' },
+        status        => { type => 'varchar', default => 'active', length => 32 },
+    ],
+
+    primary_key_columns => [ 'id' ],
+
+    allow_inline_column_values => 1,
+
+    foreign_keys => [
+        fother => {
+            class       => 'MyMySQLOtherObject2',
+            key_columns => { fother_id2 => 'id2' },
+        },
+
+        fother2 => {
+            class       => 'MyMySQLOtherObject3',
+            key_columns => { fother_id3 => 'id3' },
+        },
+
+        fother3 => {
+            class       => 'MyMySQLOtherObject4',
+            key_columns => { fother_id4 => 'id4' },
+        },
+
+        my_my_sqlother_object => {
+            class       => 'MyMySQLOtherObject',
+            key_columns => {
+                fk1 => 'k1',
+                fk2 => 'k2',
+                fk3 => 'k3',
+            },
+        },
+    ],
+);
 
 1;
 EOF
@@ -846,6 +913,8 @@ __PACKAGE__->meta->columns
 );
 
 __PACKAGE__->meta->primary_key_columns([ 'id' ]);
+
+__PACKAGE__->meta->allow_inline_column_values(1);
 
 __PACKAGE__->meta->foreign_keys
 (

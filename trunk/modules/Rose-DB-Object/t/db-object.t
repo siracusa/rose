@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 583;
+use Test::More tests => 584;
 
 BEGIN 
 {
@@ -438,7 +438,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 117)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 118)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -471,6 +471,8 @@ SKIP: foreach my $db_type ('mysql')
   }
 
   ok($o->load, "load() 1 - $db_type");
+
+  is(ref $o->dt_default, 'DateTime', "now() default - $db_type");
 
   is($o->zepoch->ymd, '1970-01-01', "zero epoch default - $db_type");
 
@@ -1722,6 +1724,7 @@ CREATE TABLE rose_db_object_test
   tee_time0      VARCHAR(32),
   tee_time5      VARCHAR(32) DEFAULT '12:34:56.123456789',
   tee_time9      VARCHAR(32),
+  dt_default     TIMESTAMP,
   last_modified  TIMESTAMP,
   date_created   TIMESTAMP,
 
@@ -1785,6 +1788,7 @@ EOF
       tee_time0 => { type => 'time', scale => 0 },
       tee_time5 => { type => 'time', scale => 5, default => '12:34:56.123456789' },
       tee_time9 => { type => 'time', scale => 9 },
+      dt_default => {  type => 'timestamp', default => 'now()' },
       last_modified => { type => 'timestamp' },
       date_created  => { type => 'timestamp' },
       main::nonpersistent_column_definitions(),

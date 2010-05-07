@@ -8,7 +8,7 @@ use Rose::DB::Object::MakeMethods::Date;
 use Rose::DB::Object::Metadata::Column::Date;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Date);
 
-our $VERSION = '0.787';
+our $VERSION = '0.788';
 
 foreach my $type (__PACKAGE__->available_method_types)
 {
@@ -21,7 +21,7 @@ sub should_inline_value
 {
   my($self, $db, $value) = @_;
   no warnings 'uninitialized';
-  return (($db->validate_timestamp_keyword($value) && $db->should_inline_timestamp_keywords) ||
+  return (($db->validate_timestamp_keyword($value) && $db->should_inline_timestamp_keyword($value)) ||
           ($db->keyword_function_calls && $value =~ /^\w+\(.*\)$/)) ? 1 : 0;
 }
 

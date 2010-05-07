@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 274;
+use Test::More tests => 275;
 
 BEGIN 
 {
@@ -323,7 +323,7 @@ EOF
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 66)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 67)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -341,6 +341,8 @@ SKIP: foreach my $db_type ('mysql')
 
   ok($o->save, "save() 1 - $db_type");
   ok($o->load, "load() 1 - $db_type");
+
+  is(ref $o->dt_default, 'DateTime', "now() default - $db_type");
 
   eval { $o->name('C' x 50) };
   ok($@, "varchar overflow fatal - $db_type");
@@ -884,6 +886,7 @@ CREATE TABLE Rose_db_object_test
   start          DATE DEFAULT '1980-12-24',
   save           INT,
   enums          ENUM ('foo', 'bar', 'baz') DEFAULT 'foo',
+  dt_default     TIMESTAMP DEFAULT NOW(),
   last_modified  TIMESTAMP,
   date_created   DATETIME,
 

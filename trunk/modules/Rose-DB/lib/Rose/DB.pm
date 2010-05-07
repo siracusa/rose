@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.760_11';
+our $VERSION = '0.760_02';
 
 our $Debug = 0;
 
@@ -2179,25 +2179,34 @@ sub validate_bitfield_keyword         { 0 }
 
 sub validate_boolean_keyword
 {
-  no warnings;
+  no warnings 'uninitialized';
   $_[1] =~ /^(?:TRUE|FALSE)$/;
 }
 
-sub should_inline_integer_keywords          { 0 }
-sub should_inline_float_keywords            { 0 }
-sub should_inline_decimal_keywords          { 0 }
-sub should_inline_numeric_keywords          { 0 }
-sub should_inline_double_precision_keywords { 0 }
-sub should_inline_bigint_keywords           { 0 }
-sub should_inline_date_keywords             { 0 }
-sub should_inline_datetime_keywords         { 0 }
-sub should_inline_time_keywords             { 0 }
-sub should_inline_timestamp_keywords        { 0 }
-sub should_inline_interval_keywords         { 0 }
-sub should_inline_set_keywords              { 0 }
-sub should_inline_array_keywords            { 0 }
-sub should_inline_boolean_keywords          { 0 }
-sub should_inline_bitfield_values           { 0 }
+sub should_inline_keyword
+{
+  no warnings 'uninitialized';
+  ($_[1] =~ /^\w+\(.*\)$/) ? 1 : 0;
+}
+
+BEGIN
+{
+  *should_inline_integer_keyword           = \&should_inline_keyword;
+  *should_inline_float_keyword             = \&should_inline_keyword;
+  *should_inline_decimal_keyword           = \&should_inline_keyword;
+  *should_inline_numeric_keyword           = \&should_inline_keyword;
+  *should_inline_double_precision_keyword  = \&should_inline_keyword;
+  *should_inline_bigint_keyword            = \&should_inline_keyword;
+  *should_inline_date_keyword              = \&should_inline_keyword;
+  *should_inline_datetime_keyword          = \&should_inline_keyword;
+  *should_inline_time_keyword              = \&should_inline_keyword;
+  *should_inline_timestamp_keyword         = \&should_inline_keyword;
+  *should_inline_interval_keyword          = \&should_inline_keyword;
+  *should_inline_set_keyword               = \&should_inline_keyword;
+  *should_inline_array_keyword             = \&should_inline_keyword;
+  *should_inline_boolean_keyword           = \&should_inline_keyword;
+  *should_inline_bitfield_value            = \&should_inline_keyword;
+}
 
 sub next_value_in_sequence
 {
