@@ -1,6 +1,9 @@
-0.760_02 (05.07.2010) - John Siracusa <siracusa@gmail.com>
+0.760_03 (05.07.2010) - John Siracusa <siracusa@gmail.com>
 
     * Support for Rose::DB::Object 0.788.
+    * Detect and report problems caused by DBD::mysql versions that fail to
+      set the Active database handle attribute back to a true value when
+      mysql_auto_reconnect is set.  (Reported by Matt S. Trout)
     * TODO: Savepoints?
 
 0.760 (04.28.2010) - John Siracusa <siracusa@gmail.com>
