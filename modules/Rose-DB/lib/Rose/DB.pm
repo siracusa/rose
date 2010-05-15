@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.760_03';
+our $VERSION = '0.760_04';
 
 our $Debug = 0;
 
@@ -1105,6 +1105,24 @@ sub begin_work
       eval
       {
         local $dbh->{'RaiseError'} = 1;
+
+        # XXX: Detect DBD::mysql bug (in some versions before 4.012) that
+        # XXX: fails to set Active back to 1 when mysql_auto_reconnect
+        # XXX: is in use.
+        unless($dbh->{'Active'})
+        {
+          if($dbh->{'Driver'}{'Name'} eq 'mysql' && $dbh->{'Driver'}{'Version'} < 4.012)
+          {
+            die 'Database handle does not have Active set to a true value.  DBD::mysql ',
+                'versions before 4.012 may fail to set Active back to 1 when the ',
+                'mysql_auto_reconnect is set.  Try upgrading to DBD::mysql 4.012 or later';
+          }
+          else
+          {
+            die "Cannot start transaction on inactive database handle ($dbh)";
+          }
+        }
+
         $ret = $dbh->begin_work
       };
 
@@ -1140,7 +1158,13 @@ sub commit
 {
   my($self) = shift;
 
-  return 0  unless(defined $self->{'dbh'} && $self->{'dbh'}{'Active'});
+  my $is_active = (defined $self->{'dbh'} && $self->{'dbh'}{'Active'}) ? 1 : 0;
+
+  unless(defined $self->{'dbh'})
+  {
+    $self->error("Could not commit transaction: database handle is undefined");
+    return 0;
+  }
 
   my $dbh = $self->dbh or return undef;
 
@@ -1169,6 +1193,20 @@ sub commit
     {
       no warnings 'uninitialized';
       $self->error("commit() $error - " . $dbh->errstr);
+
+      unless($is_active)
+      {
+        if($dbh->{'Driver'}{'Name'} eq 'mysql' && $dbh->{'Driver'}{'Version'} < 4.012)
+        {
+          $self->error($self->error . '; Also, the database handle did not ' .
+            'have Active set to a true value.  DBD::mysql versions before 4.012 ' .
+            'may fail to set Active back to 1 when the mysql_auto_reconnect is ' .
+            'set.  Try upgrading to DBD::mysql 4.012 or later');
+        }
+
+        return 0;
+      }
+
       return undef;
     }
 
@@ -1191,7 +1229,13 @@ sub rollback
 {
   my($self) = shift;
 
-  return 0  unless(defined $self->{'dbh'} && $self->{'dbh'}{'Active'});
+  my $is_active = (defined $self->{'dbh'} && $self->{'dbh'}{'Active'}) ? 1 : 0;
+
+  unless(defined $self->{'dbh'})
+  {
+    $self->error("Could not roll back transaction: database handle is undefined");
+    return 0;
+  }
 
   my $dbh = $self->dbh or return undef;
 
@@ -1220,6 +1264,20 @@ sub rollback
   {
     no warnings 'uninitialized';
     $self->error("rollback() - $error " . $dbh->errstr);
+
+    unless($is_active)
+    {
+      if($dbh->{'Driver'}{'Name'} eq 'mysql' && $dbh->{'Driver'}{'Version'} < 4.012)
+      {
+        $self->error($self->error . '; Also, the database handle did not ' .
+          'have Active set to a true value.  DBD::mysql versions before 4.012 ' .
+          'may fail to set Active back to 1 when the mysql_auto_reconnect is ' .
+          'set.  Try upgrading to DBD::mysql 4.012 or later');
+      }
+
+      return 0;
+    }
+
     return undef;
   }
 
@@ -1249,25 +1307,6 @@ sub do_transaction
 
     eval
     {
-      local $dbh->{'RaiseError'} = 1;
-      
-      # XXX: Detect DBD::mysql bug (in some versions before 4.012) that
-      # XXX: fails to set Active back to 1 when mysql_auto_reconnect
-      # XXX: is in use.
-      unless($dbh->{'Active'})
-      {
-        if ($dbh->{'Driver'}{'Name'} eq 'mysql' && $dbh->{'Driver'}{'Version'} < 4.012)
-        {
-          die "Database handle does not have Active set to a true value.  DBD::mysql ",
-              "versions before 4.012 may fail to set Active back to 1 when the ",
-              "mysql_auto_reconnect is set.  Please upgrade to DBD::mysql 4.012 or later";
-        }
-        else
-        {
-          die "Cannot start transaction on inactive database handle ($dbh)";
-        }
-      }
-
       $self->begin_work or die $self->error;
       $code->(@_);
       $self->commit or die $self->error;
