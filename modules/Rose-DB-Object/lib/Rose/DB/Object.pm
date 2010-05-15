@@ -16,7 +16,7 @@ use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Exception;
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.787_02';
+our $VERSION = '0.787_03';
 
 our $Debug = 0;
 
@@ -112,7 +112,15 @@ sub _init_db
     return $db;
   }
 
-  $self->error("Could not init_db() - $error - " . ($db ? $db->error : ''));
+  if(ref $error)
+  {
+    $self->error($error);
+  }
+  else
+  {
+    $self->error("Could not init_db() - $error - " . ($db ? $db->error : ''));
+  }
+
   $self->meta->handle_error($self);
   return undef;
 }
@@ -302,7 +310,7 @@ sub load
 
     if($error)
     {
-      $self->error("load(with => ...) - $error");
+      $self->error(ref $error ? $error : "load(with => ...) - $error");
       $meta->handle_error($self);
       return undef;
     }
@@ -451,7 +459,7 @@ sub load
 
   if($error)
   {
-    $self->error("load() - $error");
+    $self->error(ref $error ? $error : "load() - $error");
     $meta->handle_error($self);
     return undef;
   }
@@ -496,7 +504,8 @@ sub save
 
     unless($ret)
     {
-      $self->error('Could not begin transaction before saving - ' . $db->error);
+      my $error = $db->error;
+      $self->error(ref $error ? $error : "Could not begin transaction before saving - $error");
       return undef;
     }
 
@@ -715,7 +724,8 @@ sub update
   #
   #unless($ret)
   #{
-  #  $self->error('Could not begin transaction before updating - ' . $db->error);
+  #  my $error = $db->error;
+  #  $self->error(ref $error ? $error : "Could not begin transaction before updating - $error");
   #  return undef;
   #}
   #
@@ -941,7 +951,7 @@ sub update
 
   if($error)
   {
-    $self->error("update() - $error");
+    $self->error(ref $error ? $error : "update() - $error");
     #$db->rollback or warn $db->error  if($started_new_tx);
     $self->meta->handle_error($self);
     return 0;
@@ -979,7 +989,8 @@ sub insert
   #
   #unless($ret)
   #{
-  #  $self->error('Could not begin transaction before inserting - ' . $db->error);
+  #  my $error = $db->error;
+  #  $self->error(ref $error ? $error : "Could not begin transaction before inserting - $error");
   #  return undef;
   #}
   #
@@ -1231,7 +1242,7 @@ sub insert
 
   if($error)
   {
-    $self->error("insert() - $error");
+    $self->error(ref $error ? $error : "insert() - $error");
     #$db->rollback or warn $db->error  if($started_new_tx);
     $self->meta->handle_error($self);
     return 0;
@@ -1509,7 +1520,7 @@ sub delete
     if($error)
     {
       Rose::DB::Object::Manager->error_mode($mgr_error_mode);
-      $self->error("delete() with cascade - $error");
+      $self->error(ref $error ? $error : "delete() with cascade - $error");
       $db->rollback  if($db && $started_new_tx);
       $self->meta->handle_error($self);
       return 0;
@@ -1554,7 +1565,7 @@ sub delete
 
     if($error)
     {
-      $self->error("delete() - $error");
+      $self->error(ref $error ? $error : "delete() - $error");
       $self->meta->handle_error($self);
       return 0;
     }

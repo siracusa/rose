@@ -2170,9 +2170,12 @@ sub object_by_key
 
         if($error || !$ret)
         {
-          $self->error("Could not load $fk_class object with key " .
-                       join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                       " - " . ($obj->error || $error));
+          my $msg = $obj->error || $error;
+
+          $self->error(ref $msg ? $msg : 
+                       ("Could not load $fk_class object with key " .
+                        join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
+                        " - $msg"));
           $self->meta->handle_error($self);
           return $ret;
         }
@@ -2288,7 +2291,7 @@ sub object_by_key
 
         if($error)
         {
-          $self->error("Could not add $name object - $error");
+          $self->error(ref $error ? $error : "Could not add $name object - $error");
           $db->rollback  if($db && $started_new_tx);
           $meta->handle_error($self);
           return undef;
@@ -2344,9 +2347,12 @@ sub object_by_key
 
         if($error || !$ret)
         {
-          $self->error("Could not load $fk_class with key " .
-                       join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                       " - " . ($obj->error || $error));
+          my $msg = $obj->error || $error;
+
+          $self->error(ref $msg ? $msg : 
+                       ("Could not load $fk_class with key " .
+                        join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
+                        " - $msg"));
           $self->meta->handle_error($self);
           return $ret;
         }
@@ -2493,7 +2499,7 @@ sub object_by_key
 
           if($error)
           {
-            $self->error("Could not add $name object - $error");
+            $self->error(ref $error ? $error : "Could not add $name object - $error");
             $meta->handle_error($self);
             return undef;
           }
@@ -2560,9 +2566,10 @@ sub object_by_key
 
         if($error || !$ret)
         {
-          $self->error("Could not load $fk_class with key " .
+          my $msg = $obj->error || $error;
+          $self->error(ref $msg ? $msg : ("Could not load $fk_class with key " .
                        join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                       " - " . ($obj->error || $error));
+                       " - $msg"));
           $self->meta->handle_error($self);
           return $ret;
         }
@@ -2694,7 +2701,7 @@ sub object_by_key
 
       if($error)
       {
-        $self->error("Could not delete $name object - $error");
+        $self->error(ref $error ? $error : "Could not delete $name object - $error");
         $db->rollback  if($db && $started_new_tx);
 
         # Restore foreign key column values
@@ -2825,7 +2832,7 @@ sub object_by_key
 
         if($error)
         {
-          $self->error("Could not delete $name object - $error");
+          $self->error(ref $error ? $error : "Could not delete $name object - $error");
 
           # Restore old foreign key column values if prudent
           while(my($method, $value) = each(%save_fk))
@@ -3043,7 +3050,8 @@ sub objects_by_key
 
       if($error || !defined $count)
       {
-        $self->error("Could not count $ft_class objects - " . ($error || $ft_manager->error));
+        my $msg = $error || $ft_manager->error;
+        $self->error(ref $msg ? $msg : ("Could not count $ft_class objects - $msg"));
         $self->meta->handle_error($self);
         return wantarray ? () : $count;
       }
@@ -3185,8 +3193,9 @@ sub objects_by_key
 
       if($error || !$objs)
       {
-        $self->error("Could not " . ($is_iterator ? 'get iterator for' : 'find') .
-                     " $ft_class objects - " . ($error || $ft_manager->error));
+        my $msg = $error || $ft_manager->error;
+        $self->error(ref $msg ? $msg : ("Could not " . ($is_iterator ? 'get iterator for' : 'find') .
+                     " $ft_class objects - $msg"));
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
@@ -3280,9 +3289,10 @@ sub objects_by_key
 
       if($error || !$objs)
       {
-        $self->error("Could not load $ft_class objects with key " .
+        my $msg = $error || $ft_manager->error;
+        $self->error(ref $msg ? $msg : ("Could not load $ft_class objects with key " .
                      join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                     " - " . ($error || $ft_manager->error));
+                     " - $msg"));
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
@@ -3298,7 +3308,7 @@ sub objects_by_key
         if($required && !@$objs)
         {
           my %query = (%key, @$query_args);
-          $self->error("Not related $ft_class object found with query " .
+          $self->error("No related $ft_class object found with query " .
                        join(', ', map { "$_ = '$query{$_}'" } sort keys %query));
           $self->meta->handle_error($self);
           return 0;
@@ -3478,7 +3488,7 @@ sub objects_by_key
 
         if($error)
         {
-          $self->error("Could not set $name objects - $error");
+          $self->error(ref $error ? $error : "Could not set $name objects - $error");
           $db->rollback  if($db && $started_new_tx);
           $meta->handle_error($self);
           return undef;
@@ -3561,9 +3571,10 @@ sub objects_by_key
 
       if($error || !$objs)
       {
-        $self->error("Could not load $ft_class objects with key " .
+        my $msg = $error || $ft_manager->error;
+        $self->error(ref $msg ? $msg : ("Could not load $ft_class objects with key " .
                      join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                     " - " . ($error || $ft_manager->error));
+                     " - $msg"));
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
@@ -3835,9 +3846,10 @@ sub objects_by_key
 
       if($error || !$objs)
       {
-        $self->error("Could not load $ft_class objects with key " .
+        my $msg = $error || $ft_manager->error;
+        $self->error(ref $msg ? $msg : ("Could not load $ft_class objects with key " .
                      join(', ', map { "$_ = '$key{$_}'" } sort keys %key) .
-                     " - " . ($error || $ft_manager->error));
+                     " - $msg"));
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
@@ -3944,7 +3956,7 @@ sub objects_by_key
 
       if($error)
       {
-        $self->error("Could not delete $name objects - $error");
+        $self->error(ref $error ? $error : "Could not delete $name objects - $error");
         $db->rollback  if($db && $started_new_tx);
         $meta->handle_error($self);
         return undef;
@@ -4143,7 +4155,7 @@ sub objects_by_key
 
       if($error)
       {
-        $self->error("Could not add $name - $error");
+        $self->error(ref $error ? $error : "Could not add $name - $error");
         $db->rollback  if($db && $started_new_tx);
         $meta->handle_error($self);
         return;
@@ -4691,7 +4703,8 @@ sub objects_by_map
 
       if($error || !$objs)
       {
-        $self->error("Could not find $foreign_class objects - " . ($error || $map_manager->error));
+        my $msg = $error || $map_manager->error;
+        $self->error(ref $msg ? $msg : "Could not find $foreign_class objects - $msg");
         $self->meta->handle_error($self);
         return wantarray ? () : $objs;
       }
@@ -4890,7 +4903,8 @@ sub objects_by_map
 
       if($error || !defined $count)
       {
-        $self->error("Could not count $foreign_class objects - " . ($error || $map_manager->error));
+        my $msg = $error || $map_manager->error;
+        $self->error(ref $msg ? $msg : "Could not count $foreign_class objects - $msg");
         $self->meta->handle_error($self);
         return $count;
       }
@@ -4954,8 +4968,9 @@ sub objects_by_map
 
       unless($objs)
       {
-        $self->error("Could not load $foreign_class objects via map class " .
-                     "$map_class - " . $map_manager->error);
+        my $error = $map_manager->error;
+        $self->error(ref $error ? $error : ("Could not load $foreign_class " .
+                     "objects via map class $map_class - $error"));
         return wantarray ? () : $objs;
       }
 
@@ -5198,7 +5213,7 @@ sub objects_by_map
 
         if($error)
         {
-          $self->error("Could not set $name objects - $error");
+          $self->error(ref $error ? $error : "Could not set $name objects - $error");
           $db->rollback  if($db && $started_new_tx);
           $meta->handle_error($self);
           return undef;
@@ -5250,8 +5265,9 @@ sub objects_by_map
 
       unless($objs)
       {
-        $self->error("Could not load $foreign_class objects via map class " .
-                     "$map_class - " . $map_manager->error);
+        my $error = $map_manager->error;
+        $self->error(ref $error ? $error : ("Could not load $foreign_class " .
+                     "objects via map class $map_class - $error"));
         return wantarray ? () : $objs;
       }
 
@@ -5521,8 +5537,9 @@ sub objects_by_map
 
       unless($objs)
       {
-        $self->error("Could not load $foreign_class objects via map class " .
-                     "$map_class - " . $map_manager->error);
+        my $error = $map_manager->error;
+        $self->error(ref $error ? $error : ("Could not load $foreign_class " .
+                     "objects via map class $map_class - $error"));
         return wantarray ? () : $objs;
       }
 
@@ -5729,7 +5746,7 @@ sub objects_by_map
 
       if($error)
       {
-        $self->error("Could not add $name objects - $error");
+        $self->error(ref $error ? $error : "Could not add $name objects - $error");
         $db->rollback  if($db && $started_new_tx);
         $meta->handle_error($self);
         return;
