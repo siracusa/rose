@@ -1755,7 +1755,7 @@ sub get_objects
     if($error)
     {
       $class->total(undef);
-      $class->error("get_objects() - $error");
+      $class->error(ref $error ? $error : "get_objects() - $error");
       $class->handle_error($class);
       return undef;
     }
@@ -2444,7 +2444,7 @@ sub get_objects
 
               if($error)
               {
-                $self->error("next() - $error");
+                $self->error(ref $error ? $error : "next() - $error");
                 $class->handle_error($self);
                 return undef;
               }
@@ -2573,7 +2573,7 @@ sub get_objects
 
               if($error)
               {
-                $self->error("next() - $error");
+                $self->error(ref $error ? $error : "next() - $error");
                 $class->handle_error($self);
                 return undef;
               }
@@ -2632,7 +2632,7 @@ sub get_objects
 
             if($error)
             {
-              $self->error("next() - $error");
+              $self->error(ref $error ? $error : "next() - $error");
               $class->handle_error($self);
               return undef;
             }
@@ -3084,7 +3084,7 @@ sub get_objects
 
   if($error)
   {
-    $class->error("get_objects() - $error");
+    $class->error(ref $error ? $error : "get_objects() - $error");
     $class->handle_error($class);
     return undef;
   }
@@ -3236,7 +3236,7 @@ sub delete_objects
 
   if($error)
   {
-    $class->error("delete_objects() - $error");
+    $class->error(ref $error ? $error : "delete_objects() - $error");
     $class->handle_error($class);
     return undef;
   }
@@ -3373,7 +3373,7 @@ sub update_objects
 
   if($error)
   {
-    $class->error("update_objects() - $error");
+    $class->error(ref $error ? $error : "update_objects() - $error");
     $class->handle_error($class);
     return undef;
   }
@@ -3546,7 +3546,7 @@ sub get_objects_from_sql
   if($error)
   {
     $class->total(undef);
-    $class->error("get_objects_from_sql() - $error");
+    $class->error(ref $error ? $error : "get_objects_from_sql() - $error");
     $class->handle_error($class);
     return undef;
   }
@@ -3629,7 +3629,7 @@ sub get_objects_iterator_from_sql
   {
     $db->release_dbh  if($dbh_retained);
     $class->total(undef);
-    $class->error("get_objects_iterator_from_sql() - $error");
+    $class->error(ref $error ? $error : "get_objects_iterator_from_sql() - $error");
     $class->handle_error($class);
     return undef;
   }
@@ -3702,7 +3702,7 @@ sub get_objects_iterator_from_sql
 
     if($error)
     {
-      $self->error("next() - $error");
+      $self->error(ref $error ? $error : "next() - $error");
       $class->handle_error($self);
       return undef;
     }

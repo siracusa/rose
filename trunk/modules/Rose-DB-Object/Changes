@@ -1,4 +1,4 @@
-0.787_02 (05.07.2010) - John Siracusa <siracusa@gmail.com>
+0.787_03 (05.15.2010) - John Siracusa <siracusa@gmail.com>
 
 	* Fixed a bug that prevented function calls like now() from being
 	  properly inlined, even when allow_inline_column_values was set
@@ -8,7 +8,7 @@
 	  column has a default value that looks like a function call.
     * Fixed SQL reserved word quoting bug.  (Reported by Taric Mirza)
       XXX: Needs tests!
-    * TODO: Don't stringify exception objects when setting error()
+    * Avoid stringifying exception objects when setting error().
       (Suggested by Kostas Chatzikokolakis)
     * TODO: DEBUG environment variable and hooks.
     * TODO: Multiple unique keys example.
