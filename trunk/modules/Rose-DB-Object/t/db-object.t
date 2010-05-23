@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 584;
+use Test::More tests => 585;
 
 BEGIN 
 {
@@ -1192,7 +1192,7 @@ SKIP: foreach my $db_type ('sqlite')
 
 SKIP: foreach my $db_type (qw(oracle))
 {
-  skip("Oracle tests", 79)  unless($HAVE_ORACLE);
+  skip("Oracle tests", 80)  unless($HAVE_ORACLE);
 
   Rose::DB->default_type($db_type);
 
@@ -1460,7 +1460,8 @@ SKIP: foreach my $db_type (qw(oracle))
   $o = MyOracleObject->new(name => 'Sequence Test', 
                               k1   => 4,
                               k2   => 5,
-                              k3   => 6);
+                              k3   => 6,
+                              key  => 123);
 
   $o->save;
 
@@ -1469,6 +1470,11 @@ SKIP: foreach my $db_type (qw(oracle))
   # Reset for next trip through loop (if any)
   $o->meta->default_load_speculative(0);
   $o->meta->error_mode('return');
+
+  $o = MyOracleObject->new(key => 123);
+  eval { $o->load };
+  
+  ok(!$@, "reserved-word load() - $db_type");
 }
 
 BEGIN
@@ -2154,6 +2160,7 @@ CREATE TABLE rose_db_object_test
   start_date      DATE,
   save            INT,
   claim#          INT,
+  key             INT,
   last_modified   TIMESTAMP,
   date_created    TIMESTAMP,
   date_created_tz TIMESTAMP WITH TIME ZONE,
@@ -2198,6 +2205,7 @@ EOF
       k1       => { type => 'int' },
       k2       => { type => 'int', lazy => 1 },
       k3       => { type => 'int' },
+      key      => { type => 'int' },
       flag     => { type => 'boolean', default => 1 },
       flag2    => { type => 'boolean' },
       status   => { default => 'active', add_methods => [ qw(get set) ] },
@@ -2225,6 +2233,7 @@ EOF
     Test::More::ok($@, 'meta->initialize() no override');
 
     MyOracleObject->meta->add_unique_key('save');
+    MyOracleObject->meta->add_unique_key('key');
     MyOracleObject->meta->add_unique_key([ qw(k1 k2 k3) ]);
 
     MyOracleObject->meta->initialize(preserve_existing => 1);

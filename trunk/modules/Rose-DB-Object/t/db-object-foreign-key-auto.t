@@ -1999,6 +1999,7 @@ EOF
     $sth->execute('Rose_db_object_other');
     my $info = $sth->fetchrow_hashref;
 
+    no warnings 'uninitialized';
     unless(lc $info->{'Type'} eq 'innodb' || lc $info->{'Engine'} eq 'innodb')
     {
       die "Missing InnoDB support";
