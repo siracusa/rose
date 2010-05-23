@@ -17,13 +17,13 @@
 
 0.788 (05.22.2010) - John Siracusa <siracusa@gmail.com>
 
-	* Fixed a bug that prevented function calls like now() from being
-	  properly inlined, even when allow_inline_column_values was set
-	  to a true value.  (Reported by David Bourget)
-	* The Loader/auto-init system will now automatically set the
-	  allow_inline_column_values attribute to a true value when a
-	  column has a default value that looks like a function call.
-	* Fixed a non-numeric warning with development releases of Math::BigInt.
+    * Fixed a bug that prevented function calls like now() from being
+      properly inlined, even when allow_inline_column_values was set
+      to a true value.  (Reported by David Bourget)
+    * The Loader/auto-init system will now automatically set the
+      allow_inline_column_values attribute to a true value when a
+      column has a default value that looks like a function call.
+    * Fixed a non-numeric warning with development releases of Math::BigInt.
     * Fixed SQL reserved word quoting bug.  (Reported by Taric Mirza)
     * Avoid stringifying exception objects when setting error().
       (Suggested by Kostas Chatzikokolakis)
