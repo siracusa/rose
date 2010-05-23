@@ -1,4 +1,4 @@
-0.787_03 (05.15.2010) - John Siracusa <siracusa@gmail.com>
+0.788 (05.22.2010) - John Siracusa <siracusa@gmail.com>
 
 	* Fixed a bug that prevented function calls like now() from being
 	  properly inlined, even when allow_inline_column_values was set
@@ -6,24 +6,10 @@
 	* The Loader/auto-init system will now automatically set the
 	  allow_inline_column_values attribute to a true value when a
 	  column has a default value that looks like a function call.
+	* Fixed a non-numeric warning with development releases of Math::BigInt.
     * Fixed SQL reserved word quoting bug.  (Reported by Taric Mirza)
-      XXX: Needs tests!
     * Avoid stringifying exception objects when setting error().
       (Suggested by Kostas Chatzikokolakis)
-    * TODO: DEBUG environment variable and hooks.
-    * TODO: Multiple unique keys example.
-    * TODO: remarks metadata attribute.
-    * TODO: Generic is_auto_increment column attribute support.
-    * TODO: Parameterize DateTime class name in column method-makers?
-    * TODO: SELECT FOR UPDATE
-    * TODO: Update docs for has_loaded_related() and/or make a better
-      solution to avoid re-fetching nonexistent objects after Manager
-      queries.
-    * TODO: Add support for REGEXP_LIKE(column, '^abc')
-    * TODO: Figure out which UK to use when load()ing via a ForeignKey
-    * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
-    * TODO: add delete_now and delete_on_save method types to ManyToMany?
-    * TODO: make save() fail if IN_DB and modified PK columns?
 
 0.787 (04.27.2010) - John Siracusa <siracusa@gmail.com>
 

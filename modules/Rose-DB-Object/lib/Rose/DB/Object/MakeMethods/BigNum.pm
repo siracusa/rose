@@ -4,13 +4,18 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.784'; # move up in the file to make CPAN happy
+our $VERSION = '0.788'; # move up in the file to make CPAN happy
 
 require Math::BigInt;
 
-if($Math::BigInt::VERSION >= 1.78)
+BIGNUM_VERSION_CHECK:
 {
-  Math::BigInt->import(try => 'GMP');
+  (my $bignum_version = $Math::BigInt::VERSION) =~ s/_//g;
+  
+  if($bignum_version >= 1.78)
+  {
+    Math::BigInt->import(try => 'GMP');
+  }
 }
 
 use Rose::Object::MakeMethods;

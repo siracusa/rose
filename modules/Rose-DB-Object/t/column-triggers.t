@@ -118,13 +118,13 @@ SETUP:
   $column->add_trigger(on_load => sub { $Temp{'on_load'}{'name'} = shift->name });
   $column->add_trigger(on_save => sub { $Temp{'on_save'}{'name'} = shift->name });
 
-  $column->add_trigger(inflate => sub { $Temp{'inflate'}{'name'} = shift->name });
-  $column->add_trigger(deflate => sub { $Temp{'deflate'}{'name'} = uc $_[1] });
+  $column->add_trigger(inflate => sub {no warnings 'uninitialized';  $Temp{'inflate'}{'name'} = shift->name });
+  $column->add_trigger(deflate => sub { no warnings 'uninitialized'; $Temp{'deflate'}{'name'} = uc $_[1] });
 
   $column = MyObject->meta->column('code');
 
-  $column->add_trigger(inflate => sub { lc $_[1] });
-  $column->add_trigger(deflate => sub { uc $_[1] });
+  $column->add_trigger(inflate => sub { no warnings 'uninitialized'; lc $_[1] });
+  $column->add_trigger(deflate => sub { no warnings 'uninitialized'; uc $_[1] });
 
   $column = MyObject->meta->column('start');
 
