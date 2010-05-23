@@ -24,10 +24,6 @@ To see how these modules fare against raw DBI, check [RDBOBenchmarksWithDBI the 
 ## Benchmark against Class::DBI, Class::DBI::Sweet, DBIx::Class using MySQL
 ##
 
-##
-## Benchmark against Class::DBI, Class::DBI::Sweet, DBIx::Class using MySQL
-##
-
 Module             Version
 -----------------  -------
 Class::DBI         3.0.17
