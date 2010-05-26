@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.761_01';
+our $VERSION = '0.761_02';
 
 our $Debug = 0;
 
@@ -2344,7 +2344,7 @@ sub format_select_start_sql
   return 'SELECT ' . ($hints->{'comment'} ? "/* $hints->{'comment'} */" : '');
 }
 
-sub format_lock { '' }
+sub format_select_lock { '' }
 
 sub supports_on_duplicate_key_update { 0 }
 

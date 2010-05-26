@@ -15,7 +15,7 @@ TRY:
 
 use Rose::DB;
 
-our $VERSION = '0.759';
+our $VERSION = '0.762';
 
 our $Debug = 0;
 
@@ -230,11 +230,13 @@ sub format_select_start_sql
       (map { $hints->{$_} ? uc($_) : () } qw(high_priority straight_join)));
 }
 
-sub format_lock
+sub format_select_lock
 {
   my($self, $lock) = @_;
 
-  my $type = ref $lock ? $lock->{'type'} : $lock;
+  $lock = { type => $lock }  unless(ref $lock);
+
+  $lock->{'type'} ||= 'for update'  if($lock->{'for_update'});
 
   my %types =
   (
@@ -242,7 +244,8 @@ sub format_lock
     'shared'     => 'LOCK IN SHARE MODE',
   );
 
-  my $sql = $types{$type} or Carp::croak "Invalid lock type: $type";
+  my $sql = $types{$lock->{'type'}}
+    or Carp::croak "Invalid lock type: $lock->{'type'}";
 
   return $sql;
 }

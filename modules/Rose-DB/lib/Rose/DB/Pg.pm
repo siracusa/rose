@@ -99,11 +99,13 @@ sub last_insertid_from_sth
   return undef;
 }
 
-sub format_lock
+sub format_select_lock
 {
   my($self, $lock) = @_;
 
   $lock = { type => $lock }  unless(ref $lock);
+
+  $lock->{'type'} ||= 'for update'  if($lock->{'for_update'});
 
   my %types =
   (

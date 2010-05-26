@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 585;
+use Test::More tests => 595;
 
 BEGIN 
 {
@@ -17,7 +17,7 @@ eval { require Time::HiRes };
 our $Have_HiRes_Time = $@ ? 0 : 1;
 
 our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE,
-    $HAVE_ORACLE);
+    $HAVE_ORACLE, $INNODB);
 
 #
 # PostgreSQL
@@ -25,7 +25,7 @@ our($PG_HAS_CHKPASS, $HAVE_PG, $HAVE_MYSQL, $HAVE_INFORMIX, $HAVE_SQLITE,
 
 SKIP: foreach my $db_type (qw(pg pg_with_schema))
 {
-  skip("PostgreSQL tests", 238)  unless($HAVE_PG);
+  skip("PostgreSQL tests", 242)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -371,6 +371,31 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
   $o->save;
 
+  # Select for update tests
+  $o = MyPgObject->new(id => $o->id);
+
+  $o->db->begin_work;
+  $o->load(for_update => 1);
+
+  # Silence errors in eval blocks below
+  Rose::DB->modify_db(type => $db_type)->print_error(0);
+
+  my $lo;
+
+  eval
+  {
+    $lo = MyPgObject->new(id => $o->id);
+    $lo->meta->error_mode('fatal');
+    $lo->load(lock => { for_update => 1, nowait => 1 });
+  };
+
+  is(DBI->err, 7, "select for update wait 1 error 7 - $db_type");
+  ok($@, "select for update no wait - $db_type");
+
+  $o->db->commit;
+
+  Rose::DB->modify_db(type => $db_type)->print_error(1);
+
   $o = MyPgObject->new(id => $o->id)->load;
 
   is($o->dur->in_units('years'), 7, "interval in_units years 2 - $db_type");
@@ -438,7 +463,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 118)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 120)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -468,6 +493,43 @@ SKIP: foreach my $db_type ('mysql')
   else
   {
     ok($o->insert, "insert() 1 - $db_type");
+  }
+
+  # Select for update tests
+  if($INNODB && $ENV{'RDBO_SLOW_TESTS'})
+  {
+    $o = MyMySQLObject->new(id => $o->id);
+
+    $o->db->begin_work;
+    $o->load(for_update => 1);
+  
+    # Silence errors in eval blocks below
+    #Rose::DB->modify_db(type => $db_type)->print_error(0);
+  
+    my $lo;
+  
+    eval
+    {
+      $lo = MyMySQLObject->new(id => $o->id);
+      $lo->meta->error_mode('fatal');
+      $lo->load(lock => { for_update => 1 });
+    };
+  
+    is(DBI->err, 1205, "select for update wait 1 error 1205 - $db_type");
+    ok($@, "select for update - $db_type");
+  
+    $o->db->commit;
+  }
+  else
+  {
+    if($INNODB)
+    {
+      SKIP: { skip("Select for update tests: RDBO_SLOW_TESTS not set - $db_type", 2) }
+    }
+    else
+    {
+      SKIP: { skip("Select for update tests: no InnoDB - $db_type", 2) }
+    }
   }
 
   ok($o->load, "load() 1 - $db_type");
@@ -1192,7 +1254,7 @@ SKIP: foreach my $db_type ('sqlite')
 
 SKIP: foreach my $db_type (qw(oracle))
 {
-  skip("Oracle tests", 80)  unless($HAVE_ORACLE);
+  skip("Oracle tests", 84)  unless($HAVE_ORACLE);
 
   Rose::DB->default_type($db_type);
 
@@ -1458,14 +1520,45 @@ SKIP: foreach my $db_type (qw(oracle))
   ok($@, "load() non-speculative explicit 2 - $db_type");
 
   $o = MyOracleObject->new(name => 'Sequence Test', 
-                              k1   => 4,
-                              k2   => 5,
-                              k3   => 6,
-                              key  => 123);
+                           k1   => 4,
+                           k2   => 5,
+                           k3   => 6,
+                           key  => 123);
 
   $o->save;
 
   like($o->id, qr/^\d+$/, "save() serial - $db_type");
+
+  # Select for update tests
+
+  $o = MyOracleObject->new(id => $o->id)->load(for_update => 1);
+
+  # Silence errors in eval blocks below
+  Rose::DB->modify_db(type => $db_type)->print_error(0);
+
+  my $lo;
+
+  eval
+  {
+    $lo = MyOracleObject->new(id => $o->id);
+    $lo->load(lock => { for_update => 1, nowait => 1 });
+  };
+
+  is(DBI->err, 54, "select for update no wait ORA-00054 - $db_type");
+  ok($@, "select for update no wait - $db_type");
+
+  eval
+  {
+    $lo = MyOracleObject->new(id => $o->id);
+    $lo->load(lock => { type => 'for update', wait => 1 });
+  };
+
+  is(DBI->err, 30006, "select for update wait 1 ORA-30006 - $db_type");
+  ok($@, "select for update wait 1 - $db_type");
+
+  $o->save;
+
+  Rose::DB->modify_db(type => $db_type)->print_error(1);
 
   # Reset for next trip through loop (if any)
   $o->meta->default_load_speculative(0);
@@ -1700,6 +1793,13 @@ EOF
         q(items  SET('a','b','c') NOT NULL DEFAULT 'a,c') :
         q(items  VARCHAR(255) NOT NULL DEFAULT 'a,c');
 
+    my $engine = '';
+
+    if(our $INNODB = mysql_supports_innodb())
+    {
+      $engine = 'TYPE=InnoDB';
+    }
+
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test
 (
@@ -1736,6 +1836,7 @@ CREATE TABLE rose_db_object_test
 
   UNIQUE(k1, k2, k3)
 )
+$engine
 EOF
 
     $dbh->do(<<"EOF");
