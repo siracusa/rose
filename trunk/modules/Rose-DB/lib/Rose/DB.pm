@@ -2344,6 +2344,8 @@ sub format_select_start_sql
   return 'SELECT ' . ($hints->{'comment'} ? "/* $hints->{'comment'} */" : '');
 }
 
+sub format_lock { '' }
+
 sub supports_on_duplicate_key_update { 0 }
 
 #
@@ -3821,7 +3823,7 @@ L<http://rose.googlecode.com>
 
 =head1 CONTRIBUTORS
 
-Peter Karman, Lucian Dragus, Ron Savage
+Kostas Chatzikokolakis, Peter Karman, Lucian Dragus, Ron Savage
 
 =head1 AUTHOR
 

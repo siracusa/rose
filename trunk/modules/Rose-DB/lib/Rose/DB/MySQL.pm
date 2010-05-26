@@ -230,6 +230,23 @@ sub format_select_start_sql
       (map { $hints->{$_} ? uc($_) : () } qw(high_priority straight_join)));
 }
 
+sub format_lock
+{
+  my($self, $lock) = @_;
+
+  my $type = ref $lock ? $lock->{'type'} : $lock;
+
+  my %types =
+  (
+    'for update' => 'FOR UPDATE',
+    'shared'     => 'LOCK IN SHARE MODE',
+  );
+
+  my $sql = $types{$type} or Carp::croak "Invalid lock type: $type";
+
+  return $sql;
+}
+
 sub validate_date_keyword
 {
   no warnings;

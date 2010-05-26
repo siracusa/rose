@@ -106,6 +106,7 @@ sub build_select
   my $group_by     = delete $args{'group_by'};
   my $limit_suffix = delete $args{'limit_suffix'};
   my $limit_prefix = delete $args{'limit_prefix'} || '';
+  my $lock         = delete $args{'lock'};
   my $distinct     = delete $args{'distinct'} ? 'DISTINCT ' : '';
   my $select       = $args{'select'};
   my $where_only   = delete $args{'where_only'};
@@ -786,6 +787,8 @@ sub build_select
   $qs .= "\nGROUP BY " . $group_by if($group_by);
   $qs .= "\nORDER BY " . $sort_by  if($sort_by);
   $qs .= "\n" . $limit_suffix      if(defined $limit_suffix);
+
+  $qs .= "\n".$db->format_lock($lock)."\n" if($lock);
 
   $Debug && warn "$qs\n";
 
