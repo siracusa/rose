@@ -11,7 +11,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw(build_select build_where_clause);
 
-our $VERSION = '0.784';
+our $VERSION = '0.789';
 
 our $Debug = 0;
 
@@ -128,6 +128,12 @@ sub build_select
   if($args{'limit'})
   {
     $limit_suffix = 'LIMIT ' . delete $args{'limit'};
+  }
+
+  # Coerce for_update boolean alias into lock argument
+  if(delete $args{'for_update'})
+  {
+    $lock ||= { type => 'for update' };
   }
 
   $all_columns = $columns  unless(%$all_columns);
@@ -788,7 +794,7 @@ sub build_select
   $qs .= "\nORDER BY " . $sort_by  if($sort_by);
   $qs .= "\n" . $limit_suffix      if(defined $limit_suffix);
 
-  $qs .= "\n".$db->format_lock($lock)."\n" if($lock);
+  $qs .= "\n" . $db->format_select_lock($lock)  if($lock);
 
   $Debug && warn "$qs\n";
 

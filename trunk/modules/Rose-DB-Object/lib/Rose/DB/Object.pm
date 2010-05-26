@@ -16,7 +16,7 @@ use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Exception;
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.788_01';
+our $VERSION = '0.788_02';
 
 our $Debug = 0;
 
@@ -267,6 +267,12 @@ sub load
     $column_names = $meta->column_names;
   }
 
+  # Coerce for_update boolean alias into lock argument
+  if(delete $args{'for_update'})
+  {
+    $args{'lock'} ||= { type => 'for update' };
+  }
+
   #
   # Handle sub-object load in separate code path
   #
@@ -404,7 +410,7 @@ sub load
 
       if(my $lock = $args{'lock'})
       {
-        $sql .= ' ' . $db->format_lock($lock);
+        $sql .= ' ' . $db->format_select_lock($lock);
       }
 
       # $meta->prepare_select_options (defunct)

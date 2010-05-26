@@ -9,7 +9,7 @@ use Rose::DB;
 
 our $Debug = 0;
 
-our $VERSION  = '0.761';
+our $VERSION  = '0.762';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -461,14 +461,18 @@ sub format_limit_with_offset
   }
 }
 
-sub format_lock
+sub format_select_lock
 {
   my($self, $lock) = @_;
 
   $lock = { type => $lock }  unless(ref $lock);
 
-  $lock->{'type'} eq 'for update'
-    or Carp::croak "Invalid lock type: $lock->{'type'}";
+  $lock->{'type'} ||= 'for update'  if($lock->{'for_update'});
+
+  unless($lock->{'type'} eq 'for update')
+  {
+    Carp::croak "Invalid lock type: $lock->{'type'}";
+  }
 
   my $sql = 'FOR UPDATE';
 
@@ -484,7 +488,19 @@ sub format_lock
       @$of);
   }
 
-  $sql .= ' NOWAIT'  if($lock->{'nowait'});
+  if($lock->{'nowait'})
+  {
+    $sql .= ' NOWAIT';
+  }
+  elsif(my $wait = $lock->{'wait'})
+  {
+    $sql .= " WAIT $wait";
+  }
+  
+  if($lock->{'skip_locked'})
+  {
+    $sql .= ' SKIP LOCKED';
+  }
 
   return $sql;
 }
