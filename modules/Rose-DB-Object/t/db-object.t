@@ -504,7 +504,7 @@ SKIP: foreach my $db_type ('mysql')
     $o->load(for_update => 1);
   
     # Silence errors in eval blocks below
-    #Rose::DB->modify_db(type => $db_type)->print_error(0);
+    Rose::DB->modify_db(type => $db_type)->print_error(0);
   
     my $lo;
   
