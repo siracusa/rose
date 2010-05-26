@@ -294,6 +294,7 @@ sub load
                                   multi_many_ok  => 1,
                                   nonlazy        => $args{'nonlazy'},
                                   inject_results => $args{'inject_results'},
+                                  lock           => $args{'lock'},
                                   (exists $args{'prepare_cached'} ?
                                   (prepare_cached =>  $args{'prepare_cached'}) : 
                                   ()))
@@ -399,6 +400,11 @@ sub load
         {
           $sql = $meta->load_all_sql(\@key_columns, $db);
         }
+      }
+
+      if(my $lock = $args{'lock'})
+      {
+        $sql .= ' ' . $db->format_lock($lock);
       }
 
       # $meta->prepare_select_options (defunct)
@@ -2439,7 +2445,7 @@ L<http://rose.googlecode.com>
 
 =head1 CONTRIBUTORS
 
-Bradley C Bailey, Graham Barr, David Christensen, Lucian Dragus, Justin Ellison, Perrin Harkins, Cees Hek, Benjamin Hitz, Peter Karman, Ed Loehr, Adam Mackler, Michael Reece, Thomas Whaples, Douglas Wilson, Teodor Zlatanov
+Bradley C Bailey, Graham Barr, Kostas Chatzikokolakis, David Christensen, Lucian Dragus, Justin Ellison, Perrin Harkins, Cees Hek, Benjamin Hitz, Peter Karman, Ed Loehr, Adam Mackler, Michael Reece, Thomas Whaples, Douglas Wilson, Teodor Zlatanov
 
 =head1 AUTHOR
 

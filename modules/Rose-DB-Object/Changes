@@ -1,5 +1,8 @@
-0.788_01 (05.22.2010) - John Siracusa <siracusa@gmail.com>
+0.788_02 (05.25.2010) - John Siracusa <siracusa@gmail.com>
 
+    * Added support for SELECT FOR UPDATE and other forms of locking
+      (Patch by Kostas Chatzikokolakis)
+      XXX: Needs docs and tests!
     * TODO: DEBUG environment variable and hooks.
     * TODO: Multiple unique keys example.
     * TODO: remarks metadata attribute.

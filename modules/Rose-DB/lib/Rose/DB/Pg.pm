@@ -99,6 +99,31 @@ sub last_insertid_from_sth
   return undef;
 }
 
+sub format_lock
+{
+  my($self, $lock) = @_;
+
+  $lock = { type => $lock }  unless(ref $lock);
+
+  my %types =
+  (
+    'for update' => 'FOR UPDATE',
+    'shared'     => 'FOR SHARE',
+  );
+
+  my $sql = $types{$lock->{'type'}}
+    or Carp::croak "Invalid lock type: $lock->{'type'}";
+
+  if(my $of = $lock->{'of'})
+  {
+    $sql .= ' OF '. join(', ', map { $self->auto_quote_table_name($_) } @$of);
+  }
+
+  $sql .= ' NOWAIT'  if($lock->{'nowait'});
+
+  return $sql;
+}
+
 sub parse_datetime
 {
   my($self) = shift;

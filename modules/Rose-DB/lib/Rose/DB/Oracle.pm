@@ -461,6 +461,34 @@ sub format_limit_with_offset
   }
 }
 
+sub format_lock
+{
+  my($self, $lock) = @_;
+
+  $lock = { type => $lock }  unless(ref $lock);
+
+  $lock->{'type'} eq 'for update'
+    or Carp::croak "Invalid lock type: $lock->{'type'}";
+
+  my $sql = 'FOR UPDATE';
+
+  if(my $of = $lock->{'of'})
+  {
+    $sql .= ' OF '. 
+      join(', ', map
+      {
+        /^(.+)\.(.+)$/ ? 
+          $self->auto_quote_column_with_table($2, $1) : 
+          $self->auto_quote_table_name($_)
+      }
+      @$of);
+  }
+
+  $sql .= ' NOWAIT'  if($lock->{'nowait'});
+
+  return $sql;
+}
+
 sub format_boolean { $_[1] ? 't' : 'f' }
 
 #
