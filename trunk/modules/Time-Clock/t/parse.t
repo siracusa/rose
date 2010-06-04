@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 31;
+use Test::More tests => 32;
 
 use Time::Clock;
 
@@ -56,6 +56,7 @@ ok($@ =~ /only allowed if/,  'parse fail 24:00:01');
 eval { $t->parse('24:01') };
 ok($@ =~ /only allowed if/,  'parse fail 24:01');
 
+ok(eval { $t->parse('7:41:50.1272602510') }, 'extended fractional seconds');
 
 if($Have_HiRes_Time)
 {

@@ -4,7 +4,7 @@ use strict;
 
 use Carp;
 
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 use overload
 (
@@ -251,7 +251,7 @@ sub parse
   if(my($hour, $min, $sec, $fsec, $ampm) = ($time =~ 
   m{^
       (\d\d?) # hour
-      (?::(\d\d)(?::(\d\d))?)?(?:\.(\d{0,9}))? # min? sec? nanosec?
+      (?::(\d\d)(?::(\d\d))?)?(?:\.(\d{0,9})\d*)? # min? sec? nanosec?
       (?:\s*([aApP]\.?[mM]\.?))? # am/pm
     $
   }x))
@@ -342,10 +342,10 @@ sub parse_delta
 
     if(my($hour, $min, $sec, $fsec) = ($delta =~ 
     m{^
-        (\d+)            # hours
-        (?::(\d+))?      # minutes
-        (?::(\d+))?      # seconds
-        (?:\.(\d{0,9}))? # nanoseconds
+        (\d+)               # hours
+        (?::(\d+))?         # minutes
+        (?::(\d+))?         # seconds
+        (?:\.(\d{0,9})\d*)? # nanoseconds
       $
     }x))
     {
