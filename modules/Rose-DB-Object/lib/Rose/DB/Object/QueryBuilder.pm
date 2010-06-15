@@ -1346,7 +1346,7 @@ Rose::DB::Object::QueryBuilder - Build SQL queries on behalf of Rose::DB::Object
       query_is_sql => 1);
 
     $sth = $dbh->prepare($sql);
-    $dbh->execute;
+    $sth->execute;
     $count = $sth->fetchrow_array;
 
     ...
@@ -1369,7 +1369,7 @@ Rose::DB::Object::QueryBuilder - Build SQL queries on behalf of Rose::DB::Object
       limit        => 5);
 
     $sth = $dbh->prepare($sql);
-    $dbh->execute(@$bind);
+    $sth->execute(@$bind);
 
     while($row = $sth->fetchrow_hashref) { ... }
 
@@ -1392,7 +1392,7 @@ Rose::DB::Object::QueryBuilder - Build SQL queries on behalf of Rose::DB::Object
       limit        => 5);
 
     $sth = $dbh->prepare($sql);
-    $dbh->execute(@$bind);
+    $sth->execute(@$bind);
 
 =head1 DESCRIPTION
 
