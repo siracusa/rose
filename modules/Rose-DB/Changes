@@ -1,6 +1,6 @@
-0.761_02 (05.25.2010) - John Siracusa <siracusa@gmail.com>
+0.761_03 (06.25.2010) - John Siracusa <siracusa@gmail.com>
 
-    * Support for Rose::DB::Object 0.789.  (Patch by Kostas Chatzikokolakis)
+    * Support for Rose::DB::Object 0.789.
     * TODO: Savepoints?
 
 0.761 (05.22.2010) - John Siracusa <siracusa@gmail.com>

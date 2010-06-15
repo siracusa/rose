@@ -232,7 +232,7 @@ sub format_select_start_sql
 
 sub format_select_lock
 {
-  my($self, $lock) = @_;
+  my($self, $class, $lock, $tables_list) = @_;
 
   $lock = { type => $lock }  unless(ref $lock);
 

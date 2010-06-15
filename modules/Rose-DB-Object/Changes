@@ -1,14 +1,13 @@
-0.788_02 (05.25.2010) - John Siracusa <siracusa@gmail.com>
+0.788_03 (06.15.2010) - John Siracusa <siracusa@gmail.com>
 
     * Added support for SELECT FOR UPDATE and other forms of locking
-      (Patch by Kostas Chatzikokolakis)
-      XXX: Needs docs and tests!
+      (Initial patch by Kostas Chatzikokolakis)
+	* Fixed some POD typos (RT 58405) 
     * TODO: DEBUG environment variable and hooks.
     * TODO: Multiple unique keys example.
     * TODO: remarks metadata attribute.
     * TODO: Generic is_auto_increment column attribute support.
     * TODO: Parameterize DateTime class name in column method-makers?
-    * TODO: SELECT FOR UPDATE
     * TODO: Update docs for has_loaded_related() and/or make a better
       solution to avoid re-fetching nonexistent objects after Manager
       queries.

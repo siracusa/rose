@@ -429,6 +429,12 @@ sub get_objects
   my $table_aliases    = exists $args{'table_aliases'} ? 
     $args{'table_aliases'} : ($args{'table_aliases'} = 1);
 
+  # Coerce for_update boolean alias into lock argument
+  if(delete $args{'for_update'})
+  {
+    $args{'lock'}{'type'} ||= 'for update';
+  }
+
   $with_objects    = undef  if(ref $with_objects && !@$with_objects);
   $require_objects = undef  if(ref $require_objects && !@$require_objects);
 
@@ -1687,18 +1693,19 @@ sub get_objects
       local $Carp::CarpLevel = $Carp::CarpLevel + 1;
 
       ($sql, $bind) =
-        build_select(dbh         => $dbh,
-                     select      => $select,
-                     tables      => \@tables,
-                     tables_sql  => \@tables_sql,
-                     columns     => \%columns,
-                     all_columns => \%all_columns,
-                     classes     => \%classes,
-                     joins       => \@joins,
-                     meta        => \%meta,
-                     db          => $db,
-                     pretty      => $Debug,
-                     bind_params => \@bind_params,
+        build_select(dbh          => $dbh,
+                     select       => $select,
+                     tables       => \@tables,
+                     tables_sql   => \@tables_sql,
+                     columns      => \%columns,
+                     all_columns  => \%all_columns,
+                     classes      => \%classes,
+                     joins        => \@joins,
+                     meta         => \%meta,
+                     db           => $db,
+                     pretty       => $Debug,
+                     bind_params  => \@bind_params,
+                     object_class => $object_class,
                      %args);
 
       if($wrap)
@@ -1885,17 +1892,18 @@ sub get_objects
     local $Carp::CarpLevel = $Carp::CarpLevel + 1;
 
     ($sql, $bind) =
-      build_select(dbh         => $dbh,
-                   tables      => \@tables,
-                   tables_sql  => \@tables_sql,
-                   columns     => \%columns,
-                   all_columns => \%all_columns,
-                   classes     => \%classes,
-                   joins       => \@joins,
-                   meta        => \%meta,
-                   db          => $db,
-                   pretty      => $Debug,
-                   bind_params => \@bind_params,
+      build_select(dbh          => $dbh,
+                   tables       => \@tables,
+                   tables_sql   => \@tables_sql,
+                   columns      => \%columns,
+                   all_columns  => \%all_columns,
+                   classes      => \%classes,
+                   joins        => \@joins,
+                   meta         => \%meta,
+                   db           => $db,
+                   pretty       => $Debug,
+                   bind_params  => \@bind_params,
+                   object_class => $object_class,
                    %args);
 
     if($subselect_limit)
@@ -4272,6 +4280,18 @@ ARRAYREF should be a reference to an array of table names or "tN" table aliases.
 
 This parameter conflicts with the C<distinct> parameter in the case where both provide a list of table names or aliases.  In this case, then a fatal error will occur.
 
+=item B<for_update BOOL>
+
+If true, this parameter is translated to be the equivalent of passing the L<lock|/lock> parameter and setting the C<type> to C<for update>.  For example, this:
+
+    for_update => 1
+
+is equivalent to this:
+
+    lock => { type => 'for update' }
+
+See the L<lock|/lock> parameter below for more information.
+
 =item B<hints HASHREF>
 
 A reference to a hash of hints that influence the SQL generated to fetch the objects.  Hints are just "suggestions" and may be ignored, depending on the actual features of the database being queried.  Use the L<debug|/debug> parameter to see the generated SQL.  Most of the current hints apply to MySQL only.  See the relevant documentation for more details:
@@ -4363,6 +4383,57 @@ Return a maximum of NUM objects.
 This parameter controls whether or not this method will consider using a sub-query to express  C<limit>/C<offset> constraints when fetching sub-objects related through one of the "...-to-many" relationship types.  Not all databases support this syntax, and not all queries can use it even in supported databases.  If this parameter is true, the feature will be used when possible.
 
 The default value is determined by the L<default_limit_with_subselect|/default_limit_with_subselect> class method.
+
+=item B<lock [ TYPE | HASHREF ]>
+
+Select the objects using some form of locking.  These lock directives have database-specific behavior and not all directives are supported by all databases.  Consult your database's documentation to find out more.  Use the L<debug|/debug> parameter to see the generated SQL.
+
+The value should be a reference to a hash or a TYPE string, which is equivalent to setting the value of the C<type> key in the hash reference form.  For example, these are both equivalent:
+
+    lock => 'for update'
+    lock => { type => 'for update' }
+ 
+Valid hash keys are:
+
+=over 4
+
+=item B<columns ARRAYREF>
+
+A reference to an array of column names to lock.  The columns may be prefixed with their table name or their C<tN> alias (e.g., C<mytable.mycol> or C<t2.mycol>) or left unadorned if they are not ambiguous.  References to scalars will be de-referenced and used as-is, included literally in the SQL locking clause.
+
+=item B<nowait BOOL>
+
+If true, do not wait to acquire the lock.  If supported, this is usually by adding a C<NOWAIT> directive to the SQL.
+
+=item B<on ARRAYREF>
+
+A reference to an array of items to lock.  Depending on the database, these may be column or tables.  Both column and table names should be specified using dot-separated relationship paths.
+
+For example, C<vendor.region.name> would lock the C<name> column in the table arrived at by traversing the C<vendor> and then the C<region> relationships, starting from the primary table (C<t1>).  Lone column names may also be used, provided they're not ambiguous.
+
+For locking whole tables, C<vendor.region> would lock the table arrived at by traversing the C<vendor> and then the C<region> relationships.  (See the L<require_objects|/require_objects> parameter for more information on relationship traversal.)
+
+Finally, references to scalars will be de-referenced and used as-is, included literally in the SQL locking clause.
+
+=item B<skip_locked BOOL>
+
+If true, skip any locked rows.  If supported, this is usually by adding a C<SKIP LOCKED> clause to the SQL.
+
+=item B<tables ARRAYREF>
+
+A reference to an array of tables to lock.  Table named or C<tN> aliases may be used.  References to scalars will be de-referenced and used as-is, included literally in the SQL locking clause.
+
+=item B<type TYPE>
+
+The type of lock to acquire.  Valid values for TYPE are C<for update> and C<shared>.  This hash key is required unless the L<for_update|/for_update> parameter was passed with a true value.
+
+=item B<wait TIME>
+
+Wait for the specified TIME (generally seconds) before giving up acquiring the lock. If supported, this is usually by adding a C<WAIT ...> clause to the SQL.
+
+=back
+
+You may pass only one of the parameters that specifies "what to lock" (i.e., C<columns>, C<on>, or C<tables>).
 
 =item B<nested_joins BOOL>
 

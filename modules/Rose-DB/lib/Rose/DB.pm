@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.761_02';
+our $VERSION = '0.761_03';
 
 our $Debug = 0;
 
@@ -2345,6 +2345,127 @@ sub format_select_start_sql
 }
 
 sub format_select_lock { '' }
+
+sub column_sql_from_lock_on_value
+{
+  my($self, $object_or_class, $name, $tables) = @_;
+
+  my %map;
+
+  if($tables)
+  {
+    my $tn = 1;
+  
+    foreach my $table (@$tables)
+    {
+      (my $table_key = $table) =~ s/^(["']?)[^.]+\1\.//;
+      $map{$table_key} = 't' . $tn++;
+    }
+  }
+
+  my $table;
+  my $chase_meta = $object_or_class->meta;
+
+  # Chase down multi-level keys: e.g., products.vendor.name
+  while($name =~ /\G([^.]+)(\.|$)/g)
+  {
+    my($sub_name, $more) = ($1, $2);
+
+    my $key = $chase_meta->foreign_key($sub_name) ||
+              $chase_meta->relationship($sub_name);
+
+    if($key)
+    {
+      $chase_meta = $key->can('foreign_class') ? 
+        $key->foreign_class->meta : $key->class->meta;
+
+      $table = $chase_meta->table;
+    }
+    else
+    {
+      if($more)
+      {
+        Carp::confess 'Invalid lock => { on => ... } argument: ',
+                      "no foreign key or relationship named '$sub_name' ",
+                      'found in ', $chase_meta->class;
+      }
+      else
+      {
+        my $column = $sub_name;
+
+        if($table)
+        {
+          $table = $map{$table}  if(defined $map{$table});
+          return $self->auto_quote_column_with_table($column, $table);
+        }
+        else
+        {
+          return $self->auto_quote_column_name($column);
+        }
+      }
+    }
+  }
+
+  Carp::confess "Invalid lock => { on => ... } argument: $name";
+}
+
+sub table_sql_from_lock_on_value
+{
+  my($self, $object_or_class, $name, $tables) = @_;
+
+  my %map;
+
+  if($tables)
+  {
+    my $tn = 1;
+  
+    foreach my $table (@$tables)
+    {
+      (my $table_key = $table) =~ s/^(["']?)[^.]+\1\.//;
+      $map{$table_key} = 't' . $tn++;
+    }
+  }
+
+  my $table;
+  my $chase_meta = $object_or_class->meta;
+
+  # Chase down multi-level keys: e.g., products.vendor.location
+  while($name =~ /\G([^.]+)(\.|$)/g)
+  {
+    my($sub_name, $more) = ($1, $2);
+
+    my $key = $chase_meta->foreign_key($sub_name) ||
+              $chase_meta->relationship($sub_name);
+
+    if($key || !$more)
+    {
+      if($key)
+      {
+        $chase_meta = $key->can('foreign_class') ? 
+          $key->foreign_class->meta : $key->class->meta;
+  
+        $table = $chase_meta->table;
+      }
+      else
+      {
+        $table = $sub_name;
+      }
+
+      next  if($more);
+
+      $table = $map{$table}  if(defined $map{$table});
+      return $self->auto_quote_table_name($table);
+    }
+    else
+    {
+      Carp::confess 'Invalid lock => { on => ... } argument: ',
+                    "no foreign key or relationship named '$sub_name' ",
+                    'found in ', $chase_meta->class;
+    }
+  }
+
+  Carp::confess "Invalid lock => { on => ... } argument: $name";
+}
 
 sub supports_on_duplicate_key_update { 0 }
 

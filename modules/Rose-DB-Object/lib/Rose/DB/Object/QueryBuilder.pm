@@ -120,6 +120,7 @@ sub build_select
   my $from_and_where_only = delete $args{'from_and_where_only'};
   my $allow_empty_lists   = $args{'allow_empty_lists'};
   my $strict_ops          = $args{'strict_ops'};
+  my $object_class        = $args{'object_class'};
 
   my $unique_aliases = $args{'unique_aliases'};
   my $table_aliases  = exists $args{'table_aliases'} ? 
@@ -793,8 +794,7 @@ sub build_select
   $qs .= "\nGROUP BY " . $group_by if($group_by);
   $qs .= "\nORDER BY " . $sort_by  if($sort_by);
   $qs .= "\n" . $limit_suffix      if(defined $limit_suffix);
-
-  $qs .= "\n" . $db->format_select_lock($lock)  if($lock);
+  $qs .= "\n" . $db->format_select_lock($object_class, $lock, $tables)  if($object_class && $lock);
 
   $Debug && warn "$qs\n";
 
@@ -1396,7 +1396,7 @@ Rose::DB::Object::QueryBuilder - Build SQL queries on behalf of Rose::DB::Object
 
 =head1 DESCRIPTION
 
-C<Rose::DB::Object::QueryBuilder> is used to build SQL queries, primarily in service of the L<Rose::DB::Object::Manager> class.  It (optionally) exports two functions: C<build_select()> and C<build_where_clause()>.
+L<Rose::DB::Object::QueryBuilder> is used to build SQL queries, primarily in service of the L<Rose::DB::Object::Manager> class.  It (optionally) exports two functions: L<build_select()|/build_select> and L<build_where_clause()|/build_where_clause>.
 
 =head1 FUNCTIONS
 
@@ -1410,7 +1410,7 @@ Returns an SQL "select" query string (in scalar context) or an SQL "select" quer
 
 =item B<clauses CLAUSES>
 
-A reference to an array of extra SQL clauses to add to the "WHERE" portion of the query string.  This is the obligatory "escape hatch" for clauses that are not supported by arguments to the C<query> parameter.
+A reference to an array of extra SQL clauses to add to the "WHERE" portion of the query string.  This is the obligatory "escape hatch" for clauses that are not supported by arguments to the L<query|/query> parameter.
 
 =item B<columns HASHREF>
 
@@ -1427,11 +1427,11 @@ This argument is required.
 
 =item B<db DB>
 
-A L<Rose::DB>-derived object.  This argument is required if C<query_is_sql> is false or omitted.
+A L<Rose::DB>-derived object.  This argument is required if L<query_is_sql|/query_is_sql> is false or omitted.
 
 =item B<dbh DBH>
 
-A C<DBI> database handle already connected to the correct database.  If this argument is omitted, an attempt will be made to extract a database handle from the C<db> argument.  If this fails, or if there is no C<db> argument, a fatal error will occur.
+A L<DBI> database handle already connected to the correct database.  If this argument is omitted, an attempt will be made to extract a database handle from the L<db|/db> argument.  If this fails, or if there is no L<db|/db> argument, a fatal error will occur.
 
 =item B<group_by CLAUSE>
 
@@ -1634,7 +1634,7 @@ A column name and a table name joined by a dot.  This is the "fully qualified" c
 
 =item C<tN.column>
 
-A column name and a table alias joined by a dot.  The table alias is in the form "tN", where "N" is a number starting from 1.  See the documentation for C<tables> parameter below to learn how table aliases are assigned to tables.
+A column name and a table alias joined by a dot.  The table alias is in the form "tN", where "N" is a number starting from 1.  See the documentation for L<tables|/tables> parameter below to learn how table aliases are assigned to tables.
 
 =item Any of the above prefixed with "!"
 
@@ -1642,13 +1642,13 @@ This indicates the negation of the specified condition.
 
 =back
 
-If C<query_is_sql> is false or omitted, then NAME can also take on these additional forms:
+If L<query_is_sql|/query_is_sql> is false or omitted, then NAME can also take on these additional forms:
 
 =over 4
 
 =item C<method>
 
-A L<get_set|Rose::DB::Object::Metadata::Column/MAKING_METHODS> column method name from a L<Rose::DB::Object>-derived class fronting one of the tables being queried.  There may be ambiguity here if the same method name is defined on more than one of the the classes involved in the query.  In such a case, the method will be mapped to the first L<Rose::DB::Object>-derived class that contains a method by that name, considered in the order that the tables are provided in the C<tables> parameter.
+A L<get_set|Rose::DB::Object::Metadata::Column/MAKING_METHODS> column method name from a L<Rose::DB::Object>-derived class fronting one of the tables being queried.  There may be ambiguity here if the same method name is defined on more than one of the the classes involved in the query.  In such a case, the method will be mapped to the first L<Rose::DB::Object>-derived class that contains a method by that name, considered in the order that the tables are provided in the L<tables|/tables> parameter.
 
 =item C<!method>
 
@@ -1660,7 +1660,7 @@ Un-prefixed column or method names that are ambiguous (i.e., exist in more than 
 
 Finally, in the case of apparently intractable ambiguity, like when a table name is the same as another table's alias, remember that you can always use the "tn_"-prefixed column name aliases, which are unique within a given query.
 
-All of these clauses are joined by C<logic> (default: "AND") in the final query.  Example:
+All of these clauses are joined by L<logic|/logic> (default: "AND") in the final query.  Example:
 
     $sql = build_select
     (
@@ -1727,9 +1727,9 @@ The C<and> and C<or> keywords can be used multiple times within a query (just li
 
 If you have a column named "and" or "or", you'll have to use the fully-qualified (table.column) or alias-qualified (tN.column) forms in order to address that column.
 
-If C<query_is_sql> is false or omitted, all of the parameter values are passed through the C<parse_value()> and C<format_value()> methods of their corresponding L<Rose::DB::Object::Metadata::Column>-dervied column objects.
+If L<query_is_sql|/query_is_sql> is false or omitted, all of the parameter values are passed through the C<parse_value()> and C<format_value()> methods of their corresponding L<Rose::DB::Object::Metadata::Column>-dervied column objects.
 
-If a column object returns true from its C<manager_uses_method()> method, then its parameter value is passed through the corresponding L<Rose::DB::Object>-derived object method instead.
+If a column object returns true from its L<manager_uses_method()|Rose::DB::Object::Metadata::Column/manager_uses_method> method, then its parameter value is passed through the corresponding L<Rose::DB::Object>-derived object method instead.
 
 Example:
 
@@ -1822,7 +1822,7 @@ The above returns an SQL statement something like this:
 
 =item B<query_is_sql BOOL>
 
-If omitted, this boolean flag is false.  If true, then the values of the C<query> parameters are taken as literal strings that are suitable for direct use in SQL queries.  Example:
+If omitted, this boolean flag is false.  If true, then the values of the L<query|/query> parameters are taken as literal strings that are suitable for direct use in SQL queries.  Example:
 
     $sql = build_select
     (
@@ -1836,7 +1836,7 @@ If omitted, this boolean flag is false.  If true, then the values of the C<query
 
 Here the date value "2003-12-25 20:00:00" must be in the format that the current database expects for columns of that data type.
 
-But if C<query_is_sql> is false or omitted, then any query value that can be handled by the L<Rose::DB::Object>-derived object method that services the corresponding database column is valid.  (Note that this is only possible when this method is called from one of the built-in L<Rose::DB::Object::Manager> methods, e.g., L<get_objects()|Rose::DB::Object::Manager/get_objects>.)
+But if L<query_is_sql|/query_is_sql> is false or omitted, then any query value that can be handled by the L<Rose::DB::Object>-derived object method that services the corresponding database column is valid.  (Note that this is only possible when this method is called from one of the built-in L<Rose::DB::Object::Manager> methods, e.g., L<get_objects()|Rose::DB::Object::Manager/get_objects>.)
 
 Example:
 
@@ -1862,7 +1862,7 @@ Usually, this overhead is dwarfed by the time required for the database to servi
 
 =item B<select COLUMNS>
 
-The names of the columns to select from the table.  COLUMNS may be a string of comma-separated column names, or a reference to an array of column names.  If this parameter is omitted, it defaults to all of the columns in all of the tables participating in the query (according to the value of the C<columns> argument).
+The names of the columns to select from the table.  COLUMNS may be a string of comma-separated column names, or a reference to an array of column names.  If this parameter is omitted, it defaults to all of the columns in all of the tables participating in the query (according to the value of the L<columns|/columns> argument).
 
 =item B<sort_by [ CLAUSE | ARRAYREF ]>
 
@@ -1886,7 +1886,7 @@ If more than one table is in the list, then each table is aliased to "tN", where
     #   baz AS t3
     # ...
 
-Furthermore, if there is no explicit value for the C<select> parameter and if the C<unique_aliases> parameter is set to true, then each selected column is aliased with a "tN_" prefix in a multi-table query.  Example:
+Furthermore, if there is no explicit value for the L<select|/select> parameter and if the L<unique_aliases|/unique_aliases> parameter is set to true, then each selected column is aliased with a "tN_" prefix in a multi-table query.  Example:
 
     SELECT
       t1.id    AS t1_id,
@@ -1901,15 +1901,15 @@ Furthermore, if there is no explicit value for the C<select> parameter and if th
 
 These unique aliases provide a technique of last resort for unambiguously addressing a column in a query clause.
 
-=item C<unique_aliases BOOL>
+=item B<unique_aliases BOOL>
 
-If true, then each selected column will be given a unique alias by prefixing it with its table alias and an underscore.  The default value is false.  See the documentation for the C<tables> parameter above for an example.
+If true, then each selected column will be given a unique alias by prefixing it with its table alias and an underscore.  The default value is false.  See the documentation for the L<tables|/tables> parameter above for an example.
 
 =back
 
 =item B<build_where_clause PARAMS>
 
-This works the same as the C<build_select()> function, except that it only returns the "WHERE" clause of the SQL query, sans the word "WHERE" and prefixed with a single space.
+This works the same as the L<build_select()|/build_select> function, except that it only returns the "WHERE" clause of the SQL query, sans the word "WHERE" and prefixed with a single space.
 
 =back
 
