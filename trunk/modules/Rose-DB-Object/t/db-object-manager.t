@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3905;
+use Test::More tests => 3907;
 
 BEGIN 
 {
@@ -572,6 +572,113 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 #   ok($fo->save, "nick object save() 6 - $db_type");
 
   #local $Rose::DB::Object::Manager::Debug = 1;
+  
+  $db->begin_work;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      db           => $db,
+      object_class => 'MyPgObject',
+      share_db     => 1,
+      with_objects => [ 'nicks.type' ],
+      for_update   => 1,
+      lock         =>
+      {
+        on     => [ qw(nicks rose_db_object_test) ],        
+        nowait => 1,
+      },
+      query        =>
+      [
+        't1.id'    => { ge => 1 },
+        't1.name'  => 'Betty',  
+        flag       => 'f',
+        flag2      => 1,
+        bits       => '10101',
+        't2.nick'  => { like => 'n%' },
+        data       => "\000\001\002",
+        start      => '5/20/2002',
+        '!start'   => { gt => DateTime->new(year  => '2005', 
+                                            month => 12,
+                                            day   => 1) },
+        '!rose_db_object_test.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 2)
+        },
+
+        '!t1.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 3)
+        },
+
+        or         => [],
+        and        => [],
+        save_col   => [ 1, 5, 123 ],
+        nums       => [ 4, 5, 6 ],
+        fk1        => 1,
+        last_modified => { le => '6/6/2020' }, # XXX: breaks in 2020!
+        date_created  => '5/10/2002 10:34:56 am'
+      ],
+      clauses => [ "LOWER(status) LIKE 'w%'" ],
+      sort_by => 'id');
+
+  $db->commit;
+  $db->begin_work;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      db           => $db,
+      object_class => 'MyPgObject',
+      share_db     => 1,
+      with_objects => [ 'nicks.type' ],
+      lock         =>
+      {
+        type   => 'shared',
+        tables => [ \q(t2), 'rose_db_object_test' ],
+        nowait => 1,
+      },
+      query        =>
+      [
+        't1.id'    => { ge => 1 },
+        't1.name'  => 'Betty',  
+        flag       => 'f',
+        flag2      => 1,
+        bits       => '10101',
+        't2.nick'  => { like => 'n%' },
+        data       => "\000\001\002",
+        start      => '5/20/2002',
+        '!start'   => { gt => DateTime->new(year  => '2005', 
+                                            month => 12,
+                                            day   => 1) },
+        '!rose_db_object_test.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 2)
+        },
+
+        '!t1.start' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 3)
+        },
+
+        or         => [],
+        and        => [],
+        save_col   => [ 1, 5, 123 ],
+        nums       => [ 4, 5, 6 ],
+        fk1        => 1,
+        last_modified => { le => '6/6/2020' }, # XXX: breaks in 2020!
+        date_created  => '5/10/2002 10:34:56 am'
+      ],
+      clauses => [ "LOWER(status) LIKE 'w%'" ],
+      sort_by => 'id');
+
+  $db->commit;
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(
@@ -3020,7 +3127,7 @@ EOF
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 788)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 790)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -3366,7 +3473,6 @@ SKIP: foreach my $db_type ('mysql')
   # Conservative version check for hints support
   if($objs->[0]->db->database_version >= 4_000_009)
   {
-
     my $sql = 
       Rose::DB::Object::Manager->get_objects_sql(
         object_class => 'MyMySQLObject',
@@ -3447,6 +3553,77 @@ SKIP: foreach my $db_type ('mysql')
   else
   {
     SKIP: {  skip("hints single table - $db_type", 3) }
+  }
+
+  # Conservative version check for select-for-update support
+  if($objs->[0]->db->database_version >= 5_000_000)
+  {
+    my $db = Rose::DB->new;
+    
+    $db->begin_work;
+
+    my $sql = 
+      Rose::DB::Object::Manager->get_objects_sql(
+        object_class => 'MyMySQLObject',
+        db           => $db,
+        share_db     => 1,
+        with_objects => [ 'bb1' ],
+        for_update   => 1,
+        query        =>
+        [
+          't1.id'    => { ge => 2 },
+          't1.name'  => { like => '%tt%' },
+        ]);
+
+    $objs = 
+      MyMySQLObject->get_objectz(
+        object_class => 'MyMySQLObject',
+        db           => $db,
+        share_db     => 1,
+        for_update   => 1,
+        debug        => 1,
+        query        =>
+        [
+          't1.id'    => { ge => 2 },
+          't1.name'  => { like => '%tt%' },
+        ]);
+
+    ok($sql =~ m{\bFOR UPDATE\b}, "select for update - $db_type");
+
+    $db->begin_work;
+
+    $sql = 
+      Rose::DB::Object::Manager->get_objects_sql(
+        object_class => 'MyMySQLObject',
+        db           => $db,
+        share_db     => 1,
+        with_objects => [ 'bb1' ],
+        lock         => { type => 'shared' },
+        query        =>
+        [
+          't1.id'    => { ge => 2 },
+          't1.name'  => { like => '%tt%' },
+        ]);
+
+    $objs = 
+      MyMySQLObject->get_objectz(
+        object_class => 'MyMySQLObject',
+        db           => $db,
+        share_db     => 1,
+        lock         => { type => 'shared' },
+        query        =>
+        [
+          't1.id'    => { ge => 2 },
+          't1.name'  => { like => '%tt%' },
+        ]);
+
+    ok($sql =~ m{\bLOCK IN SHARE MODE\b}, "select lock shared - $db_type");
+
+    $db->commit;
+  }
+  else
+  {
+    SKIP: {  skip("select for update - $db_type", 2) }
   }
 
   $objs = 
@@ -11996,11 +12173,124 @@ SKIP: foreach my $db_type (qw(oracle))
 
   #local $Rose::DB::Object::Manager::Debug = 1;
 
+  my $db = Rose::DB->new;
+  
+  $db->begin_work;
+
   $objs = 
     Rose::DB::Object::Manager->get_objects(
       object_class => 'MyOracleObject',
+      db           => $db,
       share_db     => 1,
       with_objects => [ 'nicks' ],
+      for_update   => 1,
+      lock         =>
+      {
+        on   => [ qw(nicks.type_id flag) ],
+        wait => 60,
+      },
+      query        =>
+      [
+        id         => { ge => 1 },
+        't1.name'  => 'Betty',  
+        flag       => 'f',
+        flag2      => 1,
+        bits       => '10101',
+        't2.nick'  => { like => 'n%' },
+        start_date => '5/20/2002',
+        '!start_date' => { gt => DateTime->new(year  => '2005', 
+                                            month => 12,
+                                            day   => 1) },
+        '!rose_db_object_test.start_date' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 2)
+        },
+
+        '!t1.start_date' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 3)
+        },
+
+        or         => [],
+        and        => [],
+        save_col   => [ 1, 5, 123 ],
+        fk1        => 1,
+        last_modified => { le => '6/6/2020' }, # XXX: breaks in 2020!
+        date_created  => '5/10/2002 10:34:56 am'
+      ],
+      clauses => [ "LOWER(status) LIKE 'w%'" ],
+      sort_by => 'id');
+
+  $db->commit;
+ $db->begin_work;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyOracleObject',
+      db           => $db,
+      share_db     => 1,
+      with_objects => [ 'nicks' ],
+      for_update   => 1,
+      lock         =>
+      {
+        on => [ qw(nicks.type_id flag) ],
+        skip_locked => 1,
+      },
+      query        =>
+      [
+        id         => { ge => 1 },
+        't1.name'  => 'Betty',  
+        flag       => 'f',
+        flag2      => 1,
+        bits       => '10101',
+        't2.nick'  => { like => 'n%' },
+        start_date => '5/20/2002',
+        '!start_date' => { gt => DateTime->new(year  => '2005', 
+                                            month => 12,
+                                            day   => 1) },
+        '!rose_db_object_test.start_date' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 2)
+        },
+
+        '!t1.start_date' => 
+        {
+          gt => DateTime->new(year  => '2005', 
+                              month => 12,
+                              day   => 3)
+        },
+
+        or         => [],
+        and        => [],
+        save_col   => [ 1, 5, 123 ],
+        fk1        => 1,
+        last_modified => { le => '6/6/2020' }, # XXX: breaks in 2020!
+        date_created  => '5/10/2002 10:34:56 am'
+      ],
+      clauses => [ "LOWER(status) LIKE 'w%'" ],
+      sort_by => 'id');
+
+  $db->commit;
+  $db->begin_work;
+
+  $objs = 
+    Rose::DB::Object::Manager->get_objects(
+      object_class => 'MyOracleObject',
+      db           => $db,
+      share_db     => 1,
+      with_objects => [ 'nicks' ],
+      lock         =>
+      {
+        type    => 'for update',
+        columns => [ qw(rose_db_object_nicks.type_id rose_db_object_test.flag), \q(save) ],
+        nowait  => 1,
+      },
       query        =>
       [
         id         => { ge => 1 },
@@ -12051,6 +12341,8 @@ SKIP: foreach my $db_type (qw(oracle))
   is($nicks->[1]->nick, 'nsix', "get_objects() with many 5 - $db_type");
   is($nicks->[2]->nick, 'none', "get_objects() with many 6 - $db_type");
   is($nicks->[3]->nick, 'nfive', "get_objects() with many 7 - $db_type");
+
+  $db->commit;
 
   $objs = 
     Rose::DB::Object::Manager->get_objects(

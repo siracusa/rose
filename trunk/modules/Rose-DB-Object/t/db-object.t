@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 595;
+use Test::More tests => 596;
 
 BEGIN 
 {
@@ -396,6 +396,9 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
   Rose::DB->modify_db(type => $db_type)->print_error(1);
 
+  $lo = MyPgObject->new(id => $o->id);
+  $lo->load(lock => { type => 'shared' });
+
   $o = MyPgObject->new(id => $o->id)->load;
 
   is($o->dur->in_units('years'), 7, "interval in_units years 2 - $db_type");
@@ -531,6 +534,9 @@ SKIP: foreach my $db_type ('mysql')
       SKIP: { skip("Select for update tests: no InnoDB - $db_type", 2) }
     }
   }
+
+  $o = MyMySQLObject->new(id => $o->id);
+  $o->load(lock => { type => 'shared' });
 
   ok($o->load, "load() 1 - $db_type");
 
@@ -1254,7 +1260,7 @@ SKIP: foreach my $db_type ('sqlite')
 
 SKIP: foreach my $db_type (qw(oracle))
 {
-  skip("Oracle tests", 84)  unless($HAVE_ORACLE);
+  skip("Oracle tests", 85)  unless($HAVE_ORACLE);
 
   Rose::DB->default_type($db_type);
 
@@ -1531,10 +1537,24 @@ SKIP: foreach my $db_type (qw(oracle))
 
   # Select for update tests
 
-  $o = MyOracleObject->new(id => $o->id)->load(for_update => 1);
+  $o = MyOracleObject->new(id => $o->id)->load(for_update => 1, lock => { columns => [ qw(k2 k3) ] });
 
   # Silence errors in eval blocks below
   Rose::DB->modify_db(type => $db_type)->print_error(0);
+
+  eval
+  {
+    $o =
+      MyOracleObject->new(id => $o->id)->load(
+        lock =>
+        {
+          type   => 'for update',
+          on     => [ qw(k2 k3) ],
+          nowait => 1,
+        });
+  };
+
+  ok($@, "select for update failure - $db_type");
 
   my $lo;
 

@@ -463,7 +463,7 @@ sub format_limit_with_offset
 
 sub format_select_lock
 {
-  my($self, $lock) = @_;
+  my($self, $class, $lock, $tables) = @_;
 
   $lock = { type => $lock }  unless(ref $lock);
 
@@ -476,16 +476,40 @@ sub format_select_lock
 
   my $sql = 'FOR UPDATE';
 
-  if(my $of = $lock->{'of'})
+  my @columns;
+
+  if(my $on = $lock->{'on'})
   {
-    $sql .= ' OF '. 
-      join(', ', map
+    @columns = map { $self->column_sql_from_lock_on_value($class, $_, $tables) } @$on;
+  }
+  elsif(my $columns = $lock->{'columns'})
+  {
+    my %map;
+
+    if($tables)
+    {
+      my $tn = 1;
+
+      foreach my $table (@$tables)
       {
-        /^(.+)\.(.+)$/ ? 
-          $self->auto_quote_column_with_table($2, $1) : 
-          $self->auto_quote_table_name($_)
+        (my $table_key = $table) =~ s/^(["']?)[^.]+\1\.//;
+        $map{$table_key} = 't' . $tn++;
       }
-      @$of);
+    }
+
+    @columns = map
+      {
+        ref $_ eq 'SCALAR' ? $$_ :
+        /^([^.]+)\.([^.]+)$/ ? 
+          $self->auto_quote_column_with_table($2, defined $map{$1} ? $map{$1} : $1) : 
+          $self->auto_quote_column_name($_)
+      }
+      @$columns;
+  }
+
+  if(@columns)
+  {
+    $sql .= ' OF ' . join(', ', @columns);
   }
 
   if($lock->{'nowait'})
@@ -496,7 +520,7 @@ sub format_select_lock
   {
     $sql .= " WAIT $wait";
   }
-  
+
   if($lock->{'skip_locked'})
   {
     $sql .= ' SKIP LOCKED';
