@@ -69,8 +69,7 @@ if($Have_HiRes_Time)
 }
 else
 {
-  ok($t->parse('now'), 'parse now hires (skipped)');
-  ok($t->as_string =~ /^\d\d:\d\d:\d\d\.\d+$/, 'now hires (skipped)');
-  ok($t->parse('now'), 'parse now');
-  ok($t->as_string =~ /^\d\d:\d\d:\d\d$/, 'check now lowres');
+  ok($t->parse('now'), 'parse now hires (skipped) 1');
+  ok($t->as_string =~ /^\d\d:\d\d:\d\d$/, 'now hires (skipped) 2');
+  SKIP: { skip('parse now lowres', 2) }
 }
