@@ -1,3 +1,7 @@
+0.762_01 (06.23.2010) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: Savepoints?
+
 0.762 (06.23.2010) - John Siracusa <siracusa@gmail.com>
 
     * Support for Rose::DB::Object 0.789.
