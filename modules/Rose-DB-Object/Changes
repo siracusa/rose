@@ -1,5 +1,8 @@
-0.789_01 (06.23.2010) - John Siracusa <siracusa@gmail.com>
+0.789_02 (07.23.2010) - John Siracusa <siracusa@gmail.com>
 
+    * Documented the behavior of the manager_args relationship attribute
+      when a relationship is used as a with_objects or require_objects
+      argument.
     * TODO: DEBUG environment variable and hooks.
     * TODO: Multiple unique keys example.
     * TODO: remarks metadata attribute.

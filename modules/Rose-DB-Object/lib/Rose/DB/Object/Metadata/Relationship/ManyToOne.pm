@@ -392,6 +392,8 @@ Get or set the name of the L<manager_class|/manager_class> class method to call 
 
 Get or set a reference to a hash of name/value arguments to pass to the L<manager_method|/manager_method> when fetching the object.  See the documentation for L<Rose::DB::Object::Manager>'s L<get_objects|Rose::DB::Object::Manager/get_objects> method for a full list of valid arguments for use with the C<manager_args> parameter.
 
+B<Note:> when the name of a relationship that has C<manager_args> is used in a L<Rose::DB::Object::Manager> L<with_objects|Rose::DB::Object::Manager/with_objects> or L<require_objects|Rose::DB::Object::Manager/require_objects> parameter value, I<only> the L<sort_by|Rose::DB::Object::Manager/sort_by> argument will be copied from C<manager_args> and incorporated into the query.
+
 =item B<map_column LOCAL [, FOREIGN]>
 
 If passed a local column name LOCAL, return the corresponding column name in the foreign table.  If passed both a local column name LOCAL and a foreign column name FOREIGN, set the local/foreign mapping and return the foreign column name.
