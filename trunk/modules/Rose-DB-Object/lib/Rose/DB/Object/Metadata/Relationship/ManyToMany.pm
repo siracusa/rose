@@ -772,6 +772,8 @@ Also note that the table name is not hard-coded.  Instead, it is fetched from th
 
 See the documentation for L<Rose::DB::Object::Manager>'s L<get_objects|Rose::DB::Object::Manager/get_objects> method for a full list of valid arguments for use with the C<manager_args> parameter, but remember that you can define your own custom L<manager_class> and thus can also define what kinds of arguments C<manager_args> will accept.
 
+B<Note:> when the name of a relationship that has C<manager_args> is used in a L<Rose::DB::Object::Manager> L<with_objects|Rose::DB::Object::Manager/with_objects> or L<require_objects|Rose::DB::Object::Manager/require_objects> parameter value, I<only> the L<sort_by|Rose::DB::Object::Manager/sort_by> argument will be copied from C<manager_args> and incorporated into the query.
+
 =item B<map_class [CLASS]>
 
 Get or set the name of the L<Rose::DB::Object>-derived class that fronts the table that maps between the other two tables.  This class must have a foreign key and/or "many to one" relationship for each of the two tables that it maps between.
