@@ -3,6 +3,7 @@
     * Documented the behavior of the manager_args relationship attribute
       when a relationship is used as a with_objects or require_objects
       argument.
+    * TODO: Add handles/proxy_method to relationships/fks.
     * TODO: DEBUG environment variable and hooks.
     * TODO: Multiple unique keys example.
     * TODO: remarks metadata attribute.
