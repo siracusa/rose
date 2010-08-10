@@ -2380,7 +2380,7 @@ EOF
         },
         {
           prefetch => [ 'code_names', 'category_id' ],
-          software_limit => 1,
+          #software_limit => 1,
           #rows => MAX_LIMIT,
         });
 
@@ -4302,7 +4302,7 @@ EOF
         }, 
         {
           prefetch => [ 'category_id', 'code_names' ], 
-          software_limit => 1,
+          #software_limit => 1,
           #rows => MAX_LIMIT,
         });
 
