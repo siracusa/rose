@@ -2263,6 +2263,7 @@ EOF
           with_objects    => [ 'code_names' ],
           require_objects => [ 'category' ]);
           #limit => MAX_LIMIT);
+
       die unless(@$ps);
 
       if($Debug && !$printed)
@@ -2380,9 +2381,9 @@ EOF
         {
           prefetch => [ 'code_names', 'category_id' ],
           software_limit => 1,
-          # prefetch ...-to-many is broken in DBIC
           #rows => MAX_LIMIT,
         });
+
       die unless(@p);
 
       if($Debug && !$printed)
@@ -4302,7 +4303,6 @@ EOF
         {
           prefetch => [ 'category_id', 'code_names' ], 
           software_limit => 1,
-          # prefetch ...-to-many is broken in DBIC
           #rows => MAX_LIMIT,
         });
 
