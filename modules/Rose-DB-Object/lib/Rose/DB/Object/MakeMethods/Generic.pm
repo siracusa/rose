@@ -1709,7 +1709,6 @@ sub set
             if(!defined $default || defined $self->{$key})
             {
               $self->{$formatted_key,$driver} = undef;
-              $self->{$mod_columns_key}{$column_name} = 1;
             }
             else
             {

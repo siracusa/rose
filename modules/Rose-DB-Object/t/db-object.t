@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 596;
+use Test::More tests => 597;
 
 BEGIN 
 {
@@ -466,7 +466,7 @@ SKIP: foreach my $db_type (qw(pg pg_with_schema))
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 120)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 121)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -545,6 +545,20 @@ SKIP: foreach my $db_type ('mysql')
   is($o->zepoch->ymd, '1970-01-01', "zero epoch default - $db_type");
 
   is_deeply([ sort $o->items ], [ qw(a c) ], "set default - $db_type");
+
+  my $os = MyMySQLObject->new(id => $o->id)->load;
+  $os->items;
+
+  CATCH_STDERR:
+  {
+    local *STDERR;
+    my $stderr;
+    open(STDERR, '>', \$stderr) or die "Could not redirect STDERR - $!";
+
+    local $Rose::DB::Object::Debug = 1;
+    $os->save(changes_only => 1);
+    is($stderr, undef, "save changes only for set column - $db_type");
+  }
 
   my $ox = MyMySQLObject->new(id => $o->id)->load;
   is($ox->bitz2->to_Bin(), '00', "spot check bitfield 1 - $db_type");
