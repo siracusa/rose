@@ -3581,7 +3581,7 @@ SKIP: foreach my $db_type ('mysql')
         db           => $db,
         share_db     => 1,
         for_update   => 1,
-        debug        => 1,
+        #debug       => 1,
         query        =>
         [
           't1.id'    => { ge => 2 },

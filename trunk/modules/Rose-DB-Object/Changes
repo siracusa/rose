@@ -1,8 +1,11 @@
-0.789_02 (07.23.2010) - John Siracusa <siracusa@gmail.com>
+0.789_03 (08.11.2010) - John Siracusa <siracusa@gmail.com>
 
     * Documented the behavior of the manager_args relationship attribute
       when a relationship is used as a with_objects or require_objects
       argument.
+    * Fixed a bug that caused SET columns to be erroneously marked as 
+      modified when their accessor methods were called.
+    * Improved handling of YAML string/number conversions in the test suite.
     * TODO: Add handles/proxy_method to relationships/fks.
     * TODO: DEBUG environment variable and hooks.
     * TODO: Multiple unique keys example.
