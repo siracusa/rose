@@ -68,6 +68,7 @@ $field->filter(sub
 {
   my($self, $value) = @_; 
 
+  no warnings 'uninitialized';
   if($self->trim_spaces)
   {
     $value = ucfirst($value);
