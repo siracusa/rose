@@ -1,5 +1,9 @@
-0.789_03 (08.11.2010) - John Siracusa <siracusa@gmail.com>
+0.789_04 (09.20.2010) - John Siracusa <siracusa@gmail.com>
 
+    * The auto-initialization process no longer sets column default
+      values to undef when there is no default for the column.  Doing
+      this was tripping up the default_exists() method.  (Reported
+      by Timo Karhu)
     * Documented the behavior of the manager_args relationship attribute
       when a relationship is used as a with_objects or require_objects
       argument.
