@@ -378,7 +378,10 @@ sub init_with_dbi_column_info
   # We're doing this in Rose::DB::Object::Metadata::Auto now
   #$self->parent->db->refine_dbi_column_info($col_info);
 
-  $self->default($col_info->{'COLUMN_DEF'});
+  if(defined $col_info->{'COLUMN_DEF'})
+  {
+    $self->default($col_info->{'COLUMN_DEF'});
+  }
 
   if($col_info->{'NULLABLE'} == SQL_NO_NULLS)
   {
