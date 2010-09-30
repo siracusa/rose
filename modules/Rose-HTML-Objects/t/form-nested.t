@@ -2,9 +2,9 @@
 
 use strict;
 
-use Test::More tests => 177;
+use Test::More tests => 181;
 
-BEGIN 
+BEGIN
 {
   use_ok('Rose::HTML::Form');
   use_ok('Rose::HTML::Form::Field::Text');
@@ -14,6 +14,8 @@ BEGIN
   use_ok('Rose::HTML::Form::Field::DateTime::Split::MonthDayYear');
   use_ok('Rose::HTML::Form::Field::DateTime::Split::MDYHMS');
 }
+
+our $Have_RDBO;
 
 # Mmm, fuzzy...
 Rose::HTML::Form->default_recursive_init_fields(rand > 0.5 ? 1 : 0);
@@ -580,6 +582,112 @@ $form->add_form('person_address.person.person2' => MyPersonForm->new);
 
 is(join(', ', $form->field_names), qq(bar, dog, person_address.address.city, person_address.address.your_state, person_address.address.street, person_address.address.zip, person_address.person.person2.age, person_address.person.person2.bday, person_address.person.person2.gender, person_address.person.person2.your_name, person_address.person.person2.start, person_address.person.age, person_address.person.bday, person_address.person.gender, person_address.person.your_name, person_address.person.start),
    'nested add 1');
+
+foreach my $class (qw(MyNonRDBO MyRDBO))
+{
+  unless($Have_RDBO)
+  {
+    SKIP: { skip('RDBO tests', 2) }
+  }
+
+  $form = Rose::HTML::Form->new;
+  $form->add_fields
+  (
+    id   => { type => 'integer' },
+    name => { type => 'text' },
+    flag => { type => 'checkbox' },
+  );
+
+  $form->field_value(name => 'John');
+  $form->field_value(flag => 1);
+
+  my $sub_form = Rose::HTML::Form->new;
+  $sub_form->add_fields
+  (
+    name => { type => 'text' },
+    flag => { type => 'checkbox' },
+  );
+
+  $sub_form->field_value(name => 'Sub John');
+  $sub_form->field_value(flag => 0);
+
+  $form->add_form(sub_form => $sub_form);
+
+  my $object = $class->new;
+
+  $object = $form->object_from_form($object);
+
+  is($object->name, 'John', 'nested same name 1');
+  is($object->flag, 1, 'nested same name 2');
+}
+
+BEGIN
+{
+  our $Have_RDBO;
+
+  package MyRDBO;
+
+  eval 
+  {
+    require Rose::DB::Object;
+    require Rose::DB;
+  };
+
+  if($@)
+  {
+    $Have_RDBO = 0;
+  }
+  else
+  {
+    Rose::DB->register_db(driver => 'sqlite');
+
+    $Have_RDBO = 1;
+    our @ISA = qw(Rose::DB::Object);
+
+    MyRDBO->meta->setup
+    (
+      table => 'foo',
+      columns =>
+      [
+        id   => { type => 'serial', primary_key => 1 },
+        name => { type => 'varchar', length => 64 },
+        flag => { type => 'boolean' },
+      ],
+    );
+  }
+
+  package MyNonRDBO;
+
+  sub new
+  {
+    bless {}, shift;
+  }
+
+  sub id
+  {
+    my($self) = shift;
+
+    return $self->{'id'} = shift  if(@_);
+    return $self->{'id'};
+  }
+
+  sub name
+  {
+    my($self) = shift;
+
+    return $self->{'name'} = shift  if(@_);
+    return $self->{'name'};
+  }
+
+  sub flag
+  {
+    my($self) = shift;
+
+    return $self->{'flag'} = shift() ? 1 : 0  if(@_);
+    return $self->{'flag'};
+  }
+
+}
 
 BEGIN
 {
