@@ -15,7 +15,7 @@ use Rose::HTML::Object::Errors qw(:form);
 use base qw(Rose::HTML::Object::WithWrapAroundChildren
             Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.606';
+our $VERSION = '0.607';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -938,9 +938,27 @@ sub object_from_form
   {
     my $meta = $object->meta;
 
-    foreach my $field ($self->fields)
+    FIELD: foreach my $field ($self->fields)
     {
       my $name = $field->local_name;
+
+      # When more than one field has the same local_name(), fields closer
+      # to the parent form take precedence.
+      my $check_name = $field->name;
+
+      # Remove the form name context, if any
+      if(defined(my $form_name_context = $self->form_name_context))
+      {
+        $check_name =~ s/^$form_name_context//;
+      }
+
+      if($check_name ne $name)
+      {
+        while($check_name =~ s/(^.+$FF_SEPARATOR_RE|^)[^$FF_SEPARATOR_RE]+$FF_SEPARATOR_RE([^$FF_SEPARATOR_RE]+)$/$1$2/)
+        {
+          next FIELD  if($self->field($check_name));
+        }
+      }
 
       if($object->can($name))
       {
@@ -961,9 +979,27 @@ sub object_from_form
   }
   else
   {
-    foreach my $field ($self->fields)
+    FIELD: foreach my $field ($self->fields)
     {
       my $name = $field->local_name;
+
+      # When more than one field has the same local_name(), fields closer
+      # to the parent form take precedence.
+      my $check_name = $field->name;
+
+      # Remove the form name context, if any
+      if(defined(my $form_name_context = $self->form_name_context))
+      {
+        $check_name =~ s/^$form_name_context//;
+      }
+
+      if($check_name ne $name)
+      {
+        while($check_name =~ s/(^.+$FF_SEPARATOR_RE|^)[^$FF_SEPARATOR_RE]+$FF_SEPARATOR_RE([^$FF_SEPARATOR_RE]+)$/$1$2/)
+        {
+          next FIELD  if($self->field($check_name));
+        }
+      }
 
       if($object->can($name))
       {
@@ -3014,7 +3050,7 @@ Returns the value of the "name" HTML attribute.
 
 Returns an object built based on the contents of the form.  
 
-For each field L<name()|Rose::HTML::Form::Field/name>, if the object has a method with the same name, then the L<internal_value()|Rose::HTML::Form::Field/internal_value> of the field is passed to the object method of that name.  The actual code is just about as concise as my description:
+For each field L<name()|Rose::HTML::Form::Field/name>, if the object has a method with the same name, then the L<internal_value()|Rose::HTML::Form::Field/internal_value> of the field is passed to the object method of that name.  The actual code is almost as simple as this:
 
   foreach my $field ($self->fields)
   {
@@ -3026,7 +3062,15 @@ For each field L<name()|Rose::HTML::Form::Field/name>, if the object has a metho
     }
   }
 
-To do this, the method needs an object.  If passed an OBJECT argument, then that's the object that's used.  If passed a CLASS name, then a new object is constructed by calling L<new()|/new> on that class.  OBJECT or CLASS may alternately be passed as a name/value pair in PARAMS.
+The only wrinkle is the case where a sub-form and a parent form have fields with the same L<local_name|Rose::HTML::Form::Field/local_name>.  In that case, the field "closer" to the "root" form (in terms of the parent/child relationship tree) takes precedence.  For example, consider the following fields:
+
+    name
+    vendor.name
+    vendor.country.name
+
+The L<local_name|Rose::HTML::Form::Field/local_name> for all of these fields is C<name>, but L<object_from_form|/object_from_form> will pass the value of the C<name> field to the C<name()> method of the object.  See the L<nested forms|/"NESTED FORMS"> section of the documentation for more information on nested forms.
+
+In order to return an object based on a form,  L<object_from_form|/object_from_form> needs an object.  If passed an OBJECT argument, then that's the object that's used.  If passed a CLASS name, then a new object is constructed by calling L<new()|/new> on that class.  OBJECT or CLASS may alternately be passed as a name/value pair in PARAMS.
 
 Use this method as a "helper" when writing your own methods such as C<person_from_form()>, as described in the example in the L<overview|/OVERVIEW>. L<object_from_form()|/object_from_form> should be called in the code for subclasses of L<Rose::HTML::Form>, but never by an end-user of such classes.
 
