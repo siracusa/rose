@@ -588,6 +588,7 @@ foreach my $class (qw(MyNonRDBO MyRDBO))
   unless($Have_RDBO)
   {
     SKIP: { skip('RDBO tests', 2) }
+    next;
   }
 
   $form = Rose::HTML::Form->new;
