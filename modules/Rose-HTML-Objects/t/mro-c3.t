@@ -10,8 +10,10 @@ use lib "$Bin/../lib";
 
 eval "use mro 'c3'";
 
-plan(skip_all => 'mro required for testing c3 class hierarchy')  if($@); 
-plan(tests => 61);
+plan(skip_all => 'mro 1.02 or later required for testing c3 class hierarchy')
+  if($@ || $mro::VERSION < 1.02); 
+
+plan(tests => 70);
 
 my $dir = abs_path("$Bin/../lib");
 
@@ -28,14 +30,12 @@ find(sub
     s{/}{::}g;
   }
 
-  eval "use $package;";
-  die "Could not load $package: $@"  if($@);
-
-  return unless ($package->isa('Rose::Object'));
-
   my $subclass = "My::$package";
 
-  my $code=<<"EOF";
+  my $pm_file = "$Bin/mro-test.pm";
+  open(my $fh, '>', $pm_file) or die "Could not write '$pm_file' - $!";
+
+  print $fh <<"EOF";
 package $subclass;
 
 use mro 'c3';
@@ -47,23 +47,44 @@ sub init
   my(\$self) = shift;
   \$self->next::method(\@_);
 }
+
+1;
 EOF
 
-  eval $code;
-  die "Could not compile code:\n$code\n\n$@"  if($@);
+  close($fh) or die "Could not write '$pm_file' - $!";
 
-  eval
+  my $pl_file = "$Bin/mro-test.pl";
+  open($fh, '>', $pl_file) or die "Could not write '$pl_file' - $!";
+
+  print $fh <<"EOF";
+use lib qq($Bin);
+
+require qq($pl_file);
+
+eval
+{
+  if($subclass->can('name'))
   {
-    if($subclass->can('name'))
-    {
-      $subclass->new(name => 'abc');
-    }
-    else
-    {
-      $subclass->new;
-     }
-  };
-  die "Could not test $package: $@"  if($@);
-  ok(!$@, $package);
+    $subclass->new(name => 'abc');
+  }
+  else
+  {
+    $subclass->new;
+  }
+};
+
+exit(\$@ ? 1 : 0);
+EOF
+
+  close($fh) or die "Could not write '$pm_file' - $!";
+
+  system($^X, $pl_file);
+
+  ok(($! == -1 || ($? >> 8) != 0), $package);
+
+  foreach my $file ($pl_file, $pm_file)
+  {
+    unlink($file) or die "Could not unlink($file) - $!";
+  }
 },
 $dir);
