@@ -1,4 +1,4 @@
-0.789_04 (09.20.2010) - John Siracusa <siracusa@gmail.com>
+0.789_05 (10.07.2010) - John Siracusa <siracusa@gmail.com>
 
     * The auto-initialization process no longer sets column default
       values to undef when there is no default for the column.  Doing
@@ -9,6 +9,8 @@
       argument.
     * Fixed a bug that caused SET columns to be erroneously marked as 
       modified when their accessor methods were called.
+    * Fixed a bug in make_manager_methods() that left base_name undefined.
+      (RT 61963, patch by Chris Malarky)
     * Improved handling of YAML string/number conversions in the test suite.
     * TODO: Add handles/proxy_method to relationships/fks.
     * TODO: DEBUG environment variable and hooks.
