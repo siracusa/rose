@@ -1,3 +1,8 @@
+0.859 (10.17.2010) - John Siracusa <siracusa@gmail.com>
+
+    * Eliminated non-numeric warning in Class::XSAccessor version check.
+    * Update copyright date.
+
 0.858 (02.10.2010) - John Siracusa <siracusa@gmail.com>
 
     * The CPAN shell in 5.10.1 (on Mac OS X, anyway) chokes on the
