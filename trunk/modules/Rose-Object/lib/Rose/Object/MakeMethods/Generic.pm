@@ -4,7 +4,7 @@ use strict;
 
 use Carp();
 
-our $VERSION = '0.856';
+our $VERSION = '0.859';
 
 use Rose::Object::MakeMethods;
 our @ISA = qw(Rose::Object::MakeMethods);
@@ -19,7 +19,9 @@ TRY:
   {
     require Class::XSAccessor;
 
-    unless($Class::XSAccessor::VERSION >= 0.14)
+    (my $version = $Class::XSAccessor::VERSION) =~ s/_//g;
+
+    unless($version >= 0.14)
     {
       die "Class::XSAccessor $Class::XSAccessor::VERSION is too old";
     }
@@ -1072,6 +1074,6 @@ John C. Siracusa (siracusa@gmail.com)
 
 =head1 LICENSE
 
-Copyright (c) 2006 by John C. Siracusa.  All rights reserved.  This program is
+Copyright (c) 2010 by John C. Siracusa.  All rights reserved.  This program is
 free software; you can redistribute it and/or modify it under the same terms
 as Perl itself.
