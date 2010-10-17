@@ -505,22 +505,22 @@ SKIP: foreach my $db_type ('mysql')
 
     $o->db->begin_work;
     $o->load(for_update => 1);
-  
+
     # Silence errors in eval blocks below
     Rose::DB->modify_db(type => $db_type)->print_error(0);
-  
+
     my $lo;
-  
+
     eval
     {
       $lo = MyMySQLObject->new(id => $o->id);
       $lo->meta->error_mode('fatal');
       $lo->load(lock => { for_update => 1 });
     };
-  
+
     is(DBI->err, 1205, "select for update wait 1 error 1205 - $db_type");
     ok($@, "select for update - $db_type");
-  
+
     $o->db->commit;
   }
   else
@@ -1600,7 +1600,7 @@ SKIP: foreach my $db_type (qw(oracle))
 
   $o = MyOracleObject->new(key => 123);
   eval { $o->load };
-  
+
   ok(!$@, "reserved-word load() - $db_type");
 }
 

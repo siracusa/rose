@@ -217,8 +217,8 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 
   $p->vendor(name => "Acme $i");
 
-  $p->prices({ price => 1.23, region => 'US' },
-             { price => 4.56, region => 'UK' });
+  $p->prices({ price => 1.25, region => 'US' },
+             { price => 4.25, region => 'UK' });
 
   $p->colors({ name => 'red'   }, 
              { name => 'green' });
@@ -243,8 +243,8 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
   my @prices = sort { $a->price <=> $b->price } $p->prices;
 
   is(scalar @prices, 2, "prices 1 - $db_type");
-  is($prices[0]->price, 1.23, "prices 2 - $db_type");
-  is($prices[1]->price, 4.56, "prices 3 - $db_type");
+  is($prices[0]->price, 1.25, "prices 2 - $db_type");
+  is($prices[1]->price, 4.25, "prices 3 - $db_type");
 
   my @colors = sort { $a->name cmp $b->name } $p->colors;
 

@@ -71,22 +71,22 @@ foreach my $db_type (qw(mysql pg informix sqlite))
 
     # One-to-many
 
-    $p->prices([ { price => 1.23 } ]);
+    $p->prices([ { price => 1.25 } ]);
     $p->save;
 
     $p = $product_class->new(id => $p->id)->load;
 
     my $price = $p->prices->[0];
-    is($price->price, 1.23, "cascade one-to-many 1.$i - $db_type");
+    is($price->price, 1.25, "cascade one-to-many 1.$i - $db_type");
     is($price->region, 'US', "cascade one-to-many 2.$i - $db_type");
     $price->region('UK');
-    $p->add_prices({ price => 4.56 });
+    $p->add_prices({ price => 4.25 });
     $p->save(cascade => 1);
 
     $price = $price_class->new(price_id => $price->price_id)->load;
     is($price->region, 'UK', "cascade one-to-many 3.$i - $db_type");
     $price = (sort { $a->price <=> $b->price } @{$p->prices})[-1];
-    is($price->price, 4.56, "cascade one-to-many 4.$i - $db_type");
+    is($price->price, 4.25, "cascade one-to-many 4.$i - $db_type");
     is($price->region, 'US', "cascade one-to-many 5.$i - $db_type");
 
     # Many-to-many

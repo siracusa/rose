@@ -1,4 +1,4 @@
-0.789_05 (10.07.2010) - John Siracusa <siracusa@gmail.com>
+0.790 (10.17.2010) - John Siracusa <siracusa@gmail.com>
 
     * The auto-initialization process no longer sets column default
       values to undef when there is no default for the column.  Doing
@@ -11,21 +11,8 @@
       modified when their accessor methods were called.
     * Fixed a bug in make_manager_methods() that left base_name undefined.
       (RT 61963, patch by Chris Malarky)
-    * Improved handling of YAML string/number conversions in the test suite.
-    * TODO: Add handles/proxy_method to relationships/fks.
-    * TODO: DEBUG environment variable and hooks.
-    * TODO: Multiple unique keys example.
-    * TODO: remarks metadata attribute.
-    * TODO: Generic is_auto_increment column attribute support.
-    * TODO: Parameterize DateTime class name in column method-makers?
-    * TODO: Update docs for has_loaded_related() and/or make a better
-      solution to avoid re-fetching nonexistent objects after Manager
-      queries.
-    * TODO: Add support for REGEXP_LIKE(column, '^abc')
-    * TODO: Figure out which UK to use when load()ing via a ForeignKey
-    * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
-    * TODO: add delete_now and delete_on_save method types to ManyToMany?
-    * TODO: make save() fail if IN_DB and modified PK columns?
+    * Improved handling of floating point and string/number conversions
+      in the test suite.
 
 0.789 (06.23.2010) - John Siracusa <siracusa@gmail.com>
 
