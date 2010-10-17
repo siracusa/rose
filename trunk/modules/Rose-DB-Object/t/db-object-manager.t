@@ -572,7 +572,7 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 #   ok($fo->save, "nick object save() 6 - $db_type");
 
   #local $Rose::DB::Object::Manager::Debug = 1;
-  
+
   $db->begin_work;
 
   $objs = 
@@ -3559,7 +3559,7 @@ SKIP: foreach my $db_type ('mysql')
   if($objs->[0]->db->database_version >= 5_000_000)
   {
     my $db = Rose::DB->new;
-    
+
     $db->begin_work;
 
     my $sql = 
@@ -12174,7 +12174,7 @@ SKIP: foreach my $db_type (qw(oracle))
   #local $Rose::DB::Object::Manager::Debug = 1;
 
   my $db = Rose::DB->new;
-  
+
   $db->begin_work;
 
   $objs = 

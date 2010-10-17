@@ -11,7 +11,7 @@ require Math::BigInt;
 BIGNUM_VERSION_CHECK:
 {
   (my $bignum_version = $Math::BigInt::VERSION) =~ s/_//g;
-  
+
   if($bignum_version >= 1.78)
   {
     Math::BigInt->import(try => 'GMP');

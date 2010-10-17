@@ -75,8 +75,8 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
       vendor => { id => 1, name => 'V1', region => { id => 'DE', name => 'Germany' } },
       prices => 
       [
-        { price => 1.23, region => { id => 'US', name => 'America' } }, 
-        { price => 4.56, region => { id => 'DE', name => 'Germany' } },
+        { price => 1.25, region => { id => 'US', name => 'America' } }, 
+        { price => 4.25, region => { id => 'DE', name => 'Germany' } },
       ],
       colors => 
       [
@@ -122,7 +122,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
       id     => 2,
       name   => 'Sled',
       vendor => { id => 2, name => 'V2', region_id => 'US', vendor_id => 1 },
-      prices => [ { price => 9.99 } ],
+      prices => [ { price => 9.25 } ],
       colors => 
       [
         { name => 'red' }, 
@@ -781,12 +781,12 @@ EOF
   $products->[0]{'prices'} = [ sort { $a->{'price'} <=> $b->{'price'} } @{$products->[0]{'prices'}} ];
   $products->[1]{'prices'} = [ sort { $a->{'price'} <=> $b->{'price'} } @{$products->[1]{'prices'}} ];
 
-  is($products->[0]{'prices'}[0]{'price'}, 1.23, "p1 - prices 2 - $db_type");
+  is($products->[0]{'prices'}[0]{'price'}, 1.25, "p1 - prices 2 - $db_type");
   is($products->[0]{'prices'}[0]{'region'}{'name'}, 'America', "p1 - prices 3 - $db_type");
-  is($products->[0]{'prices'}[1]{'price'}, 4.56, "p1 - prices 4 - $db_type");
+  is($products->[0]{'prices'}[1]{'price'}, 4.25, "p1 - prices 4 - $db_type");
   is($products->[0]{'prices'}[1]{'region'}{'name'}, 'Germany', "p1 - prices 5 - $db_type");
 
-  is($products->[1]{'prices'}[0]{'price'}, 9.99, "p2 - prices 2 - $db_type");
+  is($products->[1]{'prices'}[0]{'price'}, 9.25, "p2 - prices 2 - $db_type");
   is($products->[1]{'prices'}[0]{'region'}{'name'}, 'America', "p2 - prices 3 - $db_type");
 
   if(has_broken_order_by($db_type))
@@ -876,7 +876,7 @@ EOF
 
   $products->[0]{'prices'} = [ sort { $a->{'price'} <=> $b->{'price'} } @{$products->[0]{'prices'}} ];
 
-  is($products->[0]{'prices'}[0]{'price'}, 9.99, "p2 - offset prices 2 - $db_type");
+  is($products->[0]{'prices'}[0]{'price'}, 9.25, "p2 - offset prices 2 - $db_type");
   is($products->[0]{'prices'}[0]{'region'}{'name'}, 'America', "p2 - offset prices 3 - $db_type");
 
   is($products->[0]{'colors'}[0]{'name'}, 'red', "p2 - offset with colors vendors 1 - $db_type");
@@ -921,9 +921,9 @@ EOF
 
   $p->{'prices'} = [ sort { $a->{'price'} <=> $b->{'price'} } @{$p->{'prices'}} ];
 
-  is($p->{'prices'}[0]{'price'}, 1.23, "p1 - iterator prices 2 - $db_type");
+  is($p->{'prices'}[0]{'price'}, 1.25, "p1 - iterator prices 2 - $db_type");
   is($p->{'prices'}[0]{'region'}{'name'}, 'America', "p1 - iterator prices 3 - $db_type");
-  is($p->{'prices'}[1]{'price'}, 4.56, "p1 - iterator prices 4 - $db_type");
+  is($p->{'prices'}[1]{'price'}, 4.25, "p1 - iterator prices 4 - $db_type");
   is($p->{'prices'}[1]{'region'}{'name'}, 'Germany', "p1 - iterator prices 5 - $db_type");
 
   is($p->{'colors'}[0]{'name'}, 'red', "p1 - iterator with colors vendors 1 - $db_type");
@@ -975,7 +975,7 @@ EOF
   $p->{'prices'} = [ sort { $a->{'price'} <=> $b->{'price'} } @{$p->{'prices'}} ];
 
   is(scalar @{$p->{'prices'}}, 1, "p2 - iterator prices 2 - $db_type");
-  is($p->{'prices'}[0]{'price'}, 9.99, "p2 - iterator prices 2 - $db_type");
+  is($p->{'prices'}[0]{'price'}, 9.25, "p2 - iterator prices 2 - $db_type");
   is($p->{'prices'}[0]{'region'}{'name'}, 'America', "p2 - iterator prices 3 - $db_type");
 
   is($p->{'colors'}[0]{'name'}, 'red', "p2 - iterator with colors vendors 1 - $db_type");
@@ -1020,7 +1020,7 @@ EOF
   $p->{'prices'} = [ sort { $a->{'price'} <=> $b->{'price'} } @{$p->{'prices'}} ];
 
   is(scalar @{$p->{'prices'}}, 1, "p2 - offset iterator prices 2 - $db_type");
-  is($p->{'prices'}[0]{'price'}, 9.99, "p2 - offset iterator prices 2 - $db_type");
+  is($p->{'prices'}[0]{'price'}, 9.25, "p2 - offset iterator prices 2 - $db_type");
   is($p->{'prices'}[0]{'region'}{'name'}, 'America', "p2 - offset iterator prices 3 - $db_type");
 
   is($p->{'colors'}[0]{'name'}, 'red', "p2 - offset iterator with colors vendors 1 - $db_type");
@@ -1069,7 +1069,7 @@ EOF
   $p->{'prices'} = [ sort { $a->{'price'} <=> $b->{'price'} } @{$p->{'prices'}} ];
 
   is(scalar @{$p->{'prices'}}, 1, "p2 - query iterator prices 2 - $db_type");
-  is($p->{'prices'}[0]{'price'}, 9.99, "p2 - query iterator prices 2 - $db_type");
+  is($p->{'prices'}[0]{'price'}, 9.25, "p2 - query iterator prices 2 - $db_type");
   is($p->{'prices'}[0]{'region'}{'name'}, 'America', "p2 - query iterator prices 3 - $db_type");
 
   is($p->{'colors'}[0]{'name'}, 'red', "p2 - query iterator with colors vendors 1 - $db_type");

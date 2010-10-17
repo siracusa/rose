@@ -4392,7 +4392,7 @@ The value should be a reference to a hash or a TYPE string, which is equivalent 
 
     lock => 'for update'
     lock => { type => 'for update' }
- 
+
 Valid hash keys are:
 
 =over 4

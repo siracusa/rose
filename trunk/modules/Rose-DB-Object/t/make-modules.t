@@ -252,7 +252,7 @@ EOF
   {
     chomp(my $line = <$script_fh>);
     close($script_fh);
-    is($line, 'V1; IS: 1.23, DE: 4.56; red, green; red: CC1', "external test - $db_type");
+    is($line, 'V1; IS: 1.25, DE: 4.25; red, green; red: CC1', "external test - $db_type");
   }
   else
   {

@@ -976,7 +976,7 @@ sub perl_quote_value
   my($self, $value) = @_;
 
   return $value  if($value =~ /^\d+$/);
-  
+
   for($value)
   {
     s/\\/\\\\/g;

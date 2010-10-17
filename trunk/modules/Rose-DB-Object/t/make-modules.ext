@@ -27,8 +27,8 @@ eval "require ${color_class}::Manager";
 die "Could not load $color_class - $@"  if($@);
 
 my $p = $product_class->new(id => 1, name => 'A');
-$p->prices({ region => 'IS', price => 1.23 },
-           { region => 'DE', price => 4.56 });
+$p->prices({ region => 'IS', price => 1.25 },
+           { region => 'DE', price => 4.25 });
 
 $p->colors({ code => 'CC1', name => 'red' },
            { code => 'CC2', name => 'green' });
@@ -107,8 +107,8 @@ INSERT INTO products (id, name, vendor_id) VALUES (1, 'A', 1);
 INSERT INTO products (id, name, vendor_id) VALUES (2, 'B', 2);
 INSERT INTO products (id, name, vendor_id) VALUES (3, 'C', 1);
 
-INSERT INTO prices (product_id, region, price) VALUES (1, 'US', 1.23);
-INSERT INTO prices (product_id, region, price) VALUES (1, 'DE', 4.56);
+INSERT INTO prices (product_id, region, price) VALUES (1, 'US', 1.25);
+INSERT INTO prices (product_id, region, price) VALUES (1, 'DE', 4.25);
 INSERT INTO prices (product_id, region, price) VALUES (2, 'US', 5.55);
 INSERT INTO prices (product_id, region, price) VALUES (3, 'US', 5.78);
 INSERT INTO prices (product_id, region, price) VALUES (3, 'US', 9.99);
