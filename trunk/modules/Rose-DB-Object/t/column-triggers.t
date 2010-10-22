@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 269;
+use Test::More tests => 270;
 
 BEGIN 
 {
@@ -326,6 +326,12 @@ foreach my $db_type (@dbs)
   is($Temp{'lc_inflate'}{'name'}, 'fred', "inflate 4 - $db_type");
   is(keys %Temp, 3, "inflate 5 - $db_type");
   %Temp = ();
+
+  $o = MyObject->new();
+  $o->meta->add_unique_keys('name');
+  $o->name('FRED');
+  $o->load;
+  isnt($Temp{'on_save'}{'name'}, 'FRED', "on_load/on_save mix - $db_type");
 
   #
   # code
