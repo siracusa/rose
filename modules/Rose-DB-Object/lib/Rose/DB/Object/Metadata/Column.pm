@@ -15,7 +15,7 @@ use Rose::DB::Object::Util
     lazy_column_values_loaded_key);
 
 use Rose::DB::Object::Constants 
-  qw(STATE_IN_DB STATE_LOADING STATE_SAVING);
+  qw(STATE_IN_DB STATE_LOADING STATE_SAVING SAVING_FOR_LOAD);
 
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
@@ -23,7 +23,7 @@ use Rose::DB::Object::MakeMethods::Generic;
 our $Triggers_Key      = 'triggers';
 our $Trigger_Index_Key = 'trigger_index';
 
-our $VERSION = '0.787';
+our $VERSION = '0.791';
 
 use overload
 (
@@ -1126,7 +1126,7 @@ sub apply_method_triggers
                 }
               }
 
-              if($on_save_code)
+              if($on_save_code && !$self->{SAVING_FOR_LOAD()})
               {
                 foreach my $code (@$on_save_code)
                 {
@@ -1280,7 +1280,7 @@ sub apply_method_triggers
               }
             }
 
-            if($on_save_code)
+            if($on_save_code && !$self->{SAVING_FOR_LOAD()})
             {
               foreach my $code (@$on_save_code)
               {

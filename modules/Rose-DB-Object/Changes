@@ -1,6 +1,6 @@
-0.790_01 (10.21.2010) - John Siracusa <siracusa@gmail.com>
+0.790_02 (10.23.2010) - John Siracusa <siracusa@gmail.com>
 
-    * TODO: don't fire on_save column triggers when loading
+    * Fixed a bug that caused on_save column triggers to fire when loading.
     * TODO: Add handles/proxy_method to relationships/fks.
     * TODO: DEBUG environment variable and hooks.
     * TODO: Multiple unique keys example.

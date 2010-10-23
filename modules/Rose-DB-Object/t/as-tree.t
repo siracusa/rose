@@ -177,7 +177,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
       name   => 'Sled',
       sale_date => '2/2/2005',
       vendor => { id => 2, name => 'V2', region_id => 'US', vendor_id => 1 },
-      prices => [ { price => '5.14' } ],
+      prices => [ { price => '5.25' } ],
       colors => 
       [
         { name => 'red' }, 
@@ -253,7 +253,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     [
       {
         'id'         => '3',
-        'price'      => '5.14',
+        'price'      => '5.25',
         'product_id' => '2',
         'region_id'  => 'US'
       }
@@ -323,7 +323,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     [
       {
         'id'         => '3',
-        'price'      => '5.14',
+        'price'      => '5.25',
         'product_id' => '2',
         'region'     => 
         {
@@ -436,7 +436,7 @@ foreach my $db_type (qw(sqlite mysql pg pg_with_schema informix))
     [
       {
         'id'      => '3',
-        'price'   => '5.14',
+        'price'   => '5.25',
         'product' => 
         {
           'id'        => '2',
