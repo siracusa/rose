@@ -16,7 +16,7 @@ use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Exception;
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.790_01';
+our $VERSION = '0.790_02';
 
 our $Debug = 0;
 
@@ -162,6 +162,7 @@ sub load
     $meta->dbi_prepare_cached;
 
   local $self->{STATE_SAVING()} = 1;
+  local $self->{SAVING_FOR_LOAD()} = 1;
 
   my(@key_columns, @key_methods, @key_values);
 

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 270;
+use Test::More tests => 274;
 
 BEGIN 
 {
@@ -241,7 +241,7 @@ foreach my $db_type (@dbs)
 {
   SKIP:
   {
-    skip("$db_type tests", 46)  unless($Have{$db_type});
+    skip("$db_type tests", 47)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -330,7 +330,7 @@ foreach my $db_type (@dbs)
   $o = MyObject->new();
   $o->meta->add_unique_keys('name');
   $o->name('FRED');
-  $o->load;
+  $o->load(speculative => 1);
   isnt($Temp{'on_save'}{'name'}, 'FRED', "on_load/on_save mix - $db_type");
 
   #
