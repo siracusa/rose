@@ -4,7 +4,7 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 24;
+use Test::More tests => 28;
 
 BEGIN 
 {
@@ -48,10 +48,30 @@ $field->init_fields(month => 12, day => 25, year => 1980);
 
 is($field->field_value('day'), 25, 'field_value() 1');
 
+is($field->html,
+   qq(<input name="date.day" size="2" type="text" value="25">) .
+   qq(<input name="date.month" size="2" type="text" value="12">) .
+   qq(<input name="date.year" size="4" type="text" value="1980">), 'html()');
+   
+is($field->html_field,
+   qq(<input name="date.day" size="2" type="text" value="25">) .
+   qq(<input name="date.month" size="2" type="text" value="12">) .
+   qq(<input name="date.year" size="4" type="text" value="1980">), 'html_field()');
+
+is($field->xhtml,
+   qq(<input name="date.day" size="2" type="text" value="25" />) .
+   qq(<input name="date.month" size="2" type="text" value="12" />) .
+   qq(<input name="date.year" size="4" type="text" value="1980" />), 'xhtml()');
+   
+is($field->xhtml_field,
+   qq(<input name="date.day" size="2" type="text" value="25" />) .
+   qq(<input name="date.month" size="2" type="text" value="12" />) .
+   qq(<input name="date.year" size="4" type="text" value="1980" />), 'xhtml_field()');
+
 is(join("\n", map { $_->html_field } $field->fields),
    qq(<input name="date.day" size="2" type="text" value="25">\n) .
    qq(<input name="date.month" size="2" type="text" value="12">\n) .
-   qq(<input name="date.year" size="4" type="text" value="1980">), 'html test');
+   qq(<input name="date.year" size="4" type="text" value="1980">), 'html field test');
 
 is($field->html_hidden_fields,
    qq(<input name="date.day" type="hidden" value="25">\n) .
