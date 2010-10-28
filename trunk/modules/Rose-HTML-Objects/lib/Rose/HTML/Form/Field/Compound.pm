@@ -11,7 +11,7 @@ use base qw(Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.606';
+our $VERSION = '0.611';
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
@@ -81,6 +81,9 @@ sub init_fields
     }
   }
 }
+
+sub html_field  { join('', map { $_->html_field } shift->fields)  }
+sub xhtml_field { join('', map { $_->xhtml_field } shift->fields) }
 
 sub resync_name
 {
@@ -436,7 +439,12 @@ Rose::HTML::Form::Field::Compound - Base class for field objects that contain ot
         last   => join(' ', @parts[2 .. $#parts]),
       };      
     }
+
+    # Override these methods to determine how sub-fields are arranged
+    sub html_field  { ... }
+    sub xhtml_field { ... }
     ...
+
 
     use MyFullNameField;
 
@@ -703,6 +711,10 @@ is just a shorter way to write this:
 
     $val = $field->field('zip_code')->internal_value;
 
+=item B<html_field>
+
+Returns the HTML serialization of the field.  The default implementation calls L<html_field|Rose::HTML::Form::Field/html_field> on each of the L<fields|/fields> and then concatenates and the results.  Override this method in your compound field subclass to lay out your sub-fields as desired.
+
 =item B<invalidate_value>
 
 Invalidates the field's value, and the value of all of its parent fields, and so on.  This will cause the field's values to be recreated the next time they are retrieved.
@@ -732,6 +744,10 @@ This method has the same effect as fetching the sub-field using the L<field|/fie
 This method is therefore essential for implementing compound fields that need to set their sub-field values directly.  Without it, any attempt to do so would cause the compound field to invalidate itself.
 
 See the source code for  L<Rose::HTML::Form::Field::DateTime::Range>'s L<inflate_value|Rose::HTML::Form::Field::DateTime::Range/inflate_value> method for a real-world usage example of the L<subfield_input_value|/subfield_input_value> method.
+
+=item B<xhtml_field>
+
+Returns the XHTML serialization of the field.  The default implementation calls L<xhtml_field|Rose::HTML::Form::Field/xhtml_field> on each of the L<fields|/fields> and then concatenates and the results.  Override this method in your compound field subclass to lay out your sub-fields as desired.
 
 =back
 
