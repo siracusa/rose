@@ -697,10 +697,6 @@ If both NAME and VALUE arguments are passed, then the field VALUE is stored unde
 
 Returns the full list of field objects, sorted by field name, in list context, or a reference to a list of the same in scalar context.
 
-=item B<field_names>
-
-Returns a sorted list of field names in list context, or a reference to a list of the same in scalar context.
-
 =item B<field_value NAME>
 
 Returns the L<internal_value|Rose::HTML::Form::Field/internal_value> of the sub-field named NAME.  In other words, this:
