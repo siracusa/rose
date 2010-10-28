@@ -500,6 +500,7 @@ sub clear
 
   foreach my $item ($self->items)
   {
+    local $item->{'auto_invalidate_parent'} = $self->auto_invalidate_parent;
     $item->clear;
   }
 

@@ -355,6 +355,8 @@ sub init_items
 
     foreach my $item ($self->items)
     {
+      local $item->{'auto_invalidate_parent'} = $self->auto_invalidate_parent;
+
       if($item->isa($group_class))
       {
         foreach my $subitem ($item->items)
