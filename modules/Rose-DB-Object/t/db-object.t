@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 597;
+use Test::More tests => 598;
 
 BEGIN 
 {
@@ -2107,6 +2107,49 @@ EOF
   if(!$@ && $dbh)
   {
     our $HAVE_SQLITE = 1;
+
+    #
+    # Method name conflict tests
+    #
+
+    local $@;
+
+     eval
+     {
+       package MyNameConflictB;
+
+       our @ISA = qw(Rose::DB::Object);
+
+       sub init_db { Rose::DB->new('sqlite') }
+
+       __PACKAGE__->meta->setup
+       (
+         table   => 'foob',
+         columns => [ qw(id blee) ],
+       );
+
+       package MyNameConflictA;
+
+       our @ISA = qw(Rose::DB::Object);
+
+       sub init_db { Rose::DB->new('sqlite') }
+
+       __PACKAGE__->meta->setup
+       (
+         table => 'fooa',
+         columns => [ qw(bar baz) ],
+         foreign_keys =>
+         [
+           new =>
+           {
+             class => 'MyNameConflictB',
+             key_columns => { baz => 'id' },
+           },
+         ],
+       );
+     };
+
+    like($@, qr/Rose::DB::Object defines a method with the same name/, 'method name conflict');
 
     # Drop existing table and create schema, ignoring errors
     {

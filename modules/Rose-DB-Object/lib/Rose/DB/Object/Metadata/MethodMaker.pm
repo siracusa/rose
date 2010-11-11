@@ -415,6 +415,13 @@ sub make_methods
     my $method_name = $self->method_name($type)
       or Carp::croak "No method name defined for method type '$type'";
 
+    if(Rose::DB::Object->can($method_name))
+    {
+      Carp::croak "Cannot create method '$method_name' in class ",
+        "$options->{'target_class'} - Rose::DB::Object defines a ",
+        "method with the same name";
+    }
+
     $method_maker_class->make_methods(
       $options,
       $method_maker_type => 

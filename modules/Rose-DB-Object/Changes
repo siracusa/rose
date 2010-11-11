@@ -1,5 +1,8 @@
-0.791_01 (10.23.2010) - John Siracusa <siracusa@gmail.com>
+0.791_02 (11.11.2010) - John Siracusa <siracusa@gmail.com>
 
+    * Detect attempts to create methods whose names conflict with
+      methods defined in Rose::DB::Object itself.  (Reported by
+      Dave Howorth)
     * TODO: Add handles/proxy_method to relationships/fks.
     * TODO: DEBUG environment variable and hooks.
     * TODO: Multiple unique keys example.
