@@ -238,6 +238,8 @@ sub method_name_conflicts
 {
   my($self, $name) = @_;
 
+  return 1  if(Rose::DB::Object->can($name));
+
   my $meta = $self->meta;
 
   foreach my $column ($meta->columns)
