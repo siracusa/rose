@@ -52,7 +52,7 @@ is($field->html,
    qq(<input name="date.day" size="2" type="text" value="25">) .
    qq(<input name="date.month" size="2" type="text" value="12">) .
    qq(<input name="date.year" size="4" type="text" value="1980">), 'html()');
-   
+
 is($field->html_field,
    qq(<input name="date.day" size="2" type="text" value="25">) .
    qq(<input name="date.month" size="2" type="text" value="12">) .
@@ -62,7 +62,7 @@ is($field->xhtml,
    qq(<input name="date.day" size="2" type="text" value="25" />) .
    qq(<input name="date.month" size="2" type="text" value="12" />) .
    qq(<input name="date.year" size="4" type="text" value="1980" />), 'xhtml()');
-   
+
 is($field->xhtml_field,
    qq(<input name="date.day" size="2" type="text" value="25" />) .
    qq(<input name="date.month" size="2" type="text" value="12" />) .
