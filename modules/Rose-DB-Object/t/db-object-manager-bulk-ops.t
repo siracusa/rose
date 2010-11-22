@@ -741,7 +741,8 @@ SKIP: foreach my $db_type ('sqlite')
       where => 
       [
         name    => { like => 'NoneSuch%' },
-        started => { gt => [ $now, $yesterday, '1/1/2005' ] }
+        started => { gt => [ $now, $yesterday, '1/1/2005' ] },
+        [ \q(rose_db_object_test.num % 2 == ?) => 0 ],
       ]);
 
   ok(defined $num, "update 1 - $db_type");
@@ -776,6 +777,7 @@ SKIP: foreach my $db_type ('sqlite')
           started => { lt => $yesterday },
           started => { lt => '1/1/2005' },
         ],
+        [ \q(rose_db_object_test.num % 2 != ?) => 0 ],
       ]);
 
   ok($num, "update 4 - $db_type");
