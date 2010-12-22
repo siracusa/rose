@@ -1,22 +1,6 @@
-0.792_01 (12.20.2010) - John Siracusa <siracusa@gmail.com>
+0.793 (12.21.2010) - John Siracusa <siracusa@gmail.com>
 
-    * Detect attempts to create methods whose names conflict with
-      methods defined in Rose::DB::Object itself.  (Reported by
-      Dave Howorth)
-    * TODO: Add handles/proxy_method to relationships/fks.
-    * TODO: DEBUG environment variable and hooks.
-    * TODO: Multiple unique keys example.
-    * TODO: remarks metadata attribute.
-    * TODO: Generic is_auto_increment column attribute support.
-    * TODO: Parameterize DateTime class name in column method-makers?
-    * TODO: Update docs for has_loaded_related() and/or make a better
-      solution to avoid re-fetching nonexistent objects after Manager
-      queries.
-    * TODO: Add support for REGEXP_LIKE(column, '^abc')
-    * TODO: Figure out which UK to use when load()ing via a ForeignKey
-    * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
-    * TODO: add delete_now and delete_on_save method types to ManyToMany?
-    * TODO: make save() fail if IN_DB and modified PK columns?
+    * Corrected skip count in t/db-object.t
 
 0.792 (12.20.2010) - John Siracusa <siracusa@gmail.com>
 
