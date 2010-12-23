@@ -1,5 +1,6 @@
 0.762_01 (06.23.2010) - John Siracusa <siracusa@gmail.com>
 
+	* TODO: Return from rollback() early if AutoCommit is set.
     * TODO: Savepoints?
 
 0.762 (06.23.2010) - John Siracusa <siracusa@gmail.com>
