@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 74;
+use Test::More tests => 78;
 
 BEGIN 
 {
@@ -20,7 +20,7 @@ Rose::DB->default_domain('test');
 
 SKIP: foreach my $db_type ('pg')
 {
-  skip("PostgreSQL tests", 23)  unless($HAVE_PG);
+  skip("PostgreSQL tests", 24)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -107,6 +107,9 @@ SKIP: foreach my $db_type ('pg')
 
     is(ref $db->error, 'My::Exception', "do_transaction() exception 1 - $db_type");
   }
+
+  $db->dbh->{'AutoCommit'} = 1;  
+  is($db->rollback, 1, "rollback with AutoCommit set - $db_type");
 }
 
 #
@@ -115,7 +118,7 @@ SKIP: foreach my $db_type ('pg')
 
 SKIP: foreach my $db_type ('oracle')
 {
-  skip("Oracle tests", 21)  unless($HAVE_ORACLE);
+  skip("Oracle tests", 22)  unless($HAVE_ORACLE);
 
   Rose::DB->default_type($db_type);
 
@@ -189,6 +192,9 @@ SKIP: foreach my $db_type ('oracle')
 
     is($count, 4, "do_transaction() 3 - $db_type");
   }
+
+  $db->dbh->{'AutoCommit'} = 1;  
+  is($db->rollback, 1, "rollback with AutoCommit set - $db_type");
 }
 
 #
@@ -197,7 +203,7 @@ SKIP: foreach my $db_type ('oracle')
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 13)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 14)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -239,6 +245,9 @@ SKIP: foreach my $db_type ('mysql')
   my $count = $sth->fetchrow_array;
 
   is($count, 4, "do_transaction() 3 - $db_type");
+
+  $db->dbh->{'AutoCommit'} = 1;  
+  is($db->rollback, 1, "rollback with AutoCommit set - $db_type");
 }
 
 #
@@ -247,7 +256,7 @@ SKIP: foreach my $db_type ('mysql')
 
 SKIP: foreach my $db_type ('informix')
 {
-  skip("Informix tests", 16)  unless($HAVE_INFORMIX);
+  skip("Informix tests", 17)  unless($HAVE_INFORMIX);
 
   Rose::DB->default_type($db_type);
 
@@ -295,6 +304,9 @@ SKIP: foreach my $db_type ('informix')
   my $count = $sth->fetchrow_array;
 
   is($count, 4, "do_transaction() 3 - $db_type");
+
+  $db->dbh->{'AutoCommit'} = 1;  
+  is($db->rollback, 1, "rollback with AutoCommit set - $db_type");
 }
 
 BEGIN

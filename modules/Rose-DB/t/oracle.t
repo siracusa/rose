@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 82);
+    Test::More->import(tests => 80);
   }
 }
 
@@ -71,8 +71,6 @@ is($db->parse_date('2002-12-31 12:34'), parse_date('12/31/2002 12:34'),  "parse_
 
 is($db->parse_datetime('2002-12-31 12:34:56'), parse_date('12/31/2002 12:34:56'),  "parse_datetime() 1");
 is($db->parse_datetime('2002-12-31 12:34:56.0'), parse_date('12/31/2002 12:34:56'),  "parse_datetime() 2");
-is($db->parse_datetime('2002-12-31 12:34:56.123'), parse_date('12/31/2002 12:34:56.123'),  "parse_datetime() 3");
-is($db->parse_datetime('2002-12-31 12:34:56.123456789'), parse_date('12/31/2002 12:34:56.123456'),  "parse_datetime() 4");
 
 is($db->parse_timestamp('2002-12-31 12:34:56'), parse_date('12/31/2002 12:34:56'),  "parse_timestamp() 1");
 is($db->parse_timestamp('2002-12-31 12:34:56.0'), parse_date('12/31/2002 12:34:56'),  "parse_timestamp() 2");

@@ -477,51 +477,60 @@ sub refine_dbi_column_info
   no strict 'refs';
   $self->$method($col_info);
 
-  # Set sequence name key, if present
-  if(defined $default && $default =~ /^nextval\(\(?'((?:''|[^']+))'::\w+/)
+
+  if(defined $default)
   {
-    $col_info->{'rdbo_default_value_sequence_name'} = 
-      $self->likes_lowercase_sequence_names ? lc $1 : $1;
-
-    if($meta)
+    # Set sequence name key, if present
+    if($default =~ /^nextval\(\(?'((?:''|[^']+))'::\w+/)
     {
-      my $seq = $col_info->{'rdbo_default_value_sequence_name'};
+      $col_info->{'rdbo_default_value_sequence_name'} = 
+        $self->likes_lowercase_sequence_names ? lc $1 : $1;
 
-      my $implicit_schema = $self->default_implicit_schema;
-
-      # Strip off default implicit schema unless a schema is explicitly 
-      # specified in the RDBO metadata object.
-      if(defined $seq && defined $implicit_schema && !defined $meta->schema)
+      if($meta)
       {
-        $seq =~ s/^$implicit_schema\.//;
-      }
+        my $seq = $col_info->{'rdbo_default_value_sequence_name'};
 
-      $col_info->{'rdbo_default_value_sequence_name'} = $self->unquote_column_name($seq);
+        my $implicit_schema = $self->default_implicit_schema;
 
-      # Pg returns serial columns as integer or bigint
-      if($col_info->{'TYPE_NAME'} eq 'integer' ||
-         $col_info->{'TYPE_NAME'} eq 'bigint')
-      {
-        my $db = $meta->db;
-
-        my $auto_seq =
-          $db->auto_sequence_name(table  => $meta->table,
-                                  column => $col_info->{'COLUMN_NAME'});
-
-        # Use schema prefix on auto-generated name if necessary
-        if($seq =~ /^[^.]+\./)
+        # Strip off default implicit schema unless a schema is explicitly 
+        # specified in the RDBO metadata object.
+        if(defined $seq && defined $implicit_schema && !defined $meta->schema)
         {
-          my $schema = $meta->select_schema($db);
-          $auto_seq = "$schema.$auto_seq"  if($schema);
+          $seq =~ s/^$implicit_schema\.//;
         }
 
-        no warnings 'uninitialized';
-        if(lc $seq eq lc $auto_seq)
+        $col_info->{'rdbo_default_value_sequence_name'} = $self->unquote_column_name($seq);
+
+        # Pg returns serial columns as integer or bigint
+        if($col_info->{'TYPE_NAME'} eq 'integer' ||
+           $col_info->{'TYPE_NAME'} eq 'bigint')
         {
-          $col_info->{'TYPE_NAME'} =
-            $col_info->{'TYPE_NAME'} eq 'integer' ? 'serial' : 'bigserial';
+          my $db = $meta->db;
+
+          my $auto_seq =
+            $db->auto_sequence_name(table  => $meta->table,
+                                    column => $col_info->{'COLUMN_NAME'});
+
+          # Use schema prefix on auto-generated name if necessary
+          if($seq =~ /^[^.]+\./)
+          {
+            my $schema = $meta->select_schema($db);
+            $auto_seq = "$schema.$auto_seq"  if($schema);
+          }
+
+          no warnings 'uninitialized';
+          if(lc $seq eq lc $auto_seq)
+          {
+            $col_info->{'TYPE_NAME'} =
+              $col_info->{'TYPE_NAME'} eq 'integer' ? 'serial' : 'bigserial';
+          }
         }
       }
+    }
+    elsif($default =~ /^NULL::[\w ]+$/)
+    {
+      # RT 64331: https://rt.cpan.org/Ticket/Display.html?id=64331
+      $col_info->{'COLUMN_DEF'} = undef;
     }
   }
 

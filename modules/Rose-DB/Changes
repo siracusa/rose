@@ -1,7 +1,7 @@
-0.762_01 (06.23.2010) - John Siracusa <siracusa@gmail.com>
+0.763 (12.30.2010) - John Siracusa <siracusa@gmail.com>
 
-	* TODO: Return from rollback() early if AutoCommit is set.
-    * TODO: Savepoints?
+    * Support for Rose::DB::Object 0.794
+	* Return from rollback() early if AutoCommit is set.
 
 0.762 (06.23.2010) - John Siracusa <siracusa@gmail.com>
 
