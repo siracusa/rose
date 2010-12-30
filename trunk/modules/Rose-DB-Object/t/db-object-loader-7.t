@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 19);
+use Test::More tests => 1 + (5 * 20);
 
 BEGIN 
 {
@@ -53,7 +53,7 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 19)  unless($Have{$db_type});
+    skip("$db_type tests", 20)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -91,6 +91,15 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
   #}
 
   my $product_class = $class_prefix . '::Product';
+
+  if($db_type =~ /^pg/)
+  {
+    is($product_class->meta->column('name_fk')->default, undef, "null default fk - $db_type");
+  }
+  else
+  {
+    SKIP: { skip("null default fk - $db_type", 1) }
+  }
 
   ok($JCS::Called_For{$product_class}, "custom metadata - $db_type");
 
@@ -229,6 +238,8 @@ CREATE TABLE product
 
   vendor_id  INT REFERENCES vendor (id),
 
+  name_fk VARCHAR(255) REFERENCES product (name),
+
   status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
             CHECK(status IN ('inactive', 'active', 'defunct')),
 
@@ -291,6 +302,8 @@ CREATE TABLE Rose_db_object_private.product
   price   DECIMAL(10,2) NOT NULL DEFAULT 0.00,
 
   vendor_id  INT REFERENCES Rose_db_object_private.vendor (id),
+
+  name_fk VARCHAR(255) DEFAULT NULL REFERENCES product (name),
 
   status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
             CHECK(status IN ('inactive', 'active', 'defunct')),
