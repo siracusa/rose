@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.762_01';
+our $VERSION = '0.763';
 
 our $Debug = 0;
 
@@ -1241,6 +1241,8 @@ sub rollback
 
   my $ac = $dbh->{'AutoCommit'};
 
+  return 1  if($ac);
+
   my $ret;
 
   #$Debug && warn "ROLLBACK TRX\n";
@@ -2355,7 +2357,7 @@ sub column_sql_from_lock_on_value
   if($tables)
   {
     my $tn = 1;
-  
+
     foreach my $table (@$tables)
     {
       (my $table_key = $table) =~ s/^(["']?)[^.]+\1\.//;
@@ -2418,7 +2420,7 @@ sub table_sql_from_lock_on_value
   if($tables)
   {
     my $tn = 1;
-  
+
     foreach my $table (@$tables)
     {
       (my $table_key = $table) =~ s/^(["']?)[^.]+\1\.//;
@@ -2443,7 +2445,7 @@ sub table_sql_from_lock_on_value
       {
         $chase_meta = $key->can('foreign_class') ? 
           $key->foreign_class->meta : $key->class->meta;
-  
+
         $table = $chase_meta->table;
       }
       else
