@@ -102,7 +102,8 @@ foreach my $db_type (qw(pg mysql informix sqlite))
                         module_postamble => 
                         sub
                         {
-                          "# My Postamble for " . $_[0]->class . "\n";
+                          no warnings 'uninitialized';
+                          "# My Postamble for " . $_[0]->class . " ($_[1])\n";
                         });
 
   my $mylsq_5_51 = ($db_type eq 'mysql' && Rose::DB->new->database_version >= 5_000_051) ? 1 : 0; 
@@ -170,7 +171,7 @@ __PACKAGE__->meta->setup
 
 1;
 
-# My Postamble for ${class_prefix}::Product
+# My Postamble for ${class_prefix}::Product ()
 EOF
 
   is(slurp("$Lib_Dir/$class_prefix/Product/Manager.pm"), <<"EOF", "Product Manager 1 - $db_type");
@@ -189,7 +190,7 @@ __PACKAGE__->make_manager_methods('products');
 
 1;
 
-# My Postamble for ${class_prefix}::Product
+# My Postamble for ${class_prefix}::Product (${class_prefix}::Product::Manager)
 EOF
 
   is(slurp("$Lib_Dir/$class_prefix/Color.pm"), <<"EOF", "Color 1 - $db_type");
@@ -228,7 +229,7 @@ __PACKAGE__->meta->setup
 
 1;
 
-# My Postamble for ${class_prefix}::Color
+# My Postamble for ${class_prefix}::Color ()
 EOF
 
   unshift(@INC, $Lib_Dir);
