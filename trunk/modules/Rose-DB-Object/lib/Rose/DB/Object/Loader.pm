@@ -17,7 +17,7 @@ use Rose::DB::Object::Metadata::Auto;
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.787';
+our $VERSION = '0.795';
 
 our $Debug = 0;
 
@@ -446,7 +446,7 @@ sub make_modules
       if($preamble)
       {
         my $this_preamble = ref $preamble eq 'CODE' ? 
-          $preamble->($class->object_class->meta) : $preamble;
+          $preamble->($class->object_class->meta, $class) : $preamble;
 
         print {$pm} $this_preamble;
       }
@@ -456,7 +456,7 @@ sub make_modules
       if($postamble)
       {
         my $this_postamble = ref $postamble eq 'CODE' ? 
-          $postamble->($class->object_class->meta) : $postamble;
+          $postamble->($class->object_class->meta, $class) : $postamble;
 
         print {$pm} $this_postamble;
       }
@@ -1521,13 +1521,13 @@ Defaults to the value of the loader object's L<module_dir|/module_dir> attribute
 
 =item B<module_preamble [ SCALAR | CODE ]>
 
-If defined as a scalar, inserts the contents of the variable into the auto-generated file before any of the auto-generated class information.  If provided as a code ref, calls the indicated function, passing the L<metadata object|Rose::DB::Object::Metadata> as a parameter.  (The metadata object that belongs to the C<object_class> is passed if the module is a L<Rose::DB::Object::Manager>-derived class.)  The returned value of the function is inserted as the preamble text.
+If defined as a scalar, inserts the contents of the variable into the auto-generated file before any of the auto-generated class information.  If provided as a code ref, calls the indicated function, passing the L<metadata object|Rose::DB::Object::Metadata> as a parameter.  (The metadata object that belongs to the C<object_class> and the L<Rose::DB::Object::Manager>-derived class name are passed if the module is a L<Rose::DB::Object::Manager>-derived class.)  The returned value of the function is inserted as the preamble text.
 
 Defaults to to the value of the loader object's L<module_preamble|/module_preamble> attribute.
 
 =item B<module_postamble [ SCALAR | CODE ]>
 
-If defined as a scalar, inserts the contents of the variable into the auto-generated file after any of the auto-generated class information.  If provided as a code ref, calls the indicated function, passing the L<metadata object|Rose::DB::Object::Metadata> as a parameter.  (The metadata object that belongs to the C<object_class> is passed if the module is a L<Rose::DB::Object::Manager>-derived class.)  The returned value of the function is inserted as the postamble text.
+If defined as a scalar, inserts the contents of the variable into the auto-generated file after any of the auto-generated class information.  If provided as a code ref, calls the indicated function, passing the L<metadata object|Rose::DB::Object::Metadata> as a parameter.  (The metadata object that belongs to the C<object_class> and the L<Rose::DB::Object::Manager>-derived class name are passed if the module is a L<Rose::DB::Object::Manager>-derived class.)  The returned value of the function is inserted as the postamble text.
 
 Defaults to to the value of the loader object's L<module_postamble|/module_postamble> attribute.
 
@@ -1539,11 +1539,11 @@ Get or set the path to the directory where L<make_modules|/make_modules> will cr
 
 =item B<module_preamble [ SCALAR | CODE ]>
 
-If defined as a scalar, inserts the contents of the variable into the auto-generated file before any of the auto-generated class information.  If provided as a code ref, calls the indicated function, passing the L<metadata object|Rose::DB::Object::Metadata> as a parameter.  (The metadata object that belongs to the C<object_class> is passed if the module is a L<Rose::DB::Object::Manager>-derived class.)  The returned value of the function is inserted as the preamble text.
+If defined as a scalar, inserts the contents of the variable into the auto-generated file before any of the auto-generated class information.  If provided as a code ref, calls the indicated function, passing the L<metadata object|Rose::DB::Object::Metadata> as a parameter.  (The metadata object that belongs to the C<object_class> and the L<Rose::DB::Object::Manager>-derived class name are passed if the module is a L<Rose::DB::Object::Manager>-derived class.)  The returned value of the function is inserted as the preamble text.
 
 =item B<module_postamble [ SCALAR | CODE ]>
 
-If defined as a scalar, inserts the contents of the variable into the auto-generated file after any of the auto-generated class information.  If provided as a code ref, calls the indicated function, passing the L<metadata object|Rose::DB::Object::Metadata> as a parameter.  (The metadata object that belongs to the C<object_class> is passed if the module is a L<Rose::DB::Object::Manager>-derived class.)  The returned value of the function is inserted as the postamble text.
+If defined as a scalar, inserts the contents of the variable into the auto-generated file after any of the auto-generated class information.  If provided as a code ref, calls the indicated function, passing the L<metadata object|Rose::DB::Object::Metadata> as a parameter.  (The metadata object that belongs to the C<object_class> and the L<Rose::DB::Object::Manager>-derived class name are passed if the module is a L<Rose::DB::Object::Manager>-derived class.)  The returned value of the function is inserted as the postamble text.
 
 =item B<pre_init_hook [CODE]>
 

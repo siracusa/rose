@@ -1,5 +1,8 @@
-0.794_01 (12.21.2010) - John Siracusa <siracusa@gmail.com>
+0.794_02 (01.19.2010) - John Siracusa <siracusa@gmail.com>
 
+    * The Loader now passes the Manager class name as a second argument to
+      module_preamble and module_postamble subroutines to allow Manager
+      classes to be distinguised from object classes.
     * TODO: Add handles/proxy_method to relationships/fks.
     * TODO: DEBUG environment variable and hooks.
     * TODO: Multiple unique keys example.
