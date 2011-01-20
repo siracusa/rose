@@ -255,7 +255,9 @@ sub get_dbh
 
   my $dbh;
 
-  eval 
+  local $@;
+
+  eval
   {
     $dbh = Rose::DB->new($type)->retain_dbh()
       or die Rose::DB->error;
