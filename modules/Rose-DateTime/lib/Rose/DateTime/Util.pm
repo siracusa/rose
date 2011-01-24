@@ -57,7 +57,11 @@ sub init_european_dates
 
   my $locale_class = DateTime::Locale->load(DateTime->DefaultLocale);
 
-  my $short = $locale_class->date_format_short;
+  # Fall back to the older (pre-0.4) DateTime::Locale API
+  my $short = 
+    $locale_class->can('date_format_short') ?
+      $locale_class->date_format_short :
+      $locale_class->short_date_format;
 
   $short =~ tr{dmyDMY}{}cd;
   $short =~ tr{dmyDMY}{dmydmy}s;

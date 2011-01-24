@@ -1,3 +1,7 @@
+0.535 (01.24.2010) - John Siracusa <siracusa@gmail.com>
+
+    * Handle pre-0.4 version of DateTime::Locale.  (RT 65070)
+
 0.534 (03.22.2010) - John Siracusa <siracusa@gmail.com>
 
     * Updated to avoid calling methods that were deprecated in
