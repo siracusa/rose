@@ -10,7 +10,7 @@ use Rose::DB::Object::Metadata::ForeignKey;
 use Rose::DB::Object::Metadata::Object;
 our @ISA = qw(Rose::DB::Object::Metadata::Object);
 
-our $VERSION = '0.786';
+our $VERSION = '0.795';
 
 our $Debug = 0;
 
@@ -1040,7 +1040,7 @@ Return the name of a "many to many" relationship that fetches objects from the t
 
 The default implementation passes the name of the table pointed to by FK through the L<singular_to_plural|/singular_to_plural> method in order to build the name.
 
-If the selected name is the name of an existing or potential method in the target class, then the suffixes "objs_" and "_objects" are tried in that order.  If neither of those suffixes resolves the situation, then ascending numeric suffixes starting with "1" are tried until a unique name is found.
+If the selected name is the name of an existing or potential method in the target class, then the suffixes "_objs" and "_objects" are tried in that order.  If neither of those suffixes resolves the situation, then ascending numeric suffixes starting with "1" are tried until a unique name is found.
 
 =item B<auto_relationship_name_one_to_many TABLE, CLASS>
 
@@ -1048,7 +1048,7 @@ Return the name of a "one to many" relationship that fetches objects from the sp
 
 If L<tables_are_singular|/tables_are_singular> is true, then TABLE is passed to the L<singular_to_plural|/singular_to_plural> method and the result is used as the name.  Otherwise, TABLE is used as-is.
 
-If the selected name is the name of an existing or potential method in the target class, then the suffixes "objs_" and "_objects" are tried in that order.  If neither of those suffixes resolves the situation, then ascending numeric suffixes starting with "1" are tried until a unique name is found.
+If the selected name is the name of an existing or potential method in the target class, then the suffixes "_objs" and "_objects" are tried in that order.  If neither of those suffixes resolves the situation, then ascending numeric suffixes starting with "1" are tried until a unique name is found.
 
 =item B<auto_relationship_name_one_to_one TABLE, CLASS>
 
