@@ -5,6 +5,7 @@
       classes to be distinguised from object classes.
     * Corrected a typo in the ConventionManager documentation ("objs_"
       should be "_objs")
+    * TODO: Loader ignores TEXT columns in PostgreSQL?
     * TODO: in/out params for Oracle serial columns.
     * TODO: Add handles/proxy_method to relationships/fks.
     * TODO: DEBUG environment variable and hooks.
