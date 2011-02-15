@@ -1,6 +1,7 @@
-0.763_01 (12.31.2010) - John Siracusa <siracusa@gmail.com>
+0.763_01 (02.15.2010) - John Siracusa <siracusa@gmail.com>
 
     * https://rt.cpan.org/Ticket/Display.html?id=63377
+    * TODO: Add sqlite_unicode attribute/method.
     * TODO: Savepoints?
 
 0.763 (12.30.2010) - John Siracusa <siracusa@gmail.com>
