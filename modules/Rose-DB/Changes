@@ -1,6 +1,7 @@
 0.763_01 (02.15.2010) - John Siracusa <siracusa@gmail.com>
 
     * https://rt.cpan.org/Ticket/Display.html?id=63377
+    * TODO: Add mysql_bind_type_guessing attribute/method.
     * TODO: Add sqlite_unicode attribute/method.
     * TODO: Savepoints?
 
