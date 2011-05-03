@@ -478,14 +478,22 @@ else
   ok(1, "This system ($^O) can't handle negative epoch values");
 }
 
-$d = parse_date('1143744435.123456789');
+$d = parse_date('1143744435.123451234');
 is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.12345', 'Epoch vs. yyyymmdd 4');
 
 $d = parse_date('1143744435.123');
 is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.12300', 'Epoch vs. yyyymmdd 5');
 
 $d = parse_date('1143744435.');
-is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.00000', 'Epoch vs. yyyymmdd 6');
+
+if ($DateTime::VERSION >= 0.67)
+{
+  is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.0', 'Epoch vs. yyyymmdd 6');
+}
+else
+{
+  is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.00000', 'Epoch vs. yyyymmdd 6');
+}
 
 $d = parse_date('19800102 8pm');
 is($d->strftime('%Y-%m-%d %H:%M:%S'), '1980-01-02 20:00:00', 'yyyymmdd 1');
