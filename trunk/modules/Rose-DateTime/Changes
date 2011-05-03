@@ -1,3 +1,8 @@
+0.536 (05.03.2011) - John Siracusa <siracusa@gmail.com>
+
+    * Account for changes in DateTime 0.67 and later and work around
+      http://rt.cpan.org/Public/Bug/Display.html?id=67928
+
 0.535 (01.24.2010) - John Siracusa <siracusa@gmail.com>
 
     * Handle pre-0.4 version of DateTime::Locale.  (RT 65070)
