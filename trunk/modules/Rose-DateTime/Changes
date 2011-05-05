@@ -1,3 +1,7 @@
+0.537 (05.04.2011) - John Siracusa <siracusa@gmail.com>
+
+    * Well that was fast.  DateTime 0.69 fixes RT 67928.  Tests updated.
+
 0.536 (05.03.2011) - John Siracusa <siracusa@gmail.com>
 
     * Account for changes in DateTime 0.67 and later and work around
