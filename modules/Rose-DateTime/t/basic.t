@@ -486,7 +486,7 @@ is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.12300', 'Epoch vs
 
 $d = parse_date('1143744435.');
 
-if ($DateTime::VERSION >= 0.67)
+if ($DateTime::VERSION >= 0.67 && $DateTime::VERSION <= 0.68)
 {
   is($d->strftime('%Y-%m-%d %H:%M:%S.%5N'), '2006-03-30 18:47:15.0', 'Epoch vs. yyyymmdd 6');
 }
