@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3907;
+use Test::More tests => 3910;
 
 BEGIN 
 {
@@ -93,7 +93,7 @@ if(defined $ENV{'RDBO_NESTED_JOINS'} && Rose::DB::Object::Manager->can('default_
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("PostgreSQL tests", 783)  unless($HAVE_PG);
+  skip("PostgreSQL tests", 784)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -730,6 +730,10 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 
   ok(!defined $objs->[0]->{'status'}, "lazy main 1 - $db_type");
   is($objs->[0]->status, 'with', "lazy main 2 - $db_type");
+
+  my $object = MyPgObject->new(db => $db, id => $objs->[0]->id);
+  $object->load(with => [ 'nicks.type' ]);
+  is($object->{'status'}, undef, "lazy load(with) 1 - $db_type");
 
   my $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
 
@@ -3127,7 +3131,7 @@ EOF
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 790)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 791)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -3742,6 +3746,10 @@ SKIP: foreach my $db_type ('mysql')
 
   ok(!defined $objs->[0]->{'status'}, "lazy main 1 - $db_type");
   is($objs->[0]->status, 'with', "lazy main 2 - $db_type");
+
+  my $object = MyMySQLObject->new(id => $objs->[0]->id);
+  $object->load(with => [ 'nicks.type' ]);
+  is($object->{'status'}, undef, "lazy load(with) 1 - $db_type");
 
   my $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
 
@@ -8905,7 +8913,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 793)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 794)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -9457,6 +9465,10 @@ SKIP: foreach my $db_type (qw(sqlite))
 
   ok(!defined $objs->[0]->{'status'}, "lazy main 1 - $db_type");
   is($objs->[0]->status, 'with', "lazy main 2 - $db_type");
+
+  my $object = MySQLiteObject->new(id => $objs->[0]->id);
+  $object->load(with => [ 'nicks.type' ]);
+  is($object->{'status'}, undef, "lazy load(with) 1 - $db_type");
 
   my $nicks = $objs->[0]->{'nicks'}; # make sure this isn't hitting the db
 

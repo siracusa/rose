@@ -1,27 +1,12 @@
-0.794_04 (01.31.2010) - John Siracusa <siracusa@gmail.com>
+0.795 (07.14.2011) - John Siracusa <siracusa@gmail.com>
 
     * The Loader now passes the Manager class name as a second argument to
       module_preamble and module_postamble subroutines to allow Manager
-      classes to be distinguised from object classes.
+      classes to be distinguished from object classes.
     * Corrected a typo in the ConventionManager documentation ("objs_"
       should be "_objs")
-    * TODO: Document classes param in QueryBuilder, or remove it from SYNOPSIS
-    * TODO: Loader ignores TEXT columns in PostgreSQL?
-    * TODO: in/out params for Oracle serial columns.
-    * TODO: Add handles/proxy_method to relationships/fks.
-    * TODO: DEBUG environment variable and hooks.
-    * TODO: Multiple unique keys example.
-    * TODO: remarks metadata attribute.
-    * TODO: Generic is_auto_increment column attribute support.
-    * TODO: Parameterize DateTime class name in column method-makers?
-    * TODO: Update docs for has_loaded_related() and/or make a better
-      solution to avoid re-fetching nonexistent objects after Manager
-      queries.
-    * TODO: Add support for REGEXP_LIKE(column, '^abc')
-    * TODO: Figure out which UK to use when load()ing via a ForeignKey
-    * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
-    * TODO: add delete_now and delete_on_save method types to ManyToMany?
-    * TODO: make save() fail if IN_DB and modified PK columns?
+    * Fixed a bug that caused load-on-demand columns to be loaded by
+      load(with => ...) method calls.  (Reported by Marlon Bailey)
 
 0.794 (12.30.2010) - John Siracusa <siracusa@gmail.com>
 
