@@ -733,7 +733,7 @@ sub get_objects
 
   my($fields, $fields_string, $table);
 
-  $args{'nonlazy'} = []  unless(exists $args{'nonlazy'});
+  $args{'nonlazy'} = []  unless(defined $args{'nonlazy'});
   my $nonlazy = $args{'nonlazy'};
   my %nonlazy = (ref $nonlazy ? map { $_ => 1 } @$nonlazy : ());
 
