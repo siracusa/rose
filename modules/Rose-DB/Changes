@@ -1,3 +1,10 @@
+0.764_01 (10.18.2011) - John Siracusa <siracusa@gmail.com>
+
+    * https://rt.cpan.org/Ticket/Display.html?id=63377
+    * TODO: Add mysql_bind_type_guessing attribute/method.
+    * TODO: Add sqlite_unicode attribute/method.
+    * TODO: Savepoints?
+
 0.764 (10.18.2011) - John Siracusa <siracusa@gmail.com>
 
     * Use ENGINE=InnoDB instead of TYPE=InnoDB in MySQL table creation

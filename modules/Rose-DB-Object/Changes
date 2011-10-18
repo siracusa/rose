@@ -1,3 +1,23 @@
+0.796_01 (10.18.2011) - John Siracusa <siracusa@gmail.com>
+      
+    * TODO: Document classes param in QueryBuilder, or remove it from SYNOPSIS
+    * TODO: Loader ignores TEXT columns in PostgreSQL?
+    * TODO: in/out params for Oracle serial columns.
+    * TODO: Add handles/proxy_method to relationships/fks.
+    * TODO: DEBUG environment variable and hooks.
+    * TODO: Multiple unique keys example.
+    * TODO: remarks metadata attribute.
+    * TODO: Generic is_auto_increment column attribute support.
+    * TODO: Parameterize DateTime class name in column method-makers?
+    * TODO: Update docs for has_loaded_related() and/or make a better
+      solution to avoid re-fetching nonexistent objects after Manager
+      queries.
+    * TODO: Add support for REGEXP_LIKE(column, '^abc')
+    * TODO: Figure out which UK to use when load()ing via a ForeignKey
+    * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
+    * TODO: add delete_now and delete_on_save method types to ManyToMany?
+    * TODO: make save() fail if IN_DB and modified PK columns?
+
 0.796 (10.18.2011) - John Siracusa <siracusa@gmail.com>
 
     * Use ENGINE=InnoDB instead of TYPE=InnoDB in MySQL table creation
