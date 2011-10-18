@@ -110,7 +110,7 @@ CREATE TABLE attribute_types
 ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1
 EOF
 
-    # MySQL will silently ignore the "TYPE=InnoDB" part and create
+    # MySQL will silently ignore the "ENGINE=InnoDB" part and create
     # a MyISAM table instead.  MySQL is evil!  Now we have to manually
     # check to make sure an InnoDB table was really created.
     my $db_name = $db->database;

@@ -170,7 +170,7 @@ CREATE TABLE rose_db_object_artists
 
   UNIQUE(name)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -183,7 +183,7 @@ CREATE TABLE rose_db_object_albums
   INDEX(artist_id),
   FOREIGN KEY (artist_id) REFERENCES rose_db_object_artists (id)  
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->disconnect;

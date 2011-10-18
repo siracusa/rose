@@ -87,7 +87,7 @@ CREATE TABLE users
 
   UNIQUE(name)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -103,7 +103,7 @@ create table user_connections
   CONSTRAINT FOREIGN KEY (from_id) REFERENCES users (id),
   CONSTRAINT FOREIGN KEY (to_id) REFERENCES users (id)
 )
-TYPE=InnoDB;
+ENGINE=InnoDB;
 EOF
 
     $dbh->disconnect;

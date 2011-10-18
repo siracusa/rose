@@ -5756,7 +5756,7 @@ EOF
       $dbh->do('DROP TABLE rose_db_object_test_codes');
     }
 
-    my $innodb = $Opt{'innodb'} ? 'TYPE=InnoDB' : '';
+    my $innodb = $Opt{'innodb'} ? 'ENGINE=InnoDB' : '';
 
     $dbh->do(<<"EOF");
 CREATE TABLE rose_db_object_test_codes

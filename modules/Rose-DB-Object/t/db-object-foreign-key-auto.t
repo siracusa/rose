@@ -1988,10 +1988,10 @@ CREATE TABLE Rose_db_object_other
 
   PRIMARY KEY(k1, k2, k3)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
-    # MySQL will silently ignore the "TYPE=InnoDB" part and create
+    # MySQL will silently ignore the "ENGINE=InnoDB" part and create
     # a MyISAM table instead.  MySQL is evil!  Now we have to manually
     # check to make sure an InnoDB table was really created.
     my $db_name = $db->database;
@@ -2033,7 +2033,7 @@ CREATE TABLE Rose_db_object_other
 
   PRIMARY KEY(k1, k2, k3)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -2042,7 +2042,7 @@ CREATE TABLE Rose_db_object_other2
   id2   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name  VARCHAR(32)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -2051,7 +2051,7 @@ CREATE TABLE Rose_db_object_other3
   id3   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name  VARCHAR(32)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -2060,7 +2060,7 @@ CREATE TABLE Rose_db_object_other4
   id4   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name  VARCHAR(32)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     # Create test foreign subclass 1
@@ -2140,7 +2140,7 @@ CREATE TABLE Rose_db_object_test
 
   FOREIGN KEY (fk1, fk2, fk3) REFERENCES Rose_db_object_other (k1, k2, k3)
 )
-TYPE=InnoDB COMMENT='This is a very long comment.  This is a very long comment.'
+ENGINE=InnoDB COMMENT='This is a very long comment.  This is a very long comment.'
 EOF
 
     $dbh->disconnect;

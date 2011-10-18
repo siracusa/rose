@@ -157,7 +157,7 @@ CREATE TABLE foos
   id   INT AUTO_INCREMENT PRIMARY KEY, 
   foo  VARCHAR(255)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -170,7 +170,7 @@ CREATE TABLE bars
 
   FOREIGN KEY (foo_id) REFERENCES foos (id)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->disconnect;
