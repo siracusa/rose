@@ -233,7 +233,7 @@ CREATE TABLE vendors
   id    INT AUTO_INCREMENT PRIMARY KEY,
   name  VARCHAR(255)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -242,7 +242,7 @@ CREATE TABLE colors
   code  CHAR(3) NOT NULL PRIMARY KEY,
   name  VARCHAR(255)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -257,7 +257,7 @@ CREATE TABLE products
 
   FOREIGN KEY (vendor_id) REFERENCES vendors (id)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -272,7 +272,7 @@ CREATE TABLE prices
 
   FOREIGN KEY (product_id) REFERENCES products (id)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -288,7 +288,7 @@ CREATE TABLE product_colors
   FOREIGN KEY (product_id) REFERENCES products (id),
   FOREIGN KEY (color_code) REFERENCES colors (code)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->disconnect;

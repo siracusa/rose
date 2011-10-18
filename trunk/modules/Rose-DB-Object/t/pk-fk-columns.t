@@ -134,7 +134,7 @@ CREATE TABLE rose_db_object_a
   id    INTEGER NOT NULL PRIMARY KEY,
   name  VARCHAR(255)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
   };
 
@@ -150,7 +150,7 @@ CREATE TABLE rose_db_object_b
 
   FOREIGN KEY (id) REFERENCES rose_db_object_a (id)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->disconnect;

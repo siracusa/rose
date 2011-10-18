@@ -306,10 +306,10 @@ CREATE TABLE rdbo_innodb_test
 (
   id INTEGER PRIMARY KEY
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
-    # MySQL will silently ignore the "TYPE=InnoDB" part and create
+    # MySQL will silently ignore the "ENGINE=InnoDB" part and create
     # a MyISAM table instead.  MySQL is evil!  Now we have to manually
     # check to make sure an InnoDB table was really created.
     my $db_name = $db->database;

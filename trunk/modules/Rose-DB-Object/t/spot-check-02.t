@@ -231,7 +231,7 @@ CREATE TABLE Rose_db_object_ug_main
   rest_expr     VARCHAR(255),
   mgi           VARCHAR(255)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
   };
 
@@ -256,7 +256,7 @@ CREATE TABLE Rose_db_object_g_main
   discontinued     INT DEFAULT 0,
   new_gene_id      INT DEFAULT NULL
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -272,7 +272,7 @@ CREATE TABLE Rose_db_object_g_ug
   FOREIGN KEY (gene_id) REFERENCES Rose_db_object_g_main (gene_id),
   FOREIGN KEY (ug_id) REFERENCES Rose_db_object_ug_main (ug_id)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->disconnect;

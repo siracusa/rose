@@ -1831,7 +1831,7 @@ EOF
 
     if(our $INNODB = mysql_supports_innodb())
     {
-      $engine = 'TYPE=InnoDB';
+      $engine = 'ENGINE=InnoDB';
     }
 
     $dbh->do(<<"EOF");

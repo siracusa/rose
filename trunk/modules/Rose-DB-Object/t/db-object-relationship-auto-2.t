@@ -376,10 +376,10 @@ CREATE TABLE vendors
 
   UNIQUE(name)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
-    # MySQL will silently ignore the "TYPE=InnoDB" part and create
+    # MySQL will silently ignore the "ENGINE=InnoDB" part and create
     # a MyISAM table instead.  MySQL is evil!  Now we have to manually
     # check to make sure an InnoDB table was really created.
     my $db_name = $db->database;
@@ -418,7 +418,7 @@ CREATE TABLE products
 
   FOREIGN KEY (vendor_id) REFERENCES vendors (id)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -434,7 +434,7 @@ CREATE TABLE prices
 
   FOREIGN KEY (product_id) REFERENCES products (id)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -445,7 +445,7 @@ CREATE TABLE colors
 
   UNIQUE(name)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -462,7 +462,7 @@ CREATE TABLE product_color_map
   FOREIGN KEY (product_id) REFERENCES products (id),
   FOREIGN KEY (color_id) REFERENCES colors (id)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->disconnect;
