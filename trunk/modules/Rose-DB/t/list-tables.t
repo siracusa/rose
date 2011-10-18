@@ -388,10 +388,10 @@ CREATE TABLE rdbo_test_vendors
 
   UNIQUE(name)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
-    # MySQL will silently ignore the "TYPE=InnoDB" part and create
+    # MySQL will silently ignore the "ENGINE=InnoDB" part and create
     # a MyISAM table instead.  MySQL is evil!  Now we have to manually
     # check to make sure an InnoDB table was really created.
     my $db_name = $db->database;
@@ -430,7 +430,7 @@ CREATE TABLE rdbo_test_products
 
   FOREIGN KEY (vendor_id) REFERENCES rdbo_test_vendors (id) ON DELETE NO ACTION ON UPDATE SET NULL
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -446,7 +446,7 @@ CREATE TABLE rdbo_test_prices
 
   FOREIGN KEY (product_id) REFERENCES rdbo_test_products (id) ON UPDATE NO ACTION
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -457,7 +457,7 @@ CREATE TABLE rdbo_test_colors
 
   UNIQUE(name)
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -474,7 +474,7 @@ CREATE TABLE rdbo_test_products_colors
   FOREIGN KEY (product_id) REFERENCES rdbo_test_products (id) ON DELETE RESTRICT,
   FOREIGN KEY (color_id) REFERENCES rdbo_test_colors (id) ON UPDATE NO ACTION
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->do(<<"EOF");
@@ -483,7 +483,7 @@ CREATE TABLE `read`
   id      INT AUTO_INCREMENT PRIMARY KEY,
   `read`  VARCHAR(255) NOT NULL
 )
-TYPE=InnoDB
+ENGINE=InnoDB
 EOF
 
     $dbh->disconnect;
