@@ -1,9 +1,7 @@
-0.763_01 (02.15.2010) - John Siracusa <siracusa@gmail.com>
+0.764 (10.18.2011) - John Siracusa <siracusa@gmail.com>
 
-    * https://rt.cpan.org/Ticket/Display.html?id=63377
-    * TODO: Add mysql_bind_type_guessing attribute/method.
-    * TODO: Add sqlite_unicode attribute/method.
-    * TODO: Savepoints?
+    * Use ENGINE=InnoDB instead of TYPE=InnoDB in MySQL table creation
+      statements to avoid an incompatibility with MySQL 5.5 (RT 71757)
 
 0.763 (12.30.2010) - John Siracusa <siracusa@gmail.com>
 
