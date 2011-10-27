@@ -1,5 +1,13 @@
 0.796_01 (10.18.2011) - John Siracusa <siracusa@gmail.com>
-      
+
+    * TODO: in as_tree,if two objects have the same related object via FK
+      then only the first object gets an inflated version of that object,
+      turning on allow_loops seems to work around the issue, but it should
+      be either a separate flag or the default behavior should be allowed. 
+      Example: I have two ordering lines in different statuses (so they are
+      unique) that both have an FK to a product, when doing as_tree on the
+      two ordering lines only the first will get an expanded version of the
+      product.
     * TODO: Document classes param in QueryBuilder, or remove it from SYNOPSIS
     * TODO: Loader ignores TEXT columns in PostgreSQL?
     * TODO: in/out params for Oracle serial columns.
