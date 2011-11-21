@@ -1031,7 +1031,7 @@ sub apply_method_triggers
               $ret[0] = &$method_code; # magic call using current @_
             }
 
-            unless($self->{'triggers_disabled'})
+            unless($column->{'triggers_disabled'} || $self->{'triggers_disabled'})
             {
               local $self->{'triggers_disabled'} = 1;
 
@@ -1061,7 +1061,7 @@ sub apply_method_triggers
               $ret[0] = &$method_code; # magic call using current @_
             }
 
-            unless($self->{'triggers_disabled'})
+            unless($column->{'triggers_disabled'} || $self->{'triggers_disabled'})
             {
               local $self->{'triggers_disabled'} = 1;
 
@@ -1083,7 +1083,7 @@ sub apply_method_triggers
           # duplicated to save one measly function call.  So sue me.
           if($self->{STATE_SAVING()})
           {
-            unless($self->{'triggers_disabled'})
+            unless($column->{'triggers_disabled'} || $self->{'triggers_disabled'})
             {
               local $self->{'triggers_disabled'} = 1;
 
@@ -1139,7 +1139,7 @@ sub apply_method_triggers
           }
           else
           {
-            unless($self->{'triggers_disabled'})
+            unless($column->{'triggers_disabled'} || $self->{'triggers_disabled'})
             {
               local $self->{'triggers_disabled'} = 1;
 
@@ -1237,7 +1237,7 @@ sub apply_method_triggers
 
         if($self->{STATE_SAVING()})
         {
-          unless($self->{'triggers_disabled'})
+          unless($column->{'triggers_disabled'} || $self->{'triggers_disabled'})
           {
             local $self->{'triggers_disabled'} = 1;
 
@@ -1293,7 +1293,7 @@ sub apply_method_triggers
         }
         else
         {
-          unless($self->{'triggers_disabled'})
+          unless($column->{'triggers_disabled'} || $self->{'triggers_disabled'})
           {
             local $self->{'triggers_disabled'} = 1;
 
@@ -1403,7 +1403,7 @@ sub apply_method_triggers
             $ret[0] = &$method_code; # magic call using current @_
           }
 
-          unless($self->{'triggers_disabled'})
+          unless($column->{'triggers_disabled'} || $self->{'triggers_disabled'})
           {
             local $self->{'triggers_disabled'} = 1;
 
@@ -1433,7 +1433,7 @@ sub apply_method_triggers
             $ret[0] = &$method_code; # magic call using current @_
           }
 
-          unless($self->{'triggers_disabled'})
+          unless($column->{'triggers_disabled'} || $self->{'triggers_disabled'})
           {
             local $self->{'triggers_disabled'} = 1;
 
