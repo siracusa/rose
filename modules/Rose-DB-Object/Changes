@@ -1,4 +1,4 @@
-0.796_01 (10.18.2011) - John Siracusa <siracusa@gmail.com>
+0.797_01 (11.21.2011) - John Siracusa <siracusa@gmail.com>
 
     * TODO: select count(distinct col1, col1) ... doesn't work in Oracle.
       Use select count(*) from (select distinct ...) instead?  (Reported
@@ -28,6 +28,11 @@
     * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
     * TODO: add delete_now and delete_on_save method types to ManyToMany?
     * TODO: make save() fail if IN_DB and modified PK columns?
+
+0.797 (11.21.2011) - John Siracusa <siracusa@gmail.com>
+
+    * Fixed a bug that prevented explicitly disabling/enabling column
+      triggers from working (RT 72592)
 
 0.796 (10.18.2011) - John Siracusa <siracusa@gmail.com>
 

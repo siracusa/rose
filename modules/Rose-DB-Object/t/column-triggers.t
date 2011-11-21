@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 274;
+use Test::More tests => 284;
 
 BEGIN 
 {
@@ -241,7 +241,7 @@ foreach my $db_type (@dbs)
 {
   SKIP:
   {
-    skip("$db_type tests", 47)  unless($Have{$db_type});
+    skip("$db_type tests", 49)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -413,6 +413,14 @@ foreach my $db_type (@dbs)
 
   $o->ended(DateTime->new(year => 1980, month => 5, day => 20));
   is($o->ended->ymd, '1980-05-20', "ended 5 - $db_type");
+
+  $o->meta->column('ended')->disable_triggers;
+  $o->ended('2/13/2004');
+  is($o->ended, '2/13/2004', "disable_triggers - $db_type");
+
+  $o->meta->column('ended')->enable_triggers;
+  $o->ended('2/3/2003');
+  is($o->ended->ymd, '2003-02-03', "enable_triggers - $db_type");
 
   #
   # Clean-up
