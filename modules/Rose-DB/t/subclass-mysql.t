@@ -13,9 +13,13 @@ BEGIN
   {
     Test::More->import(skip_all => 'Missing DBD::mysql');
   }
+  elsif($DBD::mysql::VERSION !~ /_/ && $DBD::mysql::VERSION < 4.017)
+  {
+    Test::More->import(skip_all => "Old DBD::mysql: $DBD::mysql::VERSION");
+  }
   else
   {
-    Test::More->import(tests => 146);
+    Test::More->import(tests => 158);
   }
 }
 
@@ -133,7 +137,7 @@ SKIP:
 {
   unless(have_db('mysql'))
   {
-    skip("MySQL connection tests", 77);
+    skip("MySQL connection tests", 80);
   }
 
   eval { $db->connect };
@@ -199,7 +203,7 @@ SKIP:
 
   $db->disconnect;
 
-  foreach my $attr (qw(mysql_auto_reconnect mysql_client_found_rows mysql_compression mysql_connect_timeout mysql_embedded_groups mysql_embedded_options mysql_enable_utf8 mysql_local_infile mysql_multi_statements mysql_read_default_file mysql_read_default_group mysql_socket mysql_ssl mysql_ssl_ca_file mysql_ssl_ca_path mysql_ssl_cipher mysql_ssl_client_cert mysql_ssl_client_key mysql_use_result))
+  foreach my $attr (qw(mysql_auto_reconnect mysql_client_found_rows mysql_compression mysql_connect_timeout mysql_embedded_groups mysql_embedded_options mysql_enable_utf8 mysql_local_infile mysql_multi_statements mysql_read_default_file mysql_read_default_group mysql_socket mysql_ssl mysql_ssl_ca_file mysql_ssl_ca_path mysql_ssl_cipher mysql_ssl_client_cert mysql_ssl_client_key mysql_use_result mysql_bind_type_guessing))
   {
     $db = My::DB2->new($attr => 1);
     is($db->$attr(), 1, "$attr 1");
@@ -277,4 +281,45 @@ sub lookup_ip
 
   return 0  unless($name && @octets);
   return join('.', @octets), "\n";
+}
+
+(my $version = $DBI::VERSION) =~ s/_//g;
+
+if($version >= 1.24)
+{
+  my $x = 0;
+  my $handler = sub { $x++ };
+  
+  My::DB2->register_db(
+    type   => 'error_handler',
+    driver => 'sqlite',
+    print_error  => 0,
+    raise_error  => 1,
+    handle_error => $handler,
+  );
+  
+  $db = My::DB2->new('error_handler');
+  
+  ok($db->raise_error, 'raise_error 1');
+  ok(!$db->print_error, 'print_error 1');
+  is($db->handle_error, $handler, 'handle_error 1');
+  
+  $db->connect;
+  
+  ok($db->raise_error, 'raise_error 2');
+  ok(!$db->print_error, 'print_error 2');
+  is($db->handle_error, $handler, 'handle_error 2');
+  
+  eval { $db->dbh->prepare('select nonesuch from ?') };
+  
+  ok($@, 'handle_error 3');
+  is($x, 1, 'handle_error 4');
+  
+  eval { $db->dbh->prepare('select nonesuch from ?') };
+  
+  is($x, 2, 'handle_error 5');
+}
+else
+{
+  SKIP: { skip("HandleError tests (DBI $DBI::VERSION)", 9) }
 }

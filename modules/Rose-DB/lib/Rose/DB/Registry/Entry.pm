@@ -7,7 +7,7 @@ use Clone::PP();
 use Rose::Object;
 our @ISA = qw(Rose::Object);
 
-our $VERSION = '0.753';
+our $VERSION = '0.765';
 
 our $Debug = 0;
 
@@ -50,7 +50,8 @@ BEGIN
     sslmode            => { type => 'scalar' },
 
     # SQLite
-    auto_create => { type => 'boolean', method_spec => { default => 1 } },
+    auto_create    => { type => 'boolean', method_spec => { default => 1 } },
+    sqlite_unicode => { type => 'boolean' },
 
     # MySQL
     mysql_auto_reconnect     => { type => 'boolean' },
@@ -72,6 +73,7 @@ BEGIN
     mysql_ssl_client_cert    => { type => 'scalar' },
     mysql_ssl_client_key     => { type => 'scalar' },
     mysql_use_result         => { type => 'boolean' },
+    mysql_bind_type_guessing => { type => 'boolean' },
   );
 }
 
@@ -156,9 +158,10 @@ use Rose::Object::MakeMethods::Generic
 
 sub init_connect_options { {} }
 
-sub autocommit  { shift->connect_option('AutoCommit', @_) }
-sub print_error { shift->connect_option('PrintError', @_) }
-sub raise_error { shift->connect_option('RaiseError', @_) }
+sub autocommit   { shift->connect_option('AutoCommit', @_) }
+sub print_error  { shift->connect_option('PrintError', @_) }
+sub raise_error  { shift->connect_option('RaiseError', @_) }
+sub handle_error { shift->connect_option('HandleError', @_) }
 
 sub driver
 {
@@ -303,6 +306,10 @@ Get or set the C<DBI> DSN (Data Source Name).  Note that an explicitly set DSN m
 =item B<dump>
 
 Returns a reference to a hash of the entry's attributes.  Only those attributes with defined values are included in the hash keys.  All values are deep copies.
+
+=item B<handle_error [VALUE]>
+
+Get or set the value of the "HandleError" connect option.
 
 =item B<host [NAME]>
 
