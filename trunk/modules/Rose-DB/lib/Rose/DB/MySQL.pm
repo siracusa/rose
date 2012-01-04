@@ -15,7 +15,7 @@ TRY:
 
 use Rose::DB;
 
-our $VERSION = '0.762';
+our $VERSION = '0.765';
 
 our $Debug = 0;
 
@@ -73,6 +73,7 @@ sub mysql_ssl_cipher         { shift->dbh_attribute('mysql_ssl_cipher', @_) }
 sub mysql_ssl_client_cert    { shift->dbh_attribute('mysql_ssl_client_cert', @_) }
 sub mysql_ssl_client_key     { shift->dbh_attribute('mysql_ssl_client_key', @_) }
 sub mysql_use_result         { shift->dbh_attribute_boolean('mysql_use_result', @_) }
+sub mysql_bind_type_guessing { shift->dbh_attribute_boolean('mysql_bind_type_guessing', @_) }
 
 sub mysql_enable_utf8
 {
@@ -613,6 +614,14 @@ Get or set the L<mysql_auto_reconnect|DBD::mysql/mysql_auto_reconnect> database 
 Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
 
 See the L<DBD::mysql|DBD::mysql/mysql_auto_reconnect> documentation to learn more about this attribute.
+
+=item B<mysql_bind_type_guessing [BOOL]>
+
+Get or set the L<mysql_bind_type_guessing|DBD::mysql/mysql_bind_type_guessing> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_bind_type_guessing> documentation to learn more about this attribute.
 
 =item B<mysql_client_found_rows [BOOL]>
 

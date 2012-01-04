@@ -4,7 +4,7 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 202;
+use Test::More tests => 205;
 
 BEGIN
 {
@@ -268,8 +268,8 @@ my $entry = $reg->entry(domain => 'test', type => 'aux');
 ok($entry->isa('Rose::DB::Registry::Entry'), 'registry entry 1');
 
 foreach my $param (qw(autocommit database domain driver dsn host password port
-                      print_error raise_error server_time_zone schema type 
-                      username connect_options pre_disconnect_sql 
+                      print_error raise_error handle_error server_time_zone schema
+                      type username connect_options pre_disconnect_sql 
                       post_connect_sql))
 {
   eval { $entry->$param() };
@@ -305,6 +305,10 @@ is($entry->connect_option('PrintError'), 1, 'entry print_error() 1');
 
 $entry->autocommit(1);
 is($entry->connect_option('AutoCommit'), 1, 'entry autocommit() 1');
+
+my $handler = sub { 123 };
+$entry->handle_error($handler);
+is($entry->connect_option('HandleError'), $handler, 'entry handle_error() 1');
 
 {
   package MyTest::DB;

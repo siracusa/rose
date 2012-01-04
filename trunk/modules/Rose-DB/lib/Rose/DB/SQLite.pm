@@ -7,7 +7,7 @@ use Carp();
 use Rose::DB;
 use SQL::ReservedWords::SQLite();
 
-our $VERSION = '0.759';
+our $VERSION = '0.765';
 
 #our $Debug = 0;
 
@@ -36,6 +36,8 @@ sub build_dsn
 }
 
 sub dbi_driver { 'SQLite' }
+
+sub sqlite_unicode { shift->dbh_attribute_boolean('sqlite_unicode', @_) }
 
 sub init_dbh
 {
@@ -581,6 +583,10 @@ SQLite does not have a native "ARRAY" data type, but it can be emulated using a 
 Get or set a boolean value indicating whether or not a new SQLite L<database|Rose::DB/database> should be created if it does not already exist.  Defaults to true.
 
 If false, and if the specified L<database|Rose::DB/database> does not exist, then a fatal error will occur when an attempt is made to L<connect|Rose::DB/connect> to the database.
+
+=item B<sqlite_unicode [BOOL]>
+
+Get or set a boolean value that indicates whether or not Perl's UTF-8 flag will be set for all text strings coming out of the database.  See the L<DBD::SQLite|DBD::SQLite/sqlite_unicode> documentation for more information.
 
 =back
 

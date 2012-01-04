@@ -107,7 +107,7 @@ SKIP: foreach my $db_type ('pg')
 
     is(ref $db->error, 'My::Exception', "do_transaction() exception 1 - $db_type");
   }
-  
+
   $db->dbh->{'AutoCommit'} = 1;  
   is($db->rollback, 1, "rollback with AutoCommit set - $db_type");
 }

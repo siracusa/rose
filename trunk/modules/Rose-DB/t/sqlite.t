@@ -13,7 +13,7 @@ BEGIN
 
   if(have_db('sqlite_admin'))
   {
-    Test::More->import(tests => 47);
+    Test::More->import(tests => 60);
   }
   else
   {
@@ -199,4 +199,54 @@ if((! -e '/tmp/rdbo_does_not_exist.db') || unlink('/tmp/rdbo_does_not_exist.db')
 else
 {
   ok(1, "could not unlink /tmp/rdbo_does_not_exist.db - $!");
+}
+
+(my $version = $DBI::VERSION) =~ s/_//g;
+
+if($version >= 1.24)
+{
+  my $x = 0;
+  my $handler = sub { $x++ };
+
+  Rose::DB->register_db(
+    type   => 'error_handler',
+    driver => 'sqlite',
+    print_error    => 0,
+    raise_error    => 1,
+    handle_error   => $handler,
+    sqlite_unicode => 1,
+  );
+
+  $db = Rose::DB->new('error_handler');
+
+  ok($db->raise_error, 'raise_error 1');
+  ok(!$db->print_error, 'print_error 1');
+  is($db->handle_error, $handler, 'handle_error 1');
+
+  $db->connect;
+
+  ok($db->raise_error, 'raise_error 2');
+  ok(!$db->print_error, 'print_error 2');
+  is($db->handle_error, $handler, 'handle_error 2');
+
+  eval { $db->dbh->prepare('select nonesuch from ?') };
+
+  ok($@, 'handle_error 3');
+  is($x, 1, 'handle_error 4');
+
+  eval { $db->dbh->prepare('select nonesuch from ?') };
+
+  is($x, 2, 'handle_error 5');
+
+  ok($db->sqlite_unicode, 'sqlite_unicode 1');
+  ok($db->dbh->{'sqlite_unicode'}, 'sqlite_unicode 2');
+
+  $db->sqlite_unicode(0);
+
+  ok(!$db->sqlite_unicode, 'sqlite_unicode 3');
+  ok(!$db->dbh->{'sqlite_unicode'}, 'sqlite_unicode 4');
+}
+else
+{
+  SKIP: { skip("HandleError tests (DBI $DBI::VERSION)", 13) }
 }

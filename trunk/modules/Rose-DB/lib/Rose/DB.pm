@@ -20,7 +20,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.764_01';
+our $VERSION = '0.765';
 
 our $Debug = 0;
 
@@ -1047,9 +1047,10 @@ sub init_dbh
   return $self->{'dbh'} = $dbh;
 }
 
-sub print_error { shift->_dbh_and_connect_option('PrintError', @_) }
-sub raise_error { shift->_dbh_and_connect_option('RaiseError', @_) }
-sub autocommit  { shift->_dbh_and_connect_option('AutoCommit', @_) }
+sub print_error  { shift->_dbh_and_connect_option('PrintError', @_) }
+sub raise_error  { shift->_dbh_and_connect_option('RaiseError', @_) }
+sub autocommit   { shift->_dbh_and_connect_option('AutoCommit', @_) }
+sub handle_error { shift->_dbh_and_connect_option('HandleError', @_) }
 
 sub _dbh_and_connect_option
 {
@@ -3719,6 +3720,12 @@ Get or set the L<DBI> DSN (Data Source Name) passed to the call to L<DBI>'s L<co
 An attempt is made to parse the new DSN.  Any parts successfully extracted are assigned to the corresponding L<Rose::DB> attributes (e.g., L<host|/host>, L<port|/port>, L<database|/database>).  If no value could be extracted for an attribute, it is set to undef.
 
 If the DSN is never set explicitly, it is built automatically based on the relevant object attributes.
+
+=item B<handle_error [VALUE]>
+
+Get or set the value of the "HandleError" connect option and L<DBI> handle attribute.  If a VALUE is passed, it will be set in both the connect options hash and the current database handle, if any.  Returns the value of the "HandleError" attribute of the database handle if it exists, or the connect option otherwise.
+
+This method should not be mixed with the L<connect_options|/connect_options> method in calls to L<register_db|/register_db> or L<modify_db|/modify_db> since L<connect_options|/connect_options> will overwrite I<all> the connect options with its argument, and neither L<register_db|/register_db> nor L<modify_db|/modify_db> guarantee the order that its parameters will be evaluated.
 
 =item B<host [NAME]>
 

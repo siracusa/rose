@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 314);
+    Test::More->import(tests => 323);
   }
 }
 
@@ -507,14 +507,43 @@ SKIP:
   $db->disconnect;
 }
 
-sub lookup_ip
+(my $version = $DBI::VERSION) =~ s/_//g;
+
+if($version >= 1.24)
 {
-  my($name) = shift;
-
-  my $address = (gethostbyname($name))[4] or return 0;
-
-  my @octets = unpack("CCCC", $address);
-
-  return 0  unless($name && @octets);
-  return join('.', @octets), "\n";
+  my $x = 0;
+  my $handler = sub { $x++ };
+  
+  Rose::DB->register_db(
+    type   => 'error_handler',
+    driver => 'sqlite',
+    print_error  => 0,
+    raise_error  => 1,
+    handle_error => $handler,
+  );
+  
+  $db = Rose::DB->new('error_handler');
+  
+  ok($db->raise_error, 'raise_error 1');
+  ok(!$db->print_error, 'print_error 1');
+  is($db->handle_error, $handler, 'handle_error 1');
+  
+  $db->connect;
+  
+  ok($db->raise_error, 'raise_error 2');
+  ok(!$db->print_error, 'print_error 2');
+  is($db->handle_error, $handler, 'handle_error 2');
+  
+  eval { $db->dbh->prepare('select nonesuch from ?') };
+  
+  ok($@, 'handle_error 3');
+  is($x, 1, 'handle_error 4');
+  
+  eval { $db->dbh->prepare('select nonesuch from ?') };
+  
+  is($x, 2, 'handle_error 5');
+}
+else
+{
+  SKIP: { skip("HandleError tests (DBI $DBI::VERSION)", 9) }
 }
