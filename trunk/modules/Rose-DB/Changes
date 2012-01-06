@@ -1,3 +1,7 @@
+0.766_01 (01.05.2012) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: Savepoints?
+
 0.766 (01.05.2012) - John Siracusa <siracusa@gmail.com>
 
     * Fixed tests that might try to load DBD::* modules that aren't installed.
