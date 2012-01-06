@@ -285,14 +285,14 @@ sub lookup_ip
 
 (my $version = $DBI::VERSION) =~ s/_//g;
 
-if($version >= 1.24)
+if(have_db('mysql') && $version >= 1.24)
 {
   my $x = 0;
   my $handler = sub { $x++ };
   
   My::DB2->register_db(
     type   => 'error_handler',
-    driver => 'sqlite',
+    driver => 'mysql',
     print_error  => 0,
     raise_error  => 1,
     handle_error => $handler,
