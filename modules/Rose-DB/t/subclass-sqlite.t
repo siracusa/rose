@@ -111,7 +111,7 @@ ok(@$a == 3 && $a->[0] eq 'a' && $a->[1] eq 'b' &&  $a->[2] eq '"', 'parse_array
 SKIP:
 {
   eval { $db->connect };
-  skip("Could not connect to db 'test', 'sqlite' - $@", 17)  if($@);
+  skip("Could not connect to db 'test', 'sqlite' - $@", 18)  if($@);
   $dbh = $db->dbh;
 
   is($db->domain, 'test', "domain()");
