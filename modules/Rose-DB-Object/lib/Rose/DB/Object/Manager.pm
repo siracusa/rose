@@ -4072,7 +4072,7 @@ Rose::DB::Object::Manager - Fetch multiple Rose::DB::Object-derived objects from
       where =>
       [
         status  => [ 'stale', 'old' ],
-        name    => { like => 'Wax%' }
+        name    => { like => 'Wax%' },
         or =>
         [
           start_date => { gt => '2008-12-30' },
