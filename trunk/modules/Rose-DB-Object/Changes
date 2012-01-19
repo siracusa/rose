@@ -1,6 +1,8 @@
 0.797_02 (01.19.2012) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a typo in the Rose::DB::Object::Manager documentation.
+    * TODO: Add default_load_speculative and default_update_changes_only
+      to Loader attributes (Metadata/Auto.pm line 955)
     * TODO: NOT(...) operator not => ...
     * TODO: select count(distinct col1, col1) ... doesn't work in Oracle.
       Use select count(*) from (select distinct ...) instead?  (Reported
