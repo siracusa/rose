@@ -1,5 +1,6 @@
-0.797_01 (11.21.2011) - John Siracusa <siracusa@gmail.com>
+0.797_02 (01.19.2012) - John Siracusa <siracusa@gmail.com>
 
+    * Fixed a typo in the Rose::DB::Object::Manager documentation.
     * TODO: NOT(...) operator not => ...
     * TODO: select count(distinct col1, col1) ... doesn't work in Oracle.
       Use select count(*) from (select distinct ...) instead?  (Reported
