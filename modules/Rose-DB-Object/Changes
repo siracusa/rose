@@ -1,6 +1,8 @@
-0.797_02 (03.02.2012) - John Siracusa <siracusa@gmail.com>
+0.797_03 (03.08.2012) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a typo in the Rose::DB::Object::Manager documentation.
+    * Fixed a bug that caused save() not to throw an exception when
+      a transaction could not be started (Reported by jdv79)
     * TDOD: Document and test passing an array reference containing
       a scalar reference to literal SQL, plus bind values, to the "set"
       parameter of update_objects() (Reported by Philip Garrett)
