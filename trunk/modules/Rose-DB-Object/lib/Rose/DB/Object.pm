@@ -16,7 +16,7 @@ use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Exception;
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.797_02';
+our $VERSION = '0.797_03';
 
 our $Debug = 0;
 
@@ -519,6 +519,7 @@ sub save
     {
       my $error = $db->error;
       $self->error(ref $error ? $error : "Could not begin transaction before saving - $error");
+      $self->meta->handle_error($self);
       return undef;
     }
 
