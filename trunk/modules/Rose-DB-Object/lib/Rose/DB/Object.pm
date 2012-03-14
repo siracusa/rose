@@ -16,7 +16,7 @@ use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Exception;
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.797_03';
+our $VERSION = '0.797_04';
 
 our $Debug = 0;
 
@@ -1347,8 +1347,10 @@ sub delete
             my $column_map = $relationship->column_map;
             my @query;
 
-            while(my($local_column, $foreign_column) = each(%$column_map))
+            foreach my $local_column (keys %$column_map)
             {
+              my $foreign_column = $column_map->{$local_column};
+
               my $method = $meta->column_accessor_method_name($local_column);
               my $value =  $self->$method();
 
@@ -1392,8 +1394,10 @@ sub delete
             my @query;
 
             # "Local" here means "local to the mapping table"
-            while(my($local_column, $foreign_column) = each(%$key_columns))
+            foreach my $local_column (keys %$key_columns)
             {
+              my $foreign_column = $key_columns->{$local_column};
+
               my $method = $meta->column_accessor_method_name($foreign_column);
               my $value  = $self->$method();
 
@@ -1454,8 +1458,10 @@ sub delete
           my $key_columns = $fk->key_columns;
           my @query;
 
-          while(my($local_column, $foreign_column) = each(%$key_columns))
+          foreach my $local_column (keys %$key_columns)
           {
+            my $foreign_column = $key_columns->{$local_column};
+
             my $method = $meta->column_accessor_method_name($local_column);
             my $value =  $self->$method();
 
@@ -1491,8 +1497,10 @@ sub delete
           my $column_map = $relationship->column_map;
           my @query;
 
-          while(my($local_column, $foreign_column) = each(%$column_map))
+          foreach my $local_column (keys %$column_map)
           {
+            my $foreign_column = $column_map->{$local_column};
+
             my $method = $meta->column_accessor_method_name($local_column);
             my $value =  $self->$method();
 
