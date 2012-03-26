@@ -12,10 +12,16 @@ use URI::Escape qw(uri_escape);
 use Rose::HTML::Util();
 use Rose::HTML::Object::Errors qw(:form);
 
-use base qw(Rose::HTML::Object::WithWrapAroundChildren
-            Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
+our @ISA = qw(Rose::HTML::Object::WithWrapAroundChildren
+              Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.607';
+our $VERSION = '0.612';
+
+# Avoid problems caused by circular dependencies by loading these
+# modules at runtime. XXX: This whole hierarchy needs an overhaul.
+require Rose::HTML::Form::Field;
+require Rose::HTML::Form::Field::Collection;
+require Rose::HTML::Object::WithWrapAroundChildren;
 
 # Multiple inheritence never quite works out the way I want it to...
 Rose::HTML::Form::Field::Collection->import_methods
