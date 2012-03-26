@@ -314,7 +314,7 @@ This would ensure that a C<Product>'s C<code_names()> are listed in alphabetical
 
 Also note that the table name is not hard-coded.  Instead, it is fetched from the L<Rose::DB::Object>-derived class that fronts the table.  This is more verbose, but is a much better choice than including the literal table name when it comes to long-term maintenance of the code.
 
-See the documentation for L<Rose::DB::Object::Manager>'s L<get_objects|Rose::DB::Object::Manager/get_objects> method for a full list of valid arguments for use with the C<manager_args> parameter, but remember that you can define your own custom L<manager_class> and thus can also define what kinds of arguments C<manager_args> will accept.
+See the documentation for L<Rose::DB::Object::Manager>'s L<get_objects|Rose::DB::Object::Manager/get_objects> method for a full list of valid arguments for use with the C<manager_args> parameter, but remember that you can define your own custom L<manager_class|/manager_class> and thus can also define what kinds of arguments C<manager_args> will accept.
 
 =item B<map_column LOCAL [, FOREIGN]>
 
