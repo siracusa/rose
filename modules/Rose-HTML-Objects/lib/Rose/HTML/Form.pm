@@ -704,9 +704,9 @@ sub validate
 
     foreach my $field ($self->fields)
     {
-      if($cascade && $field->parent_form ne $self)
+      if($field->parent_form ne $self)
       {
-        $Debug && warn "Skipping redundant validation of ", $field->name, "\n";
+        $Debug && warn "Skipping validation of field ", $field->name, " in child form\n";
       }
       else
       {
@@ -1217,6 +1217,9 @@ sub add_forms
         {
           croak "Cannot nest a form within itself";
         }
+
+        # Manually propagate the empty_is_ok attribute to sub-forms, but only if it's set
+        $form->empty_is_ok(1)  if($self->empty_is_ok);
       }
       elsif(ref $form eq 'HASH')
       {
@@ -1255,6 +1258,12 @@ sub add_forms
           if($repeat_spec->{'form'});
 
         $form = ref($self)->object_type_class_loaded('repeatable form')->new(%$repeat_spec);
+
+        # Manually propagate the empty_is_ok attribute to sub-forms, but only if it's set
+        if($repeat_spec->{'empty_is_ok'} || $self->empty_is_ok)
+        {
+          $form->empty_is_ok(1);
+        }
       }
       else
       {
