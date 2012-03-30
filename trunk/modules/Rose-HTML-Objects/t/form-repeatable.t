@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 57;
+use Test::More tests => 62;
 
 BEGIN 
 {
@@ -158,6 +158,25 @@ is_deeply([ map { $_->name } $form_x->fields_depth_first ], \@fields, 'make_form
 #print join(' ', map { $_->name } $form_x->fields_depth_first), "\n";
 #print $form_x->xhtml_table;
 #exit;
+
+$new_form = $form_x->form('f')->make_next_form;
+
+is($new_form->rank, 8, 'make_next_form 1');
+
+$form = Rose::HTML::Form->new;
+
+$form->add_forms
+(
+  a =>
+  {
+    form_spec     => { fields =>  [ x => { type => 'text' } ] },
+    default_count => 0,
+    repeatable    => 999,
+  },
+);
+
+$new_form = $form->form('a')->make_next_form;
+is($new_form->rank, 1, 'make_next_form 2');
 
 $form = Rose::HTML::Form->new;
 
@@ -441,6 +460,38 @@ POD_EXAMPLE:
   #print $form->xhtml_table;
 }
 
+$form = MyFamilyForm->new;
+
+$form->params({ 
+  'parents.1.age' => 40,
+  'parents.1.name' => 'John',
+  'parents.1.gender' => 'M',
+  'children.1.age' => 4,
+  'children.1.name' => 'Tim',
+  'children.1.gender' => 'M',
+});
+
+$form->init_fields;
+
+ok(!$form->validate, 'nested validation 1');
+ok($form->field('name')->has_errors, 'nested validation 2');
+
+$form->params({ 
+  'name' => 'The Smiths',
+  'parents.1.age' => 40,
+  'parents.1.name' => 'John',
+  'parents.1.gender' => 'M',
+  'children.1.age' => '',
+  'children.1.name' => '',
+  'children.1.gender' => '',
+});
+
+$form->init_fields;
+
+ok($form->validate, 'nested validation 3');
+
+$form->init_fields;
+
 BEGIN
 {
   package MyPerson;
@@ -591,4 +642,141 @@ BEGIN
       person_addresses => MyPersonAddressesForm->new,
     );
   }
+
+  package MyPersonForm2;
+
+  our @ISA = qw(Rose::HTML::Form);
+  
+  sub build_form
+  {
+    my ($self) = shift;
+
+    $self->add_fields
+    (
+      name => 
+      {
+        type     => 'text',
+        label    => 'Name',
+        required => 1,
+      },
+
+      age => 
+      {
+        type     => 'integer',
+        min      => 0,
+        max      => 200,
+        label    => 'Age',
+        size     => 3,
+        required => 1,
+      },
+
+      gender => 
+      {
+        type    => 'pop-up menu',
+        options => ['', qw(M F)],
+        labels  => 
+        {
+          '' => '',
+          M  => 'Male',
+          F  => 'Female',
+        },
+        default  => '',
+        required => 1,
+        label    => 'Gender',
+      },
+
+      create_button => 
+      {
+        type  => 'submit',
+        value => 'Create Person',
+      },
+    );
+  }
+
+  package MyFamilyForm;
+
+  our @ISA = qw(Rose::HTML::Form);
+
+  sub build_form
+  {
+    my ($self) = shift;
+
+    $self->add_forms
+    (
+      parents => 
+      {
+        form       => MyPersonForm2->new,
+        repeatable => 1,
+      },
+
+      children => 
+      {
+        form        => MyPersonForm2->new,
+        repeatable  => 1,
+        empty_is_ok => 1,
+      },
+    );
+
+    $self->add_fields
+    (
+      name => 
+      {
+        type     => 'text',
+        label    => 'Family Name',
+        required => 1,
+      },
+
+      add_child_button => 
+      {
+        type  => 'submit',
+        value => 'Add Child',
+        id    => 'add-child-button',
+      },
+
+      add_parent_button => 
+      {
+        type  => 'submit',
+        value => 'Add Parent',
+        id    => 'add-parent-button',
+      },
+
+      create_button => 
+      {
+        type  => 'submit',
+        value => 'Create Family',
+      },
+    );
+  }
+
+#   sub validate
+#   {
+#     my ($self) = shift;
+# 
+#     my $ok = $self->SUPER::validate(cascade => 0);
+#     return $ok unless ($ok);
+# 
+#     foreach my $parentform ( $self->form('parents')->forms )
+#     {
+#       next if ( $parentform->is_empty );
+# 
+#       unless ( $parentform->validate )
+#       {
+#         $self->add_error( 'Invalid parent: ' . $parentform->error );
+#         $ok = 0;
+#       }
+#     }
+# 
+#     foreach my $childform ( $self->form('children')->forms )
+#     {
+#       next if ( $childform->is_empty );
+# 
+#       unless ( $childform->validate )
+#       {
+#         $self->add_error( 'Invalid child: ' . $childform->error );
+#         $ok = 0;
+#       }
+#     }
+# 
+#     return $ok;
+#   }
 }

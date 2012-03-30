@@ -98,9 +98,17 @@ sub make_form
 
   $form->rank($num);
 
+  $self->form_rank_counter($num + 1)  if($num > $self->form_rank_counter);
+
   $self->add_form($num => $form);
 
   return $form;
+}
+
+sub make_next_form
+{
+  my ($self) = shift;
+  return $self->make_form($self->increment_form_rank_counter);
 }
 
 sub objects_from_form
@@ -331,6 +339,10 @@ Get or set the name of the default L<Rose::HTML::Form>-derived class of the repe
 
 Get or set the default number of repeated forms to create in the absence of any L<parameters|Rose::HTML::Form/params>.  The default value is zero.
 
+=item B<empty_is_ok [BOOL]>
+
+Get or set a boolean value that indicates whether or not it's OK for a repeated form to be empty.  (That is, validation should not fail if the entire form is empty, even if the form has required fields.)  Defaults to false.
+
 =item B<init_fields>
 
 In addition to doing all the usual things that the L<base class implementation|Rose::HTML::Form/init_fields> does, this method creates or deletes repeated sub-forms as necessary to make sure they match the query L<parameters|Rose::HTML::Form/params>, if present, or the L<default_count|/default_count> if there are no L<parameters|Rose::HTML::Form/params> that apply to any of the sub-forms.
@@ -356,6 +368,10 @@ The name of the method to call on each sub-form.  The default value is C<init_wi
 =item B<make_form INT>
 
 Given an integer argument greater than zero, create, add to the form, and return a new numbered L<prototype form clone|/prototype_form_clone> object.
+
+=item B<make_next_form>
+
+Create, add to the form, and return a new numbered L<prototype form clone|/prototype_form_clone> object whose L<rank|Rose::HTML::Form/rank> is one greater than the the highest-ranking existing sub-form.
 
 =item B<objects_from_form [PARAMS]>
 

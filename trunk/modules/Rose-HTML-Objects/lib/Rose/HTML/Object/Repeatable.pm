@@ -107,10 +107,14 @@ sub empty_is_ok
       $form->empty_is_ok(@_);
     }
 
-    return $_[0] ? 1 : 0;
+    return $self->{'empty_is_ok'} = $_[0] ? 1 : 0;
   }
 
-  foreach my $form ($self->forms)
+  my $forms = $self->forms;
+
+  return $self->{'empty_is_ok'}  unless(@$forms);
+
+  foreach my $form (@$forms)
   {
     return 0  unless($form->empty_is_ok);
   }
