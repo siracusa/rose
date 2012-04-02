@@ -1058,13 +1058,31 @@ sub reset
 
 sub init_form_rank_counter { 1 }
 
+sub next_form_rank
+{
+  my($self) = shift;
+
+  my $rank = 1;
+
+  foreach my $form ($self->forms)
+  {
+    $rank = $form->rank + 1  if($form->rank >= $rank);    
+  }
+
+  return $rank;
+}
+
+# XXX: Remove when form_rank_counter is removed
 sub increment_form_rank_counter
 {
   my($self) = shift;
+
   my $rank = $self->form_rank_counter;
   $self->form_rank_counter($rank + 1);
+
   return $rank;
 }
+
 
 sub repeatable_form
 {
@@ -1177,6 +1195,8 @@ sub add_forms
 
   my @added_forms;
 
+  my $next_rank = $self->next_form_rank;
+
   while(@_)
   {
     my $arg = shift;
@@ -1200,7 +1220,8 @@ sub add_forms
 
       unless(defined $form->rank)
       {
-        $form->rank($self->increment_form_rank_counter);
+        $self->increment_form_rank_counter; # XXX: Remove when form_rank_counter is removed
+        $form->rank($next_rank++);
       }
     }
     else
@@ -1274,7 +1295,8 @@ sub add_forms
 
       unless(defined $form->rank)
       {
-        $form->rank($self->increment_form_rank_counter);
+        $self->increment_form_rank_counter; # XXX: Remove when form_rank_counter is removed
+        $form->rank($next_rank++);
       }
     }
 
@@ -1436,6 +1458,7 @@ sub delete_repeatable_fields
     delete $self->{'forms'}{$form->form_name};
   }
 
+  $self->form_rank_counter(undef); # XXX: Remove when form_rank_counter is removed
   $self->_clear_form_generated_values;
 
   return;
@@ -1466,7 +1489,6 @@ sub delete_forms
     delete $self->{'forms'}{$form->form_name};
   }
 
-  $self->form_rank_counter(undef);
   $self->_clear_form_generated_values;
   return;
 }
@@ -1571,7 +1593,6 @@ sub delete_fields
   $self->{'fields'} = {};
   $self->{'fields_by_name'} = {};
   $self->delete_repeatable_fields;
-  $self->field_rank_counter(undef);
   return;
 }
 
@@ -2569,7 +2590,7 @@ Here are some example name/hashref pairs suitable for passing as arguments to th
 
 =back
 
-Each form's L<parent_form|/parent_form> is set to the form object it was added to.  If the form's L<rank|/rank> is undefined, it's set to the value of the form's L<form_rank_counter|/field_rank_counter> attribute and the rank counter is incremented.
+Each form's L<parent_form|/parent_form> is set to the form object it was added to.
 
 Adding a form with the same name as an existing field will cause a fatal error.
 
@@ -2684,7 +2705,7 @@ Delete the form stored under the name NAME.  If NAME "isa" L<Rose::HTML::Form>, 
 
 =item B<delete_forms>
 
-Delete all sub-forms, leaving the list of sub-forms empty.  The L<form_rank_counter|/form_rank_counter> is also reset to 1.
+Delete all sub-forms, leaving the list of sub-forms empty.
 
 =item B<delete_param NAME [, VALUES]>
 
@@ -2828,7 +2849,7 @@ Returns an ordered list of form names in list context, or a reference to this li
 
 =item B<form_rank_counter [INT]>
 
-Get or set the value of the counter used to set the L<rank|/rank> of sub-forms as they're L<added|/add_forms> to the form.  The counter starts at 1 by default.
+This method is deprecated and will be removed in a future release.
 
 =item B<hidden_fields>
 

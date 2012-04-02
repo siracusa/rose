@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 68;
+use Test::More tests => 69;
 
 BEGIN 
 {
@@ -475,6 +475,10 @@ $form->init_fields;
 
 ok(!$form->validate, 'nested validation 1');
 ok($form->field('name')->has_errors, 'nested validation 2');
+
+$new_form = $form->form('parents')->make_next_form;
+
+is($new_form->rank, 2, 'make_next_form 3');
 
 $form->params({ 
   'name' => 'The Smiths',
