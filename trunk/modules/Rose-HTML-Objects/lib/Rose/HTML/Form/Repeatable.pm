@@ -6,7 +6,7 @@ use Rose::HTML::Form;
 
 use base 'Rose::HTML::Object::Repeatable';
 
-our $VERSION = '0.555';
+our $VERSION = '0.613';
 
 __PACKAGE__->default_form_class('Rose::HTML::Form');
 
@@ -341,7 +341,7 @@ Get or set the default number of repeated forms to create in the absence of any 
 
 =item B<empty_is_ok [BOOL]>
 
-Get or set a boolean value that indicates whether or not it's OK for a repeated form to be empty.  (That is, validation should not fail if the entire form is empty, even if the form has required fields.)  Defaults to false.
+Get or set a boolean value that indicates whether or not it's OK for a repeated form to be empty.  (That is, validation should not fail if the entire sub-form is empty, even if the sub-form has required fields.)  Defaults to false.
 
 =item B<init_fields>
 
