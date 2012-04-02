@@ -15,7 +15,7 @@ use Rose::HTML::Object::Errors qw(:form);
 our @ISA = qw(Rose::HTML::Object::WithWrapAroundChildren
               Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.613';
+our $VERSION = '0.614';
 
 # Avoid problems caused by circular dependencies by loading these
 # modules at runtime. XXX: This whole hierarchy needs an overhaul.
@@ -1076,10 +1076,8 @@ sub next_form_rank
 sub increment_form_rank_counter
 {
   my($self) = shift;
-
   my $rank = $self->form_rank_counter;
   $self->form_rank_counter($rank + 1);
-
   return $rank;
 }
 
