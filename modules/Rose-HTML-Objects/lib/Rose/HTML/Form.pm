@@ -15,7 +15,7 @@ use Rose::HTML::Object::Errors qw(:form);
 our @ISA = qw(Rose::HTML::Object::WithWrapAroundChildren
               Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.612';
+our $VERSION = '0.613';
 
 # Avoid problems caused by circular dependencies by loading these
 # modules at runtime. XXX: This whole hierarchy needs an overhaul.

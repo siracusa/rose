@@ -7,7 +7,7 @@ use Clone::PP();
 
 use base 'Rose::HTML::Form';
 
-our $VERSION = '0.606';
+our $VERSION = '0.613';
 
 #
 # Class data

@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 62;
+use Test::More tests => 68;
 
 BEGIN 
 {
@@ -490,7 +490,53 @@ $form->init_fields;
 
 ok($form->validate, 'nested validation 3');
 
+$form->params({ 
+  'name' => 'The Smiths',
+  'parents.1.age' => 40,
+  'parents.1.name' => 'John',
+  'parents.1.gender' => 'M',
+  'children.1.age' => 4,
+  'children.1.name' => 'Tim',
+  'children.1.gender' => 'M',
+  'children.3.age' => 5,
+  'children.3.name' => 'Jill',
+  'children.3.gender' => 'F',
+});
+
 $form->init_fields;
+
+ok($form->validate, 'nested validation 4');
+
+my @forms = $form->form('children')->forms;
+
+is(scalar @forms, 2, 'sparse repeated form 1');
+
+is($form->form('children')->form(1)->field_value('name'), 'Tim', 'sparse repeated form 2');
+is($form->form('children')->form(3)->field_value('name'), 'Jill', 'sparse repeated form 3');
+
+$form->params({ 
+  'name' => 'The Smiths',
+  'parents.1.age' => 40,
+  'parents.1.name' => 'John',
+  'parents.1.gender' => 'M',
+  'children.1.age' => 4,
+  'children.1.name' => 'Tim',
+  'children.1.gender' => 'M',
+  'children.2.age' => '',
+  'children.2.name' => '',
+  'children.2.gender' => '',
+  'children.3.age' => 5,
+  'children.3.name' => 'Jill',
+  'children.3.gender' => 'F',
+});
+
+$form->init_fields;
+
+@forms = $form->form('children')->forms;
+
+is(scalar @forms, 3, 'sparse repeated form 4');
+
+ok($form->form('children')->form(2)->is_empty, 'sparse repeated form 5');
 
 BEGIN
 {
@@ -646,7 +692,7 @@ BEGIN
   package MyPersonForm2;
 
   our @ISA = qw(Rose::HTML::Form);
-  
+
   sub build_form
   {
     my ($self) = shift;
