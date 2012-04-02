@@ -1083,7 +1083,6 @@ sub increment_form_rank_counter
   return $rank;
 }
 
-
 sub repeatable_form
 {
   my($self) = shift;
@@ -1458,7 +1457,6 @@ sub delete_repeatable_fields
     delete $self->{'forms'}{$form->form_name};
   }
 
-  $self->form_rank_counter(undef); # XXX: Remove when form_rank_counter is removed
   $self->_clear_form_generated_values;
 
   return;
@@ -1489,6 +1487,7 @@ sub delete_forms
     delete $self->{'forms'}{$form->form_name};
   }
 
+  $self->form_rank_counter(undef); # XXX: Remove when form_rank_counter is removed
   $self->_clear_form_generated_values;
   return;
 }
@@ -1593,6 +1592,7 @@ sub delete_fields
   $self->{'fields'} = {};
   $self->{'fields_by_name'} = {};
   $self->delete_repeatable_fields;
+  $self->field_rank_counter(undef);
   return;
 }
 
