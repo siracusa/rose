@@ -6,7 +6,7 @@ use Carp();
 
 use base 'Rose::Object::MakeMethods';
 
-our $VERSION = '0.606';
+our $VERSION = '0.615';
 
 sub localized_message
 {
