@@ -6,6 +6,7 @@ use base 'Rose::HTML::Object::Localized';
 
 use Carp;
 use Scalar::Util();
+use List::MoreUtils qw(uniq);
 
 use Rose::HTML::Util();
 use Rose::HTML::Object::Message::Localizer;
@@ -641,11 +642,11 @@ sub html_attrs_string
   my @html;
 
   local $_;
+
   my $required_attrs = $self->required_html_attrs_hash;
   my %boolean_attrs  = map { $_ => 1 } $self->boolean_html_attrs;
-  my %attrs = map { $_ => 1 } (keys(%{$self->{'html_attrs'}}), keys(%$required_attrs));
 
-  foreach my $attr (sort keys %attrs)
+  foreach my $attr (sort(uniq(keys(%{$self->{'html_attrs'}}), keys(%$required_attrs))))
   {
     my $value;
 
@@ -663,13 +664,15 @@ sub html_attrs_string
       }
 
       $value = ''  unless(defined $value);
-      push(@html, $attr . q(=") . Rose::HTML::Util::escape_html($value) . q("));
+      push(@html, $attr . q(=") .
+      	($value =~ /\W/ ? Rose::HTML::Util::escape_html($value) : $value) . q("));
     }
     elsif(exists $required_attrs->{$attr})
     {
       $value = $required_attrs->{$attr};
       $value = ''  unless(defined $value);
-      push(@html, $attr . q(=") . Rose::HTML::Util::escape_html($value) . q("));
+      push(@html, $attr . q(=") .
+        ($value =~ /\W/ ? Rose::HTML::Util::escape_html($value) : $value) . q("));
     }
   }
 
@@ -678,18 +681,21 @@ sub html_attrs_string
   return ' ' . join(' ', @html);
 }
 
+our (%Boolean_Attrs, %Required_Attrs);
+
 sub xhtml_attrs_string
 {
   my($self) = shift;
+
+  my $class = ref($self);
 
   my @html;
 
   local $_;
   my $required_attrs = $self->required_html_attrs_hash;
   my %boolean_attrs  = map { $_ => 1 } $self->boolean_html_attrs;
-  my %attrs = map { $_ => 1 } (keys(%{$self->{'html_attrs'}}), keys(%$required_attrs));
 
-  foreach my $attr (sort keys %attrs)
+  foreach my $attr (sort(uniq(keys(%{$self->{'html_attrs'}}), keys(%$required_attrs))))
   {
     my $value;
 
@@ -702,18 +708,20 @@ sub xhtml_attrs_string
     {
       if($boolean_attrs{$attr})
       {
-        push(@html, $attr . q(=") . Rose::HTML::Util::escape_html($attr) . q("))  if($value);
+        push(@html, $attr . q(=") . ($attr =~ /\W/ ? Rose::HTML::Util::escape_html($attr) : $attr) . q("))  if($value);
         next;
       }
 
       $value = ''  unless(defined $value);
-      push(@html, $attr . q(=") . Rose::HTML::Util::escape_html($value) . q("));
+      push(@html, $attr . q(=") .
+      	($value =~ /\W/ ? Rose::HTML::Util::escape_html($value) : $value) . q("));
     }
     elsif(exists $required_attrs->{$attr})
     {
       $value = $required_attrs->{$attr};
       $value = ''  unless(defined $value);
-      push(@html, $attr . q(=") . Rose::HTML::Util::escape_html($value) . q("));
+      push(@html, $attr . q(=") .
+        ($value =~ /\W/ ? Rose::HTML::Util::escape_html($value) : $value) . q("));
     }
   }
 

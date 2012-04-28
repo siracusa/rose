@@ -186,11 +186,11 @@ sub localized_error
     {
       my($self) = shift;
 
-      my $localizer = $self->localizer;
-
       if(@_)
       {
         my($id) = shift;
+
+        my $localizer = $self->localizer;
 
         my @args;
 
@@ -291,11 +291,11 @@ sub localized_errors
     {
       my($self) = shift;
 
-      my $localizer = $self->localizer;
-
       if(@_)
       {
         return $self->{$key} = undef  unless(defined $_[0]);
+
+        my $localizer = $self->localizer;
 
         if(@_ > 1)
         {
