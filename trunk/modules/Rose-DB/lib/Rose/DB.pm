@@ -4,6 +4,7 @@ use strict;
 
 use DBI;
 use Carp();
+use Clone::PP();
 use Bit::Vector::Overload;
 use SQL::ReservedWords();
 
@@ -20,7 +21,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.766_01';
+our $VERSION = '0.766_02';
 
 our $Debug = 0;
 
@@ -690,7 +691,7 @@ sub init_db_info
 sub init_connect_options
 {
   my($class) = ref $_[0];
-  $class->default_connect_options;
+  return Clone::PP::clone(scalar $class->default_connect_options);
 }
 
 sub connect_option

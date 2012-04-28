@@ -566,3 +566,24 @@ else
   my $count = grep { /^mysql_/ } keys %$dump;
   SKIP: { skip('mysql entry tests', $count) }
 }
+
+{
+    package My::DB;
+
+    use base 'Rose::DB';
+
+    My::DB->register_db(
+        driver => 'SQLite',
+    );  
+
+    My::DB->default_connect_options( { RaiseError => 0, } );
+}
+
+my $db1 = My::DB->new;
+ok(!$db1->dbh->{RaiseError}, 'RaiseError false');
+
+my $db2 = My::DB->new(raise_error => 1);
+ok($db2->dbh->{RaiseError}, 'RaiseError true');
+
+my $db3 = My::DB->new;
+ok(!$db2->dbh->{RaiseError}, 'RaiseError false');
