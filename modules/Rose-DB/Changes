@@ -1,6 +1,11 @@
-0.766_01 (01.05.2012) - John Siracusa <siracusa@gmail.com>
+0.767_01 (04.27.2012) - John Siracusa <siracusa@gmail.com>
 
     * TODO: Savepoints?
+
+0.767 (04.27.2012) - John Siracusa <siracusa@gmail.com>
+
+    * Updated Rose::DB::Oracle to honor NLS_*_FORMAT environment variables
+      for dates.
 
 0.766 (01.05.2012) - John Siracusa <siracusa@gmail.com>
 

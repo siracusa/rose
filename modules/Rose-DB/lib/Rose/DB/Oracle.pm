@@ -9,7 +9,7 @@ use Rose::DB;
 
 our $Debug = 0;
 
-our $VERSION  = '0.762';
+our $VERSION  = '0.767';
 
 use Rose::Class::MakeMethods::Generic
 (
@@ -19,9 +19,12 @@ use Rose::Class::MakeMethods::Generic
 __PACKAGE__->_default_post_connect_sql
 (
   [
-    q(ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD HH24:MI:SS'),
-    q(ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS.FF'),
-    q(ALTER SESSION SET NLS_TIMESTAMP_TZ_FORMAT = 'YYYY-MM-DD HH24:MI:SS.FF TZHTZM')
+    q(ALTER SESSION SET NLS_DATE_FORMAT = ') .
+      ($ENV{'NLS_DATE_FORMAT'} || 'YYYY-MM-DD HH24:MI:SS') . q('),
+    q(ALTER SESSION SET NLS_TIMESTAMP_FORMAT = ') . 
+      ($ENV{'NLS_TIMESTAMP_FORMAT'} || 'YYYY-MM-DD HH24:MI:SS.FF') . q('),
+    q(ALTER SESSION SET NLS_TIMESTAMP_TZ_FORMAT = ') .
+      ($ENV{'NLS_TIMESTAMP_TZ_FORMAT'} || 'YYYY-MM-DD HH24:MI:SS.FF TZHTZM') . q('),
   ]
 );
 
@@ -562,7 +565,7 @@ sub parse_date
 {
   my($self, $value) = @_;
 
-  local $DateTime::Format::Oracle::nls_date_format = 'YYYY-MM-DD HH24:MI:SS';
+  local $DateTime::Format::Oracle::nls_date_format = $ENV{'NLS_DATE_FORMAT'} || 'YYYY-MM-DD HH24:MI:SS';
 
   # Add or extend the time to appease DateTime::Format::Oracle
   if($value =~ /\d\d:/)
@@ -583,7 +586,8 @@ sub parse_timestamp
 {
   my($self, $value) = @_;
 
-  local $DateTime::Format::Oracle::nls_timestamp_format = 'YYYY-MM-DD HH24:MI:SS.FF';
+  local $DateTime::Format::Oracle::nls_timestamp_format =
+    $ENV{'NLS_TIMESTAMP_FORMAT'} || 'YYYY-MM-DD HH24:MI:SS.FF';
 
   # Add, extend, or truncate fractional seconds to appease DateTime::Format::Oracle
   for($value)
@@ -600,7 +604,8 @@ sub parse_timestamp_with_time_zone
 {
   my($self, $value) = @_;
 
-  local $DateTime::Format::Oracle::nls_timestamp_tz_format = 'YYYY-MM-DD HH24:MI:SS.FF TZHTZM';
+  local $DateTime::Format::Oracle::nls_timestamp_tz_format =
+    $ENV{'NLS_TIMESTAMP_TZ_FORMAT'} || 'YYYY-MM-DD HH24:MI:SS.FF TZHTZM';
 
   # Add, extend, or truncate fractional seconds to appease DateTime::Format::Oracle
   for($value)
@@ -616,7 +621,10 @@ sub parse_timestamp_with_time_zone
 sub format_date
 {
   my($self) = shift;
-  local $DateTime::Format::Oracle::nls_date_format = 'YYYY-MM-DD HH24:MI:SS';
+
+  local $DateTime::Format::Oracle::nls_date_format =
+    $ENV{'NLS_DATE_FORMAT'} || 'YYYY-MM-DD HH24:MI:SS';
+
   return DateTime::Format::Oracle->format_date(@_);
 }
 
@@ -625,14 +633,20 @@ sub format_date
 sub format_timestamp
 {
   my($self) = shift;
-  local $DateTime::Format::Oracle::nls_timestamp_format = 'YYYY-MM-DD HH24:MI:SS.FF';
+
+  local $DateTime::Format::Oracle::nls_timestamp_format =
+    $ENV{'NLS_TIMESTAMP_FORMAT'} || 'YYYY-MM-DD HH24:MI:SS.FF';
+
   return DateTime::Format::Oracle->format_timestamp(@_);
 }
 
 sub format_timestamp_with_time_zone
 {
   my($self) = shift;
-  local $DateTime::Format::Oracle::nls_timestamp_tz_format = 'YYYY-MM-DD HH24:MI:SS.FF TZHTZM';
+
+  local $DateTime::Format::Oracle::nls_timestamp_tz_format =
+    $ENV{'NLS_TIMESTAMP_TZ_FORMAT'} || 'YYYY-MM-DD HH24:MI:SS.FF TZHTZM';
+
   return DateTime::Format::Oracle->format_timestamp_with_time_zone(@_);
 }
 
@@ -692,7 +706,7 @@ The L<default_post_connect_sql|/default_post_connect_sql> statements will be run
     ALTER SESSION SET NLS_TIMESTAMP_FORMAT = 'YYYY-MM-DD HH24:MI:SS.FF'
     ALTER SESSION SET NLS_TIMESTAMP_TZ_FORMAT = 'YYYY-MM-DD HH24:MI:SS.FF TZHTZM'
 
-These statements enable date/time column value parsing and formatting to work correctly.
+If one or more C<NLS_*_FORMAT> environment variables are set, the format strings above are replaced by the values that these environment variables have I<at the time this module is loaded>.
 
 =back
 
