@@ -11,7 +11,7 @@ use List::MoreUtils qw(uniq);
 use Rose::HTML::Util();
 use Rose::HTML::Object::Message::Localizer;
 
-our $VERSION = '0.606';
+our $VERSION = '0.615';
 
 our $Debug = undef;
 
