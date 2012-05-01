@@ -19,7 +19,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 158);
+    Test::More->import(tests => 159);
   }
 }
 
@@ -288,8 +288,8 @@ sub lookup_ip
 if(have_db('mysql') && $version >= 1.24)
 {
   my $x = 0;
-  my $handler = sub { $x++ };
-  
+  my $handler = sub { $x++; die "Error: $x" };
+
   Rose::DB->register_db(
     type   => 'error_handler',
     driver => 'mysql',
@@ -297,29 +297,38 @@ if(have_db('mysql') && $version >= 1.24)
     raise_error  => 1,
     handle_error => $handler,
   );
-  
+
   $db = Rose::DB->new('error_handler');
-  
+
   ok($db->raise_error, 'raise_error 1');
   ok(!$db->print_error, 'print_error 1');
   is($db->handle_error, $handler, 'handle_error 1');
-  
+
   $db->connect;
-  
+
   ok($db->raise_error, 'raise_error 2');
   ok(!$db->print_error, 'print_error 2');
   is($db->handle_error, $handler, 'handle_error 2');
-  
-  eval { $db->dbh->prepare('select nonesuch from ?') };
-  
+  is($db->dbh->{'HandleError'}, $handler, 'HandleError 1');
+
+  eval
+  {
+  	my $sth = $db->dbh->prepare('select nonesuch from ?');
+  	$sth->execute;
+  };
+
   ok($@, 'handle_error 3');
   is($x, 1, 'handle_error 4');
-  
-  eval { $db->dbh->prepare('select nonesuch from ?') };
-  
+
+  eval
+  {
+  	my $sth = $db->dbh->prepare('select nonesuch from ?');
+  	$sth->execute;
+  };
+
   is($x, 2, 'handle_error 5');
 }
 else
 {
-  SKIP: { skip("HandleError tests (DBI $DBI::VERSION)", 9) }
+  SKIP: { skip("HandleError tests (DBI $DBI::VERSION)", 10) }
 }

@@ -1,9 +1,7 @@
-0.767_01 (04.27.2012) - John Siracusa <siracusa@gmail.com>
+0.767 (05.01.2012) - John Siracusa <siracusa@gmail.com>
 
-    * TODO: Savepoints?
-
-0.767 (04.27.2012) - John Siracusa <siracusa@gmail.com>
-
+    * Fixed some bugs that could cause connect_options not to be honored.
+    * Fixed some incorrectly failing handle_error tests.
     * Updated Rose::DB::Oracle to honor NLS_*_FORMAT environment variables
       for dates.
 
