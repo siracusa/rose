@@ -1,3 +1,7 @@
+0.767_01 (05.01.2012) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: Savepoints?
+
 0.767 (05.01.2012) - John Siracusa <siracusa@gmail.com>
 
     * Fixed some bugs that could cause connect_options not to be honored.
