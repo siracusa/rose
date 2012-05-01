@@ -4,7 +4,7 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 205;
+use Test::More tests => 208;
 
 BEGIN
 {
@@ -241,11 +241,11 @@ My::DB2->modify_db(domain   => 'test',
                     username => 'blargh',
                     connect_options => { Foo => 1 });
 
-$db->init_db_info;
-$adb->init_db_info;
+$db->init_db_info(refresh => 1);
+$adb->init_db_info(refresh => 1);
 
 is($db->username, $adb->username, "alias username() mod");
-is($db->connect_options, $adb->connect_options, "alias connect_options() mod");
+is($db->connect_options->{'Foo'}, $adb->connect_options->{'Foo'}, "alias connect_options() mod");
 
 $db = My::DB2->new('generic');
 
@@ -566,3 +566,24 @@ else
   my $count = grep { /^mysql_/ } keys %$dump;
   SKIP: { skip('mysql entry tests', $count) }
 }
+
+{
+    package My::DBX;
+
+    use base 'My::DB2';
+
+    My::DBX->register_db(
+        driver => 'SQLite',
+    );  
+
+    My::DBX->default_connect_options( { RaiseError => 0, } );
+}
+
+my $db1 = My::DBX->new;
+ok(!$db1->dbh->{RaiseError}, 'RaiseError false');
+
+my $db2 = My::DBX->new(raise_error => 1);
+ok($db2->dbh->{RaiseError}, 'RaiseError true');
+
+my $db3 = My::DBX->new;
+ok(!$db3->dbh->{RaiseError}, 'RaiseError false');

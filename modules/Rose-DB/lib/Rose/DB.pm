@@ -21,7 +21,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.766_02';
+our $VERSION = '0.767';
 
 our $Debug = 0;
 
@@ -634,7 +634,7 @@ sub init_server_time_zone { 'floating' }
 
 sub init_db_info
 {
-  my($self) = shift;
+  my($self, %args) = @_;
 
   return 1  if($self->{'dsn'});
 
@@ -661,11 +661,9 @@ sub init_db_info
     Carp::croak "No database information found for domain '$domain' and type '$type'";
   }
 
-  unless($self->{'connect_options_for'}{$domain} && 
-         $self->{'connect_options_for'}{$domain}{$type})
+  unless($args{'refresh'} || ($self->{'connect_options_for'}{$domain} && 
+         $self->{'connect_options_for'}{$domain}{$type}))
   {
-    $self->{'connect_options'} = undef;
-
     if(my $custom_options = $db_info->{'connect_options'})
     {
       my $options = $self->connect_options;
