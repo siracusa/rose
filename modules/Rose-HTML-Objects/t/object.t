@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 232;
+use Test::More tests => 233;
 
 BEGIN { use_ok('Rose::HTML::Object') }
 
@@ -121,6 +121,7 @@ is($o->html_attr('name'), 'Hello', 'html_attr_hook() 1');
 is($o->html_attr('ucname'), 'HELLO', 'html_attr_hook() 2');
 
 is($o->html_attr_is_valid('foo'), 0, 'html_attr_is_valid() 1');
+is($o->html_attr_is_valid('data-foo'), 1, 'html_attr_is_valid() 1.1');
 
 is($o->validate_html_attrs(1), 1, 'validate_html_attrs(1)');
 eval { $o->html_attr('foo') };
