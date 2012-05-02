@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 233;
+use Test::More tests => 234;
 
 BEGIN { use_ok('Rose::HTML::Object') }
 
@@ -168,6 +168,10 @@ $o->html_attr(color => 'red');
 is($o->delete_html_attrs('name', 'age'), 2, 'delete_html_attrs() 1');
 
 is($o->html_attrs_string, ' bar="baz" color="red" ucname="HELLO"', 'delete_html_attrs() 2');
+
+$o->html_attr('data-bar' => 'goo');
+is($o->html_attrs_string, ' bar="baz" color="red" data-bar="goo" ucname="HELLO"', 'data attributes 1');
+$o->delete_html_attr('data-bar');
 
 $o->clear_html_attr('bar');
 my $names_str = join(' ', $o->html_attr_names);
