@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 227;
+use Test::More tests => 232;
 
 BEGIN { use_ok('Rose::HTML::Object') }
 
@@ -100,6 +100,22 @@ $o->html_attr_hook('name' => sub
 });
 
 $o->html_attr('name' => 'hello');
+
+$o->add_class('foo');
+is($o->html_attr('class'), 'foo', 'add_class() 1');
+
+$o->add_class('foo');
+is($o->html_attr('class'), 'foo', 'add_class() 2');
+
+$o->add_class('bar');
+is($o->html_attr('class'), 'foo bar', 'add_class() 3');
+
+$o->add_classes('foo', 'bar', 'baz');
+is($o->html_attr('class'), 'foo bar baz', 'add_class() 4');
+
+$o->add_classes([ 'foo', 'blee', 'baz' ]);
+is($o->html_attr('class'), 'foo bar baz blee', 'add_class() 5');
+$o->delete_html_attr('class');
 
 is($o->html_attr('name'), 'Hello', 'html_attr_hook() 1');
 is($o->html_attr('ucname'), 'HELLO', 'html_attr_hook() 2');
