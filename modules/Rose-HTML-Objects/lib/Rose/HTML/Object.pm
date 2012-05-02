@@ -765,6 +765,29 @@ sub xhtml_tag
   return '<' . $self->xhtml_element . $self->xhtml_attrs_string . ' />';
 }
 
+sub add_class
+{
+  my ($self, $newclass) = @_;
+
+  my $class = $self->html_attr('class');
+
+  unless($class =~ /(?:^| )$newclass(?: |$)/)
+  {
+    $self->html_attr(class => $class ? "$class $newclass" : $newclass);
+  }
+}
+
+sub add_classes
+{
+  my ($self) = shift;
+
+  no warnings 'uninitialized';
+  foreach my $class ((ref $_[0] eq ref []) ? @{$_[0]} : @_)
+  {
+    $self->add_class($class);
+  }
+}
+
 #
 # Lame start/end HTML fall-backs for lazy derived classes
 #
