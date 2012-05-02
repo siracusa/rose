@@ -11,7 +11,7 @@ use List::MoreUtils qw(uniq);
 use Rose::HTML::Util();
 use Rose::HTML::Object::Message::Localizer;
 
-our $VERSION = '0.615';
+our $VERSION = '0.616';
 
 our $Debug = undef;
 
@@ -201,7 +201,7 @@ use Rose::Class::MakeMethods::Set
   [
     valid_html_attr =>
     {
-      test_method     => 'html_attr_is_valid', 
+      test_method     => '_html_attr_is_valid', 
       delete_implies  => [ 'delete_boolean_html_attr', 'delete_required_html_attr' ],
       inherit_implies => 'inherit_boolean_html_attr',
     },
@@ -508,6 +508,12 @@ sub html_attr
   croak 'Missing attribute name';
 }
 
+sub html_attr_is_valid
+{
+  my ($self, $attr) = @_;
+  return 1  if($attr =~ /^data-\w/);
+  return $self->_html_attr_is_valid($attr);
+}
 
 sub html_attr_names 
 {
@@ -771,6 +777,7 @@ sub add_class
 
   my $class = $self->html_attr('class');
 
+  no warnings 'uninitialized';
   unless($class =~ /(?:^| )$newclass(?: |$)/)
   {
     $self->html_attr(class => $class ? "$class $newclass" : $newclass);
