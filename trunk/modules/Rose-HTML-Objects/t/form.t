@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 258;
+use Test::More tests => 264;
 
 BEGIN 
 {
@@ -986,6 +986,28 @@ ok(!$form->validate, 'empty_is_ok 2');
 $form->empty_is_ok(1);
 
 ok($form->validate, 'empty_is_ok 3');
+
+$form->add_field(save_button => { type => 'submit', value => 'Save' });
+$form->add_field(cancel_button => { type => 'submit', value => 'Cancel' });
+
+$form->params({ save_button => 'Save' });
+$form->init_fields;
+
+ok($form->field('save_button')->was_submitted, 'button was_submitted 1');
+ok(!$form->field('cancel_button')->was_submitted, 'button was_submitted 2');
+
+$form->params({ cancel_button => 'Cancel' });
+$form->init_fields;
+
+ok(!$form->field('save_button')->was_submitted, 'button was_submitted 3');
+ok($form->field('cancel_button')->was_submitted, 'button was_submitted 4');
+
+$form->params({ save_button => 'Save!' });
+$form->init_fields;
+
+ok(!$form->field('save_button')->was_submitted, 'button was_submitted 5');
+ok(!$form->field('cancel_button')->was_submitted, 'button was_submitted 6');
+
 
 BEGIN
 {

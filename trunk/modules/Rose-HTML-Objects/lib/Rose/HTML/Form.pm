@@ -15,7 +15,7 @@ use Rose::HTML::Object::Errors qw(:form);
 our @ISA = qw(Rose::HTML::Object::WithWrapAroundChildren
               Rose::HTML::Form::Field Rose::HTML::Form::Field::Collection);
 
-our $VERSION = '0.614';
+our $VERSION = '0.616';
 
 # Avoid problems caused by circular dependencies by loading these
 # modules at runtime. XXX: This whole hierarchy needs an overhaul.
@@ -797,8 +797,7 @@ sub _init_field
   }
   else
   {
-    return  unless((($name_exists || $name_attr_exists || $moniker_exists) &&
-                  !$field->isa('Rose::HTML::Form::Field::Submit')) || $on_off);
+    return  unless($name_exists || $name_attr_exists || $moniker_exists || $on_off);
 
     if($field->isa('Rose::HTML::Form::Field::Group'))
     {

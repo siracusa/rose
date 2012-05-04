@@ -691,11 +691,12 @@ sub html_tag
 
   if($self->html_element && $self->apply_error_class && defined $self->error)
   {
-    my $class = $self->html_attr('class');
-    $self->html_attr(class => $class ? "$class error" : 'error');
+    $self->add_class('error');
 
     my $html = $self->Rose::HTML::Object::html_tag(@_);
-    $self->html_attr(class => $class);
+
+    $self->delete_class('error');
+
     return $html;
   }
   else
@@ -710,11 +711,12 @@ sub xhtml_tag
 
   if($self->html_element && $self->apply_error_class && defined $self->error)
   {
-    my $class = $self->html_attr('class');
-    $self->html_attr(class => $class ? "$class error" : 'error');
+    $self->add_class('error');
 
     my $html = $self->Rose::HTML::Object::xhtml_tag(@_);
-    $self->html_attr(class => $class);
+
+    $self->delete_class('error');
+
     return $html;
   }
   else

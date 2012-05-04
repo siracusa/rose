@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 19;
+use Test::More tests => 20;
 
 BEGIN 
 {
@@ -37,8 +37,10 @@ is($field->html_field, '<input alt="Foo" name="search" src="foo.gif" type="submi
 is($field->xhtml_field, '<input alt="Foo" name="search" src="foo.gif" type="submit" value="Search" />', 'xhtml_field() 4');
 
 $field->input_value('abc');
+is($field->internal_value, undef, 'internal_value() 1');
 
-is($field->internal_value, 'abc', 'internal_value()');
+$field->input_value('Search');
+is($field->internal_value, 'Search', 'internal_value() 2');
 
 is($field->html_field, '<input alt="Foo" name="search" src="foo.gif" type="submit" value="Search">', 'html_field() 5');
 is($field->xhtml_field, '<input alt="Foo" name="search" src="foo.gif" type="submit" value="Search" />', 'xhtml_field() 5');

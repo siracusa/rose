@@ -6,6 +6,11 @@ use Carp();
 
 use base 'Rose::HTML::Form::Field::Input';
 
+use Rose::Object::MakeMethods::Generic
+(
+  'boolean' => 'was_submitted',
+);
+
 use Rose::HTML::Object::MakeMethods::Localization
 (
   localized_message =>
@@ -20,7 +25,7 @@ __PACKAGE__->add_required_html_attrs(
   name  => '',
 });
 
-our $VERSION = '0.606';
+our $VERSION = '0.616';
 
 sub is_button { 1 }
 sub is_empty { 1 }
@@ -30,8 +35,8 @@ sub html_hidden_fields { (wantarray) ? () : [] }
 
 *xhtml_hidden_fields = \&html_hidden_fields;
 
-sub clear { }
-sub reset { }
+sub clear { shift->was_submitted(0) }
+sub reset { shift->was_submitted(0) }
 
 sub image_html  { shift->__image_html(0, @_) }
 sub image_xhtml { shift->__image_html(1, @_) }
@@ -107,6 +112,20 @@ sub value
   }
 
   return $value;
+}
+
+sub input_value
+{
+  my ($self, $value) = @_;
+  no warnings 'uninitialized';
+  $self->was_submitted($value eq $self->value);
+}
+
+sub internal_value
+{
+  my ($self) = shift;
+  return $self->value  if($self->was_submitted);
+  return undef;
 }
 
 1;
@@ -221,6 +240,10 @@ Returns true.
 =item B<value [VALUE]>
 
 Gets or sets the value of the "value" HTML attribute.
+
+=item B<was_submitted>
+
+Returns true if this submit button was pressed, false otherwise.
 
 =back
 
