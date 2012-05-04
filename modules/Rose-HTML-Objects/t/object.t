@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 234;
+use Test::More tests => 241;
 
 BEGIN { use_ok('Rose::HTML::Object') }
 
@@ -115,6 +115,31 @@ is($o->html_attr('class'), 'foo bar baz', 'add_class() 4');
 
 $o->add_classes([ 'foo', 'blee', 'baz' ]);
 is($o->html_attr('class'), 'foo bar baz blee', 'add_class() 5');
+
+$o->delete_class('bar');
+is($o->html_attr('class'), 'foo baz blee', 'delete_class() 1');
+
+$o->delete_class('foo');
+is($o->html_attr('class'), 'baz blee', 'delete_class() 2');
+
+$o->delete_class('blee');
+is($o->html_attr('class'), 'baz', 'delete_class() 3');
+
+$o->class('  foo  bar baz blee   baz bar   ');
+
+$o->delete_class('bar');
+is($o->html_attr('class'), 'foo baz blee baz', 'delete_class() 4');
+
+$o->delete_classes(qw(foo baz goo));
+is($o->html_attr('class'), 'blee', 'delete_class() 5');
+
+$o->class('foo bar  baz  baz bar');
+$o->delete_classes([ qw(blee baz goo foo) ]);
+is($o->html_attr('class'), 'bar bar', 'delete_class() 6');
+
+$o->delete_classes([ qw(bar) ]);
+is($o->html_attr('class'), '', 'delete_class() 7');
+
 $o->delete_html_attr('class');
 
 is($o->html_attr('name'), 'Hello', 'html_attr_hook() 1');

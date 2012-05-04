@@ -773,14 +773,14 @@ sub xhtml_tag
 
 sub add_class
 {
-  my ($self, $newclass) = @_;
+  my ($self, $new_class) = @_;
 
   my $class = $self->html_attr('class');
 
   no warnings 'uninitialized';
-  unless($class =~ /(?:^| )$newclass(?: |$)/)
+  unless($class =~ /(?:^| )$new_class(?: |$)/)
   {
-    $self->html_attr(class => $class ? "$class $newclass" : $newclass);
+    $self->html_attr(class => $class ? "$class $new_class" : $new_class);
   }
 }
 
@@ -792,6 +792,37 @@ sub add_classes
   foreach my $class ((ref $_[0] eq ref []) ? @{$_[0]} : @_)
   {
     $self->add_class($class);
+  }
+}
+
+sub delete_class
+{
+  my ($self, $delete_class) = @_;
+
+  my $class = $self->html_attr('class');
+
+  no warnings 'uninitialized';
+  if($class =~ s/(^| |\G)\Q$delete_class\E( |$)/$1$2/g)
+  {
+    for($class)
+    {
+      s/^ +//;
+      s/ +$//;
+      s/  +/ /g;
+    }
+
+    $self->html_attr(class => $class);
+  }
+}
+
+sub delete_classes
+{
+  my ($self) = shift;
+
+  no warnings 'uninitialized';
+  foreach my $class ((ref $_[0] eq ref []) ? @{$_[0]} : @_)
+  {
+    $self->delete_class($class);
   }
 }
 
