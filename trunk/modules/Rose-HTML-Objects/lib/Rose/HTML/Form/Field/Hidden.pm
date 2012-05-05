@@ -4,7 +4,7 @@ use strict;
 
 use base 'Rose::HTML::Form::Field::Input';
 
-our $VERSION = '0.606';
+our $VERSION = '0.616';
 
 __PACKAGE__->delete_valid_html_attrs(qw(disabled ismap usemap alt src tabindex
 checked maxlength onblur onchange onclick ondblclick onfocus onkeydown
@@ -18,7 +18,6 @@ sub hidden_fields       { (wantarray) ? shift : [ shift ] }
 sub html_hidden_fields  { (wantarray) ? shift->html_field : [ shift->html_field ] }
 sub xhtml_hidden_fields { (wantarray) ? shift->xhtml_field : [ shift->xhtml_field ] }
 
-sub clear      {   }
 sub error      {   }
 sub errors     {   }
 sub has_error  { 0 }
