@@ -567,23 +567,30 @@ else
   SKIP: { skip('mysql entry tests', $count) }
 }
 
+if(have_db('sqlite'))
 {
-    package My::DBX;
-
-    use base 'Rose::DB';
-
-    My::DBX->register_db(
-        driver => 'SQLite',
-    );  
-
-    My::DBX->default_connect_options( { RaiseError => 0, } );
+  {
+      package My::DBX;
+  
+      use base 'Rose::DB';
+  
+      My::DBX->register_db(
+          driver => 'SQLite',
+      );  
+  
+      My::DBX->default_connect_options( { RaiseError => 0, } );
+  }
+  
+  my $db1 = My::DBX->new;
+  ok(!$db1->dbh->{RaiseError}, 'RaiseError false');
+  
+  my $db2 = My::DBX->new(raise_error => 1);
+  ok($db2->dbh->{RaiseError}, 'RaiseError true');
+  
+  my $db3 = My::DBX->new;
+  ok(!$db3->dbh->{RaiseError}, 'RaiseError false');
 }
-
-my $db1 = My::DBX->new;
-ok(!$db1->dbh->{RaiseError}, 'RaiseError false');
-
-my $db2 = My::DBX->new(raise_error => 1);
-ok($db2->dbh->{RaiseError}, 'RaiseError true');
-
-my $db3 = My::DBX->new;
-ok(!$db3->dbh->{RaiseError}, 'RaiseError false');
+else
+{
+  SKIP: { skip('connect option tests that require DBD::SQLite', 3) }
+}
