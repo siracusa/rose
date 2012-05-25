@@ -1,3 +1,7 @@
+0.769 (05.25.2012) - John Siracusa <siracusa@gmail.com>
+
+    * Fixed (more) test failures due to DBD::SQLite not being installed.
+
 0.768 (05.12.2012) - John Siracusa <siracusa@gmail.com>
 
     * Fixed test failures due to DBD::SQLite not being installed.

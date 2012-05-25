@@ -513,7 +513,7 @@ if(have_db('pg') && $version >= 1.24)
 {
   my $x = 0;
   my $handler = sub { $x++ };
-  
+
   My::DB2->register_db(
     type         => 'error_handler',
     driver       => 'pg',
@@ -523,15 +523,15 @@ if(have_db('pg') && $version >= 1.24)
     raise_error  => 1,
     handle_error => $handler,
   );
-  
+
   $db = My::DB2->new('error_handler');
-  
+
   ok($db->raise_error, 'raise_error 1');
   ok(!$db->print_error, 'print_error 1');
   is($db->handle_error, $handler, 'handle_error 1');
 
   $db->connect;
-  
+
   ok($db->raise_error, 'raise_error 2');
   ok(!$db->print_error, 'print_error 2');
   is($db->handle_error, $handler, 'handle_error 2');
