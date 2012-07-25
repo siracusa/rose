@@ -1,5 +1,6 @@
 0.798_01 (04.04.2012) - John Siracusa <siracusa@gmail.com>
 
+    * TODO: https://rt.cpan.org/Public/Bug/Display.html?id=78571
     * TODO: Document and test passing an array reference containing
       a scalar reference to literal SQL, plus bind values, to the "set"
       parameter of update_objects() (Reported by Philip Garrett)
