@@ -1,3 +1,7 @@
+0.537_01 (07.28.2012) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: European date parsing settings.
+
 0.537 (05.04.2011) - John Siracusa <siracusa@gmail.com>
 
     * Well that was fast.  DateTime 0.69 fixes RT 67928.  Tests updated.
