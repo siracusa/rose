@@ -1,5 +1,24 @@
 0.798_01 (04.04.2012) - John Siracusa <siracusa@gmail.com>
 
+    * TODO: Chris <ccampise@gmail.com> write:
+      Just for other's sake....because Rose::DB::Object::Metadata doesn't
+      support varchar2 out of the box, I had to add the following method to my
+      Metadata subclass:
+
+      __PACKAGE__->column_type_class(varchar2 =>
+        'Rose::DB::Object::Metadata::Column::Varchar',
+      );
+
+      As for my INTEGER field, DBD Oracle returns 'NUMBER' type for any defined
+      numeric columns in Oracle.  According to the DBD::Oracle POD this is
+      because Oracle only supports NUMBER fields but does support other numeric
+      fields as aliases.
+
+      Would I be losing any resolution if I just left NUMBER columns as default
+      scalars (as are ID and VENDOR_ID in my table example above)?  Or should I
+      bother in trying to map these columns manually with actual
+      Rose::DB::Object::Metadata::Column types?
+
     * TODO: https://rt.cpan.org/Public/Bug/Display.html?id=78571
     * TODO: Document and test passing an array reference containing
       a scalar reference to literal SQL, plus bind values, to the "set"
