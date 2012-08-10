@@ -1,26 +1,5 @@
-0.798_01 (04.04.2012) - John Siracusa <siracusa@gmail.com>
+0.799_01 (08.10.2012) - John Siracusa <siracusa@gmail.com>
 
-    * TODO: Chris <ccampise@gmail.com> write:
-      Just for other's sake....because Rose::DB::Object::Metadata doesn't
-      support varchar2 out of the box, I had to add the following method to my
-      Metadata subclass:
-
-      __PACKAGE__->column_type_class(varchar2 =>
-        'Rose::DB::Object::Metadata::Column::Varchar',
-      );
-
-      As for my INTEGER field, DBD Oracle returns 'NUMBER' type for any defined
-      numeric columns in Oracle.  According to the DBD::Oracle POD this is
-      because Oracle only supports NUMBER fields but does support other numeric
-      fields as aliases.
-
-      Would I be losing any resolution if I just left NUMBER columns as default
-      scalars (as are ID and VENDOR_ID in my table example above)?  Or should I
-      bother in trying to map these columns manually with actual
-      Rose::DB::Object::Metadata::Column types?
-
-    * Fixed some typos in the Loader documentation (RT 78860)
-    * TODO: https://rt.cpan.org/Public/Bug/Display.html?id=78571
     * TODO: Document and test passing an array reference containing
       a scalar reference to literal SQL, plus bind values, to the "set"
       parameter of update_objects() (Reported by Philip Garrett)
@@ -55,6 +34,14 @@
     * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
     * TODO: add delete_now and delete_on_save method types to ManyToMany?
     * TODO: make save() fail if IN_DB and modified PK columns?
+
+0.799 (08.10.2012) - John Siracusa <siracusa@gmail.com>
+
+    * Added column type mappings for varchar2, nvarchar, and nvarchar2.
+      (Suggested by Chris Campise)
+    * Fixed some typos in the Loader documentation (RT 78860)
+    * Fixed a Loader bug that caused the base class's init_db method to
+      be ignored (RT 78571)
 
 0.798 (04.04.2012) - John Siracusa <siracusa@gmail.com>
 

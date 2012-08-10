@@ -25,7 +25,7 @@ eval { local $@; require Scalar::Util::Clone };
 
 use Clone(); # This is the backup clone method
 
-our $VERSION = '0.786';
+our $VERSION = '0.799';
 
 our $Debug = 0;
 
@@ -141,6 +141,9 @@ __PACKAGE__->column_type_classes
   'char'      => 'Rose::DB::Object::Metadata::Column::Character',
   'character' => 'Rose::DB::Object::Metadata::Column::Character',
   'varchar'   => 'Rose::DB::Object::Metadata::Column::Varchar',
+  'varchar2'  => 'Rose::DB::Object::Metadata::Column::Varchar',
+  'nvarchar'  => 'Rose::DB::Object::Metadata::Column::Varchar',
+  'nvarchar2' => 'Rose::DB::Object::Metadata::Column::Varchar',
   'string'    => 'Rose::DB::Object::Metadata::Column::Varchar',
 
   'text'      => 'Rose::DB::Object::Metadata::Column::Text',
@@ -168,6 +171,7 @@ __PACKAGE__->column_type_classes
   'enum'      => 'Rose::DB::Object::Metadata::Column::Enum',
 
   'num'       => 'Rose::DB::Object::Metadata::Column::Numeric',
+  #'number'   => 'Rose::DB::Object::Metadata::Column::Numeric',
   'numeric'   => 'Rose::DB::Object::Metadata::Column::Numeric',
   'decimal'   => 'Rose::DB::Object::Metadata::Column::Numeric',
   'float'     => 'Rose::DB::Object::Metadata::Column::Float',
@@ -4873,6 +4877,9 @@ The default mapping of type names to class names is:
   char      => Rose::DB::Object::Metadata::Column::Character
   character => Rose::DB::Object::Metadata::Column::Character
   varchar   => Rose::DB::Object::Metadata::Column::Varchar
+  varchar2  => Rose::DB::Object::Metadata::Column::Varchar
+  nvarchar  => Rose::DB::Object::Metadata::Column::Varchar
+  nvarchar2 => Rose::DB::Object::Metadata::Column::Varchar
   string    => Rose::DB::Object::Metadata::Column::Varchar
 
   text      => Rose::DB::Object::Metadata::Column::Text
@@ -4892,6 +4899,8 @@ The default mapping of type names to class names is:
   smallint  => Rose::DB::Object::Metadata::Column::Integer
   mediumint => Rose::DB::Object::Metadata::Column::Integer
 
+  bigint    => Rose::DB::Object::Metadata::Column::BigInt
+  
   serial    => Rose::DB::Object::Metadata::Column::Serial
   bigserial => Rose::DB::Object::Metadata::Column::BigSerial
 
