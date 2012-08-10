@@ -802,7 +802,37 @@ sub make_classes
 
   $db_args{'connect_options'} = $self->db_options  if(defined $self->db_options);
 
-  my $init_db;
+  # Set up the object base class
+  my @base_classes = $self->base_classes;
+
+  foreach my $class (@base_classes)
+  {
+    no strict 'refs';
+    unless(UNIVERSAL::isa($class, 'Rose::DB::Object') || @{"${class}::ISA"})
+    {
+      my $error;
+
+      TRY:
+      {
+        local $@;
+        eval "require $class";
+        $error = $@;
+      }
+
+      croak $error  if($error);
+    }
+  }
+
+  my ($init_db,  $need_new_init_db);
+
+  # Check if the base class already has its own init_db
+  my $can_rdbo = Rose::DB::Object->can('init_db');
+  my $can_base = $base_classes[0]->can('init_db');
+
+  unless($can_rdbo && $can_base && $can_rdbo ne $can_base)
+  {
+    $need_new_init_db = 1;
+  }
 
   if($made_new_db_class)
   {
@@ -853,41 +883,23 @@ sub make_classes
   }
   else
   {
-    $init_db = sub { $db_class->new(%db_args) };
+    $init_db = $need_new_init_db ? sub { $db_class->new(%db_args) } : $can_base;
 
     my $hash = perl_hashref(hash       => \%db_args,
                             inline     => 1,
                             no_curlies => 1,
                             indent     => 0);
 
-    $extra_info->{'perl_init_db'} = 
-      "use $db_class;\n\n" .
-      "sub init_db { $db_class->new($hash) }";
+    if($need_new_init_db)
+    {
+      $extra_info->{'perl_init_db'} = 
+        "use $db_class;\n\n" .
+        "sub init_db { $db_class->new($hash) }";
+    }
   }
 
   # Refresh the db
   $db = $init_db->();
-
-  # Set up the object base class
-  my @base_classes = $self->base_classes;
-
-  foreach my $class (@base_classes)
-  {
-    no strict 'refs';
-    unless(UNIVERSAL::isa($class, 'Rose::DB::Object') || @{"${class}::ISA"})
-    {
-      my $error;
-
-      TRY:
-      {
-        local $@;
-        eval "require $class";
-        $error = $@;
-      }
-
-      croak $error  if($error);
-    }
-  }
 
   $extra_info->{'init_db_in_base_class'} = 0;
 
@@ -905,9 +917,13 @@ sub make_classes
   {
     if($made_new_db_class || $db_class ne 'Rose::DB')
     {
-      no strict 'refs';
-      no warnings;
-      *{"$base_classes[0]::init_db"} = $init_db;
+      if($need_new_init_db)
+      {
+        no strict 'refs';
+        no warnings;
+        *{"$base_classes[0]::init_db"} = $init_db;
+      }
+      
       $extra_info->{'init_db_in_base_class'} = 1;
       $extra_info->{'base_classes'}{$base_classes[0]}++;
     }
@@ -1191,7 +1207,7 @@ Finally, automatically create L<Rose::DB::Object> subclasses for all the tables 
 
 Here's what you get for your effort.
 
-  My::Corp::Product->new(name => 'Sled');
+  $p = My::Corp::Product->new(name => 'Sled');
 
   $p->vendor(name => 'Acme');
 
