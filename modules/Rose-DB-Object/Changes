@@ -19,6 +19,7 @@
       bother in trying to map these columns manually with actual
       Rose::DB::Object::Metadata::Column types?
 
+    * Fixed some typos in the Loader documentation (RT 78860)
     * TODO: https://rt.cpan.org/Public/Bug/Display.html?id=78571
     * TODO: Document and test passing an array reference containing
       a scalar reference to literal SQL, plus bind values, to the "set"

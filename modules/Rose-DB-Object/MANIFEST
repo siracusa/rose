@@ -145,6 +145,7 @@ t/db-object-loader-5.t
 t/db-object-loader-6.t
 t/db-object-loader-7.t
 t/db-object-loader-8.t
+t/db-object-loader-9.t
 t/db-object-manager-bulk-ops.t
 t/db-object-manager.t
 t/db-object-mapper.t
@@ -163,6 +164,8 @@ t/lib/My/DB/Gene/Main.pm
 t/lib/My/DB/Gene2Unigene.pm
 t/lib/My/DB/Object.pm
 t/lib/My/DB/Unigene/Main.pm
+t/lib/My/DB/Opa.pm
+t/lib/My/DB/Opa/Object.pm
 t/makemethods-db.t
 t/makemethods.t
 t/make-modules.ext
