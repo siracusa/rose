@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (5 * 21);
+use Test::More tests => 1 + (5 * 20);
 
 BEGIN 
 {
@@ -53,7 +53,7 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 {
   SKIP:
   {
-    skip("$db_type tests", 21)  unless($Have{$db_type});
+    skip("$db_type tests", 20)  unless($Have{$db_type});
   }
 
   next  unless($Have{$db_type});
@@ -111,7 +111,7 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 
   my $p = $product_class->new(name => "Sled $i");
 
-  ok($p->db->class =~ /^${class_prefix}::DB::AutoBase\d+$/, "db 1 - $db_type");
+  #ok($p->db->class =~ /^${class_prefix}::DB::AutoBase\d+$/, "db 1 - $db_type");
 
   ok($p->isa('My::DB::Object'), "base class 1 - $db_type");
   ok($p->isa('MyWeirdClass'), "base class 2 - $db_type");
