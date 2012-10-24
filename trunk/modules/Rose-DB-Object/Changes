@@ -1,5 +1,7 @@
 0.800_01 (09.09.2012) - John Siracusa <siracusa@gmail.com>
 
+    * TODO: Change recommended Oracle trigger PL/SQL to avoid sequence
+      gaps (search email for Tom Adamo Auto-Incremented Oracle PK)
     * TODO: Document and test passing an array reference containing
       a scalar reference to literal SQL, plus bind values, to the "set"
       parameter of update_objects() (Reported by Philip Garrett)
