@@ -37,6 +37,7 @@ WriteMakefile(NAME         => 'Rose::HTML::Objects',
               ($^O =~ /darwin/i ? (dist => { DIST_CP => 'cp' }) : ()), # Avoid Mac OS X ._* files
               PREREQ_PM =>
               {
+                'base'            => '2.18',
                 'Scalar::Util'    => 0,
                 'DateTime'        => '0.20',
                 'Carp'            => 0,
