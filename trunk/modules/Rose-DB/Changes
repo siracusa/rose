@@ -1,3 +1,8 @@
+0.770 (11.24.2012) - John Siracusa <siracusa@gmail.com>
+
+    * Fixed "DBD::Informix::st execute failed: SQL: -255: Not in transaction"
+      errors in the test suite.  (Patch by Sergey Leschenko.)
+
 0.769 (05.25.2012) - John Siracusa <siracusa@gmail.com>
 
     * Fixed (more) test failures due to DBD::SQLite not being installed.

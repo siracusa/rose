@@ -581,7 +581,7 @@ EOF
 CREATE VIEW rdbo_test_view AS SELECT * FROM rdbo_test_colors
 EOF
 
-    $dbh->commit;
+    #$dbh->commit;
     $dbh->disconnect;
   }
 
