@@ -557,7 +557,6 @@ CREATE TABLE Rose_db_object_test
 )
 EOF
 
-    $dbh->commit;
     $dbh->disconnect;
   }
 
