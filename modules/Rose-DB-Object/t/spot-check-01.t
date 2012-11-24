@@ -275,7 +275,6 @@ CREATE TABLE Rose_db_object_MDV
 )
 EOF
 
-    $dbh->commit;
     $dbh->disconnect;
   }
 

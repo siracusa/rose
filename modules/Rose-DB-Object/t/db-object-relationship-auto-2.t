@@ -555,7 +555,6 @@ CREATE TABLE product_color_map
 )
 EOF
 
-    $dbh->commit;
     $dbh->disconnect;
   }
 
