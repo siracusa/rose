@@ -18,7 +18,7 @@ use constant XHTML_ERROR_SEP => "<br />\n";
 
 use Rose::HTML::Form::Constants qw(FF_SEPARATOR);
 
-our $VERSION = '0.607';
+our $VERSION = '0.617';
 
 #our $Debug = 0;
 
@@ -780,20 +780,13 @@ sub label_object
     $label->for($self->html_attr('id'));
   }
 
-  my @classes = 
-  (
-    ($self->required ? 'required' : ()),
-    (defined $self->error ? 'error' : ()),
-  );
+  $self->required ?
+    $label->add_class('required') :
+    $label->delete_class('required');
 
-  if(@classes)
-  {
-    $label->html_attr(class => "@classes");
-  }
-  else
-  {
-    $label->delete_html_attr('class');
-  }
+  defined $self->error ?
+    $label->add_class('error') :
+    $label->delete_class('error');
 
   if(@_)
   {

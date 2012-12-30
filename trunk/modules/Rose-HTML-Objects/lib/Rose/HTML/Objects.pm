@@ -7,7 +7,7 @@ use File::Spec();
 use File::Path();
 use File::Basename();
 
-our $VERSION = '0.616';
+our $VERSION = '0.617';
 
 our $Debug = 0;
 
@@ -1027,7 +1027,7 @@ L<http://rose.googlecode.com>
 
 =head1 CONTRIBUTORS
 
-Uwe Voelker, Jacques Supcik, Cees Hek, Denis Moskowitz
+Tom Heady, Cees Hek, Kevin McGrath, Denis Moskowitz, RJBS, Jacques Supcik, Uwe Voelker
 
 =head1 AUTHOR
 
