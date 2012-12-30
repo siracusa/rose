@@ -4,7 +4,7 @@ use strict;
 
 use base 'Rose::HTML::Form::Field::OnOff::Checkable';
 
-our $VERSION = '0.606';
+our $VERSION = '0.617';
 
 __PACKAGE__->delete_valid_html_attrs(qw(ismap usemap alt src));
 __PACKAGE__->required_html_attr_value(type => 'checkbox');
@@ -167,6 +167,20 @@ Gets or sets the value of the "value" HTML attribute.
 =item B<xhtml_checkbox>
 
 Returns the XHTML serialization of the checkbox field only (i.e., without any label or error message)
+
+=item B<label_object>
+
+Returns the object representing the L<label|Rose::HTML::Label> for the checkbox.
+
+Example:
+
+  $field =
+    Rose::HTML::Form::Field::Checkbox->new(
+      label => 'Run tests',
+      name  => 'tests',
+      value => 'yes');
+
+  $field->label_object->add_class('checkbox_label');
 
 =back
 

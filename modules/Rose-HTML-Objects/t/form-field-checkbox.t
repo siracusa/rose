@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 26;
+use Test::More tests => 32;
 
 BEGIN 
 {
@@ -70,3 +70,16 @@ is($field->xhtml_field, '<input checked="checked" class="foo" id="bar" name="tes
 
 is($field->html_checkbox, '<input checked class="foo" id="bar" name="tests" style="baz" type="checkbox" value="yep">', 'html_checkbox() 3');
 is($field->xhtml_checkbox, '<input checked="checked" class="foo" id="bar" name="tests" style="baz" type="checkbox" value="yep" />', 'xhtml_checkbox() 3');
+
+is($field->html_label, '<label for="bar">Run tests</label>','html label before add class');
+is($field->xhtml_label, '<label for="bar">Run tests</label>','xhtml label before add class');
+
+$field->label_object->add_class(q{test_class});
+
+is($field->html_label, '<label class="test_class" for="bar">Run tests</label>', 'html label after add class');
+is($field->xhtml_label, '<label class="test_class" for="bar">Run tests</label>', 'xhtml label after add class');
+
+$field->label_object->delete_class(q{test_class});
+
+is($field->html_label, '<label class="" for="bar">Run tests</label>', 'html label after delete class');
+is($field->xhtml_label, '<label class="" for="bar">Run tests</label>', 'xhtml label after delete class');
