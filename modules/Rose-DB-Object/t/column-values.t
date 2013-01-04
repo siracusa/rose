@@ -8,7 +8,7 @@ require 't/test-lib.pl';
 
 if(have_db('sqlite_admin'))
 {
-  Test::More->import(tests => 209);
+  Test::More->import(tests => 219);
   #Test::More->import('no_plan');
 }
 else
@@ -58,9 +58,67 @@ foreach my $type (sort keys (%$classes)) #(qw(bits))#
   $meta->add_column("c$i" => { type => $type, %e });
 }
 
+foreach my $type (qw(char varchar))
+{
+  foreach my $mode (qw(fatal warn truncate))
+  {
+    $meta->add_column("overflow_${type}_$mode" => { type => $type, overflow => $mode, length => 4 });
+  }
+}
+
 $meta->initialize;
 
 my $o = My::DB::Object->new;
+
+foreach my $type (qw(char varchar))
+{
+  my $column_name = "overflow_${type}_fatal";
+  my $column = $o->meta->column($column_name);
+
+  my $db = db_for_column_type($column->type);
+
+  unless($db)
+  {
+    SKIP:
+    {
+      skip("db unavailable for $type tests", 5);
+    }
+
+    next;
+  }
+
+  $o->db($db);
+
+  TRY:
+  {
+    local $@;
+    eval { $column->parse_value($db, '12345') };
+    like($@, qr/^My::DB::Object: Value for $column_name is too long.  Maximum length is 4 characters.  Value is 5 characters: 12345 /, $column_name);
+  }
+
+  $column_name = "overflow_${type}_warn";
+  $column = $o->meta->column($column_name);
+
+  WARN1:
+  {
+    my $warning = '';
+    local $SIG{'__WARN__'} = sub { $warning .= join('', @_) };
+    is($column->parse_value($db, '12345'), '1234', "$column_name 1");
+    like($warning, qr/^My::DB::Object: Value for $column_name is too long.  Maximum length is 4 characters.  Value is 5 characters: 12345 /, "$column_name 2");
+  }
+
+  $column_name = "overflow_${type}_truncate";
+  $column = $o->meta->column($column_name);
+
+  WARN2:
+  {
+    my $warning = '';
+    local $SIG{'__WARN__'} = sub { $warning .= join('', @_) };
+    is($column->parse_value($db, '12345'), '1234', "$column_name 1");
+    is($warning, '', "$column_name 2");
+  }
+}
+
 
 foreach my $n (1 .. $i)
 {

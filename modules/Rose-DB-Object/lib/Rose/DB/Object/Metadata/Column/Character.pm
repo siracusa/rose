@@ -2,13 +2,15 @@ package Rose::DB::Object::Metadata::Column::Character;
 
 use strict;
 
+use Carp();
+
 use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::MakeMethods::Generic;
 
 use Rose::DB::Object::Metadata::Column::Scalar;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Scalar);
 
-our $VERSION = '0.60';
+our $VERSION = '0.803';
 
 sub type { 'character' }
 
@@ -19,8 +21,31 @@ foreach my $type (__PACKAGE__->available_method_types)
 
 sub parse_value
 {
-  my $length = $_[0]->length or return $_[2];
-  return sprintf("%-*s", $length, $_[2])
+  my ($self, $db, $value) = @_;
+
+  my $length = $self->length or return $value;
+
+  if(length($value) > $length)
+  {
+    my $overflow = $self->overflow;
+      
+    if($overflow eq 'fatal')
+    {
+      local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+      Carp::croak  $self->parent->class, ': Value for ', $self->name, ' is too long.  Maximum ',
+                  "length is $length character@{[ $length == 1 ? '' : 's' ]}.  ",
+                  "Value is ", length($value), " characters: $value";
+    }
+    elsif($overflow eq 'warn')
+    {
+      local $Carp::CarpLevel = $Carp::CarpLevel + 1;
+      Carp::carp  $self->parent->class, ': Value for ', $self->name, ' is too long.  Maximum ',
+                 "length is $length character@{[ $length == 1 ? '' : 's' ]}.  ",
+                 "Value is ", length($value), " characters: $value";
+    }
+  }
+
+  return sprintf("%-*s", $length, substr($value, 0, $length));
 }
 
 *format_value = \&parse_value;
