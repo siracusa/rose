@@ -7,7 +7,7 @@ use Carp();
 use Rose::DB::Object::Metadata::Column::Character;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Character);
 
-our $VERSION = '0.802';
+our $VERSION = '0.803';
 
 foreach my $type (__PACKAGE__->available_method_types)
 {
@@ -29,16 +29,16 @@ sub parse_value
     if($overflow eq 'fatal')
     {
       local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-      Carp::croak 'Value for ', $self->name, ' is too long.  Maximum ',
+      Carp::croak $self->parent->class, ': Value for ', $self->name, ' is too long.  Maximum ',
                   "length is $length character@{[ $length == 1 ? '' : 's' ]}.  ",
-                  "Value is ", length(\$value), " characters: $value";
+                  "Value is ", length($value), " characters: $value";
     }
     elsif($overflow eq 'warn')
     {
       local $Carp::CarpLevel = $Carp::CarpLevel + 1;
-      Carp::carp 'Value for ', $self->name, ' is too long.  Maximum ',
+      Carp::carp  $self->parent->class, ': Value for ', $self->name, ' is too long.  Maximum ',
                  "length is $length character@{[ $length == 1 ? '' : 's' ]}.  ",
-                 "Value is ", length(\$value), " characters: $value";
+                 "Value is ", length($value), " characters: $value";
     }
   }
 
