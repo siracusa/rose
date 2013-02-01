@@ -90,6 +90,9 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
   ## Run tests
   ##
 
+  no warnings qw(redefine once);
+  *My::DB::Object::init_db = sub { $db };
+
   my $p = $product_class->new(name => "Sled $i");
 
   #ok($p->db->class =~ /^${class_prefix}::DB::AutoBase\d+$/, "db 1 - $db_type");

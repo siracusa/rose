@@ -92,6 +92,9 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
 
   my $product_class = $class_prefix . '::Product';
 
+  no warnings qw(redefine once);
+  *My::DB::Object::init_db = sub { $db };
+
   if($db_type =~ /^pg/)
   {
     is($product_class->meta->column('name_fk')->default, undef, "null default fk - $db_type");
@@ -311,6 +314,8 @@ CREATE TABLE Rose_db_object_private.product
 
   status  VARCHAR(128) NOT NULL DEFAULT 'inactive' 
             CHECK(status IN ('inactive', 'active', 'defunct')),
+
+  num     float(4),
 
   date_created  TIMESTAMP NOT NULL DEFAULT NOW(),
   release_date  TIMESTAMP,

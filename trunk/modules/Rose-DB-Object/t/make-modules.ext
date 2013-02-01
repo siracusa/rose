@@ -39,8 +39,9 @@ $p->save;
 
 $p = $product_class->new(id => $p->id)->load;
 my $ret = $p->vendor->name . '; ' .
-          join(', ', map { $_->region . ': ' . $_->price } $p->prices) . '; ' .
-          join(', ', map { $_->name } $p->colors) . '; ';
+          join(', ', map { $_->region . ': ' . $_->price } 
+            sort { $a->price <=> $b->price } $p->prices) . '; ' .
+          join(', ', map { $_->name } sort { $a->name cmp $b->name } $p->colors) . '; ';
 
 my $c = $color_class->new(name => 'red')->load;
 

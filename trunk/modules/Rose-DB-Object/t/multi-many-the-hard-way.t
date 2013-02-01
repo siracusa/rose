@@ -151,16 +151,17 @@ BEGIN
     {
       local $dbh->{'RaiseError'} = 0;
       local $dbh->{'PrintError'} = 0;
-      $dbh->do('DROP TABLE channel_item_map CASCADE');
-      $dbh->do('DROP TABLE accounts CASCADE');
-      $dbh->do('DROP TABLE channels CASCADE');
-      $dbh->do('DROP TABLE features CASCADE');
-      $dbh->do('DROP TABLE items CASCADE');
+      $dbh->do('SET FOREIGN_KEY_CHECKS = 0');
+      $dbh->do('DROP TABLE channel_item_map');
+      $dbh->do('DROP TABLE accounts');
+      $dbh->do('DROP TABLE channels');
+      $dbh->do('DROP TABLE features');
+      $dbh->do('DROP TABLE items');
 
-      $dbh->do('DROP TABLE ab CASCADE');
-      $dbh->do('DROP TABLE d CASCADE');
-      $dbh->do('DROP TABLE ds CASCADE');
-      $dbh->do('DROP TABLE dv CASCADE');
+      $dbh->do('DROP TABLE ab');
+      $dbh->do('DROP TABLE d');
+      $dbh->do('DROP TABLE ds');
+      $dbh->do('DROP TABLE dv');
     }
   };
 
@@ -828,16 +829,19 @@ END
     my $dbh = Rose::DB->new('mysql_admin')->retain_dbh()
       or die Rose::DB->error;
 
-    $dbh->do('DROP TABLE channel_item_map CASCADE');
-    $dbh->do('DROP TABLE accounts CASCADE');
-    $dbh->do('DROP TABLE channels CASCADE');
-    $dbh->do('DROP TABLE features CASCADE');
-    $dbh->do('DROP TABLE items CASCADE');
+    local $dbh->{'RaiseError'} = 0;
+    local $dbh->{'PrintError'} = 0;
+    $dbh->do('SET FOREIGN_KEY_CHECKS = 0');
+    $dbh->do('DROP TABLE channel_item_map');
+    $dbh->do('DROP TABLE accounts');
+    $dbh->do('DROP TABLE channels');
+    $dbh->do('DROP TABLE features');
+    $dbh->do('DROP TABLE items');
 
-    $dbh->do('DROP TABLE ab CASCADE');
-    $dbh->do('DROP TABLE d CASCADE');
-    $dbh->do('DROP TABLE ds CASCADE');
-    $dbh->do('DROP TABLE dv CASCADE');
+    $dbh->do('DROP TABLE ab');
+    $dbh->do('DROP TABLE d');
+    $dbh->do('DROP TABLE ds');
+    $dbh->do('DROP TABLE dv');
 
     $dbh->disconnect;
   }

@@ -165,12 +165,21 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
   }
   elsif($db_type eq 'pg_with_schema')
   {
+    no warnings 'uninitialized';
+    my($v1, $v2, $v3) = split(/\./, $DBD::Pg::VERSION);
+
+    my $extra = ($v1 >= 2 && $v2 >= 19) ? 
+      q(, sequence => 'rose_db_object_private.colors_id_seq') : '';
+
     is(Pgws::Color->meta->column('id')->perl_hash_definition,
-       q(id => { type => 'bigserial', not_null => 1 }),
+       qq(id => { type => 'bigserial', not_null => 1$extra }),
        "bigserial perl_hash_definition 1 - $db_type"); 
 
+    $extra = ($v1 >= 2 && $v2 >= 19) ? 
+      q(, sequence => 'rose_db_object_private.prices_id_seq') : '';
+
     is(Pgws::Price->meta->column('id')->perl_hash_definition,
-       q(id => { type => 'serial', not_null => 1 }),
+       qq(id => { type => 'serial', not_null => 1$extra }),
        "bigserial perl_hash_definition 2 - $db_type");
   }
   else
@@ -196,6 +205,9 @@ foreach my $db_type (qw(mysql pg_with_schema pg informix sqlite))
   ##
   ## Run tests
   ##
+
+  no warnings qw(redefine once);
+  *My::DB::Object::init_db = sub { $db };
 
   my $p = $product_class->new(name => "Sled $i");
 

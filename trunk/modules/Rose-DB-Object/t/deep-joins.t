@@ -1963,6 +1963,7 @@ sub has_broken_order_by
 {
   my($db_type) = shift;
 
+  no warnings 'uninitialized';
   (my $version = $DBD::SQLite::VERSION) =~ s/_//g;
 
   if($db_type eq 'sqlite' && $version < 1.11)
