@@ -303,14 +303,30 @@ __PACKAGE__->meta->unique_keys(
 );
 EOF
 
-  is(MyPgObject->meta->perl_unique_keys_definition(style => 'object', braces => 'bsd', indent => 2),
-     <<'EOF', "perl_unique_keys_definition 2 - $db_type");
+  my($v1, $v2, $v3) = split(/\./, $DBD::Pg::VERSION);
+
+  if($v1 >= 2 && $v2 >= 19)
+  {
+    is(MyPgObject->meta->perl_unique_keys_definition(style => 'object', braces => 'bsd', indent => 2),
+      <<'EOF', "perl_unique_keys_definition 2 - $db_type");
+__PACKAGE__->meta->unique_keys
+(
+  Rose::DB::Object::Metadata::UniqueKey->new(name => 'rose_db_object_test_k1_k2_k3_key', columns => [ 'k1', 'k2', 'k3' ]),
+  Rose::DB::Object::Metadata::UniqueKey->new(name => 'rose_db_object_test_save_key', columns => [ 'save' ]),
+);
+EOF
+  }
+  else
+  {
+    is(MyPgObject->meta->perl_unique_keys_definition(style => 'object', braces => 'bsd', indent => 2),
+      <<'EOF', "perl_unique_keys_definition 2 - $db_type");
 __PACKAGE__->meta->unique_keys
 (
   Rose::DB::Object::Metadata::UniqueKey->new(name => 'rose_db_object_test_k1_key', columns => [ 'k1', 'k2', 'k3' ]),
   Rose::DB::Object::Metadata::UniqueKey->new(name => 'rose_db_object_test_save_key', columns => [ 'save' ]),
 );
 EOF
+  }
 
   is(MyPgObject->meta->perl_primary_key_columns_definition,
      qq(__PACKAGE__->meta->primary_key_columns([ 'id' ]);\n),

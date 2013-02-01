@@ -114,6 +114,20 @@ foreach my $db_type (qw(pg mysql informix sqlite))
     $Column_Defs{$db_type}{'vendor_id'} =~ s/default => '', //;
   }
 
+  my $unique_keys;
+
+  no warnings 'uninitialized';
+  my($v1, $v2, $v3) = split(/\./, $DBD::Pg::VERSION);
+
+  if($db_type eq 'pg' && $v1 >= 2 && $v2 >= 19)
+  {
+    $unique_keys = qq([ 'name' ],\n    [ 'name', 'vendor_id' ],);
+  }
+  else
+  {
+    $unique_keys = qq([ 'name', 'vendor_id' ],\n    [ 'name' ],);
+  }
+
   is(slurp("$Lib_Dir/$class_prefix/Product.pm"), <<"EOF", "Product 1 - $db_type");
 # My Preamble
 package ${class_prefix}::Product;
@@ -137,8 +151,7 @@ __PACKAGE__->meta->setup
 
   unique_keys => 
   [
-    [ 'name', 'vendor_id' ],
-    [ 'name' ],
+    $unique_keys
   ],
 
   foreign_keys => 
@@ -240,7 +253,7 @@ EOF
 
   # Perl 5.8.x and later support the FILEHANDLE,MODE,EXPR,LIST form of 
   # open, but not (apparently) on Windows
-  if($Config{'version'} =~ /^5\.([89]|10)\./ && $^O !~ /Win32/i)
+  if($Config{'version'} =~ /^5\.([89]|1\d)\./ && $^O !~ /Win32/i)
   {
     $ok = open($script_fh, '-|', $Perl, 't/make-modules.ext', $db_type);
   }
@@ -253,7 +266,7 @@ EOF
   {
     chomp(my $line = <$script_fh>);
     close($script_fh);
-    is($line, 'V1; IS: 1.25, DE: 4.25; red, green; red: CC1', "external test - $db_type");
+    is($line, 'V1; IS: 1.25, DE: 4.25; green, red; red: CC1', "external test - $db_type");
   }
   else
   {
