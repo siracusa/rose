@@ -16,7 +16,7 @@ use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Exception;
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.804';
+our $VERSION = '0.805';
 
 our $Debug = 0;
 
@@ -2030,11 +2030,12 @@ Since Oracle does not natively support a serial or auto-incremented column data 
     CREATE TRIGGER mytable_insert BEFORE INSERT ON mytable
     FOR EACH ROW
     BEGIN
-        SELECT NVL(:new.id, mytable_id_seq.nextval) 
-          INTO :new.id FROM dual;
+       IF :new.id IS NULL THEN
+           :new.id := mytable_id_seq.nextval;   
+       END IF;
     END;
 
-Note the use of C<NVL()> in the trigger, which allows the value of the C<id> column to be set explicitly.  If a non-NULL value for the C<id> column is provided, then a new value is not pulled from the sequence.
+Note the conditional that checks if C<:new.id> is null, which allows the value of the C<id> column to be set explicitly.  If a non-NULL value for the C<id> column is provided, then a new value is not pulled from the sequence.
 
 If the sequence is not named according to the C<E<lt>tableE<gt>_E<lt>columnE<gt>_seq> convention, you can specify the sequence name explicitly in the column metadata.  Example:
 

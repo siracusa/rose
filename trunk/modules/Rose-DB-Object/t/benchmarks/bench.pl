@@ -1738,6 +1738,7 @@ EOF
           db => $DB,
           query_is_sql => 1,
           prepare_cached => 1,
+          inject_results => 1,
           query =>
           [
             id => { le => 100_000 + $Iterations },
@@ -1878,6 +1879,7 @@ EOF
           db => $DB,
           query_is_sql => 1,
           prepare_cached => 1,
+          inject_results => 1,
           query =>
           [
             name => { like => 'Product %2%' },
@@ -2464,6 +2466,7 @@ EOF
           db => $DB,
           query_is_sql => 1,
           prepare_cached => 1,
+          inject_results => 1,
           query =>
           [
             id   => { le => 100_000 + $Iterations },
@@ -3866,6 +3869,7 @@ EOF
           db => $DB,
           query_is_sql => 1,
           prepare_cached => 1,
+          inject_results => 1,
           query =>
           [
             id => { le => 100_000 + $Iterations },
@@ -4344,6 +4348,7 @@ EOF
           db => $DB,
           query_is_sql => 1,
           prepare_cached => 1,
+          inject_results => 1,
           query =>
           [
             id => { le => 100_000 + $Iterations },
@@ -4456,6 +4461,7 @@ EOF
           db => $DB,
           query_is_sql => 1,
           prepare_cached => 1,
+          inject_results => 1,
           query =>
           [
             id => { le => 100_000 + $Iterations },
