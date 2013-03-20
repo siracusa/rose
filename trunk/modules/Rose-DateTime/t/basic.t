@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 5527;
+use Test::More tests => 5531;
 
 BEGIN 
 {
@@ -333,7 +333,34 @@ $d2 = parse_date('2003-01-02 8:00:00.000000000 AM');
 
 ok($d == $d2, 'parse_date(m/d/yyyy ham) 2');
 
-my $now  = parse_date('now');
+my $now    = parse_date('now');
+my $dt_now = DateTime->now->truncate(to => 'minute');
+
+ok($now && $now->isa('DateTime'), 'now');
+
+# Time marches on; did we cross minute?
+if($now)
+{
+  $now->truncate(to => 'minute');
+  $now = parse_date('now')->truncate(to => 'minute')
+    unless ($now == $dt_now);
+}
+
+is($now, $dt_now, 'now is current');
+
+my $today    = parse_date('today');
+my $dt_today = DateTime->now->truncate(to => 'day');
+
+ok($today && $today->isa('DateTime'), 'today');
+
+# Similarly for midnight
+if($today and $today != $dt_today)
+{
+  $today = parse_date('today');
+}
+
+is($today, $dt_today, 'today is current');
+
 my $inf  = parse_date('infinity');
 my $ninf = parse_date('-infinity');
 

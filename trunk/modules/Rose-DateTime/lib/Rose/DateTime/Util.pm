@@ -18,7 +18,7 @@ our %EXPORT_TAGS =
   all => \@EXPORT_OK
 );
 
-our $VERSION = '0.534';
+our $VERSION = '0.538';
 
 our $TZ = 'floating';
 our $Debug = 0;
@@ -204,9 +204,7 @@ sub parse_date
   elsif($arg =~ /^today$/i)
   {
     $date = DateTime->now(time_zone => $time_zone);
-    $date->hour(0);
-    $date->minute(0);
-    $date->second(0);
+    $date->truncate(to => 'day');
   }
   elsif($arg =~ /^(-)?infinity$/i)
   {
