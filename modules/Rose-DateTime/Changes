@@ -1,3 +1,7 @@
+0.538_01 (03.20.2013) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: European date parsing settings.
+
 0.538 (03.20.2013) - John Siracusa <siracusa@gmail.com>
 
     * Ensure that "today" is parsed as a DateTime with the time set to
