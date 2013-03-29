@@ -6,7 +6,7 @@ use Carp;
 
 use base 'Rose::HTML::Object::Exporter';
 
-our $VERSION = '0.605';
+our $VERSION = '0.618';
 
 our $Debug = 0;
 
@@ -157,7 +157,7 @@ sub add_message
       #
       #TRY:
       #{
-      #  local $@:
+      #  local $@;
       #  eval "package $class; use constant $name => $id;";
       #  $error = $@;
       #}
@@ -194,7 +194,7 @@ sub add_messages
   }
   else
   {
-    while(my($name, $thing) = each(%{"${class}::"}))
+    foreach my $name (keys %{"${class}::"})
     {
       my $fq_name = "${class}::$name";
 
