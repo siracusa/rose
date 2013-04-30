@@ -24,301 +24,298 @@ See [RDBOBenchmarks] for a comparison that does not include DBI.
 Module             Version
 -----------------  -------
 Class::DBI         3.0.17
-Class::DBI::Sweet  0.10
-DBI                1.611
-DBIx::Class        0.08121
-Rose::DB::Object   0.788
+Class::DBI::Sweet  0.11
+DBI                1.623
+DBIx::Class        0.08250
+Rose::DB::Object   0.805
 
 # Simple: insert 1
             (warning: too few iterations for a reliable count)
-        Rate CDBS CDBI DBIC RDBO DBI 
-CDBS  2174/s   --  -6% -22% -68% -89%
-CDBI  2312/s   6%   -- -17% -66% -88%
-DBIC  2797/s  29%  21%   -- -59% -85%
-RDBO  6780/s 212% 193% 142%   -- -64%
-DBI  19048/s 776% 724% 581% 181%   --
+        Rate DBIC CDBS CDBI RDBO DBI 
+DBIC  1754/s   -- -10% -14% -77% -88%
+CDBS  1942/s  11%   --  -5% -75% -87%
+CDBI  2051/s  17%   6%   -- -73% -86%
+RDBO  7692/s 338% 296% 275%   -- -48%
+DBI  14815/s 744% 663% 622%  93%   --
 
 # Complex: insert 1
             (warning: too few iterations for a reliable count)
-        Rate CDBS CDBI DBIC RDBO DBI 
-CDBS  2247/s   --  -8% -15% -63% -87%
-CDBI  2454/s   9%   --  -7% -60% -85%
-DBIC  2649/s  18%   8%   -- -56% -84%
-RDBO  6061/s 170% 147% 129%   -- -64%
-DBI  16667/s 642% 579% 529% 175%   --
+        Rate DBIC CDBS CDBI RDBO DBI 
+DBIC  1869/s   --  -6% -11% -72% -89%
+CDBS  1990/s   6%   --  -5% -71% -88%
+CDBI  2094/s  12%   5%   -- -69% -87%
+RDBO  6780/s 263% 241% 224%   -- -59%
+DBI  16667/s 792% 737% 696% 146%   --
 
 # Simple: insert 2
             (warning: too few iterations for a reliable count)
-        Rate  CDBS  CDBI  DBIC  RDBO  DBI 
-CDBS  1290/s    --   -2%  -13%  -80%  -92%
-CDBI  1311/s    2%    --  -11%  -80%  -92%
-DBIC  1481/s   15%   13%    --  -77%  -91%
-RDBO  6452/s  400%  392%  335%    --  -61%
-DBI  16667/s 1192% 1171% 1025%  158%    --
+        Rate  DBIC  CDBS  CDBI  RDBO  DBI 
+DBIC   993/s    --  -11%  -18%  -84%  -94%
+CDBS  1111/s   12%    --   -8%  -82%  -93%
+CDBI  1205/s   21%    8%    --  -80%  -92%
+RDBO  6154/s  520%  454%  411%    --  -60%
+DBI  15385/s 1450% 1285% 1177%  150%    --
 
 # Complex: insert 2
             (warning: too few iterations for a reliable count)
-        Rate  CDBS  CDBI  DBIC  RDBO  DBI 
-CDBS  1418/s    --   -2%  -12%  -76%  -92%
-CDBI  1455/s    3%    --  -10%  -75%  -92%
-DBIC  1613/s   14%   11%    --  -73%  -91%
-RDBO  5882/s  315%  304%  265%    --  -68%
-DBI  18182/s 1182% 1150% 1027%  209%    --
+        Rate  DBIC  CDBS  CDBI  RDBO  DBI 
+DBIC  1173/s    --   -4%   -7%  -79%  -92%
+CDBS  1216/s    4%    --   -4%  -78%  -92%
+CDBI  1262/s    8%    4%    --  -77%  -91%
+RDBO  5556/s  374%  357%  340%    --  -62%
+DBI  14815/s 1163% 1119% 1074%  167%    --
 
 # Simple: accessor 1
-       Rate  CDBS  CDBI  DBIC  RDBO  DBI 
-CDBS 3.27/s    --   -1%  -87%  -95%  -97%
-CDBI 3.29/s    1%    --  -87%  -95%  -97%
-DBIC 25.8/s  688%  684%    --  -62%  -78%
-RDBO 67.8/s 1975% 1963%  163%    --  -42%
-DBI   116/s 3451% 3430%  350%   71%    --
+       Rate  CDBI  CDBS  DBIC  RDBO  DBI 
+CDBI 3.15/s    --   -0%  -89%  -95%  -98%
+CDBS 3.16/s    0%    --  -89%  -95%  -98%
+DBIC 29.2/s  825%  824%    --  -55%  -78%
+RDBO 64.2/s 1938% 1936%  120%    --  -52%
+DBI   133/s 4118% 4114%  356%  107%    --
 
 # Complex: accessor 1
        Rate  CDBS  CDBI  DBIC  RDBO  DBI 
-CDBS 3.28/s    --   -0%  -87%  -95%  -97%
-CDBI 3.29/s    0%    --  -87%  -95%  -97%
-DBIC 25.4/s  674%  672%    --  -62%  -78%
-RDBO 66.2/s 1917% 1913%  161%    --  -43%
-DBI   117/s 3455% 3448%  360%   76%    --
+CDBS 3.15/s    --   -1%  -89%  -95%  -98%
+CDBI 3.17/s    1%    --  -89%  -95%  -98%
+DBIC 29.2/s  829%  822%    --  -55%  -78%
+RDBO 64.5/s 1950% 1936%  121%    --  -51%
+DBI   133/s 4112% 4083%  354%  105%    --
 
 # Simple: accessor 2
-        Rate  CDBS  CDBI  DBIC  RDBO  DBI 
-CDBS 0.737/s    --   -0%  -88%  -96%  -98%
-CDBI 0.740/s    0%    --  -88%  -96%  -98%
-DBIC  6.06/s  722%  719%    --  -64%  -84%
-RDBO  16.7/s 2163% 2152%  175%    --  -57%
-DBI   38.5/s 5129% 5105%  536%  131%    --
+        Rate  CDBI  CDBS  DBIC  RDBO  DBI 
+CDBI 0.710/s    --   -0%  -90%  -96%  -98%
+CDBS 0.711/s    0%    --  -90%  -96%  -98%
+DBIC  7.24/s  919%  918%    --  -58%  -84%
+RDBO  17.3/s 2341% 2339%  139%    --  -61%
+DBI   44.2/s 6120% 6114%  510%  155%    --
 
 # Complex: accessor 2
-        Rate  CDBS  CDBI  DBIC  RDBO  DBI 
-CDBS 0.739/s    --   -1%  -68%  -91%  -98%
-CDBI 0.743/s    1%    --  -68%  -91%  -98%
-DBIC  2.33/s  216%  214%    --  -71%  -94%
-RDBO  7.95/s  977%  970%  241%    --  -79%
-DBI   38.6/s 5120% 5086% 1552%  385%    --
+        Rate  CDBI  CDBS  DBIC  RDBO  DBI 
+CDBI 0.706/s    --   -0%  -68%  -91%  -98%
+CDBS 0.709/s    0%    --  -68%  -91%  -98%
+DBIC  2.24/s  217%  215%    --  -72%  -95%
+RDBO  8.08/s 1045% 1040%  261%    --  -82%
+DBI   44.2/s 6159% 6131% 1875%  447%    --
 
 # Simple: load 1
             (warning: too few iterations for a reliable count)
         Rate CDBS DBIC CDBI RDBO DBI 
-CDBS  2030/s   -- -16% -34% -65% -85%
-DBIC  2424/s  19%   -- -21% -59% -82%
-CDBI  3077/s  52%  27%   -- -48% -78%
-RDBO  5882/s 190% 143%  91%   -- -57%
-DBI  13793/s 579% 469% 348% 134%   --
+CDBS  1702/s   -- -17% -36% -76% -87%
+DBIC  2051/s  21%   -- -23% -71% -85%
+CDBI  2649/s  56%  29%   -- -63% -80%
+RDBO  7143/s 320% 248% 170%   -- -46%
+DBI  13333/s 683% 550% 403%  87%   --
 
 # Simple: load 2
-            (warning: too few iterations for a reliable count)
-        Rate CDBS DBIC CDBI RDBO DBI 
-CDBS  1606/s   -- -20% -26% -68% -88%
-DBIC  2010/s  25%   --  -8% -60% -84%
-CDBI  2174/s  35%   8%   -- -57% -83%
-RDBO  5000/s 211% 149% 130%   -- -61%
-DBI  12903/s 703% 542% 494% 158%   --
+       Rate CDBS DBIC CDBI RDBO DBI 
+CDBS 1307/s   --  -4% -25% -73% -83%
+DBIC 1356/s   4%   -- -23% -72% -82%
+CDBI 1754/s  34%  29%   -- -63% -77%
+RDBO 4762/s 264% 251% 171%   -- -37%
+DBI  7547/s 477% 457% 330%  58%   --
 
 # Complex: load 2
-            (warning: too few iterations for a reliable count)
-        Rate CDBS CDBI DBIC RDBO DBI 
-CDBS  1133/s   -- -21% -44% -76% -90%
-CDBI  1439/s  27%   -- -29% -69% -87%
-DBIC  2020/s  78%  40%   -- -57% -82%
-RDBO  4651/s 310% 223% 130%   -- -58%
-DBI  11111/s 881% 672% 450% 139%   --
+       Rate CDBS DBIC CDBI RDBO DBI 
+CDBS 1075/s   -- -20% -22% -75% -85%
+DBIC 1347/s  25%   --  -2% -69% -81%
+CDBI 1370/s  27%   2%   -- -68% -81%
+RDBO 4301/s 300% 219% 214%   -- -40%
+DBI  7143/s 564% 430% 421%  66%   --
 
 # Simple: load 3
-            (warning: too few iterations for a reliable count)
-        Rate  DBIC  CDBS  CDBI  RDBO  DBI 
-DBIC   679/s    --  -34%  -50%  -73%  -94%
-CDBS  1023/s   51%    --  -25%  -60%  -91%
-CDBI  1356/s  100%   33%    --  -46%  -88%
-RDBO  2532/s  273%  147%   87%    --  -77%
-DBI  11111/s 1536%  986%  719%  339%    --
+       Rate  DBIC  CDBS  CDBI  RDBO  DBI 
+DBIC  549/s    --  -40%  -53%  -78%  -93%
+CDBS  917/s   67%    --  -22%  -64%  -88%
+CDBI 1173/s  114%   28%    --  -53%  -84%
+RDBO 2516/s  358%  174%  114%    --  -67%
+DBI  7547/s 1275%  723%  543%  200%    --
 
 # Complex: load 3
-            (warning: too few iterations for a reliable count)
-        Rate  DBIC  CDBS  CDBI  RDBO  DBI 
-DBIC   730/s    --  -16%  -26%  -70%  -93%
-CDBS   868/s   19%    --  -12%  -64%  -92%
-CDBI   988/s   35%   14%    --  -59%  -91%
-RDBO  2424/s  232%  179%  145%    --  -78%
-DBI  10811/s 1381% 1146%  995%  346%    --
+       Rate  DBIC  CDBS  CDBI  RDBO  DBI 
+DBIC  544/s    --  -33%  -43%  -77%  -93%
+CDBS  810/s   49%    --  -15%  -66%  -89%
+CDBI  957/s   76%   18%    --  -60%  -87%
+RDBO 2367/s  335%  192%  147%    --  -69%
+DBI  7547/s 1287%  832%  689%  219%    --
 
 # Simple: update 1
-       Rate CDBS DBIC CDBI RDBO DBI 
-CDBS 1163/s   -- -17% -19% -68% -85%
-DBIC 1399/s  20%   --  -3% -62% -82%
-CDBI 1439/s  24%   3%   -- -61% -81%
-RDBO 3670/s 216% 162% 155%   -- -52%
-DBI  7692/s 562% 450% 435% 110%   --
+       Rate DBIC CDBS CDBI RDBO DBI 
+DBIC  905/s   --  -5% -27% -74% -87%
+CDBS  955/s   5%   -- -23% -73% -86%
+CDBI 1235/s  36%  29%   -- -65% -82%
+RDBO 3509/s 288% 268% 184%   -- -49%
+DBI  6897/s 662% 622% 459%  97%   --
 
 # Simple: update 2
-       Rate CDBS CDBI DBIC RDBO DBI 
-CDBS  952/s   -- -18% -19% -69% -87%
-CDBI 1159/s  22%   --  -1% -62% -85%
-DBIC 1173/s  23%   1%   -- -62% -84%
-RDBO 3077/s 223% 165% 162%   -- -59%
-DBI  7547/s 692% 551% 543% 145%   --
+       Rate DBIC CDBS CDBI RDBO DBI 
+DBIC  714/s   --  -9% -26% -74% -86%
+CDBS  787/s  10%   -- -18% -71% -84%
+CDBI  959/s  34%  22%   -- -65% -81%
+RDBO 2703/s 278% 243% 182%   -- -45%
+DBI  4938/s 591% 527% 415%  83%   --
 
 # Complex: update 2
-       Rate  CDBS  CDBI  DBIC  RDBO  DBI 
-CDBS  599/s    --  -12%  -40%  -76%  -91%
-CDBI  681/s   14%    --  -32%  -73%  -90%
-DBIC 1003/s   67%   47%    --  -61%  -85%
-RDBO 2548/s  325%  274%  154%    --  -63%
-DBI  6897/s 1052%  912%  588%  171%    --
+       Rate CDBS CDBI DBIC RDBO DBI 
+CDBS  576/s   -- -14% -14% -77% -89%
+CDBI  667/s  16%   --  -0% -73% -87%
+DBIC  669/s  16%   0%   -- -73% -87%
+RDBO 2500/s 334% 275% 274%   -- -51%
+DBI  5063/s 780% 659% 657% 103%   --
 
 # Simple: search 1
-       Rate  CDBS  DBIC  CDBI  RDBO  DBI 
-CDBS  163/s    --   -6%  -10%  -61%  -97%
-DBIC  174/s    7%    --   -4%  -59%  -97%
-CDBI  180/s   11%    4%    --  -57%  -97%
-RDBO  421/s  159%  142%  134%    --  -92%
-DBI  5359/s 3197% 2986% 2878% 1174%    --
+       Rate  CDBS  CDBI  DBIC  RDBO  DBI 
+CDBS  137/s    --  -13%  -77%  -88%  -98%
+CDBI  157/s   15%    --  -74%  -86%  -97%
+DBIC  606/s  344%  286%    --  -47%  -89%
+RDBO 1136/s  731%  622%   87%    --  -79%
+DBI  5526/s 3942% 3415%  811%  387%    --
 
 # Simple: search 2
        Rate  CDBS  CDBI  DBIC  RDBO  DBI 
-CDBS 63.5/s    --   -8%  -44%  -72%  -97%
-CDBI 68.9/s    9%    --  -39%  -70%  -97%
-DBIC  113/s   78%   64%    --  -50%  -95%
-RDBO  226/s  257%  228%  100%    --  -91%
-DBI  2476/s 3801% 3493% 2089%  994%    --
+CDBS 56.0/s    --  -11%  -85%  -91%  -98%
+CDBI 63.1/s   13%    --  -83%  -89%  -98%
+DBIC  382/s  581%  505%    --  -36%  -85%
+RDBO  596/s  963%  845%   56%    --  -77%
+DBI  2610/s 4558% 4039%  584%  338%    --
 
 # Complex: search 2
        Rate   CDBS   CDBI   DBIC   RDBO   DBI 
-CDBS 12.0/s     --    -2%   -89%   -93%  -100%
-CDBI 12.2/s     2%     --   -89%   -93%   -99%
-DBIC  112/s   835%   818%     --   -34%   -95%
-RDBO  170/s  1325%  1300%    53%     --   -93%
-DBI  2402/s 20000% 19646%  2051%  1310%     --
+CDBS 14.8/s     --    -2%   -96%   -98%   -99%
+CDBI 15.1/s     2%     --   -96%   -97%   -99%
+DBIC  378/s  2456%  2412%     --   -36%   -85%
+RDBO  594/s  3914%  3845%    57%     --   -77%
+DBI  2562/s 17208% 16914%   577%   331%     --
 
 # Simple: search with limit and offset
        Rate  CDBS  DBIC  RDBO  DBI 
-CDBS 62.8/s    --  -44%  -72%  -97%
-DBIC  112/s   78%    --  -50%  -95%
-RDBO  225/s  259%  101%    --  -89%
-DBI  2105/s 3253% 1783%  835%    --
+CDBS 55.6/s    --  -85%  -91%  -97%
+DBIC  376/s  577%    --  -36%  -83%
+RDBO  587/s  956%   56%    --  -73%
+DBI  2151/s 3770%  472%  266%    --
 
 # Complex: search with limit and offset
        Rate   CDBS   DBIC   RDBO   DBI 
-CDBS 12.0/s     --   -89%   -93%   -99%
-DBIC  112/s   834%     --   -35%   -95%
-RDBO  171/s  1326%    53%     --   -92%
-DBI  2055/s 17079%  1740%  1105%     --
+CDBS 14.8/s     --   -96%   -98%   -99%
+DBIC  375/s  2435%     --   -37%   -83%
+RDBO  593/s  3905%    58%     --   -72%
+DBI  2153/s 14452%   474%   263%     --
 
 # Making indexes...
 
 # Simple: search with 1-to-1 sub-objects
        Rate  DBIC  CDBS  CDBI  RDBO  DBI 
-DBIC 26.6/s    --  -48%  -52%  -91%  -97%
-CDBS 51.6/s   94%    --   -7%  -82%  -95%
-CDBI 55.3/s  108%    7%    --  -81%  -95%
-RDBO  288/s  983%  458%  420%    --  -72%
-DBI  1043/s 3824% 1922% 1784%  262%    --
+DBIC 31.2/s    --  -33%  -39%  -91%  -97%
+CDBS 46.5/s   49%    --   -9%  -86%  -96%
+CDBI 51.2/s   64%   10%    --  -84%  -95%
+RDBO  330/s  956%  610%  545%    --  -68%
+DBI  1038/s 3223% 2132% 1927%  215%    --
 
 # Complex: search with 1-to-1 sub-objects
        Rate  CDBS  CDBI  DBIC  RDBO  DBI 
-CDBS 11.5/s    --   -1%  -57%  -96%  -99%
-CDBI 11.6/s    1%    --  -56%  -96%  -99%
-DBIC 26.5/s  130%  129%    --  -91%  -98%
-RDBO  287/s 2394% 2381%  982%    --  -73%
-DBI  1066/s 9175% 9125% 3924%  272%    --
+CDBS 14.1/s    --   -2%  -56%  -96%  -99%
+CDBI 14.3/s    2%    --  -55%  -96%  -99%
+DBIC 31.7/s  125%  121%    --  -90%  -97%
+RDBO  327/s 2221% 2181%  932%    --  -69%
+DBI  1048/s 7333% 7206% 3207%  220%    --
 
 # Inserting 1-to-n records.....
 
 # Simple: search with 1-to-1 and 1-to-n sub-objects
-     s/iter  CDBS  DBIC  CDBI  RDBO  DBI 
-CDBS   2.66    --  -13%  -14%  -86%  -96%
-DBIC   2.31   15%    --   -1%  -84%  -95%
-CDBI   2.29   16%    1%    --  -84%  -95%
-RDBO  0.370  619%  525%  519%    --  -71%
-DBI   0.106 2404% 2079% 2056%  248%    --
+     s/iter  CDBS  CDBI  DBIC  RDBO  DBI 
+CDBS   3.00    --  -16%  -55%  -89%  -96%
+CDBI   2.52   19%    --  -47%  -86%  -96%
+DBIC   1.34  123%   87%    --  -75%  -92%
+RDBO  0.342  777%  636%  293%    --  -67%
+DBI   0.112 2571% 2141% 1096%  204%    --
 
 # Complex: search with 1-to-1 and 1-to-n sub-objects
      s/iter  CDBS  CDBI  DBIC  RDBO  DBI 
-CDBS   3.93    --   -9%  -40%  -90%  -97%
-CDBI   3.57   10%    --  -34%  -89%  -96%
-DBIC   2.35   67%   52%    --  -84%  -95%
-RDBO  0.381  931%  836%  518%    --  -67%
-DBI   0.127 2989% 2703% 1750%  200%    --
+CDBS   4.03    --  -13%  -65%  -91%  -96%
+CDBI   3.51   15%    --  -60%  -90%  -95%
+DBIC   1.39  189%  152%    --  -75%  -88%
+RDBO  0.350 1049%  903%  298%    --  -54%
+DBI   0.163 2374% 2059%  756%  115%    --
 
 # Simple: iterate 1
-       Rate  DBIC  CDBS  CDBI  RDBO  DBI 
-DBIC  114/s    --   -7%  -14%  -67%  -98%
-CDBS  122/s    7%    --   -8%  -64%  -98%
-CDBI  133/s   17%    9%    --  -61%  -98%
-RDBO  341/s  200%  179%  157%    --  -95%
-DBI  6884/s 5957% 5540% 5089% 1918%    --
+       Rate  CDBS  CDBI  DBIC  RDBO  DBI 
+CDBS  106/s    --  -11%  -58%  -72%  -98%
+CDBI  120/s   13%    --  -53%  -69%  -98%
+DBIC  253/s  139%  112%    --  -33%  -96%
+RDBO  380/s  259%  218%   50%    --  -94%
+DBI  6431/s 5977% 5279% 2438% 1591%    --
 
 # Complex: iterate 1
-       Rate  DBIC  CDBS  CDBI  RDBO  DBI 
-DBIC  114/s    --   -7%  -14%  -67%  -98%
-CDBS  122/s    8%    --   -7%  -64%  -98%
-CDBI  132/s   16%    8%    --  -61%  -98%
-RDBO  340/s  199%  177%  157%    --  -95%
-DBI  6884/s 5949% 5520% 5105% 1926%    --
+       Rate  CDBS  CDBI  DBIC  RDBO  DBI 
+CDBS  106/s    --  -12%  -58%  -85%  -98%
+CDBI  120/s   13%    --  -53%  -83%  -98%
+DBIC  253/s  139%  112%    --  -63%  -96%
+RDBO  684/s  547%  472%  171%    --  -90%
+DBI  6559/s 6101% 5385% 2493%  858%    --
 
 # Simple: iterate 2
        Rate  CDBS  CDBI  DBIC  RDBO  DBI 
-CDBS 54.0/s    --   -7%  -30%  -73%  -99%
-CDBI 58.0/s    7%    --  -24%  -71%  -99%
-DBIC 76.5/s   42%   32%    --  -62%  -98%
-RDBO  200/s  271%  245%  162%    --  -96%
-DBI  4845/s 8878% 8252% 6229% 2319%    --
+CDBS 48.1/s    --  -11%  -73%  -77%  -99%
+CDBI 53.8/s   12%    --  -70%  -74%  -99%
+DBIC  181/s  276%  236%    --  -14%  -96%
+RDBO  209/s  335%  289%   16%    --  -95%
+DBI  4218/s 8676% 7736% 2235% 1916%    --
 
 # Complex: iterate 2
-       Rate   CDBS   CDBI   DBIC   RDBO   DBI 
-CDBS 11.5/s     --    -2%   -85%   -93%  -100%
-CDBI 11.7/s     2%     --   -85%   -92%  -100%
-DBIC 76.2/s   564%   552%     --   -50%   -98%
-RDBO  154/s  1239%  1215%   102%     --   -97%
-DBI  4882/s 42398% 41655%  6303%  3074%     --
+       Rate   CDBS   CDBI   RDBO   DBIC   DBI 
+CDBS 13.9/s     --    -3%   -91%   -92%  -100%
+CDBI 14.3/s     3%     --   -91%   -92%  -100%
+RDBO  162/s  1067%  1030%     --   -11%   -96%
+DBIC  181/s  1205%  1163%    12%     --   -96%
+DBI  4224/s 30360% 29385%  2510%  2234%     --
 
 # Simple: iterate 3
        Rate   CDBS   CDBI   DBIC   RDBO   DBI 
-CDBS 21.2/s     --    -3%    -9%   -83%   -99%
-CDBI 21.8/s     3%     --    -6%   -83%   -99%
-DBIC 23.3/s    10%     7%     --   -82%   -99%
-RDBO  126/s   496%   479%   442%     --   -96%
-DBI  3256/s 15241% 14801% 13856%  2475%     --
+CDBS 19.8/s     --    -5%   -30%   -85%   -99%
+CDBI 20.7/s     5%     --   -27%   -84%   -99%
+DBIC 28.4/s    43%    37%     --   -78%   -99%
+RDBO  128/s   548%   519%   352%     --   -95%
+DBI  2746/s 13771% 13137%  9567%  2040%     --
 
 # Complex: iterate 3
-       Rate   CDBI   CDBS   DBIC   RDBO   DBI 
-CDBI 8.75/s     --    -0%   -62%   -92%  -100%
-CDBS 8.76/s     0%     --   -62%   -92%  -100%
-DBIC 23.2/s   165%   165%     --   -78%   -99%
-RDBO  104/s  1092%  1091%   349%     --   -97%
-DBI  3319/s 37835% 37803% 14196%  3083%     --
+       Rate   CDBS   CDBI   DBIC   RDBO   DBI 
+CDBS 9.83/s     --    -3%   -65%   -91%  -100%
+CDBI 10.1/s     3%     --   -64%   -91%  -100%
+DBIC 28.3/s   188%   180%     --   -74%   -99%
+RDBO  107/s   993%   960%   279%     --   -96%
+DBI  2784/s 28228% 27372%  9725%  2492%     --
 
 # Dropping indexes...
 
 # Simple: delete
             (warning: too few iterations for a reliable count)
-        Rate  CDBS  DBIC  CDBI  RDBO  DBI 
-CDBS  1361/s    --  -10%  -17%  -83%  -92%
-DBIC  1515/s   11%    --   -8%  -81%  -91%
-CDBI  1646/s   21%    9%    --  -80%  -91%
-RDBO  8163/s  500%  439%  396%    --  -53%
-DBI  17391/s 1178% 1048%  957%  113%    --
+        Rate  DBIC  CDBS  CDBI  RDBO  DBI 
+DBIC  1036/s    --   -6%  -27%  -89%  -94%
+CDBS  1099/s    6%    --  -23%  -88%  -94%
+CDBI  1423/s   37%   30%    --  -85%  -92%
+RDBO  9524/s  819%  767%  569%    --  -45%
+DBI  17391/s 1578% 1483% 1122%   83%    --
 
 # Complex: delete
             (warning: too few iterations for a reliable count)
-        Rate  CDBS  CDBI  DBIC  RDBO  DBI 
-CDBS   774/s    --  -17%  -42%  -92%  -96%
-CDBI   928/s   20%    --  -31%  -90%  -95%
-DBIC  1338/s   73%   44%    --  -86%  -93%
-RDBO  9756/s 1161%  951%  629%    --  -51%
-DBI  20000/s 2485% 2055% 1395%  105%    --
+        Rate  CDBS  DBIC  CDBI  RDBO  DBI 
+CDBS   680/s    --  -11%  -15%  -93%  -96%
+DBIC   768/s   13%    --   -4%  -92%  -96%
+CDBI   803/s   18%    5%    --  -92%  -95%
+RDBO 10000/s 1370% 1202% 1145%    --  -43%
+DBI  17391/s 2457% 2165% 2065%   74%    --
 
 # Simple: insert or update
             (warning: too few iterations for a reliable count)
         Rate  DBIC  CDBS  CDBI  RDBO  DBI 
-DBIC  1070/s    --   -4%  -21%  -79%  -95%
-CDBS  1114/s    4%    --  -18%  -78%  -95%
-CDBI  1361/s   27%   22%    --  -73%  -94%
-RDBO  5000/s  367%  349%  267%    --  -79%
-DBI  23529/s 2100% 2012% 1629%  371%    --
+DBIC   731/s    --  -16%  -38%  -86%  -97%
+CDBS   873/s   19%    --  -26%  -83%  -96%
+CDBI  1187/s   62%   36%    --  -77%  -95%
+RDBO  5263/s  620%  503%  343%    --  -76%
+DBI  22222/s 2939% 2444% 1772%  322%    --
 
 # Complex: insert or update
        Rate DBIC RDBO
-DBIC  922/s   -- -77%
-RDBO 4082/s 343%   --
+DBIC  515/s   -- -88%
+RDBO 4444/s 763%   --
+=
 }}}
