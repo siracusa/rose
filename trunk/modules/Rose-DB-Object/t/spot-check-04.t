@@ -62,8 +62,11 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
   {
     $RDBO::LeakTest = 0;
 
-    no warnings;
-    local *Rose::DB::DESTROY = sub
+    my $db_class = ref(Rose::DB->new);
+
+    no strict 'refs';
+    no warnings 'redefine';
+    *{"${db_class}::DESTROY"} = sub
     {
       $_[0]->disconnect;
       $RDBO::LeakTest++;
