@@ -32,7 +32,8 @@ sub group_context_name
 {
   my($self) = shift;
   my $parent_group = $self->parent_group or return;
-  return $parent_group->fq_name or return;
+  my $name = $parent_group->fq_name or return;
+  return $name;
 }
 
 sub fq_name

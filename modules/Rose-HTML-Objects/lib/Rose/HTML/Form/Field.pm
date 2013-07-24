@@ -224,7 +224,8 @@ sub field_context_name
 {
   my($self) = shift;
   my $parent_field = $self->parent_field or return;
-  return $parent_field->fq_name or return;
+  my $name = $parent_field->fq_name or return;
+  return $name;
 }
 
 sub is_flat_group { 0 }
