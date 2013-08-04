@@ -21,7 +21,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.770';
+our $VERSION = '0.771';
 
 our $Debug = 0;
 
@@ -3719,6 +3719,8 @@ Get or set the L<DBI> DSN (Data Source Name) passed to the call to L<DBI>'s L<co
 An attempt is made to parse the new DSN.  Any parts successfully extracted are assigned to the corresponding L<Rose::DB> attributes (e.g., L<host|/host>, L<port|/port>, L<database|/database>).  If no value could be extracted for an attribute, it is set to undef.
 
 If the DSN is never set explicitly, it is built automatically based on the relevant object attributes.
+
+If the DSN is set explicitly, but any of L<host|/host>, L<port|/port>, L<database|/database>, L<schema|/schema>, or L<catalog|/catalog> are also provided, either in an object constructor or when the data source is registered, the explicit DSN may be ignored as a new DSN is constructed based on these attributes.
 
 =item B<handle_error [VALUE]>
 

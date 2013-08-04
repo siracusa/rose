@@ -1,3 +1,8 @@
+0.771 (08.04.2013) - John Siracusa <siracusa@gmail.com>
+
+    * Documented the behavior of the dsn attribute when it has an explicit
+      value and attributes that contribute to the dsn are also set (RT 87487)
+
 0.770 (11.24.2012) - John Siracusa <siracusa@gmail.com>
 
     * Fixed "DBD::Informix::st execute failed: SQL: -255: Not in transaction"
