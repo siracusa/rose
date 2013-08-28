@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 420;
+use Test::More tests => 448;
 
 BEGIN 
 {
@@ -31,6 +31,10 @@ foreach my $pair ((map { [ "2 $_", 2 ] } qw(s sec secs second seconds)),
 
   MyCachedObject->meta->cached_objects_expire_in($arg);
   is(MyCachedObject->meta->cached_objects_expire_in, $secs, "cache_expires_in($arg) - generic");
+  
+  MyCachedObject->cached_objects_expire_in($arg);
+  my $object = MyCachedObject->new;
+  is($object->cached_objects_expire_in, MyCachedObject->cached_objects_expire_in, 'object inherited expires');
 }
 
 #
