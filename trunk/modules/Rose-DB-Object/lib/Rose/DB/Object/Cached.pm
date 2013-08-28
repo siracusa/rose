@@ -261,7 +261,7 @@ my %Expiration_Units =
 
 sub clear_object_cache
 {
-  my($class) = shift;
+  my($class) = ref($_[0]) || $_[0];
 
   no strict 'refs';
   %{"${class}::Objects_By_Id"}  = ();
@@ -280,6 +280,8 @@ sub clear_object_cache
 sub cached_objects_expire_in
 {
   my($class) = shift;
+
+  $class = ref($class)  if(ref($class));
 
   no strict 'refs';
   return ${"${class}::Cache_Expires"} ||= 0  unless(@_);
