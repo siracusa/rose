@@ -1,5 +1,6 @@
 0.807_01 (06.08.2013) - John Siracusa <siracusa@gmail.com>
 
+    * TODO: http://code.google.com/p/rose/issues/detail?id=7
     * TODO: Document and test passing an array reference containing
       a scalar reference to literal SQL, plus bind values, to the "set"
       parameter of update_objects() (Reported by Philip Garrett)
