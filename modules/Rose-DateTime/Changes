@@ -1,6 +1,6 @@
-0.538_01 (03.20.2013) - John Siracusa <siracusa@gmail.com>
+0.539 (10.03.2013) - John Siracusa <siracusa@gmail.com>
 
-    * TODO: European date parsing settings.
+    * Fixed a typo in the documentation. (RT 89224)
 
 0.538 (03.20.2013) - John Siracusa <siracusa@gmail.com>
 
