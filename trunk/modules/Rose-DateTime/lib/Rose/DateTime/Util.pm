@@ -18,7 +18,7 @@ our %EXPORT_TAGS =
   all => \@EXPORT_OK
 );
 
-our $VERSION = '0.538';
+our $VERSION = '0.539';
 
 our $TZ = 'floating';
 our $Debug = 0;
@@ -750,7 +750,7 @@ If a L<DateTime> object is passed in place of the TEXT argument, it is returned 
 
 Since the time zone is not part of any of the supported date string formats, L<parse_date()|/parse_date> takes an optional TIMEZONE argument which is passed to the L<DateTime> constructor as the value of the C<time_zone> parameter.  In the absence of a TIMEZONE argument to C<parwse_date()>, the time zone defaults to the value returned by the L<time_zone()|/time_zone> class method ("floating", by default)
 
-The formats understood and their interpretations are listed below.  Square brackets are used to undicate optional portions of the formats.
+The formats understood and their interpretations are listed below.  Square brackets are used to indicate optional portions of the formats.
 
 =over 4
 
