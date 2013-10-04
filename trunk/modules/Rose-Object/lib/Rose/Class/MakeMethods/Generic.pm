@@ -1500,7 +1500,7 @@ Choose the interface.  This is kind of pointless since there is only one interfa
 
 =item C<keys_method>
 
-The name of the class method that returns a reference to a list of keys in scalar context, or a list of keys in list context.   Defaults to to C<plural_name> with "_keys" added to the end.
+The name of the class method that returns a reference to a list of keys in scalar context, or a list of keys in list context.   Defaults to C<plural_name> with "_keys" added to the end.
 
 =item C<plural_name>
 

@@ -742,7 +742,7 @@ The key inside the hash-based object to use for the storage of this attribute. D
 
 =item C<init_method>
 
-The name of the method to call when initializing the value of an undefined attribute.  Again, the only thing that matters about the return value of this method is whether or not is is true or false.  This option is only applicable when using the C<get_set_init> interface. Defaults to the method name with the prefix C<init_> added.
+The name of the method to call when initializing the value of an undefined attribute.  Again, the only thing that matters about the return value of this method is whether or not it is true or false.  This option is only applicable when using the C<get_set_init> interface. Defaults to the method name with the prefix C<init_> added.
 
 =item C<interface>
 
