@@ -1,3 +1,9 @@
+0.772 (10.28.2013) - John Siracusa <siracusa@gmail.com>
+
+    * Fixed a bug that caused nested arrays to be incorrectly formatted by 
+      Rose::DB::Pg's format_array() method.  (Patch by Brian Duggan.)
+    * Updated contributors list.
+
 0.771 (08.04.2013) - John Siracusa <siracusa@gmail.com>
 
     * Documented the behavior of the dsn attribute when it has an explicit

@@ -21,7 +21,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.771';
+our $VERSION = '0.772';
 
 our $Debug = 0;
 
@@ -2814,6 +2814,8 @@ BEGIN
 
 __END__
 
+=encoding utf8
+
 =head1 NAME
 
 Rose::DB - A DBI wrapper and abstraction layer.
@@ -3954,7 +3956,7 @@ L<http://rose.googlecode.com>
 
 =head1 CONTRIBUTORS
 
-Kostas Chatzikokolakis, Peter Karman, Lucian Dragus, Ron Savage
+Kostas Chatzikokolakis, Peter Karman, Brian Duggan, Lucian Dragus, Ask Bjørn Hansen, Sergey Leschenko, Ron Savage
 
 =head1 AUTHOR
 

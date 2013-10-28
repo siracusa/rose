@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 324);
+    Test::More->import(tests => 325);
   }
 }
 
@@ -445,6 +445,9 @@ SKIP:
 
   $str = $db->format_array([ 'a' .. 'c' ]);
   is($str, '{"a","b","c"}', 'format_array() 2');
+
+  my $str2 = $db->format_array([ [ 'a' .. 'c' ], [ 'd', 'e' ] ]);
+  is($str2, '{{"a","b","c"},{"d","e"}}', 'format_array() 3');
 
   my $ar = $db->parse_array('[-3:3]={1,2,3}');
   ok(ref $ar eq 'ARRAY' && @$ar == 3 && $ar->[0] eq '1' && $ar->[1] eq '2' && $ar->[2] eq '3',
