@@ -300,6 +300,10 @@ sub format_array
     {
       $_
     }
+    elsif(ref($_) eq 'ARRAY')
+    {
+      $self->format_array($_);
+    }
     else
     {
       s/\\/\\\\/g; 
