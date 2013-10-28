@@ -386,7 +386,7 @@ SKIP:
 {
   unless(have_db('pg'))
   {
-    skip('pg tests', 47);
+    skip('pg tests', 48);
   }
 
   eval { $db->connect };

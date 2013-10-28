@@ -1,3 +1,7 @@
+0.773 (10.28.2013) - John Siracusa <siracusa@gmail.com>
+
+    * Fixed bad skip count on test file.
+
 0.772 (10.28.2013) - John Siracusa <siracusa@gmail.com>
 
     * Fixed a bug that caused nested arrays to be incorrectly formatted by 
