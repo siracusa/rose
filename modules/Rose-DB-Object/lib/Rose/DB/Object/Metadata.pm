@@ -1954,7 +1954,7 @@ sub make_column_methods
   #
   #unless(keys %methods == @$columns)
   #{
-  #  Carp::croak "Rose::DB::Object-derived objects are requiresd to have ",
+  #  Carp::croak "Rose::DB::Object-derived objects are required to have ",
   #              "a 'get_set' method for every column.  This class (",
   #              $self->class, ") has ", scalar @$columns, "column",
   #              (@$columns == 1 ? '' : 's'), " and ", scalar keys %methods,
@@ -4726,7 +4726,7 @@ L<Rose::DB::Object::Metadata> objects store information about a single table in 
 
 L<Rose::DB::Object::Metadata> objects also store information about the L<Rose::DB::Object>s that front the database tables they describe.  What might normally be thought of as "class data" for the L<Rose::DB::Object> is stored in the metadata object instead, in order to keep the method namespace of the L<Rose::DB::Object>-derived class uncluttered.
 
-L<Rose::DB::Object::Metadata> objects objects are per-class singletons; there is one L<Rose::DB::Object::Metadata> object for each L<Rose::DB::Object>-derived class.  Metadata objects are almost never explicitly instantiated.  Rather, there are automatically created and accessed through L<Rose::DB::Object>-derived objects' L<meta|Rose::DB::Object/meta> method.
+L<Rose::DB::Object::Metadata> objects are per-class singletons; there is one L<Rose::DB::Object::Metadata> object for each L<Rose::DB::Object>-derived class.  Metadata objects are almost never explicitly instantiated.  Rather, there are automatically created and accessed through L<Rose::DB::Object>-derived objects' L<meta|Rose::DB::Object/meta> method.
 
 Once created, metadata objects can be populated manually or automatically.  Both techniques are shown in the L<synopsis|/SYNOPSIS> above.  The automatic mode works by asking the database itself for the information.  There are some caveats to this approach.  See the L<auto-initialization|/"AUTO-INITIALIZATION"> section for more information.
 
@@ -5540,7 +5540,7 @@ In all cases, the object's L<error|Rose::DB::Object/error> attribute will also c
 
 =item B<first_column>
 
-Returns the first column, determined by the orider that columns were L<added|/add_columns>, or undef if there are no columns.
+Returns the first column, determined by the order that columns were L<added|/add_columns>, or undef if there are no columns.
 
 =item B<foreign_key NAME [, FOREIGNKEY | HASHREF ]>
 
@@ -5774,7 +5774,7 @@ Get or set the L<Rose::DB::Object::Metadata::PrimaryKey> object that stores the 
 
 =item B<primary_key_columns [COLUMNS]>
 
-Get or set the list of of columns that make up the primary key.  COLUMNS should be a list of column names or L<Rose::DB::Object::Metadata::Column>-derived objects.
+Get or set the list of columns that make up the primary key.  COLUMNS should be a list of column names or L<Rose::DB::Object::Metadata::Column>-derived objects.
 
 Returns all of the columns that make up the primary key.  Each column is a L<Rose::DB::Object::Metadata::Column>-derived column object if a L<column|/column> object with the same name exists, or just the column name otherwise.  In scalar context, a reference to an array of columns is returned.  In list context, a list is returned.
 
@@ -6155,7 +6155,7 @@ If true, then the auto-generated relationships replace any existing relationship
 
 =item B<relationship_types ARRAYREF>
 
-A reference to an array of relationship L<type|Rose::DB::Object::Metadata::Relationship/type> names.  Only relationships of these types will be created.  If omitted, relationships of L<all types|/relationship_type_classes> will be created.  If passed a reference to an emoty array, no relationships will be created.
+A reference to an array of relationship L<type|Rose::DB::Object::Metadata::Relationship/type> names.  Only relationships of these types will be created.  If omitted, relationships of L<all types|/relationship_type_classes> will be created.  If passed a reference to an empty array, no relationships will be created.
 
 =item B<types ARRAYREF>
 

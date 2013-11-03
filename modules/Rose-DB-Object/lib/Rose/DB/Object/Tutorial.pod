@@ -374,7 +374,7 @@ Note that this is a "real" iterator.  Objects not iterated over are not fetched 
 
 =head4 Counting objects
 
-Counting objects is straightforward.  The C<get_products_count()> method takes the same same kinds of arguments as C<get_products()> and C<get_products_iterator()>. It returns the count.
+Counting objects is straightforward.  The C<get_products_count()> method takes the same kinds of arguments as C<get_products()> and C<get_products_iterator()>. It returns the count.
 
     $num_cheap_products = 
       Product::Manager->get_products_count(
@@ -1334,7 +1334,7 @@ Here's a simple C<Color> class to front it.
       ],
     );
 
-Finally, let's add the the "one to many" relationship to the C<Product> class.
+Finally, let's add the "one to many" relationship to the C<Product> class.
 
     package Product;
 

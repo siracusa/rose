@@ -82,7 +82,7 @@ Rose::DB::Object::Metadata::Column::BigInt - Big integer column metadata.
 
 =head1 DESCRIPTION
 
-Objects of this class store and manipulate metadata for big integer (sometimes called "int8") columns in a database.  Values are stored internally and returned as L<Math::BigInt> objects.  If the L<Math::BigInt::GMP> module is installed, it will be used transparently for better peformance.
+Objects of this class store and manipulate metadata for big integer (sometimes called "int8") columns in a database.  Values are stored internally and returned as L<Math::BigInt> objects.  If the L<Math::BigInt::GMP> module is installed, it will be used transparently for better performance.
 
 This class inherits from L<Rose::DB::Object::Metadata::Column::Integer>. Inherited methods that are not overridden will not be documented a second time here.  See the L<Rose::DB::Object::Metadata::Column::Integer> documentation for more information.
 

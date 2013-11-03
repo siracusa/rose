@@ -1500,7 +1500,7 @@ sub make_methods
 
 sub dbi_requires_bind_param { 0 }
 
-# It's improtant to return undef or a hashref, not an empty list
+# It's important to return undef or a hashref, not an empty list
 sub dbi_bind_param_attrs { undef } 
 
 1;
@@ -1901,7 +1901,7 @@ is L<non-persistent|Rose::DB::Object::Metadata/nonpersistent_columns>.
 =item B<not_null [BOOL]>
 
 Get or set a boolean flag that indicates whether or not the column 
-value can can be null.
+value can be null.
 
 =item B<parse_value DB, VALUE>
 

@@ -218,7 +218,7 @@ EOF
       # need a mapping from "colno" to column name.
       my($sxt_sth, %extended_type, %colno_to_name);
 
-      # Query the syscolumns table to get somemore column information
+      # Query the syscolumns table to get some more column information
       $sc_sth->execute($table_id);
 
       while(my $sc_row = $sc_sth->fetchrow_hashref)
@@ -237,7 +237,7 @@ EOF
         ## Painfully derive the data type name (TYPE_NAME)
         ##
 
-        # If the coltype is a value greater than or equal to 256, the the
+        # If the coltype is a value greater than or equal to 256, the
         # column does not allow null values.  To determine the data type for
         # a coltype column that contains a value greater than 256, subtract
         # 256 from the value and evaluate the remainder, based on the
@@ -513,7 +513,7 @@ EOF
       }
 
       # Then comes this monster query to get the unique key column names.
-      # (The subquery fithers out any primary keys.) I'd love to know a
+      # (The subquery filters out any primary keys.) I'd love to know a
       # better/easier way to do this...
       my $uk_sth = $dbh->prepare(<<'EOF');
 SELECT
@@ -837,7 +837,7 @@ EOF
 
       # This step is important!  It ensures that foreign keys will be created
       # in a deterministic order, which in turn allows the "auto-naming" of
-      # foreign keys to work in a predictible manner.  This exact sort order
+      # foreign keys to work in a predictable manner.  This exact sort order
       # (lowercase table name comparisons) is part of the API for foreign
       # key auto generation.
       @foreign_keys = 

@@ -849,7 +849,7 @@ sub get_objects
 
   if($with_objects)
   {
-    # XXX: Hack to avoid suprious ORA-00918 errors
+    # XXX: Hack to avoid spurious ORA-00918 errors
     # XXX: http://ora-00918.ora-code.com/msg/28663.html
     if(($args{'limit'} || $args{'offset'}) && $dbh->{'Driver'}{'Name'} eq 'Oracle')
     {
@@ -1603,7 +1603,7 @@ sub get_objects
       }
     }
 
-    # Expand tN.* specificers, if necessary
+    # Expand tN.* specifiers, if necessary
     if($expand_dotstar)
     {
       my @select;
@@ -1805,7 +1805,7 @@ sub get_objects
       }
 
       # When selecting sub-objects via a "... to many" relationship, force
-      # a sort by t1's primarky key unless sorting by some other column in
+      # a sort by t1's primary key unless sorting by some other column in
       # t1.  This is required to ensure that all result rows from each row
       # in t1 are grouped together.  But don't do it when we're selecting
       # columns from just one table.  (Compare to 3 because the primary table
@@ -1846,7 +1846,7 @@ sub get_objects
   elsif($num_to_many_rels > 0 && (!%fetch || (keys %fetch || 0) > 3) && !$no_forced_sort)
   {
     # When selecting sub-objects via a "... to many" relationship, force a
-    # sort by t1's primarky key to ensure that all result rows from each
+    # sort by t1's primary key to ensure that all result rows from each
     # row in t1 are grouped together.  But don't do it when we're selecting
     # columns from just one table. (Compare to 3 because the primary table
     # name, fully-qualified name, and the "t1" alias are always in the list.)
@@ -4544,7 +4544,7 @@ All product objects returned would have associated vendor objects, but those ven
 
 Note that inner joins may be implicit and L<nested_joins|/nested_joins> may or may not be used.  When in doubt, use the L<debug|/debug> parameter to see the generated SQL.
 
-B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include more than one "... to many" relationship in ARRAYREF.  Sometimes this may still be more efficient than making additional queries to fetch these sub-objects, but that all depends on the actual data.  A warning will be emitted (via L<Carp::cluck|Carp/cluck>) if you you include more than one "... to many" relationship in ARRAYREF.  If you're sure you know what you're doing, you can silence this warning by passing the C<multi_many_ok> parameter with a true value.
+B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include more than one "... to many" relationship in ARRAYREF.  Sometimes this may still be more efficient than making additional queries to fetch these sub-objects, but that all depends on the actual data.  A warning will be emitted (via L<Carp::cluck|Carp/cluck>) if you include more than one "... to many" relationship in ARRAYREF.  If you're sure you know what you're doing, you can silence this warning by passing the C<multi_many_ok> parameter with a true value.
 
 B<Note:> the C<require_objects> list currently cannot be used to simultaneously fetch two objects that both front the same database table, I<but are of different classes>.  One workaround is to make one class use a synonym or alias for one of the tables.  Another option is to make one table a trivial view of the other.  The objective is to get the table names to be different for each different class (even if it's just a matter of letter case, if your database is not case-sensitive when it comes to table names).
 
@@ -4576,7 +4576,7 @@ If true, C<db> will be passed to each L<Rose::DB::Object>-derived object when it
 
 =item B<sort_by [ CLAUSE | ARRAYREF ]>
 
-A fully formed SQL "ORDER BY ..." clause, sans the words "ORDER BY", or a reference to an array of strings or scalar references to be de-refrenced as needed, joined with a comma, and appended to the "ORDER BY" clause.
+A fully formed SQL "ORDER BY ..." clause, sans the words "ORDER BY", or a reference to an array of strings or scalar references to be de-referenced as needed, joined with a comma, and appended to the "ORDER BY" clause.
 
 If an argument is a reference to a scalar, then it is passed through to the ORDER BY clause unmodified.
 
@@ -4662,7 +4662,7 @@ All product objects returned would have associated vendor objects, but those ven
 
 Note that inner joins may be implicit and L<nested_joins|/nested_joins> may or may not be used.  When in doubt, use the L<debug|/debug> parameter to see the generated SQL.
 
-B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include more than one "... to many" relationship in ARRAYREF.  Sometimes this may still be more efficient than making additional queries to fetch these sub-objects, but that all depends on the actual data.  A warning will be emitted (via L<Carp::cluck|Carp/cluck>) if you you include more than one "... to many" relationship in ARRAYREF.  If you're sure you know what you're doing, you can silence this warning by passing the C<multi_many_ok> parameter with a true value.
+B<Warning:> there may be a geometric explosion of redundant data returned by the database if you include more than one "... to many" relationship in ARRAYREF.  Sometimes this may still be more efficient than making additional queries to fetch these sub-objects, but that all depends on the actual data.  A warning will be emitted (via L<Carp::cluck|Carp/cluck>) if you include more than one "... to many" relationship in ARRAYREF.  If you're sure you know what you're doing, you can silence this warning by passing the C<multi_many_ok> parameter with a true value.
 
 B<Note:> the C<with_objects> list currently cannot be used to simultaneously fetch two objects that both front the same database table, I<but are of different classes>.  One workaround is to make one class use a synonym or alias for one of the tables.  Another option is to make one table a trivial view of the other.  The objective is to get the table names to be different for each different class (even if it's just a matter of letter case, if your database is not case-sensitive when it comes to table names).
 
@@ -4823,7 +4823,7 @@ If the base name cannot be determined in one of the ways described above, then t
 
 =item * B<method types>
 
-If an explicit list of mehod types is not passed to the method, then all of the L<default_manager_method_types|/default_manager_method_types> are created.  Example:
+If an explicit list of method types is not passed to the method, then all of the L<default_manager_method_types|/default_manager_method_types> are created.  Example:
 
     # Base name is determined by convention manager auto_manager_base_name()
     # method, all default method types created

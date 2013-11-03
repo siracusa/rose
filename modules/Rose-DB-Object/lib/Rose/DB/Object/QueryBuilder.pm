@@ -579,7 +579,7 @@ sub build_select
     #
     # If this parameter is passed, then every table except t1 that has 
     # a join type and condition will be joined with an explicit JOIN
-    # statement.  Otherwise, an inplicit inner join will be used.
+    # statement.  Otherwise, an implicit inner join will be used.
     if($joins && @$joins)
     {
       my $i = 1;
@@ -1648,7 +1648,7 @@ If L<query_is_sql|/query_is_sql> is false or omitted, then NAME can also take on
 
 =item C<method>
 
-A L<get_set|Rose::DB::Object::Metadata::Column/MAKING_METHODS> column method name from a L<Rose::DB::Object>-derived class fronting one of the tables being queried.  There may be ambiguity here if the same method name is defined on more than one of the the classes involved in the query.  In such a case, the method will be mapped to the first L<Rose::DB::Object>-derived class that contains a method by that name, considered in the order that the tables are provided in the L<tables|/tables> parameter.
+A L<get_set|Rose::DB::Object::Metadata::Column/MAKING_METHODS> column method name from a L<Rose::DB::Object>-derived class fronting one of the tables being queried.  There may be ambiguity here if the same method name is defined on more than one of the classes involved in the query.  In such a case, the method will be mapped to the first L<Rose::DB::Object>-derived class that contains a method by that name, considered in the order that the tables are provided in the L<tables|/tables> parameter.
 
 =item C<!method>
 
@@ -1727,7 +1727,7 @@ The C<and> and C<or> keywords can be used multiple times within a query (just li
 
 If you have a column named "and" or "or", you'll have to use the fully-qualified (table.column) or alias-qualified (tN.column) forms in order to address that column.
 
-If L<query_is_sql|/query_is_sql> is false or omitted, all of the parameter values are passed through the C<parse_value()> and C<format_value()> methods of their corresponding L<Rose::DB::Object::Metadata::Column>-dervied column objects.
+If L<query_is_sql|/query_is_sql> is false or omitted, all of the parameter values are passed through the C<parse_value()> and C<format_value()> methods of their corresponding L<Rose::DB::Object::Metadata::Column>-derived column objects.
 
 If a column object returns true from its L<manager_uses_method()|Rose::DB::Object::Metadata::Column/manager_uses_method> method, then its parameter value is passed through the corresponding L<Rose::DB::Object>-derived object method instead.
 

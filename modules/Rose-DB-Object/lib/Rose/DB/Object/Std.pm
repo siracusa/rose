@@ -197,7 +197,7 @@ You do have to correctly define the "id" column in the database, however.  Here 
 
 Other data definitions are possible, of course, but the three definitions above are used in the L<Rose::DB::Object::Std> test suite and are therefore guaranteed to work.  If you have success with alternative approaches, patches and/or new tests are welcome.
 
-To achieve much of this functionality, L<Rose::DB::Object::Std> uses L<Rose::DB::Object::Std::Metadata> objects.  The C<meta()> method will create these form you.  You should not need to do anything special if you use the idimoatic approach to defining metadata as shown in the L<synopsis|/SYNOPSIS>.  
+To achieve much of this functionality, L<Rose::DB::Object::Std> uses L<Rose::DB::Object::Std::Metadata> objects.  The C<meta()> method will create these form you.  You should not need to do anything special if you use the idiomatic approach to defining metadata as shown in the L<synopsis|/SYNOPSIS>.  
 
 =head1 METHODS
 
