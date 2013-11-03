@@ -2009,7 +2009,7 @@ sub object_by_key
 {
   my($class, $name, $args, $options) = @_;
 
-  # Delegate to plural with coercion to single as indictated by args
+  # Delegate to plural with coercion to single as indicated by args
   if($args->{'manager_class'} || $args->{'manager_method'} ||
      $args->{'manager_args'} || $args->{'query_args'} ||
      $args->{'join_args'})
@@ -2048,7 +2048,7 @@ sub object_by_key
   my $fk_columns = $args->{'key_columns'} or die "Missing key columns hash";
   my $share_db   = $args->{'share_db'};
 
-  # Delegate to plural with coercion to single as indictated by column map
+  # Delegate to plural with coercion to single as indicated by column map
   my(%unique, $key_ok);
 
   foreach my $uk_cols (scalar($fk_meta->primary_key_column_names),
@@ -2802,7 +2802,7 @@ sub object_by_key
       delete $self->{ON_SAVE_ATTR_NAME()}{'pre'}{'fk'}{$fk_name}{'set'};
       delete $self->{ON_SAVE_ATTR_NAME()}{'post'}{'rel'}{$fk_name}{'set'};
 
-      # Clear the foreignobject attribute
+      # Clear the foreign object attribute
       $self->{$key} = undef;
 
       # Make the code to run on save
@@ -4462,7 +4462,7 @@ sub objects_by_map
 
   unless($require_objects)
   {
-    # Make a second attempt to find a a suitable foreign relationship in the
+    # Make a second attempt to find a suitable foreign relationship in the
     # map class, this time looking for links back to $target_class so long as
     # it's a different relationship than the one used in the local link.
     foreach my $item ($map_meta->foreign_keys, $map_meta->relationships)

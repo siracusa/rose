@@ -401,7 +401,7 @@ sub is_ready_to_make_methods
 
       unless($require_objects)
       {
-        # Make a second attempt to find a a suitable foreign relationship in the
+        # Make a second attempt to find a suitable foreign relationship in the
         # map class, this time looking for links back to $target_class so long as
         # it's a different relationship than the one used in the local link.
         foreach my $item ($map_meta->foreign_keys, $map_meta->relationships)

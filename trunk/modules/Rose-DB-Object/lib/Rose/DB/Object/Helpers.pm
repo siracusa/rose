@@ -588,7 +588,7 @@ sub strip
 
   delete $self->{ON_SAVE_ATTR_NAME()};
 
-  # Reference to metadata object will be regenrated as needed
+  # Reference to metadata object will be regenerated as needed
   delete $self->{META_ATTR_NAME()};
 
   return $self;
@@ -1290,7 +1290,7 @@ The return value of the L<save|Rose::DB::Object/save> method is returned.
 
 Update or insert a row with a single SQL statement, depending on whether or not a row with the same primary or unique key already exists.  Any PARAMS are passed on to the call to L<save|Rose::DB::Object/save> (which is supplied with the appropriate C<insert> or C<update> boolean parameter).
 
-If the current database does not support the "ON DUPLICATE KEY UPDATE" SQL extension, then this method simply calls the L<insert_or_update|/insert_or_update> method, pasing all PARAMS.
+If the current database does not support the "ON DUPLICATE KEY UPDATE" SQL extension, then this method simply calls the L<insert_or_update|/insert_or_update> method, passing all PARAMS.
 
 Currently, the only database that supports "ON DUPLICATE KEY UPDATE" is MySQL, and only in version 4.1.0 or later.  You can read more about the feature here:
 

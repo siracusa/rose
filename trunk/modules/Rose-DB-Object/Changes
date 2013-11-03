@@ -1,39 +1,6 @@
-0.808_01 (08.28.2013) - John Siracusa <siracusa@gmail.com>
+0.808 (11.03.2013) - John Siracusa <siracusa@gmail.com>
 
-    * TODO: Document and test passing an array reference containing
-      a scalar reference to literal SQL, plus bind values, to the "set"
-      parameter of update_objects() (Reported by Philip Garrett)
-    * TODO: Add default_load_speculative and default_update_changes_only
-      to Loader attributes (Metadata/Auto.pm line 955)
-    * TODO: NOT(...) operator not => ...
-    * TODO: select count(distinct col1, col1) ... doesn't work in Oracle.
-      Use select count(*) from (select distinct ...) instead?  (Reported
-      by Kevin McGrath)
-    * TODO: in as_tree,if two objects have the same related object via FK
-      then only the first object gets an inflated version of that object,
-      turning on allow_loops seems to work around the issue, but it should
-      be either a separate flag or the default behavior should be allowed. 
-      Example: I have two ordering lines in different statuses (so they are
-      unique) that both have an FK to a product, when doing as_tree on the
-      two ordering lines only the first will get an expanded version of the
-      product.
-    * TODO: Document classes param in QueryBuilder, or remove it from SYNOPSIS
-    * TODO: Loader ignores TEXT columns in PostgreSQL?
-    * TODO: in/out params for Oracle serial columns.
-    * TODO: Add handles/proxy_method to relationships/fks.
-    * TODO: DEBUG environment variable and hooks.
-    * TODO: Multiple unique keys example.
-    * TODO: remarks metadata attribute.
-    * TODO: Generic is_auto_increment column attribute support.
-    * TODO: Parameterize DateTime class name in column method-makers?
-    * TODO: Update docs for has_loaded_related() and/or make a better
-      solution to avoid re-fetching nonexistent objects after Manager
-      queries.
-    * TODO: Add support for REGEXP_LIKE(column, '^abc')
-    * TODO: Figure out which UK to use when load()ing via a ForeignKey
-    * TODO: Loader vs. CURRENT_TIMESTAMP MySQL column default
-    * TODO: add delete_now and delete_on_save method types to ManyToMany?
-    * TODO: make save() fail if IN_DB and modified PK columns?
+    * Fixed typos.
 
 0.807 (08.28.2013) - John Siracusa <siracusa@gmail.com>
 

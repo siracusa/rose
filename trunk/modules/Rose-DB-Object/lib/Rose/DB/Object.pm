@@ -16,7 +16,7 @@ use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Exception;
 use Rose::DB::Object::Util();
 
-our $VERSION = '0.807';
+our $VERSION = '0.808';
 
 our $Debug = 0;
 
@@ -1656,7 +1656,7 @@ EOF
   {
     Carp::confess qq(Can't locate $method_type method "$2" via package "$1"$msg);
   }
-  else # notreached?
+  else # not reached?
   {
     Carp::confess qq(Can't locate $method_type method $AUTOLOAD$msg);
   }
@@ -1946,7 +1946,7 @@ Finally, the L<Rose::DB::Object::Loader> can be used to automatically create a s
 
 Before L<Rose::DB::Object> can do any useful work, you must register at least one L<Rose::DB> data source.  By default, L<Rose::DB::Object> instantiates a L<Rose::DB> object by passing no arguments to its constructor.  (See the L<db|/db> method.)  If you register a L<Rose::DB> data source using the default type and domain, this will work fine.  Otherwise, you must override the L<meta|/meta> method in your L<Rose::DB::Object> subclass and have it return the appropriate L<Rose::DB>-derived object.
 
-To define your own L<Rose::DB::Object>-derived class, you must describe the table that your class will act as a front-end for.    This is done through the L<Rose::DB::Object::Metadata> object associated with each L<Rose::DB::Object>-dervied class.  The metadata object is accessible via L<Rose::DB::Object>'s L<meta|/meta> method.
+To define your own L<Rose::DB::Object>-derived class, you must describe the table that your class will act as a front-end for.    This is done through the L<Rose::DB::Object::Metadata> object associated with each L<Rose::DB::Object>-derived class.  The metadata object is accessible via L<Rose::DB::Object>'s L<meta|/meta> method.
 
 Metadata objects can be populated manually or automatically.  Both techniques are shown in the L<synopsis|/SYNOPSIS> above.  The automatic mode works by asking the database itself for the information.  There are some caveats to this approach.  See the L<auto-initialization|Rose::DB::Object::Metadata/"AUTO-INITIALIZATION"> section of the L<Rose::DB::Object::Metadata> documentation for more information.
 
@@ -2228,7 +2228,7 @@ If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used 
 
 =back
 
-The cascaded delete feature described above plays it safe by only deleting rows that are not referenced by any other rows (according to the metadata provided by each L<Rose::DB::Object>-derived class).  I B<strongly recommend> that you implement "cascaded delete" in the database itself, rather than using this feature.  It will undoubtedly be faster and more robust than doing it "client-side."  You may also want to cascade only to certain tables, or otherwise deviate from the "safe" plan.  If your database supports automatic cascaded delete and/or triggers, please consider using thse features.
+The cascaded delete feature described above plays it safe by only deleting rows that are not referenced by any other rows (according to the metadata provided by each L<Rose::DB::Object>-derived class).  I B<strongly recommend> that you implement "cascaded delete" in the database itself, rather than using this feature.  It will undoubtedly be faster and more robust than doing it "client-side."  You may also want to cascade only to certain tables, or otherwise deviate from the "safe" plan.  If your database supports automatic cascaded delete and/or triggers, please consider using these features.
 
 =item B<error>
 

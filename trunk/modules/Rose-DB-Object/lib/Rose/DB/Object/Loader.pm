@@ -695,7 +695,7 @@ sub make_classes
   local $self->{'class_prefix'} = $class_prefix; 
 
   # When setting explicit values for attributes that cascade to
-  # affect other attributes, save off tehold values are restore
+  # affect other attributes, save off the old values are restore
   # them at the end.
   my %save;
 
@@ -904,7 +904,7 @@ sub make_classes
   $extra_info->{'init_db_in_base_class'} = 0;
 
   # Install the init_db routine in the base class, but only if 
-  # using the default base calss.
+  # using the default base class.
   if($self->using_default_base_class)
   {
     no strict 'refs';
@@ -1479,7 +1479,7 @@ This is an alias for the C<warn_on_missing_primary_key> parameter.
 
 If true, then any table that does not have a primary key will trigger a warning.
 
-If C<require_primary_key> is false and the loader object's L<warn_on_missing_primary_key|/warn_on_missing_primary_key> attribute is undefined, or if the C<warn_on_missing_primary_key> parameter is set to an undefined valur or is not passed to the L<make_classes|/make_classes> call at all, then C<warn_on_missing_primary_key> is set to false.  Otherwise, it defaults to the value of the loader object's L<warn_on_missing_primary_key|/warn_on_missing_primary_key> attribute.  Note that a L<Rose::DB::Object>-derived class based on a table with no primary key will not function correctly in all circumstances.
+If C<require_primary_key> is false and the loader object's L<warn_on_missing_primary_key|/warn_on_missing_primary_key> attribute is undefined, or if the C<warn_on_missing_primary_key> parameter is set to an undefined value or is not passed to the L<make_classes|/make_classes> call at all, then C<warn_on_missing_primary_key> is set to false.  Otherwise, it defaults to the value of the loader object's L<warn_on_missing_primary_key|/warn_on_missing_primary_key> attribute.  Note that a L<Rose::DB::Object>-derived class based on a table with no primary key will not function correctly in all circumstances.
 
 These complicated defaults are intended to honor the intentions of the C<require_primary_key> attribute/parameter.  If not requiring primary keys and no explicit decision has been made about whether to warn about missing primary keys, either in the parameters to the  L<make_classes|/make_classes> call or in the loader object itself, then we don't warn about missing primary keys.  The idea is that not requiring primary keys is a strong indication that their absence is not worth a warning.
 
@@ -1539,13 +1539,13 @@ Defaults to the value of the loader object's L<module_dir|/module_dir> attribute
 
 If defined as a scalar, inserts the contents of the variable into the auto-generated file before any of the auto-generated class information.  If provided as a code ref, calls the indicated function, passing the L<metadata object|Rose::DB::Object::Metadata> as a parameter.  (The metadata object that belongs to the C<object_class> and the L<Rose::DB::Object::Manager>-derived class name are passed if the module is a L<Rose::DB::Object::Manager>-derived class.)  The returned value of the function is inserted as the preamble text.
 
-Defaults to to the value of the loader object's L<module_preamble|/module_preamble> attribute.
+Defaults to the value of the loader object's L<module_preamble|/module_preamble> attribute.
 
 =item B<module_postamble [ SCALAR | CODE ]>
 
 If defined as a scalar, inserts the contents of the variable into the auto-generated file after any of the auto-generated class information.  If provided as a code ref, calls the indicated function, passing the L<metadata object|Rose::DB::Object::Metadata> as a parameter.  (The metadata object that belongs to the C<object_class> and the L<Rose::DB::Object::Manager>-derived class name are passed if the module is a L<Rose::DB::Object::Manager>-derived class.)  The returned value of the function is inserted as the postamble text.
 
-Defaults to to the value of the loader object's L<module_postamble|/module_postamble> attribute.
+Defaults to the value of the loader object's L<module_postamble|/module_postamble> attribute.
 
 =back
 

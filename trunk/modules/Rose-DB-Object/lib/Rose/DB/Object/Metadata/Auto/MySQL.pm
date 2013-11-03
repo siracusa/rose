@@ -347,7 +347,7 @@ EOF
 
       # This step is important!  It ensures that foreign keys will be created
       # in a deterministic order, which in turn allows the "auto-naming" of
-      # foreign keys to work in a predictible manner.  This exact sort order
+      # foreign keys to work in a predictable manner.  This exact sort order
       # (lowercase table name comparisons) is part of the API for foreign
       # key auto generation.
       @foreign_keys = 
