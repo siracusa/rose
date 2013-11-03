@@ -15,7 +15,7 @@ TRY:
 
 use Rose::DB;
 
-our $VERSION = '0.765';
+our $VERSION = '0.774';
 
 our $Debug = 0;
 
@@ -787,7 +787,7 @@ If the resulting string is longer than L<max_interval_characters|/max_interval_c
 
 =item B<format_set ARRAYREF | LIST>
 
-Given a reference to an array or a list of values, return a string formatted according to the rules of MySQL's "SET" data type.  Undef is returned if ARRAYREF points to an empty array or if LIST is not passed.  If th array or list contains undefined values, a fatal error will occur.
+Given a reference to an array or a list of values, return a string formatted according to the rules of MySQL's "SET" data type.  Undef is returned if ARRAYREF points to an empty array or if LIST is not passed.  If the array or list contains undefined values, a fatal error will occur.
 
 =item B<parse_array STRING | LIST | ARRAYREF>
 

@@ -4,7 +4,7 @@ use strict;
 
 use Rose::DateTime::Util();
 
-our $VERSION = '0.759';
+our $VERSION = '0.774';
 
 our $Debug = 0;
 
@@ -954,7 +954,7 @@ Converts the L<DateTime> object DATETIME into the appropriate format for the "DA
 
 =item B<format_set ARRAYREF | LIST>
 
-Given a reference to an array or a list of values, return a string formatted according to the rules of Informix's "SET" data type.  Undef is returned if ARRAYREF points to an empty array or if LIST is not passed.  If th array or list contains undefined values, a fatal error will occur.
+Given a reference to an array or a list of values, return a string formatted according to the rules of Informix's "SET" data type.  Undef is returned if ARRAYREF points to an empty array or if LIST is not passed.  If the array or list contains undefined values, a fatal error will occur.
 
 =item B<format_timestamp DATETIME>
 
