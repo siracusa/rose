@@ -21,7 +21,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.773';
+our $VERSION = '0.774';
 
 our $Debug = 0;
 
@@ -1548,7 +1548,7 @@ sub _get_primary_key_column_names
 }
 
 #
-# These methods could/should be overriden in driver-specific subclasses
+# These methods could/should be overridden in driver-specific subclasses
 #
 
 sub insertid_param { undef }
@@ -3888,7 +3888,7 @@ Parse STRING and return a L<DateTime::Duration> object.  STRING should be format
 
 If STRING is a L<DateTime::Duration> object, a valid interval keyword (according to L<validate_interval_keyword|/validate_interval_keyword>), or if it looks like a function call (matches C</^\w+\(.*\)$/>) and L<keyword_function_calls|/keyword_function_calls> is true, then it is returned unmodified.  Otherwise, undef is returned if STRING could not be parsed as a valid "interval" value.
 
-This optional MODE argyment determines how math is done on duration objects.  If defined, the C<end_of_month> setting for each L<DateTime::Duration> object created by this column will have its mode set to MODE.  Otherwise, the C<end_of_month> parameter will not be passed to the L<DateTime::Duration> constructor.
+This optional MODE argument determines how math is done on duration objects.  If defined, the C<end_of_month> setting for each L<DateTime::Duration> object created by this column will have its mode set to MODE.  Otherwise, the C<end_of_month> parameter will not be passed to the L<DateTime::Duration> constructor.
 
 Valid modes are C<wrap>, C<limit>, and C<preserve>.  See the documentation for L<DateTime::Duration> for a full explanation.
 
