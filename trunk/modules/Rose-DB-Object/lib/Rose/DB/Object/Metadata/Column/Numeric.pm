@@ -35,10 +35,10 @@ sub should_inline_value
 sub init_with_dbi_column_info
 {
   my($self, $col_info) = @_;
-
+$DB::single = 1;
   # Prevent COLUMN_SIZE from setting bogus length in superclass
-  $self->precision(delete $col_info->{'COLUMN_SIZE'});
-  $self->scale($col_info->{'DECIMAL_DIGITS'});
+  $self->precision($col_info->{'DECIMAL_DIGITS'});
+  $self->scale(delete $col_info->{'COLUMN_SIZE'});
 
   $self->SUPER::init_with_dbi_column_info($col_info);
 

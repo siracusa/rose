@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1 + (6 * 36) + 9;
+use Test::More tests => 1 + (6 * 38) + 9;
 
 BEGIN 
 {
@@ -42,7 +42,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
   {
     unless($Have{$db_type})
     {
-      skip("$db_type tests", 36 + scalar @{$Reserved_Words{$db_type} ||= []});
+      skip("$db_type tests", 38 + scalar @{$Reserved_Words{$db_type} ||= []});
     }
   }
 
@@ -233,6 +233,16 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
   else
   {
     SKIP: { skip("bigserial test for $db_type", 1) }
+  }
+
+  if($db_type eq 'Pg')
+  {
+    is($price_class->meta->column('price')->precision, 10, "decimal precision - $db_type");
+    is($price_class->meta->column('price')->scale, 2, "decimal scale - $db_type");
+  }
+  else
+  {
+    SKIP: { skip("decimal precision and scale - $db_type yet", 2) }
   }
 
   if($db_type eq 'informix' || $db_type eq 'oracle')

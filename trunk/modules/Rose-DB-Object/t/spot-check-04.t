@@ -85,7 +85,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite))
       }
     }
 
-    is($RDBO::LeakTest, 1, "iterator db leak check - $db_type");
+    ok($RDBO::LeakTest > 0, "iterator db leak check - $db_type");
   }
 }
 
