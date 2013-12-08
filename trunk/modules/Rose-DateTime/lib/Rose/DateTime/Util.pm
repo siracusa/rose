@@ -18,7 +18,7 @@ our %EXPORT_TAGS =
   all => \@EXPORT_OK
 );
 
-our $VERSION = '0.539';
+our $VERSION = '0.540';
 
 our $TZ = 'floating';
 our $Debug = 0;
@@ -55,7 +55,12 @@ sub init_european_dates
 {
   #my($class) = shift;
 
-  my $locale_class = DateTime::Locale->load(DateTime->DefaultLocale);
+  my $locale_class = DateTime->DefaultLocale;
+  
+  unless(ref $locale_class)
+  {
+    $locale_class = DateTime::Locale->load($locale_class);
+  }
 
   # Fall back to the older (pre-0.4) DateTime::Locale API
   my $short = 
