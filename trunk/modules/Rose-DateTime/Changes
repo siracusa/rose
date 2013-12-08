@@ -1,3 +1,7 @@
+0.540_01 (12.08.2013) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: European date parsing settings.
+
 0.540 (12.08.2013) - John Siracusa <siracusa@gmail.com>
 
     * Handle object return value from DateTime->DefaultLocale.
