@@ -216,15 +216,15 @@ sub init_local_moniker { shift->local_name }
 sub form_context_name
 {
   my($self) = shift;
-  my $parent_form = $self->parent_form or return;
-  return $parent_form->fq_form_name or return;
+  my $parent_form = $self->parent_form or return undef;
+  return $parent_form->fq_form_name;
 }
 
 sub field_context_name
 {
   my($self) = shift;
-  my $parent_field = $self->parent_field or return;
-  my $name = $parent_field->fq_name or return;
+  my $parent_field = $self->parent_field or return undef;
+  my $name = $parent_field->fq_name or return undef;
   return $name;
 }
 
