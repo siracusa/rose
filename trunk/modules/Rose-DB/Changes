@@ -1,3 +1,7 @@
+0.775 (01.18.2013) - John Siracusa <siracusa@gmail.com>
+
+    * Improved automated installation detection (RT 92254)
+
 0.774 (11.01.2013) - John Siracusa <siracusa@gmail.com>
 
     * Fixed typos.

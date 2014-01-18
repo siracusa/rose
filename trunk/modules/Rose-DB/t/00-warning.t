@@ -74,7 +74,7 @@ print STDERR<<"EOF";
 EOF
 }
 
-unless($ENV{'AUTOMATED_TESTING'})
+unless($ENV{'AUTOMATED_TESTING'} || $ENV{'PERL_MM_USE_DEFAULT'})
 {
   my %old;
 
