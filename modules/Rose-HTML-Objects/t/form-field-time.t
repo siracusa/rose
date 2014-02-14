@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 36;
+use Test::More tests => 38;
 
 BEGIN 
 {
@@ -79,3 +79,8 @@ is($field->output_value, '05:01:00 am', 'output_value() 6');
 $field->input_value('-13:01am');
 
 is($field->validate, 0, 'validate() 4');
+
+$field = Rose::HTML::Form::Field::Time->new(name => 'new');
+ok($field->validate, 'validate() empty 1');
+$field->input_value('');
+ok($field->validate, 'validate() empty 2');
