@@ -6,7 +6,7 @@ use Rose::HTML::Object::Errors qw(:time);
 
 use base 'Rose::HTML::Form::Field::Text';
 
-our $VERSION = '0.606';
+our $VERSION = '0.621';
 
 __PACKAGE__->add_required_html_attr(
 {
@@ -55,6 +55,8 @@ sub validate
   return $ok  unless($ok);
 
   my $time = $self->internal_value;
+
+  return 1 unless ($time && $time =~ /\S/);
 
   unless($time =~ /^(\d\d):(\d\d):(\d\d) ([AP]M)$/)
   {
