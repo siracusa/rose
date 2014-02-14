@@ -1,3 +1,7 @@
+1.03 (02.14.2014) - John Siracusa <siracusa@gmail.com>
+
+    * Documented the return value of parse().
+
 1.02 (06.15.2010) - John Siracusa <siracusa@gmail.com>
 
     * Fixed test failures on systems without Time::HiRes.

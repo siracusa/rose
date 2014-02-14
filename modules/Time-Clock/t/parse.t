@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 32;
+use Test::More tests => 33;
 
 use Time::Clock;
 
@@ -73,3 +73,7 @@ else
   ok($t->as_string =~ /^\d\d:\d\d:\d\d$/, 'now hires (skipped) 2');
   SKIP: { skip('parse now lowres', 2) }
 }
+
+$t = Time::Clock->new->parse('12:34:56.123456789');
+
+is($t->format('%H %k %I %i %M %S %N %n %p %P %T'), '12 12 12 12 34 56 123456789 .123456789 PM pm 12:34:56', 'new->parse');
