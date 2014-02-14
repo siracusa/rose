@@ -4,7 +4,7 @@ use strict;
 
 use Carp;
 
-our $VERSION = '1.02';
+our $VERSION = '1.03';
 
 use overload
 (
@@ -711,7 +711,9 @@ Get or set the nanosecond of the clock.  INT must be an integer from 0 to 999999
 
 =item B<parse STRING>
 
-Set the clock time by parsing STRING.  Valid string values contain an hour with optional minutes, seconds, fractional seconds, and AM/PM string.  There should be a colon (":") between hours, minutes, and seconds, and a decimal point (".") between the seconds and fractional seconds.  Fractional seconds may contain up to 9 digits.  The AM/PM string is case-insensitive and may have periods after each letter.
+Set the clock time by parsing STRING.  The invoking object is returned.
+
+Valid string values contain an hour with optional minutes, seconds, fractional seconds, and AM/PM string.  There should be a colon (":") between hours, minutes, and seconds, and a decimal point (".") between the seconds and fractional seconds.  Fractional seconds may contain up to 9 digits.  The AM/PM string is case-insensitive and may have periods after each letter.
 
 The string "now" will initialize the clock object with the current (local) time.  If the L<Time::HiRes> module is installed, this time will have fractional seconds.
 
