@@ -50,8 +50,8 @@ Rose::HTML::Form::Field::Hidden - Object representation of a hidden field in an 
 
     $field =
       Rose::HTML::Form::Field::Hidden->new(
-        name  => 'code',  
-        value => '1234');
+        name    => 'code',  
+        default => '1234');
 
     print $field->html;
 
