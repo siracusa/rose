@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 1603;
+use Test::More tests => 1604;
 
 BEGIN 
 {
@@ -4523,7 +4523,7 @@ SKIP: foreach my $db_type ('informix')
 
 SKIP: foreach my $db_type ('sqlite')
 {
-  skip("SQLite tests", 465)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 466)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -6125,21 +6125,25 @@ SKIP: foreach my $db_type ('sqlite')
   # Begin with_map_records tests
 
   test_memory_cycle_ok($o, "with_map_records memory cycle 1 - $db_type");
-# print find_cycle($o);
-# print "######################\n";
-#$DB::single = 1;
+
   @colors = $o->colors2;  
-# use Devel::Cycle;
-# print find_cycle($o);
-# exit;
+
   is($colors[0]->map_record->color_id, $colors[0]->id, "with_map_records rel 1 - $db_type");
   is($colors[0]->map_record->obj_id, $o->id, "with_map_records rel 2 - $db_type");
-#exit;
+
   @colors = $o->colors3;  
 
   is($colors[-1]->map_rec->color_id, $colors[-1]->id, "with_map_records rel 3 - $db_type");
   is($colors[-1]->map_rec->obj_id, $o->id, "with_map_records rel 4 - $db_type");
   is($colors[-1]->map_rec->color_id, 1, "with_map_records rel 5 - $db_type");
+
+  $colors[-1]->map_rec->arb_attr('new');
+
+  $o->colors3(@colors);
+  $o->save;
+
+  $o2 = ref($o)->new(id => $o->id)->load;
+  is(join(',', sort map { $_->id } $o2->colors), join(',', sort map { $_->id } @colors), "with_map_records update 1 - $db_type");
 
   my $objs = 
     Rose::DB::Object::Manager->get_objects(
