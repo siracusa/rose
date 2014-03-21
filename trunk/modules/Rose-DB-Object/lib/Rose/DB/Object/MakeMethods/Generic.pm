@@ -5149,7 +5149,25 @@ sub objects_by_map
               # Create or retrieve map record, connected to self
               if($map_record_method)
               {
-                $map_record = $object->$map_record_method() || $map_class->new;
+                $map_record = $object->$map_record_method();
+
+                if($map_record)
+                {
+                  if($map_record->{STATE_IN_DB()})
+                  {
+                    foreach my $method ($map_record->meta->primary_key_column_mutator_names)
+                    {
+                      $map_record->$method(undef);
+                    }
+
+                    $map_record->{STATE_IN_DB()} = 0;
+                  }
+                }
+                else
+                {
+                  $map_record = $map_class->new;
+                }
+
                 $map_record->init(%method_map_to_self, db => $db);
               }
               else
@@ -5421,7 +5439,25 @@ sub objects_by_map
             # Create or retrieve map record, connected to self
             if($map_record_method)
             {
-              $map_record = $object->$map_record_method() || $map_class->new;
+              $map_record = $object->$map_record_method();
+
+              if($map_record)
+              {
+                if($map_record->{STATE_IN_DB()})
+                {
+                  foreach my $method ($map_record->meta->primary_key_column_mutator_names)
+                  {
+                    $map_record->$method(undef);
+                  }
+
+                  $map_record->{STATE_IN_DB()} = 0;
+                }
+              }
+              else
+              {
+                $map_record = $map_class->new;
+              }
+
               $map_record->init(%method_map_to_self, db => $db);
             }
             else
