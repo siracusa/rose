@@ -260,7 +260,7 @@ The examples above show SELECT, INSERT, UPDATE, and DELETE operations on one row
 
 But why is there a separate class for dealing with multiple objects?  Why not simply add more methods to the object itself?  Say, a C<search()> method to go alongside L<load()|Rose::DB::Object/load>, L<save()|Rose::DB::Object/save>, L<delete()|Rose::DB::Object/delete> and friends?  There are several reasons.
 
-First, it's somewhat "semantically impure" for the class that represents a single row to also be the class that's used to fetch multiple row.  It's also important to keep the object method namespace as sparsely populated as possible.  Each new object method prevents a column with the same name from using that method name.  L<Rose::DB::Object> tries to keep the list of L<reserved method names|Rose::DB::Object/"RESERVED METHODS"> as small as possible.
+First, it's somewhat "semantically impure" for the class that represents a single row to also be the class that's used to fetch multiple rows.  It's also important to keep the object method namespace as sparsely populated as possible.  Each new object method prevents a column with the same name from using that method name.  L<Rose::DB::Object> tries to keep the list of L<reserved method names|Rose::DB::Object/"RESERVED METHODS"> as small as possible.
 
 Second, inevitably, classes grow.  It's important for the object manager class to be separate from the object class itself so each class can grow happily in isolation, with no potential for namespace or functionality clashes.
 
