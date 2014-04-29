@@ -1,4 +1,4 @@
-0.811_01 (03.22.2014) - John Siracusa <siracusa@gmail.com>
+0.812_01 (04.28.2014) - John Siracusa <siracusa@gmail.com>
 
     * TODO: Document and test passing an array reference containing
       a scalar reference to literal SQL, plus bind values, to the "set"
@@ -35,8 +35,10 @@
     * TODO: add delete_now and delete_on_save method types to ManyToMany?
     * TODO: make save() fail if IN_DB and modified PK columns?
 
-0.812 (03.22.2014) - John Siracusa <siracusa@gmail.com>
+0.812 (04.28.2014) - John Siracusa <siracusa@gmail.com>
 
+    * Second attempt to address precision and scale mix-ups in auto-loaded
+      numeric column metadata.
     * Corrected a typo in the documentation (RT 94100)
 
 0.811 (03.21.2014) - John Siracusa <siracusa@gmail.com>

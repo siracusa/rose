@@ -11,7 +11,7 @@ our @ISA = qw(Rose::DB::Object::Metadata::Auto);
 
 our $Debug;
 
-our $VERSION = '0.784';
+our $VERSION = '0.812';
 
 # Other useful columns, not selected for now
 #   pg_get_indexdef(i.oid) AS indexdef
@@ -157,6 +157,16 @@ sub auto_generate_unique_keys
   @unique_keys = sort { lc $a->name cmp lc $b->name } @unique_keys;
 
   return wantarray ? @unique_keys : \@unique_keys;
+}
+
+sub auto_generate_column
+{
+  my($self, $name, $col_info) = @_;
+
+  $col_info->{'NUMERIC_PRECISION'} = $col_info->{'DECIMAL_DIGITS'};
+  $col_info->{'NUMERIC_SCALE'}     = $col_info->{'COLUMN_SIZE'};
+
+  return $self->SUPER::auto_generate_column($name, $col_info);
 }
 
 1;

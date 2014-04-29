@@ -7,7 +7,7 @@ use Rose::Object::MakeMethods::Generic;
 use Rose::DB::Object::Metadata::Column::Scalar;
 our @ISA = qw(Rose::DB::Object::Metadata::Column::Scalar);
 
-our $VERSION = '0.788';
+our $VERSION = '0.812';
 
 __PACKAGE__->delete_common_method_maker_argument_names('length');
 
@@ -35,10 +35,15 @@ sub should_inline_value
 sub init_with_dbi_column_info
 {
   my($self, $col_info) = @_;
-$DB::single = 1;
+
+  $self->precision(defined $col_info->{'NUMERIC_PRECISION'} ? 
+    $col_info->{'NUMERIC_PRECISION'} : $col_info->{'COLUMN_SIZE'});
+
+  $self->scale(defined $col_info->{'NUMERIC_SCALE'} ? 
+    $col_info->{'NUMERIC_SCALE'} : $col_info->{'DECIMAL_DIGITS'});
+
   # Prevent COLUMN_SIZE from setting bogus length in superclass
-  $self->precision($col_info->{'DECIMAL_DIGITS'});
-  $self->scale(delete $col_info->{'COLUMN_SIZE'});
+  delete $col_info->{'COLUMN_SIZE'};
 
   $self->SUPER::init_with_dbi_column_info($col_info);
 
