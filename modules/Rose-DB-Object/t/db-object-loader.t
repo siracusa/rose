@@ -235,7 +235,7 @@ foreach my $db_type (qw(mysql pg pg_with_schema informix sqlite oracle))
     SKIP: { skip("bigserial test for $db_type", 1) }
   }
 
-  if($db_type eq 'Pg')
+  if($db_type eq 'Pg' || $db_type eq 'mysql')
   {
     is($price_class->meta->column('price')->precision, 10, "decimal precision - $db_type");
     is($price_class->meta->column('price')->scale, 2, "decimal scale - $db_type");
