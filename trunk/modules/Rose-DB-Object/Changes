@@ -1,5 +1,6 @@
 0.812_01 (04.28.2014) - John Siracusa <siracusa@gmail.com>
 
+    * TODO: Utility functions to get/set lazy-loading info.
     * TODO: Document and test passing an array reference containing
       a scalar reference to literal SQL, plus bind values, to the "set"
       parameter of update_objects() (Reported by Philip Garrett)
