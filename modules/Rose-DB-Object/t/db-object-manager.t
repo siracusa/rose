@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3910;
+use Test::More tests => 3916;
 
 BEGIN 
 {
@@ -93,7 +93,7 @@ if(defined $ENV{'RDBO_NESTED_JOINS'} && Rose::DB::Object::Manager->can('default_
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("PostgreSQL tests", 784)  unless($HAVE_PG);
+  skip("PostgreSQL tests", 786)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -335,6 +335,22 @@ SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
       sort_by => 'name DESC');
 
   is($count, 1, "get_objects_count() require 1 - $db_type");
+
+  $count = MyPgObjectManager->object_count(
+    select   => 'name',
+    distinct => 1,
+    all      => 1,
+  );
+
+  is($count, 4, "get_objects_count() distinct column 1 - $db_type");
+
+  $count = MyPgObjectManager->object_count(
+    select   => [ 'status' ],
+    distinct => 1,
+    all      => 1,
+  );
+
+  is($count, 1, "get_objects_count() distinct column 2 - $db_type");
 
   # Clear sub-object
   $objs->[0]->b1(undef);
@@ -3131,7 +3147,7 @@ EOF
 
 SKIP: foreach my $db_type ('mysql')
 {
-  skip("MySQL tests", 791)  unless($HAVE_MYSQL);
+  skip("MySQL tests", 793)  unless($HAVE_MYSQL);
 
   Rose::DB->default_type($db_type);
 
@@ -3371,6 +3387,24 @@ SKIP: foreach my $db_type ('mysql')
       sort_by => 'name DESC');
 
   is($count, 1, "get_objects_count() require 1 - $db_type");
+
+  $count = Rose::DB::Object::Manager->get_objects_count(
+    object_class => 'MyMySQLObject',
+    select       => 'name',
+    distinct     => 1,
+    all          => 1,
+  );
+
+  is($count, 4, "get_objects_count() distinct column 1 - $db_type");
+
+  $count = Rose::DB::Object::Manager->get_objects_count(
+    object_class => 'MyMySQLObject',
+    select       => [ 'status' ],
+    distinct     => 1,
+    all          => 1,
+  );
+
+  is($count, 1, "get_objects_count() distinct column 2 - $db_type");
 
   # Clear sub-object
   $objs->[0]->b1(undef);
@@ -8913,7 +8947,7 @@ EOF
 
 SKIP: foreach my $db_type (qw(sqlite))
 {
-  skip("SQLite tests", 794)  unless($HAVE_SQLITE);
+  skip("SQLite tests", 796)  unless($HAVE_SQLITE);
 
   Rose::DB->default_type($db_type);
 
@@ -9230,6 +9264,22 @@ SKIP: foreach my $db_type (qw(sqlite))
       sort_by => 'name DESC');
 
   is($count, 1, "get_objects_count() require 1 - $db_type");
+
+  $count = MySQLiteObjectManager->object_count(
+    select   => 'name',
+    distinct => 1,
+    all      => 1,
+  );
+
+  is($count, 4, "get_objects_count() distinct column 1 - $db_type");
+
+  $count = MySQLiteObjectManager->object_count(
+    select   => [ 'status' ],
+    distinct => 1,
+    all      => 1,
+  );
+
+  is($count, 1, "get_objects_count() distinct column 2 - $db_type");
 
   # Clear sub-object
   $objs->[0]->b1(undef);

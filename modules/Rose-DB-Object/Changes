@@ -1,6 +1,8 @@
-0.812_01 (04.28.2014) - John Siracusa <siracusa@gmail.com>
+0.812_02 (06.19.2014) - John Siracusa <siracusa@gmail.com>
 
-    8 TODO: https://rt.cpan.org/Ticket/Display.html?id=96079
+    * Fixed get_objects_count() with custom select lists and distinct
+      (Reported by Alexander Karelas)
+    * TODO: https://rt.cpan.org/Ticket/Display.html?id=96079
     * TODO: Utility functions to get/set lazy-loading info.
     * TODO: Document and test passing an array reference containing
       a scalar reference to literal SQL, plus bind values, to the "set"
