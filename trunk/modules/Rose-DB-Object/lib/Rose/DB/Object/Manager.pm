@@ -16,7 +16,7 @@ use Rose::DB::Object::Constants
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
 
-our $VERSION = '0.790';
+our $VERSION = '0.813';
 
 our $Debug = 0;
 
@@ -1650,7 +1650,7 @@ sub get_objects
     my($sql, $bind, @bind_params);
 
     # Do we have to use DISTINCT to count?
-    my $use_distinct = $with_objects ? 1 : 0;
+    my $use_distinct = (delete $args{'distinct'} || $with_objects) ? 1 : 0;
 
     if(!$use_distinct && $require_objects)
     {
@@ -1679,8 +1679,10 @@ sub get_objects
       if(!$use_distinct || @$pk_columns == 1 || 
          $db->supports_multi_column_count_distinct)
       {
+        my $select_arg = delete $args{'select'};
+
         $select = $use_distinct ? 
-          'COUNT(DISTINCT ' . join(', ', map { "t1.$_" } @$pk_columns) . ')' :
+          'COUNT(DISTINCT ' .  join(', ', ($select_arg ? @$select_arg : (map { "t1.$_" } @$pk_columns))) . ')' :
           'COUNT(*)';
       }
       else
