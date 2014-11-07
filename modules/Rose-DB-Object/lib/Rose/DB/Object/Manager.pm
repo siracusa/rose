@@ -3464,6 +3464,7 @@ sub get_objects_from_sql
 
   my $methods   = $args{'_methods'};
   my $exec_args = $args{'args'} || [];
+  my $attr      = $args{'prepare_options'};
 
   my $have_methods = ($args{'_methods'} && %{$args{'_methods'}}) ? 1 : 0;
 
@@ -3499,8 +3500,8 @@ sub get_objects_from_sql
       local $dbh->{'RaiseError'} = 1;
 
       $Debug && warn "$sql (", join(', ', @$exec_args), ")\n";
-      my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
-                                  $dbh->prepare($sql) or die $dbh->errstr;
+      my $sth = $prepare_cached ? $dbh->prepare_cached($sql, $attr, 3) : 
+                                  $dbh->prepare($sql, $attr) or die $dbh->errstr;
 
       $sth->execute(@$exec_args);
 
@@ -3591,6 +3592,7 @@ sub get_objects_iterator_from_sql
 
   my $methods   = $args{'_methods'};
   my $exec_args = $args{'args'} || [];
+  my $attr      = $args{'prepare_options'};
 
   my $have_methods = ($args{'_methods'} && %{$args{'_methods'}}) ? 1 : 0;
 
@@ -3626,8 +3628,8 @@ sub get_objects_iterator_from_sql
       local $dbh->{'RaiseError'} = 1;
 
       $Debug && warn "$sql (", join(', ', @$exec_args), ")\n";
-      $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
-                               $dbh->prepare($sql) or die $dbh->errstr;
+      $sth = $prepare_cached ? $dbh->prepare_cached($sql, $attr, 3) : 
+                               $dbh->prepare($sql, $attr) or die $dbh->errstr;
 
       $sth->execute(@$exec_args);
     };
@@ -4695,6 +4697,10 @@ The class name of the L<Rose::DB::Object>-derived objects to be fetched.  Defaul
 =item B<prepare_cached BOOL>
 
 If true, then L<DBI>'s L<prepare_cached|DBI/prepare_cached> method will be used (instead of the L<prepare|DBI/prepare> method) when preparing the SQL statement that will fetch the objects.  If omitted, the default value is determined by the L<dbi_prepare_cached|/dbi_prepare_cached> class method.
+
+=item B<prepare_options HASHREF>
+
+A reference to a hash of attributes to be passed to L<DBI>'s L<prepare|DBI/prepare> or L<prepare_cached|DBI/prepare_cached> method when preparing the SQL statement.
 
 =item B<share_db BOOL>
 

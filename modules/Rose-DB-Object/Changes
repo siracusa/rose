@@ -1,3 +1,8 @@
+0.813 (11.07.2014) - John Siracusa <siracusa@gmail.com>
+
+    * Added prepare_options parameter to get_objects_iterator_from_sql() and
+      get_objects_from_sql() Manager methods (RT 98014)
+
 0.812 (11.07.2014) - John Siracusa <siracusa@gmail.com>
 
     * Second attempt to address precision and scale mix-ups in auto-loaded
