@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 3916;
+use Test::More tests => 3917;
 
 BEGIN 
 {
@@ -93,7 +93,7 @@ if(defined $ENV{'RDBO_NESTED_JOINS'} && Rose::DB::Object::Manager->can('default_
 
 SKIP: foreach my $db_type (qw(pg)) #pg_with_schema
 {
-  skip("PostgreSQL tests", 786)  unless($HAVE_PG);
+  skip("PostgreSQL tests", 787)  unless($HAVE_PG);
 
   Rose::DB->default_type($db_type);
 
@@ -2331,12 +2331,26 @@ EOF
     MyPgObjectManager->get_objects_from_sql(
       db   => $db,
       args => [ 19 ],
-      sql => <<"EOF");
-SELECT * FROM rose_db_object_test WHERE id > ? ORDER BY id DESC
+      prepare_options => { pg_placeholder_dollaronly => 1 },
+      sql => <<'EOF');
+SELECT * FROM rose_db_object_test WHERE id > $1 ORDER BY id DESC
 EOF
 
   ok(scalar @$objs == 2, "get_objects_from_sql 9 - $db_type");
   is($objs->[0]->id, 60, "get_objects_from_sql 10 - $db_type");
+
+  $iterator = 
+    MyPgObjectManager->get_objects_iterator_from_sql(
+      db   => $db,
+      args => [ 19 ],
+      prepare_options => { pg_placeholder_dollaronly => 1 },
+      sql => <<'EOF');
+SELECT * FROM rose_db_object_test WHERE id > $1 ORDER BY id DESC
+EOF
+
+  $o = $iterator->next;
+  is($o->id, 60, "get_objects_iterator_from_sql 11 - $db_type");
+  $iterator->finish();
 
   my $method = 
     MyPgObjectManager->make_manager_method_from_sql(
