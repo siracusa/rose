@@ -305,7 +305,7 @@ EOF
 
   my($v1, $v2, $v3) = split(/\./, $DBD::Pg::VERSION);
 
-  if($v1 >= 2 && $v2 >= 19)
+  if(($v1 >= 2 && $v2 >= 19) || $v1 > 2)
   {
     is(MyPgObject->meta->perl_unique_keys_definition(style => 'object', braces => 'bsd', indent => 2),
       <<'EOF', "perl_unique_keys_definition 2 - $db_type");
