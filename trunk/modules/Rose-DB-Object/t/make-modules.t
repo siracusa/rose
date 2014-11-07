@@ -119,7 +119,7 @@ foreach my $db_type (qw(pg mysql informix sqlite))
   no warnings 'uninitialized';
   my($v1, $v2, $v3) = split(/\./, $DBD::Pg::VERSION);
 
-  if($db_type eq 'pg' && $v1 >= 2 && $v2 >= 19)
+  if($db_type eq 'pg' && (($v1 >= 2 && $v2 >= 19) || $v1 > 2))
   {
     $unique_keys = qq([ 'name' ],\n    [ 'name', 'vendor_id' ],);
   }

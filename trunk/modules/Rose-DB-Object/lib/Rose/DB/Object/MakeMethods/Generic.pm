@@ -20,7 +20,7 @@ use Rose::DB::Object::Constants
 use Rose::DB::Object::Helpers();
 use Rose::DB::Object::Util qw(column_value_formatted_key);
 
-our $VERSION = '0.784';
+our $VERSION = '0.812';
 
 our $Debug = 0;
 
@@ -5503,7 +5503,7 @@ sub objects_by_map
             # Save the map record, if necessary
             unless($in_db)
             {
-              $map_record->save or die $map_record->error;
+              $map_record->save(%$args) or die $map_record->error;
             }
           }
 

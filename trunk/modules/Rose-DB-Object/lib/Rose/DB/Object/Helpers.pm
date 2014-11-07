@@ -11,7 +11,7 @@ require Rose::DB::Object::Util;
 
 use Carp;
 
-our $VERSION = '0.784';
+our $VERSION = '0.812';
 
 __PACKAGE__->export_tags
 (
@@ -1360,8 +1360,7 @@ Example:
 
     # Get person id 123 if it exists, otherwise create it now
     # along with permission sub-objects.
-    $person = Person->new(id    => 123, 
-                          perms => \@perms)->load_or_insert;
+    $person = Person->new(id => 123, perms => \@perms)->load_or_save;
 
 =head2 load_speculative [PARAMS]
 
