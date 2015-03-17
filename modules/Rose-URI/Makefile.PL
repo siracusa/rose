@@ -31,6 +31,6 @@ WriteMakefile(NAME         => 'Rose::URI',
                 {
                   license     => 'http://dev.perl.org/licenses/',
                   bugtracker  => 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-URI',
-                  repository  => 'http://rose.googlecode.com/svn/trunk/modules/Rose-URI',
+                  repository  => 'https://github.com/siracusa/rose/tree/master/modules/Rose-URI',
                 },
               })));

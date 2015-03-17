@@ -24,6 +24,6 @@ WriteMakefile(NAME         => 'Time::Clock',
                 {
                   license     => 'http://dev.perl.org/licenses/',
                   bugtracker  => 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=Time-Clock',
-                  repository  => 'http://rose.googlecode.com/svn/trunk/modules/Time-Clock',
+                  repository  => 'https://github.com/siracusa/rose/tree/master/modules/Time-Clock',
                 },
               })));

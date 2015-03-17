@@ -1,6 +1,10 @@
+1.01 (03.17.2015) - John Siracusa <siracusa@gmail.com>
+
+    * Updated project URLs.
+
 1.00 (03.17.2010) - John Siracusa <siracusa@gmail.com>
 
-    * Updated tests to accomodate new default escaping rules in
+    * Updated tests to accommodate new default escaping rules in
       URI::Escape 3.30 (and, presumably, later versions).
     * Bumped version number to reflect API stability.
 

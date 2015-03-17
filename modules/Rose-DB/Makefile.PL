@@ -38,9 +38,9 @@ WriteMakefile(NAME         => 'Rose::DB',
                 resources =>
                 {
                   license     => 'http://dev.perl.org/licenses/',
-                  homepage    => 'http://rose.googlecode.com/',
+                  homepage    => 'http://rosecode.org',
                   bugtracker  => 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB',
-                  repository  => 'http://rose.googlecode.com/svn/trunk/modules/Rose-DB',
+                  repository  => 'https://github.com/siracusa/rose/tree/master/modules/Rose-DB',
                   MailingList => 'http://groups.google.com/group/rose-db-object',
                 },
               })));

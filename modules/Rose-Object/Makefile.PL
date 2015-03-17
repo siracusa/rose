@@ -50,7 +50,7 @@ WriteMakefile(NAME          => 'Rose::Object',
                   license     => 'http://dev.perl.org/licenses/',
                   homepage    => 'http://rose.googlecode.com/',
                   bugtracker  => 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-Object',
-                  repository  => 'http://rose.googlecode.com/svn/trunk/modules/Rose-Object',
+                  repository  => 'https://github.com/siracusa/rose/tree/master/modules/Rose-Object',
                 },
               })));
 

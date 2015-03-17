@@ -19,7 +19,7 @@ our $Make_URI;
 
 our $SCHEME_RE = '[a-zA-Z][a-zA-Z0-9.+\-]*';
 
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 # Class data
 use Rose::Class::MakeMethods::Generic

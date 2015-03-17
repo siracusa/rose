@@ -69,9 +69,9 @@ WriteMakefile(NAME         => 'Rose::HTML::Objects',
                 resources =>
                 {
                   license     => 'http://dev.perl.org/licenses/',
-                  homepage    => 'http://rose.googlecode.com/',
+                  homepage    => 'http://rosecode.org',
                   bugtracker  => 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-HTML-Objects',
-                  repository  => 'http://rose.googlecode.com/svn/trunk/modules/Rose-HTML-Objects',
+                  repository  => 'https://github.com/siracusa/rose/tree/master/modules/Rose-HTML-Objects',
                   MailingList => 'http://groups.google.com/group/rose-html-objects',
                 },
               })));
