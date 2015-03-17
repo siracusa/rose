@@ -1,6 +1,6 @@
 # Welcome to Rose
 
-Rose is a set of Perl modules focused on web application development. The modules that make up Rose include a DBI abstraction layer, an object-relational mapper (ORM), an HTML widget toolkit, and (eventually) an MVC-style web application framework.
+Rose is a set of Perl modules focused on web application development. The modules that make up Rose include a DBI abstraction layer, an object-relational mapper (ORM), and an HTML widget toolkit.
 
 ## Download
 
