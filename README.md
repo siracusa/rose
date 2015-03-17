@@ -18,7 +18,6 @@ Rose is a set of Perl modules focused on web application development. The module
   * [Rose::DB::Object mailing list](http://groups.google.com/group/rose-db-object)
   * [Rose::HTML::Objects mailing list](http://groups.google.com/group/rose-html-objects)
   * [Old Rose::DB::Object SourceForge mailing list archive](http://www.mail-archive.com/rose-db-object@lists.sourceforge.net)
-  * [Old Rose::HTML::Objects SourceForge mailing list archive](http://sourceforge.net/mailarchive/forum.php?forum_name=rose-html-objects)
   * IRC on irc.perl.org channel #rdbo
 
 ## Tutorials
