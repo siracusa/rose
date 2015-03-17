@@ -10,8 +10,8 @@ Rose is a set of Perl modules focused on web application development. The module
 
 ## Overview
 
-  * [Rose::DB::Object](RDBO.md) (RDBO)
-  * [Rose::HTML::Objects](RHTMLO.md)
+  * [Rose::DB::Object](https://github.com/siracusa/rose/blob/wiki/RDBO.md) (RDBO)
+  * [Rose::HTML::Objects](https://github.com/siracusa/rose/blob/wiki/RHTMLO.md)
 
 ## Support
 
@@ -28,10 +28,10 @@ Rose is a set of Perl modules focused on web application development. The module
 
 ## Benchmarks
 
-  * Rose-DB-Object is fast. See [RDBOBenchmarks](RDBOBenchmarks.md).
+  * Rose-DB-Object is fast. See [RDBOBenchmarks](https://github.com/siracusa/rose/blob/wiki/RDBOBenchmarks.md).
 
 ## Miscellaneous
 
-  * [Extending Rose::DB::Object](RDBOExtending.md) - a brief overview from the mailing list.
-  * [Generating Schema Graphs](SchemaGraphs.md)
-  * [Success stories](SuccessStories.md)
+  * [Extending Rose::DB::Object](https://github.com/siracusa/rose/blob/wiki/RDBOExtending.md) - a brief overview from the mailing list.
+  * [Generating Schema Graphs](https://github.com/siracusa/rose/blob/wiki/SchemaGraphs.md)
+  * [Success stories](https://github.com/siracusa/rose/blob/wiki/SuccessStories.md)
