@@ -7,8 +7,6 @@ Rose is a set of Perl modules focused on web application development. The module
   * [Rose::DB on CPAN](http://search.cpan.org/dist/Rose-DB/)
   * [Rose::DB::Object on CPAN](http://search.cpan.org/dist/Rose-DB-Object/)
   * [Rose::HTML::Objects on CPAN](http://search.cpan.org/dist/Rose-HTML-Objects/)
-  * [Subversion repository](https://rose.googlecode.com/svn/trunk) ([web interface](http://code.google.com/p/rose/source/browse))
-  * [SVN checkout instructions](http://code.google.com/p/rose/source/checkout)
 
 ## Overview
 
