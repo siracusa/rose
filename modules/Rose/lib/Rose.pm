@@ -105,7 +105,7 @@ To report a bug, email the L<author|/AUTHOR> or use CPAN's bug tracker.
 
 Source code, mailing lists, and a wiki are available at the Rose project web site:
 
-L<http://rose.googlecode.com>
+L<http://rosecode.org>
 
 =head1 AUTHOR
 

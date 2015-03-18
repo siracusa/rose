@@ -21,7 +21,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.776';
+our $VERSION = '0.777';
 
 our $Debug = 0;
 
@@ -3952,7 +3952,7 @@ L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-DB>
 
 There's also a wiki and other resources linked from the Rose project home page:
 
-L<http://rose.googlecode.com>
+L<http://rosecode.org>
 
 =head1 CONTRIBUTORS
 

@@ -1664,7 +1664,7 @@ L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-HTML-Objects>
 
 There's also a wiki and other resources linked from the Rose project home page:
 
-L<http://rose.googlecode.com>
+L<http://rosecode.org>
 
 =head1 AUTHOR
 

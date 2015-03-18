@@ -7,7 +7,7 @@ use File::Spec();
 use File::Path();
 use File::Basename();
 
-our $VERSION = '0.621';
+our $VERSION = '0.623';
 
 our $Debug = 0;
 
@@ -1023,7 +1023,7 @@ L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Rose-HTML-Objects>
 
 There's also a wiki and other resources linked from the Rose project home page:
 
-L<http://rose.googlecode.com>
+L<http://rosecode.org>
 
 =head1 CONTRIBUTORS
 
