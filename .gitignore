@@ -1,0 +1,12 @@
+*.o
+*.so
+*.gz
+*.tar
+Makefile
+MYMETA.json
+MYMETA.yml
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
