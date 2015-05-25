@@ -91,7 +91,7 @@ sub parse_date
 {
   my($self, $value) = @_;
 
-  if(UNIVERSAL::isa($value, 'DateTime') || 
+  if( eval { $value->isa('DateTime') } ||  
     $self->validate_date_keyword($value))
   {
     return $value;
@@ -119,7 +119,7 @@ sub parse_datetime
 {
   my($self, $value) = @_;
 
-  if(UNIVERSAL::isa($value, 'DateTime') || 
+  if( eval { $value->isa('DateTime') } || 
     $self->validate_datetime_keyword($value))
   {
     return $value;
@@ -147,7 +147,7 @@ sub parse_timestamp
 {
   my($self, $value) = @_;
 
-  if(UNIVERSAL::isa($value, 'DateTime') || 
+  if( eval { $value->isa('DateTime') } || 
     $self->validate_timestamp_keyword($value))
   {
     return $value;
