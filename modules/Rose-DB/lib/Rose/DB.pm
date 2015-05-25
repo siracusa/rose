@@ -874,7 +874,7 @@ sub release_dbh
     $self->{'_dbh_refcount'} = 0;
 
     # Account for possible Apache::DBI magic
-    if(UNIVERSAL::isa($dbh, 'Apache::DBI::db'))
+    if( eval { $dbh->isa('Apache::DBI::db') } )
     {
       return $dbh->DBI::db::disconnect; # bypass Apache::DBI
     }
@@ -1653,7 +1653,7 @@ sub parse_date
 {
   my($self, $value) = @_;
 
-  if(UNIVERSAL::isa($value, 'DateTime') || $self->validate_date_keyword($value))
+  if( eval { $value->isa('DateTime') } || $self->validate_date_keyword($value))
   {
     return $value;
   }
@@ -1680,7 +1680,7 @@ sub parse_datetime
 {  
   my($self, $value) = @_;
 
-  if(UNIVERSAL::isa($value, 'DateTime') || 
+  if( eval { $value->isa('DateTime') } || 
     $self->validate_datetime_keyword($value))
   {
     return $value;
@@ -1708,7 +1708,7 @@ sub parse_timestamp
 {  
   my($self, $value) = @_;
 
-  if(UNIVERSAL::isa($value, 'DateTime') || 
+  if( eval { $value->isa('DateTime') } || 
     $self->validate_timestamp_keyword($value))
   {
     return $value;
@@ -1736,7 +1736,7 @@ sub parse_timestamp_with_time_zone
 {  
   my($self, $value) = @_;
 
-  if(UNIVERSAL::isa($value, 'DateTime') || 
+  if( eval { $value->isa('DateTime') } || 
     $self->validate_timestamp_keyword($value))
   {
     return $value;
@@ -1764,7 +1764,7 @@ sub parse_time
 {
   my($self, $value) = @_;
 
-  if(!defined $value || UNIVERSAL::isa($value, 'Time::Clock') || 
+  if(!defined $value || eval { $value->isa('Time::Clock') } || 
      $self->validate_time_keyword($value) || 
      ($self->keyword_function_calls && $value =~ /^\w+\(.*\)$/))
   {
@@ -1954,7 +1954,7 @@ sub parse_interval
 {
   my($self, $value, $end_of_month_mode) = @_;
 
-  if(!defined $value || UNIVERSAL::isa($value, 'DateTime::Duration') || 
+  if(!defined $value || eval { $value->isa('DateTime::Duration') }  || 
      $self->validate_interval_keyword($value) ||
      ($self->keyword_function_calls && $value =~ /^\w+\(.*\)$/))
   {
