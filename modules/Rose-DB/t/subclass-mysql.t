@@ -19,7 +19,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 159);
+    Test::More->import(tests => 164);
   }
 }
 
@@ -137,7 +137,7 @@ SKIP:
 {
   unless(have_db('mysql'))
   {
-    skip("MySQL connection tests", 80);
+    skip("MySQL connection tests", 85);
   }
 
   eval { $db->connect };
@@ -207,7 +207,11 @@ SKIP:
   {
     SKIP:
     {
-      skip ('mysql_enable_utf8mb4', 3) if $attr eq 'mysql_enable_utf8mb4' and ($DBD::mysql::VERSION lt '4.032' or $DBD::mysql::VERSION eq '4.032_01');
+      if($attr eq 'mysql_enable_utf8mb4' && 
+          ($DBD::mysql::VERSION lt '4.032' or $DBD::mysql::VERSION eq '4.032_01'))
+      {
+        skip('mysql_enable_utf8mb4', 3);
+      }
 
       $db = My::DB2->new($attr => 1);
       is($db->$attr(), 1, "$attr 1");
@@ -239,7 +243,10 @@ SKIP:
 
   SKIP:
   {
-    skip ('mysql_enable_utf8mb4', 2) if $DBD::mysql::VERSION lt '4.032' or $DBD::mysql::VERSION eq '4.032_01';
+    if($DBD::mysql::VERSION lt '4.032' || $DBD::mysql::VERSION eq '4.032_01')
+    {
+      skip ('mysql_enable_utf8mb4', 2);
+    }
 
     $db->mysql_enable_utf8(0);
     $db->mysql_enable_utf8mb4(1);
@@ -303,6 +310,7 @@ sub lookup_ip
 if(have_db('mysql') && $version >= 1.24)
 {
   my $x = 0;
+
   my $handler = sub { $x++; die "Error: $x" };
 
   My::DB2->register_db(
@@ -311,6 +319,7 @@ if(have_db('mysql') && $version >= 1.24)
     print_error  => 0,
     raise_error  => 1,
     handle_error => $handler,
+    username     => 'root',
   );
 
   $db = My::DB2->new('error_handler');

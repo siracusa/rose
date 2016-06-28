@@ -4,7 +4,7 @@ use strict;
 
 use FindBin qw($Bin);
 
-use Test::More tests => 208;
+use Test::More tests => 209;
 
 BEGIN
 {

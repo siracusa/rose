@@ -422,8 +422,8 @@ CREATE TABLE rdbo_test_products
   status  VARCHAR(128) NOT NULL DEFAULT 'inactive'
             CHECK(status IN ('inactive', 'active', 'defunct')),
 
-  date_created  TIMESTAMP,
-  release_date  TIMESTAMP,
+  date_created  DATETIME,
+  release_date  DATETIME,
 
   UNIQUE(name),
   INDEX(vendor_id),

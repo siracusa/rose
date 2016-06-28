@@ -1,3 +1,8 @@
+0.778 (06.28.2016) - John Siracusa <siracusa@gmail.com>
+
+    * Added mysql_enable_utf8mb4 attribute. (Patch by Alexander Karelas.)
+    * Updated tests for the latest versions of MySQL and DateTime::Format::Pg.
+
 0.777 (03.17.2015) - John Siracusa <siracusa@gmail.com>
 
     * Updated more project URLs.
