@@ -203,18 +203,23 @@ SKIP:
 
   $db->disconnect;
 
-  foreach my $attr (qw(mysql_auto_reconnect mysql_client_found_rows mysql_compression mysql_connect_timeout mysql_embedded_groups mysql_embedded_options mysql_enable_utf8 mysql_local_infile mysql_multi_statements mysql_read_default_file mysql_read_default_group mysql_socket mysql_ssl mysql_ssl_ca_file mysql_ssl_ca_path mysql_ssl_cipher mysql_ssl_client_cert mysql_ssl_client_key mysql_use_result mysql_bind_type_guessing))
+  foreach my $attr (qw(mysql_auto_reconnect mysql_client_found_rows mysql_compression mysql_connect_timeout mysql_embedded_groups mysql_embedded_options mysql_enable_utf8 mysql_enable_utf8mb4 mysql_local_infile mysql_multi_statements mysql_read_default_file mysql_read_default_group mysql_socket mysql_ssl mysql_ssl_ca_file mysql_ssl_ca_path mysql_ssl_cipher mysql_ssl_client_cert mysql_ssl_client_key mysql_use_result mysql_bind_type_guessing))
   {
-    $db = My::DB2->new($attr => 1);
-    is($db->$attr(), 1, "$attr 1");
-    $db->connect;
-
-    if($attr eq 'mysql_auto_reconnect') # can't read back the others?
+    SKIP:
     {
-      is($db->$attr(), 1, "$attr 2");
-      is($db->dbh->{$attr}, 1, "$attr 3");
+      skip ('mysql_enable_utf8mb4', 3) if $attr eq 'mysql_enable_utf8mb4' and ($DBD::mysql::VERSION lt '4.032' or $DBD::mysql::VERSION eq '4.032_01');
+
+      $db = My::DB2->new($attr => 1);
+      is($db->$attr(), 1, "$attr 1");
+      $db->connect;
+
+      if($attr eq 'mysql_auto_reconnect') # can't read back the others?
+      {
+        is($db->$attr(), 1, "$attr 2");
+        is($db->dbh->{$attr}, 1, "$attr 3");
+      }
+      else { SKIP: { skip("$attr dbh read-back", 2) } }
     }
-    else { SKIP: { skip("$attr dbh read-back", 2) } }
   }
 
   TEST:
@@ -231,6 +236,16 @@ SKIP:
   $db->connect;
   $db->mysql_enable_utf8(1);
   is($db->mysql_enable_utf8, 1, 'mysql_enable_utf8 2');
+
+  SKIP:
+  {
+    skip ('mysql_enable_utf8mb4', 2) if $DBD::mysql::VERSION lt '4.032' or $DBD::mysql::VERSION eq '4.032_01';
+
+    $db->mysql_enable_utf8(0);
+    $db->mysql_enable_utf8mb4(1);
+    is($db->mysql_enable_utf8, 0, 'mysql_enable_utf8 3');
+    is($db->mysql_enable_utf8mb4, 1, 'mysql_enable_utf8mb4 2');
+  }
 
   if($db->isa('My::DB2'))
   {

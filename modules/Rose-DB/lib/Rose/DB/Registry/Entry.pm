@@ -61,6 +61,7 @@ BEGIN
     mysql_embedded_groups    => { type => 'scalar' },
     mysql_embedded_options   => { type => 'scalar' },
     mysql_enable_utf8        => { type => 'boolean' },
+    mysql_enable_utf8mb4     => { type => 'boolean' },
     mysql_local_infile       => { type => 'scalar' },
     mysql_multi_statements   => { type => 'boolean' },
     mysql_read_default_file  => { type => 'scalar' },
@@ -420,6 +421,14 @@ Get or set the L<mysql_enable_utf8|DBD::mysql/mysql_enable_utf8> database handle
 Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
 
 See the L<DBD::mysql|DBD::mysql/mysql_enable_utf8> documentation to learn more about this attribute.
+
+=item B<mysql_enable_utf8mb4 [BOOL]>
+
+Get or set the L<mysql_enable_utf8mb4|DBD::mysql/mysql_enable_utf8mb4> database handle attribute.  This is set directly on the L<dbh|Rose::DB/dbh>, if one exists.  Otherwise, it will be set when the L<dbh|Rose::DB/dbh> is created.  If no value for this attribute is defined (the default) then it will not be set when the L<dbh|Rose::DB/dbh> is created, deferring instead to whatever default value L<DBD::mysql> chooses.
+
+Returns the value of this attribute in the L<dbh|Rose::DB/dbh>, if one exists, or the value that will be set when the L<dbh|Rose::DB/dbh> is next created.
+
+See the L<DBD::mysql|DBD::mysql/mysql_enable_utf8mb4> documentation to learn more about this attribute.
 
 =item B<mysql_local_infile [STRING]>
 
