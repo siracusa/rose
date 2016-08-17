@@ -15,7 +15,7 @@ use Rose::DB::Constants qw(IN_TRANSACTION);
 use Rose::DB::Object::Constants 
   qw(PRIVATE_PREFIX FLAG_DB_IS_PRIVATE STATE_IN_DB STATE_LOADING
      STATE_SAVING ON_SAVE_ATTR_NAME MODIFIED_COLUMNS MODIFIED_NP_COLUMNS
-     SET_COLUMNS EXCEPTION_CODE_NO_KEY);
+     SET_COLUMNS EXCEPTION_CODE_NO_KEY LOADED_RELATIONS);
 
 use Rose::DB::Object::Helpers();
 use Rose::DB::Object::Util qw(column_value_formatted_key);
@@ -2124,6 +2124,10 @@ sub object_by_key
 
       return $self->{$key}  if(defined $self->{$key});
 
+      if (defined $self->{LOADED_RELATIONS()} && $self->{LOADED_RELATIONS()}->{$key}) {
+        return undef;	
+      } 
+
       my %key;
 
       while(my($local_column, $foreign_column) = each(%$fk_columns))
@@ -2300,6 +2304,10 @@ sub object_by_key
       }
 
       return $self->{$key}  if(defined $self->{$key});
+
+      if (defined $self->{LOADED_RELATIONS()} && $self->{LOADED_RELATIONS()}->{$key}) {
+        return undef;	
+      }
 
       my %key;
 
@@ -2519,6 +2527,10 @@ sub object_by_key
       }
 
       return $self->{$key}  if(defined $self->{$key});
+
+      if (defined $self->{LOADED_RELATIONS()} && $self->{LOADED_RELATIONS()}->{$key}) {
+        return undef;	
+      } 
 
       my %key;
 
@@ -3239,6 +3251,14 @@ sub objects_by_key
         }
       }
 
+      if (defined $self->{LOADED_RELATIONS()} && $self->{LOADED_RELATIONS()}->{$key}) {
+        if (!$single) {
+          return wantarray ? () : [];	
+        } else {
+          return undef;
+        }	
+      } 
+
       my %key;
 
       while(my($local_column, $foreign_column) = each(%$ft_columns))
@@ -3518,6 +3538,14 @@ sub objects_by_key
         }
       }
 
+      if (defined $self->{LOADED_RELATIONS()} && $self->{LOADED_RELATIONS()}->{$key}) {
+        if (!$single) {
+          return wantarray ? () : [];	
+        } else {
+          return undef;
+        }	
+      } 
+
       my $objs;
 
       # Get query key
@@ -3793,6 +3821,14 @@ sub objects_by_key
       }
 
       my $objs;
+
+      if (defined $self->{LOADED_RELATIONS()} && $self->{LOADED_RELATIONS()}->{$key}) {
+        if (!$single) {
+          return wantarray ? () : [];	
+        } else {
+          return undef;
+        }	
+      } 
 
       # Get query key
       my %key;
@@ -4931,6 +4967,10 @@ sub objects_by_map
         return wantarray ? @{$self->{$key}} : $self->{$key};  
       }
 
+      if (defined $self->{LOADED_RELATIONS()} && $self->{LOADED_RELATIONS()}->{$key}) {
+        return wantarray ? () : [];	
+      } 
+
       my %join_map_to_self;
 
       while(my($map_column, $self_method) = each(%map_column_to_self_method))
@@ -5246,6 +5286,10 @@ sub objects_by_map
         return wantarray ? @{$self->{$key}} : $self->{$key};  
       }
 
+      if (defined $self->{LOADED_RELATIONS()} && $self->{LOADED_RELATIONS()}->{$key}) {
+        return wantarray ? () : [];	
+      } 
+
       my %join_map_to_self;
 
       while(my($local_column, $foreign_method) = each(%map_column_to_self_method))
@@ -5535,6 +5579,10 @@ sub objects_by_map
       {
         return wantarray ? @{$self->{$key}} : $self->{$key};  
       }
+
+      if (defined $self->{LOADED_RELATIONS()} && $self->{LOADED_RELATIONS()}->{$key}) {
+        return wantarray ? () : [];	
+      } 
 
       my %join_map_to_self;
 
