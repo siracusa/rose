@@ -1048,7 +1048,7 @@ sub apply_method_triggers
           }
           else
           {
-            $self->{$is_inflated_key} = 0  unless($uses_formatted_key);
+            $self->{$is_inflated_key} = 1  unless($uses_formatted_key);
 
             my @ret;
 
