@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 164);
+    Test::More->import(tests => 107);
   }
 }
 
@@ -199,16 +199,11 @@ SKIP:
 
   $db->disconnect;
 
-  foreach my $attr (qw(mariadb_auto_reconnect mariadb_client_found_rows mariadb_compression mariadb_connect_timeout mariadb_embedded_groups mariadb_embedded_options mariadb_enable_utf8 mariadb_enable_utf8mb4 mariadb_local_infile mariadb_multi_statements mariadb_read_default_file mariadb_read_default_group mariadb_socket mariadb_ssl mariadb_ssl_ca_file mariadb_ssl_ca_path mariadb_ssl_cipher mariadb_ssl_client_cert mariadb_ssl_client_key mariadb_use_result mariadb_bind_type_guessing))
+  # https://metacpan.org/pod/DBD::MariaDB#DATABASE-HANDLES
+  foreach my $attr (qw(mariadb_auto_reconnect mariadb_use_result mariadb_bind_type_guessing))
   {
     SKIP:
     {
-      if($attr eq 'mariadb_enable_utf8mb4' && 
-          ($DBD::MariaDB::VERSION lt '4.032' or $DBD::MariaDB::VERSION eq '4.032_01'))
-      {
-        skip('mariadb_enable_utf8mb4', 3);
-      }
-
       $db = Rose::DB->new($attr => 1);
       is($db->$attr(), 1, "$attr 1");
       $db->connect;
@@ -234,16 +229,6 @@ SKIP:
   ok($db->{'dbh'}{'Active'}, 'retain stuffed dbh');
 
   $db->connect;
-  $db->mariadb_enable_utf8(1);
-  is($db->mariadb_enable_utf8, 1, 'mariadb_enable_utf8 2');
-
-  SKIP:
-  {
-    $db->mariadb_enable_utf8(0);
-    $db->mariadb_enable_utf8mb4(1);
-    is($db->mariadb_enable_utf8, 0, 'mariadb_enable_utf8 3');
-    is($db->mariadb_enable_utf8mb4, 1, 'mariadb_enable_utf8mb4 2');
-  }
 
   if($db->isa('My::DB2'))
   {
