@@ -6,6 +6,7 @@ lib/Rose/DB/Constants.pm
 lib/Rose/DB/Generic.pm
 lib/Rose/DB/Informix.pm
 lib/Rose/DB/MySQL.pm
+lib/Rose/DB/MariaDB.pm
 lib/Rose/DB/Oracle.pm
 lib/Rose/DB/Pg.pm
 lib/Rose/DB/Registry.pm

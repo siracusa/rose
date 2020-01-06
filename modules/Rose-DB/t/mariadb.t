@@ -133,11 +133,11 @@ SKIP:
 {
   unless(have_db('mariadb'))
   {
-    skip("MariaDB connection tests", 85);
+    skip("MariaDB connection tests", 28);
   }
 
   eval { $db->connect };
-  skip("Could not connect to db 'test', 'mariadb' - $@", 27)  if($@);
+  skip("Could not connect to db 'test', 'mariadb' - $@", 28)  if($@);
   $dbh = $db->dbh;
 
   is($db->domain, 'test', "domain()");
@@ -202,12 +202,12 @@ SKIP:
   # https://metacpan.org/pod/DBD::MariaDB#DATABASE-HANDLES
   foreach my $attr (qw(mariadb_auto_reconnect mariadb_use_result mariadb_bind_type_guessing))
   {
+    $db = Rose::DB->new($attr => 1);
+    is($db->$attr(), 1, "$attr 1");
+    $db->connect;
+
     SKIP:
     {
-      $db = Rose::DB->new($attr => 1);
-      is($db->$attr(), 1, "$attr 1");
-      $db->connect;
-
       if($attr eq 'mariadb_auto_reconnect') # can't read back the others?
       {
         is($db->$attr(), 1, "$attr 2");
