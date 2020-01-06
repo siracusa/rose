@@ -131,7 +131,7 @@ BEGIN
     driver   => 'mariadb',
     database => 'test',
     host     => 'localhost',
-    username => 'root',
+    username => 'test',
     password => ''
   );
 
@@ -142,7 +142,7 @@ BEGIN
     driver   => 'mariadb',
     database => 'test',
     host     => 'localhost',
-    username => 'root',
+    username => 'test',
     password => ''
   );
 
@@ -257,7 +257,7 @@ BEGIN
 
   unless($Rose::DB::Object::Test::NoDefaults)
   {
-    foreach my $db_type (qw(ORACLE PG MYSQL INFORMIX))
+    foreach my $db_type (qw(ORACLE PG MYSQL MARIADB INFORMIX))
     {
       if(my $dsn = $ENV{"RDBO_${db_type}_DSN"})
       {

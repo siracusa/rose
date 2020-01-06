@@ -295,7 +295,7 @@ if(have_db('mariadb') && $version >= 1.24)
     print_error  => 0,
     raise_error  => 1,
     handle_error => $handler,
-    username     => 'root',
+    username     => 'test',
   );
 
   $db = Rose::DB->new('error_handler');

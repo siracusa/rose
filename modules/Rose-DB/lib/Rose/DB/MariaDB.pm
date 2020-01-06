@@ -15,7 +15,7 @@ TRY:
 
 use Rose::DB;
 
-our $VERSION = '0.774';
+our $VERSION = '0.780';
 
 our $Debug = 0;
 
@@ -566,14 +566,14 @@ Rose::DB::MariaDB - MariaDB driver class for Rose::DB.
   ...
 
   # Set max length of varchar columns used to emulate the array data type
-  Rose::DB::MySQL->max_array_characters(128);
+  Rose::DB::MariaDB->max_array_characters(128);
 
-  $db = Rose::DB->new; # $db is really a Rose::DB::MySQL-derived object
+  $db = Rose::DB->new; # $db is really a Rose::DB::MariaDB-derived object
   ...
 
 =head1 DESCRIPTION
 
-L<Rose::DB> blesses objects into a class derived from L<Rose::DB::MySQL> when the L<driver|Rose::DB/driver> is "mysql".  This mapping of driver names to class names is configurable.  See the documentation for L<Rose::DB>'s L<new()|Rose::DB/new> and L<driver_class()|Rose::DB/driver_class> methods for more information.
+L<Rose::DB> blesses objects into a class derived from L<Rose::DB::MariaDB> when the L<driver|Rose::DB/driver> is "mariadb".  This mapping of driver names to class names is configurable.  See the documentation for L<Rose::DB>'s L<new()|Rose::DB/new> and L<driver_class()|Rose::DB/driver_class> methods for more information.
 
 This class cannot be used directly.  You must use L<Rose::DB> and let its L<new()|Rose::DB/new> method return an object blessed into the appropriate class for you, according to its L<driver_class()|Rose::DB/driver_class> mappings.
 
@@ -593,13 +593,13 @@ This setting comes into play when L<Rose::DB::Object::Loader> is used to auto-cr
 
 Get or set the maximum length of varchar columns used to emulate the array data type.  The default value is 255.
 
-MySQL does not have a native "ARRAY" data type, but this data type can be emulated using a "VARCHAR" column and a specially formatted string.  The formatting and parsing of this string is handled by the L<format_array|/format_array> and L<parse_array|/parse_array> object methods.  The maximum length limit is honored by the L<format_array|/format_array> object method.
+MariaDB does not have a native "ARRAY" data type, but this data type can be emulated using a "VARCHAR" column and a specially formatted string.  The formatting and parsing of this string is handled by the L<format_array|/format_array> and L<parse_array|/parse_array> object methods.  The maximum length limit is honored by the L<format_array|/format_array> object method.
 
 =item B<max_interval_characters [INT]>
 
 Get or set the maximum length of varchar columns used to emulate the interval data type.  The default value is 255.
 
-MySQL does not have a native "interval" data type, but this data type can be emulated using a "VARCHAR" column and a specially formatted string.  The formatting and parsing of this string is handled by the L<format_interval|/format_interval> and L<parse_interval|/parse_interval> object methods.  The maximum length limit is honored by the L<format_interval|/format_interval> object method.
+MariaDB does not have a native "interval" data type, but this data type can be emulated using a "VARCHAR" column and a specially formatted string.  The formatting and parsing of this string is handled by the L<format_interval|/format_interval> and L<parse_interval|/parse_interval> object methods.  The maximum length limit is honored by the L<format_interval|/format_interval> object method.
 
 =back
 
@@ -795,11 +795,11 @@ If the resulting string is longer than L<max_interval_characters|/max_interval_c
 
 =item B<format_set ARRAYREF | LIST>
 
-Given a reference to an array or a list of values, return a string formatted according to the rules of MySQL's "SET" data type.  Undef is returned if ARRAYREF points to an empty array or if LIST is not passed.  If the array or list contains undefined values, a fatal error will occur.
+Given a reference to an array or a list of values, return a string formatted according to the rules of MariaDB's "SET" data type.  Undef is returned if ARRAYREF points to an empty array or if LIST is not passed.  If the array or list contains undefined values, a fatal error will occur.
 
 =item B<parse_array STRING | LIST | ARRAYREF>
 
-Parse STRING and return a reference to an array.  STRING should be formatted according to the MySQL array data type emulation format returned by L<format_array()|/format_array>.  Undef is returned if STRING is undefined.
+Parse STRING and return a reference to an array.  STRING should be formatted according to the MariaDB array data type emulation format returned by L<format_array()|/format_array>.  Undef is returned if STRING is undefined.
 
 If a LIST of more than one item is passed, a reference to an array containing the values in LIST is returned.
 
@@ -813,7 +813,7 @@ If STRING is a L<DateTime::Duration> object, a valid interval keyword (according
 
 =item B<parse_set STRING | LIST | ARRAYREF>
 
-Parse STRING and return a reference to an array.  STRING should be formatted according to MySQL's "SET" data type.  Undef is returned if STRING is undefined.
+Parse STRING and return a reference to an array.  STRING should be formatted according to MariaDB's "SET" data type.  Undef is returned if STRING is undefined.
 
 If a LIST of more than one item is passed, a reference to an array containing the values in LIST is returned.
 
@@ -821,7 +821,7 @@ If a an ARRAYREF is passed, it is returned as-is.
 
 =item B<validate_date_keyword STRING>
 
-Returns true if STRING is a valid keyword for the MySQL "date" data type.  Valid (case-insensitive) date keywords are:
+Returns true if STRING is a valid keyword for the MariaDB "date" data type.  Valid (case-insensitive) date keywords are:
 
     curdate()
     current_date
@@ -834,7 +834,7 @@ Any string that looks like a function call (matches /^\w+\(.*\)$/) is also consi
 
 =item B<validate_datetime_keyword STRING>
 
-Returns true if STRING is a valid keyword for the MySQL "datetime" data type, false otherwise.  Valid (case-insensitive) datetime keywords are:
+Returns true if STRING is a valid keyword for the MariaDB "datetime" data type, false otherwise.  Valid (case-insensitive) datetime keywords are:
 
     curdate()
     current_date
@@ -852,7 +852,7 @@ Any string that looks like a function call (matches /^\w+\(.*\)$/) is also consi
 
 =item B<validate_timestamp_keyword STRING>
 
-Returns true if STRING is a valid keyword for the MySQL "timestamp" data type, false otherwise.  Valid (case-insensitive) timestamp keywords are:
+Returns true if STRING is a valid keyword for the MariaDB "timestamp" data type, false otherwise.  Valid (case-insensitive) timestamp keywords are:
 
     curdate()
     current_date
@@ -877,6 +877,6 @@ John C. Siracusa (siracusa@gmail.com)
 
 =head1 LICENSE
 
-Copyright (c) 2010 by John C. Siracusa.  All rights reserved.  This program is
+Copyright (c) 2020 by John C. Siracusa.  All rights reserved.  This program is
 free software; you can redistribute it and/or modify it under the same terms
 as Perl itself.
