@@ -6,7 +6,7 @@ use Rose::HTML::Object::Errors qw(:number);
 
 use base 'Rose::HTML::Form::Field::Text';
 
-our $VERSION = '0.606';
+our $VERSION = '0.624';
 
 # use Rose::Object::MakeMethods::Generic
 # (
