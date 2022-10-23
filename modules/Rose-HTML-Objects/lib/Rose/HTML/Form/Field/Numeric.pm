@@ -15,6 +15,10 @@ our $VERSION = '0.606';
 
 __PACKAGE__->default_html_attr_value(size  => 6);
 
+__PACKAGE__->add_required_html_attrs({
+	type  => 'number',
+});
+
 sub positive
 {
   my($self) = shift;
