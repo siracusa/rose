@@ -9,7 +9,7 @@ use base 'Rose::HTML::Form::Field::Numeric';
 our $VERSION = '0.606';
 
 __PACKAGE__->add_required_html_attrs({
-  type  => 'number',
+  step => 1,
 });
 
 
