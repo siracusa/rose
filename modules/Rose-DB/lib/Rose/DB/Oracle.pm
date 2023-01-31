@@ -532,7 +532,7 @@ sub format_select_lock
   return $sql;
 }
 
-sub format_boolean { $_[1] ? 't' : 'f' }
+sub format_boolean { $_[1] ? '1' : '0' }
 
 #
 # Date/time keywords and inlining
