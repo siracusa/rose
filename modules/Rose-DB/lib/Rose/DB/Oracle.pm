@@ -102,10 +102,19 @@ sub build_dsn
 
   if($args{'host'} || $args{'port'})
   {
-    $args{'sid'} = $database;
+    if ($database =~ /^service\:/)
+    {
+      $database =~ s/service\://;
 
-    return 'dbi:Oracle:' . 
-      join(';', map { "$_=$args{$_}" } grep { $args{$_} } qw(sid host port));
+      return sprintf("dbi:Oracle://%s:%s/%s", $args{'host'}, $args{'port'}, $database);
+    }
+    else
+    {
+      $args{'sid'} = $database;
+
+      return 'dbi:Oracle:' .
+        join(';', map { "$_=$args{$_}" } grep { $args{$_} } qw(sid host port));
+    }
   }
 
   return "dbi:Oracle:$database";
