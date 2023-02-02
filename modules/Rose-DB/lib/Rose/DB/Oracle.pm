@@ -102,10 +102,20 @@ sub build_dsn
 
   if($args{'host'} || $args{'port'})
   {
-    $args{'sid'} = $database;
+    if ($args{'service'})
+    {
+      $args{'service_name'} = $args{'service'};
 
-    return 'dbi:Oracle:' . 
-      join(';', map { "$_=$args{$_}" } grep { $args{$_} } qw(sid host port));
+      return 'dbi:Oracle:' .
+        join(';', map { "$_=$args{$_}" } grep { $args{$_} } qw(service_name host port));
+    }
+    else
+    {
+      $args{'sid'} = $database;
+
+      return 'dbi:Oracle:' .
+        join(';', map { "$_=$args{$_}" } grep { $args{$_} } qw(sid host port));
+    }
   }
 
   return "dbi:Oracle:$database";
@@ -668,6 +678,7 @@ Rose::DB::Oracle - Oracle driver class for Rose::DB.
     type     => 'main',
     driver   => 'Oracle',
     database => 'dev_db',
+    service  => 'service_name',
     host     => 'localhost',
     username => 'devuser',
     password => 'mysecret',
@@ -689,6 +700,8 @@ This class cannot be used directly.  You must use L<Rose::DB> and let its L<new(
 Only the methods that are new or have different behaviors than those in L<Rose::DB> are documented here.  See the L<Rose::DB> documentation for the full list of methods.
 
 B<Oracle 9 or later is required.>
+
+If you want to connect to a service rather than a database, use the "service" parameter instead of "database". This feature will allow you to connect to PDBs (Pluggable Databases).
 
 B<Note:> This class is a work in progress.  Support for Oracle databases is not yet complete.  If you would like to help, please contact John Siracusa at siracusa@gmail.com or post to the L<mailing list|Rose::DB/SUPPORT>.
 
