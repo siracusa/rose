@@ -13,7 +13,11 @@ our $VERSION  = '0.767';
 
 use Rose::Class::MakeMethods::Generic
 (
-  inheritable_scalar => '_default_post_connect_sql',
+  inheritable_scalar =>
+  [
+    '_default_post_connect_sql',
+    'booleans_are_numeric',
+  ]
 );
 
 __PACKAGE__->_default_post_connect_sql
@@ -27,6 +31,12 @@ __PACKAGE__->_default_post_connect_sql
       ($ENV{'NLS_TIMESTAMP_TZ_FORMAT'} || 'YYYY-MM-DD HH24:MI:SS.FF TZHTZM') . q('),
   ]
 );
+
+__PACKAGE__->booleans_are_numeric(0);
+
+#
+# Object methods
+#
 
 sub default_post_connect_sql
 {
@@ -532,7 +542,17 @@ sub format_select_lock
   return $sql;
 }
 
-sub format_boolean { $_[1] ? 't' : 'f' }
+sub format_boolean
+{
+  my($self, $var) = @_;
+
+  if (ref($self)->booleans_are_numeric)
+  {
+    return $var ? '1' : '0';
+  }
+
+  return $var ? 't' : 'f';
+}
 
 #
 # Date/time keywords and inlining
@@ -707,6 +727,10 @@ The L<default_post_connect_sql|/default_post_connect_sql> statements will be run
     ALTER SESSION SET NLS_TIMESTAMP_TZ_FORMAT = 'YYYY-MM-DD HH24:MI:SS.FF TZHTZM'
 
 If one or more C<NLS_*_FORMAT> environment variables are set, the format strings above are replaced by the values that these environment variables have I<at the time this module is loaded>.
+
+=item B<booleans_are_numeric [BOOL]>
+
+Get or set a boolean value that indicates whether or not "booleans are numeric". At present, Oracle does not have a dedicated boolean type, and it can therefore be implemented as either a CHAR(1) or NUMBER(1) field. If true, boolean columns are treated as numeric and containing either 1 or 0. If false, they are treated as a character field containing either 't' or 'f'. The default is false.
 
 =back
 
