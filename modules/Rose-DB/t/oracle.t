@@ -221,3 +221,14 @@ Rose::DB->register_db
 );
 
 is(Rose::DB->new('dsn4')->dsn, 'dbi:Oracle:sid=somedb;host=somehost;port=someport', 'dsn 4');
+
+Rose::DB->register_db
+(
+  type     => 'dsn5',
+  driver   => 'oracle',
+  service  => 'someservice',
+  host     => 'somehost',
+  port     => 'someport',
+);
+
+is(Rose::DB->new('dsn5')->dsn, 'dbi:Oracle:service_name=someservice;host=somehost;port=someport', 'dsn 5');
