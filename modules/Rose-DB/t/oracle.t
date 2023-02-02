@@ -52,6 +52,8 @@ $db->keyword_function_calls(1);
 is($db->parse_boolean('Foo(Bar)'), 'Foo(Bar)', 'parse_boolean (Foo(Bar))');
 $db->keyword_function_calls(0);
 
+# booleans_are_numeric is false (default)
+
 foreach my $val (qw(t 1 true True T y Y yes Yes))
 {
   is($db->format_boolean($db->parse_boolean($val)), 't', "format_boolean ($val)");
@@ -61,6 +63,21 @@ foreach my $val (qw(f 0 false False F n N no No))
 {
   is($db->format_boolean($db->parse_boolean($val)), 'f', "format_boolean ($val)");
 }
+
+# booleans_are_numeric is true
+
+Rose::DB::Oracle->booleans_are_numeric(1);
+
+foreach my $val (qw(t 1 true True T y Y yes Yes))
+{
+  is($db->format_boolean($db->parse_boolean($val)), '1', "format_boolean ($val)");
+}
+
+foreach my $val (qw(f 0 false False F n N no No))
+{
+  is($db->format_boolean($db->parse_boolean($val)), '0', "format_boolean ($val)");
+}
+
 
 is($db->auto_quote_column_name('foo_bar_123'), 'foo_bar_123', 'auto_quote_column_name 1');
 is($db->auto_quote_column_name('claim#'), '"CLAIM#"', 'auto_quote_column_name 2');
