@@ -41,7 +41,7 @@ __PACKAGE__->booleans_are_numeric(0);
 sub booleans_are_numeric
 {
   my($class) = shift;
-  
+
   if(@_)
   {
     my $arg = shift;
@@ -50,7 +50,7 @@ sub booleans_are_numeric
 
     no warnings 'redefine';
     if($arg)
-    {    
+    {
       *format_boolean = \&format_boolean_numeric;
     }
     else
@@ -376,7 +376,7 @@ sub parse_dbi_column_info_default
   #
   #   $col_info->{'COLUMN_DEF'} = "'foo' "; # WTF?
   #
-  # I have no idea why.  Anyway, we just want the value beteen the quotes.
+  # I have no idea why.  Anyway, we just want the value between the quotes.
 
   return undef unless (defined $default);
 
@@ -721,10 +721,20 @@ Rose::DB::Oracle - Oracle driver class for Rose::DB.
     type     => 'main',
     driver   => 'Oracle',
     database => 'dev_db',
-    service  => 'service_name',
     host     => 'localhost',
     username => 'devuser',
     password => 'mysecret',
+  );
+
+  Rose::DB->register_db
+  (
+    domain   => 'production',
+    type     => 'main',
+    driver   => 'Oracle',
+    service  => 'my_pdb',
+    host     => 'db.example.com',
+    username => 'produser',
+    password => 'prodsecret',
   );
 
   Rose::DB->default_domain('development');
@@ -744,7 +754,7 @@ Only the methods that are new or have different behaviors than those in L<Rose::
 
 B<Oracle 9 or later is required.>
 
-If you want to connect to a service rather than a database, use the "service" parameter instead of "database". This feature will allow you to connect to PDBs (Pluggable Databases).
+If you want to connect to a service rather than a database, use the C<service> parameter instead of C<database> when registering the data source, as shown in the L<SYNOPSIS|/SYNOPSIS> above. This will allow you to connect to PDBs (Pluggable Databases).
 
 B<Note:> This class is a work in progress.  Support for Oracle databases is not yet complete.  If you would like to help, please contact John Siracusa at siracusa@gmail.com or post to the L<mailing list|Rose::DB/SUPPORT>.
 

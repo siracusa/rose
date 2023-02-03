@@ -3978,7 +3978,7 @@ L<http://rosecode.org>
 
 =head1 CONTRIBUTORS
 
-Kostas Chatzikokolakis, Peter Karman, Brian Duggan, Lucian Dragus, Ask Bjørn Hansen, Sergey Leschenko, Ron Savage, Ferry
+Kostas Chatzikokolakis, Peter Karman, Brian Duggan, Lucian Dragus, Ask Bjørn Hansen, Sergey Leschenko, Ron Savage, Ferry Hendrikx
 
 =head1 AUTHOR
 
