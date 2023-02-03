@@ -9,14 +9,14 @@ use Rose::DB;
 
 our $Debug = 0;
 
-our $VERSION  = '0.767';
+our $VERSION  = '0.784';
 
 use Rose::Class::MakeMethods::Generic
 (
   inheritable_scalar =>
   [
     '_default_post_connect_sql',
-    'booleans_are_numeric',
+    '_booleans_are_numeric',
   ]
 );
 
@@ -33,6 +33,36 @@ __PACKAGE__->_default_post_connect_sql
 );
 
 __PACKAGE__->booleans_are_numeric(0);
+
+#
+# Class methods
+#
+
+sub booleans_are_numeric
+{
+  my($class) = shift;
+  
+  if(@_)
+  {
+    my $arg = shift;
+
+    $class->_booleans_are_numeric($arg);
+
+    no warnings 'redefine';
+    if($arg)
+    {    
+      *format_boolean = \&format_boolean_numeric;
+    }
+    else
+    {
+      *format_boolean = \&format_boolean_char;
+    }
+
+    return $arg ? 1 : 0;
+  }
+
+  return $class->_booleans_are_numeric;
+}
 
 #
 # Object methods
@@ -552,17 +582,10 @@ sub format_select_lock
   return $sql;
 }
 
-sub format_boolean
-{
-  my($self, $var) = @_;
+sub format_boolean_char    { $_[1] ? 't' : 'f' }
+sub format_boolean_numeric { $_[1] ? 1 : 0 }
 
-  if (ref($self)->booleans_are_numeric)
-  {
-    return $var ? '1' : '0';
-  }
-
-  return $var ? 't' : 'f';
-}
+BEGIN { *format_boolean = \&format_boolean_char }
 
 #
 # Date/time keywords and inlining
@@ -743,7 +766,7 @@ If one or more C<NLS_*_FORMAT> environment variables are set, the format strings
 
 =item B<booleans_are_numeric [BOOL]>
 
-Get or set a boolean value that indicates whether or not "booleans are numeric". At present, Oracle does not have a dedicated boolean type, and it can therefore be implemented as either a CHAR(1) or NUMBER(1) field. If true, boolean columns are treated as numeric and containing either 1 or 0. If false, they are treated as a character field containing either 't' or 'f'. The default is false.
+Get or set a boolean value that indicates whether or not boolean columns are numeric. Oracle does not have a dedicated boolean column type. Two common stand-in column types are CHAR(1) and NUMBER(1). If C<booleans_are_numeric> is true, then boolean columns are treated as NUMBER(1) columns containing either 1 or 0. If false, they are treated as CHAR(1) columns containing either 't' or 'f'. The default is false.
 
 =back
 

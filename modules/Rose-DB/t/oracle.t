@@ -15,7 +15,7 @@ BEGIN
   }
   else
   {
-    Test::More->import(tests => 80);
+    Test::More->import(tests => 99);
   }
 }
 
@@ -70,14 +70,13 @@ Rose::DB::Oracle->booleans_are_numeric(1);
 
 foreach my $val (qw(t 1 true True T y Y yes Yes))
 {
-  is($db->format_boolean($db->parse_boolean($val)), '1', "format_boolean ($val)");
+  is($db->format_boolean($db->parse_boolean($val)), '1', "format_boolean (numeric) ($val)");
 }
 
 foreach my $val (qw(f 0 false False F n N no No))
 {
-  is($db->format_boolean($db->parse_boolean($val)), '0', "format_boolean ($val)");
+  is($db->format_boolean($db->parse_boolean($val)), '0', "format_boolean (numeric) ($val)");
 }
-
 
 is($db->auto_quote_column_name('foo_bar_123'), 'foo_bar_123', 'auto_quote_column_name 1');
 is($db->auto_quote_column_name('claim#'), '"CLAIM#"', 'auto_quote_column_name 2');

@@ -21,7 +21,7 @@ our @ISA = qw(Rose::Object);
 
 our $Error;
 
-our $VERSION = '0.783';
+our $VERSION = '0.784';
 
 our $Debug = 0;
 
@@ -3978,7 +3978,7 @@ L<http://rosecode.org>
 
 =head1 CONTRIBUTORS
 
-Kostas Chatzikokolakis, Peter Karman, Brian Duggan, Lucian Dragus, Ask Bjørn Hansen, Sergey Leschenko, Ron Savage
+Kostas Chatzikokolakis, Peter Karman, Brian Duggan, Lucian Dragus, Ask Bjørn Hansen, Sergey Leschenko, Ron Savage, Ferry
 
 =head1 AUTHOR
 
