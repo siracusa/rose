@@ -42,6 +42,9 @@ BEGIN
     pre_disconnect_sql => { type => 'array' },
     post_connect_sql   => { type => 'array' },
 
+    # Oracle
+    service            => { type => 'scalar' },
+
     # Pg
     european_dates     => { type => 'boolean', method_spec => { default => 0 } },
     pg_enable_utf8     => { type => 'boolean' },
