@@ -238,6 +238,8 @@ sub validate_timestamp_keyword
 
 *validate_datetime_keyword = \&validate_timestamp_keyword;
 
+sub should_inline_timestamp_keyword { 1 }
+
 sub server_time_zone
 {
   my($self) = shift;
