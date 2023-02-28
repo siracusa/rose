@@ -199,13 +199,13 @@ foreach my $name (qw(date datetime time timestamp))
 
 # Timestamp inlining (default is false)
 
-is($db->should_inline_timestamp_keyword, 0, 'should_inline_timestamp_keyword');
+is($db->should_inline_timestamp_keyword, 0, 'should_inline_timestamp_keyword (0)');
 
 Rose::DB::Pg->timestamps_are_inlined(1);
-is($db->should_inline_timestamp_keyword, 1, 'should_inline_timestamp_keyword');
+is($db->should_inline_timestamp_keyword, 1, 'should_inline_timestamp_keyword (1)');
 
 Rose::DB::Pg->timestamps_are_inlined(0);
-is($db->should_inline_timestamp_keyword, 0, 'should_inline_timestamp_keyword');
+is($db->should_inline_timestamp_keyword, 0, 'should_inline_timestamp_keyword (0)');
 
 # Interval values
 
