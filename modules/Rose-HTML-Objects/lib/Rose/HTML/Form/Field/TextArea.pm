@@ -10,11 +10,6 @@ use base 'Rose::HTML::Form::Field';
 
 our $VERSION = '0.606';
 
-use Rose::Object::MakeMethods::Generic
-(
-  scalar => 'maxlength',
-);
-
 __PACKAGE__->add_valid_html_attrs
 (
   'rows',        # NUMBER         #REQUIRED
@@ -23,6 +18,7 @@ __PACKAGE__->add_valid_html_attrs
   'readonly',    # (readonly)     #IMPLIED
   'onselect',    # %Script;       #IMPLIED  -- some text was selected --
   'onchange',    # %Script;       #IMPLIED  -- the element value was changed --
+  'maxlength'
 );
 
 __PACKAGE__->add_required_html_attrs(
