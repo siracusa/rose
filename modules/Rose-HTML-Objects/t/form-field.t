@@ -2,7 +2,7 @@
 
 use strict;
 
-use Test::More tests => 89;
+use Test::More tests => 94;
 
 BEGIN 
 {
@@ -99,20 +99,30 @@ is($field->input_value, ' John ', 'input_value()');
 
 ok($field->validate, 'validate() again');
 
+$field->required(undef);
+
 is($field->html_field, '<></>', 'html_field() 1');
 is($field->xhtml_field, '<></>', 'xhtml_field() 1');
 
 is($field->html, '<></>', 'html() 1');
 is($field->xhtml, '<></>', 'xhtml() 1');
 
+$field->required(1);
+
+is($field->html_field, '< required="1"></>', 'html_field() 1');
+is($field->xhtml_field, '< required="1"></>', 'xhtml_field() 1');
+
+is($field->html, '< required="1"></>', 'html() 1');
+is($field->xhtml, '< required="1"></>', 'xhtml() 1');
+
 $field->input_value(undef);
 $field->validate;
 
-is($field->html_field, '<></>', 'html_field() 2');
-is($field->xhtml_field, '<></>', 'xhtml_field() 2');
+is($field->html_field, '< required="1"></>', 'html_field() 1');
+is($field->xhtml_field, '< required="1"></>', 'xhtml_field() 1');
 
-is($field->html, qq(<></><br>\n<span class="error">Name is a required field.</span>), 'html() 2');
-is($field->xhtml, qq(<></><br />\n<span class="error">Name is a required field.</span>), 'xhtml() 2');
+is($field->html, qq(< required="1"></><br>\n<span class="error">Name is a required field.</span>), 'html() 2');
+is($field->xhtml, qq(< required="1"></><br />\n<span class="error">Name is a required field.</span>), 'xhtml() 2');
 
 $field->label('Name> ');
 

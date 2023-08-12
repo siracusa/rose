@@ -36,6 +36,7 @@ __PACKAGE__->add_valid_html_attrs
   'min',
   'max',
   'step',
+  'required'
 );
 
 __PACKAGE__->add_required_html_attrs(

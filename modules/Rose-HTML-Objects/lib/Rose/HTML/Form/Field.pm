@@ -34,7 +34,7 @@ use Rose::Object::MakeMethods::Generic
 (
   scalar => [ qw(rank type) ],
 
-  boolean => [ qw(required is_cleared has_partial_value) ],
+  boolean => [ qw(is_cleared has_partial_value) ],
   boolean => 
   [
     trim_spaces => { default => 1 },
@@ -56,6 +56,7 @@ __PACKAGE__->add_valid_html_attrs(qw(
   accesskey
   tabindex
   autofocus
+  required
 ));
 
 sub is_button { 0 }
