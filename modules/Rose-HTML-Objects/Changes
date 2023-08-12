@@ -1,4 +1,4 @@
-0.625_01 (10.23.2022) - John Siracusa <siracusa@gmail.com>
+0.626_01 (10.23.2022) - John Siracusa <siracusa@gmail.com>
 
     * TODO: Fix field names in compound fields containing checkboxes
       or a checkbox group
@@ -8,6 +8,10 @@
     * TODO: Remove deprecated form_rank_counter() method.
     * TODO: Document $form->xhtml_table
     * TODO: db_object_from_form() - use mutator methods when available?
+
+0.626 (08.12.2023) - John Siracusa <siracusa@gmail.com>
+
+    * Added boolean required attribute to form field HTML.
 
 0.625 (07.27.2023) - John Siracusa <siracusa@gmail.com>
 
