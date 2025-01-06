@@ -1,3 +1,14 @@
+0.628_01 (01.06.2025) - John Siracusa <siracusa@gmail.com>
+
+    * TODO: Fix field names in compound fields containing checkboxes
+      or a checkbox group
+    * TODO: More HTML5 attributes.
+    * TODO: is_empty to look at input_value instead of internal_value
+    * TODO: Add is_effectively_empty that looks at internal_value
+    * TODO: Remove deprecated form_rank_counter() method.
+    * TODO: Document $form->xhtml_table
+    * TODO: db_object_from_form() - use mutator methods when available?
+
 0.627 (01.06.2025) - John Siracusa <siracusa@gmail.com>
 
     * Replaced List::MoreUtils with List::Util. (Patch by github.com/plicease)
