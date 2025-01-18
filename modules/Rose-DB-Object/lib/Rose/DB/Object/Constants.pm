@@ -12,7 +12,7 @@ our @EXPORT_OK =
      LOADED_FROM_DRIVER FLAG_DB_IS_PRIVATE MODIFIED_COLUMNS 
      MODIFIED_NP_COLUMNS SET_COLUMNS SAVING_FOR_LOAD
      STATE_IN_DB STATE_LOADING STATE_SAVING STATE_CLONING
-     EXCEPTION_CODE_NO_KEY);
+     EXCEPTION_CODE_NO_KEY LOADED_RELATIONS);
 
 our %EXPORT_TAGS = (all => \@EXPORT_OK);
 
@@ -29,6 +29,7 @@ use constant STATE_IN_DB         => PRIVATE_PREFIX . '_in_db';
 use constant STATE_LOADING       => PRIVATE_PREFIX . '_loading';
 use constant STATE_SAVING        => PRIVATE_PREFIX . '_saving';
 use constant STATE_CLONING       => STATE_SAVING;
+use constant LOADED_RELATIONS    => PRIVATE_PREFIX . '_loaded_relations';
 
 use constant EXCEPTION_CODE_NO_KEY => 5; # arbitrary
 

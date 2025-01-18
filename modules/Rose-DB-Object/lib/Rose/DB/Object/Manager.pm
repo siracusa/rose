@@ -11,7 +11,7 @@ use Scalar::Util qw(weaken refaddr);
 use Rose::DB::Object::Iterator;
 use Rose::DB::Object::QueryBuilder qw(build_select build_where_clause);
 use Rose::DB::Object::Constants
-  qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB MODIFIED_COLUMNS);
+  qw(PRIVATE_PREFIX STATE_LOADING STATE_IN_DB MODIFIED_COLUMNS LOADED_RELATIONS);
 
 # XXX: A value that is unlikely to exist in a primary key column value
 use constant PK_JOIN => "\0\2,\3\0";
@@ -2177,6 +2177,7 @@ sub get_objects
                               while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                               {
                                 $parent->{$method} = $subobjects;
+                                $parent->{LOADED_RELATIONS()}->{$method} = 1;
                               }
                             }                      
                           }
@@ -2189,6 +2190,7 @@ sub get_objects
                               while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                               {
                                 $parent->$method($subobjects);
+                                $parent->{LOADED_RELATIONS()}->{$method} = 1;
                               }
                             }
                           }
@@ -2217,6 +2219,7 @@ sub get_objects
                           $object->init(%{$row{$object_class,0}});
                           $object->{STATE_IN_DB()} = 1;
                         }
+                        $object->{LOADED_RELATIONS()} = {};
 
                         $last_object = $object; # This is the "last object" from now on
                         @sub_objects = ();      # The list of sub-objects is per-object
@@ -2236,29 +2239,34 @@ sub get_objects
 
                         my $class  = $classes[$i];
                         my $tn = $i + 1;
-
+						
                         # Null primary key columns are not allowed
                         my $sub_pk = join(PK_JOIN, grep { defined } map { $row{$class,$i}{$_} } @{$sub_pk_columns[$tn]});
-                        next  unless(length $sub_pk);
+                        
+                        my $subobject = undef;
+                        if (! length $sub_pk) {
+                        	$sub_pk = '___NO_KEY___';
+                        } else {
+                          $subobject = $seen[$i]{$sub_pk};
 
-                        my $subobject = $seen[$i]{$sub_pk};
-
-                        unless($subobject)
-                        {
-                          # Make sub-object
-                          if($direct_inject)
+                          unless($subobject)
                           {
-                            $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args }, $class;
-                          }
-                          else
-                          {    
-                            $subobject = $class->new(%subobject_args);
-                            local $subobject->{STATE_LOADING()} = 1;
-                            $subobject->init(%{$row{$class,$i}});
-                            $subobject->{STATE_IN_DB()} = 1;
-                          }
+                            # Make sub-object
+                            if($direct_inject)
+                            {
+                              $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args }, $class;
+                            }
+                            else
+                            {    
+                              $subobject = $class->new(%subobject_args);
+                              local $subobject->{STATE_LOADING()} = 1;
+                              $subobject->init(%{$row{$class,$i}});
+                              $subobject->{STATE_IN_DB()} = 1;
+                            }
+                            $subobject->{LOADED_RELATIONS()} = {};
 
-                          $seen[$i]{$sub_pk} = $subobject;
+                            $seen[$i]{$sub_pk} = $subobject;
+                          }
                         }
 
                         # If this object belongs to an attribute that can have more
@@ -2272,7 +2280,7 @@ sub get_objects
                           }
                           else
                           {
-                            if($map_record)
+                            if($map_record && defined $subobject)
                             {
                               my $method = $mapped_object_methods[$i - 1] or next;
 
@@ -2285,6 +2293,7 @@ sub get_objects
                                 local $subobject->{STATE_LOADING()} = 1;
                                 $subobject->$method($map_record);
                               }
+                              $subobject->{LOADED_RELATIONS()}->{$method} = 1;
 
                               $map_record = 0;
                             }
@@ -2303,11 +2312,13 @@ sub get_objects
                                 my $maps = $subobject_method_map[$i + 1][$bt];
                                 my %check;
 
-                                foreach my $map (@$maps)
-                                {
-                                  my $subobject_method = $map->[1];
-                                  $check{$subobject_method} = $subobject->$subobject_method();
-                                }
+								if (defined $subobject) {
+	                                foreach my $map (@$maps)
+	                                {
+	                                  my $subobject_method = $map->[1];
+	                                  $check{$subobject_method} = $subobject->$subobject_method();
+	                                }
+								}
 
                                 PARENT: foreach my $check_parent (reverse @$parent_object)
                                 {
@@ -2326,13 +2337,21 @@ sub get_objects
                               # objects in the list of tables in the FROM clause.
                               $parent_object = $parent_object->[-1] #$parent_object->[$subobjects_belong_to[$i]]
                                 if(ref $parent_object eq 'ARRAY');
+                                
+                                if (! defined $parent_object) {
+                                  next;
+                                }
 
                               my $method = $subobject_methods[$i];
 
                               my $ident = refaddr $parent_object;
                               next  if($seen{$ident,$method}{$sub_pk}++);
                               $parent_objects{$ident} = $parent_object;
-                              push(@{$subobjects{$ident}{$method}}, $subobject);
+                              
+                              if (defined $subobject) {
+     						  	push(@{$subobjects{$ident}{$method}}, $subobject);
+                              }
+     						  $parent_object->{LOADED_RELATIONS()}->{$method} = 1;
                             }
                             else
                             {
@@ -2340,15 +2359,22 @@ sub get_objects
                               my $method = $subobject_methods[$i];
                               next  if($seen{$ident,$method}{$sub_pk}++);
                               $parent_objects{$ident} = $object;
-                              push(@{$subobjects{$ident}{$method}}, $subobject);
+                              if (defined $subobject) {
+                              	push(@{$subobjects{$ident}{$method}}, $subobject);
+                              }
+                              $object->{LOADED_RELATIONS()}->{$method} = 1;
                             }
 
-                            push(@{$sub_objects[$i]}, $subobject);
+							if (defined $subobject) {
+                           		push(@{$sub_objects[$i]}, $subobject);
+							}
                           }
                         }
                         else # Otherwise, just assign it
                         {
-                          $sub_objects[$i] = $subobject;
+                        	if (defined $subobject) {
+                          		$sub_objects[$i] = $subobject;
+                        	}
                           my $parent_object;
 
                           if(my $bt = $belongs_to[$i])
@@ -2362,6 +2388,10 @@ sub get_objects
                           else
                           {
                             $parent_object = $object;
+                          }
+                          
+                          if (! defined $parent_object) {
+                          		next;
                           }
 
                           my $method = $subobject_methods[$i];
@@ -2378,8 +2408,9 @@ sub get_objects
                             local $parent_object->{STATE_LOADING()} = 1;
                             $parent_object->$method($subobject);
                           }
+                          $parent_object->{LOADED_RELATIONS()}->{$method} = 1;
                         }
-                      }
+                      } # foreach subtable
 
                       if($skip_first)
                       {
@@ -2420,6 +2451,7 @@ sub get_objects
                           while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                           {
                             $parent->{$method} = $subobjects;
+                            $parent->{LOADED_RELATIONS()}->{$method} = 1;
                           }
                         }
                       }
@@ -2432,6 +2464,7 @@ sub get_objects
                           while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                           {
                             $parent->$method($subobjects);
+                            $parent->{LOADED_RELATIONS()}->{$method} = 1;
                           }
                         }
                       }
@@ -2516,6 +2549,7 @@ sub get_objects
                       $object->init(%{$row{$object_class,0}});
                       $object->{STATE_IN_DB()} = 1;
                     }
+                    $object->{LOADED_RELATIONS()} = {};
 
                     my @sub_objects;
 
@@ -2542,6 +2576,7 @@ sub get_objects
                           $subobject->init(%{$row{$class,$i}});
                           $subobject->{STATE_IN_DB()} = 1;
                         }
+                        $subobject->{LOADED_RELATIONS()} = {};
 
                         $sub_objects[$i] = $subobject;
 
@@ -2550,10 +2585,12 @@ sub get_objects
                           if(my $bt = $belongs_to[$i])
                           {
                             $sub_objects[$bt]->{$method} = $subobject;
+                            $sub_objects[$bt]->{LOADED_RELATIONS()}->{$method} = 1;
                           }
                           else
                           {
                             $object->{$method} = $subobject;
+                            $object->{LOADED_RELATIONS()}->{$method} = 1;
                           }
                         }
                         else
@@ -2562,11 +2599,13 @@ sub get_objects
                           {
                             local $sub_objects[$bt]->{STATE_LOADING()} = 1;
                             $sub_objects[$bt]->$method($subobject);
+                            $sub_objects[$bt]->{LOADED_RELATIONS()}->{$method} = 1;
                           }
                           else
                           {
                             local $object->{STATE_LOADING()} = 1;
                             $object->$method($subobject);
+                            $object->{LOADED_RELATIONS()}->{$method} = 1;
                           }
                         }
                       }
@@ -2591,7 +2630,7 @@ sub get_objects
               return $skip_first ? undef : $object;
             });
           }
-        }
+        } # if ($with_objects)
         else # no sub-objects at all
         {
           $iterator->_next_code(sub
@@ -2630,6 +2669,7 @@ sub get_objects
                     $object->init(%{$row{$object_class,0}});
                     $object->{STATE_IN_DB()} = 1;
                   }
+                  $object->{LOADED_RELATIONS()} = {};
 
                   $skip_first = 0;
                   $self->{'_count'}++;
@@ -2667,7 +2707,7 @@ sub get_objects
         });
 
         return $iterator;
-      }
+      } # if ($return_iterator)
 
       $count = 0;
 
@@ -2712,6 +2752,7 @@ sub get_objects
                     while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                     {
                       $parent->{$method} = $subobjects; # XXX
+                      $parent->{LOADED_RELATIONS()}->{$method} = 1;
                     }
                   }              
                 }
@@ -2724,6 +2765,7 @@ sub get_objects
                     while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                     {
                       $parent->$method($subobjects);
+                      $parent->{LOADED_RELATIONS()}->{$method} = 1;
                     }
                   }
                 }
@@ -2753,6 +2795,7 @@ sub get_objects
                 $object->init(%{$row{$object_class,0}});
                 $object->{STATE_IN_DB()} = 1;
               }
+              $object->{LOADED_RELATIONS()} = {};
 
               $last_object = $object; # This is the "last object" from now on.
               @sub_objects = ();      # The list of sub-objects is per-object.
@@ -2768,47 +2811,53 @@ sub get_objects
             foreach my $i (1 .. $num_subtables)
             {
               my $mapped_object_method = $mapped_object_methods[$i];
+              
               next  if(defined $mapped_object_method && !$mapped_object_method);
-
+              
               my $class  = $classes[$i];
               my $tn = $i + 1;
 
               # Null primary key columns are not allowed
               my $sub_pk = join(PK_JOIN, grep { defined } map { $row{$class,$i}{$_} } @{$sub_pk_columns[$tn]});
-              next  unless(length $sub_pk);
+              
+              my $subobject = undef;
+              if (! length($sub_pk)) {
+              	$sub_pk = '___NO_KEY___';
+              } else {  
+              		$subobject = $seen[$i]{$sub_pk};
 
-              my $subobject = $seen[$i]{$sub_pk};
-
-              unless($subobject)
-              {
-                # Make sub-object
-                if($direct_inject)
-                {
-                  $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args },  $class;
-                }
-                else
-                {    
-                  $subobject = $class->new(%subobject_args);
-                  local $subobject->{STATE_LOADING()} = 1;
-                  $subobject->init(%{$row{$class,$i}});
-                  $subobject->{STATE_IN_DB()} = 1;
-                }
-
-                $seen[$i]{$sub_pk} = $subobject;
-              }
+	              unless($subobject)
+	              {
+	                # Make sub-object
+	                if($direct_inject)
+	                {
+	                  $subobject = bless { STATE_IN_DB() => 1, %{$row{$class,$i}}, %subobject_args },  $class;
+	                }
+	                else
+	                {    
+	                  $subobject = $class->new(%subobject_args);
+	                  local $subobject->{STATE_LOADING()} = 1;
+	                  $subobject->init(%{$row{$class,$i}});
+	                  $subobject->{STATE_IN_DB()} = 1;
+	                }
+	                $subobject->{LOADED_RELATIONS()} = {};
+	
+	                $seen[$i]{$sub_pk} = $subobject;
+	              }
+				}
 
               # If this object belongs to an attribute that can have more
               # than one object then just save it for later in the
               # per-object sub-objects list.
               if($has_dups[$i])
-              {
+              { # ist eine X-to-many-Relation
                 if($mapped_object_method)
                 {
                   $map_record = $subobject;
                 }
                 else
                 {
-                  if($map_record)
+                  if($map_record && defined $subobject)
                   {
                     my $method = $mapped_object_methods[$i - 1] or next;
 
@@ -2821,6 +2870,7 @@ sub get_objects
                       local $subobject->{STATE_LOADING()} = 1;
                       $subobject->$method($map_record);
                     }
+                    $subobject->{LOADED_RELATIONS()}->{$method} = 1;
 
                     $map_record = 0;
                   }
@@ -2839,11 +2889,13 @@ sub get_objects
                       my $maps = $subobject_method_map[$i + 1][$bt];
                       my %check;
 
-                      foreach my $map (@$maps)
-                      {
-                        my $subobject_method = $map->[1];
-                        $check{$subobject_method} = $subobject->$subobject_method();
-                      }
+						if (defined $subobject) {
+	                      foreach my $map (@$maps)
+	                      {
+	                        my $subobject_method = $map->[1];
+	                        $check{$subobject_method} = $subobject->$subobject_method();
+	                      }
+						}
 
                       PARENT: foreach my $check_parent (reverse @$parent_object)
                       {
@@ -2862,13 +2914,20 @@ sub get_objects
                     # objects in the list of tables in the FROM clause.
                     $parent_object = $parent_object->[-1] #$parent_object->[$subobjects_belong_to[$i]]
                       if(ref $parent_object eq 'ARRAY');
+                      
+                    if (! defined $parent_object) {
+                    	next;
+                    }
 
                     my $method = $subobject_methods[$i];
 
                     my $ident = refaddr $parent_object;
                     next  if($seen{$ident,$method}{$sub_pk}++);
                     $parent_objects{$ident} = $parent_object;
-                    push(@{$subobjects{$ident}{$method}}, $subobject);
+                    if (defined $subobject) {
+                    	push(@{$subobjects{$ident}{$method}}, $subobject);
+                    }
+                    $parent_object->{LOADED_RELATIONS()}->{$method} = 1;
                   }
                   else
                   {
@@ -2876,15 +2935,22 @@ sub get_objects
                     my $method = $subobject_methods[$i];
                     next  if($seen{$ident,$method}{$sub_pk}++);
                     $parent_objects{$ident} = $object;
-                    push(@{$subobjects{$ident}{$method}}, $subobject);
+                    if (defined $subobject) {
+               			push(@{$subobjects{$ident}{$method}}, $subobject);
+                    }
+                    $object->{LOADED_RELATIONS()}->{$method} = 1;
                   }
 
-                  push(@{$sub_objects[$i]}, $subobject);
+					if (defined $subobject) {
+              			push(@{$sub_objects[$i]}, $subobject);
+					}
                 }
               }
               else # Otherwise, just assign it
               {
-                push(@{$sub_objects[$i]}, $subobject);
+              	if (defined $subobject) {
+               		push(@{$sub_objects[$i]}, $subobject);
+              	}
 
                 my $parent_object;
 
@@ -2898,6 +2964,10 @@ sub get_objects
                 else
                 {
                   $parent_object = $object;
+                }
+
+                if (! defined $parent_object) {
+                  	next;
                 }
 
                 my $method = $subobject_methods[$i];
@@ -2914,6 +2984,7 @@ sub get_objects
                   local $parent_object->{STATE_LOADING()} = 1;
                   $parent_object->$method($subobject);
                 }
+                $parent_object->{LOADED_RELATIONS()}->{$method} = 1;
               }
             }
 
@@ -2939,6 +3010,7 @@ sub get_objects
                 while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                 {
                   $parent->{$method} = $subobjects; # XXX
+                  $parent->{LOADED_RELATIONS()}->{$method} = 1;
                 }
               }
             }
@@ -2947,10 +3019,11 @@ sub get_objects
               while(my($ident, $parent) = each(%parent_objects))
               {
                 local $parent->{STATE_LOADING()} = 1;
-
+				
                 while(my($method, $subobjects) = each(%{$subobjects{$ident}}))
                 {
                   $parent->$method($subobjects);
+                  $parent->{LOADED_RELATIONS()}->{$method} = 1;
                 }
               }
             }
@@ -2990,6 +3063,7 @@ sub get_objects
               $object->init(%{$row{$object_class,0}});
               $object->{STATE_IN_DB()} = 1;
             }
+            $object->{LOADED_RELATIONS()} = {};
 
             my @sub_objects;
 
@@ -3014,6 +3088,7 @@ sub get_objects
                 $subobject->init(%{$row{$class,$i}});
                 $subobject->{STATE_IN_DB()} = 1;
               }
+              $subobject->{LOADED_RELATIONS()} = {};
 
               $sub_objects[$i] = $subobject;
 
@@ -3022,10 +3097,12 @@ sub get_objects
                 if(my $bt = $belongs_to[$i])
                 {
                   $sub_objects[$bt]->{$method} = $subobject;
+                  $sub_objects[$bt]->{LOADED_RELATIONS()}->{$method} = 1;
                 }
                 else
                 {
                   $object->{$method} = $subobject;
+                  $object->{LOADED_RELATIONS()}->{$method} = 1;
                 }
               }
               else
@@ -3034,11 +3111,13 @@ sub get_objects
                 {
                   local $sub_objects[$bt]->{STATE_LOADING()} = 1;
                   $sub_objects[$bt]->$method($subobject);
+                  $sub_objects[$bt]->{LOADED_RELATIONS()}->{$method} = 1;
                 }
                 else
                 {
                   local $object->{STATE_LOADING()} = 1;
                   $object->$method($subobject);
+                  $object->{LOADED_RELATIONS()}->{$method} = 1;
                 }
               }
             }
@@ -3064,7 +3143,7 @@ sub get_objects
 
           while($sth->fetch)
           {
-            push(@objects, bless { STATE_IN_DB() => 1, %{$row{$object_class,0}}, %object_args }, $object_class);
+            push(@objects, bless { STATE_IN_DB() => 1, LOADED_RELATIONS() => {}, %{$row{$object_class,0}}, %object_args }, $object_class);
           }
         }
         else
@@ -3076,6 +3155,7 @@ sub get_objects
             local $object->{STATE_LOADING()} = 1;
             $object->init(%{$row{$object_class,0}});
             $object->{STATE_IN_DB()} = 1;
+            $object->{LOADED_RELATIONS()} = {};
 
             push(@objects, $object);
           }
