@@ -3272,6 +3272,8 @@ sub delete_objects
       my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
                                   $dbh->prepare($sql) or die $dbh->errstr;
 
+      my $rv;
+
       if(@bind_params)
       {
         my $i = 1;
@@ -3282,14 +3284,16 @@ sub delete_objects
           $i++;
         }
 
-        $sth->execute;
+        $rv = $sth->execute;
       }
       else
       {
-        $sth->execute(@$bind);
+        $rv = $sth->execute(@$bind);
       }
 
       $count = $sth->rows || 0;
+      $count = $rv  if($count < 0);
+      $count = 0    if(defined $count && $count eq '0E0');
     };
 
     $error = $@;
@@ -3409,6 +3413,8 @@ sub update_objects
       my $sth = $prepare_cached ? $dbh->prepare_cached($sql, undef, 3) : 
                                   $dbh->prepare($sql) or die $dbh->errstr;
 
+      my $rv;
+
       if(@bind_params)
       {
         my $i = 1;
@@ -3419,14 +3425,17 @@ sub update_objects
           $i++;
         }
 
-        $sth->execute;
+        $rv = $sth->execute;
       }
       else
       {
-        $sth->execute(@$set_bind, @$where_bind);
+        $rv = $sth->execute(@$set_bind, @$where_bind);
       }
 
+      # When running queries that affect zero rows, DBD::Pg now returns 
+      # 0E0 from execute() and -1 from rows(), so handle that below.
       $count = $sth->rows || 0;
+      $count = int($rv)  if($count < 0); # coerce 0E0 to 0
     };
 
     $error = $@;
