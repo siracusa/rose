@@ -727,6 +727,8 @@ sub refine_dbi_foreign_key_info
     $fk_info->{'FK_TABLE_CAT'} = undef;
     $fk_info->{'UK_TABLE_CAT'} = undef;
   }
+
+   Rose::DB->refine_dbi_foreign_key_info($fk_info);
 }
 
 sub list_tables
